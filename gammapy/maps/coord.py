@@ -4,6 +4,7 @@ import html
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
+from gammapy.utils.compat import COPY_IF_NEEDED
 
 __all__ = ["MapCoord"]
 
@@ -28,9 +29,10 @@ class MapCoord:
     """Represents a sequence of n-dimensional map coordinates.
 
     Contains coordinates for 2 spatial dimensions and an arbitrary
-    number of additional non-spatial dimensions.
+    number of additional non-spatial dimensions. Ensure correct broadcasting of the array
+    to allow for this.
 
-    For further information see :ref:`mapcoord`.
+    For further information and examples see :ref:`mapcoord`.
 
     Parameters
     ----------
@@ -104,13 +106,13 @@ class MapCoord:
     @property
     def theta(self):
         """Theta co-latitude angle in radians."""
-        theta = u.Quantity(self.lat, unit="deg", copy=False).to_value("rad")
+        theta = u.Quantity(self.lat, unit="deg", copy=COPY_IF_NEEDED).to_value("rad")
         return np.pi / 2.0 - theta
 
     @property
     def phi(self):
         """Phi longitude angle in radians."""
-        phi = u.Quantity(self.lon, unit="deg", copy=False).to_value("rad")
+        phi = u.Quantity(self.lon, unit="deg", copy=COPY_IF_NEEDED).to_value("rad")
         return phi
 
     @property
@@ -256,10 +258,10 @@ class MapCoord:
             lon, lat, frame = skycoord_to_lonlat(self.skycoord, frame=frame)
             data = copy.deepcopy(self._data)
             if isinstance(self.lon, u.Quantity):
-                lon = u.Quantity(lon, unit="deg", copy=False)
+                lon = u.Quantity(lon, unit="deg", copy=COPY_IF_NEEDED)
 
             if isinstance(self.lon, u.Quantity):
-                lat = u.Quantity(lat, unit="deg", copy=False)
+                lat = u.Quantity(lat, unit="deg", copy=COPY_IF_NEEDED)
 
             data["lon"] = lon
             data["lat"] = lat

@@ -168,6 +168,27 @@ def fpe_map_pwl():
 
 
 @pytest.fixture(scope="session")
+def fpe_map_pwl_ray():
+    """duplicate of fpe_map_pwl to avoid fails due to execution order"""
+    dataset_1 = simulate_map_dataset(name="test-map-pwl")
+    dataset_2 = dataset_1.copy(name="test-map-pwl-2")
+    dataset_2.models = dataset_1.models
+
+    dataset_2.mask_safe = RegionNDMap.from_geom(dataset_2.counts.geom, dtype=bool)
+
+    energy_edges = [0.1, 1, 10, 100] * u.TeV
+    datasets = [dataset_1, dataset_2]
+    fpe = FluxPointsEstimator(
+        energy_edges=energy_edges,
+        source="source",
+        selection_optional="all",
+    )
+    fpe.norm.scan_n_values = 3
+
+    return datasets, fpe
+
+
+@pytest.fixture(scope="session")
 def fpe_map_pwl_reoptimize():
     dataset = simulate_map_dataset()
     energy_edges = [1, 10] * u.TeV
@@ -287,6 +308,15 @@ def test_run_pwl(fpe_pwl, tmpdir):
     fp.write(tmpdir / "test.fits")
     fp_new = FluxPoints.read(tmpdir / "test.fits")
     assert fp_new.meta["sed_type_init"] == "likelihood"
+
+    # test datasets stat
+    fp_dataset = FluxPointsDataset(data=fp, models=fp.reference_model)
+    fp_dataset.stat_type = "chi2"
+    assert_allclose(fp_dataset.stat_sum(), 3.82374, rtol=1e-4)
+    fp_dataset.stat_type = "profile"
+    assert_allclose(fp_dataset.stat_sum(), 3.790053, rtol=1e-4)
+    fp_dataset.stat_type = "distrib"
+    assert_allclose(fp_dataset.stat_sum(), 3.783325, rtol=1e-4)
 
 
 def test_run_ecpl(fpe_ecpl, tmpdir):
@@ -636,10 +666,10 @@ def test_flux_points_parallel_ray_actor_spectrum(fpe_pwl):
 
 @requires_data()
 @requires_dependency("ray")
-def test_flux_points_parallel_ray_actor_map(fpe_map_pwl):
+def test_flux_points_parallel_ray_actor_map(fpe_map_pwl_ray):
     from gammapy.datasets.actors import DatasetsActor
 
-    datasets, fpe = fpe_map_pwl
+    datasets, fpe = fpe_map_pwl_ray
     actors = DatasetsActor(datasets)
 
     fp = fpe.run(actors)

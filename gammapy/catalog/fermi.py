@@ -29,11 +29,13 @@ __all__ = [
     "SourceCatalog3FHL",
     "SourceCatalog4FGL",
     "SourceCatalog2PC",
+    "SourceCatalog3PC",
     "SourceCatalogObject2FHL",
     "SourceCatalogObject3FGL",
     "SourceCatalogObject3FHL",
     "SourceCatalogObject4FGL",
     "SourceCatalogObject2PC",
+    "SourceCatalogObject3PC",
 ]
 
 log = logging.getLogger(__name__)
@@ -148,6 +150,11 @@ class SourceCatalogObjectFermiPCBase(SourceCatalogObject, abc.ABC):
             reference_model=self.sky_model(),
             format="gadf-sed",
         )
+
+    @property
+    def lightcurve(self):
+        """Light-curve."""
+        pass
 
 
 class SourceCatalogObjectFermiBase(SourceCatalogObject, abc.ABC):
@@ -1395,9 +1402,9 @@ class SourceCatalogObject2PC(SourceCatalogObjectFermiPCBase):
             ss += fmt_f.format(
                 indentation,
                 "Index 2",
-                d["PLEC_Exponential_Index"],
-                d["Unc_PLEC_Exponential_Index"],
             )
+            d["PLEC_Exponential_Index"],
+            d["Unc_PLEC_Exponential_Index"],
             ss += "{}{:<20s} : {:.3f}\n".format(
                 indentation, "Reference", d["PLEC_Scale"]
             )
@@ -1511,6 +1518,192 @@ class SourceCatalogObject2PC(SourceCatalogObjectFermiPCBase):
         table["e2dnde_ul"] = np.nan * table["e2dnde"].unit
         e2dnde_ul = compute_flux_points_ul(table["e2dnde"], table["e2dnde_err"])
         table["e2dnde_ul"][is_ul] = e2dnde_ul[is_ul]
+
+        table = Table()
+
+        return table
+
+
+class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
+
+    asso = ["assoc_new"]
+
+    _energy_edges = u.Quantity([50, 100, 300, 1_000, 3e3, 1e4, 3e4, 1e5, 1e6], "MeV")
+
+    @property
+    def _auxiliary_filename(self):
+        return make_path(
+            "$GAMMAPY_DATA/catalogs/fermi/3PC_auxiliary_20230728/"
+            + self.name
+            + "_3PC_data.fits.gz"
+        )
+
+    def _info_pulsar(self):
+        d = self.data
+        ss = "\n*** Pulsar info ***\n\n"
+        ss += "{:<20s} : {:.3f}\n".format("Period", d["P0"])
+        ss += "{:<20s} : {:.3e}\n".format("P_Dot", d["P1"])
+        ss += "{:<20s} : {:.3e}\n".format("E_Dot", d["EDOT"])
+        return ss
+
+    def _info_phasogram(self):
+        d = self.data
+        ss = "\n*** Phasogram info ***\n\n"
+        if not isinstance(d["NPEAK"], np.ma.core.MaskedConstant):
+            npeak = d["NPEAK"]
+            ss += "{:<20s} : {:.3f}\n".format("Number of peaks", npeak)
+            if npeak > 1:
+                ss += "{:<20s} : {:.3f}\n".format("Ph1 (peak one)", d["PHI1"])
+                ss += "{:<20s} : {:.3f}\n".format(
+                    "Ph2 (peak two)", d["PHI1"] + d["PKSEP"]
+                )
+                ss += "{:<20s} : {:.3f}\n".format("Peak separation", d["PKSEP"])
+            else:
+                if not isinstance(d["PHI1"], np.ma.core.MaskedConstant):
+                    ss += "{:<20s} : {:.3f}\n".format("Ph1 (peak one)", d["PHI1"])
+        else:
+            ss += "No phasogram info available.\n"
+        return ss
+
+    def _info_spectral_fit(self):
+        d = self.data_spectral
+        ss = "\n*** Spectral info ***\n\n"
+        if d is None:
+            ss += "No spectral info available.\n"
+            return ss
+        ss += "{:<20s} : {:.0f}\n".format("TS", d["Test_Statistic"])
+        ss += "{:<20s} : {:.0f}\n".format("Significance (DC)", d["Signif_Avg"])
+        ss += "{:<20s} : {:s}\n".format("Spectrum Type", d["SpectrumType"])
+
+        indentation = " " * 4
+        fmt_e = "{}{:<20s} : {:.3e} +- {:.3e}\n"
+        fmt_f = "{}{:<20s} : {:.3f} +- {:.3f}\n"
+
+        if not isinstance(d["PLEC_Flux_Density_b23"], np.ma.core.MaskedConstant):
+
+            ss += "\n{}* SuperExpCutoffPowerLaw4FGLDR3 b = 2/3 *\n\n".format(
+                indentation
+            )
+            ss += fmt_e.format(
+                indentation,
+                "Amplitude",
+                d["PLEC_Flux_Density_b23"],
+                d["Unc_PLEC_Flux_Density_b23"],
+            )
+            ss += fmt_f.format(
+                indentation,
+                "Index 1",
+                -d["PLEC_IndexS_b23"],
+                d["Unc_PLEC_IndexS_b23"],
+            )
+            ss += "{}{:<20s} : {:.3f}\n".format(indentation, "Index 2", 0.6667)
+            ss += "{}{:<20s} : {:.3f}\n".format(
+                indentation, "Reference", d["Pivot_Energy_b23"]
+            )
+            ss += fmt_f.format(
+                indentation,
+                "Expfactor",
+                d["PLEC_ExpfactorS_b23"],
+                d["Unc_PLEC_ExpfactorS_b23"],
+            )
+
+        if not isinstance(d["PLEC_Flux_Density_bfr"], np.ma.core.MaskedConstant):
+
+            ss += "\n{}* SuperExpCutoffPowerLaw4FGLDR3 b free *\n\n".format(indentation)
+            ss += fmt_e.format(
+                indentation,
+                "Amplitude",
+                d["PLEC_Flux_Density_bfr"],
+                d["Unc_PLEC_Flux_Density_bfr"],
+            )
+            ss += fmt_f.format(
+                indentation,
+                "Index 1",
+                -d["PLEC_IndexS_bfr"],
+                d["Unc_PLEC_IndexS_bfr"],
+            )
+            ss += fmt_f.format(
+                indentation,
+                "Index 2",
+                d["PLEC_Exp_Index_bfr"],
+                d["Unc_PLEC_Exp_Index_bfr"],
+            )
+            ss += "{}{:<20s} : {:.3f}\n".format(
+                indentation, "Reference", d["Pivot_Energy_bfr"]
+            )
+            ss += fmt_f.format(
+                indentation,
+                "Expfactor",
+                d["PLEC_ExpfactorS_bfr"],
+                d["Unc_PLEC_ExpfactorS_bfr"],
+            )
+        return ss
+
+    def spectral_model(self):
+        d = self.data_spectral
+        if d is None or d["SpectrumType"] != "PLSuperExpCutoff4":
+            log.warning(f"No spectral model available for source {self.name}")
+            return None
+
+        tag = "SuperExpCutoffPowerLaw4FGLDR3SpectralModel"
+        pars = {
+            "reference": d["Pivot_Energy_bfr"],
+            "amplitude": d["PLEC_Flux_Density_bfr"],
+            "index_1": -d["PLEC_IndexS_bfr"],
+            "index_2": d["PLEC_Exp_Index_bfr"],
+            "expfactor": d["PLEC_ExpfactorS_bfr"],
+        }
+        errs = {
+            "amplitude": d["Unc_PLEC_Flux_Density_bfr"],
+            "index_1": d["Unc_PLEC_IndexS_bfr"],
+            "index_2": d["Unc_PLEC_Exp_Index_bfr"],
+            "expfactor": d["Unc_PLEC_ExpfactorS_bfr"],
+        }
+
+        model = Model.create(tag, "spectral", **pars)
+
+        for name, value in errs.items():
+            model.parameters[name].error = value
+
+        return model
+
+    @property
+    def flux_points_table(self):
+        """Flux points (`~astropy.table.Table`). Flux point is an upper limit if
+        its significance is less than 2."""
+        fp_data = self.data_spectral
+        if fp_data is None:
+            log.warning(f"No flux points available for source {self.name}")
+            return None
+        table = Table()
+
+        table["e_min"] = self._energy_edges[:-1]
+        table["e_max"] = self._energy_edges[1:]
+        table["e_ref"] = np.sqrt(table["e_min"] * table["e_max"])
+
+        fgl_cols = ["Flux_Band", "Unc_Flux_Band", "Sqrt_TS_Band", "nuFnu_Band"]
+        flux, flux_err, sig, nuFnu = [fp_data[col] for col in fgl_cols]
+
+        table["flux"] = flux
+        table["flux_errn"] = np.abs(flux_err[:, 0])
+        table["flux_errp"] = flux_err[:, 1]
+
+        table["e2dnde"] = nuFnu
+        table["e2dnde_errn"] = np.abs(nuFnu * flux_err[:, 0] / flux)
+        table["e2dnde_errp"] = nuFnu * flux_err[:, 1] / flux
+
+        is_ul = np.isnan(flux_err[:, 0]) | (sig < 2)
+        table["is_ul"] = is_ul
+
+        table["flux_ul"] = np.nan * flux_err.unit
+        flux_ul = compute_flux_points_ul(table["flux"], table["flux_errp"])
+        table["flux_ul"][is_ul] = flux_ul[is_ul]
+
+        table["e2dnde_ul"] = np.nan * table["e2dnde"].unit
+        e2dnde_ul = compute_flux_points_ul(table["e2dnde"], table["e2dnde_errp"])
+        table["e2dnde_ul"][is_ul] = e2dnde_ul[is_ul]
+
+        table["sqrt_ts"] = fp_data["Sqrt_TS_Band"]
 
         return table
 
@@ -1693,19 +1886,13 @@ class SourceCatalog3FHL(SourceCatalog):
 
 class SourceCatalog2PC(SourceCatalog):
     """Fermi-LAT 2nd pulsar catalog.
-    <<<<<<< HEAD
-        - https://ui.adsabs.harvard.edu/abs/2013ApJS..208...17A
-        - https://fermi.gsfc.nasa.gov/ssc/data/access/lat/2nd_PSR_catalog/
-        One source is represented by `~gammapy.catalog.SourceCatalogObject2PC`.
-    =======
 
-        - https://ui.adsabs.harvard.edu/abs/2013ApJS..208...17A
-        - https://fermi.gsfc.nasa.gov/ssc/data/access/lat/2nd_PSR_catalog/
+    - https://ui.adsabs.harvard.edu/abs/2013ApJS..208...17A
+    - https://fermi.gsfc.nasa.gov/ssc/data/access/lat/2nd_PSR_catalog/
 
-        One source is represented by `~gammapy.catalog.SourceCatalogObject2PC`.
+    One source is represented by `~gammapy.catalog.SourceCatalogObject2PC`.
 
-    >>>>>>> deab08cf4 (2P catalog class)
-        TODO  : Fix the UnitsWarning here ...
+    TODO  : Fix the UnitsWarning here ...
     """
 
     tag = "2PC"
@@ -1713,6 +1900,7 @@ class SourceCatalog2PC(SourceCatalog):
     source_object_class = SourceCatalogObject2PC
 
     def __init__(self, filename="$GAMMAPY_DATA/catalogs/fermi/2PC_catalog_v04.fits.gz"):
+
         filename = make_path(filename)
 
         with warnings.catch_warnings():
@@ -1726,12 +1914,13 @@ class SourceCatalog2PC(SourceCatalog):
         table_standardise_units_inplace(table_off_peak)
 
         source_name_key = "PSR_Name"
+
         super().__init__(table=table_psr, source_name_key=source_name_key)
 
         self.source_object_class._source_name_key = source_name_key
 
-        self.spectral_table = table_spectral
         self.off_peak_table = table_off_peak
+        self.spectral_table = table_spectral
 
     def to_models(self, **kwargs):
         models = Models()
@@ -1743,3 +1932,55 @@ class SourceCatalog2PC(SourceCatalog):
 
     def _get_name_spectral(self, data):
         return f"{data[self._source_name_key].strip()}"
+
+
+class SourceCatalog3PC(SourceCatalog):
+    """Fermi-LAT 3rd pulsar catalog.
+
+    - https://arxiv.org/abs/2307.11132
+    - https://fermi.gsfc.nasa.gov/ssc/data/access/lat/3rd_PSR_catalog/
+
+    One source is represented by `~gammapy.catalog.SourceCatalogObject3PC`.
+    """
+
+    tag = "3PC"
+    description = "LAT 3rd pulsar catalog"
+    source_object_class = SourceCatalogObject3PC
+
+    def __init__(
+        self, filename="$GAMMAPY_DATA/catalogs/fermi/3PC_Catalog+SEDs_20230803.fits.gz"
+    ):
+        filename = make_path(filename)
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", u.UnitsWarning)
+            table_psr = Table.read(filename, hdu="PULSARS_BIGFILE")
+            table_spectral = Table.read(filename, hdu="LAT_Point_Source_Catalog")
+            table_bigfile_config = Table.read(filename, hdu="BIGFILE_CONFIG")
+
+        table_standardise_units_inplace(table_psr)
+        table_standardise_units_inplace(table_spectral)
+        table_standardise_units_inplace(table_bigfile_config)
+
+        source_name_key = "PSRJ"
+        super().__init__(table=table_psr, source_name_key=source_name_key)
+
+        self.source_object_class._source_name_key = source_name_key
+
+        self.spectral_table = table_spectral
+        self.off_bigfile_config = table_bigfile_config
+
+    def to_models(self, **kwargs):
+        models = Models()
+        for m in self:
+            sky_model = m.sky_model()
+            if sky_model is not None:
+                models.append(sky_model)
+        return models
+
+    @property
+    def _get_source_name_key(self):
+        return "NickName"
+
+    def _get_name_spectral(self, data):
+        return f"PSR{data[self._source_name_key].strip()}"

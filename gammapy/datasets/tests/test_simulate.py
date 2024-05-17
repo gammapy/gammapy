@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import logging
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
@@ -276,6 +277,22 @@ def test_fail_sample_coord_time_energy(
 
 
 @requires_data()
+def test_negative_npred(dataset):
+    spatial_model = PointSpatialModel(lon_0="0 deg", lat_0="0 deg", frame="galactic")
+    spectral_model = PowerLawSpectralModel(amplitude="-4e-10 cm-2 s-1 TeV-1")
+
+    dataset.models = [
+        SkyModel(spectral_model=spectral_model, spatial_model=spatial_model),
+        FoVBackgroundModel(dataset_name=dataset.name),
+    ]
+
+    sampler = MapDatasetEventSampler(random_state=0, n_event_bunch=1000)
+    events = sampler.run(dataset=dataset)
+
+    assert len(events.table) == 15
+
+
+@requires_data()
 def test_sample_coord_time_energy_random_seed(
     dataset, energy_dependent_temporal_sky_model
 ):
@@ -482,7 +499,7 @@ def test_event_det_coords(dataset, models):
 
 
 @requires_data()
-def test_mde_run(dataset, models, tmp_path):
+def test_mde_run(dataset, models, caplog, tmp_path):
     irfs = load_irf_dict_from_file(
         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     )
@@ -499,8 +516,21 @@ def test_mde_run(dataset, models, tmp_path):
     )
 
     dataset.models = models
+
+    logging.getLogger().setLevel(logging.INFO)
     sampler = MapDatasetEventSampler(random_state=0)
     events = sampler.run(dataset=dataset, observation=obs)
+
+    captured = caplog.records
+    str = [
+        "Evaluating model: test-source",
+        "Evaluating background...",
+        "Event sampling completed.",
+    ]
+
+    assert captured[1].message == str[0]
+    assert captured[2].message == str[1]
+    assert captured[4].message == str[2]
 
     dataset_bkg = dataset.copy(name="new-dataset")
     dataset_bkg.models = [FoVBackgroundModel(dataset_name=dataset_bkg.name)]

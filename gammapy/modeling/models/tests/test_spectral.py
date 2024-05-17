@@ -32,6 +32,7 @@ from gammapy.modeling.models import (
     TemplateNDSpectralModel,
     TemplateSpectralModel,
 )
+from gammapy.utils.compat import COPY_IF_NEEDED
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import (
     assert_quantity_allclose,
@@ -431,12 +432,31 @@ def test_model_plot():
         amplitude=1e-12 * u.Unit("TeV-1 cm-2 s-1"), reference=1 * u.Unit("TeV"), index=2
     )
     pwl.amplitude.error = 0.1e-12 * u.Unit("TeV-1 cm-2 s-1")
+    energy_axis = MapAxis.from_energy_bounds(1 * u.TeV, 10 * u.TeV, 100)
 
     with mpl_plot_check():
         pwl.plot((1 * u.TeV, 10 * u.TeV))
 
     with mpl_plot_check():
         pwl.plot_error((1 * u.TeV, 10 * u.TeV))
+
+    with mpl_plot_check():
+        pwl.plot([0.08, 20] * u.TeV)
+
+    with mpl_plot_check():
+        pwl.plot_error([0.08, 20] * u.TeV)
+
+    with mpl_plot_check():
+        pwl.plot([0.08 * u.TeV, 20 * u.TeV])
+
+    with mpl_plot_check():
+        pwl.plot_error([0.08 * u.TeV, 20 * u.TeV])
+
+    with mpl_plot_check():
+        pwl.plot(energy_bounds=energy_axis)
+
+    with mpl_plot_check():
+        pwl.plot_error(energy_bounds=energy_axis)
 
 
 def test_model_plot_sed_type():
@@ -1215,10 +1235,10 @@ def test_template_ND_EBL(tmpdir):
     # Get energy values
     table_energy = Table.read(filename, hdu="ENERGIES")
     energy_lo = u.Quantity(
-        table_energy["ENERG_LO"], "keV", copy=False
+        table_energy["ENERG_LO"], "keV", copy=COPY_IF_NEEDED
     )  # unit not stored in file
     energy_hi = u.Quantity(
-        table_energy["ENERG_HI"], "keV", copy=False
+        table_energy["ENERG_HI"], "keV", copy=COPY_IF_NEEDED
     )  # unit not stored in file
     energy = np.sqrt(energy_lo * energy_hi)
 

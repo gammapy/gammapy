@@ -733,6 +733,26 @@ def test_axes_basics():
     assert new_axes != axes
 
 
+def test_map_axes_assert_names():
+    axis_a = MapAxis([1, 2, 3], name="axis_a")
+    axis_b = MapAxis([1, 2, 3, 4], name="axis_b")
+    axis_c = LabelMapAxis(["a", "b"], name="axis_c")
+
+    axes = MapAxes([axis_a, axis_b, axis_c])
+
+    axes.assert_names(["axis_a", "axis_b", "axis_c"])
+    axes.assert_names(["axis_a", "axis_b"], allow_extra=True)
+
+    with pytest.raises(ValueError):
+        axes.assert_names(["axis_a", "axis_b"])
+
+    with pytest.raises(ValueError):
+        axes.assert_names(["axis_c", "axis_b", "axis_a"])
+
+    with pytest.raises(ValueError):
+        axes.assert_names(["axis_b"], allow_extra=True)
+
+
 def test_axes_getitem():
     axis1 = MapAxis.from_bounds(1, 4, 3, name="a1")
     axis2 = axis1.copy(name="a2")
@@ -962,3 +982,22 @@ def test_energy_bin_per_decade_not_strict_bounds():
     )
 
     assert_allclose(axis.edges[0:-nbin] * 10.0, axis.edges[nbin:], rtol=1e-5, atol=0)
+
+
+def test_periodic_map_axis():
+    axis1 = MapAxis.from_bounds(-0.5, 0.5, 5, boundary_type="periodic")
+    coords = np.array([-1.0, -0.7, 0.1, 1.2])
+    assert_allclose(axis1.wrap_coord(coords), [0.0, 0.3, 0.1, 0.2], rtol=1e-5)
+
+    idx = axis1.coord_to_idx(coord=coords)
+    assert_allclose(idx, [2, 4, 2, 3], rtol=1e-5)
+
+    pix = axis1.coord_to_pix(coord=coords)
+    assert_allclose(pix, [2.0, 3.5, 2.5, 3.0], rtol=1e-5)
+
+    with pytest.raises(ValueError):
+        axis1 = MapAxis.from_bounds(-0.5, 0.5, 5, boundary_type="other")
+    with pytest.raises(ValueError):
+        axis1 = MapAxis.from_bounds(
+            -0.5, 0.5, 5, boundary_type="periodic", interp="log"
+        )

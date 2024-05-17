@@ -9,6 +9,7 @@ from astropy.coordinates import SkyCoord
 from astropy.time import Time
 from astropy.utils.introspection import minversion
 import matplotlib.pyplot as plt
+from .compat import COPY_IF_NEEDED
 
 __all__ = [
     "assert_quantity_allclose",
@@ -160,7 +161,7 @@ def assert_quantity_allclose(actual, desired, rtol=1.0e-7, atol=None, **kwargs):
     """Assert all-close for `~astropy.units.Quantity` objects.
 
     Notes
-    _____
+    -----
     Requires that ``unit`` is identical, not just that quantities
     are allclose taking different units into account.
 
@@ -174,9 +175,9 @@ def assert_quantity_allclose(actual, desired, rtol=1.0e-7, atol=None, **kwargs):
 
 
 def _unquantify_allclose_arguments(actual, desired, rtol, atol):
-    actual = u.Quantity(actual, subok=True, copy=False)
+    actual = u.Quantity(actual, subok=True, copy=COPY_IF_NEEDED)
 
-    desired = u.Quantity(desired, subok=True, copy=False)
+    desired = u.Quantity(desired, subok=True, copy=COPY_IF_NEEDED)
     try:
         desired = desired.to(actual.unit)
     except u.UnitsError:
@@ -189,7 +190,7 @@ def _unquantify_allclose_arguments(actual, desired, rtol, atol):
         # by default, we assume an absolute tolerance of 0
         atol = u.Quantity(0)
     else:
-        atol = u.Quantity(atol, subok=True, copy=False)
+        atol = u.Quantity(atol, subok=True, copy=COPY_IF_NEEDED)
         try:
             atol = atol.to(actual.unit)
         except u.UnitsError:
@@ -198,7 +199,7 @@ def _unquantify_allclose_arguments(actual, desired, rtol, atol):
                 "are not convertible".format(atol.unit, actual.unit)
             )
 
-    rtol = u.Quantity(rtol, subok=True, copy=False)
+    rtol = u.Quantity(rtol, subok=True, copy=COPY_IF_NEEDED)
     try:
         rtol = rtol.to(u.dimensionless_unscaled)
     except Exception:

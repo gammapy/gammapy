@@ -11,12 +11,14 @@ import scipy.special
 import astropy.units as u
 from astropy import constants as const
 from astropy.table import Table
+from astropy.units import Quantity
 from astropy.utils.decorators import classproperty
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from gammapy.maps import MapAxis, RegionNDMap
 from gammapy.maps.axes import UNIT_STRING_FORMAT
 from gammapy.modeling import Parameter, Parameters
+from gammapy.utils.compat import COPY_IF_NEEDED
 from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.utils.integrate import trapz_loglog
 from gammapy.utils.interpolation import (
@@ -426,8 +428,9 @@ class SpectralModel(ModelBase):
 
         Parameters
         ----------
-        energy_bounds : `~astropy.units.Quantity`
-            Plot energy bounds passed to MapAxis.from_energy_bounds.
+        energy_bounds : `~astropy.units.Quantity`, list of `~astropy.units.Quantity` or `~gammapy.maps.MapAxis`
+            Energy bounds between which the model is to be plotted. Or an
+            axis defining the energy bounds between which the model is to be plotted.
         ax : `~matplotlib.axes.Axes`, optional
             Matplotlib axes. Default is None.
         sed_type : {"dnde", "flux", "eflux", "e2dnde"}
@@ -443,20 +446,28 @@ class SpectralModel(ModelBase):
         -------
         ax : `~matplotlib.axes.Axes`, optional
             Matplotlib axes.
+
+        Notes
+        -----
+        If ``energy_bounds`` is supplied as a list, tuple, or Quantity, an ``energy_axis`` is created internally with
+        ``n_points`` bins between the given bounds.
         """
         from gammapy.estimators.map.core import DEFAULT_UNIT
-
-        ax = plt.gca() if ax is None else ax
 
         if self.is_norm_spectral_model:
             sed_type = "norm"
 
-        energy_min, energy_max = energy_bounds
-        energy = MapAxis.from_energy_bounds(
-            energy_min,
-            energy_max,
-            n_points,
-        )
+        if isinstance(energy_bounds, (tuple, list, Quantity)):
+            energy_min, energy_max = energy_bounds
+            energy = MapAxis.from_energy_bounds(
+                energy_min,
+                energy_max,
+                n_points,
+            )
+        elif isinstance(energy_bounds, MapAxis):
+            energy = energy_bounds
+
+        ax = plt.gca() if ax is None else ax
 
         if ax.yaxis.units is None:
             ax.yaxis.set_units(DEFAULT_UNIT[sed_type] * energy.unit**energy_power)
@@ -498,8 +509,9 @@ class SpectralModel(ModelBase):
 
         Parameters
         ----------
-        energy_bounds : `~astropy.units.Quantity`
-            Plot energy bounds passed to `~gammapy.maps.MapAxis.from_energy_bounds`.
+        energy_bounds : `~astropy.units.Quantity`, list of `~astropy.units.Quantity` or `~gammapy.maps.MapAxis`
+            Energy bounds between which the model is to be plotted. Or an
+            axis defining the energy bounds between which the model is to be plotted.
         ax : `~matplotlib.axes.Axes`, optional
             Matplotlib axes. Default is None.
         sed_type : {"dnde", "flux", "eflux", "e2dnde"}
@@ -515,20 +527,28 @@ class SpectralModel(ModelBase):
         -------
         ax : `~matplotlib.axes.Axes`, optional
             Matplotlib axes.
+
+        Notes
+        -----
+        If ``energy_bounds`` is supplied as a list, tuple, or Quantity, an ``energy_axis`` is created internally with
+        ``n_points`` bins between the given bounds.
         """
         from gammapy.estimators.map.core import DEFAULT_UNIT
-
-        ax = plt.gca() if ax is None else ax
 
         if self.is_norm_spectral_model:
             sed_type = "norm"
 
-        energy_min, energy_max = energy_bounds
-        energy = MapAxis.from_energy_bounds(
-            energy_min,
-            energy_max,
-            n_points,
-        )
+        if isinstance(energy_bounds, (tuple, list, Quantity)):
+            energy_min, energy_max = energy_bounds
+            energy = MapAxis.from_energy_bounds(
+                energy_min,
+                energy_max,
+                n_points,
+            )
+        elif isinstance(energy_bounds, MapAxis):
+            energy = energy_bounds
+
+        ax = plt.gca() if ax is None else ax
 
         kwargs.setdefault("facecolor", "black")
         kwargs.setdefault("alpha", 0.2)
@@ -627,7 +647,7 @@ class SpectralModel(ModelBase):
 
         def f(x):
             # scale by 1e12 to achieve better precision
-            energy = u.Quantity(x, eunit, copy=False)
+            energy = u.Quantity(x, eunit, copy=COPY_IF_NEEDED)
             y = self(energy).to_value(value.unit)
             return 1e12 * (y - value.value)
 
@@ -1521,6 +1541,11 @@ class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
     @staticmethod
     def evaluate(energy, amplitude, reference, expfactor, index_1, index_2):
         """Evaluate the model (static function)."""
+        if isinstance(index_1, u.Quantity):
+            index_1 = index_1.to_value(u.one)
+        if isinstance(index_2, u.Quantity):
+            index_2 = index_2.to_value(u.one)
+
         pwl = amplitude * (energy / reference) ** (-index_1)
         cutoff = np.exp(
             expfactor / reference.unit**index_2 * (reference**index_2 - energy**index_2)
@@ -1737,7 +1762,7 @@ class TemplateSpectralModel(SpectralModel):
         meta=None,
     ):
         self.energy = energy
-        self.values = u.Quantity(values, copy=False)
+        self.values = u.Quantity(values, copy=COPY_IF_NEEDED)
         self.meta = {} if meta is None else meta
         interp_kwargs = interp_kwargs or {}
         interp_kwargs.setdefault("values_scale", "log")
@@ -1797,7 +1822,9 @@ class TemplateSpectralModel(SpectralModel):
         # Get spectrum values (no interpolation, take closest value for param)
         table_spectra = Table.read(filename, hdu="SPECTRA")
         idx = np.abs(table_spectra["PARAMVAL"] - param).argmin()
-        values = u.Quantity(table_spectra[idx][1], "", copy=False)  # no dimension
+        values = u.Quantity(
+            table_spectra[idx][1], "", copy=COPY_IF_NEEDED
+        )  # no dimension
 
         kwargs.setdefault("interp_kwargs", {"values_scale": "lin"})
         return cls(energy=energy, values=values, **kwargs)
@@ -1899,7 +1926,7 @@ class TemplateNDSpectralModel(SpectralModel):
         ]
 
         val = self.map.interp_by_pix(pixels, **self._interp_kwargs)
-        return u.Quantity(val, self.map.unit, copy=False)
+        return u.Quantity(val, self.map.unit, copy=COPY_IF_NEEDED)
 
     def write(self, overwrite=False):
         """
@@ -1999,7 +2026,7 @@ class EBLAbsorptionNormSpectralModel(SpectralModel):
         # set values log centers
         self.param = param
         self.energy = energy
-        self.data = u.Quantity(data, copy=False)
+        self.data = u.Quantity(data, copy=COPY_IF_NEEDED)
 
         interp_kwargs = interp_kwargs or {}
         interp_kwargs.setdefault("points_scale", ("lin", "log"))
@@ -2093,10 +2120,10 @@ class EBLAbsorptionNormSpectralModel(SpectralModel):
         # Get energy values
         table_energy = Table.read(filename, hdu="ENERGIES")
         energy_lo = u.Quantity(
-            table_energy["ENERG_LO"], "keV", copy=False
+            table_energy["ENERG_LO"], "keV", copy=COPY_IF_NEEDED
         )  # unit not stored in file
         energy_hi = u.Quantity(
-            table_energy["ENERG_HI"], "keV", copy=False
+            table_energy["ENERG_HI"], "keV", copy=COPY_IF_NEEDED
         )  # unit not stored in file
         energy = np.sqrt(energy_lo * energy_hi)
 

@@ -21,28 +21,24 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            python: '3.9'
-            tox_env: 'py39-test-alldeps-cov'
-            allowed_fail: false
-          - os: ubuntu-latest
-            python: '3.10'
-            tox_env: 'py310-test-alldeps_noray'
-            gammapy_data_path: /home/runner/work/gammapy/gammapy/gammapy-datasets/dev
-            allowed_fail: false
-          - os: macos-latest
-            python: '3.10'
-            tox_env: 'py310-test'
-            gammapy_data_path: /Users/runner/work/gammapy/gammapy/gammapy-datasets/dev
-            allowed_fail: false
-          - os: windows-latest
-            python: '3.10'
-            tox_env: 'py310-test-alldeps_noray'
-            gammapy_data_path:  D:\a\gammapy\gammapy\gammapy-datasets\dev
-            allowed_fail: false
-          - os: ubuntu-latest
             python: '3.11'
             tox_env: 'py311-test-alldeps_noray'
             gammapy_data_path: /home/runner/work/gammapy/gammapy/gammapy-datasets/dev
+            allowed_fail: false
+          - os: ubuntu-latest
+            python: '3.10'
+            tox_env: 'py310-test-alldeps-cov'
+            gammapy_data_path: /home/runner/work/gammapy/gammapy/gammapy-datasets/dev
+            allowed_fail: false
+          - os: macos-latest
+            python: '3.11'
+            tox_env: 'py311-test'
+            gammapy_data_path: /Users/runner/work/gammapy/gammapy/gammapy-datasets/dev
+            allowed_fail: false
+          - os: windows-latest
+            python: '3.11'
+            tox_env: 'py311-test-alldeps_noray'
+            gammapy_data_path:  D:\a\gammapy\gammapy\gammapy-datasets\dev
             allowed_fail: false
           - os: ubuntu-latest
             python: '3.12'
@@ -59,14 +55,14 @@ jobs:
             allowed_fail: false
           - os: ubuntu-latest
             python: '3.9'
-            tox_env: 'py39-test-alldeps_noray-astropylts-numpy121'
+            tox_env: 'py39-test-alldeps_noray-astropy50-numpy121'
             allowed_fail: false
           - os: ubuntu-latest
             python: '3.9'
             tox_env: 'oldestdeps'
             allowed_fail: false
           - os: ubuntu-latest
-            python: '3.9'
+            python: '3.11'
             tox_env: 'devdeps'
             allowed_fail: true
     steps:
@@ -140,7 +136,7 @@ jobs:
       - name: check links
         continue-on-error: true
         run: |
-          tox -e linkcheck -- -j auto  
+          tox -e linkcheck -- -j auto
   conda-build:
     name: Linux python 3.9 conda-build all-deps
     runs-on: ubuntu-latest

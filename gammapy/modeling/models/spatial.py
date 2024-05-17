@@ -21,6 +21,7 @@ from regions import (
 import matplotlib.pyplot as plt
 from gammapy.maps import HpxNDMap, Map, MapCoord, WcsGeom, WcsNDMap
 from gammapy.modeling import Parameter, Parameters
+from gammapy.utils.compat import COPY_IF_NEEDED
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.interpolation import interpolation_scale
 from gammapy.utils.regions import region_circle_to_ellipse, region_to_frame
@@ -651,7 +652,7 @@ class GaussianSpatialModel(SpatialModel):
             norm = (1 / (2 * np.pi * sigma * minor_axis)).to_value("sr-1")
 
         exponent = -0.5 * ((1 - np.cos(sep)) / a)
-        return u.Quantity(norm * np.exp(exponent).value, "sr-1", copy=False)
+        return u.Quantity(norm * np.exp(exponent).value, "sr-1", copy=COPY_IF_NEEDED)
 
     def to_region(self, x_sigma=1.5, **kwargs):
         r"""Model outline at a given number of :math:`\sigma`.
@@ -937,7 +938,7 @@ class DiskSpatialModel(SpatialModel):
         in_ellipse = DiskSpatialModel._evaluate_smooth_edge(
             sep - sigma_eff, sigma_eff * edge_width
         )
-        return u.Quantity(norm * in_ellipse, "sr-1", copy=False)
+        return u.Quantity(norm * in_ellipse, "sr-1", copy=COPY_IF_NEEDED)
 
     def to_region(self, **kwargs):
         """Model outline as a `~regions.EllipseSkyRegion`."""
@@ -1259,8 +1260,8 @@ class TemplateSpatialModel(SpatialModel):
     """Spatial sky map template model.
 
     For more information see :ref:`template-spatial-model`.
-    By default the position of the model is fixed at the center of the map.
-    The position can be fittted by unfreezing the `lon_0` and `lat_0 `parameters.
+    By default, the position of the model is fixed at the center of the map.
+    The position can be fitted by unfreezing the `lon_0` and `lat_0` parameters.
     In that case, the coordinate of every pixel is shifted in lon and lat
     in the frame of the map. NOTE: planar distances are calculated, so
     the results are correct only when the fitted position is close to the
@@ -1277,7 +1278,7 @@ class TemplateSpatialModel(SpatialModel):
     interp_kwargs : dict
         Interpolation keyword arguments passed to `gammapy.maps.Map.interp_by_coord`.
         Default arguments are {'method': 'linear', 'fill_value': 0, "values_scale": "log"}.
-    Filename : str
+    filename : str
         Name of the map file.
     copy_data : bool
         Create a deepcopy of the map data or directly use the original. Default is True.
@@ -1465,7 +1466,7 @@ class TemplateSpatialModel(SpatialModel):
 
         val = self.map.interp_by_coord(coord, **self._interp_kwargs)
         val = np.clip(val, 0, a_max=None)
-        return u.Quantity(val, self.map.unit, copy=False)
+        return u.Quantity(val, self.map.unit, copy=COPY_IF_NEEDED)
 
     @property
     def position_lonlat(self):
@@ -1617,7 +1618,7 @@ class TemplateNDSpatialModel(SpatialModel):
         val = self.map.interp_by_coord(coord, **self._interp_kwargs)
         val = np.clip(val, 0, a_max=None)
 
-        return u.Quantity(val, self.map.unit, copy=False)
+        return u.Quantity(val, self.map.unit, copy=COPY_IF_NEEDED)
 
     def write(self, overwrite=False):
         """

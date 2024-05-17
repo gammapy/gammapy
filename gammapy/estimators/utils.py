@@ -1,21 +1,24 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 import scipy.ndimage
+from scipy import stats
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
 from gammapy.datasets import SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.datasets.map import MapEvaluator
-from gammapy.maps import MapAxis, TimeMapAxis, WcsNDMap
+from gammapy.maps import Map, MapAxis, TimeMapAxis, WcsNDMap
 from gammapy.modeling.models import (
     ConstantFluxSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
 )
 from gammapy.stats import compute_flux_doubling, compute_fpp, compute_fvar
+from gammapy.stats.utils import ts_to_sigma
 from .map.core import FluxMaps
 
 __all__ = [
+    "get_combined_significance_maps",
     "estimate_exposure_reco_energy",
     "find_peaks",
     "find_peaks_in_flux_map",
@@ -686,3 +689,160 @@ def get_rebinned_axis(fluxpoint, axis_name="energy", method=None, **kwargs):
         edges = np.append(edges_min, edges_max[-1])
         axis_new = MapAxis.from_edges(edges, name=axis_name, interp=ax.interp)
     return axis_new
+
+
+def get_combined_significance_maps(estimator, datasets):
+    """Computes excess and significance for a set of datasets.
+    The significance computation assumes that the model contains
+    one degree of freedom per valid energy bin in each dataset.
+    This method implemented here is valid under the assumption
+    that the TS in each independent bin follows a Chi2 distribution,
+    then the sum of the TS also follows a Chi2 distribution (with the sum of degree of freedom).
+
+    See, Zhen (2014): https://www.sciencedirect.com/science/article/abs/pii/S0167947313003204,
+    Lancaster (1961): https://onlinelibrary.wiley.com/doi/10.1111/j.1467-842X.1961.tb00058.x
+
+
+    Parameters
+    ----------
+    estimator : `~gammapy.estimator.ExcessMapEstimator` or `~gammapy.estimator.TSMapEstimator`
+        Excess Map Estimator or TS Map Estimator
+    dataset : `~gammapy.datasets.Datasets`
+        Datasets containing only `~gammapy.maps.MapDataset`.
+
+    Returns
+    -------
+    results : dict
+        Dictionary with keys :
+        - "significance" : joint significance map.
+        - "df" : degree of freedom map (one norm per valid bin).
+        - "npred_excess" : summed excess map.
+        - "estimator_results" : dictionary containing the estimator results for each dataset.
+
+    """
+    from .map.excess import ExcessMapEstimator
+    from .map.ts import TSMapEstimator
+
+    if not isinstance(estimator, (ExcessMapEstimator, TSMapEstimator)):
+        raise TypeError(
+            f"estimator type should be ExcessMapEstimator or TSMapEstimator), got {type(estimator)} instead."
+        )
+
+    geom = datasets[0].counts.geom.to_image()
+    ts_sum = Map.from_geom(geom)
+    ts_sum_sign = Map.from_geom(geom)
+    npred_excess_sum = Map.from_geom(geom)
+    df = Map.from_geom(geom)
+
+    results = dict()
+    for kd, d in enumerate(datasets):
+        result = estimator.run(d)
+        results[d.name] = result
+
+        df += np.sum(result["ts"].data > 0, axis=0)  # one dof (norm) per valid bin
+        ts_sum += result["ts"].reduce_over_axes()
+        ts_sum_sign += (
+            result["ts"] * np.sign(result["npred_excess"])
+        ).reduce_over_axes()
+        npred_excess_sum += result["npred_excess"].reduce_over_axes()
+
+    significance = Map.from_geom(geom)
+    significance.data = ts_to_sigma(ts_sum.data, df.data) * np.sign(ts_sum_sign)
+    return dict(
+        significance=significance,
+        df=df,
+        npred_excess=npred_excess_sum,
+        estimator_results=results,
+    )
+
+
+def combine_flux_maps(maps, method="gaussian_errors", reference_model=None):
+    """Create a FluxMaps by combining a list of flux maps with the same geometry.
+     This assumes the flux maps are independent measurements of the same true value.
+     The GTI is stacked in the process.
+
+    Parameters
+    ----------
+    maps : list of `~gammapy.estimators.FluxMaps`
+        List of maps with the same geometry.
+    method : {"gaussian_errors"}
+        * gaussian_errors :
+            Under the gaussian error approximation the likelihood is given by the gaussian distibution.
+            The product of gaussians is also a gaussian so can derive dnde, dnde_err, and ts.
+    reference_model : `~gammapy.modeling.models.SkyModel`, optional
+        Reference model to use for conversions.
+        If None, use the reference_model of the first FluxMaps in the list.
+
+    Returns
+    -------
+    flux_maps : `~gammapy.estimators.FluxMaps`
+        Joint flux map.
+    """
+    if method != "gaussian_errors":
+        raise ValueError(
+            f'Invalid method : {method}, available methods are : "gaussian_errors"'
+        )
+
+    if isinstance(maps, FluxMaps):
+        geom = maps.dnde.sum_over_axes().geom
+        means = list(maps.dnde.copy().iter_by_image(keepdims=True))
+        sigmas = list(maps.dnde_err.copy().iter_by_image(keepdims=True))
+        mean = Map.from_geom(geom, data=means[0].data, unit=means[0].unit)
+        sigma = Map.from_geom(geom, data=sigmas[0].data, unit=sigmas[0].unit)
+        gti = maps.gti
+        meta = maps.meta
+        if reference_model is None:
+            reference_model = maps.reference_model
+    else:
+        means = [map_.dnde.copy() for map_ in maps]
+        sigmas = [map_.dnde_err.copy() for map_ in maps]
+        mean = means[0]
+        sigma = sigmas[0]
+
+        gtis = [map_.gti for map_ in maps if map_.gti is not None]
+        if np.any(gtis):
+            gti = gtis[0].copy()
+            for k in range(1, len(gtis)):
+                gti.stack(gtis[k])
+        else:
+            gti = None
+
+        if reference_model is None:
+            reference_model = maps[0].reference_model
+
+        # TODO : change this once we have stackable metadata objets
+        metas = [map_.meta for map_ in maps if map_.meta is not None]
+        meta = {}
+        if np.any(metas):
+            for data in metas:
+                meta.update(data)
+
+    for k in range(1, len(means)):
+
+        mean_k = means[k].quantity.to_value(mean.unit)
+        sigma_k = sigmas[k].quantity.to_value(sigma.unit)
+
+        mask_valid = np.isfinite(mean) & np.isfinite(sigma) & (sigma.data != 0)
+        mask_valid_k = np.isfinite(mean_k) & np.isfinite(sigma_k) & (sigma_k != 0)
+        mask = mask_valid & mask_valid_k
+        mask_k = ~mask_valid & mask_valid_k
+
+        mean.data[mask] = (
+            (mean.data * sigma_k**2 + mean_k * sigma.data**2)
+            / (sigma.data**2 + sigma_k**2)
+        )[mask]
+        sigma.data[mask] = (
+            sigma.data * sigma_k / np.sqrt(sigma.data**2 + sigma_k**2)
+        )[mask]
+
+        mean.data[mask_k] = mean_k[mask_k]
+        sigma.data[mask_k] = sigma_k[mask_k]
+
+    ts = -2 * np.log(
+        stats.norm.pdf(0, loc=mean, scale=sigma)
+        / stats.norm.pdf(mean, loc=mean, scale=sigma)
+    )
+    ts = Map.from_geom(mean.geom, data=ts)
+
+    kwargs = dict(sed_type="dnde", gti=gti, reference_model=reference_model, meta=meta)
+    return FluxMaps.from_maps(dict(dnde=mean, dnde_err=sigma, ts=ts), **kwargs)

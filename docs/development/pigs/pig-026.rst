@@ -32,7 +32,7 @@ In the past priors were a regularly requested feature or the solution to a probl
 See the following issues and PRs of Gammapy:
 
 Case 1: Background systematics as a nuisance parameter `#3955`_
----------------------------------------------------------
+---------------------------------------------------------------
 The goal is to fit energy-dependent systematics in the FoVBackground with nuisance parameters and set priors on the two model parameters ``norm`` and ``tilt``:
 
 
@@ -51,7 +51,7 @@ The goal is to fit energy-dependent systematics in the FoVBackground with nuisan
 A preliminary version was set up like this and tests on simulated datasets were successful. Note that this setup is quite simple and it can be developed more advanced based on the same principle. 
 
 Case 2: Favoring positive values for flux amplitudes
----------------------------------------------------
+----------------------------------------------------
 
 A step-like prior function can be used to favour positive values for physical properties like the flux amplitude. By setting a prior one avoids defining hard boundary conditions with the ``min`` attribute of the to-be-fitted parameter. 
 The prior is set to ``value`` if the parameter value is between ``xmin`` and ``xmax`` and 0 if not.
@@ -68,7 +68,7 @@ The prior is set to ``value`` if the parameter value is between ``xmin`` and ``x
 
 
 Case 3: Support unfolding methods for spectral flux points `#4122`_
-----------------------------------------------------------
+-------------------------------------------------------------------
 
 The proposed prior class will allow the probability to unfold spectral flux points with Tikonov regularisation. The Tikonov matrix can be defined and set as the covariance matrix in the class ``CovarianceGaussianPrior``. The weight of the ``PriorFitStatistic`` can be interpreted as the regularisation strength tau. However, this requires a more advanced setup since this multi-dimensional prior is set on multiple parameters simultaneously. The goal is to use the proposed prior class as a starting point and develop it into multidimensional use cases in the near future. 
 A suggested implementation example is shown below. Here the prior is set on the model instead of the single parameters.
@@ -239,8 +239,8 @@ A simple method in the ``Models`` class will allow setting priors on multiple pa
 
 
 
-Serialisation 
-------------
+Serialisation
+-------------
 
 The priors are serialised and read and writeable to a yaml file. They are also saved if the associated ``Parameter`` or ``Parameters`` is transformed to a dictionary. For this, the prior subclasses are tagged. The following two example shows the resulting yaml file for a ``Parameter``.
 

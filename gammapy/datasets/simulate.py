@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Simulate observations."""
 import html
+import logging
 from copy import deepcopy
 import numpy as np
 import astropy.units as u
@@ -20,6 +21,8 @@ from gammapy.utils.random import get_random_state
 from .map import create_map_dataset_from_observation
 
 __all__ = ["MapDatasetEventSampler", "ObservationEventSampler"]
+
+log = logging.getLogger(__name__)
 
 
 class MapDatasetEventSampler:
@@ -191,6 +194,7 @@ class MapDatasetEventSampler:
 
         npred = self._evaluate_timevar_source(dataset, model=model)
         data = npred.data[np.isfinite(npred.data)]
+        data = np.clip(data, 0, None)
 
         try:
             n_events = self.random_state.poisson(np.sum(data))
@@ -225,6 +229,7 @@ class MapDatasetEventSampler:
             Table of sampled events.
         """
         data = npred.data[np.isfinite(npred.data)]
+        data = np.clip(data, 0, None)
         n_events = self.random_state.poisson(np.sum(data))
 
         coords = npred.sample_coord(n_events=n_events, random_state=self.random_state)
@@ -258,6 +263,7 @@ class MapDatasetEventSampler:
 
         events_all = EventList(Table())
         for idx, evaluator in enumerate(dataset.evaluators.values()):
+            log.info(f"Evaluating model: {evaluator.model.name}")
             if evaluator.needs_update:
                 evaluator.update(
                     dataset.exposure,
@@ -310,6 +316,7 @@ class MapDatasetEventSampler:
 
         table = Table()
         if dataset.background:
+            log.info("Evaluating background...")
             background = dataset.npred_background()
 
             temporal_model = ConstantTemporalModel()
@@ -586,6 +593,7 @@ class MapDatasetEventSampler:
 
         geom = dataset._geom
         selection = geom.contains(events.map_coord(geom))
+        log.info("Event sampling completed.")
         return events.select_row_subset(selection)
 
 
