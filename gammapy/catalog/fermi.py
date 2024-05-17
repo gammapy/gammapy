@@ -1330,6 +1330,7 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
 
 class SourceCatalogObject2PC(SourceCatalogObjectFermiPCBase):
     """One source from the 2PC catalog."""
+
     @property
     def _auxiliary_filename(self):
         return make_path(
@@ -1524,6 +1525,7 @@ class SourceCatalogObject2PC(SourceCatalogObjectFermiPCBase):
 
 
 class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
+    """One source from the 3PC catalog."""
 
     asso = ["assoc_new"]
 
