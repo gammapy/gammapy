@@ -756,7 +756,7 @@ def get_combined_significance_maps(estimator, datasets):
     )
 
 
-def joint_flux_maps(maps, method="gaussian_errors", reference_model=None):
+def combine_flux_maps(maps, method="gaussian_errors", reference_model=None):
     """Create a FluxMaps by combining a list of flux maps with the same geometry.
      This assumes the flux maps are independent measurements of the same true value.
      The GTI is stacked in the process.

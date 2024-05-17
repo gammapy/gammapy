@@ -9,7 +9,7 @@ from astropy.io import fits
 from astropy.time import Time
 from gammapy.data import GTI
 from gammapy.estimators import FluxMaps
-from gammapy.estimators.utils import joint_flux_maps
+from gammapy.estimators.utils import combine_flux_maps
 from gammapy.maps import MapAxis, Maps, RegionGeom, TimeMapAxis, WcsNDMap
 from gammapy.modeling.models import (
     LogParabolaSpectralModel,
@@ -212,7 +212,7 @@ def test_map_properties(map_flux_estimate):
     assert_allclose(fe.eflux_ul.quantity.value[:, 2, 2], [4.60517e-10, 4.60517e-10])
 
 
-def test_joint_flux_maps(map_flux_estimate, wcs_flux_map, reference_model):
+def test_combine_flux_maps(map_flux_estimate, wcs_flux_map, reference_model):
     start = u.Quantity([1, 2], "min")
     stop = u.Quantity([1.5, 2.5], "min")
     gti = GTI.create(start, stop)
@@ -222,13 +222,13 @@ def test_joint_flux_maps(map_flux_estimate, wcs_flux_map, reference_model):
     iE = 0
     energy = fe.geom.axes[0].center[iE]
 
-    fe_new = joint_flux_maps([fe, fe])
+    fe_new = combine_flux_maps([fe, fe])
     assert_allclose(fe_new.dnde.quantity, fe.dnde.quantity)
     assert_allclose(
         fe_new.dnde_err.quantity.value, fe.dnde_err.quantity.value / np.sqrt(2)
     )
 
-    fe_new = joint_flux_maps(
+    fe_new = combine_flux_maps(
         [fe, fe], reference_model=FluxMaps.reference_model_default.spectral_model
     )
     assert_allclose(fe_new.dnde.quantity, fe.dnde.quantity)
@@ -246,7 +246,7 @@ def test_joint_flux_maps(map_flux_estimate, wcs_flux_map, reference_model):
     assert fe_new.meta == fe.meta
 
     fe = FluxMaps(wcs_flux_map, reference_model)
-    fe_new = joint_flux_maps([fe, fe], reference_model=reference_model)
+    fe_new = combine_flux_maps([fe, fe], reference_model=reference_model)
     assert_allclose(fe_new.dnde.quantity, fe.dnde.quantity)
     assert_allclose(
         fe_new.dnde_err.quantity.value, fe.dnde_err.quantity.value / np.sqrt(2)
@@ -259,7 +259,7 @@ def test_joint_flux_maps(map_flux_estimate, wcs_flux_map, reference_model):
     )
     assert_allclose(fe_new.ts, ts * 2)
 
-    fe_new = joint_flux_maps(fe)
+    fe_new = combine_flux_maps(fe)
 
 
 def test_flux_map_properties(wcs_flux_map, reference_model):
