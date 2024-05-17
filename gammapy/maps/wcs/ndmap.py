@@ -726,16 +726,12 @@ class WcsNDMap(WcsMap):
 
         # This is likely not the most efficient way to do this
         data = np.apply_along_axis(
-            lambda a: np.histogram(a, bins=bins_axis.edges, density=density)[0],
+            lambda a: np.histogram(a, bins=bins_axis.edges.value, density=density)[0],
             axis=-1,
-            arr=quantity,
+            arr=quantity.to_value(bins_axis.unit),
         )
 
-        if density:
-            unit = 1.0 / bins_axis.unit
-            data = data.value
-        else:
-            unit = ""
+        unit = 1.0 / bins_axis.unit if density else ""
 
         return RegionNDMap.from_geom(geom=geom_hist, data=data, unit=unit)
 

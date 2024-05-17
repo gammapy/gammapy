@@ -82,12 +82,6 @@ Status shields
     :target: https://github.com/gammapy/gammapy/actions
     :alt: GitHub actions CI
 
-* .. image:: https://codecov.io/gh/gammapy/gammapy/branch/master/graph/badge.svg?style=flat
+* .. image:: https://codecov.io/gh/gammapy/gammapy/branch/main/graph/badge.svg?style=flat
     :target: https://codecov.io/gh/gammapy/gammapy
-
-Note if you cloned this repository before Oct 7th 2022
-++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-The  primary branch was renamed `main`. See the following instructions:
-https://github.com/gammapy/gammapy/wiki/Changing-master-branch-to-main
 

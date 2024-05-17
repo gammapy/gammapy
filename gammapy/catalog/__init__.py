@@ -6,10 +6,12 @@ from .fermi import (
     SourceCatalog2FHL,
     SourceCatalog3FGL,
     SourceCatalog3FHL,
+    SourceCatalog3PC,
     SourceCatalog4FGL,
     SourceCatalogObject2FHL,
     SourceCatalogObject3FGL,
     SourceCatalogObject3FHL,
+    SourceCatalogObject3PC,
     SourceCatalogObject4FGL,
 )
 from .gammacat import SourceCatalogGammaCat, SourceCatalogObjectGammaCat
@@ -36,6 +38,7 @@ CATALOG_REGISTRY = Registry(
         SourceCatalog4FGL,
         SourceCatalog2FHL,
         SourceCatalog3FHL,
+        SourceCatalog3PC,
         SourceCatalog3HWC,
         SourceCatalog1LHAASO,
     ]
@@ -53,6 +56,7 @@ __all__ = [
     "SourceCatalog3FHL",
     "SourceCatalog3HWC",
     "SourceCatalog4FGL",
+    "SourceCatalog3PC",
     "SourceCatalogGammaCat",
     "SourceCatalogHGPS",
     "SourceCatalogLargeScaleHGPS",
@@ -64,6 +68,7 @@ __all__ = [
     "SourceCatalogObject3FHL",
     "SourceCatalogObject3HWC",
     "SourceCatalogObject4FGL",
+    "SourceCatalogObject3PC",
     "SourceCatalogObjectGammaCat",
     "SourceCatalogObjectHGPS",
     "SourceCatalogObjectHGPSComponent",
