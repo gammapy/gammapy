@@ -2609,22 +2609,14 @@ class MapDatasetOnOff(MapDataset):
         total_alpha = Map.from_geom(geom)
         total_acceptance = Map.from_geom(geom)
 
-        total_acceptance.stack(
-            self.acceptance, weights=self.mask_safe, nan_to_num=nan_to_num
-        )
+        total_acceptance.stack(self.acceptance, nan_to_num=nan_to_num)
         total_acceptance.stack(
             other.acceptance, weights=other.mask_safe, nan_to_num=nan_to_num
         )
 
         if self.counts_off:
-            total_off.stack(
-                self.counts_off, weights=self.mask_safe, nan_to_num=nan_to_num
-            )
-            total_alpha.stack(
-                self.alpha * self.counts_off,
-                weights=self.mask_safe,
-                nan_to_num=nan_to_num,
-            )
+            total_off.stack(self.counts_off, nan_to_num=nan_to_num)
+            total_alpha.stack(self.alpha * self.counts_off, nan_to_num=nan_to_num)
         if other.counts_off:
             total_off.stack(
                 other.counts_off, weights=other.mask_safe, nan_to_num=nan_to_num
