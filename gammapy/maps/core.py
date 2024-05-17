@@ -1051,12 +1051,14 @@ class Map(abc.ABC):
                 )
             map_copy.data /= map_copy.geom.solid_angle().to_value("deg2")
 
-        if map_copy.is_mask:
+        if map_copy.is_mask and fill_value is not None:
             # TODO: check this NaN handling is needed
             data = map_copy.get_by_coord(coords)
             data = np.nan_to_num(data, nan=fill_value).astype(bool)
         else:
             data = map_copy.interp_by_coord(coords, fill_value=fill_value, **kwargs)
+            if map_copy.is_mask:
+                data = data.astype(bool)
 
         if preserve_counts:
             data *= geom.solid_angle().to_value("deg2")
