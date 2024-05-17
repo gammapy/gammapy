@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import numpy as np
 from gammapy.modeling import Fit, Parameter
 from gammapy.stats.utils import sigma_to_ts
 from .fit import FitResult, OptimizeResult
@@ -61,15 +62,48 @@ class TestStatisticNested:
         This assumes that the TS follows a chi squared distribution
         with a number of degree of freedom equal to `n_free_parameters`.
         """
-        return sigma_to_ts(self.n_sigma, self.n_free_parameters)
+        return np.sign(self.n_sigma) * sigma_to_ts(self.n_sigma, self.n_free_parameters)
 
-    def run(self, datasets):
-        """Perform the alternative hypothesis testing.
+    def ts_known_bkg(self, datasets):
+        """Perform the alternative hypothesis testing assuming known background (all parameters frozen).
+        This implicitly assumes that the non-null model is a good representation of the true model.
+        If the assumption is true the ts_known_bkg should tend to the ts_asimov (deviation would indicate a bad fit of the data).
+        Deviations between ts and frozen_ts can be used to identify potential sources of confusion depending on which parameters are let free for the ts computation
+         (for example considereing diffuse background or nearby source).
+        """
+        stat = datasets.stat_sum()
+        object_cache, prev_pars = self._apply_null_hypothesis(datasets)
+        stat_null = datasets.stat_sum()
+        self._restore_status(datasets, object_cache, prev_pars)
+        return stat_null - stat
+
+    def ts_asimov(self, datasets):
+        """Perform the alternative hypothesis testing in the Asimov dataset.
+        The Asimov dataset is defined by counts=npred such as the non-null model is the true model.
+        """
+        counts_cache = [d.counts for d in datasets]
+        for d in datasets:
+            d.counts = d.npred()
+
+        ts = self.ts_known_bkg(datasets)
+
+        for kd, d in enumerate(datasets):
+            d.counts = counts_cache[kd]
+        return ts
+
+    def ts(self, datasets):
+        """Perform the alternative hypothesis testing."""
+        return self.run(datasets, apply_selection=False)["ts"]
+
+    def run(self, datasets, apply_selection=True):
+        """Perform the alternative hypothesis testing and apply model selection.
 
         Parameters
         ----------
         datasets : `~gammapy.datasets.Datasets`
             Datasets.
+        apply_selection : bool
+            Apply or not the model selection. Default is True.
 
         Returns
         -------
@@ -81,19 +115,14 @@ class TestStatisticNested:
                 * "fit_results" : results for the best fit
                 * "fit_results_null" : fit results for the null hypothesis
         """
+
         for p in self.parameters:
             p.frozen = False
         fit_results = self.fit.run(datasets)
-        object_cache = [p.__dict__ for p in datasets.models.parameters]
-        prev_pars = [p.value for p in datasets.models.parameters]
         stat = datasets.stat_sum()
 
-        for p, val in zip(self.parameters, self.null_values):
-            if isinstance(val, Parameter):
-                p.__dict__ = val.__dict__
-            else:
-                p.value = val
-                p.frozen = True
+        object_cache, prev_pars = self._apply_null_hypothesis(datasets)
+
         if len(datasets.models.parameters.free_parameters) > 0:
             fit_results_null = self.fit.run(datasets)
         else:
@@ -112,18 +141,33 @@ class TestStatisticNested:
         stat_null = datasets.stat_sum()
 
         ts = stat_null - stat
-        if ts > self.ts_threshold:
-            # restore default model if preferred against null hypothesis
-            for p in self.parameters:
-                p.frozen = False
-            for kp, p in enumerate(datasets.models.parameters):
-                p.__dict__ = object_cache[kp]
-                p.value = prev_pars[kp]
+        if not apply_selection or ts > self.ts_threshold:
+            # restore default model if preferred against null hypothesis or if selection is ignored
+            self._restore_status(datasets, object_cache, prev_pars)
         return dict(
             ts=ts,
             fit_results=fit_results,
             fit_results_null=fit_results_null,
         )
+
+    def _apply_null_hypothesis(self, datasets):
+        object_cache = [p.__dict__ for p in datasets.models.parameters]
+        prev_pars = [p.value for p in datasets.models.parameters]
+        for p, val in zip(self.parameters, self.null_values):
+            if isinstance(val, Parameter):
+                p.__dict__ = val.__dict__
+            else:
+                p.value = val
+                p.frozen = True
+        return object_cache, prev_pars
+
+    def _restore_status(self, datasets, object_cache, prev_pars):
+        """Restore parameters to given cached cached objects and values"""
+        for p in self.parameters:
+            p.frozen = False
+        for kp, p in enumerate(datasets.models.parameters):
+            p.__dict__ = object_cache[kp]
+            p.value = prev_pars[kp]
 
 
 def select_nested_models(

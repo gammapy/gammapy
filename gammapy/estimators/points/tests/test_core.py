@@ -211,12 +211,14 @@ class TestFluxPoints:
         assert str(flux_points) == str(actual)
 
     def test_write_ecsv(self, tmp_path, flux_points):
+        filename = tmp_path / "flux_points.ecsv"
+        filename.touch()
         flux_points.write(
-            tmp_path / "flux_points.ecsv",
+            filename,
             sed_type=flux_points.sed_type_init,
             overwrite=True,
         )
-        actual = FluxPoints.read(tmp_path / "flux_points.ecsv")
+        actual = FluxPoints.read(filename)
         actual._data.pop("is_ul", None)
         flux_points._data.pop("is_ul", None)
         assert str(flux_points) == str(actual)

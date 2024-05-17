@@ -3,10 +3,16 @@
 import pytest
 from numpy.testing import assert_allclose
 from astropy.table import Table
-from gammapy.datasets import Dataset
+from gammapy.datasets import Dataset, Datasets, SpectrumDatasetOnOff
 from gammapy.modeling import Fit, Parameter
-from gammapy.modeling.models import ModelBase, Models
-from gammapy.utils.testing import requires_dependency
+from gammapy.modeling.fit import FitResult
+from gammapy.modeling.models import (
+    LogParabolaSpectralModel,
+    ModelBase,
+    Models,
+    SkyModel,
+)
+from gammapy.utils.testing import requires_data, requires_dependency
 
 
 class MyModel(ModelBase):
@@ -315,3 +321,38 @@ def test_stat_contour():
 
     # Check that original value state wasn't changed
     assert_allclose(dataset.models.parameters["y"].value, 300)
+
+
+@requires_data()
+def test_write(tmpdir):
+    datasets = Datasets()
+    for obs_id in [23523, 23526]:
+        dataset = SpectrumDatasetOnOff.read(
+            f"$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs{obs_id}.fits"
+        )
+        datasets.append(dataset)
+
+    datasets = datasets.stack_reduce(name="HESS")
+    model = SkyModel(spectral_model=LogParabolaSpectralModel(), name="crab")
+    datasets.models = model
+    fit = Fit()
+    result = fit.run(datasets)
+
+    result_dict = result.to_dict()
+    assert (
+        result_dict["covariance_result"]["backend"] == result.covariance_result.backend
+    )
+    assert result_dict["optimize_result"]["nfev"] == result.optimize_result.nfev
+    assert (
+        result_dict["optimize_result"]["total_stat"]
+        == result.optimize_result.total_stat
+    )
+
+    result.write(path=tmpdir / "test-fit-result.yaml")
+
+    optimize_result = fit.optimize(datasets)
+    result = FitResult(optimize_result=optimize_result)
+
+    result_dict = result.to_dict()
+    assert "covariance_result" not in result_dict
+    result.write(path=tmpdir / "test-fit-result.yaml", overwrite=True)

@@ -4,7 +4,11 @@ import itertools
 import logging
 import numpy as np
 from astropy.table import Table
+import yaml
+from gammapy.utils.check import add_checksum
+from gammapy.utils.metadata import CreatorMetaData
 from gammapy.utils.pbar import progress_bar
+from gammapy.utils.scripts import make_path
 from .covariance import Covariance
 from .iminuit import (
     confidence_iminuit,
@@ -15,7 +19,7 @@ from .iminuit import (
 from .scipy import confidence_scipy, optimize_scipy
 from .sherpa import optimize_sherpa
 
-__all__ = ["Fit"]
+__all__ = ["Fit", "FitResult", "OptimizeResult", "CovarianceResult"]
 
 log = logging.getLogger(__name__)
 
@@ -311,7 +315,7 @@ class Fit:
 
         For the scipy backend ``kwargs`` are forwarded to `~scipy.optimize.brentq`. If the
         confidence estimation fails, the bracketing interval can be adapted by modifying the
-        the upper bound of the interval (``b``) value.
+        upper bound of the interval (``b``) value.
 
         Parameters
         ----------
@@ -579,9 +583,26 @@ class FitStepResult:
         except AttributeError:
             return f"<pre>{html.escape(str(self))}</pre>"
 
+    def to_dict(self):
+        """Convert to dictionary."""
+        return {
+            "backend": self.backend,
+            "method": self.method,
+            "success": self.success,
+            "message": self.message,
+        }
+
 
 class CovarianceResult(FitStepResult):
-    """Covariance result object."""
+    """Covariance result object.
+
+    Parameters
+    ----------
+    matrix : `~numpy.ndarray`, optional
+        The covariance matrix. Default is None.
+    kwargs : dict
+        Extra ``kwargs`` are passed to the backend.
+    """
 
     def __init__(self, matrix=None, **kwargs):
         self._matrix = matrix
@@ -594,7 +615,23 @@ class CovarianceResult(FitStepResult):
 
 
 class OptimizeResult(FitStepResult):
-    """Optimize result object."""
+    """Optimize result object.
+
+    Parameters
+    ----------
+    models : `~gammapy.modeling.models.DatasetModels`
+        Best fit models.
+    nfev : int
+        Number of function evaluations.
+    total_stat : float
+        Value of the fit statistic at minimum.
+    trace : `~astropy.table.Table`
+        Parameter trace from the optimisation.
+    minuit : `~iminuit.minuit.Minuit`, optional
+        Minuit object. Default is None.
+    kwargs : dict
+        Extra ``kwargs`` are passed to the backend.
+    """
 
     def __init__(self, models, nfev, total_stat, trace, minuit=None, **kwargs):
         self._models = models
@@ -640,15 +677,24 @@ class OptimizeResult(FitStepResult):
         string += f"\ttotal stat : {self.total_stat:.2f}\n\n"
         return string
 
+    def to_dict(self):
+        """Convert to dictionary."""
+        output = super().to_dict()
+        output["nfev"] = self.nfev
+        output["total_stat"] = self._total_stat
+        return output
+
 
 class FitResult:
     """Fit result class.
 
+    The fit result class provides the results from the optimisation and covariance of the fit.
+
     Parameters
     ----------
-    optimize_result : `OptimizeResult`
+    optimize_result : `~OptimizeResult`
         Result of the optimization step.
-    covariance_result : `CovarianceResult`
+    covariance_result : `~CovarianceResult`
         Result of the covariance step.
     """
 
@@ -720,6 +766,64 @@ class FitResult:
     def covariance_result(self):
         """Optimize result."""
         return self._covariance_result
+
+    def to_dict(self, full_output=False, overwrite_templates=False):
+        """Convert to dictionary."""
+
+        models_dict = self.models.to_dict(
+            full_output=full_output, overwrite_templates=overwrite_templates
+        )
+        output = {}
+        if self.optimize_result is not None:
+            output["optimize_result"] = self.optimize_result.to_dict()
+        if self.covariance_result is not None:
+            output["covariance_result"] = self.covariance_result.to_dict()
+        output["models"] = models_dict
+        return output
+
+    def to_yaml(self, full_output=False, overwrite_templates=False):
+        """Convert to YAML string."""
+        data = self.to_dict(
+            full_output=full_output, overwrite_templates=overwrite_templates
+        )
+        text = yaml.dump(
+            data, sort_keys=False, indent=4, width=80, default_flow_style=False
+        )
+        creation = CreatorMetaData()
+        return text + creation.to_yaml()
+
+    def write(
+        self,
+        path,
+        overwrite=False,
+        full_output=False,
+        overwrite_templates=False,
+        checksum=False,
+    ):
+        """Write to file.
+
+        Parameters
+        ----------
+        path : `pathlib.Path` or str
+            Path to write files.
+        overwrite : bool, optional
+            Overwrite existing file. Default is False.
+        full_output : bool, optional
+            Store full parameter output. Default is False.
+        overwrite_templates : bool, optional
+            Overwrite templates FITS files. Default is False.
+        checksum : bool, optional
+            When True adds a CHECKSUM entry to the file.
+            Default is False.
+        """
+        path = make_path(path)
+        if path.exists() and not overwrite:
+            raise IOError(f"File exists already: {path}")
+
+        yaml_str = self.to_yaml(full_output, overwrite_templates)
+        if checksum:
+            yaml_str = add_checksum(yaml_str)
+        path.write_text(yaml_str)
 
     def __str__(self):
         string = ""
