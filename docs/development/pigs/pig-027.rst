@@ -216,7 +216,7 @@ It should allow complex types (e.g. `SkyCoord` or even `Map`), it should validat
 its content, allow hierarchical structure (i.e. a metadata object should be able
 to contain another one). Once defined, specific classes such as `IRFMetaData`,
 `DatasetMetaData`, or `ObservationMetaData` classes can be introduced with
-their separate serialization and validation. This is discussed in PIG 28 which
+their separate serialization and validation. This is discussed in PIG 25 which
 proposes to handle `MetaData` with pydantic which allows defining hierarchical
 structures and being able to validate those. See `GH 4491`_
 
@@ -227,6 +227,9 @@ what is meta data / and what is data and where to draw the line.
 Estimators
 ++++++++++
 
+The sensitivity of given ``Datasets`` for an estimates quantity should be provided by ``Estimators`` in
+particular for flux. Flux maps estimators should provide sensitivity maps and flux point estimators could
+provide the spectral flux sensitivity.
 
 Documentation
 +++++++++++++
