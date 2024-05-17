@@ -309,6 +309,15 @@ def test_run_pwl(fpe_pwl, tmpdir):
     fp_new = FluxPoints.read(tmpdir / "test.fits")
     assert fp_new.meta["sed_type_init"] == "likelihood"
 
+    # test datasets stat
+    fp_dataset = FluxPointsDataset(data=fp, models=fp.reference_model)
+    fp_dataset.stat_type = "chi2"
+    assert_allclose(fp_dataset.stat_sum(), 3.82374, rtol=1e-4)
+    fp_dataset.stat_type = "profile"
+    assert_allclose(fp_dataset.stat_sum(), 3.790053, rtol=1e-4)
+    fp_dataset.stat_type = "distrib"
+    assert_allclose(fp_dataset.stat_sum(), 3.783325, rtol=1e-4)
+
 
 def test_run_ecpl(fpe_ecpl, tmpdir):
     datasets, fpe = fpe_ecpl
