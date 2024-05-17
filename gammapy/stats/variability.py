@@ -304,7 +304,7 @@ def TimmerKonig_lightcurve_simulator(
         Number of points in the output time series.
     spacing : `~astropy.units.Quantity`
         Sample spacing, inverse of the sampling rate. The units are inherited by the resulting time axis.
-    leakage_protection : float
+    leakage_protection : float, optional
         Factor by which to multiply the length of the time series to avoid red noise leakage.
     random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
         Defines random number generator initialisation.
