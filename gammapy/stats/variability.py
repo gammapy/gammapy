@@ -305,7 +305,7 @@ def TimmerKonig_lightcurve_simulator(
     spacing : `~astropy.units.Quantity`
         Sample spacing, inverse of the sampling rate. The units are inherited by the resulting time axis.
     leakage_protection : float, optional
-        Factor by which to multiply the length of the time series to avoid red noise leakage.
+        Factor by which to multiply the length of the time series to avoid red noise leakage. Default is 1.0.
     random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
         Defines random number generator initialisation.
         Passed to `~gammapy.utils.random.get_random_state`. Default is "random-seed".
@@ -349,7 +349,15 @@ def TimmerKonig_lightcurve_simulator(
 
     random_state = get_random_state(random_state)
 
-    frequencies = np.fft.fftfreq(int(npoints * leakage_protection), spacing.value)
+    if leakage_protection < 1.0:
+        raise ValueError("The leakage protection factor must be at least 1.0")
+
+    npoints_extended = int(npoints * leakage_protection)
+    if leakage_protection > 1.0 and npoints_extended == npoints:
+        raise Warning(
+            "The extended number of points is the same length as the desired number"
+        )
+    frequencies = np.fft.fftfreq(npoints_extended, spacing.value)
 
     # To obtain real data only the positive or negative part of the frequency is necessary.
     real_frequencies = np.sort(np.abs(frequencies[frequencies < 0]))
@@ -383,10 +391,8 @@ def TimmerKonig_lightcurve_simulator(
     fourier_coeffs = np.insert(fourier_coeffs, 0, 0)
     time_series = np.fft.ifft(fourier_coeffs).real
 
-    if leakage_protection != 1.0:
-        extract = random_state.randint(
-            npoints - 1, int(leakage_protection * npoints) - npoints
-        )
+    if npoints_extended > npoints:
+        extract = random_state.randint(1, npoints_extended - npoints)
         time_series = np.take(time_series, range(extract, extract + npoints))
 
     tmax = time_series.max()
