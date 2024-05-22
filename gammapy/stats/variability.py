@@ -350,12 +350,13 @@ def TimmerKonig_lightcurve_simulator(
     random_state = get_random_state(random_state)
 
     if leakage_protection < 1.0:
-        raise ValueError("The leakage protection factor must be at least 1.0")
+        raise ValueError("The leakage protection factor must be at least 1.0.")
 
     npoints_extended = int(npoints * leakage_protection)
     if leakage_protection > 1.0 and npoints_extended == npoints:
         raise Warning(
-            "The extended number of points is the same length as the desired number"
+            "The extended time series is the same length as the final desired time series."
+            "To have an effective protection from noise leakage and avoid aliasing, increase <leakage_protection>."
         )
     frequencies = np.fft.fftfreq(npoints_extended, spacing.value)
 
