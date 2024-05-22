@@ -518,7 +518,7 @@ class Parameter:
         return output
 
     def update_scale(self, value):
-        """update the parameter scale.
+        """Update the parameter scale.
 
         Set ``factor`` and ``scale`` according to ``scale_method`` attribute.
 
@@ -555,11 +555,11 @@ class Parameter:
         return value
 
     def autoscale(self):
-        "apply interpolation_scale and scale_method to the parameter"
+        "Apply `interpolation_scale' and `scale_method' to the parameter."
         self.factor = self.transform(self.value, update_scale=True)
 
     def reset_autoscale(self):
-        "reset scaling such as factor=value, scale=1"
+        "Reset scaling such as factor=value, scale=1."
         self._factor = self._value
         self._scale = 1.0
 
