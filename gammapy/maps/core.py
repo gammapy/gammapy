@@ -1031,6 +1031,7 @@ class Map(abc.ABC):
             the map is a differential quantity (e.g. intensity). Default is False.
         fill_value : float, optional
             The value to use for points outside the interpolation domain.
+            If None, values outside the domain are extrapolated.
             Default is 0.
         **kwargs : dict, optional
             Keyword arguments passed to `Map.interp_by_coord`.
