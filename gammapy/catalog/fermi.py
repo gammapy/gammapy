@@ -1520,8 +1520,6 @@ class SourceCatalogObject2PC(SourceCatalogObjectFermiPCBase):
         e2dnde_ul = compute_flux_points_ul(table["e2dnde"], table["e2dnde_err"])
         table["e2dnde_ul"][is_ul] = e2dnde_ul[is_ul]
 
-        table = Table()
-
         return table
 
 
