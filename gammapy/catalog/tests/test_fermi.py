@@ -767,9 +767,12 @@ class TestFermi2PCObject:
         ]
         assert_allclose(flux_points.flux_ul.data.flat, desired, rtol=1e-5)
 
-    def test_lightcurve(self):
+    @pytest.mark.xfail
+    def test_lightcurve(self, ref=SOURCES_3PC_NONE[0]):
         # TODO: add lightcurve test when lightcurve is introduce to the class.
-        pass
+        lightcurve = self.cat[ref["idx"]].lightcurve
+
+        assert lightcurve is not None
 
 
 @requires_data()
