@@ -1492,8 +1492,11 @@ class SourceCatalogObject2PC(SourceCatalogObjectFermiPCBase):
     @property
     def flux_points_table(self):
         """Flux points (`~astropy.table.Table`)."""
+
         try:
-            fp_data = Table.read(self._auxiliary_filename, hdu="PULSAR_SED")
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", u.UnitsWarning)
+                fp_data = Table.read(self._auxiliary_filename, hdu="PULSAR_SED")
         except (KeyError, FileNotFoundError):
             log.warning(f"No flux points available for source {self.name}")
             return None
