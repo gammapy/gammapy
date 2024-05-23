@@ -1892,8 +1892,6 @@ class SourceCatalog2PC(SourceCatalog):
     - https://fermi.gsfc.nasa.gov/ssc/data/access/lat/2nd_PSR_catalog/
 
     One source is represented by `~gammapy.catalog.SourceCatalogObject2PC`.
-
-    TODO  : Fix the UnitsWarning here ...
     """
 
     tag = "2PC"
