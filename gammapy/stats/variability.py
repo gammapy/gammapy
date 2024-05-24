@@ -356,7 +356,7 @@ def TimmerKonig_lightcurve_simulator(
     if leakage_protection > 1.0 and npoints_extended == npoints:
         raise Warning(
             "The extended time series is the same length as the final desired time series."
-            "To have an effective protection from noise leakage and avoid aliasing, increase <leakage_protection>."
+            "To have an effective protection from noise leakage and avoid aliasing, increase the leakage_protection option."
         )
     frequencies = np.fft.fftfreq(npoints_extended, spacing.value)
 
