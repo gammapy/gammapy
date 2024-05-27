@@ -164,11 +164,28 @@ def test_tk():
         temp, 15, 1 * u.h, power_spectrum_params=params
     )
 
+    time_series4, time_axis4 = TimmerKonig_lightcurve_simulator(
+        lambda x: x ** (-3), 20, 1 * u.s, leakage_protection=100.0
+    )
+
     assert len(time_series) == 20
     assert isinstance(time_axis, u.Quantity)
     assert time_axis.unit == u.s
     assert len(time_series2) == 21
     assert len(time_series3) == 15
+    assert len(time_series4) == 20
+
+
+def test_tk_badleakage():
+    with pytest.raises(ValueError):
+        TimmerKonig_lightcurve_simulator(
+            lambda x: x ** (-3), 20, 1 * u.s, leakage_protection=0.1
+        )
+
+    with pytest.raises(Warning):
+        TimmerKonig_lightcurve_simulator(
+            lambda x: x ** (-3), 20, 1 * u.s, leakage_protection=1.001
+        )
 
 
 def test_structure_function():
