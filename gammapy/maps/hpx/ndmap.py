@@ -449,7 +449,7 @@ class HpxNDMap(HpxMap):
                 "Can only stack equivalent maps or cutout of the same map."
             )
 
-        data = other.quantity.to_value(self.unit).astype(self.data.dtype)
+        data = other.data.astype(self.data.dtype) * other.unit.to(self.unit)
 
         if nan_to_num:
             not_finite = ~np.isfinite(data)

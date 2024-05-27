@@ -1108,7 +1108,7 @@ class WcsNDMap(WcsMap):
                 "Can only stack equivalent maps or cutout of the same map."
             )
 
-         if not self.unit.is_equivalent(other.unit):
+        if not self.unit.is_equivalent(other.unit):
             raise ValueError(
                 f"Cannot stack maps: {self.unit} and {other.unit} are not equivalent."
             )
