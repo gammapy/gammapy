@@ -1074,7 +1074,7 @@ class WcsNDMap(WcsMap):
         parent_slices = Ellipsis, slices[0], slices[1]
 
         return self.__class__.from_geom(
-            geom=geom_cutout, data=self.quantity[parent_slices]
+            geom=geom_cutout, data=self.data[parent_slices], unit=self.unit
         )
 
     def stack(self, other, weights=None, nan_to_num=True):
