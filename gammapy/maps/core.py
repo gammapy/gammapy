@@ -1645,11 +1645,12 @@ class Map(abc.ABC):
         shape = [1] * len(self.geom.data_shape)
         shape[axis_idx] = -1
 
-        values = self.quantity * axis.bin_width.reshape(shape)
-
+        values = self.data * axis.bin_width.value.reshape(shape)
+        unit = self.unit * axis.unit
         if axis_name == "rad":
             # take Jacobian into account
-            values = 2 * np.pi * axis.center.reshape(shape) * values
+            values = 2 * np.pi * axis.center.value.reshape(shape) * values
+            unit *= axis.unit
 
         data = np.insert(values.cumsum(axis=axis_idx), 0, 0, axis=axis_idx)
 
@@ -1658,7 +1659,7 @@ class Map(abc.ABC):
         )
         axes = self.geom.axes.replace(axis_shifted)
         geom = self.geom.to_image().to_cube(axes)
-        return self.__class__(geom=geom, data=data.value, unit=data.unit)
+        return self.__class__(geom=geom, data=data, unit=unit)
 
     def integral(self, axis_name, coords, **kwargs):
         """Compute integral along a given axis.
@@ -1693,13 +1694,15 @@ class Map(abc.ABC):
         axis_name : str, optional
             Along which axis to normalise.
         """
-        cumsum = self.cumsum(axis_name=axis_name).quantity
+        cumsum = self.cumsum(axis_name=axis_name)
 
         with np.errstate(invalid="ignore", divide="ignore"):
             axis = self.geom.axes.index_data(axis_name=axis_name)
-            normed = self.quantity / cumsum.max(axis=axis, keepdims=True)
+            normed = self.data / cumsum.data.max(axis=axis, keepdims=True)
+            unit = self.unit / cumsum.unit
 
-        self.quantity = np.nan_to_num(normed)
+        self.data = np.nan_to_num(normed)
+        self._unit = unit
 
     @classmethod
     def from_stack(cls, maps, axis=None, axis_name=None):
