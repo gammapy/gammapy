@@ -1889,18 +1889,21 @@ class Map(abc.ABC):
             f"\tdtype : {self.data.dtype}\n"
         )
 
-    def _arithmetics(self, operator, other, copy):
-        """Perform arithmetic on maps after checking geometry consistency."""
+    def _check_arithmetics(self, other):
+        """Checking geometry consistency."""
         if isinstance(other, Map):
-            if self.geom == other.geom:
-                q = other.quantity
-            else:
+            if self.geom != other.geom:
                 raise ValueError("Map Arithmetic: Inconsistent geometries.")
+            return other
         else:
-            q = u.Quantity(other, copy=COPY_IF_NEEDED)
+            return u.Quantity(other, copy=COPY_IF_NEEDED)
 
+    def _apply_arithmetics(self, operator, other_data, copy, unit=None):
+        """Perform arithmetic operation on the array objects and replace unit if needed."""
         out = self.copy() if copy else self
-        out.quantity = operator(out.quantity, q)
+        out.data = operator(out.data, other_data)
+        if unit:
+            out._unit = u.Unit(unit)
         return out
 
     def _boolean_arithmetics(self, operator, other, copy):
@@ -1921,46 +1924,96 @@ class Map(abc.ABC):
         return out
 
     def __add__(self, other):
-        return self._arithmetics(np.add, other, copy=True)
+        other = self._check_arithmetics(other)
+        other_data = other.data if isinstance(other, Map) else other.value
+        other_data = other_data * other._unit.to(self._unit)
+        return self._apply_arithmetics(np.add, other_data, copy=True)
 
     def __iadd__(self, other):
-        return self._arithmetics(np.add, other, copy=COPY_IF_NEEDED)
+        other = self._check_arithmetics(other)
+        other_data = other.data if isinstance(other, Map) else other.value
+        other_data = other_data * other._unit.to(self._unit)
+        return self._apply_arithmetics(np.add, other_data, copy=COPY_IF_NEEDED)
 
     def __sub__(self, other):
-        return self._arithmetics(np.subtract, other, copy=True)
+        other = self._check_arithmetics(other)
+        other_data = other.data if isinstance(other, Map) else other.value
+        other_data = other_data * other._unit.to(self._unit)
+        return self._apply_arithmetics(np.subtract, other_data, copy=True)
 
     def __isub__(self, other):
-        return self._arithmetics(np.subtract, other, copy=COPY_IF_NEEDED)
+        other = self._check_arithmetics(other)
+        other_data = other.data if isinstance(other, Map) else other.value
+        other_data = other_data * other._unit.to(self._unit)
+        return self._apply_arithmetics(np.subtract, other_data, copy=COPY_IF_NEEDED)
 
     def __mul__(self, other):
-        return self._arithmetics(np.multiply, other, copy=True)
+        other = self._check_arithmetics(other)
+        other_data = other.data if isinstance(other, Map) else other.value
+        new_unit = self._unit * other._unit
+        return self._apply_arithmetics(
+            np.multiply, other_data, copy=True, unit=new_unit
+        )
 
     def __imul__(self, other):
-        return self._arithmetics(np.multiply, other, copy=COPY_IF_NEEDED)
+        other = self._check_arithmetics(other)
+        other_data = other.data if isinstance(other, Map) else other.value
+        new_unit = self._unit * other._unit
+        return self._apply_arithmetics(
+            np.multiply, other_data, copy=COPY_IF_NEEDED, unit=new_unit
+        )
 
     def __truediv__(self, other):
-        return self._arithmetics(np.true_divide, other, copy=True)
+        other = self._check_arithmetics(other)
+        other_data = other.data if isinstance(other, Map) else other.value
+        new_unit = self._unit / other._unit
+        return self._apply_arithmetics(
+            np.true_divide, other_data, copy=True, unit=new_unit
+        )
 
     def __itruediv__(self, other):
-        return self._arithmetics(np.true_divide, other, copy=COPY_IF_NEEDED)
+        other = self._check_arithmetics(other)
+        other_data = other.data if isinstance(other, Map) else other.value
+        new_unit = self._unit / other._unit
+        return self._apply_arithmetics(
+            np.true_divide, other_data, copy=COPY_IF_NEEDED, unit=new_unit
+        )
 
     def __le__(self, other):
-        return self._arithmetics(np.less_equal, other, copy=True)
+        other = self._check_arithmetics(other)
+        other_data = other.data if isinstance(other, Map) else other.value
+        other_data = other_data * other._unit.to(self._unit)
+        return self._apply_arithmetics(np.less_equal, other_data, copy=True)
 
     def __lt__(self, other):
-        return self._arithmetics(np.less, other, copy=True)
+        other = self._check_arithmetics(other)
+        other_data = other.data if isinstance(other, Map) else other.value
+        other_data = other_data * other._unit.to(self._unit)
+        return self._apply_arithmetics(np.less, other_data, copy=True)
 
     def __ge__(self, other):
-        return self._arithmetics(np.greater_equal, other, copy=True)
+        other = self._check_arithmetics(other)
+        other_data = other.data if isinstance(other, Map) else other.value
+        other_data = other_data * other._unit.to(self._unit)
+        return self._apply_arithmetics(np.greater_equal, other_data, copy=True)
 
     def __gt__(self, other):
-        return self._arithmetics(np.greater, other, copy=True)
+        other = self._check_arithmetics(other)
+        other_data = other.data if isinstance(other, Map) else other.value
+        other_data = other_data * other._unit.to(self._unit)
+        return self._apply_arithmetics(np.greater, other_data, copy=True)
 
     def __eq__(self, other):
-        return self._arithmetics(np.equal, other, copy=True)
+        other = self._check_arithmetics(other)
+        other_data = other.data if isinstance(other, Map) else other.value
+        other_data = other_data * other._unit.to(self._unit)
+        return self._apply_arithmetics(np.equal, other_data, copy=True)
 
     def __ne__(self, other):
-        return self._arithmetics(np.not_equal, other, copy=True)
+        other = self._check_arithmetics(other)
+        other_data = other.data if isinstance(other, Map) else other.value
+        other_data = other_data * other._unit.to(self._unit)
+        return self._apply_arithmetics(np.not_equal, other_data, copy=True)
 
     def __and__(self, other):
         return self._boolean_arithmetics(np.logical_and, other, copy=True)
