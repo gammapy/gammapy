@@ -1108,7 +1108,16 @@ class WcsNDMap(WcsMap):
                 "Can only stack equivalent maps or cutout of the same map."
             )
 
-        data = other.quantity[cutout_slices].to_value(self.unit).astype(self.data.dtype)
+         if not self.unit.is_equivalent(other.unit):
+            raise ValueError(
+                f"Cannot stack maps: {self.unit} and {other.unit} are not equivalent."
+            )
+
+        data = other.data[cutout_slices].astype(self.data.dtype)
+
+        if self.unit != "":
+            data = data * other.unit.to(self.unit)
+
         if nan_to_num:
             not_finite = ~np.isfinite(data)
             if np.any(not_finite):
