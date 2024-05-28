@@ -920,10 +920,17 @@ class MapDataset(Dataset):
 
         if "migra" in geom.axes.names:
             geom = geom.squash("migra")
-            mask_safe_edisp = self.mask_safe_image.interp_to_geom(geom.to_image())
+            mask_safe_edisp = self.mask_safe_image.interp_to_geom(
+                geom.to_image(), fill_value=None
+            )
             return mask_safe_edisp.to_cube(geom.axes)
 
-        return self.mask_safe.interp_to_geom(geom)
+        # allow extrapolation only along spatial dimension
+        # to support case where mask_safe geom and irfs geom are different
+        geom_same_axes = geom.to_image().to_cube(self.mask_safe.geom.axes)
+        mask_safe_edisp = self.mask_safe.interp_to_geom(geom_same_axes, fill_value=None)
+        mask_safe_edisp = mask_safe_edisp.interp_to_geom(geom)
+        return mask_safe_edisp
 
     def to_masked(self, name=None, nan_to_num=True):
         """Return masked dataset.
