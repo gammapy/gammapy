@@ -10,6 +10,7 @@ from astropy.time import Time
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Covariance, Parameters
 from gammapy.modeling.parameter import _get_parameters_str
+from gammapy.utils.compat import COPY_IF_NEEDED
 from gammapy.utils.fits import LazyFitsData
 from gammapy.utils.scripts import make_name, make_path
 from .core import Model, ModelBase, Models
@@ -1189,8 +1190,8 @@ def create_fermi_isotropic_diffuse_model(filename, **kwargs):
         Fermi isotropic diffuse sky model.
     """
     vals = np.loadtxt(make_path(filename))
-    energy = u.Quantity(vals[:, 0], "MeV", copy=False)
-    values = u.Quantity(vals[:, 1], "MeV-1 s-1 cm-2", copy=False)
+    energy = u.Quantity(vals[:, 0], "MeV", copy=COPY_IF_NEEDED)
+    values = u.Quantity(vals[:, 1], "MeV-1 s-1 cm-2", copy=COPY_IF_NEEDED)
 
     kwargs.setdefault("interp_kwargs", {"fill_value": None})
 

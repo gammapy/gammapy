@@ -11,6 +11,7 @@ from astropy import units as u
 from astropy.io import fits
 import matplotlib.pyplot as plt
 import gammapy.utils.parallel as parallel
+from gammapy.utils.compat import COPY_IF_NEEDED
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.scripts import make_path
 from gammapy.utils.types import JsonQuantityDecoder
@@ -128,7 +129,7 @@ class Map(abc.ABC):
     @property
     def quantity(self):
         """Map data as a `~astropy.units.Quantity` object."""
-        return u.Quantity(self.data, self.unit, copy=False)
+        return u.Quantity(self.data, self.unit, copy=COPY_IF_NEEDED)
 
     @quantity.setter
     def quantity(self, val):
@@ -139,7 +140,7 @@ class Map(abc.ABC):
         val : `~astropy.units.Quantity`
            Quantity.
         """
-        val = u.Quantity(val, copy=False)
+        val = u.Quantity(val, copy=COPY_IF_NEEDED)
 
         self.data = val.value
         self._unit = val.unit
@@ -769,6 +770,13 @@ class Map(abc.ABC):
         -------
         map_out : `Map`
             Sliced map object.
+
+        Examples
+        --------
+        >>> from gammapy.maps import Map
+        >>> m = Map.read("$GAMMAPY_DATA/fermi_3fhl/gll_iem_v06_cutout.fits")
+        >>> slices = {"energy": slice(0, 5)}
+        >>> sliced = m.slice_by_idx(slices)
         """
         geom = self.geom.slice_by_idx(slices)
         slices = tuple([slices.get(ax.name, slice(None)) for ax in self.geom.axes])
@@ -1023,6 +1031,7 @@ class Map(abc.ABC):
             the map is a differential quantity (e.g. intensity). Default is False.
         fill_value : float, optional
             The value to use for points outside the interpolation domain.
+            If None, values outside the domain are extrapolated.
             Default is 0.
         **kwargs : dict, optional
             Keyword arguments passed to `Map.interp_by_coord`.
@@ -1043,12 +1052,14 @@ class Map(abc.ABC):
                 )
             map_copy.data /= map_copy.geom.solid_angle().to_value("deg2")
 
-        if map_copy.is_mask:
+        if map_copy.is_mask and fill_value is not None:
             # TODO: check this NaN handling is needed
             data = map_copy.get_by_coord(coords)
             data = np.nan_to_num(data, nan=fill_value).astype(bool)
         else:
             data = map_copy.interp_by_coord(coords, fill_value=fill_value, **kwargs)
+            if map_copy.is_mask:
+                data = data.astype(bool)
 
         if preserve_counts:
             data *= geom.solid_angle().to_value("deg2")
@@ -1655,7 +1666,7 @@ class Map(abc.ABC):
         cumsum = self.cumsum(axis_name=axis_name)
         cumsum = cumsum.pad(pad_width=1, axis_name=axis_name, mode="edge")
         return u.Quantity(
-            cumsum.interp_by_coord(coords, **kwargs), cumsum.unit, copy=False
+            cumsum.interp_by_coord(coords, **kwargs), cumsum.unit, copy=COPY_IF_NEEDED
         )
 
     def normalize(self, axis_name=None):
@@ -1865,7 +1876,7 @@ class Map(abc.ABC):
             else:
                 raise ValueError("Map Arithmetic: Inconsistent geometries.")
         else:
-            q = u.Quantity(other, copy=False)
+            q = u.Quantity(other, copy=COPY_IF_NEEDED)
 
         out = self.copy() if copy else self
         out.quantity = operator(out.quantity, q)
@@ -1892,25 +1903,25 @@ class Map(abc.ABC):
         return self._arithmetics(np.add, other, copy=True)
 
     def __iadd__(self, other):
-        return self._arithmetics(np.add, other, copy=False)
+        return self._arithmetics(np.add, other, copy=COPY_IF_NEEDED)
 
     def __sub__(self, other):
         return self._arithmetics(np.subtract, other, copy=True)
 
     def __isub__(self, other):
-        return self._arithmetics(np.subtract, other, copy=False)
+        return self._arithmetics(np.subtract, other, copy=COPY_IF_NEEDED)
 
     def __mul__(self, other):
         return self._arithmetics(np.multiply, other, copy=True)
 
     def __imul__(self, other):
-        return self._arithmetics(np.multiply, other, copy=False)
+        return self._arithmetics(np.multiply, other, copy=COPY_IF_NEEDED)
 
     def __truediv__(self, other):
         return self._arithmetics(np.true_divide, other, copy=True)
 
     def __itruediv__(self, other):
-        return self._arithmetics(np.true_divide, other, copy=False)
+        return self._arithmetics(np.true_divide, other, copy=COPY_IF_NEEDED)
 
     def __le__(self, other):
         return self._arithmetics(np.less_equal, other, copy=True)
@@ -1943,13 +1954,13 @@ class Map(abc.ABC):
         return self._boolean_arithmetics(np.logical_xor, other, copy=True)
 
     def __iand__(self, other):
-        return self._boolean_arithmetics(np.logical_and, other, copy=False)
+        return self._boolean_arithmetics(np.logical_and, other, copy=COPY_IF_NEEDED)
 
     def __ior__(self, other):
-        return self._boolean_arithmetics(np.logical_or, other, copy=False)
+        return self._boolean_arithmetics(np.logical_or, other, copy=COPY_IF_NEEDED)
 
     def __ixor__(self, other):
-        return self._boolean_arithmetics(np.logical_xor, other, copy=False)
+        return self._boolean_arithmetics(np.logical_xor, other, copy=COPY_IF_NEEDED)
 
     def __array__(self):
         return self.data
