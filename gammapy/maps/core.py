@@ -7,7 +7,7 @@ import json
 from collections import OrderedDict
 from itertools import repeat
 import numpy as np
-from numpy import ndindex
+from numpy import isscalar, ndindex
 from astropy import units as u
 from astropy.io import fits
 import matplotlib.pyplot as plt
@@ -104,7 +104,7 @@ class Map(abc.ABC):
         value : array-like
             Data array.
         """
-        if np.isscalar(value):
+        if isscalar(value):
             value = value * np.ones(self.geom.data_shape, dtype=type(value))
 
         if isinstance(value, u.Quantity):
