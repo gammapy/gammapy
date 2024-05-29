@@ -1898,7 +1898,7 @@ class Map(abc.ABC):
             f"\tdtype : {self.data.dtype}\n"
         )
 
-    def _apply_arithmetics(self, operator, other, copy):
+    def _arithmetics(self, operator, other, copy):
         """Perform arithmetic operation on the array objects and replace unit if needed."""
         if isinstance(other, Map):
             if self.geom != other.geom:
@@ -1941,46 +1941,46 @@ class Map(abc.ABC):
         return out
 
     def __add__(self, other):
-        return self._apply_arithmetics(np.add, other, copy=True)
+        return self._arithmetics(np.add, other, copy=True)
 
     def __iadd__(self, other):
-        return self._apply_arithmetics(np.add, other, copy=False)
+        return self._arithmetics(np.add, other, copy=False)
 
     def __sub__(self, other):
-        return self._apply_arithmetics(np.subtract, other, copy=True)
+        return self._arithmetics(np.subtract, other, copy=True)
 
     def __isub__(self, other):
-        return self._apply_arithmetics(np.subtract, other, copy=False)
+        return self._arithmetics(np.subtract, other, copy=False)
 
     def __mul__(self, other):
-        return self._apply_arithmetics(np.multiply, other, copy=True)
+        return self._arithmetics(np.multiply, other, copy=True)
 
     def __imul__(self, other):
-        return self._apply_arithmetics(np.multiply, other, copy=False)
+        return self._arithmetics(np.multiply, other, copy=False)
 
     def __truediv__(self, other):
-        return self._apply_arithmetics(np.true_divide, other, copy=True)
+        return self._arithmetics(np.true_divide, other, copy=True)
 
     def __itruediv__(self, other):
-        return self._apply_arithmetics(np.true_divide, other, copy=False)
+        return self._arithmetics(np.true_divide, other, copy=False)
 
     def __le__(self, other):
-        return self._apply_arithmetics(np.less_equal, other, copy=True)
+        return self._arithmetics(np.less_equal, other, copy=True)
 
     def __lt__(self, other):
-        return self._apply_arithmetics(np.less, other, copy=True)
+        return self._arithmetics(np.less, other, copy=True)
 
     def __ge__(self, other):
-        return self._apply_arithmetics(np.greater_equal, other, copy=True)
+        return self._arithmetics(np.greater_equal, other, copy=True)
 
     def __gt__(self, other):
-        return self._apply_arithmetics(np.greater, other, copy=True)
+        return self._arithmetics(np.greater, other, copy=True)
 
     def __eq__(self, other):
-        return self._apply_arithmetics(np.equal, other, copy=True)
+        return self._arithmetics(np.equal, other, copy=True)
 
     def __ne__(self, other):
-        return self._apply_arithmetics(np.not_equal, other, copy=True)
+        return self._arithmetics(np.not_equal, other, copy=True)
 
     def __and__(self, other):
         return self._boolean_arithmetics(np.logical_and, other, copy=True)
