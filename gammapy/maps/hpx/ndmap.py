@@ -431,7 +431,12 @@ class HpxNDMap(HpxMap):
                 "Can only stack equivalent maps or cutout of the same map."
             )
 
-        data = other.data * other.unit.to(self.unit)
+        if not self.unit.is_equivalent(other.unit):
+            raise ValueError(
+                f"Cannot stack maps: {self.unit} and {other.unit} are not equivalent."
+            )
+
+        data = (other.data * other.unit.to(self.unit)).astype(self.data.dtype)
 
         if nan_to_num:
             not_finite = ~np.isfinite(data)
