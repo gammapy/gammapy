@@ -7,6 +7,7 @@ import json
 from collections import OrderedDict
 from itertools import repeat
 import numpy as np
+from numpy import ndindex
 from astropy import units as u
 from astropy.io import fits
 import matplotlib.pyplot as plt
@@ -471,7 +472,7 @@ class Map(abc.ABC):
         --------
         iter_by_image_data : iterate by image returning data and index.
         """
-        for idx in np.ndindex(self.geom.shape_axes):
+        for idx in ndindex(self.geom.shape_axes):
             if keepdims:
                 names = self.geom.axes.names
                 slices = {name: slice(_, _ + 1) for name, _ in zip(names, idx)}
@@ -495,7 +496,7 @@ class Map(abc.ABC):
         --------
         iter_by_image : iterate by image returning a map.
         """
-        for idx in np.ndindex(self.geom.shape_axes):
+        for idx in ndindex(self.geom.shape_axes):
             yield self.data[idx[::-1]], idx[::-1]
 
     def iter_by_image_index(self):
@@ -513,7 +514,7 @@ class Map(abc.ABC):
         --------
         iter_by_image : iterate by image returning a map.
         """
-        for idx in np.ndindex(self.geom.shape_axes):
+        for idx in ndindex(self.geom.shape_axes):
             yield idx[::-1]
 
     def coadd(self, map_in, weights=None):
@@ -1177,7 +1178,7 @@ class Map(abc.ABC):
             ),
             task_name="Reprojection",
         )
-        for idx in np.ndindex(self.geom.shape_axes):
+        for idx in ndindex(self.geom.shape_axes):
             output_map.data[idx[0]] = maps[idx[0]].data
         return output_map
 
