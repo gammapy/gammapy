@@ -1115,8 +1115,7 @@ class WcsNDMap(WcsMap):
 
         data = other.data[cutout_slices].astype(self.data.dtype)
 
-        if self.unit != "":
-            data = data * other.unit.to(self.unit)
+        data = (data * other.unit.to(self.unit)).astype(self.data.dtype)
 
         if nan_to_num:
             not_finite = ~np.isfinite(data)

@@ -1903,13 +1903,13 @@ class Map(abc.ABC):
         if isinstance(other, Map):
             if self.geom != other.geom:
                 raise ValueError("Map Arithmetic: Inconsistent geometries.")
-            other_data = other.data
         else:
             other = u.Quantity(other, copy=COPY_IF_NEEDED)
 
         unit = None
-        if operator is [np.multiply, np.true_divide]:
+        if operator in [np.multiply, np.true_divide]:
             unit = operator(self.unit, other.unit)
+            other_data = other.data if isinstance(other, Map) else other.value
         else:
             other_data = (
                 other.to_unit(self.unit).data
