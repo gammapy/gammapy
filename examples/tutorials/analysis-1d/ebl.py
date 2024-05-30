@@ -2,9 +2,10 @@
 Account for spectral absorption due to the EBL
 ==============================================
 
-Gamma rays emitted extra-galactic objects, eg blazars, interact with the
-photons of the Extragalactic Background Light (EBL) through pair
-production and are attenuated, thus modifying the intrinsic spectrum.
+Gamma rays emitted from extra-galactic objects, eg blazars, interact
+with the photons of the Extragalactic Background Light (EBL) through
+pair production and are attenuated, thus modifying the intrinsic
+spectrum.
 
 Various models of the EBL are supplied in `GAMMAPY_DATA`. This
 notebook shows how to use these models to correct for this interaction.
@@ -24,93 +25,39 @@ from astropy.coordinates import Angle, SkyCoord
 from astropy.time import Time
 from regions import CircleSkyRegion
 import matplotlib.pyplot as plt
-from gammapy.data import DataStore
-from gammapy.datasets import Datasets, SpectrumDataset
+from gammapy.catalog import SourceCatalog4FGL
+from gammapy.datasets import SpectrumDatasetOnOff
 from gammapy.estimators import FluxPointsEstimator
-from gammapy.makers import (
-    ReflectedRegionsBackgroundMaker,
-    SafeMaskMaker,
-    SpectrumDatasetMaker,
-)
 from gammapy.maps import MapAxis, RegionGeom, WcsGeom
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
+    EBL_DATA_BUILTIN,
     EBLAbsorptionNormSpectralModel,
+    GaussianPrior,
     PowerLawSpectralModel,
     SkyModel,
 )
 
 ######################################################################
-# Select the data
-# ---------------
+# Load the data
+# -------------
 #
-# We will analyse 6 observations of the blazars PKS~2155-304 taken in 2008
-# by H.E.S.S. when it was in a steady state.
+# We will use 6 observations of the blazars PKS~2155-304 taken in 2008 by
+# H.E.S.S. when it was in a steady state. The data have already been
+# reduced to OGIP format\ `SpectrumDatasetOnOff` following the procedure
+# :doc:`/tutorials/analysis-1d/spectral_analysis` tutorial using a
+# `ReflectedRegions` background estimation. The spectra and IRF from the
+# 6 observations have been stacked together.
+#
+# We will load this dataset as a `SpectrumDatasetOnOff` and proceed with
+# the modeling. You can do a 3D analysis as well.
 #
 
-data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
-
-# spatial selection
-target_position = SkyCoord(329.71693826 * u.deg, -30.2255890 * u.deg, frame="icrs")
-selection_pos = dict(
-    type="sky_circle",
-    frame="icrs",
-    lon=target_position.ra,
-    lat=target_position.dec,
-    radius=2 * u.deg,
+dataset = SpectrumDatasetOnOff.read(
+    "$GAMMAPY_DATA/PKS2155-steady/pks2155-304_steady.fits.gz"
 )
 
-# time selection
-selection_time = dict(type="time_box", time_range=Time([54705, 54709], format="mjd"))
-
-# apply the selections
-obs_ids = data_store.obs_table.select_observations([selection_pos, selection_time])[
-    "OBS_ID"
-]
-observations = data_store.get_observations(obs_ids)
-print(f"Number of selected observations : {len(observations)}")
-
-
-######################################################################
-# Data reduction
-# --------------
-#
-# Here, we do a 1D spectral analysis (see:
-# :doc:`/tutorials/analysis-1d/spectral_analysis` for details). You may
-# also choose to do a 3D analysis.
-#
-
-# define the axes and the geom
-energy_axis = MapAxis.from_energy_bounds("0.2 TeV", "20 TeV", nbin=5, per_decade=True)
-energy_axis_true = MapAxis.from_energy_bounds(
-    "0.1 TeV", "40 TeV", nbin=20, name="energy_true", per_decade=True
-)
-
-on_region_radius = Angle("0.11 deg")
-on_region = CircleSkyRegion(center=target_position, radius=on_region_radius)
-
-geom = RegionGeom.create(region=on_region, axes=[energy_axis])
-
-dataset_maker = SpectrumDatasetMaker(
-    containment_correction=True, selection=["counts", "exposure", "edisp"]
-)
-bkg_maker = ReflectedRegionsBackgroundMaker()
-safe_mask_masker = SafeMaskMaker(methods=["aeff-max"], aeff_percent=10)
-
-# Do the data reduction
-datasets = Datasets()
-dataset_empty = SpectrumDataset.create(geom=geom, energy_axis_true=energy_axis_true)
-
-for obs in observations:
-    dataset = dataset_maker.run(dataset_empty.copy(), obs)
-    dataset_on_off = bkg_maker.run(dataset, obs)
-    dataset_on_off = safe_mask_masker.run(dataset_on_off, obs)
-    datasets.append(dataset_on_off)
-
-# Here, we stack the datasets to save time during the fitting. You can also do a joint fitting
-stacked = datasets.stack_reduce(name="pks2155-304")
-
-print(stacked)
+print(dataset)
 
 
 ######################################################################
@@ -123,44 +70,43 @@ print(stacked)
 # intrinsic model.
 #
 
-# define the power law
-index = 3.53
-amplitude = 1.81 * 1e-12 * u.Unit("cm-2 s-1 TeV-1")
-reference = 1 * u.TeV
-pwl = PowerLawSpectralModel(index=index, amplitude=amplitude, reference=reference)
-
-# Specify the redshift of the source
-redshift = 0.116
-# Load the EBL model. Here we use the model from Dominguez 2011
-absorption = EBLAbsorptionNormSpectralModel.read_builtin("dominguez", redshift=redshift)
-
 
 ######################################################################
-# We keep the paramters of the EBL model frozen in this example. For a
-# list of the other available models, see
+# For a list of available models, see
 # :doc:`/api/gammapy.modeling.models.EBL_DATA_BUILTIN`.
 #
 
-# The power-law model is multiplied by the EBL norm spectral model
+print(EBL_DATA_BUILTIN.keys())
+
+# define the power law
+index = 2.3
+amplitude = 1.81 * 1e-12 * u.Unit("cm-2 s-1 TeV-1")
+reference = 1 * u.TeV
+pwl = PowerLawSpectralModel(index=index, amplitude=amplitude, reference=reference)
+pwl.index.frozen = False
+# Specify the redshift of the source
+redshift = 0.116
+
+# Load the EBL model. Here we use the model from Dominguez, 2011
+absorption = EBLAbsorptionNormSpectralModel.read_builtin("dominguez", redshift=redshift)
+
+
+# The power-law model is multiplied by the EBL to get the final model
 spectral_model = pwl * absorption
 print(spectral_model)
 
 # Now, create a sky model and proceed with the fit
 sky_model = SkyModel(spatial_model=None, spectral_model=spectral_model, name="pks2155")
 
-stacked.models = sky_model
+dataset.models = sky_model
 
 fit = Fit()
-result = fit.run(datasets=[stacked])
+result = fit.run(datasets=[dataset])
 
 # we make a copy here to compare it later
 model_best = sky_model.copy()
 
 print(result.models.to_parameters_table())
-
-# To see the covariance,
-model_best.covariance.plot_correlation()
-plt.show()
 
 
 ######################################################################
@@ -171,11 +117,11 @@ plt.show()
 # normally
 #
 
-energy_edges = energy_axis.edges
+energy_edges = dataset.counts.geom.axes["energy"].edges
 fpe = FluxPointsEstimator(
     energy_edges=energy_edges, source="pks2155", selection_optional="all"
 )
-flux_points_obs = fpe.run(datasets=[stacked])
+flux_points_obs = fpe.run(datasets=[dataset])
 
 
 ######################################################################
@@ -200,8 +146,24 @@ print(flux_points_intrinsic._reference_model)
 # values from the full covariance
 #
 
+# The covariance matrix on the full model
+spectral_model.covariance.plot_correlation()
+plt.show()
 
-pwl.covariance = spectral_model.covariance.get_subcovariance(pwl.covariance.parameters)
+# The covariance matrix on the power law does not contain the off diagnoal terms
+pwl.covariance.plot_correlation()
+plt.show()
+
+# Extract the sub covaraince and set is on the `pwl`
+sub_covar = spectral_model.covariance.get_subcovariance(pwl.covariance.parameters)
+pwl.covariance = sub_covar
+pwl.covariance.plot_correlation()
+plt.show()
+
+
+######################################################################
+# We see that the covariance is now set correctly
+#
 
 
 ######################################################################
@@ -230,3 +192,101 @@ pwl.plot_error(
 plt.ylim(bottom=1e-13)
 plt.legend()
 plt.show()
+
+
+######################################################################
+# Further extensions
+# ------------------
+#
+# In this notebook, we have kept the parameters of the EBL model, the
+# `alpha_norm` and the `redshift` frozen. Under reasonable assumptions
+# on the intrinsic spectrum, it can be possible to constrain these
+# parameters.
+#
+# Example: We now assume that the FermiLAT 4FGL catalog spectrum of the
+# source is a good assumption of the intrisic spectrum.
+#
+# *NOTE*: This is a very simplified assumption and in reality, EBL
+# absorption can affect the Fermi spectrum significantlty. Also, blazar
+# spectra vary with time and long term averaged states may not be
+# representative of a specific steady state
+#
+
+catalog = SourceCatalog4FGL()
+
+src = catalog["PKS 2155-304"]
+
+# Get the intrinsic model
+intrinsic_model = src.spectral_model()
+print(intrinsic_model)
+
+
+######################################################################
+# We add Gaussian priors on the spectral parameters assuming the 4FGL
+# measurements. For more details on using priors, see
+# :doc:`/tutorials/api/priors`
+#
+
+intrinsic_model.alpha.prior = GaussianPrior(
+    mu=intrinsic_model.alpha.value, sigma=intrinsic_model.alpha.error
+)
+intrinsic_model.beta.prior = GaussianPrior(
+    mu=intrinsic_model.beta.value, sigma=intrinsic_model.beta.error
+)
+
+
+######################################################################
+# As before, multiply the intrisic model with the EBL model
+#
+
+obs_model = intrinsic_model * absorption
+
+
+######################################################################
+# Now, free the redshift of the source
+#
+
+obs_model.parameters["redshift"].frozen = False
+
+print(obs_model.parameters.to_table())
+
+sky_model = SkyModel(spectral_model=obs_model, name="observed")
+dataset.models = sky_model
+
+result1 = fit.run([dataset])
+
+print(result1.parameters.to_table())
+
+
+######################################################################
+# Get a fit stat profile for the redshift
+# ---------------------------------------
+#
+# For more information about stat profiles, see
+# :doc:`/tutorials/api/fitting`
+#
+
+total_stat = result1.total_stat
+
+par = sky_model.parameters["redshift"]
+par.scan_max = par.value + 5.0 * par.error
+par.scan_min = max(0, par.value - 5.0 * par.error)
+par.scan_n_values = 31
+
+# %time
+profile = fit.stat_profile(
+    datasets=[dataset], parameter=sky_model.parameters["redshift"], reoptimize=True
+)
+
+plt.figure()
+ax = plt.gca()
+ax.plot(profile["observed.spectral.redshift_scan"], profile["stat_scan"] - total_stat)
+ax.set_title("TS profile")
+ax.set_xlabel("Redshift")
+ax.set_ylabel("del TS")
+plt.show()
+
+
+######################################################################
+# We see that the redshift is well constrained.
+#
