@@ -1112,8 +1112,7 @@ class FluxMaps:
         ----------
 
         reference_model : `~gammapy.modeling.models.SkyModel`, optional
-            The reference model to use for conversions. If None, a model consisting
-            of a point source with a power law spectrum of index 2 is assumed.
+            The reference model to use for conversions. If None, the copied model is used.
 
         Returns
         -------
