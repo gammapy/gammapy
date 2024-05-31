@@ -982,9 +982,13 @@ class Map(abc.ABC):
         preserve_counts : bool
             Preserve the integral over each bin.  This should be true
             if the map is an integral quantity (e.g. counts) and false if
-            the map is a differential quantity (e.g. intensity)
-        **kwargs : dict
-            Keyword arguments passed to `Map.interp_by_coord`
+            the map is a differential quantity (e.g. intensity). Default is False.
+        fill_value : float, optional
+            The value to use for points outside the interpolation domain.
+            If None, values outside the domain are extrapolated.
+            Default is 0.
+        **kwargs : dict, optional
+            Keyword arguments passed to `Map.interp_by_coord`.
 
         Returns
         -------
@@ -1002,12 +1006,14 @@ class Map(abc.ABC):
                 )
             map_copy.data /= map_copy.geom.solid_angle().to_value("deg2")
 
-        if map_copy.is_mask:
+        if map_copy.is_mask and fill_value is not None:
             # TODO: check this NaN handling is needed
             data = map_copy.get_by_coord(coords)
             data = np.nan_to_num(data, nan=fill_value).astype(bool)
         else:
             data = map_copy.interp_by_coord(coords, fill_value=fill_value, **kwargs)
+            if map_copy.is_mask:
+                data = data.astype(bool)
 
         if preserve_counts:
             data *= geom.solid_angle().to_value("deg2")
