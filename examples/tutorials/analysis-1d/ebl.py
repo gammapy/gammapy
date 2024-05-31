@@ -133,9 +133,9 @@ flux_points_obs = fpe.run(datasets=[dataset])
 flux_points_intrinsic = deepcopy(flux_points_obs)
 flux_points_intrinsic._reference_model = SkyModel(spectral_model=pwl)
 
-print(flux_points_obs._reference_model)
+print(flux_points_obs.reference_model)
 
-print(flux_points_intrinsic._reference_model)
+print(flux_points_intrinsic.reference_model)
 
 
 ######################################################################
