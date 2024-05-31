@@ -330,6 +330,17 @@ class FluxMaps:
         """Reference model as a `~gammapy.modeling.models.SkyModel`."""
         return self._reference_model
 
+    @reference_model.setter
+    def reference_model(self, reference_model):
+        """Reference model as a `~gammapy.modeling.models.SkyModel`.
+
+        Parameters
+        ----------
+        value : `~gammapy.modeling.models.SkyModel`
+            Sky model
+        """
+        self._reference_model = reference_model
+
     @property
     def reference_spectral_model(self):
         """Reference spectral model as a `SpectralModel`"""
