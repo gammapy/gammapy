@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
+from copy import deepcopy
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
@@ -1103,6 +1104,28 @@ class FluxMaps:
             str(make_path(filename)), memmap=False, checksum=checksum
         ) as hdulist:
             return cls.from_hdulist(hdulist, checksum=checksum)
+
+    def copy(self, reference_model=None):
+        """Deep copy
+
+        Parameters
+        ----------
+
+        reference_model : `~gammapy.modeling.models.SkyModel`, optional
+            The reference model to use for conversions. If None, a model consisting
+            of a point source with a power law spectrum of index 2 is assumed.
+
+        Returns
+        -------
+        flux_maps : `FluxMaps`
+            Copied flux maps object.
+
+        """
+
+        new = deepcopy(self)
+        if reference_model is not None:
+            new.reference_model = reference_model
+        return new
 
     def slice_by_idx(self, slices):
         """Slice flux maps by index.
