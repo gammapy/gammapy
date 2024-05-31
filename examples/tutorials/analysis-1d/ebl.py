@@ -222,8 +222,8 @@ print(intrinsic_model)
 
 
 ######################################################################
-# We add Gaussian priors on the spectral parameters assuming the 4FGL
-# measurements. For more details on using priors, see
+# We add Gaussian priors on the `alpha` and `beta` parameters based on the 4FGL
+# measurements and the associated errors. For more details on using priors, see
 # :doc:`/tutorials/api/priors`
 #
 
