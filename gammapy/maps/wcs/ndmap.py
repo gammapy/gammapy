@@ -975,7 +975,7 @@ class WcsNDMap(WcsMap):
 
         return self._init_copy(data=smoothed_data)
 
-    def cutout(self, position, width, mode="trim", odd_npix=False):
+    def cutout(self, position, width, mode="trim", odd_npix=False, min_npix=1):
         """
         Create a cutout around a given position.
 
@@ -992,6 +992,9 @@ class WcsNDMap(WcsMap):
         odd_npix : bool, optional
             Force width to odd number of pixels.
             Default is False.
+        min_npix : bool, optional
+            Force width to a minimmum number of pixels.
+            Default is 1.
 
         Returns
         -------
@@ -999,7 +1002,11 @@ class WcsNDMap(WcsMap):
             Cutout map.
         """
         geom_cutout = self.geom.cutout(
-            position=position, width=width, mode=mode, odd_npix=odd_npix
+            position=position,
+            width=width,
+            mode=mode,
+            odd_npix=odd_npix,
+            min_npix=min_npix,
         )
         cutout_info = geom_cutout.cutout_slices(self.geom, mode=mode)
 
