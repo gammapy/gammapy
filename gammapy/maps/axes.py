@@ -13,6 +13,7 @@ from astropy.table import Column, Table, hstack
 from astropy.time import Time
 from astropy.utils import lazyproperty
 import matplotlib.pyplot as plt
+from gammapy.utils.compat import COPY_IF_NEEDED
 from gammapy.utils.interpolation import interpolation_scale
 from gammapy.utils.time import time_ref_from_dict, time_ref_to_dict
 from .utils import INVALID_INDEX, INVALID_VALUE, edges_from_lo_hi
@@ -281,7 +282,7 @@ class MapAxis:
     def edges(self):
         """Return an array of bin edges."""
         pix = np.arange(self.nbin + 1, dtype=float) - 0.5
-        return u.Quantity(self.pix_to_coord(pix), self._unit, copy=False)
+        return u.Quantity(self.pix_to_coord(pix), self._unit, copy=COPY_IF_NEEDED)
 
     @property
     def edges_min(self):
@@ -453,7 +454,7 @@ class MapAxis:
     def center(self):
         """Return an array of bin centers."""
         pix = np.arange(self.nbin, dtype=float)
-        return u.Quantity(self.pix_to_coord(pix), self._unit, copy=False)
+        return u.Quantity(self.pix_to_coord(pix), self._unit, copy=COPY_IF_NEEDED)
 
     @lazyproperty
     def bin_width(self):
@@ -802,7 +803,7 @@ class MapAxis:
         """
         pix = pix - self._pix_offset
         values = self._transform.pix_to_coord(pix=pix)
-        return u.Quantity(values, unit=self.unit, copy=False)
+        return u.Quantity(values, unit=self.unit, copy=COPY_IF_NEEDED)
 
     def wrap_coord(self, coord):
         """Wrap coords between axis edges for a periodic boundary condition
@@ -862,7 +863,7 @@ class MapAxis:
         """
         if self._boundary_type == BoundaryEnum.periodic:
             coord = self.wrap_coord(coord)
-        coord = u.Quantity(coord, self.unit, copy=False).value
+        coord = u.Quantity(coord, self.unit, copy=COPY_IF_NEEDED).value
         pix = self._transform.coord_to_pix(coord=coord)
         return np.array(pix + self._pix_offset, ndmin=1)
 
@@ -885,7 +886,7 @@ class MapAxis:
         """
         if self._boundary_type == BoundaryEnum.periodic:
             coord = self.wrap_coord(coord)
-        coord = u.Quantity(coord, self.unit, copy=False, ndmin=1).value
+        coord = u.Quantity(coord, self.unit, copy=COPY_IF_NEEDED, ndmin=1).value
         edges = self.edges.value
         idx = np.digitize(coord, edges) - 1
 
@@ -911,6 +912,15 @@ class MapAxis:
         -------
         axis : `MapAxis`
             Sliced axis object.
+
+        Examples
+        --------
+        >>> from gammapy.maps import MapAxis
+        >>> axis = MapAxis.from_bounds(
+        ...     10.0, 2e3, 6, interp="log", name="energy_true", unit="GeV"
+        ... )
+        >>> slices = slice(1, 3)
+        >>> sliced = axis.slice(slices)
         """
         center = self.center[idx].value
         idx = self.coord_to_idx(center)
@@ -1901,8 +1911,24 @@ class MapAxes(Sequence):
 
         Returns
         -------
-        geom : `~Geom`
-            Sliced geometry.
+        axes : `~MapAxes`
+            Sliced axes.
+
+        Examples
+        --------
+        >>> import astropy.units as u
+        >>> from astropy.time import Time
+        >>> from gammapy.maps import MapAxis, MapAxes, TimeMapAxis
+        >>> energy_axis = MapAxis.from_energy_bounds(1*u.TeV, 3*u.TeV, 6)
+        >>> time_ref = Time("1999-01-01T00:00:00.123456789")
+        >>> time_axis = TimeMapAxis(
+        ...     edges_min=[0, 1, 3] * u.d,
+        ...     edges_max=[0.8, 1.9, 5.4] * u.d,
+        ...     reference_time=time_ref,
+        ... )
+        >>> axes = MapAxes([energy_axis, time_axis])
+        >>> slices = {"energy": slice(0, 3), "time": slice(0, 1)}
+        >>> sliced_axes = axes.slice_by_idx(slices)
         """
         axes = []
         for ax in self:
@@ -2742,13 +2768,26 @@ class TimeMapAxis:
 
         Parameters
         ----------
-        idx : slice
+        idx : `slice`
             Slice object selecting a sub-selection of the axis.
 
         Returns
         -------
         axis : `~TimeMapAxis`
             Sliced time map axis object.
+
+        Examples
+        --------
+        >>> from gammapy.maps import TimeMapAxis
+        >>> import astropy.units as u
+        >>> from astropy.time import Time
+        >>> time_map_axis = TimeMapAxis(
+        ...     edges_min=[1, 5, 10, 15] * u.day,
+        ...     edges_max=[2, 7, 13, 18] * u.day,
+        ...     reference_time=Time("2020-03-19"),
+        ... )
+        >>> slices = slice(1, 3)
+        >>> sliced = time_map_axis.slice(slices)
         """
         return TimeMapAxis(
             self._edges_min[idx].copy(),
@@ -2763,7 +2802,7 @@ class TimeMapAxis:
 
         Returns
         -------
-        axis : `~MapAxis`
+        axis : `~TimeMapAxis`
             Squashed time map axis object.
         """
         return TimeMapAxis(
@@ -3407,6 +3446,15 @@ class LabelMapAxis:
         -------
         axis : `~LabelMapAxis`
             Sliced axis object.
+
+        Examples
+        --------
+        >>> from gammapy.maps import LabelMapAxis
+        >>> label_axis = LabelMapAxis(
+        ...     labels=["dataset-1", "dataset-2", "dataset-3", "dataset-4"], name="dataset"
+        ... )
+        >>> slices = slice(2, 4)
+        >>> sliced = label_axis.slice(slices)
         """
         return self.__class__(
             labels=self._labels[idx],

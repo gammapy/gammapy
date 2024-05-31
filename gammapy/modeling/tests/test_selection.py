@@ -19,10 +19,31 @@ def fermi_datasets():
 def test_test_statistic_detection(fermi_datasets):
 
     model = fermi_datasets.models["Crab Nebula"]
+
     results = select_nested_models(
         fermi_datasets, [model.spectral_model.amplitude], [0]
     )
     assert_allclose(results["ts"], 20905.667798, rtol=1e-5)
+
+    ts_eval = TestStatisticNested([model.spectral_model.amplitude], [0])
+    ts_known_bkg = ts_eval.ts_known_bkg(fermi_datasets)
+    ts_asimov = ts_eval.ts_asimov(fermi_datasets)
+    ts = ts_eval.ts(fermi_datasets)
+    assert_allclose(ts_known_bkg, 28086.269146, rtol=1e-2)
+    assert_allclose(ts_asimov, 27495.908291, rtol=1e-2)
+    assert_allclose(ts, 20905.667798, rtol=1e-5)
+
+    # bad model
+    bias_factor = 1.2
+    model.spectral_model.amplitude.value *= bias_factor
+    ts_eval = TestStatisticNested([model.spectral_model.amplitude], [0])
+    ts_known_bkg = ts_eval.ts_known_bkg(fermi_datasets)
+    ts_asimov = ts_eval.ts_asimov(fermi_datasets)
+    ts = ts_eval.ts(fermi_datasets)
+    assert_allclose(ts_known_bkg, 28002.894113, rtol=1e-2)
+    assert_allclose(ts_asimov, 34130.645399, rtol=1e-2)  # ts_known_bkg<<ts_asimov
+    assert_allclose(ts, 20905.667798, rtol=1e-5)
+    model.spectral_model.amplitude.value /= bias_factor
 
 
 @requires_data()

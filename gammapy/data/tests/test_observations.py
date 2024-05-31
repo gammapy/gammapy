@@ -378,6 +378,8 @@ def test_observation_write(tmp_path):
     obs = Observation.read(
         "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz"
     )
+    mjdreff = obs.events.table.meta["MJDREFF"]
+    mjdrefi = obs.events.table.meta["MJDREFI"]
     path = tmp_path / "obs.fits.gz"
 
     obs.meta.creation.origin = "test"
@@ -392,6 +394,9 @@ def test_observation_write(tmp_path):
     assert obs_read.rad_max is None
     assert obs_read.obs_id == 23523
     assert_allclose(obs_read.observatory_earth_location.lat.deg, -23.271778)
+
+    assert_allclose(obs_read.events.table.meta["MJDREFF"], mjdreff)
+    assert_allclose(obs_read.events.table.meta["MJDREFI"], mjdrefi)
 
     # unsupported format
     with pytest.raises(ValueError):

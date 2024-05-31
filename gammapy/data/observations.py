@@ -578,7 +578,9 @@ class Observation:
         events = self.events
         if events is not None:
             events_hdu = events.to_table_hdu(format=format)
-            events_hdu.header.update(self.pointing.to_fits_header())
+            events_hdu.header.update(
+                self.pointing.to_fits_header(time_ref=events.time_ref)
+            )
             hdul.append(events_hdu)
 
         gti = self.gti

@@ -267,7 +267,7 @@ class FluxPoints(FluxMaps):
         table = self.to_table(sed_type=sed_type, format=format)
 
         if ".fits" not in filename.suffixes:
-            table.write(filename)
+            table.write(filename, overwrite=overwrite)
             return
 
         primary_hdu = fits.PrimaryHDU()

@@ -94,7 +94,7 @@ class ExcessMapEstimator(Estimator):
 
     Parameters
     ----------
-    correlation_radius : `~astropy.coordinate.Angle`
+    correlation_radius : `~astropy.coordinates.Angle`
         Correlation radius to use.
     n_sigma : float
         Confidence level for the asymmetric errors expressed in number of sigma.
