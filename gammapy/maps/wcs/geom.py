@@ -885,7 +885,7 @@ class WcsGeom(Geom):
         coord = self.to_image().get_coord()
         return center.separation(coord.skycoord)
 
-    def cutout(self, position, width, mode="trim", odd_npix=False):
+    def cutout(self, position, width, mode="trim", odd_npix=False, min_npix=1):
         """
         Create a cutout around a given position.
 
@@ -902,6 +902,10 @@ class WcsGeom(Geom):
         odd_npix : bool, optional
             Force width to odd number of pixels.
             Default is False.
+        min_npix : bool, optional
+            Force width to a minimmum number of pixels.
+            Default is 1.
+
 
         Returns
         -------
@@ -911,7 +915,7 @@ class WcsGeom(Geom):
         width = _check_width(width) * u.deg
 
         binsz = self.pixel_scales
-        width_npix = np.clip((width / binsz).to_value(""), 1, None)
+        width_npix = np.clip((width / binsz).to_value(""), min_npix, None)
 
         if odd_npix:
             width_npix = round_up_to_odd(width_npix)
