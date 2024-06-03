@@ -82,6 +82,9 @@ VALID_QUANTITIES = [
     "counts",
     "success",
     "n_dof",
+    "norm_scan_values",
+    "stat_scan_local",
+    "stat_scan",
 ]
 
 
@@ -97,6 +100,9 @@ OPTIONAL_QUANTITIES_COMMON = [
     "counts",
     "success",
     "n_dof",
+    "norm_scan_values",
+    "stat_scan_local",
+    "stat_scan",
 ]
 
 
@@ -486,6 +492,18 @@ class FluxMaps:
         """Fit statistic scan value."""
         self._check_quantity("stat_scan")
         return self._data["stat_scan"]
+
+    @property
+    def norm_scan_values(self):
+        """Fit statistic norm scan values."""
+        self._check_quantity("norm_scan_values")
+        return self._data["norm_scan_values"]
+
+    @property
+    def stat_scan_local(self):
+        """Fit statistic scan value around best norm."""
+        self._check_quantity("stat_scan_local")
+        return self._data["stat_scan_local"]
 
     @property
     def stat(self):
