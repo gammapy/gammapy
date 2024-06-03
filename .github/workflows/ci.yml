@@ -152,9 +152,10 @@ jobs:
       - name: checkout repo
         uses: actions/checkout@v4
       - name: create and activate env
-        uses: mamba-org/provision-with-micromamba@main
+        uses: mamba-org/setup-micromamba@v1
         with:
           environment-file: environment-dev.yml
+          cache-downloads: true
       - name: install gammapy
         run: |
           pip install -e .
