@@ -18,8 +18,8 @@
 #        args: ["--count", "--max-line-length=100", "--extend-ignore=E203,E712,W503"]
 
 repos:
-  - repo: https://github.com/astral-sh/ruff
-    rev: v0.0.273
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.0.282
     hooks:
       - id: ruff
         args: ["--fix"]
