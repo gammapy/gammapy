@@ -331,17 +331,6 @@ class FluxMaps:
         """Reference model as a `~gammapy.modeling.models.SkyModel`."""
         return self._reference_model
 
-    @reference_model.setter
-    def reference_model(self, reference_model):
-        """Reference model as a `~gammapy.modeling.models.SkyModel`.
-
-        Parameters
-        ----------
-        reference_model : `~gammapy.modeling.models.SkyModel`
-            Sky model
-        """
-        self._reference_model = reference_model
-
     @property
     def reference_spectral_model(self):
         """Reference spectral model as a `SpectralModel`"""
@@ -1112,8 +1101,9 @@ class FluxMaps:
         ----------
 
         reference_model : `~gammapy.modeling.models.SkyModel`, optional
-            The reference model to use for conversions. If None, the copied model is used.
-
+            The reference model to use for conversions. If None, the originial model is copied.
+            Flux maps have been obtained for a specific reference model.
+            Changing it will change the fluxes. Handle with care.
         Returns
         -------
         flux_maps : `FluxMaps`
@@ -1123,7 +1113,10 @@ class FluxMaps:
 
         new = deepcopy(self)
         if reference_model is not None:
-            new.reference_model = reference_model
+            new._reference_model = reference_model.copy()
+            log.warning(
+                "Changing the reference model will change the fluxes. Handle with care."
+            )
         return new
 
     def slice_by_idx(self, slices):
