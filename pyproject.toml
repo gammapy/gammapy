@@ -46,3 +46,5 @@ try:
 except Exception:
     version = '{version}'
 """
+[tool.ruff]
+line-length = 100  # or any desired length
