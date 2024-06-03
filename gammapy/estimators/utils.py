@@ -770,6 +770,13 @@ def combine_flux_maps(maps, method="gaussian_errors", reference_model=None):
         * gaussian_errors :
             Under the gaussian error approximation the likelihood is given by the gaussian distibution.
             The product of gaussians is also a gaussian so can derive dnde, dnde_err, and ts.
+        * profile :
+            Sum the likelihood profile maps.
+            The flux maps must contains the `stat_scan` maps.
+            Reference model must be the same for all maps,
+            otherwise the likelihood profile maps are not aligned.
+        Default is "gaussian_errors", but "profile" will be more accurate if available.
+
     reference_model : `~gammapy.modeling.models.SkyModel`, optional
         Reference model to use for conversions.
         If None, use the reference_model of the first FluxMaps in the list.
@@ -779,27 +786,13 @@ def combine_flux_maps(maps, method="gaussian_errors", reference_model=None):
     flux_maps : `~gammapy.estimators.FluxMaps`
         Joint flux map.
     """
-    if method != "gaussian_errors":
-        raise ValueError(
-            f'Invalid method : {method}, available methods are : "gaussian_errors"'
-        )
 
     if isinstance(maps, FluxMaps):
-        geom = maps.dnde.sum_over_axes().geom
-        means = list(maps.dnde.copy().iter_by_image(keepdims=True))
-        sigmas = list(maps.dnde_err.copy().iter_by_image(keepdims=True))
-        mean = Map.from_geom(geom, data=means[0].data, unit=means[0].unit)
-        sigma = Map.from_geom(geom, data=sigmas[0].data, unit=sigmas[0].unit)
         gti = maps.gti
         meta = maps.meta
         if reference_model is None:
             reference_model = maps.reference_model
     else:
-        means = [map_.dnde.copy() for map_ in maps]
-        sigmas = [map_.dnde_err.copy() for map_ in maps]
-        mean = means[0]
-        sigma = sigmas[0]
-
         gtis = [map_.gti for map_ in maps if map_.gti is not None]
         if np.any(gtis):
             gti = gtis[0].copy()
@@ -807,46 +800,119 @@ def combine_flux_maps(maps, method="gaussian_errors", reference_model=None):
                 gti.stack(gtis[k])
         else:
             gti = None
-
-        if reference_model is None:
-            reference_model = maps[0].reference_model
-
         # TODO : change this once we have stackable metadata objets
         metas = [map_.meta for map_ in maps if map_.meta is not None]
         meta = {}
         if np.any(metas):
             for data in metas:
                 meta.update(data)
+        if reference_model is None:
+            reference_model = maps[0].reference_model
 
-    for k in range(1, len(means)):
+    if method == "gaussian_errors":
 
-        mean_k = means[k].quantity.to_value(mean.unit)
-        sigma_k = sigmas[k].quantity.to_value(sigma.unit)
+        if isinstance(maps, FluxMaps):
+            geom = maps.dnde.sum_over_axes().geom
+            means = list(maps.dnde.copy().iter_by_image(keepdims=True))
+            sigmas = list(maps.dnde_err.copy().iter_by_image(keepdims=True))
+            mean = Map.from_geom(geom, data=means[0].data, unit=means[0].unit)
+            sigma = Map.from_geom(geom, data=sigmas[0].data, unit=sigmas[0].unit)
 
-        mask_valid = np.isfinite(mean) & np.isfinite(sigma) & (sigma.data != 0)
-        mask_valid_k = np.isfinite(mean_k) & np.isfinite(sigma_k) & (sigma_k != 0)
-        mask = mask_valid & mask_valid_k
-        mask_k = ~mask_valid & mask_valid_k
+        else:
+            means = [map_.dnde.copy() for map_ in maps]
+            sigmas = [map_.dnde_err.copy() for map_ in maps]
+            mean = means[0]
+            sigma = sigmas[0]
 
-        mean.data[mask] = (
-            (mean.data * sigma_k**2 + mean_k * sigma.data**2)
-            / (sigma.data**2 + sigma_k**2)
-        )[mask]
-        sigma.data[mask] = (
-            sigma.data * sigma_k / np.sqrt(sigma.data**2 + sigma_k**2)
-        )[mask]
+            gtis = [map_.gti for map_ in maps if map_.gti is not None]
+            if np.any(gtis):
+                gti = gtis[0].copy()
+                for k in range(1, len(gtis)):
+                    gti.stack(gtis[k])
+            else:
+                gti = None
 
-        mean.data[mask_k] = mean_k[mask_k]
-        sigma.data[mask_k] = sigma_k[mask_k]
+        for k in range(1, len(means)):
 
-    ts = -2 * np.log(
-        stats.norm.pdf(0, loc=mean, scale=sigma)
-        / stats.norm.pdf(mean, loc=mean, scale=sigma)
-    )
-    ts = Map.from_geom(mean.geom, data=ts)
+            mean_k = means[k].quantity.to_value(mean.unit)
+            sigma_k = sigmas[k].quantity.to_value(sigma.unit)
+
+            mask_valid = np.isfinite(mean) & np.isfinite(sigma) & (sigma.data != 0)
+            mask_valid_k = np.isfinite(mean_k) & np.isfinite(sigma_k) & (sigma_k != 0)
+            mask = mask_valid & mask_valid_k
+            mask_k = ~mask_valid & mask_valid_k
+
+            mean.data[mask] = (
+                (mean.data * sigma_k**2 + mean_k * sigma.data**2)
+                / (sigma.data**2 + sigma_k**2)
+            )[mask]
+            sigma.data[mask] = (
+                sigma.data * sigma_k / np.sqrt(sigma.data**2 + sigma_k**2)
+            )[mask]
+
+            mean.data[mask_k] = mean_k[mask_k]
+            sigma.data[mask_k] = sigma_k[mask_k]
+
+        ts = -2 * np.log(
+            stats.norm.pdf(0, loc=mean, scale=sigma)
+            / stats.norm.pdf(mean, loc=mean, scale=sigma)
+        )
+        ts = Map.from_geom(mean.geom, data=ts)
+
+        kwargs = dict(
+            sed_type="dnde", gti=gti, reference_model=reference_model, meta=meta
+        )
+        return FluxMaps.from_maps(dict(dnde=mean, dnde_err=sigma, ts=ts), **kwargs)
+
+    elif method == "profile":
+
+        # TODO move that elsewhere
+        equivalent_model = True
+        for map_ in maps[1:]:
+            for p1, p0 in zip(
+                map_.reference_model.parameters, maps[0].reference_model.parameters
+            ):
+                equivalent_model &= np.all(p0.quantity == p1.quantity)
+                equivalent_model &= np.all(p0.scan_values == p1.scan_values)
+        if not equivalent_model:
+            raise ValueError(
+                f"""Reference model must be the same for all maps with method={method},
+                otherwise the likelihood profiles map are not aligned."""
+            )
+
+        stat_scans = [map_.stat_scan.copy() for map_ in maps]
+        stat_scan = stat_scans[0]
+
+        for k in range(1, len(stat_scans)):
+            stat_scan += stat_scans[k]
+
+        geom = maps[0].norm.geom
+        dnde_ref = maps[0].dnde_ref.squeeze()
+        norm_coord = stat_scan.geom.get_coord()["norm"]
+
+        ind_best = stat_scan.data.argmin(axis=1)
+        ij, ik, il = np.indices(ind_best.shape)
+        norm = norm_coord[ij, ind_best, ik, il]
+        dnde = Map.from_geom(
+            geom=geom, data=norm.data * dnde_ref.value, unit=dnde_ref.unit
+        )
+
+        ind_err = np.abs(stat_scan.data + stat_scan.data.min(axis=1) - 1).argmin(axis=1)
+        norm_err = np.abs(norm_coord[ij, ind_err, ik, il])
+        dnde_err = Map.from_geom(
+            geom=geom, data=norm_err.data * dnde_ref.value, unit=dnde_ref.unit
+        )
+
+        ts = -stat_scan.data.min(axis=1)
+        ts = Map.from_geom(geom=geom, data=ts)
+
+    else:
+        raise ValueError(
+            f'Invalid method : {method}, available methods are : "gaussian_errors", "cash"'
+        )
 
     kwargs = dict(sed_type="dnde", gti=gti, reference_model=reference_model, meta=meta)
-    return FluxMaps.from_maps(dict(dnde=mean, dnde_err=sigma, ts=ts), **kwargs)
+    return FluxMaps.from_maps(dict(dnde=dnde, dnde_err=dnde_err, ts=ts), **kwargs)
 
 
 def _generate_scan_values(power_min=-6, power_max=2, relative_error=1e-2):
