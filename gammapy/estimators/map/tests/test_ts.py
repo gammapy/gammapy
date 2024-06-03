@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+from copy import deepcopy
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
@@ -6,7 +7,7 @@ import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from gammapy.datasets import Datasets, MapDataset, MapDatasetOnOff
 from gammapy.estimators import TSMapEstimator
-from gammapy.estimators.utils import get_combined_significance_maps
+from gammapy.estimators.utils import combine_flux_maps, get_combined_significance_maps
 from gammapy.irf import EDispKernelMap, PSFMap
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling.models import (
@@ -311,6 +312,19 @@ def test_ts_map_stat_scan(fake_dataset):
     assert maps.dnde_scan_values.unit == dnde_ref.unit
     norm = maps.dnde_scan_values.data[ij, ind_best, ik, il] / dnde_ref.value
     assert_allclose(norm[success], maps_ref.norm.data[success], rtol=1e-5)
+    combined_map = combine_flux_maps([maps, maps], method="profile")
+    assert_allclose(combined_map.ts.data, 2 * ts)
+    assert_allclose(combined_map.norm.data, norm)
+
+    maps1 = deepcopy(maps)
+    combined_map = combine_flux_maps([maps, maps1], method="profile")
+    assert_allclose(combined_map.ts.data, 2 * ts)
+    assert_allclose(combined_map.norm.data, norm)
+
+    with pytest.raises(ValueError):
+        maps1 = deepcopy(maps)
+        maps1._reference_model.parameters["amplitude"].value = 1
+        combined_map = combine_flux_maps([maps, maps1], method="profile")
 
     assert_allclose(maps.norm.data[success], maps_ref.norm.data[success], rtol=1e-4)
     assert_allclose(
