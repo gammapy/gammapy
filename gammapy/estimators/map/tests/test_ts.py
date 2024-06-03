@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+from copy import deepcopy
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
@@ -6,7 +7,7 @@ import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from gammapy.datasets import MapDataset, MapDatasetOnOff
 from gammapy.estimators import TSMapEstimator
-from gammapy.estimators.utils import get_combined_significance_maps
+from gammapy.estimators.utils import combine_flux_maps, get_combined_significance_maps
 from gammapy.irf import EDispKernelMap, PSFMap
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling.models import (
@@ -291,6 +292,15 @@ def test_ts_map_stat_scan(fake_dataset):
     maps = estimator.run(dataset)
     success = maps.success.data
 
+    maps.stat_scan_local.geom.data_shape == (1, 11, 2, 2)
+    ts = np.abs(maps["stat_scan_local"].data.min(axis=1))
+    assert_allclose(ts[success], maps.ts.data[success], rtol=1e-3)
+
+    ind_best = maps.stat_scan_local.data.argmin(axis=1)
+    ij, ik, il = np.indices(ind_best.shape)
+    norm = maps.norm_scan_values.data[ij, ind_best, ik, il]
+    assert_allclose(norm[success], maps.norm.data[success], rtol=1e-5)
+
     maps.stat_scan.geom.data_shape == (1, 4001, 2, 2)
 
     ts = np.abs(maps["stat_scan"].data.min(axis=1))
@@ -302,14 +312,19 @@ def test_ts_map_stat_scan(fake_dataset):
     norm = norm_coord[ij, ind_best, ik, il]
     assert_allclose(norm[success], maps.norm.data[success], rtol=5e-2)
 
-    maps.stat_scan_local.geom.data_shape == (1, 11, 2, 2)
-    ts = np.abs(maps["stat_scan_local"].data.min(axis=1))
-    assert_allclose(ts[success], maps.ts.data[success], rtol=1e-3)
+    combined_map = combine_flux_maps([maps, maps], method="profile")
+    assert_allclose(combined_map.ts.data, 2 * ts)
+    assert_allclose(combined_map.norm.data, norm)
 
-    ind_best = maps.stat_scan_local.data.argmin(axis=1)
-    ij, ik, il = np.indices(ind_best.shape)
-    norm = maps.norm_scan_values.data[ij, ind_best, ik, il]
-    assert_allclose(norm[success], maps.norm.data[success], rtol=1e-5)
+    maps1 = deepcopy(maps)
+    combined_map = combine_flux_maps([maps, maps1], method="profile")
+    assert_allclose(combined_map.ts.data, 2 * ts)
+    assert_allclose(combined_map.norm.data, norm)
+
+    with pytest.raises(ValueError):
+        maps1 = deepcopy(maps)
+        maps1._reference_model.parameters["amplitude"].value = 1
+        combined_map = combine_flux_maps([maps, maps1], method="profile")
 
 
 def test_ts_map_with_model(fake_dataset):
