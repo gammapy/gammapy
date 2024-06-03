@@ -47,4 +47,14 @@ except Exception:
     version = '{version}'
 """
 [tool.ruff]
-line-length = 100  # or any desired length
+line-length = 100
+extend-ignore = ["E501"]
+
+[[tool.ruff.per-file-ignores]]
+path = "docs/**/*.py"
+ignore = ["E501"]
+
+[[tool.ruff.per-file-ignores]]
+path = "examples/**/*.py"
+ignore = ["E501", "E402"]
+
