@@ -277,6 +277,41 @@ def test_compute_ts_map_downsampled(input_dataset):
     assert np.isnan(result["ts"].data[0, 30, 40])
 
 
+def test_ts_map_stat_scan(fake_dataset):
+    model = fake_dataset.models["source"]
+
+    dataset = fake_dataset.downsample(25)
+
+    estimator = TSMapEstimator(
+        model,
+        kernel_width="0.3 deg",
+        selection_optional=["stat_scan_local", "stat_scan"],
+        energy_edges=[200, 3500] * u.GeV,
+    )
+    maps = estimator.run(dataset)
+    success = maps.success.data
+
+    maps.stat_scan.geom.data_shape == (1, 4001, 2, 2)
+
+    ts = np.abs(maps["stat_scan"].data.min(axis=1))
+    assert_allclose(ts[success], maps.ts.data[success], rtol=1e-3)
+
+    norm_coord = maps.stat_scan.geom.get_coord()["norm"]
+    ind_best = maps.stat_scan.data.argmin(axis=1)
+    ij, ik, il = np.indices(ind_best.shape)
+    norm = norm_coord[ij, ind_best, ik, il]
+    assert_allclose(norm[success], maps.norm.data[success], rtol=5e-2)
+
+    maps.stat_scan_local.geom.data_shape == (1, 11, 2, 2)
+    ts = np.abs(maps["stat_scan_local"].data.min(axis=1))
+    assert_allclose(ts[success], maps.ts.data[success], rtol=1e-3)
+
+    ind_best = maps.stat_scan_local.data.argmin(axis=1)
+    ij, ik, il = np.indices(ind_best.shape)
+    norm = maps.norm_scan_values.data[ij, ind_best, ik, il]
+    assert_allclose(norm[success], maps.norm.data[success], rtol=1e-5)
+
+
 def test_ts_map_with_model(fake_dataset):
     model = fake_dataset.models["source"]
 
