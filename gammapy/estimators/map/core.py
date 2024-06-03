@@ -337,7 +337,7 @@ class FluxMaps:
 
         Parameters
         ----------
-        value : `~gammapy.modeling.models.SkyModel`
+        reference_model : `~gammapy.modeling.models.SkyModel`
             Sky model
         """
         self._reference_model = reference_model
