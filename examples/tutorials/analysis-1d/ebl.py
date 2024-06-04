@@ -21,14 +21,10 @@ notebook shows how to use these models to correct for this interaction.
 
 from copy import deepcopy
 import astropy.units as u
-from astropy.coordinates import Angle, SkyCoord
-from astropy.time import Time
-from regions import CircleSkyRegion
 import matplotlib.pyplot as plt
 from gammapy.catalog import SourceCatalog4FGL
 from gammapy.datasets import SpectrumDatasetOnOff
 from gammapy.estimators import FluxPointsEstimator
-from gammapy.maps import MapAxis, RegionGeom, WcsGeom
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
     EBL_DATA_BUILTIN,
@@ -42,14 +38,14 @@ from gammapy.modeling.models import (
 # Load the data
 # -------------
 #
-# We will use 6 observations of the blazars PKS~2155-304 taken in 2008 by
+# We will use 6 observations of the blazars PKS 2155-304 taken in 2008 by
 # H.E.S.S. when it was in a steady state. The data have already been
-# reduced to OGIP format\ `SpectrumDatasetOnOff` following the procedure
+# reduced to OGIP format `SpectrumDatasetOnOff` following the procedure
 # :doc:`/tutorials/analysis-1d/spectral_analysis` tutorial using a
 # `ReflectedRegions` background estimation. The spectra and IRF from the
 # 6 observations have been stacked together.
 #
-# We will load this dataset as a `SpectrumDatasetOnOff` and proceed with
+# We will load this dataset as a `~gammapy.datasets.SpectrumDatasetOnOff` and proceed with
 # the modeling. You can do a 3D analysis as well.
 #
 
@@ -66,7 +62,7 @@ print(dataset)
 #
 # The observed spectrum is already attenuated due to the EBL. Assuming
 # that the intrinsic spectrum is a power law, the observed spectrum is a
-# `CompoundSpectrumModel` given by the product of an EBL model with the
+# `gammapy.modeling.models.CompoundSpectralModel` given by the product of an EBL model with the
 # intrinsic model.
 #
 
@@ -78,7 +74,9 @@ print(dataset)
 
 print(EBL_DATA_BUILTIN.keys())
 
-# define the power law
+######################################################################
+# Define the power law
+#
 index = 2.3
 amplitude = 1.81 * 1e-12 * u.Unit("cm-2 s-1 TeV-1")
 reference = 1 * u.TeV
@@ -95,7 +93,9 @@ absorption = EBLAbsorptionNormSpectralModel.read_builtin("dominguez", redshift=r
 spectral_model = pwl * absorption
 print(spectral_model)
 
+######################################################################
 # Now, create a sky model and proceed with the fit
+#
 sky_model = SkyModel(spatial_model=None, spectral_model=spectral_model, name="pks2155")
 
 dataset.models = sky_model
@@ -113,7 +113,7 @@ print(result.models.to_parameters_table())
 # Get the flux points
 # ===================
 #
-# To get the observed flux points, just run the `FluxPointsEstimator`
+# To get the observed flux points, just run the `~gammapy.estimators.FluxPointsEstimator
 # normally
 #
 
@@ -150,11 +150,15 @@ print(flux_points_intrinsic.reference_model)
 spectral_model.covariance.plot_correlation()
 plt.show()
 
-# The covariance matrix on the power law does not contain the off diagnoal terms
+######################################################################
+# The covariance matrix on the power law does not contain the off diagonal terms
+#
 pwl.covariance.plot_correlation()
 plt.show()
 
-# Extract the sub covaraince and set is on the `pwl`
+######################################################################
+# Extract the sub covariance and set is on the `pwl`
+#
 sub_covar = spectral_model.covariance.get_subcovariance(pwl.covariance.parameters)
 pwl.covariance = sub_covar
 pwl.covariance.plot_correlation()
@@ -204,10 +208,10 @@ plt.show()
 # parameters.
 #
 # Example: We now assume that the FermiLAT 4FGL catalog spectrum of the
-# source is a good assumption of the intrisic spectrum.
+# source is a good assumption of the intrinsic spectrum.
 #
 # *NOTE*: This is a very simplified assumption and in reality, EBL
-# absorption can affect the Fermi spectrum significantlty. Also, blazar
+# absorption can affect the Fermi spectrum significantly. Also, blazar
 # spectra vary with time and long term averaged states may not be
 # representative of a specific steady state
 #
@@ -236,7 +240,7 @@ intrinsic_model.beta.prior = GaussianPrior(
 
 
 ######################################################################
-# As before, multiply the intrisic model with the EBL model
+# As before, multiply the intrinsic model with the EBL model
 #
 
 obs_model = intrinsic_model * absorption
