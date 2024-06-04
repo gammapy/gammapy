@@ -1106,7 +1106,7 @@ class FluxMaps:
             Changing it will change the fluxes. Handle with care.
         Returns
         -------
-        flux_maps : `FluxMaps`
+        flux_maps : `~gammapy.estimators.FluxMaps`
             Copied flux maps object.
 
         """
