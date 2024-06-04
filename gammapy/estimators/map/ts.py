@@ -97,14 +97,14 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
     sum_over_energy_groups : bool
         Whether to sum over the energy groups or fit the norm on the full energy
         cube.
-    norm : ~gammapy.modeling.Parameter` or dict
+    norm : `~gammapy.modeling.Parameter` or dict
         Norm parameter used for the likelihood profile computation on a fixed norm range.
         Only used for "stat_scan" in `selection_optional`.
         Default is None and a new parameter is created automatically,
         with value=1, name="norm", scan_min=-20, scan_max=20, and scan_n_values = 4001.
         If a dict is given the entries should be a subset of
         `~gammapy.modeling.Parameter` arguments.
-    norm_local : ~gammapy.modeling.Parameter` or dict
+    norm_local : `~gammapy.modeling.Parameter` or dict
         Norm parameter used for the local likelihood profile computation around the best norm value.
         Only used for "stat_scan_local" in `selection_optional`.
         Default is None and a new parameter is created automatically,
