@@ -2,23 +2,23 @@
 requires = [
     "setuptools >= 65",
     "Cython",
-    'numpy>=2.0.0rc1',
-    'setuptools_scm[toml] >= 8',
+    "numpy >= 2.0.0rc1",
+    "setuptools_scm[toml] >= 8",
 ]
 build-backend = "setuptools.build_meta"
 
 [tool.black]
 line-length = 88
-target-version = ['py38', 'py39', 'py310', 'py311', 'py312']
-include = '\.pyi?$'
+target-version = ["py38", "py39", "py310", "py311", "py312"]
+include = '\\.pyi?$'
 exclude = '''
 /(
-    \.eggs
-  | \.git
-  | \.hg
-  | \.mypy_cache
-  | \.tox
-  | \.venv
+    \\.eggs
+  | \\.git
+  | \\.hg
+  | \\.mypy_cache
+  | \\.tox
+  | \\.venv
   | _build
   | buck-out
   | build
@@ -35,7 +35,7 @@ filterwarnings = [
 
 [tool.setuptools_scm]
 version_file = "gammapy/version.py"
-version_file_template = """\
+version_file_template = """
 # Note that we need to fall back to the hard-coded version if either
 # setuptools_scm can't be imported or setuptools_scm can't determine the
 # version, so we catch the generic 'Exception'.
@@ -46,14 +46,3 @@ except Exception:
     version = '{version}'
 """
 
-#[tool.ruff]
-#line-length = 100
-#extend-ignore = ["E501"]
-
-#[[tool.ruff.per-file-ignores]]
-#path = "docs/**/*.py"
-#ignore = ["E501"]
-#
-#[[tool.ruff.per-file-ignores]]
-#path = "examples/**/*.py"
-#ignore = ["E501", "E402"]
