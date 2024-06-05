@@ -1,0 +1,6 @@
+line-length = 100
+lint.extend-ignore = ["E501"]
+
+[lint.per-file-ignores]
+"docs/**/*.py" = ["E501"]
+"examples/**/*.py" = ["E501", "E402"]
