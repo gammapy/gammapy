@@ -17,9 +17,15 @@
 #        exclude: examples
 #        args: ["--count", "--max-line-length=100", "--extend-ignore=E203,E712,W503"]
 
+#repos:
+#  - repo: https://github.com/astral-sh/ruff-pre-commit
+#    rev: v0.4.7Y
+#    hooks:
+#      - id: ruff
+#        args: ["--config=pyproject_minimal.toml"]
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.4.7
     hooks:
       - id: ruff
-        args: ["--config=pyproject.toml"]
+        args: ["--config=.ruff.toml"]
