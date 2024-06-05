@@ -164,10 +164,10 @@ def get_psf():
 def get_edisp(geom, geom_etrue):
     filename = "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz"
     edisp2d = EnergyDispersion2D.read(filename, hdu="EDISP")
-    energy = geom.axes["energy"].edges
-    energy_true = geom_etrue.axes["energy_true"].edges
+    energy_axis = geom.axes["energy"]
+    energy_axis_true = geom_etrue.axes["energy_true"]
     edisp_kernel = edisp2d.to_edisp_kernel(
-        offset="1.2 deg", energy=energy, energy_true=energy_true
+        offset="1.2 deg", energy_axis=energy_axis, energy_axis_true=energy_axis_true
     )
     edisp = EDispKernelMap.from_edisp_kernel(edisp_kernel)
     return edisp
