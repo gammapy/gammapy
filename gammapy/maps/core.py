@@ -570,7 +570,7 @@ class Map(abc.ABC):
 
         """
         if axis_name:
-            if np.isscalar(pad_width):
+            if isscalar(pad_width):
                 pad_width = (pad_width, pad_width)
 
             geom = self.geom.pad(pad_width=pad_width, axis_name=axis_name)
