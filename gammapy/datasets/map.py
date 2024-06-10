@@ -416,7 +416,7 @@ class MapDataset(Dataset):
 
         self.mask_fit = mask_fit
 
-        if psf and not isinstance(psf, (PSFMap, HDULocation)):
+        if psf and not isinstance(psf, (PSFMap, PSFKernel, HDULocation)):
             raise ValueError(
                 f"'psf' must be a 'PSFMap' or `HDULocation` object, got {type(psf)}"
             )

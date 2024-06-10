@@ -7,7 +7,7 @@ from astropy.coordinates import angular_separation
 from astropy.utils import lazyproperty
 from regions import CircleSkyRegion
 import matplotlib.pyplot as plt
-from gammapy.irf import EDispKernel
+from gammapy.irf import EDispKernel, PSFKernel
 from gammapy.maps import HpxNDMap, Map, RegionNDMap, WcsNDMap
 from gammapy.modeling.models import PointSpatialModel, TemplateNPredModel
 from .utils import apply_edisp
@@ -207,23 +207,28 @@ class MapEvaluator:
 
         # lookup psf
         if psf and self.model.spatial_model:
-            energy_name = psf.energy_name
-            geom_psf = geom if energy_name == "energy" else exposure.geom
-
-            if self.use_psf_containment(geom=geom_psf):
-                energy_values = geom_psf.axes[energy_name].center.reshape((-1, 1, 1))
-                kwargs = {energy_name: energy_values, "rad": geom.region.radius}
-                self.psf_containment = psf.containment(**kwargs)
+            if isinstance(psf, PSFKernel):
+                self.psf = psf
             else:
-                if geom_psf.is_region or geom_psf.is_hpx:
-                    geom_psf = geom_psf.to_wcs_geom()
+                energy_name = psf.energy_name
+                geom_psf = geom if energy_name == "energy" else exposure.geom
 
-                self.psf = psf.get_psf_kernel(
-                    position=self.position,
-                    geom=geom_psf,
-                    containment=PSF_CONTAINMENT,
-                    max_radius=PSF_MAX_RADIUS,
-                )
+                if self.use_psf_containment(geom=geom_psf):
+                    energy_values = geom_psf.axes[energy_name].center.reshape(
+                        (-1, 1, 1)
+                    )
+                    kwargs = {energy_name: energy_values, "rad": geom.region.radius}
+                    self.psf_containment = psf.containment(**kwargs)
+                else:
+                    if geom_psf.is_region or geom_psf.is_hpx:
+                        geom_psf = geom_psf.to_wcs_geom()
+
+                    self.psf = psf.get_psf_kernel(
+                        position=self.position,
+                        geom=geom_psf,
+                        containment=PSF_CONTAINMENT,
+                        max_radius=PSF_MAX_RADIUS,
+                    )
 
         self.exposure = exposure
         if self.evaluation_mode == "local":
