@@ -416,16 +416,10 @@ class MapDataset(Dataset):
 
         self.mask_fit = mask_fit
 
-        if psf and not isinstance(psf, (PSFMap, PSFKernel, HDULocation)):
+        if psf and not isinstance(psf, (PSFMap, HDULocation)):
             raise ValueError(
-                f"'psf' must be a 'PSFMap', 'PSFKernel' or `HDULocation` object, got {type(psf)}"
+                f"'psf' must be a 'PSFMap' or `HDULocation` object, got {type(psf)}"
             )
-
-        if psf and isinstance(psf, PSFMap) and isinstance(psf.psf_map.geom, RegionGeom):
-            if exposure and psf.energy_name == "energy_true":
-                psf = psf.get_psf_kernel(exposure.geom)
-            elif counts and psf.energy_name == "energy":
-                psf = psf.get_psf_kernel(exposure.geom)
         self.psf = psf
 
         if edisp and not isinstance(edisp, (EDispMap, EDispKernelMap, HDULocation)):
@@ -446,20 +440,15 @@ class MapDataset(Dataset):
 
         self._psf = self._get_effectivep_psf()
 
-    @property
     def _get_effectivep_psf(self):
         """Precompute PSFkernel if possible"""
-        effectivep_ps = self.psf
-        if (
-            self.psf
-            and isinstance(self.psf, PSFMap)
-            and isinstance(self.psf.psf_map.geom, RegionGeom)
-        ):
+        effectivep_psf = self.psf
+        if isinstance(self.psf.psf_map.geom, RegionGeom):
             if self.exposure and self.psf.energy_name == "energy_true":
-                effectivep_ps = self.psf.get_psf_kernel(self.exposure.geom)
+                effectivep_psf = self.psf.get_psf_kernel(self.exposure.geom)
             elif self.counts and self.psf.energy_name == "energy":
-                effectivep_ps = self.psf.get_psf_kernel(self.exposure.geom)
-        return effectivep_ps
+                effectivep_psf = self.psf.get_psf_kernel(self.counts.geom)
+        return effectivep_psf
 
     @property
     def meta(self):
