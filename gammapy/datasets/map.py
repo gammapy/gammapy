@@ -9,7 +9,7 @@ from regions import CircleSkyRegion
 import matplotlib.pyplot as plt
 from gammapy.data import GTI, PointingMode
 from gammapy.irf import EDispKernelMap, EDispMap, PSFKernel, PSFMap, RecoPSFMap
-from gammapy.maps import LabelMapAxis, Map, MapAxes, MapAxis, WcsGeom
+from gammapy.maps import LabelMapAxis, Map, MapAxes, MapAxis, RegionGeom, WcsGeom
 from gammapy.modeling.models import DatasetModels, FoVBackgroundModel, Models
 from gammapy.stats import (
     CashCountsStatistic,
@@ -418,9 +418,14 @@ class MapDataset(Dataset):
 
         if psf and not isinstance(psf, (PSFMap, PSFKernel, HDULocation)):
             raise ValueError(
-                f"'psf' must be a 'PSFMap' or `HDULocation` object, got {type(psf)}"
+                f"'psf' must be a 'PSFMap', 'PSFKernel' or `HDULocation` object, got {type(psf)}"
             )
 
+        if psf and isinstance(psf, PSFMap) and isinstance(psf.psf_map.geom, RegionGeom):
+            if exposure and psf.energy_name == "energy_true":
+                psf = psf.get_psf_kernel(exposure.geom)
+            elif counts and psf.energy_name == "energy":
+                psf = psf.get_psf_kernel(exposure.geom)
         self.psf = psf
 
         if edisp and not isinstance(edisp, (EDispMap, EDispKernelMap, HDULocation)):
@@ -438,6 +443,23 @@ class MapDataset(Dataset):
             self._meta = MapDatasetMetaData()
         else:
             self._meta = meta
+
+        self._psf = self._get_effectivep_psf()
+
+    @property
+    def _get_effectivep_psf(self):
+        """Precompute PSFkernel if possible"""
+        effectivep_ps = self.psf
+        if (
+            self.psf
+            and isinstance(self.psf, PSFMap)
+            and isinstance(self.psf.psf_map.geom, RegionGeom)
+        ):
+            if self.exposure and self.psf.energy_name == "energy_true":
+                effectivep_ps = self.psf.get_psf_kernel(self.exposure.geom)
+            elif self.counts and self.psf.energy_name == "energy":
+                effectivep_ps = self.psf.get_psf_kernel(self.exposure.geom)
+        return effectivep_ps
 
     @property
     def meta(self):
@@ -719,7 +741,7 @@ class MapDataset(Dataset):
             if evaluator.needs_update:
                 evaluator.update(
                     self.exposure,
-                    self.psf,
+                    self._psf,
                     self.edisp,
                     self._geom,
                     self.mask_image,
