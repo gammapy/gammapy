@@ -291,6 +291,10 @@ class PSFMap(IRFMap):
         kernel : `~gammapy.irf.PSFKernel` or list of `PSFKernel`
             The resulting kernel.
         """
+
+        if geom.is_region or geom.is_hpx:
+            geom = geom.to_wcs_geom()
+
         if factor is None:  # TODO: remove once deprecated
             factor = _psf_upsampling_factor(self, geom, position, precision_factor)
 
