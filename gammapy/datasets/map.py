@@ -10,7 +10,7 @@ from regions import CircleSkyRegion
 import matplotlib.pyplot as plt
 from gammapy.data import GTI, PointingMode
 from gammapy.irf import EDispKernelMap, EDispMap, PSFKernel, PSFMap, RecoPSFMap
-from gammapy.maps import LabelMapAxis, Map, MapAxes, MapAxis, RegionGeom, WcsGeom
+from gammapy.maps import LabelMapAxis, Map, MapAxes, MapAxis, WcsGeom
 from gammapy.modeling.models import DatasetModels, FoVBackgroundModel, Models
 from gammapy.stats import (
     CashCountsStatistic,
@@ -374,6 +374,7 @@ class MapDataset(Dataset):
     exposure = LazyFitsData(cache=True)
     edisp = LazyFitsData(cache=True)
     background = LazyFitsData(cache=True)
+    psf = LazyFitsData(cache=True)
     mask_fit = LazyFitsData(cache=True)
     mask_safe = LazyFitsData(cache=True)
 
@@ -442,12 +443,20 @@ class MapDataset(Dataset):
     def _effective_psf(self):
         """Precompute PSFkernel if possible"""
         effective_psf = self.psf
-        if self.psf and isinstance(self.psf.psf_map.geom, RegionGeom):
-            if self.exposure and self.psf.energy_name == "energy_true":
+        if self.psf and self.psf.psf_map.geom.to_image().data_shape == (1, 1):
+            if (
+                self.exposure
+                and not self.exposure.geom.is_region
+                and self.psf.energy_name == "energy_true"
+            ):
                 effective_psf = self.psf.get_psf_kernel(
                     self.exposure.geom, multiscale=True
                 )
-            elif self.counts and self.psf.energy_name == "energy":
+            elif (
+                self.counts
+                and not self.counts.geom.is_region
+                and self.psf.energy_name == "energy"
+            ):
                 effective_psf = self.psf.get_psf_kernel(
                     self.counts.geom, multiscale=True
                 )
