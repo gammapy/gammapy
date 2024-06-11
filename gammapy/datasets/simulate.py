@@ -443,9 +443,9 @@ class MapDatasetEventSampler:
 
         meta["HDUCLAS1"] = "EVENTS"
         meta["EXTNAME"] = "EVENTS"
-        meta[
-            "HDUDOC"
-        ] = "https://github.com/open-gamma-ray-astro/gamma-astro-data-formats"
+        meta["HDUDOC"] = (
+            "https://github.com/open-gamma-ray-astro/gamma-astro-data-formats"
+        )
         meta["HDUVERS"] = "0.2"
         meta["HDUCLASS"] = "GADF"
 
@@ -476,15 +476,15 @@ class MapDatasetEventSampler:
         meta["DSREF1"] = ":GTI"
         meta["DSTYP2"] = "ENERGY"
         meta["DSUNI2"] = "TeV"
-        meta[
-            "DSVAL2"
-        ] = f'{dataset._geom.axes["energy"].edges.min().value}:{dataset._geom.axes["energy"].edges.max().value}'  # noqa: E501
+        meta["DSVAL2"] = (
+            f'{dataset._geom.axes["energy"].edges.min().value}:{dataset._geom.axes["energy"].edges.max().value}'  # noqa: E501
+        )
         meta["DSTYP3"] = "POS(RA,DEC)     "
 
         offset_max = np.max(dataset._geom.width).to_value("deg")
-        meta[
-            "DSVAL3"
-        ] = f"CIRCLE({fixed_icrs.ra.deg},{fixed_icrs.dec.deg},{offset_max})"  # noqa: E501
+        meta["DSVAL3"] = (
+            f"CIRCLE({fixed_icrs.ra.deg},{fixed_icrs.dec.deg},{offset_max})"  # noqa: E501
+        )
         meta["DSUNI3"] = "deg             "
         meta["NDSKEYS"] = " 3 "
 
