@@ -6,10 +6,10 @@ import inspect
 import json
 from collections import OrderedDict
 from itertools import repeat
-import numpy as np
 from numpy import isscalar, ndindex
 from astropy import units as u
 from astropy.io import fits
+import jax.numpy as np
 import matplotlib.pyplot as plt
 import gammapy.utils.parallel as parallel
 from gammapy.utils.compat import COPY_IF_NEEDED

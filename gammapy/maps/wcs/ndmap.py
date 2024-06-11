@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 from itertools import repeat
-import numpy as np
+import numpy
 import scipy.interpolate
 import scipy.ndimage as ndi
 import scipy.signal
@@ -11,6 +11,7 @@ from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.nddata import block_reduce
 from regions import PixCoord, PointPixelRegion, PointSkyRegion, SkyRegion
+import jax.numpy as np
 import matplotlib.colors as mpcolors
 import matplotlib.pyplot as plt
 import gammapy.utils.parallel as parallel
@@ -28,6 +29,19 @@ log = logging.getLogger(__name__)
 
 
 C_MAP_MASK = mpcolors.ListedColormap(["black", "white"], name="mask")
+
+
+def set_by_idx_numpy(data, idx, vals):
+    idx = pix_tuple_to_idx(idx)
+    data.T[idx] = vals
+
+
+def set_by_idx_jax(data, idx, vals):
+    idx = pix_tuple_to_idx(idx)
+    data.T.at[idx].set(vals)
+
+
+SET_BY_IDX = set_by_idx_jax if np.__package__ == "jax.numpy" else set_by_idx_numpy
 
 
 class WcsNDMap(WcsMap):
@@ -65,14 +79,14 @@ class WcsNDMap(WcsMap):
     def _make_default_data(geom, shape_np, dtype):
         # Check whether corners of each image plane are valid
 
-        data = np.zeros(shape_np, dtype=dtype)
+        data = numpy.zeros(shape_np, dtype=dtype)
 
         if not geom.is_regular or geom.is_allsky:
             coords = geom.get_coord()
             is_nan = np.isnan(coords.lon)
             data[is_nan] = np.nan
 
-        return data
+        return np.array(data)
 
     @classmethod
     def from_hdu(cls, hdu, hdu_bands=None, format=None):
@@ -103,11 +117,11 @@ class WcsNDMap(WcsMap):
         if isinstance(hdu, fits.BinTableHDU):
             map_out = cls(geom, meta=meta, unit=unit)
             pix = hdu.data.field("PIX")
-            pix = np.unravel_index(pix, shape_wcs[::-1])
-            vals = hdu.data.field("VALUE")
+            pix = numpy.unravel_index(pix, shape_wcs[::-1])
+            vals = np.array(hdu.data.field("VALUE"))
             if "CHANNEL" in hdu.data.columns.names and shape:
                 chan = hdu.data.field("CHANNEL")
-                chan = np.unravel_index(chan, shape[::-1])
+                chan = numpy.unravel_index(chan, shape[::-1])
                 idx = chan + pix
             else:
                 idx = pix
@@ -238,8 +252,10 @@ class WcsNDMap(WcsMap):
         return self._resample_by_idx(idx, weights=weights, preserve_counts=True)
 
     def set_by_idx(self, idx, vals):
-        idx = pix_tuple_to_idx(idx)
-        self.data.T[idx] = vals
+        return SET_BY_IDX(self.data, idx, vals)
+
+    #        idx = pix_tuple_to_idx(idx)
+    #        self.data.T[idx] = vals
 
     def _pad_spatial(
         self, pad_width, axis_name=None, mode="constant", cval=0, method="linear"
@@ -1009,10 +1025,10 @@ class WcsNDMap(WcsMap):
         slices = cutout_info["cutout-slices"]
         cutout_slices = Ellipsis, slices[0], slices[1]
 
-        data = np.zeros(shape=geom_cutout.data_shape, dtype=self.data.dtype)
+        data = numpy.zeros(shape=geom_cutout.data_shape, dtype=self.data.dtype)
         data[cutout_slices] = self.data[parent_slices]
 
-        return self._init_copy(geom=geom_cutout, data=data)
+        return self._init_copy(geom=geom_cutout, data=np.array(data))
 
     def _cutout_view(self, position, width, odd_npix=False):
         """
