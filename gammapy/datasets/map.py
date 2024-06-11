@@ -438,18 +438,27 @@ class MapDataset(Dataset):
         else:
             self._meta = meta
 
-        self._psf = self._get_effective_psf()
+    @property
+    def psf(self):
+        return self._psf
+
+    @psf.setter
+    def psf(self, psf):
+        if isinstance(psf, HDULocation):
+            psf = psf.load()
+        self._psf = psf
+        self._effective_psf = self._get_effective_psf()
 
     def _get_effective_psf(self):
         """Precompute PSFkernel if possible"""
-        effective_psf = self.psf
-        if isinstance(self.psf.psf_map.geom, RegionGeom):
-            if self.exposure and self.psf.energy_name == "energy_true":
-                effective_psf = self.psf.get_psf_kernel(
+        effective_psf = self._psf
+        if isinstance(self._psf.psf_map.geom, RegionGeom):
+            if self.exposure and self._psf.energy_name == "energy_true":
+                effective_psf = self._psf.get_psf_kernel(
                     self.exposure.geom, multiscale=True
                 )
-            elif self.counts and self.psf.energy_name == "energy":
-                effective_psf = self.psf.get_psf_kernel(
+            elif self.counts and self._psf.energy_name == "energy":
+                effective_psf = self._psf.get_psf_kernel(
                     self.counts.geom, multiscale=True
                 )
         return effective_psf
@@ -532,7 +541,7 @@ class MapDataset(Dataset):
         if self.exposure:
             geoms["geom_exposure"] = self.exposure.geom
 
-        if self.psf:
+        if self._psf:
             geoms["geom_psf"] = self.psf.psf_map.geom
 
         if self.edisp:
@@ -734,7 +743,7 @@ class MapDataset(Dataset):
             if evaluator.needs_update:
                 evaluator.update(
                     self.exposure,
-                    self._psf,
+                    self._effective_psf,
                     self.edisp,
                     self._geom,
                     self.mask_image,
