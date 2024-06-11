@@ -2,7 +2,7 @@
 from typing import Optional
 from astropy.io import fits
 from astropy.table import Table
-from pydantic import BaseModel, ValidationError, validator
+from pydantic import BaseModel, ValidationError, field_validator
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table_validator import GADF_EVENT_TABLE_DEFINITION, TableValidator
 
@@ -55,7 +55,7 @@ class GADFEventsHeader(BaseModel):
     RELHUM: Optional[float]
     NSBLEVEL: Optional[float]
 
-    @validator("HDUCLAS1")
+    @field_validator("HDUCLAS1")
     def _validate_hduclas1(cls, v):
         if v == "EVENTS":
             return v

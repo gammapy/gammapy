@@ -40,10 +40,10 @@ def test_gadf_event_reader():
     filename = make_path(
         "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz"
     )
-    events = GADFEventsReaderWriter.read(filename)
+    events_table, events_hdr = GADFEventsReaderWriter.read(filename)
 
-    assert len(events.table) == 11243
-    assert_allclose(events.table["ENERGY"][0], 0.55890286)
+    assert len(events_table) == 11243
+    assert_allclose(events_table["ENERGY"][0], 0.55890286)
 
 
 @requires_data()
