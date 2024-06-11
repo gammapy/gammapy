@@ -643,6 +643,20 @@ def test_convolve_nd():
     assert_allclose(values_full, values_same, rtol=1e-5)
 
 
+def test_get_psf_kernel_with_multiscale():
+    energy_axis = MapAxis.from_edges(
+        np.logspace(-1.0, 1.0, 4), unit="TeV", name="energy_true"
+    )
+    geom = WcsGeom.create(binsz=0.02 * u.deg, width=4.0 * u.deg, axes=[energy_axis])
+
+    psf = PSFMap.from_gauss(energy_axis, sigma=[0.1, 0.2, 0.3] * u.deg)
+
+    kernels = psf.get_psf_kernel(geom=geom, max_radius=None, multiscale=True)
+    assert len(kernels) == len(energy_axis.center)
+    assert_allclose(kernels[0].psf_kernel_map.geom.width.value, [[0.74], [0.74]])
+    assert_allclose(kernels[1].psf_kernel_map.geom.width.value, [[1.34], [1.34]])
+
+
 def test_convolve_pixel_scale_error():
     m = WcsNDMap.create(binsz=0.05 * u.deg, width=5 * u.deg)
     kgeom = WcsGeom.create(binsz=0.04 * u.deg, width=0.5 * u.deg)
