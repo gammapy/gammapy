@@ -13,9 +13,8 @@ class ObservationFilter:
 
     Parameters
     ----------
-    time_filter : `astropy.time.Time`, optional
-        Start and stop time of the selected time interval. Currently, we only support
-        a single time interval. Default is None.
+    time_filter : `astropy.time.Time` or a list, optional
+        Start and stop time of the selected time interval. Default is None.
     event_filters : list of dict, optional
         An event filter dictionary needs two keys:
 
