@@ -408,7 +408,6 @@ class EventList:
                 submask &= time < time_interval[1]
                 mask |= submask
         else:
-            print(time_intervals)
             mask = time_intervals[0] <= time
             mask &= time < time_intervals[1]
         return self.select_row_subset(mask)
