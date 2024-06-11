@@ -258,6 +258,7 @@ class PSFMap(IRFMap):
         containment=0.999,
         factor=None,
         precision_factor=12,
+        multiscale=False,
     ):
         """Return a PSF kernel at the given position.
 
@@ -283,6 +284,10 @@ class PSFMap(IRFMap):
         precision_factor : int, optional
             Factor between the bin half-width of the geom and the median R68% containment radius.
             Used only for the oversampling method. Default is 10.
+        multiscale : bool
+            If true the maximum angular size of the kernel map depends of enregy,
+            and a list of `~gammapy.irf.PSFKernel` is returned.
+            Default is False.
 
         Returns
         -------
@@ -345,6 +350,17 @@ class PSFMap(IRFMap):
             coords = kernel_image.geom.get_coord()
             im.fill_by_coord(coords, weights=kernel_image.data)
         return PSFKernel(kernel_map, normalize=True)
+
+        if multiscale:
+            kernels = []
+            for im, rad_max in zip(kernel_map.iter_by_image(keepdims=True), radii):
+                kernel_map_cutout = im.cutout(
+                    im.geom.center_skydir, width=2 * rad_max, odd_npix=True
+                )
+                kernels.append(PSFKernel(kernel_map_cutout, normalize=True))
+            return kernels
+        else:
+            return PSFKernel(kernel_map, normalize=True)
 
     def sample_coord(self, map_coord, random_state=0, chunk_size=10000):
         """Apply PSF corrections on the coordinates of a set of simulated events.

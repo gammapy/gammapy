@@ -149,7 +149,14 @@ class MapEvaluator:
     def psf_width(self):
         """Width of the PSF."""
         if self.psf is not None:
-            psf_width = np.max(self.psf.psf_kernel_map.geom.width)
+            if isinstance(self.psf, list):
+                psf_width = np.max(
+                    u.Quantity(
+                        [np.max(kern.psf_kernel_map.geom.width) for kern in self.psf]
+                    )
+                )
+            else:
+                psf_width = np.max(self.psf.psf_kernel_map.geom.width)
         else:
             psf_width = 0 * u.deg
         return psf_width
@@ -200,14 +207,18 @@ class MapEvaluator:
         # lookup edisp
         del self._edisp_diagonal
         if edisp:
-            energy_axis = geom.axes["energy"]
-            self.edisp = edisp.get_edisp_kernel(
-                position=self.position, energy_axis=energy_axis
-            )
+            if isinstance(edisp, EDispKernel):
+                self.edisp = edisp
+            else:
+                energy_axis = geom.axes["energy"]
+                self.edisp = edisp.get_edisp_kernel(
+                    position=self.position, energy_axis=energy_axis
+                )
+            del self._edisp_diagonal
 
         # lookup psf
         if psf and self.model.spatial_model:
-            if isinstance(psf, PSFKernel):
+            if isinstance(psf, (PSFKernel, list)):
                 self.psf = psf
             else:
                 energy_name = psf.energy_name
@@ -425,9 +436,11 @@ class MapEvaluator:
 
     @property
     def apply_psf_after_edisp(self):
-        return (
-            self.psf is not None and "energy" in self.psf.psf_kernel_map.geom.axes.names
-        )
+        if isinstance(self.psf, list):
+            psf = self.psf[0]
+        else:
+            psf = self.psf
+        return self.psf is not None and "energy" in psf.psf_kernel_map.geom.axes.names
 
     def compute_npred(self):
         """Evaluate model predicted counts.
