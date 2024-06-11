@@ -716,7 +716,7 @@ def test_piecewise_spatial_model_gc():
 
 
 def test_piecewise_spatial_model():
-    for lon in [359.9, 0, -359.9]:  # range(-360, 360):
+    for lon in range(-360, 360):
         geom = WcsGeom.create(
             skydir=(lon, 2.3), npix=(2, 2), binsz=0.3, frame="galactic"
         )
