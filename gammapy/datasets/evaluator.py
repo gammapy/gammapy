@@ -231,9 +231,6 @@ class MapEvaluator:
                     kwargs = {energy_name: energy_values, "rad": geom.region.radius}
                     self.psf_containment = psf.containment(**kwargs)
                 else:
-                    if geom_psf.is_region or geom_psf.is_hpx:
-                        geom_psf = geom_psf.to_wcs_geom()
-
                     self.psf = psf.get_psf_kernel(
                         position=self.position,
                         geom=geom_psf,
