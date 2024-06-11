@@ -67,6 +67,26 @@ def test_filter_events(observation):
 
 
 @requires_data()
+def test_time_filter_events(observation):
+    time_filters = Time(
+        [[53090.12, 53090.13], [53090.14, 53090.15]], format="mjd", scale="tt"
+    )
+
+    obs_filter = ObservationFilter(time_filter=time_filters)
+
+    events = observation.events
+
+    filtered_events = obs_filter.filter_events(events)
+    assert (
+        not (filtered_events.time < time_filters[0][0]).any()
+        or not (filtered_events.time >= time_filters[1][1]).any()
+    )
+    mask = filtered_events.time >= time_filters[0][1]
+    mask &= filtered_events.time < time_filters[1][0]
+    assert not mask.any()
+
+
+@requires_data()
 def test_filter_gti(observation):
     time_filter = Time([53090.125, 53090.130], format="mjd", scale="tt")
 

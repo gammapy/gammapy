@@ -352,6 +352,8 @@ class EventList:
         >>> print(len(events2.table))
         97978
         """
+        if row_specifier is None:
+            return self
         table = self.table[row_specifier]
         return self.__class__(table=table)
 
@@ -382,12 +384,12 @@ class EventList:
         mask &= energy < energy_range[1]
         return self.select_row_subset(mask)
 
-    def select_time(self, time_interval):
-        """Select events in time interval.
+    def select_time(self, time_intervals):
+        """Select events in time intervals.
 
         Parameters
         ----------
-        time_interval : `astropy.time.Time`
+        time_intervals : `astropy.time.Time` or list of time_interval
             Start time (inclusive) and stop time (exclusive) for the selection.
 
         Returns
@@ -395,9 +397,20 @@ class EventList:
         events : `EventList`
             Copy of event list with selection applied.
         """
+        if time_intervals is None:
+            return self
+
         time = self.time
-        mask = time_interval[0] <= time
-        mask &= time < time_interval[1]
+        mask = np.full(len(time), False)
+        if time_intervals.value.shape != (2,):
+            for time_interval in time_intervals:
+                submask = time_interval[0] <= time
+                submask &= time < time_interval[1]
+                mask |= submask
+        else:
+            print(time_intervals)
+            mask = time_intervals[0] <= time
+            mask &= time < time_intervals[1]
         return self.select_row_subset(mask)
 
     def select_region(self, regions, wcs=None):
