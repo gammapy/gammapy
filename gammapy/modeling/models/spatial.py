@@ -1678,9 +1678,9 @@ class PiecewiseNormSpatialModel(SpatialModel):
 
     def __init__(self, coords, norms=None, interp="lin", **kwargs):
         self._coords = coords.copy()
-        self._coords["lon"] = Angle(coords.lon).wrap_at(0 * u.deg)
-        self._wrap_angle = (coords.lon.max() - coords.lon.min()) / 2
-        self._coords["lon"] = Angle(coords.lon).wrap_at(self._wrap_angle)
+        lon = Angle(coords.lon).wrap_at(0 * u.deg)
+        self._wrap_angle = (lon.max() - lon.min()) / 2
+        self._coords["lon"] = Angle(lon).wrap_at(self._wrap_angle)
         self._interp = interp
 
         if norms is None:
