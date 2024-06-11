@@ -1726,6 +1726,7 @@ class PiecewiseNormSpatialModel(SpatialModel):
         coords = [value.value for value in self.coords._data.values()]
         # TODO: apply axes scaling in this loop
         coords = list(zip(*coords))
+        lon = Angle(lon).wrap_at(0 * u.deg)
         lon = Angle(lon).wrap_at(self._wrap_angle)
         # by default rely on CloughTocher2DInterpolator
         # (Piecewise cubic, C1 smooth, curvature-minimizing interpolant)
