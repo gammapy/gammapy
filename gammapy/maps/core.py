@@ -10,8 +10,6 @@ import numpy as np
 from numpy import isscalar, ndindex
 from astropy import units as u
 from astropy.io import fits
-import jax
-import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import gammapy.utils.parallel as parallel
 from gammapy.utils.compat import COPY_IF_NEEDED
@@ -26,9 +24,16 @@ from .geom import pix_tuple_to_idx
 __all__ = ["Map"]
 
 
-jax.config.update("jax_enable_x64", True)
+USE_JAX = True
+if USE_JAX:
+    import jax
+    import jax.numpy as jnp
 
-CONVERT_ARRAY = np.array if jnp else jnp.array
+    jax.config.update("jax_enable_x64", True)
+
+NP = np if not USE_JAX else jnp
+
+CONVERT_ARRAY = np.array if not USE_JAX else jnp.array
 
 
 class Map(abc.ABC):
@@ -1893,10 +1898,10 @@ class Map(abc.ABC):
             other = u.Quantity(other, copy=COPY_IF_NEEDED)
 
         unit = None
-        if operator == np.multiply:
+        if operator == NP.multiply:
             unit = self.unit * other.unit
             other_data = other.data if isinstance(other, Map) else other.value
-        elif operator == np.true_divide:
+        elif operator == NP.true_divide:
             unit = self.unit / other.unit
             other_data = other.data if isinstance(other, Map) else other.value
         else:
@@ -1914,7 +1919,7 @@ class Map(abc.ABC):
 
     def _boolean_arithmetics(self, operator, other, copy):
         """Perform arithmetic on maps after checking geometry consistency."""
-        if operator == np.logical_not:
+        if operator == NP.logical_not:
             out = self.copy()
             out.data = operator(out.data)
             return out
@@ -1930,67 +1935,67 @@ class Map(abc.ABC):
         return out
 
     def __add__(self, other):
-        return self._arithmetics(np.add, other, copy=True)
+        return self._arithmetics(NP.add, other, copy=True)
 
     def __iadd__(self, other):
-        return self._arithmetics(np.add, other, copy=False)
+        return self._arithmetics(NP.add, other, copy=False)
 
     def __sub__(self, other):
-        return self._arithmetics(np.subtract, other, copy=True)
+        return self._arithmetics(NP.subtract, other, copy=True)
 
     def __isub__(self, other):
-        return self._arithmetics(np.subtract, other, copy=False)
+        return self._arithmetics(NP.subtract, other, copy=False)
 
     def __mul__(self, other):
-        return self._arithmetics(np.multiply, other, copy=True)
+        return self._arithmetics(NP.multiply, other, copy=True)
 
     def __imul__(self, other):
-        return self._arithmetics(np.multiply, other, copy=False)
+        return self._arithmetics(NP.multiply, other, copy=False)
 
     def __truediv__(self, other):
-        return self._arithmetics(np.true_divide, other, copy=True)
+        return self._arithmetics(NP.true_divide, other, copy=True)
 
     def __itruediv__(self, other):
-        return self._arithmetics(np.true_divide, other, copy=False)
+        return self._arithmetics(NP.true_divide, other, copy=False)
 
     def __le__(self, other):
-        return self._arithmetics(np.less_equal, other, copy=True)
+        return self._arithmetics(NP.less_equal, other, copy=True)
 
     def __lt__(self, other):
-        return self._arithmetics(np.less, other, copy=True)
+        return self._arithmetics(NP.less, other, copy=True)
 
     def __ge__(self, other):
-        return self._arithmetics(np.greater_equal, other, copy=True)
+        return self._arithmetics(NP.greater_equal, other, copy=True)
 
     def __gt__(self, other):
-        return self._arithmetics(np.greater, other, copy=True)
+        return self._arithmetics(NP.greater, other, copy=True)
 
     def __eq__(self, other):
-        return self._arithmetics(np.equal, other, copy=True)
+        return self._arithmetics(NP.equal, other, copy=True)
 
     def __ne__(self, other):
-        return self._arithmetics(np.not_equal, other, copy=True)
+        return self._arithmetics(NP.not_equal, other, copy=True)
 
     def __and__(self, other):
-        return self._boolean_arithmetics(np.logical_and, other, copy=True)
+        return self._boolean_arithmetics(NP.logical_and, other, copy=True)
 
     def __or__(self, other):
-        return self._boolean_arithmetics(np.logical_or, other, copy=True)
+        return self._boolean_arithmetics(NP.logical_or, other, copy=True)
 
     def __invert__(self):
-        return self._boolean_arithmetics(np.logical_not, None, copy=True)
+        return self._boolean_arithmetics(NP.logical_not, None, copy=True)
 
     def __xor__(self, other):
-        return self._boolean_arithmetics(np.logical_xor, other, copy=True)
+        return self._boolean_arithmetics(NP.logical_xor, other, copy=True)
 
     def __iand__(self, other):
-        return self._boolean_arithmetics(np.logical_and, other, copy=COPY_IF_NEEDED)
+        return self._boolean_arithmetics(NP.logical_and, other, copy=COPY_IF_NEEDED)
 
     def __ior__(self, other):
-        return self._boolean_arithmetics(np.logical_or, other, copy=COPY_IF_NEEDED)
+        return self._boolean_arithmetics(NP.logical_or, other, copy=COPY_IF_NEEDED)
 
     def __ixor__(self, other):
-        return self._boolean_arithmetics(np.logical_xor, other, copy=COPY_IF_NEEDED)
+        return self._boolean_arithmetics(NP.logical_xor, other, copy=COPY_IF_NEEDED)
 
     def __array__(self):
         return self.data

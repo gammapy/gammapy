@@ -2,6 +2,7 @@
 import logging
 from itertools import repeat
 import numpy
+import numpy as np
 import scipy.interpolate
 import scipy.ndimage as ndi
 import scipy.signal
@@ -11,17 +12,22 @@ from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.nddata import block_reduce
 from regions import PixCoord, PointPixelRegion, PointSkyRegion, SkyRegion
-import jax.numpy as np
 import matplotlib.colors as mpcolors
 import matplotlib.pyplot as plt
 import gammapy.utils.parallel as parallel
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.units import unit_from_fits_image_hdu
 from gammapy.visualization.utils import add_colorbar
+from ..core import CONVERT_ARRAY, USE_JAX
 from ..geom import pix_tuple_to_idx
 from ..utils import INVALID_INDEX
 from .core import WcsMap
 from .geom import WcsGeom
+
+if USE_JAX:
+    import jax.numpy as jnp
+
+NP = np if not USE_JAX else jnp
 
 __all__ = ["WcsNDMap"]
 
@@ -42,7 +48,7 @@ def set_by_idx_jax(data, idx, vals):
     return data.T.at[idx].set(vals)
 
 
-SET_BY_IDX = set_by_idx_jax if np.__package__ == "jax.numpy" else set_by_idx_numpy
+SET_BY_IDX = set_by_idx_jax if USE_JAX else set_by_idx_numpy
 
 
 class WcsNDMap(WcsMap):
@@ -87,7 +93,7 @@ class WcsNDMap(WcsMap):
             is_nan = np.isnan(coords.lon)
             data[is_nan] = np.nan
 
-        return np.array(data)
+        return CONVERT_ARRAY(data)
 
     @classmethod
     def from_hdu(cls, hdu, hdu_bands=None, format=None):
