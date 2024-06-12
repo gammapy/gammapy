@@ -24,17 +24,19 @@ def _psf_upsampling_factor(psf, geom, position, energy=None, precision_factor=12
     """Minimal factor between the bin half-width of the geom and the median R68% containment radius."""
     if energy is None:
         energy = geom.axes[psf.energy_name].center
-    psf_r68 = psf.containment_radius(
+    psf_r68s = psf.containment_radius(
         0.68, geom.axes[psf.energy_name].center, position=position
     )
-    psf_r68_median = np.percentile(psf_r68, 50)
-    base_factor = (2 * psf_r68_median / geom.pixel_scales.max()).to_value("")
-    factor = np.minimum(
-        int(np.ceil(precision_factor / base_factor)), PSF_MAX_OVERSAMPLING
-    )
-    if isinstance(geom, HpxGeom):
-        factor = int(2 ** np.ceil(np.log(factor) / np.log(2)))
-    return factor
+    factors = []
+    for psf_r68 in psf_r68s:
+        base_factor = (2 * psf_r68 / geom.pixel_scales.max()).to_value("")
+        factor = np.minimum(
+            int(np.ceil(precision_factor / base_factor)), PSF_MAX_OVERSAMPLING
+        )
+        if isinstance(geom, HpxGeom):
+            factor = int(2 ** np.ceil(np.log(factor) / np.log(2)))
+        factors.append(factor)
+    return factors
 
 
 class IRFLikePSF(PSF):
@@ -256,7 +258,6 @@ class PSFMap(IRFMap):
         containment=0.999,
         factor=None,
         precision_factor=12,
-        multiscale=False,
     ):
         """Return a PSF kernel at the given position.
 
@@ -282,10 +283,7 @@ class PSFMap(IRFMap):
         precision_factor : int, optional
             Factor between the bin half-width of the geom and the median R68% containment radius.
             Used only for the oversampling method. Default is 10.
-        multiscale : bool
-            If true the maximum angular size of the kernel map depends of energy,
-            otherwise the maximum across all energies is used.
-            Default is False.
+
         Returns
         -------
         kernel : `~gammapy.irf.PSFKernel` or list of `PSFKernel`
@@ -295,30 +293,33 @@ class PSFMap(IRFMap):
         if geom.is_region or geom.is_hpx:
             geom = geom.to_wcs_geom()
 
-        if factor is None:  # TODO: remove once deprecated
-            factor = _psf_upsampling_factor(self, geom, position, precision_factor)
-
         if position is None:
             position = self.psf_map.geom.center_skydir
 
         position = self._get_nearest_valid_position(position)
 
-        if max_radius is None or multiscale:
-            energy_axis = self.psf_map.geom.axes[self.energy_name]
-            kwargs = {
-                "fraction": containment,
-                "position": position,
-                self.energy_name: energy_axis.center,
-            }
-            radii = self.containment_radius(**kwargs)
-            if max_radius is None:
-                max_radius = np.max(radii)
+        energy_axis = self.psf_map.geom.axes[self.energy_name]
+        kwargs = {
+            "fraction": containment,
+            "position": position,
+            self.energy_name: energy_axis.center,
+        }
+        radii = self.containment_radius(**kwargs)
+        if max_radius is None:
+            max_radius = np.max(radii)
+        else:
+            radii[radii > max_radius] = max_radius
 
+        nr = len(radii)
+        if factor is None:  # TODO: this remove and the else once factor is deprecated
+            factor = _psf_upsampling_factor(self, geom, position, precision_factor)
+        else:
+            factor = [factor] * nr
         geom = geom.to_odd_npix(max_radius=max_radius)
         kernel_map = Map.from_geom(geom=geom)
-        for im, ind in zip(kernel_map.iter_by_image(keepdims=True), range(len(radii))):
+        for im, ind in zip(kernel_map.iter_by_image(keepdims=True), range(nr)):
             geom_image_cut = im.geom.to_odd_npix(max_radius=radii[ind]).upsample(
-                factor=factor
+                factor=factor[ind]
             )
 
             coords = geom_image_cut.get_coord(sparse=True)
@@ -337,7 +338,9 @@ class PSFMap(IRFMap):
             kernel_image = Map.from_geom(
                 geom=geom_image_cut, data=np.clip(data, 0, np.inf)
             )
-            kernel_image = kernel_image.downsample(factor=factor, preserve_counts=True)
+            kernel_image = kernel_image.downsample(
+                factor=factor[ind], preserve_counts=True
+            )
             coords = kernel_image.geom.get_coord()
             im.fill_by_coord(coords, weights=kernel_image.data)
         return PSFKernel(kernel_map, normalize=True)

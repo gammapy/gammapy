@@ -5,7 +5,6 @@ from scipy.stats import median_abs_deviation as mad
 import astropy.units as u
 from astropy.io import fits
 from astropy.table import Table
-from astropy.utils import lazyproperty
 from regions import CircleSkyRegion
 import matplotlib.pyplot as plt
 from gammapy.data import GTI, PointingMode
@@ -439,27 +438,17 @@ class MapDataset(Dataset):
         else:
             self._meta = meta
 
-    @lazyproperty
+    @property
     def _effective_psf(self):
         """Precompute PSFkernel if possible"""
         effective_psf = self.psf
         if self.psf and self.psf.psf_map.geom.to_image().data_shape == (1, 1):
-            if (
-                self.exposure
-                and not self.exposure.geom.is_region
-                and self.psf.energy_name == "energy_true"
-            ):
-                effective_psf = self.psf.get_psf_kernel(
-                    self.exposure.geom, multiscale=True
-                )
-            elif (
-                self.counts
-                and not self.counts.geom.is_region
-                and self.psf.energy_name == "energy"
-            ):
-                effective_psf = self.psf.get_psf_kernel(
-                    self.counts.geom, multiscale=True
-                )
+            if self.psf.energy_name == "energy_true":
+                map_ref = self.exposure
+            else:
+                map_ref = self.counts
+            if map_ref and not map_ref.geom.is_region:
+                effective_psf = self.psf.get_psf_kernel(map_ref.geom)
         return effective_psf
 
     @property
@@ -562,15 +551,16 @@ class MapDataset(Dataset):
     def models(self, models):
         """Models setter."""
         self._evaluators = {}
-
         if models is not None:
             models = DatasetModels(models)
             models = models.select(datasets_names=self.name)
-
+            if models:
+                psf = self._effective_psf
             for model in models:
                 if not isinstance(model, FoVBackgroundModel):
                     evaluator = MapEvaluator(
                         model=model,
+                        psf=psf,
                         evaluation_mode=EVALUATION_MODE,
                         gti=self.gti,
                         use_cache=USE_NPRED_CACHE,
@@ -742,7 +732,7 @@ class MapDataset(Dataset):
             if evaluator.needs_update:
                 evaluator.update(
                     self.exposure,
-                    self._effective_psf,
+                    self.psf,
                     self.edisp,
                     self._geom,
                     self.mask_image,
