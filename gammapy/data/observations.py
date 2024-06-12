@@ -412,8 +412,9 @@ class Observation:
             f"\tobs id            : {self.obs_id} \n "
             f"\ttstart            : {self.tstart.mjd:.2f}\n"
             f"\ttstop             : {self.tstop.mjd:.2f}\n"
-            f"\tduration          : {self.observation_time_duration:.2f}\n"
-            f"\tpointing (icrs)   : {pointing}\n"
+            f"\tnumber of GTIs:   : {len(self.gti.table)}\n"
+            f"\tduration          : {self.observation_time_duration:.2f} (from GTIs)\n"
+            f"\tpointing (icrs)   : {pointing}"
             f"\tdeadtime fraction : {self.observation_dead_time_fraction:.1%}\n"
         )
 
