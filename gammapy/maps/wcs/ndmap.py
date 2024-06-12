@@ -34,11 +34,12 @@ C_MAP_MASK = mpcolors.ListedColormap(["black", "white"], name="mask")
 def set_by_idx_numpy(data, idx, vals):
     idx = pix_tuple_to_idx(idx)
     data.T[idx] = vals
+    return data
 
 
 def set_by_idx_jax(data, idx, vals):
     idx = pix_tuple_to_idx(idx)
-    data.T.at[idx].set(vals)
+    return data.T.at[idx].set(vals)
 
 
 SET_BY_IDX = set_by_idx_jax if np.__package__ == "jax.numpy" else set_by_idx_numpy
@@ -246,13 +247,17 @@ class WcsNDMap(WcsMap):
         if not preserve_counts:
             weights /= np.bincount(idx_inv).astype(self.data.dtype)
 
-        self.data.T.flat[idx] += weights
+        if np.__package__ == "jax.numpy":
+            data = self.data.T.flatten()
+            self.data = data.at[idx].add(weights)
+        else:
+            self.data.T.flat[idx] += weights
 
     def fill_by_idx(self, idx, weights=None):
         return self._resample_by_idx(idx, weights=weights, preserve_counts=True)
 
     def set_by_idx(self, idx, vals):
-        return SET_BY_IDX(self.data, idx, vals)
+        self.data = SET_BY_IDX(self.data, idx, vals)
 
     #        idx = pix_tuple_to_idx(idx)
     #        self.data.T[idx] = vals

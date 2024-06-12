@@ -6,10 +6,12 @@ import inspect
 import json
 from collections import OrderedDict
 from itertools import repeat
+import numpy as np
 from numpy import isscalar, ndindex
 from astropy import units as u
 from astropy.io import fits
-import jax.numpy as np
+import jax
+import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import gammapy.utils.parallel as parallel
 from gammapy.utils.compat import COPY_IF_NEEDED
@@ -22,6 +24,11 @@ from .coord import MapCoord
 from .geom import pix_tuple_to_idx
 
 __all__ = ["Map"]
+
+
+jax.config.update("jax_enable_x64", True)
+
+CONVERT_ARRAY = np.array if jnp else jnp.array
 
 
 class Map(abc.ABC):
@@ -103,7 +110,7 @@ class Map(abc.ABC):
             Data array.
         """
         if isscalar(value):
-            value = value * np.ones(self.geom.data_shape, dtype=type(value))
+            value = value * jnp.ones(self.geom.data_shape, dtype=type(value))
 
         if isinstance(value, u.Quantity):
             raise TypeError("Map data must be a Numpy array. Set unit separately")
@@ -577,7 +584,7 @@ class Map(abc.ABC):
             if mode == "constant":
                 kwargs["constant_values"] = cval
 
-            data = np.pad(self.data, pad_width=pad_width_np, mode=mode, **kwargs)
+            data = jnp.pad(self.data, pad_width=pad_width_np, mode=mode, **kwargs)
             return self.__class__(
                 geom=geom, data=data, unit=self.unit, meta=self.meta.copy()
             )
@@ -751,7 +758,7 @@ class Map(abc.ABC):
         slices = tuple([slice(0, _) for _ in geom.data_shape])
         data = ufunc.reduceat(padded_array, indices=indices, axis=idx)[slices]
 
-        return self._init_copy(data=data, geom=geom)
+        return self._init_copy(data=CONVERT_ARRAY(data), geom=geom)
 
     def slice_by_idx(
         self,
@@ -950,7 +957,10 @@ class Map(abc.ABC):
 
         if not mask.all():
             vals = vals.astype(type(fill_value))
-            vals[~mask] = fill_value
+            if "jax" in jnp and isinstance(vals, jnp.array):
+                vals.at[~mask].set(fill_value)
+            else:
+                vals[~mask] = fill_value
 
         return vals
 
@@ -1883,8 +1893,11 @@ class Map(abc.ABC):
             other = u.Quantity(other, copy=COPY_IF_NEEDED)
 
         unit = None
-        if operator in [np.multiply, np.true_divide]:
-            unit = operator(self.unit, other.unit)
+        if operator == np.multiply:
+            unit = self.unit * other.unit
+            other_data = other.data if isinstance(other, Map) else other.value
+        elif operator == np.true_divide:
+            unit = self.unit / other.unit
             other_data = other.data if isinstance(other, Map) else other.value
         else:
             other_data = (
