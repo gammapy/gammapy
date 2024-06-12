@@ -115,7 +115,7 @@ class Map(abc.ABC):
             Data array.
         """
         if isscalar(value):
-            value = value * jnp.ones(self.geom.data_shape, dtype=type(value))
+            value = value * NP.ones(self.geom.data_shape, dtype=type(value))
 
         if isinstance(value, u.Quantity):
             raise TypeError("Map data must be a Numpy array. Set unit separately")
@@ -589,7 +589,7 @@ class Map(abc.ABC):
             if mode == "constant":
                 kwargs["constant_values"] = cval
 
-            data = jnp.pad(self.data, pad_width=pad_width_np, mode=mode, **kwargs)
+            data = NP.pad(self.data, pad_width=pad_width_np, mode=mode, **kwargs)
             return self.__class__(
                 geom=geom, data=data, unit=self.unit, meta=self.meta.copy()
             )
@@ -962,8 +962,8 @@ class Map(abc.ABC):
 
         if not mask.all():
             vals = vals.astype(type(fill_value))
-            if "jax" in jnp and isinstance(vals, jnp.array):
-                vals.at[~mask].set(fill_value)
+            if USE_JAX:
+                vals = vals.at[~mask].set(fill_value)
             else:
                 vals[~mask] = fill_value
 

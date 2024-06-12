@@ -1039,7 +1039,7 @@ class WcsNDMap(WcsMap):
         data = numpy.zeros(shape=geom_cutout.data_shape, dtype=self.data.dtype)
         data[cutout_slices] = self.data[parent_slices]
 
-        return self._init_copy(geom=geom_cutout, data=np.array(data))
+        return self._init_copy(geom=geom_cutout, data=NP.array(data))
 
     def _cutout_view(self, position, width, odd_npix=False):
         """
@@ -1122,4 +1122,7 @@ class WcsNDMap(WcsMap):
             if not other.geom.to_image() == weights.geom.to_image():
                 raise ValueError("Incompatible spatial geoms between map and weights")
             data = data * weights.data[cutout_slices]
-        self.data[parent_slices] += data
+        if USE_JAX:
+            self.data = self.data.at[parent_slices].add(data)
+        else:
+            self.data[parent_slices] += data
