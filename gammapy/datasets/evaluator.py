@@ -1,11 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import html
 import logging
-import numpy as np
 import astropy.units as u
 from astropy.coordinates import angular_separation
 from astropy.utils import lazyproperty
 from regions import CircleSkyRegion
+import jax.numpy as np
 import matplotlib.pyplot as plt
 from gammapy.irf import EDispKernel
 from gammapy.maps import HpxNDMap, Map, RegionNDMap, WcsNDMap
@@ -277,7 +277,7 @@ class MapEvaluator:
 
     def compute_flux_psf_convolved(self, *arg):
         """Compute PSF convolved and temporal model corrected flux."""
-        value = self.compute_flux_spectral()
+        value, unit = self.compute_flux_spectral()
 
         if self.model.spatial_model:
             if self.psf_containment is not None:
@@ -288,7 +288,7 @@ class MapEvaluator:
         if self.model.temporal_model:
             value *= self.compute_temporal_norm()
 
-        return Map.from_geom(geom=self.geom, data=value.value, unit=value.unit)
+        return Map.from_geom(geom=self.geom, data=value, unit=unit)
 
     def compute_flux_spatial(self):
         """Compute spatial flux using caching."""
@@ -342,14 +342,14 @@ class MapEvaluator:
     def compute_flux_spectral(self):
         """Compute spectral flux."""
         energy = self.geom.axes["energy_true"].edges
-        value = self.model.spectral_model.integral(
+        value, unit = self.model.spectral_model.integral(
             energy[:-1],
             energy[1:],
         )
         if self.geom.is_hpx:
-            return value.reshape((-1, 1))
+            return value.reshape((-1, 1)), unit
         else:
-            return value.reshape((-1, 1, 1))
+            return value.reshape((-1, 1, 1)), unit
 
     def compute_temporal_norm(self):
         """Compute temporal norm."""
@@ -363,8 +363,10 @@ class MapEvaluator:
 
         For now just divide flux cube by exposure.
         """
-        npred = (flux.quantity * self.exposure.quantity).to_value("")
-        return Map.from_geom(self.geom, data=npred, unit="")
+        unit = flux.unit.decompose() * self.exposure.unit
+        data = flux.data * np.array(self.exposure.data) * unit.scale
+        # npred = (flux.quantity * self.exposure.quantity).to_value("")
+        return Map.from_geom(self.geom, data=data, unit="")
 
     def apply_psf(self, npred):
         """Convolve npred cube with PSF."""

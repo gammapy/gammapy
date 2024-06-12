@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import numpy as np
 from astropy.coordinates import SkyCoord
+import jax.numpy as np
 from gammapy.maps import Map
 from gammapy.modeling.models.utils import cutout_template_models
 from . import Datasets
@@ -57,7 +57,8 @@ def apply_edisp(input_map, edisp):
     if edisp is not None:
         loc = input_map.geom.axes.index("energy_true")
         data = np.rollaxis(input_map.data, loc, len(input_map.data.shape))
-        data = np.dot(data, edisp.pdf_matrix)
+        data_edisp = np.array(edisp.pdf_matrix)
+        data = np.dot(data, data_edisp)
         data = np.rollaxis(data, -1, loc)
         energy_axis = edisp.axes["energy"].copy(name="energy")
     else:

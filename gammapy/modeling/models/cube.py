@@ -3,10 +3,10 @@
 
 import logging
 import os
-import numpy as np
 import astropy.units as u
 from astropy.nddata import NoOverlapError
 from astropy.time import Time
+import jax.numpy as np
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling import Covariance, Parameters
 from gammapy.modeling.parameter import _get_parameters_str
@@ -75,7 +75,7 @@ class SkyModel(ModelBase):
 
         self.apply_irf = apply_irf
         self.datasets_names = datasets_names
-        self._check_unit()
+        # self._check_unit()
 
         super().__init__(covariance_data=covariance_data)
 
@@ -384,10 +384,11 @@ class SkyModel(ModelBase):
             1,
         ]
         shape[geom.axes.index_data("energy_true")] = -1
-        value = self.spectral_model.integral(
+        value, unit = self.spectral_model.integral(
             energy[:-1],
             energy[1:],
-        ).reshape(shape)
+        )
+        value = value.reshape(shape)
 
         if self.spatial_model:
             value = (
@@ -402,7 +403,7 @@ class SkyModel(ModelBase):
 
         value = value * np.ones(geom.data_shape)
 
-        return Map.from_geom(geom=geom, data=value.value, unit=value.unit)
+        return Map.from_geom(geom=geom, data=value, unit=unit)
 
     def _compute_time_integral(self, value, geom, gti):
         """Multiply input value with time integral for the given geometry and GTI."""

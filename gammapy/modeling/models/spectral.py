@@ -5,7 +5,6 @@ import operator
 import os
 import warnings
 from pathlib import Path
-import numpy as np
 import scipy.optimize
 import scipy.special
 import astropy.units as u
@@ -14,6 +13,7 @@ from astropy.table import Table
 from astropy.units import Quantity
 from astropy.utils.decorators import classproperty
 from astropy.visualization import quantity_support
+import jax.numpy as np
 import matplotlib.pyplot as plt
 from gammapy.maps import MapAxis, RegionNDMap
 from gammapy.maps.axes import UNIT_STRING_FORMAT
@@ -114,7 +114,9 @@ def integrate_spectrum(func, energy_min, energy_max, ndecade=100):
     """
     # Here we impose to duplicate the number
     num = np.maximum(np.max(ndecade * np.log10(energy_max / energy_min)), 2)
-    energy = np.geomspace(energy_min, energy_max, num=int(num), axis=-1)
+    energy = (
+        np.geomspace(energy_min, energy_max, num=int(num), axis=-1) * energy_min.unit
+    )
     integral = trapz_loglog(func(energy), energy, axis=-1)
     return integral.sum(axis=0)
 
@@ -125,9 +127,20 @@ class SpectralModel(ModelBase):
     _type = "spectral"
 
     def __call__(self, energy):
-        kwargs = {par.name: par.quantity for par in self.parameters}
-        kwargs = self._convert_evaluate_unit(kwargs, energy)
-        return self.evaluate(energy, **kwargs)
+        # kwargs = {par.name: par.quantity for par in self.parameters}
+        # kwargs = self._convert_evaluate_unit(kwargs, energy)
+        kwargs = self.convert_to_val(energy)
+        eval = self.evaluate(energy, **kwargs)
+        return eval
+
+    def convert_to_val(self, energy):
+        kwargs = {}
+        for par in self.parameters:
+            value = par.value
+            if par.unit.physical_type == "energy":
+                value = value * par.unit.to(energy.unit)
+            kwargs[par.name] = value
+        return kwargs
 
     @classproperty
     def is_norm_spectral_model(cls):
@@ -274,9 +287,14 @@ class SpectralModel(ModelBase):
             Keyword arguments passed to :func:`~gammapy.modeling.models.spectral.integrate_spectrum`.
         """
         if hasattr(self, "evaluate_integral"):
-            kwargs = {par.name: par.quantity for par in self.parameters}
-            kwargs = self._convert_evaluate_unit(kwargs, energy_min)
-            return self.evaluate_integral(energy_min, energy_max, **kwargs)
+            # kwargs = {par.name: par.quantity for par in self.parameters}
+            # kwargs = self._convert_evaluate_unit(kwargs, energy_min)
+            kwargs = self.convert_to_val(energy_min)
+            eval = self.evaluate_integral(energy_min, energy_max, **kwargs)
+            unit = energy_min.unit
+            for par in self.parameters.norm_parameters:
+                unit = unit * par.unit
+            return eval, unit
         else:
             return integrate_spectrum(self, energy_min, energy_max, **kwargs)
 

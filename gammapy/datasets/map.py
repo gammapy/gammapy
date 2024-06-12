@@ -6,6 +6,7 @@ import astropy.units as u
 from astropy.io import fits
 from astropy.table import Table
 from regions import CircleSkyRegion
+import jax.numpy as jnp
 import matplotlib.pyplot as plt
 from gammapy.data import GTI, PointingMode
 from gammapy.irf import EDispKernelMap, EDispMap, PSFKernel, PSFMap, RecoPSFMap
@@ -647,7 +648,10 @@ class MapDataset(Dataset):
 
         if self.background:
             npred_total += self.npred_background()
-        npred_total.data[npred_total.data < 0.0] = 0
+            data = npred_total.data + self.npred_background().data
+
+            data1 = jnp.where(data < 0.0, 0, data)
+        npred_total = Map.from_geom(geom=self._geom, data=data1)
         return npred_total
 
     def npred_background(self):
@@ -2371,6 +2375,7 @@ class MapDatasetOnOff(MapDataset):
             mu_sig=self.npred_signal().data,
         )
         mu_bkg = np.nan_to_num(mu_bkg)
+        mu_bkg = jnp.array(mu_bkg)
         return Map.from_geom(geom=self._geom, data=mu_bkg)
 
     def npred_off(self):
@@ -2398,7 +2403,11 @@ class MapDatasetOnOff(MapDataset):
         """
         if self.counts_off is None:
             return None
-        return self.alpha * self.counts_off
+        return Map.from_geom(
+            geom=self._geom,
+            data=jnp.array(self.alpha.data) * jnp.array(self.counts_off.data),
+        )
+        # return self.alpha * self.counts_off
 
     def stat_array(self):
         """Statistic function value per bin given the current model parameters."""
