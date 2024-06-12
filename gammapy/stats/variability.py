@@ -292,8 +292,8 @@ def TimmerKonig_lightcurve_simulator(
     nchunks=10,
     random_state="random-seed",
     power_spectrum_params=None,
-    mean=0,
-    std=1,
+    mean=0.0,
+    std=1.0,
     poisson=False,
 ):
     """Implementation of the Timmer-Koenig algorithm to simulate a time series from a power spectrum.
