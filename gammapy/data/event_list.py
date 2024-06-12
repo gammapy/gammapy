@@ -396,6 +396,11 @@ class EventList:
         -------
         events : `EventList`
             Copy of event list with selection applied.
+
+        Notes
+        -----
+        This function does not modify the metadata, in particular the ONTIME. It is instead recommended to use an
+        `~gammapy.data.ObservationFilter` associated to the object `~gammapy.data.Observation`.
         """
         if time_intervals is None:
             return self
