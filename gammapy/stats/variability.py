@@ -396,7 +396,11 @@ def TimmerKonig_lightcurve_simulator(
     time_series = np.fft.ifft(fourier_coeffs).real
 
     ndiv = npoints_ext // (2 * nchunks)
-    time_series = time_series[npoints_ext // 2 - ndiv : npoints_ext // 2 + ndiv]
+    setstart = npoints_ext // 2 - ndiv
+    setend = npoints_ext // 2 + ndiv
+    if npoints % 2 != 0:
+        setend = setend + 1
+    time_series = time_series[setstart:setend]
 
     time_series = (time_series - time_series.mean()) / time_series.std()
 

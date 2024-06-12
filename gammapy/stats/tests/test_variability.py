@@ -152,7 +152,7 @@ def test_tk():
         lambda x: x ** (-3), 20, 1 * u.s
     )
     time_series2, time_axis2 = TimmerKonig_lightcurve_simulator(
-        lambda x: x**0.5, 21, 2 * u.h
+        lambda x: x**0.5, 21, 2 * u.h, nchunks=1, poisson=True
     )
 
     def temp(x, norm, index):
@@ -161,11 +161,11 @@ def test_tk():
     params = {"norm": 1.5, "index": 3}
 
     time_series3, time_axis3 = TimmerKonig_lightcurve_simulator(
-        temp, 15, 1 * u.h, power_spectrum_params=params
+        temp, 15, 1 * u.h, nchunks=100, power_spectrum_params=params
     )
 
     time_series4, time_axis4 = TimmerKonig_lightcurve_simulator(
-        lambda x: x ** (-3), 20, 1 * u.s, leakage_protection=100.0
+        lambda x: x ** (-3), 200, 1 * u.s, mean=2.0, std=0.1
     )
 
     assert len(time_series) == 20
@@ -173,19 +173,9 @@ def test_tk():
     assert time_axis.unit == u.s
     assert len(time_series2) == 21
     assert len(time_series3) == 15
-    assert len(time_series4) == 20
-
-
-def test_tk_badleakage():
-    with pytest.raises(ValueError):
-        TimmerKonig_lightcurve_simulator(
-            lambda x: x ** (-3), 20, 1 * u.s, leakage_protection=0.1
-        )
-
-    with pytest.raises(Warning):
-        TimmerKonig_lightcurve_simulator(
-            lambda x: x ** (-3), 20, 1 * u.s, leakage_protection=1.001
-        )
+    assert len(time_series4) == 200
+    assert_allclose(time_series4.mean(), 2.0)
+    assert_allclose(time_series4.std(), 0.1)
 
 
 def test_structure_function():
