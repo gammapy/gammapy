@@ -258,7 +258,6 @@ class PSFMap(IRFMap):
         containment=0.999,
         factor=None,
         precision_factor=12,
-        multiscale=False,
     ):
         """Return a PSF kernel at the given position.
 
@@ -284,10 +283,7 @@ class PSFMap(IRFMap):
         precision_factor : int, optional
             Factor between the bin half-width of the geom and the median R68% containment radius.
             Used only for the oversampling method. Default is 10.
-        multiscale : bool
-            If true the maximum angular size of the kernel map depends of energy,
-            otherwise the maximum across all energies is used.
-            Default is False.
+
         Returns
         -------
         kernel : `~gammapy.irf.PSFKernel` or list of `PSFKernel`

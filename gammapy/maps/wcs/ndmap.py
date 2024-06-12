@@ -17,7 +17,6 @@ import gammapy.utils.parallel as parallel
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.units import unit_from_fits_image_hdu
 from gammapy.visualization.utils import add_colorbar
-from ..axes import MapAxis
 from ..geom import pix_tuple_to_idx
 from ..utils import INVALID_INDEX
 from .core import WcsMap
@@ -863,7 +862,7 @@ class WcsNDMap(WcsMap):
         """
         from gammapy.irf import PSFKernel
 
-        if self.geom.is_image and not isinstance(kernel, (PSFKernel, list)):
+        if self.geom.is_image and not isinstance(kernel, PSFKernel):
             if kernel.ndim > 2:
                 raise ValueError(
                     "Image convolution with 3D kernel requires a PSFKernel object"
@@ -881,30 +880,8 @@ class WcsNDMap(WcsMap):
             if self.geom.is_image:
                 geom = geom.to_cube(kmap.geom.axes)
 
-        if isinstance(kernel, list):
-            kernels = []
-            nax = len(kernel[0].psf_kernel_map.geom.axes)
-            axes_lists = [[] for _ in range(nax)]
-            for ind, k in enumerate(kernel):
-                kmap = k.psf_kernel_map
-                kernels.append(kmap.data.squeeze().astype(np.float32))
-                for kax in range(nax):
-                    axes_lists[kax].append(kmap.geom.axes[kax])
-
-                if not np.allclose(
-                    self.geom.pixel_scales.deg, kmap.geom.pixel_scales.deg, rtol=1e-5
-                ):
-                    raise ValueError("Pixel size of kernel and map not compatible.")
-
-            axes = [MapAxis.from_stack(_) for _ in axes_lists]
-            kernel = np.array(kernels, dtype=object)
-            shape_axes_kernel = tuple(len(_.center) for _ in axes)
-            ndim = 3
-            if self.geom.is_image:
-                geom = geom.to_cube(axes)
-        else:
-            shape_axes_kernel = kernel.shape[slice(0, -2)]
-            ndim = kernel.ndim
+        shape_axes_kernel = kernel.shape[slice(0, -2)]
+        ndim = kernel.ndim
 
         if len(shape_axes_kernel) > 0:
             if not geom.shape_axes == shape_axes_kernel:
