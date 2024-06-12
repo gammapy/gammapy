@@ -292,8 +292,8 @@ def TimmerKonig_lightcurve_simulator(
     nchunks=10,
     random_state="random-seed",
     power_spectrum_params=None,
-    mean=None,
-    std=None,
+    mean=0,
+    std=1,
     poisson=False,
 ):
     """Implementation of the Timmer-Koenig algorithm to simulate a time series from a power spectrum.
@@ -314,10 +314,10 @@ def TimmerKonig_lightcurve_simulator(
         Passed to `~gammapy.utils.random.get_random_state`. Default is "random-seed".
     power_spectrum_params : dict, optional
         Dictionary of parameters to be provided to the power spectrum function.
-    mean : float, `~astropy.units.Quantity`, optional
-        Desired mean of the final series.
-    std : float, `~astropy.units.Quantity`m optional
-        Desired standard deviation of the final series.
+    mean : float, `~astropy.units.Quantity`
+        Desired mean of the final series. Default is 0.
+    std : float, `~astropy.units.Quantity`
+        Desired standard deviation of the final series. Default is 1.
     poisson : bool
         Whether to apply poissonian noise to the final time series. Default is False.
 
@@ -403,11 +403,7 @@ def TimmerKonig_lightcurve_simulator(
     time_series = time_series[setstart:setend]
 
     time_series = (time_series - time_series.mean()) / time_series.std()
-
-    if std:
-        time_series = time_series * std
-    if mean:
-        time_series += mean
+    time_series = time_series * std + mean
 
     if poisson:
         time_series = (
