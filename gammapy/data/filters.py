@@ -23,8 +23,7 @@ class ObservationFilter:
           class that corresponds to the filter type
           (see `~gammapy.data.ObservationFilter.EVENT_FILTER_TYPES`)
 
-        The filtered event list will be an intersection of all filters. A union
-        of filters is not supported yet. Default is None.
+        The filtered event list will be an intersection of all filters. Default is None.
 
     Examples
     --------
@@ -32,7 +31,9 @@ class ObservationFilter:
     >>> from astropy.time import Time
     >>> from astropy.coordinates import Angle
     >>>
-    >>> time_filter = Time(['2021-03-27T20:10:00', '2021-03-27T20:20:00'])
+    >>> mytimes = [['2021-03-27T20:10:00', '2021-03-27T20:15:00'],
+    >>>          ['2021-03-27T20:15:01', '2021-03-27T20:20:00']]
+    >>> time_filter = Time(mytimes)
     >>> phase_filter = {'type': 'custom', 'opts': dict(parameter='PHASE', band=(0.2, 0.8))}
     >>>
     >>> my_obs_filter = ObservationFilter(time_filter=time_filter, event_filters=[phase_filter])
@@ -72,8 +73,8 @@ class ObservationFilter:
         filtered_events : `~gammapy.data.EventListBase`
             The filtered event list.
         """
-        filtered_events = self._filter_by_time(events)
 
+        filtered_events = self._filter_by_time(events)
         for f in self.event_filters:
             method_str = self.EVENT_FILTER_TYPES[f["type"]]
             filtered_events = getattr(filtered_events, method_str)(**f["opts"])
