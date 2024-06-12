@@ -430,6 +430,11 @@ class MapDataset(Dataset):
             )
 
         self.edisp = edisp
+        #        if self.edisp is None:
+        #            self.edisp = EDispKernel.from_diagonal_response(
+        #                energy_axis_true=self.geoms["geom_exposure"].axes["energy_true"],
+        #                energy_axis=self.geoms["geom"].axes["energy"],
+        #            )
         self.mask_safe = mask_safe
         self.gti = gti
         self.models = models

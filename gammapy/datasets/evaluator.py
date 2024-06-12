@@ -241,10 +241,17 @@ class MapEvaluator:
 
     @lazyproperty
     def _edisp_diagonal(self):
-        return EDispKernel.from_diagonal_response(
+        #        if self.edisp is not None:
+        edisp = EDispKernel.from_diagonal_response(
             energy_axis_true=self.edisp.axes["energy_true"],
             energy_axis=self.edisp.axes["energy"],
         )
+        #        else:
+        #            edisp = EDispKernel.from_diagonal_response(
+        #                energy_axis_true=energy,
+        #                energy_axis=energy,
+        #            )
+        return edisp
 
     def update_spatial_oversampling_factor(self, geom):
         """Update spatial oversampling_factor for model evaluation."""
@@ -395,6 +402,10 @@ class MapEvaluator:
     @lazyproperty
     def _compute_npred(self):
         """Compute npred."""
+        #        if self.edisp is None:
+        #            self.edisp = self._edisp_diagonal
+        #            print(self.edisp)
+        #
         if isinstance(self.model, TemplateNPredModel):
             npred = self.model.evaluate()
         else:
