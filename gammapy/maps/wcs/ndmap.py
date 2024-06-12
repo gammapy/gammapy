@@ -18,7 +18,7 @@ import gammapy.utils.parallel as parallel
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.units import unit_from_fits_image_hdu
 from gammapy.visualization.utils import add_colorbar
-from ..core import CONVERT_ARRAY, USE_JAX
+from ..core import USE_JAX
 from ..geom import pix_tuple_to_idx
 from ..utils import INVALID_INDEX
 from .core import WcsMap
@@ -93,7 +93,7 @@ class WcsNDMap(WcsMap):
             is_nan = np.isnan(coords.lon)
             data[is_nan] = np.nan
 
-        return CONVERT_ARRAY(data)
+        return NP.array(data)
 
     @classmethod
     def from_hdu(cls, hdu, hdu_bands=None, format=None):

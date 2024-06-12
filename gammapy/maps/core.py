@@ -24,7 +24,8 @@ from .geom import pix_tuple_to_idx
 __all__ = ["Map"]
 
 
-USE_JAX = True
+USE_JAX = False
+
 if USE_JAX:
     import jax
     import jax.numpy as jnp
@@ -32,8 +33,6 @@ if USE_JAX:
     jax.config.update("jax_enable_x64", True)
 
 NP = np if not USE_JAX else jnp
-
-CONVERT_ARRAY = np.array if not USE_JAX else jnp.array
 
 
 class Map(abc.ABC):
@@ -763,7 +762,7 @@ class Map(abc.ABC):
         slices = tuple([slice(0, _) for _ in geom.data_shape])
         data = ufunc.reduceat(padded_array, indices=indices, axis=idx)[slices]
 
-        return self._init_copy(data=CONVERT_ARRAY(data), geom=geom)
+        return self._init_copy(data=NP.array(data), geom=geom)
 
     def slice_by_idx(
         self,
@@ -910,7 +909,7 @@ class Map(abc.ABC):
         data = self.data[idx[::-1]]
         return self.__class__(geom=geom, data=data, unit=self.unit, meta=self.meta)
 
-    def get_by_coord(self, coords, fill_value=np.nan):
+    def get_by_coord(self, coords, fill_value=NP.nan):
         """Return map values at the given map coordinates.
 
         Parameters
@@ -933,7 +932,7 @@ class Map(abc.ABC):
         vals = self.get_by_pix(pix, fill_value=fill_value)
         return vals
 
-    def get_by_pix(self, pix, fill_value=np.nan):
+    def get_by_pix(self, pix, fill_value=NP.nan):
         """Return map values at the given pixel coordinates.
 
         Parameters
