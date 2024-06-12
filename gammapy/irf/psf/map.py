@@ -271,10 +271,11 @@ class PSFMap(IRFMap):
             center position is used.
         max_radius : `~astropy.coordinates.Angle`, optional
             Maximum angular size of the kernel map.
+            Default is None and it will be computed for the `containment` fraction set.
         containment : float, optional
-            Containment fraction to use as size of the kernel. The max. radius
-            across all energies is used. The radius can be overwritten using
-            the `max_radius` argument. Default is 0.999.
+            Containment fraction to use as size of the kernel.
+            The radius can be overwritten using the `max_radius` argument.
+            Default is 0.999.
         factor : int, optional
             Oversampling factor to compute the PSF.
             Default is None and it will be computed automatically.
@@ -282,10 +283,9 @@ class PSFMap(IRFMap):
             Factor between the bin half-width of the geom and the median R68% containment radius.
             Used only for the oversampling method. Default is 10.
         multiscale : bool
-            If true the maximum angular size of the kernel map depends of enregy,
-            and a list of `~gammapy.irf.PSFKernel` is returned.
+            If true the maximum angular size of the kernel map depends of energy,
+            otherwise the maximum across all energies is used.
             Default is False.
-
         Returns
         -------
         kernel : `~gammapy.irf.PSFKernel` or list of `PSFKernel`
@@ -314,33 +314,33 @@ class PSFMap(IRFMap):
             if max_radius is None:
                 max_radius = np.max(radii)
 
-        geom = geom.to_odd_npix(max_radius=max_radius).upsample(factor=factor)
-        coords = geom.get_coord(sparse=True)
-        rad = coords.skycoord.separation(geom.center_skydir)
+        geom = geom.to_odd_npix(max_radius=max_radius)
+        kernel_map = Map.from_geom(geom=geom)
+        for im, ind in zip(kernel_map.iter_by_image(keepdims=True), range(len(radii))):
+            geom_image_cut = im.geom.to_odd_npix(max_radius=radii[ind]).upsample(
+                factor=factor
+            )
 
-        coords = {
-            self.energy_name: coords[self.energy_name],
-            "rad": rad,
-            "skycoord": position,
-        }
+            coords = geom_image_cut.get_coord(sparse=True)
+            rad = coords.skycoord.separation(geom.center_skydir)
 
-        data = self.psf_map.interp_by_coord(
-            coords=coords,
-            method="linear",
-        )
-        kernel_map = Map.from_geom(geom=geom, data=np.clip(data, 0, np.inf))
-        kernel_map = kernel_map.downsample(factor=factor, preserve_counts=True)
+            coords = {
+                self.energy_name: coords[self.energy_name],
+                "rad": rad,
+                "skycoord": position,
+            }
 
-        if multiscale:
-            kernels = []
-            for im, rad_max in zip(kernel_map.iter_by_image(keepdims=True), radii):
-                kernel_map_cutout = im.cutout(
-                    im.geom.center_skydir, width=2 * rad_max, odd_npix=True
-                )
-                kernels.append(PSFKernel(kernel_map_cutout, normalize=True))
-            return kernels
-        else:
-            return PSFKernel(kernel_map, normalize=True)
+            data = self.psf_map.interp_by_coord(
+                coords=coords,
+                method="linear",
+            )
+            kernel_image = Map.from_geom(
+                geom=geom_image_cut, data=np.clip(data, 0, np.inf)
+            )
+            kernel_image = kernel_image.downsample(factor=factor, preserve_counts=True)
+            coords = kernel_image.geom.get_coord()
+            im.fill_by_coord(coords, weights=kernel_image.data)
+        return PSFKernel(kernel_map, normalize=True)
 
     def sample_coord(self, map_coord, random_state=0, chunk_size=10000):
         """Apply PSF corrections on the coordinates of a set of simulated events.
