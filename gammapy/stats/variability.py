@@ -319,7 +319,7 @@ def TimmerKonig_lightcurve_simulator(
     std : float, `~astropy.units.Quantity`m optional
         Desired standard deviation of the final series.
     poisson : bool
-        Whether to apply poissonian noise to the final time series.
+        Whether to apply poissonian noise to the final time series. Default is False.
 
 
     Returns
