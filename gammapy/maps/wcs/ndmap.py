@@ -944,9 +944,12 @@ class WcsNDMap(WcsMap):
             ),
             task_name="Convolution",
         )
-        data = np.empty(geom.data_shape, dtype=np.float32)
+        data = NP.empty(geom.data_shape, dtype=np.float32)
         for idx_res, idx in enumerate(indexes):
-            data[idx] = convolved[idx_res]
+            if USE_JAX:
+                data = data.at[idx].set(convolved[idx_res])
+            else:
+                data[idx] = convolved[idx_res]
         return self._init_copy(data=data, geom=geom)
 
     @staticmethod

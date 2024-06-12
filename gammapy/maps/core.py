@@ -24,7 +24,7 @@ from .geom import pix_tuple_to_idx
 __all__ = ["Map"]
 
 
-USE_JAX = False
+USE_JAX = True
 
 if USE_JAX:
     import jax
