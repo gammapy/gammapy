@@ -200,36 +200,35 @@ class MapEvaluator:
         # lookup edisp
         del self._edisp_diagonal
         if edisp:
-            if isinstance(self.edisp, EDispKernel):
-                pass
-            else:
-                energy_axis = geom.axes["energy"]
-                self.edisp = edisp.get_edisp_kernel(
-                    position=self.position, energy_axis=energy_axis
-                )
+            energy_axis = geom.axes["energy"]
+            self.edisp = edisp.get_edisp_kernel(
+                position=self.position, energy_axis=energy_axis
+            )
             del self._edisp_diagonal
 
         # lookup psf
-        if psf and self.model.spatial_model:
-            if isinstance(self.psf, PSFKernel):
-                pass
-            else:
-                energy_name = psf.energy_name
-                geom_psf = geom if energy_name == "energy" else exposure.geom
+        if (
+            psf
+            and self.model.spatial_model
+            and not (
+                isinstance(self.psf, PSFKernel)
+                and psf.psf_map.geom.to_image().data_shape == (1, 1)
+            )
+        ):
+            energy_name = psf.energy_name
+            geom_psf = geom if energy_name == "energy" else exposure.geom
 
-                if self.use_psf_containment(geom=geom_psf):
-                    energy_values = geom_psf.axes[energy_name].center.reshape(
-                        (-1, 1, 1)
-                    )
-                    kwargs = {energy_name: energy_values, "rad": geom.region.radius}
-                    self.psf_containment = psf.containment(**kwargs)
-                else:
-                    self.psf = psf.get_psf_kernel(
-                        position=self.position,
-                        geom=geom_psf,
-                        containment=PSF_CONTAINMENT,
-                        max_radius=PSF_MAX_RADIUS,
-                    )
+            if self.use_psf_containment(geom=geom_psf):
+                energy_values = geom_psf.axes[energy_name].center.reshape((-1, 1, 1))
+                kwargs = {energy_name: energy_values, "rad": geom.region.radius}
+                self.psf_containment = psf.containment(**kwargs)
+            else:
+                self.psf = psf.get_psf_kernel(
+                    position=self.position,
+                    geom=geom_psf,
+                    containment=PSF_CONTAINMENT,
+                    max_radius=PSF_MAX_RADIUS,
+                )
 
         self.exposure = exposure
         if self.evaluation_mode == "local":
