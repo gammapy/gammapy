@@ -1946,9 +1946,7 @@ def test_dataset_mixed_geom(tmpdir):
         geom=geom, geom_exposure=geom_exposure, geom_psf=geom_psf, geom_edisp=geom_edisp
     )
     assert isinstance(dataset.psf, PSFMap)
-    assert isinstance(dataset._effective_psf, list)
-    assert len(dataset._effective_psf) == len(energy_axis_true.center)
-    assert isinstance(dataset._effective_psf[0], PSFKernel)
+    assert isinstance(dataset._psf_kernel, PSFKernel)
 
     filename = tmpdir / "test.fits"
     dataset.write(filename)
@@ -1962,9 +1960,8 @@ def test_dataset_mixed_geom(tmpdir):
     assert isinstance(dataset.psf.psf_map.geom.region, CircleSkyRegion)
     assert isinstance(dataset.edisp.edisp_map.geom.region, CircleSkyRegion)
 
-    assert len(dataset._effective_psf) == len(energy_axis_true.center)
-    assert isinstance(dataset._effective_psf, list)
-    assert isinstance(dataset._effective_psf[0], PSFKernel)
+    assert isinstance(dataset.psf, PSFMap)
+    assert isinstance(dataset._psf_kernel, PSFKernel)
 
     geom_psf = WcsGeom.create(npix=1, axes=[rad_axis, energy_axis_true])
     dataset = MapDataset.from_geoms(
@@ -1972,9 +1969,7 @@ def test_dataset_mixed_geom(tmpdir):
     )
 
     assert isinstance(dataset.psf, PSFMap)
-    assert isinstance(dataset._effective_psf, list)
-    assert len(dataset._effective_psf) == len(energy_axis_true.center)
-    assert isinstance(dataset._effective_psf[0], PSFKernel)
+    assert isinstance(dataset._psf_kernel, PSFKernel)
 
     geom_psf_reco = RegionGeom.create(
         "icrs;circle(0, 0, 0.2)", axes=[rad_axis, energy_axis]
