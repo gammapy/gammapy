@@ -2,6 +2,7 @@
 import html
 import itertools
 import logging
+from os.path import split
 import numpy as np
 from astropy.table import Table
 import yaml
@@ -165,7 +166,7 @@ class Fit:
 
         Returns
         -------
-        fit_result : `FitResult`
+        fit_result : `~gammapy.modeling.FitResult`
             Fit result.
         """
 
@@ -799,6 +800,7 @@ class FitResult:
         full_output=False,
         overwrite_templates=False,
         checksum=False,
+        covariance=True,
     ):
         """Write to file.
 
@@ -815,6 +817,9 @@ class FitResult:
         checksum : bool, optional
             When True adds a CHECKSUM entry to the file.
             Default is False.
+        covariance : bool, optional
+            When True write the covariance of the fitted parameters into a separated file.
+            Default is True.
         """
         path = make_path(path)
         if path.exists() and not overwrite:
@@ -824,6 +829,15 @@ class FitResult:
         if checksum:
             yaml_str = add_checksum(yaml_str)
         path.write_text(yaml_str)
+
+        if covariance:
+            base_path, _ = split(path)
+            base_path = make_path(base_path)
+            filecovar = path.stem + "_covariance.dat"
+            kwargs = dict(
+                format="ascii.fixed_width", delimiter="|", overwrite=overwrite
+            )
+            self.models.write_covariance(base_path / filecovar, **kwargs)
 
     def __str__(self):
         string = ""
