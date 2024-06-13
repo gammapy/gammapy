@@ -651,6 +651,9 @@ def test_get_psf_kernel_multiscale():
 
     psf = PSFMap.from_gauss(energy_axis, sigma=[0.1, 0.2, 0.3] * u.deg)
 
+    kernel = psf.get_psf_kernel(geom=geom, max_radius="3 deg")
+    assert_allclose(kernel.psf_kernel_map.geom.width, 2 * 3 * u.deg, atol=0.02)
+
     kernel = psf.get_psf_kernel(geom=geom, max_radius=None)
 
     geom_image = kernel.psf_kernel_map.geom.to_image()
