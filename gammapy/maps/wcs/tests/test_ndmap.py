@@ -643,7 +643,7 @@ def test_convolve_nd():
     assert_allclose(values_full, values_same, rtol=1e-5)
 
 
-def test_get_psf_kernel_with_multiscale():
+def test_get_psf_kernel_multiscale():
     energy_axis = MapAxis.from_edges(
         np.logspace(-1.0, 1.0, 4), unit="TeV", name="energy_true"
     )
@@ -651,10 +651,17 @@ def test_get_psf_kernel_with_multiscale():
 
     psf = PSFMap.from_gauss(energy_axis, sigma=[0.1, 0.2, 0.3] * u.deg)
 
-    kernels = psf.get_psf_kernel(geom=geom, max_radius=None, multiscale=True)
-    assert len(kernels) == len(energy_axis.center)
-    assert_allclose(kernels[0].psf_kernel_map.geom.width.value, [[0.74], [0.74]])
-    assert_allclose(kernels[1].psf_kernel_map.geom.width.value, [[1.34], [1.34]])
+    kernel = psf.get_psf_kernel(geom=geom, max_radius=None)
+
+    geom_image = kernel.psf_kernel_map.geom.to_image()
+    coords = geom_image.get_coord()
+    sep = coords.skycoord.separation(geom_image.center_skydir)
+
+    widths = [0.74, 1.34, 1.34] * u.deg
+    for im, width in zip(kernel.psf_kernel_map.iter_by_image(), widths):
+        mask = sep > width
+        assert np.all(im.data[mask] == 0)
+        assert np.any(im.data[~mask] > 0)
 
 
 def test_convolve_pixel_scale_error():
