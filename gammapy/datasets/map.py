@@ -430,11 +430,12 @@ class MapDataset(Dataset):
             )
 
         self.edisp = edisp
-        #        if self.edisp is None:
-        #            self.edisp = EDispKernel.from_diagonal_response(
-        #                energy_axis_true=self.geoms["geom_exposure"].axes["energy_true"],
-        #                energy_axis=self.geoms["geom"].axes["energy"],
-        #            )
+        if self.edisp is None and self.exposure is not None:
+            log.warning("Edisp is not defined. A diagonal response matrix will be set.")
+            self.edisp = EDispMap.from_diagonal_response(
+                energy_axis_true=self.geoms["geom_exposure"].axes["energy_true"],
+            )
+
         self.mask_safe = mask_safe
         self.gti = gti
         self.models = models
