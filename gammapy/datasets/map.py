@@ -441,7 +441,7 @@ class MapDataset(Dataset):
     @property
     def _psf_kernel(self):
         """Precompute PSFkernel if possible"""
-        if self.psf and self.psf.psf_map.geom.to_image().data_shape == (1, 1):
+        if self.psf and self.psf.psf_map.single_spatial_bin:
             if self.psf.energy_name == "energy_true":
                 map_ref = self.exposure
             else:

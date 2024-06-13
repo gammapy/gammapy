@@ -210,10 +210,7 @@ class MapEvaluator:
         if (
             psf
             and self.model.spatial_model
-            and not (
-                isinstance(self.psf, PSFKernel)
-                and psf.psf_map.geom.to_image().data_shape == (1, 1)
-            )
+            and not (isinstance(self.psf, PSFKernel) and psf.psf_map.single_spatial_bin)
         ):
             energy_name = psf.energy_name
             geom_psf = geom if energy_name == "energy" else exposure.geom
