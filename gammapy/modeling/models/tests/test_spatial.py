@@ -723,12 +723,10 @@ def test_piecewise_spatial_model():
         )
 
         coords = MapCoord.create(geom.footprint)
-        print(coords["lon"])
         coords["lon"] *= u.deg
         coords["lat"] *= u.deg
 
         model = PiecewiseNormSpatialModel(coords, frame="galactic")
-        print(model.coords["lon"].deg)
 
         assert_allclose(model(*geom.to_image().center_coord), 1.0)
 
