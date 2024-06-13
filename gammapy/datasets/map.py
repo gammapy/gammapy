@@ -439,17 +439,15 @@ class MapDataset(Dataset):
             self._meta = meta
 
     @property
-    def _effective_psf(self):
+    def _psf_kernel(self):
         """Precompute PSFkernel if possible"""
-        effective_psf = self.psf
         if self.psf and self.psf.psf_map.geom.to_image().data_shape == (1, 1):
             if self.psf.energy_name == "energy_true":
                 map_ref = self.exposure
             else:
                 map_ref = self.counts
             if map_ref and not map_ref.geom.is_region:
-                effective_psf = self.psf.get_psf_kernel(map_ref.geom)
-        return effective_psf
+                return self.psf.get_psf_kernel(map_ref.geom)
 
     @property
     def meta(self):
@@ -555,7 +553,7 @@ class MapDataset(Dataset):
             models = DatasetModels(models)
             models = models.select(datasets_names=self.name)
             if models:
-                psf = self._effective_psf
+                psf = self._psf_kernel
             for model in models:
                 if not isinstance(model, FoVBackgroundModel):
                     evaluator = MapEvaluator(
