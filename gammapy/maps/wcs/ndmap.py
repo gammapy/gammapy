@@ -880,16 +880,6 @@ class WcsNDMap(WcsMap):
             if self.geom.is_image:
                 geom = geom.to_cube(kmap.geom.axes)
 
-        shape_axes_kernel = kernel.shape[slice(0, -2)]
-        ndim = kernel.ndim
-
-        if len(shape_axes_kernel) > 0:
-            if not geom.shape_axes == shape_axes_kernel:
-                raise ValueError(
-                    f"Incompatible shape between data {geom.shape_axes}"
-                    " and kernel {shape_axes_kernel}"
-                )
-
         if mode == "full":
             pad_width = [0.5 * (width - 1) for width in kernel.shape[-2:]]
             geom = geom.pad(pad_width, axis_name=None)
@@ -898,13 +888,24 @@ class WcsNDMap(WcsMap):
                 "WcsNDMap.convolve: mode='valid' is not supported."
             )
 
-        if self.geom.is_image and ndim == 3:
-            indexes = range(shape_axes_kernel[0])
+        shape_axes_kernel = kernel.shape[slice(0, -2)]
+
+        if len(shape_axes_kernel) > 0:
+            if not geom.shape_axes == shape_axes_kernel:
+                raise ValueError(
+                    f"Incompatible shape between data {geom.shape_axes}"
+                    " and kernel {shape_axes_kernel}"
+                )
+
+        if self.geom.is_image and kernel.ndim == 3:
+            indexes = range(kernel.shape[0])
             images = repeat(self.data.astype(np.float32))
         else:
             indexes = list(self.iter_by_image_index())
             images = (self.data[idx] for idx in indexes)
-        kernels = (kernel[Ellipsis] if ndim == 2 else kernel[idx] for idx in indexes)
+        kernels = (
+            kernel[Ellipsis] if kernel.ndim == 2 else kernel[idx] for idx in indexes
+        )
 
         convolved = parallel.run_multiprocessing(
             self._convolve,
