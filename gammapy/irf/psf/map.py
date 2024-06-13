@@ -308,6 +308,7 @@ class PSFMap(IRFMap):
         if max_radius is None:
             max_radius = np.max(radii)
         else:
+            max_radius = u.Quantity(max_radius)
             radii[radii > max_radius] = max_radius
 
         nr = len(radii)
