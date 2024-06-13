@@ -358,7 +358,7 @@ Computing pulsar phases can be done using an external library such as
 [Gammapy Recipe](https://gammapy.github.io/gammapy-recipes/_build/html/index.html)
 showing how to use PINT within the Gammapy framework is available
 [here](https://gammapy.github.io/gammapy-recipes/_build/html/notebooks/pulsar_phase/pulsar_phase_computation.html).
-For brevity, this code example shows how to add a dummy phase column to a new
+For brevity, the code below shows how to add a dummy phase column to a new
 `~gammapy.data.EventList` and `~gammapy.data.Observation`.
 
 .. testcode::
