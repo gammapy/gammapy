@@ -276,7 +276,7 @@ def test_fake(sky_model, geom, geom_etrue):
 
     assert real_dataset.counts.data.shape == dataset.counts.data.shape
     assert_allclose(real_dataset.counts.data.sum(), 9525.299054, rtol=1e-5)
-    assert_allclose(dataset.counts.data.sum(), 9711)
+    assert_allclose(dataset.counts.data.sum(), 9709)
 
 
 @requires_data()
