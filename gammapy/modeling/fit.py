@@ -183,6 +183,10 @@ class Fit:
             optimize_result.models.parameters, covariance_result.matrix
         )
 
+        datasets.models.covariance = Covariance(
+            datasets.models.parameters, covariance_result.matrix
+        )
+
         return FitResult(
             optimize_result=optimize_result,
             covariance_result=covariance_result,
