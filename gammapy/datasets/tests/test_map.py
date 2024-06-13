@@ -2095,3 +2095,14 @@ def test_to_masked():
     )
     d1 = datasetonoff.to_masked()
     assert_allclose(d1.counts.data.sum(), 170)
+
+
+def test_diagonal_edisp(geom_etrue, caplog):
+    axis = MapAxis.from_energy_bounds(1, 10, 2, unit="TeV")
+    geom = WcsGeom.create(npix=(10, 10), binsz=0.05, axes=[axis])
+    counts = Map.from_geom(geom, data=1)
+    psf = get_psf()
+    exposure = get_exposure(geom_etrue)
+    dataset = MapDataset(counts=counts, exposure=exposure, edisp=None, psf=psf)
+    #    assert "Edisp is not defined. A diagonal response matrix will be set." in [record.levelname for record in caplog.records]
+    assert dataset.edisp is not None
