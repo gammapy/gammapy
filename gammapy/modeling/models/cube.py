@@ -30,7 +30,7 @@ __all__ = [
 ]
 
 
-class SkyModel(ModelBase, CovarianceMixin):
+class SkyModel(CovarianceMixin, ModelBase):
     """Sky model component.
 
     This model represents a factorised sky model.
