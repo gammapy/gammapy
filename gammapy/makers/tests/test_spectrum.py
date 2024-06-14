@@ -260,7 +260,7 @@ def test_region_center_spectrum_dataset_maker_magic_dl3(
 
     assert isinstance(dataset, SpectrumDataset)
     assert dataset.exposure.meta["is_pointlike"]
-    assert "WARNING" in [record.levelname for record in caplog.records]
+    assert "WARNING" not in [record.levelname for record in caplog.records]
     assert dataset.edisp is not None
 
     # use_center = False should raise a warning
