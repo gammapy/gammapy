@@ -164,6 +164,17 @@ class SkyModel(ModelBase):
         return Parameters.from_stack(parameters)
 
     @property
+    def parameters_unique_names(self):
+        """List of unique parameter names. Return formatted as par_type.par_name."""
+        names = []
+        for model in enumerate(self._models):
+            for par_name in model.parameters_unique_names:
+                components = [model.type, par_name]
+                name = ".".join(components)
+                names.append(name)
+        return names
+
+    @property
     def spatial_model(self):
         """Spatial model as a `~gammapy.modeling.models.SpatialModel` object."""
         return self._spatial_model
@@ -690,6 +701,11 @@ class FoVBackgroundModel(ModelBase):
         return self._spatial_model
 
     @property
+    def _models(self):
+        models = self.spectral_model, self.spatial_model
+        return [model for model in models if model is not None]
+
+    @property
     def name(self):
         """Model name."""
         return self.datasets_names[0] + "-bkg"
@@ -702,6 +718,17 @@ class FoVBackgroundModel(ModelBase):
         if self.spatial_model is not None:
             parameters.append(self.spatial_model.parameters)
         return Parameters.from_stack(parameters)
+
+    @property
+    def parameters_unique_names(self):
+        """List of unique parameter names. Return formatted as par_type.par_name."""
+        names = []
+        for model in enumerate(self._models):
+            for par_name in model.parameters_unique_names:
+                components = [model.type, par_name]
+                name = ".".join(components)
+                names.append(name)
+        return names
 
     def __str__(self):
         str_ = f"{self.__class__.__name__}\n\n"
@@ -954,10 +981,26 @@ class TemplateNPredModel(ModelBase):
         self._spectral_model = model
 
     @property
+    def _models(self):
+        models = self.spectral_model, self.spatial_model
+        return [model for model in models if model is not None]
+
+    @property
     def parameters(self):
         parameters = []
         parameters.append(self.spectral_model.parameters)
         return Parameters.from_stack(parameters)
+
+    @property
+    def parameters_unique_names(self):
+        """List of unique parameter names. Return formatted as par_type.par_name."""
+        names = []
+        for model in enumerate(self._models):
+            for par_name in model.parameters_unique_names:
+                components = [model.type, par_name]
+                name = ".".join(components)
+                names.append(name)
+        return names
 
     def evaluate(self):
         """Evaluate background model.
