@@ -309,7 +309,8 @@ class MapDataset(Dataset):
     psf : `~gammapy.irf.PSFMap` or `~gammapy.utils.fits.HDULocation`
         PSF kernel.
     edisp : `~gammapy.irf.EDispMap` or `~gammapy.utils.fits.HDULocation`
-        Energy dispersion kernel
+        Energy dispersion kernel.
+        When the Edisp is not defined, a diagonal edisp matrix is internally set.
     mask_safe : `~gammapy.maps.WcsNDMap` or `~gammapy.utils.fits.HDULocation`
         Mask defining the safe data range.
     gti : `~gammapy.data.GTI`

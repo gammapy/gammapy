@@ -409,6 +409,16 @@ class MapDatasetMaker(Maker):
             psf = self.make_psf(dataset.psf.psf_map.geom, observation)
             kwargs["psf"] = psf
 
+        if "edisp" not in self.selection:
+            log.warning(
+                "'edisp' is not selected. A diagonal response matrix will be set anyway."
+            )
+            edisp = EDispKernelMap.from_diagonal_response(
+                energy_axis_true=dataset.geoms["geom_exposure"].axes["energy_true"],
+                energy_axis=dataset.geoms["geom"].axes["energy"],
+                geom=dataset.edisp.edisp_map.geom,
+            )
+
         if "edisp" in self.selection:
             if dataset.edisp.edisp_map.geom.axes[0].name.upper() == "MIGRA":
                 edisp = self.make_edisp(dataset.edisp.edisp_map.geom, observation)
@@ -416,7 +426,6 @@ class MapDatasetMaker(Maker):
                 edisp = self.make_edisp_kernel(
                     dataset.edisp.edisp_map.geom, observation
                 )
-
-            kwargs["edisp"] = edisp
+        kwargs["edisp"] = edisp
 
         return dataset.__class__(name=dataset.name, **kwargs)

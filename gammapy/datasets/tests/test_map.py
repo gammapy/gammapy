@@ -2097,6 +2097,7 @@ def test_to_masked():
     assert_allclose(d1.counts.data.sum(), 170)
 
 
+@requires_data()
 def test_diagonal_edisp(geom_etrue, caplog):
     axis = MapAxis.from_energy_bounds(1, 10, 2, unit="TeV")
     geom = WcsGeom.create(npix=(10, 10), binsz=0.05, axes=[axis])
