@@ -2,10 +2,12 @@
 import html
 import itertools
 import logging
+import warnings
+from os.path import split
 import numpy as np
 from astropy.table import Table
 import yaml
-from gammapy.utils.check import add_checksum
+from gammapy.utils.check import add_checksum, verify_checksum
 from gammapy.utils.metadata import CreatorMetaData
 from gammapy.utils.pbar import progress_bar
 from gammapy.utils.scripts import make_path
@@ -776,6 +778,9 @@ class FitResult:
         output = {}
         if self.optimize_result is not None:
             output["optimize_result"] = self.optimize_result.to_dict()
+            output["optimize_result"]["total_stat"] = float(
+                output["optimize_result"]["total_stat"]
+            )
         if self.covariance_result is not None:
             output["covariance_result"] = self.covariance_result.to_dict()
         output["models"] = models_dict
@@ -824,6 +829,35 @@ class FitResult:
         if checksum:
             yaml_str = add_checksum(yaml_str)
         path.write_text(yaml_str)
+
+    @classmethod
+    def read(cls, filename, checksum=False):
+        """Read from YAML file.
+
+        Parameters
+        ----------
+        filename : str
+            input filename
+        checksum : bool
+            Whether to perform checksum verification. Default is False.
+        """
+        yaml_str = make_path(filename).read_text()
+        path, filename = split(filename)
+        return cls.from_yaml(yaml_str, path=path, checksum=checksum)
+
+    @classmethod
+    def from_yaml(cls, yaml_str, path="", checksum=False):
+        """Create from YAML string."""
+        data = yaml.safe_load(yaml_str)
+        checksum_str = data.pop("checksum", None)
+        if checksum:
+            yaml_str = yaml.dump(
+                data, sort_keys=False, indent=4, width=80, default_flow_style=False
+            )
+            if not verify_checksum(yaml_str, checksum_str):
+                warnings.warn("Checksum verification failed.", UserWarning)
+
+        return data
 
     def __str__(self):
         string = ""

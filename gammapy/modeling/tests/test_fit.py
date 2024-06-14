@@ -324,7 +324,7 @@ def test_stat_contour():
 
 
 @requires_data()
-def test_write(tmpdir):
+def test_write_read(tmpdir):
     datasets = Datasets()
     for obs_id in [23523, 23526]:
         dataset = SpectrumDatasetOnOff.read(
@@ -356,3 +356,11 @@ def test_write(tmpdir):
     result_dict = result.to_dict()
     assert "covariance_result" not in result_dict
     result.write(path=tmpdir / "test-fit-result.yaml", overwrite=True)
+
+    result_read = FitResult.read(filename=tmpdir / "test-fit-result.yaml")
+
+    assert result_read["optimize_result"]["nfev"] == result.optimize_result.nfev
+    assert (
+        result_read["optimize_result"]["total_stat"]
+        == result.optimize_result.total_stat
+    )
