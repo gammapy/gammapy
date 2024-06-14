@@ -729,7 +729,7 @@ class CompoundSpectralModel(SpectralModel):
         names = []
         for idx, model in enumerate(self._models):
             for par_name in model.parameters_unique_names:
-                components = [f"model{idx}", par_name]
+                components = [f"model{idx+1}", par_name]
                 name = ".".join(components)
                 names.append(name)
         return names
