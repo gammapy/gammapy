@@ -72,7 +72,6 @@ def test_spectrum_dataset_fits_io(spectrum_dataset, tmp_path):
     )
     hdulist = spectrum_dataset.to_hdulist()
     actual = [hdu.name for hdu in hdulist]
-    print(actual)
     desired = [
         "PRIMARY",
         "COUNTS",
@@ -101,6 +100,7 @@ def test_spectrum_dataset_fits_io(spectrum_dataset, tmp_path):
     assert_allclose(
         spectrum_dataset.npred_background().data, dataset_new.npred_background().data
     )
+    assert dataset_new.edisp is not None
     assert dataset_new.name == "test"
 
     assert_allclose(spectrum_dataset.exposure.data, dataset_new.exposure.data)

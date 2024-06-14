@@ -2104,5 +2104,5 @@ def test_diagonal_edisp(geom_etrue, caplog):
     psf = get_psf()
     exposure = get_exposure(geom_etrue)
     dataset = MapDataset(counts=counts, exposure=exposure, edisp=None, psf=psf)
-    #    assert "Edisp is not defined. A diagonal response matrix will be set." in [record.levelname for record in caplog.records]
+    assert "WARNING" in [record.levelname for record in caplog.records]
     assert dataset.edisp is not None

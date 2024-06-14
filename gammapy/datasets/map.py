@@ -431,7 +431,7 @@ class MapDataset(Dataset):
 
         self.edisp = edisp
         if self.edisp is None and self.exposure is not None:
-            log.info("Edisp is not defined. A diagonal response matrix will be set.")
+            log.warning("Edisp is not defined. A diagonal response matrix will be set.")
             self.edisp = EDispMap.from_diagonal_response(
                 energy_axis_true=self.geoms["geom_exposure"].axes["energy_true"],
             )
