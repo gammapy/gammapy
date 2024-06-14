@@ -15,6 +15,7 @@ from astropy.units import Quantity
 from astropy.utils.decorators import classproperty
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
+from covariance import CovarianceMixin
 from gammapy.maps import MapAxis, RegionNDMap
 from gammapy.maps.axes import UNIT_STRING_FORMAT
 from gammapy.modeling import Parameter, Parameters
@@ -703,7 +704,7 @@ class ConstantSpectralModel(SpectralModel):
         return np.ones(np.atleast_1d(energy).shape) * const
 
 
-class CompoundSpectralModel(SpectralModel):
+class CompoundSpectralModel(SpectralModel, CovarianceMixin):
     """Arithmetic combination of two spectral models.
 
     For more information see :ref:`compound-spectral-model`.

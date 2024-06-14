@@ -12,7 +12,7 @@ from astropy.table import Table
 import matplotlib.pyplot as plt
 import yaml
 from gammapy.maps import Map, RegionGeom
-from gammapy.modeling import Covariance, Parameter, Parameters
+from gammapy.modeling import Covariance, CovarianceMixin, Parameter, Parameters
 from gammapy.utils.check import add_checksum, verify_checksum
 from gammapy.utils.metadata import CreatorMetaData
 from gammapy.utils.scripts import make_name, make_path
@@ -341,7 +341,7 @@ class Model:
         return cls.from_dict(data)
 
 
-class DatasetModels(collections.abc.Sequence):
+class DatasetModels(collections.abc.Sequence, CovarianceMixin):
     """Immutable models container.
 
     Parameters
@@ -377,31 +377,6 @@ class DatasetModels(collections.abc.Sequence):
         # Set separately because this triggers the update mechanism on the sub-models
         if covariance_data is not None:
             self.covariance = covariance_data
-
-    def _check_covariance(self):
-        if not self.parameters == self._covariance.parameters:
-            self._covariance = Covariance.from_stack(
-                [model.covariance for model in self._models]
-            )
-
-    @property
-    def covariance(self):
-        """Covariance as a `~gammapy.modeling.Covariance` object."""
-        self._check_covariance()
-
-        for model in self._models:
-            self._covariance.set_subcovariance(model.covariance)
-
-        return self._covariance
-
-    @covariance.setter
-    def covariance(self, covariance):
-        self._check_covariance()
-        self._covariance.data = covariance
-
-        for model in self._models:
-            subcovar = self._covariance.get_subcovariance(model.covariance.parameters)
-            model.covariance = subcovar
 
     @property
     def parameters(self):
