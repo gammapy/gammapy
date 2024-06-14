@@ -8,7 +8,8 @@ import astropy.units as u
 from astropy.nddata import NoOverlapError
 from astropy.time import Time
 from gammapy.maps import Map, MapAxis, WcsGeom
-from gammapy.modeling import CovarianceMixin, Parameters
+from gammapy.modeling import Parameters
+from gammapy.modeling.covariance import CovarianceMixin
 from gammapy.modeling.parameter import _get_parameters_str
 from gammapy.utils.compat import COPY_IF_NEEDED
 from gammapy.utils.fits import LazyFitsData

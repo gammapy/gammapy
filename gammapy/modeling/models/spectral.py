@@ -15,7 +15,6 @@ from astropy.units import Quantity
 from astropy.utils.decorators import classproperty
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
-from covariance import CovarianceMixin
 from gammapy.maps import MapAxis, RegionNDMap
 from gammapy.maps.axes import UNIT_STRING_FORMAT
 from gammapy.modeling import Parameter, Parameters
@@ -28,7 +27,7 @@ from gammapy.utils.interpolation import (
 )
 from gammapy.utils.roots import find_roots
 from gammapy.utils.scripts import make_path
-from ..covariance import Covariance
+from ..covariance import CovarianceMixin
 from .core import ModelBase
 
 log = logging.getLogger(__name__)

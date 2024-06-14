@@ -12,7 +12,8 @@ from astropy.table import Table
 import matplotlib.pyplot as plt
 import yaml
 from gammapy.maps import Map, RegionGeom
-from gammapy.modeling import Covariance, CovarianceMixin, Parameter, Parameters
+from gammapy.modeling import Covariance, Parameter, Parameters
+from gammapy.modeling.covariance import CovarianceMixin
 from gammapy.utils.check import add_checksum, verify_checksum
 from gammapy.utils.metadata import CreatorMetaData
 from gammapy.utils.scripts import make_name, make_path
