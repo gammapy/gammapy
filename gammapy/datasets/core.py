@@ -184,7 +184,7 @@ class Datasets(collections.abc.MutableSequence):
         The order of the unique models remains.
         """
         if models:
-            self._covariance = models.covariance
+            self._covariance = DatasetModels(models).covariance
         for dataset in self:
             dataset.models = models
 
