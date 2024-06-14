@@ -162,6 +162,7 @@ def test_datasets_write(tmp_path):
         )
 
 
+@requires_data()
 def test_datasets_fit():
     axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=2)
     geom = WcsGeom.create(
