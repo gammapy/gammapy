@@ -805,7 +805,7 @@ def test_template_ND(tmpdir):
 
 @requires_data()
 def test_templatespatial_write(tmpdir):
-    filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits"  # noqa: E501
+    filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits"
     map_ = Map.read(filename)
     template = TemplateSpatialModel(map_, filename=filename)
 

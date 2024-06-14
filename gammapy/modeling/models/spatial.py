@@ -1506,15 +1506,14 @@ class TemplateSpatialModel(SpatialModel):
         overwrite: bool, optional
             Overwrite existing file.
             Default is False, which will raise a warning if the template file exists already.
+        filename: str, optional
+            Set the filename of the template  model.
         """
-        if self.filename is None and filename is None:
+        if filename is not None:
+            self.filename = filename
+        if self.filename is None:
             raise IOError("Missing filename")
-        elif filename:
-            if os.path.isfile(make_path(filename)) and not overwrite:
-                log.warning("Template file already exits, and overwrite is False")
-            else:
-                self.map.write(filename, overwrite=overwrite)
-        elif os.path.isfile(make_path(self.filename)) and not overwrite:
+        if os.path.isfile(make_path(self.filename)) and not overwrite:
             log.warning("Template file already exits, and overwrite is False")
         else:
             self.map.write(self.filename, overwrite=overwrite)
