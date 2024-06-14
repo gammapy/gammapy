@@ -183,7 +183,7 @@ class Fit:
             optimize_result.models.parameters, covariance_result.matrix
         )
 
-        datasets.set_covariance(
+        datasets._covariance(
             Covariance(datasets.models.parameters, covariance_result.matrix)
         )
 

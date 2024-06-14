@@ -188,9 +188,6 @@ class Datasets(collections.abc.MutableSequence):
         for dataset in self:
             dataset.models = models
 
-    def set_covariance(self, covariance):
-        self._covariance = covariance
-
     @property
     def names(self):
         return [d.name for d in self._datasets]
