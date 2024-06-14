@@ -23,6 +23,8 @@ class DatasetsActor(Datasets):
         Datasets
     """
 
+    _local_attr = ["models", "parameters"]
+
     def __init__(self, datasets=None):
         from ray import get
 
@@ -45,6 +47,7 @@ class DatasetsActor(Datasets):
                 datasets.remove(d0)  # moved to remote so removed from main process
             self._datasets = datasets_list
             self._ray_get = get
+            self._covariance = None
 
         # trigger actors auto_init_wrapper (so overhead so appears on init)
         self.name
@@ -73,7 +76,9 @@ class DatasetsActor(Datasets):
                 d._to_update = {}
             return results
 
-        if inspect.ismethod(getattr(self._datasets[0], name)):
+        if name in self._local_attr:
+            return super().__getattribute__(name)
+        elif inspect.ismethod(getattr(self._datasets[0], name)):
             return wrapper
         else:
             return wrapper()
