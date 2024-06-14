@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 from itertools import repeat
+import numpy
 import numpy as np
 import scipy.interpolate
 import scipy.ndimage as ndi
@@ -17,10 +18,16 @@ import gammapy.utils.parallel as parallel
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator
 from gammapy.utils.units import unit_from_fits_image_hdu
 from gammapy.visualization.utils import add_colorbar
+from ..core import USE_JAX
 from ..geom import pix_tuple_to_idx
 from ..utils import INVALID_INDEX
 from .core import WcsMap
 from .geom import WcsGeom
+
+if USE_JAX:
+    import jax.numpy as jnp
+
+NP = np if not USE_JAX else jnp
 
 __all__ = ["WcsNDMap"]
 
@@ -28,6 +35,20 @@ log = logging.getLogger(__name__)
 
 
 C_MAP_MASK = mpcolors.ListedColormap(["black", "white"], name="mask")
+
+
+def set_by_idx_numpy(data, idx, vals):
+    idx = pix_tuple_to_idx(idx)
+    data.T[idx] = vals
+    return data
+
+
+def set_by_idx_jax(data, idx, vals):
+    idx = pix_tuple_to_idx(idx)
+    return data.T.at[idx].set(vals)
+
+
+SET_BY_IDX = set_by_idx_jax if USE_JAX else set_by_idx_numpy
 
 
 class WcsNDMap(WcsMap):
@@ -65,14 +86,14 @@ class WcsNDMap(WcsMap):
     def _make_default_data(geom, shape_np, dtype):
         # Check whether corners of each image plane are valid
 
-        data = np.zeros(shape_np, dtype=dtype)
+        data = numpy.zeros(shape_np, dtype=dtype)
 
         if not geom.is_regular or geom.is_allsky:
             coords = geom.get_coord()
             is_nan = np.isnan(coords.lon)
             data[is_nan] = np.nan
 
-        return data
+        return NP.array(data)
 
     @classmethod
     def from_hdu(cls, hdu, hdu_bands=None, format=None):
@@ -103,11 +124,11 @@ class WcsNDMap(WcsMap):
         if isinstance(hdu, fits.BinTableHDU):
             map_out = cls(geom, meta=meta, unit=unit)
             pix = hdu.data.field("PIX")
-            pix = np.unravel_index(pix, shape_wcs[::-1])
-            vals = hdu.data.field("VALUE")
+            pix = numpy.unravel_index(pix, shape_wcs[::-1])
+            vals = np.array(hdu.data.field("VALUE"))
             if "CHANNEL" in hdu.data.columns.names and shape:
                 chan = hdu.data.field("CHANNEL")
-                chan = np.unravel_index(chan, shape[::-1])
+                chan = numpy.unravel_index(chan, shape[::-1])
                 idx = chan + pix
             else:
                 idx = pix
@@ -232,14 +253,20 @@ class WcsNDMap(WcsMap):
         if not preserve_counts:
             weights /= np.bincount(idx_inv).astype(self.data.dtype)
 
-        self.data.T.flat[idx] += weights
+        if np.__package__ == "jax.numpy":
+            data = self.data.T.flatten()
+            self.data = data.at[idx].add(weights)
+        else:
+            self.data.T.flat[idx] += weights
 
     def fill_by_idx(self, idx, weights=None):
         return self._resample_by_idx(idx, weights=weights, preserve_counts=True)
 
     def set_by_idx(self, idx, vals):
-        idx = pix_tuple_to_idx(idx)
-        self.data.T[idx] = vals
+        self.data = SET_BY_IDX(self.data, idx, vals)
+
+    #        idx = pix_tuple_to_idx(idx)
+    #        self.data.T[idx] = vals
 
     def _pad_spatial(
         self, pad_width, axis_name=None, mode="constant", cval=0, method="linear"
@@ -917,9 +944,12 @@ class WcsNDMap(WcsMap):
             ),
             task_name="Convolution",
         )
-        data = np.empty(geom.data_shape, dtype=np.float32)
+        data = NP.empty(geom.data_shape, dtype=np.float32)
         for idx_res, idx in enumerate(indexes):
-            data[idx] = convolved[idx_res]
+            if USE_JAX:
+                data = data.at[idx].set(convolved[idx_res])
+            else:
+                data[idx] = convolved[idx_res]
         return self._init_copy(data=data, geom=geom)
 
     @staticmethod
@@ -1009,10 +1039,10 @@ class WcsNDMap(WcsMap):
         slices = cutout_info["cutout-slices"]
         cutout_slices = Ellipsis, slices[0], slices[1]
 
-        data = np.zeros(shape=geom_cutout.data_shape, dtype=self.data.dtype)
+        data = numpy.zeros(shape=geom_cutout.data_shape, dtype=self.data.dtype)
         data[cutout_slices] = self.data[parent_slices]
 
-        return self._init_copy(geom=geom_cutout, data=data)
+        return self._init_copy(geom=geom_cutout, data=NP.array(data))
 
     def _cutout_view(self, position, width, odd_npix=False):
         """
@@ -1043,7 +1073,7 @@ class WcsNDMap(WcsMap):
         parent_slices = Ellipsis, slices[0], slices[1]
 
         return self.__class__.from_geom(
-            geom=geom_cutout, data=self.quantity[parent_slices]
+            geom=geom_cutout, data=self.data[parent_slices], unit=self.unit
         )
 
     def stack(self, other, weights=None, nan_to_num=True):
@@ -1077,7 +1107,15 @@ class WcsNDMap(WcsMap):
                 "Can only stack equivalent maps or cutout of the same map."
             )
 
-        data = other.quantity[cutout_slices].to_value(self.unit)
+        if not self.unit.is_equivalent(other.unit):
+            raise ValueError(
+                f"Cannot stack maps: {self.unit} and {other.unit} are not equivalent."
+            )
+
+        data = other.data[cutout_slices]
+
+        data = (data * other.unit.to(self.unit)).astype(self.data.dtype)
+
         if nan_to_num:
             not_finite = ~np.isfinite(data)
             if np.any(not_finite):
@@ -1087,4 +1125,7 @@ class WcsNDMap(WcsMap):
             if not other.geom.to_image() == weights.geom.to_image():
                 raise ValueError("Incompatible spatial geoms between map and weights")
             data = data * weights.data[cutout_slices]
-        self.data[parent_slices] += data
+        if USE_JAX:
+            self.data = self.data.at[parent_slices].add(data)
+        else:
+            self.data[parent_slices] += data

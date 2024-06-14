@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
-import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
 from astropy.convolution import Box2DKernel, Gaussian2DKernel
@@ -8,6 +7,7 @@ from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.time import Time
 from regions import CircleSkyRegion, PointSkyRegion, RectangleSkyRegion
+import jax.numpy as np
 from gammapy.datasets.map import MapEvaluator
 from gammapy.irf import PSFKernel, PSFMap
 from gammapy.maps import (
@@ -531,9 +531,8 @@ def test_wcsndmap_resample_axis_logical_and():
     axis_1 = MapAxis.from_edges([1, 2, 3, 4, 5], name="test-1")
 
     geom = WcsGeom.create(npix=(2, 2), axes=[axis_1])
-    m = WcsNDMap(geom, dtype=bool)
-    m.data[:, :, :] = True
-    m.data[0, 0, 0] = False
+    m = WcsNDMap(geom, data=True, dtype=bool)
+    m.set_by_pix([0, 0, 0], False)
 
     new_axis = MapAxis.from_edges([1, 3, 5], name="test-1")
     m2 = m.resample_axis(axis=new_axis, ufunc=np.logical_and)
