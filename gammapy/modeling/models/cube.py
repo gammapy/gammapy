@@ -167,7 +167,7 @@ class SkyModel(ModelBase):
     def parameters_unique_names(self):
         """List of unique parameter names. Return formatted as par_type.par_name."""
         names = []
-        for model in enumerate(self._models):
+        for model in self._models:
             for par_name in model.parameters_unique_names:
                 components = [model.type, par_name]
                 name = ".".join(components)
@@ -723,7 +723,7 @@ class FoVBackgroundModel(ModelBase):
     def parameters_unique_names(self):
         """List of unique parameter names. Return formatted as par_type.par_name."""
         names = []
-        for model in enumerate(self._models):
+        for model in self._models:
             for par_name in model.parameters_unique_names:
                 components = [model.type, par_name]
                 name = ".".join(components)
@@ -995,7 +995,7 @@ class TemplateNPredModel(ModelBase):
     def parameters_unique_names(self):
         """List of unique parameter names. Return formatted as par_type.par_name."""
         names = []
-        for model in enumerate(self._models):
+        for model in self._models:
             for par_name in model.parameters_unique_names:
                 components = [model.type, par_name]
                 name = ".".join(components)
