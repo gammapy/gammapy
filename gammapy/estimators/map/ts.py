@@ -291,7 +291,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
             selection += ["stat_scan"]
 
         if "stat_scan_local" in self.selection_optional:
-            selection += ["norm_scan_values", "stat_scan_local", "stat_scan"]
+            selection += ["dnde_scan_values", "stat_scan_local", "stat_scan"]
 
         return selection
 
@@ -516,22 +516,25 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         j, i = zip(*positions)
 
         geom = maps["counts"].geom.squash(axis_name="energy")
+        energy_axis = maps["counts"].geom.axes["energy"]
+        dnde_ref = self.model.spectral_model(energy_axis.center)
 
         for name in self.selection_all:
             if name == "stat_scan":
-                norm_axis = MapAxis(
-                    self.norm.scan_values,
+                dnde_axis = MapAxis(
+                    self.norm.scan_values * dnde_ref.data,
                     interp=self.norm.interp,
                     node_type="center",
-                    name="norm",
+                    name="dnde",
+                    unit=self.dnde_ref.unit,
                 )
-                axes = geom.axes + [norm_axis]
+                axes = geom.axes + [dnde_axis]
                 geom_scan = geom.to_image().to_cube(axes)
 
                 m = Map.from_geom(geom_scan, data=np.nan, unit="")
                 m.data[:, 0, j, i] = np.array([_[name] for _ in results]).T
 
-            elif name in ["norm_scan_values", "stat_scan_local"]:
+            elif name in ["dnde_scan_values", "stat_scan_local"]:
                 norm_bin_axis = MapAxis(
                     range(len(self.norm_local.scan_values)),
                     interp="lin",
@@ -894,7 +897,7 @@ class BrentqFluxEstimator(Estimator):
         return dict(
             stat_scan=stat_scan,
             stat_scan_local=stat_scan_local,
-            norm_scan_values=sparse_norms,
+            dnde_scan_values=sparse_norms,
         )
 
     def estimate_scan(self, dataset, result):
