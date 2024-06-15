@@ -882,7 +882,7 @@ def get_flux_map_from_profile(
     """get ts, dnde, dnde_err, dnde_errp, dnde_errn, and dnde_ul from likelihood profile"""
 
     dnde_coord = stat_scan.geom.get_coord()["dnde"]
-    geom = stat_scan.geom.to_image().to_cube([stat_scan.geom.axes["energy"]])
+    geom = stat_scan.geom.squash(axis_name="dnde")
 
     ts = -stat_scan.data.min(axis=1)
 
