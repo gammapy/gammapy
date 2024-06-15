@@ -545,8 +545,15 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
                 axes = geom.axes + [norm_bin_axis]
                 geom_scan = geom.to_image().to_cube(axes)
 
-                m = Map.from_geom(geom_scan, data=np.nan, unit="")
-                m.data[:, 0, j, i] = np.array([_[name] for _ in results]).T
+                if name == "dnde_scan_values":
+                    unit = dnde_ref.unit
+                    factor = dnde_ref.value
+                else:
+                    unit = ""
+                    factor = 1
+
+                m = Map.from_geom(geom_scan, data=np.nan, unit=unit)
+                m.data[:, 0, j, i] = np.array([_[name] for _ in results]).T * factor
 
             else:
                 m = Map.from_geom(geom=geom, data=np.nan, unit="")
