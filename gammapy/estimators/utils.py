@@ -43,7 +43,7 @@ def find_peaks(image, threshold, min_distance=1):
     a different method in the first place to result in a smooth image.
     You can also increase the ``min_distance`` parameter.
 
-    The output table contains one row per peak and the following columns:
+    The output_maps table contains one row per peak and the following columns:
 
     - ``x`` and ``y`` are the pixel coordinates (first pixel at zero).
     - ``ra`` and ``dec`` are the RA / DEC sky coordinates (ICRS frame).
@@ -70,7 +70,7 @@ def find_peaks(image, threshold, min_distance=1):
 
     Returns
     -------
-    output : `~astropy.table.Table`
+    output_maps : `~astropy.table.Table`
         Table with parameters of detected peaks.
 
     Examples
@@ -170,7 +170,7 @@ def find_peaks_in_flux_map(maps, threshold, min_distance=1):
 
     Returns
     -------
-    output : `~astropy.table.Table`
+    output_maps : `~astropy.table.Table`
         Table with parameters of detected peaks.
 
     Examples
@@ -852,7 +852,7 @@ def combine_flux_maps(maps, method="gaussian_errors", reference_model=None):
         ts = Map.from_geom(mean.geom, data=ts)
 
         kwargs = dict(
-            sed_type="dnde", gti=gti, reference_model=reference_model, meta=meta
+            sed_type="dnde", reference_model=reference_model, meta=meta, gti=gti
         )
         return FluxMaps.from_maps(dict(dnde=mean, dnde_err=sigma, ts=ts), **kwargs)
 
@@ -867,7 +867,10 @@ def combine_flux_maps(maps, method="gaussian_errors", reference_model=None):
             stat_scan += stat_scans[k]
 
         return get_flux_map_from_profile(
-            stat_scan, gti=gti, reference_model=reference_model, meta=meta
+            {"stat_scan": stat_scan},
+            reference_model=reference_model,
+            meta=meta,
+            gti=gti,
         )
 
     else:
@@ -877,32 +880,77 @@ def combine_flux_maps(maps, method="gaussian_errors", reference_model=None):
 
 
 def get_flux_map_from_profile(
-    stat_scan, n_sigma=1, n_sigma_ul=2, reference_model=None, gti=None, meta=None
+    flux_map, n_sigma=1, n_sigma_ul=2, reference_model=None, meta=None, gti=None
 ):
-    """get ts, dnde, dnde_err, dnde_errp, dnde_errn, and dnde_ul from likelihood profile"""
+    """Create a new flux map using the likehood profile (stat_scan)
+    to get ts, dnde, dnde_err, dnde_errp, dnde_errn, and dnde_ul.
 
-    dnde_coord = stat_scan.geom.get_coord()["dnde"]
-    geom = stat_scan.geom.squash(axis_name="dnde")
+    Parameters
+    ----------
+    flux_maps : `~gammapy.estimators.FluxMaps` or dict of `~gammapy.maps.WcsNDMap`
+        Flux map or dict containing  a `stat_scan` entry
+    n_sigma : int
+        Number of sigma for flux error. Default is 1.
+    n_sigma_ul : int
+        Number of sigma for flux upper limits. Default is 2.
+    reference_model : `~gammapy.modeling.models.SkyModel`, optional
+        The reference model to use for conversions. If None, a model consisting
+        of a point source with a power law spectrum of index 2 is assumed.
+        Default is None and and the one of `flux_map` will be used if available
+    meta : dict, optional
+        Dict of metadata.
+        Default is None and and the oneof `flux_map` will be used if available
+    gti : `~gammapy.data.GTI`, optional
+        Maps GTI information.
+        Default is None and and the one of `flux_map` will be used if available
 
-    ts = -stat_scan.data.min(axis=1)
+    Returns
+    -------
+    flux_maps : `~gammapy.estimators.FluxMaps`
+        Flux map.
 
-    ind = stat_scan.data.argmin(axis=1)
+    """
+
+    if isinstance(flux_map, dict):
+        output_maps = flux_map
+    else:
+        if reference_model is None:
+            reference_model = flux_map.reference_model
+        if gti is None:
+            gti = flux_map.gti
+        if meta is None:
+            meta = flux_map.meta
+
+        output_maps = dict(stat_scan=flux_map.stat_scan)
+        if getattr(flux_map, "stat_scan_local", False):
+            output_maps["stat_scan_local"] = flux_map["stat_scan_local"]
+            output_maps["dnde_scan_values"] = flux_map["dnde_scan_values"]
+
+    dnde_coord = flux_map["stat_scan"].geom.get_coord()["dnde"]
+    geom = (
+        flux_map["stat_scan"]
+        .geom.to_image()
+        .to_cube([flux_map["stat_scan"].geom.axes["energy"]])
+    )
+
+    ts = -flux_map["stat_scan"].data.min(axis=1) * u.Unit("")
+    ind = flux_map["stat_scan"].data.argmin(axis=1)
     ij, ik, il = np.indices(ind.shape)
     dnde = dnde_coord[ij, ind, ik, il]
 
     maskp = dnde_coord > dnde
     invalid_value = 999
-    stat_diff = stat_scan.data - stat_scan.data.min(axis=1)
+    stat_diff = flux_map["stat_scan"].data - flux_map["stat_scan"].data.min(axis=1)
     ind = np.abs(stat_diff + invalid_value * maskp - n_sigma**2).argmin(axis=1)
-    dnde_errn = dnde - np.abs(dnde_coord[ij, ind, ik, il])
+    dnde_errn = dnde - dnde_coord[ij, ind, ik, il]
 
     ind = np.abs(stat_diff + invalid_value * (~maskp) - n_sigma**2).argmin(axis=1)
-    dnde_errp = np.abs(dnde_coord[ij, ind, ik, il]) - dnde
+    dnde_errp = dnde_coord[ij, ind, ik, il] - dnde
 
     ind = np.abs(stat_diff + invalid_value * (~maskp) - n_sigma_ul**2).argmin(axis=1)
-    dnde_ul = np.abs(dnde_coord[ij, ind, ik, il])
+    dnde_ul = dnde_coord[ij, ind, ik, il]
 
-    dnde_err = np.sqrt(dnde_errn**2 + dnde_errp**2)
+    dnde_err = (dnde_errn + dnde_errp) / 2
 
     maps = dict(
         ts=ts,
@@ -913,10 +961,10 @@ def get_flux_map_from_profile(
         dnde_ul=dnde_ul,
     )
     for key in maps.keys():
-        maps[key] = Map.from_geom(geom, data=maps[key].data, unit=maps[key].unit)
-    maps["stat_scan"] = stat_scan
+        maps[key] = Map.from_geom(geom, data=maps[key].value, unit=maps[key].unit)
     kwargs = dict(sed_type="dnde", gti=gti, reference_model=reference_model, meta=meta)
-    return FluxMaps.from_maps(maps, **kwargs)
+    output_maps.update(maps)
+    return FluxMaps.from_maps(output_maps, **kwargs)
 
 
 def _generate_scan_values(power_min=-6, power_max=2, relative_error=1e-2):
@@ -991,52 +1039,70 @@ def _get_norm_scan_values(norm, result):
     return np.sort(sparse_norms)
 
 
-def approximate_profile(flux_map, sqrt_ts_threshold_ul=None, norm_scan_values=None):
-    """likelihood profile approximation from dnde, dnde_err, dnde_errp, dnde_errn, and dnde_ul"""
+def approximate_profile(flux_map, sqrt_ts_threshold_ul="ignore", dnde_scan_axis=None):
+    """Likelihood profile approximation assuming that probabilities distributions for
+    flux points correspond to asymmetric gaussians and for upper limits to complementary error functions.
+    Use available quantities among dnde, dnde_err, dnde_errp, dnde_errn, and dnde_ul.
+
+    Parameters
+    ----------
+    flux_map : `~gammapy.estimators.FluxMaps`
+        Flux map.
+    sqrt_ts_threshold_ul : int
+        Threshold value in sqrt(TS) for upper limits.
+        Default is `ignore` and no threshold is applied.
+        Setting to `None` will use the one of `flux_map`.
+    dnde_scan_axis : list of `~gammapy.maps.MapAxis`
+        dnde axis used to compute the profile.
+
+    Returns
+    -------
+    flux_maps : `~gammapy.estimators.FluxMaps`
+        Flux map.
+
+    """
 
     if sqrt_ts_threshold_ul is None:
         sqrt_ts_threshold_ul = flux_map.sqrt_ts_threshold_ul
 
     geom = flux_map.dnde.geom
-    dnde_axis = MapAxis(
-        flux_map.dnde_ref * norm_scan_values,
-        interp="lin",
-        node_type="center",
-        name="dnde",
-        unit=flux_map.dnde_ref.unit,
-    )
-    axes = geom.axes + [dnde_axis]
-    geom_scan = geom.to_image().to_cube(axes)
+    geom_scan = geom.to_image().to_cube([dnde_scan_axis] + list(geom.axes))
 
     stat_approx = Map.from_geom(geom_scan, data=np.nan, unit="")
     dnde_coord = stat_approx.geom.get_coord()["dnde"].value
 
     mask_valid = ~np.isnan(flux_map.dnde.data)
     ij, il, ik = np.where(mask_valid)
-    loc = flux_map.dnde.data[mask_valid][None, :]
-    value = dnde_coord[mask_valid]
+    loc = flux_map.dnde.data[mask_valid][:, None]
+    value = dnde_coord[ij, :, il, ik]
     try:
-        mask_p = (dnde_coord >= flux_map.dnde.data)[mask_valid]
+        mask_p = (dnde_coord >= flux_map.dnde.data)[ij, :, il, ik]
         scale = np.zeros(mask_p.shape)
-        scale[mask_p] = flux_map.dnde_errp.data[mask_valid][mask_p]
-        scale[~mask_p] = flux_map.dnde_errn.data[mask_valid][~mask_p]
+        scale[mask_p] = (
+            flux_map.dnde_errp.data[mask_valid][:, None]
+            * np.ones(mask_p.shape[1])[None, :]
+        )[mask_p]
+        scale[~mask_p] = (
+            flux_map.dnde_errn.data[mask_valid][:, None]
+            * np.ones(mask_p.shape[1])[None, :]
+        )[~mask_p]
     except AttributeError:
         scale = flux_map.dnde_err.data[mask_valid]
-    scale = scale[None, :]
-    stat_approx.data[:, ij, il, ik] = -2 * np.log(
-        stats.norm.norm.pdf(value, loc=loc, scale=scale)
-        / stats.norm.norm.pdf(0, loc=loc, scale=scale)
+        scale = scale[:, None]
+    stat_approx.data[ij, :, il, ik] = -2 * np.log(
+        stats.norm.pdf(value, loc=loc, scale=scale)
+        / stats.norm.pdf(0, loc=loc, scale=scale)
     )
 
-    if np.isfinite(sqrt_ts_threshold_ul):
-        mask_ul = (flux_map.ts.data < sqrt_ts_threshold_ul**2) & ~np.isnan(
+    if not sqrt_ts_threshold_ul == "ignore" and sqrt_ts_threshold_ul is not None:
+        mask_ul = (flux_map.sqrt_ts.data < sqrt_ts_threshold_ul) & ~np.isnan(
             flux_map.dnde_ul.data
         )
         ij, il, ik = np.where(mask_ul)
-        value = dnde_coord[mask_ul]
-        loc_ul = flux_map.dnde_ul.data[mask_ul][None, :]
-        scale_ul = flux_map.dnde_ul.data[mask_ul][None, :]
-        stat_approx.data[:, ij, il, ik] = -2 * np.log(
+        value = dnde_coord[ij, :, il, ik]
+        loc_ul = flux_map.dnde_ul.data[mask_ul][:, None]
+        scale_ul = flux_map.dnde_ul.data[mask_ul][:, None]
+        stat_approx.data[ij, :, il, ik] = -2 * np.log(
             (special.erfc((-loc_ul + value) / scale_ul) / 2)
             / (special.erfc((-loc_ul + 0) / scale_ul) / 2)
         )
