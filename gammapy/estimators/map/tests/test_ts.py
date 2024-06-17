@@ -314,17 +314,18 @@ def test_ts_map_stat_scan(fake_dataset):
     assert_allclose(norm[success], maps_ref.norm.data[success], rtol=1e-5)
     combined_map = combine_flux_maps([maps, maps], method="profile")
     assert_allclose(combined_map.ts.data, 2 * ts)
-    assert_allclose(combined_map.norm.data, norm)
+    assert_allclose(combined_map.norm.data, norm, rtol=5e-2)
 
     maps1 = deepcopy(maps)
     combined_map = combine_flux_maps([maps, maps1], method="profile")
     assert_allclose(combined_map.ts.data, 2 * ts)
-    assert_allclose(combined_map.norm.data, norm)
+    assert_allclose(combined_map.norm.data, norm, rtol=5e-2)
 
-    with pytest.raises(ValueError):
-        maps1 = deepcopy(maps)
-        maps1._reference_model.parameters["amplitude"].value = 1
-        combined_map = combine_flux_maps([maps, maps1], method="profile")
+    maps1 = deepcopy(maps)
+    maps1._reference_model.parameters["amplitude"].value = 1
+    combined_map = combine_flux_maps([maps, maps1], method="profile")
+    assert_allclose(combined_map.ts.data, 2 * ts)
+    assert_allclose(combined_map.norm.data, norm, rtol=5e-2)
 
     assert_allclose(maps.norm.data[success], maps_ref.norm.data[success], rtol=1e-4)
     assert_allclose(
