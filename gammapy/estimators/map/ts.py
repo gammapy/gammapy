@@ -24,7 +24,7 @@ from .core import FluxMaps
 __all__ = ["TSMapEstimator"]
 
 
-def _generate_scan_values(power_min=-3, power_max=2, relative_error=0.01):
+def _generate_scan_values(power_min=-4, power_max=2, relative_error=0.02):
     arrays = []
     for power in range(power_min, power_max):
         vmin = 10**power
@@ -32,7 +32,7 @@ def _generate_scan_values(power_min=-3, power_max=2, relative_error=0.01):
         bin_per_decade = int((vmax - vmin) / (vmin * relative_error))
         arrays.append(np.linspace(vmin, vmax, bin_per_decade + 1))
     scan_1side = np.unique(np.concatenate(arrays))
-    return np.concatenate((-scan_1side, [0], scan_1side))
+    return np.concatenate((-scan_1side[::-1], [0], scan_1side))
 
 
 def _extract_array(array, shape, position):
@@ -113,7 +113,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         Only used for "stat_scan" in `selection_optional`.
         Default is None and a new parameter is created automatically,
         with value=1, name="norm", scan_min=-100, scan_max=100,
-        and values sampled such as we can probe a 1% relative error on the norm.
+        and values sampled such as we can probe a 2% relative error on the norm.
         If a dict is given the entries should be a subset of
         `~gammapy.modeling.Parameter` arguments.
     n_jobs : int
@@ -837,13 +837,14 @@ class BrentqFluxEstimator(Estimator):
             (
                 result["norm"] + np.linspace(-2, 2, 41) * result["norm_err"],
                 result["norm"] + np.linspace(-10, 10, 21) * result["norm_err"],
+                np.abs(result["norm"]) * np.linspace(-10, 10, 21),
                 np.linspace(-10, 10, 21),
-                [self.norm.scan_values[0], self.norm.scan_values[-1]],
+                np.linspace(self.norm.scan_values[0], self.norm.scan_values[-1], 3),
             )
         )
         return np.unique(sparse_norms)
 
-    def stat_scan(self, dataset, result):
+    def estimate_scan(self, dataset, result):
         """Compute likelihood profile on a fixed norm range.
 
         Parameters
@@ -940,7 +941,7 @@ class BrentqFluxEstimator(Estimator):
             result.update(self.estimate_errn_errp(dataset, result))
 
         if "stat_scan" in self.selection_optional:
-            result.update(self.estimate_scan_local(dataset, result))
+            result.update(self.estimate_scan(dataset, result))
 
         return result
 
