@@ -833,16 +833,22 @@ class BrentqFluxEstimator(Estimator):
 
     def sample_norm(self, result):
         """sample different scales to compute profile"""
+
+        norm_err = result["norm_err"]
+        norm = result["norm"]
+        if ~np.isfinite(norm_err):
+            norm_err = 0.1
+        if ~np.isfinite(norm):
+            norm = 1.01
         sparse_norms = np.concatenate(
             (
-                result["norm"] + np.linspace(-2, 2, 41) * result["norm_err"],
-                result["norm"] + np.linspace(-10, 10, 21) * result["norm_err"],
-                np.abs(result["norm"]) * np.linspace(-10, 10, 21),
+                norm + np.linspace(-2, 2, 41) * norm_err,
+                norm + np.linspace(-10, 10, 21) * norm_err,
+                np.abs(norm) * np.linspace(-10, 10, 21),
                 np.linspace(-10, 10, 21),
                 np.linspace(self.norm.scan_values[0], self.norm.scan_values[-1], 3),
             )
         )
-        sparse_norms = sparse_norms[np.isfinite(sparse_norms)]
         return np.unique(sparse_norms)
 
     def estimate_scan(self, dataset, result):
