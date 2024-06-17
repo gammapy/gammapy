@@ -842,6 +842,7 @@ class BrentqFluxEstimator(Estimator):
                 np.linspace(self.norm.scan_values[0], self.norm.scan_values[-1], 3),
             )
         )
+        sparse_norms = sparse_norms[np.isfinite(sparse_norms)]
         return np.unique(sparse_norms)
 
     def estimate_scan(self, dataset, result):
