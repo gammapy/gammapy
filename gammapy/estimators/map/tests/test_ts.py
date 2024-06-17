@@ -286,7 +286,7 @@ def test_ts_map_stat_scan(fake_dataset):
     estimator = TSMapEstimator(
         model,
         kernel_width="0.3 deg",
-        selection_optional=["stat_scan_local", "stat_scan"],
+        selection_optional=["stat_scan"],
         energy_edges=[200, 3500] * u.GeV,
     )
     maps = estimator.run(dataset)
