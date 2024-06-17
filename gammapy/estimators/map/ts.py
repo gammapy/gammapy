@@ -4,6 +4,7 @@ import warnings
 from itertools import repeat
 import numpy as np
 import scipy.optimize
+from scipy.interpolate import InterpolatedUnivariateSpline
 from astropy.coordinates import Angle
 from astropy.utils import lazyproperty
 import gammapy.utils.parallel as parallel
@@ -290,7 +291,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
             selection += ["stat_scan"]
 
         if "stat_scan_local" in self.selection_optional:
-            selection += ["norm_scan_values", "stat_scan_local"]
+            selection += ["norm_scan_values", "stat_scan_local", "stat_scan"]
 
         return selection
 
@@ -849,8 +850,20 @@ class BrentqFluxEstimator(Estimator):
         )
         return {"norm_errn": flux_errn, "norm_errp": flux_errp}
 
+    def sample_norm(self, result):
+        """sample different scales to compute profile"""
+        sparse_norms = np.concatenate(
+            (
+                result["norm"] + np.linspace(-1, 1, 11) * result["norm_err"],
+                result["norm"] + np.linspace(-10, 10, 21) * result["norm_err"],
+                result["norm"] * np.linspace(-10, 10, 21),
+                np.linspace(self.norm.scan_values[0], self.norm.scan_values[-1], 21),
+            )
+        )
+        return np.unique(sparse_norms)
+
     def estimate_scan_local(self, dataset, result):
-        """Compute likelihood profile around best norm value.
+        """Compute likelihood profile on a fixed norm range.
 
         Parameters
         ----------
@@ -860,19 +873,29 @@ class BrentqFluxEstimator(Estimator):
         Returns
         -------
         result : dict
-            Result dictionary including  'norm_values' and 'stat_scan'.
+            Result dictionary including 'stat_scan'.
         """
 
-        scale = self.norm_local.scan_values * result["norm"]
-        output = {"norm_scan_values": scale}
+        sparse_norms = self.sample_norm(result)
 
-        scale = scale[None, :]
+        scale = sparse_norms[None, :]
         model = dataset.model.ravel()[:, None]
         background = dataset.background.ravel()[:, None]
         counts = dataset.counts.ravel()[:, None]
         stat_scan = cash(counts, model * scale + background)
-        output["stat_scan_local"] = stat_scan.sum(axis=0) - result["stat_null"]
-        return output
+
+        stat_scan_local = stat_scan.sum(axis=0) - result["stat_null"]
+
+        spline = InterpolatedUnivariateSpline(
+            sparse_norms, stat_scan_local, k=2, ext="raise", check_finite=True
+        )
+        stat_scan = spline(self.norm.scan_values)
+
+        return dict(
+            stat_scan=stat_scan,
+            stat_scan_local=stat_scan_local,
+            norm_scan_values=sparse_norms,
+        )
 
     def estimate_scan(self, dataset, result):
         """Compute likelihood profile on a fixed norm range.
@@ -888,12 +911,17 @@ class BrentqFluxEstimator(Estimator):
             Result dictionary including 'stat_scan'.
         """
 
-        scale = self.norm.scan_values[None, :]
+        sparse_norms = self.norm.scan_values
+
+        scale = sparse_norms[None, :]
         model = dataset.model.ravel()[:, None]
         background = dataset.background.ravel()[:, None]
         counts = dataset.counts.ravel()[:, None]
         stat_scan = cash(counts, model * scale + background)
-        return {"stat_scan": stat_scan.sum(axis=0) - result["stat_null"]}
+
+        stat_scan = stat_scan.sum(axis=0) - result["stat_null"]
+
+        return {"stat_scan": stat_scan}
 
     def estimate_default(self, dataset):
         """Estimate default norm.
@@ -946,6 +974,9 @@ class BrentqFluxEstimator(Estimator):
         else:
             result = self.estimate_best_fit(dataset)
 
+        if "stat_scan" in self.selection_optional:
+            result.update(self.estimate_scan(dataset, result))
+
         norm = result["norm"]
         result["npred"] = dataset.npred(norm=norm).sum()
         result["npred_excess"] = result["npred"] - dataset.npred(norm=0).sum()
@@ -958,9 +989,6 @@ class BrentqFluxEstimator(Estimator):
 
         if "stat_scan_local" in self.selection_optional:
             result.update(self.estimate_scan_local(dataset, result))
-
-        if "stat_scan" in self.selection_optional:
-            result.update(self.estimate_scan(dataset, result))
 
         return result
 
