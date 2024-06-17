@@ -291,7 +291,7 @@ def test_ts_map_stat_scan(fake_dataset):
     maps = estimator.run(dataset)
     success = maps.success.data
 
-    maps.stat_scan_local.geom.data_shape == (1, 11, 2, 2)
+    assert maps.stat_scan_local.geom.data_shape == (1, 99, 2, 2)
     ts = np.abs(maps["stat_scan_local"].data.min(axis=1))
     assert_allclose(ts[success], maps.ts.data[success], rtol=1e-3)
 
@@ -303,7 +303,7 @@ def test_ts_map_stat_scan(fake_dataset):
     norm = maps.dnde_scan_values.data[ij, ind_best, ik, il] / dnde_ref.value
     assert_allclose(norm[success], maps.norm.data[success], rtol=1e-5)
 
-    maps.stat_scan.geom.data_shape == (1, 4001, 2, 2)
+    assert maps.stat_scan.geom.data_shape == (1, 5401, 2, 2)
 
     ts = np.abs(maps["stat_scan"].data.min(axis=1))
     assert_allclose(ts[success], maps.ts.data[success], rtol=1e-3)
@@ -314,14 +314,14 @@ def test_ts_map_stat_scan(fake_dataset):
     dnde = dnde_coord[ij, ind_best, ik, il]
     assert_allclose(dnde[success], maps.norm.data[success] * dnde_ref, rtol=5e-2)
 
-    maps.stat_scan_local.geom.data_shape == (1, 11, 2, 2)
+    assert maps.stat_scan_local.geom.data_shape == (1, 99, 2, 2)
     ts = np.abs(maps["stat_scan_local"].data.min(axis=1))
     assert_allclose(ts[success], maps.ts.data[success], rtol=1e-3)
 
     ind_best = maps.stat_scan_local.data.argmin(axis=1)
     ij, ik, il = np.indices(ind_best.shape)
-    norm = maps.norm_scan_values.data[ij, ind_best, ik, il]
-    assert_allclose(norm[success], maps.norm.data[success], rtol=1e-5)
+    dnde = maps.dnde_scan_values.quantity[ij, ind_best, ik, il]
+    assert_allclose(dnde[success], maps.norm.data[success] * dnde_ref, rtol=1e-5)
 
 
 def test_ts_map_with_model(fake_dataset):
