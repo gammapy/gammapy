@@ -285,11 +285,20 @@ def test_ts_map_stat_scan(fake_dataset):
     estimator = TSMapEstimator(
         model,
         kernel_width="0.3 deg",
-        selection_optional=["stat_scan_local", "stat_scan"],
+        selection_optional=["stat_scan"],
         energy_edges=[200, 3500] * u.GeV,
     )
     maps = estimator.run(dataset)
     success = maps.success.data
+
+    maps.stat_scan_local.geom.data_shape == (1, 11, 2, 2)
+    ts = np.abs(maps["stat_scan_local"].data.min(axis=1))
+    assert_allclose(ts[success], maps.ts.data[success], rtol=1e-3)
+
+    ind_best = maps.stat_scan_local.data.argmin(axis=1)
+    ij, ik, il = np.indices(ind_best.shape)
+    norm = maps.dnde_scan_values.data[ij, ind_best, ik, il].value / maps.dnde_ref.value
+    assert_allclose(norm[success], maps.norm.data[success], rtol=1e-5)
 
     maps.stat_scan.geom.data_shape == (1, 4001, 2, 2)
 
