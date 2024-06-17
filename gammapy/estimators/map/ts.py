@@ -24,6 +24,17 @@ from .core import FluxMaps
 __all__ = ["TSMapEstimator"]
 
 
+def _generate_scan_values(power_min=-3, power_max=2, relative_error=0.01):
+    arrays = []
+    for power in range(power_min, power_max):
+        vmin = 10**power
+        vmax = 10 ** (power + 1)
+        bin_per_decade = int((vmax - vmin) / (vmin * relative_error))
+        arrays.append(np.linspace(vmin, vmax, bin_per_decade + 1))
+    scan_1side = np.unique(np.concatenate(arrays))
+    return np.concatenate((-scan_1side, [0], scan_1side))
+
+
 def _extract_array(array, shape, position):
     """Helper function to extract parts of a larger array.
 
@@ -86,8 +97,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
             * "all": all the optional steps are executed
             * "errn-errp": estimate asymmetric error on flux.
             * "ul": estimate upper limits on flux.
-            * "stat_scan_local": estimate likelihood profile around best norm
-            * "stat_scan": estimate likelihood profile on a fixed norm range
+            * "stat_scan": estimate likelihood profile
 
         Default is None so the optional steps are not executed.
     energy_edges : list of `~astropy.units.Quantity`, optional
@@ -102,17 +112,10 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         Norm parameter used for the likelihood profile computation on a fixed norm range.
         Only used for "stat_scan" in `selection_optional`.
         Default is None and a new parameter is created automatically,
-        with value=1, name="norm", scan_min=-20, scan_max=20, and scan_n_values = 4001.
+        with value=1, name="norm", scan_min=-100, scan_max=100,
+        and values sampled such as we can probe a 1% relative error on the norm.
         If a dict is given the entries should be a subset of
         `~gammapy.modeling.Parameter` arguments.
-    norm_local : `~gammapy.modeling.Parameter` or dict
-        Norm parameter used for the local likelihood profile computation around the best norm value.
-        Only used for "stat_scan_local" in `selection_optional`.
-        Default is None and a new parameter is created automatically,
-        with value=1, name="norm", scan_min=0.2, scan_max=5, and scan_n_values = 11.
-        If a dict is given the entries should be a subset of
-        `~gammapy.modeling.Parameter` arguments.
-
     n_jobs : int
         Number of processes used in parallel for the computation. Default is one,
         unless `~gammapy.utils.parallel.N_JOBS_DEFAULT` was modified. The number
@@ -169,7 +172,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
     """
 
     tag = "TSMapEstimator"
-    _available_selection_optional = ["errn-errp", "ul", "stat_scan", "stat_scan_local"]
+    _available_selection_optional = ["errn-errp", "ul", "stat_scan"]
 
     def __init__(
         self,
@@ -186,7 +189,6 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         n_jobs=None,
         parallel_backend=None,
         norm=None,
-        norm_local=None,
     ):
         if kernel_width is not None:
             kernel_width = Angle(kernel_width)
@@ -200,10 +202,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
                 unit="",
                 interp="lin",
                 frozen=False,
-                scan_min=-20.0,
-                scan_max=20.0,
-                scan_n_values=4001,
-                scan_values=None,
+                scan_values=_generate_scan_values(),
             )
             if isinstance(norm, dict):
                 norm_kwargs.update(norm)
@@ -214,28 +213,6 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         if norm.name != "norm":
             raise ValueError("norm.name is not 'norm'")
         self.norm = norm
-
-        if norm_local is None or isinstance(norm_local, dict):
-            norm_local_kwargs = dict(
-                name="norm",
-                value=1,
-                unit="",
-                interp="log",
-                frozen=False,
-                scan_min=0.2,
-                scan_max=5.0,
-                scan_n_values=11,
-                scan_values=None,
-            )
-            if isinstance(norm_local, dict):
-                norm_local_kwargs.update(norm_local)
-            try:
-                norm_local = Parameter(**norm_local_kwargs)
-            except TypeError as error:
-                raise TypeError(f"Invalid dict key for norm_local init : {error}")
-        if norm_local.name != "norm":
-            raise ValueError("norm.name is not 'norm'")
-        self.norm_local = norm_local
 
         if model is None:
             model = SkyModel(
@@ -263,7 +240,6 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
             selection_optional=selection_optional,
             ts_threshold=threshold,
             norm=self.norm,
-            norm_local=self.norm_local,
         )
 
     @property
@@ -288,9 +264,6 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
             selection += ["norm_ul"]
 
         if "stat_scan" in self.selection_optional:
-            selection += ["stat_scan"]
-
-        if "stat_scan_local" in self.selection_optional:
             selection += ["dnde_scan_values", "stat_scan_local", "stat_scan"]
 
         return selection
@@ -526,7 +499,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
                     interp=self.norm.interp,
                     node_type="center",
                     name="dnde",
-                    unit=self.dnde_ref.unit,
+                    unit=dnde_ref.unit,
                 )
                 axes = geom.axes + [dnde_axis]
                 geom_scan = geom.to_image().to_cube(axes)
@@ -536,7 +509,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
             elif name in ["dnde_scan_values", "stat_scan_local"]:
                 norm_bin_axis = MapAxis(
-                    range(len(self.norm_local.scan_values)),
+                    range(len(results[0]["dnde_scan_values"])),
                     interp="lin",
                     node_type="center",
                     name="norm_bin",
@@ -713,7 +686,7 @@ class SimpleMapDataset:
 class BrentqFluxEstimator(Estimator):
     """Single parameter flux estimator."""
 
-    _available_selection_optional = ["errn-errp", "ul", "stat_scan", "stat_scan_local"]
+    _available_selection_optional = ["errn-errp", "ul", "stat_scan"]
     tag = "BrentqFluxEstimator"
 
     def __init__(
@@ -725,7 +698,6 @@ class BrentqFluxEstimator(Estimator):
         max_niter=20,
         ts_threshold=None,
         norm=None,
-        norm_local=None,
     ):
         self.rtol = rtol
         self.n_sigma = n_sigma
@@ -733,7 +705,6 @@ class BrentqFluxEstimator(Estimator):
         self.selection_optional = selection_optional
         self.max_niter = max_niter
         self.ts_threshold = ts_threshold
-        self.norm_local = norm_local
         self.norm = norm
 
     def estimate_best_fit(self, dataset):
@@ -864,15 +835,15 @@ class BrentqFluxEstimator(Estimator):
         """sample different scales to compute profile"""
         sparse_norms = np.concatenate(
             (
-                result["norm"] + np.linspace(-1, 1, 11) * result["norm_err"],
+                result["norm"] + np.linspace(-2, 2, 41) * result["norm_err"],
                 result["norm"] + np.linspace(-10, 10, 21) * result["norm_err"],
-                result["norm"] * np.linspace(-10, 10, 21),
-                np.linspace(self.norm.scan_values[0], self.norm.scan_values[-1], 21),
+                np.linspace(-10, 10, 21),
+                [self.norm.scan_values[0], self.norm.scan_values[-1]],
             )
         )
         return np.unique(sparse_norms)
 
-    def estimate_scan_local(self, dataset, result):
+    def stat_scan(self, dataset, result):
         """Compute likelihood profile on a fixed norm range.
 
         Parameters
@@ -897,7 +868,7 @@ class BrentqFluxEstimator(Estimator):
         stat_scan_local = stat_scan.sum(axis=0) - result["stat_null"]
 
         spline = InterpolatedUnivariateSpline(
-            sparse_norms, stat_scan_local, k=2, ext="raise", check_finite=True
+            sparse_norms, stat_scan_local, k=1, ext="raise", check_finite=True
         )
         stat_scan = spline(self.norm.scan_values)
 
@@ -906,32 +877,6 @@ class BrentqFluxEstimator(Estimator):
             stat_scan_local=stat_scan_local,
             dnde_scan_values=sparse_norms,
         )
-
-    def estimate_scan(self, dataset, result):
-        """Compute likelihood profile on a fixed norm range.
-
-        Parameters
-        ----------
-        dataset : `SimpleMapDataset`
-            Simple map dataset.
-
-        Returns
-        -------
-        result : dict
-            Result dictionary including 'stat_scan'.
-        """
-
-        sparse_norms = self.norm.scan_values
-
-        scale = sparse_norms[None, :]
-        model = dataset.model.ravel()[:, None]
-        background = dataset.background.ravel()[:, None]
-        counts = dataset.counts.ravel()[:, None]
-        stat_scan = cash(counts, model * scale + background)
-
-        stat_scan = stat_scan.sum(axis=0) - result["stat_null"]
-
-        return {"stat_scan": stat_scan}
 
     def estimate_default(self, dataset):
         """Estimate default norm.
@@ -984,9 +929,6 @@ class BrentqFluxEstimator(Estimator):
         else:
             result = self.estimate_best_fit(dataset)
 
-        if "stat_scan" in self.selection_optional:
-            result.update(self.estimate_scan(dataset, result))
-
         norm = result["norm"]
         result["npred"] = dataset.npred(norm=norm).sum()
         result["npred_excess"] = result["npred"] - dataset.npred(norm=0).sum()
@@ -997,7 +939,7 @@ class BrentqFluxEstimator(Estimator):
         if "errn-errp" in self.selection_optional:
             result.update(self.estimate_errn_errp(dataset, result))
 
-        if "stat_scan_local" in self.selection_optional:
+        if "stat_scan" in self.selection_optional:
             result.update(self.estimate_scan_local(dataset, result))
 
         return result
