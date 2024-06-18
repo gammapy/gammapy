@@ -314,11 +314,11 @@ def TimmerKonig_lightcurve_simulator(
         Passed to `~gammapy.utils.random.get_random_state`. Default is "random-seed".
     power_spectrum_params : dict, optional
         Dictionary of parameters to be provided to the power spectrum function.
-    mean : float, `~astropy.units.Quantity`
+    mean : float, `~astropy.units.Quantity`, optional
         Desired mean of the final series. Default is 0.
-    std : float, `~astropy.units.Quantity`
+    std : float, `~astropy.units.Quantity`, optional
         Desired standard deviation of the final series. Default is 1.
-    poisson : bool
+    poisson : bool, optional
         Whether to apply poissonian noise to the final time series. Default is False.
 
 
