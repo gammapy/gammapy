@@ -14,9 +14,9 @@ import yaml
 from gammapy.maps import Map, RegionGeom
 from gammapy.modeling import Covariance, Parameter, Parameters
 from gammapy.modeling.covariance import CovarianceMixin
-from gammapy.utils.check import add_checksum, verify_checksum
+from gammapy.utils.check import verify_checksum
 from gammapy.utils.metadata import CreatorMetaData
-from gammapy.utils.scripts import make_name, make_path
+from gammapy.utils.scripts import make_name, make_path, to_yaml, write_yaml
 
 __all__ = ["Model", "Models", "DatasetModels", "ModelBase"]
 
@@ -478,6 +478,7 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
         overwrite_templates=False,
         write_covariance=True,
         checksum=False,
+        extra_dict=None,
     ):
         """Write to YAML file.
 
@@ -496,6 +497,8 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
         checksum : bool
             When True adds a CHECKSUM entry to the file.
             Default is False.
+        extra_dict : dict
+            Additionnal informations to write with the models.
         """
         base_path, _ = split(path)
         path = make_path(path)
@@ -516,17 +519,17 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
             self.write_covariance(base_path / filecovar, **kwargs)
             self._covar_file = filecovar
 
-        yaml_str = self.to_yaml(full_output, overwrite_templates)
-        if checksum:
-            yaml_str = add_checksum(yaml_str)
-        path.write_text(yaml_str)
+        yaml_str = ""
+        if extra_dict is not None:
+            yaml_str += to_yaml(extra_dict)
+        yaml_str += self.to_yaml(full_output, overwrite_templates)
+
+        write_yaml(yaml_str, overwrite=overwrite, checksum=checksum)
 
     def to_yaml(self, full_output=False, overwrite_templates=False):
         """Convert to YAML string."""
         data = self.to_dict(full_output, overwrite_templates)
-        text = yaml.dump(
-            data, sort_keys=False, indent=4, width=80, default_flow_style=False
-        )
+        text = to_yaml(data)
         creation = CreatorMetaData()
         return text + creation.to_yaml()
 
