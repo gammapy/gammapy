@@ -706,6 +706,7 @@ def test_piecewise_spatial_model_gc():
 
     model_dict = model.to_dict()
     new_model = PiecewiseNormSpatialModel.from_dict(model_dict)
+    assert model_dict == new_model.to_dict()
 
     assert_allclose(new_model.evaluate_geom(geom.to_image()), expected, atol=1e-5)
 
@@ -720,6 +721,7 @@ def test_piecewise_spatial_model():
         geom = WcsGeom.create(
             skydir=(lon, 2.3), npix=(2, 2), binsz=0.3, frame="galactic"
         )
+
         coords = MapCoord.create(geom.footprint)
         coords["lon"] *= u.deg
         coords["lat"] *= u.deg
@@ -741,6 +743,7 @@ def test_piecewise_spatial_model():
 
         model_dict = model.to_dict()
         new_model = PiecewiseNormSpatialModel.from_dict(model_dict)
+        assert model_dict == new_model.to_dict()
 
         assert_allclose(new_model.evaluate_geom(geom.to_image()), expected, atol=1e-5)
 

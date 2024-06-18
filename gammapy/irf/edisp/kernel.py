@@ -150,7 +150,7 @@ class EDispKernel(IRF):
             pdf_threshold=pdf_threshold,
         )
         return edisp.to_edisp_kernel(
-            offset=offset_axis.center[0], energy=energy_axis.edges
+            offset=offset_axis.center[0], energy_axis=energy_axis
         )
 
     @classmethod
