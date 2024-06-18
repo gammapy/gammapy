@@ -186,6 +186,14 @@ def test_tk_mean():
         lambda x: x ** (-1.5), 2000, 1 * u.s, mean=2.5, std=0.5
     )
 
+    time_series2, time_axis2 = TimmerKonig_lightcurve_simulator(
+        lambda x: x ** (-1.5),
+        2000,
+        1 * u.s,
+        mean=1e-7 * (u.cm**-2),
+        std=5e-8 * (u.cm**-2),
+    )
+
     with pytest.raises(Warning):
         TimmerKonig_lightcurve_simulator(
             lambda x: x ** (-3), 20, 1 * u.s, mean=0.5, poisson=True
@@ -193,6 +201,8 @@ def test_tk_mean():
 
     assert_allclose(time_series.mean(), 2.5)
     assert_allclose(time_series.std(), 0.5)
+    assert_allclose(time_series2.mean(), 1e-7 * (u.cm**-2))
+    assert_allclose(time_series2.std(), 5e-8 * (u.cm**-2))
 
 
 def test_structure_function():

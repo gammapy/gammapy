@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 import scipy.stats as stats
+import astropy.units as u
 from gammapy.utils.random import get_random_state
 
 __all__ = [
@@ -360,10 +361,15 @@ def TimmerKonig_lightcurve_simulator(
     if not isinstance(npoints * nchunks, int):
         raise TypeError("npoints and nchunks must be integers")
 
-    if mean * spacing.value < 1 and poisson:
-        raise Warning(
-            "Poisson noise was requested but the target mean is too low - resulting counts will likely be 0."
-        )
+    if poisson:
+        if isinstance(mean, u.Quantity):
+            wmean = mean.value * spacing.value
+        else:
+            wmean = mean * spacing.value
+        if wmean < 1.0:
+            raise Warning(
+                "Poisson noise was requested but the target mean is too low - resulting counts will likely be 0."
+            )
 
     random_state = get_random_state(random_state)
 
