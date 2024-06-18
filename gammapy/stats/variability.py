@@ -357,7 +357,7 @@ def TimmerKonig_lightcurve_simulator(
             "The power spectrum has to be provided as a callable function."
         )
 
-    if not type(npoints) == type(nchunks) == int:
+    if not isinstance(npoints, int) and isinstance(nchunks, int):
         raise TypeError("npoints and nchunks must be integers")
 
     if mean * spacing.value < 1 and poisson:
