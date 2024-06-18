@@ -19,6 +19,7 @@ __all__ = [
 
 PATH_DOCS = Path(__file__).resolve().parent / ".." / ".." / "docs"
 SKIP = ["_static", "_build", "_checkpoints", "docs/user-guide/model-gallery/"]
+YAML_FORMAT = dict(sort_keys=False, indent=4, width=80, default_flow_style=False)
 
 
 def get_images_paths(folder=PATH_DOCS):
@@ -67,8 +68,8 @@ def read_yaml(filename, logger=None, checksum=False):
     return data
 
 
-def write_yaml(dictionary, filename, logger=None, sort_keys=True, checksum=False):
-    """Write YAML file.
+def to_yaml(dictionary, sort_keys=False):
+    """dict to yaml
 
     Parameters
     ----------
@@ -83,13 +84,38 @@ def write_yaml(dictionary, filename, logger=None, sort_keys=True, checksum=False
     checksum : bool, optional
         Whether to add checksum keyword. Default is False.
     """
-    text = yaml.safe_dump(dictionary, default_flow_style=False, sort_keys=sort_keys)
+    yaml_format = YAML_FORMAT.copy()
+    yaml_format["sort_keys"] = sort_keys
+    text = yaml.safe_dump(dictionary, **yaml_format)
+    return text
+
+
+def write_yaml(
+    text, filename, logger=None, sort_keys=False, checksum=False, overwrite=False
+):
+    """Write YAML file.
+
+    Parameters
+    ----------
+    text : str
+        yaml str
+    filename : `~pathlib.Path`
+        Filename.
+    logger : `~logging.Logger`, optional
+        Logger. Default is None.
+    sort_keys : bool, optional
+        Whether to sort keys. Default is True.
+    checksum : bool, optional
+        Whether to add checksum keyword. Default is False.
+    """
 
     if checksum:
         text = add_checksum(text, sort_keys=sort_keys)
 
     path = make_path(filename)
     path.parent.mkdir(exist_ok=True)
+    if path.exists() and not overwrite:
+        raise IOError(f"File exists already: {path}")
     if logger is not None:
         logger.info(f"Writing {path}")
     path.write_text(text)
