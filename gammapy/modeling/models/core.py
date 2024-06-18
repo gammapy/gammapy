@@ -185,6 +185,10 @@ class ModelBase:
             [getattr(self, name) for name in self.default_parameters.names]
         )
 
+    @property
+    def parameters_unique_names(self):
+        return self.parameters.unique_parameters.names
+
     def copy(self, **kwargs):
         """Deep copy."""
         return copy.deepcopy(self)
@@ -408,12 +412,11 @@ class DatasetModels(collections.abc.Sequence):
     def parameters_unique_names(self):
         """List of unique parameter names. Return formatted as model_name.par_type.par_name."""
         names = []
-        for model in self:
-            for par in model.parameters:
-                components = [model.name, par.type, par.name]
+        for model in self._models:
+            for par_name in model.parameters_unique_names:
+                components = [model.name, par_name]
                 name = ".".join(components)
                 names.append(name)
-
         return names
 
     @property
