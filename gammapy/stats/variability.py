@@ -357,6 +357,14 @@ def TimmerKonig_lightcurve_simulator(
             "The power spectrum has to be provided as a callable function."
         )
 
+    if not type(npoints) == type(nchunks) == int:
+        raise TypeError("npoints and nchunks must be integers")
+
+    if mean * spacing.value < 1 and poisson:
+        raise Warning(
+            "Poisson noise was requested but the target mean is too low - resulting counts will likely be 0."
+        )
+
     random_state = get_random_state(random_state)
 
     npoints_ext = npoints * nchunks
