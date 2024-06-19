@@ -7,6 +7,7 @@ from gammapy.utils.scripts import (
     make_path,
     read_yaml,
     recursive_merge_dicts,
+    to_yaml,
     write_yaml,
 )
 
@@ -29,7 +30,7 @@ def test_recursive_merge_dicts():
 
 
 def test_read_write_yaml_checksum(tmp_path):
-    data = {"b": 1234, "a": "other"}
+    data = to_yaml({"b": 1234, "a": "other"})
     path = make_path(tmp_path / "test.yaml")
     write_yaml(data, path, sort_keys=False, checksum=True)
 
