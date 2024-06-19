@@ -518,13 +518,13 @@ def test_compound_models_io(tmp_path):
     assert_allclose(sk1.covariance.data, sk.covariance.data, rtol=1e-3)
     assert_allclose(np.sum(sk1.covariance.data), 0.0)
     assert Models([sk]).parameters_unique_names == [
-        "model.spectral.index",
-        "model.spectral.amplitude",
-        "model.spectral.reference",
-        "model.spectral.amplitude",
-        "model.spectral.reference",
-        "model.spectral.alpha",
-        "model.spectral.beta",
+        "model.spectral.model1.index",
+        "model.spectral.model1.amplitude",
+        "model.spectral.model1.reference",
+        "model.spectral.model2.amplitude",
+        "model.spectral.model2.reference",
+        "model.spectral.model2.alpha",
+        "model.spectral.model2.beta",
     ]
 
 
