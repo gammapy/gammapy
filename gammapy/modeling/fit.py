@@ -586,10 +586,12 @@ class FitStepResult:
     def to_dict(self):
         """Convert to dictionary."""
         return {
-            "backend": self.backend,
-            "method": self.method,
-            "success": self.success,
-            "message": self.message,
+            self.__class__.__name__: {
+                "backend": self.backend,
+                "method": self.method,
+                "success": self.success,
+                "message": self.message,
+            }
         }
 
 
@@ -680,8 +682,8 @@ class OptimizeResult(FitStepResult):
     def to_dict(self):
         """Convert to dictionary."""
         output = super().to_dict()
-        output["nfev"] = self.nfev
-        output["total_stat"] = self._total_stat
+        output[self.__class__.__name__]["nfev"] = self.nfev
+        output[self.__class__.__name__]["total_stat"] = float(self._total_stat)
         return output
 
 
@@ -794,9 +796,9 @@ class FitResult:
         """
         output = {}
         if self.optimize_result is not None:
-            output["optimize_result"] = self.optimize_result.to_dict()
+            output.update(self.optimize_result.to_dict())
         if self.covariance_result is not None:
-            output["covariance_result"] = self.covariance_result.to_dict()
+            output.update(self.covariance_result.to_dict())
         self.models.write(
             path,
             overwrite,
