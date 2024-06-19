@@ -20,6 +20,7 @@ from gammapy.stats import (
     wstat,
 )
 from gammapy.utils.fits import HDULocation, LazyFitsData
+from gammapy.utils.metadata import CreatorMetaData
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
 from gammapy.utils.table import hstack_columns
@@ -1856,29 +1857,35 @@ class MapDataset(Dataset):
             Cutout map dataset.
         """
         name = make_name(name)
-        kwargs = {"gti": self.gti, "name": name, "meta_table": self.meta_table}
-        cutout_kwargs = {"position": position, "width": width, "mode": mode}
+        kwargs = {
+            "gti": self.gti,
+            "name": name,
+            "meta_table": self.meta_table,
+            "meta": self.meta,
+        }
+        kwargs["meta"].creation = CreatorMetaData()
+        kwargs["meta"].optional = {"position": position, "width": width, "mode": mode}
 
         if self.counts is not None:
-            kwargs["counts"] = self.counts.cutout(**cutout_kwargs)
+            kwargs["counts"] = self.counts.cutout(position, width, mode)
 
         if self.exposure is not None:
-            kwargs["exposure"] = self.exposure.cutout(**cutout_kwargs)
+            kwargs["exposure"] = self.exposure.cutout(position, width, mode)
 
         if self.background is not None and self.stat_type == "cash":
-            kwargs["background"] = self.background.cutout(**cutout_kwargs)
+            kwargs["background"] = self.background.cutout(position, width, mode)
 
         if self.edisp is not None:
-            kwargs["edisp"] = self.edisp.cutout(**cutout_kwargs)
+            kwargs["edisp"] = self.edisp.cutout(position, width, mode)
 
         if self.psf is not None:
-            kwargs["psf"] = self.psf.cutout(**cutout_kwargs)
+            kwargs["psf"] = self.psf.cutout(position, width, mode)
 
         if self.mask_safe is not None:
-            kwargs["mask_safe"] = self.mask_safe.cutout(**cutout_kwargs)
+            kwargs["mask_safe"] = self.mask_safe.cutout(position, width, mode)
 
         if self.mask_fit is not None:
-            kwargs["mask_fit"] = self.mask_fit.cutout(**cutout_kwargs)
+            kwargs["mask_fit"] = self.mask_fit.cutout(position, width, mode)
 
         return self.__class__(**kwargs)
 
@@ -2952,25 +2959,18 @@ class MapDatasetOnOff(MapDataset):
         cutout : `MapDatasetOnOff`
             Cutout map dataset.
         """
-        cutout_kwargs = {
-            "position": position,
-            "width": width,
-            "mode": mode,
-            "name": name,
-        }
-
-        cutout_dataset = super().cutout(**cutout_kwargs)
-
-        del cutout_kwargs["name"]
+        cutout_dataset = super().cutout(position, width, mode)
 
         if self.counts_off is not None:
-            cutout_dataset.counts_off = self.counts_off.cutout(**cutout_kwargs)
+            cutout_dataset.counts_off = self.counts_off.cutout(position, width, mode)
 
         if self.acceptance is not None:
-            cutout_dataset.acceptance = self.acceptance.cutout(**cutout_kwargs)
+            cutout_dataset.acceptance = self.acceptance.cutout(position, width, mode)
 
         if self.acceptance_off is not None:
-            cutout_dataset.acceptance_off = self.acceptance_off.cutout(**cutout_kwargs)
+            cutout_dataset.acceptance_off = self.acceptance_off.cutout(
+                position, width, mode
+            )
 
         return cutout_dataset
 
