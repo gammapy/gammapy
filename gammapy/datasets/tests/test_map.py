@@ -773,6 +773,9 @@ def test_map_fit_ray(sky_model, geom, geom_etrue):
     models["test-2-bkg"].spectral_model.norm.value = 0.99
 
     actors = DatasetsActor(datasets)
+    assert len(actors.models) == len(models)
+    assert len(actors.parameters) == len(models.parameters.unique_parameters)
+
     fit = Fit()
     result = fit.run(datasets=actors)
 
