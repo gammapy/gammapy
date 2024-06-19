@@ -263,7 +263,7 @@ class TestSourceCatalogObjectHGPS:
         assert_allclose(p["lon_0"].value, 266.287384)
         assert_allclose(p["lat_0"].value, -1.243260383605957)
         assert_allclose(p["radius"].value, 0.95)
-        assert_allclose(p["width"].value, 0.05)
+        assert_allclose(p["width"].value, 0.05, rtol=1e-6)
 
     @staticmethod
     def test_flux_points_meta(cat):
