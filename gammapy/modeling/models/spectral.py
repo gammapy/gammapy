@@ -703,7 +703,7 @@ class ConstantSpectralModel(SpectralModel):
         return np.ones(np.atleast_1d(energy).shape) * const
 
 
-class CompoundSpectralModel(SpectralModel, CovarianceMixin):
+class CompoundSpectralModel(CovarianceMixin, SpectralModel):
     """Arithmetic combination of two spectral models.
 
     For more information see :ref:`compound-spectral-model`.
