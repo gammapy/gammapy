@@ -338,10 +338,11 @@ def test_write(tmpdir):
     fit = Fit()
     result = fit.run(datasets)
 
-    result_dict = result.to_dict()
+    result_dict = result.covariance_result.to_dict()
     assert (
         result_dict["covariance_result"]["backend"] == result.covariance_result.backend
     )
+    result_dict = result.optimize_result.to_dict()
     assert result_dict["optimize_result"]["nfev"] == result.optimize_result.nfev
     assert (
         result_dict["optimize_result"]["total_stat"]
@@ -353,6 +354,4 @@ def test_write(tmpdir):
     optimize_result = fit.optimize(datasets)
     result = FitResult(optimize_result=optimize_result)
 
-    result_dict = result.to_dict()
-    assert "covariance_result" not in result_dict
     result.write(path=tmpdir / "test-fit-result.yaml", overwrite=True)
