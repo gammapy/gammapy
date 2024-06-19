@@ -137,7 +137,7 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
             raise ValueError("All datasets must have aligned energy axes.")
 
         if (
-            not datasets == 1
+            len(datasets) > 1
             and datasets[0].meta_table is not None
             and any(
                 dataset.meta_table["TELESCOP"].shape
