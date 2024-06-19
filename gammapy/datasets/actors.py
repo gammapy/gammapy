@@ -23,8 +23,6 @@ class DatasetsActor(Datasets):
         Datasets
     """
 
-    _local_attr = ["models", "parameters"]
-
     def __init__(self, datasets=None):
         from ray import get
 
@@ -76,9 +74,7 @@ class DatasetsActor(Datasets):
                 d._to_update = {}
             return results
 
-        if name in self._local_attr:
-            return super().__getattribute__(name)
-        elif inspect.ismethod(getattr(self._datasets[0], name)):
+        if inspect.ismethod(getattr(self._datasets[0], name)):
             return wrapper
         else:
             return wrapper()
@@ -167,13 +163,23 @@ class MapDatasetActor(RayFrontendMixin):
         self._to_update = {}
         return output
 
+    def __setattr__(self, name, value):
+        if name == "models":
+            if value is None:
+                value = DatasetModels()
+            value = DatasetModels(
+                [
+                    m
+                    for m in value
+                    if m.datasets_names is None or self.name in m.datasets_names
+                ]
+            )
+        super().__setattr__(name, value)
+
     def _get_remote(self, attr, *args, from_actors=False, **kwargs):
         self._check_models()
-        res = self._actor._get.remote(
-            attr, *args, to_update=self._to_update, from_actors=from_actors, **kwargs
-        )
-        self._to_update = {}
-        return res
+        results = super()._get_remote(attr, *args, from_actors=False, **kwargs)
+        return results
 
     def _check_models(self):
         if ~np.all(
@@ -185,7 +191,6 @@ class MapDatasetActor(RayFrontendMixin):
             self._cache["models"] = self.models.copy()
 
     def _check_parameters(self):
-
         if self.models.parameters.names != self._cache[
             "models"
         ].parameters.names or len(self.models.parameters.free_parameters) != len(
