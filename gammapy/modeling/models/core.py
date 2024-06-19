@@ -15,7 +15,6 @@ from gammapy.maps import Map, RegionGeom
 from gammapy.modeling import Covariance, Parameter, Parameters
 from gammapy.modeling.covariance import CovarianceMixin
 from gammapy.utils.check import verify_checksum
-from gammapy.utils.metadata import CreatorMetaData
 from gammapy.utils.scripts import make_name, make_path, to_yaml, write_yaml
 
 __all__ = ["Model", "Models", "DatasetModels", "ModelBase"]
@@ -529,9 +528,7 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
     def to_yaml(self, full_output=False, overwrite_templates=False):
         """Convert to YAML string."""
         data = self.to_dict(full_output, overwrite_templates)
-        text = to_yaml(data)
-        creation = CreatorMetaData()
-        return text + creation.to_yaml()
+        return to_yaml(data)
 
     def update_link_label(self):
         """Update linked parameters labels used for serialisation and print."""

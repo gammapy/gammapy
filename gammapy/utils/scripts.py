@@ -84,10 +84,13 @@ def to_yaml(dictionary, sort_keys=False):
     checksum : bool, optional
         Whether to add checksum keyword. Default is False.
     """
+    from gammapy.utils.metadata import CreatorMetaData
+
     yaml_format = YAML_FORMAT.copy()
     yaml_format["sort_keys"] = sort_keys
     text = yaml.safe_dump(dictionary, **yaml_format)
-    return text
+    creation = CreatorMetaData()
+    return text + creation.to_yaml()
 
 
 def write_yaml(
