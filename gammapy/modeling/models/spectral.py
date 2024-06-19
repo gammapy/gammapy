@@ -27,6 +27,7 @@ from gammapy.utils.interpolation import (
 )
 from gammapy.utils.roots import find_roots
 from gammapy.utils.scripts import make_path
+from ..covariance import Covariance
 from .core import ModelBase
 
 log = logging.getLogger(__name__)
@@ -717,8 +718,22 @@ class CompoundSpectralModel(SpectralModel):
         super().__init__()
 
     @property
+    def _models(self):
+        return [self.model1, self.model2]
+
+    @property
     def parameters(self):
         return self.model1.parameters + self.model2.parameters
+
+    @property
+    def parameters_unique_names(self):
+        names = []
+        for idx, model in enumerate(self._models):
+            for par_name in model.parameters_unique_names:
+                components = [f"model{idx+1}", par_name]
+                name = ".".join(components)
+                names.append(name)
+        return names
 
     def __str__(self):
         return (
@@ -763,6 +778,31 @@ class CompoundSpectralModel(SpectralModel):
         model2 = model2_cls.from_dict({"spectral": data["model2"]})
         op = getattr(operator, data["operator"])
         return cls(model1, model2, op)
+
+    def _check_covariance(self):
+        if not self.parameters == self._covariance.parameters:
+            self._covariance = Covariance.from_stack(
+                [model.covariance for model in self._models]
+            )
+
+    @property
+    def covariance(self):
+        """Covariance as a `~gammapy.modeling.Covariance` object."""
+        self._check_covariance()
+
+        for model in self._models:
+            self._covariance.set_subcovariance(model.covariance)
+
+        return self._covariance
+
+    @covariance.setter
+    def covariance(self, covariance):
+        self._check_covariance()
+        self._covariance.data = covariance
+
+        for model in self._models:
+            subcovar = self._covariance.get_subcovariance(model.covariance.parameters)
+            model.covariance = subcovar
 
 
 class PowerLawSpectralModel(SpectralModel):
