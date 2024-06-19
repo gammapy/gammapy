@@ -758,7 +758,6 @@ def test_map_fit_ray(sky_model, geom, geom_etrue):
     dataset_1 = get_map_dataset(geom, geom_etrue, name="test-1")
     dataset_2 = get_map_dataset(geom, geom_etrue, name="test-2")
     datasets = Datasets([dataset_1, dataset_2])
-
     models = Models(datasets.models)
     models.insert(0, sky_model)
 
@@ -772,12 +771,21 @@ def test_map_fit_ray(sky_model, geom, geom_etrue):
     models["test-1-bkg"].spectral_model.norm.value = 0.49
     models["test-2-bkg"].spectral_model.norm.value = 0.99
 
+    datasets.models = None
+
     actors = DatasetsActor(datasets)
+    assert len(actors.models) == 0
+
+    actors.models = models
     assert len(actors.models) == len(models)
     assert len(actors.parameters) == len(models.parameters.unique_parameters)
 
+    assert len(actors[0].models) == len(models) - 1
+
     fit = Fit()
     result = fit.run(datasets=actors)
+
+    assert_allclose(result.models.covariance.data, actors.models.covariance.data)
 
     assert result.success
     assert result.optimize_result.backend == "minuit"
