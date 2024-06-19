@@ -524,7 +524,7 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
             yaml_str += to_yaml(extra_dict)
         yaml_str += self.to_yaml(full_output, overwrite_templates)
 
-        write_yaml(yaml_str, overwrite=overwrite, checksum=checksum)
+        write_yaml(yaml_str, path, overwrite=overwrite, checksum=checksum)
 
     def to_yaml(self, full_output=False, overwrite_templates=False):
         """Convert to YAML string."""
