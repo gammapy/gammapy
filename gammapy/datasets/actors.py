@@ -167,13 +167,7 @@ class MapDatasetActor(RayFrontendMixin):
         if name == "models":
             if value is None:
                 value = DatasetModels()
-            value = DatasetModels(
-                [
-                    m
-                    for m in value
-                    if m.datasets_names is None or self.name in m.datasets_names
-                ]
-            )
+            value = value.select(datasets_names=self.name)
         super().__setattr__(name, value)
 
     def _get_remote(self, attr, *args, from_actors=False, **kwargs):
