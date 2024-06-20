@@ -12,6 +12,7 @@ from .iminuit import (
     covariance_iminuit,
     optimize_iminuit,
 )
+from .modeling.models import _write_models
 from .scipy import confidence_scipy, optimize_scipy
 from .sherpa import optimize_sherpa
 
@@ -799,7 +800,8 @@ class FitResult:
             output.update(self.optimize_result.to_dict())
         if self.covariance_result is not None:
             output.update(self.covariance_result.to_dict())
-        self.models.write(
+        _write_models(
+            self.models,
             path,
             overwrite,
             full_output,

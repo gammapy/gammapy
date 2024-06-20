@@ -91,6 +91,43 @@ def _check_name_unique(model, names):
     return
 
 
+def _write_models(
+    models,
+    path,
+    overwrite=False,
+    full_output=False,
+    overwrite_templates=False,
+    write_covariance=True,
+    checksum=False,
+    extra_dict=None,
+):
+    """Write models to YAML file with additionnal informations using an `extra_dict`"""
+
+    base_path, _ = split(path)
+    path = make_path(path)
+    base_path = make_path(base_path)
+
+    if path.exists() and not overwrite:
+        raise IOError(f"File exists already: {path}")
+
+    if (
+        write_covariance
+        and models.covariance is not None
+        and len(models.parameters) != 0
+    ):
+        filecovar = path.stem + "_covariance.dat"
+        kwargs = dict(format="ascii.fixed_width", delimiter="|", overwrite=overwrite)
+        models.write_covariance(base_path / filecovar, **kwargs)
+        models._covar_file = filecovar
+
+    yaml_str = ""
+    if extra_dict is not None:
+        yaml_str += to_yaml(extra_dict)
+    yaml_str += models.to_yaml(full_output, overwrite_templates)
+
+    write_yaml(yaml_str, path, overwrite=overwrite, checksum=checksum)
+
+
 class ModelBase:
     """Model base class."""
 
@@ -477,7 +514,6 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
         overwrite_templates=False,
         write_covariance=True,
         checksum=False,
-        extra_dict=None,
     ):
         """Write to YAML file.
 
@@ -496,34 +532,16 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
         checksum : bool
             When True adds a CHECKSUM entry to the file.
             Default is False.
-        extra_dict : dict
-            Additionnal informations to write with the models.
         """
-        base_path, _ = split(path)
-        path = make_path(path)
-        base_path = make_path(base_path)
-
-        if path.exists() and not overwrite:
-            raise IOError(f"File exists already: {path}")
-
-        if (
-            write_covariance
-            and self.covariance is not None
-            and len(self.parameters) != 0
-        ):
-            filecovar = path.stem + "_covariance.dat"
-            kwargs = dict(
-                format="ascii.fixed_width", delimiter="|", overwrite=overwrite
-            )
-            self.write_covariance(base_path / filecovar, **kwargs)
-            self._covar_file = filecovar
-
-        yaml_str = ""
-        if extra_dict is not None:
-            yaml_str += to_yaml(extra_dict)
-        yaml_str += self.to_yaml(full_output, overwrite_templates)
-
-        write_yaml(yaml_str, path, overwrite=overwrite, checksum=checksum)
+        _write_models(
+            self.models,
+            path,
+            overwrite,
+            full_output,
+            overwrite_templates,
+            write_covariance,
+            checksum,
+        )
 
     def to_yaml(self, full_output=False, overwrite_templates=False):
         """Convert to YAML string."""
