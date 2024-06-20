@@ -1,16 +1,22 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import logging
 import numpy as np
 import scipy.special
 from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord
+from astropy.units import Quantity
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from matplotlib.colors import PowerNorm
 from gammapy.maps import MapAxes, MapAxis, RegionGeom
+from gammapy.utils.deprecation import deprecated_renamed_argument
 from gammapy.visualization.utils import add_colorbar
 from ..core import IRF
 
 __all__ = ["EnergyDispersion2D"]
+
+
+log = logging.getLogger(__name__)
 
 
 class EnergyDispersion2D(IRF):
@@ -41,8 +47,9 @@ class EnergyDispersion2D(IRF):
     Create energy dispersion matrix (`~gammapy.irf.EnergyDispersion`)
     for a given field of view offset and energy binning:
 
-    >>> energy = MapAxis.from_bounds(0.1, 20, nbin=60, unit="TeV", interp="log").edges
-    >>> edisp = edisp2d.to_edisp_kernel(offset='1.2 deg', energy=energy, energy_true=energy)
+    >>> energy_axis = MapAxis.from_bounds(0.1, 20, nbin=60, unit="TeV", interp="log", name='energy')
+    >>> edisp = edisp2d.to_edisp_kernel(offset='1.2 deg', energy_axis=energy_axis,
+    ...                                 energy_axis_true=energy_axis.copy(name='energy_true'))
 
     See Also
     --------
@@ -117,7 +124,13 @@ class EnergyDispersion2D(IRF):
             data=data.value,
         )
 
-    def to_edisp_kernel(self, offset, energy_true=None, energy=None):
+    @deprecated_renamed_argument(
+        ["energy_true", "energy"],
+        ["energy_axis_true", "energy_axis"],
+        ["v1.3", "v1.3"],
+        arg_in_kwargs=True,
+    )
+    def to_edisp_kernel(self, offset, energy_axis_true=None, energy_axis=None):
         """Detector response R(Delta E_reco, Delta E_true).
 
         Probability to reconstruct an energy in a given true energy band
@@ -127,9 +140,9 @@ class EnergyDispersion2D(IRF):
         ----------
         offset : `~astropy.coordinates.Angle`
             Offset.
-        energy_true : `~astropy.units.Quantity`, optional
+        energy_axis_true : `~gammapy.maps.MapAxis`, optional
             True energy axis. Default is None.
-        energy : `~astropy.units.Quantity`, optional
+        energy_axis : `~gammapy.maps.MapAxis`, optional
             Reconstructed energy axis. Default is None.
 
         Returns
@@ -141,18 +154,18 @@ class EnergyDispersion2D(IRF):
 
         offset = Angle(offset)
 
-        if energy is None:
+        if isinstance(energy_axis, Quantity):
+            energy_axis = MapAxis.from_energy_edges(energy_axis)
+        if energy_axis is None:
             energy_axis = self.axes["energy_true"].copy(name="energy")
-        else:
-            energy_axis = MapAxis.from_energy_edges(energy)
 
-        if energy_true is None:
-            energy_axis_true = self.axes["energy_true"]
-        else:
+        if isinstance(energy_axis_true, Quantity):
             energy_axis_true = MapAxis.from_energy_edges(
-                energy_true,
+                energy_axis_true,
                 name="energy_true",
             )
+        if energy_axis_true is None:
+            energy_axis_true = self.axes["energy_true"]
 
         pointing = SkyCoord("0d", "0d")
 
