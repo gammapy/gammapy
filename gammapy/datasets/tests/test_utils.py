@@ -60,10 +60,23 @@ def test_dataset_split():
     )
 
     dataset = MapDataset.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc.fits.gz")
-    dataset.models = Models([diffuse_iem])
 
     width = 4 * u.deg
     margin = 1 * u.deg
+
+    datasets = split_dataset(dataset, width, margin)
+    assert len(datasets) == 15
+    assert len(datasets.models) == 0
+
+    datasets = split_dataset(dataset, width, margin, split_template_models=False)
+    assert len(datasets.models) == 0
+
+    dataset.models = Models()
+    datasets = split_dataset(dataset, width, margin)
+    assert len(datasets.models) == 0
+
+    dataset.models = Models([diffuse_iem])
+
     datasets = split_dataset(dataset, width, margin, split_template_models=False)
     assert len(datasets) == 15
     assert len(datasets.models) == 1
