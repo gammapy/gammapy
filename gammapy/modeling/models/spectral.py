@@ -3,6 +3,7 @@
 import logging
 import operator
 import os
+from pathlib import Path
 import numpy as np
 import scipy.optimize
 import scipy.special
@@ -12,7 +13,6 @@ from astropy.table import Table
 from astropy.utils.decorators import classproperty
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
-from pathlib import Path
 from gammapy.maps import MapAxis, RegionNDMap
 from gammapy.modeling import Parameter, Parameters
 from gammapy.utils.integrate import trapz_loglog
@@ -629,8 +629,22 @@ class CompoundSpectralModel(SpectralModel):
         super().__init__()
 
     @property
+    def _models(self):
+        return [self.model1, self.model2]
+
+    @property
     def parameters(self):
         return self.model1.parameters + self.model2.parameters
+
+    @property
+    def parameters_unique_names(self):
+        names = []
+        for idx, model in enumerate(self._models):
+            for par_name in model.parameters_unique_names:
+                components = [f"model{idx+1}", par_name]
+                name = ".".join(components)
+                names.append(name)
+        return names
 
     def __str__(self):
         return (
