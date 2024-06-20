@@ -245,6 +245,7 @@ class AnalysisConfig(GammapyBaseConfig):
     def read(cls, path):
         """Read from YAML file."""
         config = read_yaml(path)
+        config.pop("metadata", None)
         return AnalysisConfig(**config)
 
     @classmethod
