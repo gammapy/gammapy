@@ -8,7 +8,8 @@ import astropy.units as u
 from astropy.nddata import NoOverlapError
 from astropy.time import Time
 from gammapy.maps import Map, MapAxis, WcsGeom
-from gammapy.modeling import Covariance, Parameters
+from gammapy.modeling import Parameters
+from gammapy.modeling.covariance import CovarianceMixin
 from gammapy.modeling.parameter import _get_parameters_str
 from gammapy.utils.compat import COPY_IF_NEEDED
 from gammapy.utils.fits import LazyFitsData
@@ -29,7 +30,7 @@ __all__ = [
 ]
 
 
-class SkyModel(ModelBase):
+class SkyModel(CovarianceMixin, ModelBase):
     """Sky model component.
 
     This model represents a factorised sky model.
@@ -84,12 +85,6 @@ class SkyModel(ModelBase):
         models = self.spectral_model, self.spatial_model, self.temporal_model
         return [model for model in models if model is not None]
 
-    def _check_covariance(self):
-        if not self.parameters == self._covariance.parameters:
-            self._covariance = Covariance.from_stack(
-                [model.covariance for model in self._models],
-            )
-
     def _check_unit(self):
         axis = MapAxis.from_energy_bounds(
             "0.1 TeV", "10 TeV", nbin=1, name="energy_true"
@@ -126,24 +121,6 @@ class SkyModel(ModelBase):
             raise ValueError(
                 f"SkyModel unit {obt_unit} is not equivalent to {ref_unit}"
             )
-
-    @property
-    def covariance(self):
-        self._check_covariance()
-
-        for model in self._models:
-            self._covariance.set_subcovariance(model.covariance)
-
-        return self._covariance
-
-    @covariance.setter
-    def covariance(self, covariance):
-        self._check_covariance()
-        self._covariance.data = covariance
-
-        for model in self._models:
-            subcovar = self._covariance.get_subcovariance(model.covariance.parameters)
-            model.covariance = subcovar
 
     @property
     def name(self):
