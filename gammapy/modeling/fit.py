@@ -165,6 +165,8 @@ class Fit:
             Fit result.
         """
 
+        datasets, parameters = self._parse_datasets(datasets=datasets)
+
         optimize_result = self.optimize(datasets=datasets)
 
         if self.backend not in registry.register["covariance"]:
@@ -178,6 +180,8 @@ class Fit:
         optimize_result.models.covariance = Covariance(
             optimize_result.models.parameters, covariance_result.matrix
         )
+
+        datasets._covariance = Covariance(parameters, covariance_result.matrix)
 
         return FitResult(
             optimize_result=optimize_result,
