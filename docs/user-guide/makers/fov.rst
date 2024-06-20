@@ -87,6 +87,9 @@ in the `fov_bkg_maker`.
     )
 
 
+Note: to prevent poorly constrained `norm` parameters or large variance in
+the last bins, the binning should be adjusted to have wider bins at higher energies.
+This ensures there are enough statistics per bin, enabling the fit to converge.
 
 
 .. minigallery:: gammapy.makers.FoVBackgroundMaker
