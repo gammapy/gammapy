@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import operator
-
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
@@ -9,19 +8,19 @@ from astropy.utils.data import get_pkg_data_filename
 from gammapy.maps import Map, MapAxis, RegionNDMap
 from gammapy.modeling.models import (
     MODEL_REGISTRY,
+    CompoundSpectralModel,
     ConstantTemporalModel,
     EBLAbsorptionNormSpectralModel,
     ExpDecayTemporalModel,
     FoVBackgroundModel,
     GaussianTemporalModel,
     LinearTemporalModel,
+    LogParabolaSpectralModel,
     Model,
     Models,
     PiecewiseNormSpectralModel,
     PowerLawSpectralModel,
-    LogParabolaSpectralModel,
     PowerLawTemporalModel,
-    CompoundSpectralModel,
     SineTemporalModel,
     SkyModel,
     TemplateNPredModel,
@@ -451,11 +450,11 @@ def test_compound_models_io(tmp_path):
     assert_allclose(sk1.covariance.data, sk.covariance.data, rtol=1e-3)
     assert_allclose(np.sum(sk1.covariance.data), 0.0)
     assert Models([sk]).parameters_unique_names == [
-        "model.spectral.index",
-        "model.spectral.amplitude",
-        "model.spectral.reference",
-        "model.spectral.amplitude",
-        "model.spectral.reference",
-        "model.spectral.alpha",
-        "model.spectral.beta",
+        "model.spectral.model1.index",
+        "model.spectral.model1.amplitude",
+        "model.spectral.model1.reference",
+        "model.spectral.model2.amplitude",
+        "model.spectral.model2.reference",
+        "model.spectral.model2.alpha",
+        "model.spectral.model2.beta",
     ]
