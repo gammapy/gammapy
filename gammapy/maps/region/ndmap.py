@@ -57,6 +57,36 @@ class RegionNDMap(Map):
         self.meta = meta
         self._unit = u.Unit(unit)
 
+    @property
+    def data(self):
+        return self._data
+
+    @data.setter
+    def data(self, value):
+        """Set data.
+        Parameters
+        ----------
+        value : array-like
+            Data array.
+        """
+        if np.isscalar(value):
+            value = value * np.ones(self.geom.data_shape, dtype=type(value))
+
+        if isinstance(value, u.Quantity):
+            raise TypeError("Map data must be a Numpy array. Set unit separately")
+
+        input_shape = value.shape
+        if len(self.geom.data_shape) == 2 + len(value.shape):
+            if self.geom.data_shape[: len(value.shape)] == value.shape:
+                value = np.expand_dims(value, (-2, -1))
+
+        if self.geom.data_shape != value.shape:
+            raise ValueError(
+                f"Input shape {input_shape} is not compatible with shape from geometry {self.geom.data_shape}"
+            )
+
+        self._data = value
+
     def plot(self, ax=None, axis_name=None, **kwargs):
         """Plot the data contained in region map along the non-spatial axis.
 
@@ -622,6 +652,7 @@ class RegionNDMap(Map):
             raise ValueError(f"Format not supported {format}")
 
         geom = RegionGeom.create(region=None, axes=axes)
+        data = data.reshape(geom.data_shape)
         return cls(geom=geom, data=data, unit=unit, meta=table.meta, dtype=data.dtype)
 
     @classmethod
@@ -661,7 +692,7 @@ class RegionNDMap(Map):
         geom = RegionGeom.from_hdulist(hdulist, format=format, hdu=hdu)
 
         table = Table.read(hdulist[hdu])
-        quantity = table[ogip_column].quantity
+        quantity = table[ogip_column].quantity.reshape(geom.data_shape)
 
         if ogip_column == "QUALITY":
             data, unit = np.logical_not(quantity.value.astype(bool)), ""
@@ -786,7 +817,7 @@ class RegionNDMap(Map):
 
         elif format == "gadf":
             table = Table()
-            data = self.quantity.flatten()
+            data = self.quantity
             table["CHANNEL"] = np.arange(len(data), dtype=np.int16)
             table["DATA"] = data
         else:
