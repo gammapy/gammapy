@@ -468,8 +468,8 @@ class Datasets(collections.abc.MutableSequence):
 
         if path.exists() and not overwrite:
             raise IOError(f"File exists already: {path}")
-
-        write_yaml(to_yaml(data), path, checksum=checksum)
+        yaml_str = to_yaml(data)
+        write_yaml(yaml_str, path, checksum=checksum)
 
         if filename_models:
             self.models.write(
