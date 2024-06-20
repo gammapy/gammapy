@@ -632,14 +632,8 @@ class FoVBackgroundModel(ModelBase):
         return self._spectral_model
 
     @property
-    def spatial_model(self):
-        """Spatial norm model."""
-        return self._spatial_model
-
-    @property
     def _models(self):
-        models = self.spectral_model, self.spatial_model
-        return [model for model in models if model is not None]
+        return [self.spectral_model]
 
     @property
     def name(self):
@@ -877,7 +871,7 @@ class TemplateNPredModel(ModelBase):
 
     @property
     def _models(self):
-        models = self.spectral_model, self.spatial_model
+        models = [self.spectral_model]
         return [model for model in models if model is not None]
 
     @property
