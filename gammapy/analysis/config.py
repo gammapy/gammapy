@@ -256,7 +256,8 @@ class AnalysisConfig(GammapyBaseConfig):
 
     def write(self, path, overwrite=False):
         """Write to YAML file."""
-        write_yaml(self.to_yaml(), path, overwrite=overwrite)
+        yaml_str = self.to_yaml()
+        write_yaml(yaml_str, path, overwrite=overwrite)
 
     def to_yaml(self):
         """Convert to YAML string."""
