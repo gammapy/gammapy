@@ -788,7 +788,7 @@ class FitResult:
         overwrite : bool, optional
             Overwrite existing file. Default is False.
         full_output : bool, optional
-            Store full parameter output. Default is False.
+            Store full parameter output. Default is True.
         overwrite_templates : bool, optional
             Overwrite templates FITS files. Default is False.
         checksum : bool, optional
