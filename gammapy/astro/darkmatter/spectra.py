@@ -182,8 +182,7 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
     scale : float
         Scale parameter for model fitting.
     jfactor : `~astropy.units.Quantity`
-        Integrated J-Factor needed when `~gammapy.modeling.models.PointSpatialModel`
-        is used.
+        Integrated J-Factor for model fitting.
     z: float
         Redshift value.
     k: int
@@ -198,8 +197,7 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
 
         >>> channel = "b"
         >>> massDM = 5000*u.Unit("GeV")
-        >>> jfactor = 3.41e19 * u.Unit("GeV2 cm-5")
-        >>> modelDM = DarkMatterAnnihilationSpectralModel(mass=massDM, channel=channel, jfactor=jfactor)  # noqa: E501
+        >>> modelDM = DarkMatterAnnihilationSpectralModel(mass=massDM, channel=channel)  # noqa: E501
 
     References
     ----------
@@ -216,22 +214,28 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
         interp="log",
     )
     scale._is_norm = True
+
+    jfactor = Parameter(
+        "jfactor",
+        1,
+        unit="GeV2 cm-5",
+        interp="log",
+    )
     tag = ["DarkMatterAnnihilationSpectralModel", "dm-annihilation"]
 
-    def __init__(self, mass, channel, scale=scale.quantity, jfactor=1, z=0, k=2):
+    def __init__(self, mass, channel, scale=scale.quantity, jfactor=jfactor, z=0, k=2):
         self.k = k
         self.z = z
         self.mass = u.Quantity(mass)
         self.channel = channel
-        self.jfactor = u.Quantity(jfactor)
         self.primary_flux = PrimaryFlux(mass, channel=self.channel)
-        super().__init__(scale=scale)
+        super().__init__(scale=scale, jfactor=jfactor)
 
-    def evaluate(self, energy, scale):
+    def evaluate(self, energy, scale, jfactor):
         """Evaluate dark matter annihilation model."""
         flux = (
             scale
-            * self.jfactor
+            * jfactor
             * self.THERMAL_RELIC_CROSS_SECTION
             * self.primary_flux(energy=energy * (1 + self.z))
             / self.k
@@ -246,7 +250,6 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
         data = super().to_dict(full_output=full_output)
         data["spectral"]["channel"] = self.channel
         data["spectral"]["mass"] = self.mass.to_string()
-        data["spectral"]["jfactor"] = self.jfactor.to_string()
         data["spectral"]["z"] = self.z
         data["spectral"]["k"] = self.k
         return data
@@ -268,8 +271,12 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
         data = data["spectral"]
         data.pop("type")
         parameters = data.pop("parameters")
-        scale = [p["value"] for p in parameters if p["name"] == "scale"][0]
-        return cls(scale=scale, **data)
+        parameters = {p["name"]: p for p in parameters}
+        scale = parameters["scale"]["value"]
+        jfactor = u.Quantity(
+            parameters["jfactor"]["value"], parameters["jfactor"]["unit"]
+        )
+        return cls(scale=scale, jfactor=jfactor, **data)
 
 
 class DarkMatterDecaySpectralModel(SpectralModel):
@@ -280,7 +287,7 @@ class DarkMatterDecaySpectralModel(SpectralModel):
     .. math::
         \frac{\mathrm d \phi}{\mathrm d E} =
         \frac{\Gamma}{4\pi m_{\mathrm{DM}}}
-        \frac{\mathrm d N}{\mathrm dE} \times J(\Delta\Omega)
+        \frac{\mathrm d N}{\mathrm dE} \times D(\Delta\Omega)
 
     Parameters
     ----------
@@ -291,23 +298,21 @@ class DarkMatterDecaySpectralModel(SpectralModel):
         See `PrimaryFlux.channel_registry` for more.
     scale : float
         Scale parameter for model fitting
-    jfactor : `~astropy.units.Quantity`
-        Integrated J-Factor needed when `~gammapy.modeling.models.PointSpatialModel`
-        is used.
+    dfactor : `~astropy.units.Quantity`
+        Integrated D-Factor for model fitting.
     z: float
         Redshift value.
 
     Examples
     --------
-    This is how to instantiate a `DarkMatterAnnihilationSpectralModel` model::
+    This is how to instantiate a `DarkMatterDecaySpectralModel` model::
 
         >>> import astropy.units as u
         >>> from gammapy.astro.darkmatter import DarkMatterDecaySpectralModel
 
         >>> channel = "b"
         >>> massDM = 5000*u.Unit("GeV")
-        >>> jfactor = 3.41e19 * u.Unit("GeV cm-2")
-        >>> modelDM = DarkMatterDecaySpectralModel(mass=massDM, channel=channel, jfactor=jfactor)  # noqa: E501
+        >>> modelDM = DarkMatterDecaySpectralModel(mass=massDM, channel=channel)  # noqa: E501
 
     References
     ----------
@@ -325,21 +330,27 @@ class DarkMatterDecaySpectralModel(SpectralModel):
     )
     scale._is_norm = True
 
+    dfactor = Parameter(
+        "dfactor",
+        1,
+        unit="GeV cm-2",
+        interp="log",
+    )
+
     tag = ["DarkMatterDecaySpectralModel", "dm-decay"]
 
-    def __init__(self, mass, channel, scale=scale.quantity, jfactor=1, z=0):
+    def __init__(self, mass, channel, scale=scale.quantity, dfactor=dfactor, z=0):
         self.z = z
         self.mass = u.Quantity(mass)
         self.channel = channel
-        self.jfactor = u.Quantity(jfactor)
         self.primary_flux = PrimaryFlux(mass, channel=self.channel)
-        super().__init__(scale=scale)
+        super().__init__(scale=scale, dfactor=dfactor)
 
-    def evaluate(self, energy, scale):
+    def evaluate(self, energy, scale, dfactor):
         """Evaluate dark matter decay model."""
         flux = (
             scale
-            * self.jfactor
+            * dfactor
             * self.primary_flux(energy=energy * (1 + self.z))
             / self.LIFETIME_AGE_OF_UNIVERSE
             / self.mass
@@ -351,7 +362,6 @@ class DarkMatterDecaySpectralModel(SpectralModel):
         data = super().to_dict(full_output=full_output)
         data["spectral"]["channel"] = self.channel
         data["spectral"]["mass"] = self.mass.to_string()
-        data["spectral"]["jfactor"] = self.jfactor.to_string()
         data["spectral"]["z"] = self.z
         return data
 
@@ -372,8 +382,12 @@ class DarkMatterDecaySpectralModel(SpectralModel):
         data = data["spectral"]
         data.pop("type")
         parameters = data.pop("parameters")
-        scale = [p["value"] for p in parameters if p["name"] == "scale"][0]
-        return cls(scale=scale, **data)
+        parameters = {p["name"]: p for p in parameters}
+        scale = parameters["scale"]["value"]
+        dfactor = u.Quantity(
+            parameters["dfactor"]["value"], parameters["dfactor"]["unit"]
+        )
+        return cls(scale=scale, dfactor=dfactor, **data)
 
 
 SPECTRAL_MODEL_REGISTRY.append(DarkMatterAnnihilationSpectralModel)
