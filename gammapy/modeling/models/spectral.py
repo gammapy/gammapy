@@ -27,6 +27,7 @@ from gammapy.utils.interpolation import (
 )
 from gammapy.utils.roots import find_roots
 from gammapy.utils.scripts import make_path
+from ..covariance import CovarianceMixin
 from .core import ModelBase
 
 log = logging.getLogger(__name__)
@@ -702,7 +703,7 @@ class ConstantSpectralModel(SpectralModel):
         return np.ones(np.atleast_1d(energy).shape) * const
 
 
-class CompoundSpectralModel(SpectralModel):
+class CompoundSpectralModel(CovarianceMixin, SpectralModel):
     """Arithmetic combination of two spectral models.
 
     For more information see :ref:`compound-spectral-model`.
@@ -717,8 +718,22 @@ class CompoundSpectralModel(SpectralModel):
         super().__init__()
 
     @property
+    def _models(self):
+        return [self.model1, self.model2]
+
+    @property
     def parameters(self):
         return self.model1.parameters + self.model2.parameters
+
+    @property
+    def parameters_unique_names(self):
+        names = []
+        for idx, model in enumerate(self._models):
+            for par_name in model.parameters_unique_names:
+                components = [f"model{idx+1}", par_name]
+                name = ".".join(components)
+                names.append(name)
+        return names
 
     def __str__(self):
         return (
