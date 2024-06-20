@@ -45,6 +45,7 @@ class DatasetsActor(Datasets):
                 datasets.remove(d0)  # moved to remote so removed from main process
             self._datasets = datasets_list
             self._ray_get = get
+            self._covariance = None
 
         # trigger actors auto_init_wrapper (so overhead so appears on init)
         self.name
@@ -162,13 +163,17 @@ class MapDatasetActor(RayFrontendMixin):
         self._to_update = {}
         return output
 
+    def __setattr__(self, name, value):
+        if name == "models":
+            if value is None:
+                value = DatasetModels()
+            value = value.select(datasets_names=self.name)
+        super().__setattr__(name, value)
+
     def _get_remote(self, attr, *args, from_actors=False, **kwargs):
         self._check_models()
-        res = self._actor._get.remote(
-            attr, *args, to_update=self._to_update, from_actors=from_actors, **kwargs
-        )
-        self._to_update = {}
-        return res
+        results = super()._get_remote(attr, *args, from_actors=False, **kwargs)
+        return results
 
     def _check_models(self):
         if ~np.all(
@@ -180,7 +185,6 @@ class MapDatasetActor(RayFrontendMixin):
             self._cache["models"] = self.models.copy()
 
     def _check_parameters(self):
-
         if self.models.parameters.names != self._cache[
             "models"
         ].parameters.names or len(self.models.parameters.free_parameters) != len(

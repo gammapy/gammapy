@@ -358,6 +358,8 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
             models = []
 
         if isinstance(models, (Models, DatasetModels)):
+            if covariance_data is None and models.covariance is not None:
+                covariance_data = models.covariance.data
             models = models._models
         elif isinstance(models, ModelBase):
             models = [models]
