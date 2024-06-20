@@ -97,6 +97,8 @@ class Parameter:
         Whether the parameter represents the flux norm of the model.
     prior : `~gammapy.modeling.models.Prior`
         Prior set on the parameter.
+    scale_interp : {"lin", "sqrt", "log"}
+        Parameter scaling.
     """
 
     norm_parameters = deprecated_attribute("norm_parameters", "1.2")
@@ -122,13 +124,17 @@ class Parameter:
         interp="lin",
         is_norm=False,
         prior=None,
+        scale_interp="lin",
     ):
         if not isinstance(name, str):
             raise TypeError(f"Name must be string, got '{type(name)}' instead")
 
         self._name = name
         self._link_label_io = None
-        self.scale = scale
+        self._scale_method = scale_method
+        self._scale_interp = scale_interp
+        self.interp = interp
+        self._scale = float(scale)
         self.min = min
         self.max = max
         self.frozen = frozen
@@ -151,8 +157,6 @@ class Parameter:
         self.scan_values = scan_values
         self.scan_n_values = scan_n_values
         self.scan_n_sigma = scan_n_sigma
-        self.interp = interp
-        self.scale_method = scale_method
         self.prior = prior
 
     def __get__(self, instance, owner):
@@ -224,15 +228,12 @@ class Parameter:
     @factor.setter
     def factor(self, val):
         self._factor = float(val)
+        self._value = self.inverse_transform(self._factor)
 
     @property
     def scale(self):
         """Scale as a float."""
         return self._scale
-
-    @scale.setter
-    def scale(self, val):
-        self._scale = float(val)
 
     @property
     def unit(self):
@@ -262,7 +263,7 @@ class Parameter:
 
         This ``factor_min = min / scale`` is for the optimizer interface.
         """
-        return self.min / self.scale
+        return self.transform(self.min)
 
     @property
     def max(self):
@@ -283,7 +284,7 @@ class Parameter:
 
         This ``factor_max = max / scale`` is for the optimizer interface.
         """
-        return self.max / self.scale
+        return self.transform(self.max)
 
     @property
     def scale_method(self):
@@ -294,7 +295,20 @@ class Parameter:
     def scale_method(self, val):
         if val not in ["scale10", "factor1"] and val is not None:
             raise ValueError(f"Invalid method: {val}")
+        self.reset_autoscale()
         self._scale_method = val
+
+    @property
+    def scale_interp(self):
+        """scale interp : {"lin", "sqrt", "log"}"""
+        return self._scale_interp
+
+    @scale_interp.setter
+    def scale_interp(self, val):
+        if val not in ["lin", "log", "sqrt"]:
+            raise ValueError(f"Invalid interp: {val}")
+        self.reset_autoscale()
+        self._scale_interp = val
 
     @property
     def frozen(self):
@@ -312,11 +326,12 @@ class Parameter:
     @property
     def value(self):
         """Value = factor x scale (float)."""
-        return self._factor * self._scale
+        return self._value
 
     @value.setter
     def value(self, val):
-        self.factor = float(val) / self._scale
+        self._value = float(val)
+        self._factor = self.transform(val)
 
     @property
     def quantity(self):
@@ -460,6 +475,7 @@ class Parameter:
             "interp": self.interp,
             "scale_method": self.scale_method,
             "is_norm": self._is_norm,
+            "scale_interp": self.scale_interp,
         }
 
         if self._link_label_io is not None:
@@ -468,8 +484,8 @@ class Parameter:
             output["prior"] = self.prior.to_dict()["prior"]
         return output
 
-    def autoscale(self):
-        """Autoscale the parameters.
+    def update_scale(self, value):
+        """Update the parameter scale.
 
         Set ``factor`` and ``scale`` according to ``scale_method`` attribute.
 
@@ -485,15 +501,34 @@ class Parameter:
 
         """
         if self.scale_method == "scale10":
-            value = self.value
             if value != 0:
                 exponent = np.floor(np.log10(np.abs(value)))
-                scale = np.power(10.0, exponent)
-                self.factor = value / scale
-                self.scale = scale
+                self._scale = np.power(10.0, exponent)
 
         elif self.scale_method == "factor1":
-            self.factor, self.scale = 1, self.value
+            self._scale = value
+
+    def transform(self, value, update_scale=False):
+        interp_scale = interpolation_scale(self.scale_interp)
+        factor = interp_scale(value)
+        if update_scale:
+            self.update_scale(factor)
+        return factor / self.scale
+
+    def inverse_transform(self, factor):
+        factor = self.scale * factor
+        interp_scale = interpolation_scale(self.scale_interp)
+        value = interp_scale.inverse(factor)
+        return value
+
+    def autoscale(self):
+        "Apply `interpolation_scale' and `scale_method' to the parameter."
+        self.factor = self.transform(self.value, update_scale=True)
+
+    def reset_autoscale(self):
+        "Reset scaling such as factor=value, scale=1."
+        self._factor = self._value
+        self._scale = 1.0
 
 
 class Parameters(collections.abc.Sequence):
@@ -834,12 +869,16 @@ class PriorParameter(Parameter):
         min=np.nan,
         max=np.nan,
         error=0,
+        scale_method="scale10",
+        scale_interp="lin",
     ):
         if not isinstance(name, str):
             raise TypeError(f"Name must be string, got '{type(name)}' instead")
 
         self._name = name
-        self.scale = scale
+        self._scale_method = scale_method
+        self._scale_interp = scale_interp
+        self._scale = float(scale)
         self.min = min
         self.max = max
         self._error = error
@@ -850,6 +889,7 @@ class PriorParameter(Parameter):
         else:
             self.factor = value
             self.unit = unit
+
         self._type = "prior"
 
     def to_dict(self):
