@@ -10,10 +10,12 @@ import yaml
 from gammapy.utils.check import add_checksum, verify_checksum
 
 __all__ = [
+    "from_yaml",
     "get_images_paths",
     "make_path",
     "read_yaml",
     "recursive_merge_dicts",
+    "to_yaml",
     "write_yaml",
 ]
 
@@ -33,6 +35,37 @@ def get_images_paths(folder=PATH_DOCS):
     for i in Path(folder).rglob("images/*"):
         if not any(s in str(i) for s in SKIP):
             yield i.resolve()
+
+
+def from_yaml(text, sort_keys=False, checksum=False):
+    """Read YAML file.
+
+    Parameters
+    ----------
+    text : str
+        yaml str
+    sort_keys : bool, optional
+        Whether to sort keys. Default is False.
+    checksum : bool
+        Whether to perform checksum verification. Default is False.
+
+    Returns
+    -------
+    data : dict
+        YAML file content as a dictionary.
+
+    """
+    data = yaml.safe_load(text)
+    checksum_str = data.pop("checksum", None)
+    if checksum:
+        yaml_format = YAML_FORMAT.copy()
+        yaml_format["sort_keys"] = sort_keys
+        yaml_str = yaml.dump(data, **yaml_format)
+        if not verify_checksum(yaml_str, checksum_str):
+            warnings.warn("Checksum verification failed.", UserWarning)
+    # TODO : for now metadata are not kept. Add proper metadata creation.
+    data.pop("metadata", None)
+    return data
 
 
 def read_yaml(filename, logger=None, checksum=False):
@@ -57,15 +90,7 @@ def read_yaml(filename, logger=None, checksum=False):
         logger.info(f"Reading {path}")
 
     text = path.read_text()
-
-    data = yaml.safe_load(text)
-    checksum_str = data.pop("checksum", None)
-    if checksum:
-        index = text.find("checksum")
-        if not verify_checksum(text[:index], checksum_str):
-            warnings.warn(f"Checksum verification failed for {filename}.", UserWarning)
-
-    return data
+    return from_yaml(text)
 
 
 def to_yaml(dictionary, sort_keys=False):
@@ -80,7 +105,7 @@ def to_yaml(dictionary, sort_keys=False):
     logger : `~logging.Logger`, optional
         Logger. Default is None.
     sort_keys : bool, optional
-        Whether to sort keys. Default is True.
+        Whether to sort keys. Default is False.
     checksum : bool, optional
         Whether to add checksum keyword. Default is False.
     """

@@ -3,19 +3,16 @@ import collections.abc
 import copy
 import html
 import logging
-import warnings
 from os.path import split
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
 import matplotlib.pyplot as plt
-import yaml
 from gammapy.maps import Map, RegionGeom
 from gammapy.modeling import Covariance, Parameter, Parameters
 from gammapy.modeling.covariance import CovarianceMixin
-from gammapy.utils.check import verify_checksum
-from gammapy.utils.scripts import make_name, make_path, to_yaml, write_yaml
+from gammapy.utils.scripts import from_yaml, make_name, make_path, to_yaml, write_yaml
 
 __all__ = ["Model", "Models", "DatasetModels", "ModelBase"]
 
@@ -456,17 +453,7 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
     @classmethod
     def from_yaml(cls, yaml_str, path="", checksum=False):
         """Create from YAML string."""
-        data = yaml.safe_load(yaml_str)
-        checksum_str = data.pop("checksum", None)
-        if checksum:
-            yaml_str = yaml.dump(
-                data, sort_keys=False, indent=4, width=80, default_flow_style=False
-            )
-            if not verify_checksum(yaml_str, checksum_str):
-                warnings.warn("Checksum verification failed.", UserWarning)
-
-        # TODO : for now metadata are not kept. Add proper metadata creation.
-        data.pop("metadata", None)
+        data = from_yaml(yaml_str, checksum=checksum)
         return cls.from_dict(data, path=path)
 
     @classmethod
