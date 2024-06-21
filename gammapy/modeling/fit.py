@@ -794,7 +794,7 @@ class FitResult:
             When True adds a CHECKSUM entry to the file.
             Default is False.
         """
-        from gammapy.modeling.models import _write_models
+        from gammapy.modeling.models.core import _write_models
 
         output = {}
         if self.optimize_result is not None:
