@@ -48,8 +48,6 @@ class MapEvaluator:
         This mode is recommended for global optimization algorithms.
     use_cache : bool
         Use npred caching.
-    geom : `WcsGeom`
-        Counts geom.
     """
 
     def __init__(
@@ -62,7 +60,6 @@ class MapEvaluator:
         mask=None,
         evaluation_mode="local",
         use_cache=True,
-        geom_reco=None,
     ):
 
         self.model = model
@@ -74,7 +71,8 @@ class MapEvaluator:
         self.use_cache = use_cache
         self.contributes = True
         self.psf_containment = None
-        self._geom_reco_axis = geom_reco.axes["energy"] if geom_reco else None
+
+        self._geom_reco_axis = None
 
         if evaluation_mode not in {"local", "global"}:
             raise ValueError(f"Invalid evaluation_mode: {evaluation_mode!r}")
@@ -121,12 +119,12 @@ class MapEvaluator:
     @property
     def _geom_reco(self):
         if self.edisp is not None:
-            energy_axis = self.edisp.axes["energy"].copy(name="energy")
+            energy_axis = self.edisp.axes["energy"]
         elif self._geom_reco_axis is not None:
             energy_axis = self._geom_reco_axis
         else:
-            energy_axis = self.geom.axes["energy_true"].copy(name="energy")
-        geom = self.geom.to_image().to_cube(axes=[energy_axis])
+            energy_axis = self.geom.axes["energy_true"]
+        geom = self.geom.to_image().to_cube(axes=[energy_axis.copy(name="energy")])
         return geom
 
     @property
@@ -392,7 +390,7 @@ class MapEvaluator:
         npred_reco : `~gammapy.maps.Map`
             Predicted counts in reconstructed energy bins.
         """
-        if self.model.apply_irf["edisp"] and self.edisp is not None:
+        if self.model.apply_irf["edisp"] and self.edisp:
             return apply_edisp(npred, self.edisp)
         else:
             if "energy_true" in npred.geom.axes.names:
