@@ -1507,8 +1507,9 @@ class TemplateSpatialModel(SpatialModel):
             Overwrite existing file.
             Default is False, which will raise a warning if the template file exists already.
         filename: str, optional
-            Set the filename of the template  model, if needed. By default, the template model
-            will be saved with the TemplateSpatialModel.filename.
+            Filename of the template model. By default, the template model
+            will be saved with the `TemplateSpatialModel.filename` attribute,
+            if `filename` is provided this attribute will be updated.
         """
         if filename is not None:
             self.filename = filename
