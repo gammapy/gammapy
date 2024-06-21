@@ -12,7 +12,6 @@ from .iminuit import (
     covariance_iminuit,
     optimize_iminuit,
 )
-from .modeling.models import _write_models
 from .scipy import confidence_scipy, optimize_scipy
 from .sherpa import optimize_sherpa
 
@@ -795,6 +794,8 @@ class FitResult:
             When True adds a CHECKSUM entry to the file.
             Default is False.
         """
+        from gammapy.modeling.models import _write_models
+
         output = {}
         if self.optimize_result is not None:
             output.update(self.optimize_result.to_dict())

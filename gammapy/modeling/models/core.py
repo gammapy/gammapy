@@ -534,7 +534,7 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
             Default is False.
         """
         _write_models(
-            self.models,
+            self,
             path,
             overwrite,
             full_output,
