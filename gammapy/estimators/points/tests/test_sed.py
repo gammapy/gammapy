@@ -449,8 +449,8 @@ def test_run_no_edip(fpe_pwl, tmpdir):
     assert_allclose(actual, [1.081434, 0.91077, 0.922176], rtol=1e-3)
 
     datasets[0].models["source"].apply_irf["edisp"] = True
-    with pytest.raises(ValueError):
-        fp = fpe.run(datasets)
+    actual = table["norm"].data
+    assert_allclose(actual, [1.081434, 0.91077, 0.922176], rtol=1e-3)
 
 
 @requires_dependency("iminuit")

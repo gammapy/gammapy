@@ -124,6 +124,8 @@ class MapEvaluator:
             energy_axis = self.edisp.axes["energy"].copy(name="energy")
         elif self._geom_reco_axis is not None:
             energy_axis = self._geom_reco_axis
+        else:
+            energy_axis = self.geom.axes["energy_true"].copy(name="energy")
         geom = self.geom.to_image().to_cube(axes=[energy_axis])
         return geom
 
@@ -195,25 +197,14 @@ class MapEvaluator:
         del self.position
         del self.cutout_width
 
-        self.exposure = exposure
         self._geom_reco_axis = geom.axes["energy"]
-        has_same_energies = np.all(
-            geom.axes["energy"].center
-            == exposure.geom.axes["energy_true"].copy(name="energy").center
-        )
 
         # lookup edisp
+        del self._edisp_diagonal
         if edisp:
             energy_axis = geom.axes["energy"]
             self.edisp = edisp.get_edisp_kernel(
                 position=self.position, energy_axis=energy_axis
-            )
-            del self._edisp_diagonal
-        elif self.model.apply_irf["edisp"] and not has_same_energies:
-            raise ValueError(
-                """Exposure and counts energy axes mismatch,
-                             edisp has to be provided or set `model.apply_irf["edisp"]=False`.
-                             """
             )
 
         # lookup psf
@@ -236,6 +227,7 @@ class MapEvaluator:
                     max_radius=PSF_MAX_RADIUS,
                 )
 
+        self.exposure = exposure
         if self.evaluation_mode == "local":
             self.contributes = self.model.contributes(mask=mask, margin=self.psf_width)
             if self.contributes and not self.model.contributes(mask=mask):
@@ -400,7 +392,7 @@ class MapEvaluator:
         npred_reco : `~gammapy.maps.Map`
             Predicted counts in reconstructed energy bins.
         """
-        if self.model.apply_irf["edisp"]:
+        if self.model.apply_irf["edisp"] and self.edisp is not None:
             return apply_edisp(npred, self.edisp)
         else:
             if "energy_true" in npred.geom.axes.names:
