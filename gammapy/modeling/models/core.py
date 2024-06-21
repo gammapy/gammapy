@@ -454,6 +454,8 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
     def from_yaml(cls, yaml_str, path="", checksum=False):
         """Create from YAML string."""
         data = from_yaml(yaml_str, checksum=checksum)
+        # TODO : for now metadata are not kept. Add proper metadata creation.
+        data.pop("metadata", None)
         return cls.from_dict(data, path=path)
 
     @classmethod
