@@ -48,6 +48,8 @@ class MapEvaluator:
         This mode is recommended for global optimization algorithms.
     use_cache : bool
         Use npred caching.
+    geom : `WcsGeom`
+        Counts geom.
     """
 
     def __init__(
@@ -60,6 +62,7 @@ class MapEvaluator:
         mask=None,
         evaluation_mode="local",
         use_cache=True,
+        geom_reco=None,
     ):
 
         self.model = model
@@ -71,6 +74,7 @@ class MapEvaluator:
         self.use_cache = use_cache
         self.contributes = True
         self.psf_containment = None
+        self._geom_reco_axis = geom_reco.axes["energy"] if geom_reco else None
 
         if evaluation_mode not in {"local", "global"}:
             raise ValueError(f"Invalid evaluation_mode: {evaluation_mode!r}")
@@ -118,8 +122,8 @@ class MapEvaluator:
     def _geom_reco(self):
         if self.edisp is not None:
             energy_axis = self.edisp.axes["energy"].copy(name="energy")
-        else:
-            energy_axis = self.geom.axes["energy_true"].copy(name="energy")
+        elif self._geom_reco_axis is not None:
+            energy_axis = self._geom_reco_axis
         geom = self.geom.to_image().to_cube(axes=[energy_axis])
         return geom
 
@@ -191,6 +195,13 @@ class MapEvaluator:
         del self.position
         del self.cutout_width
 
+        self.exposure = exposure
+        self._geom_reco_axis = geom.axes["energy"]
+        has_same_energies = np.all(
+            geom.axes["energy"].center
+            == exposure.geom.axes["energy_true"].copy(name="energy").center
+        )
+
         # lookup edisp
         if edisp:
             energy_axis = geom.axes["energy"]
@@ -198,6 +209,12 @@ class MapEvaluator:
                 position=self.position, energy_axis=energy_axis
             )
             del self._edisp_diagonal
+        elif self.model.apply_irf["edisp"] and not has_same_energies:
+            raise ValueError(
+                """Exposure and counts energy axes mismatch,
+                             edisp has to be provided or set `model.apply_irf["edisp"]=False`.
+                             """
+            )
 
         # lookup psf
         if psf and self.model.spatial_model:
@@ -219,7 +236,6 @@ class MapEvaluator:
                     max_radius=PSF_MAX_RADIUS,
                 )
 
-        self.exposure = exposure
         if self.evaluation_mode == "local":
             self.contributes = self.model.contributes(mask=mask, margin=self.psf_width)
             if self.contributes and not self.model.contributes(mask=mask):
@@ -242,8 +258,8 @@ class MapEvaluator:
     @lazyproperty
     def _edisp_diagonal(self):
         return EDispKernel.from_diagonal_response(
-            energy_axis_true=self.edisp.axes["energy_true"],
-            energy_axis=self.edisp.axes["energy"],
+            energy_axis_true=self.geom.axes["energy_true"],
+            energy_axis=self._geom_reco.axes["energy"],
         )
 
     def update_spatial_oversampling_factor(self, geom):
