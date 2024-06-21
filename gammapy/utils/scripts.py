@@ -63,8 +63,7 @@ def from_yaml(text, sort_keys=False, checksum=False):
         yaml_str = yaml.dump(data, **yaml_format)
         if not verify_checksum(yaml_str, checksum_str):
             warnings.warn("Checksum verification failed.", UserWarning)
-    # TODO : for now metadata are not kept. Add proper metadata creation.
-    data.pop("metadata", None)
+
     return data
 
 
@@ -90,7 +89,7 @@ def read_yaml(filename, logger=None, checksum=False):
         logger.info(f"Reading {path}")
 
     text = path.read_text()
-    return from_yaml(text)
+    return from_yaml(text, checksum=checksum)
 
 
 def to_yaml(dictionary, sort_keys=False):
