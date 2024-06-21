@@ -143,9 +143,10 @@ class Fit:
 
     @staticmethod
     def _parse_datasets(datasets):
-        from gammapy.datasets import Datasets
+        from gammapy.datasets import Dataset, Datasets
 
-        datasets = Datasets(datasets)
+        if isinstance(datasets, (list, Dataset)):
+            datasets = Datasets(datasets)
         return datasets, datasets.parameters
 
     def run(self, datasets):
@@ -161,6 +162,9 @@ class Fit:
         fit_result : `FitResult`
             Fit result
         """
+
+        datasets, parameters = self._parse_datasets(datasets=datasets)
+
         optimize_result = self.optimize(datasets=datasets)
 
         if self.backend not in registry.register["covariance"]:
@@ -172,6 +176,8 @@ class Fit:
         optimize_result.models.covariance = Covariance(
             optimize_result.models.parameters, covariance_result.matrix
         )
+
+        datasets._covariance = Covariance(parameters, covariance_result.matrix)
 
         return FitResult(
             optimize_result=optimize_result,

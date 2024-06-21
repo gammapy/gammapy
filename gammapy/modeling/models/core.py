@@ -333,13 +333,17 @@ class DatasetModels(collections.abc.Sequence):
     ----------
     models : `SkyModel`, list of `SkyModel` or `Models`
         Sky models
+    covariance_data : `~numpy.ndarray`
+        Covariance data.
     """
 
-    def __init__(self, models=None):
+    def __init__(self, models=None, covariance_data=None):
         if models is None:
             models = []
 
         if isinstance(models, (Models, DatasetModels)):
+            if covariance_data is None and models.covariance is not None:
+                covariance_data = models.covariance.data
             models = models._models
         elif isinstance(models, ModelBase):
             models = [models]
@@ -355,6 +359,10 @@ class DatasetModels(collections.abc.Sequence):
         self._models = models
         self._covar_file = None
         self._covariance = Covariance(self.parameters)
+
+        # Set separately because this triggers the update mechanism on the sub-models
+        if covariance_data is not None:
+            self.covariance = covariance_data
 
     def _check_covariance(self):
         if not self.parameters == self._covariance.parameters:

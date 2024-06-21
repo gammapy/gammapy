@@ -137,6 +137,7 @@ class Datasets(collections.abc.MutableSequence):
             unique_names.append(dataset.name)
 
         self._datasets = datasets
+        self._covariance = None
 
     @property
     def parameters(self):
@@ -160,8 +161,12 @@ class Datasets(collections.abc.MutableSequence):
             if dataset.models is not None:
                 for model in dataset.models:
                     models[model] = model
+        models = DatasetModels(list(models.keys()))
 
-        return DatasetModels(list(models.keys()))
+        if self._covariance and self._covariance.parameters == models.parameters:
+            return DatasetModels(models, covariance_data=self._covariance.data)
+        else:
+            return models
 
     @models.setter
     def models(self, models):
@@ -170,6 +175,8 @@ class Datasets(collections.abc.MutableSequence):
         Duplicate model objects have been removed.
         The order of the unique models remains.
         """
+        if models:
+            self._covariance = DatasetModels(models).covariance
         for dataset in self:
             dataset.models = models
 
