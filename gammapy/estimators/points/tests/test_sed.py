@@ -449,6 +449,8 @@ def test_run_no_edip(fpe_pwl, tmpdir):
     assert_allclose(actual, [1.081434, 0.91077, 0.922176], rtol=1e-3)
 
     datasets[0].models["source"].apply_irf["edisp"] = True
+    fp = fpe.run(datasets)
+    table = fp.to_table()
     actual = table["norm"].data
     assert_allclose(actual, [1.081434, 0.91077, 0.922176], rtol=1e-3)
 
