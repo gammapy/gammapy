@@ -405,7 +405,7 @@ panels = [
 # Finally we produce the confidence contours figures.
 #
 
-fig, axes = plt.subplots(1, 3, figsize=(16, 5))
+fig, axes = plt.subplots(1, 3, figsize=(10, 3))
 colors = ["m", "b", "c"]
 for p, ax in zip(panels, axes):
     xlabel = pars[p["x"]]
