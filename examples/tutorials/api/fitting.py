@@ -230,12 +230,14 @@ total_stat = result_minuit.total_stat
 
 fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(14, 4))
 
-for ax, par in zip(axes, datasets.parameters.free_parameters):
+for ax, par in zip(axes, crab_model.parameters.free_parameters):
     par.scan_n_values = 17
-    idx = datasets.parameters.index(par)
-    name = datasets.models.parameters_unique_names[idx]
+    idx = crab_model.parameters.index(par)
+    name = crab_model.parameters_unique_names[idx]
     profile = fit.stat_profile(datasets=datasets, parameter=par)
-    ax.plot(profile[f"{name}_scan"], profile["stat_scan"] - total_stat)
+    ax.plot(
+        profile[f"{crab_model.name}.{name}_scan"], profile["stat_scan"] - total_stat
+    )
     ax.set_xlabel(f"{par.name} [{par.unit}]")
     ax.set_ylabel("Delta TS")
     ax.set_title(f"{name}:\n {par.value:.1e} +- {par.error:.1e}")
@@ -263,10 +265,11 @@ print(result_minuit.models.covariance)
 ######################################################################
 # And you can plot the total parameter correlation as well:
 #
-
 result_minuit.models.covariance.plot_correlation()
 plt.show()
 
+
+######################################################################
 # The covariance information is also propagated to the individual models
 # Therefore, one can also get the error on a specific parameter by directly
 # accessing the `~gammapy.modeling.Parameter.error` attribute:
@@ -327,26 +330,24 @@ plt.show()
 #
 
 
-def make_contours(fit, datasets, result, npoints, sigmas):
+def make_contours(fit, datasets, model, npoints, sigmas):
     cts_sigma = []
     for sigma in sigmas:
         contours = dict()
         for par_1, par_2 in combinations(["alpha", "beta", "amplitude"], r=2):
-            idx1, idx2 = datasets.parameters.index(par_1), datasets.parameters.index(
-                par_2
-            )
-            name1 = datasets.models.parameters_unique_names[idx1]
-            name2 = datasets.models.parameters_unique_names[idx2]
+            idx1, idx2 = model.parameters.index(par_1), model.parameters.index(par_2)
+            name1 = model.parameters_unique_names[idx1]
+            name2 = model.parameters_unique_names[idx2]
             contour = fit.stat_contour(
                 datasets=datasets,
-                x=datasets.parameters[par_1],
-                y=datasets.parameters[par_2],
+                x=model.parameters[par_1],
+                y=model.parameters[par_2],
                 numpoints=npoints,
                 sigma=sigma,
             )
             contours[f"contour_{par_1}_{par_2}"] = {
-                par_1: contour[name1].tolist(),
-                par_2: contour[name2].tolist(),
+                par_1: contour[f"{model.name}.{name1}"].tolist(),
+                par_2: contour[f"{model.name}.{name2}"].tolist(),
             }
         cts_sigma.append(contours)
     return cts_sigma
@@ -361,7 +362,7 @@ sigmas = [1, 2]
 cts_sigma = make_contours(
     fit=fit,
     datasets=datasets,
-    result=result_minuit,
+    model=crab_model,
     npoints=10,
     sigmas=sigmas,
 )
@@ -455,8 +456,8 @@ plt.tight_layout()
 #
 
 result = result_minuit
-par_alpha = datasets.parameters["alpha"]
-par_beta = datasets.parameters["beta"]
+par_alpha = crab_model.parameters["alpha"]
+par_beta = crab_model.parameters["beta"]
 
 par_alpha.scan_values = np.linspace(1.55, 2.7, 20)
 par_beta.scan_values = np.linspace(-0.05, 0.55, 20)
