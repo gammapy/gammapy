@@ -19,8 +19,7 @@ Gammapy provides the `~gammapy.makers.FoVBackgroundMaker`. The latter creates a
 and a `~gammapy.modeling.models.NormSpectralModel` which allows to renormalize the background cube, and
 possibly to change its spectral distribution. By default, only the `norm` parameter of a
 `~gammapy.modeling.models.PowerLawNormSpectralModel` is left free. Here we show the addition of a `~gammapy.modeling.models.PowerLawNormSpectralModel`
-in which the `norm` and `tilt` parameters are unfrozen as an example. It is also possible to implement other normed
-models, such as the `~gammapy.modeling.models.PiecewiseNormSpectralModel`.
+in which the `norm` and `tilt` parameters are unfrozen as an example.
 
 .. testcode::
 
@@ -64,6 +63,33 @@ models, such as the `~gammapy.modeling.models.PiecewiseNormSpectralModel`.
 		dataset = safe_mask_maker.run(dataset, obs)
 		dataset = fov_bkg_maker.run(dataset)
 		stacked.stack(dataset)
+
+
+
+It is also possible to implement other normed models, such as the
+`~gammapy.modeling.models.PiecewiseNormSpectralModel`. To do so,
+you can utilise most of the above code with an adaption to the `spectral_model` applied
+in the `fov_bkg_maker`.
+
+.. code-block:: python
+
+    from gammapy.modeling.models import PiecewiseNormSpectralModel
+
+    spectral_model = PiecewiseNormSpectralModel(
+        energy=energy_axis.edges,
+        norms=np.ones_like(energy_axis.edges)
+    )
+
+    fov_bkg_maker = FoVBackgroundMaker(
+        method="fit",
+        exclusion_mask=exclusion_mask,
+        spectral_model=spectral_model
+    )
+
+
+Note: to prevent poorly constrained `norm` parameters or large variance in
+the last bins, the binning should be adjusted to have wider bins at higher energies.
+This ensures there are enough statistics per bin, enabling the fit to converge.
 
 
 .. minigallery:: gammapy.makers.FoVBackgroundMaker
