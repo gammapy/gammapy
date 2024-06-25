@@ -817,10 +817,18 @@ def combine_flux_maps(maps, method="gaussian_errors", reference_model=None):
             sigmas = list(maps.dnde_err.copy().iter_by_image(keepdims=True))
             mean = Map.from_geom(geom, data=means[0].data, unit=means[0].unit)
             sigma = Map.from_geom(geom, data=sigmas[0].data, unit=sigmas[0].unit)
-
         else:
             means = [map_.dnde.copy() for map_ in maps]
             sigmas = [map_.dnde_err.copy() for map_ in maps]
+            # compensate for the ts deviation from gaussian approximation expectation in each map
+            ts_diff = np.nansum(
+                [
+                    map_.ts.data - (map_.dnde.data / map_.dnde_err.data) ** 2
+                    for map_ in maps
+                ],
+                axis=0,
+            )
+
             mean = means[0]
             sigma = sigmas[0]
 
@@ -849,7 +857,7 @@ def combine_flux_maps(maps, method="gaussian_errors", reference_model=None):
             stats.norm.pdf(0, loc=mean, scale=sigma)
             / stats.norm.pdf(mean, loc=mean, scale=sigma)
         )
-        ts = Map.from_geom(mean.geom, data=ts)
+        ts = Map.from_geom(mean.geom, data=ts + ts_diff)
 
         kwargs = dict(
             sed_type="dnde", reference_model=reference_model, meta=meta, gti=gti
