@@ -1069,6 +1069,16 @@ def approximate_profile(flux_map, sqrt_ts_threshold_ul="ignore", dnde_scan_axis=
         Flux map.
 
     """
+    from .map.ts import _generate_scan_values
+
+    if dnde_scan_axis is None:
+        dnde_scan_axis = MapAxis(
+            _generate_scan_values() * flux_map.dnde_ref.squeeze(),
+            interp="lin",
+            node_type="center",
+            name="dnde",
+            unit=flux_map.dnde_ref.unit,
+        )
 
     if sqrt_ts_threshold_ul is None:
         sqrt_ts_threshold_ul = flux_map.sqrt_ts_threshold_ul
