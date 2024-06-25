@@ -58,10 +58,7 @@ class PlotMixin:
         >>> dataset.plot_fit(kwargs_residuals=kwargs_residuals, kwargs_spectrum=kwargs_spectrum)  # doctest: +SKIP
         """
         gs = GridSpec(7, 1)
-        if ax_spectrum is None and ax_residuals is None:
-            bool_visible_xticklabel = False
-        else:
-            bool_visible_xticklabel = True
+        bool_visible_xticklabel = not (ax_spectrum is None and ax_residuals is None)
         ax_spectrum, ax_residuals = get_axes(
             ax_spectrum,
             ax_residuals,
