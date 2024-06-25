@@ -865,14 +865,18 @@ def combine_flux_maps(maps, method="gaussian_errors", reference_model=None):
         return FluxMaps.from_maps(dict(dnde=mean, dnde_err=sigma, ts=ts), **kwargs)
 
     elif method in ["distrib", "profile"]:
-        if method == "distrib":
-            stat_scans = [approximate_profile(map_) for map_ in maps]
-        else:
-            stat_scans = [map_.stat_scan.copy() for map_ in maps]
-        stat_scan = stat_scans[0]
 
-        for k in range(1, len(stat_scans)):
-            stat_scan += stat_scans[k]
+        for k, map_ in enumerate(maps):
+            map_stat_scan = (
+                map_.stat_scan.copy()
+                if method == "profile"
+                else approximate_profile(map_)
+            )
+            map_stat_scan.data[np.isnan(map_stat_scan.data)] = 0.0
+            if k == 0:
+                stat_scan = map_stat_scan
+            else:
+                stat_scan += map_stat_scan
 
         return get_flux_map_from_profile(
             {"stat_scan": stat_scan},
