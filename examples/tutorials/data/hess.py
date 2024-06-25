@@ -46,7 +46,7 @@ import matplotlib.pyplot as plt
 from IPython.display import display
 from gammapy.data import DataStore
 from gammapy.makers.utils import make_theta_squared_table
-from gammapy.maps import MapAxis, WcsGeom
+from gammapy.maps import MapAxis
 
 ######################################################################
 # Check setup
