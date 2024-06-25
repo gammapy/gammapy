@@ -330,11 +330,11 @@ plt.show()
 #
 
 
-def make_contours(fit, datasets, model, npoints, sigmas):
+def make_contours(fit, datasets, model, params, npoints, sigmas):
     cts_sigma = []
     for sigma in sigmas:
         contours = dict()
-        for par_1, par_2 in combinations(["alpha", "beta", "amplitude"], r=2):
+        for par_1, par_2 in combinations(params, r=2):
             idx1, idx2 = model.parameters.index(par_1), model.parameters.index(par_2)
             name1 = model.parameters_unique_names[idx1]
             name2 = model.parameters_unique_names[idx2]
@@ -358,69 +358,52 @@ def make_contours(fit, datasets, model, npoints, sigmas):
 #
 
 # %%time
+params = ["alpha", "beta", "amplitude"]
 sigmas = [1, 2]
 cts_sigma = make_contours(
     fit=fit,
     datasets=datasets,
     model=crab_model,
+    params=params,
     npoints=10,
     sigmas=sigmas,
 )
 
-
-######################################################################
-# Then we prepare some aliases and annotations in order to make the
-# plotting nicer.
+#####################################################################
 #
+# Define the combinations of parameters to plot
+param_pairs = list(combinations(params, r=2))
 
-pars = {
-    "phi": r"$\phi_0 \,/\,(10^{-11}\,{\rm TeV}^{-1} \, {\rm cm}^{-2} {\rm s}^{-1})$",
+#####################################################################
+#
+# Labels for plotting
+labels = {
+    "amplitude": r"$\phi_0 \,/\,({\rm TeV}^{-1} \, {\rm cm}^{-2} {\rm s}^{-1})$",
     "alpha": r"$\alpha$",
     "beta": r"$\beta$",
 }
 
-panels = [
-    {
-        "x": "alpha",
-        "y": "phi",
-        "cx": (lambda ct: ct["contour_alpha_amplitude"]["alpha"]),
-        "cy": (lambda ct: np.array(1e11) * ct["contour_alpha_amplitude"]["amplitude"]),
-    },
-    {
-        "x": "beta",
-        "y": "phi",
-        "cx": (lambda ct: ct["contour_beta_amplitude"]["beta"]),
-        "cy": (lambda ct: np.array(1e11) * ct["contour_beta_amplitude"]["amplitude"]),
-    },
-    {
-        "x": "alpha",
-        "y": "beta",
-        "cx": (lambda ct: ct["contour_alpha_beta"]["alpha"]),
-        "cy": (lambda ct: ct["contour_alpha_beta"]["beta"]),
-    },
-]
 
-
-######################################################################
-# Finally we produce the confidence contours figures.
+#####################################################################
+# Produce the confidence contours figures.
 #
 
 fig, axes = plt.subplots(1, 3, figsize=(10, 3))
 colors = ["m", "b", "c"]
-for p, ax in zip(panels, axes):
-    xlabel = pars[p["x"]]
-    ylabel = pars[p["y"]]
-    for ks in range(len(cts_sigma)):
+
+for (par_1, par_2), ax in zip(param_pairs, axes):
+    for ks, sigma in enumerate(sigmas):
+        contour = cts_sigma[ks][f"contour_{par_1}_{par_2}"]
         plot_contour_line(
             ax,
-            p["cx"](cts_sigma[ks]),
-            p["cy"](cts_sigma[ks]),
+            contour[par_1],
+            contour[par_2],
             lw=2.5,
             color=colors[ks],
             label=f"{sigmas[ks]}" + r"$\sigma$",
         )
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
+    ax.set_xlabel(labels[par_1])
+    ax.set_ylabel(labels[par_2])
 plt.legend()
 plt.tight_layout()
 
