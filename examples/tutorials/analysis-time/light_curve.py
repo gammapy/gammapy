@@ -65,13 +65,14 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
 )
+from gammapy.utils.check import check_tutorials_setup
 
 log = logging.getLogger(__name__)
 
 ######################################################################
 # Check setup
 # -----------
-from gammapy.utils.check import check_tutorials_setup
+
 
 check_tutorials_setup()
 

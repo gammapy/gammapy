@@ -75,6 +75,10 @@ import matplotlib.pyplot as plt
 # Check setup
 # -----------
 from gammapy.utils.check import check_tutorials_setup
+from gammapy.maps import Map
+from gammapy.data import EventList
+from gammapy.utils.regions import SphericalCircleSkyRegion
+from gammapy.catalog import SourceCatalog3FHL
 
 # %matplotlib inline
 
@@ -98,7 +102,7 @@ check_tutorials_setup()
 # -  Cutout parts from images
 #
 
-from gammapy.maps import Map
+
 
 gc_3fhl = Map.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-counts.fits.gz")
 
@@ -204,7 +208,6 @@ plt.show()
 # Let’s start with the import from the `~gammapy.data` submodule:
 #
 
-from gammapy.data import EventList
 
 ######################################################################
 # Very similar to the sky map class an event list can be created, by
@@ -266,7 +269,7 @@ print(events_3fhl.time)
 #
 
 # select all events within a radius of 0.5 deg around center
-from gammapy.utils.regions import SphericalCircleSkyRegion
+
 
 region = SphericalCircleSkyRegion(center, radius=0.5 * u.deg)
 events_gc_3fhl = events_3fhl.select_region(region)
@@ -304,7 +307,7 @@ print("highest energy photon: ", events_gc_3fhl.energy[-1].to("GeV"))
 # `~gammapy.catalog` submodule:
 #
 
-from gammapy.catalog import SourceCatalog3FHL
+
 
 ######################################################################
 # First we initialize the Fermi-LAT 3FHL catalog and directly take a look
