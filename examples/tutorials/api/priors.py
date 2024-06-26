@@ -71,6 +71,9 @@ from gammapy.modeling.models import (
     UniformPrior,
 )
 from gammapy.utils.check import check_tutorials_setup
+from gammapy.modeling import PriorParameter
+from gammapy.modeling.models import Model, Prior
+from gammapy.modeling.models import PRIOR_REGISTRY
 
 ######################################################################
 # Check setup
@@ -105,7 +108,7 @@ model = SkyModel(spectral_model=pl_spectrum, name="simu-source")
 #
 
 dataset = SpectrumDatasetOnOff.read(
-    f"$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits"
+    "$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits"
 )
 
 # Set model and fit range
@@ -424,8 +427,7 @@ plt.show()
 # The only parameter is ``sigma`` and the evaluation method return the squared inverse of ``sigma``.
 
 
-from gammapy.modeling import PriorParameter
-from gammapy.modeling.models import Model, Prior
+
 
 
 class MyCustomPrior(Prior):
@@ -454,7 +456,7 @@ class MyCustomPrior(Prior):
 
 # The custom prior is added to the PRIOR_REGISTRY so that it can be serialised.
 
-from gammapy.modeling.models import PRIOR_REGISTRY
+
 
 PRIOR_REGISTRY.append(MyCustomPrior)
 
