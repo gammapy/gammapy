@@ -230,12 +230,14 @@ total_stat = result_minuit.total_stat
 
 fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(14, 4))
 
-for ax, par in zip(axes, datasets.parameters.free_parameters):
+for ax, par in zip(axes, crab_model.parameters.free_parameters):
     par.scan_n_values = 17
-    idx = datasets.parameters.index(par)
-    name = datasets.models.parameters_unique_names[idx]
+    idx = crab_model.parameters.index(par)
+    name = crab_model.parameters_unique_names[idx]
     profile = fit.stat_profile(datasets=datasets, parameter=par)
-    ax.plot(profile[f"{name}_scan"], profile["stat_scan"] - total_stat)
+    ax.plot(
+        profile[f"{crab_model.name}.{name}_scan"], profile["stat_scan"] - total_stat
+    )
     ax.set_xlabel(f"{par.name} [{par.unit}]")
     ax.set_ylabel("Delta TS")
     ax.set_title(f"{name}:\n {par.value:.1e} +- {par.error:.1e}")
@@ -263,10 +265,11 @@ print(result_minuit.models.covariance)
 ######################################################################
 # And you can plot the total parameter correlation as well:
 #
-
 result_minuit.models.covariance.plot_correlation()
 plt.show()
 
+
+######################################################################
 # The covariance information is also propagated to the individual models
 # Therefore, one can also get the error on a specific parameter by directly
 # accessing the `~gammapy.modeling.Parameter.error` attribute:
@@ -327,26 +330,24 @@ plt.show()
 #
 
 
-def make_contours(fit, datasets, result, npoints, sigmas):
+def make_contours(fit, datasets, model, params, npoints, sigmas):
     cts_sigma = []
     for sigma in sigmas:
         contours = dict()
-        for par_1, par_2 in combinations(["alpha", "beta", "amplitude"], r=2):
-            idx1, idx2 = datasets.parameters.index(par_1), datasets.parameters.index(
-                par_2
-            )
-            name1 = datasets.models.parameters_unique_names[idx1]
-            name2 = datasets.models.parameters_unique_names[idx2]
+        for par_1, par_2 in combinations(params, r=2):
+            idx1, idx2 = model.parameters.index(par_1), model.parameters.index(par_2)
+            name1 = model.parameters_unique_names[idx1]
+            name2 = model.parameters_unique_names[idx2]
             contour = fit.stat_contour(
                 datasets=datasets,
-                x=datasets.parameters[par_1],
-                y=datasets.parameters[par_2],
+                x=model.parameters[par_1],
+                y=model.parameters[par_2],
                 numpoints=npoints,
                 sigma=sigma,
             )
             contours[f"contour_{par_1}_{par_2}"] = {
-                par_1: contour[name1].tolist(),
-                par_2: contour[name2].tolist(),
+                par_1: contour[f"{model.name}.{name1}"].tolist(),
+                par_2: contour[f"{model.name}.{name2}"].tolist(),
             }
         cts_sigma.append(contours)
     return cts_sigma
@@ -357,69 +358,52 @@ def make_contours(fit, datasets, result, npoints, sigmas):
 #
 
 # %%time
+params = ["alpha", "beta", "amplitude"]
 sigmas = [1, 2]
 cts_sigma = make_contours(
     fit=fit,
     datasets=datasets,
-    result=result_minuit,
+    model=crab_model,
+    params=params,
     npoints=10,
     sigmas=sigmas,
 )
 
-
-######################################################################
-# Then we prepare some aliases and annotations in order to make the
-# plotting nicer.
+#####################################################################
 #
+# Define the combinations of parameters to plot
+param_pairs = list(combinations(params, r=2))
 
-pars = {
-    "phi": r"$\phi_0 \,/\,(10^{-11}\,{\rm TeV}^{-1} \, {\rm cm}^{-2} {\rm s}^{-1})$",
+#####################################################################
+#
+# Labels for plotting
+labels = {
+    "amplitude": r"$\phi_0 \,/\,({\rm TeV}^{-1} \, {\rm cm}^{-2} {\rm s}^{-1})$",
     "alpha": r"$\alpha$",
     "beta": r"$\beta$",
 }
 
-panels = [
-    {
-        "x": "alpha",
-        "y": "phi",
-        "cx": (lambda ct: ct["contour_alpha_amplitude"]["alpha"]),
-        "cy": (lambda ct: np.array(1e11) * ct["contour_alpha_amplitude"]["amplitude"]),
-    },
-    {
-        "x": "beta",
-        "y": "phi",
-        "cx": (lambda ct: ct["contour_beta_amplitude"]["beta"]),
-        "cy": (lambda ct: np.array(1e11) * ct["contour_beta_amplitude"]["amplitude"]),
-    },
-    {
-        "x": "alpha",
-        "y": "beta",
-        "cx": (lambda ct: ct["contour_alpha_beta"]["alpha"]),
-        "cy": (lambda ct: ct["contour_alpha_beta"]["beta"]),
-    },
-]
 
-
-######################################################################
-# Finally we produce the confidence contours figures.
+#####################################################################
+# Produce the confidence contours figures.
 #
 
-fig, axes = plt.subplots(1, 3, figsize=(16, 5))
+fig, axes = plt.subplots(1, 3, figsize=(10, 3))
 colors = ["m", "b", "c"]
-for p, ax in zip(panels, axes):
-    xlabel = pars[p["x"]]
-    ylabel = pars[p["y"]]
-    for ks in range(len(cts_sigma)):
+
+for (par_1, par_2), ax in zip(param_pairs, axes):
+    for ks, sigma in enumerate(sigmas):
+        contour = cts_sigma[ks][f"contour_{par_1}_{par_2}"]
         plot_contour_line(
             ax,
-            p["cx"](cts_sigma[ks]),
-            p["cy"](cts_sigma[ks]),
+            contour[par_1],
+            contour[par_2],
             lw=2.5,
             color=colors[ks],
             label=f"{sigmas[ks]}" + r"$\sigma$",
         )
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
+    ax.set_xlabel(labels[par_1])
+    ax.set_ylabel(labels[par_2])
 plt.legend()
 plt.tight_layout()
 
@@ -455,8 +439,8 @@ plt.tight_layout()
 #
 
 result = result_minuit
-par_alpha = datasets.parameters["alpha"]
-par_beta = datasets.parameters["beta"]
+par_alpha = crab_model.parameters["alpha"]
+par_beta = crab_model.parameters["beta"]
 
 par_alpha.scan_values = np.linspace(1.55, 2.7, 20)
 par_beta.scan_values = np.linspace(-0.05, 0.55, 20)
