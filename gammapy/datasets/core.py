@@ -9,7 +9,7 @@ from astropy import units as u
 from astropy.table import Table, vstack
 from gammapy.data import GTI
 from gammapy.modeling.models import DatasetModels, Models
-from gammapy.utils.scripts import make_name, make_path, read_yaml, write_yaml
+from gammapy.utils.scripts import make_name, make_path, read_yaml, to_yaml, write_yaml
 
 log = logging.getLogger(__name__)
 
@@ -468,8 +468,8 @@ class Datasets(collections.abc.MutableSequence):
 
         if path.exists() and not overwrite:
             raise IOError(f"File exists already: {path}")
-
-        write_yaml(data, path, sort_keys=False, checksum=checksum)
+        yaml_str = to_yaml(data)
+        write_yaml(yaml_str, path, checksum=checksum)
 
         if filename_models:
             self.models.write(

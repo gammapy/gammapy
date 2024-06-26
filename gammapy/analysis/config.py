@@ -11,7 +11,7 @@ from astropy import units as u
 import yaml
 from pydantic import BaseModel, ConfigDict
 from gammapy.makers import MapDatasetMaker
-from gammapy.utils.scripts import make_path, read_yaml
+from gammapy.utils.scripts import read_yaml, to_yaml, write_yaml
 from gammapy.utils.types import AngleType, EnergyType, PathType, TimeType
 
 __all__ = ["AnalysisConfig"]
@@ -245,6 +245,7 @@ class AnalysisConfig(GammapyBaseConfig):
     def read(cls, path):
         """Read from YAML file."""
         config = read_yaml(path)
+        config.pop("metadata", None)
         return AnalysisConfig(**config)
 
     @classmethod
@@ -255,19 +256,13 @@ class AnalysisConfig(GammapyBaseConfig):
 
     def write(self, path, overwrite=False):
         """Write to YAML file."""
-        path = make_path(path)
-
-        if path.exists() and not overwrite:
-            raise IOError(f"File exists already: {path}")
-
-        path.write_text(self.to_yaml())
+        yaml_str = self.to_yaml()
+        write_yaml(yaml_str, path, overwrite=overwrite)
 
     def to_yaml(self):
         """Convert to YAML string."""
         data = json.loads(self.model_dump_json())
-        return yaml.dump(
-            data, sort_keys=False, indent=4, width=80, default_flow_style=None
-        )
+        return to_yaml(data)
 
     def set_logging(self):
         """Set logging config.

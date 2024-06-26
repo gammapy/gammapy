@@ -26,7 +26,7 @@ from gammapy.modeling.models import (
     TemplateNPredModel,
 )
 from gammapy.utils.deprecation import GammapyDeprecationWarning
-from gammapy.utils.scripts import make_path, read_yaml, write_yaml
+from gammapy.utils.scripts import make_path, read_yaml, to_yaml, write_yaml
 from gammapy.utils.testing import requires_data, requires_dependency
 
 
@@ -306,7 +306,7 @@ def test_absorption_io(tmp_path):
     assert_allclose(new_model.param, model.param)
     assert_allclose(new_model.data, model.data)
 
-    write_yaml(model_dict, tmp_path / "tmp.yaml")
+    write_yaml(to_yaml(model_dict), tmp_path / "tmp.yaml")
     read_yaml(tmp_path / "tmp.yaml")
 
 
