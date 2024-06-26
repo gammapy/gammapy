@@ -836,20 +836,24 @@ class BrentqFluxEstimator(Estimator):
 
         norm_err = result["norm_err"]
         norm = result["norm"]
-        if ~np.isfinite(norm_err):
+        if ~np.isfinite(norm_err) or norm_err == 0:
             norm_err = 0.1
-        if ~np.isfinite(norm):
-            norm = 1.01
+        if ~np.isfinite(norm) or norm == 0:
+            norm = 1.0
         sparse_norms = np.concatenate(
             (
                 norm + np.linspace(-2, 2, 41) * norm_err,
                 norm + np.linspace(-10, 10, 21) * norm_err,
                 np.abs(norm) * np.linspace(-10, 10, 21),
                 np.linspace(-10, 10, 21),
-                np.linspace(self.norm.scan_values[0], self.norm.scan_values[-1], 3),
+                np.linspace(self.norm.scan_values[0], self.norm.scan_values[-1], 2),
             )
         )
-        return np.unique(sparse_norms)
+        sparse_norms = np.unique(sparse_norms)
+        if len(sparse_norms) != 99:
+            rand_norms = 20 * np.random.rand(99 - len(sparse_norms)) - 10
+            sparse_norms = np.concatenate((sparse_norms, rand_norms))
+        return np.sort(sparse_norms)
 
     def estimate_scan(self, dataset, result):
         """Compute likelihood profile on a fixed norm range.
