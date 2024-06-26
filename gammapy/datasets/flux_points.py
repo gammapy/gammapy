@@ -536,6 +536,8 @@ class FluxPointsDataset(Dataset):
         gs = GridSpec(7, 1)
         if ax_spectrum is None:
             ax_spectrum = fig.add_subplot(gs[:5, :])
+            if ax_residuals is None:
+                plt.setp(ax_spectrum.get_xticklabels(), visible=False)
 
         if ax_residuals is None:
             ax_residuals = fig.add_subplot(gs[5:, :], sharex=ax_spectrum)
