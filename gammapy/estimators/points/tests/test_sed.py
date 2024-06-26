@@ -430,6 +430,31 @@ def test_run_map_pwl_reoptimize(fpe_map_pwl_reoptimize):
     assert_allclose(actual, [9.788123, 0.486066, 17.603708], rtol=1e-2)
 
 
+def test_run_no_edip(fpe_pwl, tmpdir):
+    datasets, fpe = fpe_pwl
+
+    datasets = datasets.copy()
+
+    datasets[0].models["source"].apply_irf["edisp"] = False
+    fp = fpe.run(datasets)
+    table = fp.to_table()
+    actual = table["norm"].data
+    assert_allclose(actual, [1.081434, 0.91077, 0.922176], rtol=1e-3)
+
+    datasets[0].edisp = None
+
+    fp = fpe.run(datasets)
+    table = fp.to_table()
+    actual = table["norm"].data
+    assert_allclose(actual, [1.081434, 0.91077, 0.922176], rtol=1e-3)
+
+    datasets[0].models["source"].apply_irf["edisp"] = True
+    fp = fpe.run(datasets)
+    table = fp.to_table()
+    actual = table["norm"].data
+    assert_allclose(actual, [1.081434, 0.91077, 0.922176], rtol=1e-3)
+
+
 @requires_dependency("iminuit")
 @requires_data()
 def test_run_template_npred(fpe_map_pwl, tmpdir):
