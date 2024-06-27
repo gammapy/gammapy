@@ -51,6 +51,7 @@ from gammapy.modeling import Fit
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from gammapy.stats import WStatCountsStatistic
 from gammapy.utils.regions import SphericalCircleSkyRegion
+from gammapy.utils.check import check_tutorials_setup
 
 warnings.filterwarnings("ignore")
 
@@ -58,7 +59,6 @@ warnings.filterwarnings("ignore")
 ######################################################################
 # Check setup
 # -----------
-from gammapy.utils.check import check_tutorials_setup
 
 check_tutorials_setup()
 
