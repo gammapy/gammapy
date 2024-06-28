@@ -1971,6 +1971,14 @@ def test_dataset_mixed_geom(tmpdir):
     assert isinstance(dataset.psf, PSFMap)
     assert isinstance(dataset._psf_kernel, PSFKernel)
 
+    geom_psf = WcsGeom.create(npix=3, axes=[rad_axis, energy_axis_true])
+    dataset = MapDataset.from_geoms(
+        geom=geom, geom_exposure=geom_exposure, geom_psf=geom_psf, geom_edisp=geom_edisp
+    )
+
+    assert isinstance(dataset.psf, PSFMap)
+    assert dataset._psf_kernel is None
+
     geom_psf_reco = RegionGeom.create(
         "icrs;circle(0, 0, 0.2)", axes=[rad_axis, energy_axis]
     )
