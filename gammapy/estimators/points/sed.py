@@ -136,19 +136,15 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
         if not datasets.energy_axes_are_aligned:
             raise ValueError("All datasets must have aligned energy axes.")
 
-        if (
-            len(datasets) > 1
-            and datasets[0].meta_table is not None
-            and any(
-                dataset.meta_table["TELESCOP"].shape
-                != datasets[0].meta_table["TELESCOP"].shape
-                for dataset in datasets
-            )
+        if datasets[0].meta_table is not None and any(
+            dataset.meta_table["TELESCOP"].shape
+            != datasets[0].meta_table["TELESCOP"].shape
+            for dataset in datasets
         ):
             for dataset in datasets:
                 if "TELESCOP" in dataset.meta_table.colnames:
                     telescopes = dataset.meta_table["TELESCOP"]
-                    if not len(np.unique(telescopes)) == 1:
+                    if not np.all(telescopes == telescopes[0]):
                         raise ValueError(
                             "All datasets must use the same value of the"
                             " 'TELESCOP' meta keyword."
