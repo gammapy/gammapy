@@ -48,7 +48,9 @@ except Exception:
 
 [tool.ruff]
 include = ["pyproject.toml", "gammapy"]
+line-length = 100
+
 
 [tool.ruff.lint]
-
 ignore = ["E741"]
+extend-ignore = ["E203","E712"]
