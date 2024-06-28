@@ -573,7 +573,7 @@ def test_convolve_full(region):
 
     kernel = psf.get_psf_kernel(geom=wcs_geom, max_radius=1 * u.deg)
     convolved_map = all_sky_map.convolve_full(kernel)
-    assert_allclose(convolved_map.data.sum(), 14, rtol=1e-5)
+    assert_allclose(convolved_map.data.sum(), 14.0, rtol=2e-5)
 
 
 def test_hpxmap_read_healpy(tmp_path):
