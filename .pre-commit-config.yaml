@@ -21,9 +21,9 @@ repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.4.8
     hooks:
-      - id: ruff
-        name: ruff (ruff.toml)
-        args: ["--config=.ruff.toml"]
+#      - id: ruff
+#        name: ruff (ruff.toml)
+#        args: ["--config=.ruff.toml"]
       - id: ruff
         name: ruff (pyproject.toml)
         args: ["--config=pyproject.toml"]
