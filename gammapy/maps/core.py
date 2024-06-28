@@ -88,6 +88,10 @@ class Map(abc.ABC):
         return self._geom
 
     @property
+    def single_spatial_bin(self):
+        return self.geom.to_image().data_shape == (1, 1)
+
+    @property
     def data(self):
         """Data array as a `~numpy.ndarray` object."""
         return self._data
