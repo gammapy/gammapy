@@ -5,8 +5,7 @@ from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.table import Table
-from regions import CircleSkyRegion
-from gammapy.data import DataStore, Observation
+from gammapy.data import Observation
 from gammapy.data.pointing import FixedPointingInfo
 from gammapy.datasets import (
     Datasets,
@@ -17,7 +16,7 @@ from gammapy.datasets import (
 from gammapy.datasets.spectrum import SpectrumDataset
 from gammapy.estimators import FluxPoints, FluxPointsEstimator
 from gammapy.irf import EDispKernelMap, EffectiveAreaTable2D, load_irf_dict_from_file
-from gammapy.makers import FoVBackgroundMaker, MapDatasetMaker, SafeMaskMaker
+from gammapy.makers import MapDatasetMaker
 from gammapy.makers.utils import make_map_exposure_true_energy
 from gammapy.maps import MapAxis, RegionGeom, RegionNDMap, WcsGeom
 from gammapy.modeling import Fit
@@ -27,7 +26,6 @@ from gammapy.modeling.models import (
     GaussianSpatialModel,
     Models,
     PiecewiseNormSpectralModel,
-    PointSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
     TemplateNPredModel,
@@ -793,74 +791,23 @@ def test_flux_points_estimator_norm_spectral_model(fermi_datasets):
     assert_allclose(flux_pred, flux_pred_ref, rtol=2e-4)
 
 
+@requires_data()
 def test_fpe_diff_lengths():
-    data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
-    observations = data_store.get_observations([23523, 23526, 23559, 23592])
-
-    energy_axis = MapAxis.from_energy_bounds(1.0, 10.0, 4, unit="TeV")
-    geom = WcsGeom.create(
-        skydir=(83.633, 22.014),
-        binsz=0.02,
-        width=(2, 2),
-        frame="icrs",
-        proj="CAR",
-        axes=[energy_axis],
+    dataset = SpectrumDatasetOnOff.read(
+        "$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits"
     )
-    energy_axis_true = MapAxis.from_energy_bounds(
-        0.5, 20, 10, unit="TeV", name="energy_true"
+    dataset1 = SpectrumDatasetOnOff.read(
+        "$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23559.fits"
     )
 
-    maker = MapDatasetMaker()
-    maker_safe_mask = SafeMaskMaker(
-        methods=["offset-max", "aeff-max"], offset_max=2.5 * u.deg
-    )
+    dataset.meta_table = Table(names=["NAME", "TELESCOP"], data=[["23523"], ["hess"]])
+    dataset1.meta_table = Table(names=["NAME", "TELESCOP"], data=[["23559"], ["hess"]])
+    dataset2 = Datasets([dataset, dataset1]).stack_reduce(name="dataset2")
+    pwl = PowerLawSpectralModel()
 
-    circle = CircleSkyRegion(
-        center=SkyCoord("83.63 deg", "22.14 deg"), radius=0.2 * u.deg
-    )
-    exclusion_mask = ~geom.region_mask(regions=[circle])
-    maker_fov = FoVBackgroundMaker(method="fit", exclusion_mask=exclusion_mask)
+    datasets = Datasets([dataset1, dataset2])
 
-    stacked_1 = MapDataset.create(
-        geom=geom, energy_axis_true=energy_axis_true, name="crab-stacked_1"
-    )
-
-    for obs in observations:
-        cutout = stacked_1.cutout(
-            obs.get_pointing_icrs(obs.tmid), width=5 * u.deg, name=f"obs-{obs.obs_id}"
-        )
-        dataset = maker.run(cutout, obs)
-        dataset = maker_safe_mask.run(dataset, obs)
-        dataset = maker_fov.run(dataset)
-        stacked_1.stack(dataset)
-
-    stacked_2 = MapDataset.create(
-        geom=geom, energy_axis_true=energy_axis_true, name="crab-stacked_2"
-    )
-
-    for obs in observations[:3]:
-        cutout = stacked_2.cutout(
-            obs.get_pointing_icrs(obs.tmid), width=5 * u.deg, name=f"obs-{obs.obs_id}"
-        )
-        dataset = maker.run(cutout, obs)
-        dataset = maker_safe_mask.run(dataset, obs)
-        dataset = maker_fov.run(dataset)
-        stacked_2.stack(dataset)
-
-    datasets = Datasets([stacked_1, stacked_2])
-
-    target_position = SkyCoord(ra=83.63308, dec=22.01450, unit="deg")
-    spatial_model = PointSpatialModel(
-        lon_0=target_position.ra, lat_0=target_position.dec, frame="icrs"
-    )
-    spectral_model = PowerLawSpectralModel(
-        index=2.702, amplitude=4.712e-11 * u.Unit("1 / (cm2 s TeV)")
-    )
-    sky_model = SkyModel(
-        spatial_model=spatial_model, spectral_model=spectral_model, name="crab"
-    )
-
-    datasets.models = sky_model
+    datasets.models = SkyModel(spectral_model=pwl, name="crab")
     energy_edges = [1, 2, 4, 10] * u.TeV
     fpe = FluxPointsEstimator(energy_edges=energy_edges, source="crab")
 
@@ -868,6 +815,6 @@ def test_fpe_diff_lengths():
 
     assert_allclose(
         fp.dnde.data,
-        [[[1.98861113e-11]], [[5.48710754e-12]], [[4.19498845e-13]]],
+        [[[1.98015713e-11]], [[3.33843428e-12]], [[3.30336385e-13]]],
         rtol=1e-3,
     )
