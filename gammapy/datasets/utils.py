@@ -160,9 +160,9 @@ def split_dataset(dataset, width, margin, split_template_models=True):
     datasets = Datasets()
     for il in ilon:
         for ib in ilat:
-            var_l, b = geom.pix_to_coord((il, ib))
+            l, b = geom.pix_to_coord((il, ib))
             cutout_kwargs = dict(
-                position=SkyCoord(var_l, b, frame=geom.frame), width=width + 2 * margin
+                position=SkyCoord(l, b, frame=geom.frame), width=width + 2 * margin
             )
             d = dataset.cutout(**cutout_kwargs)
 
@@ -172,7 +172,7 @@ def split_dataset(dataset, width, margin, split_template_models=True):
             ilgrid, ibgrid = np.meshgrid(
                 range(geom_cut_image.data_shape[1]), range(geom_cut_image.data_shape[0])
             )
-            il_cut, ib_cut = geom_cut_image.coord_to_pix((var_l, b))
+            il_cut, ib_cut = geom_cut_image.coord_to_pix((l, b))
             mask = (ilgrid >= il_cut - pixel_width[1] / 2.0) & (
                 ibgrid >= ib_cut - pixel_width[0] / 2.0
             )

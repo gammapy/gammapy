@@ -225,17 +225,17 @@ class EDispKernel(IRF):
 
         pdf_matrix = np.zeros([len(data), header["DETCHANS"]], dtype=np.float64)
 
-        for i, var_l in enumerate(data):
-            if var_l.field("N_GRP"):
+        for i, l in enumerate(data):
+            if l.field("N_GRP"):
                 m_start = 0
-                for k in range(var_l.field("N_GRP")):
-                    chan_min = var_l.field("F_CHAN")[k]
-                    chan_max = var_l.field("F_CHAN")[k] + var_l.field("N_CHAN")[k]
+                for k in range(l.field("N_GRP")):
+                    chan_min = l.field("F_CHAN")[k]
+                    chan_max = l.field("F_CHAN")[k] + l.field("N_CHAN")[k]
 
-                    pdf_matrix[i, chan_min:chan_max] = var_l.field("MATRIX")[
-                        m_start : m_start + var_l.field("N_CHAN")[k]  # noqa: E203
+                    pdf_matrix[i, chan_min:chan_max] = l.field("MATRIX")[
+                        m_start : m_start + l.field("N_CHAN")[k]  # noqa: E203
                     ]
-                    m_start += var_l.field("N_CHAN")[k]
+                    m_start += l.field("N_CHAN")[k]
 
         table = Table.read(ebounds_hdu)
         energy_axis = MapAxis.from_table(table, format="ogip")
