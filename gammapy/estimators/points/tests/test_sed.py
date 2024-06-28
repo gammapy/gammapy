@@ -7,7 +7,12 @@ from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.table import Table
 from gammapy.data import Observation
 from gammapy.data.pointing import FixedPointingInfo
-from gammapy.datasets import FluxPointsDataset, MapDataset, SpectrumDatasetOnOff
+from gammapy.datasets import (
+    Datasets,
+    FluxPointsDataset,
+    MapDataset,
+    SpectrumDatasetOnOff,
+)
 from gammapy.datasets.spectrum import SpectrumDataset
 from gammapy.estimators import FluxPoints, FluxPointsEstimator
 from gammapy.irf import EDispKernelMap, EffectiveAreaTable2D, load_irf_dict_from_file
@@ -32,8 +37,6 @@ from gammapy.utils.testing import requires_data, requires_dependency
 
 @pytest.fixture()
 def fermi_datasets():
-    from gammapy.datasets import Datasets
-
     filename = "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_datasets.yaml"
     filename_models = "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_models.yaml"
     return Datasets.read(filename=filename, filename_models=filename_models)
@@ -786,3 +789,32 @@ def test_flux_points_estimator_norm_spectral_model(fermi_datasets):
     flux_points_dataset = FluxPointsDataset(data=flux_points, models=model)
     flux_pred = flux_points_dataset.flux_pred()
     assert_allclose(flux_pred, flux_pred_ref, rtol=2e-4)
+
+
+@requires_data()
+def test_fpe_diff_lengths():
+    dataset = SpectrumDatasetOnOff.read(
+        "$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits"
+    )
+    dataset1 = SpectrumDatasetOnOff.read(
+        "$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23559.fits"
+    )
+
+    dataset.meta_table = Table(names=["NAME", "TELESCOP"], data=[["23523"], ["hess"]])
+    dataset1.meta_table = Table(names=["NAME", "TELESCOP"], data=[["23559"], ["hess"]])
+    dataset2 = Datasets([dataset, dataset1]).stack_reduce(name="dataset2")
+    pwl = PowerLawSpectralModel()
+
+    datasets = Datasets([dataset1, dataset2])
+
+    datasets.models = SkyModel(spectral_model=pwl, name="crab")
+    energy_edges = [1, 2, 4, 10] * u.TeV
+    fpe = FluxPointsEstimator(energy_edges=energy_edges, source="crab")
+
+    fp = fpe.run(datasets)
+
+    assert_allclose(
+        fp.dnde.data,
+        [[[1.98015713e-11]], [[3.33843428e-12]], [[3.30336385e-13]]],
+        rtol=1e-3,
+    )
