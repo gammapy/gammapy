@@ -958,9 +958,10 @@ class IRFMap:
         cutout : `IRFMap`
             Cutout IRF map.
         """
-        irf_map = self._irf_map.cutout(position, width, mode)
+
+        irf_map = self._irf_map.cutout(position, width, mode, min_npix=3)
         if self.exposure_map:
-            exposure_map = self.exposure_map.cutout(position, width, mode)
+            exposure_map = self.exposure_map.cutout(position, width, mode, min_npix=3)
         else:
             exposure_map = None
         return self.__class__(irf_map, exposure_map=exposure_map)
