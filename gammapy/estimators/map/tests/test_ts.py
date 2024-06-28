@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+from copy import deepcopy
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
@@ -6,7 +7,7 @@ import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from gammapy.datasets import MapDataset, MapDatasetOnOff
 from gammapy.estimators import TSMapEstimator
-from gammapy.estimators.utils import get_combined_significance_maps
+from gammapy.estimators.utils import combine_flux_maps, get_combined_significance_maps
 from gammapy.irf import EDispKernelMap, PSFMap
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling.models import (
@@ -275,6 +276,56 @@ def test_compute_ts_map_downsampled(input_dataset):
 
     # Check mask is correctly taken into account
     assert np.isnan(result["ts"].data[0, 30, 40])
+
+
+def test_ts_map_stat_scan(fake_dataset):
+    model = fake_dataset.models["source"]
+
+    dataset = fake_dataset.downsample(25)
+
+    estimator = TSMapEstimator(
+        model,
+        kernel_width="0.3 deg",
+        selection_optional=["stat_scan"],
+        energy_edges=[200, 3500] * u.GeV,
+    )
+    maps = estimator.run(dataset)
+    success = maps.success.data
+
+    maps.stat_scan_local.geom.data_shape == (1, 11, 2, 2)
+    ts = np.abs(maps["stat_scan_local"].data.min(axis=1))
+    assert_allclose(ts[success], maps.ts.data[success], rtol=1e-3)
+
+    ind_best = maps.stat_scan_local.data.argmin(axis=1)
+    ij, ik, il = np.indices(ind_best.shape)
+    norm = maps.norm_scan_values.data[ij, ind_best, ik, il]
+    assert_allclose(norm[success], maps.norm.data[success], rtol=1e-5)
+
+    maps.stat_scan.geom.data_shape == (1, 4001, 2, 2)
+
+    ts = np.abs(maps["stat_scan"].data.min(axis=1))
+    assert_allclose(ts[success], maps.ts.data[success], rtol=1e-3)
+
+    norm_coord = maps.stat_scan.geom.get_coord()["norm"]
+    ind_best = maps.stat_scan.data.argmin(axis=1)
+    ij, ik, il = np.indices(ind_best.shape)
+    norm = norm_coord[ij, ind_best, ik, il]
+    assert_allclose(norm[success], maps.norm.data[success], rtol=5e-2)
+
+    combined_map = combine_flux_maps([maps, maps], method="profile")
+    assert_allclose(combined_map.ts.data, 2 * ts)
+    assert_allclose(combined_map.norm.data, norm, rtol=5e-2)
+
+    maps1 = deepcopy(maps)
+    combined_map = combine_flux_maps([maps, maps1], method="profile")
+    assert_allclose(combined_map.ts.data, 2 * ts)
+    assert_allclose(combined_map.norm.data, norm, rtol=5e-2)
+
+    maps1 = deepcopy(maps)
+    maps1._reference_model.parameters["amplitude"].value = 1
+    combined_map = combine_flux_maps([maps, maps1], method="profile")
+    assert_allclose(combined_map.ts.data, 2 * ts)
+    assert_allclose(combined_map.norm.data, norm, rtol=5e-2)
 
 
 def test_ts_map_with_model(fake_dataset):

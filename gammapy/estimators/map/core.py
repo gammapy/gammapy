@@ -76,8 +76,10 @@ VALID_QUANTITIES = [
     "npred",
     "npred_excess",
     "stat",
-    "stat_scan",
     "stat_null",
+    "stat_scan",
+    "stat_scan_local",
+    "norm_scan_values",
     "niter",
     "is_ul",
     "counts",
@@ -93,6 +95,9 @@ OPTIONAL_QUANTITIES_COMMON = [
     "npred_excess",
     "stat",
     "stat_null",
+    "stat_scan",
+    "stat_scan_local",
+    "norm_scan_values",
     "niter",
     "is_ul",
     "counts",
@@ -487,6 +492,18 @@ class FluxMaps:
         """Fit statistic scan value."""
         self._check_quantity("stat_scan")
         return self._data["stat_scan"]
+
+    @property
+    def norm_scan_values(self):
+        """Fit statistic norm scan values."""
+        self._check_quantity("norm_scan_values")
+        return self._data["norm_scan_values"]
+
+    @property
+    def stat_scan_local(self):
+        """Fit statistic scan value around best norm."""
+        self._check_quantity("stat_scan_local")
+        return self._data["stat_scan_local"]
 
     @property
     def stat(self):
