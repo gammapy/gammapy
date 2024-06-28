@@ -17,7 +17,6 @@ from astropy import units as u
 import matplotlib.pyplot as plt
 from gammapy.modeling.models import (
     LogParabolaNormSpectralModel,
-    LogParabolaSpectralModel,
     Models,
     SkyModel,
     TemplateSpectralModel,

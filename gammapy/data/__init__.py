@@ -17,6 +17,7 @@ __all__ = [
     "DataStore",
     "EventList",
     "EventListMetaData",
+    "ObservationMetaData",
     "FixedPointingInfo",
     "GTI",
     "HDUIndexTable",

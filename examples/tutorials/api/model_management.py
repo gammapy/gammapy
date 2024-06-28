@@ -77,6 +77,7 @@ from gammapy.modeling.models import (
 # Check setup
 # -----------
 from gammapy.utils.check import check_tutorials_setup
+from gammapy.catalog import SourceCatalog3FHL
 
 check_tutorials_setup()
 
@@ -242,7 +243,7 @@ print(datasets)
 # :doc:`/tutorials/api/catalog` tutorial.
 #
 
-from gammapy.catalog import SourceCatalog3FHL
+
 
 catalog = SourceCatalog3FHL()
 

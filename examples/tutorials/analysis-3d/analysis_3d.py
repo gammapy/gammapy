@@ -16,8 +16,6 @@ will be done in two different ways:
 """
 
 from pathlib import Path
-import numpy as np
-from scipy.stats import norm
 import astropy.units as u
 from regions import CircleSkyRegion
 

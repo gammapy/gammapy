@@ -95,7 +95,6 @@ In practice, we have to:
 from pathlib import Path
 
 # Check package versions
-import numpy as np
 import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion

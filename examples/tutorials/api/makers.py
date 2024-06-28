@@ -23,7 +23,6 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
 import matplotlib.pyplot as plt
-from IPython.display import display
 from gammapy.data import DataStore
 from gammapy.datasets import Datasets, MapDataset, SpectrumDataset
 from gammapy.makers import (

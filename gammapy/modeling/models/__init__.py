@@ -108,6 +108,7 @@ __all__ = [
     "PowerLawNormSpectralModel",
     "PowerLawSpectralModel",
     "PowerLawTemporalModel",
+    "Prior",
     "scale_plot_flux",
     "ScaleSpectralModel",
     "Shell2SpatialModel",

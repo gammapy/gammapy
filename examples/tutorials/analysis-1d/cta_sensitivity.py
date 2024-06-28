@@ -49,6 +49,7 @@ from gammapy.maps.axes import UNIT_STRING_FORMAT
 # Check setup
 # -----------
 from gammapy.utils.check import check_tutorials_setup
+from cycler import cycler
 
 check_tutorials_setup()
 
@@ -181,7 +182,7 @@ display(sensitivity_table)
 # Plot the sensitivity curve
 #
 
-from cycler import cycler
+
 
 fig, ax = plt.subplots()
 

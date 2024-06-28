@@ -36,7 +36,6 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 import matplotlib.pyplot as plt
 from gammapy.data import DataStore
-from gammapy.data.observations import Observations
 from gammapy.data.utils import get_irfs_features
 from gammapy.utils.cluster import hierarchical_clustering, standard_scaler
 
