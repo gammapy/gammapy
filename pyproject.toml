@@ -46,3 +46,9 @@ except Exception:
     version = '{version}'
 """
 
+[tool.ruff]
+include = ["pyproject.toml", "gammapy"]
+
+[tool.ruff.lint]
+
+ignore = ["E741"]
