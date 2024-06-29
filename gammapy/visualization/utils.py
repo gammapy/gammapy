@@ -341,8 +341,8 @@ def plot_distribution(
         )
         cells_in_grid = rows * cols
     else:
-        axes = ax
-        cells_in_grid = len(ax.flatten())
+        axes = np.array([ax])
+        cells_in_grid = axes.size
 
     if not isinstance(axes, np.ndarray):
         axes = np.array([axes])
