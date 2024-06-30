@@ -543,7 +543,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
                 raise TypeError(
                     f"{type(dataset)} is not a valid type for {self.__class__}"
                 )
-            if dataset.counts.geom != geom_ref:
+            if dataset.counts.geom.to_image() != geom_ref.to_image():
                 raise TypeError("Datasets geometries must match")
 
         datasets_models = datasets.models
