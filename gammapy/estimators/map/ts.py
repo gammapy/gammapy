@@ -7,6 +7,7 @@ import scipy.optimize
 from astropy.coordinates import Angle
 from astropy.utils import lazyproperty
 import gammapy.utils.parallel as parallel
+from gammapy.datasets import Datasets
 from gammapy.datasets.map import MapEvaluator
 from gammapy.datasets.utils import get_nearest_valid_exposure_position
 from gammapy.maps import Map, Maps
@@ -408,26 +409,29 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
             "kernel": kernel,
         }
 
-    def estimate_flux_map(self, dataset):
+    def estimate_flux_map(self, datasets):
         """Estimate flux and test statistic maps for single dataset.
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.MapDataset`
+        dataset : `~gammapy.datasets.Datasets`
             Map dataset.
         """
-        maps = self.estimate_fit_input_maps(dataset=dataset)
 
-        x, y = np.where(np.squeeze(maps["mask"].data))
+        maps = [self.estimate_fit_input_maps(dataset=d) for d in datasets]
+
+        mask = np.sum([_["mask"].data for _ in maps], axis=0).astype(bool)
+
+        x, y = np.where(np.squeeze(mask))
         positions = list(zip(x, y))
 
         inputs = zip(
             positions,
-            repeat(maps["counts"].data.astype(float)),
-            repeat(maps["exposure"].data.astype(float)),
-            repeat(maps["background"].data.astype(float)),
-            repeat(maps["kernel"].data),
-            repeat(maps["norm"].data),
+            repeat([_["counts"].data.astype(float) for _ in maps]),
+            repeat([_["exposure"].data.astype(float) for _ in maps]),
+            repeat([_["background"].data.astype(float) for _ in maps]),
+            repeat([_["kernel"].data for _ in maps]),
+            repeat([_["norm"].data for _ in maps]),
             repeat(self._flux_estimator),
         )
 
@@ -442,7 +446,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
         j, i = zip(*positions)
 
-        geom = maps["counts"].geom.squash(axis_name="energy")
+        geom = maps[0]["counts"].geom.squash(axis_name="energy")
 
         for name in self.selection_all:
             m = Map.from_geom(geom=geom, data=np.nan, unit="")
@@ -451,7 +455,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
         return result
 
-    def run(self, dataset):
+    def run(self, datasets):
         """
         Run test statistic map estimation.
 
@@ -464,8 +468,8 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.MapDataset`
-            Input MapDataset.
+        dataset : `~gammapy.datasets.Datasets`
+            Input Datasets.
 
         Returns
         -------
@@ -479,36 +483,56 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
                 * flux_ul : upper limit map.
 
         """
-        if dataset.stat_type != "cash":
-            raise TypeError(f"{type(dataset)} is not a valid type for {self.__class__}")
-        dataset_models = dataset.models
+        if not isinstance(datasets, (Datasets, list)):
+            datasets = Datasets([datasets])
 
-        pad_width = self.estimate_pad_width(dataset=dataset)
-        dataset = dataset.pad(pad_width, name=dataset.name)
-        dataset = dataset.downsample(self.downsampling_factor, name=dataset.name)
+        geom_ref = datasets[0].counts.geom
+        for dataset in datasets:
+            if dataset.stat_type != "cash":
+                raise TypeError(
+                    f"{type(dataset)} is not a valid type for {self.__class__}"
+                )
+            if dataset.counts.geom.to_image() != geom_ref.to_image():
+                raise TypeError("Datasets geometries must match")
 
-        energy_axis = self._get_energy_axis(dataset=dataset)
+        datasets_models = datasets.models
+
+        pad_width = (0, 0)
+        for dataset in datasets:
+            pad_width_dataset = self.estimate_pad_width(dataset=dataset)
+            pad_width = tuple(np.maximum(pad_width, pad_width_dataset))
+
+        datasets_padded = Datasets()
+        for dataset in datasets:
+            dataset = dataset.pad(pad_width, name=dataset.name)
+            dataset = dataset.downsample(self.downsampling_factor, name=dataset.name)
+            datasets_padded.append(dataset)
+        datasets = datasets_padded
+
+        energy_axis = self._get_energy_axis(dataset=datasets[0])
 
         results = []
 
         for energy_min, energy_max in progress_bar(
             energy_axis.iter_by_edges, desc="Energy bins"
         ):
-            dataset_sliced = dataset.slice_by_energy(
-                energy_min=energy_min, energy_max=energy_max, name=dataset.name
+            datasets_sliced = datasets.slice_by_energy(
+                energy_min=energy_min, energy_max=energy_max
             )
 
             if self.sum_over_energy_groups:
-                dataset_sliced = dataset_sliced.to_image(name=dataset.name)
+                datasets_sliced = Datasets(
+                    [d.to_image(name=d.name) for d in datasets_sliced]
+                )
 
-            if dataset_models is not None:
-                models_sliced = dataset_models._slice_by_energy(
+            if datasets_models is not None:
+                models_sliced = datasets_models._slice_by_energy(
                     energy_min=energy_min,
                     energy_max=energy_max,
                     sum_over_energy_groups=self.sum_over_energy_groups,
                 )
-                dataset_sliced.models = models_sliced
-            result = self.estimate_flux_map(dataset_sliced)
+                datasets_sliced.models = models_sliced
+            result = self.estimate_flux_map(datasets_sliced)
             results.append(result)
 
         maps = Maps()
@@ -835,12 +859,31 @@ def _ts_value(position, counts, exposure, background, kernel, norm, flux_estimat
     TS : float
         Test statistic value at the given pixel position.
     """
-    dataset = SimpleMapDataset.from_arrays(
-        counts=counts,
-        background=background,
-        exposure=exposure,
-        kernel=kernel,
-        position=position,
-        norm=norm,
+
+    datasets = []
+    nd = len(counts)
+    for idx in range(nd):
+        datasets.append(
+            SimpleMapDataset.from_arrays(
+                counts=counts[idx],
+                background=background[idx],
+                exposure=exposure[idx],
+                kernel=kernel[idx],
+                position=position,
+                norm=norm[idx],
+            )
+        )
+
+    norm_guess = np.array([d.norm_guess for d in datasets])
+    mask_valid = np.isfinite(norm_guess)
+    if np.any(mask_valid):
+        norm_guess = np.mean(norm_guess[mask_valid])
+    else:
+        norm_guess = 1.0
+    dataset = SimpleMapDataset(
+        counts=np.concatenate([d.counts for d in datasets]),
+        background=np.concatenate([d.background for d in datasets]),
+        model=np.concatenate([d.model for d in datasets]),
+        norm_guess=norm_guess,
     )
     return flux_estimator.run(dataset)
