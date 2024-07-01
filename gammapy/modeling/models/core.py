@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import yaml
 from gammapy.maps import Map, RegionGeom
 from gammapy.modeling import Covariance, Parameter, Parameters
+from gammapy.modeling.covariance import CovarianceMixin
 from gammapy.utils.check import add_checksum, verify_checksum
 from gammapy.utils.metadata import CreatorMetaData
 from gammapy.utils.scripts import make_name, make_path
@@ -185,6 +186,10 @@ class ModelBase:
             [getattr(self, name) for name in self.default_parameters.names]
         )
 
+    @property
+    def parameters_unique_names(self):
+        return self.parameters.unique_parameters.names
+
     def copy(self, **kwargs):
         """Deep copy."""
         return copy.deepcopy(self)
@@ -337,7 +342,7 @@ class Model:
         return cls.from_dict(data)
 
 
-class DatasetModels(collections.abc.Sequence):
+class DatasetModels(collections.abc.Sequence, CovarianceMixin):
     """Immutable models container.
 
     Parameters
@@ -353,6 +358,8 @@ class DatasetModels(collections.abc.Sequence):
             models = []
 
         if isinstance(models, (Models, DatasetModels)):
+            if covariance_data is None and models.covariance is not None:
+                covariance_data = models.covariance.data
             models = models._models
         elif isinstance(models, ModelBase):
             models = [models]
@@ -374,31 +381,6 @@ class DatasetModels(collections.abc.Sequence):
         if covariance_data is not None:
             self.covariance = covariance_data
 
-    def _check_covariance(self):
-        if not self.parameters == self._covariance.parameters:
-            self._covariance = Covariance.from_stack(
-                [model.covariance for model in self._models]
-            )
-
-    @property
-    def covariance(self):
-        """Covariance as a `~gammapy.modeling.Covariance` object."""
-        self._check_covariance()
-
-        for model in self._models:
-            self._covariance.set_subcovariance(model.covariance)
-
-        return self._covariance
-
-    @covariance.setter
-    def covariance(self, covariance):
-        self._check_covariance()
-        self._covariance.data = covariance
-
-        for model in self._models:
-            subcovar = self._covariance.get_subcovariance(model.covariance.parameters)
-            model.covariance = subcovar
-
     @property
     def parameters(self):
         """Parameters as a `~gammapy.modeling.Parameters` object."""
@@ -408,12 +390,11 @@ class DatasetModels(collections.abc.Sequence):
     def parameters_unique_names(self):
         """List of unique parameter names. Return formatted as model_name.par_type.par_name."""
         names = []
-        for model in self:
-            for par in model.parameters:
-                components = [model.name, par.type, par.name]
+        for model in self._models:
+            for par_name in model.parameters_unique_names:
+                components = [model.name, par_name]
                 name = ".".join(components)
                 names.append(name)
-
         return names
 
     @property

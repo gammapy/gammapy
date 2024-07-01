@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
+from pathlib import Path
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
@@ -723,12 +724,10 @@ def test_piecewise_spatial_model():
         )
 
         coords = MapCoord.create(geom.footprint)
-        print(coords["lon"])
         coords["lon"] *= u.deg
         coords["lat"] *= u.deg
 
         model = PiecewiseNormSpatialModel(coords, frame="galactic")
-        print(model.coords["lon"].deg)
 
         assert_allclose(model(*geom.to_image().center_coord), 1.0)
 
@@ -795,12 +794,24 @@ def test_template_ND(tmpdir):
 
     template.filename = str(tmpdir / "template_ND.fits")
     template.write()
+
     dict_ = template.to_dict()
     template_new = TemplateNDSpatialModel.from_dict(dict_)
     assert_allclose(template_new.map.data, nd_map.data)
     assert len(template_new.parameters) == 2
     assert template_new.parameters["norm"].value == 2
     assert template_new.parameters["cste"].value == 0
+
+
+@requires_data()
+def test_templatespatial_write(tmpdir):
+    filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits"
+    map_ = Map.read(filename)
+    template = TemplateSpatialModel(map_, filename=filename)
+
+    filename_new = str(tmpdir / "template_test.fits")
+    template.write(overwrite=True, filename=filename_new)
+    assert Path(filename_new).is_file()
 
 
 @requires_data()

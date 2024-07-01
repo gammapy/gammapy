@@ -774,6 +774,20 @@ def test_template_spectral_model_compound():
     assert np.allclose(new_model(energy), 2 * values)
 
 
+def test_covariance_spectral_model_compound():
+    model = TEST_MODELS[2]["model"] + TEST_MODELS[1]["model"]
+    covar = np.eye(len(model.parameters))
+    covar[0, -1] = 1.0
+    covar[-1, 0] = 1.0
+    covar[0, 1] = 1.0
+    covar[-1, -3] = 1.0
+
+    model.covariance = covar
+    assert_allclose(model.covariance.data, covar)
+    assert_allclose(model.model1.covariance.data, covar[:3, :3])
+    assert_allclose(model.model2.covariance.data, covar[-3:, -3:])
+
+
 def test_evaluate_spectral_model_compound():
     energy = [1.00e06, 1.25e06, 1.58e06, 1.99e06] * u.MeV
     model = TEST_MODELS[-2]["model"]
