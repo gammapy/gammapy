@@ -26,6 +26,7 @@ from .filters import ObservationFilter
 from .gti import GTI
 from .metadata import ObservationMetaData
 from .pointing import FixedPointingInfo
+from .utils import check_time_intervals
 
 __all__ = ["Observation", "Observations"]
 
@@ -489,9 +490,8 @@ class Observation:
 
         Parameters
         ----------
-        time_interval : `astropy.time.Time`
+        time_interval : array of `astropy.time.Time`
             Start and stop time of the selected time interval.
-            For now, we only support a single time interval.
 
         Returns
         -------
@@ -718,7 +718,7 @@ class Observations(collections.abc.MutableSequence):
 
         Parameters
         ----------
-        time_intervals : `astropy.time.Time` or list of `astropy.time.Time`
+        time_intervals : array of `astropy.time.Time`
             List of start and stop time of the time intervals or one time interval.
 
         Returns
@@ -727,7 +727,11 @@ class Observations(collections.abc.MutableSequence):
             A new Observations instance of the specified time intervals.
         """
         new_obs_list = []
-        if isinstance(time_intervals, Time):
+        if time_intervals is None or check_time_intervals(time_intervals) is False:
+            raise ValueError(
+                "The time intervals should be an array of distinct intervals of astropy.time.Time."
+            )
+        if np.array(time_intervals).shape == (2,):
             time_intervals = [time_intervals]
 
         for time_interval in time_intervals:
