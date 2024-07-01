@@ -74,11 +74,10 @@ def test_observation_peek(data_store):
     "time_interval, expected_times",
     [
         (
-            Time(
-                ["2004-12-04T22:10:00", "2004-12-04T22:30:00"],
-                format="isot",
-                scale="tt",
-            ),
+            [
+                Time("2004-12-04T22:10:00", format="isot", scale="tt"),
+                Time("2004-12-04T22:30:00", format="isot", scale="tt"),
+            ],
             Time(
                 ["2004-12-04T22:10:00", "2004-12-04T22:30:00"],
                 format="isot",
@@ -86,14 +85,26 @@ def test_observation_peek(data_store):
             ),
         ),
         (
-            Time([53343.930, 53343.940], format="mjd", scale="tt"),
+            [
+                Time(53343.930, format="mjd", scale="tt"),
+                Time(53343.940, format="mjd", scale="tt"),
+            ],
             Time([53343.930, 53343.940], format="mjd", scale="tt"),
         ),
         (
-            Time([10.0, 100000.0], format="mjd", scale="tt"),
+            [
+                Time(10.0, format="mjd", scale="tt"),
+                Time(100000.0, format="mjd", scale="tt"),
+            ],
             Time([53343.92234009, 53343.94186563], format="mjd", scale="tt"),
         ),
-        (Time([10.0, 20.0], format="mjd", scale="tt"), None),
+        (
+            [
+                Time(10.0, format="mjd", scale="tt"),
+                Time(20.0, format="mjd", scale="tt"),
+            ],
+            None,
+        ),
     ],
 )
 def test_observation_select_time(data_store, time_interval, expected_times):
@@ -119,21 +130,37 @@ def test_observation_select_time(data_store, time_interval, expected_times):
     "time_interval, expected_times, expected_nr_of_obs",
     [
         (
-            Time([53090.130, 53090.140], format="mjd", scale="tt"),
+            [
+                Time(53090.130, format="mjd", scale="tt"),
+                Time(53090.140, format="mjd", scale="tt"),
+            ],
             Time([53090.130, 53090.140], format="mjd", scale="tt"),
             1,
         ),
         (
-            Time([53090.130, 53091.110], format="mjd", scale="tt"),
+            [
+                Time(53090.130, format="mjd", scale="tt"),
+                Time(53091.110, format="mjd", scale="tt"),
+            ],
             Time([53090.130, 53091.110], format="mjd", scale="tt"),
             3,
         ),
         (
-            Time([10.0, 53111.0230], format="mjd", scale="tt"),
+            [
+                Time(53090.1234512, format="mjd", scale="tt"),
+                Time(53111.0230, format="mjd", scale="tt"),
+            ],
             Time([53090.1234512, 53111.0230], format="mjd", scale="tt"),
             8,
         ),
-        (Time([10.0, 20.0], format="mjd", scale="tt"), None, 0),
+        (
+            [
+                Time(10.0, format="mjd", scale="tt"),
+                Time(20.0, format="mjd", scale="tt"),
+            ],
+            None,
+            0,
+        ),
     ],
 )
 def test_observations_select_time(
@@ -212,11 +239,20 @@ def test_observations_str(data_store):
 def test_observations_select_time_time_intervals_list(data_store):
     obs_ids = data_store.obs_table["OBS_ID"][:8]
     obss = data_store.get_observations(obs_ids)
-    # third time interval is out of the observations time range
+    # The third time interval is out of the observation time range
     time_intervals = [
-        Time([53090.130, 53090.140], format="mjd", scale="tt"),
-        Time([53110.011, 53110.019], format="mjd", scale="tt"),
-        Time([53112.345, 53112.42], format="mjd", scale="tt"),
+        [
+            Time(53090.130, format="mjd", scale="tt"),
+            Time(53090.140, format="mjd", scale="tt"),
+        ],
+        [
+            Time(53110.011, format="mjd", scale="tt"),
+            Time(53110.019, format="mjd", scale="tt"),
+        ],
+        [
+            Time(53112.345, format="mjd", scale="tt"),
+            Time(53112.42, format="mjd", scale="tt"),
+        ],
     ]
     new_obss = obss.select_time(time_intervals)
 
