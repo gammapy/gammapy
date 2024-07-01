@@ -108,7 +108,13 @@ class Observation:
         self._events = events
         self._pointing = pointing
         self._location = location  # this is part of the meta or is it data?
-        self.obs_filter = obs_filter or ObservationFilter()
+        if obs_filter:
+            self.obs_filter = obs_filter
+        else:
+            default_obs_filter = ObservationFilter()
+            if gti and events:
+                default_obs_filter.time_filter = self._gti.time_intervals
+            self.obs_filter = default_obs_filter
         self._meta = meta
 
     def _repr_html_(self):
