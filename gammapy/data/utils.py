@@ -161,7 +161,7 @@ def check_time_intervals(time_intervals):
 
     Parameters
     ----------
-    time_intervals : list of intervals of `astropy.time.Time`, an interval being a list
+    time_intervals : array of intervals of `astropy.time.Time`, an interval being a list
 
     Returns
     -------
