@@ -31,9 +31,8 @@ class ObservationFilter:
     >>> from astropy.time import Time
     >>> from astropy.coordinates import Angle
     >>>
-    >>> mytimes = [['2021-03-27T20:10:00', '2021-03-27T20:15:00'],
-    >>>          ['2021-03-27T20:15:01', '2021-03-27T20:20:00']]
-    >>> time_filter = Time(mytimes)
+    >>> time_filter = [[Time('2021-03-27T20:10:00'), Time('2021-03-27T20:15:00')],
+    >>>          [Time('2021-03-27T20:15:01'), Time('2021-03-27T20:20:00')]]
     >>> phase_filter = {'type': 'custom', 'opts': dict(parameter='PHASE', band=(0.2, 0.8))}
     >>>
     >>> my_obs_filter = ObservationFilter(time_filter=time_filter, event_filters=[phase_filter])
