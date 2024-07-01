@@ -295,7 +295,7 @@ class GTI:
 
         Returns
         -------
-        gti : `GTI`
+        gti : `~gammapy.data.GTI`
             GTI table.
         """
         start = Time([_[0] for _ in time_intervals])
@@ -307,16 +307,16 @@ class GTI:
         return cls.create(start, stop, reference_time)
 
     def select_time(self, time_intervals):
-        """Select and crop GTIs in time interval.
+        """Select and crop GTIs in time intervals.
 
         Parameters
         ----------
-        time_intervals : a pair of `astropy.time.Time` or a list of time_intervals
+        time_intervals : a pair of `astropy.time.Time` or an array of such time intervals
             Start and stop time for the selection.
 
         Returns
         -------
-        gti : `GTI`
+        gti : `~gammapy.data.GTI`
             Copy of the GTI table with selection applied.
         """
         if np.array(time_intervals).data.shape != (2,):
