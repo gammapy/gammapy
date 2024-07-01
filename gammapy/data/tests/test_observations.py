@@ -184,6 +184,36 @@ def test_observations_select_time(
         )
 
 
+def test_observation_select_time_gti(data_store):
+    obs_ids = data_store.obs_table["OBS_ID"][:1]
+    obss = data_store.get_observations(obs_ids)
+
+    time_intervals = [
+        [
+            Time("2004-03-26T02:58:46.184", format="isot", scale="tt"),
+            Time("2004-03-26T02:59:46.184", format="isot", scale="tt"),
+        ],
+        [
+            Time("2004-03-26T03:15:48.184", format="isot", scale="tt"),
+            Time("2004-03-26T03:20:48.184", format="isot", scale="tt"),
+        ],
+    ]
+
+    # Test for the `Observation` object
+    new_obs = obss[0].select_time(time_intervals)
+    assert len(new_obs.gti.table) == 2
+    assert_allclose(new_obs.observation_time_duration.value, 360.0, rtol=1e-9)
+    assert Time(new_obs.gti.time_start[0]).mjd == time_intervals[0][0].mjd
+    assert Time(new_obs.gti.time_stop[1]).mjd == time_intervals[1][1].mjd
+
+    # Test for the `Observations` object
+    new_obs_s = obss.select_time(time_intervals)
+    assert len(new_obs_s) == 2
+    assert len(new_obs_s[0].gti.table) == 1
+    assert_allclose(new_obs_s[0].observation_time_duration.value, 60.0, rtol=1e-9)
+    assert Time(new_obs_s[1].gti.time_start[0]).mjd == time_intervals[1][0].mjd
+
+
 @requires_data()
 def test_observations_mutation(data_store):
     obs_ids = data_store.obs_table["OBS_ID"][:4]
