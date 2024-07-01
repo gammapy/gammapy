@@ -100,7 +100,7 @@ class ObservationFilter:
 
         Calls the `select_time` method of the data object.
         """
-        if self.time_filter:
+        if self.time_filter is not None:
             return data.select_time(self.time_filter)
         else:
             return data
