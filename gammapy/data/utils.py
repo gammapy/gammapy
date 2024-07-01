@@ -4,7 +4,7 @@ import numpy as np
 import astropy.units as u
 from astropy.stats import interval_overlap_length
 from astropy.table import Table
-from astropy.time import Time, TimeDelta
+from astropy.time import Time
 from gammapy.utils.cluster import standard_scaler
 
 __all__ = ["get_irfs_features", "check_time_intervals"]
@@ -182,10 +182,8 @@ def check_time_intervals(time_intervals):
                 return False
         comb = list(combinations(ti, 2))
         for xx in comb:
-            res = interval_overlap_length(xx[0], xx[1])
-            # Note: an issue to astropy has been posted to always return the same type
-            if isinstance(res, float) and res > 0.0:
-                return False
-            if isinstance(res, TimeDelta) and res.value > 0.0:
+            i1 = [xx[0][0].to_value("gps"), xx[0][1].to_value("gps")]
+            i2 = [xx[1][0].to_value("gps"), xx[1][1].to_value("gps")]
+            if interval_overlap_length(i1, i2) > 0.0:
                 return False
     return True
