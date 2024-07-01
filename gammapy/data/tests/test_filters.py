@@ -46,7 +46,10 @@ def test_filter_events(observation):
     region = SphericalCircleSkyRegion(center=target_position, radius=region_radius)
     region_filter = {"type": "sky_region", "opts": {"regions": region}}
 
-    time_filter = Time([53090.12, 53090.13], format="mjd", scale="tt")
+    time_filter = [
+        Time(53090.12, format="mjd", scale="tt"),
+        Time(53090.13, format="mjd", scale="tt"),
+    ]
 
     obs_filter = ObservationFilter(
         event_filters=[custom_filter, region_filter], time_filter=time_filter
@@ -68,9 +71,16 @@ def test_filter_events(observation):
 
 @requires_data()
 def test_time_filter_events(observation):
-    time_filters = Time(
-        [[53090.12, 53090.13], [53090.14, 53090.15]], format="mjd", scale="tt"
-    )
+    time_filters = [
+        [
+            Time(53090.12, format="mjd", scale="tt"),
+            Time(53090.13, format="mjd", scale="tt"),
+        ],
+        [
+            Time(53090.14, format="mjd", scale="tt"),
+            Time(53090.15, format="mjd", scale="tt"),
+        ],
+    ]
 
     obs_filter = ObservationFilter(time_filter=time_filters)
 
