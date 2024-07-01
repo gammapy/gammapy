@@ -14,13 +14,14 @@ from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from gammapy.maps import MapAxis, MapCoord, RegionGeom, WcsNDMap
 from gammapy.maps.axes import UNIT_STRING_FORMAT
-from gammapy.utils.deprecation import deprecated
+from gammapy.utils.deprecation import deprecated, deprecated_renamed_argument
 from gammapy.utils.fits import earth_location_from_dict
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
 from gammapy.utils.time import time_ref_from_dict
 from .gti import GTI
 from .metadata import EventListMetaData
+from .utils import check_time_intervals
 
 __all__ = ["EventList"]
 
@@ -384,30 +385,34 @@ class EventList:
         mask &= energy < energy_range[1]
         return self.select_row_subset(mask)
 
+    @deprecated_renamed_argument("time_interval", "time_intervals", "1.3")
     def select_time(self, time_intervals):
-        """Select events in time intervals.
+        """Select events lying in the given time intervals.
 
         Parameters
         ----------
-        time_intervals : `astropy.time.Time` or list of time_interval
+        time_intervals : array of disjoint `astropy.time.Time` intervals
             Start time (inclusive) and stop time (exclusive) for the selection.
 
         Returns
         -------
         events : `EventList`
-            Copy of event list with selection applied.
+            Copy of the event list with selection applied.
 
         Notes
         -----
         This function does not modify the metadata, in particular the ONTIME. It is instead recommended to use an
         `~gammapy.data.ObservationFilter` associated to the object `~gammapy.data.Observation`.
         """
-        if time_intervals is None:
-            return self
+        if time_intervals is None or check_time_intervals(time_intervals) is False:
+            raise ValueError(
+                "The time intervals should be an array of distinct intervals of astropy.time.Time."
+            )
+        time_intervals.sort()
 
         time = self.time
         mask = np.full(len(time), False)
-        if time_intervals.value.shape != (2,):
+        if np.array(time_intervals).shape != (2,):
             for time_interval in time_intervals:
                 submask = time_interval[0] <= time
                 submask &= time < time_interval[1]
@@ -418,7 +423,7 @@ class EventList:
         return self.select_row_subset(mask)
 
     def select_region(self, regions, wcs=None):
-        """Select events in given region.
+        """Select events within a given region.
 
         Parameters
         ----------
