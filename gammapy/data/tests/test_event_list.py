@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
+import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import SkyCoord
@@ -37,7 +38,7 @@ class TestEventListBase:
         obs.write("test.fits.gz", include_irfs=False, overwrite=True)
         read_again = EventList.read("test.fits.gz")
 
-        assert (self.events.table == read_again.table).all()
+        assert np.array(self.events.table == read_again.table).all()
         assert read_again.table.meta["EXTNAME"] == "EVENTS"
         assert read_again.table.meta["HDUCLASS"] == "GADF"
         assert read_again.table.meta["HDUCLAS1"] == "EVENTS"
@@ -52,7 +53,8 @@ class TestEventListBase:
         read_again_ev = EventList.read("test.fits")
         read_again_gti = GTI.read("test.fits")
 
-        assert (self.events.table == read_again_ev.table).all()
+        # For this run, there are 3 events after the GTI.tstop
+        assert np.array(self.events.table[:-3] == read_again_ev.table).all()
         assert gti.table.meta == read_again_gti.table.meta
         assert_allclose(gti.table["START"].mjd, read_again_gti.table["START"].mjd)
         assert_allclose(gti.table["STOP"].mjd, read_again_gti.table["STOP"].mjd)

@@ -1,10 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+from itertools import combinations
 import numpy as np
 import astropy.units as u
+from astropy.stats import interval_overlap_length
 from astropy.table import Table
+from astropy.time import Time
 from gammapy.utils.cluster import standard_scaler
 
-__all__ = ["get_irfs_features"]
+__all__ = ["get_irfs_features", "check_time_intervals"]
 
 
 def get_irfs_features(
@@ -151,3 +154,36 @@ def get_irfs_features(
         features.meta["frame"] = "galactic"
 
     return features
+
+
+def check_time_intervals(time_intervals):
+    """Function checking that the intervals are made of `astropy.time.Time` objects and are disjoint.
+
+    Parameters
+    ----------
+    time_intervals : array of intervals of `astropy.time.Time`, an interval being a list
+
+    Returns
+    -------
+
+    """
+    # Note: this function will be moved into a future class `TimeInterval`
+
+    ti = np.array(time_intervals)
+    if not isinstance(time_intervals, list) or ti.shape == (0,):
+        return False
+
+    if ti.shape == (2,):
+        if not isinstance(np.all(ti), Time):
+            return False
+    else:
+        for xx in ti:
+            if not isinstance(np.all(xx), Time):
+                return False
+        comb = list(combinations(ti, 2))
+        for xx in comb:
+            i1 = [xx[0][0].to_value("gps"), xx[0][1].to_value("gps")]
+            i2 = [xx[1][0].to_value("gps"), xx[1][1].to_value("gps")]
+            if interval_overlap_length(i1, i2) > 0.0:
+                return False
+    return True

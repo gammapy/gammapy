@@ -341,10 +341,10 @@ plt.show()
 # Let's inspect the simulated events as a function of time:
 #
 
-time_interval = temporal_model.reference_time + [300, 700] * u.s
+time_interval = [temporal_model.reference_time + tt * u.s for tt in [300, 700]]
 src_events.select_time(time_interval).plot_energy(label="500 s")
 
-time_interval = temporal_model.reference_time + [1600, 2000] * u.s
+time_interval = [temporal_model.reference_time + tt * u.s for tt in [1600, 2000]]
 src_events.select_time(time_interval).plot_energy(label="1800 s")
 
 plt.legend()
