@@ -714,7 +714,9 @@ class Observations(collections.abc.MutableSequence):
         return [str(obs.obs_id) for obs in self]
 
     def select_time(self, time_intervals):
-        """Select a time interval of the observations.
+        """Split the observations according to the time intervals.
+        The produced observations are made from the intersection of the original good time intervals and the user time
+        intervals.
 
         Parameters
         ----------
