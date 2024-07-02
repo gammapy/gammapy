@@ -350,14 +350,16 @@ or
     :id: HowToAddPhase
     :title: Add PHASE information to your data
 
-For doing pulsar analysis, you must compute the phase associated
-to each event and then create a new `EventList` and a new `Observation`.
-Modifying the `EventList` of an `Observation` in-place is prohibited because of the
-underlying lazy loading implemented in reading observations.
-Code for computing phases is NOT provided within gammapy,
-and you must use an external s/w like PINT or TEMPO2. For brevity,
-this code example shows the only technical implementation
-using a dummy phase column.
+To do a pulsar analysis, one must compute the pulsar phase of
+each event and put this new information in a new `~gammapy.data.Observation`.
+Computing pulsar phases can be done using an external library such as
+[PINT](https://nanograv-pint.readthedocs.io/en/latest/) or
+[Tempo2](https://www.pulsarastronomy.net/pulsar/software/tempo2). A
+[Gammapy Recipe](https://gammapy.github.io/gammapy-recipes/_build/html/index.html)
+showing how to use PINT within the Gammapy framework is available
+[here](https://gammapy.github.io/gammapy-recipes/_build/html/notebooks/pulsar_phase/pulsar_phase_computation.html).
+For brevity, the code below shows how to add a dummy phase column to a new
+`~gammapy.data.EventList` and `~gammapy.data.Observation`.
 
 .. testcode::
 
@@ -374,14 +376,14 @@ using a dummy phase column.
     # create a new `EventList`
     table = obs.events.table
     table["PHASE"] = phase
-    events_new = EventList(table)
+    new_events = EventList(table)
 
     # copy the observation in memory, changing the events
-    o2 = obs.copy(events=events_new, in_memory=True)
+    obs2 = obs.copy(events=new_events, in_memory=True)
 
     # The new observation and the new events table can be serialised independently
-    o2.write("new_obs.fits.gz", overwrite=True)
-    events_new.write("events.fits.gz", gti=obs.gti, overwrite=True)
+    obs2.write("new_obs.fits.gz")
+    obs2.write("events.fits.gz", include_irfs=False)
 
 .. accordion-footer::
 
