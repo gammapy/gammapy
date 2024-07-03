@@ -102,7 +102,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         Only used for "stat_scan" in `selection_optional`.
         Default is None and a new parameter is created automatically,
         with value=1, name="norm", scan_min=-100, scan_max=100,
-        and values sampled such as we can probe a 1% relative error on the norm.
+        and values sampled such as we can probe a 0.1% relative error on the norm.
         If a dict is given the entries should be a subset of
         `~gammapy.modeling.Parameter` arguments.
     n_jobs : int
@@ -831,8 +831,8 @@ class BrentqFluxEstimator(Estimator):
             )
         )
         sparse_norms = np.unique(sparse_norms)
-        if len(sparse_norms) != 107:
-            rand_norms = 20 * np.random.rand(107 - len(sparse_norms)) - 10
+        if len(sparse_norms) != 109:
+            rand_norms = 20 * np.random.rand(109 - len(sparse_norms)) - 10
             sparse_norms = np.concatenate((sparse_norms, rand_norms))
         return np.sort(sparse_norms)
 

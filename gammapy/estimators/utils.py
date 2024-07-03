@@ -848,7 +848,7 @@ def combine_flux_maps(maps, method="gaussian_errors", reference_model=None):
     return FluxMaps.from_maps(dict(dnde=mean, dnde_err=sigma, ts=ts), **kwargs)
 
 
-def _generate_scan_values(power_min=-4, power_max=2, relative_error=0.01):
+def _generate_scan_values(power_min=-4, power_max=2, relative_error=1e-3):
     """Values sampled such as we can probe a given `relative_error` on the norm
     between 10**`power_min` and 10**`power_max`.
 
@@ -858,6 +858,6 @@ def _generate_scan_values(power_min=-4, power_max=2, relative_error=0.01):
         vmin = 10**power
         vmax = 10 ** (power + 1)
         bin_per_decade = int((vmax - vmin) / (vmin * relative_error))
-        arrays.append(np.linspace(vmin, vmax, bin_per_decade + 1))
+        arrays.append(np.linspace(vmin, vmax, bin_per_decade + 1, dtype=np.float32))
     scan_1side = np.unique(np.concatenate(arrays))
     return np.concatenate((-scan_1side[::-1], [0], scan_1side))
