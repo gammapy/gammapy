@@ -1069,8 +1069,8 @@ def approximate_profile(flux_map, sqrt_ts_threshold_ul="ignore", dnde_scan_axis=
 
     Returns
     -------
-    flux_maps : `~gammapy.estimators.FluxMaps`
-        Flux map.
+    scan_map: `~gammapy.estimators.Maps`
+        Likelihood profile map.
 
     """
     from .map.ts import _generate_scan_values
