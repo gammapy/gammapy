@@ -945,10 +945,6 @@ class BrentqFluxEstimator(Estimator):
         else:
             result = self.estimate_best_fit(dataset)
 
-        norm = result["norm"]
-        result["npred"] = dataset.npred(norm=norm).sum()
-        result["npred_excess"] = result["npred"] - dataset.npred(norm=0).sum()
-
         if "ul" in self.selection_optional:
             result.update(self.estimate_ul(dataset, result))
 
@@ -957,6 +953,11 @@ class BrentqFluxEstimator(Estimator):
 
         if "stat_scan" in self.selection_optional:
             result.update(self.estimate_scan(dataset, result))
+
+        norm = result["norm"]
+        result["npred"] = dataset.npred(norm=norm).sum()
+        result["npred_excess"] = result["npred"] - dataset.npred(norm=0).sum()
+        result["stat"] = dataset.stat_sum(norm=norm)
 
         return result
 
