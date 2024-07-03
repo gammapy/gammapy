@@ -823,7 +823,7 @@ class BrentqFluxEstimator(Estimator):
             norm = 1.0
         sparse_norms = np.concatenate(
             (
-                norm + np.linspace(-2, 2, 41) * norm_err,
+                norm + np.linspace(-2.5, 2.5, 51) * norm_err,
                 norm + np.linspace(-10, 10, 21) * norm_err,
                 np.abs(norm) * np.linspace(-10, 10, 21),
                 np.linspace(-10, 10, 21),
@@ -831,8 +831,8 @@ class BrentqFluxEstimator(Estimator):
             )
         )
         sparse_norms = np.unique(sparse_norms)
-        if len(sparse_norms) != 99:
-            rand_norms = 20 * np.random.rand(99 - len(sparse_norms)) - 10
+        if len(sparse_norms) != 107:
+            rand_norms = 20 * np.random.rand(107 - len(sparse_norms)) - 10
             sparse_norms = np.concatenate((sparse_norms, rand_norms))
         return np.sort(sparse_norms)
 
