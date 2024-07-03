@@ -253,7 +253,13 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
             selection += ["norm_ul"]
 
         if "stat_scan" in self.selection_optional:
-            selection += ["dnde_scan_values", "stat_scan_local", "stat_scan"]
+            selection += [
+                "dnde_scan_values",
+                "stat_scan",
+                "norm_errp",
+                "norm_errn",
+                "norm_ul",
+            ]
 
         return selection
 
@@ -859,7 +865,31 @@ class BrentqFluxEstimator(Estimator):
         )
         stat_scan = spline(self.norm.scan_values)
 
+        ts = -stat_scan.min()
+        ind = stat_scan.argmin()
+        norm = self.norm.scan_values[ind]
+
+        maskp = self.norm.scan_values > norm
+        invalid_value = 999
+        stat_diff = stat_scan - stat_scan.min()
+        ind = np.abs(stat_diff + invalid_value * maskp - self.n_sigma**2).argmin()
+        norm_errn = norm - self.norm.scan_values[ind]
+
+        ind = np.abs(stat_diff + invalid_value * (~maskp) - self.n_sigma**2).argmin()
+        norm_errp = self.norm.scan_values[ind] - norm
+
+        ind = np.abs(stat_diff + invalid_value * (~maskp) - self.n_sigma_ul**2).argmin()
+        norm_ul = self.norm.scan_values[ind]
+
+        norm_err = (norm_errn + norm_errp) / 2
+
         return dict(
+            ts=ts,
+            norm=norm,
+            norm_err=norm_err,
+            norm_errn=norm_errn,
+            norm_errp=norm_errp,
+            norm_ul=norm_ul,
             stat_scan=stat_scan_local,
             dnde_scan_values=sparse_norms,
         )
