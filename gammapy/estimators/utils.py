@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 import scipy.ndimage
-from scipy import special, stats
+from scipy import special
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
@@ -853,11 +853,7 @@ def combine_flux_maps(maps, method="gaussian_errors", reference_model=None):
             mean.data[mask_k] = mean_k[mask_k]
             sigma.data[mask_k] = sigma_k[mask_k]
 
-        ts = -2 * np.log(
-            stats.norm.pdf(0, loc=mean, scale=sigma)
-            / stats.norm.pdf(mean, loc=mean, scale=sigma)
-        )
-        ts = Map.from_geom(mean.geom, data=ts + ts_diff)
+        ts = mean * mean / sigma / sigma + ts_diff
 
         kwargs = dict(
             sed_type="dnde", reference_model=reference_model, meta=meta, gti=gti
@@ -937,8 +933,8 @@ def get_flux_map_from_profile(
             stat_scan=flux_map.stat_scan, dnde_scan_values=flux_map.dnde_scan_values
         )
 
-    if "dnde_scan_values" in flux_map:
-        dnde_coord = flux_map["dnde_scan_values"].data
+    if getattr(flux_map, "dnde_scan_values", False):
+        dnde_coord = flux_map["dnde_scan_values"].quantity
     else:
         dnde_coord = flux_map["stat_scan"].geom.get_coord()["dnde"]
 
@@ -1114,10 +1110,7 @@ def approximate_profile(flux_map, sqrt_ts_threshold_ul="ignore", dnde_scan_axis=
     except AttributeError:
         scale = flux_map.dnde_err.data[mask_valid]
         scale = scale[:, None]
-    stat_approx.data[ij, :, il, ik] = -2 * np.log(
-        stats.norm.pdf(value, loc=loc, scale=scale)
-        / stats.norm.pdf(0, loc=loc, scale=scale)
-    )
+    stat_approx.data[ij, :, il, ik] = ((value - loc) / scale) ** 2
 
     try:
         invalid_value = 999
