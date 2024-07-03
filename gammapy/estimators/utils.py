@@ -933,12 +933,15 @@ def get_flux_map_from_profile(
         if meta is None:
             meta = flux_map.meta
 
-        output_maps = dict(stat_scan=flux_map.stat_scan)
-        if getattr(flux_map, "stat_scan_local", False):
-            output_maps["stat_scan_local"] = flux_map["stat_scan_local"]
-            output_maps["dnde_scan_values"] = flux_map["dnde_scan_values"]
+        output_maps = dict(
+            stat_scan=flux_map.stat_scan, dnde_scan_values=flux_map.dnde_scan_values
+        )
 
-    dnde_coord = flux_map["stat_scan"].geom.get_coord()["dnde"]
+    if "dnde_scan_values" in flux_map:
+        dnde_coord = flux_map["dnde_scan_values"].data
+    else:
+        dnde_coord = flux_map["stat_scan"].geom.get_coord()["dnde"]
+
     geom = (
         flux_map["stat_scan"]
         .geom.to_image()
