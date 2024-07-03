@@ -75,6 +75,13 @@ print(dataset)
 print(EBL_DATA_BUILTIN.keys())
 
 ######################################################################
+# To use other EBL models, you need to save the optical depth as a
+# function of energy and redshift as an XSPEC model.
+# Alternatively, you can use packages like `ebltable <https://github.com/me-manu/ebltable>`
+# which interface ebl models with Gammapy.
+#
+
+######################################################################
 # Define the power law
 #
 index = 2.3
@@ -136,44 +143,15 @@ flux_points_obs = fpe.run(datasets=[dataset])
 # compound model.
 #
 
-flux_points_intrinsic = flux_points_obs.copy
-flux_points_intrinsic._reference_model = SkyModel(spectral_model=pwl)
+flux_points_intrinsic = flux_points_obs.copy(
+    reference_model=SkyModel(spectral_model=pwl)
+)
 
+#
 print(flux_points_obs.reference_model)
 
+#
 print(flux_points_intrinsic.reference_model)
-
-
-######################################################################
-# Set the covariance on the power law model correctly
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#
-# To set the covariance on the powerlaw, we must extract the relevant
-# values from the full covariance
-#
-
-# The covariance matrix on the full model
-spectral_model.covariance.plot_correlation()
-plt.show()
-
-######################################################################
-# The covariance matrix on the power law does not contain the off diagonal terms
-#
-pwl.covariance.plot_correlation()
-plt.show()
-
-######################################################################
-# Extract the sub covariance and set is on the `pwl`
-#
-sub_covar = spectral_model.covariance.get_subcovariance(pwl.covariance.parameters)
-pwl.covariance = sub_covar
-pwl.covariance.plot_correlation()
-plt.show()
-
-
-######################################################################
-# We see that the covariance is now set correctly
-#
 
 
 ######################################################################
@@ -181,7 +159,6 @@ plt.show()
 # --------------------------------------
 #
 
-# sphinx_gallery_thumbnail_number = 2
 plt.figure()
 sed_type = "e2dnde"
 energy_bounds = [0.2, 20] * u.TeV
@@ -202,6 +179,7 @@ pwl.plot_error(
 plt.ylim(bottom=1e-13)
 plt.legend()
 plt.show()
+# sphinx_gallery_thumbnail_number = 2
 
 
 ######################################################################
@@ -290,7 +268,9 @@ profile = fit.stat_profile(
 
 plt.figure()
 ax = plt.gca()
-ax.plot(profile["observed.spectral.redshift_scan"], profile["stat_scan"] - total_stat)
+ax.plot(
+    profile["observed.spectral.model2.redshift_scan"], profile["stat_scan"] - total_stat
+)
 ax.set_title("TS profile")
 ax.set_xlabel("Redshift")
 ax.set_ylabel("del TS")
