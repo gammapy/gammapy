@@ -36,12 +36,9 @@ from gammapy.maps import Map, MapAxis, WcsGeom
 # Check setup
 # -----------
 from gammapy.utils.check import check_tutorials_setup
-######################################################################
-# To get a list of all available spectral models you can import and print
-# the spectral model registry or take a look at the :ref:`model-gallery`
-#
 
-from gammapy.modeling.models import SPECTRAL_MODEL_REGISTRY
+check_tutorials_setup()
+
 
 ######################################################################
 # Spectral models
@@ -53,69 +50,16 @@ from gammapy.modeling.models import SPECTRAL_MODEL_REGISTRY
 
 from gammapy.modeling.models import PowerLawSpectralModel
 
-######################################################################
-# A typical use case of a norm model would be in applying spectral
-# correction to a `~gammapy.modeling.models.TemplateSpectralModel`. A template model is defined
-# by custom tabular values provided at initialization.
-#
-
-from gammapy.modeling.models import TemplateSpectralModel
-
-
-######################################################################
-# Spatial models are imported from the same `~gammapy.modeling.models`
-# namespace, let’s start with a `~gammapy.modeling.models.GaussianSpatialModel`:
-#
-
-from gammapy.modeling.models import GaussianSpatialModel
-
-######################################################################
-# Again you can check the `SPATIAL_MODELS` registry to see which models
-# are available or take a look at the :ref:`model-gallery`
-#
-
-from gammapy.modeling.models import SPATIAL_MODEL_REGISTRY
-######################################################################
-# The `~gammapy.modeling.models.SpatialModel.to_region()` method can also be useful to write e.g. ds9 region
-# files using `write_ds9` from the `regions` package:
-#
-
-from regions import Regions
-
-######################################################################
-# Temporal models are imported from the same `~gammapy.modeling.models`
-# namespace, let’s start with a `~gammapy.modeling.models.GaussianTemporalModel`:
-#
-
-from gammapy.modeling.models import GaussianTemporalModel
-
-######################################################################
-# To check the `TEMPORAL_MODELS` registry to see which models are
-# available:
-#
-
-from gammapy.modeling.models import TEMPORAL_MODEL_REGISTRY
-
-######################################################################
-# Temporal models can be evaluated on `astropy.time.Time` objects. The
-# returned quantity is a dimensionless number
-#
-
-from astropy.time import Time
-from gammapy.modeling.models import SkyModel
-from gammapy.modeling.models import PowerLawNormSpectralModel, TemplateSpatialModel
-from gammapy.modeling.models import Models
-from gammapy.modeling import Parameter
-from gammapy.modeling.models import SpectralModel
-from astropy.coordinates import angular_separation
-from gammapy.modeling.models import SpatialModel
-
-
 pwl = PowerLawSpectralModel()
 print(pwl)
 
-check_tutorials_setup()
 
+######################################################################
+# To get a list of all available spectral models you can import and print
+# the spectral model registry or take a look at the :ref:`model-gallery`
+#
+
+from gammapy.modeling.models import SPECTRAL_MODEL_REGISTRY
 
 print(SPECTRAL_MODEL_REGISTRY)
 
@@ -221,7 +165,7 @@ for model in SPECTRAL_MODEL_REGISTRY:
 # As an example, we see the `~gammapy.modeling.models.PowerLawNormSpectralModel`
 #
 
-
+from gammapy.modeling.models import PowerLawNormSpectralModel
 
 pwl_norm = PowerLawNormSpectralModel(tilt=0.1)
 print(pwl_norm)
@@ -235,7 +179,13 @@ energy = [0.3, 1, 3, 10, 30] * u.TeV
 print(pwl_norm(energy))
 
 
+######################################################################
+# A typical use case of a norm model would be in applying spectral
+# correction to a `~gammapy.modeling.models.TemplateSpectralModel`. A template model is defined
+# by custom tabular values provided at initialization.
+#
 
+from gammapy.modeling.models import TemplateSpectralModel
 
 energy = [0.3, 1, 3, 10, 30] * u.TeV
 values = [40, 30, 20, 10, 1] * u.Unit("TeV-1 s-1 cm-2")
@@ -273,11 +223,23 @@ print(model_add)
 #
 
 
+######################################################################
+# Spatial models are imported from the same `~gammapy.modeling.models`
+# namespace, let’s start with a `~gammapy.modeling.models.GaussianSpatialModel`:
+#
+
+from gammapy.modeling.models import GaussianSpatialModel
 
 gauss = GaussianSpatialModel(lon_0="0 deg", lat_0="0 deg", sigma="0.2 deg")
 print(gauss)
 
 
+######################################################################
+# Again you can check the `SPATIAL_MODELS` registry to see which models
+# are available or take a look at the :ref:`model-gallery`
+#
+
+from gammapy.modeling.models import SPATIAL_MODEL_REGISTRY
 
 print(SPATIAL_MODEL_REGISTRY)
 
@@ -356,7 +318,12 @@ ax.add_artist(region_pix.as_artist(ec="w", fc="None"))
 plt.show()
 
 
+######################################################################
+# The `~gammapy.modeling.models.SpatialModel.to_region()` method can also be useful to write e.g. ds9 region
+# files using `write_ds9` from the `regions` package:
+#
 
+from regions import Regions
 
 regions = Regions([gauss.to_region(), gauss_elongated.to_region()])
 
@@ -376,18 +343,33 @@ regions.write(
 #
 
 
+######################################################################
+# Temporal models are imported from the same `~gammapy.modeling.models`
+# namespace, let’s start with a `~gammapy.modeling.models.GaussianTemporalModel`:
+#
 
+from gammapy.modeling.models import GaussianTemporalModel
 
 gauss_temp = GaussianTemporalModel(t_ref=59240.0 * u.d, sigma=2.0 * u.d)
 print(gauss_temp)
 
 
+######################################################################
+# To check the `TEMPORAL_MODELS` registry to see which models are
+# available:
+#
 
+from gammapy.modeling.models import TEMPORAL_MODEL_REGISTRY
 
 print(TEMPORAL_MODEL_REGISTRY)
 
 
+######################################################################
+# Temporal models can be evaluated on `astropy.time.Time` objects. The
+# returned quantity is a dimensionless number
+#
 
+from astropy.time import Time
 
 time = Time("2021-01-29 00:00:00.000")
 gauss_temp(time)
@@ -411,7 +393,7 @@ plt.show()
 # existing spectral, spatial and temporal model components:
 #
 
-
+from gammapy.modeling.models import SkyModel
 
 model = SkyModel(
     spectral_model=pwl,
@@ -478,7 +460,7 @@ print(model_spectrum)
 # existing FITS file:
 #
 
-
+from gammapy.modeling.models import PowerLawNormSpectralModel, TemplateSpatialModel
 
 diffuse_cube = TemplateSpatialModel.read(
     "$GAMMAPY_DATA/fermi-3fhl-gc/gll_iem_v06_gc.fits.gz", normalize=False
@@ -535,6 +517,7 @@ display(model.parameters.to_table())
 # multiple model components, Gammapy has a `~gammapy.modeling.models.Models` class:
 #
 
+from gammapy.modeling.models import Models
 
 models = Models([model, diffuse])
 print(models)
@@ -655,7 +638,8 @@ print(models_yaml)
 # ``MyCustomSpectralModel``:
 #
 
-
+from gammapy.modeling import Parameter
+from gammapy.modeling.models import SpectralModel
 
 
 class MyCustomSpectralModel(SpectralModel):
@@ -771,7 +755,8 @@ models.write("my-custom-models.yaml", overwrite=True)
 # models.
 #
 
-
+from astropy.coordinates import angular_separation
+from gammapy.modeling.models import SpatialModel
 
 
 class MyCustomGaussianModel(SpatialModel):

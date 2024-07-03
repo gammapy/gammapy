@@ -67,9 +67,13 @@ from astropy.time import Time
 import matplotlib.pyplot as plt
 from IPython.display import display
 
+log = logging.getLogger(__name__)
+
+
 ######################################################################
 # And some gammapy specific imports
 #
+
 import warnings
 from gammapy.data import FixedPointingInfo, Observation, observatory_locations
 from gammapy.datasets import Datasets, FluxPointsDataset, SpectrumDataset
@@ -84,9 +88,6 @@ from gammapy.modeling.models import (
     SkyModel,
 )
 
-from gammapy.utils.check import check_tutorials_setup
-
-log = logging.getLogger(__name__)
 warnings.filterwarnings(
     action="ignore", message="overflow encountered in exp", module="astropy"
 )
@@ -94,7 +95,7 @@ warnings.filterwarnings(
 ######################################################################
 # Check setup
 # -----------
-
+from gammapy.utils.check import check_tutorials_setup
 
 check_tutorials_setup()
 

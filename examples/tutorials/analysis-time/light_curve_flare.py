@@ -73,6 +73,8 @@ from regions import CircleSkyRegion
 # %matplotlib inline
 import matplotlib.pyplot as plt
 
+log = logging.getLogger(__name__)
+
 from gammapy.data import DataStore
 from gammapy.datasets import Datasets, SpectrumDataset
 from gammapy.estimators import LightCurveEstimator
@@ -90,8 +92,8 @@ from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 # -----------
 from gammapy.utils.check import check_tutorials_setup
 
-log = logging.getLogger(__name__)
 check_tutorials_setup()
+
 
 ######################################################################
 # Select the data

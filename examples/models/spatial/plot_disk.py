@@ -36,17 +36,14 @@ The model is defined on the celestial sphere, with a normalization defined by:
 # Here is an example plot of the model:
 
 
+import numpy as np
 from astropy.coordinates import Angle
 from gammapy.modeling.models import (
+    DiskSpatialModel,
     Models,
     PowerLawSpectralModel,
     SkyModel,
 )
-import numpy as np
-from astropy import units as u
-from astropy.visualization import quantity_support
-import matplotlib.pyplot as plt
-from gammapy.modeling.models import DiskSpatialModel
 
 phi = Angle("30 deg")
 model = DiskSpatialModel(
@@ -77,6 +74,11 @@ ax.text(2.15, 2.3, r"$\phi$", transform=transform)
 # %%
 # This plot illustrates the definition of the edge parameter:
 
+import numpy as np
+from astropy import units as u
+from astropy.visualization import quantity_support
+import matplotlib.pyplot as plt
+from gammapy.modeling.models import DiskSpatialModel
 
 lons = np.linspace(0, 0.3, 500) * u.deg
 
