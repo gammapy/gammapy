@@ -42,7 +42,7 @@ from gammapy.modeling.models import (
 # H.E.S.S. when it was in a steady state. The data have already been
 # reduced to OGIP format `SpectrumDatasetOnOff` following the procedure
 # :doc:`/tutorials/analysis-1d/spectral_analysis` tutorial using a
-# `ReflectedRegions` background estimation. The spectra and IRF from the
+# `ReflectedRegions` background estimation. The spectra and IRFs from the
 # 6 observations have been stacked together.
 #
 # We will load this dataset as a `~gammapy.datasets.SpectrumDatasetOnOff` and proceed with
@@ -100,6 +100,12 @@ sky_model = SkyModel(spatial_model=None, spectral_model=spectral_model, name="pk
 
 dataset.models = sky_model
 
+######################################################################
+# Note that since this dataset has been produced
+# by a reflected region analysis, it uses ON-OFF statistic
+# and does not require a background model.
+#
+
 fit = Fit()
 result = fit.run(datasets=[dataset])
 
@@ -127,10 +133,10 @@ flux_points_obs = fpe.run(datasets=[dataset])
 ######################################################################
 # To get the deabsorbed flux points (ie, intrinsic points), we simply need
 # to set the reference model to the best fit power law instead of the
-# compound model. We first make a copy of the computed flux points
+# compound model.
 #
 
-flux_points_intrinsic = deepcopy(flux_points_obs)
+flux_points_intrinsic = flux_points_obs.copy
 flux_points_intrinsic._reference_model = SkyModel(spectral_model=pwl)
 
 print(flux_points_obs.reference_model)
