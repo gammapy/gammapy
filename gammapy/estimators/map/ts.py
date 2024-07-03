@@ -482,26 +482,12 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         dnde_ref = self.model.spectral_model(energy_axis.center)
 
         for name in self.selection_all:
-            if name == "stat_scan":
-                dnde_axis = MapAxis(
-                    self.norm.scan_values * dnde_ref.data,
-                    interp=self.norm.interp,
-                    node_type="center",
-                    name="dnde",
-                    unit=dnde_ref.unit,
-                )
-                axes = geom.axes + [dnde_axis]
-                geom_scan = geom.to_image().to_cube(axes)
-
-                m = Map.from_geom(geom_scan, data=np.nan, unit="")
-                m.data[:, 0, j, i] = np.array([_[name] for _ in results]).T
-
-            elif name in ["dnde_scan_values", "stat_scan_local"]:
+            if name in ["dnde_scan_values", "stat_scan"]:
                 norm_bin_axis = MapAxis(
                     range(len(results[0]["dnde_scan_values"])),
                     interp="lin",
                     node_type="center",
-                    name="norm_bin",
+                    name="dnde_bin",
                 )
 
                 axes = geom.axes + [norm_bin_axis]
@@ -874,8 +860,7 @@ class BrentqFluxEstimator(Estimator):
         stat_scan = spline(self.norm.scan_values)
 
         return dict(
-            stat_scan=stat_scan,
-            stat_scan_local=stat_scan_local,
+            stat_scan=stat_scan_local,
             dnde_scan_values=sparse_norms,
         )
 
