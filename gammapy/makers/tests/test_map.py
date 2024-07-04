@@ -22,6 +22,7 @@ from gammapy.irf import Background2D, EDispKernelMap, EDispMap, PSFMap
 from gammapy.makers import FoVBackgroundMaker, MapDatasetMaker, SafeMaskMaker
 from gammapy.maps import HpxGeom, Map, MapAxis, WcsGeom
 from gammapy.utils.testing import requires_data, requires_dependency
+from gammapy.utils.time import time_ref_to_dict
 
 
 @pytest.fixture(scope="session")
@@ -330,8 +331,12 @@ def test_interpolate_map_dataset():
     ev_t = Table()
     gti_t = Table()
 
+    time_ref = Time("2003-01-01 00:00:00", scale="utc", format="iso")
     ev_t["EVENT_ID"] = np.arange(nr_ev)
-    ev_t["TIME"] = nr_ev * [Time("2011-01-01 00:00:00", scale="utc", format="iso")]
+    time_ref = Time("2003-01-01 00:00:00", scale="utc", format="iso")
+    ev_t["TIME"] = nr_ev * [
+        (Time("2011-01-01 00:00:00", scale="utc", format="iso") - time_ref).sec
+    ]
     ev_t["RA"] = np.linspace(-1, 1, nr_ev) * u.deg
     ev_t["DEC"] = np.linspace(-1, 1, nr_ev) * u.deg
     ev_t["ENERGY"] = np.logspace(0, 2, nr_ev) * u.TeV
@@ -340,6 +345,8 @@ def test_interpolate_map_dataset():
     gti_t["STOP"] = [Time("2011-01-02 00:00:00", scale="utc", format="iso")]
 
     events = EventList(ev_t)
+    events.table.meta = time_ref_to_dict(time_ref)
+
     gti = GTI(gti_t)
 
     # define observation
