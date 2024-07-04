@@ -210,3 +210,32 @@ class Covariance:
 
     def __array__(self):
         return self.data
+
+
+class CovarianceMixin:
+    """Mixin class for covariance property on multi-components models"""
+
+    def _check_covariance(self):
+        if not self.parameters == self._covariance.parameters:
+            self._covariance = Covariance.from_stack(
+                [model.covariance for model in self._models]
+            )
+
+    @property
+    def covariance(self):
+        """Covariance as a `~gammapy.modeling.Covariance` object."""
+        self._check_covariance()
+
+        for model in self._models:
+            self._covariance.set_subcovariance(model.covariance)
+
+        return self._covariance
+
+    @covariance.setter
+    def covariance(self, covariance):
+        self._check_covariance()
+        self._covariance.data = covariance
+
+        for model in self._models:
+            subcovar = self._covariance.get_subcovariance(model.covariance.parameters)
+            model.covariance = subcovar
