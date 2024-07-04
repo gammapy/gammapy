@@ -19,7 +19,6 @@ notebook shows how to use these models to correct for this interaction.
 # As usual, we’ll start with the standard imports …
 #
 
-from copy import deepcopy
 import astropy.units as u
 import matplotlib.pyplot as plt
 from gammapy.catalog import SourceCatalog4FGL
@@ -77,8 +76,8 @@ print(EBL_DATA_BUILTIN.keys())
 ######################################################################
 # To use other EBL models, you need to save the optical depth as a
 # function of energy and redshift as an XSPEC model.
-# Alternatively, you can use packages like `ebltable <https://github.com/me-manu/ebltable>`
-# which shows how to interface other ebl models with Gammapy.
+# Alternatively, you can use packages like `ebltable <https://github.com/me-manu/ebltable>`_
+# which shows how to interface other EBL models with Gammapy.
 #
 
 ######################################################################
@@ -126,7 +125,7 @@ print(result.models.to_parameters_table())
 # Get the flux points
 # ===================
 #
-# To get the observed flux points, just run the `~gammapy.estimators.FluxPointsEstimator
+# To get the observed flux points, just run the `~gammapy.estimators.FluxPointsEstimator`
 # normally
 #
 
@@ -273,7 +272,7 @@ ax.plot(
 )
 ax.set_title("TS profile")
 ax.set_xlabel("Redshift")
-ax.set_ylabel("del TS")
+ax.set_ylabel("$\Delta$ TS")
 plt.show()
 
 
