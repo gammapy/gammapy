@@ -298,6 +298,8 @@ class GTI:
         gti : `~gammapy.data.GTI`
             GTI table.
         """
+        if np.array(time_intervals).shape == (2,):
+            time_intervals = [time_intervals]
         start = Time([_[0] for _ in time_intervals])
         stop = Time([_[1] for _ in time_intervals])
 
