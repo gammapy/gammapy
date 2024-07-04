@@ -240,6 +240,24 @@ class Datasets(collections.abc.MutableSequence):
             stat_sum += dataset.stat_sum()
         return stat_sum
 
+    def stat_sum_asimov(self, model_name=None):
+        """Test statistic for the given model assuming Asimov datasets
+
+        Parameters
+        ----------
+        model_name : str
+            Name of the sky model for which to compute the statistic
+        """
+        from .flux_points import FluxPointsDataset
+
+        """Test statistic for the given model assuming an Asimov dataset"""
+        stat_sum_asimov = 0
+        for dataset in self:
+            if isinstance(self, FluxPointsDataset):
+                raise ValueError("Not defined for a flux points dataset")
+            stat_sum_asimov += dataset.stat_sum_asimov(model_name=model_name)
+        return stat_sum_asimov
+
     def select_time(self, time_min, time_max, atol="1e-6 s"):
         """Select datasets in a given time interval.
 
