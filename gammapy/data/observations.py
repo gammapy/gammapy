@@ -108,13 +108,7 @@ class Observation:
         self._events = events
         self._pointing = pointing
         self._location = location  # this is part of the meta or is it data?
-        if obs_filter:
-            self.obs_filter = obs_filter
-        else:
-            default_obs_filter = ObservationFilter()
-            if gti and events:
-                default_obs_filter.time_filter = self._gti.time_intervals
-            self.obs_filter = default_obs_filter
+        self.obs_filter = obs_filter or ObservationFilter()
         self._meta = meta
 
     def _repr_html_(self):
@@ -173,6 +167,10 @@ class Observation:
     @property
     def events(self):
         """Event list of the observation as an `~gammapy.data.EventList`."""
+
+        if self.obs_filter.time_filter is None and self._gti is not None:
+            self.obs_filter.time_filter = self._gti.time_intervals
+
         events = self.obs_filter.filter_events(self._events)
         return events
 
