@@ -72,6 +72,10 @@ class ObservationFilter:
         filtered_events : `~gammapy.data.EventListBase`
             The filtered event list.
         """
+        if events is None:
+            return None
+        if len(events.table) == 0:
+            return events
 
         filtered_events = self._filter_by_time(events)
         for f in self.event_filters:
