@@ -400,7 +400,7 @@ class TestTheta2Table:
             obs_info.update(meta)
             events.meta.update(obs_info)
             gti = GTI.create(
-                start=[1] * u.s,
+                start=[0] * u.s,
                 stop=[3] * u.s,
                 reference_time=Time("2010-01-01", scale="tt"),
             )
