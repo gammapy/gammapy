@@ -78,7 +78,7 @@ print(EBL_DATA_BUILTIN.keys())
 # To use other EBL models, you need to save the optical depth as a
 # function of energy and redshift as an XSPEC model.
 # Alternatively, you can use packages like `ebltable <https://github.com/me-manu/ebltable>`
-# which interface ebl models with Gammapy.
+# which shows how to interface other ebl models with Gammapy.
 #
 
 ######################################################################
