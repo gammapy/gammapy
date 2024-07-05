@@ -311,14 +311,14 @@ class PSFMap(IRFMap):
             max_radius = u.Quantity(max_radius)
             radii[radii > max_radius] = max_radius
 
-        nr = len(radii)
+        n_radii = len(radii)
         if factor is None:  # TODO: this remove and the else once factor is deprecated
             factor = _psf_upsampling_factor(self, geom, position, precision_factor)
         else:
-            factor = [factor] * nr
+            factor = [factor] * n_radii
         geom = geom.to_odd_npix(max_radius=max_radius)
         kernel_map = Map.from_geom(geom=geom)
-        for im, ind in zip(kernel_map.iter_by_image(keepdims=True), range(nr)):
+        for im, ind in zip(kernel_map.iter_by_image(keepdims=True), range(n_radii)):
             geom_image_cut = im.geom.to_odd_npix(max_radius=radii[ind]).upsample(
                 factor=factor[ind]
             )
