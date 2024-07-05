@@ -11,7 +11,7 @@ from astropy import units as u
 import yaml
 from pydantic import BaseModel, ConfigDict
 from gammapy.makers import MapDatasetMaker
-from gammapy.utils.scripts import make_path, read_yaml
+from gammapy.utils.scripts import read_yaml, to_yaml, write_yaml
 from gammapy.utils.types import AngleType, EnergyType, PathType, TimeType
 
 __all__ = ["AnalysisConfig"]
@@ -243,31 +243,47 @@ class AnalysisConfig(GammapyBaseConfig):
 
     @classmethod
     def read(cls, path):
-        """Read from YAML file."""
+        """Read from YAML file.
+
+        Parameters
+        ----------
+        path : str
+            input filepath
+        """
         config = read_yaml(path)
+        config.pop("metadata", None)
         return AnalysisConfig(**config)
 
     @classmethod
     def from_yaml(cls, config_str):
-        """Create from YAML string."""
+        """Create from YAML string.
+
+        Parameters
+        ----------
+        config_str : str
+            yaml str
+
+        """
         settings = yaml.safe_load(config_str)
         return AnalysisConfig(**settings)
 
     def write(self, path, overwrite=False):
-        """Write to YAML file."""
-        path = make_path(path)
+        """Write to YAML file.
 
-        if path.exists() and not overwrite:
-            raise IOError(f"File exists already: {path}")
-
-        path.write_text(self.to_yaml())
+        Parameters
+        ----------
+        path : `pathlib.Path` or str
+            Path to write files.
+        overwrite : bool, optional
+            Overwrite existing file. Default is False.
+        """
+        yaml_str = self.to_yaml()
+        write_yaml(yaml_str, path, overwrite=overwrite)
 
     def to_yaml(self):
         """Convert to YAML string."""
         data = json.loads(self.model_dump_json())
-        return yaml.dump(
-            data, sort_keys=False, indent=4, width=80, default_flow_style=None
-        )
+        return to_yaml(data)
 
     def set_logging(self):
         """Set logging config.
