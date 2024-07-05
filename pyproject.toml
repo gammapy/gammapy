@@ -7,25 +7,6 @@ requires = [
 ]
 build-backend = "setuptools.build_meta"
 
-#[tool.black]
-#line-length = 88
-#target-version = ["py38", "py39", "py310", "py311", "py312"]
-#include = '\\.pyi?$'
-#exclude = '''
-#/(
-#    \\.eggs
-#  | \\.git
-#  | \\.hg
-#  | \\.mypy_cache
-#  | \\.tox
-#  | \\.venv
-#  | _build
-#  | buck-out
-#  | build
-#  | gammapy/extern
-#)/
-#'''
-
 [tool.pytest.ini_options]
 filterwarnings = [
     "error::astropy.utils.exceptions.AstropyDeprecationWarning",
