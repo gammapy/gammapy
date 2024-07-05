@@ -243,19 +243,40 @@ class AnalysisConfig(GammapyBaseConfig):
 
     @classmethod
     def read(cls, path):
-        """Read from YAML file."""
+        """Read from YAML file.
+
+        Parameters
+        ----------
+        path : str
+            input filepath
+        """
         config = read_yaml(path)
         config.pop("metadata", None)
         return AnalysisConfig(**config)
 
     @classmethod
     def from_yaml(cls, config_str):
-        """Create from YAML string."""
+        """Create from YAML string.
+
+        Parameters
+        ----------
+        config_str : str
+            yaml str
+
+        """
         settings = yaml.safe_load(config_str)
         return AnalysisConfig(**settings)
 
     def write(self, path, overwrite=False):
-        """Write to YAML file."""
+        """Write to YAML file.
+
+        Parameters
+        ----------
+        path : `pathlib.Path` or str
+            Path to write files.
+        overwrite : bool, optional
+            Overwrite existing file. Default is False.
+        """
         yaml_str = self.to_yaml()
         write_yaml(yaml_str, path, overwrite=overwrite)
 

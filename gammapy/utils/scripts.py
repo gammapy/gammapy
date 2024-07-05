@@ -100,14 +100,8 @@ def to_yaml(dictionary, sort_keys=False):
     ----------
     dictionary : dict
         Python dictionary.
-    filename : `~pathlib.Path`
-        Filename.
-    logger : `~logging.Logger`, optional
-        Logger. Default is None.
     sort_keys : bool, optional
         Whether to sort keys. Default is False.
-    checksum : bool, optional
-        Whether to add checksum keyword. Default is False.
     """
     from gammapy.utils.metadata import CreatorMetaData
 
@@ -136,6 +130,8 @@ def write_yaml(
         Whether to sort keys. Default is True.
     checksum : bool, optional
         Whether to add checksum keyword. Default is False.
+    overwrite : bool, optional
+        Overwrite existing file. Default is False.
     """
 
     if checksum:

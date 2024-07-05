@@ -443,7 +443,7 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
         ----------
         filename : str
             input filename
-        checksum : bool
+        checksum : bool, optional
             Whether to perform checksum verification. Default is False.
         """
         yaml_str = make_path(filename).read_text()
@@ -452,7 +452,19 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
 
     @classmethod
     def from_yaml(cls, yaml_str, path="", checksum=False):
-        """Create from YAML string."""
+        """Create from YAML string.
+
+        Parameters
+        ----------
+        yaml_str : str
+            yaml str
+        path : str
+            base path of model files
+        checksum : bool, optional
+            Whether to perform checksum verification. Default is False.
+
+
+        """
         data = from_yaml(yaml_str, checksum=checksum)
         # TODO : for now metadata are not kept. Add proper metadata creation.
         data.pop("metadata", None)
@@ -518,7 +530,7 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
             Overwrite templates FITS files. Default is False.
         write_covariance : bool, optional
             Whether to save the covariance. Default is True.
-        checksum : bool
+        checksum : bool, optional
             When True adds a CHECKSUM entry to the file.
             Default is False.
         """
@@ -533,7 +545,15 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
         )
 
     def to_yaml(self, full_output=False, overwrite_templates=False):
-        """Convert to YAML string."""
+        """Convert to YAML string.
+
+        Parameters
+        ----------
+         full_output : bool, optional
+            Store full parameter output. Default is False.
+        overwrite_templates : bool, optional
+            Overwrite templates FITS files. Default is False.
+        """
         data = self.to_dict(full_output, overwrite_templates)
         return to_yaml(data)
 
