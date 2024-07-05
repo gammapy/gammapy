@@ -24,17 +24,19 @@ def _psf_upsampling_factor(psf, geom, position, energy=None, precision_factor=12
     """Minimal factor between the bin half-width of the geom and the median R68% containment radius."""
     if energy is None:
         energy = geom.axes[psf.energy_name].center
-    psf_r68 = psf.containment_radius(
+    psf_r68s = psf.containment_radius(
         0.68, geom.axes[psf.energy_name].center, position=position
     )
-    psf_r68_median = np.percentile(psf_r68, 50)
-    base_factor = (2 * psf_r68_median / geom.pixel_scales.max()).to_value("")
-    factor = np.minimum(
-        int(np.ceil(precision_factor / base_factor)), PSF_MAX_OVERSAMPLING
-    )
-    if isinstance(geom, HpxGeom):
-        factor = int(2 ** np.ceil(np.log(factor) / np.log(2)))
-    return factor
+    factors = []
+    for psf_r68 in psf_r68s:
+        base_factor = (2 * psf_r68 / geom.pixel_scales.max()).to_value("")
+        factor = np.minimum(
+            int(np.ceil(precision_factor / base_factor)), PSF_MAX_OVERSAMPLING
+        )
+        if isinstance(geom, HpxGeom):
+            factor = int(2 ** np.ceil(np.log(factor) / np.log(2)))
+        factors.append(factor)
+    return factors
 
 
 class IRFLikePSF(PSF):
