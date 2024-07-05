@@ -129,7 +129,7 @@ def test_psf_map_containment():
     assert_allclose(psf_map.containment(rad=10 * u.deg, energy_true=[10] * u.TeV), 1)
 
 
-def test_psf_map_cuout():
+def test_psf_map_cutout():
     psf_map = make_test_psfmap(0.15 * u.deg)
     psf_map_cutout = psf_map.cutout(
         position=SkyCoord(1, 1, unit="deg"), width=(1, 0.01)

@@ -963,9 +963,11 @@ class IRFMap:
             Cutout IRF map.
         """
 
-        irf_map = self._irf_map.cutout(position, width, mode, min_npix)
+        irf_map = self._irf_map.cutout(position, width, mode, min_npix=min_npix)
         if self.exposure_map:
-            exposure_map = self.exposure_map.cutout(position, width, mode, min_npix)
+            exposure_map = self.exposure_map.cutout(
+                position, width, mode, min_npi=min_npix
+            )
         else:
             exposure_map = None
         return self.__class__(irf_map, exposure_map=exposure_map)
