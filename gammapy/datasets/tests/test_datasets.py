@@ -215,3 +215,49 @@ def test_datasets_fit():
     results = fit.run(datasets)
 
     assert_allclose(results.models.covariance.data, datasets.models.covariance.data)
+
+
+@requires_data()
+def test_stat_sum_asimov():
+    axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=2)
+    geom = WcsGeom.create(
+        skydir=(266.40498829, -28.93617776),
+        binsz=0.05,
+        width=(20, 20),
+        frame="icrs",
+        axes=[axis],
+    )
+
+    axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=3, name="energy_true")
+    geom_etrue = WcsGeom.create(
+        skydir=(266.40498829, -28.93617776),
+        binsz=0.05,
+        width=(20, 20),
+        frame="icrs",
+        axes=[axis],
+    )
+    dataset_1 = get_map_dataset(geom, geom_etrue, name="test-1")
+    dataset_2 = get_map_dataset(geom, geom_etrue, name="test-2")
+    datasets = Datasets([dataset_1, dataset_2])
+
+    model = SkyModel.create("pl", "point", name="src")
+    model.spatial_model.position = dataset_1.exposure.geom.center_skydir
+
+    model2 = model.copy()
+    model2.spatial_model.lon_0.value += 0.1
+    model2.spatial_model.lat_0.value += 0.1
+
+    models = Models(
+        [
+            model,
+            model2,
+            FoVBackgroundModel(dataset_name=dataset_1.name),
+            FoVBackgroundModel(dataset_name=dataset_2.name),
+        ]
+    )
+
+    datasets.models = models
+
+    assert_allclose(
+        datasets.stat_sum_asimov(model_name=model2.name), 1026.621439, rtol=1e-5
+    )

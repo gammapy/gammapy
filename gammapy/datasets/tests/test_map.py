@@ -2106,3 +2106,25 @@ def test_to_masked():
     )
     d1 = datasetonoff.to_masked()
     assert_allclose(d1.counts.data.sum(), 170)
+
+
+@requires_data()
+def test_stat_sum_asimov(geom, geom_etrue, sky_model):
+    dataset = get_map_dataset(geom, geom_etrue)
+
+    bkg_model = FoVBackgroundModel(dataset_name=dataset.name)
+    model2 = SkyModel(
+        spectral_model=PowerLawSpectralModel(),
+        spatial_model=GaussianSpatialModel(frame="galactic"),
+        name="model2",
+    )
+    dataset.models = [sky_model, bkg_model, model2]
+
+    assert_allclose(dataset.stat_sum_asimov(model_name="model2"), 0.875633, rtol=1e-5)
+
+    dataset_onoff = MapDatasetOnOff.from_map_dataset(
+        dataset, acceptance=1, acceptance_off=2
+    )
+    assert_allclose(
+        dataset_onoff.stat_sum_asimov(model_name="model2"), 0.619468, rtol=1e-5
+    )

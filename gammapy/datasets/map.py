@@ -1344,6 +1344,29 @@ class MapDataset(Dataset):
         else:
             return cash_sum_cython(counts.ravel(), npred.ravel()) + prior_stat_sum
 
+    def stat_sum_asimov(self, model_name=None):
+        """Test statistic for the given model assuming an Asimov dataset
+
+        Parameters
+        ----------
+        model_name : str
+            Name of the sky model for which to compute the statistic
+        """
+
+        npred = self.npred().data
+        npred_source = self.npred_signal(model_names=[model_name]).data
+        npred_h0 = npred - npred_source
+
+        if self.mask is not None:
+            mask = self.mask.data
+            npred = npred[mask]
+            npred_h0 = npred_h0[mask]
+
+        L0 = cash_sum_cython(npred, npred)
+        L1 = cash_sum_cython(npred, npred_h0)
+
+        return np.sum(L1 - L0)
+
     def fake(self, random_state="random-seed"):
         """Simulate fake counts for the current model and reduced IRFs.
 
@@ -2649,6 +2672,31 @@ class MapDatasetOnOff(MapDataset):
             return 0
         else:
             return Dataset.stat_sum(self)
+
+    def stat_sum_asimov(self, model_name=None):
+        """Test statistic for the given model assuming an Asimov dataset
+
+        Parameters
+        ----------
+        model_name : str
+            Name of the sky model for which to compute the statistic
+        """
+
+        if self.mask is not None:
+            mask = self.mask
+        else:
+            mask = Map.from_geom(self._geom, data=True, dtype=bool)
+
+        mask = mask.data
+
+        npred_source = self.npred_signal(model_names=[model_name])
+        npred_signal = self.npred_signal()
+        npred_h0 = (npred_signal - npred_source).data[mask]
+        on = (self.npred_signal() + self.background).data[mask]
+        off = self.counts_off.data[mask]
+        alpha = self.alpha.data[mask]
+
+        return np.sum(wstat(on, off, alpha, npred_h0))
 
     def fake(self, npred_background, random_state="random-seed"):
         """Simulate fake counts (on and off) for the current model and reduced IRFs.
