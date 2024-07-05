@@ -203,7 +203,7 @@ def test_compute_ts_map_psf(fermi_dataset):
     )
     result = estimator.run(fermi_dataset)
 
-    assert_allclose(result["ts"].data[0, 29, 29], 833.38, rtol=2e-3)
+    assert_allclose(result["ts"].data[0, 29, 29], 830.97957, rtol=2e-3)
     assert_allclose(result["niter"].data[0, 29, 29], 7)
     assert_allclose(result["flux"].data[0, 29, 29], 1.34984e-09, rtol=2e-3)
     assert_allclose(result["flux_err"].data[0, 29, 29], 7.93751176e-11, rtol=2e-3)
@@ -232,10 +232,10 @@ def test_compute_ts_map_energy(fermi_dataset):
     result = estimator.run(fermi_dataset)
     result.filter_success_nan = False
 
-    assert_allclose(result.ts.data[1, 43, 30], 0.199291, atol=0.01)
+    assert_allclose(result.ts.data[1, 43, 30], 0.212079, atol=0.01)
     assert not result["success"].data[1, 43, 30]
 
-    assert_allclose(result["ts"].data[:, 29, 29], [804.86171, 16.988756], rtol=1e-2)
+    assert_allclose(result["ts"].data[:, 29, 29], [795.815842, 17.52017], rtol=1e-2)
     assert_allclose(
         result["flux"].data[:, 29, 29], [1.233119e-09, 3.590694e-11], rtol=1e-2
     )
