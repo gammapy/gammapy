@@ -441,7 +441,7 @@ class MapDataset(Dataset):
     @property
     def _psf_kernel(self):
         """Precompute PSFkernel if there is only one spatial bin in the PSFmap"""
-        if self.psf and self.psf.psf_map.single_spatial_bin:
+        if self.psf and self.psf.has_single_spatial_bin:
             if self.psf.energy_name == "energy_true":
                 map_ref = self.exposure
             else:
