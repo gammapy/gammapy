@@ -72,6 +72,8 @@ class MapEvaluator:
         self.contributes = True
         self.psf_containment = None
 
+        self._geom_reco_axis = None
+
         if evaluation_mode not in {"local", "global"}:
             raise ValueError(f"Invalid evaluation_mode: {evaluation_mode!r}")
 
@@ -117,10 +119,12 @@ class MapEvaluator:
     @property
     def _geom_reco(self):
         if self.edisp is not None:
-            energy_axis = self.edisp.axes["energy"].copy(name="energy")
+            energy_axis = self.edisp.axes["energy"]
+        elif self._geom_reco_axis is not None:
+            energy_axis = self._geom_reco_axis
         else:
-            energy_axis = self.geom.axes["energy_true"].copy(name="energy")
-        geom = self.geom.to_image().to_cube(axes=[energy_axis])
+            energy_axis = self.geom.axes["energy_true"]
+        geom = self.geom.to_image().to_cube(axes=[energy_axis.copy(name="energy")])
         return geom
 
     @property
@@ -192,13 +196,15 @@ class MapEvaluator:
         del self.position
         del self.cutout_width
 
+        self._geom_reco_axis = geom.axes["energy"]
+
         # lookup edisp
+        del self._edisp_diagonal
         if edisp:
             energy_axis = geom.axes["energy"]
             self.edisp = edisp.get_edisp_kernel(
                 position=self.position, energy_axis=energy_axis
             )
-            del self._edisp_diagonal
 
         # lookup psf
         if psf and self.model.spatial_model:
@@ -246,8 +252,8 @@ class MapEvaluator:
     @lazyproperty
     def _edisp_diagonal(self):
         return EDispKernel.from_diagonal_response(
-            energy_axis_true=self.edisp.axes["energy_true"],
-            energy_axis=self.edisp.axes["energy"],
+            energy_axis_true=self.geom.axes["energy_true"],
+            energy_axis=self._geom_reco.axes["energy"],
         )
 
     def update_spatial_oversampling_factor(self, geom):
@@ -388,7 +394,7 @@ class MapEvaluator:
         npred_reco : `~gammapy.maps.Map`
             Predicted counts in reconstructed energy bins.
         """
-        if self.model.apply_irf["edisp"]:
+        if self.model.apply_irf["edisp"] and self.edisp:
             return apply_edisp(npred, self.edisp)
         else:
             if "energy_true" in npred.geom.axes.names:
