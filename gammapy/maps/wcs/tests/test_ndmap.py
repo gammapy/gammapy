@@ -1060,3 +1060,11 @@ def test_histogram_center_value():
     )
     map1.fill_by_coord({"skycoord": radec, "energy": evt_energy})
     assert_allclose(map1.data[0:2], [[[2.0]], [[2.0]]])
+
+    map1 = WcsNDMap.create(
+        skydir=center,
+        binsz=1 * u.deg,
+        width=3 * u.deg,
+    )
+    map1.fill_by_pix([[0.0, 0.5, 1.0, 1.5], [0.0, 0.5, 1.0, 1.5]])
+    assert_allclose(map1.data, [[1.0, 0.0, 0.0], [0.0, 2.0, 0.0], [0.0, 0.0, 1.0]])
