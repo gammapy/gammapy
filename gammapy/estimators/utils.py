@@ -8,6 +8,7 @@ from astropy.table import Table
 from gammapy.datasets import SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.datasets.map import MapEvaluator
 from gammapy.maps import Map, MapAxis, TimeMapAxis, WcsNDMap
+from gammapy.modeling import Parameter
 from gammapy.modeling.models import (
     ConstantFluxSpatialModel,
     PowerLawSpectralModel,
@@ -861,3 +862,35 @@ def _generate_scan_values(power_min=-4, power_max=2, relative_error=1e-2):
         arrays.append(np.linspace(vmin, vmax, bin_per_decade + 1, dtype=np.float32))
     scan_1side = np.unique(np.concatenate(arrays))
     return np.concatenate((-scan_1side[::-1], [0], scan_1side))
+
+
+def _get_default_norm(
+    norm,
+    norm_min=None,
+    norm_max=None,
+    norm_n_values=None,
+    norm_values=None,
+    interp="lin",
+):
+    """create default norm parameter"""
+    if norm is None or isinstance(norm, dict):
+        norm_kwargs = dict(
+            name="norm",
+            value=1,
+            unit="",
+            interp=interp,
+            frozen=False,
+            scan_min=norm_min,
+            scan_max=norm_max,
+            scan_n_values=norm_n_values,
+            scan_values=norm_values,
+        )
+        if isinstance(norm, dict):
+            norm_kwargs.update(norm)
+        try:
+            norm = Parameter(**norm_kwargs)
+        except TypeError as error:
+            raise TypeError(f"Invalid dict key for norm init : {error}")
+    if norm.name != "norm":
+        raise ValueError("norm.name is not 'norm'")
+    return norm

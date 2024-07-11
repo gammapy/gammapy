@@ -4,8 +4,8 @@ import numpy as np
 from gammapy.datasets import Datasets
 from gammapy.datasets.actors import DatasetsActor
 from gammapy.estimators.parameter import ParameterEstimator
+from gammapy.estimators.utils import _get_default_norm
 from gammapy.maps import Map, MapAxis
-from gammapy.modeling import Parameter
 from gammapy.modeling.models import ScaleSpectralModel
 from gammapy.utils.deprecation import deprecated_attribute, deprecated_renamed_argument
 
@@ -97,27 +97,15 @@ class FluxEstimator(ParameterEstimator):
     ):
 
         self.source = source
-        if norm is None or isinstance(norm, dict):
-            norm_kwargs = dict(
-                name="norm",
-                value=1,
-                unit="",
-                interp="log",
-                frozen=False,
-                scan_min=norm_min,
-                scan_max=norm_max,
-                scan_n_values=norm_n_values,
-                scan_values=norm_values,
-            )
-            if isinstance(norm, dict):
-                norm_kwargs.update(norm)
-            try:
-                norm = Parameter(**norm_kwargs)
-            except TypeError as error:
-                raise TypeError(f"Invalid dict key for norm init : {error}")
-        if norm.name != "norm":
-            raise ValueError("norm.name is not 'norm'")
-        self.norm = norm
+
+        self.norm = _get_default_norm(
+            norm,
+            norm_min=norm_min,
+            norm_max=norm_max,
+            norm_n_values=norm_n_values,
+            norm_values=norm_values,
+            interp="log",
+        )
 
         super().__init__(
             null_value=0,

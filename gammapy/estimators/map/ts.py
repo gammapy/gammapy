@@ -11,14 +11,17 @@ import gammapy.utils.parallel as parallel
 from gammapy.datasets.map import MapEvaluator
 from gammapy.datasets.utils import get_nearest_valid_exposure_position
 from gammapy.maps import Map, MapAxis, Maps
-from gammapy.modeling import Parameter
 from gammapy.modeling.models import PointSpatialModel, PowerLawSpectralModel, SkyModel
 from gammapy.stats import cash, cash_sum_cython, f_cash_root_cython, norm_bounds_cython
 from gammapy.utils.array import shape_2N, symmetric_crop_pad_width
 from gammapy.utils.pbar import progress_bar
 from gammapy.utils.roots import find_roots
 from ..core import Estimator
-from ..utils import _generate_scan_values, estimate_exposure_reco_energy
+from ..utils import (
+    _generate_scan_values,
+    _get_default_norm,
+    estimate_exposure_reco_energy,
+)
 from .core import FluxMaps
 
 __all__ = ["TSMapEstimator"]
@@ -184,24 +187,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
         self.kernel_width = kernel_width
 
-        if norm is None or isinstance(norm, dict):
-            norm_kwargs = dict(
-                name="norm",
-                value=1,
-                unit="",
-                interp="lin",
-                frozen=False,
-                scan_values=_generate_scan_values(),
-            )
-            if isinstance(norm, dict):
-                norm_kwargs.update(norm)
-            try:
-                norm = Parameter(**norm_kwargs)
-            except TypeError as error:
-                raise TypeError(f"Invalid dict key for norm init : {error}")
-        if norm.name != "norm":
-            raise ValueError("norm.name is not 'norm'")
-        self.norm = norm
+        self.norm = _get_default_norm(norm, scan_values=_generate_scan_values())
 
         if model is None:
             model = SkyModel(
