@@ -894,3 +894,28 @@ def _get_default_norm(
     if norm.name != "norm":
         raise ValueError("norm.name is not 'norm'")
     return norm
+
+
+def _get_norm_scan_values(norm, result):
+    """Compute norms based on the fit result to sample the stat profile at different scales."""
+
+    norm_err = result["norm_err"]
+    norm_value = result["norm"]
+    if ~np.isfinite(norm_err) or norm_err == 0:
+        norm_err = 0.1
+    if ~np.isfinite(norm_value) or norm_value == 0:
+        norm_value = 1.0
+    sparse_norms = np.concatenate(
+        (
+            norm_value + np.linspace(-2.5, 2.5, 51) * norm_err,
+            norm_value + np.linspace(-10, 10, 21) * norm_err,
+            np.abs(norm_value) * np.linspace(-10, 10, 21),
+            np.linspace(-10, 10, 21),
+            np.linspace(norm.scan_values[0], norm.scan_values[-1], 2),
+        )
+    )
+    sparse_norms = np.unique(sparse_norms)
+    if len(sparse_norms) != 109:
+        rand_norms = 20 * np.random.rand(109 - len(sparse_norms)) - 10
+        sparse_norms = np.concatenate((sparse_norms, rand_norms))
+    return np.sort(sparse_norms)
