@@ -632,9 +632,7 @@ class SimpleMapDataset:
     @lazyproperty
     def norm_bounds(self):
         """Bounds for x"""
-        return norm_bounds_cython(
-            self.counts.ravel(), self.background.ravel(), self.model.ravel()
-        )
+        return norm_bounds_cython(self.counts, self.background, self.model)
 
     def npred(self, norm):
         """Predicted number of counts."""
@@ -642,13 +640,11 @@ class SimpleMapDataset:
 
     def stat_sum(self, norm):
         """Statistics sum."""
-        return cash_sum_cython(self.counts.ravel(), self.npred(norm).ravel())
+        return cash_sum_cython(self.counts, self.npred(norm))
 
     def stat_derivative(self, norm):
         """Statistics derivative."""
-        return f_cash_root_cython(
-            norm, self.counts.ravel(), self.background.ravel(), self.model.ravel()
-        )
+        return f_cash_root_cython(norm, self.counts, self.background, self.model)
 
     def stat_2nd_derivative(self, norm):
         """Statistics 2nd derivative."""
@@ -665,9 +661,9 @@ class SimpleMapDataset:
         exposure_cutout = _extract_array(exposure, kernel.shape, position)
         norm_guess = norm[0, position[0], position[1]]
         return cls(
-            counts=counts_cutout,
-            background=background_cutout,
-            model=kernel * exposure_cutout,
+            counts=counts_cutout.ravel(),
+            background=background_cutout.ravel(),
+            model=(kernel * exposure_cutout).ravel(),
             norm_guess=norm_guess,
         )
 
