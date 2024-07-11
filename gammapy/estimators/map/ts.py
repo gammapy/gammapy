@@ -799,7 +799,7 @@ class BrentqFluxEstimator(Estimator):
         return {"norm_errn": flux_errn, "norm_errp": flux_errp}
 
     def estimate_scan(self, dataset, result):
-        """Compute likelihood profile on a fixed norm range.
+        """Compute likelihood profile.
 
         Parameters
         ----------
