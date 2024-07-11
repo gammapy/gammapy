@@ -232,12 +232,6 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
             "success",
         ]
 
-        if "errn-errp" in self.selection_optional:
-            selection += ["norm_errp", "norm_errn"]
-
-        if "ul" in self.selection_optional:
-            selection += ["norm_ul"]
-
         if "stat_scan" in self.selection_optional:
             selection += [
                 "dnde_scan_values",
@@ -246,6 +240,11 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
                 "norm_errn",
                 "norm_ul",
             ]
+        else:
+            if "errn-errp" in self.selection_optional:
+                selection += ["norm_errp", "norm_errn"]
+            if "ul" in self.selection_optional:
+                selection += ["norm_ul"]
 
         return selection
 
