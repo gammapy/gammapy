@@ -866,10 +866,10 @@ def _generate_scan_values(power_min=-4, power_max=2, relative_error=1e-2):
 
 def _get_default_norm(
     norm,
-    norm_min=None,
-    norm_max=None,
-    norm_n_values=None,
-    norm_values=None,
+    scan_min=None,
+    scan_max=None,
+    scan_n_values=None,
+    scan_values=None,
     interp="lin",
 ):
     """create default norm parameter"""
@@ -880,10 +880,10 @@ def _get_default_norm(
             unit="",
             interp=interp,
             frozen=False,
-            scan_min=norm_min,
-            scan_max=norm_max,
-            scan_n_values=norm_n_values,
-            scan_values=norm_values,
+            scan_min=scan_min,
+            scan_max=scan_max,
+            scan_n_values=scan_n_values,
+            scan_values=scan_values,
         )
         if isinstance(norm, dict):
             norm_kwargs.update(norm)

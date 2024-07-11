@@ -100,10 +100,10 @@ class FluxEstimator(ParameterEstimator):
 
         self.norm = _get_default_norm(
             norm,
-            norm_min=norm_min,
-            norm_max=norm_max,
-            norm_n_values=norm_n_values,
-            norm_values=norm_values,
+            scan_min=norm_min,
+            scan_max=norm_max,
+            scan_n_values=norm_n_values,
+            scan_values=norm_values,
             interp="log",
         )
 
