@@ -3,20 +3,16 @@ import collections.abc
 import copy
 import html
 import logging
-import warnings
 from os.path import split
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
 import matplotlib.pyplot as plt
-import yaml
 from gammapy.maps import Map, RegionGeom
 from gammapy.modeling import Covariance, Parameter, Parameters
 from gammapy.modeling.covariance import CovarianceMixin
-from gammapy.utils.check import add_checksum, verify_checksum
-from gammapy.utils.metadata import CreatorMetaData
-from gammapy.utils.scripts import make_name, make_path
+from gammapy.utils.scripts import from_yaml, make_name, make_path, to_yaml, write_yaml
 
 __all__ = ["Model", "Models", "DatasetModels", "ModelBase"]
 
@@ -90,6 +86,43 @@ def _check_name_unique(model, names):
             )
         )
     return
+
+
+def _write_models(
+    models,
+    path,
+    overwrite=False,
+    full_output=False,
+    overwrite_templates=False,
+    write_covariance=True,
+    checksum=False,
+    extra_dict=None,
+):
+    """Write models to YAML file with additionnal informations using an `extra_dict`"""
+
+    base_path, _ = split(path)
+    path = make_path(path)
+    base_path = make_path(base_path)
+
+    if path.exists() and not overwrite:
+        raise IOError(f"File exists already: {path}")
+
+    if (
+        write_covariance
+        and models.covariance is not None
+        and len(models.parameters) != 0
+    ):
+        filecovar = path.stem + "_covariance.dat"
+        kwargs = dict(format="ascii.fixed_width", delimiter="|", overwrite=overwrite)
+        models.write_covariance(base_path / filecovar, **kwargs)
+        models._covar_file = filecovar
+
+    yaml_str = ""
+    if extra_dict is not None:
+        yaml_str += to_yaml(extra_dict)
+    yaml_str += models.to_yaml(full_output, overwrite_templates)
+
+    write_yaml(yaml_str, path, overwrite=overwrite, checksum=checksum)
 
 
 class ModelBase:
@@ -410,7 +443,7 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
         ----------
         filename : str
             input filename
-        checksum : bool
+        checksum : bool, optional
             Whether to perform checksum verification. Default is False.
         """
         yaml_str = make_path(filename).read_text()
@@ -419,16 +452,20 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
 
     @classmethod
     def from_yaml(cls, yaml_str, path="", checksum=False):
-        """Create from YAML string."""
-        data = yaml.safe_load(yaml_str)
-        checksum_str = data.pop("checksum", None)
-        if checksum:
-            yaml_str = yaml.dump(
-                data, sort_keys=False, indent=4, width=80, default_flow_style=False
-            )
-            if not verify_checksum(yaml_str, checksum_str):
-                warnings.warn("Checksum verification failed.", UserWarning)
+        """Create from YAML string.
 
+        Parameters
+        ----------
+        yaml_str : str
+            yaml str
+        path : str
+            base path of model files
+        checksum : bool, optional
+            Whether to perform checksum verification. Default is False.
+
+
+        """
+        data = from_yaml(yaml_str, checksum=checksum)
         # TODO : for now metadata are not kept. Add proper metadata creation.
         data.pop("metadata", None)
         return cls.from_dict(data, path=path)
@@ -493,42 +530,32 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
             Overwrite templates FITS files. Default is False.
         write_covariance : bool, optional
             Whether to save the covariance. Default is True.
-        checksum : bool
+        checksum : bool, optional
             When True adds a CHECKSUM entry to the file.
             Default is False.
         """
-        base_path, _ = split(path)
-        path = make_path(path)
-        base_path = make_path(base_path)
-
-        if path.exists() and not overwrite:
-            raise IOError(f"File exists already: {path}")
-
-        if (
-            write_covariance
-            and self.covariance is not None
-            and len(self.parameters) != 0
-        ):
-            filecovar = path.stem + "_covariance.dat"
-            kwargs = dict(
-                format="ascii.fixed_width", delimiter="|", overwrite=overwrite
-            )
-            self.write_covariance(base_path / filecovar, **kwargs)
-            self._covar_file = filecovar
-
-        yaml_str = self.to_yaml(full_output, overwrite_templates)
-        if checksum:
-            yaml_str = add_checksum(yaml_str)
-        path.write_text(yaml_str)
+        _write_models(
+            self,
+            path,
+            overwrite,
+            full_output,
+            overwrite_templates,
+            write_covariance,
+            checksum,
+        )
 
     def to_yaml(self, full_output=False, overwrite_templates=False):
-        """Convert to YAML string."""
+        """Convert to YAML string.
+
+        Parameters
+        ----------
+         full_output : bool, optional
+            Store full parameter output. Default is False.
+        overwrite_templates : bool, optional
+            Overwrite templates FITS files. Default is False.
+        """
         data = self.to_dict(full_output, overwrite_templates)
-        text = yaml.dump(
-            data, sort_keys=False, indent=4, width=80, default_flow_style=False
-        )
-        creation = CreatorMetaData()
-        return text + creation.to_yaml()
+        return to_yaml(data)
 
     def update_link_label(self):
         """Update linked parameters labels used for serialisation and print."""

@@ -4,11 +4,7 @@ import itertools
 import logging
 import numpy as np
 from astropy.table import Table
-import yaml
-from gammapy.utils.check import add_checksum
-from gammapy.utils.metadata import CreatorMetaData
 from gammapy.utils.pbar import progress_bar
-from gammapy.utils.scripts import make_path
 from .covariance import Covariance
 from .iminuit import (
     confidence_iminuit,
@@ -590,10 +586,12 @@ class FitStepResult:
     def to_dict(self):
         """Convert to dictionary."""
         return {
-            "backend": self.backend,
-            "method": self.method,
-            "success": self.success,
-            "message": self.message,
+            self.__class__.__name__: {
+                "backend": self.backend,
+                "method": self.method,
+                "success": self.success,
+                "message": self.message,
+            }
         }
 
 
@@ -684,8 +682,8 @@ class OptimizeResult(FitStepResult):
     def to_dict(self):
         """Convert to dictionary."""
         output = super().to_dict()
-        output["nfev"] = self.nfev
-        output["total_stat"] = self._total_stat
+        output[self.__class__.__name__]["nfev"] = self.nfev
+        output[self.__class__.__name__]["total_stat"] = float(self._total_stat)
         return output
 
 
@@ -771,37 +769,13 @@ class FitResult:
         """Optimize result."""
         return self._covariance_result
 
-    def to_dict(self, full_output=False, overwrite_templates=False):
-        """Convert to dictionary."""
-
-        models_dict = self.models.to_dict(
-            full_output=full_output, overwrite_templates=overwrite_templates
-        )
-        output = {}
-        if self.optimize_result is not None:
-            output["optimize_result"] = self.optimize_result.to_dict()
-        if self.covariance_result is not None:
-            output["covariance_result"] = self.covariance_result.to_dict()
-        output["models"] = models_dict
-        return output
-
-    def to_yaml(self, full_output=False, overwrite_templates=False):
-        """Convert to YAML string."""
-        data = self.to_dict(
-            full_output=full_output, overwrite_templates=overwrite_templates
-        )
-        text = yaml.dump(
-            data, sort_keys=False, indent=4, width=80, default_flow_style=False
-        )
-        creation = CreatorMetaData()
-        return text + creation.to_yaml()
-
     def write(
         self,
         path,
         overwrite=False,
-        full_output=False,
+        full_output=True,
         overwrite_templates=False,
+        write_covariance=True,
         checksum=False,
     ):
         """Write to file.
@@ -813,21 +787,29 @@ class FitResult:
         overwrite : bool, optional
             Overwrite existing file. Default is False.
         full_output : bool, optional
-            Store full parameter output. Default is False.
+            Store full parameter output. Default is True.
         overwrite_templates : bool, optional
             Overwrite templates FITS files. Default is False.
         checksum : bool, optional
             When True adds a CHECKSUM entry to the file.
             Default is False.
         """
-        path = make_path(path)
-        if path.exists() and not overwrite:
-            raise IOError(f"File exists already: {path}")
+        from gammapy.modeling.models.core import _write_models
 
-        yaml_str = self.to_yaml(full_output, overwrite_templates)
-        if checksum:
-            yaml_str = add_checksum(yaml_str)
-        path.write_text(yaml_str)
+        output = {}
+        if self.optimize_result is not None:
+            output.update(self.optimize_result.to_dict())
+        if self.covariance_result is not None:
+            output.update(self.covariance_result.to_dict())
+        _write_models(
+            self.models,
+            path,
+            overwrite,
+            full_output,
+            overwrite_templates,
+            write_covariance,
+            extra_dict=output,
+        )
 
     def __str__(self):
         string = ""
