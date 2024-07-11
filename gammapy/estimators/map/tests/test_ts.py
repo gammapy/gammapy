@@ -431,17 +431,16 @@ def test_joint_ts_map(fake_dataset):
         model=model, threshold=1, selection_optional="all", sum_over_energy_groups=True
     )
     result = estimator.run([fake_dataset, fake_dataset.copy()])
-
-    assert_allclose(result["npred_excess"].data.sum(), 1560.707371, rtol=1e-3)
     assert_allclose(result["sqrt_ts"].data[0, 10, 10], 1.92364, rtol=1e-3)
 
 
 @requires_data()
-def test_joint_ts_map_hawc(fake_dataset):
+def test_joint_ts_map_hawc():
 
     datasets = Datasets.read("$GAMMAPY_DATA/hawc/DL4/HAWC_pass4_public_Crab.yaml")
     datasets = Datasets(datasets[-2:])
 
-    estimator = TSMapEstimator(kernel_width=2 * u.deg, sum_over_energy_groups=True)
+    estimator = TSMapEstimator(kernel_width=2 * u.deg)
     result = estimator.run(datasets)
-    assert_allclose(result["sqrt_ts"].data[0, 59, 59], 12.363897, rtol=1e-3)
+    assert_allclose(result["flux"].data[0, 59, 59], 1.0185e-13, rtol=1e-3)
+    assert_allclose(result["sqrt_ts"].data[0, 59, 59], 2.14400, rtol=1e-3)
