@@ -813,7 +813,7 @@ class BrentqFluxEstimator(Estimator):
         return {"norm_errn": flux_errn, "norm_errp": flux_errp}
 
     def sample_norm(self, result):
-        """Sample different scales to compute profile."""
+        """Compute norms based on the fit result to sample the stat profile at different scales."""
 
         norm_err = result["norm_err"]
         norm = result["norm"]
