@@ -311,15 +311,6 @@ def test_ts_map_stat_scan(fake_dataset):
     norm = maps.dnde_scan_values.data[ij, ind_best, ik, il] / dnde_ref.value
     assert_allclose(norm[success], maps_ref.norm.data[success], rtol=1e-5)
 
-    assert maps.stat_scan.geom.data_shape == (1, 109, 2, 2)
-    ts = np.abs(maps["stat_scan"].data.min(axis=1))
-    assert_allclose(ts[success], maps_ref.ts.data[success], rtol=1e-3)
-
-    ind_best = maps.stat_scan.data.argmin(axis=1)
-    ij, ik, il = np.indices(ind_best.shape)
-    dnde = maps.dnde_scan_values.quantity[ij, ind_best, ik, il]
-    assert_allclose(dnde[success], maps_ref.norm.data[success] * dnde_ref, rtol=1e-5)
-
 
 def test_ts_map_with_model(fake_dataset):
     model = fake_dataset.models["source"]
