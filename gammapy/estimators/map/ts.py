@@ -441,8 +441,8 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.Datasets`
-            Map dataset.
+        dataset : `~gammapy.datasets.Datasets` or `~gammapy.datasets.MapDataset`
+            Map dataset or Datasets (list of MapDataset with the same spatial geometry).
         """
 
         maps = [self.estimate_fit_input_maps(dataset=d) for d in datasets]
@@ -519,8 +519,8 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.Datasets`
-            Input Datasets.
+        dataset : `~gammapy.datasets.Datasets` or `~gammapy.datasets.MapDataset`
+            Map dataset or Datasets (list of MapDataset with the same spatial geometry).
 
         Returns
         -------
@@ -534,8 +534,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
                 * flux_ul : upper limit map.
 
         """
-        if not isinstance(datasets, (Datasets, list)):
-            datasets = Datasets([datasets])
+        datasets = Datasets(datasets)
 
         geom_ref = datasets[0].counts.geom
         for dataset in datasets:
