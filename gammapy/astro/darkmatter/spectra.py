@@ -250,30 +250,6 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
         data["spectral"]["k"] = self.k
         return data
 
-    @classmethod
-    def from_dict(cls, data):
-        """Create spectral model from a dictionary.
-
-        Parameters
-        ----------
-        data : dict
-            Dictionary with model data.
-
-        Returns
-        -------
-        model : `DarkMatterAnnihilationSpectralModel`
-            Dark matter annihilation spectral model.
-        """
-        data = data["spectral"]
-        data.pop("type")
-        parameters = data.pop("parameters")
-        parameters = {p["name"]: p for p in parameters}
-        scale = parameters["scale"]["value"]
-        jfactor = u.Quantity(
-            parameters["jfactor"]["value"], parameters["jfactor"]["unit"]
-        )
-        return cls(scale=scale, jfactor=jfactor, **data)
-
 
 class DarkMatterDecaySpectralModel(SpectralModel):
     r"""Dark matter decay spectral model.
@@ -361,26 +337,3 @@ class DarkMatterDecaySpectralModel(SpectralModel):
         data["spectral"]["z"] = self.z
         return data
 
-    @classmethod
-    def from_dict(cls, data):
-        """Create spectral model from dictionary.
-
-        Parameters
-        ----------
-        data : dict
-            Dictionary with model data.
-
-        Returns
-        -------
-        model : `DarkMatterDecaySpectralModel`
-            Dark matter decay spectral model.
-        """
-        data = data["spectral"]
-        data.pop("type")
-        parameters = data.pop("parameters")
-        parameters = {p["name"]: p for p in parameters}
-        scale = parameters["scale"]["value"]
-        dfactor = u.Quantity(
-            parameters["dfactor"]["value"], parameters["dfactor"]["unit"]
-        )
-        return cls(scale=scale, dfactor=dfactor, **data)
