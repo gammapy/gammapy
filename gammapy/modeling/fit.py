@@ -572,8 +572,13 @@ class Fit:
         >>> datasets.models = model
         >>> fit = Fit(backend='minuit')
         >>> optimize = fit.optimize(datasets)
-        >>> stat_contour = fit.stat_contour(datasets=datasets, x=model.spectral_model.alpha, y=model.spectral_model.amplitude)
+        >>> stat_contour = fit.stat_contour(
+        ...     datasets=datasets,
+        ...     x=model.spectral_model.alpha,
+        ...     y=model.spectral_model.amplitude,
+        ... )
         """
+
         datasets, parameters = self._parse_datasets(datasets=datasets)
 
         x = parameters[x]
