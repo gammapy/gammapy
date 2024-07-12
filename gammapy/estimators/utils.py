@@ -8,6 +8,7 @@ from astropy.table import Table
 from gammapy.datasets import SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.datasets.map import MapEvaluator
 from gammapy.maps import Map, MapAxis, TimeMapAxis, WcsNDMap
+from gammapy.modeling import Parameter
 from gammapy.modeling.models import (
     ConstantFluxSpatialModel,
     PowerLawSpectralModel,
@@ -846,3 +847,75 @@ def combine_flux_maps(maps, method="gaussian_errors", reference_model=None):
 
     kwargs = dict(sed_type="dnde", gti=gti, reference_model=reference_model, meta=meta)
     return FluxMaps.from_maps(dict(dnde=mean, dnde_err=sigma, ts=ts), **kwargs)
+
+
+def _generate_scan_values(power_min=-4, power_max=2, relative_error=1e-2):
+    """Values sampled such as we can probe a given `relative_error` on the norm
+    between 10**`power_min` and 10**`power_max`.
+
+    """
+    arrays = []
+    for power in range(power_min, power_max):
+        vmin = 10**power
+        vmax = 10 ** (power + 1)
+        bin_per_decade = int((vmax - vmin) / (vmin * relative_error))
+        arrays.append(np.linspace(vmin, vmax, bin_per_decade + 1, dtype=np.float32))
+    scan_1side = np.unique(np.concatenate(arrays))
+    return np.concatenate((-scan_1side[::-1], [0], scan_1side))
+
+
+def _get_default_norm(
+    norm,
+    scan_min=None,
+    scan_max=None,
+    scan_n_values=None,
+    scan_values=None,
+    interp="lin",
+):
+    """create default norm parameter"""
+    if norm is None or isinstance(norm, dict):
+        norm_kwargs = dict(
+            name="norm",
+            value=1,
+            unit="",
+            interp=interp,
+            frozen=False,
+            scan_min=scan_min,
+            scan_max=scan_max,
+            scan_n_values=scan_n_values,
+            scan_values=scan_values,
+        )
+        if isinstance(norm, dict):
+            norm_kwargs.update(norm)
+        try:
+            norm = Parameter(**norm_kwargs)
+        except TypeError as error:
+            raise TypeError(f"Invalid dict key for norm init : {error}")
+    if norm.name != "norm":
+        raise ValueError("norm.name is not 'norm'")
+    return norm
+
+
+def _get_norm_scan_values(norm, result):
+    """Compute norms based on the fit result to sample the stat profile at different scales."""
+
+    norm_err = result["norm_err"]
+    norm_value = result["norm"]
+    if ~np.isfinite(norm_err) or norm_err == 0:
+        norm_err = 0.1
+    if ~np.isfinite(norm_value) or norm_value == 0:
+        norm_value = 1.0
+    sparse_norms = np.concatenate(
+        (
+            norm_value + np.linspace(-2.5, 2.5, 51) * norm_err,
+            norm_value + np.linspace(-10, 10, 21) * norm_err,
+            np.abs(norm_value) * np.linspace(-10, 10, 21),
+            np.linspace(-10, 10, 21),
+            np.linspace(norm.scan_values[0], norm.scan_values[-1], 2),
+        )
+    )
+    sparse_norms = np.unique(sparse_norms)
+    if len(sparse_norms) != 109:
+        rand_norms = 20 * np.random.rand(109 - len(sparse_norms)) - 10
+        sparse_norms = np.concatenate((sparse_norms, rand_norms))
+    return np.sort(sparse_norms)
