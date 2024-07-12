@@ -336,4 +336,3 @@ class DarkMatterDecaySpectralModel(SpectralModel):
         data["spectral"]["mass"] = self.mass.to_string()
         data["spectral"]["z"] = self.z
         return data
-
