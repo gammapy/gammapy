@@ -381,6 +381,25 @@ class Fit:
         results : dict
             Dictionary with keys "parameter_name_scan", "stat_scan" and "fit_results". The latter contains an
             empty list, if `reoptimize` is set to False.
+
+        Examples
+        --------
+        >>> from gammapy.datasets import Datasets, SpectrumDatasetOnOff
+        >>> from gammapy.modeling.models import SkyModel, LogParabolaSpectralModel
+        >>> from gammapy.modeling import Fit
+        >>> datasets = Datasets()
+        >>> for obs_id in [23523, 23526]:
+        ...     dataset = SpectrumDatasetOnOff.read(
+        ...         f"$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs{obs_id}.fits"
+        ...     )
+        ...     datasets.append(dataset)
+        >>> datasets = datasets.stack_reduce(name="HESS")
+        >>> model = SkyModel(spectral_model=LogParabolaSpectralModel(), name="crab")
+        >>> datasets.models = model
+        >>> fit = Fit()
+        >>> result = fit.run(datasets)
+        >>> parameter = datasets.models.parameters['amplitude']
+        >>> stat_profile = fit.stat_profile(datasets=datasets, parameter=parameter)
         """
         datasets, parameters = self._parse_datasets(datasets=datasets)
 
@@ -438,6 +457,33 @@ class Fit:
         results : dict
             Dictionary with keys "x_values", "y_values", "stat" and "fit_results".
             The latter contains an empty list, if `reoptimize` is set to False.
+
+        Examples
+        --------
+        >>> from gammapy.datasets import Datasets, SpectrumDatasetOnOff
+        >>> from gammapy.modeling.models import SkyModel, LogParabolaSpectralModel
+        >>> from gammapy.modeling import Fit
+        >>> import numpy as np
+        >>> datasets = Datasets()
+        >>> for obs_id in [23523, 23526]:
+        ...     dataset = SpectrumDatasetOnOff.read(
+        ...         f"$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs{obs_id}.fits"
+        ...     )
+        ...     datasets.append(dataset)
+        >>> datasets = datasets.stack_reduce(name="HESS")
+        >>> model = SkyModel(spectral_model=LogParabolaSpectralModel(), name="crab")
+        >>> datasets.models = model
+        >>> par_alpha = datasets.models.parameters["alpha"]
+        >>> par_beta = datasets.models.parameters["beta"]
+        >>> par_alpha.scan_values = np.linspace(1.55, 2.7, 20)
+        >>> par_beta.scan_values = np.linspace(-0.05, 0.55, 20)
+        >>> fit = Fit()
+        >>> stat_surface = fit.stat_surface(
+        ...     datasets=datasets,
+        ...     x=par_alpha,
+        ...     y=par_beta,
+        ...     reoptimize=False,
+        ... )
         """
         datasets, parameters = self._parse_datasets(datasets=datasets)
 
@@ -509,7 +555,30 @@ class Fit:
         result : dict
             Dictionary containing the parameter values defining the contour, with the
             boolean flag "success" and the information objects from ``mncontour``.
+
+        Examples
+        --------
+        >>> from gammapy.datasets import Datasets, SpectrumDatasetOnOff
+        >>> from gammapy.modeling.models import SkyModel, LogParabolaSpectralModel
+        >>> from gammapy.modeling import Fit
+        >>> datasets = Datasets()
+        >>> for obs_id in [23523, 23526]:
+        ...     dataset = SpectrumDatasetOnOff.read(
+        ...         f"$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs{obs_id}.fits"
+        ...     )
+        ...     datasets.append(dataset)
+        >>> datasets = datasets.stack_reduce(name="HESS")
+        >>> model = SkyModel(spectral_model=LogParabolaSpectralModel(), name="crab")
+        >>> datasets.models = model
+        >>> fit = Fit(backend='minuit')
+        >>> optimize = fit.optimize(datasets)
+        >>> stat_contour = fit.stat_contour(
+        ...     datasets=datasets,
+        ...     x=model.spectral_model.alpha,
+        ...     y=model.spectral_model.amplitude,
+        ... )
         """
+
         datasets, parameters = self._parse_datasets(datasets=datasets)
 
         x = parameters[x]
