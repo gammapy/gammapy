@@ -12,6 +12,7 @@ from gammapy.modeling.models import (
     Models,
     SkyModel,
 )
+from gammapy.utils.scripts import read_yaml
 from gammapy.utils.testing import requires_data, requires_dependency
 
 
@@ -338,21 +339,28 @@ def test_write(tmpdir):
     fit = Fit()
     result = fit.run(datasets)
 
-    result_dict = result.to_dict()
+    result_dict = result.covariance_result.to_dict()
     assert (
-        result_dict["covariance_result"]["backend"] == result.covariance_result.backend
+        result_dict["CovarianceResult"]["backend"] == result.covariance_result.backend
     )
-    assert result_dict["optimize_result"]["nfev"] == result.optimize_result.nfev
+    result_dict = result.optimize_result.to_dict()
+    assert result_dict["OptimizeResult"]["nfev"] == result.optimize_result.nfev
     assert (
-        result_dict["optimize_result"]["total_stat"]
-        == result.optimize_result.total_stat
+        result_dict["OptimizeResult"]["total_stat"] == result.optimize_result.total_stat
     )
 
-    result.write(path=tmpdir / "test-fit-result.yaml")
+    filename = tmpdir / "test-fit-result.yaml"
+
+    result.write(filename)
+    data = read_yaml(filename)
+    assert "CovarianceResult" in data
+    assert "OptimizeResult" in data
 
     optimize_result = fit.optimize(datasets)
     result = FitResult(optimize_result=optimize_result)
 
-    result_dict = result.to_dict()
-    assert "covariance_result" not in result_dict
-    result.write(path=tmpdir / "test-fit-result.yaml", overwrite=True)
+    result.write(filename, overwrite=True)
+    data = read_yaml(filename)
+
+    assert "CovarianceResult" not in data
+    assert "OptimizeResult" in data
