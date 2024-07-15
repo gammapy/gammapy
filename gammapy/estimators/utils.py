@@ -773,16 +773,26 @@ def combine_flux_maps(
         * gaussian_errors :
             Under the gaussian error approximation the likelihood is given by the gaussian distibution.
             The product of gaussians is also a gaussian so can derive dnde, dnde_err, and ts.
+        * distrib :
+            Likelihood profile approximation assuming that probabilities distributions for
+            flux points correspond to asymmetric gaussians and for upper limits to complementary error functions.
+            Use available quantities among dnde, dnde_err, dnde_errp, dnde_errn, dnde_ul, and ts.
         * profile :
             Sum the likelihood profile maps.
             The flux maps must contains the `stat_scan` maps.
-            Reference model must be the same for all maps,
-            otherwise the likelihood profile maps are not aligned.
-        Default is "gaussian_errors", but "profile" will be more accurate if available.
+
+        Default is "gaussian_errors" which is the faster but least accurate solution,
+        "distrib"  will be more accurate if dnde_errp and dnde_errn are available,
+        "profile"  will be even more accurate if "stat_scan" is available.
 
     reference_model : `~gammapy.modeling.models.SkyModel`, optional
         Reference model to use for conversions.
-        If None, use the reference_model of the first FluxMaps in the list.
+        Default is None and is will use the reference_model of the first FluxMaps in the list.
+
+    dnde_scan_axis : `~gammapy.maps.MapAxis`
+        dnde axis used to compute the likelihood profile.
+        Used only if `method` is distrib or profile.
+        Default is None and it will be derived from the first FluxMaps in the list.
 
     Returns
     -------
@@ -865,12 +875,13 @@ def combine_flux_maps(
         return FluxMaps.from_maps(dict(dnde=mean, dnde_err=sigma, ts=ts), **kwargs)
 
     elif method in ["distrib", "profile"]:
-
+        if dnde_scan_axis is None:
+            dnde_scan_axis = _default_scan_map(maps[0]).geom.axes["dnde"]
         for k, map_ in enumerate(maps):
             map_stat_scan = (
-                inpterpolate_profile(map_)
+                inpterpolate_profile(map_, dnde_scan_axis=dnde_scan_axis)
                 if method == "profile"
-                else approximate_profile(map_)
+                else approximate_profile(map_, dnde_scan_axis=dnde_scan_axis)
             )
             map_stat_scan.data[np.isnan(map_stat_scan.data)] = 0.0
             if k == 0:
@@ -889,6 +900,143 @@ def combine_flux_maps(
         raise ValueError(
             f'Invalid method : {method}, available methods are : "gaussian_errors", "distrib", "profile"'
         )
+
+
+def _default_scan_map(flux_map, dnde_scan_axis=None):
+    if dnde_scan_axis is None:
+        dnde_scan_axis = MapAxis(
+            _generate_scan_values() * flux_map.dnde_ref.squeeze(),
+            interp="lin",
+            node_type="center",
+            name="dnde",
+            unit=flux_map.dnde_ref.unit,
+        )
+
+    geom = flux_map.dnde.geom
+    geom_scan = geom.to_image().to_cube([dnde_scan_axis] + list(geom.axes))
+    return Map.from_geom(geom_scan, data=np.nan, unit="")
+
+
+def inpterpolate_profile(flux_map, dnde_scan_axis=None):
+    """Interpolate sparse likelihood profile to regular grid
+
+    Parameters
+    ----------
+    flux_map : `~gammapy.estimators.FluxMaps`
+        Flux map.
+    dnde_scan_axis : `~gammapy.maps.MapAxis`
+        dnde axis used to compute the profile.
+
+    Returns
+    -------
+    scan_map: `~gammapy.estimators.Maps`
+        Likelihood profile map.
+
+    """
+
+    stat_scan = _default_scan_map(flux_map, dnde_scan_axis)
+    dnde_scan_axis = stat_scan.geom.axes["dnde"]
+
+    mask_valid = ~np.isnan(flux_map.dnde.data)
+    dnde_scan_values = flux_map.dnde_scan_values.quantity.to_value(dnde_scan_axis.unit)
+
+    for ij, il, ik in zip(*np.where(mask_valid)):
+        spline = InterpolatedUnivariateSpline(
+            dnde_scan_values[ij, :, il, ik],
+            flux_map.stat_scan.data[ij, :, il, ik],
+            k=1,
+            ext="raise",
+            check_finite=True,
+        )
+        stat_scan.data[ij, :, il, ik] = spline(dnde_scan_axis.center)
+    return stat_scan
+
+
+def approximate_profile(flux_map, sqrt_ts_threshold_ul="ignore", dnde_scan_axis=None):
+    """Likelihood profile approximation assuming that probabilities distributions for
+    flux points correspond to asymmetric gaussians and for upper limits to complementary error functions.
+    Use available quantities among dnde, dnde_err, dnde_errp, dnde_errn, dnde_ul and ts.
+
+    Parameters
+    ----------
+    flux_map : `~gammapy.estimators.FluxMaps`
+        Flux map.
+    sqrt_ts_threshold_ul : int
+        Threshold value in sqrt(TS) for upper limits.
+        Default is `ignore` and no threshold is applied.
+        Setting to `None` will use the one of `flux_map`.
+    dnde_scan_axis : `~gammapy.maps.MapAxis`
+        dnde axis used to compute the profile.
+
+    Returns
+    -------
+    scan_map: `~gammapy.estimators.Maps`
+        Likelihood profile map.
+
+    """
+
+    stat_approx = _default_scan_map(flux_map, dnde_scan_axis)
+    dnde_coord = stat_approx.geom.get_coord()["dnde"].value
+
+    if sqrt_ts_threshold_ul is None:
+        sqrt_ts_threshold_ul = flux_map.sqrt_ts_threshold_ul
+
+    mask_valid = ~np.isnan(flux_map.dnde.data)
+    ij, il, ik = np.where(mask_valid)
+    loc = flux_map.dnde.data[mask_valid][:, None]
+    value = dnde_coord[ij, :, il, ik]
+    try:
+        mask_p = dnde_coord >= flux_map.dnde.data
+        mask_p2d = mask_p[ij, :, il, ik]
+        new_axis = np.ones(mask_p2d.shape[1], dtype=bool)[None, :]
+        scale = np.zeros(mask_p2d.shape)
+        scale[mask_p2d] = (flux_map.dnde_errp.data[mask_valid][:, None] * new_axis)[
+            mask_p2d
+        ]
+        scale[~mask_p2d] = (flux_map.dnde_errn.data[mask_valid][:, None] * new_axis)[
+            ~mask_p2d
+        ]
+    except AttributeError:
+        scale = flux_map.dnde_err.data[mask_valid]
+        scale = scale[:, None]
+    stat_approx.data[ij, :, il, ik] = ((value - loc) / scale) ** 2
+
+    try:
+        invalid_value = 999
+        stat_min_p = (stat_approx.data + invalid_value * (~mask_p)).min(
+            axis=1, keepdims=True
+        )
+        stat_min_m = (stat_approx.data + invalid_value * mask_p).min(
+            axis=1, keepdims=True
+        )
+
+        mask_minp = mask_p & (stat_min_p > stat_min_m)
+        stat_approx.data[mask_minp] = (stat_approx.data + stat_min_m - stat_min_p)[
+            mask_minp
+        ]
+        mask_minn = ~mask_p & (stat_min_m >= stat_min_p)
+        stat_approx.data[mask_minn] = (stat_approx.data + stat_min_p - stat_min_m)[
+            mask_minn
+        ]
+    except NameError:
+        pass
+
+    if not sqrt_ts_threshold_ul == "ignore" and sqrt_ts_threshold_ul is not None:
+        mask_ul = (flux_map.sqrt_ts.data < sqrt_ts_threshold_ul) & ~np.isnan(
+            flux_map.dnde_ul.data
+        )
+        ij, il, ik = np.where(mask_ul)
+        value = dnde_coord[ij, :, il, ik]
+        loc_ul = flux_map.dnde_ul.data[mask_ul][:, None]
+        scale_ul = flux_map.dnde_ul.data[mask_ul][:, None]
+        stat_approx.data[ij, :, il, ik] = -2 * np.log(
+            (special.erfc((-loc_ul + value) / scale_ul) / 2)
+            / (special.erfc((-loc_ul + 0) / scale_ul) / 2)
+        )
+
+    stat_approx.data[np.isnan(stat_approx.data)] = np.inf
+    stat_approx.data += -flux_map.ts.data - stat_approx.data.min(axis=1)
+    return stat_approx
 
 
 def get_flux_map_from_profile(
@@ -1052,126 +1200,3 @@ def _get_norm_scan_values(norm, result):
         rand_norms = 20 * np.random.rand(109 - len(sparse_norms)) - 10
         sparse_norms = np.concatenate((sparse_norms, rand_norms))
     return np.sort(sparse_norms)
-
-
-def _default_scan_map(flux_map, dnde_scan_axis=None):
-    if dnde_scan_axis is None:
-        dnde_scan_axis = MapAxis(
-            _generate_scan_values() * flux_map.dnde_ref.squeeze(),
-            interp="lin",
-            node_type="center",
-            name="dnde",
-            unit=flux_map.dnde_ref.unit,
-        )
-
-    geom = flux_map.dnde.geom
-    geom_scan = geom.to_image().to_cube([dnde_scan_axis] + list(geom.axes))
-    return Map.from_geom(geom_scan, data=np.nan, unit="")
-
-
-def inpterpolate_profile(flux_map, dnde_scan_axis=None):
-    """Interpolate sparse likelihood profile to regular grid"""
-
-    stat_scan = _default_scan_map(flux_map, dnde_scan_axis)
-    dnde_scan_axis = stat_scan.geom.axes["dnde"]
-
-    mask_valid = ~np.isnan(flux_map.dnde.data)
-    dnde_scan_values = flux_map.dnde_scan_values.quantity.to_value(dnde_scan_axis.unit)
-
-    for ij, il, ik in zip(*np.where(mask_valid)):
-        spline = InterpolatedUnivariateSpline(
-            dnde_scan_values[ij, :, il, ik],
-            flux_map.stat_scan.data[ij, :, il, ik],
-            k=1,
-            ext="raise",
-            check_finite=True,
-        )
-        stat_scan.data[ij, :, il, ik] = spline(dnde_scan_axis.center)
-    return stat_scan
-
-
-def approximate_profile(flux_map, sqrt_ts_threshold_ul="ignore", dnde_scan_axis=None):
-    """Likelihood profile approximation assuming that probabilities distributions for
-    flux points correspond to asymmetric gaussians and for upper limits to complementary error functions.
-    Use available quantities among dnde, dnde_err, dnde_errp, dnde_errn, and dnde_ul.
-
-    Parameters
-    ----------
-    flux_map : `~gammapy.estimators.FluxMaps`
-        Flux map.
-    sqrt_ts_threshold_ul : int
-        Threshold value in sqrt(TS) for upper limits.
-        Default is `ignore` and no threshold is applied.
-        Setting to `None` will use the one of `flux_map`.
-    dnde_scan_axis : list of `~gammapy.maps.MapAxis`
-        dnde axis used to compute the profile.
-
-    Returns
-    -------
-    scan_map: `~gammapy.estimators.Maps`
-        Likelihood profile map.
-
-    """
-
-    stat_approx = _default_scan_map(flux_map, dnde_scan_axis)
-    dnde_coord = stat_approx.geom.get_coord()["dnde"].value
-
-    if sqrt_ts_threshold_ul is None:
-        sqrt_ts_threshold_ul = flux_map.sqrt_ts_threshold_ul
-
-    mask_valid = ~np.isnan(flux_map.dnde.data)
-    ij, il, ik = np.where(mask_valid)
-    loc = flux_map.dnde.data[mask_valid][:, None]
-    value = dnde_coord[ij, :, il, ik]
-    try:
-        mask_p = dnde_coord >= flux_map.dnde.data
-        mask_p2d = mask_p[ij, :, il, ik]
-        new_axis = np.ones(mask_p2d.shape[1], dtype=bool)[None, :]
-        scale = np.zeros(mask_p2d.shape)
-        scale[mask_p2d] = (flux_map.dnde_errp.data[mask_valid][:, None] * new_axis)[
-            mask_p2d
-        ]
-        scale[~mask_p2d] = (flux_map.dnde_errn.data[mask_valid][:, None] * new_axis)[
-            ~mask_p2d
-        ]
-    except AttributeError:
-        scale = flux_map.dnde_err.data[mask_valid]
-        scale = scale[:, None]
-    stat_approx.data[ij, :, il, ik] = ((value - loc) / scale) ** 2
-
-    try:
-        invalid_value = 999
-        stat_min_p = (stat_approx.data + invalid_value * (~mask_p)).min(
-            axis=1, keepdims=True
-        )
-        stat_min_m = (stat_approx.data + invalid_value * mask_p).min(
-            axis=1, keepdims=True
-        )
-
-        mask_minp = mask_p & (stat_min_p > stat_min_m)
-        stat_approx.data[mask_minp] = (stat_approx.data + stat_min_m - stat_min_p)[
-            mask_minp
-        ]
-        mask_minn = ~mask_p & (stat_min_m >= stat_min_p)
-        stat_approx.data[mask_minn] = (stat_approx.data + stat_min_p - stat_min_m)[
-            mask_minn
-        ]
-    except NameError:
-        pass
-
-    if not sqrt_ts_threshold_ul == "ignore" and sqrt_ts_threshold_ul is not None:
-        mask_ul = (flux_map.sqrt_ts.data < sqrt_ts_threshold_ul) & ~np.isnan(
-            flux_map.dnde_ul.data
-        )
-        ij, il, ik = np.where(mask_ul)
-        value = dnde_coord[ij, :, il, ik]
-        loc_ul = flux_map.dnde_ul.data[mask_ul][:, None]
-        scale_ul = flux_map.dnde_ul.data[mask_ul][:, None]
-        stat_approx.data[ij, :, il, ik] = -2 * np.log(
-            (special.erfc((-loc_ul + value) / scale_ul) / 2)
-            / (special.erfc((-loc_ul + 0) / scale_ul) / 2)
-        )
-
-    stat_approx.data[np.isnan(stat_approx.data)] = np.inf
-    stat_approx.data += -flux_map.ts.data - stat_approx.data.min(axis=1)
-    return stat_approx
