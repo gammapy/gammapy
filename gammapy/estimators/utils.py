@@ -800,27 +800,21 @@ def combine_flux_maps(
         Joint flux map.
     """
 
-    if isinstance(maps, FluxMaps):
-        gti = maps.gti
-        meta = maps.meta
-        if reference_model is None:
-            reference_model = maps.reference_model
+    gtis = [map_.gti for map_ in maps if map_.gti is not None]
+    if np.any(gtis):
+        gti = gtis[0].copy()
+        for k in range(1, len(gtis)):
+            gti.stack(gtis[k])
     else:
-        gtis = [map_.gti for map_ in maps if map_.gti is not None]
-        if np.any(gtis):
-            gti = gtis[0].copy()
-            for k in range(1, len(gtis)):
-                gti.stack(gtis[k])
-        else:
-            gti = None
-        # TODO : change this once we have stackable metadata objets
-        metas = [map_.meta for map_ in maps if map_.meta is not None]
-        meta = {}
-        if np.any(metas):
-            for data in metas:
-                meta.update(data)
-        if reference_model is None:
-            reference_model = maps[0].reference_model
+        gti = None
+    # TODO : change this once we have stackable metadata objets
+    metas = [map_.meta for map_ in maps if map_.meta is not None]
+    meta = {}
+    if np.any(metas):
+        for data in metas:
+            meta.update(data)
+    if reference_model is None:
+        reference_model = maps[0].reference_model
 
     if method == "gaussian_errors":
 
