@@ -944,7 +944,7 @@ def inpterpolate_profile(flux_map, dnde_scan_axis=None):
     return stat_scan
 
 
-def approximate_profile(flux_map, sqrt_ts_threshold_ul="ignore", dnde_scan_axis=None):
+def approximate_profile(flux_map, dnde_scan_axis=None, sqrt_ts_threshold_ul="ignore"):
     """Likelihood profile approximation assuming that probabilities distributions for
     flux points correspond to asymmetric gaussians and for upper limits to complementary error functions.
     Use available quantities among dnde, dnde_err, dnde_errp, dnde_errn, dnde_ul and ts.
@@ -953,12 +953,12 @@ def approximate_profile(flux_map, sqrt_ts_threshold_ul="ignore", dnde_scan_axis=
     ----------
     flux_map : `~gammapy.estimators.FluxMaps`
         Flux map.
+    dnde_scan_axis : `~gammapy.maps.MapAxis`
+        dnde axis used to compute the profile.
     sqrt_ts_threshold_ul : int
         Threshold value in sqrt(TS) for upper limits.
         Default is `ignore` and no threshold is applied.
         Setting to `None` will use the one of `flux_map`.
-    dnde_scan_axis : `~gammapy.maps.MapAxis`
-        dnde axis used to compute the profile.
 
     Returns
     -------
