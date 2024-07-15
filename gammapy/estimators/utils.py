@@ -865,9 +865,9 @@ def combine_flux_maps(
             dnde_scan_axis = _default_scan_map(maps[0]).geom.axes["dnde"]
         for k, map_ in enumerate(maps):
             map_stat_scan = (
-                inpterpolate_profile(map_, dnde_scan_axis=dnde_scan_axis)
+                interpolate_profile_map(map_, dnde_scan_axis=dnde_scan_axis)
                 if method == "profile"
-                else approximate_profile(map_, dnde_scan_axis=dnde_scan_axis)
+                else approximate_profile_map(map_, dnde_scan_axis=dnde_scan_axis)
             )
             map_stat_scan.data[np.isnan(map_stat_scan.data)] = 0.0
             if k == 0:
@@ -903,7 +903,7 @@ def _default_scan_map(flux_map, dnde_scan_axis=None):
     return Map.from_geom(geom_scan, data=np.nan, unit="")
 
 
-def inpterpolate_profile(flux_map, dnde_scan_axis=None):
+def interpolate_profile_map(flux_map, dnde_scan_axis=None):
     """Interpolate sparse likelihood profile to regular grid
 
     Parameters
@@ -938,7 +938,9 @@ def inpterpolate_profile(flux_map, dnde_scan_axis=None):
     return stat_scan
 
 
-def approximate_profile(flux_map, dnde_scan_axis=None, sqrt_ts_threshold_ul="ignore"):
+def approximate_profile_map(
+    flux_map, dnde_scan_axis=None, sqrt_ts_threshold_ul="ignore"
+):
     """Likelihood profile approximation assuming that probabilities distributions for
     flux points correspond to asymmetric gaussians and for upper limits to complementary error functions.
     Use available quantities among dnde, dnde_err, dnde_errp, dnde_errn, dnde_ul and ts.
