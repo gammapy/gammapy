@@ -259,8 +259,6 @@ def test_combine_flux_maps(map_flux_estimate, wcs_flux_map, reference_model):
     )
     assert_allclose(fe_new.ts, ts * 2)
 
-    fe_new = combine_flux_maps(fe)
-
 
 def test_flux_map_properties(wcs_flux_map, reference_model):
     fluxmap = FluxMaps(wcs_flux_map, reference_model)
