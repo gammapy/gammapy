@@ -529,9 +529,6 @@ def test_make_effective_livetime_map():
         axes=[energy_axis_true],
     )
     obs_time = make_effective_livetime_map(observations, geom, offset_max=2.5 * u.deg)
-
-    obs_time.plot_grid()
-
     obs_time_center = obs_time.get_by_coord((source_pos, energy_axis_true.center))
     assert_allclose(obs_time_center, [0, 1.2847], rtol=1e-3)
 
