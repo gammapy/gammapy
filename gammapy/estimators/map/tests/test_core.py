@@ -250,8 +250,7 @@ def test_combine_flux_maps(map_flux_estimate, wcs_flux_map, reference_model):
     )
     assert fe_new.meta == fe.meta
 
-    fe = FluxMaps(wcs_flux_map, reference_model)
-    fe.ts.data = (fe.norm.data / fe.norm_err.data) ** 2
+    fe = FluxMaps(data, reference_model)
 
     fe_new = combine_flux_maps([fe, fe], reference_model=reference_model)
     assert_allclose(fe_new.dnde.quantity, fe.dnde.quantity)
@@ -260,9 +259,13 @@ def test_combine_flux_maps(map_flux_estimate, wcs_flux_map, reference_model):
     )
     assert_allclose(fe_new.norm.quantity, fe.norm.quantity)
 
-    ts = -2 * np.log(
-        stats.norm.pdf(0, loc=fe.dnde.data, scale=fe.dnde_err.data)
-        / stats.norm.pdf(fe.dnde.data, loc=fe.dnde.data, scale=fe.dnde_err.data)
+    ts = (
+        -2
+        * np.log(
+            stats.norm.pdf(0, loc=fe.dnde.data, scale=fe.dnde_err.data)
+            / stats.norm.pdf(fe.dnde.data, loc=fe.dnde.data, scale=fe.dnde_err.data)
+        )
+        + (fe.ts - (fe.norm.data / fe.norm_err.data) ** 2) * 2
     )
     assert_allclose(fe_new.ts, ts * 2)
 
