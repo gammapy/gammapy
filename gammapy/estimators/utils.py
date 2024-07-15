@@ -890,7 +890,7 @@ def combine_flux_maps(
 
     else:
         raise ValueError(
-            f'Invalid method : {method}, available methods are : "gaussian_errors", "distrib", "profile"'
+            f'Invalid method provided : {method}. Available methods are : "gaussian_errors", "distrib", "profile"'
         )
 
 
