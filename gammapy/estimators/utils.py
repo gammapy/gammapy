@@ -44,7 +44,7 @@ def find_peaks(image, threshold, min_distance=1):
     a different method in the first place to result in a smooth image.
     You can also increase the ``min_distance`` parameter.
 
-    The output_maps table contains one row per peak and the following columns:
+    The output table contains one row per peak and the following columns:
 
     - ``x`` and ``y`` are the pixel coordinates (first pixel at zero).
     - ``ra`` and ``dec`` are the RA / DEC sky coordinates (ICRS frame).
@@ -71,7 +71,7 @@ def find_peaks(image, threshold, min_distance=1):
 
     Returns
     -------
-    output_maps : `~astropy.table.Table`
+    output : `~astropy.table.Table`
         Table with parameters of detected peaks.
 
     Examples
@@ -171,7 +171,7 @@ def find_peaks_in_flux_map(maps, threshold, min_distance=1):
 
     Returns
     -------
-    output_maps : `~astropy.table.Table`
+    output : `~astropy.table.Table`
         Table with parameters of detected peaks.
 
     Examples
