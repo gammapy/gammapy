@@ -7,7 +7,12 @@ import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from gammapy.datasets import Datasets, MapDataset, MapDatasetOnOff
 from gammapy.estimators import TSMapEstimator
-from gammapy.estimators.utils import combine_flux_maps, get_combined_significance_maps
+from gammapy.estimators.utils import (
+    approximate_profile_map,
+    combine_flux_maps,
+    get_combined_significance_maps,
+    get_flux_map_from_profile,
+)
 from gammapy.irf import EDispKernelMap, PSFMap
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling.models import (
@@ -313,6 +318,19 @@ def test_ts_map_stat_scan(fake_dataset):
     norm = maps.dnde_scan_values.data[ij, ind_best, ik, il] / dnde_ref.value
     assert_allclose(norm[success], maps_ref.norm.data[success], rtol=1e-5)
 
+    stat_scan_aprrox = approximate_profile_map(maps, sqrt_ts_threshold_ul="ignore")
+    ts_aprrox = np.abs(stat_scan_aprrox.data.min(axis=1))
+    assert_allclose(ts_aprrox[success], maps_ref.ts.data[success], rtol=1e-3)
+
+    stat_scan_aprrox = approximate_profile_map(maps, sqrt_ts_threshold_ul=None)
+    ts_aprrox = np.abs(stat_scan_aprrox.data.min(axis=1))
+    assert_allclose(ts_aprrox[success], maps_ref.ts.data[success], rtol=1e-3)
+
+    maps_from_scan = get_flux_map_from_profile(maps)
+    assert_allclose(
+        maps_from_scan.ts.data[success], maps_ref.ts.data[success], rtol=1e-3
+    )
+
     combined_map = combine_flux_maps([maps, maps], method="profile")
     assert_allclose(combined_map.ts.data, 2 * ts, rtol=1e-4)
     assert_allclose(combined_map.norm.data[success], norm[success], rtol=5e-2)
@@ -350,6 +368,8 @@ def test_ts_map_stat_scan(fake_dataset):
     assert_allclose(
         maps.norm_ul.data[success], maps_ref.norm_ul.data[success], rtol=5e-2
     )
+    with pytest.raises(ValueError):
+        combine_flux_maps([maps, maps1], method="test")
 
 
 def test_ts_map_with_model(fake_dataset):
