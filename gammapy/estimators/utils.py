@@ -2,6 +2,7 @@
 import numpy as np
 import scipy.ndimage
 from scipy import special
+from scipy.interpolate import InterpolatedUnivariateSpline
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
@@ -757,7 +758,9 @@ def get_combined_significance_maps(estimator, datasets):
     )
 
 
-def combine_flux_maps(maps, method="gaussian_errors", reference_model=None):
+def combine_flux_maps(
+    maps, method="gaussian_errors", reference_model=None, dnde_scan_axis=None
+):
     """Create a FluxMaps by combining a list of flux maps with the same geometry.
      This assumes the flux maps are independent measurements of the same true value.
      The GTI is stacked in the process.
@@ -864,7 +867,7 @@ def combine_flux_maps(maps, method="gaussian_errors", reference_model=None):
 
         for k, map_ in enumerate(maps):
             map_stat_scan = (
-                map_.stat_scan.copy()
+                inpterpolate_profile(map_)
                 if method == "profile"
                 else approximate_profile(map_)
             )
@@ -1050,6 +1053,57 @@ def _get_norm_scan_values(norm, result):
     return np.sort(sparse_norms)
 
 
+def _generate_scan_values(power_min=-4, power_max=2, relative_error=1e-2):
+    """Values sampled such as we can probe a given `relative_error` on the norm
+    between 10**`power_min` and 10**`power_max`.
+
+    """
+    arrays = []
+    for power in range(power_min, power_max):
+        vmin = 10**power
+        vmax = 10 ** (power + 1)
+        bin_per_decade = int((vmax - vmin) / (vmin * relative_error))
+        arrays.append(np.linspace(vmin, vmax, bin_per_decade + 1, dtype=np.float32))
+    scan_1side = np.unique(np.concatenate(arrays))
+    return np.concatenate((-scan_1side[::-1], [0], scan_1side))
+
+
+def _default_scan_map(flux_map, dnde_scan_axis=None):
+    if dnde_scan_axis is None:
+        dnde_scan_axis = MapAxis(
+            _generate_scan_values() * flux_map.dnde_ref.squeeze(),
+            interp="lin",
+            node_type="center",
+            name="dnde",
+            unit=flux_map.dnde_ref.unit,
+        )
+
+    geom = flux_map.dnde.geom
+    geom_scan = geom.to_image().to_cube([dnde_scan_axis] + list(geom.axes))
+    return Map.from_geom(geom_scan, data=np.nan, unit="")
+
+
+def inpterpolate_profile(flux_map, dnde_scan_axis=None):
+    """Interpolate sparse likelihood profile to regular grid"""
+
+    stat_scan = _default_scan_map(flux_map, dnde_scan_axis)
+    dnde_scan_axis = stat_scan.geom.axes["dnde"]
+
+    mask_valid = ~np.isnan(flux_map.dnde.data)
+    dnde_scan_values = flux_map.dnde_scan_values.quantity.to_value(dnde_scan_axis.unit)
+
+    for ij, il, ik in zip(*np.where(mask_valid)):
+        spline = InterpolatedUnivariateSpline(
+            dnde_scan_values[ij, :, il, ik],
+            flux_map.stat_scan.data[ij, :, il, ik],
+            k=1,
+            ext="raise",
+            check_finite=True,
+        )
+        stat_scan.data[ij, :, il, ik] = spline(dnde_scan_axis.center)
+    return stat_scan
+
+
 def approximate_profile(flux_map, sqrt_ts_threshold_ul="ignore", dnde_scan_axis=None):
     """Likelihood profile approximation assuming that probabilities distributions for
     flux points correspond to asymmetric gaussians and for upper limits to complementary error functions.
@@ -1072,25 +1126,12 @@ def approximate_profile(flux_map, sqrt_ts_threshold_ul="ignore", dnde_scan_axis=
         Likelihood profile map.
 
     """
-    from .map.ts import _generate_scan_values
 
-    if dnde_scan_axis is None:
-        dnde_scan_axis = MapAxis(
-            _generate_scan_values() * flux_map.dnde_ref.squeeze(),
-            interp="lin",
-            node_type="center",
-            name="dnde",
-            unit=flux_map.dnde_ref.unit,
-        )
+    stat_approx = _default_scan_map(flux_map, dnde_scan_axis)
+    dnde_coord = stat_approx.geom.get_coord()["dnde"].value
 
     if sqrt_ts_threshold_ul is None:
         sqrt_ts_threshold_ul = flux_map.sqrt_ts_threshold_ul
-
-    geom = flux_map.dnde.geom
-    geom_scan = geom.to_image().to_cube([dnde_scan_axis] + list(geom.axes))
-
-    stat_approx = Map.from_geom(geom_scan, data=np.nan, unit="")
-    dnde_coord = stat_approx.geom.get_coord()["dnde"].value
 
     mask_valid = ~np.isnan(flux_map.dnde.data)
     ij, il, ik = np.where(mask_valid)
