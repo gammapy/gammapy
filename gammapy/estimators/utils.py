@@ -860,7 +860,6 @@ def combine_flux_maps(
             sigma.data[mask_k] = sigma_k[mask_k]
 
         ts = mean * mean / sigma / sigma + ts_diff
-        ts.data[np.isnan(ts)] = 0.0
 
         kwargs = dict(
             sed_type="dnde", reference_model=reference_model, meta=meta, gti=gti

@@ -319,7 +319,7 @@ def test_ts_map_stat_scan(fake_dataset):
 
     maps1 = deepcopy(maps)
     combined_map = combine_flux_maps([maps, maps1], method="gaussian_errors")
-    assert_allclose(combined_map.ts.data, 2 * ts, rtol=1e-4)
+    assert_allclose(combined_map.ts.data[success], 2 * ts[success], rtol=1e-4)
     assert_allclose(combined_map.norm.data[success], norm[success], rtol=5e-2)
 
     combined_map = combine_flux_maps([maps, maps1], method="distrib")
