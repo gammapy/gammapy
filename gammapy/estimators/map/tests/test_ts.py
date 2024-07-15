@@ -305,27 +305,40 @@ def test_ts_map_stat_scan(fake_dataset):
     ts = np.abs(maps["stat_scan"].data.min(axis=1))
     assert_allclose(ts[success], maps_ref.ts.data[success], rtol=1e-3)
 
-    ind_best = maps.stat_scan.data.argmin(axis=1)
-    ij, ik, il = np.indices(ind_best.shape)
-
     dnde_ref = maps.dnde_ref.squeeze()
     assert maps.dnde_scan_values.unit == dnde_ref.unit
+
+    ind_best = maps.stat_scan.data.argmin(axis=1)
+    ij, ik, il = np.indices(ind_best.shape)
     norm = maps.dnde_scan_values.data[ij, ind_best, ik, il] / dnde_ref.value
     assert_allclose(norm[success], maps_ref.norm.data[success], rtol=1e-5)
+
     combined_map = combine_flux_maps([maps, maps], method="profile")
-    assert_allclose(combined_map.ts.data, 2 * ts)
-    assert_allclose(combined_map.norm.data, norm, rtol=5e-2)
+    assert_allclose(combined_map.ts.data, 2 * ts, rtol=1e-4)
+    assert_allclose(combined_map.norm.data[success], norm[success], rtol=5e-2)
 
     maps1 = deepcopy(maps)
+    combined_map = combine_flux_maps([maps, maps1], method="gaussian_errors")
+    assert_allclose(combined_map.ts.data, 2 * ts, rtol=1e-4)
+    assert_allclose(combined_map.norm.data[success], norm[success], rtol=5e-2)
+
+    combined_map = combine_flux_maps([maps, maps1], method="distrib")
+    assert_allclose(combined_map.ts.data, 2 * ts, rtol=1e-4)
+    assert_allclose(combined_map.norm.data[success], norm[success], rtol=5e-2)
+
     combined_map = combine_flux_maps([maps, maps1], method="profile")
-    assert_allclose(combined_map.ts.data, 2 * ts)
-    assert_allclose(combined_map.norm.data, norm, rtol=5e-2)
+    assert_allclose(combined_map.ts.data, 2 * ts, rtol=1e-4)
+    assert_allclose(combined_map.norm.data[success], norm[success], rtol=5e-2)
 
-    maps1 = deepcopy(maps)
     maps1._reference_model.parameters["amplitude"].value = 1
+
+    combined_map = combine_flux_maps([maps, maps1], method="distrib")
+    assert_allclose(combined_map.ts.data, 2 * ts, rtol=1e-4)
+    assert_allclose(combined_map.norm.data[success], norm[success], rtol=5e-2)
+
     combined_map = combine_flux_maps([maps, maps1], method="profile")
-    assert_allclose(combined_map.ts.data, 2 * ts)
-    assert_allclose(combined_map.norm.data, norm, rtol=5e-2)
+    assert_allclose(combined_map.ts.data, 2 * ts, rtol=1e-4)
+    assert_allclose(combined_map.norm.data[success], norm[success], rtol=5e-2)
 
     assert_allclose(maps.norm.data[success], maps_ref.norm.data[success], rtol=1e-4)
     assert_allclose(
