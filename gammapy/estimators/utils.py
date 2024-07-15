@@ -1053,21 +1053,6 @@ def _get_norm_scan_values(norm, result):
     return np.sort(sparse_norms)
 
 
-def _generate_scan_values(power_min=-4, power_max=2, relative_error=1e-2):
-    """Values sampled such as we can probe a given `relative_error` on the norm
-    between 10**`power_min` and 10**`power_max`.
-
-    """
-    arrays = []
-    for power in range(power_min, power_max):
-        vmin = 10**power
-        vmax = 10 ** (power + 1)
-        bin_per_decade = int((vmax - vmin) / (vmin * relative_error))
-        arrays.append(np.linspace(vmin, vmax, bin_per_decade + 1, dtype=np.float32))
-    scan_1side = np.unique(np.concatenate(arrays))
-    return np.concatenate((-scan_1side[::-1], [0], scan_1side))
-
-
 def _default_scan_map(flux_map, dnde_scan_axis=None):
     if dnde_scan_axis is None:
         dnde_scan_axis = MapAxis(
