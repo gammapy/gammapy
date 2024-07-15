@@ -1090,14 +1090,15 @@ def get_flux_map_from_profile(
     maskp = dnde_coord > dnde
     stat_diff = flux_map["stat_scan"].data - flux_map["stat_scan"].data.min(axis=1)
 
-    ind = np.abs(stat_diff - n_sigma**2)[maskp].argmin()
-    dnde_errn = dnde - dnde_coord[maskp][ind]
+    invalid_value = 999
+    ind = np.abs(stat_diff + invalid_value * maskp - n_sigma**2).argmin(axis=1)
+    dnde_errn = dnde - dnde_coord[ij, ind, ik, il]
 
-    ind = np.abs(stat_diff - n_sigma**2)[~maskp].argmin()
-    dnde_errp = dnde_coord[~maskp][ind] - dnde
+    ind = np.abs(stat_diff + invalid_value * (~maskp) - n_sigma**2).argmin(axis=1)
+    dnde_errp = dnde_coord[ij, ind, ik, il] - dnde
 
-    ind = np.abs(stat_diff - n_sigma_ul**2)[~maskp].argmin()
-    dnde_ul = dnde_coord[~maskp][ind]
+    ind = np.abs(stat_diff + invalid_value * (~maskp) - n_sigma_ul**2).argmin(axis=1)
+    dnde_ul = dnde_coord[ij, ind, ik, il]
 
     dnde_err = (dnde_errn + dnde_errp) / 2
 
