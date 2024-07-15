@@ -217,8 +217,13 @@ def test_combine_flux_maps(map_flux_estimate, wcs_flux_map, reference_model):
     stop = u.Quantity([1.5, 2.5], "min")
     gti = GTI.create(start, stop)
 
+    data = map_flux_estimate.copy()
+    ts = data["norm"].copy()
+    ts.data = (data["norm"].data / data["norm_err"].data) ** 2
+    data["ts"] = ts
+
     model = SkyModel(PowerLawSpectralModel(amplitude="1e-10 cm-2s-1TeV-1", index=2))
-    fe = FluxMaps(data=map_flux_estimate, reference_model=model, gti=gti)
+    fe = FluxMaps(data=data, reference_model=model, gti=gti)
     iE = 0
     energy = fe.geom.axes[0].center[iE]
 
@@ -246,6 +251,8 @@ def test_combine_flux_maps(map_flux_estimate, wcs_flux_map, reference_model):
     assert fe_new.meta == fe.meta
 
     fe = FluxMaps(wcs_flux_map, reference_model)
+    fe.ts.data = (fe.norm.data / fe.norm_err.data) ** 2
+
     fe_new = combine_flux_maps([fe, fe], reference_model=reference_model)
     assert_allclose(fe_new.dnde.quantity, fe.dnde.quantity)
     assert_allclose(
