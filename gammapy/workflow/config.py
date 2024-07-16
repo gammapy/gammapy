@@ -35,6 +35,16 @@ def deep_update(d, u):
     return d
 
 
+class AnalysisStepEnum(str, Enum):
+    data_reduction = "data-selection"
+    observations = "observations"
+    datasets = "datasets"
+    excess_map = "excess-map"
+    fit = "fit"
+    flux_points = "flux-points"
+    light_curve = "light-curve"
+
+
 class ReductionTypeEnum(str, Enum):
     spectrum = "1d"
     cube = "3d"
@@ -218,8 +228,10 @@ class GeneralConfig(GammapyBaseConfig):
     log: LogConfig = LogConfig()
     outdir: str = "."
     n_jobs: int = 1
-    datasets_file: Optional[PathType] = None
-    models_file: Optional[PathType] = None
+    datasets_file: Path = None
+    models_file: Path = None
+    steps: List[str] = ["data-selection", "fit", "flux-points"]
+    overwrite: List[bool] = [True, True, True]
 
 
 class AnalysisConfig(GammapyBaseConfig):

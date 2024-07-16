@@ -1,0 +1,68 @@
+# Section: general
+# General settings for the high level interface / optional
+general:
+    # logging settings for the session
+    log:
+        # choose one of the example values for level
+        level: INFO            # also CRITICAL, ERROR, WARNING, DEBUG
+        filename: filename.log
+        filemode: w
+        format: "%(asctime)s - %(message)s"
+        datefmt: "%d-%b-%y %H:%M:%S"
+    # output folder where files will be stored
+    outdir: .
+
+# Section: observations
+# Observations used in the analysis / mandatory
+observations:
+    # path to data store where to fetch observations
+    datastore: $GAMMAPY_DATA/hess-dl3-dr1/
+    obs_ids: [23523, 23526]
+    obs_file:   # csv file with obs_ids
+    # spatial /time filters applied on the obs_ids
+    obs_cone: {frame: icrs, lon: 83.633 deg, lat: 22.014 deg, radius: 3 deg}
+    obs_time: {start: '2019-12-01', stop: '2020-03-01'}
+
+# Section: datasets
+# Process of data reduction / mandatory
+datasets:
+    type: 3d   # also 1d
+    stack: false
+    geom:
+        wcs:
+            skydir: {frame: icrs, lon: 83.633 deg, lat: 22.014 deg}
+            binsize: 0.1 deg
+            width: {width: 7 deg, height: 5 deg}
+            binsize_irf: 0.1 deg
+        axes:
+            energy: {min: 0.1 TeV, max: 10 TeV, nbins: 30}
+            energy_true: {min: 0.1 TeV, max: 10 TeV, nbins: 30}
+    map_selection: ['counts', 'exposure', 'background', 'psf', 'edisp']
+    background:
+        method: ring        # also fov_background, reflected for 1d
+        exclusion:          # fits file for exclusion mask
+        parameters: {r_in: 0.7 deg, width: 0.7 deg} # ring
+    safe_mask:
+            methods: ['aeff-default', 'offset-max']
+            parameters: {offset_max: 2.5 deg}
+    on_region: {frame: icrs, lon: 83.633 deg, lat: 22.014 deg, radius: 3 deg}
+    containment_correction: true
+
+# Section: fit
+# Fitting process / optional
+fit:
+    fit_range: {min: 0.1 TeV, max: 10 TeV}
+
+# Section: flux_points
+# Flux estimation process /optional
+flux_points:
+    energy: {min: 0.1 TeV, max: 10 TeV, nbins: 30}
+    source: "source"
+    parameters: {}
+
+# Section: excess_map
+# Flux/significance map process /optional
+excess_map:
+    correlation_radius: 0.1 deg
+    energy_edges: {min: 0.1 TeV, max: 10 TeV, nbins: 1}
+    parameters: {}
