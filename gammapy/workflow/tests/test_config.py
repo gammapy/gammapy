@@ -8,7 +8,7 @@ from pydantic import ValidationError
 from gammapy.utils.testing import assert_allclose
 from gammapy.workflow.config import GeneralConfig, WorkflowConfig
 
-CONFIG_PATH = Path(__file__).resolve().parent / ".." / "config"
+CONFIG_PATH = Path(__file__).resolve().parent.parent / "config"
 DOC_FILE = CONFIG_PATH / "docs.yaml"
 
 
