@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import click
-from gammapy.analysis import Analysis, AnalysisConfig
+from gammapy.workflow import Workflow, WorkflowConfig
 
 log = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 )
 def cli_make_config(filename, overwrite):
     """Writes default configuration file."""
-    config = AnalysisConfig()
+    config = WorkflowConfig()
     config.write(filename, overwrite=overwrite)
     log.info(f"Configuration file produced: {filename}")
 
@@ -30,21 +30,8 @@ def cli_make_config(filename, overwrite):
     help="Filename with default configuration values.",
     show_default=True,
 )
-@click.option(
-    "--out",
-    default="datasets",
-    help="Output folder where reduced datasets are stored.",
-    show_default=True,
-)
-@click.option(
-    "--overwrite", default=False, is_flag=True, help="Overwrite existing datasets."
-)
-def cli_run_analysis(filename, out, overwrite):
+def cli_run_workflow(filename):
     """Performs automated data reduction process."""
-    config = AnalysisConfig.read(filename)
-    config.datasets.background.method = "reflected"
-    analysis = Analysis(config)
-    analysis.get_observations()
-    analysis.get_datasets()
-    analysis.datasets.write(out, overwrite=overwrite)
-    log.info(f"Datasets stored in {out} folder.")
+    config = WorkflowConfig.read(filename)
+    workflow = Workflow(config)
+    workflow.run()
