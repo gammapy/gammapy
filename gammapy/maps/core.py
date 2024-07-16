@@ -1734,9 +1734,10 @@ class Map(abc.ABC):
 
             data.append(m.quantity.to_value(maps[0].unit))
 
-        return cls.from_geom(
-            data=np.stack(data), geom=geom.to_cube(axes=[axis]), unit=maps[0].unit
-        )
+        new_geom = geom.to_cube(axes=[axis])
+        data = np.concatenate(data).reshape(new_geom.data_shape)
+
+        return cls.from_geom(data=data, geom=new_geom, unit=maps[0].unit)
 
     def split_by_axis(self, axis_name):
         """Split a Map along an axis into multiple maps.
