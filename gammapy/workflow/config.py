@@ -228,8 +228,8 @@ class GeneralConfig(GammapyBaseConfig):
     log: LogConfig = LogConfig()
     outdir: str = "."
     n_jobs: int = 1
-    datasets_file: Path = None
-    models_file: Path = None
+    datasets_file: Optional[PathType] = None
+    models_file: Optional[PathType] = None
     steps: List[str] = ["data-selection", "fit", "flux-points"]
     overwrite: List[bool] = [True, True, True]
 

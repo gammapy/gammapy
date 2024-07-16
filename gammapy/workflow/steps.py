@@ -100,7 +100,7 @@ class ObservationsWorkflowStep(WorkflowStepBase):
 
         self.log.info("Fetching observations.")
         ids = self._make_obs_table_selection()
-        required_irf = [_.value for _ in observations_settings.required_irf]
+        required_irf = observations_settings.required_irf
         self.data.observations = self.data.datastore.get_observations(
             ids, skip_missing=True, required_irf=required_irf
         )
@@ -114,7 +114,7 @@ class ObservationsWorkflowStep(WorkflowStepBase):
                 time_intervals = [(tstart, tstop) for tstart, tstop in zip(start, stop)]
             self.data.observations = self.data.observations.select_time(time_intervals)
 
-        self.log.info(f"Number of selected observations: {len(self.observations)}")
+        self.log.info(f"Number of selected observations: {len(self.data.observations)}")
 
         for obs in self.data.observations:
             self.log.debug(obs)
