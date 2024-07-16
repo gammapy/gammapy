@@ -2,6 +2,7 @@
 """classes containing the analysis steps supported by the high level interface"""
 
 import abc
+import logging
 import os
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
@@ -14,18 +15,17 @@ from gammapy.estimators import (
     LightCurveEstimator,
 )
 from gammapy.makers import (
+    DatasetsMaker,
     FoVBackgroundMaker,
     MapDatasetMaker,
     ReflectedRegionsBackgroundMaker,
     RingBackgroundMaker,
     SafeMaskMaker,
     SpectrumDatasetMaker,
-    DatasetsMaker,
 )
 from gammapy.maps import Map, MapAxis, RegionGeom, WcsGeom
 from gammapy.utils.pbar import progress_bar
-from gammapy.utils.scripts import make_path, make_name
-import logging
+from gammapy.utils.scripts import make_name, make_path
 
 
 class AnalysisStepBase(abc.ABC):
@@ -113,6 +113,8 @@ class ObservationsAnalysisStep(AnalysisStepBase):
             else:
                 time_intervals = [(tstart, tstop) for tstart, tstop in zip(start, stop)]
             self.data.observations = self.data.observations.select_time(time_intervals)
+
+        self.log.info(f"Number of selected observations: {len(self.observations)}")
 
         for obs in self.data.observations:
             self.log.debug(obs)
@@ -265,9 +267,9 @@ class DatasetsAnalysisStep(AnalysisStepBase):
         elif datasets_settings.type == "1d":
             maker_config = {}
             if datasets_settings.containment_correction:
-                maker_config[
-                    "containment_correction"
-                ] = datasets_settings.containment_correction
+                maker_config["containment_correction"] = (
+                    datasets_settings.containment_correction
+                )
 
             maker_config["selection"] = ["counts", "exposure", "edisp"]
 
@@ -347,7 +349,6 @@ class DatasetsAnalysisStep(AnalysisStepBase):
             cutout_width=2 * offset_max,
         )
         self.products.datasets = datasets_maker.run(stacked, self.data.observations)
-        # TODO: move progress bar to DatasetsMaker but how with multiprocessing ?
 
     def _spectrum_extraction(self):
         """Run all steps for the spectrum extraction."""
