@@ -5,15 +5,15 @@ from astropy.coordinates import Angle
 from astropy.time import Time
 from astropy.units import Quantity
 from pydantic import ValidationError
-from gammapy.analysis.config import AnalysisConfig, GeneralConfig
 from gammapy.utils.testing import assert_allclose
+from gammapy.workflow.config import GeneralConfig, WorkflowConfig
 
 CONFIG_PATH = Path(__file__).resolve().parent / ".." / "config"
 DOC_FILE = CONFIG_PATH / "docs.yaml"
 
 
 def test_config_default_types():
-    config = AnalysisConfig()
+    config = WorkflowConfig()
     assert config.observations.obs_cone.frame is None
     assert config.observations.obs_cone.lon is None
     assert config.observations.obs_cone.lat is None
@@ -39,7 +39,7 @@ def test_config_default_types():
 
 
 def test_config_not_default_types():
-    config = AnalysisConfig()
+    config = WorkflowConfig()
     config.observations.obs_cone = {
         "frame": "galactic",
         "lon": "83.633 deg",
@@ -60,30 +60,30 @@ def test_config_not_default_types():
 
 
 def test_config_basics():
-    config = AnalysisConfig()
-    assert "AnalysisConfig" in str(config)
-    config = AnalysisConfig.read(DOC_FILE)
+    config = WorkflowConfig()
+    assert "WorkflowConfig" in str(config)
+    config = WorkflowConfig.read(DOC_FILE)
     assert config.general.outdir == "."
 
 
 def test_config_create_from_dict():
     data = {"general": {"log": {"level": "warning"}}}
-    config = AnalysisConfig(**data)
+    config = WorkflowConfig(**data)
     assert config.general.log.level == "warning"
 
 
 def test_config_create_from_yaml():
-    config = AnalysisConfig.read(DOC_FILE)
+    config = WorkflowConfig.read(DOC_FILE)
     assert isinstance(config.general, GeneralConfig)
     config_str = Path(DOC_FILE).read_text()
-    config = AnalysisConfig.from_yaml(config_str)
+    config = WorkflowConfig.from_yaml(config_str)
     assert isinstance(config.general, GeneralConfig)
 
 
 def test_config_to_yaml(tmp_path):
-    config = AnalysisConfig()
+    config = WorkflowConfig()
     assert "level: info" in config.to_yaml()
-    config = AnalysisConfig()
+    config = WorkflowConfig()
     fpath = Path(tmp_path) / "temp.yaml"
     config.write(fpath)
     text = Path(fpath).read_text()
@@ -93,13 +93,13 @@ def test_config_to_yaml(tmp_path):
 
 
 def test_get_doc_sections():
-    config = AnalysisConfig()
+    config = WorkflowConfig()
     doc = config._get_doc_sections()
     assert "general" in doc.keys()
 
 
 def test_safe_mask_config_validation():
-    config = AnalysisConfig()
+    config = WorkflowConfig()
     # Check empty list is accepted
     config.datasets.safe_mask.methods = []
 
@@ -117,7 +117,7 @@ def test_time_range_iso():
             stop: [2004-12-04 22:26:24.000, 2004-12-04 22:53:45.600, 2004-12-04 23:31:12.000]
             }
     """
-    config = AnalysisConfig.from_yaml(cfg)
+    config = WorkflowConfig.from_yaml(cfg)
 
     assert_allclose(
         config.observations.obs_time.start.mjd, [53343.92, 53343.935, 53343.954]
@@ -134,7 +134,7 @@ def test_time_range_jyear():
             stop: [J2004.92658453, J2004.92663655, J2004.92670773]
             }
     """
-    config = AnalysisConfig.from_yaml(cfg)
+    config = WorkflowConfig.from_yaml(cfg)
 
     assert_allclose(
         config.observations.obs_time.start.mjd, [53343.92, 53343.935, 53343.954]

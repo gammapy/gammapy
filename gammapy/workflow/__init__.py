@@ -1,31 +1,31 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Gammapy high level interface (analysis)."""
+"""Gammapy high level interface (workflow)."""
 from gammapy.utils.registry import Registry
-from .config import AnalysisConfig
-from .core import Analysis
+from .config import WorkflowConfig
+from .core import Workflow
 from .steps import (
-    DataSelectionAnalysisStep,
-    DatasetsAnalysisStep,
-    ExcessMapAnalysisStep,
-    FitAnalysisStep,
-    FluxPointsAnalysisStep,
-    LightCurveAnalysisStep,
-    ObservationsAnalysisStep,
+    DataSelectionWorkflowStep,
+    DatasetsWorkflowStep,
+    ExcessMapWorkflowStep,
+    FitWorkflowStep,
+    FluxPointsWorkflowStep,
+    LightCurveWorkflowStep,
+    ObservationsWorkflowStep,
 )
 
 __all__ = [
-    "Analysis",
-    "AnalysisConfig",
+    "Workflow",
+    "WorkflowConfig",
 ]
 
-ANALYSIS_STEP_REGISTRY = Registry(
+WORKFLOW_STEP_REGISTRY = Registry(
     [
-        DataSelectionAnalysisStep,
-        ObservationsAnalysisStep,
-        DatasetsAnalysisStep,
-        ExcessMapAnalysisStep,
-        FitAnalysisStep,
-        FluxPointsAnalysisStep,
-        LightCurveAnalysisStep,
+        DataSelectionWorkflowStep,
+        ObservationsWorkflowStep,
+        DatasetsWorkflowStep,
+        ExcessMapWorkflowStep,
+        FitWorkflowStep,
+        FluxPointsWorkflowStep,
+        LightCurveWorkflowStep,
     ]
 )

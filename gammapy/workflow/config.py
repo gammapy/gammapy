@@ -14,7 +14,7 @@ from gammapy.makers import MapDatasetMaker
 from gammapy.utils.scripts import read_yaml, to_yaml, write_yaml
 from gammapy.utils.types import AngleType, EnergyType, PathType, TimeType
 
-__all__ = ["AnalysisConfig"]
+__all__ = ["WorkflowConfig"]
 
 CONFIG_PATH = Path(__file__).resolve().parent / "config"
 DOCS_FILE = CONFIG_PATH / "docs.yaml"
@@ -35,7 +35,7 @@ def deep_update(d, u):
     return d
 
 
-class AnalysisStepEnum(str, Enum):
+class WorkflowStepEnum(str, Enum):
     data_reduction = "data-selection"
     observations = "observations"
     datasets = "datasets"
@@ -234,8 +234,8 @@ class GeneralConfig(GammapyBaseConfig):
     overwrite: List[bool] = [True, True, True]
 
 
-class AnalysisConfig(GammapyBaseConfig):
-    """Gammapy analysis configuration."""
+class WorkflowConfig(GammapyBaseConfig):
+    """Gammapy workflow configuration."""
 
     general: GeneralConfig = GeneralConfig()
     observations: ObservationsConfig = ObservationsConfig()
@@ -264,7 +264,7 @@ class AnalysisConfig(GammapyBaseConfig):
         """
         config = read_yaml(path)
         config.pop("metadata", None)
-        return AnalysisConfig(**config)
+        return WorkflowConfig(**config)
 
     @classmethod
     def from_yaml(cls, config_str):
@@ -277,7 +277,7 @@ class AnalysisConfig(GammapyBaseConfig):
 
         """
         settings = yaml.safe_load(config_str)
-        return AnalysisConfig(**settings)
+        return WorkflowConfig(**settings)
 
     def write(self, path, overwrite=False):
         """Write to YAML file.
@@ -311,12 +311,12 @@ class AnalysisConfig(GammapyBaseConfig):
 
         Parameters
         ----------
-        config : str or `AnalysisConfig` object, optional
+        config : str or `WorkflowConfig` object, optional
             Configuration settings provided in dict() syntax. Default is None.
         """
         if isinstance(config, str):
-            other = AnalysisConfig.from_yaml(config)
-        elif isinstance(config, AnalysisConfig):
+            other = WorkflowConfig.from_yaml(config)
+        elif isinstance(config, WorkflowConfig):
             other = config
         else:
             raise TypeError(f"Invalid type: {config}")
@@ -325,7 +325,7 @@ class AnalysisConfig(GammapyBaseConfig):
             self.model_dump(exclude_defaults=True),
             other.model_dump(exclude_defaults=True),
         )
-        return AnalysisConfig(**config_new)
+        return WorkflowConfig(**config_new)
 
     @staticmethod
     def _get_doc_sections():

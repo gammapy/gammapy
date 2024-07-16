@@ -13,7 +13,7 @@ general:
     outdir: .
 
 # Section: observations
-# Observations used in the analysis / mandatory
+# Observations used in the workflow / mandatory
 observations:
     # path to data store where to fetch observations
     datastore: $GAMMAPY_DATA/hess-dl3-dr1/

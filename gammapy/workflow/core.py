@@ -2,20 +2,20 @@
 """Session class driving the high level interface API."""
 import html
 import logging
-from gammapy.analysis.config import AnalysisConfig
 from gammapy.datasets import Datasets
 from gammapy.modeling import Fit
 from gammapy.modeling.models import DatasetModels, FoVBackgroundModel, Models
 from gammapy.utils.scripts import make_path
-from .steps import AnalysisStep
+from gammapy.workflow.config import WorkflowConfig
+from .steps import WorkflowStep
 
-__all__ = ["Analysis"]
+__all__ = ["Workflow"]
 
 log = logging.getLogger(__name__)
 
 
-class Analysis:
-    """Config-driven high level analysis interface.
+class Workflow:
+    """Config-driven high level workflow interface.
 
     It is initialized by default with a set of configuration parameters and values declared in
     an internal high level interface model, though the user can also provide configuration
@@ -24,8 +24,8 @@ class Analysis:
 
     Parameters
     ----------
-    config : dict or `~gammapy.analysis.AnalysisConfig`
-        Configuration options following `AnalysisConfig` schema.
+    config : dict or `~gammapy.workflow.WorkflowConfig`
+        Configuration options following `WorkflowConfig` schema.
     """
 
     def __init__(self, config):
@@ -57,17 +57,17 @@ class Analysis:
 
     @property
     def config(self):
-        """Analysis configuration as an `~gammapy.analysis.AnalysisConfig` object."""
+        """Workflow configuration as an `~gammapy.workflow.WorkflowConfig` object."""
         return self._config
 
     @config.setter
     def config(self, value):
         if isinstance(value, dict):
-            self._config = AnalysisConfig(**value)
-        elif isinstance(value, AnalysisConfig):
+            self._config = WorkflowConfig(**value)
+        elif isinstance(value, WorkflowConfig):
             self._config = value
         else:
-            raise TypeError("config must be dict or AnalysisConfig.")
+            raise TypeError("config must be dict or WorkflowConfig.")
 
     def run(self, steps=None, overwrite=None, **kwargs):
         if steps is None:
@@ -81,10 +81,10 @@ class Analysis:
                 overwrite_step = overwrite[k]
             else:
                 overwrite_step = overwrite
-            analysis_step = AnalysisStep.create(
+            workflow_step = WorkflowStep.create(
                 step, self.config, log=self.log, overwrite=overwrite_step, **kwargs
             )
-            analysis_step.run(self)
+            workflow_step.run(self)
 
     # keep these methods to be backward compatible
     def get_observations(self):

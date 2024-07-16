@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""classes containing the analysis steps supported by the high level interface"""
+"""classes containing the workflow steps supported by the high level interface"""
 
 import abc
 import logging
@@ -28,8 +28,8 @@ from gammapy.utils.pbar import progress_bar
 from gammapy.utils.scripts import make_name, make_path
 
 
-class AnalysisStepBase(abc.ABC):
-    tag = "analysis-step"
+class WorkflowStepBase(abc.ABC):
+    tag = "workflow-step"
 
     def __init__(self, config, log=None, name=None, overwrite=True):
         self.config = config
@@ -45,12 +45,12 @@ class AnalysisStepBase(abc.ABC):
         return self._name
 
     def run(self, data):
-        # TODO: for now data is an analysis class
+        # TODO: for now data is an workflow class
         # but it will be replaced by a new specific container
         # and the type and origin of data required will be defined by config
         self.data = data
         self.products = self.data
-        # TODO: for now it is the analysis class
+        # TODO: for now it is the workflow class
         # but in future each step will declare the products they create
         # and init a specific container
         self._run()
@@ -60,18 +60,18 @@ class AnalysisStepBase(abc.ABC):
         pass
 
 
-class AnalysisStep:
-    "Create one of the analysis step class listed in the registry"
+class WorkflowStep:
+    "Create one of the workflow step class listed in the registry"
 
     @staticmethod
     def create(tag, config, **kwargs):
-        from . import ANALYSIS_STEP_REGISTRY
+        from . import WORKFLOW_STEP_REGISTRY
 
-        cls = ANALYSIS_STEP_REGISTRY.get_cls(tag)
+        cls = WORKFLOW_STEP_REGISTRY.get_cls(tag)
         return cls(config, **kwargs)
 
 
-class DataSelectionAnalysisStep(AnalysisStepBase):
+class DataSelectionWorkflowStep(WorkflowStepBase):
     tag = "data-selection"
 
     def _run(self):
@@ -79,10 +79,10 @@ class DataSelectionAnalysisStep(AnalysisStepBase):
         if filepath is not None and os.path.exists(filepath) and not self.overwrite:
             self.data.read_datasets()
         else:
-            obs_step = ObservationsAnalysisStep(
+            obs_step = ObservationsWorkflowStep(
                 self.config, log=self.log, overwrite=self.overwrite
             )
-            datasets_step = DatasetsAnalysisStep(
+            datasets_step = DatasetsWorkflowStep(
                 self.config, log=self.log, overwrite=self.overwrite
             )
             obs_step.run(self.data)
@@ -90,7 +90,7 @@ class DataSelectionAnalysisStep(AnalysisStepBase):
             self.data.write_datasets()
 
 
-class ObservationsAnalysisStep(AnalysisStepBase):
+class ObservationsWorkflowStep(WorkflowStepBase):
     tag = "observations"
 
     def _run(self):
@@ -120,7 +120,7 @@ class ObservationsAnalysisStep(AnalysisStepBase):
             self.log.debug(obs)
 
     def _get_data_store(self):
-        """Set the datastore on the Analysis object."""
+        """Set the datastore on the Workflow object."""
         path = make_path(self.config.observations.datastore)
         if path.is_file():
             self.log.debug(f"Setting datastore from file: {path}")
@@ -168,7 +168,7 @@ class ObservationsAnalysisStep(AnalysisStepBase):
         return selected_obs_table["OBS_ID"].tolist()
 
 
-class DatasetsAnalysisStep(AnalysisStepBase):
+class DatasetsWorkflowStep(WorkflowStepBase):
     tag = "datasets"
 
     def _run(self):
@@ -239,7 +239,7 @@ class DatasetsAnalysisStep(AnalysisStepBase):
         return geom
 
     def _create_reference_dataset(self, name=None):
-        """Create the reference dataset for the current analysis."""
+        """Create the reference dataset for the current workflow."""
         self.log.debug("Creating target Dataset.")
         geom = self._create_geometry()
 
@@ -325,7 +325,7 @@ class DatasetsAnalysisStep(AnalysisStepBase):
         return bkg_maker
 
     def _map_making(self):
-        """Make maps and datasets for 3d analysis"""
+        """Make maps and datasets for 3d workflow"""
         datasets_settings = self.config.datasets
         offset_max = datasets_settings.geom.selection.offset_max
 
@@ -398,7 +398,7 @@ def make_energy_axis(axis, name="energy"):
         )
 
 
-class ExcessMapAnalysisStep(AnalysisStepBase):
+class ExcessMapWorkflowStep(WorkflowStepBase):
     tag = "excess-map"
 
     def _run(self):
@@ -426,7 +426,7 @@ class ExcessMapAnalysisStep(AnalysisStepBase):
         self.products.excess_map = excess_map_estimator.run(self.data.datasets[0])
 
 
-class FitAnalysisStep(AnalysisStepBase):
+class FitWorkflowStep(WorkflowStepBase):
     tag = "fit"
 
     def _run(self):
@@ -449,7 +449,7 @@ class FitAnalysisStep(AnalysisStepBase):
         self.log.info(self.products.fit_result)
 
 
-class FluxPointsAnalysisStep(AnalysisStepBase):
+class FluxPointsWorkflowStep(WorkflowStepBase):
     tag = "flux-points"
 
     def _run(self):
@@ -481,7 +481,7 @@ class FluxPointsAnalysisStep(AnalysisStepBase):
         self.log.info("\n{}".format(table[cols]))
 
 
-class LightCurveAnalysisStep(AnalysisStepBase):
+class LightCurveWorkflowStep(WorkflowStepBase):
     tag = "light-curve"
 
     def _run(self):
