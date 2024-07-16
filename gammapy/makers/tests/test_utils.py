@@ -515,6 +515,8 @@ def test_make_effective_livetime_map():
     obs_id = ds.obs_table["OBS_ID"][ds.obs_table["OBJECT"] == "MSH 15-5-02"][:3]
     observations = ds.get_observations(obs_id)
     source_pos = SkyCoord(228.32, -59.08, unit="deg")
+    offset_pos = SkyCoord(322.00, 0.1, unit="deg", frame="galactic")
+
     energy_axis_true = MapAxis.from_energy_bounds(
         10 * u.GeV, 1 * u.TeV, nbin=2, name="energy_true"
     )
@@ -522,11 +524,15 @@ def test_make_effective_livetime_map():
         skydir=source_pos,
         binsz=0.02,
         width=(6, 6),
-        frame="icrs",
+        frame="galactic",
         proj="CAR",
         axes=[energy_axis_true],
     )
     obs_time = make_effective_livetime_map(observations, geom, offset_max=2.5 * u.deg)
     obs_time_center = obs_time.get_by_coord((source_pos, energy_axis_true.center))
     assert_allclose(obs_time_center, [0, 1.2847], rtol=1e-3)
+
+    obs_time_offset = obs_time.get_by_coord((offset_pos, energy_axis_true.center))
+    assert_allclose(obs_time_offset, [0, 0.242814], rtol=1e-3)
+
     assert obs_time.unit == u.hr
