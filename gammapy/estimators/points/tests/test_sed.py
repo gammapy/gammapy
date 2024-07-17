@@ -847,3 +847,9 @@ def test_fpe_diff_lengths():
         [[[2.034323e-11]], [[3.39049716e-12]], [[2.96231326e-13]]],
         rtol=1e-3,
     )
+
+    dataset4 = dataset1.copy()
+    dataset4.meta_table = Table(names=["NAME", "TELESCOP"], data=[["23523"], ["not"]])
+    datasets = Datasets([dataset1, dataset2, dataset3, dataset4])
+    with pytest.raises(ValueError):
+        fp = fpe.run(datasets)
