@@ -89,6 +89,7 @@ def _get_fov_coords(pointing, irf, geom, use_region_center=True, obstime=None):
                 pointing_icrs.icrs.ra,
                 pointing_icrs.icrs.dec,
             )
+            fov_lon = -fov_lon
         else:
             raise ValueError(
                 f"Unsupported background coordinate system: {irf.fov_alignment!r}"
