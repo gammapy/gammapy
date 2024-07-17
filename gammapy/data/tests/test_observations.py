@@ -187,6 +187,7 @@ def test_observations_select_time(
         )
 
 
+@requires_data()
 def test_observation_select_time_gti(data_store):
     obs_ids = data_store.obs_table["OBS_ID"][:1]
     obss = data_store.get_observations(obs_ids)
