@@ -1044,19 +1044,21 @@ def to_cube(image):
     # introduce a fake energy axis for now
     axis = MapAxis.from_edges([1, 10] * u.TeV, name="energy")
     geom = image.geom.to_cube([axis])
-    return WcsNDMap.from_geom(geom=geom, data=image.data)
+    return WcsNDMap.from_geom(geom=geom, data=image.data, unit=image.unit)
 
 
 @pytest.fixture
 def images():
     """Load some `counts`, `counts_off`, `acceptance_on`, `acceptance_off" images"""
     filename = "$GAMMAPY_DATA/tests/unbundled/hess/survey/hess_survey_snippet.fits.gz"
+    exposure_image = WcsNDMap.read(filename, hdu="EXPGAMMAMAP").copy(unit="m2s")
+
     return {
         "counts": to_cube(WcsNDMap.read(filename, hdu="ON")),
         "counts_off": to_cube(WcsNDMap.read(filename, hdu="OFF")),
         "acceptance": to_cube(WcsNDMap.read(filename, hdu="ONEXPOSURE")),
         "acceptance_off": to_cube(WcsNDMap.read(filename, hdu="OFFEXPOSURE")),
-        "exposure": to_cube(WcsNDMap.read(filename, hdu="EXPGAMMAMAP")),
+        "exposure": to_cube(exposure_image),
         "background": to_cube(WcsNDMap.read(filename, hdu="BACKGROUND")),
     }
 
@@ -1254,11 +1256,80 @@ def test_stack_onoff(images):
 
     assert_allclose(stacked.counts.data.sum(), 2 * dataset.counts.data.sum())
     assert_allclose(stacked.counts_off.data.sum(), 2 * dataset.counts_off.data.sum())
-    assert_allclose(
-        stacked.acceptance.data.sum(), dataset.data_shape[1] * dataset.data_shape[2]
-    )
-    assert_allclose(np.nansum(stacked.acceptance_off.data), 2.925793e08, rtol=1e-5)
+    assert_allclose(stacked.acceptance.data, 2 * dataset.acceptance.data)
+    assert_allclose(np.nansum(stacked.acceptance_off.data), 40351192, rtol=1e-5)
     assert_allclose(stacked.exposure.data, 2.0 * dataset.exposure.data)
+
+
+@requires_data()
+def test_stack_onoff_with_masked_input(images):
+    dataset = get_map_dataset_onoff(images)
+    dataset.mask_safe.data[0, 125:, 125:] = False
+    stacked = dataset.copy().to_masked()
+    stacked.stack(dataset)
+
+    assert_allclose(stacked.counts.data.sum(), 8054)
+    assert_allclose(
+        stacked.counts_off.data[0, :125, :125],
+        2 * dataset.counts_off.data[0, :125, :125],
+    )
+    assert_allclose(stacked.counts_off.data[0, 125:, 125:], 0)
+    assert_allclose(
+        stacked.acceptance.data[0, :125, :125],
+        2 * dataset.acceptance.data[0, :125, :125],
+    )
+    assert_allclose(stacked.acceptance.data[0, 125:, 125:], 0)
+    assert_allclose(stacked.acceptance.data.sum(), 7957.8296)
+    assert_allclose(np.nansum(stacked.acceptance_off.data), 37661880.0, rtol=1e-5)
+    assert_allclose(
+        stacked.exposure.data[0, :125, :125], 2.0 * dataset.exposure.data[0, :125, :125]
+    )
+    assert_allclose(stacked.exposure.data[0, 125:, 125:], 0)
+
+
+@requires_data()
+def test_stack_onoff_with_unmasked_input(images):
+    dataset = get_map_dataset_onoff(images)
+    dataset.mask_safe.data[0, 125:, 125:] = False
+    stacked = dataset.copy()
+    stacked.stack(dataset)
+
+    assert_allclose(
+        stacked.counts.data[0, :125, :125], 2 * dataset.counts.data[0, :125, :125]
+    )
+    assert_allclose(
+        stacked.counts.data[0, 125:, 125:], dataset.counts.data[0, 125:, 125:]
+    )
+    assert_allclose(
+        stacked.counts_off.data[0, :125, :125],
+        2 * dataset.counts_off.data[0, :125, :125],
+    )
+    assert_allclose(
+        stacked.counts_off.data[0, 125:, 125:], dataset.counts_off.data[0, 125:, 125:]
+    )
+    assert_allclose(
+        stacked.acceptance.data[0, :125, :125],
+        2 * dataset.acceptance.data[0, :125, :125],
+    )
+    assert_allclose(
+        stacked.acceptance.data[0, 125:, 125:], dataset.acceptance.data[0, 125:, 125:]
+    )
+    assert_allclose(
+        stacked.acceptance_off.data[0, :125, :125],
+        2 * dataset.acceptance_off.data[0, :125, :125],
+        rtol=1e-5,
+    )
+    assert_allclose(
+        stacked.acceptance_off.data[0, 125:, 125:],
+        dataset.acceptance_off.data[0, 125:, 125:],
+        rtol=1e-5,
+    )
+    assert_allclose(
+        stacked.exposure.data[0, :125, :125], 2.0 * dataset.exposure.data[0, :125, :125]
+    )
+    assert_allclose(
+        stacked.exposure.data[0, 125:, 125:], dataset.exposure.data[0, 125:, 125:]
+    )
 
 
 def test_dataset_cutout_aligned(geom):
