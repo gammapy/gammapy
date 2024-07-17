@@ -734,8 +734,11 @@ class MapDataset(Dataset):
     def stack(self, other, nan_to_num=True):
         r"""Stack another dataset in place. The original dataset is modified.
 
-        Safe mask is applied to compute the stacked counts data. Counts outside
-        each dataset safe mask are lost.
+        Safe mask is applied to the other dataset to compute the stacked counts data.
+        Counts outside the safe mask are lost.
+
+        Note that the masking is not applied to the current dataset. If masking needs
+        to be applied to it, use `~gammapy.MapDataset.to_masked()` first.
 
         The stacking of 2 datasets is implemented as follows. Here, :math:`k`
         denotes a bin in reconstructed energy and :math:`j = {1,2}` is the dataset number
@@ -764,6 +767,7 @@ class MapDataset(Dataset):
 
             \overline{\epsilon_k} = \epsilon_{1k} OR \epsilon_{2k}
 
+        For details, see :ref:`stack`.
 
         Parameters
         ----------
@@ -2302,13 +2306,23 @@ class MapDatasetOnOff(MapDataset):
     def stack(self, other, nan_to_num=True):
         r"""Stack another dataset in place.
 
-        The ``acceptance`` of the stacked dataset is normalized to 1,
-        and the stacked ``acceptance_off`` is scaled so that:
+        Safe mask is applied to the other dataset to compute the stacked counts data,
+        counts outside the safe mask are lost (as for `~gammapy.MapDataset.stack`).
+
+        The ``acceptance`` of the stacked dataset is obtained by stacking the acceptance weighted
+        by the other mask_safe onto the current unweighted acceptance.
+
+        Note that the masking is not applied to the current dataset. If masking needs
+        to be applied to it, use `~gammapy.MapDataset.to_masked()` first.
+
+        The stacked ``acceptance_off`` is scaled so that:
 
         .. math::
             \alpha_\text{stacked} =
             \frac{1}{a_\text{off}} =
             \frac{\alpha_1\text{OFF}_1 + \alpha_2\text{OFF}_2}{\text{OFF}_1 + OFF_2}
+
+        For details, see :ref:`stack`.
 
         Parameters
         ----------
@@ -2326,16 +2340,16 @@ class MapDatasetOnOff(MapDataset):
         geom = self.counts.geom
         total_off = Map.from_geom(geom)
         total_alpha = Map.from_geom(geom)
+        total_acceptance = Map.from_geom(geom)
+
+        total_acceptance.stack(self.acceptance, nan_to_num=nan_to_num)
+        total_acceptance.stack(
+            other.acceptance, weights=other.mask_safe, nan_to_num=nan_to_num
+        )
 
         if self.counts_off:
-            total_off.stack(
-                self.counts_off, weights=self.mask_safe, nan_to_num=nan_to_num
-            )
-            total_alpha.stack(
-                self.alpha * self.counts_off,
-                weights=self.mask_safe,
-                nan_to_num=nan_to_num,
-            )
+            total_off.stack(self.counts_off, nan_to_num=nan_to_num)
+            total_alpha.stack(self.alpha * self.counts_off, nan_to_num=nan_to_num)
         if other.counts_off:
             total_off.stack(
                 other.counts_off, weights=other.mask_safe, nan_to_num=nan_to_num
@@ -2347,15 +2361,15 @@ class MapDatasetOnOff(MapDataset):
             )
 
         with np.errstate(divide="ignore", invalid="ignore"):
-            acceptance_off = total_off / total_alpha
+            acceptance_off = total_acceptance * total_off / total_alpha
             average_alpha = total_alpha.data.sum() / total_off.data.sum()
 
         # For the bins where the stacked OFF counts equal 0, the alpha value is
         # performed by weighting on the total OFF counts of each run
         is_zero = total_off.data == 0
-        acceptance_off.data[is_zero] = 1 / average_alpha
+        acceptance_off.data[is_zero] = total_acceptance.data[is_zero] / average_alpha
 
-        self.acceptance.data[...] = 1
+        self.acceptance.data[...] = total_acceptance.data
         self.acceptance_off = acceptance_off
 
         self.counts_off = total_off
