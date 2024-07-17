@@ -1008,6 +1008,7 @@ class MapDataset(Dataset):
 
             \overline{\epsilon_k} = \epsilon_{1k} OR \epsilon_{2k}.
 
+        For details, see :ref:`stack`.
 
         Parameters
         ----------
@@ -2608,6 +2609,8 @@ class MapDatasetOnOff(MapDataset):
             \alpha_\text{stacked} =
             \frac{1}{a_\text{off}} =
             \frac{\alpha_1\text{OFF}_1 + \alpha_2\text{OFF}_2}{\text{OFF}_1 + OFF_2}.
+
+        For details, see :ref:`stack`.
 
         Parameters
         ----------
