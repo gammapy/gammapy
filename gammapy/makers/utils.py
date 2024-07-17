@@ -3,7 +3,7 @@ import logging
 import warnings
 import numpy as np
 import astropy.units as u
-from astropy.coordinates import Angle, SkyOffsetFrame
+from astropy.coordinates import Angle
 from astropy.table import Table
 from gammapy.data import FixedPointingInfo
 from gammapy.irf import BackgroundIRF, EDispMap, FoVAlignment, PSFMap
@@ -83,11 +83,9 @@ def _get_fov_coords(pointing, irf, geom, use_region_center=True, obstime=None):
                 altaz_coord.az, altaz_coord.alt, pointing_altaz.az, pointing_altaz.alt
             )
         elif irf.fov_alignment == FoVAlignment.RADEC:
-            # Create OffsetFrame
-            frame = SkyOffsetFrame(origin=pointing_icrs)
-            pseudo_fov_coord = sky_coord.transform_to(frame)
-            fov_lon = pseudo_fov_coord.lon
-            fov_lat = pseudo_fov_coord.lat
+            fov_lon, fov_lat = sky_to_fov(
+                sky_coord.ra, sky_coord.dec, pointing_icrs.ra, pointing_icrs.dec
+            )
         else:
             raise ValueError(
                 f"Unsupported background coordinate system: {irf.fov_alignment!r}"
@@ -257,33 +255,6 @@ def make_map_background_irf(
         obstime=obstime,
     )
     coords["energy"] = broadcast_axis_values_to_geom(geom, "energy", False)
-
-            # for backwards compatibility, obstime should be required
-            if obstime is None:
-                warnings.warn(
-                    "Future versions of gammapy will require the obstime keyword for this function",
-                    DeprecationWarning,
-                )
-                obstime = pointing.obstime
-
-            pointing_altaz = pointing.get_altaz(obstime)
-            altaz_coord = sky_coord.transform_to(pointing_altaz.frame)
-
-            # Compute FOV coordinates of map relative to pointing
-            fov_lon, fov_lat = sky_to_fov(
-                altaz_coord.az, altaz_coord.alt, pointing_altaz.az, pointing_altaz.alt
-            )
-        elif bkg.fov_alignment == FoVAlignment.RADEC:
-            fov_lon, fov_lat = sky_to_fov(
-                sky_coord.ra, sky_coord.dec, pointing_icrs.ra, pointing_icrs.dec
-            )
-        else:
-            raise ValueError(
-                f"Unsupported background coordinate system: {bkg.fov_alignment!r}"
-            )
-
-        coords["fov_lon"] = fov_lon
-        coords["fov_lat"] = fov_lat
 
     bkg_de = bkg.integrate_log_log(**coords, axis_name="energy")
     data = (bkg_de * d_omega * ontime).to_value("")
