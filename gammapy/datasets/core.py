@@ -485,6 +485,8 @@ class Datasets(collections.abc.MutableSequence):
         This works only if all datasets are of the same type and with aligned geometries, and if a proper
         in-place stack method exists for the Dataset type.
 
+        For details, see :ref:`stack`.
+
         Parameters
         ----------
         name : str, optional
