@@ -629,6 +629,10 @@ def make_effective_livetime_map(observations, geom, offset_max=None):
         geom_obs = geom.cutout(
             position=obs.get_pointing_icrs(obs.tmid), width=2.0 * offset_max
         )
+        coords = geom_obs.get_coord()
+        offset = coords.skycoord.separation(obs.get_pointing_icrs(obs.tmid))
+        mask = offset < offset_max
+
         exposure = make_map_exposure_true_energy(
             pointing=geom.center_skydir,
             livetime=obs.observation_live_time_duration,
@@ -641,7 +645,7 @@ def make_effective_livetime_map(observations, geom, offset_max=None):
             offset=0.0 * u.deg, energy_true=geom.axes["energy_true"].center
         )
         on_axis = on_axis.reshape((on_axis.shape[0], 1, 1))
-        lv_obs = exposure / on_axis
+        lv_obs = exposure * mask / on_axis
         livetime.stack(lv_obs)
     return livetime
 

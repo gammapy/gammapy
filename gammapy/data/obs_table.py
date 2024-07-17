@@ -189,9 +189,9 @@ class ObservationTable(Table):
 
         Parameters
         ----------
-        center : `~astropy.coordinate.SkyCoord`
+        center : `~astropy.coordinates.SkyCoord`
             Cone center coordinate.
-        radius : `~astropy.coordinate.Angle`
+        radius : `~astropy.coordinates.Angle`
             Cone opening angle. The maximal separation allowed between the center
             and the observation pointing direction.
         inverted : bool, optional

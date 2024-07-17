@@ -1,0 +1,69 @@
+
+*** Basic info ***
+
+Catalog row index (zero-based) : 38
+Source name          : J1112-6103
+
+*** Other info ***
+
+Binary               : N
+
+*** Pulsar info ***
+
+Period               : 64.970 ms
+P_Dot                : 3.150e-14
+E_Dot                : 4.540e+36 erg / s
+Type                 : YRL
+
+*** Position info ***
+
+RA                   : 168.062 deg
+DEC                  : -61.059 deg
+GLON                 : 291.221 deg
+GLAT                 : -0.463 deg
+
+*** Spectral info ***
+
+On peak              : N
+TS DC                : 58
+TS cutoff            : 6
+TS b free            : 0
+
+    * PLSuperExpCutoff b = 1 *
+
+    Amplitude            : 3.555e-12 1 / (MeV s cm2) +- 1.157e-12 1 / (MeV s cm2)
+    Index 1              : 1.557 +- 0.281
+    Index 2              : 1.000
+    Reference            : 1000.000 MeV
+    Ecut                 : 5889.000 MeV +- 3235.000 MeV
+
+    * PLSuperExpCutoff b free *
+
+    Amplitude            : 0.000e+00 1 / (MeV s cm2) +- 0.000e+00 1 / (MeV s cm2)
+    Index 1              : -- +- --
+    Index 2              : -- +- --
+    Reference            : 0.000 MeV
+    Ecut                 : 0.000 MeV +- 0.000 MeV
+
+    * PowerLaw *
+
+    Amplitude            : 2.554e-12 1 / (MeV s cm2) +- 6.340e-13 1 / (MeV s cm2)
+    Index                : 2.070 +- 0.105
+    Reference            : 1000.000 MeV
+
+*** Spectral points ***
+
+e_min   e_max  e_ref        flux           flux_err         e2dnde      e2dnde_err  is_ul     flux_ul        e2dnde_ul  
+ GeV     GeV    GeV   ph / (GeV s cm2) ph / (GeV s cm2) erg / (s cm2) erg / (s cm2)       ph / (GeV s cm2) erg / (s cm2)
+------ ------- ------ ---------------- ---------------- ------------- ------------- ----- ---------------- -------------
+ 0.100   0.316  0.152        2.641e-07        0.000e+00     9.769e-12     0.000e+00  True        2.641e-07     9.769e-12
+ 0.316   1.000  0.481        2.015e-08        9.124e-09     7.452e-12     3.375e-12 False              nan           nan
+ 1.000   3.162  1.520        1.999e-09        4.012e-10     7.396e-12     1.484e-12 False              nan           nan
+ 3.162  10.000  4.805        8.503e-11        3.112e-11     3.145e-12     1.151e-12 False              nan           nan
+10.000  31.623 15.195        1.433e-11        0.000e+00     5.302e-12     0.000e+00  True        1.433e-11     5.302e-12
+31.623 100.000 48.052        1.453e-12        0.000e+00     5.373e-12     0.000e+00  True        1.453e-12     5.373e-12
+
+*** Phasogram info ***
+
+Number of peaks      : 2
+Peak separation      : 0.457

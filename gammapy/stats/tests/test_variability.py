@@ -70,7 +70,6 @@ def lc():
 
 
 def test_lightcurve_fvar():
-
     flux = np.array([[1e-11, 4e-12], [3e-11, np.nan], [1e-11, 1e-12]])
     flux_err = np.array([[0.1e-11, 0.4e-12], [0.3e-11, np.nan], [0.1e-11, 0.1e-12]])
 
@@ -83,7 +82,6 @@ def test_lightcurve_fvar():
 
 
 def test_lightcurve_fpp():
-
     flux = np.array([[1e-11, 4e-12], [3e-11, np.nan], [1e-11, 1e-12]])
     flux_err = np.array([[0.1e-11, 0.4e-12], [0.3e-11, np.nan], [0.1e-11, 0.1e-12]])
 
@@ -109,7 +107,6 @@ def test_lightcurve_chisq(lc_table):
 
 
 def test_lightcurve_flux_doubling():
-
     flux = np.array(
         [
             [1e-11, 4e-12],
@@ -147,12 +144,9 @@ def test_lightcurve_flux_doubling():
     assert_allclose(dtime_err, [425.92375713, 242.80234065] * u.s)
 
 
-def test_tk():
+def test_tk_function():
     time_series, time_axis = TimmerKonig_lightcurve_simulator(
         lambda x: x ** (-3), 20, 1 * u.s
-    )
-    time_series2, time_axis2 = TimmerKonig_lightcurve_simulator(
-        lambda x: x**0.5, 21, 2 * u.h
     )
 
     def temp(x, norm, index):
@@ -160,15 +154,61 @@ def test_tk():
 
     params = {"norm": 1.5, "index": 3}
 
-    time_series3, time_axis3 = TimmerKonig_lightcurve_simulator(
+    time_series2, time_axis2 = TimmerKonig_lightcurve_simulator(
         temp, 15, 1 * u.h, power_spectrum_params=params
     )
 
     assert len(time_series) == 20
     assert isinstance(time_axis, u.Quantity)
     assert time_axis.unit == u.s
-    assert len(time_series2) == 21
-    assert len(time_series3) == 15
+    assert len(time_series2) == 15
+
+
+def test_tk_nchunks():
+    time_series, time_axis = TimmerKonig_lightcurve_simulator(
+        lambda x: x ** (-1.5), 21, 1 * u.s, nchunks=100
+    )
+    time_series2, time_axis2 = TimmerKonig_lightcurve_simulator(
+        lambda x: x ** (-1.5), 21, 1 * u.s, nchunks=20
+    )
+
+    with pytest.raises(TypeError):
+        TimmerKonig_lightcurve_simulator(lambda x: x ** (-3), 20, 1 * u.s, nchunks=0.5)
+
+    with pytest.raises(TypeError):
+        TimmerKonig_lightcurve_simulator(lambda x: x ** (-3), 20.5, 1 * u.s)
+
+    assert len(time_series) == len(time_series2) == 21
+
+
+def test_tk_mean():
+    time_series, time_axis = TimmerKonig_lightcurve_simulator(
+        lambda x: x ** (-1.5), 2000, 1 * u.s, mean=2.5, std=0.5
+    )
+
+    time_series2, time_axis2 = TimmerKonig_lightcurve_simulator(
+        lambda x: x ** (-1.5),
+        2000,
+        1 * u.s,
+        mean=1e-7 * (u.cm**-2),
+        std=5e-8 * (u.cm**-2),
+    )
+
+    time_series3, time_axis3 = TimmerKonig_lightcurve_simulator(
+        lambda x: x ** (-1.5), 2000, 1 * u.s, mean=2.5, std=0.5, poisson=True
+    )
+
+    with pytest.raises(Warning):
+        TimmerKonig_lightcurve_simulator(
+            lambda x: x ** (-3), 20, 1 * u.s, mean=0.5, poisson=True
+        )
+
+    assert_allclose(time_series.mean(), 2.5)
+    assert_allclose(time_series.std(), 0.5)
+    assert_allclose(time_series2.mean(), 1e-7 * (u.cm**-2))
+    assert_allclose(time_series2.std(), 5e-8 * (u.cm**-2))
+    assert_allclose(time_series3.mean(), 2.5, rtol=0.1)
+    assert_allclose(time_series3.std(), 1, rtol=1)
 
 
 def test_structure_function():

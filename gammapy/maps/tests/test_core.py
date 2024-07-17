@@ -437,6 +437,24 @@ def test_interp_to_geom():
     assert isinstance(interp_wcs_map, WcsNDMap)
     assert interp_wcs_map.geom == wcs_geom_target
 
+    # WcsNDMap is_mask
+    geom_wcs = WcsGeom.create(
+        npix=(5, 3), proj="CAR", binsz=0.1, axes=[energy], skydir=(0, 0)
+    )
+
+    wcs_map = Map.from_geom(geom_wcs, unit="", data=True)
+    wcs_geom_target = WcsGeom.create(
+        skydir=(30, 30),
+        width=(10, 10),
+        binsz=0.1 * u.deg,
+        axes=[energy_target],
+        frame="galactic",
+    )
+    interp_wcs_map = wcs_map.interp_to_geom(
+        wcs_geom_target, method="linear", fill_value=None
+    )
+    assert np.all(interp_wcs_map.data)
+
     # HpxNDMap
     geom_hpx = HpxGeom.create(binsz=60, axes=[energy], skydir=(0, 0))
     hpx_map = Map.from_geom(geom_hpx, unit="")

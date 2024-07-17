@@ -4,11 +4,13 @@ from gammapy.utils.registry import Registry
 from .core import SourceCatalog, SourceCatalogObject
 from .fermi import (
     SourceCatalog2FHL,
+    SourceCatalog2PC,
     SourceCatalog3FGL,
     SourceCatalog3FHL,
     SourceCatalog3PC,
     SourceCatalog4FGL,
     SourceCatalogObject2FHL,
+    SourceCatalogObject2PC,
     SourceCatalogObject3FGL,
     SourceCatalogObject3FHL,
     SourceCatalogObject3PC,
@@ -40,6 +42,7 @@ CATALOG_REGISTRY = Registry(
         SourceCatalog3FHL,
         SourceCatalog3PC,
         SourceCatalog3HWC,
+        SourceCatalog2PC,
         SourceCatalog1LHAASO,
     ]
 )
@@ -56,6 +59,7 @@ __all__ = [
     "SourceCatalog3FHL",
     "SourceCatalog3HWC",
     "SourceCatalog4FGL",
+    "SourceCatalog2PC",
     "SourceCatalog3PC",
     "SourceCatalogGammaCat",
     "SourceCatalogHGPS",
@@ -68,6 +72,7 @@ __all__ = [
     "SourceCatalogObject3FHL",
     "SourceCatalogObject3HWC",
     "SourceCatalogObject4FGL",
+    "SourceCatalogObject2PC",
     "SourceCatalogObject3PC",
     "SourceCatalogObjectGammaCat",
     "SourceCatalogObjectHGPS",

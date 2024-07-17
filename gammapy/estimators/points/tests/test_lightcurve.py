@@ -7,7 +7,7 @@ from astropy.table import Column, Table
 from astropy.time import Time
 from astropy.timeseries import BinnedTimeSeries, BoxLeastSquares
 from gammapy.data import GTI
-from gammapy.datasets import Datasets
+from gammapy.datasets import Datasets, FluxPointsDataset
 from gammapy.datasets.actors import DatasetsActor
 from gammapy.estimators import FluxPoints, LightCurveEstimator
 from gammapy.estimators.points.lightcurve import parallel as parallel
@@ -736,6 +736,43 @@ def test_recompute_ul():
     lightcurve = estimator.run(datasets)
     with pytest.raises(ValueError):
         lightcurve.recompute_ul(n_sigma_ul=4)
+
+
+@requires_data()
+def test_dataset_stat_type():
+    datasets = get_spectrum_datasets()
+    selection = ["all"]
+    estimator = LightCurveEstimator(
+        energy_edges=[1, 3, 30] * u.TeV, selection_optional=selection, n_sigma_ul=2
+    )
+    lightcurve = estimator.run(datasets)
+    assert_allclose(
+        lightcurve.dnde_ul.data[0], [[[3.260703e-13]], [[1.159354e-14]]], rtol=1e-3
+    )
+
+    lightcurve_dataset = FluxPointsDataset(
+        data=lightcurve, models=[lightcurve.reference_model]
+    )
+    lightcurve_dataset.stat_type = "profile"
+    assert_allclose(lightcurve_dataset.stat_sum(), 5.741539, rtol=1e-5)
+    lightcurve_dataset.stat_type = "distrib"
+    assert_allclose(lightcurve_dataset.stat_sum(), 5.824218, rtol=1e-5)
+    lightcurve_dataset.stat_type = "chi2"
+    assert_allclose(lightcurve_dataset.stat_sum(), 6.014128, rtol=1e-5)
+
+    # test if scan is not present
+    selection = []
+    estimator = LightCurveEstimator(
+        energy_edges=[1, 30] * u.TeV, selection_optional=selection
+    )
+    lightcurve = estimator.run(datasets)
+
+    lightcurve_dataset = FluxPointsDataset(
+        data=lightcurve, models=[lightcurve.reference_model]
+    )
+    with pytest.raises(AttributeError):
+        lightcurve_dataset.stat_type = "profile"
+        lightcurve_dataset.stat_sum()
 
 
 @requires_data()

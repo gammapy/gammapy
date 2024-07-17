@@ -240,7 +240,7 @@ class LinearScale(InterpolationScale):
         return values
 
 
-def interpolate_profile(x, y, interp_scale="sqrt"):
+def interpolate_profile(x, y, interp_scale="sqrt", extrapolate=False):
     """Helper function to interpolate one-dimensional profiles.
 
     Parameters
@@ -254,6 +254,9 @@ def interpolate_profile(x, y, interp_scale="sqrt"):
         of parabolic shape, a "sqrt" scaling is recommended. In other cases or
         for fine sampled profiles a "lin" can also be used.
         Default is "sqrt".
+    extrapolate : bool
+        Extrapolate or not if the evaluation value is outside the range of x values.
+        Default is False.
 
     Returns
     -------
@@ -261,4 +264,8 @@ def interpolate_profile(x, y, interp_scale="sqrt"):
         Interpolator.
     """
     method_dict = {"sqrt": "quadratic", "lin": "linear"}
-    return scipy.interpolate.interp1d(x, y, kind=method_dict[interp_scale])
+    kwargs = dict(kind=method_dict[interp_scale])
+    if extrapolate:
+        kwargs["bounds_error"] = False
+        kwargs["fill_value"] = "extrapolate"
+    return scipy.interpolate.interp1d(x, y, **kwargs)

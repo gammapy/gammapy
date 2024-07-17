@@ -380,23 +380,13 @@ plt.show()
 #
 # To round up our analysis we can compute flux points by fitting the norm
 # of the global model in energy bands.
-# We can utilise the `~gammapy.estimators.utils.resample_energy_edges`
-# for defining the energy bins in which the minimum number of `sqrt_ts` is 2.
-# To do so we first stack the individual datasets, only for obtaining the energies:
-#
-
-dataset_stacked = Datasets(datasets).stack_reduce()
-energy_edges = resample_energy_edges(dataset_stacked, conditions={"sqrt_ts_min": 2})
-
-
-######################################################################
-# Now we create an instance of the
+# We create an instance of the
 # `~gammapy.estimators.FluxPointsEstimator`, by passing the dataset and
 # the energy binning:
 #
 
 fpe = FluxPointsEstimator(
-    energy_edges=energy_edges, source="crab", selection_optional="all"
+    energy_edges=energy_axis.edges, source="crab", selection_optional="all"
 )
 flux_points = fpe.run(datasets=datasets)
 
@@ -416,6 +406,7 @@ display(flux_points.to_table(sed_type="dnde", formatted=True))
 fig, ax = plt.subplots()
 flux_points.plot(ax=ax, sed_type="e2dnde", color="darkorange")
 flux_points.plot_ts_profiles(ax=ax, sed_type="e2dnde")
+ax.set_xlim(0.6, 40)
 plt.show()
 
 ######################################################################
@@ -430,8 +421,11 @@ plt.show()
 # quickly made like this:
 #
 
-flux_points_dataset = FluxPointsDataset(data=flux_points, models=model_best_joint)
-flux_points_dataset.plot_fit()
+flux_points_dataset = FluxPointsDataset(
+    data=flux_points, models=model_best_joint.copy()
+)
+ax, _ = flux_points_dataset.plot_fit()
+ax.set_xlim(0.6, 40)
 plt.show()
 
 
@@ -502,6 +496,82 @@ ax.legend()
 plt.show()
 
 # sphinx_gallery_thumbnail_number = 5
+
+######################################################################
+# A note on statistics
+# --------------------
+#
+# Different statistic are available for the FluxPointDataset :
+# * chi2 : estimate from chi2 statistics.
+# * profile : estimate from interpolation of the likelihood profile.
+# * distrib : estimate from probability distributions,
+#             assuming that flux points correspond to asymmetric gaussians
+#             and upper limits complementary error functions.
+# Default is `chi2`, in that case upper limits are ignored and the mean of asymetrics error is used.
+# So it is recommended to use `profile` if `stat_scan` is available on flux points.
+# The `distrib` case provides an approximation if the `profile` is not available
+# which allows to take into accounts upper limit and asymetrics error.
+#
+# In the example below we can see that the `profile` case matches exactly the result
+# from the joint analysis of the ON/OFF datasets using `wstat` (as labelled).
+
+
+def plot_stat(fp_dataset):
+    fig, ax = plt.subplots()
+
+    plot_kwargs = {
+        "energy_bounds": [0.1, 30] * u.TeV,
+        "sed_type": "e2dnde",
+        "ax": ax,
+    }
+
+    fp_dataset.data.plot(energy_power=2, ax=ax)
+    model_best_joint.spectral_model.plot(
+        color="b", lw=0.5, **plot_kwargs, label="wstat"
+    )
+
+    stat_types = ["chi2", "profile", "distrib"]
+    colors = ["red", "g", "c"]
+    lss = ["--", ":", "--"]
+
+    for ks, stat in enumerate(stat_types):
+
+        fp_dataset.stat_type = stat
+
+        fit = Fit()
+        fit.run([fp_dataset])
+
+        fp_dataset.models[0].spectral_model.plot(
+            color=colors[ks], ls=lss[ks], **plot_kwargs, label=stat
+        )
+        fp_dataset.models[0].spectral_model.plot_error(
+            facecolor=colors[ks], **plot_kwargs
+        )
+        plt.legend()
+
+
+plot_stat(flux_points_dataset)
+
+######################################################################
+
+# In order to avoid discrepancies due to the treatment of upper limits
+# we can utilise the `~gammapy.estimators.utils.resample_energy_edges`
+# for defining energy bins in which the minimum number of `sqrt_ts` is 2.
+# In that case all the statistics definitions give equivalent results.
+#
+
+energy_edges = resample_energy_edges(dataset_stacked, conditions={"sqrt_ts_min": 2})
+
+fpe_no_ul = FluxPointsEstimator(
+    energy_edges=energy_edges, source="crab", selection_optional="all"
+)
+flux_points_no_ul = fpe_no_ul.run(datasets=datasets)
+flux_points_dataset_no_ul = FluxPointsDataset(
+    data=flux_points_no_ul,
+    models=model_best_joint.copy(),
+)
+
+plot_stat(flux_points_dataset_no_ul)
 
 ######################################################################
 # Exercises

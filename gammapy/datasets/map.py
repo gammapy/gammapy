@@ -420,7 +420,6 @@ class MapDataset(Dataset):
             raise ValueError(
                 f"'psf' must be a 'PSFMap' or `HDULocation` object, got {type(psf)}"
             )
-
         self.psf = psf
 
         if edisp and not isinstance(edisp, (EDispMap, EDispKernelMap, HDULocation)):
@@ -438,6 +437,17 @@ class MapDataset(Dataset):
             self._meta = MapDatasetMetaData()
         else:
             self._meta = meta
+
+    @property
+    def _psf_kernel(self):
+        """Precompute PSFkernel if there is only one spatial bin in the PSFmap"""
+        if self.psf and self.psf.has_single_spatial_bin:
+            if self.psf.energy_name == "energy_true":
+                map_ref = self.exposure
+            else:
+                map_ref = self.counts
+            if map_ref and not map_ref.geom.is_region:
+                return self.psf.get_psf_kernel(map_ref.geom)
 
     @property
     def meta(self):
@@ -539,15 +549,16 @@ class MapDataset(Dataset):
     def models(self, models):
         """Models setter."""
         self._evaluators = {}
-
         if models is not None:
             models = DatasetModels(models)
             models = models.select(datasets_names=self.name)
-
+            if models:
+                psf = self._psf_kernel
             for model in models:
                 if not isinstance(model, FoVBackgroundModel):
                     evaluator = MapEvaluator(
                         model=model,
+                        psf=psf,
                         evaluation_mode=EVALUATION_MODE,
                         gti=self.gti,
                         use_cache=USE_NPRED_CACHE,
@@ -930,10 +941,17 @@ class MapDataset(Dataset):
 
         if "migra" in geom.axes.names:
             geom = geom.squash("migra")
-            mask_safe_edisp = self.mask_safe_image.interp_to_geom(geom.to_image())
+            mask_safe_edisp = self.mask_safe_image.interp_to_geom(
+                geom.to_image(), fill_value=None
+            )
             return mask_safe_edisp.to_cube(geom.axes)
 
-        return self.mask_safe.interp_to_geom(geom)
+        # allow extrapolation only along spatial dimension
+        # to support case where mask_safe geom and irfs geom are different
+        geom_same_axes = geom.to_image().to_cube(self.mask_safe.geom.axes)
+        mask_safe_edisp = self.mask_safe.interp_to_geom(geom_same_axes, fill_value=None)
+        mask_safe_edisp = mask_safe_edisp.interp_to_geom(geom)
+        return mask_safe_edisp
 
     def to_masked(self, name=None, nan_to_num=True):
         """Return masked dataset.

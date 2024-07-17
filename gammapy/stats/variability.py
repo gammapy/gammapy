@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 import scipy.stats as stats
+import astropy.units as u
 from gammapy.utils.random import get_random_state
 
 __all__ = [
@@ -289,8 +290,12 @@ def TimmerKonig_lightcurve_simulator(
     power_spectrum,
     npoints,
     spacing,
+    nchunks=10,
     random_state="random-seed",
     power_spectrum_params=None,
+    mean=0.0,
+    std=1.0,
+    poisson=False,
 ):
     """Implementation of the Timmer-Koenig algorithm to simulate a time series from a power spectrum.
 
@@ -303,11 +308,20 @@ def TimmerKonig_lightcurve_simulator(
         Number of points in the output time series.
     spacing : `~astropy.units.Quantity`
         Sample spacing, inverse of the sampling rate. The units are inherited by the resulting time axis.
-    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+    nchunks : int, optional
+        Factor by which to multiply the length of the time series to avoid red noise leakage. Default is 10.
+    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
         Defines random number generator initialisation.
         Passed to `~gammapy.utils.random.get_random_state`. Default is "random-seed".
     power_spectrum_params : dict, optional
         Dictionary of parameters to be provided to the power spectrum function.
+    mean : float, `~astropy.units.Quantity`, optional
+        Desired mean of the final series. Default is 0.
+    std : float, `~astropy.units.Quantity`, optional
+        Desired standard deviation of the final series. Default is 1.
+    poisson : bool, optional
+        Whether to apply poissonian noise to the final time series. Default is False.
+
 
     Returns
     -------
@@ -344,9 +358,24 @@ def TimmerKonig_lightcurve_simulator(
             "The power spectrum has to be provided as a callable function."
         )
 
+    if not isinstance(npoints * nchunks, int):
+        raise TypeError("npoints and nchunks must be integers")
+
+    if poisson:
+        if isinstance(mean, u.Quantity):
+            wmean = mean.value * spacing.value
+        else:
+            wmean = mean * spacing.value
+        if wmean < 1.0:
+            raise Warning(
+                "Poisson noise was requested but the target mean is too low - resulting counts will likely be 0."
+            )
+
     random_state = get_random_state(random_state)
 
-    frequencies = np.fft.fftfreq(npoints, spacing.value)
+    npoints_ext = npoints * nchunks
+
+    frequencies = np.fft.fftfreq(npoints_ext, spacing.value)
 
     # To obtain real data only the positive or negative part of the frequency is necessary.
     real_frequencies = np.sort(np.abs(frequencies[frequencies < 0]))
@@ -360,7 +389,7 @@ def TimmerKonig_lightcurve_simulator(
     imaginary_part = random_state.normal(0, 1, len(periodogram) - 1)
 
     # Nyquist frequency component handling
-    if npoints % 2 == 0:
+    if npoints_ext % 2 == 0:
         idx0 = -2
         random_factor = random_state.normal(0, 1)
     else:
@@ -380,11 +409,23 @@ def TimmerKonig_lightcurve_simulator(
     fourier_coeffs = np.insert(fourier_coeffs, 0, 0)
     time_series = np.fft.ifft(fourier_coeffs).real
 
-    tmax = time_series.max()
-    if tmax < np.abs(time_series.min()):
-        time_series = -time_series
+    ndiv = npoints_ext // (2 * nchunks)
+    setstart = npoints_ext // 2 - ndiv
+    setend = npoints_ext // 2 + ndiv
+    if npoints % 2 != 0:
+        setend = setend + 1
+    time_series = time_series[setstart:setend]
 
-    time_series = 0.5 + 0.5 * time_series / tmax
+    time_series = (time_series - time_series.mean()) / time_series.std()
+    time_series = time_series * std + mean
+
+    if poisson:
+        time_series = (
+            random_state.poisson(
+                np.where(time_series >= 0, time_series, 0) * spacing.value
+            )
+            / spacing.value
+        )
 
     time_axis = np.linspace(0, npoints * spacing.value, npoints) * spacing.unit
 

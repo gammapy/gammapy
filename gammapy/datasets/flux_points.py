@@ -1,6 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
+from scipy.special import erfc
+from scipy.stats import norm
 from astropy import units as u
 from astropy.io import fits
 from astropy.table import Table
@@ -14,6 +16,7 @@ from gammapy.modeling.models import (
     SkyModel,
     TemplateSpatialModel,
 )
+from gammapy.utils.interpolation import interpolate_profile
 from gammapy.utils.scripts import make_name, make_path
 from .core import Dataset
 
@@ -55,6 +58,25 @@ class FluxPointsDataset(Dataset):
     meta_table : `~astropy.table.Table`
         Table listing information on observations used to create the dataset.
         One line per observation for stacked datasets.
+    stat_type : str
+        Method used to compute the statistics:
+        * chi2 : estimate from chi2 statistics.
+        * profile : estimate from interpolation of the likelihood profile.
+        * distrib : Assuming gaussian errors the likelihood is given by the
+                    probability density function of the normal distribution.
+                    For the upper limit case it is necessary to marginalize over the unknown measurement,
+                    So we integrate the normal distribution up to the upper limit value
+                    which gives the complementary error function.
+                    See eq. C7 of Mohanty et al (2013) :
+                    https://iopscience.iop.org/article/10.1088/0004-637X/773/2/168/pdf
+
+        Default is `chi2`, in that case upper limits are ignored and the mean of asymetrics error is used.
+        However it is recommended to use `profile` if `stat_scan` is available on flux points.
+        The `distrib` case provides an approximation if the profile is not available.
+    stat_kwargs : dict
+        Extra arguments specifying the interpolation scheme of the likelihood profile.
+        Used only if `stat_type=="profile"`. In that case the default is :
+        `stat_kwargs={"interp_scale":"sqrt", "extrapolate":True}
 
     Examples
     --------
@@ -102,7 +124,6 @@ class FluxPointsDataset(Dataset):
     ``gammapy download datasets --tests --out $GAMMAPY_DATA``
     """
 
-    stat_type = "chi2"
     tag = "FluxPointsDataset"
 
     def __init__(
@@ -113,6 +134,8 @@ class FluxPointsDataset(Dataset):
         mask_safe=None,
         name=None,
         meta_table=None,
+        stat_type="chi2",
+        stat_kwargs=None,
     ):
         if not data.geom.has_energy_axis:
             raise ValueError("FluxPointsDataset needs an energy axis")
@@ -122,10 +145,61 @@ class FluxPointsDataset(Dataset):
         self.models = models
         self.meta_table = meta_table
 
-        if mask_safe is None:
-            mask_safe = (~data.is_ul).data
+        self._available_stat_type = dict(
+            chi2=self._stat_array_chi2,
+            profile=self._stat_array_profile,
+            distrib=self._stat_array_distrib,
+        )
 
+        if stat_kwargs is None:
+            stat_kwargs = dict()
+        self.stat_kwargs = stat_kwargs
+
+        self.stat_type = stat_type
+
+        if mask_safe is None:
+            mask_safe = np.ones(self.data.dnde.data.shape, dtype=bool)
         self.mask_safe = mask_safe
+
+    @property
+    def available_stat_type(self):
+        return list(self._available_stat_type.keys())
+
+    @property
+    def stat_type(self):
+        return self._stat_type
+
+    @stat_type.setter
+    def stat_type(self, stat_type):
+
+        if stat_type not in self.available_stat_type:
+            raise ValueError(
+                f"Invalid stat_type: possible options are {self.available_stat_type}"
+            )
+
+        if stat_type == "chi2":
+            self._mask_valid = (~self.data.is_ul).data & np.isfinite(self.data.dnde)
+        elif stat_type == "distrib":
+            self._mask_valid = (
+                self.data.is_ul.data & np.isfinite(self.data.dnde_ul)
+            ) | np.isfinite(self.data.dnde)
+        elif stat_type == "profile":
+            self.stat_kwargs.setdefault("interp_scale", "sqrt")
+            self.stat_kwargs.setdefault("extrapolate", True)
+            self._profile_interpolators = self._get_valid_profile_interpolators()
+        self._stat_type = stat_type
+
+    @property
+    def mask_valid(self):
+        return self._mask_valid
+
+    @property
+    def mask_safe(self):
+        return self._mask_safe & self.mask_valid
+
+    @mask_safe.setter
+    def mask_safe(self, mask_safe):
+        self._mask_safe = mask_safe
 
     @property
     def name(self):
@@ -310,13 +384,81 @@ class FluxPointsDataset(Dataset):
 
     def stat_array(self):
         """Fit statistic array."""
+        return self._available_stat_type[self.stat_type]()
+
+    def _stat_array_chi2(self):
+        """Chi2 statistics."""
         model = self.flux_pred()
         data = self.data.dnde.quantity
         try:
-            sigma = self.data.dnde_err
+            sigma = self.data.dnde_err.quantity
         except AttributeError:
-            sigma = (self.data.dnde_errn + self.data.dnde_errp) / 2
-        return ((data - model) / sigma.quantity).to_value("") ** 2
+            sigma = (self.data.dnde_errn + self.data.dnde_errp).quantity / 2
+        return ((data - model) / sigma).to_value("") ** 2
+
+    def _stat_array_profile(self):
+        """Estimate statitistic from interpolation of the likelihood profile."""
+        model = np.zeros(self.data.dnde.data.shape) + (
+            self.flux_pred() / self.data.dnde_ref
+        ).to_value("")
+        stat = np.zeros(model.shape)
+        for idx in np.ndindex(self._profile_interpolators.shape):
+            stat[idx] = self._profile_interpolators[idx](model[idx])
+        return stat
+
+    def _get_valid_profile_interpolators(self):
+        value_scan = self.data.stat_scan.geom.axes["norm"].center
+        shape_axes = self.data.stat_scan.geom._shape[slice(3, None)][::-1]
+        interpolators = np.empty(shape_axes, dtype=object)
+        self._mask_valid = np.ones(self.data.dnde.data.shape, dtype=bool)
+        for idx in np.ndindex(shape_axes):
+            stat_scan = np.abs(
+                self.data.stat_scan.data[idx].squeeze()
+                - self.data.stat.data[idx].squeeze()
+            )
+            self._mask_valid[idx] = np.all(np.isfinite(stat_scan))
+            interpolators[idx] = interpolate_profile(
+                value_scan,
+                stat_scan,
+                interp_scale=self.stat_kwargs["interp_scale"],
+                extrapolate=self.stat_kwargs["extrapolate"],
+            )
+        return interpolators
+
+    def _stat_array_distrib(self):
+        """Estimate statistic from probability distributions,
+        assumes that flux points correspond to asymmetric gaussians
+        and upper limits complementary error functions.
+        """
+        model = np.zeros(self.data.dnde.data.shape) + self.flux_pred().to_value(
+            self.data.dnde.unit
+        )
+
+        stat = np.zeros(model.shape)
+
+        mask_valid = ~np.isnan(self.data.dnde.data)
+        loc = self.data.dnde.data[mask_valid]
+        value = model[mask_valid]
+        try:
+            mask_p = (model >= self.data.dnde.data)[mask_valid]
+            scale = np.zeros(mask_p.shape)
+            scale[mask_p] = self.data.dnde_errp.data[mask_valid][mask_p]
+            scale[~mask_p] = self.data.dnde_errn.data[mask_valid][~mask_p]
+        except AttributeError:
+            scale = self.data.dnde_err.data[mask_valid]
+        stat[mask_valid] = -2 * np.log(
+            norm.pdf(value, loc=loc, scale=scale) / norm.pdf(loc, loc=loc, scale=scale)
+        )
+
+        mask_ul = self.data.is_ul.data & ~np.isnan(self.data.dnde_ul.data)
+        value = model[mask_ul]
+        loc_ul = self.data.dnde_ul.data[mask_ul]
+        scale_ul = self.data.dnde_ul.data[mask_ul]
+        stat[mask_ul] = 2 * np.log(
+            (erfc((loc_ul - value) / scale_ul) / 2)
+            / (erfc((loc_ul - 0) / scale_ul) / 2)
+        )
+        return stat
 
     def residuals(self, method="diff"):
         """Compute flux point residuals.
@@ -394,6 +536,8 @@ class FluxPointsDataset(Dataset):
         gs = GridSpec(7, 1)
         if ax_spectrum is None:
             ax_spectrum = fig.add_subplot(gs[:5, :])
+            if ax_residuals is None:
+                plt.setp(ax_spectrum.get_xticklabels(), visible=False)
 
         if ax_residuals is None:
             ax_residuals = fig.add_subplot(gs[5:, :], sharex=ax_spectrum)

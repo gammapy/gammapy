@@ -7,7 +7,7 @@ from astropy.coordinates import angular_separation
 from astropy.utils import lazyproperty
 from regions import CircleSkyRegion
 import matplotlib.pyplot as plt
-from gammapy.irf import EDispKernel
+from gammapy.irf import EDispKernel, PSFKernel
 from gammapy.maps import HpxNDMap, Map, RegionNDMap, WcsNDMap
 from gammapy.modeling.models import PointSpatialModel, TemplateNPredModel
 from .utils import apply_edisp
@@ -72,6 +72,8 @@ class MapEvaluator:
         self.contributes = True
         self.psf_containment = None
 
+        self._geom_reco_axis = None
+
         if evaluation_mode not in {"local", "global"}:
             raise ValueError(f"Invalid evaluation_mode: {evaluation_mode!r}")
 
@@ -117,10 +119,12 @@ class MapEvaluator:
     @property
     def _geom_reco(self):
         if self.edisp is not None:
-            energy_axis = self.edisp.axes["energy"].copy(name="energy")
+            energy_axis = self.edisp.axes["energy"]
+        elif self._geom_reco_axis is not None:
+            energy_axis = self._geom_reco_axis
         else:
-            energy_axis = self.geom.axes["energy_true"].copy(name="energy")
-        geom = self.geom.to_image().to_cube(axes=[energy_axis])
+            energy_axis = self.geom.axes["energy_true"]
+        geom = self.geom.to_image().to_cube(axes=[energy_axis.copy(name="energy")])
         return geom
 
     @property
@@ -191,7 +195,10 @@ class MapEvaluator:
         del self.position
         del self.cutout_width
 
+        self._geom_reco_axis = geom.axes["energy"]
+
         # lookup edisp
+        del self._edisp_diagonal
         if edisp:
             energy_axis = geom.axes["energy"]
             self.edisp = edisp.get_edisp_kernel(
@@ -200,7 +207,11 @@ class MapEvaluator:
             del self._edisp_diagonal
 
         # lookup psf
-        if psf and self.model.spatial_model:
+        if (
+            psf
+            and self.model.spatial_model
+            and not (isinstance(self.psf, PSFKernel) and psf.has_single_spatial_bin)
+        ):
             energy_name = psf.energy_name
             geom_psf = geom if energy_name == "energy" else exposure.geom
 
@@ -209,9 +220,6 @@ class MapEvaluator:
                 kwargs = {energy_name: energy_values, "rad": geom.region.radius}
                 self.psf_containment = psf.containment(**kwargs)
             else:
-                if geom_psf.is_region or geom_psf.is_hpx:
-                    geom_psf = geom_psf.to_wcs_geom()
-
                 self.psf = psf.get_psf_kernel(
                     position=self.position,
                     geom=geom_psf,
@@ -242,8 +250,8 @@ class MapEvaluator:
     @lazyproperty
     def _edisp_diagonal(self):
         return EDispKernel.from_diagonal_response(
-            energy_axis_true=self.edisp.axes["energy_true"],
-            energy_axis=self.edisp.axes["energy"],
+            energy_axis_true=self.geom.axes["energy_true"],
+            energy_axis=self._geom_reco.axes["energy"],
         )
 
     def update_spatial_oversampling_factor(self, geom):
@@ -384,7 +392,7 @@ class MapEvaluator:
         npred_reco : `~gammapy.maps.Map`
             Predicted counts in reconstructed energy bins.
         """
-        if self.model.apply_irf["edisp"]:
+        if self.model.apply_irf["edisp"] and self.edisp:
             return apply_edisp(npred, self.edisp)
         else:
             if "energy_true" in npred.geom.axes.names:

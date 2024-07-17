@@ -1,12 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 import scipy.ndimage
+from scipy import stats
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
 from gammapy.datasets import SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.datasets.map import MapEvaluator
 from gammapy.maps import Map, MapAxis, TimeMapAxis, WcsNDMap
+from gammapy.modeling import Parameter
 from gammapy.modeling.models import (
     ConstantFluxSpatialModel,
     PowerLawSpectralModel,
@@ -753,3 +755,167 @@ def get_combined_significance_maps(estimator, datasets):
         npred_excess=npred_excess_sum,
         estimator_results=results,
     )
+
+
+def combine_flux_maps(maps, method="gaussian_errors", reference_model=None):
+    """Create a FluxMaps by combining a list of flux maps with the same geometry.
+     This assumes the flux maps are independent measurements of the same true value.
+     The GTI is stacked in the process.
+
+    Parameters
+    ----------
+    maps : list of `~gammapy.estimators.FluxMaps`
+        List of maps with the same geometry.
+    method : {"gaussian_errors"}
+        * gaussian_errors :
+            Under the gaussian error approximation the likelihood is given by the gaussian distibution.
+            The product of gaussians is also a gaussian so can derive dnde, dnde_err, and ts.
+    reference_model : `~gammapy.modeling.models.SkyModel`, optional
+        Reference model to use for conversions.
+        If None, use the reference_model of the first FluxMaps in the list.
+
+    Returns
+    -------
+    flux_maps : `~gammapy.estimators.FluxMaps`
+        Joint flux map.
+    """
+    if method != "gaussian_errors":
+        raise ValueError(
+            f'Invalid method : {method}, available methods are : "gaussian_errors"'
+        )
+
+    if isinstance(maps, FluxMaps):
+        geom = maps.dnde.sum_over_axes().geom
+        means = list(maps.dnde.copy().iter_by_image(keepdims=True))
+        sigmas = list(maps.dnde_err.copy().iter_by_image(keepdims=True))
+        mean = Map.from_geom(geom, data=means[0].data, unit=means[0].unit)
+        sigma = Map.from_geom(geom, data=sigmas[0].data, unit=sigmas[0].unit)
+        gti = maps.gti
+        meta = maps.meta
+        if reference_model is None:
+            reference_model = maps.reference_model
+    else:
+        means = [map_.dnde.copy() for map_ in maps]
+        sigmas = [map_.dnde_err.copy() for map_ in maps]
+        mean = means[0]
+        sigma = sigmas[0]
+
+        gtis = [map_.gti for map_ in maps if map_.gti is not None]
+        if np.any(gtis):
+            gti = gtis[0].copy()
+            for k in range(1, len(gtis)):
+                gti.stack(gtis[k])
+        else:
+            gti = None
+
+        if reference_model is None:
+            reference_model = maps[0].reference_model
+
+        # TODO : change this once we have stackable metadata objets
+        metas = [map_.meta for map_ in maps if map_.meta is not None]
+        meta = {}
+        if np.any(metas):
+            for data in metas:
+                meta.update(data)
+
+    for k in range(1, len(means)):
+
+        mean_k = means[k].quantity.to_value(mean.unit)
+        sigma_k = sigmas[k].quantity.to_value(sigma.unit)
+
+        mask_valid = np.isfinite(mean) & np.isfinite(sigma) & (sigma.data != 0)
+        mask_valid_k = np.isfinite(mean_k) & np.isfinite(sigma_k) & (sigma_k != 0)
+        mask = mask_valid & mask_valid_k
+        mask_k = ~mask_valid & mask_valid_k
+
+        mean.data[mask] = (
+            (mean.data * sigma_k**2 + mean_k * sigma.data**2)
+            / (sigma.data**2 + sigma_k**2)
+        )[mask]
+        sigma.data[mask] = (
+            sigma.data * sigma_k / np.sqrt(sigma.data**2 + sigma_k**2)
+        )[mask]
+
+        mean.data[mask_k] = mean_k[mask_k]
+        sigma.data[mask_k] = sigma_k[mask_k]
+
+    ts = -2 * np.log(
+        stats.norm.pdf(0, loc=mean, scale=sigma)
+        / stats.norm.pdf(mean, loc=mean, scale=sigma)
+    )
+    ts = Map.from_geom(mean.geom, data=ts)
+
+    kwargs = dict(sed_type="dnde", gti=gti, reference_model=reference_model, meta=meta)
+    return FluxMaps.from_maps(dict(dnde=mean, dnde_err=sigma, ts=ts), **kwargs)
+
+
+def _generate_scan_values(power_min=-4, power_max=2, relative_error=1e-2):
+    """Values sampled such as we can probe a given `relative_error` on the norm
+    between 10**`power_min` and 10**`power_max`.
+
+    """
+    arrays = []
+    for power in range(power_min, power_max):
+        vmin = 10**power
+        vmax = 10 ** (power + 1)
+        bin_per_decade = int((vmax - vmin) / (vmin * relative_error))
+        arrays.append(np.linspace(vmin, vmax, bin_per_decade + 1, dtype=np.float32))
+    scan_1side = np.unique(np.concatenate(arrays))
+    return np.concatenate((-scan_1side[::-1], [0], scan_1side))
+
+
+def _get_default_norm(
+    norm,
+    scan_min=None,
+    scan_max=None,
+    scan_n_values=None,
+    scan_values=None,
+    interp="lin",
+):
+    """create default norm parameter"""
+    if norm is None or isinstance(norm, dict):
+        norm_kwargs = dict(
+            name="norm",
+            value=1,
+            unit="",
+            interp=interp,
+            frozen=False,
+            scan_min=scan_min,
+            scan_max=scan_max,
+            scan_n_values=scan_n_values,
+            scan_values=scan_values,
+        )
+        if isinstance(norm, dict):
+            norm_kwargs.update(norm)
+        try:
+            norm = Parameter(**norm_kwargs)
+        except TypeError as error:
+            raise TypeError(f"Invalid dict key for norm init : {error}")
+    if norm.name != "norm":
+        raise ValueError("norm.name is not 'norm'")
+    return norm
+
+
+def _get_norm_scan_values(norm, result):
+    """Compute norms based on the fit result to sample the stat profile at different scales."""
+
+    norm_err = result["norm_err"]
+    norm_value = result["norm"]
+    if ~np.isfinite(norm_err) or norm_err == 0:
+        norm_err = 0.1
+    if ~np.isfinite(norm_value) or norm_value == 0:
+        norm_value = 1.0
+    sparse_norms = np.concatenate(
+        (
+            norm_value + np.linspace(-2.5, 2.5, 51) * norm_err,
+            norm_value + np.linspace(-10, 10, 21) * norm_err,
+            np.abs(norm_value) * np.linspace(-10, 10, 21),
+            np.linspace(-10, 10, 21),
+            np.linspace(norm.scan_values[0], norm.scan_values[-1], 2),
+        )
+    )
+    sparse_norms = np.unique(sparse_norms)
+    if len(sparse_norms) != 109:
+        rand_norms = 20 * np.random.rand(109 - len(sparse_norms)) - 10
+        sparse_norms = np.concatenate((sparse_norms, rand_norms))
+    return np.sort(sparse_norms)

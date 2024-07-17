@@ -21,6 +21,7 @@ from gammapy.irf import (
     EffectiveAreaTable2D,
     EnergyDependentMultiGaussPSF,
     EnergyDispersion2D,
+    PSFKernel,
     PSFMap,
     RecoPSFMap,
 )
@@ -164,10 +165,10 @@ def get_psf():
 def get_edisp(geom, geom_etrue):
     filename = "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz"
     edisp2d = EnergyDispersion2D.read(filename, hdu="EDISP")
-    energy = geom.axes["energy"].edges
-    energy_true = geom_etrue.axes["energy_true"].edges
+    energy_axis = geom.axes["energy"]
+    energy_axis_true = geom_etrue.axes["energy_true"]
     edisp_kernel = edisp2d.to_edisp_kernel(
-        offset="1.2 deg", energy=energy, energy_true=energy_true
+        offset="1.2 deg", energy_axis=energy_axis, energy_axis_true=energy_axis_true
     )
     edisp = EDispKernelMap.from_edisp_kernel(edisp_kernel)
     return edisp
@@ -276,7 +277,7 @@ def test_fake(sky_model, geom, geom_etrue):
 
     assert real_dataset.counts.data.shape == dataset.counts.data.shape
     assert_allclose(real_dataset.counts.data.sum(), 9525.299054, rtol=1e-5)
-    assert_allclose(dataset.counts.data.sum(), 9711)
+    assert_allclose(dataset.counts.data.sum(), 9709)
 
 
 @requires_data()
@@ -758,7 +759,6 @@ def test_map_fit_ray(sky_model, geom, geom_etrue):
     dataset_1 = get_map_dataset(geom, geom_etrue, name="test-1")
     dataset_2 = get_map_dataset(geom, geom_etrue, name="test-2")
     datasets = Datasets([dataset_1, dataset_2])
-
     models = Models(datasets.models)
     models.insert(0, sky_model)
 
@@ -772,9 +772,21 @@ def test_map_fit_ray(sky_model, geom, geom_etrue):
     models["test-1-bkg"].spectral_model.norm.value = 0.49
     models["test-2-bkg"].spectral_model.norm.value = 0.99
 
+    datasets.models = None
+
     actors = DatasetsActor(datasets)
+    assert len(actors.models) == 0
+
+    actors.models = models
+    assert len(actors.models) == len(models)
+    assert len(actors.parameters) == len(models.parameters.unique_parameters)
+
+    assert len(actors[0].models) == len(models) - 1
+
     fit = Fit()
     result = fit.run(datasets=actors)
+
+    assert_allclose(result.models.covariance.data, actors.models.covariance.data)
 
     assert result.success
     assert result.optimize_result.backend == "minuit"
@@ -2004,6 +2016,8 @@ def test_dataset_mixed_geom(tmpdir):
     dataset = MapDataset.from_geoms(
         geom=geom, geom_exposure=geom_exposure, geom_psf=geom_psf, geom_edisp=geom_edisp
     )
+    assert isinstance(dataset.psf, PSFMap)
+    assert isinstance(dataset._psf_kernel, PSFKernel)
 
     filename = tmpdir / "test.fits"
     dataset.write(filename)
@@ -2016,6 +2030,33 @@ def test_dataset_mixed_geom(tmpdir):
 
     assert isinstance(dataset.psf.psf_map.geom.region, CircleSkyRegion)
     assert isinstance(dataset.edisp.edisp_map.geom.region, CircleSkyRegion)
+
+    assert isinstance(dataset.psf, PSFMap)
+    assert dataset.psf.has_single_spatial_bin
+    assert isinstance(dataset._psf_kernel, PSFKernel)
+
+    geom_psf = WcsGeom.create(npix=1, axes=[rad_axis, energy_axis_true])
+    dataset = MapDataset.from_geoms(
+        geom=geom, geom_exposure=geom_exposure, geom_psf=geom_psf, geom_edisp=geom_edisp
+    )
+
+    assert isinstance(dataset.psf, PSFMap)
+    assert dataset.psf.has_single_spatial_bin
+    assert isinstance(dataset._psf_kernel, PSFKernel)
+    psf_1bin = dataset.psf.copy()
+
+    geom_psf = WcsGeom.create(npix=3, axes=[rad_axis, energy_axis_true])
+    dataset = MapDataset.from_geoms(
+        geom=geom, geom_exposure=geom_exposure, geom_psf=geom_psf, geom_edisp=geom_edisp
+    )
+
+    assert isinstance(dataset.psf, PSFMap)
+    assert not dataset.psf.has_single_spatial_bin
+    assert dataset._psf_kernel is None
+
+    dataset.psf.psf_map = psf_1bin.psf_map
+    assert dataset.psf.has_single_spatial_bin
+    assert isinstance(dataset._psf_kernel, PSFKernel)
 
     geom_psf_reco = RegionGeom.create(
         "icrs;circle(0, 0, 0.2)", axes=[rad_axis, energy_axis]
@@ -2166,3 +2207,27 @@ def test_to_masked():
     )
     d1 = datasetonoff.to_masked()
     assert_allclose(d1.counts.data.sum(), 170)
+
+
+def test_get_psf_kernel_multiscale():
+    energy_axis = MapAxis.from_edges(
+        np.logspace(-1.0, 1.0, 4), unit="TeV", name="energy_true"
+    )
+    geom = WcsGeom.create(binsz=0.02 * u.deg, width=4.0 * u.deg, axes=[energy_axis])
+
+    psf = PSFMap.from_gauss(energy_axis, sigma=[0.1, 0.2, 0.3] * u.deg)
+
+    kernel = psf.get_psf_kernel(geom=geom, max_radius="3 deg")
+    assert_allclose(kernel.psf_kernel_map.geom.width, 2 * 3 * u.deg, atol=0.02)
+
+    kernel = psf.get_psf_kernel(geom=geom, max_radius=None)
+
+    geom_image = kernel.psf_kernel_map.geom.to_image()
+    coords = geom_image.get_coord()
+    sep = coords.skycoord.separation(geom_image.center_skydir)
+
+    widths = [0.74, 1.34, 1.34] * u.deg
+    for im, width in zip(kernel.psf_kernel_map.iter_by_image(), widths):
+        mask = sep > width
+        assert np.all(im.data[mask] == 0)
+        assert np.any(im.data[~mask] > 0)

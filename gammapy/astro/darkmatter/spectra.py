@@ -5,11 +5,7 @@ import astropy.units as u
 from astropy.table import Table
 from gammapy.maps import MapAxis, RegionNDMap
 from gammapy.modeling import Parameter
-from gammapy.modeling.models import (
-    SPECTRAL_MODEL_REGISTRY,
-    SpectralModel,
-    TemplateNDSpectralModel,
-)
+from gammapy.modeling.models import SpectralModel, TemplateNDSpectralModel
 from gammapy.utils.scripts import make_path
 
 __all__ = ["PrimaryFlux", "DarkMatterAnnihilationSpectralModel"]
@@ -374,7 +370,3 @@ class DarkMatterDecaySpectralModel(SpectralModel):
         parameters = data.pop("parameters")
         scale = [p["value"] for p in parameters if p["name"] == "scale"][0]
         return cls(scale=scale, **data)
-
-
-SPECTRAL_MODEL_REGISTRY.append(DarkMatterAnnihilationSpectralModel)
-SPECTRAL_MODEL_REGISTRY.append(DarkMatterDecaySpectralModel)

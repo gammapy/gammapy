@@ -2,12 +2,14 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
+from scipy import stats
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.time import Time
 from gammapy.data import GTI
 from gammapy.estimators import FluxMaps
+from gammapy.estimators.utils import combine_flux_maps
 from gammapy.maps import MapAxis, Maps, RegionGeom, TimeMapAxis, WcsNDMap
 from gammapy.modeling.models import (
     LogParabolaSpectralModel,
@@ -208,6 +210,56 @@ def test_map_properties(map_flux_estimate):
         fe.eflux_errp.quantity.value[:, 2, 2], [3.4538775e-11, 3.4538775e-11]
     )
     assert_allclose(fe.eflux_ul.quantity.value[:, 2, 2], [4.60517e-10, 4.60517e-10])
+
+
+def test_combine_flux_maps(map_flux_estimate, wcs_flux_map, reference_model):
+    start = u.Quantity([1, 2], "min")
+    stop = u.Quantity([1.5, 2.5], "min")
+    gti = GTI.create(start, stop)
+
+    model = SkyModel(PowerLawSpectralModel(amplitude="1e-10 cm-2s-1TeV-1", index=2))
+    fe = FluxMaps(data=map_flux_estimate, reference_model=model, gti=gti)
+    iE = 0
+    energy = fe.geom.axes[0].center[iE]
+
+    fe_new = combine_flux_maps([fe, fe])
+    assert_allclose(fe_new.dnde.quantity, fe.dnde.quantity)
+    assert_allclose(
+        fe_new.dnde_err.quantity.value, fe.dnde_err.quantity.value / np.sqrt(2)
+    )
+
+    fe_new = combine_flux_maps(
+        [fe, fe], reference_model=FluxMaps.reference_model_default.spectral_model
+    )
+    assert_allclose(fe_new.dnde.quantity, fe.dnde.quantity)
+    assert_allclose(
+        fe_new.dnde_err.quantity.value, fe.dnde_err.quantity.value / np.sqrt(2)
+    )
+
+    ratio = model.spectral_model(
+        energy
+    ) / FluxMaps.reference_model_default.spectral_model(energy)
+
+    assert_allclose(
+        fe_new.norm.quantity.value[iE, :, :] / fe.norm.quantity.value[iE, :, :], ratio
+    )
+    assert fe_new.meta == fe.meta
+
+    fe = FluxMaps(wcs_flux_map, reference_model)
+    fe_new = combine_flux_maps([fe, fe], reference_model=reference_model)
+    assert_allclose(fe_new.dnde.quantity, fe.dnde.quantity)
+    assert_allclose(
+        fe_new.dnde_err.quantity.value, fe.dnde_err.quantity.value / np.sqrt(2)
+    )
+    assert_allclose(fe_new.norm.quantity, fe.norm.quantity)
+
+    ts = -2 * np.log(
+        stats.norm.pdf(0, loc=fe.dnde.data, scale=fe.dnde_err.data)
+        / stats.norm.pdf(fe.dnde.data, loc=fe.dnde.data, scale=fe.dnde_err.data)
+    )
+    assert_allclose(fe_new.ts, ts * 2)
+
+    fe_new = combine_flux_maps(fe)
 
 
 def test_flux_map_properties(wcs_flux_map, reference_model):
@@ -519,3 +571,16 @@ def test_slice_by_coord():
 
     sliced_map4 = ref_map.slice_by_coord({"time": slice(1 * u.d, 3 * u.d)})
     assert sliced_map4.geom.axes["time"].nbin == 1
+
+
+def test_copy(map_flux_estimate):
+
+    model = SkyModel(PowerLawSpectralModel(amplitude="1e-10 cm-2s-1TeV-1", index=3))
+
+    fe = FluxMaps(data=map_flux_estimate, reference_model=model)
+    fe_new = fe.copy(reference_model=None)
+    assert fe_new.reference_model.spectral_model.index.value == 3
+
+    model = SkyModel(PowerLawSpectralModel(amplitude="1e-10 cm-2s-1TeV-1", index=4))
+    fe_new = fe.copy(reference_model=model)
+    assert fe_new.reference_model.spectral_model.index.value == 4
