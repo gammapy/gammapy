@@ -2575,11 +2575,11 @@ class MapDatasetOnOff(MapDataset):
     def stack(self, other, nan_to_num=True):
         r"""Stack another dataset in place.
 
-        Safe mask is applied to the other dataset to compute the stacked counts data.
-        Counts outside the safe mask are lost.
+        Safe mask is applied to the other dataset to compute the stacked counts data,
+        counts outside the safe mask are lost (as for `~gammapy.MapDataset.stack`).
 
         The ``acceptance`` of the stacked dataset is obtained by stacking the acceptance weighted
-        by the other mask_safe onto the current unwieghted acceptance.
+        by the other mask_safe onto the current unweighted acceptance.
 
         Note that the masking is not applied to the current dataset. If masking needs
         to be applied to it, use `~gammapy.MapDataset.to_masked()` first.
