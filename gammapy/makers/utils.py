@@ -84,7 +84,10 @@ def _get_fov_coords(pointing, irf, geom, use_region_center=True, obstime=None):
             )
         elif irf.fov_alignment == FoVAlignment.RADEC:
             fov_lon, fov_lat = sky_to_fov(
-                sky_coord.ra, sky_coord.dec, pointing_icrs.ra, pointing_icrs.dec
+                sky_coord.icrs.ra,
+                sky_coord.icrs.dec,
+                pointing_icrs.icrs.ra,
+                pointing_icrs.icrs.dec,
             )
         else:
             raise ValueError(
