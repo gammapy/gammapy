@@ -571,3 +571,16 @@ def test_slice_by_coord():
 
     sliced_map4 = ref_map.slice_by_coord({"time": slice(1 * u.d, 3 * u.d)})
     assert sliced_map4.geom.axes["time"].nbin == 1
+
+
+def test_copy(map_flux_estimate):
+
+    model = SkyModel(PowerLawSpectralModel(amplitude="1e-10 cm-2s-1TeV-1", index=3))
+
+    fe = FluxMaps(data=map_flux_estimate, reference_model=model)
+    fe_new = fe.copy(reference_model=None)
+    assert fe_new.reference_model.spectral_model.index.value == 3
+
+    model = SkyModel(PowerLawSpectralModel(amplitude="1e-10 cm-2s-1TeV-1", index=4))
+    fe_new = fe.copy(reference_model=model)
+    assert fe_new.reference_model.spectral_model.index.value == 4

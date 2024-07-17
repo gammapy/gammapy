@@ -184,7 +184,9 @@ stacked = MapDataset.create(
 #
 # The `~gammapy.makers.MapDatasetMaker` object is initialized as well as
 # the `~gammapy.makers.SafeMaskMaker` that carries here a maximum offset
-# selection.
+# selection. The `~gammapy.makers.FoVBackgroundMaker` utilised here has the
+# default ``spectral_model`` but it is possible to set your own. For further
+# details see the :doc:`FoV background </user-guide/makers/fov>`.
 #
 
 offset_max = 2.5 * u.deg
