@@ -138,3 +138,6 @@ def test_plot_distribution():
         axes, res = plot_distribution(
             wcs_map=map_, func="norm", kwargs_hist={"bins": 40}
         )
+
+        fig, ax = plt.subplots(nrows=1, ncols=1)
+        plot_distribution(map_empty, ax=ax)
