@@ -803,18 +803,22 @@ def test_fpe_diff_lengths():
     dataset.meta_table = Table(names=["NAME", "TELESCOP"], data=[["23523"], ["hess"]])
     dataset1.meta_table = Table(names=["NAME", "TELESCOP"], data=[["23559"], ["hess"]])
     dataset2 = Datasets([dataset, dataset1]).stack_reduce(name="dataset2")
+
+    dataset3 = dataset1.copy()
+    dataset3.meta_table = None
+
     pwl = PowerLawSpectralModel()
 
-    datasets = Datasets([dataset1, dataset2])
+    datasets = Datasets([dataset1, dataset2, dataset3])
 
-    datasets.models = SkyModel(spectral_model=pwl, name="crab")
+    datasets.models = SkyModel(spectral_model=pwl, name="test")
     energy_edges = [1, 2, 4, 10] * u.TeV
-    fpe = FluxPointsEstimator(energy_edges=energy_edges, source="crab")
+    fpe = FluxPointsEstimator(energy_edges=energy_edges, source="test")
 
     fp = fpe.run(datasets)
 
     assert_allclose(
         fp.dnde.data,
-        [[[1.98015713e-11]], [[3.33843428e-12]], [[3.30336385e-13]]],
+        [[[2.034323e-11]], [[3.39049716e-12]], [[2.96231326e-13]]],
         rtol=1e-3,
     )
