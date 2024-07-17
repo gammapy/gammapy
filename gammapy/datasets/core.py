@@ -250,11 +250,10 @@ class Datasets(collections.abc.MutableSequence):
         """
         from .flux_points import FluxPointsDataset
 
-        """Test statistic for the given model assuming an Asimov dataset"""
         stat_sum_asimov = 0
         for dataset in self:
             if isinstance(self, FluxPointsDataset):
-                raise ValueError("Not defined for a flux points dataset")
+                raise TypeError("Not defined for a flux points dataset")
             stat_sum_asimov += dataset.stat_sum_asimov(model_name=model_name)
         return stat_sum_asimov
 
