@@ -790,9 +790,9 @@ def combine_flux_maps(
         Default is None and is will use the reference_model of the first FluxMaps in the list.
 
     dnde_scan_axis : `~gammapy.maps.MapAxis`
-        dnde axis used to compute the likelihood profile.
-        Used only if `method` is distrib or profile.
+        Map axis providing the dnde values used to compute the profile.
         Default is None and it will be derived from the first FluxMaps in the list.
+        Used only if `method` is distrib or profile.
 
     Returns
     -------
@@ -865,13 +865,9 @@ def combine_flux_maps(
             dnde_scan_axis = _default_scan_map(maps[0]).geom.axes["dnde"]
         for k, map_ in enumerate(maps):
             if method == "profile":
-                map_stat_scan = interpolate_profile_map(
-                    map_, dnde_scan_axis=dnde_scan_axis
-                )
+                map_stat_scan = interpolate_profile_map(map_, dnde_scan_axis)
             else:
-                map_stat_scan = approximate_profile_map(
-                    map_, dnde_scan_axis=dnde_scan_axis
-                )
+                map_stat_scan = approximate_profile_map(map_, dnde_scan_axis)
             map_stat_scan.data[np.isnan(map_stat_scan.data)] = 0.0
             if k == 0:
                 stat_scan = map_stat_scan
@@ -914,7 +910,8 @@ def interpolate_profile_map(flux_map, dnde_scan_axis=None):
     flux_map : `~gammapy.estimators.FluxMaps`
         Flux map.
     dnde_scan_axis : `~gammapy.maps.MapAxis`
-        dnde axis used to compute the profile.
+        Map axis providing the dnde values used to compute the profile.
+        Default is None and it will be derived from the flux_map.
 
     Returns
     -------
@@ -953,7 +950,8 @@ def approximate_profile_map(
     flux_map : `~gammapy.estimators.FluxMaps`
         Flux map.
     dnde_scan_axis : `~gammapy.maps.MapAxis`
-        dnde axis used to compute the profile.
+        Map axis providing the dnde values used to compute the profile.
+        Default is None and it will be derived from the flux_map.
     sqrt_ts_threshold_ul : int
         Threshold value in sqrt(TS) for upper limits.
         Default is `ignore` and no threshold is applied.
