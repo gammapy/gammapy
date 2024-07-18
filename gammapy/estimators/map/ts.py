@@ -852,14 +852,14 @@ class BrentqFluxEstimator(Estimator):
 
         maskp = self.norm.scan_values > norm
         stat_diff = stat_scan - stat_scan.min()
-        ind = np.abs(stat_diff - self.n_sigma**2)[maskp].argmin()
-        norm_errn = norm - self.norm.scan_values[maskp][ind]
-
         ind = np.abs(stat_diff - self.n_sigma**2)[~maskp].argmin()
-        norm_errp = self.norm.scan_values[~maskp][ind] - norm
+        norm_errn = norm - self.norm.scan_values[~maskp][ind]
 
-        ind = np.abs(stat_diff - self.n_sigma_ul**2)[~maskp].argmin()
-        norm_ul = self.norm.scan_values[~maskp][ind]
+        ind = np.abs(stat_diff - self.n_sigma**2)[maskp].argmin()
+        norm_errp = self.norm.scan_values[maskp][ind] - norm
+
+        ind = np.abs(stat_diff - self.n_sigma_ul**2)[maskp].argmin()
+        norm_ul = self.norm.scan_values[maskp][ind]
 
         norm_err = (norm_errn + norm_errp) / 2
 
