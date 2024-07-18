@@ -864,11 +864,14 @@ def combine_flux_maps(
         if dnde_scan_axis is None:
             dnde_scan_axis = _default_scan_map(maps[0]).geom.axes["dnde"]
         for k, map_ in enumerate(maps):
-            map_stat_scan = (
-                interpolate_profile_map(map_, dnde_scan_axis=dnde_scan_axis)
-                if method == "profile"
-                else approximate_profile_map(map_, dnde_scan_axis=dnde_scan_axis)
-            )
+            if method == "profile":
+                map_stat_scan = interpolate_profile_map(
+                    map_, dnde_scan_axis=dnde_scan_axis
+                )
+            else:
+                map_stat_scan = approximate_profile_map(
+                    map_, dnde_scan_axis=dnde_scan_axis
+                )
             map_stat_scan.data[np.isnan(map_stat_scan.data)] = 0.0
             if k == 0:
                 stat_scan = map_stat_scan
