@@ -963,3 +963,30 @@ def test_map_dot_product():
     assert dot_map.data.shape == (4, 2, 3, 1, 1)
 
     assert_allclose(dot_map.data[0, :, 0, 0, 0], [1, 0])
+
+
+def test_data_shape_braodcast():
+    axis1 = MapAxis.from_edges((0, 1, 3), name="axis1")
+
+    map1 = WcsNDMap.create(npix=(5, 6), axes=[axis1])
+
+    with pytest.raises(ValueError):
+        map1.data = np.zeros((1, 2, 6, 5))
+
+    with pytest.raises(ValueError):
+        map1.data = np.zeros((2, 6, 5, 1))
+
+    map2: RegionNDMap = RegionNDMap.create(region=None, axes=[axis1])
+
+    map2.data = np.ones((2,))
+    assert_allclose(map2.data, 1)
+    assert map2.data.shape == (2, 1, 1)
+
+    map2.data = np.zeros((2, 1, 1))
+    assert_allclose(map2.data, 0)
+
+    with pytest.raises(ValueError):
+        map2.data = np.ones((2, 1))
+
+    with pytest.raises(ValueError):
+        map2.data = np.ones((1, 1, 2))

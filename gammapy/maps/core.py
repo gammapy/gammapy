@@ -110,10 +110,10 @@ class Map(abc.ABC):
         if not value.shape == self.geom.data_shape:
             try:
                 value = np.broadcast_to(value, self.geom.data_shape, subok=True)
-            except Exception:
+            except ValueError as exc:
                 raise ValueError(
                     f"Input shape {value.shape} is not compatible with shape from geometry {self.geom.data_shape}"
-                ) from None
+                ) from exc
 
         self._data = value
 
