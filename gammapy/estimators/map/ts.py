@@ -303,7 +303,10 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
             geom=dataset.counts.geom,
             mask=dataset.mask_image,
         )
+
         kernel = evaluator.compute_npred()
+        mask_safe = dataset.mask_safe.interp_to_geom(kernel.geom, method="nearest")
+        kernel *= mask_safe
         kernel.data /= kernel.data.sum()
         return kernel
 
@@ -411,10 +414,12 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
             Maps dictionary.
         """
         # First create 2D map arrays
-        counts = dataset.counts
-        background = dataset.npred()
+        counts = dataset.counts * dataset.mask_safe
+        background = dataset.npred() * dataset.mask_safe
 
         exposure = estimate_exposure_reco_energy(dataset, self.model.spectral_model)
+
+        exposure *= dataset.mask_safe
 
         kernel = self.estimate_kernel(dataset)
 
@@ -431,6 +436,12 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         )
 
         exposure_npred = (exposure * flux_ref * mask.data).to_unit("")
+        if self.sum_over_energy_groups:
+            counts = counts.sum_over_axes()
+            background = background.sum_over_axes()
+            exposure_npred = exposure_npred.sum_over_axes()
+            kernel = kernel.sum_over_axes()
+            kernel.data /= kernel.data.sum()
 
         norm = (flux / flux_ref).to_unit("")
         return {
@@ -575,11 +586,6 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
             datasets_sliced = datasets.slice_by_energy(
                 energy_min=energy_min, energy_max=energy_max
             )
-
-            if self.sum_over_energy_groups:
-                datasets_sliced = Datasets(
-                    [d.to_image(name=d.name) for d in datasets_sliced]
-                )
 
             if datasets_models is not None:
                 models_sliced = datasets_models._slice_by_energy(
