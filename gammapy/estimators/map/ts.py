@@ -671,11 +671,13 @@ class SimpleMapDataset:
         counts_cutout = _extract_array(counts, kernel.shape, position)
         background_cutout = _extract_array(background, kernel.shape, position)
         exposure_cutout = _extract_array(exposure, kernel.shape, position)
+        model = kernel * exposure_cutout
         norm_guess = norm[0, position[0], position[1]]
+        mask_invalid = (counts_cutout == 0) & (background_cutout == 0) & (model == 0)
         return cls(
-            counts=counts_cutout.ravel(),
-            background=background_cutout.ravel(),
-            model=(kernel * exposure_cutout).ravel(),
+            counts=counts_cutout[~mask_invalid],
+            background=background_cutout[~mask_invalid],
+            model=model[~mask_invalid],
             norm_guess=norm_guess,
         )
 
