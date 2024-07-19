@@ -844,22 +844,24 @@ class BrentqFluxEstimator(Estimator):
         spline = InterpolatedUnivariateSpline(
             sparse_norms, stat_scan_local, k=1, ext="raise", check_finite=True
         )
-        stat_scan = spline(self.norm.scan_values)
+
+        norms = np.unique(np.concatenate((sparse_norms, self.norm.scan_values)))
+        stat_scan = spline(norms)
 
         ts = -stat_scan.min()
         ind = stat_scan.argmin()
-        norm = self.norm.scan_values[ind]
+        norm = norms[ind]
 
-        maskp = self.norm.scan_values > norm
+        maskp = norms > norm
         stat_diff = stat_scan - stat_scan.min()
         ind = np.abs(stat_diff - self.n_sigma**2)[~maskp].argmin()
-        norm_errn = norm - self.norm.scan_values[~maskp][ind]
+        norm_errn = norm - norms[~maskp][ind]
 
         ind = np.abs(stat_diff - self.n_sigma**2)[maskp].argmin()
-        norm_errp = self.norm.scan_values[maskp][ind] - norm
+        norm_errp = norms[maskp][ind] - norm
 
         ind = np.abs(stat_diff - self.n_sigma_ul**2)[maskp].argmin()
-        norm_ul = self.norm.scan_values[maskp][ind]
+        norm_ul = norms[maskp][ind]
 
         norm_err = (norm_errn + norm_errp) / 2
 
