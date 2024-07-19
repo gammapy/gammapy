@@ -14,6 +14,8 @@ from gammapy.stats import WStatCountsStatistic
 from gammapy.utils.coordinates import sky_to_fov
 from gammapy.utils.regions import compound_region_to_regions
 
+REVERSE_FOV_LON = False
+
 __all__ = [
     "make_counts_rad_max",
     "make_edisp_kernel_map",
@@ -89,7 +91,8 @@ def _get_fov_coords(pointing, irf, geom, use_region_center=True, obstime=None):
                 pointing_icrs.icrs.ra,
                 pointing_icrs.icrs.dec,
             )
-            fov_lon = -fov_lon
+            if REVERSE_FOV_LON:
+                fov_lon = -fov_lon
         else:
             raise ValueError(
                 f"Unsupported background coordinate system: {irf.fov_alignment!r}"
