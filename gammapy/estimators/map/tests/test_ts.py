@@ -373,6 +373,7 @@ def test_ts_map_stat_scan(fake_dataset):
 
 
 def test_ts_map_with_model(fake_dataset):
+    fake_dataset = fake_dataset.copy()
     model = fake_dataset.models["source"]
 
     fake_dataset.models = []
