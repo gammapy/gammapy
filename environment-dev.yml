@@ -27,6 +27,7 @@ dependencies:
   - regions>=0.5
   - matplotlib>=3.4
   - scipy!=1.10
+  - iminuit>=2.8.0
   - extension-helpers
   # test dependencies
   - codecov
