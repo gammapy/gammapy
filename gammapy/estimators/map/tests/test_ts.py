@@ -286,6 +286,7 @@ def test_ts_map_stat_scan(fake_dataset):
         model,
         kernel_width="0.3 deg",
         energy_edges=[200, 3500] * u.GeV,
+        selection_optional=["errn-errp", "ul"],
     )
 
     estimator = TSMapEstimator(
@@ -310,6 +311,17 @@ def test_ts_map_stat_scan(fake_dataset):
     assert maps.dnde_scan_values.unit == dnde_ref.unit
     norm = maps.dnde_scan_values.data[ij, ind_best, ik, il] / dnde_ref.value
     assert_allclose(norm[success], maps_ref.norm.data[success], rtol=1e-5)
+
+    assert_allclose(maps.norm.data[success], maps_ref.norm.data[success], rtol=1e-4)
+    assert_allclose(
+        maps.norm_errn.data[success], maps_ref.norm_errn.data[success], rtol=5e-2
+    )
+    assert_allclose(
+        maps.norm_errp.data[success], maps_ref.norm_errp.data[success], rtol=5e-2
+    )
+    assert_allclose(
+        maps.norm_ul.data[success], maps_ref.norm_ul.data[success], rtol=5e-2
+    )
 
 
 def test_ts_map_with_model(fake_dataset):
