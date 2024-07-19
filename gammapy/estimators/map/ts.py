@@ -305,8 +305,9 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         )
 
         kernel = evaluator.compute_npred()
-        mask_safe = dataset.mask_safe.interp_to_geom(kernel.geom, method="nearest")
-        kernel *= mask_safe
+        if dataset.mask_safe:
+            mask_safe = dataset.mask_safe.interp_to_geom(kernel.geom, method="nearest")
+            kernel *= mask_safe
         kernel.data /= kernel.data.sum()
         return kernel
 
@@ -367,7 +368,8 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         # in some image there are pixels, which have exposure, but zero
         # background, which doesn't make sense and causes the TS computation
         # to fail, this is a temporary fix
-        background = (dataset.npred() * dataset.mask_safe).sum_over_axes(keepdims=False)
+        mask_safe = dataset.mask_safe if dataset.mask_safe else 1.0
+        background = (dataset.npred() * mask_safe).sum_over_axes(keepdims=False)
         mask[background.data == 0] = False
         return Map.from_geom(data=mask, geom=geom)
 
@@ -414,12 +416,14 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
             Maps dictionary.
         """
         # First create 2D map arrays
-        counts = dataset.counts * dataset.mask_safe
-        background = dataset.npred() * dataset.mask_safe
+
+        mask_safe = dataset.mask_safe if dataset.mask_safe else 1.0
+        counts = dataset.counts * mask_safe
+        background = dataset.npred() * mask_safe
 
         exposure = estimate_exposure_reco_energy(dataset, self.model.spectral_model)
 
-        exposure *= dataset.mask_safe
+        exposure *= mask_safe
 
         kernel = self.estimate_kernel(dataset)
 
