@@ -77,7 +77,6 @@ dependencies:
   - pyinstrument
   - memray
   - pip:
-      - iminuit>=2.26
       - sherpa
       - pytest-sphinx
       - ray[default]>=2.9
