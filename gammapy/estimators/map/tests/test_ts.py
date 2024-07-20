@@ -527,7 +527,12 @@ def test_joint_ts_map_hawc():
     datasets = Datasets.read("$GAMMAPY_DATA/hawc/DL4/HAWC_pass4_public_Crab.yaml")
     datasets = Datasets(datasets[-2:])
 
-    estimator = TSMapEstimator(kernel_width=2 * u.deg)
+    estimator = TSMapEstimator(kernel_width=2 * u.deg, sum_over_energy_groups=False)
     result = estimator.run(datasets)
-    assert_allclose(result["flux"].data[0, 59, 59], 1.0185e-13, rtol=1e-3)
-    assert_allclose(result["sqrt_ts"].data[0, 59, 59], 2.14400, rtol=1e-3)
+    assert_allclose(result["flux"].data[0, 59, 59], 1.909396e-13, rtol=1e-3)
+    assert_allclose(result["sqrt_ts"].data[0, 59, 59], 10.878956, rtol=1e-3)
+
+    estimator = TSMapEstimator(kernel_width=2 * u.deg, sum_over_energy_groups=True)
+    result = estimator.run(datasets)
+    assert_allclose(result["flux"].data[0, 59, 59], 1.99452e-13, rtol=1e-3)
+    assert_allclose(result["sqrt_ts"].data[0, 59, 59], 11.997135, rtol=1e-3)
