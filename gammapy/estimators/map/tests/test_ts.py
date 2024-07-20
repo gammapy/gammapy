@@ -492,23 +492,18 @@ def test_joint_ts_map(fake_dataset):
 
     fake_dataset.models = [model]
 
-    stacked_dataset = fake_dataset.copy(name="copy")
-    stacked_dataset.counts *= 2
-    stacked_dataset.exposure *= 2
-    stacked_dataset.background *= 2
-    stacked_dataset.models = [model]
     estimator = TSMapEstimator(
-        model=model, threshold=1, selection_optional=[], sum_over_energy_groups=True
+        model=model, selection_optional=[], sum_over_energy_groups=True
     )
     assert estimator.sum_over_energy_groups
 
     result = estimator.run(fake_dataset)
-    assert_allclose(result["npred_excess"].data.sum(), 1140.364071, rtol=1e-3)
+    assert_allclose(result["npred_excess"].data.sum(), 902.403647, rtol=1e-3)
     assert_allclose(result["sqrt_ts"].data[0, 10, 10], 1.360219, rtol=1e-3)
 
     result = get_combined_significance_maps(estimator, [fake_dataset, fake_dataset])
 
-    assert_allclose(result["npred_excess"].data.sum(), 2 * 1140.364071, rtol=1e-3)
+    assert_allclose(result["npred_excess"].data.sum(), 2 * 902.403647, rtol=1e-3)
     assert_allclose(result["significance"].data[10, 10], 1.414529, rtol=1e-3)
     assert_allclose(
         result["df"].data, 2 * (~np.isnan(result["significance"].data)), rtol=1e-3
