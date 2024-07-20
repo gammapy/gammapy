@@ -253,6 +253,30 @@ def test_compute_ts_map_energy(fermi_dataset):
     energy_axis = result["ts"].geom.axes["energy"]
     assert_allclose(energy_axis.edges.to_value("GeV"), [10, 84.471641, 500], rtol=1e-4)
 
+    fermi_dataset_maksed = fermi_dataset.copy()
+    mask_safe = Map.from_geom(fermi_dataset.counts.geom, dtype=bool)
+    mask_safe.data[:-3, :, :] = True
+    print(mask_safe.data.shape)
+    fermi_dataset_maksed.mask_safe = mask_safe
+
+    result = estimator.run(fermi_dataset_maksed)
+    result.filter_success_nan = False
+
+    assert_allclose(result.ts.data[1, 43, 30], 0.164831, atol=0.01)
+    assert not result["success"].data[1, 43, 30]
+
+    assert_allclose(result["ts"].data[:, 29, 29], [795.815842, 8.777864], rtol=1e-2)
+    assert_allclose(
+        result["flux"].data[:, 29, 29], [1.223901e-09, 3.748007e-11], rtol=1e-2
+    )
+    assert_allclose(
+        result["flux_err"].data[:, 29, 29], [7.363390e-11, 1.799367e-11], rtol=1e-2
+    )
+    assert_allclose(result["niter"].data[:, 29, 29], [6, 6])
+
+    energy_axis = result["ts"].geom.axes["energy"]
+    assert_allclose(energy_axis.edges.to_value("GeV"), [10, 84.471641, 500], rtol=1e-4)
+
 
 @requires_data()
 def test_compute_ts_map_downsampled(input_dataset):
@@ -373,8 +397,8 @@ def test_ts_map_stat_scan(fake_dataset):
 
 
 def test_ts_map_with_model(fake_dataset):
-    fake_dataset = fake_dataset.copy()
     model = fake_dataset.models["source"]
+    fake_dataset = fake_dataset.copy()
 
     fake_dataset.models = []
 
@@ -464,6 +488,8 @@ def test_with_TemplateSpatialModel():
 def test_joint_ts_map(fake_dataset):
 
     model = fake_dataset.models["source"]
+    fake_dataset = fake_dataset.copy()
+
     fake_dataset.models = [model]
 
     stacked_dataset = fake_dataset.copy(name="copy")
