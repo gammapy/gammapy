@@ -443,10 +443,12 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         norm = (flux / flux_ref).to_unit("")
 
         if self.sum_over_energy_groups:
+            if dataset.mask_safe is None:
+                mask_safe = Map.from_geom(counts.geom, data=True, dtype=bool)
             counts = counts.sum_over_axes()
             background = background.sum_over_axes()
             exposure_npred = exposure_npred.sum_over_axes()
-            mask_safe = dataset.mask_safe
+
         else:
             mask_safe = None  # already applied
 
