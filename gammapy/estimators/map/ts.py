@@ -305,9 +305,6 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         )
 
         kernel = evaluator.compute_npred()
-        if dataset.mask_safe:
-            mask_safe = dataset.mask_safe.interp_to_geom(kernel.geom, method="nearest")
-            kernel *= mask_safe
         kernel.data /= kernel.data.sum()
         return kernel
 
@@ -417,12 +414,11 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         """
         # First create 2D map arrays
 
+        exposure = estimate_exposure_reco_energy(dataset, self.model.spectral_model)
+
         mask_safe = dataset.mask_safe if dataset.mask_safe else 1.0
         counts = dataset.counts * mask_safe
         background = dataset.npred() * mask_safe
-
-        exposure = estimate_exposure_reco_energy(dataset, self.model.spectral_model)
-
         exposure *= mask_safe
 
         kernel = self.estimate_kernel(dataset)
@@ -440,19 +436,22 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         )
 
         exposure_npred = (exposure * flux_ref * mask.data).to_unit("")
+        norm = (flux / flux_ref).to_unit("")
+
         if self.sum_over_energy_groups:
             counts = counts.sum_over_axes()
             background = background.sum_over_axes()
             exposure_npred = exposure_npred.sum_over_axes()
-            kernel = kernel.sum_over_axes()
-            kernel.data /= kernel.data.sum()
+            mask_safe = dataset.mask_safe
+        else:
+            mask_safe = None  # already applied
 
-        norm = (flux / flux_ref).to_unit("")
         return {
             "counts": counts,
             "background": background,
             "norm": norm,
             "mask": mask,
+            "mask_safe": mask_safe,
             "exposure": exposure_npred,
             "kernel": kernel,
         }
@@ -480,6 +479,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
             repeat([_["background"].data.astype(float) for _ in maps]),
             repeat([_["kernel"].data for _ in maps]),
             repeat([_["norm"].data for _ in maps]),
+            repeat([_["mask_safe"] for _ in maps]),
             repeat(self._flux_estimator),
         )
 
@@ -670,8 +670,18 @@ class SimpleMapDataset:
         return (term_top / term_bottom)[~mask].sum()
 
     @classmethod
-    def from_arrays(cls, counts, background, exposure, norm, position, kernel):
+    def from_arrays(
+        cls, counts, background, exposure, norm, position, kernel, mask_safe
+    ):
         """"""
+        if mask_safe:
+            # compute mask_safe weighted kernel for the sum_over_axes case
+            mask_safe = _extract_array(mask_safe.data, kernel.shape, position)
+            kernel = (kernel * mask_safe).sum(axis=0, keepdims=True)
+            with np.errstate(invalid="ignore", divide="ignore"):
+                kernel /= mask_safe.sum(axis=0, keepdims=True)
+                kernel[~np.isfinite(kernel)] = 0
+
         counts_cutout = _extract_array(counts, kernel.shape, position)
         background_cutout = _extract_array(background, kernel.shape, position)
         exposure_cutout = _extract_array(exposure, kernel.shape, position)
@@ -962,7 +972,9 @@ class BrentqFluxEstimator(Estimator):
         return result
 
 
-def _ts_value(position, counts, exposure, background, kernel, norm, flux_estimator):
+def _ts_value(
+    position, counts, exposure, background, kernel, norm, mask_safe, flux_estimator
+):
     """Compute test statistic value at a given pixel position.
 
     Uses approach described in Stewart (2009).
@@ -997,9 +1009,10 @@ def _ts_value(position, counts, exposure, background, kernel, norm, flux_estimat
                 counts=counts[idx],
                 background=background[idx],
                 exposure=exposure[idx],
-                kernel=kernel[idx],
-                position=position,
                 norm=norm[idx],
+                position=position,
+                kernel=kernel[idx],
+                mask_safe=mask_safe[idx],
             )
         )
 
