@@ -256,7 +256,7 @@ def test_compute_ts_map_energy(fermi_dataset):
     fermi_dataset_maksed = fermi_dataset.copy()
     mask_safe = Map.from_geom(fermi_dataset.counts.geom, dtype=bool)
     mask_safe.data[:-3, :, :] = True
-    print(mask_safe.data.shape)
+
     fermi_dataset_maksed.mask_safe = mask_safe
 
     result = estimator.run(fermi_dataset_maksed)

@@ -339,6 +339,8 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
         flux.quantity = flux.quantity.to("1 / (cm2 s)")
         flux = flux.convolve(kernel)
+        if dataset.mask_safe:
+            flux *= dataset.mask_safe
         return flux.sum_over_axes()
 
     @staticmethod
@@ -365,8 +367,10 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         # in some image there are pixels, which have exposure, but zero
         # background, which doesn't make sense and causes the TS computation
         # to fail, this is a temporary fix
-        mask_safe = dataset.mask_safe if dataset.mask_safe else 1.0
-        background = (dataset.npred() * mask_safe).sum_over_axes(keepdims=False)
+        npred = dataset.npred()
+        if dataset.mask_safe:
+            npred *= dataset.mask_safe
+        background = npred.sum_over_axes(keepdims=False)
         mask[background.data == 0] = False
         return Map.from_geom(data=mask, geom=geom)
 
@@ -416,11 +420,6 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
         exposure = estimate_exposure_reco_energy(dataset, self.model.spectral_model)
 
-        mask_safe = dataset.mask_safe if dataset.mask_safe else 1.0
-        counts = dataset.counts * mask_safe
-        background = dataset.npred() * mask_safe
-        exposure *= mask_safe
-
         kernel = self.estimate_kernel(dataset)
 
         mask = self.estimate_mask_default(dataset=dataset)
@@ -428,6 +427,11 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         flux = self.estimate_flux_default(
             dataset=dataset, kernel=kernel, exposure=exposure
         )
+
+        mask_safe = dataset.mask_safe if dataset.mask_safe else 1.0
+        counts = dataset.counts * mask_safe
+        background = dataset.npred() * mask_safe
+        exposure *= mask_safe
 
         energy_axis = counts.geom.axes["energy"]
 
