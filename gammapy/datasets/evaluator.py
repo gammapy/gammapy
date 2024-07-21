@@ -317,12 +317,10 @@ class MapEvaluator:
             if self.geom.region is None or self.psf is None:
                 return 1
 
-            wcs_geom = self.geom.to_wcs_geom(width_min=self.cutout_width).to_image()
+            wcs_geom = self.geom.to_wcs_geom(width_min=self.cutout_width)
+            values = self._compute_flux_spatial_geom(wcs_geom)
 
-            if self.psf and self.model.apply_irf["psf"]:
-                values = self._compute_flux_spatial_geom(wcs_geom)
-            else:
-                values = self.model.spatial_model.integrate_geom(wcs_geom)
+            if not values.geom.has_energy_axis:
                 axes = [self.geom.axes["energy_true"].squash()]
                 values = values.to_cube(axes=axes)
 
