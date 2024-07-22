@@ -635,12 +635,23 @@ def test_observations_getitem(data_store):
     assert len(obs_2) == 2
     assert obs_2.ids == ["20136", "20151"]
 
-    obs_3 = obs_1[np.array(mask)]
+    ind = [0, 2]
+    obs_2 = obs_1[ind]
 
-    assert len(obs_3) == 2
-    assert obs_3.ids == ["20136", "20151"]
+    assert len(obs_2) == 2
+    assert obs_2.ids == ["20136", "20151"]
+
+    obs_2 = obs_1[np.array(mask)]
+
+    assert len(obs_2) == 2
+    assert obs_2.ids == ["20136", "20151"]
 
     assert obs_1[["20136", "20151"]].ids == ["20136", "20151"]
 
-    assert len(obs_1[[]]) == 0
-    assert len(obs_1[np.array([])]) == 0
+    obs_2 = obs_1[[]]
+    assert len(obs_2) == 0
+    assert isinstance(obs_2, Observations)
+
+    obs_2 = obs_1[np.array([])]
+    assert len(obs_2) == 0
+    assert isinstance(obs_2, Observations)
