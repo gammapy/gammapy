@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
+import astropy.units as u
 from astropy.coordinates import SkyCoord
 from gammapy.data import Observation
 import astropy.units as u
@@ -417,3 +418,59 @@ def create_global_dataset(
         per_decade=True,
     )
     return MapDataset.create(geom=geom, energy_axis_true=energy_axis_true, name=name)
+
+def create_energy_mask(dataset, energy_min=None, energy_max=None):
+    """Create a mask for the dataset"""
+    energy_axis = dataset._geom.axes["energy"]
+
+    if energy_min is None:
+        energy_min = energy_axis.bounds[0]
+
+    if energy_max is None:
+        energy_max = energy_axis.bounds[1]
+
+    energy_min, energy_max = u.Quantity(energy_min), u.Quantity(energy_max)
+
+    group = energy_axis.group_table(edges=[energy_min, energy_max])
+
+    is_normal = group["bin_type"] == "normal   "
+    group = group[is_normal]
+
+    return dataset._geom.energy_mask(
+        group["energy_min"][0] * energy_axis.unit,
+        group["energy_max"][0] * energy_axis.unit,
+    )
+
+
+class set_and_restore_mask_fit:
+    """Context manager to set a `mask_fit` oa dataset and restore the initial mask.
+
+    Parameters
+    ----------
+    datasets : `~gammapy.datasets.datasets`
+        the Datasets to apply the energy mask to.
+    energy_min : `~astropy.units.Quantity`
+        minimum energy.
+    energy_min : `~astropy.units.Quantity`
+        maximum energy.
+    """
+
+    def __init__(self, datasets, energy_min, energy_max):
+        self.energy_min = energy_min
+        self.energy_max = energy_max
+        self.datasets = datasets
+        self.mask_fits = [dataset.mask_fit for dataset in datasets]
+
+    def __enter__(self):
+        datasets = Datasets()
+        for dataset in self.datasets:
+            mask_fit = create_energy_mask(dataset, self.energy_min, self.energy_max)
+            if dataset.mask_fit is not None:
+                mask_fit *= dataset.mask_fit
+            dataset.mask_fit = mask_fit
+            datasets.append(dataset)
+        return datasets
+
+    def __exit__(self, type, value, traceback):
+        for dataset, mask_fit in zip(self.datasets, self.mask_fits):
+            dataset.mask_fit = mask_fit
