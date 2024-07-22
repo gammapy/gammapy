@@ -190,9 +190,6 @@ def test_observations_mutation(data_store):
     with pytest.raises(TypeError):
         obss[5] = "bad"
 
-    with pytest.raises(TypeError):
-        obss[["1", "2"]]
-
 
 def test_empty_observations():
     observations = Observations()
@@ -584,13 +581,6 @@ def test_stack_observations(data_store, caplog):
 
 
 @requires_data()
-def test_slice(data_store):
-    obs_1 = data_store.get_observations([20136, 20137, 20151])
-    assert isinstance(obs_1[0], Observation)
-    assert isinstance(obs_1[1:], Observations)
-
-
-@requires_data()
 def test_observations_generator(data_store):
     """Test Observations.generator()"""
     obs_1 = data_store.get_observations([20136, 20137, 20151])
@@ -628,3 +618,40 @@ def test_event_setter():
     events = EventList(Table())
     obs.events = events
     assert obs.events is events
+
+
+@requires_data()
+def test_observations_getitem(data_store):
+    """Test mask indexing on Observations"""
+    obs_1 = data_store.get_observations([20136, 20137, 20151])
+
+    assert isinstance(obs_1[0], Observation)
+    assert isinstance(obs_1[1:], Observations)
+    assert len(obs_1[1:]) == 2
+
+    mask = [True, False, True]
+    obs_2 = obs_1[mask]
+
+    assert len(obs_2) == 2
+    assert obs_2.ids == ["20136", "20151"]
+
+    ind = [0, 2]
+    obs_2 = obs_1[ind]
+
+    assert len(obs_2) == 2
+    assert obs_2.ids == ["20136", "20151"]
+
+    obs_2 = obs_1[np.array(mask)]
+
+    assert len(obs_2) == 2
+    assert obs_2.ids == ["20136", "20151"]
+
+    assert obs_1[["20136", "20151"]].ids == ["20136", "20151"]
+
+    obs_2 = obs_1[[]]
+    assert len(obs_2) == 0
+    assert isinstance(obs_2, Observations)
+
+    obs_2 = obs_1[np.array([])]
+    assert len(obs_2) == 0
+    assert isinstance(obs_2, Observations)
