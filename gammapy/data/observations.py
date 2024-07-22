@@ -659,11 +659,7 @@ class Observations(collections.abc.MutableSequence):
             self.append(obs)
 
     def __getitem__(self, item):
-        if (isinstance(item, np.ndarray) and item.size == 0) or (
-            isinstance(item, list) and not item
-        ):
-            return self.__class__()
-        elif isinstance(item, (list, np.ndarray)) and all(
+        if isinstance(item, (list, np.ndarray)) and all(
             isinstance(x, str) for x in item
         ):
             return self.__class__([self._observations[self.index(_)] for _ in item])
