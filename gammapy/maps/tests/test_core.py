@@ -965,7 +965,7 @@ def test_map_dot_product():
     assert_allclose(dot_map.data[0, :, 0, 0, 0], [1, 0])
 
 
-def test_data_shape_braodcast():
+def test_data_shape_broadcast():
     axis1 = MapAxis.from_edges((0, 1, 3), name="axis1")
 
     map1 = WcsNDMap.create(npix=(5, 6), axes=[axis1])
