@@ -219,6 +219,7 @@ def test_combine_flux_maps(map_flux_estimate, wcs_flux_map, reference_model):
 
     data = map_flux_estimate.copy()
     ts = data["norm"].copy()
+    data["norm_err"].data[0, 0, 0] = 0.0
     ts.data = (data["norm"].data / data["norm_err"].data) ** 2
     data["ts"] = ts
 
