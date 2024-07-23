@@ -21,7 +21,7 @@ We will be using the following Gammapy class:
 -  `~gammapy.estimators.SensitivityEstimator`
 
 """
-
+from cycler import cycler
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
@@ -49,7 +49,6 @@ from gammapy.maps.axes import UNIT_STRING_FORMAT
 # Check setup
 # -----------
 from gammapy.utils.check import check_tutorials_setup
-from cycler import cycler
 
 check_tutorials_setup()
 

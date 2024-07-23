@@ -62,6 +62,7 @@ import matplotlib.pyplot as plt
 
 # %matplotlib inline
 from IPython.display import display
+from gammapy.catalog import SourceCatalog3FHL
 from gammapy.datasets import Datasets, MapDataset
 from gammapy.maps import Map
 from gammapy.modeling.models import (
@@ -77,7 +78,6 @@ from gammapy.modeling.models import (
 # Check setup
 # -----------
 from gammapy.utils.check import check_tutorials_setup
-from gammapy.catalog import SourceCatalog3FHL
 
 check_tutorials_setup()
 

@@ -54,13 +54,13 @@ import astropy.units as u
 # %matplotlib inline
 import matplotlib.pyplot as plt
 from IPython.display import display
+from gammapy.catalog import SourceCatalog4FGL
 from gammapy.catalog import CATALOG_REGISTRY
 
 ######################################################################
 # Check setup
 # -----------
 from gammapy.utils.check import check_tutorials_setup
-from gammapy.catalog import SourceCatalog4FGL
 check_tutorials_setup()
 
 
