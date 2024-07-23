@@ -186,3 +186,8 @@ def test_set_and_restore_mask():
     assert_allclose(range1[0].quantity.to_value("TeV"), 0.01)
     assert_allclose(range1[1].quantity.to_value("TeV"), 100.0)
     assert_allclose(range2[0].quantity.to_value("TeV"), 0.01)
+
+    with set_and_restore_mask_fit(
+        datasets, 100 * u.TeV, 200 * u.TeV
+    ) as masked_datasets:
+        assert len(masked_datasets) == 0

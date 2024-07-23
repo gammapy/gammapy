@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import logging
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
@@ -14,6 +15,8 @@ __all__ = [
     "split_dataset",
     "create_map_dataset_from_dl4",
 ]
+
+log = logging.getLogger(__name__)
 
 
 def apply_edisp(input_map, edisp):
@@ -420,7 +423,17 @@ def create_global_dataset(
     return MapDataset.create(geom=geom, energy_axis_true=energy_axis_true, name=name)
 
 def create_energy_mask(dataset, energy_min=None, energy_max=None):
-    """Create a mask for the dataset"""
+    """Build a mask for the dataset restricting its mask_fit to a given energy range.
+
+    Parameters
+    ----------
+    dataset : `~gammapy.datasets.Dataset`
+        the dataset to compute a mask for.
+    energy_min : `~astropy.units.Quantity`
+        minimum energy.
+    energy_max : `~astropy.units.Quantity`
+        maximum energy.
+    """
     energy_axis = dataset._geom.axes["energy"]
 
     if energy_min is None:
@@ -436,10 +449,15 @@ def create_energy_mask(dataset, energy_min=None, energy_max=None):
     is_normal = group["bin_type"] == "normal   "
     group = group[is_normal]
 
-    return dataset._geom.energy_mask(
+    mask_fit = dataset._geom.energy_mask(
         group["energy_min"][0] * energy_axis.unit,
         group["energy_max"][0] * energy_axis.unit,
     )
+
+    if dataset.mask_fit is not None:
+        mask_fit *= dataset.mask_fit
+
+    return mask_fit
 
 
 class set_and_restore_mask_fit:
@@ -464,10 +482,17 @@ class set_and_restore_mask_fit:
     def __enter__(self):
         datasets = Datasets()
         for dataset in self.datasets:
-            mask_fit = create_energy_mask(dataset, self.energy_min, self.energy_max)
-            if dataset.mask_fit is not None:
-                mask_fit *= dataset.mask_fit
-            dataset.mask_fit = mask_fit
+            try:
+                mask_fit = create_energy_mask(dataset, self.energy_min, self.energy_max)
+                if dataset.mask_fit is not None:
+                    mask_fit *= dataset.mask_fit
+                dataset.mask_fit = mask_fit
+            except ValueError:
+                log.info(
+                    f"Dataset {dataset.name} does not contribute in the energy range"
+                )
+                continue
+
             datasets.append(dataset)
         return datasets
 
