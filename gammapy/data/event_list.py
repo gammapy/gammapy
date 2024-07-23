@@ -404,6 +404,7 @@ class EventList:
         This function does not modify the metadata, in particular the ONTIME. It is instead recommended to use an
         `~gammapy.data.ObservationFilter` associated to the object `~gammapy.data.Observation`.
         """
+        time_intervals = np.asarray(time_intervals)
         if time_intervals is None or check_time_intervals(time_intervals) is False:
             raise ValueError(
                 "The time intervals should be an array of distinct intervals of astropy.time.Time."
