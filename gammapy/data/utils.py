@@ -173,11 +173,11 @@ def check_time_intervals(time_intervals):
         return False
 
     if ti.shape == (2,):
-        if not np.all(isinstance(_, Time) for _ in ti):
+        if not np.all([isinstance(_, Time) for _ in ti]):
             return False
     else:
         for xx in ti:
-            if not np.all(isinstance(_, Time) for _ in xx):
+            if not np.all([isinstance(_, Time) for _ in xx]):
                 return False
         comb = list(combinations(ti, 2))
         for xx in comb:
