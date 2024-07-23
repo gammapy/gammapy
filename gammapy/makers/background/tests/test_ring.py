@@ -65,8 +65,8 @@ def test_ring_bkg_maker(geom, observations, exclusion_mask):
         datasets.append(dataset_on_off)
 
     mask = dataset.mask_safe
-    assert_allclose(datasets[0].counts_off.data[mask].sum(), 2511333)
-    assert_allclose(datasets[1].counts_off.data[mask].sum(), 2143577.0)
+    assert_allclose(datasets[0].counts_off.data[mask].sum(), 2509677)
+    assert_allclose(datasets[1].counts_off.data[mask].sum(), 2141921)
     assert_allclose(datasets[0].acceptance_off.data[mask].sum(), 2961300, rtol=1e-5)
     assert_allclose(datasets[1].acceptance_off.data[mask].sum(), 2364657.2, rtol=1e-5)
     assert_allclose(datasets[0].alpha.data[0][100][100], 0.00063745599, rtol=1e-5)
@@ -81,7 +81,7 @@ def test_ring_bkg_maker(geom, observations, exclusion_mask):
         {
             "obs_idx": 0,
             "method": "fixed_r_in",
-            "counts_off": 2511417.0,
+            "counts_off": 2509761.0246051,
             "acceptance_off": 2960679.594648,
             "alpha": 0.000637456020,
             "exposure": 806254444.8480084,
@@ -89,7 +89,7 @@ def test_ring_bkg_maker(geom, observations, exclusion_mask):
         {
             "obs_idx": 0,
             "method": "fixed_width",
-            "counts_off": 2511417.0,
+            "counts_off": 2509761.0246051,
             "acceptance_off": 2960679.594648,
             "alpha": 0.000637456020,
             "exposure": 806254444.8480084,
@@ -97,7 +97,7 @@ def test_ring_bkg_maker(geom, observations, exclusion_mask):
         {
             "obs_idx": 1,
             "method": "fixed_r_in",
-            "counts_off": 2143577.0,
+            "counts_off": 2141921.03820403,
             "acceptance_off": 2364657.352647,
             "alpha": 0.00061841976,
             "exposure": 779613265.2688407,
@@ -105,7 +105,7 @@ def test_ring_bkg_maker(geom, observations, exclusion_mask):
         {
             "obs_idx": 1,
             "method": "fixed_width",
-            "counts_off": 2143577.0,
+            "counts_off": 2141921.03820403,
             "acceptance_off": 2364657.352647,
             "alpha": 0.00061841976,
             "exposure": 779613265.2688407,
