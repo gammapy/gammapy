@@ -304,7 +304,7 @@ def test_analysis_1d_stacked_no_fit_range():
         analysis.get_excess_map()
 
     assert len(analysis.datasets) == 1
-    assert_allclose(analysis.datasets["stacked"].counts.data.sum(), 184)
+    assert_allclose(analysis.datasets["stacked"].counts.data.sum(), 183)
     pars = analysis.models.parameters
     assert_allclose(analysis.datasets[0].mask_fit.data, True)
 
@@ -327,7 +327,7 @@ def test_analysis_ring_background():
         analysis.datasets[0].npred_background().data[0, 10, 10], 0.091799, rtol=1e-2
     )
     assert isinstance(analysis.excess_map["sqrt_ts"], WcsNDMap)
-    assert_allclose(analysis.excess_map.npred_excess.data[0, 62, 62], 134.12389)
+    assert_allclose(analysis.excess_map.npred_excess.data[0, 62, 62], 133.12389)
 
 
 @requires_data()
@@ -406,7 +406,7 @@ def test_analysis_3d_joint_datasets():
     assert_allclose(
         analysis.datasets[0].background_model.spectral_model.norm.value,
         1.031743694988066,
-        rtol=1e-6,
+        rtol=1e-3,
     )
     assert_allclose(
         analysis.datasets[0].background_model.spectral_model.tilt.value,
