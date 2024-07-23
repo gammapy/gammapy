@@ -168,9 +168,8 @@ def check_time_intervals(time_intervals):
 
     """
     # Note: this function will be moved into a future class `TimeInterval`
-
-    ti = np.array(time_intervals)
-    if not isinstance(time_intervals, list) or ti.shape == (0,):
+    ti = np.asarray(time_intervals)
+    if ti.shape == () or ti.shape == (0,):
         return False
 
     if ti.shape == (2,):
