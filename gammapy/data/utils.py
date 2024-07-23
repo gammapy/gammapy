@@ -173,7 +173,7 @@ def check_time_intervals(time_intervals):
         return False
 
     if ti.shape == (2,):
-        if not isinstance(np.all(ti), Time):
+        if not np.all(isinstance(_, Time) for _ in ti):
             return False
     else:
         for xx in ti:
