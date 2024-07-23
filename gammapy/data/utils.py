@@ -178,7 +178,7 @@ def check_time_intervals(time_intervals):
             return False
     else:
         for xx in ti:
-            if not isinstance(np.all(xx), Time):
+            if not np.all(isinstance(_, Time) for _ in xx):
                 return False
         comb = list(combinations(ti, 2))
         for xx in comb:
