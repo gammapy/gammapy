@@ -4,11 +4,7 @@ import itertools
 import logging
 import numpy as np
 from astropy.table import Table
-import yaml
-from gammapy.utils.check import add_checksum
-from gammapy.utils.metadata import CreatorMetaData
 from gammapy.utils.pbar import progress_bar
-from gammapy.utils.scripts import make_path
 from .covariance import Covariance
 from .iminuit import (
     confidence_iminuit,
@@ -385,6 +381,25 @@ class Fit:
         results : dict
             Dictionary with keys "parameter_name_scan", "stat_scan" and "fit_results". The latter contains an
             empty list, if `reoptimize` is set to False.
+
+        Examples
+        --------
+        >>> from gammapy.datasets import Datasets, SpectrumDatasetOnOff
+        >>> from gammapy.modeling.models import SkyModel, LogParabolaSpectralModel
+        >>> from gammapy.modeling import Fit
+        >>> datasets = Datasets()
+        >>> for obs_id in [23523, 23526]:
+        ...     dataset = SpectrumDatasetOnOff.read(
+        ...         f"$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs{obs_id}.fits"
+        ...     )
+        ...     datasets.append(dataset)
+        >>> datasets = datasets.stack_reduce(name="HESS")
+        >>> model = SkyModel(spectral_model=LogParabolaSpectralModel(), name="crab")
+        >>> datasets.models = model
+        >>> fit = Fit()
+        >>> result = fit.run(datasets)
+        >>> parameter = datasets.models.parameters['amplitude']
+        >>> stat_profile = fit.stat_profile(datasets=datasets, parameter=parameter)
         """
         datasets, parameters = self._parse_datasets(datasets=datasets)
 
@@ -442,6 +457,33 @@ class Fit:
         results : dict
             Dictionary with keys "x_values", "y_values", "stat" and "fit_results".
             The latter contains an empty list, if `reoptimize` is set to False.
+
+        Examples
+        --------
+        >>> from gammapy.datasets import Datasets, SpectrumDatasetOnOff
+        >>> from gammapy.modeling.models import SkyModel, LogParabolaSpectralModel
+        >>> from gammapy.modeling import Fit
+        >>> import numpy as np
+        >>> datasets = Datasets()
+        >>> for obs_id in [23523, 23526]:
+        ...     dataset = SpectrumDatasetOnOff.read(
+        ...         f"$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs{obs_id}.fits"
+        ...     )
+        ...     datasets.append(dataset)
+        >>> datasets = datasets.stack_reduce(name="HESS")
+        >>> model = SkyModel(spectral_model=LogParabolaSpectralModel(), name="crab")
+        >>> datasets.models = model
+        >>> par_alpha = datasets.models.parameters["alpha"]
+        >>> par_beta = datasets.models.parameters["beta"]
+        >>> par_alpha.scan_values = np.linspace(1.55, 2.7, 20)
+        >>> par_beta.scan_values = np.linspace(-0.05, 0.55, 20)
+        >>> fit = Fit()
+        >>> stat_surface = fit.stat_surface(
+        ...     datasets=datasets,
+        ...     x=par_alpha,
+        ...     y=par_beta,
+        ...     reoptimize=False,
+        ... )
         """
         datasets, parameters = self._parse_datasets(datasets=datasets)
 
@@ -513,7 +555,30 @@ class Fit:
         result : dict
             Dictionary containing the parameter values defining the contour, with the
             boolean flag "success" and the information objects from ``mncontour``.
+
+        Examples
+        --------
+        >>> from gammapy.datasets import Datasets, SpectrumDatasetOnOff
+        >>> from gammapy.modeling.models import SkyModel, LogParabolaSpectralModel
+        >>> from gammapy.modeling import Fit
+        >>> datasets = Datasets()
+        >>> for obs_id in [23523, 23526]:
+        ...     dataset = SpectrumDatasetOnOff.read(
+        ...         f"$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs{obs_id}.fits"
+        ...     )
+        ...     datasets.append(dataset)
+        >>> datasets = datasets.stack_reduce(name="HESS")
+        >>> model = SkyModel(spectral_model=LogParabolaSpectralModel(), name="crab")
+        >>> datasets.models = model
+        >>> fit = Fit(backend='minuit')
+        >>> optimize = fit.optimize(datasets)
+        >>> stat_contour = fit.stat_contour(
+        ...     datasets=datasets,
+        ...     x=model.spectral_model.alpha,
+        ...     y=model.spectral_model.amplitude,
+        ... )
         """
+
         datasets, parameters = self._parse_datasets(datasets=datasets)
 
         x = parameters[x]
@@ -590,10 +655,12 @@ class FitStepResult:
     def to_dict(self):
         """Convert to dictionary."""
         return {
-            "backend": self.backend,
-            "method": self.method,
-            "success": self.success,
-            "message": self.message,
+            self.__class__.__name__: {
+                "backend": self.backend,
+                "method": self.method,
+                "success": self.success,
+                "message": self.message,
+            }
         }
 
 
@@ -684,8 +751,8 @@ class OptimizeResult(FitStepResult):
     def to_dict(self):
         """Convert to dictionary."""
         output = super().to_dict()
-        output["nfev"] = self.nfev
-        output["total_stat"] = self._total_stat
+        output[self.__class__.__name__]["nfev"] = self.nfev
+        output[self.__class__.__name__]["total_stat"] = float(self._total_stat)
         return output
 
 
@@ -771,37 +838,13 @@ class FitResult:
         """Optimize result."""
         return self._covariance_result
 
-    def to_dict(self, full_output=False, overwrite_templates=False):
-        """Convert to dictionary."""
-
-        models_dict = self.models.to_dict(
-            full_output=full_output, overwrite_templates=overwrite_templates
-        )
-        output = {}
-        if self.optimize_result is not None:
-            output["optimize_result"] = self.optimize_result.to_dict()
-        if self.covariance_result is not None:
-            output["covariance_result"] = self.covariance_result.to_dict()
-        output["models"] = models_dict
-        return output
-
-    def to_yaml(self, full_output=False, overwrite_templates=False):
-        """Convert to YAML string."""
-        data = self.to_dict(
-            full_output=full_output, overwrite_templates=overwrite_templates
-        )
-        text = yaml.dump(
-            data, sort_keys=False, indent=4, width=80, default_flow_style=False
-        )
-        creation = CreatorMetaData()
-        return text + creation.to_yaml()
-
     def write(
         self,
         path,
         overwrite=False,
-        full_output=False,
+        full_output=True,
         overwrite_templates=False,
+        write_covariance=True,
         checksum=False,
     ):
         """Write to file.
@@ -813,21 +856,29 @@ class FitResult:
         overwrite : bool, optional
             Overwrite existing file. Default is False.
         full_output : bool, optional
-            Store full parameter output. Default is False.
+            Store full parameter output. Default is True.
         overwrite_templates : bool, optional
             Overwrite templates FITS files. Default is False.
         checksum : bool, optional
             When True adds a CHECKSUM entry to the file.
             Default is False.
         """
-        path = make_path(path)
-        if path.exists() and not overwrite:
-            raise IOError(f"File exists already: {path}")
+        from gammapy.modeling.models.core import _write_models
 
-        yaml_str = self.to_yaml(full_output, overwrite_templates)
-        if checksum:
-            yaml_str = add_checksum(yaml_str)
-        path.write_text(yaml_str)
+        output = {}
+        if self.optimize_result is not None:
+            output.update(self.optimize_result.to_dict())
+        if self.covariance_result is not None:
+            output.update(self.covariance_result.to_dict())
+        _write_models(
+            self.models,
+            path,
+            overwrite,
+            full_output,
+            overwrite_templates,
+            write_covariance,
+            extra_dict=output,
+        )
 
     def __str__(self):
         string = ""
