@@ -253,7 +253,7 @@ class Map(abc.ABC):
             Map object.
         """
         with fits.open(
-            str(make_path(filename)), memmap=False, checksum=checksum
+            make_path(filename), memmap=False, checksum=checksum
         ) as hdulist:
             return Map.from_hdulist(
                 hdulist, hdu, hdu_bands, map_type, format=format, colname=colname

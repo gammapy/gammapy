@@ -76,7 +76,6 @@ VALID_QUANTITIES = [
     "npred",
     "npred_excess",
     "stat",
-    "stat_scan",
     "stat_null",
     "stat_scan",
     "dnde_scan_values",

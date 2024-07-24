@@ -105,7 +105,7 @@ model = SkyModel(spectral_model=pl_spectrum, name="simu-source")
 #
 
 dataset = SpectrumDatasetOnOff.read(
-    f"$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits"
+    "$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits"
 )
 
 # Set model and fit range
