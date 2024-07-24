@@ -62,6 +62,7 @@ import matplotlib.pyplot as plt
 
 # %matplotlib inline
 from IPython.display import display
+from gammapy.catalog import SourceCatalog3FHL
 from gammapy.datasets import Datasets, MapDataset
 from gammapy.maps import Map
 from gammapy.modeling.models import (
@@ -242,7 +243,7 @@ print(datasets)
 # :doc:`/tutorials/api/catalog` tutorial.
 #
 
-from gammapy.catalog import SourceCatalog3FHL
+
 
 catalog = SourceCatalog3FHL()
 
