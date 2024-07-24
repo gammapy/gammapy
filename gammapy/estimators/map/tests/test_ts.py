@@ -16,6 +16,7 @@ from gammapy.estimators.utils import (
 from gammapy.irf import EDispKernelMap, PSFMap
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling.models import (
+    ConstantSpatialModel,
     GaussianSpatialModel,
     PointSpatialModel,
     PowerLawSpectralModel,
@@ -276,6 +277,51 @@ def test_compute_ts_map_energy(fermi_dataset):
 
     energy_axis = result["ts"].geom.axes["energy"]
     assert_allclose(energy_axis.edges.to_value("GeV"), [10, 84.471641, 500], rtol=1e-4)
+
+
+requires_data()
+
+
+def test_compute_ts_map_invalid(fermi_dataset):
+
+    spatial_model = PointSpatialModel()
+    spectral_model = PowerLawSpectralModel(amplitude="1e-22 cm-2 s-1 keV-1")
+    model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
+
+    estimator = TSMapEstimator(
+        model=model,
+        kernel_width="0.6 deg",
+        energy_edges=[10, 100, 1000] * u.GeV,
+        sum_over_energy_groups=False,
+    )
+
+    fermi_dataset_empty = fermi_dataset.copy()
+    fermi_dataset_empty.background = None
+    with pytest.raises(ValueError):
+        result = estimator.run(fermi_dataset_empty)
+    fermi_dataset_empty = fermi_dataset.copy()
+    fermi_dataset_empty.background.data = 0
+    with pytest.raises(ValueError):
+        result = estimator.run(fermi_dataset_empty)
+
+    fermi_dataset_empty = fermi_dataset.copy()
+    fermi_dataset_empty.mask_safe.data = False
+    with pytest.raises(ValueError):
+        result = estimator.run(fermi_dataset_empty)
+
+    spatial_model = ConstantSpatialModel(value=0 / u.sr)
+    spectral_model = PowerLawSpectralModel(amplitude="1e-22 cm-2 s-1 keV-1")
+    model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
+
+    estimator = TSMapEstimator(
+        model=model,
+        kernel_width="0.6 deg",
+        energy_edges=[10, 100, 1000] * u.GeV,
+        sum_over_energy_groups=False,
+    )
+
+    result = estimator.run(fermi_dataset)
+    assert_allclose(result["ts"].data, 0)
 
 
 @requires_data()
