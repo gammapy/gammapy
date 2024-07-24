@@ -1,7 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
+from itertools import combinations
 import numpy as np
 import astropy.units as u
+from astropy.stats import interval_overlap_length
 from astropy.table import Table
 from astropy.time import Time
 from gammapy.utils.cluster import standard_scaler
@@ -9,6 +11,8 @@ from gammapy.utils.cluster import standard_scaler
 __all__ = ["get_irfs_features", "check_time_intervals"]
 
 log = logging.getLogger(__name__)
+
+CHECK_OVERLAPPING_TI = True
 
 
 def get_irfs_features(
@@ -180,18 +184,14 @@ def check_time_intervals(time_intervals):
         for xx in ti:
             if not np.all([isinstance(_, Time) for _ in xx]):
                 return False
-        # For the HAWC dataset, there is over-lapping GTIs. What to so???
-        # from itertools import combinations
-        # from astropy.stats import interval_overlap_length
-        # for idx, xx in enumerate(combinations(ti, 2)):
-        #     i1 = [xx[0][0].to_value("gps"), xx[0][1].to_value("gps")]
-        #     i2 = [xx[1][0].to_value("gps"), xx[1][1].to_value("gps")]
-        #     if interval_overlap_length(i1, i2) > 0.0:
-        #         i1 = [xx[0][0], xx[0][1]]
-        #         i2 = [xx[1][0], xx[1][1]]
-        #         log.warning(f"Overlapping GTIs: {i1} and {i2}")
-        #         return False
-        #     # If the number of GTIs is too large, the combination function will return too many pairs
-        #     if idx > 1e6:
-        #         return True
+        if not CHECK_OVERLAPPING_TI:
+            return True
+        for idx, xx in enumerate(combinations(ti, 2)):
+            i1 = [xx[0][0].to_value("gps"), xx[0][1].to_value("gps")]
+            i2 = [xx[1][0].to_value("gps"), xx[1][1].to_value("gps")]
+            if interval_overlap_length(i1, i2) > 0.0:
+                i1 = [xx[0][0], xx[0][1]]
+                i2 = [xx[1][0], xx[1][1]]
+                log.warning(f"Overlapping GTIs: {i1} and {i2}")
+                return False
     return True
