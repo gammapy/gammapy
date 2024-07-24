@@ -217,8 +217,14 @@ def test_combine_flux_maps(map_flux_estimate, wcs_flux_map, reference_model):
     stop = u.Quantity([1.5, 2.5], "min")
     gti = GTI.create(start, stop)
 
+    data = map_flux_estimate.copy()
+    ts = data["norm"].copy()
+    data["norm_err"].data[0, 0, 0] = 0.0
+    ts.data = (data["norm"].data / data["norm_err"].data) ** 2
+    data["ts"] = ts
+
     model = SkyModel(PowerLawSpectralModel(amplitude="1e-10 cm-2s-1TeV-1", index=2))
-    fe = FluxMaps(data=map_flux_estimate, reference_model=model, gti=gti)
+    fe = FluxMaps(data=data, reference_model=model, gti=gti)
     iE = 0
     energy = fe.geom.axes[0].center[iE]
 
@@ -245,7 +251,8 @@ def test_combine_flux_maps(map_flux_estimate, wcs_flux_map, reference_model):
     )
     assert fe_new.meta == fe.meta
 
-    fe = FluxMaps(wcs_flux_map, reference_model)
+    fe = FluxMaps(data, reference_model)
+
     fe_new = combine_flux_maps([fe, fe], reference_model=reference_model)
     assert_allclose(fe_new.dnde.quantity, fe.dnde.quantity)
     assert_allclose(
@@ -253,13 +260,15 @@ def test_combine_flux_maps(map_flux_estimate, wcs_flux_map, reference_model):
     )
     assert_allclose(fe_new.norm.quantity, fe.norm.quantity)
 
-    ts = -2 * np.log(
-        stats.norm.pdf(0, loc=fe.dnde.data, scale=fe.dnde_err.data)
-        / stats.norm.pdf(fe.dnde.data, loc=fe.dnde.data, scale=fe.dnde_err.data)
+    ts = (
+        -2
+        * np.log(
+            stats.norm.pdf(0, loc=fe.dnde.data, scale=fe.dnde_err.data)
+            / stats.norm.pdf(fe.dnde.data, loc=fe.dnde.data, scale=fe.dnde_err.data)
+        )
+        + (fe.ts - (fe.norm.data / fe.norm_err.data) ** 2) * 2
     )
     assert_allclose(fe_new.ts, ts * 2)
-
-    fe_new = combine_flux_maps(fe)
 
 
 def test_flux_map_properties(wcs_flux_map, reference_model):

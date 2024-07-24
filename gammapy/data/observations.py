@@ -658,11 +658,15 @@ class Observations(collections.abc.MutableSequence):
         for obs in observations:
             self.append(obs)
 
-    def __getitem__(self, key):
-        if isinstance(key, slice):
-            return self.__class__(self._observations[key])
+    def __getitem__(self, item):
+        if isinstance(item, (list, np.ndarray)) and all(
+            isinstance(x, str) for x in item
+        ):
+            return self.__class__([self._observations[self.index(_)] for _ in item])
+        elif isinstance(item, (slice, list, np.ndarray)):
+            return self.__class__(list(np.array(self._observations)[item]))
         else:
-            return self._observations[self.index(key)]
+            return self._observations[self.index(item)]
 
     def __delitem__(self, key):
         del self._observations[self.index(key)]
