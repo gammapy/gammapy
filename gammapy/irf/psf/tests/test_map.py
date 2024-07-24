@@ -567,6 +567,11 @@ def test_psf_map_reco(tmpdir):
 
 @requires_data()
 def test_psf_map_reco_hawc():
+    # There are overlapping GTIs in this HAWC dataset
+    from gammapy.data import utils
+
+    utils.CHECK_OVERLAPPING_TI = False
+
     filename = (
         "$GAMMAPY_DATA/hawc/crab_events_pass4/irfs/PSFMap_Crab_fHitbin5NN.fits.gz"
     )
