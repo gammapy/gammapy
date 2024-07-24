@@ -460,6 +460,12 @@ def test_minimal_datastore():
 
 @requires_data()
 def test_dataset_hawc():
+
+    # There are overlapping GTIs in this HAWC dataset
+    from gammapy.data import utils
+
+    utils.CHECK_OVERLAPPING_TI = False
+
     # create the energy reco axis
     energy_axis = MapAxis.from_edges(
         [1.00, 1.78, 3.16, 5.62, 10.0, 17.8, 31.6, 56.2, 100, 177, 316] * u.TeV,
