@@ -31,8 +31,8 @@ def evaluator():
     )
 
     spectral_model = ConstantSpectralModel()
-    spatial_model = PointSpatialModel(
-        lon_0=0 * u.deg, lat_0=0 * u.deg, frame="galactic"
+    spatial_model = GaussianSpatialModel(
+        lon_0=0 * u.deg, lat_0=0 * u.deg, sigma=0.001 * u.deg, frame="galactic"
     )
 
     models = SkyModel(spectral_model=spectral_model, spatial_model=spatial_model)
@@ -58,6 +58,12 @@ def test_compute_flux_spatial(evaluator):
 
 def test_compute_flux_spatial_no_psf(evaluator):
     # check that spatial integration is not performed in the absence of a psf
+
+    evaluator.model.apply_irf["psf"] = False
+    flux = evaluator.compute_flux_spatial()
+    evaluator.model.apply_irf["psf"] = True
+    assert_allclose(flux, 1.0)
+
     evaluator.psf = None
     flux = evaluator.compute_flux_spatial()
     assert_allclose(flux, 1.0)
