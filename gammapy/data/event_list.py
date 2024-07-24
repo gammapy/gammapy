@@ -407,7 +407,7 @@ class EventList:
         time_intervals = np.asarray(time_intervals)
         if time_intervals is None or check_time_intervals(time_intervals) is False:
             raise ValueError(
-                "The time intervals should be an array of distinct intervals of astropy.time.Time."
+                "The time intervals should be an array of non-overlapping intervals of astropy.time.Time."
             )
         time_intervals.sort()
 
