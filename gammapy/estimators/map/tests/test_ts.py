@@ -279,11 +279,8 @@ def test_compute_ts_map_energy(fermi_dataset):
     assert_allclose(energy_axis.edges.to_value("GeV"), [10, 84.471641, 500], rtol=1e-4)
 
 
-requires_data()
-
-
+@requires_data()
 def test_compute_ts_map_invalid(fermi_dataset):
-
     spatial_model = PointSpatialModel()
     spectral_model = PowerLawSpectralModel(amplitude="1e-22 cm-2 s-1 keV-1")
     model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
@@ -532,7 +529,6 @@ def test_with_TemplateSpatialModel():
 
 
 def test_joint_ts_map(fake_dataset):
-
     model = fake_dataset.models["source"]
     fake_dataset = fake_dataset.copy()
 
@@ -564,7 +560,6 @@ def test_joint_ts_map(fake_dataset):
 
 @requires_data()
 def test_joint_ts_map_hawc():
-
     datasets = Datasets.read("$GAMMAPY_DATA/hawc/DL4/HAWC_pass4_public_Crab.yaml")
     datasets = Datasets(datasets[-2:])
 
