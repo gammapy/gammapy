@@ -475,6 +475,14 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
         mask = np.sum([_["mask"].data for _ in maps], axis=0).astype(bool)
 
+        if not np.any(mask):
+            raise ValueError(
+                """No valid positions found.
+            Check that the dataset background is defined and not only zeros,
+            or that the mask_safe is not all False."
+            """
+            )
+
         x, y = np.where(np.squeeze(mask))
         positions = list(zip(x, y))
 
