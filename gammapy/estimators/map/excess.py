@@ -223,6 +223,17 @@ class ExcessMapEstimator(Estimator):
         resampled_dataset = dataset.resample_energy_axis(
             energy_axis=axis, name=dataset.name
         )
+
+        if dataset.exposure:
+            reco_exposure = estimate_exposure_reco_energy(
+                dataset, self.spectral_model, normalize=False
+            )
+            reco_exposure = reco_exposure.resample_axis(
+                axis=axis, weights=dataset.mask_safe
+            )
+        else:
+            reco_exposure = None
+
         if isinstance(dataset, MapDatasetOnOff):
             resampled_dataset.models = dataset.models
         else:
@@ -231,7 +242,7 @@ class ExcessMapEstimator(Estimator):
             )
             resampled_dataset.models = None
 
-        result = self.estimate_excess_map(resampled_dataset)
+        result = self.estimate_excess_map(resampled_dataset, reco_exposure)
         return result
 
     def estimate_kernel(self, dataset):
@@ -278,7 +289,7 @@ class ExcessMapEstimator(Estimator):
             mask = Map.from_geom(dataset.counts.geom, data=True, dtype=bool)
         return mask
 
-    def estimate_exposure_reco_energy(self, dataset, kernel, mask):
+    def estimate_exposure_reco_energy(self, dataset, kernel, mask, reco_exposure):
         """Estimate exposure map in reconstructed energy for a single dataset
            assuming the given spectral_model shape.
 
@@ -297,18 +308,16 @@ class ExcessMapEstimator(Estimator):
             Reconstructed exposure map.
         """
         if dataset.exposure:
-            reco_exposure = estimate_exposure_reco_energy(
-                dataset, self.spectral_model, normalize=False
-            )
             with np.errstate(invalid="ignore", divide="ignore"):
                 reco_exposure = reco_exposure.convolve(kernel.data) / mask.convolve(
                     kernel.data
                 )
         else:
             reco_exposure = 1
+
         return reco_exposure
 
-    def estimate_excess_map(self, dataset):
+    def estimate_excess_map(self, dataset, reco_exposure):
         """Estimate excess and test statistic maps for a single dataset.
 
         If exposure is defined, a flux map is also computed.
@@ -337,7 +346,9 @@ class ExcessMapEstimator(Estimator):
         maps["ts"] = Map.from_geom(geom, data=counts_stat.ts)
         maps["sqrt_ts"] = Map.from_geom(geom, data=counts_stat.sqrt_ts)
 
-        reco_exposure = self.estimate_exposure_reco_energy(dataset, kernel, mask)
+        reco_exposure = self.estimate_exposure_reco_energy(
+            dataset, kernel, mask, reco_exposure
+        )
 
         with np.errstate(invalid="ignore", divide="ignore"):
             maps["norm"] = maps["npred_excess"] / reco_exposure
