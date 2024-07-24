@@ -41,9 +41,12 @@ def simple_dataset_mask_safe():
     geom = WcsGeom.create(npix=20, binsz=0.02, axes=[axis])
     dataset = MapDataset.create(geom)
     dataset.mask_safe += np.ones(dataset.data_shape, dtype=bool)
-    dataset.mask_safe.data[0, :, :] = False
+    dataset.mask_safe.data[0, :10, :] = False
     dataset.counts += 2
     dataset.background += 1
+    dataset.exposure.data += 1
+    dataset.exposure.data[0, :, :] = 2
+    dataset.exposure.data[2, :10, :] = 4
     return dataset
 
 
@@ -167,20 +170,44 @@ def test_significance_map_estimator_map_dataset(simple_dataset):
 
 
 def test_significance_map_estimator_map_dataset_mask_safe(simple_dataset_mask_safe):
-    simple_dataset_mask_safe.exposure = None
+
     estimator = ExcessMapEstimator(0.1 * u.deg, selection_optional=["all"])
 
     result = estimator.run(simple_dataset_mask_safe)
 
-    assert_allclose(result["npred"].data[0, 10, 10], 324)
-    assert_allclose(result["npred_excess"].data[0, 10, 10], 162)
-    assert_allclose(result["npred_background"].data[0, 10, 10], 162)
-    assert_allclose(result["sqrt_ts"].data[0, 10, 10], 11.187468, atol=1e-5)
+    assert_allclose(result["npred"].data[0, 10, 10], 416)
+    assert_allclose(result["npred_excess"].data[0, 10, 10], 208)
+    assert_allclose(result["npred_background"].data[0, 10, 10], 208)
+    assert_allclose(result["sqrt_ts"].data[0, 10, 10], 12.676681, atol=1e-5)
 
-    assert_allclose(result["npred_excess_err"].data[0, 10, 10], 18.0, atol=1e-3)
-    assert_allclose(result["npred_excess_errp"].data[0, 10, 10], 18.334, atol=1e-3)
-    assert_allclose(result["npred_excess_errn"].data[0, 10, 10], 17.668, atol=1e-3)
-    assert_allclose(result["npred_excess_ul"].data[0, 10, 10], 199.345, atol=1e-3)
+    assert_allclose(result["npred_excess_err"].data[0, 10, 10], 20.396078, atol=1e-3)
+    assert_allclose(result["npred_excess_errp"].data[0, 10, 10], 20.730114, atol=1e-3)
+    assert_allclose(result["npred_excess_errn"].data[0, 10, 10], 20.063506, atol=1e-3)
+    assert_allclose(result["npred_excess_ul"].data[0, 10, 10], 250.136257, atol=1e-3)
+
+    assert_allclose(result["flux"].data[0, 0, 0], 0.016359, atol=1e-3)
+    assert_allclose(result["flux"].data[0, 10, 10], 0.018004, atol=1e-3)
+
+    reco_exposure = result["npred_excess"] / result["norm"]
+
+    assert_allclose(np.unique(reco_exposure).min(), 3.1469110e-08, rtol=1e-5)
+    assert_allclose(np.unique(reco_exposure).max(), 1.7745566e-07, rtol=1e-5)
+
+    simple_dataset_mask_safe.exposure = None
+
+    result = estimator.run(simple_dataset_mask_safe)
+
+    assert_allclose(result["npred_excess"].data[0, 10, 10], 208)
+    assert_allclose(result["npred_background"].data[0, 10, 10], 208)
+    assert_allclose(result["sqrt_ts"].data[0, 10, 10], 12.676681, atol=1e-5)
+
+    assert_allclose(result["npred_excess_err"].data[0, 10, 10], 20.396078, atol=1e-3)
+    assert_allclose(result["npred_excess_errp"].data[0, 10, 10], 20.730114, atol=1e-3)
+    assert_allclose(result["npred_excess_errn"].data[0, 10, 10], 20.063506, atol=1e-3)
+    assert_allclose(result["npred_excess_ul"].data[0, 10, 10], 250.136257, atol=1e-3)
+
+    assert_allclose(result["flux"].data[0, 0, 0], 5.148e-10, atol=1e-3)
+    assert_allclose(result["flux"].data[0, 10, 10], 2.0592e-09, atol=1e-3)
 
 
 def test_significance_map_estimator_map_dataset_exposure(simple_dataset):
