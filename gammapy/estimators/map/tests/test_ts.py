@@ -302,7 +302,8 @@ def test_compute_ts_map_invalid(fermi_dataset):
         result = estimator.run(fermi_dataset_empty)
 
     fermi_dataset_empty = fermi_dataset.copy()
-    fermi_dataset_empty.mask_safe.data = False
+    mask_safe = Map.from_geom(fermi_dataset.counts.geom, dtype=bool)
+    fermi_dataset_empty.mask_safe = mask_safe
     with pytest.raises(ValueError):
         result = estimator.run(fermi_dataset_empty)
 
