@@ -793,6 +793,17 @@ def test_label_map_axis_basics():
     axis_copy = axis.copy()
     assert axis_copy.name == "label-axis"
 
+    # Ensure order is correct
+    labels = np.array([1, 4, 5])
+    assert_allclose(labels, [1, 4, 5])
+    assert_allclose(LabelMapAxis(labels).center, labels)
+
+    # Test case with non unique labels
+    with pytest.raises(ValueError) as exc_info:
+        LabelMapAxis([1, 1, 1])
+
+    assert str(exc_info.value) == "Node labels must be unique"
+
 
 def test_label_map_axis_coord_to_idx():
     axis = LabelMapAxis(labels=["label-1", "label-2", "label-3"], name="label-axis")
