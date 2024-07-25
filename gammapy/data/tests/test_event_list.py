@@ -258,3 +258,7 @@ class TestEventSelection:
         time_interval = Time("2010-01-01T00:00:00") + [1.4, 10] * u.s
         new_list = self.events.select_time(time_interval)
         assert len(new_list.table) == 3
+
+        time_interval = [1.4, 10]
+        with pytest.raises(ValueError):
+            new_list = self.events.select_time(time_interval)
