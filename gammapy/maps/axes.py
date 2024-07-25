@@ -68,6 +68,7 @@ PLOT_AXIS_LABEL = {
 }
 
 DEFAULT_LABEL_TEMPLATE = "{quantity} [{unit}]"
+UNIT_STRING_FORMAT = "latex_inline"
 
 
 class MapAxis:
