@@ -2,6 +2,8 @@
 import astropy.units as u
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
+from matplotlib.ticker import FormatStrFormatter
+from gammapy.maps.axes import UNIT_STRING_FORMAT
 from .core import IRF
 
 __all__ = [
@@ -111,7 +113,8 @@ class RadMax2D(IRF):
         energy_axis.format_plot_xaxis(ax=ax)
         ax.set_ylim(0 * u.deg, None)
         ax.legend(loc="best")
-        ax.set_ylabel(f"Rad max. [{ax.yaxis.units}]")
+        ax.set_ylabel(f"Rad max. [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]")
+        ax.yaxis.set_major_formatter(FormatStrFormatter("%.2f"))
         return ax
 
     @property
