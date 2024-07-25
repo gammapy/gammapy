@@ -46,7 +46,7 @@ def pix_tuple_to_idx(pix):
             idx += [p]
         else:
             with np.errstate(invalid="ignore"):
-                p_idx = np.rint(p).astype(int)
+                p_idx = np.floor(p + 0.5).astype(int)
             p_idx[~np.isfinite(p)] = INVALID_INDEX.int
             idx += [p_idx]
 

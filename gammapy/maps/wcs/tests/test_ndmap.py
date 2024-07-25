@@ -959,3 +959,92 @@ def test_double_cutout():
     m_new.stack(m_cc)
     m_c_new = m_new.cutout(position=position, width="2 deg")
     np.testing.assert_allclose(m_c_new.data, m_cc.data)
+
+
+def test_to_region_nd_map_histogram_basic():
+    random_state = np.random.RandomState(seed=0)
+
+    energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3)
+
+    data = Map.create(axes=[energy_axis], width=10, unit="cm2 s-1", binsz=0.02)
+    data.data = random_state.normal(
+        size=data.data.shape, loc=0, scale=np.array([1.0, 2.0, 3.0]).reshape((-1, 1, 1))
+    )
+
+    hist = data.to_region_nd_map_histogram()
+    assert hist.data.shape == (3, 100, 1, 1)
+    assert hist.unit == ""
+    assert hist.geom.axes[0].name == "bins"
+    assert_allclose(hist.data[:, 50, 0, 0], [29019, 14625, 9794])
+
+    hist = data.to_region_nd_map_histogram(density=True, nbin=50)
+    assert hist.data.shape == (3, 50, 1, 1)
+    assert hist.unit == 1 / (u.cm**2 / u.s)
+    assert hist.geom.axes[0].name == "bins"
+    assert_allclose(hist.data[:, 25, 0, 0], [0.378215, 0.196005, 0.131782], atol=1e-5)
+
+
+def test_to_region_nd_map_histogram_advanced():
+    random_state = np.random.RandomState(seed=0)
+
+    energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3)
+    label_axis = LabelMapAxis(["a", "b"], name="label")
+
+    data = Map.create(axes=[energy_axis, label_axis], width=10, binsz=0.02)
+
+    data.data = random_state.normal(
+        size=data.data.shape,
+        loc=0,
+        scale=np.array([[1.0, 2.0, 3.0]]).reshape((-1, 1, 1)),
+    )
+
+    region = CircleSkyRegion(center=SkyCoord(0, 0, unit="deg"), radius=3 * u.deg)
+
+    bins_axis = MapAxis.from_edges([-2, -1, 0, 1, 2], name="my-bins")
+    hist = data.to_region_nd_map_histogram(region=region, bins_axis=bins_axis)
+
+    assert hist.data.shape == (2, 3, 4, 1, 1)
+    assert hist.unit == ""
+    assert hist.geom.axes[0].name == "my-bins"
+    assert_allclose(
+        hist.data[:, :, 2, 0, 0], [[24189, 13587, 9212], [24053, 13410, 9186]]
+    )
+
+
+def test_plot_mask():
+    axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=2)
+    geom = WcsGeom.create(
+        binsz=0.02,
+        width=(2, 2),
+        frame="icrs",
+        axes=[axis],
+    )
+
+    mask = Map.from_geom(geom=geom, dtype=bool)
+    mask.data[1] |= True
+
+    with mpl_plot_check():
+        mask.plot_grid()
+
+
+def test_histogram_center_value():
+    evt_energy = np.arange(100.0, 105, 0.5) * u.GeV
+    N_evt = evt_energy.shape[0]
+    center = SkyCoord(0, 0, unit="deg", frame="icrs")
+    radec = SkyCoord(
+        [center.ra] * N_evt, [center.dec] * N_evt, unit="deg"
+    )  # fake position list
+    energy_axis = MapAxis.from_edges(np.arange(100, 106, 1) * u.GeV, name="energy")
+    map1 = WcsNDMap.create(
+        skydir=center, binsz=0.1 * u.deg, width=0.1 * u.deg, axes=[energy_axis]
+    )
+    map1.fill_by_coord({"skycoord": radec, "energy": evt_energy})
+    assert_allclose(map1.data[0:2], [[[2.0]], [[2.0]]])
+
+    map1 = WcsNDMap.create(
+        skydir=center,
+        binsz=1 * u.deg,
+        width=3 * u.deg,
+    )
+    map1.fill_by_pix([[0.0, 0.5, 1.0, 1.5], [0.0, 0.5, 1.0, 1.5]])
+    assert_allclose(map1.data, [[1.0, 0.0, 0.0], [0.0, 2.0, 0.0], [0.0, 0.0, 1.0]])
