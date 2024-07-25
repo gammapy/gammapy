@@ -186,7 +186,7 @@ def check_time_intervals(time_intervals):
                 return False
         if not CHECK_OVERLAPPING_TI:
             return True
-        for idx, xx in enumerate(combinations(ti, 2)):
+        for xx in combinations(ti, 2):
             i1 = [xx[0][0].to_value("gps"), xx[0][1].to_value("gps")]
             i2 = [xx[1][0].to_value("gps"), xx[1][1].to_value("gps")]
             if interval_overlap_length(i1, i2) > 0.0:
