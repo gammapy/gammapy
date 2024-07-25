@@ -300,8 +300,18 @@ def test_cutout_min_size():
     geom = WcsGeom.create(skydir=(0, 0), npix=10, binsz=0.5)
     position = SkyCoord(0, 0, unit="deg")
     cutout_geom = geom.cutout(position=position, width=["2 deg", "0.1 deg"])
-
     assert cutout_geom.data_shape == (1, 4)
+
+    cutout_geom = geom.cutout(position=position, width=["2 deg", "0.1 deg"], min_npix=3)
+    assert cutout_geom.data_shape == (3, 4)
+
+    geom = WcsGeom.create(skydir=(0, 0), npix=(10, 1), binsz=0.5)
+    position = SkyCoord(0, 0, unit="deg")
+    cutout_geom = geom.cutout(position=position, width=["1 deg", "0.1 deg"])
+    assert cutout_geom.data_shape == (1, 2)
+
+    cutout_geom = geom.cutout(position=position, width=["1 deg", "0.1 deg"], min_npix=3)
+    assert cutout_geom.data_shape == (1, 3)
 
 
 def test_wcs_geom_get_coord():
