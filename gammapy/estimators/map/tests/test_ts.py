@@ -9,6 +9,7 @@ from gammapy.estimators import TSMapEstimator
 from gammapy.irf import EDispKernelMap, PSFMap
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling.models import (
+    ConstantSpatialModel,
     GaussianSpatialModel,
     PointSpatialModel,
     PowerLawSpectralModel,
@@ -204,11 +205,11 @@ def test_compute_ts_map_psf(fermi_dataset):
 
     assert_allclose(result["ts"].data[0, 29, 29], 830.97957, rtol=2e-3)
     assert_allclose(result["niter"].data[0, 29, 29], 7)
-    assert_allclose(result["flux"].data[0, 29, 29], 1.34984e-09, rtol=2e-3)
-    assert_allclose(result["flux_err"].data[0, 29, 29], 7.93751176e-11, rtol=2e-3)
-    assert_allclose(result["flux_errp"].data[0, 29, 29], 7.948953e-11, rtol=2e-3)
-    assert_allclose(result["flux_errn"].data[0, 29, 29], 7.508168e-11, rtol=2e-3)
-    assert_allclose(result["flux_ul"].data[0, 29, 29], 1.513062157e-09, rtol=2e-3)
+    assert_allclose(result["flux"].data[0, 29, 29], 1.339426e-09, rtol=2e-3)
+    assert_allclose(result["flux_err"].data[0, 29, 29], 7.883016e-11, rtol=2e-3)
+    assert_allclose(result["flux_errp"].data[0, 29, 29], 7.913813e-11, rtol=2e-3)
+    assert_allclose(result["flux_errn"].data[0, 29, 29], 7.453983e-11, rtol=2e-3)
+    assert_allclose(result["flux_ul"].data[0, 29, 29], 1.501809e-09, rtol=2e-3)
 
     assert result["flux"].unit == u.Unit("cm-2s-1")
     assert result["flux_err"].unit == u.Unit("cm-2s-1")
@@ -246,6 +247,73 @@ def test_compute_ts_map_energy(fermi_dataset):
     energy_axis = result["ts"].geom.axes["energy"]
     assert_allclose(energy_axis.edges.to_value("GeV"), [10, 84.471641, 500], rtol=1e-4)
 
+    fermi_dataset_maksed = fermi_dataset.copy()
+    mask_safe = Map.from_geom(fermi_dataset.counts.geom, dtype=bool)
+    mask_safe.data[:-3, :, :] = True
+
+    fermi_dataset_maksed.mask_safe = mask_safe
+
+    result = estimator.run(fermi_dataset_maksed)
+    result.filter_success_nan = False
+
+    assert_allclose(result.ts.data[1, 43, 30], 0.164831, atol=0.01)
+    assert not result["success"].data[1, 43, 30]
+
+    assert_allclose(result["ts"].data[:, 29, 29], [795.815842, 8.777864], rtol=1e-2)
+    assert_allclose(
+        result["flux"].data[:, 29, 29], [1.223901e-09, 3.748007e-11], rtol=1e-2
+    )
+    assert_allclose(
+        result["flux_err"].data[:, 29, 29], [7.363390e-11, 1.799367e-11], rtol=1e-2
+    )
+    assert_allclose(result["niter"].data[:, 29, 29], [6, 6])
+
+    energy_axis = result["ts"].geom.axes["energy"]
+    assert_allclose(energy_axis.edges.to_value("GeV"), [10, 84.471641, 500], rtol=1e-4)
+
+
+@requires_data()
+def test_compute_ts_map_invalid(fermi_dataset):
+    spatial_model = PointSpatialModel()
+    spectral_model = PowerLawSpectralModel(amplitude="1e-22 cm-2 s-1 keV-1")
+    model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
+
+    estimator = TSMapEstimator(
+        model=model,
+        kernel_width="0.6 deg",
+        energy_edges=[10, 100, 1000] * u.GeV,
+        sum_over_energy_groups=False,
+    )
+
+    fermi_dataset_empty = fermi_dataset.copy()
+    fermi_dataset_empty.background = None
+    with pytest.raises(ValueError):
+        result = estimator.run(fermi_dataset_empty)
+    fermi_dataset_empty = fermi_dataset.copy()
+    fermi_dataset_empty.background.data = 0
+    with pytest.raises(ValueError):
+        result = estimator.run(fermi_dataset_empty)
+
+    fermi_dataset_empty = fermi_dataset.copy()
+    mask_safe = Map.from_geom(fermi_dataset.counts.geom, dtype=bool)
+    fermi_dataset_empty.mask_safe = mask_safe
+    with pytest.raises(ValueError):
+        result = estimator.run(fermi_dataset_empty)
+
+    spatial_model = ConstantSpatialModel(value=0 / u.sr)
+    spectral_model = PowerLawSpectralModel(amplitude="1e-22 cm-2 s-1 keV-1")
+    model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
+
+    estimator = TSMapEstimator(
+        model=model,
+        kernel_width="0.6 deg",
+        energy_edges=[10, 100, 1000] * u.GeV,
+        sum_over_energy_groups=False,
+    )
+
+    result = estimator.run(fermi_dataset)
+    assert_allclose(result["ts"].data, 0)
+
 
 @requires_data()
 def test_compute_ts_map_downsampled(input_dataset):
@@ -278,6 +346,7 @@ def test_compute_ts_map_downsampled(input_dataset):
 
 def test_ts_map_with_model(fake_dataset):
     model = fake_dataset.models["source"]
+    fake_dataset = fake_dataset.copy()
 
     fake_dataset.models = []
 
