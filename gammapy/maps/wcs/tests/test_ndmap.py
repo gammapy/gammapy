@@ -565,6 +565,10 @@ def test_make_cutout(mode):
     assert_allclose(actual, 36.0)
     assert_allclose(cutout.geom.shape_axes, m.geom.shape_axes)
     assert_allclose(cutout.geom.width.to_value("deg"), [[2.0], [3.0]])
+    assert_allclose(cutout.geom.data_shape, (3, 2, 3, 2))
+
+    cutout = m.cutout(position=pos, width=(2.0, 3.0) * u.deg, mode=mode, min_npix=3)
+    assert_allclose(cutout.geom.data_shape, (3, 2, 3, 3))
 
 
 def test_convolve_vs_smooth():
