@@ -208,7 +208,7 @@ class ExcessMapEstimator(Estimator):
         result = self.estimate_excess_map(resampled_dataset, reco_exposure)
         return result
 
-    def estimate_excess_map(self, dataset):
+    def estimate_excess_map(self, dataset, reco_exposure):
         """Estimate excess and ts maps for single dataset.
 
         If exposure is defined, a flux map is also computed.
@@ -245,9 +245,6 @@ class ExcessMapEstimator(Estimator):
         maps["sqrt_ts"] = Map.from_geom(geom, data=counts_stat.sqrt_ts)
 
         if dataset.exposure:
-            reco_exposure = estimate_exposure_reco_energy(
-                dataset, self.spectral_model, normalize=False
-            )
             with np.errstate(invalid="ignore", divide="ignore"):
                 reco_exposure = reco_exposure.convolve(kernel.array) / mask.convolve(
                     kernel.array
@@ -296,31 +293,3 @@ class ExcessMapEstimator(Estimator):
             reference_model=SkyModel(self.spectral_model),
             sed_type="likelihood",
         )
-
-    def estimate_exposure_reco_energy(self, dataset, kernel, mask, reco_exposure):
-        """Estimate exposure map in reconstructed energy for a single dataset
-           assuming the given spectral_model shape.
-
-        Parameters
-        ----------
-        dataset : `~gammapy.datasets.MapDataset`
-            Map dataset.
-        kernel : `~astropy.convolution.Tophat2DKernel`
-            Kernel.
-        mask : `~gammapy.maps.Map`
-            Mask map.
-
-        Returns
-        -------
-        reco_exposure : `Map`
-            Reconstructed exposure map.
-        """
-        if dataset.exposure:
-            with np.errstate(invalid="ignore", divide="ignore"):
-                reco_exposure = reco_exposure.convolve(kernel.data) / mask.convolve(
-                    kernel.data
-                )
-        else:
-            reco_exposure = 1
-
-        return reco_exposure
