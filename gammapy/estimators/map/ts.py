@@ -100,6 +100,9 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         of jobs limited to the number of physical CPUs.
     parallel_backend : {"multiprocessing", "ray"}
         Which backend to use for multiprocessing. Defaults to `~gammapy.utils.parallel.BACKEND_DEFAULT`.
+    max_niter : int
+        Maximal number of iterations used by the root finding algorithm.
+        Default is 100.
 
     Notes
     -----
@@ -165,6 +168,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         sum_over_energy_groups=True,
         n_jobs=None,
         parallel_backend=None,
+        max_niter=100,
     ):
         if kernel_width is not None:
             kernel_width = Angle(kernel_width)
@@ -187,6 +191,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         self.n_jobs = n_jobs
         self.parallel_backend = parallel_backend
         self.sum_over_energy_groups = sum_over_energy_groups
+        self.max_niter = max_niter
 
         self.selection_optional = selection_optional
         self.energy_edges = energy_edges
@@ -196,6 +201,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
             n_sigma_ul=self.n_sigma_ul,
             selection_optional=selection_optional,
             ts_threshold=threshold,
+            max_niter=self.max_niter,
         )
 
     @property
@@ -649,7 +655,7 @@ class BrentqFluxEstimator(Estimator):
         n_sigma,
         n_sigma_ul,
         selection_optional=None,
-        max_niter=20,
+        max_niter=100,
         ts_threshold=None,
     ):
         self.rtol = rtol
