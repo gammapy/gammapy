@@ -415,12 +415,12 @@ class EventList:
         mask = np.full(len(time), False)
         if np.array(time_intervals).shape != (2,):
             for time_interval in time_intervals:
-                submask = time_interval[0] <= time
-                submask &= time < time_interval[1]
+                submask = time_interval[0].mjd <= time.mjd
+                submask &= time.mjd < time_interval[1].mjd
                 mask |= submask
         else:
-            mask = time_intervals[0] <= time
-            mask &= time < time_intervals[1]
+            mask = time_intervals[0].mjd <= time.mjd
+            mask &= time.mjd < time_intervals[1].mjd
         return self.select_row_subset(mask)
 
     def select_region(self, regions, wcs=None):
