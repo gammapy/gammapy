@@ -4,6 +4,10 @@ from gammapy.data.utils import check_time_intervals
 
 
 def test_check_time_intervals():
+    from gammapy.data import utils
+
+    utils.CHECK_OVERLAPPING_TI = True
+
     assert check_time_intervals(1.0) is False
     assert check_time_intervals([]) is False
     assert check_time_intervals([53090.130, 53090.140]) is False
@@ -33,7 +37,6 @@ def test_check_time_intervals():
     ti = [aa, bb, dd]
     assert check_time_intervals(ti) is False
 
-    from gammapy.data import utils
-
     utils.CHECK_OVERLAPPING_TI = False
     assert check_time_intervals(ti) is True
+    utils.CHECK_OVERLAPPING_TI = True
