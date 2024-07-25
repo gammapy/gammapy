@@ -186,6 +186,17 @@ class ExcessMapEstimator(Estimator):
         resampled_dataset = dataset.resample_energy_axis(
             energy_axis=axis, name=dataset.name
         )
+
+        if dataset.exposure:
+            reco_exposure = estimate_exposure_reco_energy(
+                dataset, self.spectral_model, normalize=False
+            )
+            reco_exposure = reco_exposure.resample_axis(
+                axis=axis, weights=dataset.mask_safe
+            )
+        else:
+            reco_exposure = None
+
         if isinstance(dataset, MapDatasetOnOff):
             resampled_dataset.models = dataset.models
         else:
@@ -194,7 +205,7 @@ class ExcessMapEstimator(Estimator):
             )
             resampled_dataset.models = None
 
-        result = self.estimate_excess_map(resampled_dataset)
+        result = self.estimate_excess_map(resampled_dataset, reco_exposure)
         return result
 
     def estimate_excess_map(self, dataset):
@@ -285,3 +296,31 @@ class ExcessMapEstimator(Estimator):
             reference_model=SkyModel(self.spectral_model),
             sed_type="likelihood",
         )
+
+    def estimate_exposure_reco_energy(self, dataset, kernel, mask, reco_exposure):
+        """Estimate exposure map in reconstructed energy for a single dataset
+           assuming the given spectral_model shape.
+
+        Parameters
+        ----------
+        dataset : `~gammapy.datasets.MapDataset`
+            Map dataset.
+        kernel : `~astropy.convolution.Tophat2DKernel`
+            Kernel.
+        mask : `~gammapy.maps.Map`
+            Mask map.
+
+        Returns
+        -------
+        reco_exposure : `Map`
+            Reconstructed exposure map.
+        """
+        if dataset.exposure:
+            with np.errstate(invalid="ignore", divide="ignore"):
+                reco_exposure = reco_exposure.convolve(kernel.data) / mask.convolve(
+                    kernel.data
+                )
+        else:
+            reco_exposure = 1
+
+        return reco_exposure
