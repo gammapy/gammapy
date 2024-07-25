@@ -907,7 +907,7 @@ class IRFMap:
         """Copy IRF map"""
         return deepcopy(self)
 
-    def cutout(self, position, width, mode="trim"):
+    def cutout(self, position, width, mode="trim", min_npix=3):
         """Cutout IRF map.
 
         Parameters
@@ -919,15 +919,23 @@ class IRFMap:
             If only one value is passed, a square region is extracted.
         mode : {'trim', 'partial', 'strict'}
             Mode option for Cutout2D, for details see `~astropy.nddata.utils.Cutout2D`.
+            Default is "trim".
+        min_npix : bool, optional
+            Force width to a minimmum number of pixels.
+            Default is 3. The default is 3 pixels so interpolation is done correctly
+            if the binning of the IRF is larger than the width of the analysis region.
 
         Returns
         -------
         cutout : `IRFMap`
             Cutout IRF map.
         """
-        irf_map = self._irf_map.cutout(position, width, mode)
+
+        irf_map = self._irf_map.cutout(position, width, mode, min_npix=min_npix)
         if self.exposure_map:
-            exposure_map = self.exposure_map.cutout(position, width, mode)
+            exposure_map = self.exposure_map.cutout(
+                position, width, mode, min_npix=min_npix
+            )
         else:
             exposure_map = None
         return self.__class__(irf_map, exposure_map=exposure_map)

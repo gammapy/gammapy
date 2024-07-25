@@ -565,6 +565,10 @@ def test_make_cutout(mode):
     assert_allclose(actual, 36.0)
     assert_allclose(cutout.geom.shape_axes, m.geom.shape_axes)
     assert_allclose(cutout.geom.width.to_value("deg"), [[2.0], [3.0]])
+    assert_allclose(cutout.geom.data_shape, (3, 2, 3, 2))
+
+    cutout = m.cutout(position=pos, width=(2.0, 3.0) * u.deg, mode=mode, min_npix=3)
+    assert_allclose(cutout.geom.data_shape, (3, 2, 3, 3))
 
 
 def test_convolve_vs_smooth():
@@ -959,3 +963,42 @@ def test_double_cutout():
     m_new.stack(m_cc)
     m_c_new = m_new.cutout(position=position, width="2 deg")
     np.testing.assert_allclose(m_c_new.data, m_cc.data)
+
+
+def test_plot_mask():
+    axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=2)
+    geom = WcsGeom.create(
+        binsz=0.02,
+        width=(2, 2),
+        frame="icrs",
+        axes=[axis],
+    )
+
+    mask = Map.from_geom(geom=geom, dtype=bool)
+    mask.data[1] |= True
+
+    with mpl_plot_check():
+        mask.plot_grid()
+
+
+def test_histogram_center_value():
+    evt_energy = np.arange(100.0, 105, 0.5) * u.GeV
+    N_evt = evt_energy.shape[0]
+    center = SkyCoord(0, 0, unit="deg", frame="icrs")
+    radec = SkyCoord(
+        [center.ra] * N_evt, [center.dec] * N_evt, unit="deg"
+    )  # fake position list
+    energy_axis = MapAxis.from_edges(np.arange(100, 106, 1) * u.GeV, name="energy")
+    map1 = WcsNDMap.create(
+        skydir=center, binsz=0.1 * u.deg, width=0.1 * u.deg, axes=[energy_axis]
+    )
+    map1.fill_by_coord({"skycoord": radec, "energy": evt_energy})
+    assert_allclose(map1.data[0:2], [[[2.0]], [[2.0]]])
+
+    map1 = WcsNDMap.create(
+        skydir=center,
+        binsz=1 * u.deg,
+        width=3 * u.deg,
+    )
+    map1.fill_by_pix([[0.0, 0.5, 1.0, 1.5], [0.0, 0.5, 1.0, 1.5]])
+    assert_allclose(map1.data, [[1.0, 0.0, 0.0], [0.0, 2.0, 0.0], [0.0, 0.0, 1.0]])
