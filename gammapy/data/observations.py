@@ -167,10 +167,8 @@ class Observation:
     @property
     def events(self):
         """Event list of the observation as an `~gammapy.data.EventList`."""
-
         if self.obs_filter.time_filter is None and self._gti is not None:
             self.obs_filter.time_filter = self._gti.time_intervals
-
         events = self.obs_filter.filter_events(self._events)
         return events
 
@@ -502,8 +500,13 @@ class Observation:
         new_obs : `~gammapy.data.Observation`
             A new observation instance of the specified time interval.
         """
+        if not check_time_intervals(time_interval):
+            raise ValueError(
+                "The time intervals should be an array of distinct intervals of astropy.time.Time."
+            )
+
         new_obs_filter = self.obs_filter.copy()
-        new_obs_filter.time_filter = time_interval
+        new_obs_filter.time_filter = self.gti.select_time(time_interval).time_intervals
         obs = copy.deepcopy(self)
         obs.obs_filter = new_obs_filter
         return obs
