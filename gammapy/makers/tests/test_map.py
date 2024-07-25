@@ -460,7 +460,6 @@ def test_minimal_datastore():
 
 @requires_data()
 def test_dataset_hawc():
-
     # There are overlapping GTIs in this HAWC dataset
     from gammapy.data import utils
 
@@ -496,7 +495,6 @@ def test_dataset_hawc():
     results["NN"] = [6.57154247837e16, 62, 0.76743538]
 
     for which in ["GP", "NN"]:
-
         # paths and file names
         data_path = "$GAMMAPY_DATA/hawc/crab_events_pass4/"
         hdu_filename = "hdu-index-table-" + which + "-Crab.fits.gz"
@@ -530,6 +528,8 @@ def test_dataset_hawc():
         assert_allclose(dataset.exposure.data.sum(), results[which][0])
         assert_allclose(dataset.counts.data.sum(), results[which][1])
         assert_allclose(dataset.background.data.sum(), results[which][2])
+
+    utils.CHECK_OVERLAPPING_TI = True
 
 
 @requires_data()

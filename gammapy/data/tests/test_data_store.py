@@ -335,3 +335,5 @@ def test_data_store_no_events():
     for obs in observations:
         assert not obs.events
         assert not obs.gti
+
+    utils.CHECK_OVERLAPPING_TI = True

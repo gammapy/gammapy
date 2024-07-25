@@ -610,3 +610,4 @@ def test_psf_map_reco_hawc():
         reco_psf_map.containment_radius(0.68, [1, 2] * u.TeV),
         [0.001, 0.43733357] * u.deg,
     )
+    utils.CHECK_OVERLAPPING_TI = True
