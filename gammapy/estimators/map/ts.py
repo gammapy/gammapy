@@ -456,6 +456,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
             repeat(maps["background"].data.astype(float)),
             repeat(maps["kernel"].data),
             repeat(maps["norm"].data),
+            repeat(maps["mask_safe"]),
             repeat(self._flux_estimator),
         )
 
@@ -881,5 +882,6 @@ def _ts_value(
         kernel=kernel,
         position=position,
         norm=norm,
+        mask_safe=mask_safe,
     )
     return flux_estimator.run(dataset)
