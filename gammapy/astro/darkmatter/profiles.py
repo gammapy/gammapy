@@ -167,9 +167,7 @@ class ZhaoProfile(DMProfile):
     def evaluate(radius, r_s, alpha, beta, gamma, rho_s):
         """Evaluate the profile."""
         rr = radius / r_s
-        return rho_s / (
-            rr**gamma * (1 + rr ** (1 / alpha)) ** ((beta - gamma) * alpha)
-        )
+        return rho_s / (rr**gamma * (1 + rr ** (1 / alpha)) ** ((beta - gamma) * alpha))
 
 
 class NFWProfile(DMProfile):

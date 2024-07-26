@@ -101,15 +101,15 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject, abc.ABC):
         try:
             ss += "{:<16s} : {:.3f}\n".format("ASSOC_PROB_BAY", d["ASSOC_PROB_BAY"])
             ss += "{:<16s} : {:.3f}\n".format("ASSOC_PROB_LR", d["ASSOC_PROB_LR"])
-        except (KeyError):
+        except KeyError:
             pass
         try:
             ss += "{:<16s} : {}\n".format("Class1", d["CLASS1"])
-        except (KeyError):
+        except KeyError:
             ss += "{:<16s} : {}\n".format("Class", d["CLASS"])
         try:
             ss += "{:<16s} : {}\n".format("Class2", d["CLASS2"])
-        except (KeyError):
+        except KeyError:
             pass
         ss += "{:<16s} : {}\n".format("TeVCat flag", d.get("TEVCAT_FLAG", "N/A"))
         return ss

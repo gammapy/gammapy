@@ -9,7 +9,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: psf/black@stable
         with:
-          version: "22.6.0"
+          version: "24.2.0"
   ci-runs:
     name: ${{ matrix.os }}, ${{ matrix.tox_env }}
     runs-on: ${{ matrix.os }}
@@ -21,27 +21,28 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            python: '3.9'
-            tox_env: 'py39-test-alldeps-cov'
+            python: '3.11'
+            tox_env: 'py311-test-alldeps_noray'
+            gammapy_data_path: /home/runner/work/gammapy/gammapy/gammapy-datasets/dev
             allowed_fail: false
           - os: ubuntu-latest
             python: '3.10'
-            tox_env: 'py310-test-alldeps_noray'
+            tox_env: 'py310-test-alldeps-cov'
             gammapy_data_path: /home/runner/work/gammapy/gammapy/gammapy-datasets/dev
             allowed_fail: false
           - os: macos-latest
-            python: '3.10'
-            tox_env: 'py310-test'
+            python: '3.11'
+            tox_env: 'py311-test'
             gammapy_data_path: /Users/runner/work/gammapy/gammapy/gammapy-datasets/dev
             allowed_fail: false
           - os: windows-latest
-            python: '3.10'
-            tox_env: 'py310-test-alldeps_noray'
+            python: '3.11'
+            tox_env: 'py311-test-alldeps_noray'
             gammapy_data_path:  D:\a\gammapy\gammapy\gammapy-datasets\dev
             allowed_fail: false
           - os: ubuntu-latest
-            python: '3.11'
-            tox_env: 'py311-test-alldeps_noray'
+            python: '3.12'
+            tox_env: 'py312-test-alldeps_noray'
             gammapy_data_path: /home/runner/work/gammapy/gammapy/gammapy-datasets/dev
             allowed_fail: false
           - os: ubuntu-latest
@@ -61,7 +62,7 @@ jobs:
             tox_env: 'oldestdeps'
             allowed_fail: false
           - os: ubuntu-latest
-            python: '3.9'
+            python: '3.11'
             tox_env: 'devdeps'
             allowed_fail: true
     steps:

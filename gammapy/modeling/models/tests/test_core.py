@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import sys
 import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
@@ -262,7 +263,15 @@ def test_positions():
 
 
 def test_parameter_name():
-    with pytest.raises(RuntimeError):
+    # From the 3.12 changelog:
+    # Exceptions raised in a class or type’s __set_name__ method are no longer
+    # wrapped by a RuntimeError.
+    if sys.version_info < (3, 12):
+        exc_class = RuntimeError
+    else:
+        exc_class = ValueError
+
+    with pytest.raises(exc_class):
 
         class MyTestModel:
             par = Parameter("wrong-name", value=3)
