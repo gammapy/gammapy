@@ -92,9 +92,6 @@ class MapEvaluator:
         self._cached_parameter_values_spatial = None
         self._cached_position = (0, 0)
         self._computation_cache = None
-        self._spatial_oversampling_factor = 1
-        if exposure is not None:
-            self.update_spatial_oversampling_factor(self.geom)
 
     def _repr_html_(self):
         try:
@@ -240,7 +237,6 @@ class MapEvaluator:
                 self.exposure = exposure._cutout_view(
                     position=self.position, width=self.cutout_width, odd_npix=True
                 )
-        self.update_spatial_oversampling_factor(self.geom)
 
         self.reset_cache_properties()
         self._computation_cache = None
@@ -252,20 +248,6 @@ class MapEvaluator:
             energy_axis_true=self.geom.axes["energy_true"],
             energy_axis=self._geom_reco.axes["energy"],
         )
-
-    def update_spatial_oversampling_factor(self, geom):
-        """Update spatial oversampling_factor for model evaluation."""
-
-        if self.contributes and (not geom.is_region or geom.region is not None):
-            res_scale = self.model.evaluation_bin_size_min
-
-            res_scale = res_scale.to_value("deg") if res_scale is not None else 0
-
-            if res_scale != 0:
-                if geom.is_region or geom.is_hpx:
-                    geom = geom.to_wcs_geom()
-                factor = int(np.ceil(np.max(geom.pixel_scales.deg) / res_scale))
-                self._spatial_oversampling_factor = factor
 
     def compute_dnde(self):
         """Compute model differential flux at map pixel centers.
@@ -317,12 +299,10 @@ class MapEvaluator:
             if self.geom.region is None or self.psf is None:
                 return 1
 
-            wcs_geom = self.geom.to_wcs_geom(width_min=self.cutout_width).to_image()
+            wcs_geom = self.geom.to_wcs_geom(width_min=self.cutout_width)
+            values = self._compute_flux_spatial_geom(wcs_geom)
 
-            if self.psf and self.model.apply_irf["psf"]:
-                values = self._compute_flux_spatial_geom(wcs_geom)
-            else:
-                values = self.model.spatial_model.integrate_geom(wcs_geom)
+            if not values.geom.has_energy_axis:
                 axes = [self.geom.axes["energy_true"].squash()]
                 values = values.to_cube(axes=axes)
 
@@ -373,8 +353,7 @@ class MapEvaluator:
 
     def apply_psf(self, npred):
         """Convolve npred cube with PSF."""
-        tmp = npred.convolve(self.psf)
-        return tmp
+        return npred.convolve(self.psf)
 
     def apply_edisp(self, npred):
         """Convolve map data with energy dispersion.
