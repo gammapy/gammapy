@@ -180,7 +180,6 @@ class MapEvaluator:
             self.edisp = edisp.get_edisp_kernel(
                 position=self.model.position, energy_axis=energy_axis
             )
-            del self._edisp_diagonal
 
         # lookup psf
         if (
