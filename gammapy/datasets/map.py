@@ -1863,29 +1863,30 @@ class MapDataset(Dataset):
             "meta_table": self.meta_table,
             "meta": self.meta,
         }
+        cutout_kwargs = {"position": position, "width": width, "mode": mode}
         kwargs["meta"].creation = CreatorMetaData()
-        kwargs["meta"].optional = {"position": position, "width": width, "mode": mode}
+        kwargs["meta"].optional = cutout_kwargs
 
         if self.counts is not None:
-            kwargs["counts"] = self.counts.cutout(position, width, mode)
+            kwargs["counts"] = self.counts.cutout(**cutout_kwargs)
 
         if self.exposure is not None:
-            kwargs["exposure"] = self.exposure.cutout(position, width, mode)
+            kwargs["exposure"] = self.exposure.cutout(**cutout_kwargs)
 
         if self.background is not None and self.stat_type == "cash":
-            kwargs["background"] = self.background.cutout(position, width, mode)
+            kwargs["background"] = self.background.cutout(**cutout_kwargs)
 
         if self.edisp is not None:
-            kwargs["edisp"] = self.edisp.cutout(position, width, mode)
+            kwargs["edisp"] = self.edisp.cutout(**cutout_kwargs)
 
         if self.psf is not None:
-            kwargs["psf"] = self.psf.cutout(position, width, mode)
+            kwargs["psf"] = self.psf.cutout(**cutout_kwargs)
 
         if self.mask_safe is not None:
-            kwargs["mask_safe"] = self.mask_safe.cutout(position, width, mode)
+            kwargs["mask_safe"] = self.mask_safe.cutout(**cutout_kwargs)
 
         if self.mask_fit is not None:
-            kwargs["mask_fit"] = self.mask_fit.cutout(position, width, mode)
+            kwargs["mask_fit"] = self.mask_fit.cutout(**cutout_kwargs)
 
         return self.__class__(**kwargs)
 
@@ -2959,18 +2960,26 @@ class MapDatasetOnOff(MapDataset):
         cutout : `MapDatasetOnOff`
             Cutout map dataset.
         """
-        cutout_dataset = super().cutout(position, width, mode)
+
+        cutout_kwargs = {
+            "position": position,
+            "width": width,
+            "mode": mode,
+            "name": name,
+        }
+
+        cutout_dataset = super().cutout(**cutout_kwargs)
+
+        del cutout_kwargs["name"]
 
         if self.counts_off is not None:
-            cutout_dataset.counts_off = self.counts_off.cutout(position, width, mode)
+            cutout_dataset.counts_off = self.counts_off.cutout(**cutout_kwargs)
 
         if self.acceptance is not None:
-            cutout_dataset.acceptance = self.acceptance.cutout(position, width, mode)
+            cutout_dataset.acceptance = self.acceptance.cutout(**cutout_kwargs)
 
         if self.acceptance_off is not None:
-            cutout_dataset.acceptance_off = self.acceptance_off.cutout(
-                position, width, mode
-            )
+            cutout_dataset.acceptance_off = self.acceptance_off.cutout(**cutout_kwargs)
 
         return cutout_dataset
 
