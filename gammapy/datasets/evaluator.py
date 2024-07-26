@@ -61,7 +61,6 @@ class MapEvaluator:
         evaluation_mode="local",
         use_cache=True,
     ):
-
         self.model = model
         self.exposure = exposure
         self.psf = psf
@@ -323,9 +322,7 @@ class MapEvaluator:
             if self.psf and self.model.apply_irf["psf"]:
                 values = self._compute_flux_spatial_geom(wcs_geom)
             else:
-                values = self.model.spatial_model.integrate_geom(
-                    wcs_geom, oversampling_factor=1
-                )
+                values = self.model.spatial_model.integrate_geom(wcs_geom)
                 axes = [self.geom.axes["energy_true"].squash()]
                 values = values.to_cube(axes=axes)
 
