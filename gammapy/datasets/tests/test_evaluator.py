@@ -32,8 +32,8 @@ def evaluator():
     )
 
     spectral_model = ConstantSpectralModel()
-    spatial_model = GaussianSpatialModel(
-        lon_0=0 * u.deg, lat_0=0 * u.deg, sigma=0.001 * u.deg, frame="galactic"
+    spatial_model = PointSpatialModel(
+        lon_0=0 * u.deg, lat_0=0 * u.deg, frame="galactic"
     )
 
     models = SkyModel(spectral_model=spectral_model, spatial_model=spatial_model)
