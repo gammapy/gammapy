@@ -83,6 +83,7 @@ class PSFMap(IRFMap):
 
     @psf_map.setter
     def psf_map(self, value):
+        del self.has_single_spatial_bin
         self._irf_map = value
 
     def normalize(self):

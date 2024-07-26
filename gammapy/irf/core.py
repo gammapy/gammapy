@@ -640,6 +640,10 @@ class IRFMap:
     def required_axes(self):
         pass
 
+    @lazyproperty
+    def has_single_spatial_bin(self):
+        return self._irf_map.geom.to_image().data_shape == (1, 1)
+
     # TODO: add mask safe to IRFMap as a regular attribute and don't derive it from the data
     @property
     def mask_safe_image(self):

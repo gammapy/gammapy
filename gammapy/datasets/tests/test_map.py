@@ -17,6 +17,7 @@ from gammapy.irf import (
     EffectiveAreaTable2D,
     EnergyDependentMultiGaussPSF,
     EnergyDispersion2D,
+    PSFKernel,
     PSFMap,
 )
 from gammapy.makers.utils import make_map_exposure_true_energy, make_psf_map
@@ -1808,6 +1809,8 @@ def test_dataset_mixed_geom(tmpdir):
     dataset = MapDataset.from_geoms(
         geom=geom, geom_exposure=geom_exposure, geom_psf=geom_psf, geom_edisp=geom_edisp
     )
+    assert isinstance(dataset.psf, PSFMap)
+    assert isinstance(dataset._psf_kernel, PSFKernel)
 
     filename = tmpdir / "test.fits"
     dataset.write(filename)
@@ -1820,6 +1823,33 @@ def test_dataset_mixed_geom(tmpdir):
 
     assert isinstance(dataset.psf.psf_map.geom.region, CircleSkyRegion)
     assert isinstance(dataset.edisp.edisp_map.geom.region, CircleSkyRegion)
+
+    assert isinstance(dataset.psf, PSFMap)
+    assert dataset.psf.has_single_spatial_bin
+    assert isinstance(dataset._psf_kernel, PSFKernel)
+
+    geom_psf = WcsGeom.create(npix=1, axes=[rad_axis, energy_axis_true])
+    dataset = MapDataset.from_geoms(
+        geom=geom, geom_exposure=geom_exposure, geom_psf=geom_psf, geom_edisp=geom_edisp
+    )
+
+    assert isinstance(dataset.psf, PSFMap)
+    assert dataset.psf.has_single_spatial_bin
+    assert isinstance(dataset._psf_kernel, PSFKernel)
+    psf_1bin = dataset.psf.copy()
+
+    geom_psf = WcsGeom.create(npix=3, axes=[rad_axis, energy_axis_true])
+    dataset = MapDataset.from_geoms(
+        geom=geom, geom_exposure=geom_exposure, geom_psf=geom_psf, geom_edisp=geom_edisp
+    )
+
+    assert isinstance(dataset.psf, PSFMap)
+    assert not dataset.psf.has_single_spatial_bin
+    assert dataset._psf_kernel is None
+
+    dataset.psf.psf_map = psf_1bin.psf_map
+    assert dataset.psf.has_single_spatial_bin
+    assert isinstance(dataset._psf_kernel, PSFKernel)
 
     geom_psf_reco = RegionGeom.create(
         "icrs;circle(0, 0, 0.2)", axes=[rad_axis, energy_axis]

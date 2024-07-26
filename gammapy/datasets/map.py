@@ -225,7 +225,6 @@ class MapDataset(Dataset):
             raise ValueError(
                 f"'psf' must be a 'PSFMap' or `HDULocation` object, got {type(psf)}"
             )
-
         self.psf = psf
 
         if edisp and not isinstance(edisp, (EDispMap, EDispKernelMap, HDULocation)):
@@ -239,6 +238,17 @@ class MapDataset(Dataset):
         self.gti = gti
         self.models = models
         self.meta_table = meta_table
+
+    @property
+    def _psf_kernel(self):
+        """Precompute PSFkernel if there is only one spatial bin in the PSFmap"""
+        if self.psf and self.psf.has_single_spatial_bin:
+            if self.psf.energy_name == "energy_true":
+                map_ref = self.exposure
+            else:
+                map_ref = self.counts
+            if map_ref and not map_ref.geom.is_region:
+                return self.psf.get_psf_kernel(map_ref.geom)
 
     # TODO: keep or remove?
     @property
@@ -332,15 +342,16 @@ class MapDataset(Dataset):
     def models(self, models):
         """Models setter"""
         self._evaluators = {}
-
         if models is not None:
             models = DatasetModels(models)
             models = models.select(datasets_names=self.name)
-
+            if models:
+                psf = self._psf_kernel
             for model in models:
                 if not isinstance(model, FoVBackgroundModel):
                     evaluator = MapEvaluator(
                         model=model,
+                        psf=psf,
                         evaluation_mode=EVALUATION_MODE,
                         gti=self.gti,
                         use_cache=USE_NPRED_CACHE,
