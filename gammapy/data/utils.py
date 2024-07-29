@@ -170,14 +170,14 @@ def check_time_intervals(time_intervals):
 
     Returns
     -------
-
+    valid: bool
     """
     # Note: this function will be moved into a future class `TimeInterval`
     ti = np.asarray(time_intervals)
     if ti.shape == () or ti.shape == (0,):
         return False
 
-    if ti.shape == (2,):
+    if ti.shape == (2,) or ti.shape == (2, 1):
         if not np.all([isinstance(_, Time) for _ in ti]):
             return False
     else:
