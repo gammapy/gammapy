@@ -1174,7 +1174,7 @@ def test_stack_npred():
         geom,
         energy_axis_true=axis_etrue,
         name="dataset-1",
-        gti=GTI.create("0 min", "30 min"),
+        gti=GTI.create(0 * u.min, 30 * u.min),
     )
     dataset_1.psf = None
     dataset_1.exposure.data += 1
@@ -1188,7 +1188,7 @@ def test_stack_npred():
         geom,
         energy_axis_true=axis_etrue,
         name="dataset-2",
-        gti=GTI.create("30 min", "60 min"),
+        gti=GTI.create(30 * u.min, 60 * u.min),
     )
     dataset_2.psf = None
     dataset_2.exposure.data += 1
