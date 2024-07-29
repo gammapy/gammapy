@@ -105,6 +105,7 @@ class Observation:
         self.bkg = bkg
         self._rad_max = rad_max
         self._gti = gti
+        self._filtered_gti = None
         self._events = events
         self._pointing = pointing
         self._location = location  # this is part of the meta or is it data?
@@ -181,8 +182,11 @@ class Observation:
     @property
     def gti(self):
         """GTI of the observation as a `~gammapy.data.GTI`."""
-        gti = self.obs_filter.filter_gti(self._gti)
-        return gti
+        if self._filtered_gti:
+            return self._filtered_gti
+
+        self._filtered_gti = self.obs_filter.filter_gti(self._gti)
+        return self._filtered_gti
 
     @staticmethod
     def _get_obs_info(
