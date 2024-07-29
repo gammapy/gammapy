@@ -122,10 +122,22 @@ class GTI:
         reference_time = Time(reference_time)
         reference_time.format = "mjd"
 
-        if not isinstance(start, Time):
+        if not isinstance(start, list):
+            if isinstance(start, u.Quantity):
+                start = reference_time + u.Quantity(start)
+        elif len(start) == 1:
+            if not isinstance(start[0], Time):
+                start = [reference_time + u.Quantity(start[0])]
+        elif not np.all([isinstance(_, Time) for _ in start]):
             start = reference_time + u.Quantity(start)
 
-        if not isinstance(stop, Time):
+        if not isinstance(start, list):
+            if isinstance(stop, u.Quantity):
+                stop = reference_time + u.Quantity(stop)
+        elif len(stop) == 1:
+            if not isinstance(stop[0], Time):
+                stop = [reference_time + u.Quantity(stop[0])]
+        elif not np.all([isinstance(_, Time) for _ in stop]):
             stop = reference_time + u.Quantity(stop)
 
         table = Table({"START": np.atleast_1d(start), "STOP": np.atleast_1d(stop)})
@@ -301,10 +313,13 @@ class GTI:
         gti : `~gammapy.data.GTI`
             GTI table.
         """
-        if np.array(time_intervals).shape == (2,):
+        if np.asarray(time_intervals).data.shape == (2, 1) or np.asarray(
+            time_intervals
+        ).shape == (2,):
             time_intervals = [time_intervals]
-        start = Time([_[0] for _ in time_intervals])
-        stop = Time([_[1] for _ in time_intervals])
+
+        start = [_[0] for _ in time_intervals]
+        stop = [_[1] for _ in time_intervals]
 
         if reference_time is None:
             reference_time = TIME_REF_DEFAULT
