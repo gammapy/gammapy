@@ -276,6 +276,9 @@ class GTI:
     @property
     def time_intervals(self):
         """List of time intervals."""
+        if len(self.table) == 0:
+            return None
+
         return [
             (t_start, t_stop)
             for t_start, t_stop in zip(self.time_start, self.time_stop)
@@ -321,17 +324,19 @@ class GTI:
         gti : `~gammapy.data.GTI`
             Copy of the GTI table with selection applied.
         """
-        if np.array(time_intervals).data.shape != (2,):
-            interval_start = Time([_[0] for _ in time_intervals])
-            interval_stop = Time([_[1] for _ in time_intervals])
+        if np.asarray(time_intervals).data.shape == (2, 1) or np.asarray(
+            time_intervals
+        ).data.shape == (2,):
+            interval_start = [time_intervals[0]]
+            interval_stop = [time_intervals[1]]
         else:
-            interval_start = Time([time_intervals[0]])
-            interval_stop = Time([time_intervals[1]])
-        interval_start.format = self.time_start.format
-        interval_stop.format = self.time_stop.format
+            interval_start = [_[0] for _ in time_intervals]
+            interval_stop = [_[1] for _ in time_intervals]
 
         gti_within = None
         for t1, t2 in zip(interval_start, interval_stop):
+            t1.format = self.time_start.format
+            t2.format = self.time_stop.format
             for tis, tie in zip(self.table["START"], self.table["STOP"]):
                 if tis > t2 or t1 > tie:
                     continue
