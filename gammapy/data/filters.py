@@ -2,6 +2,7 @@
 import copy
 import html
 import logging
+from .utils import check_time_intervals
 
 __all__ = ["ObservationFilter"]
 
@@ -105,6 +106,10 @@ class ObservationFilter:
         Calls the `select_time` method of the data object.
         """
         if self.time_filter is not None:
+            if not check_time_intervals(self.time_filter):
+                raise ValueError(
+                    "The time intervals should be a sorted array of distinct intervals of astropy.time.Time."
+                )
             return data.select_time(self.time_filter)
         else:
             return data
