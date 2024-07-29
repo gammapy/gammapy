@@ -506,7 +506,14 @@ class Observation:
             )
 
         new_obs_filter = self.obs_filter.copy()
-        new_obs_filter.time_filter = self.gti.select_time(time_interval).time_intervals
+        new_ti = self.gti.select_time(time_interval)
+        if new_ti.time_intervals is None:
+            new_obs_filter.time_filter = [
+                self.gti.time_start,
+                self.gti.time_start + 1e-9 * u.s,
+            ]
+        else:
+            new_obs_filter.time_filter = new_ti.time_intervals
         obs = copy.deepcopy(self)
         obs.obs_filter = new_obs_filter
         return obs
