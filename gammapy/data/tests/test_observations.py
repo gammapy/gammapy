@@ -112,7 +112,6 @@ def test_observation_peek(data_store):
 )
 def test_observation_select_time(data_store, time_interval, expected_times):
     obs = data_store.obs(23523)
-
     new_obs = obs.select_time(time_interval)
 
     if expected_times:
@@ -124,8 +123,8 @@ def test_observation_select_time(data_store, time_interval, expected_times):
         assert_time_allclose(new_obs.gti.time_start[0], expected_times[0], atol=0.01)
         assert_time_allclose(new_obs.gti.time_stop[-1], expected_times[1], atol=0.01)
     else:
-        assert len(new_obs.events.table) == 0
-        assert len(new_obs.gti.table) == 0
+        assert len(new_obs.gti.table) == 1
+        assert new_obs.gti.time_sum < 1.0e-8 * u.s
 
 
 @requires_data()
@@ -204,11 +203,17 @@ def test_observation_select_time_gti(data_store):
     ]
 
     # Test for the `Observation` object
+    assert len(obss[0].gti.table) == 1
+
     new_obs = obss[0].select_time(time_intervals)
     assert len(new_obs.gti.table) == 2
     assert_allclose(new_obs.observation_time_duration.value, 360.0, rtol=1e-9)
     assert Time(new_obs.gti.time_start[0]).mjd == time_intervals[0][0].mjd
     assert Time(new_obs.gti.time_stop[1]).mjd == time_intervals[1][1].mjd
+
+    bad_time_interval = [0, 1]
+    with pytest.raises(ValueError):
+        new_obs = obss[0].select_time(bad_time_interval)
 
     # Test for the `Observations` object
     new_obs_s = obss.select_time(time_intervals)
