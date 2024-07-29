@@ -184,6 +184,9 @@ def check_time_intervals(time_intervals):
         for xx in ti:
             if not np.all([isinstance(_, Time) for _ in xx]):
                 return False
+        if (ti[:-1] <= ti[1:]).all() is False:
+            log.warning("Sorted time intervals is required")
+            return False
         if not CHECK_OVERLAPPING_TI:
             return True
         for xx in combinations(ti, 2):
