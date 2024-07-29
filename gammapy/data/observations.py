@@ -185,7 +185,13 @@ class Observation:
         if self._filtered_gti:
             return self._filtered_gti
 
-        self._filtered_gti = self.obs_filter.filter_gti(self._gti)
+        if self.obs_filter.time_filter is None and self._gti is not None:
+            self._filtered_gti = self._gti
+            return self._filtered_gti
+        elif self.obs_filter.time_filter is not None:
+            self._filtered_gti = GTI.from_time_intervals(self.obs_filter.time_filter)
+        else:
+            self._filtered_gti = self.obs_filter.filter_gti(self._gti)
         return self._filtered_gti
 
     @staticmethod
@@ -506,15 +512,15 @@ class Observation:
         """
         if not check_time_intervals(time_interval):
             raise ValueError(
-                "The time intervals should be an array of distinct intervals of astropy.time.Time."
+                "The time intervals should be a sorted array of distinct intervals of astropy.time.Time."
             )
 
         new_obs_filter = self.obs_filter.copy()
         new_ti = self.gti.select_time(time_interval)
         if new_ti.time_intervals is None:
             new_obs_filter.time_filter = [
-                self.gti.time_start,
-                self.gti.time_start + 1e-9 * u.s,
+                self.gti.time_start[0],
+                self.gti.time_start[0] + 1e-9 * u.s,
             ]
         else:
             new_obs_filter.time_filter = new_ti.time_intervals
@@ -754,7 +760,7 @@ class Observations(collections.abc.MutableSequence):
         new_obs_list = []
         if time_intervals is None or check_time_intervals(time_intervals) is False:
             raise ValueError(
-                "The time intervals should be an array of distinct intervals of astropy.time.Time."
+                "The time intervals should be a sorted array of distinct intervals of astropy.time.Time."
             )
         if np.array(time_intervals).shape == (2,):
             time_intervals = [time_intervals]
