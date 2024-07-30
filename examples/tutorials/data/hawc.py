@@ -38,11 +38,9 @@ This is how to access data and IRFs from the HAWC Crab event data release.
 
 """
 
-import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 import matplotlib.pyplot as plt
-from IPython.display import display
 from gammapy.data import DataStore, HDUIndexTable, ObservationTable
 from gammapy.datasets import MapDataset
 from gammapy.estimators import ExcessMapEstimator
@@ -53,7 +51,6 @@ from gammapy.maps import Map, MapAxis, WcsGeom
 # Check setup
 # -----------
 from gammapy.utils.check import check_tutorials_setup
-from gammapy.visualization import plot_theta_squared_table
 
 check_tutorials_setup()
 

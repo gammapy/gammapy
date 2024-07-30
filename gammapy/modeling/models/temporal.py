@@ -198,7 +198,7 @@ class TemporalModel(ModelBase):
         t_delta = u.Quantity(t_delta)
         random_state = get_random_state(random_state)
 
-        ontime = u.Quantity((t_max - t_min).sec, t_delta.unit)
+        ontime = (t_max - t_min).to("s")
         n_step = (ontime / t_delta).to_value("").item()
         t_step = ontime / n_step
 

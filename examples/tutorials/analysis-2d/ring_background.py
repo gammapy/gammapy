@@ -47,8 +47,6 @@ modelling and fitting.
 #
 
 import logging
-import numpy as np
-from scipy.stats import norm
 
 # %matplotlib inline
 import astropy.units as u
@@ -60,14 +58,14 @@ from gammapy.datasets import MapDatasetOnOff
 from gammapy.estimators import ExcessMapEstimator
 from gammapy.makers import RingBackgroundMaker
 from gammapy.visualization import plot_distribution
-
+from gammapy.utils.check import check_tutorials_setup
 log = logging.getLogger(__name__)
 
 
 ######################################################################
 # Check setup
 # -----------
-from gammapy.utils.check import check_tutorials_setup
+
 
 check_tutorials_setup()
 

@@ -21,6 +21,7 @@ from gammapy.irf import (
     EffectiveAreaTable2D,
     EnergyDependentMultiGaussPSF,
     EnergyDispersion2D,
+    PSFKernel,
     PSFMap,
     RecoPSFMap,
 )
@@ -276,7 +277,7 @@ def test_fake(sky_model, geom, geom_etrue):
 
     assert real_dataset.counts.data.shape == dataset.counts.data.shape
     assert_allclose(real_dataset.counts.data.sum(), 9525.299054, rtol=1e-5)
-    assert_allclose(dataset.counts.data.sum(), 9711)
+    assert_allclose(dataset.counts.data.sum(), 9709)
 
 
 @requires_data()
@@ -758,7 +759,6 @@ def test_map_fit_ray(sky_model, geom, geom_etrue):
     dataset_1 = get_map_dataset(geom, geom_etrue, name="test-1")
     dataset_2 = get_map_dataset(geom, geom_etrue, name="test-2")
     datasets = Datasets([dataset_1, dataset_2])
-
     models = Models(datasets.models)
     models.insert(0, sky_model)
 
@@ -772,9 +772,21 @@ def test_map_fit_ray(sky_model, geom, geom_etrue):
     models["test-1-bkg"].spectral_model.norm.value = 0.49
     models["test-2-bkg"].spectral_model.norm.value = 0.99
 
+    datasets.models = None
+
     actors = DatasetsActor(datasets)
+    assert len(actors.models) == 0
+
+    actors.models = models
+    assert len(actors.models) == len(models)
+    assert len(actors.parameters) == len(models.parameters.unique_parameters)
+
+    assert len(actors[0].models) == len(models) - 1
+
     fit = Fit()
     result = fit.run(datasets=actors)
+
+    assert_allclose(result.models.covariance.data, actors.models.covariance.data)
 
     assert result.success
     assert result.optimize_result.backend == "minuit"
@@ -1208,19 +1220,21 @@ def to_cube(image):
     # introduce a fake energy axis for now
     axis = MapAxis.from_edges([1, 10] * u.TeV, name="energy")
     geom = image.geom.to_cube([axis])
-    return WcsNDMap.from_geom(geom=geom, data=image.data)
+    return WcsNDMap.from_geom(geom=geom, data=image.data, unit=image.unit)
 
 
 @pytest.fixture
 def images():
     """Load some `counts`, `counts_off`, `acceptance_on`, `acceptance_off" images"""
     filename = "$GAMMAPY_DATA/tests/unbundled/hess/survey/hess_survey_snippet.fits.gz"
+    exposure_image = WcsNDMap.read(filename, hdu="EXPGAMMAMAP").copy(unit="m2s")
+
     return {
         "counts": to_cube(WcsNDMap.read(filename, hdu="ON")),
         "counts_off": to_cube(WcsNDMap.read(filename, hdu="OFF")),
         "acceptance": to_cube(WcsNDMap.read(filename, hdu="ONEXPOSURE")),
         "acceptance_off": to_cube(WcsNDMap.read(filename, hdu="OFFEXPOSURE")),
-        "exposure": to_cube(WcsNDMap.read(filename, hdu="EXPGAMMAMAP")),
+        "exposure": to_cube(exposure_image),
         "background": to_cube(WcsNDMap.read(filename, hdu="BACKGROUND")),
     }
 
@@ -1446,11 +1460,80 @@ def test_stack_onoff(images):
 
     assert_allclose(stacked.counts.data.sum(), 2 * dataset.counts.data.sum())
     assert_allclose(stacked.counts_off.data.sum(), 2 * dataset.counts_off.data.sum())
-    assert_allclose(
-        stacked.acceptance.data.sum(), dataset.data_shape[1] * dataset.data_shape[2]
-    )
-    assert_allclose(np.nansum(stacked.acceptance_off.data), 2.925793e08, rtol=1e-5)
+    assert_allclose(stacked.acceptance.data, 2 * dataset.acceptance.data)
+    assert_allclose(np.nansum(stacked.acceptance_off.data), 40351192, rtol=1e-5)
     assert_allclose(stacked.exposure.data, 2.0 * dataset.exposure.data)
+
+
+@requires_data()
+def test_stack_onoff_with_masked_input(images):
+    dataset = get_map_dataset_onoff(images)
+    dataset.mask_safe.data[0, 125:, 125:] = False
+    stacked = dataset.copy().to_masked()
+    stacked.stack(dataset)
+
+    assert_allclose(stacked.counts.data.sum(), 8054)
+    assert_allclose(
+        stacked.counts_off.data[0, :125, :125],
+        2 * dataset.counts_off.data[0, :125, :125],
+    )
+    assert_allclose(stacked.counts_off.data[0, 125:, 125:], 0)
+    assert_allclose(
+        stacked.acceptance.data[0, :125, :125],
+        2 * dataset.acceptance.data[0, :125, :125],
+    )
+    assert_allclose(stacked.acceptance.data[0, 125:, 125:], 0)
+    assert_allclose(stacked.acceptance.data.sum(), 7957.8296)
+    assert_allclose(np.nansum(stacked.acceptance_off.data), 37661880.0, rtol=1e-5)
+    assert_allclose(
+        stacked.exposure.data[0, :125, :125], 2.0 * dataset.exposure.data[0, :125, :125]
+    )
+    assert_allclose(stacked.exposure.data[0, 125:, 125:], 0)
+
+
+@requires_data()
+def test_stack_onoff_with_unmasked_input(images):
+    dataset = get_map_dataset_onoff(images)
+    dataset.mask_safe.data[0, 125:, 125:] = False
+    stacked = dataset.copy()
+    stacked.stack(dataset)
+
+    assert_allclose(
+        stacked.counts.data[0, :125, :125], 2 * dataset.counts.data[0, :125, :125]
+    )
+    assert_allclose(
+        stacked.counts.data[0, 125:, 125:], dataset.counts.data[0, 125:, 125:]
+    )
+    assert_allclose(
+        stacked.counts_off.data[0, :125, :125],
+        2 * dataset.counts_off.data[0, :125, :125],
+    )
+    assert_allclose(
+        stacked.counts_off.data[0, 125:, 125:], dataset.counts_off.data[0, 125:, 125:]
+    )
+    assert_allclose(
+        stacked.acceptance.data[0, :125, :125],
+        2 * dataset.acceptance.data[0, :125, :125],
+    )
+    assert_allclose(
+        stacked.acceptance.data[0, 125:, 125:], dataset.acceptance.data[0, 125:, 125:]
+    )
+    assert_allclose(
+        stacked.acceptance_off.data[0, :125, :125],
+        2 * dataset.acceptance_off.data[0, :125, :125],
+        rtol=1e-5,
+    )
+    assert_allclose(
+        stacked.acceptance_off.data[0, 125:, 125:],
+        dataset.acceptance_off.data[0, 125:, 125:],
+        rtol=1e-5,
+    )
+    assert_allclose(
+        stacked.exposure.data[0, :125, :125], 2.0 * dataset.exposure.data[0, :125, :125]
+    )
+    assert_allclose(
+        stacked.exposure.data[0, 125:, 125:], dataset.exposure.data[0, 125:, 125:]
+    )
 
 
 def test_dataset_cutout_aligned(geom):
@@ -1933,6 +2016,8 @@ def test_dataset_mixed_geom(tmpdir):
     dataset = MapDataset.from_geoms(
         geom=geom, geom_exposure=geom_exposure, geom_psf=geom_psf, geom_edisp=geom_edisp
     )
+    assert isinstance(dataset.psf, PSFMap)
+    assert isinstance(dataset._psf_kernel, PSFKernel)
 
     filename = tmpdir / "test.fits"
     dataset.write(filename)
@@ -1945,6 +2030,33 @@ def test_dataset_mixed_geom(tmpdir):
 
     assert isinstance(dataset.psf.psf_map.geom.region, CircleSkyRegion)
     assert isinstance(dataset.edisp.edisp_map.geom.region, CircleSkyRegion)
+
+    assert isinstance(dataset.psf, PSFMap)
+    assert dataset.psf.has_single_spatial_bin
+    assert isinstance(dataset._psf_kernel, PSFKernel)
+
+    geom_psf = WcsGeom.create(npix=1, axes=[rad_axis, energy_axis_true])
+    dataset = MapDataset.from_geoms(
+        geom=geom, geom_exposure=geom_exposure, geom_psf=geom_psf, geom_edisp=geom_edisp
+    )
+
+    assert isinstance(dataset.psf, PSFMap)
+    assert dataset.psf.has_single_spatial_bin
+    assert isinstance(dataset._psf_kernel, PSFKernel)
+    psf_1bin = dataset.psf.copy()
+
+    geom_psf = WcsGeom.create(npix=3, axes=[rad_axis, energy_axis_true])
+    dataset = MapDataset.from_geoms(
+        geom=geom, geom_exposure=geom_exposure, geom_psf=geom_psf, geom_edisp=geom_edisp
+    )
+
+    assert isinstance(dataset.psf, PSFMap)
+    assert not dataset.psf.has_single_spatial_bin
+    assert dataset._psf_kernel is None
+
+    dataset.psf.psf_map = psf_1bin.psf_map
+    assert dataset.psf.has_single_spatial_bin
+    assert isinstance(dataset._psf_kernel, PSFKernel)
 
     geom_psf_reco = RegionGeom.create(
         "icrs;circle(0, 0, 0.2)", axes=[rad_axis, energy_axis]
@@ -2095,3 +2207,27 @@ def test_to_masked():
     )
     d1 = datasetonoff.to_masked()
     assert_allclose(d1.counts.data.sum(), 170)
+
+
+def test_get_psf_kernel_multiscale():
+    energy_axis = MapAxis.from_edges(
+        np.logspace(-1.0, 1.0, 4), unit="TeV", name="energy_true"
+    )
+    geom = WcsGeom.create(binsz=0.02 * u.deg, width=4.0 * u.deg, axes=[energy_axis])
+
+    psf = PSFMap.from_gauss(energy_axis, sigma=[0.1, 0.2, 0.3] * u.deg)
+
+    kernel = psf.get_psf_kernel(geom=geom, max_radius="3 deg")
+    assert_allclose(kernel.psf_kernel_map.geom.width, 2 * 3 * u.deg, atol=0.02)
+
+    kernel = psf.get_psf_kernel(geom=geom, max_radius=None)
+
+    geom_image = kernel.psf_kernel_map.geom.to_image()
+    coords = geom_image.get_coord()
+    sep = coords.skycoord.separation(geom_image.center_skydir)
+
+    widths = [0.74, 1.34, 1.34] * u.deg
+    for im, width in zip(kernel.psf_kernel_map.iter_by_image(), widths):
+        mask = sep > width
+        assert np.all(im.data[mask] == 0)
+        assert np.any(im.data[~mask] > 0)

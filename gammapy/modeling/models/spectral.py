@@ -27,7 +27,7 @@ from gammapy.utils.interpolation import (
 )
 from gammapy.utils.roots import find_roots
 from gammapy.utils.scripts import make_path
-from ..covariance import Covariance
+from ..covariance import CovarianceMixin
 from .core import ModelBase
 
 log = logging.getLogger(__name__)
@@ -703,7 +703,7 @@ class ConstantSpectralModel(SpectralModel):
         return np.ones(np.atleast_1d(energy).shape) * const
 
 
-class CompoundSpectralModel(SpectralModel):
+class CompoundSpectralModel(CovarianceMixin, SpectralModel):
     """Arithmetic combination of two spectral models.
 
     For more information see :ref:`compound-spectral-model`.
@@ -778,31 +778,6 @@ class CompoundSpectralModel(SpectralModel):
         model2 = model2_cls.from_dict({"spectral": data["model2"]})
         op = getattr(operator, data["operator"])
         return cls(model1, model2, op)
-
-    def _check_covariance(self):
-        if not self.parameters == self._covariance.parameters:
-            self._covariance = Covariance.from_stack(
-                [model.covariance for model in self._models]
-            )
-
-    @property
-    def covariance(self):
-        """Covariance as a `~gammapy.modeling.Covariance` object."""
-        self._check_covariance()
-
-        for model in self._models:
-            self._covariance.set_subcovariance(model.covariance)
-
-        return self._covariance
-
-    @covariance.setter
-    def covariance(self, covariance):
-        self._check_covariance()
-        self._covariance.data = covariance
-
-        for model in self._models:
-            subcovar = self._covariance.get_subcovariance(model.covariance.parameters)
-            model.covariance = subcovar
 
 
 class PowerLawSpectralModel(SpectralModel):

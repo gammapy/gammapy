@@ -3129,7 +3129,7 @@ class LabelMapAxis:
         if not len(unique_labels) == len(labels):
             raise ValueError("Node labels must be unique")
 
-        self._labels = unique_labels
+        self._labels = np.array(labels)
         self._name = name
 
     @property

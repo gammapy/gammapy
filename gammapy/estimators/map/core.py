@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
+from copy import deepcopy
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
@@ -75,8 +76,9 @@ VALID_QUANTITIES = [
     "npred",
     "npred_excess",
     "stat",
-    "stat_scan",
     "stat_null",
+    "stat_scan",
+    "dnde_scan_values",
     "niter",
     "is_ul",
     "counts",
@@ -92,6 +94,8 @@ OPTIONAL_QUANTITIES_COMMON = [
     "npred_excess",
     "stat",
     "stat_null",
+    "stat_scan",
+    "dnde_scan_values",
     "niter",
     "is_ul",
     "counts",
@@ -486,6 +490,12 @@ class FluxMaps:
         """Fit statistic scan value."""
         self._check_quantity("stat_scan")
         return self._data["stat_scan"]
+
+    @property
+    def dnde_scan_values(self):
+        """Fit statistic norm scan values."""
+        self._check_quantity("dnde_scan_values")
+        return self._data["dnde_scan_values"]
 
     @property
     def stat(self):
@@ -1092,6 +1102,31 @@ class FluxMaps:
             str(make_path(filename)), memmap=False, checksum=checksum
         ) as hdulist:
             return cls.from_hdulist(hdulist, checksum=checksum)
+
+    def copy(self, reference_model=None):
+        """Deep copy
+
+        Parameters
+        ----------
+
+        reference_model : `~gammapy.modeling.models.SkyModel`, optional
+            The reference model to use for conversions. If None, the originial model is copied.
+            Flux maps have been obtained for a specific reference model.
+            Changing it will change the fluxes. Handle with care.
+        Returns
+        -------
+        flux_maps : `~gammapy.estimators.FluxMaps`
+            Copied flux maps object.
+
+        """
+
+        new = deepcopy(self)
+        if reference_model is not None:
+            new._reference_model = reference_model.copy()
+            log.warning(
+                "Changing the reference model will change the fluxes. Handle with care."
+            )
+        return new
 
     def slice_by_idx(self, slices):
         """Slice flux maps by index.

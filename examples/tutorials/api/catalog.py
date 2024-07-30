@@ -54,13 +54,13 @@ import astropy.units as u
 # %matplotlib inline
 import matplotlib.pyplot as plt
 from IPython.display import display
+from gammapy.catalog import SourceCatalog4FGL
 from gammapy.catalog import CATALOG_REGISTRY
 
 ######################################################################
 # Check setup
 # -----------
 from gammapy.utils.check import check_tutorials_setup
-
 check_tutorials_setup()
 
 
@@ -97,7 +97,7 @@ print(CATALOG_REGISTRY)
 # So a catalog can be loaded directly from its corresponding class
 #
 
-from gammapy.catalog import SourceCatalog4FGL
+
 
 catalog = SourceCatalog4FGL()
 print("Number of sources :", len(catalog.table))

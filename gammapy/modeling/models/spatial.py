@@ -1497,7 +1497,7 @@ class TemplateSpatialModel(SpatialModel):
         data["spatial"]["unit"] = str(self.map.unit)
         return data
 
-    def write(self, overwrite=False):
+    def write(self, overwrite=False, filename=None):
         """
         Write the map.
 
@@ -1506,10 +1506,16 @@ class TemplateSpatialModel(SpatialModel):
         overwrite: bool, optional
             Overwrite existing file.
             Default is False, which will raise a warning if the template file exists already.
+        filename: str, optional
+            Filename of the template model. By default, the template model
+            will be saved with the `TemplateSpatialModel.filename` attribute,
+            if `filename` is provided this attribute will be updated.
         """
+        if filename is not None:
+            self.filename = filename
         if self.filename is None:
             raise IOError("Missing filename")
-        elif os.path.isfile(make_path(self.filename)) and not overwrite:
+        if os.path.isfile(make_path(self.filename)) and not overwrite:
             log.warning("Template file already exits, and overwrite is False")
         else:
             self.map.write(self.filename, overwrite=overwrite)

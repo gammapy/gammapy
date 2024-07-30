@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
+from copy import deepcopy
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
@@ -58,6 +59,28 @@ def test_compute_flux_spatial(evaluator):
 
 def test_compute_flux_spatial_no_psf(evaluator):
     # check that spatial integration is not performed in the absence of a psf
+
+    evaluator_gaussian = deepcopy(evaluator)
+    model = evaluator.model.copy()
+    model.spatial_model = GaussianSpatialModel(
+        lon_0=0 * u.deg, lat_0=0 * u.deg, sigma=0.001 * u.deg, frame="galactic"
+    )
+    evaluator_gaussian.model = model
+
+    evaluator_gaussian.model.apply_irf["psf"] = False
+    flux = evaluator_gaussian.compute_flux_spatial()
+    evaluator_gaussian.model.apply_irf["psf"] = True
+    assert_allclose(flux, 1.0)
+
+    evaluator_gaussian.psf = None
+    flux = evaluator_gaussian.compute_flux_spatial()
+    assert_allclose(flux, 1.0)
+
+    evaluator.model.apply_irf["psf"] = False
+    flux = evaluator.compute_flux_spatial()
+    evaluator.model.apply_irf["psf"] = True
+    assert_allclose(flux, 1.0)
+
     evaluator.psf = None
     flux = evaluator.compute_flux_spatial()
     assert_allclose(flux, 1.0)

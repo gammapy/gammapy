@@ -352,9 +352,9 @@ class LogSpiral:
         x, y : `~numpy.ndarray`
             Position (x, y).
         """
-        if (theta is None) and not (radius is None):
+        if (theta is None) and radius is not None:
             theta = self.theta(radius, spiralarm_index=spiralarm_index)
-        elif (radius is None) and not (theta is None):
+        elif (radius is None) and theta is not None:
             radius = self.radius(theta, spiralarm_index=spiralarm_index)
         else:
             raise ValueError("Specify only one of: theta, radius")

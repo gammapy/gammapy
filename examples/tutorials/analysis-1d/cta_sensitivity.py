@@ -21,7 +21,7 @@ We will be using the following Gammapy class:
 -  `~gammapy.estimators.SensitivityEstimator`
 
 """
-
+from cycler import cycler
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
@@ -181,7 +181,7 @@ display(sensitivity_table)
 # Plot the sensitivity curve
 #
 
-from cycler import cycler
+
 
 fig, ax = plt.subplots()
 
