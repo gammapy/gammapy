@@ -111,14 +111,17 @@ class Observation:
         """Background of the observation."""
         bkg = self._bkg
         # used for backward compatibility of old HESS data
-        if (
-            bkg
-            and self._meta
-            and self._meta.optional
-            and self._meta.optional["CREATOR"] == "SASH FITS::EventListWriter"
-            and self.meta.optional["HDUVERS"] == "0.2"
-        ):
-            bkg._fov_alignment = FoVAlignment.REVERSE_LON_RADEC
+        try:
+            if (
+                bkg
+                and self._meta
+                and self._meta.optional
+                and self._meta.optional["CREATOR"] == "SASH FITS::EventListWriter"
+                and self._meta.optional["HDUVERS"] == "0.2"
+            ):
+                bkg._fov_alignment = FoVAlignment.REVERSE_LON_RADEC
+        except KeyError:
+            pass
         return bkg
 
     @bkg.setter
@@ -157,7 +160,7 @@ class Observation:
     def available_hdus(self):
         """Which HDUs are available."""
         available_hdus = []
-        keys = ["_events", "_gti", "aeff", "edisp", "psf", "bkg", "_rad_max"]
+        keys = ["_events", "_gti", "aeff", "edisp", "psf", "_bkg", "_rad_max"]
         hdus = ["events", "gti", "aeff", "edisp", "psf", "bkg", "rad_max"]
         for key, hdu in zip(keys, hdus):
             available = self.__dict__.get(key, False)
