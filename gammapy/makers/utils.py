@@ -14,8 +14,6 @@ from gammapy.stats import WStatCountsStatistic
 from gammapy.utils.coordinates import sky_to_fov
 from gammapy.utils.regions import compound_region_to_regions
 
-REVERSE_FOV_LON = False
-
 __all__ = [
     "make_counts_rad_max",
     "make_edisp_kernel_map",
@@ -84,14 +82,14 @@ def _get_fov_coords(pointing, irf, geom, use_region_center=True, obstime=None):
             fov_lon, fov_lat = sky_to_fov(
                 altaz_coord.az, altaz_coord.alt, pointing_altaz.az, pointing_altaz.alt
             )
-        elif irf.fov_alignment == FoVAlignment.RADEC:
+        elif irf.fov_alignment in [FoVAlignment.RADEC, FoVAlignment.REVERSE_LON_RADEC]:
             fov_lon, fov_lat = sky_to_fov(
                 sky_coord.icrs.ra,
                 sky_coord.icrs.dec,
                 pointing_icrs.icrs.ra,
                 pointing_icrs.icrs.dec,
             )
-            if REVERSE_FOV_LON:
+            if irf.fov_alignment == FoVAlignment.REVERSE_LON_RADEC:
                 fov_lon = -fov_lon
         else:
             raise ValueError(

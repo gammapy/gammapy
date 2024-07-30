@@ -16,6 +16,7 @@ from astropy.units import Quantity
 from astropy.utils import lazyproperty
 import matplotlib.pyplot as plt
 from gammapy.utils.deprecation import GammapyDeprecationWarning
+from gammapy.irf import FoVAlignment
 from gammapy.utils.fits import LazyFitsData, earth_location_to_dict
 from gammapy.utils.metadata import CreatorMetaData, TargetMetaData, TimeInfoMetaData
 from gammapy.utils.scripts import make_path
@@ -65,7 +66,7 @@ class Observation:
     aeff = LazyFitsData(cache=False)
     edisp = LazyFitsData(cache=False)
     psf = LazyFitsData(cache=False)
-    bkg = LazyFitsData(cache=False)
+    _bkg = LazyFitsData(cache=False)
     _rad_max = LazyFitsData(cache=True)
     _events = LazyFitsData(cache=False)
     _gti = LazyFitsData(cache=True)
@@ -90,7 +91,7 @@ class Observation:
         self.aeff = aeff
         self.edisp = edisp
         self.psf = psf
-        self.bkg = bkg
+        self._bkg = bkg
         self._rad_max = rad_max
         self._gti = gti
         self._events = events
@@ -104,6 +105,25 @@ class Observation:
             return self.to_html()
         except AttributeError:
             return f"<pre>{html.escape(str(self))}</pre>"
+
+    @property
+    def bkg(self):
+        """Background of the observation."""
+        bkg = self._bkg
+        # used for backward compatibility of old HESS data
+        if (
+            bkg
+            and self._meta
+            and self._meta.optional
+            and self._meta.optional["CREATOR"] == "SASH FITS::EventListWriter"
+            and self.meta.optional["HDUVERS"] == "0.2"
+        ):
+            bkg._fov_alignment = FoVAlignment.REVERSE_LON_RADEC
+        return bkg
+
+    @bkg.setter
+    def bkg(self, value):
+        self._bkg = value
 
     @property
     def meta(self):
