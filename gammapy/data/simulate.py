@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Simulate observations"""
+
 from itertools import repeat
 from gammapy.utils import parallel as parallel
 from gammapy.utils.scripts import make_path
@@ -41,6 +42,7 @@ class ObservationsEventsSampler(parallel.ParallelMixin):
             outdir.mkdir(exist_ok=True, parents=True)
         self.outdir = outdir
         self.n_jobs = n_jobs
+        self.parallel_backend = parallel_backend
         self.overwrite = overwrite
 
         if sampler_kwargs is None:
@@ -86,12 +88,16 @@ class ObservationsEventsSampler(parallel.ParallelMixin):
             Can be None to only sample background events. Default is None.
         """
 
+        n_jobs = min(self.n_jobs, len(observations))
+
         observations = parallel.run_multiprocessing(
             self.simulate_observation,
             zip(
                 observations,
                 repeat(models),
             ),
+            backend=self.parallel_backend,
+            pool_kwargs=dict(processes=n_jobs),
             task_name="Simulate observations",
         )
         if self.outdir is None:
