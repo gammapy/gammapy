@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 
 
 def convolved_map_dataset_counts_statistics(
-    dataset, kernel, mask, correlate_off, output_full=False
+    dataset, kernel, mask, correlate_off, full_output=False
 ):
     """Return a `CountsStatistic` object.
 
@@ -32,7 +32,7 @@ def convolved_map_dataset_counts_statistics(
         Mask map.
     correlate_off : bool
         Correlate OFF events.
-    output_full : bool
+    full_output : bool
         Whether to return the full output for a `MapDatasetOnOff` which includes a `Maps` object
         for correlated on, correlated off and alpha. Default is False.
 
@@ -72,7 +72,7 @@ def convolved_map_dataset_counts_statistics(
             with np.errstate(invalid="ignore", divide="ignore"):
                 alpha = acceptance_on_convolve / acceptance_off
 
-        if output_full:
+        if full_output:
             maps = Maps(
                 acceptance_on=acceptance_on, acceptance_off=acceptance_off, alpha=alpha
             )
@@ -147,7 +147,7 @@ class ExcessMapEstimator(Estimator):
         If False, apply the estimator in each energy bin of the parent dataset.
         If True, apply the estimator in only one bin defined by the energy edges of the parent dataset.
         Default is False.
-    output_full : bool
+    full_output : bool
         Whether to return the full output for a `~MapDatasetOnOff` which includes a `~Maps` object
         for correlated on, correlated off and alpha. Default is False.
 
@@ -191,7 +191,7 @@ class ExcessMapEstimator(Estimator):
         bkg_syst_fraction_sensitivity=0.05,
         apply_threshold_sensitivity=False,
         sum_over_energy_groups=False,
-        output_full=False,
+        full_output=False,
     ):
         self.correlation_radius = correlation_radius
         self.n_sigma = n_sigma
@@ -204,7 +204,7 @@ class ExcessMapEstimator(Estimator):
         self.energy_edges = energy_edges
         self.sum_over_energy_groups = sum_over_energy_groups
         self.correlate_off = correlate_off
-        self.output_full = output_full
+        self.full_output = full_output
 
         if spectral_model is None:
             spectral_model = PowerLawSpectralModel(index=2)
@@ -357,13 +357,13 @@ class ExcessMapEstimator(Estimator):
 
         mask = self.estimate_mask_default(dataset)
 
-        if self.output_full:
+        if self.full_output:
             counts_stat, optional_maps = convolved_map_dataset_counts_statistics(
                 dataset,
                 kernel,
                 mask,
                 self.correlate_off,
-                self.output_full,
+                self.full_output,
             )
         else:
             counts_stat = convolved_map_dataset_counts_statistics(
@@ -438,7 +438,7 @@ class ExcessMapEstimator(Estimator):
             meta["gamma_min_sensitivity"] = self.gamma_min_sensitivity
             meta["bkg_syst_fraction_sensitivity"] = self.bkg_syst_fraction_sensitivity
 
-        if self.output_full:
+        if self.full_output:
             return FluxMaps.from_maps(
                 maps=maps,
                 meta=meta,
