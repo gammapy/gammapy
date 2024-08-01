@@ -173,7 +173,6 @@ def test_significance_map_estimator_map_dataset(simple_dataset):
 
 
 def test_significance_map_estimator_map_dataset_mask_safe(simple_dataset_mask_safe):
-
     estimator = ExcessMapEstimator(0.1 * u.deg, selection_optional=["all"])
 
     result = estimator.run(simple_dataset_mask_safe)
@@ -359,7 +358,6 @@ def test_excess_map_estimator_map_dataset_on_off_with_correlation_model(
 def test_excess_map_estimator_map_dataset_on_off_reco_exposure(
     simple_dataset_on_off,
 ):
-
     model = SkyModel(
         PowerLawSpectralModel(amplitude="1e-9 cm-2 s-1TeV-1"),
         GaussianSpatialModel(
@@ -439,3 +437,15 @@ def test_joint_excess_map(simple_dataset):
     assert_allclose(
         result["df"].data, 2 * (~np.isnan(result["significance"].data)), rtol=1e-3
     )
+
+
+def test_maps_full_output(simple_dataset_on_off):
+    estimator_full = ExcessMapEstimator(output_full=True)
+    result_full, maps = estimator_full.run(simple_dataset_on_off)
+
+    assert maps.geom.npix[0] == 20
+    assert len(maps) == 3
+
+    assert_allclose(maps["acceptance_on"].data[:, 10, 10], 2, atol=1e-3)
+    assert_allclose(maps["acceptance_off"].data[:, 10, 10], 2, atol=1e-3)
+    assert_allclose(maps["alpha"].data[:, 10, 10], 1, atol=1e-3)

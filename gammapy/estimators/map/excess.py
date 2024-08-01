@@ -5,7 +5,7 @@ import numpy as np
 from astropy.convolution import Tophat2DKernel
 from astropy.coordinates import Angle
 from gammapy.datasets import MapDataset, MapDatasetOnOff
-from gammapy.maps import Map
+from gammapy.maps import Map, Maps
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from gammapy.stats import CashCountsStatistic, WStatCountsStatistic
 from ..core import Estimator
@@ -17,7 +17,9 @@ __all__ = ["ExcessMapEstimator"]
 log = logging.getLogger(__name__)
 
 
-def convolved_map_dataset_counts_statistics(dataset, kernel, mask, correlate_off):
+def convolved_map_dataset_counts_statistics(
+    dataset, kernel, mask, correlate_off, output_full=False
+):
     """Return a `CountsStatistic` object.
 
     Parameters
@@ -30,6 +32,9 @@ def convolved_map_dataset_counts_statistics(dataset, kernel, mask, correlate_off
         Mask map.
     correlate_off : bool
         Correlate OFF events.
+    output_full : bool
+        Whether to return the full output for a `MapDatasetOnOff` which includes a `Maps` object
+        for correlated on, correlated off and alpha. Default is False.
 
     Returns
     -------
@@ -67,9 +72,17 @@ def convolved_map_dataset_counts_statistics(dataset, kernel, mask, correlate_off
             with np.errstate(invalid="ignore", divide="ignore"):
                 alpha = acceptance_on_convolve / acceptance_off
 
-        return WStatCountsStatistic(
-            n_on_conv.data, n_off.data, alpha.data, npred_sig_convolve.data
-        )
+        if output_full:
+            maps = Maps(
+                acceptance_on=acceptance_on, acceptance_off=acceptance_off, alpha=alpha
+            )
+            return WStatCountsStatistic(
+                n_on_conv.data, n_off.data, alpha.data, npred_sig_convolve.data
+            ), maps
+        else:
+            return WStatCountsStatistic(
+                n_on_conv.data, n_off.data, alpha.data, npred_sig_convolve.data
+            )
     else:
         npred = dataset.npred() * mask
         background_conv = npred.convolve(kernel_data)
@@ -128,12 +141,15 @@ class ExcessMapEstimator(Estimator):
         Correlate OFF events. Default is True.
     spectral_model : `~gammapy.modeling.models.SpectralModel`
         Spectral model used for the computation of the flux map.
-        If None, a Power Law of index 2 is assumed (default).
+        If None, a `~PowerLawSpectralModel` of index 2 is assumed (default).
     sum_over_energy_groups : bool
         Only used if energy_edges is None.
-        If False apply the estimator in each energy bin of the parent dataset.
-        If True apply the estimator in only one bin defined by the energy edges of the parent dataset.
+        If False, apply the estimator in each energy bin of the parent dataset.
+        If True, apply the estimator in only one bin defined by the energy edges of the parent dataset.
         Default is False.
+    output_full : bool
+        Whether to return the full output for a `~MapDatasetOnOff` which includes a `~Maps` object
+        for correlated on, correlated off and alpha. Default is False.
 
     Examples
     --------
@@ -175,6 +191,7 @@ class ExcessMapEstimator(Estimator):
         bkg_syst_fraction_sensitivity=0.05,
         apply_threshold_sensitivity=False,
         sum_over_energy_groups=False,
+        output_full=False,
     ):
         self.correlation_radius = correlation_radius
         self.n_sigma = n_sigma
@@ -187,6 +204,7 @@ class ExcessMapEstimator(Estimator):
         self.energy_edges = energy_edges
         self.sum_over_energy_groups = sum_over_energy_groups
         self.correlate_off = correlate_off
+        self.output_full = output_full
 
         if spectral_model is None:
             spectral_model = PowerLawSpectralModel(index=2)
@@ -339,9 +357,18 @@ class ExcessMapEstimator(Estimator):
 
         mask = self.estimate_mask_default(dataset)
 
-        counts_stat = convolved_map_dataset_counts_statistics(
-            dataset, kernel, mask, self.correlate_off
-        )
+        if self.output_full:
+            counts_stat, optional_maps = convolved_map_dataset_counts_statistics(
+                dataset,
+                kernel,
+                mask,
+                self.correlate_off,
+                self.output_full,
+            )
+        else:
+            counts_stat = convolved_map_dataset_counts_statistics(
+                dataset, kernel, mask, self.correlate_off
+            )
 
         maps = {}
         maps["npred"] = Map.from_geom(geom, data=counts_stat.n_on)
@@ -411,9 +438,17 @@ class ExcessMapEstimator(Estimator):
             meta["gamma_min_sensitivity"] = self.gamma_min_sensitivity
             meta["bkg_syst_fraction_sensitivity"] = self.bkg_syst_fraction_sensitivity
 
-        return FluxMaps.from_maps(
-            maps=maps,
-            meta=meta,
-            reference_model=SkyModel(self.spectral_model),
-            sed_type="likelihood",
-        )
+        if self.output_full:
+            return FluxMaps.from_maps(
+                maps=maps,
+                meta=meta,
+                reference_model=SkyModel(self.spectral_model),
+                sed_type="likelihood",
+            ), optional_maps
+        else:
+            return FluxMaps.from_maps(
+                maps=maps,
+                meta=meta,
+                reference_model=SkyModel(self.spectral_model),
+                sed_type="likelihood",
+            )
