@@ -5,7 +5,7 @@ import numpy as np
 from astropy.convolution import Tophat2DKernel
 from astropy.coordinates import Angle
 from gammapy.datasets import MapDataset, MapDatasetOnOff
-from gammapy.maps import Map, Maps
+from gammapy.maps import Map
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from gammapy.stats import CashCountsStatistic, WStatCountsStatistic
 from ..core import Estimator
@@ -17,10 +17,8 @@ __all__ = ["ExcessMapEstimator"]
 log = logging.getLogger(__name__)
 
 
-def convolved_map_dataset_counts_statistics(
-    dataset, kernel, mask, correlate_off, full_output=False
-):
-    """Return a `CountsStatistic` object.
+def _get_convolved_maps(dataset, kernel, mask, correlate_off):
+    """Return convolved maps.
 
     Parameters
     ----------
@@ -32,14 +30,11 @@ def convolved_map_dataset_counts_statistics(
         Mask map.
     correlate_off : bool
         Correlate OFF events.
-    full_output : bool
-        Whether to return the full output for a `MapDatasetOnOff` which includes a `Maps` object
-        for correlated on, correlated off and alpha. Default is False.
 
     Returns
     -------
-    counts_statistic : `~gammapy.stats.CashCountsStatistic` or `~gammapy.stats.WStatCountsStatistic`
-        The counts statistic.
+    convolved_maps : dict
+        Dictionary of convolved maps.
     """
     # Kernel is modified later make a copy here
     kernel = copy.deepcopy(kernel)
@@ -50,19 +45,20 @@ def convolved_map_dataset_counts_statistics(
     n_on = dataset.counts * mask
     n_on_conv = np.rint(n_on.convolve(kernel_data).data)
 
+    convolved_maps = {"n_on_conv": n_on_conv}
+
     if isinstance(dataset, MapDatasetOnOff):
         n_off = dataset.counts_off * mask
         npred_sig = dataset.npred_signal() * mask
         acceptance_on = dataset.acceptance * mask
         acceptance_off = dataset.acceptance_off * mask
-
         npred_sig_convolve = npred_sig.convolve(kernel_data)
         if correlate_off:
             background = dataset.background * mask
             background.data[dataset.acceptance_off == 0] = 0.0
             background_conv = background.convolve(kernel_data)
-
             n_off = n_off.convolve(kernel_data)
+
             with np.errstate(invalid="ignore", divide="ignore"):
                 alpha = background_conv / n_off
 
@@ -71,21 +67,54 @@ def convolved_map_dataset_counts_statistics(
 
             with np.errstate(invalid="ignore", divide="ignore"):
                 alpha = acceptance_on_convolve / acceptance_off
-
-        if full_output:
-            maps = Maps(
-                acceptance_on=acceptance_on, acceptance_off=acceptance_off, alpha=alpha
-            )
-            return WStatCountsStatistic(
-                n_on_conv.data, n_off.data, alpha.data, npred_sig_convolve.data
-            ), maps
-        else:
-            return WStatCountsStatistic(
-                n_on_conv.data, n_off.data, alpha.data, npred_sig_convolve.data
-            )
+        convolved_maps.update(
+            {
+                "n_off": n_off,
+                "npred_sig_convolve": npred_sig_convolve,
+                "acceptance_on": acceptance_on,
+                "acceptance_off": acceptance_off,
+                "alpha": alpha,
+            }
+        )
     else:
         npred = dataset.npred() * mask
         background_conv = npred.convolve(kernel_data)
+        convolved_maps.update(
+            {
+                "background_conv": background_conv,
+            }
+        )
+
+    return convolved_maps
+
+
+def convolved_map_dataset_counts_statistics(convolved_maps, stat_type):
+    """Return a `CountsStatistic` object.
+
+    Parameters
+    ----------
+    convolved_maps : dict
+        Dictionary of convolved maps.
+    stat_type :
+
+    Returns
+    -------
+    counts_statistic : `~gammapy.stats.CashCountsStatistic` or `~gammapy.stats.WStatCountsStatistic`
+        The counts statistic.
+    """
+
+    if stat_type == "wstat":
+        n_on_conv = convolved_maps["n_on_conv"]
+        n_off = convolved_maps["n_off"]
+        alpha = convolved_maps["alpha"]
+        npred_sig_convolve = convolved_maps["npred_sig_convolve"]
+
+        return WStatCountsStatistic(
+            n_on_conv.data, n_off.data, alpha.data, npred_sig_convolve.data
+        )
+    elif stat_type == "cash":
+        n_on_conv = convolved_maps["n_on_conv"]
+        background_conv = convolved_maps["background_conv"]
         return CashCountsStatistic(n_on_conv.data, background_conv.data)
 
 
@@ -130,6 +159,9 @@ class ExcessMapEstimator(Estimator):
             * "errn-errp": estimate asymmetric errors.
             * "ul": estimate upper limits.
             * "sensitivity": estimate sensitivity for a given significance
+            * "alpha":
+            * "acceptance_on":
+            * "acceptance_off":
 
         Default is None so the optional steps are not executed.
     energy_edges : list of `~astropy.units.Quantity`, optional
@@ -175,7 +207,14 @@ class ExcessMapEstimator(Estimator):
     """
 
     tag = "ExcessMapEstimator"
-    _available_selection_optional = ["errn-errp", "ul", "sensitivity"]
+    _available_selection_optional = [
+        "errn-errp",
+        "ul",
+        "sensitivity",
+        "alpha",
+        "acceptance_on",
+        "acceptance_off",
+    ]
 
     def __init__(
         self,
@@ -352,23 +391,13 @@ class ExcessMapEstimator(Estimator):
         """
 
         kernel = self.estimate_kernel(dataset)
-
         geom = dataset.counts.geom
-
         mask = self.estimate_mask_default(dataset)
 
-        if self.full_output:
-            counts_stat, optional_maps = convolved_map_dataset_counts_statistics(
-                dataset,
-                kernel,
-                mask,
-                self.correlate_off,
-                self.full_output,
-            )
-        else:
-            counts_stat = convolved_map_dataset_counts_statistics(
-                dataset, kernel, mask, self.correlate_off
-            )
+        convolved_maps = _get_convolved_maps(dataset, kernel, mask, self.correlate_off)
+        counts_stat = convolved_map_dataset_counts_statistics(
+            convolved_maps=convolved_maps, stat_type=dataset.stat_type
+        )
 
         maps = {}
         maps["npred"] = Map.from_geom(geom, data=counts_stat.n_on)
@@ -423,6 +452,27 @@ class ExcessMapEstimator(Estimator):
                     )
                 excess = Map.from_geom(geom=geom, data=excess_counts)
                 maps["norm_sensitivity"] = excess / reco_exposure
+            if "alpha" in self.selection_optional:
+                if not isinstance(dataset, MapDatasetOnOff):
+                    raise ValueError(
+                        "This option can only be selected for 'MapDatasetOnOff."
+                    )
+                else:
+                    maps["alpha"] = convolved_maps["alpha"]
+            if "acceptance_on" in self.selection_optional:
+                if not isinstance(dataset, MapDatasetOnOff):
+                    raise ValueError(
+                        "This option can only be selected for 'MapDatasetOnOff."
+                    )
+                else:
+                    maps["acceptance_on"] = convolved_maps["acceptance_on"]
+            if "acceptance_off" in self.selection_optional:
+                if not isinstance(dataset, MapDatasetOnOff):
+                    raise ValueError(
+                        "This option can only be selected for 'MapDatasetOnOff."
+                    )
+                else:
+                    maps["acceptance_off"] = convolved_maps["acceptance_off"]
 
         # return nan values outside mask
         for name in maps:
@@ -438,17 +488,9 @@ class ExcessMapEstimator(Estimator):
             meta["gamma_min_sensitivity"] = self.gamma_min_sensitivity
             meta["bkg_syst_fraction_sensitivity"] = self.bkg_syst_fraction_sensitivity
 
-        if self.full_output:
-            return FluxMaps.from_maps(
-                maps=maps,
-                meta=meta,
-                reference_model=SkyModel(self.spectral_model),
-                sed_type="likelihood",
-            ), optional_maps
-        else:
-            return FluxMaps.from_maps(
-                maps=maps,
-                meta=meta,
-                reference_model=SkyModel(self.spectral_model),
-                sed_type="likelihood",
-            )
+        return FluxMaps.from_maps(
+            maps=maps,
+            meta=meta,
+            reference_model=SkyModel(self.spectral_model),
+            sed_type="likelihood",
+        )

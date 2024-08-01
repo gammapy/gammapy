@@ -439,13 +439,12 @@ def test_joint_excess_map(simple_dataset):
     )
 
 
-def test_maps_full_output(simple_dataset_on_off):
-    estimator_full = ExcessMapEstimator(output_full=True)
-    result_full, maps = estimator_full.run(simple_dataset_on_off)
+def test_maps_alpha(simple_dataset_on_off):
+    estimator = ExcessMapEstimator(
+        selection_optional=["alpha", "acceptance_on", "acceptance_off"]
+    )
+    result = estimator.run(simple_dataset_on_off)
 
-    assert maps.geom.npix[0] == 20
-    assert len(maps) == 3
-
-    assert_allclose(maps["acceptance_on"].data[:, 10, 10], 2, atol=1e-3)
-    assert_allclose(maps["acceptance_off"].data[:, 10, 10], 2, atol=1e-3)
-    assert_allclose(maps["alpha"].data[:, 10, 10], 1, atol=1e-3)
+    assert_allclose(result["acceptance_on"].data[:, 10, 10], 2, atol=1e-3)
+    assert_allclose(result["acceptance_off"].data[:, 10, 10], 2, atol=1e-3)
+    assert_allclose(result["alpha"].data[:, 10, 10], 1, atol=1e-3)
