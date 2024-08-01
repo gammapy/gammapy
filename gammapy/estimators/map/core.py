@@ -85,6 +85,8 @@ VALID_QUANTITIES = [
     "success",
     "n_dof",
     "alpha",
+    "acceptance_on",
+    "acceptance_off",
 ]
 
 
