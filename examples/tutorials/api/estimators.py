@@ -21,10 +21,6 @@ Key Features
    -   **Excess Calculation (Backward Folding)**: Use the analytical solution by Li and Ma
        for significance based on excess counts, currently available in `~gammapy.estimators.ExcessMapEstimator`.
 
--  **Energy Edges**: Estimators group the parent dataset energy bins based on input energy edges,
-   which may not exactly match the output bins. Specific binning must be defined in the parent
-   dataset geometry to achieve that.
-
 For further information on these details please refer to :doc:`</user-guide/estimators>`.
 
 The setup
@@ -35,19 +31,12 @@ The setup
 import numpy as np
 import matplotlib.pyplot as plt
 from astropy import units as u
-from astropy.coordinates import SkyCoord
 from IPython.display import display
-from gammapy.datasets import MapDataset, SpectrumDatasetOnOff, Datasets
-from gammapy.estimators import (
-    FluxPointsEstimator,
-    FluxProfileEstimator,
-    TSMapEstimator,
-)
+from gammapy.datasets import SpectrumDatasetOnOff, Datasets
+from gammapy.estimators import FluxPointsEstimator
 from gammapy.modeling import Fit
-from gammapy.modeling.models import SkyModel, PowerLawSpectralModel, PointSpatialModel
+from gammapy.modeling.models import SkyModel, PowerLawSpectralModel
 from gammapy.utils.scripts import make_path
-from gammapy.utils.regions import make_orthogonal_rectangle_sky_regions
-from gammapy.maps import RegionGeom
 
 
 ######################################################################
@@ -76,7 +65,9 @@ pwl = PowerLawSpectralModel(index=2.7, amplitude="5e-11  cm-2 s-1 TeV-1")
 datasets.models = SkyModel(spectral_model=pwl, name="crab")
 
 ######################################################################
-# And optimize the model parameters to best fit the data:
+# Before using the estimators, it is necessary to first ensure that the model is properly
+# fitted. This applies to all scenarios, including light curve estimation. To optimize the
+# model parameters to best fit the data we utilise the following:
 #
 
 fit = Fit()
@@ -111,6 +102,8 @@ fp_result.plot(sed_type="dnde")
 plt.show()
 
 ######################################################################
+# From the above we can see that we access to many quantities. We can also access
+# the quantities names through `fp_result.available_quantities`.
 # Here we show how you can plot a different plot type and define the axes units.
 
 ax = plt.subplot()
@@ -159,7 +152,7 @@ fp_result.dnde.slice_by_idx({"energy": slice(3, 10)})
 print(fp_result.reference_model)
 
 ######################################################################
-# `FluxPoints` are the represented by the "norm" scaling factor with
+# `~gammapy.estimators.FluxPoints` are the represented by the "norm" scaling factor with
 # respect to the reference model:
 
 fp_result.norm.plot()
@@ -171,7 +164,14 @@ plt.show()
 #
 # While the flux estimate and associated errors are common to all datasets,
 # the result also stores some dataset specific quantities, which can be useful
-# for debugging. The `~gammapy.maps.region.ndmap.RegionNDMap` allows for plotting of multidimensional data
+# for debugging.
+# Here we remind the user of the meaning of the forthcoming quantities:
+#
+# -  ``counts``: predicted counts from the null hypothesis.
+# -  ``npred``: predicted number of counts from best fit hypothesis.
+# -  ``npred_excess``: predicted number of excess counts from best fit hypothesis.
+#
+# The `~gammapy.maps.region.ndmap.RegionNDMap` allows for plotting of multidimensional data
 # as well, by specifying the primary `axis_name`:
 
 
@@ -207,13 +207,30 @@ display(table)
 # A fully configured estimation
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# The following code shows fully configured flux points estimation:
+# The following code shows fully configured flux points estimation.
+# Firstly we define the `backend` for the fit:
 
 
 fit = Fit(
     optimize_opts={"backend": "minuit"},
     confidence_opts={"backend": "scipy"},
 )
+
+######################################################################
+# The various quantities utilised in this tutorial are described here:
+#
+# -  ``source``: which source from the model to compute the flux points for
+# -  ``energy_edges``: edges of the flux points energy bins
+# -  ``n_sigma``: number of sigma for the flux error
+# -  ``n_sigma_ul``: the number of sigma for the flux upper limits
+# -  ``selection_optional``: what additional maps to compute
+# -  ``fit``: the fit instance (as defined above)
+#
+# **Important note**: the `energy_edges` are taken from the parent dataset energy bins,
+# which may not exactly match the output bins. Specific binning must be defined in the
+# parent dataset geometry to achieve that.
+#
+
 
 fp_estimator_config = FluxPointsEstimator(
     source="crab",
@@ -229,6 +246,7 @@ print(fp_estimator_config)
 
 ######################################################################
 #
+
 # %%time
 fp_result_config = fp_estimator_config.run(datasets=datasets)
 
@@ -239,166 +257,3 @@ print(fp_result_config)
 fp_result_config.plot(sed_type="e2dnde", color="tab:orange")
 fp_result_config.plot_ts_profiles(sed_type="e2dnde")
 plt.show()
-
-
-######################################################################
-# Flux Map Estimation
-# -------------------
-
-dataset_cta = MapDataset.read(
-    "$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz", name="cta_dataset"
-)
-
-plt.figure(figsize=(12, 6))
-counts_image = dataset_cta.counts.sum_over_axes()
-counts_image.smooth("0.05 deg").plot(stretch="linear", add_cbar=True)
-plt.show()
-
-######################################################################
-# Estimator configuration
-# ~~~~~~~~~~~~~~~~~~~~~~~
-#
-
-model = SkyModel(
-    spectral_model=PowerLawSpectralModel(), spatial_model=PointSpatialModel()
-)
-
-map_estimator = TSMapEstimator(
-    model=model,
-    energy_edges=[0.1, 0.3, 1, 3, 10] * u.TeV,
-    n_sigma=1,
-    n_sigma_ul=2,
-    selection_optional=None,
-    n_jobs=8,
-    kernel_width=1 * u.deg,
-    sum_over_energy_groups=True,
-)
-
-print(map_estimator)
-
-######################################################################
-# %%time
-map_result = map_estimator.run(dataset_cta)
-
-######################################################################
-# Accessing and visualising results
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#
-# Below we print the result of the `~gammapy.estimators.TSMapEstimator`. We have access to a number of
-# different quantities, as shown below. We can also access the quantities names
-# through `map_result.available_quantities`.
-#
-
-print(map_result)
-
-######################################################################
-#
-print(type(map_result.dnde))
-
-######################################################################
-#
-map_result.dnde.plot_grid(stretch="sqrt", ncols=2, add_cbar=True, figsize=(16, 10))
-plt.show()
-
-# sphinx_gallery_thumbnail_number = 10
-
-
-######################################################################
-#
-map_result.sqrt_ts.plot_grid(add_cbar=True, ncols=2, figsize=(16, 10))
-plt.show()
-
-######################################################################
-# Again the data is represented internally by a reference model and "norm" factors:
-
-print(map_result.reference_model)
-
-######################################################################
-#
-map_result.norm.plot_grid(add_cbar=True, ncols=2, stretch="sqrt", figsize=(16, 10))
-plt.show()
-
-######################################################################
-#
-position = SkyCoord("0d", "0d", frame="galactic")
-flux_points = map_result.get_flux_points(position=position)
-
-print(flux_points)
-
-######################################################################
-#
-flux_points.plot(sed_type="e2dnde")
-plt.show()
-
-######################################################################
-# This is how the maps are serialised to FITS:
-
-hdulist = map_result.to_hdulist(sed_type="dnde")
-hdulist.info()
-
-
-######################################################################
-# Flux Map Estimation
-# -------------------
-#
-# Finally we take a quick look at the `~gammapy.estimators.FluxProfileEstimator`.
-# For this we first define the profile bins as a list of `~regions.Region` objects:
-
-regions = make_orthogonal_rectangle_sky_regions(
-    start_pos=SkyCoord("2d", "0d", frame="galactic"),
-    end_pos=SkyCoord("358d", "0d", frame="galactic"),
-    wcs=counts_image.geom.wcs,
-    height="1 deg",
-    nbin=31,
-)
-
-geom = RegionGeom.create(region=regions)
-ax = counts_image.smooth("0.1 deg").plot()
-geom.plot_region(ax=ax, color="w")
-plt.show()
-
-######################################################################
-#
-flux_profile_estimator = FluxProfileEstimator(
-    regions=regions,
-    spectrum=PowerLawSpectralModel(index=2.3),
-    energy_edges=[0.1, 0.3, 1, 3, 10] * u.TeV,
-    selection_optional="all",
-)
-
-# %%time
-profile = flux_profile_estimator.run(datasets=dataset_cta)
-
-print(profile)
-
-######################################################################
-#
-ax = profile.dnde.plot(axis_name="projected-distance")
-ax.set_yscale("log")
-plt.show()
-
-######################################################################
-#
-profile.counts.plot(axis_name="projected-distance")
-plt.show()
-
-######################################################################
-#
-profile_3_10_TeV = profile.slice_by_idx({"energy": slice(2, 3)})
-ax = profile_3_10_TeV.plot(sed_type="dnde", color="tab:orange")
-profile_3_10_TeV.plot_ts_profiles(sed_type="dnde")
-ax.set_yscale("linear")
-plt.show()
-
-######################################################################
-#
-sed = profile.slice_by_idx({"projected-distance": 15})
-ax = sed.plot(sed_type="e2dnde", color="tab:orange")
-sed.plot_ts_profiles(ax=ax, sed_type="e2dnde")
-ax.set_ylim(2e-12, 1e-11)
-plt.show()
-
-######################################################################
-#
-table = profile_3_10_TeV.to_table(sed_type="flux", format="profile")
-display(table)
