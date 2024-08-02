@@ -164,7 +164,7 @@ class ExcessMapEstimator(Estimator):
             * "acceptance_on": acceptance from the on region
             * "acceptance_off": acceptange from the off region
 
-        Default is None so the optional steps are not executed.2
+        Default is None so the optional steps are not executed.
         Note: "alpha", "acceptance_on" and "acceptance_off" can only be selected if the dataset is a
         `~MapDatasetOnOff`.
     energy_edges : list of `~astropy.units.Quantity`, optional

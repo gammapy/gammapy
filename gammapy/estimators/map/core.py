@@ -143,7 +143,7 @@ class FluxMaps:
         * n_dof : optional, the number of degrees of freedom used in TS computation
         * alpha : optional, normalisation factor to accounts for differences between the test region and the background
         * acceptance_off : optional, acceptance from the off region
-        * acceptance_on : optional, acceptance from the oon region
+        * acceptance_on : optional, acceptance from the on region
 
     reference_model : `~gammapy.modeling.models.SkyModel`, optional
         The reference model to use for conversions. If None, a model consisting
