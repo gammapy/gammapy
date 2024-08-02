@@ -166,7 +166,7 @@ class ExcessMapEstimator(Estimator):
 
         Default is None so the optional steps are not executed.
         Note: "alpha", "acceptance_on" and "acceptance_off" can only be selected if the dataset is a
-        `~MapDatasetOnOff`.
+        `~gammapy.datasets.MapDatasetOnOff`.
     energy_edges : list of `~astropy.units.Quantity`, optional
         Edges of the target maps energy bins. The resulting bin edges won't be exactly equal to the input ones,
         but rather the closest values to the energy axis edges of the parent dataset.
@@ -176,9 +176,9 @@ class ExcessMapEstimator(Estimator):
         Correlate OFF events. Default is True.
     spectral_model : `~gammapy.modeling.models.SpectralModel`
         Spectral model used for the computation of the flux map.
-        If None, a `~PowerLawSpectralModel` of index 2 is assumed (default).
+        If None, a `~gammapy.modeling.models.PowerLawSpectralModel` of index 2 is assumed (default).
     sum_over_energy_groups : bool
-        Only used if energy_edges is None.
+        Only used if ``energy_edges`` is None.
         If False, apply the estimator in each energy bin of the parent dataset.
         If True, apply the estimator in only one bin defined by the energy edges of the parent dataset.
         Default is False.
