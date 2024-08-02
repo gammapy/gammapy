@@ -95,7 +95,8 @@ def convolved_map_dataset_counts_statistics(convolved_maps, stat_type):
     ----------
     convolved_maps : dict
         Dictionary of convolved maps.
-    stat_type :
+    stat_type : str
+        The statistic type, either 'wstat' or 'cash'.
 
     Returns
     -------
@@ -126,7 +127,7 @@ class ExcessMapEstimator(Estimator):
 
     .. note::
 
-        By default the excess estimator correlates the off counts as well to avoid
+        By default, the excess estimator correlates the off counts as well to avoid
         artifacts at the edges of the :term:`FoV` for stacked on-off datasets.
         However, when the on-off dataset has been derived from a ring background
         estimate, this leads to the off counts being correlated twice. To avoid
@@ -159,11 +160,13 @@ class ExcessMapEstimator(Estimator):
             * "errn-errp": estimate asymmetric errors.
             * "ul": estimate upper limits.
             * "sensitivity": estimate sensitivity for a given significance
-            * "alpha":
-            * "acceptance_on":
-            * "acceptance_off":
+            * "alpha": normalisation factor to accounts for differences between the on and off regions
+            * "acceptance_on": acceptance from the on region
+            * "acceptance_off": acceptange from the off region
 
-        Default is None so the optional steps are not executed.
+        Default is None so the optional steps are not executed.2
+        Note: "alpha", "acceptance_on" and "acceptance_off" can only be selected if the dataset is a
+        `~MapDatasetOnOff`.
     energy_edges : list of `~astropy.units.Quantity`, optional
         Edges of the target maps energy bins. The resulting bin edges won't be exactly equal to the input ones,
         but rather the closest values to the energy axis edges of the parent dataset.
