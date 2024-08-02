@@ -969,7 +969,7 @@ def test_memory_usage():
 def test_double_cutout():
     # regression test for https://github.com/gammapy/gammapy/issues/3368
     m = Map.create(width="10 deg")
-    m.data = np.arange(10_000, dtype="float")
+    m.data = np.arange(10_000, dtype="float").reshape((100, 100))
 
     position = SkyCoord("1d", "1d")
     m_c = m.cutout(position=position, width="3 deg")

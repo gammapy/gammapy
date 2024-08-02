@@ -106,7 +106,7 @@ def test_region_nd_map_plot_two_axes():
     )
 
     m = RegionNDMap.create("icrs;circle(0, 0, 1)", axes=[energy_axis, time_axis])
-    m.data = 10 + np.random.random(m.data.size)
+    m.data = 10 + np.random.random(m.data.shape)
 
     with mpl_plot_check():
         m.plot(axis_name="energy")
@@ -136,7 +136,7 @@ def test_label_axis_io(tmpdir):
     label_axis = LabelMapAxis(labels=["dataset-1", "dataset-2"], name="dataset")
 
     m = RegionNDMap.create(region=None, axes=[energy_axis, label_axis])
-    m.data = np.arange(m.data.size)
+    m.data = np.arange(m.data.size).reshape((2, 5))
 
     filename = tmpdir / "test.fits"
 
@@ -391,7 +391,7 @@ def test_region_nd_map_interp_no_region():
     )
 
     m = RegionNDMap.create(region=None, axes=[energy_axis, time_axis])
-    m.data = np.arange(6).reshape((energy_axis.nbin, time_axis.nbin))
+    m.data = np.arange(6).reshape((time_axis.nbin, energy_axis.nbin))
 
     energy = [2, 6] * u.TeV
     time = time_ref + [[0.4], [1.5], [4.2]] * u.d
