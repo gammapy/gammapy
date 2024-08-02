@@ -179,9 +179,6 @@ class ExcessMapEstimator(Estimator):
         If False, apply the estimator in each energy bin of the parent dataset.
         If True, apply the estimator in only one bin defined by the energy edges of the parent dataset.
         Default is False.
-    full_output : bool
-        Whether to return the full output for a `~MapDatasetOnOff` which includes a `~Maps` object
-        for correlated on, correlated off and alpha. Default is False.
 
     Examples
     --------
@@ -230,7 +227,6 @@ class ExcessMapEstimator(Estimator):
         bkg_syst_fraction_sensitivity=0.05,
         apply_threshold_sensitivity=False,
         sum_over_energy_groups=False,
-        full_output=False,
     ):
         self.correlation_radius = correlation_radius
         self.n_sigma = n_sigma
@@ -243,7 +239,6 @@ class ExcessMapEstimator(Estimator):
         self.energy_edges = energy_edges
         self.sum_over_energy_groups = sum_over_energy_groups
         self.correlate_off = correlate_off
-        self.full_output = full_output
 
         if spectral_model is None:
             spectral_model = PowerLawSpectralModel(index=2)
