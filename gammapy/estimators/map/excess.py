@@ -364,7 +364,7 @@ class ExcessMapEstimator(Estimator):
 
         Returns
         -------
-        reco_exposure : `Map`
+        reco_exposure : `~gammapy.maps.Map`
             Reconstructed exposure map.
         """
         if dataset.exposure:
