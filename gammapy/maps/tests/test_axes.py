@@ -188,7 +188,7 @@ def test_strict_downsample():
         axis1.downsample(4)
     assert str(exc_info.value) == "Number of energy_true bins is not divisible by 4"
 
-    axis1_strict_down = axis1.downsample(4, strict=True)
+    axis1_strict_down = axis1.downsample(4, strict=False)
     assert_allclose(axis1_strict_down.nbin, 0.5 * (axis1.nbin) - 1)
 
     axis2 = MapAxis.from_nodes([0, 1, 3, 6, 9], name="test", interp="lin")
@@ -196,7 +196,7 @@ def test_strict_downsample():
         axis2.downsample(3)
     assert str(exc_info.value) == "Number of test bins - 1 is not divisible by 3"
 
-    axis2_strict_down = axis2.downsample(3, strict=True)
+    axis2_strict_down = axis2.downsample(3, strict=False)
     assert_allclose(axis2_strict_down.nbin, 0.5 * (axis2.nbin + 1))
 
 
