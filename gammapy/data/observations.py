@@ -26,6 +26,7 @@ from .filters import ObservationFilter
 from .gti import GTI
 from .metadata import ObservationMetaData
 from .pointing import FixedPointingInfo
+from .utils import check_time_intervals
 
 __all__ = ["Observation", "Observations"]
 
@@ -104,6 +105,7 @@ class Observation:
         self.bkg = bkg
         self._rad_max = rad_max
         self._gti = gti
+        self._filtered_gti = None
         self._events = events
         self._pointing = pointing
         self._location = location  # this is part of the meta or is it data?
@@ -166,6 +168,8 @@ class Observation:
     @property
     def events(self):
         """Event list of the observation as an `~gammapy.data.EventList`."""
+        if self.obs_filter.time_filter is None and self._gti is not None:
+            self.obs_filter.time_filter = self._gti.time_intervals
         events = self.obs_filter.filter_events(self._events)
         return events
 
@@ -178,8 +182,17 @@ class Observation:
     @property
     def gti(self):
         """GTI of the observation as a `~gammapy.data.GTI`."""
-        gti = self.obs_filter.filter_gti(self._gti)
-        return gti
+        if self._filtered_gti:
+            return self._filtered_gti
+
+        if self.obs_filter.time_filter is None and self._gti is not None:
+            self._filtered_gti = self._gti
+            return self._filtered_gti
+        elif self.obs_filter.time_filter is not None:
+            self._filtered_gti = GTI.from_time_intervals(self.obs_filter.time_filter)
+        else:
+            self._filtered_gti = self.obs_filter.filter_gti(self._gti)
+        return self._filtered_gti
 
     @staticmethod
     def _get_obs_info(
@@ -412,8 +425,9 @@ class Observation:
             f"\tobs id            : {self.obs_id} \n "
             f"\ttstart            : {self.tstart.mjd:.2f}\n"
             f"\ttstop             : {self.tstop.mjd:.2f}\n"
-            f"\tduration          : {self.observation_time_duration:.2f}\n"
-            f"\tpointing (icrs)   : {pointing}\n"
+            f"\tnumber of GTIs:   : {len(self.gti.table)}\n"
+            f"\tduration          : {self.observation_time_duration:.2f} (from GTIs)\n"
+            f"\tpointing (icrs)   : {pointing}"
             f"\tdeadtime fraction : {self.observation_dead_time_fraction:.1%}\n"
         )
 
@@ -488,18 +502,30 @@ class Observation:
 
         Parameters
         ----------
-        time_interval : `astropy.time.Time`
+        time_interval : array of `astropy.time.Time`
             Start and stop time of the selected time interval.
-            For now, we only support a single time interval.
 
         Returns
         -------
         new_obs : `~gammapy.data.Observation`
             A new observation instance of the specified time interval.
         """
+        if not check_time_intervals(time_interval):
+            raise ValueError(
+                "The time intervals should be a sorted array of distinct intervals of astropy.time.Time."
+            )
+
         new_obs_filter = self.obs_filter.copy()
-        new_obs_filter.time_filter = time_interval
+        new_ti = self.gti.select_time(time_interval)
+        if new_ti.time_intervals is None:
+            new_obs_filter.time_filter = [
+                self.gti.time_start[0],
+                self.gti.time_start[0] + 1e-9 * u.s,
+            ]
+        else:
+            new_obs_filter.time_filter = new_ti.time_intervals
         obs = copy.deepcopy(self)
+        obs._filtered_gti = None
         obs.obs_filter = new_obs_filter
         return obs
 
@@ -717,11 +743,13 @@ class Observations(collections.abc.MutableSequence):
         return [str(obs.obs_id) for obs in self]
 
     def select_time(self, time_intervals):
-        """Select a time interval of the observations.
+        """Split the observations according to the time intervals.
+        The produced observations are made from the intersection of the original good time intervals and the user time
+        intervals.
 
         Parameters
         ----------
-        time_intervals : `astropy.time.Time` or list of `astropy.time.Time`
+        time_intervals : array of `astropy.time.Time`
             List of start and stop time of the time intervals or one time interval.
 
         Returns
@@ -730,7 +758,11 @@ class Observations(collections.abc.MutableSequence):
             A new Observations instance of the specified time intervals.
         """
         new_obs_list = []
-        if isinstance(time_intervals, Time):
+        if time_intervals is None or check_time_intervals(time_intervals) is False:
+            raise ValueError(
+                "The time intervals should be a sorted array of distinct intervals of astropy.time.Time."
+            )
+        if np.array(time_intervals).shape == (2,):
             time_intervals = [time_intervals]
 
         for time_interval in time_intervals:

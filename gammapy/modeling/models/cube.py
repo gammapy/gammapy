@@ -407,10 +407,7 @@ class SkyModel(CovarianceMixin, ModelBase):
                     t1, t2 = time_axis.time_min[idx], time_axis.time_max[idx]
                 else:
                     gti_in_bin = gti.select_time(
-                        time_interval=[
-                            time_axis.time_min[idx],
-                            time_axis.time_max[idx],
-                        ]
+                        [time_axis.time_min[idx], time_axis.time_max[idx]]
                     )
                     t1, t2 = gti_in_bin.time_start, gti_in_bin.time_stop
                 integral = self.temporal_model.integral(t1, t2)

@@ -1,10 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
+import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.table import Table
+from astropy.time import Time
 from regions import CircleSkyRegion, RectangleSkyRegion
 from gammapy.data import GTI, EventList, Observation
 from gammapy.maps import MapAxis, WcsGeom
@@ -37,7 +39,7 @@ class TestEventListBase:
         obs.write("test.fits.gz", include_irfs=False, overwrite=True)
         read_again = EventList.read("test.fits.gz")
 
-        assert (self.events.table == read_again.table).all()
+        assert np.array(self.events.table == read_again.table).all()
         assert read_again.table.meta["EXTNAME"] == "EVENTS"
         assert read_again.table.meta["HDUCLASS"] == "GADF"
         assert read_again.table.meta["HDUCLAS1"] == "EVENTS"
@@ -52,7 +54,8 @@ class TestEventListBase:
         read_again_ev = EventList.read("test.fits")
         read_again_gti = GTI.read("test.fits")
 
-        assert (self.events.table == read_again_ev.table).all()
+        # For this run, there are 3 events after the GTI.tstop
+        assert np.array(self.events.table[:-3] == read_again_ev.table).all()
         assert gti.table.meta == read_again_gti.table.meta
         assert_allclose(gti.table["START"].mjd, read_again_gti.table["START"].mjd)
         assert_allclose(gti.table["STOP"].mjd, read_again_gti.table["STOP"].mjd)
@@ -206,6 +209,15 @@ class TestEventSelection:
         table["ENERGY"] = [1.0, 1.5, 1.5, 10.0] * u.TeV
         table["OFFSET"] = [0.1, 0.5, 1.0, 1.5] * u.deg
 
+        table["TIME"] = [1, 2, 3, 4] * u.s
+        dateref = Time("2010-01-01T00:00:00")
+        dateref_mjd_fra, dateref_mjd_int = np.modf(dateref.mjd)
+        table.meta["MJDREFI"] = dateref_mjd_int
+        table.meta["MJDREFF"] = dateref_mjd_fra
+        table.meta["TIMESYS"] = "TT"
+        table.meta["TIMEUNIT"] = "s"
+        table.meta["TIMEREF"] = "LOCAL"
+
         self.events = EventList(table)
 
         center1 = SkyCoord(0.0, 0.0, frame="icrs", unit="deg")
@@ -241,3 +253,12 @@ class TestEventSelection:
         energy_range = u.Quantity([1, 10], "TeV")
         new_list = self.events.select_energy(energy_range)
         assert len(new_list.table) == 3
+
+    def test_select_time(self):
+        time_interval = Time("2010-01-01T00:00:00") + [1.4, 10] * u.s
+        new_list = self.events.select_time(time_interval)
+        assert len(new_list.table) == 3
+
+        time_interval = [1.4, 10]
+        with pytest.raises(ValueError):
+            new_list = self.events.select_time(time_interval)
