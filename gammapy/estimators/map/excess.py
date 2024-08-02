@@ -447,27 +447,10 @@ class ExcessMapEstimator(Estimator):
                     )
                 excess = Map.from_geom(geom=geom, data=excess_counts)
                 maps["norm_sensitivity"] = excess / reco_exposure
-            if "alpha" in self.selection_optional:
-                if not isinstance(dataset, MapDatasetOnOff):
-                    raise ValueError(
-                        "This option can only be selected for 'MapDatasetOnOff."
-                    )
-                else:
-                    maps["alpha"] = convolved_maps["alpha"]
-            if "acceptance_on" in self.selection_optional:
-                if not isinstance(dataset, MapDatasetOnOff):
-                    raise ValueError(
-                        "This option can only be selected for 'MapDatasetOnOff."
-                    )
-                else:
-                    maps["acceptance_on"] = convolved_maps["acceptance_on"]
-            if "acceptance_off" in self.selection_optional:
-                if not isinstance(dataset, MapDatasetOnOff):
-                    raise ValueError(
-                        "This option can only be selected for 'MapDatasetOnOff."
-                    )
-                else:
-                    maps["acceptance_off"] = convolved_maps["acceptance_off"]
+            if isinstance(dataset, MapDatasetOnOff):
+                keys_onoff = set(["alpha", "acceptance_on", "acceptance_off"])
+                for key in keys_onoff.intersection(self.selection_optional):
+                    maps[key] = convolved_maps[key]
 
         # return nan values outside mask
         for name in maps:
