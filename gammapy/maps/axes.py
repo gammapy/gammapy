@@ -1110,7 +1110,7 @@ class MapAxis:
             nodes = self.pix_to_coord(pix_new)
             return self.from_nodes(nodes, name=self.name, interp=self.interp)
 
-    def downsample(self, factor, strict=False):
+    def downsample(self, factor, strict=True):
         """Downsample map axis by a given factor.
 
         When downsampling each n-th (given by the factor) bin is selected from
@@ -1123,9 +1123,10 @@ class MapAxis:
         factor : int
             Downsampling factor.
         strict : bool
-
-            If True, then the remainder is placed in the last bin
-            Default is False.
+            Whether the number of bins is strictly divisible by the factor.
+            If True, ``nbin`` must be divisible by the ``factor``.
+            If False, the reminder bins are put into the last bin of the new axis.
+            Default is True.
 
         Returns
         -------
@@ -1134,39 +1135,32 @@ class MapAxis:
         """
         if self.node_type == "edges":
             nbin = self.nbin / factor
-
-            if strict and np.mod(nbin, 1) > 0:
+            if not strict and np.mod(nbin, 1) > 0:
                 idx = np.arange(0, self.nbin, factor)
                 if idx[-1] < self.nbin:
                     idx = np.append(idx, self.nbin)
                 edges = self.edges[idx]
-
             else:
                 if np.mod(nbin, 1) > 0:
                     raise ValueError(
                         f"Number of {self.name} bins is not divisible by {factor}"
                     )
                 edges = self.edges[::factor]
-            downsampled = self.from_edges(edges, name=self.name, interp=self.interp)
-            return downsampled
+            return self.from_edges(edges, name=self.name, interp=self.interp)
         else:
             nbin = (self.nbin - 1) / factor
-
-            if strict and np.mod(nbin, 1) > 0:
+            if not strict and np.mod(nbin, 1) > 0:
                 idx = np.arange(0, self.nbin - 1, factor)
                 if idx[-1] < self.nbin - 1:
                     idx = np.append(idx, self.nbin - 1)
                 nodes = self.center[idx]
-
             else:
                 if np.mod(nbin, 1) > 0:
                     raise ValueError(
                         f"Number of {self.name} bins - 1 is not divisible by {factor}"
                     )
                 nodes = self.center[::factor]
-
-            downsampled = self.from_nodes(nodes, name=self.name, interp=self.interp)
-            return downsampled
+            return self.from_nodes(nodes, name=self.name, interp=self.interp)
 
     def to_header(self, format="ogip", idx=0):
         """Create FITS header.
