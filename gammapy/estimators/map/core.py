@@ -597,19 +597,19 @@ class FluxMaps:
 
     @property
     def alpha(self):
-        """Alpha maps."""
+        """The normalisation, alpha, for differences between the on and off regions."""
         self._check_quantity("alpha")
         return self._data["alpha"]
 
     @property
     def acceptance_on(self):
-        """acceptance_on."""
+        """The acceptance in the on region."""
         self._check_quantity("acceptance_on")
         return self._data["acceptance_on"]
 
     @property
     def acceptance_off(self):
-        """acceptance_off."""
+        """The acceptance in the off region"""
         self._check_quantity("acceptance_off")
         return self._data["acceptance_off"]
 

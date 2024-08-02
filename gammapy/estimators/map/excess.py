@@ -156,13 +156,13 @@ class ExcessMapEstimator(Estimator):
         Which additional maps to estimate besides delta TS, significance and symmetric error.
         Available options are:
 
-            * "all": all the optional steps are executed
+            * "all": all the optional steps are executed.
             * "errn-errp": estimate asymmetric errors.
             * "ul": estimate upper limits.
-            * "sensitivity": estimate sensitivity for a given significance
-            * "alpha": normalisation factor to accounts for differences between the on and off regions
-            * "acceptance_on": acceptance from the on region
-            * "acceptance_off": acceptange from the off region
+            * "sensitivity": estimate sensitivity for a given significance.
+            * "alpha": normalisation factor to accounts for differences between the on and off regions.
+            * "acceptance_on": acceptance from the on region.
+            * "acceptance_off": acceptange from the off region.
 
         Default is None so the optional steps are not executed.
         Note: "alpha", "acceptance_on" and "acceptance_off" can only be selected if the dataset is a
