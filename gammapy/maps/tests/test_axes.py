@@ -132,6 +132,16 @@ def test_downsample():
     assert_allclose(axis_down.edges[-1], axis.edges[-1])
     assert axis_down.node_type == axis.node_type
 
+    axis = MapAxis(nodes=[0, 1, 2, 3, 4, 5], name="abc")
+    with pytest.raises(ValueError) as exc_info:
+        axis.downsample(2, strict=True)
+    assert str(exc_info.value) == "Number of abc bins is not divisible by 2"
+
+    axis_down = axis.downsample(2, strict=False)
+    assert_allclose(axis_down.nbin, np.ceil(0.5 * axis.nbin))
+    assert_allclose(axis_down.edges[0], axis.edges[0])
+    assert_allclose(axis_down.edges[-1], axis.edges[-1])
+
 
 def test_upsample_non_regular():
     axis = MapAxis.from_edges([0, 1, 3, 7], name="test", interp="lin")
@@ -178,26 +188,6 @@ def test_up_downsample_consistency(factor):
     axis = MapAxis.from_edges([0, 1, 3, 7, 13], name="test", interp="lin")
     axis_new = axis.upsample(factor).downsample(factor)
     assert_allclose(axis.edges, axis_new.edges)
-
-
-def test_strict_downsample():
-    axis1 = MapAxis.from_bounds(
-        10.0, 2e3, 6, interp="log", name="energy_true", unit="GeV"
-    )
-    with pytest.raises(ValueError) as exc_info:
-        axis1.downsample(4)
-    assert str(exc_info.value) == "Number of energy_true bins is not divisible by 4"
-
-    axis1_strict_down = axis1.downsample(4, strict=False)
-    assert_allclose(axis1_strict_down.nbin, 0.5 * (axis1.nbin) - 1)
-
-    axis2 = MapAxis.from_nodes([0, 1, 3, 6, 9], name="test", interp="lin")
-    with pytest.raises(ValueError) as exc_info:
-        axis2.downsample(3)
-    assert str(exc_info.value) == "Number of test bins - 1 is not divisible by 3"
-
-    axis2_strict_down = axis2.downsample(3, strict=False)
-    assert_allclose(axis2_strict_down.nbin, 0.5 * (axis2.nbin + 1))
 
 
 def test_one_bin_nodes():
