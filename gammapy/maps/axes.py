@@ -1110,7 +1110,7 @@ class MapAxis:
             nodes = self.pix_to_coord(pix_new)
             return self.from_nodes(nodes, name=self.name, interp=self.interp)
 
-    def downsample(self, factor):
+    def downsample(self, factor, strict=True):
         """Downsample map axis by a given factor.
 
         When downsampling each n-th (given by the factor) bin is selected from
@@ -1122,32 +1122,31 @@ class MapAxis:
         ----------
         factor : int
             Downsampling factor.
+        strict : bool
+            Whether the number of bins is strictly divisible by the factor.
+            If True, ``nbin`` must be divisible by the ``factor``.
+            If False, the reminder bins are put into the last bin of the new axis.
+            Default is True.
 
         Returns
         -------
         axis : `MapAxis`
             Downsampled map axis.
         """
-        if self.node_type == "edges":
-            nbin = self.nbin / factor
+        if self.node_type == "center":
+            raise ValueError(
+                f"Downsampling is not possible for {self.name} axis with node_type=center"
+            )
 
-            if np.mod(nbin, 1) > 0:
+        edges = self.edges[::factor]
+        if edges[-1] != self.edges[-1]:
+            if strict is True:
                 raise ValueError(
                     f"Number of {self.name} bins is not divisible by {factor}"
                 )
-
-            edges = self.edges[::factor]
-            return self.from_edges(edges, name=self.name, interp=self.interp)
-        else:
-            nbin = (self.nbin - 1) / factor
-
-            if np.mod(nbin, 1) > 0:
-                raise ValueError(
-                    f"Number of {self.name} bins - 1 is not divisible by {factor}"
-                )
-
-            nodes = self.center[::factor]
-            return self.from_nodes(nodes, name=self.name, interp=self.interp)
+            else:
+                edges = np.append(edges, self.edges[-1])
+        return self.from_edges(edges, name=self.name, interp=self.interp)
 
     def to_header(self, format="ogip", idx=0):
         """Create FITS header.

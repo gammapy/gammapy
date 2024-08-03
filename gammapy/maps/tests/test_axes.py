@@ -132,6 +132,16 @@ def test_downsample():
     assert_allclose(axis_down.edges[-1], axis.edges[-1])
     assert axis_down.node_type == axis.node_type
 
+    axis = MapAxis(nodes=[0, 1, 2, 3, 4, 5], name="abc")
+    with pytest.raises(ValueError) as exc_info:
+        axis.downsample(2, strict=True)
+    assert str(exc_info.value) == "Number of abc bins is not divisible by 2"
+
+    axis_down = axis.downsample(2, strict=False)
+    assert_allclose(axis_down.nbin, np.ceil(0.5 * axis.nbin))
+    assert_allclose(axis_down.edges[0], axis.edges[0])
+    assert_allclose(axis_down.edges[-1], axis.edges[-1])
+
 
 def test_upsample_non_regular():
     axis = MapAxis.from_edges([0, 1, 3, 7], name="test", interp="lin")
