@@ -130,7 +130,7 @@ plt.show()
 # TS map estimation
 # -----------------
 #
-# The Test Statistic, TS = 2 ∆ log L (`Mattox et
+# The Test Statistic, :math:`TS = 2 \Delta log L` (`Mattox et
 # al. 1996 <https://ui.adsabs.harvard.edu/abs/1996ApJ...461..396M/abstract>`__),
 # compares the likelihood function L optimized with and without a given
 # source. The TS map is computed by fitting by a single amplitude
@@ -155,11 +155,11 @@ model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
 # Here we show a full configuration of the estimator. We reminde the user of the meaning
 # of the various quantities:
 #
-# -  ``model``: a `~SkyModel` which is converted to a source model kernel
+# -  ``model``: a `~gammapy.modeling.models.SkyModel` which is converted to a source model kernel
 # -  ``kernel_width``: the width for the above kernel
 # -  ``n_sigma``: number of sigma for the flux error
 # -  ``n_sigma_ul``: the number of sigma for the flux upper limits
-# -  ``selection_optional``: what maps to compute
+# -  ``selection_optional``: what optional maps to compute
 # -  ``n_jobs``: for running in parallel, the number of processes used for the computation
 # -  ``sum_over_energy_groups``: to sum over the energy groups or fit the `norm` on the full energy cube
 
@@ -185,7 +185,7 @@ maps = estimator.run(dataset)
 #
 # Below we print the result of the `~gammapy.estimators.TSMapEstimator`. We have access to a number of
 # different quantities, as shown below. We can also access the quantities names
-# through `map_result.available_quantities`.
+# through ``map_result.available_quantities``.
 #
 
 print(maps)
@@ -210,7 +210,8 @@ plt.show()
 
 
 ######################################################################
-# The data is represented internally by a reference model and "norm" factors:
+# The flux in each pixel is obtained by multiplying a reference model with a
+# normalisation factor:
 
 print(maps.reference_model)
 
