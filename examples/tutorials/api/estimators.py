@@ -3,9 +3,13 @@ Estimators
 ==========
 
 This tutorial provides an overview of the `Estimator` API. All estimators live in the
-`gammapy.estimators` sub-module offers algorithms and classes for high-level flux and
-significance estimation, through a common functionality such as estimation of flux points,
-lightcurves, flux maps and profiles via a common API.
+`gammapy.estimators` sub-module, offering a range of algorithms and classes for high-level flux and
+significance estimation. This is accomplished through a common functionality such as estimation of
+flux points, light curves, flux maps and profiles via a common API.
+
+
+Provides algorithms and classes for flux and significance estimation. Common functionality for flux points,
+lightcurves, flux maps, and profiles.
 
 
 Key Features
@@ -21,7 +25,7 @@ Key Features
    -   **Excess Calculation (Backward Folding)**: Use the analytical solution by Li and Ma
        for significance based on excess counts, currently available in `~gammapy.estimators.ExcessMapEstimator`.
 
-For further information on these details please refer to :doc:`</user-guide/estimators>`.
+For further information on these details please refer to :doc:`/user-guide/estimators`.
 
 The setup
 ---------
@@ -44,18 +48,16 @@ from gammapy.utils.scripts import make_path
 # ----------------------
 #
 # We start with a simple example for flux points estimation taking multiple datasets into account.
+# In this section we show the steps to estimate the flux points.
 # First we read the pre-computed datasets from `$GAMMAPY_DATA`.
 #
 
 datasets = Datasets()
-
 path = make_path("$GAMMAPY_DATA/joint-crab/spectra/hess/")
 
 for filename in path.glob("pha_obs*.fits"):
     dataset = SpectrumDatasetOnOff.read(filename)
     datasets.append(dataset)
-
-print(datasets)
 
 ######################################################################
 # Next we define a spectral model and set it on the datasets:
@@ -75,8 +77,24 @@ fit_result = fit.optimize(datasets=datasets)
 print(fit_result)
 
 ######################################################################
+# A fully configured Flux Points Estimation
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
 # The `~gammapy.estimators.FluxPointsEstimator` estimates flux points for a given list of datasets,
-# energies and spectral model. Now we prepare the flux point estimation:
+# energies and spectral model. The most simple way to call the estimator is by defining both
+# the ``source`` and ``energy_edges``.
+# Here we prepare a full configuration of the flux point estimation.
+# Firstly we define the ``backend`` for the fit:
+#
+
+fit = Fit(
+    optimize_opts={"backend": "minuit"},
+    confidence_opts={"backend": "scipy"},
+)
+
+
+######################################################################
+# Define the fully configured flux points estimator:
 #
 
 energy_edges = np.geomspace(0.7, 100, 9) * u.TeV
@@ -84,7 +102,27 @@ energy_edges = np.geomspace(0.7, 100, 9) * u.TeV
 fp_estimator = FluxPointsEstimator(
     source="crab",
     energy_edges=energy_edges,
+    n_sigma=1,
+    n_sigma_ul=2,
+    selection_optional="all",
+    fit=fit,
 )
+
+######################################################################
+# The various quantities utilised in this tutorial are described here:
+#
+# -  ``source``: which source from the model to compute the flux points for
+# -  ``energy_edges``: edges of the flux points energy bins
+# -  ``n_sigma``: number of sigma for the flux error
+# -  ``n_sigma_ul``: the number of sigma for the flux upper limits
+# -  ``selection_optional``: what additional maps to compute
+# -  ``fit``: the fit instance (as defined above)
+#
+# **Important note**: the ``energy_edges`` are taken from the parent dataset energy bins,
+# which may not exactly match the output bins. Specific binning must be defined in the
+# parent dataset geometry to achieve that.
+#
+
 
 # %%time
 fp_result = fp_estimator.run(datasets=datasets)
@@ -103,13 +141,15 @@ plt.show()
 
 ######################################################################
 # From the above we can see that we access to many quantities. We can also access
-# the quantities names through `fp_result.available_quantities`.
-# Here we show how you can plot a different plot type and define the axes units.
+# the quantities names through ``fp_result.available_quantities``.
+# Here we show how you can plot a different plot type and define the axes units,
+# we also overlay the TS profile.
 
 ax = plt.subplot()
 ax.xaxis.set_units(u.eV)
 ax.yaxis.set_units(u.Unit("TeV cm-2 s-1"))
-fp_result.plot(ax=ax, sed_type="e2dnde")
+fp_result.plot(ax=ax, sed_type="e2dnde", color="tab:orange")
+fp_result.plot_ts_profiles(sed_type="e2dnde")
 plt.show()
 
 ######################################################################
@@ -172,7 +212,7 @@ plt.show()
 # -  ``npred_excess``: predicted number of excess counts from best fit hypothesis.
 #
 # The `~gammapy.maps.region.ndmap.RegionNDMap` allows for plotting of multidimensional data
-# as well, by specifying the primary `axis_name`:
+# as well, by specifying the primary ``axis_name``:
 
 
 fp_result.counts.plot(axis_name="energy")
@@ -202,58 +242,3 @@ display(table)
 #
 table = fp_result.to_table(sed_type="likelihood", format="gadf-sed", formatted=True)
 display(table)
-
-######################################################################
-# A fully configured estimation
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#
-# The following code shows fully configured flux points estimation.
-# Firstly we define the `backend` for the fit:
-
-
-fit = Fit(
-    optimize_opts={"backend": "minuit"},
-    confidence_opts={"backend": "scipy"},
-)
-
-######################################################################
-# The various quantities utilised in this tutorial are described here:
-#
-# -  ``source``: which source from the model to compute the flux points for
-# -  ``energy_edges``: edges of the flux points energy bins
-# -  ``n_sigma``: number of sigma for the flux error
-# -  ``n_sigma_ul``: the number of sigma for the flux upper limits
-# -  ``selection_optional``: what additional maps to compute
-# -  ``fit``: the fit instance (as defined above)
-#
-# **Important note**: the `energy_edges` are taken from the parent dataset energy bins,
-# which may not exactly match the output bins. Specific binning must be defined in the
-# parent dataset geometry to achieve that.
-#
-
-
-fp_estimator_config = FluxPointsEstimator(
-    source="crab",
-    energy_edges=energy_edges,
-    n_sigma=1,
-    n_sigma_ul=2,
-    selection_optional="all",
-    fit=fit,
-)
-
-print(fp_estimator_config)
-
-
-######################################################################
-#
-
-# %%time
-fp_result_config = fp_estimator_config.run(datasets=datasets)
-
-print(fp_result_config)
-
-######################################################################
-#
-fp_result_config.plot(sed_type="e2dnde", color="tab:orange")
-fp_result_config.plot_ts_profiles(sed_type="e2dnde")
-plt.show()
