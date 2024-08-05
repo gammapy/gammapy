@@ -106,6 +106,7 @@ fp_estimator = FluxPointsEstimator(
     n_sigma_ul=2,
     selection_optional="all",
     fit=fit,
+    reoptimize=False,
 )
 
 ######################################################################
@@ -117,6 +118,7 @@ fp_estimator = FluxPointsEstimator(
 # -  ``n_sigma_ul``: the number of sigma for the flux upper limits
 # -  ``selection_optional``: what additional maps to compute
 # -  ``fit``: the fit instance (as defined above)
+# -  ``reoptimize``: whether to reoptimize the flux points with other model parameters, aside from the ``norm``.
 #
 # **Important note**: the ``energy_edges`` are taken from the parent dataset energy bins,
 # which may not exactly match the output bins. Specific binning must be defined in the
