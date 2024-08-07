@@ -1,0 +1,38 @@
+components:
+    - name: source
+      spatial:
+          parameters:
+              - frozen: false
+                max: 85
+                min: 80
+                name: lon_0
+                scale: 1.0
+                unit: deg
+                value: 83.633
+              - frozen: false
+                max: 24
+                min: 20
+                name: lat_0
+                scale: 1.0
+                unit: deg
+                value: 22.14
+          type: PointSpatialModel
+      spectral:
+          parameters:
+              - frozen: false
+                name: index
+                scale: 1.0
+                unit: ''
+                value: 2.6
+              - frozen: false
+                name: amplitude
+                scale: 1.0
+                unit: cm-2 s-1 TeV-1
+                value: 5.0e-11
+              - frozen: true
+                name: reference
+                scale: 1.0
+                unit: TeV
+                value: 1.0
+          type: PowerLawSpectralModel
+      type: SkyModel
