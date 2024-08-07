@@ -46,7 +46,9 @@ def test_dm_annihilation_spectral_model(tmpdir):
     integral_flux = model.integral(energy_min=energy_min, energy_max=energy_max).to(
         "cm-2 s-1"
     )
-    differential_flux = model.evaluate(energy=1 * u.TeV, scale=1).to("cm-2 s-1 TeV-1")
+    differential_flux = model.evaluate(energy=1 * u.TeV, scale=1, jfactor=jfactor).to(
+        "cm-2 s-1 TeV-1"
+    )
 
     sky_model = SkyModel(
         spectral_model=model,
@@ -71,15 +73,17 @@ def test_dm_annihilation_spectral_model(tmpdir):
 def test_dm_decay_spectral_model(tmpdir):
     channel = "b"
     massDM = 5 * u.TeV
-    jfactor = 3.41e19 * u.Unit("GeV cm-2")
+    dfactor = 3.41e19 * u.Unit("GeV cm-2")
     energy_min = 0.01 * u.TeV
     energy_max = 10 * u.TeV
 
-    model = DarkMatterDecaySpectralModel(mass=massDM, channel=channel, jfactor=jfactor)
+    model = DarkMatterDecaySpectralModel(mass=massDM, channel=channel, dfactor=dfactor)
     integral_flux = model.integral(energy_min=energy_min, energy_max=energy_max).to(
         "cm-2 s-1"
     )
-    differential_flux = model.evaluate(energy=1 * u.TeV, scale=1).to("cm-2 s-1 TeV-1")
+    differential_flux = model.evaluate(energy=1 * u.TeV, scale=1, dfactor=dfactor).to(
+        "cm-2 s-1 TeV-1"
+    )
 
     sky_model = SkyModel(
         spectral_model=model,
@@ -95,6 +99,6 @@ def test_dm_decay_spectral_model(tmpdir):
 
     assert new_models[0].spectral_model.channel == model.channel
     assert new_models[0].spectral_model.z == model.z
-    assert_allclose(new_models[0].spectral_model.jfactor.value, model.jfactor.value)
+    assert_allclose(new_models[0].spectral_model.dfactor.value, model.dfactor.value)
     assert new_models[0].spectral_model.mass.value == 5
     assert new_models[0].spectral_model.mass.unit == u.TeV
