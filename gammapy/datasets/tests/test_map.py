@@ -1699,6 +1699,7 @@ def test_map_dataset_on_off_fake(geom):
     assert_allclose(empty_dataset.counts.data[0, 50, 50], 0)
     assert_allclose(empty_dataset.counts.data.mean(), 0.99445, rtol=1e-3)
     assert_allclose(empty_dataset.counts_off.data.mean(), 10.00055, rtol=1e-3)
+    assert empty_dataset.counts.data.dtype == float
 
 
 @requires_data()
