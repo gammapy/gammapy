@@ -1569,9 +1569,7 @@ class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
 
         pwl = amplitude * (energy / reference) ** (-index_1)
         cutoff = np.exp(
-            expfactor
-            / reference.unit**index_2
-            * (reference**index_2 - energy**index_2)
+            expfactor / reference.unit**index_2 * (reference**index_2 - energy**index_2)
         )
         return pwl * cutoff
 

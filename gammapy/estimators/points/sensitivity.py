@@ -116,9 +116,9 @@ class SensitivityEstimator(Estimator):
         criterion = np.chararray(excess.shape, itemsize=12)
         criterion[is_gamma_limited] = "gamma"
         criterion[is_bkg_syst_limited] = "bkg"
-        criterion[
-            ~np.logical_or(is_gamma_limited, is_bkg_syst_limited)
-        ] = "significance"
+        criterion[~np.logical_or(is_gamma_limited, is_bkg_syst_limited)] = (
+            "significance"
+        )
         return criterion
 
     def run(self, dataset):

@@ -152,6 +152,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
     ----------
     [Stewart2009]_
     """
+
     tag = "TSMapEstimator"
     _available_selection_optional = ["errn-errp", "ul"]
 

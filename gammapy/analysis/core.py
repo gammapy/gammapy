@@ -482,9 +482,9 @@ class Analysis:
         elif datasets_settings.type == "1d":
             maker_config = {}
             if datasets_settings.containment_correction:
-                maker_config[
-                    "containment_correction"
-                ] = datasets_settings.containment_correction
+                maker_config["containment_correction"] = (
+                    datasets_settings.containment_correction
+                )
 
             maker_config["selection"] = ["counts", "exposure", "edisp"]
 
