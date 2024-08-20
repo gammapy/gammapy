@@ -36,8 +36,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 from astropy import units as u
 from IPython.display import display
-from gammapy.datasets import SpectrumDatasetOnOff, Datasets
-from gammapy.estimators import FluxPointsEstimator
+from gammapy.datasets import SpectrumDatasetOnOff, Datasets, MapDataset
+from gammapy.estimators import (
+    FluxPointsEstimator,
+    ExcessMapEstimator,
+    FluxPoints,
+)
 from gammapy.modeling import Fit
 from gammapy.modeling.models import SkyModel, PowerLawSpectralModel
 from gammapy.utils.scripts import make_path
@@ -244,3 +248,39 @@ display(table)
 #
 table = fp_result.to_table(sed_type="likelihood", format="gadf-sed", formatted=True)
 display(table)
+
+
+######################################################################
+# Common API
+# ----------
+# In `GAMMAPY_DATA` we have access to other `~gammapy.estimators.FluxPoints` objects
+# which have been created utilising the above method. Here we read the PKS 2155-304 light curve
+# and create a `~gammapy.estimators.FluxMaps` object and show the data structure of such objects.
+# We emphasize that these follow a very similar structure.
+#
+
+######################################################################
+# Load the light curve for the PKS 2155-304 as a `~gammapy.estimators.FluxPoints` object.
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+
+lightcurve = FluxPoints.read(
+    "$GAMMAPY_DATA/estimators/pks2155_hess_lc/pks2155_hess_lc.fits", format="lightcurve"
+)
+
+display(lightcurve.available_quantities)
+
+
+######################################################################
+# Create a `~gammapy.estimators.FluxMaps` object through one of the estimators.
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+
+dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
+estimator = ExcessMapEstimator(correlation_radius="0.1 deg")
+result = estimator.run(dataset)
+display(result)
+
+######################################################################
+#
+display(result.available_quantities)
