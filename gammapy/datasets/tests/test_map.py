@@ -278,6 +278,14 @@ def test_fake(sky_model, geom, geom_etrue):
     assert real_dataset.counts.data.shape == dataset.counts.data.shape
     assert_allclose(real_dataset.counts.data.sum(), 9525.299054, rtol=1e-5)
     assert_allclose(dataset.counts.data.sum(), 9709)
+    assert dataset.counts.data.dtype == float
+
+    stacked = get_map_dataset(geom, geom_etrue)
+    bkg_model = FoVBackgroundModel(dataset_name=stacked.name)
+    stacked.models = [sky_model, bkg_model]
+    stacked.counts = stacked.npred()
+    stacked.stack(dataset)
+    assert_allclose(stacked.counts.data.sum(), 19234.3407, 1e-2)
 
 
 @requires_data()
@@ -1684,7 +1692,7 @@ def test_map_dataset_on_off_cutout(images):
     assert cutout_dataset.name != dataset.name
 
 
-def test_map_dataset_on_off_fake(geom):
+def test_map_dataset_on_off_fake(geom, images):
     rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="rad")
     energy_true_axis = geom.axes["energy"].copy(name="energy_true")
 
