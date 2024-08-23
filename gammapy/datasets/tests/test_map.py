@@ -285,7 +285,7 @@ def test_fake(sky_model, geom, geom_etrue):
     stacked.models = [sky_model, bkg_model]
     stacked.counts = stacked.npred()
     dataset.stack(stacked)
-    assert_allclose(stacked.counts.data.sum(), 19234.3407, 1e-2)
+    assert_allclose(dataset.counts.data.sum(), 19234.3407, 1e-2)
 
 
 @requires_data()
