@@ -284,7 +284,7 @@ def test_fake(sky_model, geom, geom_etrue):
     bkg_model = FoVBackgroundModel(dataset_name=stacked.name)
     stacked.models = [sky_model, bkg_model]
     stacked.counts = stacked.npred()
-    stacked.stack(dataset)
+    dataset.stack(stacked)
     assert_allclose(stacked.counts.data.sum(), 19234.3407, 1e-2)
 
 
