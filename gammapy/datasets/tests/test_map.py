@@ -278,6 +278,14 @@ def test_fake(sky_model, geom, geom_etrue):
     assert real_dataset.counts.data.shape == dataset.counts.data.shape
     assert_allclose(real_dataset.counts.data.sum(), 9525.299054, rtol=1e-5)
     assert_allclose(dataset.counts.data.sum(), 9709)
+    assert dataset.counts.data.dtype == float
+
+    stacked = get_map_dataset(geom, geom_etrue)
+    bkg_model = FoVBackgroundModel(dataset_name=stacked.name)
+    stacked.models = [sky_model, bkg_model]
+    stacked.counts = stacked.npred()
+    dataset.stack(stacked)
+    assert_allclose(dataset.counts.data.sum(), 19234.3407, 1e-2)
 
 
 @requires_data()
@@ -1664,6 +1672,7 @@ def test_map_dataset_on_off_fake(geom):
     assert_allclose(empty_dataset.counts.data[0, 50, 50], 0)
     assert_allclose(empty_dataset.counts.data.mean(), 0.99445, rtol=1e-3)
     assert_allclose(empty_dataset.counts_off.data.mean(), 10.00055, rtol=1e-3)
+    assert empty_dataset.counts.data.dtype == float
 
 
 @requires_data()
