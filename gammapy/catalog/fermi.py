@@ -538,13 +538,17 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         names = ["flux", "flux_errp", "flux_errn", "flux_ul", "ts"]
         maps = Maps.from_geom(geom=geom, names=names)
 
-        maps["flux"].quantity = self.data[tag]
-        maps["flux_errp"].quantity = self.data[f"Unc_{tag}"][:, 1]
-        maps["flux_errn"].quantity = -self.data[f"Unc_{tag}"][:, 0]
+        maps["flux"].quantity = self.data[tag].reshape(geom.data_shape)
+        maps["flux_errp"].quantity = self.data[f"Unc_{tag}"][:, 1].reshape(
+            geom.data_shape
+        )
+        maps["flux_errn"].quantity = -self.data[f"Unc_{tag}"][:, 0].reshape(
+            geom.data_shape
+        )
         maps["flux_ul"].quantity = compute_flux_points_ul(
             maps["flux"].quantity, maps["flux_errp"].quantity
-        )
-        maps["ts"].quantity = self.data[tag_sqrt_ts] ** 2
+        ).reshape(geom.data_shape)
+        maps["ts"].quantity = (self.data[tag_sqrt_ts] ** 2).reshape(geom.data_shape)
 
         return FluxPoints.from_maps(
             maps=maps,
@@ -833,12 +837,16 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
         names = ["flux", "flux_errp", "flux_errn", "flux_ul"]
         maps = Maps.from_geom(geom=geom, names=names)
 
-        maps["flux"].quantity = self.data[tag]
-        maps["flux_errp"].quantity = self.data[f"Unc_{tag}"][:, 1]
-        maps["flux_errn"].quantity = -self.data[f"Unc_{tag}"][:, 0]
+        maps["flux"].quantity = self.data[tag].reshape(geom.data_shape)
+        maps["flux_errp"].quantity = self.data[f"Unc_{tag}"][:, 1].reshape(
+            geom.data_shape
+        )
+        maps["flux_errn"].quantity = -self.data[f"Unc_{tag}"][:, 0].reshape(
+            geom.data_shape
+        )
         maps["flux_ul"].quantity = compute_flux_points_ul(
             maps["flux"].quantity, maps["flux_errp"].quantity
-        )
+        ).reshape(geom.data_shape)
         is_ul = np.isnan(maps["flux_errn"])
         maps["flux_ul"].data[~is_ul] = np.nan
 

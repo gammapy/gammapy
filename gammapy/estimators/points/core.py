@@ -53,7 +53,9 @@ def squash_fluxpoints(flux_point, axis):
         geom = geom.to_cube([flux_point.geom.axes["energy"]])
 
     maps["norm"] = Map.from_geom(geom, data=minimizer.x)
-    maps["norm_err"] = Map.from_geom(geom, data=np.sqrt(minimizer.hess_inv.todense()))
+    maps["norm_err"] = Map.from_geom(
+        geom, data=np.sqrt(minimizer.hess_inv.todense()).reshape(geom.data_shape)
+    )
     maps["n_dof"] = Map.from_geom(geom, data=flux_point.geom.axes[axis.name].nbin)
 
     if "norm_ul" in flux_point.available_quantities:
@@ -63,8 +65,9 @@ def squash_fluxpoints(flux_point, axis):
 
     maps["stat"] = Map.from_geom(geom, data=f(minimizer.x))
 
+    geom_scan = geom.to_cube([MapAxis.from_nodes(value_scan, name="norm")])
     maps["stat_scan"] = Map.from_geom(
-        geom=geom.to_cube([MapAxis.from_nodes(value_scan, name="norm")]), data=stat_scan
+        geom=geom_scan, data=stat_scan.reshape(geom_scan.data_shape)
     )
     try:
         maps["stat_null"] = Map.from_geom(geom, data=np.sum(flux_point.stat_null.data))
