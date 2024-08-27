@@ -1374,6 +1374,7 @@ class MapDataset(Dataset):
         npred = self.npred()
         data = np.nan_to_num(npred.data, copy=True, nan=0.0, posinf=0.0, neginf=0.0)
         npred.data = random_state.poisson(data)
+        npred.data = npred.data.astype("float")
         self.counts = npred
 
     def to_hdulist(self):
