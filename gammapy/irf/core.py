@@ -799,7 +799,9 @@ class IRFMap:
 
             geom_exposure = geom_psf.squash("rad")
             exposure_map = Map.from_geom(
-                geom=geom_exposure, data=table["Exposure"].data, unit="cm2 s"
+                geom=geom_exposure,
+                data=table["Exposure"].data.reshape(geom_exposure.data_shape),
+                unit="cm2 s",
             )
             return cls(psf_map=psf_map, exposure_map=exposure_map)
         else:

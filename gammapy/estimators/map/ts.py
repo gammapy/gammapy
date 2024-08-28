@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Functions to compute test statistic images."""
+
 import warnings
 from itertools import repeat
 import numpy as np
@@ -500,6 +501,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         results = parallel.run_multiprocessing(
             _ts_value,
             inputs,
+            backend=self.parallel_backend,
             pool_kwargs=dict(processes=self.n_jobs),
             task_name="TS map",
         )

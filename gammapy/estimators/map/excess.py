@@ -17,8 +17,8 @@ __all__ = ["ExcessMapEstimator"]
 log = logging.getLogger(__name__)
 
 
-def convolved_map_dataset_counts_statistics(dataset, kernel, mask, correlate_off):
-    """Return a `CountsStatistic` object.
+def _get_convolved_maps(dataset, kernel, mask, correlate_off):
+    """Return convolved maps.
 
     Parameters
     ----------
@@ -33,8 +33,8 @@ def convolved_map_dataset_counts_statistics(dataset, kernel, mask, correlate_off
 
     Returns
     -------
-    counts_statistic : `~gammapy.stats.CashCountsStatistic` or `~gammapy.stats.WStatCountsStatistic`
-        The counts statistic.
+    convolved_maps : dict
+        Dictionary of convolved maps.
     """
     # Kernel is modified later make a copy here
     kernel = copy.deepcopy(kernel)
@@ -45,19 +45,20 @@ def convolved_map_dataset_counts_statistics(dataset, kernel, mask, correlate_off
     n_on = dataset.counts * mask
     n_on_conv = np.rint(n_on.convolve(kernel_data).data)
 
+    convolved_maps = {"n_on_conv": n_on_conv}
+
     if isinstance(dataset, MapDatasetOnOff):
         n_off = dataset.counts_off * mask
         npred_sig = dataset.npred_signal() * mask
         acceptance_on = dataset.acceptance * mask
         acceptance_off = dataset.acceptance_off * mask
-
         npred_sig_convolve = npred_sig.convolve(kernel_data)
         if correlate_off:
             background = dataset.background * mask
             background.data[dataset.acceptance_off == 0] = 0.0
             background_conv = background.convolve(kernel_data)
-
             n_off = n_off.convolve(kernel_data)
+
             with np.errstate(invalid="ignore", divide="ignore"):
                 alpha = background_conv / n_off
 
@@ -66,13 +67,55 @@ def convolved_map_dataset_counts_statistics(dataset, kernel, mask, correlate_off
 
             with np.errstate(invalid="ignore", divide="ignore"):
                 alpha = acceptance_on_convolve / acceptance_off
-
-        return WStatCountsStatistic(
-            n_on_conv.data, n_off.data, alpha.data, npred_sig_convolve.data
+        convolved_maps.update(
+            {
+                "n_off": n_off,
+                "npred_sig_convolve": npred_sig_convolve,
+                "acceptance_on": acceptance_on,
+                "acceptance_off": acceptance_off,
+                "alpha": alpha,
+            }
         )
     else:
         npred = dataset.npred() * mask
         background_conv = npred.convolve(kernel_data)
+        convolved_maps.update(
+            {
+                "background_conv": background_conv,
+            }
+        )
+
+    return convolved_maps
+
+
+def convolved_map_dataset_counts_statistics(convolved_maps, stat_type):
+    """Return a `CountsStatistic` object.
+
+    Parameters
+    ----------
+    convolved_maps : dict
+        Dictionary of convolved maps.
+    stat_type : str
+        The statistic type, either 'wstat' or 'cash'.
+
+    Returns
+    -------
+    counts_statistic : `~gammapy.stats.CashCountsStatistic` or `~gammapy.stats.WStatCountsStatistic`
+        The counts statistic.
+    """
+
+    if stat_type == "wstat":
+        n_on_conv = convolved_maps["n_on_conv"]
+        n_off = convolved_maps["n_off"]
+        alpha = convolved_maps["alpha"]
+        npred_sig_convolve = convolved_maps["npred_sig_convolve"]
+
+        return WStatCountsStatistic(
+            n_on_conv.data, n_off.data, alpha.data, npred_sig_convolve.data
+        )
+    elif stat_type == "cash":
+        n_on_conv = convolved_maps["n_on_conv"]
+        background_conv = convolved_maps["background_conv"]
         return CashCountsStatistic(n_on_conv.data, background_conv.data)
 
 
@@ -84,7 +127,7 @@ class ExcessMapEstimator(Estimator):
 
     .. note::
 
-        By default the excess estimator correlates the off counts as well to avoid
+        By default, the excess estimator correlates the off counts as well to avoid
         artifacts at the edges of the :term:`FoV` for stacked on-off datasets.
         However, when the on-off dataset has been derived from a ring background
         estimate, this leads to the off counts being correlated twice. To avoid
@@ -113,12 +156,17 @@ class ExcessMapEstimator(Estimator):
         Which additional maps to estimate besides delta TS, significance and symmetric error.
         Available options are:
 
-            * "all": all the optional steps are executed
+            * "all": all the optional steps are executed.
             * "errn-errp": estimate asymmetric errors.
             * "ul": estimate upper limits.
-            * "sensitivity": estimate sensitivity for a given significance
+            * "sensitivity": estimate sensitivity for a given significance.
+            * "alpha": normalisation factor to accounts for differences between the on and off regions.
+            * "acceptance_on": acceptance from the on region.
+            * "acceptance_off": acceptange from the off region.
 
         Default is None so the optional steps are not executed.
+        Note: "alpha", "acceptance_on" and "acceptance_off" can only be selected if the dataset is a
+        `~gammapy.datasets.MapDatasetOnOff`.
     energy_edges : list of `~astropy.units.Quantity`, optional
         Edges of the target maps energy bins. The resulting bin edges won't be exactly equal to the input ones,
         but rather the closest values to the energy axis edges of the parent dataset.
@@ -128,11 +176,11 @@ class ExcessMapEstimator(Estimator):
         Correlate OFF events. Default is True.
     spectral_model : `~gammapy.modeling.models.SpectralModel`
         Spectral model used for the computation of the flux map.
-        If None, a Power Law of index 2 is assumed (default).
+        If None, a `~gammapy.modeling.models.PowerLawSpectralModel` of index 2 is assumed (default).
     sum_over_energy_groups : bool
-        Only used if energy_edges is None.
-        If False apply the estimator in each energy bin of the parent dataset.
-        If True apply the estimator in only one bin defined by the energy edges of the parent dataset.
+        Only used if ``energy_edges`` is None.
+        If False, apply the estimator in each energy bin of the parent dataset.
+        If True, apply the estimator in only one bin defined by the energy edges of the parent dataset.
         Default is False.
 
     Examples
@@ -159,7 +207,14 @@ class ExcessMapEstimator(Estimator):
     """
 
     tag = "ExcessMapEstimator"
-    _available_selection_optional = ["errn-errp", "ul", "sensitivity"]
+    _available_selection_optional = [
+        "errn-errp",
+        "ul",
+        "sensitivity",
+        "alpha",
+        "acceptance_on",
+        "acceptance_off",
+    ]
 
     def __init__(
         self,
@@ -309,7 +364,7 @@ class ExcessMapEstimator(Estimator):
 
         Returns
         -------
-        reco_exposure : `Map`
+        reco_exposure : `~gammapy.maps.Map`
             Reconstructed exposure map.
         """
         if dataset.exposure:
@@ -334,13 +389,12 @@ class ExcessMapEstimator(Estimator):
         """
 
         kernel = self.estimate_kernel(dataset)
-
         geom = dataset.counts.geom
-
         mask = self.estimate_mask_default(dataset)
 
+        convolved_maps = _get_convolved_maps(dataset, kernel, mask, self.correlate_off)
         counts_stat = convolved_map_dataset_counts_statistics(
-            dataset, kernel, mask, self.correlate_off
+            convolved_maps=convolved_maps, stat_type=dataset.stat_type
         )
 
         maps = {}
@@ -396,6 +450,10 @@ class ExcessMapEstimator(Estimator):
                     )
                 excess = Map.from_geom(geom=geom, data=excess_counts)
                 maps["norm_sensitivity"] = excess / reco_exposure
+            if isinstance(dataset, MapDatasetOnOff):
+                keys_onoff = set(["alpha", "acceptance_on", "acceptance_off"])
+                for key in keys_onoff.intersection(self.selection_optional):
+                    maps[key] = convolved_maps[key]
 
         # return nan values outside mask
         for name in maps:
