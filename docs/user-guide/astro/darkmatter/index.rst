@@ -8,14 +8,14 @@ Introduction
 ============
 
 The `gammapy.astro.darkmatter` module provides spatial and spectral models for
-indirect dark matter searches. This introduction is aimed at people who already
-have some experience with dark matter analysis. For a thorough introduction see
-e.g. `Cirelli 2014`_.
+indirect dark matter searches, using PPPC4DM models. This introduction is aimed
+at people who already have some experience with dark matter analysis. For a thorough
+introduction see e.g. `Cirelli 2014`_.
 
 The spatial distribution of dark matter halos is typically modeled with
 radially symmetric profiles. Common profiles are the ones by Navarro, Frenk and
 White (NFW) or Einasto for cuspy and an Isothermal or Burkert profile for cored
-dark matter distributions (see `gammapy.astro.darkmatter.profiles`).
+dark matter distributions (see `gammapy.astro.darkmatter.DMProfile`).
 
 The spectral models in `gammapy.astro.darkmatter.PrimaryFlux` are based on
 `Cirelli et al.  2011`_, who provide tabulated spectra for different
