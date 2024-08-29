@@ -291,7 +291,7 @@ class ArrayQuantityLength(RegionAttr):
     """
 
     def _validate(self, value):
-        if not (isinstance(value, u.Quantity)):
+        if not isinstance(value, u.Quantity):
             raise ValueError(f"The {self.name} must be an astropy " "Quantity object")
 
 
