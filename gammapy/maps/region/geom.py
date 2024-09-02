@@ -83,7 +83,6 @@ class RegionGeom(Geom):
 
     """
 
-    is_regular = True
     is_allsky = False
     is_hpx = False
     is_region = True
@@ -435,7 +434,6 @@ class RegionGeom(Geom):
             )
         else:
             width = self.width
-
         wcs_geom_region = WcsGeom(wcs=self.wcs, npix=self.wcs.array_shape)
         wcs_geom = wcs_geom_region.cutout(position=self.center_skydir, width=width)
         wcs_geom = wcs_geom.to_cube(self.axes)
