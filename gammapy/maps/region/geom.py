@@ -65,7 +65,6 @@ class RegionGeom(Geom):
         is provided, the input of ``binsz_wcs`` is overridden.
     """
 
-    is_regular = True
     is_allsky = False
     is_hpx = False
     is_region = True
@@ -249,7 +248,7 @@ class RegionGeom(Geom):
             return np.ones(coords.skycoord.shape, dtype=bool)
 
         if not self.is_regular:
-            idx = self.axes.coord_to_idx(coords)
+            idx = self.to_image().axes.coord_to_idx(coords)
             cls = self.region.__class__
             region = cls(
                 center=self.region.center, radius=self.region.radius[idx].squeeze()
