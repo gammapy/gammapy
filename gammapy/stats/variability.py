@@ -354,7 +354,7 @@ def discrete_correlation_function(
         [np.nanmean(udcf[bin_indices == i], axis=0) for i in range(1, len(bins))]
     )
     dcf_err = np.array(
-        [np.std(udcf[bin_indices == i], axis=0) for i in range(1, len(bins))]
+        [np.nanstd(udcf[bin_indices == i], axis=0) for i in range(1, len(bins))]
     ) / (np.sqrt((len(time1) - 1) / (len(bins) - 1)))
     bincenters = (bins[1:] + bins[:-1]) / 2
 

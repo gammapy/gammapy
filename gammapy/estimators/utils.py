@@ -575,12 +575,26 @@ def compute_dcf(lightcurve1, lightcurve2=None, flux_quantity="flux", tau=1 * u.h
         flux_err2 = getattr(lightcurve2, flux_quantity + "_err")
         coords2 = lightcurve2.geom.axes["time"].center
         return discrete_correlation_function(
-            flux1, flux_err1, flux2, flux_err2, coords1, coords2, tau, axis
+            flux1.data,
+            flux_err1.data,
+            flux2.data,
+            flux_err2.data,
+            coords1,
+            coords2,
+            tau,
+            axis,
         )
 
     else:
         return discrete_correlation_function(
-            flux1, flux_err1, flux1, flux_err1, coords1, coords1, tau, axis
+            flux1.data,
+            flux_err1.data,
+            flux1.data,
+            flux_err1.data,
+            coords1,
+            coords1,
+            tau,
+            axis,
         )
 
 
@@ -865,7 +879,6 @@ def combine_flux_maps(
         reference_model = maps[0].reference_model
 
     if method == "gaussian_errors":
-
         means = [map_.dnde.copy() for map_ in maps]
         sigmas = [map_.dnde_err.copy() for map_ in maps]
         # compensate for the ts deviation from gaussian approximation expectation in each map
@@ -881,7 +894,6 @@ def combine_flux_maps(
         sigma = sigmas[0]
 
         for k in range(1, len(means)):
-
             mean_k = means[k].quantity.to_value(mean.unit)
             sigma_k = sigmas[k].quantity.to_value(sigma.unit)
 
