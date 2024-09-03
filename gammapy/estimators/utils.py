@@ -13,7 +13,12 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
 )
-from gammapy.stats import compute_flux_doubling, compute_fpp, compute_fvar
+from gammapy.stats import (
+    compute_flux_doubling,
+    compute_fpp,
+    compute_fvar,
+    discrete_correlation_function,
+)
 from gammapy.stats.utils import ts_to_sigma
 from .map.core import FluxMaps
 
@@ -27,6 +32,7 @@ __all__ = [
     "compute_lightcurve_fvar",
     "compute_lightcurve_fpp",
     "compute_lightcurve_doublingtime",
+    "compute_dcf",
 ]
 
 
@@ -532,6 +538,48 @@ def compute_lightcurve_doublingtime(lightcurve, flux_quantity="flux"):
     )
 
     return table
+
+
+def compute_dcf(lightcurve1, lightcurve2=None, flux_quantity="flux", tau=1 * u.h):
+    r"""Compute the discrete correlation function for two lightcurves of the discrete autocorrelation if only one lightcurve is provided.
+
+    Internally calls the `~gammapy.stats.discrete_correlation_function` function
+
+    Parameters
+    ----------
+    lightcurve1 : `~gammapy.estimators.FluxPoints`
+        The first lightcurve object.
+    lightcurve1 : `~gammapy.estimators.FluxPoints`, optional
+        The second lightcurve object. If not provided, the autocorrelation for the first lightcurve will be computed. Default is None.
+    flux_quantity : str
+        Flux quantity to use for calculation. Should be 'dnde', 'flux', 'e2dnde' or 'eflux'. Default is 'flux'.
+    tau : `~astropy.units.Quantity`
+        Size of the bins to compute the discrete correlation. Default is 1 hour.
+
+
+    Returns
+    -------
+    bincenters, dcf, dcf_err : `~numpy.ndarray`, `~astropy.units.Quantity`
+        Array of discrete time bins, discrete correlation function and associated error.
+    """
+
+    flux1 = getattr(lightcurve1, flux_quantity)
+    flux_err1 = getattr(lightcurve1, flux_quantity + "_err")
+    coords1 = lightcurve1.geom.axes["time"].center
+    axis = flux1.geom.axes.index_data("time")
+
+    if lightcurve2:
+        flux2 = getattr(lightcurve2, flux_quantity)
+        flux_err2 = getattr(lightcurve2, flux_quantity + "_err")
+        coords2 = lightcurve2.geom.axes["time"].center
+        return discrete_correlation_function(
+            flux1, flux_err1, flux2, flux_err2, coords1, coords2, tau, axis
+        )
+
+    else:
+        return discrete_correlation_function(
+            flux1, flux_err1, flux1, flux_err1, coords1, coords1, tau, axis
+        )
 
 
 def get_edges_fixed_bins(fluxpoint, group_size, axis_name="energy"):

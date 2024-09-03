@@ -13,6 +13,7 @@ from .variability import (
     compute_flux_doubling,
     compute_fpp,
     compute_fvar,
+    discrete_correlation_function,
     structure_function,
 )
 
@@ -32,5 +33,6 @@ __all__ = [
     "compute_flux_doubling",
     "compute_chisq",
     "structure_function",
+    "discrete_correlation_function",
     "TimmerKonig_lightcurve_simulator",
 ]
