@@ -76,13 +76,17 @@ VALID_QUANTITIES = [
     "npred",
     "npred_excess",
     "stat",
-    "stat_scan",
     "stat_null",
+    "stat_scan",
+    "dnde_scan_values",
     "niter",
     "is_ul",
     "counts",
     "success",
     "n_dof",
+    "alpha",
+    "acceptance_on",
+    "acceptance_off",
 ]
 
 
@@ -93,6 +97,8 @@ OPTIONAL_QUANTITIES_COMMON = [
     "npred_excess",
     "stat",
     "stat_null",
+    "stat_scan",
+    "dnde_scan_values",
     "niter",
     "is_ul",
     "counts",
@@ -135,6 +141,9 @@ class FluxMaps:
         * sqrt_ts : optional, the square root of the test statistic, when relevant.
         * success : optional, a boolean tagging the validity of the estimation.
         * n_dof : optional, the number of degrees of freedom used in TS computation
+        * alpha : optional, normalisation factor to accounts for differences between the test region and the background
+        * acceptance_off : optional, acceptance from the off region
+        * acceptance_on : optional, acceptance from the on region
 
     reference_model : `~gammapy.modeling.models.SkyModel`, optional
         The reference model to use for conversions. If None, a model consisting
@@ -219,8 +228,9 @@ class FluxMaps:
         if not required.issubset(keys):
             missing = required.difference(keys)
             raise ValueError(
-                "Missing data / column for SED type '{}':"
-                " {}".format(sed_type, missing)
+                "Missing data / column for SED type '{}':" " {}".format(
+                    sed_type, missing
+                )
             )
 
     # TODO: add support for scan
@@ -489,6 +499,12 @@ class FluxMaps:
         return self._data["stat_scan"]
 
     @property
+    def dnde_scan_values(self):
+        """Fit statistic norm scan values."""
+        self._check_quantity("dnde_scan_values")
+        return self._data["dnde_scan_values"]
+
+    @property
     def stat(self):
         """Fit statistic value."""
         self._check_quantity("stat")
@@ -578,6 +594,24 @@ class FluxMaps:
         """Number of degrees of freedom of the fit per energy bin."""
         self._check_quantity("n_dof")
         return self._data["n_dof"]
+
+    @property
+    def alpha(self):
+        """The normalisation, alpha, for differences between the on and off regions."""
+        self._check_quantity("alpha")
+        return self._data["alpha"]
+
+    @property
+    def acceptance_on(self):
+        """The acceptance in the on region."""
+        self._check_quantity("acceptance_on")
+        return self._data["acceptance_on"]
+
+    @property
+    def acceptance_off(self):
+        """The acceptance in the off region"""
+        self._check_quantity("acceptance_off")
+        return self._data["acceptance_off"]
 
     @property
     def dnde_ref(self):

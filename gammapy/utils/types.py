@@ -12,6 +12,7 @@ from .scripts import make_path
 __all__ = [
     "AngleType",
     "EnergyType",
+    "QuantityType",
     "TimeType",
     "PathType",
     "EarthLocationType",
@@ -92,6 +93,11 @@ def validate_energy(v):
     return v
 
 
+def validate_quantity(v):
+    """Validator for `~astropy.units.Quantity`."""
+    return u.Quantity(v)
+
+
 def validate_time(v):
     """Validator for `~astropy.time.Time`."""
     return Time(v)
@@ -151,6 +157,13 @@ EnergyType = Annotated[
     u.Quantity,
     PlainSerializer(lambda v: f"{v.value} {v.unit}", **SERIALIZE_KWARGS),
     BeforeValidator(validate_energy),
+    scalar_validator,
+]
+
+QuantityType = Annotated[
+    u.Quantity,
+    PlainSerializer(lambda v: f"{v.value} {v.unit}", **SERIALIZE_KWARGS),
+    BeforeValidator(validate_quantity),
     scalar_validator,
 ]
 

@@ -1,22 +1,30 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Functions to compute test statistic images."""
+
 import warnings
 from itertools import repeat
 import numpy as np
 import scipy.optimize
+from scipy.interpolate import InterpolatedUnivariateSpline
 from astropy.coordinates import Angle
 from astropy.utils import lazyproperty
 import gammapy.utils.parallel as parallel
+from gammapy.datasets import Datasets
 from gammapy.datasets.map import MapEvaluator
 from gammapy.datasets.utils import get_nearest_valid_exposure_position
-from gammapy.maps import Map, Maps
+from gammapy.maps import Map, MapAxis, Maps
 from gammapy.modeling.models import PointSpatialModel, PowerLawSpectralModel, SkyModel
-from gammapy.stats import cash_sum_cython, f_cash_root_cython, norm_bounds_cython
+from gammapy.stats import cash, cash_sum_cython, f_cash_root_cython, norm_bounds_cython
 from gammapy.utils.array import shape_2N, symmetric_crop_pad_width
 from gammapy.utils.pbar import progress_bar
 from gammapy.utils.roots import find_roots
 from ..core import Estimator
-from ..utils import estimate_exposure_reco_energy
+from ..utils import (
+    _generate_scan_values,
+    _get_default_norm,
+    _get_norm_scan_values,
+    estimate_exposure_reco_energy,
+)
 from .core import FluxMaps
 
 __all__ = ["TSMapEstimator"]
@@ -84,6 +92,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
             * "all": all the optional steps are executed
             * "errn-errp": estimate asymmetric error on flux.
             * "ul": estimate upper limits on flux.
+            * "stat_scan": estimate likelihood profile
 
         Default is None so the optional steps are not executed.
     energy_edges : list of `~astropy.units.Quantity`, optional
@@ -94,12 +103,23 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
     sum_over_energy_groups : bool
         Whether to sum over the energy groups or fit the norm on the full energy
         cube.
+    norm : `~gammapy.modeling.Parameter` or dict
+        Norm parameter used for the likelihood profile computation on a fixed norm range.
+        Only used for "stat_scan" in `selection_optional`.
+        Default is None and a new parameter is created automatically,
+        with value=1, name="norm", scan_min=-100, scan_max=100,
+        and values sampled such as we can probe a 0.1% relative error on the norm.
+        If a dict is given the entries should be a subset of
+        `~gammapy.modeling.Parameter` arguments.
     n_jobs : int
         Number of processes used in parallel for the computation. Default is one,
         unless `~gammapy.utils.parallel.N_JOBS_DEFAULT` was modified. The number
         of jobs limited to the number of physical CPUs.
     parallel_backend : {"multiprocessing", "ray"}
         Which backend to use for multiprocessing. Defaults to `~gammapy.utils.parallel.BACKEND_DEFAULT`.
+    max_niter : int
+        Maximal number of iterations used by the root finding algorithm.
+        Default is 100.
 
     Notes
     -----
@@ -150,7 +170,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
     """
 
     tag = "TSMapEstimator"
-    _available_selection_optional = ["errn-errp", "ul"]
+    _available_selection_optional = ["errn-errp", "ul", "stat_scan"]
 
     def __init__(
         self,
@@ -166,11 +186,15 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         sum_over_energy_groups=True,
         n_jobs=None,
         parallel_backend=None,
+        norm=None,
+        max_niter=100,
     ):
         if kernel_width is not None:
             kernel_width = Angle(kernel_width)
 
         self.kernel_width = kernel_width
+
+        self.norm = _get_default_norm(norm, scan_values=_generate_scan_values())
 
         if model is None:
             model = SkyModel(
@@ -188,6 +212,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         self.n_jobs = n_jobs
         self.parallel_backend = parallel_backend
         self.sum_over_energy_groups = sum_over_energy_groups
+        self.max_niter = max_niter
 
         self.selection_optional = selection_optional
         self.energy_edges = energy_edges
@@ -197,6 +222,8 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
             n_sigma_ul=self.n_sigma_ul,
             selection_optional=selection_optional,
             ts_threshold=threshold,
+            norm=self.norm,
+            max_niter=self.max_niter,
         )
 
     @property
@@ -214,11 +241,19 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
             "success",
         ]
 
-        if "errn-errp" in self.selection_optional:
-            selection += ["norm_errp", "norm_errn"]
-
-        if "ul" in self.selection_optional:
-            selection += ["norm_ul"]
+        if "stat_scan" in self.selection_optional:
+            selection += [
+                "dnde_scan_values",
+                "stat_scan",
+                "norm_errp",
+                "norm_errn",
+                "norm_ul",
+            ]
+        else:
+            if "errn-errp" in self.selection_optional:
+                selection += ["norm_errp", "norm_errn"]
+            if "ul" in self.selection_optional:
+                selection += ["norm_ul"]
 
         return selection
 
@@ -269,6 +304,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
             geom=dataset.counts.geom,
             mask=dataset.mask_image,
         )
+
         kernel = evaluator.compute_npred()
         kernel.data /= kernel.data.sum()
         return kernel
@@ -304,6 +340,8 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
         flux.quantity = flux.quantity.to("1 / (cm2 s)")
         flux = flux.convolve(kernel)
+        if dataset.mask_safe:
+            flux *= dataset.mask_safe
         return flux.sum_over_axes()
 
     @staticmethod
@@ -330,7 +368,10 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         # in some image there are pixels, which have exposure, but zero
         # background, which doesn't make sense and causes the TS computation
         # to fail, this is a temporary fix
-        background = dataset.npred().sum_over_axes(keepdims=False)
+        npred = dataset.npred()
+        if dataset.mask_safe:
+            npred *= dataset.mask_safe
+        background = npred.sum_over_axes(keepdims=False)
         mask[background.data == 0] = False
         return Map.from_geom(data=mask, geom=geom)
 
@@ -377,8 +418,6 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
             Maps dictionary.
         """
         # First create 2D map arrays
-        counts = dataset.counts
-        background = dataset.npred()
 
         exposure = estimate_exposure_reco_energy(dataset, self.model.spectral_model)
 
@@ -390,6 +429,11 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
             dataset=dataset, kernel=kernel, exposure=exposure
         )
 
+        mask_safe = dataset.mask_safe if dataset.mask_safe else 1.0
+        counts = dataset.counts * mask_safe
+        background = dataset.npred() * mask_safe
+        exposure *= mask_safe
+
         energy_axis = counts.geom.axes["energy"]
 
         flux_ref = self.model.spectral_model.integral(
@@ -397,43 +441,67 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         )
 
         exposure_npred = (exposure * flux_ref * mask.data).to_unit("")
-
         norm = (flux / flux_ref).to_unit("")
+
+        if self.sum_over_energy_groups:
+            if dataset.mask_safe is None:
+                mask_safe = Map.from_geom(counts.geom, data=True, dtype=bool)
+            counts = counts.sum_over_axes()
+            background = background.sum_over_axes()
+            exposure_npred = exposure_npred.sum_over_axes()
+
+        else:
+            mask_safe = None  # already applied
+
         return {
             "counts": counts,
             "background": background,
             "norm": norm,
             "mask": mask,
+            "mask_safe": mask_safe,
             "exposure": exposure_npred,
             "kernel": kernel,
         }
 
-    def estimate_flux_map(self, dataset):
+    def estimate_flux_map(self, datasets):
         """Estimate flux and test statistic maps for single dataset.
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.MapDataset`
-            Map dataset.
+        dataset : `~gammapy.datasets.Datasets` or `~gammapy.datasets.MapDataset`
+            Map dataset or Datasets (list of MapDataset with the same spatial geometry).
         """
-        maps = self.estimate_fit_input_maps(dataset=dataset)
 
-        x, y = np.where(np.squeeze(maps["mask"].data))
+        maps = [self.estimate_fit_input_maps(dataset=d) for d in datasets]
+
+        mask = np.sum([_["mask"].data for _ in maps], axis=0).astype(bool)
+
+        if not np.any(mask):
+            raise ValueError(
+                """No valid positions found.
+            Check that the dataset background is defined and not only zeros,
+            or that the mask_safe is not all False."
+            """
+            )
+
+        x, y = np.where(np.squeeze(mask))
         positions = list(zip(x, y))
 
         inputs = zip(
             positions,
-            repeat(maps["counts"].data.astype(float)),
-            repeat(maps["exposure"].data.astype(float)),
-            repeat(maps["background"].data.astype(float)),
-            repeat(maps["kernel"].data),
-            repeat(maps["norm"].data),
+            repeat([_["counts"].data.astype(float) for _ in maps]),
+            repeat([_["exposure"].data.astype(float) for _ in maps]),
+            repeat([_["background"].data.astype(float) for _ in maps]),
+            repeat([_["kernel"].data for _ in maps]),
+            repeat([_["norm"].data for _ in maps]),
+            repeat([_["mask_safe"] for _ in maps]),
             repeat(self._flux_estimator),
         )
 
         results = parallel.run_multiprocessing(
             _ts_value,
             inputs,
+            backend=self.parallel_backend,
             pool_kwargs=dict(processes=self.n_jobs),
             task_name="TS map",
         )
@@ -442,16 +510,40 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
         j, i = zip(*positions)
 
-        geom = maps["counts"].geom.squash(axis_name="energy")
+        geom = maps[0]["counts"].geom.squash(axis_name="energy")
+        energy_axis = maps[0]["counts"].geom.axes["energy"]
+        dnde_ref = self.model.spectral_model(energy_axis.center)
 
         for name in self.selection_all:
-            m = Map.from_geom(geom=geom, data=np.nan, unit="")
-            m.data[0, j, i] = [_[name] for _ in results]
+            if name in ["dnde_scan_values", "stat_scan"]:
+                norm_bin_axis = MapAxis(
+                    range(len(results[0]["dnde_scan_values"])),
+                    interp="lin",
+                    node_type="center",
+                    name="dnde_bin",
+                )
+
+                axes = geom.axes + [norm_bin_axis]
+                geom_scan = geom.to_image().to_cube(axes)
+
+                if name == "dnde_scan_values":
+                    unit = dnde_ref.unit
+                    factor = dnde_ref.value
+                else:
+                    unit = ""
+                    factor = 1
+
+                m = Map.from_geom(geom_scan, data=np.nan, unit=unit)
+                m.data[:, 0, j, i] = np.array([_[name] for _ in results]).T * factor
+
+            else:
+                m = Map.from_geom(geom=geom, data=np.nan, unit="")
+                m.data[0, j, i] = [_[name] for _ in results]
             result[name] = m
 
         return result
 
-    def run(self, dataset):
+    def run(self, datasets):
         """
         Run test statistic map estimation.
 
@@ -464,8 +556,8 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.MapDataset`
-            Input MapDataset.
+        dataset : `~gammapy.datasets.Datasets` or `~gammapy.datasets.MapDataset`
+            Map dataset or Datasets (list of MapDataset with the same spatial geometry).
 
         Returns
         -------
@@ -479,36 +571,50 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
                 * flux_ul : upper limit map.
 
         """
-        if dataset.stat_type != "cash":
-            raise TypeError(f"{type(dataset)} is not a valid type for {self.__class__}")
-        dataset_models = dataset.models
+        datasets = Datasets(datasets)
 
-        pad_width = self.estimate_pad_width(dataset=dataset)
-        dataset = dataset.pad(pad_width, name=dataset.name)
-        dataset = dataset.downsample(self.downsampling_factor, name=dataset.name)
+        geom_ref = datasets[0].counts.geom
+        for dataset in datasets:
+            if dataset.stat_type != "cash":
+                raise TypeError(
+                    f"{type(dataset)} is not a valid type for {self.__class__}"
+                )
+            if dataset.counts.geom.to_image() != geom_ref.to_image():
+                raise TypeError("Datasets geometries must match")
 
-        energy_axis = self._get_energy_axis(dataset=dataset)
+        datasets_models = datasets.models
+
+        pad_width = (0, 0)
+        for dataset in datasets:
+            pad_width_dataset = self.estimate_pad_width(dataset=dataset)
+            pad_width = tuple(np.maximum(pad_width, pad_width_dataset))
+
+        datasets_padded = Datasets()
+        for dataset in datasets:
+            dataset = dataset.pad(pad_width, name=dataset.name)
+            dataset = dataset.downsample(self.downsampling_factor, name=dataset.name)
+            datasets_padded.append(dataset)
+        datasets = datasets_padded
+
+        energy_axis = self._get_energy_axis(dataset=datasets[0])
 
         results = []
 
         for energy_min, energy_max in progress_bar(
             energy_axis.iter_by_edges, desc="Energy bins"
         ):
-            dataset_sliced = dataset.slice_by_energy(
-                energy_min=energy_min, energy_max=energy_max, name=dataset.name
+            datasets_sliced = datasets.slice_by_energy(
+                energy_min=energy_min, energy_max=energy_max
             )
 
-            if self.sum_over_energy_groups:
-                dataset_sliced = dataset_sliced.to_image(name=dataset.name)
-
-            if dataset_models is not None:
-                models_sliced = dataset_models._slice_by_energy(
+            if datasets_models is not None:
+                models_sliced = datasets_models._slice_by_energy(
                     energy_min=energy_min,
                     energy_max=energy_max,
                     sum_over_energy_groups=self.sum_over_energy_groups,
                 )
-                dataset_sliced.models = models_sliced
-            result = self.estimate_flux_map(dataset_sliced)
+                datasets_sliced.models = models_sliced
+            result = self.estimate_flux_map(datasets_sliced)
             results.append(result)
 
         maps = Maps()
@@ -558,9 +664,7 @@ class SimpleMapDataset:
     @lazyproperty
     def norm_bounds(self):
         """Bounds for x"""
-        return norm_bounds_cython(
-            self.counts.ravel(), self.background.ravel(), self.model.ravel()
-        )
+        return norm_bounds_cython(self.counts, self.background, self.model)
 
     def npred(self, norm):
         """Predicted number of counts."""
@@ -568,13 +672,11 @@ class SimpleMapDataset:
 
     def stat_sum(self, norm):
         """Statistics sum."""
-        return cash_sum_cython(self.counts.ravel(), self.npred(norm).ravel())
+        return cash_sum_cython(self.counts, self.npred(norm))
 
     def stat_derivative(self, norm):
         """Statistics derivative."""
-        return f_cash_root_cython(
-            norm, self.counts.ravel(), self.background.ravel(), self.model.ravel()
-        )
+        return f_cash_root_cython(norm, self.counts, self.background, self.model)
 
     def stat_2nd_derivative(self, norm):
         """Statistics 2nd derivative."""
@@ -584,16 +686,28 @@ class SimpleMapDataset:
         return (term_top / term_bottom)[~mask].sum()
 
     @classmethod
-    def from_arrays(cls, counts, background, exposure, norm, position, kernel):
+    def from_arrays(
+        cls, counts, background, exposure, norm, position, kernel, mask_safe
+    ):
         """"""
+        if mask_safe:
+            # compute mask_safe weighted kernel for the sum_over_axes case
+            mask_safe = _extract_array(mask_safe.data, kernel.shape, position)
+            kernel = (kernel * mask_safe).sum(axis=0, keepdims=True)
+            with np.errstate(invalid="ignore", divide="ignore"):
+                kernel /= mask_safe.sum(axis=0, keepdims=True)
+                kernel[~np.isfinite(kernel)] = 0
+
         counts_cutout = _extract_array(counts, kernel.shape, position)
         background_cutout = _extract_array(background, kernel.shape, position)
         exposure_cutout = _extract_array(exposure, kernel.shape, position)
+        model = kernel * exposure_cutout
         norm_guess = norm[0, position[0], position[1]]
+        mask_invalid = (counts_cutout == 0) & (background_cutout == 0) & (model == 0)
         return cls(
-            counts=counts_cutout,
-            background=background_cutout,
-            model=kernel * exposure_cutout,
+            counts=counts_cutout[~mask_invalid],
+            background=background_cutout[~mask_invalid],
+            model=model[~mask_invalid],
             norm_guess=norm_guess,
         )
 
@@ -602,7 +716,7 @@ class SimpleMapDataset:
 class BrentqFluxEstimator(Estimator):
     """Single parameter flux estimator."""
 
-    _available_selection_optional = ["errn-errp", "ul"]
+    _available_selection_optional = ["errn-errp", "ul", "stat_scan"]
     tag = "BrentqFluxEstimator"
 
     def __init__(
@@ -611,8 +725,9 @@ class BrentqFluxEstimator(Estimator):
         n_sigma,
         n_sigma_ul,
         selection_optional=None,
-        max_niter=20,
+        max_niter=100,
         ts_threshold=None,
+        norm=None,
     ):
         self.rtol = rtol
         self.n_sigma = n_sigma
@@ -620,6 +735,7 @@ class BrentqFluxEstimator(Estimator):
         self.selection_optional = selection_optional
         self.max_niter = max_niter
         self.ts_threshold = ts_threshold
+        self.norm = norm
 
     def estimate_best_fit(self, dataset):
         """Estimate best fit norm parameter.
@@ -745,6 +861,65 @@ class BrentqFluxEstimator(Estimator):
         )
         return {"norm_errn": flux_errn, "norm_errp": flux_errp}
 
+    def estimate_scan(self, dataset, result):
+        """Compute likelihood profile.
+
+        Parameters
+        ----------
+        dataset : `SimpleMapDataset`
+            Simple map dataset.
+
+        Returns
+        -------
+        result : dict
+            Result dictionary including 'stat_scan'.
+        """
+
+        sparse_norms = _get_norm_scan_values(self.norm, result)
+
+        scale = sparse_norms[None, :]
+        model = dataset.model.ravel()[:, None]
+        background = dataset.background.ravel()[:, None]
+        counts = dataset.counts.ravel()[:, None]
+        stat_scan = cash(counts, model * scale + background)
+
+        stat_scan_local = stat_scan.sum(axis=0) - result["stat_null"]
+
+        spline = InterpolatedUnivariateSpline(
+            sparse_norms, stat_scan_local, k=1, ext="raise", check_finite=True
+        )
+
+        norms = np.unique(np.concatenate((sparse_norms, self.norm.scan_values)))
+        stat_scan = spline(norms)
+
+        ts = -stat_scan.min()
+        ind = stat_scan.argmin()
+        norm = norms[ind]
+
+        maskp = norms > norm
+        stat_diff = stat_scan - stat_scan.min()
+        ind = np.abs(stat_diff - self.n_sigma**2)[~maskp].argmin()
+        norm_errn = norm - norms[~maskp][ind]
+
+        ind = np.abs(stat_diff - self.n_sigma**2)[maskp].argmin()
+        norm_errp = norms[maskp][ind] - norm
+
+        ind = np.abs(stat_diff - self.n_sigma_ul**2)[maskp].argmin()
+        norm_ul = norms[maskp][ind]
+
+        norm_err = (norm_errn + norm_errp) / 2
+
+        return dict(
+            ts=ts,
+            norm=norm,
+            norm_err=norm_err,
+            norm_errn=norm_errn,
+            norm_errp=norm_errp,
+            norm_ul=norm_ul,
+            stat_scan=stat_scan_local,
+            dnde_scan_values=sparse_norms,
+        )
+
     def estimate_default(self, dataset):
         """Estimate default norm.
 
@@ -796,20 +971,26 @@ class BrentqFluxEstimator(Estimator):
         else:
             result = self.estimate_best_fit(dataset)
 
-        norm = result["norm"]
-        result["npred"] = dataset.npred(norm=norm).sum()
-        result["npred_excess"] = result["npred"] - dataset.npred(norm=0).sum()
-
         if "ul" in self.selection_optional:
             result.update(self.estimate_ul(dataset, result))
 
         if "errn-errp" in self.selection_optional:
             result.update(self.estimate_errn_errp(dataset, result))
 
+        if "stat_scan" in self.selection_optional:
+            result.update(self.estimate_scan(dataset, result))
+
+        norm = result["norm"]
+        result["npred"] = dataset.npred(norm=norm).sum()
+        result["npred_excess"] = result["npred"] - dataset.npred(norm=0).sum()
+        result["stat"] = dataset.stat_sum(norm=norm)
+
         return result
 
 
-def _ts_value(position, counts, exposure, background, kernel, norm, flux_estimator):
+def _ts_value(
+    position, counts, exposure, background, kernel, norm, mask_safe, flux_estimator
+):
     """Compute test statistic value at a given pixel position.
 
     Uses approach described in Stewart (2009).
@@ -835,12 +1016,32 @@ def _ts_value(position, counts, exposure, background, kernel, norm, flux_estimat
     TS : float
         Test statistic value at the given pixel position.
     """
-    dataset = SimpleMapDataset.from_arrays(
-        counts=counts,
-        background=background,
-        exposure=exposure,
-        kernel=kernel,
-        position=position,
-        norm=norm,
+
+    datasets = []
+    nd = len(counts)
+    for idx in range(nd):
+        datasets.append(
+            SimpleMapDataset.from_arrays(
+                counts=counts[idx],
+                background=background[idx],
+                exposure=exposure[idx],
+                norm=norm[idx],
+                position=position,
+                kernel=kernel[idx],
+                mask_safe=mask_safe[idx],
+            )
+        )
+
+    norm_guess = np.array([d.norm_guess for d in datasets])
+    mask_valid = np.isfinite(norm_guess)
+    if np.any(mask_valid):
+        norm_guess = np.mean(norm_guess[mask_valid])
+    else:
+        norm_guess = 1.0
+    dataset = SimpleMapDataset(
+        counts=np.concatenate([d.counts for d in datasets]),
+        background=np.concatenate([d.background for d in datasets]),
+        model=np.concatenate([d.model for d in datasets]),
+        norm_guess=norm_guess,
     )
     return flux_estimator.run(dataset)
