@@ -320,7 +320,7 @@ def discrete_correlation(flux1, flux_err1, flux2, flux_err2, time1, time2, tau, 
     flux2 = np.rollaxis(flux2, axis, 0)
 
     mean1, mean2 = np.nanmean(flux1, axis=0), np.nanmean(flux2, axis=0)
-    sigma1, sigma2 = np.nanstd(flux1, axis=0), np.nanstd(flux1, axis=0)
+    sigma1, sigma2 = np.nanstd(flux1, axis=0), np.nanstd(flux2, axis=0)
 
     udcf1 = (flux1 - mean1) / np.sqrt((sigma1**2 - flux_err1**2))
     udcf2 = (flux2 - mean2) / np.sqrt((sigma2**2 - flux_err2**2))
