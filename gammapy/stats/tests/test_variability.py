@@ -13,7 +13,7 @@ from gammapy.stats.variability import (
     compute_fpp,
     compute_fvar,
     structure_function,
-    discrete_correlation_function,
+    discrete_correlation,
 )
 from gammapy.utils.testing import assert_quantity_allclose
 
@@ -312,7 +312,7 @@ def test_dcf():
         * u.s
     )
 
-    bins, dcf, dcf_err = discrete_correlation_function(
+    bins, dcf, dcf_err = discrete_correlation(
         flux, flux_err, flux2, flux_err2, time, time2, tau=1.5e4 * u.s
     )
 

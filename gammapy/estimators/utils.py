@@ -19,7 +19,7 @@ from gammapy.stats import (
     compute_flux_doubling,
     compute_fpp,
     compute_fvar,
-    discrete_correlation_function,
+    discrete_correlation,
 )
 from gammapy.stats.utils import ts_to_sigma
 from .map.core import FluxMaps
@@ -574,7 +574,7 @@ def compute_dcf(lightcurve1, lightcurve2=None, flux_quantity="flux", tau=1 * u.h
         flux2 = getattr(lightcurve2, flux_quantity)
         flux_err2 = getattr(lightcurve2, flux_quantity + "_err")
         coords2 = lightcurve2.geom.axes["time"].center
-        return discrete_correlation_function(
+        return discrete_correlation(
             flux1.data,
             flux_err1.data,
             flux2.data,
@@ -586,7 +586,7 @@ def compute_dcf(lightcurve1, lightcurve2=None, flux_quantity="flux", tau=1 * u.h
         )
 
     else:
-        return discrete_correlation_function(
+        return discrete_correlation(
             flux1.data,
             flux_err1.data,
             flux1.data,

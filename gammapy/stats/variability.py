@@ -11,6 +11,7 @@ __all__ = [
     "compute_flux_doubling",
     "structure_function",
     "TimmerKonig_lightcurve_simulator",
+    "discrete_correlation",
 ]
 
 
@@ -286,17 +287,15 @@ def structure_function(flux, flux_err, time, tdelta_precision=5):
     return sf, distances
 
 
-def discrete_correlation_function(
-    flux1, flux_err1, flux2, flux_err2, time1, time2, tau, axis=0
-):
+def discrete_correlation(flux1, flux_err1, flux2, flux_err2, time1, time2, tau, axis=0):
     """Compute the discrete structure function for a variable source.
 
     Parameters
     ----------
-    flux1, flux2 : `~astropy.units.Quantity`
-        The first and second set of measured fluxes.
-    flux_err1, flux_err2 : `~astropy.units.Quantity`
-        The first and second set of errors on measured fluxes.
+    flux1, flux_err1: `~astropy.units.Quantity`
+        The first set of measured fluxes and associated error.
+    flux2, flux_err2 : `~astropy.units.Quantity`
+        The second set of measured fluxes and associated error.
     time1, time2 : `~astropy.units.Quantity`
         The time coordinates at which the fluxes are measured.
     tau : `~astropy.units.Quantity`
