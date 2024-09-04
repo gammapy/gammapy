@@ -12,6 +12,7 @@ from gammapy.estimators.utils import (
     compute_lightcurve_doublingtime,
     compute_lightcurve_fpp,
     compute_lightcurve_fvar,
+    compute_dcf,
     find_peaks,
     find_peaks_in_flux_map,
     get_rebinned_axis,
@@ -197,6 +198,15 @@ def test_compute_lightcurve_doublingtime():
         dcoord,
         Time([[[55197.99960648]], [[55197.99960648]]], format="mjd", scale="utc"),
     )
+
+
+def test_compute_dcf():
+    lighcurve = lc()
+
+    bins, dcf, dcf_err = compute_dcf(lighcurve, tau=5 * u.d)
+    assert_allclose(bins, [-216000.0, 216000.0] * u.s)
+    assert_allclose(dcf, [[-1.041667, -1.155327], [0.347222, 0.385109]], rtol=1e-6)
+    assert_allclose(dcf_err, [[0.0, 0.0], [1.388889, 1.540436]], rtol=1e-6)
 
 
 @requires_data()
