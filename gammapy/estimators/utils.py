@@ -543,7 +543,7 @@ def compute_lightcurve_doublingtime(lightcurve, flux_quantity="flux"):
 
 
 def compute_dcf(lightcurve1, lightcurve2=None, flux_quantity="flux", tau=1 * u.h):
-    r"""Compute the discrete correlation function for two lightcurves of the discrete autocorrelation if only one lightcurve is provided.
+    r"""Compute the discrete correlation function for two lightcurves or the discrete autocorrelation if only one lightcurve is provided.
 
     Internally calls the `~gammapy.stats.discrete_correlation_function` function
 
