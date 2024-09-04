@@ -317,9 +317,6 @@ def discrete_correlation_function(
     https://ui.adsabs.harvard.edu/abs/1988ApJ...333..646E/abstract
     """
 
-    if flux1.shape != flux2.shape:
-        raise ValueError("The two fluxes to correlate must have the same shape.")
-
     flux1 = np.rollaxis(flux1, axis, 0)
     flux2 = np.rollaxis(flux2, axis, 0)
 
