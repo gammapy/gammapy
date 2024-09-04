@@ -551,7 +551,7 @@ def compute_dcf(lightcurve1, lightcurve2=None, flux_quantity="flux", tau=1 * u.h
     ----------
     lightcurve1 : `~gammapy.estimators.FluxPoints`
         The first lightcurve object.
-    lightcurve1 : `~gammapy.estimators.FluxPoints`, optional
+    lightcurve2 : `~gammapy.estimators.FluxPoints`, optional
         The second lightcurve object. If not provided, the autocorrelation for the first lightcurve will be computed. Default is None.
     flux_quantity : str
         Flux quantity to use for calculation. Should be 'dnde', 'flux', 'e2dnde' or 'eflux'. Default is 'flux'.
