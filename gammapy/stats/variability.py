@@ -322,8 +322,8 @@ def discrete_correlation(flux1, flux_err1, flux2, flux_err2, time1, time2, tau, 
     mean1, mean2 = np.nanmean(flux1, axis=0), np.nanmean(flux2, axis=0)
     sigma1, sigma2 = np.nanstd(flux1, axis=0), np.nanstd(flux2, axis=0)
 
-    udcf1 = (flux1 - mean1) / np.sqrt((sigma1**2 - flux_err1**2))
-    udcf2 = (flux2 - mean2) / np.sqrt((sigma2**2 - flux_err2**2))
+    udcf1 = (flux1 - mean1) / np.sqrt((sigma1**2 - np.nanmean(flux_err1, axis=0) ** 2))
+    udcf2 = (flux2 - mean2) / np.sqrt((sigma2**2 - np.nanmean(flux_err2, axis=0) ** 2))
 
     udcf = np.empty(((flux1.shape[0],) + flux2.shape))
     dist = u.Quantity(np.empty(((flux1.shape[0], flux2.shape[0]))), unit=time1.unit)
