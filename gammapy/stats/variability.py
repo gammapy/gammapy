@@ -288,7 +288,7 @@ def structure_function(flux, flux_err, time, tdelta_precision=5):
 
 
 def discrete_correlation(flux1, flux_err1, flux2, flux_err2, time1, time2, tau, axis=0):
-    """Compute the discrete structure function for a variable source.
+    """Compute the discrete correlation function for a variable source.
 
     Parameters
     ----------
@@ -306,7 +306,7 @@ def discrete_correlation(flux1, flux_err1, flux2, flux_err2, time1, time2, tau, 
 
     Returns
     -------
-    bincenters, dcf, dcf_err : `~numpy.ndarray`, `~astropy.units.Quantity`
+    bincenters, discrete_correlation, discrete_correlation_err : `~numpy.ndarray`, `~astropy.units.Quantity`
         Array of discrete time bins, discrete correlation function and associated error.
 
     References
@@ -348,19 +348,23 @@ def discrete_correlation(flux1, flux_err1, flux2, flux_err2, time1, time2, tau, 
     bin_indices = np.digitize(dist, bins).flatten()
 
     udcf = np.reshape(udcf, (udcf.shape[0] * udcf.shape[1], -1))
-    dcf = np.array(
+    discrete_correlation = np.array(
         [np.nanmean(udcf[bin_indices == i], axis=0) for i in range(1, len(bins))]
     )
-    dcf_err = np.array(
+    discrete_correlation_err = np.array(
         [
-            np.sqrt(np.nansum((dcf[i - 1] - udcf[bin_indices == i]) ** 2, axis=0))
+            np.sqrt(
+                np.nansum(
+                    (discrete_correlation[i - 1] - udcf[bin_indices == i]) ** 2, axis=0
+                )
+            )
             / (len(udcf[bin_indices == i]) - 1)
             for i in range(1, len(bins))
         ]
     )
     bincenters = (bins[1:] + bins[:-1]) / 2
 
-    return bincenters, dcf, dcf_err
+    return bincenters, discrete_correlation, discrete_correlation_err
 
 
 def TimmerKonig_lightcurve_simulator(
