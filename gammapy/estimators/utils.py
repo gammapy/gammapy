@@ -563,7 +563,7 @@ def compute_lightcurve_discrete_correlation(
 
     Returns
     -------
-    bincenters, discrete_correlation, discrete_correlation_err : `~numpy.ndarray`, `~astropy.units.Quantity`
+    bincenters, discrete_correlation, discrete_correlation_err : `~astropy.units.Quantity`, `~numpy.ndarray`, `~numpy.ndarray`
         Array of discrete time bins, discrete correlation function and associated error.
     """
 
