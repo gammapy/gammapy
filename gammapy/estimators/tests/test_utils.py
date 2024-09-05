@@ -12,7 +12,7 @@ from gammapy.estimators.utils import (
     compute_lightcurve_doublingtime,
     compute_lightcurve_fpp,
     compute_lightcurve_fvar,
-    compute_dcf,
+    compute_lightcurve_discrete_correlation,
     find_peaks,
     find_peaks_in_flux_map,
     get_rebinned_axis,
@@ -162,6 +162,39 @@ def lc():
     return FluxPoints.from_table(table=table, format="lightcurve")
 
 
+def lc2():
+    meta = dict(TIMESYS="utc", SED_TYPE="flux")
+
+    table = Table(
+        meta=meta,
+        data=[
+            Column(Time(["2010-01-01", "2010-01-03", "2010-01-05"]).mjd, "time_min"),
+            Column(Time(["2010-01-03", "2010-01-05", "2010-01-07"]).mjd, "time_max"),
+            Column([[1.0, 2.0], [1.0, 2.0], [1.0, 2.0]], "e_min", unit="TeV"),
+            Column([[2.0, 5.0], [2.0, 5.0], [2.0, 5.0]], "e_max", unit="TeV"),
+            Column(
+                [[1.51e-11, 3.4e-12], [3.1e-11, 6.7e-12], [3.1e-11, 7.5e-12]],
+                "flux",
+                unit="cm-2 s-1",
+            ),
+            Column(
+                [[0.1e-11, 0.4e-12], [0.3e-11, 0.7e-12], [0.31e-11, 0.72e-12]],
+                "flux_err",
+                unit="cm-2 s-1",
+            ),
+            Column(
+                [[np.nan, np.nan], [3.6e-11, 1e-11], [3.6e-11, 1e-11]],
+                "flux_ul",
+                unit="cm-2 s-1",
+            ),
+            Column([[False, False], [True, True], [True, True]], "is_ul"),
+            Column([[True, True], [True, True], [True, True]], "success"),
+        ],
+    )
+
+    return FluxPoints.from_table(table=table, format="lightcurve")
+
+
 def test_compute_lightcurve_fvar():
     lightcurve = lc()
 
@@ -202,11 +235,48 @@ def test_compute_lightcurve_doublingtime():
 
 def test_compute_dcf():
     lighcurve = lc()
+    lightcurve2 = lc2()
+    lightcurve2["flux"].data
 
-    bins, dcf, dcf_err = compute_dcf(lighcurve, tau=5 * u.d)
-    assert_allclose(bins, [-216000.0, 216000.0] * u.s)
-    assert_allclose(dcf, [[-1.041667, -1.155327], [0.347222, 0.385109]], rtol=1e-6)
-    assert_allclose(dcf_err, [[np.nan, np.nan], [0.850517, 0.943321]], rtol=1e-6)
+    bins, dcf, dcf_err = compute_lightcurve_discrete_correlation(
+        lighcurve, lightcurve2, tau=3 * u.d
+    )
+    assert_allclose(bins, [-388800.0, -129600.0, 129600.0, 388800.0] * u.s)
+    assert_allclose(
+        dcf,
+        [
+            [-0.760599, -1.052783],
+            [-0.760599, -0.537134],
+            [1.014132, 1.059945],
+            [-1.521198, -1.589918],
+        ],
+        rtol=1e-6,
+    )
+    assert_allclose(
+        dcf_err,
+        [[np.nan, np.nan], [np.nan, np.nan], [0.310513, 0.372241], [np.nan, np.nan]],
+        rtol=1e-6,
+    )
+
+    bins2, dcf2, dcf_err2 = compute_lightcurve_discrete_correlation(
+        lightcurve2, tau=3 * u.d
+    )
+    assert_allclose(bins2, [-388800.0, -129600.0, 129600.0, 388800.0] * u.s)
+    assert_allclose(
+        dcf2,
+        [
+            [-1.11074, -1.448801],
+            [-0.277685, -0.124862],
+            [0.55537, 0.629465],
+            [-1.11074, -1.448801],
+        ],
+        rtol=1e-5,
+    )
+    assert_allclose(
+        dcf_err2,
+        [[np.nan, np.nan], [1.178118, 0.868782], [0.589059, 0.53472], [np.nan, np.nan]],
+        rtol=1e-6,
+    )
 
 
 @requires_data()
