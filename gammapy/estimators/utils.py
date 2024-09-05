@@ -34,7 +34,7 @@ __all__ = [
     "compute_lightcurve_fvar",
     "compute_lightcurve_fpp",
     "compute_lightcurve_doublingtime",
-    "compute_dcf",
+    "compute_lightcurve_discrete_correlation",
 ]
 
 
@@ -542,7 +542,9 @@ def compute_lightcurve_doublingtime(lightcurve, flux_quantity="flux"):
     return table
 
 
-def compute_dcf(lightcurve1, lightcurve2=None, flux_quantity="flux", tau=1 * u.h):
+def compute_lightcurve_discrete_correlation(
+    lightcurve1, lightcurve2=None, flux_quantity="flux", tau=1 * u.h
+):
     r"""Compute the discrete correlation function for two lightcurves or the discrete autocorrelation if only one lightcurve is provided.
 
     Internally calls the `~gammapy.stats.discrete_correlation_function` function
@@ -561,7 +563,7 @@ def compute_dcf(lightcurve1, lightcurve2=None, flux_quantity="flux", tau=1 * u.h
 
     Returns
     -------
-    bincenters, dcf, dcf_err : `~numpy.ndarray`, `~astropy.units.Quantity`
+    bincenters, discrete_correlation, discrete_correlation_err : `~numpy.ndarray`, `~astropy.units.Quantity`
         Array of discrete time bins, discrete correlation function and associated error.
     """
 
