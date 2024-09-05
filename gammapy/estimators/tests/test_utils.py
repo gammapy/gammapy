@@ -206,7 +206,7 @@ def test_compute_dcf():
     bins, dcf, dcf_err = compute_dcf(lighcurve, tau=5 * u.d)
     assert_allclose(bins, [-216000.0, 216000.0] * u.s)
     assert_allclose(dcf, [[-1.041667, -1.155327], [0.347222, 0.385109]], rtol=1e-6)
-    assert_allclose(dcf_err, [[0.0, 0.0], [1.388889, 1.540436]], rtol=1e-6)
+    assert_allclose(dcf_err, [[np.nan, np.nan], [0.850517, 0.943321]], rtol=1e-6)
 
 
 @requires_data()

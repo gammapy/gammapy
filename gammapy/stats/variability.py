@@ -352,8 +352,12 @@ def discrete_correlation(flux1, flux_err1, flux2, flux_err2, time1, time2, tau, 
         [np.nanmean(udcf[bin_indices == i], axis=0) for i in range(1, len(bins))]
     )
     dcf_err = np.array(
-        [np.nanstd(udcf[bin_indices == i], axis=0) for i in range(1, len(bins))]
-    ) / (np.sqrt((len(time1) - 1) / (len(bins) - 1)))
+        [
+            np.sqrt(np.nansum((dcf[i - 1] - udcf[bin_indices == i]) ** 2, axis=0))
+            / (len(udcf[bin_indices == i]) - 1)
+            for i in range(1, len(bins))
+        ]
+    )
     bincenters = (bins[1:] + bins[:-1]) / 2
 
     return bincenters, dcf, dcf_err
