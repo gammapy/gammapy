@@ -545,9 +545,10 @@ def compute_lightcurve_doublingtime(lightcurve, flux_quantity="flux"):
 def compute_lightcurve_discrete_correlation(
     lightcurve1, lightcurve2=None, flux_quantity="flux", tau=1 * u.h
 ):
-    r"""Compute the discrete correlation function for two lightcurves or the discrete autocorrelation if only one lightcurve is provided.
+    r"""Compute the discrete correlation function for two lightcurves, or the discrete autocorrelation if only one lightcurve is provided.
+    NaN values will be ignored in the computation in order to account for possible gaps in the data.
 
-    Internally calls the `~gammapy.stats.discrete_correlation_function` function
+    Internally calls the `~gammapy.stats.discrete_correlation` function
 
     Parameters
     ----------
@@ -563,8 +564,14 @@ def compute_lightcurve_discrete_correlation(
 
     Returns
     -------
-    bincenters, discrete_correlation, discrete_correlation_err : `~astropy.units.Quantity`, `~numpy.ndarray`, `~numpy.ndarray`
-        Array of discrete time bins, discrete correlation function and associated error.
+    discrete_correlation_dict : dict
+        Dictionary containing the array of discrete time bins, discrete correlation function and associated error.
+
+    References
+    ----------
+    .. [Edelson1988] "THE DISCRETE CORRELATION FUNCTION: A NEW METHOD FOR ANALYZING
+    UNEVENLY SAMPLED VARIABILITY DATA", Edelson et al. (1988)
+    https://ui.adsabs.harvard.edu/abs/1988ApJ...333..646E/abstract
     """
 
     flux1 = getattr(lightcurve1, flux_quantity)
@@ -576,7 +583,7 @@ def compute_lightcurve_discrete_correlation(
         flux2 = getattr(lightcurve2, flux_quantity)
         flux_err2 = getattr(lightcurve2, flux_quantity + "_err")
         coords2 = lightcurve2.geom.axes["time"].center
-        return discrete_correlation(
+        bins, dcf, dcf_err = discrete_correlation(
             flux1.data,
             flux_err1.data,
             flux2.data,
@@ -588,7 +595,7 @@ def compute_lightcurve_discrete_correlation(
         )
 
     else:
-        return discrete_correlation(
+        bins, dcf, dcf_err = discrete_correlation(
             flux1.data,
             flux_err1.data,
             flux1.data,
@@ -598,6 +605,14 @@ def compute_lightcurve_discrete_correlation(
             tau,
             axis,
         )
+
+    discrete_correlation_dict = {
+        "bins": bins,
+        "discrete_correlation": dcf,
+        "discrete_correlation_err": dcf_err,
+    }
+
+    return discrete_correlation_dict
 
 
 def get_edges_fixed_bins(fluxpoint, group_size, axis_name="energy"):

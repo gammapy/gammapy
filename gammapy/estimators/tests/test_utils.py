@@ -238,12 +238,11 @@ def test_compute_dcf():
     lightcurve2 = lc2()
     lightcurve2["flux"].data
 
-    bins, dcf, dcf_err = compute_lightcurve_discrete_correlation(
-        lighcurve, lightcurve2, tau=3 * u.d
-    )
-    assert_allclose(bins, [-388800.0, -129600.0, 129600.0, 388800.0] * u.s)
+    dict = compute_lightcurve_discrete_correlation(lighcurve, lightcurve2, tau=3 * u.d)
+
+    assert_allclose(dict["bins"], [-388800.0, -129600.0, 129600.0, 388800.0] * u.s)
     assert_allclose(
-        dcf,
+        dict["discrete_correlation"],
         [
             [-0.760599, -1.052783],
             [-0.760599, -0.537134],
@@ -253,17 +252,15 @@ def test_compute_dcf():
         rtol=1e-6,
     )
     assert_allclose(
-        dcf_err,
+        dict["discrete_correlation_err"],
         [[np.nan, np.nan], [np.nan, np.nan], [0.310513, 0.372241], [np.nan, np.nan]],
         rtol=1e-6,
     )
 
-    bins2, dcf2, dcf_err2 = compute_lightcurve_discrete_correlation(
-        lightcurve2, tau=3 * u.d
-    )
-    assert_allclose(bins2, [-388800.0, -129600.0, 129600.0, 388800.0] * u.s)
+    dict2 = compute_lightcurve_discrete_correlation(lightcurve2, tau=3 * u.d)
+    assert_allclose(dict2["bins"], [-388800.0, -129600.0, 129600.0, 388800.0] * u.s)
     assert_allclose(
-        dcf2,
+        dict2["discrete_correlation"],
         [
             [-1.11074, -1.448801],
             [-0.277685, -0.124862],
@@ -273,7 +270,7 @@ def test_compute_dcf():
         rtol=1e-5,
     )
     assert_allclose(
-        dcf_err2,
+        dict2["discrete_correlation_err"],
         [[np.nan, np.nan], [1.178118, 0.868782], [0.589059, 0.53472], [np.nan, np.nan]],
         rtol=1e-6,
     )
