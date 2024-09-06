@@ -1123,7 +1123,7 @@ class MapAxis:
         factor : int
             Downsampling factor.
         strict : bool
-            Whether the number of bins is strictly divisible by the factor.
+            Whether the number of bins, is strictly divisible by the factor.
             If True, ``nbin`` must be divisible by the ``factor``.
             If False, the reminder bins are put into the last bin of the new axis.
             Default is True.
@@ -1133,20 +1133,27 @@ class MapAxis:
         axis : `MapAxis`
             Downsampled map axis.
         """
-        if self.node_type == "center":
-            raise ValueError(
-                f"Downsampling is not possible for {self.name} axis with node_type=center"
-            )
+        if self.node_type == "edges":
+            edges = self.edges[::factor]
+            if edges[-1] != self.edges[-1]:
+                if strict is True:
+                    raise ValueError(
+                        f"Number of {self.name} bins ({self.nbin}) is not divisible by {factor}"
+                    )
+                else:
+                    edges = np.append(edges, self.edges[-1])
+            return self.from_edges(edges, name=self.name, interp=self.interp)
 
-        edges = self.edges[::factor]
-        if edges[-1] != self.edges[-1]:
-            if strict is True:
-                raise ValueError(
-                    f"Number of {self.name} bins is not divisible by {factor}"
-                )
-            else:
-                edges = np.append(edges, self.edges[-1])
-        return self.from_edges(edges, name=self.name, interp=self.interp)
+        elif self.node_type == "center":
+            centers = self.center[::factor]
+            if centers[-1] != self.center[-1]:
+                if strict is True:
+                    raise ValueError(
+                        f"Number of {self.name} bins - 1 ({self.nbin-1}) is not divisible by {factor}"
+                    )
+                else:
+                    centers = np.append(centers, self.center[-1])
+            return self.from_nodes(centers, name=self.name, interp=self.interp)
 
     def to_header(self, format="ogip", idx=0):
         """Create FITS header.
