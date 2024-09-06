@@ -320,6 +320,7 @@ def discrete_correlation(flux1, flux_err1, flux2, flux_err2, time1, time2, tau, 
     flux2 = np.rollaxis(flux2, axis, 0)
 
     tau = tau.to(time1.unit)
+    time2 = time2.to(time1.unit)
 
     mean1, mean2 = np.nanmean(flux1, axis=0), np.nanmean(flux2, axis=0)
     sigma1, sigma2 = np.nanstd(flux1, axis=0), np.nanstd(flux2, axis=0)
