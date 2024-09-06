@@ -139,6 +139,7 @@ def test_resample_energy_edges(spectrum_dataset):
     assert_allclose(np.squeeze(grouped.background)[-1], 200)
 
 
+@pytest.fixture(scope="session")
 def lc():
     meta = dict(TIMESYS="utc", SED_TYPE="flux")
 
@@ -162,6 +163,7 @@ def lc():
     return FluxPoints.from_table(table=table, format="lightcurve")
 
 
+@pytest.fixture(scope="session")
 def lc2():
     meta = dict(TIMESYS="utc", SED_TYPE="flux")
 

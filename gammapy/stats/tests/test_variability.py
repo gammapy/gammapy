@@ -37,6 +37,7 @@ def lc_table():
     return table
 
 
+@pytest.fixture(scope="session")
 def lc():
     meta = dict(TIMESYS="utc", SED_TYPE="flux")
 
