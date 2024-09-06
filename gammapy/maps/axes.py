@@ -1113,7 +1113,7 @@ class MapAxis:
     def downsample(self, factor, strict=True):
         """Downsample map axis by a given factor.
 
-        When downsampling each n-th (given by the factor) bin is selected from
+        When downsampling, each n-th (given by the factor) bin is selected from
         the axis while preserving the axis limits. For node type "edges" this
         requires nbin to be dividable by the factor, for node type "center" this
         requires nbin - 1 to be dividable by the factor.
@@ -1123,7 +1123,7 @@ class MapAxis:
         factor : int
             Downsampling factor.
         strict : bool
-            Whether the number of bins, is strictly divisible by the factor.
+            Whether the number of bins is strictly divisible by the factor.
             If True, ``nbin`` must be divisible by the ``factor``.
             If False, the reminder bins are put into the last bin of the new axis.
             Default is True.
