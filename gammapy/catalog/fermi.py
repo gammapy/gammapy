@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Fermi catalog and source classes."""
+
 import abc
 import logging
 import warnings
@@ -56,7 +57,6 @@ class SourceCatalogObjectFermiPCBase(SourceCatalogObject, abc.ABC):
         return self.info()
 
     def info(self, info="all"):
-
         if info == "all":
             info = "basic,more,position,pulsar,spectral,lightcurve"
 
@@ -1376,7 +1376,6 @@ class SourceCatalogObject2PC(SourceCatalogObjectFermiPCBase):
         fmt_f = "{}{:<20s} : {:.3f} +- {:.3f}\n"
 
         if not isinstance(d["PLEC1_Prefactor"], np.ma.core.MaskedConstant):
-
             ss += "\n{}* PLSuperExpCutoff b = 1 *\n\n".format(indentation)
             ss += fmt_e.format(
                 indentation, "Amplitude", d["PLEC1_Prefactor"], d["Unc_PLEC1_Prefactor"]
@@ -1396,7 +1395,6 @@ class SourceCatalogObject2PC(SourceCatalogObjectFermiPCBase):
             )
 
         if not isinstance(d["PLEC_Prefactor"], np.ma.core.MaskedConstant):
-
             ss += "\n{}* PLSuperExpCutoff b free *\n\n".format(indentation)
             ss += fmt_e.format(
                 indentation, "Amplitude", d["PLEC_Prefactor"], d["Unc_PLEC_Prefactor"]
@@ -1422,7 +1420,6 @@ class SourceCatalogObject2PC(SourceCatalogObjectFermiPCBase):
             )
 
         if not isinstance(d["PL_Prefactor"], np.ma.core.MaskedConstant):
-
             ss += "\n{}* PowerLaw *\n\n".format(indentation)
             ss += fmt_e.format(
                 indentation, "Amplitude", d["PL_Prefactor"], d["Unc_PL_Prefactor"]
@@ -1589,7 +1586,6 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
         fmt_f = "{}{:<20s} : {:.3f} +- {:.3f}\n"
 
         if not isinstance(d["PLEC_Flux_Density_b23"], np.ma.core.MaskedConstant):
-
             ss += "\n{}* SuperExpCutoffPowerLaw4FGLDR3 b = 2/3 *\n\n".format(
                 indentation
             )
@@ -1617,7 +1613,6 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
             )
 
         if not isinstance(d["PLEC_Flux_Density_bfr"], np.ma.core.MaskedConstant):
-
             ss += "\n{}* SuperExpCutoffPowerLaw4FGLDR3 b free *\n\n".format(indentation)
             ss += fmt_e.format(
                 indentation,
@@ -1655,19 +1650,33 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
             return None
 
         tag = "SuperExpCutoffPowerLaw4FGLDR3SpectralModel"
-        pars = {
-            "reference": d["Pivot_Energy_bfr"],
-            "amplitude": d["PLEC_Flux_Density_bfr"],
-            "index_1": -d["PLEC_IndexS_bfr"],
-            "index_2": d["PLEC_Exp_Index_bfr"],
-            "expfactor": d["PLEC_ExpfactorS_bfr"],
-        }
-        errs = {
-            "amplitude": d["Unc_PLEC_Flux_Density_bfr"],
-            "index_1": d["Unc_PLEC_IndexS_bfr"],
-            "index_2": d["Unc_PLEC_Exp_Index_bfr"],
-            "expfactor": d["Unc_PLEC_ExpfactorS_bfr"],
-        }
+        if not isinstance(d["PLEC_IndexS_bfr"], np.ma.core.masked_array):
+            pars = {
+                "reference": d["Pivot_Energy_bfr"],
+                "amplitude": d["PLEC_Flux_Density_bfr"],
+                "index_1": -d["PLEC_IndexS_bfr"],
+                "index_2": d["PLEC_Exp_Index_bfr"],
+                "expfactor": d["PLEC_ExpfactorS_bfr"],
+            }
+            errs = {
+                "amplitude": d["Unc_PLEC_Flux_Density_bfr"],
+                "index_1": d["Unc_PLEC_IndexS_bfr"],
+                "index_2": d["Unc_PLEC_Exp_Index_bfr"],
+                "expfactor": d["Unc_PLEC_ExpfactorS_bfr"],
+            }
+        else:
+            pars = {
+                "reference": d["Pivot_Energy_b23"],
+                "amplitude": d["PLEC_Flux_Density_b23"],
+                "index_1": -d["PLEC_IndexS_b23"],
+                "index_2": d["PLEC_Exp_Index_b23"],
+                "expfactor": d["PLEC_ExpfactorS_b23"],
+            }
+            errs = {
+                "amplitude": d["Unc_PLEC_Flux_Density_b23"],
+                "index_1": d["Unc_PLEC_IndexS_b23"],
+                "expfactor": d["Unc_PLEC_ExpfactorS_b23"],
+            }
 
         model = Model.create(tag, "spectral", **pars)
 
@@ -1907,7 +1916,6 @@ class SourceCatalog2PC(SourceCatalog):
     source_object_class = SourceCatalogObject2PC
 
     def __init__(self, filename="$GAMMAPY_DATA/catalogs/fermi/2PC_catalog_v04.fits.gz"):
-
         filename = make_path(filename)
 
         with warnings.catch_warnings():
