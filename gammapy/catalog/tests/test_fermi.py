@@ -67,6 +67,14 @@ SOURCES_3PC = [
         dnde=u.Quantity(5.32697275e-10, "cm-2 s-1 MeV-1"),
         dnde_err=u.Quantity(1.64905329e-12, "cm-2 s-1 MeV-1"),
     ),
+    dict(
+        idx=56,
+        name="J0940-5428",
+        str_ref_file="data/3pc_j0940-5428.txt",
+        spec_type=SuperExpCutoffPowerLaw4FGLDR3SpectralModel,
+        dnde=u.Quantity(9.92080658e-13, "cm-2 s-1 MeV-1"),
+        dnde_err=u.Quantity(5.80666225e-14, "cm-2 s-1 MeV-1"),
+    ),
 ]
 
 
@@ -809,14 +817,15 @@ class TestFermi3PCObject:
     def test_data(self):
         assert_allclose(self.source.data["P0"], 0.08937108859019084)
 
-    def test_spectral_model(self, ref=SOURCES_3PC[0]):
-        model = self.cat[ref["idx"]].spectral_model()
+    def test_spectral_model(self, ref_list=SOURCES_3PC):
+        for ref in ref_list:
+            model = self.cat[ref["idx"]].spectral_model()
 
-        e_ref = model.reference.quantity
-        dnde, dnde_err = model.evaluate_error(e_ref)
-        assert isinstance(model, ref["spec_type"])
-        assert_quantity_allclose(dnde, ref["dnde"], rtol=1e-4)
-        assert_quantity_allclose(dnde_err, ref["dnde_err"], rtol=1e-4)
+            e_ref = model.reference.quantity
+            dnde, dnde_err = model.evaluate_error(e_ref)
+            assert isinstance(model, ref["spec_type"])
+            assert_quantity_allclose(dnde, ref["dnde"], rtol=1e-4)
+            assert_quantity_allclose(dnde_err, ref["dnde_err"], rtol=1e-4)
 
     def test_spectral_model_none(self, ref=SOURCES_3PC_NONE[0]):
         model = self.cat[ref["idx"]].spectral_model()
