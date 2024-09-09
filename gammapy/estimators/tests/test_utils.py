@@ -139,7 +139,7 @@ def test_resample_energy_edges(spectrum_dataset):
     assert_allclose(np.squeeze(grouped.background)[-1], 200)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture()
 def lc():
     meta = dict(TIMESYS="utc", SED_TYPE="flux")
 
@@ -197,10 +197,8 @@ def lc2():
     return FluxPoints.from_table(table=table, format="lightcurve")
 
 
-def test_compute_lightcurve_fvar():
-    lightcurve = lc()
-
-    fvar = compute_lightcurve_fvar(lightcurve)
+def test_compute_lightcurve_fvar(lc):
+    fvar = compute_lightcurve_fvar(lc)
     ffvar = fvar["fvar"].quantity
     ffvar_err = fvar["fvar_err"].quantity
 
@@ -208,10 +206,8 @@ def test_compute_lightcurve_fvar():
     assert_allclose(ffvar_err, [[[0.0795621]], [[0.074706]]])
 
 
-def test_compute_lightcurve_fpp():
-    lightcurve = lc()
-
-    fpp = compute_lightcurve_fpp(lightcurve)
+def test_compute_lightcurve_fpp(lc):
+    fpp = compute_lightcurve_fpp(lc)
     ffpp = fpp["fpp"].quantity
     ffpp_err = fpp["fpp_err"].quantity
 
@@ -219,10 +215,8 @@ def test_compute_lightcurve_fpp():
     assert_allclose(ffpp_err, [[[0.07930673]], [[0.07397653]]])
 
 
-def test_compute_lightcurve_doublingtime():
-    lightcurve = lc()
-
-    dtime = compute_lightcurve_doublingtime(lightcurve)
+def test_compute_lightcurve_doublingtime(lc):
+    dtime = compute_lightcurve_doublingtime(lc)
     ddtime = dtime["doublingtime"].quantity
     ddtime_err = dtime["doubling_err"].quantity
     dcoord = dtime["doubling_coord"]
@@ -235,12 +229,8 @@ def test_compute_lightcurve_doublingtime():
     )
 
 
-def test_compute_dcf():
-    lighcurve = lc()
-    lightcurve2 = lc2()
-    lightcurve2["flux"].data
-
-    dict = compute_lightcurve_discrete_correlation(lighcurve, lightcurve2, tau=3 * u.d)
+def test_compute_dcf(lc, lc2):
+    dict = compute_lightcurve_discrete_correlation(lc, lc2, tau=3 * u.d)
 
     assert_allclose(dict["bins"], [-388800.0, -129600.0, 129600.0, 388800.0] * u.s)
     assert_allclose(
@@ -259,7 +249,7 @@ def test_compute_dcf():
         rtol=1e-6,
     )
 
-    dict2 = compute_lightcurve_discrete_correlation(lightcurve2, tau=3 * u.d)
+    dict2 = compute_lightcurve_discrete_correlation(lc2, tau=3 * u.d)
     assert_allclose(dict2["bins"], [-388800.0, -129600.0, 129600.0, 388800.0] * u.s)
     assert_allclose(
         dict2["discrete_correlation"],
