@@ -267,6 +267,9 @@ def test_compute_dcf(lc, lc2):
         rtol=1e-6,
     )
 
+    dict3 = compute_lightcurve_discrete_correlation(lc2)
+    assert_allclose(dict3["bins"], [-345600.0, -115200.0, 115200.0, 345600.0] * u.s)
+
 
 @requires_data()
 def test_get_rebinned_axis():

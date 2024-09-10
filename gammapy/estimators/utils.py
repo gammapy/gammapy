@@ -543,7 +543,7 @@ def compute_lightcurve_doublingtime(lightcurve, flux_quantity="flux"):
 
 
 def compute_lightcurve_discrete_correlation(
-    lightcurve1, lightcurve2=None, flux_quantity="flux", tau=1 * u.h
+    lightcurve1, lightcurve2=None, flux_quantity="flux", tau=None
 ):
     r"""Compute the discrete correlation function for two lightcurves, or the discrete autocorrelation if only one lightcurve is provided.
     NaN values will be ignored in the computation in order to account for possible gaps in the data.
@@ -555,11 +555,14 @@ def compute_lightcurve_discrete_correlation(
     lightcurve1 : `~gammapy.estimators.FluxPoints`
         The first lightcurve object.
     lightcurve2 : `~gammapy.estimators.FluxPoints`, optional
-        The second lightcurve object. If not provided, the autocorrelation for the first lightcurve will be computed. Default is None.
+        The second lightcurve object. If not provided, the autocorrelation for the first lightcurve will be computed.
+        Default is None.
     flux_quantity : str
-        Flux quantity to use for calculation. Should be 'dnde', 'flux', 'e2dnde' or 'eflux'. The choice does not affect the computation. Default is 'flux'.
-    tau : `~astropy.units.Quantity`
-        Size of the bins to compute the discrete correlation. Default is 1 hour.
+        Flux quantity to use for calculation. Should be 'dnde', 'flux', 'e2dnde' or 'eflux'.
+        The choice does not affect the computation. Default is 'flux'.
+    tau : `~astropy.units.Quantity`, optional
+        Size of the bins to compute the discrete correlation.
+        If None, the bin size will be double the bins of the first lightcurve. Default is None.
 
 
     Returns
@@ -578,6 +581,9 @@ def compute_lightcurve_discrete_correlation(
     flux_err1 = getattr(lightcurve1, flux_quantity + "_err")
     coords1 = lightcurve1.geom.axes["time"].center
     axis = flux1.geom.axes.index_data("time")
+
+    if tau is None:
+        tau = (coords1[-1] - coords1[0]) / (0.5 * len(coords1))
 
     if lightcurve2:
         flux2 = getattr(lightcurve2, flux_quantity)
