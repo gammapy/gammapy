@@ -1643,14 +1643,31 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
             )
         return ss
 
-    def spectral_model(self):
+    def spectral_model(self, fit="auto"):
+        """
+        In the 3PC, Fermi-LAT collaboration tried to fit a
+        `~gammapy.modelling.models.SuperExpCutoffPowerLaw4FGLDR3SpectralModel` with the
+        exponential index `index_2` free, or fixed to 2/3. These two models are referred
+        as "b free" and "b 23". For most pulsars, both models are available. However,
+        in some cases the "b free" model did not fit correctly.
+
+        Parameters
+        ----------
+
+        fit : str, optional
+            Which fitted model to return. The user can choose between "auto", "b free"
+            and "b 23". "auto" will always try to return the "b free" first and fall
+            back to the "b 23" fit if "b free" is not available. Default is "auto".
+        """
         d = self.data_spectral
         if d is None or d["SpectrumType"] != "PLSuperExpCutoff4":
             log.warning(f"No spectral model available for source {self.name}")
             return None
 
         tag = "SuperExpCutoffPowerLaw4FGLDR3SpectralModel"
-        if not isinstance(d["PLEC_IndexS_bfr"], np.ma.core.masked_array):
+        if not (
+            isinstance(d["PLEC_IndexS_bfr"], np.ma.core.masked_array) or (fit == "b 23")
+        ):
             pars = {
                 "reference": d["Pivot_Energy_bfr"],
                 "amplitude": d["PLEC_Flux_Density_bfr"],
