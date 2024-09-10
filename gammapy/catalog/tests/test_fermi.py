@@ -826,6 +826,8 @@ class TestFermi3PCObject:
             assert isinstance(model, ref["spec_type"])
             assert_quantity_allclose(dnde, ref["dnde"], rtol=1e-4)
             assert_quantity_allclose(dnde_err, ref["dnde_err"], rtol=1e-4)
+            if ref["name"] == "J0940-5428":
+                assert model.index_2.error == 0.0
 
     def test_spectral_model_none(self, ref=SOURCES_3PC_NONE[0]):
         model = self.cat[ref["idx"]].spectral_model()
