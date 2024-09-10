@@ -6,8 +6,6 @@ This tutorial provides an overview of the `Estimator` API. All estimators live i
 `gammapy.estimators` sub-module, offering a range of algorithms and classes for high-level flux and
 significance estimation. This is accomplished through a common functionality such as estimation of
 flux points, light curves, flux maps and profiles via a common API.
-
-
 Provides algorithms and classes for flux and significance estimation. Common functionality for flux points,
 lightcurves, flux maps, and profiles.
 
@@ -42,7 +40,7 @@ from gammapy.estimators import (
     ExcessMapEstimator,
     FluxPoints,
 )
-from gammapy.modeling import Fit
+from gammapy.modeling import Fit, Parameter
 from gammapy.modeling.models import SkyModel, PowerLawSpectralModel
 from gammapy.utils.scripts import make_path
 
@@ -103,6 +101,8 @@ fit = Fit(
 
 energy_edges = np.geomspace(0.7, 100, 9) * u.TeV
 
+norm = Parameter(value=1.5, name="norm")
+
 fp_estimator = FluxPointsEstimator(
     source="crab",
     energy_edges=energy_edges,
@@ -110,10 +110,21 @@ fp_estimator = FluxPointsEstimator(
     n_sigma_ul=2,
     selection_optional="all",
     fit=fit,
+    norm=norm,
     reoptimize=False,
 )
 
 ######################################################################
+# The ``norm`` parameter can be adjusted a few different ways. For example, we can change its
+# minimum and maximum values, as follows.
+#
+
+fp_estimator.norm.max = 3
+fp_estimator.norm.min = -1
+
+######################################################################
+# Note: for a gamma-ray source that has weak emission you should set a high maximum value.
+#
 # The various quantities utilised in this tutorial are described here:
 #
 # -  ``source``: which source from the model to compute the flux points for
@@ -122,7 +133,8 @@ fp_estimator = FluxPointsEstimator(
 # -  ``n_sigma_ul``: the number of sigma for the flux upper limits
 # -  ``selection_optional``: what additional maps to compute
 # -  ``fit``: the fit instance (as defined above)
-# -  ``reoptimize``: whether to reoptimize the flux points with other model parameters, aside from the ``norm``.
+# -  ``reoptimize``: whether to reoptimize the flux points with other model parameters, aside from the ``norm``
+# -  ``norm``: normalisation parameter for the fit
 #
 # **Important note**: the ``energy_edges`` are taken from the parent dataset energy bins,
 # which may not exactly match the output bins. Specific binning must be defined in the

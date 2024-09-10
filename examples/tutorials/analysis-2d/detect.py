@@ -152,7 +152,7 @@ model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
 
 
 ######################################################################
-# Here we show a full configuration of the estimator. We reminde the user of the meaning
+# Here we show a full configuration of the estimator. We remind the user of the meaning
 # of the various quantities:
 #
 # -  ``model``: a `~gammapy.modeling.models.SkyModel` which is converted to a source model kernel
