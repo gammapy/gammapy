@@ -557,7 +557,7 @@ def compute_lightcurve_discrete_correlation(
     lightcurve2 : `~gammapy.estimators.FluxPoints`, optional
         The second lightcurve object. If not provided, the autocorrelation for the first lightcurve will be computed. Default is None.
     flux_quantity : str
-        Flux quantity to use for calculation. Should be 'dnde', 'flux', 'e2dnde' or 'eflux'. Default is 'flux'.
+        Flux quantity to use for calculation. Should be 'dnde', 'flux', 'e2dnde' or 'eflux'. The choice does not affect the computation. Default is 'flux'.
     tau : `~astropy.units.Quantity`
         Size of the bins to compute the discrete correlation. Default is 1 hour.
 
