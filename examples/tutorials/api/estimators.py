@@ -94,14 +94,12 @@ fit = Fit(
     confidence_opts={"backend": "scipy"},
 )
 
-
 ######################################################################
 # Define the fully configured flux points estimator:
 #
 
 energy_edges = np.geomspace(0.7, 100, 9) * u.TeV
-
-norm = Parameter(value=1.5, name="norm")
+norm = Parameter(name="norm", value=1.0)
 
 fp_estimator = FluxPointsEstimator(
     source="crab",
@@ -111,16 +109,15 @@ fp_estimator = FluxPointsEstimator(
     selection_optional="all",
     fit=fit,
     norm=norm,
-    reoptimize=False,
 )
 
 ######################################################################
 # The ``norm`` parameter can be adjusted a few different ways. For example, we can change its
-# minimum and maximum values, as follows.
+# minimum and maximum values that it scans over, as follows.
 #
 
-fp_estimator.norm.max = 3
-fp_estimator.norm.min = -1
+fp_estimator.norm.scan_min = 0.1
+fp_estimator.norm.scan_max = 3
 
 ######################################################################
 # Note: for a gamma-ray source that has weak emission you should set a high maximum value.
@@ -138,7 +135,8 @@ fp_estimator.norm.min = -1
 #
 # **Important note**: the ``energy_edges`` are taken from the parent dataset energy bins,
 # which may not exactly match the output bins. Specific binning must be defined in the
-# parent dataset geometry to achieve that.
+# parent dataset geometry to achieve that.  This could be done in the following way:
+# `energy_edges = datasets[0].geoms["geom"].axes["energy"].downsample(factor=5).edges`
 #
 
 
