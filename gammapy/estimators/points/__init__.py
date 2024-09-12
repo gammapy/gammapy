@@ -4,6 +4,7 @@ from .lightcurve import LightCurveEstimator
 from .profile import FluxProfileEstimator
 from .sed import FluxPointsEstimator
 from .sensitivity import SensitivityEstimator
+from .timeresolvedspectroscopy import TimeResolvedSpectroscopyEstimator
 
 __all__ = [
     "FluxPoints",
@@ -11,4 +12,5 @@ __all__ = [
     "FluxProfileEstimator",
     "LightCurveEstimator",
     "SensitivityEstimator",
+    "TimeResolvedSpectroscopyEstimator",
 ]
