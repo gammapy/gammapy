@@ -12,6 +12,7 @@ from .points import (
     FluxProfileEstimator,
     LightCurveEstimator,
     SensitivityEstimator,
+    TimeResolvedSpectroscopyEstimator,
 )
 from .profile import ImageProfile, ImageProfileEstimator
 
@@ -32,6 +33,7 @@ __all__ = [
     "TSMapEstimator",
     "EnergyDependentMorphologyEstimator",
     "FluxMetaData",
+    "TimeResolvedSpectroscopyEstimator",
 ]
 
 
