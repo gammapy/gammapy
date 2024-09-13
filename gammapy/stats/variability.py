@@ -306,8 +306,12 @@ def discrete_correlation(flux1, flux_err1, flux2, flux_err2, time1, time2, tau, 
 
     Returns
     -------
-    bincenters, discrete_correlation, discrete_correlation_err : `~astropy.units.Quantity`, `~numpy.ndarray`, `~numpy.ndarray`
-        Array of discrete time bins, discrete correlation function and associated error.
+    bincenters: `~astropy.units.Quantity`
+        Array of discrete time bins.
+    discrete_correlation: `~numpy.ndarray`
+        Array of discrete correlation function values for each bin.
+    discrete_correlation_err : `~numpy.ndarray`
+        Error associated to the discrete correlation values.
 
     References
     ----------

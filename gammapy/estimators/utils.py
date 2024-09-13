@@ -568,7 +568,10 @@ def compute_lightcurve_discrete_correlation(
     Returns
     -------
     discrete_correlation_dict : dict
-        Dictionary containing the array of discrete time bins, discrete correlation function and associated error.
+        Dictionary containing:
+            "bins" : the array of discrete time bins
+            "discrete_correlation" : discrete correlation function values
+            "discrete_correlation_err" : associated error
 
     References
     ----------
