@@ -61,6 +61,10 @@ jobs:
             tox_env: 'py310-test'
             allowed_fail: false
           - os: ubuntu-latest
+            python: '3.13'
+            tox_env: 'py313-test'
+            allowed_fail: false
+          - os: ubuntu-latest
             python: '3.10'
             tox_env: 'codestyle'
             allowed_fail: false
