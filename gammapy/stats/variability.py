@@ -361,20 +361,17 @@ def discrete_correlation(flux1, flux_err1, flux2, flux_err2, time1, time2, tau, 
     discrete_correlation = np.array(
         [np.nanmean(udcf[bin_indices == i], axis=0) for i in range(1, len(bins))]
     )
-    discrete_correlation_err = np.array(
-        [
-            np.sqrt(
-                np.nansum(
-                    (discrete_correlation[i - 1] - udcf[bin_indices == i]) ** 2, axis=0
-                )
-            )
-            / (len(udcf[bin_indices == i]) - 1)
-            for i in range(1, len(bins))
-        ]
-    )
+
+    discrete_correlation_err = []
+    for i in range(1, len(bins)):
+        terms = (discrete_correlation[i - 1] - udcf[bin_indices == i]) ** 2
+        num = np.sqrt(np.nansum(terms, axis=0))
+        den = len(udcf[bin_indices == i]) - 1
+        discrete_correlation_err.append(num / den)
+
     bincenters = (bins[1:] + bins[:-1]) / 2
 
-    return bincenters, discrete_correlation, discrete_correlation_err
+    return bincenters, discrete_correlation, np.array(discrete_correlation_err)
 
 
 def TimmerKonig_lightcurve_simulator(
