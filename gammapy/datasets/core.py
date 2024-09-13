@@ -240,10 +240,10 @@ class Datasets(collections.abc.MutableSequence):
         prior_stat_sum = 0
         for dataset in self:
             stat_sum += dataset.stat_sum()
-            # remove prior_fit_statistic from individual dataset to avoid double counting
+            # Remove prior_fit_statistic from individual dataset to avoid double counting
             if dataset.models is not None:
                 prior_stat_sum -= prior_fit_statistic(dataset.models.priors)
-        # compute prior_fit_statistics from all datasets
+        # Compute prior_fit_statistics from all datasets
         if self.models is not None:
             prior_stat_sum += prior_fit_statistic(self.models.priors)
         return stat_sum + prior_stat_sum
