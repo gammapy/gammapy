@@ -22,6 +22,64 @@ from gammapy.maps import Map, MapAxis
 from gammapy.utils.testing import assert_time_allclose, requires_data
 
 
+@pytest.fixture()
+def lc():
+    meta = dict(TIMESYS="utc", SED_TYPE="flux")
+
+    table = Table(
+        meta=meta,
+        data=[
+            Column(Time(["2010-01-01", "2010-01-03"]).mjd, "time_min"),
+            Column(Time(["2010-01-03", "2010-01-10"]).mjd, "time_max"),
+            Column([[1.0, 2.0], [1.0, 2.0]], "e_min", unit="TeV"),
+            Column([[2.0, 5.0], [2.0, 5.0]], "e_max", unit="TeV"),
+            Column([[1e-11, 4e-12], [3e-11, 7e-12]], "flux", unit="cm-2 s-1"),
+            Column(
+                [[0.1e-11, 0.4e-12], [0.3e-11, 0.7e-12]], "flux_err", unit="cm-2 s-1"
+            ),
+            Column([[np.nan, np.nan], [3.6e-11, 1e-11]], "flux_ul", unit="cm-2 s-1"),
+            Column([[False, False], [True, True]], "is_ul"),
+            Column([[True, True], [True, True]], "success"),
+        ],
+    )
+
+    return FluxPoints.from_table(table=table, format="lightcurve")
+
+
+@pytest.fixture(scope="session")
+def lc2():
+    meta = dict(TIMESYS="utc", SED_TYPE="flux")
+
+    table = Table(
+        meta=meta,
+        data=[
+            Column(Time(["2010-01-01", "2010-01-03", "2010-01-05"]).mjd, "time_min"),
+            Column(Time(["2010-01-03", "2010-01-05", "2010-01-07"]).mjd, "time_max"),
+            Column([[1.0, 2.0], [1.0, 2.0], [1.0, 2.0]], "e_min", unit="GeV"),
+            Column([[2.0, 5.0], [2.0, 5.0], [2.0, 5.0]], "e_max", unit="GeV"),
+            Column(
+                [[1.51e-7, 3.4e-8], [3.1e-7, 6.7e-8], [3.1e-7, 7.5e-8]],
+                "flux",
+                unit="m-2 s-1",
+            ),
+            Column(
+                [[0.1e-7, 0.4e-8], [0.3e-7, 0.7e-8], [0.31e-7, 0.72e-8]],
+                "flux_err",
+                unit="m-2 s-1",
+            ),
+            Column(
+                [[np.nan, np.nan], [3.6e-7, 1e-7], [3.6e-7, 1e-7]],
+                "flux_ul",
+                unit="m-2 s-1",
+            ),
+            Column([[False, False], [True, True], [True, True]], "is_ul"),
+            Column([[True, True], [True, True], [True, True]], "success"),
+        ],
+    )
+
+    return FluxPoints.from_table(table=table, format="lightcurve")
+
+
 class TestFindPeaks:
     def test_simple(self):
         """Test a simple example"""
@@ -137,64 +195,6 @@ def test_resample_energy_edges(spectrum_dataset):
     assert grouped.counts.data.shape == (29, 1, 1)
     assert_allclose(np.squeeze(grouped.counts)[-1], 2518.0)
     assert_allclose(np.squeeze(grouped.background)[-1], 200)
-
-
-@pytest.fixture()
-def lc():
-    meta = dict(TIMESYS="utc", SED_TYPE="flux")
-
-    table = Table(
-        meta=meta,
-        data=[
-            Column(Time(["2010-01-01", "2010-01-03"]).mjd, "time_min"),
-            Column(Time(["2010-01-03", "2010-01-10"]).mjd, "time_max"),
-            Column([[1.0, 2.0], [1.0, 2.0]], "e_min", unit="TeV"),
-            Column([[2.0, 5.0], [2.0, 5.0]], "e_max", unit="TeV"),
-            Column([[1e-11, 4e-12], [3e-11, 7e-12]], "flux", unit="cm-2 s-1"),
-            Column(
-                [[0.1e-11, 0.4e-12], [0.3e-11, 0.7e-12]], "flux_err", unit="cm-2 s-1"
-            ),
-            Column([[np.nan, np.nan], [3.6e-11, 1e-11]], "flux_ul", unit="cm-2 s-1"),
-            Column([[False, False], [True, True]], "is_ul"),
-            Column([[True, True], [True, True]], "success"),
-        ],
-    )
-
-    return FluxPoints.from_table(table=table, format="lightcurve")
-
-
-@pytest.fixture(scope="session")
-def lc2():
-    meta = dict(TIMESYS="utc", SED_TYPE="flux")
-
-    table = Table(
-        meta=meta,
-        data=[
-            Column(Time(["2010-01-01", "2010-01-03", "2010-01-05"]).mjd, "time_min"),
-            Column(Time(["2010-01-03", "2010-01-05", "2010-01-07"]).mjd, "time_max"),
-            Column([[1.0, 2.0], [1.0, 2.0], [1.0, 2.0]], "e_min", unit="GeV"),
-            Column([[2.0, 5.0], [2.0, 5.0], [2.0, 5.0]], "e_max", unit="GeV"),
-            Column(
-                [[1.51e-7, 3.4e-8], [3.1e-7, 6.7e-8], [3.1e-7, 7.5e-8]],
-                "flux",
-                unit="m-2 s-1",
-            ),
-            Column(
-                [[0.1e-7, 0.4e-8], [0.3e-7, 0.7e-8], [0.31e-7, 0.72e-8]],
-                "flux_err",
-                unit="m-2 s-1",
-            ),
-            Column(
-                [[np.nan, np.nan], [3.6e-7, 1e-7], [3.6e-7, 1e-7]],
-                "flux_ul",
-                unit="m-2 s-1",
-            ),
-            Column([[False, False], [True, True], [True, True]], "is_ul"),
-            Column([[True, True], [True, True], [True, True]], "success"),
-        ],
-    )
-
-    return FluxPoints.from_table(table=table, format="lightcurve")
 
 
 def test_compute_lightcurve_fvar(lc):
