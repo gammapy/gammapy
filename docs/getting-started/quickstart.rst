@@ -4,9 +4,7 @@ Recommended Setup
 -----------------
 
 We recommend using :ref:`virtual environments <virtual-envs>`, to do so
-execute the following commands in the terminal:
-
-.. code-block:: bash
+execute the following commands in the terminal::
 
     curl -O https://gammapy.org/download/install/gammapy-|release|-environment.yml
     conda env create -f gammapy-|release|-environment.yml
@@ -29,9 +27,7 @@ execute the following commands in the terminal:
 The best way to get started and learn Gammapy are the :ref:`tutorials`.
 You can download the Gammapy tutorial notebooks and the example
 datasets. The total size to download is ~180 MB. Select the location where you
-want to install the datasets and proceed with the following commands:
-
-.. code:: bash
+want to install the datasets and proceed with the following commands::
 
     conda activate gammapy-|release|
     gammapy download notebooks
@@ -42,9 +38,7 @@ want to install the datasets and proceed with the following commands:
 
 The last conda commands will define the environment variable within the conda environment.
 Conversely, you might want to define the ``$GAMMAPY_DATA`` environment
-variable directly in your shell with:
-
-.. code:: bash
+variable directly in your shell with::
 
     export GAMMAPY_DATA=$PWD/gammapy-datasets/|release|
 
@@ -57,12 +51,22 @@ variable directly in your shell with:
     "Environment Variables" settings dialog, as explained e.g.
     `here <https://docs.python.org/3/using/windows.html#excursus-setting-environment-variables>`__.
 
-Finally start a notebook server by executing:
 
-.. code-block:: bash
+Jupyter
+-------
+Once you have activated your gammapy environment you can start
+a notebook server by executing::
 
     cd notebooks
     jupyter notebook
+
+
+Another option is to utilise the ipykernel functionality of Jupyter Notebook::
+
+    conda activate gammapy-|release|
+    python -m ipykernel install --user --name gammapy-|release| --display-name "gammapy-|release|"
+
+To utilise it you just need to select it when you open `jupyter lab` or `jupyter notebook`.
 
 If you are new to conda, Python and Jupyter, it is recommended to also read the :ref:`using-gammapy` guide.
 If you encounter any issues you can check the :ref:`troubleshoot` guide.
