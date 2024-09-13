@@ -323,8 +323,10 @@ def discrete_correlation(flux1, flux_err1, flux2, flux_err2, time1, time2, tau, 
     flux1 = np.rollaxis(flux1, axis, 0)
     flux2 = np.rollaxis(flux2, axis, 0)
 
-    if (np.squeeze(flux1.shape) != np.squeeze(flux2.shape)).all():
-        raise ValueError("flux1 and flux2 must have the same squeezed shape.")
+    if np.squeeze(flux1).shape[1:] != np.squeeze(flux2).shape[1:]:
+        raise ValueError(
+            "flux1 and flux2 must have the same squeezed shape, apart from the chosen axis."
+        )
 
     tau = tau.to(time1.unit)
     time2 = time2.to(time1.unit)
