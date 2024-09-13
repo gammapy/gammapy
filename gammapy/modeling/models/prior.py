@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Priors for Gammapy."""
+
 import logging
 import numpy as np
 import astropy.units as u
@@ -38,7 +39,6 @@ class Prior(ModelBase):
     _unit = ""
 
     def __init__(self, modelparameters, **kwargs):
-
         if isinstance(modelparameters, Parameter):
             self._modelparameters = Parameters([modelparameters])
         elif isinstance(modelparameters, Parameters):
@@ -87,7 +87,7 @@ class Prior(ModelBase):
 
     @property
     def weight(self):
-        """Weight mulitplied to the prior when evaluated."""
+        """Weight multiplied to the prior when evaluated."""
         return self._weight
 
     @weight.setter
@@ -95,7 +95,7 @@ class Prior(ModelBase):
         self._weight = value
 
     def __call__(self):
-        """Call evaluate method"""
+        """Call evaluate method."""
         # assuming the same unit as the PriorParameter here
         kwargs = {par.name: par.value for par in self.parameters}
         return self.weight * self.evaluate(self._modelparameters.value, **kwargs)
@@ -168,8 +168,9 @@ class GaussianPrior(Prior):
     mu = PriorParameter(name="mu", value=0)
     sigma = PriorParameter(name="sigma", value=1)
 
-    def evaluate(self, value, mu, sigma):
-    """Evaluate the Gaussian prior."""
+    @staticmethod
+    def evaluate(value, mu, sigma):
+        """Evaluate the Gaussian prior."""
         return ((value - mu) / sigma) ** 2
 
 
@@ -194,8 +195,9 @@ class UniformPrior(Prior):
     min = PriorParameter(name="min", value=-np.inf, unit="")
     max = PriorParameter(name="max", value=np.inf, unit="")
 
-    def evaluate(self, value, min, max):
-    """Evaluate the uniform prior."""
+    @staticmethod
+    def evaluate(value, min, max):
+        """Evaluate the uniform prior."""
         if min < value < max:
             return 1.0
         else:
