@@ -716,7 +716,7 @@ class Observations(collections.abc.MutableSequence):
         """List of observation IDs (`list`)."""
         return [str(obs.obs_id) for obs in self]
 
-    def select_time(self, time_intervals):
+    def select_time(self, time_intervals, inverted=False):
         """Select a time interval of the observations.
 
         Parameters
@@ -735,10 +735,14 @@ class Observations(collections.abc.MutableSequence):
 
         for time_interval in time_intervals:
             for obs in self:
-                if (obs.tstart < time_interval[1]) & (obs.tstop > time_interval[0]):
-                    new_obs = obs.select_time(time_interval)
-                    new_obs_list.append(new_obs)
-
+                if not inverted:
+                    if (obs.tstart < time_interval[1]) & (obs.tstop > time_interval[0]):
+                        new_obs = obs.select_time(time_interval)
+                        new_obs_list.append(new_obs)
+                else:
+                    if (obs.tstart > time_interval[1]) | (obs.tstop < time_interval[0]):
+                        new_obs = obs.select_time(time_interval)
+                        new_obs_list.append(new_obs)
         return self.__class__(new_obs_list)
 
     def _ipython_key_completions_(self):
