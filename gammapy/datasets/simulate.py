@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Simulate observations."""
+
 import html
 import logging
 from copy import deepcopy
@@ -264,10 +265,11 @@ class MapDatasetEventSampler:
         events_all = EventList(Table())
         for idx, evaluator in enumerate(dataset.evaluators.values()):
             log.info(f"Evaluating model: {evaluator.model.name}")
+            psf_empty = None
             if evaluator.needs_update:
                 evaluator.update(
                     dataset.exposure,
-                    dataset.psf,
+                    psf_empty,
                     dataset.edisp,
                     dataset._geom,
                     dataset.mask,
