@@ -272,6 +272,7 @@
     "applicationSubCategory": "Very-high energy gamma rays",
     "programmingLanguage": "Python 3",
     "operatingSystem": "Linux, Mac OS, Windows",
+    "referencePublication": "https://doi.org/10.1051/0004-6361/202346488",
     "audience": {
         "@id": "/audience/science-research",
         "@type": "Audience",
