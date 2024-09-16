@@ -248,6 +248,10 @@ def test_observations_select_time_time_intervals_list(data_store):
     assert_time_allclose(new_obss[1].gti.time_start[0], time_intervals[1][0])
     assert_time_allclose(new_obss[1].gti.time_stop[-1], time_intervals[1][1])
 
+    out_obs = obss.select_time(time_intervals[-1], inverted=True)
+
+    assert len(out_obs) == 8
+
 
 @requires_data()
 def test_observation_cta_1dc():
