@@ -723,6 +723,8 @@ class Observations(collections.abc.MutableSequence):
         ----------
         time_intervals : `astropy.time.Time` or list of `astropy.time.Time`
             List of start and stop time of the time intervals or one time interval.
+        inverted : `bool`, optional
+            Invert selection: keep all entries outside the time range. Default is False.
 
         Returns
         -------
