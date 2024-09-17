@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Simulate observations."""
+
 import html
 import logging
 from copy import deepcopy
@@ -590,6 +591,9 @@ class MapDatasetEventSampler:
             events.table.meta.update(
                 self.event_list_meta(dataset, observation, self.keep_mc_id)
             )
+
+        sort_by_time = np.argsort(events.table["TIME"])
+        events.table = events.table[sort_by_time]
 
         geom = dataset._geom
         selection = geom.contains(events.map_coord(geom))
