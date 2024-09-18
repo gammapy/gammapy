@@ -19,7 +19,7 @@ class ResolvedEstimator:
                 raise TypeError(
                     "Can't iterate a model with a temporal component over a time axis."
                 )
-        elif "energy" in axis.unit.physical_type:
+        elif axis.is_energy_axis():
             self._category = "energy"
         self._axis = axis
         self._model = model
@@ -32,11 +32,15 @@ class ResolvedEstimator:
         valid_intervals = []
         fit_result = []
         index = 0
-        for bin_min, bin_max in zip(self._axis.edges_min, self._axis.edges_max):
+        for bin_min, bin_max in self._axis.iter_by_edges:
             if self._category == "time":
+                if not isinstance(self._axis, TimeMapAxis):
+                    bin_min = bin_min + self._axis.reference_time
+                    bin_max = bin_max + self._axis.reference_time
+
                 datasets_to_fit = datasets.select_time(
-                    time_min=bin_min + self._axis.reference_time,
-                    time_max=bin_max + self._axis.reference_time,
+                    time_min=bin_min,
+                    time_max=bin_max,
                 )
 
             elif self._category == "energy":
