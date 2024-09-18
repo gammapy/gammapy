@@ -511,7 +511,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         j, i = zip(*positions)
 
         geom = maps[0]["counts"].geom.squash(axis_name="energy")
-        energy_axis = maps[0]["counts"].geom.axes["energy"]
+        energy_axis = geom.axes["energy"]
         dnde_ref = self.model.spectral_model(energy_axis.center)
 
         for name in self.selection_all:
