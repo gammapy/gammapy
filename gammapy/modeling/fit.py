@@ -2,6 +2,7 @@
 import html
 import itertools
 import logging
+import collections.abc
 import numpy as np
 from astropy.table import Table
 from gammapy.utils.pbar import progress_bar
@@ -15,7 +16,7 @@ from .iminuit import (
 from .scipy import confidence_scipy, optimize_scipy
 from .sherpa import optimize_sherpa
 
-__all__ = ["Fit", "FitResult", "OptimizeResult", "CovarianceResult"]
+__all__ = ["Fit", "FitResult", "OptimizeResult", "CovarianceResult", "FitResults"]
 
 log = logging.getLogger(__name__)
 
@@ -895,3 +896,12 @@ class FitResult:
             return self.to_html()
         except AttributeError:
             return f"<pre>{html.escape(str(self))}</pre>"
+
+
+class FitResults(collections.abc.Sequence):
+    def __init__(self, results=None, axis=None):
+        if results is None:
+            results = []
+
+        self.results = results
+        self.axis = axis
