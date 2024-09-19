@@ -1343,19 +1343,22 @@ class MapDataset(Dataset):
         return ax_spatial, ax_spectral
 
     def stat_sum(self):
-        """Total statistic function value given the current model parameters and priors set on the models."""
+        """Total statistic function value given the current model parameters."""
         counts, npred = self.counts.data.astype(float), self.npred().data
-        prior_stat_sum = 0.0
-        if self.models is not None:
-            prior_stat_sum = prior_fit_statistic(self.models.priors)
 
         if self.mask is not None:
-            return (
-                cash_sum_cython(counts[self.mask.data], npred[self.mask.data])
-                + prior_stat_sum
-            )
+            return cash_sum_cython(counts[self.mask.data], npred[self.mask.data])
         else:
-            return cash_sum_cython(counts.ravel(), npred.ravel()) + prior_stat_sum
+            return cash_sum_cython(counts.ravel(), npred.ravel())
+
+    def stat_sum_prior(self):
+        """Total statistic function value given the priors set on the models."""
+        if self.models is not None:
+            return prior_fit_statistic(self.models.priors)
+
+    def stat_sum_posterior(self):
+        """Total statistic function value given the current model parameters and priors set on the models."""
+        return self.stat_sum() + self.stat_sum_prior()
 
     def fake(self, random_state="random-seed"):
         """Simulate fake counts for the current model and reduced IRFs.

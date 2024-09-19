@@ -69,15 +69,22 @@ class Dataset(abc.ABC):
             return self.mask_safe
 
     def stat_sum(self):
-        """Total statistic given the current model parameters and priors."""
+        """Total statistic given the current model parameters."""
         stat = self.stat_array()
 
         if self.mask is not None:
             stat = stat[self.mask.data]
-        prior_stat_sum = 0.0
+
+        return np.sum(stat, dtype=np.float64)
+
+    def stat_sum_prior(self):
+        """Total statistic given the priors set on the models."""
         if self.models is not None:
-            prior_stat_sum = prior_fit_statistic(self.models.priors)
-        return np.sum(stat, dtype=np.float64) + prior_stat_sum
+            return prior_fit_statistic(self.models.priors)
+
+    def stat_sum_posterior(self):
+        """Total statistic given the current model parameters and priors set on the models."""
+        return self.stat_sum() + self.stat_sum_prior()
 
     @abc.abstractmethod
     def stat_array(self):
@@ -237,16 +244,21 @@ class Datasets(collections.abc.MutableSequence):
         """Compute joint statistic function value."""
         stat_sum = 0
         # TODO: add parallel evaluation of likelihoods
-        prior_stat_sum = 0
         for dataset in self:
             stat_sum += dataset.stat_sum()
-            # Remove prior_fit_statistic from individual dataset to avoid double counting
-            if dataset.models is not None:
-                prior_stat_sum -= prior_fit_statistic(dataset.models.priors)
+        return stat_sum
+
+    def stat_sum_prior(self):
+        """Compute joint statistic function value for priors."""
+        prior_stat_sum = 0
         # Compute prior_fit_statistics from all datasets
-        if self.models is not None:
-            prior_stat_sum += prior_fit_statistic(self.models.priors)
-        return stat_sum + prior_stat_sum
+        for dataset in self:
+            prior_stat_sum += dataset.stat_sum_prior()
+        return prior_stat_sum
+
+    def stat_sum_posterior(self):
+        """Compute joint statistic function value for the posterior (parameter values and priors)."""
+        return self.stat_sum() + self.stat_sum_prior()
 
     def select_time(self, time_min, time_max, atol="1e-6 s"):
         """Select datasets in a given time interval.
