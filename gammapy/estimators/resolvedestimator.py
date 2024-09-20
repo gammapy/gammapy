@@ -58,11 +58,15 @@ class ResolvedEstimator:
                 )
                 continue
 
-            model_in_bin = self._model.copy(name="Model_bin_" + str(index))
-            datasets_to_fit.models = model_in_bin
-            result = self._fit.run(datasets_to_fit)
+            result = self.fit_model_in_bin(datasets_to_fit, index)
             fit_result.append(result)
             valid_intervals.append([bin_min, bin_max])
             index += 1
 
         return valid_intervals, fit_result
+
+    def fit_model_in_bin(self, datasets, index):
+        model_in_bin = self._model.copy(name="Model_bin_" + str(index))
+        datasets.models = model_in_bin
+        result = self._fit.run(datasets)
+        return result
