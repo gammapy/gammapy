@@ -670,9 +670,9 @@ def test_mde_run_switchoff(dataset, models):
     events = sampler.run(dataset=dataset, observation=obs)
 
     assert len(events.table) == 90
-    assert_allclose(events.table["ENERGY"][0], 2.3837788, rtol=1e-5)
-    assert_allclose(events.table["RA"][0], 266.56408893, rtol=1e-5)
-    assert_allclose(events.table["DEC"][0], -28.748145, rtol=1e-5)
+    assert_allclose(events.table["ENERGY"][0], 1.947042, rtol=1e-5)
+    assert_allclose(events.table["RA"][0], 266.875015, rtol=1e-5)
+    assert_allclose(events.table["DEC"][0], -29.115063, rtol=1e-5)
 
     meta = events.table.meta
 
@@ -900,6 +900,25 @@ def test_bunch_event_number_sample_sources(dataset):
     events = sampler.run(dataset=dataset)
 
     assert len(events.table) == 24128
+
+
+@requires_data()
+def test_sort_evt_by_time(dataset):
+    spatial_model = GaussianSpatialModel(
+        lon_0="0 deg", lat_0="0 deg", sigma="0.2 deg", frame="galactic"
+    )
+    spectral_model = PowerLawSpectralModel(amplitude="4e-10 cm-2 s-1 TeV-1")
+
+    dataset.models = [
+        SkyModel(spectral_model=spectral_model, spatial_model=spatial_model),
+        FoVBackgroundModel(dataset_name=dataset.name),
+    ]
+
+    sampler = MapDatasetEventSampler(random_state=0, n_event_bunch=1000)
+    events = sampler.run(dataset=dataset)
+
+    dt = np.diff(events.table["TIME"])
+    assert np.all(dt >= 0)
 
 
 @requires_data()

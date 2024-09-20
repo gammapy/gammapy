@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Spatial models."""
+
 import logging
 import os
 import numpy as np
@@ -1305,6 +1306,8 @@ class TemplateSpatialModel(SpatialModel):
             log.warning("Map has negative values. Check and fix this!")
         if (map.data == 0.0).all():
             log.warning("Map values are all zeros. Check and fix this!")
+        if np.isnan(map.data).any():
+            log.warning("Map has NaN values. Check and fix this!")
         if not map.geom.is_image and (map.data.sum(axis=(1, 2)) == 0).any():
             log.warning(
                 "Map values are all zeros in at least one energy bin. Check and fix this!"
