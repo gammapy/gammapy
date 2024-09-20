@@ -150,6 +150,41 @@ class Prior(ModelBase):
         return prior_cls.from_parameters(priorparameters, **kwargs)
 
 
+class MultiVariateGaussianPrior(Prior):
+    """Multi-dimensional Gaussian Prior.
+
+    Parameters
+    ----------
+    param :
+        Meaning
+    """
+
+    tag = ["MultiVariateGaussianPrior"]
+    _type = "prior"
+
+    # Should follow like the Covariance class??
+    def __init__(self, modelparameters, covariance_matrix):
+        self.modelparameters = modelparameters
+        self.covariance_matrix = covariance_matrix
+
+        # Ensure the correct shape
+        value = np.asanyarray(self.covariance_matrix)
+        npars = len(self.modelparameters)
+        shape = (npars, npars)
+        if value.shape != shape:
+            raise ValueError(
+                f"Invalid covariance matrix shape: {value.shape}, expected {shape}"
+            )
+
+        # Do we need this?
+        self.dimension = value.shape[-1]
+
+    def evaluate(self, values):
+        """Evaluate the Multi-variate Gaussian prior."""
+        # Correct way to calculate that?
+        return np.matmul(values, np.matmul(values, self.covariance_matrix))
+
+
 class GaussianPrior(Prior):
     """One-dimensional Gaussian Prior.
 
