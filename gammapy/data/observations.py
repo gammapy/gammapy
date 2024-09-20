@@ -483,7 +483,7 @@ class Observation:
             if name is None:
                 ax.set_visible(False)
 
-    def select_time(self, time_interval):
+    def select_time(self, time_interval, inverted=False):
         """Select a time interval of the observation.
 
         Parameters
@@ -499,6 +499,7 @@ class Observation:
         """
         new_obs_filter = self.obs_filter.copy()
         new_obs_filter.time_filter = time_interval
+        new_obs_filter.inverted_time = inverted
         obs = copy.deepcopy(self)
         obs.obs_filter = new_obs_filter
         return obs
