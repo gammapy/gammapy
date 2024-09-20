@@ -4,8 +4,10 @@ import itertools
 import logging
 import collections.abc
 import numpy as np
+import astropy.units as u
 from astropy.table import Table
 from gammapy.utils.pbar import progress_bar
+from gammapy.maps import TimeMapAxis, MapAxis
 from .covariance import Covariance
 from .iminuit import (
     confidence_iminuit,
@@ -15,6 +17,7 @@ from .iminuit import (
 )
 from .scipy import confidence_scipy, optimize_scipy
 from .sherpa import optimize_sherpa
+from .models import Models
 
 __all__ = ["Fit", "FitResult", "OptimizeResult", "CovarianceResult", "FitResults"]
 
@@ -899,9 +902,79 @@ class FitResult:
 
 
 class FitResults(collections.abc.Sequence):
-    def __init__(self, results=None, axis=None):
-        if results is None:
-            results = []
+    def __init__(self, results, axis=None):
+        if axis and axis.nbin != len(results):
+            raise ValueError("Axis length does not correspond to number of results")
 
         self.results = results
         self.axis = axis
+
+    def __add__(self, other):
+        if isinstance(other, FitResult):
+            return FitResult([*self, other])
+        else:
+            raise TypeError(f"Invalid type: {other!r}")
+
+    def __getitem__(self, key):
+        if isinstance(key, np.ndarray) and key.dtype == bool:
+            return self.__class__(list(np.array(self.results)[key]))
+        else:
+            return self.__class__(self.results[key])
+
+    def __len__(self):
+        return len(self.results)
+
+    def success(self):
+        return [f.success for f in self.results]
+
+    def models(self):
+        return Models([model for f in self.results for model in f.models])
+
+    def covariance_results(self):
+        return [f.covariance_result for f in self.results]
+
+    def optimize_results(self):
+        return [f.optimize_result for f in self.results]
+
+    def select_by_interval(self, coord_min, coord_max):
+        if self.axis is None:
+            raise ValueError("No axis to convert coordinate to index!")
+
+        keymin = self.axis.coord_to_idx(coord_min)
+        keymax = self.axis.coord_to_idx(coord_max)
+
+        return self[keymin:keymax]
+
+    def write_models(self, path, **kwargs):
+        self.models().write(self.models, path, **kwargs)
+
+    def create_model_table(self):
+        col_names = []
+        col_unit = []
+
+        for par in self.models()[0].parameters.free_parameters:
+            col_names.append(par.name)
+            col_names.append(par.name + "_err")
+            unt = par.unit
+            if unt is u.Unit():
+                unt = ""
+            col_unit.append(unt)
+            col_unit.append(unt)
+
+        t = Table(names=col_names, units=col_unit)
+
+        for i in range(len(self)):
+            col_data = []
+
+            for name in self.models()[i].parameters.free_parameters.names:
+                col_data.append(self.models()[i].parameters[name].value)
+                col_data.append(self.models()[i].parameters[name].error)
+
+            t.add_row(col_data)
+
+        if isinstance(self.axis, TimeMapAxis):
+            t.add_columns(self.axis.to_gti().table.columns, indexes=[0, 0])
+        elif isinstance(self.axis, MapAxis):
+            t.add_columns(self.axis.to_table().columns, indexes=[0, 0])
+
+        return t
