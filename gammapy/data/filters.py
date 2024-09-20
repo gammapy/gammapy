@@ -45,9 +45,10 @@ class ObservationFilter:
 
     EVENT_FILTER_TYPES = dict(sky_region="select_region", custom="select_parameter")
 
-    def __init__(self, time_filter=None, event_filters=None):
+    def __init__(self, time_filter=None, event_filters=None, inverted_time=False):
         self.time_filter = time_filter
         self.event_filters = event_filters or []
+        self.inverted_time = inverted_time
 
     def _repr_html_(self):
         try:
@@ -60,7 +61,7 @@ class ObservationFilter:
         """Fraction of the livetime kept when applying the event_filters."""
         return self._check_filter_phase(self.event_filters)
 
-    def filter_events(self, events, inverted_time=False):
+    def filter_events(self, events):
         """Apply filters to an event list.
 
         Parameters
@@ -76,7 +77,7 @@ class ObservationFilter:
         filtered_events : `~gammapy.data.EventListBase`
             The filtered event list.
         """
-        filtered_events = self._filter_by_time(events, inverted_time)
+        filtered_events = self._filter_by_time(events)
 
         for f in self.event_filters:
             method_str = self.EVENT_FILTER_TYPES[f["type"]]
@@ -99,13 +100,13 @@ class ObservationFilter:
         """
         return self._filter_by_time(gti)
 
-    def _filter_by_time(self, data, inverted=False):
+    def _filter_by_time(self, data):
         """Return a new time filtered data object.
 
         Calls the `select_time` method of the data object.
         """
         if self.time_filter:
-            return data.select_time(self.time_filter, inverted)
+            return data.select_time(self.time_filter, self.inverted_time)
         else:
             return data
 
