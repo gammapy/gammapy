@@ -12,6 +12,7 @@ from gammapy.estimators.utils import (
     compute_lightcurve_doublingtime,
     compute_lightcurve_fpp,
     compute_lightcurve_fvar,
+    compute_lightcurve_discrete_correlation,
     find_peaks,
     find_peaks_in_flux_map,
     get_rebinned_axis,
@@ -19,6 +20,64 @@ from gammapy.estimators.utils import (
 )
 from gammapy.maps import Map, MapAxis
 from gammapy.utils.testing import assert_time_allclose, requires_data
+
+
+@pytest.fixture()
+def lc():
+    meta = dict(TIMESYS="utc", SED_TYPE="flux")
+
+    table = Table(
+        meta=meta,
+        data=[
+            Column(Time(["2010-01-01", "2010-01-03"]).mjd, "time_min"),
+            Column(Time(["2010-01-03", "2010-01-10"]).mjd, "time_max"),
+            Column([[1.0, 2.0], [1.0, 2.0]], "e_min", unit="TeV"),
+            Column([[2.0, 5.0], [2.0, 5.0]], "e_max", unit="TeV"),
+            Column([[1e-11, 4e-12], [3e-11, 7e-12]], "flux", unit="cm-2 s-1"),
+            Column(
+                [[0.1e-11, 0.4e-12], [0.3e-11, 0.7e-12]], "flux_err", unit="cm-2 s-1"
+            ),
+            Column([[np.nan, np.nan], [3.6e-11, 1e-11]], "flux_ul", unit="cm-2 s-1"),
+            Column([[False, False], [True, True]], "is_ul"),
+            Column([[True, True], [True, True]], "success"),
+        ],
+    )
+
+    return FluxPoints.from_table(table=table, format="lightcurve")
+
+
+@pytest.fixture(scope="session")
+def lc2():
+    meta = dict(TIMESYS="utc", SED_TYPE="flux")
+
+    table = Table(
+        meta=meta,
+        data=[
+            Column(Time(["2010-01-01", "2010-01-03", "2010-01-05"]).mjd, "time_min"),
+            Column(Time(["2010-01-03", "2010-01-05", "2010-01-07"]).mjd, "time_max"),
+            Column([[1.0, 2.0], [1.0, 2.0], [1.0, 2.0]], "e_min", unit="GeV"),
+            Column([[2.0, 5.0], [2.0, 5.0], [2.0, 5.0]], "e_max", unit="GeV"),
+            Column(
+                [[1.51e-7, 3.4e-8], [3.1e-7, 6.7e-8], [3.1e-7, 7.5e-8]],
+                "flux",
+                unit="m-2 s-1",
+            ),
+            Column(
+                [[0.1e-7, 0.4e-8], [0.3e-7, 0.7e-8], [0.31e-7, 0.72e-8]],
+                "flux_err",
+                unit="m-2 s-1",
+            ),
+            Column(
+                [[np.nan, np.nan], [3.6e-7, 1e-7], [3.6e-7, 1e-7]],
+                "flux_ul",
+                unit="m-2 s-1",
+            ),
+            Column([[False, False], [True, True], [True, True]], "is_ul"),
+            Column([[True, True], [True, True], [True, True]], "success"),
+        ],
+    )
+
+    return FluxPoints.from_table(table=table, format="lightcurve")
 
 
 class TestFindPeaks:
@@ -138,33 +197,8 @@ def test_resample_energy_edges(spectrum_dataset):
     assert_allclose(np.squeeze(grouped.background)[-1], 200)
 
 
-def lc():
-    meta = dict(TIMESYS="utc", SED_TYPE="flux")
-
-    table = Table(
-        meta=meta,
-        data=[
-            Column(Time(["2010-01-01", "2010-01-03"]).mjd, "time_min"),
-            Column(Time(["2010-01-03", "2010-01-10"]).mjd, "time_max"),
-            Column([[1.0, 2.0], [1.0, 2.0]], "e_min", unit="TeV"),
-            Column([[2.0, 5.0], [2.0, 5.0]], "e_max", unit="TeV"),
-            Column([[1e-11, 4e-12], [3e-11, 7e-12]], "flux", unit="cm-2 s-1"),
-            Column(
-                [[0.1e-11, 0.4e-12], [0.3e-11, 0.7e-12]], "flux_err", unit="cm-2 s-1"
-            ),
-            Column([[np.nan, np.nan], [3.6e-11, 1e-11]], "flux_ul", unit="cm-2 s-1"),
-            Column([[False, False], [True, True]], "is_ul"),
-            Column([[True, True], [True, True]], "success"),
-        ],
-    )
-
-    return FluxPoints.from_table(table=table, format="lightcurve")
-
-
-def test_compute_lightcurve_fvar():
-    lightcurve = lc()
-
-    fvar = compute_lightcurve_fvar(lightcurve)
+def test_compute_lightcurve_fvar(lc):
+    fvar = compute_lightcurve_fvar(lc)
     ffvar = fvar["fvar"].quantity
     ffvar_err = fvar["fvar_err"].quantity
 
@@ -172,10 +206,8 @@ def test_compute_lightcurve_fvar():
     assert_allclose(ffvar_err, [[[0.0795621]], [[0.074706]]])
 
 
-def test_compute_lightcurve_fpp():
-    lightcurve = lc()
-
-    fpp = compute_lightcurve_fpp(lightcurve)
+def test_compute_lightcurve_fpp(lc):
+    fpp = compute_lightcurve_fpp(lc)
     ffpp = fpp["fpp"].quantity
     ffpp_err = fpp["fpp_err"].quantity
 
@@ -183,10 +215,8 @@ def test_compute_lightcurve_fpp():
     assert_allclose(ffpp_err, [[[0.07930673]], [[0.07397653]]])
 
 
-def test_compute_lightcurve_doublingtime():
-    lightcurve = lc()
-
-    dtime = compute_lightcurve_doublingtime(lightcurve)
+def test_compute_lightcurve_doublingtime(lc):
+    dtime = compute_lightcurve_doublingtime(lc)
     ddtime = dtime["doublingtime"].quantity
     ddtime_err = dtime["doubling_err"].quantity
     dcoord = dtime["doubling_coord"]
@@ -197,6 +227,48 @@ def test_compute_lightcurve_doublingtime():
         dcoord,
         Time([[[55197.99960648]], [[55197.99960648]]], format="mjd", scale="utc"),
     )
+
+
+def test_compute_dcf(lc, lc2):
+    dict = compute_lightcurve_discrete_correlation(lc, lc2, tau=3 * u.d)
+
+    assert_allclose(dict["bins"], [-388800.0, -129600.0, 129600.0, 388800.0] * u.s)
+    assert_allclose(
+        dict["discrete_correlation"],
+        [
+            [-0.760599, -1.052783],
+            [-0.760599, -0.537134],
+            [1.014132, 1.059945],
+            [-1.521198, -1.589918],
+        ],
+        rtol=1e-6,
+    )
+    assert_allclose(
+        dict["discrete_correlation_err"],
+        [[np.nan, np.nan], [np.nan, np.nan], [0.310513, 0.372241], [np.nan, np.nan]],
+        rtol=1e-6,
+    )
+
+    dict2 = compute_lightcurve_discrete_correlation(lc2, tau=3 * u.d)
+    assert_allclose(dict2["bins"], [-388800.0, -129600.0, 129600.0, 388800.0] * u.s)
+    assert_allclose(
+        dict2["discrete_correlation"],
+        [
+            [-1.11074, -1.448801],
+            [-0.277685, -0.124862],
+            [0.55537, 0.629465],
+            [-1.11074, -1.448801],
+        ],
+        rtol=1e-5,
+    )
+    assert_allclose(
+        dict2["discrete_correlation_err"],
+        [[np.nan, np.nan], [1.178118, 0.868782], [0.589059, 0.53472], [np.nan, np.nan]],
+        rtol=1e-6,
+    )
+
+    dict3 = compute_lightcurve_discrete_correlation(lc2)
+    assert_allclose(dict3["bins"], [-345600.0, -115200.0, 115200.0, 345600.0] * u.s)
 
 
 @requires_data()

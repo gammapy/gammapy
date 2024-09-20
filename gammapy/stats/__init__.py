@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Statistics."""
+
 from .counts_statistic import CashCountsStatistic, WStatCountsStatistic
 from .fit_statistics import cash, cstat, get_wstat_gof_terms, get_wstat_mu_bkg, wstat
 from .fit_statistics_cython import (
@@ -13,6 +14,7 @@ from .variability import (
     compute_flux_doubling,
     compute_fpp,
     compute_fvar,
+    discrete_correlation,
     structure_function,
 )
 
@@ -32,5 +34,6 @@ __all__ = [
     "compute_flux_doubling",
     "compute_chisq",
     "structure_function",
+    "discrete_correlation",
     "TimmerKonig_lightcurve_simulator",
 ]
