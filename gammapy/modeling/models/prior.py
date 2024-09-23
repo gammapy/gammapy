@@ -7,7 +7,7 @@ import astropy.units as u
 from gammapy.modeling import Parameter, Parameters, PriorParameter, PriorParameters
 from .core import ModelBase
 
-__all__ = ["GaussianPrior", "UniformPrior"]
+__all__ = ["MultiVariateGaussianPrior", "GaussianPrior", "UniformPrior"]
 
 log = logging.getLogger(__name__)
 
@@ -164,12 +164,12 @@ class MultiVariateGaussianPrior(Prior):
 
     # Should follow like the Covariance class??
     def __init__(self, modelparameters, covariance_matrix):
-        self.modelparameters = modelparameters
-        self.covariance_matrix = covariance_matrix
+        self._modelparameters = modelparameters
+        self._covariance_matrix = covariance_matrix
 
         # Ensure the correct shape
         value = np.asanyarray(self.covariance_matrix)
-        npars = len(self.modelparameters)
+        npars = len(self._modelparameters)
         shape = (npars, npars)
         if value.shape != shape:
             raise ValueError(
@@ -178,6 +178,23 @@ class MultiVariateGaussianPrior(Prior):
 
         # Do we need this?
         self.dimension = value.shape[-1]
+
+        for par in self._modelparameters:
+            par.prior = self
+
+        # super().__init__(self._modelparameters)
+
+    # def from_subcovariance(self, parameters, subcovar):
+    #    idx = [parameters.index(par) for par in parameters]
+
+    def __call__(self):
+        """Call evaluate method"""
+        values = [modelparameter.value for modelparameter in self._modelparameters]
+        return self.evaluate(values)
+
+    @property
+    def covariance_matrix(self):
+        return self._covariance_matrix
 
     def evaluate(self, values):
         """Evaluate the Multi-variate Gaussian prior."""
