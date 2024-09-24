@@ -3030,6 +3030,25 @@ class TimeMapAxis:
             self.edges_min, self.edges_max, reference_time=self.reference_time
         )
 
+    def to_table(self, format="gadf"):
+        """Create table.
+
+        Parameters
+        ----------
+        format : {"gadf"}
+            Format specification. Default is "gadf".
+
+        Returns
+        -------
+        table : `~astropy.table.Table`
+            Table with axis data.
+        """
+        t = Table()
+        t["START"] = self.time_min
+        t["STOP"] = self.time_max
+
+        return t
+
     def to_header(self, format="gadf", idx=0):
         """Create FITS header.
 
