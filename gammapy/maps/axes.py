@@ -3043,9 +3043,7 @@ class TimeMapAxis:
         table : `~astropy.table.Table`
             Table with axis data.
         """
-        t = Table()
-        t["START"] = self.time_min
-        t["STOP"] = self.time_max
+        t = self.to_gti().table
 
         return t
 
