@@ -358,7 +358,7 @@ def test_mde_sample_sources(dataset, models):
 def test_mde_sample_sources_psf_update(dataset, models):
     dataset.models = models
     sampler = MapDatasetEventSampler(random_state=0)
-    events = sampler.sample_sources(dataset=dataset, psf_update=None)
+    events = sampler.sample_sources(dataset=dataset, psf_update=False)
     assert len(events.table["ENERGY_TRUE"]) == 90
 
 

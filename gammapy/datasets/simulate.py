@@ -255,9 +255,9 @@ class MapDatasetEventSampler:
         ----------
         dataset : `~gammapy.datasets.MapDataset`
             Map dataset.
-        psf_update : `str` or `~gammapy.datasets.MapDataset`
+        psf_update : bool
             Parameter to switch-off (on) the update of the PSF
-            in the dataset; available options: `None` or `dataset.psf`.
+            in the dataset; default is False.
 
         Returns
         -------
