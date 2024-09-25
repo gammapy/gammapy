@@ -659,6 +659,13 @@ def test_fermi_isotropic():
     assert flux.unit == "MeV-1 cm-2 s-1 sr-1"
     assert isinstance(model.spectral_model, CompoundSpectralModel)
 
+    model_options = create_fermi_isotropic_diffuse_model(
+        filename=filename,
+        interp_kwargs={"extrapolate": True, "method": "nearest"},
+    )
+    flux_options = model_options(**coords)
+    assert_allclose(flux_options.value, 1.456e-13, rtol=1e-3)
+
 
 class MyCustomGaussianModel(SpatialModel):
     """My custom gaussian model.
