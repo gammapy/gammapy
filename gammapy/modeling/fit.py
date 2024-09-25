@@ -4,8 +4,7 @@ import itertools
 import logging
 import collections.abc
 import numpy as np
-import astropy.units as u
-from astropy.table import Table
+from astropy.table import Table, QTable
 from gammapy.utils.pbar import progress_bar
 from gammapy.maps import TimeMapAxis, MapAxis
 from .covariance import Covariance
@@ -946,31 +945,21 @@ class FitResults(collections.abc.Sequence):
         return self[keymin:keymax]
 
     def write_models(self, path, **kwargs):
-        self.models().write(self.models, path, **kwargs)
+        self.models().write(path, **kwargs)
 
     def create_model_table(self):
-        col_names = []
-        col_unit = []
+        t = QTable()
 
-        for par in self.models()[0].parameters.free_parameters:
-            col_names.append(par.name)
-            col_names.append(par.name + "_err")
-            unt = par.unit
-            if unt is u.Unit():
-                unt = ""
-            col_unit.append(unt)
-            col_unit.append(unt)
-
-        t = Table(names=col_names, units=col_unit)
-
-        for i in range(len(self)):
-            col_data = []
-
-            for name in self.models()[i].parameters.free_parameters.names:
-                col_data.append(self.models()[i].parameters[name].value)
-                col_data.append(self.models()[i].parameters[name].error)
-
-            t.add_row(col_data)
+        t["convergence"] = [result.success for result in self.results]
+        for par in self.results[0].models.parameters.free_parameters:
+            t[par.name] = [
+                result.models.parameters[par.name].value * par.unit
+                for result in self.results
+            ]
+            t[par.name + "_err"] = [
+                result.models.parameters[par.name].error * par.unit
+                for result in self.results
+            ]
 
         if isinstance(self.axis, TimeMapAxis):
             t.add_columns(self.axis.to_gti().table.columns, indexes=[0, 0])
