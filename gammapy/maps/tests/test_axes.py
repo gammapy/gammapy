@@ -260,6 +260,25 @@ def test_one_bin_nodes():
     assert_allclose(axis.pix_to_coord(0), 1 * u.deg)
 
 
+def test_table():
+    axis = MapAxis(
+        nodes=[0, 1, 2, 3, 4, 5, 6, 7, 8],
+        unit="TeV",
+        name="energy",
+        node_type="edges",
+        interp="lin",
+    )
+
+    table = axis.to_table()
+    assert table.colnames == ["CHANNEL", "E_MIN", "E_MAX"]
+    assert len(table["CHANNEL"]) == axis.nbin
+    assert table["E_MIN"].unit == table["E_MAX"].unit == u.TeV
+    assert (table["E_MIN"].data == axis.edges_min.value).all()
+
+    table_kev = axis.to_table("ogip-sherpa")
+    assert table_kev["E_MIN"].unit == table_kev["E_MAX"].unit == u.keV
+
+
 def test_group_table_basic(energy_axis_ref):
     energy_edges = [1, 2, 10] * u.TeV
 
