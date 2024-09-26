@@ -901,12 +901,10 @@ class FitResult:
 
 
 class FitResults(collections.abc.Sequence):
-    def __init__(self, results, axis=None):
-        if axis and axis.nbin != len(results):
-            raise ValueError("Axis length does not correspond to number of results")
-
+    def __init__(self, results):
+        if np.array([not isinstance(result, FitResult) for result in results]).any():
+            raise TypeError(f"Elements in {results!r} are not FitResult objects")
         self.results = results
-        self.axis = axis
 
     def __add__(self, other):
         if isinstance(other, FitResult):
@@ -935,19 +933,21 @@ class FitResults(collections.abc.Sequence):
     def optimize_results(self):
         return [f.optimize_result for f in self.results]
 
-    def select_by_interval(self, coord_min, coord_max):
-        if self.axis is None:
-            raise ValueError("No axis to convert coordinate to index!")
+    def select_by_interval(self, axis, coord_min, coord_max):
+        if axis and axis.nbin != len(self.results):
+            raise ValueError("Axis length does not correspond to number of results")
 
-        keymin = self.axis.coord_to_idx(coord_min)
-        keymax = self.axis.coord_to_idx(coord_max)
+        keymin = axis.coord_to_idx(coord_min)
+        keymax = axis.coord_to_idx(coord_max)
 
         return self[keymin:keymax]
 
     def write_models(self, path, **kwargs):
         self.models().write(path, **kwargs)
 
-    def create_model_table(self):
+    def create_model_table(self, axis=None):
+        if axis and axis.nbin != len(self.results):
+            raise ValueError("Axis length does not correspond to number of results")
         t = QTable()
 
         t["convergence"] = [result.success for result in self.results]
@@ -961,9 +961,9 @@ class FitResults(collections.abc.Sequence):
                 for result in self.results
             ]
 
-        if isinstance(self.axis, TimeMapAxis):
-            t.add_columns(self.axis.to_gti().table.columns, indexes=[0, 0])
-        elif isinstance(self.axis, MapAxis):
-            t.add_columns(self.axis.to_table().columns, indexes=[0, 0])
+        if isinstance(axis, TimeMapAxis):
+            t.add_columns(axis.to_gti().table.columns, indexes=[0, 0])
+        elif isinstance(axis, MapAxis):
+            t.add_columns(axis.to_table().columns, indexes=[0, 0])
 
         return t
