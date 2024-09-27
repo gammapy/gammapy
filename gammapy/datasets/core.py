@@ -649,11 +649,11 @@ class LazyDatasets(collections.abc.MutableSequence):
     models : `~gammapy.modeling.models.Models`, optional
         Models to set on the datasets after creation. Default is None.
     cache : bool, optional
-        flag to salact caching of the datasets in memory after creation. Default is True.
+        flag to select caching of the datasets in memory after creation. Default is False.
     """
 
     def __init__(
-        self, datasets_maker, observations, reference_dataset, models=None, cache=True
+        self, datasets_maker, observations, reference_dataset, models=None, cache=False
     ):
         self.datasets_maker = datasets_maker
         self.observations = observations
