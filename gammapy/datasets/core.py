@@ -7,6 +7,7 @@ import logging
 import numpy as np
 from astropy import units as u
 from astropy.table import Table, vstack
+from astropy.time import Time
 from gammapy.data import GTI
 from gammapy.modeling.models import DatasetModels, Models
 from gammapy.utils.scripts import make_name, make_path, read_yaml, to_yaml, write_yaml
@@ -15,7 +16,7 @@ from gammapy.stats import FIT_STATISTICS_REGISTRY
 log = logging.getLogger(__name__)
 
 
-__all__ = ["Dataset", "Datasets"]
+__all__ = ["Dataset", "Datasets", "LazyDatasets"]
 
 
 class Dataset(abc.ABC):
@@ -630,3 +631,124 @@ class Datasets(collections.abc.MutableSequence):
 
     def __len__(self):
         return len(self._datasets)
+
+
+class LazyDatasets(collections.abc.MutableSequence):
+    """A lazy generator for datasets.
+
+    Parameters
+    ----------
+    datasets_maker : `~gammapy.makers.DatasetsMaker`
+        the Maker in charge of creating the datasets.
+    observations : `~gammapy.data.Observations`
+        the observations used to produce the Dataset objects.
+    reference_dataset : `~gammapy.datasets.Dataset`
+        the reference object for dataset creation.
+    models : `~gammapy.modeling.models.Models`, optional
+        Models to set on the datasets after creation. Default is None.
+    cache : bool, optional
+        flag to salact caching of the datasets in memory after creation. Default is True.
+    """
+
+    def __init__(
+        self, datasets_maker, observations, reference_dataset, models=None, cache=True
+    ):
+        self.datasets_maker = datasets_maker
+        self.observations = observations
+        self.reference_dataset = reference_dataset
+
+        self.models = models
+        self._datasets = [
+            None,
+        ] * len(self.observations)
+        self.cache = cache
+
+    def __str__(self):
+        str_ = self.__class__.__name__ + "\n"
+        str_ += "--------\n\n"
+
+        for idx, observation in enumerate(self.observations):
+            str_ += f"Dataset {idx}: \n\n"
+            str_ += f"\tObservation: {observation.obs_id}\n"
+
+        if self.models:
+            names = self.models.names
+        else:
+            names = ""
+        str_ += f"\tModels     : {names}\n\n"
+
+        return str_.expandtabs(tabsize=2)
+
+    def __getitem__(self, idx):
+        """Generate requested dataset or return new LazyDataset if idx is a slice."""
+        if isinstance(idx, slice):
+            return self.__class__(
+                self.dataset_maker,
+                self.observations[idx],
+                self.reference_dataset,
+                self.models,
+            )
+        if self._datasets[idx] is not None:
+            return self._datasets[idx]
+        dataset = self._generate_dataset(self.observations[idx])
+        if self.cache:
+            self._datasets[idx] = dataset
+        return dataset
+
+    def __len__(self):
+        """The length of the LazyDataset is assumed to be the number of observations"""
+        return len(self.observations)
+
+    def __setitem__(self, idx, value):
+        raise NotImplementedError("This does not apply to LazyDatasets")
+
+    def __delitem__(self, idx):
+        raise NotImplementedError("This does not apply to LazyDatasets")
+
+    def insert(self, idx, value):
+        raise NotImplementedError("This does not apply to LazyDatasets")
+
+    def __iter__(self):
+        """Returns generator on dataset or returns cached dataset."""
+        for i, observation in enumerate(self.observations):
+            if self._datasets[i] is None:
+                dataset = self._generate_dataset(observation)
+                if self.cache:
+                    self._datasets[i] = dataset
+                yield dataset
+            else:
+                yield self._datasets[i]
+
+    def _generate_dataset(self, observation):
+        """Generate dataset for observation and set models to it."""
+        log.warning(f"Creating dataset from {observation.obs_id}")
+        dataset = self.datasets_maker.make_dataset(self.reference_dataset, observation)
+        if self.models is not None:
+            dataset.models = self.models
+        return dataset
+
+    def select_time(self, time_min, time_max, atol=None):
+        """Apply interval time filtering to the LazyDataset and return new LazyDataset.
+
+        Internally, this will apply time filtering to the observations, splitting them into
+        smaller chunks.
+
+        Parameters
+        ----------
+        time_min : `~astropy.time.Time`
+            start times of the requested intervals.
+        time_max : `~astropy.time.Time`
+            stop times of the requested intervals.
+        atol : float, optional
+            tolerance. Here for consistency with Datasets.select_time, but it is unused.
+        """
+        filtered_observations = self.observations.select_time(
+            Time([time_min, time_max])
+        )
+
+        return self.__class__(
+            self.datasets_maker,
+            filtered_observations,
+            self.reference_dataset,
+            self.models,
+        )
