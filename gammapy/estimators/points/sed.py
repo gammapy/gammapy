@@ -8,8 +8,11 @@ import gammapy.utils.parallel as parallel
 from gammapy.datasets import Datasets
 from gammapy.datasets.actors import DatasetsActor
 from gammapy.datasets.flux_points import _get_reference_model
-from gammapy.maps import MapAxis
+from gammapy.maps import MapAxis, Map, RegionGeom
 from gammapy.modeling import Fit
+from gammapy.modeling.models import GaussianPrior, PiecewiseNormSpectralModel, SkyModel
+from gammapy.utils.deprecation import deprecated_attribute
+from ..core import Estimator
 from ..flux import FluxEstimator
 from .core import FluxPoints
 
@@ -282,3 +285,111 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
             result.update({"norm_sensitivity": np.nan})
 
         return result
+
+
+class RegularizedFluxPointsEstimator(Estimator):
+    def __init__(
+        self,
+        energy_nodes,
+        source=0,
+        prior=None,
+        selection_optional=None,
+        fit=None,
+        reoptimize=True,
+    ):
+        self.energy_nodes = energy_nodes
+        self.source = source
+
+        if prior is None:
+            self.prior = GaussianPrior(mu=1, sigma=0.7)
+        self.prior = prior
+
+        if fit is None:
+            fit = Fit()
+        self.fit = fit
+
+        self.selection_optional = selection_optional
+        self.reoptimize = reoptimize
+
+    def define_norm_model(self):
+        norm_model = PiecewiseNormSpectralModel(energy=self.energy_nodes)
+
+        for par in norm_model.parameters:
+            par.prior = self.prior.copy()
+        return norm_model
+
+    @staticmethod
+    def create_region(norm_model):
+        e_axis = MapAxis.from_nodes(norm_model.energy, name="energy", interp="log")
+        return RegionGeom(region=None, axes=[e_axis])
+
+    def compute_flux(self, datasets, norm_model):
+        res = Fit().run(datasets)
+        if not res.success:
+            raise RuntimeError(
+                f"Regularized spectral fitting failed with {res.message}."
+            )
+        geom = self.create_region(norm_model)
+        norm_map = Map.from_geom(geom, data=norm_model.parameters.value, unit="")
+        norm_err_map = Map.from_geom(
+            geom, data=np.array([_.error for _ in norm_model.parameters]), unit=""
+        )
+
+        return {"norm": norm_map, "norm_err": norm_err_map}
+
+    def compute_errn_errp(self, datasets, norm_model):
+        results = []
+        for par in norm_model.parameters.free_parameters:
+            results.append(self.fit.confidence(datasets, par))
+        geom = self.create_region(norm_model)
+
+        errn, errp = [], []
+        for result in results:
+            errn.append(result["errn"])
+            errp.append(result["errp"])
+
+        norm_errn_map = Map.from_geom(geom, data=np.array(errn), unit="")
+        norm_errp_map = Map.from_geom(geom, data=np.array(errp), unit="")
+
+        return {"norm_errn": norm_errn_map, "norm_errp": norm_errp_map}
+
+    def compute_ul(self, datasets, norm_model):
+        results = []
+        bests = []
+        for par in norm_model.parameters.free_parameters:
+            bests.append(par.value)
+            results.append(self.fit.confidence(datasets, par, sigma=3))
+        geom = self.create_region(norm_model)
+
+        errp = []
+        for result, best in zip(results, bests):
+            errp.append(result["errp"] + best)
+
+        norm_ul_map = Map.from_geom(geom, data=np.array(errp), unit="")
+
+        return {"norm_ul": norm_ul_map}
+
+    def run(self, datasets):
+        datasets = datasets.copy()
+        model = datasets.models[self.source]
+        spectral_model = model.spectral_model.copy()
+        spectral_model.freeze()
+
+        norm_model = self.define_norm_model()
+
+        regul_model = SkyModel(
+            spectral_model=spectral_model * norm_model, name=model.name + "_regul"
+        )
+
+        regul_model.spectral_model.model1.freeze()
+        datasets.models = [regul_model]
+
+        maps_dict = self.compute_flux(datasets, norm_model)
+
+        # maps_dict.update(self.compute_errn_errp(datasets, norm_model))
+
+        # maps_dict.update(self.compute_ul(datasets, norm_model))
+
+        return FluxPoints.from_maps(
+            maps=maps_dict, reference_model=spectral_model, sed_type="likelihood"
+        )
