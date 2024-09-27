@@ -3030,13 +3030,8 @@ class TimeMapAxis:
             self.edges_min, self.edges_max, reference_time=self.reference_time
         )
 
-    def to_table(self, format="gadf"):
+    def to_table(self):
         """Create table.
-
-        Parameters
-        ----------
-        format : {"gadf"}
-            Format specification. Default is "gadf".
 
         Returns
         -------
