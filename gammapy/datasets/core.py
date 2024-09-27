@@ -145,6 +145,8 @@ class Datasets(collections.abc.MutableSequence):
             datasets = datasets._datasets
         elif isinstance(datasets, Dataset):
             datasets = [datasets]
+        elif isinstance(datasets, LazyDatasets):
+            datasets = [_ for _ in datasets]
         elif not isinstance(datasets, list):
             raise TypeError(f"Invalid type: {datasets!r}")
 
