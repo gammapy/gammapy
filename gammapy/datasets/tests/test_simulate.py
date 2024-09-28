@@ -308,7 +308,7 @@ def test_sample_coord_time_energy_random_seed(
 
     assert_allclose(
         [events[0][0], events[0][1], events[0][2], events[0][3]],
-        [0.2998, 1.932196, 266.404988, -28.936178],
+        [0.29982, 1.932196, 266.404988, -28.936178],
         rtol=1e-3,
     )
 
@@ -327,7 +327,7 @@ def test_sample_coord_time_energy_unit(dataset, energy_dependent_temporal_sky_mo
     assert len(events) == 1254
     assert_allclose(
         [events[0][0], events[0][1], events[0][2], events[0][3]],
-        [854.108591, 6.22904, 266.404988, -28.936178],
+        [854.10859, 6.22904, 266.404988, -28.936178],
         rtol=1e-6,
     )
 
@@ -366,6 +366,7 @@ def test_mde_sample_sources_psf_update(dataset, models):
 def test_sample_sources_energy_dependent(dataset, energy_dependent_temporal_sky_model):
     dataset.models = energy_dependent_temporal_sky_model
 
+    print(dataset.gti.time_start.scale)
     sampler = MapDatasetEventSampler(random_state=0)
     events = sampler.sample_sources(dataset=dataset)
 
@@ -377,6 +378,9 @@ def test_sample_sources_energy_dependent(dataset, energy_dependent_temporal_sky_
     assert_allclose(events.table["DEC_TRUE"][0], -28.936178, rtol=1e-5)
 
     assert_allclose(events.table["TIME"][0], 95.464699, rtol=1e-5)
+
+    dt = np.max(events.table["TIME"]) - np.min(events.table["TIME"])
+    assert dt <= dataset.gti.time_sum.to("s").value + sampler.t_delta.to("s").value
 
 
 @requires_data()
