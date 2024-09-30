@@ -650,21 +650,36 @@ def test_sky_point_source():
 @requires_data()
 def test_fermi_isotropic():
     filename = "$GAMMAPY_DATA/fermi_3fhl/iso_P8R2_SOURCE_V6_v06.txt"
-    model = create_fermi_isotropic_diffuse_model(filename)
-    coords = {"lon": 0 * u.deg, "lat": 0 * u.deg, "energy": 50 * u.GeV}
+    vals = np.loadtxt(make_path(filename))
+    energy = u.Quantity(vals[:, 0], "MeV")
+    values = u.Quantity(vals[:, 1], "MeV-1 s-1 cm-2")
 
-    flux = model(**coords)
-
-    assert_allclose(flux.value, 1.463e-13, rtol=1e-3)
+    # No extrapolation
+    model = create_fermi_isotropic_diffuse_model(
+        filename=filename,
+        interp_kwargs={"extrapolate": False, "bounds_error": False},
+    )
+    coords_inner = {"lon": 0 * u.deg, "lat": 0 * u.deg, "energy": energy[7]}
+    flux = model(**coords_inner)
+    assert_allclose(flux.value, values[7].value, rtol=1e-3)
     assert flux.unit == "MeV-1 cm-2 s-1 sr-1"
     assert isinstance(model.spectral_model, CompoundSpectralModel)
 
+    # No extrapolation with bounds_error
+    with pytest.raises(ValueError):
+        create_fermi_isotropic_diffuse_model(
+            filename=filename,
+            interp_kwargs={"extrapolate": False, "bounds_error": True},
+        )
+
+    # With extrapolation
+    coords_outer = {"lon": 0 * u.deg, "lat": 0 * u.deg, "energy": 900 * u.GeV}
     model_options = create_fermi_isotropic_diffuse_model(
         filename=filename,
         interp_kwargs={"extrapolate": True, "method": "nearest"},
     )
-    flux_options = model_options(**coords)
-    assert_allclose(flux_options.value, 1.456e-13, rtol=1e-3)
+    flux_options = model_options(**coords_outer)
+    assert_allclose(flux_options.value, 2.749180e-16, rtol=1e-3)
 
 
 class MyCustomGaussianModel(SpatialModel):
