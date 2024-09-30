@@ -38,8 +38,8 @@ template.plot(energy_bounds)
 plt.grid(which="both")
 
 # %%
-# Examples for extrapolation
-# --------------------------
+# Example of extrapolation
+# ------------------------
 # The following shows how to implement extrapolation for the template spectral model:
 
 energy = [0.5, 1, 3, 10, 20] * u.TeV
