@@ -53,8 +53,10 @@ template_extrapolate = TemplateSpectralModel(
     energy=energy, values=values, interp_kwargs={"extrapolate": True}
 )
 energy_bounds = [0.2, 80] * u.TeV
-template_extrapolate.plot(energy_bounds, label="Extrapolated", alpha=0.5, color="green")
-template_noextrapolate.plot(energy_bounds, label="Not extrapolated", ls="--")
+template_extrapolate.plot(energy_bounds, label="Extrapolated", alpha=0.4, color="blue")
+template_noextrapolate.plot(
+    energy_bounds, label="Not extrapolated", ls="--", color="black"
+)
 plt.legend()
 
 
