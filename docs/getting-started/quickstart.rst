@@ -74,7 +74,7 @@ Another option is to utilise the ipykernel functionality of Jupyter Notebook:
     conda activate gammapy-|release|
     python -m ipykernel install --user --name gammapy-|release| --display-name "gammapy-|release|"
 
-To utilise it you just need to select it when you open `jupyter lab` or `jupyter notebook`.
+To make use of it, simply choose it as your kernel when launching `jupyter lab` or `jupyter notebook`.
 
 If you are new to conda, Python and Jupyter, it is recommended to also read the :ref:`using-gammapy` guide.
 If you encounter any issues you can check the :ref:`troubleshoot` guide.
