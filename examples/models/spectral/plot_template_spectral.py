@@ -38,8 +38,28 @@ template.plot(energy_bounds)
 plt.grid(which="both")
 
 # %%
-# Spectral correction
-# Corrections to templates can be applied by multiplication with a normalized spectral model,
+# Examples for extrapolation
+# --------------------------
+# The following shows how to implement extrapolation for the template spectral model:
+
+energy = [0.5, 1, 3, 10, 20] * u.TeV
+values = [40, 30, 20, 10, 1] * u.Unit("TeV-1 s-1 cm-2")
+template_noextrapolate = TemplateSpectralModel(
+    energy=energy,
+    values=values,
+    interp_kwargs={"extrapolate": False, "bounds_error": False},
+)
+template_extrapolate = TemplateSpectralModel(
+    energy=energy, values=values, interp_kwargs={"extrapolate": True}
+)
+energy_bounds = [0.2, 80] * u.TeV
+template_extrapolate.plot(energy_bounds, label="Extrapolated", alpha=0.5, color="green")
+template_noextrapolate.plot(energy_bounds, label="Not extrapolated", ls="--")
+plt.legend()
+
+
+# %%
+# Spectral corrections to templates can be applied by multiplication with a normalized spectral model,
 # for example `gammapy.modeling.models.PowerLawNormSpectralModel`.
 # This operation create a new `gammapy.modeling.models.CompoundSpectralModel`
 
