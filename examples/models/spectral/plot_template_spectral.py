@@ -40,7 +40,7 @@ plt.grid(which="both")
 # %%
 # Example of extrapolation
 # ------------------------
-# The following shows how to implement extrapolation for the template spectral model:
+# The following shows how to implement extrapolation of a template spectral model:
 
 energy = [0.5, 1, 3, 10, 20] * u.TeV
 values = [40, 30, 20, 10, 1] * u.Unit("TeV-1 s-1 cm-2")
@@ -61,7 +61,7 @@ plt.legend()
 # %%
 # Spectral corrections to templates can be applied by multiplication with a normalized spectral model,
 # for example `gammapy.modeling.models.PowerLawNormSpectralModel`.
-# This operation create a new `gammapy.modeling.models.CompoundSpectralModel`
+# This operation creates a new `gammapy.modeling.models.CompoundSpectralModel`
 
 new_model = template * PowerLawNormSpectralModel(norm=2, tilt=0)
 
