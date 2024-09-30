@@ -67,7 +67,9 @@ a notebook server by executing::
     jupyter notebook
 
 
-Another option is to utilise the ipykernel functionality of Jupyter Notebook:
+Another option is to utilise the ipykernel functionality of Jupyter Notebook, which allows you
+to choose a kernel from a predefined list. To add kernels to the list, use the following
+command lines:
 
 .. substitution-code-block:: console
 
