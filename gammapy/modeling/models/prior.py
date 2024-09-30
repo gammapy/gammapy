@@ -155,16 +155,25 @@ class MultiVariateGaussianPrior(Prior):
 
     Parameters
     ----------
-    param :
+    modelparameters :
+        Meaning
+    covariance_matrix :
         Meaning
     """
 
     tag = ["MultiVariateGaussianPrior"]
     _type = "prior"
 
-    # Should follow like the Covariance class??
     def __init__(self, modelparameters, covariance_matrix):
-        self._modelparameters = modelparameters
+        # Why is this not being imported from the super??
+        # self._modelparameters = modelparameters
+        if isinstance(modelparameters, Parameter):
+            self._modelparameters = Parameters([modelparameters])
+        elif isinstance(modelparameters, Parameters):
+            self._modelparameters = modelparameters
+        else:
+            raise ValueError(f"Invalid model type {modelparameters}")
+
         self._covariance_matrix = covariance_matrix
 
         # Ensure the correct shape
@@ -182,22 +191,21 @@ class MultiVariateGaussianPrior(Prior):
         for par in self._modelparameters:
             par.prior = self
 
-        # super().__init__(self._modelparameters)
+        super().__init__(self._modelparameters)
 
     # def from_subcovariance(self, parameters, subcovar):
     #    idx = [parameters.index(par) for par in parameters]
 
     def __call__(self):
         """Call evaluate method"""
-        values = [modelparameter.value for modelparameter in self._modelparameters]
-        return self.evaluate(values)
+        return self.evaluate(self._modelparameters.value)
 
     @property
     def covariance_matrix(self):
         return self._covariance_matrix
 
     def evaluate(self, values):
-        """Evaluate the Multi-variate Gaussian prior."""
+        """Evaluate the MultiVariateGaussianPrior."""
         # Correct way to calculate that?
         return np.matmul(values, np.matmul(values, self.covariance_matrix))
 
