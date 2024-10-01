@@ -133,8 +133,9 @@ Glossary
       in which the dataset mask is True.
 
     SED
-      Short for "spectral energy distribution". For a spectral model or flux points object
-      the type of plot is typically adjusted through the `sed_type` quantity.
+      Short for "spectral energy distribution". For a spectral model or flux points
+      object, the type of plot (e.g. dN/dE, E^2 dN/dE) is typically adjusted through
+      the `sed_type` quantity.
 
     Stacked Analysis
       In a stacked analysis individual observations are reduced to datasets which
