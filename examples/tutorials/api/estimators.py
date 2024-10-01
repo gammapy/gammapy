@@ -4,10 +4,9 @@ Estimators
 
 This tutorial provides an overview of the `Estimator` API. All estimators live in the
 `gammapy.estimators` sub-module, offering a range of algorithms and classes for high-level flux and
-significance estimation. This is accomplished through a common functionality such as estimation of
+significance estimation. This is accomplished through a common functionality allowing the estimation of
 flux points, light curves, flux maps and profiles via a common API.
-Provides algorithms and classes for flux and significance estimation. Common functionality for flux points,
-lightcurves, flux maps, and profiles.
+
 
 
 Key Features
@@ -84,7 +83,7 @@ print(fit_result)
 #
 # The `~gammapy.estimators.FluxPointsEstimator` estimates flux points for a given list of datasets,
 # energies and spectral model. The most simple way to call the estimator is by defining both
-# the ``source`` and ``energy_edges``.
+# the name of the ``source`` and its ``energy_edges``.
 # Here we prepare a full configuration of the flux point estimation.
 # Firstly we define the ``backend`` for the fit:
 #
@@ -112,7 +111,7 @@ fp_estimator = FluxPointsEstimator(
 )
 
 ######################################################################
-# The ``norm`` parameter can be adjusted a few different ways. For example, we can change its
+# The ``norm`` parameter can be adjusted in a few different ways. For example, we can change its
 # minimum and maximum values that it scans over, as follows.
 #
 
@@ -120,7 +119,9 @@ fp_estimator.norm.scan_min = 0.1
 fp_estimator.norm.scan_max = 3
 
 ######################################################################
-# Note: for a gamma-ray source that has weak emission you should set a high maximum value.
+# Note: The default scan range of the norm parameter is between 0.1 to 10. In case the upper
+# limit values lie outside this range, nan values will be returned. It may thus be useful to
+# increase this range, specially for the computation of upper limits from weak sources.
 #
 # The various quantities utilised in this tutorial are described here:
 #
@@ -133,9 +134,9 @@ fp_estimator.norm.scan_max = 3
 # -  ``reoptimize``: whether to reoptimize the flux points with other model parameters, aside from the ``norm``
 # -  ``norm``: normalisation parameter for the fit
 #
-# **Important note**: the ``energy_edges`` are taken from the parent dataset energy bins,
-# which may not exactly match the output bins. Specific binning must be defined in the
-# parent dataset geometry to achieve that.  This could be done in the following way:
+# **Important note**: the output ``energy_edges`` are taken from the parent dataset energy bins,
+# selecting the bins closest to the requested ``energy_edges``. To match the input bins directly,
+# specific binning must be defined based on the parent dataset geometry. This could be done in the following way:
 # `energy_edges = datasets[0].geoms["geom"].axes["energy"].downsample(factor=5).edges`
 #
 
@@ -156,7 +157,7 @@ fp_result.plot(sed_type="dnde")
 plt.show()
 
 ######################################################################
-# From the above we can see that we access to many quantities. We can also access
+# We can also access
 # the quantities names through ``fp_result.available_quantities``.
 # Here we show how you can plot a different plot type and define the axes units,
 # we also overlay the TS profile.
@@ -178,6 +179,10 @@ print(type(fp_result.dnde))
 #
 fp_result.dnde.plot()
 plt.show()
+
+######################################################################
+# From the above, we can see that we access to many quantities.
+
 
 ######################################################################
 # Access the data:
@@ -223,8 +228,8 @@ plt.show()
 # for debugging.
 # Here we remind the user of the meaning of the forthcoming quantities:
 #
-# -  ``counts``: predicted counts from the null hypothesis.
-# -  ``npred``: predicted number of counts from best fit hypothesis.
+# -  ``counts``: predicted counts from the null hypothesis,
+# -  ``npred``: predicted number of counts from best fit hypothesis,
 # -  ``npred_excess``: predicted number of excess counts from best fit hypothesis.
 #
 # The `~gammapy.maps.region.ndmap.RegionNDMap` allows for plotting of multidimensional data
