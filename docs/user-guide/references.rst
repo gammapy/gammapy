@@ -132,6 +132,10 @@ Glossary
       data are analyzed. In practice, at each energy it corresponds with the sky region
       in which the dataset mask is True.
 
+    SED
+      Short for "spectral energy distribution". For a spectral model or flux points object
+      the type of plot is typically adjusted through the `sed_type` quantity.
+
     Stacked Analysis
       In a stacked analysis individual observations are reduced to datasets which
       are then stacked to produce a single reduced dataset. The latter is then used
