@@ -165,18 +165,10 @@ class MultiVariateGaussianPrior(Prior):
     _type = "prior"
 
     def __init__(self, modelparameters, covariance_matrix):
-        # Why is this not being imported from the super??
-        # self._modelparameters = modelparameters
-        if isinstance(modelparameters, Parameter):
-            self._modelparameters = Parameters([modelparameters])
-        elif isinstance(modelparameters, Parameters):
-            self._modelparameters = modelparameters
-        else:
-            raise ValueError(f"Invalid model type {modelparameters}")
+        super().__init__(modelparameters)
 
         self._covariance_matrix = covariance_matrix
 
-        # Ensure the correct shape
         value = np.asanyarray(self.covariance_matrix)
         npars = len(self._modelparameters)
         shape = (npars, npars)
@@ -185,13 +177,11 @@ class MultiVariateGaussianPrior(Prior):
                 f"Invalid covariance matrix shape: {value.shape}, expected {shape}"
             )
 
-        # Do we need this?
+        # Do we want this?
         self.dimension = value.shape[-1]
 
         for par in self._modelparameters:
             par.prior = self
-
-        super().__init__(self._modelparameters)
 
     # def from_subcovariance(self, parameters, subcovar):
     #    idx = [parameters.index(par) for par in parameters]
@@ -206,7 +196,6 @@ class MultiVariateGaussianPrior(Prior):
 
     def evaluate(self, values):
         """Evaluate the MultiVariateGaussianPrior."""
-        # Correct way to calculate that?
         return np.matmul(values, np.matmul(values, self.covariance_matrix))
 
 
