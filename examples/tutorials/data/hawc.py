@@ -17,7 +17,7 @@ This dataset is 1 GB in size, so only a subset will be used here as an example.
 
 This notebook is a quick introduction to HAWC data analysis with Gammapy.
 It briefly describes the HAWC data and how to access it, and then uses a
-subset of it to produce a MapDataset, to show how the data reduction is performed.
+subset of it to produce a `~gammapy.datasets.MapDataset`, to show how the data reduction is performed.
 
 The HAWC data release contains events where energy is estimated using
 two different algorithms, referred to as "NN" and "GP" (see this `paper <https://iopscience.iop.org/article/10.3847/1538-4357/ab2f7d>`__
@@ -26,7 +26,7 @@ events are repeated between the NN and GP datasets. So these data should never
 be analyzed jointly, and one of the two estimators needs to be chosen before
 proceeding.
 
-Once the data has been reduced to a MapDataset, there are no differences
+Once the data has been reduced to a `~gammapy.datasets.MapDataset`, there are no differences
 in the way that HAWC data is handled with respect to data from any other
 observatory, such as H.E.S.S. or CTAO.
 
@@ -141,32 +141,35 @@ plt.show()
 # Data reduction into a MapDataset
 # --------------------------------
 #
-# We will now produce a MapDataset using the data from one of the
+# We will now produce a `~gammapy.datasets.MapDataset` using the data from one of the
 # fHit bins. In order to use all bins, one just needs to repeat this
-# process inside of a for loop that modifies the variable fHit.
+# process inside a for loop that modifies the variable fHit.
 
 
 ######################################################################
-# First we define the geometry and axes
+# First we define the geometry and axes, starting with the energy reco axis:
 
-# create the energy reco axis
-# Note that this axis is the one used to create the background model map. If
-# different edges are used, the MapDatasetMaker will interpolate between
-# them, which might lead to unexpected behavior.
 energy_axis = MapAxis.from_edges(
     [1.00, 1.78, 3.16, 5.62, 10.0, 17.8, 31.6, 56.2, 100, 177, 316] * u.TeV,
     name="energy",
     interp="log",
 )
 
+######################################################################
+# Note: this axis is the one used to create the background model map. If
+# different edges are used, the `~gammapy.makers.MapDatasetMaker` will interpolate between
+# them, which might lead to unexpected behavior.
 
-# and energy true axis
+######################################################################
+# Define the energy true axis:
+
 energy_axis_true = MapAxis.from_energy_bounds(
     1e-3, 1e4, nbin=140, unit="TeV", name="energy_true"
 )
 
+######################################################################
+# Finally, create a geometry around the Crab location:
 
-# create a geometry around the Crab location
 geom = WcsGeom.create(
     skydir=SkyCoord(ra=83.63, dec=22.01, unit="deg", frame="icrs"),
     width=6 * u.deg,
@@ -179,27 +182,28 @@ geom = WcsGeom.create(
 # Define the makers we will use
 
 maker = MapDatasetMaker(selection=["counts", "background", "exposure", "edisp", "psf"])
-safemask_maker = SafeMaskMaker(methods=["aeff-max"], aeff_percent=10)
+safe_mask_maker = SafeMaskMaker(methods=["aeff-max"], aeff_percent=10)
 
 
 ######################################################################
-# Create empty Mapdataset
-# The keyword reco_psf=True is needed because the HAWC PSF is
+# Create an empty `~gammapy.datasets.MapDataset`.
+# The keyword `reco_psf=True` is needed because the HAWC PSF is
 # derived in reconstructed energy.
 
 dataset_empty = MapDataset.create(
     geom, energy_axis_true=energy_axis_true, name="fHit " + str(fHit), reco_psf=True
 )
-# run the map dataset maker
 dataset = maker.run(dataset_empty, obs)
 
-# The livetime info is used by the SafeMask maker to retrieve the
+######################################################################
+# The livetime information is used by the `~gammapy.makers.SafeMaskMaker` to retrieve the
 # effective area from the exposure. The HAWC effective area is computed
-# for one source transit above 45º zenith, which is around 6h
-# Note that since the effective area condition used here is relative to
-# the maximum, this value does not actually impact the result
+# for one source transit above 45º zenith, which is around 6h.
+# Since the effective area condition used here is relative to
+# the maximum, this value does not actually impact the result.
+
 dataset.exposure.meta["livetime"] = "6 h"
-dataset = safemask_maker.run(dataset)
+dataset = safe_mask_maker.run(dataset)
 
 
 ######################################################################
@@ -207,7 +211,7 @@ dataset = safemask_maker.run(dataset)
 # one single transit, but our dataset might comprise more. The number
 # of transits can be derived using the good time intervals (GTI) stored
 # with the event list. For convenience, the HAWC data release already
-# included this quantity as a map
+# included this quantity as a map.
 
 transit_map = Map.read(data_path + "irfs/TransitsMap_Crab.fits.gz")
 transit_number = transit_map.get_by_coord(geom.center_skydir)
@@ -221,11 +225,8 @@ dataset.exposure.data *= transit_number
 # Check the dataset we produced
 # -----------------------------
 #
-# We will now check the contents of the dataset
-
-
-######################################################################
-# We can use the .peek() method to quickly get a glimpse of the contents
+# We will now check the contents of the dataset.
+# We can use the ``.peek()`` method to quickly get a glimpse of the contents
 dataset.peek()
 plt.show()
 
@@ -245,6 +246,7 @@ plt.show()
 
 ######################################################################
 # Combining all energies
+
 excess_estimator_integrated = ExcessMapEstimator(
     correlation_radius="0.2 deg", selection_optional=[]
 )
