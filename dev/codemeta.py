@@ -20,10 +20,12 @@ def update_codemeta(maintainer, filename, setup_file=None):
             data["maintainer"] = author
 
     data["readme"] = "https://gammapy.org"
+    data["referencePublication"] = "https://doi.org/10.1051/0004-6361/202346488"
     data["issueTracker"] = "https://github.com/gammapy/gammapy/issues"
     data["developmentStatus"] = ("active",)
     data["email"] = "GAMMAPY-COORDINATION-L@IN2P3.FR"
 
+    data["programmingLanguage"] = "Python"
     if setup_file:
         # complete with software requirements from setup.cfg
         cf = ConfigParser()
