@@ -338,7 +338,7 @@ plt.show()
 # Exercises
 # ---------
 #
-# 1. Quantify the variablity in the spectral index
+# 1. Quantify the variability in the spectral index
 # 2. Rerun the algorithm using a different spectral shape, such as a
 #    broken power law.
 # 3. Compare the significance of the new model with the simple power law.
