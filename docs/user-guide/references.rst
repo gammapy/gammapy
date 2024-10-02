@@ -134,8 +134,8 @@ Glossary
 
     SED
       Short for "spectral energy distribution". For a spectral model or flux points
-      object, the type of plot (e.g. dN/dE, E^2 dN/dE) is typically adjusted through
-      the `sed_type` quantity.
+      object, the type of plot (e.g. :math:`dN/dE`, :math:`E^2\ dN/dE`) is typically adjusted
+      through the `sed_type` quantity. See :ref:`sedtypes` for a list of options.
 
     Stacked Analysis
       In a stacked analysis individual observations are reduced to datasets which
