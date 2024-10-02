@@ -82,7 +82,7 @@ log = logging.getLogger(__name__)
 # Data selection
 # ~~~~~~~~~~~~~~
 #
-# We select all runs pointing within 2 degrees of PKS2155-304.
+# We select all runs pointing within 2 degrees of PKS 2155-304.
 #
 
 data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
