@@ -101,9 +101,9 @@ print(f"Number of selected observations : {len(observations)}")
 
 ######################################################################
 # The flaring observations were taken during July 2006. We define
-# 15-minutes time intervals as lists of `~astropy.Time` start and stop
+# 15-minute time intervals as lists of `~astropy.time.Time` start and stop
 # objects, and apply the intervals to the observations by using
-# `~observations.select_time`
+# `~gammapy.data.Observations.select_time`
 #
 
 t0 = Time("2006-07-29T20:30")
