@@ -63,8 +63,6 @@ log = logging.getLogger(__name__)
 
 from gammapy.data import GTI, DataStore
 from gammapy.datasets import Datasets, SpectrumDataset
-from gammapy.estimators import Estimator, LightCurveEstimator
-from gammapy.estimators.utils import get_rebinned_axis
 from gammapy.makers import (
     ReflectedRegionsBackgroundMaker,
     SafeMaskMaker,
@@ -73,11 +71,8 @@ from gammapy.makers import (
 from gammapy.maps import MapAxis, RegionGeom, TimeMapAxis
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
-    BrokenPowerLawSpectralModel,
-    Models,
     PowerLawSpectralModel,
     SkyModel,
-    SpectralModel,
 )
 
 log = logging.getLogger(__name__)
