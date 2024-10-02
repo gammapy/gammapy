@@ -125,8 +125,8 @@ print(short_observations[1].gti)
 # --------------
 #
 # In this example, we perform a 1D analysis with a reflected regions
-# background estimation. For details, see
-# :doc:/tutorials/analysis-1d/spectral_analysis tutorial.
+# background estimation. For details, see the
+# :doc:`/tutorials/analysis-1d/spectral_analysis` tutorial.
 #
 
 # Target definition
