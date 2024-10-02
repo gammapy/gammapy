@@ -280,7 +280,7 @@ print(table)
 
 
 ######################################################################
-# Visualisting the results
+# Visualising the results
 # ~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # We can plot the spectral index and the amplitude as a function of time.
