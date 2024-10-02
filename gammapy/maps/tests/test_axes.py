@@ -260,6 +260,25 @@ def test_one_bin_nodes():
     assert_allclose(axis.pix_to_coord(0), 1 * u.deg)
 
 
+def test_table():
+    axis = MapAxis(
+        nodes=[0, 1, 2, 3, 4, 5, 6, 7, 8],
+        unit="TeV",
+        name="energy",
+        node_type="edges",
+        interp="lin",
+    )
+
+    table = axis.to_table()
+    assert table.colnames == ["CHANNEL", "E_MIN", "E_MAX"]
+    assert len(table["CHANNEL"]) == axis.nbin
+    assert table["E_MIN"].unit == table["E_MAX"].unit == u.TeV
+    assert (table["E_MIN"].data == axis.edges_min.value).all()
+
+    table_kev = axis.to_table("ogip-sherpa")
+    assert table_kev["E_MIN"].unit == table_kev["E_MAX"].unit == u.keV
+
+
 def test_group_table_basic(energy_axis_ref):
     energy_edges = [1, 2, 10] * u.TeV
 
@@ -604,6 +623,19 @@ def test_coord_to_idx_time_axis(time_intervals):
     assert_allclose(indices[::2], -1)
     assert_allclose(pix, 0, atol=1e-10)
     assert_allclose(pixels[1::2], [np.nan, 1, 3, 5, 7, 9, 11, 13, 15, 17, 19])
+
+
+def test_timeaxis_table(time_intervals):
+    tmin = time_intervals["t_min"]
+    tmax = time_intervals["t_max"]
+    tref = time_intervals["t_ref"]
+    axis = TimeMapAxis(tmin, tmax, tref, name="time")
+
+    table = axis.to_table()
+
+    assert table.colnames == ["START", "STOP"]
+    assert len(table["START"]) == axis.nbin
+    assert (table["START"] == axis.time_min).all()
 
 
 def test_pix_to_coord_time_axis(time_intervals):
