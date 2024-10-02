@@ -61,7 +61,7 @@ import matplotlib.pyplot as plt
 
 log = logging.getLogger(__name__)
 
-from gammapy.data import GTI, DataStore
+from gammapy.data import DataStore
 from gammapy.datasets import Datasets, SpectrumDataset
 from gammapy.makers import (
     ReflectedRegionsBackgroundMaker,
