@@ -14,7 +14,7 @@ Context
 The `LightCurveEstimator` in Gammapy (see
 :doc:`light curve notebook </tutorials/analysis-time/light_curve>`,
 and
-:doc:`light curve for flares notebook </tutorials/analysis-time/light_curve_for_flares>`.)
+:doc:`light curve for flares notebook </tutorials/analysis-time/light_curve_flare>`.)
 fits the amplitude in each time/energy bin, keeping the spectral shape
 frozen. However, in the analysis of flaring sources, it is often
 interesting to study not only how the flux changes with time but how the
