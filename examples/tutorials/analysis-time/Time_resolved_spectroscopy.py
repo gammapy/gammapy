@@ -28,7 +28,7 @@ The main idea behind doing a time resolved spectroscopy is to
 -  Select relevant `~gammapy.data.Observations` from the
    `~gammapy.data.DataStore`
 -  Define time intervals in which to fit the spectral model
--  Apply the above time seclections on the data to obatin new
+-  Apply the above time selections on the data to obtain new
    `~gammapy.data.Observations`
 -  Perform standard data reduction on the above data
 -  Define a source model
