@@ -193,8 +193,8 @@ print(sky_model)
 # Time resolved spectroscopy algorithm
 # ------------------------------------
 #
-# The following function is the crux of this tutorial. The `sky_model`
-# is fit in each bin and a list of `fit_results` stores the fit
+# The following function is the crux of this tutorial. The ``sky_model``
+# is fit in each bin and a list of ``fit_results`` stores the fit
 # information in each bin.
 #
 # If time bins are present without any available observations, those bins
