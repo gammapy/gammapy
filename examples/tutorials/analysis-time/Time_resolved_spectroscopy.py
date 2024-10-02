@@ -159,7 +159,7 @@ for obs in short_observations:
 
 
 ######################################################################
-# This gives us list of `SpectrumDatasetOnOff` which can now be
+# This gives us list of `~gammapy.datasets.SpectrumDatasetOnOff` which can now be
 # modelled.
 #
 
