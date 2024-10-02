@@ -15,7 +15,12 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
 )
-from gammapy.stats import compute_flux_doubling, compute_fpp, compute_fvar
+from gammapy.stats import (
+    compute_flux_doubling,
+    compute_fpp,
+    compute_fvar,
+    discrete_correlation,
+)
 from gammapy.stats.utils import ts_to_sigma
 from .map.core import FluxMaps
 
@@ -29,6 +34,7 @@ __all__ = [
     "compute_lightcurve_fvar",
     "compute_lightcurve_fpp",
     "compute_lightcurve_doublingtime",
+    "compute_lightcurve_discrete_correlation",
 ]
 
 
@@ -536,6 +542,88 @@ def compute_lightcurve_doublingtime(lightcurve, flux_quantity="flux"):
     return table
 
 
+def compute_lightcurve_discrete_correlation(
+    lightcurve1, lightcurve2=None, flux_quantity="flux", tau=None
+):
+    r"""Compute the discrete correlation function for two lightcurves, or the discrete autocorrelation if only one lightcurve is provided.
+    NaN values will be ignored in the computation in order to account for possible gaps in the data.
+
+    Internally calls the `~gammapy.stats.discrete_correlation` function
+
+    Parameters
+    ----------
+    lightcurve1 : `~gammapy.estimators.FluxPoints`
+        The first lightcurve object.
+    lightcurve2 : `~gammapy.estimators.FluxPoints`, optional
+        The second lightcurve object. If not provided, the autocorrelation for the first lightcurve will be computed.
+        Default is None.
+    flux_quantity : str
+        Flux quantity to use for calculation. Should be 'dnde', 'flux', 'e2dnde' or 'eflux'.
+        The choice does not affect the computation. Default is 'flux'.
+    tau : `~astropy.units.Quantity`, optional
+        Size of the bins to compute the discrete correlation.
+        If None, the bin size will be double the bins of the first lightcurve. Default is None.
+
+
+    Returns
+    -------
+    discrete_correlation_dict : dict
+        Dictionary containing:
+            "bins" : the array of discrete time bins
+            "discrete_correlation" : discrete correlation function values
+            "discrete_correlation_err" : associated error
+
+    References
+    ----------
+    .. [Edelson1988] "THE DISCRETE CORRELATION FUNCTION: A NEW METHOD FOR ANALYZING
+    UNEVENLY SAMPLED VARIABILITY DATA", Edelson et al. (1988)
+    https://ui.adsabs.harvard.edu/abs/1988ApJ...333..646E/abstract
+    """
+
+    flux1 = getattr(lightcurve1, flux_quantity)
+    flux_err1 = getattr(lightcurve1, flux_quantity + "_err")
+    coords1 = lightcurve1.geom.axes["time"].center
+    axis = flux1.geom.axes.index_data("time")
+
+    if tau is None:
+        tau = (coords1[-1] - coords1[0]) / (0.5 * len(coords1))
+
+    if lightcurve2:
+        flux2 = getattr(lightcurve2, flux_quantity)
+        flux_err2 = getattr(lightcurve2, flux_quantity + "_err")
+        coords2 = lightcurve2.geom.axes["time"].center
+        bins, dcf, dcf_err = discrete_correlation(
+            flux1.data,
+            flux_err1.data,
+            flux2.data,
+            flux_err2.data,
+            coords1,
+            coords2,
+            tau,
+            axis,
+        )
+
+    else:
+        bins, dcf, dcf_err = discrete_correlation(
+            flux1.data,
+            flux_err1.data,
+            flux1.data,
+            flux_err1.data,
+            coords1,
+            coords1,
+            tau,
+            axis,
+        )
+
+    discrete_correlation_dict = {
+        "bins": bins,
+        "discrete_correlation": dcf,
+        "discrete_correlation_err": dcf_err,
+    }
+
+    return discrete_correlation_dict
+
+
 def get_edges_fixed_bins(fluxpoint, group_size, axis_name="energy"):
     """Rebin the flux point to combine value adjacent bins.
 
@@ -817,7 +905,6 @@ def combine_flux_maps(
         reference_model = maps[0].reference_model
 
     if method == "gaussian_errors":
-
         means = [map_.dnde.copy() for map_ in maps]
         sigmas = [map_.dnde_err.copy() for map_ in maps]
         # compensate for the ts deviation from gaussian approximation expectation in each map
@@ -833,7 +920,6 @@ def combine_flux_maps(
         sigma = sigmas[0]
 
         for k in range(1, len(means)):
-
             mean_k = means[k].quantity.to_value(mean.unit)
             sigma_k = sigmas[k].quantity.to_value(sigma.unit)
 
