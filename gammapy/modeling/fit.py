@@ -6,7 +6,6 @@ import collections.abc
 import numpy as np
 from astropy.table import Table, QTable
 from gammapy.utils.pbar import progress_bar
-from gammapy.maps import TimeMapAxis, MapAxis
 from .covariance import Covariance
 from .iminuit import (
     confidence_iminuit,
@@ -961,9 +960,6 @@ class FitResults(collections.abc.Sequence):
                 for result in self.results
             ]
 
-        if isinstance(axis, TimeMapAxis):
-            t.add_columns(axis.to_gti().table.columns, indexes=[0, 0])
-        elif isinstance(axis, MapAxis):
             t.add_columns(axis.to_table().columns, indexes=[0, 0])
 
         return t
