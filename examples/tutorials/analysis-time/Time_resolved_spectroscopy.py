@@ -284,7 +284,7 @@ print(table)
 # ~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # We can plot the spectral index and the amplitude as a function of time.
-# For convenience, we will convert the times into a `TimeMapAxis`.
+# For convenience, we will convert the times into a `~gammapy.maps.TimeMapAxis`.
 #
 
 time_axis = TimeMapAxis.from_time_edges(
