@@ -70,9 +70,9 @@ Notes:
   Gammapy names defined here, to the names used in the formats.
   Of course, where formats are not set in stone yet, we advocate and encourage
   the use of the names chosen here.
-* Finally, we realise that eventually probably CTA will define this, and Gammapy
-  is only a prototype. So if CTA chooses something else, probably we will follow
-  suite and do one more backward-incompatible change at some point to align with CTA.
+* Finally, we realise that eventually probably CTAO will define this, and Gammapy
+  is only a prototype. So if CTAO chooses something else, probably we will follow
+  suite and do one more backward-incompatible change at some point to align with CTAO.
 
 Clobber or overwrite?
 +++++++++++++++++++++
