@@ -16,9 +16,9 @@ TEST_PRIORS = [
     dict(
         name="uni",
         model=UniformPrior(min=0.0),
-        val_at_0=0.0,
-        val_at_1=1.0,
-        val_with_weight_2=0.0,
+        val_at_0=1.0,
+        val_at_1=0.0,
+        val_with_weight_2=2.0,
     ),
 ]
 

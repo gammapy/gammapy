@@ -8,14 +8,14 @@ Introduction
 ============
 
 The `gammapy.astro.darkmatter` module provides spatial and spectral models for
-indirect dark matter searches. This introduction is aimed at people who already
-have some experience with dark matter analysis. For a thorough introduction see
-e.g. `Cirelli 2014`_.
+indirect dark matter searches, using PPPC4DM models. This introduction is aimed
+at people who already have some experience with dark matter analysis. For a thorough
+introduction see e.g. `Cirelli 2014`_.
 
 The spatial distribution of dark matter halos is typically modeled with
 radially symmetric profiles. Common profiles are the ones by Navarro, Frenk and
 White (NFW) or Einasto for cuspy and an Isothermal or Burkert profile for cored
-dark matter distributions (see `gammapy.astro.darkmatter.profiles`).
+dark matter distributions (see `gammapy.astro.darkmatter.DMProfile`).
 
 The spectral models in `gammapy.astro.darkmatter.PrimaryFlux` are based on
 `Cirelli et al.  2011`_, who provide tabulated spectra for different
@@ -27,16 +27,6 @@ Other packages
 
 There are many other packages out there that implement functionality for dark
 matter analysis, their capabilities are summarized in the following
-
-GammaLib
---------
-
-The `GammaLib 1.3 release`_ contains radial profile spatial models, including
-Dark Matter halo models, such as GModelSpatialRadialProfileDMBurkert,
-GModelSpatialRadialProfileDMEinasto, GModelSpatialRadialProfileDMZhao. There is
-some discussion about the implementation in `Feature request #1520`_.  From a
-superficial search in the GammaLib docs it seems that there are no spectral
-models implemented.
 
 FermiST
 -------
@@ -97,15 +87,15 @@ Galactic Centre (GC), HESS observations of the GC, and projected sensitivities
 for CTA observations of the GC. It is released in tandem with the `GAMBIT`_
 module `DarkBit`_.  DarkBit can be used for directly computing observables and
 likelihoods, for any combination of parameter values in some underlying
-particle model. GamLike can somehow be use to reproduce HESS results (Section
-6.2.2. of the DarkBit paper). But I don't fully understand how.
+particle model.
 
-.. minigallery:: gammapy.astro.darkmatter.DarkMatterAnnihilationSpectralModel
+Gammapy tutorial
+================
+
+.. minigallery:: `gammapy.astro.darkmatter.DarkMatterAnnihilationSpectralModel`
     :add-heading:
 
 
-.. _GammaLib 1.3 release: http://cta.irap.omp.eu/gammalib-devel/admin/release_history/1.3.html
-.. _Feature request #1520:  https://cta-redmine.irap.omp.eu/issues/1520
 .. _Cirelli et al. 2011: http://iopscience.iop.org/article/10.1088/1475-7516/2011/03/051/pdf
 .. _Cirelli 2014: http://www.marcocirelli.net/otherworks/HDR.pdf
 .. _DMFitFunction: https://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/source_models.html#DMFitFunction
@@ -117,5 +107,5 @@ particle model. GamLike can somehow be use to reproduce HESS results (Section
 .. _CLUMPY: http://lpsc.in2p3.fr/clumpy/
 .. _DarkSUSY: http://www.darksusy.org/
 .. _GamLike: https://bitbucket.org/weniger/gamlike
-.. _GAMBIT: https://gambit.hepforge.org/
+.. _GAMBIT: https://gambitbsm.org/
 .. _DarkBit: https://link.springer.com/article/10.1140%2Fepjc%2Fs10052-017-5155-4

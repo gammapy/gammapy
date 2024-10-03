@@ -26,7 +26,6 @@
 # be accessible, and the documentation will not build correctly.
 
 import datetime
-import os
 
 # Get configuration information from setup.cfg
 from configparser import ConfigParser
@@ -191,8 +190,8 @@ html_favicon = os.path.join(html_static_path[0], "gammapy_logo.ico")
 
 # Custom sidebar templates, maps document names to template names.
 html_sidebars = {
-    "search": "search-field.html",
-    "navigation": "sidebar-nav-bs.html",
+    "search": ["search-field.html"],
+    "navigation": ["sidebar-nav-bs.html"],
 }
 
 # If not "", a "Last updated on:" timestamp is inserted at every page bottom,
