@@ -10,6 +10,7 @@ from astropy.table import Table, vstack
 from gammapy.data import GTI
 from gammapy.modeling.models import DatasetModels, Models
 from gammapy.utils.scripts import make_name, make_path, read_yaml, to_yaml, write_yaml
+from gammapy.stats import prior_fit_statistic
 
 log = logging.getLogger(__name__)
 
@@ -68,15 +69,22 @@ class Dataset(abc.ABC):
             return self.mask_safe
 
     def stat_sum(self):
-        """Total statistic given the current model parameters and priors."""
+        """Total statistic given the current model parameters."""
         stat = self.stat_array()
 
         if self.mask is not None:
             stat = stat[self.mask.data]
-        prior_stat_sum = 0.0
+
+        return np.sum(stat, dtype=np.float64)
+
+    def stat_sum_prior(self):
+        """Total statistic given the priors set on the models."""
         if self.models is not None:
-            prior_stat_sum = self.models.parameters.prior_stat_sum()
-        return np.sum(stat, dtype=np.float64) + prior_stat_sum
+            return prior_fit_statistic(self.models.priors)
+
+    def stat_sum_posterior(self):
+        """Total statistic given the current model parameters and priors set on the models."""
+        return self.stat_sum() + self.stat_sum_prior()
 
     @abc.abstractmethod
     def stat_array(self):
@@ -239,6 +247,18 @@ class Datasets(collections.abc.MutableSequence):
         for dataset in self:
             stat_sum += dataset.stat_sum()
         return stat_sum
+
+    def stat_sum_prior(self):
+        """Compute joint statistic function value for priors."""
+        prior_stat_sum = 0
+        # Compute prior_fit_statistics from all datasets
+        for dataset in self:
+            prior_stat_sum += dataset.stat_sum_prior()
+        return prior_stat_sum
+
+    def stat_sum_posterior(self):
+        """Compute joint statistic function value for the posterior (parameter values and priors)."""
+        return self.stat_sum() + self.stat_sum_prior()
 
     def select_time(self, time_min, time_max, atol="1e-6 s"):
         """Select datasets in a given time interval.
