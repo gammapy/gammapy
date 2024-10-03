@@ -146,6 +146,6 @@ plt.show()
 # ----------
 #
 # Now you know how to access and work with H.E.S.S. data. All other
-# tutorials and documentation apply to H.E.S.S. and CTA or any other IACT
+# tutorials and documentation apply to H.E.S.S. and CTAO or any other IACT
 # that provides DL3 data and IRFs in the standard format.
 #
