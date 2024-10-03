@@ -11,7 +11,7 @@ spectral changes during flares.
 Context
 -------
 
-The `LightCurveEstimator` in Gammapy (see
+The `~gammapy.estimators.LightCurveEstimator` in Gammapy (see
 :doc:`light curve notebook </tutorials/analysis-time/light_curve>`,
 and
 :doc:`light curve for flares notebook </tutorials/analysis-time/light_curve_flare>`.)
