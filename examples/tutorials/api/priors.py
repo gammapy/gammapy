@@ -192,12 +192,15 @@ results = fit.run(dataset1)
 results_prior = fit.run(dataset1_prior)
 
 
-""
+######################################################################
 # The parameters table will mention the type of prior associated to each model
+
 print(results_prior.models.to_parameters_table())
 
-""
+
+######################################################################
 # To see the details of the priors, eg:
+
 print(results_prior.models.parameters["index"].prior)
 
 ######################################################################
