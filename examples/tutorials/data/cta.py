@@ -17,10 +17,7 @@ Release <https://www.ctao.org/news/ctao-adopts-the-gammapy-software-package-for-
 CTAO will start taking data in the coming years. For now, to learn how to
 analyse CTAO data and to use Gammapy, if you are a member of the CTAO
 consortium, you can use the simulated dataset from the CTA first data
-challenge which ran in 2017 and 2018.
-
--  https://forge.in2p3.fr/projects/data-challenge-1-dc-1/wiki (CTA
-   internal)
+challenge which ran in 2017 and 2018 (https://forge.in2p3.fr/projects/data-challenge-1-dc-1/wiki).
 
 Gammapy fully supports the FITS data formats (events, IRFs) used in CTA
 1DC. The XML sky model format is not supported, but are also not needed
@@ -28,12 +25,11 @@ to analyse the data, you have to specify your model via the Gammapy YAML
 model format, or Python code, as shown below.
 
 You can use Gammapy to simulate CTAO data and evaluate CTAO performance
-using the CTAO response files available here:
+using the CTAO response files. For the Omega configuration (prod3b, 2016), the files can
+be found here: https://zenodo.org/records/5163273. For the Alpha configuration (prod5, 2021),
+they can be found here: https://zenodo.org/records/5499840. They are all fully
+supported by Gammapy.
 
-- https://www.ctao.org/for-scientists/performance/
-
-The current FITS format `CTA-Performance-prod3b-v2-FITS.tar` is fully
-supported by Gammapy, as shown below.
 
 Tutorial overview
 -----------------
@@ -94,10 +90,10 @@ check_tutorials_setup()
 # After download, follow the instructions how to `untar` the files, and
 # set a `CTADATA` environment variable to point to the data.
 #
-# For convenience, since the 1DC data files are large, and not publicly
+# **For convenience**, since the 1DC data files are large and not publicly
 # available to anyone, we have taken a tiny subset of the CTA 1DC data,
 # four observations with the southern array from the GPS survey, pointing
-# near the Galactic center, and included them at `$GAMMAPY_DATA/cta-1dc`
+# near the Galactic center, and **included them at `$GAMMAPY_DATA/cta-1dc`**
 # which you get via `gammapy download datasets`.
 #
 # Files
