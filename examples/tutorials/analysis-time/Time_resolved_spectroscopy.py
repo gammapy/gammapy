@@ -129,7 +129,6 @@ print(short_observations[1].gti)
 # :doc:`/tutorials/analysis-1d/spectral_analysis` tutorial.
 #
 
-# Target definition
 energy_axis = MapAxis.from_energy_bounds("0.4 TeV", "20 TeV", nbin=10)
 energy_axis_true = MapAxis.from_energy_bounds(
     "0.1 TeV", "40 TeV", nbin=20, name="energy_true"
