@@ -1,6 +1,6 @@
 """
 CTAO with Gammapy
-================
+=================
 
 Access and inspect CTAO data and instrument response functions (IRFs) using Gammapy.
 
