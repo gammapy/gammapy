@@ -1195,7 +1195,7 @@ class TemplateNPredModel(ModelBase):
 def create_fermi_isotropic_diffuse_model(filename, **kwargs):
     """Read Fermi isotropic diffuse model.
 
-    See `LAT Background models <https://fermi.gsfc.nasa.gov/ssc/data/access/lat/BackgroundModels.html>`__  # noqa: E501
+    See `LAT Background models <https://fermi.gsfc.nasa.gov/ssc/data/access/lat/BackgroundModels.html>`__.
 
     Parameters
     ----------
