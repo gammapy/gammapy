@@ -464,7 +464,7 @@ pwl.parameters["index"].prior = customprior
 customprior(pwl.parameters["index"])
 
 # The power law spectral model can be written into a dictionary.
-# If the a model is read in from this dictionary, the costum prior is still set on the index.
+# If a model is read in from this dictionary, the custom prior is still set on the index.
 
 print(pwl.to_dict())
 model_read = Model.from_dict(pwl.to_dict())
