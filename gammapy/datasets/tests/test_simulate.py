@@ -257,6 +257,32 @@ def test_sample_coord_time_energy(dataset, energy_dependent_temporal_sky_model):
         rtol=1e-6,
     )
 
+    irfs = load_irf_dict_from_file(
+        "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
+    )
+    livetime = 1.0 * u.hr
+    pointing = FixedPointingInfo(
+        fixed_icrs=SkyCoord(0, 0, unit="deg", frame="galactic").icrs,
+    )
+    obs = Observation.create(
+        obs_id=1001,
+        pointing=pointing,
+        livetime=livetime,
+        irfs=irfs,
+        location=LOCATION,
+    )
+
+    new_mod = Models(
+        [
+            energy_dependent_temporal_sky_model,
+            FoVBackgroundModel(dataset_name=dataset.name),
+        ]
+    )
+    dataset.models = new_mod
+    events = sampler.run(dataset, obs)
+    print(events.table.meta)
+    assert dataset.gti.time_ref.scale == events.table.meta["TIMESYS"]
+
 
 @requires_data()
 def test_fail_sample_coord_time_energy(
@@ -366,7 +392,6 @@ def test_mde_sample_sources_psf_update(dataset, models):
 def test_sample_sources_energy_dependent(dataset, energy_dependent_temporal_sky_model):
     dataset.models = energy_dependent_temporal_sky_model
 
-    print(dataset.gti.time_start.scale)
     sampler = MapDatasetEventSampler(random_state=0)
     events = sampler.sample_sources(dataset=dataset)
 
