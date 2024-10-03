@@ -1758,7 +1758,7 @@ class TemplateSpectralModel(SpectralModel):
         Array with the values of the model at energies ``energy``.
     interp_kwargs : dict
         Interpolation option passed to `~gammapy.utils.interpolation.ScaledRegularGridInterpolator`.
-        By default, all values outside the interpolation range are set to zero.
+        By default, all values outside the interpolation range are set to NaN.
         If you want to apply linear extrapolation you can pass `interp_kwargs={'extrapolate':
         True, 'method': 'linear'}`. If you want to choose the interpolation
         scaling applied to values, you can use `interp_kwargs={"values_scale": "log"}`.
