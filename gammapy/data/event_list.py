@@ -382,13 +382,15 @@ class EventList:
         mask &= energy < energy_range[1]
         return self.select_row_subset(mask)
 
-    def select_time(self, time_interval):
+    def select_time(self, time_interval, inverted=False):
         """Select events in time interval.
 
         Parameters
         ----------
         time_interval : `astropy.time.Time`
             Start time (inclusive) and stop time (exclusive) for the selection.
+        inverted : bool, optional
+            Invert selection: keep all entries outside the time range. Default is False.
 
         Returns
         -------
@@ -398,6 +400,8 @@ class EventList:
         time = self.time
         mask = time_interval[0] <= time
         mask &= time < time_interval[1]
+        if inverted:
+            mask = ~mask
         return self.select_row_subset(mask)
 
     def select_region(self, regions, wcs=None):
