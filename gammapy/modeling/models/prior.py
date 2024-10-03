@@ -80,11 +80,11 @@ class Prior(ModelBase):
     def weight(self, value):
         self._weight = value
 
-    def __call__(self, value):
+    def __call__(self, modelparameters):
         """Call evaluate method."""
         # assuming the same unit as the PriorParameter here
         kwargs = {par.name: par.value for par in self.parameters}
-        return self.weight * self.evaluate(value.value, **kwargs)
+        return self.weight * self.evaluate(modelparameters.value, **kwargs)
 
     def to_dict(self, full_output=False):
         """Create dictionary for YAML serialisation."""
@@ -108,7 +108,10 @@ class Prior(ModelBase):
 
         data = {"type": tag, "parameters": params, "weight": self.weight}
 
-        return data
+        if self.type is None:
+            return data
+        else:
+            return {self.type: data}
 
     @classmethod
     def from_dict(cls, data, **kwargs):
@@ -154,7 +157,7 @@ class MultiVariateGaussianPrior(Prior):
         modelparameters : Parameters object
         """
         value = np.asanyarray(self.covariance_matrix)
-        npars = len(self._modelparameters)
+        npars = len(modelparameters)
         shape = (npars, npars)
         if value.shape != shape:
             raise ValueError(

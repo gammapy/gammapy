@@ -3,6 +3,7 @@
 
 see :ref:`fit-statistics`
 """
+
 import numpy as np
 from gammapy.stats.fit_statistics_cython import TRUNCATION_VALUE
 
@@ -10,21 +11,20 @@ __all__ = ["cash", "cstat", "wstat", "get_wstat_mu_bkg", "get_wstat_gof_terms"]
 
 
 def prior_fit_statistic(priors):
-
     r"""Prior.
 
     Evaluating a list of priors.
-    Mulitdimensional priors are only counted once.
+    Multidimensional priors are only counted once.
 
     Parameters
     ----------
     priors : list
-        list of priors
+        List of priors.
 
-     Returns
+    Returns
     -------
     prior_stat_sum : float
-        sum of priors
+        Sum of priors.
 
     """
     prior_stat_sum = 0.0
@@ -199,9 +199,7 @@ def wstat(n_on, n_off, alpha, mu_sig, mu_bkg=None, extra_terms=True):
     with np.errstate(divide="ignore", invalid="ignore"):
         # This is a false positive error from pylint
         # See https://github.com/PyCQA/pylint/issues/2436
-        term2_ = -n_on * np.log(
-            mu_sig + alpha * mu_bkg
-        )  # pylint:disable=invalid-unary-operand-type
+        term2_ = -n_on * np.log(mu_sig + alpha * mu_bkg)  # pylint:disable=invalid-unary-operand-type
     # Handle n_on == 0
     condition = n_on == 0
     term2 = np.where(condition, 0, term2_)
