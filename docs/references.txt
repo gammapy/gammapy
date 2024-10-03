@@ -59,7 +59,7 @@
 
 .. _Python for gamma-ray astronomy 2015: http://gammapy.github.io/PyGamma15/
 
-.. _CTA: https://www.cta-observatory.org/
+.. _CTAO: https://www.ctao.org/
 .. _H.E.S.S.: https://www.mpi-hd.mpg.de/hfm/HESS/
 .. _HAWC: https://www.hawc-observatory.org/
 .. _VERITAS: https://veritas.sao.arizona.edu/
