@@ -294,7 +294,7 @@ plt.show()
 #
 # In the next example, we want to encourage the amplitude to have
 # positive, i.e. physical, values. Instead of setting hard bounds, we can
-# also set a uniform prior, which prefers positive values over negatives.
+# also set a uniform prior, which prefers positive values to negatives.
 #
 # We set the amplitude of the power-law used to simulate the source to a very
 # small value. Together with statistical fluctuations, this could result in some
