@@ -78,7 +78,7 @@ class EffectiveAreaTable2D(IRF):
         ----------
         ax : `~matplotlib.axes.Axes`, optional
             Matplotlib axes. Default is None.
-        offset : `~astropy.coordinates.Angle`, optional
+        offset : list of `~astropy.coordinates.Angle`, optional
             Offset. Default is None.
         kwargs : dict
             Forwarded to plt.plot().
