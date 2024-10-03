@@ -34,7 +34,7 @@ class MapDatasetMaker(Maker):
         Background evaluation oversampling factor in energy.
     background_interp_missing_data : bool, optional
         Interpolate missing values in background 3d map.
-        Default is True, have to be set to True for CTA IRF.
+        Default is True, have to be set to True for CTAO IRF.
     background_pad_offset : bool, optional
         Pad one bin in offset for 2d background map.
         This avoids extrapolation at edges and use the nearest value.
