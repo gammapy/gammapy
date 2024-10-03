@@ -47,7 +47,7 @@ values = [40, 30, 20, 10, 1] * u.Unit("TeV-1 s-1 cm-2")
 template_noextrapolate = TemplateSpectralModel(
     energy=energy,
     values=values,
-    interp_kwargs={"extrapolate": False, "bounds_error": False},
+    interp_kwargs={"extrapolate": False},
 )
 template_extrapolate = TemplateSpectralModel(
     energy=energy, values=values, interp_kwargs={"extrapolate": True}
