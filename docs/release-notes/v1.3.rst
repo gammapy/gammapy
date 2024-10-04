@@ -1,7 +1,95 @@
+.. include:: ../references.txt
+
 .. _gammapy_1p3_release:
 
-1.3 (unreleased)
-----------------
+1.3 (October xx, 2024)
+-------------------------
+
+- Released October xx, 2024
+- xx contributors
+- 160 pull requests since v1.2 (not all listed below)
+- 59 closed issues
+
+Summary
+~~~~~~~
+
+This release introduces a number of performance improvements, new features and bug fixes.
+There has been significant code cleanup, specially with respect to the documentaion and three new tutorials have been added.
+
+This release is based on numpy 1.2 and css for sphinx v15 (REPHRASE)
 
 
-- No changes yet
+New features
+~~~~~~~~~~~~
+
+*gammapy.catalogs*
+
+- Support for the 2PC and 3PC pulsar catalogs from Fermi-LAT is now added
+
+*gammapy.data*
+
+- 
+
+*gammapy.datasets*
+
+- Performance improvement in Fermi-LAT analysis with adaption in psf kernel computation
+- Stacking of acceptance maps improved
+
+
+*gammapy.maps*
+
+- Multiple non-spatial axes supported in creation on MapDatasets. Full likelihood computation with additional axes not yet supported
+- Map axes with periodic boundary conditions are now supported.
+- An error is raised for maps with invalid input shapes instead of silently broadcasting.
+
+*gammapy.estimators*
+
+- Binwise likelihood profiles are now stored on FluxMaps. FluxMaps obtained from different datasets can be combined.
+- A new tutorial explaining the general Estimator API has been added.
+- A new tutorial showing how to perform energy dependent spectroscopy has been added
+
+*gammapy.stats*
+
+- Implementation of the Timmer-Koenig algorithm with leakage protection to simulate a time series from a power spectrum.
+- Compution of the discrete structure function for a variable source using Emmanoulopoulos et al. (2010) algorithm.
+- Computation of the discrete cross correlation function added.
+
+API changes
+~~~~~~~~~~~
+
+*gammapy.modeling*
+
+- Unique naming of model parameters adapted, leading to resolution of issues with computation of the covariance matrix for complex model lists
+- New tutorial added for modeling EBL absorption
+- Time scale issue in simulation energy dependent temporal models resolved.
+- Definition of `UniformPrior` fixed to return 0 within min and max values indstead of one.
+
+Bug fixes and improvements
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- ON and OFF phase intervals are copied in PhaseBackgroundMaker
+- Add min_pix option in `WcsGeom.cutout`
+- Add copy method on FluxMaps
+- Fix select_nested_models if there is no free parameters for the null hypothesis
+- css for sphinx v15
+- Allow extrapolation only along spatial dimension in mask_safe_edisp
+- Add write function to `FitResult`
+- Expose `FitResult` object
+- Fix cutout_template_models to work if models is None
+- Fix angle wrapping of spatial parameters in `PiecewiseNormSpatialModel`
+- Fix map evaluation if no edisp is set
+- Add missing parallel processing options
+- Add `TimeMapAxis.to_table()` 
+- Add a warning in `TemplateSpatialModel` for presence of nan values 
+- Fix TSmapEstimator stat_scan with sum_over_energy_group=False
+- Fix ignored overwrite in datasets.write
+- Improve plotting of spectral residuals by removing the mask in computation but rathere adding a visual mask.
+- Add strict option to MapAxis.downsample
+- Add alpha maps to ExcessMapEstimator
+
+Pull Requests
+~~~~~~~~~~~~~
+
+This list is incomplete. Small improvements and bug fixes are not listed here.
+
+
