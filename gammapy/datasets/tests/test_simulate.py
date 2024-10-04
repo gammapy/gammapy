@@ -280,7 +280,6 @@ def test_sample_coord_time_energy(dataset, energy_dependent_temporal_sky_model):
     )
     dataset.models = new_mod
     events = sampler.run(dataset, obs)
-    print(events.table.meta)
     assert dataset.gti.time_ref.scale == events.table.meta["TIMESYS"]
 
 
@@ -333,9 +332,16 @@ def test_sample_coord_time_energy_random_seed(
     assert len(events) == 1256
 
     assert_allclose(
-        [events[0][0], events[0][1], events[0][2], events[0][3]],
-        [0.29982, 1.932196, 266.404988, -28.936178],
+        [events[0][1], events[0][2], events[0][3]],
+        [1.932196, 266.404988, -28.936178],
         rtol=1e-3,
+    )
+
+    # Important: do not increase the tolerance!
+    assert_allclose(
+        events[0][0],
+        0.29982,
+        rtol=1.5e-6,
     )
 
 
@@ -352,9 +358,16 @@ def test_sample_coord_time_energy_unit(dataset, energy_dependent_temporal_sky_mo
 
     assert len(events) == 1254
     assert_allclose(
-        [events[0][0], events[0][1], events[0][2], events[0][3]],
-        [854.10859, 6.22904, 266.404988, -28.936178],
+        [events[0][1], events[0][2], events[0][3]],
+        [6.22904, 266.404988, -28.936178],
         rtol=1e-6,
+    )
+
+    # Important: do not increase the tolerance!
+    assert_allclose(
+        events[0][0],
+        854.10859,
+        rtol=1.5e-6,
     )
 
 
