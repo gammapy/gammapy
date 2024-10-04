@@ -69,6 +69,7 @@
 .. _FermiPy: https://github.com/fermiPy/fermipy
 .. _gadf: https://gamma-astro-data-formats.readthedocs.io/
 .. _Gamma Astro Data Formats: https://gamma-astro-data-formats.readthedocs.io/
+.. _Very-high-energy Open Data Format: https://vodf.readthedocs.io/en/latest/index.html
 
 .. _April 2016 IACT data meeting: https://github.com/open-gamma-ray-astro/2016-04_IACT_DL3_Meeting/
 
@@ -135,3 +136,7 @@
 .. _A Whirlwind tour of Python: https://nbviewer.org/github/jakevdp/WhirlwindTourOfPython/blob/master/Index.ipynb
 .. _Python data science handbook: https://jakevdp.github.io/PythonDataScienceHandbook/
 .. _Astropy Hands-On Tutorial: https://github.com/Asterics2020-Obelics/School2019/tree/master/astropy
+
+.. _FAIR principles: https://www.go-fair.org/fair-principles/
+.. _FAIR4RS principles: https://www.rd-alliance.org/group_output/fair-principles-for-research-software-fair4rs-principles/
+.. _IVOA: https://ivoa.net/
