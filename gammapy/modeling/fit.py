@@ -899,7 +899,7 @@ class FitResult:
             return f"<pre>{html.escape(str(self))}</pre>"
 
 
-class FitResults(collections.abc.Sequence):
+class FitResults(collections.abc.MutableSequence):
     def __init__(self, results, axis_name=None):
         if np.array([not isinstance(result, FitResult) for result in results]).any():
             raise TypeError(f"Elements in {results!r} are not FitResult objects")
