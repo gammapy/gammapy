@@ -590,7 +590,6 @@ class Observation:
         if in_memory:
             argnames = inspect.getfullargspec(self.__init__).args
             # TODO: remove once obs_info is removed from the list of arguments in __init__
-            argnames.remove("obs_info")
             argnames.remove("self")
 
             for name in argnames:
