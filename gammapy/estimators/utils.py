@@ -1241,7 +1241,7 @@ def _get_default_norm(
             scan_min=scan_min,
             scan_max=scan_max,
             scan_n_values=scan_n_values,
-            scan_values=None,
+            scan_values=scan_values,
         )
         if isinstance(norm, dict):
             norm_kwargs.update(norm)
