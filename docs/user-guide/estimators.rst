@@ -88,6 +88,11 @@ To compute the error, asymmetric errors as well as upper limits one can
 specify the arguments ``n_sigma`` and ``n_sigma_ul``. The ``n_sigma``
 arguments are translated into a TS difference assuming ``ts = n_sigma ** 2``.
 
+.. _sedtypes:
+
+SED types
+~~~~~~~~~
+
 In addition to the norm values a reference spectral model and energy ranges
 are given. Using this reference spectral model the norm values can be converted
 to the following different SED types:

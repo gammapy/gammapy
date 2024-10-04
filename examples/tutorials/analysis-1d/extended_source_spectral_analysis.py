@@ -342,5 +342,4 @@ reduced.models = model
 
 # Plot the result
 ax_spectrum, ax_residuals = reduced.plot_fit()
-reduced.plot_masks(ax=ax_spectrum)
 plt.show()

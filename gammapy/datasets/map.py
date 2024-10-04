@@ -1225,26 +1225,17 @@ class MapDataset(Dataset):
 
         """
         counts, npred = self.counts.copy(), self.npred()
-
-        if self.mask is None:
-            mask = self.counts.copy()
-            mask.data = 1
-        else:
-            mask = self.mask
-        counts *= mask
-        npred *= mask
-
         counts_spec = counts.get_spectrum(region)
         npred_spec = npred.get_spectrum(region)
         residuals = self._compute_residuals(counts_spec, npred_spec, method)
 
         if self.stat_type == "wstat":
-            counts_off = (self.counts_off * mask).get_spectrum(region)
+            counts_off = (self.counts_off).get_spectrum(region)
 
             with np.errstate(invalid="ignore"):
-                alpha = (self.background * mask).get_spectrum(region) / counts_off
+                alpha = self.background.get_spectrum(region) / counts_off
 
-            mu_sig = (self.npred_signal() * mask).get_spectrum(region)
+            mu_sig = self.npred_signal().get_spectrum(region)
             stat = WStatCountsStatistic(
                 n_on=counts_spec,
                 n_off=counts_off,

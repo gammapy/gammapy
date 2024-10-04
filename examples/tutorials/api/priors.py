@@ -193,6 +193,17 @@ results_prior = fit.run(dataset1_prior)
 
 
 ######################################################################
+# The parameters table will mention the type of prior associated to each model
+
+print(results_prior.models.to_parameters_table())
+
+
+######################################################################
+# To see the details of the priors, eg:
+
+print(results_prior.models.parameters["index"].prior)
+
+######################################################################
 # The Likelihood profiles can be computed for both the datasets. Hereby,
 # the likelihood gets computed for different values of the index. For each
 # step the other free parameters are getting reoptimized.
@@ -294,10 +305,10 @@ plt.show()
 #
 # In the next example, we want to encourage the amplitude to have
 # positive, i.e. physical, values. Instead of setting hard bounds, we can
-# also set a uniform prior, which prefers positive values over negatives.
+# also set a uniform prior, which prefers positive values to negatives.
 #
-# We set the amplitude of the power-law used to simulate the source very
-# small. Together with statistical fluctuations, this will result in some
+# We set the amplitude of the power-law used to simulate the source to a very
+# small value. Together with statistical fluctuations, this could result in some
 # negative amplitude best-fit values.
 #
 
@@ -308,20 +319,19 @@ model_weak = SkyModel(
     name="weak-model",
 )
 model_weak_prior = model_weak.copy(name="weak-model-prior")
-uniform = UniformPrior(max=0)
+uniform = UniformPrior(min=0)
 uniform.weight = 2
 model_weak_prior.parameters["amplitude"].prior = uniform
 
 
 ######################################################################
-# We set the maximum value where the prior is applied to zero. Note that,
-# per default, the minimum value is set to negative infinity. Therefore, the
-# uniform prior is zero, i.e. no influence on the fit at all if the
-# amplitude value is positive.
-#
-# The weight of the prior again quantifies how strong we want prior to
-# being. Here, we are setting it to 2. This value is only applied if the
-# amplitude value is below zero.
+# We set the minimum value to zero and per default, the maximum value
+# is set to positive infinity. Therefore, the uniform prior penalty 
+# is zero, i.e. no influence on the fit at all, if the amplitude value
+# is positive and a penalty (the weight) in the form of a prior likelihood
+# for negative values.
+# Here, we are setting it to 2. This value is only applied if the
+# amplitude value goes below zero.
 #
 
 uni_prior_stat_sums = []
@@ -336,7 +346,7 @@ plt.plot(
     uni_prior_stat_sums,
     color="tab:orange",
     linestyle="dashed",
-    label=f"Uniform Prior\n $max={uniform.max.value}$, weight={uniform.weight}",
+    label=f"Uniform Prior\n $min={uniform.min.value}$, weight={uniform.weight}",
 )
 plt.xlabel("Amplitude Value [1 / (TeV s cm2)]")
 plt.ylabel("Prior")
@@ -438,7 +448,7 @@ class MyCustomPrior(Prior):
         Minimum value.
         Default is -inf.
     max : float
-        Maxmimum value.
+        Maximum value.
         Default is inf.
     """
 
@@ -448,7 +458,7 @@ class MyCustomPrior(Prior):
 
     @staticmethod
     def evaluate(value, sigma):
-        """Evaluate the costom prior."""
+        """Evaluate the custom prior."""
         return value / sigma**2
 
 
@@ -459,13 +469,13 @@ from gammapy.modeling.models import PRIOR_REGISTRY
 PRIOR_REGISTRY.append(MyCustomPrior)
 
 # The custom prior is set on the index of a powerlaw spectral model and is evaluated.
-costomprior = MyCustomPrior(sigma=0.5)
+customprior = MyCustomPrior(sigma=0.5)
 pwl = PowerLawSpectralModel()
-pwl.parameters["index"].prior = costomprior
-costomprior(pwl.parameters["index"])
+pwl.parameters["index"].prior = customprior
+customprior(pwl.parameters["index"])
 
 # The power law spectral model can be written into a dictionary.
-# If the a model is read in from this dictionary, the costum prior is still set on the index.
+# If a model is read in from this dictionary, the custom prior is still set on the index.
 
 print(pwl.to_dict())
 model_read = Model.from_dict(pwl.to_dict())
