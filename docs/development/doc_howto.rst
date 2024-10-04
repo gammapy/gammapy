@@ -204,6 +204,26 @@ and gallery examples by using RST syntax like this:
 This will link to the tutorial :doc:`/tutorials/starting/analysis_2` from the tutorial base folder. The file
 suffix will be automatically inferred by Sphinx.
 
+Links to documentation
+++++++++++++++++++++++
+
+To make a reference to a heading within an RST file, first you need to define an explicit target for the heading:
+
+.. code-block:: rst
+
+    .. _datasets:
+
+    Datasets (DL4)
+    ==============
+
+
+The reference is the rendered as ``datasets``. 
+To link to this in the documentation you can use:
+
+.. code-block:: rst
+
+    :ref:`datasets`
+
 
 API Links
 +++++++++
