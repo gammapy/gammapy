@@ -109,14 +109,6 @@ class FluxEstimator(ParameterEstimator):
         """
         ref_model = models[self.source].spectral_model
         scale_model = ScaleSpectralModel(ref_model)
-
-        norms = ref_model.parameters.norm_parameters
-
-        if len(norms.free_parameters) == 1:
-            self.norm = self._set_norm_parameter(
-                self.norm.copy(), norms.free_parameters[0]
-            )
-
         scale_model.norm = self.norm.copy()
         return scale_model
 
