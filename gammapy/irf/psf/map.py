@@ -7,7 +7,6 @@ from matplotlib.ticker import FormatStrFormatter
 from gammapy.maps import HpxGeom, Map, MapAxes, MapAxis, MapCoord, WcsGeom
 from gammapy.maps.axes import UNIT_STRING_FORMAT
 from gammapy.modeling.models import PowerLawSpectralModel
-from gammapy.utils.deprecation import deprecated_renamed_argument
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from ..core import IRFMap
@@ -248,16 +247,12 @@ class PSFMap(IRFMap):
         )
         return Map.from_geom(geom=geom, data=data.value, unit=data.unit)
 
-    @deprecated_renamed_argument(
-        "factor", "precision_factor", "v1.2", arg_in_kwargs=True
-    )
     def get_psf_kernel(
         self,
         geom,
         position=None,
         max_radius=None,
         containment=0.999,
-        factor=None,
         precision_factor=12,
     ):
         """Return a PSF kernel at the given position.
@@ -313,10 +308,7 @@ class PSFMap(IRFMap):
             radii[radii > max_radius] = max_radius
 
         n_radii = len(radii)
-        if factor is None:  # TODO: this remove and the else once factor is deprecated
-            factor = _psf_upsampling_factor(self, geom, position, precision_factor)
-        else:
-            factor = [factor] * n_radii
+        factor = _psf_upsampling_factor(self, geom, position, precision_factor)
         geom = geom.to_odd_npix(max_radius=max_radius)
         kernel_map = Map.from_geom(geom=geom)
         for im, ind in zip(kernel_map.iter_by_image(keepdims=True), range(n_radii)):
