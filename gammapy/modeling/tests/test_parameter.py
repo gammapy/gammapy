@@ -184,7 +184,7 @@ def test_parameters_create_table():
     table = Parameters._create_default_table()
 
     assert len(table) == 0
-    assert len(table.columns) == 11
+    assert len(table.columns) == 10
 
     assert table.colnames == [
         "type",
