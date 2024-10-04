@@ -168,7 +168,7 @@ def test_parameters_to_table(pars, tmp_path):
 
     table = pars.to_table()
     assert len(table) == 2
-    assert len(table.columns) == 11
+    assert len(table.columns) == 10
     assert table["link"][0] == "test"
     assert table["link"][1] == ""
 
