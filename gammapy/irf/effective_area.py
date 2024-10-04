@@ -7,6 +7,7 @@ from gammapy.maps import MapAxes, MapAxis
 from gammapy.maps.axes import UNIT_STRING_FORMAT
 from gammapy.visualization.utils import add_colorbar
 from .core import IRF
+from gammapy.utils.deprecation import GammapyDeprecationWarning
 
 __all__ = ["EffectiveAreaTable2D"]
 
