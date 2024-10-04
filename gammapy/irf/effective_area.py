@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import warnings
 import numpy as np
 import astropy.units as u
 from astropy.visualization import quantity_support
