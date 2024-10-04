@@ -15,7 +15,7 @@ from astropy.time import Time
 from astropy.units import Quantity
 from astropy.utils import lazyproperty
 import matplotlib.pyplot as plt
-from gammapy.utils.deprecation import GammapyDeprecationWarning, deprecated
+from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.utils.fits import LazyFitsData, earth_location_to_dict
 from gammapy.utils.metadata import CreatorMetaData, TargetMetaData, TimeInfoMetaData
 from gammapy.utils.scripts import make_path
@@ -386,18 +386,6 @@ class Observation:
     def target_radec(self):
         """Target RA / DEC sky coordinates as a `~astropy.coordinates.SkyCoord` object."""
         return self.meta.target.position
-
-    @property
-    @deprecated(
-        "v1.2",
-        message="Access additional metadata directly in obs.meta.opt.",
-    )
-    def muoneff(self):
-        """Observation muon efficiency."""
-        if "MUONEFF" in self.meta.optional:
-            return self.meta.optional["MUONEFF"]
-        else:
-            raise KeyError("No muon efficiency information.")
 
     def __str__(self):
         pointing = self.get_pointing_icrs(self.tmid)
