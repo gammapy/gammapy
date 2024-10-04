@@ -90,8 +90,8 @@ Steps for the day to announce the release:
    (decide on a case by case basis, if it's relevant to the group of people):
 
     * https://groups.google.com/forum/#!forum/astropy-dev
-    * CTAO AS WG list (cta-wg-as@cta-observatory.org)
-    * hess-forum list (hess-forum@lsw.uni-heidelberg.de)
+    * CTAO AS WG list (cta-wg-as [at] cta-observatory [dot] org)
+    * hess-forum list (hess-forum [at] lsw.uni-heidelberg [dot] de)
 #. Make sure the release milestone and issue is closed on GitHub
 #. Update these release notes with any useful infos / steps that you learned
    while making the release (ideally try to script / automate the task or check,
