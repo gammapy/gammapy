@@ -959,7 +959,7 @@ def combine_flux_maps(
             if k == 0:
                 stat_scan = map_stat_scan
             else:
-                stat_scan += map_stat_scan
+                stat_scan.data += map_stat_scan.data
 
         return get_flux_map_from_profile(
             {"stat_scan": stat_scan},
