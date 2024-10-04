@@ -84,16 +84,6 @@ class FluxEstimator(ParameterEstimator):
             reoptimize=reoptimize,
         )
 
-    def _set_norm_parameter(self, norm=None, scaled_parameter=None):
-        """Define properties of the norm spectral parameter."""
-
-        if np.isnan(self.norm.min):
-            norm.min = scaled_parameter.min / scaled_parameter.value
-        if np.isnan(self.norm.max):
-            norm.max = scaled_parameter.max / scaled_parameter.value
-        norm.interp = scaled_parameter.interp
-        return norm
-
     def get_scale_model(self, models):
         """Set scale model.
 
