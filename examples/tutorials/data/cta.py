@@ -16,15 +16,17 @@ Release <https://www.ctao.org/news/ctao-adopts-the-gammapy-software-package-for-
 
 CTAO will start taking data in the coming years. For now, to learn how to
 analyse CTAO data and to use Gammapy, if you are a member of the CTAO
-consortium, you can use the simulated dataset from the CTA first data
-challenge which ran in 2017 and 2018 (https://forge.in2p3.fr/projects/data-challenge-1-dc-1/wiki).
+consortium, you can use the simulated dataset from:
+
+- the CTA first data challenge which ran in 2017 and 2018 (https://forge.in2p3.fr/projects/data-challenge-1-dc-1/wiki),
+- the CTAO Science Data Challenge of 2024 (https://ctaoobservatory.sharepoint.com/:f:/r/sites/share-open-data/Shared%20Documents/Reference%20datasets/Internal%20Science%20Data%20Challenge?csf=1&web=1&e=gNuFzI)
 
 Gammapy fully supports the FITS data formats (events, IRFs) used in CTA
-1DC. The XML sky model format is not supported, but are also not needed
+1DC and SDC. The XML sky model format is not supported, but are also not needed
 to analyse the data, you have to specify your model via the Gammapy YAML
 model format, or Python code, as shown below.
 
-You can use Gammapy to simulate CTAO data and evaluate CTAO performance
+You can also use Gammapy to simulate CTAO data and evaluate CTAO performance
 using the CTAO response files. Two sets of responses are available for different
 array layouts:
 
