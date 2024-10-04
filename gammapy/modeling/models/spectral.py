@@ -1367,7 +1367,7 @@ class ExpCutoffPowerLawNormSpectralModel(SpectralModel):
     ----------
     index : `~astropy.units.Quantity`
         :math:`\Gamma`.
-        Default is 1.5.
+        Default is 0.
     norm : `~astropy.units.Quantity`
         :math:`\phi_0`.
         Default is 1.
@@ -1388,7 +1388,7 @@ class ExpCutoffPowerLawNormSpectralModel(SpectralModel):
 
     tag = ["ExpCutoffPowerLawNormSpectralModel", "ecpl-norm"]
 
-    index = Parameter("index", 1.5)
+    index = Parameter("index", 0.0)
     norm = Parameter("norm", 1, unit="", interp="log")
     norm._is_norm = True
     reference = Parameter("reference", "1 TeV", frozen=True)
@@ -1400,7 +1400,7 @@ class ExpCutoffPowerLawNormSpectralModel(SpectralModel):
     ):
         if index is None:
             warnings.warn(
-                "The default index value changed from 1.5 to 0 since v1.2",
+                "The default index value changed from 1.5 to 0 since v1.3",
                 GammapyDeprecationWarning,
             )
 
