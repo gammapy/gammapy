@@ -23,7 +23,6 @@ class MeyerCrabSpectralModel(SpectralModel):
     """
 
     norm = Parameter("norm", value=1, frozen=True)
-    norm._is_norm = True
     coefficients = [-0.00449161, 0, 0.0473174, -0.179475, -0.53616, -10.2708]
 
     @staticmethod

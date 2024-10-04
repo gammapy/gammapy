@@ -8,7 +8,6 @@ from gammapy.data import GTI
 from gammapy.datasets import Datasets
 from gammapy.datasets.actors import DatasetsActor
 from gammapy.maps import LabelMapAxis, Map, TimeMapAxis
-from gammapy.utils.deprecation import deprecated_attribute
 from gammapy.utils.pbar import progress_bar
 from .core import FluxPoints
 from .sed import FluxPointsEstimator
@@ -43,14 +42,6 @@ class LightCurveEstimator(FluxPointsEstimator):
         For which source in the model to compute the flux points. Default is 0.
     atol : `~astropy.units.Quantity`
         Tolerance value for time comparison with different scale. Default 1e-6 sec.
-    norm_min : float
-        Minimum value for the norm used for the fit statistic profile evaluation.
-    norm_max : float
-        Maximum value for the norm used for the fit statistic profile evaluation.
-    norm_n_values : int
-        Number of norm values used for the fit statistic profile.
-    norm_values : `numpy.ndarray`
-        Array of norm values to be used for the fit statistic profile.
     n_sigma : int
         Number of sigma to use for asymmetric error computation. Default is 1.
     n_sigma_ul : int
@@ -99,11 +90,6 @@ class LightCurveEstimator(FluxPointsEstimator):
     """
 
     tag = "LightCurveEstimator"
-
-    norm_min = deprecated_attribute("norm_min", "1.2")
-    norm_max = deprecated_attribute("norm_max", "1.2")
-    norm_n_values = deprecated_attribute("norm_n_values", "1.2")
-    norm_values = deprecated_attribute("norm_values", "1.2")
 
     def __init__(self, time_intervals=None, atol="1e-6 s", **kwargs):
         self.time_intervals = time_intervals
