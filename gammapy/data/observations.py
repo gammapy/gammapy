@@ -39,8 +39,6 @@ class Observation:
     ----------
     obs_id : int, optional
         Observation id. Default is None
-    obs_info : dict, optional
-        Observation info dict. Default is None.
     aeff : `~gammapy.irf.EffectiveAreaTable2D`, optional
         Effective area. Default is None.
     edisp : `~gammapy.irf.EnergyDispersion2D`, optional
