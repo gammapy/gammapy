@@ -418,19 +418,15 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
 
     @property
     def priors(self):
-        """Priors (list).
-
-        Duplicate prior objects have been removed.
-        """
         priors = {}
 
-        for parameter in self.parameters:
-            if parameter.prior is not None:
-                priors[parameter.prior] = parameter.prior
+        for model in self:
+            priors[model.prior] = model.prior
+
         return list(priors)
 
     @priors.setter
-    def set_prior(self, parameters, priors):
+    def set_priors(self, parameters, priors):
         for parameter, prior in zip(parameters, priors):
             parameter.prior = prior
 

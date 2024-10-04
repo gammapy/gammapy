@@ -82,7 +82,6 @@ class Prior(ModelBase):
 
     def __call__(self, modelparameters):
         """Call evaluate method."""
-        # assuming the same unit as the PriorParameter here
         kwargs = {par.name: par.value for par in self.parameters}
         return self.weight * self.evaluate(modelparameters.value, **kwargs)
 
