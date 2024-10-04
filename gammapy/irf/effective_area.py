@@ -256,10 +256,12 @@ class EffectiveAreaTable2D(IRF):
         }
 
         if instrument == "CTA":
-            ss = "Deprecation Warning> "
-            ss += "since v1.3, the value 'CTA' is replaced by 'CTAO' for the argument instrument."
-            raise ValueError(ss)
-        elif instrument not in pars.keys():
+            instrument = "CTAO"
+            warnings.warn(
+                "Since v1.3, the value 'CTA' is replaced by 'CTAO' for the argument instrument.",
+                GammapyDeprecationWarning,
+            )
+        if instrument not in pars.keys():
             ss = f"Unknown instrument: {instrument}\n"
             ss += f"Valid instruments: {list(pars.keys())}"
             raise ValueError(ss)
