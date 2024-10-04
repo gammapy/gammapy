@@ -248,19 +248,26 @@ class MapDatasetEventSampler:
 
         return table
 
-    def sample_sources(self, dataset):
+    def sample_sources(self, dataset, psf_update=False):
         """Sample source model components.
 
         Parameters
         ----------
         dataset : `~gammapy.datasets.MapDataset`
             Map dataset.
+        psf_update : bool
+            Parameter to switch-off (on) the update of the PSF
+            in the dataset; default is False.
 
         Returns
         -------
         events : `~gammapy.data.EventList`
             Event list.
         """
+        if psf_update is True:
+            psf_update = dataset.psf
+        else:
+            psf_update = None
 
         events_all = EventList(Table())
         for idx, evaluator in enumerate(dataset.evaluators.values()):
@@ -268,7 +275,7 @@ class MapDatasetEventSampler:
             if evaluator.needs_update:
                 evaluator.update(
                     dataset.exposure,
-                    dataset.psf,
+                    psf_update,
                     dataset.edisp,
                     dataset._geom,
                     dataset.mask,

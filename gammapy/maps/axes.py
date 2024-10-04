@@ -3030,6 +3030,18 @@ class TimeMapAxis:
             self.edges_min, self.edges_max, reference_time=self.reference_time
         )
 
+    def to_table(self):
+        """Create table.
+
+        Returns
+        -------
+        table : `~astropy.table.Table`
+            Table with axis data.
+        """
+        t = self.to_gti().table
+
+        return t
+
     def to_header(self, format="gadf", idx=0):
         """Create FITS header.
 

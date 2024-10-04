@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Spectral models for Gammapy."""
+
 import logging
 import operator
 import os
@@ -1397,7 +1398,6 @@ class ExpCutoffPowerLawNormSpectralModel(SpectralModel):
     def __init__(
         self, index=None, norm=None, reference=None, lambda_=None, alpha=None, **kwargs
     ):
-
         if index is None:
             warnings.warn(
                 "The default index value changed from 1.5 to 0 since v1.2",
@@ -1708,7 +1708,6 @@ class LogParabolaNormSpectralModel(SpectralModel):
     beta = Parameter("beta", 0)
 
     def __init__(self, norm=None, reference=None, alpha=None, beta=None, **kwargs):
-
         if alpha is None:
             warnings.warn(
                 "The default alpha value changed from 2 to 0 since v1.2",
@@ -1758,10 +1757,10 @@ class TemplateSpectralModel(SpectralModel):
     values : `~numpy.ndarray`
         Array with the values of the model at energies ``energy``.
     interp_kwargs : dict
-        Interpolation keyword arguments passed to `scipy.interpolate.RegularGridInterpolator`.
-        By default all values outside the interpolation range are set to zero.
-        If you want to apply linear extrapolation you can pass `interp_kwargs={'fill_value':
-        'extrapolate', 'kind': 'linear'}`. If you want to choose the interpolation
+        Interpolation option passed to `~gammapy.utils.interpolation.ScaledRegularGridInterpolator`.
+        By default, all values outside the interpolation range are set to NaN.
+        If you want to apply linear extrapolation you can pass `interp_kwargs={'extrapolate':
+        True, 'method': 'linear'}`. If you want to choose the interpolation
         scaling applied to values, you can use `interp_kwargs={"values_scale": "log"}`.
     meta : dict, optional
         Meta information, meta['filename'] will be used for serialisation.

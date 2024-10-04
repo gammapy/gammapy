@@ -355,6 +355,14 @@ def test_mde_sample_sources(dataset, models):
 
 
 @requires_data()
+def test_mde_sample_sources_psf_update(dataset, models):
+    dataset.models = models
+    sampler = MapDatasetEventSampler(random_state=0)
+    events = sampler.sample_sources(dataset=dataset, psf_update=False)
+    assert len(events.table["ENERGY_TRUE"]) == 90
+
+
+@requires_data()
 def test_sample_sources_energy_dependent(dataset, energy_dependent_temporal_sky_model):
     dataset.models = energy_dependent_temporal_sky_model
 
