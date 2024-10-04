@@ -170,7 +170,7 @@ class MultiVariateGaussianPrior(Prior):
 
     def evaluate(self, values):
         """Evaluate the MultiVariateGaussianPrior."""
-        return values.T @ self.covariance_matrix @ values
+        return np.matmul(values, np.matmul(values, self.covariance_matrix))
 
 
 class GaussianPrior(Prior):
