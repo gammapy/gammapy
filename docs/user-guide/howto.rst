@@ -327,7 +327,7 @@ Note that you can create your own style with matplotlib (see
 `here <https://matplotlib.org/stable/tutorials/introductory/customizing.html>`__ and
 `here <https://matplotlib.org/stable/tutorials/colors/colormaps.html>`__)
 
-TODO: update the link
+.. TODO: update the link
 The CTAO observatory released a document describing best practices for **data visualisation in a way friendly to
 color-blind people**:
 `CTAO document <https://www.cta-observatory.org/wp-content/uploads/2020/10/CTA_ColourBlindness_BestPractices2.pdf>`_. To
