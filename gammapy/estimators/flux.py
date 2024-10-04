@@ -7,7 +7,6 @@ from gammapy.estimators.parameter import ParameterEstimator
 from gammapy.estimators.utils import _get_default_norm
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling.models import ScaleSpectralModel
-from gammapy.utils.deprecation import deprecated_attribute, deprecated_renamed_argument
 
 log = logging.getLogger(__name__)
 
@@ -28,14 +27,6 @@ class FluxEstimator(ParameterEstimator):
     ----------
     source : str or int
         For which source in the model to compute the flux.
-    norm_min : float
-        Minimum value for the norm used for the fit statistic profile evaluation.
-    norm_max : float
-        Maximum value for the norm used for the fit statistic profile evaluation.
-    norm_n_values : int
-        Number of norm values used for the fit statistic profile.
-    norm_values : `numpy.ndarray`
-        Array of norm values to be used for the fit statistic profile.
     n_sigma : int
         Sigma to use for asymmetric error computation.
     n_sigma_ul : int
@@ -70,23 +61,9 @@ class FluxEstimator(ParameterEstimator):
 
     tag = "FluxEstimator"
 
-    norm_min = deprecated_attribute("norm_min", "1.2")
-    norm_max = deprecated_attribute("norm_max", "1.2")
-    norm_n_values = deprecated_attribute("norm_n_values", "1.2")
-    norm_values = deprecated_attribute("norm_values", "1.2")
-
-    @deprecated_renamed_argument(
-        ["norm_min", "norm_max", "norm_n_values", "norm_values"],
-        [None, None, None, None],
-        ["1.2", "1.2", "1.2", "1.2"],
-    )
     def __init__(
         self,
         source=0,
-        norm_min=0.2,
-        norm_max=5,
-        norm_n_values=11,
-        norm_values=None,
         n_sigma=1,
         n_sigma_ul=2,
         selection_optional=None,
@@ -96,14 +73,7 @@ class FluxEstimator(ParameterEstimator):
     ):
         self.source = source
 
-        self.norm = _get_default_norm(
-            norm,
-            scan_min=norm_min,
-            scan_max=norm_max,
-            scan_n_values=norm_n_values,
-            scan_values=norm_values,
-            interp="log",
-        )
+        self.norm = _get_default_norm(norm, interp="log")
 
         super().__init__(
             null_value=0,
@@ -113,16 +83,6 @@ class FluxEstimator(ParameterEstimator):
             fit=fit,
             reoptimize=reoptimize,
         )
-
-    def _set_norm_parameter(self, norm=None, scaled_parameter=None):
-        """Define properties of the norm spectral parameter."""
-
-        if np.isnan(self.norm.min):
-            norm.min = scaled_parameter.min / scaled_parameter.value
-        if np.isnan(self.norm.max):
-            norm.max = scaled_parameter.max / scaled_parameter.value
-        norm.interp = scaled_parameter.interp
-        return norm
 
     def get_scale_model(self, models):
         """Set scale model.
@@ -139,14 +99,6 @@ class FluxEstimator(ParameterEstimator):
         """
         ref_model = models[self.source].spectral_model
         scale_model = ScaleSpectralModel(ref_model)
-
-        norms = ref_model.parameters.norm_parameters
-
-        if len(norms.free_parameters) == 1:
-            self.norm = self._set_norm_parameter(
-                self.norm.copy(), norms.free_parameters[0]
-            )
-
         scale_model.norm = self.norm.copy()
         return scale_model
 

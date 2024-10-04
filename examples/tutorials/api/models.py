@@ -294,7 +294,7 @@ plt.show()
 
 
 ######################################################################
-# All spatial models have an associated sky region to it e.g. to
+# All spatial models have an associated sky region to it e.g. to
 # illustrate the extension of the model on a sky image. The returned object
 # is an `~regions.SkyRegion` object:
 #
@@ -319,7 +319,7 @@ plt.show()
 
 
 ######################################################################
-# The `~gammapy.modeling.models.SpatialModel.to_region()` method can also be useful to write e.g. ds9 region
+# The `~gammapy.modeling.models.SpatialModel.to_region()` method can also be useful to write e.g. ds9 region
 # files using `write_ds9` from the `regions` package:
 #
 
@@ -444,7 +444,7 @@ plt.show()
 # parameter resides on the `~gammapy.modeling.models.SpectralModel`, specifying a spectral
 # component is compulsory. The temporal and spatial components are
 # optional. The temporal model needs to be specified only for timing
-# analysis. In some cases (e.g. when doing a spectral analysis) there is
+# analysis. In some cases (e.g. when doing a spectral analysis) there is
 # no need for a spatial component either, and only a spectral model is
 # associated with the source.
 #
@@ -456,7 +456,7 @@ print(model_spectrum)
 ######################################################################
 # Additionally the spatial model of `~gammapy.modeling.models.SkyModel`
 # can be used to represent source models based on templates, where the
-# spatial and energy axes are correlated. It can be created e.g. from an
+# spatial and energy axes are correlated. It can be created e.g. from an
 # existing FITS file:
 #
 
@@ -531,7 +531,7 @@ print(models["my-source"])
 
 
 ######################################################################
-# **Note:** To make the access by name unambiguous, models are required to
+# **Note:** To make the access by name unambiguous, models are required to
 # have a unique name, otherwise an error will be thrown.
 #
 # To see which models are available you can use the ``.names`` attribute:
@@ -661,7 +661,7 @@ class MyCustomSpectralModel(SpectralModel):
     """
 
     tag = "MyCustomSpectralModel"
-    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1", min=0, is_norm=True)
+    amplitude = Parameter("amplitude", "1e-12 cm-2 s-1 TeV-1", min=0)
     index = Parameter("index", 2, min=0)
     reference = Parameter("reference", "1 TeV", frozen=True)
     mean = Parameter("mean", "1 TeV", min=0)
@@ -783,7 +783,6 @@ class MyCustomGaussianModel(SpatialModel):
 
     @staticmethod
     def evaluate(lon, lat, energy, lon_0, lat_0, sigma_1TeV, sigma_10TeV):
-
         sep = angular_separation(lon, lat, lon_0, lat_0)
 
         # Compute sigma for the given energy using linear interpolation in log energy

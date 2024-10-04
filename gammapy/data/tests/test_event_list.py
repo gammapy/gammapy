@@ -3,12 +3,10 @@ import pytest
 from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import SkyCoord
-from astropy.io import fits
 from astropy.table import Table
 from regions import CircleSkyRegion, RectangleSkyRegion
 from gammapy.data import GTI, EventList, Observation
 from gammapy.maps import MapAxis, WcsGeom
-from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.utils.testing import mpl_plot_check, requires_data
 
 
@@ -61,13 +59,6 @@ class TestEventListBase:
         with pytest.raises(AttributeError):
             obs = Observation(events=self.events, gti=gti.table)
             obs.write("test.fits", overwrite=True)
-
-    def test_write_checksum(self):
-        with pytest.raises(GammapyDeprecationWarning):
-            self.events.write("test.fits", overwrite=True, checksum=True)
-            hdu = fits.open("test.fits")["EVENTS"]
-            assert "CHECKSUM" in hdu.header
-            assert "DATASUM" in hdu.header
 
 
 @requires_data()

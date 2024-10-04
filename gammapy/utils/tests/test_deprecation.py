@@ -8,30 +8,30 @@ from ..deprecation import (
 )
 
 
-@deprecated("v1.1", alternative="new_function")
+@deprecated("v1.3", alternative="new_function")
 def deprecated_function(a, b):
     return a + b
 
 
-@deprecated(since="v1.2")
+@deprecated(since="v1.3")
 class deprecated_class:
     def __init__(self):
         pass
 
 
-@deprecated_renamed_argument("a", "x", "v1.1")
+@deprecated_renamed_argument("a", "x", "v1.3")
 def deprecated_argument_function(x, y):
     return x + y
 
 
-@deprecated_renamed_argument("old", "new", "v1.1", arg_in_kwargs=True)
+@deprecated_renamed_argument("old", "new", "v1.3", arg_in_kwargs=True)
 def deprecated_argument_function_kwarg(new=1):
     return new
 
 
 class some_class:
     old_attribute = deprecated_attribute(
-        "old_attribute", "v1.1", alternative="new_attribute"
+        "old_attribute", "v1.3", alternative="new_attribute"
     )
 
     def __init__(self, value):
@@ -44,14 +44,14 @@ class some_class:
 
 
 def test_deprecated_function():
-    assert "deprecated:: v1.1" in deprecated_function.__doc__
+    assert "deprecated:: v1.3" in deprecated_function.__doc__
 
     with pytest.warns(GammapyDeprecationWarning, match="Use new_function instead"):
         deprecated_function(1, 2)
 
 
 def test_deprecated_class():
-    assert "deprecated:: v1.2" in deprecated_class.__doc__
+    assert "deprecated:: v1.3" in deprecated_class.__doc__
 
     with pytest.warns(
         GammapyDeprecationWarning, match="The deprecated_class class is deprecated"

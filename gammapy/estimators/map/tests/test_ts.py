@@ -440,6 +440,32 @@ def test_ts_map_stat_scan(fake_dataset):
         combine_flux_maps([maps, maps1], method="test")
 
 
+def test_ts_map_stat_scan_different_energy(fake_dataset):
+    model = fake_dataset.models["source"]
+
+    dataset = fake_dataset.downsample(25)
+
+    estimator = TSMapEstimator(
+        model,
+        kernel_width="0.3 deg",
+        energy_edges=[200, 3500] * u.GeV,
+        selection_optional=["stat_scan"],
+    )
+
+    estimator_1 = TSMapEstimator(
+        model,
+        kernel_width="0.3 deg",
+        selection_optional=["stat_scan"],
+        energy_edges=[0.2, 10] * u.TeV,
+    )
+
+    maps = estimator.run(dataset)
+    maps_1 = estimator_1.run(dataset)
+
+    combined_map = combine_flux_maps([maps_1, maps], method="profile")
+    assert combined_map.ts.data.shape == (1, 2, 2)
+
+
 def test_ts_map_with_model(fake_dataset):
     model = fake_dataset.models["source"]
     fake_dataset = fake_dataset.copy()
@@ -564,12 +590,48 @@ def test_joint_ts_map_hawc():
     datasets = Datasets.read("$GAMMAPY_DATA/hawc/DL4/HAWC_pass4_public_Crab.yaml")
     datasets = Datasets(datasets[-2:])
 
-    estimator = TSMapEstimator(kernel_width=2 * u.deg, sum_over_energy_groups=False)
+    estimator = TSMapEstimator(
+        kernel_width=2 * u.deg, sum_over_energy_groups=False, n_jobs=4
+    )
     result = estimator.run(datasets)
     assert_allclose(result["flux"].data[0, 59, 59], 1.909396e-13, rtol=1e-3)
     assert_allclose(result["sqrt_ts"].data[0, 59, 59], 10.878956, rtol=1e-3)
 
-    estimator = TSMapEstimator(kernel_width=2 * u.deg, sum_over_energy_groups=True)
+    estimator = TSMapEstimator(
+        kernel_width=2 * u.deg,
+        sum_over_energy_groups=False,
+        selection_optional=["stat_scan"],
+        n_jobs=4,
+    )
+    result = estimator.run(datasets)
+    assert_allclose(result["flux"].data[0, 59, 59], 1.909396e-13, rtol=1e-3)
+    assert_allclose(result["sqrt_ts"].data[0, 59, 59], 10.878956, rtol=1e-3)
+    assert result.stat_scan.geom.data_shape == (1, 109, 120, 120)
+    assert result.dnde_scan_values.geom.data_shape == (1, 109, 120, 120)
+    assert_allclose(
+        result["dnde_scan_values"].data[0, 0, 59, 59], -3.164557e-13, rtol=1e-3
+    )
+    assert_allclose(result["stat_scan"].data[0, 0, 59, 59], 5193.588657, rtol=1e-3)
+
+    estimator = TSMapEstimator(
+        kernel_width=2 * u.deg, sum_over_energy_groups=True, n_jobs=4
+    )
     result = estimator.run(datasets)
     assert_allclose(result["flux"].data[0, 59, 59], 1.99452e-13, rtol=1e-3)
     assert_allclose(result["sqrt_ts"].data[0, 59, 59], 11.997135, rtol=1e-3)
+
+    estimator = TSMapEstimator(
+        kernel_width=2 * u.deg,
+        sum_over_energy_groups=True,
+        selection_optional=["stat_scan"],
+        n_jobs=4,
+    )
+    result = estimator.run(datasets)
+    assert_allclose(result["flux"].data[0, 59, 59], 1.99452e-13, rtol=1e-3)
+    assert_allclose(result["sqrt_ts"].data[0, 59, 59], 11.997135, rtol=1e-3)
+    assert result.stat_scan.geom.data_shape == (1, 109, 120, 120)
+    assert result.dnde_scan_values.geom.data_shape == (1, 109, 120, 120)
+    assert_allclose(
+        result["dnde_scan_values"].data[0, 0, 59, 59], -3.164557e-13, rtol=1e-3
+    )
+    assert_allclose(result["stat_scan"].data[0, 0, 59, 59], 7625.040553, rtol=1e-3)

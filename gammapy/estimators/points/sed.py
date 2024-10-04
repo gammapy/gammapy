@@ -10,7 +10,6 @@ from gammapy.datasets.actors import DatasetsActor
 from gammapy.datasets.flux_points import _get_reference_model
 from gammapy.maps import MapAxis
 from gammapy.modeling import Fit
-from gammapy.utils.deprecation import deprecated_attribute
 from ..flux import FluxEstimator
 from .core import FluxPoints
 
@@ -40,14 +39,6 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
     ----------
     source : str or int
         For which source in the model to compute the flux points.
-    norm_min : float
-        Minimum value for the norm used for the fit statistic profile evaluation.
-    norm_max : float
-        Maximum value for the norm used for the fit statistic profile evaluation.
-    norm_n_values : int
-        Number of norm values used for the fit statistic profile.
-    norm_values : `numpy.ndarray`
-        Array of norm values to be used for the fit statistic profile.
     n_sigma : int
         Number of sigma to use for asymmetric error computation. Default is 1.
     n_sigma_ul : int
@@ -93,11 +84,6 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
     """
 
     tag = "FluxPointsEstimator"
-
-    norm_min = deprecated_attribute("norm_min", "1.2")
-    norm_max = deprecated_attribute("norm_max", "1.2")
-    norm_n_values = deprecated_attribute("norm_n_values", "1.2")
-    norm_values = deprecated_attribute("norm_values", "1.2")
 
     def __init__(
         self,
