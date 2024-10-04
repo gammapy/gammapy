@@ -219,7 +219,8 @@ channel = "Z"
 massDM = 10 * u.TeV
 diff_flux = DarkMatterAnnihilationSpectralModel(mass=massDM, channel=channel)
 int_flux = (
-    jfact * diff_flux.integral(energy_min=0.1 * u.TeV, energy_max=10 * u.TeV)
+    jfact.to_value("GeV2 cm-5")
+    * diff_flux.integral(energy_min=0.1 * u.TeV, energy_max=10 * u.TeV)
 ).to("cm-2 s-1")
 
 flux_map = WcsNDMap(geom=geom, data=int_flux.value, unit="cm-2 s-1")
@@ -243,7 +244,8 @@ channel = "Z"
 massDM = 10 * u.TeV
 diff_flux = DarkMatterDecaySpectralModel(mass=massDM, channel=channel)
 int_flux = (
-    jfact_decay * diff_flux.integral(energy_min=0.1 * u.TeV, energy_max=10 * u.TeV)
+    jfact_decay.to_value("GeV cm-2")
+    * diff_flux.integral(energy_min=0.1 * u.TeV, energy_max=10 * u.TeV)
 ).to("cm-2 s-1")
 
 flux_map = WcsNDMap(geom=geom, data=int_flux.value, unit="cm-2 s-1")

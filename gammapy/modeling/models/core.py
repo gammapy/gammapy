@@ -279,6 +279,10 @@ class ModelBase:
             data["parameters"], cls.default_parameters
         )
 
+        for key in data.keys():
+            if key not in ["type", "parameters"] and key not in kwargs:
+                kwargs[key] = data[key]
+
         return cls.from_parameters(parameters, **kwargs)
 
     def __str__(self):

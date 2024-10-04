@@ -46,7 +46,7 @@ def test_dmfluxmap_annihilation(jfact_annihilation):
 
     diff_flux = DarkMatterAnnihilationSpectralModel(mass=massDM, channel=channel)
     int_flux = (
-        jfact_annihilation
+        jfact_annihilation.to_value("GeV2 cm-5")
         * diff_flux.integral(energy_min=energy_min, energy_max=energy_max)
     ).to("cm-2 s-1")
     actual = int_flux[5, 5]
@@ -63,7 +63,8 @@ def test_dmfluxmap_decay(jfact_decay):
 
     diff_flux = DarkMatterDecaySpectralModel(mass=massDM, channel=channel)
     int_flux = (
-        jfact_decay * diff_flux.integral(energy_min=energy_min, energy_max=energy_max)
+        jfact_decay.to_value("GeV cm-2")
+        * diff_flux.integral(energy_min=energy_min, energy_max=energy_max)
     ).to("cm-2 s-1")
     actual = int_flux[5, 5]
     desired = 7.01927e-3 / u.cm**2 / u.s
