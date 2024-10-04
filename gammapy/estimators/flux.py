@@ -7,7 +7,6 @@ from gammapy.estimators.parameter import ParameterEstimator
 from gammapy.estimators.utils import _get_default_norm
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling.models import ScaleSpectralModel
-from gammapy.utils.deprecation import deprecated_attribute, deprecated_renamed_argument
 
 log = logging.getLogger(__name__)
 
@@ -28,14 +27,6 @@ class FluxEstimator(ParameterEstimator):
     ----------
     source : str or int
         For which source in the model to compute the flux.
-    norm_min : float
-        Minimum value for the norm used for the fit statistic profile evaluation.
-    norm_max : float
-        Maximum value for the norm used for the fit statistic profile evaluation.
-    norm_n_values : int
-        Number of norm values used for the fit statistic profile.
-    norm_values : `numpy.ndarray`
-        Array of norm values to be used for the fit statistic profile.
     n_sigma : int
         Sigma to use for asymmetric error computation.
     n_sigma_ul : int
@@ -58,7 +49,6 @@ class FluxEstimator(ParameterEstimator):
         If False only the norm of the source of interest if fitted,
         and all other parameters are frozen at their current values.
         Default is False.
-    norm : ~gammapy.modeling.Parameter`
     norm : ~gammapy.modeling.Parameter` or dict
         Norm parameter used for the fit
         Default is None and a new parameter is created automatically,
@@ -71,23 +61,9 @@ class FluxEstimator(ParameterEstimator):
 
     tag = "FluxEstimator"
 
-    norm_min = deprecated_attribute("norm_min", "1.2")
-    norm_max = deprecated_attribute("norm_max", "1.2")
-    norm_n_values = deprecated_attribute("norm_n_values", "1.2")
-    norm_values = deprecated_attribute("norm_values", "1.2")
-
-    @deprecated_renamed_argument(
-        ["norm_min", "norm_max", "norm_n_values", "norm_values"],
-        [None, None, None, None],
-        ["1.2", "1.2", "1.2", "1.2"],
-    )
     def __init__(
         self,
         source=0,
-        norm_min=0.2,
-        norm_max=5,
-        norm_n_values=11,
-        norm_values=None,
         n_sigma=1,
         n_sigma_ul=2,
         selection_optional=None,
@@ -95,17 +71,9 @@ class FluxEstimator(ParameterEstimator):
         reoptimize=False,
         norm=None,
     ):
-
         self.source = source
 
-        self.norm = _get_default_norm(
-            norm,
-            scan_min=norm_min,
-            scan_max=norm_max,
-            scan_n_values=norm_n_values,
-            scan_values=norm_values,
-            interp="log",
-        )
+        self.norm = _get_default_norm(norm, interp="log")
 
         super().__init__(
             null_value=0,

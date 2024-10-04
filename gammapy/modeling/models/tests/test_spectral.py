@@ -1291,10 +1291,3 @@ def test_template_ND_EBL(tmpdir):
     assert_allclose(template_new.map.data, region_map.data)
     assert len(template.parameters) == 1
     assert_allclose(template.parameters["redshift"].value, 0.1)
-
-
-def test_is_norm_spectral_models():
-    for test_model in TEST_MODELS:
-        m = test_model["model"]
-        if m.tag[0] not in ["PiecewiseNormSpectralModel", "TemplateSpectralModel"]:
-            assert np.any([p._is_norm for p in m.parameters])

@@ -113,11 +113,11 @@ class FluxPointsDataset(Dataset):
         message    : Hesse terminated successfully.
 
     >>> print(result.parameters.to_table())
-    type    name     value         unit      ... frozen is_norm link prior
-    ---- --------- ---------- -------------- ... ------ ------- ---- -----
-             index 2.2159e+00                ...  False   False
-         amplitude 2.1619e-13 TeV-1 s-1 cm-2 ...  False    True
-         reference 1.0000e+00            TeV ...   True   False
+    type    name     value         unit      ... frozen link prior
+    ---- --------- ---------- -------------- ... ------ ---- -----
+             index 2.2159e+00                ...  False
+         amplitude 2.1619e-13 TeV-1 s-1 cm-2 ...  False
+         reference 1.0000e+00            TeV ...   True
 
     Note: In order to reproduce the example, you need the tests datasets folder.
     You may download it with the command:
@@ -171,7 +171,6 @@ class FluxPointsDataset(Dataset):
 
     @stat_type.setter
     def stat_type(self, stat_type):
-
         if stat_type not in self.available_stat_type:
             raise ValueError(
                 f"Invalid stat_type: possible options are {self.available_stat_type}"
@@ -592,9 +591,10 @@ class FluxPointsDataset(Dataset):
 
         if method == "diff/model":
             model = self.flux_pred()
-            yerr = (yerr[0].quantity / model).squeeze(), (
-                yerr[1].quantity / model
-            ).squeeze()
+            yerr = (
+                (yerr[0].quantity / model).squeeze(),
+                (yerr[1].quantity / model).squeeze(),
+            )
         elif method == "diff":
             yerr = yerr[0].quantity.squeeze(), yerr[1].quantity.squeeze()
         else:

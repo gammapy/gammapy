@@ -696,7 +696,6 @@ class ConstantSpectralModel(SpectralModel):
 
     tag = ["ConstantSpectralModel", "const"]
     const = Parameter("const", "1e-12 cm-2 s-1 TeV-1")
-    const._is_norm = True
 
     @staticmethod
     def evaluate(energy, const):
@@ -811,7 +810,6 @@ class PowerLawSpectralModel(SpectralModel):
         scale_method="scale10",
         interp="log",
     )
-    amplitude._is_norm = True
     reference = Parameter("reference", "1 TeV", frozen=True)
 
     @staticmethod
@@ -936,7 +934,6 @@ class PowerLawNormSpectralModel(SpectralModel):
 
     tag = ["PowerLawNormSpectralModel", "pl-norm"]
     norm = Parameter("norm", 1, unit="", interp="log")
-    norm._is_norm = True
     tilt = Parameter("tilt", 0, frozen=True)
     reference = Parameter("reference", "1 TeV", frozen=True)
 
@@ -1049,7 +1046,6 @@ class PowerLaw2SpectralModel(SpectralModel):
         scale_method="scale10",
         interp="log",
     )
-    amplitude._is_norm = True
     index = Parameter("index", 2)
     emin = Parameter("emin", "0.1 TeV", frozen=True)
     emax = Parameter("emax", "100 TeV", frozen=True)
@@ -1141,7 +1137,6 @@ class BrokenPowerLawSpectralModel(SpectralModel):
         scale_method="scale10",
         interp="log",
     )
-    amplitude._is_norm = True
     ebreak = Parameter("ebreak", "1 TeV")
 
     @staticmethod
@@ -1189,7 +1184,6 @@ class SmoothBrokenPowerLawSpectralModel(SpectralModel):
         scale_method="scale10",
         interp="log",
     )
-    amplitude._is_norm = True
     ebreak = Parameter("ebreak", "1 TeV")
     reference = Parameter("reference", "1 TeV", frozen=True)
     beta = Parameter("beta", 1, frozen=True)
@@ -1327,7 +1321,6 @@ class ExpCutoffPowerLawSpectralModel(SpectralModel):
         scale_method="scale10",
         interp="log",
     )
-    amplitude._is_norm = True
     reference = Parameter("reference", "1 TeV", frozen=True)
     lambda_ = Parameter("lambda_", "0.1 TeV-1")
     alpha = Parameter("alpha", "1.0", frozen=True)
@@ -1390,7 +1383,6 @@ class ExpCutoffPowerLawNormSpectralModel(SpectralModel):
 
     index = Parameter("index", 0.0)
     norm = Parameter("norm", 1, unit="", interp="log")
-    norm._is_norm = True
     reference = Parameter("reference", "1 TeV", frozen=True)
     lambda_ = Parameter("lambda_", "0.1 TeV-1")
     alpha = Parameter("alpha", "1.0", frozen=True)
@@ -1455,7 +1447,6 @@ class ExpCutoffPowerLaw3FGLSpectralModel(SpectralModel):
         scale_method="scale10",
         interp="log",
     )
-    amplitude._is_norm = True
     reference = Parameter("reference", "1 TeV", frozen=True)
     ecut = Parameter("ecut", "10 TeV")
 
@@ -1504,7 +1495,6 @@ class SuperExpCutoffPowerLaw3FGLSpectralModel(SpectralModel):
         scale_method="scale10",
         interp="log",
     )
-    amplitude._is_norm = True
     reference = Parameter("reference", "1 TeV", frozen=True)
     ecut = Parameter("ecut", "10 TeV")
     index_1 = Parameter("index_1", 1.5)
@@ -1547,7 +1537,6 @@ class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
         scale_method="scale10",
         interp="log",
     )
-    amplitude._is_norm = True
     reference = Parameter("reference", "1 TeV", frozen=True)
     expfactor = Parameter("expfactor", "1e-2")
     index_1 = Parameter("index_1", 1.5)
@@ -1595,7 +1584,6 @@ class SuperExpCutoffPowerLaw4FGLDR3SpectralModel(SpectralModel):
         scale_method="scale10",
         interp="log",
     )
-    amplitude._is_norm = True
     reference = Parameter("reference", "1 TeV", frozen=True)
     expfactor = Parameter("expfactor", "1e-2")
     index_1 = Parameter("index_1", 1.5)
@@ -1647,7 +1635,6 @@ class LogParabolaSpectralModel(SpectralModel):
         scale_method="scale10",
         interp="log",
     )
-    amplitude._is_norm = True
     reference = Parameter("reference", "10 TeV", frozen=True)
     alpha = Parameter("alpha", 2)
     beta = Parameter("beta", 1)
@@ -1702,7 +1689,6 @@ class LogParabolaNormSpectralModel(SpectralModel):
     tag = ["LogParabolaNormSpectralModel", "lp-norm"]
 
     norm = Parameter("norm", 1, unit="", interp="log")
-    norm._is_norm = True
     reference = Parameter("reference", "10 TeV", frozen=True)
     alpha = Parameter("alpha", 0)
     beta = Parameter("beta", 0)
@@ -2390,7 +2376,6 @@ class GaussianSpectralModel(SpectralModel):
 
     tag = ["GaussianSpectralModel", "gauss"]
     amplitude = Parameter("amplitude", 1e-12 * u.Unit("cm-2 s-1"), interp="log")
-    amplitude._is_norm = True
 
     mean = Parameter("mean", 1 * u.TeV)
     sigma = Parameter("sigma", 2 * u.TeV)

@@ -195,7 +195,6 @@ def test_parameters_create_table():
         "min",
         "max",
         "frozen",
-        "is_norm",
         "link",
         "prior",
     ]
@@ -209,7 +208,6 @@ def test_parameters_create_table():
             ("min", "<f8"),
             ("max", "<f8"),
             ("frozen", "?"),
-            ("is_norm", "?"),
             ("link", "<U1"),
             ("prior", "<U1"),
         ]

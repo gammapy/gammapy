@@ -1224,9 +1224,9 @@ def _generate_scan_values(power_min=-6, power_max=2, relative_error=1e-2):
 
 def _get_default_norm(
     norm,
-    scan_min=None,
-    scan_max=None,
-    scan_n_values=None,
+    scan_min=0.2,
+    scan_max=5,
+    scan_n_values=11,
     scan_values=None,
     interp="lin",
 ):
@@ -1241,7 +1241,7 @@ def _get_default_norm(
             scan_min=scan_min,
             scan_max=scan_max,
             scan_n_values=scan_n_values,
-            scan_values=scan_values,
+            scan_values=None,
         )
         if isinstance(norm, dict):
             norm_kwargs.update(norm)
