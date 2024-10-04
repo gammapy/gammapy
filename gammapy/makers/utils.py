@@ -28,6 +28,8 @@ __all__ = [
 
 log = logging.getLogger(__name__)
 
+MINIMUM_TIME_STEP = 1 * u.s  # Minimum time step used to handle FoV rotations
+
 
 def _get_fov_coords(pointing, irf, geom, use_region_center=True, obstime=None):
     # TODO: create dedicated coordinate handling see #5041
@@ -98,17 +100,17 @@ def _get_fov_coords(pointing, irf, geom, use_region_center=True, obstime=None):
     return coords
 
 
-def time_limit_rotation(maximum_rotation, pointing_altaz):
+def compute_rotation_time_step(rotation, pointing_altaz):
     """
-    Compute the maximum time such that the FoV associated to a fixed RaDec position rotates by less than
-    'maximum_rotation' in AltAz frame. It assumes that the rotation rate at the provided pointing is a good estimate
-    of the rotation rate over the full output duration (first order approximation).
+    Compute the time such that the FoV associated to a fixed RaDec position rotates by 'rotation' in AltAz frame.
+    It assumes that the rotation rate at the provided pointing is a good estimate of the rotation rate over the full
+    output duration (first order approximation).
 
 
     Parameters
     ----------
-    maximum_rotation : `~astropy.units.Quantity`
-        Maximum rotation angle.
+    rotation : `~astropy.units.Quantity`
+        Rotation angle.
     pointing_altaz : `~astropy.coordinates.SkyCoord`
         Pointing direction.
 
@@ -117,17 +119,15 @@ def time_limit_rotation(maximum_rotation, pointing_altaz):
     duration : `~astropy.units.Quantity`
         Time associated with the requested rotation.
     """
-    earth_rotation_deg_per_second = 0.004167
+    earth_rotation = 360 * u.deg / u.day
     denom = (
-        earth_rotation_deg_per_second
+        earth_rotation
         * np.cos(pointing_altaz.location.lat.rad)
-        * np.cos(pointing_altaz.az.rad)
+        * np.abs(np.cos(pointing_altaz.az.rad))
     )
-    if denom == 0:
+    if denom.value == 0:
         return 3600 * u.s
-    return (
-        maximum_rotation.to_value(u.deg) * np.cos(pointing_altaz.alt.rad) / denom
-    ) * u.s
+    return rotation * np.cos(pointing_altaz.alt.rad) / denom
 
 
 def make_map_exposure_true_energy(
@@ -223,7 +223,7 @@ def evaluate_bkg(pointing, ontime, bkg, geom, use_region_center, obstime, d_omeg
         irf=bkg,
         geom=geom,
         use_region_center=use_region_center,
-        obstime=obstime,
+        obstime=obstime + ontime / 2,
     )
     coords["energy"] = broadcast_axis_values_to_geom(geom, "energy", False)
 
@@ -236,7 +236,7 @@ def make_map_background_irf(
     ontime,
     bkg,
     geom,
-    fov_rotation_error_limit,
+    fov_rotation_step,
     oversampling=None,
     use_region_center=True,
     obstime=None,
@@ -260,7 +260,7 @@ def make_map_background_irf(
         Background rate model.
     geom : `~gammapy.maps.WcsGeom`
         Reference geometry.
-    fov_rotation_error_limit : `~astropy.units.Quantity`
+    fov_rotation_step : `~astropy.units.Quantity`
         Maximum rotation error to create sub-time bins if the irf is 3D and in AltAz.
     oversampling : int
         Oversampling factor in energy, used for the background model evaluation.
@@ -302,17 +302,17 @@ def make_map_background_irf(
         endtime = obstime + ontime
         data = np.zeros(geom.data_shape)
         while obstime < endtime:
-            # Evaluate the step time needed to have FoV rotation of less than fov_rotation_error_limit
+            # Evaluate the step time needed to have a FoV rotation of fov_rotation_step
             # Minimum step of 1 second to avoid infinite computation very close to zenith
             steptime = max(
-                time_limit_rotation(
-                    fov_rotation_error_limit, pointing.get_altaz(obstime)
+                compute_rotation_time_step(
+                    fov_rotation_step, pointing.get_altaz(obstime)
                 ),
-                1 * u.s,
+                MINIMUM_TIME_STEP,
             )
             steptime = (
                 steptime
-                if steptime < endtime - obstime - 1 * u.s
+                if steptime < endtime - obstime - MINIMUM_TIME_STEP
                 else endtime - obstime
             )
             data += evaluate_bkg(

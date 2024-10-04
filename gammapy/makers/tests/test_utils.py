@@ -190,7 +190,7 @@ def test_map_background_2d(bkg_2d, fixed_pointing_info):
         ontime="42 s",
         bkg=bkg_2d,
         geom=geom,
-        fov_rotation_error_limit=0.5 * u.deg,
+        fov_rotation_step=1.0 * u.deg,
     )
 
     assert_allclose(bkg.data[:, 1, 1], [1.869025, 0.186903], rtol=1e-5)
@@ -201,7 +201,7 @@ def test_map_background_2d(bkg_2d, fixed_pointing_info):
         ontime="42 s",
         bkg=bkg_2d,
         geom=geom,
-        fov_rotation_error_limit=0.5 * u.deg,
+        fov_rotation_step=1.0 * u.deg,
         obstime=obstime,
     )
     assert_allclose(bkg.data, bkg_fpi.data, rtol=1e-5)
@@ -215,7 +215,7 @@ def make_map_background_irf_with_symmetry(fpi, symmetry="constant"):
         ontime="42 s",
         bkg=bkg_3d_custom(symmetry),
         geom=WcsGeom.create(npix=(3, 3), binsz=4, axes=[axis], skydir=fpi.fixed_icrs),
-        fov_rotation_error_limit=0.5 * u.deg,
+        fov_rotation_step=1.0 * u.deg,
         obstime=obstime,
     )
 
@@ -265,7 +265,7 @@ def test_make_map_background_irf(bkg_3d, pars, fixed_pointing_info):
             ebounds=pars["ebounds"],
             skydir=fixed_pointing_info.fixed_icrs,
         ),
-        fov_rotation_error_limit=0.5 * u.deg,
+        fov_rotation_step=1.0 * u.deg,
         oversampling=10,
         obstime=Time("2020-01-01T20:00"),
     )
@@ -326,7 +326,7 @@ def test_make_map_background_irf_skycoord(fixed_pointing_info_aligned):
             ontime="42 s",
             bkg=bkg_3d_custom("asymmetric", "ALTAZ"),
             geom=WcsGeom.create(npix=(3, 3), binsz=4, axes=[axis], skydir=position),
-            fov_rotation_error_limit=0.5 * u.deg,
+            fov_rotation_step=1.0 * u.deg,
         )
 
 
@@ -344,7 +344,7 @@ def test_make_map_background_irf_AltAz_align(fixed_pointing_info):
             axes=[axis],
             skydir=fixed_pointing_info.get_icrs(obstime),
         ),
-        fov_rotation_error_limit=0.5 * u.deg,
+        fov_rotation_step=1.0 * u.deg,
         obstime=obstime,
     )
 
