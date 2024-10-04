@@ -908,7 +908,7 @@ class FitResults(collections.abc.MutableSequence):
 
     def __add__(self, other):
         if isinstance(other, FitResult):
-            return FitResult([*self, other])
+            return FitResults([*self, other])
         else:
             raise TypeError(f"Invalid type: {other!r}")
 
