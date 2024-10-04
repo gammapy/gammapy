@@ -14,17 +14,17 @@ def prior_fit_statistic(priors):
     r"""Prior.
 
     Evaluating a list of priors.
-    Multidimensional priors are only counted once.
+    Mulitdimensional priors are only counted once.
 
     Parameters
     ----------
     priors : list
-        List of priors.
+        list of priors
 
-    Returns
+     Returns
     -------
     prior_stat_sum : float
-        Sum of priors.
+        sum of priors
 
     """
     prior_stat_sum = 0.0

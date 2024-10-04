@@ -95,7 +95,7 @@ def _write_models(
     checksum=False,
     extra_dict=None,
 ):
-    """Write models to YAML file with additional information using an `extra_dict`"""
+    """Write models to YAML file with additionnal informations using an `extra_dict`"""
 
     base_path, _ = split(path)
     path = make_path(path)
@@ -418,24 +418,16 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
 
     @property
     def priors(self):
+        """Priors (list).
+
+        Duplicate prior objects have been removed.
+        """
         priors = {}
 
-        for model in self:
-            priors[model.prior] = model.prior
-
-        return list(priors)
-
-    @priors.setter
-    def set_priors(self, parameters, priors):
-        for parameter, prior in zip(parameters, priors):
-            parameter.prior = prior
-
-    def stat_sum_prior(self):
-        parameters_stat_sum = 0
         for parameter in self.parameters:
             if parameter.prior is not None:
-                parameters_stat_sum += parameter.prior_stat_sum()
-        return parameters_stat_sum
+                priors[parameter.prior] = parameter.prior
+        return list(priors)
 
     @property
     def parameters_unique_names(self):

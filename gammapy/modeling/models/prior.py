@@ -4,7 +4,7 @@
 import logging
 import numpy as np
 import astropy.units as u
-from gammapy.modeling import PriorParameter, PriorParameters
+from gammapy.modeling import Parameter, Parameters, PriorParameter, PriorParameters
 from .core import ModelBase
 
 __all__ = ["MultiVariateGaussianPrior", "GaussianPrior", "UniformPrior"]
@@ -38,7 +38,14 @@ class Prior(ModelBase):
 
     _unit = ""
 
-    def __init__(self, **kwargs):
+    def __init__(self, modelparameters, **kwargs):
+        if isinstance(modelparameters, Parameter):
+            self._modelparameters = Parameters([modelparameters])
+        elif isinstance(modelparameters, Parameters):
+            self._modelparameters = modelparameters
+        else:
+            raise ValueError(f"Invalid model type {modelparameters}")
+
         # Copy default parameters from the class to the instance
         default_parameters = self.default_parameters.copy()
 
@@ -57,6 +64,13 @@ class Prior(ModelBase):
             self._weight = _weight
         else:
             self._weight = 1
+
+        for par in self._modelparameters:
+            par.prior = self
+
+    @property
+    def modelparameters(self):
+        return self._modelparameters
 
     @property
     def parameters(self):
@@ -80,10 +94,11 @@ class Prior(ModelBase):
     def weight(self, value):
         self._weight = value
 
-    def __call__(self, modelparameters):
+    def __call__(self):
         """Call evaluate method."""
+        # assuming the same unit as the PriorParameter here
         kwargs = {par.name: par.value for par in self.parameters}
-        return self.weight * self.evaluate(modelparameters.value, **kwargs)
+        return self.weight * self.evaluate(self._modelparameters.value, **kwargs)
 
     def to_dict(self, full_output=False):
         """Create dictionary for YAML serialisation."""
@@ -105,31 +120,34 @@ class Prior(ModelBase):
                     ):
                         del par[item]
 
-        data = {"type": tag, "parameters": params, "weight": self.weight}
+        data = {
+            "type": tag,
+            "parameters": params,
+            "weight": self.weight,
+            "modelparameters": self._modelparameters,
+        }
 
-        if self.type is None:
-            return data
-        else:
-            return {self.type: data}
+        return data
 
     @classmethod
-    def from_dict(cls, data, **kwargs):
+    def from_dict(cls, data):
         """Get prior parameters from dictionary."""
+        from . import PRIOR_REGISTRY
+
+        prior_cls = PRIOR_REGISTRY.get_cls(data["type"])
         kwargs = {}
 
-        key0 = next(iter(data))
-        if key0 in ["prior"]:
-            data = data[key0]
-        if data["type"] not in cls.tag:
+        if data["type"] not in prior_cls.tag:
             raise ValueError(
                 f"Invalid model type {data['type']} for class {cls.__name__}"
             )
         priorparameters = _build_priorparameters_from_dict(
-            data["parameters"], cls.default_parameters
+            data["parameters"], prior_cls.default_parameters
         )
         kwargs["weight"] = data["weight"]
+        kwargs["modelparameters"] = data["modelparameters"]
 
-        return cls.from_parameters(priorparameters, **kwargs)
+        return prior_cls.from_parameters(priorparameters, **kwargs)
 
 
 class MultiVariateGaussianPrior(Prior):
@@ -137,6 +155,8 @@ class MultiVariateGaussianPrior(Prior):
 
     Parameters
     ----------
+    modelparameters :
+        Meaning
     covariance_matrix :
         Meaning
     """
@@ -144,25 +164,31 @@ class MultiVariateGaussianPrior(Prior):
     tag = ["MultiVariateGaussianPrior"]
     _type = "prior"
 
-    def __init__(self, covariance_matrix):
-        super().__init__()
+    def __init__(self, modelparameters, covariance_matrix):
+        super().__init__(modelparameters)
 
         self._covariance_matrix = covariance_matrix
 
-    def __call__(self, modelparameters):
-        """
-        Call evaluate method.
-
-        modelparameters : Parameters object
-        """
         value = np.asanyarray(self.covariance_matrix)
-        npars = len(modelparameters)
+        npars = len(self._modelparameters)
         shape = (npars, npars)
         if value.shape != shape:
             raise ValueError(
                 f"Invalid covariance matrix shape: {value.shape}, expected {shape}"
             )
-        return self.evaluate(modelparameters.value)
+
+        # Do we want this?
+        self.dimension = value.shape[-1]
+
+        for par in self._modelparameters:
+            par.prior = self
+
+    # def from_subcovariance(self, parameters, subcovar):
+    #    idx = [parameters.index(par) for par in parameters]
+
+    def __call__(self):
+        """Call evaluate method"""
+        return self.evaluate(self._modelparameters.value)
 
     @property
     def covariance_matrix(self):
@@ -170,7 +196,7 @@ class MultiVariateGaussianPrior(Prior):
 
     def evaluate(self, values):
         """Evaluate the MultiVariateGaussianPrior."""
-        return np.matmul(values, np.matmul(values, self.covariance_matrix))
+        return values.T @ self.covariance_matrix @ values
 
 
 class GaussianPrior(Prior):
