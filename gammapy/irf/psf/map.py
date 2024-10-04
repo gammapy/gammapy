@@ -273,9 +273,6 @@ class PSFMap(IRFMap):
             Containment fraction to use as size of the kernel.
             The radius can be overwritten using the `max_radius` argument.
             Default is 0.999.
-        factor : int, optional
-            Oversampling factor to compute the PSF.
-            Default is None and it will be computed automatically.
         precision_factor : int, optional
             Factor between the bin half-width of the geom and the median R68% containment radius.
             Used only for the oversampling method. Default is 10.
