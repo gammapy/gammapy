@@ -900,10 +900,11 @@ class FitResult:
 
 
 class FitResults(collections.abc.Sequence):
-    def __init__(self, results):
+    def __init__(self, results, axis_name=None):
         if np.array([not isinstance(result, FitResult) for result in results]).any():
             raise TypeError(f"Elements in {results!r} are not FitResult objects")
         self.results = results
+        self._axis_name = axis_name
 
     def __add__(self, other):
         if isinstance(other, FitResult):
@@ -933,7 +934,7 @@ class FitResults(collections.abc.Sequence):
         return [f.optimize_result for f in self.results]
 
     def select_by_interval(self, axis, coord_min, coord_max):
-        if axis and axis.nbin != len(self.results):
+        if axis.nbin != len(self.results) and axis.name != self._axis_name:
             raise ValueError("Axis length does not correspond to number of results")
 
         keymin = axis.coord_to_idx(coord_min)
