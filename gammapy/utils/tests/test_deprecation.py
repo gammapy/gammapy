@@ -8,7 +8,7 @@ from ..deprecation import (
 )
 
 
-@deprecated("v1.1", alternative="new_function")
+@deprecated("v1.3", alternative="new_function")
 def deprecated_function(a, b):
     return a + b
 
