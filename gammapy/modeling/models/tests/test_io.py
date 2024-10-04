@@ -360,8 +360,6 @@ def make_all_models():
     yield Model.create("SuperExpCutoffPowerLaw4FGLDR3SpectralModel", "spectral")
     yield Model.create("SuperExpCutoffPowerLaw4FGLSpectralModel", "spectral")
     yield Model.create("LogParabolaSpectralModel", "spectral")
-    with pytest.warns(GammapyDeprecationWarning):
-        yield Model.create("LogParabolaNormSpectralModel", "spectral")
     yield Model.create(
         "TemplateSpectralModel", "spectral", energy=[1, 2] * u.cm, values=[3, 4] * u.cm
     )  # TODO: add unit validation?
