@@ -25,10 +25,13 @@ to analyse the data, you have to specify your model via the Gammapy YAML
 model format, or Python code, as shown below.
 
 You can use Gammapy to simulate CTAO data and evaluate CTAO performance
-using the CTAO response files. For the Omega configuration (prod3b, 2016), the files can
-be found here: https://zenodo.org/records/5163273. For the Alpha configuration (prod5, 2021),
-they can be found here: https://zenodo.org/records/5499840. They are all fully
-supported by Gammapy.
+using the CTAO response files. Two sets of responses are available for different
+array layouts:
+
+- the Omega configuration (prod3b, 2016):  https://zenodo.org/records/5163273,
+- the Alpha configuration (prod5, 2021): https://zenodo.org/records/5499840.
+
+They are all fully supported by Gammapy.
 
 
 Tutorial overview
@@ -355,11 +358,10 @@ plt.show()
 #
 # CTA 1DC is useful to learn how to analyse CTAO data. But to do
 # simulations and studies for CTAO now, you should get the most recent CTAO
-# IRFs in FITS format from
-# https://www.ctao.org/for-scientists/performance/
+# IRFs in FITS format from https://www.ctao.org/for-scientists/performance/.
 #
-# If you want to run the download and examples in the next code cells,
-# remove the # to uncomment.
+# If you want to use other response files, the following code cells (remove the # to uncomment)
+# explain how to proceed. This exemple is mad for the Alpha configuration (Prod5).
 #
 
 # !curl -o cta-prod5-zenodo-fitsonly-v0.1.zip https://zenodo.org/records/5499840/files/cta-prod5-zenodo-fitsonly-v0.1.zip
