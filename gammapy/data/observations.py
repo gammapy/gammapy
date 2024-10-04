@@ -77,7 +77,6 @@ class Observation:
         self,
         obs_id=None,
         meta=None,
-        obs_info=None,
         gti=None,
         aeff=None,
         edisp=None,
@@ -89,14 +88,6 @@ class Observation:
         pointing=None,
         location=None,
     ):
-        if obs_info is not None:
-            warnings.warn(
-                "obs_info argument is deprecated since v1.2. Use meta instead.",
-                GammapyDeprecationWarning,
-            )
-            if meta is None:
-                meta = ObservationMetaData.from_header(obs_info)
-
         self.obs_id = obs_id
         self.aeff = aeff
         self.edisp = edisp
@@ -350,15 +341,6 @@ class Observation:
         which in turn is used in the exposure and flux computation.
         """
         return self.meta.deadtime_fraction
-
-    @property
-    def obs_info(self):
-        """Observation information dictionary."""
-        warnings.warn(
-            "obs_info property is deprecated since v1.2. Use meta instead.",
-            GammapyDeprecationWarning,
-        )
-        return self.meta.to_header()
 
     @property
     def pointing(self):
