@@ -10,6 +10,7 @@ from astropy.table import Table, vstack
 from gammapy.data import GTI
 from gammapy.modeling.models import DatasetModels, Models
 from gammapy.utils.scripts import make_name, make_path, read_yaml, to_yaml, write_yaml
+from gammapy.stats import prior_fit_statistic
 
 log = logging.getLogger(__name__)
 

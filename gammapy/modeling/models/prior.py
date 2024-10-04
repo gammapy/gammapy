@@ -8,7 +8,7 @@ from scipy.stats import norm, uniform
 from gammapy.modeling import PriorParameter, PriorParameters
 from .core import ModelBase
 
-__all__ = ["GaussianPrior", "UniformPrior", "Prior"]
+__all__ = ["MultiVariateGaussianPrior", "GaussianPrior", "UniformPrior", "Prior"]
 
 log = logging.getLogger(__name__)
 
@@ -132,6 +132,51 @@ class Prior(ModelBase):
         )
         kwargs["weight"] = data["weight"]
         return cls.from_parameters(priorparameters, **kwargs)
+
+
+class MultiVariateGaussianPrior(Prior):
+    """Multi-dimensional Gaussian Prior.
+    Parameters
+    ----------
+    modelparameters :
+        Meaning
+    covariance_matrix :
+        Meaning
+    """
+
+    tag = ["MultiVariateGaussianPrior"]
+    _type = "prior"
+
+    def __init__(self, modelparameters, covariance_matrix):
+        # super().__init__(modelparameters)
+        self._modelparameters = modelparameters
+        self._covariance_matrix = covariance_matrix
+
+        value = np.asanyarray(self.covariance_matrix)
+        npars = len(self._modelparameters)
+        shape = (npars, npars)
+        if value.shape != shape:
+            raise ValueError(
+                f"Invalid covariance matrix shape: {value.shape}, expected {shape}"
+            )
+
+        # Do we want this?
+        self.dimension = value.shape[-1]
+
+        for par in self._modelparameters:
+            par.prior = self
+
+    def __call__(self):
+        """Call evaluate method"""
+        return self.evaluate(self._modelparameters.value)
+
+    @property
+    def covariance_matrix(self):
+        return self._covariance_matrix
+
+    def evaluate(self, values):
+        """Evaluate the MultiVariateGaussianPrior."""
+        return values.T @ self.covariance_matrix @ values
 
 
 class GaussianPrior(Prior):

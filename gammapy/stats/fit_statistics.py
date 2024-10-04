@@ -10,6 +10,33 @@ from gammapy.stats.fit_statistics_cython import TRUNCATION_VALUE
 __all__ = ["cash", "cstat", "wstat", "get_wstat_mu_bkg", "get_wstat_gof_terms"]
 
 
+def prior_fit_statistic(priors):
+    """
+    Prior fit statistic.
+    Evaluating a list of priors.
+    Multi-dimensional priors are only counted once.
+
+    Parameters
+    ----------
+    priors : list
+        list of priors
+
+    Returns
+    -------
+    prior_stat_sum : float
+        sum of priors
+    """
+    prior_stat_sum = 0.0
+
+    if priors is not None:
+        _evaluated_priors = []
+        for prior in priors:
+            if prior not in _evaluated_priors:
+                prior_stat_sum += prior()
+                _evaluated_priors.append(prior)
+    return prior_stat_sum
+
+
 def cash(n_on, mu_on, truncation_value=TRUNCATION_VALUE):
     r"""Cash statistic, for Poisson data.
 
