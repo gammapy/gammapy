@@ -363,7 +363,7 @@ plt.show()
 # IRFs in FITS format from https://www.ctao.org/for-scientists/performance/.
 #
 # If you want to use other response files, the following code cells (remove the # to uncomment)
-# explain how to proceed. This exemple is mad for the Alpha configuration (Prod5).
+# explain how to proceed. This example is made with the Alpha configuration (Prod5).
 #
 
 # !curl -o cta-prod5-zenodo-fitsonly-v0.1.zip https://zenodo.org/records/5499840/files/cta-prod5-zenodo-fitsonly-v0.1.zip
