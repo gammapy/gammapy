@@ -251,7 +251,11 @@ def _evaluate_bkg(pointing, ontime, bkg, geom, use_region_center, obstime, d_ome
         irf=bkg,
         geom=geom,
         use_region_center=use_region_center,
-        obstime=obstime + ontime / 2,
+        #  TODO `obstime` should be provided in future versions of gammapy.
+        #  TODO Using None is deprecated. if else to be removed.
+        obstime=None
+        if obstime is None
+        else obstime + ontime / (2 * u.dimensionless_unscaled),
     )
     coords["energy"] = broadcast_axis_values_to_geom(geom, "energy", False)
 
