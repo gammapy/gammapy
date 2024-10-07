@@ -29,6 +29,7 @@ __all__ = [
 log = logging.getLogger(__name__)
 
 MINIMUM_TIME_STEP = 1 * u.s  # Minimum time step used to handle FoV rotations
+EARTH_ANGULAR_VELOCITY = 360 * u.deg / u.day
 
 
 def _get_fov_coords(pointing, irf, geom, use_region_center=True, obstime=None):
@@ -119,9 +120,8 @@ def compute_rotation_time_step(rotation, pointing_altaz):
     duration : `~astropy.units.Quantity`
         Time associated with the requested rotation.
     """
-    earth_rotation = 360 * u.deg / u.day
     denom = (
-        earth_rotation
+        EARTH_ANGULAR_VELOCITY
         * np.cos(pointing_altaz.location.lat.rad)
         * np.abs(np.cos(pointing_altaz.az.rad))
     )
