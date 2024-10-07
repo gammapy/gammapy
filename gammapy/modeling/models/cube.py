@@ -628,12 +628,12 @@ class FoVBackgroundModel(ModelBase):
 
     Parameters
     ----------
-    spectral_model : `~gammapy.modeling.models.SpectralModel`
-        Normalized spectral model.
-        Default is `~gammapy.modeling.models.PowerLawNormSpectralModel`
     dataset_name : str
         Dataset name.
-    spatial_model : `~gammapy.modeling.models.SpatialModel`
+    spectral_model : `~gammapy.modeling.models.SpectralModel`, Optional
+        Normalized spectral model.
+        Default is `~gammapy.modeling.models.PowerLawNormSpectralModel`
+    spatial_model : `~gammapy.modeling.models.SpatialModel`, Optional
         Unitless Spatial model (unit is dropped on evaluation if defined).
         Default is None.
     """
@@ -642,13 +642,13 @@ class FoVBackgroundModel(ModelBase):
 
     def __init__(
         self,
+        dataset_name,
         spectral_model=None,
-        dataset_name=None,
         spatial_model=None,
         covariance_data=None,
     ):
         if dataset_name is None:
-            raise ValueError("Dataset name a is required argument")
+            raise ValueError("Dataset name is a required argument")
 
         self.datasets_names = [dataset_name]
 
