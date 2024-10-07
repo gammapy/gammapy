@@ -19,6 +19,13 @@ There has been significant code cleanup, specially with respect to the documenta
 This release is based on numpy 1.2 and css for sphinx v15 (REPHRASE)
 
 
+API changes
+~~~~~~~~~~~
+
+No new API breaking changes have been introducted in this version.
+Fetures deprecated since Gammapy v1.2 have been removed. 
+
+
 New features
 ~~~~~~~~~~~~
 
