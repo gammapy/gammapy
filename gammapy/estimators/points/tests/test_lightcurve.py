@@ -43,7 +43,7 @@ def lc():
             Column([True, True], "success"),
         ],
     )
-    gti = GTI.create("0h", "1h", "2010-01-01T00:00:00")
+    gti = GTI.create(0 * u.h, 1 * u.h, "2010-01-01T00:00:00")
 
     return FluxPoints.from_table(table=table, gti=gti)
 
@@ -164,12 +164,12 @@ def get_spectrum_datasets():
     model = SkyModel(spectral_model=PowerLawSpectralModel())
     dataset_1 = simulate_spectrum_dataset(model=model, random_state=0)
     dataset_1._name = "dataset_1"
-    gti1 = GTI.create("0h", "1h", Time("2010-01-01T00:00:00").tt)
+    gti1 = GTI.create(0 * u.h, 1 * u.h, Time("2010-01-01T00:00:00").tt)
     dataset_1.gti = gti1
 
     dataset_2 = simulate_spectrum_dataset(model=model, random_state=1)
     dataset_2._name = "dataset_2"
-    gti2 = GTI.create("1h", "2h", Time("2010-01-01T00:00:00").tt)
+    gti2 = GTI.create(1 * u.h, 2 * u.h, Time("2010-01-01T00:00:00").tt)
     dataset_2.gti = gti2
 
     return [dataset_1, dataset_2]
@@ -571,11 +571,11 @@ def test_lightcurve_estimator_spectrum_datasets_gti_not_include_in_time_interval
 
 def get_map_datasets():
     dataset_1 = simulate_map_dataset(random_state=0, name="dataset_1")
-    gti1 = GTI.create("0 h", "1 h", "2010-01-01T00:00:00")
+    gti1 = GTI.create(0 * u.h, 1 * u.h, "2010-01-01T00:00:00")
     dataset_1.gti = gti1
 
     dataset_2 = simulate_map_dataset(random_state=1, name="dataset_2")
-    gti2 = GTI.create("1 h", "2 h", "2010-01-01T00:00:00")
+    gti2 = GTI.create(1 * u.h, 2 * u.h, "2010-01-01T00:00:00")
     dataset_2.gti = gti2
 
     model = dataset_1.models["source"].copy(name="test_source")
