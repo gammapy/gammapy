@@ -33,9 +33,6 @@ New features
 
 - Support for the 2PC and 3PC pulsar catalogs from Fermi-LAT is now added
 
-*gammapy.data*
-
-- 
 
 *gammapy.datasets*
 
@@ -61,8 +58,7 @@ New features
 - Compution of the discrete structure function for a variable source using Emmanoulopoulos et al. (2010) algorithm.
 - Computation of the discrete cross correlation function added.
 
-API changes
-~~~~~~~~~~~
+
 
 *gammapy.modeling*
 
