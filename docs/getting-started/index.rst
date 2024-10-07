@@ -45,7 +45,9 @@ environment using either conda or mamba.** Here are two methods to quickly insta
         Update existing version? Working with virtual environments? Installing a specific version? Check the advanced
         installation page.
 
-        .. button-ref:: install
+        +++
+
+        .. button-ref:: installation
             :ref-type: ref
             :click-parent:
             :color: secondary
