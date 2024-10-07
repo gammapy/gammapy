@@ -217,7 +217,35 @@ def _map_spectrum_weight(map, spectrum=None):
     return map * weights.reshape(shape.astype(int))
 
 
-def evaluate_bkg(pointing, ontime, bkg, geom, use_region_center, obstime, d_omega):
+def _evaluate_bkg(pointing, ontime, bkg, geom, use_region_center, obstime, d_omega):
+    """
+    Evaluate the background IRF on a given geometry.
+
+    Parameters
+    ----------
+    pointing :  `~gammapy.data.FixedPointingInfo` or `~astropy.coordinates.SkyCoord`
+        Observation pointing.
+    ontime : `~astropy.units.Quantity`
+        Observation ontime. i.e. not corrected for deadtime
+    bkg : `~gammapy.irf.Background3D`
+        Background rate model.
+    geom : `~gammapy.maps.WcsGeom`
+        Reference geometry.
+    use_region_center : bool, optional
+        For geom as a `~gammapy.maps.RegionGeom`. If True, consider the values at the region center.
+        If False, average over the whole region.
+        Default is True.
+    obstime : `~astropy.time.Time`
+        Observation time to use.
+    d_omega : 'astropy.units.Quantity'
+        Solid angle of the image geometry.
+
+    Returns
+    -------
+    evaluated_bkg : `numpy.ndarray`
+        Background IRF evaluated on the provided geometry
+
+    """
     coords = _get_fov_coords(
         pointing=pointing,
         irf=bkg,
@@ -295,7 +323,7 @@ def make_map_background_irf(
         image_geom = geom.to_image()
         d_omega = image_geom.solid_angle()
     if bkg.has_offset_axis or bkg.fov_alignment == FoVAlignment.RADEC:
-        data = evaluate_bkg(
+        data = _evaluate_bkg(
             pointing, ontime, bkg, geom, use_region_center, obstime, d_omega
         )
     if bkg.fov_alignment == FoVAlignment.ALTAZ:
@@ -315,7 +343,7 @@ def make_map_background_irf(
                 if steptime < endtime - obstime - MINIMUM_TIME_STEP
                 else endtime - obstime
             )
-            data += evaluate_bkg(
+            data += _evaluate_bkg(
                 pointing, steptime, bkg, geom, use_region_center, obstime, d_omega
             )
             obstime = obstime + steptime
