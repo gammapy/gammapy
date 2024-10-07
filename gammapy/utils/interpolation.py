@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Interpolation utilities."""
+
 import html
 from itertools import compress
 import numpy as np
@@ -66,8 +67,9 @@ class ScaledRegularGridInterpolator:
         values_scaled = self.scale(values)
         points_scaled = self._scale_points(points=points)
 
+        kwargs.setdefault("bounds_error", False)
+
         if extrapolate:
-            kwargs.setdefault("bounds_error", False)
             kwargs.setdefault("fill_value", None)
 
         method = kwargs.get("method", None)

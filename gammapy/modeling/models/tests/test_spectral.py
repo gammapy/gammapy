@@ -774,6 +774,18 @@ def test_template_spectral_model_compound():
     assert np.allclose(new_model(energy), 2 * values)
 
 
+def test_template_spectral_model_options():
+    energy = [1.00e06, 1.25e06, 1.58e06, 1.99e06] * u.MeV
+    values = [4.39e-7, 1.96e-7, 8.80e-7, 3.94e-7] * u.Unit("MeV-1 s-1 sr-1")
+
+    model = TemplateSpectralModel(
+        energy=energy,
+        values=values,
+        interp_kwargs={"extrapolate": True, "method": "linear"},
+    )
+    assert np.allclose(model(energy), values)
+
+
 def test_covariance_spectral_model_compound():
     model = TEST_MODELS[2]["model"] + TEST_MODELS[1]["model"]
     covar = np.eye(len(model.parameters))
@@ -1227,7 +1239,6 @@ def test_template_ND_no_energy(tmpdir):
 
 @requires_data()
 def test_template_ND_EBL(tmpdir):
-
     # TODO: add RegionNDMap.read(format="xspec")
     # Create EBL data array
     filename = "$GAMMAPY_DATA/ebl/ebl_franceschini.fits.gz"
@@ -1280,10 +1291,3 @@ def test_template_ND_EBL(tmpdir):
     assert_allclose(template_new.map.data, region_map.data)
     assert len(template.parameters) == 1
     assert_allclose(template.parameters["redshift"].value, 0.1)
-
-
-def test_is_norm_spectral_models():
-    for test_model in TEST_MODELS:
-        m = test_model["model"]
-        if m.tag[0] not in ["PiecewiseNormSpectralModel", "TemplateSpectralModel"]:
-            assert np.any([p._is_norm for p in m.parameters])

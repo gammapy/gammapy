@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Model parameter classes."""
+
 import collections.abc
 import copy
 import html
@@ -8,7 +9,6 @@ import logging
 import numpy as np
 from astropy import units as u
 from astropy.table import Table
-from gammapy.utils.deprecation import deprecated_attribute
 from gammapy.utils.interpolation import interpolation_scale
 
 __all__ = ["Parameter", "Parameters", "PriorParameter", "PriorParameters"]
@@ -93,15 +93,9 @@ class Parameter:
         Method used to set ``factor`` and ``scale``.
     interp : {"lin", "sqrt", "log"}
         Parameter scaling to use for the scan.
-    is_norm : bool
-        Whether the parameter represents the flux norm of the model.
     prior : `~gammapy.modeling.models.Prior`
         Prior set on the parameter.
     """
-
-    norm_parameters = deprecated_attribute("norm_parameters", "1.2")
-
-    is_norm = deprecated_attribute("is_norm", "1.2")
 
     def __init__(
         self,
@@ -120,7 +114,6 @@ class Parameter:
         scan_values=None,
         scale_method="scale10",
         interp="lin",
-        is_norm=False,
         prior=None,
     ):
         if not isinstance(name, str):
@@ -133,7 +126,6 @@ class Parameter:
         self.max = max
         self.frozen = frozen
         self._error = error
-        self._is_norm = is_norm
         self._type = None
 
         # TODO: move this to a setter method that can be called from `__set__` also!
@@ -459,7 +451,6 @@ class Parameter:
             "frozen": self.frozen,
             "interp": self.interp,
             "scale_method": self.scale_method,
-            "is_norm": self._is_norm,
         }
 
         if self._link_label_io is not None:
@@ -602,11 +593,6 @@ class Parameters(collections.abc.Sequence):
         return copy.deepcopy(self)
 
     @property
-    def norm_parameters(self):
-        """List of norm parameters."""
-        return self.__class__([par for par in self._parameters if par._is_norm])
-
-    @property
     def free_parameters(self):
         """List of free parameters."""
         return self.__class__([par for par in self._parameters if not par.frozen])
@@ -675,7 +661,6 @@ class Parameters(collections.abc.Sequence):
             "min": "float",
             "max": "float",
             "frozen": "bool",
-            "is_norm": "bool",
             "link": "str",
             "prior": "str",
         }

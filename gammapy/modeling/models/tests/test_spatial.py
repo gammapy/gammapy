@@ -487,6 +487,14 @@ def test_sky_diffuse_map_empty(caplog):
         )
         assert np.all(np.isfinite(model.map.data))
 
+    # model with nan
+    model_map.data[0, 0, 0] = np.nan
+    with caplog.at_level(logging.WARNING):
+        TemplateSpatialModel(model_map, normalize=True)
+        assert "Map has NaN values. Check and fix this!" in [
+            _.message for _ in caplog.records
+        ]
+
 
 @pytest.mark.parametrize("model_cls", SPATIAL_MODEL_REGISTRY)
 def test_model_from_dict(tmpdir, model_cls):

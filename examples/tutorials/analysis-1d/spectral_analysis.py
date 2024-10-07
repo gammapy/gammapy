@@ -363,7 +363,6 @@ display(result_joint.models.to_parameters_table())
 
 ax_spectrum, ax_residuals = datasets[0].plot_fit()
 ax_spectrum.set_ylim(0.1, 40)
-datasets[0].plot_masks(ax=ax_spectrum)
 plt.show()
 
 
@@ -534,7 +533,6 @@ def plot_stat(fp_dataset):
     lss = ["--", ":", "--"]
 
     for ks, stat in enumerate(stat_types):
-
         fp_dataset.stat_type = stat
 
         fit = Fit()
