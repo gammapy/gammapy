@@ -336,3 +336,6 @@ html_css_files = [
 html_context = {
     "default_mode": "light",
 }
+
+# Add-on to insert the Matomo tracker
+templates_path = ['_templates']
