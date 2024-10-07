@@ -42,7 +42,7 @@ class MapDatasetMaker(Maker):
     fov_rotation_step : `~astropy.units.Quantity`, optional
         Maximum error on the rotation angle between AltAz and RaDec frames during background evaluation.
         Used only when the Background IRF has an AltAz alignement.
-        Default is 0.5 deg.
+        Default is 1.0 deg.
 
     Examples
     --------
