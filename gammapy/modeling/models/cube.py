@@ -2,6 +2,7 @@
 """Cube models (axes: lon, lat, energy)."""
 
 import logging
+import warnings
 import os
 import numpy as np
 import astropy.units as u
@@ -14,6 +15,7 @@ from gammapy.modeling.parameter import _get_parameters_str
 from gammapy.utils.compat import COPY_IF_NEEDED
 from gammapy.utils.fits import LazyFitsData
 from gammapy.utils.scripts import make_name, make_path
+from gammapy.utils.deprecation import GammapyDeprecationWarning
 from .core import Model, ModelBase, Models
 from .spatial import ConstantSpatialModel, SpatialModel
 from .spectral import PowerLawNormSpectralModel, SpectralModel, TemplateSpectralModel
@@ -647,8 +649,16 @@ class FoVBackgroundModel(ModelBase):
         spatial_model=None,
         covariance_data=None,
     ):
-        if dataset_name is None:
-            raise ValueError("Dataset name is a required argument")
+        # TODO: remove this in v2.0
+        if isinstance(dataset_name, SpectralModel):
+            warnings.warn(
+                "dataset_name has been made a positional argument since v2.0.",
+                GammapyDeprecationWarning,
+                stacklevel=2,
+            )
+            buf = dataset_name
+            dataset_name = spectral_model
+            spectral_model = buf
 
         self.datasets_names = [dataset_name]
 
