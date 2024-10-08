@@ -36,6 +36,9 @@
 .. image:: https://img.shields.io/badge/A&A-Published-Green.svg
     :target: https://doi.org/10.1051/0004-6361/202346488
 
+.. image:: https://img.shields.io/badge/Matomo-3152A0?style=for-the-badge&logo=Matomo&logoColor=white
+    :target: https://matomo.org/
+
 Gammapy
 =======
 
