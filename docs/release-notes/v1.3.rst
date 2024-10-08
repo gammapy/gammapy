@@ -16,7 +16,7 @@ Summary
 This release introduces a number of performance improvements, new features and bug fixes.
 There has been significant code cleanup, specially with respect to the documentaion and three new tutorials have been added.
 
-This release is based on numpy 1.2 and css for sphinx v15 (REPHRASE)
+This release is compatible with numpy >=2.0. 
 
 
 API changes
