@@ -26,6 +26,8 @@
 # be accessible, and the documentation will not build correctly.
 
 import datetime
+import sys
+import os
 
 # Get configuration information from setup.cfg
 from configparser import ConfigParser
@@ -55,6 +57,8 @@ def setup(app):
 conf = ConfigParser()
 conf.read([os.path.join(os.path.dirname(__file__), "..", "setup.cfg")])
 setup_cfg = dict(conf.items("metadata"))
+
+sys.path.insert(0, os.path.dirname(__file__))
 
 linkcheck_anchors_ignore = []
 linkcheck_ignore = [
@@ -316,7 +320,7 @@ sphinx_gallery_conf = {
     "exclude_implicit_doc": {},
     "filename_pattern": r"\.py",
     "reset_modules": ("matplotlib",),
-    "within_subsection_order": FileNameSortKey,
+    "within_subsection_order": "sphinxext.TutorialExplicitOrder",
     "download_all_examples": True,
     "capture_repr": ("_repr_html_", "__repr__"),
     "nested_sections": False,
