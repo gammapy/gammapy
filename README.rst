@@ -30,6 +30,9 @@
 .. image:: https://archive.softwareheritage.org/badge/origin/https://github.com/gammapy/gammapy/
     :target: https://archive.softwareheritage.org/browse/origin/?origin_url=https://github.com/gammapy/gammapy
 
+.. image:: https://archive.softwareheritage.org/badge/swh:1:snp:11e81660a96c3252c4afa4d48b58d1d2f78ea80a/
+    :target: https://archive.softwareheritage.org/swh:1:snp:11e81660a96c3252c4afa4d48b58d1d2f78ea80a;origin=https://github.com/gammapy/gammapy
+
 .. image:: https://img.shields.io/badge/A&A-Published-Green.svg
     :target: https://doi.org/10.1051/0004-6361/202346488
 
