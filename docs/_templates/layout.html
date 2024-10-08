@@ -5,27 +5,31 @@
 # Gammapy documentation layout configuration file.
 -->
 
-{% extends "!layout.html" %}
-{% block extrahead %}
+<!DOCTYPE html>
+<html>
+ <head>
+       {{ super() }}
+       <!-- Matomo Tracking Code -->
 
-   {{ super() }}
+        <script>
+          var _paq = window._paq = window._paq || [];
+          /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
+          _paq.push(['trackPageView']);
+          _paq.push(['enableLinkTracking']);
+          (function() {
+            var u="https://apcstatview.in2p3.fr/";
+            _paq.push(['setTrackerUrl', u+'matomo.php']);
+            _paq.push(['setSiteId', '3']);
+            var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+            g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
+          })();
+        </script>
 
-   <!-- Matomo -->
+        <!-- End Matomo Code -->
+ </head>
 
-   <script>
-     var _paq = window._paq = window._paq || [];
-     /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
-     _paq.push(['trackPageView']);
-     _paq.push(['enableLinkTracking']);
-     (function() {
-     var u="https://apcstatview.in2p3.fr/";
-     _paq.push(['setTrackerUrl', u+'matomo.php']);
-     _paq.push(['setSiteId', '3']);
-     var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
-     g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
-     })();
-   </script>
+ <body>
+       {{ body }}
+</body>
 
-   <!-- End Matomo Code -->
-
-{% endblock %}
+</html>
