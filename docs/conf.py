@@ -70,6 +70,8 @@ linkcheck_ignore = [
     "https://www.hawc-observatory.org/",  # invalid certificate
     "https://ipython.org",  # invalid certificate
     "https://jupyter.org",  # invalid certificate
+    "https://hess-confluence.desy.de/confluence/display/HESS/HESS+FITS+data", # private page
+    "https://hess-confluence.desy.de/"
 ]
 
 # the buttons link to html pages which are auto-generated...
@@ -110,7 +112,7 @@ intersphinx_mapping["pandas"] = ("https://pandas.pydata.org/pandas-docs/stable/"
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns.append("_templates")
+#exclude_patterns.append("_templates") # in order to handle matomo
 exclude_patterns.append("_static")
 exclude_patterns.append("**.ipynb_checkpoints")
 exclude_patterns.append("user-guide/model-gallery/*/*.ipynb")
@@ -336,3 +338,6 @@ html_css_files = [
 html_context = {
     "default_mode": "light",
 }
+
+# Add-on to insert the Matomo tracker
+templates_path = ['_templates']
