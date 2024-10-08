@@ -55,7 +55,7 @@ New features
 *gammapy.stats*
 
 - Implementation of the Timmer-Koenig algorithm with leakage protection to simulate a time series from a power spectrum.
-- Compution of the discrete structure function for a variable source using Emmanoulopoulos et al. (2010) algorithm.
+- Computation of the discrete structure function for a variable source using Emmanoulopoulos et al. (2010) algorithm.
 - Computation of the discrete cross correlation function added.
 
 
