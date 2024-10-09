@@ -17,7 +17,7 @@ execute the following commands in the terminal:
 
 .. note::
 
-    On Linux, the optional dependency ``sherpa``isn't available.
+    On Linux, the optional dependency ``sherpa`` isn't available.
 
 .. note::
 
