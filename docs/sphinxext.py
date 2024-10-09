@@ -70,7 +70,7 @@ TUTORIAL_SORT_DICT = {
 class BaseExplicitOrder:
     """
     Base class inspired by sphinx_gallery _SortKey to customize sorting based on a
-    dictionnary. The dictionnary should contain the filename and its order in the
+    dictionary. The dictionary should contain the filename and its order in the
     subsection.
     """
 
