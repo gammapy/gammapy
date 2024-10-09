@@ -53,23 +53,27 @@ Four solutions exist:
 
 1. You add this message by hand into each of your commit messages (not recommended)
 
-2. You can sign each of your commits with the command: "``git commit -s``".
+2. You can sign each of your commits with the command: "``git commit -S``".
 
 If you have authored a commit that is missing its ‘Signed-off-by’ line, you can amend your commits and push them to
 GitHub: "``git commit --amend --no-edit --signoff``"
 (see also this `How To <https://github.com/src-d/guide/blob/master/developer-community/fix-DCO.md#how-to-add-sign-offs-retroactively>`_).
 
-3. You can make an alias of the command "``git commit -s``", e.g.
+3. You can make an alias of the command "``git commit -S``", e.g.
 
-``alias gcs 'git commit -s'``
+``alias gcs 'git commit -S'``
 
 4. You can create a so-called `git hooks` allowing to automatically sign all your commits (recommended option). This
 method is described in detail `here <https://github.com/src-d/guide/blob/master/developer-community/fix-DCO.md#how-to-prevent-missing-sign-offs-in-the-future>`_.
 
 For each of these solutions, it is **mandatory** to correctly set your `user.name` and `user.email` as part of your git
 configuration (see `this page <https://docs.github.com/en/account-and-profile/setting-up-and-managing-your-personal-account-on-github/managing-email-preferences/setting-your-commit-email-address>`_ to configure it).
-You have to use **your real name** (i.e., pseudonyms or anonymous contributions cannot be made) when using git. This is
-because the DCO is a binding document, granting the Gammapy project to be an open source project.
+You have to use **your real name** (i.e., pseudonyms or anonymous contributions cannot be made) when using git. You should
+also follow the GitHub instructions given into `this page <https://docs.github.com/en/authentication/managing-commit-signature-verification/about-commit-signature-verification#ssh-commit-signature-verification>`_
+to have a SS commit signature verification.
+
+Because the DCO is a binding document that grants the Gammapy project to be an open source project, these configurations
+are mandatory.
 
 
 Get in touch early
