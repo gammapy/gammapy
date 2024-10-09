@@ -236,8 +236,10 @@ html_theme_options = {
     },
     "navbar_end": ["version-switcher", "theme-switcher", "navbar-icon-links"],
     "navigation_with_keys": True,
-    # metadata
-    "content_footer_items": ["last-updated"],
+    # footers
+    "footer_start": ["copyright"],
+    "footer_center": ["last-updated"],
+    "footer_end": ["sphinx-version", "theme-version"]
 }
 
 
