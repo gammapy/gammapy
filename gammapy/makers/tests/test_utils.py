@@ -164,7 +164,6 @@ def bkg_3d_custom(symmetry="constant", fov_align="RADEC"):
     energy_axis = MapAxis.from_energy_edges([0.1, 10, 1000] * u.TeV)
     fov_lon_axis = MapAxis.from_edges([-3, -1, 1, 3] * u.deg, name="fov_lon")
     fov_lat_axis = MapAxis.from_edges([-3, -1, 1, 3] * u.deg, name="fov_lat")
-
     return Background3D(
         axes=[energy_axis, fov_lon_axis, fov_lat_axis],
         data=data,
@@ -331,21 +330,101 @@ def test_make_map_background_irf_skycoord(fixed_pointing_info_aligned):
 
 
 @requires_data()
-def test_make_map_background_irf_AltAz_align(fixed_pointing_info):
+def test_make_map_background_irf_altaz_align(fixed_pointing_info):
     axis = MapAxis.from_edges([0.1, 1, 10], name="energy", unit="TeV", interp="log")
     obstime = Time("2020-01-01T20:00:00")
-    make_map_background_irf(
+    map_long_altaz = make_map_background_irf(
+        pointing=fixed_pointing_info,
+        ontime="42000 s",
+        bkg=bkg_3d_custom("asymmetric", "ALTAZ"),
+        geom=WcsGeom.create(
+            npix=(10, 10),
+            binsz=0.1,
+            axes=[axis],
+            skydir=fixed_pointing_info.get_icrs(obstime),
+        ),
+        fov_rotation_step=20.0 * u.deg,
+        obstime=obstime,
+    )
+    map_short_altaz = make_map_background_irf(
         pointing=fixed_pointing_info,
         ontime="42 s",
         bkg=bkg_3d_custom("asymmetric", "ALTAZ"),
         geom=WcsGeom.create(
-            npix=(3, 3),
-            binsz=4,
+            npix=(10, 10),
+            binsz=0.1,
             axes=[axis],
             skydir=fixed_pointing_info.get_icrs(obstime),
         ),
-        fov_rotation_step=1.0 * u.deg,
+        fov_rotation_step=20.0 * u.deg,
+        obstime=obstime + "20979 s",
+    )
+    map_long_radec = make_map_background_irf(
+        pointing=fixed_pointing_info,
+        ontime="42000 s",
+        bkg=bkg_3d_custom("asymmetric", "RADEC"),
+        geom=WcsGeom.create(
+            npix=(10, 10),
+            binsz=0.1,
+            axes=[axis],
+            skydir=fixed_pointing_info.get_icrs(obstime),
+        ),
+        fov_rotation_step=20.0 * u.deg,
         obstime=obstime,
+    )
+    map_short_altaz_norotation = make_map_background_irf(
+        pointing=fixed_pointing_info,
+        ontime="42 s",
+        bkg=bkg_3d_custom("asymmetric", "ALTAZ"),
+        geom=WcsGeom.create(
+            npix=(10, 10),
+            binsz=0.1,
+            axes=[axis],
+            skydir=fixed_pointing_info.get_icrs(obstime),
+        ),
+        fov_rotation_step=360.0 * u.deg,
+        obstime=obstime + "20979 s",
+    )
+    map_altaz_long_norotation = make_map_background_irf(
+        pointing=fixed_pointing_info,
+        ontime="42000 s",
+        bkg=bkg_3d_custom("asymmetric", "ALTAZ"),
+        geom=WcsGeom.create(
+            npix=(10, 10),
+            binsz=0.1,
+            axes=[axis],
+            skydir=fixed_pointing_info.get_icrs(obstime),
+        ),
+        fov_rotation_step=360.0 * u.deg,
+        obstime=obstime,
+    )
+    # Check that background normalisations are consistent
+    assert np.isclose(
+        np.sum(map_long_altaz.data), np.sum(map_long_radec.data), rtol=1e-2
+    )
+    assert np.isclose(
+        np.sum(map_long_altaz.data), 1000 * np.sum(map_short_altaz.data), rtol=1e-2
+    )
+    # Check that results differ when considering short and long observations with
+    # AltAz aligned IRFs
+    assert not np.all(
+        np.isclose(map_long_altaz.data / map_short_altaz.data, 1000, rtol=1e-2)
+    )
+    # Check that results differ when considering RaDec or AltAz aligned IRFs
+    assert not np.all(
+        np.isclose(map_long_altaz.data / map_long_radec.data, 1, rtol=1e-2)
+    )
+    assert not np.all(
+        np.isclose(map_long_radec.data / map_short_altaz.data, 1000, rtol=1e-2)
+    )
+    # Check that results are independent of the observation duration with AltAz
+    # aligned IRFs when the FoV rotation is ignored
+    assert np.all(
+        np.isclose(
+            map_altaz_long_norotation.data / map_short_altaz_norotation.data,
+            1000,
+            rtol=1e-5,
+        )
     )
 
 
