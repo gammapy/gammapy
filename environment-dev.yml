@@ -77,7 +77,6 @@ dependencies:
   - pyinstrument
   - memray
   - pip:
-      - sherpa
       - pytest-sphinx
       - ray[default]>=2.9
       - PyGithub
