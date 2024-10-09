@@ -140,10 +140,11 @@ result_scipy = fit_scipy.run(datasets)
 #   page https://cxc.cfa.harvard.edu/sherpa/methods/opt_methods.html
 #
 
+# Uncomment the following line if Sherpa is installed
 # %%time
-sherpa_opts = {"method": "simplex", "ftol": 1e-3, "maxfev": int(1e4)}
-fit_sherpa = Fit(store_trace=True, backend="sherpa", optimize_opts=sherpa_opts)
-results_simplex = fit_sherpa.run(datasets)
+# sherpa_opts = {"method": "simplex", "ftol": 1e-3, "maxfev": int(1e4)}
+# fit_sherpa = Fit(store_trace=True, backend="sherpa", optimize_opts=sherpa_opts)
+# results_simplex = fit_sherpa.run(datasets)
 
 
 ######################################################################
@@ -184,7 +185,7 @@ print(result_scipy)
 
 # %%
 
-print(results_simplex)
+# print(results_simplex)
 
 # %%
 
