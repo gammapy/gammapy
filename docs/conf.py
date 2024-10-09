@@ -116,7 +116,7 @@ intersphinx_mapping["pandas"] = ("https://pandas.pydata.org/pandas-docs/stable/"
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-#exclude_patterns.append("_templates") # in order to handle matomo
+exclude_patterns.append("_templates") # in order to handle matomo
 exclude_patterns.append("_static")
 exclude_patterns.append("**.ipynb_checkpoints")
 exclude_patterns.append("user-guide/model-gallery/*/*.ipynb")
@@ -344,4 +344,4 @@ html_context = {
 }
 
 # Add-on to insert the Matomo tracker
-templates_path = ['_templates']
+#templates_path = ['_templates']

@@ -67,6 +67,12 @@ TUTORIAL_SORT_DICT = {
 }
 
 
+sort_dict_datasets = {
+        "analysis_3d.py": 0,
+        "analysis_1.py": 1,
+}
+
+
 class BaseExplicitOrder:
     """
     Base class inspired by sphinx_gallery _SortKey to customize sorting based on a
@@ -80,12 +86,6 @@ class BaseExplicitOrder:
     def __repr__(self):
         return f"<{self.__class__.__name__}>"
 
-    def __call__(self, filename):
-        if filename in self.sort_dict.keys():
-            return self.sort_dict.get(filename)
-        else:
-            return 0
-
 
 class TutorialExplicitOrder(BaseExplicitOrder):
     """
@@ -94,4 +94,8 @@ class TutorialExplicitOrder(BaseExplicitOrder):
 
     sort_dict = TUTORIAL_SORT_DICT
 
-
+    def __call__(self, filename):
+        if filename in self.sort_dict.keys():
+            return self.sort_dict.get(filename)
+        else:
+            return 0
