@@ -17,7 +17,8 @@ execute the following commands in the terminal:
 
 .. note::
 
-    On Linux, the optional dependency ``sherpa`` isn't available.
+    On Linux, the optional dependency ``sherpa`` isn't installed by default.
+    If required, it can be installed with `conda install -c https://cxc.cfa.harvard.edu/conda/sherpa -c conda-forge sherpa`
 
 .. note::
 
