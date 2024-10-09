@@ -13,9 +13,11 @@ execute the following commands in the terminal:
 
 .. note::
 
-    On Windows, you have to open up the conda environment file and delete the
-    lines with ``sherpa`` and ``healpy``. Those are optional dependencies that
-    currently aren't available on Windows.
+    On Windows, the optional dependencies ``sherpa`` and ``healpy`` aren't available.
+
+.. note::
+
+    On Linux, the optional dependency ``sherpa``isn't available.
 
 .. note::
 
