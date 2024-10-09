@@ -1,8 +1,21 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
+import logging
+import importlib
 from .likelihood import Likelihood
 
+log = logging.getLogger(__name__)
+
 __all__ = ["optimize_sherpa", "covariance_sherpa"]
+
+
+def is_sherpa_available():
+    """Check if ray is available."""
+    try:
+        importlib.import_module("sherpa")
+        return True
+    except ModuleNotFoundError:
+        return False
 
 
 def get_sherpa_optimizer(name):
@@ -46,6 +59,16 @@ def optimize_sherpa(parameters, function, store_trace=False, **kwargs):
     result : (factors, info, optimizer)
         Tuple containing the best fit factors, some information and the optimizer instance.
     """
+    if not is_sherpa_available():
+        log.warning("Sherpa is not installed.")
+        info = {
+            "success": False,
+            "message": "Failed",
+            "nfev": 0,
+            "trace": None,
+        }
+        return None, info, None
+
     method = kwargs.pop("method", "simplex")
     optimizer = get_sherpa_optimizer(method)
     optimizer.config.update(kwargs)
