@@ -39,7 +39,7 @@ dependencies:
   - requests
   - tqdm
   # extra dependencies
-  - sherpa=4.16
+  - sherpa
   - healpy
   - ipython
   - jupyter
