@@ -324,6 +324,7 @@ sphinx_gallery_conf = {
     "filename_pattern": r"\.py",
     "reset_modules": ("matplotlib",),
     "within_subsection_order": "sphinxext.TutorialExplicitOrder",
+    "minigallery_sort_order": "sphinxext.mini_gallery_explicit_order",
     "download_all_examples": True,
     "capture_repr": ("_repr_html_", "__repr__"),
     "nested_sections": False,
