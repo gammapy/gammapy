@@ -257,7 +257,6 @@ print(results[0].models)
 
 
 def create_table(time_intervals, fit_result):
-
     t = QTable()
 
     t["tstart"] = np.array(time_intervals).T[0]
