@@ -39,7 +39,6 @@ dependencies:
   - requests
   - tqdm
   # extra dependencies
-  - sherpa
   - healpy
   - ipython
   - jupyter
@@ -78,6 +77,7 @@ dependencies:
   - pyinstrument
   - memray
   - pip:
+      - sherpa>=4.17
       - pytest-sphinx
       - ray[default]>=2.9
       - PyGithub
