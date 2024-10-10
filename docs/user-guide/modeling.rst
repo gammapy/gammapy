@@ -49,8 +49,16 @@ Gammapy provides an easy interface to :ref:`custom-model`.
 Using gammapy.modeling
 ----------------------
 
-.. minigallery:: gammapy.modeling.Fit
-    :add-heading:
+.. minigallery::
+
+    ../examples/tutorials/api/fitting.py
+    ../examples/tutorials/api/models.py
+    ../examples/tutorials/api/model_management.py
+    ../examples/tutorials/analysis-1d/spectral_analysis.py
+    ../examples/tutorials/analysis-3d/analysis_3d.py
+    ../examples/tutorails/analysis-3d/analysis_mwl.py
+    ../examples/tutorials/analysis-1d/sed_fitting.py
+    ../examples/tutorials/api/priors.py
 
 .. include:: ../references.txt
 

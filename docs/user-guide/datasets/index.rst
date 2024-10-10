@@ -243,6 +243,14 @@ Using gammapy.datasets
 ----------------------
 
 .. minigallery::
-    :add-heading:
+    :add-heading: Examples using `~gammapy.datasets.MapDataset`
+
+    ../examples/tutorials/starting/analysis_1.py
+    ../examples/tutorials/analysis-3d/analysis_3d.py
+
+
+.. minigallery::
+    :add-heading: Examples using `~gammapy.datasets.SpectrumDataset`
 
     ../examples/tutorials/analysis-1d/spectral_analysis.py
+    ../examples/tutorials/analysis-1d/spectral_analysis_hli.py
