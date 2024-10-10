@@ -9,7 +9,7 @@ name: gammapy-dev
 
 channels:
   - conda-forge
-  - sherpa
+  - https://cxc.cfa.harvard.edu/conda/sherpa
 
 variables:
   PYTHONNOUSERSITE: "1"
