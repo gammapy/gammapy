@@ -407,9 +407,14 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         )
 
         fmt = "{:<45s} : {:.3f} +- {:.3f}\n"
-        ss += fmt.format(
-            "Spectral index", d[tag + "_Index"], d["Unc_" + tag + "_Index"]
-        )
+        if f"{tag}_ExpfactorS" in d:
+            ss += fmt.format(
+                "Spectral index", d[tag + "_IndexS"], d["Unc_" + tag + "_IndexS"]
+            )
+        else:
+            ss += fmt.format(
+                "Spectral index", d[tag + "_Index"], d["Unc_" + tag + "_Index"]
+            )
 
         fmt = "{:<45s} : {:.3} +- {:.3} {}\n"
         ss += fmt.format(
