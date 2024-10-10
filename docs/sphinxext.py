@@ -66,11 +66,82 @@ TUTORIAL_SORT_DICT = {
         "survey_map.py": 0,
 }
 
-
-sort_dict_datasets = {
-        "analysis_3d.py": 0,
+MINIGALLERY_SORT_DICT = {
+    "dl3": {
+        "overview.py": 0,
         "analysis_1.py": 1,
+        "observation_clustering.py": 2,
+    },
+    "irf": {
+        "irfs.py": 0,
+        "cta_sensitivity.py": 1,
+    },
+    "makers": {
+        "makers.py": 0,
+        "spectral_analysis.py": 1,
+        "spectral_analysis_rad_max.py": 2,
+        "extended_source_spectral_analysis.py": 3,
+        "analysis_1.py": 4,
+        "hawc.py": 5,
+    },
+    "maps": {
+        "maps.py": 0,
+        "mask_maps.py": 1
+    },
+    "datasets":  {
+        "analysis_1.py": 0,
+        "analysis_3d.py": 1,
+        "spectral_analysis.py": 2,
+        "spectral_analysis_hli.py": 3,
+    },
+    "modeling": {
+        "fitting.py": 0,
+        "model.py": 1,
+        "model_management.py": 2,
+        "spectral_analysis.py": 3,
+        "analysis_3d.py": 4,
+        "analysis_mwl.py": 5,
+        "sed_fitting.py": 6,
+        "priors.py": 7,
+    },
+    "estimators": {
+        "estimators.py": 0,
+        "spectral_analysis.py": 1,
+        "analysis_mwl.py": 2,
+        "light_curve.py": 3,
+        "light_curve_flare": 4,
+    }
 }
+
+
+MINIGALLERY_SORT_DICT_TEST = {
+    "dl3": {
+        "overview.py": 0,
+        "analysis_1.py": 1,
+        "observation_clustering.py": 2,
+    },
+    "irf": {
+        "irfs.py": 0,
+        "cta_sensitivity.py": 1,
+    }
+}
+
+MINIGALLERY_SORT_DICT_LIST_TEST = [
+    {
+        "makers.py": 0,
+        "spectral_analysis.py": 1,
+        "spectral_analysis_rad_max.py": 2,
+        "extended_source_spectral_analysis.py": 3,
+        "analysis_1.py": 4,
+        "hawc.py": 5,
+     },
+    {
+        "analysis_1.py": 0,
+        "analysis_3d.py": 1,
+        "spectral_analysis.py": 2,
+        "spectral_analysis_hli.py": 3,
+    }
+]
 
 
 class BaseExplicitOrder:
@@ -79,9 +150,6 @@ class BaseExplicitOrder:
     dictionary. The dictionary should contain the filename and its order in the
     subsection.
     """
-
-    def __init__(self, src_dir):
-        self.src_dir = src_dir
 
     def __repr__(self):
         return f"<{self.__class__.__name__}>"
@@ -92,6 +160,9 @@ class TutorialExplicitOrder(BaseExplicitOrder):
     Class that handle the ordering of the tutorials in each gallery subsection.
     """
 
+    def __init__(self, src_dir):
+        self.src_dir = src_dir
+
     sort_dict = TUTORIAL_SORT_DICT
 
     def __call__(self, filename):
@@ -99,3 +170,16 @@ class TutorialExplicitOrder(BaseExplicitOrder):
             return self.sort_dict.get(filename)
         else:
             return 0
+
+
+class MiniGalleryExplicitOrder(BaseExplicitOrder):
+
+    sort_dict_list = MINIGALLERY_SORT_DICT_LIST_TEST
+    count = 0
+
+    def __call__(self, path):
+        self.counts += 1
+        return self.sort_dict_list[self.counts - 1].get(path.split('/')[-1])
+
+
+mini_gallery_explicit_order = MiniGalleryExplicitOrder()
