@@ -25,12 +25,12 @@ using Poisson probability distribution.
 This can be done to check the feasibility of a measurement, to test
 whether fitted parameters really provide a good fit to the data etc.
 
-Here we will see how to perform a 1D spectral simulation of a CTA
+Here we will see how to perform a 1D spectral simulation of a CTAO
 observation, in particular, we will generate OFF observations following
-the template background stored in the CTA IRFs.
+the template background stored in the CTAO IRFs.
 
 **Objective: simulate a number of spectral ON-OFF observations of a
-source with a power-law spectral model with CTA using the CTA 1DC
+source with a power-law spectral model with CTAO using the CTA 1DC
 response, fit them with the assumed spectral model and check that the
 distribution of fitted parameters is consistent with the input values.**
 

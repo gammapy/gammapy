@@ -28,7 +28,7 @@ proceeding.
 
 Once the data has been reduced to a MapDataset, there are no differences
 in the way that HAWC data is handled with respect to data from any other
-observatory, such as H.E.S.S. or CTA.
+observatory, such as H.E.S.S. or CTAO.
 
 
 HAWC data access and reduction

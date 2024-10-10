@@ -2,12 +2,12 @@
 Point source sensitivity
 ========================
 
-Estimate the CTA sensitivity for a point-like IRF at a fixed zenith angle and fixed offset.
+Estimate the CTAO sensitivity for a point-like IRF at a fixed zenith angle and fixed offset.
 
 Introduction
 ------------
 
-This notebook explains how to estimate the CTA sensitivity for a
+This notebook explains how to estimate the CTAO sensitivity for a
 point-like IRF at a fixed zenith angle and fixed offset, using the full
 containment IRFs distributed for the CTA 1DC. The significance is
 computed for a 1D analysis (ON-OFF regions) with the Li&Ma formula.
@@ -81,7 +81,7 @@ empty_dataset = SpectrumDataset.create(geom=geom, energy_axis_true=energy_axis_t
 # Load IRFs and prepare dataset
 # -----------------------------
 #
-# We extract the 1D IRFs from the full 3D IRFs provided by CTA.
+# We extract the 1D IRFs from the full 3D IRFs provided by CTAO.
 #
 
 irfs = load_irf_dict_from_file(
@@ -153,7 +153,7 @@ dataset_on_off = SpectrumDatasetOnOff.from_spectrum_dataset(
 #
 # We assume an alpha of 0.2 (ratio between ON and OFF area). We then run the sensitivity estimator.
 #
-# These are the conditions imposed in standard CTA sensitivity computations.
+# These are the conditions imposed in standard CTAO sensitivity computations.
 
 sensitivity_estimator = SensitivityEstimator(
     gamma_min=10,

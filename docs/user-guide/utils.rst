@@ -39,12 +39,12 @@ In Gammapy, `astropy.time.Time` objects are used to represent times:
 Note that Astropy chose ``format='isot'`` and ``scale='utc'`` as default and in
 Gammapy these are also the recommended format and time scale.
 
-.. warning::
+.. .. warning::
 
-   Actually what's written here is not true. In CTA it hasn't been decided if
+..   Actually what's written here is not true. In CTAO, it hasn't been decided if
    times will be in ``utc`` or ``tt`` (terrestrial time) format.
 
-   Here's a reminder that this needs to be settled / updated:
+..   Here's a reminder that this needs to be settled / updated:
    https://github.com/gammapy/gammapy/issues/284
 
 

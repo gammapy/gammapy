@@ -42,7 +42,7 @@ the Gammapy API are explained in more detail in the following.
     Fig. 1 Data flow and sub-package structure of Gammapy. The folder icons
     represent the corresponding sub-packages. The direction of the
     the data flow is illustrated with shaded arrows. The top section
-    shows the data levels as defined by `CTA`_.
+    shows the data levels as defined by `CTAO`_.
 
 Analysis steps
 --------------

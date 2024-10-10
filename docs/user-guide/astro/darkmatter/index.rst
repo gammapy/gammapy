@@ -84,7 +84,7 @@ gamLike
 `GamLike`_ contains likelihood functions for most leading gamma-ray indirect
 searches for dark matter, including Fermi-LAT observations of dwarfs and the
 Galactic Centre (GC), HESS observations of the GC, and projected sensitivities
-for CTA observations of the GC. It is released in tandem with the `GAMBIT`_
+for CTAO observations of the GC. It is released in tandem with the `GAMBIT`_
 module `DarkBit`_.  DarkBit can be used for directly computing observables and
 likelihoods, for any combination of parameter values in some underlying
 particle model.

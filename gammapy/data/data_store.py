@@ -197,11 +197,6 @@ class DataStore:
         - ``CALDB`` (example: ``CALDB = 1dc``)
         - ``IRF`` (example: ``IRF = South_z20_50h``)
 
-        This method is useful specifically if you want to load data simulated
-        with `ctobssim`_.
-
-        .. _ctobssim: http://cta.irap.omp.eu/ctools/users/reference_manual/ctobssim.html
-
         Parameters
         ----------
         events_paths : list of str or `~pathlib.Path`
@@ -732,7 +727,6 @@ class DataStoreMaker:
         yield dict(HDU_TYPE="bkg", HDU_CLASS="bkg_3d", HDU_NAME="BACKGROUND", **info)
 
 
-# TODO: load IRF file, and infer HDU_CLASS from IRF file contents!
 class CalDBIRF:
     """Helper class to work with IRFs in CALDB format."""
 

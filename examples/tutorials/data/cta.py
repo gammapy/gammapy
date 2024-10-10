@@ -1,58 +1,58 @@
 """
-CTA with Gammapy
-================
+CTAO with Gammapy
+=================
 
-Access and inspect CTA data and instrument response functions (IRFs) using Gammapy.
+Access and inspect CTAO data and instrument response functions (IRFs) using Gammapy.
 
 Introduction
 ------------
 
-The `Cherenkov Telescope Array
-(CTA) <https://www.cta-observatory.org/>`__ is the next generation
+The `Cherenkov Telescope Array Observatory (CTAO) <https://www.ctao.org/>`__ is the next generation
 ground-based observatory for gamma-ray astronomy. Gammapy is the core
-library for the Cherenkov Telescope Array (CTA) science tools
+library for the Cherenkov Telescope Array Observatory (CTAO) science tools
 (`2017ICRC…35..766D <https://ui.adsabs.harvard.edu/abs/2017ICRC...35..766D>`__
 and `CTAO Press
-Release <https://www.cta-observatory.org/ctao-adopts-the-gammapy-software-package-for-science-analysis/>`__).
+Release <https://www.ctao.org/news/ctao-adopts-the-gammapy-software-package-for-science-analysis/>`__).
 
-CTA will start taking data in the coming years. For now, to learn how to
-analyse CTA data and to use Gammapy, if you are a member of the CTA
-consortium, you can use the simulated dataset from the CTA first data
-challenge which ran in 2017 and 2018.
+CTAO will start taking data in the coming years. For now, to learn how to
+analyse CTAO data and to use Gammapy, if you are a member of the CTAO
+consortium, you can use the simulated dataset from:
 
--  https://forge.in2p3.fr/projects/data-challenge-1-dc-1/wiki (CTA
-   internal)
+- the CTA first data challenge which ran in 2017 and 2018 (https://forge.in2p3.fr/projects/data-challenge-1-dc-1/wiki),
+- the CTAO Science Data Challenge of 2024 (https://ctaoobservatory.sharepoint.com/:f:/r/sites/share-open-data/Shared%20Documents/Reference%20datasets/Internal%20Science%20Data%20Challenge?csf=1&web=1&e=gNuFzI)
 
 Gammapy fully supports the FITS data formats (events, IRFs) used in CTA
-1DC. The XML sky model format is not supported, but are also not needed
+1DC and SDC. The XML sky model format is not supported, but are also not needed
 to analyse the data, you have to specify your model via the Gammapy YAML
 model format, or Python code, as shown below.
 
-You can use Gammapy to simulate CTA data and evaluate CTA performance
-using the CTA response files available here:
+You can also use Gammapy to simulate CTAO data and evaluate CTAO performance
+using the CTAO response files. Two sets of responses are available for different
+array layouts:
 
--  https://www.cta-observatory.org/science/cta-performance/
+- the Omega configuration (prod3b, 2016):  https://zenodo.org/records/5163273,
+- the Alpha configuration (prod5, 2021): https://zenodo.org/records/5499840.
 
-The current FITS format `CTA-Performance-prod3b-v2-FITS.tar` is fully
-supported by Gammapy, as shown below.
+They are all fully supported by Gammapy.
+
 
 Tutorial overview
 -----------------
 
-This notebook shows how to access CTA data and instrument response
+This notebook shows how to access CTAO data and instrument response
 functions (IRFs) using Gammapy, and gives some examples how to quick
-look the content of CTA files, especially to see the shape of CTA IRFs.
+look the content of CTAO files, especially to see the shape of CTAO IRFs.
 
 At the end of the notebooks, we give several links to other tutorial
-notebooks that show how to simulate CTA data and how to evaluate CTA
-observability and sensitivity, or how to analyse CTA data.
+notebooks that show how to simulate CTAO data and how to evaluate CTAO
+observability and sensitivity, or how to analyse CTAO data.
 
-Note that the FITS data and IRF format currently used by CTA is the one
+Note that the FITS data and IRF format currently used by CTAO is the one
 documented at https://gamma-astro-data-formats.readthedocs.io/, and is
-also used by H.E.S.S. and other imaging atmospheric Cherenkov telescopes
+also used by H.E.S.S. and other Imaging Atmospheric Cherenkov Telescopes
 (IACTs). So if you see other Gammapy tutorials using e.g. H.E.S.S.
-example data, know that they also apply to CTA, all you have to do is to
-change the loaded data or IRFs to CTA.
+example data, know that they also apply to CTAO, all you have to do is to
+change the loaded data or IRFs to CTAO.
 
 Setup
 -----
@@ -95,18 +95,18 @@ check_tutorials_setup()
 # After download, follow the instructions how to `untar` the files, and
 # set a `CTADATA` environment variable to point to the data.
 #
-# For convenience, since the 1DC data files are large, and not publicly
+# **For convenience**, since the 1DC data files are large and not publicly
 # available to anyone, we have taken a tiny subset of the CTA 1DC data,
 # four observations with the southern array from the GPS survey, pointing
-# near the Galactic center, and included them at `$GAMMAPY_DATA/cta-1dc`
+# near the Galactic center, and **included them at `$GAMMAPY_DATA/cta-1dc`**
 # which you get via `gammapy download datasets`.
 #
 # Files
 # ~~~~~
 #
 # Next we will show a quick overview of the files and how to load them,
-# and some quick look plots showing the shape of the CTA IRFs. How to do
-# CTA simulations and analyses is shown in other tutorials, see links at
+# and some quick look plots showing the shape of the CTAO IRFs. How to do
+# CTAO simulations and analyses is shown in other tutorials, see links at
 # the end of this notebook.
 #
 
@@ -164,9 +164,9 @@ print(observation)
 # equivalently via the `~gammapy.data.EventList` class by specifying the
 # EVENTS filename.
 #
-# The quick-look `events.peek()` plot below shows that CTA has a field
+# The quick-look `events.peek()` plot below shows that CTAO has a field
 # of view of a few degrees, and two energy thresholds, one significantly
-# below 100 GeV where the CTA large-size telescopes (LSTs) detect events,
+# below 100 GeV where the CTAO large-size telescopes (LSTs) detect events,
 # and a second one near 100 GeV where the mid-sized telescopes (MSTs)
 # start to detect events.
 #
@@ -206,7 +206,7 @@ plt.show()
 # IRFs
 # ----
 #
-# The CTA instrument response functions (IRFs) are given as FITS files in
+# The CTAO instrument response functions (IRFs) are given as FITS files in
 # the `caldb` folder, the following IRFs are available:
 #
 # -  effective area
@@ -216,12 +216,12 @@ plt.show()
 #
 # Notes:
 #
-# -  The IRFs contain the energy and offset dependence of the CTA response
-# -  CTA 1DC was based on an early version of the CTA FITS responses
+# -  The IRFs contain the energy and offset dependence of the CTAO response
+# -  CTA 1DC was based on an early version of the CTAO FITS responses
 #    produced in 2017, improvements have been made since.
 # -  The point spread function was approximated by a Gaussian shape
 # -  The background is from hadronic and electron air shower events that
-#    pass CTA selection cuts. It was given as a function of field of view
+#    pass CTAO selection cuts. It was given as a function of field of view
 #    coordinates, although it is radially symmetric.
 # -  The energy dispersion in CTA 1DC is noisy at low energy, leading to
 #    unreliable spectral points for some analyses.
@@ -355,28 +355,28 @@ plt.show()
 
 
 ######################################################################
-# CTA performance files
-# ---------------------
+# Latest CTAO performance files
+# -----------------------------
 #
-# CTA 1DC is useful to learn how to analyse CTA data. But to do
-# simulations and studies for CTA now, you should get the most recent CTA
-# IRFs in FITS format from
-# https://www.cta-observatory.org/science/cta-performance/
+# CTA 1DC is useful to learn how to analyse CTAO data. But to do
+# simulations and studies for CTAO now, you should get the most recent CTAO
+# IRFs in FITS format from https://www.ctao.org/for-scientists/performance/.
 #
-# If you want to run the download and examples in the next code cells,
-# remove the # to uncomment.
+# If you want to use other response files, the following code cells (remove the # to uncomment)
+# explain how to proceed. This example is made with the Alpha configuration (Prod5).
 #
 
-# !curl -O https://www.cta-observatory.org/wp-content/uploads/2019/04/CTA-Performance-prod3b-v2-FITS.tar.gz
+# !curl -o cta-prod5-zenodo-fitsonly-v0.1.zip https://zenodo.org/records/5499840/files/cta-prod5-zenodo-fitsonly-v0.1.zip
+# !unzip cta-prod5-zenodo-fitsonly-v0.1.zip
+# !ls fits/
 
-# !tar xf CTA-Performance-prod3b-v2-FITS.tar.gz
+# !tar xf fits/CTA-Performance-prod5-v0.1-South-40deg.FITS.tar.gz -C fits/.
+# !ls fits/*.fits.gz
 
-# !ls caldb/data/cta/prod3b-v2/bcf
-
-# irfs1 = load_irf_dict_from_file("caldb/data/cta/prod3b-v2/bcf/South_z20_50h/irf_file.fits")
+# irfs1 = load_irf_dict_from_file("fits/Prod5-South-40deg-SouthAz-14MSTs37SSTs.180000s-v0.1.fits.gz")
 # irfs1["aeff"].plot_energy_dependence()
 
-# irfs2 = load_irf_dict_from_file("caldb/data/cta/prod3b-v2/bcf/South_z40_50h/irf_file.fits")
+# irfs2 = load_irf_dict_from_file("fits/Prod5-South-40deg-SouthAz-14MSTs37SSTs.1800s-v0.1.fits.gz")
 # irfs2["aeff"].plot_energy_dependence()
 
 
@@ -391,11 +391,11 @@ plt.show()
 # -  Use `~gammapy.data.EventList.pointing_radec` to find the pointing position of this
 #    observation, and use `astropy.coordinates.SkyCoord` methods to find
 #    the field of view offset of the highest-energy event.
-# -  What is the effective area and PSF 68% containment radius of CTA at 1
+# -  What is the effective area and PSF 68% containment radius of CTAO at 1
 #    TeV for the `South_z20_50h` configuration used for the CTA 1DC
 #    simulation?
-# -  Get the latest CTA FITS performance files from
-#    https://www.cta-observatory.org/science/cta-performance/ and run the
+# -  Get the latest CTAO FITS performance files from
+#    https://www.ctao.org/for-scientists/performance/ and run the
 #    code example above. Make an effective area ratio plot of 40 deg
 #    zenith versus 20 deg zenith for the `South_z40_50h` and
 #    `South_z20_50h` configurations.
@@ -412,7 +412,7 @@ plt.show()
 #    :doc:`/tutorials/starting/analysis_1` and
 #    :doc:`/tutorials/starting/analysis_2` or any other
 #    Gammapy analysis tutorial.
-# -  Learn how to evaluate CTA observability and sensitivity with
+# -  Learn how to evaluate CTAO observability and sensitivity with
 #    :doc:`/tutorials/analysis-3d/simulate_3d`,
 #    :doc:`/tutorials/analysis-1d/spectrum_simulation`
 #    or :doc:`/tutorials/analysis-1d/cta_sensitivity`.
