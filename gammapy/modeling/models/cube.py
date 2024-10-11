@@ -652,7 +652,7 @@ class FoVBackgroundModel(ModelBase):
         # TODO: remove this in v2.0
         if isinstance(dataset_name, SpectralModel):
             warnings.warn(
-                "dataset_name has been made a positional argument since v2.0.",
+                "dataset_name has been made a positional argument since v1.3.",
                 GammapyDeprecationWarning,
                 stacklevel=2,
             )
