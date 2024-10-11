@@ -19,7 +19,7 @@ class DatasetsActor(Datasets):
 
     Parameters
     ----------
-    datasets : `Datasets`
+    datasets : `~gammapy.datasets.Datasets`
         Datasets
     """
 
@@ -27,7 +27,7 @@ class DatasetsActor(Datasets):
         from ray import get
 
         log.warning(
-            "Gammapy support for parallelisation with ray is still a prototype and is not fully functional."
+            "Gammapy support for parallelization with ray is still a prototype and is not fully functional."
         )
 
         if datasets is not None:
@@ -128,12 +128,12 @@ class MapDatasetActor(RayFrontendMixin):
 
     Parameters
     ----------
-    dataset : `MapDataset`
+    dataset : `~gammapy.datasets.MapDataset`
         MapDataset
     """
 
     _mutable_attr = ["models", "mask_fit"]
-    _local_attr = ["name"]  # immutable small enough to keep and acces locally
+    _local_attr = ["name"]  # immutable small enough to keep and access locally
     _public_attr = [key for key in dir(MapDataset) if not key.startswith("__")]
 
     def __init__(self, dataset):
@@ -216,7 +216,7 @@ class _MapDatasetActorBackend(MapDataset, RayBackendMixin):
 
     Parameters
     ----------
-    dataset : `MapDataset`
+    dataset : `~gammapy.datasets.MapDataset`
         MapDataset
     """
 

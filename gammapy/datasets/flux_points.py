@@ -51,9 +51,9 @@ class FluxPointsDataset(Dataset):
         Models (only spectral part needs to be set).
     data : `~gammapy.estimators.FluxPoints`
         Flux points. Must be sorted along the energy axis.
-    mask_fit : `numpy.ndarray`
+    mask_fit : `~numpy.ndarray`
         Mask to apply for fitting.
-    mask_safe : `numpy.ndarray`
+    mask_safe : `~numpy.ndarray`
         Mask defining the safe data range. By default, upper limit values are excluded.
     meta_table : `~astropy.table.Table`
         Table listing information on observations used to create the dataset.
@@ -71,7 +71,7 @@ class FluxPointsDataset(Dataset):
                     https://iopscience.iop.org/article/10.1088/0004-637X/773/2/168/pdf
 
         Default is `chi2`, in that case upper limits are ignored and the mean of asymetrics error is used.
-        However it is recommended to use `profile` if `stat_scan` is available on flux points.
+        However, it is recommended to use `profile` if `stat_scan` is available on flux points.
         The `distrib` case provides an approximation if the profile is not available.
     stat_kwargs : dict
         Extra arguments specifying the interpolation scheme of the likelihood profile.
@@ -269,7 +269,7 @@ class FluxPointsDataset(Dataset):
             Name of the new dataset. Default is None.
         Returns
         -------
-        dataset : `FluxPointsDataset`
+        dataset : `~gammapy.datasets.FluxPointsDataset`
             FluxPointsDataset.
         """
         from gammapy.estimators import FluxPoints
@@ -302,7 +302,7 @@ class FluxPointsDataset(Dataset):
             Dictionary containing data to create dataset from.
         Returns
         -------
-        dataset : `FluxPointsDataset`
+        dataset : `~gammapy.datasets.FluxPointsDataset`
             Flux point datasets.
         """
         from gammapy.estimators import FluxPoints
@@ -396,7 +396,7 @@ class FluxPointsDataset(Dataset):
         return ((data - model) / sigma).to_value("") ** 2
 
     def _stat_array_profile(self):
-        """Estimate statitistic from interpolation of the likelihood profile."""
+        """Estimate statistics from interpolation of the likelihood profile."""
         model = np.zeros(self.data.dnde.data.shape) + (
             self.flux_pred() / self.data.dnde_ref
         ).to_value("")
@@ -568,7 +568,7 @@ class FluxPointsDataset(Dataset):
         ax : `~matplotlib.axes.Axes`, optional
             Axes to plot on. Default is None.
         method : {"diff", "diff/model"}
-            Normalization used to compute the residuals, see `FluxPointsDataset.residuals`. Default is "diff".
+            Normalization used to compute the residuals, see `~gammapy.datasets.FluxPointsDataset.residuals`. Default is "diff".
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.axes.Axes.errorbar`.
 
@@ -632,11 +632,11 @@ class FluxPointsDataset(Dataset):
         ax : `~matplotlib.axes.Axes`, optional
             Axes to plot on. Default is None.
         kwargs_fp : dict, optional
-            Keyword arguments passed to `gammapy.estimators.FluxPoints.plot` to configure the plot style.
+            Keyword arguments passed to `~gammapy.estimators.FluxPoints.plot` to configure the plot style.
             Default is None.
         kwargs_model : dict, optional
-            Keyword arguments passed to `gammapy.modeling.models.SpectralModel.plot` and
-            `gammapy.modeling.models.SpectralModel.plot_error` to configure the plot style. Default is None.
+            Keyword arguments passed to `~gammapy.modeling.models.SpectralModel.plot` and
+            `~gammapy.modeling.models.SpectralModel.plot_error` to configure the plot style. Default is None.
         axis_name : str
             Axis along which to plot the flux points for multiple axes. Default is energy.
 

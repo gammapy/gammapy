@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """HESS Galactic plane survey (HGPS) catalog."""
+
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import Angle
@@ -35,7 +36,7 @@ class SourceCatalogObjectHGPSComponent(SourceCatalogObject):
 
     See Also
     --------
-    SourceCatalogHGPS, SourceCatalogObjectHGPS
+    `~gammapy.catalog.SourceCatalogHGPS`, `~gammapy.catalog.SourceCatalogObjectHGPS`
     """
 
     _source_name_key = "Component_ID"
@@ -89,7 +90,7 @@ class SourceCatalogObjectHGPSComponent(SourceCatalogObject):
 class SourceCatalogObjectHGPS(SourceCatalogObject):
     """One object from the HGPS catalog.
 
-    The catalog is represented by `SourceCatalogHGPS`.
+    The catalog is represented by `~gammapy.catalog.SourceCatalogHGPS`.
     Examples are given there.
     """
 
@@ -553,7 +554,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             Which spectral model.
 
         linked : bool
-             Each subcomponent of a source is given as a different `SkyModel`.
+             Each subcomponent of a source is given as a different `~gammapy.modeling.models.SkyModel`.
              If True, the spectral parameters except the normalisation are linked.
              Default is False.
 
@@ -633,7 +634,7 @@ class SourceCatalogHGPS(SourceCatalog):
 
     Reference: https://www.mpi-hd.mpg.de/hfm/HESS/hgps/
 
-    One source is represented by `SourceCatalogObjectHGPS`.
+    One source is represented by `~gammapy.catalog.SourceCatalogObjectHGPS`.
 
     Examples
     --------
@@ -878,10 +879,10 @@ class SourceCatalogHGPS(SourceCatalog):
 
         components_status : {'independent', 'linked', 'merged'}
             Relation between the sources components. Available options are:
-                * 'independent': each subcomponent of a source is given as a different `SkyModel` (Default).
-                * 'linked': each subcomponent of a source is given as a different `SkyModel` but the spectral
+                * 'independent': each subcomponent of a source is given as a different `~gammapy.modeling.models.SkyModel` (Default).
+                * 'linked': each subcomponent of a source is given as a different `~gammapy.modeling.models.SkyModel` but the spectral
                   parameters except the normalisation are linked.
-                * 'merged': the subcomponents are merged into a single `SkyModel` given as a
+                * 'merged': the subcomponents are merged into a single `~gammapy.modeling.models.SkyModel` given as a
                   `~gammapy.modeling.models.TemplateSpatialModel` with a `~gammapy.modeling.models.PowerLawNormSpectralModel`.
                   In that case the relative weights between the components cannot be adjusted.
 
@@ -917,7 +918,7 @@ class SourceCatalogLargeScaleHGPS:
         Table of Gaussian parameters.
         ``x``, ``amplitude``, ``mean``, ``stddev``.
     interp_kwargs : dict
-        Keyword arguments passed to `ScaledRegularGridInterpolator`.
+        Keyword arguments passed to `~gammapy.utils.interpolation.ScaledRegularGridInterpolator`.
     """
 
     def __init__(self, table, interp_kwargs=None):

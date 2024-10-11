@@ -92,7 +92,7 @@ class Dataset(abc.ABC):
 
         Returns
         -------
-        dataset : `Dataset`
+        dataset : `~gammapy.datasets.Dataset`
             Copied datasets.
         """
         new = copy.deepcopy(self)
@@ -123,7 +123,7 @@ class Datasets(collections.abc.MutableSequence):
 
     Parameters
     ----------
-    datasets : `Dataset` or list of `Dataset`
+    datasets : `~gammapy.datasets.Dataset` or list of `~gammapy.datasets.Dataset`
         Datasets.
     """
 
@@ -252,7 +252,7 @@ class Datasets(collections.abc.MutableSequence):
 
         Returns
         -------
-        datasets : `Datasets`
+        datasets : `~gammapy.datasets.Datasets`
             Datasets in the given time interval.
 
         """
@@ -282,7 +282,7 @@ class Datasets(collections.abc.MutableSequence):
 
         Returns
         -------
-        datasets : Datasets
+        datasets : `~gammapy.datasets.Datasets`
             Datasets.
 
         """
@@ -318,7 +318,7 @@ class Datasets(collections.abc.MutableSequence):
 
         Returns
         -------
-        datasets : `Datasets`
+        datasets : `~gammapy.datasets.Datasets`
             List of `~gammapy.datasets.SpectrumDataset`.
         """
         datasets = Datasets()
@@ -404,7 +404,7 @@ class Datasets(collections.abc.MutableSequence):
 
         Returns
         -------
-        dataset : `gammapy.datasets.Datasets`
+        dataset : `~gammapy.datasets.Datasets`
             Datasets.
         """
         from . import DATASET_REGISTRY

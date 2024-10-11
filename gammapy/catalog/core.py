@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Source catalog and object base classes."""
+
 import abc
 import html
 import numbers
@@ -56,7 +57,7 @@ class SourceCatalogObject:
         Dictionary of data from a catalog for a given source in the case where the
         catalog contains an extended sources table (Fermi-LAT).
     data_spectral : dict
-        Dictionary of data from a catalof for a given source in the case where the
+        Dictionary of data from a catalog for a given source in the case where the
         catalog contains a spectral table (Fermi-LAT 2PC and 3PC).
     """
 
@@ -234,7 +235,7 @@ class SourceCatalog(abc.ABC):
 
         Returns
         -------
-        source : `SourceCatalogObject`
+        source : `~gammapy.catalog.SourceCatalogObject`
             Source object.
         """
         data = table_row_to_dict(self.table[index])

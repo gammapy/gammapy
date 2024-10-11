@@ -269,15 +269,15 @@ class SpectrumDataset(PlotMixin, MapDataset):
     tag = "SpectrumDataset"
 
     def cutout(self, *args, **kwargs):
-        """Not supported for `SpectrumDataset`"""
+        """Not supported for `~gammapy.datasets.SpectrumDataset`"""
         raise NotImplementedError("Method not supported on a spectrum dataset")
 
     def plot_residuals_spatial(self, *args, **kwargs):
-        """Not supported for `SpectrumDataset`"""
+        """Not supported for `~gammapy.datasets.SpectrumDataset`"""
         raise NotImplementedError("Method not supported on a spectrum dataset")
 
     def to_spectrum_dataset(self, *args, **kwargs):
-        """Not supported for `SpectrumDataset`"""
+        """Not supported for `~gammapy.datasets.SpectrumDataset`"""
         raise NotImplementedError("Already a Spectrum Dataset. Method not supported")
 
 
@@ -296,11 +296,11 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
     tag = "SpectrumDatasetOnOff"
 
     def cutout(self, *args, **kwargs):
-        """Not supported for `SpectrumDatasetOnOff`."""
+        """Not supported for `~gammapy.datasets.SpectrumDatasetOnOff`."""
         raise NotImplementedError("Method not supported on a spectrum dataset")
 
     def plot_residuals_spatial(self, *args, **kwargs):
-        """Not supported for `SpectrumDatasetOnOff`."""
+        """Not supported for `~gammapy.datasets.SpectrumDatasetOnOff`."""
         raise NotImplementedError("Method not supported on a spectrum dataset")
 
     @classmethod
@@ -308,7 +308,7 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         """Read from file.
 
         For OGIP formats, filename is the name of a PHA file. The BKG, ARF, and RMF file names must be
-        set in the PHA header and the files must be present in the same folder. For details, see `OGIPDatasetReader.read`.
+        set in the PHA header and the files must be present in the same folder. For details, see `~gammapy.datasets.OGIPDatasetReader.read`.
 
         For the GADF format, a MapDataset serialisation is used.
 
@@ -321,7 +321,7 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         checksum : bool
             If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
         kwargs : dict, optional
-            Keyword arguments passed to `MapDataset.read`.
+            Keyword arguments passed to `~gammapy.datasets.MapDataset.read`.
         """
         from .io import OGIPDatasetReader
 
@@ -334,7 +334,7 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
     def write(self, filename, overwrite=False, format="ogip", checksum=False):
         """Write spectrum dataset on off to file.
 
-        Can be serialised either as a `MapDataset` with a `RegionGeom`
+        Can be serialised either as a `~gammapy.datasets.MapDataset` with a `RegionGeom`
         following the GADF specifications, or as per the OGIP format.
         For OGIP formats specs, see `OGIPDatasetWriter`.
 
@@ -374,7 +374,7 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
 
         Returns
         -------
-        dataset : `SpectrumDatasetOnOff`
+        dataset : `~gammapy.datasets.SpectrumDatasetOnOff`
             Spectrum dataset on off.
         """
 
@@ -394,7 +394,7 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
 
         Parameters
         ----------
-        dataset : `SpectrumDataset`
+        dataset : `~gammapy.datasets.SpectrumDataset`
             Spectrum dataset defining counts, edisp, exposure etc.
         acceptance : `~numpy.array` or float
             Relative background efficiency in the on region.
@@ -407,7 +407,7 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
 
         Returns
         -------
-        dataset : `SpectrumDatasetOnOff`
+        dataset : `~gammapy.datasets.SpectrumDatasetOnOff`
             Spectrum dataset on off.
         """
         return cls.from_map_dataset(**kwargs)
@@ -423,7 +423,7 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
 
         Returns
         -------
-        dataset : `SpectrumDataset`
+        dataset : `~gammapy.datasets.SpectrumDataset`
             SpectrumDataset with Cash statistic.
         """
         return self.to_map_dataset(name=name).to_spectrum_dataset(on_region=None)

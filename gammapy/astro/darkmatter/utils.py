@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities to compute J-factor maps."""
+
 import html
 import numpy as np
 import astropy.units as u
@@ -12,7 +13,7 @@ class JFactory:
 
     J-Factors are computed for annihilation and D-Factors for decay.
     Set the argument `annihilation` to `False` to compute D-Factors.
-    The assumed dark matter profiles will be centered on the center of the map.
+    The assumed dark matter profiles will be centered in the center of the map.
 
     Parameters
     ----------

@@ -270,7 +270,7 @@ class AnalysisConfig(GammapyBaseConfig):
 
         Parameters
         ----------
-        path : `pathlib.Path` or str
+        path : `~pathlib.Path` or str
             Path to write files.
         overwrite : bool, optional
             Overwrite existing file. Default is False.
@@ -286,7 +286,7 @@ class AnalysisConfig(GammapyBaseConfig):
     def set_logging(self):
         """Set logging config.
 
-        Calls ``logging.basicConfig``, i.e. adjusts global logging state.
+        Calls `~logging.basicConfig`, i.e. adjusts global logging state.
         """
         self.general.log.level = self.general.log.level.upper()
         logging.basicConfig(**self.general.log.model_dump())
@@ -297,7 +297,7 @@ class AnalysisConfig(GammapyBaseConfig):
 
         Parameters
         ----------
-        config : str or `AnalysisConfig` object, optional
+        config : str or `~gammapy.analysis.AnalysisConfig` object, optional
             Configuration settings provided in dict() syntax. Default is None.
         """
         if isinstance(config, str):
