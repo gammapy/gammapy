@@ -70,9 +70,12 @@ Notes:
   Gammapy names defined here, to the names used in the formats.
   Of course, where formats are not set in stone yet, we advocate and encourage
   the use of the names chosen here.
-* Finally, we realise that eventually probably CTA will define this, and Gammapy
-  is only a prototype. So if CTA chooses something else, probably we will follow
-  suite and do one more backward-incompatible change at some point to align with CTA.
+* Finally, CTAO has proposed a full data model associated to the needed quantities. And
+  the community is working to create a data format for very-high-energy data produced by gamma-ray
+  and neutrino experiments within the open initiative `Very-high-energy Open Data Format`_. This format
+  aims to respect the CTAO data model, to respect the `FAIR principles`_ and to follow as much as
+  possible the `IVOA`_ recommendations. In order to handle past, current and old formats,
+  Gammapy should follow the `FAIR4RS principles`_ by proposing a user-friendly interface.
 
 Clobber or overwrite?
 +++++++++++++++++++++
