@@ -364,7 +364,7 @@ class MapDataset(Dataset):
 
     See Also
     --------
-    `~gammapy.datasets.MapDatasetOnOff`, `~gammapy.datasets.SpectrumDataset`, `~gammapy.datasets.FluxPointsDataset`.
+    MapDatasetOnOff, SpectrumDataset, FluxPointsDataset.
     """
 
     stat_type = "cash"
