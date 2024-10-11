@@ -63,7 +63,7 @@ New features
 *gammapy.modeling*
 
 - Unique naming of model parameters adapted, leading to resolution of issues with computation of the covariance matrix for complex model lists.
-- New tutorial added for modeling EBL absorption
+- New tutorial added for modeling EBL absorption.
 - Time scale issue in simulation energy dependent temporal models resolved.
 - Definition of `UniformPrior` fixed to return 0 within min and max values indstead of one.
 
