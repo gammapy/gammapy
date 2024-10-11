@@ -23,7 +23,7 @@ API changes
 ~~~~~~~~~~~
 
 No new API breaking changes have been introducted in this version.
-Fetures deprecated since Gammapy v1.2 have been removed. 
+Features deprecated since Gammapy v1.2 have been removed. 
 
 
 New features
