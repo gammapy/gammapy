@@ -1188,7 +1188,7 @@ class FluxMaps:
         )
 
     def slice_by_coord(self, slices):
-        """Slice flux maps by coordinate valuesy.
+        """Slice flux maps by coordinate values.
 
         Parameters
         ----------
