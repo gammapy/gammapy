@@ -58,6 +58,9 @@ New features
 - Computation of the discrete structure function for a variable source using Emmanoulopoulos et al. (2010) algorithm.
 - Computation of the discrete cross correlation function added.
 
+*infrastructure*
+
+- Add Matomo as website analytics, instead of Google Analytics.
 
 
 *gammapy.modeling*
