@@ -101,7 +101,11 @@ obs_filename = f"obs-index-table-{energy_estimator}-Crab.fits.gz"
 obs_table = ObservationTable.read(data_path + obs_filename)
 
 ######################################################################
-# Now, we read the HDU index table of fHit bin number 6
+# The remainder of this tutorial utilises just one fHit value, however,
+# for a regular analysis you should combine all fHit bins. Here,
+# we utilise fHit bin number 6. We start by reading the HDU index table
+# of this fHit bin
+
 fHit = 6
 hdu_table = HDUIndexTable.read(data_path + hdu_filename, hdu=fHit)
 
