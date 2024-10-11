@@ -36,7 +36,7 @@ class SourceCatalogObjectHGPSComponent(SourceCatalogObject):
 
     See Also
     --------
-    `SourceCatalogHGPS`, `SourceCatalogObjectHGPS`
+    SourceCatalogHGPS, SourceCatalogObjectHGPS
     """
 
     _source_name_key = "Component_ID"
