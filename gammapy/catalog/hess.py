@@ -36,7 +36,7 @@ class SourceCatalogObjectHGPSComponent(SourceCatalogObject):
 
     See Also
     --------
-    `~gammapy.catalog.SourceCatalogHGPS`, `~gammapy.catalog.SourceCatalogObjectHGPS`
+    `SourceCatalogHGPS`, `SourceCatalogObjectHGPS`
     """
 
     _source_name_key = "Component_ID"
