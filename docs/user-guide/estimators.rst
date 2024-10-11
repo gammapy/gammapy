@@ -165,9 +165,9 @@ This how to compute flux maps with the `ExcessMapEstimator`:
     <BLANKLINE>
         geom  : WcsGeom
         axes  : ['lon', 'lat', 'energy']
-        shape : (320, 240, 2)
+        shape : (np.int64(320), np.int64(240), 2)
         ndim  : 3
-        unit  : 1 / (cm2 s)
+        unit  : 1 / (s cm2)
         dtype : float64
     <BLANKLINE>
 
