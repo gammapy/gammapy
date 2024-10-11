@@ -31,7 +31,7 @@ New features
 
 *gammapy.catalogs*
 
-- Support for the 2PC and 3PC pulsar catalogs from Fermi-LAT is now added
+- Support for the 2PC and 3PC pulsar catalogs from Fermi-LAT is now added.
 
 
 *gammapy.datasets*
