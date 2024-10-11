@@ -2,7 +2,7 @@
 """Simple models for cosmic ray spectra at Earth.
 
 For measurements, the "Database of Charged Cosmic Rays (CRDB)" is a great resource:
-http://lpsc.in2p3.fr/cosmic-rays-db/
+https://lpsc.in2p3.fr/crdb/
 """
 import numpy as np
 from astropy import units as u
@@ -37,7 +37,7 @@ class _LogGaussianSpectralModel(SpectralModel):
 def create_cosmic_ray_spectral_model(particle="proton"):
     """Cosmic a cosmic ray spectral model at Earth.
 
-    These are the spectra assumed in this CTA study:
+    These are the spectra assumed in this CTAO study:
     Table 3 in https://ui.adsabs.harvard.edu/abs/2013APh....43..171B
 
     The spectrum given is a differential flux ``dnde`` in units of
