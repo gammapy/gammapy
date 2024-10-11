@@ -2266,7 +2266,7 @@ class MapDatasetOnOff(MapDataset):
 
     See Also
     --------
-    `~gammapy.datasets.MapDataset`, `~gammapy.datasets.SpectrumDataset`, `~gammapy.datasets.FluxPointsDataset`.
+    MapDataset, SpectrumDataset, FluxPointsDataset.
 
     """
 
