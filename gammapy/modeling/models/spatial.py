@@ -1040,7 +1040,7 @@ class ShellSpatialModel(SpatialModel):
 
     See Also
     --------
-    `~gammapy.modeling.models.Shell2SpatialModel`
+    Shell2SpatialModel
     """
 
     tag = ["ShellSpatialModel", "shell"]
@@ -1114,7 +1114,7 @@ class Shell2SpatialModel(SpatialModel):
 
     See Also
     --------
-    `~gammapy.modeling.models.ShellSpatialModel`
+    ShellSpatialModel
     """
 
     tag = ["Shell2SpatialModel", "shell2"]
