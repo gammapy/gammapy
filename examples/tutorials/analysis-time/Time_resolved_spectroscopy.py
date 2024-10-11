@@ -1,6 +1,6 @@
 """
 Time resolved spectroscopy estimator
-======================================
+====================================
 
 Perform spectral fits of a blazar in different time bins to investigate
 spectral changes during flares.
