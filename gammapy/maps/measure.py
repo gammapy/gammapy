@@ -96,7 +96,7 @@ def containment_radius(map_, fraction=0.393, position=None):
     Returns
     -------
     radius : `~astropy.coordinates.Angle`
-        Minimal radius required to reach the given containement fraction.
+        Minimal radius required to reach the given containment fraction.
 
     """
     from . import WcsNDMap

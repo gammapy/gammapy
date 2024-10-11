@@ -200,7 +200,7 @@ class MapAxis:
 
         Parameters
         ----------
-        other : `MapAxis`
+        other : `~gammapy.maps.MapAxis`
             Other map axis.
         atol : float, optional
             Absolute numerical tolerance for the comparison measured in bins. Default is 2e-2.
@@ -221,7 +221,7 @@ class MapAxis:
 
         Parameters
         ----------
-        other : `MapAxis`
+        other : `~gammapy.maps.MapAxis`
             Other map axis.
         **kwargs : dict, optional
             Keyword arguments passed to `~numpy.allclose`.
@@ -354,7 +354,7 @@ class MapAxis:
         return mpl_scale[self.interp]
 
     def to_node_type(self, node_type):
-        """Return a copy of the `MapAxis` instance with a node type set to node_type.
+        """Return a copy of the `~gammapy.maps.MapAxis` instance with a node type set to node_type.
 
         Parameters
         ----------
@@ -382,7 +382,7 @@ class MapAxis:
             )
 
     def rename(self, new_name):
-        """Rename the axis. Return a copy of the `MapAxis` instance with name set to new_name.
+        """Rename the axis. Return a copy of the `~gammapy.maps.MapAxis` instance with name set to new_name.
 
         Parameters
         ----------
@@ -511,7 +511,7 @@ class MapAxis:
             Interpolation method used to transform between axis and pixel
             coordinates.  Default: 'lin'.
         ***kwargs : dict, optional
-            Keyword arguments passed to `MapAxis`.
+            Keyword arguments passed to `~gammapy.maps.MapAxis`.
         """
         nbin = int(nbin)
         interp = kwargs.setdefault("interp", "lin")
@@ -552,7 +552,7 @@ class MapAxis:
 
         Returns
         -------
-        axis : `MapAxis`
+        axis : `~gammapy.maps.MapAxis`
             Axis with name "energy" and interp "log".
         """
         energy_edges = u.Quantity(energy_edges, unit)
@@ -610,7 +610,7 @@ class MapAxis:
 
         Returns
         -------
-        axis : `MapAxis`
+        axis : `~gammapy.maps.MapAxis`
             Create MapAxis from the given input parameters.
         """
         energy_min = u.Quantity(energy_min, unit)
@@ -670,7 +670,7 @@ class MapAxis:
             Interpolation method used to transform between axis and pixel
             coordinates. Default is 'lin'.
         **kwargs : dict, optional
-            Keyword arguments passed to `MapAxis`.
+            Keyword arguments passed to `~gammapy.maps.MapAxis`.
         """
         if len(nodes) < 1:
             raise ValueError("Nodes array must have at least one element.")
@@ -693,7 +693,7 @@ class MapAxis:
             Interpolation method used to transform between axis and pixel
             coordinates.  Default: 'lin'.
         **kwargs : dict, optional
-            Keyword arguments passed to `MapAxis`.
+            Keyword arguments passed to `~gammapy.maps.MapAxis`.
         """
         if len(edges) < 2:
             raise ValueError("Edges array must have at least two elements.")
@@ -747,7 +747,7 @@ class MapAxis:
 
         Returns
         -------
-        axis : `MapAxis`
+        axis : `~gammapy.maps.MapAxis`
             Padded axis.
         """
         if isinstance(pad_width, tuple):
@@ -773,7 +773,7 @@ class MapAxis:
 
         Parameters
         ----------
-        axes : list of `MapAxis`
+        axes : list of `~gammapy.maps.MapAxis`
             List of map axis to merge.
 
         Returns
@@ -910,7 +910,7 @@ class MapAxis:
 
         Returns
         -------
-        axis : `MapAxis`
+        axis : `~gammapy.maps.MapAxis`
             Sliced axis object.
 
         Examples
@@ -942,7 +942,7 @@ class MapAxis:
 
         Returns
         -------
-        axis : `~MapAxis`
+        axis : `~gammapy.maps.MapAxis`
             Squashed axis object.
         """
         return MapAxis.from_bounds(
@@ -981,7 +981,7 @@ class MapAxis:
         return self.__class__(**kwargs)
 
     def copy(self, **kwargs):
-        """Copy `MapAxis` instance and overwrite given attributes.
+        """Copy `~gammapy.maps.MapAxis` instance and overwrite given attributes.
 
         Parameters
         ----------
@@ -990,7 +990,7 @@ class MapAxis:
 
         Returns
         -------
-        copy : `MapAxis`
+        copy : `~gammapy.maps.MapAxis`
             Copied map axis.
         """
         return self._init_copy(**kwargs)
@@ -1093,7 +1093,7 @@ class MapAxis:
 
         Returns
         -------
-        axis : `MapAxis`
+        axis : `~gammapy.maps.MapAxis`
             Upsampled map axis.
 
         """
@@ -1130,7 +1130,7 @@ class MapAxis:
 
         Returns
         -------
-        axis : `MapAxis`
+        axis : `~gammapy.maps.MapAxis`
             Downsampled map axis.
         """
         if self.node_type == "edges":
@@ -1328,7 +1328,7 @@ class MapAxis:
 
         Returns
         -------
-        axis : `MapAxis`
+        axis : `~gammapy.maps.MapAxis`
             Map Axis.
         """
         if format in ["ogip", "fgst-ccube"]:
@@ -1469,7 +1469,7 @@ class MapAxis:
 
         Returns
         -------
-        axis : `MapAxis`
+        axis : `~gammapy.maps.MapAxis`
             Map Axis.
         """
         table = Table.read(hdu)
@@ -1510,7 +1510,7 @@ class MapAxes(Sequence):
 
         Returns
         -------
-        axis : `MapAxis`
+        axis : `~gammapy.maps.MapAxis`
             Map axis.
         """
         # get longest axis
@@ -1642,7 +1642,7 @@ class MapAxes(Sequence):
 
         Returns
         -------
-        axes : `MapAxes`
+        axes : `~gammapy.maps.MapAxes`
             Map axes.
         """
         axes = []
@@ -1661,12 +1661,12 @@ class MapAxes(Sequence):
 
         Parameters
         ----------
-        axis : `MapAxis`
+        axis : `~gammapy.maps.MapAxis`
             Map axis.
 
         Returns
         -------
-        axes : MapAxes
+        axes : `~gammapy.maps.MapAxes`
             Map axes.
         """
         axes = []
@@ -1686,12 +1686,12 @@ class MapAxes(Sequence):
 
         Parameters
         ----------
-        axis : `MapAxis`
+        axis : `~gammapy.maps.MapAxis`
             New map axis.
 
         Returns
         -------
-        axes : `MapAxes`
+        axes : `~gammapy.maps.MapAxes`
             Axes object with resampled axis.
         """
         axis_self = self[axis.name]
@@ -1730,7 +1730,7 @@ class MapAxes(Sequence):
 
         Returns
         -------
-        axes : `MapAxes`
+        axes : `~gammapy.maps.MapAxes`
             Map axes.
 
         """
@@ -1754,7 +1754,7 @@ class MapAxes(Sequence):
 
         Returns
         -------
-        axes : `MapAxes`
+        axes : `~gammapy.maps.MapAxes`
             Axes with squashed axis.
         """
         axes = []
@@ -1778,7 +1778,7 @@ class MapAxes(Sequence):
 
         Returns
         -------
-        axes : `MapAxes`
+        axes : `~gammapy.maps.MapAxes`
             Axes with squashed axis.
         """
         axes = []
@@ -1800,7 +1800,7 @@ class MapAxes(Sequence):
 
         Returns
         -------
-        axes : `MapAxes`
+        axes : `~gammapy.maps.MapAxes`
             Axes without the `axis_name`.
         """
         axes = []
@@ -1836,7 +1836,7 @@ class MapAxes(Sequence):
 
         Parameters
         ----------
-        coord : dict of `~numpy.ndarray` or `MapCoord`
+        coord : dict of `~numpy.ndarray` or `~gammapy.maps.MapCoord`
             Array of axis coordinate values.
         clip : bool, optional
             Choose whether to clip indices to the valid range of the axis. Default is True.
@@ -1917,7 +1917,7 @@ class MapAxes(Sequence):
 
         Returns
         -------
-        axes : `~MapAxes`
+        axes : `~gammapy.maps.MapAxes`
             Sliced axes.
 
         Examples
@@ -2069,7 +2069,7 @@ class MapAxes(Sequence):
 
         Returns
         -------
-        axes : `MapAxes`
+        axes : `~gammapy.maps.MapAxes`
             Map axes object.
         """
         if hdu is None:
@@ -2091,7 +2091,7 @@ class MapAxes(Sequence):
 
         Returns
         -------
-        axes : `MapAxes`
+        axes : `~gammapy.maps.MapAxes`
             Map axes object.
         """
         from gammapy.irf.io import IRF_DL3_AXES_SPECIFICATION
@@ -2158,14 +2158,14 @@ class MapAxes(Sequence):
 
         Parameters
         ----------
-        axes : list of `~MapAxis` or `~numpy.ndarray`
+        axes : list of `~gammapy.maps.MapAxis` or `~numpy.ndarray`
             Sequence of axis or edges defining the axes.
         n_spatial_axes : int, optional
             Number of spatial axes. Default is None.
 
         Returns
         -------
-        axes : `MapAxes`
+        axes : `~gammapy.maps.MapAxes`
             Map axes object.
         """
         if axes is None:
@@ -2220,7 +2220,7 @@ class MapAxes(Sequence):
 
         Returns
         -------
-        axes : `MapAxes`
+        axes : `~gammapy.maps.MapAxes`
             Renamed Map axes object.
         """
         axes = self.copy()
@@ -2242,10 +2242,10 @@ class MapAxes(Sequence):
 
         Parameters
         ----------
-        other : `MapAxes`
+        other : `~gammapy.maps.MapAxes`
             Other map axes.
         **kwargs : dict, optional
-            Keyword arguments forwarded to `~MapAxis.is_allclose`
+            Keyword arguments forwarded to `~gammapy.maps.MapAxis.is_allclose`
 
         Returns
         -------
@@ -2359,7 +2359,7 @@ class TimeMapAxis:
 
         Returns
         -------
-        axis : `TimeMapAxis`
+        axis : `~gammapy.maps.TimeMapAxis`
             Contiguous time axis.
         """
         edges = np.unique(np.stack([self.edges_min, self.edges_max]))
@@ -2416,12 +2416,12 @@ class TimeMapAxis:
 
     @property
     def bounds(self):
-        """Bounds of the axis as a ~astropy.units.Quantity."""
+        """Bounds of the axis as a `~astropy.units.Quantity`."""
         return self.edges_min[0], self.edges_max[-1]
 
     @property
     def time_bounds(self):
-        """Bounds of the axis as a ~astropy.units.Quantity."""
+        """Bounds of the axis as a `~astropy.units.Quantity`."""
         t_min, t_max = self.bounds
         return t_min + self.reference_time, t_max + self.reference_time
 
@@ -2558,7 +2558,7 @@ class TimeMapAxis:
 
         Parameters
         ----------
-        other : `TimeMapAxis`
+        other : `~gammapy.maps.TimeMapAxis`
             Other time map axis.
         **kwargs : dict, optional
             Keyword arguments forwarded to `~numpy.allclose`.
@@ -2764,7 +2764,7 @@ class TimeMapAxis:
 
         Returns
         -------
-        copy : `TimeMapAxis`
+        copy : `~gammapy.maps.TimeMapAxis`
             Copied time map axis.
         """
         return self._init_copy(**kwargs)
@@ -2779,7 +2779,7 @@ class TimeMapAxis:
 
         Returns
         -------
-        axis : `~TimeMapAxis`
+        axis : `~gammapy.maps.TimeMapAxis`
             Sliced time map axis object.
 
         Examples
@@ -2808,7 +2808,7 @@ class TimeMapAxis:
 
         Returns
         -------
-        axis : `~TimeMapAxis`
+        axis : `~gammapy.maps.TimeMapAxis`
             Squashed time map axis object.
         """
         return TimeMapAxis(
@@ -2844,7 +2844,7 @@ class TimeMapAxis:
 
         Returns
         -------
-        axis : `TimeMapAxis`
+        axis : `~gammapy.maps.TimeMapAxis`
             Time map axis.
         """
         unit = u.Unit(unit)
@@ -2876,7 +2876,7 @@ class TimeMapAxis:
 
         Returns
         -------
-        axis : `TimeMapAxis`
+        axis : `~gammapy.maps.TimeMapAxis`
             Time map axis.
         """
         if format == "gadf":
@@ -2942,7 +2942,7 @@ class TimeMapAxis:
 
         Returns
         -------
-        axis : `TimeMapAxis`
+        axis : `~gammapy.maps.TimeMapAxis`
             Time map axis.
 
         """
@@ -2973,7 +2973,7 @@ class TimeMapAxis:
 
         Returns
         -------
-        axis : `TimeMapAxis`
+        axis : `~gammapy.maps.TimeMapAxis`
             Time map axis.
 
         """
@@ -3369,7 +3369,7 @@ class LabelMapAxis:
 
         Returns
         -------
-        axis : `TimeMapAxis`
+        axis : `~gammapy.maps.TimeMapAxis`
             Time map axis.
         """
         if format == "gadf":
@@ -3404,7 +3404,7 @@ class LabelMapAxis:
 
         Parameters
         ----------
-        other : `LabelMapAxis`
+        other : `~gammapy.maps.LabelMapAxis`
             Other map axis.
 
         Returns
@@ -3462,7 +3462,7 @@ class LabelMapAxis:
 
         Returns
         -------
-        axis : `~LabelMapAxis`
+        axis : `~gammapy.maps.LabelMapAxis`
             Sliced axis object.
 
         Examples
@@ -3485,12 +3485,12 @@ class LabelMapAxis:
 
         Parameters
         ----------
-        axes : list of `LabelMapAxis`
+        axes : list of `~gammapy.maps.LabelMapAxis`
             List of label map axis to be merged.
 
         Returns
         -------
-        axis : `LabelMapAxis`
+        axis : `~gammapy.maps.LabelMapAxis`
             Stacked axis.
         """
 
@@ -3508,12 +3508,12 @@ class LabelMapAxis:
 
         Parameters
         ----------
-        axis : `LabelMapAxis`
+        axis : `~gammapy.maps.LabelMapAxis`
             Axis to concatenate with.
 
         Returns
         -------
-        axis : `LabelMapAxis`
+        axis : `~gammapy.maps.LabelMapAxis`
             Concatenation of the two axis.
         """
         if not isinstance(axis, LabelMapAxis):
@@ -3535,7 +3535,7 @@ class LabelMapAxis:
 
         Returns
         -------
-        axis : `LabelMapAxis`
+        axis : `~gammapy.maps.LabelMapAxis`
             Squashed label map axis.
         """
         return LabelMapAxis(
