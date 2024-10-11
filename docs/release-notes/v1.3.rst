@@ -42,7 +42,7 @@ New features
 
 *gammapy.maps*
 
-- Multiple non-spatial axes supported in creation on MapDatasets. Full likelihood computation with additional axes not yet supported
+- Multiple non-spatial axes supported in creation on MapDatasets. Full likelihood computation with additional axes not yet supported.
 - Map axes with periodic boundary conditions are now supported.
 - An error is raised for maps with invalid input shapes instead of silently broadcasting.
 
