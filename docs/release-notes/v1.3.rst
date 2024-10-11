@@ -50,7 +50,7 @@ New features
 
 - Binwise likelihood profiles are now stored on FluxMaps. FluxMaps obtained from different datasets can be combined.
 - A new tutorial explaining the general Estimator API has been added.
-- A new tutorial showing how to perform time dependent spectroscopy has been added
+- A new tutorial showing how to perform time dependent spectroscopy has been added.
 
 *gammapy.stats*
 
