@@ -37,7 +37,7 @@ New features
 *gammapy.datasets*
 
 - Performance improvement in Fermi-LAT analysis with adaption in psf kernel computation
-- Stacking of acceptance maps improved
+- Stacking of acceptance maps improved.
 
 
 *gammapy.maps*
