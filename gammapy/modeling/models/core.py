@@ -98,7 +98,7 @@ def _write_models(
     checksum=False,
     extra_dict=None,
 ):
-    """Write models to YAML file with additionnal informations using an `extra_dict`"""
+    """Write models to YAML file with additional information using an `extra_dict`"""
 
     base_path, _ = split(path)
     path = make_path(path)
@@ -379,7 +379,7 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
 
     Parameters
     ----------
-    models : `SkyModel`, list of `SkyModel` or `Models`
+    models : `~gammapy.modelling.SkyModels`, list of `SkyModel` or `Models`
         Sky models.
     covariance_data : `~numpy.ndarray`
         Covariance data.
@@ -771,7 +771,7 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
 
         Returns
         -------
-        models : `DatasetModels`
+        models : `~gammapy.modeling.models.DatasetModels`
             Selected models.
         """
         mask = self.selection_mask(
@@ -1017,7 +1017,7 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
 
         Parameters
         ----------
-        geom : `Geom`
+        geom : `~gammapy.maps.Geom`
             Map geometry of the result template model.
         spectral_model : `~gammapy.modeling.models.SpectralModel`, optional
             One of the NormSpectralModel. Default is None.
@@ -1195,7 +1195,7 @@ class Models(DatasetModels, collections.abc.MutableSequence):
 
     Parameters
     ----------
-    models : `SkyModel`, list of `SkyModel` or `Models`
+    models : `~gammapy.modeling.models.SkyModel`, list of `SkyModel` or `Models`
         Sky models.
     """
 

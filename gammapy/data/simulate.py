@@ -7,7 +7,7 @@ from gammapy.utils.scripts import make_path
 
 
 class ObservationsEventsSampler(parallel.ParallelMixin):
-    """Run event sampling for an emsemble of observations
+    """Run event sampling for an ensemble of observations
 
     Parameters
     ----------
@@ -77,11 +77,11 @@ class ObservationsEventsSampler(parallel.ParallelMixin):
             return observation
 
     def run(self, observations, models=None):
-        """Run event sampling for an ensemble of onservations
+        """Run event sampling for an ensemble of observations
 
         Parameters
         ----------
-        observation : `~gammapy.data.Observation`
+        observations : list of `~gammapy.data.Observation`
             Observation to be simulated.
         models : `~gammapy.modeling.Models`, optional
             Models to simulate.

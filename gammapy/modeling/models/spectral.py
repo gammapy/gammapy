@@ -418,7 +418,7 @@ class SpectralModel(ModelBase):
     ):
         """Plot spectral model curve.
 
-        By default a log-log scaling of the axes is used, if you want to change
+        By default, a log-log scaling of the axes is used, if you want to change
         the y-axis scaling to linear you can use::
 
             >>> from gammapy.modeling.models import ExpCutoffPowerLawSpectralModel
@@ -627,7 +627,7 @@ class SpectralModel(ModelBase):
     def inverse(self, value, energy_min=0.1 * u.TeV, energy_max=100 * u.TeV):
         """Return energy for a given function value of the spectral model.
 
-        Calls the `scipy.optimize.brentq` numerical root finding method.
+        Calls the `~scipy.optimize.brentq` numerical root finding method.
 
         Parameters
         ----------
@@ -659,7 +659,7 @@ class SpectralModel(ModelBase):
     def inverse_all(self, values, energy_min=0.1 * u.TeV, energy_max=100 * u.TeV):
         """Return energies for multiple function values of the spectral model.
 
-        Calls the `scipy.optimize.brentq` numerical root finding method.
+        Calls the `~scipy.optimize.brentq` numerical root finding method.
 
         Parameters
         ----------
@@ -799,7 +799,7 @@ class PowerLawSpectralModel(SpectralModel):
 
     See Also
     --------
-    PowerLaw2SpectralModel, PowerLawNormSpectralModel
+    `~gammapy.modeling.models.PowerLaw2SpectralModel`, `~gammapy.modeling.models.PowerLawNormSpectralModel`
     """
 
     tag = ["PowerLawSpectralModel", "pl"]
@@ -929,7 +929,7 @@ class PowerLawNormSpectralModel(SpectralModel):
 
     See Also
     --------
-    PowerLawSpectralModel, PowerLaw2SpectralModel
+    `~gammapy.modeling.models.PowerLawSpectralModel`, `~gammapy.modeling.models.PowerLaw2SpectralModel`
     """
 
     tag = ["PowerLawNormSpectralModel", "pl-norm"]
@@ -1035,7 +1035,7 @@ class PowerLaw2SpectralModel(SpectralModel):
 
     See Also
     --------
-    PowerLawSpectralModel, PowerLawNormSpectralModel
+    `~gammapy.modeling.models.PowerLawSpectralModel`, `~gammapy.modeling.models.PowerLawNormSpectralModel`
     """
 
     tag = ["PowerLaw2SpectralModel", "pl-2"]
@@ -1125,7 +1125,7 @@ class BrokenPowerLawSpectralModel(SpectralModel):
 
     See Also
     --------
-    SmoothBrokenPowerLawSpectralModel
+    `~gammapy.modeling.models.SmoothBrokenPowerLawSpectralModel`
     """
 
     tag = ["BrokenPowerLawSpectralModel", "bpl"]
@@ -1172,7 +1172,7 @@ class SmoothBrokenPowerLawSpectralModel(SpectralModel):
 
     See Also
     --------
-    BrokenPowerLawSpectralModel
+    `~gammapy.modeling.models.BrokenPowerLawSpectralModel`
     """
 
     tag = ["SmoothBrokenPowerLawSpectralModel", "sbpl"]
@@ -1206,9 +1206,9 @@ class PiecewiseNormSpectralModel(SpectralModel):
     ----------
     energy : `~astropy.units.Quantity`
         Array of energies at which the model values are given (nodes).
-    norms : `~numpy.ndarray` or list of `Parameter`
+    norms : `~numpy.ndarray` or list of `~gammapy.modeling.Parameter`
         Array with the initial norms of the model at energies ``energy``.
-        Normalisation parameters are created for each value.
+        Normalization parameters are created for each value.
         Default is one at each node.
     interp : str
         Interpolation scaling in {"log", "lin"}. Default is "log".
@@ -1309,7 +1309,7 @@ class ExpCutoffPowerLawSpectralModel(SpectralModel):
 
     See Also
     --------
-    ExpCutoffPowerLawNormSpectralModel
+    `~gammapy.modeling.models.ExpCutoffPowerLawNormSpectralModel`
     """
 
     tag = ["ExpCutoffPowerLawSpectralModel", "ecpl"]
@@ -1376,7 +1376,7 @@ class ExpCutoffPowerLawNormSpectralModel(SpectralModel):
 
     See Also
     --------
-    ExpCutoffPowerLawSpectralModel
+    `~gammapy.modeling.models.ExpCutoffPowerLawSpectralModel`
     """
 
     tag = ["ExpCutoffPowerLawNormSpectralModel", "ecpl-norm"]
@@ -1625,7 +1625,7 @@ class LogParabolaSpectralModel(SpectralModel):
 
     See Also
     --------
-    LogParabolaNormSpectralModel
+    `~gammapy.modeling.models.LogParabolaNormSpectralModel`
     """
 
     tag = ["LogParabolaSpectralModel", "lp"]
@@ -1683,7 +1683,7 @@ class LogParabolaNormSpectralModel(SpectralModel):
 
     See Also
     --------
-    LogParabolaSpectralModel
+    `~gammapy.modeling.models.LogParabolaSpectralModel`
     """
 
     tag = ["LogParabolaNormSpectralModel", "lp-norm"]
@@ -1807,7 +1807,7 @@ class TemplateSpectralModel(SpectralModel):
         # set energy to log-centers
         energy = np.sqrt(energy_lo * energy_hi)
 
-        # Get spectrum values (no interpolation, take closest value for param)
+        # Get spectrum values (no interpolation, take the closest value for param)
         table_spectra = Table.read(filename, hdu="SPECTRA")
         idx = np.abs(table_spectra["PARAMVAL"] - param).argmin()
         values = u.Quantity(
@@ -2001,7 +2001,7 @@ class EBLAbsorptionNormSpectralModel(SpectralModel):
         Default is 1.
     interp_kwargs : dict
         Interpolation option passed to `~gammapy.utils.interpolation.ScaledRegularGridInterpolator`.
-        By default the models are extrapolated outside the range. To prevent
+        By default, the models are extrapolated outside the range. To prevent
         this and raise an error instead use interp_kwargs = {"extrapolate": False}.
     """
 

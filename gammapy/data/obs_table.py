@@ -24,7 +24,7 @@ class ObservationTable(Table):
 
         Parameters
         ----------
-        filename : `pathlib.Path` or str
+        filename : `~pathlib.Path` or str
             Filename.
         **kwargs : dict, optional
             Keyword arguments passed to `~astropy.table.Table.read`.

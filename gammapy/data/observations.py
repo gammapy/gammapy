@@ -221,7 +221,7 @@ class Observation:
         tstart : `~astropy.time.Time` or `~astropy.units.Quantity`, optional
             Start time of observation as `~astropy.time.Time` or duration
             relative to `reference_time`. Default is None.
-        tstop : `astropy.time.Time` or `~astropy.units.Quantity`, optional
+        tstop : `~astropy.time.Time` or `~astropy.units.Quantity`, optional
             Stop time of observation as `~astropy.time.Time` or duration
             relative to `reference_time`. Default is None.
         irfs : dict, optional
@@ -233,7 +233,7 @@ class Observation:
 
         Returns
         -------
-        obs : `gammapy.data.MemoryObservation`
+        obs : `~gammapy.data.Observation`
             Observation.
         """
         if tstart is None:
@@ -456,7 +456,7 @@ class Observation:
 
         Parameters
         ----------
-        time_interval : `astropy.time.Time`
+        time_interval : `~astropy.time.Time`
             Start and stop time of the selected time interval.
             For now, we only support a single time interval.
 
@@ -566,14 +566,14 @@ class Observation:
     def copy(self, in_memory=False, **kwargs):
         """Copy observation.
 
-        Overwriting `Observation` arguments requires the ``in_memory`` argument to be true.
+        Overwriting `~gammapy.data.Observation` arguments requires the ``in_memory`` argument to be true.
 
         Parameters
         ----------
         in_memory : bool, optional
             Copy observation in memory. Default is False.
         **kwargs : dict, optional
-            Keyword arguments passed to `Observation`.
+            Keyword arguments passed to `~gammapy.data.Observation`.
 
         Examples
         --------
@@ -584,7 +584,7 @@ class Observation:
 
         Returns
         -------
-        obs : `Observation`
+        obs : `~gammapy.data.Observation`
             Copied observation.
         """
         if in_memory:
@@ -688,7 +688,7 @@ class Observations(collections.abc.MutableSequence):
 
         Parameters
         ----------
-        time_intervals : `astropy.time.Time` or list of `astropy.time.Time`
+        time_intervals : `~astropy.time.Time` or list of `~astropy.time.Time`
             List of start and stop time of the time intervals or one time interval.
 
         Returns
@@ -716,13 +716,13 @@ class Observations(collections.abc.MutableSequence):
 
         Parameters
         ----------
-        labels : list or `numpy.ndarray`
+        labels : list or `~numpy.ndarray`
             Array of group labels.
 
         Returns
         -------
         obs_clusters : dict of `~gammapy.data.Observations`
-            Dictionary of Observations instance, one instance for each group.
+            Dictionary of Observations instances, one instance for each group.
         """
         obs_groups = {}
         for label in np.unique(labels):
@@ -735,17 +735,17 @@ class Observations(collections.abc.MutableSequence):
     @classmethod
     def from_stack(cls, observations_list):
         # TODO : Do more check when stacking observations when we have metadata.
-        """Create a new `Observations` instance by concatenating a list of `Observations` objects.
+        """Create a new `~gammapy.data.Observations` instance by concatenating a list of `~gammapy.data.Observations` objects.
 
         Parameters
         ----------
         observations_list : list of `~gammapy.data.Observations`
-            The list of `Observations` to stack.
+            The list of `~gammapy.data.Observations` to stack.
 
         Returns
         -------
         observations : `~gammapy.data.Observations`
-            The `Observations` object resulting from stacking all the `Observations` in `observation_list`.
+            The `~gammapy.data.Observations` object resulting from stacking all the `~gammapy.data.Observations` in `observation_list`.
         """
         obs = itertools.chain(*observations_list)
         return cls(list(obs))

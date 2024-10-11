@@ -344,13 +344,13 @@ class SafeMaskMaker(Maker):
 
         Returns
         -------
-        dataset : `Dataset`
+        dataset : `~gammapy.datasets.Dataset`
             Dataset with defined safe range mask.
         """
 
         if self.irfs == "DL3":
             if observation is None:
-                raise ValueError("observation argument is mandatory with DL3 irfs")
+                raise ValueError("observation argument is mandatory with DL3 IRFs")
 
         if dataset.mask_safe:
             mask_safe = dataset.mask_safe.data

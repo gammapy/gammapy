@@ -257,7 +257,7 @@ class SkyModel(CovarianceMixin, ModelBase):
 
         Returns
         -------
-        models : `DatasetModels`
+        models : `~gammapy.modeling.models.DatasetModels`
             Selected models contributing inside the region where mask is True.
         """
         from gammapy.datasets.evaluator import CUTOUT_MARGIN
@@ -354,9 +354,9 @@ class SkyModel(CovarianceMixin, ModelBase):
 
         Parameters
         ----------
-        geom : `Geom` or `~gammapy.maps.RegionGeom`
+        geom : `~gammapy.maps.Geom` or `~gammapy.maps.RegionGeom`
             Map geometry.
-        gti : `GTI`, optional
+        gti : `~gammapy.data.GTI`, optional
             GIT table. Default is None.
         oversampling_factor : int, optional
             The oversampling factor to use for spatial integration.
@@ -364,7 +364,7 @@ class SkyModel(CovarianceMixin, ModelBase):
 
         Returns
         -------
-        flux : `Map`
+        flux : `~gammapy.data.Map`
             Predicted flux map.
         """
         energy = geom.axes["energy_true"].edges
@@ -433,11 +433,11 @@ class SkyModel(CovarianceMixin, ModelBase):
         copy_data : bool, optional
             Copy the data arrays attached to models. Default is False.
         **kwargs : dict
-            Keyword arguments forwarded to `SkyModel`.
+            Keyword arguments forwarded to `~gammapy.modeling.models.SkyModel`.
 
         Returns
         -------
-        model : `SkyModel`
+        model : `~gammapy.modeling.models.SkyModel`
             Copied sky model.
         """
         if self.spatial_model is not None:
@@ -461,7 +461,7 @@ class SkyModel(CovarianceMixin, ModelBase):
         return self.__class__(**kwargs)
 
     def to_dict(self, full_output=False):
-        """Create dictionary for YAML serilisation."""
+        """Create dictionary for YAML serialisation."""
         data = {}
         data["name"] = self.name
         data["type"] = self.tag[0]
@@ -484,7 +484,7 @@ class SkyModel(CovarianceMixin, ModelBase):
 
     @classmethod
     def from_dict(cls, data, **kwargs):
-        """Create SkyModel from dictionary."""
+        """Create `~gammapy.modeling.models.SkyModel` from dictionary."""
         from gammapy.modeling.models import (
             SPATIAL_MODEL_REGISTRY,
             SPECTRAL_MODEL_REGISTRY,
@@ -563,11 +563,11 @@ class SkyModel(CovarianceMixin, ModelBase):
         temporal_model : str, optional
             Tag to create temporal model. Default is None.
         **kwargs : dict
-            Keyword arguments passed to `SkyModel`.
+            Keyword arguments passed to `~gammapy.modeling.models.SkyModel`.
 
         Returns
         -------
-        model : SkyModel
+        model : `~gammapy.modeling.models.SkyModel`
             Sky model.
         """
         spectral_model = Model.create(spectral_model, model_type="spectral")
@@ -623,8 +623,8 @@ class FoVBackgroundModel(ModelBase):
     """Field of view background model.
 
     The background model holds the correction parameters applied to
-    the instrumental background attached to a `MapDataset` or
-    `SpectrumDataset`.
+    the instrumental background attached to a `~gammapy.datasets.MapDataset` or
+    `~gammapy.datasets.SpectrumDataset`.
 
     Parameters
     ----------
@@ -749,7 +749,7 @@ class FoVBackgroundModel(ModelBase):
             return value
 
     def copy(self, name=None, copy_data=False, **kwargs):
-        """Copy the `FoVBackgroundModel` instance.
+        """Copy the `~gammapy.modeling.models.FoVBackgroundModel` instance.
 
         Parameters
         ----------
@@ -760,11 +760,11 @@ class FoVBackgroundModel(ModelBase):
             Ignored, present for API compatibility.
             Default is False.
         **kwargs : dict
-            Keyword arguments forwarded to `FoVBackgroundModel`.
+            Keyword arguments forwarded to `~gammapy.modeling.models.FoVBackgroundModel`.
 
         Returns
         -------
-        model : `FoVBackgroundModel`
+        model : `~gammapy.modeling.models.FoVBackgroundModel`
             Copied FoV background model.
         """
         kwargs.setdefault("spectral_model", self.spectral_model.copy())
@@ -920,11 +920,11 @@ class TemplateNPredModel(ModelBase):
             Copy the data arrays attached to models.
             Default is False.
         **kwargs : dict
-            Keyword arguments forwarded to `TemplateNPredModel`.
+            Keyword arguments forwarded to `~gammapy.modeling.models.TemplateNPredModel`.
 
         Returns
         -------
-        model : `TemplateNPredModel`
+        model : `~gammapy.modeling.models.TemplateNPredModel`
             Copied template npred model.
         """
         name = make_name(name)
@@ -1080,7 +1080,7 @@ class TemplateNPredModel(ModelBase):
 
         Returns
         -------
-        cutout : `TemplateNPredModel`
+        cutout : `~gammapy.modeling.models.TemplateNPredModel`
             Cutout background model.
         """
         cutout_kwargs = {"position": position, "width": width, "mode": mode}
@@ -1096,7 +1096,7 @@ class TemplateNPredModel(ModelBase):
 
         Parameters
         ----------
-        other : `TemplateNPredModel`
+        other : `~gammapy.modeling.models.TemplateNPredModel`
             Other background model.
         weights : float, optional
             Weights. Default is None.
@@ -1126,7 +1126,7 @@ class TemplateNPredModel(ModelBase):
 
         Returns
         -------
-        model : `TemplateNpredModel`
+        model : `~gammapy.modeling.models.TemplateNpredModel`
             Sliced Model.
 
         """
@@ -1202,11 +1202,11 @@ def create_fermi_isotropic_diffuse_model(filename, **kwargs):
     filename : str
         Filename.
     kwargs : dict
-        Keyword arguments forwarded to `TemplateSpectralModel`.
+        Keyword arguments forwarded to `~gammapy.modeling.models.TemplateSpectralModel`.
 
     Returns
     -------
-    diffuse_model : `SkyModel`
+    diffuse_model : `~gammapy.modeling.models.SkyModel`
         Fermi isotropic diffuse sky model.
     """
     vals = np.loadtxt(make_path(filename))

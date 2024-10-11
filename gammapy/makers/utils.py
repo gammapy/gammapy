@@ -435,7 +435,7 @@ def make_theta_squared_table(
         Axis of edges of the theta2 bin used to compute the distribution.
     position : `~astropy.coordinates.SkyCoord`
         Position from which the on theta^2 distribution is computed.
-    position_off : `astropy.coordinates.SkyCoord`
+    position_off : `~astropy.coordinates.SkyCoord`
         Position from which the OFF theta^2 distribution is computed.
         Default is reflected position w.r.t. to the pointing position.
 

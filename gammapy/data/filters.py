@@ -13,7 +13,7 @@ class ObservationFilter:
 
     Parameters
     ----------
-    time_filter : `astropy.time.Time`, optional
+    time_filter : `~astropy.time.Time`, optional
         Start and stop time of the selected time interval. Currently, we only support
         a single time interval. Default is None.
     event_filters : list of dict, optional
@@ -107,7 +107,7 @@ class ObservationFilter:
             return data
 
     def copy(self):
-        """Copy the `ObservationFilter` object."""
+        """Copy the `~gammapy.data.ObservationFilter` object."""
         return copy.deepcopy(self)
 
     @staticmethod

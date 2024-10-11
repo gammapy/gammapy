@@ -122,7 +122,7 @@ class GTIMetaData(MetaData):
 
     Parameters
     ----------
-    reference_time : Time, str
+    reference_time : str
         The GTI reference time.
     """
 

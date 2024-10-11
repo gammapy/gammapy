@@ -71,7 +71,7 @@ class HDUIndexTable(Table):
         return make_path(self.meta.get("BASE_DIR", ""))
 
     def hdu_location(self, obs_id, hdu_type=None, hdu_class=None, warn_missing=True):
-        """Create `HDULocation` for a given selection.
+        """Create `~gammapy.data.HDULocation` for a given selection.
 
         Parameters
         ----------
