@@ -48,8 +48,7 @@ Gammapy is a Python package, so you can of course import and use it from Python:
     Type "help", "copyright", "credits" or "license" for more information.
     >>> from gammapy.stats import CashCountsStatistic
     >>> CashCountsStatistic(n_on=10, mu_bkg=4.2).sqrt_ts
-    2.397918129147546
-
+    np.float64(2.397918129147546)
 
 IPython
 -------
