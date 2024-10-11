@@ -799,7 +799,7 @@ class PowerLawSpectralModel(SpectralModel):
 
     See Also
     --------
-    `~gammapy.modeling.models.PowerLaw2SpectralModel`, `~gammapy.modeling.models.PowerLawNormSpectralModel`
+    PowerLaw2SpectralModel, PowerLawNormSpectralModel
     """
 
     tag = ["PowerLawSpectralModel", "pl"]
@@ -929,7 +929,7 @@ class PowerLawNormSpectralModel(SpectralModel):
 
     See Also
     --------
-    `~gammapy.modeling.models.PowerLawSpectralModel`, `~gammapy.modeling.models.PowerLaw2SpectralModel`
+    PowerLawSpectralModel, PowerLaw2SpectralModel
     """
 
     tag = ["PowerLawNormSpectralModel", "pl-norm"]
@@ -1035,7 +1035,7 @@ class PowerLaw2SpectralModel(SpectralModel):
 
     See Also
     --------
-    `~gammapy.modeling.models.PowerLawSpectralModel`, `~gammapy.modeling.models.PowerLawNormSpectralModel`
+    PowerLawSpectralModel, PowerLawNormSpectralModel
     """
 
     tag = ["PowerLaw2SpectralModel", "pl-2"]
@@ -1125,7 +1125,7 @@ class BrokenPowerLawSpectralModel(SpectralModel):
 
     See Also
     --------
-    `~gammapy.modeling.models.SmoothBrokenPowerLawSpectralModel`
+    SmoothBrokenPowerLawSpectralModel
     """
 
     tag = ["BrokenPowerLawSpectralModel", "bpl"]
@@ -1172,7 +1172,7 @@ class SmoothBrokenPowerLawSpectralModel(SpectralModel):
 
     See Also
     --------
-    `~gammapy.modeling.models.BrokenPowerLawSpectralModel`
+    BrokenPowerLawSpectralModel
     """
 
     tag = ["SmoothBrokenPowerLawSpectralModel", "sbpl"]
@@ -1309,7 +1309,7 @@ class ExpCutoffPowerLawSpectralModel(SpectralModel):
 
     See Also
     --------
-    `~gammapy.modeling.models.ExpCutoffPowerLawNormSpectralModel`
+    ExpCutoffPowerLawNormSpectralModel
     """
 
     tag = ["ExpCutoffPowerLawSpectralModel", "ecpl"]
@@ -1376,7 +1376,7 @@ class ExpCutoffPowerLawNormSpectralModel(SpectralModel):
 
     See Also
     --------
-    `~gammapy.modeling.models.ExpCutoffPowerLawSpectralModel`
+    ExpCutoffPowerLawSpectralModel
     """
 
     tag = ["ExpCutoffPowerLawNormSpectralModel", "ecpl-norm"]
@@ -1625,7 +1625,7 @@ class LogParabolaSpectralModel(SpectralModel):
 
     See Also
     --------
-    `~gammapy.modeling.models.LogParabolaNormSpectralModel`
+    LogParabolaNormSpectralModel
     """
 
     tag = ["LogParabolaSpectralModel", "lp"]
@@ -1683,7 +1683,7 @@ class LogParabolaNormSpectralModel(SpectralModel):
 
     See Also
     --------
-    `~gammapy.modeling.models.LogParabolaSpectralModel`
+    LogParabolaSpectralModel
     """
 
     tag = ["LogParabolaNormSpectralModel", "lp-norm"]
