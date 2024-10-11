@@ -19,7 +19,7 @@ class SafeMaskMaker(Maker):
 
     .. warning::
 
-         Currently some methods computing a safe energy range ("aeff-default",
+         Currently, some methods computing a safe energy range ("aeff-default",
          "aeff-max" and "edisp-bias") determine a true energy range and apply
          it to reconstructed energy, effectively neglecting the energy dispersion.
 
@@ -47,7 +47,7 @@ class SafeMaskMaker(Maker):
     offset_max : str or `~astropy.units.Quantity`
         Maximum offset cut.
     irfs : {"DL4", "DL3"}
-        Whether to use reprojected ("DL4") or raw ("DL3") irfs.
+        Whether to use reprojected ("DL4") or raw ("DL3") IRFs.
         Default is "DL4".
     """
 
@@ -288,7 +288,7 @@ class SafeMaskMaker(Maker):
         dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.SpectrumDataset`
             Dataset to compute mask for.
         observation: `~gammapy.data.Observation`
-            Observation to compute mask for. It is a mandatory argument when DL3 irfs are used.
+            Observation to compute mask for. It is a mandatory argument when DL3 IRFs are used.
 
 
         Returns
