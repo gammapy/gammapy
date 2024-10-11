@@ -85,6 +85,7 @@ gammapy/gammapy.cfg
 docs/_generated
 docs/gen_modules
 docs/api
+docs/sg_execution_times.rst
 .coverage
 
 dev/crab

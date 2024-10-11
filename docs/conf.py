@@ -112,8 +112,7 @@ intersphinx_mapping["pandas"] = ("https://pandas.pydata.org/pandas-docs/stable/"
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-#exclude_patterns.append("_templates") # in order to handle matomo
-exclude_patterns.append("_static")
+exclude_patterns.append("_templates")
 exclude_patterns.append("**.ipynb_checkpoints")
 exclude_patterns.append("user-guide/model-gallery/*/*.ipynb")
 exclude_patterns.append("user-guide/model-gallery/*/*.md5")
@@ -236,6 +235,10 @@ html_theme_options = {
     },
     "navbar_end": ["version-switcher", "theme-switcher", "navbar-icon-links"],
     "navigation_with_keys": True,
+    # footers
+    "footer_start": ["copyright"],
+    "footer_center": ["last-updated"],
+    "footer_end": ["sphinx-version", "theme-version"]
 }
 
 
@@ -330,10 +333,8 @@ sphinx_gallery_conf = {
 }
 
 html_static_path = ["_static"]
-
-html_css_files = [
-    "custom.css",
-]
+html_css_files = ["custom.css"]
+html_js_files = ["matomo.js"]
 
 html_context = {
     "default_mode": "light",

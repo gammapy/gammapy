@@ -331,7 +331,7 @@ plt.show()
 
 
 ######################################################################
-# Note that here we are lacking statistic because we only use one run of CTA.
+# Note that here we are lacking statistic because we only use one run of CTAO.
 #
 # Phase-resolved spectrum
 # -----------------------

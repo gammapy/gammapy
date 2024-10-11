@@ -64,7 +64,7 @@ check_tutorials_setup()
 # Now, we create a config file for out analysis. You may load this from
 # disc if you have a pre-defined config file.
 #
-# Here, we use 3 simulated CTA runs of the galactic center.
+# Here, we use 3 simulated CTAO runs of the galactic center.
 #
 
 config = AnalysisConfig()
