@@ -61,7 +61,6 @@ def test_from_parametrization():
 
     with pytest.raises(ValueError):
         area2 = EffectiveAreaTable2D.from_parametrization(axis, "SWIFT")
-        assert area2.unit == area_ref.unit
 
 
 @requires_data()
