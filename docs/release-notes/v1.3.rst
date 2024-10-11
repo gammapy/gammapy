@@ -103,7 +103,7 @@ Bug fixes and improvements
 - Add a warning in `TemplateSpatialModel` for presence of nan values 
 - Fix TSmapEstimator stat_scan with sum_over_energy_group=False
 - Fix ignored overwrite in datasets.write
-- Improve plotting of spectral residuals by removing the mask in computation but rathere adding a visual mask.
+- Improve plotting of spectral residuals by removing the mask in computation but rathere adding a visual mask
 - Add strict option to MapAxis.downsample
 - Add alpha maps to ExcessMapEstimator
 
