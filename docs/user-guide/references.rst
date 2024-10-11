@@ -111,7 +111,7 @@ Glossary
 
     MCMC
       Short for "Markov chain Monte Carlo". See the
-      `following recipie <https://gammapy.github.io/gammapy-recipes/_build/html/notebooks/mcmc-sampling-emcee/mcmc_sampling.html>`_.
+      `following recipe <https://gammapy.github.io/gammapy-recipes/_build/html/notebooks/mcmc-sampling-emcee/mcmc_sampling.html>`_.
 
     MET
       Short for "mission elapsed time". See also :ref:`MET_definition` in :ref:`time_handling`.
