@@ -19,7 +19,7 @@ class DatasetsMaker(Maker, parallel.ParallelMixin):
 
     Parameters
     ----------
-    makers : list of `Maker` objects
+    makers : list of `~gammapy.makers.Maker` objects
         Makers.
     stack_datasets : bool, optional
         If True, stack into the reference dataset (see `run` method arguments).
@@ -34,7 +34,7 @@ class DatasetsMaker(Maker, parallel.ParallelMixin):
     cutout_width : tuple of `~astropy.coordinates.Angle`, optional
         Angular sizes of the region in (lon, lat) in that specific order.
         If only one value is passed, a square region is extracted.
-        If None it returns an error, except if the list of makers includes a `SafeMaskMaker`
+        If None it returns an error, except if the list of makers includes a `~gammapy.makers.SafeMaskMaker`
         with the offset-max method defined. In that case it is set to two times `offset_max`.
         Default is None.
     parallel_backend : {'multiprocessing', 'ray'}, optional
@@ -95,7 +95,7 @@ class DatasetsMaker(Maker, parallel.ParallelMixin):
         ----------
         dataset : `~gammapy.datasets.MapDataset`
             Reference dataset.
-        observation : `Observation`
+        observation : `~gammapy.data.Observation`
             Observation.
         """
         if self._apply_cutout:
@@ -142,7 +142,7 @@ class DatasetsMaker(Maker, parallel.ParallelMixin):
         ----------
         dataset : `~gammapy.datasets.MapDataset`
             Reference dataset (used only for stacking if datasets are provided).
-        observations : `Observations`
+        observations : `~gammapy.data.Observations`
             Observations.
         datasets : `~gammapy.datasets.Datasets`
             Base datasets, if provided its length must be the same as the observations.
