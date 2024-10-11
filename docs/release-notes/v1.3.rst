@@ -14,16 +14,34 @@ Summary
 ~~~~~~~
 
 This release introduces a number of performance improvements, new features and bug fixes.
+Improved support is provided for joint analysis with different event types.
 There has been significant code cleanup, specially with respect to the documentaion and three new tutorials have been added.
 
 This release is compatible with numpy >=2.0. 
+Sherpa dependency has beeen fixed to >4.16
 
 
 API changes
 ~~~~~~~~~~~
 
-No new API breaking changes have been introducted in this version.
+One deprecated change has been introducted in this version:
+- The order of arguments in the `FoVBackgroundModel` has been modified; `daatset_name` is now a complusoryt first positional argument.
+
 Features deprecated since Gammapy v1.2 have been removed. 
+
+Infrastructure
+~~~~~~~~~~~~~~
+
+- Matomo is now used for website analytics, replacing Google Analytics.
+
+
+Documentation improvements
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- css with sphinx v15 is now used for the docs build.
+- Tutorials are now ordered in a logical workflow.
+- Three new tutorials have been added: (1) on modelling the EBL absorption, (2) on exposing the general API of `gammapy.estimators` and `FluxMaps`,  (3) on performing time dependent spectroscopy.
+- Code examples have been added in docstrings.
 
 
 New features
@@ -36,35 +54,31 @@ New features
 
 *gammapy.datasets*
 
-- Performance improvement in Fermi-LAT analysis with adaption in psf kernel computation.
-- Stacking of acceptance maps improved.
+- Performance improvement in Fermi-LAT analysis is implemented with adaption in psf kernel computation.
+- Stacking of acceptance maps is improved.
 
 
 *gammapy.maps*
 
-- Multiple non-spatial axes supported in creation on MapDatasets. Full likelihood computation with additional axes not yet supported.
+- Multiple non-spatial axes are now supported in MapDataset creation. Full likelihood computation with additional axes is not yet supported.
 - Map axes with periodic boundary conditions are now supported.
 - An error is raised for maps with invalid input shapes instead of silently broadcasting.
 
 *gammapy.estimators*
 
-- Binwise likelihood profiles are now stored on FluxMaps. FluxMaps obtained from different datasets can be combined.
-- A new tutorial explaining the general Estimator API has been added.
-- A new tutorial showing how to perform time dependent spectroscopy has been added.
+- Binwise likelihood profiles are now stored on FluxMaps. 
+- FluxMaps obtained from different datasets (eg: different event types) can be combined.
 
 *gammapy.stats*
 
-- Implementation of the Timmer-Koenig algorithm with leakage protection to simulate a time series from a power spectrum.
-- Computation of the discrete structure function for a variable source using Emmanoulopoulos et al. (2010) algorithm.
-- Computation of the discrete cross correlation function added.
-
-*infrastructure*
-
-- Add Matomo as website analytics, instead of Google Analytics.
+- Timmer-Koenig algorithm with leakage protection to simulate a time series from a power spectrum is implemented.
+- Discrete structure function for a variable source using Emmanoulopoulos et al. (2010) algorithm is added.
+- Discrete cross correlation function computation is added.
 
 
 *gammapy.modeling*
 
+- The `FitResult` object is exposed as an important API element, combining the results from the optimisation and covariance of the fit.
 - Unique naming of model parameters adapted, leading to resolution of issues with computation of the covariance matrix for complex model lists.
 - New tutorial added for modeling EBL absorption.
 - Time scale issue in simulation energy dependent temporal models resolved.
