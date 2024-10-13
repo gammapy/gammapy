@@ -10,6 +10,27 @@
 - 160 pull requests since v1.2 (not all listed below)
 - 59 closed issues
 
+Contributors
+~~~~~~~~~~~~
+- Stefan Fröse
+- REGEARD Maxime
+- Bruno Khélifi
+- Claudio Galelli
+- aaguasca
+- Fabio PINTORE
+- Daniel Morcuende
+- Atreyee Sinha
+- Brigitta Sipőcz
+- Michele Peresano
+- Maximilian Linhoff
+- AOI
+- stahanna
+- Quentin Remy
+- Astro-Kirsty
+- Fabio Acero
+- Régis Terrier
+
+
 Summary
 ~~~~~~~
 
@@ -80,9 +101,9 @@ New features
 
 - The `FitResult` object is exposed as an important API element, combining the results from the optimisation and covariance of the fit.
 - Unique naming of model parameters adapted, leading to resolution of issues with computation of the covariance matrix for complex model lists.
-- New tutorial added for modeling EBL absorption.
 - Time scale issue in simulation energy dependent temporal models resolved.
 - Definition of `UniformPrior` fixed to return 0 within min and max values indstead of one.
+
 
 Bug fixes and improvements
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -107,9 +128,87 @@ Bug fixes and improvements
 - Add strict option to MapAxis.downsample
 - Add alpha maps to ExcessMapEstimator
 
+
+
 Pull Requests
 ~~~~~~~~~~~~~
 
 This list is incomplete. Small improvements and bug fixes are not listed here.
+
+- [#5472] Add the Matomo tracker into our documentation web pages (Bruno Khélifi)
+- [#5466] Improve the time resolved spectroscopy tutorial (Claudio Galelli)
+- [#5462] Update all the documentation with the new name of CTA : CTAO (Bruno Khélifi)
+- [#5453] Fix time shift from sampled events with `MapDatasetEventSampler` (Fabio PINTORE)
+- [#5449] combine_flux_maps  supports for different energy axes (Quentin Remy)
+- [#5448] Fix typo in Uniform prior returned value (facero)
+- [#5445] Add a to_table() method to TimeMapAxis (Claudio Galelli)
+- [#5440] Fix TSmapEstimator stat_scan with sum_over_energy_group=False (Quentin Remy)
+- [#5438] Speed up event sampler (Fabio PINTORE)
+- [#5437] Remove mask in residual plotting (Atreyee Sinha)
+- [#5433] Sort sampled events by time in `MapDatasetEventSampler` (Fabio PINTORE)
+- [#5427] A time resolved spectroscopy estimator (Atreyee Sinha)
+- [#5423] Function for the discrete cross correlation function (Claudio Galelli)
+- [#5409] Add strict option to `MapAxis.downsample` (Astro-Kirsty)
+- [#5408] Add alpha maps to `ExcessMapEstimator` (Astro-Kirsty)
+- [#5407] Add an API tutorial for Estimators (Astro-Kirsty)
+- [#5405] Add missing parallel options (Quentin Remy)
+- [#5390] Fix region evaluation without psf convolution (Quentin Remy)
+- [#5389] Fix `LabelMapAxis` so it doesn't reorder the labels (Astro-Kirsty)
+- [#5385] Fix reco_exposure computation with mask safe in ExcessMapEstimator (Quentin Remy)
+- [#5382] Fix and tweaks for the stat_scan in TSMapEstimator (Quentin Remy)
+- [#5381] Apply safe mask in TSMapEstimator (Quentin Remy)
+- [#5380] Add max_niter as option in TSMapEstimator (Quentin Remy)
+- [#5378] Observations `__getitem__` method addition (REGEARD Maxime)
+- [#5370] Add offset mask to make_effective_livetime_map (Quentin Remy)
+- [#5366] Remove use of np.rint in pix_tuple_to_idx (Atreyee Sinha)
+- [#5356] Brought gammapy.visualization.plot_distribution in line with its documentation (AOI)
+- [#5353] Add support for joint TSmap estimation (Quentin Remy)
+- [#5350] Adapt `RadMax2D.plot_rad_max_vs_energy` (Astro-Kirsty)
+- [#5346] Add examples to fit function docstrings (Astro-Kirsty)
+- [#5342] Fix evaluation if no edisp is set (Quentin Remy)
+- [#5320] Fix parameters unique names (Quentin Remy)
+- [#5316] Add CovarianceMixin for multicomponent models classes (Quentin Remy)
+- [#5314] Improve get_psf_kernel performance (Quentin Remy)
+- [#5312] More complex background spectral model exposed (Astro-Kirsty)
+- [#5304] introducing a `filename` argument to TemplateSpatialModel.write (Fabio PINTORE)
+- [#5303] QOL changes in Timmer&Konig (Claudio Galelli)
+- [#5300] Fix wrap in PiecewiseNormSpatialModel (Quentin Remy)
+- [#5298] Coherent units in `TemporalModel.sample_time` (Fabio PINTORE)
+- [#5297] Precompute the PSF Kernel if the PSFMap has only one bin (Quentin Remy)
+- [#5289] Add new methods for combine_flux_maps to use likelihood profile or its approximation (Quentin Remy)
+- [#5285] Add support for stat_scan in TSMapEstimator (Quentin Remy)
+- [#5280] Add min_pix option in WcsGeom.cutout and set it to 3 for IRFs (Quentin Remy)
+- [#5279] Add copy method on FluxMaps (Quentin Remy)
+- [#5275] Add a notebook for EBL correction example (Atreyee Sinha)
+- [#5271] Allow extrapolation only along spatial dimension in `mask_safe_edisp` (Quentin Remy)
+- [#5270] Modify acceptance stacking behavior (Régis Terrier)
+- [#5269] Add leakage protection factor in the Timmer Konig algorithm (Claudio Galelli)- [#5258] Add write function to `FitResult` (Astro-Kirsty)
+- [#5255] Expose `FitResult` (Astro-Kirsty)
+- [#5254] Make non-FITS table file from FluxPoints overwritable (Michele Peresano)
+- [#5222] Allow `MapAxis` to be passed in `SpectralModel.plot()` (Astro-Kirsty)
+- [#5207] Specify the models with duplicated name in `Models` (Fabio PINTORE)
+- [#5206] Convert negative `npred` values to zero in `MapDatasetEventSampler` (Fabio PINTORE)
+- [#5205] Specify the sampled model in `MapDatasetEventSampler` (Fabio PINTORE)
+- [#5200] Use two argument form of Time to parse reference time (Maximilian Linhoff)
+- [#5188] Raise an error if the geometry of the exclusion mask passed to `ReflectedRegionsBackgroundMaker` is not an image (REGEARD Maxime)
+- [#5186] Adjust `to_edisp_kernel` input to `MapAxis` (Astro-Kirsty)
+- [#5184] Support additional axes in Mapdataset.create (Régis Terrier)
+- [#5180] Raise error on invalid input shape in Map (Maximilian Linhoff)
+- [#5176] Fix `observatory_earth_location` (Stefan Fröse)
+- [#5169] Add boundary condition to create a PeriodicMapAxis (Atreyee Sinha)
+- [#5161] Flux maps combination (Quentin Remy)
+- [#5160] Fix select_nested_models if there is no free parameters for the null hypothesis (Quentin Remy)
+- [#5156] Introduction of the structure function for variability studies (Claudio Galelli)
+- [#5145] LightCurveTemplateTemporalModel method to generate a model from a periodogram by using the Timmer algorithm (Claudio Galelli)
+- [#5135] Add different options to compute stat_array on FluxPointsDatasets (Quentin Remy)
+- [#5129] Copy on and off phase intervals in `PhaseBackgroundMaker` (REGEARD Maxime)
+- [#5125] Fix implementation of the testing code for larger docstring examples (Astro-Kirsty)
+- [#5118] css for sphinx v15 (stahanna)
+- [#5115] Add 3 TS definitions to compute with TestStatisticNested class (Quentin Remy)
+- [#5058] 3PC Fermi catalog (REGEARD Maxime)
+- [#5057] 2PC Fermi catalog (REGEARD Maxime)
+- [#4996] MAINT: use new location for dev wheels (Brigitta Sipőcz)
+- [#4983] Adjust getting-started page (Astro-Kirsty)
+- [#4433] Add a function to combine excess maps (Quentin Remy)
 
 
