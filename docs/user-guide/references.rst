@@ -109,8 +109,12 @@ Glossary
       Gammapy utility classes performing data reduction of the DL3 data to binned datasets (DL4).
       See :ref:`makers` and the :ref:`data flow <data_flow>`.
 
+    MCMC
+      Short for "Markov chain Monte Carlo". See the
+      `following recipe <https://gammapy.github.io/gammapy-recipes/_build/html/notebooks/mcmc-sampling-emcee/mcmc_sampling.html>`_.
+
     MET
-      Short for "mission elapsed time". see also :ref:`MET_definition` in :ref:`time_handling`.
+      Short for "mission elapsed time". See also :ref:`MET_definition` in :ref:`time_handling`.
 
     PSF
       Short for "point spread function": it is the IRF representing the probability density of the angular separation
