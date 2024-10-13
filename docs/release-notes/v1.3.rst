@@ -29,6 +29,11 @@ Contributors
 - Astro-Kirsty
 - Fabio Acero
 - Régis Terrier
+- Lars Mohrmann
+- VascoSch92
+- Laura Olivera Nieto
+- Axel Donath
+- Samantha Wong
 
 
 Summary
