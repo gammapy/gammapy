@@ -367,6 +367,7 @@ def test_write(tmpdir):
     assert "OptimizeResult" in data
 
 
+@requires_data()
 def test_covariance_no_optimize_results():
     spec = SpectrumDatasetOnOff.read(
         "$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits"
