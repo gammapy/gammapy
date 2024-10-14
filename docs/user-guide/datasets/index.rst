@@ -242,10 +242,15 @@ serialised as a `~gammapy.modeling.models.TemplateSpectralModel`.
 Using gammapy.datasets
 ----------------------
 
-.. minigallery:: gammapy.datasets.MapDataset
-    :add-heading:
+.. minigallery::
+    :add-heading: Examples using `~gammapy.datasets.MapDataset`
+
+    ../examples/tutorials/starting/analysis_1.py
+    ../examples/tutorials/analysis-3d/analysis_3d.py
 
 
-.. minigallery:: gammapy.datasets.SpectrumDatasetOnOff
-    :add-heading:
+.. minigallery::
+    :add-heading: Examples using `~gammapy.datasets.SpectrumDataset`
 
+    ../examples/tutorials/analysis-1d/spectral_analysis.py
+    ../examples/tutorials/analysis-1d/spectral_analysis_hli.py

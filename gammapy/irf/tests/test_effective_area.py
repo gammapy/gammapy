@@ -10,6 +10,7 @@ from gammapy.utils.testing import (
     mpl_plot_check,
     requires_data,
 )
+from gammapy.utils.deprecation import GammapyDeprecationWarning
 
 
 @pytest.fixture(scope="session")
@@ -53,6 +54,13 @@ def test_from_parametrization():
     assert_allclose(area.quantity[:, 0], area_ref)
     assert area.unit == area_ref.unit
     assert area.meta["TELESCOP"] == "HESS"
+
+    with pytest.warns(GammapyDeprecationWarning):
+        area2 = EffectiveAreaTable2D.from_parametrization(axis, "CTA")
+        assert area2.unit == area_ref.unit
+
+    with pytest.raises(ValueError):
+        area2 = EffectiveAreaTable2D.from_parametrization(axis, "SWIFT")
 
 
 @requires_data()

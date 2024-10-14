@@ -29,13 +29,13 @@ log = logging.getLogger(__name__)
 
 
 def squash_fluxpoints(flux_point, axis):
-    """Squash a FluxPoints object into one point.
+    """Squash a `~FluxPoints` object into one point.
+
     The log-likelihoods profiles in each bin are summed
     to compute the resultant quantities. Stat profiles
-    must be present on the fluxpoints object for
+    must be present on the `~FluxPoints` object for
     this method to work.
     """
-
     value_scan = flux_point.stat_scan.geom.axes["norm"].center
     stat_scan = np.sum(flux_point.stat_scan.data, axis=0).ravel()
     f = interp1d(value_scan, stat_scan, kind="quadratic", bounds_error=False)
@@ -317,8 +317,7 @@ class FluxPoints(FluxMaps):
     def from_table(
         cls, table, sed_type=None, format=None, reference_model=None, gti=None
     ):
-        """Create flux points from a table. The table column names must be consistent with the
-        sed_type.
+        """Create flux points from a table. The table column names must be consistent with the sed_type.
 
         Parameters
         ----------
@@ -436,7 +435,6 @@ class FluxPoints(FluxMaps):
 
                 If None, the format will be guessed by looking at the axes that are present in the object.
                 Default is None.
-
         formatted : bool
             Formatted version with column formats applied. Numerical columns are
             formatted to .3f and .3e respectively. Default is False.
@@ -448,7 +446,6 @@ class FluxPoints(FluxMaps):
 
         Examples
         --------
-
         This is how to read and plot example flux points:
 
         >>> from gammapy.estimators import FluxPoints
@@ -594,7 +591,7 @@ class FluxPoints(FluxMaps):
         return model.inverse(dnde_mean)
 
     def _plot_get_flux_err(self, sed_type=None):
-        """Compute flux error for given SED type"""
+        """Compute flux error for given SED type."""
         y_errn, y_errp = None, None
 
         if "norm_err" in self.available_quantities:
@@ -774,6 +771,7 @@ class FluxPoints(FluxMaps):
 
     def recompute_ul(self, n_sigma_ul=2, **kwargs):
         """Recompute upper limits corresponding to the given value.
+
         The pre-computed statistic profiles must exist for the re-computation.
 
         Parameters
@@ -799,7 +797,6 @@ class FluxPoints(FluxMaps):
         >>> print(flux_points_recomputed.meta["n_sigma_ul"], flux_points_recomputed.flux_ul.data[0])
         3 [[6.22245374e-09]]
         """
-
         if not self.has_stat_profiles:
             raise ValueError(
                 "Stat profiles not present. Upper limit computation is not possible"
@@ -823,12 +820,13 @@ class FluxPoints(FluxMaps):
 
     def resample_axis(self, axis_new):
         """Rebin the flux point object along the new axis.
+
         The log-likelihoods profiles in each bin are summed
         to compute the resultant quantities.
-        Stat profiles must be present on the fluxpoints object for
+        Stat profiles must be present on the `~gammapy.estimators.FluxPoints` object for
         this method to work.
 
-        For now, works only for flat fluxpoints.
+        For now, works only for flat `~gammapy.estimators.FluxPoints`.
 
         Parameters
         ----------
@@ -840,7 +838,6 @@ class FluxPoints(FluxMaps):
         flux_points : `~gammapy.estimators.FluxPoints`
             A new FluxPoints object with modified axis.
         """
-
         if not self.has_stat_profiles:
             raise ValueError("Stat profiles not present, rebinning is not possible")
 

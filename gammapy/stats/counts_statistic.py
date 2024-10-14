@@ -52,6 +52,7 @@ class CountsStatistic(abc.ABC):
     @property
     def sqrt_ts(self):
         """Return statistical significance of measured excess.
+
         The sign of the excess is applied to distinguish positive and negative fluctuations.
         """
         return np.sign(self.n_sig) * np.sqrt(self.ts)
@@ -59,6 +60,7 @@ class CountsStatistic(abc.ABC):
     @property
     def p_value(self):
         """Return p_value of measured excess.
+
         Here the value accounts only for the positive excess significance (i.e. one-sided).
         """
         return 0.5 * chi2.sf(self.ts, 1)
@@ -138,7 +140,6 @@ class CountsStatistic(abc.ABC):
         n_sigma : float
             Confidence level of the uncertainty expressed in number of sigma. Default is 1.
         """
-
         errp = np.zeros_like(self.n_on, dtype="float")
         max_range = self.n_sig + 2 * n_sigma * (self.error + 1)
 
@@ -167,7 +168,6 @@ class CountsStatistic(abc.ABC):
         n_sigma : float
             Confidence level of the upper limit expressed in number of sigma. Default is 3.
         """
-
         ul = np.zeros_like(self.n_on, dtype="float")
 
         min_range = self.n_sig
@@ -207,7 +207,6 @@ class CountsStatistic(abc.ABC):
         n_sig : `numpy.ndarray`
             Excess.
         """
-
         n_sig = np.zeros_like(self.n_bkg, dtype="float")
         it = np.nditer(n_sig, flags=["multi_index"])
 
@@ -400,7 +399,7 @@ class WStatCountsStatistic(CountsStatistic):
 
     @property
     def n_sig(self):
-        """Excess"""
+        """Excess."""
         return self.n_on - self.n_bkg - self.mu_sig
 
     @property

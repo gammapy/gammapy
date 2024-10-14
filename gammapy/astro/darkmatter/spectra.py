@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Dark matter spectra."""
+
 import numpy as np
 import astropy.units as u
 from astropy.table import Table
@@ -70,7 +71,6 @@ class PrimaryFlux(TemplateNDSpectralModel):
     tag = ["PrimaryFlux", "dm-pf"]
 
     def __init__(self, mDM, channel):
-
         self.table_path = make_path(self.table_filename)
         if not self.table_path.exists():
             raise FileNotFoundError(
@@ -213,7 +213,6 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
         unit="",
         interp="log",
     )
-    scale._is_norm = True
     tag = ["DarkMatterAnnihilationSpectralModel", "dm-annihilation"]
 
     def __init__(self, mass, channel, scale=scale.quantity, jfactor=1, z=0, k=2):
@@ -321,7 +320,6 @@ class DarkMatterDecaySpectralModel(SpectralModel):
         unit="",
         interp="log",
     )
-    scale._is_norm = True
 
     tag = ["DarkMatterDecaySpectralModel", "dm-decay"]
 

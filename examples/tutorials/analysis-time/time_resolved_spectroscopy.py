@@ -1,9 +1,6 @@
 """
-A time resolved spectroscopy estimator
-======================================
-
-Aim
----
+Time resolved spectroscopy estimator
+====================================
 
 Perform spectral fits of a blazar in different time bins to investigate
 spectral changes during flares.
@@ -257,7 +254,6 @@ print(results[0].models)
 
 
 def create_table(time_intervals, fit_result):
-
     t = QTable()
 
     t["tstart"] = np.array(time_intervals).T[0]
@@ -325,11 +321,18 @@ print("Integral flux in the first bin:", integral_flux)
 # amplitude
 #
 
+plt.errorbar(
+    table["amplitude"],
+    table["index"],
+    xerr=table["amplitude_err"],
+    yerr=table["index_err"],
+    linestyle=":",
+    linewidth=0.5,
+)
 plt.scatter(table["amplitude"], table["index"], c=time_axis.center.value)
-plt.plot(table["amplitude"], table["index"], linewidth=0.5)
 plt.xlabel("amplitude")
 plt.ylabel("index")
-plt.colorbar()
+plt.colorbar().set_label("time")
 plt.show()
 
 

@@ -130,7 +130,7 @@ plt.show()
 # TS map estimation
 # -----------------
 #
-# The Test Statistic, TS = 2 ∆ log L (`Mattox et
+# The Test Statistic, :math:`TS = 2 \Delta log L` (`Mattox et
 # al. 1996 <https://ui.adsabs.harvard.edu/abs/1996ApJ...461..396M/abstract>`__),
 # compares the likelihood function L optimized with and without a given
 # source. The TS map is computed by fitting by a single amplitude
@@ -150,18 +150,47 @@ spatial_model = PointSpatialModel()
 spectral_model = PowerLawSpectralModel(amplitude="1e-22 cm-2 s-1 keV-1", index=2)
 model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
 
-# %%time
-estimator = TSMapEstimator(
-    model,
-    kernel_width="1 deg",
-    energy_edges=[10, 500] * u.GeV,
-)
-maps = estimator.run(dataset)
-
 
 ######################################################################
-# Plot resulting images
-# ~~~~~~~~~~~~~~~~~~~~~
+# Here we show a full configuration of the estimator. We remind the user of the meaning
+# of the various quantities:
+#
+# -  ``model``: a `~gammapy.modeling.models.SkyModel` which is converted to a source model kernel
+# -  ``kernel_width``: the width for the above kernel
+# -  ``n_sigma``: number of sigma for the flux error
+# -  ``n_sigma_ul``: the number of sigma for the flux upper limits
+# -  ``selection_optional``: what optional maps to compute
+# -  ``n_jobs``: for running in parallel, the number of processes used for the computation
+# -  ``sum_over_energy_groups``: to sum over the energy groups or fit the `norm` on the full energy cube
+
+
+# %%time
+estimator = TSMapEstimator(
+    model=model,
+    kernel_width="1 deg",
+    energy_edges=[10, 500] * u.GeV,
+    n_sigma=1,
+    n_sigma_ul=2,
+    selection_optional=None,
+    n_jobs=1,
+    sum_over_energy_groups=True,
+)
+
+
+maps = estimator.run(dataset)
+
+######################################################################
+# Accessing and visualising results
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# Below we print the result of the `~gammapy.estimators.TSMapEstimator`. We have access to a number of
+# different quantities, as shown below. We can also access the quantities names
+# through ``map_result.available_quantities``.
+#
+
+print(maps)
+
+######################################################################
 #
 
 fig, (ax1, ax2, ax3) = plt.subplots(
@@ -178,6 +207,19 @@ ax2.set_title("Flux map")
 maps["niter"].plot(ax=ax3, add_cbar=True)
 ax3.set_title("Iteration map")
 plt.show()
+
+
+######################################################################
+# The flux in each pixel is obtained by multiplying a reference model with a
+# normalisation factor:
+
+print(maps.reference_model)
+
+######################################################################
+#
+maps.norm.plot(add_cbar=True, stretch="sqrt")
+plt.show()
+
 
 ######################################################################
 # Source candidates
