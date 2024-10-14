@@ -53,7 +53,6 @@ def compute_fvar(flux, flux_err, axis=0):
        curves from active galaxies", Vaughan et al. (2003)
        https://ui.adsabs.harvard.edu/abs/2003MNRAS.345.1271V
     """
-
     flux_mean = np.nanmean(flux, axis=axis)
     n_points = np.count_nonzero(~np.isnan(flux), axis=axis)
 
@@ -104,7 +103,6 @@ def compute_fpp(flux, flux_err, axis=0):
        Arakelian 564 and Ton S180", Edelson et al. (2002), equation 3,
        https://iopscience.iop.org/article/10.1086/323779
     """
-
     flux_mean = np.nanmean(flux, axis=axis)
     n_points = np.count_nonzero(~np.isnan(flux), axis=axis)
     flux = flux.swapaxes(0, axis).T
@@ -177,7 +175,6 @@ def compute_flux_doubling(flux, flux_err, coords, axis=0):
         Dictionary containing the characteristic flux doubling, halving and errors,
         with coordinates at which they were found.
     """
-
     flux = np.atleast_2d(flux).swapaxes(0, axis).T
     flux_err = np.atleast_2d(flux_err).swapaxes(0, axis).T
 
@@ -257,10 +254,9 @@ def structure_function(flux, flux_err, time, tdelta_precision=5):
     References
     ----------
     .. [Emmanoulopoulos2010] "On the use of structure functions to study blazar variability:
-    caveats and problems", Emmanoulopoulos et al. (2010)
-    https://academic.oup.com/mnras/article/404/2/931/968488
+       caveats and problems", Emmanoulopoulos et al. (2010)
+       https://academic.oup.com/mnras/article/404/2/931/968488
     """
-
     dist_matrix = (time[np.newaxis, :] - time[:, np.newaxis]).round(
         decimals=tdelta_precision
     )
@@ -316,10 +312,9 @@ def discrete_correlation(flux1, flux_err1, flux2, flux_err2, time1, time2, tau, 
     References
     ----------
     .. [Edelson1988] "THE DISCRETE CORRELATION FUNCTION: A NEW METHOD FOR ANALYZING
-    UNEVENLY SAMPLED VARIABILITY DATA", Edelson et al. (1988)
-    https://ui.adsabs.harvard.edu/abs/1988ApJ...333..646E/abstract
+       UNEVENLY SAMPLED VARIABILITY DATA", Edelson et al. (1988)
+       https://ui.adsabs.harvard.edu/abs/1988ApJ...333..646E/abstract
     """
-
     flux1 = np.rollaxis(flux1, axis, 0)
     flux2 = np.rollaxis(flux2, axis, 0)
 
@@ -439,7 +434,7 @@ def TimmerKonig_lightcurve_simulator(
     References
     ----------
     .. [Timmer1995] "On generating power law noise", J. Timmer and M, Konig, section 3
-    https://ui.adsabs.harvard.edu/abs/1995A%26A...300..707T/abstract
+       https://ui.adsabs.harvard.edu/abs/1995A%26A...300..707T/abstract
     """
     if not callable(power_spectrum):
         raise ValueError(
