@@ -27,13 +27,11 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
     fitted within the energy range defined by the energy group. This is done for
     each group independently. The amplitude is re-normalized using the "norm" parameter,
     which specifies the deviation of the flux from the reference model in this
-    energy group. See https://gamma-astro-data-formats.readthedocs.io/en/latest/spectra/binned_likelihoods/index.html  # noqa: E501
+    energy group. See https://gamma-astro-data-formats.readthedocs.io/en/latest/spectra/binned_likelihoods/index.html
     for details.
 
-    The method is also described in the Fermi-LAT catalog paper
-    https://ui.adsabs.harvard.edu/abs/2015ApJS..218...23A
-    or the HESS Galactic Plane Survey paper
-    https://ui.adsabs.harvard.edu/abs/2018A%26A...612A...1H
+    The method is also described in the `Fermi-LAT catalog paper <https://ui.adsabs.harvard.edu/abs/2015ApJS..218...23A>`__
+    or the `H.E.S.S. Galactic Plane Survey paper <https://ui.adsabs.harvard.edu/abs/2018A%26A...612A...1H>`__
 
     Parameters
     ----------
@@ -115,7 +113,6 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
         flux_points : `FluxPoints`
             Estimated flux points.
         """
-
         if not isinstance(datasets, DatasetsActor):
             datasets = Datasets(datasets=datasets)
 
@@ -200,7 +197,7 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
             return self._nan_result(datasets, model, energy_min, energy_max)
 
     def _nan_result(self, datasets, model, energy_min, energy_max):
-        """NaN result"""
+        """NaN result."""
         energy_axis = MapAxis.from_energy_edges([energy_min, energy_max])
 
         with np.errstate(invalid="ignore", divide="ignore"):

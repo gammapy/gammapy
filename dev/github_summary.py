@@ -198,7 +198,7 @@ def list_merged_PRs(filename, milestones, from_backports):
     table = Table.read(filename)
 
     # Keep only merged PRs
-    table = table[table["is_merged"] is True]
+    table = table[table["is_merged"] == True]
 
     # Keep the requested milestones
     valid = np.zeros((len(table)), dtype="bool")

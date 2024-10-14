@@ -26,6 +26,8 @@
 # be accessible, and the documentation will not build correctly.
 
 import datetime
+import sys
+import os
 
 # Get configuration information from setup.cfg
 from configparser import ConfigParser
@@ -35,7 +37,7 @@ from pkg_resources import get_distribution
 from sphinx_astropy.conf import *
 
 # Sphinx-gallery config
-from sphinx_gallery.sorting import ExplicitOrder, FileNameSortKey
+from sphinx_gallery.sorting import ExplicitOrder
 
 # Load utils docs functions
 from gammapy.utils.docs import SubstitutionCodeBlock, gammapy_sphinx_ext_activate
@@ -55,6 +57,8 @@ def setup(app):
 conf = ConfigParser()
 conf.read([os.path.join(os.path.dirname(__file__), "..", "setup.cfg")])
 setup_cfg = dict(conf.items("metadata"))
+
+sys.path.insert(0, os.path.dirname(__file__))
 
 linkcheck_anchors_ignore = []
 linkcheck_ignore = [
@@ -221,7 +225,7 @@ html_theme_options = {
         {
             "name": "Twitter",
             "url": "https://twitter.com/gammapyST",
-            "icon": "fab fa-twitter-square",
+            "icon": "fab fa-square-x-twitter",
         },
         {
             "name": "Slack",
@@ -319,7 +323,7 @@ sphinx_gallery_conf = {
     "exclude_implicit_doc": {},
     "filename_pattern": r"\.py",
     "reset_modules": ("matplotlib",),
-    "within_subsection_order": FileNameSortKey,
+    "within_subsection_order": "sphinxext.TutorialExplicitOrder",
     "download_all_examples": True,
     "capture_repr": ("_repr_html_", "__repr__"),
     "nested_sections": False,

@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Tools to create profiles (i.e. 1D "slices" from 2D images)."""
+
 from itertools import repeat
 import numpy as np
 from astropy import units as u
@@ -21,7 +22,7 @@ class FluxProfileEstimator(FluxPointsEstimator):
     ----------
     regions : list of `~regions.SkyRegion`
         Regions to use.
-    spectrum : `~gammapy.modeling.models.SpectralModel` (optional)
+    spectrum : `~gammapy.modeling.models.SpectralModel`, optional
         Spectral model to compute the fluxes or brightness.
         Default is power-law with spectral index of 2.
     n_jobs : int, optional
@@ -143,7 +144,6 @@ class FluxProfileEstimator(FluxPointsEstimator):
         profile : `~gammapy.estimators.FluxPoints`
             Profile flux points.
         """
-
         datasets = Datasets(datasets=datasets)
 
         maps = parallel.run_multiprocessing(

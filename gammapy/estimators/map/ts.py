@@ -65,7 +65,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
     Parameters
     ----------
-    model : `~gammapy.modeling.model.SkyModel`
+    model : `~gammapy.modeling.models.SkyModel`
         Source model kernel. If set to None,
         assume spatail model: point source model, PointSpatialModel.
         spectral model: PowerLawSpectral Model of index 2
@@ -155,7 +155,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
     <BLANKLINE>
       geom                   : WcsGeom
       axes                   : ['lon', 'lat', 'energy']
-      shape                  : (400, 200, 1)
+      shape                  : (np.int64(400), np.int64(200), 1)
       quantities             : ['ts', 'norm', 'niter', 'norm_err', 'npred', 'npred_excess', 'stat', 'stat_null', 'success']
       ref. model             : pl
       n_sigma                : 1
@@ -471,7 +471,6 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         dataset : `~gammapy.datasets.Datasets` or `~gammapy.datasets.MapDataset`
             Map dataset or Datasets (list of MapDataset with the same spatial geometry).
         """
-
         maps = [self.estimate_fit_input_maps(dataset=d) for d in datasets]
 
         mask = np.sum([_["mask"].data for _ in maps], axis=0).astype(bool)
@@ -663,7 +662,7 @@ class SimpleMapDataset:
 
     @lazyproperty
     def norm_bounds(self):
-        """Bounds for x"""
+        """Bounds for x."""
         return norm_bounds_cython(self.counts, self.background, self.model)
 
     def npred(self, norm):
@@ -874,7 +873,6 @@ class BrentqFluxEstimator(Estimator):
         result : dict
             Result dictionary including 'stat_scan'.
         """
-
         sparse_norms = _get_norm_scan_values(self.norm, result)
 
         scale = sparse_norms[None, :]
@@ -1016,7 +1014,6 @@ def _ts_value(
     TS : float
         Test statistic value at the given pixel position.
     """
-
     datasets = []
     nd = len(counts)
     for idx in range(nd):

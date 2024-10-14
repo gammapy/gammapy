@@ -195,14 +195,13 @@ def find_peaks_in_flux_map(maps, threshold, min_distance=1):
     >>> # Find the peaks which are above 5 sigma
     >>> sources = find_peaks_in_flux_map(maps, threshold=5, min_distance=0.1*u.deg)
     >>> print(sources[:4])
-     x   y      ra       dec    ...   norm  norm_err     flux      flux_err
-               deg       deg    ...                  1 / (s cm2) 1 / (s cm2)
-    --- --- --------- --------- ... ------- -------- ----------- -----------
-    158 135 266.05019 -28.70181 ... 0.28551  0.06450   2.827e-12   6.385e-13
-     92 133 267.07022 -27.31834 ... 0.37058  0.08342   3.669e-12   8.259e-13
-    176 134 265.80492 -29.09805 ... 0.30561  0.06549   3.025e-12   6.484e-13
-    282 150 263.78083 -31.12704 ... 0.55027  0.12611   5.448e-12   1.249e-12
-
+    x   y      ra       dec      npred   npred_excess   counts     ts    sqrt_ts   norm  norm_err     flux      flux_err
+               deg       deg                                                                       1 / (s cm2) 1 / (s cm2)
+    --- --- --------- --------- --------- ------------ --------- -------- ------- ------- -------- ----------- -----------
+    158 135 266.05019 -28.70181 192.00000     61.33788 192.00000 25.11839 5.01183 0.28551  0.06450   2.827e-12   6.385e-13
+     92 133 267.07022 -27.31834 137.00000     51.99467 137.00000 26.78181 5.17511 0.37058  0.08342   3.669e-12   8.259e-13
+    176 134 265.80492 -29.09805 195.00000     65.15990 195.00000 28.29158 5.31898 0.30561  0.06549   3.025e-12   6.484e-13
+    282 150 263.78083 -31.12704  84.00000     39.99004  84.00000 28.61526 5.34932 0.55027  0.12611   5.448e-12   1.249e-12
     """
     quantity_for_peaks = maps["sqrt_ts"]
 
@@ -393,7 +392,8 @@ def resample_energy_edges(dataset, conditions={}):
 
 
 def compute_lightcurve_fvar(lightcurve, flux_quantity="flux"):
-    r"""Compute the fractional excess variance of the input lightcurve.
+    """
+    Compute the fractional excess variance of the input lightcurve.
 
     Internally calls the `~gammapy.stats.compute_fvar` function.
 
@@ -410,7 +410,6 @@ def compute_lightcurve_fvar(lightcurve, flux_quantity="flux"):
     fvar : `~astropy.table.Table`
         Table of fractional excess variance and associated error for each energy bin of the lightcurve.
     """
-
     flux = getattr(lightcurve, flux_quantity)
     flux_err = getattr(lightcurve, flux_quantity + "_err")
 
@@ -431,7 +430,8 @@ def compute_lightcurve_fvar(lightcurve, flux_quantity="flux"):
 
 
 def compute_lightcurve_fpp(lightcurve, flux_quantity="flux"):
-    r"""Compute the point-to-point excess variance of the input lightcurve.
+    """
+    Compute the point-to-point excess variance of the input lightcurve.
 
     Internally calls the `~gammapy.stats.compute_fpp` function
 
@@ -447,7 +447,6 @@ def compute_lightcurve_fpp(lightcurve, flux_quantity="flux"):
     table : `~astropy.table.Table`
         Table of point-to-point excess variance and associated error for each energy bin of the lightcurve.
     """
-
     flux = getattr(lightcurve, flux_quantity)
     flux_err = getattr(lightcurve, flux_quantity + "_err")
 
@@ -468,7 +467,8 @@ def compute_lightcurve_fpp(lightcurve, flux_quantity="flux"):
 
 
 def compute_lightcurve_doublingtime(lightcurve, flux_quantity="flux"):
-    r"""Compute the minimum characteristic flux doubling and halving time for the input lightcurve.
+    """
+    Compute the minimum characteristic flux doubling and halving time for the input lightcurve.
 
     Internally calls the `~gammapy.stats.compute_flux_doubling` function.
 
@@ -499,11 +499,10 @@ def compute_lightcurve_doublingtime(lightcurve, flux_quantity="flux"):
 
     References
     ----------
-    ..[Brown2013] "Locating the γ-ray emission region
-    of the flat spectrum radio quasar PKS 1510−089", Brown et al. (2013)
-    https://academic.oup.com/mnras/article/431/1/824/1054498
+    .. [Brown2013] "Locating the γ-ray emission region
+       of the flat spectrum radio quasar PKS 1510−089", Brown et al. (2013)
+       https://academic.oup.com/mnras/article/431/1/824/1054498
     """
-
     flux = getattr(lightcurve, flux_quantity)
     flux_err = getattr(lightcurve, flux_quantity + "_err")
     coords = lightcurve.geom.axes["time"].center
@@ -545,10 +544,11 @@ def compute_lightcurve_doublingtime(lightcurve, flux_quantity="flux"):
 def compute_lightcurve_discrete_correlation(
     lightcurve1, lightcurve2=None, flux_quantity="flux", tau=None
 ):
-    r"""Compute the discrete correlation function for two lightcurves, or the discrete autocorrelation if only one lightcurve is provided.
+    """Compute the discrete correlation function for two lightcurves, or the discrete autocorrelation if only one lightcurve is provided.
+
     NaN values will be ignored in the computation in order to account for possible gaps in the data.
 
-    Internally calls the `~gammapy.stats.discrete_correlation` function
+    Internally calls the `~gammapy.stats.discrete_correlation` function.
 
     Parameters
     ----------
@@ -564,22 +564,21 @@ def compute_lightcurve_discrete_correlation(
         Size of the bins to compute the discrete correlation.
         If None, the bin size will be double the bins of the first lightcurve. Default is None.
 
-
     Returns
     -------
     discrete_correlation_dict : dict
-        Dictionary containing:
-            "bins" : the array of discrete time bins
-            "discrete_correlation" : discrete correlation function values
-            "discrete_correlation_err" : associated error
+        Dictionary containing the discrete correlation results. Entries are:
+
+                * "bins" : the array of discrete time bins
+                * "discrete_correlation" : discrete correlation function values
+                * "discrete_correlation_err" : associated error
 
     References
     ----------
     .. [Edelson1988] "THE DISCRETE CORRELATION FUNCTION: A NEW METHOD FOR ANALYZING
-    UNEVENLY SAMPLED VARIABILITY DATA", Edelson et al. (1988)
-    https://ui.adsabs.harvard.edu/abs/1988ApJ...333..646E/abstract
+       UNEVENLY SAMPLED VARIABILITY DATA", Edelson et al. (1988)
+       https://ui.adsabs.harvard.edu/abs/1988ApJ...333..646E/abstract
     """
-
     flux1 = getattr(lightcurve1, flux_quantity)
     flux_err1 = getattr(lightcurve1, flux_quantity + "_err")
     coords1 = lightcurve1.geom.axes["time"].center
@@ -643,7 +642,6 @@ def get_edges_fixed_bins(fluxpoint, group_size, axis_name="energy"):
     edges_max : `~astropy.units.Quantity` or `~astropy.time.Time`
         Maximum bin edge for the new axis.
     """
-
     ax = fluxpoint.geom.axes[axis_name]
     nbin = ax.nbin
     if not isinstance(group_size, int):
@@ -782,7 +780,8 @@ def get_rebinned_axis(fluxpoint, axis_name="energy", method=None, **kwargs):
 
 
 def get_combined_significance_maps(estimator, datasets):
-    """Computes excess and significance for a set of datasets.
+    """Compute excess and significance for a set of datasets.
+
     The significance computation assumes that the model contains
     one degree of freedom per valid energy bin in each dataset.
     This method implemented here is valid under the assumption
@@ -795,20 +794,20 @@ def get_combined_significance_maps(estimator, datasets):
 
     Parameters
     ----------
-    estimator : `~gammapy.estimator.ExcessMapEstimator` or `~gammapy.estimator.TSMapEstimator`
+    estimator : `~gammapy.estimators.ExcessMapEstimator` or `~gammapy.estimators.TSMapEstimator`
         Excess Map Estimator or TS Map Estimator
     dataset : `~gammapy.datasets.Datasets`
-        Datasets containing only `~gammapy.maps.MapDataset`.
+        Datasets containing only `~gammapy.datasets.MapDataset`.
 
     Returns
     -------
     results : dict
-        Dictionary with keys :
-        - "significance" : joint significance map.
-        - "df" : degree of freedom map (one norm per valid bin).
-        - "npred_excess" : summed excess map.
-        - "estimator_results" : dictionary containing the estimator results for each dataset.
+        Dictionary with entries:
 
+                * "significance" : joint significance map.
+                * "df" : degree of freedom map (one norm per valid bin).
+                * "npred_excess" : summed excess map.
+                * "estimator_results" : dictionary containing the estimator results for each dataset.
     """
     from .map.excess import ExcessMapEstimator
     from .map.ts import TSMapEstimator
@@ -850,6 +849,7 @@ def combine_flux_maps(
     maps, method="gaussian_errors", reference_model=None, dnde_scan_axis=None
 ):
     """Create a FluxMaps by combining a list of flux maps with the same geometry.
+
      This assumes the flux maps are independent measurements of the same true value.
      The GTI is stacked in the process.
 
@@ -887,7 +887,6 @@ def combine_flux_maps(
     flux_maps : `~gammapy.estimators.FluxMaps`
         Joint flux map.
     """
-
     gtis = [map_.gti for map_ in maps if map_.gti is not None]
     if np.any(gtis):
         gti = gtis[0].copy()
@@ -990,7 +989,7 @@ def _default_scan_map(flux_map, dnde_scan_axis=None):
 
 
 def interpolate_profile_map(flux_map, dnde_scan_axis=None):
-    """Interpolate sparse likelihood profile to regular grid
+    """Interpolate sparse likelihood profile to regular grid.
 
     Parameters
     ----------
@@ -1006,7 +1005,6 @@ def interpolate_profile_map(flux_map, dnde_scan_axis=None):
         Likelihood profile map.
 
     """
-
     stat_scan = _default_scan_map(flux_map, dnde_scan_axis)
     dnde_scan_axis = stat_scan.geom.axes["dnde"]
 
@@ -1048,9 +1046,7 @@ def approximate_profile_map(
     -------
     scan_map: `~gammapy.estimators.Maps`
         Likelihood profile map.
-
     """
-
     stat_approx = _default_scan_map(flux_map, dnde_scan_axis)
     dnde_coord = stat_approx.geom.get_coord()["dnde"].value
 
@@ -1132,13 +1128,13 @@ def get_flux_map_from_profile(
     reference_model : `~gammapy.modeling.models.SkyModel`, optional
         The reference model to use for conversions. If None, a model consisting
         of a point source with a power law spectrum of index 2 is assumed.
-        Default is None and and the one of `flux_map` will be used if available
+        Default is None and the one of `flux_map` will be used if available
     meta : dict, optional
         Dict of metadata.
-        Default is None and and the oneof `flux_map` will be used if available
+        Default is None and the one of `flux_map` will be used if available
     gti : `~gammapy.data.GTI`, optional
         Maps GTI information.
-        Default is None and and the one of `flux_map` will be used if available
+        Default is None and the one of `flux_map` will be used if available
 
     Returns
     -------
@@ -1146,7 +1142,6 @@ def get_flux_map_from_profile(
         Flux map.
 
     """
-
     if isinstance(flux_map, dict):
         output_maps = flux_map
     else:
@@ -1230,7 +1225,7 @@ def _get_default_norm(
     scan_values=None,
     interp="lin",
 ):
-    """create default norm parameter"""
+    """Create default norm parameter."""
     if norm is None or isinstance(norm, dict):
         norm_kwargs = dict(
             name="norm",
@@ -1256,7 +1251,6 @@ def _get_default_norm(
 
 def _get_norm_scan_values(norm, result):
     """Compute norms based on the fit result to sample the stat profile at different scales."""
-
     norm_err = result["norm_err"]
     norm_value = result["norm"]
     if ~np.isfinite(norm_err) or norm_err == 0:
