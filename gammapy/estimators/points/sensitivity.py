@@ -5,10 +5,12 @@ from gammapy.maps import Map
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from gammapy.stats import WStatCountsStatistic
 from ..core import Estimator
+from gammapy.utils.deprecation import deprecated_renamed_argument
 
 __all__ = ["SensitivityEstimator"]
 
 
+@deprecated_renamed_argument("spectrum", "spectral_model", "v1.3")
 class SensitivityEstimator(Estimator):
     """Estimate sensitivity.
 
@@ -20,7 +22,7 @@ class SensitivityEstimator(Estimator):
 
     Parameters
     ----------
-    spectrum : `SpectralModel`
+    spectral_model : `SpectralModel`
         Spectral model assumption. Default is Power Law with index 2.
     n_sigma : float, optional
         Minimum significance. Default is 5.
@@ -39,16 +41,17 @@ class SensitivityEstimator(Estimator):
 
     def __init__(
         self,
-        spectrum=None,
+        spectral_model=None,
         n_sigma=5.0,
         gamma_min=10,
         bkg_syst_fraction=0.05,
     ):
+        if spectral_model is None:
+            spectral_model = PowerLawSpectralModel(
+                index=2, amplitude="1 cm-2 s-1 TeV-1"
+            )
 
-        if spectrum is None:
-            spectrum = PowerLawSpectralModel(index=2, amplitude="1 cm-2 s-1 TeV-1")
-
-        self.spectrum = spectrum
+        self.spectral_model = spectral_model
         self.n_sigma = n_sigma
         self.gamma_min = gamma_min
         self.bkg_syst_fraction = bkg_syst_fraction
@@ -100,12 +103,12 @@ class SensitivityEstimator(Estimator):
         """
         energy = dataset._geom.axes["energy"].center
 
-        dataset.models = SkyModel(spectral_model=self.spectrum)
+        dataset.models = SkyModel(spectral_model=self.spectral_model)
         npred = dataset.npred_signal()
 
         phi_0 = excess / npred
 
-        dnde_model = self.spectrum(energy=energy)
+        dnde_model = self.spectral_model(energy=energy)
         dnde = phi_0.data[:, 0, 0] * dnde_model * energy**2
         return dnde.to("erg / (cm2 s)")
 

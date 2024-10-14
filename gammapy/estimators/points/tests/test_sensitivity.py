@@ -89,7 +89,7 @@ def test_integral_estimation(spectrum_dataset, caplog):
     sens = SensitivityEstimator(gamma_min=25, bkg_syst_fraction=0.075)
     table = sens.run(dataset_on_off)
     flux_points = FluxPoints.from_table(
-        table, sed_type="e2dnde", reference_model=sens.spectrum
+        table, sed_type="e2dnde", reference_model=sens.spectral_model
     )
 
     assert_allclose(table["excess"].data.squeeze(), 270540, rtol=1e-3)
