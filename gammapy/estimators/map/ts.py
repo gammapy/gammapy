@@ -155,7 +155,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
     <BLANKLINE>
       geom                   : WcsGeom
       axes                   : ['lon', 'lat', 'energy']
-      shape                  : (400, 200, 1)
+      shape                  : (np.int64(400), np.int64(200), 1)
       quantities             : ['ts', 'norm', 'niter', 'norm_err', 'npred', 'npred_excess', 'stat', 'stat_null', 'success']
       ref. model             : pl
       n_sigma                : 1
