@@ -380,9 +380,9 @@ class TestFermi4FGLObject:
         assert_allclose(table["flux_errn"][0], 4.437058e-8, rtol=1e-3)
 
     def test_lightcurve_dr4(self):
-        dr2 = SourceCatalog4FGL("$GAMMAPY_DATA/catalogs/fermi/gll_psc_v32.fit.gz")
-        source_dr2 = dr2[self.source_name]
-        table = source_dr2.lightcurve(interval="1-year").to_table(
+        dr4 = SourceCatalog4FGL("$GAMMAPY_DATA/catalogs/fermi/gll_psc_v32.fit.gz")
+        source_dr4 = dr4[self.source_name]
+        table = source_dr4.lightcurve(interval="1-year").to_table(
             format="lightcurve", sed_type="flux"
         )
 
@@ -396,7 +396,7 @@ class TestFermi4FGLObject:
         assert_allclose(table["flux_errn"][0], 2.298336e-08, rtol=1e-3)
 
         with pytest.raises(ValueError):
-            source_dr2.lightcurve(interval="2-month")
+            source_dr4.lightcurve(interval="2-month")
 
 
 @requires_data()
