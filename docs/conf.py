@@ -221,7 +221,7 @@ html_theme_options = {
         {
             "name": "Twitter",
             "url": "https://twitter.com/gammapyST",
-            "icon": "fab fa-twitter-square",
+            "icon": "fab fa-square-x-twitter",
         },
         {
             "name": "Slack",
