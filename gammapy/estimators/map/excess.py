@@ -103,7 +103,6 @@ def convolved_map_dataset_counts_statistics(convolved_maps, stat_type):
     counts_statistic : `~gammapy.stats.CashCountsStatistic` or `~gammapy.stats.WStatCountsStatistic`
         The counts statistic.
     """
-
     if stat_type == "wstat":
         n_on_conv = convolved_maps["n_on_conv"]
         n_off = convolved_maps["n_off"]
@@ -196,7 +195,7 @@ class ExcessMapEstimator(Estimator):
     <BLANKLINE>
       geom                   : WcsGeom
       axes                   : ['lon', 'lat', 'energy']
-      shape                  : (320, 240, 1)
+      shape                  : (np.int64(320), np.int64(240), 1)
       quantities             : ['npred', 'npred_excess', 'counts', 'ts', 'sqrt_ts', 'norm', 'norm_err']
       ref. model             : pl
       n_sigma                : 1
@@ -258,7 +257,7 @@ class ExcessMapEstimator(Estimator):
         self._correlation_radius = Angle(correlation_radius)
 
     def run(self, dataset):
-        """Compute correlated excess, Li & Ma significance and flux maps
+        """Compute correlated excess, Li & Ma significance and flux maps.
 
         If a model is set on the dataset the excess map estimator will compute
         the excess taking into account the predicted counts of the model.
@@ -318,7 +317,6 @@ class ExcessMapEstimator(Estimator):
         kernel : `~astropy.convolution.Tophat2DKernel`
             Kernel.
         """
-
         pixel_size = np.mean(np.abs(dataset.counts.geom.wcs.wcs.cdelt))
         size = self.correlation_radius.deg / pixel_size
         kernel = Tophat2DKernel(size)
@@ -350,8 +348,7 @@ class ExcessMapEstimator(Estimator):
         return mask
 
     def estimate_exposure_reco_energy(self, dataset, kernel, mask, reco_exposure):
-        """Estimate exposure map in reconstructed energy for a single dataset
-           assuming the given spectral_model shape.
+        """Estimate exposure map in reconstructed energy for a single dataset assuming the given spectral_model shape.
 
         Parameters
         ----------
@@ -387,7 +384,6 @@ class ExcessMapEstimator(Estimator):
         dataset : `~gammapy.datasets.MapDataset`
             Map dataset.
         """
-
         kernel = self.estimate_kernel(dataset)
         geom = dataset.counts.geom
         mask = self.estimate_mask_default(dataset)

@@ -47,9 +47,9 @@ class ObservationMetaData(MetaData):
     ----------
     obs_info : `~gammapy.utils.ObsInfoMetaData`
         The general observation information.
-    pointing : `~gammapy.utils.PointingInfoMetaData
+    pointing : `~gammapy.utils.PointingInfoMetaData`
         The pointing metadata.
-    target : `~gammapy.utils.TargetMetaData
+    target : `~gammapy.utils.TargetMetaData`
         The target metadata.
     creation : `~gammapy.utils.CreatorMetaData`
         The creation metadata.

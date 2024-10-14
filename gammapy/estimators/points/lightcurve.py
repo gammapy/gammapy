@@ -211,7 +211,6 @@ class LightCurveEstimator(FluxPointsEstimator):
         result : `FluxPoints`
             Resulting flux points.
         """
-
         estimator = self.copy()
         estimator.n_jobs = self._n_child_jobs
         fp = estimator._run_flux_points(datasets)
