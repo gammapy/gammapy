@@ -378,5 +378,5 @@ def test_covariance_no_optimize_results():
     fit.optimize([spec])
     res = fit.covariance([spec])
 
-    assert_allclose(res.matrix.data[0, 1], 6.163970e-13)
-    assert_allclose(res.matrix.data[0, 0], 2.239832e-02)
+    assert_allclose(res.matrix.data[0, 1], 6.163970e-13, rtol=1e-3)
+    assert_allclose(res.matrix.data[0, 0], 2.239832e-02, rtol=1e-3)

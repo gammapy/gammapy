@@ -296,12 +296,15 @@ class Fit:
             )
             datasets.models.covariance = matrix
 
+        if optimize_result:
+            optimize_result.models.covariance = matrix.data.copy()
+
         return CovarianceResult(
             backend=backend,
             method=method,
             success=info["success"],
             message=info["message"],
-            matrix=datasets.models.covariance.data,
+            matrix=matrix.data,
         )
 
     def confidence(self, datasets, parameter, sigma=1, reoptimize=True):
