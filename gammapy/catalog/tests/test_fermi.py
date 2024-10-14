@@ -113,6 +113,17 @@ SOURCES_4FGL = [
     ),
 ]
 
+SOURCES_4FGL_DR4 = [
+    dict(
+        idx=1391,
+        name="4FGL J0534.5+2200",
+        str_ref_file="data/4fgl-dr4_J0534.5+2200.txt",
+        spec_type=SuperExpCutoffPowerLaw4FGLDR3SpectralModel,
+        dnde=u.Quantity(1.1048e-07, "cm-2 s-1 GeV-1"),
+        dnde_err=u.Quantity(6.9934e-10, "cm-2 s-1 GeV-1"),
+    )
+]
+
 SOURCES_3FGL = [
     dict(
         idx=0,
@@ -186,9 +197,10 @@ SOURCES_3FHL = [
 
 
 @requires_data()
-def test_4FGL_DR4():
+@pytest.mark.parametrize("ref", SOURCES_4FGL_DR4, ids=lambda _: _["name"])
+def test_4FGL_DR4(ref):
     cat = SourceCatalog4FGL("$GAMMAPY_DATA/catalogs/fermi/gll_psc_v32.fit.gz")
-    source = cat["4FGL J0534.5+2200"]
+    source = cat[ref["name"]]
     model = source.spectral_model()
     fp = source.flux_points
     not_ul = ~fp.is_ul.data.squeeze()
@@ -198,6 +210,11 @@ def test_4FGL_DR4():
 
     models = cat.to_models()
     assert len(models) == len(cat.table)
+
+    actual = str(cat[ref["idx"]])
+    with open(get_pkg_data_filename(ref["str_ref_file"])) as fh:
+        expected = fh.read()
+    assert actual == modify_unit_order_astropy_5_3(expected)
 
 
 @requires_data()
