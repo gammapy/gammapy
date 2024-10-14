@@ -181,6 +181,6 @@ class UniformPrior(Prior):
     def evaluate(value, min, max):
         """Evaluate the uniform prior."""
         if min < value < max:
-            return 1.0
-        else:
             return 0.0
+        else:
+            return 1.0

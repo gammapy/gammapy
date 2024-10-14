@@ -173,7 +173,7 @@ def parse(
 
     Simple example::
 
-        >>> import xmltodict
+        >>> from gammapy.extern import xmltodict
         >>> doc = xmltodict.parse(\"\"\"
         ... <a prop="x">
         ...   <b>1</b>
@@ -181,9 +181,9 @@ def parse(
         ... </a>
         ... \"\"\")
         >>> doc['a']['@prop']
-        u'x'
+        'x'
         >>> doc['a']['b']
-        [u'1', u'2']
+        ['1', '2']
 
     If `item_depth` is `0`, the function returns a dictionary for the root
     element (default behavior). Otherwise, it calls `item_callback` every time
@@ -198,7 +198,7 @@ def parse(
     Streaming example::
 
         >>> def handle(path, item):
-        ...     print 'path:%s item:%s' % (path, item)
+        ...     print('path:%s item:%s' % (path, item))
         ...     return True
         ...
         >>> xmltodict.parse(\"\"\"
@@ -206,8 +206,8 @@ def parse(
         ...   <b>1</b>
         ...   <b>2</b>
         ... </a>\"\"\", item_depth=2, item_callback=handle)
-        path:[(u'a', {u'prop': u'x'}), (u'b', None)] item:1
-        path:[(u'a', {u'prop': u'x'}), (u'b', None)] item:2
+        path:[('a', OrderedDict([('prop', 'x')])), ('b', None)] item: 1
+        path:[('a', OrderedDict([('prop', 'x')])), ('b', None)] item: 2
 
     The optional argument `postprocessor` is a function that takes `path`,
     `key` and `value` as positional arguments and returns a new `(key, value)`
@@ -220,7 +220,7 @@ def parse(
         ...         return key, value
         >>> xmltodict.parse('<a><b>1</b><b>2</b><b>x</b></a>',
         ...                 postprocessor=postprocessor)
-        OrderedDict([(u'a', OrderedDict([(u'b:int', [1, 2]), (u'b', u'x')]))])
+        OrderedDict([('a', OrderedDict([('b:int', [1, 2]), ('b', 'x')]))])
 
     You can pass an alternate version of `expat` (such as `defusedexpat`) by
     using the `expat` parameter. E.g:

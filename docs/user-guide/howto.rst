@@ -179,7 +179,7 @@ It is possible to combine Gammapy with astrophysical modeling codes, if they
 provide a Python interface. Usually this requires some glue code to be written,
 e.g. `~gammapy.modeling.models.NaimaSpectralModel` is an example of a Gammapy
 wrapper class around the Naima spectral model and radiation classes, which then
-allows modeling and fitting of Naima models within Gammapy (e.g. using CTA,
+allows modeling and fitting of Naima models within Gammapy (e.g. using CTAO,
 H.E.S.S. or Fermi-LAT data).
 
 .. accordion-footer::
@@ -327,7 +327,8 @@ Note that you can create your own style with matplotlib (see
 `here <https://matplotlib.org/stable/tutorials/introductory/customizing.html>`__ and
 `here <https://matplotlib.org/stable/tutorials/colors/colormaps.html>`__)
 
-The CTA observatory released a document describing best practices for **data visualisation in a way friendly to
+.. TODO: update the link
+The CTAO observatory released a document describing best practices for **data visualisation in a way friendly to
 color-blind people**:
 `CTAO document <https://www.cta-observatory.org/wp-content/uploads/2020/10/CTA_ColourBlindness_BestPractices2.pdf>`_. To
 use them, you should add into your notebooks or scripts the following lines after the Gammapy imports:

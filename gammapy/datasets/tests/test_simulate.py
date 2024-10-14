@@ -257,6 +257,31 @@ def test_sample_coord_time_energy(dataset, energy_dependent_temporal_sky_model):
         rtol=1e-6,
     )
 
+    irfs = load_irf_dict_from_file(
+        "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
+    )
+    livetime = 1.0 * u.hr
+    pointing = FixedPointingInfo(
+        fixed_icrs=SkyCoord(0, 0, unit="deg", frame="galactic").icrs,
+    )
+    obs = Observation.create(
+        obs_id=1001,
+        pointing=pointing,
+        livetime=livetime,
+        irfs=irfs,
+        location=LOCATION,
+    )
+
+    new_mod = Models(
+        [
+            energy_dependent_temporal_sky_model,
+            FoVBackgroundModel(dataset_name=dataset.name),
+        ]
+    )
+    dataset.models = new_mod
+    events = sampler.run(dataset, obs)
+    assert dataset.gti.time_ref.scale == events.table.meta["TIMESYS"]
+
 
 @requires_data()
 def test_fail_sample_coord_time_energy(
@@ -307,9 +332,16 @@ def test_sample_coord_time_energy_random_seed(
     assert len(events) == 1256
 
     assert_allclose(
-        [events[0][0], events[0][1], events[0][2], events[0][3]],
-        [0.2998, 1.932196, 266.404988, -28.936178],
+        [events[0][1], events[0][2], events[0][3]],
+        [1.932196, 266.404988, -28.936178],
         rtol=1e-3,
+    )
+
+    # Important: do not increase the tolerance!
+    assert_allclose(
+        events[0][0],
+        0.29982,
+        rtol=1.5e-6,
     )
 
 
@@ -326,9 +358,16 @@ def test_sample_coord_time_energy_unit(dataset, energy_dependent_temporal_sky_mo
 
     assert len(events) == 1254
     assert_allclose(
-        [events[0][0], events[0][1], events[0][2], events[0][3]],
-        [854.108591, 6.22904, 266.404988, -28.936178],
+        [events[0][1], events[0][2], events[0][3]],
+        [6.22904, 266.404988, -28.936178],
         rtol=1e-6,
+    )
+
+    # Important: do not increase the tolerance!
+    assert_allclose(
+        events[0][0],
+        854.10859,
+        rtol=1.5e-6,
     )
 
 
@@ -377,6 +416,9 @@ def test_sample_sources_energy_dependent(dataset, energy_dependent_temporal_sky_
     assert_allclose(events.table["DEC_TRUE"][0], -28.936178, rtol=1e-5)
 
     assert_allclose(events.table["TIME"][0], 95.464699, rtol=1e-5)
+
+    dt = np.max(events.table["TIME"]) - np.min(events.table["TIME"])
+    assert dt <= dataset.gti.time_sum.to("s").value + sampler.t_delta.to("s").value
 
 
 @requires_data()

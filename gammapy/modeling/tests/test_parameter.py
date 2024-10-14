@@ -168,7 +168,7 @@ def test_parameters_to_table(pars, tmp_path):
 
     table = pars.to_table()
     assert len(table) == 2
-    assert len(table.columns) == 11
+    assert len(table.columns) == 10
     assert table["link"][0] == "test"
     assert table["link"][1] == ""
 
@@ -184,7 +184,7 @@ def test_parameters_create_table():
     table = Parameters._create_default_table()
 
     assert len(table) == 0
-    assert len(table.columns) == 11
+    assert len(table.columns) == 10
 
     assert table.colnames == [
         "type",
@@ -195,7 +195,6 @@ def test_parameters_create_table():
         "min",
         "max",
         "frozen",
-        "is_norm",
         "link",
         "prior",
     ]
@@ -209,7 +208,6 @@ def test_parameters_create_table():
             ("min", "<f8"),
             ("max", "<f8"),
             ("frozen", "?"),
-            ("is_norm", "?"),
             ("link", "<U1"),
             ("prior", "<U1"),
         ]
