@@ -68,7 +68,7 @@ Tutorials Overview
     :link: ../tutorials/data/cta.html
 
 Gammapy can read and access data from multiple gamma-ray instruments. Data from
-Imaging Atmospheric Cherenkov Telescopes, such as `CTA`_, `H.E.S.S.`_, `MAGIC`_
+Imaging Atmospheric Cherenkov Telescopes, such as `CTAO`_, `H.E.S.S.`_, `MAGIC`_
 and `VERITAS`_, is typically accessed from the **event list data level**, called "DL3".
 This is most easily done using the `~gammapy.data.DataStore` class. In addition data
 can also be accessed from the **level of binned events and pre-reduced instrument response functions**,
@@ -76,7 +76,7 @@ so called "DL4". This is typically the case for `Fermi-LAT`_ data or data from
 Water Cherenkov Observatories. This data can be read directly using the
 `~gammapy.maps.Map` and `~gammapy.irf.core.IRFMap` classes.
 
-:bdg-link-primary:`CTA data tutorial <../tutorials/data/cta.html>`
+:bdg-link-primary:`CTAO data tutorial <../tutorials/data/cta.html>`
 :bdg-link-primary:`HESS data tutorial <../tutorials/data/hess.html>`
 :bdg-link-primary:`Fermi-LAT data tutorial <../tutorials/data/fermi_lat.html>`
 
