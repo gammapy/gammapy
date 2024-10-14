@@ -23,11 +23,11 @@ def cash(n_on, mu_on, truncation_value=TRUNCATION_VALUE):
 
     Parameters
     ----------
-    n_on : `~numpy.ndarray`
+    n_on : `~numpy.ndarray` or array_like
         Observed counts.
-    mu_on : `~numpy.ndarray`
+    mu_on : `~numpy.ndarray` or array_like
         Expected counts.
-    truncation_value : `~numpy.ndarray`
+    truncation_value : `~numpy.ndarray` or array_like
         Minimum value use for ``mu_on``
         ``mu_on`` = ``truncation_value`` where ``mu_on`` <= ``truncation_value``.
         Default is 1e-25.
@@ -77,11 +77,11 @@ def cstat(n_on, mu_on, truncation_value=TRUNCATION_VALUE):
 
     Parameters
     ----------
-    n_on : `~numpy.ndarray`
+    n_on : `~numpy.ndarray` or array_like
         Observed counts.
-    mu_on : `~numpy.ndarray`
+    mu_on : `~numpy.ndarray` or array_like
         Expected counts.
-    truncation_value : `~numpy.ndarray`
+    truncation_value : float
         ``n_on`` = ``truncation_value`` where ``n_on`` <= ``truncation_value.``
         ``mu_on`` = ``truncation_value`` where ``n_on`` <= ``truncation_value``
         Default is 1e-25.
@@ -125,15 +125,15 @@ def wstat(n_on, n_off, alpha, mu_sig, mu_bkg=None, extra_terms=True):
 
     Parameters
     ----------
-    n_on : `~numpy.ndarray`
+    n_on : `~numpy.ndarray` or array_like
         Total observed counts.
-    n_off : `~numpy.ndarray`
+    n_off : `~numpy.ndarray` or array_like
         Total observed background counts.
-    alpha : `~numpy.ndarray`
+    alpha : `~numpy.ndarray` or array_like
         Exposure ratio between on and off region.
-    mu_sig : `~numpy.ndarray`
+    mu_sig : `~numpy.ndarray` or array_like
         Signal expected counts.
-    mu_bkg : `~numpy.ndarray`, optional
+    mu_bkg : `~numpy.ndarray` or array_like, optional
         Background expected counts.
     extra_terms : bool, optional
         Add model independent terms to convert stat into goodness-of-fit
