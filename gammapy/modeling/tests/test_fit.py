@@ -375,5 +375,7 @@ def test_covariance():
 
     fit = Fit()
     fit.optimize([spec])
+    res = fit.covariance([spec])
 
-    fit.covariance([spec])
+    assert_allclose(res.matrix.data[0, 1], 6.163970e-13)
+    assert_allclose(res.matrix.data[0, 0], 2.239832e-02)
