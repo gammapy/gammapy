@@ -21,7 +21,7 @@ We can write the expected number of detected events  :math:`N(p, E)`:
 
 .. math::
 
-   N(p, E) {\rm d}p {\rm d}E = 
+   N(p, E) {\rm d}p {\rm d}E =
    t_{\rm obs} \int_{E_{\rm true}} {\rm d}E_{\rm true} \, \int_{p_{\rm true}} {\rm d}p_{\rm true} \, R(p, E|p_{\rm true}, E_{\rm true}) \times \Phi(p_{\rm true}, E_{\rm true})
 
 where:
@@ -47,11 +47,11 @@ where:
   of the detector collection area times its detection efficiency at true energy :math:`E_{\rm true}` and position :math:`p_{\rm true}`.
 * :math:`PSF(p|p_{\rm true}, E_{\rm true})` is the point spread function (unit: :math:`{\rm sr}^{-1}`). It gives the probability of
   measuring a direction :math:`p` when the true direction is :math:`p_{\rm true}` and the true energy is :math:`E_{\rm true}`.
-  Gamma-ray instruments consider the probability density of the angular separation between true and reconstructed directions 
+  Gamma-ray instruments consider the probability density of the angular separation between true and reconstructed directions
   :math:`\delta p = p_{\rm true} - p`, i.e. :math:`PSF(\delta p|p_{\rm true}, E_{\rm true})`.
 * :math:`E_{\rm disp}(E|p_{\rm true}, E_{\rm true})` is the energy dispersion (unit: :math:`{\rm TeV}^{-1}`). It gives the probability to
   reconstruct the photon at energy :math:`E` when the true energy is :math:`E_{\rm true}` and the true position :math:`p_{\rm true}`.
-  Gamma-ray instruments consider the probability density of the migration :math:`\mu=\frac{E}{E_{\rm true}}`, 
+  Gamma-ray instruments consider the probability density of the migration :math:`\mu=\frac{E}{E_{\rm true}}`,
   i.e. :math:`E_{\rm disp}(\mu|p_{\rm true}, E_{\rm true})`.
 
 The implicit assumption here is that energy dispersion and PSF are completely independent. This is not totally
@@ -92,16 +92,10 @@ Variable          Definition
 Using gammapy.irf
 -----------------
 
-.. minigallery:: gammapy.irf.PSFMap
-    :add-heading:
+.. minigallery::
 
-
-.. minigallery:: gammapy.irf.EDispKernelMap
-    :add-heading:
-
-
-.. minigallery:: gammapy.irf.load_irf_dict_from_file
-    :add-heading:
+    ../examples/tutorials/api/irfs.py
+    ../examples/tutorials/analysis-1d/cta_sensitivity.py
 
 
 .. toctree::

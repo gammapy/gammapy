@@ -2018,14 +2018,16 @@ class MapDataset(Dataset):
         >>> sliced = dataset.slice_by_idx(slices)
         >>> print(sliced.geoms["geom"])
         WcsGeom
-                axes       : ['lon', 'lat', 'energy']
-                shape      : (320, 240, 3)
-                ndim       : 3
-                frame      : galactic
-                projection : CAR
-                center     : 0.0 deg, 0.0 deg
-                width      : 8.0 deg x 6.0 deg
-                wcs ref    : 0.0 deg, 0.0 deg
+        <BLANKLINE>
+            axes       : ['lon', 'lat', 'energy']
+            shape      : (np.int64(320), np.int64(240), 3)
+            ndim       : 3
+            frame      : galactic
+            projection : CAR
+            center     : 0.0 deg, 0.0 deg
+            width      : 8.0 deg x 6.0 deg
+            wcs ref    : 0.0 deg, 0.0 deg
+        <BLANKLINE>
         """
         name = make_name(name)
         kwargs = {"gti": self.gti, "name": name, "meta_table": self.meta_table}
@@ -2074,7 +2076,7 @@ class MapDataset(Dataset):
         >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
         >>> sliced = dataset.slice_by_energy(energy_min="1 TeV", energy_max="5 TeV")
         >>> sliced.data_shape
-        (3, 240, 320)
+        (3, np.int64(240), np.int64(320))
         """
         name = make_name(name)
 
