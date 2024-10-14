@@ -334,9 +334,9 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
     def write(self, filename, overwrite=False, format="ogip", checksum=False):
         """Write spectrum dataset on off to file.
 
-        Can be serialised either as a `~gammapy.datasets.MapDataset` with a `RegionGeom`
+        Can be serialised either as a `~gammapy.datasets.MapDataset` with a `~gammapy.maps.RegionGeom`
         following the GADF specifications, or as per the OGIP format.
-        For OGIP formats specs, see `OGIPDatasetWriter`.
+        For OGIP formats specs, see `~gammapy.datasets.OGIPDatasetWriter`.
 
         Parameters
         ----------

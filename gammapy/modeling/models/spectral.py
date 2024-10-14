@@ -627,7 +627,7 @@ class SpectralModel(ModelBase):
     def inverse(self, value, energy_min=0.1 * u.TeV, energy_max=100 * u.TeV):
         """Return energy for a given function value of the spectral model.
 
-        Calls the `~scipy.optimize.brentq` numerical root finding method.
+        Calls the `scipy.optimize.brentq` numerical root finding method.
 
         Parameters
         ----------
@@ -659,7 +659,7 @@ class SpectralModel(ModelBase):
     def inverse_all(self, values, energy_min=0.1 * u.TeV, energy_max=100 * u.TeV):
         """Return energies for multiple function values of the spectral model.
 
-        Calls the `~scipy.optimize.brentq` numerical root finding method.
+        Calls the `scipy.optimize.brentq` numerical root finding method.
 
         Parameters
         ----------
@@ -1198,7 +1198,7 @@ class SmoothBrokenPowerLawSpectralModel(SpectralModel):
 
 
 class PiecewiseNormSpectralModel(SpectralModel):
-    """Piecewise spectral correction with a free normalization at each fixed energy nodes.
+    """Piecewise spectral correction with a free normalisation at each fixed energy nodes.
 
     For more information see :ref:`piecewise-norm-spectral`.
 
@@ -1208,7 +1208,7 @@ class PiecewiseNormSpectralModel(SpectralModel):
         Array of energies at which the model values are given (nodes).
     norms : `~numpy.ndarray` or list of `~gammapy.modeling.Parameter`
         Array with the initial norms of the model at energies ``energy``.
-        Normalization parameters are created for each value.
+        Normalisation parameters are created for each value.
         Default is one at each node.
     interp : str
         Interpolation scaling in {"log", "lin"}. Default is "log".

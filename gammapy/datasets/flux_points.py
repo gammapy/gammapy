@@ -70,8 +70,8 @@ class FluxPointsDataset(Dataset):
                     See eq. C7 of Mohanty et al (2013) :
                     https://iopscience.iop.org/article/10.1088/0004-637X/773/2/168/pdf
 
-        Default is `chi2`, in that case upper limits are ignored and the mean of asymetrics error is used.
-        However, it is recommended to use `profile` if `stat_scan` is available on flux points.
+        Default is ``chi2``, in that case upper limits are ignored and the mean of asymetrics error is used.
+        However, it is recommended to use ``profile`` if ``stat_scan`` is available on flux points.
         The `distrib` case provides an approximation if the profile is not available.
     stat_kwargs : dict
         Extra arguments specifying the interpolation scheme of the likelihood profile.

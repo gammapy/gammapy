@@ -34,7 +34,7 @@ class DatasetsMaker(Maker, parallel.ParallelMixin):
     cutout_width : tuple of `~astropy.coordinates.Angle`, optional
         Angular sizes of the region in (lon, lat) in that specific order.
         If only one value is passed, a square region is extracted.
-        If None it returns an error, except if the list of makers includes a `~gammapy.makers.SafeMaskMaker`
+        If None, an error is returned except if the list of makers includes a `~gammapy.makers.SafeMaskMaker`
         with the offset-max method defined. In that case it is set to two times `offset_max`.
         Default is None.
     parallel_backend : {'multiprocessing', 'ray'}, optional

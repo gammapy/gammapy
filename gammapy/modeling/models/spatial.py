@@ -900,7 +900,7 @@ class DiskSpatialModel(SpatialModel):
 
     @staticmethod
     def _evaluate_norm_factor(r_0, e):
-        """Compute the normalization factor."""
+        """Compute the normalisation factor."""
         semi_minor = r_0 * np.sqrt(1 - e**2)
 
         def integral_fcn(x, a, b):
@@ -1677,7 +1677,7 @@ class PiecewiseNormSpatialModel(SpatialModel):
         Flat coordinates list at which the model values are given (nodes).
     norms : `~numpy.ndarray` or list of `~gammapy.modeling.Parameter`
         Array with the initial norms of the model at energies ``energy``.
-        Normalization parameters are created for each value.
+        Normalisation parameters are created for each value.
         Default is one at each node.
     interp : {"lin", "log"}
         Interpolation scaling. Default is "lin".

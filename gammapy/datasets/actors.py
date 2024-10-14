@@ -27,7 +27,7 @@ class DatasetsActor(Datasets):
         from ray import get
 
         log.warning(
-            "Gammapy support for parallelization with ray is still a prototype and is not fully functional."
+            "Gammapy support for parallelisation with ray is still a prototype and is not fully functional."
         )
 
         if datasets is not None:

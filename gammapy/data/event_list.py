@@ -528,7 +528,7 @@ class EventList:
         >>> bins = np.linspace(start=0, stop=0.3 ** 2, num=30) * u.deg ** 2
         >>> events.plot_offset2_distribution(center=center, bins=bins) # doctest: +SKIP
 
-        Note how we passed the ``bins`` option of `~matplotlib.pyplot.hist` to control
+        Note how we passed the ``bins`` option of `matplotlib.pyplot.hist` to control
         the histogram binning, in this case 30 bins ranging from 0 to (0.3 deg)^2.
         """
         ax = plt.gca() if ax is None else ax

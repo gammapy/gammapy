@@ -199,8 +199,8 @@ def create_map_dataset_from_observation(
     models : `~gammapy.modeling.Models`, optional
         Models. Default is None.
     dataset_name : str, optional
-        If `models` contains one or multiple `~gammapy.modeling.models.FoVBackgroundModel`
-        it should match the `dataset_name` of the background model to use.
+        If ``models`` contains one or multiple `~gammapy.modeling.models.FoVBackgroundModel`
+        it should match the ``dataset_name`` of the background model to use.
         Default is None. If None it is determined from the observation ID.
     energy_axis_true : `~gammapy.maps.MapAxis`, optional
         True energy axis. Default is None.
@@ -1709,7 +1709,7 @@ class MapDataset(Dataset):
         return info
 
     def to_spectrum_dataset(self, on_region, containment_correction=False, name=None):
-        """Return a `~gammapy.datasets.SpectrumDataset` from on_region.
+        """Return a `~gammapy.datasets.SpectrumDataset` from ``on_region``.
 
         Counts and background are summed in the on_region. Exposure is taken
         from the average exposure.
@@ -2867,7 +2867,7 @@ class MapDatasetOnOff(MapDataset):
         return info
 
     def to_spectrum_dataset(self, on_region, containment_correction=False, name=None):
-        """Return a `~gammapy.datasets.SpectrumDatasetOnOff` from on_region.
+        """Return a `~gammapy.datasets.SpectrumDatasetOnOff` from ``on_region``.
 
         Counts and OFF counts are summed in the on_region.
 

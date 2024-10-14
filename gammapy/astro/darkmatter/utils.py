@@ -13,7 +13,7 @@ class JFactory:
 
     J-Factors are computed for annihilation and D-Factors for decay.
     Set the argument `annihilation` to `False` to compute D-Factors.
-    The assumed dark matter profiles will be centered in the center of the map.
+    The assumed dark matter profiles will be centered on the center of the map.
 
     Parameters
     ----------
