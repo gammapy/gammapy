@@ -75,9 +75,7 @@ class ASmoothMapEstimator(Estimator):
         energy_edges=None,
     ):
         if spectral_model is None:
-            spectral_model = PowerLawSpectralModel(
-                index=2, amplitude="1 cm-2 s-1 TeV-1"
-            )
+            spectral_model = PowerLawSpectralModel(index=2)
 
         self.spectral_model = spectral_model
 
