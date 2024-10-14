@@ -22,8 +22,8 @@ class SensitivityEstimator(Estimator):
 
     Parameters
     ----------
-    spectral_model : `SpectralModel`
-        Spectral model assumption. Default is Power Law with index 2.
+    spectral_model : `~gammapy.modeling.models.SpectralModel`, optional
+        Spectral model assumption. Default is power-law with spectral index of 2.
     n_sigma : float, optional
         Minimum significance. Default is 5.
     gamma_min : float, optional

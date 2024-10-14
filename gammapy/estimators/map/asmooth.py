@@ -39,8 +39,8 @@ class ASmoothMapEstimator(Estimator):
         Smoothing scales.
     kernel : `astropy.convolution.Kernel`
         Smoothing kernel.
-    spectral_model : `~gammapy.modeling.models.SpectralModel`
-        Spectral model assumption.
+    spectral_model : `~gammapy.modeling.models.SpectralModel`, optional
+        Spectral model assumption. Default is power-law with spectral index of 2.
     method : {'lima', 'asmooth'}
         Significance estimation method. Default is 'lima'.
     threshold : float
@@ -75,7 +75,9 @@ class ASmoothMapEstimator(Estimator):
         energy_edges=None,
     ):
         if spectral_model is None:
-            spectral_model = PowerLawSpectralModel()
+            spectral_model = PowerLawSpectralModel(
+                index=2, amplitude="1 cm-2 s-1 TeV-1"
+            )
 
         self.spectral_model = spectral_model
 
