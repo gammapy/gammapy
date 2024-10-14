@@ -22,7 +22,6 @@ def _sqrt_ts_asmooth(counts, background):
     return (counts - background) / np.sqrt(counts + background)
 
 
-@deprecated_renamed_argument("spectrum", "spectral_model", "v1.3")
 class ASmoothMapEstimator(Estimator):
     """Adaptively smooth counts image.
 
@@ -65,6 +64,7 @@ class ASmoothMapEstimator(Estimator):
 
     tag = "ASmoothMapEstimator"
 
+    @deprecated_renamed_argument("spectrum", "spectral_model", "v1.3")
     def __init__(
         self,
         scales=None,

@@ -16,7 +16,6 @@ from gammapy.utils.deprecation import deprecated_renamed_argument
 __all__ = ["FluxProfileEstimator"]
 
 
-@deprecated_renamed_argument("spectrum", "spectral_model", "v1.3")
 class FluxProfileEstimator(FluxPointsEstimator):
     """Estimate flux profiles.
 
@@ -91,6 +90,7 @@ class FluxProfileEstimator(FluxPointsEstimator):
 
     tag = "FluxProfileEstimator"
 
+    @deprecated_renamed_argument("spectrum", "spectral_model", "v1.3")
     def __init__(self, regions, spectral_model=None, **kwargs):
         if len(regions) <= 1:
             raise ValueError(

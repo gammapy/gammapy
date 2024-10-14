@@ -10,7 +10,6 @@ from gammapy.utils.deprecation import deprecated_renamed_argument
 __all__ = ["SensitivityEstimator"]
 
 
-@deprecated_renamed_argument("spectrum", "spectral_model", "v1.3")
 class SensitivityEstimator(Estimator):
     """Estimate sensitivity.
 
@@ -39,6 +38,7 @@ class SensitivityEstimator(Estimator):
 
     tag = "SensitivityEstimator"
 
+    @deprecated_renamed_argument("spectrum", "spectral_model", "v1.3")
     def __init__(
         self,
         spectral_model=None,
