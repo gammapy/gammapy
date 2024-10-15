@@ -48,7 +48,7 @@ Reference :
 - Literature : `Buchner 2023, <http://arxiv.org/abs/2101.09675>`_ , `Ashton 2022, <https://ui.adsabs.harvard.edu/abs/2022NRvMP...2...39A>`_
 
 
-**Why not start with an MCMC sampler for the BayesianInference class ? **
+**Why not start with an MCMC sampler for the BayesianInference class ?**
 
 Besides the many advantages of the NS described above, one technical specificity of the MCMC method is that the user needs to specify a warmup/burn period *that can only be estimated once the chain has run*.
 From an implementation point of view of the class this means that the user would need to run the sampler, then look at the chain, specify the burn period and then estimate the best model parameters.
@@ -126,7 +126,6 @@ Namely:
 
 
 
-
 Outputs from the Nested Sampling 
 ==============
 
@@ -142,12 +141,14 @@ The UltraNest sampler returns a dictionnary that is very complete and that conta
 Here are the keys of that dictionnary :   
 
 .. code:: python
+
   ['niter', 'logz', 'logzerr', 'logz_bs', 'logz_single', 'logzerr_tail', 'logzerr_bs', 'ess', 'H', 'Herr', 'posterior', 'weighted_samples', 'samples', 'maximum_likelihood', 'ncall', 'paramnames', 'logzerr_single', 'insertion_order_MWW_test'])
 
 
 In particular, the posterior key returns all the information needed to update the model Parameters :   
 
 .. code:: python
+
  'posterior': {'mean': [2.014811633859834, 2.989779066475214e-12],
   'stdev': [0.010066705375548107, 3.739770898783367e-14],
   'median': [2.0148015517529894, 2.988413141629203e-12],
