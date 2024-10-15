@@ -280,6 +280,7 @@ plt.show()
 # %%
 # This is how for analysis you could slice out the PSF
 # at a given field of view offset
+plt.figure(figsize=(8, 5))
 irfs["psf"].plot_containment_radius_vs_energy(
     offset=[1] * u.deg, fraction=[0.68, 0.8, 0.95]
 )
