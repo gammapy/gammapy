@@ -186,9 +186,11 @@ Task list
 
 The PIG implementation will be : 
 
-1.
-2.
-3.
+1. Modify the stat_sum function
+2. Add inverse_cdf attributes to the Priors
+3. Define the class BayesianFit and SamplerLikelihood
+4. Prepare a tutorial to show case this new class
+5. 
 
 
 Decision
