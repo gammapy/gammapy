@@ -924,8 +924,17 @@ class FitResults(collections.abc.MutableSequence):
     def success(self):
         return [f.success for f in self.results]
 
-    def models(self):
-        return Models([model for f in self.results for model in f.models])
+    def models(self, squeeze=False):
+        if squeeze:
+            return Models(
+                [
+                    model.copy(name="FitResult" + str(i) + "_Model" + str(j))
+                    for i, f in enumerate(self.results)
+                    for j, model in enumerate(f.models)
+                ]
+            )
+        else:
+            return [f.models for f in self.results]
 
     def covariance_results(self):
         return [f.covariance_result for f in self.results]
@@ -943,7 +952,7 @@ class FitResults(collections.abc.MutableSequence):
         return self[keymin:keymax]
 
     def write_models(self, path, **kwargs):
-        self.models().write(path, **kwargs)
+        self.models(squeeze=True).write(path, **kwargs)
 
     def create_model_table(self, axis=None):
         if axis and axis.nbin != len(self.results):
