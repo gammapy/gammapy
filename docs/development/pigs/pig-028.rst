@@ -44,8 +44,27 @@ The following PIG focuses on the implementation of the NS with the UltraNest pac
 As they have very similar API, both packages could be implemented/tested in the future.
 
 Reference : 
-- Ultranest : https://johannesbuchner.github.io/UltraNest
+- Ultranest : https://johannesbuchner.github.io/UltraNest  
 - Literature : `Buchner 2023, <http://arxiv.org/abs/2101.09675>`_ , `Ashton 2022, <https://ui.adsabs.harvard.edu/abs/2022NRvMP...2...39A>`_
+
+
+**Why not start with an MCMC sampler for the BayesianInference class ? **
+Besides the many advantages of the NS described above, one technical specificity of the MCMC method is that the user needs to specify a warmup/burn period *that can only be estimated once the chain has run*.
+From an implementation point of view of the class this means that the user would need to run the sampler, then look at the chain, specify the burn period and then estimate the best model parameters.
+This implies that the class will not be able to update the model parameters in a single round like the Fit class does.
+In addition, there is no convergence criteria in the MCMC so the MCMC can not return a `convergence successful : True ` status.  
+NS has no warmup period, a well defined convergence criteria, and can estimate convergence success.
+
+
+
+**A visual comparison of the approaches of MCMC vs NS**
+
+NS approximate the posterior distribution via sparse sampling of the entire likelihood landscape covering the full prior space.  
+At the opposite, MCMC (like gradient descent methods) will only "visit" the landscape in the vicinity of their walk.  
+Below is an illustration of Nested Sampling and MCMC modeling of the dataset `$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits`.
+
+.. image:: pig-028-Landscape-Crab-NestedSampling-MCMC.png
+   :alt: MCMC vs Nested Sampling likelihood exploration
 
 
 Use cases
@@ -100,11 +119,37 @@ Namely:
    So likelihood should be : `-0.5*Stat`
 
 2. Priors: The sampling in the NS algorithm is drawn from a "unity cube". This means that all sample are drawn from a [0,1] random uniform distribution that 
- are latter transformed to the parameter space via their inverse cumulative distribution (cdf). An `inverse_cdf` attribute needs to be implemented for all Priors.
+   are latter transformed to the parameter space via their inverse cumulative distribution (cdf). An `inverse_cdf` attribute needs to be implemented for all Priors.
 
-1. Sampler: The UltraNest sampler object needs to be initiliazed with the correct parameters and (modified) likelihood 
+3. Sampler: The UltraNest sampler object needs to be initiliazed with the correct parameters and (modified) likelihood 
 
 
+
+
+Outputs from the Nested Sampling 
+==============
+
+Similarly to the MCMC method, the NS sampler will return samples of the posterior distributions. However there are several conceptual differences with the chains returned by the MCMC sampler.
+
+1. There is no concept of chains in NS, each sample (live or dead points) serve to explore the entire likelihood landscape. 
+   To estimate the posterior distributions, the samples need to be weighted in NS (See review paper listed in the intro). 
+2. The NS computes the full integral of the likelihood over the entire prior space. The integral result is the Bayesian evidence Z wich can be used to compare different models in apparently a better way that the BIC/AIC.
+   In addition an error on Z is estimated via bootstrap of the samples.
+3. A `converged : True/False` status can be returned
+   
+The UltraNest sampler returns a dictionnary that is very complete and that contains all (and even more) information that is needed.  
+Here are the keys of that dictionnary :  
+`['niter', 'logz', 'logzerr', 'logz_bs', 'logz_single', 'logzerr_tail', 'logzerr_bs', 'ess', 'H', 'Herr', 'posterior', 'weighted_samples', 'samples', 'maximum_likelihood', 'ncall', 'paramnames', 'logzerr_single', 'insertion_order_MWW_test'])
+`
+
+In particular, the posterior key returns all the information needed to update the model Parameters :
+```
+ 'posterior': {'mean': [2.014811633859834, 2.989779066475214e-12],
+  'stdev': [0.010066705375548107, 3.739770898783367e-14],
+  'median': [2.0148015517529894, 2.988413141629203e-12],
+  'errlo': [2.00472179200096, 2.9537056583888585e-12],
+  'errup': [2.024897178551308, 3.028549898215494e-12],
+```
 
 
 Proposal
