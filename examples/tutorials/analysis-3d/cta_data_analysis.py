@@ -8,11 +8,11 @@ Introduction
 ------------
 
 **This notebook shows an example how to make a sky image and spectrum
-for simulated CTA data with Gammapy.**
+for simulated CTAO data with Gammapy.**
 
 The dataset we will use is three observation runs on the Galactic
 Center. This is a tiny (and thus quick to process and play with and
-learn) subset of the simulated CTA dataset that was produced for the
+learn) subset of the simulated CTAO dataset that was produced for the
 first data challenge in August 2017.
 
 """
@@ -27,7 +27,6 @@ first data challenge in August 2017.
 # Configure the logger, so that the spectral analysis
 # isn't so chatty about what it's doing.
 import logging
-import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
@@ -51,7 +50,7 @@ from gammapy.modeling.models import (
     SkyModel,
 )
 from gammapy.visualization import plot_npred_signal, plot_spectrum_datasets_off_regions
-
+from gammapy.utils.check import check_tutorials_setup
 logging.basicConfig()
 log = logging.getLogger("gammapy.spectrum")
 log.setLevel(logging.ERROR)
@@ -59,7 +58,7 @@ log.setLevel(logging.ERROR)
 ######################################################################
 # Check setup
 # -----------
-from gammapy.utils.check import check_tutorials_setup
+
 
 check_tutorials_setup()
 
@@ -402,7 +401,7 @@ plt.show()
 # What next?
 # ----------
 #
-# -  This notebook showed an example of a first CTA analysis with Gammapy,
+# -  This notebook showed an example of a first CTAO analysis with Gammapy,
 #    using simulated 1DC data.
 # -  Let us know if you have any questions or issues!
 #

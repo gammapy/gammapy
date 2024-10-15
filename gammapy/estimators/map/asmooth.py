@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Implementation of adaptive smoothing algorithms."""
+
 import numpy as np
 from astropy.convolution import Gaussian2DKernel, Tophat2DKernel
 from astropy.coordinates import Angle
@@ -36,7 +37,7 @@ class ASmoothMapEstimator(Estimator):
         Smoothing scales.
     kernel : `astropy.convolution.Kernel`
         Smoothing kernel.
-    spectrum : `SpectralModel`
+    spectrum : `~gammapy.modeling.models.SpectralModel`
         Spectral model assumption.
     method : {'lima', 'asmooth'}
         Significance estimation method. Default is 'lima'.

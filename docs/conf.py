@@ -26,6 +26,7 @@
 # be accessible, and the documentation will not build correctly.
 
 import datetime
+import sys
 import os
 
 # Get configuration information from setup.cfg
@@ -36,7 +37,7 @@ from pkg_resources import get_distribution
 from sphinx_astropy.conf import *
 
 # Sphinx-gallery config
-from sphinx_gallery.sorting import ExplicitOrder, FileNameSortKey
+from sphinx_gallery.sorting import ExplicitOrder
 
 # Load utils docs functions
 from gammapy.utils.docs import SubstitutionCodeBlock, gammapy_sphinx_ext_activate
@@ -57,6 +58,8 @@ conf = ConfigParser()
 conf.read([os.path.join(os.path.dirname(__file__), "..", "setup.cfg")])
 setup_cfg = dict(conf.items("metadata"))
 
+sys.path.insert(0, os.path.dirname(__file__))
+
 linkcheck_anchors_ignore = []
 linkcheck_ignore = [
     "http://gamma-sky.net/#",
@@ -71,6 +74,8 @@ linkcheck_ignore = [
     "https://www.hawc-observatory.org/",  # invalid certificate
     "https://ipython.org",  # invalid certificate
     "https://jupyter.org",  # invalid certificate
+    "https://hess-confluence.desy.de/confluence/display/HESS/HESS+FITS+data", # private page
+    "https://hess-confluence.desy.de/"
 ]
 
 # the buttons link to html pages which are auto-generated...
@@ -112,7 +117,6 @@ intersphinx_mapping["pandas"] = ("https://pandas.pydata.org/pandas-docs/stable/"
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 exclude_patterns.append("_templates")
-exclude_patterns.append("_static")
 exclude_patterns.append("**.ipynb_checkpoints")
 exclude_patterns.append("user-guide/model-gallery/*/*.ipynb")
 exclude_patterns.append("user-guide/model-gallery/*/*.md5")
@@ -191,8 +195,8 @@ html_favicon = os.path.join(html_static_path[0], "gammapy_logo.ico")
 
 # Custom sidebar templates, maps document names to template names.
 html_sidebars = {
-    "search": "search-field.html",
-    "navigation": "sidebar-nav-bs.html",
+    "search": ["search-field.html"],
+    "navigation": ["sidebar-nav-bs.html"],
 }
 
 # If not "", a "Last updated on:" timestamp is inserted at every page bottom,
@@ -221,7 +225,7 @@ html_theme_options = {
         {
             "name": "Twitter",
             "url": "https://twitter.com/gammapyST",
-            "icon": "fab fa-twitter-square",
+            "icon": "fab fa-square-x-twitter",
         },
         {
             "name": "Slack",
@@ -235,6 +239,10 @@ html_theme_options = {
     },
     "navbar_end": ["version-switcher", "theme-switcher", "navbar-icon-links"],
     "navigation_with_keys": True,
+    # footers
+    "footer_start": ["copyright"],
+    "footer_center": ["last-updated"],
+    "footer_end": ["sphinx-version", "theme-version"]
 }
 
 
@@ -315,7 +323,7 @@ sphinx_gallery_conf = {
     "exclude_implicit_doc": {},
     "filename_pattern": r"\.py",
     "reset_modules": ("matplotlib",),
-    "within_subsection_order": FileNameSortKey,
+    "within_subsection_order": "sphinxext.TutorialExplicitOrder",
     "download_all_examples": True,
     "capture_repr": ("_repr_html_", "__repr__"),
     "nested_sections": False,
@@ -329,11 +337,12 @@ sphinx_gallery_conf = {
 }
 
 html_static_path = ["_static"]
-
-html_css_files = [
-    "custom.css",
-]
+html_css_files = ["custom.css"]
+html_js_files = ["matomo.js"]
 
 html_context = {
     "default_mode": "light",
 }
+
+# Add-on to insert the Matomo tracker
+templates_path = ['_templates']

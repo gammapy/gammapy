@@ -94,6 +94,8 @@ def read_hermes_cube(filename):
 def cutout_template_models(models, cutout_kwargs, datasets_names=None):
     """Apply cutout to template models."""
     models_cut = Models()
+    if models is None:
+        return models_cut
     for m in models:
         if isinstance(m.spatial_model, TemplateSpatialModel):
             try:

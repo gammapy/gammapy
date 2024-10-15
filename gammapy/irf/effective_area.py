@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import warnings
 import numpy as np
 import astropy.units as u
 from astropy.visualization import quantity_support
@@ -7,6 +8,7 @@ from gammapy.maps import MapAxes, MapAxis
 from gammapy.maps.axes import UNIT_STRING_FORMAT
 from gammapy.visualization.utils import add_colorbar
 from .core import IRF
+from gammapy.utils.deprecation import GammapyDeprecationWarning
 
 __all__ = ["EffectiveAreaTable2D"]
 
@@ -78,7 +80,7 @@ class EffectiveAreaTable2D(IRF):
         ----------
         ax : `~matplotlib.axes.Axes`, optional
             Matplotlib axes. Default is None.
-        offset : `~astropy.coordinates.Angle`, optional
+        offset : list of `~astropy.coordinates.Angle`, optional
             Offset. Default is None.
         kwargs : dict
             Forwarded to plt.plot().
@@ -239,7 +241,7 @@ class EffectiveAreaTable2D(IRF):
         energy_axis_true : `MapAxis`, optional
             Energy binning, analytic function is evaluated at log centers.
             Default is None.
-        instrument : {'HESS', 'HESS2', 'CTA'}
+        instrument : {'HESS', 'HESS2', 'CTAO'}
             Instrument name. Default is 'HESS'.
 
         Returns
@@ -252,9 +254,15 @@ class EffectiveAreaTable2D(IRF):
         pars = {
             "HESS": [6.85e9, 0.0891, 5e5],
             "HESS2": [2.05e9, 0.0891, 1e5],
-            "CTA": [1.71e11, 0.0891, 1e5],
+            "CTAO": [1.71e11, 0.0891, 1e5],
         }
 
+        if instrument == "CTA":
+            instrument = "CTAO"
+            warnings.warn(
+                "Since v1.3, the value 'CTA' is replaced by 'CTAO' for the argument instrument.",
+                GammapyDeprecationWarning,
+            )
         if instrument not in pars.keys():
             ss = f"Unknown instrument: {instrument}\n"
             ss += f"Valid instruments: {list(pars.keys())}"

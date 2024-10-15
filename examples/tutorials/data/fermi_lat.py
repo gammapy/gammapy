@@ -273,13 +273,13 @@ plt.show()
 #
 # To load the isotropic diffuse model with Gammapy, use the
 # `~gammapy.modeling.models.TemplateSpectralModel`. We are using
-# `'fill_value': 'extrapolate'` to extrapolate the model above 500 GeV:
+# `'extrapolate': True` to extrapolate the model above 500 GeV:
 #
 
 filename = "$GAMMAPY_DATA/fermi_3fhl/iso_P8R2_SOURCE_V6_v06.txt"
 
 diffuse_iso = create_fermi_isotropic_diffuse_model(
-    filename=filename, interp_kwargs={"fill_value": None}
+    filename=filename, interp_kwargs={"extrapolate": True}
 )
 
 

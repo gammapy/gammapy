@@ -7,7 +7,7 @@ from astropy.coordinates import angular_separation
 from astropy.utils import lazyproperty
 from regions import CircleSkyRegion
 import matplotlib.pyplot as plt
-from gammapy.irf import EDispKernel
+from gammapy.irf import EDispKernel, PSFKernel
 from gammapy.maps import HpxNDMap, Map, RegionNDMap, WcsNDMap
 from gammapy.modeling.models import PointSpatialModel, TemplateNPredModel
 from .utils import apply_edisp
@@ -61,7 +61,6 @@ class MapEvaluator:
         evaluation_mode="local",
         use_cache=True,
     ):
-
         self.model = model
         self.exposure = exposure
         self.psf = psf
@@ -71,6 +70,8 @@ class MapEvaluator:
         self.use_cache = use_cache
         self.contributes = True
         self.psf_containment = None
+
+        self._geom_reco_axis = None
 
         if evaluation_mode not in {"local", "global"}:
             raise ValueError(f"Invalid evaluation_mode: {evaluation_mode!r}")
@@ -91,9 +92,6 @@ class MapEvaluator:
         self._cached_parameter_values_spatial = None
         self._cached_position = (0, 0)
         self._computation_cache = None
-        self._spatial_oversampling_factor = 1
-        if exposure is not None:
-            self.update_spatial_oversampling_factor(self.geom)
 
     def _repr_html_(self):
         try:
@@ -117,10 +115,12 @@ class MapEvaluator:
     @property
     def _geom_reco(self):
         if self.edisp is not None:
-            energy_axis = self.edisp.axes["energy"].copy(name="energy")
+            energy_axis = self.edisp.axes["energy"]
+        elif self._geom_reco_axis is not None:
+            energy_axis = self._geom_reco_axis
         else:
-            energy_axis = self.geom.axes["energy_true"].copy(name="energy")
-        geom = self.geom.to_image().to_cube(axes=[energy_axis])
+            energy_axis = self.geom.axes["energy_true"]
+        geom = self.geom.to_image().to_cube(axes=[energy_axis.copy(name="energy")])
         return geom
 
     @property
@@ -191,7 +191,10 @@ class MapEvaluator:
         del self.position
         del self.cutout_width
 
+        self._geom_reco_axis = geom.axes["energy"]
+
         # lookup edisp
+        del self._edisp_diagonal
         if edisp:
             energy_axis = geom.axes["energy"]
             self.edisp = edisp.get_edisp_kernel(
@@ -200,7 +203,11 @@ class MapEvaluator:
             del self._edisp_diagonal
 
         # lookup psf
-        if psf and self.model.spatial_model:
+        if (
+            psf
+            and self.model.spatial_model
+            and not (isinstance(self.psf, PSFKernel) and psf.has_single_spatial_bin)
+        ):
             energy_name = psf.energy_name
             geom_psf = geom if energy_name == "energy" else exposure.geom
 
@@ -209,9 +216,6 @@ class MapEvaluator:
                 kwargs = {energy_name: energy_values, "rad": geom.region.radius}
                 self.psf_containment = psf.containment(**kwargs)
             else:
-                if geom_psf.is_region or geom_psf.is_hpx:
-                    geom_psf = geom_psf.to_wcs_geom()
-
                 self.psf = psf.get_psf_kernel(
                     position=self.position,
                     geom=geom_psf,
@@ -233,7 +237,6 @@ class MapEvaluator:
                 self.exposure = exposure._cutout_view(
                     position=self.position, width=self.cutout_width, odd_npix=True
                 )
-        self.update_spatial_oversampling_factor(self.geom)
 
         self.reset_cache_properties()
         self._computation_cache = None
@@ -242,23 +245,9 @@ class MapEvaluator:
     @lazyproperty
     def _edisp_diagonal(self):
         return EDispKernel.from_diagonal_response(
-            energy_axis_true=self.edisp.axes["energy_true"],
-            energy_axis=self.edisp.axes["energy"],
+            energy_axis_true=self.geom.axes["energy_true"],
+            energy_axis=self._geom_reco.axes["energy"],
         )
-
-    def update_spatial_oversampling_factor(self, geom):
-        """Update spatial oversampling_factor for model evaluation."""
-
-        if self.contributes and (not geom.is_region or geom.region is not None):
-            res_scale = self.model.evaluation_bin_size_min
-
-            res_scale = res_scale.to_value("deg") if res_scale is not None else 0
-
-            if res_scale != 0:
-                if geom.is_region or geom.is_hpx:
-                    geom = geom.to_wcs_geom()
-                factor = int(np.ceil(np.max(geom.pixel_scales.deg) / res_scale))
-                self._spatial_oversampling_factor = factor
 
     def compute_dnde(self):
         """Compute model differential flux at map pixel centers.
@@ -310,14 +299,10 @@ class MapEvaluator:
             if self.geom.region is None or self.psf is None:
                 return 1
 
-            wcs_geom = self.geom.to_wcs_geom(width_min=self.cutout_width).to_image()
+            wcs_geom = self.geom.to_wcs_geom(width_min=self.cutout_width)
+            values = self._compute_flux_spatial_geom(wcs_geom)
 
-            if self.psf and self.model.apply_irf["psf"]:
-                values = self._compute_flux_spatial_geom(wcs_geom)
-            else:
-                values = self.model.spatial_model.integrate_geom(
-                    wcs_geom, oversampling_factor=1
-                )
+            if not values.geom.has_energy_axis:
                 axes = [self.geom.axes["energy_true"].squash()]
                 values = values.to_cube(axes=axes)
 
@@ -368,8 +353,7 @@ class MapEvaluator:
 
     def apply_psf(self, npred):
         """Convolve npred cube with PSF."""
-        tmp = npred.convolve(self.psf)
-        return tmp
+        return npred.convolve(self.psf)
 
     def apply_edisp(self, npred):
         """Convolve map data with energy dispersion.
@@ -384,7 +368,7 @@ class MapEvaluator:
         npred_reco : `~gammapy.maps.Map`
             Predicted counts in reconstructed energy bins.
         """
-        if self.model.apply_irf["edisp"]:
+        if self.model.apply_irf["edisp"] and self.edisp:
             return apply_edisp(npred, self.edisp)
         else:
             if "energy_true" in npred.geom.axes.names:

@@ -12,6 +12,7 @@ from gammapy.modeling.models import (
     Models,
     SkyModel,
 )
+from gammapy.utils.scripts import read_yaml
 from gammapy.utils.testing import requires_data, requires_dependency
 
 
@@ -221,7 +222,7 @@ def test_stat_profile():
     dataset.models.parameters["x"].scan_n_values = 3
     result = fit.stat_profile(datasets=[dataset], parameter="x")
 
-    assert_allclose(result["test.model.x_scan"], [0, 2, 4], atol=1e-7)
+    assert_allclose(result["test.x_scan"], [0, 2, 4], atol=1e-7)
     assert_allclose(result["stat_scan"], [4, 0, 4], atol=1e-7)
     assert len(result["fit_results"]) == 0
 
@@ -238,7 +239,7 @@ def test_stat_profile_reoptimize():
     dataset.models.parameters["x"].scan_n_values = 3
     result = fit.stat_profile(datasets=[dataset], parameter="x", reoptimize=True)
 
-    assert_allclose(result["test.model.x_scan"], [0, 2, 4], atol=1e-7)
+    assert_allclose(result["test.x_scan"], [0, 2, 4], atol=1e-7)
     assert_allclose(result["stat_scan"], [4, 0, 4], atol=1e-7)
     assert_allclose(
         result["fit_results"][0].total_stat, result["stat_scan"][0], atol=1e-7
@@ -257,8 +258,8 @@ def test_stat_surface():
     dataset.models.parameters["y"].scan_values = y_values
     result = fit.stat_surface(datasets=[dataset], x="x", y="y")
 
-    assert_allclose(result["test.model.x_scan"], x_values, atol=1e-7)
-    assert_allclose(result["test.model.y_scan"], y_values, atol=1e-7)
+    assert_allclose(result["test.x_scan"], x_values, atol=1e-7)
+    assert_allclose(result["test.y_scan"], y_values, atol=1e-7)
     expected_stat = [
         [1.0001e04, 1.0000e00, 1.0001e04],
         [1.0000e04, 0.0000e00, 1.0000e04],
@@ -286,8 +287,8 @@ def test_stat_surface_reoptimize():
 
     result = fit.stat_surface(datasets=[dataset], x="x", y="y", reoptimize=True)
 
-    assert_allclose(result["test.model.x_scan"], x_values, atol=1e-7)
-    assert_allclose(result["test.model.y_scan"], y_values, atol=1e-7)
+    assert_allclose(result["test.x_scan"], x_values, atol=1e-7)
+    assert_allclose(result["test.y_scan"], y_values, atol=1e-7)
     expected_stat = [
         [1.0001e04, 1.0000e00, 1.0001e04],
         [1.0000e04, 0.0000e00, 1.0000e04],
@@ -309,11 +310,11 @@ def test_stat_contour():
 
     assert result["success"]
 
-    x = result["test.model.y"]
+    x = result["test.y"]
     assert len(x) in [10, 11]  # Behavior changed after iminuit>=2.13
     assert_allclose(x[0], 299, rtol=1e-5)
     assert_allclose(x[9], 299.133975, rtol=1e-5)
-    y = result["test.model.z"]
+    y = result["test.z"]
     assert len(x) == len(y)
     assert len(y) in [10, 11]
     assert_allclose(y[0], 0.04, rtol=1e-5)
@@ -338,21 +339,28 @@ def test_write(tmpdir):
     fit = Fit()
     result = fit.run(datasets)
 
-    result_dict = result.to_dict()
+    result_dict = result.covariance_result.to_dict()
     assert (
-        result_dict["covariance_result"]["backend"] == result.covariance_result.backend
+        result_dict["CovarianceResult"]["backend"] == result.covariance_result.backend
     )
-    assert result_dict["optimize_result"]["nfev"] == result.optimize_result.nfev
+    result_dict = result.optimize_result.to_dict()
+    assert result_dict["OptimizeResult"]["nfev"] == result.optimize_result.nfev
     assert (
-        result_dict["optimize_result"]["total_stat"]
-        == result.optimize_result.total_stat
+        result_dict["OptimizeResult"]["total_stat"] == result.optimize_result.total_stat
     )
 
-    result.write(path=tmpdir / "test-fit-result.yaml")
+    filename = tmpdir / "test-fit-result.yaml"
+
+    result.write(filename)
+    data = read_yaml(filename)
+    assert "CovarianceResult" in data
+    assert "OptimizeResult" in data
 
     optimize_result = fit.optimize(datasets)
     result = FitResult(optimize_result=optimize_result)
 
-    result_dict = result.to_dict()
-    assert "covariance_result" not in result_dict
-    result.write(path=tmpdir / "test-fit-result.yaml", overwrite=True)
+    result.write(filename, overwrite=True)
+    data = read_yaml(filename)
+
+    assert "CovarianceResult" not in data
+    assert "OptimizeResult" in data

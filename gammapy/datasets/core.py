@@ -9,7 +9,7 @@ from astropy import units as u
 from astropy.table import Table, vstack
 from gammapy.data import GTI
 from gammapy.modeling.models import DatasetModels, Models
-from gammapy.utils.scripts import make_name, make_path, read_yaml, write_yaml
+from gammapy.utils.scripts import make_name, make_path, read_yaml, to_yaml, write_yaml
 
 log = logging.getLogger(__name__)
 
@@ -145,6 +145,7 @@ class Datasets(collections.abc.MutableSequence):
             unique_names.append(dataset.name)
 
         self._datasets = datasets
+        self._covariance = None
 
     @property
     def parameters(self):
@@ -168,8 +169,12 @@ class Datasets(collections.abc.MutableSequence):
             if dataset.models is not None:
                 for model in dataset.models:
                     models[model] = model
+        models = DatasetModels(list(models.keys()))
 
-        return DatasetModels(list(models.keys()))
+        if self._covariance and self._covariance.parameters == models.parameters:
+            return DatasetModels(models, covariance_data=self._covariance.data)
+        else:
+            return models
 
     @models.setter
     def models(self, models):
@@ -178,6 +183,8 @@ class Datasets(collections.abc.MutableSequence):
         Duplicate model objects have been removed.
         The order of the unique models remains.
         """
+        if models:
+            self._covariance = DatasetModels(models).covariance
         for dataset in self:
             dataset.models = models
 
@@ -461,8 +468,8 @@ class Datasets(collections.abc.MutableSequence):
 
         if path.exists() and not overwrite:
             raise IOError(f"File exists already: {path}")
-
-        write_yaml(data, path, sort_keys=False, checksum=checksum)
+        yaml_str = to_yaml(data)
+        write_yaml(yaml_str, path, checksum=checksum, overwrite=overwrite)
 
         if filename_models:
             self.models.write(
@@ -477,6 +484,8 @@ class Datasets(collections.abc.MutableSequence):
 
         This works only if all datasets are of the same type and with aligned geometries, and if a proper
         in-place stack method exists for the Dataset type.
+
+        For details, see :ref:`stack`.
 
         Parameters
         ----------

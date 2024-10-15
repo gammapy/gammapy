@@ -7,7 +7,8 @@ from astropy.coordinates import SkyCoord
 from gammapy.datasets import Datasets, SpectrumDatasetOnOff
 from gammapy.datasets.tests.test_map import get_map_dataset
 from gammapy.maps import MapAxis, WcsGeom
-from gammapy.modeling.models import SkyModel
+from gammapy.modeling import Fit
+from gammapy.modeling.models import FoVBackgroundModel, Models, SkyModel
 from gammapy.modeling.tests.test_fit import MyDataset
 from gammapy.utils.testing import requires_data
 
@@ -159,3 +160,58 @@ def test_datasets_write(tmp_path):
             filename_models=tmp_path / "test_model",
             overwrite=False,
         )
+
+
+@requires_data()
+def test_datasets_fit():
+    axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=2)
+    geom = WcsGeom.create(
+        skydir=(266.40498829, -28.93617776),
+        binsz=0.05,
+        width=(20, 20),
+        frame="icrs",
+        axes=[axis],
+    )
+
+    axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=3, name="energy_true")
+    geom_etrue = WcsGeom.create(
+        skydir=(266.40498829, -28.93617776),
+        binsz=0.05,
+        width=(20, 20),
+        frame="icrs",
+        axes=[axis],
+    )
+
+    dataset_1 = get_map_dataset(geom, geom_etrue, name="test-1")
+    dataset_1.mask_fit = None
+    dataset_1.background /= 400
+    dataset_2 = get_map_dataset(geom, geom_etrue, name="test-2")
+    dataset_2.mask_fit = None
+    dataset_2.background /= 400
+
+    datasets = Datasets([dataset_1, dataset_2])
+
+    model = SkyModel.create("pl", "point", name="src")
+    model.spatial_model.position = dataset_1.exposure.geom.center_skydir
+
+    model2 = model.copy()
+    model2.spatial_model.lon_0.value += 0.1
+    model2.spatial_model.lat_0.value += 0.1
+
+    models = Models(
+        [
+            model,
+            model2,
+            FoVBackgroundModel(dataset_name=dataset_1.name),
+            FoVBackgroundModel(dataset_name=dataset_2.name),
+        ]
+    )
+
+    datasets.models = models
+    dataset_1.fake()
+    dataset_2.fake()
+
+    fit = Fit()
+    results = fit.run(datasets)
+
+    assert_allclose(results.models.covariance.data, datasets.models.covariance.data)

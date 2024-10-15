@@ -108,7 +108,12 @@ class Map(abc.ABC):
             raise TypeError("Map data must be a Numpy array. Set unit separately")
 
         if not value.shape == self.geom.data_shape:
-            value = value.reshape(self.geom.data_shape)
+            try:
+                value = np.broadcast_to(value, self.geom.data_shape, subok=True)
+            except ValueError as exc:
+                raise ValueError(
+                    f"Input shape {value.shape} is not compatible with shape from geometry {self.geom.data_shape}"
+                ) from exc
 
         self._data = value
 
@@ -253,7 +258,7 @@ class Map(abc.ABC):
             Map object.
         """
         with fits.open(
-            str(make_path(filename)), memmap=False, checksum=checksum
+            make_path(filename), memmap=False, checksum=checksum
         ) as hdulist:
             return Map.from_hdulist(
                 hdulist, hdu, hdu_bands, map_type, format=format, colname=colname
@@ -1729,9 +1734,10 @@ class Map(abc.ABC):
 
             data.append(m.quantity.to_value(maps[0].unit))
 
-        return cls.from_geom(
-            data=np.stack(data), geom=geom.to_cube(axes=[axis]), unit=maps[0].unit
-        )
+        new_geom = geom.to_cube(axes=[axis])
+        data = np.concatenate(data).reshape(new_geom.data_shape)
+
+        return cls.from_geom(data=data, geom=new_geom, unit=maps[0].unit)
 
     def split_by_axis(self, axis_name):
         """Split a Map along an axis into multiple maps.

@@ -13,6 +13,7 @@ from gammapy.stats.variability import (
     compute_fpp,
     compute_fvar,
     structure_function,
+    discrete_correlation,
 )
 from gammapy.utils.testing import assert_quantity_allclose
 
@@ -36,6 +37,7 @@ def lc_table():
     return table
 
 
+@pytest.fixture(scope="session")
 def lc():
     meta = dict(TIMESYS="utc", SED_TYPE="flux")
 
@@ -70,7 +72,6 @@ def lc():
 
 
 def test_lightcurve_fvar():
-
     flux = np.array([[1e-11, 4e-12], [3e-11, np.nan], [1e-11, 1e-12]])
     flux_err = np.array([[0.1e-11, 0.4e-12], [0.3e-11, np.nan], [0.1e-11, 0.1e-12]])
 
@@ -83,7 +84,6 @@ def test_lightcurve_fvar():
 
 
 def test_lightcurve_fpp():
-
     flux = np.array([[1e-11, 4e-12], [3e-11, np.nan], [1e-11, 1e-12]])
     flux_err = np.array([[0.1e-11, 0.4e-12], [0.3e-11, np.nan], [0.1e-11, 0.1e-12]])
 
@@ -109,7 +109,6 @@ def test_lightcurve_chisq(lc_table):
 
 
 def test_lightcurve_flux_doubling():
-
     flux = np.array(
         [
             [1e-11, 4e-12],
@@ -147,12 +146,9 @@ def test_lightcurve_flux_doubling():
     assert_allclose(dtime_err, [425.92375713, 242.80234065] * u.s)
 
 
-def test_tk():
+def test_tk_function():
     time_series, time_axis = TimmerKonig_lightcurve_simulator(
         lambda x: x ** (-3), 20, 1 * u.s
-    )
-    time_series2, time_axis2 = TimmerKonig_lightcurve_simulator(
-        lambda x: x**0.5, 21, 2 * u.h
     )
 
     def temp(x, norm, index):
@@ -160,32 +156,61 @@ def test_tk():
 
     params = {"norm": 1.5, "index": 3}
 
-    time_series3, time_axis3 = TimmerKonig_lightcurve_simulator(
+    time_series2, time_axis2 = TimmerKonig_lightcurve_simulator(
         temp, 15, 1 * u.h, power_spectrum_params=params
-    )
-
-    time_series4, time_axis4 = TimmerKonig_lightcurve_simulator(
-        lambda x: x ** (-3), 20, 1 * u.s, leakage_protection=100.0
     )
 
     assert len(time_series) == 20
     assert isinstance(time_axis, u.Quantity)
     assert time_axis.unit == u.s
-    assert len(time_series2) == 21
-    assert len(time_series3) == 15
-    assert len(time_series4) == 20
+    assert len(time_series2) == 15
 
 
-def test_tk_badleakage():
-    with pytest.raises(ValueError):
-        TimmerKonig_lightcurve_simulator(
-            lambda x: x ** (-3), 20, 1 * u.s, leakage_protection=0.1
-        )
+def test_tk_nchunks():
+    time_series, time_axis = TimmerKonig_lightcurve_simulator(
+        lambda x: x ** (-1.5), 21, 1 * u.s, nchunks=100
+    )
+    time_series2, time_axis2 = TimmerKonig_lightcurve_simulator(
+        lambda x: x ** (-1.5), 21, 1 * u.s, nchunks=20
+    )
+
+    with pytest.raises(TypeError):
+        TimmerKonig_lightcurve_simulator(lambda x: x ** (-3), 20, 1 * u.s, nchunks=0.5)
+
+    with pytest.raises(TypeError):
+        TimmerKonig_lightcurve_simulator(lambda x: x ** (-3), 20.5, 1 * u.s)
+
+    assert len(time_series) == len(time_series2) == 21
+
+
+def test_tk_mean():
+    time_series, time_axis = TimmerKonig_lightcurve_simulator(
+        lambda x: x ** (-1.5), 2000, 1 * u.s, mean=2.5, std=0.5
+    )
+
+    time_series2, time_axis2 = TimmerKonig_lightcurve_simulator(
+        lambda x: x ** (-1.5),
+        2000,
+        1 * u.s,
+        mean=1e-7 * (u.cm**-2),
+        std=5e-8 * (u.cm**-2),
+    )
+
+    time_series3, time_axis3 = TimmerKonig_lightcurve_simulator(
+        lambda x: x ** (-1.5), 2000, 1 * u.s, mean=2.5, std=0.5, poisson=True
+    )
 
     with pytest.raises(Warning):
         TimmerKonig_lightcurve_simulator(
-            lambda x: x ** (-3), 20, 1 * u.s, leakage_protection=1.001
+            lambda x: x ** (-3), 20, 1 * u.s, mean=0.5, poisson=True
         )
+
+    assert_allclose(time_series.mean(), 2.5)
+    assert_allclose(time_series.std(), 0.5)
+    assert_allclose(time_series2.mean(), 1e-7 * (u.cm**-2))
+    assert_allclose(time_series2.std(), 5e-8 * (u.cm**-2))
+    assert_allclose(time_series3.mean(), 2.5, rtol=0.1)
+    assert_allclose(time_series3.std(), 1, rtol=1)
 
 
 def test_structure_function():
@@ -233,4 +258,97 @@ def test_structure_function():
     assert_allclose(
         distances,
         [3600.0, 7000.0, 7200.0, 10800.0, 14200.0, 14400.0, 17800.0, 21400.0] * u.s,
+    )
+
+
+def test_dcf():
+    flux = np.array(
+        [
+            [1e-11, 4e-12],
+            [3e-11, 2.5e-12],
+            [1e-11, 1e-12],
+            [0.8e-11, 0.8e-12],
+            [1e-11, 1e-12],
+        ]
+    )
+    flux2 = np.array(
+        [
+            [1e-11, 3.5e-12],
+            [4e-11, 1.5e-12],
+            [1.7e-11, 2e-12],
+            [0.4e-11, 1.8e-12],
+            [1e-11, 1.5e-12],
+            [1.1e-11, 0.7e-12],
+        ]
+    )
+
+    flux_err = np.array(
+        [
+            [0.1e-11, 0.4e-12],
+            [0.3e-11, 0.2e-12],
+            [0.1e-11, 0.1e-12],
+            [0.08e-11, 0.08e-12],
+            [0.1e-11, 0.1e-12],
+        ]
+    )
+    flux_err2 = np.array(
+        [
+            [0.2e-11, 0.24e-12],
+            [0.4e-11, 0.21e-12],
+            [0.07e-11, 0.14e-12],
+            [0.12e-11, 0.18e-12],
+            [0.1e-11, 0.13e-12],
+            [0.4e-11, 0.2e-12],
+        ]
+    )
+
+    time = (
+        np.array(
+            [6.31157019e08, 6.31160619e08, 6.31164219e08, 6.31171419e08, 6.31178419e08]
+        )
+        * u.s
+    )
+    time2 = (
+        np.array(
+            [
+                6.31156919e08,
+                6.31160519e08,
+                6.31163819e08,
+                6.31171419e08,
+                6.31178219e08,
+                6.31178819e08,
+            ]
+        )
+        * u.s
+    )
+
+    bins, dcf, dcf_err = discrete_correlation(
+        flux, flux_err, flux2, flux_err2, time, time2, tau=1.5e4 * u.s
+    )
+
+    assert_allclose(
+        dcf,
+        [
+            [-0.332361, -1.009638],
+            [-0.065639, 0.313054],
+            [0.215329, 0.133132],
+            [-0.373906, -0.56788],
+        ],
+        rtol=1e-5,
+    )
+
+    assert_allclose(
+        dcf_err,
+        [
+            [0.34881, 0.553113],
+            [0.236548, 0.174538],
+            [0.401313, 0.361757],
+            [0.820525, 1.204655],
+        ],
+        rtol=1e-5,
+    )
+
+    assert_allclose(
+        bins,
+        u.Quantity([-22500.0, -7500.0, 7500.0, 22500.0], unit="s"),
     )

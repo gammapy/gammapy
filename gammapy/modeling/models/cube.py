@@ -2,17 +2,20 @@
 """Cube models (axes: lon, lat, energy)."""
 
 import logging
+import warnings
 import os
 import numpy as np
 import astropy.units as u
 from astropy.nddata import NoOverlapError
 from astropy.time import Time
 from gammapy.maps import Map, MapAxis, WcsGeom
-from gammapy.modeling import Covariance, Parameters
+from gammapy.modeling import Parameters
+from gammapy.modeling.covariance import CovarianceMixin
 from gammapy.modeling.parameter import _get_parameters_str
 from gammapy.utils.compat import COPY_IF_NEEDED
 from gammapy.utils.fits import LazyFitsData
 from gammapy.utils.scripts import make_name, make_path
+from gammapy.utils.deprecation import GammapyDeprecationWarning
 from .core import Model, ModelBase, Models
 from .spatial import ConstantSpatialModel, SpatialModel
 from .spectral import PowerLawNormSpectralModel, SpectralModel, TemplateSpectralModel
@@ -29,7 +32,7 @@ __all__ = [
 ]
 
 
-class SkyModel(ModelBase):
+class SkyModel(CovarianceMixin, ModelBase):
     """Sky model component.
 
     This model represents a factorised sky model.
@@ -84,12 +87,6 @@ class SkyModel(ModelBase):
         models = self.spectral_model, self.spatial_model, self.temporal_model
         return [model for model in models if model is not None]
 
-    def _check_covariance(self):
-        if not self.parameters == self._covariance.parameters:
-            self._covariance = Covariance.from_stack(
-                [model.covariance for model in self._models],
-            )
-
     def _check_unit(self):
         axis = MapAxis.from_energy_bounds(
             "0.1 TeV", "10 TeV", nbin=1, name="energy_true"
@@ -128,24 +125,6 @@ class SkyModel(ModelBase):
             )
 
     @property
-    def covariance(self):
-        self._check_covariance()
-
-        for model in self._models:
-            self._covariance.set_subcovariance(model.covariance)
-
-        return self._covariance
-
-    @covariance.setter
-    def covariance(self, covariance):
-        self._check_covariance()
-        self._covariance.data = covariance
-
-        for model in self._models:
-            subcovar = self._covariance.get_subcovariance(model.covariance.parameters)
-            model.covariance = subcovar
-
-    @property
     def name(self):
         return self._name
 
@@ -162,6 +141,17 @@ class SkyModel(ModelBase):
             parameters.append(self.temporal_model.parameters)
 
         return Parameters.from_stack(parameters)
+
+    @property
+    def parameters_unique_names(self):
+        """List of unique parameter names. Return formatted as par_type.par_name."""
+        names = []
+        for model in self._models:
+            for par_name in model.parameters_unique_names:
+                components = [model.type, par_name]
+                name = ".".join(components)
+                names.append(name)
+        return names
 
     @property
     def spatial_model(self):
@@ -640,12 +630,12 @@ class FoVBackgroundModel(ModelBase):
 
     Parameters
     ----------
-    spectral_model : `~gammapy.modeling.models.SpectralModel`
-        Normalized spectral model.
-        Default is `~gammapy.modeling.models.PowerLawNormSpectralModel`
     dataset_name : str
         Dataset name.
-    spatial_model : `~gammapy.modeling.models.SpatialModel`
+    spectral_model : `~gammapy.modeling.models.SpectralModel`, Optional
+        Normalized spectral model.
+        Default is `~gammapy.modeling.models.PowerLawNormSpectralModel`
+    spatial_model : `~gammapy.modeling.models.SpatialModel`, Optional
         Unitless Spatial model (unit is dropped on evaluation if defined).
         Default is None.
     """
@@ -654,13 +644,21 @@ class FoVBackgroundModel(ModelBase):
 
     def __init__(
         self,
+        dataset_name,
         spectral_model=None,
-        dataset_name=None,
         spatial_model=None,
         covariance_data=None,
     ):
-        if dataset_name is None:
-            raise ValueError("Dataset name a is required argument")
+        # TODO: remove this in v2.0
+        if isinstance(dataset_name, SpectralModel):
+            warnings.warn(
+                "dataset_name has been made first argument since v1.3.",
+                GammapyDeprecationWarning,
+                stacklevel=2,
+            )
+            buf = dataset_name
+            dataset_name = spectral_model
+            spectral_model = buf
 
         self.datasets_names = [dataset_name]
 
@@ -690,6 +688,11 @@ class FoVBackgroundModel(ModelBase):
         return self._spatial_model
 
     @property
+    def _models(self):
+        models = self.spectral_model, self.spatial_model
+        return [model for model in models if model is not None]
+
+    @property
     def name(self):
         """Model name."""
         return self.datasets_names[0] + "-bkg"
@@ -702,6 +705,17 @@ class FoVBackgroundModel(ModelBase):
         if self.spatial_model is not None:
             parameters.append(self.spatial_model.parameters)
         return Parameters.from_stack(parameters)
+
+    @property
+    def parameters_unique_names(self):
+        """List of unique parameter names. Return formatted as par_type.par_name."""
+        names = []
+        for model in self._models:
+            for par_name in model.parameters_unique_names:
+                components = [model.type, par_name]
+                name = ".".join(components)
+                names.append(name)
+        return names
 
     def __str__(self):
         str_ = f"{self.__class__.__name__}\n\n"
@@ -954,10 +968,26 @@ class TemplateNPredModel(ModelBase):
         self._spectral_model = model
 
     @property
+    def _models(self):
+        models = self.spectral_model, self.spatial_model
+        return [model for model in models if model is not None]
+
+    @property
     def parameters(self):
         parameters = []
         parameters.append(self.spectral_model.parameters)
         return Parameters.from_stack(parameters)
+
+    @property
+    def parameters_unique_names(self):
+        """List of unique parameter names. Return formatted as par_type.par_name."""
+        names = []
+        for model in self._models:
+            for par_name in model.parameters_unique_names:
+                components = [model.type, par_name]
+                name = ".".join(components)
+                names.append(name)
+        return names
 
     def evaluate(self):
         """Evaluate background model.
@@ -1175,7 +1205,7 @@ class TemplateNPredModel(ModelBase):
 def create_fermi_isotropic_diffuse_model(filename, **kwargs):
     """Read Fermi isotropic diffuse model.
 
-    See `LAT Background models <https://fermi.gsfc.nasa.gov/ssc/data/access/lat/BackgroundModels.html>`__  # noqa: E501
+    See `LAT Background models <https://fermi.gsfc.nasa.gov/ssc/data/access/lat/BackgroundModels.html>`__.
 
     Parameters
     ----------

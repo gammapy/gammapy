@@ -35,7 +35,7 @@ class EDispMap(IRFMap):
     --------
     ::
 
-        # Energy dispersion map for CTA data
+        # Energy dispersion map for CTAO data
         import numpy as np
         from astropy import units as u
         from astropy.coordinates import SkyCoord
@@ -88,6 +88,7 @@ class EDispMap(IRFMap):
 
     @edisp_map.setter
     def edisp_map(self, value):
+        del self.has_single_spatial_bin
         self._irf_map = value
 
     def normalize(self):

@@ -58,6 +58,7 @@ class PlotMixin:
         >>> dataset.plot_fit(kwargs_residuals=kwargs_residuals, kwargs_spectrum=kwargs_spectrum)  # doctest: +SKIP
         """
         gs = GridSpec(7, 1)
+        bool_visible_xticklabel = not (ax_spectrum is None and ax_residuals is None)
         ax_spectrum, ax_residuals = get_axes(
             ax_spectrum,
             ax_residuals,
@@ -77,6 +78,9 @@ class PlotMixin:
         method = kwargs_residuals.get("method", "diff")
         label = self._residuals_labels[method]
         ax_residuals.set_ylabel(f"Residuals\n{label}")
+        plt.setp(ax_spectrum.get_xticklabels(), visible=bool_visible_xticklabel)
+        self.plot_masks(ax=ax_spectrum)
+        self.plot_masks(ax=ax_residuals)
 
         return ax_spectrum, ax_residuals
 

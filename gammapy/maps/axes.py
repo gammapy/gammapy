@@ -1110,10 +1110,10 @@ class MapAxis:
             nodes = self.pix_to_coord(pix_new)
             return self.from_nodes(nodes, name=self.name, interp=self.interp)
 
-    def downsample(self, factor):
+    def downsample(self, factor, strict=True):
         """Downsample map axis by a given factor.
 
-        When downsampling each n-th (given by the factor) bin is selected from
+        When downsampling, each n-th (given by the factor) bin is selected from
         the axis while preserving the axis limits. For node type "edges" this
         requires nbin to be dividable by the factor, for node type "center" this
         requires nbin - 1 to be dividable by the factor.
@@ -1122,6 +1122,11 @@ class MapAxis:
         ----------
         factor : int
             Downsampling factor.
+        strict : bool
+            Whether the number of bins is strictly divisible by the factor.
+            If True, ``nbin`` must be divisible by the ``factor``.
+            If False, the reminder bins are put into the last bin of the new axis.
+            Default is True.
 
         Returns
         -------
@@ -1129,25 +1134,26 @@ class MapAxis:
             Downsampled map axis.
         """
         if self.node_type == "edges":
-            nbin = self.nbin / factor
-
-            if np.mod(nbin, 1) > 0:
-                raise ValueError(
-                    f"Number of {self.name} bins is not divisible by {factor}"
-                )
-
             edges = self.edges[::factor]
+            if edges[-1] != self.edges[-1]:
+                if strict is True:
+                    raise ValueError(
+                        f"Number of {self.name} bins ({self.nbin}) is not divisible by {factor}"
+                    )
+                else:
+                    edges = np.append(edges, self.edges[-1])
             return self.from_edges(edges, name=self.name, interp=self.interp)
-        else:
-            nbin = (self.nbin - 1) / factor
 
-            if np.mod(nbin, 1) > 0:
-                raise ValueError(
-                    f"Number of {self.name} bins - 1 is not divisible by {factor}"
-                )
-
-            nodes = self.center[::factor]
-            return self.from_nodes(nodes, name=self.name, interp=self.interp)
+        elif self.node_type == "center":
+            centers = self.center[::factor]
+            if centers[-1] != self.center[-1]:
+                if strict is True:
+                    raise ValueError(
+                        f"Number of {self.name} bins - 1 ({self.nbin-1}) is not divisible by {factor}"
+                    )
+                else:
+                    centers = np.append(centers, self.center[-1])
+            return self.from_nodes(centers, name=self.name, interp=self.interp)
 
     def to_header(self, format="ogip", idx=0):
         """Create FITS header.
@@ -3024,6 +3030,18 @@ class TimeMapAxis:
             self.edges_min, self.edges_max, reference_time=self.reference_time
         )
 
+    def to_table(self):
+        """Create table.
+
+        Returns
+        -------
+        table : `~astropy.table.Table`
+            Table with axis data.
+        """
+        t = self.to_gti().table
+
+        return t
+
     def to_header(self, format="gadf", idx=0):
         """Create FITS header.
 
@@ -3129,7 +3147,7 @@ class LabelMapAxis:
         if not len(unique_labels) == len(labels):
             raise ValueError("Node labels must be unique")
 
-        self._labels = unique_labels
+        self._labels = np.array(labels)
         self._name = name
 
     @property
