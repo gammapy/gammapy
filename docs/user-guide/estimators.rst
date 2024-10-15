@@ -91,7 +91,7 @@ arguments are translated into a TS difference assuming ``ts = n_sigma ** 2``.
 .. _sedtypes:
 
 SED types
-~~~~~~~~~
+^^^^^^^^^
 
 In addition to the norm values a reference spectral model and energy ranges
 are given. Using this reference spectral model the norm values can be converted
