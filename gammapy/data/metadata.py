@@ -122,7 +122,7 @@ class GTIMetaData(MetaData):
 
     Parameters
     ----------
-    reference_time : str
+    reference_time : `~astropy.time.Time`, str
         The GTI reference time.
     """
 
