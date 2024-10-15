@@ -41,7 +41,7 @@ This is a fundamental difference between MCMC (and Minuit) which will only ever 
 The analysis using the NS framework is more CPU time consuming than a standard classical fit but provides the full posterior distribution for all parameters, which is out of reach with traditional fitting techniques (N*(N-1)/2 contour plots to generate).
 In addition it is more robust to the choice of initialization, requires less human intervention and is therefore readily pluggable in pipeline analysis.
 The following PIG focuses on the implementation of the NS with the UltraNest package, one of the leading package in Astronomy (already used in Cosmology and in X-rays). Another relevant implementation is the one by Dynesty.
-As they have very similar API, both packages could be implemented/tested in the future.
+However, UltraNest is claimed to be more robust, provide safer uncertainties, and better parallelization (see `UltraNest doc <https://johannesbuchner.github.io/UltraNest/issues.html#what-is-the-difference-between-ultranest-and-multinest-dynesty>`_)
 
 Reference : 
 - Ultranest : https://johannesbuchner.github.io/UltraNest   
@@ -102,8 +102,16 @@ replaces the deltaCstat / AIC/BIC, etc
 comparing non nested models
 
 
-Case 4: Any other suggestions ? 
+Case 4: Parallelization of the "fitting"
 ---------------------------------------------------------------
+How to speed up a fit and the error estimation has been in discussion for a while. UltraNest supports parallelisation out-of-the-box with MPI support.
+This allows to take advantage of the CPUs on a laptop or a cluster. From my experience in X-ray analysis, parallelisation scales well up to 16 cores (but this is probably very data dependent).
+
+
+
+Case 5: Any other suggestions ? 
+---------------------------------------------------------------
+
 
 
 
