@@ -1738,7 +1738,7 @@ class PiecewiseNormSpatialModel(SpatialModel):
         lon = Angle(lon).wrap_at(0 * u.deg)
         lon = Angle(lon).wrap_at(self._wrap_angle)
         # by default rely on CloughTocher2DInterpolator
-        # (Piecewise cubic, C1 smooth, curvature-minimizing interpolation)
+        # (Piecewise cubic, C1 smooth, curvature-minimizing interpolant)
         interpolated = griddata(coords, v_nodes, (lon, lat), method="cubic")
         return scale.inverse(interpolated) * self.norms.unit
 
