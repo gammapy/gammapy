@@ -181,6 +181,7 @@ class FluxPoints(FluxMaps):
         format=None,
         reference_model=None,
         checksum=False,
+        table_format="ascii.ecsv",
         **kwargs,
     ):
         """Read precomputed flux points.
@@ -198,6 +199,8 @@ class FluxPoints(FluxMaps):
             Reference spectral model.
         checksum : bool
             If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
+        table_format :  str
+            Format string for the ~astropy.Table object. Default is "ascii.ecsv"
         **kwargs : dict, optional
             Keyword arguments passed to `astropy.table.Table.read`.
 
@@ -208,9 +211,8 @@ class FluxPoints(FluxMaps):
         """
         filename = make_path(filename)
         gti = None
-        kwargs.setdefault("format", "ascii.ecsv")
         try:
-            table = Table.read(filename, **kwargs)
+            table = Table.read(filename, format=table_format, **kwargs)
         except (IORegistryError, UnicodeDecodeError):
             with fits.open(filename, checksum=checksum) as hdulist:
                 if "FLUXPOINTS" in hdulist:
