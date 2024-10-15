@@ -81,7 +81,7 @@ class ObservationsEventsSampler(parallel.ParallelMixin):
 
         Parameters
         ----------
-        observations : list of `~gammapy.data.Observation`
+        observations : `~gammapy.data.Observations`
             Observation to be simulated.
         models : `~gammapy.modeling.Models`, optional
             Models to simulate.
