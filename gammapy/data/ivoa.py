@@ -323,7 +323,7 @@ def to_obscore_table(
         Default is None. Giving the values of this argument is highly recommended.
         If not, the corresponding obscore field is filled by the Observation ID value.
     access_url : str, optional
-        URL used to access (download) dataset(check IVOA recommendations).
+        URL used to access (download) dataset (check IVOA recommendations).
         Default is None. Giving the values of this argument is highly recommended.
         If not, the corresponding obscore field is filled by the Observation ID value.
     obscore_template : dict, optional
