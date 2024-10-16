@@ -565,7 +565,7 @@ class FluxPointsDataset(Dataset):
         ax : `~matplotlib.axes.Axes`, optional
             Axes to plot on. Default is None.
         method : {"diff", "diff/model"}
-            Normalization used to compute the residuals, see `~gammapy.datasets.FluxPointsDataset.residuals`. Default is "diff".
+            Normalisation used to compute the residuals, see `~gammapy.datasets.FluxPointsDataset.residuals`. Default is "diff".
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.axes.Axes.errorbar`.
 
