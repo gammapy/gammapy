@@ -122,10 +122,22 @@ class GTI:
         reference_time = Time(reference_time)
         reference_time.format = "mjd"
 
-        if not isinstance(start, Time):
+        if not isinstance(start, list):
+            if isinstance(start, u.Quantity):
+                start = reference_time + u.Quantity(start)
+        elif len(start) == 1:
+            if not isinstance(start[0], Time):
+                start = [reference_time + u.Quantity(start[0])]
+        elif not np.all([isinstance(_, Time) for _ in start]):
             start = reference_time + u.Quantity(start)
 
-        if not isinstance(stop, Time):
+        if not isinstance(start, list):
+            if isinstance(stop, u.Quantity):
+                stop = reference_time + u.Quantity(stop)
+        elif len(stop) == 1:
+            if not isinstance(stop[0], Time):
+                stop = [reference_time + u.Quantity(stop[0])]
+        elif not np.all([isinstance(_, Time) for _ in stop]):
             stop = reference_time + u.Quantity(stop)
 
         table = Table({"START": np.atleast_1d(start), "STOP": np.atleast_1d(stop)})
@@ -276,6 +288,9 @@ class GTI:
     @property
     def time_intervals(self):
         """List of time intervals."""
+        if len(self.table) == 0:
+            return None
+
         return [
             (t_start, t_stop)
             for t_start, t_stop in zip(self.time_start, self.time_stop)
@@ -295,47 +310,66 @@ class GTI:
 
         Returns
         -------
-        gti : `GTI`
+        gti : `~gammapy.data.GTI`
             GTI table.
         """
-        start = Time([_[0] for _ in time_intervals])
-        stop = Time([_[1] for _ in time_intervals])
+        if np.asarray(time_intervals).data.shape == (2, 1) or np.asarray(
+            time_intervals
+        ).shape == (2,):
+            time_intervals = [time_intervals]
+
+        start = [_[0] for _ in time_intervals]
+        stop = [_[1] for _ in time_intervals]
 
         if reference_time is None:
             reference_time = TIME_REF_DEFAULT
 
         return cls.create(start, stop, reference_time)
 
-    def select_time(self, time_interval):
-        """Select and crop GTIs in time interval.
+    def select_time(self, time_intervals):
+        """Select and crop GTIs in time intervals.
 
         Parameters
         ----------
-        time_interval : `astropy.time.Time`
+        time_intervals : a pair of `astropy.time.Time` or an array of such time intervals
             Start and stop time for the selection.
 
         Returns
         -------
-        gti : `GTI`
+        gti : `~gammapy.data.GTI`
             Copy of the GTI table with selection applied.
         """
-        interval_start, interval_stop = time_interval
-        interval_start.format = self.time_start.format
-        interval_stop.format = self.time_stop.format
+        if np.asarray(time_intervals).data.shape == (2, 1) or np.asarray(
+            time_intervals
+        ).data.shape == (2,):
+            interval_start = [time_intervals[0]]
+            interval_stop = [time_intervals[1]]
+        else:
+            interval_start = [_[0] for _ in time_intervals]
+            interval_stop = [_[1] for _ in time_intervals]
 
-        # get GTIs that fall within the time_interval
-        mask = self.time_start < interval_stop
-        mask &= self.time_stop > interval_start
-        gti_within = self.table[mask]
+        gti_within = None
+        for t1, t2 in zip(interval_start, interval_stop):
+            t1.format = self.time_start.format
+            t2.format = self.time_stop.format
+            for tis, tie in zip(self.table["START"], self.table["STOP"]):
+                if tis > t2 or t1 > tie:
+                    continue
+                else:
+                    ts = max(t1, tis)
+                    te = min(t2, tie)
+                    agti = Table(
+                        {"START": np.atleast_1d(ts), "STOP": np.atleast_1d(te)}
+                    )
+                    if gti_within:
+                        gti_within = vstack([gti_within, agti])
+                    else:
+                        gti_within = agti
+        if gti_within is None:
+            return self.__class__(Table(names=("START", "STOP")), self.time_ref)
 
-        # crop the GTIs
-        gti_within["START"] = np.clip(
-            gti_within["START"], interval_start, interval_stop
-        )
-
-        gti_within["STOP"] = np.clip(gti_within["STOP"], interval_start, interval_stop)
-
-        return self.__class__(gti_within)
+        gti_within.sort("START")
+        return self.__class__(gti_within, self.time_ref)
 
     def delete_interval(self, time_interval):
         """Select and crop GTIs in time interval.

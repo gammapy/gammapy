@@ -22,6 +22,7 @@ from gammapy.irf import Background2D, EDispKernelMap, EDispMap, PSFMap
 from gammapy.makers import FoVBackgroundMaker, MapDatasetMaker, SafeMaskMaker
 from gammapy.maps import HpxGeom, Map, MapAxis, WcsGeom
 from gammapy.utils.testing import requires_data, requires_dependency
+from gammapy.utils.time import time_ref_to_dict
 
 
 @pytest.fixture(scope="session")
@@ -330,8 +331,12 @@ def test_interpolate_map_dataset():
     ev_t = Table()
     gti_t = Table()
 
+    time_ref = Time("2003-01-01 00:00:00", scale="utc", format="iso")
     ev_t["EVENT_ID"] = np.arange(nr_ev)
-    ev_t["TIME"] = nr_ev * [Time("2011-01-01 00:00:00", scale="utc", format="iso")]
+    time_ref = Time("2003-01-01 00:00:00", scale="utc", format="iso")
+    ev_t["TIME"] = nr_ev * [
+        (Time("2011-01-01 00:00:00", scale="utc", format="iso") - time_ref).sec
+    ]
     ev_t["RA"] = np.linspace(-1, 1, nr_ev) * u.deg
     ev_t["DEC"] = np.linspace(-1, 1, nr_ev) * u.deg
     ev_t["ENERGY"] = np.logspace(0, 2, nr_ev) * u.TeV
@@ -340,6 +345,8 @@ def test_interpolate_map_dataset():
     gti_t["STOP"] = [Time("2011-01-02 00:00:00", scale="utc", format="iso")]
 
     events = EventList(ev_t)
+    events.table.meta = time_ref_to_dict(time_ref)
+
     gti = GTI(gti_t)
 
     # define observation
@@ -453,6 +460,11 @@ def test_minimal_datastore():
 
 @requires_data()
 def test_dataset_hawc():
+    # There are overlapping GTIs in this HAWC dataset
+    from gammapy.data import utils
+
+    utils.CHECK_OVERLAPPING_TI = False
+
     # create the energy reco axis
     energy_axis = MapAxis.from_edges(
         [1.00, 1.78, 3.16, 5.62, 10.0, 17.8, 31.6, 56.2, 100, 177, 316] * u.TeV,
@@ -483,7 +495,6 @@ def test_dataset_hawc():
     results["NN"] = [6.57154247837e16, 62, 0.76743538]
 
     for which in ["GP", "NN"]:
-
         # paths and file names
         data_path = "$GAMMAPY_DATA/hawc/crab_events_pass4/"
         hdu_filename = "hdu-index-table-" + which + "-Crab.fits.gz"
@@ -517,6 +528,8 @@ def test_dataset_hawc():
         assert_allclose(dataset.exposure.data.sum(), results[which][0])
         assert_allclose(dataset.counts.data.sum(), results[which][1])
         assert_allclose(dataset.background.data.sum(), results[which][2])
+
+    utils.CHECK_OVERLAPPING_TI = True
 
 
 @requires_data()

@@ -51,6 +51,9 @@ def test_observation(data_store):
     c = SkyCoord(83.63333129882812, 22.01444435119629, unit="deg")
     assert_skycoord_allclose(obs.target_radec, c)
 
+    assert obs.events.time[0].mjd >= Time(obs.obs_filter.time_filter[0][0]).mjd
+    assert obs.events.time[-1].mjd <= Time(obs.obs_filter.time_filter[0][1]).mjd
+
 
 @requires_data()
 def test_observation_peek(data_store):
@@ -74,11 +77,10 @@ def test_observation_peek(data_store):
     "time_interval, expected_times",
     [
         (
-            Time(
-                ["2004-12-04T22:10:00", "2004-12-04T22:30:00"],
-                format="isot",
-                scale="tt",
-            ),
+            [
+                Time("2004-12-04T22:10:00", format="isot", scale="tt"),
+                Time("2004-12-04T22:30:00", format="isot", scale="tt"),
+            ],
             Time(
                 ["2004-12-04T22:10:00", "2004-12-04T22:30:00"],
                 format="isot",
@@ -86,19 +88,30 @@ def test_observation_peek(data_store):
             ),
         ),
         (
-            Time([53343.930, 53343.940], format="mjd", scale="tt"),
+            [
+                Time(53343.930, format="mjd", scale="tt"),
+                Time(53343.940, format="mjd", scale="tt"),
+            ],
             Time([53343.930, 53343.940], format="mjd", scale="tt"),
         ),
         (
-            Time([10.0, 100000.0], format="mjd", scale="tt"),
+            [
+                Time(10.0, format="mjd", scale="tt"),
+                Time(100000.0, format="mjd", scale="tt"),
+            ],
             Time([53343.92234009, 53343.94186563], format="mjd", scale="tt"),
         ),
-        (Time([10.0, 20.0], format="mjd", scale="tt"), None),
+        (
+            [
+                Time(10.0, format="mjd", scale="tt"),
+                Time(20.0, format="mjd", scale="tt"),
+            ],
+            None,
+        ),
     ],
 )
 def test_observation_select_time(data_store, time_interval, expected_times):
     obs = data_store.obs(23523)
-
     new_obs = obs.select_time(time_interval)
 
     if expected_times:
@@ -110,8 +123,8 @@ def test_observation_select_time(data_store, time_interval, expected_times):
         assert_time_allclose(new_obs.gti.time_start[0], expected_times[0], atol=0.01)
         assert_time_allclose(new_obs.gti.time_stop[-1], expected_times[1], atol=0.01)
     else:
-        assert len(new_obs.events.table) == 0
-        assert len(new_obs.gti.table) == 0
+        assert len(new_obs.gti.table) == 1
+        assert new_obs.gti.time_sum < 1.0e-8 * u.s
 
 
 @requires_data()
@@ -119,21 +132,37 @@ def test_observation_select_time(data_store, time_interval, expected_times):
     "time_interval, expected_times, expected_nr_of_obs",
     [
         (
-            Time([53090.130, 53090.140], format="mjd", scale="tt"),
+            [
+                Time(53090.130, format="mjd", scale="tt"),
+                Time(53090.140, format="mjd", scale="tt"),
+            ],
             Time([53090.130, 53090.140], format="mjd", scale="tt"),
             1,
         ),
         (
-            Time([53090.130, 53091.110], format="mjd", scale="tt"),
+            [
+                Time(53090.130, format="mjd", scale="tt"),
+                Time(53091.110, format="mjd", scale="tt"),
+            ],
             Time([53090.130, 53091.110], format="mjd", scale="tt"),
             3,
         ),
         (
-            Time([10.0, 53111.0230], format="mjd", scale="tt"),
+            [
+                Time(53090.1234512, format="mjd", scale="tt"),
+                Time(53111.0230, format="mjd", scale="tt"),
+            ],
             Time([53090.1234512, 53111.0230], format="mjd", scale="tt"),
             8,
         ),
-        (Time([10.0, 20.0], format="mjd", scale="tt"), None, 0),
+        (
+            [
+                Time(10.0, format="mjd", scale="tt"),
+                Time(20.0, format="mjd", scale="tt"),
+            ],
+            None,
+            0,
+        ),
     ],
 )
 def test_observations_select_time(
@@ -155,6 +184,43 @@ def test_observations_select_time(
         assert_time_allclose(
             new_obss[-1].gti.time_stop[-1], expected_times[1], atol=0.01
         )
+
+
+@requires_data()
+def test_observation_select_time_gti(data_store):
+    obs_ids = data_store.obs_table["OBS_ID"][:1]
+    obss = data_store.get_observations(obs_ids)
+
+    time_intervals = [
+        [
+            Time("2004-03-26T02:58:46.184", format="isot", scale="tt"),
+            Time("2004-03-26T02:59:46.184", format="isot", scale="tt"),
+        ],
+        [
+            Time("2004-03-26T03:15:48.184", format="isot", scale="tt"),
+            Time("2004-03-26T03:20:48.184", format="isot", scale="tt"),
+        ],
+    ]
+
+    # Test for the `Observation` object
+    assert len(obss[0].gti.table) == 1
+
+    new_obs = obss[0].select_time(time_intervals)
+    assert len(new_obs.gti.table) == 2
+    assert_allclose(new_obs.observation_time_duration.value, 360.0, rtol=1e-9)
+    assert Time(new_obs.gti.time_start[0]).mjd == time_intervals[0][0].mjd
+    assert Time(new_obs.gti.time_stop[1]).mjd == time_intervals[1][1].mjd
+
+    bad_time_interval = [0, 1]
+    with pytest.raises(ValueError):
+        new_obs = obss[0].select_time(bad_time_interval)
+
+    # Test for the `Observations` object
+    new_obs_s = obss.select_time(time_intervals)
+    assert len(new_obs_s) == 2
+    assert len(new_obs_s[0].gti.table) == 1
+    assert_allclose(new_obs_s[0].observation_time_duration.value, 60.0, rtol=1e-9)
+    assert Time(new_obs_s[1].gti.time_start[0]).mjd == time_intervals[1][0].mjd
 
 
 @requires_data()
@@ -209,11 +275,20 @@ def test_observations_str(data_store):
 def test_observations_select_time_time_intervals_list(data_store):
     obs_ids = data_store.obs_table["OBS_ID"][:8]
     obss = data_store.get_observations(obs_ids)
-    # third time interval is out of the observations time range
+    # The third time interval is out of the observation time range
     time_intervals = [
-        Time([53090.130, 53090.140], format="mjd", scale="tt"),
-        Time([53110.011, 53110.019], format="mjd", scale="tt"),
-        Time([53112.345, 53112.42], format="mjd", scale="tt"),
+        [
+            Time(53090.130, format="mjd", scale="tt"),
+            Time(53090.140, format="mjd", scale="tt"),
+        ],
+        [
+            Time(53110.011, format="mjd", scale="tt"),
+            Time(53110.019, format="mjd", scale="tt"),
+        ],
+        [
+            Time(53112.345, format="mjd", scale="tt"),
+            Time(53112.42, format="mjd", scale="tt"),
+        ],
     ]
     new_obss = obss.select_time(time_intervals)
 
@@ -301,7 +376,7 @@ def test_observation_read():
     val = obs.aeff.evaluate(energy_true=energy, offset=offset)
 
     assert obs.obs_id == 20136
-    assert len(obs.events.energy) == 11243
+    assert len(obs.events.energy) == 11240
     assert obs.available_hdus == ["events", "gti", "aeff", "edisp", "psf", "bkg"]
     assert_allclose(val.value, 278000.54120855, rtol=1e-5)
     assert val.unit == "m2"
@@ -329,7 +404,7 @@ def test_observation_read_single_file():
     val = obs.aeff.evaluate(energy_true=energy, offset=offset)
 
     assert obs.obs_id == 20136
-    assert len(obs.events.energy) == 11243
+    assert len(obs.events.energy) == 11240
     assert obs.available_hdus == ["events", "gti", "aeff", "edisp", "psf", "bkg"]
     assert_allclose(val.value, 273372.44851054, rtol=1e-5)
     assert val.unit == "m2"
@@ -361,6 +436,7 @@ class TestObservationChecker:
             self.data_store.hdu_table[index]["FILE_NAME"] = "bad"
 
         observation = self.data_store.obs(110380)
+
         records = list(observation.check())
         assert len(records) == 10
         assert records[1]["msg"] == "Loading events failed"

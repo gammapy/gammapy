@@ -2,6 +2,7 @@
 import copy
 import html
 import logging
+from .utils import check_time_intervals
 
 __all__ = ["ObservationFilter"]
 
@@ -13,9 +14,8 @@ class ObservationFilter:
 
     Parameters
     ----------
-    time_filter : `astropy.time.Time`, optional
-        Start and stop time of the selected time interval. Currently, we only support
-        a single time interval. Default is None.
+    time_filter : `astropy.time.Time` or a list, optional
+        Start and stop time of the selected time interval. Default is None.
     event_filters : list of dict, optional
         An event filter dictionary needs two keys:
 
@@ -24,8 +24,7 @@ class ObservationFilter:
           class that corresponds to the filter type
           (see `~gammapy.data.ObservationFilter.EVENT_FILTER_TYPES`)
 
-        The filtered event list will be an intersection of all filters. A union
-        of filters is not supported yet. Default is None.
+        The filtered event list will be an intersection of all filters. Default is None.
 
     Examples
     --------
@@ -33,7 +32,8 @@ class ObservationFilter:
     >>> from astropy.time import Time
     >>> from astropy.coordinates import Angle
     >>>
-    >>> time_filter = Time(['2021-03-27T20:10:00', '2021-03-27T20:20:00'])
+    >>> time_filter = [[Time('2021-03-27T20:10:00'), Time('2021-03-27T20:15:00')],
+    >>>          [Time('2021-03-27T20:15:01'), Time('2021-03-27T20:20:00')]]
     >>> phase_filter = {'type': 'custom', 'opts': dict(parameter='PHASE', band=(0.2, 0.8))}
     >>>
     >>> my_obs_filter = ObservationFilter(time_filter=time_filter, event_filters=[phase_filter])
@@ -73,8 +73,12 @@ class ObservationFilter:
         filtered_events : `~gammapy.data.EventListBase`
             The filtered event list.
         """
-        filtered_events = self._filter_by_time(events)
+        if events is None:
+            return None
+        if len(events.table) == 0:
+            return events
 
+        filtered_events = self._filter_by_time(events)
         for f in self.event_filters:
             method_str = self.EVENT_FILTER_TYPES[f["type"]]
             filtered_events = getattr(filtered_events, method_str)(**f["opts"])
@@ -101,7 +105,11 @@ class ObservationFilter:
 
         Calls the `select_time` method of the data object.
         """
-        if self.time_filter:
+        if self.time_filter is not None:
+            if not check_time_intervals(self.time_filter):
+                raise ValueError(
+                    "The time intervals should be a sorted array of distinct intervals of astropy.time.Time."
+                )
             return data.select_time(self.time_filter)
         else:
             return data

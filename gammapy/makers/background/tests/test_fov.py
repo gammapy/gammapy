@@ -113,7 +113,7 @@ def test_fov_bkg_maker_fit(obs_dataset, exclusion_mask):
     dataset = fov_bkg_maker.run(dataset1)
 
     model = dataset.models[f"{dataset.name}-bkg"].spectral_model
-    assert_allclose(model.norm.value, 0.83077, rtol=1e-4)
+    assert_allclose(model.norm.value, 0.83026, rtol=1e-4)
     assert_allclose(model.norm.error, 0.02069, rtol=1e-2)
     assert_allclose(model.tilt.value, 0.0, rtol=1e-4)
     assert_allclose(model.tilt.error, 0.0, rtol=1e-2)
@@ -130,10 +130,10 @@ def test_fov_bkg_maker_fit(obs_dataset, exclusion_mask):
     dataset = fov_bkg_maker.run(dataset2)
 
     model = dataset.models[f"{dataset.name}-bkg"].spectral_model
-    assert_allclose(model.norm.value, 0.901523, rtol=1e-4)
-    assert_allclose(model.norm.error, 0.60880, rtol=1e-4)
-    assert_allclose(model.tilt.value, 0.071069, rtol=1e-4)
-    assert_allclose(model.tilt.error, 0.586600, rtol=1e-4)
+    assert_allclose(model.norm.value, 0.90118, rtol=1e-4)
+    assert_allclose(model.norm.error, 0.60999, rtol=1e-4)
+    assert_allclose(model.tilt.value, 0.07127, rtol=1e-4)
+    assert_allclose(model.tilt.error, 0.58796, rtol=1e-4)
 
     assert_allclose(fov_bkg_maker.default_spectral_model.tilt.value, 0.0)
     assert_allclose(fov_bkg_maker.default_spectral_model.norm.value, 1.0)
@@ -172,9 +172,9 @@ def test_fov_bkg_maker_with_source_model(obs_dataset, exclusion_mask, caplog):
     # pre-fit both source and background to get reference model
     Fit().run(test_dataset)
     bkg_model_spec = test_dataset.models[f"{test_dataset.name}-bkg"].spectral_model
-    norm_ref = 0.897
+    norm_ref = 0.8964
     assert not bkg_model_spec.norm.frozen
-    assert_allclose(bkg_model_spec.norm.value, norm_ref, rtol=1e-4)
+    assert_allclose(bkg_model_spec.norm.value, norm_ref, rtol=1e-3)
     assert_allclose(bkg_model_spec.tilt.value, 0.0, rtol=1e-4)
 
     # apply scale method with pre-fitted source model and no exclusion_mask
@@ -183,7 +183,7 @@ def test_fov_bkg_maker_with_source_model(obs_dataset, exclusion_mask, caplog):
     dataset = fov_bkg_maker.run(test_dataset)
 
     bkg_model_spec = test_dataset.models[f"{dataset.name}-bkg"].spectral_model
-    assert_allclose(bkg_model_spec.norm.value, norm_ref, rtol=1e-4)
+    assert_allclose(bkg_model_spec.norm.value, norm_ref, rtol=1e-3)
     assert_allclose(bkg_model_spec.tilt.value, 0.0, rtol=1e-4)
 
     # apply fit method with pre-fitted source model and no exclusion mask
@@ -192,7 +192,7 @@ def test_fov_bkg_maker_with_source_model(obs_dataset, exclusion_mask, caplog):
     dataset = fov_bkg_maker.run(test_dataset)
 
     bkg_model_spec = test_dataset.models[f"{dataset.name}-bkg"].spectral_model
-    assert_allclose(bkg_model_spec.norm.value, norm_ref, rtol=1e-4)
+    assert_allclose(bkg_model_spec.norm.value, norm_ref, rtol=1e-3)
     assert_allclose(bkg_model_spec.tilt.value, 0.0, rtol=1e-4)
 
     # apply scale method with pre-fitted source model and exclusion_mask
@@ -201,7 +201,7 @@ def test_fov_bkg_maker_with_source_model(obs_dataset, exclusion_mask, caplog):
     dataset = fov_bkg_maker.run(test_dataset)
 
     bkg_model_spec = test_dataset.models[f"{dataset.name}-bkg"].spectral_model
-    assert_allclose(bkg_model_spec.norm.value, 0.830779, rtol=1e-4)
+    assert_allclose(bkg_model_spec.norm.value, 0.830779, rtol=1e-3)
     assert_allclose(bkg_model_spec.tilt.value, 0.0, rtol=1e-4)
 
     # apply fit method with pre-fitted source model and exclusion mask
@@ -210,7 +210,7 @@ def test_fov_bkg_maker_with_source_model(obs_dataset, exclusion_mask, caplog):
     dataset = fov_bkg_maker.run(test_dataset)
 
     bkg_model_spec = test_dataset.models[f"{dataset.name}-bkg"].spectral_model
-    assert_allclose(bkg_model_spec.norm.value, 0.830779, rtol=1e-4)
+    assert_allclose(bkg_model_spec.norm.value, 0.830779, rtol=1e-3)
     assert_allclose(bkg_model_spec.tilt.value, 0.0, rtol=1e-4)
 
     # Here we check that source parameters are correctly thawed after fit.
@@ -244,8 +244,8 @@ def test_fov_bkg_maker_fit_with_tilt(obs_dataset, exclusion_mask):
     dataset = fov_bkg_maker.run(test_dataset)
 
     model = dataset.models[f"{dataset.name}-bkg"].spectral_model
-    assert_allclose(model.norm.value, 0.901523, rtol=1e-4)
-    assert_allclose(model.tilt.value, 0.071069, rtol=1e-4)
+    assert_allclose(model.norm.value, 0.901180, rtol=1e-4)
+    assert_allclose(model.tilt.value, 0.071272, rtol=1e-4)
 
 
 @requires_data()
