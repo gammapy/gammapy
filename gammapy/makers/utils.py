@@ -217,7 +217,7 @@ def _map_spectrum_weight(map, spectrum=None):
     return map * weights.reshape(shape.astype(int))
 
 
-def _evaluate_bkg(pointing, ontime, bkg, geom, use_region_center, obstime, d_omega):
+def _evaluate_bkg(pointing, steptime, bkg, geom, use_region_center, obstime, d_omega):
     """
     Evaluate the background IRF on a given geometry.
 
@@ -225,8 +225,8 @@ def _evaluate_bkg(pointing, ontime, bkg, geom, use_region_center, obstime, d_ome
     ----------
     pointing :  `~gammapy.data.FixedPointingInfo` or `~astropy.coordinates.SkyCoord`
         Observation pointing.
-    ontime : `~astropy.units.Quantity`
-        Observation ontime. i.e. not corrected for deadtime
+    steptime : `~astropy.units.Quantity`
+        Time step over which the background is integrated
     bkg : `~gammapy.irf.Background3D`
         Background rate model.
     geom : `~gammapy.maps.WcsGeom`
@@ -255,12 +255,12 @@ def _evaluate_bkg(pointing, ontime, bkg, geom, use_region_center, obstime, d_ome
         #  TODO Using None is deprecated. if else to be removed.
         obstime=None
         if obstime is None
-        else obstime + ontime / (2 * u.dimensionless_unscaled),
+        else obstime + steptime / (2 * u.dimensionless_unscaled),
     )
     coords["energy"] = broadcast_axis_values_to_geom(geom, "energy", False)
 
     bkg_de = bkg.integrate_log_log(**coords, axis_name="energy")
-    return (bkg_de * d_omega * ontime).to_value("")
+    return (bkg_de * d_omega * steptime).to_value("")
 
 
 def make_map_background_irf(
@@ -330,27 +330,26 @@ def make_map_background_irf(
         data = _evaluate_bkg(
             pointing, ontime, bkg, geom, use_region_center, obstime, d_omega
         )
-    if bkg.fov_alignment == FoVAlignment.ALTAZ:
+    if not bkg.has_offset_axis and bkg.fov_alignment == FoVAlignment.ALTAZ:
         endtime = obstime + ontime
         data = np.zeros(geom.data_shape)
-        while obstime < endtime:
+        time = obstime
+        while time < endtime:
             # Evaluate the step time needed to have a FoV rotation of fov_rotation_step
             # Minimum step of 1 second to avoid infinite computation very close to zenith
             steptime = max(
-                compute_rotation_time_step(
-                    fov_rotation_step, pointing.get_altaz(obstime)
-                ),
+                compute_rotation_time_step(fov_rotation_step, pointing.get_altaz(time)),
                 MINIMUM_TIME_STEP,
             )
             steptime = (
                 steptime
-                if steptime < endtime - obstime - MINIMUM_TIME_STEP
-                else endtime - obstime
+                if steptime < endtime - time - MINIMUM_TIME_STEP
+                else endtime - time
             )
             data += _evaluate_bkg(
-                pointing, steptime, bkg, geom, use_region_center, obstime, d_omega
+                pointing, steptime, bkg, geom, use_region_center, time, d_omega
             )
-            obstime = obstime + steptime
+            time = time + steptime
 
     if not use_region_center:
         region_coord, weights = geom.get_wcs_coord_and_weights()
