@@ -107,6 +107,8 @@ class ObservationMetaData(MetaData):
             "PRESSURE",
             "RELHUM",
             "NSBLEVEL",
+            "CREATOR",
+            "HDUVERS",
         ]
         optional = dict()
         for key in optional_keywords:
