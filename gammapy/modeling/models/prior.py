@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Priors for Gammapy."""
+
 import logging
 import numpy as np
 import astropy.units as u
@@ -65,14 +66,14 @@ class Prior(ModelBase):
         )
 
     def __init_subclass__(cls, **kwargs):
-        # Add priorparameters list on the model sub-class (not instances)
+        # Add prior parameters list on the model sub-class (not instances)
         cls.default_parameters = PriorParameters(
             [_ for _ in cls.__dict__.values() if isinstance(_, PriorParameter)]
         )
 
     @property
     def weight(self):
-        """Weight mulitplied to the prior when evaluated."""
+        """Weight multiplied to the prior when evaluated."""
         return self._weight
 
     @weight.setter
@@ -81,7 +82,7 @@ class Prior(ModelBase):
 
     def __call__(self, value):
         """Call evaluate method."""
-        # assuming the same unit as the PriorParamater here
+        # assuming the same unit as the prior parameter here
         kwargs = {par.name: par.value for par in self.parameters}
         return self.weight * self.evaluate(value.value, **kwargs)
 

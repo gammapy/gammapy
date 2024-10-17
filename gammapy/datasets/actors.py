@@ -19,7 +19,7 @@ class DatasetsActor(Datasets):
 
     Parameters
     ----------
-    datasets : `Datasets`
+    datasets : `~gammapy.datasets.Datasets`
         Datasets
     """
 
@@ -128,12 +128,12 @@ class MapDatasetActor(RayFrontendMixin):
 
     Parameters
     ----------
-    dataset : `MapDataset`
+    dataset : `~gammapy.datasets.MapDataset`
         MapDataset
     """
 
     _mutable_attr = ["models", "mask_fit"]
-    _local_attr = ["name"]  # immutable small enough to keep and acces locally
+    _local_attr = ["name"]  # immutable small enough to keep and access locally
     _public_attr = [key for key in dir(MapDataset) if not key.startswith("__")]
 
     def __init__(self, dataset):
@@ -216,7 +216,7 @@ class _MapDatasetActorBackend(MapDataset, RayBackendMixin):
 
     Parameters
     ----------
-    dataset : `MapDataset`
+    dataset : `~gammapy.datasets.MapDataset`
         MapDataset
     """
 

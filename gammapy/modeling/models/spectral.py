@@ -418,7 +418,7 @@ class SpectralModel(ModelBase):
     ):
         """Plot spectral model curve.
 
-        By default a log-log scaling of the axes is used, if you want to change
+        By default, a log-log scaling of the axes is used, if you want to change
         the y-axis scaling to linear you can use::
 
             >>> from gammapy.modeling.models import ExpCutoffPowerLawSpectralModel
@@ -1198,7 +1198,7 @@ class SmoothBrokenPowerLawSpectralModel(SpectralModel):
 
 
 class PiecewiseNormSpectralModel(SpectralModel):
-    """Piecewise spectral correction with a free normalization at each fixed energy nodes.
+    """Piecewise spectral correction with a free normalisation at each fixed energy nodes.
 
     For more information see :ref:`piecewise-norm-spectral`.
 
@@ -1206,7 +1206,7 @@ class PiecewiseNormSpectralModel(SpectralModel):
     ----------
     energy : `~astropy.units.Quantity`
         Array of energies at which the model values are given (nodes).
-    norms : `~numpy.ndarray` or list of `Parameter`
+    norms : `~numpy.ndarray` or list of `~gammapy.modeling.Parameter`
         Array with the initial norms of the model at energies ``energy``.
         Normalisation parameters are created for each value.
         Default is one at each node.
@@ -1807,7 +1807,7 @@ class TemplateSpectralModel(SpectralModel):
         # set energy to log-centers
         energy = np.sqrt(energy_lo * energy_hi)
 
-        # Get spectrum values (no interpolation, take closest value for param)
+        # Get spectrum values (no interpolation, take the closest value for param)
         table_spectra = Table.read(filename, hdu="SPECTRA")
         idx = np.abs(table_spectra["PARAMVAL"] - param).argmin()
         values = u.Quantity(
@@ -2001,7 +2001,7 @@ class EBLAbsorptionNormSpectralModel(SpectralModel):
         Default is 1.
     interp_kwargs : dict
         Interpolation option passed to `~gammapy.utils.interpolation.ScaledRegularGridInterpolator`.
-        By default the models are extrapolated outside the range. To prevent
+        By default, the models are extrapolated outside the range. To prevent
         this and raise an error instead use interp_kwargs = {"extrapolate": False}.
     """
 

@@ -259,7 +259,7 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
 
         Returns
         -------
-        model : `DarkMatterAnnihilationSpectralModel`
+        model : `~gammapy.astro.darkmatter.DarkMatterAnnihilationSpectralModel`
             Dark matter annihilation spectral model.
         """
         data = data["spectral"]
@@ -296,7 +296,7 @@ class DarkMatterDecaySpectralModel(SpectralModel):
 
     Examples
     --------
-    This is how to instantiate a `DarkMatterAnnihilationSpectralModel` model::
+    This is how to instantiate a `~gammapy.astro.darkmatter.DarkMatterAnnihilationSpectralModel` model::
 
         >>> import astropy.units as u
         >>> from gammapy.astro.darkmatter import DarkMatterDecaySpectralModel
@@ -362,7 +362,7 @@ class DarkMatterDecaySpectralModel(SpectralModel):
 
         Returns
         -------
-        model : `DarkMatterDecaySpectralModel`
+        model : `~gammapy.astro.darkmatter.DarkMatterDecaySpectralModel`
             Dark matter decay spectral model.
         """
         data = data["spectral"]

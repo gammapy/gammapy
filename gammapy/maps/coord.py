@@ -132,7 +132,7 @@ class MapCoord:
 
     @classmethod
     def _from_lonlat(cls, coords, frame=None, axis_names=None):
-        """Create a `~MapCoord` from a tuple of coordinate vectors.
+        """Create a `~gammapy.maps.MapCoord` from a tuple of coordinate vectors.
 
         The first two elements of the tuple should be longitude and latitude in degrees.
 
@@ -149,7 +149,7 @@ class MapCoord:
 
         Returns
         -------
-        coord : `~MapCoord`
+        coord : `~gammapy.maps.MapCoord`
             A coordinates object.
         """
         if axis_names is None:
@@ -249,7 +249,7 @@ class MapCoord:
 
         Returns
         -------
-        coords : `~MapCoord`
+        coords : `~gammapy.maps.MapCoord`
             A coordinates object.
         """
         if frame == self.frame:
@@ -277,7 +277,7 @@ class MapCoord:
 
         Returns
         -------
-        coords : `~MapCoord`
+        coords : `~gammapy.maps.MapCoord`
             A coordinates object.
         """
         try:
@@ -310,7 +310,7 @@ class MapCoord:
         )
 
     def copy(self):
-        """Copy `MapCoord` object."""
+        """Copy `~gammapy.maps.MapCoord` object."""
         return copy.deepcopy(self)
 
     def __str__(self):

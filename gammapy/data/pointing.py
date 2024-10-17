@@ -30,7 +30,7 @@ __all__ = ["FixedPointingInfo", "PointingInfo", "PointingMode"]
 
 
 def _check_coord_frame(coord_or_frame, expected_frame, name):
-    """Check if a skycoord or frame is given in expected_frame."""
+    """Check if a sky coordinate or a frame is given in expected_frame."""
     is_coord = isinstance(coord_or_frame, SkyCoord)
     is_frame = isinstance(coord_or_frame, BaseCoordinateFrame)
 
@@ -99,15 +99,15 @@ class FixedPointingInfo:
     meta : `~astropy.table.Table.meta`
         Meta header info from Table on pointing.
         Passing this is deprecated, provide ``mode`` and ``fixed_icrs`` or ``fixed_altaz``
-        instead or use `FixedPointingInfo.from_fits_header` instead.
-    mode : `PointingMode`
+        instead or use `~gammapy.data.FixedPointingInfo.from_fits_header` instead.
+    mode : `~gammapy.data.PointingMode`
         How the telescope was pointing during the observation.
     fixed_icrs : `~astropy.coordinates.SkyCoord`, optional
         The coordinates of the observation in ICRS as a `~astropy.coordinates.SkyCoord` object. Default is None.
-        Required if mode is `PointingMode.POINTING`.
+        Required if mode is `~gammapy.data.PointingMode.POINTING`.
     fixed_altaz : `~astropy.coordinates.SkyCoord`, optional
         The coordinates of the observation in alt-az as a `~astropy.coordinates.SkyCoord` object. Default is None.
-        Required if mode is `PointingMode.DRIFT`.
+        Required if mode is `~gammapy.data.PointingMode.DRIFT`.
 
     Examples
     --------
@@ -201,7 +201,7 @@ class FixedPointingInfo:
 
         Parameters
         ----------
-        header : `astropy.fits.Header`
+        header : `~astropy.fits.Header`
             Header to parse, e.g. from a GADF EVENTS HDU.
             Currently, only the GADF format is supported.
 
@@ -283,12 +283,12 @@ class FixedPointingInfo:
         version : str, optional
             Version of the ``format``, this function currently supports
             gadf versions 0.2 and 0.3. Default is "0.3".
-        time_ref : `astropy.time.Time`, optional
+        time_ref : `~astropy.time.Time`, optional
             Reference time for storing the time related information in fits format. Default is None.
 
         Returns
         -------
-        header : `astropy.fits.Header`
+        header : `~astropy.fits.Header`
             Header with fixed pointing information filled for the requested format.
         """
         if format != "gadf":
@@ -385,15 +385,15 @@ class FixedPointingInfo:
 
         Parameters
         ----------
-        obstime : `astropy.time.Time`, optional
+        obstime : `~astropy.time.Time`, optional
             Time for which to get the pointing position in ICRS frame. Default is None.
-        location : `astropy.coordinates.EarthLocation`, optional
+        location : `~astropy.coordinates.EarthLocation`, optional
             Observatory location, only needed for drift observations to transform
             from horizontal coordinates to ICRS. Default is None.
 
         Returns
         -------
-        icrs : `astropy.coordinates.SkyCoord`
+        icrs : `~astropy.coordinates.SkyCoord`
             Pointing position in ICRS frame.
         """
         if self.mode == PointingMode.POINTING:
@@ -420,15 +420,15 @@ class FixedPointingInfo:
 
         Parameters
         ----------
-        obstime : `astropy.time.Time`, optional
+        obstime : `~astropy.time.Time`, optional
             Time for which to get the pointing position in alt-az frame. Default is None.
-        location : `astropy.coordinates.EarthLocation`, optional
+        location : `~astropy.coordinates.EarthLocation`, optional
             Observatory location, only needed for pointing observations to transform
             from ICRS to horizontal coordinates. Default is None.
 
         Returns
         -------
-        altaz : `astropy.coordinates.SkyCoord`
+        altaz : `~astropy.coordinates.SkyCoord`
             Pointing position in alt-az frame.
         """
         location = location if location is not None else self._location
@@ -632,12 +632,12 @@ class PointingInfo:
 
         Parameters
         ----------
-        obstime : `astropy.time.Time`
+        obstime : `~astropy.time.Time`
             Time for which to get the pointing position in ICRS frame.
 
         Returns
         -------
-        icrs : `astropy.coordinates.SkyCoord`
+        icrs : `~astropy.coordinates.SkyCoord`
             Pointing position in ICRS frame.
         """
         return SkyCoord(
@@ -659,12 +659,12 @@ class PointingInfo:
 
         Parameters
         ----------
-        obstime : `astropy.time.Time`
+        obstime : `~astropy.time.Time`
             Time for which to get the pointing position in alt-az frame.
 
         Returns
         -------
-        altaz : `astropy.coordinates.SkyCoord`
+        altaz : `~astropy.coordinates.SkyCoord`
             Pointing position in alt-az frame.
         """
         # give precedence to ALT_PNT / AZ_PNT if present

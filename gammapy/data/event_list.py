@@ -107,12 +107,12 @@ class EventList:
 
         Parameters
         ----------
-        filename : `pathlib.Path`, str
+        filename : `~pathlib.Path`, str
             Filename
         hdu : str
             Name of events HDU. Default is "EVENTS".
         checksum : bool
-            If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
+            If True, checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
         """
         filename = make_path(filename)
 
@@ -276,7 +276,7 @@ class EventList:
 
         Returns
         -------
-        event_list : `EventList`
+        event_list : `~gammapy.data.EventList`
             New event list with table row subset selected.
 
         Examples
@@ -309,7 +309,7 @@ class EventList:
 
         Returns
         -------
-        event_list : `EventList`
+        event_list : `~gammapy.data.EventList`
             Copy of event list with selection applied.
 
         Examples
@@ -331,12 +331,12 @@ class EventList:
 
         Parameters
         ----------
-        time_interval : `astropy.time.Time`
+        time_interval : `~astropy.time.Time`
             Start time (inclusive) and stop time (exclusive) for the selection.
 
         Returns
         -------
-        events : `EventList`
+        events : `~gammapy.data.EventList`
             Copy of event list with selection applied.
         """
         time = self.time
@@ -358,7 +358,7 @@ class EventList:
 
         Returns
         -------
-        event_list : `EventList`
+        event_list : `~gammapy.data.EventList`
             Copy of event list with selection applied.
         """
         geom = RegionGeom.from_regions(regions, wcs=wcs)
@@ -372,13 +372,13 @@ class EventList:
         ----------
         parameter : str
             Parameter used for the selection. Must be present in `self.table`.
-        band : tuple or `astropy.units.Quantity`
+        band : tuple or `~astropy.units.Quantity`
             Minimum and maximum value for the parameter to be selected (minimum <= parameter < maximum).
             If parameter is not dimensionless, a Quantity is required.
 
         Returns
         -------
-        event_list : `EventList`
+        event_list : `~gammapy.data.EventList`
             Copy of event list with selection applied.
 
         Examples
@@ -492,7 +492,7 @@ class EventList:
         ----------
         ax : `~matplotlib.axes.Axes`, optional
             Matplotlib axes. Default is None.
-        center : `astropy.coordinates.SkyCoord`, optional
+        center : `~astropy.coordinates.SkyCoord`, optional
             Center position for the offset^2 distribution.
             Default is the observation pointing position.
         max_percentile : float, optional
@@ -640,7 +640,7 @@ class EventList:
 
         Returns
         -------
-        event_list : `EventList`
+        event_list : `~gammapy.data.EventList`
             Copy of event list with selection applied.
 
         Examples
@@ -753,7 +753,7 @@ class EventList:
 
         Returns
         -------
-        event_list : `EventList`
+        event_list : `~gammapy.data.EventList`
             Copy of event list with selection applied.
 
         Examples
@@ -777,14 +777,14 @@ class EventList:
 
         Parameters
         ----------
-        rad_max : `~gamapy.irf.RadMax2D`
+        rad_max : `~gammapy.irf.RadMax2D`
             Rad max definition.
         position : `~astropy.coordinates.SkyCoord`, optional
             Center position. Default is the pointing position.
 
         Returns
         -------
-        event_list : `EventList`
+        event_list : `~gammapy.data.EventList`
             Copy of event list with selection applied.
         """
         if position is None:

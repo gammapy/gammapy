@@ -351,7 +351,7 @@ class Geom(abc.ABC):
 
         Returns
         -------
-        geom : `~Geom`
+        geom : `~gammapy.maps.Geom`
             Sliced geometry.
 
         Examples
@@ -378,7 +378,7 @@ class Geom(abc.ABC):
 
         Returns
         -------
-        geom : `~Geom`
+        geom : `~gammapy.maps.Geom`
             Renamed geometry.
         """
         axes = self.axes.rename_axes(names=names, new_names=new_names)
@@ -420,7 +420,7 @@ class Geom(abc.ABC):
 
         Returns
         -------
-        geom : `~Geom`
+        geom : `~gammapy.maps.Geom`
             Map geometry.
         """
         pass
@@ -435,7 +435,7 @@ class Geom(abc.ABC):
 
         Returns
         -------
-        geom : `Geom`
+        geom : `~gammapy.maps.Geom`
             Geom with squashed axis.
         """
         axes = self.axes.squash(axis_name=axis_name)
@@ -451,7 +451,7 @@ class Geom(abc.ABC):
 
         Returns
             -------
-        geom : `Geom`
+        geom : `~gammapy.maps.Geom`
             New geom with the axis removed.
         """
         axes = self.axes.drop(axis_name=axis_name)
@@ -470,7 +470,7 @@ class Geom(abc.ABC):
 
         Returns
         -------
-        geom : `~Geom`
+        geom : `~gammapy.maps.Geom`
             Padded geometry.
         """
         if axis_name is None:
@@ -495,7 +495,7 @@ class Geom(abc.ABC):
 
         Returns
         -------
-        geom : `~Geom`
+        geom : `~gammapy.maps.Geom`
             Cropped geometry.
         """
         pass
@@ -513,7 +513,7 @@ class Geom(abc.ABC):
 
         Returns
         -------
-        geom : `~Geom`
+        geom : `~gammapy.maps.Geom`
             Downsampled geometry.
 
         """
@@ -532,7 +532,7 @@ class Geom(abc.ABC):
 
         Returns
         -------
-        geom : `~Geom`
+        geom : `~gammapy.maps.Geom`
             Upsampled geometry.
 
         """
@@ -545,12 +545,12 @@ class Geom(abc.ABC):
 
         Parameters
         ----------
-        axis : `MapAxis`
+        axis : `~gammapy.maps.MapAxis`
             New map axis.
 
         Returns
         -------
-        map : `Geom`
+        map : `~gammapy.maps.Geom`
             Geom with resampled axis.
         """
         axes = self.axes.resample(axis=axis)
@@ -561,12 +561,12 @@ class Geom(abc.ABC):
 
         Parameters
         ----------
-        axis : `MapAxis`
+        axis : `~gammapy.maps.MapAxis`
             New map axis.
 
         Returns
         -------
-        map : `Geom`
+        map : `~gammapy.maps.Geom`
             Geom with replaced axis.
         """
         axes = self.axes.replace(axis=axis)

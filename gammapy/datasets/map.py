@@ -60,7 +60,7 @@ def create_map_dataset_geoms(
     binsz_irf=BINSZ_IRF_DEFAULT,
     reco_psf=False,
 ):
-    """Create map geometries for a `MapDataset`.
+    """Create map geometries for a `~gammapy.datasets.MapDataset`.
 
     Parameters
     ----------
@@ -199,8 +199,8 @@ def create_map_dataset_from_observation(
     models : `~gammapy.modeling.Models`, optional
         Models. Default is None.
     dataset_name : str, optional
-        If `models` contains one or multiple `FoVBackgroundModel`
-        it should match the `dataset_name` of the background model to use.
+        If ``models`` contains one or multiple `~gammapy.modeling.models.FoVBackgroundModel`
+        it should match the ``dataset_name`` of the background model to use.
         Default is None. If None it is determined from the observation ID.
     energy_axis_true : `~gammapy.maps.MapAxis`, optional
         True energy axis. Default is None.
@@ -651,7 +651,7 @@ class MapDataset(Dataset):
 
         Returns
         -------
-        npred : `Map`
+        npred : `~gammapy.maps.Map`
             Total predicted counts.
         """
         npred_total = self.npred_signal()
@@ -669,7 +669,7 @@ class MapDataset(Dataset):
 
         Returns
         -------
-        npred_background : `Map`
+        npred_background : `~gammapy.maps.Map`
             Predicted counts from the background.
         """
         background = self.background
@@ -713,7 +713,7 @@ class MapDataset(Dataset):
 
         Returns
         -------
-        npred_sig : `gammapy.maps.Map`
+        npred_sig : `~gammapy.maps.Map`
             Map of the predicted signal counts.
         """
         npred_total = Map.from_geom(self._geom, dtype=float)
@@ -768,13 +768,13 @@ class MapDataset(Dataset):
 
         Parameters
         ----------
-        geom : `Geom`
+        geom : `~gammapy.maps.Geom`
             Geometry for the counts and background maps.
-        geom_exposure : `Geom`
+        geom_exposure : `~gammapy.maps.Geom`
             Geometry for the exposure map. Default is None.
-        geom_psf : `Geom`
+        geom_psf : `~gammapy.maps.Geom`
             Geometry for the PSF map. Default is None.
-        geom_edisp : `Geom`
+        geom_edisp : `~gammapy.maps.Geom`
             Geometry for the energy dispersion kernel map.
             If geom_edisp has a migra axis, this will create an EDispMap instead. Default is None.
         reference_time : `~astropy.time.Time`
@@ -787,7 +787,7 @@ class MapDataset(Dataset):
 
         Returns
         -------
-        dataset : `MapDataset` or `SpectrumDataset`
+        dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.SpectrumDataset`
             A dataset containing zero filled maps.
         """
         name = make_name(name)
@@ -858,7 +858,7 @@ class MapDataset(Dataset):
 
         Returns
         -------
-        empty_maps : `MapDataset`
+        empty_maps : `~gammapy.datasets.MapDataset`
             A MapDataset containing zero filled maps.
 
         Examples
@@ -965,7 +965,7 @@ class MapDataset(Dataset):
 
         Returns
         -------
-        dataset : `MapDataset` or `SpectrumDataset`
+        dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.SpectrumDataset`
             Masked dataset.
         """
         dataset = self.__class__.from_geoms(**self.geoms, name=name)
@@ -1097,7 +1097,7 @@ class MapDataset(Dataset):
 
         Returns
         -------
-        residuals : `gammapy.maps.Map`
+        residuals : `~gammapy.maps.Map`
             Residual map.
         """
         npred, counts = self.npred(), self.counts.copy()
@@ -1432,7 +1432,7 @@ class MapDataset(Dataset):
 
         Returns
         -------
-        dataset : `MapDataset`
+        dataset : `~gammapy.datasets.MapDataset`
             Map dataset.
         """
         name = make_name(name)
@@ -1566,7 +1566,7 @@ class MapDataset(Dataset):
 
         Returns
         -------
-        dataset : `MapDataset`
+        dataset : `~gammapy.datasets.MapDataset`
             Map dataset.
         """
 
@@ -1709,7 +1709,7 @@ class MapDataset(Dataset):
         return info
 
     def to_spectrum_dataset(self, on_region, containment_correction=False, name=None):
-        """Return a ~gammapy.datasets.SpectrumDataset from on_region.
+        """Return a `~gammapy.datasets.SpectrumDataset` from ``on_region``.
 
         Counts and background are summed in the on_region. Exposure is taken
         from the average exposure.
@@ -1717,7 +1717,7 @@ class MapDataset(Dataset):
         The energy dispersion kernel is obtained at the on_region center.
         Only regions with centers are supported.
 
-        The model is not exported to the ~gammapy.datasets.SpectrumDataset.
+        The model is not exported to the `~gammapy.datasets.SpectrumDataset`.
         It must be set after the dataset extraction.
 
         Parameters
@@ -1844,7 +1844,7 @@ class MapDataset(Dataset):
 
         Returns
         -------
-        cutout : `MapDataset`
+        cutout : `~gammapy.datasets.MapDataset`
             Cutout map dataset.
         """
         name = make_name(name)
@@ -1891,7 +1891,7 @@ class MapDataset(Dataset):
 
         Returns
         -------
-        dataset : `MapDataset` or `SpectrumDataset`
+        dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.SpectrumDataset`
             Downsampled map dataset.
         """
         name = make_name(name)
@@ -1960,7 +1960,7 @@ class MapDataset(Dataset):
 
         Returns
         -------
-        dataset : `MapDataset`
+        dataset : `~gammapy.datasets.MapDataset`
             Padded map dataset.
 
         """
@@ -2007,7 +2007,7 @@ class MapDataset(Dataset):
 
         Returns
         -------
-        dataset : `MapDataset` or `SpectrumDataset`
+        dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.SpectrumDataset`
             Sliced dataset.
 
         Examples
@@ -2067,7 +2067,7 @@ class MapDataset(Dataset):
 
         Returns
         -------
-        dataset : `MapDataset`
+        dataset : `~gammapy.datasets.MapDataset`
             Sliced Dataset.
 
         Examples
@@ -2121,7 +2121,7 @@ class MapDataset(Dataset):
 
         Returns
         -------
-        dataset : `MapDataset` or `SpectrumDataset`
+        dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.SpectrumDataset`
             Resampled dataset.
         """
         name = make_name(name)
@@ -2173,7 +2173,7 @@ class MapDataset(Dataset):
 
         Returns
         -------
-        dataset : `MapDataset` or `SpectrumDataset`
+        dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.SpectrumDataset`
             Dataset integrated over non-spatial axes.
         """
         energy_axis = self._geom.axes["energy"].squash()
@@ -2361,7 +2361,7 @@ class MapDatasetOnOff(MapDataset):
 
         Returns
         -------
-        alpha : `Map`
+        alpha : `~gammapy.maps.Map`
             Alpha map.
         """
         with np.errstate(invalid="ignore", divide="ignore"):
@@ -2377,7 +2377,7 @@ class MapDatasetOnOff(MapDataset):
 
         Returns
         -------
-        npred_background : `Map`
+        npred_background : `~gammapy.maps.Map`
             Predicted background counts.
         """
         mu_bkg = self.alpha.data * get_wstat_mu_bkg(
@@ -2396,7 +2396,7 @@ class MapDatasetOnOff(MapDataset):
 
         Returns
         -------
-        npred_off : `Map`
+        npred_off : `~gammapy.maps.Map`
             Predicted off counts.
         """
         return self.npred_background() / self.alpha
@@ -2409,7 +2409,7 @@ class MapDatasetOnOff(MapDataset):
 
         Returns
         -------
-        background : `Map`
+        background : `~gammapy.maps.Map`
             Background map.
         """
         if self.counts_off is None:
@@ -2447,13 +2447,13 @@ class MapDatasetOnOff(MapDataset):
 
         Parameters
         ----------
-        geom : `gammapy.maps.WcsGeom`
+        geom : `~gammapy.maps.WcsGeom`
             Geometry for the counts, counts_off, acceptance and acceptance_off maps.
-        geom_exposure : `gammapy.maps.WcsGeom`, optional
+        geom_exposure : `~gammapy.maps.WcsGeom`, optional
             Geometry for the exposure map. Default is None.
-        geom_psf : `gammapy.maps.WcsGeom`, optional
+        geom_psf : `~gammapy.maps.WcsGeom`, optional
             Geometry for the PSF map. Default is None.
-        geom_edisp : `gammapy.maps.WcsGeom`, optional
+        geom_edisp : `~gammapy.maps.WcsGeom`, optional
             Geometry for the energy dispersion kernel map.
             If geom_edisp has a migra axis, this will create an EDispMap instead. Default is None.
         reference_time : `~astropy.time.Time`
@@ -2465,7 +2465,7 @@ class MapDatasetOnOff(MapDataset):
 
         Returns
         -------
-        empty_maps : `MapDatasetOnOff`
+        empty_maps : `~gammapy.datasets.MapDatasetOnOff`
             A MapDatasetOnOff containing zero filled maps.
         """
         #  TODO: it seems the super() pattern does not work here?
@@ -2494,13 +2494,13 @@ class MapDatasetOnOff(MapDataset):
 
         Parameters
         ----------
-        dataset : `MapDataset`
+        dataset : `~gammapy.datasets.MapDataset`
             Spectrum dataset defining counts, edisp, aeff, livetime etc.
-        acceptance : `Map`
+        acceptance : `~gammapy.maps.Map`
             Relative background efficiency in the on region.
-        acceptance_off : `Map`
+        acceptance_off : `~gammapy.maps.Map`
             Relative background efficiency in the off region.
-        counts_off : `Map`, optional
+        counts_off : `~gammapy.maps.Map`, optional
             Off counts map . If the dataset provides a background model,
             and no off counts are defined. The off counts are deferred from
             counts_off / alpha. Default is None.
@@ -2509,7 +2509,7 @@ class MapDatasetOnOff(MapDataset):
 
         Returns
         -------
-        dataset : `MapDatasetOnOff`
+        dataset : `~gammapy.datasets.MapDatasetOnOff`
             Map dataset on off.
 
         """
@@ -2551,7 +2551,7 @@ class MapDatasetOnOff(MapDataset):
 
         Returns
         -------
-        dataset : `MapDataset`
+        dataset : `~gammapy.datasets.MapDataset`
             Map dataset with cash statistics.
         """
         name = make_name(name)
@@ -2608,7 +2608,7 @@ class MapDatasetOnOff(MapDataset):
 
         Parameters
         ----------
-        other : `MapDatasetOnOff`
+        other : `~gammapy.datasets.MapDatasetOnOff`
             Other dataset.
         nan_to_num : bool
             Non-finite values are replaced by zero if True. Default is True.
@@ -2746,7 +2746,7 @@ class MapDatasetOnOff(MapDataset):
 
         Returns
         -------
-        dataset : `MapDatasetOnOff`
+        dataset : `~gammapy.datasets.MapDatasetOnOff`
             Map dataset.
         """
         kwargs = {}
@@ -2869,7 +2869,7 @@ class MapDatasetOnOff(MapDataset):
         return info
 
     def to_spectrum_dataset(self, on_region, containment_correction=False, name=None):
-        """Return a ~gammapy.datasets.SpectrumDatasetOnOff from on_region.
+        """Return a `~gammapy.datasets.SpectrumDatasetOnOff` from ``on_region``.
 
         Counts and OFF counts are summed in the on_region.
 
@@ -2881,7 +2881,7 @@ class MapDatasetOnOff(MapDataset):
         The energy dispersion kernel is obtained at the on_region center.
         Only regions with centers are supported.
 
-        The models are not exported to the ~gammapy.dataset.SpectrumDatasetOnOff.
+        The models are not exported to the `~gammapy.dataset.SpectrumDatasetOnOff`.
         It must be set after the dataset extraction.
 
         Parameters
@@ -2943,7 +2943,7 @@ class MapDatasetOnOff(MapDataset):
 
         Returns
         -------
-        cutout : `MapDatasetOnOff`
+        cutout : `~gammapy.datasets.MapDatasetOnOff`
             Cutout map dataset.
         """
         cutout_kwargs = {
@@ -2985,7 +2985,7 @@ class MapDatasetOnOff(MapDataset):
 
         Returns
         -------
-        dataset : `MapDatasetOnOff`
+        dataset : `~gammapy.datasets.MapDatasetOnOff`
             Downsampled map dataset.
         """
 
@@ -3041,7 +3041,7 @@ class MapDatasetOnOff(MapDataset):
 
         Returns
         -------
-        map_out : `Map`
+        map_out : `~gammapy.maps.Map`
             Sliced map object.
         """
         kwargs = {"name": name}
@@ -3072,7 +3072,7 @@ class MapDatasetOnOff(MapDataset):
 
         Returns
         -------
-        dataset : `SpectrumDataset`
+        dataset : `~gammapy.datasets.SpectrumDataset`
             Resampled spectrum dataset.
         """
         dataset = super().resample_energy_axis(energy_axis, name)

@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Time-dependent models."""
+
 import logging
 import numpy as np
 import scipy.interpolate
@@ -96,7 +97,7 @@ class TemporalModel(ModelBase):
         self.t_ref.value = Time(t_ref, scale=self.scale).mjd
 
     def to_dict(self, full_output=False):
-        """Create dictionary for YAML serilisation."""
+        """Create dictionary for YAML serialisation."""
         data = super().to_dict(full_output)
         data["temporal"]["scale"] = self.scale
         return data
@@ -632,7 +633,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
         Returns
         -------
-        model : `LightCurveTemplateTemporalModel`
+        model : `~gammapy.modeling.models.LightCurveTemplateTemporalModel`
             Light curve template model.
         """
         filename = str(make_path(filename))
@@ -934,14 +935,14 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
     A timing solution is used to compute the phase corresponding to time and
     a template phase curve is used to determine the associated ``norm``.
 
-    The phasecurve is given as a table with columns ``phase`` and ``norm``.
+    The phase curve is given as a table with columns ``phase`` and ``norm``.
 
     The ``norm`` is supposed to be a unit-less multiplicative factor in the model,
     to be multiplied with a spectral model.
 
     The model does linear interpolation for times between the given ``(phase, norm)`` values.
 
-    The implementation currently uses `scipy.interpolate. InterpolatedUnivariateSpline`,
+    The implementation currently uses `scipy.interpolate.InterpolatedUnivariateSpline`,
     using degree ``k=1`` to get linear interpolation.
     This class also contains an ``integral`` method, making the computation of
     mean fluxes for a given time interval a one-liner.

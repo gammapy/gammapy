@@ -284,7 +284,7 @@ class SpatialModel(ModelBase):
         data : dict
             Dictionary containing model parameters.
         kwargs : dict
-            Keyword arguments passed to `~SpatialModel.from_parameters`.
+            Keyword arguments passed to `~gammapy.modeling.models.SpatialModel.from_parameters`.
         """
         kwargs = kwargs or {}
         spatial_data = data.get("spatial", data)
@@ -568,12 +568,12 @@ class PointSpatialModel(SpatialModel):
 
         Parameters
         ----------
-        geom : `Geom`
+        geom : `~gammapy.maps.Geom`
             Map geometry.
 
         Returns
         -------
-        flux : `Map`
+        flux : `~gammapy.maps.Map`
             Predicted flux map.
         """
         geom_image = geom.to_image()
@@ -730,7 +730,7 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
         Center position.
         Default is "0 deg", "0 deg".
     r_0 : `~astropy.coordinates.Angle`
-        Length of the major semiaxis, in angular units.
+        Length of the major semi-axis, in angular units.
         Default is 1 deg.
     eta : `float`
         Shape parameter within (0, 1). Special cases for disk: ->0, Gaussian: 0.5, Laplace:1
@@ -739,7 +739,7 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
         Eccentricity (:math:`0< e< 1`).
         Default is 0.
     phi : `~astropy.coordinates.Angle`
-        Rotation angle :math:`\phi`: of the major semiaxis.
+        Rotation angle :math:`\phi`: of the major semi-axis.
         Increases counter-clockwise from the North direction.
         Default is 0 deg.
     frame : {"icrs", "galactic"}
@@ -856,13 +856,13 @@ class DiskSpatialModel(SpatialModel):
         Center position.
         Default is "0 deg", "0 deg".
     r_0 : `~astropy.coordinates.Angle`
-        :math:`a`: length of the major semiaxis, in angular units.
+        :math:`a`: length of the major semi-axis, in angular units.
         Default is 1 deg.
     e : `float`
         Eccentricity of the ellipse (:math:`0< e< 1`).
         Default is 0.
     phi : `~astropy.coordinates.Angle`
-        Rotation angle :math:`\phi`: of the major semiaxis.
+        Rotation angle :math:`\phi`: of the major semi-axis.
         Increases counter-clockwise from the North direction.
         Default is 0 deg.
     edge_width : float
@@ -900,7 +900,7 @@ class DiskSpatialModel(SpatialModel):
 
     @staticmethod
     def _evaluate_norm_factor(r_0, e):
-        """Compute the normalization factor."""
+        """Compute the normalisation factor."""
         semi_minor = r_0 * np.sqrt(1 - e**2)
 
         def integral_fcn(x, a, b):
@@ -954,7 +954,7 @@ class DiskSpatialModel(SpatialModel):
 
     @classmethod
     def from_region(cls, region, **kwargs):
-        """Create a `DiskSpatialModel from a ~regions.EllipseSkyRegion`.
+        """Create a `~gammapy.modeling.models.DiskSpatialModel from a ~regions.EllipseSkyRegion`.
 
         Parameters
         ----------
@@ -1190,7 +1190,7 @@ class ConstantSpatialModel(SpatialModel):
     position = None
 
     def to_dict(self, full_output=False):
-        """Create dictionary for YAML serilisation."""
+        """Create dictionary for YAML serialisation."""
         # redefined to ignore frame attribute from parent class
         data = super().to_dict(full_output)
         data["spatial"].pop("frame")
@@ -1395,11 +1395,11 @@ class TemplateSpatialModel(SpatialModel):
         copy_data : bool
             Whether to copy the data. Default is False.
         **kwargs : dict
-            Keyword arguments forwarded to `TemplateSpatialModel`.
+            Keyword arguments forwarded to `~gammapy.modeling.models.TemplateSpatialModel`.
 
         Returns
         -------
-        model : `TemplateSpatialModel`
+        model : `~gammapy.modeling.models.TemplateSpatialModel`
             Copied template spatial model.
         """
         kwargs.setdefault("map", self.map)
@@ -1493,7 +1493,7 @@ class TemplateSpatialModel(SpatialModel):
         return cls(m, normalize=normalize, filename=filename, **kwargs)
 
     def to_dict(self, full_output=False):
-        """Create dictionary for YAML serilisation."""
+        """Create dictionary for YAML serialisation."""
         data = super().to_dict(full_output)
         data["spatial"]["filename"] = self.filename
         data["spatial"]["normalize"] = self.normalize
@@ -1511,7 +1511,7 @@ class TemplateSpatialModel(SpatialModel):
             Default is False, which will raise a warning if the template file exists already.
         filename: str, optional
             Filename of the template model. By default, the template model
-            will be saved with the `TemplateSpatialModel.filename` attribute,
+            will be saved with the `~gammapy.modeling.models.TemplateSpatialModel.filename` attribute,
             if `filename` is provided this attribute will be updated.
         """
         if filename is not None:
@@ -1675,7 +1675,7 @@ class PiecewiseNormSpatialModel(SpatialModel):
     ----------
     coord : `gammapy.maps.MapCoord`
         Flat coordinates list at which the model values are given (nodes).
-    norms : `~numpy.ndarray` or list of `Parameter`
+    norms : `~numpy.ndarray` or list of `~gammapy.modeling.Parameter`
         Array with the initial norms of the model at energies ``energy``.
         Normalisation parameters are created for each value.
         Default is one at each node.

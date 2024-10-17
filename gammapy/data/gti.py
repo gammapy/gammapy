@@ -100,7 +100,7 @@ class GTI:
         return table
 
     def copy(self):
-        """Deep copy of the `~gammapy.data.GIT` object."""
+        """Deep copy of the `~gammapy.data.GTI` object."""
         return copy.deepcopy(self)
 
     @classmethod
@@ -138,14 +138,14 @@ class GTI:
 
         Parameters
         ----------
-        filename : `pathlib.Path` or str
+        filename : `~pathlib.Path` or str
             Filename
         hdu : str
             hdu name. Default is "GTI".
         format: str
             Input format, currently only "gadf" is supported. Default is "gadf".
         checksum : bool
-            If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
+            If True, checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
         """
         filename = make_path(filename)
         with fits.open(str(make_path(filename)), memmap=False) as hdulist:
@@ -185,7 +185,7 @@ class GTI:
 
     def to_table_hdu(self, format="gadf"):
         """
-        Convert this GTI instance to a `astropy.io.fits.BinTableHDU`.
+        Convert this `~gammapy.data.GTI` instance to a `astropy.io.fits.BinTableHDU`.
 
         Parameters
         ----------
@@ -194,7 +194,7 @@ class GTI:
 
         Returns
         -------
-        hdu : `astropy.io.fits.BinTableHDU`
+        hdu : `~astropy.io.fits.BinTableHDU`
             GTI table converted to FITS representation.
         """
         if format != "gadf":
@@ -295,7 +295,7 @@ class GTI:
 
         Returns
         -------
-        gti : `GTI`
+        gti : `~gammapy.data.GTI`
             GTI table.
         """
         start = Time([_[0] for _ in time_intervals])
@@ -311,12 +311,12 @@ class GTI:
 
         Parameters
         ----------
-        time_interval : `astropy.time.Time`
+        time_interval : `~astropy.time.Time`
             Start and stop time for the selection.
 
         Returns
         -------
-        gti : `GTI`
+        gti : `~gammapy.data.GTI`
             Copy of the GTI table with selection applied.
         """
         interval_start, interval_stop = time_interval
@@ -342,12 +342,12 @@ class GTI:
 
         Parameters
         ----------
-        time_interval : [`astropy.time.Time`, `astropy.time.Time`]
+        time_interval : [`~astropy.time.Time`, `~astropy.time.Time`]
             Start and stop time for the selection.
 
         Returns
         -------
-        gti : `GTI`
+        gti : `~gammapy.data.GTI`
             Copy of the GTI table with the bad time interval deleted.
         """
         interval_start, interval_stop = time_interval
@@ -387,14 +387,14 @@ class GTI:
 
         Parameters
         ----------
-        gtis : list of `GTI`
+        gtis : list of `~gammapy.data.GTI`
             List of good time intervals to stack.
         **kwargs : dict, optional
             Keywords passed on to `~astropy.table.vstack`.
 
         Returns
         -------
-        gti : `GTI`
+        gti : `~gammapy.data.GTI`
             Stacked good time intervals.
         """
         tables = [_.table for _ in gtis]
@@ -445,7 +445,7 @@ class GTI:
 
         Parameters
         ----------
-        time_intervals : list of `astropy.time.Time`
+        time_intervals : list of `~astropy.time.Time`
             Start and stop time for each interval to compute the LC.
         atol : `~astropy.units.Quantity`
             Tolerance value for time comparison with different scale. Default is "1e-6 s".
