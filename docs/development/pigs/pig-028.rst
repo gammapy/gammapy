@@ -26,7 +26,7 @@ Motivation
 Bayesian inference uses prior knowledge, in the form of a prior distribution in order to estimate posterior probabilities which we traditionally visualize in the form of corner plots.
 These distributions contains much more information than a single best-fit as they reveal not only the "best model" but the (not always Gaussian) errors and correlation between parameters.
 
-A well know approach to estimate this posterior distribution is the Markov Chain Monte Carlo (MCMC) which uses an ensemble of walkers to produce a chain of samples that after a convergence period will reache a stationary state.
+A well know approach to estimate this posterior distribution is the Markov Chain Monte Carlo (MCMC) which uses an ensemble of walkers to produce a chain of samples that after a convergence period will reach a stationary state.
 *Once convergence* is reached the successive elements of the chain are samples of the target posterior distribution.
 However the weakness of the MCMC approach lies in the *Once convergence* part.
 Started far from the best likelihood region, the convergence time can be long or never reached if the walkers fall in a local minima.
@@ -199,6 +199,7 @@ The PIG implementation will be :
 2. Add inverse_cdf attributes to the Priors
 3. Define the class BayesianFit and SamplerLikelihood
 4. Prepare a tutorial to show case this new class
+5. Update the 'stats' documentation page 
 6.
 
 
