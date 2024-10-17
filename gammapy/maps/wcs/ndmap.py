@@ -358,14 +358,17 @@ class WcsNDMap(WcsMap):
             idx = self.geom.axes.index_data(axis_name)
             block_size[idx] = factor
 
-        func = np.nansum if preserve_counts else np.nanmean
-
         if weights is None:
-            weights = 1
+            weights = np.ones_like(self.data)
         else:
             weights = weights.data
 
-        data = block_reduce(self.data * weights, tuple(block_size), func=func)
+        data = block_reduce(self.data * weights, tuple(block_size), func=np.nansum)
+
+        if not preserve_counts:
+            weight_sum = block_reduce(weights, tuple(block_size), func=np.nansum)
+            data=np.divide(data,weight_sum,out=np.zeros_like(data,dtype=self.data.dtype),where=(weight_sum!=0))
+        
         return self._init_copy(geom=geom, data=data.astype(self.data.dtype))
 
     def plot(
