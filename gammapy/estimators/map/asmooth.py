@@ -12,6 +12,7 @@ from gammapy.utils.array import scale_cube
 from gammapy.utils.pbar import progress_bar
 from ..core import Estimator
 from ..utils import estimate_exposure_reco_energy
+from gammapy.utils.deprecation import deprecated_renamed_argument
 
 __all__ = ["ASmoothMapEstimator"]
 
@@ -37,8 +38,8 @@ class ASmoothMapEstimator(Estimator):
         Smoothing scales.
     kernel : `astropy.convolution.Kernel`
         Smoothing kernel.
-    spectrum : `~gammapy.modeling.models.SpectralModel`
-        Spectral model assumption.
+    spectral_model : `~gammapy.modeling.models.SpectralModel`, optional
+        Spectral model assumption. Default is power-law with spectral index of 2.
     method : {'lima', 'asmooth'}
         Significance estimation method. Default is 'lima'.
     threshold : float
@@ -63,19 +64,20 @@ class ASmoothMapEstimator(Estimator):
 
     tag = "ASmoothMapEstimator"
 
+    @deprecated_renamed_argument("spectrum", "spectral_model", "v1.3")
     def __init__(
         self,
         scales=None,
         kernel=Gaussian2DKernel,
-        spectrum=None,
+        spectral_model=None,
         method="lima",
         threshold=5,
         energy_edges=None,
     ):
-        if spectrum is None:
-            spectrum = PowerLawSpectralModel()
+        if spectral_model is None:
+            spectral_model = PowerLawSpectralModel(index=2)
 
-        self.spectrum = spectrum
+        self.spectral_model = spectral_model
 
         if scales is None:
             scales = self.get_scales(n_scales=9, kernel=kernel)
@@ -231,7 +233,7 @@ class ASmoothMapEstimator(Estimator):
             background = dataset_image.background.data[0]
 
         if dataset_image.exposure is not None:
-            exposure = estimate_exposure_reco_energy(dataset_image, self.spectrum)
+            exposure = estimate_exposure_reco_energy(dataset_image, self.spectral_model)
         else:
             exposure = None
 
