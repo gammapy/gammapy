@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Galactic radial source distribution probability density functions."""
+
 import numpy as np
 from astropy.modeling import Fittable1DModel, Parameter
 from astropy.units import Quantity
@@ -340,16 +341,16 @@ class LogSpiral:
 
         Parameters
         ----------
-        theta : `~astropy.units.Quantity`, optional
+        theta : `astropy.units.Quantity`, optional
             Angle (deg). Default is None.
-        radius : `~astropy.units.Quantity`, optional
+        radius : `astropy.units.Quantity`, optional
             Radius (kpc). Default is None.
         spiralarm_index : int, optional
             Spiral arm index. Default is 0.
 
         Returns
         -------
-        x, y : `~numpy.ndarray`
+        x, y : `numpy.ndarray`
             Position (x, y).
         """
         if (theta is None) and radius is not None:
@@ -369,14 +370,14 @@ class LogSpiral:
 
         Parameters
         ----------
-        theta : `~astropy.units.Quantity`
+        theta : `astropy.units.Quantity`
             Angle (deg).
         spiralarm_index : int
             Spiral arm index.
 
         Returns
         -------
-        radius : `~numpy.ndarray`
+        radius : `numpy.ndarray`
             Radius (kpc).
         """
         k = self.k[spiralarm_index]
@@ -391,14 +392,14 @@ class LogSpiral:
 
         Parameters
         ----------
-        radius : `~astropy.units.Quantity`
+        radius : `astropy.units.Quantity`
             Radius (kpc).
         spiralarm_index : int
             Spiral arm index.
 
         Returns
         -------
-        theta : `~numpy.ndarray`
+        theta : `numpy.ndarray`
             Angle (deg).
         """
         k = self.k[spiralarm_index]
@@ -431,16 +432,16 @@ class FaucherSpiral(LogSpiral):
 
         Parameters
         ----------
-        radius : `~astropy.units.Quantity`
+        radius : `astropy.units.Quantity`
             Radius coordinate.
-        theta : `~astropy.units.Quantity`
+        theta : `astropy.units.Quantity`
             Angle coordinate.
         amount : float, optional
             Amount of blurring of the position, given as a fraction of `radius`.
             Default is 0.07.
-        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+        random_state : {int, 'random-seed', 'global-rng'}
             Defines random number generator initialisation.
-            Passed to `~gammapy.utils.random.get_random_state`.
+            Passed to `gammapy.utils.random.get_random_state`.
             Default is 'random-seed'.
         """
         random_state = get_random_state(random_state)
@@ -462,16 +463,16 @@ class FaucherSpiral(LogSpiral):
 
         Parameters
         ----------
-        radius : `~astropy.units.Quantity`
+        radius : `astropy.units.Quantity`
             Radius coordinate.
-        theta : `~astropy.units.Quantity`
+        theta : `astropy.units.Quantity`
             Angle coordinate.
-        r_corr : `~astropy.units.Quantity`, optional
+        r_corr : `astropy.units.Quantity`, optional
             Scale of the correction towards the GC.
             Default is 2.857 * u.kpc.
-        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+        random_state : {int, 'random-seed', 'global-rng'}
             Defines random number generator initialisation.
-            Passed to `~gammapy.utils.random.get_random_state`.
+            Passed to `gammapy.utils.random.get_random_state`.
             Default is 'random-seed'.
         """
         random_state = get_random_state(random_state)
@@ -492,14 +493,14 @@ class FaucherSpiral(LogSpiral):
 
         Parameters
         ----------
-        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+        random_state : {int, 'random-seed', 'global-rng'}
             Defines random number generator initialisation.
-            Passed to `~gammapy.utils.random.get_random_state`.
+            Passed to `gammapy.utils.random.get_random_state`.
             Default is 'random-seed'.
 
         Returns
         -------
-        Returns dx and dy, if blurring= true.
+        Returns radius, theta, spiralarm.
         """
         random_state = get_random_state(random_state)
 

@@ -270,7 +270,7 @@ class AnalysisConfig(GammapyBaseConfig):
 
         Parameters
         ----------
-        path : `~pathlib.Path` or str
+        path : `pathlib.Path` or str
             Path to write files.
         overwrite : bool, optional
             Overwrite existing file. Default is False.
@@ -297,7 +297,7 @@ class AnalysisConfig(GammapyBaseConfig):
 
         Parameters
         ----------
-        config : str or `~gammapy.analysis.AnalysisConfig` object, optional
+        config : str or `gammapy.analysis.AnalysisConfig` object, optional
             Configuration settings provided in dict() syntax. Default is None.
         """
         if isinstance(config, str):

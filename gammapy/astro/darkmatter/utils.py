@@ -17,11 +17,11 @@ class JFactory:
 
     Parameters
     ----------
-    geom : `~gammapy.maps.WcsGeom`
+    geom : `gammapy.maps.WcsGeom`
         Reference geometry.
-    profile : `~gammapy.astro.darkmatter.profiles.DMProfile`
+    profile : `gammapy.astro.darkmatter.profiles.DMProfile`
         Dark matter profile.
-    distance : `~astropy.units.Quantity`
+    distance : `astropy.units.Quantity`
         Distance to convert angular scale of the map.
     annihilation: bool, optional
         Decay or annihilation. Default is True.

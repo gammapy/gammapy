@@ -24,10 +24,10 @@ class PrimaryFlux(TemplateNDSpectralModel):
 
     Parameters
     ----------
-    mDM : `~astropy.units.Quantity`
+    mDM : `astropy.units.Quantity`
         Dark matter particle mass as rest mass energy.
     channel: str
-        Annihilation channel. List available channels with `~gammapy.spectrum.PrimaryFlux.allowed_channels`.
+        Annihilation channel. List available channels with `gammapy.spectrum.PrimaryFlux.allowed_channels`.
 
     References
     ----------
@@ -172,15 +172,15 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
 
     Parameters
     ----------
-    mass : `~astropy.units.Quantity`
+    mass : `astropy.units.Quantity`
         Dark matter mass.
     channel : str
-        Annihilation channel for `~gammapy.astro.darkmatter.PrimaryFlux`, e.g. "b" for "bbar".
+        Annihilation channel for `gammapy.astro.darkmatter.PrimaryFlux`, e.g. "b" for "bbar".
         See `PrimaryFlux.channel_registry` for more.
     scale : float
         Scale parameter for model fitting.
-    jfactor : `~astropy.units.Quantity`
-        Integrated J-Factor needed when `~gammapy.modeling.models.PointSpatialModel`
+    jfactor : `astropy.units.Quantity`
+        Integrated J-Factor needed when `gammapy.modeling.models.PointSpatialModel`
         is used.
     z: float
         Redshift value.
@@ -259,7 +259,7 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
 
         Returns
         -------
-        model : `~gammapy.astro.darkmatter.DarkMatterAnnihilationSpectralModel`
+        model : `gammapy.astro.darkmatter.DarkMatterAnnihilationSpectralModel`
             Dark matter annihilation spectral model.
         """
         data = data["spectral"]
@@ -281,15 +281,15 @@ class DarkMatterDecaySpectralModel(SpectralModel):
 
     Parameters
     ----------
-    mass : `~astropy.units.Quantity`
+    mass : `astropy.units.Quantity`
         Dark matter mass.
     channel : str
-        Annihilation channel for `~gammapy.astro.darkmatter.PrimaryFlux`, e.g. "b" for "bbar".
+        Annihilation channel for `gammapy.astro.darkmatter.PrimaryFlux`, e.g. "b" for "bbar".
         See `PrimaryFlux.channel_registry` for more.
     scale : float
         Scale parameter for model fitting
-    jfactor : `~astropy.units.Quantity`
-        Integrated J-Factor needed when `~gammapy.modeling.models.PointSpatialModel`
+    jfactor : `astropy.units.Quantity`
+        Integrated J-Factor needed when `gammapy.modeling.models.PointSpatialModel`
         is used.
     z: float
         Redshift value.
@@ -362,7 +362,7 @@ class DarkMatterDecaySpectralModel(SpectralModel):
 
         Returns
         -------
-        model : `~gammapy.astro.darkmatter.DarkMatterDecaySpectralModel`
+        model : `gammapy.astro.darkmatter.DarkMatterDecaySpectralModel`
             Dark matter decay spectral model.
         """
         data = data["spectral"]
