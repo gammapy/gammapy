@@ -4,6 +4,7 @@
 For measurements, the "Database of Charged Cosmic Rays (CRDB)" is a great resource:
 https://lpsc.in2p3.fr/crdb/
 """
+
 import numpy as np
 from astropy import units as u
 from gammapy.modeling import Parameter
@@ -58,7 +59,7 @@ def create_cosmic_ray_spectral_model(particle="proton"):
 
     Returns
     -------
-    `~gammapy.modeling.models.SpectralModel`
+    `gammapy.modeling.models.SpectralModel`
         Spectral model (for all-sky cosmic ray flux).
     """
     omega = 4 * np.pi * u.sr

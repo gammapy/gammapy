@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """iminuit fitting functions."""
+
 import logging
 import numpy as np
 from scipy.stats import chi2, norm
@@ -55,7 +56,7 @@ def optimize_iminuit(parameters, function, store_trace=False, **kwargs):
 
     Parameters
     ----------
-    parameters : `~gammapy.modeling.Parameters`
+    parameters : `gammapy.modeling.Parameters`
         Parameters with starting values.
     function : callable
         Likelihood function.

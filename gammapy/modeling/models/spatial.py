@@ -98,7 +98,7 @@ class SpatialModel(ModelBase):
 
     @property
     def position(self):
-        """Spatial model center position as a `~astropy.coordinates.SkyCoord`."""
+        """Spatial model center position as a `astropy.coordinates.SkyCoord`."""
         lon = self.lon_0.quantity
         lat = self.lat_0.quantity
         return SkyCoord(lon, lat, frame=self.frame)
@@ -130,7 +130,7 @@ class SpatialModel(ModelBase):
 
     @property
     def position_error(self):
-        """Get 95% containment position error as `~regions.EllipseSkyRegion`."""
+        """Get 95% containment position error as `regions.EllipseSkyRegion`."""
         if self.covariance is None:
             raise ValueError("No position error information available.")
 
@@ -160,16 +160,16 @@ class SpatialModel(ModelBase):
         )
 
     def evaluate_geom(self, geom):
-        """Evaluate model on `~gammapy.maps.Geom`.
+        """Evaluate model on `gammapy.maps.Geom`.
 
         Parameters
         ----------
-        geom : `~gammapy.maps.WcsGeom`
+        geom : `gammapy.maps.WcsGeom`
             Map geometry.
 
         Returns
         -------
-        map : `~gammapy.maps.Map`
+        map : `gammapy.maps.Map`
             Map containing the value in each spatial bin.
         """
         coords = geom.get_coord(frame=self.frame, sparse=True)
@@ -180,7 +180,7 @@ class SpatialModel(ModelBase):
             return self(coords.lon, coords.lat)
 
     def integrate_geom(self, geom, oversampling_factor=None):
-        """Integrate model on `~gammapy.maps.Geom` or `~gammapy.maps.RegionGeom`.
+        """Integrate model on `gammapy.maps.Geom` or `gammapy.maps.RegionGeom`.
 
         Integration is performed by simple rectangle approximation, the pixel center model value
         is multiplied by the pixel solid angle.
@@ -192,7 +192,7 @@ class SpatialModel(ModelBase):
 
         Parameters
         ----------
-        geom : `~gammapy.maps.WcsGeom` or `~gammapy.maps.RegionGeom`
+        geom : `gammapy.maps.WcsGeom` or `gammapy.maps.RegionGeom`
             The geom on which the integration is performed.
         oversampling_factor : int or None
             The oversampling factor to use for integration.
@@ -200,7 +200,7 @@ class SpatialModel(ModelBase):
 
         Returns
         -------
-        map : `~gammapy.maps.Map` or `gammapy.maps.RegionNDMap`
+        map : `gammapy.maps.Map` or `gammapy.maps.RegionNDMap`
             Map containing the integral value in each spatial bin.
         """
         wcs_geom = geom
@@ -284,7 +284,7 @@ class SpatialModel(ModelBase):
         data : dict
             Dictionary containing model parameters.
         kwargs : dict
-            Keyword arguments passed to `~gammapy.modeling.models.SpatialModel.from_parameters`.
+            Keyword arguments passed to :func:`gammapy.modeling.models.SpatialModel.from_parameters`.
         """
         kwargs = kwargs or {}
         spatial_data = data.get("spatial", data)
@@ -320,16 +320,16 @@ class SpatialModel(ModelBase):
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes`, optional
             Matplotlib axes. Default is None.
-        geom : `~gammapy.maps.WcsGeom`, optional
+        geom : `gammapy.maps.WcsGeom`, optional
             Geometry to use for plotting. Default is None.
         **kwargs : dict
-            Keyword arguments passed to `~gammapy.maps.WcsMap.plot()`.
+            Keyword arguments passed to :func:`gammapy.maps.WcsMap.plot()`.
 
         Returns
         -------
-        ax : `~matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes`, optional
             Matplotlib axes.
         """
         m = self._get_plot_map(geom)
@@ -344,16 +344,16 @@ class SpatialModel(ModelBase):
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes`, optional
             Matplotlib axes. Default is None.
-        geom : `~gammapy.maps.WcsGeom`, optional
+        geom : `gammapy.maps.WcsGeom`, optional
             Geom to use for plotting. Default is None.
         **kwargs : dict
-            Keyword arguments passed to `~gammapy.maps.WcsMap.plot()`.
+            Keyword arguments passed to :func:`gammapy.maps.WcsMap.plot`.
 
         Returns
         -------
-        ax : `~matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes`, optional
             Matplotlib axes.
         """
         m = self._get_plot_map(geom)
@@ -366,14 +366,14 @@ class SpatialModel(ModelBase):
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes`, optional
             Matplotlib axes to plot the position error on. Default is None.
         **kwargs : dict
-            Keyword arguments passed to `~gammapy.maps.WcsMap.plot()`.
+            Keyword arguments passed to :func:`gammapy.maps.WcsMap.plot`.
 
         Returns
         -------
-        ax : `~matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes`, optional
             Matplotlib axes.
         """
         # plot center position
@@ -405,7 +405,7 @@ class SpatialModel(ModelBase):
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes`, optional
             Matplotlib axes to plot the errors on. Default is None.
         which: list of str
             Which errors to plot.
@@ -416,15 +416,15 @@ class SpatialModel(ModelBase):
                 * "extension": plot the extension error of the spatial model
 
         kwargs_position : dict, optional
-            Keyword arguments passed to `~SpatialModel.plot_position_error`.
+            Keyword arguments passed to :func:`SpatialModel.plot_position_error`.
             Default is None.
         kwargs_extension : dict, optional
-            Keyword arguments passed to `~SpatialModel.plot_extension_error`.
+            Keyword arguments passed to :func:`SpatialModel.plot_extension_error`.
             Default is None.
 
         Returns
         -------
-        ax : `~matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes`, optional
             Matplotlib axes.
         """
         kwargs_position = kwargs_position or {}
@@ -459,14 +459,14 @@ class SpatialModel(ModelBase):
 
         Parameters
         ----------
-        geom : `~gammapy.maps.WcsGeom`, optional
+        geom : `gammapy.maps.WcsGeom`, optional
             Geometry to use for plotting. Default is None.
         **kwargs : dict
-            Keyword arguments passed to `~gammapy.maps.WcsMap.plot()`.
+            Keyword arguments passed to :func:`gammapy.maps.WcsMap.plot`.
 
         Returns
         -------
-        ax : `~matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes`, optional
             Matplotlib axes.
         """
         m = self._get_plot_map(geom)
@@ -476,13 +476,13 @@ class SpatialModel(ModelBase):
 
     @classmethod
     def from_position(cls, position, **kwargs):
-        """Define the position of the model using a `~astropy.coordinates.SkyCoord`.
+        """Define the position of the model using a `astropy.coordinates.SkyCoord`.
 
-        The model will be created in the frame of the `~astropy.coordinates.SkyCoord`.
+        The model will be created in the frame of the `astropy.coordinates.SkyCoord`.
 
         Parameters
         ----------
-        position : `~astropy.coordinates.SkyCoord`
+        position : `astropy.coordinates.SkyCoord`
             Position.
 
         Returns
@@ -519,7 +519,7 @@ class PointSpatialModel(SpatialModel):
 
     Parameters
     ----------
-    lon_0, lat_0 : `~astropy.coordinates.Angle`
+    lon_0, lat_0 : `astropy.coordinates.Angle`
         Center position.
         Default is "0 deg", "0 deg".
     frame : {"icrs", "galactic"}
@@ -532,12 +532,12 @@ class PointSpatialModel(SpatialModel):
 
     @property
     def evaluation_bin_size_min(self):
-        """Minimal evaluation bin size as an `~astropy.coordinates.Angle`."""
+        """Minimal evaluation bin size as an `astropy.coordinates.Angle`."""
         return 0 * u.deg
 
     @property
     def evaluation_radius(self):
-        """Evaluation radius as an `~astropy.coordinates.Angle`.
+        """Evaluation radius as an `astropy.coordinates.Angle`.
 
         Set as zero degrees.
         """
@@ -559,21 +559,21 @@ class PointSpatialModel(SpatialModel):
         return False
 
     def evaluate_geom(self, geom):
-        """Evaluate model on `~gammapy.maps.Geom`."""
+        """Evaluate model on `gammapy.maps.Geom`."""
         values = self.integrate_geom(geom).data
         return values / geom.solid_angle()
 
     def integrate_geom(self, geom, oversampling_factor=None):
-        """Integrate model on `~gammapy.maps.Geom`.
+        """Integrate model on `gammapy.maps.Geom`.
 
         Parameters
         ----------
-        geom : `~gammapy.maps.Geom`
+        geom : `gammapy.maps.Geom`
             Map geometry.
 
         Returns
         -------
-        flux : `~gammapy.maps.Map`
+        flux : `gammapy.maps.Map`
             Predicted flux map.
         """
         geom_image = geom.to_image()
@@ -588,7 +588,7 @@ class PointSpatialModel(SpatialModel):
         return Map.from_geom(geom=geom_image, data=data, unit="")
 
     def to_region(self, **kwargs):
-        """Model outline as a `~regions.PointSkyRegion`."""
+        """Model outline as a `regions.PointSkyRegion`."""
         return PointSkyRegion(center=self.position, **kwargs)
 
 
@@ -599,16 +599,16 @@ class GaussianSpatialModel(SpatialModel):
 
     Parameters
     ----------
-    lon_0, lat_0 : `~astropy.coordinates.Angle`
+    lon_0, lat_0 : `astropy.coordinates.Angle`
         Center position.
         Default is "0 deg", "0 deg".
-    sigma : `~astropy.coordinates.Angle`
+    sigma : `astropy.coordinates.Angle`
         Length of the major semiaxis of the Gaussian, in angular units.
         Default is 1 deg.
     e : `float`
         Eccentricity of the Gaussian (:math:`0< e< 1`).
         Default is 0.
-    phi : `~astropy.coordinates.Angle`
+    phi : `astropy.coordinates.Angle`
         Rotation angle :math:`\phi`: of the major semiaxis.
         Increases counter-clockwise from the North direction.
         Default is 0 deg.
@@ -626,12 +626,12 @@ class GaussianSpatialModel(SpatialModel):
 
     @property
     def evaluation_bin_size_min(self):
-        """Minimal evaluation bin size as an `~astropy.coordinates.Angle`, chosen as sigma/3."""
+        """Minimal evaluation bin size as an `astropy.coordinates.Angle`, chosen as sigma/3."""
         return self.parameters["sigma"].quantity / 3.0
 
     @property
     def evaluation_radius(self):
-        r"""Evaluation radius as an `~astropy.coordinates.Angle`.
+        r"""Evaluation radius as an `astropy.coordinates.Angle`.
 
         Set as :math:`5\sigma`.
         """
@@ -667,7 +667,7 @@ class GaussianSpatialModel(SpatialModel):
 
         Returns
         -------
-        region : `~regions.EllipseSkyRegion`
+        region : `regions.EllipseSkyRegion`
             Model outline.
         """
         minor_axis = Angle(self.sigma.quantity * np.sqrt(1 - self.e.quantity**2))
@@ -696,7 +696,7 @@ class GaussianSpatialModel(SpatialModel):
 
         Returns
         -------
-        region : `~regions.EllipseSkyRegion`
+        region : `regions.EllipseSkyRegion`
             Model error region.
         """
         sigma_hi = self.sigma.quantity + (self.sigma.error * self.sigma.unit)
@@ -726,10 +726,10 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
 
     Parameters
     ----------
-    lon_0, lat_0 : `~astropy.coordinates.Angle`
+    lon_0, lat_0 : `astropy.coordinates.Angle`
         Center position.
         Default is "0 deg", "0 deg".
-    r_0 : `~astropy.coordinates.Angle`
+    r_0 : `astropy.coordinates.Angle`
         Length of the major semi-axis, in angular units.
         Default is 1 deg.
     eta : `float`
@@ -738,7 +738,7 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
     e : `float`
         Eccentricity (:math:`0< e< 1`).
         Default is 0.
-    phi : `~astropy.coordinates.Angle`
+    phi : `astropy.coordinates.Angle`
         Rotation angle :math:`\phi`: of the major semi-axis.
         Increases counter-clockwise from the North direction.
         Default is 0 deg.
@@ -766,7 +766,7 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
 
     @property
     def evaluation_bin_size_min(self):
-        """Minimal evaluation bin size as an `~astropy.coordinates.Angle`.
+        """Minimal evaluation bin size as an `astropy.coordinates.Angle`.
 
         The bin min size is defined as r_0/(3+8*eta)/(e+1).
         """
@@ -774,7 +774,7 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
 
     @property
     def evaluation_radius(self):
-        r"""Evaluation radius as an `~astropy.coordinates.Angle`.
+        r"""Evaluation radius as an `astropy.coordinates.Angle`.
 
         The evaluation radius is defined as r_eval = r_0*(1+8*eta) so it verifies:
         r_eval -> r_0 if eta -> 0
@@ -794,7 +794,7 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
 
         Returns
         -------
-        region : `~regions.EllipseSkyRegion`
+        region : `regions.EllipseSkyRegion`
             Model outline.
         """
         minor_axis = Angle(self.r_0.quantity * np.sqrt(1 - self.e.quantity**2))
@@ -822,7 +822,7 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
 
         Returns
         -------
-        region : `~regions.EllipseSkyRegion`
+        region : `regions.EllipseSkyRegion`
             Model error region.
         """
         r_0_lo = self.r_0.quantity - self.r_0.error * self.r_0.unit
@@ -852,16 +852,16 @@ class DiskSpatialModel(SpatialModel):
 
     Parameters
     ----------
-    lon_0, lat_0 : `~astropy.coordinates.Angle`
+    lon_0, lat_0 : `astropy.coordinates.Angle`
         Center position.
         Default is "0 deg", "0 deg".
-    r_0 : `~astropy.coordinates.Angle`
+    r_0 : `astropy.coordinates.Angle`
         :math:`a`: length of the major semi-axis, in angular units.
         Default is 1 deg.
     e : `float`
         Eccentricity of the ellipse (:math:`0< e< 1`).
         Default is 0.
-    phi : `~astropy.coordinates.Angle`
+    phi : `astropy.coordinates.Angle`
         Rotation angle :math:`\phi`: of the major semi-axis.
         Increases counter-clockwise from the North direction.
         Default is 0 deg.
@@ -884,7 +884,7 @@ class DiskSpatialModel(SpatialModel):
 
     @property
     def evaluation_bin_size_min(self):
-        """Minimal evaluation bin size as an `~astropy.coordinates.Angle`.
+        """Minimal evaluation bin size as an `astropy.coordinates.Angle`.
 
         The bin min size is defined as r_0*(1-edge_width)/10.
         """
@@ -892,7 +892,7 @@ class DiskSpatialModel(SpatialModel):
 
     @property
     def evaluation_radius(self):
-        """Evaluation radius as an `~astropy.coordinates.Angle`.
+        """Evaluation radius as an `astropy.coordinates.Angle`.
 
         Set to the length of the semi-major axis plus the edge width.
         """
@@ -942,7 +942,7 @@ class DiskSpatialModel(SpatialModel):
         return u.Quantity(norm * in_ellipse, "sr-1", copy=COPY_IF_NEEDED)
 
     def to_region(self, **kwargs):
-        """Model outline as a `~regions.EllipseSkyRegion`."""
+        """Model outline as a `regions.EllipseSkyRegion`."""
         minor_axis = Angle(self.r_0.quantity * np.sqrt(1 - self.e.quantity**2))
         return EllipseSkyRegion(
             center=self.position,
@@ -954,11 +954,11 @@ class DiskSpatialModel(SpatialModel):
 
     @classmethod
     def from_region(cls, region, **kwargs):
-        """Create a `~gammapy.modeling.models.DiskSpatialModel from a ~regions.EllipseSkyRegion`.
+        """Create a `gammapy.modeling.models.DiskSpatialModel from a `regions.EllipseSkyRegion`.
 
         Parameters
         ----------
-        region : `~regions.EllipseSkyRegion` or ~regions.CircleSkyRegion`
+        region : `regions.EllipseSkyRegion` or `regions.CircleSkyRegion`
             Region to create model from.
         kwargs : dict
             Keyword arguments passed to `~gammapy.modeling.models.DiskSpatialModel`.
@@ -996,7 +996,7 @@ class DiskSpatialModel(SpatialModel):
 
         Returns
         -------
-        region : `~regions.EllipseSkyRegion`
+        region : `regions.EllipseSkyRegion`
             Model error region.
         """
         r_0_lo = self.r_0.quantity - self.r_0.error * self.r_0.unit
@@ -1026,13 +1026,13 @@ class ShellSpatialModel(SpatialModel):
 
     Parameters
     ----------
-    lon_0, lat_0 : `~astropy.coordinates.Angle`
+    lon_0, lat_0 : `astropy.coordinates.Angle`
         Center position.
         Default is "0 deg", "0 deg".
-    radius : `~astropy.coordinates.Angle`
+    radius : `astropy.coordinates.Angle`
         Inner radius, :math:`r_{in}`.
         Default is 1 deg.
-    width : `~astropy.coordinates.Angle`
+    width : `astropy.coordinates.Angle`
         Shell width.
         Default is 0.2 deg.
     frame : {"icrs", "galactic"}
@@ -1051,7 +1051,7 @@ class ShellSpatialModel(SpatialModel):
 
     @property
     def evaluation_bin_size_min(self):
-        """Minimal evaluation bin size as an `~astropy.coordinates.Angle`.
+        """Minimal evaluation bin size as an `astropy.coordinates.Angle`.
 
         The bin min size is defined as the shell width.
         """
@@ -1059,7 +1059,7 @@ class ShellSpatialModel(SpatialModel):
 
     @property
     def evaluation_radius(self):
-        r"""Evaluation radius as an `~astropy.coordinates.Angle`.
+        r"""Evaluation radius as an `astropy.coordinates.Angle`.
 
         Set to :math:`r_\text{out}`.
         """
@@ -1084,7 +1084,7 @@ class ShellSpatialModel(SpatialModel):
         return norm * value
 
     def to_region(self, **kwargs):
-        """Model outline as a `~regions.CircleAnnulusSkyRegion`."""
+        """Model outline as a `regions.CircleAnnulusSkyRegion`."""
         return CircleAnnulusSkyRegion(
             center=self.position,
             inner_radius=self.radius.quantity,
@@ -1100,10 +1100,10 @@ class Shell2SpatialModel(SpatialModel):
 
     Parameters
     ----------
-    lon_0, lat_0 : `~astropy.coordinates.Angle`
+    lon_0, lat_0 : `astropy.coordinates.Angle`
         Center position.
         Default is "0 deg", "0 deg".
-    r_0 : `~astropy.coordinates.Angle`
+    r_0 : `astropy.coordinates.Angle`
         Outer radius, :math:`r_{out}`.
         Default is 1 deg.
     eta : float
@@ -1125,7 +1125,7 @@ class Shell2SpatialModel(SpatialModel):
 
     @property
     def evaluation_bin_size_min(self):
-        """Minimal evaluation bin size as an `~astropy.coordinates.Angle`.
+        """Minimal evaluation bin size as an `astropy.coordinates.Angle`.
 
         The bin min size is defined as r_0*eta.
         """
@@ -1133,7 +1133,7 @@ class Shell2SpatialModel(SpatialModel):
 
     @property
     def evaluation_radius(self):
-        r"""Evaluation radius as an `~astropy.coordinates.Angle`.
+        r"""Evaluation radius as an `astropy.coordinates.Angle`.
 
         Set to :math:`r_\text{out}`.
         """
@@ -1162,7 +1162,7 @@ class Shell2SpatialModel(SpatialModel):
         return norm * value
 
     def to_region(self, **kwargs):
-        """Model outline as a `~regions.CircleAnnulusSkyRegion`."""
+        """Model outline as a `regions.CircleAnnulusSkyRegion`."""
         return CircleAnnulusSkyRegion(
             center=self.position,
             inner_radius=self.r_in,
@@ -1178,7 +1178,7 @@ class ConstantSpatialModel(SpatialModel):
 
     Parameters
     ----------
-    value : `~astropy.units.Quantity`
+    value : `astropy.units.Quantity`
         Value. Default is 1 sr-1.
     """
 
@@ -1203,7 +1203,7 @@ class ConstantSpatialModel(SpatialModel):
         return value
 
     def to_region(self, **kwargs):
-        """Model outline as a `~regions.RectangleSkyRegion`."""
+        """Model outline as a `regions.RectangleSkyRegion`."""
         return RectangleSkyRegion(
             center=SkyCoord(0 * u.deg, 0 * u.deg, frame=self.frame),
             height=180 * u.deg,
@@ -1248,7 +1248,7 @@ class ConstantFluxSpatialModel(SpatialModel):
         return Map.from_geom(geom=geom, data=1)
 
     def to_region(self, **kwargs):
-        """Model outline as a `~regions.RectangleSkyRegion`."""
+        """Model outline as a `regions.RectangleSkyRegion`."""
         return RectangleSkyRegion(
             center=SkyCoord(0 * u.deg, 0 * u.deg, frame=self.frame),
             height=180 * u.deg,
@@ -1270,7 +1270,7 @@ class TemplateSpatialModel(SpatialModel):
 
     Parameters
     ----------
-    map : `~gammapy.maps.Map`
+    map : `gammapy.maps.Map`
         Map template.
     meta : dict, optional
         Meta information, meta['filename'] will be used for serialisation.
@@ -1285,7 +1285,7 @@ class TemplateSpatialModel(SpatialModel):
         Create a deepcopy of the map data or directly use the original. Default is True.
         Use False to save memory in case of large maps.
     **kwargs : dict
-        Keyword arguments forwarded to `SpatialModel.__init__`.
+        Keyword arguments forwarded to :func:`SpatialModel.__init__`.
     """
 
     tag = ["TemplateSpatialModel", "template"]
@@ -1413,7 +1413,7 @@ class TemplateSpatialModel(SpatialModel):
 
     @property
     def map(self):
-        """Template map as a `~gammapy.maps.Map` object."""
+        """Template map as a `gammapy.maps.Map` object."""
         return self._map
 
     @property
@@ -1422,7 +1422,7 @@ class TemplateSpatialModel(SpatialModel):
 
     @property
     def evaluation_radius(self):
-        """Evaluation radius as an `~astropy.coordinates.Angle`.
+        """Evaluation radius as an `astropy.coordinates.Angle`.
 
         Set to half of the maximal dimension of the map.
         """
@@ -1511,8 +1511,8 @@ class TemplateSpatialModel(SpatialModel):
             Default is False, which will raise a warning if the template file exists already.
         filename: str, optional
             Filename of the template model. By default, the template model
-            will be saved with the `~gammapy.modeling.models.TemplateSpatialModel.filename` attribute,
-            if `filename` is provided this attribute will be updated.
+            will be saved with the `gammapy.modeling.models.TemplateSpatialModel.filename` attribute.
+            If ``filename`` is provided this attribute will be updated.
         """
         if filename is not None:
             self.filename = filename
@@ -1524,7 +1524,7 @@ class TemplateSpatialModel(SpatialModel):
             self.map.write(self.filename, overwrite=overwrite)
 
     def to_region(self, **kwargs):
-        """Model outline from template map boundary as a `~regions.RectangleSkyRegion`."""
+        """Model outline from template map boundary as a `regions.RectangleSkyRegion`."""
         return RectangleSkyRegion(
             center=self.map.geom.center_skydir,
             width=self.map.geom.width[0][0],
@@ -1548,7 +1548,7 @@ class TemplateNDSpatialModel(SpatialModel):
 
     Parameters
     ----------
-    map : `~gammapy.maps.WcsNDMap` or `~gammapy.maps.HpxNDMap`
+    map : `gammapy.maps.WcsNDMap` or `gammapy.maps.HpxNDMap`
         Map template.
     meta : dict, optional
         Meta information, meta['filename'] will be used for serialisation.
@@ -1607,7 +1607,7 @@ class TemplateNDSpatialModel(SpatialModel):
 
     @property
     def map(self):
-        """Template map as a `~gammapy.maps.WcsNDMap` or `~gammapy.maps.HpxNDMap`."""
+        """Template map as a `gammapy.maps.WcsNDMap` or `gammapy.maps.HpxNDMap`."""
         return self._map
 
     @property
@@ -1675,7 +1675,7 @@ class PiecewiseNormSpatialModel(SpatialModel):
     ----------
     coord : `gammapy.maps.MapCoord`
         Flat coordinates list at which the model values are given (nodes).
-    norms : `~numpy.ndarray` or list of `~gammapy.modeling.Parameter`
+    norms : `numpy.ndarray` or list of `gammapy.modeling.Parameter`
         Array with the initial norms of the model at energies ``energy``.
         Normalisation parameters are created for each value.
         Default is one at each node.
@@ -1743,16 +1743,16 @@ class PiecewiseNormSpatialModel(SpatialModel):
         return scale.inverse(interpolated) * self.norms.unit
 
     def evaluate_geom(self, geom):
-        """Evaluate model on `~gammapy.maps.Geom`.
+        """Evaluate model on `gammapy.maps.Geom`.
 
         Parameters
         ----------
-        geom : `~gammapy.maps.WcsGeom`
+        geom : `gammapy.maps.WcsGeom`
             Map geometry.
 
         Returns
         -------
-        map : `~gammapy.maps.Map`
+        map : `gammapy.maps.Map`
             Map containing the value in each spatial bin.
 
         """

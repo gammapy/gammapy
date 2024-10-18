@@ -13,7 +13,7 @@ log = logging.getLogger(__name__)
 
 
 def _build_priorparameters_from_dict(data, default_parameters):
-    """Build a `~gammapy.modeling.PriorParameters` object from input dictionary and default prior parameter values."""
+    """Build a `gammapy.modeling.PriorParameters` object from input dictionary and default prior parameter values."""
     par_data = []
 
     input_names = [_["name"] for _ in data]
@@ -60,7 +60,7 @@ class Prior(ModelBase):
 
     @property
     def parameters(self):
-        """Prior parameters as a `~gammapy.modeling.PriorParameters` object."""
+        """Prior parameters as a `gammapy.modeling.PriorParameters` object."""
         return PriorParameters(
             [getattr(self, name) for name in self.default_parameters.names]
         )

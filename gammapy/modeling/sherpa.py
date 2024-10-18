@@ -34,7 +34,7 @@ def optimize_sherpa(parameters, function, store_trace=False, **kwargs):
 
     Parameters
     ----------
-    parameters : `~gammapy.modeling.Parameters`
+    parameters : `gammapy.modeling.Parameters`
         Parameter list with starting values.
     function : callable
         Likelihood function.

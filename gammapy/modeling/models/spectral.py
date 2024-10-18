@@ -106,9 +106,9 @@ def integrate_spectrum(func, energy_min, energy_max, ndecade=100):
     ----------
     func : callable
         Function to integrate.
-    energy_min : `~astropy.units.Quantity`
+    energy_min : `astropy.units.Quantity`
         Integration range minimum.
-    energy_max : `~astropy.units.Quantity`
+    energy_max : `astropy.units.Quantity`
         Integration range minimum.
     ndecade : int, optional
         Number of grid points per decade used for the integration.
@@ -172,7 +172,7 @@ class SpectralModel(ModelBase):
 
         Parameters
         ----------
-        fct : `~astropy.units.Quantity`
+        fct : `astropy.units.Quantity`
             Function to estimate the error.
         epsilon : float
             Step size of the gradient evaluation. Given as a
@@ -182,7 +182,7 @@ class SpectralModel(ModelBase):
 
         Returns
         -------
-        f_cov : `~astropy.units.Quantity`
+        f_cov : `astropy.units.Quantity`
             Error of the given function.
         """
         eps = np.sqrt(np.diag(self.covariance)) * epsilon
@@ -210,7 +210,7 @@ class SpectralModel(ModelBase):
 
         Parameters
         ----------
-        energy : `~astropy.units.Quantity`
+        energy : `astropy.units.Quantity`
             Energy at which to evaluate.
         epsilon : float, optional
             Step size of the gradient evaluation. Given as a
@@ -218,7 +218,7 @@ class SpectralModel(ModelBase):
 
         Returns
         -------
-        dnde, dnde_error : tuple of `~astropy.units.Quantity`
+        dnde, dnde_error : tuple of `astropy.units.Quantity`
             Tuple of flux and flux error.
         """
         return self._propagate_error(epsilon=epsilon, fct=self, energy=energy)
@@ -231,7 +231,7 @@ class SpectralModel(ModelBase):
 
         Returns
         -------
-        pivot energy : `~astropy.units.Quantity`
+        pivot energy : `astropy.units.Quantity`
             The energy at which the statistical error in the computed flux is smallest.
             If no minimum is found, NaN will be returned.
         """
@@ -270,10 +270,10 @@ class SpectralModel(ModelBase):
 
         Parameters
         ----------
-        energy_min, energy_max : `~astropy.units.Quantity`
+        energy_min, energy_max : `astropy.units.Quantity`
             Lower and upper bound of integration range.
         **kwargs : dict
-            Keyword arguments passed to :func:`~gammapy.modeling.models.spectral.integrate_spectrum`.
+            Keyword arguments passed to :func:`gammapy.modeling.models.spectral.integrate_spectrum`.
         """
         if hasattr(self, "evaluate_integral"):
             kwargs = {par.name: par.quantity for par in self.parameters}
@@ -287,7 +287,7 @@ class SpectralModel(ModelBase):
 
         Parameters
         ----------
-        energy_min, energy_max :  `~astropy.units.Quantity`
+        energy_min, energy_max :  `astropy.units.Quantity`
             Lower and upper bound of integration range.
         epsilon : float, optional
             Step size of the gradient evaluation. Given as a
@@ -296,7 +296,7 @@ class SpectralModel(ModelBase):
 
         Returns
         -------
-        flux, flux_err : tuple of `~astropy.units.Quantity`
+        flux, flux_err : tuple of `astropy.units.Quantity`
             Integral flux and flux error between energy_min and energy_max.
         """
         return self._propagate_error(
@@ -315,10 +315,10 @@ class SpectralModel(ModelBase):
 
         Parameters
         ----------
-        energy_min, energy_max : `~astropy.units.Quantity`
+        energy_min, energy_max : `astropy.units.Quantity`
             Lower and upper bound of integration range.
         **kwargs : dict
-            Keyword arguments passed to :func:`~gammapy.modeling.models.spectral.integrate_spectrum`.
+            Keyword arguments passed to :func:`gammapy.modeling.models.spectral.integrate_spectrum`.
         """
 
         def f(x):
@@ -336,7 +336,7 @@ class SpectralModel(ModelBase):
 
         Parameters
         ----------
-        energy_min, energy_max :  `~astropy.units.Quantity`
+        energy_min, energy_max :  `astropy.units.Quantity`
             Lower and upper bound of integration range.
         epsilon : float, optional
             Step size of the gradient evaluation. Given as a
@@ -345,7 +345,7 @@ class SpectralModel(ModelBase):
 
         Returns
         -------
-        energy_flux, energy_flux_err : tuple of `~astropy.units.Quantity`
+        energy_flux, energy_flux_err : tuple of `astropy.units.Quantity`
             Energy flux and energy flux error between energy_min and energy_max.
         """
         return self._propagate_error(
@@ -366,7 +366,7 @@ class SpectralModel(ModelBase):
 
         Returns
         -------
-        fluxes : dict of `~astropy.units.Quantity`
+        fluxes : dict of `astropy.units.Quantity`
             Reference fluxes.
         """
         energy = energy_axis.center
@@ -430,10 +430,10 @@ class SpectralModel(ModelBase):
 
         Parameters
         ----------
-        energy_bounds : `~astropy.units.Quantity`, list of `~astropy.units.Quantity` or `~gammapy.maps.MapAxis`
+        energy_bounds : `astropy.units.Quantity`, list of `astropy.units.Quantity` or `gammapy.maps.MapAxis`
             Energy bounds between which the model is to be plotted. Or an
             axis defining the energy bounds between which the model is to be plotted.
-        ax : `~matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes`, optional
             Matplotlib axes. Default is None.
         sed_type : {"dnde", "flux", "eflux", "e2dnde"}
             Evaluation methods of the model. Default is "dnde".
@@ -442,11 +442,11 @@ class SpectralModel(ModelBase):
         n_points : int, optional
             Number of evaluation nodes. Default is 100.
         **kwargs : dict
-            Keyword arguments forwarded to `~matplotlib.pyplot.plot`.
+            Keyword arguments forwarded to :func:`matplotlib.pyplot.plot`.
 
         Returns
         -------
-        ax : `~matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes`, optional
             Matplotlib axes.
 
         Notes
@@ -511,10 +511,10 @@ class SpectralModel(ModelBase):
 
         Parameters
         ----------
-        energy_bounds : `~astropy.units.Quantity`, list of `~astropy.units.Quantity` or `~gammapy.maps.MapAxis`
+        energy_bounds : `astropy.units.Quantity`, list of `astropy.units.Quantity` or `gammapy.maps.MapAxis`
             Energy bounds between which the model is to be plotted. Or an
             axis defining the energy bounds between which the model is to be plotted.
-        ax : `~matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes`, optional
             Matplotlib axes. Default is None.
         sed_type : {"dnde", "flux", "eflux", "e2dnde"}
             Evaluation methods of the model. Default is "dnde".
@@ -527,7 +527,7 @@ class SpectralModel(ModelBase):
 
         Returns
         -------
-        ax : `~matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes`, optional
             Matplotlib axes.
 
         Notes
@@ -589,7 +589,7 @@ class SpectralModel(ModelBase):
 
         Parameters
         ----------
-        energy : `~astropy.units.Quantity`
+        energy : `astropy.units.Quantity`
             Energy at which to estimate the index.
         epsilon : float, optional
             Fractional energy increment to use for determining the spectral index.
@@ -609,7 +609,7 @@ class SpectralModel(ModelBase):
 
         Parameters
         ----------
-        energy : `~astropy.units.Quantity`
+        energy : `astropy.units.Quantity`
             Energy at which to estimate the index.
         epsilon : float, optional
             Fractional energy increment to use for determining the spectral index.
@@ -631,16 +631,16 @@ class SpectralModel(ModelBase):
 
         Parameters
         ----------
-        value : `~astropy.units.Quantity`
+        value : `astropy.units.Quantity`
             Function value of the spectral model.
-        energy_min : `~astropy.units.Quantity`, optional
+        energy_min : `astropy.units.Quantity`, optional
             Lower energy bound of the roots finding. Default is 0.1 TeV.
-        energy_max : `~astropy.units.Quantity`, optional
+        energy_max : `astropy.units.Quantity`, optional
             Upper energy bound of the roots finding. Default is 100 TeV.
 
         Returns
         -------
-        energy : `~astropy.units.Quantity`
+        energy : `astropy.units.Quantity`
             Energies at which the model has the given ``value``.
         """
         eunit = "TeV"
@@ -663,16 +663,16 @@ class SpectralModel(ModelBase):
 
         Parameters
         ----------
-        values : `~astropy.units.Quantity`
+        values : `astropy.units.Quantity`
             Function values of the spectral model.
-        energy_min : `~astropy.units.Quantity`, optional
+        energy_min : `astropy.units.Quantity`, optional
             Lower energy bound of the roots finding. Default is 0.1 TeV.
-        energy_max : `~astropy.units.Quantity`, optional
+        energy_max : `astropy.units.Quantity`, optional
             Upper energy bound of the roots finding. Default is 100 TeV.
 
         Returns
         -------
-        energy : list of `~astropy.units.Quantity`
+        energy : list of `astropy.units.Quantity`
             Each element contains the energies at which the model
             has corresponding value of ``values``.
         """
@@ -690,7 +690,7 @@ class ConstantSpectralModel(SpectralModel):
 
     Parameters
     ----------
-    const : `~astropy.units.Quantity`
+    const : `astropy.units.Quantity`
         :math:`k`. Default is 1e-12 cm-2 s-1 TeV-1.
     """
 
@@ -787,13 +787,13 @@ class PowerLawSpectralModel(SpectralModel):
 
     Parameters
     ----------
-    index : `~astropy.units.Quantity`
+    index : `astropy.units.Quantity`
         :math:`\Gamma`.
         Default is 2.0.
-    amplitude : `~astropy.units.Quantity`
+    amplitude : `astropy.units.Quantity`
         :math:`\phi_0`.
         Default is 1e-12 cm-2 s-1 TeV-1.
-    reference : `~astropy.units.Quantity`
+    reference : `astropy.units.Quantity`
         :math:`E_0`.
         Default is 1 TeV.
 
@@ -828,7 +828,7 @@ class PowerLawSpectralModel(SpectralModel):
 
         Parameters
         ----------
-        energy_min, energy_max : `~astropy.units.Quantity`
+        energy_min, energy_max : `astropy.units.Quantity`
             Lower and upper bound of integration range.
         """
         val = -1 * index + 1
@@ -858,7 +858,7 @@ class PowerLawSpectralModel(SpectralModel):
 
         Parameters
         ----------
-        energy_min, energy_max : `~astropy.units.Quantity`
+        energy_min, energy_max : `astropy.units.Quantity`
             Lower and upper bound of integration range.
         """
         val = -1 * index + 2
@@ -884,7 +884,7 @@ class PowerLawSpectralModel(SpectralModel):
 
         Parameters
         ----------
-        value : `~astropy.units.Quantity`
+        value : `astropy.units.Quantity`
             Function value of the spectral model.
         """
         base = value / self.amplitude.quantity
@@ -902,7 +902,7 @@ class PowerLawSpectralModel(SpectralModel):
 
         Returns
         -------
-        pivot energy : `~astropy.units.Quantity`
+        pivot energy : `astropy.units.Quantity`
             If no minimum is found, NaN will be returned.
         """
         index_err = self.index.error
@@ -917,13 +917,13 @@ class PowerLawNormSpectralModel(SpectralModel):
 
     Parameters
     ----------
-    tilt : `~astropy.units.Quantity`
+    tilt : `astropy.units.Quantity`
         :math:`\Gamma`.
         Default is 0.
-    norm : `~astropy.units.Quantity`
+    norm : `astropy.units.Quantity`
         :math:`\phi_0`.
         Default is 1.
-    reference : `~astropy.units.Quantity`
+    reference : `astropy.units.Quantity`
         :math:`E_0`.
         Default is 1 TeV.
 
@@ -985,7 +985,7 @@ class PowerLawNormSpectralModel(SpectralModel):
 
         Parameters
         ----------
-        value : `~astropy.units.Quantity`
+        value : `astropy.units.Quantity`
             Function value of the spectral model.
         """
         base = value / self.norm.quantity
@@ -1003,7 +1003,7 @@ class PowerLawNormSpectralModel(SpectralModel):
 
         Returns
         -------
-        pivot energy : `~astropy.units.Quantity`
+        pivot energy : `astropy.units.Quantity`
             If no minimum is found, NaN will be returned.
         """
         tilt_err = self.tilt.error
@@ -1020,16 +1020,16 @@ class PowerLaw2SpectralModel(SpectralModel):
 
     Parameters
     ----------
-    index : `~astropy.units.Quantity`
+    index : `astropy.units.Quantity`
         Spectral index :math:`\Gamma`.
         Default is 2.
-    amplitude : `~astropy.units.Quantity`
+    amplitude : `astropy.units.Quantity`
         Integral flux :math:`F_0`.
         Default is 1e-12 cm-2 s-1.
-    emin : `~astropy.units.Quantity`
+    emin : `astropy.units.Quantity`
         Lower energy limit :math:`E_{0, min}`.
         Default is 0.1 TeV.
-    emax : `~astropy.units.Quantity`
+    emax : `astropy.units.Quantity`
         Upper energy limit :math:`E_{0, max}`.
         Default is 100 TeV.
 
@@ -1070,7 +1070,7 @@ class PowerLaw2SpectralModel(SpectralModel):
 
         Parameters
         ----------
-        energy_min, energy_max : `~astropy.units.Quantity`
+        energy_min, energy_max : `astropy.units.Quantity`
             Lower and upper bound of integration range.
         """
         temp1 = np.power(energy_max, -index.value + 1)
@@ -1088,7 +1088,7 @@ class PowerLaw2SpectralModel(SpectralModel):
 
         Parameters
         ----------
-        value : `~astropy.units.Quantity`
+        value : `astropy.units.Quantity`
             Function value of the spectral model.
         """
         amplitude = self.amplitude.quantity
@@ -1110,16 +1110,16 @@ class BrokenPowerLawSpectralModel(SpectralModel):
 
     Parameters
     ----------
-    index1 : `~astropy.units.Quantity`
+    index1 : `astropy.units.Quantity`
         :math:`\Gamma1`.
         Default is 2.
-    index2 : `~astropy.units.Quantity`
+    index2 : `astropy.units.Quantity`
         :math:`\Gamma2`.
         Default is 2.
-    amplitude : `~astropy.units.Quantity`
+    amplitude : `astropy.units.Quantity`
         :math:`\phi_0`.
         Default is 1e-12 cm-2 s-1 TeV-1.
-    ebreak : `~astropy.units.Quantity`
+    ebreak : `astropy.units.Quantity`
         :math:`E_{break}`.
         Default is 1 TeV.
 
@@ -1157,17 +1157,17 @@ class SmoothBrokenPowerLawSpectralModel(SpectralModel):
 
     Parameters
     ----------
-    index1 : `~astropy.units.Quantity`
+    index1 : `astropy.units.Quantity`
         :math:`\Gamma_1`. Default is 2.
-    index2 : `~astropy.units.Quantity`
+    index2 : `astropy.units.Quantity`
         :math:`\Gamma_2`. Default is 2.
-    amplitude : `~astropy.units.Quantity`
+    amplitude : `astropy.units.Quantity`
         :math:`\phi_0`. Default is 1e-12 cm-2 s-1 TeV-1.
-    reference : `~astropy.units.Quantity`
+    reference : `astropy.units.Quantity`
         :math:`E_0`. Default is 1 TeV.
-    ebreak : `~astropy.units.Quantity`
+    ebreak : `astropy.units.Quantity`
         :math:`E_{break}`. Default is 1 TeV.
-    beta : `~astropy.units.Quantity`
+    beta : `astropy.units.Quantity`
         :math:`\beta`. Default is 1.
 
     See Also
@@ -1204,9 +1204,9 @@ class PiecewiseNormSpectralModel(SpectralModel):
 
     Parameters
     ----------
-    energy : `~astropy.units.Quantity`
+    energy : `astropy.units.Quantity`
         Array of energies at which the model values are given (nodes).
-    norms : `~numpy.ndarray` or list of `~gammapy.modeling.Parameter`
+    norms : `numpy.ndarray` or list of `gammapy.modeling.Parameter`
         Array with the initial norms of the model at energies ``energy``.
         Normalisation parameters are created for each value.
         Default is one at each node.
@@ -1291,19 +1291,19 @@ class ExpCutoffPowerLawSpectralModel(SpectralModel):
 
     Parameters
     ----------
-    index : `~astropy.units.Quantity`
+    index : `astropy.units.Quantity`
         :math:`\Gamma`.
         Default is 1.5.
-    amplitude : `~astropy.units.Quantity`
+    amplitude : `astropy.units.Quantity`
         :math:`\phi_0`.
         Default is 1e-12 cm-2 s-1 TeV-1.
-    reference : `~astropy.units.Quantity`
+    reference : `astropy.units.Quantity`
         :math:`E_0`.
         Default is 1 TeV.
-    lambda_ : `~astropy.units.Quantity`
+    lambda_ : `astropy.units.Quantity`
         :math:`\lambda`.
         Default is 0.1 TeV-1.
-    alpha : `~astropy.units.Quantity`
+    alpha : `astropy.units.Quantity`
         :math:`\alpha`.
         Default is 1.
 
@@ -1335,7 +1335,7 @@ class ExpCutoffPowerLawSpectralModel(SpectralModel):
 
     @property
     def e_peak(self):
-        r"""Spectral energy distribution peak energy (`~astropy.units.Quantity`).
+        r"""Spectral energy distribution peak energy (`astropy.units.Quantity`).
 
         This is the peak in E^2 x dN/dE and is given by:
 
@@ -1358,19 +1358,19 @@ class ExpCutoffPowerLawNormSpectralModel(SpectralModel):
 
     Parameters
     ----------
-    index : `~astropy.units.Quantity`
+    index : `astropy.units.Quantity`
         :math:`\Gamma`.
         Default is 0.
-    norm : `~astropy.units.Quantity`
+    norm : `astropy.units.Quantity`
         :math:`\phi_0`.
         Default is 1.
-    reference : `~astropy.units.Quantity`
+    reference : `astropy.units.Quantity`
         :math:`E_0`.
         Default is 1 TeV.
-    lambda_ : `~astropy.units.Quantity`
+    lambda_ : `astropy.units.Quantity`
         :math:`\lambda`.
         Default is 0.1 TeV-1.
-    alpha : `~astropy.units.Quantity`
+    alpha : `astropy.units.Quantity`
         :math:`\alpha`.
         Default is 1.
 
@@ -1425,16 +1425,16 @@ class ExpCutoffPowerLaw3FGLSpectralModel(SpectralModel):
 
     Parameters
     ----------
-    index : `~astropy.units.Quantity`
+    index : `astropy.units.Quantity`
         :math:`\Gamma`.
         Default is 1.5.
-    amplitude : `~astropy.units.Quantity`
+    amplitude : `astropy.units.Quantity`
         :math:`\phi_0`.
         Default is 1e-12 cm-2 s-1 TeV-1.
-    reference : `~astropy.units.Quantity`
+    reference : `astropy.units.Quantity`
         :math:`E_0`.
         Default is 1 TeV.
-    ecut : `~astropy.units.Quantity`
+    ecut : `astropy.units.Quantity`
         :math:`E_{C}`.
         Default is 10 TeV.
     """
@@ -1471,19 +1471,19 @@ class SuperExpCutoffPowerLaw3FGLSpectralModel(SpectralModel):
 
     Parameters
     ----------
-    index_1 : `~astropy.units.Quantity`
+    index_1 : `astropy.units.Quantity`
         :math:`\Gamma_1`.
         Default is 1.5.
-    index_2 : `~astropy.units.Quantity`
+    index_2 : `astropy.units.Quantity`
         :math:`\Gamma_2`.
         Default is 2.
-    amplitude : `~astropy.units.Quantity`
+    amplitude : `astropy.units.Quantity`
         :math:`\phi_0`.
         Default is 1e-12 cm-2 s-1 TeV-1.
-    reference : `~astropy.units.Quantity`
+    reference : `astropy.units.Quantity`
         :math:`E_0`.
         Default is 1 TeV.
-    ecut : `~astropy.units.Quantity`
+    ecut : `astropy.units.Quantity`
         :math:`E_{C}`.
         Default is 10 TeV.
     """
@@ -1516,15 +1516,15 @@ class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
 
     Parameters
     ----------
-    index_1 : `~astropy.units.Quantity`
+    index_1 : `astropy.units.Quantity`
         :math:`\Gamma_1`. Default is 1.5.
-    index_2 : `~astropy.units.Quantity`
+    index_2 : `astropy.units.Quantity`
         :math:`\Gamma_2`. Default is 2.
-    amplitude : `~astropy.units.Quantity`
+    amplitude : `astropy.units.Quantity`
         :math:`\phi_0`. Default is 1e-12 cm-2 s-1 TeV-1.
-    reference : `~astropy.units.Quantity`
+    reference : `astropy.units.Quantity`
         :math:`E_0`. Default is 1 TeV.
-    expfactor : `~astropy.units.Quantity`
+    expfactor : `astropy.units.Quantity`
         :math:`a`, given as dimensionless value but
         internally assumes unit of :math:`E_0^{-\Gamma_2}`.
         Default is 1e-2.
@@ -1565,15 +1565,15 @@ class SuperExpCutoffPowerLaw4FGLDR3SpectralModel(SpectralModel):
 
     Parameters
     ----------
-    index_1 : `~astropy.units.Quantity`
+    index_1 : `astropy.units.Quantity`
         :math:`\Gamma_1`. Default is 1.5.
-    index_2 : `~astropy.units.Quantity`
+    index_2 : `astropy.units.Quantity`
         :math:`\Gamma_2`. Default is 2.
-    amplitude : `~astropy.units.Quantity`
+    amplitude : `astropy.units.Quantity`
         :math:`\phi_0`.  Default is 1e-12 cm-2 s-1 TeV-1.
-    reference : `~astropy.units.Quantity`
+    reference : `astropy.units.Quantity`
         :math:`E_0`. Default is 1 TeV.
-    expfactor : `~astropy.units.Quantity`
+    expfactor : `astropy.units.Quantity`
         :math:`a`, given as dimensionless value. Default is 1e-2.
     """
 
@@ -1614,13 +1614,13 @@ class LogParabolaSpectralModel(SpectralModel):
 
     Parameters
     ----------
-    amplitude : `~astropy.units.Quantity`
+    amplitude : `astropy.units.Quantity`
         :math:`\phi_0`. Default is 1e-12 cm-2 s-1 TeV-1.
-    reference : `~astropy.units.Quantity`
+    reference : `astropy.units.Quantity`
         :math:`E_0`. Default is 10 TeV.
-    alpha : `~astropy.units.Quantity`
+    alpha : `astropy.units.Quantity`
         :math:`\alpha`. Default is 2.
-    beta : `~astropy.units.Quantity`
+    beta : `astropy.units.Quantity`
         :math:`\beta`. Default is 1.
 
     See Also
@@ -1654,7 +1654,7 @@ class LogParabolaSpectralModel(SpectralModel):
 
     @property
     def e_peak(self):
-        r"""Spectral energy distribution peak energy (`~astropy.units.Quantity`).
+        r"""Spectral energy distribution peak energy (`astropy.units.Quantity`).
 
         This is the peak in E^2 x dN/dE and is given by:
 
@@ -1672,13 +1672,13 @@ class LogParabolaNormSpectralModel(SpectralModel):
 
     Parameters
     ----------
-    norm : `~astropy.units.Quantity`
+    norm : `astropy.units.Quantity`
         :math:`\phi_0`. Default is 1.
-    reference : `~astropy.units.Quantity`
+    reference : `astropy.units.Quantity`
         :math:`E_0`. Default is 10 TeV.
-    alpha : `~astropy.units.Quantity`
+    alpha : `astropy.units.Quantity`
         :math:`\alpha`. Default is 0.
-    beta : `~astropy.units.Quantity`
+    beta : `astropy.units.Quantity`
         :math:`\beta`. Default is 0.
 
     See Also
@@ -1726,12 +1726,12 @@ class TemplateSpectralModel(SpectralModel):
 
     Parameters
     ----------
-    energy : `~astropy.units.Quantity`
+    energy : `astropy.units.Quantity`
         Array of energies at which the model values are given
-    values : `~numpy.ndarray`
+    values : `numpy.ndarray`
         Array with the values of the model at energies ``energy``.
     interp_kwargs : dict
-        Interpolation option passed to `~gammapy.utils.interpolation.ScaledRegularGridInterpolator`.
+        Interpolation option passed to :func:`gammapy.utils.interpolation.ScaledRegularGridInterpolator`.
         By default, all values outside the interpolation range are set to NaN.
         If you want to apply linear extrapolation you can pass `interp_kwargs={'extrapolate':
         True, 'method': 'linear'}`. If you want to choose the interpolation
@@ -1854,7 +1854,7 @@ class TemplateNDSpectralModel(SpectralModel):
 
     Parameters
     ----------
-    map : `~gammapy.maps.RegionNDMap`
+    map : `gammapy.maps.RegionNDMap`
         Map template.
     meta : dict, optional
         Meta information, meta['filename'] will be used for serialisation.
@@ -1902,7 +1902,7 @@ class TemplateNDSpectralModel(SpectralModel):
 
     @property
     def map(self):
-        """Template map as a `~gammapy.maps.RegionNDMap`."""
+        """Template map as a `gammapy.maps.RegionNDMap`."""
         return self._map
 
     def evaluate(self, energy, **kwargs):
@@ -1987,11 +1987,11 @@ class EBLAbsorptionNormSpectralModel(SpectralModel):
 
     Parameters
     ----------
-    energy : `~astropy.units.Quantity`
+    energy : `astropy.units.Quantity`
         Energy node values.
-    param : `~astropy.units.Quantity`
+    param : `astropy.units.Quantity`
         Parameter node values.
-    data : `~astropy.units.Quantity`
+    data : `astropy.units.Quantity`
         Model value.
     redshift : float
         Redshift of the absorption model.
@@ -2000,7 +2000,7 @@ class EBLAbsorptionNormSpectralModel(SpectralModel):
         Norm of the EBL model.
         Default is 1.
     interp_kwargs : dict
-        Interpolation option passed to `~gammapy.utils.interpolation.ScaledRegularGridInterpolator`.
+        Interpolation option passed to :func:`gammapy.utils.interpolation.ScaledRegularGridInterpolator`.
         By default, the models are extrapolated outside the range. To prevent
         this and raise an error instead use interp_kwargs = {"extrapolate": False}.
     """
@@ -2094,7 +2094,7 @@ class EBLAbsorptionNormSpectralModel(SpectralModel):
             Norm of the EBL model.
             Default is 1.
         interp_kwargs : dict, optional
-            Interpolation option passed to `~gammapy.utils.interpolation.ScaledRegularGridInterpolator`.
+            Interpolation option passed to :func:`gammapy.utils.interpolation.ScaledRegularGridInterpolator`.
             Default is None.
 
         """
@@ -2179,14 +2179,14 @@ class NaimaSpectralModel(SpectralModel):
 
     Parameters
     ----------
-    radiative_model : `~naima.models.BaseRadiative`
-        An instance of a radiative model defined in `~naima.models`.
-    distance : `~astropy.units.Quantity`, optional
+    radiative_model : `naima.models.BaseRadiative`
+        An instance of a radiative model defined in `naima.models`.
+    distance : `astropy.units.Quantity`, optional
         Distance to the source. If set to 0, the intrinsic differential
         luminosity will be returned. Default is 1 kpc.
     seed : str or list of str, optional
         Seed photon field(s) to be considered for the `radiative_model` flux computation,
-        in case of a `~naima.models.InverseCompton` model. It can be a subset of the
+        in case of a `naima.models.InverseCompton` model. It can be a subset of the
         `seed_photon_fields` list defining the `radiative_model`. Default is the whole list
         of photon fields.
     nested_models : dict
@@ -2319,12 +2319,12 @@ class NaimaSpectralModel(SpectralModel):
 
         Parameters
         ----------
-        energy : `~astropy.units.Quantity`
+        energy : `astropy.units.Quantity`
             Energy to evaluate the model at.
 
         Returns
         -------
-        dnde : `~astropy.units.Quantity`
+        dnde : `astropy.units.Quantity`
             Differential flux at given energy.
         """
         self._update_naima_parameters(**kwargs)
@@ -2366,11 +2366,11 @@ class GaussianSpectralModel(SpectralModel):
 
     Parameters
     ----------
-    amplitude : `~astropy.units.Quantity`
+    amplitude : `astropy.units.Quantity`
         :math:`N_0`. Default is 1e-12 cm-2 s-1.
-    mean : `~astropy.units.Quantity`
+    mean : `astropy.units.Quantity`
         :math:`\bar{E}`. Default is 1 TeV.
-    sigma : `~astropy.units.Quantity`
+    sigma : `astropy.units.Quantity`
         :math:`\sigma`. Default is 2 TeV.
     """
 
@@ -2396,7 +2396,7 @@ class GaussianSpectralModel(SpectralModel):
 
         Parameters
         ----------
-        energy_min, energy_max : `~astropy.units.Quantity`
+        energy_min, energy_max : `astropy.units.Quantity`
             Lower and upper bound of integration range
         """  # noqa: E501
         # kwargs are passed to this function but not used
@@ -2425,7 +2425,7 @@ class GaussianSpectralModel(SpectralModel):
 
         Parameters
         ----------
-        energy_min, energy_max : `~astropy.units.Quantity`
+        energy_min, energy_max : `astropy.units.Quantity`
             Lower and upper bound of integration range.
         """  # noqa: E501
         u_min = (

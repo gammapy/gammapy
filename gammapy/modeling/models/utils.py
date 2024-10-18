@@ -16,7 +16,7 @@ __all__ = ["read_hermes_cube"]
 
 
 def _template_model_from_cta_sdc(filename, t_ref=None):
-    """To create a `~gammapy.modeling.models.LightCurveTemplateTemporalModel` from the energy-dependent temporal model files of the cta-sdc1.
+    """To create a `gammapy.modeling.models.LightCurveTemplateTemporalModel` from the energy-dependent temporal model files of the cta-sdc1.
 
     This format is subject to change.
     """

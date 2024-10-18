@@ -36,15 +36,15 @@ class SkyModel(CovarianceMixin, ModelBase):
     """Sky model component.
 
     This model represents a factorised sky model.
-    It has `~gammapy.modeling.Parameters` combining the spatial and spectral parameters.
+    It has `gammapy.modeling.Parameters` combining the spatial and spectral parameters.
 
     Parameters
     ----------
-    spectral_model : `~gammapy.modeling.models.SpectralModel`
+    spectral_model : `gammapy.modeling.models.SpectralModel`
         Spectral model.
-    spatial_model : `~gammapy.modeling.models.SpatialModel`
+    spatial_model : `gammapy.modeling.models.SpatialModel`
         Spatial model (must be normalised to integrate to 1).
-    temporal_model : `~gammapy.modeling.models.TemporalModel`
+    temporal_model : `gammapy.modeling.models.TemporalModel`
         Temporal model.
     name : str
         Model identifier.
@@ -155,7 +155,7 @@ class SkyModel(CovarianceMixin, ModelBase):
 
     @property
     def spatial_model(self):
-        """Spatial model as a `~gammapy.modeling.models.SpatialModel` object."""
+        """Spatial model as a `gammapy.modeling.models.SpatialModel` object."""
         return self._spatial_model
 
     @spatial_model.setter
@@ -167,7 +167,7 @@ class SkyModel(CovarianceMixin, ModelBase):
 
     @property
     def spectral_model(self):
-        """Spectral model as a `~gammapy.modeling.models.SpectralModel` object."""
+        """Spectral model as a `gammapy.modeling.models.SpectralModel` object."""
         return self._spectral_model
 
     @spectral_model.setter
@@ -178,7 +178,7 @@ class SkyModel(CovarianceMixin, ModelBase):
 
     @property
     def temporal_model(self):
-        """Temporal model as a `~gammapy.modeling.models.TemporalModel` object."""
+        """Temporal model as a `gammapy.modeling.models.TemporalModel` object."""
         return self._temporal_model
 
     @temporal_model.setter
@@ -190,7 +190,7 @@ class SkyModel(CovarianceMixin, ModelBase):
 
     @property
     def position(self):
-        """Position as a `~astropy.coordinates.SkyCoord`."""
+        """Position as a `astropy.coordinates.SkyCoord`."""
         return getattr(self.spatial_model, "position", None)
 
     @property
@@ -211,12 +211,12 @@ class SkyModel(CovarianceMixin, ModelBase):
 
     @property
     def evaluation_radius(self):
-        """Evaluation radius as an `~astropy.coordinates.Angle`."""
+        """Evaluation radius as an `astropy.coordinates.Angle`."""
         return self.spatial_model.evaluation_radius
 
     @property
     def evaluation_region(self):
-        """Evaluation region as an `~astropy.coordinates.Angle`."""
+        """Evaluation region as an `astropy.coordinates.Angle`."""
         return self.spatial_model.evaluation_region
 
     @property
@@ -250,16 +250,16 @@ class SkyModel(CovarianceMixin, ModelBase):
 
         Parameters
         ----------
-        mask : `~gammapy.maps.WcsNDMap` of boolean type
+        mask : `gammapy.maps.WcsNDMap` of boolean type
             Map containing a boolean mask.
-        margin : `~astropy.units.Quantity`
+        margin : `astropy.units.Quantity`
             Add a margin in degree to the source evaluation radius.
             Used to take into account PSF width.
 
 
         Returns
         -------
-        models : `~gammapy.modeling.models.DatasetModels`
+        models : `gammapy.modeling.models.DatasetModels`
             Selected models contributing inside the region where mask is True.
         """
         from gammapy.datasets.evaluator import CUTOUT_MARGIN
@@ -297,16 +297,16 @@ class SkyModel(CovarianceMixin, ModelBase):
 
         Parameters
         ----------
-        lon, lat : `~astropy.units.Quantity`
+        lon, lat : `astropy.units.Quantity`
             Spatial coordinates.
-        energy : `~astropy.units.Quantity`
+        energy : `astropy.units.Quantity`
             Energy coordinate.
-        time: `~astropy.time.Time`, optional
+        time: `astropy.time.Time`, optional
             Time coordinate. Default is None.
 
         Returns
         -------
-        value : `~astropy.units.Quantity`
+        value : `astropy.units.Quantity`
             Model value at the given point.
         """
         value = self.spectral_model(energy)  # pylint:disable=not-callable
@@ -326,7 +326,7 @@ class SkyModel(CovarianceMixin, ModelBase):
         return value
 
     def evaluate_geom(self, geom, gti=None):
-        """Evaluate model on `~gammapy.maps.Geom`."""
+        """Evaluate model on `gammapy.maps.Geom`."""
         coords = geom.get_coord(sparse=True)
 
         value = self.spectral_model(coords["energy_true"])
@@ -349,24 +349,24 @@ class SkyModel(CovarianceMixin, ModelBase):
         return value
 
     def integrate_geom(self, geom, gti=None, oversampling_factor=None):
-        """Integrate model on `~gammapy.maps.Geom`.
+        """Integrate model on `gammapy.maps.Geom`.
 
-        See `~gammapy.modeling.models.SpatialModel.integrate_geom` and
-        `~gammapy.modeling.models.SpectralModel.integral`.
+        See :func:`gammapy.modeling.models.SpatialModel.integrate_geom` and
+        :func:`gammapy.modeling.models.SpectralModel.integral`.
 
         Parameters
         ----------
-        geom : `~gammapy.maps.Geom` or `~gammapy.maps.RegionGeom`
+        geom : `gammapy.maps.Geom` or `gammapy.maps.RegionGeom`
             Map geometry.
-        gti : `~gammapy.data.GTI`, optional
-            GIT table. Default is None.
+        gti : `gammapy.data.GTI`, optional
+            GTI table. Default is None.
         oversampling_factor : int, optional
             The oversampling factor to use for spatial integration.
             Default is None: the factor is estimated from the model minimal bin size.
 
         Returns
         -------
-        flux : `~gammapy.data.Map`
+        flux : `gammapy.data.Map`
             Predicted flux map.
         """
         energy = geom.axes["energy_true"].edges
@@ -625,17 +625,17 @@ class FoVBackgroundModel(ModelBase):
     """Field of view background model.
 
     The background model holds the correction parameters applied to
-    the instrumental background attached to a `~gammapy.datasets.MapDataset` or
-    `~gammapy.datasets.SpectrumDataset`.
+    the instrumental background attached to a `gammapy.datasets.MapDataset` or
+    `gammapy.datasets.SpectrumDataset`.
 
     Parameters
     ----------
     dataset_name : str
         Dataset name.
-    spectral_model : `~gammapy.modeling.models.SpectralModel`, Optional
+    spectral_model : `gammapy.modeling.models.SpectralModel`, Optional
         Normalized spectral model.
-        Default is `~gammapy.modeling.models.PowerLawNormSpectralModel`
-    spatial_model : `~gammapy.modeling.models.SpatialModel`, Optional
+        Default is `gammapy.modeling.models.PowerLawNormSpectralModel`
+    spatial_model : `gammapy.modeling.models.SpatialModel`, Optional
         Unitless Spatial model (unit is dropped on evaluation if defined).
         Default is None.
     """
@@ -858,15 +858,15 @@ class TemplateNPredModel(ModelBase):
 
     Parameters
     ----------
-    map : `~gammapy.maps.Map`
+    map : `gammapy.maps.Map`
         Background model map.
-    spectral_model : `~gammapy.modeling.models.SpectralModel`
+    spectral_model : `gammapy.modeling.models.SpectralModel`
         Normalized spectral model.
-        Default is `~gammapy.modeling.models.PowerLawNormSpectralModel`.
+        Default is `gammapy.modeling.models.PowerLawNormSpectralModel`.
     copy_data : bool
         Create a deepcopy of the map data or directly use the original. Default is True.
         Use False to save memory in case of large maps.
-    spatial_model : `~gammapy.modeling.models.SpatialModel`
+    spatial_model : `gammapy.modeling.models.SpatialModel`
         Unitless Spatial model (unit is dropped on evaluation if defined).
         Default is None.
     """
@@ -951,14 +951,14 @@ class TemplateNPredModel(ModelBase):
 
     @property
     def energy_center(self):
-        """True energy axis bin centers as a `~astropy.units.Quantity`."""
+        """True energy axis bin centers as a `astropy.units.Quantity`."""
         energy_axis = self.map.geom.axes["energy"]
         energy = energy_axis.center
         return energy[:, np.newaxis, np.newaxis]
 
     @property
     def spectral_model(self):
-        """Spectral model as a `~gammapy.modeling.models.SpectralModel` object."""
+        """Spectral model as a `gammapy.modeling.models.SpectralModel` object."""
         return self._spectral_model
 
     @spectral_model.setter
@@ -994,7 +994,7 @@ class TemplateNPredModel(ModelBase):
 
         Returns
         -------
-        background_map : `~gammapy.maps.Map`
+        background_map : `gammapy.maps.Map`
             Background evaluated on the Map.
         """
         value = self.spectral_model(self.energy_center).value
@@ -1077,13 +1077,13 @@ class TemplateNPredModel(ModelBase):
 
         Parameters
         ----------
-        position : `~astropy.coordinates.SkyCoord`
+        position : `astropy.coordinates.SkyCoord`
             Center position of the cutout region.
-        width : tuple of `~astropy.coordinates.Angle`
+        width : tuple of `astropy.coordinates.Angle`
             Angular sizes of the region in (lon, lat) in that specific order.
             If only one value is passed, a square region is extracted.
-        mode : {'trim', 'partial', 'strict'}
-            Mode option for Cutout2D, for details see `~astropy.nddata.utils.Cutout2D`.
+        mode : {"trim", "partial", "strict"}
+            Mode option for Cutout2D, for details see `astropy.nddata.utils.Cutout2D`.
             Default is "trim".
         name : str, optional
             Name of the returned background model. Default is None.
@@ -1129,7 +1129,7 @@ class TemplateNPredModel(ModelBase):
 
         Parameters
         ----------
-        energy_min, energy_max : `~astropy.units.Quantity`
+        energy_min, energy_max : `astropy.units.Quantity`
             Energy bounds of the slice. Default is None.
         name : str
             Name of the sliced model. Default is None.
@@ -1183,12 +1183,12 @@ class TemplateNPredModel(ModelBase):
 
     @property
     def position(self):
-        """Position as a `~astropy.coordinates.SkyCoord`."""
+        """Position as a `astropy.coordinates.SkyCoord`."""
         return self.map.geom.center_skydir
 
     @property
     def evaluation_radius(self):
-        """Evaluation radius as a `~astropy.coordinates.Angle`."""
+        """Evaluation radius as a `astropy.coordinates.Angle`."""
         return np.max(self.map.geom.width) / 2.0
 
     def freeze(self, model_type="spectral"):
@@ -1212,11 +1212,11 @@ def create_fermi_isotropic_diffuse_model(filename, **kwargs):
     filename : str
         Filename.
     kwargs : dict
-        Keyword arguments forwarded to `~gammapy.modeling.models.TemplateSpectralModel`.
+        Keyword arguments forwarded to `gammapy.modeling.models.TemplateSpectralModel`.
 
     Returns
     -------
-    diffuse_model : `~gammapy.modeling.models.SkyModel`
+    diffuse_model : `gammapy.modeling.models.SkyModel`
         Fermi isotropic diffuse sky model.
     """
     vals = np.loadtxt(make_path(filename))

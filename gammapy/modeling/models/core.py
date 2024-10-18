@@ -57,7 +57,7 @@ def _get_model_class_from_dict(data):
 
 
 def _build_parameters_from_dict(data, default_parameters):
-    """Build a `~gammapy.modeling.Parameters` object from input dictionary and default parameter values."""
+    """Build a `gammapy.modeling.Parameters` object from input dictionary and default parameter values."""
     par_data = []
 
     input_names = [_["name"] for _ in data]
@@ -214,7 +214,7 @@ class ModelBase:
 
     @property
     def parameters(self):
-        """Parameters as a `~gammapy.modeling.Parameters` object."""
+        """Parameters as a `gammapy.modeling.Parameters` object."""
         return Parameters(
             [getattr(self, name) for name in self.default_parameters.names]
         )
@@ -379,9 +379,9 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
 
     Parameters
     ----------
-    models : `~gammapy.modelling.SkyModels`, list of `SkyModel` or `Models`
+    models : `gammapy.modelling.SkyModels`, list of `SkyModel` or `Models`
         Sky models.
-    covariance_data : `~numpy.ndarray`
+    covariance_data : `numpy.ndarray`
         Covariance data.
     """
 
@@ -415,7 +415,7 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
 
     @property
     def parameters(self):
-        """Parameters as a `~gammapy.modeling.Parameters` object."""
+        """Parameters as a `gammapy.modeling.Parameters` object."""
         return Parameters.from_stack([_.parameters for _ in self._models])
 
     @property
@@ -595,7 +595,7 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
             return {"components": models_data}
 
     def to_parameters_table(self):
-        """Convert model parameters to a `~astropy.table.Table`."""
+        """Convert model parameters to a `astropy.table.Table`."""
         table = self.parameters.to_table()
         # Warning: splitting of parameters will break is source name has a "." in its name.
         model_name = [name.split(".")[0] for name in self.parameters_unique_names]
@@ -603,7 +603,7 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
         return table
 
     def update_parameters_from_table(self, t):
-        """Update models from a `~astropy.table.Table`."""
+        """Update models from a `astropy.table.Table`."""
         parameters_dict = [dict(zip(t.colnames, row)) for row in t]
         for k, data in enumerate(parameters_dict):
             self.parameters[k].update_from_dict(data)
@@ -618,7 +618,7 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
         filename : str
             Filename.
         **kwargs : dict
-            Keyword arguments passed to `~astropy.table.Table.read`.
+            Keyword arguments passed to `astropy.table.Table.read`.
 
         """
         path = make_path(path)
@@ -638,7 +638,7 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
         filename : str
             Filename.
         **kwargs : dict
-            Keyword arguments passed to `~astropy.table.Table.write`.
+            Keyword arguments passed to `astropy.table.Table.write`.
 
         """
         names = self.parameters_unique_names
@@ -727,7 +727,7 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
 
         Parameters
         ----------
-        energy_min, energy_max : `~astropy.units.Quantity`
+        energy_min, energy_max : `astropy.units.Quantity`
             Energy bounds of the slice
         sum_over_energy_groups : bool
             Whether to sum over the energy groups or not. Default is False.
@@ -848,9 +848,9 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
 
         Parameters
         ----------
-        mask : `~gammapy.maps.WcsNDMap` of boolean type
+        mask : `gammapy.maps.WcsNDMap` of boolean type
             Map containing a boolean mask.
-        margin : `~astropy.unit.Quantity`, optional
+        margin : `astropy.unit.Quantity`, optional
             Add a margin in degree to the source evaluation radius.
             Used to take into account PSF width. Default is "0 deg".
         use_evaluation_region : bool, optional
@@ -882,10 +882,10 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
 
         Parameters
         ----------
-        geom : `~gammapy.maps.Geom`
+        geom : `gammapy.maps.Geom`
             Geometry to select models from.
         **kwargs : dict
-            Keyword arguments passed to `~gammapy.modeling.models.DatasetModels.select_mask`.
+            Keyword arguments passed to `gammapy.modeling.models.DatasetModels.select_mask`.
 
         Returns
         -------
@@ -900,11 +900,11 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
 
         Parameters
         ----------
-        regions : str, `~regions.Region` or list of `~regions.Region`
+        regions : str, `regions.Region` or list of `regions.Region`
             Region or list of regions (pixel or sky regions accepted).
             A region can be defined as a string ind DS9 format as well.
             See http://ds9.si.edu/doc/ref/region.html for details.
-        wcs : `~astropy.wcs.WCS`, optional
+        wcs : `astropy.wcs.WCS`, optional
             World coordinate system transformation. Default is None.
 
         Returns
@@ -1013,13 +1013,13 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
         return self.__class__(models)
 
     def to_template_sky_model(self, geom, spectral_model=None, name=None):
-        """Merge a list of models into a single `~gammapy.modeling.models.SkyModel`.
+        """Merge a list of models into a single `gammapy.modeling.models.SkyModel`.
 
         Parameters
         ----------
-        geom : `~gammapy.maps.Geom`
+        geom : `gammapy.maps.Geom`
             Map geometry of the result template model.
-        spectral_model : `~gammapy.modeling.models.SpectralModel`, optional
+        spectral_model : `gammapy.modeling.models.SpectralModel`, optional
             One of the NormSpectralModel. Default is None.
         name : str, optional
             Name of the new model. Default is None.
@@ -1047,21 +1047,21 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
         )
 
     def to_template_spectral_model(self, geom, mask=None):
-        """Merge a list of models into a single `~gammapy.modeling.models.TemplateSpectralModel`.
+        """Merge a list of models into a single `gammapy.modeling.models.TemplateSpectralModel`.
 
         For each model the spatial component is integrated over the given geometry where the mask is true
         and multiplied by the spectral component value in each energy bin.
 
         Parameters
         ----------
-        geom : `~gammapy.maps.Geom`
+        geom : `gammapy.maps.Geom`
             Map geometry on which the template model is computed.
-        mask :  `~gammapy.maps.Map` with bool dtype.
+        mask :  `gammapy.maps.Map` with bool dtype.
             Evaluate the model only where the mask is True.
 
         Returns
         -------
-        model : `~gammapy.modeling.models.TemplateSpectralModel`
+        model : `gammapy.modeling.models.TemplateSpectralModel`
             Template spectral model.
         """
 
@@ -1084,7 +1084,7 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
 
     @property
     def positions(self):
-        """Positions of the models as a `~astropy.coordinates.SkyCoord`."""
+        """Positions of the models as a `astropy.coordinates.SkyCoord`."""
         positions = []
 
         for model in self.select(tag="sky-model"):
@@ -1102,7 +1102,7 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
 
         Returns
         -------
-        regions: list of `~regions.SkyRegion`
+        regions: list of `regions.SkyRegion`
             Regions.
         """
         regions = []
@@ -1131,21 +1131,21 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
 
         Parameters
         ----------
-        ax : `~astropy.visualization.WCSAxes`, optional
+        ax : `astropy.visualization.WCSAxes`, optional
             Axes to plot on. If no axes are given, an all-sky WCS
             is chosen using a CAR projection. Default is None.
         kwargs_point : dict, optional
-            Keyword arguments passed to `~matplotlib.lines.Line2D` for plotting
+            Keyword arguments passed to `matplotlib.lines.Line2D` for plotting
             of point sources. Default is None.
-        path_effect : `~matplotlib.patheffects.PathEffect`, optional
+        path_effect : `matplotlib.patheffects.PathEffect`, optional
             Path effect applied to artists and lines. Default is None.
         **kwargs : dict
-            Keyword arguments passed to `~matplotlib.artists.Artist`.
+            Keyword arguments passed to `matplotlib.artists.Artist`.
 
 
         Returns
         -------
-        ax : `~astropy.visualization.WcsAxes`
+        ax : `astropy.visualization.WcsAxes`
             WCS axes.
         """
         regions = self.to_regions()
@@ -1160,16 +1160,16 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
 
         Parameters
         ----------
-        ax : `~astropy.visualization.WCSAxes`, optional
+        ax : `astropy.visualization.WCSAxes`, optional
             Axes to plot on. If no axes are given, an all-sky WCS
             is chosen using a CAR projection. Default is None.
         **kwargs : dict
-            Keyword arguments passed to `~matplotlib.pyplot.scatter`.
+            Keyword arguments passed to `matplotlib.pyplot.scatter`.
 
 
         Returns
         -------
-        ax : `~astropy.visualization.WcsAxes`
+        ax : `astropy.visualization.WcsAxes`
             WCS axes.
         """
         from astropy.visualization.wcsaxes import WCSAxes
@@ -1195,7 +1195,7 @@ class Models(DatasetModels, collections.abc.MutableSequence):
 
     Parameters
     ----------
-    models : `~gammapy.modeling.models.SkyModel`, list of `SkyModel` or `Models`
+    models : `gammapy.modeling.models.SkyModel`, list of `SkyModel` or `Models`
         Sky models.
     """
 
