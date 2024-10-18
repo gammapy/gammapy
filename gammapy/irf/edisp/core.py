@@ -26,13 +26,13 @@ class EnergyDispersion2D(IRF):
 
     Parameters
     ----------
-    energy_axis_true : `MapAxis`
+    energy_axis_true : `gammapy.maps.MapAxis`
         True energy axis.
-    migra_axis : `MapAxis`
+    migra_axis : `gammapy.maps.MapAxis`
         Energy migration axis.
-    offset_axis : `MapAxis`
+    offset_axis : `gammapy.maps.MapAxis`
         Field of view offset axis.
-    data : `~numpy.ndarray`
+    data : `numpy.ndarray`
         Energy dispersion probability density.
 
     Examples
@@ -44,7 +44,7 @@ class EnergyDispersion2D(IRF):
     >>> filename = '$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz'
     >>> edisp2d = EnergyDispersion2D.read(filename, hdu="EDISP")
 
-    Create energy dispersion matrix (`~gammapy.irf.EnergyDispersion`)
+    Create energy dispersion matrix (`gammapy.irf.EnergyDispersion`)
     for a given field of view offset and energy binning:
 
     >>> energy_axis = MapAxis.from_bounds(0.1, 20, nbin=60, unit="TeV", interp="log", name='energy')
@@ -89,15 +89,15 @@ class EnergyDispersion2D(IRF):
 
         Parameters
         ----------
-        energy_axis_true : `MapAxis`
+        energy_axis_true : `gammapy.maps.MapAxis`
             True energy axis.
-        migra_axis : `~astropy.units.Quantity`
+        migra_axis : `astropy.units.Quantity`
             Migra axis.
-        offset_axis : `~astropy.units.Quantity`
+        offset_axis : `astropy.units.Quantity`
             Bin edges of offset.
-        bias : float or `~numpy.ndarray`
+        bias : float or `numpy.ndarray`
             Center of Gaussian energy dispersion, bias.
-        sigma : float or `~numpy.ndarray`
+        sigma : float or `numpy.ndarray`
             RMS width of Gaussian energy dispersion, resolution.
         pdf_threshold : float, optional
             Zero suppression threshold. Default is 1e-6.
@@ -138,16 +138,16 @@ class EnergyDispersion2D(IRF):
 
         Parameters
         ----------
-        offset : `~astropy.coordinates.Angle`
+        offset : `astropy.coordinates.Angle`
             Offset.
-        energy_axis_true : `~gammapy.maps.MapAxis`, optional
+        energy_axis_true : `gammapy.maps.MapAxis`, optional
             True energy axis. Default is None.
-        energy_axis : `~gammapy.maps.MapAxis`, optional
+        energy_axis : `gammapy.maps.MapAxis`, optional
             Reconstructed energy axis. Default is None.
 
         Returns
         -------
-        edisp : `~gammapy.irf.EDispKernel`
+        edisp : `gammapy.irf.EDispKernel`
             Energy dispersion matrix.
         """
         from gammapy.makers.utils import make_edisp_kernel_map
@@ -186,18 +186,18 @@ class EnergyDispersion2D(IRF):
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes`, optional
             Matplotlib axes. Default is None.
-        offset : `~astropy.coordinates.Angle`, optional
+        offset : `astropy.coordinates.Angle`, optional
             Offset. Default is None.
-        energy_true : `~astropy.units.Quantity`, optional
+        energy_true : `astropy.units.Quantity`, optional
             True energy. Default is None.
         **kwargs : dict
-            Keyword arguments forwarded to `~matplotlib.pyplot.plot`.
+            Keyword arguments forwarded to `matplotlib.pyplot.plot`.
 
         Returns
         -------
-        ax : `~matplotlib.axes.Axes`
+        ax : `matplotlib.axes.Axes`
             Matplotlib axes.
         """
         ax = plt.gca() if ax is None else ax
@@ -241,22 +241,22 @@ class EnergyDispersion2D(IRF):
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes`, optional
             Matplotlib axes. Default is None.
-        offset : `~astropy.coordinates.Angle`, optional
+        offset : `astropy.coordinates.Angle`, optional
             Offset. Default is None.
         add_cbar : bool, optional
             Add a colorbar to the plot. Default is False.
         axes_loc : dict, optional
-            Keyword arguments passed to `~mpl_toolkits.axes_grid1.axes_divider.AxesDivider.append_axes`.
+            Keyword arguments passed to `mpl_toolkits.axes_grid1.axes_divider.AxesDivider.append_axes`.
         kwargs_colorbar : dict, optional
-            Keyword arguments passed to `~matplotlib.pyplot.colorbar`.
+            Keyword arguments passed to `matplotlib.pyplot.colorbar`.
         kwargs : dict
-            Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
+            Keyword arguments passed to `matplotlib.pyplot.pcolormesh`.
 
         Returns
         -------
-        ax : `~matplotlib.axes.Axes`
+        ax : `matplotlib.axes.Axes`
             Matplotlib axes.
         """
         kwargs.setdefault("cmap", "GnBu")

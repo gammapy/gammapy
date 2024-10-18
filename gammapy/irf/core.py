@@ -40,17 +40,17 @@ class IRF(metaclass=abc.ABCMeta):
 
     Parameters
     ----------
-    axes : list of `MapAxis` or `MapAxes`
+    axes : list of `gammapy.maps.MapAxis` or `gammapy.maps.MapAxes`
         Axes.
-    data : `~numpy.ndarray` or `~astropy.units.Quantity`, optional
+    data : `numpy.ndarray` or `astropy.units.Quantity`, optional
         Data. Default is 0.
-    unit : str or `~astropy.units.Unit`, optional
+    unit : str or `astropy.units.Unit`, optional
         Unit, ignored if data is a Quantity.
         Default is "".
     is_pointlike : bool, optional
         Whether the IRF is point-like. True for point-like IRFs, False for full-enclosure.
         Default is False.
-    fov_alignment : `FoVAlignment`, optional
+    fov_alignment : `gammapy.irf.FoVAlignment`, optional
         The orientation of the field of view coordinate system.
         Default is FoVAlignment.RADEC.
     meta : dict, optional
@@ -118,7 +118,7 @@ class IRF(metaclass=abc.ABCMeta):
 
     @property
     def fov_alignment(self):
-        """Alignment of the field of view coordinate axes, see `FoVAlignment`."""
+        """Alignment of the field of view coordinate axes, see `gammapy.irf.FoVAlignment`."""
         return self._fov_alignment
 
     @property
@@ -131,7 +131,7 @@ class IRF(metaclass=abc.ABCMeta):
 
         Parameters
         ----------
-        value : `~numpy.ndarray`
+        value : `numpy.ndarray`
             Data array.
         """
         required_shape = self.axes.shape
@@ -186,7 +186,7 @@ class IRF(metaclass=abc.ABCMeta):
 
     @property
     def unit(self):
-        """Map unit as a `~astropy.units.Unit` object."""
+        """Map unit as a `astropy.units.Unit` object."""
         return self._unit
 
     @lazyproperty
@@ -205,7 +205,7 @@ class IRF(metaclass=abc.ABCMeta):
 
     @property
     def quantity(self):
-        """Quantity as a `~astropy.units.Quantity` object."""
+        """Quantity as a `astropy.units.Quantity` object."""
         return u.Quantity(self.data, unit=self.unit, copy=COPY_IF_NEEDED)
 
     @quantity.setter
@@ -214,7 +214,7 @@ class IRF(metaclass=abc.ABCMeta):
 
         Parameters
         ----------
-        value : `~astropy.units.Quantity`
+        value : `astropy.units.Quantity`
            Quantity.
         """
         val = u.Quantity(val, copy=COPY_IF_NEEDED)
@@ -226,7 +226,7 @@ class IRF(metaclass=abc.ABCMeta):
 
         Parameters
         ----------
-        unit : `~astropy.unit.Unit` or str
+        unit : `astropy.unit.Unit` or str
             New unit.
 
         Returns
@@ -267,12 +267,12 @@ class IRF(metaclass=abc.ABCMeta):
         ----------
         **kwargs : dict
             Coordinates at which to evaluate the IRF.
-        method : str {'linear', 'nearest'}, optional
+        method : str {"linear", "nearest"}, optional
             Interpolation method.
 
         Returns
         -------
-        array : `~astropy.units.Quantity`
+        array : `astropy.units.Quantity`
             Interpolated values.
         """
         # TODO: change to coord dict?
@@ -321,7 +321,7 @@ class IRF(metaclass=abc.ABCMeta):
 
         Returns
         -------
-        array : `~astropy.units.Quantity`
+        array : `astropy.units.Quantity`
             Returns 2D array with axes offset.
         """
         axis = self.axes.index(axis_name)
@@ -339,7 +339,7 @@ class IRF(metaclass=abc.ABCMeta):
 
         Returns
         -------
-        irf : `~IRF`
+        irf : `IRF`
             Cumsum IRF.
 
         """
@@ -377,7 +377,7 @@ class IRF(metaclass=abc.ABCMeta):
 
         Returns
         -------
-        array : `~astropy.units.Quantity`
+        array : `astropy.units.Quantity`
             Returns 2D array with axes offset.
 
         """
@@ -403,11 +403,11 @@ class IRF(metaclass=abc.ABCMeta):
 
     @classmethod
     def from_hdulist(cls, hdulist, hdu=None, format="gadf-dl3"):
-        """Create from `~astropy.io.fits.HDUList`.
+        """Create from `astropy.io.fits.HDUList`.
 
         Parameters
         ----------
-        hdulist : `~astropy.io.HDUList`
+        hdulist : `astropy.io.HDUList`
             HDU list.
         hdu : str
             HDU name.
@@ -430,7 +430,7 @@ class IRF(metaclass=abc.ABCMeta):
 
         Parameters
         ----------
-        filename : str or `~pathlib.Path`
+        filename : str or `pathlib.Path`
             Filename.
         hdu : str
             HDU name.
@@ -447,11 +447,11 @@ class IRF(metaclass=abc.ABCMeta):
 
     @classmethod
     def from_table(cls, table, format="gadf-dl3"):
-        """Read from `~astropy.table.Table`.
+        """Read from `astropy.table.Table`.
 
         Parameters
         ----------
-        table : `~astropy.table.Table`
+        table : `astropy.table.Table`
             Table with IRF data.
         format : {"gadf-dl3"}, optional
             Format specification. Default is "gadf-dl3".
@@ -485,7 +485,7 @@ class IRF(metaclass=abc.ABCMeta):
 
         Returns
         -------
-        table : `~astropy.table.Table`
+        table : `astropy.table.Table`
             IRF data table.
         """
         table = self.axes.to_table(format=format)
@@ -511,7 +511,7 @@ class IRF(metaclass=abc.ABCMeta):
         return table
 
     def to_table_hdu(self, format="gadf-dl3"):
-        """Convert to `~astropy.io.fits.BinTableHDU`.
+        """Convert to `astropy.io.fits.BinTableHDU`.
 
         Parameters
         ----------
@@ -520,7 +520,7 @@ class IRF(metaclass=abc.ABCMeta):
 
         Returns
         -------
-        hdu : `~astropy.io.fits.BinTableHDU`
+        hdu : `astropy.io.fits.BinTableHDU`
             IRF data table HDU.
         """
         name = IRF_DL3_HDU_SPECIFICATION[self.tag]["extname"]
@@ -541,7 +541,7 @@ class IRF(metaclass=abc.ABCMeta):
     def write(self, filename, *args, **kwargs):
         """Write IRF to fits.
 
-        Calls `~astropy.io.fits.HDUList.writeto`, forwarding all arguments.
+        Calls `astropy.io.fits.HDUList.writeto`, forwarding all arguments.
         """
         self.to_hdulist().writeto(str(make_path(filename)), *args, **kwargs)
 
@@ -555,7 +555,7 @@ class IRF(metaclass=abc.ABCMeta):
         axis_name : str
             Axis to downsample. By default, spatial axes are padded.
         **kwargs : dict
-            Keyword argument forwarded to `~numpy.pad`.
+            Keyword argument forwarded to `numpy.pad`.
 
         Returns
         -------
@@ -610,7 +610,7 @@ class IRF(metaclass=abc.ABCMeta):
 
         Parameters
         ----------
-        other : `~gammapy.irfs.IRF`
+        other : `IRF`
             The IRF to compare against.
         rtol_axes : float, optional
             Relative tolerance for the axis comparison.
@@ -681,7 +681,7 @@ class IRFMap:
 
         Parameters
         ----------
-        region : `~regions.SkyRegion` or `~astropy.coordinates.SkyCoord`
+        region : `regions.SkyRegion` or `astropy.coordinates.SkyCoord`
             Region or position where to get the map.
 
         Returns
@@ -730,11 +730,11 @@ class IRFMap:
         exposure_hdu_bands=None,
         format="gadf",
     ):
-        """Create from `~astropy.io.fits.HDUList`.
+        """Create from `astropy.io.fits.HDUList`.
 
         Parameters
         ----------
-        hdulist : `~astropy.fits.HDUList`
+        hdulist : `astropy.fits.HDUList`
             HDU list.
         hdu : str, optional
             Name or index of the HDU with the IRF map.
@@ -815,14 +815,14 @@ class IRFMap:
 
         Parameters
         ----------
-        filename : str or `~pathlib.Path`
+        filename : str or `pathlib.Path`
             File name.
         format : {"gadf", "gtpsf"}, optional
             File format. Default is "gadf".
         hdu : str or int
             HDU location. Default is None.
         checksum : bool
-            If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
+            If True, checks both ``DATASUM`` and ``CHECKSUM`` cards in the file headers. Default is False.
 
         Returns
         -------
@@ -836,7 +836,7 @@ class IRFMap:
             return cls.from_hdulist(hdulist, format=format, hdu=hdu)
 
     def to_hdulist(self, format="gadf"):
-        """Convert to `~astropy.io.fits.HDUList`.
+        """Convert to `astropy.io.fits.HDUList`.
 
         Parameters
         ----------
@@ -845,7 +845,7 @@ class IRFMap:
 
         Returns
         -------
-        hdu_list : `~astropy.io.fits.HDUList`
+        hdu_list : `astropy.io.fits.HDUList`
             HDU list.
         """
         if format == "gadf":
@@ -882,14 +882,14 @@ class IRFMap:
 
         Parameters
         ----------
-        filename : str or `~pathlib.Path`
+        filename : str or `pathlib.Path`
             Filename to write to.
         overwrite : bool, optional
             Overwrite existing file. Default is False.
         format : {"gadf", "gtpsf"}, optional
             File format. Default is "gadf".
         checksum : bool, optional
-            When True adds both DATASUM and CHECKSUM cards to the headers written to the file.
+            When True, adds both ``DATASUM`` and ``CHECKSUM`` cards to the headers written to the file.
             Default is False.
         """
         hdulist = self.to_hdulist(format=format)
@@ -900,9 +900,9 @@ class IRFMap:
 
         Parameters
         ----------
-        other : `~gammapy.irf.IRFMap`
+        other : `IRFMap`
             IRF map to be stacked with this one.
-        weights : `~gammapy.maps.Map`, optional
+        weights : `gammapy.maps.Map`, optional
             Map with stacking weights. Default is None.
         nan_to_num: bool, optional
             Non-finite values are replaced by zero if True.
@@ -950,16 +950,16 @@ class IRFMap:
 
         Parameters
         ----------
-        position : `~astropy.coordinates.SkyCoord`
+        position : `astropy.coordinates.SkyCoord`
             Center position of the cutout region.
-        width : tuple of `~astropy.coordinates.Angle`
+        width : tuple of `astropy.coordinates.Angle`
             Angular sizes of the region in (lon, lat) in that specific order.
             If only one value is passed, a square region is extracted.
-        mode : {'trim', 'partial', 'strict'}, optional
-            Mode option for Cutout2D, for details see `~astropy.nddata.utils.Cutout2D`.
+        mode : {"trim", "partial", "strict"}, optional
+            Mode option for Cutout2D, for details see `astropy.nddata.utils.Cutout2D`.
             Default is "trim".
         min_npix : bool, optional
-            Force width to a minimmum number of pixels.
+            Force width to a minimum number of pixels.
             Default is 3. The default is 3 pixels so interpolation is done correctly
             if the binning of the IRF is larger than the width of the analysis region.
 
@@ -987,7 +987,7 @@ class IRFMap:
             Downsampling factor.
         axis_name : str
             Axis to downsample. By default, spatial axes are downsampled.
-        weights : `~gammapy.maps.Map`, optional
+        weights : `gammapy.maps.Map`, optional
             Map with weights downsampling. Default is None.
 
         Returns

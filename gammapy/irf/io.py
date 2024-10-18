@@ -178,13 +178,13 @@ def load_irf_dict_from_file(filename):
 
     Parameters
     ----------
-    filename : str or `~pathlib.Path`
+    filename : str or `pathlib.Path`
         Path to the file containing the IRF components, if EVENTS and GTI HDUs
         are included in the file, they are ignored.
 
     Returns
     -------
-    irf_dict : dict of `~gammapy.irf.IRF`
+    irf_dict : dict of `gammapy.irf.IRF`
         Dictionary with instances of the Gammapy objects corresponding
         to the IRF components.
     """

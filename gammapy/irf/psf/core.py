@@ -22,14 +22,14 @@ class PSF(IRF):
 
         Parameters
         ----------
-        rad : `~astropy.units.Quantity`
+        rad : `astropy.units.Quantity`
             Rad value.
         **kwargs : dict
             Other coordinates.
 
         Returns
         -------
-        containment : `~numpy.ndarray`
+        containment : `numpy.ndarray`
             Containment.
         """
         containment = self.integral(axis_name="rad", rad=rad, **kwargs)
@@ -40,7 +40,7 @@ class PSF(IRF):
 
         Parameters
         ----------
-        fraction : float or `~numpy.ndarray`
+        fraction : float or `numpy.ndarray`
             Containment fraction.
         factor : int, optional
             Up-sampling factor of the rad axis, determines the precision of the
@@ -51,7 +51,7 @@ class PSF(IRF):
 
         Returns
         -------
-        radius : `~astropy.coordinates.Angle`
+        radius : `astropy.coordinates.Angle`
             Containment radius.
         """
         # TODO: this uses a lot of numpy broadcasting tricks, maybe simplify...
@@ -91,10 +91,10 @@ class PSF(IRF):
         fraction : list, optional
             Containment fraction to compute containment radius for, between 0 and 1.
             Default is (0.68, 0.95).
-        energy_true : `~astropy.units.u.Quantity`, optional
+        energy_true : `astropy.units.u.Quantity`, optional
             Energies to compute containment radius for.
             Default is ([1.0], [10.0]) TeV.
-        offset : `~astropy.units.u.Quantity`, optional
+        offset : `astropy.units.u.Quantity`, optional
             Offset to compute containment radius for.
             Default is 0 deg.
 
@@ -132,20 +132,20 @@ class PSF(IRF):
 
         Parameters
         ----------
-        ax : `~matplotlib.pyplot.Axes`, optional
+        ax : `matplotlib.pyplot.Axes`, optional
             Matplotlib axes. Default is None.
-        fraction : list of float or `~numpy.ndarray`, optional
+        fraction : list of float or `numpy.ndarray`, optional
             Containment fraction between 0 and 1.
             Default is (0.68, 0.95).
-        offset : `~astropy.units.Quantity`, optional
+        offset : `astropy.units.Quantity`, optional
             Offset array.
             Default is (0, 1) deg.
         **kwargs : dict
-            Keyword arguments passed to `~matplotlib.pyplot.plot`.
+            Keyword arguments passed to `matplotlib.pyplot.plot`.
 
         Returns
         -------
-        ax : `~matplotlib.pyplot.Axes`
+        ax : `matplotlib.pyplot.Axes`
              Matplotlib axes.
 
         """
@@ -184,7 +184,7 @@ class PSF(IRF):
 
         Parameters
         ----------
-        ax : `~matplotlib.pyplot.Axes`, optional
+        ax : `matplotlib.pyplot.Axes`, optional
             Matplotlib axes. Default is None.
         fraction : float, optional
             Containment fraction between 0 and 1.
@@ -192,15 +192,15 @@ class PSF(IRF):
         add_cbar : bool, optional
             Add a colorbar. Default is True.
         axes_loc : dict, optional
-            Keyword arguments passed to `~mpl_toolkits.axes_grid1.axes_divider.AxesDivider.append_axes`.
+            Keyword arguments passed to `mpl_toolkits.axes_grid1.axes_divider.AxesDivider.append_axes`.
         kwargs_colorbar : dict, optional
-            Keyword arguments passed to `~matplotlib.pyplot.colorbar`.
+            Keyword arguments passed to `matplotlib.pyplot.colorbar`.
         **kwargs : dict
-            Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
+            Keyword arguments passed to `matplotlib.pyplot.pcolormesh`.
 
         Returns
         -------
-        ax : `~matplotlib.pyplot.Axes`
+        ax : `matplotlib.pyplot.Axes`
              Matplotlib axes.
         """
         ax = plt.gca() if ax is None else ax
@@ -245,12 +245,12 @@ class PSF(IRF):
 
         Parameters
         ----------
-        ax : `~matplotlib.pyplot.Axes`, optional
+        ax : `matplotlib.pyplot.Axes`, optional
             Matplotlib axes. Default is None.
-        offset : `~astropy.coordinates.Angle`, optional
+        offset : `astropy.coordinates.Angle`, optional
             Offset in the field of view.
             Default is 0 deg.
-        energy_true : `~astropy.units.Quantity`, optional
+        energy_true : `astropy.units.Quantity`, optional
             True energy at which to plot the profile.
             Default is [0.1, 1, 10] TeV.
         kwargs : dict

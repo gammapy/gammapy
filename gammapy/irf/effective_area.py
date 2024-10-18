@@ -20,11 +20,11 @@ class EffectiveAreaTable2D(IRF):
 
     Parameters
     ----------
-    energy_axis_true : `MapAxis`
+    energy_axis_true : `gammapy.maps.MapAxis`
         True energy axis.
-    offset_axis : `MapAxis`
+    offset_axis : `gammapy.maps.MapAxis`
         Field of view offset axis.
-    data : `~astropy.units.Quantity`
+    data : `astropy.units.Quantity`
         Effective area.
     meta : dict
         Metadata dictionary.
@@ -78,16 +78,16 @@ class EffectiveAreaTable2D(IRF):
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes`, optional
             Matplotlib axes. Default is None.
-        offset : list of `~astropy.coordinates.Angle`, optional
+        offset : list of `astropy.coordinates.Angle`, optional
             Offset. Default is None.
         kwargs : dict
             Forwarded to plt.plot().
 
         Returns
         -------
-        ax : `~matplotlib.axes.Axes`
+        ax : `matplotlib.axes.Axes`
             Matplotlib axes.
         """
         ax = plt.gca() if ax is None else ax
@@ -116,16 +116,16 @@ class EffectiveAreaTable2D(IRF):
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes`, optional
             Matplotlib axes. Default is None.
-        energy : `~astropy.units.Quantity`
+        energy : `astropy.units.Quantity`
             Energy.
         **kwargs : dict
-            Keyword argument passed to `~matplotlib.pyplot.plot`.
+            Keyword argument passed to `matplotlib.pyplot.plot`.
 
         Returns
         -------
-        ax : `~matplotlib.axes.Axes`
+        ax : `matplotlib.axes.Axes`
             Matplotlib axes.
         """
         ax = plt.gca() if ax is None else ax
@@ -159,20 +159,20 @@ class EffectiveAreaTable2D(IRF):
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes`, optional
             Matplotlib axes. Default is None.
         add_cbar : bool, optional
             Add a colorbar to the plot. Default is True.
         axes_loc : dict, optional
-            Keyword arguments passed to `~mpl_toolkits.axes_grid1.axes_divider.AxesDivider.append_axes`.
+            Keyword arguments passed to `mpl_toolkits.axes_grid1.axes_divider.AxesDivider.append_axes`.
         kwargs_colorbar : dict, optional
-            Keyword arguments passed to `~matplotlib.pyplot.colorbar`.
+            Keyword arguments passed to `matplotlib.pyplot.colorbar`.
         kwargs : dict
-            Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
+            Keyword arguments passed to `matplotlib.pyplot.pcolormesh`.
 
         Returns
         -------
-        ax : `~matplotlib.axes.Axes`
+        ax : `matplotlib.axes.Axes`
             Matplotlib axes.
         """
         ax = plt.gca() if ax is None else ax

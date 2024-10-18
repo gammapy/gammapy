@@ -10,15 +10,15 @@ __all__ = ["PSFKernel"]
 
 
 class PSFKernel:
-    """PSF kernel for `~gammapy.maps.Map`.
+    """PSF kernel for `gammapy.maps.Map`.
 
     This is a container class to store a PSF kernel
-    that can be used to convolve `~gammapy.maps.WcsNDMap` objects.
-    It is usually computed from an `~gammapy.irf.PSFMap`.
+    that can be used to convolve `gammapy.maps.WcsNDMap` objects.
+    It is usually computed from an `gammapy.irf.PSFMap`.
 
     Parameters
     ----------
-    psf_kernel_map : `~gammapy.maps.Map`
+    psf_kernel_map : `gammapy.maps.Map`
         PSF kernel stored in a Map.
 
     Examples
@@ -84,7 +84,7 @@ class PSFKernel:
 
     @property
     def psf_kernel_map(self):
-        """The map object holding the kernel as a `~gammapy.maps.Map`."""
+        """The map object holding the kernel as a `gammapy.maps.Map`."""
         return self._psf_kernel_map
 
     @classmethod
@@ -99,18 +99,18 @@ class PSFKernel:
 
         Parameters
         ----------
-        geom : `~gammapy.maps.WcsGeom`
+        geom : `gammapy.maps.WcsGeom`
             Map geometry.
-        model : `~gammapy.modeling.models.SpatiaModel`
+        model : `gammapy.modeling.models.SpatialModel`
             Gaussian width.
-        max_radius : `~astropy.coordinates.Angle`, optional
+        max_radius : `astropy.coordinates.Angle`, optional
             Desired kernel map size. Default is None.
         factor : int, optional
             Oversample factor to compute the PSF. Default is 4.
 
         Returns
         -------
-        kernel : `~gammapy.irf.PSFKernel`
+        kernel : `PSFKernel`
             The kernel Map with reduced geometry according to the max_radius.
         """
         if max_radius is None:
@@ -135,18 +135,18 @@ class PSFKernel:
 
         Parameters
         ----------
-        geom : `~gammapy.maps.WcsGeom`
+        geom : `gammapy.maps.WcsGeom`
             Map geometry.
-        sigma : `~astropy.coordinates.Angle`
+        sigma : `astropy.coordinates.Angle`
             Gaussian width.
-        max_radius : `~astropy.coordinates.Angle`, optional
+        max_radius : `astropy.coordinates.Angle`, optional
             Desired kernel map size. Default is None.
         factor : int, optional
             Oversample factor to compute the PSF. Default is 4.
 
         Returns
         -------
-        kernel : `~gammapy.irf.PSFKernel`
+        kernel : `PSFKernel`
             The kernel Map with reduced geometry according to the max_radius.
         """
         from gammapy.modeling.models import GaussianSpatialModel
@@ -166,10 +166,10 @@ class PSFKernel:
 
         Parameters
         ----------
-        spectrum : `~gammapy.modeling.models.SpectralModel`, optional
+        spectrum : `gammapy.modeling.models.SpectralModel`, optional
             Spectral model to compute the weights.
             Default is power-law with spectral index of 2.
-        exposure : `~astropy.units.Quantity` or `~numpy.ndarray`, optional
+        exposure : `astropy.units.Quantity` or `numpy.ndarray`, optional
             1D array containing exposure in each true energy bin.
             It must have the same size as the PSFKernel energy axis.
             Default is uniform exposure over energy.
@@ -179,7 +179,7 @@ class PSFKernel:
 
         Returns
         -------
-        weighted_kernel : `~gammapy.irf.PSFKernel`
+        weighted_kernel : `PSFKernel`
             The weighted kernel summed over energy.
         """
         map = self.psf_kernel_map
@@ -221,19 +221,19 @@ class PSFKernel:
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes`, optional
             Matplotlib axes. Default is None.
-        energy : `~astropy.units.Quantity`, optional
+        energy : `astropy.units.Quantity`, optional
             If None, the PSF kernel is summed over the energy axis. Otherwise, the kernel
             corresponding to the energy bin including the given energy is shown.
         add_cbar : bool, optional
             Add a colorbar. Default is False.
         kwargs: dict
-            Keyword arguments passed to `~matplotlib.axes.Axes.imshow`.
+            Keyword arguments passed to `matplotlib.axes.Axes.imshow`.
 
         Returns
         -------
-        ax : `~matplotlib.axes.Axes`
+        ax : `matplotlib.axes.Axes`
             Matplotlib axes.
         """
         ax = plt.gca() if ax is None else ax
