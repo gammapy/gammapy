@@ -8,7 +8,7 @@ Datasets (DL4)
 The `gammapy.datasets` sub-package contains classes to handle reduced
 gamma-ray data for modeling and fitting.
 
-The `Dataset` class bundles reduced data, IRFs and model to perform
+The `~gammapy.datasets.Dataset` class bundles reduced data, IRFs and model to perform
 likelihood fitting and joint-likelihood fitting.
 All datasets contain a `~gammapy.modeling.models.Models` container with one or more
 `~gammapy.modeling.models.SkyModel` objects that represent additive emission
@@ -96,7 +96,7 @@ a joint fit across multiple datasets.
 Predicted counts
 ----------------
 
-The total number of predicted counts from a `MapDataset` are computed per bin like:
+The total number of predicted counts from a `~gammapy.datasets.MapDataset` are computed per bin like:
 
 .. math::
 
@@ -174,7 +174,7 @@ Here, :math:`k` denotes a bin in reconstructed energy,
 
 For the model evaluation, an important factor that needs to be accounted for is
 that the energy threshold changes between observations.
-With the above implementation using a `~gammapy.irf.EDispersionMap`,
+With the above implementation using a `~gammapy.irf.EDispMap`,
 the `npred` is conserved,
 ie, the predicted number of counts on the stacked
 dataset is the sum expected by stacking the `npred` of the individual runs,
@@ -220,11 +220,13 @@ stack runs taken under similar conditions and then do a joint fit on the stacked
 Serialisation of datasets
 -------------------------
 
-The various `Map` objects contained in `~gammapy.datasets.MapDataset` and `~gammapy.datasets.MapDatasetOnOff` are serialised according to `GADF Sky Maps <https://gamma-astro-data-formats.readthedocs.io/en/v0.2/skymaps/index.html>`__.
+The various `~gammapy.maps.Map` objects contained in `~gammapy.datasets.MapDataset` and
+`~gammapy.datasets.MapDatasetOnOff` are serialised according to
+`GADF Sky Maps <https://gamma-astro-data-formats.readthedocs.io/en/v0.2/skymaps/index.html>`__.
 A hdulist is created with the different attributes, and each of these are written with the data
-contained in a `BinTableHDU` with a `WcsGeom` and a `BANDS HDU` specifying the non-spatial dimensions.
-Optionally, a `meta_table` is also written as an `astropy.table.Table` containing various information
-about the observations which created the dataset. While the `meta_table` can contain useful information for
+contained in a ``BinTableHDU`` with a `~gammapy.maps.WcsGeom` and a ``BANDS HDU`` specifying the non-spatial dimensions.
+Optionally, a ``meta_table`` is also written as an `astropy.table.Table` containing various information
+about the observations which created the dataset. While the ``meta_table`` can contain useful information for
 later stage analysis, it is not used anywhere internally within gammapy.
 
 `~gammapy.datasets.SpectrumDataset` follows a similar convention as for `~gammapy.datasets.MapDataset`, but uses a
@@ -233,7 +235,7 @@ later stage analysis, it is not used anywhere internally within gammapy.
 either according to the above specification, or (by default), according to the
 `OGIP standards <https://gamma-astro-data-formats.readthedocs.io/en/v0.1/ogip/index.html>`__.
 
-`~gammapy.datasets.FluxPointsDatasets` are serialised as `gammapy.estimators.FluxPoints` objects, which contains
+`~gammapy.datasets.FluxPointsDataset` are serialised as `gammapy.estimators.FluxPoints` objects, which contains
 a set of `gammapy.maps.Map` objects storing the estimated flux as function of energy, and some optional quantities like
 typically errors, upper limits, etc. It also contains a reference model,
 serialised as a `~gammapy.modeling.models.TemplateSpectralModel`.
