@@ -225,6 +225,25 @@ Proposal
 .. code:: python
 
   class SamplerLikelihood:
+    """Wrapper of the likelihood function used by the sampler.
+
+    Parameters
+    ----------
+    parameters : `~gammapy.modeling.Parameters`
+        Parameters with starting values.
+    function : callable
+        Likelihood function.
+    """
+
+    def __init__(self, function, parameters):
+        self.function = function
+        self.parameters = parameters
+
+    def fcn(self, value):
+        self.parameters.value = value
+        total_stat = -0.5*self.function()
+
+        return total_stat
 
 
 Serialisation of the samples
