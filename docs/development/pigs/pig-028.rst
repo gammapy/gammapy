@@ -172,7 +172,50 @@ Proposal
 
 .. code:: python
 
-  class BayesianFit:
+  class NestedSampler:
+    def __init__(self, live_points=100, frac_remain=0.1):
+        self._sampler = None
+        self.min_num_live_points = live_points
+        self.frac_remain = frac_remain
+
+    @staticmethod
+    def _parse_datasets(datasets):
+        from gammapy.datasets import Dataset, Datasets
+
+        if isinstance(datasets, (list, Dataset)):
+            datasets = Datasets(datasets)
+        return datasets, datasets.parameters.free_parameters
+
+    @staticmethod
+    def _update_models(models, results):
+        posterior = results["posterior"]
+        samples = results["samples"]
+        for i, par in enumerate(models.parameters.free_parameters):
+            par.value = posterior["mean"][i]
+            par.error = posterior["stdev"][i]
+            par._samples = samples[:,i] * par.unit
+
+        # Compute a covariance from the samples?
+        covariance = Covariance(models.parameters.free_parameters, np.cov(samples.T))
+        models.covariance=covariance
+        return models
+    
+    def run(self, datasets):
+        datasets, parameters = self._parse_datasets(datasets=datasets)
+        parameters = parameters.free_parameters
+
+        # create log likelihood function
+        # need to remove prior penalty
+        like = SamplerLikelihood(function=datasets.stat_sum_no_prior, parameters=parameters)
+        
+        # create ultranest object
+        self._sampler = ultranest.ReactiveNestedSampler(parameters.names, like.fcn, transform=parameters.prior_inverse_cdf)
+        
+        results = self._sampler.run(min_num_live_points=self.min_num_live_points, frac_remain=self.frac_remain)
+
+        updated_models = self._update_models(datasets.models.copy(), results)
+        
+        return BayesianInference(models=updated_models, results=results)
 
 
             
