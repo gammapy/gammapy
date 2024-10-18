@@ -34,9 +34,9 @@ def compute_fvar(flux, flux_err, axis=0):
 
     Parameters
     ----------
-    flux : `~astropy.units.Quantity`
+    flux : `astropy.units.Quantity`
         The measured fluxes.
-    flux_err : `~astropy.units.Quantity`
+    flux_err : `astropy.units.Quantity`
         The error on measured fluxes.
     axis : int, optional
         Axis along which the excess variance is computed.
@@ -44,7 +44,7 @@ def compute_fvar(flux, flux_err, axis=0):
 
     Returns
     -------
-    fvar, fvar_err : `~numpy.ndarray`
+    fvar, fvar_err : `numpy.ndarray`
         Fractional excess variance.
 
     References
@@ -83,9 +83,9 @@ def compute_fpp(flux, flux_err, axis=0):
 
     Parameters
     ----------
-    flux : `~astropy.units.Quantity`
+    flux : `astropy.units.Quantity`
         The measured fluxes.
-    flux_err : `~astropy.units.Quantity`
+    flux_err : `astropy.units.Quantity`
         The error on measured fluxes.
     axis : int, optional
         Axis along which the excess variance is computed.
@@ -93,7 +93,7 @@ def compute_fpp(flux, flux_err, axis=0):
 
     Returns
     -------
-    fpp, fpp_err : `~numpy.ndarray`
+    fpp, fpp_err : `numpy.ndarray`
         Point-to-point excess variance.
 
     References
@@ -129,12 +129,12 @@ def compute_chisq(flux):
 
     Parameters
     ----------
-    flux : `~astropy.units.Quantity`
+    flux : `astropy.units.Quantity`
         The measured fluxes.
 
     Returns
     -------
-    ChiSq, P-value : tuple of float or `~numpy.ndarray`
+    ChiSq, P-value : tuple of float or `numpy.ndarray`
         Tuple of Chi-square and P-value.
     """
     yexp = np.mean(flux)
@@ -160,11 +160,11 @@ def compute_flux_doubling(flux, flux_err, coords, axis=0):
 
     Parameters
     ----------
-    flux : `~astropy.units.Quantity`
+    flux : `astropy.units.Quantity`
         The measured fluxes.
-    flux_err : `~astropy.units.Quantity`
+    flux_err : `astropy.units.Quantity`
         The error on measured fluxes.
-    coords : `~astropy.units.Quantity`
+    coords : `astropy.units.Quantity`
         The coordinates at which the fluxes are measured.
     axis : int, optional
         Axis along which the value is computed.
@@ -237,18 +237,18 @@ def structure_function(flux, flux_err, time, tdelta_precision=5):
 
     Parameters
     ----------
-    flux : `~astropy.units.Quantity`
+    flux : `astropy.units.Quantity`
         The measured fluxes.
-    flux_err : `~astropy.units.Quantity`
+    flux_err : `astropy.units.Quantity`
         The error on measured fluxes.
-    time : `~astropy.units.Quantity`
+    time : `astropy.units.Quantity`
         The time coordinates at which the fluxes are measured.
     tdelta_precision : int, optional
         The number of decimal places to check to separate the time deltas. Default is 5.
 
     Returns
     -------
-    sf, distances : `~numpy.ndarray`, `~astropy.units.Quantity`
+    sf, distances : `numpy.ndarray`, `astropy.units.Quantity`
         Discrete structure function and array of time distances.
 
     References
@@ -288,13 +288,13 @@ def discrete_correlation(flux1, flux_err1, flux2, flux_err2, time1, time2, tau, 
 
     Parameters
     ----------
-    flux1, flux_err1: `~astropy.units.Quantity`
+    flux1, flux_err1: `astropy.units.Quantity`
         The first set of measured fluxes and associated error.
-    flux2, flux_err2 : `~astropy.units.Quantity`
+    flux2, flux_err2 : `astropy.units.Quantity`
         The second set of measured fluxes and associated error.
-    time1, time2 : `~astropy.units.Quantity`
+    time1, time2 : `astropy.units.Quantity`
         The time coordinates at which the fluxes are measured.
-    tau : `~astropy.units.Quantity`
+    tau : `astropy.units.Quantity`
         Size of the bins to compute the discrete correlation.
     axis : int, optional
         Axis along which the correlation is computed.
@@ -302,11 +302,11 @@ def discrete_correlation(flux1, flux_err1, flux2, flux_err2, time1, time2, tau, 
 
     Returns
     -------
-    bincenters: `~astropy.units.Quantity`
+    bincenters: `astropy.units.Quantity`
         Array of discrete time bins.
-    discrete_correlation: `~numpy.ndarray`
+    discrete_correlation: `numpy.ndarray`
         Array of discrete correlation function values for each bin.
-    discrete_correlation_err : `~numpy.ndarray`
+    discrete_correlation_err : `numpy.ndarray`
         Error associated to the discrete correlation values.
 
     References
@@ -389,18 +389,18 @@ def TimmerKonig_lightcurve_simulator(
         a function mapping the input frequencies to the periodogram.
     npoints : int
         Number of points in the output time series.
-    spacing : `~astropy.units.Quantity`
+    spacing : `astropy.units.Quantity`
         Sample spacing, inverse of the sampling rate. The units are inherited by the resulting time axis.
     nchunks : int, optional
         Factor by which to multiply the length of the time series to avoid red noise leakage. Default is 10.
-    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
+    random_state : {int, "random-seed", "global-rng"}, optional
         Defines random number generator initialisation.
-        Passed to `~gammapy.utils.random.get_random_state`. Default is "random-seed".
+        Passed to `gammapy.utils.random.get_random_state`. Default is "random-seed".
     power_spectrum_params : dict, optional
         Dictionary of parameters to be provided to the power spectrum function.
-    mean : float, `~astropy.units.Quantity`, optional
+    mean : float, `astropy.units.Quantity`, optional
         Desired mean of the final series. Default is 0.
-    std : float, `~astropy.units.Quantity`, optional
+    std : float, `astropy.units.Quantity`, optional
         Desired standard deviation of the final series. Default is 1.
     poisson : bool, optional
         Whether to apply poissonian noise to the final time series. Default is False.
@@ -408,9 +408,9 @@ def TimmerKonig_lightcurve_simulator(
 
     Returns
     -------
-    time_series : `~numpy.ndarray`
+    time_series : `numpy.ndarray`
         Simulated time series.
-    time_axis : `~astropy.units.Quantity`
+    time_axis : `astropy.units.Quantity`
         Time axis of the series in the same units as 'spacing'. It will be defined with length 'npoints', from 0 to
         'npoints'*'spacing'.
 
