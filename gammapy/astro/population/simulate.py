@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Simulate source catalogs."""
+
 import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.table import Column, Table
@@ -51,16 +52,16 @@ def make_catalog_random_positions_cube(
         Number of sources. Default is 100.
     dimension : {1, 2, 3}
         Number of dimensions. Default is 3.
-    distance_max : `~astropy.units.Quantity`, optional
+    distance_max : `astropy.units.Quantity`, optional
         Maximum distance. Default is "1 pc".
-    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+    random_state : {int, 'random-seed', 'global-rng'}
         Defines random number generator initialisation.
         Default is 'random-seed'.
-        Passed to `~gammapy.utils.random.get_random_state`.
+        Passed to `gammapy.utils.random.get_random_state`.
 
     Returns
     -------
-    table : `~astropy.table.Table`
+    table : `astropy.table.Table`
         Table with 3D position cartesian coordinates.
         Columns: x (pc), y (pc), z (pc).
     """
@@ -102,16 +103,16 @@ def make_catalog_random_positions_sphere(
     ----------
     size : int, optional
         Number of sources. Default is 100.
-    distance_min, distance_max : `~astropy.units.Quantity`, optional
+    distance_min, distance_max : `astropy.units.Quantity`, optional
         Minimum and maximum distance. Default is "0 pc" and "1 pc", respectively.
-    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+    random_state : {int, 'random-seed', 'global-rng'}
         Defines random number generator initialisation.
-        Default is "random-state".
-        Passed to `~gammapy.utils.random.get_random_state`.
+        Default is "random-seed".
+        Passed to `gammapy.utils.random.get_random_state`.
 
     Returns
     -------
-    catalog : `~astropy.table.Table`
+    catalog : `astropy.table.Table`
         Table with 3D position spherical coordinates.
         Columns: lon (deg), lat (deg), distance(pc).
     """
@@ -144,7 +145,7 @@ def make_base_catalog_galactic(
 
     Choose a radial distribution, a velocity distribution, the number
     of sources ``n_sources`` and the maximum age ``max_age`` in years. If ``spiralarms``
-    is True a spiral arm modeling after Faucher&Kaspi is included.
+    is True a spiral arm modeling after Faucher & Kaspi (2006) [FaucherKaspi2006]_ is included.
 
     ``max_age`` and ``n_sources`` effectively correspond to a SN rate:
     SN_rate = ``n_sources`` / ``max_age``
@@ -159,24 +160,28 @@ def make_base_catalog_galactic(
     vel_dis : callable, optional
         Proper motion velocity distribution of sources.
         Default is "H05".
-    max_age : `~astropy.units.Quantity`, optional
+    max_age : `astropy.units.Quantity`, optional
         Maximal age of the source.
         Default is "1e6 yr".
     spiralarms : bool, optional
         Include a spiral arm model in the catalog.
         Default is True.
-    n_ISM : `~astropy.units.Quantity`, optional
+    n_ISM : `astropy.units.Quantity`, optional
         Density of the interstellar medium.
         Default is "1 cm-3".
-    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+    random_state : {int, 'random-seed', 'global-rng'}
         Defines random number generator initialisation.
-        Default is "random-state".
-        Passed to `~gammapy.utils.random.get_random_state`.
+        Default is "random-seed".
+        Passed to `gammapy.utils.random.get_random_state`.
 
     Returns
     -------
-    table : `~astropy.table.Table`
+    table : `astropy.table.Table`
         Catalog of simulated source positions and proper velocities.
+
+    References
+    ----------
+    .. [FaucherKaspi2006] https://ui.adsabs.harvard.edu/abs/2006ApJ...643..332F
     """
     max_age = Quantity(max_age).to_value("yr")
     n_ISM = Quantity(n_ISM).to("cm-3")
@@ -268,12 +273,12 @@ def add_snr_parameters(table):
 
     Parameters
     ----------
-    table : `~astropy.table.Table`
+    table : `astropy.table.Table`
         Table that requires at least columns "age" and "n_ISM" to be defined.
 
     Returns
     -------
-    table : `~astropy.table.Table`
+    table : `astropy.table.Table`
         Table with the following entries:
 
                 * "E_SN" : SNR kinetic energy
@@ -324,9 +329,9 @@ def add_pulsar_parameters(
         The mean period. Default is 0.3 (seconds).
     P_stdv : float, optional
         The standard deviation period. Default is 0.15.
-    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+    random_state : {int, 'random-seed', 'global-rng'}
         Defines random number generator initialisation.
-        Passed to `~gammapy.utils.random.get_random_state`.
+        Passed to `gammapy.utils.random.get_random_state`.
     """
     random_state = get_random_state(random_state)
     # Read relevant columns
@@ -374,13 +379,13 @@ def add_pwn_parameters(table):
 
     Parameters
     ----------
-    table : `~astropy.table.Table`
+    table : `astropy.table.Table`
         Table that requires at least the following columns to be defined:
         "age", "E_SN", "n_ISM", "P0_birth" and "B_PSR".
 
     Returns
     -------
-    table : `~astropy.table.Table`
+    table : `astropy.table.Table`
         Table with the additional entry "r_out_PWN" which is the outer radius
         of the PWN.
     """
@@ -422,7 +427,7 @@ def add_observed_parameters(table, obs_pos=None):
 
     Parameters
     ----------
-    table : `~astropy.table.Table`
+    table : `astropy.table.Table`
         Input table.
     obs_pos : tuple, optional
         Observation position (X, Y, Z) in Galactocentric coordinates.
@@ -430,7 +435,7 @@ def add_observed_parameters(table, obs_pos=None):
 
     Returns
     -------
-    table : `~astropy.table.Table`
+    table : `astropy.table.Table`
         Modified input table with columns added.
     """
     obs_pos = obs_pos or [astrometry.D_SUN_TO_GALACTIC_CENTER, 0, 0]

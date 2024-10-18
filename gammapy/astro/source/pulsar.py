@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Pulsar source models."""
+
 import html
 import numpy as np
 from astropy.units import Quantity
@@ -21,13 +22,13 @@ class SimplePulsar:
 
     Parameters
     ----------
-    P : `~astropy.units.Quantity`
+    P : `astropy.units.Quantity`
         Rotation period (sec).
-    P_dot : `~astropy.units.Quantity`
+    P_dot : `astropy.units.Quantity`
         Rotation period derivative (sec sec^-1).
-    I : `~astropy.units.Quantity`
+    I : `astropy.units.Quantity`
         Moment of inertia (g cm^2).
-    R : `~astropy.units.Quantity`
+    R : `astropy.units.Quantity`
         Radius of the pulsar (cm).
     """
 
@@ -45,7 +46,7 @@ class SimplePulsar:
 
     @property
     def luminosity_spindown(self):
-        r"""Spin-down luminosity as a `~astropy.units.Quantity`.
+        r"""Spin-down luminosity as a `astropy.units.Quantity`.
 
         .. math:: \dot{L} = 4\pi^2 I \frac{\dot{P}}{P^{3}}
         """
@@ -53,7 +54,7 @@ class SimplePulsar:
 
     @property
     def tau(self):
-        r"""Characteristic age as a `~astropy.units.Quantity`.
+        r"""Characteristic age as a `astropy.units.Quantity`.
 
         .. math:: \tau = \frac{P}{2\dot{P}}
         """
@@ -61,7 +62,7 @@ class SimplePulsar:
 
     @property
     def magnetic_field(self):
-        r"""Magnetic field strength at the polar cap as a `~astropy.units.Quantity`.
+        r"""Magnetic field strength at the polar cap as a `astropy.units.Quantity`.
 
         .. math:: B = 3.2 \cdot 10^{19} (P\dot{P})^{1/2} \text{ Gauss}
         """
@@ -75,7 +76,7 @@ class Pulsar:
     ----------
     P_0 : float
         Period at birth.
-    B : `~astropy.units.Quantity`
+    B : `astropy.units.Quantity`
         Magnetic field strength at the poles (Gauss).
     n : float
         Spin-down braking index.
@@ -119,7 +120,7 @@ class Pulsar:
 
         Parameters
         ----------
-        t : `~astropy.units.Quantity`
+        t : `astropy.units.Quantity`
             Time after birth of the pulsar.
         """
         t = Quantity(t, "yr")
@@ -134,7 +135,7 @@ class Pulsar:
 
         Parameters
         ----------
-        t : `~astropy.units.Quantity`
+        t : `astropy.units.Quantity`
             Time after birth of the pulsar.
         """
         t = Quantity(t, "yr")
@@ -148,7 +149,7 @@ class Pulsar:
 
         Parameters
         ----------
-        t : `~astropy.units.Quantity`
+        t : `astropy.units.Quantity`
             Time after birth of the pulsar.
         """
         t = Quantity(t, "yr")
@@ -164,7 +165,7 @@ class Pulsar:
 
         Parameters
         ----------
-        t : `~astropy.units.Quantity`
+        t : `astropy.units.Quantity`
             Time after birth of the pulsar.
         """
         t = Quantity(t, "yr")
@@ -177,7 +178,7 @@ class Pulsar:
 
         Parameters
         ----------
-        t : `~astropy.units.Quantity`
+        t : `astropy.units.Quantity`
             Time after birth of the pulsar.
         """
         t = Quantity(t, "yr")
@@ -191,7 +192,7 @@ class Pulsar:
 
         Parameters
         ----------
-        t : `~astropy.units.Quantity`
+        t : `astropy.units.Quantity`
             Time after birth of the pulsar.
         """
         t = Quantity(t, "yr")

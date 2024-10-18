@@ -23,10 +23,10 @@ class BackgroundIRF(IRF):
 
     Parameters
     ----------
-    axes : list of `MapAxis` or `MapAxes` object
-    data : `~np.ndarray`
+    axes : list of `gammapy.maps.MapAxis` or `gammapy.maps.MapAxes` object
+    data : `np.ndarray`
         Data array.
-    unit : str or `~astropy.units.Unit`
+    unit : str or `astropy.units.Unit`
         Data unit usually ``s^-1 MeV^-1 sr^-1``.
     meta : dict
         Metadata dictionary.
@@ -38,11 +38,11 @@ class BackgroundIRF(IRF):
 
     @classmethod
     def from_table(cls, table, format="gadf-dl3"):
-        """Read from `~astropy.table.Table`.
+        """Read from `astropy.table.Table`.
 
         Parameters
         ----------
-        table : `~astropy.table.Table`
+        table : `astropy.table.Table`
             Table with background data.
         format : {"gadf-dl3"}
             Format specification. Default is "gadf-dl3".
@@ -107,13 +107,13 @@ class Background3D(BackgroundIRF):
 
     Parameters
     ----------
-    axes : list of `MapAxis` or `MapAxes` object
+    axes : list of `gammapy.maps.MapAxis` or `gammapy.maps.MapAxes` object
         Required data axes: ["energy", "fov_lon", "fov_lat"] in the given order.
-    data : `~np.ndarray`
+    data : `np.ndarray`
         Data array.
-    unit : str or `~astropy.units.Unit`
+    unit : str or `astropy.units.Unit`
         Data unit usually ``s^-1 MeV^-1 sr^-1``.
-    fov_alignment : `~gammapy.irf.FoVAlignment`
+    fov_alignment : `gammapy.irf.FoVAlignment`
         The orientation of the field of view coordinate system.
     meta : dict
         Metadata dictionary.
@@ -185,7 +185,7 @@ class Background3D(BackgroundIRF):
 
         Parameters
         ----------
-        energy : `~astropy.units.Quantity`, optional
+        energy : `astropy.units.Quantity`, optional
             List of energies. Default is 1 TeV.
         add_cbar : bool, optional
             Add color bar. Default is True.
@@ -194,11 +194,11 @@ class Background3D(BackgroundIRF):
         figsize : tuple, optional
             Figure size. Default is None.
         axes_loc : dict, optional
-            Keyword arguments passed to `~mpl_toolkits.axes_grid1.axes_divider.AxesDivider.append_axes`.
+            Keyword arguments passed to `mpl_toolkits.axes_grid1.axes_divider.AxesDivider.append_axes`.
         kwargs_colorbar : dict, optional
-            Keyword arguments passed to `~matplotlib.pyplot.colorbar`.
+            Keyword arguments passed to `matplotlib.pyplot.colorbar`.
         **kwargs : dict
-            Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
+            Keyword arguments passed to `matplotlib.pyplot.pcolormesh`.
         """
         kwargs_colorbar = kwargs_colorbar or {}
 
@@ -259,11 +259,11 @@ class Background2D(BackgroundIRF):
 
     Parameters
     ----------
-    axes : list of `MapAxis` or `MapAxes` object
+    axes : list of `gammapy.maps.MapAxis` or `gammapy.maps.MapAxes` object
         Required data axes: ["energy", "offset"] in the given order.
-    data : `~np.ndarray`
+    data : `np.ndarray`
         Data array.
-    unit : str or `~astropy.units.Unit`
+    unit : str or `astropy.units.Unit`
         Data unit usually ``s^-1 MeV^-1 sr^-1``.
     meta : dict
         Metadata dictionary.
@@ -301,7 +301,7 @@ class Background2D(BackgroundIRF):
 
         Parameters
         ----------
-        energy : `~astropy.units.Quantity`, optional
+        energy : `astropy.units.Quantity`, optional
             List of energy. Default is 1 TeV.
         add_cbar : bool, optional
             Add color bar. Default is True.
@@ -310,7 +310,7 @@ class Background2D(BackgroundIRF):
         figsize : tuple, optional
             Figure size. Default is None.
         **kwargs : dict
-            Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
+            Keyword arguments passed to `matplotlib.pyplot.pcolormesh`.
         """
         bkg_3d = self.to_3d()
         bkg_3d.plot_at_energy(
@@ -324,20 +324,20 @@ class Background2D(BackgroundIRF):
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes`, optional
             Matplotlib axes. Default is None.
         add_cbar : bool, optional
             Add a colorbar to the plot. Default is True.
         axes_loc : dict, optional
-            Keyword arguments passed to `~mpl_toolkits.axes_grid1.axes_divider.AxesDivider.append_axes`.
+            Keyword arguments passed to `mpl_toolkits.axes_grid1.axes_divider.AxesDivider.append_axes`.
         kwargs_colorbar : dict, optional
-            Keyword arguments passed to `~matplotlib.pyplot.colorbar`.
+            Keyword arguments passed to `matplotlib.pyplot.colorbar`.
         kwargs : dict
-            Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
+            Keyword arguments passed to `matplotlib.pyplot.pcolormesh`.
 
         Returns
         -------
-        ax : `~matplotlib.axes.Axes`
+        ax : `matplotlib.axes.Axes`
             Matplotlib axes.
         """
         ax = plt.gca() if ax is None else ax
@@ -371,14 +371,14 @@ class Background2D(BackgroundIRF):
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes`, optional
             Matplotlib axes. Default is None.
-        energy : `~astropy.units.Quantity`, optional
+        energy : `astropy.units.Quantity`, optional
             Energy. Default is None.
 
         Returns
         -------
-        ax : `~matplotlib.axes.Axes`
+        ax : `matplotlib.axes.Axes`
             Matplotlib axes.
         """
         ax = plt.gca() if ax is None else ax
@@ -411,16 +411,16 @@ class Background2D(BackgroundIRF):
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes`, optional
             Matplotlib axes. Default is None.
-        offset : `~astropy.coordinates.Angle`, optional
+        offset : `astropy.coordinates.Angle`, optional
             Offset. Default is None.
         kwargs : dict
             Forwarded to plt.plot().
 
         Returns
         -------
-        ax : `~matplotlib.axes.Axes`
+        ax : `matplotlib.axes.Axes`
             Matplotlib axes.
         """
         ax = plt.gca() if ax is None else ax
@@ -451,14 +451,14 @@ class Background2D(BackgroundIRF):
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes`, optional
             Matplotlib axes. Default is None.
         **kwargs : dict
-            Keyword arguments forwarded to `~matplotib.pyplot.plot`.
+            Keyword arguments forwarded to `matplotib.pyplot.plot`.
 
         Returns
         -------
-        ax : `~matplotlib.axes.Axes`
+        ax : `matplotlib.axes.Axes`
             Matplotlib axes.
         """
         ax = plt.gca() if ax is None else ax

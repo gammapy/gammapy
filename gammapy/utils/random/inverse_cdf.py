@@ -14,13 +14,13 @@ class InverseCDFSampler:
 
     Parameters
     ----------
-    pdf : `~gammapy.maps.Map`
+    pdf : `gammapy.maps.Map`
         Map of the predicted source counts.
     axis : int
         Axis along which sampling the indexes.
-    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+    random_state : {int, 'random-seed', 'global-rng'}
         Defines random number generator initialisation.
-        Passed to `~gammapy.utils.random.get_random_state`.
+        Passed to `gammapy.utils.random.get_random_state`.
     """
 
     def __init__(self, pdf, axis=None, random_state=0):
@@ -50,7 +50,7 @@ class InverseCDFSampler:
 
         Returns
         -------
-        index : tuple of `~numpy.ndarray`
+        index : tuple of `numpy.ndarray`
             Coordinates of the drawn sample.
         """
         choices = self.random_state.uniform(high=1, size=len(self.cdf))
@@ -77,7 +77,7 @@ class InverseCDFSampler:
 
         Returns
         -------
-        index : tuple of `~numpy.ndarray`
+        index : tuple of `numpy.ndarray`
             Coordinates of the drawn sample.
         """
         # pick numbers which are uniformly random over the cumulative distribution function

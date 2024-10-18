@@ -41,7 +41,6 @@ class PhaseBackgroundMaker(Maker):
 
     @staticmethod
     def _make_counts(dataset, observation, phases, phase_column_name):
-
         event_lists = []
         for interval in phases:
             events = observation.events.select_parameter(
@@ -63,14 +62,14 @@ class PhaseBackgroundMaker(Maker):
 
         Parameters
         ----------
-        dataset : `SpectrumDataset`
+        dataset : `gammapy.datasets.SpectrumDataset`
             Input dataset.
-        observation : `DatastoreObservation`
+        observation : `gammapy.data.Observation`
             Data store observation.
 
         Returns
         -------
-        counts_off : `RegionNDMap`
+        counts_off : `gammapy.maps.RegionNDMap`
             Off counts.
         """
         return self._make_counts(
@@ -82,14 +81,14 @@ class PhaseBackgroundMaker(Maker):
 
         Parameters
         ----------
-        dataset : `SpectrumDataset`
+        dataset : `gammapy.datasets.SpectrumDataset`
             Input dataset.
-        observation : `DatastoreObservation`
+        observation : `gammapy.data.Observation`
             Data store observation.
 
         Returns
         -------
-        counts : `RegionNDMap`
+        counts : `gammapy.maps.RegionNDMap`
             On counts.
         """
         return self._make_counts(
@@ -101,14 +100,14 @@ class PhaseBackgroundMaker(Maker):
 
         Parameters
         ----------
-        dataset : `SpectrumDataset` or `MapDataset`
+        dataset : `gammapy.datasets.SpectrumDataset` or `gammapy.datasets.MapDataset`
             Input dataset.
-        observation : `Observation`
+        observation : `gammapy.data.Observation`
             Data store observation.
 
         Returns
         -------
-        dataset_on_off : `SpectrumDatasetOnOff` or `MapDatasetOnOff`
+        dataset_on_off : `gammapy.datasets.SpectrumDatasetOnOff` or `gammapy.datasets.MapDatasetOnOff`
             On off dataset.
         """
         counts_off = self.make_counts_off(dataset, observation)

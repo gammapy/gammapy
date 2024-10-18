@@ -17,13 +17,13 @@ class HpxMap(Map):
 
     Parameters
     ----------
-    geom : `~gammapy.maps.HpxGeom`
+    geom : `gammapy.maps.HpxGeom`
         HEALPix geometry object.
-    data : `~numpy.ndarray`
+    data : `numpy.ndarray`
         Data array.
     meta : dict
         Dictionary to store metadata.
-    unit : `~astropy.units.Unit`
+    unit : `astropy.units.Unit`
         The map unit.
     """
 
@@ -48,10 +48,10 @@ class HpxMap(Map):
 
         Parameters
         ----------
-        nside : int or `~numpy.ndarray`, optional
+        nside : int or `numpy.ndarray`, optional
             HEALPix NSIDE parameter. This parameter sets the size of
             the spatial pixels in the map. Default is None.
-        binsz : float or `~numpy.ndarray`, optional
+        binsz : float or `numpy.ndarray`, optional
             Approximate pixel size in degrees. An NSIDE will be
             chosen that corresponds to a pixel size closest to this
             value. This option is superseded by ``nside``.
@@ -65,9 +65,9 @@ class HpxMap(Map):
         frame : {"icrs", "galactic"}
             Coordinate system, either Galactic ("galactic") or Equatorial ("icrs").
             Default is "icrs".
-        data : `~numpy.ndarray`, optional
+        data : `numpy.ndarray`, optional
             Data array. Default is None.
-        skydir : tuple or `~astropy.coordinates.SkyCoord`, optional
+        skydir : tuple or `astropy.coordinates.SkyCoord`, optional
             Sky position of map center. Can be either a SkyCoord
             object or a tuple of longitude and latitude in deg in the
             coordinate system of the map. Default is None.
@@ -79,16 +79,16 @@ class HpxMap(Map):
         region : str, optional
             HEALPix region string. Default is None.
         axes : list, optional
-            List of `~MapAxis` objects for each non-spatial dimension.
+            List of `MapAxis` objects for each non-spatial dimension.
             Default is None.
         meta : `dict`, optional
             Dictionary to store the metadata. Default is None.
-        unit : str or `~astropy.units.Unit`, optional
+        unit : str or `astropy.units.Unit`, optional
             The map unit. Default is "".
 
         Returns
         -------
-        map : `~HpxMap`
+        map : `HpxMap`
             A HEALPix map object.
         """
         from .ndmap import HpxNDMap
@@ -118,7 +118,7 @@ class HpxMap(Map):
 
         Parameters
         ----------
-        hdu_list : `~astropy.io.fits.HDUList`
+        hdu_list : `astropy.io.fits.HDUList`
             HDU list containing HDUs for map data and bands.
         hdu : str, optional
             Name or index of the HDU with the map data. If None then
@@ -174,7 +174,7 @@ class HpxMap(Map):
         return hpx_map
 
     def to_hdulist(self, hdu="SKYMAP", hdu_bands=None, sparse=False, format="gadf"):
-        """Convert to `~astropy.io.fits.HDUList`.
+        """Convert to `astropy.io.fits.HDUList`.
 
         Parameters
         ----------
@@ -206,7 +206,7 @@ class HpxMap(Map):
 
         Returns
         -------
-        hdu_list : `~astropy.io.fits.HDUList`
+        hdu_list : `astropy.io.fits.HDUList`
             The FITS HDUList.
         """
         if hdu_bands is None:
@@ -266,7 +266,7 @@ class HpxMap(Map):
             or ``width_pix`` whichever is smaller. If this parameter
             is None then the width will be set from ``oversample``.
             Default is None.
-        hpx2wcs : `~HpxToWcsMapping`, optional
+        hpx2wcs : `HpxToWcsMapping`, optional
             Set the HEALPix to WCS mapping object that will be used to
             generate the WCS map. If None then a new mapping will be
             generated based on ``proj`` and ``oversample`` arguments.
@@ -274,7 +274,7 @@ class HpxMap(Map):
 
         Returns
         -------
-        map_out : `~gammapy.maps.WcsMap`
+        map_out : `gammapy.maps.WcsMap`
             WCS map object.
         """
         pass
@@ -285,7 +285,7 @@ class HpxMap(Map):
 
         Returns
         -------
-        map : `~HpxMap`
+        map : `HpxMap`
             Map object.
         """
         pass
@@ -309,7 +309,7 @@ class HpxMap(Map):
 
         Returns
         -------
-        hdu_out : `~astropy.io.fits.BinTableHDU` or `~astropy.io.fits.ImageHDU`
+        hdu_out : `astropy.io.fits.BinTableHDU` or `astropy.io.fits.ImageHDU`
             Output HDU containing map data.
         """
         hpxconv = HpxConv.create(format)

@@ -25,10 +25,10 @@ class EDispMap(IRFMap):
 
     Parameters
     ----------
-    edisp_map : `~gammapy.maps.Map`
+    edisp_map : `gammapy.maps.Map`
         The input Energy Dispersion Map. Should be a Map with 2 non-spatial axes.
         migra and true energy axes should be given in this specific order.
-    exposure_map : `~gammapy.maps.Map`, optional
+    exposure_map : `gammapy.maps.Map`, optional
         Associated exposure map. Needs to have a consistent map geometry.
 
     Examples
@@ -100,14 +100,14 @@ class EDispMap(IRFMap):
 
         Parameters
         ----------
-        energy_axis : `~gammapy.maps.MapAxis`
+        energy_axis : `gammapy.maps.MapAxis`
             Reconstructed energy axis.
-        position : `~astropy.coordinates.SkyCoord`
+        position : `astropy.coordinates.SkyCoord`
             The target position. Should be a single coordinates.
 
         Returns
         -------
-        edisp : `~gammapy.irf.EnergyDispersion`
+        edisp : `gammapy.irf.EnergyDispersion`
             The energy dispersion (i.e. rmf object).
         """
         edisp_map = self.to_region_nd_map(region=position)
@@ -119,12 +119,12 @@ class EDispMap(IRFMap):
 
         Parameters
         ----------
-        energy_axis : `~gammapy.maps.MapAxis`
+        energy_axis : `gammapy.maps.MapAxis`
             Reconstructed energy axis.
 
         Returns
         -------
-        edisp : `~gammapy.maps.EDispKernelMap`
+        edisp : `gammapy.maps.EDispKernelMap`
             Energy dispersion kernel map.
         """
         energy_axis_true = self.edisp_map.geom.axes["energy_true"]
@@ -167,12 +167,12 @@ class EDispMap(IRFMap):
 
         Parameters
         ----------
-        geom : `~gammapy.maps.Geom`
+        geom : `gammapy.maps.Geom`
             Energy dispersion map geometry.
 
         Returns
         -------
-        edisp_map : `~gammapy.maps.EDispMap`
+        edisp_map : `gammapy.maps.EDispMap`
             Energy dispersion map.
         """
         if "energy_true" not in [ax.name for ax in geom.axes]:
@@ -196,11 +196,11 @@ class EDispMap(IRFMap):
 
         Parameters
         ----------
-        map_coord : `~gammapy.maps.MapCoord`
+        map_coord : `gammapy.maps.MapCoord`
             Sequence of coordinates and energies of sampled events.
-        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
+        random_state : {int, 'random-seed', 'global-rng'}, optional
             Defines random number generator initialisation.
-            Passed to `~gammapy.utils.random.get_random_state`.
+            Passed to `gammapy.utils.random.get_random_state`.
             Default is 0.
         chunk_size : int
             If set, this will slice the input MapCoord into smaller chunks of chunk_size elements.
@@ -208,7 +208,7 @@ class EDispMap(IRFMap):
 
         Returns
         -------
-        `~gammapy.maps.MapCoord`.
+        `gammapy.maps.MapCoord`.
             Sequence of energy dispersion corrected coordinates of the input map_coord map.
         """
         random_state = get_random_state(random_state)
@@ -249,14 +249,14 @@ class EDispMap(IRFMap):
 
         Parameters
         ----------
-        energy_axis_true : `~gammapy.maps.MapAxis`
+        energy_axis_true : `gammapy.maps.MapAxis`
             True energy axis.
-        migra_axis : `~gammapy.maps.MapAxis`, optional
+        migra_axis : `gammapy.maps.MapAxis`, optional
             Migra axis. Default is None.
 
         Returns
         -------
-        edisp_map : `~gammapy.maps.EDispMap`
+        edisp_map : `gammapy.maps.EDispMap`
             Energy dispersion map.
         """
         migra_res = 1e-5
@@ -299,10 +299,10 @@ class EDispKernelMap(IRFMap):
 
     Parameters
     ----------
-    edisp_kernel_map : `~gammapy.maps.Map`
+    edisp_kernel_map : `gammapy.maps.Map`
         The input energy dispersion kernel map. Should be a Map with 2 non-spatial axes.
         Reconstructed and true energy axes should be given in this specific order.
-    exposure_map : `~gammapy.maps.Map`, optional
+    exposure_map : `gammapy.maps.Map`, optional
         Associated exposure map. Needs to have a consistent map geometry.
 
     """
@@ -329,7 +329,7 @@ class EDispKernelMap(IRFMap):
 
         Parameters
         ----------
-        geom : `~gammapy.maps.Geom`
+        geom : `gammapy.maps.Geom`
             Energy dispersion map geometry.
 
         Returns
@@ -356,16 +356,16 @@ class EDispKernelMap(IRFMap):
 
         Parameters
         ----------
-        position : `~astropy.coordinates.SkyCoord` or `~regions.SkyRegion`, optional
+        position : `astropy.coordinates.SkyCoord` or `regions.SkyRegion`, optional
             The target position. Should be a single coordinates.
             Default is None.
-        energy_axis : `MapAxis`, optional
+        energy_axis : `gammapy.maps.MapAxis`, optional
             Reconstructed energy axis, only used for checking.
             Default is None.
 
         Returns
         -------
-        edisp : `~gammapy.irf.EnergyDispersion`
+        edisp : `gammapy.irf.EnergyDispersion`
             The energy dispersion (i.e. rmf object).
         """
         if energy_axis:
@@ -391,11 +391,11 @@ class EDispKernelMap(IRFMap):
 
         Parameters
         ----------
-        energy_axis : `~gammapy.maps.MapAxis`
+        energy_axis : `gammapy.maps.MapAxis`
             Energy axis.
-        energy_axis_true : `~gammapy.maps.MapAxis`
+        energy_axis_true : `gammapy.maps.MapAxis`
             True energy axis
-        geom : `~gammapy.maps.Geom`, optional
+        geom : `gammapy.maps.Geom`, optional
             The (2D) geometry object to use. If None, an all sky geometry with 2 bins is created.
             Default is None.
 
@@ -421,9 +421,9 @@ class EDispKernelMap(IRFMap):
 
         Parameters
         ----------
-        edisp : `~gammapy.irf.EDispKernel`
+        edisp : `gammapy.irf.EDispKernel`
             The input 1D kernel.
-        geom : `~gammapy.maps.Geom`, optional
+        geom : `gammapy.maps.Geom`, optional
             The (2D) geometry object to use. If None, an all sky geometry with 2 bins is created.
             Default is None.
 
@@ -451,17 +451,17 @@ class EDispKernelMap(IRFMap):
 
         Parameters
         ----------
-        energy_axis_true : `~astropy.units.Quantity`
+        energy_axis_true : `astropy.units.Quantity`
             Bin edges of true energy axis.
-        energy_axis : `~astropy.units.Quantity`
+        energy_axis : `astropy.units.Quantity`
             Bin edges of reconstructed energy axis.
-        bias : float or `~numpy.ndarray`
+        bias : float or `numpy.ndarray`
             Center of Gaussian energy dispersion, bias.
-        sigma : float or `~numpy.ndarray`
+        sigma : float or `numpy.ndarray`
             RMS width of Gaussian energy dispersion, resolution.
         pdf_threshold : float, optional
             Zero suppression threshold. Default is 1e-6.
-        geom : `~gammapy.maps.Geom`, optional
+        geom : `gammapy.maps.Geom`, optional
             The (2D) geometry object to use. If None, an all sky geometry with 2 bins is created.
             Default is None.
 
@@ -484,7 +484,7 @@ class EDispKernelMap(IRFMap):
 
         Parameters
         ----------
-        weights: `~gammapy.maps.Map`, optional
+        weights: `gammapy.maps.Map`, optional
             Weights to be applied. Default is None.
 
         Returns
@@ -511,9 +511,9 @@ class EDispKernelMap(IRFMap):
 
         Parameters
         ----------
-        energy_axis : `~gammapy.maps.MapAxis`
+        energy_axis : `gammapy.maps.MapAxis`
             The reconstructed energy axis to use for the grouping.
-        weights: `~gammapy.maps.Map`, optional
+        weights: `gammapy.maps.Map`, optional
             Weights to be applied. Default is None.
 
         Returns

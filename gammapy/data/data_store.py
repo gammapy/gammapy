@@ -43,14 +43,14 @@ class DataStore:
 
     Parameters
     ----------
-    hdu_table : `~gammapy.data.HDUIndexTable`
+    hdu_table : `gammapy.data.HDUIndexTable`
         HDU index table.
-    obs_table : `~gammapy.data.ObservationTable`
+    obs_table : `gammapy.data.ObservationTable`
         Observation index table.
 
     Examples
     --------
-    Here's an example how to create a `DataStore` to access H.E.S.S. data:
+    Here's an example how to create a ``DataStore`` to access H.E.S.S. data:
 
     >>> from gammapy.data import DataStore
     >>> data_store = DataStore.from_dir('$GAMMAPY_DATA/hess-dl3-dr1')
@@ -104,7 +104,7 @@ class DataStore:
 
         Parameters
         ----------
-        filename : str or `~pathlib.Path`
+        filename : str or `pathlib.Path`
             FITS filename.
         hdu_hdu : str or int, optional
             FITS HDU name or number for the HDU index table. Default is "HDU_INDEX".
@@ -132,14 +132,14 @@ class DataStore:
 
         Parameters
         ----------
-        base_dir : str or `~pathlib.Path`
+        base_dir : str or `pathlib.Path`
             Base directory of the data files.
-        hdu_table_filename : str or `~pathlib.Path`, optional
+        hdu_table_filename : str or `pathlib.Path`, optional
             Filename of the HDU index file. May be specified either relative
-            to `base_dir` or as an absolute path. If None, default is "hdu-index.fits.gz".
-        obs_table_filename : str or `~pathlib.Path`, optional
+            to ``base_dir`` or as an absolute path. If None, default is "hdu-index.fits.gz".
+        obs_table_filename : str or `pathlib.Path`, optional
             Filename of the observation index file. May be specified either relative
-            to `base_dir` or as an absolute path. If None, default is obs-index.fits.gz.
+            to ``base_dir`` or as an absolute path. If None, default is obs-index.fits.gz.
 
         Returns
         -------
@@ -199,9 +199,9 @@ class DataStore:
 
         Parameters
         ----------
-        events_paths : list of str or `~pathlib.Path`
+        events_paths : list of str or `pathlib.Path`
             List of paths to the events files.
-        irfs_paths : str or `~pathlib.Path`, or list of str or list of `~pathlib.Path`, optional
+        irfs_paths : str or `pathlib.Path`, or list of str or list of `pathlib.Path`, optional
             Path to the IRFs file. If a list is provided it must be the same length
             as `events_paths`. If None the events files have to contain CALDB and
             IRF header keywords to locate the IRF files, otherwise the IRFs are
@@ -261,7 +261,7 @@ class DataStore:
             return s
 
     def obs(self, obs_id, required_irf="full-enclosure", require_events=True):
-        """Access a given `~gammapy.data.Observation`.
+        """Access a given `gammapy.data.Observation`.
 
         Parameters
         ----------
@@ -289,7 +289,7 @@ class DataStore:
 
         Returns
         -------
-        observation : `~gammapy.data.Observation`
+        observation : `gammapy.data.Observation`
             Observation container.
 
         """
@@ -346,7 +346,7 @@ class DataStore:
         required_irf="full-enclosure",
         require_events=True,
     ):
-        """Generate a `~gammapy.data.Observations`.
+        """Generate a `gammapy.data.Observations`.
 
         Notes
         -----
@@ -386,7 +386,7 @@ class DataStore:
 
         Returns
         -------
-        observations : `~gammapy.data.Observations`
+        observations : `gammapy.data.Observations`
             Container holding a list of `~gammapy.data.Observation`.
         """
         if obs_id is None:
@@ -417,9 +417,9 @@ class DataStore:
 
         Parameters
         ----------
-        obs_id : array-like, `~gammapy.data.ObservationTable`
+        obs_id : array-like, `gammapy.data.ObservationTable`
             List of observations to copy.
-        outdir : str or `~pathlib.Path`
+        outdir : str or `pathlib.Path`
             Directory for the new store.
         hdu_class : list of str, optional
             see :attr:`gammapy.data.HDUIndexTable.VALID_HDU_CLASS`.

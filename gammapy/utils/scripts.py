@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities to create scripts and command-line tools."""
+
 import codecs
 import os.path
 import warnings
@@ -73,9 +74,9 @@ def read_yaml(filename, logger=None, checksum=False):
 
     Parameters
     ----------
-    filename : `~pathlib.Path`
+    filename : `pathlib.Path`
         Filename.
-    logger : `~logging.Logger`
+    logger : `logging.Logger`
         Logger.
     checksum : bool
         Whether to perform checksum verification. Default is False.
@@ -122,9 +123,9 @@ def write_yaml(
     ----------
     text : str
         yaml str
-    filename : `~pathlib.Path`
+    filename : `pathlib.Path`
         Filename.
-    logger : `~logging.Logger`, optional
+    logger : `logging.Logger`, optional
         Logger. Default is None.
     sort_keys : bool, optional
         Whether to sort keys. Default is True.
@@ -163,7 +164,7 @@ def make_name(name=None):
 
 
 def make_path(path):
-    """Expand environment variables on `~pathlib.Path` construction.
+    """Expand environment variables on `pathlib.Path` construction.
 
     Parameters
     ----------

@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Tools to create profiles (i.e. 1D "slices" from 2D images)."""
+
 import numpy as np
 import scipy.ndimage
 from astropy import units as u
@@ -20,13 +21,13 @@ class ImageProfileEstimator(Estimator):
 
     Parameters
     ----------
-    x_edges : `~astropy.coordinates.Angle`, optional
+    x_edges :  `astropy.coordinates.Angle`, optional
         Coordinate edges to define a custom measurement grid.
     method : {'sum', 'mean'}
         Compute sum or mean within profile bins. Default is 'sum'.
     axis : {'lon', 'lat', 'radial'}
         Along which axis to estimate the profile. Default is 'lon'.
-    center : `~astropy.coordinates.SkyCoord`, optional
+    center :  `astropy.coordinates.SkyCoord`, optional
         Center coordinate for the radial profile option.
 
     Examples
@@ -145,16 +146,16 @@ class ImageProfileEstimator(Estimator):
 
         Parameters
         ----------
-        image : `~gammapy.maps.Map`
+        image :  `gammapy.maps.Map`
             Input image to run profile estimator on.
-        image_err : `~gammapy.maps.Map`, optional
+        image_err :  `gammapy.maps.Map`, optional
             Input error image to run profile estimator on. Default is None.
-        mask : `~gammapy.maps.Map`
+        mask :  `gammapy.maps.Map`
             Optional mask to exclude regions from the measurement.
 
         Returns
         -------
-        profile : `ImageProfile`
+        profile : `gammapy.estimators.ImageProfile`
             Result image profile object.
         """
         p = self.parameters
@@ -182,7 +183,7 @@ class ImageProfileEstimator(Estimator):
 class ImageProfile:
     """Image profile class.
 
-    The image profile data is stored in `~astropy.table.Table` object, with the
+    The image profile data is stored in  `astropy.table.Table` object, with the
     following columns:
 
         * `x_ref` Coordinate bin center (required).
@@ -193,7 +194,7 @@ class ImageProfile:
 
     Parameters
     ----------
-    table : `~astropy.table.Table`
+    table :  `astropy.table.Table`
         Table instance with the columns specified as above.
     """
 
@@ -221,17 +222,17 @@ class ImageProfile:
         ----------
         kernel : {'gauss', 'box'}
             Kernel shape. Default is "box".
-        radius : `~astropy.units.Quantity`, str or float
+        radius :  `astropy.units.Quantity`, str or float
             Smoothing width given as quantity or float. If a float is given it
             is interpreted as smoothing width in pixels. If an (angular) quantity
             is given it is converted to pixels using `xref[1] - x_ref[0]`. Default is "0.1 deg".
         kwargs : dict, optional
-            Keyword arguments passed to `~scipy.ndimage.uniform_filter`
-            ('box') and `~scipy.ndimage.gaussian_filter` ('gauss').
+            Keyword arguments passed to  `scipy.ndimage.uniform_filter`
+            ('box') and  `scipy.ndimage.gaussian_filter` ('gauss').
 
         Returns
         -------
-        profile : `ImageProfile`
+        profile : `gammapy.estimators.ImageProfile`
             Smoothed image profile.
         """
         table = self.table.copy()
@@ -278,14 +279,14 @@ class ImageProfile:
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`, optional
+        ax :  `matplotlib.axes.Axes`, optional
             Axes object. Default is None.
         **kwargs : dict, optional
-            Keyword arguments passed to `~matplotlib.axes.Axes.plot`.
+            Keyword arguments passed to  `matplotlib.axes.Axes.plot`.
 
         Returns
         -------
-        ax : `~matplotlib.axes.Axes`
+        ax :  `matplotlib.axes.Axes`
             Axes object.
         """
         if ax is None:
@@ -304,14 +305,14 @@ class ImageProfile:
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`, optional
+        ax :  `matplotlib.axes.Axes`, optional
             Axes object. Default is None.
         **kwargs : dict, optional
-            Keyword arguments passed to `~matplotlib.pyplot.fill_between`.
+            Keyword arguments passed to  `matplotlib.pyplot.fill_between`.
 
         Returns
         -------
-        ax : `~matplotlib.axes.Axes`
+        ax :  `matplotlib.axes.Axes`
             Axes object.
         """
         if ax is None:
@@ -366,11 +367,11 @@ class ImageProfile:
         figsize : tuple
             Size of the figure. Default is (8, 4.5).
         **kwargs : dict, optional
-            Keyword arguments passed to `ImageProfile.plot_profile()`.
+            Keyword arguments passed to `gammapy.estimators.ImageProfile.plot_profile()`.
 
         Returns
         -------
-        ax : `~matplotlib.axes.Axes`
+        ax :  `matplotlib.axes.Axes`
             Axes object.
         """
         fig = plt.figure(figsize=figsize)
@@ -393,7 +394,7 @@ class ImageProfile:
 
         Returns
         -------
-        profile : `ImageProfile`
+        profile : `gammapy.estimators.ImageProfile`
             Normalized image profile.
         """
         table = self.table.copy()

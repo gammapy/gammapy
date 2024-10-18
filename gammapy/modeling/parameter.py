@@ -65,11 +65,11 @@ class Parameter:
     ----------
     name : str
         Name.
-    value : float or `~astropy.units.Quantity`
+    value : float or `astropy.units.Quantity`
         Value.
     scale : float, optional
         Scale (sometimes used in fitting).
-    unit : `~astropy.units.Unit` or str, optional
+    unit : `astropy.units.Unit` or str, optional
         Unit.
     min : float, optional
         Minimum (sometimes used in fitting).
@@ -89,11 +89,11 @@ class Parameter:
         Number of sigmas to scan.
     scan_values: `numpy.array`
         Scan values. Overwrites all the scan keywords before.
-    scale_method : {'scale10', 'factor1', None}
+    scale_method : {"scale10", "factor1", None}
         Method used to set ``factor`` and ``scale``.
     interp : {"lin", "sqrt", "log"}
         Parameter scaling to use for the scan.
-    prior : `~gammapy.modeling.models.Prior`
+    prior : `gammapy.modeling.models.Prior`
         Prior set on the parameter.
     """
 
@@ -168,7 +168,7 @@ class Parameter:
 
     @property
     def prior(self):
-        """Prior applied to the parameter  as a `~gammapy.modeling.models.Prior`."""
+        """Prior applied to the parameter  as a `gammapy.modeling.models.Prior`."""
         return self._prior
 
     @prior.setter
@@ -228,7 +228,7 @@ class Parameter:
 
     @property
     def unit(self):
-        """Unit as a `~astropy.units.Unit` object."""
+        """Unit as a `astropy.units.Unit` object."""
         return self._unit
 
     @unit.setter
@@ -242,7 +242,7 @@ class Parameter:
 
     @min.setter
     def min(self, val):
-        """`~astropy.table.Table` has masked values for NaN. Replacing with NaN."""
+        """`astropy.table.Table` has masked values for NaN. Replacing with NaN."""
         if isinstance(val, np.ma.core.MaskedConstant):
             self._min = np.nan
         else:
@@ -263,7 +263,7 @@ class Parameter:
 
     @max.setter
     def max(self, val):
-        """`~astropy.table.Table` has masked values for NaN. Replacing with NaN."""
+        """`astropy.table.Table` has masked values for NaN. Replacing with NaN."""
         if isinstance(val, np.ma.core.MaskedConstant):
             self._max = np.nan
         else:
@@ -312,7 +312,7 @@ class Parameter:
 
     @property
     def quantity(self):
-        """Value times unit as a `~astropy.units.Quantity`."""
+        """Value times unit as a `astropy.units.Quantity`."""
         return self.value * self.unit
 
     @quantity.setter
@@ -389,7 +389,7 @@ class Parameter:
 
     @property
     def scan_values(self):
-        """Stat scan values as a `~numpy.ndarray`."""
+        """Stat scan values as a `numpy.ndarray`."""
         if self._scan_values is None:
             scale = interpolation_scale(self.interp)
             parmin, parmax = scale([self.scan_min, self.scan_max])
@@ -667,7 +667,7 @@ class Parameters(collections.abc.Sequence):
         return Table(names=name_to_type.keys(), dtype=name_to_type.values())
 
     def to_table(self):
-        """Convert parameter attributes to `~astropy.table.Table`."""
+        """Convert parameter attributes to `astropy.table.Table`."""
         table = self._create_default_table()
 
         for p in self._parameters:
@@ -867,7 +867,7 @@ class PriorParameters(Parameters):
         self._parameters = parameters
 
     def to_table(self):
-        """Convert parameter attributes to `~astropy.table.Table`."""
+        """Convert parameter attributes to `astropy.table.Table`."""
         rows = []
         for p in self._parameters:
             d = p.to_dict()

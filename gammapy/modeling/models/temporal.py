@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Time-dependent models."""
+
 import logging
 import numpy as np
 import scipy.interpolate
@@ -36,7 +37,7 @@ log = logging.getLogger(__name__)
 class TemporalModel(ModelBase):
     """Temporal model base class.
 
-    Evaluates on `~astropy.time.Time` objects.
+    Evaluates on `astropy.time.Time` objects.
     """
 
     _type = "temporal"
@@ -57,14 +58,14 @@ class TemporalModel(ModelBase):
 
         Parameters
         ----------
-        time : `~astropy.time.Time`
+        time : `astropy.time.Time`
             Time object.
-        energy : `~astropy.units.Quantity`, optional
+        energy : `astropy.units.Quantity`, optional
             Energy. Default is None.
 
         Returns
         -------
-        values : `~astropy.units.Quantity`
+        values : `astropy.units.Quantity`
             Model values.
         """
         kwargs = {par.name: par.quantity for par in self.parameters}
@@ -96,7 +97,7 @@ class TemporalModel(ModelBase):
         self.t_ref.value = Time(t_ref, scale=self.scale).mjd
 
     def to_dict(self, full_output=False):
-        """Create dictionary for YAML serilisation."""
+        """Create dictionary for YAML serialisation."""
         data = super().to_dict(full_output)
         data["temporal"]["scale"] = self.scale
         return data
@@ -110,7 +111,7 @@ class TemporalModel(ModelBase):
         data : dict
             Dictionary containing the model parameters.
         **kwargs : dict
-            Keyword arguments passed to `~TemporalModel.from_parameters`.
+            Keyword arguments passed to `TemporalModel.from_parameters`.
         """
         kwargs = kwargs or {}
         temporal_data = data.get("temporal", data)
@@ -124,12 +125,12 @@ class TemporalModel(ModelBase):
 
         Parameters
         ----------
-        t_min, t_max : `~astropy.time.Time`
+        t_min, t_max : `astropy.time.Time`
             Lower and upper bound of integration range.
 
         Returns
         -------
-        time_sum : `~astropy.time.TimeDelta`
+        time_sum : `astropy.time.TimeDelta`
             Summed time in the intervals.
 
         """
@@ -142,18 +143,18 @@ class TemporalModel(ModelBase):
 
         Parameters
         ----------
-        time_range : `~astropy.time.Time`
+        time_range : `astropy.time.Time`
             Times to plot the model.
-        ax : `~matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes`, optional
             Axis to plot on.
         n_points : int
             Number of bins to plot model. Default is 100.
         **kwargs : dict
-            Keywords forwarded to `~matplotlib.pyplot.errorbar`.
+            Keywords forwarded to `matplotlib.pyplot.errorbar`.
 
         Returns
         -------
-        ax : `~matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes`, optional
             Matplotlib axes.
         """
         time_min, time_max = time_range
@@ -177,20 +178,20 @@ class TemporalModel(ModelBase):
         ----------
         n_events : int
             Number of events to sample.
-        t_min : `~astropy.time.Time`
+        t_min : `astropy.time.Time`
             Start time of the sampling.
-        t_max : `~astropy.time.Time`
+        t_max : `astropy.time.Time`
             Stop time of the sampling.
-        t_delta : `~astropy.units.Quantity`, optional
+        t_delta : `astropy.units.Quantity`, optional
             Time step used for sampling of the temporal model. Default is 1 s.
-        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+        random_state : {int, 'random-seed', 'global-rng'}
             Defines random number generator initialisation.
-            Passed to `~gammapy.utils.random.get_random_state`.
+            Passed to `gammapy.utils.random.get_random_state`.
             Default is 0.
 
         Returns
         -------
-        time : `~astropy.units.Quantity`
+        time : `astropy.units.Quantity`
             Array with times of the sampled events.
         """
         t_min = Time(t_min, scale=self.scale)
@@ -218,9 +219,9 @@ class TemporalModel(ModelBase):
 
         Parameters
         ----------
-        t_min: `~astropy.time.Time`
+        t_min: `astropy.time.Time`
             Start times of observation.
-        t_max: `~astropy.time.Time`
+        t_max: `astropy.time.Time`
             Stop times of observation.
         oversampling_factor : int, optional
             Oversampling factor to be used for numerical integration.
@@ -258,14 +259,14 @@ class ConstantTemporalModel(TemporalModel):
 
         Parameters
         ----------
-        t_min : `~astropy.time.Time`
+        t_min : `astropy.time.Time`
             Start times of observation.
-        t_max : `~astropy.time.Time`
+        t_max : `astropy.time.Time`
             Stop times of observation.
 
         Returns
         -------
-        norm : `~astropy.units.Quantity`
+        norm : `astropy.units.Quantity`
             Integrated flux norm on the given time intervals.
         """
         return (t_max - t_min) / self.time_sum(t_min, t_max)
@@ -281,10 +282,10 @@ class LinearTemporalModel(TemporalModel):
     alpha : float
         Constant term of the baseline flux.
         Default is 1.
-    beta : `~astropy.units.Quantity`
+    beta : `astropy.units.Quantity`
         Time variation coefficient of the flux.
         Default is 0.
-    t_ref : `~astropy.units.Quantity`
+    t_ref : `astropy.units.Quantity`
         The reference time in mjd.
         Frozen per default, at 2000-01-01.
     """
@@ -306,9 +307,9 @@ class LinearTemporalModel(TemporalModel):
 
         Parameters
         ----------
-        t_min : `~astropy.time.Time`
+        t_min : `astropy.time.Time`
             Start times of observation.
-        t_max : `~astropy.time.Time`
+        t_max : `astropy.time.Time`
             Stop times of observation.
 
         Returns
@@ -333,9 +334,9 @@ class ExpDecayTemporalModel(TemporalModel):
 
     Parameters
     ----------
-    t0 : `~astropy.units.Quantity`
+    t0 : `astropy.units.Quantity`
         Decay timescale. Default is 1 day.
-    t_ref : `~astropy.units.Quantity`
+    t_ref : `astropy.units.Quantity`
         The reference time in mjd. Frozen per default, at 2000-01-01.
     """
 
@@ -355,9 +356,9 @@ class ExpDecayTemporalModel(TemporalModel):
 
         Parameters
         ----------
-        t_min : `~astropy.time.Time`
+        t_min : `astropy.time.Time`
             Start times of observation.
-        t_max : `~astropy.time.Time`
+        t_max : `astropy.time.Time`
             Stop times of observation.
 
         Returns
@@ -379,10 +380,10 @@ class GaussianTemporalModel(TemporalModel):
 
     Parameters
     ----------
-    t_ref : `~astropy.units.Quantity`
+    t_ref : `astropy.units.Quantity`
         The reference time in mjd at the peak.
         Default is 2000-01-01.
-    sigma : `~astropy.units.Quantity`
+    sigma : `astropy.units.Quantity`
         Width of the gaussian profile.
         Default is 1 day.
     """
@@ -402,9 +403,9 @@ class GaussianTemporalModel(TemporalModel):
 
         Parameters
         ----------
-        t_min : `~astropy.time.Time`
+        t_min : `astropy.time.Time`
             Start times of observation.
-        t_max : `~astropy.time.Time`
+        t_max : `astropy.time.Time`
             Stop times of observation.
 
         Returns
@@ -431,16 +432,16 @@ class GeneralizedGaussianTemporalModel(TemporalModel):
 
     Parameters
     ----------
-    t_ref : `~astropy.units.Quantity`
+    t_ref : `astropy.units.Quantity`
         The time of the pulse's maximum intensity.
         Default is 2000-01-01.
-    t_rise : `~astropy.units.Quantity`
+    t_rise : `astropy.units.Quantity`
         Rise time constant.
         Default is 1 day.
-    t_decay : `~astropy.units.Quantity`
+    t_decay : `astropy.units.Quantity`
         Decay time constant.
         Default is 1 day.
-    eta : `~astropy.units.Quantity`
+    eta : `astropy.units.Quantity`
         Inverse pulse sharpness -> higher values implies a more peaked pulse.
         Default is 1/2.
 
@@ -474,7 +475,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
     """Temporal light curve model.
 
     The lightcurve is given at specific times (and optionally energies) as a ``norm``
-    It can be serialised either as an astropy table or a `~gammapy.maps.RegionNDMap`
+    It can be serialised either as an astropy table or a `gammapy.maps.RegionNDMap`
 
     The ``norm`` is supposed to be a unit-less multiplicative factor in the model,
     to be multiplied with a spectral model.
@@ -588,7 +589,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
         Parameters
         ----------
-        table : `~astropy.table.Table`
+        table : `astropy.table.Table`
             Table containing the template model.
         filename : str, optional
             Name of input file. Default is None.
@@ -632,7 +633,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
         Returns
         -------
-        model : `LightCurveTemplateTemporalModel`
+        model : `~gammapy.modeling.models.LightCurveTemplateTemporalModel`
             Light curve template model.
         """
         filename = str(make_path(filename))
@@ -676,8 +677,8 @@ class LightCurveTemplateTemporalModel(TemporalModel):
             filename : str
                 Name of output file.
             format : {"table" or "map"}
-                If format is "table", it is serialised as a `~astropy.table.Table`.
-                If "map", then it is serialised as a `~gammapy.maps.RegionNDMap`.
+                If format is "table", it is serialised as a `astropy.table.Table`.
+                If "map", then it is serialised as a `gammapy.maps.RegionNDMap`.
                 Default is "table".
             overwrite : bool, optional
                 Overwrite existing file. Default is False.
@@ -703,16 +704,16 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
         Parameters
         ----------
-        time: `~astropy.time.Time`
+        time: `astropy.time.Time`
             Time.
-        t_ref: `~gammapy.modeling.Parameter`, optional
+        t_ref: `gammapy.modeling.Parameter`, optional
             Reference time for the model. Default is None.
-        energy: `~astropy.units.Quantity`, optional
+        energy: `astropy.units.Quantity`, optional
             Energy. Default is None.
 
         Returns
         -------
-        values : `~astropy.units.Quantity`
+        values : `astropy.units.Quantity`
             Model values.
         """
         if t_ref is None:
@@ -772,19 +773,19 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
         Parameters
         ----------
-        time_range : `~astropy.time.Time`
+        time_range : `astropy.time.Time`
             Times to plot the model.
-        ax : `~matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes`, optional
             Axis to plot on. Default is None.
         n_points : int, optional
             Number of bins to plot model. Default is 100.
-        energy : `~astropy.units.quantity`, optional
+        energy : `astropy.units.quantity`, optional
             Energies to compute the model at for energy dependent models. Default is None.
         **kwargs : dict
-            Keywords forwarded to `~matplotlib.pyplot.errorbar`.
+            Keywords forwarded to `matplotlib.pyplot.errorbar`.
         Returns
         -------
-        ax : `~matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes`, optional
             Matplotlib axes.
         """
         if not self.is_energy_dependent:
@@ -822,10 +823,10 @@ class PowerLawTemporalModel(TemporalModel):
     ----------
     alpha : float
         Decay time power. Default is 1.
-    t_ref: `~astropy.units.Quantity`
+    t_ref: `astropy.units.Quantity`
         The reference time in mjd.
         Frozen by default, at 2000-01-01.
-    t0: `~astropy.units.Quantity`
+    t0: `astropy.units.Quantity`
         The scaling time in mjd.
         Fixed by default, at 1 day.
     """
@@ -847,9 +848,9 @@ class PowerLawTemporalModel(TemporalModel):
 
         Parameters
         ----------
-        t_min: `~astropy.time.Time`
+        t_min: `astropy.time.Time`
             Start times of observation.
-        t_max: `~astropy.time.Time`
+        t_max: `astropy.time.Time`
             Stop times of observation.
 
         Returns
@@ -881,10 +882,10 @@ class SineTemporalModel(TemporalModel):
     amp : float
         Amplitude of the sinusoidal function.
         Default is 1.
-    t_ref: `~astropy.units.Quantity`
+    t_ref: `astropy.units.Quantity`
         The reference time in mjd.
         Default is 2000-01-01.
-    omega: `~astropy.units.Quantity`
+    omega: `astropy.units.Quantity`
         Pulsation of the signal.
         Default is 1 rad/day.
     """
@@ -906,9 +907,9 @@ class SineTemporalModel(TemporalModel):
 
         Parameters
         ----------
-        t_min: `~astropy.time.Time`
+        t_min: `astropy.time.Time`
             Start times of observation.
-        t_max: `~astropy.time.Time`
+        t_max: `astropy.time.Time`
             Stop times of observation.
 
         Returns
@@ -934,37 +935,37 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
     A timing solution is used to compute the phase corresponding to time and
     a template phase curve is used to determine the associated ``norm``.
 
-    The phasecurve is given as a table with columns ``phase`` and ``norm``.
+    The phase curve is given as a table with columns ``phase`` and ``norm``.
 
     The ``norm`` is supposed to be a unit-less multiplicative factor in the model,
     to be multiplied with a spectral model.
 
     The model does linear interpolation for times between the given ``(phase, norm)`` values.
 
-    The implementation currently uses `scipy.interpolate. InterpolatedUnivariateSpline`,
+    The implementation currently uses `scipy.interpolate.InterpolatedUnivariateSpline`,
     using degree ``k=1`` to get linear interpolation.
     This class also contains an ``integral`` method, making the computation of
     mean fluxes for a given time interval a one-liner.
 
     Parameters
     ----------
-    table : `~astropy.table.Table`
+    table : `astropy.table.Table`
         A table with 'PHASE' vs 'NORM'.
     filename : str
         The name of the file containing the phase curve.
-    t_ref : `~astropy.units.Quantity`
+    t_ref : `astropy.units.Quantity`
         The reference time in mjd.
         Default is 48442.5 mjd.
-    phi_ref : `~astropy.units.Quantity`
+    phi_ref : `astropy.units.Quantity`
         The phase at reference time.
         Default is 0.
-    f0 : `~astropy.units.Quantity`
+    f0 : `astropy.units.Quantity`
         The frequency at t_ref in s-1.
         Default is 29.946923 s-1.
-    f1 : `~astropy.units.Quantity`
+    f1 : `astropy.units.Quantity`
         The frequency derivative at t_ref in s-2.
         Default is 0 s-2.
-    f2 : `~astropy.units.Quantity`
+    f2 : `astropy.units.Quantity`
         The frequency second derivative at t_ref in s-3.
         Default is 0 s-3.
     """
@@ -1006,7 +1007,7 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
 
         Parameters
         ----------
-        path : str or `~pathlib.Path`
+        path : str or `pathlib.Path`
             Filename with path.
         """
         filename = str(make_path(path))
@@ -1026,18 +1027,18 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
 
         Parameters
         ----------
-        time : `~astropy.units.Quantity`
+        time : `astropy.units.Quantity`
             The time at which to compute the phase.
-        t_ref : `~astropy.units.Quantity`
+        t_ref : `astropy.units.Quantity`
             The reference time in mjd.
-        phi_ref : `~astropy.units.Quantity`
+        phi_ref : `astropy.units.Quantity`
             The phase at reference time.
             Default is 0.
-        f0 : `~astropy.units.Quantity`
+        f0 : `astropy.units.Quantity`
             The frequency at t_ref in s-1.
-        f1 : `~astropy.units.Quantity`
+        f1 : `astropy.units.Quantity`
             The frequency derivative at t_ref in s-2.
-        f2 : `~astropy.units.Quantity`
+        f2 : `astropy.units.Quantity`
             The frequency second derivative at t_ref in s-3.
 
         Returns
@@ -1083,9 +1084,9 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
 
         Parameters
         ----------
-        t_min: `~astropy.time.Time`
+        t_min: `astropy.time.Time`
             Start times of observation.
-        t_max: `~astropy.time.Time`
+        t_max: `astropy.time.Time`
             Stop times of observation.
 
         Returns
@@ -1145,16 +1146,16 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes`, optional
             Axis to plot on. Default is None.
         n_points : int, optional
             Number of bins to plot model. Default is 100.
         **kwargs : dict
-            Keywords forwarded to `~matplotlib.pyplot.errorbar`.
+            Keywords forwarded to `matplotlib.pyplot.errorbar`.
 
         Returns
         -------
-        ax : `~matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes`, optional
             Matplotlib axes.
         """
         phase_axis = MapAxis.from_bounds(0.0, 1, nbin=n_points, name="Phase", unit="")
@@ -1178,19 +1179,19 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         ----------
         n_events : int
             Number of events to sample.
-        t_min : `~astropy.time.Time`
+        t_min : `astropy.time.Time`
             Start time of the sampling.
-        t_max : `~astropy.time.Time`
+        t_max : `astropy.time.Time`
             Stop time of the sampling.
-        t_delta : `~astropy.units.Quantity`
+        t_delta : `astropy.units.Quantity`
             Time step used for sampling of the temporal model.
-        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+        random_state : {int, 'random-seed', 'global-rng', `numpy.random.RandomState`}
             Defines random number generator initialisation.
-            Passed to `~gammapy.utils.random.get_random_state`.
+            Passed to `gammapy.utils.random.get_random_state`.
 
         Returns
         -------
-        time : `~astropy.units.Quantity`
+        time : `astropy.units.Quantity`
             Array with times of the sampled events.
         """
         t_delta = u.Quantity(t_delta)

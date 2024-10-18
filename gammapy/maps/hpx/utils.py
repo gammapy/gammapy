@@ -18,14 +18,14 @@ def unravel_hpx_index(idx, npix):
 
     Parameters
     ----------
-    idx : `~numpy.ndarray`
+    idx : `numpy.ndarray`
         Flat index.
-    npix : `~numpy.ndarray`
+    npix : `numpy.ndarray`
         Number of pixels in each band.
 
     Returns
     -------
-    idx : tuple of `~numpy.ndarray`
+    idx : tuple of `numpy.ndarray`
         Index array for each dimension of the map.
     """
     if npix.size == 1:
@@ -43,14 +43,14 @@ def ravel_hpx_index(idx, npix):
 
     Parameters
     ----------
-    idx : tuple of `~numpy.ndarray`
+    idx : tuple of `numpy.ndarray`
         Index array.
-    npix : `~numpy.ndarray`
+    npix : `numpy.ndarray`
         Number of pixels.
 
     Returns
     -------
-    idx : `~numpy.ndarray`
+    idx : `numpy.ndarray`
         Index array.
     """
     if len(idx) == 1:
@@ -91,12 +91,12 @@ def get_nside_from_pix_size(pixsz):
 
     Parameters
     ----------
-    pixsz : `~numpy.ndarray`
+    pixsz : `numpy.ndarray`
         Pixel size in degrees.
 
     Returns
     -------
-    nside : `~numpy.ndarray`
+    nside : `numpy.ndarray`
         HEALPix NSIDE parameter.
     """
     import healpy as hp
@@ -126,13 +126,13 @@ def match_hpx_pix(nside, nest, nside_pix, ipix_ring):
 
     Parameters
     ----------
-    nside : int or `~numpy.ndarray`
+    nside : int or `numpy.ndarray`
         HEALPix NSIDE parameter, must be a power of 2.
     nest : bool
         Indexing scheme. If True, "NESTED" scheme. If False, "RING" scheme.
-    nside_pix : int or `~numpy.ndarray`
+    nside_pix : int or `numpy.ndarray`
         HEALPix NSIDE parameter of subpixel.
-    ipix_ring : int or `~numpy.ndarray`
+    ipix_ring : int or `numpy.ndarray`
         HEALPix pixel number.
     """
     import healpy as hp
@@ -173,12 +173,12 @@ def get_superpixels(idx, nside_subpix, nside_superpix, nest=True):
 
     Parameters
     ----------
-    idx : `~numpy.ndarray`
+    idx : `numpy.ndarray`
         Array of HEALPix pixel indices for subpixels of NSIDE
         ``nside_subpix``.
-    nside_subpix : int or `~numpy.ndarray`
+    nside_subpix : int or `numpy.ndarray`
         HEALPix NSIDE parameter of subpixel.
-    nside_superpix : int or `~numpy.ndarray`
+    nside_superpix : int or `numpy.ndarray`
         HEALPix NSIDE parameter of superpixel.
     nest : bool, optional
         Indexing scheme. If True, "NESTED" scheme. If False, "RING" scheme.
@@ -186,7 +186,7 @@ def get_superpixels(idx, nside_subpix, nside_superpix, nest=True):
 
     Returns
     -------
-    idx_super : `~numpy.ndarray`
+    idx_super : `numpy.ndarray`
         Indices of HEALPix pixels of nside ``nside_superpix`` that
         contain pixel indices ``idx`` of nside ``nside_subpix``.
     """
@@ -225,12 +225,12 @@ def get_subpixels(idx, nside_superpix, nside_subpix, nest=True):
 
     Parameters
     ----------
-    idx : `~numpy.ndarray`
+    idx : `numpy.ndarray`
         Array of HEALPix pixel indices for superpixels of NSIDE
         ``nside_superpix``.
-    nside_superpix : int or `~numpy.ndarray`
+    nside_superpix : int or `numpy.ndarray`
         HEALPix NSIDE parameter of superpixel.
-    nside_subpix : int or `~numpy.ndarray`
+    nside_subpix : int or `numpy.ndarray`
         HEALPix NSIDE parameter of subpixel.
     nest : bool, optional
         Indexing scheme. If True, "NESTED" scheme. If False, "RING" scheme.
@@ -238,7 +238,7 @@ def get_subpixels(idx, nside_superpix, nside_subpix, nest=True):
 
     Returns
     -------
-    idx_sub : `~numpy.ndarray`
+    idx_sub : `numpy.ndarray`
         Indices of HEALPix pixels of nside ``nside_subpix`` contained
         within pixel indices ``idx`` of nside ``nside_superpix``.
     """
@@ -280,9 +280,9 @@ class HpxToWcsMapping:
 
     Parameters
     ----------
-    hpx : `~HpxGeom`
+    hpx : `gammapy.maps.HpxGeom`
         HEALPix geometry object.
-    wcs : `~gammapy.maps.WcsGeom`
+    wcs : `gammapy.maps.WcsGeom`
         WCS geometry object.
     """
 
@@ -340,14 +340,14 @@ class HpxToWcsMapping:
 
         Parameters
         ----------
-        hpx : `~HpxGeom`
+        hpx : `gammapy.maps.HpxGeom`
             HEALPix geometry object.
-        wcs : `~gammapy.maps.WcsGeom`
+        wcs : `gammapy.maps.WcsGeom`
             WCS geometry object.
 
         Returns
         -------
-        hpx2wcs : `~HpxToWcsMapping`
+        hpx2wcs : `HpxToWcsMapping`
             Mapping.
 
         """
@@ -398,9 +398,9 @@ class HpxToWcsMapping:
 
         Parameters
         ----------
-        hpx_data : `~numpy.ndarray`
+        hpx_data : `numpy.ndarray`
             The input HEALPix data.
-        wcs_data : `~numpy.ndarray`
+        wcs_data : `numpy.ndarray`
             The data array being filled.
         normalize : bool, optional
             If True, preserve integral by splitting HEALPix values between bins.
@@ -411,7 +411,7 @@ class HpxToWcsMapping:
 
         Returns
         -------
-        wcs_data : `~numpy.ndarray`
+        wcs_data : `numpy.ndarray`
             The WCS data array.
         """
         # FIXME: Do we want to flatten mapping arrays?
@@ -447,9 +447,9 @@ class HpxToWcsMapping:
 
         Parameters
         ----------
-        wcs_data : `~numpy.ndarray`
+        wcs_data : `numpy.ndarray`
             The input WCS data.
-        hpx_data : `~numpy.ndarray`
+        hpx_data : `numpy.ndarray`
             The data array being filled.
         normalize : bool, optional
             If True, preserve integral by splitting HEALPix values between bins.
@@ -457,7 +457,7 @@ class HpxToWcsMapping:
 
         Returns
         -------
-        hpx_data : `~numpy.ndarray`
+        hpx_data : `numpy.ndarray`
             The HEALPix data array.
         """
         shape = tuple([t.flat[0] for t in self._npix])

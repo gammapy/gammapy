@@ -39,15 +39,15 @@ class WcsNDMap(WcsMap):
 
     Parameters
     ----------
-    geom : `~gammapy.maps.WcsGeom`
+    geom : `gammapy.maps.WcsGeom`
         WCS geometry object.
-    data : `~numpy.ndarray`
+    data : `numpy.ndarray`
         Data array. If none then an empty array will be allocated.
     dtype : str, optional
         Data type, default is float32
     meta : `dict`
         Dictionary to store meta data.
-    unit : str or `~astropy.units.Unit`
+    unit : str or `astropy.units.Unit`
         The map unit
     """
 
@@ -80,9 +80,9 @@ class WcsNDMap(WcsMap):
 
         Parameters
         ----------
-        hdu : `~astropy.io.fits.BinTableHDU` or `~astropy.io.fits.ImageHDU`
+        hdu : `astropy.io.fits.BinTableHDU` or `astropy.io.fits.ImageHDU`
             The map FITS HDU.
-        hdu_bands : `~astropy.io.fits.BinTableHDU`
+        hdu_bands : `astropy.io.fits.BinTableHDU`
             The BANDS table HDU.
         format : {'gadf', 'fgst-ccube','fgst-template'}
             FITS format convention.
@@ -134,7 +134,7 @@ class WcsNDMap(WcsMap):
 
         Parameters
         ----------
-        coords : tuple, dict or `~gammapy.maps.MapCoord`
+        coords : tuple, dict or `gammapy.maps.MapCoord`
             Coordinate arrays for each dimension of the map. Tuple
             should be ordered as (lon, lat, x_0, ..., x_n) where x_i
             are coordinates for non-spatial dimensions of the map.
@@ -151,7 +151,7 @@ class WcsNDMap(WcsMap):
 
         Returns
         -------
-        vals : `~numpy.ndarray`
+        vals : `numpy.ndarray`
             Interpolated pixel values.
         """
         if self.geom.is_regular:
@@ -258,7 +258,7 @@ class WcsNDMap(WcsMap):
                 return self._pad_coadd(geom, pad_width, mode, cval, method)
 
     def _pad_np(self, geom, pad_width, mode, cval):
-        """Pad a map using `~numpy.pad`.
+        """Pad a map using `numpy.pad`.
 
         This method only works for regular geometries but should be more
         efficient when working with large maps.
@@ -383,9 +383,9 @@ class WcsNDMap(WcsMap):
 
         Parameters
         ----------
-        ax : `~astropy.visualization.wcsaxes.WCSAxes`, optional
+        ax : `astropy.visualization.wcsaxes.WCSAxes`, optional
             WCS axis object to plot on. Default is None.
-        fig : `~matplotlib.figure.Figure`, optional
+        fig : `matplotlib.figure.Figure`, optional
             Figure object. Default is None.
         add_cbar : bool, optional
             Add color bar. Default is False.
@@ -393,15 +393,15 @@ class WcsNDMap(WcsMap):
             Passed to `astropy.visualization.simple_norm`.
              Default is "linear".
         axes_loc : dict, optional
-            Keyword arguments passed to `~mpl_toolkits.axes_grid1.axes_divider.AxesDivider.append_axes`.
+            Keyword arguments passed to `mpl_toolkits.axes_grid1.axes_divider.AxesDivider.append_axes`.
         kwargs_colorbar : dict, optional
-            Keyword arguments passed to `~matplotlib.pyplot.colorbar`.
+            Keyword arguments passed to `matplotlib.pyplot.colorbar`.
         **kwargs : dict
-            Keyword arguments passed to `~matplotlib.pyplot.imshow`.
+            Keyword arguments passed to `matplotlib.pyplot.imshow`.
 
         Returns
         -------
-        ax : `~astropy.visualization.wcsaxes.WCSAxes`
+        ax : `astropy.visualization.wcsaxes.WCSAxes`
             WCS axes object.
         """
         from astropy.visualization import simple_norm
@@ -465,15 +465,15 @@ class WcsNDMap(WcsMap):
 
         Parameters
         ----------
-        ax : `~astropy.visualization.wcsaxes.WCSAxes`, optional
+        ax : `astropy.visualization.wcsaxes.WCSAxes`, optional
             WCS axis object to plot on. Default is None.
 
         **kwargs : dict
-            Keyword arguments passed to `~matplotlib.pyplot.contourf`.
+            Keyword arguments passed to `matplotlib.pyplot.contourf`.
 
         Returns
         -------
-        ax : `~astropy.visualization.wcsaxes.WCSAxes`, optional
+        ax : `astropy.visualization.wcsaxes.WCSAxes`, optional
             WCS axis object to plot on.
         """
         if not self.geom.is_flat:
@@ -567,7 +567,7 @@ class WcsNDMap(WcsMap):
 
         Parameters
         ----------
-        region: `~regions.Region`, optional
+        region: `regions.Region`, optional
              Extended region. Default is None.
 
         Returns
@@ -595,11 +595,11 @@ class WcsNDMap(WcsMap):
 
         Parameters
         ----------
-        region: `~regions.Region` or `~astropy.coordinates.SkyCoord`, optional
+        region: `regions.Region` or `astropy.coordinates.SkyCoord`, optional
              Region. Default is None.
         func : numpy.func, optional
-            Function to reduce the data. Default is np.nansum.
-            For boolean Map, use np.any or np.all.
+            Function to reduce the data. Default is 'np.nansum'.
+            For boolean Map, use 'np.any' or 'np.all'.
         weights : `WcsNDMap`, optional
             Array to be used as weights. The geometry must be equivalent.
             Default is None.
@@ -609,7 +609,7 @@ class WcsNDMap(WcsMap):
 
         Returns
         -------
-        spectrum : `~gammapy.maps.RegionNDMap`
+        spectrum : `gammapy.maps.RegionNDMap`
             Spectrum in the given region.
         """
         from gammapy.maps import RegionGeom, RegionNDMap
@@ -657,9 +657,9 @@ class WcsNDMap(WcsMap):
 
         Parameters
         ----------
-        region: `~regions.Region`, optional
+        region: `regions.Region`, optional
             Region to histogram over. Default is None.
-        bins_axis : `MapAxis`, optional
+        bins_axis : `gammapy.maps.MapAxis`, optional
             Binning of the histogram. Default is None.
         nbin : int, optional
             Number of bins to use if no bins_axis is given.
@@ -693,7 +693,7 @@ class WcsNDMap(WcsMap):
 
         Returns
         -------
-        region_map : `RegionNDMap`
+        region_map : `gammapy.maps.RegionNDMap`
             Region map with histogram.
 
         """
@@ -740,7 +740,7 @@ class WcsNDMap(WcsMap):
 
         Parameters
         ----------
-        region: `~regions.SkyRegion` or `~regions.PixRegion`
+        region: `regions.SkyRegion` or `regions.PixRegion`
              Region or list of Regions (pixel or sky regions accepted).
 
         Returns
@@ -772,12 +772,12 @@ class WcsNDMap(WcsMap):
 
         Parameters
         ----------
-        width : `~astropy.units.Quantity`, str or float
+        width : `astropy.units.Quantity`, str or float
             If a float is given it interpreted as width in pixels. If an (angular)
             quantity is given it converted to pixels using ``geom.wcs.wcs.cdelt``.
             The width corresponds to radius in case of a disk kernel, and
             the side length in case of a box kernel.
-        kernel : {'disk', 'box'}, optional
+        kernel : {"disk", "box"}, optional
             Kernel shape. Default is "disk".
         use_fft : bool, optional
             Use `scipy.signal.fftconvolve` if True. Otherwise, use
@@ -809,10 +809,10 @@ class WcsNDMap(WcsMap):
 
         Parameters
         ----------
-        width : tuple of `~astropy.units.Quantity`
+        width : tuple of `astropy.units.Quantity`
             Angular sizes of the margin in (lon, lat) in that specific order.
             If only one value is passed, the same margin is applied in (lon, lat).
-        kernel : {'disk', 'box'}, optional
+        kernel : {"disk", "box"}, optional
             Kernel shape. Default is "disk".
         use_fft : bool, optional
             Use `scipy.signal.fftconvolve` if True. Otherwise, use
@@ -846,14 +846,14 @@ class WcsNDMap(WcsMap):
 
         Parameters
         ----------
-        kernel : `~gammapy.irf.PSFKernel` or `numpy.ndarray`
+        kernel : `gammapy.irf.PSFKernel` or `numpy.ndarray`
             Convolution kernel.
         method : str, optional
-            The method used by `~scipy.signal.convolve`.
-            Default is 'fft'.
+            The method used by `scipy.signal.convolve`.
+            Default is "fft".
         mode : str, optional
-            The convolution mode used by `~scipy.signal.convolve`.
-            Default is 'same'.
+            The convolution mode used by `scipy.signal.convolve`.
+            Default is "same".
 
         Returns
         -------
@@ -924,7 +924,7 @@ class WcsNDMap(WcsMap):
 
     @staticmethod
     def _convolve(image, kernel, method, mode):
-        """Convolve using `~scipy.signal.convolve` without kwargs for parallel evaluation."""
+        """Convolve using `scipy.signal.convolve` without kwargs for parallel evaluation."""
         return scipy.signal.convolve(image, kernel, method=method, mode=mode)
 
     def smooth(self, width, kernel="gauss", **kwargs):
@@ -934,19 +934,19 @@ class WcsNDMap(WcsMap):
 
         Parameters
         ----------
-        width : `~astropy.units.Quantity`, str or float
+        width : `astropy.units.Quantity`, str or float
             Smoothing width given as quantity or float. If a float is given it
             interpreted as smoothing width in pixels. If an (angular) quantity
             is given it converted to pixels using ``geom.wcs.wcs.cdelt``.
             It corresponds to the standard deviation in case of a Gaussian kernel,
             the radius in case of a disk kernel, and the side length in case
             of a box kernel.
-        kernel : {'gauss', 'disk', 'box'}, optional
+        kernel : {"gauss", "disk", "box"}, optional
             Kernel shape. Default is "gauss".
         kwargs : dict
-            Keyword arguments passed to `~ndi.uniform_filter`
-            ('box'), `~ndi.gaussian_filter` ('gauss') or
-            `~ndi.convolve` ('disk').
+            Keyword arguments passed to `ndi.uniform_filter`
+            ("box"), `ndi.gaussian_filter` ("gauss") or
+            `ndi.convolve` ("disk").
 
         Returns
         -------
@@ -981,24 +981,24 @@ class WcsNDMap(WcsMap):
 
         Parameters
         ----------
-        position : `~astropy.coordinates.SkyCoord`
+        position : `astropy.coordinates.SkyCoord`
             Center position of the cutout region.
-        width : tuple of `~astropy.coordinates.Angle`
+        width : tuple of `astropy.coordinates.Angle`
             Angular sizes of the region in (lon, lat) in that specific order.
             If only one value is passed, a square region is extracted.
-        mode : {'trim', 'partial', 'strict'}, optional
-            Mode option for Cutout2D, for details see `~astropy.nddata.utils.Cutout2D`.
+        mode : {"trim", "partial", "strict"}, optional
+            Mode option for Cutout2D, for details see `astropy.nddata.utils.Cutout2D`.
             Default is "trim".
         odd_npix : bool, optional
             Force width to odd number of pixels.
             Default is False.
         min_npix : bool, optional
-            Force width to a minimmum number of pixels.
+            Force width to a minimum number of pixels.
             Default is 1.
 
         Returns
         -------
-        cutout : `~gammapy.maps.WcsNDMap`
+        cutout : `gammapy.maps.WcsNDMap`
             Cutout map.
         """
         geom_cutout = self.geom.cutout(
@@ -1027,9 +1027,9 @@ class WcsNDMap(WcsMap):
 
         Parameters
         ----------
-        position : `~astropy.coordinates.SkyCoord`
+        position : `astropy.coordinates.SkyCoord`
             Center position of the cutout region.
-        width : tuple of `~astropy.coordinates.Angle`
+        width : tuple of `astropy.coordinates.Angle`
             Angular sizes of the region in (lon, lat) in that specific order.
             If only one value is passed, a square region is extracted.
         odd_npix : bool, optional
@@ -1038,7 +1038,7 @@ class WcsNDMap(WcsMap):
 
         Returns
         -------
-        cutout : `~gammapy.maps.WcsNDMap`
+        cutout : `gammapy.maps.WcsNDMap`
             Cutout map.
         """
         geom_cutout = self.geom.cutout(

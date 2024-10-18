@@ -20,13 +20,13 @@ def get_irfs_features(
 
     Parameters
     ----------
-    observations : `~gammapy.data.Observations`
-        Container holding a list of `~gammapy.data.Observation`.
-    energy_true : `~astropy.units.Quantity`
+    observations : `gammapy.data.Observations`
+        Container holding a list of `gammapy.data.Observation`.
+    energy_true : `astropy.units.Quantity`
         Energy true at which to compute the containment radius.
-    position : `~astropy.coordinates.SkyCoord`, optional
+    position : `astropy.coordinates.SkyCoord`, optional
         Sky position. Default is None.
-    fixed_offset : `~astropy.coordinates.Angle`, optional
+    fixed_offset : `astropy.coordinates.Angle`, optional
         Offset calculated from the pointing position. Default is None.
         If neither the `position` nor the `fixed_offset` is specified,
         it uses the position of the center of the map by default.
@@ -42,7 +42,7 @@ def get_irfs_features(
 
     Returns
     -------
-    features : `~astropy.table.Table`
+    features : `astropy.table.Table`
         Features table.
 
     Examples

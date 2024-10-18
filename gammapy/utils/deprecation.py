@@ -17,7 +17,7 @@ def deprecated(since, **kwargs):
     Use to mark a function or class as deprecated.
 
     Reuses Astropy's deprecated decorator.
-    Check arguments and usage in `~astropy.utils.decorator.deprecated`.
+    Check arguments and usage in `astropy.utils.decorator.deprecated`.
 
     Parameters
     ----------
@@ -33,7 +33,7 @@ def deprecated(since, **kwargs):
 def deprecated_renamed_argument(old_name, new_name, since, **kwargs):
     """Deprecate a _renamed_ or _removed_ function argument.
 
-    Check arguments and usage in `~astropy.utils.decorator.deprecated_renamed_argument`.
+    Check arguments and usage in `astropy.utils.decorator.deprecated_renamed_argument`.
     """
     from astropy.utils import deprecated_renamed_argument
 

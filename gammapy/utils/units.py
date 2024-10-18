@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Units and Quantity related helper functions."""
+
 import logging
 from math import floor
 import numpy as np
@@ -20,12 +21,12 @@ def standardise_unit(unit):
 
     Parameters
     ----------
-    unit : `~astropy.units.Unit` or str
+    unit : `astropy.units.Unit` or str
         Any old unit.
 
     Returns
     -------
-    unit : `~astropy.units.Unit`
+    unit : `astropy.units.Unit`
         Shiny new, standardised unit.
 
     Examples
@@ -75,7 +76,7 @@ def energy_unit_format(E):
 
     Parameters
     ----------
-    E: `~astropy.units.Quantity`
+    E: `astropy.units.Quantity`
         Quantity or list of quantities.
 
     Returns

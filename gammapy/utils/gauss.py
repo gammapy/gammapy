@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Multi-Gaussian distribution utilities (Gammapy internal)."""
+
 import html
 import numpy as np
 from astropy import units as u
@@ -41,14 +42,14 @@ class Gauss2DPDF:
 
         Parameters
         ----------
-        x : `~numpy.ndarray`
+        x : `numpy.ndarray`
             x coordinate.
-        y : `~numpy.ndarray`, optional
+        y : `numpy.ndarray`, optional
             y coordinate.
 
         Returns
         -------
-        dpdxdy : `~numpy.ndarray`
+        dpdxdy : `numpy.ndarray`
             dp / (dx dy).
         """
         theta2 = x * x + y * y
@@ -61,12 +62,12 @@ class Gauss2DPDF:
 
         Parameters
         ----------
-        theta2 : `~numpy.ndarray`
+        theta2 : `numpy.ndarray`
             Offset squared.
 
         Returns
         -------
-        dpdtheta2 : `~numpy.ndarray`
+        dpdtheta2 : `numpy.ndarray`
             dp / dtheta2.
         """
         amplitude = 1 / (2 * self._sigma2)
@@ -78,12 +79,12 @@ class Gauss2DPDF:
 
         Parameters
         ----------
-        rad : `~numpy.ndarray`
+        rad : `numpy.ndarray`
             Offset.
 
         Returns
         -------
-        containment_fraction : `~numpy.ndarray`
+        containment_fraction : `numpy.ndarray`
             Containment fraction.
         """
         return 1 - np.exp(-0.5 * rad**2 / self._sigma2)
@@ -93,12 +94,12 @@ class Gauss2DPDF:
 
         Parameters
         ----------
-        containment_fraction : `~numpy.ndarray`
+        containment_fraction : `numpy.ndarray`
             Containment fraction.
 
         Returns
         -------
-        containment_radius : `~numpy.ndarray`
+        containment_radius : `numpy.ndarray`
             Containment radius.
         """
         return self.sigma * np.sqrt(-2 * np.log(1 - containment_fraction))
@@ -108,12 +109,12 @@ class Gauss2DPDF:
 
         Parameters
         ----------
-        sigma : `~numpy.ndarray` or float
+        sigma : `numpy.ndarray` or float
             Gaussian width of the new Gaussian 2D PDF to convolve with.
 
         Returns
         -------
-        gauss_convolve : `~gammapy.modeling.models.Gauss2DPDF`
+        gauss_convolve : `gammapy.modeling.models.Gauss2DPDF`
             Convolution of both Gaussians.
         """
         new_sigma = np.sqrt(self._sigma2 + sigma**2)
@@ -125,9 +126,9 @@ class MultiGauss2D:
 
     Parameters
     ----------
-    sigmas : `~numpy.ndarray`
+    sigmas : `numpy.ndarray`
             Widths of the Gaussians to add.
-    norms : `~numpy.ndarray`, optional
+    norms : `numpy.ndarray`, optional
             Normalizations of the Gaussians to add.
 
     Notes
@@ -151,14 +152,14 @@ class MultiGauss2D:
 
         Parameters
         ----------
-        x : `~numpy.ndarray`
+        x : `numpy.ndarray`
             x coordinate.
-        y : `~numpy.ndarray`, optional
+        y : `numpy.ndarray`, optional
             y coordinate. Default is 0.
 
         Returns
         -------
-        total : `~numpy.ndarray`
+        total : `numpy.ndarray`
             dp / (dx dy).
         """
         values = []
@@ -174,12 +175,12 @@ class MultiGauss2D:
 
     @property
     def sigmas(self):
-        """Array of Gaussian widths as an `~numpy.ndarray`."""
+        """Array of Gaussian widths as an `numpy.ndarray`."""
         return u.Quantity([_.sigma for _ in self.components])
 
     @property
     def integral(self):
-        """Integral as sum of norms as an `~numpy.ndarray`."""
+        """Integral as sum of norms as an `numpy.ndarray`."""
         return np.nansum(self.norms, axis=0)
 
     @property
@@ -213,12 +214,12 @@ class MultiGauss2D:
 
         Parameters
         ----------
-        theta2 : `~numpy.ndarray`
+        theta2 : `numpy.ndarray`
             Offset squared.
 
         Returns
         -------
-        dpdtheta2 : `~numpy.ndarray`
+        dpdtheta2 : `numpy.ndarray`
             dp / dtheta2.
         """
         values = []
@@ -232,7 +233,7 @@ class MultiGauss2D:
 
         Returns
         -------
-        norm_multigauss : `~gammapy.modeling.models.MultiGauss2D`
+        norm_multigauss : `gammapy.modeling.models.MultiGauss2D`
            Normalized function.
         """
         with np.errstate(divide="ignore", invalid="ignore"):
@@ -243,12 +244,12 @@ class MultiGauss2D:
 
         Parameters
         ----------
-        rad : `~numpy.ndarray`
+        rad : `numpy.ndarray`
             Offset.
 
         Returns
         -------
-        containment_fraction : `~numpy.ndarray`
+        containment_fraction : `numpy.ndarray`
             Containment fraction.
         """
         values = []
@@ -263,12 +264,12 @@ class MultiGauss2D:
 
         Parameters
         ----------
-        containment_fraction : `~numpy.ndarray`
+        containment_fraction : `numpy.ndarray`
             Containment fraction.
 
         Returns
         -------
-        containment_radius : `~numpy.ndarray`
+        containment_radius : `numpy.ndarray`
             Containment radius.
         """
         rad_max = 1e3
@@ -293,12 +294,12 @@ class MultiGauss2D:
 
         Parameters
         ----------
-        containment_fraction : `~numpy.ndarray`
+        containment_fraction : `numpy.ndarray`
             Containment fraction.
 
         Returns
         -------
-        sigma : `~numpy.ndarray`
+        sigma : `numpy.ndarray`
             Equivalent containment radius.
         """
         theta1 = self.containment_radius(containment_fraction)
@@ -318,14 +319,14 @@ class MultiGauss2D:
 
         Parameters
         ----------
-        sigma : `~numpy.ndarray` or float
+        sigma : `numpy.ndarray` or float
             Gaussian width of the new Gaussian 2D PDF to convolve with.
-        norm : `~numpy.ndarray` or float
+        norm : `numpy.ndarray` or float
             Normalization of the new Gaussian 2D PDF to convolve with.
 
         Returns
         -------
-        new_multi_gauss_2d : `~gammapy.modeling.models.MultiGauss2D`
+        new_multi_gauss_2d : `gammapy.modeling.models.MultiGauss2D`
             Convolution as new MultiGauss2D.
         """
         sigmas, norms = [], []

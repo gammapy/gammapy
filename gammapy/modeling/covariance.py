@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Covariance class."""
+
 import numpy as np
 import scipy
 import matplotlib.pyplot as plt
@@ -14,9 +15,9 @@ class Covariance:
 
     Parameters
     ----------
-    parameters : `~gammapy.modeling.Parameters`
+    parameters : `gammapy.modeling.Parameters`
         Parameter list.
-    data : `~numpy.ndarray`
+    data : `numpy.ndarray`
         Covariance data array.
 
     """
@@ -36,7 +37,7 @@ class Covariance:
 
     @property
     def data(self):
-        """Covariance data as a `~numpy.ndarray`."""
+        """Covariance data as a `numpy.ndarray`."""
         return self._data
 
     @data.setter
@@ -115,7 +116,7 @@ class Covariance:
 
         Returns
         -------
-        covariance : `~numpy.ndarray`
+        covariance : `numpy.ndarray`
             Sub-covariance.
         """
         idx = [self.parameters.index(par) for par in parameters]
@@ -147,14 +148,14 @@ class Covariance:
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes`, optional
             Axis to plot on. Default is None.
         **kwargs : dict
-            Keyword arguments passed to `~gammapy.visualization.plot_heatmap`.
+            Keyword arguments passed to `gammapy.visualization.plot_heatmap`.
 
         Returns
         -------
-        ax : `~matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes`, optional
             Matplotlib axes.
 
         """

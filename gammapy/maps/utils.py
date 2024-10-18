@@ -107,7 +107,7 @@ def broadcast_axis_values_to_geom(geom, axis_name, use_center=True):
 
     Parameters
     ----------
-    geom : `~gammapy.maps.Geom`
+    geom : `gammapy.maps.Geom`
         the input Geom.
     axis_name : str
         input axis name. Must be part of the Geom non-spatial axes.
@@ -116,7 +116,7 @@ def broadcast_axis_values_to_geom(geom, axis_name, use_center=True):
 
     Returns
     -------
-    array : `~numpy.array` or `~astropy.Quantity`
+    array : `numpy.array` or `astropy.Quantity`
         reshaped array.
     """
     if axis_name not in geom.axes.names:

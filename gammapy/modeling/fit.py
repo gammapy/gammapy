@@ -106,7 +106,7 @@ class Fit:
     confidence_opts : dict
         Extra arguments passed to the backend. E.g. `iminuit.Minuit.minos` supports
         a ``maxcall`` option. For the scipy backend ``confidence_opts`` are forwarded
-        to `~scipy.optimize.brentq`. If the confidence estimation fails, the bracketing
+        to `scipy.optimize.brentq`. If the confidence estimation fails, the bracketing
         interval can be adapted by modifying the upper bound of the interval (``b``) value.
     store_trace : bool
         Whether to store the trace of the fit.
@@ -313,15 +313,15 @@ class Fit:
         Extra ``kwargs`` are passed to the backend.
         E.g. `iminuit.Minuit.minos` supports a ``maxcall`` option.
 
-        For the scipy backend ``kwargs`` are forwarded to `~scipy.optimize.brentq`. If the
+        For the scipy backend ``kwargs`` are forwarded to `scipy.optimize.brentq`. If the
         confidence estimation fails, the bracketing interval can be adapted by modifying the
         upper bound of the interval (``b``) value.
 
         Parameters
         ----------
-        datasets : `Datasets` or list of `Dataset`
+        datasets : `gammapy.datasets.Datasets` or list of `gammapy.datasets.Dataset`
             Datasets to optimize.
-        parameter : `~gammapy.modeling.Parameter`
+        parameter : `gammapy.modeling.Parameter`
             Parameter of interest.
         sigma : float, optional
             Number of standard deviations for the confidence level. Default is 1.
@@ -368,9 +368,9 @@ class Fit:
 
         Parameters
         ----------
-        datasets : `Datasets` or list of `Dataset`
+        datasets : `gammapy.datasets.Datasets` or list of `gammapy.datasets.Dataset`
             Datasets to optimize.
-        parameter : `~gammapy.modeling.Parameter`
+        parameter : `gammapy.modeling.Parameter`
             Parameter of interest. The specification for the scan, such as bounds
             and number of values is taken from the parameter object.
         reoptimize : bool, optional
@@ -445,9 +445,9 @@ class Fit:
 
         Parameters
         ----------
-        datasets : `Datasets` or list of `Dataset`
+        datasets : `gammapy.datasets.Datasets` or list of `gammapy.datasets.Dataset`
             Datasets to optimize.
-        x, y : `~gammapy.modeling.Parameter`
+        x, y : `gammapy.modeling.Parameter`
             Parameters of interest.
         reoptimize : bool, optional
             Re-optimize other parameters, when computing the confidence region. Default is False.
@@ -541,9 +541,9 @@ class Fit:
 
         Parameters
         ----------
-        datasets : `Datasets` or list of `Dataset`
+        datasets : `gammapy.datasets.Datasets` or list of `gammapy.datasets.Dataset`
             Datasets to optimize.
-        x, y : `~gammapy.modeling.Parameter`
+        x, y : `gammapy.modeling.Parameter`
             Parameters of interest.
         numpoints : int, optional
             Number of contour points. Default is 10.
@@ -669,7 +669,7 @@ class CovarianceResult(FitStepResult):
 
     Parameters
     ----------
-    matrix : `~numpy.ndarray`, optional
+    matrix : `numpy.ndarray`, optional
         The covariance matrix. Default is None.
     kwargs : dict
         Extra ``kwargs`` are passed to the backend.
@@ -681,7 +681,7 @@ class CovarianceResult(FitStepResult):
 
     @property
     def matrix(self):
-        """Covariance matrix as a `~numpy.ndarray`."""
+        """Covariance matrix as a `numpy.ndarray`."""
         return self._matrix
 
 
@@ -690,15 +690,15 @@ class OptimizeResult(FitStepResult):
 
     Parameters
     ----------
-    models : `~gammapy.modeling.models.DatasetModels`
+    models : `gammapy.modeling.models.DatasetModels`
         Best fit models.
     nfev : int
         Number of function evaluations.
     total_stat : float
         Value of the fit statistic at minimum.
-    trace : `~astropy.table.Table`
+    trace : `astropy.table.Table`
         Parameter trace from the optimisation.
-    minuit : `~iminuit.minuit.Minuit`, optional
+    minuit : `iminuit.minuit.Minuit`, optional
         Minuit object. Default is None.
     kwargs : dict
         Extra ``kwargs`` are passed to the backend.
@@ -763,9 +763,9 @@ class FitResult:
 
     Parameters
     ----------
-    optimize_result : `~OptimizeResult`
+    optimize_result : `gammapy.modeling.OptimizeResult`
         Result of the optimization step.
-    covariance_result : `~CovarianceResult`
+    covariance_result : `gammapy.modeling.CovarianceResult`
         Result of the covariance step.
     """
 

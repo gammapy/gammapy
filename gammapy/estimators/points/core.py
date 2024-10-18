@@ -29,11 +29,11 @@ log = logging.getLogger(__name__)
 
 
 def squash_fluxpoints(flux_point, axis):
-    """Squash a `~FluxPoints` object into one point.
+    """Squash a `gammapy.estimators.FluxPoints` object into one point.
 
     The log-likelihoods profiles in each bin are summed
     to compute the resultant quantities. Stat profiles
-    must be present on the `~FluxPoints` object for
+    must be present on the `~gammapy.estimators.FluxPoints` object for
     this method to work.
     """
     value_scan = flux_point.stat_scan.geom.axes["norm"].center
@@ -103,12 +103,12 @@ class FluxPoints(FluxMaps):
 
     Parameters
     ----------
-    table : `~astropy.table.Table`
+    table : `astropy.table.Table`
         Table with flux point data.
 
     Attributes
     ----------
-    table : `~astropy.table.Table`
+    table : `astropy.table.Table`
         Table with flux point data.
 
     Examples
@@ -251,7 +251,7 @@ class FluxPoints(FluxMaps):
                   lightcurves. Basically a generalisation of the "gadf" format, but
                   currently there is no detailed documentation available.
                 * "binned-time-series": table format support by Astropy's
-                  `~astropy.timeseries.BinnedTimeSeries`.
+                  `astropy.timeseries.BinnedTimeSeries`.
                 * "profile": Gammapy internal format to store energy dependent
                   flux profiles. Basically a generalisation of the "gadf" format, but
                   currently there is no detailed documentation available.
@@ -321,7 +321,7 @@ class FluxPoints(FluxMaps):
 
         Parameters
         ----------
-        table : `~astropy.table.Table`
+        table : `astropy.table.Table`
             Table.
         sed_type : {"dnde", "flux", "eflux", "e2dnde", "likelihood"}, optional
             SED type. Default is None.
@@ -428,7 +428,7 @@ class FluxPoints(FluxMaps):
                   lightcurves. Basically a generalisation of the "gadf" format, but
                   currently there is no detailed documentation available.
                 * "binned-time-series": table format support by Astropy's
-                  `~astropy.timeseries.BinnedTimeSeries`.
+                  `astropy.timeseries.BinnedTimeSeries`.
                 * "profile": Gammapy internal format to store energy dependent
                   flux profiles. Basically a generalisation of the "gadf" format, but
                   currently there is no detailed documentation available.
@@ -441,7 +441,7 @@ class FluxPoints(FluxMaps):
 
         Returns
         -------
-        table : `~astropy.table.Table`
+        table : `astropy.table.Table`
             Flux points table.
 
         Examples
@@ -610,7 +610,7 @@ class FluxPoints(FluxMaps):
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes`, optional
             Axis object to plot on. Default is None.
         sed_type : {"dnde", "flux", "eflux", "e2dnde"}, optional
             SED type. Default is None.
@@ -619,11 +619,11 @@ class FluxPoints(FluxMaps):
         time_format : {"iso", "mjd"}
             Used time format is a time axis is present. Default is "iso".
         **kwargs : dict, optional
-            Keyword arguments passed to `~RegionNDMap.plot`.
+            Keyword arguments passed to `RegionNDMap.plot`.
 
         Returns
         -------
-        ax : `~matplotlib.axes.Axes`
+        ax : `matplotlib.axes.Axes`
             Axis object.
         """
         if sed_type is None:
@@ -683,18 +683,18 @@ class FluxPoints(FluxMaps):
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes`, optional
             Axis object to plot on. Default is None.
         sed_type : {"dnde", "flux", "eflux", "e2dnde"}, optional
             SED type. Default is None.
         add_cbar : bool, optional
             Whether to add a colorbar to the plot. Default is True.
         **kwargs : dict, optional
-            Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
+            Keyword arguments passed to `matplotlib.pyplot.pcolormesh`.
 
         Returns
         -------
-        ax : `~matplotlib.axes.Axes`
+        ax : `matplotlib.axes.Axes`
             Axis object.
         """
         if ax is None:
@@ -779,11 +779,11 @@ class FluxPoints(FluxMaps):
         n_sigma_ul : int
             Number of sigma to use for upper limit computation. Default is 2.
         **kwargs : dict, optional
-            Keyword arguments passed to `~scipy.optimize.brentq`.
+            Keyword arguments passed to `scipy.optimize.brentq`.
 
         Returns
         -------
-        flux_points : `~gammapy.estimators.FluxPoints`
+        flux_points : `gammapy.estimators.FluxPoints`
             A new FluxPoints object with modified upper limits.
 
         Examples
@@ -823,7 +823,7 @@ class FluxPoints(FluxMaps):
 
         The log-likelihoods profiles in each bin are summed
         to compute the resultant quantities.
-        Stat profiles must be present on the `~gammapy.estimators.FluxPoints` object for
+        Stat profiles must be present on the `gammapy.estimators.FluxPoints` object for
         this method to work.
 
         For now, works only for flat `~gammapy.estimators.FluxPoints`.
@@ -835,7 +835,7 @@ class FluxPoints(FluxMaps):
 
         Returns
         -------
-        flux_points : `~gammapy.estimators.FluxPoints`
+        flux_points : `gammapy.estimators.FluxPoints`
             A new FluxPoints object with modified axis.
         """
         if not self.has_stat_profiles:

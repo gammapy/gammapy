@@ -70,7 +70,7 @@ class WcsGeom(Geom):
 
     Parameters
     ----------
-    wcs : `~astropy.wcs.WCS`
+    wcs : `astropy.wcs.WCS`
         WCS projection object.
     npix : tuple
         Number of pixels in each spatial dimension.
@@ -126,7 +126,7 @@ class WcsGeom(Geom):
 
     @property
     def data_shape(self):
-        """Shape of the `~numpy.ndarray` matching this geometry."""
+        """Shape of the `numpy.ndarray` matching this geometry."""
         return self._shape[::-1]
 
     @property
@@ -279,7 +279,7 @@ class WcsGeom(Geom):
 
         Returns
         -------
-        pix : `~astropy.coordinates.SkyCoord`
+        pix : `astropy.coordinates.SkyCoord`
         """
         return SkyCoord.from_pixel(self.center_pix[0], self.center_pix[1], self.wcs)
 
@@ -293,7 +293,7 @@ class WcsGeom(Geom):
 
         Returns
         -------
-        angle: `~astropy.coordinates.Angle`
+        angle: `astropy.coordinates.Angle`
         """
         return Angle(proj_plane_pixel_scales(self.wcs), "deg")
 
@@ -343,7 +343,7 @@ class WcsGeom(Geom):
             set to the center of the map. Default is None.
         axes : list, optional
             List of non-spatial axes.
-        skydir : tuple or `~astropy.coordinates.SkyCoord`, optional
+        skydir : tuple or `astropy.coordinates.SkyCoord`, optional
             Sky position of map center. Can be either a SkyCoord
             object or a tuple of longitude and latitude in deg in the
             coordinate system of the map. Default is None.
@@ -357,7 +357,7 @@ class WcsGeom(Geom):
 
         Returns
         -------
-        geom : `~WcsGeom`
+        geom : `WcsGeom`
             A WCS geometry object.
 
         Examples
@@ -423,13 +423,13 @@ class WcsGeom(Geom):
 
     @property
     def footprint(self):
-        """Footprint of the geometry as a `~astropy.coordinates.SkyCoord`."""
+        """Footprint of the geometry as a `astropy.coordinates.SkyCoord`."""
         coords = self.wcs.calc_footprint()
         return SkyCoord(coords, frame=self.frame, unit="deg")
 
     @property
     def footprint_rectangle_sky_region(self):
-        """Footprint of the geometry as a `~regions.RectangleSkyRegion`."""
+        """Footprint of the geometry as a `regions.RectangleSkyRegion`."""
         width, height = self.width
         return RectangleSkyRegion(
             center=self.center_skydir, width=width[0], height=height[0]
@@ -441,9 +441,9 @@ class WcsGeom(Geom):
 
         Parameters
         ----------
-        geom : `~WcsGeom`
+        geom : `WcsGeom`
             A reference WCS geometry object.
-        skydir : tuple or `~astropy.coordinates.SkyCoord`
+        skydir : tuple or `astropy.coordinates.SkyCoord`
             Sky position of map center. Can be either a SkyCoord
             object or a tuple of longitude and latitude in degrees in the
             coordinate system of the map.
@@ -455,7 +455,7 @@ class WcsGeom(Geom):
 
         Returns
         -------
-        geom : `~WcsGeom`
+        geom : `WcsGeom`
             An aligned WCS geometry object with specified size and center.
 
         """
@@ -480,16 +480,16 @@ class WcsGeom(Geom):
 
         Parameters
         ----------
-        header : `~astropy.io.fits.Header`
+        header : `astropy.io.fits.Header`
             The FITS header.
-        hdu_bands : `~astropy.io.fits.BinTableHDU`, optional
+        hdu_bands : `astropy.io.fits.BinTableHDU`, optional
             The BANDS table HDU. Default is None.
         format : {'gadf', 'fgst-ccube','fgst-template'}, optional
             FITS format convention. Default is "gadf".
 
         Returns
         -------
-        wcs : `~WcsGeom`
+        wcs : `WcsGeom`
             WCS geometry object.
         """
         wcs = WCS(header, naxis=2).sub(2)
@@ -610,10 +610,10 @@ class WcsGeom(Geom):
 
         Parameters
         ----------
-        mode : {'center', 'edges'}, optional
+        mode : {"center", "edges"}, optional
             Get center or edge coordinates for the spatial axes.
             Default is "center".
-        frame : str or `~astropy.coordinates.Frame`, optional
+        frame : str or `astropy.coordinates.Frame`, optional
             Coordinate frame. Default is None.
         sparse : bool, optional
             Compute sparse coordinates. Default is False.
@@ -623,7 +623,7 @@ class WcsGeom(Geom):
 
         Returns
         -------
-        coord : `~MapCoord`
+        coord : `gammapy.maps.MapCoord`
             Map coordinate object.
         """
         if axis_name is None:
@@ -803,7 +803,7 @@ class WcsGeom(Geom):
         )
 
     def solid_angle(self):
-        """Solid angle array as a `~astropy.units.Quantity` in ``sr``.
+        """Solid angle array as a `astropy.units.Quantity` in ``sr``.
 
         The array has the same dimension as the WcsGeom object
         if the spatial shape is not unique along the extra axis,
@@ -856,7 +856,7 @@ class WcsGeom(Geom):
         return value
 
     def bin_volume(self):
-        """Bin volume as a `~astropy.units.Quantity`."""
+        """Bin volume as a `astropy.units.Quantity`."""
         return self._bin_volume
 
     @lazyproperty
@@ -874,12 +874,12 @@ class WcsGeom(Geom):
 
         Parameters
         ----------
-        center : `~astropy.coordinates.SkyCoord`
+        center : `astropy.coordinates.SkyCoord`
             Center position.
 
         Returns
         -------
-        separation : `~astropy.coordinates.Angle`
+        separation : `astropy.coordinates.Angle`
             Separation angle array (2D).
         """
         coord = self.to_image().get_coord()
@@ -891,13 +891,13 @@ class WcsGeom(Geom):
 
         Parameters
         ----------
-        position : `~astropy.coordinates.SkyCoord`
+        position : `astropy.coordinates.SkyCoord`
             Center position of the cutout region.
-        width : tuple of `~astropy.coordinates.Angle`
+        width : tuple of `astropy.coordinates.Angle`
             Angular sizes of the region in (lon, lat) in that specific order.
             If only one value is passed, a square region is extracted.
-        mode : {'trim', 'partial', 'strict'}, optional
-            Mode option for Cutout2D, for details see `~astropy.nddata.utils.Cutout2D`.
+        mode : {"trim", "partial", "strict"}, optional
+            Mode option for Cutout2D, for details see `astropy.nddata.utils.Cutout2D`.
             Default is "trim".
         odd_npix : bool, optional
             Force width to odd number of pixels.
@@ -909,7 +909,7 @@ class WcsGeom(Geom):
 
         Returns
         -------
-        cutout : `~gammapy.maps.WcsNDMap`
+        cutout : `gammapy.maps.WcsNDMap`
             Cutout map.
         """
         width = _check_width(width) * u.deg
@@ -936,13 +936,13 @@ class WcsGeom(Geom):
 
         Parameters
         ----------
-        width : tuple of `~astropy.units.Quantity`
+        width : tuple of `astropy.units.Quantity`
             Angular sizes of the margin in (lon, lat) in that specific order.
             If only one value is passed, the same margin is applied in (lon, lat).
 
         Returns
         -------
-        mask_map : `~gammapy.maps.WcsNDMap` of boolean type
+        mask_map : `gammapy.maps.WcsNDMap` of boolean type
             Boundary mask.
 
         """
@@ -962,7 +962,7 @@ class WcsGeom(Geom):
 
         Parameters
         ----------
-        regions : str, `~regions.Region` or list of `~regions.Region`
+        regions : str, `regions.Region` or list of `regions.Region`
             Region or list of regions (pixel or sky regions accepted).
             A region can be defined as a string ind DS9 format as well.
             See http://ds9.si.edu/doc/ref/region.html for details.
@@ -973,7 +973,7 @@ class WcsGeom(Geom):
 
         Returns
         -------
-        mask_map : `~gammapy.maps.WcsNDMap` of boolean type
+        mask_map : `gammapy.maps.WcsNDMap` of boolean type
             Boolean region mask.
 
 
@@ -1018,7 +1018,7 @@ class WcsGeom(Geom):
 
         Parameters
         ----------
-        regions : str, `~regions.Region` or list of `~regions.Region`
+        regions : str, `regions.Region` or list of `regions.Region`
             Region or list of regions (pixel or sky regions accepted).
             A region can be defined as a string ind DS9 format as well.
             See http://ds9.si.edu/doc/ref/region.html for details.
@@ -1028,7 +1028,7 @@ class WcsGeom(Geom):
 
         Returns
         -------
-        map : `~gammapy.maps.WcsNDMap` of boolean type
+        map : `gammapy.maps.WcsNDMap` of boolean type
             Weights region mask.
         """
         geom = self.upsample(factor=oversampling_factor)
@@ -1041,17 +1041,17 @@ class WcsGeom(Geom):
 
         Parameters
         ----------
-        width : `~astropy.units.Quantity`, str or float
+        width : `astropy.units.Quantity`, str or float
             If a float is given it interpreted as width in pixels. If an (angular)
             quantity is given it converted to pixels using ``geom.wcs.wcs.cdelt``.
             The width corresponds to radius in case of a disk kernel, and
             the side length in case of a box kernel.
-        kernel : {'disk', 'box'}, optional
+        kernel : {"disk", "box"}, optional
             Kernel shape. Default is "disk".
 
         Returns
         -------
-        structure : `~numpy.ndarray`
+        structure : `numpy.ndarray`
             Binary structure.
         """
         width = u.Quantity(width)
@@ -1097,7 +1097,7 @@ class WcsGeom(Geom):
 
         Parameters
         ----------
-        max_radius : `~astropy.units.Quantity`, optional
+        max_radius : `astropy.units.Quantity`, optional
             Maximum radius of the geometry (half the width).
             Default is None.
 
@@ -1234,7 +1234,7 @@ def pix2world(wcs, cdelt, crpix, pix):
 
     Parameters
     ----------
-    wcs : `~astropy.wcs.WCS`
+    wcs : `astropy.wcs.WCS`
         WCS transform object.
     cdelt : tuple
         Tuple of X/Y pixel size in deg. Each element should have the

@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Metadata base container for Gammapy."""
+
 import json
 from typing import ClassVar, Literal, Optional, get_args
 import astropy.units as u
@@ -182,7 +183,7 @@ class CreatorMetaData(MetaData):
     creator : str
         The software used to create the data contained in the parent object.
         Default is the used Gammapy version.
-    date : `~astropy.time.Time` or str
+    date : `astropy.time.Time` or str
         The creation date. Default is the current date.
     origin : str
         The organization at the origin of the data.
@@ -225,9 +226,9 @@ class PointingInfoMetaData(MetaData):
 
     Parameters
     ----------
-    radec_mean : `~astropy.coordinates.SkyCoord`, optional
+    radec_mean : `astropy.coordinates.SkyCoord`, optional
         Mean pointing position of the observation in `icrs` frame.
-    altaz_mean : `~astropy.coordinates.SkyCoord`, or `~astropy.coordinates.AltAz`, optional
+    altaz_mean : `astropy.coordinates.SkyCoord`, or `astropy.coordinates.AltAz`, optional
         Mean pointing position of the observation in local AltAz frame.
     """
 
@@ -242,11 +243,11 @@ class TimeInfoMetaData(MetaData):
 
     Parameters
     ----------
-    time_start : `~astropy.time.Time` or str
+    time_start : `astropy.time.Time` or str
         The observation start time.
-    time_stop : `~astropy.time.Time` or str
+    time_stop : `astropy.time.Time` or str
         The observation stop time.
-    reference_time : `~astropy.time.Time` or str
+    reference_time : `astropy.time.Time` or str
         The observation reference time."""
 
     _tag: ClassVar[Literal["time_info"]] = "time_info"
@@ -291,7 +292,7 @@ class TargetMetaData(MetaData):
     ----------
     name : str, optional
         The target name.
-    position : `~astropy.coordinates.SkyCoord`, optional
+    position : `astropy.coordinates.SkyCoord`, optional
         Position of the observation in `icrs` frame.
 
     """

@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Time related utility functions."""
+
 import numpy as np
 import astropy.units as u
 from astropy.time import Time, TimeDelta
@@ -33,13 +34,13 @@ def time_to_fits(time, epoch=None, unit=u.s):
 
     Parameters
     ----------
-    time : `~astropy.time.Time`
+    time : `astropy.time.Time`
         Time to be converted.
-    epoch : `~astropy.time.Time`, optional
+    epoch : `astropy.time.Time`, optional
         Epoch to use for the time. The corresponding keywords must
         be stored in the same FITS header.
         Default is None, so the `DEFAULT_EPOCH` is used.
-    unit : `~astropy.units.Unit`, optional
+    unit : `astropy.units.Unit`, optional
         Unit, should be stored as `TIMEUNIT` in the same FITS header.
         Default is u.s.
 
@@ -61,13 +62,13 @@ def time_to_fits_header(time, epoch=None, unit=u.s):
 
     Parameters
     ----------
-    time : `~astropy.time.Time`
+    time : `astropy.time.Time`
         Time to be converted.
-    epoch : `~astropy.time.Time`, optional
+    epoch : `astropy.time.Time`, optional
         Epoch to use for the time. The corresponding keywords must
         be stored in the same FITS header.
         Default is None, so `DEFAULT_EPOCH` is used.
-    unit : `~astropy.units.Unit`, optional
+    unit : `astropy.units.Unit`, optional
         Unit, should be stored as `TIMEUNIT` in the same FITS header.
         Default is u.s.
 
@@ -90,13 +91,13 @@ def time_ref_from_dict(meta, format="mjd", scale="tt"):
     meta : dict
         FITS time standard header information.
     format: str, optional
-        Format of the `~astropy.time.Time` information. Default is 'mjd'.
+        Format of the `astropy.time.Time` information. Default is 'mjd'.
     scale: str, optional
-        Scale of the `~astropy.time.Time` information. Default is 'tt'.
+        Scale of the `astropy.time.Time` information. Default is 'tt'.
 
     Returns
     -------
-    time : `~astropy.time.Time`
+    time : `astropy.time.Time`
         Time object with ``format='MJD'``.
     """
     scale = meta.get("TIMESYS", scale).lower()
@@ -112,11 +113,11 @@ def time_ref_to_dict(time=None, scale="tt"):
 
     Parameters
     ----------
-    time : `~astropy.time.Time`, optional
+    time : `astropy.time.Time`, optional
         The reference epoch for storing time in FITS.
         Default is None, so 'DEFAULT_EPOCH' is used.
     scale: str, optional
-        Scale of the `~astropy.time.Time` information.
+        Scale of the `astropy.time.Time` information.
         Default is "tt".
 
     Returns
@@ -140,14 +141,14 @@ def time_relative_to_ref(time, meta):
 
     Parameters
     ----------
-    time : `~astropy.time.Time`
+    time : `astropy.time.Time`
         Time to be converted.
     meta : dict
         Dictionary with the keywords ``MJDREFI`` and ``MJDREFF``.
 
     Returns
     -------
-    time_delta : `~astropy.time.TimeDelta`
+    time_delta : `astropy.time.TimeDelta`
         Time in seconds after the reference.
     """
     time_ref = time_ref_from_dict(meta)
@@ -159,14 +160,14 @@ def absolute_time(time_delta, meta):
 
     Parameters
     ----------
-    time_delta : `~astropy.time.TimeDelta`
+    time_delta : `astropy.time.TimeDelta`
         Time in seconds after the MET reference.
     meta : dict
         Dictionary with the keywords ``MJDREFI`` and ``MJDREFF``.
 
     Returns
     -------
-    time : `~astropy.time.Time`
+    time : `astropy.time.Time`
         Absolute time with ``format='ISOT'`` and ``scale='UTC'``.
     """
     time = time_ref_from_dict(meta) + time_delta

@@ -28,17 +28,17 @@ class MapEvaluator:
 
     Parameters
     ----------
-    model : `~gammapy.modeling.models.SkyModel`
+    model : `gammapy.modeling.models.SkyModel`
         Sky model.
-    exposure : `~gammapy.maps.Map`
+    exposure : `gammapy.maps.Map`
         Exposure map.
-    psf : `~gammapy.irf.PSFKernel`
+    psf : `gammapy.irf.PSFKernel`
         PSF kernel.
-    edisp : `~gammapy.irf.EDispKernel`
+    edisp : `gammapy.irf.EDispKernel`
         Energy dispersion.
-    mask : `~gammapy.maps.Map`
+    mask : `gammapy.maps.Map`
         Mask to apply to the likelihood for fitting.
-    gti : `~gammapy.data.GTI`
+    gti : `gammapy.data.GTI`
         GTI of the observation or union of GTI if it is a stacked observation.
     evaluation_mode : {"local", "global"}
         Model evaluation mode.
@@ -174,7 +174,7 @@ class MapEvaluator:
 
         Parameters
         ----------
-        exposure : `~gammapy.maps.Map`
+        exposure : `gammapy.maps.Map`
             Exposure map.
         psf : `gammapy.irf.PSFMap`
             PSF map.
@@ -182,7 +182,7 @@ class MapEvaluator:
             Edisp map.
         geom : `WcsGeom`
             Counts geom.
-        mask : `~gammapy.maps.Map`
+        mask : `gammapy.maps.Map`
             Mask to apply to the likelihood for fitting.
         """
         # TODO: simplify and clean up
@@ -254,7 +254,7 @@ class MapEvaluator:
 
         Returns
         -------
-        model_map : `~gammapy.maps.Map`
+        model_map : `gammapy.maps.Map`
             Sky cube with data filled with evaluated model values.
             Units: ``cm-2 s-1 TeV-1 deg-2``.
         """
@@ -291,7 +291,7 @@ class MapEvaluator:
 
         Returns
         ----------
-        value: `~astropy.units.Quantity`
+        value: `astropy.units.Quantity`
             PSF-corrected, integrated flux over a given region.
         """
         if self.geom.is_region:
@@ -360,12 +360,12 @@ class MapEvaluator:
 
         Parameters
         ----------
-        npred : `~gammapy.maps.Map`
+        npred : `gammapy.maps.Map`
             Predicted counts in true energy bins.
 
         Returns
         -------
-        npred_reco : `~gammapy.maps.Map`
+        npred_reco : `gammapy.maps.Map`
             Predicted counts in reconstructed energy bins.
         """
         if self.model.apply_irf["edisp"] and self.edisp:
@@ -407,7 +407,7 @@ class MapEvaluator:
 
         Returns
         -------
-        npred : `~gammapy.maps.Map`
+        npred : `gammapy.maps.Map`
             Predicted counts on the map (in reconstructed energy bins).
         """
         if self.parameters_changed or not self.use_cache:

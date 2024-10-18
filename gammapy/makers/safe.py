@@ -19,7 +19,7 @@ class SafeMaskMaker(Maker):
 
     .. warning::
 
-         Currently some methods computing a safe energy range ("aeff-default",
+         Currently, some methods computing a safe energy range ("aeff-default",
          "aeff-max" and "edisp-bias") determine a true energy range and apply
          it to reconstructed energy, effectively neglecting the energy dispersion.
 
@@ -37,17 +37,17 @@ class SafeMaskMaker(Maker):
     bias_percent : float
         Percentage of the energy bias to be used as lower
         energy threshold for method "edisp-bias".
-    position : `~astropy.coordinates.SkyCoord`
-        Position at which the `aeff_percent` or `bias_percent` are computed.
-    fixed_offset : `~astropy.coordinates.Angle`
+    position : `astropy.coordinates.SkyCoord`
+        Position at which the ``aeff_percent`` or ``bias_percent`` are computed.
+    fixed_offset : `astropy.coordinates.Angle`
         Offset, calculated from the pointing position, at which
-        the `aeff_percent` or `bias_percent` are computed.
+        the ``aeff_percent`` or ``bias_percent`` are computed.
         If neither the position nor fixed_offset is specified,
         it uses the position of the center of the map by default.
-    offset_max : str or `~astropy.units.Quantity`
+    offset_max : str or `astropy.units.Quantity`
         Maximum offset cut.
     irfs : {"DL4", "DL3"}
-        Whether to use reprojected ("DL4") or raw ("DL3") irfs.
+        Whether to use reprojected ("DL4") or raw ("DL3") IRFs.
         Default is "DL4".
     """
 
@@ -98,14 +98,14 @@ class SafeMaskMaker(Maker):
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.SpectrumDataset`
+        dataset : `gammapy.datasets.MapDataset` or `gammapy.datasets.SpectrumDataset`
             Dataset to compute mask for.
-        observation : `~gammapy.data.Observation`
+        observation : `gammapy.data.Observation`
             Observation to compute mask for.
 
         Returns
         -------
-        mask_safe : `~numpy.ndarray`
+        mask_safe : `numpy.ndarray`
             Maximum offset mask.
         """
         if observation is None:
@@ -122,14 +122,14 @@ class SafeMaskMaker(Maker):
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.SpectrumDataset`
+        dataset : `gammapy.datasets.MapDataset` or `gammapy.datasets.SpectrumDataset`
             Dataset to compute mask for.
-        observation : `~gammapy.data.Observation`
+        observation : `gammapy.data.Observation`
             Observation to compute mask for.
 
         Returns
         -------
-        mask_safe : `~numpy.ndarray`
+        mask_safe : `numpy.ndarray`
             Safe data range mask.
         """
         if observation is None:
@@ -182,14 +182,14 @@ class SafeMaskMaker(Maker):
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.SpectrumDataset`
+        dataset : `gammapy.datasets.MapDataset` or `gammapy.datasets.SpectrumDataset`
             Dataset to compute mask for.
-        observation : `~gammapy.data.Observation`
+        observation : `gammapy.data.Observation`
             Observation to compute mask for. It is a mandatory argument when fixed_offset is set.
 
         Returns
         -------
-        mask_safe : `~numpy.ndarray`
+        mask_safe : `numpy.ndarray`
             Safe data range mask.
         """
 
@@ -244,14 +244,14 @@ class SafeMaskMaker(Maker):
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.SpectrumDataset`
+        dataset : `gammapy.datasets.MapDataset` or `gammapy.datasets.SpectrumDataset`
             Dataset to compute mask for.
-        observation : `~gammapy.data.Observation`
+        observation : `gammapy.data.Observation`
             Observation to compute mask for. It is a mandatory argument when fixed_offset is set.
 
         Returns
         -------
-        mask_safe : `~numpy.ndarray`
+        mask_safe : `numpy.ndarray`
             Safe data range mask.
         """
 
@@ -285,15 +285,15 @@ class SafeMaskMaker(Maker):
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.SpectrumDataset`
+        dataset : `gammapy.datasets.MapDataset` or `gammapy.datasets.SpectrumDataset`
             Dataset to compute mask for.
-        observation: `~gammapy.data.Observation`
-            Observation to compute mask for. It is a mandatory argument when DL3 irfs are used.
+        observation: `gammapy.data.Observation`
+            Observation to compute mask for. It is a mandatory argument when DL3 IRFs are used.
 
 
         Returns
         -------
-        mask_safe : `~numpy.ndarray`
+        mask_safe : `numpy.ndarray`
             Safe data range mask.
         """
         geom = dataset._geom
@@ -316,12 +316,12 @@ class SafeMaskMaker(Maker):
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.SpectrumDataset`
+        dataset : `gammapy.datasets.MapDataset` or `gammapy.datasets.SpectrumDataset`
             Dataset to compute mask for.
 
         Returns
         -------
-        mask_safe : `~numpy.ndarray`
+        mask_safe : `numpy.ndarray`
             Safe data range mask.
         """
         bkg = dataset.background.data
@@ -337,20 +337,20 @@ class SafeMaskMaker(Maker):
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.SpectrumDataset`
+        dataset : `gammapy.datasets.MapDataset` or `gammapy.datasets.SpectrumDataset`
             Dataset to compute mask for.
-        observation : `~gammapy.data.Observation`
+        observation : `gammapy.data.Observation`
             Observation to compute mask for.
 
         Returns
         -------
-        dataset : `Dataset`
+        dataset : `gammapy.datasets.Dataset`
             Dataset with defined safe range mask.
         """
 
         if self.irfs == "DL3":
             if observation is None:
-                raise ValueError("observation argument is mandatory with DL3 irfs")
+                raise ValueError("observation argument is mandatory with DL3 IRFs")
 
         if dataset.mask_safe:
             mask_safe = dataset.mask_safe.data
