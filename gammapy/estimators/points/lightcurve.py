@@ -40,7 +40,7 @@ class LightCurveEstimator(FluxPointsEstimator):
         Start and stop time for each interval to compute the LC.
     source : str or int
         For which source in the model to compute the flux points. Default is 0.
-    atol : `~astropy.units.Quantity`
+    atol : `astropy.units.Quantity`
         Tolerance value for time comparison with different scale. Default 1e-6 sec.
     n_sigma : int
         Number of sigma to use for asymmetric error computation. Default is 1.
@@ -55,12 +55,12 @@ class LightCurveEstimator(FluxPointsEstimator):
             * "scan": estimate fit statistic profiles.
 
         Default is None so the optional steps are not executed.
-    energy_edges : list of `~astropy.units.Quantity`, optional
+    energy_edges : list of `astropy.units.Quantity`, optional
         Edges of the lightcurve energy bins. The resulting bin edges won't be exactly equal to the input ones,
         but rather the closest values to the energy axis edges of the parent dataset.
         Default is None: apply the estimator in each energy bin of the parent dataset.
         For further explanation see :ref:`estimators`.
-    fit : `Fit`
+    fit : `gammapy.modeling.Fit`
         Fit instance specifying the backend and fit options.
     reoptimize : bool
         If True the free parameters of the other models are fitted in each bin independently,
@@ -70,15 +70,15 @@ class LightCurveEstimator(FluxPointsEstimator):
         and all other parameters are frozen at their current values.
     n_jobs : int
         Number of processes used in parallel for the computation. Default is one,
-        unless `~gammapy.utils.parallel.N_JOBS_DEFAULT` was modified. The number
+        unless `gammapy.utils.parallel.N_JOBS_DEFAULT` was modified. The number
         of jobs is limited to the number of physical CPUs.
     parallel_backend : {"multiprocessing", "ray"}
-        Which backend to use for multiprocessing. Defaults to `~gammapy.utils.parallel.BACKEND_DEFAULT`.
-    norm : ~gammapy.modeling.Parameter` or dict
+        Which backend to use for multiprocessing. Defaults to `gammapy.utils.parallel.BACKEND_DEFAULT`.
+    norm : `gammapy.modeling.Parameter` or dict
         Norm parameter used for the fit
         Default is None and a new parameter is created automatically,
         with value=1, name="norm", scan_min=0.2, scan_max=5, and scan_n_values = 11.
-        By default the min and max are not set and derived from the source model,
+        By default ,the min and max are not set and derived from the source model,
         unless the source model does not have one and only one norm parameter.
         If a dict is given the entries should be a subset of
         `~gammapy.modeling.Parameter` arguments.
@@ -108,12 +108,12 @@ class LightCurveEstimator(FluxPointsEstimator):
 
         Parameters
         ----------
-        datasets : list of `~gammapy.datasets.SpectrumDataset` or `~gammapy.datasets.MapDataset`
+        datasets : list of `gammapy.datasets.SpectrumDataset` or `gammapy.datasets.MapDataset`
             Spectrum or Map datasets.
 
         Returns
         -------
-        lightcurve : `~gammapy.estimators.FluxPoints`
+        lightcurve : `gammapy.estimators.FluxPoints`
             Light curve flux points.
         """
         if not isinstance(datasets, DatasetsActor):
@@ -203,12 +203,12 @@ class LightCurveEstimator(FluxPointsEstimator):
 
         Parameters
         ----------
-        datasets : `~gammapy.modeling.Datasets`
+        datasets : `gammapy.modeling.Datasets`
             List of dataset objects.
 
         Returns
         -------
-        result : `FluxPoints`
+        result : `gammapy.estimators.FluxPoints`
             Resulting flux points.
         """
         estimator = self.copy()

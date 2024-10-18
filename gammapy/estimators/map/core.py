@@ -110,7 +110,7 @@ OPTIONAL_QUANTITIES_COMMON = [
 class FluxMaps:
     """A flux map / points container.
 
-    It contains a set of `~gammapy.maps.Map` objects that store the estimated
+    It contains a set of `gammapy.maps.Map` objects that store the estimated
     flux as a function of energy as well as associated quantities (typically
     errors, upper limits, delta TS and possibly raw quantities such counts,
     excesses etc). It also contains a reference model to convert the flux
@@ -127,7 +127,7 @@ class FluxMaps:
 
     Parameters
     ----------
-    data : dict of `~gammapy.maps.Map`
+    data : dict of `gammapy.maps.Map`
         The maps dictionary. Expected entries are the following:
 
         * norm : the norm factor.
@@ -145,12 +145,12 @@ class FluxMaps:
         * acceptance_off : optional, acceptance from the off region
         * acceptance_on : optional, acceptance from the on region
 
-    reference_model : `~gammapy.modeling.models.SkyModel`, optional
+    reference_model : `gammapy.modeling.models.SkyModel`, optional
         The reference model to use for conversions. If None, a model consisting
         of a point source with a power law spectrum of index 2 is assumed.
     meta : dict, optional
         Dict of metadata.
-    gti : `~gammapy.data.GTI`, optional
+    gti : `gammapy.data.GTI`, optional
         Maps GTI information.
     filter_success_nan : boolean, optional
         Set fitted norm and error to NaN when the fit has not succeeded.
@@ -355,7 +355,7 @@ class FluxMaps:
 
         Returns
         -------
-        energy_ref : `~astropy.units.Quantity`
+        energy_ref : `astropy.units.Quantity`
             Reference energy.
         """
         return self.energy_axis.center
@@ -366,7 +366,7 @@ class FluxMaps:
 
         Returns
         -------
-        energy_min : `~astropy.units.Quantity`
+        energy_min : `astropy.units.Quantity`
             Lower bound of energy bin.
         """
         return self.energy_axis.edges[:-1]
@@ -377,7 +377,7 @@ class FluxMaps:
 
         Returns
         -------
-        energy_max : `~astropy.units.Quantity`
+        energy_max : `astropy.units.Quantity`
             Upper bound of energy bin.
         """
         return self.energy_axis.edges[1:]
@@ -418,7 +418,7 @@ class FluxMaps:
 
         Parameters
         ----------
-        value : `~Map`
+        value : `Map`
             Boolean map.
         """
         if not isinstance(value, Map):
@@ -780,12 +780,12 @@ class FluxMaps:
 
         Parameters
         ----------
-        position : `~astropy.coordinates.SkyCoord`
+        position : `astropy.coordinates.SkyCoord`
             Position where the flux points are extracted.
 
         Returns
         -------
-        flux_points : `~gammapy.estimators.FluxPoints`
+        flux_points : `gammapy.estimators.FluxPoints`
             Flux points object.
         """
         from gammapy.estimators import FluxPoints
@@ -925,18 +925,18 @@ class FluxMaps:
             Maps object containing the input maps.
         sed_type : str, optional
             SED type of the input maps. If None, set to "likelihood". Default is None.
-        reference_model : `~gammapy.modeling.models.SkyModel`, optional
+        reference_model : `gammapy.modeling.models.SkyModel`, optional
             Reference model to use for conversions.
             If None, a model consisting of a point source with a power
             law spectrum of index 2 is assumed. Default is None.
-        gti : `~gammapy.data.GTI`, optional
+        gti : `gammapy.data.GTI`, optional
             Maps GTI information. Default is None.
         meta : `dict`
             Meta dictionary.
 
         Returns
         -------
-        flux_maps : `~gammapy.estimators.FluxMaps`
+        flux_maps : `gammapy.estimators.FluxMaps`
             Flux maps object.
         """
         if sed_type is None:
@@ -999,7 +999,7 @@ class FluxMaps:
 
         Returns
         -------
-        hdulist : `~astropy.io.fits.HDUList`
+        hdulist : `astropy.io.fits.HDUList`
             Map dataset list of HDUs.
         """
         if sed_type is None:
@@ -1026,7 +1026,7 @@ class FluxMaps:
 
         Parameters
         ----------
-        hdulist : `~astropy.io.fits.HDUList`
+        hdulist : `astropy.io.fits.HDUList`
             List of HDUs.
         hdu_bands : str, optional
             Name of the HDU with the BANDS table. Default is 'BANDS'
@@ -1036,7 +1036,7 @@ class FluxMaps:
 
         Returns
         -------
-        flux_maps : `~gammapy.estimators.FluxMaps`
+        flux_maps : `gammapy.estimators.FluxMaps`
             Flux maps object.
         """
         maps = Maps.from_hdulist(hdulist=hdulist, hdu_bands=hdu_bands)
@@ -1119,7 +1119,7 @@ class FluxMaps:
 
         Returns
         -------
-        flux_maps : `~gammapy.estimators.FluxMaps`
+        flux_maps : `gammapy.estimators.FluxMaps`
             Flux maps object.
         """
         with fits.open(
@@ -1132,14 +1132,14 @@ class FluxMaps:
 
         Parameters
         ----------
-        reference_model : `~gammapy.modeling.models.SkyModel`, optional
+        reference_model : `gammapy.modeling.models.SkyModel`, optional
             The reference model to use for conversions. If None, the original model is copied.
             Flux maps have been obtained for a specific reference model.
             Changing it will change the fluxes. Handle with care.
 
         Returns
         -------
-        flux_maps : `~gammapy.estimators.FluxMaps`
+        flux_maps : `gammapy.estimators.FluxMaps`
             Copied flux maps object.
 
         """
@@ -1233,7 +1233,7 @@ class FluxMaps:
 
         Parameters
         ----------
-        time_min, time_max : `~astropy.time.Time`
+        time_min, time_max : `astropy.time.Time`
             Time bounds used to slice the flux map.
 
         Returns
@@ -1257,7 +1257,7 @@ class FluxMaps:
 
         Parameters
         ----------
-        energy_min, energy_max : `~astropy.units.Quantity`
+        energy_min, energy_max : `astropy.units.Quantity`
             Energy bounds used to slice the flux map.
 
         Returns

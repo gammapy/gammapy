@@ -50,34 +50,34 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
             * "scan": estimate fit statistic profiles.
 
         Default is None so the optional steps are not executed.
-    energy_edges : list of `~astropy.units.Quantity`, optional
+    energy_edges : list of `astropy.units.Quantity`, optional
         Edges of the flux points energy bins. The resulting bin edges won't be exactly equal to the input ones,
         but rather the closest values to the energy axis edges of the parent dataset.
         Default is None: apply the estimator in each energy bin of the parent dataset.
         For further explanation see :ref:`estimators`.
-    fit : `Fit`
+    fit : `gammapy.modeling.Fit`
         Fit instance specifying the backend and fit options.
     reoptimize : bool
-        If True the free parameters of the other models are fitted in each bin independently,
+        If True, the free parameters of the other models are fitted in each bin independently,
         together with the norm of the source of interest
         (but the other parameters of the source of interest are kept frozen).
-        If False only the norm of the source of interest if fitted,
+        If False, only the norm of the source of interest if fitted,
         and all other parameters are frozen at their current values.
     sum_over_energy_groups : bool
         Whether to sum over the energy groups or fit the norm on the full energy grid.
     n_jobs : int
         Number of processes used in parallel for the computation. Default is one, unless
-        `~gammapy.utils.parallel.N_JOBS_DEFAULT` was modified. The number of jobs is
+        `gammapy.utils.parallel.N_JOBS_DEFAULT` was modified. The number of jobs is
         limited to the number of physical CPUs.
     parallel_backend : {"multiprocessing", "ray"}
         Which backend to use for multiprocessing.
-    norm : `~gammapy.modeling.Parameter` or dict
-        Norm parameter used for the fit
+    norm : `gammapy.modeling.Parameter` or dict
+        Norm parameter used for the fit.
         Default is None and a new parameter is created automatically,
         with value=1, name="norm", scan_min=0.2, scan_max=5, and scan_n_values = 11.
-        By default the min and max are not set and derived from the source model,
+        By default, the min and max are not set and derived from the source model,
         unless the source model does not have one and only one norm parameter.
-        If a dict is given the entries should be a subset of
+        If a dict is given, the entries should be a subset of
         `~gammapy.modeling.Parameter` arguments.
     """
 
@@ -105,12 +105,12 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
 
         Parameters
         ----------
-        datasets : `~gammapy.datasets.Datasets`
+        datasets : `gammapy.datasets.Datasets`
             Datasets.
 
         Returns
         -------
-        flux_points : `FluxPoints`
+        flux_points : `gammapy.estimators.FluxPoints`
             Estimated flux points.
         """
         if not isinstance(datasets, DatasetsActor):
@@ -161,9 +161,9 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
 
         Parameters
         ----------
-        datasets : `~gammapy.datasets.Datasets`
+        datasets : `gammapy.datasets.Datasets`
             Datasets.
-        energy_min, energy_max : `~astropy.units.Quantity`
+        energy_min, energy_max : `astropy.units.Quantity`
             Energy bounds to compute the flux point for.
 
         Returns

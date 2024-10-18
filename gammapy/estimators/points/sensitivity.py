@@ -20,7 +20,7 @@ class SensitivityEstimator(Estimator):
 
     Parameters
     ----------
-    spectrum : `SpectralModel`
+    spectrum : `gammapy.modeling.models.SpectralModel`
         Spectral model assumption. Default is Power Law with index 2.
     n_sigma : float, optional
         Minimum significance. Default is 5.
@@ -44,7 +44,6 @@ class SensitivityEstimator(Estimator):
         gamma_min=10,
         bkg_syst_fraction=0.05,
     ):
-
         if spectrum is None:
             spectrum = PowerLawSpectralModel(index=2, amplitude="1 cm-2 s-1 TeV-1")
 
@@ -58,12 +57,12 @@ class SensitivityEstimator(Estimator):
 
         Parameters
         ----------
-        dataset : `SpectrumDataset`
+        dataset : `gammapy.datasets.SpectrumDataset`
             Spectrum dataset.
 
         Returns
         -------
-        excess : `~gammapy.maps.RegionNDMap`
+        excess : `gammapy.maps.RegionNDMap`
             Minimal excess.
         """
         n_off = dataset.counts_off.data
@@ -88,14 +87,14 @@ class SensitivityEstimator(Estimator):
 
         Parameters
         ----------
-        excess : `~gammapy.maps.RegionNDMap`
+        excess : `gammapy.maps.RegionNDMap`
             Minimal excess.
-        dataset : `~gammapy.datasets.SpectrumDataset`
+        dataset : `gammapy.datasets.SpectrumDataset`
             Spectrum dataset.
 
         Returns
         -------
-        e2dnde : `~astropy.units.Quantity`
+        e2dnde : `astropy.units.Quantity`
             Minimal differential flux.
         """
         energy = dataset._geom.axes["energy"].center
@@ -125,12 +124,12 @@ class SensitivityEstimator(Estimator):
 
         Parameters
         ----------
-        dataset : `SpectrumDatasetOnOff`
+        dataset : `gammapy.datasets.SpectrumDatasetOnOff`
             Dataset to compute sensitivity for.
 
         Returns
         -------
-        sensitivity : `~astropy.table.Table`
+        sensitivity : `astropy.table.Table`
             Sensitivity table.
         """
         energy = dataset._geom.axes["energy"].center

@@ -28,22 +28,22 @@ class ASmoothMapEstimator(Estimator):
 
     Algorithm based on https://ui.adsabs.harvard.edu/abs/2006MNRAS.368...65E .
 
-    The algorithm was slightly adapted to also allow Li & Ma  to estimate the
+    The algorithm was slightly adapted to also allow Li & Ma to estimate the
     sqrt(TS) of a feature in the image.
 
     Parameters
     ----------
-    scales : `~astropy.units.Quantity`
+    scales : `astropy.units.Quantity`
         Smoothing scales.
     kernel : `astropy.convolution.Kernel`
         Smoothing kernel.
-    spectrum : `~gammapy.modeling.models.SpectralModel`
+    spectrum : `gammapy.modeling.models.SpectralModel`
         Spectral model assumption.
     method : {'lima', 'asmooth'}
         Significance estimation method. Default is 'lima'.
     threshold : float
         Significance threshold. Default is 5.
-    energy_edges : list of `~astropy.units.Quantity`, optional
+    energy_edges : list of `astropy.units.Quantity`, optional
         Edges of the target maps energy bins. The resulting bin edges won't be exactly equal to the input ones,
         but rather the closest values to the energy axis edges of the parent dataset.
         Default is None: apply the estimator in each energy bin of the parent dataset.
@@ -103,7 +103,7 @@ class ASmoothMapEstimator(Estimator):
 
         Returns
         -------
-        scales : `~numpy.ndarray`
+        scales : `numpy.ndarray`
             Scale array.
         """
         if kernel == Gaussian2DKernel:
@@ -118,13 +118,13 @@ class ASmoothMapEstimator(Estimator):
 
         Parameters
         ----------
-        pixel_scale : `~astropy.coordinates.Angle`
+        pixel_scale : `astropy.coordinates.Angle`
             Sky image pixel scale.
 
         Returns
         -------
         kernels : list
-            List of `~astropy.convolution.Kernel`.
+            List of `astropy.convolution.Kernel`.
         """
         scales = self.scales.to_value("deg") / Angle(pixel_scale).deg
 
@@ -161,12 +161,12 @@ class ASmoothMapEstimator(Estimator):
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.MapDatasetOnOff`
+        dataset : `gammapy.datasets.MapDataset` or `gammapy.datasets.MapDatasetOnOff`
             The input dataset (with one bin in energy at most).
 
         Returns
         -------
-        images : dict of `~gammapy.maps.WcsNDMap`
+        images : dict of `gammapy.maps.WcsNDMap`
             Smoothed images; keys are:
                 * 'counts'
                 * 'background'
@@ -212,7 +212,7 @@ class ASmoothMapEstimator(Estimator):
 
         Returns
         -------
-        images : dict of `~gammapy.maps.WcsNDMap`
+        images : dict of `gammapy.maps.WcsNDMap`
             Smoothed images; keys are:
                 * 'counts'
                 * 'background'

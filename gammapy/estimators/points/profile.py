@@ -20,20 +20,20 @@ class FluxProfileEstimator(FluxPointsEstimator):
 
     Parameters
     ----------
-    regions : list of `~regions.SkyRegion`
+    regions : list of `regions.SkyRegion`
         Regions to use.
-    spectrum : `~gammapy.modeling.models.SpectralModel`, optional
+    spectrum : `gammapy.modeling.models.SpectralModel`, optional
         Spectral model to compute the fluxes or brightness.
         Default is power-law with spectral index of 2.
     n_jobs : int, optional
         Number of processes used in parallel for the computation. Default is one,
-        unless `~gammapy.utils.parallel.N_JOBS_DEFAULT` was modified. The number
+        unless `gammapy.utils.parallel.N_JOBS_DEFAULT` was modified. The number
         of jobs is limited to the number of physical CPUs.
     parallel_backend : {"multiprocessing", "ray"}, optional
         Which backend to use for multiprocessing.
-        Defaults to `~gammapy.utils.parallel.BACKEND_DEFAULT`.
+        Defaults to `gammapy.utils.parallel.BACKEND_DEFAULT`.
     **kwargs : dict, optional
-        Keywords forwarded to the `FluxPointsEstimator` (see documentation
+        Keywords forwarded to the `gammapy.estimators.FluxPointsEstimator` (see documentation
         there for further description of valid keywords).
 
     Examples
@@ -136,12 +136,12 @@ class FluxProfileEstimator(FluxPointsEstimator):
 
         Parameters
         ----------
-        datasets : list of `~gammapy.datasets.MapDataset`
+        datasets : list of `gammapy.datasets.MapDataset`
             Map datasets.
 
         Returns
         -------
-        profile : `~gammapy.estimators.FluxPoints`
+        profile : `gammapy.estimators.FluxPoints`
             Profile flux points.
         """
         datasets = Datasets(datasets=datasets)
