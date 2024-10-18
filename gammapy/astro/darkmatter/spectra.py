@@ -18,7 +18,7 @@ class PrimaryFlux(TemplateNDSpectralModel):
     Based on the precomputed models by Cirelli et al. (2016). All available
     annihilation channels can be found there. The dark matter mass will be set
     to the nearest available value. The spectra will be available as
-    `~gammapy.modeling.models.TemplateNDSpectralModel` for a chosen dark matter mass and
+    `gammapy.modeling.models.TemplateNDSpectralModel` for a chosen dark matter mass and
     annihilation channel. Using a `~gammapy.modeling.models.TemplateNDSpectralModel`
     allows the interpolation between different dark matter masses.
 

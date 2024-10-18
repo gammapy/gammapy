@@ -19,14 +19,14 @@ DEFAULT_OBSCORE_TEMPLATE = {
 
 
 def empty_obscore_table():
-    """Generate the Obscore default table.
+    """Generate the "Obscore" default table.
 
-    In case the obscore standard changes, this function should be changed according
+    In case the "obscore" standard changes, this function should be changed according
     to https://www.ivoa.net/documents/ObsCore
 
     Returns
     -------
-    table : `~astropy.table.Table`
+    table : `astropy.table.Table`
        the empty table
     """
     obscore_table = [None] * 29
@@ -280,7 +280,7 @@ def observation_obscore_dict(observation):
 
     Parameters
     ----------
-    observation : `~gammapy.data.Observation`
+    observation : `gammapy.data.Observation`
         the observation
 
     Returns
@@ -309,30 +309,30 @@ def to_obscore_table(
     access_url=None,
     obscore_template=None,
 ):
-    """Generate the complete obscore Table by adding one row per observation using _obscore_row()
+    """Generate the complete "obscore" table by adding one row per observation using `_obscore_row()`
 
     Parameters
     ----------
-    base_dir : str or `~pathlib.Path`
+    base_dir : str or `pathlib.Path`
         Base directory of the data files.
     selected_obs : list or array of Observation ID(int)
-        Default is None (default of ``None`` means ``no observation ``).
-        If not given, the full obscore (for all the obs_ids in DataStore) table is returned.
+        Default is None (default of ``None`` means ``no observation``).
+        If not given, the full "obscore" table (for all the obs_ids in DataStore) is returned.
     obs_publisher_did : str, optional
         ID for the Dataset given by the publisher (check IVOA recommendations).
         Default is None. Giving the values of this argument is highly recommended.
-        If not, the corresponding obscore field is filled by the Observation ID value.
+        If not, the corresponding "obscore" field is filled by the Observation ID value.
     access_url : str, optional
         URL used to access (download) dataset (check IVOA recommendations).
         Default is None. Giving the values of this argument is highly recommended.
-        If not, the corresponding obscore field is filled by the Observation ID value.
+        If not, the corresponding "obscore" field is filled by the Observation ID value.
     obscore_template : dict, optional
-        Template for fixed values in the obscore Table.
+        Template for fixed values in the o"bscore" table.
         Default is DEFAULT_OBSCORE_TEMPLATE
 
     Returns
     -------
-    obscore_tab : `~astropy.table.Table`
+    obscore_tab : `astropy.table.Table`
         Obscore table with number of rows = len(selected_obs)
 
     References

@@ -45,15 +45,15 @@ class ObservationMetaData(MetaData):
 
     Parameters
     ----------
-    obs_info : `~gammapy.utils.ObsInfoMetaData`
+    obs_info : `gammapy.utils.ObsInfoMetaData`
         The general observation information.
-    pointing : `~gammapy.utils.PointingInfoMetaData`
+    pointing : `gammapy.utils.PointingInfoMetaData`
         The pointing metadata.
-    target : `~gammapy.utils.TargetMetaData`
+    target : `gammapy.utils.TargetMetaData`
         The target metadata.
-    creation : `~gammapy.utils.CreatorMetaData`
+    creation : `gammapy.utils.CreatorMetaData`
         The creation metadata.
-    location : `~astropy.coordinates.EarthLocation` or str, optional
+    location : `astropy.coordinates.EarthLocation` or str, optional
         The observatory location.
     deadtime_fraction : float
         The observation deadtime fraction. Default is 0.
@@ -80,7 +80,7 @@ class ObservationMetaData(MetaData):
         header : dict
             Input FITS header.
         format : str
-            The header data format. Default is gadf.
+            The header data format. Default is `"gadf"`.
         """
         meta = super().from_header(header, format)
 
@@ -122,7 +122,7 @@ class GTIMetaData(MetaData):
 
     Parameters
     ----------
-    reference_time : `~astropy.time.Time`, str
+    reference_time : `astropy.time.Time`, str
         The GTI reference time.
     """
 
@@ -143,7 +143,7 @@ class EventListMetaData(MetaData):
     ----------
     event_class : str
         The event class metadata.
-    creation : `~gammapy.utils.metadata.CreatorMetaData`
+    creation : `gammapy.utils.metadata.CreatorMetaData`
         The creation metadata.
     """
 

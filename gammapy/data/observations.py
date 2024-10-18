@@ -39,26 +39,26 @@ class Observation:
     ----------
     obs_id : int, optional
         Observation id. Default is None
-    aeff : `~gammapy.irf.EffectiveAreaTable2D`, optional
+    aeff : `gammapy.irf.EffectiveAreaTable2D`, optional
         Effective area. Default is None.
-    edisp : `~gammapy.irf.EnergyDispersion2D`, optional
+    edisp : `gammapy.irf.EnergyDispersion2D`, optional
         Energy dispersion. Default is None.
-    psf : `~gammapy.irf.PSF3D`, optional
+    psf : `gammapy.irf.PSF3D`, optional
         Point spread function. Default is None.
-    bkg : `~gammapy.irf.Background3D`, optional
+    bkg : `gammapy.irf.Background3D`, optional
         Background rate model. Default is None.
-    rad_max : `~gammapy.irf.RadMax2D`, optional
+    rad_max : `gammapy.irf.RadMax2D`, optional
         Only for point-like IRFs: RAD_MAX table (energy dependent RAD_MAX)
         For a fixed RAD_MAX, create a RadMax2D with a single bin. Default is None.
-    gti : `~gammapy.data.GTI`, optional
+    gti : `gammapy.data.GTI`, optional
         Table with GTI start and stop time. Default is None.
-    events : `~gammapy.data.EventList`, optional
+    events : `gammapy.data.EventList`, optional
         Event list. Default is None.
     obs_filter : `ObservationFilter`, optional
         Observation filter. Default is None.
-    pointing : `~gammapy.data.FixedPointingInfo`, optional
+    pointing : `gammapy.data.FixedPointingInfo`, optional
         Pointing information. Default is None.
-    location : `~astropy.coordinates.EarthLocation`, optional
+    location : `astropy.coordinates.EarthLocation`, optional
         Earth location of the observatory. Default is None.
     """
 
@@ -154,7 +154,7 @@ class Observation:
 
     @property
     def events(self):
-        """Event list of the observation as an `~gammapy.data.EventList`."""
+        """Event list of the observation as an `gammapy.data.EventList`."""
         events = self.obs_filter.filter_events(self._events)
         return events
 
@@ -166,7 +166,7 @@ class Observation:
 
     @property
     def gti(self):
-        """GTI of the observation as a `~gammapy.data.GTI`."""
+        """GTI of the observation as a `gammapy.data.GTI`."""
         gti = self.obs_filter.filter_gti(self._gti)
         return gti
 
@@ -210,30 +210,30 @@ class Observation:
 
         Parameters
         ----------
-        pointing : `~gammapy.data.FixedPointingInfo` or `~astropy.coordinates.SkyCoord`
+        pointing : `gammapy.data.FixedPointingInfo` or `astropy.coordinates.SkyCoord`
             Pointing information.
-        location : `~astropy.coordinates.EarthLocation`, optional
+        location : `astropy.coordinates.EarthLocation`, optional
             Earth location of the observatory. Default is None.
         obs_id : int, optional
             Observation ID as identifier. Default is 0.
-        livetime : ~astropy.units.Quantity`, optional
+        livetime : astropy.units.Quantity`, optional
             Livetime exposure of the simulated observation. Default is None.
-        tstart : `~astropy.time.Time` or `~astropy.units.Quantity`, optional
-            Start time of observation as `~astropy.time.Time` or duration
-            relative to `reference_time`. Default is None.
-        tstop : `~astropy.time.Time` or `~astropy.units.Quantity`, optional
-            Stop time of observation as `~astropy.time.Time` or duration
-            relative to `reference_time`. Default is None.
+        tstart : `astropy.time.Time` or `astropy.units.Quantity`, optional
+            Start time of observation as `astropy.time.Time` or duration
+            relative to ``reference_time``. Default is None.
+        tstop : `astropy.time.Time` or `astropy.units.Quantity`, optional
+            Stop time of observation as `astropy.time.Time` or duration
+            relative to ``reference_time``. Default is None.
         irfs : dict, optional
             IRFs used for simulating the observation: `bkg`, `aeff`, `psf`, `edisp`, `rad_max`. Default is None.
         deadtime_fraction : float, optional
             Deadtime fraction. Default is 0.
-        reference_time : `~astropy.time.Time`, optional
+        reference_time : `astropy.time.Time`, optional
             the reference time to use in GTI definition. Default is `~astropy.time.Time("2000-01-01 00:00:00")`.
 
         Returns
         -------
-        obs : `~gammapy.data.Observation`
+        obs : `gammapy.data.Observation`
             Observation.
         """
         if tstart is None:
@@ -288,22 +288,22 @@ class Observation:
 
     @property
     def tstart(self):
-        """Observation start time as a `~astropy.time.Time` object."""
+        """Observation start time as a `astropy.time.Time` object."""
         return self.gti.time_start[0]
 
     @property
     def tstop(self):
-        """Observation stop time as a `~astropy.time.Time` object."""
+        """Observation stop time as a `astropy.time.Time` object."""
         return self.gti.time_stop[0]
 
     @property
     def tmid(self):
-        """Midpoint between start and stop time as a `~astropy.time.Time` object."""
+        """Midpoint between start and stop time as a `astropy.time.Time` object."""
         return self.tstart + 0.5 * (self.tstop - self.tstart)
 
     @property
     def observation_time_duration(self):
-        """Observation time duration in seconds as a `~astropy.units.Quantity`.
+        """Observation time duration in seconds as a `astropy.units.Quantity`.
 
         The wall time, including dead-time.
         """
@@ -311,7 +311,7 @@ class Observation:
 
     @property
     def observation_live_time_duration(self):
-        """Live-time duration in seconds as a `~astropy.units.Quantity`.
+        """Live-time duration in seconds as a `astropy.units.Quantity`.
 
         The dead-time-corrected observation time.
 
@@ -342,7 +342,7 @@ class Observation:
 
     @property
     def pointing(self):
-        """Get the pointing for the observation as a `~gammapy.data.FixedPointingInfo` object."""
+        """Get the pointing for the observation as a `gammapy.data.FixedPointingInfo` object."""
         if self._pointing is None:
             self._pointing = FixedPointingInfo.from_fits_header(self.events.table.meta)
         return self._pointing
@@ -357,14 +357,14 @@ class Observation:
 
     @property
     def observatory_earth_location(self):
-        """Observatory location as an `~astropy.coordinates.EarthLocation` object."""
+        """Observatory location as an `astropy.coordinates.EarthLocation` object."""
         if self._location is None:
             return self.meta.location
         return self._location
 
     @lazyproperty
     def target_radec(self):
-        """Target RA / DEC sky coordinates as a `~astropy.coordinates.SkyCoord` object."""
+        """Target RA / DEC sky coordinates as a `astropy.coordinates.SkyCoord` object."""
         return self.meta.target.position
 
     def __str__(self):
@@ -456,13 +456,13 @@ class Observation:
 
         Parameters
         ----------
-        time_interval : `~astropy.time.Time`
+        time_interval : `astropy.time.Time`
             Start and stop time of the selected time interval.
             For now, we only support a single time interval.
 
         Returns
         -------
-        new_obs : `~gammapy.data.Observation`
+        new_obs : `gammapy.data.Observation`
             A new observation instance of the specified time interval.
         """
         new_obs_filter = self.obs_filter.copy()
@@ -477,17 +477,17 @@ class Observation:
 
         Parameters
         ----------
-        event_file : str or `~pathlib.Path`
+        event_file : str or `pathlib.Path`
             Path to the FITS file containing the event list and the GTI.
-        irf_file : str or `~pathlib.Path`, optional
+        irf_file : str or `pathlib.Path`, optional
             Path to the FITS file containing the IRF components. Default is None.
             If None, the IRFs will be read from the event file.
         checksum : bool
-            If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
+            If True checks both ``DATASUM`` and ``CHECKSUM` cards in the file headers. Default is False.
 
         Returns
         -------
-        observation : `~gammapy.data.Observation`
+        observation : `gammapy.data.Observation`
             Observation with the events and the IRF read from the file.
         """
         from gammapy.irf.io import load_irf_dict_from_file
@@ -516,11 +516,11 @@ class Observation:
         self, path, overwrite=False, format="gadf", include_irfs=True, checksum=False
     ):
         """
-        Write this observation into `~pathlib.Path` using the specified format.
+        Write this observation into `pathlib.Path` using the specified format.
 
         Parameters
         ----------
-        path : str or `~pathlib.Path`
+        path : str or `pathlib.Path`
             Path for the output file.
         overwrite : bool, optional
             Overwrite existing file. Default is False.
@@ -529,7 +529,7 @@ class Observation:
         include_irfs : bool, optional
             Whether to include irf components in the output file. Default is True.
         checksum : bool, optional
-            When True adds both DATASUM and CHECKSUM cards to the headers written to the file.
+            When True adds both ``DATASUM`` and ``CHECKSUM`` cards to the headers written to the file.
             Default is False.
         """
         if format != "gadf":
@@ -566,14 +566,14 @@ class Observation:
     def copy(self, in_memory=False, **kwargs):
         """Copy observation.
 
-        Overwriting `~gammapy.data.Observation` arguments requires the ``in_memory`` argument to be true.
+        Overwriting `gammapy.data.Observation` arguments requires the ``in_memory`` argument to be true.
 
         Parameters
         ----------
         in_memory : bool, optional
             Copy observation in memory. Default is False.
         **kwargs : dict, optional
-            Keyword arguments passed to `~gammapy.data.Observation`.
+            Keyword arguments passed to `gammapy.data.Observation`.
 
         Examples
         --------
@@ -584,7 +584,7 @@ class Observation:
 
         Returns
         -------
-        obs : `~gammapy.data.Observation`
+        obs : `gammapy.data.Observation`
             Copied observation.
         """
         if in_memory:
@@ -613,7 +613,7 @@ class Observations(collections.abc.MutableSequence):
     Parameters
     ----------
     observations : list
-        A list of `~gammapy.data.Observation`.
+        A list of `gammapy.data.Observation`.
     """
 
     def __init__(self, observations=None):
@@ -688,12 +688,12 @@ class Observations(collections.abc.MutableSequence):
 
         Parameters
         ----------
-        time_intervals : `~astropy.time.Time` or list of `~astropy.time.Time`
+        time_intervals : `astropy.time.Time` or list of `astropy.time.Time`
             List of start and stop time of the time intervals or one time interval.
 
         Returns
         -------
-        new_observations : `~gammapy.data.Observations`
+        new_observations : `gammapy.data.Observations`
             A new Observations instance of the specified time intervals.
         """
         new_obs_list = []
@@ -716,12 +716,12 @@ class Observations(collections.abc.MutableSequence):
 
         Parameters
         ----------
-        labels : list or `~numpy.ndarray`
+        labels : list or `numpy.ndarray`
             Array of group labels.
 
         Returns
         -------
-        obs_clusters : dict of `~gammapy.data.Observations`
+        obs_clusters : dict of `gammapy.data.Observations`
             Dictionary of Observations instances, one instance for each group.
         """
         obs_groups = {}
@@ -735,17 +735,17 @@ class Observations(collections.abc.MutableSequence):
     @classmethod
     def from_stack(cls, observations_list):
         # TODO : Do more check when stacking observations when we have metadata.
-        """Create a new `~gammapy.data.Observations` instance by concatenating a list of `~gammapy.data.Observations` objects.
+        """Create a new `gammapy.data.Observations` instance by concatenating a list of `~gammapy.data.Observations` objects.
 
         Parameters
         ----------
-        observations_list : list of `~gammapy.data.Observations`
+        observations_list : list of `gammapy.data.Observations`
             The list of `~gammapy.data.Observations` to stack.
 
         Returns
         -------
-        observations : `~gammapy.data.Observations`
-            The `~gammapy.data.Observations` object resulting from stacking all the `~gammapy.data.Observations` in `observation_list`.
+        observations : `gammapy.data.Observations`
+            The `~gammapy.data.Observations` object resulting from stacking all the `~gammapy.data.Observations` in ``observation_list``.
         """
         obs = itertools.chain(*observations_list)
         return cls(list(obs))

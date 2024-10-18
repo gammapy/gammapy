@@ -286,7 +286,7 @@ class AnalysisConfig(GammapyBaseConfig):
     def set_logging(self):
         """Set logging config.
 
-        Calls `~logging.basicConfig`, i.e. adjusts global logging state.
+        Calls `logging.basicConfig`, i.e. adjusts global logging state.
         """
         self.general.log.level = self.general.log.level.upper()
         logging.basicConfig(**self.general.log.model_dump())

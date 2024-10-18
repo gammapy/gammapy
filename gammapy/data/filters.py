@@ -13,16 +13,16 @@ class ObservationFilter:
 
     Parameters
     ----------
-    time_filter : `~astropy.time.Time`, optional
+    time_filter : `astropy.time.Time`, optional
         Start and stop time of the selected time interval. Currently, we only support
         a single time interval. Default is None.
     event_filters : list of dict, optional
         An event filter dictionary needs two keys:
 
-        - **type** : str, one of the keys in `~gammapy.data.ObservationFilter.EVENT_FILTER_TYPES`
-        - **opts** : dict, it is passed on to the method of the `~gammapy.data.EventListBase`
+        - **type** : str, one of the keys in `gammapy.data.ObservationFilter.EVENT_FILTER_TYPES`
+        - **opts** : dict, it is passed on to the method of the `gammapy.data.EventListBase`
           class that corresponds to the filter type
-          (see `~gammapy.data.ObservationFilter.EVENT_FILTER_TYPES`)
+          (see `gammapy.data.ObservationFilter.EVENT_FILTER_TYPES`)
 
         The filtered event list will be an intersection of all filters. A union
         of filters is not supported yet. Default is None.
@@ -65,12 +65,12 @@ class ObservationFilter:
 
         Parameters
         ----------
-        events : `~gammapy.data.EventListBase`
+        events : `gammapy.data.EventListBase`
             Event list to which the filters will be applied.
 
         Returns
         -------
-        filtered_events : `~gammapy.data.EventListBase`
+        filtered_events : `gammapy.data.EventListBase`
             The filtered event list.
         """
         filtered_events = self._filter_by_time(events)
@@ -86,12 +86,12 @@ class ObservationFilter:
 
         Parameters
         ----------
-        gti : `~gammapy.data.GTI`
+        gti : `gammapy.data.GTI`
             GTI table to which the filters will be applied.
 
         Returns
         -------
-        filtered_gti : `~gammapy.data.GTI`
+        filtered_gti : `gammapy.data.GTI`
             The filtered GTI table.
         """
         return self._filter_by_time(gti)
@@ -107,7 +107,7 @@ class ObservationFilter:
             return data
 
     def copy(self):
-        """Copy the `~gammapy.data.ObservationFilter` object."""
+        """Copy the `gammapy.data.ObservationFilter` object."""
         return copy.deepcopy(self)
 
     @staticmethod

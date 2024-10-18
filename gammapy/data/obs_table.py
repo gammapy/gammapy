@@ -24,42 +24,42 @@ class ObservationTable(Table):
 
         Parameters
         ----------
-        filename : `~pathlib.Path` or str
+        filename : `pathlib.Path` or str
             Filename.
         **kwargs : dict, optional
-            Keyword arguments passed to `~astropy.table.Table.read`.
+            Keyword arguments passed to `astropy.table.Table.read`.
         """
         return super().read(make_path(filename), **kwargs)
 
     @property
     def pointing_radec(self):
-        """Pointing positions in ICRS as a `~astropy.coordinates.SkyCoord` object."""
+        """Pointing positions in ICRS as a `astropy.coordinates.SkyCoord` object."""
         return SkyCoord(self["RA_PNT"], self["DEC_PNT"], unit="deg", frame="icrs")
 
     @property
     def pointing_galactic(self):
-        """Pointing positions in Galactic coordinates as a `~astropy.coordinates.SkyCoord` object."""
+        """Pointing positions in Galactic coordinates as a `astropy.coordinates.SkyCoord` object."""
         return SkyCoord(
             self["GLON_PNT"], self["GLAT_PNT"], unit="deg", frame="galactic"
         )
 
     @property
     def time_ref(self):
-        """Time reference as a `~astropy.time.Time` object."""
+        """Time reference as a `astropy.time.Time` object."""
         return time_ref_from_dict(self.meta)
 
     @property
     def time_start(self):
-        """Observation start time as a `~astropy.time.Time` object."""
+        """Observation start time as a `astropy.time.Time` object."""
         return self.time_ref + Quantity(self["TSTART"], "second")
 
     @property
     def time_stop(self):
-        """Observation stop time as a `~astropy.time.Time` object."""
+        """Observation stop time as a `astropy.time.Time` object."""
         return self.time_ref + Quantity(self["TSTOP"], "second")
 
     def select_obs_id(self, obs_id):
-        """Get `~gammapy.data.ObservationTable` containing only ``obs_id``.
+        """Get `gammapy.data.ObservationTable` containing only ``obs_id``.
 
         Raises KeyError if observation is not available.
 
@@ -95,7 +95,7 @@ class ObservationTable(Table):
 
         Generic function to apply a 1D box selection (min, max) to a
         table on any variable that is in the observation table and can
-        be cast into a `~astropy.units.Quantity` object.
+        be cast into a `astropy.units.Quantity` object.
 
         If the range length is 0 (min = max), the selection is applied
         to the exact value indicated by the min value. This is useful
@@ -109,7 +109,7 @@ class ObservationTable(Table):
         ----------
         selection_variable : str
             Name of variable to apply a cut (it should exist on the table).
-        value_range : `~astropy.units.Quantity`-like
+        value_range : `astropy.units.Quantity`-like
             Allowed range of values (min, max). The type should be
             consistent with the selection_variable.
         inverted : bool, optional
@@ -118,7 +118,7 @@ class ObservationTable(Table):
 
         Returns
         -------
-        obs_table : `~gammapy.data.ObservationTable`
+        obs_table : `gammapy.data.ObservationTable`
             Observation table after selection.
         """
         value_range = Quantity(value_range)
@@ -141,14 +141,14 @@ class ObservationTable(Table):
 
         Apply a 1D box selection (min, max) to a
         table on any time variable that is in the observation table.
-        It supports absolute times in `~astropy.time.Time` format.
+        It supports absolute times in `astropy.time.Time` format.
 
         If the inverted flag is activated, the selection is applied to
         keep all elements outside the selected range.
 
         Parameters
         ----------
-        time_range : `~astropy.time.Time`
+        time_range : `astropy.time.Time`
             Allowed time range (min, max).
         partial_overlap : bool, optional
             Include partially overlapping observations. Default is False.
@@ -158,7 +158,7 @@ class ObservationTable(Table):
 
         Returns
         -------
-        obs_table : `~gammapy.data.ObservationTable`
+        obs_table : `gammapy.data.ObservationTable`
             Observation table after selection.
         """
         tstart = self.time_start
@@ -189,9 +189,9 @@ class ObservationTable(Table):
 
         Parameters
         ----------
-        center : `~astropy.coordinates.SkyCoord`
+        center : `astropy.coordinates.SkyCoord`
             Cone center coordinate.
-        radius : `~astropy.coordinates.Angle`
+        radius : `astropy.coordinates.Angle`
             Cone opening angle. The maximal separation allowed between the center
             and the observation pointing direction.
         inverted : bool, optional
@@ -199,7 +199,7 @@ class ObservationTable(Table):
 
         Returns
         -------
-        obs_table : `~gammapy.data.ObservationTable`
+        obs_table : `gammapy.data.ObservationTable`
             Observation table after selection.
         """
         region = SphericalCircleSkyRegion(center=center, radius=radius)
@@ -222,7 +222,7 @@ class ObservationTable(Table):
 
         - intervals (min, max) on any other parameter present in the
           observation table, that can be cast into an
-          `~astropy.units.Quantity` object
+          `astropy.units.Quantity` object
 
         Allowed selection criteria are interpreted using the following
         keywords in the **selection** dictionary under the **type** key.
@@ -233,15 +233,15 @@ class ObservationTable(Table):
         - ``time_box`` is a 1D selection criterion acting on the observation
           start time (**TSTART**); the interval is set via the
           **time_range** keyword; uses
-          `~gammapy.data.ObservationTable.select_time_range`
+          `gammapy.data.ObservationTable.select_time_range`
 
         - ``par_box`` is a 1D selection criterion acting on any
-          parameter defined in the observation table that can be casted
-          into an `~astropy.units.Quantity` object; the parameter name
+          parameter defined in the observation table that can be cast
+          into an `astropy.units.Quantity` object; the parameter name
           and interval can be specified using the keywords **variable** and
           **value_range** respectively; min = max selects exact
           values of the parameter; uses
-          `~gammapy.data.ObservationTable.select_range`
+          `gammapy.data.ObservationTable.select_range`
 
         In all cases, the selection can be inverted by activating the
         **inverted** flag, in which case, the selection is applied to keep all
@@ -256,7 +256,7 @@ class ObservationTable(Table):
 
         Returns
         -------
-        obs_table : `~gammapy.data.ObservationTable`
+        obs_table : `gammapy.data.ObservationTable`
             Observation table after selection.
 
         Examples
@@ -323,7 +323,7 @@ class ObservationTableChecker(Checker):
 
     Parameters
     ----------
-    obs_table : `~gammapy.data.ObservationTable`
+    obs_table : `gammapy.data.ObservationTable`
         Observation table.
     """
 
