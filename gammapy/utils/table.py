@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Table helper utilities."""
+
 import numpy as np
 from astropy.table import Table
 from astropy.units import Quantity
@@ -18,14 +19,14 @@ def hstack_columns(table, table_other):
 
     Parameters
     ----------
-    table : `~astropy.table.Table`
+    table : `astropy.table.Table`
         Input table.
-    table_other : `~astropy.table.Table`
+    table_other : `astropy.table.Table`
         Other input table.
 
     Returns
     -------
-    stacked : `~astropy.table.Table`
+    stacked : `astropy.table.Table`
         Stacked table.
     """
     stacked = Table()
@@ -39,16 +40,16 @@ def hstack_columns(table, table_other):
 def table_standardise_units_copy(table):
     """Standardise units for all columns in a table in a copy.
 
-    Calls `~gammapy.utils.units.standardise_unit`.
+    Calls `gammapy.utils.units.standardise_unit`.
 
     Parameters
     ----------
-    table : `~astropy.table.Table`
+    table : `astropy.table.Table`
         Input table (won't be modified).
 
     Returns
     -------
-    table : `~astropy.table.Table`
+    table : `astropy.table.Table`
         Copy of the input table with standardised column units.
     """
     # Note: we could add an `inplace` option (or variant of this function)
@@ -71,7 +72,7 @@ def table_row_to_dict(row, make_quantity=True):
 
     Parameters
     ----------
-    row : `~astropy.table.Row`
+    row : `astropy.table.Row`
         Row.
     make_quantity : bool, optional
         Make quantity values for columns with units.

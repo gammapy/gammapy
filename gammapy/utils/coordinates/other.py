@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Other coordinate and distance-related functions."""
+
 import numpy as np
 from astropy.units import Quantity, Unit
 
@@ -14,7 +15,7 @@ __all__ = [
 
 # TODO: replace this with the default from the Galactocentric frame in astropy.coordinates
 D_SUN_TO_GALACTIC_CENTER = Quantity(8.5, "kpc")
-"""Default assumed distance from the Sun to the Galactic center (`~astropy.units.Quantity`)"""
+"""Default assumed distance from the Sun to the Galactic center (`astropy.units.Quantity`)"""
 
 
 def cartesian(r, theta):
@@ -50,14 +51,14 @@ def velocity_glon_glat(x, y, z, vx, vy, vz):
 
     Parameters
     ----------
-    x, y, z : `~astropy.units.Quantity`
+    x, y, z : `astropy.units.Quantity`
         Position in x, y, z direction.
-    vx, vy, vz : `~astropy.units.Quantity`
+    vx, vy, vz : `astropy.units.Quantity`
         Velocity in x, y, z direction.
 
     Returns
     -------
-    v_glon, v_glat : `~astropy.units.Quantity`
+    v_glon, v_glat : `astropy.units.Quantity`
         Projected velocity in Galactic sky coordinates.
     """
     y_prime = y + D_SUN_TO_GALACTIC_CENTER
@@ -77,18 +78,18 @@ def motion_since_birth(v, age, theta, phi):
 
     Parameters
     ----------
-    v : `~astropy.units.Quantity`
+    v : `astropy.units.Quantity`
         Absolute value of the velocity.
-    age : `~astropy.units.Quantity`
+    age : `astropy.units.Quantity`
         Age of the source.
-    theta, phi : `~astropy.units.Quantity`
+    theta, phi : `astropy.units.Quantity`
         Angular direction of the velocity.
 
     Returns
     -------
-    dx, dy, dz : `~astropy.units.Quantity`
+    dx, dy, dz : `astropy.units.Quantity`
         Displacement in x, y, z direction.
-    vx, vy, vz : `~astropy.units.Quantity`
+    vx, vy, vz : `astropy.units.Quantity`
         Velocity in x, y, z direction.
     """
     vx = v * np.cos(phi) * np.sin(theta)

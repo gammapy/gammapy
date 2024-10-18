@@ -35,10 +35,10 @@ def find_roots(
     ----------
     f : callable
         A function to find roots of. Its output should be unitless.
-    lower_bound : `~astropy.units.Quantity`
+    lower_bound : `astropy.units.Quantity`
         Lower bound of the search ranges to find roots.
         If an array is given search will be performed element-wise.
-    upper_bound : `~astropy.units.Quantity`
+    upper_bound : `astropy.units.Quantity`
         Upper bound of the search ranges to find roots.
         If an array is given search will be performed element-wise.
     nbin : int, optional
@@ -49,7 +49,7 @@ def find_roots(
     args : tuple, optional
         Extra arguments passed to the objective function and its derivative(s).
     method : str, optional
-        Solver available in `~scipy.optimize.root_scalar`.  Should be one of :
+        Solver available in `scipy.optimize.root_scalar`.  Should be one of :
             - 'brentq' (default),
             - 'brenth',
             - 'bisect',
@@ -77,15 +77,15 @@ def find_roots(
         Maximum number of iterations.
     options : dict, optional
         A dictionary of solver options.
-        See `~scipy.optimize.root_scalar` for details.
+        See `scipy.optimize.root_scalar` for details.
 
     Returns
     -------
-    roots : `~astropy.units.Quantity`
+    roots : `astropy.units.Quantity`
         The function roots.
 
-    results : `~numpy.array`
-        An array of `~scipy.optimize.RootResults` which is an
+    results : `numpy.array`
+        An array of `scipy.optimize.RootResults` which is an
         object containing information about the convergence.
         If the solver failed to converge in a bracketing range
         the corresponding `roots` array element is NaN.

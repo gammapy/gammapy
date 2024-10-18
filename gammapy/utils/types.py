@@ -49,7 +49,7 @@ class JsonQuantityDecoder(json.JSONDecoder):
 
 
 def json_encode_earth_location(v):
-    """JSON encoder for `~astropy.coordinates.EarthLocation`."""
+    """JSON encoder for `astropy.coordinates.EarthLocation`."""
     return (
         f"lon: {v.lon.value} {v.lon.unit}, "
         f"lat : {v.lat.value} {v.lat.unit}, "
@@ -58,12 +58,12 @@ def json_encode_earth_location(v):
 
 
 def json_encode_sky_coord(v):
-    """JSON encoder for `~astropy.coordinates.SkyCoord`."""
+    """JSON encoder for `astropy.coordinates.SkyCoord`."""
     return f"lon: {v.spherical.lon.value} {v.spherical.lon.unit}, lat: {v.spherical.lat.value} {v.spherical.lat.unit}, frame: {v.frame.name} "
 
 
 def json_encode_time(v):
-    """JSON encoder for `~astropy.time.Time`."""
+    """JSON encoder for `astropy.time.Time`."""
     if v.isscalar:
         return v.value
 
@@ -71,7 +71,7 @@ def json_encode_time(v):
 
 
 def validate_angle(v):
-    """Validator for `~astropy.coordinates.Angle`."""
+    """Validator for `astropy.coordinates.Angle`."""
     return Angle(v)
 
 
@@ -84,7 +84,7 @@ def validate_scalar(v):
 
 
 def validate_energy(v):
-    """Validator for `~astropy.units.Quantity` with unit "energy"."""
+    """Validator for `astropy.units.Quantity` with unit "energy"."""
     v = u.Quantity(v)
 
     if v.unit.physical_type != "energy":
@@ -94,17 +94,17 @@ def validate_energy(v):
 
 
 def validate_quantity(v):
-    """Validator for `~astropy.units.Quantity`."""
+    """Validator for `astropy.units.Quantity`."""
     return u.Quantity(v)
 
 
 def validate_time(v):
-    """Validator for `~astropy.time.Time`."""
+    """Validator for `astropy.time.Time`."""
     return Time(v)
 
 
 def validate_earth_location(v):
-    """Validator for `~astropy.coordinates.EarthLocation`."""
+    """Validator for `astropy.coordinates.EarthLocation`."""
     if isinstance(v, EarthLocation):
         return v
 
@@ -118,12 +118,12 @@ def validate_earth_location(v):
 
 
 def validate_sky_coord(v):
-    """Validator for `~astropy.coordinates.SkyCoord`."""
+    """Validator for `astropy.coordinates.SkyCoord`."""
     return SkyCoord(v)
 
 
 def validate_sky_coord_icrs(v):
-    """Validator for `~astropy.coordinates.SkyCoord` in icrs."""
+    """Validator for `astropy.coordinates.SkyCoord` in icrs."""
     try:
         return SkyCoord(v).icrs
     except AttributeError:
@@ -131,7 +131,7 @@ def validate_sky_coord_icrs(v):
 
 
 def validate_altaz_coord(v):
-    """Validator for `~astropy.coordinates.AltAz`."""
+    """Validator for `astropy.coordinates.AltAz`."""
     if isinstance(v, AltAz):
         return SkyCoord(v)
 

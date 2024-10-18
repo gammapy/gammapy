@@ -18,7 +18,7 @@ class HDULocation:
 
     This represents one row in `HDUIndexTable`.
 
-    It's more a helper class, that is wrapped by `~gammapy.data.Observation`,
+    It's more a helper class, that is wrapped by `gammapy.data.Observation`,
     usually those objects will be used to access data.
 
     See also :ref:`gadf:hdu-index`.
@@ -150,7 +150,7 @@ class LazyFitsData(object):
 
 
 def earth_location_from_dict(meta):
-    """Create `~astropy.coordinates.EarthLocation` from FITS header dictionary."""
+    """Create `astropy.coordinates.EarthLocation` from FITS header dictionary."""
     lon = Angle(meta["GEOLON"], "deg")
     lat = Angle(meta["GEOLAT"], "deg")
     if "GEOALT" in meta:
@@ -164,7 +164,7 @@ def earth_location_from_dict(meta):
 
 
 def earth_location_to_dict(location):
-    """Convert `~astropy.coordinates.EarthLocation` to FITS header dictionary."""
+    """Convert `astropy.coordinates.EarthLocation` to FITS header dictionary."""
     return {
         "GEOLON": location.lon.deg,
         "GEOLAT": location.lat.deg,
@@ -173,7 +173,7 @@ def earth_location_to_dict(location):
 
 
 def skycoord_from_dict(header, frame="icrs", ext="PNT"):
-    """Create `~astropy.coordinates.SkyCoord` from a dictionary of FITS keywords.
+    """Create `astropy.coordinates.SkyCoord` from a dictionary of FITS keywords.
 
     Parameters
     ----------
@@ -186,7 +186,7 @@ def skycoord_from_dict(header, frame="icrs", ext="PNT"):
 
     Returns
     -------
-    skycoord : `~astropy.coordinates.skycoord`
+    skycoord : `astropy.coordinates.SkyCoord`
         The input SkyCoord.
     """
 

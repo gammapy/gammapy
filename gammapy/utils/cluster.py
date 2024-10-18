@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities for hierarchical/agglomerative clustering."""
+
 import numpy as np
 import scipy.cluster.hierarchy as sch
 
@@ -16,12 +17,12 @@ def standard_scaler(features):
 
     Parameters
     ----------
-    features : `~astropy.table.Table`
+    features : `astropy.table.Table`
         Table containing the features.
 
     Returns
     -------
-    scaled_features : `~astropy.table.Table`
+    scaled_features : `astropy.table.Table`
         Table containing the scaled features (dimensionless).
 
 
@@ -68,7 +69,7 @@ def hierarchical_clustering(features, linkage_kwargs=None, fcluster_kwargs=None)
 
     Parameters
     ----------
-    features : `~astropy.table.Table`
+    features : `astropy.table.Table`
         Table containing the features.
     linkage_kwargs : dict, optional
         Arguments forwarded to `scipy.cluster.hierarchy.linkage`.
@@ -80,7 +81,7 @@ def hierarchical_clustering(features, linkage_kwargs=None, fcluster_kwargs=None)
 
     Returns
     -------
-    features : `~astropy.table.Table`
+    features : `astropy.table.Table`
         Table containing the features and an extra column for the groups labels.
 
 

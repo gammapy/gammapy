@@ -12,6 +12,7 @@ TODO: before Gammapy v1.0, discuss what to do about ``gammapy.utils.regions``.
 Options: keep as-is, hide from the docs, or to remove it completely
 (if the functionality is available in ``astropy-regions`` directly.
 """
+
 import operator
 import numpy as np
 from scipy.optimize import Bounds, minimize
@@ -49,7 +50,7 @@ def compound_region_center(compound_region):
 
     Returns
     -------
-    center : `~astropy.coordinates.SkyCoord`
+    center : `astropy.coordinates.SkyCoord`
         Geometric median of the positions of the individual regions.
     """
     regions = compound_region_to_regions(compound_region)
@@ -91,12 +92,12 @@ def compound_region_to_regions(region):
 
     Parameters
     ----------
-    region : `~regions.CompoundSkyRegion` or `~regions.SkyRegion`
+    region : `regions.CompoundSkyRegion` or `regions.SkyRegion`
         Compound sky region.
 
     Returns
     -------
-    regions : `~regions.Regions`
+    regions : `regions.Regions`
         List of regions.
     """
     regions = Regions([])
@@ -121,12 +122,12 @@ def regions_to_compound_region(regions):
 
     Parameters
     ----------
-    regions : `~regions.Regions`
+    regions : `regions.Regions`
         List of regions.
 
     Returns
     -------
-    compound : `~regions.CompoundSkyRegion` or `~regions.CompoundPixelRegion`
+    compound : `regions.CompoundSkyRegion` or `regions.CompoundPixelRegion`
         Compound sky region.
     """
     region_union = regions[0]
@@ -162,20 +163,20 @@ def make_orthogonal_rectangle_sky_regions(start_pos, end_pos, wcs, height, nbin=
 
     Parameters
     ----------
-    start_pos : `~astropy.regions.SkyCoord`
+    start_pos : `astropy.regions.SkyCoord`
         First sky coordinate defining the line to which the orthogonal boxes made.
-    end_pos : `~astropy.regions.SkyCoord`
+    end_pos : `astropy.regions.SkyCoord`
         Second sky coordinate defining the line to which the orthogonal boxes made.
-    height : `~astropy.quantity.Quantity`
+    height : `astropy.quantity.Quantity`
         Height of the rectangle region.
-    wcs : `~astropy.wcs.WCS`
+    wcs : `astropy.wcs.WCS`
         WCS projection object.
     nbin : int, optional
         Number of boxes along the line. Default is 1.
 
     Returns
     -------
-    regions : list of `~regions.RectangleSkyRegion`
+    regions : list of `regions.RectangleSkyRegion`
         Regions in which the profiles are made.
     """
     pix_start = start_pos.to_pixel(wcs)
@@ -206,18 +207,18 @@ def make_concentric_annulus_sky_regions(
 
     Parameters
     ----------
-    center : `~astropy.coordinates.SkyCoord`
+    center : `astropy.coordinates.SkyCoord`
         Center coordinate.
-    radius_max : `~astropy.units.Quantity`
+    radius_max : `astropy.units.Quantity`
         Maximum radius.
-    radius_min : `~astropy.units.Quantity`, optional
+    radius_min : `astropy.units.Quantity`, optional
         Minimum radius. Default is 1e-5 deg.
     nbin : int, optional
         Number of boxes along the line. Default is 11.
 
     Returns
     -------
-    regions : list of `~regions.RectangleSkyRegion`
+    regions : list of `regions.RectangleSkyRegion`
         Regions in which the profiles are made.
     """
     regions = []
@@ -240,14 +241,14 @@ def region_to_frame(region, frame):
 
     Parameters
     ----------
-    region : `~regions.SkyRegion`
+    region : `regions.SkyRegion`
         Region to transform.
     frame : {"icrs", "galactic"}
         Frame to transform the region into.
 
     Returns
     -------
-    region_new : `~regions.SkyRegion`
+    region_new : `regions.SkyRegion`
         Region in the given frame.
     """
     from gammapy.maps import WcsGeom
@@ -262,12 +263,12 @@ def region_circle_to_ellipse(region):
 
     Parameters
     ----------
-    region : `~regions.CircleSkyRegion`
+    region : `regions.CircleSkyRegion`
         Region to transform.
 
     Returns
     -------
-    region_new : `~regions.EllipseSkyRegion`
+    region_new : `regions.EllipseSkyRegion`
         Elliptical region with same major and minor axis.
     """
     region_new = EllipseSkyRegion(
