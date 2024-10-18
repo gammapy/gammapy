@@ -53,9 +53,9 @@ class FluxMetaData(MetaData):
         Threshold on the square root of the likelihood value above which upper limits should be used.
     n_sigma_sensitivity : float, optional
         Sigma number for which the flux sensitivity is computed
-    target : `~gammapy.utils.TargetMetaData`, optional
+    target : `gammapy.utils.TargetMetaData`, optional
         General metadata information about the target.
-    creation : `~gammapy.utils.CreatorMetaData`, optional
+    creation : `gammapy.utils.CreatorMetaData`, optional
         The creation metadata.
     optional : dict, optional
         additional optional metadata.

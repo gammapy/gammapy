@@ -44,7 +44,7 @@ def weighted_chi2_parameter(results_edep, parameters=["sigma"]):
     -----
     This chi-square should be utilised with caution as it does not take into
     account any correlation between the parameters.
-    To properly utilise the chi-squared parameter one must ensure each of the parameters
+    To properly utilise the chi-squared parameter, one must ensure each of the parameters
     are independent, which cannot be guaranteed in this use case.
 
     """
@@ -74,11 +74,11 @@ class EnergyDependentMorphologyEstimator(Estimator):
 
     Parameters
     ----------
-    energy_edges : list of `~astropy.units.Quantity`
+    energy_edges : list of `astropy.units.Quantity`
         Energy edges for the energy-dependence test.
     source : str or int
         For which source in the model to compute the estimator.
-    fit : `~gammapy.modeling.Fit`, optional
+    fit : `gammapy.modeling.Fit`, optional
         Fit instance specifying the backend and fit options.
         If None, the fit backend default is minuit.
         Default is None.
@@ -105,12 +105,12 @@ class EnergyDependentMorphologyEstimator(Estimator):
 
         Parameters
         ----------
-        datasets : `~gammapy.datasets.Datasets`
+        datasets : `gammapy.datasets.Datasets`
             Input datasets to use.
 
         Returns
         -------
-        slices_src : `~gammapy.datasets.Datasets`
+        slices_src : `gammapy.datasets.Datasets`
             Sliced datasets.
         """
         model = datasets.models[self.source]
@@ -142,7 +142,7 @@ class EnergyDependentMorphologyEstimator(Estimator):
 
         Parameters
         ----------
-        datasets : `~gammapy.datasets.Datasets`
+        datasets : `gammapy.datasets.Datasets`
             Input datasets to use.
 
         Returns
@@ -208,7 +208,7 @@ class EnergyDependentMorphologyEstimator(Estimator):
 
         Parameters
         ----------
-        datasets : `~gammapy.datasets.Datasets`
+        datasets : `gammapy.datasets.Datasets`
             Input datasets to use.
 
         Returns
@@ -292,7 +292,7 @@ class EnergyDependentMorphologyEstimator(Estimator):
 
         Parameters
         ----------
-        datasets : `~gammapy.datasets.Datasets`
+        datasets : `gammapy.datasets.Datasets`
             Input datasets to use.
 
         Returns

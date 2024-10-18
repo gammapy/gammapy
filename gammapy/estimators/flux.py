@@ -16,7 +16,7 @@ class FluxEstimator(ParameterEstimator):
 
     Estimates flux for a given list of datasets with their model in a given energy range.
 
-    To estimate the model flux the amplitude of the reference spectral model is
+    To estimate the model flux, the amplitude of the reference spectral model is
     fitted within the energy range. The amplitude is re-normalized using the "norm" parameter,
     which specifies the deviation of the flux from the reference model in this
     energy range.
@@ -40,22 +40,22 @@ class FluxEstimator(ParameterEstimator):
             * "scan": estimate fit statistic profiles.
 
         Default is None so the optional steps are not executed.
-    fit : `Fit`
+    fit : `gammapy.modeling.Fit`
         Fit instance specifying the backend and fit options.
     reoptimize : bool
-        If True the free parameters of the other models are fitted in each bin independently,
+        If True, the free parameters of the other models are fitted in each bin independently,
         together with the norm of the source of interest
         (but the other parameters of the source of interest are kept frozen).
-        If False only the norm of the source of interest if fitted,
+        If False, only the norm of the source of interest if fitted,
         and all other parameters are frozen at their current values.
         Default is False.
-    norm : `~gammapy.modeling.Parameter` or dict
+    norm : `gammapy.modeling.Parameter` or dict
         Norm parameter used for the fit.
         Default is None and a new parameter is created automatically,
         with value=1, name="norm", scan_min=0.2, scan_max=5, and scan_n_values = 11.
         By default, the min and max are not set and derived from the source model,
         unless the source model does not have one and only one norm parameter.
-        If a dict is given the entries should be a subset of
+        If a dict is given, the entries should be a subset of
         `~gammapy.modeling.Parameter` arguments.
     """
 
@@ -89,12 +89,12 @@ class FluxEstimator(ParameterEstimator):
 
         Parameters
         ----------
-        models : `Models`
+        models : `gammapy.modeling.models.Models`
             Models.
 
         Returns
         -------
-        model : `ScaleSpectralModel`
+        model : `gammapy.modeling.models.ScaleSpectralModel`
             Scale spectral model.
         """
         ref_model = models[self.source].spectral_model
@@ -107,14 +107,14 @@ class FluxEstimator(ParameterEstimator):
 
         Parameters
         ----------
-        datasets : Datasets
+        datasets : `gammapy.datasets.Datasets`
             Datasets.
 
         Returns
         -------
         result : dict
             Dictionary with an array with one entry per dataset with the sum of the
-            masked npred excess.
+            masked "npred" excess.
         """
         npred_excess = []
 
@@ -132,7 +132,7 @@ class FluxEstimator(ParameterEstimator):
 
         Parameters
         ----------
-        datasets : list of `~gammapy.datasets.SpectrumDataset`
+        datasets : list of `gammapy.datasets.SpectrumDataset`
             Spectrum datasets.
 
         Returns
