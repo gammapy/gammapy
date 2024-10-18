@@ -30,11 +30,11 @@ A well know approach to estimate this posterior distribution is the Markov Chain
 *Once convergence* is reached the successive elements of the chain are samples of the target posterior distribution.
 However the weakness of the MCMC approach lies in the *Once convergence* part.
 Started far from the best likelihood region, the convergence time can be long or never reached if the walkers fall in a local minima.
-The choice of the inititialization point can become critical for complex models with a high number of dimensions and the ability of these walkers to escape a local minimum or to accurately describe a complex likelihood space is not guaranteed.
+The choice of the initialization point can become critical for complex models with a high number of dimensions and the ability of these walkers to escape a local minimum or to accurately describe a complex likelihood space is not guaranteed.
 
 To overcome these issues, we propose to implement a Bayesian Inference class in gammapy based on the nested sampling (NS) algorithm,
-which is a Monte Carlo algorithm for computing an integral of the likelihood function over the model parameter space in 2004 by John Skilling.
-The method performs this integral by evolving a collection of points through the parameter space for a recent review : Ashton2022, Buchner2023). 
+which is a Monte Carlo algorithm for computing an integral of the likelihood function over the prior model parameter space in 2004 by John Skilling.
+The method performs this integral by evolving a collection of points through the parameter space (see recent reviews of Ashton2022, and of Buchner2023). 
 Without going into too many details, one important specificity of the NS method is that it starts from the entire parameter space and evolves a collection of live points to map all minima (including multiple modes if any)
 whereas Markov Chain Monte Carlo methods require an initialization point and the walkers will explore the local likelihood. The ability of these walkers to escape a local minimum or to accurately describe a complex likelihood space is not guaranteed.
 This is a fundamental difference between MCMC (and Minuit) which will only ever probe the vicinity along their minimization paths and dot not have an overview of the global likelihood landscape.
@@ -48,7 +48,7 @@ Reference :
 - Literature : `Buchner 2023, <http://arxiv.org/abs/2101.09675>`_ , `Ashton 2022, <https://ui.adsabs.harvard.edu/abs/2022NRvMP...2...39A>`_
 
 
-**Why not start with an MCMC sampler for the BayesianInference class ?**
+**Potential limitations of MCMC in a BayesianInference class ?**
 
 Besides the many advantages of the NS described above, one technical specificity of the MCMC method is that the user needs to specify a warmup/burn period *that can only be estimated once the chain has run*.
 From an implementation point of view of the class this means that the user would need to run the sampler, then look at the chain, specify the burn period and then estimate the best model parameters.
@@ -56,7 +56,7 @@ This implies that the class will not be able to update the model parameters in a
 In addition, there is no convergence criteria in the MCMC so the MCMC can not return a `convergence successful : True ` status.  
 NS has no warmup period, a well defined convergence criteria, and can estimate convergence success.
 
-
+However we might want to keep the class general enough so that MCMC can be plugged easily in the future ?
 
 **A visual comparison of the approaches of MCMC vs NS**
 
@@ -248,21 +248,36 @@ Proposal
 
 Serialisation of the samples
 -------------
-
-
+In UltraNest, a serialisation is proposed to save to disk the samples and results dictionnary. So this can be used directly to `save` and there is also a `read_file` function.
 
 
 Task list 
 -----------------------
 
-The PIG implementation will be : 
+The task will be split between different subcategories
 
-1. Modify the stat_sum function
-2. Add inverse_cdf attributes to the Priors
-3. Define the class BayesianFit and SamplerLikelihood
-4. Prepare a tutorial to show case this new class
-5. Update the 'stats' documentation page 
-6.
+*Modifications to existing code*
+1. Add a stat_sum function `stat_sum_no_prior` which returns only the likelihood term Without the penalty term
+2. Add inverse_cdf attributes to the all Priors
+3. Add LogUniform prior (crucial for amplitude)
+
+*Design & decisions of a new Bayesian class*
+1. Should the class be called NestedSampler (only NS) or BayesianFit (would host MCMC and NS)
+2. Should we return the sampler in the BayesianInference(models=updated_models, results=results) ?
+3. Should we create a `.posterior` attribute for each model parameter ? To contain what exactly ?
+4. UltraNest provides different samplers options. How do we implement them (e.g. self._sampler.stepsampler = ultranest.stepsampler.SliceSampler)
+   
+*Update the docs*
+1. Prepare a tutorial to show case this new class
+2. Add section presenting the different approaches of Minuit, MCMC, and NS ?
+3. Update the 'stats' documentation page for the new prior and new inverse_cdf
+4.
+
+
+
+User testing of the API
+-----------------------
+Once a dev version is working, we could run a small user testing on experiencied gammapy users to have their feedback and then on less experiencied users.
 
 
 Decision
