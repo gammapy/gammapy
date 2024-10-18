@@ -126,7 +126,12 @@ def compute_rotation_time_step(rotation, pointing_altaz):
         * np.abs(np.cos(pointing_altaz.az.rad))
     )
     if denom.value == 0:
-        return 3600 * u.s
+        if np.cos(pointing_altaz.location.lat.rad) == 0:
+            # Assuming that the observatory location is fixed during one observation, the time step can be infinite
+            return np.inf * u.s
+        if np.cos(pointing_altaz.az.rad) == 0:
+            # For fixed RaDec pointing, this is temporary. A short interval is thus provided
+            return 60 * u.s
     return rotation * np.cos(pointing_altaz.alt.rad) / denom
 
 
