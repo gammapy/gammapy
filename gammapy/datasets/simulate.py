@@ -31,12 +31,12 @@ class MapDatasetEventSampler:
 
     Parameters
     ----------
-    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
-        Defines random number generator initialisation via the `~gammapy.utils.random.get_random_state` function.
+    random_state : {int, 'random-seed', 'global-rng'}, optional
+        Defines random number generator initialisation via the `gammapy.utils.random.get_random_state` function.
     oversample_energy_factor : int, optional
         Defines an oversampling factor for the energies; it is used only when sampling
         an energy-dependent time-varying source.
-    t_delta : `~astropy.units.Quantity`, optional
+    t_delta : `astropy.units.Quantity`, optional
         Time interval used to sample the time-dependent source.
     keep_mc_id : bool, optional
         Flag to tag sampled events from a given model with a Montecarlo identifier.
@@ -71,14 +71,14 @@ class MapDatasetEventSampler:
 
         Parameters
         ----------
-        coords : `~gammapy.maps.MapCoord`
+        coords : `gammapy.maps.MapCoord`
             Coordinates of the sampled events.
-        time_ref : `~astropy.time.Time`
+        time_ref : `astropy.time.Time`
             Reference time of the event list.
 
         Returns
         -------
-        table : `~astropy.table.Table`
+        table : `astropy.table.Table`
             Table of the sampled events.
         """
         table = Table()
@@ -105,14 +105,14 @@ class MapDatasetEventSampler:
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.MapDataset`
+        dataset : `gammapy.datasets.MapDataset`
             Map dataset.
-        model : `~gammapy.modeling.models.SkyModel`
+        model : `gammapy.modeling.models.SkyModel`
             Sky model instance.
 
         Returns
         -------
-        npred : `~gammapy.maps.RegionNDMap`
+        npred : `gammapy.maps.RegionNDMap`
             Npred map.
         """
         energy_true = dataset.edisp.edisp_map.geom.axes["energy_true"]
@@ -173,14 +173,14 @@ class MapDatasetEventSampler:
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.MapDataset`
+        dataset : `gammapy.datasets.MapDataset`
             Map dataset.
-        model : `~gammapy.modeling.models.SkyModel`
+        model : `gammapy.modeling.models.SkyModel`
             Sky model instance.
 
         Returns
         -------
-        table : `~astropy.table.Table`
+        table : `astropy.table.Table`
             Table of sampled events.
         """
         if not isinstance(model.spatial_model, PointSpatialModel):
@@ -219,16 +219,16 @@ class MapDatasetEventSampler:
 
         Parameters
         ----------
-        npred : `~gammapy.dataset.MapDataset`
+        npred : `gammapy.dataset.MapDataset`
             Npred map.
-        temporal_model : `~gammapy.modeling.models\
+        temporal_model : `gammapy.modeling.models\
             Temporal model of the source.
-        gti : `~gammapy.data.GTI`
+        gti : `gammapy.data.GTI`
              GTI of the dataset.
 
         Returns
         -------
-        table : `~astropy.table.Table`
+        table : `astropy.table.Table`
             Table of sampled events.
         """
         data = npred.data[np.isfinite(npred.data)]
@@ -255,7 +255,7 @@ class MapDatasetEventSampler:
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.MapDataset`
+        dataset : `gammapy.datasets.MapDataset`
             Map dataset.
         psf_update : bool
             Parameter to switch-off (on) the update of the PSF
@@ -263,7 +263,7 @@ class MapDatasetEventSampler:
 
         Returns
         -------
-        events : `~gammapy.data.EventList`
+        events : `gammapy.data.EventList`
             Event list.
         """
         if psf_update is True:
@@ -315,7 +315,7 @@ class MapDatasetEventSampler:
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.MapDataset`
+        dataset : `gammapy.datasets.MapDataset`
             Map dataset.
 
         Returns
@@ -349,14 +349,14 @@ class MapDatasetEventSampler:
 
         Parameters
         ----------
-        edisp_map : `~gammapy.irf.EDispMap`
+        edisp_map : `gammapy.irf.EDispMap`
             Energy dispersion map.
-        events : `~gammapy.data.EventList`
+        events : `gammapy.data.EventList`
             Event list with the true energies.
 
         Returns
         -------
-        events : `~gammapy.data.EventList`
+        events : `gammapy.data.EventList`
             Event list with reconstructed energy column.
         """
         coord = MapCoord(
@@ -379,14 +379,14 @@ class MapDatasetEventSampler:
 
         Parameters
         ----------
-        psf_map : `~gammapy.irf.PSFMap`
+        psf_map : `gammapy.irf.PSFMap`
             PSF map.
-        events : `~gammapy.data.EventList`
+        events : `gammapy.data.EventList`
             Event list.
 
         Returns
         -------
-        events : `~gammapy.data.EventList`
+        events : `gammapy.data.EventList`
             Event list with reconstructed position columns.
         """
         coord = MapCoord(
@@ -410,14 +410,14 @@ class MapDatasetEventSampler:
 
         Parameters
         ----------
-        observation : `~gammapy.data.Observation`
+        observation : `gammapy.data.Observation`
             In memory observation.
-        events : `~gammapy.data.EventList`
+        events : `gammapy.data.EventList`
             Event list.
 
         Returns
         -------
-        events : `~gammapy.data.EventList`
+        events : `gammapy.data.EventList`
             Event list with columns of event detector coordinates.
         """
         sky_coord = SkyCoord(events.table["RA"], events.table["DEC"], frame="icrs")
@@ -435,9 +435,9 @@ class MapDatasetEventSampler:
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.MapDataset`
+        dataset : `gammapy.datasets.MapDataset`
             Map dataset.
-        observation : `~gammapy.data.Observation`
+        observation : `gammapy.data.Observation`
             In memory observation.
         keep_mc_id : bool
             Flag to tag sampled events from a given model with a Montecarlo identifier.
@@ -567,14 +567,14 @@ class MapDatasetEventSampler:
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.MapDataset`
+        dataset : `gammapy.datasets.MapDataset`
             Map dataset.
-        observation : `~gammapy.data.Observation`, optional
+        observation : `gammapy.data.Observation`, optional
             In memory observation. Default is None.
 
         Returns
         -------
-        events : `~gammapy.data.EventList`
+        events : `gammapy.data.EventList`
             Event list.
         """
         events_src = self.sample_sources(dataset)
@@ -621,12 +621,12 @@ class ObservationEventSampler(MapDatasetEventSampler):
 
     Parameters
     ----------
-    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
-        Defines random number generator initialisation via the `~gammapy.utils.random.get_random_state` function.
+    random_state : {int, 'random-seed', 'global-rng'}, optional
+        Defines random number generator initialisation via the `gammapy.utils.random.get_random_state` function.
     oversample_energy_factor : int, optional
         Defines an oversampling factor for the energies; it is used only when sampling
         an energy-dependent time-varying source. Default is 10.
-    t_delta : `~astropy.units.Quantity`, optional
+    t_delta : `astropy.units.Quantity`, optional
         Time interval used to sample the time-dependent source. Default is 0.5 s.
     keep_mc_id : bool, optional
         Flag to tag sampled events from a given model with a Montecarlo identifier.
@@ -635,7 +635,7 @@ class ObservationEventSampler(MapDatasetEventSampler):
         Size of events bunches to sample. If None, sample all events in memory.
         Default is 10000.
     dataset_kwargs : dict, optional
-        Arguments passed to `~gammapy.datasets.create_map_dataset_from_observation()`
+        Arguments passed to `gammapy.datasets.create_map_dataset_from_observation()`
     """
 
     def __init__(
@@ -663,18 +663,18 @@ class ObservationEventSampler(MapDatasetEventSampler):
 
         Parameters
         ----------
-        observation : `~gammapy.data.Observation`
+        observation : `gammapy.data.Observation`
             Observation to be simulated.
-        models : `~gammapy.modeling.Models`, optional
+        models : `gammapy.modeling.Models`, optional
             Models to simulate.
             Can be None to only sample background events. Default is None.
         dataset_name : str, optional
-            If `models` contains one or multiple `FoVBackgroundModel`
-            it should match the `dataset_name` of the background model to use.
+            If ``models`` contains one or multiple `gammapy.modeling.models.FoVBackgroundModel`
+            it should match the ``dataset_name`` of the background model to use.
             Default is None.
         Returns
         -------
-        observation : `~gammapy.data.Observation`
+        observation : `gammapy.data.Observation`
             A copy of the input observation with event list filled.
         """
 

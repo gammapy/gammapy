@@ -60,7 +60,7 @@ class OGIPDatasetWriter(DatasetWriter):
 
     Parameters
     ----------
-    filename : `~pathlib.Path` or str
+    filename : `pathlib.Path` or str
         Filename.
     format : {"ogip", "ogip-sherpa"}
         Which format to use. Default is 'ogip'.
@@ -88,7 +88,7 @@ class OGIPDatasetWriter(DatasetWriter):
 
         Parameters
         ----------
-        filename : `~pathlib.Path`
+        filename : `pathlib.Path`
             Filename.
 
         Returns
@@ -141,7 +141,7 @@ class OGIPDatasetWriter(DatasetWriter):
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.SpectrumDatasetOnOff`
+        dataset : `gammapy.datasets.SpectrumDatasetOnOff`
             Dataset to write.
         """
         filenames = self.get_filenames(self.filename)
@@ -162,9 +162,9 @@ class OGIPDatasetWriter(DatasetWriter):
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.SpectrumDatasetOnOff`
+        dataset : `gammapy.datasets.SpectrumDatasetOnOff`
             Dataset to write.
-        filename : str or `~pathlib.Path`
+        filename : str or `pathlib.Path`
             Filename to use.
         """
         kernel = dataset.edisp.get_edisp_kernel()
@@ -180,9 +180,9 @@ class OGIPDatasetWriter(DatasetWriter):
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.SpectrumDatasetOnOff`
+        dataset : `gammapy.datasets.SpectrumDatasetOnOff`
             Dataset to write.
-        filename : str or `~pathlib.Path`
+        filename : str or `pathlib.Path`
             Filename to use.
 
         """
@@ -199,7 +199,7 @@ class OGIPDatasetWriter(DatasetWriter):
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.SpectrumDatasetOnOff`
+        dataset : `gammapy.datasets.SpectrumDatasetOnOff`
             Dataset to write.
         is_bkg : bool
             Whether to use counts off. Default is False.
@@ -233,9 +233,9 @@ class OGIPDatasetWriter(DatasetWriter):
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.SpectrumDatasetOnOff`
+        dataset : `gammapy.datasets.SpectrumDatasetOnOff`
             Dataset to write.
-        filename : str or `~pathlib.Path`
+        filename : str or `pathlib.Path`
             Filename to use.
 
         """
@@ -252,9 +252,9 @@ class OGIPDatasetWriter(DatasetWriter):
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.SpectrumDatasetOnOff`
+        dataset : `gammapy.datasets.SpectrumDatasetOnOff`
             Dataset to write.
-        filename : str or `~pathlib.Path`
+        filename : str or `pathlib.Path`
             Filename to use.
         """
         hdulist = self.to_counts_hdulist(dataset, is_bkg=True)
@@ -262,7 +262,7 @@ class OGIPDatasetWriter(DatasetWriter):
 
 
 class OGIPDatasetReader(DatasetReader):
-    """Read `~gammapy.datasets.SpectrumDatasetOnOff` from OGIP files.
+    """Read `gammapy.datasets.SpectrumDatasetOnOff` from OGIP files.
 
     BKG file, ARF, and RMF must be set in the PHA header and be present in
     the same folder.
@@ -277,10 +277,10 @@ class OGIPDatasetReader(DatasetReader):
 
     Parameters
     ----------
-    filename : str or `~pathlib.Path`
+    filename : str or `pathlib.Path`
         OGIP PHA file to read.
     checksum : bool
-        If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
+        If True checks both ``DATASUM`` and ``CHECKSUM`` cards in the file headers. Default is False.
     """
 
     tag = "ogip"
@@ -296,12 +296,12 @@ class OGIPDatasetReader(DatasetReader):
 
         Parameters
         ----------
-        filename : str or `~pathlib.Path`
+        filename : str or `pathlib.Path`
             Filename.
 
         Returns
         -------
-        filename : `~pathlib.Path`
+        filename : `pathlib.Path`
             Valid path.
         """
         filename = make_path(filename)
@@ -341,10 +341,10 @@ class OGIPDatasetReader(DatasetReader):
 
         Parameters
         ----------
-        filename : str or `~pathlib.Path`
+        filename : str or `pathlib.Path`
             PHA file name.
         checksum : bool
-            If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
+            If True checks both ``DATASUM`` and ``CHECKSUM`` cards in the file headers. Default is False.
 
         Returns
         -------
@@ -374,10 +374,10 @@ class OGIPDatasetReader(DatasetReader):
 
         Parameters
         ----------
-        filename : str or `~pathlib.Path`
+        filename : str or `pathlib.Path`
             PHA file name.
         checksum : bool
-            If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
+            If True checks both ``DATASUM`` and ``CHECKSUM`` cards in the file headers. Default is False.
 
         Returns
         -------
@@ -397,16 +397,16 @@ class OGIPDatasetReader(DatasetReader):
 
         Parameters
         ----------
-        filename : str or `~pathlib.Path`
+        filename : str or `pathlib.Path`
             PHA file name.
-        exposure : `~gammapy.maps.RegionNDMap`
+        exposure : `gammapy.maps.RegionNDMap`
             Exposure map.
         checksum : bool
-            If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
+            If True checks both ``DATASUM`` and ``CHECKSUM`` cards in the file headers. Default is False.
 
         Returns
         -------
-        data : `~gammapy.maps.EDispKernelMap`
+        data : `gammapy.maps.EDispKernelMap`
             Dictionary with edisp.
         """
         kernel = EDispKernel.read(filename, checksum=checksum)
@@ -422,16 +422,16 @@ class OGIPDatasetReader(DatasetReader):
 
         Parameters
         ----------
-        filename : str or `~pathlib.Path`
+        filename : str or `pathlib.Path`
             PHA file name.
-        livetime : `~astropy.units.Quantity`
+        livetime : `astropy.units.Quantity`
             Livetime.
         checksum : bool
-            If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
+            If True checks both ``DATASUM`` and ``CHECKSUM`` cards in the file headers. Default is False.
 
         Returns
         -------
-        data : `~gammapy.data.RegionNDMap`
+        data : `gammapy.data.RegionNDMap`
             Exposure map.
         """
         aeff = RegionNDMap.read(filename, format="ogip-arf", checksum=checksum)
@@ -444,7 +444,7 @@ class OGIPDatasetReader(DatasetReader):
 
         Returns
         -------
-        dataset : `~gammapy.datasets.SpectrumDatasetOnOff`
+        dataset : `gammapy.datasets.SpectrumDatasetOnOff`
             Spectrum dataset.
         """
         kwargs = self.read_pha(self.filename, checksum=self.checksum)

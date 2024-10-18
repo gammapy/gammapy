@@ -19,7 +19,7 @@ class DatasetsActor(Datasets):
 
     Parameters
     ----------
-    datasets : `~gammapy.datasets.Datasets`
+    datasets : `gammapy.datasets.Datasets`
         Datasets
     """
 
@@ -128,7 +128,7 @@ class MapDatasetActor(RayFrontendMixin):
 
     Parameters
     ----------
-    dataset : `~gammapy.datasets.MapDataset`
+    dataset : `gammapy.datasets.MapDataset`
         MapDataset
     """
 
@@ -216,7 +216,7 @@ class _MapDatasetActorBackend(MapDataset, RayBackendMixin):
 
     Parameters
     ----------
-    dataset : `~gammapy.datasets.MapDataset`
+    dataset : `gammapy.datasets.MapDataset`
         MapDataset
     """
 

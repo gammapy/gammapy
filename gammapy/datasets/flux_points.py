@@ -46,15 +46,15 @@ class FluxPointsDataset(Dataset):
 
     Parameters
     ----------
-    models : `~gammapy.modeling.models.Models`
+    models : `gammapy.modeling.models.Models`
         Models (only spectral part needs to be set).
-    data : `~gammapy.estimators.FluxPoints`
+    data : `gammapy.estimators.FluxPoints`
         Flux points. Must be sorted along the energy axis.
-    mask_fit : `~numpy.ndarray`
+    mask_fit : `numpy.ndarray`
         Mask to apply for fitting.
-    mask_safe : `~numpy.ndarray`
+    mask_safe : `numpy.ndarray`
         Mask defining the safe data range. By default, upper limit values are excluded.
-    meta_table : `~astropy.table.Table`
+    meta_table : `astropy.table.Table`
         Table listing information on observations used to create the dataset.
         One line per observation for stacked datasets.
     stat_type : str
@@ -231,7 +231,7 @@ class FluxPointsDataset(Dataset):
             When True adds both DATASUM and CHECKSUM cards to the headers written to the FITS file.
             Applies only if filename has .fits suffix. Default is False.
         **kwargs : dict, optional
-             Keyword arguments passed to `~astropy.table.Table.write`.
+             Keyword arguments passed to `astropy.table.Table.write`.
         """
         table = self.data.to_table()
 
@@ -266,7 +266,7 @@ class FluxPointsDataset(Dataset):
             Name of the new dataset. Default is None.
         Returns
         -------
-        dataset : `~gammapy.datasets.FluxPointsDataset`
+        dataset : `gammapy.datasets.FluxPointsDataset`
             FluxPointsDataset.
         """
         from gammapy.estimators import FluxPoints
@@ -299,7 +299,7 @@ class FluxPointsDataset(Dataset):
             Dictionary containing data to create dataset from.
         Returns
         -------
-        dataset : `~gammapy.datasets.FluxPointsDataset`
+        dataset : `gammapy.datasets.FluxPointsDataset`
             Flux point datasets.
         """
         from gammapy.estimators import FluxPoints
@@ -469,7 +469,7 @@ class FluxPointsDataset(Dataset):
 
         Returns
         -------
-        residuals : `~numpy.ndarray`
+        residuals : `numpy.ndarray`
             Residuals array.
         """
         fp = self.data
@@ -491,21 +491,21 @@ class FluxPointsDataset(Dataset):
     ):
         """Plot flux points, best fit model and residuals in two panels.
 
-        Calls `~FluxPointsDataset.plot_spectrum` and `~FluxPointsDataset.plot_residuals`.
+        Calls `FluxPointsDataset.plot_spectrum` and `FluxPointsDataset.plot_residuals`.
 
         Parameters
         ----------
-        ax_spectrum : `~matplotlib.axes.Axes`, optional
+        ax_spectrum : `matplotlib.axes.Axes`, optional
             Axes to plot flux points and best fit model on. Default is None.
-        ax_residuals : `~matplotlib.axes.Axes`, optional
+        ax_residuals : `matplotlib.axes.Axes`, optional
             Axes to plot residuals on. Default is None.
         kwargs_spectrum : dict, optional
-            Keyword arguments passed to `~FluxPointsDataset.plot_spectrum`. Default is None.
+            Keyword arguments passed to `FluxPointsDataset.plot_spectrum`. Default is None.
         kwargs_residuals : dict, optional
-            Keyword arguments passed to `~FluxPointsDataset.plot_residuals`. Default is None.
+            Keyword arguments passed to `FluxPointsDataset.plot_residuals`. Default is None.
         Returns
         -------
-        ax_spectrum, ax_residuals : `~matplotlib.axes.Axes`
+        ax_spectrum, ax_residuals : `matplotlib.axes.Axes`
             Flux points, best fit model and residuals plots.
 
         Examples
@@ -562,16 +562,16 @@ class FluxPointsDataset(Dataset):
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes`, optional
             Axes to plot on. Default is None.
         method : {"diff", "diff/model"}
-            Normalisation used to compute the residuals, see `~gammapy.datasets.FluxPointsDataset.residuals`. Default is "diff".
+            Normalisation used to compute the residuals, see `gammapy.datasets.FluxPointsDataset.residuals`. Default is "diff".
         **kwargs : dict
-            Keyword arguments passed to `~matplotlib.axes.Axes.errorbar`.
+            Keyword arguments passed to `matplotlib.axes.Axes.errorbar`.
 
         Returns
         -------
-        ax : `~matplotlib.axes.Axes`
+        ax : `matplotlib.axes.Axes`
             Axes object.
 
         """
@@ -626,20 +626,20 @@ class FluxPointsDataset(Dataset):
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes`, optional
             Axes to plot on. Default is None.
         kwargs_fp : dict, optional
-            Keyword arguments passed to `~gammapy.estimators.FluxPoints.plot` to configure the plot style.
+            Keyword arguments passed to `gammapy.estimators.FluxPoints.plot` to configure the plot style.
             Default is None.
         kwargs_model : dict, optional
-            Keyword arguments passed to `~gammapy.modeling.models.SpectralModel.plot` and
-            `~gammapy.modeling.models.SpectralModel.plot_error` to configure the plot style. Default is None.
+            Keyword arguments passed to `gammapy.modeling.models.SpectralModel.plot` and
+            `gammapy.modeling.models.SpectralModel.plot_error` to configure the plot style. Default is None.
         axis_name : str
             Axis along which to plot the flux points for multiple axes. Default is energy.
 
         Returns
         -------
-        ax : `~matplotlib.axes.Axes`
+        ax : `matplotlib.axes.Axes`
             Axes object.
 
         Examples

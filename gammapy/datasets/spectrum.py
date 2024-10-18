@@ -23,22 +23,22 @@ class PlotMixin:
     ):
         """Plot spectrum and residuals in two panels.
 
-        Calls `~SpectrumDataset.plot_excess` and `~SpectrumDataset.plot_residuals_spectral`.
+        Calls `SpectrumDataset.plot_excess` and `SpectrumDataset.plot_residuals_spectral`.
 
         Parameters
         ----------
-        ax_spectrum : `~matplotlib.axes.Axes`, optional
+        ax_spectrum : `matplotlib.axes.Axes`, optional
             Axes to plot spectrum on. Default is None.
-        ax_residuals : `~matplotlib.axes.Axes`, optional
+        ax_residuals : `matplotlib.axes.Axes`, optional
             Axes to plot residuals on. Default is None.
         kwargs_spectrum : dict, optional
-            Keyword arguments passed to `~SpectrumDataset.plot_excess`. Default is None.
+            Keyword arguments passed to `SpectrumDataset.plot_excess`. Default is None.
         kwargs_residuals : dict, optional
-            Keyword arguments passed to `~SpectrumDataset.plot_residuals_spectral`. Default is None.
+            Keyword arguments passed to `SpectrumDataset.plot_residuals_spectral`. Default is None.
 
         Returns
         -------
-        ax_spectrum, ax_residuals : `~matplotlib.axes.Axes`
+        ax_spectrum, ax_residuals : `matplotlib.axes.Axes`
             Spectrum and residuals plots.
 
         Examples
@@ -91,18 +91,18 @@ class PlotMixin:
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes`, optional
             Axes to plot on. Default is None.
         kwargs_counts : dict, optional
-            Keyword arguments passed to `~matplotlib.axes.Axes.hist` for the counts. Default is None.
+            Keyword arguments passed to `matplotlib.axes.Axes.hist` for the counts. Default is None.
         kwargs_background : dict, optional
-            Keyword arguments passed to `~matplotlib.axes.Axes.hist` for the background. Default is None.
+            Keyword arguments passed to `matplotlib.axes.Axes.hist` for the background. Default is None.
         **kwargs : dict, optional
-            Keyword arguments passed to both `~matplotlib.axes.Axes.hist`.
+            Keyword arguments passed to both `matplotlib.axes.Axes.hist`.
 
         Returns
         -------
-        ax : `~matplotlib.axes.Axes`
+        ax : `matplotlib.axes.Axes`
             Axes object.
         """
         kwargs_counts = kwargs_counts or {}
@@ -127,16 +127,16 @@ class PlotMixin:
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes`, optional
             Axes to plot on. Default is None.
         kwargs_fit : dict, optional
-            Keyword arguments passed to `~RegionNDMap.plot_mask()` for mask fit. Default is None.
+            Keyword arguments passed to `RegionNDMap.plot_mask()` for mask fit. Default is None.
         kwargs_safe : dict, optional
-            Keyword arguments passed to `~RegionNDMap.plot_mask()` for mask safe. Default is None.
+            Keyword arguments passed to `RegionNDMap.plot_mask()` for mask safe. Default is None.
 
         Returns
         -------
-        ax : `~matplotlib.axes.Axes`
+        ax : `matplotlib.axes.Axes`
             Axes object.
 
         Examples
@@ -180,20 +180,20 @@ class PlotMixin:
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes`, optional
             Axes to plot on. Default is None.
         kwargs_excess : dict, optional
-            Keyword arguments passed to `~matplotlib.axes.Axes.errorbar` for
+            Keyword arguments passed to `matplotlib.axes.Axes.errorbar` for
             the excess. Default is None.
         kwargs_npred_signal : dict, optional
-            Keyword arguments passed to `~matplotlib.axes.Axes.hist` for the
+            Keyword arguments passed to `matplotlib.axes.Axes.hist` for the
             predicted signal. Default is None.
         **kwargs : dict, optional
             Keyword arguments passed to both plot methods.
 
         Returns
         -------
-        ax : `~matplotlib.axes.Axes`
+        ax : `matplotlib.axes.Axes`
             Axes object.
 
         Examples
@@ -257,10 +257,10 @@ class PlotMixin:
 
 class SpectrumDataset(PlotMixin, MapDataset):
     """Main dataset for spectrum fitting (1D analysis).
-    It bundles together binned counts, background, IRFs into `~gammapy.maps.RegionNDMap` (a Map with only one spatial bin).
+    It bundles together binned counts, background, IRFs into `gammapy.maps.RegionNDMap` (a Map with only one spatial bin).
     A safe mask and a fit mask can be added to exclude bins during the analysis.
     If models are assigned to it, it can compute the predicted number of counts and the statistic function,
-    here the Cash statistic (see `~gammapy.stats.cash`).
+    here the Cash statistic (see `gammapy.stats.cash`).
 
     For more information see :ref:`datasets`.
     """
@@ -269,15 +269,15 @@ class SpectrumDataset(PlotMixin, MapDataset):
     tag = "SpectrumDataset"
 
     def cutout(self, *args, **kwargs):
-        """Not supported for `~gammapy.datasets.SpectrumDataset`"""
+        """Not supported for `gammapy.datasets.SpectrumDataset`"""
         raise NotImplementedError("Method not supported on a spectrum dataset")
 
     def plot_residuals_spatial(self, *args, **kwargs):
-        """Not supported for `~gammapy.datasets.SpectrumDataset`"""
+        """Not supported for `gammapy.datasets.SpectrumDataset`"""
         raise NotImplementedError("Method not supported on a spectrum dataset")
 
     def to_spectrum_dataset(self, *args, **kwargs):
-        """Not supported for `~gammapy.datasets.SpectrumDataset`"""
+        """Not supported for `gammapy.datasets.SpectrumDataset`"""
         raise NotImplementedError("Already a Spectrum Dataset. Method not supported")
 
 
@@ -287,7 +287,7 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
 
     A fit mask can be added to exclude bins during the analysis.
 
-    It uses the Wstat statistic (see `~gammapy.stats.wstat`).
+    It uses the Wstat statistic (see `gammapy.stats.wstat`).
 
     For more information see :ref:`datasets`.
     """
@@ -296,11 +296,11 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
     tag = "SpectrumDatasetOnOff"
 
     def cutout(self, *args, **kwargs):
-        """Not supported for `~gammapy.datasets.SpectrumDatasetOnOff`."""
+        """Not supported for `gammapy.datasets.SpectrumDatasetOnOff`."""
         raise NotImplementedError("Method not supported on a spectrum dataset")
 
     def plot_residuals_spatial(self, *args, **kwargs):
-        """Not supported for `~gammapy.datasets.SpectrumDatasetOnOff`."""
+        """Not supported for `gammapy.datasets.SpectrumDatasetOnOff`."""
         raise NotImplementedError("Method not supported on a spectrum dataset")
 
     @classmethod
@@ -308,20 +308,20 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         """Read from file.
 
         For OGIP formats, filename is the name of a PHA file. The BKG, ARF, and RMF file names must be
-        set in the PHA header and the files must be present in the same folder. For details, see `~gammapy.datasets.OGIPDatasetReader.read`.
+        set in the PHA header and the files must be present in the same folder. For details, see `gammapy.datasets.OGIPDatasetReader.read`.
 
         For the GADF format, a MapDataset serialisation is used.
 
         Parameters
         ----------
-        filename : `~pathlib.Path` or str
+        filename : `pathlib.Path` or str
             OGIP PHA file to read.
         format : {"ogip", "ogip-sherpa", "gadf"}
             Format to use. Default is "ogip".
         checksum : bool
             If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
         kwargs : dict, optional
-            Keyword arguments passed to `~gammapy.datasets.MapDataset.read`.
+            Keyword arguments passed to `gammapy.datasets.MapDataset.read`.
         """
         from .io import OGIPDatasetReader
 
@@ -334,13 +334,13 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
     def write(self, filename, overwrite=False, format="ogip", checksum=False):
         """Write spectrum dataset on off to file.
 
-        Can be serialised either as a `~gammapy.datasets.MapDataset` with a `~gammapy.maps.RegionGeom`
+        Can be serialised either as a `gammapy.datasets.MapDataset` with a `gammapy.maps.RegionGeom`
         following the GADF specifications, or as per the OGIP format.
-        For OGIP formats specs, see `~gammapy.datasets.OGIPDatasetWriter`.
+        For OGIP formats specs, see `gammapy.datasets.OGIPDatasetWriter`.
 
         Parameters
         ----------
-        filename : `~pathlib.Path` or str
+        filename : `pathlib.Path` or str
             Filename to write to.
         overwrite : bool, optional
             Overwrite existing file. Default is False.
@@ -374,7 +374,7 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
 
         Returns
         -------
-        dataset : `~gammapy.datasets.SpectrumDatasetOnOff`
+        dataset : `gammapy.datasets.SpectrumDatasetOnOff`
             Spectrum dataset on off.
         """
 
@@ -394,20 +394,20 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.SpectrumDataset`
+        dataset : `gammapy.datasets.SpectrumDataset`
             Spectrum dataset defining counts, edisp, exposure etc.
-        acceptance : `~numpy.array` or float
+        acceptance : `numpy.array` or float
             Relative background efficiency in the on region.
-        acceptance_off : `~numpy.array` or float
+        acceptance_off : `numpy.array` or float
             Relative background efficiency in the off region.
-        counts_off : `~gammapy.maps.RegionNDMap`
+        counts_off : `gammapy.maps.RegionNDMap`
             Off counts spectrum. If the dataset provides a background model,
-            and no off counts are defined. The off counts are deferred from
-            counts_off / alpha.
+            and no off counts are defined, the off counts are deferred from
+            ``counts_off`` / alpha.
 
         Returns
         -------
-        dataset : `~gammapy.datasets.SpectrumDatasetOnOff`
+        dataset : `gammapy.datasets.SpectrumDatasetOnOff`
             Spectrum dataset on off.
         """
         return cls.from_map_dataset(**kwargs)
@@ -423,7 +423,7 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
 
         Returns
         -------
-        dataset : `~gammapy.datasets.SpectrumDataset`
+        dataset : `gammapy.datasets.SpectrumDataset`
             SpectrumDataset with Cash statistic.
         """
         return self.to_map_dataset(name=name).to_spectrum_dataset(on_region=None)
