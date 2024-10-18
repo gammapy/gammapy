@@ -24,7 +24,7 @@ Background estimation
 Safe data range definition
 --------------------------
 
-The definition of a safe data range is done using the `SafeMaskMaker` or manually.
+The definition of a safe data range is done using the `~gammapy.makers.SafeMaskMaker` or manually.
 
 
 Using gammapy.makers

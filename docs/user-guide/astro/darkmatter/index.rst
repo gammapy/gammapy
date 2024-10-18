@@ -89,11 +89,11 @@ module `DarkBit`_.  DarkBit can be used for directly computing observables and
 likelihoods, for any combination of parameter values in some underlying
 particle model.
 
-Gammapy tutorial
-================
+Using gammapy.astro.darkmatter
+------------------------------
 
-.. minigallery:: `gammapy.astro.darkmatter.DarkMatterAnnihilationSpectralModel`
-    :add-heading:
+.. minigallery:: gammapy.astro.darkmatter
+
 
 
 .. _Cirelli et al. 2011: http://iopscience.iop.org/article/10.1088/1475-7516/2011/03/051/pdf
