@@ -1,0 +1,70 @@
+
+*** Basic info ***
+
+Catalog row index (zero-based) : 1391
+Source name          : 4FGL J0534.5+2200
+Extended name        :                   
+Associations     : PSR J0534+2200, Crab IC field, Crab pulsar, 3FGL J0534.5+2201, 3FHL J0534.5+2201, 2AGL J0534+2205, EGR J0534+2159
+ASSOC_PROB_BAY   : 1.000
+ASSOC_PROB_LR    : 1.000
+Class1           : PSR  
+Class2           :           
+TeVCat flag      : P
+
+*** Other info ***
+
+Significance (100 MeV - 1 TeV)   : 25.186
+Npred                            : 98594.1
+
+Other flags          : 784
+
+*** Position info ***
+
+RA                   : 83.637 deg
+DEC                  : 22.015 deg
+GLON                 : 184.559 deg
+GLAT                 : -5.781 deg
+
+Semimajor (68%)      : 0.0045 deg
+Semiminor (68%)      : 0.0044 deg
+Position angle (68%) : -71.52 deg
+Semimajor (95%)      : 0.0073 deg
+Semiminor (95%)      : 0.0072 deg
+Position angle (95%) : -71.52 deg
+ROI number           : 270
+
+*** Spectral info ***
+
+Spectrum type                                 : PLSuperExpCutoff 
+Detection significance (100 MeV - 1 TeV)      : 25.186
+Exponential factor                            : 0.2337 +- 0.0188
+Super-exponential cutoff index                : 0.5219 +- 0.0946
+Significance curvature                        : 27.6
+Pivot energy                                  : 1343 MeV
+Spectral index                                : 2.274 +- 0.008
+Flux Density at pivot energy                  : 1.1e-10 +- 6.99e-13 cm-2 MeV-1 s-1
+Integral flux (1 - 100 GeV)                   : 1.54e-07 +- 8.44e-10 cm-2 s-1
+Energy flux (100 MeV - 100 GeV)               : 1.46e-09 +- 2.16e-11 erg cm-2 s-1
+
+*** Spectral points ***
+
+  e_min       e_max        flux     flux_errn   flux_errp      e2dnde     e2dnde_errn   e2dnde_errp  is_ul   flux_ul     e2dnde_ul   sqrt_ts
+   MeV         MeV     1 / (s cm2) 1 / (s cm2) 1 / (s cm2) erg / (s cm2) erg / (s cm2) erg / (s cm2)       1 / (s cm2) erg / (s cm2)        
+---------- ----------- ----------- ----------- ----------- ------------- ------------- ------------- ----- ----------- ------------- -------
+    50.000     100.000   2.365e-06   2.901e-07   2.916e-07     3.800e-10     4.662e-11     4.686e-11 False         nan           nan   8.309
+   100.000     300.000   1.595e-06   3.088e-08   3.088e-08     3.840e-10     7.436e-12     7.436e-12 False         nan           nan  60.667
+   300.000    1000.000   5.546e-07   5.472e-09   5.472e-09     3.760e-10     3.710e-12     3.710e-12 False         nan           nan 138.346
+  1000.000    3000.000   1.255e-07   8.804e-10   8.804e-10     2.918e-10     2.047e-12     2.047e-12 False         nan           nan 155.573
+  3000.000   10000.000   2.464e-08   8.789e-10   8.789e-10     1.552e-10     5.536e-12     5.536e-12 False         nan           nan   9.059
+ 10000.000   30000.000   2.149e-09   4.120e-10   2.330e-10     4.498e-11     8.622e-12     4.877e-12 False         nan           nan   3.116
+ 30000.000  100000.000   1.542e-16         nan   4.113e-12     8.085e-18           nan     2.157e-13  True   8.227e-12     4.314e-13   0.000
+100000.000 1000000.000   6.125e-18         nan   3.875e-12     5.675e-19           nan     3.590e-13  True   7.750e-12     7.180e-13   0.000
+*** Lightcurve info ***
+
+Lightcurve measured in the energy band: 100 MeV - 100 GeV
+
+Variability index : 156.729
+Significance peak (100 MeV - 100 GeV)    : 154.788
+Integral flux peak (100 MeV - 100 GeV)   : 2.54e-06 +- 2.55e-08 cm^-2 s^-1
+Time peak                                : 3.18e+08 s (Mission elapsed time)
+Peak interval                            : 3.65e+02 day

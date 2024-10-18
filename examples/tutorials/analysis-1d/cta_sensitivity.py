@@ -21,6 +21,7 @@ We will be using the following Gammapy class:
 -  `~gammapy.estimators.SensitivityEstimator`
 
 """
+
 from cycler import cycler
 import numpy as np
 import astropy.units as u
@@ -182,13 +183,11 @@ display(sensitivity_table)
 #
 
 
-
 fig, ax = plt.subplots()
 
 ax.set_prop_cycle(cycler("marker", "s*v") + cycler("color", "rgb"))
 
 for criterion in ("significance", "gamma", "bkg"):
-
     mask = sensitivity_table["criterion"] == criterion
     t = sensitivity_table[mask]
 
@@ -264,7 +263,9 @@ print(sensitivity_table)
 #
 
 flux_points = FluxPoints.from_table(
-    sensitivity_table, sed_type="e2dnde", reference_model=sensitivity_estimator.spectrum
+    sensitivity_table,
+    sed_type="e2dnde",
+    reference_model=sensitivity_estimator.spectral_model,
 )
 print(
     f"Integral sensitivity in {livetime:.2f} above {energy_axis.edges[0]:.2e} "

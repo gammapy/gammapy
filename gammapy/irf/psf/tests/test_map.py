@@ -10,6 +10,8 @@ from gammapy.irf import PSF3D, EffectiveAreaTable2D, PSFMap, RecoPSFMap
 from gammapy.makers.utils import make_map_exposure_true_energy, make_psf_map
 from gammapy.maps import Map, MapAxis, MapCoord, RegionGeom, WcsGeom
 from gammapy.utils.testing import mpl_plot_check, requires_data
+from gammapy.modeling.models import PowerLawSpectralModel
+from gammapy.utils.deprecation import GammapyDeprecationWarning
 
 
 @pytest.fixture(scope="session")
@@ -422,6 +424,9 @@ def test_psf_map_write_gtpsf(tmpdir):
 
 def test_to_image():
     psfmap = make_test_psfmap(0.15 * u.deg)
+
+    with pytest.warns(GammapyDeprecationWarning):
+        psfmap.to_image(spectrum=PowerLawSpectralModel())
 
     psf2D = psfmap.to_image()
     assert_allclose(psf2D.psf_map.geom.data_shape, (1, 100, 25, 25))
