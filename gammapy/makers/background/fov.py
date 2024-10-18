@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """FoV background estimation."""
+
 import logging
 import numpy as np
 from gammapy.maps import Map, RegionGeom
@@ -29,15 +30,15 @@ class FoVBackgroundMaker(Maker):
 
     Parameters
     ----------
-    method : {'scale', 'fit'}
-        The normalization method to be applied. Default 'scale'.
-    exclusion_mask : `~gammapy.maps.WcsNDMap`
+    method : {"scale", "fit"}
+        The normalization method to be applied. Default "scale".
+    exclusion_mask : `gammapy.maps.WcsNDMap`
         Exclusion mask.
-    spectral_model : SpectralModel or str
-        Reference norm spectral model to use for the `FoVBackgroundModel`, if
-        none is defined on the dataset. By default, use pl-norm.
+    spectral_model : `gammapy.modeling.models.SpectralModel` or str
+        Reference norm spectral model to use for the `~gammapy.modeling.models.FoVBackgroundModel`, if
+        none is defined on the dataset. By default, use "pl-norm".
     min_counts : int
-        Minimum number of counts, or residuals counts if a SkyModel is set,
+        Minimum number of counts, or residuals counts if a `~gammapy.modeling.models.SkyModel` is set,
         required outside the exclusion region.
     min_npred_background : float
         Minimum number of predicted background counts required outside the
@@ -95,12 +96,12 @@ class FoVBackgroundMaker(Maker):
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.MapDataset`
+        dataset : `gammapy.datasets.MapDataset`
             Input map dataset.
 
         Returns
         -------
-        dataset : `~gammapy.datasets.MapDataset`
+        dataset : `gammapy.datasets.MapDataset`
             Map dataset including background model.
 
         """
@@ -120,12 +121,12 @@ class FoVBackgroundMaker(Maker):
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.MapDataset`
+        dataset : `gammapy.datasets.MapDataset`
             Input map dataset.
 
         Returns
         -------
-        mask : `~gammapy.maps.WcsNDMap`
+        mask : `gammapy.maps.WcsNDMap`
             Projected exclusion mask.
         """
         geom = dataset._geom
@@ -188,7 +189,7 @@ class FoVBackgroundMaker(Maker):
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.MapDataset`
+        dataset : `gammapy.datasets.MapDataset`
             Input map dataset.
 
         """
@@ -223,12 +224,12 @@ class FoVBackgroundMaker(Maker):
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.MapDataset`
+        dataset : `gammapy.datasets.MapDataset`
             Input dataset.
 
         Returns
         -------
-        dataset : `~gammapy.datasets.MapDataset`
+        dataset : `gammapy.datasets.MapDataset`
             Map dataset with fitted background model.
         """
         # freeze all model components not related to background model
@@ -252,12 +253,12 @@ class FoVBackgroundMaker(Maker):
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.MapDataset`
+        dataset : `gammapy.datasets.MapDataset`
             Input dataset.
 
         Returns
         -------
-        dataset : `~gammapy.datasets.MapDataset`
+        dataset : `gammapy.datasets.MapDataset`
             Map dataset with scaled background model.
         """
         total = self._make_masked_summed_counts(dataset)

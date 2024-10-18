@@ -18,7 +18,7 @@ class SpectrumDatasetMaker(MapDatasetMaker):
     ----------
     selection : list of str, optional
         Select which maps to make, the available options are:
-        'counts', 'exposure', 'background', 'edisp'.
+        "counts", "exposure", "background", "edisp".
         By default, all maps are made.
     containment_correction : bool
         Apply containment correction for point sources and circular on regions.
@@ -50,14 +50,14 @@ class SpectrumDatasetMaker(MapDatasetMaker):
 
         Parameters
         ----------
-        geom : `~gammapy.maps.RegionGeom`
+        geom : `gammapy.maps.RegionGeom`
             Reference map geometry.
-        observation : `~gammapy.data.Observation`
+        observation : `gammapy.data.Observation`
             Observation to compute effective area for.
 
         Returns
         -------
-        exposure : `~gammapy.maps.RegionNDMap`
+        exposure : `gammapy.maps.RegionNDMap`
             Exposure map.
         """
         exposure = super().make_exposure(
@@ -95,21 +95,21 @@ class SpectrumDatasetMaker(MapDatasetMaker):
     def make_counts(geom, observation):
         """Make counts map.
 
-        If the `~gammapy.maps.RegionGeom` is built from a `~regions.CircleSkyRegion`,
+        If the `gammapy.maps.RegionGeom` is built from a `regions.CircleSkyRegion`,
         the latter will be directly used to extract the counts.
-        If instead the `~gammapy.maps.RegionGeom` is built from a `~regions.PointSkyRegion`,
+        If instead the `~gammapy.maps.RegionGeom` is built from a `regions.PointSkyRegion`,
         the size of the ON region is taken from the `RAD_MAX_2D` table containing energy-dependent theta2 cuts.
 
         Parameters
         ----------
-        geom : `~gammapy.maps.Geom`
+        geom : `gammapy.maps.Geom`
             Reference map geometry.
-        observation : `~gammapy.data.Observation`
+        observation : `gammapy.data.Observation`
             Observation container.
 
         Returns
         -------
-        counts : `~gammapy.maps.RegionNDMap`
+        counts : `gammapy.maps.RegionNDMap`
             Counts map.
         """
         return super(SpectrumDatasetMaker, SpectrumDatasetMaker).make_counts(
@@ -121,14 +121,14 @@ class SpectrumDatasetMaker(MapDatasetMaker):
 
         Parameters
         ----------
-        dataset : `~gammapy.spectrum.SpectrumDataset`
+        dataset : `gammapy.spectrum.SpectrumDataset`
             Reference dataset.
-        observation : `~gammapy.data.Observation`
+        observation : `gammapy.data.Observation`
             Observation.
 
         Returns
         -------
-        dataset : `~gammapy.spectrum.SpectrumDataset`
+        dataset : `gammapy.spectrum.SpectrumDataset`
             Spectrum dataset.
         """
         return super(SpectrumDatasetMaker, self).run(dataset, observation)

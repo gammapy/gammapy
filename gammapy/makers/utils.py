@@ -108,22 +108,22 @@ def make_map_exposure_true_energy(
 
     Parameters
     ----------
-    pointing : `~astropy.coordinates.SkyCoord`
+    pointing : `astropy.coordinates.SkyCoord`
         Pointing direction.
-    livetime : `~astropy.units.Quantity`
+    livetime : `astropy.units.Quantity`
         Livetime.
-    aeff : `~gammapy.irf.EffectiveAreaTable2D`
+    aeff : `gammapy.irf.EffectiveAreaTable2D`
         Effective area.
-    geom : `~gammapy.maps.WcsGeom`
+    geom : `gammapy.maps.WcsGeom`
         Map geometry (must have an energy axis).
     use_region_center : bool, optional
-        For geom as a `~gammapy.maps.RegionGeom`. If True, consider the values at the region center.
+        For geom as a `gammapy.maps.RegionGeom`. If True, consider the values at the region center.
         If False, average over the whole region.
         Default is True.
 
     Returns
     -------
-    map : `~gammapy.maps.WcsNDMap`
+    map : `gammapy.maps.WcsNDMap`
         Exposure map.
     """
     coords = _get_fov_coords(
@@ -157,15 +157,15 @@ def _map_spectrum_weight(map, spectrum=None):
 
     Parameters
     ----------
-    map : `~gammapy.maps.Map`
+    map : `gammapy.maps.Map`
         Input map with an "energy" axis.
-    spectrum : `~gammapy.modeling.models.SpectralModel`, optional
+    spectrum : `gammapy.modeling.models.SpectralModel`, optional
         Spectral model to compute the weights.
         Default is None, which is a power-law with spectral index of 2.
 
     Returns
     -------
-    map_weighted : `~gammapy.maps.Map`
+    map_weighted : `gammapy.maps.Map`
         Weighted image.
     """
     if spectrum is None:
@@ -198,33 +198,33 @@ def make_map_background_irf(
 
     Parameters
     ----------
-    pointing : `~gammapy.data.FixedPointingInfo` or `~astropy.coordinates.SkyCoord`
+    pointing : `gammapy.data.FixedPointingInfo` or `astropy.coordinates.SkyCoord`
         Observation pointing.
 
-        - If a `~gammapy.data.FixedPointingInfo` is passed, FOV coordinates
+        - If a `gammapy.data.FixedPointingInfo` is passed, FOV coordinates
           are properly computed.
-        - If a `~astropy.coordinates.SkyCoord` is passed, FOV frame rotation
+        - If a `astropy.coordinates.SkyCoord` is passed, FOV frame rotation
           is not taken into account.
 
-    ontime : `~astropy.units.Quantity`
+    ontime : `astropy.units.Quantity`
         Observation ontime. i.e. not corrected for deadtime
         see https://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/full_enclosure/bkg/index.html#notes)  # noqa: E501
-    bkg : `~gammapy.irf.Background3D`
+    bkg : `gammapy.irf.Background3D`
         Background rate model.
-    geom : `~gammapy.maps.WcsGeom`
+    geom : `gammapy.maps.WcsGeom`
         Reference geometry.
     oversampling : int
         Oversampling factor in energy, used for the background model evaluation.
     use_region_center : bool, optional
-        For geom as a `~gammapy.maps.RegionGeom`. If True, consider the values at the region center.
+        For geom as a `gammapy.maps.RegionGeom`. If True, consider the values at the region center.
         If False, average over the whole region.
         Default is True.
-    obstime : `~astropy.time.Time`
+    obstime : `astropy.time.Time`
         Observation time to use.
 
     Returns
     -------
-    background : `~gammapy.maps.WcsNDMap`
+    background : `gammapy.maps.WcsNDMap`
         Background predicted counts sky cube in reconstructed energy.
     """
     # TODO:
@@ -281,20 +281,20 @@ def make_psf_map(psf, pointing, geom, exposure_map=None):
 
     Parameters
     ----------
-    psf : `~gammapy.irf.PSF3D`
+    psf : `gammapy.irf.PSF3D`
         The PSF IRF.
-    pointing : `~astropy.coordinates.SkyCoord`
+    pointing : `astropy.coordinates.SkyCoord`
         The pointing direction.
-    geom : `~gammapy.maps.Geom`
+    geom : `gammapy.maps.Geom`
         The map geometry to be used. It provides the target geometry.
         rad and true energy axes should be given in this specific order.
-    exposure_map : `~gammapy.maps.Map`, optional
+    exposure_map : `gammapy.maps.Map`, optional
         The associated exposure map.
         Default is None.
 
     Returns
     -------
-    psfmap : `~gammapy.irf.PSFMap`
+    psfmap : `gammapy.irf.PSFMap`
         The resulting PSF map.
     """
     coords = _get_fov_coords(
@@ -325,24 +325,24 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None, use_region_center=T
 
     Parameters
     ----------
-    edisp : `~gammapy.irf.EnergyDispersion2D`
+    edisp : `gammapy.irf.EnergyDispersion2D`
         The 2D energy dispersion IRF.
-    pointing : `~astropy.coordinates.SkyCoord`
+    pointing : `astropy.coordinates.SkyCoord`
         The pointing direction.
-    geom : `~gammapy.maps.Geom`
+    geom : `gammapy.maps.Geom`
         The map geometry to be used. It provides the target geometry.
         migra and true energy axes should be given in this specific order.
-    exposure_map : `~gammapy.maps.Map`, optional
+    exposure_map : `gammapy.maps.Map`, optional
         The associated exposure map.
         Default is None.
     use_region_center : bool, optional
-        For geom as a `~gammapy.maps.RegionGeom`. If True, consider the values at the region center.
+        For geom as a `gammapy.maps.RegionGeom`. If True, consider the values at the region center.
         If False, average over the whole region.
         Default is True.
 
     Returns
     -------
-    edispmap : `~gammapy.irf.EDispMap`
+    edispmap : `gammapy.irf.EDispMap`
         The resulting energy dispersion map.
     """
     coords = _get_fov_coords(pointing, edisp, geom, use_region_center=use_region_center)
@@ -373,24 +373,24 @@ def make_edisp_kernel_map(
 
     Parameters
     ----------
-    edisp : `~gammapy.irf.EnergyDispersion2D`
+    edisp : `gammapy.irf.EnergyDispersion2D`
         The 2D energy dispersion IRF.
-    pointing : `~astropy.coordinates.SkyCoord`
+    pointing : `astropy.coordinates.SkyCoord`
         The pointing direction.
-    geom : `~gammapy.maps.Geom`
+    geom : `gammapy.maps.Geom`
         The map geometry to be used. It provides the target geometry.
         energy and true energy axes should be given in this specific order.
-    exposure_map : `~gammapy.maps.Map`, optional
+    exposure_map : `gammapy.maps.Map`, optional
         The associated exposure map.
         Default is None.
     use_region_center : bool, optional
-        For geom as a `~gammapy.maps.RegionGeom`. If True, consider the values at the region center.
+        For geom as a `gammapy.maps.RegionGeom`. If True, consider the values at the region center.
         If False, average over the whole region.
         Default is True.
 
     Returns
     -------
-    edispmap : `~gammapy.irf.EDispKernelMap`
+    edispmap : `gammapy.irf.EDispKernelMap`
         the resulting EDispKernel map
     """
 
@@ -429,19 +429,19 @@ def make_theta_squared_table(
 
     Parameters
     ----------
-    observations: `~gammapy.data.Observations`
+    observations: `gammapy.data.Observations`
         List of observations.
-    theta_squared_axis : `~gammapy.maps.geom.MapAxis`
+    theta_squared_axis : `gammapy.maps.geom.MapAxis`
         Axis of edges of the theta2 bin used to compute the distribution.
-    position : `~astropy.coordinates.SkyCoord`
+    position : `astropy.coordinates.SkyCoord`
         Position from which the on theta^2 distribution is computed.
-    position_off : `~astropy.coordinates.SkyCoord`
+    position_off : `astropy.coordinates.SkyCoord`
         Position from which the OFF theta^2 distribution is computed.
         Default is reflected position w.r.t. to the pointing position.
 
     Returns
     -------
-    table : `~astropy.table.Table`
+    table : `astropy.table.Table`
         Table containing the on counts, the off counts, acceptance, off acceptance and alpha
         for each theta squared bin.
     """
@@ -513,16 +513,16 @@ def make_counts_rad_max(geom, rad_max, events):
 
     Parameters
     ----------
-    geom : `~gammapy.maps.RegionGeom`
+    geom : `gammapy.maps.RegionGeom`
         Reference map geometry.
-    rad_max : `~gammapy.irf.RadMax2D`
+    rad_max : `gammapy.irf.RadMax2D`
         Rhe RAD_MAX_2D table IRF.
-    events : `~gammapy.data.EventList`
+    events : `gammapy.data.EventList`
         Event list to be used to compute the ON counts.
 
     Returns
     -------
-    counts : `~gammapy.maps.RegionNDMap`
+    counts : `gammapy.maps.RegionNDMap`
         Counts vs estimated energy extracted from the ON region.
     """
     selected_events = events.select_rad_max(
@@ -541,16 +541,16 @@ def make_counts_off_rad_max(geom_off, rad_max, events):
 
     Parameters
     ----------
-    geom_off : `~gammapy.maps.RegionGeom`
+    geom_off : `gammapy.maps.RegionGeom`
         Reference map geometry for the on region.
-    rad_max : `~gammapy.irf.RadMax2D`
+    rad_max : `gammapy.irf.RadMax2D`
         The RAD_MAX_2D table IRF.
-    events : `~gammapy.data.EventList`
+    events : `gammapy.data.EventList`
         Event list to be used to compute the OFF counts.
 
     Returns
     -------
-    counts_off : `~gammapy.maps.RegionNDMap`
+    counts_off : `gammapy.maps.RegionNDMap`
         OFF Counts vs estimated energy extracted from the ON region.
     """
     if not geom_off.is_all_point_sky_regions:
@@ -576,17 +576,17 @@ def make_observation_time_map(observations, geom, offset_max=None):
 
     Parameters
     ----------
-    observations : `~gammapy.data.Observations`
+    observations : `gammapy.data.Observations`
             Observations container containing list of observations.
-    geom : `~gammapy.maps.Geom`
+    geom : `gammapy.maps.Geom`
             Reference geometry.
-    offset_max : `~astropy.units.quantity.Quantity`, optional
+    offset_max : `astropy.units.quantity.Quantity`, optional
         The maximum offset FoV. Default is None.
         If None, it will be taken from the IRFs.
 
     Returns
     -------
-    exposure : `~gammapy.maps.Map`
+    exposure : `gammapy.maps.Map`
         Effective livetime.
     """
     geom = geom.to_image()
@@ -610,16 +610,16 @@ def make_effective_livetime_map(observations, geom, offset_max=None):
 
     Parameters
     ----------
-    observations : `~gammapy.data.Observations`
+    observations : `gammapy.data.Observations`
         Observations container containing list of observations.
-    geom : `~gammapy.maps.Geom`
+    geom : `gammapy.maps.Geom`
         Reference geometry.
-    offset_max : `~astropy.units.quantity.Quantity`, optional
+    offset_max : `astropy.units.quantity.Quantity`, optional
         The maximum offset FoV. Default is None.
 
     Returns
     -------
-     exposure : `~gammapy.maps.Map`
+     exposure : `gammapy.maps.Map`
         Effective livetime.
     """
 
@@ -662,12 +662,12 @@ def guess_instrument_fov(obs):
 
     Parameters
     ----------
-    obs : `~gammapy.data.Observation`
+    obs : `gammapy.data.Observation`
         Observation container.
 
     Returns
     -------
-    offset_max : `~astropy.units.quantity.Quantity`
+    offset_max : `astropy.units.quantity.Quantity`
         The maximum offset of the effective area IRF.
     """
 
