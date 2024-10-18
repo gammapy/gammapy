@@ -17,9 +17,9 @@ class WcsMap(Map):
 
     Parameters
     ----------
-    geom : `~gammapy.maps.WcsGeom`
+    geom : `gammapy.maps.WcsGeom`
         A WCS geometry object.
-    data : `~numpy.ndarray`
+    data : `numpy.ndarray`
         Data array.
     """
 
@@ -43,7 +43,7 @@ class WcsMap(Map):
 
         Parameters
         ----------
-        map_type : {'wcs', 'wcs-sparse'}, optional
+        map_type : {"wcs", "wcs-sparse"}, optional
             Map type. Selects the class that will be used to
             instantiate the map. Default is "wcs".
         npix : int or tuple or list, optional
@@ -65,7 +65,7 @@ class WcsMap(Map):
             define a different map width in each image plane.
             Default is None.
         proj : string, optional
-            Any valid WCS projection type. Default is 'CAR' (cartesian).
+            Any valid WCS projection type. Default is "CAR" (cartesian).
         frame : {"icrs", "galactic"}, optional
             Coordinate system, either Galactic ("galactic") or Equatorial ("icrs").
             Default is "icrs".
@@ -74,7 +74,7 @@ class WcsMap(Map):
             be chosen to be center of the map. Default is None.
         axes : list, optional
             List of non-spatial axes. Default is None.
-        skydir : tuple or `~astropy.coordinates.SkyCoord`, optional
+        skydir : tuple or `astropy.coordinates.SkyCoord`, optional
             Sky position of map center. Can be either a SkyCoord
             object or a tuple of longitude and latitude in degrees in the
             coordinate system of the map.
@@ -82,12 +82,12 @@ class WcsMap(Map):
             Data type. Default is "float32".
         meta : `dict`, optional
             Dictionary to store metadata. Default is None.
-        unit : str or `~astropy.units.Unit`, optional
+        unit : str or `astropy.units.Unit`, optional
             The unit of the map. Default is "".
 
         Returns
         -------
-        map : `~WcsMap`
+        map : `WcsMap`
             A WCS map object.
         """
         from .ndmap import WcsNDMap
@@ -116,7 +116,7 @@ class WcsMap(Map):
 
         Parameters
         ----------
-        hdu_list : `~astropy.io.fits.HDUList`
+        hdu_list : `astropy.io.fits.HDUList`
             HDU list containing HDUs for map data and bands.
         hdu : str, optional
             Name or index of the HDU with the map data.
@@ -157,7 +157,7 @@ class WcsMap(Map):
         return wcs_map
 
     def to_hdulist(self, hdu=None, hdu_bands=None, sparse=False, format="gadf"):
-        """Convert to `~astropy.io.fits.HDUList`.
+        """Convert to `astropy.io.fits.HDUList`.
 
         Parameters
         ----------
@@ -175,7 +175,7 @@ class WcsMap(Map):
 
         Returns
         -------
-        hdu_list : `~astropy.io.fits.HDUList`
+        hdu_list : `astropy.io.fits.HDUList`
             HDU list.
         """
         if sparse:
@@ -235,7 +235,7 @@ class WcsMap(Map):
 
         Returns
         -------
-        hdu : `~astropy.io.fits.BinTableHDU` or `~astropy.io.fits.ImageHDU`
+        hdu : `astropy.io.fits.BinTableHDU` or `astropy.io.fits.ImageHDU`
             HDU containing the map data.
         """
         header = self.geom.to_header()

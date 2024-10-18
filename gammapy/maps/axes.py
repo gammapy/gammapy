@@ -92,20 +92,20 @@ class MapAxis:
 
     Parameters
     ----------
-    nodes : `~numpy.ndarray` or `~astropy.units.Quantity`
+    nodes : `numpy.ndarray` or `astropy.units.Quantity`
         Array of node values.  These will be interpreted as either bin
         edges or centers according to ``node_type``.
-    interp : {'lin', 'log', 'sqrt'}
+    interp : {"lin", "log", "sqrt"}
         Interpolation method used to transform between axis and pixel
-        coordinates. Default is 'lin'.
+        coordinates. Default is "lin".
     name : str, optional
         Axis name. Default is "".
     node_type : str, optional
         Flag indicating whether coordinate nodes correspond to pixel
-        edges (node_type = 'edges') or pixel centers (node_type =
-        'center').  'center' should be used where the map values are
+        edges (node_type = "edges") or pixel centers (node_type =
+        "center"). "center" should be used where the map values are
         defined at a specific coordinate (e.g. differential
-        quantities). 'edges' should be used where map values are
+        quantities). "edges" should be used where map values are
         defined by an integral over coordinate intervals (e.g. a
         counts histogram). Default is "edges".
     unit : str, optional
@@ -200,7 +200,7 @@ class MapAxis:
 
         Parameters
         ----------
-        other : `~gammapy.maps.MapAxis`
+        other : `gammapy.maps.MapAxis`
             Other map axis.
         atol : float, optional
             Absolute numerical tolerance for the comparison measured in bins. Default is 2e-2.
@@ -221,10 +221,10 @@ class MapAxis:
 
         Parameters
         ----------
-        other : `~gammapy.maps.MapAxis`
+        other : `gammapy.maps.MapAxis`
             Other map axis.
         **kwargs : dict, optional
-            Keyword arguments passed to `~numpy.allclose`.
+            Keyword arguments passed to `numpy.allclose`.
 
         Returns
         -------
@@ -296,7 +296,7 @@ class MapAxis:
 
     @property
     def bounds(self):
-        """Bounds of the axis as a `~astropy.units.Quantity`."""
+        """Bounds of the axis as a `astropy.units.Quantity`."""
         idx = [0, -1]
         if self.node_type == "edges":
             return self.edges[idx]
@@ -305,7 +305,7 @@ class MapAxis:
 
     @property
     def as_plot_xerr(self):
-        """Return a tuple of x-error to be passed to `~matplotlib.pyplot.errorbar`."""
+        """Return a tuple of x-error to be passed to `matplotlib.pyplot.errorbar`."""
         return (
             self.center - self.edges_min,
             self.edges_max - self.center,
@@ -354,7 +354,7 @@ class MapAxis:
         return mpl_scale[self.interp]
 
     def to_node_type(self, node_type):
-        """Return a copy of the `~gammapy.maps.MapAxis` instance with a node type set to node_type.
+        """Return a copy of the `gammapy.maps.MapAxis` instance with a node type set to node_type.
 
         Parameters
         ----------
@@ -363,7 +363,7 @@ class MapAxis:
 
         Returns
         -------
-        axis : `~gammapy.maps.MapAxis`
+        axis : `MapAxis`
             The new MapAxis.
         """
         if node_type == self.node_type:
@@ -382,7 +382,7 @@ class MapAxis:
             )
 
     def rename(self, new_name):
-        """Rename the axis. Return a copy of the `~gammapy.maps.MapAxis` instance with name set to new_name.
+        """Rename the axis. Return a copy of the `gammapy.maps.MapAxis` instance with name set to new_name.
 
         Parameters
         ----------
@@ -391,7 +391,7 @@ class MapAxis:
 
         Returns
         -------
-        axis : `~gammapy.maps.MapAxis`
+        axis : `MapAxis`
             The new MapAxis.
         """
         return self.copy(name=new_name)
@@ -401,12 +401,12 @@ class MapAxis:
 
         Parameters
         ----------
-        ax : `~matplotlib.pyplot.Axis`
+        ax : `matplotlib.pyplot.Axis`
             Plot axis to format.
 
         Returns
         -------
-        ax : `~matplotlib.pyplot.Axis`
+        ax : `matplotlib.pyplot.Axis`
             Formatted plot axis.
         """
         ax.set_xscale(self.as_plot_scale)
@@ -426,12 +426,12 @@ class MapAxis:
 
         Parameters
         ----------
-        ax : `~matplotlib.pyplot.Axis`
+        ax : `matplotlib.pyplot.Axis`
             Plot axis to format.
 
         Returns
         -------
-        ax : `~matplotlib.pyplot.Axis`
+        ax : `matplotlib.pyplot.Axis`
             Formatted plot axis.
         """
         ax.set_yscale(self.as_plot_scale)
@@ -507,11 +507,11 @@ class MapAxis:
             Upper bound of last axis bin.
         nbin : int
             Number of bins.
-        interp : {'lin', 'log', 'sqrt'}
+        interp : {"lin", "log", "sqrt"}
             Interpolation method used to transform between axis and pixel
-            coordinates.  Default: 'lin'.
+            coordinates.  Default: "lin".
         ***kwargs : dict, optional
-            Keyword arguments passed to `~gammapy.maps.MapAxis`.
+            Keyword arguments passed to `gammapy.maps.MapAxis`.
         """
         nbin = int(nbin)
         interp = kwargs.setdefault("interp", "lin")
@@ -541,19 +541,19 @@ class MapAxis:
 
         Parameters
         ----------
-        energy_edges : `~astropy.units.Quantity` or float
+        energy_edges : `astropy.units.Quantity` or float
             Energy edges.
-        unit : `~astropy.units.Unit`, optional
+        unit : `astropy.units.Unit`, optional
             Energy unit. Default is None.
         name : str, optional
-            Name of the energy axis, either 'energy' or 'energy_true'. Default is None.
+            Name of the energy axis, either "energy" or "energy_true". Default is None.
         interp: str, optional
-            interpolation mode. Default is 'log'.
+            interpolation mode. Default is "log".
 
         Returns
         -------
-        axis : `~gammapy.maps.MapAxis`
-            Axis with name "energy" and interp "log".
+        axis : `MapAxis`
+            Energy axis.
         """
         energy_edges = u.Quantity(energy_edges, unit)
 
@@ -589,18 +589,18 @@ class MapAxis:
 
         Parameters
         ----------
-        energy_min, energy_max : `~astropy.units.Quantity`, float
+        energy_min, energy_max : `astropy.units.Quantity`, float
             Energy range.
         nbin : int
             Number of bins.
-        unit : `~astropy.units.Unit`, optional
+        unit : `astropy.units.Unit`, optional
             Energy unit. Default is None.
         per_decade : bool, optional
-            Whether `nbin` is given per decade. Default is False.
+            Whether ``nbin`` is given per decade. Default is False.
         name : str, optional
-            Name of the energy axis, either 'energy' or 'energy_true'. Default is None.
+            Name of the energy axis, either "energy" or "energy_true". Default is None.
         node_type : str, optional
-            Node type, either 'edges' or 'center'. Default is 'edges'.
+            Node type, either "edges" or "center". Default is "edges".
         strict_bounds : bool, optional
             Whether to strictly end the binning at 'energy_max' when
             `per_decade=True`. If True, the number of bins per decade
@@ -610,7 +610,7 @@ class MapAxis:
 
         Returns
         -------
-        axis : `~gammapy.maps.MapAxis`
+        axis : `MapAxis`
             Create MapAxis from the given input parameters.
         """
         energy_min = u.Quantity(energy_min, unit)
@@ -664,13 +664,13 @@ class MapAxis:
 
         Parameters
         ----------
-        nodes : `~numpy.ndarray`
+        nodes : `numpy.ndarray`
             Axis nodes (bin center).
-        interp : {'lin', 'log', 'sqrt'}
+        interp : {"lin", "log", "sqrt"}
             Interpolation method used to transform between axis and pixel
-            coordinates. Default is 'lin'.
+            coordinates. Default is "lin".
         **kwargs : dict, optional
-            Keyword arguments passed to `~gammapy.maps.MapAxis`.
+            Keyword arguments passed to `gammapy.maps.MapAxis`.
         """
         if len(nodes) < 1:
             raise ValueError("Nodes array must have at least one element.")
@@ -687,13 +687,13 @@ class MapAxis:
 
         Parameters
         ----------
-        edges : `~numpy.ndarray`
+        edges : `numpy.ndarray`
             Axis bin edges.
-        interp : {'lin', 'log', 'sqrt'}
+        interp : {"lin", "log", "sqrt"}
             Interpolation method used to transform between axis and pixel
-            coordinates.  Default: 'lin'.
+            coordinates.  Default: "lin".
         **kwargs : dict, optional
-            Keyword arguments passed to `~gammapy.maps.MapAxis`.
+            Keyword arguments passed to `gammapy.maps.MapAxis`.
         """
         if len(edges) < 2:
             raise ValueError("Edges array must have at least two elements.")
@@ -747,7 +747,7 @@ class MapAxis:
 
         Returns
         -------
-        axis : `~gammapy.maps.MapAxis`
+        axis : `MapAxis`
             Padded axis.
         """
         if isinstance(pad_width, tuple):
@@ -773,7 +773,7 @@ class MapAxis:
 
         Parameters
         ----------
-        axes : list of `~gammapy.maps.MapAxis`
+        axes : list of `MapAxis`
             List of map axis to merge.
 
         Returns
@@ -793,12 +793,12 @@ class MapAxis:
 
         Parameters
         ----------
-        pix : `~numpy.ndarray`
+        pix : `numpy.ndarray`
             Array of pixel coordinate values.
 
         Returns
         -------
-        coord : `~numpy.ndarray`
+        coord : `numpy.ndarray`
             Array of axis coordinate values.
         """
         pix = pix - self._pix_offset
@@ -810,12 +810,12 @@ class MapAxis:
 
         Parameters
         ----------
-        coord : `~numpy.ndarray`
+        coord : `numpy.ndarray`
             Array of axis coordinate values.
 
         Returns
         -------
-        coord : `~numpy.ndarray`
+        coord : `numpy.ndarray`
             Wrapped array of axis coordinate values.
         """
 
@@ -828,7 +828,7 @@ class MapAxis:
 
         Parameters
         ----------
-        pix : `~numpy.ndarray`
+        pix : `numpy.ndarray`
             Pixel coordinates.
         clip : bool, optional
             Choose whether to clip indices to the valid range of the
@@ -837,7 +837,7 @@ class MapAxis:
 
         Returns
         -------
-        idx : `~numpy.ndarray`
+        idx : `numpy.ndarray`
             Pixel indices.
         """
         if clip:
@@ -853,12 +853,12 @@ class MapAxis:
 
         Parameters
         ----------
-        coord : `~numpy.ndarray`
+        coord : `numpy.ndarray`
             Array of axis coordinate values.
 
         Returns
         -------
-        pix : `~numpy.ndarray`
+        pix : `numpy.ndarray`
             Array of pixel coordinate values.
         """
         if self._boundary_type == BoundaryEnum.periodic:
@@ -872,7 +872,7 @@ class MapAxis:
 
         Parameters
         ----------
-        coord : `~numpy.ndarray`
+        coord : `numpy.ndarray`
             Array of axis coordinate values.
         clip : bool, optional
             Choose whether to clip the index to the valid range of the
@@ -881,7 +881,7 @@ class MapAxis:
 
         Returns
         -------
-        idx : `~numpy.ndarray`
+        idx : `numpy.ndarray`
             Array of bin indices.
         """
         if self._boundary_type == BoundaryEnum.periodic:
@@ -910,7 +910,7 @@ class MapAxis:
 
         Returns
         -------
-        axis : `~gammapy.maps.MapAxis`
+        axis : `MapAxis`
             Sliced axis object.
 
         Examples
@@ -942,7 +942,7 @@ class MapAxis:
 
         Returns
         -------
-        axis : `~gammapy.maps.MapAxis`
+        axis : `MapAxis`
             Squashed axis object.
         """
         return MapAxis.from_bounds(
@@ -981,7 +981,7 @@ class MapAxis:
         return self.__class__(**kwargs)
 
     def copy(self, **kwargs):
-        """Copy `~gammapy.maps.MapAxis` instance and overwrite given attributes.
+        """Copy `MapAxis` instance and overwrite given attributes.
 
         Parameters
         ----------
@@ -990,7 +990,7 @@ class MapAxis:
 
         Returns
         -------
-        copy : `~gammapy.maps.MapAxis`
+        copy : `MapAxis`
             Copied map axis.
         """
         return self._init_copy(**kwargs)
@@ -1000,7 +1000,7 @@ class MapAxis:
 
         Parameters
         ----------
-        coord : `~astropy.units.Quantity`
+        coord : `astropy.units.Quantity`
             Coordinates to be rounded.
         clip : bool, optional
             Choose whether to clip the index to the valid range of the
@@ -1009,7 +1009,7 @@ class MapAxis:
 
         Returns
         -------
-        coord : `~astropy.units.Quantity`
+        coord : `astropy.units.Quantity`
             Rounded coordinates.
         """
         edges_pix = self.coord_to_pix(coord)
@@ -1025,12 +1025,12 @@ class MapAxis:
 
         Parameters
         ----------
-        edges : `~astropy.units.Quantity`
+        edges : `astropy.units.Quantity`
             Group bin edges.
 
         Returns
         -------
-        groups : `~astropy.table.Table`
+        groups : `astropy.table.Table`
             Map axis group table.
         """
         if self.node_type != "edges":
@@ -1093,7 +1093,7 @@ class MapAxis:
 
         Returns
         -------
-        axis : `~gammapy.maps.MapAxis`
+        axis : `MapAxis`
             Upsampled map axis.
 
         """
@@ -1130,7 +1130,7 @@ class MapAxis:
 
         Returns
         -------
-        axis : `~gammapy.maps.MapAxis`
+        axis : `MapAxis`
             Downsampled map axis.
         """
         if self.node_type == "edges":
@@ -1167,7 +1167,7 @@ class MapAxis:
 
         Returns
         -------
-        header : `~astropy.io.fits.Header`
+        header : `astropy.io.fits.Header`
             Header to extend.
         """
         header = fits.Header()
@@ -1207,7 +1207,7 @@ class MapAxis:
         return header
 
     def to_table(self, format="ogip"):
-        """Convert `~astropy.units.Quantity` to OGIP ``EBOUNDS`` extension.
+        """Convert `astropy.units.Quantity` to OGIP ``EBOUNDS`` extension.
 
         See https://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/memos/cal_gen_92_002/cal_gen_92_002.html#tth_sEc3.2  # noqa: E501
 
@@ -1220,7 +1220,7 @@ class MapAxis:
 
         Returns
         -------
-        table : `~astropy.table.Table`
+        table : `astropy.table.Table`
             Table HDU.
         """
         table = Table()
@@ -1281,7 +1281,7 @@ class MapAxis:
         return table
 
     def to_table_hdu(self, format="ogip"):
-        """Convert `~astropy.units.Quantity` to OGIP ``EBOUNDS`` extension.
+        """Convert `astropy.units.Quantity` to OGIP ``EBOUNDS`` extension.
 
         See https://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/memos/cal_gen_92_002/cal_gen_92_002.html#tth_sEc3.2  # noqa: E501
 
@@ -1294,7 +1294,7 @@ class MapAxis:
 
         Returns
         -------
-        hdu : `~astropy.io.fits.BinTableHDU`
+        hdu : `astropy.io.fits.BinTableHDU`
             Table HDU.
         """
         table = self.to_table(format=format)
@@ -1317,7 +1317,7 @@ class MapAxis:
 
         Parameters
         ----------
-        table : `~astropy.table.Table`
+        table : `astropy.table.Table`
             Table.
         format : {"ogip", "ogip-arf", "fgst-ccube", "fgst-template", "gadf", "gadf-dl3"}
             Format specification. Default is "ogip".
@@ -1328,7 +1328,7 @@ class MapAxis:
 
         Returns
         -------
-        axis : `~gammapy.maps.MapAxis`
+        axis : `MapAxis`
             Map Axis.
         """
         if format in ["ogip", "fgst-ccube"]:
@@ -1460,7 +1460,7 @@ class MapAxis:
 
         Parameters
         ----------
-        hdu : `~astropy.io.fits.BinTableHDU`
+        hdu : `astropy.io.fits.BinTableHDU`
             Table HDU.
         format : {"ogip", "ogip-arf", "fgst-ccube", "fgst-template"}
             Format specification. Default is "ogip".
@@ -1469,7 +1469,7 @@ class MapAxis:
 
         Returns
         -------
-        axis : `~gammapy.maps.MapAxis`
+        axis : `MapAxis`
             Map Axis.
         """
         table = Table.read(hdu)
@@ -1481,7 +1481,7 @@ class MapAxes(Sequence):
 
     Parameters
     ----------
-    axes : list of `MapAxis`
+    axes : list of `gammapy.maps.MapAxis`
         List of map axis objects.
     """
 
@@ -1510,7 +1510,7 @@ class MapAxes(Sequence):
 
         Returns
         -------
-        axis : `~gammapy.maps.MapAxis`
+        axis : `gammapy.maps.MapAxis`
             Map axis.
         """
         # get longest axis
@@ -1565,7 +1565,7 @@ class MapAxes(Sequence):
 
         Returns
         -------
-        coords : dict of `~astropy.units.Quantity`.
+        coords : dict of `astropy.units.Quantity`.
             Map coordinates as a dictionary.
         """
         coords = {}
@@ -1584,7 +1584,7 @@ class MapAxes(Sequence):
 
         Returns
         -------
-        bin_volume : `~astropy.units.Quantity`
+        bin_volume : `astropy.units.Quantity`
             Bin volume.
         """
         bin_volume = np.array(1)
@@ -1642,7 +1642,7 @@ class MapAxes(Sequence):
 
         Returns
         -------
-        axes : `~gammapy.maps.MapAxes`
+        axes : `MapAxes`
             Map axes.
         """
         axes = []
@@ -1661,12 +1661,12 @@ class MapAxes(Sequence):
 
         Parameters
         ----------
-        axis : `~gammapy.maps.MapAxis`
+        axis : `gammapy.maps.MapAxis`
             Map axis.
 
         Returns
         -------
-        axes : `~gammapy.maps.MapAxes`
+        axes : `MapAxes`
             Map axes.
         """
         axes = []
@@ -1686,12 +1686,12 @@ class MapAxes(Sequence):
 
         Parameters
         ----------
-        axis : `~gammapy.maps.MapAxis`
+        axis : `gammapy.maps.MapAxis`
             New map axis.
 
         Returns
         -------
-        axes : `~gammapy.maps.MapAxes`
+        axes : `MapAxes`
             Axes object with resampled axis.
         """
         axis_self = self[axis.name]
@@ -1730,7 +1730,7 @@ class MapAxes(Sequence):
 
         Returns
         -------
-        axes : `~gammapy.maps.MapAxes`
+        axes : `MapAxes`
             Map axes.
 
         """
@@ -1754,7 +1754,7 @@ class MapAxes(Sequence):
 
         Returns
         -------
-        axes : `~gammapy.maps.MapAxes`
+        axes : `MapAxes`
             Axes with squashed axis.
         """
         axes = []
@@ -1778,7 +1778,7 @@ class MapAxes(Sequence):
 
         Returns
         -------
-        axes : `~gammapy.maps.MapAxes`
+        axes : `MapAxes`
             Axes with squashed axis.
         """
         axes = []
@@ -1800,7 +1800,7 @@ class MapAxes(Sequence):
 
         Returns
         -------
-        axes : `~gammapy.maps.MapAxes`
+        axes : `MapAxes`
             Axes without the `axis_name`.
         """
         axes = []
@@ -1836,7 +1836,7 @@ class MapAxes(Sequence):
 
         Parameters
         ----------
-        coord : dict of `~numpy.ndarray` or `~gammapy.maps.MapCoord`
+        coord : dict of `numpy.ndarray` or `gammapy.maps.MapCoord`
             Array of axis coordinate values.
         clip : bool, optional
             Choose whether to clip indices to the valid range of the axis. Default is True.
@@ -1845,7 +1845,7 @@ class MapAxes(Sequence):
 
         Returns
         -------
-        pix : tuple of `~numpy.ndarray`
+        pix : tuple of `numpy.ndarray`
             Array of pixel indices values.
         """
         return tuple([ax.coord_to_idx(coord[ax.name], clip=clip) for ax in self])
@@ -1855,12 +1855,12 @@ class MapAxes(Sequence):
 
         Parameters
         ----------
-        coord : dict of `~numpy.ndarray`
+        coord : dict of `numpy.ndarray`
             Array of axis coordinate values.
 
         Returns
         -------
-        pix : tuple of `~numpy.ndarray`
+        pix : tuple of `numpy.ndarray`
             Array of pixel coordinate values.
         """
         return tuple([ax.coord_to_pix(coord[ax.name]) for ax in self])
@@ -1885,7 +1885,7 @@ class MapAxes(Sequence):
 
         Parameters
         ----------
-        pix : tuple of `~numpy.ndarray`
+        pix : tuple of `numpy.ndarray`
             Pixel coordinates.
         clip : bool, optional
             Choose whether to clip indices to the valid range of the
@@ -1894,7 +1894,7 @@ class MapAxes(Sequence):
 
         Returns
         -------
-        idx : tuple `~numpy.ndarray`
+        idx : tuple `numpy.ndarray`
             Pixel indices.
         """
         idx = []
@@ -1917,7 +1917,7 @@ class MapAxes(Sequence):
 
         Returns
         -------
-        axes : `~gammapy.maps.MapAxes`
+        axes : `MapAxes`
             Sliced axes.
 
         Examples
@@ -1957,7 +1957,7 @@ class MapAxes(Sequence):
 
         Returns
         -------
-        header : `~astropy.io.fits.Header`
+        header : `astropy.io.fits.Header`
             FITS header.
         """
         header = fits.Header()
@@ -1978,7 +1978,7 @@ class MapAxes(Sequence):
 
         Returns
         -------
-        table : `~astropy.table.Table`
+        table : `astropy.table.Table`
             Table with axis data.
         """
         if format == "gadf-dl3":
@@ -2035,7 +2035,7 @@ class MapAxes(Sequence):
 
         Returns
         -------
-        hdu : `~astropy.io.fits.BinTableHDU`
+        hdu : `astropy.io.fits.BinTableHDU`
             Bin table HDU.
         """
         # FIXME: Check whether convention is compatible with
@@ -2061,7 +2061,7 @@ class MapAxes(Sequence):
 
         Parameters
         ----------
-        hdu : `~astropy.io.fits.BinTableHDU`
+        hdu : `astropy.io.fits.BinTableHDU`
             Bin table HDU.
         format : {"gadf", "gadf-dl3", "fgst-ccube", "fgst-template", "fgst-bexcube", "ogip-arf"}
             Format to use. Default is "gadf".
@@ -2069,7 +2069,7 @@ class MapAxes(Sequence):
 
         Returns
         -------
-        axes : `~gammapy.maps.MapAxes`
+        axes : `MapAxes`
             Map axes object.
         """
         if hdu is None:
@@ -2084,14 +2084,14 @@ class MapAxes(Sequence):
 
         Parameters
         ----------
-        table : `~astropy.table.Table`
+        table : `astropy.table.Table`
             Bin table HDU.
         format : {"gadf", "gadf-dl3", "fgst-ccube", "fgst-template", "fgst-bexcube", "ogip-arf"}
             Format to use. Default is "gadf".
 
         Returns
         -------
-        axes : `~gammapy.maps.MapAxes`
+        axes : `MapAxes`
             Map axes object.
         """
         from gammapy.irf.io import IRF_DL3_AXES_SPECIFICATION
@@ -2154,18 +2154,18 @@ class MapAxes(Sequence):
 
     @classmethod
     def from_default(cls, axes, n_spatial_axes=None):
-        """Make a sequence of `~MapAxis` objects.
+        """Make a sequence of `MapAxis` objects.
 
         Parameters
         ----------
-        axes : list of `~gammapy.maps.MapAxis` or `~numpy.ndarray`
+        axes : list of `gammapy.maps.MapAxis` or `numpy.ndarray`
             Sequence of axis or edges defining the axes.
         n_spatial_axes : int, optional
             Number of spatial axes. Default is None.
 
         Returns
         -------
-        axes : `~gammapy.maps.MapAxes`
+        axes : `MapAxes`
             Map axes object.
         """
         if axes is None:
@@ -2220,7 +2220,7 @@ class MapAxes(Sequence):
 
         Returns
         -------
-        axes : `~gammapy.maps.MapAxes`
+        axes : `MapAxes`
             Renamed Map axes object.
         """
         axes = self.copy()
@@ -2242,10 +2242,10 @@ class MapAxes(Sequence):
 
         Parameters
         ----------
-        other : `~gammapy.maps.MapAxes`
+        other : `MapAxes`
             Other map axes.
         **kwargs : dict, optional
-            Keyword arguments forwarded to `~gammapy.maps.MapAxis.is_allclose`
+            Keyword arguments forwarded to `gammapy.maps.MapAxis.is_allclose`
 
         Returns
         -------
@@ -2281,17 +2281,17 @@ class TimeMapAxis:
 
     Parameters
     ----------
-    edges_min : `~astropy.units.Quantity`
+    edges_min : `astropy.units.Quantity`
         Array of edge time values. This is the time delta w.r.t. to the reference time.
-    edges_max : `~astropy.units.Quantity`
+    edges_max : `astropy.units.Quantity`
         Array of edge time values. This is the time delta w.r.t. to the reference time.
-    reference_time : `~astropy.time.Time`
+    reference_time : `astropy.time.Time`
         Reference time to use.
     name : str, optional
         Axis name. Default is "time".
-    interp : {'lin'}
+    interp : {"lin"}
         Interpolation method used to transform between axis and pixel
-        coordinates. For now only 'lin' is supported. Default is 'lin'.
+        coordinates. For now only "lin" is supported. Default is "lin".
     """
 
     node_type = "intervals"
@@ -2359,7 +2359,7 @@ class TimeMapAxis:
 
         Returns
         -------
-        axis : `~gammapy.maps.TimeMapAxis`
+        axis : `TimeMapAxis`
             Contiguous time axis.
         """
         edges = np.unique(np.stack([self.edges_min, self.edges_max]))
@@ -2416,38 +2416,38 @@ class TimeMapAxis:
 
     @property
     def bounds(self):
-        """Bounds of the axis as a `~astropy.units.Quantity`."""
+        """Bounds of the axis as a `astropy.units.Quantity`."""
         return self.edges_min[0], self.edges_max[-1]
 
     @property
     def time_bounds(self):
-        """Bounds of the axis as a `~astropy.units.Quantity`."""
+        """Bounds of the axis as a `astropy.units.Quantity`."""
         t_min, t_max = self.bounds
         return t_min + self.reference_time, t_max + self.reference_time
 
     @property
     def time_min(self):
-        """Return axis lower edges as `~astropy.time.Time` object."""
+        """Return axis lower edges as `astropy.time.Time` object."""
         return self._edges_min + self.reference_time
 
     @property
     def time_max(self):
-        """Return axis upper edges as a `~astropy.time.Time` object."""
+        """Return axis upper edges as a `astropy.time.Time` object."""
         return self._edges_max + self.reference_time
 
     @property
     def time_delta(self):
-        """Return axis time bin width as a `~astropy.time.TimeDelta` object."""
+        """Return axis time bin width as a `astropy.time.TimeDelta` object."""
         return self.time_max - self.time_min
 
     @property
     def time_mid(self):
-        """Return time bin center as a `~astropy.time.Time` object."""
+        """Return time bin center as a `astropy.time.Time` object."""
         return self.time_min + 0.5 * self.time_delta
 
     @property
     def time_edges(self):
-        """Time edges as a `~astropy.time.Time` object."""
+        """Time edges as a `astropy.time.Time` object."""
         return self.reference_time + self.edges
 
     @property
@@ -2511,12 +2511,12 @@ class TimeMapAxis:
 
         Parameters
         ----------
-        ax : `~matplotlib.pyplot.Axis`
+        ax : `matplotlib.pyplot.Axis`
             Plot axis to format.
 
         Returns
         -------
-        ax : `~matplotlib.pyplot.Axis`
+        ax : `matplotlib.pyplot.Axis`
             Formatted plot axis.
         """
         from matplotlib.dates import DateFormatter
@@ -2558,10 +2558,10 @@ class TimeMapAxis:
 
         Parameters
         ----------
-        other : `~gammapy.maps.TimeMapAxis`
+        other : `TimeMapAxis`
             Other time map axis.
         **kwargs : dict, optional
-            Keyword arguments forwarded to `~numpy.allclose`.
+            Keyword arguments forwarded to `numpy.allclose`.
 
         Returns
         -------
@@ -2615,13 +2615,13 @@ class TimeMapAxis:
 
         Parameters
         ----------
-        coord : `~astropy.time.Time` or `~astropy.units.Quantity`
+        coord : `astropy.time.Time` or `astropy.units.Quantity`
             Array of time axis coordinate values. The quantity is assumed
             to be relative to the reference time.
 
         Returns
         -------
-        idx : `~numpy.ndarray`
+        idx : `numpy.ndarray`
             Array of bin indices.
         """
         if isinstance(coord, u.Quantity):
@@ -2642,12 +2642,12 @@ class TimeMapAxis:
 
         Parameters
         ----------
-        pix : `~numpy.ndarray`
+        pix : `numpy.ndarray`
             Array of pixel positions.
 
         Returns
         -------
-        coord : `~astropy.time.Time`
+        coord : `astropy.time.Time`
             Array of time axis coordinate values.
         """
         shape = np.shape(pix)
@@ -2674,12 +2674,12 @@ class TimeMapAxis:
 
         Parameters
         ----------
-        coord : `~astropy.time.Time`
+        coord : `astropy.time.Time`
             Array of time axis coordinate values.
 
         Returns
         -------
-        pix : `~numpy.ndarray`
+        pix : `numpy.ndarray`
             Array of pixel positions.
         """
         if isinstance(coord, u.Quantity):
@@ -2713,12 +2713,12 @@ class TimeMapAxis:
 
     @property
     def center(self):
-        """Return interval centers as a `~astropy.units.Quantity`."""
+        """Return interval centers as a `astropy.units.Quantity`."""
         return self.edges_min + 0.5 * self.bin_width
 
     @property
     def bin_width(self):
-        """Return time interval width as a `~astropy.units.Quantity`."""
+        """Return time interval width as a `astropy.units.Quantity`."""
         return self.time_delta.to("h")
 
     def __repr__(self):
@@ -2764,7 +2764,7 @@ class TimeMapAxis:
 
         Returns
         -------
-        copy : `~gammapy.maps.TimeMapAxis`
+        copy : `TimeMapAxis`
             Copied time map axis.
         """
         return self._init_copy(**kwargs)
@@ -2779,7 +2779,7 @@ class TimeMapAxis:
 
         Returns
         -------
-        axis : `~gammapy.maps.TimeMapAxis`
+        axis : `TimeMapAxis`
             Sliced time map axis object.
 
         Examples
@@ -2808,7 +2808,7 @@ class TimeMapAxis:
 
         Returns
         -------
-        axis : `~gammapy.maps.TimeMapAxis`
+        axis : `TimeMapAxis`
             Squashed time map axis object.
         """
         return TimeMapAxis(
@@ -2824,17 +2824,17 @@ class TimeMapAxis:
     #  Should we define a mechanism to ensure this is always correct?
     @classmethod
     def from_time_edges(cls, time_min, time_max, unit="d", interp="lin", name="time"):
-        """Create TimeMapAxis from the time interval edges defined as a `~astropy.time.Time` object.
+        """Create TimeMapAxis from the time interval edges defined as a `astropy.time.Time` object.
 
         The reference time is defined as the lower edge of the first interval.
 
         Parameters
         ----------
-        time_min : `~astropy.time.Time`
+        time_min : `astropy.time.Time`
             Array of lower edge times.
-        time_max : `~astropy.time.Time`
+        time_max : `astropy.time.Time`
             Array of lower edge times.
-        unit : `~astropy.units.Unit` or str, optional
+        unit : `astropy.units.Unit` or str, optional
             The unit to convert the edges to. Default is 'd' (day).
         interp : {'lin'}
             Interpolation method used to transform between axis and pixel
@@ -2844,7 +2844,7 @@ class TimeMapAxis:
 
         Returns
         -------
-        axis : `~gammapy.maps.TimeMapAxis`
+        axis : `TimeMapAxis`
             Time map axis.
         """
         unit = u.Unit(unit)
@@ -2867,7 +2867,7 @@ class TimeMapAxis:
 
         Parameters
         ----------
-        table : `~astropy.table.Table`
+        table : `astropy.table.Table`
             Bin table HDU.
         format : {"gadf", "fermi-fgl", "lightcurve"}
             Format to use. Default is "gadf".
@@ -2876,7 +2876,7 @@ class TimeMapAxis:
 
         Returns
         -------
-        axis : `~gammapy.maps.TimeMapAxis`
+        axis : `TimeMapAxis`
             Time map axis.
         """
         if format == "gadf":
@@ -2935,14 +2935,14 @@ class TimeMapAxis:
 
         Parameters
         ----------
-        gti : `~gammapy.data.GTI`
+        gti : `gammapy.data.GTI`
             GTI table.
         name : str, optional
             Axis name. Default is "time".
 
         Returns
         -------
-        axis : `~gammapy.maps.TimeMapAxis`
+        axis : `TimeMapAxis`
             Time map axis.
 
         """
@@ -2964,16 +2964,16 @@ class TimeMapAxis:
 
         Parameters
         ----------
-        gti : `~gammapy.data.GTI`
+        gti : `gammapy.data.GTI`
             GTI table.
-        t_delta : `~astropy.units.Quantity`
+        t_delta : `astropy.units.Quantity`
             Time binning.
         name : str, optional
             Axis name. Default is "time".
 
         Returns
         -------
-        axis : `~gammapy.maps.TimeMapAxis`
+        axis : `TimeMapAxis`
             Time map axis.
 
         """
@@ -2995,13 +2995,13 @@ class TimeMapAxis:
 
         Parameters
         ----------
-        time_min : `~astropy.time.Time`
+        time_min : `astropy.time.Time`
             Lower bound.
-        time_max : `~astropy.time.Time`
+        time_max : `astropy.time.Time`
             Upper bound.
         nbin : int
             Number of bins.
-        unit : `~astropy.units.Unit` or str, optional
+        unit : `astropy.units.Unit` or str, optional
             The unit to convert the edges to. Default is 'd' (day).
         name : str, optional
             Name of the axis. Default is "time".
@@ -3021,7 +3021,7 @@ class TimeMapAxis:
 
         Returns
         -------
-        gti : `~gammapy.data.GTI`
+        gti : `gammapy.data.GTI`
             GTI table.
         """
         from gammapy.data import GTI
@@ -3035,7 +3035,7 @@ class TimeMapAxis:
 
         Returns
         -------
-        table : `~astropy.table.Table`
+        table : `astropy.table.Table`
             Table with axis data.
         """
         t = self.to_gti().table
@@ -3054,7 +3054,7 @@ class TimeMapAxis:
 
         Returns
         -------
-        header : `~astropy.io.fits.Header`
+        header : `astropy.io.fits.Header`
             Corresponding FITS header.
         """
         header = fits.Header()
@@ -3078,12 +3078,12 @@ class TimeMapAxis:
 
         Parameters
         ----------
-        interval_edges : list of `~astropy.time.Time` or `~astropy.units.Quantity`
+        interval_edges : list of `astropy.time.Time` or `astropy.units.Quantity`
             Start and stop time for each interval to compute the LC.
 
         Returns
         -------
-        groups : `~astropy.table.Table`
+        groups : `astropy.table.Table`
             Group table. Bin groups are divided in:
 
             * "normal" for the bins containing data
@@ -3185,12 +3185,12 @@ class LabelMapAxis:
 
         Parameters
         ----------
-        pix : `~numpy.ndarray`
+        pix : `numpy.ndarray`
             Array of pixel coordinate values.
 
         Returns
         -------
-        coord : `~numpy.ndarray`
+        coord : `numpy.ndarray`
             Array of axis coordinate values.
         """
         idx = np.round(pix).astype(int)
@@ -3203,12 +3203,12 @@ class LabelMapAxis:
 
         Parameters
         ----------
-        coord : `~astropy.time.Time`
+        coord : `astropy.time.Time`
             Array of axis coordinate values.
 
         Returns
         -------
-        idx : `~numpy.ndarray`
+        idx : `numpy.ndarray`
             Array of bin indices.
         """
         coord = np.array(coord)[..., np.newaxis]
@@ -3225,12 +3225,12 @@ class LabelMapAxis:
 
         Parameters
         ----------
-        coord : `~numpy.ndarray`
+        coord : `numpy.ndarray`
             Array of axis label values.
 
         Returns
         -------
-        pix : `~numpy.ndarray`
+        pix : `numpy.ndarray`
             Array of pixel coordinate values.
         """
         return self.coord_to_idx(coord).astype("float")
@@ -3240,7 +3240,7 @@ class LabelMapAxis:
 
         Parameters
         ----------
-        pix : tuple of `~numpy.ndarray`
+        pix : tuple of `numpy.ndarray`
             Pixel coordinates.
         clip : bool, optional
             Choose whether to clip indices to the valid range of the
@@ -3249,7 +3249,7 @@ class LabelMapAxis:
 
         Returns
         -------
-        idx : tuple `~numpy.ndarray`
+        idx : tuple `numpy.ndarray`
             Pixel indices.
         """
         if clip:
@@ -3311,12 +3311,12 @@ class LabelMapAxis:
 
         Parameters
         ----------
-        ax : `~matplotlib.pyplot.Axis`
+        ax : `matplotlib.pyplot.Axis`
             Plot axis to format.
 
         Returns
         -------
-        ax : `~matplotlib.pyplot.Axis`
+        ax : `matplotlib.pyplot.Axis`
             Formatted plot axis.
         """
         ax.set_xticks(self.as_plot_center)
@@ -3340,7 +3340,7 @@ class LabelMapAxis:
 
         Returns
         -------
-        header : `~astropy.io.fits.Header`
+        header : `astropy.io.fits.Header`
             Header to extend.
         """
         header = fits.Header()
@@ -3360,7 +3360,7 @@ class LabelMapAxis:
 
         Parameters
         ----------
-        table : `~astropy.table.Table`
+        table : `astropy.table.Table`
             Bin table HDU.
         format : {"gadf"}
             Format to use.
@@ -3369,7 +3369,7 @@ class LabelMapAxis:
 
         Returns
         -------
-        axis : `~gammapy.maps.TimeMapAxis`
+        axis : `gammapy.maps.TimeMapAxis`
             Time map axis.
         """
         if format == "gadf":
@@ -3404,7 +3404,7 @@ class LabelMapAxis:
 
         Parameters
         ----------
-        other : `~gammapy.maps.LabelMapAxis`
+        other : `LabelMapAxis`
             Other map axis.
 
         Returns
@@ -3462,7 +3462,7 @@ class LabelMapAxis:
 
         Returns
         -------
-        axis : `~gammapy.maps.LabelMapAxis`
+        axis : `LabelMapAxis`
             Sliced axis object.
 
         Examples
@@ -3485,12 +3485,12 @@ class LabelMapAxis:
 
         Parameters
         ----------
-        axes : list of `~gammapy.maps.LabelMapAxis`
+        axes : list of `LabelMapAxis`
             List of label map axis to be merged.
 
         Returns
         -------
-        axis : `~gammapy.maps.LabelMapAxis`
+        axis : `LabelMapAxis`
             Stacked axis.
         """
 
@@ -3508,12 +3508,12 @@ class LabelMapAxis:
 
         Parameters
         ----------
-        axis : `~gammapy.maps.LabelMapAxis`
+        axis : `LabelMapAxis`
             Axis to concatenate with.
 
         Returns
         -------
-        axis : `~gammapy.maps.LabelMapAxis`
+        axis : `LabelMapAxis`
             Concatenation of the two axis.
         """
         if not isinstance(axis, LabelMapAxis):
@@ -3535,7 +3535,7 @@ class LabelMapAxis:
 
         Returns
         -------
-        axis : `~gammapy.maps.LabelMapAxis`
+        axis : `LabelMapAxis`
             Squashed label map axis.
         """
         return LabelMapAxis(

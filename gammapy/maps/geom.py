@@ -37,7 +37,7 @@ def pix_tuple_to_idx(pix):
 
     Returns
     -------
-    idx : `~numpy.ndarray`
+    idx : `numpy.ndarray`
         Array of pixel indices.
     """
     idx = []
@@ -57,7 +57,7 @@ def pix_tuple_to_idx(pix):
 class Geom(abc.ABC):
     """Map geometry base class.
 
-    See also: `~gammapy.maps.WcsGeom` and `~gammapy.maps.HpxGeom`.
+    See also: `gammapy.maps.WcsGeom` and `gammapy.maps.HpxGeom`.
     """
 
     # workaround for the lru_cache pickle issue
@@ -93,7 +93,7 @@ class Geom(abc.ABC):
 
         Returns
         -------
-        memory : `~astropy.units.Quantity`
+        memory : `astropy.units.Quantity`
             Estimated memory usage in megabytes (MB).
         """
         return (np.empty(self.data_shape, dtype).nbytes * u.byte).to("MB")
@@ -124,7 +124,7 @@ class Geom(abc.ABC):
 
         Parameters
         ----------
-        hdulist :  `~astropy.io.fits.HDUList`
+        hdulist :  `astropy.io.fits.HDUList`
             HDU list containing HDUs for map data and bands.
         hdu : str or int, optional
             Name or index of the HDU with the map data. Default is None.
@@ -247,7 +247,7 @@ class Geom(abc.ABC):
 
         Parameters
         ----------
-        coords : tuple or `~MapCoord`
+        coords : tuple or `gammapy.maps.MapCoord`
             Coordinate values in each dimension of the map.  This can
             either be a tuple of numpy arrays or a MapCoord object.
             If passed as a tuple then the ordering should be
@@ -312,12 +312,12 @@ class Geom(abc.ABC):
 
         Parameters
         ----------
-        coords : tuple or `~gammapy.maps.MapCoord`
+        coords : tuple or `gammapy.maps.MapCoord`
             Tuple of map coordinates.
 
         Returns
         -------
-        containment : `~numpy.ndarray`
+        containment : `numpy.ndarray`
             Bool array.
         """
         pass
@@ -332,7 +332,7 @@ class Geom(abc.ABC):
 
         Returns
         -------
-        containment : `~numpy.ndarray`
+        containment : `numpy.ndarray`
             Bool array.
         """
         idx = self.pix_to_idx(pix)
@@ -545,7 +545,7 @@ class Geom(abc.ABC):
 
         Parameters
         ----------
-        axis : `~gammapy.maps.MapAxis`
+        axis : `gammapy.maps.MapAxis`
             New map axis.
 
         Returns
@@ -561,7 +561,7 @@ class Geom(abc.ABC):
 
         Parameters
         ----------
-        axis : `~gammapy.maps.MapAxis`
+        axis : `gammapy.maps.MapAxis`
             New map axis.
 
         Returns
@@ -574,7 +574,7 @@ class Geom(abc.ABC):
 
     @abc.abstractmethod
     def solid_angle(self):
-        """Solid angle as a `~astropy.units.Quantity` object (in ``sr``)."""
+        """Solid angle as a `astropy.units.Quantity` object (in ``sr``)."""
         pass
 
     @property
@@ -629,7 +629,7 @@ class Geom(abc.ABC):
 
         Parameters
         ----------
-        energy_min, energy_max : `~astropy.units.Quantity`
+        energy_min, energy_max : `astropy.units.Quantity`
             Energy range.
 
         Returns

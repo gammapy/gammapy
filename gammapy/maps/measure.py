@@ -12,7 +12,7 @@ def containment_region(map_, fraction=0.393, apply_union=True):
 
     Parameters
     ----------
-    map_ : `~gammapy.maps.WcsNDMap`
+    map_ : `gammapy.maps.WcsNDMap`
         Map of integral quantities.
     fraction : float, optional
         Containment fraction. Default is 0.393.
@@ -22,7 +22,7 @@ def containment_region(map_, fraction=0.393, apply_union=True):
 
     Returns
     -------
-    regions : list of `~regions.PolygonSkyRegion` or `~regions.CompoundSkyRegion`
+    regions : list of `regions.PolygonSkyRegion` or `regions.CompoundSkyRegion`
         Regions from iso-contours matching containment fraction.
     """
     from . import WcsNDMap
@@ -85,17 +85,17 @@ def containment_radius(map_, fraction=0.393, position=None):
 
     Parameters
     ----------
-    map_ : `~gammapy.maps.WcsNDMap`
+    map_ : `gammapy.maps.WcsNDMap`
         Map of integral quantities.
     fraction : float
         Containment fraction. Default is 0.393.
-    position : `~astropy.coordinates.SkyCoord`
+    position : `astropy.coordinates.SkyCoord`
         Position from where the containment is computed.
         Default is the center of the Map.
 
     Returns
     -------
-    radius : `~astropy.coordinates.Angle`
+    radius : `astropy.coordinates.Angle`
         Minimal radius required to reach the given containment fraction.
 
     """

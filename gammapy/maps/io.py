@@ -7,9 +7,9 @@ def find_bands_hdu(hdu_list, hdu):
 
     Parameters
     ----------
-    hdu_list : `~astropy.io.fits.HDUList`
+    hdu_list : `astropy.io.fits.HDUList`
         The FITS HDU list.
-    hdu : `~astropy.io.fits.BinTableHDU` or `~astropy.io.fits.ImageHDU`
+    hdu : `astropy.io.fits.BinTableHDU` or `astropy.io.fits.ImageHDU`
         The HDU to check.
     Returns
     -------

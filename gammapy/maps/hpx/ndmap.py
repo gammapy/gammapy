@@ -31,14 +31,14 @@ class HpxNDMap(HpxMap):
 
     Parameters
     ----------
-    geom : `~gammapy.maps.HpxGeom`
+    geom : `gammapy.maps.HpxGeom`
         HEALPix geometry object.
-    data : `~numpy.ndarray`
+    data : `numpy.ndarray`
         HEALPix data array.
         If None, then an empty array will be allocated.
     meta : `dict`
         Dictionary to store metadata.
-    unit : str or `~astropy.units.Unit`
+    unit : str or `astropy.units.Unit`
         The map unit.
     """
 
@@ -147,9 +147,9 @@ class HpxNDMap(HpxMap):
 
         Parameters
         ----------
-        hdu : `~astropy.io.fits.BinTableHDU`
+        hdu : `astropy.io.fits.BinTableHDU`
             The FITS HDU.
-        hdu_bands : `~astropy.io.fits.BinTableHDU`, optional
+        hdu_bands : `astropy.io.fits.BinTableHDU`, optional
             The BANDS table HDU. Default is None.
         format : str, optional
             FITS convention. Default is None.
@@ -346,7 +346,7 @@ class HpxNDMap(HpxMap):
 
         Returns
         -------
-        geom : `~HpxNDMap`
+        geom : `HpxNDMap`
             HEALPix map with new NSIDE.
         """
         if len(self.geom.nside) > 1:
@@ -385,14 +385,14 @@ class HpxNDMap(HpxMap):
 
         Parameters
         ----------
-        position : `~astropy.coordinates.SkyCoord`
+        position : `astropy.coordinates.SkyCoord`
             Center position of the cutout region.
-        width : `~astropy.coordinates.Angle` or `~astropy.units.Quantity`
+        width : `astropy.coordinates.Angle` or `astropy.units.Quantity`
             Diameter of the circular cutout region.
 
         Returns
         -------
-        cutout : `~gammapy.maps.HpxNDMap`
+        cutout : `gammapy.maps.HpxNDMap`
             Cutout map.
         """
         geom = self.geom.cutout(position=position, width=width)
@@ -457,13 +457,13 @@ class HpxNDMap(HpxMap):
 
         Parameters
         ----------
-        width : `~astropy.units.Quantity`, str or float
+        width : `astropy.units.Quantity`, str or float
             Smoothing width given as quantity or float. If a float is given it is
             interpreted as smoothing width in pixels. If an (angular) quantity
-            is given it is converted to pixels using `~healpy.nside2resol`.
+            is given it is converted to pixels using `healpy.nside2resol`.
             It corresponds to the standard deviation in case of a Gaussian kernel,
             and the radius in case of a disk kernel.
-        kernel : {'gauss', 'disk'}, optional
+        kernel : {"gauss", "disk"}, optional
             Kernel shape. Default is "gauss".
 
         Returns
@@ -550,16 +550,16 @@ class HpxNDMap(HpxMap):
 
         Parameters
         ----------
-        kernel : `~gammapy.irf.PSFKernel`
+        kernel : `gammapy.irf.PSFKernel`
             Convolution kernel. The pixel size must be upsampled by a factor 2 or bigger
             with respect to the input map to prevent artifacts in the projection.
         convolution_method : {"wcs-tan", ""}
             Convolution method. If "wcs-tan", project on WCS geometry and
-            convolve with WCS kernel. See `~gammapy.maps.HpxNDMap.convolve_wcs`.
-            If "", convolve map with a symmetrical WCS kernel. See `~gammapy.maps.HpxNDMap.convolve_full`.
+            convolve with WCS kernel. See `gammapy.maps.HpxNDMap.convolve_wcs`.
+            If "", convolve map with a symmetrical WCS kernel. See `gammapy.maps.HpxNDMap.convolve_full`.
             Default is "wcs-tan".
         **kwargs : dict
-            Keyword arguments passed to `~gammapy.maps.WcsNDMap.convolve`.
+            Keyword arguments passed to `gammapy.maps.WcsNDMap.convolve`.
 
         Returns
         -------
@@ -589,11 +589,11 @@ class HpxNDMap(HpxMap):
 
         Parameters
         ----------
-        kernel : `~gammapy.irf.PSFKernel`
+        kernel : `gammapy.irf.PSFKernel`
             Convolution kernel. The pixel size must be upsampled by a factor 2 or bigger
             with respect to the input map to prevent artifacts in the projection.
         **kwargs : dict
-            Keyword arguments passed to `~gammapy.maps.WcsNDMap.convolve`.
+            Keyword arguments passed to `gammapy.maps.WcsNDMap.convolve`.
 
         Returns
         -------
@@ -648,7 +648,7 @@ class HpxNDMap(HpxMap):
         """Convolve map with a symmetrical WCS kernel.
 
         Extract the radial profile of the kernel (assuming radial symmetry) and
-        convolve via `~healpy.sphtfunc.smoothing`. Since no projection is applied, this is
+        convolve via `healpy.sphtfunc.smoothing`. Since no projection is applied, this is
         suited for full-sky and large maps.
 
         If the kernel is two-dimensional, it is applied to all image planes likewise.
@@ -657,7 +657,7 @@ class HpxNDMap(HpxMap):
 
         Parameters
         ----------
-        kernel : `~gammapy.irf.PSFKernel`
+        kernel : `gammapy.irf.PSFKernel`
             Convolution kernel. The pixel size must be upsampled by a factor 2 or bigger
             with respect to the input map to prevent artifacts in the projection.
 
@@ -864,21 +864,21 @@ class HpxNDMap(HpxMap):
 
         Parameters
         ----------
-        region: `~regions.Region` or `~astropy.coordinates.SkyCoord`
+        region: `regions.Region` or `astropy.coordinates.SkyCoord`
              Region.
         func : numpy.func, optional
-            Function to reduce the data. Default is np.nansum.
-            For boolean Map, use np.any or np.all.
-        weights : `WcsNDMap`, optional
+            Function to reduce the data. Default is 'np.nansum'.
+            For boolean Map, use 'np.any' or 'np.all'.
+        weights : `gammapy.maps.WcsNDMap`, optional
             Array to be used as weights. The geometry must be equivalent.
             Default is None.
         method : {"nearest", "linear"}
             How to interpolate if a position is given.
-            Default is "neraest".
+            Default is "nearest".
 
         Returns
         -------
-        spectrum : `~gammapy.maps.RegionNDMap`
+        spectrum : `gammapy.maps.RegionNDMap`
             Spectrum in the given region.
         """
         from gammapy.maps import RegionGeom, RegionNDMap
@@ -924,16 +924,16 @@ class HpxNDMap(HpxMap):
         """Quickplot method.
 
         This will generate a visualization of the map by converting to
-        a rasterized WCS image (method='raster') or drawing polygons
-        for each pixel (method='poly').
+        a rasterized WCS image (method="raster") or drawing polygons
+        for each pixel (method="poly").
 
         Parameters
         ----------
-        method : {'raster','poly'}
+        method : {"raster","poly"}
             Method for mapping HEALPix pixels to a two-dimensional
-            image. Can be set to 'raster' (rasterization to cartesian
-            image plane) or 'poly' (explicit polygons for each pixel).
-            WARNING: The 'poly' method is much slower than 'raster'
+            image. Can be set to "raster" (rasterization to cartesian
+            image plane) or "poly" (explicit polygons for each pixel).
+            WARNING: The "poly" method is much slower than "raster"
             and only suitable for maps with less than ~10k pixels.
             Default is "raster".
         proj : string, optional
@@ -950,11 +950,11 @@ class HpxNDMap(HpxMap):
             is None then the width will be set from ``oversample``.
             Default is 1000.
         **kwargs : dict
-            Keyword arguments passed to `~matplotlib.pyplot.imshow`.
+            Keyword arguments passed to `matplotlib.pyplot.imshow`.
 
         Returns
         -------
-        ax : `~astropy.visualization.wcsaxes.WCSAxes`
+        ax : `astropy.visualization.wcsaxes.WCSAxes`
             WCS axes object.
         """
         if method == "raster":
@@ -983,7 +983,7 @@ class HpxNDMap(HpxMap):
             Set the number vertices that will be computed for each
             pixel in multiples of 4.
             Default is 1.
-        ax : `~matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes`, optional
             Matplotlib axes. Default is None.
         """
         # FIXME: At the moment this only works for all-sky maps if the
@@ -1070,11 +1070,11 @@ class HpxNDMap(HpxMap):
 
         Parameters
         ----------
-        method : {'raster','poly'}
+        method : {"raster","poly"}
             Method for mapping HEALPix pixels to a two-dimensional
-            image. Can be set to 'raster' (rasterization to cartesian
-            image plane) or 'poly' (explicit polygons for each pixel).
-            WARNING: The 'poly' method is much slower than 'raster'
+            image. Can be set to "raster" (rasterization to cartesian
+            image plane) or "poly" (explicit polygons for each pixel).
+            WARNING: The "poly" method is much slower than "raster"
             and only suitable for maps with less than ~10k pixels.
             Default is "raster".
         proj : string, optional
@@ -1091,11 +1091,11 @@ class HpxNDMap(HpxMap):
             is None then the width will be set from ``oversample``.
             Default is 1000.
         **kwargs : dict
-            Keyword arguments passed to `~matplotlib.pyplot.imshow`.
+            Keyword arguments passed to `matplotlib.pyplot.imshow`.
 
         Returns
         -------
-        ax : `~astropy.visualization.wcsaxes.WCSAxes`
+        ax : `astropy.visualization.wcsaxes.WCSAxes`
             WCS axis object.
         """
         if not self.is_mask:
