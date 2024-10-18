@@ -19,7 +19,7 @@ used in gamma-ray astronomy (`colormap_hess` and `colormap_milagro`).
 Survey panel plots
 ------------------
 
-The `MapPanelPlotter` allows to split e.g. a galactic plane survey image with
+The `~gammapy.visualization.MapPanelPlotter` allows to split e.g. a galactic plane survey image with
 a large aspect ratio into multiple panels. Here is a short example:
 
 .. plot::

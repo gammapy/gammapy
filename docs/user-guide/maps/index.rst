@@ -20,11 +20,11 @@ non-spatial dimensions and can represent images (2D), cubes (3D), or hypercubes
 
 
 `gammapy.maps` is organized around two data structures: *geometry* classes
-inheriting from `~Geom` and *map* classes inheriting from `~Map`. A geometry
-defines the map boundaries, pixelization scheme, and provides methods for
-converting to/from map and pixel coordinates. A map owns a `~Geom` instance
+inheriting from `~gammapy.maps.Geom` and *map* classes inheriting from `~gammapy.maps.Map`. A geometry
+defines the map boundaries, pixelisation scheme, and provides methods for
+converting to/from map and pixel coordinates. A map owns a `~gammapy.maps.Geom` instance
 as well as a data array containing map values. Where possible it is recommended
-to use the abstract `~Map` interface for accessing or updating the contents of a
+to use the abstract `~gammapy.maps.Map` interface for accessing or updating the contents of a
 map as this allows algorithms to be used interchangeably with different map
 representations. The following reviews methods of the abstract map interface.
 
@@ -33,11 +33,11 @@ Getting started with maps
 -------------------------
 
 All map objects have an abstract interface provided through the methods of the
-`~Map`. These methods can be used for accessing and manipulating the contents of
+`~gammapy.maps.Map`. These methods can be used for accessing and manipulating the contents of
 a map without reference to the underlying data representation (e.g. whether a
-map uses WCS or HEALPix pixelization). For applications which do depend on the
+map uses WCS or HEALPix pixelisation). For applications which do depend on the
 specific representation one can also work directly with the classes derived from
-`~Map`. In the following we review some of the basic methods for working with
+`~gammapy.maps.Map`. In the following we review some of the basic methods for working with
 map objects, more details are given in the :doc:`/tutorials/api/maps`
 tutorial.
 
@@ -47,20 +47,20 @@ Accessor methods
 ----------------
 
 All map objects have a set of accessor methods provided through the abstract
-`~Map` class. These methods can be used to access or update the contents of the
+`~gammapy.maps.Map` class. These methods can be used to access or update the contents of the
 map irrespective of its underlying representation. Four types of accessor
 methods are provided:
 
 * ``get`` : Return the value of the map at the pixel containing the
-  given coordinate (`~Map.get_by_idx`, `~Map.get_by_pix`, `~Map.get_by_coord`).
+  given coordinate (`~gammapy.maps.Map.get_by_idx`, `~gammapy.maps.Map.get_by_pix`, `~gammapy.maps.Map.get_by_coord`).
 * ``interp`` : Interpolate or extrapolate the value of the map at an arbitrary
   coordinate.
 * ``set`` : Set the value of the map at the pixel containing the
-  given coordinate (`~Map.set_by_idx`, `~Map.set_by_pix`, `~Map.set_by_coord`).
+  given coordinate (`~gammapy.maps.Map.set_by_idx`, `~gammapy.maps.Map.set_by_pix`, `~gammapy.maps.Map.set_by_coord`).
 * ``fill`` : Increment the value of the map at the pixel containing
   the given coordinate with a unit weight or the value in the optional
-  ``weights`` argument (`~Map.fill_by_idx`, `~Map.fill_by_pix`,
-  `~Map.fill_by_coord`).
+  ``weights`` argument (`~gammapy.maps.Map.fill_by_idx`, `~gammapy.maps.Map.fill_by_pix`,
+  `~gammapy.maps.Map.fill_by_coord`).
 
 Accessor methods accept as their first argument a coordinate tuple containing
 scalars, lists, or numpy arrays with one tuple element for each dimension of the
@@ -84,7 +84,7 @@ coordinates can be expressed in one of three coordinate systems:
   array for each non-spatial dimension.
 
 The coordinate system accepted by a given accessor method can be inferred from
-the suffix of the method name (e.g. `~Map.get_by_idx`).  The following
+the suffix of the method name (e.g. `~gammapy.maps.Map.get_by_idx`).  The following
 demonstrates how one can access the same pixels of a WCS map using each of the
 three coordinate systems:
 
@@ -141,7 +141,7 @@ following demonstrates how one can set pixel values:
 Interface with MapCoord and SkyCoord
 ------------------------------------
 
-The ``coord`` accessor methods accept `dict`, `~gammapy.maps.MapCoord`, and
+The ``coord`` accessor methods accept ``dict``, `~gammapy.maps.MapCoord`, and
 `~astropy.coordinates.SkyCoord` arguments in addition to the standard `tuple` of
 `~numpy.ndarray` argument.  When using a `tuple` argument a
 `~astropy.coordinates.SkyCoord` can be used instead of longitude and latitude
@@ -166,7 +166,7 @@ transformed to match the coordinate system of the map.
     m.set_by_coord((skycoord, energy), [0.5, 1.5])
     m.get_by_coord((skycoord, energy))
 
-A `~gammapy.maps.MapCoord` or `dict` argument can be used to interact with a map object
+A `~gammapy.maps.MapCoord` or ``dict`` argument can be used to interact with a map object
 without reference to the axis ordering of the map geometry:
 
 .. testcode::
@@ -188,9 +188,9 @@ MapCoord
 
 `~gammapy.maps.MapCoord` is an N-dimensional coordinate object that stores both spatial and
 non-spatial coordinates and is accepted by all ``coord`` methods. A `~gammapy.maps.MapCoord`
-can be created with or without explicitly named axes with `MapCoord.create`.
+can be created with or without explicitly named axes with `~gammapy.maps.MapCoord.create`.
 Axes of a `~gammapy.maps.MapCoord` can be accessed by index, name, or attribute.  A `~gammapy.maps.MapCoord`
-without explicit axis names can be created by calling `MapCoord.create` with a
+without explicit axis names can be created by calling `~gammapy.maps.MapCoord.create` with a
 `tuple` argument:
 
 .. testcode::
@@ -231,8 +231,8 @@ latitude.  Non-spatial axes are assigned a default name ``axis{I}`` where
 ``{I}`` is the index of the non-spatial dimension. `~gammapy.maps.MapCoord` objects created
 without named axes must have the same axis ordering as the map geometry.
 
-A `~gammapy.maps.MapCoord` with named axes can be created by calling `MapCoord.create`
-with a `dict`:
+A `~gammapy.maps.MapCoord` with named axes can be created by calling `~gammapy.maps.MapCoord.create`
+with a ``dict``:
 
 .. testcode::
 

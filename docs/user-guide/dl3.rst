@@ -32,7 +32,7 @@ You can use the `~gammapy.data.EventList` class to load IACT gamma-ray event lis
     filename = '$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz'
     events = EventList.read(filename)
 
-To load Fermi-LAT event lists, use the `~gammapy.data.EventListLAT` class:
+To load Fermi-LAT event lists, you can also use the `~gammapy.data.EventList` class:
 
 .. testcode::
 
@@ -139,7 +139,7 @@ Writing event lists and GTIs to file
 
 To write the events or GTIs separately, one can just save the underlying
 `astropy.table.Table`. To have an event file written in a correct DL3 format, it is
-necessary to utilise the  ``write`` method available for`~gammapy.data.Observation`.
+necessary to utilise the  ``write`` method available for `~gammapy.data.Observation`.
 It will write the `~gammapy.data.EventList` and their associated GTIs together in the
 same FITS file according to the format specifications. To avoid writing IRFs along the
 ``EventList`` one has to set ``include_irfs`` to ``False``. See the example below:
