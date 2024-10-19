@@ -1,42 +1,36 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from astropy.time import Time
-from gammapy.data.utils import check_time_intervals
+import astropy.units as u
+from astropy.coordinates import SkyCoord
+from gammapy.data.utils import get_irfs_features
+from gammapy.utils.testing import (
+    assert_allclose,
+    requires_data,
+)
+from gammapy.data import DataStore
 
 
-def test_check_time_intervals():
-    from gammapy.data import utils
+@requires_data()
+def test_irfs_features():
+    selection = dict(
+        type="sky_circle",
+        frame="icrs",
+        lon="329.716 deg",
+        lat="-30.225 deg",
+        radius="2 deg",
+    )
 
-    utils.CHECK_OVERLAPPING_TI = True
+    data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
+    obs_table = data_store.obs_table.select_observations(selection)
+    obs = data_store.get_observations(obs_table["OBS_ID"][:1])
 
-    assert check_time_intervals(1.0) is False
-    assert check_time_intervals([]) is False
-    assert check_time_intervals([53090.130, 53090.140]) is False
-
-    aa = [
-        Time(53090.130, format="mjd", scale="tt"),
-        Time(53090.140, format="mjd", scale="tt"),
-    ]
-    bb = [
-        Time(53090.150, format="mjd", scale="tt"),
-        Time(53090.160, format="mjd", scale="tt"),
-    ]
-    ti = [aa, bb]
-    assert check_time_intervals(ti) is True
-
-    cc = [
-        Time(53090.140, format="mjd", scale="tt"),
-        Time(53090.160, format="mjd", scale="tt"),
-    ]
-    ti = [aa, cc]
-    assert check_time_intervals(ti) is True
-
-    dd = [
-        Time(53080.150, format="mjd", scale="tt"),
-        Time(53091.160, format="mjd", scale="tt"),
-    ]
-    ti = [aa, bb, dd]
-    assert check_time_intervals(ti) is False
-
-    utils.CHECK_OVERLAPPING_TI = False
-    assert check_time_intervals(ti) is True
-    utils.CHECK_OVERLAPPING_TI = True
+    position = SkyCoord(329.716 * u.deg, -30.225 * u.deg, frame="icrs")
+    names = ["edisp-bias", "edisp-res", "psf-radius"]
+    features_irfs = get_irfs_features(
+        obs,
+        energy_true="1 TeV",
+        position=position,
+        names=names,
+    )
+    assert_allclose(features_irfs[0]["edisp-bias"], 0.11587, rtol=1.0e-4)
+    assert_allclose(features_irfs[0]["edisp-res"], 0.36834, rtol=1.0e-4)
+    assert_allclose(features_irfs[0]["psf-radius"], 0.14149, rtol=1.0e-4)
