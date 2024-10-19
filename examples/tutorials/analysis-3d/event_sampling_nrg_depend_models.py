@@ -253,7 +253,7 @@ models = [model, bkg_model]
 # Define an observation and make a dataset
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# In the following, we define an observation of 1 hr with CTA in the
+# In the following, we define an observation of 1 hr with CTAO in the
 # alpha-configuration for the south array, and we also create a dataset
 # to be passed to the event sampler. The full `SkyModel` created above
 # is passed to the dataset.

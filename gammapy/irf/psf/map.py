@@ -12,6 +12,7 @@ from gammapy.utils.random import InverseCDFSampler, get_random_state
 from ..core import IRFMap
 from .core import PSF
 from .kernel import PSFKernel
+from gammapy.utils.deprecation import deprecated_renamed_argument
 
 __all__ = ["PSFMap", "RecoPSFMap"]
 
@@ -447,12 +448,13 @@ class PSFMap(IRFMap):
         )
         return cls(psf_map=psf_map, exposure_map=exposure_map)
 
-    def to_image(self, spectrum=None, keepdims=True):
+    @deprecated_renamed_argument("spectrum", "spectral_model", "v1.3")
+    def to_image(self, spectral_model=None, keepdims=True):
         """Reduce to a 2D map after weighing with the associated exposure and a spectrum.
 
         Parameters
         ----------
-        spectrum : `~gammapy.modeling.models.SpectralModel`, optional
+        spectral_model : `~gammapy.modeling.models.SpectralModel`, optional
             Spectral model to compute the weights.
             Default is power-law with spectral index of 2.
         keepdims : bool, optional
@@ -466,10 +468,10 @@ class PSFMap(IRFMap):
         """
         from gammapy.makers.utils import _map_spectrum_weight
 
-        if spectrum is None:
-            spectrum = PowerLawSpectralModel(index=2.0)
+        if spectral_model is None:
+            spectral_model = PowerLawSpectralModel(index=2.0)
 
-        exp_weighed = _map_spectrum_weight(self.exposure_map, spectrum)
+        exp_weighed = _map_spectrum_weight(self.exposure_map, spectral_model)
         exposure = exp_weighed.sum_over_axes(
             axes_names=[self.energy_name], keepdims=keepdims
         )

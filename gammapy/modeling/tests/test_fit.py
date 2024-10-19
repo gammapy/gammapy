@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Unit tests for the Fit class"""
+
 import pytest
 from numpy.testing import assert_allclose
 from astropy.table import Table
@@ -364,3 +365,18 @@ def test_write(tmpdir):
 
     assert "CovarianceResult" not in data
     assert "OptimizeResult" in data
+
+
+@requires_data()
+def test_covariance_no_optimize_results():
+    spec = SpectrumDatasetOnOff.read(
+        "$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits"
+    )
+    spec.models = [SkyModel.create(spectral_model="pl")]
+
+    fit = Fit()
+    fit.optimize([spec])
+    res = fit.covariance([spec])
+
+    assert_allclose(res.matrix.data[0, 1], 6.163970e-13, rtol=1e-3)
+    assert_allclose(res.matrix.data[0, 0], 2.239832e-02, rtol=1e-3)

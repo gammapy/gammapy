@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Implementation of energy-dependent morphology estimator tool."""
+
 import numpy as np
 from gammapy.datasets import Datasets
 from gammapy.modeling import Fit
@@ -47,7 +48,6 @@ def weighted_chi2_parameter(results_edep, parameters=["sigma"]):
     are independent, which cannot be guaranteed in this use case.
 
     """
-
     chi2_value = []
     df = []
     for parameter in parameters:
@@ -91,7 +91,6 @@ class EnergyDependentMorphologyEstimator(Estimator):
     tag = "EnergyDependentMorphologyEstimator"
 
     def __init__(self, energy_edges, source=0, fit=None):
-
         self.energy_edges = energy_edges
         self.source = source
         self.num_energy_bands = len(self.energy_edges) - 1
@@ -301,7 +300,6 @@ class EnergyDependentMorphologyEstimator(Estimator):
         results : `dict`
             Dictionary with the various energy-dependence estimation values.
         """
-
         if not isinstance(datasets, Datasets) or datasets.is_all_same_type is False:
             raise ValueError("Unsupported datasets type.")
 

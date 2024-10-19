@@ -5,6 +5,8 @@ from gammapy.datasets import SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.estimators import FluxPoints, SensitivityEstimator
 from gammapy.irf import EDispKernelMap
 from gammapy.maps import MapAxis, RegionNDMap
+from gammapy.modeling.models import PowerLawSpectralModel
+from gammapy.utils.deprecation import GammapyDeprecationWarning
 
 
 @pytest.fixture()
@@ -37,6 +39,10 @@ def test_cta_sensitivity_estimator(spectrum_dataset, caplog):
         acceptance=RegionNDMap.from_geom(geom=geom, data=1),
         acceptance_off=RegionNDMap.from_geom(geom=geom, data=5),
     )
+    with pytest.warns(GammapyDeprecationWarning):
+        SensitivityEstimator(
+            gamma_min=25, bkg_syst_fraction=0.075, spectrum=PowerLawSpectralModel()
+        )
 
     sens = SensitivityEstimator(gamma_min=25, bkg_syst_fraction=0.075)
     table = sens.run(dataset_on_off)
@@ -89,7 +95,7 @@ def test_integral_estimation(spectrum_dataset, caplog):
     sens = SensitivityEstimator(gamma_min=25, bkg_syst_fraction=0.075)
     table = sens.run(dataset_on_off)
     flux_points = FluxPoints.from_table(
-        table, sed_type="e2dnde", reference_model=sens.spectrum
+        table, sed_type="e2dnde", reference_model=sens.spectral_model
     )
 
     assert_allclose(table["excess"].data.squeeze(), 270540, rtol=1e-3)

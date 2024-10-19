@@ -5,6 +5,7 @@ import astropy.units as u
 import matplotlib.pyplot as plt
 from gammapy.maps import Map
 from gammapy.modeling.models import PowerLawSpectralModel
+from gammapy.utils.deprecation import deprecated_renamed_argument
 
 __all__ = ["PSFKernel"]
 
@@ -161,12 +162,13 @@ class PSFKernel:
         """Write the Map object which contains the PSF kernel to file."""
         self.psf_kernel_map.write(*args, **kwargs)
 
-    def to_image(self, spectrum=None, exposure=None, keepdims=True):
+    @deprecated_renamed_argument("spectrum", "spectral_model", "v1.3")
+    def to_image(self, spectral_model=None, exposure=None, keepdims=True):
         """Transform 3D PSFKernel into a 2D PSFKernel.
 
         Parameters
         ----------
-        spectrum : `~gammapy.modeling.models.SpectralModel`, optional
+        spectral_model : `~gammapy.modeling.models.SpectralModel`, optional
             Spectral model to compute the weights.
             Default is power-law with spectral index of 2.
         exposure : `~astropy.units.Quantity` or `~numpy.ndarray`, optional
@@ -184,8 +186,8 @@ class PSFKernel:
         """
         map = self.psf_kernel_map
 
-        if spectrum is None:
-            spectrum = PowerLawSpectralModel(index=2.0)
+        if spectral_model is None:
+            spectral_model = PowerLawSpectralModel(index=2.0)
 
         if exposure is None:
             exposure = np.ones(map.geom.axes[0].center.shape)
@@ -200,7 +202,7 @@ class PSFKernel:
             if "energy" in name:
                 energy_name = name
         energy_edges = map.geom.axes[energy_name].edges
-        weights = spectrum.integral(
+        weights = spectral_model.integral(
             energy_min=energy_edges[:-1], energy_max=energy_edges[1:], intervals=True
         )
         weights *= exposure

@@ -293,16 +293,11 @@ however, the user must ensure that the array has been correctly broadcasted.
 Using gammapy.maps
 ------------------
 
-.. minigallery:: gammapy.maps.WcsNDMap
-    :add-heading:
+.. minigallery::
 
+   ../examples/tutorials/api/maps.py
+   ../examples/tutorials/api/mask_maps.py
 
-.. minigallery:: gammapy.maps.RegionNDMap
-    :add-heading:
-
-
-.. minigallery:: gammapy.maps.HpxNDMap
-    :add-heading:
 
 .. toctree::
     :maxdepth: 1
