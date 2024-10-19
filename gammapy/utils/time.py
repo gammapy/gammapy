@@ -1,15 +1,22 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Time related utility functions."""
+
+import logging
 import numpy as np
 import astropy.units as u
 from astropy.time import Time, TimeDelta
+from astropy.stats import interval_overlap_length
+from itertools import combinations
 
 __all__ = [
     "absolute_time",
     "time_ref_from_dict",
     "time_ref_to_dict",
     "time_relative_to_ref",
+    "check_time_intervals",
 ]
+
+log = logging.getLogger(__name__)
 
 TIME_KEYWORDS = ["MJDREFI", "MJDREFF", "TIMEUNIT", "TIMESYS", "TIMEREF"]
 
@@ -213,4 +220,44 @@ def unique_time_info(rows):
         for name in TIME_KEYWORDS:
             if first_obs[name] != row[name] or row[name] is None:
                 return False
+    return True
+
+
+def check_time_intervals(time_intervals, check_overlapping_intervals=True):
+    """Check that the intervals are made of `astropy.time.Time` objects and are disjoint.
+    Parameters
+    ----------
+    time_intervals : array of intervals of `astropy.time.Time`
+        List of time intervals to check
+    check_overlapping_intervals: bool
+        Check whether the intervals are disjoint. Default: True.
+    Returns
+    -------
+        valid: bool
+    """
+    # Note: this function will be moved into a future class `TimeInterval`
+    ti = np.asarray(time_intervals)
+    if ti.shape == () or ti.shape == (0,):
+        return False
+    if ti.shape == (2,) or ti.shape == (2, 1):
+        if not np.all([isinstance(_, Time) for _ in ti]):
+            return False
+    else:
+        for xx in ti:
+            if not np.all([isinstance(_, Time) for _ in xx]):
+                return False
+        if (ti[:-1] <= ti[1:]).all() is False:
+            log.warning("Sorted time intervals is required")
+            return False
+
+    if not check_overlapping_intervals:
+        return True
+    for xx in combinations(ti, 2):
+        i1 = [xx[0][0].to_value("gps"), xx[0][1].to_value("gps")]
+        i2 = [xx[1][0].to_value("gps"), xx[1][1].to_value("gps")]
+        if interval_overlap_length(i1, i2) > 0.0:
+            i1 = [xx[0][0], xx[0][1]]
+            i2 = [xx[1][0], xx[1][1]]
+            log.warning(f"Overlapping GTIs: {i1} and {i2}")
+            return False
     return True
