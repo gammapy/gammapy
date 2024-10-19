@@ -250,8 +250,9 @@ def check_time_intervals(time_intervals, check_overlapping_intervals=True):
             log.warning("Sorted time intervals is required")
             return False
 
-    if not check_overlapping_intervals:
+    if not check_overlapping_intervals or len(time_intervals) < 3:
         return True
+
     for xx in combinations(ti, 2):
         i1 = [xx[0][0].to_value("gps"), xx[0][1].to_value("gps")]
         i2 = [xx[1][0].to_value("gps"), xx[1][1].to_value("gps")]
