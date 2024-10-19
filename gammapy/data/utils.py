@@ -4,6 +4,7 @@ import astropy.units as u
 from astropy.table import Table
 from gammapy.utils.cluster import standard_scaler
 
+
 __all__ = ["get_irfs_features"]
 
 
