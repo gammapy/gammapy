@@ -9,7 +9,12 @@ from astropy.io import fits
 from astropy.table import Table, vstack
 from astropy.time import Time
 from gammapy.utils.scripts import make_path
-from gammapy.utils.time import TIME_REF_DEFAULT, time_ref_from_dict, time_ref_to_dict
+from gammapy.utils.time import (
+    TIME_REF_DEFAULT,
+    check_time_intervals,
+    time_ref_to_dict,
+    time_ref_from_dict,
+)
 from .metadata import GTIMetaData
 
 __all__ = ["GTI"]
@@ -343,6 +348,11 @@ class GTI:
         -----
         The function realises the intersection between the observatory GTIs and the given interval(s).
         """
+        if time_intervals is None or not check_time_intervals(time_intervals, False):
+            raise ValueError(
+                "The time intervals should be an array of non-overlapping intervals of astropy.time.Time."
+            )
+
         if np.asarray(time_intervals).data.shape == (2, 1) or np.asarray(
             time_intervals
         ).data.shape == (2,):
