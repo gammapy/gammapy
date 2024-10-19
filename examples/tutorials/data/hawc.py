@@ -118,14 +118,6 @@ data_store = DataStore(hdu_table=hdu_table, obs_table=obs_table)
 data_store.info()
 
 ######################################################################
-# In this dataset, there are unfortunately overlapping GTIs. So
-# we are disabling the standard check of overlapping of GTIs.
-
-from gammapy.data import utils
-
-utils.CHECK_OVERLAPPING_TI = False
-
-######################################################################
 # There is only one observation
 
 obs = data_store.get_observations()[0]

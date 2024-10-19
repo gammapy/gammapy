@@ -316,11 +316,6 @@ def test_data_store_required_irf_pointlike_variable_rad_max():
 def test_data_store_no_events():
     """Check the behavior of the "point-like" option for data_store"""
 
-    # There are overlapping GTIs in this HAWC dataset
-    from gammapy.data import utils
-
-    utils.CHECK_OVERLAPPING_TI = False
-
     data_path = "$GAMMAPY_DATA/hawc/crab_events_pass4/"
     hdu_filename = "hdu-index-table-GP-no-events.fits.gz"
     obs_filename = "obs-index-table-GP-no-events.fits.gz"
@@ -335,5 +330,3 @@ def test_data_store_no_events():
     for obs in observations:
         assert not obs.events
         assert not obs.gti
-
-    utils.CHECK_OVERLAPPING_TI = True
