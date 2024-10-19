@@ -15,6 +15,8 @@ from .utils import (
     make_map_exposure_true_energy,
     make_psf_map,
 )
+from gammapy.utils.time import check_time_intervals
+
 
 __all__ = ["MapDatasetMaker"]
 
@@ -39,6 +41,12 @@ class MapDatasetMaker(Maker):
         Pad one bin in offset for 2d background map.
         This avoids extrapolation at edges and use the nearest value.
         Default is True.
+    evt_filter : {"gti": True, "uti": [tstart, tstop], "none": True}, optional
+        Filter the events using either the observatory time intervals ('gti'), some user time intervals ('uti') with
+        `astropy.time.Time` objects or no filtering.
+        Default is '{"gti": True}'.
+    check_overlapping_intervals: bool, optional
+        Check whether the intervals are disjoint. Default: True.
 
     Examples
     --------
@@ -100,6 +108,7 @@ class MapDatasetMaker(Maker):
 
     tag = "MapDatasetMaker"
     available_selection = ["counts", "exposure", "background", "psf", "edisp"]
+    available_filter = ["gti", "uti", "none"]
 
     def __init__(
         self,
@@ -107,6 +116,8 @@ class MapDatasetMaker(Maker):
         background_oversampling=None,
         background_interp_missing_data=True,
         background_pad_offset=True,
+        evt_filter={"gti": True},
+        check_overlapping_intervals=True,
     ):
         self.background_oversampling = background_oversampling
         self.background_interp_missing_data = background_interp_missing_data
@@ -119,8 +130,15 @@ class MapDatasetMaker(Maker):
         if not selection.issubset(self.available_selection):
             difference = selection.difference(self.available_selection)
             raise ValueError(f"{difference} is not a valid method.")
-
         self.selection = selection
+
+        if not set(evt_filter.keys()).issubset(self.available_filter):
+            raise ValueError(
+                f"Available methods associated to the 'evt_filter' argument are {self.available_filter}"
+            )
+        self.evt_filter = evt_filter
+
+        self.check_overlapping_intervals = check_overlapping_intervals
 
     @staticmethod
     def make_counts(geom, observation):
@@ -366,6 +384,35 @@ class MapDatasetMaker(Maker):
     def _make_metadata(table):
         return MapDatasetMetaData._from_meta_table(table)
 
+    def set_filtering(self, observation):
+        """Update the event filtering of the `gammapy.data.Observation` instance.
+
+        Parameters
+        ----------
+        observation : `~gammapy.data.Observation`
+            Observation.
+
+        Returns
+        -------
+        observation : `~gammapy.data.Observation`
+            Filtered observation.
+        """
+        if "none" in list(self.evt_filter.keys()):
+            return observation
+
+        if "gti" in list(self.evt_filter.keys()):
+            if observation.gti is not None:
+                ti = observation.gti.time_intervals
+                if not check_time_intervals(ti, self.check_overlapping_intervals):
+                    raise ValueError("Observation GTI not valid.")
+                return observation.select_time(ti)
+        if "uti" in list(self.evt_filter.keys()):
+            if not check_time_intervals(
+                self.evt_filter("uti"), self.check_overlapping_intervals
+            ):
+                raise ValueError("User time intervals not valid.")
+            return observation.select_time(self.evt_filter("uti"))
+
     def run(self, dataset, observation):
         """Make map dataset.
 
@@ -381,42 +428,54 @@ class MapDatasetMaker(Maker):
         dataset : `~gammapy.datasets.MapDataset`
             Map dataset.
         """
-        kwargs = {"gti": observation.gti}
-        kwargs["meta_table"] = self.make_meta_table(observation)
+        print("ini0 ", len(observation.events.table))
+        filtered_obs = self.set_filtering(observation)
+        print("ini1")
+        print(filtered_obs.gti)
+        print(len(filtered_obs.events.table))
+        print(filtered_obs)
+        print("ok0")
+
+        kwargs = {"gti": filtered_obs.gti}
+        kwargs["meta_table"] = self.make_meta_table(filtered_obs)
         kwargs["meta"] = self._make_metadata(kwargs["meta_table"])
 
         mask_safe = Map.from_geom(dataset.counts.geom, dtype=bool)
         mask_safe.data[...] = True
-
         kwargs["mask_safe"] = mask_safe
 
         if "counts" in self.selection:
-            counts = self.make_counts(dataset.counts.geom, observation)
+            counts = self.make_counts(dataset.counts.geom, filtered_obs)
         else:
             counts = Map.from_geom(dataset.counts.geom, data=0)
         kwargs["counts"] = counts
+        print("ok1")
 
         if "exposure" in self.selection:
-            exposure = self.make_exposure(dataset.exposure.geom, observation)
+            exposure = self.make_exposure(dataset.exposure.geom, filtered_obs)
             kwargs["exposure"] = exposure
+        print("ok2")
 
         if "background" in self.selection:
             kwargs["background"] = self.make_background(
-                dataset.counts.geom, observation
+                dataset.counts.geom, filtered_obs
             )
+        print("ok3")
 
         if "psf" in self.selection:
-            psf = self.make_psf(dataset.psf.psf_map.geom, observation)
+            psf = self.make_psf(dataset.psf.psf_map.geom, filtered_obs)
             kwargs["psf"] = psf
+        print("ok4")
 
         if "edisp" in self.selection:
             if dataset.edisp.edisp_map.geom.axes[0].name.upper() == "MIGRA":
-                edisp = self.make_edisp(dataset.edisp.edisp_map.geom, observation)
+                edisp = self.make_edisp(dataset.edisp.edisp_map.geom, filtered_obs)
             else:
                 edisp = self.make_edisp_kernel(
-                    dataset.edisp.edisp_map.geom, observation
+                    dataset.edisp.edisp_map.geom, filtered_obs
                 )
 
             kwargs["edisp"] = edisp
 
+        print("ok6")
         return dataset.__class__(name=dataset.name, **kwargs)
