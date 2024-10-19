@@ -51,9 +51,6 @@ def test_observation(data_store):
     c = SkyCoord(83.63333129882812, 22.01444435119629, unit="deg")
     assert_skycoord_allclose(obs.target_radec, c)
 
-    assert obs.events.time[0].mjd >= Time(obs.obs_filter.time_filter[0][0]).mjd
-    assert obs.events.time[-1].mjd <= Time(obs.obs_filter.time_filter[0][1]).mjd
-
 
 @requires_data()
 def test_observation_peek(data_store):
@@ -376,7 +373,7 @@ def test_observation_read():
     val = obs.aeff.evaluate(energy_true=energy, offset=offset)
 
     assert obs.obs_id == 20136
-    assert len(obs.events.energy) == 11240
+    assert len(obs.events.energy) == 11243
     assert obs.available_hdus == ["events", "gti", "aeff", "edisp", "psf", "bkg"]
     assert_allclose(val.value, 278000.54120855, rtol=1e-5)
     assert val.unit == "m2"
@@ -404,7 +401,7 @@ def test_observation_read_single_file():
     val = obs.aeff.evaluate(energy_true=energy, offset=offset)
 
     assert obs.obs_id == 20136
-    assert len(obs.events.energy) == 11240
+    assert len(obs.events.energy) == 11243
     assert obs.available_hdus == ["events", "gti", "aeff", "edisp", "psf", "bkg"]
     assert_allclose(val.value, 273372.44851054, rtol=1e-5)
     assert val.unit == "m2"

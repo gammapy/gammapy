@@ -20,13 +20,16 @@ from gammapy.utils.fits import LazyFitsData, earth_location_to_dict
 from gammapy.utils.metadata import CreatorMetaData, TargetMetaData, TimeInfoMetaData
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
-from gammapy.utils.time import time_ref_to_dict, time_relative_to_ref
+from gammapy.utils.time import (
+    time_ref_to_dict,
+    time_relative_to_ref,
+    check_time_intervals,
+)
 from .event_list import EventList, EventListChecker
 from .filters import ObservationFilter
 from .gti import GTI
 from .metadata import ObservationMetaData
 from .pointing import FixedPointingInfo
-from .utils import check_time_intervals
 
 __all__ = ["Observation", "Observations"]
 
@@ -157,8 +160,6 @@ class Observation:
     @property
     def events(self):
         """Event list of the observation as an `~gammapy.data.EventList`."""
-        if self.obs_filter.time_filter is None and self._gti is not None:
-            self.obs_filter.time_filter = self._gti.time_intervals
         events = self.obs_filter.filter_events(self._events)
         return events
 
@@ -171,16 +172,13 @@ class Observation:
     @property
     def gti(self):
         """GTI of the observation as a `~gammapy.data.GTI`."""
-        if self._filtered_gti:
+        if self._filtered_gti or self._gti is None:
             return self._filtered_gti
 
-        if self.obs_filter.time_filter is None and self._gti is not None:
+        if self.obs_filter.time_filter is None:
             self._filtered_gti = self._gti
-            return self._filtered_gti
-        elif self.obs_filter.time_filter is not None:
-            self._filtered_gti = GTI.from_time_intervals(self.obs_filter.time_filter)
         else:
-            self._filtered_gti = self.obs_filter.filter_gti(self._gti)
+            self._filtered_gti = self._gti.select_time(self.obs_filter.time_filter)
         return self._filtered_gti
 
     @staticmethod
@@ -478,11 +476,7 @@ class Observation:
         new_obs : `~gammapy.data.Observation`
             A new observation instance of the specified time interval.
         """
-        if not check_time_intervals(time_interval):
-            raise ValueError(
-                "The time intervals should be a sorted array of distinct intervals of astropy.time.Time."
-            )
-
+        # TODO: add a check on the time interval
         new_obs_filter = self.obs_filter.copy()
         new_ti = self.gti.select_time(time_interval)
         if new_ti.time_intervals is None:
@@ -725,7 +719,10 @@ class Observations(collections.abc.MutableSequence):
             A new Observations instance of the specified time intervals.
         """
         new_obs_list = []
-        if time_intervals is None or check_time_intervals(time_intervals) is False:
+        if (
+            time_intervals is None
+            or check_time_intervals(time_intervals, False) is False
+        ):
             raise ValueError(
                 "The time intervals should be a sorted array of distinct intervals of astropy.time.Time."
             )
