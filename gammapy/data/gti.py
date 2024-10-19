@@ -16,7 +16,7 @@ __all__ = ["GTI"]
 
 
 class GTI:
-    """Good time intervals (GTI) `~astropy.table.Table`.
+    """Good time intervals (GTI) `astropy.table.Table`.
 
     Data format specification: :ref:`gadf:iact-gti`.
 
@@ -26,9 +26,9 @@ class GTI:
 
     Parameters
     ----------
-    table : `~astropy.table.Table`
+    table : `astropy.table.Table`
         GTI table.
-    reference_time : `~astropy.time.Time`, optional
+    reference_time : `astropy.time.Time`, optional
         The reference time. Default is None.
         If None, use TIME_REF_DEFAULT.
 
@@ -100,7 +100,7 @@ class GTI:
         return table
 
     def copy(self):
-        """Deep copy of the `~gammapy.data.GIT` object."""
+        """Deep copy of the `gammapy.data.GTI` object."""
         return copy.deepcopy(self)
 
     @classmethod
@@ -109,11 +109,11 @@ class GTI:
 
         Parameters
         ----------
-        start : `~astropy.time.Time` or `~astropy.units.Quantity`
+        start : `astropy.time.Time` or `astropy.units.Quantity`
             Start times, if a quantity then w.r.t. reference time.
-        stop : `~astropy.time.Time` or `~astropy.units.Quantity`
+        stop : `astropy.time.Time` or `astropy.units.Quantity`
             Stop times, if a quantity then w.r.t. reference time.
-        reference_time : `~astropy.time.Time`, optional
+        reference_time : `astropy.time.Time`, optional
             The reference time to use in GTI definition. Default is None.
             If None, use TIME_REF_DEFAULT.
         """
@@ -157,7 +157,7 @@ class GTI:
         format: str
             Input format, currently only "gadf" is supported. Default is "gadf".
         checksum : bool
-            If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
+            If True, checks both ``DATASUM`` and ``CHECKSUM`` cards in the file headers. Default is False.
         """
         filename = make_path(filename)
         with fits.open(str(make_path(filename)), memmap=False) as hdulist:
@@ -177,7 +177,7 @@ class GTI:
 
         Parameters
         ----------
-        table_hdu : `~astropy.io.fits.BinTableHDU`
+        table_hdu : `astropy.io.fits.BinTableHDU`
             table hdu.
         format : {"gadf"}
             Input format, currently only "gadf" is supported. Default is "gadf".
@@ -225,10 +225,10 @@ class GTI:
 
         Parameters
         ----------
-        filename : str or `~pathlib.Path`
+        filename : str or `pathlib.Path`
             Filename.
         **kwargs : dict, optional
-            Keyword arguments passed to `~astropy.io.fits.HDUList.writeto`.
+            Keyword arguments passed to :func:`astropy.io.fits.HDUList.writeto`.
         """
         hdu = self.to_table_hdu()
         hdulist = fits.HDUList([fits.PrimaryHDU(), hdu])
@@ -251,38 +251,38 @@ class GTI:
 
     @property
     def time_delta(self):
-        """GTI durations in seconds as a `~astropy.units.Quantity`."""
+        """GTI durations in seconds as a `astropy.units.Quantity`."""
         delta = self.time_stop - self.time_start
         return delta.to("s")
 
     @property
     def time_ref(self):
-        """Time reference as a `~astropy.time.Time` object."""
+        """Time reference as a `astropy.time.Time` object."""
         return self._meta.reference_time
 
     @property
     def time_sum(self):
-        """Sum of GTIs in seconds as a `~astropy.units.Quantity`."""
+        """Sum of GTIs in seconds as a `astropy.units.Quantity`."""
         return self.time_delta.sum()
 
     @property
     def time_start(self):
-        """GTI start times as a `~astropy.time.Time` object."""
+        """GTI start times as a `astropy.time.Time` object."""
         return self.table["START"]
 
     @property
     def time_stop(self):
-        """GTI end times as a `~astropy.time.Time` object."""
+        """GTI end times as a `astropy.time.Time` object."""
         return self.table["STOP"]
 
     @property
     def met_start(self):
-        """GTI start time difference with reference time in seconds, MET as a `~astropy.units.Quantity`."""
+        """GTI start time difference with reference time in seconds, MET as a `astropy.units.Quantity`."""
         return (self.time_start - self.time_ref).to("s")
 
     @property
     def met_stop(self):
-        """GTI start time difference with reference time in seconds, MET as a `~astropy.units.Quantity`."""
+        """GTI start time difference with reference time in seconds, MET as a `astropy.units.Quantity`."""
         return (self.time_stop - self.time_ref).to("s")
 
     @property
@@ -302,9 +302,9 @@ class GTI:
 
         Parameters
         ----------
-        time_intervals : list of `~astropy.time.Time` objects
+        time_intervals : list of `astropy.time.Time` objects
             Time intervals.
-        reference_time : `~astropy.time.Time`, optional
+        reference_time : `astropy.time.Time`, optional
             Reference time to use in GTI definition. Default is None.
             If None, use TIME_REF_DEFAULT.
 
@@ -338,6 +338,10 @@ class GTI:
         -------
         gti : `~gammapy.data.GTI`
             Copy of the GTI table with selection applied.
+
+        Notes
+        -----
+        The function realises the intersection between the observatory GTIs and the given interval(s).
         """
         if np.asarray(time_intervals).data.shape == (2, 1) or np.asarray(
             time_intervals
@@ -408,7 +412,7 @@ class GTI:
 
         Parameters
         ----------
-        other : `~gammapy.data.GTI`
+        other : `gammapy.data.GTI`
             GTI to stack to self.
         """
         self.table = self._validate_table(vstack([self.table, other.table]))
@@ -417,14 +421,14 @@ class GTI:
     def from_stack(cls, gtis, **kwargs):
         """Stack (concatenate) list of GTIs.
 
-        Calls `~astropy.table.vstack`.
+        Calls :func:`astropy.table.vstack`.
 
         Parameters
         ----------
         gtis : list of `GTI`
             List of good time intervals to stack.
         **kwargs : dict, optional
-            Keywords passed on to `~astropy.table.vstack`.
+            Keywords passed on to :func:`astropy.table.vstack`.
 
         Returns
         -------
@@ -438,7 +442,7 @@ class GTI:
     def union(self, overlap_ok=True, merge_equal=True):
         """Union of overlapping time intervals.
 
-        Returns a new `~gammapy.data.GTI` object.
+        Returns a new `gammapy.data.GTI` object.
 
         Parameters
         ----------
@@ -481,12 +485,12 @@ class GTI:
         ----------
         time_intervals : list of `astropy.time.Time`
             Start and stop time for each interval to compute the LC.
-        atol : `~astropy.units.Quantity`
+        atol : `astropy.units.Quantity`
             Tolerance value for time comparison with different scale. Default is "1e-6 s".
 
         Returns
         -------
-        group_table : `~astropy.table.Table`
+        group_table : `astropy.table.Table`
             Contains the grouping info.
         """
         atol = u.Quantity(atol)

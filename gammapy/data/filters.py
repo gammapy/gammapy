@@ -2,7 +2,6 @@
 import copy
 import html
 import logging
-from .utils import check_time_intervals
 
 __all__ = ["ObservationFilter"]
 
@@ -19,10 +18,10 @@ class ObservationFilter:
     event_filters : list of dict, optional
         An event filter dictionary needs two keys:
 
-        - **type** : str, one of the keys in `~gammapy.data.ObservationFilter.EVENT_FILTER_TYPES`
-        - **opts** : dict, it is passed on to the method of the `~gammapy.data.EventListBase`
+        - **type** : str, one of the keys in `gammapy.data.ObservationFilter.EVENT_FILTER_TYPES`
+        - **opts** : dict, it is passed on to the method of the `gammapy.data.EventListBase`
           class that corresponds to the filter type
-          (see `~gammapy.data.ObservationFilter.EVENT_FILTER_TYPES`)
+          (see `gammapy.data.ObservationFilter.EVENT_FILTER_TYPES`)
 
         The filtered event list will be an intersection of all filters. Default is None.
 
@@ -65,12 +64,12 @@ class ObservationFilter:
 
         Parameters
         ----------
-        events : `~gammapy.data.EventListBase`
+        events : `gammapy.data.EventListBase`
             Event list to which the filters will be applied.
 
         Returns
         -------
-        filtered_events : `~gammapy.data.EventListBase`
+        filtered_events : `gammapy.data.EventListBase`
             The filtered event list.
         """
         if events is None:
@@ -90,12 +89,12 @@ class ObservationFilter:
 
         Parameters
         ----------
-        gti : `~gammapy.data.GTI`
+        gti : `gammapy.data.GTI`
             GTI table to which the filters will be applied.
 
         Returns
         -------
-        filtered_gti : `~gammapy.data.GTI`
+        filtered_gti : `gammapy.data.GTI`
             The filtered GTI table.
         """
         return self._filter_by_time(gti)
@@ -106,10 +105,7 @@ class ObservationFilter:
         Calls the `select_time` method of the data object.
         """
         if self.time_filter is not None:
-            if not check_time_intervals(self.time_filter):
-                raise ValueError(
-                    "The time intervals should be a sorted array of distinct intervals of astropy.time.Time."
-                )
+            # TODO: one could check the time intervals here
             return data.select_time(self.time_filter)
         else:
             return data
