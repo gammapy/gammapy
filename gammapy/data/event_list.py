@@ -18,7 +18,7 @@ from gammapy.utils.deprecation import deprecated_renamed_argument
 from gammapy.utils.fits import earth_location_from_dict
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
-from gammapy.utils.time import time_ref_from_dict
+from gammapy.utils.time import time_ref_from_dict, check_time_intervals
 from .metadata import EventListMetaData
 
 __all__ = ["EventList"]
@@ -349,8 +349,7 @@ class EventList:
         `gammapy.data.ObservationFilter` associated to the object `gammapy.data.Observation`.
         """
         time_intervals = np.asarray(time_intervals)
-        # TODO: add the time interval checks
-        if time_intervals is None:
+        if time_intervals is None or not check_time_intervals(time_intervals, False):
             raise ValueError(
                 "The time intervals should be an array of non-overlapping intervals of astropy.time.Time."
             )
