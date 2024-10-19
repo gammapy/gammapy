@@ -52,8 +52,7 @@ class TestEventListBase:
         read_again_ev = EventList.read("test.fits")
         read_again_gti = GTI.read("test.fits")
 
-        # For this run, there are 3 events after the GTI.tstop
-        assert np.array(self.events.table[:-3] == read_again_ev.table).all()
+        assert np.array(self.events.table == read_again_ev.table).all()
         assert gti.table.meta == read_again_gti.table.meta
         assert_allclose(gti.table["START"].mjd, read_again_gti.table["START"].mjd)
         assert_allclose(gti.table["STOP"].mjd, read_again_gti.table["STOP"].mjd)
