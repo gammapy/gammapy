@@ -38,7 +38,6 @@ approach which utilises the change points in Bayesian blocks as indicators of va
 # -----
 # As usual, we’ll start with some general imports…
 
-
 import numpy as np
 from astropy.stats import bayesian_blocks
 from astropy.time import Time

@@ -7,12 +7,12 @@ from matplotlib.ticker import FormatStrFormatter
 from gammapy.maps import HpxGeom, Map, MapAxes, MapAxis, MapCoord, WcsGeom
 from gammapy.maps.axes import UNIT_STRING_FORMAT
 from gammapy.modeling.models import PowerLawSpectralModel
-from gammapy.utils.deprecation import deprecated_renamed_argument
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from ..core import IRFMap
 from .core import PSF
 from .kernel import PSFKernel
+from gammapy.utils.deprecation import deprecated_renamed_argument
 
 __all__ = ["PSFMap", "RecoPSFMap"]
 
@@ -248,16 +248,12 @@ class PSFMap(IRFMap):
         )
         return Map.from_geom(geom=geom, data=data.value, unit=data.unit)
 
-    @deprecated_renamed_argument(
-        "factor", "precision_factor", "v1.2", arg_in_kwargs=True
-    )
     def get_psf_kernel(
         self,
         geom,
         position=None,
         max_radius=None,
         containment=0.999,
-        factor=None,
         precision_factor=12,
     ):
         """Return a PSF kernel at the given position.
@@ -278,9 +274,6 @@ class PSFMap(IRFMap):
             Containment fraction to use as size of the kernel.
             The radius can be overwritten using the `max_radius` argument.
             Default is 0.999.
-        factor : int, optional
-            Oversampling factor to compute the PSF.
-            Default is None and it will be computed automatically.
         precision_factor : int, optional
             Factor between the bin half-width of the geom and the median R68% containment radius.
             Used only for the oversampling method. Default is 10.
@@ -313,10 +306,7 @@ class PSFMap(IRFMap):
             radii[radii > max_radius] = max_radius
 
         n_radii = len(radii)
-        if factor is None:  # TODO: this remove and the else once factor is deprecated
-            factor = _psf_upsampling_factor(self, geom, position, precision_factor)
-        else:
-            factor = [factor] * n_radii
+        factor = _psf_upsampling_factor(self, geom, position, precision_factor)
         geom = geom.to_odd_npix(max_radius=max_radius)
         kernel_map = Map.from_geom(geom=geom)
         for im, ind in zip(kernel_map.iter_by_image(keepdims=True), range(n_radii)):
@@ -458,12 +448,13 @@ class PSFMap(IRFMap):
         )
         return cls(psf_map=psf_map, exposure_map=exposure_map)
 
-    def to_image(self, spectrum=None, keepdims=True):
+    @deprecated_renamed_argument("spectrum", "spectral_model", "v1.3")
+    def to_image(self, spectral_model=None, keepdims=True):
         """Reduce to a 2D map after weighing with the associated exposure and a spectrum.
 
         Parameters
         ----------
-        spectrum : `~gammapy.modeling.models.SpectralModel`, optional
+        spectral_model : `~gammapy.modeling.models.SpectralModel`, optional
             Spectral model to compute the weights.
             Default is power-law with spectral index of 2.
         keepdims : bool, optional
@@ -477,10 +468,10 @@ class PSFMap(IRFMap):
         """
         from gammapy.makers.utils import _map_spectrum_weight
 
-        if spectrum is None:
-            spectrum = PowerLawSpectralModel(index=2.0)
+        if spectral_model is None:
+            spectral_model = PowerLawSpectralModel(index=2.0)
 
-        exp_weighed = _map_spectrum_weight(self.exposure_map, spectrum)
+        exp_weighed = _map_spectrum_weight(self.exposure_map, spectral_model)
         exposure = exp_weighed.sum_over_axes(
             axes_names=[self.energy_name], keepdims=keepdims
         )

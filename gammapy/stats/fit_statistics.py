@@ -3,6 +3,7 @@
 
 see :ref:`fit-statistics`
 """
+
 import numpy as np
 from gammapy.stats.fit_statistics_cython import TRUNCATION_VALUE
 
@@ -22,11 +23,11 @@ def cash(n_on, mu_on, truncation_value=TRUNCATION_VALUE):
 
     Parameters
     ----------
-    n_on : array_like
+    n_on : `~numpy.ndarray` or array_like
         Observed counts.
-    mu_on : array_like
+    mu_on : `~numpy.ndarray` or array_like
         Expected counts.
-    truncation_value : array_like
+    truncation_value : `~numpy.ndarray` or array_like
         Minimum value use for ``mu_on``
         ``mu_on`` = ``truncation_value`` where ``mu_on`` <= ``truncation_value``.
         Default is 1e-25.
@@ -76,11 +77,11 @@ def cstat(n_on, mu_on, truncation_value=TRUNCATION_VALUE):
 
     Parameters
     ----------
-    n_on : array_like
+    n_on : `~numpy.ndarray` or array_like
         Observed counts.
-    mu_on : array_like
+    mu_on : `~numpy.ndarray` or array_like
         Expected counts.
-    truncation_value : array_like
+    truncation_value : float
         ``n_on`` = ``truncation_value`` where ``n_on`` <= ``truncation_value.``
         ``mu_on`` = ``truncation_value`` where ``n_on`` <= ``truncation_value``
         Default is 1e-25.
@@ -124,15 +125,15 @@ def wstat(n_on, n_off, alpha, mu_sig, mu_bkg=None, extra_terms=True):
 
     Parameters
     ----------
-    n_on : array_like
+    n_on : `~numpy.ndarray` or array_like
         Total observed counts.
-    n_off : array_like
+    n_off : `~numpy.ndarray` or array_like
         Total observed background counts.
-    alpha : array_like
+    alpha : `~numpy.ndarray` or array_like
         Exposure ratio between on and off region.
-    mu_sig : array_like
+    mu_sig : `~numpy.ndarray` or array_like
         Signal expected counts.
-    mu_bkg : array_like, optional
+    mu_bkg : `~numpy.ndarray` or array_like, optional
         Background expected counts.
     extra_terms : bool, optional
         Add model independent terms to convert stat into goodness-of-fit
@@ -170,9 +171,7 @@ def wstat(n_on, n_off, alpha, mu_sig, mu_bkg=None, extra_terms=True):
     with np.errstate(divide="ignore", invalid="ignore"):
         # This is a false positive error from pylint
         # See https://github.com/PyCQA/pylint/issues/2436
-        term2_ = -n_on * np.log(
-            mu_sig + alpha * mu_bkg
-        )  # pylint:disable=invalid-unary-operand-type
+        term2_ = -n_on * np.log(mu_sig + alpha * mu_bkg)  # pylint:disable=invalid-unary-operand-type
     # Handle n_on == 0
     condition = n_on == 0
     term2 = np.where(condition, 0, term2_)
