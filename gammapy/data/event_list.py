@@ -14,12 +14,10 @@ from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from gammapy.maps import MapAxis, MapCoord, RegionGeom, WcsNDMap
 from gammapy.maps.axes import UNIT_STRING_FORMAT
-from gammapy.utils.deprecation import deprecated
 from gammapy.utils.fits import earth_location_from_dict
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
 from gammapy.utils.time import time_ref_from_dict
-from .gti import GTI
 from .metadata import EventListMetaData
 
 __all__ = ["EventList"]
@@ -150,60 +148,6 @@ class EventList:
             raise ValueError(f"Only the 'gadf' format supported, got {format}")
 
         return fits.BinTableHDU(self.table, name="EVENTS")
-
-    @deprecated(
-        since="v1.2",
-        message="To write an EventList utilise Observation.write() with include_irfs=False",
-    )
-    def write(self, filename, gti=None, overwrite=False, format="gadf", checksum=False):
-        """Write the event list to a FITS file.
-
-        If a GTI object is provided, it is saved into
-        a second extension in the file.
-
-        Parameters
-        ----------
-        filename : `pathlib.Path` or str
-            Filename.
-        gti : `~gammapy.data.GTI`, optional
-            Good Time Intervals object to save to the same file.
-            Default is None.
-        overwrite : bool, optional
-            Overwrite existing file. Default is False.
-        format : str, optional
-            FITS format convention. Default is "gadf".
-        checksum : bool, optional
-            When True adds both DATASUM and CHECKSUM cards to the headers written to the file.
-            Default is False.
-        """
-        if format != "gadf":
-            raise ValueError(f"{format} is not a valid EventList format.")
-
-        meta_dict = self.table.meta
-
-        if "HDUCLAS1" in meta_dict.keys() and meta_dict["HDUCLAS1"] != "EVENTS":
-            raise ValueError("The HDUCLAS1 keyword must be 'EVENTS' for an EventList")
-        else:
-            meta_dict["HDUCLAS1"] = "EVENTS"
-
-        if "HDUCLASS" in meta_dict.keys() and meta_dict["HDUCLASS"] != "GADF":
-            raise ValueError("The HDUCLASS must be 'GADF' for format 'gadf'")
-        else:
-            meta_dict["HDUCLASS"] = "GADF"
-
-        filename = make_path(filename)
-
-        primary_hdu = fits.PrimaryHDU()
-        hdu_evt = self.to_table_hdu(format=format)
-        hdu_all = fits.HDUList([primary_hdu, hdu_evt])
-
-        if gti is not None:
-            if not isinstance(gti, GTI):
-                raise TypeError("gti must be an instance of GTI")
-            hdu_gti = gti.to_table_hdu(format=format)
-            hdu_all.append(hdu_gti)
-
-        hdu_all.writeto(filename, overwrite=overwrite, checksum=checksum)
 
     # TODO: Pass metadata here. Also check that specific meta contents are consistent
     @classmethod

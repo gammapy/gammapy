@@ -40,8 +40,7 @@ def _get_reference_model(model, energy_bounds, margin_percent=70):
 
 
 class FluxPointsDataset(Dataset):
-    """Bundle a set of flux points with a parametric model,
-    to compute fit statistic function using chi2 statistics.
+    """Bundle a set of flux points with a parametric model, to compute fit statistic function using chi2 statistics.
 
     For more information see :ref:`datasets`.
 
@@ -60,23 +59,21 @@ class FluxPointsDataset(Dataset):
         One line per observation for stacked datasets.
     stat_type : str
         Method used to compute the statistics:
-        * chi2 : estimate from chi2 statistics.
-        * profile : estimate from interpolation of the likelihood profile.
-        * distrib : Assuming gaussian errors the likelihood is given by the
-                    probability density function of the normal distribution.
-                    For the upper limit case it is necessary to marginalize over the unknown measurement,
-                    So we integrate the normal distribution up to the upper limit value
-                    which gives the complementary error function.
-                    See eq. C7 of Mohanty et al (2013) :
-                    https://iopscience.iop.org/article/10.1088/0004-637X/773/2/168/pdf
+
+                * chi2 : estimate from chi2 statistics.
+                * profile : estimate from interpolation of the likelihood profile.
+                * distrib : Assuming gaussian errors the likelihood is given by the probability density function
+                  of the normal distribution. For the upper limit case it is necessary to marginalize over the unknown
+                  measurement, so we integrate the normal distribution up to the upper limit value which gives the
+                  complementary error function. See eq. C7 of `Mohanty et al (2013) <https://iopscience.iop.org/article/10.1088/0004-637X/773/2/168/pdf>`__
 
         Default is `chi2`, in that case upper limits are ignored and the mean of asymetrics error is used.
-        However it is recommended to use `profile` if `stat_scan` is available on flux points.
+        However, it is recommended to use `profile` if `stat_scan` is available on flux points.
         The `distrib` case provides an approximation if the profile is not available.
     stat_kwargs : dict
         Extra arguments specifying the interpolation scheme of the likelihood profile.
         Used only if `stat_type=="profile"`. In that case the default is :
-        `stat_kwargs={"interp_scale":"sqrt", "extrapolate":True}
+        `stat_kwargs={"interp_scale":"sqrt", "extrapolate":True}`
 
     Examples
     --------
@@ -113,11 +110,11 @@ class FluxPointsDataset(Dataset):
         message    : Hesse terminated successfully.
 
     >>> print(result.parameters.to_table())
-    type    name     value         unit      ... frozen is_norm link prior
-    ---- --------- ---------- -------------- ... ------ ------- ---- -----
-             index 2.2159e+00                ...  False   False
-         amplitude 2.1619e-13 TeV-1 s-1 cm-2 ...  False    True
-         reference 1.0000e+00            TeV ...   True   False
+    type    name     value         unit      ... frozen link prior
+    ---- --------- ---------- -------------- ... ------ ---- -----
+             index 2.2159e+00                ...  False
+         amplitude 2.1619e-13 TeV-1 s-1 cm-2 ...  False
+         reference 1.0000e+00            TeV ...   True
 
     Note: In order to reproduce the example, you need the tests datasets folder.
     You may download it with the command:
@@ -171,7 +168,6 @@ class FluxPointsDataset(Dataset):
 
     @stat_type.setter
     def stat_type(self, stat_type):
-
         if stat_type not in self.available_stat_type:
             raise ValueError(
                 f"Invalid stat_type: possible options are {self.available_stat_type}"
@@ -592,9 +588,10 @@ class FluxPointsDataset(Dataset):
 
         if method == "diff/model":
             model = self.flux_pred()
-            yerr = (yerr[0].quantity / model).squeeze(), (
-                yerr[1].quantity / model
-            ).squeeze()
+            yerr = (
+                (yerr[0].quantity / model).squeeze(),
+                (yerr[1].quantity / model).squeeze(),
+            )
         elif method == "diff":
             yerr = yerr[0].quantity.squeeze(), yerr[1].quantity.squeeze()
         else:

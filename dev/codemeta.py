@@ -4,6 +4,7 @@ import json
 import logging
 from configparser import ConfigParser
 import click
+from datetime import date
 
 log = logging.getLogger(__name__)
 
@@ -23,6 +24,10 @@ def update_codemeta(maintainer, filename, setup_file=None):
     data["issueTracker"] = "https://github.com/gammapy/gammapy/issues"
     data["developmentStatus"] = ("active",)
     data["email"] = "GAMMAPY-COORDINATION-L@IN2P3.FR"
+
+    modified_date = str(date.today())
+    data["dateModified"] = modified_date
+
 
     if setup_file:
         # complete with software requirements from setup.cfg

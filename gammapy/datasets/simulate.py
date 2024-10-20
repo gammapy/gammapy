@@ -206,7 +206,9 @@ class MapDatasetEventSampler:
 
         coords = npred.sample_coord(n_events=n_events, random_state=self.random_state)
 
-        coords["time"] = Time(coords["time"], format="mjd", scale="tt")
+        coords["time"] = Time(
+            coords["time"], format="mjd", scale=dataset.gti.time_ref.scale
+        )
 
         table = self._make_table(coords, dataset.gti.time_ref)
 
