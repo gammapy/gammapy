@@ -246,7 +246,7 @@ ax2.set_title("Excess map")
 excess_map.plot(ax=ax2, add_cbar=True)
 plt.show()
 
-# #####################################################################
+#####################################################################
 # It is often important to look at the significance distribution outside
 # the exclusion region to check that the background estimation is not
 # contaminated by gamma-ray events. This can be the case when exclusion
