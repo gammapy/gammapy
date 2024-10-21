@@ -290,6 +290,6 @@ plt.show()
 # ----------
 #
 # Now you know how to access and work with HAWC data. All other
-# tutorials and documentation concerning 3D analysis and `MapDatasets <gammapy.datasets.MapDataset>`
-# can be used from this step on.
+# tutorials and documentation concerning 3D analysis techniques and
+# the `~gammapy.datasets.MapDataset` object can be used from this step on.
 #
