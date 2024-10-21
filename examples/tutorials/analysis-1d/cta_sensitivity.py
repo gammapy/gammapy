@@ -222,7 +222,7 @@ ax1.plot(
     sensitivity_table["background"],
     "o-",
     color="black",
-    label="blackground",
+    label="background",
 )
 
 ax1.loglog()
