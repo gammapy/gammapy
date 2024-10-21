@@ -176,7 +176,7 @@ exclusion_mask.sum_over_axes().plot()
 plt.show()
 
 
-# #####################################################################
+#####################################################################
 # For the present analysis, we use a ring with an inner radius of 0.5 deg
 # and width of 0.3 deg.
 #
