@@ -252,7 +252,7 @@ plt.show()
 # contaminated by gamma-ray events. This can be the case when exclusion
 # regions are not large enough. Typically, we expect the off distribution
 # to be a standard normal distribution. To compute the significance distribution outside the exclusion region,
-# we can recompute the maps after adding a `mask_fit` to out dataset.
+# we can recompute the maps after adding a `mask_fit` to our dataset.
 #
 
 # Mask the regions with gamma-ray emission
