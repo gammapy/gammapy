@@ -226,7 +226,7 @@ print(stacked_on_off)
 # `here <https://ui.adsabs.harvard.edu/abs/1983ApJ...272..317L/abstract>`__.
 #
 #
-# Also, since the off counts are obtained with a ring background estimation, then we specify `correlate_off=False`
+# Also, since the off counts are obtained with a ring background estimation, and are thus already correlated, we specify `correlate_off=False`
 # to avoid over correlation.
 
 # Using a convolution radius of 0.04 degrees
