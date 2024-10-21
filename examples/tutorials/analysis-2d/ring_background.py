@@ -206,7 +206,7 @@ for dataset in analysis.datasets:
     stacked_on_off.stack(dataset_on_off)
 
 
-# #####################################################################
+#####################################################################
 # This `stacked_on_off` has `on` and `off` counts and acceptance
 # maps which we will use in all further analysis. The `acceptance` and
 # `acceptance_off` maps are the system acceptance of gamma-ray like
