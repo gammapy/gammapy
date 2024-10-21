@@ -19,7 +19,7 @@ Not that with ``EarthLocation`` the orientation of angles is as follows:
 
 Available observatories (alphabetical order):
 
-- ``ctao_south`` and ``ctao_north`` for CTA, see
+- ``ctao_south`` and ``ctao_north`` for CTAO, see
   `Website <https://www.cta-observatory.org/>`__ and
   `Wikipedia <https://en.wikipedia.org/wiki/Cherenkov_Telescope_Array>`__
 - ``hawc`` for HAWC, see
