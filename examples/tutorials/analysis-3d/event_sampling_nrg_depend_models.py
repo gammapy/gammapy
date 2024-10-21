@@ -267,7 +267,7 @@ pointing = FixedPointingInfo(fixed_icrs=pointing_position)
 livetime = 1 * u.hr
 
 irfs = load_irf_dict_from_file(path / irf_filename)
-location = observatory_locations["cta_south"]
+location = observatory_locations["ctao_south"]
 
 observation = Observation.create(
     obs_id=1001,
