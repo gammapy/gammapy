@@ -39,7 +39,7 @@ modelling and fitting.
 
 """
 
-#####################################################################
+######################################################################
 # Setup
 # -----
 #
@@ -63,7 +63,7 @@ from gammapy.utils.check import check_tutorials_setup
 log = logging.getLogger(__name__)
 
 
-#####################################################################
+######################################################################
 # Check setup
 # -----------
 
@@ -71,7 +71,7 @@ log = logging.getLogger(__name__)
 check_tutorials_setup()
 
 
-#####################################################################
+######################################################################
 # Creating the config file
 # ------------------------
 #
@@ -118,7 +118,7 @@ config.datasets.stack = False
 print(config)
 
 
-#####################################################################
+######################################################################
 # Getting the reduced dataset
 # ---------------------------
 #
@@ -145,7 +145,7 @@ print(analysis.config)
 analysis.get_datasets()
 
 
-# #####################################################################
+######################################################################
 # Extracting the ring background
 # ------------------------------
 #
@@ -155,7 +155,7 @@ analysis.get_datasets()
 #
 
 
-#####################################################################
+######################################################################
 # Create exclusion mask
 # ~~~~~~~~~~~~~~~~~~~~~
 #
@@ -176,7 +176,7 @@ exclusion_mask.sum_over_axes().plot()
 plt.show()
 
 
-#####################################################################
+######################################################################
 # For the present analysis, we use a ring with an inner radius of 0.5 deg
 # and width of 0.3 deg.
 #
@@ -186,7 +186,7 @@ ring_maker = RingBackgroundMaker(
 )
 
 
-#####################################################################
+######################################################################
 # Create a stacked dataset
 # ~~~~~~~~~~~~~~~~~~~~~~~~
 #
@@ -206,7 +206,7 @@ for dataset in analysis.datasets:
     stacked_on_off.stack(dataset_on_off)
 
 
-#####################################################################
+######################################################################
 # This `stacked_on_off` has `on` and `off` counts and acceptance
 # maps which we will use in all further analysis. The `acceptance` and
 # `acceptance_off` maps are the system acceptance of gamma-ray like
@@ -216,7 +216,7 @@ for dataset in analysis.datasets:
 print(stacked_on_off)
 
 
-# #####################################################################
+######################################################################
 # Compute correlated significance and correlated excess maps
 # ----------------------------------------------------------
 #
@@ -246,7 +246,7 @@ ax2.set_title("Excess map")
 excess_map.plot(ax=ax2, add_cbar=True)
 plt.show()
 
-#####################################################################
+######################################################################
 # It is often important to look at the significance distribution outside
 # the exclusion region to check that the background estimation is not
 # contaminated by gamma-ray events. This can be the case when exclusion
