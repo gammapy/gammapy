@@ -304,6 +304,8 @@ lc_1d = lc_maker_1d.run(datasets)
 # Finally we plot the result for the 1D lightcurve:
 #
 plt.figure(figsize=(8, 6))
+plt.tight_layout()
+plt.subplots_adjust(bottom=0.3)
 lc_1d.plot(marker="o", axis_name="time", sed_type="flux")
 plt.show()
 
@@ -326,6 +328,8 @@ print(axis_new)
 
 lc_new = sliced_lc.resample_axis(axis_new)
 plt.figure(figsize=(8, 6))
+plt.tight_layout()
+plt.subplots_adjust(bottom=0.3)
 ax = sliced_lc.plot(label="original")
 lc_new.plot(ax=ax, label="rebinned")
 plt.legend()
