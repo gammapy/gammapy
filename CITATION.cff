@@ -56,10 +56,10 @@ authors:
   family-names: Linhoff
   affiliation: "Astroparticle Physics Group, TU Dortmund University, Germany"
   orcid: "https://orcid.org/0000-0001-7993-8189"
-- given-names: 'Kurt'
-  family-names: 'McKee'
-  affiliation: 'University of Chicago, USA'
-  orcid: 'https://orcid.org/0000-0002-8547-8489'
+- given-names: Lars
+  family-names: Mohrmann
+  affiliation: "Max Planck Institute for Nuclear Physics, Heidelberg, Germany"
+  orcid: "https://orcid.org/0000-0002-9667-8654"
 - given-names: Daniel
   family-names: Morcuende
   affiliation: Institute of Particle and Cosmos Physics, Instituto de Astrofísica
@@ -87,6 +87,10 @@ authors:
   affiliation: "EMFTEL department and IPARCOS, Universidad Complutense de Madrid,
     28040 Madrid, Spain"
   orcid: "https://orcid.org/0000-0002-9238-7163"
+- given-names: "Brigitta M"
+  family-names: Sipőcz
+  affiliation: "Caltech/IPAC, USA"
+  orcid: "https://orcid.org/0000-0002-3713-6337"
 - given-names: Hanna
   family-names: Stapel
   affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
