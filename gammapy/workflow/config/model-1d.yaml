@@ -1,0 +1,21 @@
+components:
+    - name: source
+      type: SkyModel
+      spectral:
+          type: PowerLawSpectralModel
+          parameters:
+              - frozen: false
+                name: index
+                scale: 1.0
+                unit: ''
+                value: 2.6
+              - frozen: false
+                name: amplitude
+                scale: 1.0
+                unit: cm-2 s-1 TeV-1
+                value: 5.0e-11
+              - frozen: true
+                name: reference
+                scale: 1.0
+                unit: TeV
+                value: 1.0
