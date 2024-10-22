@@ -13,20 +13,20 @@
 Contributors
 ~~~~~~~~~~~~
 - Stefan Fröse
-- REGEARD Maxime
+- Maxime Regeard
 - Bruno Khélifi
 - Claudio Galelli
-- aaguasca
+- Arnau Aguasca-Cabot
 - Fabio Pintore
 - Daniel Morcuende
 - Atreyee Sinha
 - Brigitta Sipőcz
 - Michele Peresano
 - Maximilian Linhoff
-- AOI
-- stahanna
+- Gerrit Roellinghoff
+- Hanna Stapel
 - Quentin Remy
-- Astro-Kirsty
+- Kirsty Feijen
 - Fabio Acero
 - Régis Terrier
 - Lars Mohrmann
