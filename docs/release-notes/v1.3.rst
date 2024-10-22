@@ -51,7 +51,7 @@ API changes
 ~~~~~~~~~~~
 
 One deprecated change has been introducted in this version:
-- The order of arguments in the `FoVBackgroundModel` has been modified; `daatset_name` is now a complusoryt first positional argument.
+- The order of arguments in the `FoVBackgroundModel` has been modified; `dataset_name` is now a compulsory first positional argument.
 
 Features deprecated since Gammapy v1.2 have been removed. 
 
