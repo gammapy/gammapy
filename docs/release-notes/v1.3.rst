@@ -17,7 +17,7 @@ Contributors
 - Bruno Khélifi
 - Claudio Galelli
 - aaguasca
-- Fabio PINTORE
+- Fabio Pintore
 - Daniel Morcuende
 - Atreyee Sinha
 - Brigitta Sipőcz
