@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Helper functions to work with distributions."""
+
 import numbers
 import numpy as np
 import scipy.integrate
@@ -55,26 +56,25 @@ def get_random_state(init):
     """Get a `numpy.random.RandomState` instance.
 
     The purpose of this utility function is to have a flexible way
-    to initialise a `~numpy.random.RandomState` instance,
+    to initialise a `numpy.random.RandomState` instance,
     a.k.a. a random number generator (``rng``).
 
     See :ref:`dev_random` for usage examples and further information.
 
     Parameters
     ----------
-    init : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+    init : {int, 'random-seed', 'global-rng'}
         Available options to initialise the RandomState object:
 
         * ``int`` -- new RandomState instance seeded with this integer
-          (calls `~numpy.random.RandomState` with ``seed=init``)
+          (calls `numpy.random.RandomState` with ``seed=init``)
         * ``'random-seed'`` -- new RandomState instance seeded in a random way
-          (calls `~numpy.random.RandomState` with ``seed=None``)
+          (calls `numpy.random.RandomState` with ``seed=None``)
         * ``'global-rng'``, return the RandomState singleton used by ``numpy.random``.
-        * `~numpy.random.RandomState` -- do nothing, return the input.
 
     Returns
     -------
-    random_state : `~numpy.random.RandomState`
+    random_state : `numpy.random.RandomState`
         RandomState instance.
     """
     if isinstance(init, (numbers.Integral, np.integer)):
@@ -87,8 +87,9 @@ def get_random_state(init):
         return init
     else:
         raise ValueError(
-            "{} cannot be used to seed a numpy.random.RandomState"
-            " instance".format(init)
+            "{} cannot be used to seed a numpy.random.RandomState" " instance".format(
+                init
+            )
         )
 
 
@@ -101,18 +102,18 @@ def sample_sphere(size, lon_range=None, lat_range=None, random_state="random-see
     ----------
     size : int
         Number of samples to generate.
-    lon_range : `~astropy.coordinates.Angle`, optional
+    lon_range : `astropy.coordinates.Angle`, optional
         Longitude range (min, max).
-    lat_range : `~astropy.coordinates.Angle`, optional
+    lat_range : `astropy.coordinates.Angle`, optional
         Latitude range (min, max).
-    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
+    random_state : {int, 'random-seed', 'global-rng'}, optional
         Defines random number generator initialisation.
-        Passed to `~gammapy.utils.random.get_random_state`.
+        Passed to `gammapy.utils.random.get_random_state`.
         Default is "random-seed".
 
     Returns
     -------
-    lon, lat: `~astropy.coordinates.Angle`
+    lon, lat: `astropy.coordinates.Angle`
         Longitude and latitude coordinate arrays.
     """
     random_state = get_random_state(random_state)
@@ -154,14 +155,14 @@ def sample_sphere_distance(
         Maximum distance. Default is 1.
     size : int or tuple of ints, optional
         Output shape. Default is one sample. Passed to `numpy.random.uniform`.
-    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
+    random_state : {int, 'random-seed', 'global-rng'}, optional
         Defines random number generator initialisation.
-        Passed to `~gammapy.utils.random.get_random_state`.
+        Passed to `gammapy.utils.random.get_random_state`.
         Default is "random-seed".
 
     Returns
     -------
-    distance : `~numpy.ndarray`
+    distance : `numpy.ndarray`
         Array of samples.
     """
     random_state = get_random_state(random_state)
@@ -205,14 +206,14 @@ def sample_powerlaw(x_min, x_max, gamma, size=None, random_state="random-seed"):
         Power law index.
     size : int, optional
         Number of samples to generate. Default is None.
-    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
+    random_state : {int, 'random-seed', 'global-rng'}, optional
         Defines random number generator initialisation.
-        Passed to `~gammapy.utils.random.get_random_state`.
+        Passed to `gammapy.utils.random.get_random_state`.
         Default is "random-seed".
 
     Returns
     -------
-    x : `~numpy.ndarray`
+    x : `numpy.ndarray`
         Array of samples from the distribution.
     """
     random_state = get_random_state(random_state)
@@ -238,7 +239,7 @@ def sample_times(
     This function can be used to test event time series,
     to have a comparison what completely random data looks like.
 
-    Can be used in two ways (in either case the return type is `~astropy.time.TimeDelta`):
+    Can be used in two ways (in either case the return type is `astropy.time.TimeDelta`):
 
     * ``return_delta=False`` - Return absolute times, relative to zero (default)
     * ``return_delta=True`` - Return time differences between consecutive events.
@@ -247,20 +248,20 @@ def sample_times(
     ----------
     size : int
         Number of samples.
-    rate : `~astropy.units.Quantity`
+    rate : `astropy.units.Quantity`
         Event rate.
-    dead_time : `~astropy.units.Quantity` or `~astropy.time.TimeDelta`, optional
+    dead_time : `astropy.units.Quantity` or `astropy.time.TimeDelta`, optional
         Dead time after event.
     return_diff : bool
         Return time difference between events. Default False, return absolute times.
-    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
+    random_state : {int, 'random-seed', 'global-rng'}, optional
         Defines random number generator initialisation.
-        Passed to `~gammapy.utils.random.get_random_state`.
+        Passed to `gammapy.utils.random.get_random_state`.
         Default is "random-seed".
 
     Returns
     -------
-    time : `~astropy.time.TimeDelta`
+    time : `astropy.time.TimeDelta`
         Time differences (second) after time zero.
 
     Examples

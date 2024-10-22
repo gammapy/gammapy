@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utility functions to deal with arrays and quantities."""
+
 import numpy as np
 import scipy.ndimage
 import scipy.signal
@@ -174,14 +175,14 @@ def scale_cube(data, kernels):
 
     Parameters
     ----------
-    data : `~numpy.ndarray`
+    data : `numpy.ndarray`
         Input data.
-    kernels : list of `~astropy.convolution.Kernel`
+    kernels : list of `astropy.convolution.Kernel`
         List of convolution kernels.
 
     Returns
     -------
-    cube : `~numpy.ndarray`
+    cube : `numpy.ndarray`
         Array of the shape (len(kernels), data.shape).
     """
     return np.dstack([_fftconvolve_wrap(kernel, data) for kernel in kernels])

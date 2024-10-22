@@ -14,9 +14,9 @@ def skycoord_to_lonlat(skycoord, frame=None):
 
     Returns
     -------
-    lon : `~numpy.ndarray`
+    lon : `numpy.ndarray`
         Longitude in degrees.
-    lat : `~numpy.ndarray`
+    lat : `numpy.ndarray`
         Latitude in degrees.
     """
     if frame:
@@ -36,7 +36,7 @@ class MapCoord:
 
     Parameters
     ----------
-    data : `dict` of `~numpy.ndarray`
+    data : `dict` of `numpy.ndarray`
         Dictionary of coordinate arrays.
     frame : {None, "icrs", "galactic"}
         Spatial coordinate system. If None then the coordinate system
@@ -127,19 +127,19 @@ class MapCoord:
 
     @property
     def skycoord(self):
-        """Coordinate object as a `~astropy.coordinates.SkyCoord`."""
+        """Coordinate object as a `astropy.coordinates.SkyCoord`."""
         return SkyCoord(self.lon, self.lat, unit="deg", frame=self.frame)
 
     @classmethod
     def _from_lonlat(cls, coords, frame=None, axis_names=None):
-        """Create a `~MapCoord` from a tuple of coordinate vectors.
+        """Create a `MapCoord` from a tuple of coordinate vectors.
 
         The first two elements of the tuple should be longitude and latitude in degrees.
 
         Parameters
         ----------
         coords : tuple
-            Tuple of `~numpy.ndarray`.
+            Tuple of `numpy.ndarray`.
         frame : {"icrs", "galactic", None}
             Set the coordinate system for longitude and latitude. If
             None, longitude and latitude will be assumed to be in
@@ -149,7 +149,7 @@ class MapCoord:
 
         Returns
         -------
-        coord : `~MapCoord`
+        coord : `~gammapy.maps.MapCoord`
             A coordinates object.
         """
         if axis_names is None:
@@ -194,14 +194,14 @@ class MapCoord:
 
     @classmethod
     def create(cls, data, frame=None, axis_names=None):
-        """Create a new `~MapCoord` object.
+        """Create a new `MapCoord` object.
 
         This method can be used to create either unnamed (with tuple input)
         or named (via dict input) axes.
 
         Parameters
         ----------
-        data : tuple, dict, `~gammapy.maps.MapCoord` or `~astropy.coordinates.SkyCoord`
+        data : tuple, dict, `gammapy.maps.MapCoord` or `astropy.coordinates.SkyCoord`
             Object containing coordinate arrays.
         frame : {"icrs", "galactic", None}
             Set the coordinate system for longitude and latitude. If
@@ -249,7 +249,7 @@ class MapCoord:
 
         Returns
         -------
-        coords : `~MapCoord`
+        coords : `~gammapy.maps.MapCoord`
             A coordinates object.
         """
         if frame == self.frame:
@@ -272,12 +272,12 @@ class MapCoord:
 
         Parameters
         ----------
-        mask : `~numpy.ndarray`
+        mask : `numpy.ndarray`
             Boolean mask.
 
         Returns
         -------
-        coords : `~MapCoord`
+        coords : `~gammapy.maps.MapCoord`
             A coordinates object.
         """
         try:
@@ -310,7 +310,7 @@ class MapCoord:
         )
 
     def copy(self):
-        """Copy `MapCoord` object."""
+        """Copy `gammapy.maps.MapCoord` object."""
         return copy.deepcopy(self)
 
     def __str__(self):

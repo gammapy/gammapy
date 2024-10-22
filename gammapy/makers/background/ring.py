@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Ring background estimation."""
+
 import itertools
 import numpy as np
 from astropy.convolution import Ring2DKernel, Tophat2DKernel
@@ -20,21 +21,21 @@ class AdaptiveRingBackgroundMaker(Maker):
 
     Parameters
     ----------
-    r_in : `~astropy.units.Quantity`
+    r_in : `astropy.units.Quantity`
         Inner radius of the ring.
-    r_out_max : `~astropy.units.Quantity`
+    r_out_max : `astropy.units.Quantity`
         Maximum outer radius of the ring.
-    width : `~astropy.units.Quantity`
+    width : `astropy.units.Quantity`
         Width of the ring.
-    stepsize : `~astropy.units.Quantity`
+    stepsize : `astropy.units.Quantity`
         Stepsize used for increasing the radius.
     threshold_alpha : float
         Threshold on alpha above which the adaptive ring takes action.
-    theta : `~astropy.units.Quantity`
+    theta : `astropy.units.Quantity`
         Integration radius used for alpha computation.
-    method : {'fixed_width', 'fixed_r_in'}
-        Adaptive ring method. Default is 'fixed_width'.
-    exclusion_mask : `~gammapy.maps.WcsNDMap`
+    method : {"fixed_width", "fixed_r_in"}
+        Adaptive ring method. Default is "fixed_width".
+    exclusion_mask : `gammapy.maps.WcsNDMap`
         Exclusion mask.
 
     See Also
@@ -72,13 +73,13 @@ class AdaptiveRingBackgroundMaker(Maker):
 
         Parameters
         ----------
-        image : `~gammapy.maps.WcsNDMap`
+        image : `gammapy.maps.WcsNDMap`
             Map specifying the WCS information.
 
         Returns
         -------
         kernels : list
-            List of `~astropy.convolution.Ring2DKernel`.
+            List of `astropy.convolution.Ring2DKernel`.
         """
         scale = image.geom.pixel_scales[0]
         r_in = (self.r_in / scale).to_value("")
@@ -151,12 +152,12 @@ class AdaptiveRingBackgroundMaker(Maker):
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.MapDataset`
+        dataset : `gammapy.datasets.MapDataset`
             Input map dataset.
 
         Returns
         -------
-        cubes : dict of `~gammapy.maps.WcsNDMap`
+        cubes : dict of `gammapy.maps.WcsNDMap`
             Dictionary containing ``counts_off``, ``acceptance`` and ``acceptance_off`` cubes.
         """
         counts = dataset.counts
@@ -193,12 +194,12 @@ class AdaptiveRingBackgroundMaker(Maker):
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.MapDataset`
+        dataset : `gammapy.datasets.MapDataset`
             Input map dataset.
 
         Returns
         -------
-        dataset_on_off : `~gammapy.datasets.MapDatasetOnOff`
+        dataset_on_off : `gammapy.datasets.MapDatasetOnOff`
             On off dataset.
         """
         from gammapy.datasets import MapDatasetOnOff
@@ -229,11 +230,11 @@ class RingBackgroundMaker(Maker):
 
     Parameters
     ----------
-    r_in : `~astropy.units.Quantity`
+    r_in : `astropy.units.Quantity`
         Inner ring radius.
-    width : `~astropy.units.Quantity`
+    width : `astropy.units.Quantity`
         Ring width.
-    exclusion_mask : `~gammapy.maps.WcsNDMap`
+    exclusion_mask : `gammapy.maps.WcsNDMap`
         Exclusion mask.
 
 
@@ -258,12 +259,12 @@ class RingBackgroundMaker(Maker):
 
         Parameters
         ----------
-        image : `~gammapy.maps.WcsNDMap`
+        image : `gammapy.maps.WcsNDMap`
             Input map.
 
         Returns
         -------
-        ring : `~astropy.convolution.Ring2DKernel`
+        ring : `astropy.convolution.Ring2DKernel`
             Ring kernel.
         """
         scale = image.geom.pixel_scales[0].to("deg")
@@ -279,13 +280,13 @@ class RingBackgroundMaker(Maker):
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.MapDataset`
+        dataset : `gammapy.datasets.MapDataset`
             Input map dataset.
 
         Returns
         -------
-        maps_off : dict of `~gammapy.maps.WcsNDMap`
-            Dictionary containing `counts_off` and `acceptance_off` maps.
+        maps_off : dict of `gammapy.maps.WcsNDMap`
+            Dictionary containing ``counts_off`` and ``acceptance_off`` maps.
         """
         counts = dataset.counts
         background = dataset.npred_background()
@@ -315,12 +316,12 @@ class RingBackgroundMaker(Maker):
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.MapDataset`
+        dataset : `gammapy.datasets.MapDataset`
             Input map dataset.
 
         Returns
         -------
-        dataset_on_off : `~gammapy.datasets.MapDatasetOnOff`
+        dataset_on_off : `gammapy.datasets.MapDatasetOnOff`
             On off dataset.
         """
         from gammapy.datasets import MapDatasetOnOff

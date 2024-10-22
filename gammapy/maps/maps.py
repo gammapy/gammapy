@@ -24,7 +24,7 @@ class Maps(MutableMapping):
 
     @property
     def geom(self):
-        """Map geometry as a `~gammapy.maps.Geom` object."""
+        """Map geometry as a `gammapy.maps.Geom` object."""
         return self._geom
 
     def __setitem__(self, key, value):
@@ -84,7 +84,7 @@ class Maps(MutableMapping):
 
         Returns
         -------
-        hdulist : `~astropy.io.fits.HDUList`
+        hdulist : `astropy.io.fits.HDUList`
             Map dataset list of HDUs.
         """
         exclude_primary = slice(1, None)
@@ -105,7 +105,7 @@ class Maps(MutableMapping):
 
         Parameters
         ----------
-        hdulist : `~astropy.io.fits.HDUList`
+        hdulist : `astropy.io.fits.HDUList`
             List of HDUs.
         hdu_bands : str, optional
             Name of the HDU with the BANDS table. If set to None, each map should have its own hdu_band.
@@ -171,12 +171,12 @@ class Maps(MutableMapping):
 
         Parameters
         ----------
-        geom : `~gammapy.maps.Geom`
+        geom : `gammapy.maps.Geom`
             The input geometry that will be used by all maps.
         names : list of str
             The list of all map names.
         kwargs_list : list of dict
-            the list of arguments to be passed to `~gammapy.maps.Map.from_geom()`.
+            the list of arguments to be passed to `gammapy.maps.Map.from_geom()`.
 
         Returns
         -------

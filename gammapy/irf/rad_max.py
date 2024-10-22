@@ -22,11 +22,11 @@ class RadMax2D(IRF):
 
     Parameters
     ----------
-    energy_axis : `MapAxis`
+    energy_axis : `gammapy.maps.MapAxis`
         Reconstructed energy axis.
-    offset_axis : `MapAxis`
+    offset_axis : `gammapy.maps.MapAxis`
         Field of view offset axis.
-    data : `~astropy.units.Quantity`
+    data : `astropy.units.Quantity`
         Applied directional cut.
     meta : dict
         Metadata dictionary.
@@ -46,7 +46,7 @@ class RadMax2D(IRF):
 
         Parameters
         ----------
-        irf : `~gammapy.irf.EffectiveAreaTable2D` or `~gammapy.irf.EnergyDispersion2D`
+        irf : `gammapy.irf.EffectiveAreaTable2D` or `gammapy.irf.EnergyDispersion2D`
             IRF instance from which to read the RAD_MAX and limit information.
 
         Returns
@@ -87,14 +87,14 @@ class RadMax2D(IRF):
 
         Parameters
         ----------
-        ax : `~matplotlib.pyplot.Axes`, optional
+        ax : `matplotlib.pyplot.Axes`, optional
             Matplotlib axes. Default is None.
         **kwargs : dict
-            Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
+            Keyword arguments passed to `matplotlib.pyplot.pcolormesh`.
 
         Returns
         -------
-        ax : `~matplotlib.pyplot.Axes`
+        ax : `matplotlib.pyplot.Axes`
              Matplotlib axes.
         """
         if ax is None:

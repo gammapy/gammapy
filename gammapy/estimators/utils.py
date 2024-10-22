@@ -65,19 +65,19 @@ def find_peaks(image, threshold, min_distance=1):
 
     Parameters
     ----------
-    image : `~gammapy.maps.WcsNDMap`
+    image : `gammapy.maps.WcsNDMap`
         Image like Map.
     threshold : float or array-like
         The data value or pixel-wise data values to be used for the
         detection threshold.  A 2D ``threshold`` must have the same
         shape as the map ``data``.
-    min_distance : int or `~astropy.units.Quantity`
+    min_distance : int or `astropy.units.Quantity`
         Minimum distance between peaks. An integer value is interpreted
         as pixels. Default is 1.
 
     Returns
     -------
-    output : `~astropy.table.Table`
+    output : `astropy.table.Table`
         Table with parameters of detected peaks.
 
     Examples
@@ -161,23 +161,23 @@ def find_peaks(image, threshold, min_distance=1):
 def find_peaks_in_flux_map(maps, threshold, min_distance=1):
     """Find local test statistic peaks for a given Map.
 
-    Utilises the `~gammapy.estimators.utils.find_peaks` function to find various parameters from FluxMaps.
+    Utilises the `gammapy.estimators.utils.find_peaks` function to find various parameters from FluxMaps.
 
     Parameters
     ----------
-    maps : `~gammapy.estimators.FluxMaps`
+    maps : `gammapy.estimators.FluxMaps`
         Input flux map object.
     threshold : float or array-like
         The test statistic data value or pixel-wise test statistic data values to be used for the
-        detection threshold.  A 2D ``threshold`` must have the same.
+        detection threshold. A 2D ``threshold`` must have the same.
         shape as the map ``data``.
-    min_distance : int or `~astropy.units.Quantity`
+    min_distance : int or `astropy.units.Quantity`
         Minimum distance between peaks. An integer value is interpreted
         as pixels. Default is 1.
 
     Returns
     -------
-    output : `~astropy.table.Table`
+    output : `astropy.table.Table`
         Table with parameters of detected peaks.
 
     Examples
@@ -263,9 +263,9 @@ def estimate_exposure_reco_energy(dataset, spectral_model=None, normalize=True):
 
     Parameters
     ----------
-    dataset : `~gammapy.datasets.MapDataset` or `~gammapy.datasets.MapDatasetOnOff`
+    dataset : `gammapy.datasets.MapDataset` or `gammapy.datasets.MapDatasetOnOff`
         The input dataset.
-    spectral_model : `~gammapy.modeling.models.SpectralModel`, optional
+    spectral_model : `gammapy.modeling.models.SpectralModel`, optional
         Assumed spectral shape. If None, a Power Law of index 2 is assumed. Default is None.
     normalize : bool
         Normalize the exposure to the total integrated flux of the spectral model.
@@ -274,7 +274,7 @@ def estimate_exposure_reco_energy(dataset, spectral_model=None, normalize=True):
 
     Returns
     -------
-    exposure : `~gammapy.maps.Map`
+    exposure : `gammapy.maps.Map`
         Exposure map in reconstructed energy.
     """
     if spectral_model is None:
@@ -315,16 +315,16 @@ def resample_energy_edges(dataset, conditions={}):
 
     Parameters
     ----------
-    dataset : `~gammapy.datasets.SpectrumDataset` or `~gammapy.datasets.SpectrumDatasetOnOff`
+    dataset : `gammapy.datasets.SpectrumDataset` or `gammapy.datasets.SpectrumDatasetOnOff`
         The input dataset.
     conditions : dict
         Keyword arguments containing the per-bin conditions used to resample the axis.
-        Available options are: 'counts_min', 'background_min', 'excess_min', 'sqrt_ts_min',
-        'npred_min', 'npred_background_min', 'npred_signal_min'. Default is {}.
+        Available options are: "counts_min", "background_min", "excess_min", "sqrt_ts_min",
+        "npred_min", "npred_background_min", "npred_signal_min". Default is {}.
 
     Returns
     -------
-    energy_edges : list of `~astropy.units.Quantity`
+    energy_edges : list of `astropy.units.Quantity`
         Energy edges for the resampled energy axis.
 
     Examples
@@ -395,19 +395,19 @@ def compute_lightcurve_fvar(lightcurve, flux_quantity="flux"):
     """
     Compute the fractional excess variance of the input lightcurve.
 
-    Internally calls the `~gammapy.stats.compute_fvar` function.
+    Internally calls the `gammapy.stats.compute_fvar` function.
 
 
     Parameters
     ----------
-    lightcurve : `~gammapy.estimators.FluxPoints`
+    lightcurve : `gammapy.estimators.FluxPoints`
         The lightcurve object.
     flux_quantity : str
-        Flux quantity to use for calculation. Should be 'dnde', 'flux', 'e2dnde' or 'eflux'. Default is 'flux'.
+        Flux quantity to use for calculation. Should be "dnde", "flux", "e2dnde" or "eflux". Default is "flux".
 
     Returns
     -------
-    fvar : `~astropy.table.Table`
+    fvar :  `astropy.table.Table`
         Table of fractional excess variance and associated error for each energy bin of the lightcurve.
     """
     flux = getattr(lightcurve, flux_quantity)
@@ -433,18 +433,18 @@ def compute_lightcurve_fpp(lightcurve, flux_quantity="flux"):
     """
     Compute the point-to-point excess variance of the input lightcurve.
 
-    Internally calls the `~gammapy.stats.compute_fpp` function
+    Internally calls the `gammapy.stats.compute_fpp` function
 
     Parameters
     ----------
-    lightcurve : `~gammapy.estimators.FluxPoints`
+    lightcurve : `gammapy.estimators.FluxPoints`
         The lightcurve object.
     flux_quantity : str
-        Flux quantity to use for calculation. Should be 'dnde', 'flux', 'e2dnde' or 'eflux'. Default is 'flux'.
+        Flux quantity to use for calculation. Should be "dnde", "flux", "e2dnde" or "eflux". Default is "flux".
 
     Returns
     -------
-    table : `~astropy.table.Table`
+    table : `astropy.table.Table`
         Table of point-to-point excess variance and associated error for each energy bin of the lightcurve.
     """
     flux = getattr(lightcurve, flux_quantity)
@@ -470,7 +470,7 @@ def compute_lightcurve_doublingtime(lightcurve, flux_quantity="flux"):
     """
     Compute the minimum characteristic flux doubling and halving time for the input lightcurve.
 
-    Internally calls the `~gammapy.stats.compute_flux_doubling` function.
+    Internally calls the `gammapy.stats.compute_flux_doubling` function.
 
     The characteristic doubling time  is estimated to obtain the
     minimum variability timescale for the light curves in which
@@ -482,17 +482,17 @@ def compute_lightcurve_doublingtime(lightcurve, flux_quantity="flux"):
 
     Parameters
     ----------
-    lightcurve : `~gammapy.estimators.FluxPoints`
+    lightcurve : `gammapy.estimators.FluxPoints`
         The lightcurve object.
     axis_name : str
         Name of the axis over which to compute the flux doubling.
     flux_quantity : str
-        Flux quantity to use for calculation. Should be 'dnde', 'flux', 'e2dnde' or 'eflux'.
-        Default is 'flux'.
+        Flux quantity to use for calculation. Should be "dnde", "flux", "e2dnde" or "eflux".
+        Default is "flux".
 
     Returns
     -------
-    table : `~astropy.table.Table`
+    table : `astropy.table.Table`
         Table of flux doubling/halving and associated error for each energy bin of the lightcurve
         with axis coordinates at which they were found.
 
@@ -548,19 +548,19 @@ def compute_lightcurve_discrete_correlation(
 
     NaN values will be ignored in the computation in order to account for possible gaps in the data.
 
-    Internally calls the `~gammapy.stats.discrete_correlation` function.
+    Internally calls the `gammapy.stats.discrete_correlation` function.
 
     Parameters
     ----------
-    lightcurve1 : `~gammapy.estimators.FluxPoints`
+    lightcurve1 : `gammapy.estimators.FluxPoints`
         The first lightcurve object.
-    lightcurve2 : `~gammapy.estimators.FluxPoints`, optional
+    lightcurve2 : `gammapy.estimators.FluxPoints`, optional
         The second lightcurve object. If not provided, the autocorrelation for the first lightcurve will be computed.
         Default is None.
     flux_quantity : str
-        Flux quantity to use for calculation. Should be 'dnde', 'flux', 'e2dnde' or 'eflux'.
-        The choice does not affect the computation. Default is 'flux'.
-    tau : `~astropy.units.Quantity`, optional
+        Flux quantity to use for calculation. Should be "dnde", "flux", "e2dnde" or "eflux".
+        The choice does not affect the computation. Default is "flux".
+    tau : `astropy.units.Quantity`, optional
         Size of the bins to compute the discrete correlation.
         If None, the bin size will be double the bins of the first lightcurve. Default is None.
 
@@ -628,18 +628,18 @@ def get_edges_fixed_bins(fluxpoint, group_size, axis_name="energy"):
 
     Parameters
     ----------
-    fluxpoint : `~gammapy.estimators.FluxPoints`
+    fluxpoint : `gammapy.estimators.FluxPoints`
         The flux points object to rebin.
     group_size : int
         Number of bins to combine.
     axis_name : str, optional
-        The axis name to combine along. Default is 'energy'.
+        The axis name to combine along. Default is "energy".
 
     Returns
     -------
-    edges_min : `~astropy.units.Quantity` or `~astropy.time.Time`
+    edges_min : `astropy.units.Quantity` or `astropy.time.Time`
         Minimum bin edge for the new axis.
-    edges_max : `~astropy.units.Quantity` or `~astropy.time.Time`
+    edges_max : `astropy.units.Quantity` or `astropy.time.Time`
         Maximum bin edge for the new axis.
     """
     ax = fluxpoint.geom.axes[axis_name]
@@ -663,18 +663,18 @@ def get_edges_min_ts(fluxpoint, ts_threshold, axis_name="energy"):
 
     Parameters
     ----------
-    fluxpoint : `~gammapy.estimators.FluxPoints`
+    fluxpoint : `gammapy.estimators.FluxPoints`
         The flux points object to rebin.
     ts_threshold : float
         The minimum significance desired.
     axis_name : str, optional
-        The axis name to combine along. Default is 'energy'.
+        The axis name to combine along. Default is "energy".
 
     Returns
     -------
-    edges_min : `~astropy.units.Quantity` or `~astropy.time.Time`
+    edges_min : `astropy.units.Quantity` or `astropy.time.Time`
         Minimum bin edge for the new axis.
-    edges_max : `~astropy.units.Quantity` or `~astropy.time.Time`
+    edges_max : `astropy.units.Quantity` or `astropy.time.Time`
         Maximum bin edge for the new axis.
     """
     ax = fluxpoint.geom.axes[axis_name]
@@ -712,21 +712,21 @@ def get_rebinned_axis(fluxpoint, axis_name="energy", method=None, **kwargs):
 
     Parameters
     ----------
-    fluxpoint : `~gammapy.estimators.FluxPoints`
+    fluxpoint :  `gammapy.estimators.FluxPoints`
         The flux point object to rebin.
     axis_name : str, optional
-        The axis name to combine along. Default is 'energy'.
+        The axis name to combine along. Default is "energy".
     method : str
         The method to resample the axis. Supported options are
-        'fixed_bins' and 'min-ts'.
+        "fixed_bins" and "min-ts".
     kwargs : dict
         Keywords passed to `get_edges_fixed_bins` or `get_edges_min_ts`.
-        If method is 'fixed-bins', keyword should be `group_size`.
-        If method is 'min-ts', keyword should be `ts_threshold`.
+        If method is "fixed-bins", keyword should be "group_size".
+        If method is "min-ts", keyword should be "ts_threshold".
 
     Returns
     -------
-    axis_new : `~gammapy.maps.MapAxis` or `~gammapy.maps.TimeMapAxis`
+    axis_new :  `gammapy.maps.MapAxis` or  `gammapy.maps.TimeMapAxis`
         The new axis.
 
     Examples
@@ -794,10 +794,10 @@ def get_combined_significance_maps(estimator, datasets):
 
     Parameters
     ----------
-    estimator : `~gammapy.estimators.ExcessMapEstimator` or `~gammapy.estimators.TSMapEstimator`
+    estimator : `gammapy.estimators.ExcessMapEstimator` or `gammapy.estimators.TSMapEstimator`
         Excess Map Estimator or TS Map Estimator
-    dataset : `~gammapy.datasets.Datasets`
-        Datasets containing only `~gammapy.datasets.MapDataset`.
+    dataset : `gammapy.datasets.Datasets`
+        Datasets containing only `gammapy.datasets.MapDataset`.
 
     Returns
     -------
@@ -855,12 +855,12 @@ def combine_flux_maps(
 
     Parameters
     ----------
-    maps : list of `~gammapy.estimators.FluxMaps`
+    maps : list of `gammapy.estimators.FluxMaps`
         List of maps with the same geometry.
     method : {"gaussian_errors"}
         * gaussian_errors :
-            Under the gaussian error approximation the likelihood is given by the gaussian distibution.
-            The product of gaussians is also a gaussian so can derive dnde, dnde_err, and ts.
+            Under the gaussian error approximation the likelihood is given by the gaussian distribution.
+            The product of gaussians is also a gaussian, so one can derive dnde, dnde_err, and ts.
         * distrib :
             Likelihood profile approximation assuming that probabilities distributions for
             flux points correspond to asymmetric gaussians and for upper limits to complementary error functions.
@@ -870,21 +870,21 @@ def combine_flux_maps(
             The flux maps must contains the `stat_scan` maps.
 
         Default is "gaussian_errors" which is the faster but least accurate solution,
-        "distrib"  will be more accurate if dnde_errp and dnde_errn are available,
-        "profile"  will be even more accurate if "stat_scan" is available.
+        "distrib" will be more accurate if dnde_errp and dnde_errn are available,
+        "profile" will be even more accurate if "stat_scan" is available.
 
-    reference_model : `~gammapy.modeling.models.SkyModel`, optional
+    reference_model : `gammapy.modeling.models.SkyModel`, optional
         Reference model to use for conversions.
-        Default is None and is will use the reference_model of the first FluxMaps in the list.
+        Default is None and it will use the ``reference_model`` of the first `~gammapy.estimators.FluxMaps` in the list.
 
-    dnde_scan_axis : `~gammapy.maps.MapAxis`
+    dnde_scan_axis : `gammapy.maps.MapAxis`
         Map axis providing the dnde values used to compute the profile.
-        Default is None and it will be derived from the first FluxMaps in the list.
-        Used only if `method` is distrib or profile.
+        Default is None and it will be derived from the first `~gammapy.estimators.FluxMaps` in the list.
+        Used only if ``method`` is "distrib" or "profile".
 
     Returns
     -------
-    flux_maps : `~gammapy.estimators.FluxMaps`
+    flux_maps : `gammapy.estimators.FluxMaps`
         Joint flux map.
     """
     gtis = [map_.gti for map_ in maps if map_.gti is not None]
@@ -993,15 +993,15 @@ def interpolate_profile_map(flux_map, dnde_scan_axis=None):
 
     Parameters
     ----------
-    flux_map : `~gammapy.estimators.FluxMaps`
+    flux_map : `gammapy.estimators.FluxMaps`
         Flux map.
-    dnde_scan_axis : `~gammapy.maps.MapAxis`
+    dnde_scan_axis : `gammapy.maps.MapAxis`
         Map axis providing the dnde values used to compute the profile.
-        Default is None and it will be derived from the flux_map.
+        Default is None and it will be derived from the ``flux_map``.
 
     Returns
     -------
-    scan_map: `~gammapy.estimators.Maps`
+    scan_map: `gammapy.estimators.Maps`
         Likelihood profile map.
 
     """
@@ -1032,19 +1032,19 @@ def approximate_profile_map(
 
     Parameters
     ----------
-    flux_map : `~gammapy.estimators.FluxMaps`
+    flux_map : `gammapy.estimators.FluxMaps`
         Flux map.
-    dnde_scan_axis : `~gammapy.maps.MapAxis`
+    dnde_scan_axis : `gammapy.maps.MapAxis`
         Map axis providing the dnde values used to compute the profile.
-        Default is None and it will be derived from the flux_map.
+        Default is None and it will be derived from the ``flux_map``.
     sqrt_ts_threshold_ul : int
         Threshold value in sqrt(TS) for upper limits.
-        Default is `ignore` and no threshold is applied.
-        Setting to `None` will use the one of `flux_map`.
+        Default is "ignore" and no threshold is applied.
+        Setting to "None" will use the one of ``flux_map``.
 
     Returns
     -------
-    scan_map: `~gammapy.estimators.Maps`
+    scan_map: `gammapy.estimators.Maps`
         Likelihood profile map.
     """
     stat_approx = _default_scan_map(flux_map, dnde_scan_axis)
@@ -1114,31 +1114,31 @@ def approximate_profile_map(
 def get_flux_map_from_profile(
     flux_map, n_sigma=1, n_sigma_ul=2, reference_model=None, meta=None, gti=None
 ):
-    """Create a new flux map using the likehood profile (stat_scan)
+    """Create a new flux map using the likelihood profile ("stat_scan")
     to get ts, dnde, dnde_err, dnde_errp, dnde_errn, and dnde_ul.
 
     Parameters
     ----------
-    flux_maps : `~gammapy.estimators.FluxMaps` or dict of `~gammapy.maps.WcsNDMap`
-        Flux map or dict containing  a `stat_scan` entry
+    flux_maps : `gammapy.estimators.FluxMaps` or dict of `gammapy.maps.WcsNDMap`
+        Flux map or dict containing a "stat_scan" entry
     n_sigma : int
         Number of sigma for flux error. Default is 1.
     n_sigma_ul : int
         Number of sigma for flux upper limits. Default is 2.
-    reference_model : `~gammapy.modeling.models.SkyModel`, optional
+    reference_model : `gammapy.modeling.models.SkyModel`, optional
         The reference model to use for conversions. If None, a model consisting
         of a point source with a power law spectrum of index 2 is assumed.
-        Default is None and the one of `flux_map` will be used if available
+        Default is None and the one of ``flux_map`` will be used if available
     meta : dict, optional
         Dict of metadata.
-        Default is None and the one of `flux_map` will be used if available
-    gti : `~gammapy.data.GTI`, optional
+        Default is None and the one of ``flux_map`` will be used if available
+    gti : `gammapy.data.GTI`, optional
         Maps GTI information.
-        Default is None and the one of `flux_map` will be used if available
+        Default is None and the one of ``flux_map`` will be used if available
 
     Returns
     -------
-    flux_maps : `~gammapy.estimators.FluxMaps`
+    flux_maps : `gammapy.estimators.FluxMaps`
         Flux map.
 
     """

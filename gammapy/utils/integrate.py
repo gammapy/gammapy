@@ -12,9 +12,9 @@ def trapz_loglog(y, x, axis=-1):
 
     Parameters
     ----------
-    y : `~numpy.ndarray`
+    y : `numpy.ndarray`
         Input array to integrate.
-    x : `~numpy.ndarray`
+    x : `numpy.ndarray`
         Independent variable to integrate over.
     axis : int, optional
         Specify the axis. Default is -1.

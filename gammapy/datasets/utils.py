@@ -13,15 +13,15 @@ def apply_edisp(input_map, edisp):
 
     Parameters
     ----------
-    input_map : `~gammapy.maps.Map`
+    input_map : `gammapy.maps.Map`
         The map to be convolved with the energy dispersion.
         It must have an axis named "energy_true".
-    edisp : `~gammapy.irf.EDispKernel`
+    edisp : `gammapy.irf.EDispKernel`
         Energy dispersion matrix.
 
     Returns
     -------
-    map : `~gammapy.maps.Map`
+    map : `gammapy.maps.Map`
         Map with energy dispersion applied.
 
     Examples
@@ -109,11 +109,11 @@ def split_dataset(dataset, width, margin, split_template_models=True):
 
     Parameters
     ----------
-    dataset : `~gammapy.datasets.Dataset`
+    dataset : `gammapy.datasets.Dataset`
         Dataset to split.
-    width : `~astropy.coordinates.Angle`
+    width : `astropy.coordinates.Angle`
         Angular size of each sub-region.
-    margin : `~astropy.coordinates.Angle`
+    margin : `astropy.coordinates.Angle`
         Angular size to be added to the `width`.
         The margin should be defined such as sources outside the region of interest
         that contributes inside are well-defined.
@@ -123,7 +123,7 @@ def split_dataset(dataset, width, margin, split_template_models=True):
 
     Returns
     -------
-    datasets : `~gammapy.datasets.Datasets`
+    datasets : `gammapy.datasets.Datasets`
         Split datasets.
 
     Examples

@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities for dealing with HEALPix projections and mappings."""
+
 import copy
 import numpy as np
 from astropy import units as u
@@ -45,7 +46,7 @@ class HpxGeom(Geom):
 
     Parameters
     ----------
-    nside : `~numpy.ndarray`
+    nside : `numpy.ndarray`
         HEALPix NSIDE parameter, the total number of pixels is
         12*nside*nside. For multi-dimensional maps one can pass
         either a single ``nside`` value or a vector of ``nside`` values
@@ -218,14 +219,14 @@ class HpxGeom(Geom):
 
         Parameters
         ----------
-        position : `~astropy.coordinates.SkyCoord`
+        position : `astropy.coordinates.SkyCoord`
             Center position of the cutout region.
-        width : `~astropy.coordinates.Angle` or `~astropy.units.Quantity`
+        width : `astropy.coordinates.Angle` or `astropy.units.Quantity`
             Diameter of the circular cutout region.
 
         Returns
         -------
-        cutout : `~gammapy.maps.WcsNDMap`
+        cutout : `gammapy.maps.WcsNDMap`
             Cutout map.
         """
         if not self.is_regular:
@@ -311,7 +312,6 @@ class HpxGeom(Geom):
         idx = pix_tuple_to_idx(pix)
         idx_local = self.global_to_local(idx)
         for i, _ in enumerate(idx):
-
             if clip:
                 if i > 0:
                     np.clip(idx[i], 0, self.axes[i - 1].nbin - 1, out=idx[i])
@@ -344,7 +344,7 @@ class HpxGeom(Geom):
 
     @property
     def data_shape(self):
-        """Shape of the `~numpy.ndarray` matching this geometry."""
+        """Shape of the `numpy.ndarray` matching this geometry."""
         npix_shape = tuple([np.max(self.npix)])
         return (npix_shape + self.axes.shape)[::-1]
 
@@ -444,7 +444,7 @@ class HpxGeom(Geom):
 
         Returns
         -------
-        center : `~astropy.coordinates.SkyCoord`
+        center : `astropy.coordinates.SkyCoord`
             Center position.
         """
         import healpy as hp
@@ -476,11 +476,11 @@ class HpxGeom(Geom):
 
     @property
     def pixel_scales(self):
-        self.angle_ = """Pixel scale.
+        """Pixel scale.
 
         Returns
         -------
-        angle: `~astropy.coordinates.Angle`
+        angle: `astropy.coordinates.Angle`
         """
         return get_pix_size_from_nside(self.nside) * u.deg
 
@@ -491,13 +491,13 @@ class HpxGeom(Geom):
         ----------
         coords : `MapCoord` or dict
             Input coordinates.
-        idxs : `~numpy.ndarray`, optional
+        idxs : `numpy.ndarray`, optional
             Indices for non-spatial axes.
             Default is None.
 
         Returns
         -------
-        weights : `~numpy.ndarray`
+        weights : `numpy.ndarray`
             Interpolation weights.
         """
         import healpy as hp
@@ -580,7 +580,7 @@ class HpxGeom(Geom):
 
         Returns
         -------
-        geom : `~HpxGeom`
+        geom : `HpxGeom`
             A HEALPix geometry object.
         """
         if not self.is_regular:
@@ -596,7 +596,7 @@ class HpxGeom(Geom):
 
         Parameters
         ----------
-        binsz : float or `~astropy.units.Quantity`
+        binsz : float or `astropy.units.Quantity`
             New pixel size. A float is assumed to be in degree.
 
         Returns
@@ -626,12 +626,12 @@ class HpxGeom(Geom):
 
         Parameters
         ----------
-        center : `~astropy.coordinates.SkyCoord`
+        center : `astropy.coordinates.SkyCoord`
             Center position.
 
         Returns
         -------
-        separation : `~astropy.coordinates.Angle`
+        separation : `astropy.coordinates.Angle`
             Separation angle array (1D).
         """
         coord = self.to_image().get_coord()
@@ -642,7 +642,7 @@ class HpxGeom(Geom):
 
         Returns
         -------
-        geom : `~HpxGeom`
+        geom : `HpxGeom`
             A HEALPix geometry object.
         """
         axes = copy.deepcopy(self.axes)
@@ -806,12 +806,12 @@ class HpxGeom(Geom):
 
         Parameters
         ----------
-        nside : int or `~numpy.ndarray`, optional
+        nside : int or `numpy.ndarray`, optional
             HEALPix NSIDE parameter. This parameter sets the size of
             the spatial pixels in the map. If nest is True, ``nside`` must be a
             power of 2, less than 2**30.
             Default is None.
-        binsz : float or `~numpy.ndarray`, optional
+        binsz : float or `numpy.ndarray`, optional
             Approximate pixel size in degrees. An ``nside`` will be
             chosen that corresponds to a pixel size closest to this
             value. This option is superseded by ``nside``.
@@ -826,7 +826,7 @@ class HpxGeom(Geom):
             HEALPix region string. Allows for partial-sky maps. Default is None.
         axes : list, optional
             List of axes for non-spatial dimensions. Default is None.
-        skydir : tuple or `~astropy.coordinates.SkyCoord`, optional
+        skydir : tuple or `astropy.coordinates.SkyCoord`, optional
             Sky position of map center. Can be either a SkyCoord
             object or a tuple of longitude and latitude in deg in the
             coordinate system of the map. Default is None.
@@ -837,7 +837,7 @@ class HpxGeom(Geom):
 
         Returns
         -------
-        geom : `~HpxGeom`
+        geom : `HpxGeom`
             A HEALPix geometry object.
 
         Examples
@@ -875,9 +875,9 @@ class HpxGeom(Geom):
 
         Parameters
         ----------
-        header : `~astropy.io.fits.Header`
+        header : `astropy.io.fits.Header`
             The FITS header.
-        hdu_bands : `~astropy.io.fits.BinTableHDU`, optional
+        hdu_bands : `astropy.io.fits.BinTableHDU`, optional
             The BANDS table HDU. Default is None.
         format : str, optional
             FITS convention. Default is None.
@@ -897,7 +897,7 @@ class HpxGeom(Geom):
 
         Returns
         -------
-        hpx : `~HpxGeom`
+        hpx : `HpxGeom`
             HEALPix geometry.
         """
         if format is None:
@@ -951,14 +951,14 @@ class HpxGeom(Geom):
 
         Parameters
         ----------
-        hdu : `~astropy.io.fits.BinTableHDU`
+        hdu : `astropy.io.fits.BinTableHDU`
             The FITS HDU.
-        hdu_bands : `~astropy.io.fits.BinTableHDU`, optional
+        hdu_bands : `astropy.io.fits.BinTableHDU`, optional
             The BANDS table HDU. Default is None.
 
         Returns
         -------
-        hpx : `~HpxGeom`
+        hpx : `HpxGeom`
             HEALPix geometry.
         """
         # FIXME: Need correct handling of IMPLICIT and EXPLICIT maps
@@ -1032,7 +1032,7 @@ class HpxGeom(Geom):
 
         Returns
         -------
-        ilist : `~numpy.ndarray`
+        ilist : `numpy.ndarray`
             List of pixel indices.
         """
         import healpy as hp
@@ -1122,7 +1122,7 @@ class HpxGeom(Geom):
 
         Returns
         -------
-        wcs : `~gammapy.maps.WcsGeom`
+        wcs : `WcsGeom`
             WCS geometry.
         """
         from gammapy.maps import WcsGeom
@@ -1161,7 +1161,7 @@ class HpxGeom(Geom):
         nside_tiles : int, optional
             HEALPix NSIDE parameter for super pixel tiles.
             Default is 4.
-        margin : `~astropy.units.Quantity`, optional
+        margin : `astropy.units.Quantity`, optional
             Width margin of the WCS tile.
             Default is "0 deg".
 
@@ -1239,7 +1239,6 @@ class HpxGeom(Geom):
 
         # Non-regular all-sky
         elif self.is_allsky and not self.is_regular:
-
             shape = (np.max(self.npix),)
             if idx is None:
                 shape = shape + self.shape_axes
@@ -1247,7 +1246,6 @@ class HpxGeom(Geom):
                 shape = shape + (1,) * len(self.axes)
             pix = [np.full(shape, -1, dtype=int) for i in range(1 + len(self.axes))]
             for idx_img in np.ndindex(self.shape_axes):
-
                 if idx is not None and idx_img != idx:
                     continue
 
@@ -1264,7 +1262,6 @@ class HpxGeom(Geom):
 
         # Explicit pixel indices
         else:
-
             if idx is not None:
                 npix_sum = np.concatenate(([0], np.cumsum(self._npix)))
                 idx_ravel = np.ravel_multi_index(idx, self.shape_axes)
@@ -1281,7 +1278,6 @@ class HpxGeom(Geom):
             pix = [np.full(shape, -1, dtype=int) for _ in range(1 + len(self.axes))]
 
             for idx_img in np.ndindex(self.shape_axes):
-
                 if idx is not None and idx_img != idx:
                     continue
 
@@ -1322,14 +1318,14 @@ class HpxGeom(Geom):
 
         Parameters
         ----------
-        regions : str, `~regions.Region` or list of `~regions.Region`
+        regions : str, `regions.Region` or list of `regions.Region`
             Region or list of regions (pixel or sky regions accepted).
             A region can be defined as a string ind DS9 format as well.
             See http://ds9.si.edu/doc/ref/region.html for details.
 
         Returns
         -------
-        mask_map : `~gammapy.maps.WcsNDMap` of boolean type
+        mask_map : `gammapy.maps.WcsNDMap` of boolean type
             Boolean region mask.
 
         """
@@ -1366,7 +1362,7 @@ class HpxGeom(Geom):
         return np.all(np.stack([t != INVALID_INDEX.int for t in idx]), axis=0)
 
     def solid_angle(self):
-        """Solid angle array as a `~astropy.units.Quantity` in ``sr``.
+        """Solid angle array as a `astropy.units.Quantity` in ``sr``.
 
         The array has the same dimensionality as ``map.nside``
         as all pixels have the same solid angle.

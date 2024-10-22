@@ -64,7 +64,6 @@ class TSDifference:
 def _confidence_scipy_brentq(
     parameters, parameter, function, sigma, reoptimize, upper=True, **kwargs
 ):
-
     ts_diff = TSDifference(
         function, parameters, parameter, reoptimize, ts_diff=sigma**2
     )
@@ -102,7 +101,6 @@ def _confidence_scipy_brentq(
 
 
 def confidence_scipy(parameters, parameter, function, sigma, reoptimize=True, **kwargs):
-
     if len(parameters.free_parameters) <= 1:
         reoptimize = False
 
@@ -144,9 +142,9 @@ def stat_profile_ul_scipy(
 
     Parameters
     ----------
-    value_scan : `~numpy.ndarray`
+    value_scan : `numpy.ndarray`
         Array of parameter values.
-    stat_scan : `~numpy.ndarray`
+    stat_scan : `numpy.ndarray`
         Array of delta fit statistic values, with respect to the minimum.
     delta_ts : float, optional
         Difference in test statistics for the upper limit. Default is 4.
@@ -155,7 +153,7 @@ def stat_profile_ul_scipy(
         of parabolic shape, a "sqrt" scaling is recommended. In other cases or
         for fine sampled profiles a "lin" can also be used. Default is "sqrt".
     **kwargs : dict
-        Keyword arguments passed to `~scipy.optimize.brentq`.
+        Keyword arguments passed to `scipy.optimize.brentq`.
 
     Returns
     -------

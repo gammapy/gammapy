@@ -33,7 +33,7 @@ class ParameterEstimator(Estimator):
             * "scan": estimate fit statistic profiles.
 
         Default is None so the optional steps are not executed.
-    fit : `~gammapy.modeling.Fit`
+    fit : `gammapy.modeling.Fit`
         Fit instance specifying the backend and fit options.
     reoptimize : bool
         Re-optimize other free model parameters. Default is True.
@@ -87,9 +87,9 @@ class ParameterEstimator(Estimator):
 
         Parameters
         ----------
-        datasets : `~gammapy.datasets.Datasets`
+        datasets : `gammapy.datasets.Datasets`
             Datasets.
-        parameter : `Parameter`
+        parameter : `gammapy.modeling.Parameter`
             For which parameter to get the value.
 
         Returns
@@ -122,9 +122,9 @@ class ParameterEstimator(Estimator):
 
         Parameters
         ----------
-        datasets : `~gammapy.datasets.Datasets`
+        datasets : `gammapy.datasets.Datasets`
             Datasets.
-        parameter : `Parameter`
+        parameter : `gammapy.modeling.Parameter`
             For which parameter to get the value.
 
         Returns
@@ -162,7 +162,7 @@ class ParameterEstimator(Estimator):
 
         Parameters
         ----------
-        datasets : `~gammapy.datasets.Datasets`
+        datasets : `gammapy.datasets.Datasets`
             Datasets.
         parameter : `Parameter`
             For which parameter to get the value.
@@ -200,9 +200,9 @@ class ParameterEstimator(Estimator):
 
         Parameters
         ----------
-        datasets : `~gammapy.datasets.Datasets`
+        datasets : `gammapy.datasets.Datasets`
             The datasets used to estimate the model parameter.
-        parameter : `~gammapy.modeling.Parameter`
+        parameter : `gammapy.modeling.Parameter`
             For which parameter to get the value.
 
         Returns
@@ -237,9 +237,9 @@ class ParameterEstimator(Estimator):
 
         Parameters
         ----------
-        datasets : `~gammapy.datasets.Datasets`
+        datasets : `gammapy.datasets.Datasets`
             The datasets used to estimate the model parameter.
-        parameter : `~gammapy.modeling.Parameter`
+        parameter : `gammapy.modeling.Parameter`
             For which parameter to get the value.
 
         Returns
@@ -291,7 +291,7 @@ class ParameterEstimator(Estimator):
 
         Parameters
         ----------
-        datasets : `~gammapy.datasets.Datasets`
+        datasets : `gammapy.datasets.Datasets`
             Datasets.
 
         Returns
@@ -313,9 +313,9 @@ class ParameterEstimator(Estimator):
 
         Parameters
         ----------
-        datasets : `~gammapy.datasets.Datasets`
+        datasets : `gammapy.datasets.Datasets`
             The datasets used to estimate the model parameter.
-        parameter : `str` or `~gammapy.modeling.Parameter`
+        parameter : `str` or `gammapy.modeling.Parameter`
             For which parameter to run the estimator.
 
         Returns
@@ -328,7 +328,6 @@ class ParameterEstimator(Estimator):
         parameter = datasets.parameters[parameter]
 
         with datasets.parameters.restore_status():
-
             if not self.reoptimize:
                 datasets.parameters.freeze_all()
                 parameter.frozen = False

@@ -27,13 +27,13 @@ class MapDatasetMetaData(MetaData):
 
     Parameters
     ----------
-    creation : `~gammapy.utils.CreatorMetaData`, optional
+    creation : `gammapy.utils.CreatorMetaData`, optional
          The creation metadata.
-    obs_info : list of `~gammapy.utils.ObsInfoMetaData`
+    obs_info : list of `gammapy.utils.ObsInfoMetaData`
         info about the observation.
     event_types : list of int or str
         Event types used in analysis.
-    pointing: list of `~gammapy.utils.PointingInfoMetaData`
+    pointing: list of `gammapy.utils.PointingInfoMetaData`
         Telescope pointing directions.
     optional : dict
         Additional optional metadata.
@@ -59,7 +59,7 @@ class MapDatasetMetaData(MetaData):
 
         Parameters
         ----------
-            table: `~astropy.table.Table`
+            table: `astropy.table.Table`
 
         """
         kwargs = {}

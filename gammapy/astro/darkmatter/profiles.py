@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Dark matter profiles."""
+
 import abc
 import html
 import numpy as np
@@ -61,9 +62,9 @@ class DMProfile(abc.ABC):
 
         Parameters
         ----------
-        rmin, rmax : `~astropy.units.Quantity`
+        rmin, rmax : `astropy.units.Quantity`
             Lower and upper bound of integration range.
-        separation : `~numpy.ndarray`
+        separation : `numpy.ndarray`
             Separation angle in radians.
         ndecade : int, optional
             Number of grid points per decade used for the integration.
@@ -85,9 +86,9 @@ class DMProfile(abc.ABC):
 
         Parameters
         ----------
-        xmin, xmax : `~astropy.units.Quantity`
+        xmin, xmax : `astropy.units.Quantity`
             Lower and upper bound of integration range.
-        separation : `~numpy.ndarray`
+        separation : `numpy.ndarray`
             Separation angle in radians.
         ndecade : int
             Number of grid points per decade used for the integration.
@@ -120,15 +121,15 @@ class ZhaoProfile(DMProfile):
 
     Parameters
     ----------
-    r_s : `~astropy.units.Quantity`
+    r_s : `astropy.units.Quantity`
         Scale radius, :math:`r_s`.
-    alpha : `~astropy.units.Quantity`
+    alpha : `astropy.units.Quantity`
         :math:`\alpha`.
-    beta: `~astropy.units.Quantity`
+    beta: `astropy.units.Quantity`
         :math:`\beta`.
-    gamma : `~astropy.units.Quantity`
+    gamma : `astropy.units.Quantity`
         :math:`\gamma`.
-    rho_s : `~astropy.units.Quantity`
+    rho_s : `astropy.units.Quantity`
         Characteristic density, :math:`\rho_s`.
 
     References
@@ -178,9 +179,9 @@ class NFWProfile(DMProfile):
 
     Parameters
     ----------
-    r_s : `~astropy.units.Quantity`
+    r_s : `astropy.units.Quantity`
         Scale radius, :math:`r_s`.
-    rho_s : `~astropy.units.Quantity`
+    rho_s : `astropy.units.Quantity`
         Characteristic density, :math:`\rho_s`.
 
     References
@@ -215,11 +216,11 @@ class EinastoProfile(DMProfile):
 
     Parameters
     ----------
-    r_s : `~astropy.units.Quantity`
+    r_s : `astropy.units.Quantity`
         Scale radius, :math:`r_s`.
-    alpha : `~astropy.units.Quantity`
+    alpha : `astropy.units.Quantity`
         :math:`\alpha`.
-    rho_s : `~astropy.units.Quantity`
+    rho_s : `astropy.units.Quantity`
         Characteristic density, :math:`\rho_s`.
 
     References
@@ -260,7 +261,7 @@ class IsothermalProfile(DMProfile):
 
     Parameters
     ----------
-    r_s : `~astropy.units.Quantity`
+    r_s : `astropy.units.Quantity`
         Scale radius, :math:`r_s`.
 
     References
@@ -293,7 +294,7 @@ class BurkertProfile(DMProfile):
 
     Parameters
     ----------
-    r_s : `~astropy.units.Quantity`
+    r_s : `astropy.units.Quantity`
         Scale radius, :math:`r_s`.
 
     References
@@ -328,7 +329,7 @@ class MooreProfile(DMProfile):
 
     Parameters
     ----------
-    r_s : `~astropy.units.Quantity`
+    r_s : `astropy.units.Quantity`
         Scale radius, :math:`r_s`.
 
     References

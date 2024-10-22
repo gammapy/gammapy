@@ -45,18 +45,18 @@ class RegionGeom(Geom):
     The spatial component of the geometry is made up of a
     single pixel with an arbitrary shape and size. It can
     also have any number of non-spatial dimensions. This class
-    represents the geometry for the `RegionNDMap` maps.
+    represents the geometry for the `gammapy.maps.RegionNDMap` maps.
 
     Parameters
     ----------
-    region : `~regions.SkyRegion`
+    region : `regions.SkyRegion`
         Region object.
     axes : list of `MapAxis`
         Non-spatial data axes.
-    wcs : `~astropy.wcs.WCS`
+    wcs : `astropy.wcs.WCS`
         Optional WCS object to project the region if needed.
-    binsz_wcs : `~astropy.units.Quantity`
-        Angular bin size of the underlying `~WcsGeom` used to evaluate
+    binsz_wcs : `astropy.units.Quantity`
+        Angular bin size of the underlying `gammapy.maps.WcsGeom` used to evaluate
         quantities in the region. Default is "0.1 deg". This default
         value is adequate for the majority of use cases. If a WCS object
         is provided, the input of ``binsz_wcs`` is overridden.
@@ -122,11 +122,11 @@ class RegionGeom(Geom):
 
     @property
     def binsz_wcs(self):
-        """Angular bin size of the underlying `~WcsGeom`.
+        """Angular bin size of the underlying `gammapy.maps.WcsGeom`.
 
         Returns
         -------
-        binsz_wcs: `~astropy.coordinates.Angle`
+        binsz_wcs: `astropy.coordinates.Angle`
             Angular bin size.
         """
         return Angle(proj_plane_pixel_scales(self.wcs), unit="deg")
@@ -158,7 +158,7 @@ class RegionGeom(Geom):
 
         Returns
         -------
-        width : `~astropy.units.Quantity`
+        width : `astropy.units.Quantity`
             Dimensions of the region in both spatial dimensions.
             Units: ``deg``
         """
@@ -167,7 +167,7 @@ class RegionGeom(Geom):
 
     @property
     def region(self):
-        """The spatial component of the region geometry as a `~regions.SkyRegion`."""
+        """The spatial component of the region geometry as a `regions.SkyRegion`."""
         return self._region
 
     @property
@@ -218,17 +218,17 @@ class RegionGeom(Geom):
         """Check if a given map coordinate is contained in the region.
 
         Requires the `.region` attribute to be set.
-        For `PointSkyRegion` the method always returns True.
+        For `regions.PointSkyRegion` the method always returns True.
 
         Parameters
         ----------
-        coords : tuple, dict, `MapCoord` or `~astropy.coordinates.SkyCoord`
+        coords : tuple, dict, `gammapy.maps.MapCoord` or `astropy.coordinates.SkyCoord`
             Object containing coordinate arrays we wish to check for inclusion
             in the region.
 
         Returns
         -------
-        mask : `~numpy.ndarray`
+        mask : `numpy.ndarray`
             Boolean array with the same shape as the input that indicates
             which coordinates are inside the region.
         """
@@ -245,7 +245,7 @@ class RegionGeom(Geom):
     def contains_wcs_pix(self, pix):
         """Check if a given WCS pixel coordinate is contained in the region.
 
-        For `PointSkyRegion` the method always returns True.
+        For `regions.PointSkyRegion` the method always returns True.
 
         Parameters
         ----------
@@ -254,7 +254,7 @@ class RegionGeom(Geom):
 
         Returns
         -------
-        containment : `~numpy.ndarray`
+        containment : `numpy.ndarray`
             Boolean array.
         """
         if self.is_all_point_sky_regions:
@@ -273,14 +273,14 @@ class RegionGeom(Geom):
 
         Returns
         -------
-        sep : `~astropy.coordinates.Angle`
+        sep : `astropy.coordinates.Angle`
             The on-sky separation between the given coordinate and the region center.
         """
         return self.center_skydir.separation(position)
 
     @property
     def data_shape(self):
-        """Shape of the `~numpy.ndarray` matching this geometry."""
+        """Shape of the `numpy.ndarray` matching this geometry."""
         return self._shape[::-1]
 
     @property
@@ -302,10 +302,10 @@ class RegionGeom(Geom):
 
         Parameters
         ----------
-        mode : {'center', 'edges'}, optional
+        mode : {"center", "edges"}, optional
             Get center or edge coordinates for the non-spatial axes.
             Default is "center".
-        frame : str or `~astropy.coordinates.Frame`, optional
+        frame : str or `astropy.coordinates.Frame`, optional
             Coordinate frame. Default is None.
         sparse : bool, optional
             Compute sparse coordinates. Default is False.
@@ -315,7 +315,7 @@ class RegionGeom(Geom):
 
         Returns
         -------
-        coord : `~MapCoord`
+        coord : `gammapy.maps.MapCoord`
             Map coordinate object.
         """
         if mode == "edges" and axis_name is None:
@@ -345,7 +345,7 @@ class RegionGeom(Geom):
 
         Returns
         -------
-        angle : `~astropy.units.Quantity`
+        angle : `astropy.units.Quantity`
             Solid angle of the region in steradians.
             Units: ``sr``
         """
@@ -375,7 +375,7 @@ class RegionGeom(Geom):
 
         Returns
         -------
-        volume : `~astropy.units.Quantity`
+        volume : `astropy.units.Quantity`
             Volume of the region.
         """
         bin_volume = self.solid_angle() * np.ones(self.data_shape)
@@ -392,14 +392,14 @@ class RegionGeom(Geom):
 
         Parameters
         ----------
-        width_min : `~astropy.quantity.Quantity`, optional
+        width_min : `astropy.quantity.Quantity`, optional
             Minimum width for the resulting geometry. Can be a single number or two,
             for different minimum widths in each spatial dimension.
             Default is None.
 
         Returns
         -------
-        wcs_geom : `~WcsGeom`
+        wcs_geom : `gammapy.maps.WcsGeom`
             A WCS geometry object.
         """
         if width_min is not None:
@@ -418,12 +418,12 @@ class RegionGeom(Geom):
 
         Parameters
         ----------
-        binsz : float, str or `~astropy.quantity.Quantity`
+        binsz : float, str or `astropy.quantity.Quantity`
             Bin size.
 
         Returns
         -------
-        region : `~RegionGeom`
+        region : `RegionGeom`
             Region geometry with the same axes and region as the input,
             but different WCS pixelization.
         """
@@ -445,10 +445,10 @@ class RegionGeom(Geom):
 
         Returns
         -------
-        region_coord : `~MapCoord`
+        region_coord : `gammapy.maps.MapCoord`
             MapCoord object with the coordinates inside
             the region.
-        weights : `~numpy.ndarray`
+        weights : `numpy.ndarray`
             Weights representing the fraction of each pixel
             contained in the region.
         """
@@ -474,7 +474,7 @@ class RegionGeom(Geom):
 
         Returns
         -------
-        region : `~RegionGeom`
+        region : `RegionGeom`
             Region geometry with the added axes.
         """
         axes = copy.deepcopy(self.axes) + axes
@@ -485,7 +485,7 @@ class RegionGeom(Geom):
 
         Returns
         -------
-        region : `~RegionGeom`
+        region : `RegionGeom`
             Region geometry without any non-spatial axes.
         """
         return self._init_copy(region=self.region, wcs=self.wcs, axes=None)
@@ -495,7 +495,7 @@ class RegionGeom(Geom):
 
         Returns
         -------
-        region : `~RegionGeom`
+        region : `RegionGeom`
             Region geometry with the upsampled axis.
         """
         axes = self.axes.upsample(factor=factor, axis_name=axis_name)
@@ -506,7 +506,7 @@ class RegionGeom(Geom):
 
         Returns
         -------
-        region : `~RegionGeom`
+        region : `RegionGeom`
             Region geometry with the downsampled axis.
         """
         axes = self.axes.downsample(factor=factor, axis_name=axis_name)
@@ -581,14 +581,14 @@ class RegionGeom(Geom):
         """Create region geometry.
 
         The input region can be passed in the form of a ds9 string and will be parsed
-        internally by `~regions.Regions.parse`. See:
+        internally by `regions.Regions.parse`. See:
 
         * https://astropy-regions.readthedocs.io/en/stable/region_io.html
         * http://ds9.si.edu/doc/ref/region.html
 
         Parameters
         ----------
-        region : str or `~regions.SkyRegion`
+        region : str or `regions.SkyRegion`
             Region definition.
         **kwargs : dict
             Keyword arguments passed to `RegionGeom.__init__`.
@@ -690,7 +690,7 @@ class RegionGeom(Geom):
 
         Returns
         -------
-        hdulist : `~astropy.io.fits.HDUList`
+        hdulist : `astropy.io.fits.HDUList`
             HDU list.
 
         """
@@ -722,7 +722,7 @@ class RegionGeom(Geom):
 
         Parameters
         ----------
-        regions : list of `~regions.SkyRegion` or str
+        regions : list of `regions.SkyRegion` or str
             Regions.
         **kwargs: dict
             Keyword arguments forwarded to `RegionGeom`.
@@ -752,7 +752,7 @@ class RegionGeom(Geom):
 
         Parameters
         ----------
-        hdulist : `~astropy.io.fits.HDUList`
+        hdulist : `astropy.io.fits.HDUList`
             HDU list.
         format : {"ogip", "ogip-arf", "gadf"}
             HDU format. Default is "ogip".
@@ -819,23 +819,23 @@ class RegionGeom(Geom):
 
         Parameters
         ----------
-        ax : `~astropy.visualization.WCSAxes`, optional
+        ax : `astropy.visualization.WCSAxes`, optional
             Axes to plot on. If no axes are given,
             the region is shown using the minimal
             equivalent WCS geometry.
             Default is None.
         kwargs_point : dict, optional
-            Keyword arguments passed to `~matplotlib.lines.Line2D` for plotting
+            Keyword arguments passed to `matplotlib.lines.Line2D` for plotting
             of point sources. Default is None.
-        path_effect : `~matplotlib.patheffects.PathEffect`, optional
+        path_effect : `matplotlib.patheffects.PathEffect`, optional
             Path effect applied to artists and lines.
             Default is None.
         **kwargs : dict
-            Keyword arguments forwarded to `~regions.PixelRegion.as_artist`.
+            Keyword arguments forwarded to `regions.PixelRegion.as_artist`.
 
         Returns
         -------
-        ax : `~astropy.visualization.WCSAxes`
+        ax : `astropy.visualization.WCSAxes`
             Axes to plot on.
         """
         if self.region:

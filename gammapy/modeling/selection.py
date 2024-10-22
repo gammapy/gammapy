@@ -16,9 +16,9 @@ class TestStatisticNested:
 
     Parameters
     ----------
-    parameters : `~gammapy.modeling.Parameters` or list of `~gammapy.modeling.Parameter`
+    parameters : `gammapy.modeling.Parameters` or list of `gammapy.modeling.Parameter`
         List of parameters frozen for the null hypothesis but free for the test hypothesis.
-    null_values : list of float or `~gammapy.modeling.Parameters`
+    null_values : list of float or `gammapy.modeling.Parameters`
         Values of the parameters frozen for the null hypothesis.
         If a `Parameters` object or a list of `Parameters` is given
         the null hypothesis follows the values of these parameters,
@@ -31,7 +31,7 @@ class TestStatisticNested:
         Number of free parameters to consider between the two hypothesis
         in order to estimate the `ts_threshold` from the `n_sigma` threshold.
         Default is len(parameters).
-    fit : `Fit`
+    fit : `gammapy.modeling.Fit`
         Fit instance specifying the backend and fit options.
     """
 
@@ -100,7 +100,7 @@ class TestStatisticNested:
 
         Parameters
         ----------
-        datasets : `~gammapy.datasets.Datasets`
+        datasets : `gammapy.datasets.Datasets`
             Datasets.
         apply_selection : bool
             Apply or not the model selection. Default is True.
@@ -181,11 +181,11 @@ def select_nested_models(
 
     Parameters
     ----------
-    datasets : `~gammapy.datasets.Datasets`
+    datasets : `gammapy.datasets.Datasets`
         Datasets.
-    parameters : `~gammapy.modeling.Parameters` or list of `~gammapy.modeling.Parameter`
+    parameters : `gammapy.modeling.Parameters` or list of `gammapy.modeling.Parameter`
         List of parameters frozen for the null hypothesis but free for the test hypothesis.
-    null_values : list of float or `~gammapy.modeling.Parameters`
+    null_values : list of float or `gammapy.modeling.Parameters`
         Values of the parameters frozen for the null hypothesis.
         If a `Parameters` object or a list of `Parameters` is given
         the null hypothesis follows the values of these parameters,
@@ -198,7 +198,7 @@ def select_nested_models(
         Number of free parameters to consider between the two hypothesis
         in order to estimate the `ts_threshold` from the `n_sigma` threshold.
         Default is len(parameters).
-    fit : `Fit`, optional
+    fit : `gammapy.modeling.Fit`, optional
         Fit instance specifying the backend and fit options. Default is None.
 
     Returns

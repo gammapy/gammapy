@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Location of gamma-ray observatories."""
+
 import astropy.units as u
 from astropy.coordinates import EarthLocation
 
@@ -10,7 +11,7 @@ observatory_locations = {}
 """Gamma-ray observatory locations (dict).
 
 This is a dict with observatory names as keys
-and values of type `~astropy.coordinates.EarthLocation`.
+and values of type `astropy.coordinates.EarthLocation`.
 
 Not that with ``EarthLocation`` the orientation of angles is as follows:
 

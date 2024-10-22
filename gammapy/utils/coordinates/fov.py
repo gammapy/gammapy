@@ -9,15 +9,15 @@ def fov_to_sky(lon, lat, lon_pnt, lat_pnt):
 
     Parameters
     ----------
-    lon, lat : `~astropy.units.Quantity`
+    lon, lat : `astropy.units.Quantity`
         Field-of-view coordinate to be transformed.
-    lon_pnt, lat_pnt : `~astropy.units.Quantity`
+    lon_pnt, lat_pnt : `astropy.units.Quantity`
         Coordinate specifying the pointing position.
         (i.e. the center of the field of view.)
 
     Returns
     -------
-    lon_t, lat_t : `~astropy.units.Quantity`
+    lon_t, lat_t : `astropy.units.Quantity`
         Transformed sky coordinate.
     """
     # Create a frame that is centered on the pointing position
@@ -40,15 +40,15 @@ def sky_to_fov(lon, lat, lon_pnt, lat_pnt):
 
     Parameters
     ----------
-    lon, lat : `~astropy.units.Quantity`
+    lon, lat : `astropy.units.Quantity`
         Sky coordinate to be transformed.
-    lon_pnt, lat_pnt : `~astropy.units.Quantity`
+    lon_pnt, lat_pnt : `astropy.units.Quantity`
         Coordinate specifying the pointing position.
         (i.e. the center of the field of view.)
 
     Returns
     -------
-    lon_t, lat_t : `~astropy.units.Quantity`
+    lon_t, lat_t : `astropy.units.Quantity`
         Transformed field-of-view coordinate.
     """
     # Create a frame that is centered on the pointing position

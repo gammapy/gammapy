@@ -34,11 +34,11 @@ def _extract_array(array, shape, position):
     """Helper function to extract parts of a larger array.
 
     Simple implementation of an array extract function , because
-    `~astropy.ndata.utils.extract_array` introduces too much overhead.`
+    `astropy.ndata.utils.extract_array` introduces too much overhead.`
 
     Parameters
     ----------
-    array : `~numpy.ndarray`
+    array : `numpy.ndarray`
         The array from which to extract.
     shape : tuple or int
         The shape of the extracted array.
@@ -65,11 +65,11 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
     Parameters
     ----------
-    model : `~gammapy.modeling.models.SkyModel`
+    model : `gammapy.modeling.models.SkyModel`
         Source model kernel. If set to None,
-        assume spatail model: point source model, PointSpatialModel.
+        assume spatial model: `~gammapy.modeling.models.PointSpatialModel`.
         spectral model: PowerLawSpectral Model of index 2
-    kernel_width : `~astropy.coordinates.Angle`
+    kernel_width : `astropy.coordinates.Angle`
         Width of the kernel to use: the kernel will be truncated at this size
     n_sigma : int
         Number of sigma for flux error. Default is 1.
@@ -95,7 +95,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
             * "stat_scan": estimate likelihood profile
 
         Default is None so the optional steps are not executed.
-    energy_edges : list of `~astropy.units.Quantity`, optional
+    energy_edges : list of `astropy.units.Quantity`, optional
         Edges of the target maps energy bins. The resulting bin edges won't be exactly equal to the input ones,
         but rather the closest values to the energy axis edges of the parent dataset.
         Default is None: apply the estimator in each energy bin of the parent dataset.
@@ -103,9 +103,9 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
     sum_over_energy_groups : bool
         Whether to sum over the energy groups or fit the norm on the full energy
         cube.
-    norm : `~gammapy.modeling.Parameter` or dict
+    norm : `gammapy.modeling.Parameter` or dict
         Norm parameter used for the likelihood profile computation on a fixed norm range.
-        Only used for "stat_scan" in `selection_optional`.
+        Only used for "stat_scan" in ``selection_optional``.
         Default is None and a new parameter is created automatically,
         with value=1, name="norm", scan_min=-100, scan_max=100,
         and values sampled such as we can probe a 0.1% relative error on the norm.
@@ -113,10 +113,10 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         `~gammapy.modeling.Parameter` arguments.
     n_jobs : int
         Number of processes used in parallel for the computation. Default is one,
-        unless `~gammapy.utils.parallel.N_JOBS_DEFAULT` was modified. The number
+        unless `gammapy.utils.parallel.N_JOBS_DEFAULT` was modified. The number
         of jobs limited to the number of physical CPUs.
     parallel_backend : {"multiprocessing", "ray"}
-        Which backend to use for multiprocessing. Defaults to `~gammapy.utils.parallel.BACKEND_DEFAULT`.
+        Which backend to use for multiprocessing. Defaults to `gammapy.utils.parallel.BACKEND_DEFAULT`.
     max_niter : int
         Maximal number of iterations used by the root finding algorithm.
         Default is 100.
@@ -265,12 +265,12 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.MapDataset`
+        dataset : `gammapy.datasets.MapDataset`
             Input dataset.
 
         Returns
         -------
-        kernel : `~gammapy.maps.Map`
+        kernel : `gammapy.maps.Map`
             Kernel map.
 
         """
@@ -314,16 +314,16 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.MapDataset`
+        dataset : `gammapy.datasets.MapDataset`
             Input dataset.
-        kernel : `~gammapy.maps.WcsNDMap`
+        kernel : `gammapy.maps.WcsNDMap`
             Source model kernel.
-        exposure : `~gammapy.maps.WcsNDMap`
+        exposure : `gammapy.maps.WcsNDMap`
             Exposure map on reconstructed energy.
 
         Returns
         -------
-        flux : `~gammapy.maps.WcsNDMap`
+        flux : `gammapy.maps.WcsNDMap`
             Approximate flux map.
         """
         if exposure is None:
@@ -350,7 +350,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.MapDataset`
+        dataset : `gammapy.datasets.MapDataset`
             Input dataset.
 
         Returns
@@ -468,7 +468,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.Datasets` or `~gammapy.datasets.MapDataset`
+        dataset : `gammapy.datasets.Datasets` or `gammapy.datasets.MapDataset`
             Map dataset or Datasets (list of MapDataset with the same spatial geometry).
         """
         maps = [self.estimate_fit_input_maps(dataset=d) for d in datasets]
@@ -555,7 +555,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.Datasets` or `~gammapy.datasets.MapDataset`
+        dataset : `gammapy.datasets.Datasets` or `gammapy.datasets.MapDataset`
             Map dataset or Datasets (list of MapDataset with the same spatial geometry).
 
         Returns
@@ -645,11 +645,11 @@ class SimpleMapDataset:
 
     Parameters
     ----------
-    counts : `~numpy.ndarray`
+    counts : `numpy.ndarray`
         Counts array.
-    background : `~numpy.ndarray`
+    background : `numpy.ndarray`
         Background array.
-    model : `~numpy.ndarray`
+    model : `numpy.ndarray`
         Kernel array.
 
     """
@@ -997,15 +997,15 @@ def _ts_value(
     ----------
     position : tuple (i, j)
         Pixel position.
-    counts : `~numpy.ndarray`
+    counts : `numpy.ndarray`
         Counts image.
-    background : `~numpy.ndarray`
+    background : `numpy.ndarray`
         Background image.
-    exposure : `~numpy.ndarray`
+    exposure : `numpy.ndarray`
         Exposure image.
     kernel : `astropy.convolution.Kernel2D`
         Source model kernel.
-    norm : `~numpy.ndarray`
+    norm : `numpy.ndarray`
         Norm image. The flux value at the given pixel position is used as
         starting value for the minimization.
 

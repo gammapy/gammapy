@@ -22,9 +22,9 @@ class EDispKernel(IRF):
 
     Parameters
     ----------
-    energy_axis_true : `~gammapy.maps.MapAxis`
+    energy_axis_true : `gammapy.maps.MapAxis`
         True energy axis. Its name must be "energy_true".
-    energy_axis : `~gammapy.maps.MapAxis`
+    energy_axis : `gammapy.maps.MapAxis`
         Reconstructed energy axis. Its name must be "energy".
     data : array_like
         2D energy dispersion matrix.
@@ -59,11 +59,11 @@ class EDispKernel(IRF):
     required_axes = ["energy_true", "energy"]
     default_interp_kwargs = dict(bounds_error=False, fill_value=0, method="nearest")
     """Default Interpolation kwargs for `~IRF`. Fill zeros and do not
-    interpolate"""
+    interpolate."""
 
     @property
     def pdf_matrix(self):
-        """Energy dispersion PDF matrix as a `~numpy.ndarray`.
+        """Energy dispersion PDF matrix as a `numpy.ndarray`.
 
         Rows (first index): True Energy
         Columns (second index): Reco Energy
@@ -75,9 +75,9 @@ class EDispKernel(IRF):
 
         Parameters
         ----------
-        lo_threshold : `~astropy.units.Quantity`
+        lo_threshold : `astropy.units.Quantity`
             Low reconstructed energy threshold.
-        hi_threshold : `~astropy.units.Quantity`
+        hi_threshold : `astropy.units.Quantity`
             High reconstructed energy threshold.
         """
         data = self.pdf_matrix.copy()
@@ -95,9 +95,9 @@ class EDispKernel(IRF):
 
         Parameters
         ----------
-        lo_threshold : `~astropy.units.Quantity`, optional
+        lo_threshold : `astropy.units.Quantity`, optional
             Low reconstructed energy threshold. Default is None.
-        hi_threshold : `~astropy.units.Quantity`, optional
+        hi_threshold : `astropy.units.Quantity`, optional
             High reconstructed energy threshold. Default is None.
         """
         energy_axis = self.axes["energy"]
@@ -118,13 +118,13 @@ class EDispKernel(IRF):
 
         Parameters
         ----------
-        energy_axis_true : `~astropy.units.Quantity`
+        energy_axis_true : `astropy.units.Quantity`
             Bin edges of true energy axis.
-        energy_axis : `~astropy.units.Quantity`
+        energy_axis : `astropy.units.Quantity`
             Bin edges of reconstructed energy axis.
-        bias : float or `~numpy.ndarray`
+        bias : float or `numpy.ndarray`
             Center of Gaussian energy dispersion, bias.
-        sigma : float or `~numpy.ndarray`
+        sigma : float or `numpy.ndarray`
             RMS width of Gaussian energy dispersion, resolution.
         pdf_threshold : float, optional
             Zero suppression threshold. Default is 1e-6.
@@ -166,9 +166,9 @@ class EDispKernel(IRF):
 
         Parameters
         ----------
-        energy_axis_true : `~gammapy.maps.MapAxis`
+        energy_axis_true : `gammapy.maps.MapAxis`
             True energy axis.
-        energy_axis : `~gammapy.maps.MapAxis`, optional
+        energy_axis : `gammapy.maps.MapAxis`, optional
             Reconstructed energy axis. Default is None.
 
         Examples
@@ -206,11 +206,11 @@ class EDispKernel(IRF):
 
     @classmethod
     def from_hdulist(cls, hdulist, hdu1="MATRIX", hdu2="EBOUNDS"):
-        """Create `EnergyDispersion` object from `~astropy.io.fits.HDUList`.
+        """Create `EnergyDispersion` object from `astropy.io.fits.HDUList`.
 
         Parameters
         ----------
-        hdulist : `~astropy.io.fits.HDUList`
+        hdulist : `astropy.io.fits.HDUList`
             HDU list with ``MATRIX`` and ``EBOUNDS`` extensions.
         hdu1 : str, optional
             HDU containing the energy dispersion matrix. Default is "MATRIX".
@@ -233,7 +233,10 @@ class EDispKernel(IRF):
                     chan_max = l.field("F_CHAN")[k] + l.field("N_CHAN")[k]
 
                     pdf_matrix[i, chan_min:chan_max] = l.field("MATRIX")[
-                        m_start : m_start + l.field("N_CHAN")[k]  # noqa: E203
+                        m_start : m_start
+                        + l.field("N_CHAN")[
+                            k
+                        ]  # noqa: E203
                     ]
                     m_start += l.field("N_CHAN")[k]
 
@@ -275,7 +278,7 @@ class EDispKernel(IRF):
 
         Returns
         -------
-        hdulist : `~astropy.io.fits.HDUList`
+        hdulist : `astropy.io.fits.HDUList`
             RMF in HDU list format.
 
         Notes
@@ -315,7 +318,7 @@ class EDispKernel(IRF):
         return fits.HDUList([prim_hdu, hdu, ebounds_hdu])
 
     def to_table(self, format="ogip"):
-        """Convert to `~astropy.table.Table`.
+        """Convert to `astropy.table.Table`.
 
         The output table is in the OGIP RMF format.
         https://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/memos/cal_gen_92_002/cal_gen_92_002.html#Tab:1  # noqa: E501
@@ -327,7 +330,7 @@ class EDispKernel(IRF):
 
         Returns
         -------
-        table : `~astropy.table.Table`
+        table : `astropy.table.Table`
             Matrix table.
 
         """
@@ -409,7 +412,7 @@ class EDispKernel(IRF):
 
         Parameters
         ----------
-        energy_true : `~astropy.units.Quantity`
+        energy_true : `astropy.units.Quantity`
             True energy.
         """
         energy_axis_true = self.axes["energy_true"]
@@ -427,7 +430,7 @@ class EDispKernel(IRF):
 
         Parameters
         ----------
-        energy_true : `~astropy.units.Quantity`
+        energy_true : `astropy.units.Quantity`
             True energy.
         """
         energy_axis_true = self.axes["energy_true"]
@@ -448,14 +451,14 @@ class EDispKernel(IRF):
         ----------
         bias : float
             Bias value.
-        energy_min : `~astropy.units.Quantity`
+        energy_min : `astropy.units.Quantity`
             Lower bracket value in case solution is not unique.
-        energy_max : `~astropy.units.Quantity`
+        energy_max : `astropy.units.Quantity`
             Upper bracket value in case solution is not unique.
 
         Returns
         -------
-        bias_energy : `~astropy.units.Quantity`
+        bias_energy : `astropy.units.Quantity`
             Reconstructed energy corresponding to the given bias.
         """
         from gammapy.modeling.models import TemplateSpectralModel
@@ -530,20 +533,20 @@ class EDispKernel(IRF):
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes`, optional
             Matplotlib axes. Default is None.
         add_cbar : bool, optional
             Add a colorbar to the plot. Default is False.
         axes_loc : dict, optional
-            Keyword arguments passed to `~mpl_toolkits.axes_grid1.axes_divider.AxesDivider.append_axes`.
+            Keyword arguments passed to `mpl_toolkits.axes_grid1.axes_divider.AxesDivider.append_axes`.
         kwargs_colorbar : dict, optional
-            Keyword arguments passed to `~matplotlib.pyplot.colorbar`.
+            Keyword arguments passed to `matplotlib.pyplot.colorbar`.
         kwargs : dict
-            Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
+            Keyword arguments passed to `matplotlib.pyplot.pcolormesh`.
 
         Returns
         -------
-        ax : `~matplotlib.axes.Axes`
+        ax : `matplotlib.axes.Axes`
             Matplotlib axes.
         """
         kwargs.setdefault("cmap", "GnBu")
@@ -574,18 +577,18 @@ class EDispKernel(IRF):
     def plot_bias(self, ax=None, **kwargs):
         """Plot reconstruction bias.
 
-        See `~gammapy.irf.EnergyDispersion.get_bias` method.
+        See `gammapy.irf.EnergyDispersion.get_bias` method.
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes`, optional
             Matplotlib axes. Default is None.
         **kwargs : dict
             Keyword arguments.
 
         Returns
         -------
-        ax : `~matplotlib.axes.Axes`, optional
+        ax : `matplotlib.axes.Axes`, optional
             Matplotlib axes.
         """
         ax = plt.gca() if ax is None else ax

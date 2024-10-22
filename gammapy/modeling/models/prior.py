@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Priors for Gammapy."""
+
 import logging
 import numpy as np
 import astropy.units as u
@@ -12,7 +13,7 @@ log = logging.getLogger(__name__)
 
 
 def _build_priorparameters_from_dict(data, default_parameters):
-    """Build a `~gammapy.modeling.PriorParameters` object from input dictionary and default prior parameter values."""
+    """Build a `gammapy.modeling.PriorParameters` object from input dictionary and default prior parameter values."""
     par_data = []
 
     input_names = [_["name"] for _ in data]
@@ -59,20 +60,20 @@ class Prior(ModelBase):
 
     @property
     def parameters(self):
-        """Prior parameters as a `~gammapy.modeling.PriorParameters` object."""
+        """Prior parameters as a `gammapy.modeling.PriorParameters` object."""
         return PriorParameters(
             [getattr(self, name) for name in self.default_parameters.names]
         )
 
     def __init_subclass__(cls, **kwargs):
-        # Add priorparameters list on the model sub-class (not instances)
+        # Add prior parameters list on the model sub-class (not instances)
         cls.default_parameters = PriorParameters(
             [_ for _ in cls.__dict__.values() if isinstance(_, PriorParameter)]
         )
 
     @property
     def weight(self):
-        """Weight mulitplied to the prior when evaluated."""
+        """Weight multiplied to the prior when evaluated."""
         return self._weight
 
     @weight.setter
@@ -81,7 +82,7 @@ class Prior(ModelBase):
 
     def __call__(self, value):
         """Call evaluate method."""
-        # assuming the same unit as the PriorParamater here
+        # assuming the same unit as the prior parameter here
         kwargs = {par.name: par.value for par in self.parameters}
         return self.weight * self.evaluate(value.value, **kwargs)
 

@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Pulsar wind nebula (PWN) source models."""
+
 import html
 import numpy as np
 import scipy.optimize
@@ -17,15 +18,15 @@ class PWN:
 
     Parameters
     ----------
-    pulsar : `~gammapy.astro.source.Pulsar`
+    pulsar : `gammapy.astro.source.Pulsar`
         Pulsar model instance.
-    snr : `~gammapy.astro.source.SNRTrueloveMcKee`
+    snr : `gammapy.astro.source.SNRTrueloveMcKee`
         SNR model instance.
     eta_e : float
         Fraction of energy going into electrons.
     eta_B : float
         Fraction of energy going into magnetic fields.
-    age : `~astropy.units.Quantity`
+    age : `astropy.units.Quantity`
         Age of the PWN.
     morphology : str
         Morphology model of the PWN.
@@ -70,7 +71,7 @@ class PWN:
 
         Returns
         -------
-        t_coll : `~astropy.units.Quantity`
+        t_coll : `astropy.units.Quantity`
             Time of collision.
         """
 
@@ -94,13 +95,13 @@ class PWN:
             \text{pc}
 
         After the collision with the reverse shock of the SNR, the radius is
-        assumed to be constant (See `~gammapy.astro.source.SNRTrueloveMcKee.radius_reverse_shock`).
+        assumed to be constant (See `gammapy.astro.source.SNRTrueloveMcKee.radius_reverse_shock`).
 
         Reference: https://ui.adsabs.harvard.edu/abs/2006ARA%26A..44...17G (Formula 8).
 
         Parameters
         ----------
-        t : `~astropy.units.Quantity`
+        t : `astropy.units.Quantity`
             Time after birth of the SNR.
         """
         t = Quantity(t, "yr")
@@ -121,7 +122,7 @@ class PWN:
 
         Parameters
         ----------
-        t : `~astropy.units.Quantity`
+        t : `astropy.units.Quantity`
             Time after birth of the SNR.
         """
         t = Quantity(t, "yr")

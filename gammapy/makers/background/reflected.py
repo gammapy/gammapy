@@ -47,7 +47,7 @@ def is_rad_max_compatible_region_geom(rad_max, geom, rtol=1e-3):
 
     Parameters
     ----------
-    geom : `~gammapy.maps.RegionGeom`
+    geom : `gammapy.maps.RegionGeom`
         Input RegionGeom.
     rtol : float, optional
         Relative tolerance. Default is 1e-3.
@@ -55,8 +55,8 @@ def is_rad_max_compatible_region_geom(rad_max, geom, rtol=1e-3):
     Returns
     -------
     valid : bool
-        True if rad_max is fixed and region is a CircleSkyRegion with compatible radius
-        True if region is a PointSkyRegion
+        True if rad_max is fixed and region is a `regions.CircleSkyRegion` with compatible radius.
+        True if region is a `regions.PointSkyRegion`
         False otherwise.
     """
     if geom.is_all_point_sky_regions:
@@ -81,7 +81,7 @@ class RegionsFinder(metaclass=ABCMeta):
 
     Parameters
     ----------
-    binsz : `~astropy.coordinates.Angle`
+    binsz : `astropy.coordinates.Angle`
         Bin size of the reference map used for region finding.
     """
 
@@ -101,20 +101,20 @@ class RegionsFinder(metaclass=ABCMeta):
 
         Parameters
         ----------
-        region : `~regions.SkyRegion`
+        region : `regions.SkyRegion`
             Region to rotate.
-        center : `~astropy.coordinates.SkyCoord`
+        center : `astropy.coordinates.SkyCoord`
             Rotation point.
-        exclusion_mask : `~gammapy.maps.WcsNDMap`, optional
+        exclusion_mask : `gammapy.maps.WcsNDMap`, optional
             Exclusion mask. Regions intersecting with this mask will not be
             included in the returned regions.
             Default is None.
 
         Returns
         -------
-        regions : list of `~regions.SkyRegion`
+        regions : list of `regions.SkyRegion`
             Reflected regions.
-        wcs : `~astropy.wcs.WCS`
+        wcs : `astropy.wcs.WCS`
             WCS for the determined regions.
         """
 
@@ -175,7 +175,7 @@ class RegionsFinder(metaclass=ABCMeta):
 class WobbleRegionsFinder(RegionsFinder):
     """Find the OFF regions symmetric to the ON region.
 
-    This is a simpler version of the `ReflectedRegionsFinder`, that
+    This is a simpler version of the `gammapy.makers.ReflectedRegionsFinder`, that
     will place ``n_off_regions`` regions at symmetric positions on the
     circle created by the center position and the on region.
 
@@ -186,8 +186,8 @@ class WobbleRegionsFinder(RegionsFinder):
     ----------
     n_off_regions : int
         Number of off regions to create. Actual number of off regions
-        might be smaller if an ``exclusion_mask`` is given to `WobbleRegionsFinder.run`.
-    binsz : `~astropy.coordinates.Angle`
+        might be smaller if an ``exclusion_mask`` is given to `gammapy.makers.WobbleRegionsFinder.run`.
+    binsz : `astropy.coordinates.Angle`
         Bin size of the reference map used for region finding.
     """
 
@@ -200,20 +200,20 @@ class WobbleRegionsFinder(RegionsFinder):
 
         Parameters
         ----------
-        region : `~regions.SkyRegion`
+        region : `regions.SkyRegion`
             Region to rotate.
-        center : `~astropy.coordinates.SkyCoord`
+        center : `astropy.coordinates.SkyCoord`
             Rotation point.
-        exclusion_mask : `~gammapy.maps.WcsNDMap`, optional
+        exclusion_mask : `gammapy.maps.WcsNDMap`, optional
             Exclusion mask. Regions intersecting with this mask will not be
             included in the returned regions.
             Default is None.
 
         Returns
         -------
-        regions : list of `~regions.SkyRegion`
+        regions : list of `regions.SkyRegion`
             Reflected regions.
-        wcs : `~astropy.wcs.WCS`
+        wcs : `astropy.wcs.WCS`
             WCS for the determined regions.
         """
         reference_geom = self._create_reference_geometry(region, center)
@@ -279,19 +279,19 @@ class ReflectedRegionsFinder(RegionsFinder):
 
     If you want to make a
     background estimate for an IACT observation using the reflected regions
-    method, see also `~gammapy.makers.ReflectedRegionsBackgroundMaker`.
+    method, see also `gammapy.makers.ReflectedRegionsBackgroundMaker`.
 
     Parameters
     ----------
-    angle_increment : `~astropy.coordinates.Angle`, optional
+    angle_increment : `astropy.coordinates.Angle`, optional
         Rotation angle applied when a region falls in an excluded region.
-    min_distance : `~astropy.coordinates.Angle`, optional
+    min_distance : `astropy.coordinates.Angle`, optional
         Minimum rotation angle between two consecutive reflected regions.
-    min_distance_input : `~astropy.coordinates.Angle`, optional
+    min_distance_input : `astropy.coordinates.Angle`, optional
         Minimum rotation angle between the input region and the first reflected region.
     max_region_number : int, optional
         Maximum number of regions to use.
-    binsz : `~astropy.coordinates.Angle`
+    binsz : `astropy.coordinates.Angle`
         Bin size of the reference map used for region finding.
 
     Examples
@@ -340,7 +340,7 @@ class ReflectedRegionsFinder(RegionsFinder):
 
         Returns
         -------
-        angular_size : `~astropy.coordinates.Angle`
+        angular_size : `astropy.coordinates.Angle`
             The maximum angular size.
         """
         mask = reference_geom.region_mask([region]).data
@@ -374,20 +374,20 @@ class ReflectedRegionsFinder(RegionsFinder):
 
         Parameters
         ----------
-        region : `~regions.SkyRegion`
+        region : `regions.SkyRegion`
             Region to rotate.
-        center : `~astropy.coordinates.SkyCoord`
+        center : `astropy.coordinates.SkyCoord`
             Rotation point.
-        exclusion_mask : `~gammapy.maps.WcsNDMap`, optional
+        exclusion_mask : `gammapy.maps.WcsNDMap`, optional
             Exclusion mask. Regions intersecting with this mask will not be
             included in the returned regions.
             Default is None.
 
         Returns
         -------
-        regions : list of `~regions.SkyRegion`
+        regions : list of `regions.SkyRegion`
             Reflected regions.
-        wcs : `~astropy.wcs.WCS`
+        wcs : `astropy.wcs.WCS`
             WCS for the determined regions.
         """
         if isinstance(region, PointSkyRegion):
@@ -435,7 +435,7 @@ class ReflectedRegionsBackgroundMaker(Maker):
     region_finder: RegionsFinder
         If not given, a `ReflectedRegionsFinder` will be created and
         any of the ``**kwargs`` will be forwarded to the `ReflectedRegionsFinder`.
-    exclusion_mask : `~gammapy.maps.WcsNDMap`, optional
+    exclusion_mask : `gammapy.maps.WcsNDMap`, optional
         Exclusion mask. The map must contain at max one non-spatial dimension, and this
         dimension must be one bin.
     """
@@ -448,7 +448,6 @@ class ReflectedRegionsBackgroundMaker(Maker):
         exclusion_mask=None,
         **kwargs,
     ):
-
         if exclusion_mask and not exclusion_mask.is_mask:
             raise ValueError("Exclusion mask must contain boolean values")
 
@@ -490,24 +489,24 @@ class ReflectedRegionsBackgroundMaker(Maker):
         """Make off counts.
 
         **NOTE for 1D analysis:** as for
-        `~gammapy.makers.map.MapDatasetMaker.make_counts`,
-        if the geometry of the dataset is a `~regions.CircleSkyRegion` then only
-        a single instance of the `ReflectedRegionsFinder` will be called.
+        `gammapy.makers.map.MapDatasetMaker.make_counts`,
+        if the geometry of the dataset is a `regions.CircleSkyRegion` then only
+        a single instance of the `gammapy.makers.ReflectedRegionsFinder` will be called.
         If, on the other hand, the geometry of the dataset is a
-        `~regions.PointSkyRegion`, then we have to call the
-        `ReflectedRegionsFinder` several time, each time with a different size
+        `regions.PointSkyRegion`, then we have to call the
+        `~gammapy.makers.ReflectedRegionsFinder` several time, each time with a different size
         of the on region that we will read from the `RAD_MAX_2D` table.
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.SpectrumDataset`
+        dataset : `gammapy.datasets.SpectrumDataset`
             Spectrum dataset.
-        observation : `~gammapy.data.Observation`
+        observation : `gammapy.data.Observation`
             Observation container.
 
         Returns
         -------
-        counts_off : `~gammapy.maps.RegionNDMap`
+        counts_off : `gammapy.maps.RegionNDMap`
             Counts vs estimated energy extracted from the OFF regions.
         """
         geom = dataset.counts.geom
@@ -569,14 +568,14 @@ class ReflectedRegionsBackgroundMaker(Maker):
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.SpectrumDataset`
+        dataset : `gammapy.datasets.SpectrumDataset`
             Spectrum dataset.
-        observation : `~gammapy.data.Observation`
+        observation : `gammapy.data.Observation`
             Data store observation.
 
         Returns
         -------
-        dataset_on_off : `~gammapy.datasets.SpectrumDatasetOnOff`
+        dataset_on_off : `gammapy.datasets.SpectrumDatasetOnOff`
             On-Off dataset.
         """
         counts_off, acceptance_off = self.make_counts_off(dataset, observation)

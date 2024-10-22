@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities for testing."""
+
 import os
 import sys
 from numpy.testing import assert_allclose
@@ -158,7 +159,7 @@ def assert_time_allclose(actual, desired, atol=1e-3):
 
 
 def assert_quantity_allclose(actual, desired, rtol=1.0e-7, atol=None, **kwargs):
-    """Assert all-close for `~astropy.units.Quantity` objects.
+    """Assert all-close for `astropy.units.Quantity` objects.
 
     Notes
     -----
@@ -182,8 +183,9 @@ def _unquantify_allclose_arguments(actual, desired, rtol, atol):
         desired = desired.to(actual.unit)
     except u.UnitsError:
         raise u.UnitsError(
-            "Units for 'desired' ({}) and 'actual' ({}) "
-            "are not convertible".format(desired.unit, actual.unit)
+            "Units for 'desired' ({}) and 'actual' ({}) " "are not convertible".format(
+                desired.unit, actual.unit
+            )
         )
 
     if atol is None:
@@ -195,8 +197,9 @@ def _unquantify_allclose_arguments(actual, desired, rtol, atol):
             atol = atol.to(actual.unit)
         except u.UnitsError:
             raise u.UnitsError(
-                "Units for 'atol' ({}) and 'actual' ({}) "
-                "are not convertible".format(atol.unit, actual.unit)
+                "Units for 'atol' ({}) and 'actual' ({}) " "are not convertible".format(
+                    atol.unit, actual.unit
+                )
             )
 
     rtol = u.Quantity(rtol, subok=True, copy=COPY_IF_NEEDED)

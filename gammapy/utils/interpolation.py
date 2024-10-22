@@ -27,9 +27,9 @@ class ScaledRegularGridInterpolator:
 
     Parameters
     ----------
-    points : tuple of `~numpy.ndarray` or `~astropy.units.Quantity`
+    points : tuple of `numpy.ndarray` or `astropy.units.Quantity`
         Tuple of points passed to `RegularGridInterpolator`.
-    values : `~numpy.ndarray`
+    values : `numpy.ndarray`
         Values passed to `RegularGridInterpolator`.
     points_scale : tuple of str
         Interpolation scale used for the points.
@@ -112,7 +112,7 @@ class ScaledRegularGridInterpolator:
 
         Parameters
         ----------
-        points : tuple of `~numpy.ndarray` or `~astropy.units.Quantity`
+        points : tuple of `numpy.ndarray` or `astropy.units.Quantity`
             Tuple of coordinate arrays of the form (x_1, x_2, x_3, ...). Arrays are
             broadcast internally.
         method : {None, "linear", "nearest"}
@@ -247,9 +247,9 @@ def interpolate_profile(x, y, interp_scale="sqrt", extrapolate=False):
 
     Parameters
     ----------
-    x : `~numpy.ndarray`
+    x : `numpy.ndarray`
         Array of x values.
-    y : `~numpy.ndarray`
+    y : `numpy.ndarray`
         Array of y values.
     interp_scale : {"sqrt", "lin"}
         Interpolation scale applied to the profile. If the profile is

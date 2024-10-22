@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Session class driving the high level interface API."""
+
 import html
 import logging
 from astropy.coordinates import SkyCoord
@@ -43,7 +44,7 @@ class Analysis:
 
     Parameters
     ----------
-    config : dict or `~gammapy.analysis.AnalysisConfig`
+    config : dict or `gammapy.analysis.AnalysisConfig`
         Configuration options following `AnalysisConfig` schema.
     """
 
@@ -75,7 +76,7 @@ class Analysis:
 
     @property
     def config(self):
-        """Analysis configuration as an `~gammapy.analysis.AnalysisConfig` object."""
+        """Analysis configuration as an `gammapy.analysis.AnalysisConfig` object."""
         return self._config
 
     @config.setter
@@ -185,7 +186,7 @@ class Analysis:
 
         Parameters
         ----------
-        models : `~gammapy.modeling.models.Models` or str
+        models : `gammapy.modeling.models.Models` or str
             Models object or YAML models string.
         extend : bool, optional
             Extend the exiting models on the datasets or replace them.
