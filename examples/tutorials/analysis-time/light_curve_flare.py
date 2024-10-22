@@ -127,7 +127,7 @@ print(f"Number of selected observations : {len(observations)}")
 # Define time intervals
 # ---------------------
 #
-# We create the list of time intervals, each of duration 10 mins. Each time interval is an
+# We create the list of time intervals, each of duration 10 minutes. Each time interval is an
 # `astropy.time.Time` object, containing a start and stop time.
 
 t0 = Time("2006-07-29T20:30")
@@ -237,15 +237,16 @@ for obs in short_observations:
 
 ######################################################################
 # Define underlying model
-# ----------------
+# -----------------------
 #
 # Since we use forward folding to obtain the flux points in each bin, exact values will depend on the underlying model. In this example, we use a power law as used in the
 # `reference
-# paper <https://ui.adsabs.harvard.edu/abs/2009A%26A...502..749A/abstract>`.
+# paper <https://ui.adsabs.harvard.edu/abs/2009A%26A...502..749A/abstract>`__.
 #
-# As we have are only using spectral datasats, we do not need any spatial models.
+# As we have are only using spectral datasets, we do not need any spatial models.
 #
-# **Note** : All time bins must have the same spectral model. To see how to investigate spectral variability, see :doc:`time resolved spectroscopy notebook </tutorials/analysis-time/time_resolved_spectroscopy>`.
+# **Note** : All time bins must have the same spectral model. To see how to investigate spectral variability,
+# see :doc:`time resolved spectroscopy notebook </tutorials/analysis-time/time_resolved_spectroscopy>`.
 
 spectral_model = PowerLawSpectralModel(amplitude=1e-10 * u.Unit("1 / (cm2 s TeV)"))
 sky_model = SkyModel(spatial_model=None, spectral_model=spectral_model, name="pks2155")
@@ -271,7 +272,8 @@ print(result.models.to_parameters_table())
 #
 # We first create the `~gammapy.estimators.LightCurveEstimator` for the
 # list of datasets we just produced. We give the estimator the name of the
-# source component to be fitted. We can directly compute the light curve in multiple energy bins by supplying a list of `energy_edges`.
+# source component to be fitted. We can directly compute the light curve in multiple energy
+# bins by supplying a list of `energy_edges`.
 #
 # By default the likelihood scan is computed from 0.2 to 5.0.
 # Here, we increase the max value to 10.0, because we are
@@ -329,4 +331,6 @@ lc_new.plot(ax=ax, label="rebinned")
 plt.legend()
 plt.show()
 
-# We can use the sliced lightcurve to understand the variability, as shown in the doc:`/tutorials/analysis-time/variability_estimation` tutorial.
+#####################################################################
+# We can use the sliced lightcurve to understand the variability,
+# as shown in the doc:`/tutorials/analysis-time/variability_estimation` tutorial.
