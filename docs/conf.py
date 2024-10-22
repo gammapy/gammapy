@@ -242,7 +242,7 @@ html_theme_options = {
         "json_url": "https://docs.gammapy.org/stable/switcher.json",
         "version_match": switch_version,
     },
-    "navbar_end": ["version-switcher", "theme-switcher", "navbar-icon-links"],
+    "navbar_end": ["version-switcher", "navbar-icon-links"],
     "navigation_with_keys": True,
     # footers
     "footer_start": ["copyright","custom-footer.html"],

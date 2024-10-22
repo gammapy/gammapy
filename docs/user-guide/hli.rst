@@ -14,7 +14,7 @@ the functionality that is available in the sub-packages to support
 standard analysis use case in a convenient way.
 
 
-Using gammapy.datasets
+Using gammapy.analysis
 ----------------------
 
 .. minigallery:: gammapy.analysis.Analysis
