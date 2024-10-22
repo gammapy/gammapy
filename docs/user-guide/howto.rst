@@ -279,6 +279,17 @@ warning like so:
 .. accordion-footer::
 
 .. accordion-header::
+    :id: HowToAvoidNaninFp
+    :title: Avoid `nan` results in Flux Point estimation
+    :link: ../tutorials/api/estimators.html#a-fully-configured-flux-points-estimation
+
+Sometimes, upper limit values may show as `nan` while running a `FluxPointsEstimator` or a `LightCurveEstimator`.
+This often arises because the range of the norm parameter being scanned over is not sufficient. Increasing this range
+usually solves the problem. In some cases, you can also consider configuring the estimator with a different `Fit` backend.
+
+.. accordion-footer::
+
+.. accordion-header::
     :id: HowToProgressBar
     :title: Display a progress bar
 
