@@ -483,7 +483,6 @@ def test_dataset_hawc():
     results["NN"] = [6.57154247837e16, 62, 0.76743538]
 
     for which in ["GP", "NN"]:
-
         # paths and file names
         data_path = "$GAMMAPY_DATA/hawc/crab_events_pass4/"
         hdu_filename = "hdu-index-table-" + which + "-Crab.fits.gz"
@@ -561,3 +560,24 @@ def test_meta_data_creation(observations):
     stacked_meta = MapDatasetMetaData._from_meta_table(dataset0.meta_table)
     assert stacked_meta.obs_info[0].obs_id == 110380
     assert stacked_meta.obs_info[1].obs_id == 111140
+
+
+@requires_data()
+def test_map_maker_ti(observations):
+    # Test for different event selection
+
+    geom_reco = geom(ebounds=[0.1, 1, 10])
+    e_true = MapAxis.from_edges(
+        [0.1, 0.5, 2.5, 10.0], name="energy_true", unit="TeV", interp="log"
+    )
+
+    reference = MapDataset.create(
+        geom=geom_reco, energy_axis_true=e_true, binsz_irf=1.0
+    )
+
+    print(observations[0])
+    maker_obs1 = MapDatasetMaker(evt_filter={"none": True})
+    map_dataset1 = maker_obs1.run(reference, observations[0])
+    assert_allclose(map_dataset1.gti.time_delta, 1800.0 * u.s)
+
+    return False
