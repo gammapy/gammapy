@@ -30,7 +30,7 @@ Contributors
 - Fabio Acero
 - Régis Terrier
 - Lars Mohrmann
-- VascoSch92
+- Vasco Schiavo
 - Laura Olivera Nieto
 - Axel Donath
 - Samantha Wong
