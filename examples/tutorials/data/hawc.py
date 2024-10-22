@@ -117,7 +117,6 @@ data_store = DataStore(hdu_table=hdu_table, obs_table=obs_table)
 
 data_store.info()
 
-
 ######################################################################
 # There is only one observation
 

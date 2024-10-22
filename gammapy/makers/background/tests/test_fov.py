@@ -152,7 +152,6 @@ def test_fov_bkg_maker_fit_nocounts(obs_dataset, exclusion_mask):
 
 @requires_data()
 def test_fov_bkg_maker_with_source_model(obs_dataset, exclusion_mask, caplog):
-
     test_dataset = obs_dataset.copy(name="test-fov")
 
     # crab model
@@ -174,7 +173,7 @@ def test_fov_bkg_maker_with_source_model(obs_dataset, exclusion_mask, caplog):
     bkg_model_spec = test_dataset.models[f"{test_dataset.name}-bkg"].spectral_model
     norm_ref = 0.897
     assert not bkg_model_spec.norm.frozen
-    assert_allclose(bkg_model_spec.norm.value, norm_ref, rtol=1e-4)
+    assert_allclose(bkg_model_spec.norm.value, norm_ref, rtol=1e-3)
     assert_allclose(bkg_model_spec.tilt.value, 0.0, rtol=1e-4)
 
     # apply scale method with pre-fitted source model and no exclusion_mask

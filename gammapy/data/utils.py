@@ -4,6 +4,7 @@ import astropy.units as u
 from astropy.table import Table
 from gammapy.utils.cluster import standard_scaler
 
+
 __all__ = ["get_irfs_features"]
 
 
@@ -51,7 +52,6 @@ def get_irfs_features(
 
     >>> from gammapy.data.utils import get_irfs_features
     >>> from gammapy.data import DataStore
-    >>> from gammapy.utils.cluster import standard_scaler
     >>> from astropy.coordinates import SkyCoord
     >>> import astropy.units as u
 

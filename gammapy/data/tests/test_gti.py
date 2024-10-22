@@ -264,3 +264,11 @@ def test_gti_from_time():
 
     assert_time_allclose(gti.table["START"], start)
     assert_time_allclose(gti.table["STOP"], stop)
+
+
+def test_from_time_intervals():
+    start = Time("2010-12-31 00:00:00", scale="utc", format="iso")
+    stop = Time("2011-01-02 00:00:00", scale="utc", format="iso")
+
+    gti = GTI.from_time_intervals([start, stop])
+    assert_time_allclose(gti.table["START"], start)

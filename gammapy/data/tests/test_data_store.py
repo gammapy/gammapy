@@ -314,7 +314,7 @@ def test_data_store_required_irf_pointlike_variable_rad_max():
 
 @requires_data()
 def test_data_store_no_events():
-    """Check behavior of the "point-like" option for data_store"""
+    """Check the behavior of the "point-like" option for data_store"""
 
     data_path = "$GAMMAPY_DATA/hawc/crab_events_pass4/"
     hdu_filename = "hdu-index-table-GP-no-events.fits.gz"

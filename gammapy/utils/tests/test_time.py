@@ -11,6 +11,7 @@ from gammapy.utils.time import (
     time_ref_to_dict,
     time_relative_to_ref,
     unique_time_info,
+    check_time_intervals,
 )
 
 
@@ -92,3 +93,36 @@ def test_check_time_info():
     ]
 
     assert unique_time_info(rows) is False
+
+
+def test_check_time_intervals():
+    assert check_time_intervals(1.0) is False
+    assert check_time_intervals([]) is False
+    assert check_time_intervals([53090.130, 53090.140]) is False
+
+    aa = [
+        Time(53090.130, format="mjd", scale="tt"),
+        Time(53090.140, format="mjd", scale="tt"),
+    ]
+    bb = [
+        Time(53090.150, format="mjd", scale="tt"),
+        Time(53090.160, format="mjd", scale="tt"),
+    ]
+    ti = [aa, bb]
+    assert check_time_intervals(ti) is True
+
+    cc = [
+        Time(53090.140, format="mjd", scale="tt"),
+        Time(53090.160, format="mjd", scale="tt"),
+    ]
+    ti = [aa, cc]
+    assert check_time_intervals(ti) is True
+
+    dd = [
+        Time(53080.150, format="mjd", scale="tt"),
+        Time(53091.160, format="mjd", scale="tt"),
+    ]
+    ti = [aa, bb, dd]
+    assert check_time_intervals(ti) is False
+
+    assert check_time_intervals(ti, False) is True
