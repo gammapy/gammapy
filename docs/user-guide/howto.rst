@@ -280,7 +280,7 @@ warning like so:
 
 .. accordion-header::
     :id: HowToAvoidNaninFp
-    :title: Avoid `nan` results in Flux Point estimation
+    :title: Avoid NaN results in Flux Point estimation
     :link: ../tutorials/api/estimators.html#a-fully-configured-flux-points-estimation
 
 Sometimes, upper limit values may show as `nan` while running a `FluxPointsEstimator` or a `LightCurveEstimator`.
