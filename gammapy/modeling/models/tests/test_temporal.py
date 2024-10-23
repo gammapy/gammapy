@@ -354,7 +354,6 @@ def test_sine_temporal_model_integral():
 
 @requires_data()
 def test_to_dict(light_curve):
-
     out = light_curve.to_dict()
     assert out["temporal"]["type"] == "LightCurveTemplateTemporalModel"
     assert "lightcrv_PKSB1222+216.fits" in out["temporal"]["filename"]
@@ -362,7 +361,6 @@ def test_to_dict(light_curve):
 
 @requires_data()
 def test_with_skymodel(light_curve):
-
     sky_model = SkyModel(spectral_model=PowerLawSpectralModel())
     out = sky_model.to_dict()
     assert "temporal" not in out
@@ -399,7 +397,7 @@ def test_phase_curve_model(tmp_path):
     )
 
     result = phase_model(t_ref + [0, 0.025, 0.05] * u.s)
-    assert_allclose(result, [0, 0.5, 0], atol=1e-5)
+    assert_allclose(result, [0.000000e00, 1.999989e00, 2.169609e-05], atol=1e-5)
 
     phase_model.filename = str(make_path(tmp_path / "tmp.fits"))
     phase_model.write()
@@ -415,17 +413,17 @@ def test_phase_curve_model(tmp_path):
     )
 
     assert_allclose(new_model.table["PHASE"].data, phase)
-    assert_allclose(new_model.table["NORM"].data, norm)
+    assert_allclose(new_model.table["NORM"].data, norm * 4)
 
     # exact number of phases
     integral = phase_model.integral(t_ref, t_ref + 10 * u.s)
-    assert_allclose(integral, 0.25, rtol=1e-5)
+    assert_allclose(integral, 1.0, rtol=1e-5)
     # long duration. Should be equal to the phase average
     integral = phase_model.integral(t_ref + 1 * u.h, t_ref + 3 * u.h)
-    assert_allclose(integral, 0.25, rtol=1e-5)
+    assert_allclose(integral, 1.0, rtol=1e-5)
     # 1.25 phase
     integral = phase_model.integral(t_ref, t_ref + 62.5 * u.ms)
-    assert_allclose(integral, 0.225, rtol=1e-5)
+    assert_allclose(integral, 1.0, rtol=1e-5)
 
 
 def test_phase_curve_model_sample_time():
@@ -472,7 +470,7 @@ def test_phasecurve_DC1():
     times = Time(t_ref, format="mjd") + [0.0, 0.5, 0.65, 1.0] * P0
     norm = model(times)
 
-    assert_allclose(norm, [0.05, 0.15, 1.0, 0.05])
+    assert_allclose(norm, [0.294118, 0.882353, 5.882353, 0.294118], atol=1e-5)
 
     with mpl_plot_check():
         model.plot_phasogram(n_points=200)

@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Time-dependent models."""
+
 import logging
 import numpy as np
 import scipy.interpolate
@@ -7,7 +8,6 @@ from astropy import units as u
 from astropy.io import fits
 from astropy.table import Table
 from astropy.time import Time
-from astropy.utils import lazyproperty
 from gammapy.maps import MapAxis, RegionNDMap, TimeMapAxis
 from gammapy.modeling import Parameter
 from gammapy.utils.compat import COPY_IF_NEEDED
@@ -988,6 +988,14 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
             filename = str(make_path(filename))
         self.filename = filename
         super().__init__(**kwargs)
+        self._normalise()
+
+    def _normalise(self):
+        time_ref = Time(self.t_ref.value, scale=self.scale, format="mjd")
+
+        norm_factor = 1 / (self.integral(time_ref, time_ref + 1 / self.f0.quantity))
+
+        self.table["NORM"] = norm_factor * self.table["NORM"]
 
     @classmethod
     def read(
@@ -1065,7 +1073,7 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
             self.filename = str(make_path(path))
             self.table.write(self.filename, overwrite=overwrite)
 
-    @lazyproperty
+    @property
     def _interpolator(self):
         x = self.table["PHASE"].data
         y = self.table["NORM"].data
