@@ -312,7 +312,7 @@ plt.show()
 
 ######################################################################
 # Light curves once obtained can be rebinned using the likelihood profiles.
-# Here, we rebin 3 adjacent bins together, to get 30 min bins.
+# Here, we rebin 3 adjacent bins together, to get 30 minute bins.
 #
 # We will first slice `lc_1d` to obtain the lightcurve in the first energy bin
 #
