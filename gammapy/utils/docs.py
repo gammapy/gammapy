@@ -53,13 +53,12 @@ class AccordionHeader(Directive):
                     {self.options["title"]}
                 </div>       
         """
-        # Add the link section aligned to the right
         if self.options.get("link", None):
             raw += f"""
-                    <span class="badge gs-badge-link">
-                        <a class="reference external" href="{self.options["link"]}">Straight to tutorial…</a>
-                    </span>
-            """
+              <span class="badge gs-badge-link">
+              <a class="reference external" href="{self.options["link"]}">Straight to tutorial…</a>
+              </span>
+              """
         raw += f"""
 
             </div>
