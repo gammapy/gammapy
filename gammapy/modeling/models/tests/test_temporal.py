@@ -428,7 +428,7 @@ def test_phase_curve_model(tmp_path):
 
 def test_phase_curve_model_sample_time():
     phase = np.linspace(0.0, 1, 51)
-    norm = 1 * (phase < 0.5)
+    norm = 1.0 * (phase < 0.5)
     table = Table(data={"PHASE": phase, "NORM": norm})
 
     t_ref = Time("2020-06-01", scale="utc")
