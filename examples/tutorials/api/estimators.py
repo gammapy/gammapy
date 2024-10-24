@@ -116,10 +116,10 @@ fp_estimator = FluxPointsEstimator(
 #
 
 fp_estimator.norm.scan_min = 0.1
-fp_estimator.norm.scan_max = 3
+fp_estimator.norm.scan_max = 10
 
 ######################################################################
-# Note: The default scan range of the norm parameter is between 0.1 to 10. In case the upper
+# Note: The default scan range of the norm parameter is between 0.2 to 5. In case the upper
 # limit values lie outside this range, nan values will be returned. It may thus be useful to
 # increase this range, specially for the computation of upper limits from weak sources.
 #
