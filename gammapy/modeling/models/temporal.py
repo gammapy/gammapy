@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Time-dependent models."""
+
 import logging
 import numpy as np
 import scipy.interpolate
@@ -7,8 +8,8 @@ from astropy import units as u
 from astropy.io import fits
 from astropy.table import Table
 from astropy.time import Time
-from astropy.utils import lazyproperty
 from gammapy.maps import MapAxis, RegionNDMap, TimeMapAxis
+from astropy.utils import lazyproperty
 from gammapy.modeling import Parameter
 from gammapy.utils.compat import COPY_IF_NEEDED
 from gammapy.utils.random import InverseCDFSampler, get_random_state
@@ -983,11 +984,30 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
     f2 = Parameter("f2", _f2_default, frozen=True)
 
     def __init__(self, table, filename=None, **kwargs):
-        self.table = table
+        self.table = self._normalise_table(table)
         if filename is not None:
             filename = str(make_path(filename))
         self.filename = filename
         super().__init__(**kwargs)
+
+    @staticmethod
+    def _normalise_table(table):
+        x = table["PHASE"].data
+        y = table["NORM"].data
+
+        try:
+            w = table["WEIGHT"].data
+        except KeyError:
+            w = None
+
+        interpolator = scipy.interpolate.InterpolatedUnivariateSpline(
+            x, y, w=w, k=1, ext=2, bbox=[0.0, 1.0]
+        )
+
+        integral = interpolator.integral(0, 1)
+
+        table["NORM"] *= 1 / integral
+        return table
 
     @classmethod
     def read(
@@ -1010,6 +1030,7 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
             Filename with path.
         """
         filename = str(make_path(path))
+
         return cls(
             Table.read(filename),
             filename=filename,
@@ -1070,8 +1091,13 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         x = self.table["PHASE"].data
         y = self.table["NORM"].data
 
+        try:
+            w = self.table["WEIGHT"].data
+        except KeyError:
+            w = None
+
         return scipy.interpolate.InterpolatedUnivariateSpline(
-            x, y, k=1, ext=2, bbox=[0.0, 1.0]
+            x, y, w=w, k=1, ext=2, bbox=[0.0, 1.0]
         )
 
     def evaluate(self, time, t_ref, phi_ref, f0, f1, f2):
@@ -1118,11 +1144,15 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         ) - self._interpolator.antiderivative()(ph_min)
 
         # Divide by Jacobian (here we neglect variations of frequency during the integration period)
-        total = (phase_integral + start_integral + end_integral) / frequency
+        total = phase_integral + start_integral + end_integral
         # Normalize by total integration time
-        integral_norm = total / self.time_sum(t_min, t_max)
+        n_period = (self.time_sum(t_min, t_max) * frequency).to("")
+        if int(n_period) == 0:
+            n_period = 1
 
-        return integral_norm.to("")
+        integral_norm = total / n_period
+
+        return integral_norm
 
     @classmethod
     def from_dict(cls, data):
