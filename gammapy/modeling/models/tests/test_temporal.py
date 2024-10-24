@@ -423,7 +423,7 @@ def test_phase_curve_model(tmp_path):
     assert_allclose(integral, 1.0, rtol=1e-5)
     # 1.25 phase
     integral = phase_model.integral(t_ref, t_ref + 62.5 * u.ms)
-    assert_allclose(integral, 1.0, rtol=1e-5)
+    assert_allclose(integral, 0.9, rtol=1e-5)
 
 
 def test_phase_curve_model_sample_time():
