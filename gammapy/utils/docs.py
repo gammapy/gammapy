@@ -46,14 +46,14 @@ class AccordionHeader(Directive):
             <div id="accordion" class="shadow tutorial-accordion">
         <div class="card tutorial-card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <div class="d-flex align-items-center" data-bs-toggle="collapse" 
+                <div class="d-flex align-items-center" data-bs-toggle="collapse"
                 data-bs-target="#{self.options["id"]}" style="cursor: pointer;">
-                    <button class="btn btn-dark btn-sm me-2" 
+                    <button class="btn btn-dark btn-sm me-2"
                     style="background-color: #150458; border-radius: 50%; width: 24px; height: 24px;">
                         <span style="font-size: 14px;">+</span>
                     </button>
                     {self.options["title"]}
-                </div>       
+                </div>
         """
         if self.options.get("link", None):
             raw += f"""
