@@ -86,6 +86,7 @@ from gammapy.makers import (
 )
 from gammapy.maps import MapAxis, RegionGeom
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
+from gammapy.modeling import Fit
 
 ######################################################################
 # Check setup
@@ -126,9 +127,8 @@ print(f"Number of selected observations : {len(observations)}")
 # Define time intervals
 # ---------------------
 #
-# We create the list of time intervals. Each time interval is an
+# We create the list of time intervals, each of duration 10 minutes. Each time interval is an
 # `astropy.time.Time` object, containing a start and stop time.
-#
 
 t0 = Time("2006-07-29T20:30")
 duration = 10 * u.min
@@ -236,25 +236,20 @@ for obs in short_observations:
 
 
 ######################################################################
-# Define the Model
-# ----------------
+# Define underlying model
+# -----------------------
 #
-# The actual flux will depend on the spectral shape assumed. For
-# simplicity, we use the power law spectral model of index 3.4 used in the
+# Since we use forward folding to obtain the flux points in each bin, exact values will depend on the underlying model. In this example, we use a power law as used in the
 # `reference
 # paper <https://ui.adsabs.harvard.edu/abs/2009A%26A...502..749A/abstract>`__.
 #
-# Here we use only a spectral model in the
-# `~gammapy.modeling.models.SkyModel` object.
+# As we have are only using spectral datasets, we do not need any spatial models.
 #
+# **Note** : All time bins must have the same spectral model. To see how to investigate spectral variability,
+# see :doc:`time resolved spectroscopy notebook </tutorials/analysis-time/time_resolved_spectroscopy>`.
 
-spectral_model = PowerLawSpectralModel(
-    index=3.4, amplitude=2e-11 * u.Unit("1 / (cm2 s TeV)"), reference=1 * u.TeV
-)
-spectral_model.parameters["index"].frozen = False
-
+spectral_model = PowerLawSpectralModel(amplitude=1e-10 * u.Unit("1 / (cm2 s TeV)"))
 sky_model = SkyModel(spatial_model=None, spectral_model=spectral_model, name="pks2155")
-
 
 ######################################################################
 # Assign to model to all datasets
@@ -266,22 +261,30 @@ sky_model = SkyModel(spatial_model=None, spectral_model=spectral_model, name="pk
 datasets.models = sky_model
 
 
+# %%time
+fit = Fit()
+result = fit.run(datasets)
+print(result.models.to_parameters_table())
+
 ######################################################################
 # Extract the light curve
 # -----------------------
 #
 # We first create the `~gammapy.estimators.LightCurveEstimator` for the
 # list of datasets we just produced. We give the estimator the name of the
-# source component to be fitted.
+# source component to be fitted. We can directly compute the light curve in multiple energy
+# bins by supplying a list of `energy_edges`.
+#
 # By default the likelihood scan is computed from 0.2 to 5.0.
 # Here, we increase the max value to 10.0, because we are
 # dealing with a large flare.
 
 lc_maker_1d = LightCurveEstimator(
-    energy_edges=[0.7, 20] * u.TeV,
+    energy_edges=[0.7, 1, 20] * u.TeV,
     source="pks2155",
     time_intervals=time_intervals,
     selection_optional="all",
+    n_jobs=4,
 )
 lc_maker_1d.norm.scan_max = 10
 
@@ -301,21 +304,37 @@ lc_1d = lc_maker_1d.run(datasets)
 # Finally we plot the result for the 1D lightcurve:
 #
 plt.figure(figsize=(8, 6))
-lc_1d.plot(marker="o")
+plt.tight_layout()
+plt.subplots_adjust(bottom=0.3)
+lc_1d.plot(marker="o", axis_name="time", sed_type="flux")
 plt.show()
 
 
 ######################################################################
-# Light curves once obtained can be rebinned.
-# Here, we rebin 4 adjacent bins together, to get 30 min bins
+# Light curves once obtained can be rebinned using the likelihood profiles.
+# Here, we rebin 3 adjacent bins together, to get 30 minute bins.
+#
+# We will first slice `lc_1d` to obtain the lightcurve in the first energy bin
 #
 
-axis_new = get_rebinned_axis(lc_1d, method="fixed-bins", group_size=3, axis_name="time")
+slices = {"energy": slice(0, 1)}
+sliced_lc = lc_1d.slice_by_idx(slices)
+print(sliced_lc)
+
+axis_new = get_rebinned_axis(
+    sliced_lc, method="fixed-bins", group_size=3, axis_name="time"
+)
 print(axis_new)
 
-lc_new = lc_1d.resample_axis(axis_new)
+lc_new = sliced_lc.resample_axis(axis_new)
 plt.figure(figsize=(8, 6))
-ax = lc_1d.plot(label="original")
+plt.tight_layout()
+plt.subplots_adjust(bottom=0.3)
+ax = sliced_lc.plot(label="original")
 lc_new.plot(ax=ax, label="rebinned")
 plt.legend()
 plt.show()
+
+#####################################################################
+# We can use the sliced lightcurve to understand the variability,
+# as shown in the doc:`/tutorials/analysis-time/variability_estimation` tutorial.
