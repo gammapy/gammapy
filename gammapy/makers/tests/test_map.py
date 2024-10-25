@@ -576,7 +576,7 @@ def test_map_maker_ti(observations):
     )
 
     print(observations[0])
-    maker_obs1 = MapDatasetMaker(evt_filter={"none": True})
+    maker_obs1 = MapDatasetMaker(event_filter={"none": True})
     map_dataset1 = maker_obs1.run(reference, observations[0])
     assert_allclose(map_dataset1.gti.time_delta, 1800.0 * u.s)
 

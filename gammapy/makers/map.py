@@ -116,7 +116,7 @@ class MapDatasetMaker(Maker):
         background_oversampling=None,
         background_interp_missing_data=True,
         background_pad_offset=True,
-        evt_filter={"gti": True},
+        event_filter={"gti": True},
         check_overlapping_intervals=True,
     ):
         self.background_oversampling = background_oversampling
@@ -132,11 +132,11 @@ class MapDatasetMaker(Maker):
             raise ValueError(f"{difference} is not a valid method.")
         self.selection = selection
 
-        if not set(evt_filter.keys()).issubset(self.available_filter):
+        if not set(event_filter.keys()).issubset(self.available_filter):
             raise ValueError(
-                f"Available methods associated to the 'evt_filter' argument are {self.available_filter}"
+                f"Available methods associated to the 'event_filter' argument are {self.available_filter}"
             )
-        self.evt_filter = evt_filter
+        self.event_filter = event_filter
 
         self.check_overlapping_intervals = check_overlapping_intervals
 
@@ -397,21 +397,21 @@ class MapDatasetMaker(Maker):
         observation : `~gammapy.data.Observation`
             Filtered observation.
         """
-        if "none" in list(self.evt_filter.keys()):
+        if "none" in list(self.event_filter.keys()):
             return observation
 
-        if "gti" in list(self.evt_filter.keys()):
+        if "gti" in list(self.event_filter.keys()):
             if observation.gti is not None:
                 ti = observation.gti.time_intervals
                 if not check_time_intervals(ti, self.check_overlapping_intervals):
                     raise ValueError("Observation GTI not valid.")
                 return observation.select_time(ti)
-        if "uti" in list(self.evt_filter.keys()):
+        if "uti" in list(self.event_filter.keys()):
             if not check_time_intervals(
-                self.evt_filter("uti"), self.check_overlapping_intervals
+                self.event_filter("uti"), self.check_overlapping_intervals
             ):
                 raise ValueError("User time intervals not valid.")
-            return observation.select_time(self.evt_filter("uti"))
+            return observation.select_time(self.event_filter("uti"))
 
     def run(self, dataset, observation):
         """Make map dataset.
