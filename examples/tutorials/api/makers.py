@@ -117,12 +117,13 @@ plt.show()
 # `background_oversampling` parameter that defines the oversampling
 # factor in energy used to compute the background (default is None).
 #
+# .. _safe-data-range:
 # Safe data range handling
 # ------------------------
 #
-# To exclude the data range from a `~gammapy.makers.MapDataset`, that is associated with
-# high systematics on instrument response functions, a `~gammapy.makers.MapDataset.mask_safe`
-# can be defined. The `~gammapy.makers.MapDataset.mask_safe` is a `~gammapy.maps.Map` object
+# To exclude the data range from a `~gammapy.datasets.MapDataset`, that is associated with
+# high systematics on instrument response functions, a `~gammapy.datasets.MapDataset.mask_safe`
+# can be defined. The `~gammapy.datasets.MapDataset.mask_safe` is a `~gammapy.maps.Map` object
 # with `bool` data type, which indicates for each pixel, whether it should be included in
 # the analysis. The convention is that a value of `True` or `1`
 # includes the pixel, while a value of `False` or `0` excludes a
@@ -141,8 +142,8 @@ plt.show()
 #    observation center are excluded
 # -  bkg-peak, the energy threshold is defined as the upper edge of the
 #    energy bin with the highest predicted background rate. This method
-#    was introduced in the HESS DL3 validation paper:
-#    https://arxiv.org/pdf/1910.08088.pdf
+#    was introduced in the
+#    `H.E.S.S. DL3 validation paper <https://arxiv.org/pdf/1910.08088.pdf>`__
 #
 # Note that currently some methods computing a safe energy range
 # ("aeff-default", "aeff-max" and "edisp-bias") determine a true energy range and
@@ -175,7 +176,7 @@ plt.show()
 # Background estimation
 # ---------------------
 #
-# The background computed by the `MapDatasetMaker` gives the number of
+# The background computed by the `~gammapy.makers.MapDatasetMaker` gives the number of
 # counts predicted by the background IRF of the observation. Because its
 # actual normalization, or even its spectral shape, might be poorly
 # constrained, it is necessary to correct it with the data themselves.
@@ -241,7 +242,7 @@ dataset = fov_bkg_maker.run(dataset)
 # -------------------
 #
 # The data reduction steps can be combined in a single loop to run a full
-# data reduction chain. For this the `MapDatasetMaker` is run first and
+# data reduction chain. For this the `~gammapy.makers.MapDatasetMaker` is run first and
 # the output dataset is the passed on to the next maker step. Finally, the
 # dataset per observation is stacked into a larger map.
 #
@@ -273,7 +274,7 @@ print(stacked)
 
 ######################################################################
 # To maintain good performance it is always recommended to do a cutout of
-# the `MapDataset` as shown above. In case you want to increase the
+# the `~gammapy.datasets.MapDataset` as shown above. In case you want to increase the
 # offset-cut later, you can also choose a larger width of the cutout than
 # `2 * offset_max`.
 #
@@ -308,8 +309,8 @@ print(datasets)
 # count spectra, background is implicitly modeled via the OFF counts
 # spectrum.
 #
-# The `~gammapy.datasets.SpectrumDatasetMaker` make spectrum dataset for a single
-# observation. In that case the irfs and background are computed at a
+# The `~gammapy.makers.SpectrumDatasetMaker` make spectrum dataset for a single
+# observation. In that case the IRFs and background are computed at a
 # single fixed offset, which is recommended only for point-sources.
 #
 # Here is an example of data reduction loop to create
@@ -349,7 +350,7 @@ plt.show()
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # It can often be useful to know the total number of hours spent
 # in the given field of view (without correcting for the acceptance
-# variation). This can be computed using `make_observation_time_map`
+# variation). This can be computed using `~gammapy.makers.utils.make_observation_time_map`
 # as shown below
 #
 
@@ -420,7 +421,7 @@ plt.show()
 
 ######################################################################
 # To get the value of the observation time at a particular position,
-# use `get_by_coord`
+# use ``get_by_coord``
 
 obs_time_src = total_obstime.get_by_coord(source_pos)
 effective_times_src = effective_livetime.get_by_coord(
