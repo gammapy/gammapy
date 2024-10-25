@@ -995,13 +995,8 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         x = table["PHASE"].data
         y = table["NORM"].data
 
-        try:
-            w = table["WEIGHT"].data
-        except KeyError:
-            w = None
-
         interpolator = scipy.interpolate.InterpolatedUnivariateSpline(
-            x, y, w=w, k=1, ext=2, bbox=[0.0, 1.0]
+            x, y, k=1, ext=2, bbox=[0.0, 1.0]
         )
 
         integral = interpolator.integral(0, 1)
@@ -1091,13 +1086,8 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         x = self.table["PHASE"].data
         y = self.table["NORM"].data
 
-        try:
-            w = self.table["WEIGHT"].data
-        except KeyError:
-            w = None
-
         return scipy.interpolate.InterpolatedUnivariateSpline(
-            x, y, w=w, k=1, ext=2, bbox=[0.0, 1.0]
+            x, y, k=1, ext=2, bbox=[0.0, 1.0]
         )
 
     def evaluate(self, time, t_ref, phi_ref, f0, f1, f2):
