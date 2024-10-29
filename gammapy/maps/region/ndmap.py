@@ -159,9 +159,6 @@ class RegionNDMap(Map):
         if "energy" in axis_name:
             ax.set_yscale("log", nonpositive="clip")
 
-        if len(self.geom.axes) > 1:
-            plt.legend()
-
         return ax
 
     def plot_hist(self, ax=None, **kwargs):
