@@ -35,7 +35,7 @@ In general the flux can be estimated using two methods:
    not re-optimising other parameters, one can estimate the significance based on the
    analytical solution by [LiMa1983]. In this case the "best fit" flux and significance
    are given by the excess over the null hypothesis. This method is also named
-   **backward folding**. This method is currently only exposed in the `ExcessMapEstimator`
+   **backward folding**. This method is currently only exposed in the `~gammapy.estimators.ExcessMapEstimator`
 
 
 Energy edges
@@ -91,7 +91,7 @@ arguments are translated into a TS difference assuming ``ts = n_sigma ** 2``.
 .. _sedtypes:
 
 SED types
-~~~~~~~~~
+^^^^^^^^^
 
 In addition to the norm values a reference spectral model and energy ranges
 are given. Using this reference spectral model the norm values can be converted
@@ -112,7 +112,7 @@ e2dnde            Differential energy flux at ``e_ref``
 The same can be applied for the error and upper limit information.
 More information can be found on the `likelihood SED type page`_.
 
-The `FluxPoints` and `FluxMaps` objects can optionally define meta
+The `~gammapy.estimators.FluxPoints` and `~gammapy.estimators.FluxMaps` objects can optionally define meta
 data with the following valid keywords:
 
 ================= =================================================
@@ -141,7 +141,7 @@ A note on negative flux and upper limit values:
 Flux maps
 ---------
 
-This how to compute flux maps with the `ExcessMapEstimator`:
+This how to compute flux maps with the `~gammapy.estimators.ExcessMapEstimator`:
 
 .. testcode::
 
