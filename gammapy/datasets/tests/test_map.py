@@ -13,13 +13,13 @@ from regions import CircleSkyRegion
 import gammapy.irf.psf.map as psf_map_module
 from gammapy.catalog import SourceCatalog3FHL
 from gammapy.data import GTI, DataStore
-from gammapy.datasets import Datasets, MapDataset, MapDatasetOnOff
-from gammapy.datasets.map import (
-    _default_width,
-    create_map_dataset_from_observation,
-    RAD_AXIS_DEFAULT,
+from gammapy.datasets import (
+    Datasets,
+    MapDataset,
+    MapDatasetOnOff,
+    create_empty_map_dataset_from_irfs,
 )
-
+from gammapy.datasets.map import RAD_AXIS_DEFAULT, _default_width
 from gammapy.irf import (
     EDispKernelMap,
     EDispMap,
@@ -2263,3 +2263,13 @@ def test_create_map_dataset_from_observation():
 
     assert dataset_new.counts.data.sum() == 0
     assert_allclose(dataset_new.exposure.data.sum(), 43239974121207.85)
+
+
+@requires_data()
+def test_create_empty_map_dataset_from_irfs(geom, geom_etrue):
+    dataset = get_map_dataset(geom, geom_etrue)
+
+    dataset_new = create_empty_map_dataset_from_irfs(dataset)
+
+    assert dataset_new.counts.data.sum() == 0
+    assert dataset_new.exposure.data.sum() == 0
