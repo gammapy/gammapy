@@ -16,6 +16,7 @@ from astropy.units import Quantity
 from astropy.utils import lazyproperty
 import matplotlib.pyplot as plt
 from gammapy.utils.deprecation import GammapyDeprecationWarning
+from gammapy.irf import FoVAlignment
 from gammapy.utils.fits import LazyFitsData, earth_location_to_dict
 from gammapy.utils.metadata import CreatorMetaData, TargetMetaData, TimeInfoMetaData
 from gammapy.utils.scripts import make_path
@@ -69,7 +70,7 @@ class Observation:
     aeff = LazyFitsData(cache=False)
     edisp = LazyFitsData(cache=False)
     psf = LazyFitsData(cache=False)
-    bkg = LazyFitsData(cache=False)
+    _bkg = LazyFitsData(cache=False)
     _rad_max = LazyFitsData(cache=True)
     _events = LazyFitsData(cache=False)
     _gti = LazyFitsData(cache=True)
@@ -94,7 +95,7 @@ class Observation:
         self.aeff = aeff
         self.edisp = edisp
         self.psf = psf
-        self.bkg = bkg
+        self._bkg = bkg
         self._rad_max = rad_max
         self._gti = gti
         self._filtered_gti = None
@@ -109,6 +110,28 @@ class Observation:
             return self.to_html()
         except AttributeError:
             return f"<pre>{html.escape(str(self))}</pre>"
+
+    @property
+    def bkg(self):
+        """Background of the observation."""
+        bkg = self._bkg
+        # used for backward compatibility of old HESS data
+        try:
+            if (
+                bkg
+                and self._meta
+                and self._meta.optional
+                and self._meta.optional["CREATOR"] == "SASH FITS::EventListWriter"
+                and self._meta.optional["HDUVERS"] == "0.2"
+            ):
+                bkg._fov_alignment = FoVAlignment.REVERSE_LON_RADEC
+        except KeyError:
+            pass
+        return bkg
+
+    @bkg.setter
+    def bkg(self, value):
+        self._bkg = value
 
     @property
     def meta(self):
@@ -142,7 +165,7 @@ class Observation:
     def available_hdus(self):
         """Which HDUs are available."""
         available_hdus = []
-        keys = ["_events", "_gti", "aeff", "edisp", "psf", "bkg", "_rad_max"]
+        keys = ["_events", "_gti", "aeff", "edisp", "psf", "_bkg", "_rad_max"]
         hdus = ["events", "gti", "aeff", "edisp", "psf", "bkg", "rad_max"]
         for key, hdu in zip(keys, hdus):
             available = self.__dict__.get(key, False)
