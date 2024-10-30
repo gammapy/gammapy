@@ -806,7 +806,7 @@ def combine_significance_maps(maps):
         - "significance" : joint significance map.
         - "df" : degree of freedom map (one norm per valid bin).
         - "npred_excess" : summed excess map.
-        - "estimator_results" : dictionary containing the estimator results for each dataset.
+        - "estimator_results" : dictionary containing the flux maps computed for each dataset.
 
     See also
     --------
@@ -834,6 +834,7 @@ def combine_significance_maps(maps):
         significance=significance,
         df=df,
         npred_excess=npred_excess_sum,
+        estimator_results=maps,
     )
 
 
@@ -865,7 +866,7 @@ def get_combined_significance_maps(estimator, datasets):
                 * "significance" : joint significance map.
                 * "df" : degree of freedom map (one norm per valid bin).
                 * "npred_excess" : summed excess map.
-                * "estimator_results" : dictionary containing the estimator results for each dataset.
+                * "estimator_results" : dictionary containing the flux maps computed for each dataset.
 
     See also
     --------
@@ -885,9 +886,7 @@ def get_combined_significance_maps(estimator, datasets):
         result = estimator.run(d)
         results[d.name] = result
 
-    output = combine_significance_maps(list(results.values()))
-    output["estimator_results"] = results
-    return output
+    return combine_significance_maps(list(results.values()))
 
 
 def combine_flux_maps(
@@ -902,7 +901,7 @@ def combine_flux_maps(
     ----------
     maps : list of `~gammapy.estimators.FluxMaps`
         List of maps with the same geometry.
-    method : {"gaussian_errors"}
+    method : str
         * gaussian_errors :
             Under the gaussian error approximation the likelihood is given by the gaussian distibution.
             The product of gaussians is also a gaussian so can derive dnde, dnde_err, and ts.
@@ -1074,7 +1073,7 @@ def get_combined_flux_maps(
         Dictionary with entries:
 
                 * "flux_maps" : `gammapy.estimators.FluxMaps`
-                * "estimator_results" : dictionary containing the estimator results for each dataset.
+                * "estimator_results" : dictionary containing the flux maps computed for each dataset.
 
     See also
     --------
