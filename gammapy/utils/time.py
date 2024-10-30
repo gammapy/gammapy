@@ -250,15 +250,26 @@ def check_time_intervals(time_intervals, check_overlapping_intervals=True):
             log.warning("Sorted time intervals is required")
             return False
 
-    if not check_overlapping_intervals or len(time_intervals) < 3:
+    if not check_overlapping_intervals:
         return True
 
-    for xx in combinations(ti, 2):
-        i1 = [xx[0][0].to_value("gps"), xx[0][1].to_value("gps")]
-        i2 = [xx[1][0].to_value("gps"), xx[1][1].to_value("gps")]
-        if interval_overlap_length(i1, i2) > 0.0:
-            i1 = [xx[0][0], xx[0][1]]
-            i2 = [xx[1][0], xx[1][1]]
-            log.warning(f"Overlapping GTIs: {i1} and {i2}")
+    if ti.shape == (2,):
+        if ti[0].to_value("gps") >= ti[1].to_value("gps"):
+            log.warning(f"Increasing times needed: {ti[0]} and {ti[1]}")
             return False
+    else:
+        for xx in combinations(ti, 2):
+            if xx[0][0].to_value("gps") >= xx[0][1].to_value("gps"):
+                log.warning(f"Increasing times needed: {xx[0][0]} and {xx[0][1]}")
+                return False
+            i1 = [xx[0][0].to_value("gps"), xx[0][1].to_value("gps")]
+
+            if xx[1][0].to_value("gps") >= xx[1][1].to_value("gps"):
+                log.warning(f"Increasing times needed: {xx[1][0]} and {xx[1][1]}")
+                return False
+            i2 = [xx[1][0].to_value("gps"), xx[1][1].to_value("gps")]
+
+            if interval_overlap_length(i1, i2) > 0.0:
+                log.warning(f"Overlapping GTIs: {xx[0]} and {xx[1]}")
+                return False
     return True
