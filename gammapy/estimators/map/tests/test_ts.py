@@ -10,6 +10,7 @@ from gammapy.estimators import TSMapEstimator
 from gammapy.estimators.utils import (
     approximate_profile_map,
     combine_flux_maps,
+    get_combined_flux_maps,
     get_combined_significance_maps,
     get_flux_map_from_profile,
 )
@@ -409,6 +410,14 @@ def test_ts_map_stat_scan(fake_dataset):
     assert_allclose(combined_map.norm.data[success], norm[success], rtol=5e-2)
 
     combined_map = combine_flux_maps([maps, maps1], method="distrib")
+    assert_allclose(combined_map.ts.data, 2 * ts, rtol=1e-4)
+    assert_allclose(combined_map.norm.data[success], norm[success], rtol=5e-2)
+
+    combined_results = get_combined_flux_maps(
+        estimator, [dataset, dataset.copy()], method="distrib"
+    )
+    combined_map = combined_results["flux_maps"]
+    assert len(combined_results["estimator_results"].values()) == 2
     assert_allclose(combined_map.ts.data, 2 * ts, rtol=1e-4)
     assert_allclose(combined_map.norm.data[success], norm[success], rtol=5e-2)
 
