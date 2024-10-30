@@ -17,6 +17,8 @@ log = logging.getLogger(__name__)
 class SafeMaskMaker(Maker):
     """Make safe data range mask for a given observation.
 
+    For more information see :ref:`safe-data-range`.
+
     .. warning::
 
          Currently, some methods computing a safe energy range ("aeff-default",
@@ -280,7 +282,7 @@ class SafeMaskMaker(Maker):
         The energy threshold is defined as the lower edge of the energy
         bin with the highest predicted background rate. This is to ensure analysis in
         a region where a  Powerlaw approximation to the background spectrum is valid.
-        The is motivated by its use in the HESS DL3
+        The is motivated by its use in the H.E.S.S. DL3
         validation paper: https://arxiv.org/pdf/1910.08088.pdf
 
         Parameters

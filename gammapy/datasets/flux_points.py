@@ -40,7 +40,7 @@ def _get_reference_model(model, energy_bounds, margin_percent=70):
 
 
 class FluxPointsDataset(Dataset):
-    """Bundle a set of flux points with a parametric model, to compute fit statistic function using chi2 statistics.
+    """Bundle a set of flux points with a parametric model, to compute fit statistic function using different statistics (see ``stat_type``).
 
     For more information see :ref:`datasets`.
 

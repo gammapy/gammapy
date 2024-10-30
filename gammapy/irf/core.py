@@ -33,6 +33,8 @@ class FoVAlignment(str, Enum):
 
     ALTAZ = "ALTAZ"
     RADEC = "RADEC"
+    # used for backward compatibility of old HESS data
+    REVERSE_LON_RADEC = "REVERSE_LON_RADEC"
 
 
 class IRF(metaclass=abc.ABCMeta):
