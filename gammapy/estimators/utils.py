@@ -882,9 +882,9 @@ def get_combined_significance_maps(estimator, datasets):
         )
 
     results = dict()
-    for kd, d in enumerate(datasets):
-        result = estimator.run(d)
-        results[d.name] = result
+    for dataset in datasets:
+        result = estimator.run(dataset)
+        results[dataset.name] = result
 
     return combine_significance_maps(list(results.values()))
 
@@ -1089,9 +1089,9 @@ def get_combined_flux_maps(
         )
 
     results = dict()
-    for kd, d in enumerate(datasets):
-        result = estimator.run(d)
-        results[d.name] = result
+    for dataset in datasets:
+        result = estimator.run(dataset)
+        results[dataset.name] = result
 
     output = dict()
     output["flux_maps"] = combine_flux_maps(
