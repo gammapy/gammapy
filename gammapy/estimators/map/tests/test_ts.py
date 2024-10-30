@@ -567,8 +567,10 @@ def test_with_TemplateSpatialModel():
 def test_joint_ts_map(fake_dataset):
     model = fake_dataset.models["source"]
     fake_dataset = fake_dataset.copy()
+    fake_dataset2 = fake_dataset.copy()
 
     fake_dataset.models = [model]
+    fake_dataset2.models = [model]
 
     estimator = TSMapEstimator(
         model=model, selection_optional=[], sum_over_energy_groups=True
@@ -579,7 +581,7 @@ def test_joint_ts_map(fake_dataset):
     assert_allclose(result["npred_excess"].data.sum(), 902.403647, rtol=1e-3)
     assert_allclose(result["sqrt_ts"].data[0, 10, 10], 1.360219, rtol=1e-3)
 
-    result = get_combined_significance_maps(estimator, [fake_dataset, fake_dataset])
+    result = get_combined_significance_maps(estimator, [fake_dataset, fake_dataset2])
 
     assert_allclose(result["npred_excess"].data.sum(), 2 * 902.403647, rtol=1e-3)
     assert_allclose(result["significance"].data[10, 10], 1.414529, rtol=1e-3)
@@ -590,7 +592,7 @@ def test_joint_ts_map(fake_dataset):
     estimator = TSMapEstimator(
         model=model, threshold=1, selection_optional="all", sum_over_energy_groups=True
     )
-    result = estimator.run([fake_dataset, fake_dataset.copy()])
+    result = estimator.run([fake_dataset, fake_dataset])
     assert_allclose(result["sqrt_ts"].data[0, 10, 10], 1.92364, rtol=1e-3)
 
 
