@@ -1041,7 +1041,7 @@ def get_combined_flux_maps(
         Excess Map Estimator or TS Map Estimator
     dataset : `gammapy.datasets.Datasets`
         Datasets containing only `~gammapy.datasets.MapDataset`.
-    method : {"gaussian_errors"}
+    method : str
         * gaussian_errors :
             Under the gaussian error approximation the likelihood is given by the gaussian distibution.
             The product of gaussians is also a gaussian so can derive dnde, dnde_err, and ts.
