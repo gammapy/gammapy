@@ -592,7 +592,7 @@ def test_joint_ts_map(fake_dataset):
     estimator = TSMapEstimator(
         model=model, threshold=1, selection_optional="all", sum_over_energy_groups=True
     )
-    result = estimator.run([fake_dataset, fake_dataset])
+    result = estimator.run([fake_dataset, fake_dataset2])
     assert_allclose(result["sqrt_ts"].data[0, 10, 10], 1.92364, rtol=1e-3)
 
 
