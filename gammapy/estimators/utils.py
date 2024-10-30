@@ -25,12 +25,15 @@ from gammapy.stats.utils import ts_to_sigma
 from .map.core import FluxMaps
 
 __all__ = [
-    "get_combined_significance_maps",
+    "combine_flux_maps",
+    "combine_significance_maps",
     "estimate_exposure_reco_energy",
     "find_peaks",
     "find_peaks_in_flux_map",
     "resample_energy_edges",
     "get_rebinned_axis",
+    "get_combined_flux_maps",
+    "get_combined_significance_maps",
     "compute_lightcurve_fvar",
     "compute_lightcurve_fpp",
     "compute_lightcurve_doublingtime",
@@ -779,6 +782,61 @@ def get_rebinned_axis(fluxpoint, axis_name="energy", method=None, **kwargs):
     return axis_new
 
 
+def combine_significance_maps(maps):
+    """Computes excess and significance for a set of datasets.
+    The significance computation assumes that the model contains
+    one degree of freedom per valid energy bin in each dataset.
+    This method implemented here is valid under the assumption
+    that the TS in each independent bin follows a Chi2 distribution,
+    then the sum of the TS also follows a Chi2 distribution (with the sum of degree of freedom).
+
+    See, Zhen (2014): https://www.sciencedirect.com/science/article/abs/pii/S0167947313003204,
+    Lancaster (1961): https://onlinelibrary.wiley.com/doi/10.1111/j.1467-842X.1961.tb00058.x
+
+
+    Parameters
+    ----------
+    maps : list of `~gammapy.estimators.FluxMaps`
+        List of maps with the same geometry.
+
+    Returns
+    -------
+    results : dict
+        Dictionary with keys :
+        - "significance" : joint significance map.
+        - "df" : degree of freedom map (one norm per valid bin).
+        - "npred_excess" : summed excess map.
+        - "estimator_results" : dictionary containing the estimator results for each dataset.
+
+    See also
+    --------
+    get_combined_significance_maps : same method but computing the significance maps from estimators and datasets
+
+    """
+
+    geom = maps[0].ts.geom.to_image()
+    ts_sum = Map.from_geom(geom)
+    ts_sum_sign = Map.from_geom(geom)
+    npred_excess_sum = Map.from_geom(geom)
+    df = Map.from_geom(geom)
+
+    for result in maps:
+        df += np.sum(result["ts"].data > 0, axis=0)  # one dof (norm) per valid bin
+        ts_sum += result["ts"].reduce_over_axes()
+        ts_sum_sign += (
+            result["ts"] * np.sign(result["npred_excess"])
+        ).reduce_over_axes()
+        npred_excess_sum += result["npred_excess"].reduce_over_axes()
+
+    significance = Map.from_geom(geom)
+    significance.data = ts_to_sigma(ts_sum.data, df.data) * np.sign(ts_sum_sign)
+    return dict(
+        significance=significance,
+        df=df,
+        npred_excess=npred_excess_sum,
+    )
+
+
 def get_combined_significance_maps(estimator, datasets):
     """Compute excess and significance for a set of datasets.
 
@@ -808,6 +866,11 @@ def get_combined_significance_maps(estimator, datasets):
                 * "df" : degree of freedom map (one norm per valid bin).
                 * "npred_excess" : summed excess map.
                 * "estimator_results" : dictionary containing the estimator results for each dataset.
+
+    See also
+    --------
+    combine_significance_maps : same method but using directly the significance maps from estimators
+
     """
     from .map.excess import ExcessMapEstimator
     from .map.ts import TSMapEstimator
@@ -817,32 +880,14 @@ def get_combined_significance_maps(estimator, datasets):
             f"estimator type should be ExcessMapEstimator or TSMapEstimator), got {type(estimator)} instead."
         )
 
-    geom = datasets[0].counts.geom.to_image()
-    ts_sum = Map.from_geom(geom)
-    ts_sum_sign = Map.from_geom(geom)
-    npred_excess_sum = Map.from_geom(geom)
-    df = Map.from_geom(geom)
-
     results = dict()
     for kd, d in enumerate(datasets):
         result = estimator.run(d)
         results[d.name] = result
 
-        df += np.sum(result["ts"].data > 0, axis=0)  # one dof (norm) per valid bin
-        ts_sum += result["ts"].reduce_over_axes()
-        ts_sum_sign += (
-            result["ts"] * np.sign(result["npred_excess"])
-        ).reduce_over_axes()
-        npred_excess_sum += result["npred_excess"].reduce_over_axes()
-
-    significance = Map.from_geom(geom)
-    significance.data = ts_to_sigma(ts_sum.data, df.data) * np.sign(ts_sum_sign)
-    return dict(
-        significance=significance,
-        df=df,
-        npred_excess=npred_excess_sum,
-        estimator_results=results,
-    )
+    output = combine_significance_maps(list(results.values()))
+    output["estimator_results"] = results
+    return output
 
 
 def combine_flux_maps(
@@ -886,6 +931,12 @@ def combine_flux_maps(
     -------
     flux_maps : `~gammapy.estimators.FluxMaps`
         Joint flux map.
+
+
+    See also
+    --------
+    get_combined_flux_maps : same method but using directly the flux maps from estimators
+
     """
     gtis = [map_.gti for map_ in maps if map_.gti is not None]
     if np.any(gtis):
@@ -971,6 +1022,87 @@ def combine_flux_maps(
         raise ValueError(
             f'Invalid method provided : {method}. Available methods are : "gaussian_errors", "distrib", "profile"'
         )
+
+
+def get_combined_flux_maps(
+    estimator,
+    datasets,
+    method="gaussian_errors",
+    reference_model=None,
+    dnde_scan_axis=None,
+):
+    """Create a FluxMaps by combining a list of flux maps with the same geometry.
+
+     This assumes the flux maps are independent measurements of the same true value.
+     The GTI is stacked in the process.
+
+    Parameters
+    ----------
+    estimator : `~gammapy.estimators.ExcessMapEstimator` or `~gammapy.estimators.TSMapEstimator`
+        Excess Map Estimator or TS Map Estimator
+    dataset : `~gammapy.datasets.Datasets`
+        Datasets containing only `~gammapy.datasets.MapDataset`.
+    method : {"gaussian_errors"}
+        * gaussian_errors :
+            Under the gaussian error approximation the likelihood is given by the gaussian distibution.
+            The product of gaussians is also a gaussian so can derive dnde, dnde_err, and ts.
+        * distrib :
+            Likelihood profile approximation assuming that probabilities distributions for
+            flux points correspond to asymmetric gaussians and for upper limits to complementary error functions.
+            Use available quantities among dnde, dnde_err, dnde_errp, dnde_errn, dnde_ul, and ts.
+        * profile :
+            Sum the likelihood profile maps.
+            The flux maps must contains the `stat_scan` maps.
+
+        Default is "gaussian_errors" which is the faster but least accurate solution,
+        "distrib"  will be more accurate if dnde_errp and dnde_errn are available,
+        "profile"  will be even more accurate if "stat_scan" is available.
+
+    reference_model : `~gammapy.modeling.models.SkyModel`, optional
+        Reference model to use for conversions.
+        Default is None and is will use the reference_model of the first FluxMaps in the list.
+
+    dnde_scan_axis : `~gammapy.maps.MapAxis`
+        Map axis providing the dnde values used to compute the profile.
+        Default is None and it will be derived from the first FluxMaps in the list.
+        Used only if `method` is distrib or profile.
+
+
+    Returns
+    -------
+    results : dict
+        Dictionary with entries:
+
+                * "flux_maps" : `~gammapy.estimators.FluxMaps`
+                * "estimator_results" : dictionary containing the estimator results for each dataset.
+
+    See also
+    --------
+    combine_flux_maps : same method but using directly the flux maps from estimators
+
+    """
+    from .map.excess import ExcessMapEstimator
+    from .map.ts import TSMapEstimator
+
+    if not isinstance(estimator, (ExcessMapEstimator, TSMapEstimator)):
+        raise TypeError(
+            f"estimator type should be ExcessMapEstimator or TSMapEstimator), got {type(estimator)} instead."
+        )
+
+    results = dict()
+    for kd, d in enumerate(datasets):
+        result = estimator.run(d)
+        results[d.name] = result
+
+    output = dict()
+    output["flux_maps"] = combine_flux_maps(
+        list(results.values()),
+        method=method,
+        reference_model=reference_model,
+        dnde_scan_axis=dnde_scan_axis,
+    )
+    output["estimator_results"] = results
+    return output
 
 
 def _default_scan_map(flux_map, dnde_scan_axis=None):
