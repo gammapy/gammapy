@@ -199,7 +199,7 @@ def _default_width(observation, spatial_width_max=12 * u.deg):
     # width estimated from the rad_max or the offset_max
     if getattr(observation, "rad_max", False) and observation.rad_max is not None:
         width = 2.0 * observation.rad_max.quantity.max()
-    elif getattr(observation, "axes", False):
+    elif hasattr(observation.psf, "axes"):
         width = 2.0 * observation.psf.axes["offset"].edges[-1]
     else:
         width = 2.0 * np.max(observation.psf.psf_map.geom.width)
@@ -208,7 +208,6 @@ def _default_width(observation, spatial_width_max=12 * u.deg):
 
 def create_empty_map_dataset_from_irfs(
     data,
-    models=None,
     dataset_name=None,
     energy_axis_true=None,
     energy_axis=None,
@@ -228,8 +227,6 @@ def create_empty_map_dataset_from_irfs(
     ----------
     data : `~gammapy.data.Observation` or `~gammapy.data.MapDataset`
         Observation or Dataset containing the IRFs.
-    models : `~gammapy.modeling.Models`, optional
-        Models. Default is None.
     dataset_name : str, optional
         If `models` contains one or multiple `FoVBackgroundModel`
         it should match the `dataset_name` of the background model to use.
@@ -274,19 +271,11 @@ def create_empty_map_dataset_from_irfs(
         if energy_axis_true is None:
             energy_axis_true = energy_axis_true_
 
-    if models is None:
-        models = Models()
-
     if dataset_name is None:
-        dataset_name = f"obs_{getattr(data, 'obs_id', data.name)}"
-
-    if not np.any(
-        [
-            isinstance(m, FoVBackgroundModel) and m.datasets_names[0] == dataset_name
-            for m in models
-        ]
-    ):
-        models.append(FoVBackgroundModel(dataset_name=dataset_name))
+        if hasattr(data, "obs_id"):
+            dataset_name = f"obs_{data.obs_id}"
+        else:
+            dataset_name = f"{data.name}"
 
     if position is None:
         if hasattr(data, "pointing"):
@@ -315,11 +304,12 @@ def create_empty_map_dataset_from_irfs(
         else:
             axes["migra_axis"] = data.edisp.edisp_map.geom.axes["migra"]
 
-    return MapDataset.create(
+    dataset = MapDataset.create(
         geom,
         name=dataset_name,
         **axes,
     )
+    return dataset
 
 
 def create_map_dataset_from_observation(
@@ -377,7 +367,6 @@ def create_map_dataset_from_observation(
 
     dataset = create_empty_map_dataset_from_irfs(
         observation,
-        models=models,
         dataset_name=dataset_name,
         energy_axis_true=energy_axis_true,
         energy_axis=energy_axis,
@@ -389,6 +378,16 @@ def create_map_dataset_from_observation(
         position=position,
         frame=frame,
     )
+
+    if models is None:
+        models = Models()
+    if not np.any(
+        [
+            isinstance(m, FoVBackgroundModel) and m.datasets_names[0] == dataset.name
+            for m in models
+        ]
+    ):
+        models.append(FoVBackgroundModel(dataset_name=dataset.name))
 
     components = ["exposure"]
     if observation.edisp is not None:
