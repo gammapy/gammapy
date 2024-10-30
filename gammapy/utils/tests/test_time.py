@@ -98,13 +98,21 @@ def test_check_time_info():
 def test_check_time_intervals(caplog):
     assert check_time_intervals(1.0) is False
     assert check_time_intervals([]) is False
+    caplog.clear()
+
     assert check_time_intervals([53090.130, 53090.140]) is False
+    assert "astropy.time.Time" in caplog.messages[0]
     caplog.clear()
 
     aa = [
         Time(53090.130, format="mjd", scale="tt"),
         Time(53090.140, format="mjd", scale="tt"),
     ]
+    ti = [[53090.130, 53090.140], aa]
+    assert check_time_intervals(ti) is False
+    assert "astropy.time.Time" in caplog.messages[0]
+    caplog.clear()
+
     bb = [
         Time(53090.150, format="mjd", scale="tt"),
         Time(53090.160, format="mjd", scale="tt"),
@@ -112,15 +120,22 @@ def test_check_time_intervals(caplog):
     ti = [aa, bb]
     assert check_time_intervals(ti) is True
 
+    ti = [bb, aa]
+    assert check_time_intervals(ti) is False
+    assert "Sorted time intervals" in caplog.messages[0]
+    caplog.clear()
+
     cc = [
-        Time(53090.140, format="mjd", scale="tt"),
-        Time(53090.160, format="mjd", scale="tt"),
+        Time(53090.155, format="mjd", scale="tt"),
+        Time(53090.165, format="mjd", scale="tt"),
     ]
-    ti = [aa, cc]
-    assert check_time_intervals(ti) is True
+    ti = [bb, cc]
+    assert check_time_intervals(ti) is False
+    assert "Overlapping GTIs" in caplog.messages[0]
+    caplog.clear()
 
     dd = [
-        Time(53080.150, format="mjd", scale="tt"),
+        Time(53090.155, format="mjd", scale="tt"),
         Time(53091.160, format="mjd", scale="tt"),
     ]
     ti = [aa, bb, dd]
@@ -130,6 +145,14 @@ def test_check_time_intervals(caplog):
 
     assert check_time_intervals(ti, False) is True
 
+    ee = [
+        Time(53090.17, format="mjd", scale="tt"),
+        Time(53090.18, format="mjd", scale="tt"),
+    ]
+    ti = [aa, bb, ee]
+    assert check_time_intervals(ti) is True
+    caplog.clear()
+
     bad = [
         Time(53090.140, format="mjd", scale="tt"),
         Time(53090.130, format="mjd", scale="tt"),
@@ -138,16 +161,6 @@ def test_check_time_intervals(caplog):
     assert "Increasing times needed" in caplog.messages[0]
     caplog.clear()
 
-    ti = [cc, bad]
-    assert check_time_intervals(ti) is False
-    assert "Increasing times needed" in caplog.messages[0]
-    caplog.clear()
-
-    ti = [bad, cc]
-    assert check_time_intervals(ti) is False
-    assert "Increasing times needed" in caplog.messages[0]
-    caplog.clear()
-
     ti = [dd, aa]
     assert check_time_intervals(ti) is False
-    assert "Overlapping GTIs" in caplog.messages[0]
+    assert "Sorted time intervals is required" in caplog.messages[0]

@@ -241,12 +241,15 @@ def check_time_intervals(time_intervals, check_overlapping_intervals=True):
         return False
     if ti.shape == (2,) or ti.shape == (2, 1):
         if not np.all([isinstance(_, Time) for _ in ti]):
+            log.warning("The times should be `astropy.time.Time` instance")
             return False
     else:
         for xx in ti:
             if not np.all([isinstance(_, Time) for _ in xx]):
+                log.warning("The times should be `astropy.time.Time` instance")
                 return False
-        if (ti[:-1] <= ti[1:]).all() is False:
+        sorted = (ti[:-1] <= ti[1:]).all()
+        if not sorted:
             log.warning("Sorted time intervals is required")
             return False
 
