@@ -1038,9 +1038,9 @@ def get_combined_flux_maps(
 
     Parameters
     ----------
-    estimator : `~gammapy.estimators.ExcessMapEstimator` or `~gammapy.estimators.TSMapEstimator`
+    estimator : `gammapy.estimators.ExcessMapEstimator` or `gammapy.estimators.TSMapEstimator`
         Excess Map Estimator or TS Map Estimator
-    dataset : `~gammapy.datasets.Datasets`
+    dataset : `gammapy.datasets.Datasets`
         Datasets containing only `~gammapy.datasets.MapDataset`.
     method : {"gaussian_errors"}
         * gaussian_errors :
@@ -1058,11 +1058,11 @@ def get_combined_flux_maps(
         "distrib"  will be more accurate if dnde_errp and dnde_errn are available,
         "profile"  will be even more accurate if "stat_scan" is available.
 
-    reference_model : `~gammapy.modeling.models.SkyModel`, optional
+    reference_model : `gammapy.modeling.models.SkyModel`, optional
         Reference model to use for conversions.
         Default is None and is will use the reference_model of the first FluxMaps in the list.
 
-    dnde_scan_axis : `~gammapy.maps.MapAxis`
+    dnde_scan_axis : `gammapy.maps.MapAxis`
         Map axis providing the dnde values used to compute the profile.
         Default is None and it will be derived from the first FluxMaps in the list.
         Used only if `method` is distrib or profile.
@@ -1073,7 +1073,7 @@ def get_combined_flux_maps(
     results : dict
         Dictionary with entries:
 
-                * "flux_maps" : `~gammapy.estimators.FluxMaps`
+                * "flux_maps" : `gammapy.estimators.FluxMaps`
                 * "estimator_results" : dictionary containing the estimator results for each dataset.
 
     See also
@@ -1086,7 +1086,7 @@ def get_combined_flux_maps(
 
     if not isinstance(estimator, (ExcessMapEstimator, TSMapEstimator)):
         raise TypeError(
-            f"estimator type should be ExcessMapEstimator or TSMapEstimator), got {type(estimator)} instead."
+            f"`estimator` type should be ExcessMapEstimator or TSMapEstimator), got {type(estimator)} instead."
         )
 
     results = dict()
