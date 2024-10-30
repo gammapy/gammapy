@@ -95,10 +95,11 @@ def test_check_time_info():
     assert unique_time_info(rows) is False
 
 
-def test_check_time_intervals():
+def test_check_time_intervals(caplog):
     assert check_time_intervals(1.0) is False
     assert check_time_intervals([]) is False
     assert check_time_intervals([53090.130, 53090.140]) is False
+    caplog.clear()
 
     aa = [
         Time(53090.130, format="mjd", scale="tt"),
@@ -124,5 +125,29 @@ def test_check_time_intervals():
     ]
     ti = [aa, bb, dd]
     assert check_time_intervals(ti) is False
+    assert "Overlapping GTIs" in caplog.messages[0]
+    caplog.clear()
 
     assert check_time_intervals(ti, False) is True
+
+    bad = [
+        Time(53090.140, format="mjd", scale="tt"),
+        Time(53090.130, format="mjd", scale="tt"),
+    ]
+    assert check_time_intervals(bad) is False
+    assert "Increasing times needed" in caplog.messages[0]
+    caplog.clear()
+
+    ti = [cc, bad]
+    assert check_time_intervals(ti) is False
+    assert "Increasing times needed" in caplog.messages[0]
+    caplog.clear()
+
+    ti = [bad, cc]
+    assert check_time_intervals(ti) is False
+    assert "Increasing times needed" in caplog.messages[0]
+    caplog.clear()
+
+    ti = [dd, aa]
+    assert check_time_intervals(ti) is False
+    assert "Overlapping GTIs" in caplog.messages[0]
