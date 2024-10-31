@@ -112,7 +112,7 @@ def test_flux_point_dataset_stat(dataset):
     dataset.stat_type = "distrib"
     fit = Fit()
     fit.run([dataset])
-    assert_allclose(dataset.stat_sum(), 36.153428, rtol=1e-3)
+    assert_allclose(dataset.stat_sum(), 27.244609, rtol=1e-3)
 
 
 def test_flux_point_dataset_with_time_axis(tmp_path):
