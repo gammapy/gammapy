@@ -500,11 +500,13 @@ plt.show()
 # --------------------
 #
 # Different statistic are available for the FluxPointDataset :
-# * chi2 : estimate from chi2 statistics.
-# * profile : estimate from interpolation of the likelihood profile.
-# * distrib : estimate from probability distributions,
+#
+# - chi2 : estimate from chi2 statistics.
+# - profile : estimate from interpolation of the likelihood profile.
+# - distrib : estimate from probability distributions,
 #             assuming that flux points correspond to asymmetric gaussians
 #             and upper limits complementary error functions.
+#
 # Default is `chi2`, in that case upper limits are ignored and the mean of asymetrics error is used.
 # So it is recommended to use `profile` if `stat_scan` is available on flux points.
 # The `distrib` case provides an approximation if the `profile` is not available
