@@ -441,8 +441,8 @@ class FluxPointsDataset(Dataset):
             scale[mask_p] = self.data.dnde_errp.data[mask_valid][mask_p]
             scale[~mask_p] = self.data.dnde_errn.data[mask_valid][~mask_p]
 
-            mask_invalid_errnp = mask_valid & np.isnan(scale)
-            scale[mask_invalid_errnp] = self.data.dnde_err.data[mask_invalid_errnp]
+            mask_invalid = np.isnan(scale)
+            scale[mask_invalid] = self.data.dnde_err.data[mask_valid][mask_invalid]
         except AttributeError:
             scale = self.data.dnde_err.data[mask_valid]
 
