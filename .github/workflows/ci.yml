@@ -158,7 +158,7 @@ jobs:
       - name: checkout repo
         uses: actions/checkout@v4
       - name: create and activate env
-        uses: mamba-org/setup-micromamba@v1
+        uses: mamba-org/setup-micromamba@v2
         with:
           environment-file: environment-dev.yml
           cache-downloads: true
