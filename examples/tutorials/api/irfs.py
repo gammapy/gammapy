@@ -491,8 +491,6 @@ psf_assym.write("test_psf.fits.gz", overwrite=True)
 
 psf_new = PSF_assym.read("test_psf.fits.gz")
 
-print(psf_new == psf_assym)
-
 ######################################################################
 # Create DL4 product - `PSFMap`
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
