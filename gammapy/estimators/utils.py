@@ -1087,14 +1087,13 @@ def get_combined_flux_maps(
             f"`estimator` type should be ExcessMapEstimator or TSMapEstimator), got {type(estimator)} instead."
         )
 
-    results = dict()
+    results = []
     for dataset in datasets:
-        result = estimator.run(dataset)
-        results[dataset.name] = result
+        results.append(estimator.run(dataset))
 
     output = dict()
     output["flux_maps"] = combine_flux_maps(
-        list(results.values()),
+        results,
         method=method,
         reference_model=reference_model,
         dnde_scan_axis=dnde_scan_axis,
