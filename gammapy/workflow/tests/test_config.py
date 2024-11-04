@@ -59,7 +59,6 @@ def test_config_not_default_types():
     assert isinstance(config.fit.fit_range.max, Quantity)
 
 
-@pytest.mark.xfail
 def test_config_basics():
     config = WorkflowConfig()
     assert "WorkflowConfig" in str(config)
@@ -73,7 +72,6 @@ def test_config_create_from_dict():
     assert config.general.log.level == "warning"
 
 
-@pytest.mark.xfail
 def test_config_create_from_yaml():
     config = WorkflowConfig.read(DOC_FILE)
     assert isinstance(config.general, GeneralConfig)
@@ -94,7 +92,6 @@ def test_config_to_yaml(tmp_path):
         config.write(fpath)
 
 
-@pytest.mark.xfail
 def test_get_doc_sections():
     config = WorkflowConfig()
     doc = config._get_doc_sections()
