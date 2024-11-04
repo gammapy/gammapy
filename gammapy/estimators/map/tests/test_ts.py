@@ -417,7 +417,7 @@ def test_ts_map_stat_scan(fake_dataset):
         estimator, [dataset, dataset.copy()], method="distrib"
     )
     combined_map = combined_results["flux_maps"]
-    assert len(combined_results["estimator_results"].values()) == 2
+    assert len(combined_results["estimator_results"]) == 2
     assert_allclose(combined_map.ts.data, 2 * ts, rtol=1e-4)
     assert_allclose(combined_map.norm.data[success], norm[success], rtol=5e-2)
 
