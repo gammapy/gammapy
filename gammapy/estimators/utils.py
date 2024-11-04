@@ -871,7 +871,7 @@ def get_combined_significance_maps(estimator, datasets):
 
     See also
     --------
-    combine_significance_maps : same method but using directly the significance maps from estimators
+    `~gammapy.estimators.combine_significance_maps` : same method but using directly the significance maps from estimators
 
     """
     from .map.excess import ExcessMapEstimator
@@ -935,7 +935,7 @@ def combine_flux_maps(
 
     See also
     --------
-    get_combined_flux_maps : same method but using directly the flux maps from estimators
+    `~gammapy.estimators.get_combined_flux_maps` : same method but using directly the flux maps from estimators
 
     """
     gtis = [map_.gti for map_ in maps if map_.gti is not None]
@@ -1031,16 +1031,16 @@ def get_combined_flux_maps(
     reference_model=None,
     dnde_scan_axis=None,
 ):
-    """Create a FluxMaps by combining a list of flux maps with the same geometry.
+    """Create a `~gammapy.estimators.FluxMaps` by combining a list of flux maps with the same geometry.
 
     This assumes the flux maps are independent measurements of the same true value.
     The GTI is stacked in the process.
 
     Parameters
     ----------
-    estimator : `gammapy.estimators.ExcessMapEstimator` or `gammapy.estimators.TSMapEstimator`
+    estimator : `~gammapy.estimators.ExcessMapEstimator` or `~gammapy.estimators.TSMapEstimator`
         Excess Map Estimator or TS Map Estimator
-    dataset : `gammapy.datasets.Datasets`
+    dataset : `~gammapy.datasets.Datasets` or list of `~gammapy.datasets.MapDataset`
         Datasets containing only `~gammapy.datasets.MapDataset`.
     method : str
         * gaussian_errors :
@@ -1058,15 +1058,13 @@ def get_combined_flux_maps(
         "distrib"  will be more accurate if dnde_errp and dnde_errn are available,
         "profile"  will be even more accurate if "stat_scan" is available.
 
-    reference_model : `gammapy.modeling.models.SkyModel`, optional
+    reference_model : `~gammapy.modeling.models.SkyModel`, optional
         Reference model to use for conversions.
         Default is None and is will use the reference_model of the first FluxMaps in the list.
-
-    dnde_scan_axis : `gammapy.maps.MapAxis`
+    dnde_scan_axis : `~gammapy.maps.MapAxis`, optional
         Map axis providing the dnde values used to compute the profile.
-        Default is None and it will be derived from the first FluxMaps in the list.
-        Used only if `method` is distrib or profile.
-
+        If None, it will be derived from the first FluxMaps in the list. Default is None.
+        Used only if `method` is "distrib" or "profile".
 
     Returns
     -------
@@ -1078,7 +1076,7 @@ def get_combined_flux_maps(
 
     See also
     --------
-    combine_flux_maps : same method but using directly the flux maps from estimators
+    `~gammapy.estimators.combine_flux_maps` : same method but using directly the flux maps from estimators
 
     """
     from .map.excess import ExcessMapEstimator
