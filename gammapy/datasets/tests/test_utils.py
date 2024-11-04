@@ -149,7 +149,7 @@ def test_create_global_dataset():
     assert global_dataset.name == "test"
     assert_allclose(global_dataset.counts.geom.width.max(), 20 * u.deg)
     assert_allclose(global_dataset.counts.geom.pixel_scales.max(), 0.02 * u.deg)
-    assert_allclose(global_dataset.counts.geom.axes[0].nbin, 17)
+    assert_allclose(global_dataset.counts.geom.axes[0].nbin, 7)
     assert_allclose(
         global_dataset.counts.geom.center_skydir.separation(
             datasets[0].counts.geom.center_skydir
