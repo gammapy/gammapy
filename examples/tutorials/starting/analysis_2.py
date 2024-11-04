@@ -78,7 +78,6 @@ from regions import CircleSkyRegion
 
 # %matplotlib inline
 import matplotlib.pyplot as plt
-from IPython.display import display
 from gammapy.data import DataStore
 from gammapy.datasets import MapDataset
 from gammapy.estimators import FluxPointsEstimator

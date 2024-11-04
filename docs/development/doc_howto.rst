@@ -144,11 +144,19 @@ following command.
 
     pytest --doctest-modules --ignore-glob=*/tests gammapy
 
-If you get a zsh error try using putting to ignore block inside quotes 
+If you get a zsh error try using putting to ignore block inside quotes
 
 .. code-block:: bash
 
     pytest --doctest-modules "--ignore-glob=*/tests" gammapy
+
+It is also important to check that you have correctly formatted your docstring. An easy way to check this
+is with the following for your specific file, i.e.:
+
+.. code-block:: bash
+
+    pydocstyle gammapy/data/event_list.py
+
 
 Sphinx gallery extension
 ------------------------
@@ -157,6 +165,7 @@ The documentation built-in process uses the `sphinx-gallery <https://sphinx-gall
 extension to build galleries of illustrated examples on how to use Gammapy (i.e.
 :ref:`model-gallery`). The Python scripts used to produce the model gallery are placed in
 ``examples/models`` and ``examples/tutorials``. The configuration of the ``sphinx-gallery`` module is done in ``docs/conf.py``.
+The tutorials are order using a python dictionary stored in ``docs/sphinxext.py``.
 
 
 Choose a thumbnail and tooltip for the tutorial gallery
@@ -179,9 +188,9 @@ choose the thumbnail for the tutorial by adding a comment before the plot:
     plt.show()
 
 The example is taken from the `sphinx-gallery documentation <https://sphinx-gallery.github.io/stable/auto_examples/plot_4_choose_thumbnail.html>`__,
-please refer to it for more details. 
+please refer to it for more details.
 
-The tooltip is the text that appears when you hover over the thumbnail. It is taken from the first line 
+The tooltip is the text that appears when you hover over the thumbnail. It is taken from the first line
 of the docstring of the tutorial. You can change it by editing the docstring. See e.g.
 `Analysis 1 Tutorial <https://github.com/gammapy/gammapy/blob/main/examples/tutorials/starting/analysis_1.py#L5>`__.
 
@@ -194,7 +203,7 @@ Links in tutorials are just handled via normal RST syntax.
 Links to other tutorials
 ++++++++++++++++++++++++
 
-From docstrings and RST documentation files in Gammapy you can link to other tutorials 
+From docstrings and RST documentation files in Gammapy you can link to other tutorials
 and gallery examples by using RST syntax like this:
 
 .. code-block:: rst
@@ -203,6 +212,26 @@ and gallery examples by using RST syntax like this:
 
 This will link to the tutorial :doc:`/tutorials/starting/analysis_2` from the tutorial base folder. The file
 suffix will be automatically inferred by Sphinx.
+
+Links to documentation
+++++++++++++++++++++++
+
+To make a reference to a heading within an RST file, first you need to define an explicit target for the heading:
+
+.. code-block:: rst
+
+    .. _datasets:
+
+    Datasets (DL4)
+    ==============
+
+
+The reference is the rendered as ``datasets``.
+To link to this in the documentation you can use:
+
+.. code-block:: rst
+
+    :ref:`datasets`
 
 
 API Links
@@ -268,6 +297,27 @@ or Gammapy code a bit (either locally with your editor or online on GitHub or vi
 or search the Numpy or Astropy documentation guidelines mentioned above.
 If that doesn't quickly turn up something useful, please ask by putting a comment on the issue or
 pull request you're working on GitHub, or email the Gammapy mailing list.
+
+
+Correct format for bullet point list
+++++++++++++++++++++++++++++++++++++
+
+To correctly add a bullet point list to the docstring, the following can be implemented:
+
+.. testcode::
+
+        """
+        Docstring explanation.
+
+        Parameters
+        ----------
+        parameter_name : parameter_type
+            Description of the parameter with entries:
+                    * option1 : description1
+                    * option2 : description2
+                    * option3 : description3 over more than
+                    one line.
+        """
 
 Functions or class methods that return a single object
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++

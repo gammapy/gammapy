@@ -9,14 +9,14 @@ This module contains utility functions for some astrophysical scenarios:
 * `~gammapy.astro.population` for astrophysical population models
 * `~gammapy.astro.darkmatter` for dark matter spatial and spectral models
 
-The ``gammapy.astro`` sub-package is in a prototyping phase and its scope and future
+The `gammapy.astro` sub-package is in a prototyping phase and its scope and future
 are currently being discussed. It is likely that some functionality will
 be removed or split out into a separate package at some point.
 
 Getting started
 ---------------
 
-The ``gammapy.astro`` namespace is empty. Use these import statements:
+The `gammapy.astro` namespace is empty. Use these import statements:
 
 .. testcode::
 

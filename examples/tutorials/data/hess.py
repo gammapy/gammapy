@@ -1,7 +1,12 @@
 """
 H.E.S.S. with Gammapy
 =====================
+
 Explore H.E.S.S. event lists and IRFs.
+
+
+Introduction
+------------
 
 `H.E.S.S. <https://www.mpi-hd.mpg.de/hfm/HESS/>`__ is an array of
 gamma-ray telescopes located in Namibia. Gammapy is regularly used and
@@ -10,7 +15,7 @@ current `open data level 3
 format <https://gamma-astro-data-formats.readthedocs.io/>`__.
 
 The H.E.S.S. data is private, and H.E.S.S. analysis is mostly documented
-and discussed at https://hess-confluence.desy.de/ and in
+and discussed in the internal Wiki pages and in
 H.E.S.S.-internal communication channels. However, in 2018, a small
 sub-set of archival H.E.S.S. data was publicly released, called the
 `H.E.S.S. DL3
@@ -26,9 +31,8 @@ simple exploration of the data with the creation of theta-squared plot.
 
 H.E.S.S. members can find details on the DL3 FITS production on this
 `Confluence
-page <https://hess-confluence.desy.de/confluence/display/HESS/HESS+FITS+data>`__
-and access more detailed tutorials in this
-`repository <https://bitbucket.org/hess_software/hess-open-source-tools/src/master/>`__
+page <https://cchesswiki.in2p3.fr/en/hess/working_groups/analysis_and_reconstruction_working_group/ar_active_tasks/hess_fits_data>`__
+and access more detailed tutorials in the BitBucket `hess-open-tools` repository.
 
 DL3 DR1
 -------
@@ -46,7 +50,7 @@ import matplotlib.pyplot as plt
 from IPython.display import display
 from gammapy.data import DataStore
 from gammapy.makers.utils import make_theta_squared_table
-from gammapy.maps import MapAxis, WcsGeom
+from gammapy.maps import MapAxis
 
 ######################################################################
 # Check setup
@@ -146,6 +150,6 @@ plt.show()
 # ----------
 #
 # Now you know how to access and work with H.E.S.S. data. All other
-# tutorials and documentation apply to H.E.S.S. and CTA or any other IACT
+# tutorials and documentation apply to H.E.S.S. and CTAO or any other IACT
 # that provides DL3 data and IRFs in the standard format.
 #

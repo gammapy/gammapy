@@ -13,6 +13,7 @@ from gammapy.stats.variability import (
     compute_fpp,
     compute_fvar,
     structure_function,
+    discrete_correlation,
 )
 from gammapy.utils.testing import assert_quantity_allclose
 
@@ -36,6 +37,7 @@ def lc_table():
     return table
 
 
+@pytest.fixture(scope="session")
 def lc():
     meta = dict(TIMESYS="utc", SED_TYPE="flux")
 
@@ -256,4 +258,97 @@ def test_structure_function():
     assert_allclose(
         distances,
         [3600.0, 7000.0, 7200.0, 10800.0, 14200.0, 14400.0, 17800.0, 21400.0] * u.s,
+    )
+
+
+def test_dcf():
+    flux = np.array(
+        [
+            [1e-11, 4e-12],
+            [3e-11, 2.5e-12],
+            [1e-11, 1e-12],
+            [0.8e-11, 0.8e-12],
+            [1e-11, 1e-12],
+        ]
+    )
+    flux2 = np.array(
+        [
+            [1e-11, 3.5e-12],
+            [4e-11, 1.5e-12],
+            [1.7e-11, 2e-12],
+            [0.4e-11, 1.8e-12],
+            [1e-11, 1.5e-12],
+            [1.1e-11, 0.7e-12],
+        ]
+    )
+
+    flux_err = np.array(
+        [
+            [0.1e-11, 0.4e-12],
+            [0.3e-11, 0.2e-12],
+            [0.1e-11, 0.1e-12],
+            [0.08e-11, 0.08e-12],
+            [0.1e-11, 0.1e-12],
+        ]
+    )
+    flux_err2 = np.array(
+        [
+            [0.2e-11, 0.24e-12],
+            [0.4e-11, 0.21e-12],
+            [0.07e-11, 0.14e-12],
+            [0.12e-11, 0.18e-12],
+            [0.1e-11, 0.13e-12],
+            [0.4e-11, 0.2e-12],
+        ]
+    )
+
+    time = (
+        np.array(
+            [6.31157019e08, 6.31160619e08, 6.31164219e08, 6.31171419e08, 6.31178419e08]
+        )
+        * u.s
+    )
+    time2 = (
+        np.array(
+            [
+                6.31156919e08,
+                6.31160519e08,
+                6.31163819e08,
+                6.31171419e08,
+                6.31178219e08,
+                6.31178819e08,
+            ]
+        )
+        * u.s
+    )
+
+    bins, dcf, dcf_err = discrete_correlation(
+        flux, flux_err, flux2, flux_err2, time, time2, tau=1.5e4 * u.s
+    )
+
+    assert_allclose(
+        dcf,
+        [
+            [-0.332361, -1.009638],
+            [-0.065639, 0.313054],
+            [0.215329, 0.133132],
+            [-0.373906, -0.56788],
+        ],
+        rtol=1e-5,
+    )
+
+    assert_allclose(
+        dcf_err,
+        [
+            [0.34881, 0.553113],
+            [0.236548, 0.174538],
+            [0.401313, 0.361757],
+            [0.820525, 1.204655],
+        ],
+        rtol=1e-5,
+    )
+
+    assert_allclose(
+        bins,
+        u.Quantity([-22500.0, -7500.0, 7500.0, 22500.0], unit="s"),
     )

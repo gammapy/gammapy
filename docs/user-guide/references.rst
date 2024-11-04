@@ -91,7 +91,7 @@ Glossary
 
     GTI
       Short for "good time interval": it indicates a continuous time interval of data
-      acquisition. In CTA, it also represents a time interval in which the IRFs are
+      acquisition. In the GADF DL3 format, it also represents a time interval in which the IRFs are
       supposed to be constant.
 
     IRF
@@ -109,8 +109,12 @@ Glossary
       Gammapy utility classes performing data reduction of the DL3 data to binned datasets (DL4).
       See :ref:`makers` and the :ref:`data flow <data_flow>`.
 
+    MCMC
+      Short for "Markov chain Monte Carlo". See the
+      `following recipe <https://gammapy.github.io/gammapy-recipes/_build/html/notebooks/mcmc-sampling-emcee/mcmc_sampling.html>`_.
+
     MET
-      Short for "mission elapsed time". see also :ref:`MET_definition` in :ref:`time_handling`.
+      Short for "mission elapsed time". See also :ref:`MET_definition` in :ref:`time_handling`.
 
     PSF
       Short for "point spread function": it is the IRF representing the probability density of the angular separation
@@ -131,6 +135,15 @@ Glossary
       Short for "region of interest": it indicates the spatial region in which the
       data are analyzed. In practice, at each energy it corresponds with the sky region
       in which the dataset mask is True.
+
+    SED
+      Short for "spectral energy distribution". For a spectral model or flux points
+      object, the type of plot (e.g. :math:`dN/dE`, :math:`E^2\ dN/dE`) is typically adjusted
+      through the `sed_type` quantity. See :ref:`sedtypes` for a list of options.
+
+..    STI
+      Short for "stable time interval": it indicates a continuous time interval of data
+      acquisition for which the instrument response files are supposed to be constant.
 
     Stacked Analysis
       In a stacked analysis individual observations are reduced to datasets which

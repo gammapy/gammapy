@@ -67,6 +67,14 @@ SOURCES_3PC = [
         dnde=u.Quantity(5.32697275e-10, "cm-2 s-1 MeV-1"),
         dnde_err=u.Quantity(1.64905329e-12, "cm-2 s-1 MeV-1"),
     ),
+    dict(
+        idx=56,
+        name="J0940-5428",
+        str_ref_file="data/3pc_j0940-5428.txt",
+        spec_type=SuperExpCutoffPowerLaw4FGLDR3SpectralModel,
+        dnde=u.Quantity(9.92080658e-13, "cm-2 s-1 MeV-1"),
+        dnde_err=u.Quantity(5.80666225e-14, "cm-2 s-1 MeV-1"),
+    ),
 ]
 
 
@@ -103,6 +111,17 @@ SOURCES_4FGL = [
         dnde=u.Quantity(1.3237202133031811e-12, "cm-2 s-1 MeV-1"),
         dnde_err=u.Quantity(4.513233455580648e-14, "cm-2 s-1 MeV-1"),
     ),
+]
+
+SOURCES_4FGL_DR4 = [
+    dict(
+        idx=1391,
+        name="4FGL J0534.5+2200",
+        str_ref_file="data/4fgl-dr4_J0534.5+2200.txt",
+        spec_type=SuperExpCutoffPowerLaw4FGLDR3SpectralModel,
+        dnde=u.Quantity(1.1048e-07, "cm-2 s-1 GeV-1"),
+        dnde_err=u.Quantity(6.9934e-10, "cm-2 s-1 GeV-1"),
+    )
 ]
 
 SOURCES_3FGL = [
@@ -178,9 +197,10 @@ SOURCES_3FHL = [
 
 
 @requires_data()
-def test_4FGL_DR4():
+@pytest.mark.parametrize("ref", SOURCES_4FGL_DR4, ids=lambda _: _["name"])
+def test_4FGL_DR4(ref):
     cat = SourceCatalog4FGL("$GAMMAPY_DATA/catalogs/fermi/gll_psc_v32.fit.gz")
-    source = cat["4FGL J0534.5+2200"]
+    source = cat[ref["name"]]
     model = source.spectral_model()
     fp = source.flux_points
     not_ul = ~fp.is_ul.data.squeeze()
@@ -190,6 +210,11 @@ def test_4FGL_DR4():
 
     models = cat.to_models()
     assert len(models) == len(cat.table)
+
+    actual = str(cat[ref["idx"]])
+    with open(get_pkg_data_filename(ref["str_ref_file"])) as fh:
+        expected = fh.read()
+    assert actual == modify_unit_order_astropy_5_3(expected)
 
 
 @requires_data()
@@ -355,9 +380,9 @@ class TestFermi4FGLObject:
         assert_allclose(table["flux_errn"][0], 4.437058e-8, rtol=1e-3)
 
     def test_lightcurve_dr4(self):
-        dr2 = SourceCatalog4FGL("$GAMMAPY_DATA/catalogs/fermi/gll_psc_v32.fit.gz")
-        source_dr2 = dr2[self.source_name]
-        table = source_dr2.lightcurve(interval="1-year").to_table(
+        dr4 = SourceCatalog4FGL("$GAMMAPY_DATA/catalogs/fermi/gll_psc_v32.fit.gz")
+        source_dr4 = dr4[self.source_name]
+        table = source_dr4.lightcurve(interval="1-year").to_table(
             format="lightcurve", sed_type="flux"
         )
 
@@ -371,7 +396,7 @@ class TestFermi4FGLObject:
         assert_allclose(table["flux_errn"][0], 2.298336e-08, rtol=1e-3)
 
         with pytest.raises(ValueError):
-            source_dr2.lightcurve(interval="2-month")
+            source_dr4.lightcurve(interval="2-month")
 
 
 @requires_data()
@@ -809,14 +834,17 @@ class TestFermi3PCObject:
     def test_data(self):
         assert_allclose(self.source.data["P0"], 0.08937108859019084)
 
-    def test_spectral_model(self, ref=SOURCES_3PC[0]):
-        model = self.cat[ref["idx"]].spectral_model()
+    def test_spectral_model(self, ref_list=SOURCES_3PC):
+        for ref in ref_list:
+            model = self.cat[ref["idx"]].spectral_model()
 
-        e_ref = model.reference.quantity
-        dnde, dnde_err = model.evaluate_error(e_ref)
-        assert isinstance(model, ref["spec_type"])
-        assert_quantity_allclose(dnde, ref["dnde"], rtol=1e-4)
-        assert_quantity_allclose(dnde_err, ref["dnde_err"], rtol=1e-4)
+            e_ref = model.reference.quantity
+            dnde, dnde_err = model.evaluate_error(e_ref)
+            assert isinstance(model, ref["spec_type"])
+            assert_quantity_allclose(dnde, ref["dnde"], rtol=1e-4)
+            assert_quantity_allclose(dnde_err, ref["dnde_err"], rtol=1e-4)
+            if ref["name"] == "J0940-5428":
+                assert model.index_2.error == 0.0
 
     def test_spectral_model_none(self, ref=SOURCES_3PC_NONE[0]):
         model = self.cat[ref["idx"]].spectral_model()

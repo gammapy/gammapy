@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Fermi catalog and source classes."""
+
 import abc
 import logging
 import warnings
@@ -56,7 +57,6 @@ class SourceCatalogObjectFermiPCBase(SourceCatalogObject, abc.ABC):
         return self.info()
 
     def info(self, info="all"):
-
         if info == "all":
             info = "basic,more,position,pulsar,spectral,lightcurve"
 
@@ -407,9 +407,14 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         )
 
         fmt = "{:<45s} : {:.3f} +- {:.3f}\n"
-        ss += fmt.format(
-            "Spectral index", d[tag + "_Index"], d["Unc_" + tag + "_Index"]
-        )
+        if f"{tag}_ExpfactorS" in d:
+            ss += fmt.format(
+                "Spectral index", d[tag + "_IndexS"], d["Unc_" + tag + "_IndexS"]
+            )
+        else:
+            ss += fmt.format(
+                "Spectral index", d[tag + "_Index"], d["Unc_" + tag + "_Index"]
+            )
 
         fmt = "{:<45s} : {:.3} +- {:.3} {}\n"
         ss += fmt.format(
@@ -654,13 +659,17 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         names = ["flux", "flux_errp", "flux_errn", "flux_ul", "ts"]
         maps = Maps.from_geom(geom=geom, names=names)
 
-        maps["flux"].quantity = self.data[tag]
-        maps["flux_errp"].quantity = self.data[f"Unc_{tag}"][:, 1]
-        maps["flux_errn"].quantity = -self.data[f"Unc_{tag}"][:, 0]
+        maps["flux"].quantity = self.data[tag].reshape(geom.data_shape)
+        maps["flux_errp"].quantity = self.data[f"Unc_{tag}"][:, 1].reshape(
+            geom.data_shape
+        )
+        maps["flux_errn"].quantity = -self.data[f"Unc_{tag}"][:, 0].reshape(
+            geom.data_shape
+        )
         maps["flux_ul"].quantity = compute_flux_points_ul(
             maps["flux"].quantity, maps["flux_errp"].quantity
-        )
-        maps["ts"].quantity = self.data[tag_sqrt_ts] ** 2
+        ).reshape(geom.data_shape)
+        maps["ts"].quantity = (self.data[tag_sqrt_ts] ** 2).reshape(geom.data_shape)
 
         return FluxPoints.from_maps(
             maps=maps,
@@ -949,12 +958,16 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
         names = ["flux", "flux_errp", "flux_errn", "flux_ul"]
         maps = Maps.from_geom(geom=geom, names=names)
 
-        maps["flux"].quantity = self.data[tag]
-        maps["flux_errp"].quantity = self.data[f"Unc_{tag}"][:, 1]
-        maps["flux_errn"].quantity = -self.data[f"Unc_{tag}"][:, 0]
+        maps["flux"].quantity = self.data[tag].reshape(geom.data_shape)
+        maps["flux_errp"].quantity = self.data[f"Unc_{tag}"][:, 1].reshape(
+            geom.data_shape
+        )
+        maps["flux_errn"].quantity = -self.data[f"Unc_{tag}"][:, 0].reshape(
+            geom.data_shape
+        )
         maps["flux_ul"].quantity = compute_flux_points_ul(
             maps["flux"].quantity, maps["flux_errp"].quantity
-        )
+        ).reshape(geom.data_shape)
         is_ul = np.isnan(maps["flux_errn"])
         maps["flux_ul"].data[~is_ul] = np.nan
 
@@ -1368,7 +1381,6 @@ class SourceCatalogObject2PC(SourceCatalogObjectFermiPCBase):
         fmt_f = "{}{:<20s} : {:.3f} +- {:.3f}\n"
 
         if not isinstance(d["PLEC1_Prefactor"], np.ma.core.MaskedConstant):
-
             ss += "\n{}* PLSuperExpCutoff b = 1 *\n\n".format(indentation)
             ss += fmt_e.format(
                 indentation, "Amplitude", d["PLEC1_Prefactor"], d["Unc_PLEC1_Prefactor"]
@@ -1388,7 +1400,6 @@ class SourceCatalogObject2PC(SourceCatalogObjectFermiPCBase):
             )
 
         if not isinstance(d["PLEC_Prefactor"], np.ma.core.MaskedConstant):
-
             ss += "\n{}* PLSuperExpCutoff b free *\n\n".format(indentation)
             ss += fmt_e.format(
                 indentation, "Amplitude", d["PLEC_Prefactor"], d["Unc_PLEC_Prefactor"]
@@ -1414,7 +1425,6 @@ class SourceCatalogObject2PC(SourceCatalogObjectFermiPCBase):
             )
 
         if not isinstance(d["PL_Prefactor"], np.ma.core.MaskedConstant):
-
             ss += "\n{}* PowerLaw *\n\n".format(indentation)
             ss += fmt_e.format(
                 indentation, "Amplitude", d["PL_Prefactor"], d["Unc_PL_Prefactor"]
@@ -1581,7 +1591,6 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
         fmt_f = "{}{:<20s} : {:.3f} +- {:.3f}\n"
 
         if not isinstance(d["PLEC_Flux_Density_b23"], np.ma.core.MaskedConstant):
-
             ss += "\n{}* SuperExpCutoffPowerLaw4FGLDR3 b = 2/3 *\n\n".format(
                 indentation
             )
@@ -1609,7 +1618,6 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
             )
 
         if not isinstance(d["PLEC_Flux_Density_bfr"], np.ma.core.MaskedConstant):
-
             ss += "\n{}* SuperExpCutoffPowerLaw4FGLDR3 b free *\n\n".format(indentation)
             ss += fmt_e.format(
                 indentation,
@@ -1640,26 +1648,57 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
             )
         return ss
 
-    def spectral_model(self):
+    def spectral_model(self, fit="auto"):
+        """
+        In the 3PC, Fermi-LAT collaboration tried to fit a
+        `~gammapy.modelling.models.SuperExpCutoffPowerLaw4FGLDR3SpectralModel` with the
+        exponential index `index_2` free, or fixed to 2/3. These two models are referred
+        as "b free" and "b 23". For most pulsars, both models are available. However,
+        in some cases the "b free" model did not fit correctly.
+
+        Parameters
+        ----------
+
+        fit : str, optional
+            Which fitted model to return. The user can choose between "auto", "b free"
+            and "b 23". "auto" will always try to return the "b free" first and fall
+            back to the "b 23" fit if "b free" is not available. Default is "auto".
+        """
         d = self.data_spectral
         if d is None or d["SpectrumType"] != "PLSuperExpCutoff4":
             log.warning(f"No spectral model available for source {self.name}")
             return None
 
         tag = "SuperExpCutoffPowerLaw4FGLDR3SpectralModel"
-        pars = {
-            "reference": d["Pivot_Energy_bfr"],
-            "amplitude": d["PLEC_Flux_Density_bfr"],
-            "index_1": -d["PLEC_IndexS_bfr"],
-            "index_2": d["PLEC_Exp_Index_bfr"],
-            "expfactor": d["PLEC_ExpfactorS_bfr"],
-        }
-        errs = {
-            "amplitude": d["Unc_PLEC_Flux_Density_bfr"],
-            "index_1": d["Unc_PLEC_IndexS_bfr"],
-            "index_2": d["Unc_PLEC_Exp_Index_bfr"],
-            "expfactor": d["Unc_PLEC_ExpfactorS_bfr"],
-        }
+        if not (
+            isinstance(d["PLEC_IndexS_bfr"], np.ma.core.masked_array) or (fit == "b 23")
+        ):
+            pars = {
+                "reference": d["Pivot_Energy_bfr"],
+                "amplitude": d["PLEC_Flux_Density_bfr"],
+                "index_1": -d["PLEC_IndexS_bfr"],
+                "index_2": d["PLEC_Exp_Index_bfr"],
+                "expfactor": d["PLEC_ExpfactorS_bfr"],
+            }
+            errs = {
+                "amplitude": d["Unc_PLEC_Flux_Density_bfr"],
+                "index_1": d["Unc_PLEC_IndexS_bfr"],
+                "index_2": d["Unc_PLEC_Exp_Index_bfr"],
+                "expfactor": d["Unc_PLEC_ExpfactorS_bfr"],
+            }
+        else:
+            pars = {
+                "reference": d["Pivot_Energy_b23"],
+                "amplitude": d["PLEC_Flux_Density_b23"],
+                "index_1": -d["PLEC_IndexS_b23"],
+                "index_2": d["PLEC_Exp_Index_b23"],
+                "expfactor": d["PLEC_ExpfactorS_b23"],
+            }
+            errs = {
+                "amplitude": d["Unc_PLEC_Flux_Density_b23"],
+                "index_1": d["Unc_PLEC_IndexS_b23"],
+                "expfactor": d["Unc_PLEC_ExpfactorS_b23"],
+            }
 
         model = Model.create(tag, "spectral", **pars)
 
@@ -1899,7 +1938,6 @@ class SourceCatalog2PC(SourceCatalog):
     source_object_class = SourceCatalogObject2PC
 
     def __init__(self, filename="$GAMMAPY_DATA/catalogs/fermi/2PC_catalog_v04.fits.gz"):
-
         filename = make_path(filename)
 
         with warnings.catch_warnings():

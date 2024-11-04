@@ -469,7 +469,7 @@ class Datasets(collections.abc.MutableSequence):
         if path.exists() and not overwrite:
             raise IOError(f"File exists already: {path}")
         yaml_str = to_yaml(data)
-        write_yaml(yaml_str, path, checksum=checksum)
+        write_yaml(yaml_str, path, checksum=checksum, overwrite=overwrite)
 
         if filename_models:
             self.models.write(
@@ -484,6 +484,8 @@ class Datasets(collections.abc.MutableSequence):
 
         This works only if all datasets are of the same type and with aligned geometries, and if a proper
         in-place stack method exists for the Dataset type.
+
+        For details, see :ref:`stack`.
 
         Parameters
         ----------

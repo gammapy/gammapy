@@ -11,6 +11,7 @@ __all__ = [
     "compute_flux_doubling",
     "structure_function",
     "TimmerKonig_lightcurve_simulator",
+    "discrete_correlation",
 ]
 
 
@@ -52,7 +53,6 @@ def compute_fvar(flux, flux_err, axis=0):
        curves from active galaxies", Vaughan et al. (2003)
        https://ui.adsabs.harvard.edu/abs/2003MNRAS.345.1271V
     """
-
     flux_mean = np.nanmean(flux, axis=axis)
     n_points = np.count_nonzero(~np.isnan(flux), axis=axis)
 
@@ -103,7 +103,6 @@ def compute_fpp(flux, flux_err, axis=0):
        Arakelian 564 and Ton S180", Edelson et al. (2002), equation 3,
        https://iopscience.iop.org/article/10.1086/323779
     """
-
     flux_mean = np.nanmean(flux, axis=axis)
     n_points = np.count_nonzero(~np.isnan(flux), axis=axis)
     flux = flux.swapaxes(0, axis).T
@@ -176,7 +175,6 @@ def compute_flux_doubling(flux, flux_err, coords, axis=0):
         Dictionary containing the characteristic flux doubling, halving and errors,
         with coordinates at which they were found.
     """
-
     flux = np.atleast_2d(flux).swapaxes(0, axis).T
     flux_err = np.atleast_2d(flux_err).swapaxes(0, axis).T
 
@@ -256,10 +254,9 @@ def structure_function(flux, flux_err, time, tdelta_precision=5):
     References
     ----------
     .. [Emmanoulopoulos2010] "On the use of structure functions to study blazar variability:
-    caveats and problems", Emmanoulopoulos et al. (2010)
-    https://academic.oup.com/mnras/article/404/2/931/968488
+       caveats and problems", Emmanoulopoulos et al. (2010)
+       https://academic.oup.com/mnras/article/404/2/931/968488
     """
-
     dist_matrix = (time[np.newaxis, :] - time[:, np.newaxis]).round(
         decimals=tdelta_precision
     )
@@ -284,6 +281,92 @@ def structure_function(flux, flux_err, time, tdelta_precision=5):
 
     sf = factor / norm
     return sf, distances
+
+
+def discrete_correlation(flux1, flux_err1, flux2, flux_err2, time1, time2, tau, axis=0):
+    """Compute the discrete correlation function for a variable source.
+
+    Parameters
+    ----------
+    flux1, flux_err1: `~astropy.units.Quantity`
+        The first set of measured fluxes and associated error.
+    flux2, flux_err2 : `~astropy.units.Quantity`
+        The second set of measured fluxes and associated error.
+    time1, time2 : `~astropy.units.Quantity`
+        The time coordinates at which the fluxes are measured.
+    tau : `~astropy.units.Quantity`
+        Size of the bins to compute the discrete correlation.
+    axis : int, optional
+        Axis along which the correlation is computed.
+        Default is 0.
+
+    Returns
+    -------
+    bincenters: `~astropy.units.Quantity`
+        Array of discrete time bins.
+    discrete_correlation: `~numpy.ndarray`
+        Array of discrete correlation function values for each bin.
+    discrete_correlation_err : `~numpy.ndarray`
+        Error associated to the discrete correlation values.
+
+    References
+    ----------
+    .. [Edelson1988] "THE DISCRETE CORRELATION FUNCTION: A NEW METHOD FOR ANALYZING
+       UNEVENLY SAMPLED VARIABILITY DATA", Edelson et al. (1988)
+       https://ui.adsabs.harvard.edu/abs/1988ApJ...333..646E/abstract
+    """
+    flux1 = np.rollaxis(flux1, axis, 0)
+    flux2 = np.rollaxis(flux2, axis, 0)
+
+    if np.squeeze(flux1).shape[1:] != np.squeeze(flux2).shape[1:]:
+        raise ValueError(
+            "flux1 and flux2 must have the same squeezed shape, apart from the chosen axis."
+        )
+
+    tau = tau.to(time1.unit)
+    time2 = time2.to(time1.unit)
+
+    mean1, mean2 = np.nanmean(flux1, axis=0), np.nanmean(flux2, axis=0)
+    sigma1, sigma2 = np.nanstd(flux1, axis=0), np.nanstd(flux2, axis=0)
+
+    udcf1 = (flux1 - mean1) / np.sqrt((sigma1**2 - np.nanmean(flux_err1, axis=0) ** 2))
+    udcf2 = (flux2 - mean2) / np.sqrt((sigma2**2 - np.nanmean(flux_err2, axis=0) ** 2))
+
+    udcf = np.empty(((flux1.shape[0],) + flux2.shape))
+    dist = u.Quantity(np.empty(((flux1.shape[0], flux2.shape[0]))), unit=time1.unit)
+
+    for i, x1 in enumerate(udcf1):
+        for j, x2 in enumerate(udcf2):
+            udcf[i, j, ...] = x1 * x2
+            dist[i, j] = time1[i] - time2[j]
+
+    maxfactor = np.floor(np.amax(dist) / tau).value + 1
+    minfactor = np.floor(np.amin(dist) / tau).value
+
+    bins = (
+        np.linspace(
+            minfactor, maxfactor, int(np.abs(maxfactor) + np.abs(minfactor) + 1)
+        )
+        * tau
+    )
+
+    bin_indices = np.digitize(dist, bins).flatten()
+
+    udcf = np.reshape(udcf, (udcf.shape[0] * udcf.shape[1], -1))
+    discrete_correlation = np.array(
+        [np.nanmean(udcf[bin_indices == i], axis=0) for i in range(1, len(bins))]
+    )
+
+    discrete_correlation_err = []
+    for i in range(1, len(bins)):
+        terms = (discrete_correlation[i - 1] - udcf[bin_indices == i]) ** 2
+        num = np.sqrt(np.nansum(terms, axis=0))
+        den = len(udcf[bin_indices == i]) - 1
+        discrete_correlation_err.append(num / den)
+
+    bincenters = (bins[1:] + bins[:-1]) / 2
+
+    return bincenters, discrete_correlation, np.array(discrete_correlation_err)
 
 
 def TimmerKonig_lightcurve_simulator(
@@ -351,7 +434,7 @@ def TimmerKonig_lightcurve_simulator(
     References
     ----------
     .. [Timmer1995] "On generating power law noise", J. Timmer and M, Konig, section 3
-    https://ui.adsabs.harvard.edu/abs/1995A%26A...300..707T/abstract
+       https://ui.adsabs.harvard.edu/abs/1995A%26A...300..707T/abstract
     """
     if not callable(power_spectrum):
         raise ValueError(

@@ -7,6 +7,8 @@ from gammapy.datasets import Datasets, MapDataset, MapDatasetOnOff
 from gammapy.estimators import ASmoothMapEstimator
 from gammapy.maps import Map, MapAxis, WcsNDMap
 from gammapy.utils.testing import requires_data
+from gammapy.modeling.models import PowerLawSpectralModel
+from gammapy.utils.deprecation import GammapyDeprecationWarning
 
 
 @pytest.fixture(scope="session")
@@ -38,6 +40,9 @@ def input_dataset():
 def test_asmooth(input_dataset_simple):
     kernel = Tophat2DKernel
     scales = ASmoothMapEstimator.get_scales(3, factor=2, kernel=kernel) * 0.1 * u.deg
+
+    with pytest.warns(GammapyDeprecationWarning):
+        ASmoothMapEstimator(scales=scales, spectrum=PowerLawSpectralModel())
 
     asmooth = ASmoothMapEstimator(
         scales=scales, kernel=kernel, method="lima", threshold=2.5

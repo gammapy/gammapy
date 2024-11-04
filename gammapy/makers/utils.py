@@ -3,11 +3,12 @@ import logging
 import warnings
 import numpy as np
 import astropy.units as u
-from astropy.coordinates import Angle, SkyOffsetFrame
+from astropy.coordinates import Angle
 from astropy.table import Table
 from gammapy.data import FixedPointingInfo
 from gammapy.irf import BackgroundIRF, EDispMap, FoVAlignment, PSFMap
 from gammapy.maps import Map, RegionNDMap
+from gammapy.maps.utils import broadcast_axis_values_to_geom
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.stats import WStatCountsStatistic
 from gammapy.utils.coordinates import sky_to_fov
@@ -81,12 +82,15 @@ def _get_fov_coords(pointing, irf, geom, use_region_center=True, obstime=None):
             fov_lon, fov_lat = sky_to_fov(
                 altaz_coord.az, altaz_coord.alt, pointing_altaz.az, pointing_altaz.alt
             )
-        elif irf.fov_alignment == FoVAlignment.RADEC:
-            # Create OffsetFrame
-            frame = SkyOffsetFrame(origin=pointing_icrs)
-            pseudo_fov_coord = sky_coord.transform_to(frame)
-            fov_lon = pseudo_fov_coord.lon
-            fov_lat = pseudo_fov_coord.lat
+        elif irf.fov_alignment in [FoVAlignment.RADEC, FoVAlignment.REVERSE_LON_RADEC]:
+            fov_lon, fov_lat = sky_to_fov(
+                sky_coord.icrs.ra,
+                sky_coord.icrs.dec,
+                pointing_icrs.icrs.ra,
+                pointing_icrs.icrs.dec,
+            )
+            if irf.fov_alignment == FoVAlignment.REVERSE_LON_RADEC:
+                fov_lon = -fov_lon
         else:
             raise ValueError(
                 f"Unsupported background coordinate system: {irf.fov_alignment!r}"
@@ -132,7 +136,8 @@ def make_map_exposure_true_energy(
         irf=aeff,
         obstime=None,
     )
-    coords["energy_true"] = geom.axes["energy_true"].center.reshape((-1, 1, 1))
+
+    coords["energy_true"] = broadcast_axis_values_to_geom(geom, "energy_true")
     exposure = aeff.evaluate(**coords)
 
     data = (exposure * livetime).to("m2 s")
@@ -140,8 +145,7 @@ def make_map_exposure_true_energy(
 
     if not use_region_center:
         _, weights = geom.get_wcs_coord_and_weights()
-        data = np.average(data, axis=-1, weights=weights)
-
+        data = np.average(data, axis=-1, weights=weights, keepdims=True)
     return Map.from_geom(geom=geom, data=data.value, unit=data.unit, meta=meta)
 
 
@@ -255,14 +259,14 @@ def make_map_background_irf(
         use_region_center=use_region_center,
         obstime=obstime,
     )
-    coords["energy"] = geom.axes["energy"].edges.reshape((-1, 1, 1))
+    coords["energy"] = broadcast_axis_values_to_geom(geom, "energy", False)
 
     bkg_de = bkg.integrate_log_log(**coords, axis_name="energy")
     data = (bkg_de * d_omega * ontime).to_value("")
 
     if not use_region_center:
         region_coord, weights = geom.get_wcs_coord_and_weights()
-        data = np.sum(weights * data, axis=2)
+        data = np.sum(weights * data, axis=2, keepdims=True)
 
     bkg_map = Map.from_geom(geom, data=data)
 
@@ -304,8 +308,8 @@ def make_psf_map(psf, pointing, geom, exposure_map=None):
         obstime=None,
     )
 
-    coords["energy_true"] = geom.axes["energy_true"].center.reshape((-1, 1, 1, 1))
-    coords["rad"] = geom.axes["rad"].center.reshape((1, -1, 1, 1))
+    coords["energy_true"] = broadcast_axis_values_to_geom(geom, "energy_true")
+    coords["rad"] = broadcast_axis_values_to_geom(geom, "rad")
 
     # Compute PSF values
     data = psf.evaluate(**coords)
@@ -345,15 +349,15 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None, use_region_center=T
         The resulting energy dispersion map.
     """
     coords = _get_fov_coords(pointing, edisp, geom, use_region_center=use_region_center)
-    coords["energy_true"] = geom.axes["energy_true"].center.reshape((-1, 1, 1, 1))
-    coords["migra"] = geom.axes["migra"].center.reshape((1, -1, 1, 1))
+    coords["energy_true"] = broadcast_axis_values_to_geom(geom, "energy_true")
+    coords["migra"] = broadcast_axis_values_to_geom(geom, "migra")
 
     # Compute EDisp values
     data = edisp.evaluate(**coords)
 
     if not use_region_center:
         _, weights = geom.get_wcs_coord_and_weights()
-        data = np.average(data, axis=-1, weights=weights)
+        data = np.average(data, axis=-1, weights=weights, keepdims=True)
 
     # Create Map and fill relevant entries
     edisp_map = Map.from_geom(geom, data=data.to_value(""), unit="")

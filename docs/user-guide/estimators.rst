@@ -35,7 +35,7 @@ In general the flux can be estimated using two methods:
    not re-optimising other parameters, one can estimate the significance based on the
    analytical solution by [LiMa1983]. In this case the "best fit" flux and significance
    are given by the excess over the null hypothesis. This method is also named
-   **backward folding**. This method is currently only exposed in the `ExcessMapEstimator`
+   **backward folding**. This method is currently only exposed in the `~gammapy.estimators.ExcessMapEstimator`
 
 
 Energy edges
@@ -88,6 +88,11 @@ To compute the error, asymmetric errors as well as upper limits one can
 specify the arguments ``n_sigma`` and ``n_sigma_ul``. The ``n_sigma``
 arguments are translated into a TS difference assuming ``ts = n_sigma ** 2``.
 
+.. _sedtypes:
+
+SED types
+^^^^^^^^^
+
 In addition to the norm values a reference spectral model and energy ranges
 are given. Using this reference spectral model the norm values can be converted
 to the following different SED types:
@@ -107,7 +112,7 @@ e2dnde            Differential energy flux at ``e_ref``
 The same can be applied for the error and upper limit information.
 More information can be found on the `likelihood SED type page`_.
 
-The `FluxPoints` and `FluxMaps` objects can optionally define meta
+The `~gammapy.estimators.FluxPoints` and `~gammapy.estimators.FluxMaps` objects can optionally define meta
 data with the following valid keywords:
 
 ================= =================================================
@@ -136,7 +141,7 @@ A note on negative flux and upper limit values:
 Flux maps
 ---------
 
-This how to compute flux maps with the `ExcessMapEstimator`:
+This how to compute flux maps with the `~gammapy.estimators.ExcessMapEstimator`:
 
 .. testcode::
 
@@ -160,9 +165,9 @@ This how to compute flux maps with the `ExcessMapEstimator`:
     <BLANKLINE>
         geom  : WcsGeom
         axes  : ['lon', 'lat', 'energy']
-        shape : (320, 240, 2)
+        shape : (np.int64(320), np.int64(240), 2)
         ndim  : 3
-        unit  : 1 / (cm2 s)
+        unit  : 1 / (s cm2)
         dtype : float64
     <BLANKLINE>
 
@@ -206,11 +211,22 @@ This is how to compute flux points:
 Using gammapy.estimators
 ------------------------
 
-.. minigallery:: gammapy.estimators.FluxPointsEstimator
-    :add-heading:
+.. minigallery::
 
-.. minigallery:: gammapy.estimators.LightCurveEstimator
-    :add-heading:
+    ../examples/tutorials/api/estimators.py
+
+.. minigallery::
+    :add-heading: Examples using `~gammapy.estimators.FluxPointsEstimator`
+
+    ../examples/tutorials/analysis-1d/spectral_analysis.py
+    ../examples/tutorials/analysis-3d/analysis_mwl.py
+
+.. minigallery::
+    :add-heading: Examples using `~gammapy.estimators.LightCurveEstimator`
+
+    ../examples/tutorials/analysis-time/light_curve.py
+    ../examples/tutorials/analysis-time/light_curve_flare.py
+
 
 
 .. _`likelihood SED type page`: https://gamma-astro-data-formats.readthedocs.io/en/latest/spectra/binned_likelihoods/index.html

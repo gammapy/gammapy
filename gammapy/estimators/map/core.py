@@ -76,7 +76,6 @@ VALID_QUANTITIES = [
     "npred",
     "npred_excess",
     "stat",
-    "stat_scan",
     "stat_null",
     "stat_scan",
     "dnde_scan_values",
@@ -85,6 +84,9 @@ VALID_QUANTITIES = [
     "counts",
     "success",
     "n_dof",
+    "alpha",
+    "acceptance_on",
+    "acceptance_off",
 ]
 
 
@@ -139,6 +141,9 @@ class FluxMaps:
         * sqrt_ts : optional, the square root of the test statistic, when relevant.
         * success : optional, a boolean tagging the validity of the estimation.
         * n_dof : optional, the number of degrees of freedom used in TS computation
+        * alpha : optional, normalisation factor to accounts for differences between the test region and the background
+        * acceptance_off : optional, acceptance from the off region
+        * acceptance_on : optional, acceptance from the on region
 
     reference_model : `~gammapy.modeling.models.SkyModel`, optional
         The reference model to use for conversions. If None, a model consisting
@@ -181,7 +186,7 @@ class FluxMaps:
 
     @property
     def available_quantities(self):
-        """Available quantities"""
+        """Available quantities."""
         return list(self._data.keys())
 
     @staticmethod
@@ -223,8 +228,9 @@ class FluxMaps:
         if not required.issubset(keys):
             missing = required.difference(keys)
             raise ValueError(
-                "Missing data / column for SED type '{}':"
-                " {}".format(sed_type, missing)
+                "Missing data / column for SED type '{}':" " {}".format(
+                    sed_type, missing
+                )
             )
 
     # TODO: add support for scan
@@ -337,7 +343,7 @@ class FluxMaps:
 
     @property
     def reference_spectral_model(self):
-        """Reference spectral model as a `SpectralModel`"""
+        """Reference spectral model as a `SpectralModel`."""
         return self.reference_model.spectral_model
 
     @property
@@ -518,7 +524,7 @@ class FluxMaps:
 
     @property
     def ts_scan(self):
-        """Test statistic scan as a `~gammapy.maps.Map` object"""
+        """Test statistic scan as a `~gammapy.maps.Map` object."""
         return self.stat_scan - np.expand_dims(self.stat.data, 2)
 
     # TODO: always derive sqrt(TS) from TS?
@@ -588,6 +594,24 @@ class FluxMaps:
         """Number of degrees of freedom of the fit per energy bin."""
         self._check_quantity("n_dof")
         return self._data["n_dof"]
+
+    @property
+    def alpha(self):
+        """The normalisation, alpha, for differences between the on and off regions."""
+        self._check_quantity("alpha")
+        return self._data["alpha"]
+
+    @property
+    def acceptance_on(self):
+        """The acceptance in the on region."""
+        self._check_quantity("acceptance_on")
+        return self._data["acceptance_on"]
+
+    @property
+    def acceptance_off(self):
+        """The acceptance in the off region."""
+        self._check_quantity("acceptance_off")
+        return self._data["acceptance_off"]
 
     @property
     def dnde_ref(self):
@@ -869,7 +893,6 @@ class FluxMaps:
             FluxMap iteration.
 
         """
-
         split_maps = {}
         axis = self.geom.axes[axis_name]
         gti = self.gti
@@ -1105,22 +1128,21 @@ class FluxMaps:
             return cls.from_hdulist(hdulist, checksum=checksum)
 
     def copy(self, reference_model=None):
-        """Deep copy
+        """Deep copy.
 
         Parameters
         ----------
-
         reference_model : `~gammapy.modeling.models.SkyModel`, optional
-            The reference model to use for conversions. If None, the originial model is copied.
+            The reference model to use for conversions. If None, the original model is copied.
             Flux maps have been obtained for a specific reference model.
             Changing it will change the fluxes. Handle with care.
+
         Returns
         -------
         flux_maps : `~gammapy.estimators.FluxMaps`
             Copied flux maps object.
 
         """
-
         new = deepcopy(self)
         if reference_model is not None:
             new._reference_model = reference_model.copy()
@@ -1153,7 +1175,6 @@ class FluxMaps:
         >>> slices = {"energy": slice(0, 2)}
         >>> sliced = fp.slice_by_idx(slices)
         """
-
         data = {}
 
         for key, item in self._data.items():
@@ -1167,7 +1188,7 @@ class FluxMaps:
         )
 
     def slice_by_coord(self, slices):
-        """Slice flux maps by coordinate values
+        """Slice flux maps by coordinate values.
 
         Parameters
         ----------
@@ -1191,7 +1212,6 @@ class FluxMaps:
         >>> slices = {"time": slice(2035.93*u.day, 2036.05*u.day)}
         >>> sliced = lc_1d.slice_by_coord(slices)
         """
-
         idx_intervals = []
 
         for key, interval in zip(slices.keys(), slices.values()):
@@ -1228,7 +1248,6 @@ class FluxMaps:
         >>> lc_1d = FluxPoints.read("$GAMMAPY_DATA/estimators/pks2155_hess_lc/pks2155_hess_lc.fits")
         >>> sliced = lc_1d.slice_by_time(time_min=2035.93*u.day, time_max=2036.05*u.day)
         """
-
         time_slice = slice(time_min, time_max)
 
         return self.slice_by_coord({"time": time_slice})
@@ -1253,7 +1272,6 @@ class FluxMaps:
         >>> fp = FluxPoints.read("$GAMMAPY_DATA/estimators/crab_hess_fp/crab_hess_fp.fits")
         >>> sliced = fp.slice_by_energy(energy_min=2*u.TeV, energy_max=10*u.TeV)
         """
-
         energy_slice = slice(energy_min, energy_max)
 
         return self.slice_by_coord({"energy": energy_slice})

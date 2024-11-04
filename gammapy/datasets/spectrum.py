@@ -79,6 +79,8 @@ class PlotMixin:
         label = self._residuals_labels[method]
         ax_residuals.set_ylabel(f"Residuals\n{label}")
         plt.setp(ax_spectrum.get_xticklabels(), visible=bool_visible_xticklabel)
+        self.plot_masks(ax=ax_spectrum)
+        self.plot_masks(ax=ax_residuals)
 
         return ax_spectrum, ax_residuals
 

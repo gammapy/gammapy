@@ -95,7 +95,6 @@ In practice, we have to:
 from pathlib import Path
 
 # Check package versions
-import numpy as np
 import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
@@ -220,7 +219,7 @@ dataset_maker = SpectrumDatasetMaker(
     containment_correction=True, selection=["counts", "exposure", "edisp"]
 )
 bkg_maker = ReflectedRegionsBackgroundMaker(exclusion_mask=exclusion_mask)
-safe_mask_masker = SafeMaskMaker(methods=["aeff-max"], aeff_percent=10)
+safe_mask_maker = SafeMaskMaker(methods=["aeff-max"], aeff_percent=10)
 
 # %%time
 datasets = Datasets()
@@ -228,7 +227,7 @@ datasets = Datasets()
 for obs_id, observation in zip(obs_ids, observations):
     dataset = dataset_maker.run(dataset_empty.copy(name=str(obs_id)), observation)
     dataset_on_off = bkg_maker.run(dataset, observation)
-    dataset_on_off = safe_mask_masker.run(dataset_on_off, observation)
+    dataset_on_off = safe_mask_maker.run(dataset_on_off, observation)
     datasets.append(dataset_on_off)
 
 print(datasets)
@@ -364,7 +363,6 @@ display(result_joint.models.to_parameters_table())
 
 ax_spectrum, ax_residuals = datasets[0].plot_fit()
 ax_spectrum.set_ylim(0.1, 40)
-datasets[0].plot_masks(ax=ax_spectrum)
 plt.show()
 
 
@@ -535,7 +533,6 @@ def plot_stat(fp_dataset):
     lss = ["--", ":", "--"]
 
     for ks, stat in enumerate(stat_types):
-
         fp_dataset.stat_type = stat
 
         fit = Fit()

@@ -15,7 +15,8 @@ from astropy.time import Time
 from astropy.units import Quantity
 from astropy.utils import lazyproperty
 import matplotlib.pyplot as plt
-from gammapy.utils.deprecation import GammapyDeprecationWarning, deprecated
+from gammapy.utils.deprecation import GammapyDeprecationWarning
+from gammapy.irf import FoVAlignment
 from gammapy.utils.fits import LazyFitsData, earth_location_to_dict
 from gammapy.utils.metadata import CreatorMetaData, TargetMetaData, TimeInfoMetaData
 from gammapy.utils.scripts import make_path
@@ -39,8 +40,6 @@ class Observation:
     ----------
     obs_id : int, optional
         Observation id. Default is None
-    obs_info : dict, optional
-        Observation info dict. Default is None.
     aeff : `~gammapy.irf.EffectiveAreaTable2D`, optional
         Effective area. Default is None.
     edisp : `~gammapy.irf.EnergyDispersion2D`, optional
@@ -67,7 +66,7 @@ class Observation:
     aeff = LazyFitsData(cache=False)
     edisp = LazyFitsData(cache=False)
     psf = LazyFitsData(cache=False)
-    bkg = LazyFitsData(cache=False)
+    _bkg = LazyFitsData(cache=False)
     _rad_max = LazyFitsData(cache=True)
     _events = LazyFitsData(cache=False)
     _gti = LazyFitsData(cache=True)
@@ -77,7 +76,6 @@ class Observation:
         self,
         obs_id=None,
         meta=None,
-        obs_info=None,
         gti=None,
         aeff=None,
         edisp=None,
@@ -89,19 +87,11 @@ class Observation:
         pointing=None,
         location=None,
     ):
-        if obs_info is not None:
-            warnings.warn(
-                "obs_info argument is deprecated since v1.2. Use meta instead.",
-                GammapyDeprecationWarning,
-            )
-            if meta is None:
-                meta = ObservationMetaData.from_header(obs_info)
-
         self.obs_id = obs_id
         self.aeff = aeff
         self.edisp = edisp
         self.psf = psf
-        self.bkg = bkg
+        self._bkg = bkg
         self._rad_max = rad_max
         self._gti = gti
         self._events = events
@@ -115,6 +105,28 @@ class Observation:
             return self.to_html()
         except AttributeError:
             return f"<pre>{html.escape(str(self))}</pre>"
+
+    @property
+    def bkg(self):
+        """Background of the observation."""
+        bkg = self._bkg
+        # used for backward compatibility of old HESS data
+        try:
+            if (
+                bkg
+                and self._meta
+                and self._meta.optional
+                and self._meta.optional["CREATOR"] == "SASH FITS::EventListWriter"
+                and self._meta.optional["HDUVERS"] == "0.2"
+            ):
+                bkg._fov_alignment = FoVAlignment.REVERSE_LON_RADEC
+        except KeyError:
+            pass
+        return bkg
+
+    @bkg.setter
+    def bkg(self, value):
+        self._bkg = value
 
     @property
     def meta(self):
@@ -148,7 +160,7 @@ class Observation:
     def available_hdus(self):
         """Which HDUs are available."""
         available_hdus = []
-        keys = ["_events", "_gti", "aeff", "edisp", "psf", "bkg", "_rad_max"]
+        keys = ["_events", "_gti", "aeff", "edisp", "psf", "_bkg", "_rad_max"]
         hdus = ["events", "gti", "aeff", "edisp", "psf", "bkg", "rad_max"]
         for key, hdu in zip(keys, hdus):
             available = self.__dict__.get(key, False)
@@ -352,15 +364,6 @@ class Observation:
         return self.meta.deadtime_fraction
 
     @property
-    def obs_info(self):
-        """Observation information dictionary."""
-        warnings.warn(
-            "obs_info property is deprecated since v1.2. Use meta instead.",
-            GammapyDeprecationWarning,
-        )
-        return self.meta.to_header()
-
-    @property
     def pointing(self):
         """Get the pointing for the observation as a `~gammapy.data.FixedPointingInfo` object."""
         if self._pointing is None:
@@ -386,18 +389,6 @@ class Observation:
     def target_radec(self):
         """Target RA / DEC sky coordinates as a `~astropy.coordinates.SkyCoord` object."""
         return self.meta.target.position
-
-    @property
-    @deprecated(
-        "v1.2",
-        message="Access additional metadata directly in obs.meta.opt.",
-    )
-    def muoneff(self):
-        """Observation muon efficiency."""
-        if "MUONEFF" in self.meta.optional:
-            return self.meta.optional["MUONEFF"]
-        else:
-            raise KeyError("No muon efficiency information.")
 
     def __str__(self):
         pointing = self.get_pointing_icrs(self.tmid)
@@ -622,7 +613,6 @@ class Observation:
         if in_memory:
             argnames = inspect.getfullargspec(self.__init__).args
             # TODO: remove once obs_info is removed from the list of arguments in __init__
-            argnames.remove("obs_info")
             argnames.remove("self")
 
             for name in argnames:
@@ -658,11 +648,15 @@ class Observations(collections.abc.MutableSequence):
         for obs in observations:
             self.append(obs)
 
-    def __getitem__(self, key):
-        if isinstance(key, slice):
-            return self.__class__(self._observations[key])
+    def __getitem__(self, item):
+        if isinstance(item, (list, np.ndarray)) and all(
+            isinstance(x, str) for x in item
+        ):
+            return self.__class__([self._observations[self.index(_)] for _ in item])
+        elif isinstance(item, (slice, list, np.ndarray)):
+            return self.__class__(list(np.array(self._observations)[item]))
         else:
-            return self._observations[self.index(key)]
+            return self._observations[self.index(item)]
 
     def __delitem__(self, key):
         del self._observations[self.index(key)]

@@ -124,7 +124,7 @@ def show_info_datasets(outfolder, release):
     print("")
     print("Or as part of your conda environment:")
     print(f"conda env config vars set GAMMAPY_DATA=$PWD/{outfolder}")
-    print(f"conda conda activate gammapy-{release}")
+    print(f"conda activate gammapy-{release}")
     print("")
 
 

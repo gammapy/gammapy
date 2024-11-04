@@ -9,7 +9,7 @@ name: gammapy-dev
 
 channels:
   - conda-forge
-  - sherpa
+  - https://cxc.cfa.harvard.edu/conda/sherpa
 
 variables:
   PYTHONNOUSERSITE: "1"
@@ -27,6 +27,7 @@ dependencies:
   - regions>=0.5
   - matplotlib>=3.4
   - scipy!=1.10
+  - iminuit>=2.8.0
   - extension-helpers
   # test dependencies
   - codecov
@@ -76,8 +77,7 @@ dependencies:
   - pyinstrument
   - memray
   - pip:
-      - iminuit>=2.26
-      - sherpa
+      - sherpa>=4.17
       - pytest-sphinx
       - ray[default]>=2.9
       - PyGithub

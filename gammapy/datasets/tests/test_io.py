@@ -58,6 +58,12 @@ def test_datasets_to_io(tmp_path):
         filename_models=tmp_path / "written_models.yaml",
     )
 
+    datasets.write(
+        filename=tmp_path / "written_datasets.yaml",
+        filename_models=tmp_path / "written_models.yaml",
+        overwrite=True,
+    )
+
     datasets_read = Datasets.read(
         filename=tmp_path / "written_datasets.yaml",
         filename_models=tmp_path / "written_models.yaml",
@@ -112,7 +118,6 @@ def test_spectrum_datasets_to_io(tmp_path):
 
 @requires_data()
 def test_ogip_writer(tmp_path):
-
     dataset = SpectrumDatasetOnOff.read(
         "$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits"
     )

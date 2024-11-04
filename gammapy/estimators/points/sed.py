@@ -10,7 +10,6 @@ from gammapy.datasets.actors import DatasetsActor
 from gammapy.datasets.flux_points import _get_reference_model
 from gammapy.maps import MapAxis
 from gammapy.modeling import Fit
-from gammapy.utils.deprecation import deprecated_attribute
 from ..flux import FluxEstimator
 from .core import FluxPoints
 
@@ -28,26 +27,16 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
     fitted within the energy range defined by the energy group. This is done for
     each group independently. The amplitude is re-normalized using the "norm" parameter,
     which specifies the deviation of the flux from the reference model in this
-    energy group. See https://gamma-astro-data-formats.readthedocs.io/en/latest/spectra/binned_likelihoods/index.html  # noqa: E501
+    energy group. See https://gamma-astro-data-formats.readthedocs.io/en/latest/spectra/binned_likelihoods/index.html
     for details.
 
-    The method is also described in the Fermi-LAT catalog paper
-    https://ui.adsabs.harvard.edu/abs/2015ApJS..218...23A
-    or the HESS Galactic Plane Survey paper
-    https://ui.adsabs.harvard.edu/abs/2018A%26A...612A...1H
+    The method is also described in the `Fermi-LAT catalog paper <https://ui.adsabs.harvard.edu/abs/2015ApJS..218...23A>`__
+    or the `H.E.S.S. Galactic Plane Survey paper <https://ui.adsabs.harvard.edu/abs/2018A%26A...612A...1H>`__
 
     Parameters
     ----------
     source : str or int
         For which source in the model to compute the flux points.
-    norm_min : float
-        Minimum value for the norm used for the fit statistic profile evaluation.
-    norm_max : float
-        Maximum value for the norm used for the fit statistic profile evaluation.
-    norm_n_values : int
-        Number of norm values used for the fit statistic profile.
-    norm_values : `numpy.ndarray`
-        Array of norm values to be used for the fit statistic profile.
     n_sigma : int
         Number of sigma to use for asymmetric error computation. Default is 1.
     n_sigma_ul : int
@@ -94,11 +83,6 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
 
     tag = "FluxPointsEstimator"
 
-    norm_min = deprecated_attribute("norm_min", "1.2")
-    norm_max = deprecated_attribute("norm_max", "1.2")
-    norm_n_values = deprecated_attribute("norm_n_values", "1.2")
-    norm_values = deprecated_attribute("norm_values", "1.2")
-
     def __init__(
         self,
         energy_edges=[1, 10] * u.TeV,
@@ -129,22 +113,21 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
         flux_points : `FluxPoints`
             Estimated flux points.
         """
-
         if not isinstance(datasets, DatasetsActor):
             datasets = Datasets(datasets=datasets)
 
         if not datasets.energy_axes_are_aligned:
             raise ValueError("All datasets must have aligned energy axes.")
 
-        if "TELESCOP" in datasets.meta_table.colnames:
-            telescopes = datasets.meta_table["TELESCOP"]
-            if not len(np.unique(telescopes)) == 1:
-                raise ValueError(
-                    "All datasets must use the same value of the"
-                    " 'TELESCOP' meta keyword."
-                )
-
-        rows = []
+        telescopes = []
+        for d in datasets:
+            if d.meta_table is not None and "TELESCOP" in d.meta_table.colnames:
+                telescopes.extend(list(d.meta_table["TELESCOP"].flatten()))
+        if len(np.unique(telescopes)) > 1:
+            raise ValueError(
+                "All datasets must use the same value of the"
+                " 'TELESCOP' meta keyword."
+            )
 
         meta = {
             "n_sigma": self.n_sigma,
@@ -214,7 +197,7 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
             return self._nan_result(datasets, model, energy_min, energy_max)
 
     def _nan_result(self, datasets, model, energy_min, energy_max):
-        """NaN result"""
+        """NaN result."""
         energy_axis = MapAxis.from_energy_edges([energy_min, energy_max])
 
         with np.errstate(invalid="ignore", divide="ignore"):

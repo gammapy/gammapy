@@ -2,12 +2,12 @@
 Point source sensitivity
 ========================
 
-Estimate the CTA sensitivity for a point-like IRF at a fixed zenith angle and fixed offset.
+Estimate the CTAO sensitivity for a point-like IRF at a fixed zenith angle and fixed offset.
 
 Introduction
 ------------
 
-This notebook explains how to estimate the CTA sensitivity for a
+This notebook explains how to estimate the CTAO sensitivity for a
 point-like IRF at a fixed zenith angle and fixed offset, using the full
 containment IRFs distributed for the CTA 1DC. The significance is
 computed for a 1D analysis (ON-OFF regions) with the Li&Ma formula.
@@ -22,6 +22,7 @@ We will be using the following Gammapy class:
 
 """
 
+from cycler import cycler
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
@@ -81,7 +82,7 @@ empty_dataset = SpectrumDataset.create(geom=geom, energy_axis_true=energy_axis_t
 # Load IRFs and prepare dataset
 # -----------------------------
 #
-# We extract the 1D IRFs from the full 3D IRFs provided by CTA.
+# We extract the 1D IRFs from the full 3D IRFs provided by CTAO.
 #
 
 irfs = load_irf_dict_from_file(
@@ -153,7 +154,7 @@ dataset_on_off = SpectrumDatasetOnOff.from_spectrum_dataset(
 #
 # We assume an alpha of 0.2 (ratio between ON and OFF area). We then run the sensitivity estimator.
 #
-# These are the conditions imposed in standard CTA sensitivity computations.
+# These are the conditions imposed in standard CTAO sensitivity computations.
 
 sensitivity_estimator = SensitivityEstimator(
     gamma_min=10,
@@ -181,14 +182,12 @@ display(sensitivity_table)
 # Plot the sensitivity curve
 #
 
-from cycler import cycler
 
 fig, ax = plt.subplots()
 
 ax.set_prop_cycle(cycler("marker", "s*v") + cycler("color", "rgb"))
 
 for criterion in ("significance", "gamma", "bkg"):
-
     mask = sensitivity_table["criterion"] == criterion
     t = sensitivity_table[mask]
 
@@ -264,7 +263,9 @@ print(sensitivity_table)
 #
 
 flux_points = FluxPoints.from_table(
-    sensitivity_table, sed_type="e2dnde", reference_model=sensitivity_estimator.spectrum
+    sensitivity_table,
+    sed_type="e2dnde",
+    reference_model=sensitivity_estimator.spectral_model,
 )
 print(
     f"Integral sensitivity in {livetime:.2f} above {energy_axis.edges[0]:.2e} "

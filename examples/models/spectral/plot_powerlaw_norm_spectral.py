@@ -18,7 +18,6 @@ import matplotlib.pyplot as plt
 from gammapy.modeling.models import (
     Models,
     PowerLawNormSpectralModel,
-    PowerLawSpectralModel,
     SkyModel,
     TemplateSpectralModel,
 )

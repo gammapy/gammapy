@@ -1,9 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Dark matter spectra."""
+
 import numpy as np
 import astropy.units as u
 from astropy.table import Table
-from gammapy.maps import MapAxis, RegionNDMap
+from gammapy.maps import Map, MapAxis, RegionGeom
 from gammapy.modeling import Parameter
 from gammapy.modeling.models import SpectralModel, TemplateNDSpectralModel
 from gammapy.utils.scripts import make_path
@@ -70,7 +71,6 @@ class PrimaryFlux(TemplateNDSpectralModel):
     tag = ["PrimaryFlux", "dm-pf"]
 
     def __init__(self, mDM, channel):
-
         self.table_path = make_path(self.table_filename)
         if not self.table_path.exists():
             raise FileNotFoundError(
@@ -97,8 +97,10 @@ class PrimaryFlux(TemplateNDSpectralModel):
         log10x_axis = MapAxis.from_nodes(log10x, name="energy_true")
 
         channel_name = self.channel_registry[self.channel]
-        region_map = RegionNDMap.create(
-            region=None, axes=[log10x_axis, mass_axis], data=self.table[channel_name]
+
+        geom = RegionGeom(region=None, axes=[log10x_axis, mass_axis])
+        region_map = Map.from_geom(
+            geom=geom, data=self.table[channel_name].reshape(geom.data_shape)
         )
 
         interp_kwargs = {"extrapolate": True, "fill_value": 0, "values_scale": "lin"}
@@ -211,7 +213,6 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
         unit="",
         interp="log",
     )
-    scale._is_norm = True
     tag = ["DarkMatterAnnihilationSpectralModel", "dm-annihilation"]
 
     def __init__(self, mass, channel, scale=scale.quantity, jfactor=1, z=0, k=2):
@@ -319,7 +320,6 @@ class DarkMatterDecaySpectralModel(SpectralModel):
         unit="",
         interp="log",
     )
-    scale._is_norm = True
 
     tag = ["DarkMatterDecaySpectralModel", "dm-decay"]
 
