@@ -2,7 +2,9 @@
 import numpy as np
 from astropy.coordinates import SkyCoord
 from gammapy.data import Observation
-from gammapy.maps import Map
+import astropy.units as u
+from gammapy.maps import Map, MapAxis, WcsGeom
+from gammapy.maps.utils import _check_width, _check_binsz
 from gammapy.modeling.models.utils import cutout_template_models
 from . import Datasets
 
@@ -287,3 +289,124 @@ def create_map_dataset_from_dl4(data, geom=None, energy_axis_true=None, name=Non
         dataset.edisp.exposure_map.data = dataset.psf.exposure_map.data
 
     return dataset
+
+
+def create_global_dataset(
+    datasets,
+    name=None,
+    position=None,
+    binsz=None,
+    width=None,
+    energy_min=None,
+    energy_max=None,
+    energy_true_min=None,
+    energy_true_max=None,
+    nbin_per_decade=None,
+):
+    """Create an empty dataset emcompassing the input datasets.
+
+    Parameters
+    ----------
+    datasets : `~gammapy.datasets.Datasets`
+        Datasets
+    name : str, optional
+            Name of the output dataset. Default is None.
+    position : `~astropy.coordinates.SkyCoord`
+        Center position of the output dataset.
+        Defalut is None, and the average postion is taken.
+    binsz : float or tuple or list, optional
+        Map pixel size in degrees.
+        Default is None, the minimum bin size is taken.
+    width : float or tuple or list or string, optional
+        Width of the map in degrees.
+        Default is None, in that case it is derived as
+        the maximal width + twice the maximal separation between datasets and position.
+    energy_min :  `~astropy.units.Quantity`
+        Energy range.
+        Default is None, the minimum energy is taken.
+    energy_max :  `~astropy.units.Quantity`
+        Energy range.
+        Default is None, the maximum energy is taken.
+    energy_true_min :  `~astropy.units.Quantity`
+        Energy range.
+        Default is None, the minimum energy is taken.
+    energy_true_max :  `~astropy.units.Quantity`
+        Energy range.
+        Default is None, the maximum energy is taken.
+    nbin_per_decade : int
+        number of energy bin per decade.
+        Default is None, the maximum is taken.
+    Returns
+    -------
+    datasets : `~gammapy.datasets.MapDatset`
+        Empy global dataset.
+    """
+    from gammapy.datasets import MapDataset
+
+    if position is None:
+        positions = SkyCoord([d.exposure.geom.center_skydir for d in datasets])
+        position = SkyCoord(positions.cartesian.mean(), frame=positions.frame)
+
+    binsz_list = []
+    width_list = []
+    energy_min_list = []
+    energy_max_list = []
+    energy_true_min_list = []
+    energy_true_max_list = []
+    nbin_per_decade_list = []
+    for d in datasets:
+        binsz_list.append(np.abs(d.counts.geom.pixel_scales).min())
+        width_list.append(
+            d.counts.geom.width.max()
+            + 2 * d.counts.geom.center_skydir.separation(position)
+        )
+        energy_min_list.append(d.counts.geom.axes[0].edges.min())
+        energy_max_list.append(d.counts.geom.axes[0].edges.max())
+        energy_true_min_list.append(d.exposure.geom.axes[0].edges.min())
+        energy_true_max_list.append(d.exposure.geom.axes[0].edges.max())
+        ndecade = np.log10(energy_true_max_list[-1].value) - np.log10(
+            energy_true_min_list[-1].value
+        )
+        nbins = len(d.exposure.geom.axes[0].center)
+        nbin_per_decade_list.append(np.ceil(nbins / ndecade))
+
+    if binsz is None:
+        binsz = np.min(u.Quantity(binsz_list))
+    binsz = _check_binsz(binsz)
+    if width is None:
+        width = np.max(u.Quantity(width_list))
+    width = _check_width(width)
+    if energy_true_min is None:
+        energy_true_min = np.min(u.Quantity(energy_true_min_list))
+    if energy_true_max is None:
+        energy_true_max = np.max(u.Quantity(energy_true_max_list))
+    if energy_min is None:
+        energy_min = np.min(u.Quantity(energy_min_list))
+    if energy_max is None:
+        energy_max = np.max(u.Quantity(energy_max_list))
+    energy_min = np.maximum(energy_min, energy_true_min)
+    energy_max = np.minimum(energy_max, energy_true_max)
+    if nbin_per_decade is None:
+        nbin_per_decade = np.max(nbin_per_decade_list)
+    energy_axis = MapAxis.from_energy_bounds(
+        energy_min, energy_max, nbin_per_decade, unit="TeV", per_decade=True
+    )
+
+    geom = WcsGeom.create(
+        skydir=position.galactic,
+        binsz=binsz,
+        width=width,
+        frame="galactic",
+        proj="CAR",
+        axes=[energy_axis],
+    )
+
+    energy_axis_true = MapAxis.from_energy_bounds(
+        energy_true_min,
+        energy_true_max,
+        nbin_per_decade,
+        unit="TeV",
+        name="energy_true",
+        per_decade=True,
+    )
+    return MapDataset.create(geom=geom, energy_axis_true=energy_axis_true, name=name)
