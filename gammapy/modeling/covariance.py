@@ -148,8 +148,9 @@ class Covariance:
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`, optional
-            Axis to plot on. Default is None.
+        figsize : tuple, optional
+            Figure size. Default is None, which takes
+            (number_params*0.9, number_params*0.7).
         **kwargs : dict
             Keyword arguments passed to `~gammapy.visualization.plot_heatmap`.
 
