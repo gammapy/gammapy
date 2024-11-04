@@ -552,7 +552,7 @@ def plot_stat(fp_dataset):
 plot_stat(flux_points_dataset)
 
 ######################################################################
-
+#
 # In order to avoid discrepancies due to the treatment of upper limits
 # we can utilise the `~gammapy.estimators.utils.resample_energy_edges`
 # for defining energy bins in which the minimum number of `sqrt_ts` is 2.
