@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Covariance class."""
+
 import numpy as np
 import scipy
 import matplotlib.pyplot as plt
@@ -142,7 +143,7 @@ class Covariance:
 
         self._data[np.ix_(idx, idx)] = covar.data
 
-    def plot_correlation(self, ax=None, **kwargs):
+    def plot_correlation(self, figsize=None, **kwargs):
         """Plot correlation matrix.
 
         Parameters
@@ -161,12 +162,10 @@ class Covariance:
         from gammapy.visualization import annotate_heatmap, plot_heatmap
 
         npars = len(self.parameters)
-        figsize = (npars * 0.8, npars * 0.65)
+        figsize = (npars * 0.9, npars * 0.7) if figsize is None else figsize
 
         plt.figure(figsize=figsize)
-
-        ax = plt.gca() if ax is None else ax
-
+        ax = plt.gca()
         kwargs.setdefault("cmap", "coolwarm")
 
         names = self.parameters.names
