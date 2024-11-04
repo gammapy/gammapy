@@ -802,11 +802,12 @@ def combine_significance_maps(maps):
     Returns
     -------
     results : dict
-        Dictionary with keys :
-        - "significance" : joint significance map.
-        - "df" : degree of freedom map (one norm per valid bin).
-        - "npred_excess" : summed excess map.
-        - "estimator_results" : dictionary containing the flux maps computed for each dataset.
+        Dictionary with entries:
+
+                * "significance" : joint significance map.
+                * "df" : degree of freedom map (one norm per valid bin).
+                * "npred_excess" : summed excess map.
+                * "estimator_results" : dictionary containing the flux maps computed for each dataset.
 
     See also
     --------
