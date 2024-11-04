@@ -499,7 +499,7 @@ plt.show()
 # A note on statistics
 # --------------------
 #
-# Different statistic are available for the FluxPointDataset :
+# Different statistic are available for the `~gammapy.datasets.FluxPointsDataset` :
 #
 # - chi2 : estimate from chi2 statistics.
 # - profile : estimate from interpolation of the likelihood profile.
