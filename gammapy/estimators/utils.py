@@ -882,12 +882,10 @@ def get_combined_significance_maps(estimator, datasets):
             f"estimator type should be ExcessMapEstimator or TSMapEstimator), got {type(estimator)} instead."
         )
 
-    results = dict()
+    results = []
     for dataset in datasets:
-        result = estimator.run(dataset)
-        results[dataset.name] = result
-
-    return combine_significance_maps(list(results.values()))
+        results.append(estimator.run(dataset))
+    return combine_significance_maps(results)
 
 
 def combine_flux_maps(
