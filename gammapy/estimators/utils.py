@@ -786,9 +786,9 @@ def combine_significance_maps(maps):
     """Computes excess and significance for a set of datasets.
     The significance computation assumes that the model contains
     one degree of freedom per valid energy bin in each dataset.
-    This method implemented here is valid under the assumption
+    The method implemented here is valid under the assumption
     that the TS in each independent bin follows a Chi2 distribution,
-    then the sum of the TS also follows a Chi2 distribution (with the sum of degree of freedom).
+    then the sum of the TS also follows a Chi2 distribution (with the sum of the degrees of freedom).
 
     See, Zhen (2014): https://www.sciencedirect.com/science/article/abs/pii/S0167947313003204,
     Lancaster (1961): https://onlinelibrary.wiley.com/doi/10.1111/j.1467-842X.1961.tb00058.x
@@ -810,7 +810,7 @@ def combine_significance_maps(maps):
 
     See also
     --------
-    get_combined_significance_maps : same method but computing the significance maps from estimators and datasets
+    get_combined_significance_maps : same method but computing the significance maps from estimators and datasets.
 
     """
 
@@ -1032,8 +1032,8 @@ def get_combined_flux_maps(
 ):
     """Create a FluxMaps by combining a list of flux maps with the same geometry.
 
-     This assumes the flux maps are independent measurements of the same true value.
-     The GTI is stacked in the process.
+    This assumes the flux maps are independent measurements of the same true value.
+    The GTI is stacked in the process.
 
     Parameters
     ----------
