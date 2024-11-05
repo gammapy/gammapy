@@ -635,7 +635,7 @@ class FluxPoints(FluxMaps):
         if ax is None:
             ax = plt.gca()
 
-        flux_unit = DEFAULT_UNIT[sed_type]
+        flux_unit = DEFAULT_UNIT[sed_type] if ax.yaxis.units is None else ax.yaxis.units
 
         flux = getattr(self, sed_type)
 
@@ -664,7 +664,7 @@ class FluxPoints(FluxMaps):
         else:
             kwargs.setdefault("yerr", None)
 
-        flux = scale_plot_flux(flux=flux.to_unit(flux_unit), energy_power=energy_power)
+        flux = scale_plot_flux(flux=flux, energy_power=energy_power).to_unit(flux_unit)
         if "time" in flux.geom.axes_names:
             flux.geom.axes["time"].time_format = time_format
         ax = flux.plot(ax=ax, **kwargs)
