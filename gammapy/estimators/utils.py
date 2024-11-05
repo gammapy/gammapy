@@ -811,7 +811,7 @@ def combine_significance_maps(maps):
 
     See also
     --------
-    get_combined_significance_maps : same method but computing the significance maps from estimators and datasets.
+    `~gammapy.estimators.utils.get_combined_significance_maps` : same method but computing the significance maps from estimators and datasets.
 
     """
 
@@ -871,7 +871,7 @@ def get_combined_significance_maps(estimator, datasets):
 
     See also
     --------
-    `~gammapy.estimators.combine_significance_maps` : same method but using directly the significance maps from estimators
+    `~gammapy.estimators.utils.combine_significance_maps` : same method but using directly the significance maps from estimators
 
     """
     from .map.excess import ExcessMapEstimator
@@ -933,7 +933,7 @@ def combine_flux_maps(
 
     See also
     --------
-    `~gammapy.estimators.get_combined_flux_maps` : same method but using directly the flux maps from estimators
+    `~gammapy.estimators.utils.get_combined_flux_maps` : same method but using directly the flux maps from estimators
 
     """
     gtis = [map_.gti for map_ in maps if map_.gti is not None]
@@ -1074,7 +1074,7 @@ def get_combined_flux_maps(
 
     See also
     --------
-    `~gammapy.estimators.combine_flux_maps` : same method but using directly the flux maps from estimators
+    `~gammapy.estimators.utils.combine_flux_maps` : same method but using directly the flux maps from estimators
 
     """
     from .map.excess import ExcessMapEstimator
