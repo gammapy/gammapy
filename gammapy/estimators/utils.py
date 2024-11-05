@@ -933,7 +933,7 @@ def combine_flux_maps(
 
     See also
     --------
-    `~gammapy.estimators.utils.get_combined_flux_maps` : same method but using directly the flux maps from estimators
+    `get_combined_flux_maps` : same method but using directly the flux maps from estimators
 
     """
     gtis = [map_.gti for map_ in maps if map_.gti is not None]
