@@ -125,7 +125,7 @@ def create_map_dataset_geoms(
 def _default_energy_axis(observation, energy_bin_per_decade_max=30):
     # number of bins per decade estimated from the energy resolution
     # such as diff(ereco.edges)/ereco.center ~ min(eres)
-    etrue = observation.psf.axes[0].edges  # only where psf is defined
+    etrue = observation.psf.axes[0].center  # only where psf is defined
     eres = observation.edisp.to_edisp_kernel(0 * u.deg).get_resolution(etrue)
     eres = eres[np.isfinite(eres)]
     if eres.size > 0:
