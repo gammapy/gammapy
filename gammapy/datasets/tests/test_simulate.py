@@ -994,6 +994,13 @@ def test_observation_event_sampler(signal_model, tmp_path):
         deadtime_fraction=0.01,
     )
 
+    # test first with defaults
+    maker = ObservationEventSampler()
+
+    sim_obs = maker.run(obs, [signal_model])
+    assert sim_obs.events is not None
+    assert len(sim_obs.events.table) > 0
+
     dataset_kwargs = dict(
         spatial_width=5 * u.deg,
         spatial_bin_size=0.01 * u.deg,
