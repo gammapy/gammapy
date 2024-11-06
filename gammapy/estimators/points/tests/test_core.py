@@ -241,6 +241,19 @@ class TestFluxPoints:
         with mpl_plot_check():
             flux_points.plot(ax=ax)
 
+    def test_plot_custom_y_units(self, flux_points):
+        fig = plt.figure()
+        ax = fig.add_axes([0.2, 0.2, 0.7, 0.7])
+        ax.xaxis.set_units(u.eV)
+
+        yunit = u.Unit("TeV cm-2 s-1")
+        ax.yaxis.set_units(yunit)
+
+        with mpl_plot_check():
+            ax = flux_points.plot(ax=ax, sed_type="e2dnde")
+
+        assert ax.yaxis.units == yunit
+
     def test_plot_likelihood(self, flux_points_likelihood):
         plt.figure()
         with mpl_plot_check():
