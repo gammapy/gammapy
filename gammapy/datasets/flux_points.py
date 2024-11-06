@@ -487,7 +487,6 @@ class FluxPointsDataset(Dataset):
         ax_residuals=None,
         kwargs_spectrum=None,
         kwargs_residuals=None,
-        axis_name="energy",
     ):
         """Plot flux points, best fit model and residuals in two panels.
 
@@ -503,6 +502,7 @@ class FluxPointsDataset(Dataset):
             Keyword arguments passed to `~FluxPointsDataset.plot_spectrum`. Default is None.
         kwargs_residuals : dict, optional
             Keyword arguments passed to `~FluxPointsDataset.plot_residuals`. Default is None.
+
         Returns
         -------
         ax_spectrum, ax_residuals : `~matplotlib.axes.Axes`
