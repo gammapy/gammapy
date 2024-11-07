@@ -692,6 +692,7 @@ class Parameters(collections.abc.Sequence):
 
         for par in data:
             link_label = par.pop("link", None)
+            par.pop("is_norm", None)
             parameter = Parameter(**par)
             parameter._link_label_io = link_label
             parameters.append(parameter)

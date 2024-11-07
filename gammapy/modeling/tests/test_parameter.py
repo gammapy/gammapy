@@ -245,6 +245,11 @@ def test_parameters_s():
     assert_allclose(pars[1].factor, 20)
     assert_allclose(pars[1].scale, 1)
 
+    # test for backward compatibilty
+    pars_dict[0]["is_norm"] = True
+    pars = Parameters.from_dict(pars_dict)
+    assert not hasattr(pars[0], "is_norm")
+
 
 def test_parameter_scan_values():
     p = Parameter(name="test", value=0, error=1)
