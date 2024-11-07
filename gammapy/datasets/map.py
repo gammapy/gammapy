@@ -141,7 +141,7 @@ def _default_energy_axis(observation, energy_bin_per_decade_max=30, position=Non
     elif hasattr(observation.psf, "axes"):
         etrue = observation.psf.axes[0]  # only where psf is defined
         if position:
-            offset = observation.pointing.fixed_icrs.separation
+            offset = observation.pointing.fixed_icrs.separation(position)
         else:
             offset = 0 * u.deg
         ekern = observation.edisp.to_edisp_kernel(offset)

@@ -2270,6 +2270,11 @@ def test_create_empty_map_dataset_from_irfs(geom, geom_etrue):
     datastore = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
     obs = datastore.get_observations()[0]
 
+    dataset_new = create_empty_map_dataset_from_irfs(obs)
+
+    assert dataset_new.counts.data.sum() == 0
+    assert dataset_new.exposure.data.sum() == 0
+
     dataset = get_map_dataset(geom, geom_etrue)
     obs.psf = dataset.psf
     obs.edisp = dataset.edisp
