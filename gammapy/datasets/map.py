@@ -241,7 +241,7 @@ def create_empty_map_dataset_from_irfs(
         Maximal number of bin per decade in energy for the reference dataset
     spatial_width : `~astropy.units.Quantity`, optional
         Spatial window size. Default is None.
-         If None it is determined from the observation offset max or rad max.
+        If None it is determined from the observation offset max or rad max.
     spatial_width_max : `~astropy.quantity.Quantity`, optional
         Maximal spatial width. Default is 12 degree.
     spatial_bin_size : `~astropy.units.Quantity`, optional
@@ -250,9 +250,9 @@ def create_empty_map_dataset_from_irfs(
     spatial_bin_size_min : `~astropy.quantity.Quantity`, optional
         Minimal spatial bin size. Default is 0.01 degree.
     position : `~astropy.coordinates.SkyCoord`, optional
-        Center of the geometry. Defalut is the observation pointing.
+        Center of the geometry. Default is the observation pointing at mid-observation time.
     frame: str, optional
-        frame of the coordinate system. Defalut is icrs.
+        frame of the coordinate system. Default is "icrs".
     """
 
     if spatial_width is None:
@@ -361,7 +361,7 @@ def create_map_dataset_from_observation(
     position : `~astropy.coordinates.SkyCoord`, optional
         Center of the geometry. Defalut is the observation pointing.
     frame: str, optional
-        frame of the coordinate system. Defalut is icrs.
+        frame of the coordinate system. Default is "icrs".
     """
     from gammapy.makers import MapDatasetMaker
 
