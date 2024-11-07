@@ -149,7 +149,7 @@ def _default_energy_axis(observation, energy_bin_per_decade_max=30, position=Non
     print(eres)
 
     eres = eres[np.isfinite(eres) & (eres > 0.0)]
-    if eres.size > 0 and np.any(eres.value > 0):
+    if eres.size > 0:
         # remove outliers
         beyond_mad = np.median(eres) - mad(eres) * eres.unit
         eres[eres < beyond_mad] = np.nan
