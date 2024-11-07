@@ -975,6 +975,17 @@ def test_sort_evt_by_time(dataset):
 def test_observation_event_sampler(signal_model, tmp_path):
     from gammapy.datasets.simulate import ObservationEventSampler
 
+    datastore = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
+    obs = datastore.get_observations()[0]
+
+    # first test defaults with HESS
+    # otherwise with CTA the EdispMap computation takes too much time and memory
+    maker = ObservationEventSampler()
+
+    sim_obs = maker.run(obs, None)
+    assert sim_obs.events is not None
+    assert len(sim_obs.events.table) > 0
+
     irfs = load_irf_dict_from_file(
         "$GAMMAPY_DATA/cta-caldb/Prod5-South-20deg-AverageAz-14MSTs37SSTs.180000s-v0.1.fits.gz"
     )
@@ -993,13 +1004,6 @@ def test_observation_event_sampler(signal_model, tmp_path):
         irfs=irfs,
         deadtime_fraction=0.01,
     )
-
-    # test first with defaults
-    maker = ObservationEventSampler()
-
-    sim_obs = maker.run(obs, [signal_model])
-    assert sim_obs.events is not None
-    assert len(sim_obs.events.table) > 0
 
     dataset_kwargs = dict(
         spatial_width=5 * u.deg,
