@@ -228,8 +228,6 @@ def create_empty_map_dataset_from_irfs(
     data : `~gammapy.data.Observation` or `~gammapy.data.MapDataset`
         Observation or Dataset containing the IRFs.
     dataset_name : str, optional
-        If `models` contains one or multiple `FoVBackgroundModel`
-        it should match the `dataset_name` of the background model to use.
         Default is None. If None it is determined from the observation ID.
     energy_axis_true : `~gammapy.maps.MapAxis`, optional
         True energy axis. Default is None.
