@@ -146,7 +146,6 @@ def _default_energy_axis(observation, energy_bin_per_decade_max=30, position=Non
             offset = 0 * u.deg
         ekern = observation.edisp.to_edisp_kernel(offset)
         eres = ekern.get_resolution(etrue.center)
-    print(eres)
 
     eres = eres[np.isfinite(eres) & (eres > 0.0)]
     if eres.size > 0:
@@ -211,8 +210,6 @@ def _default_width(observation, spatial_width_max=12 * u.deg):
         width = 2.0 * np.max(observation.psf.psf_map.geom.width)
     elif hasattr(observation.psf, "axes"):
         width = 2.0 * observation.psf.axes["offset"].edges[-1]
-    else:
-        width = spatial_width_max
     return np.minimum(width, spatial_width_max)
 
 
