@@ -160,7 +160,7 @@ def _default_binsz(observation, spatial_bin_size_min=0.01 * u.deg):
 def _default_width(observation, spatial_width_max=12 * u.deg):
     # width estimated from the rad_max or the offset_max
     if observation.rad_max is not None:
-        width = 2.0 * np.max(observation.rad_max)
+        width = 2.0 * observation.rad_max.quantity.max()
     else:
         width = 2.0 * observation.psf.axes["offset"].edges[-1]
     return np.minimum(width, spatial_width_max)
