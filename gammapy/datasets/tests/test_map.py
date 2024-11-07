@@ -19,7 +19,7 @@ from gammapy.datasets.map import (
     create_map_dataset_from_observation,
     RAD_AXIS_DEFAULT,
 )
-    
+
 from gammapy.irf import (
     EDispKernelMap,
     EDispMap,
@@ -2262,4 +2262,4 @@ def test_create_map_dataset_from_observation():
     dataset_new = create_map_dataset_from_observation(observations[0])
 
     assert dataset_new.counts.data.sum() == 0
-    assert_allclose(dataset_new.exposure.data.sum, 43239974121207.85)
+    assert_allclose(dataset_new.exposure.data.sum(), 43239974121207.85)
