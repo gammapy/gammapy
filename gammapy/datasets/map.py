@@ -123,19 +123,32 @@ def create_map_dataset_geoms(
     }
 
 
-def _default_energy_axis(observation, energy_bin_per_decade_max=30):
+def _default_energy_axis(observation, energy_bin_per_decade_max=30, position=None):
     # number of bins per decade estimated from the energy resolution
     # such as diff(ereco.edges)/ereco.center ~ min(eres)
-    if hasattr(observation.psf, "axes"):
-        etrue = observation.psf.axes[0]  # only where psf is defined
-        ekern = observation.edisp.to_edisp_kernel(0 * u.deg)
-        eres = ekern.get_resolution(etrue.center)
-    else:
-        etrue = observation.psf.psf_map.geom.axes[observation.psf.energy_name]
-        ekern = observation.edisp.get_edisp_kernel(energy_axis=etrue.rename("energy"))
-        eres = ekern.get_resolution(etrue.center)
 
-    eres = eres[np.isfinite(eres)]
+    if isinstance(observation.psf, PSFMap):
+        etrue = observation.psf.psf_map.geom.axes[observation.psf.energy_name]
+        if isinstance(observation.edisp, EDispKernelMap):
+            ekern = observation.edisp.get_edisp_kernel(
+                energy_axis=None, position=position
+            )
+        if isinstance(observation.edisp, EDispMap):
+            ekern = observation.edisp.get_edisp_kernel(
+                energy_axis=etrue.rename("energy"), position=position
+            )
+        eres = ekern.get_resolution(etrue.center)
+    elif hasattr(observation.psf, "axes"):
+        etrue = observation.psf.axes[0]  # only where psf is defined
+        if position:
+            offset = observation.pointing.fixed_icrs.separation
+        else:
+            offset = 0 * u.deg
+        ekern = observation.edisp.to_edisp_kernel(offset)
+        eres = ekern.get_resolution(etrue.center)
+    print(eres)
+
+    eres = eres[np.isfinite(eres) & (eres > 0.0)]
     if eres.size > 0 and np.any(eres.value > 0):
         # remove outliers
         beyond_mad = np.median(eres) - mad(eres) * eres.unit
@@ -154,14 +167,11 @@ def _default_energy_axis(observation, energy_bin_per_decade_max=30):
         per_decade=True,
         name="energy_true",
     )
-    if (
-        hasattr(observation, "events")
-        and observation.events
-        and len(observation.events) > 0
-    ):
+    if hasattr(observation, "bkg") and observation.bkg:
+        ereco = observation.bkg.axes["energy"]
         energy_axis = MapAxis.from_energy_bounds(
-            observation.events.energy.min(),
-            observation.events.energy.max(),
+            ereco.edges[0],
+            ereco.edges[-1],
             nbin=nbin_per_decade,
             per_decade=True,
             name="energy",
@@ -174,14 +184,14 @@ def _default_energy_axis(observation, energy_bin_per_decade_max=30):
 
 def _default_binsz(observation, spatial_bin_size_min=0.01 * u.deg):
     # bin size estimated from the minimal r68 of the psf
-    if hasattr(observation.psf, "axes"):
+    if isinstance(observation.psf, PSFMap):
+        energy_axis = observation.psf.psf_map.geom.axes[observation.psf.energy_name]
+        psf_r68 = observation.psf.containment_radius(0.68, energy_axis.edges)
+    elif hasattr(observation.psf, "axes"):
         etrue = observation.psf.axes[0]  # only where psf is defined
         psf_r68 = observation.psf.containment_radius(
             0.68, energy_true=etrue.edges, offset=0.0 * u.deg
         )
-    else:
-        energy_axis = observation.psf.psf_map.geom.axes[observation.psf.energy_name]
-        psf_r68 = observation.psf.containment_radius(0.68, energy_axis.edges)
 
     psf_r68 = psf_r68[np.isfinite(psf_r68)]
     if psf_r68.size > 0:
@@ -197,17 +207,17 @@ def _default_binsz(observation, spatial_bin_size_min=0.01 * u.deg):
 
 def _default_width(observation, spatial_width_max=12 * u.deg):
     # width estimated from the rad_max or the offset_max
-    if getattr(observation, "rad_max", False) and observation.rad_max is not None:
-        width = 2.0 * observation.rad_max.quantity.max()
+    if isinstance(observation.psf, PSFMap):
+        width = 2.0 * np.max(observation.psf.psf_map.geom.width)
     elif hasattr(observation.psf, "axes"):
         width = 2.0 * observation.psf.axes["offset"].edges[-1]
     else:
-        width = 2.0 * np.max(observation.psf.psf_map.geom.width)
+        width = spatial_width_max
     return np.minimum(width, spatial_width_max)
 
 
 def create_empty_map_dataset_from_irfs(
-    data,
+    observation,
     dataset_name=None,
     energy_axis_true=None,
     energy_axis=None,
@@ -225,8 +235,8 @@ def create_empty_map_dataset_from_irfs(
 
     Parameters
     ----------
-    data : `~gammapy.data.Observation` or `~gammapy.data.MapDataset`
-        Observation or Dataset containing the IRFs.
+    observation : `~gammapy.data.Observation`
+        Observation containing the IRFs.
     dataset_name : str, optional
         Default is None. If None it is determined from the observation ID.
     energy_axis_true : `~gammapy.maps.MapAxis`, optional
@@ -253,14 +263,22 @@ def create_empty_map_dataset_from_irfs(
         frame of the coordinate system. Default is "icrs".
     """
 
+    if position is None:
+        if hasattr(observation, "pointing"):
+            if observation.pointing.mode is not PointingMode.POINTING:
+                raise NotImplementedError(
+                    "Only datas with fixed pointing in ICRS are supported"
+                )
+            position = observation.pointing.fixed_icrs
+
     if spatial_width is None:
-        spatial_width = _default_width(data, spatial_width_max)
+        spatial_width = _default_width(observation, spatial_width_max)
     if spatial_bin_size is None:
-        spatial_bin_size = _default_binsz(data, spatial_bin_size_min)
+        spatial_bin_size = _default_binsz(observation, spatial_bin_size_min)
 
     if energy_axis is None or energy_axis_true is None:
         energy_axis_, energy_axis_true_ = _default_energy_axis(
-            data, energy_bin_per_decade_max
+            observation, energy_bin_per_decade_max, position
         )
 
         if energy_axis is None:
@@ -270,20 +288,7 @@ def create_empty_map_dataset_from_irfs(
             energy_axis_true = energy_axis_true_
 
     if dataset_name is None:
-        if hasattr(data, "obs_id"):
-            dataset_name = f"obs_{data.obs_id}"
-        else:
-            dataset_name = f"{data.name}"
-
-    if position is None:
-        if hasattr(data, "pointing"):
-            if data.pointing.mode is not PointingMode.POINTING:
-                raise NotImplementedError(
-                    "Only datas with fixed pointing in ICRS are supported"
-                )
-            position = data.pointing.fixed_icrs
-        else:
-            position = data.exposure.geom.center_skydir
+        dataset_name = f"obs_{observation.obs_id}"
 
     geom = WcsGeom.create(
         skydir=position.transform_to(frame),
@@ -296,11 +301,11 @@ def create_empty_map_dataset_from_irfs(
     axes = dict(
         energy_axis_true=energy_axis_true,
     )
-    if data.edisp is not None:
-        if hasattr(data.edisp, "axes"):
-            axes["migra_axis"] = data.edisp.axes["migra"]
-        else:
-            axes["migra_axis"] = data.edisp.edisp_map.geom.axes["migra"]
+    if observation.edisp is not None:
+        if isinstance(observation.edisp, EDispMap):
+            axes["migra_axis"] = observation.edisp.edisp_map.geom.axes["migra"]
+        elif hasattr(observation.edisp, "axes"):
+            axes["migra_axis"] = observation.edisp.axes["migra"]
 
     dataset = MapDataset.create(
         geom,
