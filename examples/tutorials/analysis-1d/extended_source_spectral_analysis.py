@@ -120,7 +120,7 @@ check_tutorials_setup()
 
 datastore = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
 obs_ids = [20326, 20327, 20349, 20350, 20396, 20397]
-# In case you want to use all RX J1713 data in the HESS DR1
+# In case you want to use all RX J1713 data in the H.E.S.S. DR1
 # other_ids=[20421, 20422, 20517, 20518, 20519, 20521, 20898, 20899, 20900]
 
 observations = datastore.get_observations(obs_ids)
