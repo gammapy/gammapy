@@ -998,13 +998,18 @@ class IRFMap:
         map : `IRFMap`
             Downsampled IRF map.
         """
-        if not weights:
+        if weights is None:
             weights = self.exposure_map
             if not self.exposure_map:
                 log.warning("IRF exposure map not set. Calculating arithmetic mean.")
 
+        if axis_name is None:
+            preserve_counts = False
+        else:
+            preserve_counts = True
+
         irf_map = self._irf_map.downsample(
-            factor=factor, axis_name=axis_name, preserve_counts=False, weights=weights
+            factor=factor, axis_name=axis_name, preserve_counts=preserve_counts, weights=weights
         )
         if axis_name is None:
             exposure_map = self.exposure_map.downsample(
