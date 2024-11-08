@@ -19,7 +19,7 @@ from gammapy.datasets import (
     MapDatasetOnOff,
     create_empty_map_dataset_from_irfs,
 )
-from gammapy.datasets.map import RAD_AXIS_DEFAULT, _default_width
+from gammapy.datasets.map import RAD_AXIS_DEFAULT
 from gammapy.irf import (
     EDispKernelMap,
     EDispMap,
@@ -2245,14 +2245,6 @@ def test_get_psf_kernel_multiscale():
         mask = sep > width
         assert np.all(im.data[mask] == 0)
         assert np.any(im.data[~mask] > 0)
-
-
-@requires_data()
-def test_default_width():
-    datastore_magic = DataStore.from_dir("$GAMMAPY_DATA/magic/rad_max/data")
-    obs = datastore_magic.get_observations(required_irf="point-like")[0]
-    width = _default_width(obs)
-    assert_allclose(width, 0.77459669 * u.deg)
 
 
 @requires_data()
