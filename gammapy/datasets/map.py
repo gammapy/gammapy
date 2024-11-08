@@ -210,6 +210,8 @@ def _default_width(observation, spatial_width_max=12 * u.deg):
         width = 2.0 * np.max(observation.psf.psf_map.geom.width)
     elif hasattr(observation.psf, "axes"):
         width = 2.0 * observation.psf.axes["offset"].edges[-1]
+    else:
+        width =  spatial_width_max
     return np.minimum(width, spatial_width_max)
 
 
