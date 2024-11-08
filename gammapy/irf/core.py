@@ -1000,6 +1000,8 @@ class IRFMap:
         """
         if not weights:
             weights = self.exposure_map
+            if not self.exposure_map:
+                log.warning("IRF exposure map not set. Calculating arithmetic mean.")
 
         irf_map = self._irf_map.downsample(
             factor=factor, axis_name=axis_name, preserve_counts=False, weights=weights
