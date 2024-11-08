@@ -989,7 +989,7 @@ class IRFMap:
             Downsampling factor.
         axis_name : str
             Axis to downsample. By default, spatial axes are downsampled.
-            It is not recommended to use this function on a PSFMap rad axis.
+            It is not recommended to use this function on a `~gammapy.irf.PSFMap` rad axis.
         weights : `~gammapy.maps.Map`, optional
             Map with weights downsampling. Default is IRFMap exposure map.
 
