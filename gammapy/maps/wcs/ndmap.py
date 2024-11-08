@@ -367,7 +367,9 @@ class WcsNDMap(WcsMap):
 
         if not preserve_counts:
             weight_sum = block_reduce(weights, tuple(block_size), func=np.nansum)
-            data=np.divide(data,weight_sum,out=np.zeros_like(data,dtype=self.data.dtype),where=(weight_sum!=0))
+            data = np.divide(
+                data, weight_sum, out=np.zeros_like(data,dtype='float64'), where=(weight_sum!=0)
+            )
         
         return self._init_copy(geom=geom, data=data.astype(self.data.dtype))
 
