@@ -452,9 +452,9 @@ class FluxPointsDataset(Dataset):
         value = model[mask_ul]
         loc_ul = self.data.dnde_ul.data[mask_ul]
         scale_ul = self.data.dnde_ul.data[mask_ul]
-        stat[mask_ul] = -2 * np.log(
-            (erfc((-loc_ul + value) / scale_ul) / 2)
-            / (erfc((-loc_ul + 0) / scale_ul) / 2)
+        stat[mask_ul] = 2 * np.log(
+            (erfc((loc_ul - value) / scale_ul) / 2)
+            / (erfc((loc_ul - 0) / scale_ul) / 2)
         )
 
         stat[np.isnan(stat.data)] = 0
