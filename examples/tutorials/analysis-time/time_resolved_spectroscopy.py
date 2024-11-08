@@ -245,7 +245,7 @@ print(results[0].models)
 
 
 ######################################################################
-# To better visualize the data, we can create a table by extracting some
+# To better visualise the data, we can create a table by extracting some
 # relevant information. In the following, we extract the time intervals,
 # information on the fit convergence and the free parameters. You can
 # extract more information if required, eg, the `total_stat` in each

@@ -125,8 +125,8 @@ def create_map_dataset_geoms(
 def _default_energy_axis(observation, energy_bin_per_decade_max=30):
     # number of bins per decade estimated from the energy resolution
     # such as diff(ereco.edges)/ereco.center ~ min(eres)
-    etrue = observation.psf.axes[0].edges  # only where psf is defined
-    eres = observation.edisp.to_edisp_kernel(0 * u.deg).get_resolution(etrue)
+    etrue = observation.psf.axes[0]  # only where psf is defined
+    eres = observation.edisp.to_edisp_kernel(0 * u.deg).get_resolution(etrue.center)
     eres = eres[np.isfinite(eres)]
     if eres.size > 0:
         # remove outliers
@@ -140,8 +140,8 @@ def _default_energy_axis(observation, energy_bin_per_decade_max=30):
         nbin_per_decade = energy_bin_per_decade_max
 
     energy_axis = MapAxis.from_energy_bounds(
-        etrue[0],
-        etrue[-1],
+        etrue.edges[0],
+        etrue.edges[-1],
         nbin=nbin_per_decade,
         per_decade=True,
         name="energy",

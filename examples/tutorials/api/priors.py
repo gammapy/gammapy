@@ -33,7 +33,7 @@ Setting priors on multiple parameters simultaneously is supported,
 However, for now, they should not be correlated.
 
 The spectral dataset used here contains a simulated power-law source and
-its IRFs are based on HESS data of the Crab Nebula (similar to
+its IRFs are based on H.E.S.S. data of the Crab Nebula (similar to
 :doc:`/tutorials/api/fitting`). We are simulating the source here, so
 that we can control the input and check the correctness of the fit
 results.
@@ -98,7 +98,7 @@ model = SkyModel(spectral_model=pl_spectrum, name="simu-source")
 
 ######################################################################
 # The data and background are read from pre-computed ON/OFF datasets of
-# HESS observations. For simplicity, we stack them together and transform
+# H.E.S.S. observations. For simplicity, we stack them together and transform
 # the dataset to a `~gammapy.datasets.SpectrumDataset`. Then we set the model and create
 # an Asimov dataset (dataset without statistics) by setting the counts as
 # the model predictions.
@@ -326,7 +326,7 @@ model_weak_prior.parameters["amplitude"].prior = uniform
 
 ######################################################################
 # We set the minimum value to zero and per default, the maximum value
-# is set to positive infinity. Therefore, the uniform prior penalty 
+# is set to positive infinity. Therefore, the uniform prior penalty
 # is zero, i.e. no influence on the fit at all, if the amplitude value
 # is positive and a penalty (the weight) in the form of a prior likelihood
 # for negative values.
