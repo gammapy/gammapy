@@ -5,17 +5,17 @@ Source catalogs
 
 `gammapy.catalog` provides convenient access to common gamma-ray source catalogs.
 
-* ``hgps`` / `SourceCatalogHGPS` - H.E.S.S. Galactic plane survey (HGPS)
-* ``gamma-cat`` /  `SourceCatalogGammaCat` - An open catalog of gamma-ray sources
-* ``3fgl`` / `SourceCatalog3FGL` - LAT 4-year point source catalog
-* ``4fgl`` / `SourceCatalog4FGL` - LAT 8-year point source catalog
-* ``2fhl`` / `SourceCatalog2FHL` - LAT second high-energy source catalog
-* ``3fhl`` / `SourceCatalog3FHL` - LAT third high-energy source catalog
-* ``2hwc`` / `SourceCatalog2HWC` - 2HWC catalog from the HAWC observatory
-* ``3hwc`` / `SourceCatalog3HWC` - 3HWC catalog from the HAWC observatory
+* ``hgps`` / `~gammapy.catalog.SourceCatalogHGPS` - H.E.S.S. Galactic plane survey (HGPS)
+* ``gamma-cat`` /  `~gammapy.catalog.SourceCatalogGammaCat` - An open catalog of gamma-ray sources
+* ``3fgl`` / `~gammapy.catalog.SourceCatalog3FGL` - LAT 4-year point source catalog
+* ``4fgl`` / `~gammapy.catalog.SourceCatalog4FGL` - LAT 8-year point source catalog
+* ``2fhl`` / `~gammapy.catalog.SourceCatalog2FHL` - LAT second high-energy source catalog
+* ``3fhl`` / `~gammapy.catalog.SourceCatalog3FHL` - LAT third high-energy source catalog
+* ``2hwc`` / `~gammapy.catalog.SourceCatalog2HWC` - 2HWC catalog from the HAWC observatory
+* ``3hwc`` / `~gammapy.catalog.SourceCatalog3HWC` - 3HWC catalog from the HAWC observatory
 
-For each catalog, a `SourceCatalog` class is provided to represent the catalog table,
-and a matching `SourceCatalogObject` class to represent one catalog source and table row.
+For each catalog, a `~gammapy.catalog.SourceCatalog` class is provided to represent the catalog table,
+and a matching `~gammapy.catalog.SourceCatalogObject` class to represent one catalog source and table row.
 
 The main functionality provided is methods that map catalog information to
 `~gammapy.modeling.models.SkyModel`, `~gammapy.modeling.models.SpectralModel`,
@@ -29,9 +29,9 @@ or to create initial source models for certain energy bands and sky regions.
 Using gammapy.catalog
 ---------------------
 
-.. minigallery:: gammapy.catalog.SourceCatalog3FHL
+.. minigallery:: `~gammapy.catalog.SourceCatalog3FHL`
     :add-heading:
 
 
-.. minigallery:: gammapy.catalog.SourceCatalogGammaCat
+.. minigallery:: `~gammapy.catalog.SourceCatalogGammaCat`
     :add-heading:

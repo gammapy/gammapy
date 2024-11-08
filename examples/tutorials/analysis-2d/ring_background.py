@@ -59,6 +59,7 @@ from gammapy.estimators import ExcessMapEstimator
 from gammapy.makers import RingBackgroundMaker
 from gammapy.visualization import plot_distribution
 from gammapy.utils.check import check_tutorials_setup
+
 log = logging.getLogger(__name__)
 
 
@@ -104,11 +105,11 @@ config.datasets.geom.wcs.width = {"width": "3 deg", "height": "3 deg"}
 config.datasets.geom.wcs.binsize = "0.02 deg"
 
 # Cutout size (for the run-wise event selection)
-config.datasets.geom.selection.offset_max = 3.5 * u.deg
+config.datasets.geom.selection.offset_max = 2.5 * u.deg
 
 # We now fix the energy axis for the counts map - (the reconstructed energy binning)
 config.datasets.geom.axes.energy.min = "0.5 TeV"
-config.datasets.geom.axes.energy.max = "5 TeV"
+config.datasets.geom.axes.energy.max = "10 TeV"
 config.datasets.geom.axes.energy.nbins = 10
 
 # We need to extract the ring for each observation separately, hence, no stacking at this stage
@@ -169,7 +170,7 @@ energy_axis = analysis.datasets[0].counts.geom.axes["energy"]
 geom_image = geom.to_image().to_cube([energy_axis.squash()])
 
 # Make the exclusion mask
-regions = CircleSkyRegion(center=source_pos, radius=0.3 * u.deg)
+regions = CircleSkyRegion(center=source_pos, radius=0.4 * u.deg)
 exclusion_mask = ~geom_image.region_mask([regions])
 exclusion_mask.sum_over_axes().plot()
 plt.show()
@@ -193,12 +194,12 @@ ring_maker = RingBackgroundMaker(
 # together to create a single stacked map for further analysis
 #
 
-# %%time
 energy_axis_true = analysis.datasets[0].exposure.geom.axes["energy_true"]
 stacked_on_off = MapDatasetOnOff.create(
     geom=geom_image, energy_axis_true=energy_axis_true, name="stacked"
 )
 
+# %%time
 for dataset in analysis.datasets:
     # Ring extracting makes sense only for 2D analysis
     dataset_on_off = ring_maker.run(dataset.to_image())
@@ -223,12 +224,13 @@ print(stacked_on_off)
 # significance is computed according to the Li & Ma expression for ON and
 # OFF Poisson measurements, see
 # `here <https://ui.adsabs.harvard.edu/abs/1983ApJ...272..317L/abstract>`__.
-# Since astropy convolution kernels only accept integers, we first convert
-# our required size in degrees to int depending on our pixel size.
 #
+#
+# Also, since the off counts are obtained with a ring background estimation, and are thus already correlated, we specify `correlate_off=False`
+# to avoid over correlation.
 
 # Using a convolution radius of 0.04 degrees
-estimator = ExcessMapEstimator(0.04 * u.deg, selection_optional=[])
+estimator = ExcessMapEstimator(0.04 * u.deg, selection_optional=[], correlate_off=False)
 lima_maps = estimator.run(stacked_on_off)
 
 significance_map = lima_maps["sqrt_ts"]
@@ -238,28 +240,29 @@ excess_map = lima_maps["npred_excess"]
 fig, (ax1, ax2) = plt.subplots(
     figsize=(11, 4), subplot_kw={"projection": lima_maps.geom.wcs}, ncols=2
 )
-
 ax1.set_title("Significance map")
 significance_map.plot(ax=ax1, add_cbar=True)
-
 ax2.set_title("Excess map")
 excess_map.plot(ax=ax2, add_cbar=True)
 plt.show()
-
 
 ######################################################################
 # It is often important to look at the significance distribution outside
 # the exclusion region to check that the background estimation is not
 # contaminated by gamma-ray events. This can be the case when exclusion
 # regions are not large enough. Typically, we expect the off distribution
-# to be a standard normal distribution.
+# to be a standard normal distribution. To compute the significance distribution outside the exclusion region,
+# we can recompute the maps after adding a `mask_fit` to our dataset.
 #
 
-# create a 2D mask for the images
-significance_map_off = significance_map * exclusion_mask
+# Mask the regions with gamma-ray emission
+stacked_on_off.mask_fit = exclusion_mask
+lima_maps2 = estimator.run(stacked_on_off)
+significance_map_off = lima_maps2["sqrt_ts"]
 
-kwargs_axes = {"xlabel": "Significance", "yscale": "log", "ylim": (1e-5, 1)}
 
+# region
+kwargs_axes = {"xlabel": "Significance", "yscale": "log", "ylim": (1e-3, 1)}
 ax, _ = plot_distribution(
     significance_map,
     kwargs_hist={
@@ -267,7 +270,7 @@ ax, _ = plot_distribution(
         "alpha": 0.5,
         "color": "red",
         "label": "all bins",
-        "bins": 21,
+        "bins": 51,
     },
     kwargs_axes=kwargs_axes,
 )
@@ -281,11 +284,12 @@ ax, res = plot_distribution(
         "alpha": 0.5,
         "color": "blue",
         "label": "off bins",
-        "bins": 21,
+        "bins": 51,
     },
     kwargs_axes=kwargs_axes,
 )
 
 plt.show()
+# endregion
 
 # sphinx_gallery_thumbnail_number = 2
