@@ -647,7 +647,7 @@ class ObservationEventSampler(MapDatasetEventSampler):
         n_event_bunch=10000,
         dataset_kwargs=None,
     ):
-        self.dataset_kwargs = dataset_kwargs if dataset_kwargs else {}
+        self.dataset_kwargs = dataset_kwargs or {}
         self.random_state = get_random_state(random_state)
         self.oversample_energy_factor = oversample_energy_factor
         self.t_delta = t_delta
