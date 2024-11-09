@@ -232,6 +232,8 @@ def run_multiprocessing(
         Keyword arguments passed to the pool. The number of processes is limited
         to the number of physical CPUs. Default is None.
     method : {'starmap', 'apply_async'}
+    method : {'starmap', 'apply_async'}, optional
+        Pool method to use. Default is None, which uses the METHOD_DEFAULT.
         Pool method to use. Default is "starmap".
     method_kwargs : dict, optional
         Keyword arguments passed to the method. Default is None.
@@ -243,7 +245,13 @@ def run_multiprocessing(
         backend = BACKEND_DEFAULT
 
     if method is None:
+    if method is None:
         method = METHOD_DEFAULT
+    
+    try:
+        method = PoolMethodEnum(method)
+    except ValueError:
+        raise ValueError(f"Invalid method: {method}. Must be one of {list(PoolMethodEnum)}")
 
     if method_kwargs is None:
         method_kwargs = METHOD_KWARGS_DEFAULT
@@ -279,7 +287,7 @@ def run_multiprocessing(
     log.info(f"Using {processes} processes to compute {task_name}")
 
     with multiprocessing.Pool(**pool_kwargs) as pool:
-        pool_func = POOL_METHODS[PoolMethodEnum(method)]
+        pool_func = POOL_METHODS[method]
         results = pool_func(
             pool=pool,
             func=func,
