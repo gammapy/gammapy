@@ -200,12 +200,12 @@ ncp = len(bayesian_edges) - 2
 print(ncp)
 
 ######################################################################
-# We can rebin the lightcurve to compute the one expected with bayesian edges
-# First, we adjust the first and last bins of the bayesian_edges to coincide
+# We can rebin the lightcurve to compute the one expected with bayesian edges.
+# First, we adjust the first and last bins of the ``bayesian_edges`` to coincide
 # with the original light curve start and end points.
 
 ######################################################################
-# Create a new axis
+# Create a new axis:
 
 axis_original = lc_1d.geom.axes["time"]
 bayesian_edges[0] = axis_original.time_edges[0].value
@@ -214,12 +214,12 @@ edges = Time(bayesian_edges, format="mjd", scale=axis_original.reference_time.sc
 axis_new = TimeMapAxis.from_time_edges(edges[:-1], edges[1:])
 
 ######################################################################
-# Rebin the lightcurve
+# Rebin the lightcurve:
 
 resample = lc_1d.resample_axis(axis_new)
 
 ######################################################################
-# Plot the new lightcurve on top of the old one
+# Plot the new lightcurve on top of the old one:
 
 plt.figure(figsize=(8, 6))
 plt.subplots_adjust(bottom=0.2, left=0.2)
