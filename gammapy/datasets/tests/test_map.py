@@ -18,6 +18,7 @@ from gammapy.datasets import (
     MapDataset,
     MapDatasetOnOff,
     create_empty_map_dataset_from_irfs,
+    create_map_dataset_from_observation,
 )
 from gammapy.datasets.map import RAD_AXIS_DEFAULT
 from gammapy.irf import (
