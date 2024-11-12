@@ -251,6 +251,11 @@ def run_multiprocessing(
     if pool_kwargs is None:
         pool_kwargs = POOL_KWARGS_DEFAULT
 
+    try:
+        method_enum = PoolMethodEnum(method)
+    except ValueError as e:
+        raise ValueError(f"Invalid method: {method}") from e
+
     processes = pool_kwargs.get("processes", N_JOBS_DEFAULT)
 
     backend = ParallelBackendEnum.from_str(backend)
@@ -279,7 +284,7 @@ def run_multiprocessing(
     log.info(f"Using {processes} processes to compute {task_name}")
 
     with multiprocessing.Pool(**pool_kwargs) as pool:
-        pool_func = POOL_METHODS[PoolMethodEnum(method)]
+        pool_func = POOL_METHODS[method_enum]
         results = pool_func(
             pool=pool,
             func=func,
