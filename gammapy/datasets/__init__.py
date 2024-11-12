@@ -6,6 +6,7 @@ from .io import OGIPDatasetReader, OGIPDatasetWriter
 from .map import (
     MapDataset,
     MapDatasetOnOff,
+    create_empty_map_dataset_from_irfs,
     create_map_dataset_from_observation,
     create_map_dataset_geoms,
 )
@@ -27,6 +28,7 @@ DATASET_REGISTRY = Registry(
 """Registry of dataset classes in Gammapy."""
 
 __all__ = [
+    "create_empty_map_dataset_from_irfs",
     "create_map_dataset_from_observation",
     "create_map_dataset_geoms",
     "Dataset",

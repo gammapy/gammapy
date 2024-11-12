@@ -30,9 +30,9 @@ Proposed approach
 
 The analysis workflow is roughly:
 
-- Compute the sky maps keeping each observation separately using the `Analysis` class
-- Estimate the background using the `RingBackgroundMaker`
-- Compute the correlated excess and significance maps using the `ExcessMapEstimator`
+- Compute the sky maps keeping each observation separately using the `~gammapy.analysis.Analysis` class
+- Estimate the background using the `~gammapy.makers.RingBackgroundMaker`
+- Compute the correlated excess and significance maps using the `~gammapy.estimators.ExcessMapEstimator`
 
 The normalised background thus obtained can be used for general
 modelling and fitting.
@@ -78,7 +78,7 @@ check_tutorials_setup()
 # Now, we create a config file for out analysis. You may load this from
 # disc if you have a pre-defined config file.
 #
-# In this example, we will use a few HESS runs on the pulsar wind nebula,
+# In this example, we will use a few H.E.S.S. runs on the pulsar wind nebula,
 # MSH 1552
 #
 
@@ -125,9 +125,8 @@ print(config)
 # We now use the config file to do the initial data reduction which will
 # then be used for a ring extraction
 #
+# Create the config:
 
-# %%time
-# create the config
 analysis = Analysis(config)
 
 # for this specific case,w e do not need fine bins in true energy
@@ -135,13 +134,13 @@ analysis.config.datasets.geom.axes.energy_true = (
     analysis.config.datasets.geom.axes.energy
 )
 
-# `First get the required observations
+# First get the required observations
 analysis.get_observations()
 
 print(analysis.config)
 
 # %%time
-# Data extraction
+# Data extraction:
 analysis.get_datasets()
 
 
@@ -151,7 +150,7 @@ analysis.get_datasets()
 #
 # Since the ring background is extracted from real off events, we need to
 # use the Wstat statistics in this case. For this, we will use the
-# `MapDatasetOnOFF` and the `RingBackgroundMaker` classes.
+# `~gammapy.datasets.MapDatasetOnOff` and the `~gammapy.makers.RingBackgroundMaker` classes.
 #
 
 
@@ -160,7 +159,7 @@ analysis.get_datasets()
 # ~~~~~~~~~~~~~~~~~~~~~
 #
 # First, we need to create an exclusion mask on the known sources. In this
-# case, we need to mask only `MSH 15-52` but this depends on the sources
+# case, we need to mask only MSH 15-52 but this depends on the sources
 # present in our field of view.
 #
 
@@ -260,8 +259,6 @@ stacked_on_off.mask_fit = exclusion_mask
 lima_maps2 = estimator.run(stacked_on_off)
 significance_map_off = lima_maps2["sqrt_ts"]
 
-
-# region
 kwargs_axes = {"xlabel": "Significance", "yscale": "log", "ylim": (1e-3, 1)}
 ax, _ = plot_distribution(
     significance_map,
@@ -290,6 +287,4 @@ ax, res = plot_distribution(
 )
 
 plt.show()
-# endregion
-
 # sphinx_gallery_thumbnail_number = 2

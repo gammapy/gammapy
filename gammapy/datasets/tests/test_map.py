@@ -13,8 +13,14 @@ from regions import CircleSkyRegion
 import gammapy.irf.psf.map as psf_map_module
 from gammapy.catalog import SourceCatalog3FHL
 from gammapy.data import GTI, DataStore
-from gammapy.datasets import Datasets, MapDataset, MapDatasetOnOff
-from gammapy.datasets.map import RAD_AXIS_DEFAULT, _default_width
+from gammapy.datasets import (
+    Datasets,
+    MapDataset,
+    MapDatasetOnOff,
+    create_empty_map_dataset_from_irfs,
+    create_map_dataset_from_observation,
+)
+from gammapy.datasets.map import RAD_AXIS_DEFAULT
 from gammapy.irf import (
     EDispKernelMap,
     EDispMap,
@@ -2243,8 +2249,39 @@ def test_get_psf_kernel_multiscale():
 
 
 @requires_data()
-def test_default_width():
-    datastore_magic = DataStore.from_dir("$GAMMAPY_DATA/magic/rad_max/data")
-    obs = datastore_magic.get_observations(required_irf="point-like")[0]
-    width = _default_width(obs)
-    assert_allclose(width, 0.77459669 * u.deg)
+def test_create_map_dataset_from_observation():
+    datastore = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
+    observations = datastore.get_observations()
+    dataset_new = create_map_dataset_from_observation(observations[0])
+
+    assert dataset_new.counts.data.sum() == 0
+    assert_allclose(dataset_new.exposure.data.sum(), 43239974121207.85)
+
+
+@requires_data()
+def test_create_empty_map_dataset_from_irfs(geom, geom_etrue):
+    datastore = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
+    obs = datastore.get_observations()[0]
+
+    dataset_new = create_empty_map_dataset_from_irfs(obs)
+
+    assert dataset_new.counts.data.sum() == 0
+    assert dataset_new.exposure.data.sum() == 0
+
+    dataset = get_map_dataset(geom, geom_etrue)
+    obs.psf = dataset.psf
+    obs.edisp = dataset.edisp
+
+    dataset_new = create_empty_map_dataset_from_irfs(obs)
+
+    assert dataset_new.counts.data.sum() == 0
+    assert dataset_new.exposure.data.sum() == 0
+
+    obs.edisp = dataset.edisp.to_edisp_kernel_map(
+        dataset.background.geom.axes["energy"]
+    )
+
+    dataset_new = create_empty_map_dataset_from_irfs(obs)
+
+    assert dataset_new.counts.data.sum() == 0
+    assert dataset_new.exposure.data.sum() == 0
