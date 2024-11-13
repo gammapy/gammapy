@@ -9,19 +9,3 @@ repos:
       - id : ruff-format
         name: ruff formatting
         args: ["--config=pyproject.toml"]
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
-    hooks:
-      - id: check-ast
-      - id: check-case-conflict
-      - id: trailing-whitespace
-      - id: check-yaml
-      - id: debug-statements
-      - id: check-added-large-files
-        args: ["--enforce-all", "--maxkb=1054"]
-        exclude: ""
-      - id: end-of-file-fixer
-      - id: mixed-line-ending
-ci:
-  autofix_prs: false
-  autoupdate_schedule: "monthly"
