@@ -405,6 +405,44 @@ class HpxNDMap(HpxMap):
         data = self.data[..., idx]
         return self.__class__(geom=geom, data=data, unit=self.unit, meta=self.meta)
 
+    def _cutout_view(self, position, width, odd_npix=False):
+        """
+        Create a cutout around a given position without copy of the data.
+
+        Parameters
+        ----------
+        position : `~astropy.coordinates.SkyCoord`
+            Center position of the cutout region.
+        width : tuple of `~astropy.coordinates.Angle`
+            Angular sizes of the region in (lon, lat) in that specific order.
+            If only one value is passed, a square region is extracted.
+        odd_npix : bool, optional
+            Force width to odd number of pixels.
+            Default is False.
+
+        Returns
+        -------
+        cutout : `~gammapy.maps.HpxNDMap`
+            Cutout map.
+        """
+        geom_cutout = self.geom.cutout(
+            position=position, width=width, mode="trim", odd_npix=odd_npix
+        )
+        # cutout_info = geom_cutout.cutout_slices(self.geom, mode="trim")
+
+        if self.geom.is_allsky:
+            idx = geom_cutout._ipix
+        else:
+            idx = self.geom.to_image().global_to_local((geom_cutout._ipix,))[0]
+
+        data = self.quantity[..., idx]
+        # slices = cutout_info["parent-slices"]
+        # parent_slices = Ellipsis, slices[0], slices[1]
+
+        return self.__class__.from_geom(
+            geom=geom_cutout, data=data  # self.quantity[parent_slices]
+        )
+
     def stack(self, other, weights=None, nan_to_num=True):
         """Stack cutout into map.
 
