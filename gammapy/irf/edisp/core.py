@@ -26,11 +26,11 @@ class EnergyDispersion2D(IRF):
 
     Parameters
     ----------
-    axes : list of `MapAxis` or `MapAxes`
-        Axes with the following names :
-            * energy_axis_true (True energy axis.)
-            * migra_axis (Energy migration axis.)
-            * offset_axis (Field of view offset axis.)
+    axes : list of `~gammapy.maps.MapAxis` or `~gammapy.maps.MapAxes`
+        Required axes (in the given order) are:
+            * energy_true (true energy axis)
+            * migra (energy migration axis)
+            * offset (field of view offset axis)
     data : `~numpy.ndarray`
         Energy dispersion probability density.
 
