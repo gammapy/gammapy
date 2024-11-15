@@ -670,6 +670,8 @@ class FluxPoints(FluxMaps):
         ax = flux.plot(ax=ax, **kwargs)
         ax.set_ylabel(f"{sed_type} [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]")
         ax.set_yscale("log")
+        if len(flux.geom.axes) > 1:
+            ax.legend()
         return ax
 
     def plot_ts_profiles(
