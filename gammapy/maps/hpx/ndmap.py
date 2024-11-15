@@ -440,7 +440,7 @@ class HpxNDMap(HpxMap):
         # parent_slices = Ellipsis, slices[0], slices[1]
 
         return self.__class__.from_geom(
-            geom=geom_cutout, data=data  # self.quantity[parent_slices]
+            geom=geom_cutout, data=data, unit=self.unit
         )
 
     def stack(self, other, weights=None, nan_to_num=True):
@@ -929,7 +929,6 @@ class HpxNDMap(HpxMap):
                 raise ValueError("Incompatible spatial geoms between map and weights")
 
         geom = RegionGeom(region=region, axes=self.geom.axes)
-
         if isinstance(region, PointSkyRegion):
             coords = geom.get_coord()
             data = self.interp_by_coord(coords=coords, method=method)
@@ -940,7 +939,7 @@ class HpxNDMap(HpxMap):
 
             if weights is not None:
                 weights_cutout = weights.cutout(
-                    position=geom.center_skydir, width=geom.width
+                    position=geom.center_skydir, width=np.max(geom.width)
                 )
                 cutout.data *= weights_cutout.data
 
