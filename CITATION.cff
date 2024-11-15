@@ -103,6 +103,10 @@ authors:
   affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
     Paris, France"
   orcid: "https://orcid.org/0000-0002-8219-4667"
+- given-names: Pei
+  family-names: Yu
+  affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
+    Paris, France"
 preferred-citation:
   authors:
   - family-names: "The Gammapy team"
