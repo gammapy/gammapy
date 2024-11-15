@@ -22,10 +22,10 @@ class EDispKernel(IRF):
 
     Parameters
     ----------
-    energy_axis_true : `~gammapy.maps.MapAxis`
-        True energy axis. Its name must be "energy_true".
-    energy_axis : `~gammapy.maps.MapAxis`
-        Reconstructed energy axis. Its name must be "energy".
+    axes : list of `~gammapy.maps.MapAxis` or `~gammapy.maps.MapAxes`
+        Required axes (in the given order) are:
+            * energy_true (true energy axis)
+            * energy (reconstructed energy axis)
     data : array_like
         2D energy dispersion matrix.
 
@@ -233,7 +233,10 @@ class EDispKernel(IRF):
                     chan_max = l.field("F_CHAN")[k] + l.field("N_CHAN")[k]
 
                     pdf_matrix[i, chan_min:chan_max] = l.field("MATRIX")[
-                        m_start : m_start + l.field("N_CHAN")[k]  # noqa: E203
+                        m_start : m_start
+                        + l.field("N_CHAN")[
+                            k
+                        ]  # noqa: E203
                     ]
                     m_start += l.field("N_CHAN")[k]
 
