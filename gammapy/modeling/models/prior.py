@@ -1,12 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Priors for Gammapy."""
+
 import logging
 import numpy as np
 import astropy.units as u
 from gammapy.modeling import PriorParameter, PriorParameters
 from .core import ModelBase
 
-__all__ = ["GaussianPrior", "UniformPrior"]
+__all__ = ["GaussianPrior", "UniformPrior", "Prior"]
 
 log = logging.getLogger(__name__)
 
