@@ -394,8 +394,11 @@ spec = sky_model.spectral_model
 #
 
 energy_bounds = [1, 10] * u.TeV
-spec.plot(energy_bounds=energy_bounds, energy_power=2)
-ax = spec.plot_error(energy_bounds=energy_bounds, energy_power=2)
+sed_type = "e2dnde"
+
+fig, ax = plt.subplots(figsize=(8, 6))
+spec.plot(ax=ax, energy_bounds=energy_bounds, sed_type=sed_type)
+spec.plot_error(ax=ax, energy_bounds=energy_bounds, sed_type=sed_type)
 plt.show()
 
 
@@ -417,6 +420,8 @@ fpe = FluxPointsEstimator(energy_edges=energy_edges, source="crab")
 # %%time
 flux_points = fpe.run(datasets=[stacked])
 
-ax = spec.plot_error(energy_bounds=energy_bounds, energy_power=2)
-flux_points.plot(ax=ax, energy_power=2)
+fig, ax = plt.subplots(figsize=(8, 6))
+spec.plot(ax=ax, energy_bounds=energy_bounds, sed_type=sed_type)
+spec.plot_error(ax=ax, energy_bounds=energy_bounds, sed_type=sed_type)
+flux_points.plot(ax=ax, sed_type=sed_type)
 plt.show()
