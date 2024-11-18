@@ -111,6 +111,10 @@ p {
   max-width: 77.25%;
 }
 
+.bd-sidebar, .bd-toc {
+  position: relative;
+}
+
 /* pre */
 .pre {
   font-size: 12px;
