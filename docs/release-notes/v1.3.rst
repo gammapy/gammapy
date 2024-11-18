@@ -69,8 +69,7 @@ Documentation improvements
 
 - CSS with Sphinx v1.5 is now used for the docs build.
 - Tutorials are now ordered in a logical workflow.
-- Three new tutorials have been added: (1) on modeling the EBL absorption, (2) on exposing the general API of
-`gammapy.estimators` and `~gammapy.estimators.FluxMaps`,  (3) on performing time-dependent spectroscopy.
+- Three new tutorials have been added: (1) on modeling the EBL absorption, (2) on exposing the general API of `gammapy.estimators` and `~gammapy.estimators.FluxMaps`,  (3) on performing time-dependent spectroscopy.
 - Code examples have been added in docstrings.
 
 
@@ -90,16 +89,14 @@ New features
 
 *gammapy.maps*
 
-- Multiple non-spatial axes are now supported in MapDataset creation. Full likelihood computation with
-additional axes is not yet supported.
+- Multiple non-spatial axes are now supported in MapDataset creation. Full likelihood computation with additional axes is not yet supported.
 - Map axes with periodic boundary conditions are now supported.
 - An error is raised for maps with invalid input shapes instead of silently broadcasting.
 
 *gammapy.estimators*
 
 - Added support for joint TS map : `TSMapEstimator.run()` now accepts `Datasets` as input.
-- Maps of likelihood profiles can now be computed with the `~gammapy.estimators.TSMapEstimator`
-via the argument : `selection_optional = ["stat_scan"]`.
+- Maps of likelihood profiles can now be computed with the `~gammapy.estimators.TSMapEstimator` via the argument : `selection_optional = ["stat_scan"]`.
 - Bin-wise likelihood profiles are now stored on `~gammapy.estimators.FluxMaps`.
 - `~gammapy.estimtors.FluxMaps` obtained from different datasets (eg: different event types) can be combined.
 - Added a function to combine flux maps in `~gammapy.estimators.utils.combine_flux_maps`. The combination
@@ -107,18 +104,15 @@ uses the likelihood profile maps if available otherwise Gaussian approximation i
 
 *gammapy.stats*
 
-- Timmer-Koenig algorithm with leakage protection for simulating a time series from a power spectrum has been
-implemented.
+- Timmer-Koenig algorithm with leakage protection for simulating a time series from a power spectrum has been implemented.
 - Discrete structure function for a variable source using the Emmanoulopoulos et al. (2010) algorithm has been added.
 - Discrete cross correlation function computation has been added.
 
 
 *gammapy.modeling*
 
-- The `~gammapy.modeling.FitResult` object is now exposed as an important API element, combining the results
-from the optimisation and covariance of the fit.
-- Unique naming of model parameters has been adapted, leading to resolution of issues with covariance matrix
-computation for complex model lists.
+- The `~gammapy.modeling.FitResult` object is now exposed as an important API element, combining the results from the optimisation and covariance of the fit.
+- Unique naming of model parameters has been adapted, leading to resolution of issues with covariance matrix computation for complex model lists.
 - Time scale issues in simulation energy dependent temporal models has been resolved.
 - Definition of `UniformPrior` has been fixed to return 0 within min and max values instead of 1.
 
