@@ -218,9 +218,9 @@ htmlhelp_basename = f"{project}doc"
 html_theme_options = {
     # toc options
     "collapse_navigation": True,
-    "navigation_depth": 4,
+    "navigation_depth": 2,
     "show_prev_next": False,
-    "sidebar_hide_name": True,
+    "secondary_sidebar_items": [],
     # links in menu
     "icon_links": [
         {
