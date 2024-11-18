@@ -2,40 +2,13 @@
 
 .. _gammapy_1p3_release:
 
-1.3 (November xx, 2024)
+1.3 (November 22, 2024)
 -------------------------
 
-- Released November xx, 2024
-- xx contributors
+- Released November 22, 2024
+- 25 contributors
 - 197 pull requests since v1.2 (not all listed below)
 - 69 closed issues
-
-Contributors
-~~~~~~~~~~~~
-- Fabio Acero
-- Arnau Aguasca-Cabot
-- Axel Donath
-- Kirsty Feijen
-- Stefan Fröse
-- Claudio Galelli
-- Bruno Khélifi
-- Maximilian Linhoff
-- Lars Mohrmann
-- Daniel Morcuende
-- Laura Olivera Nieto
-- Michele Peresano
-- Fabio Pintore
-- Maxime Regeard
-- Quentin Remy
-- Gerrit Roellinghoff
-- Vasco Schiavo
-- Atreyee Sinha
-- Brigitta Sipőcz
-- Hanna Stapel
-- Régis Terrier
-- Santiago Vila
-- Samantha Wong
-- Pei Yu
 
 Summary
 ~~~~~~~
@@ -140,6 +113,35 @@ Bug fixes and improvements
 - Added alpha maps to `~gammapy.estimators.ExcessMapEstimator`.
 - Fixed `~gammapy.data.ObservationsEventsSampler` for observations based on full-enclosure IRFs.
 - Added a method to normalize `~gammapy.modeling.models.TemplatePhaseCurveTemporalModel`.
+
+
+Contributors
+~~~~~~~~~~~~
+- Fabio Acero
+- Arnau Aguasca-Cabot
+- Axel Donath
+- Kirsty Feijen
+- Stefan Fröse
+- Claudio Galelli
+- Bruno Khélifi
+- Maximilian Linhoff
+- Lars Mohrmann
+- Daniel Morcuende
+- Laura Olivera Nieto
+- Mireia Nievas
+- Michele Peresano
+- Fabio Pintore
+- Maxime Regeard
+- Quentin Remy
+- Gerrit Roellinghoff
+- Vasco Schiavo
+- Atreyee Sinha
+- Brigitta Sipőcz
+- Hanna Stapel
+- Régis Terrier
+- Santiago Vila
+- Samantha Wong
+- Pei Yu
 
 
 Pull Requests
