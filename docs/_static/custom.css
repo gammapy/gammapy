@@ -437,9 +437,8 @@ a.dropdown-item {
 }
 
 @media screen and (max-width: 768px) {
-    .secondary-sidebar {
-        display: none !important;
-    }
+    .pysidebar {
+        display: none;  /* Hides the sidebar */
 
     .content-wrapper {
         margin-left: 0;  /* Ensures the content takes the full width */

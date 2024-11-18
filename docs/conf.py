@@ -216,11 +216,11 @@ html_title = "{} v{}".format(project, release)
 htmlhelp_basename = f"{project}doc"
 
 html_theme_options = {
-    # toc options
+    "header_links_before_dropdown": 6,
     "collapse_navigation": True,
     "navigation_depth": 2,
     "show_prev_next": False,
-    "secondary_sidebar_items": [],
+    #"secondary_sidebar_items": [],
     # links in menu
     "icon_links": [
         {
