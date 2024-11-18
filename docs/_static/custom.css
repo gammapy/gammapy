@@ -112,7 +112,7 @@ p {
 }
 
 .bd-sidebar, .bd-toc {
-  position: sticky;
+  position: relative;
 }
 
 /* pre */
@@ -417,7 +417,8 @@ a.dropdown-item {
 }
 
 .bd-page-width {
-  max-width: 100rem;
+  max-width: 90%;
+  margin: 0 auto;
 }
 
 .sphinx-bs{
@@ -433,4 +434,14 @@ a.dropdown-item {
   display: inline-flex;
   padding: .5em;
   background: var(--gammapy-secondary);
+}
+
+@media screen and (max-width: 768px) {
+    .pysidebar {
+        display: none;  /* Hides the sidebar */
+    }
+
+    .content-wrapper {
+        margin-left: 0;  /* Ensures the content takes the full width */
+    }
 }
