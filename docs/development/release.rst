@@ -36,7 +36,7 @@ On the day of the release candidate:
    * Add an entry for the release candidate like ``v1.0rc1`` or ``v1.1rc1`` in the ``download/index.json`` file,
      by copying the entry for ``dev`` tag. As we do not handle release candidates nor bug fix releases for data,
      this still allows to fix bugs in the data during the release candidate testing.
-   * In the ``download/install`` folder, copy a previous environment file file as ``gammapy-1.0-environment.yml``.
+   * In the ``download/install`` folder, copy a previous environment file file as ``gammapy-1.0rc1-environment.yml``.
    * Adapt the dependency conda env name and versions as required in this file.
 
 #. Update the ``CITATION.cff`` date and version by running the ``dev/prepare-release.py`` script.
@@ -96,7 +96,7 @@ Steps for the day to announce the release:
    (decide on a case by case basis, if it's relevant to the group of people):
 
     * https://groups.google.com/forum/#!forum/astropy-dev
-    * CTAO AS WG list (cta-wg-as@cta-observatory. org)
+    * CTAO AS WG list (cta-wg-as@cta-observatory.org)
     * hess-forum list (hess-forum@lsw.uni-heidelberg.de)
 #. Make sure the release milestone and issue is closed on GitHub
 #. Update these release notes with any useful infos / steps that you learned
