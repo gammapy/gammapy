@@ -220,7 +220,6 @@ html_theme_options = {
     "collapse_navigation": True,
     "navigation_depth": 2,
     "show_prev_next": False,
-    #"secondary_sidebar_items": [],
     # links in menu
     "icon_links": [
         {
