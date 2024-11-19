@@ -58,6 +58,7 @@ lc_1d = FluxPoints.read(
 )
 
 plt.figure(figsize=(8, 6))
+plt.subplots_adjust(bottom=0.2, left=0.2)
 lc_1d.plot(marker="o")
 plt.show()
 
@@ -116,7 +117,8 @@ relative_variability_significance = (
 print(relative_variability_significance)
 
 ######################################################################
-# The variability amplitude as presented in `Heidt & Wagner, 1996 <https://ui.adsabs.harvard.edu/abs/1996A%26A...305...42H/abstract>`__ is:
+# The variability amplitude as presented in
+# `Heidt & Wagner, 1996 <https://ui.adsabs.harvard.edu/abs/1996A%26A...305...42H/abstract>`__ is:
 
 variability_amplitude = np.sqrt((f_max - f_min) ** 2 - 2 * f_mean_err**2)
 
@@ -143,9 +145,9 @@ print(variability_amplitude_significance)
 #  Fractional excess variance, point-to-point fractional variance and doubling/halving time
 # -----------------------------------------------------------------------------------------
 # The fractional excess variance, as presented by
-# `Vaughan et al., 2003 <https://ui.adsabs.harvard.edu/abs/2003MNRAS.345.1271V/abstract>`__, is a simple but effective
-# method to assess the significance of a time variability feature in an object, for example an AGN flare.
-# It is important to note that it requires Gaussian errors to be applicable.
+# `Vaughan et al., 2003 <https://ui.adsabs.harvard.edu/abs/2003MNRAS.345.1271V/abstract>`__, is
+# a simple but effective method to assess the significance of a time variability feature in an object,
+# for example an AGN flare. It is important to note that it requires Gaussian errors to be applicable.
 # The excess variance computation is implemented in `~gammapy.estimators.utils`.
 
 fvar_table = compute_lightcurve_fvar(lc_1d)
@@ -176,7 +178,8 @@ print(dtime_table)
 # (`Scargle et al., 2013 <https://ui.adsabs.harvard.edu/abs/2013ApJ...764..167S/abstract>`__).
 # A good and simple-to-use implementation of the algorithm is found in
 # `astropy.stats.bayesian_blocks`.
-# This implementation uses Gaussian statistics, as opposed to the `first introductory paper <https://iopscience.iop.org/article/10.1086/306064>`__
+# This implementation uses Gaussian statistics, as opposed to the
+# `first introductory paper <https://iopscience.iop.org/article/10.1086/306064>`__
 # which is based on Poissonian statistics.
 #
 # By passing the flux and error on the flux as ``measures`` to the method we can obtain the list of optimal bin edges
@@ -190,27 +193,36 @@ bayesian_edges = bayesian_blocks(
 
 ######################################################################
 # The result giving a significance estimation for variability in the lightcurve is the number of *change points*,
-# i.e. the number of internal bin edges: if at least one change point is identified by the algorithm, there is significant variability.
+# i.e. the number of internal bin edges: if at least one change point is identified by the algorithm,
+# there is significant variability.
 
 ncp = len(bayesian_edges) - 2
 print(ncp)
 
 ######################################################################
-# We can rebin the lightcurve to compute the one expected with bayesian edges
-# First, we adjust the first and last bins of the bayesian_edges to coincide
+# We can rebin the lightcurve to compute the one expected with bayesian edges.
+# First, we adjust the first and last bins of the ``bayesian_edges`` to coincide
 # with the original light curve start and end points.
 
-# create a new axis
+######################################################################
+# Create a new axis:
+
 axis_original = lc_1d.geom.axes["time"]
 bayesian_edges[0] = axis_original.time_edges[0].value
 bayesian_edges[-1] = axis_original.time_edges[-1].value
 edges = Time(bayesian_edges, format="mjd", scale=axis_original.reference_time.scale)
 axis_new = TimeMapAxis.from_time_edges(edges[:-1], edges[1:])
 
-# rebin the lightcurve
+######################################################################
+# Rebin the lightcurve:
+
 resample = lc_1d.resample_axis(axis_new)
 
-# plot the new lightcurve on top of the old one
+######################################################################
+# Plot the new lightcurve on top of the old one:
+
+plt.figure(figsize=(8, 6))
+plt.subplots_adjust(bottom=0.2, left=0.2)
 ax = lc_1d.plot(label="original")
 resample.plot(ax=ax, marker="s", label="rebinned")
 plt.legend()

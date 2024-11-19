@@ -11,6 +11,7 @@ from gammapy.maps import MapAxis
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from .core import FluxPoints
 from .sed import FluxPointsEstimator
+from gammapy.utils.deprecation import deprecated_renamed_argument
 
 __all__ = ["FluxProfileEstimator"]
 
@@ -22,7 +23,7 @@ class FluxProfileEstimator(FluxPointsEstimator):
     ----------
     regions : list of `~regions.SkyRegion`
         Regions to use.
-    spectrum : `~gammapy.modeling.models.SpectralModel`, optional
+    spectral_model : `~gammapy.modeling.models.SpectralModel`, optional
         Spectral model to compute the fluxes or brightness.
         Default is power-law with spectral index of 2.
     n_jobs : int, optional
@@ -89,7 +90,8 @@ class FluxProfileEstimator(FluxPointsEstimator):
 
     tag = "FluxProfileEstimator"
 
-    def __init__(self, regions, spectrum=None, **kwargs):
+    @deprecated_renamed_argument("spectrum", "spectral_model", "v1.3")
+    def __init__(self, regions, spectral_model=None, **kwargs):
         if len(regions) <= 1:
             raise ValueError(
                 "Please provide at least two regions for flux profile estimation."
@@ -97,10 +99,10 @@ class FluxProfileEstimator(FluxPointsEstimator):
 
         self.regions = regions
 
-        if spectrum is None:
-            spectrum = PowerLawSpectralModel()
+        if spectral_model is None:
+            spectral_model = PowerLawSpectralModel()
 
-        self.spectrum = spectrum
+        self.spectral_model = spectral_model
         super().__init__(**kwargs)
 
     @property
@@ -170,7 +172,7 @@ class FluxProfileEstimator(FluxPointsEstimator):
                 .to_region_nd_map(region, func=np.sum, weights=dataset_map.mask_safe)
                 .data
             )
-        datasets_to_fit.models = SkyModel(self.spectrum, name="test-source")
+        datasets_to_fit.models = SkyModel(self.spectral_model, name="test-source")
         estimator = self.copy()
         estimator.n_jobs = self._n_child_jobs
         return estimator._run_flux_points(datasets_to_fit)

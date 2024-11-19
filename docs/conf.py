@@ -116,7 +116,7 @@ intersphinx_mapping["pandas"] = ("https://pandas.pydata.org/pandas-docs/stable/"
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns.append("_templates")
+#exclude_patterns.append("_templates")
 exclude_patterns.append("**.ipynb_checkpoints")
 exclude_patterns.append("user-guide/model-gallery/*/*.ipynb")
 exclude_patterns.append("user-guide/model-gallery/*/*.md5")
@@ -186,6 +186,11 @@ html_theme = "pydata_sphinx_theme"
 
 # Static files to copy after template files
 html_static_path = ["_static"]
+html_css_files = ["custom.css"]
+html_js_files = ["matomo.js"]
+
+templates_path = ["_templates"]
+
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
@@ -237,10 +242,10 @@ html_theme_options = {
         "json_url": "https://docs.gammapy.org/stable/switcher.json",
         "version_match": switch_version,
     },
-    "navbar_end": ["version-switcher", "theme-switcher", "navbar-icon-links"],
+    "navbar_end": ["version-switcher", "navbar-icon-links"],
     "navigation_with_keys": True,
     # footers
-    "footer_start": ["copyright"],
+    "footer_start": ["copyright","custom-footer.html"],
     "footer_center": ["last-updated"],
     "footer_end": ["sphinx-version", "theme-version"]
 }
@@ -336,13 +341,7 @@ sphinx_gallery_conf = {
     },
 }
 
-html_static_path = ["_static"]
-html_css_files = ["custom.css"]
-html_js_files = ["matomo.js"]
-
 html_context = {
     "default_mode": "light",
 }
 
-# Add-on to insert the Matomo tracker
-templates_path = ['_templates']
