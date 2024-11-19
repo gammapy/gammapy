@@ -670,15 +670,16 @@ class FluxPoints(FluxMaps):
             ax = flux.plot(ax=ax, **kwargs)
         else:
             ax = flux.plot(ax=ax, **kwargs)
-            self._plot_format_ax(ax=ax, energy_power=energy_power, sed_type=sed_type)
+            ax.set_xlabel(f"Energy [{ax.xaxis.units.to_string(UNIT_STRING_FORMAT)}]")
+            ax.set_xscale("log", nonpositive="clip")
+        self._plot_format_yax(ax=ax, energy_power=energy_power, sed_type=sed_type)
 
         if len(flux.geom.axes) > 1:
             ax.legend()
         return ax
 
     @staticmethod
-    def _plot_format_ax(ax, energy_power, sed_type):
-        ax.set_xlabel(f"Energy [{ax.xaxis.units.to_string(UNIT_STRING_FORMAT)}]")
+    def _plot_format_yax(ax, energy_power, sed_type):
         if energy_power > 0:
             ax.set_ylabel(
                 f"e{energy_power} * {sed_type} [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]"
@@ -689,7 +690,6 @@ class FluxPoints(FluxMaps):
             )
 
         ax.set_yscale("log", nonpositive="clip")
-        ax.set_xscale("log", nonpositive="clip")
 
     def plot_ts_profiles(
         self,
