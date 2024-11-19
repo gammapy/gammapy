@@ -309,7 +309,7 @@ print(psf)
 
 ######################################################################
 # To get an idea of the size of the PSF we check how the containment radii
-# of the Fermi-LAT PSF vari with energy and different containment
+# of the Fermi-LAT PSF vary with energy and different containment
 # fractions:
 #
 

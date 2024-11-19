@@ -2,7 +2,6 @@
 import logging
 import numpy as np
 from scipy.special import erfc
-from scipy.stats import norm
 from astropy import units as u
 from astropy.io import fits
 from astropy.table import Table
@@ -426,6 +425,7 @@ class FluxPointsDataset(Dataset):
         assumes that flux points correspond to asymmetric gaussians
         and upper limits complementary error functions.
         """
+
         model = np.zeros(self.data.dnde.data.shape) + self.flux_pred().to_value(
             self.data.dnde.unit
         )
@@ -440,13 +440,15 @@ class FluxPointsDataset(Dataset):
             scale = np.zeros(mask_p.shape)
             scale[mask_p] = self.data.dnde_errp.data[mask_valid][mask_p]
             scale[~mask_p] = self.data.dnde_errn.data[mask_valid][~mask_p]
+
+            mask_invalid = np.isnan(scale)
+            scale[mask_invalid] = self.data.dnde_err.data[mask_valid][mask_invalid]
         except AttributeError:
             scale = self.data.dnde_err.data[mask_valid]
-        stat[mask_valid] = -2 * np.log(
-            norm.pdf(value, loc=loc, scale=scale) / norm.pdf(loc, loc=loc, scale=scale)
-        )
 
-        mask_ul = self.data.is_ul.data & ~np.isnan(self.data.dnde_ul.data)
+        stat[mask_valid] = ((value - loc) / scale) ** 2
+
+        mask_ul = self.data.is_ul.data
         value = model[mask_ul]
         loc_ul = self.data.dnde_ul.data[mask_ul]
         scale_ul = self.data.dnde_ul.data[mask_ul]
@@ -454,6 +456,8 @@ class FluxPointsDataset(Dataset):
             (erfc((loc_ul - value) / scale_ul) / 2)
             / (erfc((loc_ul - 0) / scale_ul) / 2)
         )
+
+        stat[np.isnan(stat.data)] = 0
         return stat
 
     def residuals(self, method="diff"):
@@ -487,7 +491,6 @@ class FluxPointsDataset(Dataset):
         ax_residuals=None,
         kwargs_spectrum=None,
         kwargs_residuals=None,
-        axis_name="energy",
     ):
         """Plot flux points, best fit model and residuals in two panels.
 
@@ -503,6 +506,7 @@ class FluxPointsDataset(Dataset):
             Keyword arguments passed to `~FluxPointsDataset.plot_spectrum`. Default is None.
         kwargs_residuals : dict, optional
             Keyword arguments passed to `~FluxPointsDataset.plot_residuals`. Default is None.
+
         Returns
         -------
         ax_spectrum, ax_residuals : `~matplotlib.axes.Axes`

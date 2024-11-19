@@ -89,7 +89,7 @@ print("DISTANCE_GC:", profiles.DMProfile.DISTANCE_GC)
 
 profile = profiles.NFWProfile(r_s=20 * u.kpc)
 
-# Adopt standard values used in HESS
+# Adopt standard values used in H.E.S.S.
 profiles.DMProfile.DISTANCE_GC = 8.5 * u.kpc
 profiles.DMProfile.LOCAL_DENSITY = 0.39 * u.Unit("GeV / cm3")
 

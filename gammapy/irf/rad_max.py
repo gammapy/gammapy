@@ -22,10 +22,10 @@ class RadMax2D(IRF):
 
     Parameters
     ----------
-    energy_axis : `MapAxis`
-        Reconstructed energy axis.
-    offset_axis : `MapAxis`
-        Field of view offset axis.
+    axes : list of `~gammapy.maps.MapAxis` or `~gammapy.maps.MapAxes`
+        Required axes (in the given order) are:
+            * energy (reconstructed energy axis)
+            * offset (field of view offset axis)
     data : `~astropy.units.Quantity`
         Applied directional cut.
     meta : dict

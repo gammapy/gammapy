@@ -20,10 +20,10 @@ class EffectiveAreaTable2D(IRF):
 
     Parameters
     ----------
-    energy_axis_true : `MapAxis`
-        True energy axis.
-    offset_axis : `MapAxis`
-        Field of view offset axis.
+    axes : list of `~gammapy.maps.MapAxis` or `~gammapy.maps.MapAxes`
+        Required axes (in the given order) are:
+            * energy_true (true energy axis)
+            * offset (field of view offset axis)
     data : `~astropy.units.Quantity`
         Effective area.
     meta : dict

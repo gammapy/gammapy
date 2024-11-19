@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Built-in models in Gammapy."""
+
 from gammapy.utils.registry import Registry
 from .core import DatasetModels, Model, ModelBase, Models
 from .cube import (
@@ -109,6 +110,8 @@ __all__ = [
     "PowerLawSpectralModel",
     "PowerLawTemporalModel",
     "Prior",
+    "GaussianPrior",
+    "UniformPrior",
     "scale_plot_flux",
     "ScaleSpectralModel",
     "Shell2SpatialModel",

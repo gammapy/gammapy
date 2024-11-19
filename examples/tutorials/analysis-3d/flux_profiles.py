@@ -203,6 +203,7 @@ for quantity in quantities:
     profile[quantity].plot(ax=ax, label=quantity.title())
 
 ax.set_ylabel("Counts")
+ax.legend()
 plt.show()
 
 

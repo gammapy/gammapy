@@ -168,7 +168,7 @@ class PSF(IRF):
         ax.set_ylabel(
             f"Containment radius [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]"
         )
-        ax.yaxis.set_major_formatter(mtick.FormatStrFormatter("%.1e"))
+        ax.yaxis.set_major_formatter(mtick.FormatStrFormatter("%.2f"))
         return ax
 
     def plot_containment_radius(
@@ -279,7 +279,7 @@ class PSF(IRF):
 
         ax.set_yscale("log")
         ax.set_ylabel(f"PSF [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]")
-        plt.legend()
+        ax.legend()
         return ax
 
     def peek(self, figsize=(15, 5)):

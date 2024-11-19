@@ -23,7 +23,8 @@ class BackgroundIRF(IRF):
 
     Parameters
     ----------
-    axes : list of `MapAxis` or `MapAxes` object
+    axes : list of `~gammapy.maps.MapAxis` or `~gammapy.maps.MapAxes`
+        Axes.
     data : `~np.ndarray`
         Data array.
     unit : str or `~astropy.units.Unit`
@@ -107,8 +108,11 @@ class Background3D(BackgroundIRF):
 
     Parameters
     ----------
-    axes : list of `MapAxis` or `MapAxes` object
-        Required data axes: ["energy", "fov_lon", "fov_lat"] in the given order.
+    axes : list of `~gammapy.maps.MapAxis` or `~gammapy.maps.MapAxes`
+        Required axes (in the given order) are:
+            * energy (reconstructed energy axis)
+            * fov_lon (field of view longitude)
+            * fov_lon (field of view latitude)
     data : `~np.ndarray`
         Data array.
     unit : str or `~astropy.units.Unit`
@@ -259,8 +263,10 @@ class Background2D(BackgroundIRF):
 
     Parameters
     ----------
-    axes : list of `MapAxis` or `MapAxes` object
-        Required data axes: ["energy", "offset"] in the given order.
+    axes : list of `~gammapy.maps.MapAxis` or `~gammapy.maps.MapAxes`
+        Required axes (in the given order) are:
+            * energy (reconstructed energy axis)
+            * offset (field of view offset axis)
     data : `~np.ndarray`
         Data array.
     unit : str or `~astropy.units.Unit`

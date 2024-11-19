@@ -300,8 +300,11 @@ class EnergyDependentMultiGaussPSF(ParametricPSF):
 
     Parameters
     ----------
-    axes : list of `MapAxis`
-        Required axes are ["energy_true", "offset"].
+    axes : list of `~gammapy.maps.MapAxis` or `~gammapy.maps.MapAxes`
+        Required axes (in the given order) are:
+            * energy_true (true energy axis)
+            * migra_axis (energy migration axis)
+            * offset_axis (field of view offset axis)
     data : `~numpy.recarray`
         Data array.
     meta : dict

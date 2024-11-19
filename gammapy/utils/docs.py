@@ -12,10 +12,11 @@ Here's some good resources with working examples:
 
 - https://doughellmann.com/blog/2010/05/09/defining-custom-roles-in-sphinx/
 - http://docutils.sourceforge.net/docs/howto/rst-directives.html
-- https://github.com/docutils-mirror/docutils/blob/master/docutils/parsers/rst/directives/images.py
+- https://github.com/docutils/docutils/blob/master/docutils/docutils/parsers/rst/directives/images.py
 - https://github.com/sphinx-doc/sphinx/blob/master/sphinx/directives/other.py
-- https://github.com/bokeh/bokeh/tree/master/bokeh/sphinxext
+- https://github.com/bokeh/bokeh/tree/master/src/bokeh/sphinxext
 """
+
 import os
 from pathlib import Path
 from docutils.parsers.rst import Directive
@@ -44,13 +45,15 @@ class AccordionHeader(Directive):
         raw = f"""
             <div id="accordion" class="shadow tutorial-accordion">
         <div class="card tutorial-card">
-            <div class="card-header collapsed card-link" data-bs-toggle="collapse"
-             data-bs-target="#{self.options["id"]}">
-                <div class="d-flex flex-row tutorial-card-header-1">
-                    <div class="d-flex flex-row tutorial-card-header-2">
-                        <button class="btn btn-dark btn-sm"></button>
-                        {self.options["title"]}
-                    </div>
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center" data-bs-toggle="collapse"
+                data-bs-target="#{self.options["id"]}" style="cursor: pointer;">
+                    <button class="btn btn-dark btn-sm me-2"
+                    style="background-color: #150458; border-radius: 50%; width: 24px; height: 24px;">
+                        <span style="font-size: 14px;">+</span>
+                    </button>
+                    {self.options["title"]}
+                </div>
         """
         if self.options.get("link", None):
             raw += f"""
@@ -60,7 +63,6 @@ class AccordionHeader(Directive):
              """
         raw += f"""
 
-                </div>
             </div>
             <div id="{self.options["id"]}" class="collapse" data-parent="#accordion">
                 <div class="card-body">

@@ -33,7 +33,7 @@ two different algorithms, referred to as "NN" and "GP" (see this
 `paper <https://iopscience.iop.org/article/10.3847/1538-4357/ab2f7d>`__
 for a detailed description). These two event classes are not independent, meaning that
 events are repeated between the NN and GP datasets. Therefore, these data should never
-be analyzed jointly, and one of the two estimators needs to be chosen before
+be analysed jointly, and one of the two estimators needs to be chosen before
 proceeding.
 
 Once the data has been reduced to a `~gammapy.datasets.MapDataset`, there are no differences
@@ -47,6 +47,7 @@ HAWC data access and reduction
 This is how to access data and IRFs from the HAWC Crab event data release.
 
 """
+
 
 import astropy.units as u
 from astropy.coordinates import SkyCoord
@@ -175,7 +176,7 @@ energy_axis = MapAxis.from_edges(
 ######################################################################
 # Note: this axis is the one used to create the background model map. If
 # different edges are used, the `~gammapy.makers.MapDatasetMaker` will interpolate between
-# them, which might lead to unexpected behavior.
+# them, which might lead to unexpected behaviour.
 
 ######################################################################
 # Define the energy true axis:
@@ -208,7 +209,7 @@ safe_mask_maker = SafeMaskMaker(methods=["aeff-max"], aeff_percent=10)
 # derived in reconstructed energy.
 
 dataset_empty = MapDataset.create(
-    geom, energy_axis_true=energy_axis_true, name="fHit " + str(fHit), reco_psf=True
+    geom, energy_axis_true=energy_axis_true, name=f"fHit {fHit}", reco_psf=True
 )
 dataset = maker.run(dataset_empty, obs)
 
@@ -278,7 +279,7 @@ plt.show()
 # Exercises
 # ---------
 #
-# -  Repeat the process for a different fHit bin
+# -  Repeat the process for a different fHit bin.
 # -  Repeat the process for all the fHit bins provided in the data
 #    release and fit a model to the result.
 #
@@ -289,6 +290,6 @@ plt.show()
 # ----------
 #
 # Now you know how to access and work with HAWC data. All other
-# tutorials and documentation concerning 3D analysis and `~gammapy.datasets.MapDataset`s
-# can be used from this step.
+# tutorials and documentation concerning 3D analysis techniques and
+# the `~gammapy.datasets.MapDataset` object can be used from this step on.
 #

@@ -499,12 +499,14 @@ plt.show()
 # A note on statistics
 # --------------------
 #
-# Different statistic are available for the FluxPointDataset :
-# * chi2 : estimate from chi2 statistics.
-# * profile : estimate from interpolation of the likelihood profile.
-# * distrib : estimate from probability distributions,
+# Different statistic are available for the `~gammapy.datasets.FluxPointsDataset` :
+#
+# - chi2 : estimate from chi2 statistics.
+# - profile : estimate from interpolation of the likelihood profile.
+# - distrib : estimate from probability distributions,
 #             assuming that flux points correspond to asymmetric gaussians
 #             and upper limits complementary error functions.
+#
 # Default is `chi2`, in that case upper limits are ignored and the mean of asymetrics error is used.
 # So it is recommended to use `profile` if `stat_scan` is available on flux points.
 # The `distrib` case provides an approximation if the `profile` is not available
@@ -550,7 +552,7 @@ def plot_stat(fp_dataset):
 plot_stat(flux_points_dataset)
 
 ######################################################################
-
+#
 # In order to avoid discrepancies due to the treatment of upper limits
 # we can utilise the `~gammapy.estimators.utils.resample_energy_edges`
 # for defining energy bins in which the minimum number of `sqrt_ts` is 2.

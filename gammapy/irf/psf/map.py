@@ -566,7 +566,7 @@ class PSFMap(IRFMap):
         ax.set_xlabel(f"Rad [{ax.xaxis.units.to_string(UNIT_STRING_FORMAT)}]")
         ax.set_ylabel(f"PSF [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]")
         ax.xaxis.set_major_formatter(FormatStrFormatter("%.2f"))
-        plt.legend()
+        ax.legend()
         return ax
 
     def __str__(self):

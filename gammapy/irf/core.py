@@ -33,6 +33,8 @@ class FoVAlignment(str, Enum):
 
     ALTAZ = "ALTAZ"
     RADEC = "RADEC"
+    # used for backward compatibility of old HESS data
+    REVERSE_LON_RADEC = "REVERSE_LON_RADEC"
 
 
 class IRF(metaclass=abc.ABCMeta):
@@ -40,7 +42,7 @@ class IRF(metaclass=abc.ABCMeta):
 
     Parameters
     ----------
-    axes : list of `MapAxis` or `MapAxes`
+    axes : list of `~gammapy.maps.MapAxis` or `~gammapy.maps.MapAxes`
         Axes.
     data : `~numpy.ndarray` or `~astropy.units.Quantity`, optional
         Data. Default is 0.

@@ -395,7 +395,6 @@ ax_spectrum, ax_residuals = analysis.datasets[0].plot_fit()
 ax_spectrum.set_ylim(0.1, 200)
 ax_spectrum.set_xlim(0.2, 60)
 ax_residuals.set_xlim(0.2, 60)
-analysis.datasets[0].plot_masks(ax=ax_spectrum)
 plt.show()
 
 

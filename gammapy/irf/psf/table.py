@@ -15,12 +15,11 @@ class PSF3D(PSF):
 
     Parameters
     ----------
-    energy_axis_true : `MapAxis`
-        True energy axis.
-    offset_axis : `MapAxis`
-        Offset axis.
-    rad_axis : `MapAxis`
-        Rad axis.
+    axes : list of `~gammapy.maps.MapAxis` or `~gammapy.maps.MapAxes`
+        Required axes (in the given order) are:
+            * energy_true (true energy axis)
+            * migra (energy migration axis)
+            * rad (rad axis)
     data : `~astropy.units.Quantity`
         PSF (3-dim with axes: psf[rad_index, offset_index, energy_index].
     meta : dict

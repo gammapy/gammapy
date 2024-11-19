@@ -7,6 +7,7 @@ from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
 from gammapy.data import DataStore
 from gammapy.datasets import SpectrumDataset
+from gammapy.irf import FoVAlignment
 from gammapy.makers import (
     ReflectedRegionsBackgroundMaker,
     SafeMaskMaker,
@@ -125,6 +126,11 @@ def test_spectrum_dataset_maker_hess_dl3(spectrum_dataset_crab, observations_hes
 
     datasets = []
     for obs in observations_hess_dl3:
+
+        assert obs.meta.optional["CREATOR"] == "SASH FITS::EventListWriter"
+        assert obs.meta.optional["HDUVERS"] == "0.2"
+        assert obs.bkg.fov_alignment == FoVAlignment.REVERSE_LON_RADEC
+
         dataset = maker.run(spectrum_dataset_crab, obs)
         datasets.append(dataset)
 

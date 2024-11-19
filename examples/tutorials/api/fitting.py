@@ -20,7 +20,7 @@ This is a hands-on tutorial to `~gammapy.modeling`, showing how to do
 perform a Fit in gammapy. The emphasis here is on interfacing the
 `Fit` class and inspecting the errors. To see an analysis example of
 how datasets and models interact, see the :doc:`/tutorials/api/model_management` tutorial.
-As an example, in this notebook, we are going to work with HESS data of the Crab Nebula and show in
+As an example, in this notebook, we are going to work with H.E.S.S. data of the Crab Nebula and show in
 particular how to :
 
 - perform a spectral analysis
@@ -75,7 +75,7 @@ crab_model = SkyModel(spectral_model=crab_spectrum, name="crab")
 
 ######################################################################
 # The data and background are read from pre-computed ON/OFF datasets of
-# HESS observations, for simplicity we stack them together. Then we set
+# H.E.S.S. observations, for simplicity we stack them together. Then we set
 # the model and fit range to the resulting dataset.
 #
 
@@ -265,7 +265,7 @@ print(result_minuit.models.covariance)
 ######################################################################
 # And you can plot the total parameter correlation as well:
 #
-result_minuit.models.covariance.plot_correlation()
+result_minuit.models.covariance.plot_correlation(figsize=(7, 5))
 plt.show()
 
 
