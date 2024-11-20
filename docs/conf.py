@@ -33,9 +33,6 @@ import os
 from configparser import ConfigParser
 from pkg_resources import get_distribution
 
-# Load all the global Astropy configuration
-from sphinx_astropy.conf import *
-
 # Sphinx-gallery config
 from sphinx_gallery.sorting import ExplicitOrder
 
@@ -43,7 +40,6 @@ from sphinx_gallery.sorting import ExplicitOrder
 from gammapy.utils.docs import SubstitutionCodeBlock, gammapy_sphinx_ext_activate
 
 # flake8: noqa
-
 
 # Add our custom directives to Sphinx
 def setup(app):
@@ -92,63 +88,94 @@ plot_html_show_source_link = False
 # If true, figures, tables and code-blocks are automatically numbered if they have a caption
 numfig = False
 
-# If your documentation needs a minimal Sphinx version, state it here.
-# needs_sphinx = "1.1"
+# The suffix of source filenames.
+source_suffix = '.rst'
 
-# We currently want to link to the latest development version of the astropy docs,
-# so we override the `intersphinx_mapping` entry pointing to the stable docs version
-# that is listed in `astropy/sphinx/conf.py`.
-intersphinx_mapping.pop("h5py", None)
-intersphinx_mapping["matplotlib"] = ("https://matplotlib.org/", None)
-intersphinx_mapping["astropy"] = ("http://docs.astropy.org/en/latest/", None)
-intersphinx_mapping["regions"] = (
-    "https://astropy-regions.readthedocs.io/en/latest/",
-    None,
-)
-intersphinx_mapping["reproject"] = ("https://reproject.readthedocs.io/en/latest/", None)
-intersphinx_mapping["naima"] = ("https://naima.readthedocs.io/en/latest/", None)
-intersphinx_mapping["gadf"] = (
-    "https://gamma-astro-data-formats.readthedocs.io/en/latest/",
-    None,
-)
-intersphinx_mapping["iminuit"] = ("https://iminuit.readthedocs.io/en/latest/", None)
-intersphinx_mapping["pandas"] = ("https://pandas.pydata.org/pandas-docs/stable/", None)
+# The master toctree document.
+master_doc = 'index'
+
+# The reST default role (used for this markup: `text`) to use for all
+# documents. Set to the "smart" one.
+default_role = 'obj'
+
+# Add any Sphinx extension module names here, as strings.
+extensions = [
+    "sphinx_click.ext",
+    'sphinx_copybutton',
+    "sphinx_design",
+    "sphinx_gallery.gen_gallery",
+    "sphinx.ext.autosummary",
+    "sphinx.ext.doctest",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.mathjax",
+    # Order for sphinx_automodapi is important
+    "sphinx_automodapi.automodapi",
+    "sphinx_automodapi.smart_resolver",
+    # Allows for mapping to other documentation projects
+    "sphinx.ext.intersphinx",
+    # Allows for Numpy docstring format
+    "numpydoc",
+    # Needed for the plot:: functionality in rst
+    "matplotlib.sphinxext.plot_directive",
+]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-#exclude_patterns.append("_templates")
-exclude_patterns.append("**.ipynb_checkpoints")
-exclude_patterns.append("user-guide/model-gallery/*/*.ipynb")
-exclude_patterns.append("user-guide/model-gallery/*/*.md5")
-exclude_patterns.append("user-guide/model-gallery/*/*.py")
+exclude_patterns = [
+    "**.ipynb_checkpoints",
+    "user-guide/model-gallery/*/*.ipynb",
+    "user-guide/model-gallery/*/*.md5",
+    "user-guide/model-gallery/*/*.py",
+    "_build",
+]
 
-extensions.extend(
-    [
-        "sphinx_click.ext",
-        "sphinx.ext.mathjax",
-        "sphinx_gallery.gen_gallery",
-        "sphinx.ext.doctest",
-        "sphinx_design",
-        "sphinx_copybutton",
-        "sphinx_automodapi.smart_resolver",
-    ]
-)
+# Define intersphinx_mapping
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3/", None),
+    "numpy": ("https://numpy.org/doc/stable/", None),
+    "scipy": ("https://docs.scipy.org/doc/scipy/", None),
+	"matplotlib": ("https://matplotlib.org/", None),
+	"astropy": ("https://docs.astropy.org/en/stable/", None),
+	"regions": ("https://astropy-regions.readthedocs.io/en/latest/", None),
+	"reproject": ("https://reproject.readthedocs.io/en/latest/", None),
+	"naima": ("https://naima.readthedocs.io/en/latest/", None),
+	"gadf": ("https://gamma-astro-data-formats.readthedocs.io/en/latest/", None),
+	"iminuit": ("https://iminuit.readthedocs.io/en/latest/", None),
+	"pandas": ("https://pandas.pydata.org/pandas-docs/stable/", None),
+	}
 
-nbsphinx_execute = "never"
+# -- Options for autosummary/autodoc output ------------------------------------
+# Enable generation of stub files
+autosummary_generate = True
+
+# Document inherited members
+automodsumm_inherited_members = True
+
+# Include class and __init__ docstrings
+autoclass_content = "both"
+
+# Directory for API docs
+automodapi_toctreedirnm = 'api'
+
+# Suppress member summaries
+numpydoc_show_class_members = False
+
+# Ensures that when users click the "Copy" button, only the actual code is copied,
+# excluding interactive prompts and indentation markers
+# https://sphinx-copybutton.readthedocs.io/en/latest/use.html#using-regexp-prompt-identifiers
 copybutton_prompt_text = r">>> |\.\.\. |\$ |In \[\d*\]: | {2,5}\.\.\.: | {5,8}: "
 copybutton_prompt_is_regexp = True
-# --
 
 # This is added to the end of RST files - a good place to put substitutions to
 # be used globally.
-rst_epilog += """
+rst_epilog = """
 .. |Table| replace:: :class:`~astropy.table.Table`
 """
 
 # This is added to keep the links to PRs in release notes
 changelog_links_docpattern = [".*changelog.*", "whatsnew/.*", "release-notes/.*"]
 
-# -- Project information ------------------------------------------------------
+# -- Project information -------------------------------------------------------
 
 # This does not *have* to match the package name, but typically does
 project = setup_cfg["name"]
@@ -156,39 +183,26 @@ author = setup_cfg["author"]
 copyright = "{}, {}".format(datetime.datetime.now().year, setup_cfg["author"])
 
 version = get_distribution(project).version
-release = "X.Y.Z"
-switch_version = version
-if "dev" in version:
-    switch_version = "dev"
-else:
-    release = version
+release = "X.Y.Z" if "dev" in version else version
+switch_version = "dev" if "dev" in version else release
+# release = "X.Y.Z"
+# switch_version = version
+# if "dev" in version:
+#     switch_version = "dev"
+# else:
+#     release = version
 
 substitutions = [
     ("|release|", release),
 ]
 # -- Options for HTML output ---------------------------------------------------
 
-# A NOTE ON HTML THEMES
-# The global astropy configuration uses a custom theme, "bootstrap-astropy",
-# which is installed along with astropy. A different theme can be used or
-# the options for this theme can be modified by overriding some
-# variables set in the global configuration. The variables set in the
-# global configuration are listed below, commented out.
-
-# Add any paths that contain custom themes here, relative to this directory.
-# To use a different custom theme, add the directory containing the theme.
-# html_theme_path = []
-
-# The theme to use for HTML and HTML Help pages.  See the documentation for
-# a list of builtin themes. To override the custom theme, set this to the
-# name of a builtin theme or the name of a custom theme in html_theme_path.
 html_theme = "pydata_sphinx_theme"
 
 # Static files to copy after template files
 html_static_path = ["_static"]
 html_css_files = ["custom.css"]
 html_js_files = ["matomo.js"]
-
 templates_path = ["_templates"]
 
 
@@ -250,7 +264,6 @@ html_theme_options = {
     "footer_end": ["sphinx-version", "theme-version"]
 }
 
-
 gammapy_sphinx_ext_activate()
 
 # -- Options for LaTeX output --------------------------------------------------
@@ -268,16 +281,12 @@ latex_documents = [
 man_pages = [("index", project.lower(), f"{project} Documentation", [author], 1)]
 
 
-# -- Other options --
+# -- Other options -------------------------------------------------------------
 
 github_issues_url = "https://github.com/gammapy/gammapy/issues/"
 
-# http://sphinx-automodapi.readthedocs.io/en/latest/automodapi.html
-# show inherited members for classes
-automodsumm_inherited_members = True
-
 # In `about.rst` and `references.rst` we are giving lists of citations
-# (e.g. papers using Gammapy) that partly aren"t referenced from anywhere
+# (e.g. papers using Gammapy) that partly aren't referenced from anywhere
 # in the Gammapy docs. This is normal, but Sphinx emits a warning.
 # The following config option suppresses the warning.
 # http://www.sphinx-doc.org/en/stable/rest.html#citations
@@ -297,7 +306,6 @@ binder_config = {
     "use_jupyter_lab": True,
 }
 
-# nitpicky = True
 sphinx_gallery_conf = {
     "examples_dirs": [
         "../examples/models",
