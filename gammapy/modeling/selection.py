@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
-from gammapy.modeling import Fit, Parameter
+from gammapy.modeling import Fit, Parameter, Covariance
 from gammapy.stats.utils import sigma_to_ts
 from .fit import FitResult, OptimizeResult
 
@@ -122,6 +122,9 @@ class TestStatisticNested:
         stat = datasets.stat_sum()
 
         object_cache, prev_pars = self._apply_null_hypothesis(datasets)
+        prev_covar = Covariance(
+            datasets.models.parameters, datasets.models.covariance.data
+        )
 
         if len(datasets.models.parameters.free_parameters) > 0:
             fit_results_null = self.fit.run(datasets)
@@ -143,7 +146,7 @@ class TestStatisticNested:
         ts = stat_null - stat
         if not apply_selection or ts > self.ts_threshold:
             # restore default model if preferred against null hypothesis or if selection is ignored
-            self._restore_status(datasets, object_cache, prev_pars)
+            self._restore_status(datasets, object_cache, prev_pars, prev_covar)
         return dict(
             ts=ts,
             fit_results=fit_results,
@@ -161,13 +164,14 @@ class TestStatisticNested:
                 p.frozen = True
         return object_cache, prev_pars
 
-    def _restore_status(self, datasets, object_cache, prev_pars):
+    def _restore_status(self, datasets, object_cache, prev_pars, prev_covar):
         """Restore parameters to given cached cached objects and values"""
         for p in self.parameters:
             p.frozen = False
         for kp, p in enumerate(datasets.models.parameters):
             p.__dict__ = object_cache[kp]
             p.value = prev_pars[kp]
+        datasets._covariance = prev_covar
 
 
 def select_nested_models(
