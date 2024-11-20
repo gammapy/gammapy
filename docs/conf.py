@@ -185,12 +185,6 @@ copyright = "{}, {}".format(datetime.datetime.now().year, setup_cfg["author"])
 version = get_distribution(project).version
 release = "X.Y.Z" if "dev" in version else version
 switch_version = "dev" if "dev" in version else release
-# release = "X.Y.Z"
-# switch_version = version
-# if "dev" in version:
-#     switch_version = "dev"
-# else:
-#     release = version
 
 substitutions = [
     ("|release|", release),
