@@ -1,7 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import numpy as np
 import pytest
 from numpy.testing import assert_allclose
 from gammapy.modeling.fit import Fit
+from gammapy.modeling.models import Models
 from gammapy.modeling.selection import TestStatisticNested, select_nested_models
 from gammapy.utils.testing import requires_data
 
@@ -12,7 +14,8 @@ def fermi_datasets():
 
     filename = "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_datasets.yaml"
     filename_models = "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_models.yaml"
-    return Datasets.read(filename=filename, filename_models=filename_models)
+    fermi_datasets = Datasets.read(filename=filename, filename_models=filename_models)
+    return fermi_datasets
 
 
 @requires_data()
@@ -67,10 +70,15 @@ def test_test_statistic_detection_other_frozen(fermi_datasets):
 @requires_data()
 def test_test_statistic_link(fermi_datasets):
     # TODO: better test with simulated data ?
-    model = fermi_datasets.models["Crab Nebula"]
+
+    models = Models.read("$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_models.yaml")
+
+    model = models["Crab Nebula"]
     model2 = model.copy(name="other")
     model2.spectral_model.alpha.value = 2.4
-    fermi_datasets.models = fermi_datasets.models + [model2]
+    model2.spectral_model.alpha.error = 1
+
+    fermi_datasets.models = models + [model2]
 
     fit = Fit()
     minuit_opts = {"tol": 10, "strategy": 0}
@@ -82,5 +90,27 @@ def test_test_statistic_link(fermi_datasets):
     )
     results = ts_eval.run(fermi_datasets)
 
+    assert results["ts"] > ts_eval.ts_threshold
+    assert model2.spectral_model.alpha.value != model.spectral_model.alpha.value
+    assert model2.spectral_model.alpha.error != model.spectral_model.alpha.error
+    assert model2.spectral_model.alpha.error != 0
+
+    ts_eval = TestStatisticNested(
+        [model.spectral_model.alpha],
+        [model2.spectral_model.alpha],
+        fit=fit,
+        n_sigma=np.inf,
+    )
+    results = ts_eval.run(fermi_datasets)
+
     assert results["ts"] < ts_eval.ts_threshold
     assert_allclose(model2.spectral_model.alpha.value, model.spectral_model.alpha.value)
+    assert_allclose(model2.spectral_model.alpha.error, model.spectral_model.alpha.error)
+    assert_allclose(
+        fermi_datasets.models[0].spectral_model.alpha.error,
+        results["fit_results_null"].models[0].spectral_model.alpha.error,
+    )
+    assert (
+        fermi_datasets.models[0].spectral_model.alpha.error
+        != results["fit_results"].models[0].spectral_model.alpha.error
+    )
