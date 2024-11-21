@@ -285,7 +285,7 @@ def test_plot_format_yaxis():
         ax = fp.plot(sed_type="dnde", energy_power=2.7)
         assert (
             ax.yaxis.get_label().get_text()
-            == "e2.7 * dnde [$\\mathrm{TeV^{-1}\\,s^{-1}\\,cm^{-2}}$]"
+            == "e2.7 * dnde [$\\mathrm{TeV^{17/10}\\,s^{-1}\\,cm^{-2}}$]"
         )
 
 
