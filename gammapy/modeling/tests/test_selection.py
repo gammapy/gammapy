@@ -17,13 +17,15 @@ def fermi_datasets():
 
 @requires_data()
 def test_test_statistic_detection(fermi_datasets):
-
     model = fermi_datasets.models["Crab Nebula"]
 
     results = select_nested_models(
         fermi_datasets, [model.spectral_model.amplitude], [0]
     )
     assert_allclose(results["ts"], 20905.667798, rtol=1e-5)
+    assert_allclose(
+        fermi_datasets.models.parameters["amplitude"].error, 0.00787969349532099
+    )
 
     ts_eval = TestStatisticNested([model.spectral_model.amplitude], [0])
     ts_known_bkg = ts_eval.ts_known_bkg(fermi_datasets)
@@ -48,7 +50,6 @@ def test_test_statistic_detection(fermi_datasets):
 
 @requires_data()
 def test_test_statistic_detection_other_frozen(fermi_datasets):
-
     with fermi_datasets.models.restore_status():
         fermi_datasets.models.freeze()
         model = fermi_datasets.models["Crab Nebula"]
@@ -56,6 +57,10 @@ def test_test_statistic_detection_other_frozen(fermi_datasets):
             fermi_datasets, [model.spectral_model.amplitude], [0]
         )
         results["fit_results_null"].nfev == 0
+        assert_allclose(
+            fermi_datasets.models.parameters["amplitude"].error, 0.00787969349532099
+        )
+
         model.spectral_model.amplitude.value = 0
         assert_allclose(
             results["fit_results_null"].parameters.value,
@@ -65,7 +70,6 @@ def test_test_statistic_detection_other_frozen(fermi_datasets):
 
 @requires_data()
 def test_test_statistic_link(fermi_datasets):
-
     # TODO: better test with simulated data ?
     model = fermi_datasets.models["Crab Nebula"]
     model2 = model.copy(name="other")
