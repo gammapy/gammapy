@@ -23,7 +23,7 @@ Motivation
 
 (The material below are some notes that I took that can be used later for a tutorial introduction)
 
-Bayesian inference uses prior knowledge, in the form of a prior distribution in order to estimate posterior probabilities which we traditionally visualize in the form of corner plots.
+Bayesian inference uses prior knowledge, in the form of a prior distribution, in order to estimate posterior probabilities which we traditionally visualize in the form of corner plots.
 These distributions contains much more information than a single best-fit as they reveal not only the "best model" but the (not always Gaussian) errors and correlation between parameters.
 
 A well know approach to estimate this posterior distribution is the Markov Chain Monte Carlo (MCMC) which uses an ensemble of walkers to produce a chain of samples that after a convergence period will reach a stationary state.
