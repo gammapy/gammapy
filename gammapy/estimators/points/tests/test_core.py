@@ -281,6 +281,13 @@ def test_plot_format_yaxis():
             == "dnde [$\\mathrm{TeV^{-1}\\,s^{-1}\\,cm^{-2}}$]"
         )
 
+    with mpl_plot_check():
+        ax = fp.plot(sed_type="dnde", energy_power=2.7)
+        assert (
+            ax.yaxis.get_label().get_text()
+            == "dnde [$\\mathrm{TeV^{-1}\\,s^{-1}\\,cm^{-2}}$]"
+        )
+
 
 @requires_data()
 def test_flux_points_single_bin_dnde():
