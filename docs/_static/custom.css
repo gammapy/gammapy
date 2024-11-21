@@ -112,7 +112,7 @@ p {
 }
 
 .bd-sidebar, .bd-toc {
-  position: sticky;
+  position: relative;
 }
 
 /* pre */
@@ -434,3 +434,4 @@ a.dropdown-item {
   padding: .5em;
   background: var(--gammapy-secondary);
 }
+
