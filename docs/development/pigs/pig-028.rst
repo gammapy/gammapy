@@ -37,7 +37,7 @@ which is a Monte Carlo algorithm for computing an integral of the likelihood fun
 The method performs this integral by evolving a collection of points through the parameter space (see recent reviews of Ashton2022, and of Buchner2023). 
 Without going into too many details, one important specificity of the NS method is that it starts from the entire parameter space and evolves a collection of live points to map all minima (including multiple modes if any)
 whereas Markov Chain Monte Carlo methods require an initialization point and the walkers will explore the local likelihood. The ability of these walkers to escape a local minimum or to accurately describe a complex likelihood space is not guaranteed.
-This is a fundamental difference between MCMC (and Minuit) which will only ever probe the vicinity along their minimization paths and dot not have an overview of the global likelihood landscape.
+This is a fundamental difference between MCMC (and Minuit) which will only ever probe the vicinity along their minimization paths and do not have an overview of the global likelihood landscape.
 The analysis using the NS framework is more CPU time consuming than a standard classical fit but provides the full posterior distribution for all parameters, which is out of reach with traditional fitting techniques (N*(N-1)/2 contour plots to generate).
 In addition it is more robust to the choice of initialization, requires less human intervention and is therefore readily integrated in pipeline analysis.
 The following PIG focuses on the implementation of the NS with the UltraNest package, one of the leading package in Astronomy (already used in Cosmology and in X-rays). Another relevant implementation is the one by Dynesty.
