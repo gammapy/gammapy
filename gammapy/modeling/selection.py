@@ -72,9 +72,9 @@ class TestStatisticNested:
          (for example considereing diffuse background or nearby source).
         """
         stat = datasets.stat_sum()
-        object_cache, prev_pars = self._apply_null_hypothesis(datasets)
+        object_cache, prev_pars, prev_covar = self._apply_null_hypothesis(datasets)
         stat_null = datasets.stat_sum()
-        self._restore_status(datasets, object_cache, prev_pars)
+        self._restore_status(datasets, object_cache, prev_pars, prev_covar)
         return stat_null - stat
 
     def ts_asimov(self, datasets):
@@ -121,10 +121,7 @@ class TestStatisticNested:
         fit_results = self.fit.run(datasets)
         stat = datasets.stat_sum()
 
-        object_cache, prev_pars = self._apply_null_hypothesis(datasets)
-        prev_covar = Covariance(
-            datasets.models.parameters, datasets.models.covariance.data
-        )
+        object_cache, prev_pars, prev_covar = self._apply_null_hypothesis(datasets)
 
         if len(datasets.models.parameters.free_parameters) > 0:
             fit_results_null = self.fit.run(datasets)
@@ -161,8 +158,11 @@ class TestStatisticNested:
                 p.__dict__ = val.__dict__
             else:
                 p.value = val
-                p.frozen = True
-        return object_cache, prev_pars
+        p.frozen = True
+        prev_covar = Covariance(
+            datasets.models.parameters, datasets.models.covariance.data
+        )
+        return object_cache, prev_pars, prev_covar
 
     def _restore_status(self, datasets, object_cache, prev_pars, prev_covar):
         """Restore parameters to given cached cached objects and values"""
