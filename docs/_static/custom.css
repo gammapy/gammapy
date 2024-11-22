@@ -75,6 +75,7 @@ p {
 
 .navbar-light .navbar-nav li a.nav-link {
   color: var(--gammapy-lightgray);
+  font-size: 16px;
 }
 
 .navbar-light .navbar-nav li a.nav-link:hover,
