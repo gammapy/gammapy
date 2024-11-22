@@ -76,7 +76,6 @@ def test_test_statistic_link(fermi_datasets):
     model = models["Crab Nebula"]
     model2 = model.copy(name="other")
     model2.spectral_model.alpha.value = 2.4
-    model2.spectral_model.alpha.error = 1
 
     fermi_datasets.models = models + [model2]
 

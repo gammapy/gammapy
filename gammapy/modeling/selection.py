@@ -160,7 +160,7 @@ class TestStatisticNested:
                 p.__dict__ = val.__dict__
             else:
                 p.value = val
-        p.frozen = True
+                p.frozen = True
         cache["covar"] = Covariance(
             datasets.models.parameters, datasets.models.covariance.data
         )
