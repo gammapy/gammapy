@@ -147,7 +147,7 @@ jobs:
           gammapy download datasets
       - name: test build docs
         run: |
-          tox -e build_docs -- -j auto
+          tox -e build_docs
       - name: check links
         continue-on-error: true
         run: |
