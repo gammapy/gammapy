@@ -197,9 +197,10 @@ def select_nested_models(
     n_free_parameters : int, optional
         Number of free parameters to consider between the two hypothesis
         in order to estimate the `ts_threshold` from the `n_sigma` threshold.
-        Default is len(parameters).
+        Default is ``len(parameters)``.
     fit : `Fit`, optional
-        Fit instance specifying the backend and fit options. Default is None.
+        Fit instance specifying the backend and fit options. Default is None, which utilises
+        the "minuit" backend with tol=0.1 and strategy=1.
 
     Returns
     -------
