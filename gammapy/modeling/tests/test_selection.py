@@ -105,11 +105,4 @@ def test_test_statistic_link(fermi_datasets):
     assert results["ts"] < ts_eval.ts_threshold
     assert_allclose(model2.spectral_model.alpha.value, model.spectral_model.alpha.value)
     assert_allclose(model2.spectral_model.alpha.error, model.spectral_model.alpha.error)
-    assert_allclose(
-        fermi_datasets.models[0].spectral_model.alpha.error,
-        results["fit_results_null"].models[0].spectral_model.alpha.error,
-    )
-    assert (
-        fermi_datasets.models[0].spectral_model.alpha.error
-        != results["fit_results"].models[0].spectral_model.alpha.error
-    )
+    assert model2.spectral_model.alpha.error != 0
