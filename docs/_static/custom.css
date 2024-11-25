@@ -84,7 +84,6 @@ p {
 }
 
 #navbar-icon-links i.fa-github-square::before,
-#navbar-icon-links i.fa-square-x-twitter::before,
 #navbar-icon-links i.fa-slack::before {
   color: white;
 }
