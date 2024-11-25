@@ -173,6 +173,11 @@
             "givenName": "Daniel"
         },
         {
+            "@type": "Person",
+            "familyName": "Nievas",
+            "givenName": "Mireia"
+        },
+        {
             "@id": "https://orcid.org/0000-0002-9105-0518",
             "@type": "Person",
             "affiliation": {
