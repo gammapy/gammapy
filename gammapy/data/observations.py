@@ -16,7 +16,6 @@ from astropy.units import Quantity
 from astropy.utils import lazyproperty
 import matplotlib.pyplot as plt
 from gammapy.utils.deprecation import GammapyDeprecationWarning
-from gammapy.irf import FoVAlignment
 from gammapy.utils.fits import LazyFitsData, earth_location_to_dict
 from gammapy.utils.metadata import CreatorMetaData, TargetMetaData, TimeInfoMetaData
 from gammapy.utils.scripts import make_path
@@ -109,6 +108,8 @@ class Observation:
     @property
     def bkg(self):
         """Background of the observation."""
+        from gammapy.irf import FoVAlignment
+
         bkg = self._bkg
         # used for backward compatibility of old HESS data
         try:
