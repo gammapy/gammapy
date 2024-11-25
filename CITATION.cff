@@ -106,8 +106,6 @@ authors:
   orcid: "https://orcid.org/0000-0002-9105-0518"
 - given-names: Michele
   family-names: Peresano
-  affiliation: ""
-  orcid: ""
 - given-names: Fabio
   family-names: Pintore
   affiliation: "INAF/IASF PALERMO, Italy"
@@ -132,7 +130,6 @@ authors:
     2, 91058 Erlangen, Germany"
 - given-names: Vasco
   family-names: Schiavo
-  affiliation: ""
 - given-names: Atreyee
   family-names: Sinha
   affiliation: "EMFTEL department and IPARCOS, Universidad Complutense de Madrid,
@@ -158,10 +155,8 @@ authors:
   orcid: "https://orcid.org/0000-0002-8219-4667"
 - given-names: Santiago
   family-names: Vila
-  affiliation: ""
 - given-names: Samantha
   family-names: Wong
-  affiliation: ""
 - given-names: Pei
   family-names: Yu
   affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
