@@ -2,13 +2,13 @@
 
 .. _gammapy_1p3_release:
 
-1.3 (November 22, 2024)
+1.3 (November 25, 2024)
 -------------------------
 
-- Released November 22, 2024
+- Released November 25, 2024
 - 25 contributors
-- 197 pull requests since v1.2 (not all listed below)
-- 69 closed issues
+- 212 pull requests since v1.2 (not all listed below)
+- 75 closed issues
 
 Summary
 ~~~~~~~
@@ -25,7 +25,8 @@ Sherpa dependency has been fixed to >4.16
 API changes
 ~~~~~~~~~~~
 
-One deprecated change has been introduced in this version:
+One  API-breaking change has been introduced in this version:
+
 - The order of arguments in the `~gammapy.modeling.models.FoVBackgroundModel` has been modified;
 `dataset_name` is now a required first positional argument.
 
@@ -40,9 +41,12 @@ Infrastructure
 Documentation improvements
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- CSS with Sphinx v1.5 is now used for the docs build.
-- Tutorials are now ordered in a logical workflow.
-- Three new tutorials have been added: (1) on modeling the EBL absorption, (2) on exposing the general API of `gammapy.estimators` and `~gammapy.estimators.FluxMaps`,  (3) on performing time-dependent spectroscopy.
+- The pydata-sphinx-theme version used to build the documentation has been updated. The overall appearance has therefore changed a bit.
+- Tutorials are now ordered in a logical workflow in each category.
+- Three new tutorials have been added: 
+   - one on modeling the EBL absorption
+   - one exposing the general API of `gammapy.estimators` and `~gammapy.estimators.FluxMaps`
+   - one performing time-dependent spectroscopy
 - Code examples have been added in docstrings.
 
 
@@ -73,14 +77,13 @@ New features
 - Bin-wise likelihood profiles are now stored on `~gammapy.estimators.FluxMaps`.
 - `~gammapy.estimtors.FluxMaps` obtained from different datasets (eg: different event types) can be combined.
 - Added a function to combine flux maps in `~gammapy.estimators.utils.combine_flux_maps`. The combination
-uses the likelihood profile maps if available otherwise Gaussian approximation is used.
+  uses the likelihood profile maps if available otherwise Gaussian approximation is used.
 
 *gammapy.stats*
 
 - Timmer-Koenig algorithm with leakage protection for simulating a time series from a power spectrum has been implemented.
 - Discrete structure function for a variable source using the Emmanoulopoulos et al. (2010) algorithm has been added.
 - Discrete cross correlation function computation has been added.
-
 
 *gammapy.modeling*
 
@@ -100,7 +103,6 @@ Bug fixes and improvements
 - Updated CSS for Sphinx v1.5.
 - Allowed extrapolation only along spatial dimension in `mask_safe_edisp`.
 - Added write function to `~gammapy.modeling.FitResult`.
-- Exposed `~gammapy.modeling.FitResult` object.
 - Fixed `cutout_template_models` to work if models is None.
 - Fixed angle wrapping of spatial parameters in `~gammapy.modeling.models.PiecewiseNormSpatialModel`.
 - Fixed map evaluation if no ``edisp`` is set.
@@ -206,8 +208,7 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 - [#5206] Convert negative `npred` values to zero in `MapDatasetEventSampler` (Fabio Pintore)
 - [#5205] Specify the sampled model in `MapDatasetEventSampler` (Fabio Pintore)
 - [#5200] Use two argument form of Time to parse reference time (Maximilian Linhoff)
-- [#5188] Raise an error if the geometry of the exclusion mask passed to `ReflectedRegionsBackgroundMaker`
-is not an image (Maxime Regeard)
+- [#5188] Raise an error if the geometry of the exclusion mask passed to `ReflectedRegionsBackgroundMaker` is not an image (Maxime Regeard)
 - [#5186] Adjust `to_edisp_kernel` input to `MapAxis` (Kirsty Feijen)
 - [#5184] Support additional axes in Mapdataset.create (Régis Terrier)
 - [#5180] Raise error on invalid input shape in Map (Maximilian Linhoff)
@@ -216,8 +217,7 @@ is not an image (Maxime Regeard)
 - [#5161] Flux maps combination (Quentin Remy)
 - [#5160] Fix select_nested_models if there is no free parameters for the null hypothesis (Quentin Remy)
 - [#5156] Introduction of the structure function for variability studies (Claudio Galelli)
-- [#5145] LightCurveTemplateTemporalModel method to generate a model from a periodogram by using the
-Timmer algorithm (Claudio Galelli)
+- [#5145] LightCurveTemplateTemporalModel method to generate a model from a periodogram by using the Timmer algorithm (Claudio Galelli)
 - [#5135] Add different options to compute stat_array on FluxPointsDatasets (Quentin Remy)
 - [#5129] Copy on and off phase intervals in `PhaseBackgroundMaker` (Maxime Regeard)
 - [#5125] Fix implementation of the testing code for larger docstring examples (Kirsty Feijen)
