@@ -183,7 +183,12 @@
             "givenName": "Laura"
         },
         {
+            "@id": "https://orcid.org/0000-0002-7537-7334",
             "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Max-Planck-Institut f\u00fcr Physik, Boltzmannstra\u00dfe 8, 85748 Garching bei M\u00fcnchen, Germany"
+            },
             "familyName": "Peresano",
             "givenName": "Michele"
         },
