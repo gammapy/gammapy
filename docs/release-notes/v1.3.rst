@@ -2,13 +2,117 @@
 
 .. _gammapy_1p3_release:
 
-1.3 (October xx, 2024)
+1.3 (November 25, 2024)
 -------------------------
 
-- Released October xx, 2024
-- xx contributors
-- 197 pull requests since v1.2 (not all listed below)
-- 69 closed issues
+- Released November 25, 2024
+- 25 contributors
+- 212 pull requests since v1.2 (not all listed below)
+- 75 closed issues
+
+Summary
+~~~~~~~
+
+This release introduces a number of performance improvements, new features and bug fixes.
+Improved support is provided for joint analysis with different event types.
+There has been significant code cleanup, specially with respect to the documentation and three new
+tutorials have been added.
+
+This release is compatible with numpy >=2.0.
+Sherpa dependency has been fixed to >4.16
+
+
+API changes
+~~~~~~~~~~~
+
+One  API-breaking change has been introduced in this version:
+
+- The order of arguments in the `~gammapy.modeling.models.FoVBackgroundModel` has been modified; `dataset_name` is now a required first positional argument.
+
+Features deprecated since Gammapy v1.2 have been removed.
+
+Infrastructure
+~~~~~~~~~~~~~~
+
+- Matomo is now used for website analytics, replacing Google Analytics.
+
+
+Documentation improvements
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- The pydata-sphinx-theme version used to build the documentation has been updated. The overall appearance has therefore changed a bit.
+- Tutorials are now ordered in a logical workflow in each category.
+- Three new tutorials have been added: 
+   - one on modeling the EBL absorption
+   - one exposing the general API of `gammapy.estimators` and `~gammapy.estimators.FluxMaps`
+   - one performing time-dependent spectroscopy
+- Code examples have been added in docstrings.
+
+
+New features
+~~~~~~~~~~~~
+
+*gammapy.catalogs*
+
+- Support for the 2PC and 3PC pulsar catalogs from Fermi-LAT has been added.
+
+
+*gammapy.datasets*
+
+- Performance improvement in Fermi-LAT analysis has been implemented with adaptations in PSF kernel computation.
+- Stacking of acceptance maps has been improved.
+
+
+*gammapy.maps*
+
+- Multiple non-spatial axes are now supported in MapDataset creation. Full likelihood computation with additional axes is not yet supported.
+- Map axes with periodic boundary conditions are now supported.
+- An error is raised for maps with invalid input shapes instead of silently broadcasting.
+
+*gammapy.estimators*
+
+- Added support for joint TS map : `TSMapEstimator.run()` now accepts `Datasets` as input.
+- Maps of likelihood profiles can now be computed with the `~gammapy.estimators.TSMapEstimator` via the argument : `selection_optional = ["stat_scan"]`.
+- Bin-wise likelihood profiles are now stored on `~gammapy.estimators.FluxMaps`.
+- `~gammapy.estimtors.FluxMaps` obtained from different datasets (eg: different event types) can be combined.
+- Added a function to combine flux maps in `~gammapy.estimators.utils.combine_flux_maps`. The combination
+  uses the likelihood profile maps if available otherwise Gaussian approximation is used.
+- Added alpha maps to the output of `~gammapy.estimators.ExcessMapEstimator`.
+
+*gammapy.stats*
+
+- Timmer-Koenig algorithm with leakage protection for simulating a time series from a power spectrum has been implemented.
+- Discrete structure function for a variable source using the Emmanoulopoulos et al. (2010) algorithm has been added.
+- Discrete cross correlation function computation has been added.
+
+*gammapy.modeling*
+
+- The `~gammapy.modeling.FitResult` object is now exposed as an important API element, combining the results from the optimisation and covariance of the fit. It can be saved to disk in the form of a yaml file thanks to a new `~gammapy.modeling.FitResult.write()` function.
+- Unique naming of model parameters has been adapted, leading to resolution of issues with covariance matrix computation for complex model lists.
+- Time scale issues in simulation energy dependent temporal models has been resolved.
+
+
+Bug fixes and improvements
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- ON and OFF phase intervals are copied in `~gammapy.makers.PhaseBackgroundMaker`.
+- Added min_pix option in `~gammapy.maps.WcsGeom.cutout`.
+- Added copy method on `~gammapy.estimators.FluxMaps`.
+- Fixed `~gammapy.modeling.select_nested_models` if there is no free parameters for the null hypothesis.
+- Allowed extrapolation only along spatial dimension in `mask_safe_edisp`.
+- Fixed `cutout_template_models` to work if models is None.
+- Fixed angle wrapping of spatial parameters in `~gammapy.modeling.models.PiecewiseNormSpatialModel`.
+- Fixed map evaluation if no ``edisp`` is set.
+- Added missing parallel processing options.
+- Added `~gammapy.maps.TimeMapAxis.to_table()`.
+- Added a warning in `~gammapy.modeling.models.TemplateSpatialModel` for presence of nan values.
+- Fixed ignored overwrite in `~gammapy.datasets.Datasets.write`.
+- Improved plotting of spectral residuals by removing the mask in computation but rather adding a visual mask.
+- Added strict option to `~gammapy.maps.MapAxis.downsample`.
+- Fixed `~gammapy.data.ObservationsEventsSampler` for observations based on full-enclosure IRFs.
+- Added a method to normalize `~gammapy.modeling.models.TemplatePhaseCurveTemporalModel`.
+- Definition of `UniformPrior` has been fixed to return 0 within min and max values instead of 1.
+
 
 Contributors
 ~~~~~~~~~~~~
@@ -23,120 +127,20 @@ Contributors
 - Lars Mohrmann
 - Daniel Morcuende
 - Laura Olivera Nieto
+- Mireia Nievas
 - Michele Peresano
 - Fabio Pintore
 - Maxime Regeard
 - Quentin Remy
 - Gerrit Roellinghoff
-- Hanna Stapel
 - Vasco Schiavo
 - Atreyee Sinha
 - Brigitta Sipőcz
+- Hanna Stapel
 - Régis Terrier
 - Santiago Vila
 - Samantha Wong
 - Pei Yu
-
-Summary
-~~~~~~~
-
-This release introduces a number of performance improvements, new features and bug fixes.
-Improved support is provided for joint analysis with different event types.
-There has been significant code cleanup, specially with respect to the documentaion and three new tutorials have been added.
-
-This release is compatible with numpy >=2.0. 
-Sherpa dependency has beeen fixed to >4.16
-
-
-API changes
-~~~~~~~~~~~
-
-One deprecated change has been introducted in this version:
-- The order of arguments in the `FoVBackgroundModel` has been modified; `dataset_name` is now a compulsory first positional argument.
-
-Features deprecated since Gammapy v1.2 have been removed. 
-
-Infrastructure
-~~~~~~~~~~~~~~
-
-- Matomo is now used for website analytics, replacing Google Analytics.
-
-
-Documentation improvements
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-- css with sphinx v15 is now used for the docs build.
-- Tutorials are now ordered in a logical workflow.
-- Three new tutorials have been added: (1) on modelling the EBL absorption, (2) on exposing the general API of `gammapy.estimators` and `FluxMaps`,  (3) on performing time dependent spectroscopy.
-- Code examples have been added in docstrings.
-
-
-New features
-~~~~~~~~~~~~
-
-*gammapy.catalogs*
-
-- Support for the 2PC and 3PC pulsar catalogs from Fermi-LAT is now added.
-
-
-*gammapy.datasets*
-
-- Performance improvement in Fermi-LAT analysis is implemented with adaption in psf kernel computation.
-- Stacking of acceptance maps is improved.
-
-
-*gammapy.maps*
-
-- Multiple non-spatial axes are now supported in MapDataset creation. Full likelihood computation with additional axes is not yet supported.
-- Map axes with periodic boundary conditions are now supported.
-- An error is raised for maps with invalid input shapes instead of silently broadcasting.
-
-*gammapy.estimators*
-
-- Add support for joint TS map : `TSMapEstimator.run()` now allows `Datasets` as input.
-- Maps of likelihood profiles can now be computed with the `TSMapEstimator` via the argument : selection_optional = ["stat_scan"]
-- Binwise likelihood profiles are now stored on FluxMaps. 
-- FluxMaps obtained from different datasets (eg: different event types) can be combined.
-- Add a function to combine flux maps in `gammapy.estimators.utils.combine_flux_maps`. The combination can be done using the likelihood profile maps if available otherwise Gaussian approximation is used.
-
-*gammapy.stats*
-
-- Timmer-Koenig algorithm with leakage protection to simulate a time series from a power spectrum is implemented.
-- Discrete structure function for a variable source using Emmanoulopoulos et al. (2010) algorithm is added.
-- Discrete cross correlation function computation is added.
-
-
-*gammapy.modeling*
-
-- The `FitResult` object is exposed as an important API element, combining the results from the optimisation and covariance of the fit.
-- Unique naming of model parameters adapted, leading to resolution of issues with computation of the covariance matrix for complex model lists.
-- Time scale issue in simulation energy dependent temporal models resolved.
-- Definition of `UniformPrior` fixed to return 0 within min and max values indstead of one.
-
-
-Bug fixes and improvements
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-- ON and OFF phase intervals are copied in PhaseBackgroundMaker
-- Add min_pix option in `WcsGeom.cutout`
-- Add copy method on FluxMaps
-- Fix select_nested_models if there is no free parameters for the null hypothesis
-- css for sphinx v15
-- Allow extrapolation only along spatial dimension in mask_safe_edisp
-- Add write function to `FitResult`
-- Expose `FitResult` object
-- Fix cutout_template_models to work if models is None
-- Fix angle wrapping of spatial parameters in `PiecewiseNormSpatialModel`
-- Fix map evaluation if no edisp is set
-- Add missing parallel processing options
-- Add `TimeMapAxis.to_table()` 
-- Add a warning in `TemplateSpatialModel` for presence of nan values 
-- Fix ignored overwrite in datasets.write
-- Improve plotting of spectral residuals by removing the mask in computation but rathere adding a visual mask
-- Add strict option to MapAxis.downsample
-- Add alpha maps to ExcessMapEstimator
-- Fix ObservationsEventsSampler for observations based on full-enclosure IRFs
-- Add a method to normalize TemplatePhaseCurveTemporalModel`
 
 
 Pull Requests
@@ -151,7 +155,7 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 - [#5462] Update all the documentation with the new name of CTA : CTAO (Bruno Khélifi)
 - [#5453] Fix time shift from sampled events with `MapDatasetEventSampler` (Fabio Pintore)
 - [#5449] combine_flux_maps  supports for different energy axes (Quentin Remy)
-- [#5448] Fix typo in Uniform prior returned value (facero)
+- [#5448] Fix typo in Uniform prior returned value (Fabio Acero)
 - [#5445] Add a to_table() method to TimeMapAxis (Claudio Galelli)
 - [#5438] Speed up event sampler (Fabio Pintore)
 - [#5437] Remove mask in residual plotting (Atreyee Sinha)
@@ -214,7 +218,7 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 - [#5135] Add different options to compute stat_array on FluxPointsDatasets (Quentin Remy)
 - [#5129] Copy on and off phase intervals in `PhaseBackgroundMaker` (Maxime Regeard)
 - [#5125] Fix implementation of the testing code for larger docstring examples (Kirsty Feijen)
-- [#5118] css for sphinx v15 (stahanna)
+- [#5118] css for sphinx v15 (Hanna Stapel)
 - [#5115] Add 3 TS definitions to compute with TestStatisticNested class (Quentin Remy)
 - [#5058] 3PC Fermi catalog (Maxime Regeard)
 - [#5057] 2PC Fermi catalog (Maxime Regeard)
