@@ -71,7 +71,6 @@ p {
 .navbar {
   background-color: var(--gammapy-secondary) !important;
   color: white;
-
 }
 
 .navbar-light .navbar-nav li a.nav-link {
@@ -84,14 +83,7 @@ p {
   color: rgba(255, 255, 255, 0.5);
 }
 
-#navbar-icon-links i.fa-github-square::before {
-  color: white;
-}
-
-#navbar-icon-links i.fa-square-x-twitter::before {
-  color: white;
-}
-
+#navbar-icon-links i.fa-github-square::before,
 #navbar-icon-links i.fa-slack::before {
   color: white;
 }
@@ -100,8 +92,10 @@ p {
   background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30'%3E%3Cpath stroke='white' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
 }
 
-.navbar-light .navbar-toggler {
-  border-color: white;
+/* This changes the 'version' dropdown, the color of the font is white */
+.dropdown-toggle {
+  color: white !important;
+  font-size: 14px;
 }
 
 .col-lg-9 {
@@ -388,8 +382,9 @@ a.dropdown-item {
   color : black !important;
 }
 
+/* Change the color of the font in the navbar */
 .nav-internal {
-  color : white !important;
+  color : rgb(209, 213, 218) !important;
 }
 
 .show {
@@ -400,14 +395,11 @@ a.dropdown-item {
   color: white;
 }
 
-.dropdown-toggle {
-  color: white !important;
-  font-size: 14px;
-}
-
 .svg-inline--fa {
   color: lightgrey ;
 }
+
+/* This changes the color of the dropdoown itself, when there is a smaller screen */
 .fa-bars {
   color: white !important;
 }
