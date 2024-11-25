@@ -8,7 +8,7 @@ abstract: 'Gammapy analyzes gamma-ray data and creates sky images, spectra and l
 type: software
 message: "If you use this software, please cite it using the metadata from this file."
 url: "https://gammapy.org/"
-date-released: 2024-10-xx
+date-released: 2024-11-25
 keywords:
 - Astronomy
 - "Gamma-rays"
@@ -31,7 +31,8 @@ authors:
   orcid: "https://orcid.org/0000-0002-6606-2816"
 - given-names: Arnau
   family-names: Aguasca-Cabot
-  affiliation: "Departament de Física Quàntica i Astrofísica, Institut de Ciències del Cosmos, Universitat de Barcelona, IEEC-UB, Barcelona, Spain"
+  affiliation: "Departament de Física Quàntica i Astrofísica, Institut de Ciències
+    del Cosmos, Universitat de Barcelona, IEEC-UB, Barcelona, Spain"
   orcid: "https://orcid.org/0000-0001-8816-4920"
 - given-names: Juan
   family-names: Bernete
