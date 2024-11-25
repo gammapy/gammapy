@@ -22,7 +22,7 @@ contact:
 identifiers:
 - description: "Zenodo repository of Gammapy"
   type: doi
-  value: 10.5281/zenodo.4701488 - EDIT
+  value: 10.5281/zenodo.4701488
 authors:
 - given-names: Fabio
   family-names: Acero
