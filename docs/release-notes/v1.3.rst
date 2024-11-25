@@ -27,8 +27,7 @@ API changes
 
 One  API-breaking change has been introduced in this version:
 
-- The order of arguments in the `~gammapy.modeling.models.FoVBackgroundModel` has been modified;
-`dataset_name` is now a required first positional argument.
+- The order of arguments in the `~gammapy.modeling.models.FoVBackgroundModel` has been modified; `dataset_name` is now a required first positional argument.
 
 Features deprecated since Gammapy v1.2 have been removed.
 
@@ -78,6 +77,7 @@ New features
 - `~gammapy.estimtors.FluxMaps` obtained from different datasets (eg: different event types) can be combined.
 - Added a function to combine flux maps in `~gammapy.estimators.utils.combine_flux_maps`. The combination
   uses the likelihood profile maps if available otherwise Gaussian approximation is used.
+- Added alpha maps to the output of `~gammapy.estimators.ExcessMapEstimator`.
 
 *gammapy.stats*
 
@@ -87,10 +87,9 @@ New features
 
 *gammapy.modeling*
 
-- The `~gammapy.modeling.FitResult` object is now exposed as an important API element, combining the results from the optimisation and covariance of the fit.
+- The `~gammapy.modeling.FitResult` object is now exposed as an important API element, combining the results from the optimisation and covariance of the fit. It can be saved to disk in the form of a yaml file thanks to a new `~gammapy.modeling.FitResult.write()` function.
 - Unique naming of model parameters has been adapted, leading to resolution of issues with covariance matrix computation for complex model lists.
 - Time scale issues in simulation energy dependent temporal models has been resolved.
-- Definition of `UniformPrior` has been fixed to return 0 within min and max values instead of 1.
 
 
 Bug fixes and improvements
@@ -100,9 +99,7 @@ Bug fixes and improvements
 - Added min_pix option in `~gammapy.maps.WcsGeom.cutout`.
 - Added copy method on `~gammapy.estimators.FluxMaps`.
 - Fixed `~gammapy.modeling.select_nested_models` if there is no free parameters for the null hypothesis.
-- Updated CSS for Sphinx v1.5.
 - Allowed extrapolation only along spatial dimension in `mask_safe_edisp`.
-- Added write function to `~gammapy.modeling.FitResult`.
 - Fixed `cutout_template_models` to work if models is None.
 - Fixed angle wrapping of spatial parameters in `~gammapy.modeling.models.PiecewiseNormSpatialModel`.
 - Fixed map evaluation if no ``edisp`` is set.
@@ -112,9 +109,9 @@ Bug fixes and improvements
 - Fixed ignored overwrite in `~gammapy.datasets.Datasets.write`.
 - Improved plotting of spectral residuals by removing the mask in computation but rather adding a visual mask.
 - Added strict option to `~gammapy.maps.MapAxis.downsample`.
-- Added alpha maps to `~gammapy.estimators.ExcessMapEstimator`.
 - Fixed `~gammapy.data.ObservationsEventsSampler` for observations based on full-enclosure IRFs.
 - Added a method to normalize `~gammapy.modeling.models.TemplatePhaseCurveTemporalModel`.
+- Definition of `UniformPrior` has been fixed to return 0 within min and max values instead of 1.
 
 
 Contributors
