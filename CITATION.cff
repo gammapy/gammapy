@@ -1,5 +1,5 @@
 # Metadata for citation of this software according to the CFF format (https://citation-file-format.github.io/)
-cff-version: 1.3.0
+cff-version: 1.2.0
 title: 'Gammapy: Python toolbox for gamma-ray astronomy'
 abstract: 'Gammapy analyzes gamma-ray data and creates sky images, spectra and lightcurves,
   from event lists and instrument response information; it can also determine the
@@ -8,7 +8,7 @@ abstract: 'Gammapy analyzes gamma-ray data and creates sky images, spectra and l
 type: software
 message: "If you use this software, please cite it using the metadata from this file."
 url: "https://gammapy.org/"
-date-released: 2024-11-15
+date-released: 2024-11-26
 keywords:
 - Astronomy
 - "Gamma-rays"
@@ -22,7 +22,7 @@ contact:
 identifiers:
 - description: "Zenodo repository of Gammapy"
   type: doi
-  value: 10.5281/zenodo.4701488 - EDIT
+  value: 10.5281/zenodo.4701488
 authors:
 - given-names: Fabio
   family-names: Acero
@@ -34,6 +34,20 @@ authors:
   affiliation: "Departament de Física Quàntica i Astrofísica, Institut de Ciències
     del Cosmos, Universitat de Barcelona, IEEC-UB, Barcelona, Spain"
   orcid: "https://orcid.org/0000-0001-8816-4920"
+- given-names: Juan
+  family-names: Bernete
+  affiliation: "Centro de Investigaciones Energéticas Medioambientales y Tecnológicas
+    (CIEMAT), Madrid, Spain"
+  orcid: "https://orcid.org/0000-0002-8108-7552"
+- given-names: Noah
+  family-names: Biederbeck
+  affiliation: "Astroparticle Physics Group, TU Dortmund University, Germany"
+  orcid: "https://orcid.org/0000-0003-3708-9785"
+- given-names: Julia
+  family-names: Djuvsland
+  affiliation: "University of Bergen, Norway and Max Planck Institute for Nuclear
+    Physics, Heidelberg, Germany"
+  orcid: "https://orcid.org/0000-0002-6488-8219"
 - given-names: Axel
   family-names: Donath
   affiliation: "Center for Astrophysics | Harvard & Smithsonian, USA"
@@ -57,10 +71,27 @@ authors:
   affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
     Paris, France"
   orcid: "https://orcid.org/0000-0001-6876-5577"
+- given-names: Jana
+  family-names: Konrad
+  affiliation: "Astroparticle Physics Group, TU Dortmund University, Germany"
+  orcid: "https://orcid.org/0009-0000-1257-4771"
+- given-names: Paula
+  family-names: Kornecki
+  affiliation: Laboratoire Univers et Théories, Observatoire de Paris, Université
+    PSL,\ \ Université Paris Cité, CNRS, F-92190 Meudon, France
+  orcid: https://orcid.org/0000-0002-2706-7438
 - given-names: Maximilian
   family-names: Linhoff
   affiliation: "Astroparticle Physics Group, TU Dortmund University, Germany"
   orcid: "https://orcid.org/0000-0001-7993-8189"
+- given-names: 'Kurt'
+  family-names: 'McKee'
+  affiliation: 'University of Chicago, USA'
+  orcid: 'https://orcid.org/0000-0002-8547-8489'
+- given-names: Simone
+  family-names: Mender
+  affiliation: "Astroparticle Physics Group, TU Dortmund University, Germany"
+  orcid: "https://orcid.org/0000-0002-0755-0609"
 - given-names: Lars
   family-names: Mohrmann
   affiliation: "Max Planck Institute for Nuclear Physics, Heidelberg, Germany"
@@ -73,10 +104,19 @@ authors:
   family-names: Olivera-Nieto
   affiliation: "Max Planck Institute for Nuclear Physics, Heidelberg, Germany"
   orcid: "https://orcid.org/0000-0002-9105-0518"
+- given-names: Michele
+  family-names: Peresano
+  affiliation: "Max-Planck-Institut für Physik, Boltzmannstraße 8, 85748 Garching bei München, Germany"
+  orcid: "https://orcid.org/0000-0002-7537-7334"
 - given-names: Fabio
   family-names: Pintore
   affiliation: "INAF/IASF PALERMO, Italy"
   orcid: "https://orcid.org/0000-0002-3869-2925"
+- given-names: Michael
+  family-names: Punch
+  affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
+    Paris, France"
+  orcid: "https://orcid.org/0000-0002-4710-2165"
 - given-names: Maxime
   family-names: Regeard
   affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
@@ -86,6 +126,10 @@ authors:
   family-names: Remy
   affiliation: "Max Planck Institute for Nuclear Physics, Heidelberg, Germany"
   orcid: "https://orcid.org/0000-0002-8815-6530"
+- given-names: Gerrit
+  family-names: Roellinghoff
+  affiliation: "Friedrich-Alexander-Universität Erlangen-Nürnberg, ECAP, Nikolaus-Fiebiger-Str.
+    2, 91058 Erlangen, Germany"
 - given-names: Atreyee
   family-names: Sinha
   affiliation: "EMFTEL department and IPARCOS, Universidad Complutense de Madrid,
@@ -99,11 +143,25 @@ authors:
   family-names: Stapel
   affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
     Paris, France"
+- given-names: "Katrin"
+  family-names: Streil
+  affiliation: "Friedrich-Alexander-Universität Erlangen-Nürnberg, ECAP, Nikolaus-Fiebiger-Str.
+    2, 91058 Erlangen, Germany"
+  orcid: "https://orcid.org/0009-0005-7886-1825"
 - given-names: Régis
   family-names: Terrier
   affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
     Paris, France"
   orcid: "https://orcid.org/0000-0002-8219-4667"
+- given-names: Tim
+  family-names: Unbehaun
+  affiliation: "Friedrich-Alexander-Universität Erlangen-Nürnberg, ECAP, Nikolaus-Fiebiger-Str.
+    2, 91058 Erlangen, Germany"
+  orcid: "https://orcid.org/0000-0002-7378-4024"
+- given-names: Samantha
+  family-names: Wong
+  affiliation: "Physics Department, McGill University, Montreal, QC H3A 2T8, Canada"
+  orcid: "https://orcid.org/0000-0002-2730-2733"
 - given-names: Pei
   family-names: Yu
   affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
