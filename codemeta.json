@@ -173,6 +173,16 @@
             "givenName": "Daniel"
         },
         {
+            "@id": "https://orcid.org/0000-0002-8321-9168",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Instituto de Astrof\u00edsica de Canarias (IAC), C/ V\u00eda L\u00e1ctea s/n, 38205 La Laguna, Tenerife, Spain"
+            },
+            "familyName": "Nievas Rosillo",
+            "givenName": "Mireia"
+        },
+        {
             "@id": "https://orcid.org/0000-0002-9105-0518",
             "@type": "Person",
             "affiliation": {
