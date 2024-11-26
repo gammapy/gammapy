@@ -332,7 +332,7 @@
     "license": "https://spdx.org/licenses/BSD-3-Clause",
     "name": "Gammapy: Python toolbox for gamma-ray astronomy",
     "url": "https://gammapy.org/",
-    "softwareVersion": "v1.3",
+    "softwareVersion": "v1.3rc1",
     "maintainer": {
         "@id": "https://orcid.org/0000-0003-4568-7005",
         "@type": "Person",
