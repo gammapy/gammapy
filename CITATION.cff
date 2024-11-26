@@ -13,7 +13,7 @@ keywords:
 - Astronomy
 - "Gamma-rays"
 - "Data analysis"
-version: v1.3rc1
+version: v1.3
 repository-code: "https://github.com/gammapy/gammapy"
 license: BSD-3-Clause
 contact:
