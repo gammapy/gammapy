@@ -173,11 +173,6 @@
             "givenName": "Daniel"
         },
         {
-            "@type": "Person",
-            "familyName": "Nievas",
-            "givenName": "Mireia"
-        },
-        {
             "@id": "https://orcid.org/0000-0002-9105-0518",
             "@type": "Person",
             "affiliation": {
@@ -247,11 +242,6 @@
             "givenName": "Gerrit"
         },
         {
-            "@type": "Person",
-            "familyName": "Schiavo",
-            "givenName": "Vasco"
-        },
-        {
             "@id": "https://orcid.org/0000-0002-9238-7163",
             "@type": "Person",
             "affiliation": {
@@ -301,11 +291,6 @@
             "givenName": "R\u00e9gis"
         },
         {
-            "@type": "Person",
-            "familyName": "Vila",
-            "givenName": "Santiago"
-        },
-        {
             "@id": "https://orcid.org/0000-0002-7378-4024",
             "@type": "Person",
             "affiliation": {
@@ -314,11 +299,6 @@
             },
             "familyName": "Unbehaun",
             "givenName": "Tim"
-        },
-        {
-            "@type": "Person",
-            "familyName": "Wong",
-            "givenName": "Samantha"
         },
         {
             "@type": "Person",
