@@ -301,6 +301,16 @@
             "givenName": "Tim"
         },
         {
+            "@id": "https://orcid.org/0000-0002-2730-2733",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Physics Department, McGill University, Montreal, QC H3A 2T8, Canada"
+            },
+            "familyName": "Wong",
+            "givenName": "Samantha"
+        },
+        {
             "@type": "Person",
             "affiliation": {
                 "@type": "Organization",
