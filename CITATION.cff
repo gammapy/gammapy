@@ -100,8 +100,6 @@ authors:
   family-names: Morcuende
   affiliation: "Instituto de Astrofísica de Andalucía-CSIC, Granada, Spain"
   orcid: https://orcid.org/0000-0001-9400-0922
-- given-names: Mireia
-  family-names: Nievas
 - given-names: Laura
   family-names: Olivera-Nieto
   affiliation: "Max Planck Institute for Nuclear Physics, Heidelberg, Germany"
@@ -132,8 +130,6 @@ authors:
   family-names: Roellinghoff
   affiliation: "Friedrich-Alexander-Universität Erlangen-Nürnberg, ECAP, Nikolaus-Fiebiger-Str.
     2, 91058 Erlangen, Germany"
-- given-names: Vasco
-  family-names: Schiavo
 - given-names: Atreyee
   family-names: Sinha
   affiliation: "EMFTEL department and IPARCOS, Universidad Complutense de Madrid,
@@ -157,15 +153,11 @@ authors:
   affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
     Paris, France"
   orcid: "https://orcid.org/0000-0002-8219-4667"
-- given-names: Santiago
-  family-names: Vila
 - given-names: Tim
   family-names: Unbehaun
   affiliation: "Friedrich-Alexander-Universität Erlangen-Nürnberg, ECAP, Nikolaus-Fiebiger-Str.
     2, 91058 Erlangen, Germany"
   orcid: "https://orcid.org/0000-0002-7378-4024"
-- given-names: Samantha
-  family-names: Wong
 - given-names: Pei
   family-names: Yu
   affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
