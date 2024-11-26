@@ -2,10 +2,10 @@
 
 .. _gammapy_1p3_release:
 
-1.3 (November 26, 2024)
------------------------
+1.3 (November 26th, 2024)
+-------------------------
 
-- Released November 26, 2024
+- Released November 26th, 2024
 - 25 contributors
 - 212 pull requests since v1.2 (not all listed below)
 - 75 closed issues
@@ -19,15 +19,17 @@ There has been significant code cleanup, specially with respect to the documenta
 tutorials have been added.
 
 This release is compatible with numpy >=2.0.
-Sherpa dependency has been fixed to >4.16
+Sherpa dependency has been fixed to >4.16, it is not included in the gammapy-1.3-environment.yml file to avoid possible installation issues.
 
 
 API changes
 ~~~~~~~~~~~
 
-One  API-breaking change has been introduced in this version:
+Few API-breaking changes have been introduced in this version:
 
+- Note that the `~gammapy.irf.Background3D` FOV-lon alignment has been reverted to follow the correct GADF convention. A check is made to ensure compatibility with previous H.E.S.S. bkg models. Please check the alignment if you are building 3D bkg models.
 - The order of arguments in the `~gammapy.modeling.models.FoVBackgroundModel` has been modified; `dataset_name` is now a required first positional argument.
+- All `~gammapy.estimators.Estimator` init functions that require a spectral model now use `spectral_model` as the argument name.
 
 Features deprecated since Gammapy v1.2 have been removed.
 
@@ -113,6 +115,11 @@ Bug fixes and improvements
 - Added a method to normalize `~gammapy.modeling.models.TemplatePhaseCurveTemporalModel`.
 - Definition of `UniformPrior` has been fixed to return 0 within min and max values instead of 1.
 
+Known issues
+~~~~~~~~~~~~
+
+- Reading a `~gammapy.modeling.models.Models` file created with Gammapy<1.2 which contains a `~gammapy.modeling.models.TemplateSpatialModel` can fail because of the covariance format.
+  A workaround is to remove the covariance entry in the `~gammapy.modeling.models.Models` file.
 
 Contributors
 ~~~~~~~~~~~~
