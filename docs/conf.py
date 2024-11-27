@@ -120,12 +120,6 @@ extensions = [
     "matplotlib.sphinxext.plot_directive",
 ]
 
-# Define shorthand for GitHub pull requests and issues
-extlinks = {
-    'pr': ('https://github.com/gammapy/gammapy/pull/%s', '[#%s]'),
-    'issue': ('https://github.com/gammapy/gammapy/issues/%s', '[#%s]')
-}
-
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 exclude_patterns = [
