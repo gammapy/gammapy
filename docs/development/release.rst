@@ -6,13 +6,16 @@
 How to make a Gammapy release
 *****************************
 
-This page contains step-by-step instructions for how to make a Gammapy release. The general procedure can
-be broken down into three major steps:
+This page contains step-by-step instructions for how to make a Gammapy release. The procedure shown here is inspired by
+the `astropy release scheme <https://docs.astropy.org/en/latest/development/maintainers/releasing.html#release-procedure-for-the-astropy-core-package>`__.
+The general procedure can be broken down into three major steps:
 
 
-* Feature freeze: freeze the core package features, a number of weeks before the release
-* Release candidate: proposed feature release which should be tested, a few weeks before the final release
-* Final release: a final release for the version of the feature release
+* Feature freeze: freeze the core package features and create a new branch for the release. This is typically done two
+  weeks before the release.
+* Release candidate: proposed feature release which should be tested. This is typically done one week before the
+  final release.
+* Final release.
 
 
 Feature Freeze and Branching
@@ -62,7 +65,7 @@ Releasing the first major release candidate
     git checkout v1.0.x
     python ./dev/prepare-release.py --release v1.0rc1
 
-#. Push the branch back to GitHub::
+#. Commit and push the branch back to GitHub::
 
     git push upstream v1.0.x
 
@@ -88,7 +91,7 @@ Releasing the first major release candidate
 Releasing the final version of the major release
 ------------------------------------------------
 
-#. Create a new release tag in the `gammapy-data repo <https://github.com/gammapy/gammapy-data>`__, like ``v1.0``
+#. Create a new tag in the `gammapy-data repo <https://github.com/gammapy/gammapy-data>`__, like ``v1.0``
    or ``v1.1``.
 
 #. In the `gammapy-webpage repo <https://github.com/gammapy/gammapy-webpage>`__:
@@ -106,7 +109,7 @@ Releasing the final version of the major release
 
 #. In the `gammapy-docs repo <https://github.com/gammapy/gammapy-docs>`__:
 
-   * Kill the ``dev-docs`` build.
+   * Kill the possible ``dev-docs`` build actions as they might interfere with the ``release`` docs build.
    * Wait for the triggered ``release`` docs build to finish.
    * Edit ``docs/stable/switcher.json`` to add the new version.
 
