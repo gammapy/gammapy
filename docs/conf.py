@@ -37,7 +37,7 @@ from pkg_resources import get_distribution
 from sphinx_gallery.sorting import ExplicitOrder
 
 # Load utils docs functions
-from gammapy.utils.docs import SubstitutionCodeBlock, gammapy_sphinx_ext_activate
+from gammapy.utils.docs import SubstitutionCodeBlock, DynamicPRLinkTransform, gammapy_sphinx_ext_activate
 
 # flake8: noqa
 
@@ -48,6 +48,7 @@ def setup(app):
     """
     app.add_config_value("substitutions", [], "html")
     app.add_directive("substitution-code-block", SubstitutionCodeBlock)
+    app.add_post_transform(DynamicPRLinkTransform)
 
 
 conf = ConfigParser()
@@ -118,6 +119,12 @@ extensions = [
     # Needed for the plot:: functionality in rst
     "matplotlib.sphinxext.plot_directive",
 ]
+
+# Define shorthand for GitHub pull requests and issues
+extlinks = {
+    'pr': ('https://github.com/gammapy/gammapy/pull/%s', '[#%s]'),
+    'issue': ('https://github.com/gammapy/gammapy/issues/%s', '[#%s]')
+}
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -234,11 +241,6 @@ html_theme_options = {
             "name": "Github",
             "url": "https://github.com/gammapy/gammapy",
             "icon": "fab fa-github-square",
-        },
-        {
-            "name": "Twitter",
-            "url": "https://twitter.com/gammapyST",
-            "icon": "fab fa-square-x-twitter",
         },
         {
             "name": "Slack",
