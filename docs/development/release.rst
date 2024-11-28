@@ -147,9 +147,8 @@ Steps for the day to announce the release:
 #. Update these release notes with any useful infos / steps that you learned
    while making the release (ideally try to script / automate the task or check,
    e.g. as a ``make release-check-xyz`` target).
-#. Update version number in Binder ``Dockerfile`` in
-   `gammapy-webpage repo <https://github.com/gammapy/gammapy-webpage>`__ master branch
-   and tag the release for Binder.
+#. Update the version numbers in `gammapy-webpage repo <https://github.com/gammapy/gammapy-webpage>`__
+   ``master`` branch to allow the Binder ``Dockerfile`` to be updated.
 #. Open a milestone and issue for the next release (and possibly also a milestone for the
    release after, so that low-priority issues can already be moved there). Find a
    release manager for the next release, assign the release issue to them,
@@ -162,8 +161,8 @@ Make a Bugfix release
 ---------------------
 
 #. Add an entry for the bug-fix release like ``v1.0.1`` or ``v1.1.2`` in the ``download/index.json`` file in the
-   `gammapy-webpage repo <https://github.com/gammapy/gammapy-webpage>`__. The ``datasets`` entry should point to last
-   stable version, like ``v1.0`` or ``v1.1``. We do not provide bug-fix release for data.
+   `gammapy-webpage repo <https://github.com/gammapy/gammapy-webpage>`__. The ``datasets`` entry should point to the
+   last stable version, like ``v1.0`` or ``v1.1``. We do not provide bug-fix release for data.
 
 #. Follow the `Astropy bug fix release instructions <https://docs.astropy.org/en/latest/development/maintainers/releasing.html#maintaining-bug-fix-releases>`__.
 
