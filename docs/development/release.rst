@@ -21,6 +21,16 @@ The general procedure can be broken down into three major steps:
 Feature Freeze and Branching
 ----------------------------
 
+**A few days before the feature freeze:**
+
+#. Fill the changelog ``docs/release-notes/<version>.rst`` for the version you are about to release.
+#. Update the author list manually in the  ``CITATION.cff``.
+#. Open a PR including both changes and mark it with the ``backport-v<version>.x`` label.
+   Gather feedback from the Gammapy user and dev community and finally merge and backport to the
+   ``v<version>.x`` branch.
+
+**On the day of the feature freeze:**
+
 #. Add a new milestone to the `GitHub issue tracker <https://github.com/gammapy/gammapy/milestones>`__ for the version
    ``v<version>.x`` (this will also be used for the next bugfix release). Also create a ``backport-v<version>.x``
    `label <https://github.com/gammapy/gammapy/labels>`__.
@@ -41,16 +51,6 @@ Feature Freeze and Branching
 
 Releasing the first major release candidate
 -------------------------------------------
-
-**A few days before the planned release candidate:**
-
-#. Fill the changelog ``docs/release-notes/<version>.rst`` for the version you are about to release.
-#. Update the author list manually in the  ``CITATION.cff``.
-#. Open a PR including both changes and mark it with the ``backport-v<version>.x`` label.
-   Gather feedback from the Gammapy user and dev community and finally merge and backport to the
-   ``v<version>.x`` branch.
-
-**On the day of the release candidate:**
 
 #. In the `gammapy-webpage repo <https://github.com/gammapy/gammapy-webpage>`__:
 
@@ -118,7 +118,8 @@ Releasing the final version of the major release
    * Find the ``tutorials_jupyter.zip`` file for the new release in the
      `gammapy-docs repo <https://github.com/gammapy/gammapy-docs>`__ and confirm the link in
      ``download/index.json`` is correct.
-   * Mention the release on the front page and on the news page.
+   * Mention the release on the front page and on the news page. Both the ``news.html`` and ``index.html`` should be
+     edited at this step to include the correct version numbers.
 
 #. Update the entry for the actual release in the
    `Gammapy release calendar <https://github.com/gammapy/gammapy/wiki/Release-Calendar>`__.
@@ -143,12 +144,31 @@ Steps for the day to announce the release:
     * https://groups.google.com/forum/#!forum/astropy-dev
     * CTAO AS WG list (cta-wg-as@cta-observatory.org)
     * hess-forum list (hess-forum@lsw.uni-heidelberg.de)
+
 #. Make sure the release milestone and issue is closed on GitHub.
 #. Update these release notes with any useful infos / steps that you learned
    while making the release (ideally try to script / automate the task or check,
    e.g. as a ``make release-check-xyz`` target).
-#. Update the version numbers in `gammapy-webpage repo <https://github.com/gammapy/gammapy-webpage>`__
-   ``master`` branch to allow the Binder ``Dockerfile`` to be updated.
+#. Update the version numbers in `gammapy-webpage repo <https://github.com/gammapy/gammapy-webpage>`__ ``master``
+   branch to allow the Binder ``Dockerfile`` to be updated:
+
+    * In `gammapy-webpage repo <https://github.com/gammapy/gammapy-webpage>`__ update the
+      ``master`` branch::
+
+        git checkout master
+        git pull
+
+    * Update the four files: ``postBuild``, ``requirements.txt``, ``runtime.txt``, and ``start`` in the ``master`` branch::
+
+        git add postBuild requirements.txt runtime.txt start
+        git commit -s -m "Update binder configuration for new release"
+        git push origin master
+
+    * Tag the new version and push to the upstream repository::
+
+        git tag -s v1.3 -m "Tagging v1.3"
+        git push origin v1.3
+
 #. Open a milestone and issue for the next release (and possibly also a milestone for the
    release after, so that low-priority issues can already be moved there). Find a
    release manager for the next release, assign the release issue to them,
