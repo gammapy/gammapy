@@ -22,7 +22,7 @@ from gammapy.modeling.models import (
     SkyModel,
 )
 from ..flux import FluxEstimator
-from .core import FluxPoints
+from .core import FluxPoints, Estimator
 
 log = logging.getLogger(__name__)
 
