@@ -11,7 +11,6 @@ from gammapy.datasets.flux_points import _get_reference_model
 from gammapy.maps import MapAxis, Map, RegionGeom
 from gammapy.modeling import Fit
 from gammapy.modeling.models import GaussianPrior, PiecewiseNormSpectralModel, SkyModel
-from gammapy.utils.deprecation import deprecated_attribute
 from ..core import Estimator
 from ..flux import FluxEstimator
 from .core import FluxPoints
