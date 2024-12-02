@@ -67,14 +67,14 @@ class Prior(ModelBase):
         )
 
     def __init_subclass__(cls, **kwargs):
-        # Add priorparameters list on the model sub-class (not instances)
+        """Add `~gammapy.modeling.PriorParameters` list on the model sub-class (not instances)."""
         cls.default_parameters = PriorParameters(
             [_ for _ in cls.__dict__.values() if isinstance(_, PriorParameter)]
         )
 
     @property
     def weight(self):
-        """Weight mulitplied to the prior when evaluated."""
+        """Weight multiplied to the prior when evaluated."""
         return self._weight
 
     @weight.setter
@@ -82,8 +82,10 @@ class Prior(ModelBase):
         self._weight = value
 
     def __call__(self, value):
-        """Call evaluate method."""
-        # assuming the same unit as the PriorParamater here
+        """Call evaluate method.
+
+        Assume the same unit as the `~gammapy.modeling.PriorParameter` here.
+        """
         kwargs = {par.name: par.value for par in self.parameters}
         return self.weight * self.evaluate(value.value, **kwargs)
 
@@ -136,24 +138,25 @@ class Prior(ModelBase):
 
 class MultiVariateGaussianPrior(Prior):
     """Multi-dimensional Gaussian Prior.
+
     Parameters
     ----------
-    modelparameters :
-        Meaning
-    covariance_matrix :
-        Meaning
+    model_parameters : list of `~gammapy.modeling.Parameter` objects
+        Model parameters to evaluate the prior.
+    covariance_matrix : list
+        Covariance matrix as a list which has a square shape with the number of model_parameters
+        as the length and width.
     """
 
     tag = ["MultiVariateGaussianPrior"]
     _type = "prior"
 
-    def __init__(self, modelparameters, covariance_matrix):
-        # super().__init__(modelparameters)
-        self._modelparameters = modelparameters
+    def __init__(self, model_parameters, covariance_matrix):
+        self.model_parameters = model_parameters
         self._covariance_matrix = covariance_matrix
 
         value = np.asanyarray(self.covariance_matrix)
-        npars = len(self._modelparameters)
+        npars = len(self._model_parameters)
         shape = (npars, npars)
         if value.shape != shape:
             raise ValueError(
@@ -163,12 +166,12 @@ class MultiVariateGaussianPrior(Prior):
         # Do we want this?
         self.dimension = value.shape[-1]
 
-        for par in self._modelparameters:
+        for par in self._model_parameters:
             par.prior = self
 
     def __call__(self):
-        """Call evaluate method"""
-        return self.evaluate(self._modelparameters.value)
+        """Call evaluate method."""
+        return self.evaluate(self._model_parameters.value)
 
     @property
     def covariance_matrix(self):
@@ -184,10 +187,10 @@ class GaussianPrior(Prior):
 
     Parameters
     ----------
-    mu : float
+    mu : float, optional
         Mean of the Gaussian distribution.
         Default is 0.
-    sigma : float
+    sigma : float, optional
         Standard deviation of the Gaussian distribution.
         Default is 1.
     """
@@ -216,11 +219,11 @@ class UniformPrior(Prior):
 
     Parameters
     ----------
-    min : float
+    min : float, optional
         Minimum value.
         Default is -inf.
-    max : float
-        Maxmimum value.
+    max : float, optional
+        Maximum value.
         Default is inf.
     """
 
