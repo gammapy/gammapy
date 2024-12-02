@@ -10,7 +10,6 @@ from astropy.table import Table, vstack
 from gammapy.data import GTI
 from gammapy.modeling.models import DatasetModels, Models
 from gammapy.utils.scripts import make_name, make_path, read_yaml, to_yaml, write_yaml
-from gammapy.stats import prior_fit_statistic
 
 log = logging.getLogger(__name__)
 
@@ -80,7 +79,7 @@ class Dataset(abc.ABC):
     def stat_sum_prior(self):
         """Total statistic given the priors set on the models."""
         if self.models is not None:
-            return prior_fit_statistic(self.models.priors)
+            return self.models.parameters.prior_stat_sum()
 
     def stat_sum_posterior(self):
         """Total statistic given the current model parameters and priors set on the models."""
@@ -251,7 +250,6 @@ class Datasets(collections.abc.MutableSequence):
     def stat_sum_prior(self):
         """Compute joint statistic function value for priors."""
         prior_stat_sum = 0
-        # Compute prior_fit_statistics from all datasets
         for dataset in self:
             prior_stat_sum += dataset.stat_sum_prior()
         return prior_stat_sum
