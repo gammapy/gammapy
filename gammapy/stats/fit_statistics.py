@@ -11,15 +11,14 @@ __all__ = ["cash", "cstat", "wstat", "get_wstat_mu_bkg", "get_wstat_gof_terms"]
 
 
 def prior_fit_statistic(priors):
-    """
-    Prior fit statistic.
-    Evaluating a list of priors.
-    Multi-dimensional priors are only counted once.
+    """Evaluate the stat sum for a list of prior fit statistics.
+
+    Each prior is only counted once.
 
     Parameters
     ----------
     priors : list
-        list of priors
+        List of priors
 
     Returns
     -------
