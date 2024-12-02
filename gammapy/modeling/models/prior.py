@@ -152,7 +152,7 @@ class MultiVariateGaussianPrior(Prior):
     _type = "prior"
 
     def __init__(self, model_parameters, covariance_matrix):
-        self.model_parameters = model_parameters
+        self._model_parameters = model_parameters
         self._covariance_matrix = covariance_matrix
 
         value = np.asanyarray(self.covariance_matrix)

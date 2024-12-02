@@ -18,7 +18,6 @@ from gammapy.stats import (
     cash_sum_cython,
     get_wstat_mu_bkg,
     wstat,
-    prior_fit_statistic,
 )
 from gammapy.utils.fits import HDULocation, LazyFitsData
 from gammapy.utils.random import get_random_state
@@ -1461,9 +1460,11 @@ class MapDataset(Dataset):
 
     def stat_sum(self):
         """Total statistic function value given the current model parameters and priors set on the models."""
-        counts, npred = self.counts.data.astype(float), self.npred().data
+        prior_stat_sum = 0.0
+        if self.models is not None:
+            prior_stat_sum = self.models.parameters.prior_stat_sum()
 
-        prior_stat_sum = prior_fit_statistic(self.models.priors)
+        counts, npred = self.counts.data.astype(float), self.npred().data
 
         if self.mask is not None:
             return (
