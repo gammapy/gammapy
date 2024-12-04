@@ -81,7 +81,7 @@ Status shields
 (mostly useful for developers)
 
 * .. image:: https://app.codacy.com/project/badge/Grade/9c32a21a915d4a28823f3b44a99a2810
-    :target: https://www.codacy.com/gh/gammapy/gammapy/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=gammapy/gammapy&amp;utm_campaign=Badge_Grade
+    :target: https://app.codacy.com/gh/gammapy/gammapy/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade
     :alt: Codacy
 
 * .. image:: https://github.com/gammapy/gammapy/workflows/CI/badge.svg?style=flat
