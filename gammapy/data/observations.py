@@ -194,6 +194,17 @@ class Observation:
         gti = self.obs_filter.filter_gti(self._gti)
         return gti
 
+    @gti.setter
+    def gti(self, value):
+        if not isinstance(value, GTI):
+            raise TypeError(f"GTI must be an GTI instance, got: {type(value)}")
+        self._gti = value
+
+    @property
+    def n_transits(self):
+        with u.add_enabled_units([u.def_unit("transit", u.sday)]):
+            return self.gti.time_sum.to("transit")
+
     @staticmethod
     def _get_obs_info(
         pointing, deadtime_fraction, time_start, time_stop, reference_time, location
