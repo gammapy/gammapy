@@ -866,6 +866,8 @@ class MapDataset(Dataset):
                     npred_geom.stack(npred)
                     labels.append(evaluator_name)
                     npred_list.append(npred_geom)
+                if not USE_NPRED_CACHE:
+                    evaluator.reset_cache_properties()
 
         if npred_list != []:
             label_axis = LabelMapAxis(labels=labels, name="models")
