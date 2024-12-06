@@ -990,3 +990,31 @@ def test_data_shape_broadcast():
 
     with pytest.raises(ValueError):
         map2.data = np.ones((1, 1, 2))
+
+
+def test_make_mask_geom():
+    energy = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=5)
+    phase = MapAxis.from_bounds(0, 1, nbin=6)
+    freq = MapAxis.from_bounds(1, 10, nbin=4, unit=u.Hz)
+
+    geom = WcsGeom.create(10, axes=[energy, phase, freq])
+    with pytest.raises(ValueError):
+        geom.create_mask("fail", 1, 3)
+
+    with pytest.raises(TypeError):
+        geom.create_mask("energy", 2, 3)
+
+    with pytest.raises(u.UnitsError):
+        geom.create_mask("freq", 2 * u.m, 4 * u.m)
+
+    mask_freq = geom.create_mask("freq", 3 * u.Hz, 5 * u.Hz, round_to_edges=True)
+    assert_allclose(
+        mask_freq.sum_over_axes(["energy", "phase"]).to_region_nd_map().data.squueze(),
+        [0, 3000, 0, 0],
+    )
+
+    mask_phase = geom.create_mask("phase", 0, 1)
+    assert np.all(mask_phase)
+
+    mask_energy = geom.create_mask("energy", 2 * u.TeV, 2.5 * u.TeV)
+    assert ~np.all(mask_energy)
