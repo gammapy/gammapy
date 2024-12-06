@@ -21,6 +21,8 @@ from .io import IRF_DL3_HDU_SPECIFICATION, IRF_MAP_HDU_SPECIFICATION, gadf_is_po
 
 log = logging.getLogger(__name__)
 
+u.add_enabled_units([u.def_unit("transit", u.sday)])
+
 
 class FoVAlignment(str, Enum):
     """
