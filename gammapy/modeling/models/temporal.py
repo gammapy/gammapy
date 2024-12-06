@@ -15,7 +15,7 @@ from gammapy.utils.compat import COPY_IF_NEEDED
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.scripts import make_path
 from gammapy.utils.time import time_ref_from_dict, time_ref_to_dict
-from .core import ModelBase, _build_parameters_from_dict
+from .core import ModelBase, build_parameters_from_dict
 
 __all__ = [
     "ConstantTemporalModel",
@@ -1146,7 +1146,7 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
 
     @classmethod
     def from_dict(cls, data):
-        params = _build_parameters_from_dict(
+        params = build_parameters_from_dict(
             data["temporal"]["parameters"], cls.default_parameters
         )
         filename = data["temporal"]["filename"]
