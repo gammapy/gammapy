@@ -75,9 +75,11 @@ Releasing the first major release candidate
     git tag -s v1.0rc1 -m "Tagging v1.0rc1"
     git push upstream v1.0.x
 
-#. Once the tag is pushed, the docs build and upload to `PyPi <https://pypi.org/>`__ should be triggered automatically.
-#. Check the ``Actions`` on `gammapy repo <https://github.com/gammapy/gammapy>`__ to check that the necessary
-   actions have started.
+#. Once the tag is pushed, the ``release`` action in charge of packaging and uploading to `PyPi <https://pypi.org/>`__
+   should be triggered automatically. Once complete, it will trigger the docs build on the  ``gammapy-docs``
+   repository.
+#. Check the ``Actions`` on `gammapy repo <https://github.com/gammapy/gammapy>`__  and 
+   `gammapy-docs <https://github.com/gammapy/gammapy-docs>`__  to check that the necessary actions have started.
 #. Once the docs build is successful find the ``tutorials_jupyter.zip`` file for the release candidate in the
    `gammapy-docs repo <https://github.com/gammapy/gammapy-docs>`__ and adapt the ``download/index.json`` to point to it.
 #. Update the entry for the release candidate in the
