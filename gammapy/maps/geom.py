@@ -631,6 +631,9 @@ class Geom(abc.ABC):
         ----------
         energy_min, energy_max : `~astropy.units.Quantity`
             Energy range.
+        round_to_edge: bool, optional
+            Wether to round `energy_min` and `energy_max` to the closest axis bin value.
+            See `~gammapy.maps.MapAxis.round`. Default is False.
 
         Returns
         -------
@@ -656,4 +659,41 @@ class Geom(abc.ABC):
 
         mask = (energy_edges[:-1] >= energy_min) & (energy_edges[1:] <= energy_max)
         data = np.broadcast_to(mask, shape=self.data_shape)
+        return Map.from_geom(geom=self, data=data, dtype=data.dtype)
+
+    def mask(self, axis_name, edge_min=None, edge_max=None, round_to_edge=False):
+        """"""
+        from . import Map
+
+        try:
+            axis = self.axes[axis_name]
+        except KeyError:
+            raise ValueError(
+                f"Axis with name `{axis_name}` not in list of axis name: {self.axes_names}."
+            )
+
+        if axis.unit is not None:
+            if isinstance(edge_min, u.Quantity) and isinstance(edge_max, u.Quantity):
+                raise TypeError(
+                    f"`edge_min` and `edge_max` must be instance of `astropy.units.Quantity` for  axis with name `{axis_name}` as unit of `{axis.unit}`."
+                )
+            if not (
+                edge_min.unit.is_equivalent(axis.unit)
+                and edge_max.unit.is_equivalent(axis.unit)
+            ):
+                raise u.UnitsError(
+                    f"`edge_min` and `edge_max` unit must be equivalent to unit `{axis.unit}` of axis with name `{axis_name}`."
+                )
+
+        if round_to_edge:
+            edge_min, edge_max = axis.round([edge_min, edge_max])
+
+        shape = tuple([-1] + [1 for n in self.axes_names if n != axis_name])
+        axis_edges = axis.edges.reshape(shape)
+
+        edge_min = edge_min or axis_edges[0]
+        edge_max = edge_max or axis_edges[-1]
+
+        mask = (axis_edges[:-1] >= edge_min) & (axis_edges[1:] <= edge_max)
+        data = np.broadcast(mask, shape=self.data_shape)
         return Map.from_geom(geom=self, data=data, dtype=data.dtype)
