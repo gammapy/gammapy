@@ -1159,6 +1159,9 @@ def test_npred(sky_model, geom, geom_etrue):
     assert_allclose(dataset.npred_background().data.sum(), 4400.0, rtol=1e-3)
     assert_allclose(dataset._background_cached.data.sum(), 4400.0, rtol=1e-3)
 
+    for ev in dataset.evaluators.values():
+        assert ev._computation_cache is not None
+
     with pytest.raises(
         KeyError,
         match="m2",
@@ -1180,40 +1183,12 @@ def test_npred_no_cache(sky_model, geom, geom_etrue):
     )
     model1 = SkyModel(pwl, gauss, name="m1")
 
-    bkg = FoVBackgroundModel(dataset_name=dataset.name)
-    dataset.models = [bkg, sky_model, model1]
+    dataset.models = [sky_model, model1]
 
-    assert_allclose(
-        dataset.npred_signal(model_names=[model1.name]).data.sum(), 150.7487, rtol=1e-3
-    )
-    npred_model1_not_stack = dataset.npred_signal(
-        model_names=[model1.name], stack=False
-    )
-    assert isinstance(npred_model1_not_stack.geom.axes[-1], LabelMapAxis)
-    assert npred_model1_not_stack.geom.axes[-1].name == "models"
-    assert_equal(npred_model1_not_stack.geom.axes[-1].center, [model1.name])
-
-    assert dataset._background_cached is None
-    assert_allclose(dataset.npred_background().data.sum(), 4000.0, rtol=1e-3)
-    assert_allclose(dataset._background_cached.data.sum(), 4000.0, rtol=1e-3)
-
-    assert_allclose(dataset.npred().data.sum(), 9676.047906, rtol=1e-3)
-    assert_allclose(dataset.npred_signal().data.sum(), 5676.04790, rtol=1e-3)
-    assert_allclose(
-        dataset.npred_signal(model_names=[model1.name, sky_model.name]).data.sum(),
-        5676.04790,
-        rtol=1e-3,
-    )
-
-    npred_all_models_not_stack = dataset.npred_signal(
-        model_names=[model1.name, sky_model.name], stack=False
-    )
-    assert_allclose(npred_all_models_not_stack.geom.data_shape, (2, 2, 100, 100))
-    assert_allclose(
-        npred_all_models_not_stack.sum_over_axes(["models"]).data.sum(),
-        5676.04790,
-        rtol=1e-3,
-    )
+    dataset.npred()
+    for ev in dataset.evaluators.values():
+        assert ev._computation_cache is None
+        assert ev._cached_parameter_previous is None
 
     dmap.USE_NPRED_CACHE = True
 
