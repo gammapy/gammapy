@@ -681,7 +681,7 @@ class Geom(abc.ABC):
         edge_min = edge_min if edge_min is not None else axis_edges[0]
         edge_max = edge_max if edge_max is not None else axis_edges[-1]
 
-        if axis.unit is not None:
+        if axis.unit != "":
             if not (
                 isinstance(edge_min, u.Quantity) and isinstance(edge_max, u.Quantity)
             ):
