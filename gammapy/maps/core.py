@@ -257,9 +257,7 @@ class Map(abc.ABC):
         map_out : `Map`
             Map object.
         """
-        with fits.open(
-            make_path(filename), memmap=False, checksum=checksum
-        ) as hdulist:
+        with fits.open(make_path(filename), memmap=False, checksum=checksum) as hdulist:
             return Map.from_hdulist(
                 hdulist, hdu, hdu_bands, map_type, format=format, colname=colname
             )
@@ -656,7 +654,7 @@ class Map(abc.ABC):
         """
         pass
 
-    def resample(self, geom, weights=None, preserve_counts=True):
+    def resample(self, geom, weights=None, preserve_counts=True, smooth=False):
         """Resample pixels to ``geom`` with given ``weights``.
 
         Parameters
@@ -683,7 +681,10 @@ class Map(abc.ABC):
 
         resampled = self._init_copy(data=None, geom=geom)
         resampled._resample_by_idx(
-            idx, weights=self.data * weights, preserve_counts=preserve_counts
+            idx,
+            weights=self.data * weights,
+            preserve_counts=preserve_counts,
+            smooth=smooth,
         )
         return resampled
 
@@ -1128,7 +1129,9 @@ class Map(abc.ABC):
                 factor = int(np.ceil(factor))
             input_map = self.upsample(factor=factor, preserve_counts=preserve_counts)
 
-        output_map = input_map.resample(geom3d, preserve_counts=preserve_counts)
+        output_map = input_map.resample(
+            geom3d, preserve_counts=preserve_counts, smooth=True
+        )
 
         if not geom.is_image and geom.axes != geom3d.axes:
             for base_ax, target_ax in zip(geom3d.axes, geom.axes):
@@ -1141,7 +1144,9 @@ class Map(abc.ABC):
                         preserve_counts=preserve_counts,
                         axis_name=base_ax.name,
                     )
-            output_map = output_map.resample(geom, preserve_counts=preserve_counts)
+            output_map = output_map.resample(
+                geom, preserve_counts=preserve_counts, smooth=True
+            )
         return output_map
 
     def reproject_by_image(
