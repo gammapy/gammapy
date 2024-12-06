@@ -641,25 +641,12 @@ class Geom(abc.ABC):
             Map containing the energy mask. The geometry of the map
             is the same as the geometry of the instance which called this method.
         """
-        from . import Map
-
-        # get energy axes and values
-        energy_axis = self.axes["energy"]
-
-        if round_to_edge:
-            energy_min, energy_max = energy_axis.round([energy_min, energy_max])
-
-        # TODO: make this more general
-        shape = (-1, 1) if self.is_hpx else (-1, 1, 1)
-        energy_edges = energy_axis.edges.reshape(shape)
-
-        # set default values
-        energy_min = energy_min if energy_min is not None else energy_edges[0]
-        energy_max = energy_max if energy_max is not None else energy_edges[-1]
-
-        mask = (energy_edges[:-1] >= energy_min) & (energy_edges[1:] <= energy_max)
-        data = np.broadcast_to(mask, shape=self.data_shape)
-        return Map.from_geom(geom=self, data=data, dtype=data.dtype)
+        return self.mask(
+            "energy",
+            edge_min=energy_min,
+            edge_max=energy_max,
+            round_to_edge=round_to_edge,
+        )
 
     def mask(self, axis_name, edge_min=None, edge_max=None, round_to_edge=False):
         """"""
