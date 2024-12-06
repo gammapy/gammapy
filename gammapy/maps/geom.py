@@ -641,7 +641,7 @@ class Geom(abc.ABC):
             Map containing the energy mask. The geometry of the map
             is the same as the geometry of the instance which called this method.
         """
-        return self.mask(
+        return self.create_mask(
             "energy",
             edge_min=energy_min,
             edge_max=energy_max,
