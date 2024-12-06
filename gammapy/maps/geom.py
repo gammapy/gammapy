@@ -648,21 +648,45 @@ class Geom(abc.ABC):
             round_to_edge=round_to_edge,
         )
 
-    def mask(self, axis_name, edge_min=None, edge_max=None, round_to_edge=False):
-        """"""
+    def create_mask(self, axis_name, edge_min=None, edge_max=None, round_to_edge=False):
+        """Create a mask over a given axis.
+
+        The energy bin must be fully contained to be included in the mask.
+
+        Parameters
+        ----------
+        edge_min, edge_max : `~astropy.units.Quantity` or float
+            Bounds of the mask. If the axis used for the mask has a unit, passing `~astropy.units.Quantity` is mandatory.
+        round_to_edge: bool, optional
+            Wether to round `energy_min` and `energy_max` to the closest axis bin value.
+            See `~gammapy.maps.MapAxis.round`. Default is False.
+
+        Returns
+        -------
+        mask : `~gammapy.maps.Map`
+            Map containing the mask. The geometry of the map is the same as the initial geometry.
+        """
         from . import Map
+
+        axes_names = self.axes_names
 
         try:
             axis = self.axes[axis_name]
         except KeyError:
             raise ValueError(
-                f"Axis with name `{axis_name}` not in list of axis name: {self.axes_names}."
+                f"Axis with name `{axis_name}` not in list of axis name: {axes_names}."
             )
+        shape = tuple([-1] + [1 for n in axes_names if n != axis_name])
+        axis_edges = axis.edges.reshape(shape)
+        edge_min = edge_min if edge_min is not None else axis_edges[0]
+        edge_max = edge_max if edge_max is not None else axis_edges[-1]
 
         if axis.unit is not None:
-            if isinstance(edge_min, u.Quantity) and isinstance(edge_max, u.Quantity):
+            if not (
+                isinstance(edge_min, u.Quantity) and isinstance(edge_max, u.Quantity)
+            ):
                 raise TypeError(
-                    f"`edge_min` and `edge_max` must be instance of `astropy.units.Quantity` for  axis with name `{axis_name}` as unit of `{axis.unit}`."
+                    f"`edge_min` and `edge_max` must be instance of `~astropy.units.Quantity` for  axis with name `{axis_name}` as unit of `{axis.unit}`."
                 )
             if not (
                 edge_min.unit.is_equivalent(axis.unit)
@@ -675,12 +699,13 @@ class Geom(abc.ABC):
         if round_to_edge:
             edge_min, edge_max = axis.round([edge_min, edge_max])
 
-        shape = tuple([-1] + [1 for n in self.axes_names if n != axis_name])
-        axis_edges = axis.edges.reshape(shape)
-
-        edge_min = edge_min or axis_edges[0]
-        edge_max = edge_max or axis_edges[-1]
-
+        axes_names.reverse()
         mask = (axis_edges[:-1] >= edge_min) & (axis_edges[1:] <= edge_max)
-        data = np.broadcast(mask, shape=self.data_shape)
+        mask = np.reshape(
+            mask,
+            shape=tuple(
+                len(axis_edges[1:]) if n == axis_name else 1 for n in axes_names
+            ),
+        )
+        data = np.broadcast_to(mask, shape=self.data_shape)
         return Map.from_geom(geom=self, data=data, dtype=data.dtype)
