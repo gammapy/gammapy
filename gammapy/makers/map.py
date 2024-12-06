@@ -176,7 +176,7 @@ class MapDatasetMaker(Maker):
             if aeff.unit.is_equivalent(u.Unit("m2 s")):
                 factor = 1.0
             elif aeff.unit.is_equivalent(u.Unit("m2 s sday-1")):
-                factor = observation.n_transits
+                factor = observation.gti.n_transits
             else:
                 raise u.UnitsError(
                     f"Effective area unit {observation.aeff.unit} is not supported"
@@ -247,7 +247,7 @@ class MapDatasetMaker(Maker):
                 bkg.quantity *= np.diff(bkg.geom.axes["energy"].edges)[:, None, None]
                 # TODO : would be better to have proper integration method
                 if bkg.unit.is_equivalent(u.Unit("sday-1")):
-                    bkg.quantity *= observation.n_transits
+                    bkg.quantity *= observation.gti.n_transits
                 return bkg
             else:
                 raise u.UnitsError(
