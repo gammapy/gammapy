@@ -994,8 +994,8 @@ def test_data_shape_broadcast():
 
 def test_make_mask_geom():
     energy = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=5)
-    phase = MapAxis.from_bounds(0, 1, nbin=6)
-    freq = MapAxis.from_bounds(1, 10, nbin=4, unit=u.Hz)
+    phase = MapAxis.from_bounds(0, 1, nbin=6, name="freq")
+    freq = MapAxis.from_bounds(1, 10, nbin=4, unit=u.Hz, name="phase")
 
     geom = WcsGeom.create(10, axes=[energy, phase, freq])
     with pytest.raises(ValueError):
@@ -1009,7 +1009,7 @@ def test_make_mask_geom():
 
     mask_freq = geom.create_mask("freq", 3 * u.Hz, 5 * u.Hz, round_to_edges=True)
     assert_allclose(
-        mask_freq.sum_over_axes(["energy", "phase"]).to_region_nd_map().data.squueze(),
+        mask_freq.sum_over_axes(["energy", "phase"]).to_region_nd_map().data.squeeze(),
         [0, 3000, 0, 0],
     )
 
