@@ -1007,7 +1007,7 @@ def test_make_mask_geom():
     with pytest.raises(u.UnitsError):
         geom.create_mask("freq", 2 * u.m, 4 * u.m)
 
-    mask_freq = geom.create_mask("freq", 3 * u.Hz, 5 * u.Hz, round_to_edges=True)
+    mask_freq = geom.create_mask("freq", 3 * u.Hz, 5 * u.Hz, round_to_edge=True)
     assert_allclose(
         mask_freq.sum_over_axes(["energy", "phase"]).to_region_nd_map().data.squeeze(),
         [0, 3000, 0, 0],
