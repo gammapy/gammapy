@@ -128,7 +128,7 @@ Releasing the final version of the major release
 
 #. Finally:
 
-   * Update the Gammapy conda-forge package at https://github.com/conda-forge/gammapy-feedstock.
+   * The Gammapy conda-forge package at https://github.com/conda-forge/gammapy-feedstock should be automatically updated within hours and a PR opened. Check that this is the case and if not, perform the manual update of the recipe meta.yaml on your gammapy-feedstock fork and open the PR. Finally, when all tests for all distributions successfully ran, merge the PR.   
    * Encourage the Gammapy developers to try out the new stable version (update and run tests) via the GitHub
      issue for the release and wait a day or two for feedback.
 
