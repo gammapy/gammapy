@@ -689,7 +689,7 @@ class Map(abc.ABC):
         return resampled
 
     @abc.abstractmethod
-    def _resample_by_idx(self, idx, weights=None, preserve_counts=False):
+    def _resample_by_idx(self, idx, weights=None, preserve_counts=False, smooth=False):
         """Resample pixels at ``idx`` with given ``weights``.
 
         Parameters
@@ -704,6 +704,10 @@ class Map(abc.ABC):
             Preserve the integral over each bin.  This should be true
             if the map is an integral quantity (e.g. counts) and false if
             the map is a differential quantity (e.g. intensity). Default is False.
+        smooth : bool, optional
+            Smooth output before scaling the total counts.
+            Used only for WCS maps if preserve_counts is True. Default is False.
+
         """
         pass
 
