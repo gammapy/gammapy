@@ -18,13 +18,16 @@ Here's some good resources with working examples:
 """
 
 import os
+import re
 from pathlib import Path
 from docutils.parsers.rst import Directive
 from docutils.parsers.rst.directives import register_directive
 from docutils.parsers.rst.directives.body import CodeBlock
 from docutils.parsers.rst.directives.images import Image
 from docutils.parsers.rst.directives.misc import Include, Raw
+from docutils import nodes
 from sphinx.util import logging
+from sphinx.transforms.post_transforms import SphinxPostTransform
 from gammapy.analysis import AnalysisConfig
 
 try:
@@ -176,6 +179,42 @@ class SubstitutionCodeBlock(CodeBlock):
 
         self.content = new_content
         return list(CodeBlock.run(self))
+
+
+class DynamicPRLinkTransform(SphinxPostTransform):
+    """
+    A Sphinx post-transform that converts [#XXXX] into clickable links to GitHub PR pages.
+    """
+
+    default_priority = 800
+    PR_PATTERN = re.compile(r"\[#(\d+)\]")  # Matches [#XXXX]
+    GITHUB_PR_BASE_URL = "https://github.com/gammapy/gammapy/pull/"  # Fixed URL
+
+    def apply(self):
+        """Apply the transform to convert PR references into links."""
+        for text_node in self.document.traverse(nodes.Text):
+            if "[#" not in text_node:  # Skip nodes unlikely to match
+                continue
+
+            content, last_idx = [], 0
+            # Find the associated pattern
+            for match in self.PR_PATTERN.finditer(text_node.astext()):
+                # Add preceding text
+                content.append(nodes.Text(text_node[last_idx : match.start()]))
+
+                # Create hyperlink node for the PR
+                pr_number = match.group(1)
+                pr_url = f"{self.GITHUB_PR_BASE_URL}{pr_number}"
+                link_node = nodes.reference(text=f"[#{pr_number}]", refuri=pr_url)
+                content.append(link_node)
+
+                last_idx = match.end()
+
+            # Add any remaining text after the last match
+            content.append(nodes.Text(text_node[last_idx:]))
+
+            # Replace the original text node with the new processed nodes
+            text_node.parent.replace(text_node, content)
 
 
 def gammapy_sphinx_ext_activate():
