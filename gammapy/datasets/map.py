@@ -1502,8 +1502,11 @@ class MapDataset(Dataset):
             Name of the new dataset. Default is None.
 
         """
-        models = self.models.copy().reassign(self.name, name)
-        return self._to_asimov_dataset(name=None, models=models)
+        asimov_dataset = self._to_asimov_dataset(name=name)
+        if self.models:
+            models = self.models.copy().reassign(self.name, asimov_dataset.name)
+            asimov_dataset.models = models
+        return asimov_dataset
 
     def fake(self, random_state="random-seed"):
         """Simulate fake counts for the current model and reduced IRFs.
