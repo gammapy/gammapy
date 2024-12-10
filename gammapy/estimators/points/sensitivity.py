@@ -228,6 +228,8 @@ class ParameterSensitivityEstimator:
 
     """
 
+    tag = "ParameterSensitivityEstimator"
+
     def __init__(
         self,
         parameter,
