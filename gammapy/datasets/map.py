@@ -1473,11 +1473,23 @@ class MapDataset(Dataset):
         else:
             return cash_sum_cython(counts.ravel(), npred.ravel()) + prior_stat_sum
 
-    def _to_asimov_dataset(self, name=None, models=None):
-        """Create Asimov dataset"""
+    def to_asimov_dataset(self, name=None):
+        """Create Asimov dataset from the current models.
+
+        Parameters
+        ----------
+        name : str, optional
+            Name of the new dataset. Default is None.
+
+        """
         npred = self.npred()
         data = np.nan_to_num(npred.data, copy=True, nan=0.0, posinf=0.0, neginf=0.0)
         npred.data = data.astype("float")
+
+        if self.models and name != self.name:
+            models = self.models.copy().reassign(self.name, name)
+        else:
+            models = self.models
 
         return self.__class__(
             models=models,
@@ -1492,21 +1504,6 @@ class MapDataset(Dataset):
             name=name,
             meta=self.meta,
         )
-
-    def to_asimov_dataset(self, name=None):
-        """Create Asimov dataset from the current models.
-
-        Parameters
-        ----------
-        name : str, optional
-            Name of the new dataset. Default is None.
-
-        """
-        asimov_dataset = self._to_asimov_dataset(name=name)
-        if self.models:
-            models = self.models.copy().reassign(self.name, asimov_dataset.name)
-            asimov_dataset.models = models
-        return asimov_dataset
 
     def fake(self, random_state="random-seed"):
         """Simulate fake counts for the current model and reduced IRFs.
@@ -2729,8 +2726,15 @@ class MapDatasetOnOff(MapDataset):
             meta_table=self.meta_table,
         )
 
-    def _to_asimov_dataset(self, name=None, models=None):
-        """Create Asimov dataset"""
+    def to_asimov_dataset(self, name=None):
+        """Create Asimov dataset from the current models.
+
+        Parameters
+        ----------
+        name : str, optional
+            Name of the new dataset. Default is None.
+
+        """
         npred = self.npred()
         data = np.nan_to_num(npred.data, copy=True, nan=0.0, posinf=0.0, neginf=0.0)
         npred.data = data.astype("float")
@@ -2742,6 +2746,11 @@ class MapDatasetOnOff(MapDataset):
             mu_sig=npred.data,
         )
         npred_off = Map.from_geom(geom=self._geom, data=npred_off)
+
+        if self.models and name != self.name:
+            models = self.models.copy().reassign(self.name, name)
+        else:
+            models = self.models
 
         return self.__class__(
             models=models,
