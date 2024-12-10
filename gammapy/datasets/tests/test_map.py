@@ -272,12 +272,22 @@ def test_map_dataset_to_asimov(sky_model, geom, geom_etrue):
     npred_sum = dataset.npred().data.sum()
 
     asimov_dataset = dataset.to_asimov_dataset()
-    counts_asimov = asimov_dataset.counts.data.sum()
 
-    assert_allclose(npred_sum, counts_asimov)
+    assert_allclose(asimov_dataset.counts.data.sum(), npred_sum)
 
     assert len(asimov_dataset.models) == len(dataset.models)
     assert asimov_dataset.background_model is not None
+
+    dataset2 = dataset.copy()
+    bkg_model2 = FoVBackgroundModel(dataset_name=dataset2.name)
+    dataset2.models = [sky_model, bkg_model2]
+
+    datasets = Datasets([dataset, dataset2])
+
+    asimov_datasets = datasets.to_asimov_datasets()
+    assert len(asimov_datasets.models) == len(datasets.models)
+    assert_allclose(asimov_datasets[0].counts.data.sum(), npred_sum)
+    assert_allclose(asimov_datasets[1].counts.data.sum(), npred_sum)
 
 
 def test_map_dataset_str_empty():
