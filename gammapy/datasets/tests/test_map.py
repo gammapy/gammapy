@@ -1357,6 +1357,7 @@ def get_map_dataset_onoff(images, **kwargs):
     )
 
 
+@requires_data()
 def test_map_dataset_on_off_to_asimov(images):
     dataset = get_map_dataset_onoff(images)
 
