@@ -262,6 +262,7 @@ def test_map_dataset_str(sky_model, geom, geom_etrue):
     assert "MapDataset" in str(dataset)
 
 
+@requires_data()
 def test_map_dataset_to_asimov(sky_model, geom, geom_etrue):
     dataset = get_map_dataset(geom, geom_etrue)
 
