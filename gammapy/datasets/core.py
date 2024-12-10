@@ -331,6 +331,10 @@ class Datasets(collections.abc.MutableSequence):
 
         return datasets
 
+    def to_asimov_datasets(self):
+        """Create Asimov datasets from the current models."""
+        return Datasets([d.to_asimov_dataset(name=d.name) for d in self])
+
     @property
     # TODO: make this a method to support different methods?
     def energy_ranges(self):
