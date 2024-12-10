@@ -1486,13 +1486,8 @@ class MapDataset(Dataset):
         data = np.nan_to_num(npred.data, copy=True, nan=0.0, posinf=0.0, neginf=0.0)
         npred.data = data.astype("float")
 
-        if self.models and name != self.name:
-            models = self.models.copy().reassign(self.name, name)
-        else:
-            models = self.models
-
-        return self.__class__(
-            models=models,
+        asimov_dataset = self.__class__(
+            models=self.models,
             counts=npred,
             exposure=self.exposure,
             background=self.background,
@@ -1504,6 +1499,12 @@ class MapDataset(Dataset):
             name=name,
             meta=self.meta,
         )
+
+        if self.models and asimov_dataset.name != self.name:
+            asimov_dataset.models = self.models.copy().reassign(
+                self.name, asimov_dataset.name
+            )
+        return asimov_dataset
 
     def fake(self, random_state="random-seed"):
         """Simulate fake counts for the current model and reduced IRFs.
@@ -2747,13 +2748,8 @@ class MapDatasetOnOff(MapDataset):
         )
         npred_off = Map.from_geom(geom=self._geom, data=npred_off)
 
-        if self.models and name != self.name:
-            models = self.models.copy().reassign(self.name, name)
-        else:
-            models = self.models
-
-        return self.__class__(
-            models=models,
+        asimov_dataset = self.__class__(
+            models=self.models,
             counts=npred,
             counts_off=npred_off,
             exposure=self.exposure,
@@ -2767,6 +2763,12 @@ class MapDatasetOnOff(MapDataset):
             name=name,
             meta=self.meta,
         )
+
+        if self.models and asimov_dataset.name != self.name:
+            asimov_dataset.models = self.models.copy().reassign(
+                self.name, asimov_dataset.name
+            )
+        return asimov_dataset
 
     @property
     def _is_stackable(self):

@@ -276,6 +276,9 @@ def test_map_dataset_to_asimov(sky_model, geom, geom_etrue):
 
     assert_allclose(npred_sum, counts_asimov)
 
+    assert len(asimov_dataset.models) == len(dataset.models)
+    assert asimov_dataset.background_model is not None
+
 
 def test_map_dataset_str_empty():
     dataset = MapDataset()
