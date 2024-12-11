@@ -61,7 +61,7 @@ OPTIONAL_QUANTITIES = {
     "e2dnde": ["e2dnde_err", "e2dnde_errp", "e2dnde_errn", "e2dnde_ul"],
     "flux": ["flux_err", "flux_errp", "flux_errn", "flux_ul", "flux_sensitivity"],
     "eflux": ["eflux_err", "eflux_errp", "eflux_errn", "eflux_ul"],
-    "likelihood": ["norm_err", "norm_errn", "norm_errp", "norm_ul"],
+    "likelihood": ["norm_err", "norm_errn", "norm_errp", "norm_ul", "norm_sensitivity"],
 }
 
 VALID_QUANTITIES = [
