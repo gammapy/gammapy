@@ -109,8 +109,7 @@ def test_integral_estimation(spectrum_dataset, caplog):
 
 def test_parameter_sensitivity_estimator(spectrum_dataset):
     spectral_model = PowerLawSpectralModel()
-    spectral_model.amplitude.min = spectral_model.amplitude.value / 1000
-    spectral_model.amplitude.max = spectral_model.amplitude.value * 1000
+    default_value = spectral_model.amplitude.value
 
     spectrum_dataset.models = SkyModel(spectral_model=spectral_model)
     datasets = Datasets(spectrum_dataset)
@@ -118,4 +117,6 @@ def test_parameter_sensitivity_estimator(spectrum_dataset):
     estimator = ParameterSensitivityEstimator(spectral_model.amplitude, 0, rtol=1e-2)
 
     value = estimator.run(datasets)
-    assert_allclose(value, 2.001501e-12, rtol=1e-2)
+    assert_allclose(value, 5.052703e-12, rtol=1e-2)
+
+    assert_allclose(spectral_model.amplitude.value, default_value, rtol=1e-2)
