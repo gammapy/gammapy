@@ -22,6 +22,8 @@ class ParameterEstimator(Estimator):
         Sigma to use for asymmetric error computation. Default is 1.
     n_sigma_ul : int
         Sigma to use for upper limit computation. Default is 2.
+    n_sigma_sensitivity : int
+        Sigma to use for sensitivity computation. Default is 5.
     null_value : float
         Which null value to use for the parameter.
     selection_optional : list of str, optional
@@ -60,12 +62,13 @@ class ParameterEstimator(Estimator):
     """
 
     tag = "ParameterEstimator"
-    _available_selection_optional = ["errn-errp", "ul", "scan"]
+    _available_selection_optional = ["errn-errp", "ul", "scan", "sensitivity"]
 
     def __init__(
         self,
         n_sigma=1,
         n_sigma_ul=2,
+        n_sigma_sensitivity=5,
         null_value=1e-150,
         selection_optional=None,
         fit=None,
@@ -73,6 +76,7 @@ class ParameterEstimator(Estimator):
     ):
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
+        self.n_sigma_sensitivity = n_sigma_sensitivity
         self.null_value = null_value
         self.selection_optional = selection_optional
 
@@ -262,6 +266,28 @@ class ParameterEstimator(Estimator):
         )
         return {f"{parameter.name}_ul": res["errp"] + parameter.value}
 
+    def estimate_sensitivity(self, datasets, parameter):
+        """Estimate norm sensitivity for the flux point.
+
+        Parameters
+        ----------
+        datasets : `~gammapy.datasets.Datasets`
+            Datasets.
+
+        Returns
+        -------
+        result : dict
+            Dictionary with an array with one entry per dataset with the sum of the
+            masked npred.
+        """
+        from .points.sensitivity import ParameterSensitivityEstimator
+
+        estimator = ParameterSensitivityEstimator(
+            parameter, self.null_value, n_sigma=self.n_sigma_sensitivity
+        )
+        value = estimator.run(datasets)
+        return {f"{parameter.name}_sensitivity": value}
+
     @staticmethod
     def estimate_counts(datasets):
         """Estimate counts for the flux point.
@@ -328,7 +354,6 @@ class ParameterEstimator(Estimator):
         parameter = datasets.parameters[parameter]
 
         with datasets.parameters.restore_status():
-
             if not self.reoptimize:
                 datasets.parameters.freeze_all()
                 parameter.frozen = False
@@ -344,6 +369,9 @@ class ParameterEstimator(Estimator):
 
             if "scan" in self.selection_optional:
                 result.update(self.estimate_scan(datasets, parameter))
+
+            if "sensitivity" in self.selection_optional:
+                result.update(self.estimate_sensitivity(datasets, parameter))
 
         result.update(self.estimate_counts(datasets))
         return result
