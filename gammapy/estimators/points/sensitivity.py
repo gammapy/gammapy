@@ -5,6 +5,7 @@ from astropy.table import Column, Table
 from gammapy.maps import Map
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from gammapy.modeling.selection import TestStatisticNested
+from gammapy.modeling.parameter import restore_parameters_status
 from gammapy.stats import WStatCountsStatistic
 from gammapy.stats.utils import ts_to_sigma
 from ..core import Estimator
@@ -79,6 +80,7 @@ class SensitivityEstimator(Estimator):
             n_on=dataset.alpha.data * n_off, n_off=n_off, alpha=dataset.alpha.data
         )
         excess_counts = stat.n_sig_matching_significance(self.n_sigma)
+
         is_gamma_limited = excess_counts < self.gamma_min
         excess_counts[is_gamma_limited] = self.gamma_min
         bkg_syst_limited = (
@@ -209,10 +211,10 @@ class ParameterSensitivityEstimator:
     ----------
     parameter : `~gammapy.modeling.Parameter`
        Parameter to test
+    null_value : float or `~gammapy.modeling.Parameter`
+        Value of the parameter for the null hypothesis.
     n_sigma : int, default=5
         Number of required significance level.
-    fraction : float, default=0.5
-        Percentage of events above the required level of significance.
     rtol : float
         Relative precision of the estimate. Used as a stopping criterion.
         Default is 0.01.
@@ -233,9 +235,8 @@ class ParameterSensitivityEstimator:
         self,
         parameter,
         null_value,
-        n_sigma=2,
+        n_sigma=5,
         n_free_parameters=None,
-        fraction=0.5,
         rtol=0.01,
         max_niter=100,
     ):
@@ -244,7 +245,6 @@ class ParameterSensitivityEstimator:
         )
         self.parameter = parameter
         self.n_sigma = n_sigma
-        self.fraction = fraction
         self.rtol = rtol
         self.max_niter = max_niter
 
@@ -258,12 +258,21 @@ class ParameterSensitivityEstimator:
     def parameter_matching_significance(self, datasets):
         """Parameter value  matching the target significance"""
 
+        if ~np.isfinite(self.parameter.min):
+            vmin = self.parameter.value / 1000
+        else:
+            vmin = self.parameter.min
+        if ~np.isfinite(self.parameter.max):
+            vmax = self.parameter.value * 1000
+        else:
+            vmax = self.parameter.max
+
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             roots, res = find_roots(
                 self._fcn,
-                self.parameter.min,
-                self.parameter.max,
+                vmin,
+                vmax,
                 args=(datasets,),
                 nbin=1,
                 maxiter=self.max_niter,
@@ -278,4 +287,7 @@ class ParameterSensitivityEstimator:
         """Parameter sensitivity
         given as the diffrence between vaue matching the target significance and the null value.
         """
-        return self.parameter_matching_significance(datasets) - self.test.null_values[0]
+        with restore_parameters_status(self.test.parameters):
+            value = self.parameter_matching_significance(datasets)
+
+        return value - self.test.null_values[0]
