@@ -5,6 +5,7 @@ from gammapy.maps import Map
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from gammapy.stats import WStatCountsStatistic
 from ..core import Estimator
+from ..utils import apply_threshold_sensitivity
 from gammapy.utils.deprecation import deprecated_renamed_argument
 
 __all__ = ["SensitivityEstimator"]
@@ -75,14 +76,14 @@ class SensitivityEstimator(Estimator):
             n_on=dataset.alpha.data * n_off, n_off=n_off, alpha=dataset.alpha.data
         )
         excess_counts = stat.n_sig_matching_significance(self.n_sigma)
-        is_gamma_limited = excess_counts < self.gamma_min
-        excess_counts[is_gamma_limited] = self.gamma_min
-        bkg_syst_limited = (
-            excess_counts < self.bkg_syst_fraction * dataset.background.data
+
+        excess_counts = apply_threshold_sensitivity(
+            dataset.background.data,
+            excess_counts,
+            self.gamma_min,
+            self.bkg_syst_fraction,
         )
-        excess_counts[bkg_syst_limited] = (
-            self.bkg_syst_fraction * dataset.background.data[bkg_syst_limited]
-        )
+
         excess = Map.from_geom(geom=dataset._geom, data=excess_counts)
         return excess
 
