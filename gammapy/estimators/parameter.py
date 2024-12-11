@@ -1,12 +1,20 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import warnings
+
 import logging
 import numpy as np
 from gammapy.datasets import Datasets
 from gammapy.datasets.actors import DatasetsActor
 from gammapy.modeling import Fit
+from gammapy.modeling.selection import TestStatisticNested
+from gammapy.modeling.parameter import restore_parameters_status
+from gammapy.stats.utils import ts_to_sigma
+from gammapy.utils.roots import find_roots
 from .core import Estimator
 
 log = logging.getLogger(__name__)
+
+__all__ = ["ParameterEstimator", "ParameterSensitivityEstimator"]
 
 
 class ParameterEstimator(Estimator):
@@ -280,7 +288,6 @@ class ParameterEstimator(Estimator):
             Dictionary with an array with one entry per dataset with the sum of the
             masked npred.
         """
-        from .points.sensitivity import ParameterSensitivityEstimator
 
         estimator = ParameterSensitivityEstimator(
             parameter, self.null_value, n_sigma=self.n_sigma_sensitivity
@@ -375,3 +382,100 @@ class ParameterEstimator(Estimator):
 
         result.update(self.estimate_counts(datasets))
         return result
+
+
+class ParameterSensitivityEstimator:
+    """Estimate the sensitivity to a given parameter
+
+    Computes the TS distribution in the non-null hypothesis using the
+    log likelihood of the Asimov dataset (i.e. a dataset with counts = npred)
+    and the non central chi2 distribution.
+    Once the TS distribution under the testing hypothesis is known,
+    one can compute the required parameter value
+    to have 50% of measurements above a given significance threshold.
+
+
+    Parameters
+    ----------
+    parameter : `~gammapy.modeling.Parameter`
+       Parameter to test
+    null_value : float or `~gammapy.modeling.Parameter`
+        Value of the parameter for the null hypothesis.
+    n_sigma : int, default=5
+        Number of required significance level.
+    rtol : float
+        Relative precision of the estimate. Used as a stopping criterion.
+        Default is 0.01.
+    max_niter : int
+        Maximal number of iterations used by the root finding algorithm.
+        Default is 100.
+
+    References
+    ----------
+        Cowan et al. (2011), European Physical Journal C, 71, 1554.
+        doi:10.1140/epjc/s10052-011-1554-0.
+
+    """
+
+    tag = "ParameterSensitivityEstimator"
+
+    def __init__(
+        self,
+        parameter,
+        null_value,
+        n_sigma=5,
+        n_free_parameters=None,
+        rtol=0.01,
+        max_niter=100,
+    ):
+        self.test = TestStatisticNested(
+            [parameter], [null_value], n_free_parameters=n_free_parameters
+        )
+        self.parameter = parameter
+        self.n_sigma = n_sigma
+        self.rtol = rtol
+        self.max_niter = max_niter
+
+    def _fcn(self, value, datasets):
+        """Call the Test Statistics function."""
+        self.parameter.value = value
+        ts_asimov = self.test.ts_asimov(datasets)
+        return ts_to_sigma(ts_asimov) - self.n_sigma
+        # return ts_to_sigma(ts_asimov, methos="cowan") - self.n_sigma # requires #5638
+
+    def parameter_matching_significance(self, datasets):
+        """Parameter value  matching the target significance"""
+
+        if ~np.isfinite(self.parameter.min):
+            vmin = self.parameter.value / 1000
+        else:
+            vmin = self.parameter.min
+        if ~np.isfinite(self.parameter.max):
+            vmax = self.parameter.value * 1000
+        else:
+            vmax = self.parameter.max
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            roots, res = find_roots(
+                self._fcn,
+                vmin,
+                vmax,
+                args=(datasets,),
+                nbin=1,
+                maxiter=self.max_niter,
+                rtol=self.rtol,
+                points_scale=self.parameter.interp,
+            )
+            # Where the root finding fails NaN is set as norm
+
+        return roots[0]
+
+    def run(self, datasets):
+        """Parameter sensitivity
+        given as the diffrence between vaue matching the target significance and the null value.
+        """
+        with restore_parameters_status(self.test.parameters):
+            value = self.parameter_matching_significance(datasets)
+
+        return value - self.test.null_values[0]

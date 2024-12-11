@@ -6,14 +6,13 @@ from .core import Estimator
 from .energydependentmorphology import EnergyDependentMorphologyEstimator
 from .map import ASmoothMapEstimator, ExcessMapEstimator, FluxMaps, TSMapEstimator
 from .metadata import FluxMetaData
-from .parameter import ParameterEstimator
+from .parameter import ParameterEstimator, ParameterSensitivityEstimator
 from .points import (
     FluxPoints,
     FluxPointsEstimator,
     FluxProfileEstimator,
     LightCurveEstimator,
     SensitivityEstimator,
-    ParameterSensitivityEstimator,
 )
 from .profile import ImageProfile, ImageProfileEstimator
 
