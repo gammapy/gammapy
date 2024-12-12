@@ -35,7 +35,7 @@ def sigma_to_ts(n_sigma, df=1):
     if np.any(invalid):
         n_sigma = np.atleast_1d(n_sigma)
         sigma_invalid = n_sigma.astype(float)[invalid]
-        df_invalid = df * np.ones(len(n_sigma))[invalid]
+        df_invalid = (df * np.ones(n_sigma.shape))[invalid]
 
         ts_invalid = np.array(
             [
@@ -77,7 +77,7 @@ def ts_to_sigma(ts, df=1):
     if np.any(invalid):
         ts = np.atleast_1d(ts)
         ts_invalid = ts.astype(float)[invalid]
-        df_invalid = df * np.ones(len(ts))[invalid]
+        df_invalid = (df * np.ones(ts.shape))[invalid]
         sigma_invalid = np.array(
             [
                 _ts_to_sigma_mpmath(ts_val, df_val)
