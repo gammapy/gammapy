@@ -33,9 +33,15 @@ def sigma_to_ts(n_sigma, df=1):
 
     invalid = np.atleast_1d(~np.isfinite(ts))
     if np.any(invalid):
-        sigma_invalid = np.atleast_1d(n_sigma).astype(float)[invalid]
+        n_sigma = np.atleast_1d(n_sigma)
+        sigma_invalid = n_sigma.astype(float)[invalid]
+        df_invalid = df * np.ones(len(n_sigma))[invalid]
+
         ts_invalid = np.array(
-            [_sigma_to_ts_mpmath(sig_val, df) for sig_val in sigma_invalid]
+            [
+                _sigma_to_ts_mpmath(sig_val, df_val)
+                for sig_val, df_val in zip(sigma_invalid, df_invalid)
+            ]
         )
         try:
             ts[invalid] = ts_invalid
@@ -69,9 +75,14 @@ def ts_to_sigma(ts, df=1):
 
     invalid = np.atleast_1d(~np.isfinite(sigma))
     if np.any(invalid):
-        ts_invalid = np.atleast_1d(ts).astype(float)[invalid]
+        ts = np.atleast_1d(ts)
+        ts_invalid = ts.astype(float)[invalid]
+        df_invalid = df * np.ones(len(ts))[invalid]
         sigma_invalid = np.array(
-            [_ts_to_sigma_mpmath(ts_val, df) for ts_val in ts_invalid]
+            [
+                _ts_to_sigma_mpmath(ts_val, df_val)
+                for ts_val, df_val in zip(ts_invalid, df_invalid)
+            ]
         )
         try:
             sigma[invalid] = sigma_invalid

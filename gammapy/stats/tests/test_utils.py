@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import numpy as np
 from numpy.testing import assert_allclose
 from gammapy.stats.utils import sigma_to_ts, ts_to_sigma
 
@@ -22,6 +23,22 @@ def test_sigma_ts_conversion():
     df = 1
     sigma_ref = 50
     ts_ref = 2500
+    ts = sigma_to_ts(sigma_ref, df=df)
+    assert_allclose(ts, ts_ref)
+    sigma = ts_to_sigma(ts, df=df)
+    assert_allclose(sigma, sigma_ref)
+
+    df = np.array([1, 1])
+    sigma_ref = np.array([50, 50])
+    ts_ref = np.array([2500, 2500])
+    ts = sigma_to_ts(sigma_ref, df=df)
+    assert_allclose(ts, ts_ref)
+    sigma = ts_to_sigma(ts, df=df)
+    assert_allclose(sigma, sigma_ref)
+
+    df = 1
+    sigma_ref = np.array([50, 50])
+    ts_ref = np.array([2500, 2500])
     ts = sigma_to_ts(sigma_ref, df=df)
     assert_allclose(ts, ts_ref)
     sigma = ts_to_sigma(ts, df=df)
