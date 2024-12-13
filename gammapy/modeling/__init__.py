@@ -19,4 +19,5 @@ __all__ = [
     "PriorParameter",
     "PriorParameters",
     "stat_profile_ul_scipy",
+    "Sampler"
 ]
