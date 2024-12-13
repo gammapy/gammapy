@@ -284,7 +284,7 @@ class GTI:
     @property
     def n_transits(self):
         with u.add_enabled_units([u.def_unit("transit", u.sday)]):
-            return self.gti.time_sum.to("transit")
+            return self.time_sum.to("transit")
 
     @classmethod
     def from_time_intervals(cls, time_intervals, reference_time=None):
