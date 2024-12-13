@@ -78,6 +78,14 @@ class Dataset(abc.ABC):
             prior_stat_sum = self.models.parameters.prior_stat_sum()
         return np.sum(stat, dtype=np.float64) + prior_stat_sum
 
+def stat_sum_no_prior(self):
+    """Total statistic given the current model parameters without the priors."""
+    stat = self.stat_array()
+
+    if self.mask is not None:
+        stat = stat[self.mask.data]
+    return np.sum(stat, dtype=np.float64) 
+
     @abc.abstractmethod
     def stat_array(self):
         """Statistic array, one value per data point."""
@@ -239,6 +247,14 @@ class Datasets(collections.abc.MutableSequence):
         for dataset in self:
             stat_sum += dataset.stat_sum()
         return stat_sum
+
+def datasets_stat_sum_no_prior(self):
+    """Compute joint statistic function value without the priors."""
+    stat_sum = 0
+    # TODO: add parallel evaluation of likelihoods
+    for dataset in self:
+        stat_sum += dataset.stat_sum_no_prior()
+    return stat_sum
 
     def select_time(self, time_min, time_max, atol="1e-6 s"):
         """Select datasets in a given time interval.
