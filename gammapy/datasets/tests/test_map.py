@@ -271,7 +271,7 @@ def test_map_dataset_to_asimov(sky_model, geom, geom_etrue):
 
     npred_sum = dataset.npred().data.sum()
 
-    asimov_dataset = dataset.to_asimov_dataset()
+    asimov_dataset = dataset._to_asimov_dataset()
 
     assert_allclose(asimov_dataset.counts.data.sum(), npred_sum)
 
@@ -1376,7 +1376,7 @@ def test_map_dataset_on_off_to_asimov(images):
 
     npred_sum = dataset.npred().data.sum()
 
-    asimov_dataset = dataset.to_asimov_dataset()
+    asimov_dataset = dataset._to_asimov_dataset()
     counts_asimov = asimov_dataset.counts.data.sum()
 
     assert_allclose(npred_sum, counts_asimov)
