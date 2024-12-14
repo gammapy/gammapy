@@ -1473,7 +1473,7 @@ class MapDataset(Dataset):
         else:
             return cash_sum_cython(counts.ravel(), npred.ravel()) + prior_stat_sum
 
-    def to_asimov_dataset(self, name=None):
+    def _to_asimov_dataset(self):
         """Create Asimov dataset from the current models.
 
         Parameters
@@ -1496,14 +1496,10 @@ class MapDataset(Dataset):
             mask_safe=self.mask_safe,
             mask_fit=self.mask_fit,
             gti=self.gti,
-            name=name,
+            name=self.name,
             meta=self.meta,
         )
-
-        if self.models and asimov_dataset.name != self.name:
-            asimov_dataset.models = self.models.copy().reassign(
-                self.name, asimov_dataset.name
-            )
+        asimov_dataset._evaluators = self._evaluators
         return asimov_dataset
 
     def fake(self, random_state="random-seed"):
@@ -2727,7 +2723,7 @@ class MapDatasetOnOff(MapDataset):
             meta_table=self.meta_table,
         )
 
-    def to_asimov_dataset(self, name=None):
+    def _to_asimov_dataset(self):
         """Create Asimov dataset from the current models.
 
         Parameters
@@ -2760,14 +2756,11 @@ class MapDatasetOnOff(MapDataset):
             mask_safe=self.mask_safe,
             mask_fit=self.mask_fit,
             gti=self.gti,
-            name=name,
+            name=self.name,
             meta=self.meta,
         )
+        asimov_dataset._evaluators = self._evaluators
 
-        if self.models and asimov_dataset.name != self.name:
-            asimov_dataset.models = self.models.copy().reassign(
-                self.name, asimov_dataset.name
-            )
         return asimov_dataset
 
     @property

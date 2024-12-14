@@ -81,7 +81,7 @@ class TestStatisticNested:
         """Perform the alternative hypothesis testing in the Asimov dataset.
         The Asimov dataset is defined by counts=npred such as the non-null model is the true model.
         """
-        asimov_datasets = datasets.to_asimov_datasets()
+        asimov_datasets = datasets._to_asimov_datasets()
         return self.ts_known_bkg(asimov_datasets)
 
     def ts(self, datasets):

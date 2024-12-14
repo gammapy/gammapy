@@ -284,7 +284,7 @@ def test_map_dataset_to_asimov(sky_model, geom, geom_etrue):
 
     datasets = Datasets([dataset, dataset2])
 
-    asimov_datasets = datasets.to_asimov_datasets()
+    asimov_datasets = datasets._to_asimov_datasets()
     assert len(asimov_datasets.models) == len(datasets.models)
     assert_allclose(asimov_datasets[0].counts.data.sum(), npred_sum)
     assert_allclose(asimov_datasets[1].counts.data.sum(), npred_sum)
