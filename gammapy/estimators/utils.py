@@ -834,6 +834,7 @@ def combine_significance_maps(maps):
     return dict(
         significance=significance,
         df=df,
+        ts=ts_sum,
         npred_excess=npred_excess_sum,
         estimator_results=maps,
     )
