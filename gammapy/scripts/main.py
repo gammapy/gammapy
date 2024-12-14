@@ -80,6 +80,23 @@ def cli_analysis():
     """
 
 
+@cli.group("workflow")
+def cli_workflow():
+    """Automation of configuration driven data reduction process.
+
+    \b
+    Examples
+    --------
+
+    \b
+    $ gammapy workflow config
+    $ gammapy workflow run
+    $ gammapy workflow config --overwrite
+    $ gammapy workflow config --filename myconfig.yaml
+    $ gammapy workflow run --filename myconfig.yaml
+    """
+
+
 @cli.group("download", short_help="Download datasets and notebooks")
 @click.pass_context
 def cli_download(ctx):  # noqa: D301
@@ -129,6 +146,14 @@ def add_subcommands():
     from .analysis import cli_run_analysis
 
     cli_analysis.add_command(cli_run_analysis)
+
+    from .workflow import cli_make_config
+
+    cli_workflow.add_command(cli_make_config)
+
+    from .workflow import cli_run_workflow
+
+    cli_workflow.add_command(cli_run_workflow)
 
 
 add_subcommands()
