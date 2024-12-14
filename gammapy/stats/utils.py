@@ -4,7 +4,7 @@ import numpy as np
 from scipy.stats import chi2, ncx2
 
 
-def sigma_to_ts(n_sigma, df=1, method="wilk"):
+def sigma_to_ts(n_sigma, df=1, method="wilks"):
     """Convert number of sigma to delta ts.
 
     The theorem is valid only if:
@@ -19,13 +19,12 @@ def sigma_to_ts(n_sigma, df=1, method="wilk"):
         Number of degree of freedom.
     method : str
         Method used to compute the statistics:
-            * wilk : applies Wilk's theorem [1]
+            * wilks : applies Wilks theorem [1]
                 The theorem is valid only if :
                 - the two hypotheses tested can be defined in the same parameters space
                 - the true value is not at the boundary of this parameters space
-
-            * cowan : uses the statistic described in Cowan et al. (2011) [2]
-        Default is `wilk`.
+            * wald : uses Wald test described in [2] and [3]
+        Default is `wilks`.
 
     Returns
     -------
@@ -36,13 +35,15 @@ def sigma_to_ts(n_sigma, df=1, method="wilk"):
     ----------
     .. [1] Wilks theorem: https://en.wikipedia.org/wiki/Wilks%27_theorem
 
-    .. [2] Cowan et al. (2011), European Physical Journal C, 71, 1554.
+    .. [2] Wald (1943): https://www.pp.rhul.ac.uk/~cowan/stat/wald1943.pdf
+
+    .. [3] Cowan et al. (2011), European Physical Journal C, 71, 1554.
         doi:10.1140/epjc/s10052-011-1554-0.
     """
     if method == "wilk":
         p_value = chi2.sf(n_sigma**2, df=1)
         return chi2.isf(p_value, df=df)
-    elif method == "cowan":
+    elif method == "wald":
         ts = n_sigma**2
         p_value = ncx2.sf(ts, df=1, nc=ts)
         return ncx2.isf(p_value, df=df, nc=ts)
@@ -63,13 +64,12 @@ def ts_to_sigma(ts, df=1, method="wilk"):
         Number of degree of freedom.
     method : str
         Method used to compute the statistics:
-            * wilk : applies Wilk's theorem [1]
+            * wilks : applies Wilks theorem [1]
                 The theorem is valid only if :
                 - the two hypotheses tested can be defined in the same parameters space
                 - the true value is not at the boundary of this parameters space
-
-            * cowan : uses the statistic described in Cowan et al. (2011) [2]
-        Default is `wilk`.
+            * wald : uses Wald test described in [2] and [3]
+        Default is `wilks`.
 
     Returns
     -------
@@ -80,14 +80,15 @@ def ts_to_sigma(ts, df=1, method="wilk"):
     ----------
     .. [1] Wilks theorem: https://en.wikipedia.org/wiki/Wilks%27_theorem
 
-    .. [2] Cowan et al. (2011), European Physical Journal C, 71, 1554.
-        doi:10.1140/epjc/s10052-011-1554-0.
+    .. [2] Wald (1943): https://www.pp.rhul.ac.uk/~cowan/stat/wald1943.pdf
 
+    .. [3] Cowan et al. (2011), European Physical Journal C, 71, 1554.
+        doi:10.1140/epjc/s10052-011-1554-0.
     """
     if method == "wilk":
         p_value = chi2.sf(ts, df=df)
         return np.sqrt(chi2.isf(p_value, df=1))
-    elif method == "cowan":
+    elif method == "wald":
         p_value = ncx2.sf(ts, df=df, nc=ts)
         return np.sqrt(ncx2.isf(p_value, df=1, nc=ts))
     else:

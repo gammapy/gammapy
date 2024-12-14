@@ -23,9 +23,9 @@ def test_sigma_ts_conversion():
     sigma_ref = 3
     ts_ref = 9
     df = 1
-    ts = sigma_to_ts(3, df=df, method="cowan")
+    ts = sigma_to_ts(3, df=df, method="wald")
     assert_allclose(ts, ts_ref)
-    sigma = ts_to_sigma(ts, df=df, method="cowan")
+    sigma = ts_to_sigma(ts, df=df, method="wald")
     assert_allclose(sigma, sigma_ref)
 
     with pytest.raises(ValueError):
