@@ -40,7 +40,7 @@ def sigma_to_ts(n_sigma, df=1, method="wilks"):
     .. [3] Cowan et al. (2011), European Physical Journal C, 71, 1554.
         doi:10.1140/epjc/s10052-011-1554-0.
     """
-    if method == "wilk":
+    if method == "wilks":
         p_value = chi2.sf(n_sigma**2, df=1)
         return chi2.isf(p_value, df=df)
     elif method == "wald":
@@ -49,11 +49,11 @@ def sigma_to_ts(n_sigma, df=1, method="wilks"):
         return ncx2.isf(p_value, df=df, nc=ts)
     else:
         raise ValueError(
-            f"Invalid method : {method}, posible options are 'wilk' or 'cowan'"
+            f"Invalid method : {method}, posible options are 'wilks' or 'wald'"
         )
 
 
-def ts_to_sigma(ts, df=1, method="wilk"):
+def ts_to_sigma(ts, df=1, method="wilks"):
     """Convert delta ts to number of sigma.
 
     Parameters
@@ -85,7 +85,7 @@ def ts_to_sigma(ts, df=1, method="wilk"):
     .. [3] Cowan et al. (2011), European Physical Journal C, 71, 1554.
         doi:10.1140/epjc/s10052-011-1554-0.
     """
-    if method == "wilk":
+    if method == "wilks":
         p_value = chi2.sf(ts, df=df)
         return np.sqrt(chi2.isf(p_value, df=1))
     elif method == "wald":
@@ -93,5 +93,5 @@ def ts_to_sigma(ts, df=1, method="wilk"):
         return np.sqrt(ncx2.isf(p_value, df=1, nc=ts))
     else:
         raise ValueError(
-            f"Invalid method : {method}, posible options are 'wilk' or 'cowan'"
+            f"Invalid method : {method}, posible options are 'wilks' or 'wald'"
         )

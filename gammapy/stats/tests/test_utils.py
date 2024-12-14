@@ -10,7 +10,11 @@ def test_sigma_ts_conversion():
     df = 1
     ts = sigma_to_ts(3, df=df)
     assert_allclose(ts, ts_ref)
+    ts = sigma_to_ts(3, df=df, method="wilks")
+    assert_allclose(ts, ts_ref)
     sigma = ts_to_sigma(ts, df=df)
+    assert_allclose(sigma, sigma_ref)
+    sigma = ts_to_sigma(ts, df=df, method="wilks")
     assert_allclose(sigma, sigma_ref)
 
     df = 2
