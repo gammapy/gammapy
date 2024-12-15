@@ -38,7 +38,8 @@ class Sampler:
 
         if isinstance(datasets, (list, Dataset)):
             datasets = Datasets(datasets)
-        return datasets, datasets.parameters.free_parameters
+#        return datasets, datasets.parameters.free_parameters
+        return datasets, datasets.parameters
 
     def run(self, datasets):
         datasets, parameters = self._parse_datasets(datasets=datasets)
