@@ -3,7 +3,6 @@
 
 import logging
 import ultranest
-#from .sampler import SamplerLikelihood
 
 __all__ = ["Sampler", "SamplerResult","SamplerLikelihood"]
 
