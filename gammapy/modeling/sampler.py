@@ -1,12 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Sampler parameter classes."""
 
-import logging
 import ultranest
+from gammapy.modeling.utils import _parse_datasets
 
-__all__ = ["Sampler", "SamplerResult","SamplerLikelihood"]
-
-
+__all__ = ["Sampler", "SamplerLikelihood"]  # , "SamplerResult"
 
 
 class Sampler:
@@ -28,55 +26,60 @@ class Sampler:
         self.backend = backend
         self.sampler_opts = sampler_opts
 
-        if self.sampler_opts is None and self.backend=="ultranest" :
-            self.sampler_opts = dict(live_points=100, frac_remain=0.5, log_dir=None, resume="subfolder", step_sampler=False, nsteps=20)
+        if self.sampler_opts is None and self.backend == "ultranest":
+            self.sampler_opts = dict(
+                live_points=100,
+                frac_remain=0.5,
+                log_dir=None,
+                resume="subfolder",
+                step_sampler=False,
+                nsteps=20,
+            )
 
-    @staticmethod
-    def _parse_datasets(datasets):
-        from gammapy.datasets import Dataset, Datasets
-
-        if isinstance(datasets, (list, Dataset)):
-            datasets = Datasets(datasets)
-#        return datasets, datasets.parameters.free_parameters
-        return datasets, datasets.parameters
-
-    def sampler_ultranest(self,parameters,like):
+    def sampler_ultranest(self, parameters, like):
         """
         Defines the Ultranest sampler and options
         Returns the result that contains the samples
         """
         # create ultranest object
-        self._sampler = ultranest.ReactiveNestedSampler(parameters.names, like.fcn, transform=parameters.prior_inverse_cdf,
-                                                        log_dir=self.sampler_opts["log_dir"], resume=self.sampler_opts["resume"])
+        self._sampler = ultranest.ReactiveNestedSampler(
+            parameters.names,
+            like.fcn,
+            transform=parameters.prior_inverse_cdf,
+            log_dir=self.sampler_opts["log_dir"],
+            resume=self.sampler_opts["resume"],
+        )
 
-        if self.sampler_opts["step_sampler"]: 
+        if self.sampler_opts["step_sampler"]:
             self._sampler.stepsampler = ultranest.stepsampler.SliceSampler(
-            nsteps = self.sampler_opts["step_sampler"],
-            generate_direction=ultranest.stepsampler.generate_mixture_random_direction,
-            adaptive_nsteps=False,
+                nsteps=self.sampler_opts["step_sampler"],
+                generate_direction=ultranest.stepsampler.generate_mixture_random_direction,
+                adaptive_nsteps=False,
             )
-        
-        result = self._sampler.run(min_num_live_points=self.sampler_opts["live_points"], frac_remain=self.sampler_opts["frac_remain"])
-        
+
+        result = self._sampler.run(
+            min_num_live_points=self.sampler_opts["live_points"],
+            frac_remain=self.sampler_opts["frac_remain"],
+        )
+
         return result
 
     def run(self, datasets):
-        datasets, parameters = self._parse_datasets(datasets=datasets)
+        datasets, parameters = _parse_datasets(datasets=datasets)
         parameters = parameters.free_parameters
-
 
         if self.backend == "ultranest":
             # create log likelihood function
             # need to remove prior penalty
-            like = SamplerLikelihood(function=datasets.stat_sum_no_prior, parameters=parameters)          
-            result = self.sampler_ultranest(parameters,like)
+            like = SamplerLikelihood(
+                function=datasets.stat_sum_no_prior, parameters=parameters
+            )
+            result = self.sampler_ultranest(parameters, like)
 
-        
         return result
-    
 
 
-#class SamplerResult:
+# class SamplerResult:
 #   """SamplerResult class.
 #   This is a placeholder to store the results from the sampler
 #   """
@@ -100,5 +103,5 @@ class SamplerLikelihood:
 
     def fcn(self, value):
         self.parameters.value = value
-        total_stat = -0.5*self.function()
+        total_stat = -0.5 * self.function()
         return total_stat
