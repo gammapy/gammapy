@@ -243,7 +243,6 @@ class Datasets(collections.abc.MutableSequence):
     def stat_sum(self):
         """Compute joint statistic function value."""
         stat_sum = 0
-        # TODO: add parallel evaluation of likelihoods
         for dataset in self:
             stat_sum += dataset.stat_sum()
         return stat_sum
@@ -251,7 +250,6 @@ class Datasets(collections.abc.MutableSequence):
     def stat_sum_no_prior(self):
         """Compute joint statistic function value without the priors."""
         stat_sum = 0
-        # TODO: add parallel evaluation of likelihoods
         for dataset in self:
             stat_sum += dataset.stat_sum_no_prior()
         return stat_sum
