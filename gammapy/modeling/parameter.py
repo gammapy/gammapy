@@ -699,7 +699,6 @@ class Parameters(collections.abc.Sequence):
 
         return cls(parameters=parameters)
 
-    #Should this have a decorator @classmethod or @staticmethod or whatever ?
     def prior_inverse_cdf(self, values):
         if None in self.prior:
             raise ValueError("Some parameters have no prior set. Check.")

@@ -24,13 +24,13 @@ class Sampler:
     #TODO : describe all parameters
     """
 
-    def __init__(self, live_points=100, frac_remain=0.5, log_dir=None, resume=False, step_sampler=False):
+    def __init__(self, backend="ultranest", sampler_opts=None):
         self._sampler = None
-        self.min_num_live_points = live_points
-        self.frac_remain = frac_remain
-        self.log_dir = log_dir
-        self.step_sampler = step_sampler
-        self.resume = resume
+        self.backend = backend
+        self.sampler_opts = sampler_opts
+
+        if self.sampler_opts is None and self.backend=="ultranest" :
+            self.sampler_opts = dict(live_points=100, frac_remain=0.5, log_dir=None, resume="subfolder", step_sampler=False, nsteps=20)
 
     @staticmethod
     def _parse_datasets(datasets):
@@ -45,26 +45,23 @@ class Sampler:
         datasets, parameters = self._parse_datasets(datasets=datasets)
         parameters = parameters.free_parameters
 
-        # create log likelihood function
-        # need to remove prior penalty
-        like = SamplerLikelihood(function=datasets.stat_sum_no_prior, parameters=parameters)
-        
-        # create ultranest object
-        self._sampler = ultranest.ReactiveNestedSampler(parameters.names, like.fcn, transform=parameters.prior_inverse_cdf,
-                                                        log_dir=self.log_dir, resume=self.resume)
+        if self.backend == "ultranest":
+            # create log likelihood function
+            # need to remove prior penalty
+            like = SamplerLikelihood(function=datasets.stat_sum_no_prior, parameters=parameters)
+            
+            # create ultranest object
+            self._sampler = ultranest.ReactiveNestedSampler(parameters.names, like.fcn, transform=parameters.prior_inverse_cdf,
+                                                            log_dir=self.sampler_opts["log_dir"], resume=self.sampler_opts["resume"])
 
-        if self.step_sampler: 
-            print(f'step_sampler={step_sampler} => Using a step sampler' )
-            nsteps = 10
-            #RegionBallSliceSampler
-            self._sampler.stepsampler = ultranest.stepsampler.SliceSampler(
-            nsteps=nsteps,
-            generate_direction=ultranest.stepsampler.generate_mixture_random_direction,
-            adaptive_nsteps=False,
-            # max_nsteps=400
-            )
-        
-        result = self._sampler.run(min_num_live_points=self.min_num_live_points, frac_remain=self.frac_remain)
+            if self.sampler_opts["step_sampler"]: 
+                self._sampler.stepsampler = ultranest.stepsampler.SliceSampler(
+                nsteps = self.sampler_opts["step_sampler"],
+                generate_direction=ultranest.stepsampler.generate_mixture_random_direction,
+                adaptive_nsteps=False,
+                )
+            
+            result = self._sampler.run(min_num_live_points=self.sampler_opts["live_points"], frac_remain=self.sampler_opts["frac_remain"])
         
         return result
    
