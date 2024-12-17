@@ -683,6 +683,18 @@ def test_ecpl_integrate():
     assert_quantity_allclose(value, 8.380714e-14 * u.Unit("s-1 cm-2"))
 
 
+def test_call_plsec_4fgl_dr1():
+    model = SuperExpCutoffPowerLaw4FGLSpectralModel(
+        amplitude="2e-12 MeV-1 s-1 cm-2",
+        reference="1000 MeV",
+        expfactor=5e-03,
+        index_1=2,
+        index_2=1,
+    )
+    desired = u.Quantity(3.823779e-20, "MeV-1 s-1 cm-2")
+    assert_allclose(model(4 * u.GeV), desired, rtol=1e-3)
+
+
 def test_pwl_pivot_energy():
     pwl = PowerLawSpectralModel(amplitude="5.35510540e-11 cm-2 s-1 TeV-1")
     assert_quantity_allclose(pwl.pivot_energy, np.nan * u.TeV, rtol=1e-5)
