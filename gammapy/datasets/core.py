@@ -80,7 +80,11 @@ class Dataset(abc.ABC):
 
         if self.mask is not None:
             stat = stat[self.mask.data]
+<<<<<<< HEAD
         return np.sum(stat, dtype=np.float64) 
+=======
+        return np.sum(stat, dtype=np.float64)
+>>>>>>> 20a1e286bdd017b12d18a733f3d4c15988b20f97
 
     @abc.abstractmethod
     def stat_array(self):
