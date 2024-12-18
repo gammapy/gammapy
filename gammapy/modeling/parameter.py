@@ -702,11 +702,7 @@ class Parameters(collections.abc.Sequence):
     def prior_inverse_cdf(self, values):
         if None in self.prior:
             raise ValueError("Some parameters have no prior set. Check.")
-<<<<<<< HEAD
-        return [par.prior.inverse_cdf(val) for par, val in zip(self,values)]
-=======
         return [par.prior.inverse_cdf(val) for par, val in zip(self, values)]
->>>>>>> 20a1e286bdd017b12d18a733f3d4c15988b20f97
 
     def set_parameter_factors(self, factors):
         """Set factor of all parameters.

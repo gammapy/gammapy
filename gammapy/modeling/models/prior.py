@@ -189,9 +189,6 @@ class UniformPrior(Prior):
         if min < value < max:
             return 0.0
         else:
-<<<<<<< HEAD
-            return 1.0
-=======
             return 1.0
 
     def inverse_cdf(self, val):
@@ -237,4 +234,3 @@ class LogUniformPrior(Prior):
             self.min.value
         )
         return 10**x
->>>>>>> 20a1e286bdd017b12d18a733f3d4c15988b20f97
