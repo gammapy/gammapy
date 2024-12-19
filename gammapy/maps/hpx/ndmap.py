@@ -777,7 +777,7 @@ class HpxNDMap(HpxMap):
 
         return val
 
-    def _resample_by_idx(self, idx, weights=None, preserve_counts=False):
+    def _resample_by_idx(self, idx, weights=None, preserve_counts=False, smooth=False):
         idx = pix_tuple_to_idx(idx)
         msk = np.all(np.stack([t != INVALID_INDEX.int for t in idx]), axis=0)
         if weights is not None:
