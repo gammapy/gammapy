@@ -1526,8 +1526,8 @@ class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
         :math:`E_0`. Default is 1 TeV.
     expfactor : `~astropy.units.Quantity`
         :math:`a`, given as dimensionless value but
-        internally assumes unit of :math:`E_0^{-\Gamma_2}`.
-        Default is 1e-2.
+        internally assumes unit of :math:`{\rm MeV}^{-\Gamma_2}`.
+        Default is 1e-14.
     """
 
     tag = ["SuperExpCutoffPowerLaw4FGLSpectralModel", "secpl-4fgl"]
@@ -1538,7 +1538,7 @@ class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
         interp="log",
     )
     reference = Parameter("reference", "1 TeV", frozen=True)
-    expfactor = Parameter("expfactor", "1e-2")
+    expfactor = Parameter("expfactor", "1e-14")
     index_1 = Parameter("index_1", 1.5)
     index_2 = Parameter("index_2", 2)
 
@@ -1552,7 +1552,7 @@ class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
 
         pwl = amplitude * (energy / reference) ** (-index_1)
         cutoff = np.exp(
-            expfactor / reference.unit**index_2 * (reference**index_2 - energy**index_2)
+            expfactor / u.MeV**index_2 * (reference**index_2 - energy**index_2)
         )
         return pwl * cutoff
 

@@ -36,7 +36,7 @@ model = SuperExpCutoffPowerLaw4FGLSpectralModel(
     index_2=2,
     amplitude="1e-12 TeV-1 cm-2 s-1",
     reference="1 TeV",
-    expfactor=1e-2,
+    expfactor=1e-14,
 )
 model.plot(energy_range)
 plt.grid(which="both")

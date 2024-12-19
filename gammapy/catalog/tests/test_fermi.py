@@ -86,6 +86,7 @@ SOURCES_4FGL = [
         spec_type=PowerLawSpectralModel,
         dnde=u.Quantity(2.9476e-11, "cm-2 s-1 GeV-1"),
         dnde_err=u.Quantity(5.3318e-12, "cm-2 s-1 GeV-1"),
+        dnde_10GeV=u.Quantity(1.470835e-12, "cm-2 s-1 GeV-1"),
     ),
     dict(
         idx=3,
@@ -94,6 +95,7 @@ SOURCES_4FGL = [
         spec_type=LogParabolaSpectralModel,
         dnde=u.Quantity(2.8545e-8, "cm-2 s-1 GeV-1"),
         dnde_err=u.Quantity(1.3324e-9, "cm-2 s-1 GeV-1"),
+        dnde_10GeV=u.Quantity(1.159598e-12, "cm-2 s-1 GeV-1"),
     ),
     dict(
         idx=7,
@@ -102,6 +104,7 @@ SOURCES_4FGL = [
         spec_type=SuperExpCutoffPowerLaw4FGLSpectralModel,
         dnde=u.Quantity(2.084e-09, "cm-2 s-1 GeV-1"),
         dnde_err=u.Quantity(1.0885e-10, "cm-2 s-1 GeV-1"),
+        dnde_10GeV=u.Quantity(2.201476e-12, "cm-2 s-1 GeV-1"),
     ),
     dict(
         idx=2718,
@@ -110,6 +113,7 @@ SOURCES_4FGL = [
         spec_type=LogParabolaSpectralModel,
         dnde=u.Quantity(1.3237202133031811e-12, "cm-2 s-1 MeV-1"),
         dnde_err=u.Quantity(4.513233455580648e-14, "cm-2 s-1 MeV-1"),
+        dnde_10GeV=u.Quantity(2.234733e-10, "cm-2 s-1 GeV-1"),
     ),
 ]
 
@@ -246,9 +250,11 @@ class TestFermi4FGLObject:
 
         e_ref = model.reference.quantity
         dnde, dnde_err = model.evaluate_error(e_ref)
+        dnde_10GeV = model(10 * u.GeV)
         assert isinstance(model, ref["spec_type"])
         assert_quantity_allclose(dnde, ref["dnde"], rtol=1e-4)
         assert_quantity_allclose(dnde_err, ref["dnde_err"], rtol=1e-4)
+        assert_quantity_allclose(dnde_10GeV, ref["dnde_10GeV"], rtol=1e-4)
 
     def test_spatial_model(self):
         model = self.cat["4FGL J0000.3-7355"].spatial_model()
