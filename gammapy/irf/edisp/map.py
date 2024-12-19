@@ -581,7 +581,7 @@ def _drm_to_edisp(filename, geom, geom_true, geom_psf):
     energy = geom.axes["energy"]
     energy_true = axis.copy(name="energy_true", unit="MeV")
 
-    edisp = EDispKernel(axes=[energy_true, energy], data=pdf_matrix)
+    edisp = EDispKernel(axes=[energy_true, energy], data=pdf_matrix.astype(np.float32))
 
     geom_irf = geom_psf.to_image().to_cube([energy_true])
 
