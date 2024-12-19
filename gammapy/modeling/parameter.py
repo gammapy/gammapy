@@ -699,6 +699,11 @@ class Parameters(collections.abc.Sequence):
 
         return cls(parameters=parameters)
 
+    def prior_inverse_cdf(self, values):
+        if None in self.prior:
+            raise ValueError("Some parameters have no prior set. Check.")
+        return [par.prior.inverse_cdf(val) for par, val in zip(self, values)]
+
     def set_parameter_factors(self, factors):
         """Set factor of all parameters.
 
