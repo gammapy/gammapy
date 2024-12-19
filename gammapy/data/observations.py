@@ -18,7 +18,7 @@ from astropy.utils import lazyproperty
 import matplotlib.pyplot as plt
 from gammapy.irf.edisp.map import _drm_to_edisp
 from gammapy.irf import PSFMap
-from gammapy.map import Map
+from gammapy.maps import Map
 from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.utils.fits import LazyFitsData, earth_location_to_dict
 from gammapy.utils.metadata import CreatorMetaData, TargetMetaData, TimeInfoMetaData

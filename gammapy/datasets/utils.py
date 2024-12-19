@@ -2,14 +2,14 @@
 import numpy as np
 from astropy.coordinates import SkyCoord
 from gammapy.maps import Map
+from gammapy.data.observations import create_observation_from_fermi_files
 from gammapy.modeling.models.utils import cutout_template_models
 from gammapy.modeling.models import (
     create_fermi_isotropic_diffuse_model,
     Models,
     FoVBackgroundModel,
 )
-from . import Datasets, MapDataset
-from gammapy.data.observations import create_observation_from_fermi_files
+from . import Datasets
 
 __all__ = [
     "apply_edisp",
@@ -238,6 +238,7 @@ def create_map_dataset_from_dl4_irfs(obs, geom=None, energy_axis_true=None, name
 
     """
     from gammapy.makers import MapDatasetMaker
+    from gammapy.datasets import MapDataset
 
     # define target geom
     if geom is None:
