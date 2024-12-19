@@ -1,5 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
+from astropy.io import fits
+from astropy.table import Table
 from gammapy.maps import Map, MapAxis, MapCoord, RegionGeom, WcsGeom
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from ..core import IRFMap
@@ -538,3 +540,50 @@ class EDispKernelMap(IRFMap):
 
         """
         self.get_edisp_kernel().peek(figsize)
+
+
+def _drm_to_edisp(filename, geom, geom_true, geom_psf):
+    """Convert fermi drm into edisp"""
+    with fits.open(filename) as hdu:
+        matrix_hdu = hdu["DRM"]
+        data = matrix_hdu.data
+        header = matrix_hdu.header
+
+        pdf_matrix = np.zeros([len(data), header["DETCHANS"]], dtype=np.float64)
+
+        for i, l in enumerate(data):
+            if l.field("N_GRP"):
+                m_start = 0
+                for k in range(l.field("N_GRP")):
+                    chan_min = l.field("F_CHAN")[k] - 1
+                    chan_max = l.field("F_CHAN")[k] + l.field("N_CHAN")[k] - 1
+
+                    pdf_matrix[i, chan_min:chan_max] = l.field("MATRIX")[
+                        m_start : m_start
+                        + l.field("N_CHAN")[
+                            k
+                        ]  # noqa: E203
+                    ]
+                    m_start += l.field("N_CHAN")[k]
+
+        table = Table.read(matrix_hdu)
+    axis = MapAxis.from_table(table, format="ogip-arf")
+
+    if pdf_matrix.shape[1] != len(geom.axes["energy"].center):
+        raise ValueError(
+            "Energy axes of counts and DRM do not match. Check that edisp_bins are the same"
+        )
+    if pdf_matrix.shape[0] != len(geom_true.axes["energy_true"].center) + 1:
+        raise ValueError(
+            "Energy true axes of exposure and DRM do not match. Check that edisp_bins are the same"
+        )
+
+    energy = geom.axes["energy"]
+    energy_true = axis.copy(name="energy_true", unit="MeV")
+
+    edisp = EDispKernel(axes=[energy_true, energy], data=pdf_matrix)
+
+    geom_irf = geom_psf.to_image().to_cube([energy_true])
+
+    edisp_map = EDispKernelMap.from_edisp_kernel(edisp, geom=geom_irf)
+    return edisp_map
