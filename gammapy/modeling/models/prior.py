@@ -7,7 +7,7 @@ import astropy.units as u
 from gammapy.modeling import PriorParameter, PriorParameters
 from .core import ModelBase
 
-__all__ = ["GaussianPrior", "UniformPrior","LogUniformPrior", "Prior"]
+__all__ = ["GaussianPrior", "UniformPrior", "LogUniformPrior", "Prior"]
 
 log = logging.getLogger(__name__)
 
@@ -158,8 +158,9 @@ class GaussianPrior(Prior):
 
     def inverse_cdf(self, val):
         """Return inverse CDF for prior."""
-        #TODO
+        # TODO
         raise NotImplementedError("To be implemented")
+
 
 class UniformPrior(Prior):
     """Uniform Prior.
@@ -189,10 +190,11 @@ class UniformPrior(Prior):
             return 0.0
         else:
             return 1.0
-    
+
     def inverse_cdf(self, val):
         """Return inverse CDF for prior."""
-        return val * (self.max.value-self.min.value) + self.min.value
+        return val * (self.max.value - self.min.value) + self.min.value
+
 
 class LogUniformPrior(Prior):
     """LogUniform Prior.
@@ -213,20 +215,22 @@ class LogUniformPrior(Prior):
     _type = "prior"
     min = PriorParameter(name="min", value=1e-20, unit="")
     max = PriorParameter(name="max", value=1, unit="")
-    
+
     if min == 0:
-        raise Exception('Par min cannot be zero for LogUniformPrior  ' )
+        raise Exception("Par min cannot be zero for LogUniformPrior  ")
     low = np.log10(min.value)
     spread = np.log10(max.value) - np.log10(min.value)
-    #if spread > 10:
+    # if spread > 10:
     #    print('note: this parameter spans *many* dex. Double-check the limits are reasonable.')
-   
+
     @staticmethod
     def evaluate(self, val):
-        #TODO
+        # TODO
         raise NotImplementedError("To be implemented")
 
     def inverse_cdf(self, val):
         """Return inverse CDF for prior."""
-        x = val * (np.log10(self.max.value) - np.log10(self.min.value)) + np.log10(self.min.value)
+        x = val * (np.log10(self.max.value) - np.log10(self.min.value)) + np.log10(
+            self.min.value
+        )
         return 10**x
