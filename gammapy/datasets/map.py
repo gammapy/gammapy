@@ -7,6 +7,7 @@ from astropy.io import fits
 from astropy.table import Table
 from regions import CircleSkyRegion
 import matplotlib.pyplot as plt
+import gammapy.datasets.evaluator as meval
 from gammapy.data import GTI, PointingMode
 from gammapy.irf import EDispKernelMap, EDispMap, PSFKernel, PSFMap, RecoPSFMap
 from gammapy.maps import LabelMapAxis, Map, MapAxes, MapAxis, WcsGeom
@@ -568,7 +569,12 @@ class MapDataset(Dataset):
             else:
                 map_ref = self.counts
             if map_ref and not map_ref.geom.is_region:
-                return self.psf.get_psf_kernel(map_ref.geom)
+                return self.psf.get_psf_kernel(
+                    position=map_ref.geom.center_skydir,
+                    geom=map_ref.geom,
+                    containment=meval.PSF_CONTAINMENT,
+                    max_radius=meval.PSF_MAX_RADIUS,
+                )
 
     @property
     def meta(self):
