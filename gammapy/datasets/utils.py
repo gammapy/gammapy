@@ -3,9 +3,20 @@ import numpy as np
 from astropy.coordinates import SkyCoord
 from gammapy.maps import Map
 from gammapy.modeling.models.utils import cutout_template_models
-from . import Datasets
+from gammapy.modeling.models import (
+    create_fermi_isotropic_diffuse_model,
+    Models,
+    FoVBackgroundModel,
+)
+from . import Datasets, MapDataset
+from gammapy.data.observations import create_observation_from_fermi_files
 
-__all__ = ["apply_edisp", "split_dataset"]
+__all__ = [
+    "apply_edisp",
+    "split_dataset",
+    "create_map_dataset_from_dl4_irfs",
+    "create_map_dataset_from_fermi_files",
+]
 
 
 def apply_edisp(input_map, edisp):
@@ -203,3 +214,164 @@ def split_dataset(dataset, width, margin, split_template_models=True):
                 d.models = dataset.models
             datasets.append(d)
     return datasets
+
+
+def create_map_dataset_from_dl4_irfs(obs, geom=None, energy_axis_true=None, name=None):
+    """Create a map dataset from an observation containing DL4 IRFs
+
+
+    Parameters
+    ----------
+    obs : `~gammapy.data.Observation`
+        Observation containing DL4 IRFs
+    geom : `~gammapy.maps.WcsGeom`, optional
+        Output dataset maps geometry. The default is None, and it is derived from IRFS
+    energy_axis_true : `~gammapy.maps.MapAxis`, optional
+        True energy axis used for IRF maps. The default is None, and it is derived from IRFS
+    name : str, optional
+        Dataset name. The default is None, and the name is randomly generated.
+
+    Returns
+    -------
+    dataset : `~gammapy.datasets.MapDataset`
+        Map dataset.
+
+    """
+    from gammapy.makers import MapDatasetMaker
+
+    # define target geom
+    if geom is None:
+        geom_image = obs.aeff.geom.to_image()
+        geom = geom_image.to_cube([obs.edisp.edisp_map.geom.axes["energy"]])
+
+    energy_axis = geom.axes["energy"]
+
+    if energy_axis_true is None:
+        # energy_axis_true = obs.edisp.edisp_map.geom.axes["energy_true"]
+        energy_axis_true = obs.aeff.geom.axes["energy_true"]
+
+    # ensure that DL4 IRFs have the axes
+    rad_axis = obs.psf.psf_map.geom.axes["rad"]
+    geom_psf = obs.psf.psf_map.geom.to_image().to_cube([rad_axis, energy_axis_true])
+    geom_edisp = obs.edisp.edisp_map.geom.to_image().to_cube(
+        [energy_axis, energy_axis_true]
+    )
+    geom_exposure = geom.to_image().to_cube([energy_axis_true])
+
+    # create dataset and run data reduction / irfs interpolation
+    dataset = MapDataset.from_geoms(
+        geom,
+        geom_exposure=geom_exposure,
+        geom_psf=geom_psf,
+        geom_edisp=geom_edisp,
+        name=name,
+    )
+
+    selection = ["exposure", "edisp", "psf"]
+    if obs.events:
+        selection.append("counts")
+    if obs.bkg:
+        selection.append("background")
+
+    maker = MapDatasetMaker(selection=selection)
+    dataset = maker.run(dataset, obs)
+
+    if "background" not in selection:
+        dataset.background = Map.from_geom(geom, data=0.0)
+
+    return dataset
+
+
+def add_fermi_isotropic_model(dataset, isotropic_filepath, as_bkg=True):
+    """Add Fermi-LAT isotropic model to dataset
+
+
+    Parameters
+    ----------
+    dataset : `~gammapy.datasets.MapDataset`
+        Map dataset.
+    isotropic_filepath : str
+        Isotropic file path.
+    as_bkg : bool, optional
+        If True set the isotropic as background model instead of a SkyModel.
+        The default is True.
+    """
+
+    if dataset.models is None:
+        models = Models()
+
+    diffuse_iso = create_fermi_isotropic_diffuse_model(
+        filename=isotropic_filepath, interp_kwargs={"extrapolate": True}
+    )
+    diffuse_iso.apply_irf["edisp"] = False
+
+    dataset.models = models + [diffuse_iso]
+
+    if as_bkg:
+        dataset.background = dataset.npred()
+        dataset.models = models + [FoVBackgroundModel(dataset_name=dataset.name)]
+
+
+def create_map_dataset_from_fermi_files(
+    path,
+    isotropic_filename,
+    events_filename="ft1_00.fits",
+    counts_filename="ccube_00.fits",
+    exposure_filename="bexpmap_roi_00.fits",
+    psf_filename="psf_00.fits",
+    drm_filename="drm_00.fits",
+    geom=None,
+    energy_axis_true=None,
+    name=None,
+    isotropic_as_bkg=True,
+):
+    """
+
+
+    Parameters
+    ----------
+    path : TYPE
+        DESCRIPTION.
+    isotropic_filename : str
+        Isotropic file name.
+    events_filename : str
+        Events filename. Default is ft1_00.fits
+    counts_filename : str, optional
+        Counts filename. Default is ccube_00.fits
+    exposure_filename : str, optional
+        exposure filename. Default is bexpmap_roi_00.fits
+    psf_filename : str, optional
+        PSF filename. Default is psf_00.fits
+    drm_filename : str, optional
+        DRM filename. Default is drm_00.fits
+    obs : `~gammapy.data.Observation`
+        Observation with DL4 IRFs
+    geom : `~gammapy.maps.WcsGeom`, optional
+        Output dataset maps geometry. The default is None, and it is derived from IRFS
+    energy_axis_true : `~gammapy.maps.MapAxis`, optional
+        True energy axis used for IRF maps. The default is None, and it is derived from IRFS
+    name : str, optional
+        Dataset name. The default is None, and the name is randomly generated.
+    isotropic_as_bkg : bool, optional
+        If True set the isotropic as background model instead of a SkyModel.
+        The default is True.
+
+    Returns
+    -------
+    dataset : `~gammapy.datasets.MapDataset`
+        Map dataset.
+
+    """
+
+    obs = create_observation_from_fermi_files(
+        path=path,
+        events_filename=events_filename,
+        counts_filename=counts_filename,
+        exposure_filename=exposure_filename,
+        psf_filename=psf_filename,
+        drm_filename=drm_filename,
+    )
+
+    dataset = create_map_dataset_from_dl4_irfs(obs, geom, energy_axis_true, name)
+    add_fermi_isotropic_model(dataset, isotropic_filename, isotropic_as_bkg)
+    return dataset
