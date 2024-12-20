@@ -672,25 +672,9 @@ class Geom(abc.ABC):
 
         axis = self.axes[axis_name]
 
-        shape = tuple([-1] + [1 for n in axes_names if n != axis_name])
-        axis_edges = axis.edges.reshape(shape)
+        axis_edges = axis.edges
         edge_min = edge_min if edge_min is not None else axis_edges[0]
         edge_max = edge_max if edge_max is not None else axis_edges[-1]
-
-        if axis.unit != "":
-            if not (
-                isinstance(edge_min, u.Quantity) and isinstance(edge_max, u.Quantity)
-            ):
-                raise TypeError(
-                    f"`edge_min` and `edge_max` must be instance of `~astropy.units.Quantity` for  axis with name `{axis_name}` as unit of `{axis.unit}`."
-                )
-            if not (
-                edge_min.unit.is_equivalent(axis.unit)
-                and edge_max.unit.is_equivalent(axis.unit)
-            ):
-                raise u.UnitsError(
-                    f"`edge_min` and `edge_max` unit must be equivalent to unit `{axis.unit}` of axis with name `{axis_name}`."
-                )
 
         if round_to_edge:
             edge_min, edge_max = axis.round([edge_min, edge_max])
