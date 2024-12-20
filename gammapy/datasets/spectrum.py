@@ -304,7 +304,7 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         raise NotImplementedError("Method not supported on a spectrum dataset")
 
     @classmethod
-    def read(cls, filename, format="ogip", checksum=False, **kwargs):
+    def read(cls, filename, format="ogip", checksum=False, name=None, **kwargs):
         """Read from file.
 
         For OGIP formats, filename is the name of a PHA file. The BKG, ARF, and RMF file names must be
@@ -318,17 +318,21 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
             OGIP PHA file to read.
         format : {"ogip", "ogip-sherpa", "gadf"}
             Format to use. Default is "ogip".
-        checksum : bool
+        checksum : bool, optional
             If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
+        name: str, optional
+            Name of the dataset. If None, dataset name will be set to the written one. Default is None.
         kwargs : dict, optional
             Keyword arguments passed to `MapDataset.read`.
         """
         from .io import OGIPDatasetReader
 
         if format == "gadf":
-            return super().read(filename, format="gadf", checksum=checksum, **kwargs)
+            return super().read(
+                filename, format="gadf", checksum=checksum, name=name, **kwargs
+            )
 
-        reader = OGIPDatasetReader(filename=filename, checksum=checksum, **kwargs)
+        reader = OGIPDatasetReader(filename=filename, checksum=checksum, name=name)
         return reader.read()
 
     def write(self, filename, overwrite=False, format="ogip", checksum=False):
