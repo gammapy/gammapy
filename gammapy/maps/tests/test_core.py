@@ -998,10 +998,10 @@ def test_make_mask_geom():
     freq = MapAxis.from_bounds(1, 10, nbin=4, unit=u.Hz, name="freq")
 
     geom = WcsGeom.create(10, axes=[energy, phase, freq])
-    with pytest.raises(ValueError):
+    with pytest.raises(KeyError):
         geom.create_mask("fail", 1, 3)
 
-    with pytest.raises(TypeError):
+    with pytest.raises(u.UnitConversionError):
         geom.create_mask("energy", 2, 3)
 
     with pytest.raises(u.UnitsError):
