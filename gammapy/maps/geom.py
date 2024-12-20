@@ -670,12 +670,8 @@ class Geom(abc.ABC):
 
         axes_names = self.axes_names
 
-        try:
-            axis = self.axes[axis_name]
-        except KeyError:
-            raise ValueError(
-                f"Axis with name `{axis_name}` not in list of axis name: {axes_names}."
-            )
+        axis = self.axes[axis_name]
+
         shape = tuple([-1] + [1 for n in axes_names if n != axis_name])
         axis_edges = axis.edges.reshape(shape)
         edge_min = edge_min if edge_min is not None else axis_edges[0]
