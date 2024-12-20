@@ -5,6 +5,7 @@ import logging
 import numpy as np
 from astropy.table import Table
 from gammapy.utils.pbar import progress_bar
+from gammapy.modeling.utils import _parse_datasets
 from .covariance import Covariance
 from .iminuit import (
     confidence_iminuit,
@@ -143,14 +144,6 @@ class Fit:
         except AttributeError:
             return f"<pre>{html.escape(str(self))}</pre>"
 
-    @staticmethod
-    def _parse_datasets(datasets):
-        from gammapy.datasets import Dataset, Datasets
-
-        if isinstance(datasets, (list, Dataset)):
-            datasets = Datasets(datasets)
-        return datasets, datasets.parameters
-
     def run(self, datasets):
         """Run all fitting steps.
 
@@ -165,7 +158,7 @@ class Fit:
             Fit result.
         """
 
-        datasets, parameters = self._parse_datasets(datasets=datasets)
+        datasets, parameters = _parse_datasets(datasets=datasets)
 
         optimize_result = self.optimize(datasets=datasets)
 
@@ -201,7 +194,7 @@ class Fit:
         optimize_result : `OptimizeResult`
             Optimization result.
         """
-        datasets, parameters = self._parse_datasets(datasets=datasets)
+        datasets, parameters = _parse_datasets(datasets=datasets)
         datasets.parameters.check_limits()
 
         if len(parameters.free_parameters.names) == 0:
@@ -270,7 +263,7 @@ class Fit:
         result : `CovarianceResult`
             Results.
         """
-        datasets, unique_pars = self._parse_datasets(datasets=datasets)
+        datasets, unique_pars = _parse_datasets(datasets=datasets)
         parameters = datasets.models.parameters
 
         kwargs = self.covariance_opts.copy()
@@ -334,7 +327,7 @@ class Fit:
         result : dict
             Dictionary with keys "errp", 'errn", "success" and "nfev".
         """
-        datasets, parameters = self._parse_datasets(datasets=datasets)
+        datasets, parameters = _parse_datasets(datasets=datasets)
 
         kwargs = self.confidence_opts.copy()
         backend = kwargs.pop("backend", self.backend)
@@ -401,7 +394,7 @@ class Fit:
         >>> parameter = datasets.models.parameters['amplitude']
         >>> stat_profile = fit.stat_profile(datasets=datasets, parameter=parameter)
         """
-        datasets, parameters = self._parse_datasets(datasets=datasets)
+        datasets, parameters = _parse_datasets(datasets=datasets)
 
         parameter = parameters[parameter]
         values = parameter.scan_values
@@ -485,7 +478,7 @@ class Fit:
         ...     reoptimize=False,
         ... )
         """
-        datasets, parameters = self._parse_datasets(datasets=datasets)
+        datasets, parameters = _parse_datasets(datasets=datasets)
 
         x = parameters[x]
         y = parameters[y]
@@ -579,7 +572,7 @@ class Fit:
         ... )
         """
 
-        datasets, parameters = self._parse_datasets(datasets=datasets)
+        datasets, parameters = _parse_datasets(datasets=datasets)
 
         x = parameters[x]
         y = parameters[y]
