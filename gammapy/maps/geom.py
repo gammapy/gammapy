@@ -651,7 +651,7 @@ class Geom(abc.ABC):
     def create_mask(self, axis_name, edge_min=None, edge_max=None, round_to_edge=False):
         """Create a mask over a given axis.
 
-        The energy bin must be fully contained to be included in the mask.
+        Bins must be fully contained to be included in the mask.
 
         Parameters
         ----------
