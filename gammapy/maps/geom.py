@@ -681,9 +681,8 @@ class Geom(abc.ABC):
 
         axes_names.reverse()
         mask = (axis_edges[:-1] >= edge_min) & (axis_edges[1:] <= edge_max)
-        mask = np.reshape(
-            mask,
-            tuple(len(axis_edges[1:]) if n == axis_name else 1 for n in axes_names),
+        mask = np.expand_dims(
+            mask, axis=tuple(np.where(np.array(axes_names) != axis_name)[0])
         )
         data = np.broadcast_to(mask, shape=self.data_shape)
         return Map.from_geom(geom=self, data=data, dtype=data.dtype)
