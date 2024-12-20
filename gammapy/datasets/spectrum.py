@@ -328,7 +328,7 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         if format == "gadf":
             return super().read(filename, format="gadf", checksum=checksum, **kwargs)
 
-        reader = OGIPDatasetReader(filename=filename, checksum=checksum)
+        reader = OGIPDatasetReader(filename=filename, checksum=checksum, **kwargs)
         return reader.read()
 
     def write(self, filename, overwrite=False, format="ogip", checksum=False):
