@@ -1819,7 +1819,7 @@ class MapAxes(Sequence):
                 if ax.name == idx:
                     return ax
             raise KeyError(
-                f"Axis with name `{idx!r}` not in list of axis name: {self.names}."
+                f"Axis with name `{idx!r}` not in list of axis names: {self.names}."
             )
         elif isinstance(idx, slice):
             axes = self._axes[idx]
