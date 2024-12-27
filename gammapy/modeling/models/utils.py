@@ -110,6 +110,7 @@ def cutout_template_models(models, cutout_kwargs, datasets_names=None):
                 spatial_model=template_cut,
                 spectral_model=m.spectral_model,
                 datasets_names=datasets_names,
+                name=m.name,
             )
             models_cut.append(model_cut)
         else:
