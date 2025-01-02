@@ -538,3 +538,34 @@ class EDispKernelMap(IRFMap):
 
         """
         self.get_edisp_kernel().peek(figsize)
+
+    @classmethod
+    def read(cls, filename, format="gadf", hdu=None, checksum=False):
+        """Read an EDispKernelMap from file and create corresponding object.
+
+        Parameters
+        ----------
+        filename : str or `~pathlib.Path`
+            File name.
+        format : {"gadf", "gtdrm"}, optional
+            File format. Default is "gadf".
+        hdu : str or int
+            HDU location. Default is None.
+        checksum : bool
+            If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
+
+        Returns
+        -------
+        edisp : `EDispKernelMap`
+            Energy dispersion kernel map.
+
+        """
+
+        if format == "gadf":
+            return super().read(filename, format, hdu, checksum)
+        elif format == "gtdrm":
+            edisp = EDispKernel.read(filename, format="gtdrm")
+            geom_edisp = RegionGeom.create(region=None, axes=edisp.axes)
+            return EDispKernelMap.from_edisp_kernel(edisp, geom=geom_edisp)
+        else:
+            raise ValueError(f"Unrecognized format: {format}")
