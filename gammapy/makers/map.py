@@ -166,7 +166,7 @@ class MapDatasetMaker(Maker):
         exposure : `~gammapy.maps.Map`
             Exposure map.
         """
-        if getattr(observation, "exposure"):
+        if getattr(observation, "exposure", None):
             return observation.exposure.interp_to_geom(
                 geom=geom,
             )
