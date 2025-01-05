@@ -6,7 +6,6 @@ import inspect
 import itertools
 import logging
 import warnings
-from pathlib import Path
 from itertools import zip_longest
 import numpy as np
 import astropy.units as u
@@ -16,9 +15,6 @@ from astropy.time import Time
 from astropy.units import Quantity
 from astropy.utils import lazyproperty
 import matplotlib.pyplot as plt
-from gammapy.irf.edisp.map import _drm_to_edisp
-from gammapy.irf import PSFMap
-from gammapy.maps import Map
 from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.utils.fits import LazyFitsData, earth_location_to_dict
 from gammapy.utils.metadata import CreatorMetaData, TargetMetaData, TimeInfoMetaData
@@ -32,7 +28,7 @@ from .metadata import ObservationMetaData
 from .pointing import FixedPointingInfo
 
 
-__all__ = ["Observation", "Observations", "create_observation_from_fermi_files"]
+__all__ = ["Observation", "Observations"]
 
 log = logging.getLogger(__name__)
 
@@ -915,58 +911,3 @@ class ObservationChecker(Checker):
         except Exception:
             yield self._record(level="warning", msg="Loading psf failed")
             return
-
-
-def create_observation_from_fermi_files(
-    path,
-    events_filename="ft1_00.fits",
-    counts_filename="ccube_00.fits",
-    exposure_filename="bexpmap_roi_00.fits",
-    psf_filename="psf_00.fits",
-    drm_filename="drm_00.fits",
-    obs_id=0,
-):
-    """Read Fermi-LAT files and create an Observation.
-
-    Parameters
-    ----------
-    path : str
-        path to files
-    events_filename : str
-        Events filename. Default is ft1_00.fits
-    counts_filename : str, optional
-        Counts filename. Default is ccube_00.fits
-    exposure_filename : str, optional
-        exposure filename. Default is bexpmap_roi_00.fits
-    psf_filename : str, optional
-        PSF filename. Default is psf_00.fits
-    drm_filename : str, optional
-        DRM filename. Default is drm_00.fits
-    obs_id : int, optional
-        Observation ID. Defalut is 0.
-
-    Returns
-    -------
-    observation : `~gammapy.data.Observation`
-        Observation with DL4 IRFs
-    """
-
-    path = Path(path)
-
-    events = EventList.read(path / events_filename)
-    counts = Map.read(path / counts_filename)
-    exposure = Map.read(path / exposure_filename)
-    psf = PSFMap.read(path / psf_filename, format="gtpsf")
-
-    edisp = _drm_to_edisp(
-        path / drm_filename, counts.geom, exposure.geom, psf.psf_map.geom
-    )
-
-    return Observation(
-        events=events,
-        psf=psf,
-        edisp=edisp,
-        aeff=exposure,
-        pointing=FixedPointingInfo(fixed_icrs=counts.geom.center_skydir.icrs),
-        obs_id=obs_id,
-    )
