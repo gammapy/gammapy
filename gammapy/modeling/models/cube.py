@@ -25,6 +25,7 @@ log = logging.getLogger(__name__)
 
 
 __all__ = [
+    "add_fermi_isotropic_diffuse_model",
     "create_fermi_isotropic_diffuse_model",
     "FoVBackgroundModel",
     "SkyModel",
@@ -1236,3 +1237,27 @@ def create_fermi_isotropic_diffuse_model(filename, **kwargs):
         name="fermi-diffuse-iso",
         apply_irf={"psf": False, "exposure": True, "edisp": False},
     )
+
+
+def add_fermi_isotropic_diffuse_model(dataset, filename, **kwargs):
+    """Add Fermi-LAT isotropic model to dataset
+    Parameters
+    ----------
+    dataset : `~gammapy.datasets.MapDataset`
+        Map dataset.
+    filename : str
+        Isotropic filename.
+    kwargs : dict
+        Keyword arguments forwarded to `TemplateSpectralModel`.
+    """
+
+    if dataset.models is None:
+        models = Models()
+
+    kwargs["interp_kwargs"]["extrapolate"] = True
+    diffuse_iso = create_fermi_isotropic_diffuse_model(filename=filename, **kwargs)
+    diffuse_iso.apply_irf["edisp"] = False
+    diffuse_iso._name = "iso_" + dataset.name
+    diffuse_iso.datasets_names = [dataset.name]
+
+    dataset.models = models + [diffuse_iso]
