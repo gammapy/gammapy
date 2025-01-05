@@ -343,3 +343,4 @@ def test_read_drm():
 
     edisp = EDispKernelMap.read(file_path, format="gtdrm")
     assert edisp.edisp_map.data.shape == (4, 4, 1, 1)
+    assert_allclose(edisp.edisp_map.data[0, 0, 0, 0], 8.9665985e-01)
