@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Data and observation handling."""
-
 from gammapy.utils.observers import observatory_locations
 from .data_store import DataStore
 from .event_list import EventList
