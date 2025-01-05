@@ -27,7 +27,6 @@ from .gti import GTI
 from .metadata import ObservationMetaData
 from .pointing import FixedPointingInfo
 
-
 __all__ = ["Observation", "Observations"]
 
 log = logging.getLogger(__name__)
