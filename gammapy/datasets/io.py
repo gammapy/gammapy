@@ -1,20 +1,26 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import os
 import abc
 import numpy as np
+from pathlib import Path
 from astropy import units as u
 from astropy.io import fits
 from astropy.table import Table
 from gammapy.data import GTI
-from gammapy.irf import EDispKernel, EDispKernelMap
-from gammapy.maps import RegionNDMap
-from gammapy.utils.scripts import make_path
+from gammapy.irf import EDispKernel, EDispKernelMap, PSFMap
+from gammapy.maps import RegionNDMap, Map
+from gammapy.modeling.models import add_fermi_isotropic_diffuse_model
+from gammapy.utils.scripts import read_yaml, make_path
 from .spectrum import SpectrumDatasetOnOff
+from .utils import create_map_dataset_from_dl4
+from .datasets import MapDataset, Datasets
 
 __all__ = [
     "DatasetReader",
     "DatasetWriter",
     "OGIPDatasetReader",
     "OGIPDatasetWriter",
+    "FermipyDatasetsReader",
 ]
 
 
@@ -472,3 +478,144 @@ class OGIPDatasetReader(DatasetReader):
             )
 
         return SpectrumDatasetOnOff(name=name, exposure=exposure, **kwargs)
+
+
+class FermipyDatasetsReader(DatasetReader):
+    """Create datasets from Fermi-LAT configuration file.
+
+    Parameters
+    ----------
+    path : str
+        Configuration file path
+    """
+
+    tag = "fermipy"
+
+    def __init__(self, filename):
+        self.filename = make_path(filename)
+
+    @staticmethod
+    def create_dataset(
+        path,
+        isotropic_filepath=None,
+        file_id=0,
+        edisp_bins=0,
+        name=None,
+    ):
+        """Create a map dataset from Fermi-LAT files.
+
+        Parameters
+        ----------
+        path : str
+            Path to files
+        isotropic_filepath : str, optional
+            Isotropic file path. Default is None
+        file_id : int
+            File index (last number of the fits file names). Default is 0.
+        edisp_bins : int
+            Number of margin bins to slice in energy. Default is 0.
+            To apply the energy dispersion correclty one should take edisp_bins>0.
+        name : str, optional
+            Dataset name. The default is None, and the name is randomly generated.
+
+        Returns
+        -------
+        dataset : `~gammapy.datasets.MapDataset`
+            Map dataset.
+
+        """
+
+        path = Path(path)
+        counts = Map.read(path / f"ccube_0{str(file_id)}.fits")
+        exposure = Map.read(path / f"bexpmap_roi_0{str(file_id)}.fits")
+        psf = PSFMap.read(path / f"psf_0{str(file_id)}.fits", format="gtpsf")
+        edisp = EDispKernelMap.read(path / f"drm_0{str(file_id)}.fits", format="gtdrm")
+
+        # check that fermipy edisp_bins are matching between edisp and exposure
+        edisp_axes = edisp.edisp_map.geom.axes
+        if (
+            len(edisp_axes["energy_true"].center)
+            != len(exposure.geom.axes[0].center) - 1
+        ):
+            raise ValueError(
+                "Energy true axes of exposure and DRM do not match. Check fermipy configuration."
+            )
+
+        psf_r68s = psf.containment_radius(
+            0.68,
+            edisp_axes["energy_true"].center,
+            position=counts.geom.center_skydir,
+        )
+        # check that pdf is well defined (fails if edisp_bins>0 in fermipy)
+        if np.any(psf_r68s.value) == 0.0:
+            raise ValueError(
+                "PSF is not defined for all true energies. Check fermipy configuration."
+            )
+
+        dataset = MapDataset(
+            counts=counts,
+            exposure=exposure,
+            psf=psf,
+            edisp=edisp,
+            name=name,
+        )
+        # standardize dataset interpolating to same geom and axes
+        dataset = create_map_dataset_from_dl4(dataset, name=dataset.name)
+
+        if edisp_bins > 0:  # slice edisp_bins
+            dataset = dataset.slice_by_idx(
+                dict(energy=slice(edisp_bins, -edisp_bins)), name=dataset.name
+            )
+
+        if isotropic_filepath:
+            add_fermi_isotropic_diffuse_model(dataset, isotropic_filepath)
+        return dataset
+
+    def read(self):
+        """Create map datasets from Fermi-LAT configuration file.
+
+        Returns
+        -------
+        dataset : `~gammapy.datasets.Datasets`
+            Map datasets.
+
+        """
+
+        filename = self.filename.resolve()
+        cwd = os.getcwd()
+        data = read_yaml(filename)
+        os.chdir(filename.parent)
+
+        if "components" in data:
+            components = data["components"]
+        else:
+            components = [data]
+
+        datasets = Datasets()
+        for file_id, component in enumerate(components):
+            if "fileio" in component and "outdir" in component["fileio"]:
+                path = component["fileio"]["outdir"]
+            elif "fileio" in data and "outdir" in data["fileio"]:
+                path = Path(data["fileio"]["outdir"])
+            else:
+                path = Path("")
+
+            if "model" in component and "isodiff" in component["model"]:
+                isotropic_filepath = Path(component["model"]["isodiff"])
+                name = isotropic_filepath.stem[4:]
+            elif "model" in data and "isodiff" in data["model"]:
+                isotropic_filepath = Path(data["model"]["isodiff"])
+                name = isotropic_filepath.stem[4:]
+            else:
+                isotropic_filepath = None
+                name = None
+            datasets.append(
+                self.create_dataset(
+                    path=path,
+                    isotropic_filepath=isotropic_filepath,
+                    file_id=file_id,
+                    name=name,
+                )
+            )
+        os.chdir(cwd)
+        return datasets
