@@ -1253,6 +1253,8 @@ def add_fermi_isotropic_diffuse_model(dataset, filename, **kwargs):
 
     if dataset.models is None:
         models = Models()
+    else:
+        models = dataset.models
 
     kwargs["interp_kwargs"]["extrapolate"] = True
     diffuse_iso = create_fermi_isotropic_diffuse_model(filename=filename, **kwargs)
