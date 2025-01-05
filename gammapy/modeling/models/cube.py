@@ -1256,10 +1256,10 @@ def add_fermi_isotropic_diffuse_model(dataset, filename, **kwargs):
     else:
         models = dataset.models
 
-    kwargs["interp_kwargs"]["extrapolate"] = True
+    kwargs["interp_kwargs"] = {"extrapolate": True}
     diffuse_iso = create_fermi_isotropic_diffuse_model(filename=filename, **kwargs)
     diffuse_iso.apply_irf["edisp"] = False
-    diffuse_iso._name = "iso_" + dataset.name
+    diffuse_iso._name = "isotropic_" + dataset.name
     diffuse_iso.datasets_names = [dataset.name]
 
     dataset.models = models + [diffuse_iso]

@@ -43,6 +43,7 @@ from gammapy.maps import (
 )
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
+    add_fermi_isotropic_diffuse_model,
     DiskSpatialModel,
     FoVBackgroundModel,
     GaussianSpatialModel,
@@ -2312,3 +2313,14 @@ def test_create_empty_map_dataset_from_irfs(geom, geom_etrue):
 
     assert dataset_new.counts.data.sum() == 0
     assert dataset_new.exposure.data.sum() == 0
+
+
+@requires_data()
+def test_add_fermi_iso():
+    dataset = MapDataset.read(
+        "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc.fits.gz", format="gadf"
+    )
+    filename = "$GAMMAPY_DATA/fermi_3fhl/iso_P8R2_SOURCE_V6_v06.txt"
+    add_fermi_isotropic_diffuse_model(dataset, filename)
+    assert "isotropic" in dataset.models.names[0]
+    assert dataset.models[0].apply_irf["edisp"] == False
