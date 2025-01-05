@@ -333,7 +333,7 @@ def test_peek():
         edisp.peek()
 
 
-@requires_data
+@requires_data()
 def test_read_drm():
     file_path = make_path("$GAMMAPY_DATA/tests/fermi/drm_00.fits")
 
