@@ -2323,4 +2323,4 @@ def test_add_fermi_iso():
     filename = "$GAMMAPY_DATA/fermi_3fhl/iso_P8R2_SOURCE_V6_v06.txt"
     add_fermi_isotropic_diffuse_model(dataset, filename)
     assert "isotropic" in dataset.models.names[0]
-    assert dataset.models[0].apply_irf["edisp"] == False
+    assert not dataset.models[0].apply_irf["edisp"]
