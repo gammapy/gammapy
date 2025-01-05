@@ -1,7 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
-from astropy.io import fits
-from astropy.table import Table
 from gammapy.maps import Map, MapAxis, MapCoord, RegionGeom, WcsGeom
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from ..core import IRFMap
