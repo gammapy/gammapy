@@ -440,7 +440,7 @@ class ParameterSensitivityEstimator:
         """Call the Test Statistics function."""
         self.parameter.value = value
         ts_asimov = self.test.ts_asimov(datasets)
-        return ts_to_sigma(ts_asimov, method="wald") - self.n_sigma
+        return ts_to_sigma(ts_asimov, ts_asimov=ts_asimov) - self.n_sigma
 
     def parameter_matching_significance(self, datasets):
         """Parameter value  matching the target significance"""
