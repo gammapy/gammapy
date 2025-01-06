@@ -140,7 +140,7 @@ def make_map_exposure_true_energy(
     coords["energy_true"] = broadcast_axis_values_to_geom(geom, "energy_true")
     exposure = aeff.evaluate(**coords)
 
-    data = (exposure * livetime).to("m2 s")
+    data = (exposure * u.Quantity(livetime)).to("m2 s")
     meta = {"livetime": livetime, "is_pointlike": aeff.is_pointlike}
 
     if not use_region_center:
