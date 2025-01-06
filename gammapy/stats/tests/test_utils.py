@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from numpy.testing import assert_allclose
 from gammapy.stats.utils import sigma_to_ts, ts_to_sigma
-import pytest
 
 
 def test_sigma_ts_conversion():
@@ -10,11 +9,11 @@ def test_sigma_ts_conversion():
     df = 1
     ts = sigma_to_ts(3, df=df)
     assert_allclose(ts, ts_ref)
-    ts = sigma_to_ts(3, df=df, method="wilks")
+    ts = sigma_to_ts(3, df=df)
     assert_allclose(ts, ts_ref)
     sigma = ts_to_sigma(ts, df=df)
     assert_allclose(sigma, sigma_ref)
-    sigma = ts_to_sigma(ts, df=df, method="wilks")
+    sigma = ts_to_sigma(ts, df=df)
     assert_allclose(sigma, sigma_ref)
 
     df = 2
@@ -27,13 +26,7 @@ def test_sigma_ts_conversion():
     sigma_ref = 3
     ts_ref = 9
     df = 1
-    ts = sigma_to_ts(3, df=df, method="wald")
+    ts = sigma_to_ts(3, df=df, n_sigma_asymov=3)
     assert_allclose(ts, ts_ref)
-    sigma = ts_to_sigma(ts, df=df, method="wald")
+    sigma = ts_to_sigma(ts, df=df, ts_asymov=ts)
     assert_allclose(sigma, sigma_ref)
-
-    with pytest.raises(ValueError):
-        sigma_to_ts(3, df=df, method="wrong_name")
-
-    with pytest.raises(ValueError):
-        ts_to_sigma(9, df=df, method="wrong_name")
