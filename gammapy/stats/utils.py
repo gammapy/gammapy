@@ -49,7 +49,7 @@ def sigma_to_ts(n_sigma, df=1, method="wilks"):
         return ncx2.isf(p_value, df=df, nc=ts)
     else:
         raise ValueError(
-            f"Invalid method : {method}, posible options are 'wilks' or 'wald'"
+            f"Invalid method : {method}, valid options are 'wilks' or 'wald'"
         )
 
 
@@ -93,5 +93,5 @@ def ts_to_sigma(ts, df=1, method="wilks"):
         return np.sqrt(ncx2.isf(p_value, df=1, nc=ts))
     else:
         raise ValueError(
-            f"Invalid method : {method}, posible options are 'wilks' or 'wald'"
+            f"Invalid method : {method}, valid options are 'wilks' or 'wald'"
         )
