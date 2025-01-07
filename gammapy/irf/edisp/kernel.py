@@ -276,7 +276,12 @@ class EDispKernel(IRF):
                 return cls.from_hdulist(hdulist, hdu1=hdu1, hdu2=hdu2)
         elif format == "gtdrm":
             with fits.open(filename, memmap=False) as hdulist:
-                if checksum and hdulist[0].verify_checksum() != 1:
+                hdu = hdulist[0]
+                if (
+                    checksum
+                    and hdu.verify_checksum() != 1
+                    and hdu.verify_datasum() != 1
+                ):
                     warnings.warn(
                         f"Checksum verification failed for HDU { hdulist[0]} of {filename}.",
                         UserWarning,
