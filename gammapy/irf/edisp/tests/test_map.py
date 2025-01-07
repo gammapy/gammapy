@@ -337,10 +337,10 @@ def test_peek():
 def test_read_drm():
     file_path = make_path("$GAMMAPY_DATA/tests/fermi/drm_00.fits")
 
-    edisp = EDispKernel.read(file_path, format="gtdrm")
+    edisp = EDispKernel.read(file_path, format="gtdrm", checksum=True)
     assert edisp.data.shape == (4, 4)
     assert_allclose(edisp.data[0, 0], 8.9665985e-01)
 
-    edisp = EDispKernelMap.read(file_path, format="gtdrm")
+    edisp = EDispKernelMap.read(file_path, format="gtdrm", checksum=True)
     assert edisp.edisp_map.data.shape == (4, 4, 1, 1)
     assert_allclose(edisp.edisp_map.data[0, 0, 0, 0], 8.9665985e-01)
