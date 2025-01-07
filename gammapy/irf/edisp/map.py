@@ -549,6 +549,7 @@ class EDispKernelMap(IRFMap):
             File name.
         format : {"gadf", "gtdrm"}, optional
             File format. Default is "gadf".
+            Format "gtdrm" creates an EDispKernelMap including a single EDispKernel.
         hdu : str or int
             HDU location. Default is None.
         checksum : bool
