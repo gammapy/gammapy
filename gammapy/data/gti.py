@@ -249,6 +249,11 @@ class GTI:
         return self._meta.reference_time
 
     @property
+    def time_sum(self):
+        """Sum of GTIs in seconds as a `~astropy.units.Quantity`."""
+        return self.time_delta.sum()
+
+    @property
     def time_start(self):
         """GTI start times as a `~astropy.time.Time` object."""
         return self.table["START"]
@@ -275,16 +280,6 @@ class GTI:
             (t_start, t_stop)
             for t_start, t_stop in zip(self.time_start, self.time_stop)
         ]
-
-    @property
-    def time_sum(self):
-        """Sum of GTIs in seconds as a `~astropy.units.Quantity`."""
-        return self.time_delta.sum()
-
-    @property
-    def n_transits(self):
-        with u.add_enabled_units([u.def_unit("transit", u.sday)]):
-            return self.gti.time_sum.to("transit")
 
     @classmethod
     def from_time_intervals(cls, time_intervals, reference_time=None):
