@@ -159,7 +159,7 @@ class GaussianPrior(Prior):
 
     def inverse_cdf(self, val):
         """Return inverse CDF for prior."""
-        rv = norm(mu, sigma)
+        rv = norm(self.mu, self.sigma)
         return rv.ppf(val)
 
 
@@ -196,5 +196,3 @@ class UniformPrior(Prior):
         """Return inverse CDF for prior."""
         rv = uniform(self.min.value, self.max.value - self.min.value)
         return rv.ppf(val)
-
-
