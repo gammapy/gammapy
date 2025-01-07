@@ -257,17 +257,21 @@ Task list
 The task will be split between different subcategories
 
 *Modifications to existing code*
+
 1. Add a stat_sum function `stat_sum_no_prior` which returns only the likelihood term Without the penalty term
-2. Add inverse_cdf attributes to the all Priors
+2. Add inverse_cdf attributes to all the Priors
 3. Add LogUniform prior (crucial for amplitude)
+4. Add function to compute inverse_cdf on Parameters
 
 *Design & decisions of a new Bayesian class*
+
 1. Should the class be called NestedSampler (only NS) or BayesianFit (would host MCMC and NS)
 2. Should we return the sampler in the BayesianInference(models=updated_models, results=results) ?
 3. Should we create a `.posterior` attribute for each model parameter ? To contain what exactly ?
 4. UltraNest provides different samplers options. How do we implement them (e.g. self._sampler.stepsampler = ultranest.stepsampler.SliceSampler)
    
 *Update the docs*
+
 1. Prepare a tutorial to show case this new class
 2. Add section presenting the different approaches of Minuit, MCMC, and NS ?
 3. Update the 'stats' documentation page for the new prior and new inverse_cdf
