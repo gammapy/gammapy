@@ -4,10 +4,11 @@
 import logging
 import numpy as np
 import astropy.units as u
+from scipy.stats import norm, uniform
 from gammapy.modeling import PriorParameter, PriorParameters
 from .core import ModelBase
 
-__all__ = ["GaussianPrior", "UniformPrior", "LogUniformPrior", "Prior"]
+__all__ = ["GaussianPrior", "UniformPrior", "Prior"]
 
 log = logging.getLogger(__name__)
 
@@ -158,8 +159,8 @@ class GaussianPrior(Prior):
 
     def inverse_cdf(self, val):
         """Return inverse CDF for prior."""
-        # TODO
-        raise NotImplementedError("To be implemented")
+        rv = norm(mu, sigma)
+        return rv.ppf(val)
 
 
 class UniformPrior(Prior):
@@ -193,44 +194,7 @@ class UniformPrior(Prior):
 
     def inverse_cdf(self, val):
         """Return inverse CDF for prior."""
-        return val * (self.max.value - self.min.value) + self.min.value
+        rv = uniform(self.min.value, self.max.value - self.min.value)
+        return rv.ppf(val)
 
 
-class LogUniformPrior(Prior):
-    """LogUniform Prior.
-
-    #TODO: docstring
-
-    Parameters
-    ----------
-    min : float
-        Minimum value.
-        Default is -inf.
-    max : float
-        Maxmimum value.
-        Default is inf.
-    """
-
-    tag = ["LogUniformPrior"]
-    _type = "prior"
-    min = PriorParameter(name="min", value=1e-20, unit="")
-    max = PriorParameter(name="max", value=1, unit="")
-
-    if min == 0:
-        raise Exception("Par min cannot be zero for LogUniformPrior  ")
-    low = np.log10(min.value)
-    spread = np.log10(max.value) - np.log10(min.value)
-    # if spread > 10:
-    #    print('note: this parameter spans *many* dex. Double-check the limits are reasonable.')
-
-    @staticmethod
-    def evaluate(self, val):
-        # TODO
-        raise NotImplementedError("To be implemented")
-
-    def inverse_cdf(self, val):
-        """Return inverse CDF for prior."""
-        x = val * (np.log10(self.max.value) - np.log10(self.min.value)) + np.log10(
-            self.min.value
-        )
-        return 10**x
