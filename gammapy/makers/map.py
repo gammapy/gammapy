@@ -171,17 +171,21 @@ class MapDatasetMaker(Maker):
             return observation.exposure.interp_to_geom(
                 geom=geom,
             )
-        if isinstance(observation.aeff, Map):
-            aeff = observation.aeff
-            if aeff.unit.is_equivalent(u.Unit("m2 s")):
-                factor = 1.0
-            elif aeff.unit.is_equivalent(u.Unit("m2 s sday-1")):
-                factor = observation.gti.n_transits
-            else:
-                raise u.UnitsError(
-                    f"Effective area unit {observation.aeff.unit} is not supported"
-                )
-            return observation.aeff.interp_to_geom(geom=geom) * factor
+        with u.add_enabled_units([u.def_unit("transit", u.sday)]):
+            if isinstance(observation.aeff, Map):
+                aeff = observation.aeff
+                if aeff.unit.is_equivalent(u.Unit("m2 s")):
+                    factor = 1.0
+                elif aeff.unit.is_equivalent(u.Unit("m2 s transit-1")):
+                    if u.Unit("transit") in aeff.unit.bases:
+                        factor = observation.gti.time_sum.to("transit")
+                    else:
+                        factor = observation.gti.time_sum
+                else:
+                    raise u.UnitsError(
+                        f"Effective area unit {observation.aeff.unit} is not supported"
+                    )
+                return observation.aeff.interp_to_geom(geom=geom) * factor
 
         return make_map_exposure_true_energy(
             pointing=observation.get_pointing_icrs(observation.tmid),
@@ -235,24 +239,30 @@ class MapDatasetMaker(Maker):
             Background map.
         """
         bkg = observation.bkg
-        if isinstance(bkg, Map):
-            if not bkg.unit or bkg.unit.is_equivalent(u.Unit("")):
-                return bkg.interp_to_geom(geom=geom, preserve_counts=True)
-            elif bkg.unit.is_equivalent(u.Unit("TeV-1 sr-1")) or bkg.unit.is_equivalent(
-                u.Unit("TeV-1 sr-1 sday-1")
-            ):
-                bkg = bkg.interp_to_geom(geom, preserve_counts=False)
-                bkg.quantity *= bkg.geom.to_image().solid_angle()[None, :, :]
-                # multipling by energy bins after take less memory than using bin_volume
-                bkg.quantity *= np.diff(bkg.geom.axes["energy"].edges)[:, None, None]
-                # TODO : would be better to have proper integration method
-                if bkg.unit.is_equivalent(u.Unit("sday-1")):
-                    bkg.quantity *= observation.gti.n_transits
-                return bkg
-            else:
-                raise u.UnitsError(
-                    f"Background unit {observation.bkg.unit} is not supported"
-                )
+        with u.add_enabled_units([u.def_unit("transit", u.sday)]):
+            if isinstance(bkg, Map):
+                if not bkg.unit or bkg.unit.is_equivalent(u.Unit("")):
+                    return bkg.interp_to_geom(geom=geom, preserve_counts=True)
+                elif bkg.unit.is_equivalent(
+                    u.Unit("TeV-1 sr-1")
+                ) or bkg.unit.is_equivalent(u.Unit("TeV-1 sr-1 transit-1")):
+                    bkg = bkg.interp_to_geom(geom, preserve_counts=False)
+                    bkg.quantity *= bkg.geom.to_image().solid_angle()[None, :, :]
+                    # multipling by energy bins after take less memory than using bin_volume
+                    bkg.quantity *= np.diff(bkg.geom.axes["energy"].edges)[
+                        :, None, None
+                    ]
+                    # TODO : would be better to have proper integration method
+                    if bkg.unit.is_equivalent(u.Unit("transit-1")):
+                        if u.Unit("transit") in bkg.unit.bases:
+                            bkg.quantity *= observation.gti.time_sum.to("transit")
+                        else:
+                            bkg.quantity *= observation.gti.time_sum
+                    return bkg
+                else:
+                    raise u.UnitsError(
+                        f"Background unit {observation.bkg.unit} is not supported"
+                    )
 
         use_region_center = getattr(self, "use_region_center", True)
 
