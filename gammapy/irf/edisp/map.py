@@ -564,7 +564,7 @@ class EDispKernelMap(IRFMap):
         if format == "gadf":
             return super().read(filename, format, hdu, checksum)
         elif format == "gtdrm":
-            edisp = EDispKernel.read(filename, format="gtdrm")
+            edisp = EDispKernel.read(filename, format="gtdrm", checksum=checksum)
             geom_edisp = RegionGeom.create(region=None, axes=edisp.axes)
             return EDispKernelMap.from_edisp_kernel(edisp, geom=geom_edisp)
         else:

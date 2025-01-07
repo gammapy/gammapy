@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
+import warnings
 from astropy.io import fits
 from astropy.table import Table
 from astropy.units import Quantity
@@ -274,6 +275,12 @@ class EDispKernel(IRF):
             ) as hdulist:
                 return cls.from_hdulist(hdulist, hdu1=hdu1, hdu2=hdu2)
         elif format == "gtdrm":
+            with fits.open(filename, memmap=False) as hdulist:
+                if checksum and hdulist[0].verify_checksum() != 1:
+                    warnings.warn(
+                        f"Checksum verification failed for HDU { hdulist[0]} of {filename}.",
+                        UserWarning,
+                    )
             table_drm = Table.read(filename, hdu="DRM")
             table_drm["ENERG_LO"].unit = "MeV"
             table_drm["ENERG_HI"].unit = "MeV"
