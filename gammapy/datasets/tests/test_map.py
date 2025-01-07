@@ -2042,7 +2042,7 @@ def test_dataset_mixed_geom(tmpdir):
         "1 TeV", "10 TeV", nbin=7, name="energy_true"
     )
 
-    rad_axis = MapAxis.from_bounds(0, 1, nbin=10, name="rad", unit="deg")
+    rad_axis = MapAxis.from_bounds(0, 5, nbin=10, name="rad", unit="deg")
 
     geom = WcsGeom.create(npix=5, axes=[energy_axis])
     geom_exposure = WcsGeom.create(npix=5, axes=[energy_axis_true])
@@ -2059,7 +2059,17 @@ def test_dataset_mixed_geom(tmpdir):
         geom=geom, geom_exposure=geom_exposure, geom_psf=geom_psf, geom_edisp=geom_edisp
     )
     assert isinstance(dataset.psf, PSFMap)
+    dataset.psf.psf_map.data = 1
+    dataset.psf.normalize()
     assert isinstance(dataset._psf_kernel, PSFKernel)
+    assert dataset._psf_kernel.data.shape == (7, 21, 21)
+
+    import gammapy.datasets.evaluator as meval
+
+    meval.PSF_MAX_RADIUS = 2 * u.deg
+    assert dataset._psf_kernel.data.shape == (7, 9, 9)
+    meval.PSF_MAX_RADIUS = None
+    assert dataset._psf_kernel.data.shape == (7, 21, 21)
 
     filename = tmpdir / "test.fits"
     dataset.write(filename)
