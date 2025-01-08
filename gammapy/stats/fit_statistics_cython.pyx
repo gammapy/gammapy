@@ -15,7 +15,7 @@ TRUNCATION_VALUE = 1e-25
 @cython.cdivision(True)
 @cython.boundscheck(False)
 def weighted_cash_sum_cython(np.ndarray[np.float_t, ndim=1] counts,
-                             np.ndarray[np.float_t, ndim=1] npred),
+                             np.ndarray[np.float_t, ndim=1] npred,
                              np.ndarray[np.float_t, ndim=1] weight):
     """Summed cash fit statistics.
 
@@ -43,13 +43,15 @@ def weighted_cash_sum_cython(np.ndarray[np.float_t, ndim=1] counts,
             npr = trunc
             lognpr = logtrunc
 
-        if weight[i] > 0
+        if weight[i] > 0:
             sum += weight[i] * npr
             if counts[i] > 0:
                 sum -= weight[i] * counts[i] * lognpr
 
     return 2 * sum
 
+@cython.cdivision(True)
+@cython.boundscheck(False)
 def cash_sum_cython(np.ndarray[np.float_t, ndim=1] counts,
                     np.ndarray[np.float_t, ndim=1] npred):
     """Summed cash fit statistics.
