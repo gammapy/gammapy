@@ -1471,7 +1471,7 @@ class MapDataset(Dataset):
             mask = self.mask.data == True  # noqa
             counts = counts[mask]
             npred = npred[mask]
-            if self.mask.dtype == bool:
+            if self.mask.data.dtype == bool:
                 cash_sum = cash_sum_cython(counts, npred)
             else:
                 weight = self.mask.data[mask]
