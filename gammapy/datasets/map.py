@@ -1468,7 +1468,7 @@ class MapDataset(Dataset):
         counts, npred = self.counts.data.astype(float), self.npred().data
 
         if self.mask is not None:
-            mask = self.mask == True
+            mask = self.mask.data == True
             counts = counts[mask]
             npred = npred[mask]
             if self.mask.dtype == bool:
