@@ -61,7 +61,7 @@ class Dataset(abc.ABC):
     def mask(self):
         """Combined fit and safe mask."""
         if self.mask_safe is not None and self.mask_fit is not None:
-            return self.mask_safe & self.mask_fit
+            return self.mask_safe * self.mask_fit
         elif self.mask_fit is not None:
             return self.mask_fit
         elif self.mask_safe is not None:
