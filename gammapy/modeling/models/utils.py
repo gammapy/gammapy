@@ -8,7 +8,7 @@ from astropy.time import Time
 from regions import PointSkyRegion
 from gammapy.maps import HpxNDMap, Map, MapAxis, RegionNDMap
 from gammapy.maps.hpx.io import HPX_FITS_CONVENTIONS, HpxConv
-from gammapy.utils.scripts import make_path
+from gammapy.utils.scripts import make_path, make_name
 from gammapy.utils.time import time_ref_from_dict, time_ref_to_dict
 from . import LightCurveTemplateTemporalModel, Models, SkyModel, TemplateSpatialModel
 
@@ -110,7 +110,7 @@ def cutout_template_models(models, cutout_kwargs, datasets_names=None):
                 spatial_model=template_cut,
                 spectral_model=m.spectral_model,
                 datasets_names=datasets_names,
-                name=m.name,
+                name=m.name if not datasets_names else f"{m.name}_{make_name()}",
             )
             models_cut.append(model_cut)
         else:
