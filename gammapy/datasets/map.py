@@ -17,6 +17,7 @@ from gammapy.stats import (
     WStatCountsStatistic,
     cash,
     cash_sum_cython,
+    weighted_cash_sum_cython,
     get_wstat_mu_bkg,
     wstat,
 )
@@ -1473,12 +1474,17 @@ class MapDataset(Dataset):
         counts, npred = self.counts.data.astype(float), self.npred().data
 
         if self.mask is not None:
-            return (
-                cash_sum_cython(counts[self.mask.data], npred[self.mask.data])
-                + prior_stat_sum
-            )
+            mask = self.mask == True
+            counts = counts[mask]
+            npred = npred[mask]
+            if self.mask.dtype == bool:
+                cash_sum = cash_sum_cython(counts, npred)
+            else:
+                weight = self.mask.data[mask]
+                cash_sum = weighted_cash_sum_cython(counts, npred, weight)
         else:
-            return cash_sum_cython(counts.ravel(), npred.ravel()) + prior_stat_sum
+            cash_sum = cash_sum_cython(counts.ravel(), npred.ravel())
+        return cash_sum + prior_stat_sum
 
     def _to_asimov_dataset(self):
         """Create Asimov dataset from the current models.
