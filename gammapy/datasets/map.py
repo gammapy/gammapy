@@ -2736,18 +2736,10 @@ class MapDatasetOnOff(MapDataset):
         data = np.nan_to_num(npred.data, copy=True, nan=0.0, posinf=0.0, neginf=0.0)
         npred.data = data.astype("float")
 
-        npred_off = get_wstat_mu_bkg(
-            n_on=npred.data,
-            n_off=self.counts_off.data,
-            alpha=self.alpha.data,
-            mu_sig=npred.data,
-        )
-        npred_off = Map.from_geom(geom=self._geom, data=npred_off)
-
         asimov_dataset = self.__class__(
             models=self.models,
             counts=npred,
-            counts_off=npred_off,
+            counts_off=self.counts_off,
             exposure=self.exposure,
             acceptance=self.acceptance,
             acceptance_off=self.acceptance_off,
