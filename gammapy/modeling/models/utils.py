@@ -92,7 +92,22 @@ def read_hermes_cube(filename):
 
 
 def cutout_template_models(models, cutout_kwargs, datasets_names=None):
-    """Apply cutout to template models."""
+    """Apply cutout to template models.
+
+    Parameters
+    ----------
+    models : `~gammapy.modeling.Models`
+        List of models
+    cutout_kwargs : dict
+        Arguments passed to `gammap.map.cutout`
+    datasets_names : list of str
+        Names of the datasets to which the new model is applied.
+
+    Returns
+    -------
+    models_cut : `~gammapy.modeling.Models`
+        Models with cutout
+    """
     models_cut = Models()
     if models is None:
         return models_cut
