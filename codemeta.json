@@ -359,7 +359,7 @@
         "active"
     ],
     "email": "GAMMAPY-COORDINATION-L@IN2P3.FR",
-    "dateModified": "2024-11-26",
+    "dateModified": "2024-12-20",
     "softwareRequirements": [
         "numpy>=1.21",
         "scipy>=1.5,!=1.10",
@@ -372,4 +372,3 @@
         "matplotlib>=3.4"
     ]
 }
-
