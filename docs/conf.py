@@ -109,6 +109,7 @@ extensions = [
     "sphinx.ext.doctest",
     "sphinx.ext.intersphinx",
     "sphinx.ext.mathjax",
+    'sphinx.ext.viewcode',
     # Order for sphinx_automodapi is important
     "sphinx_automodapi.automodapi",
     "sphinx_automodapi.smart_resolver",
