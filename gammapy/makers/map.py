@@ -3,7 +3,7 @@ import logging
 import astropy.units as u
 from astropy.table import Table
 from regions import PointSkyRegion
-from gammapy.datasets import MapDatasetMetaData
+from gammapy.datasets import MapDatasetMetaData, MapDataset
 from gammapy.irf import EDispKernelMap, PSFMap, RecoPSFMap
 from gammapy.data import Observation
 from gammapy.maps import Map
@@ -390,7 +390,7 @@ class MapDatasetMaker(Maker):
         if isinstance(observation, Observation):
             kwargs["meta_table"] = self.make_meta_table(observation)
             kwargs["meta"] = self._make_metadata(kwargs["meta_table"])
-        else:
+        elif isinstance(observation, MapDataset):
             kwargs["meta"] = observation.meta
 
         mask_safe = Map.from_geom(dataset.counts.geom, dtype=bool)
