@@ -232,10 +232,11 @@ class WcsNDMap(WcsMap):
         bincount = np.bincount(idx_inv).astype(self.data.dtype)
 
         if smooth:
-            weight_sum = np.sum(weights)
+            weight_sum = np.nansum(weights)
             weights /= bincount
             if preserve_counts:
-                weights *= weight_sum / np.sum(weights)
+                factor = weight_sum / np.nansum(weights)
+                weights *= np.nan_to_num(factor, nan=0.0, posinf=0.0, neginf=0.0)
         elif not preserve_counts:
             weights /= bincount
 
