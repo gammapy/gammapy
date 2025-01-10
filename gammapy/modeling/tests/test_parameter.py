@@ -281,8 +281,8 @@ def test_update_from_dict():
     par = Parameter(
         "test",
         value=1e-10,
-        min="nan",
-        max="nan",
+        min=None,
+        max=None,
         frozen=False,
         unit="TeV",
         scale_method="scale10",
