@@ -1223,7 +1223,7 @@ def create_fermi_isotropic_diffuse_model(filename, dataset_name=None, **kwargs):
     energy = u.Quantity(vals[:, 0], "MeV", copy=COPY_IF_NEEDED)
     values = u.Quantity(vals[:, 1], "MeV-1 s-1 cm-2", copy=COPY_IF_NEEDED)
 
-    kwargs.setdefault("interp_kwargs", {"fill_value": None})
+    kwargs.setdefault("interp_kwargs", {"fill_value": None, "extrapolate": True})
 
     spatial_model = ConstantSpatialModel()
     spectral_model = (
