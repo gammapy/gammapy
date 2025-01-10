@@ -9,7 +9,7 @@ from astropy.table import Table
 from gammapy.data import GTI
 from gammapy.irf import EDispKernel, EDispKernelMap, PSFMap
 from gammapy.maps import RegionNDMap, Map
-from gammapy.modeling.models import add_fermi_isotropic_diffuse_model
+from gammapy.modeling.models import create_fermi_isotropic_diffuse_model, Models
 from gammapy.utils.scripts import read_yaml, make_path
 from .spectrum import SpectrumDatasetOnOff
 from .utils import create_map_dataset_from_dl4
@@ -487,17 +487,23 @@ class FermipyDatasetsReader(DatasetReader):
     ----------
     path : str
         Configuration file path
+    edisp_bins : int
+        Number of margin bins to slice in energy. Default is 0.
+        If fermipy was configured with edisp_bins=0, it should be set to a value
+        edisp_bins>0 here in order to apply the energy dispersion correclty.
+
     """
 
     tag = "fermipy"
 
-    def __init__(self, filename):
+    def __init__(self, filename, edisp_bins=0):
         self.filename = make_path(filename)
+        self.edisp_bins = edisp_bins
 
     @staticmethod
     def create_dataset(
         path,
-        isotropic_filepath=None,
+        isotropic_file=None,
         file_id=0,
         edisp_bins=0,
         name=None,
@@ -508,13 +514,14 @@ class FermipyDatasetsReader(DatasetReader):
         ----------
         path : str
             Path to files
-        isotropic_filepath : str, optional
+        isotropic_file : str, optional
             Isotropic file path. Default is None
         file_id : int
             File index (last number of the fits file names). Default is 0.
         edisp_bins : int
             Number of margin bins to slice in energy. Default is 0.
-            To apply the energy dispersion correclty one should take edisp_bins>0.
+            If fermipy was configured with edisp_bins=0, it should be set to a value
+            edisp_bins>0 here in order to apply the energy dispersion correclty.
         name : str, optional
             Dataset name. The default is None, and the name is randomly generated.
 
@@ -567,8 +574,9 @@ class FermipyDatasetsReader(DatasetReader):
                 dict(energy=slice(edisp_bins, -edisp_bins)), name=dataset.name
             )
 
-        if isotropic_filepath:
-            add_fermi_isotropic_diffuse_model(dataset, isotropic_filepath)
+        if isotropic_file:
+            model = create_fermi_isotropic_diffuse_model(dataset, isotropic_file)
+            dataset.models = Models([model])
         return dataset
 
     def read(self):
@@ -601,19 +609,20 @@ class FermipyDatasetsReader(DatasetReader):
                 path = Path("")
 
             if "model" in component and "isodiff" in component["model"]:
-                isotropic_filepath = Path(component["model"]["isodiff"])
-                name = isotropic_filepath.stem[4:]
+                isotropic_file = Path(component["model"]["isodiff"])
+                name = isotropic_file.stem[4:]
             elif "model" in data and "isodiff" in data["model"]:
-                isotropic_filepath = Path(data["model"]["isodiff"])
-                name = isotropic_filepath.stem[4:]
+                isotropic_file = Path(data["model"]["isodiff"])
+                name = isotropic_file.stem[4:]
             else:
-                isotropic_filepath = None
+                isotropic_file = None
                 name = None
             datasets.append(
                 self.create_dataset(
                     path=path,
-                    isotropic_filepath=isotropic_filepath,
+                    isotropic_file=isotropic_file,
                     file_id=file_id,
+                    edisp_bins=self.edisp_bins,
                     name=name,
                 )
             )
