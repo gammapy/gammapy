@@ -25,7 +25,6 @@ log = logging.getLogger(__name__)
 
 
 __all__ = [
-    "add_fermi_isotropic_diffuse_model",
     "create_fermi_isotropic_diffuse_model",
     "FoVBackgroundModel",
     "SkyModel",
@@ -1203,7 +1202,7 @@ class TemplateNPredModel(ModelBase):
             self._spectral_model.unfreeze()
 
 
-def create_fermi_isotropic_diffuse_model(filename, **kwargs):
+def create_fermi_isotropic_diffuse_model(filename, dataset_name=None, **kwargs):
     """Read Fermi isotropic diffuse model.
 
     See `LAT Background models <https://fermi.gsfc.nasa.gov/ssc/data/access/lat/BackgroundModels.html>`__.
@@ -1231,35 +1230,16 @@ def create_fermi_isotropic_diffuse_model(filename, **kwargs):
         TemplateSpectralModel(energy=energy, values=values, **kwargs)
         * PowerLawNormSpectralModel()
     )
+    if dataset_name:
+        datasets_names = [dataset_name]
+        name = f"isotropic_{dataset_name}"
+    else:
+        datasets_names = None
+        name = "fermi-diffuse-iso"
     return SkyModel(
         spatial_model=spatial_model,
         spectral_model=spectral_model,
-        name="fermi-diffuse-iso",
+        name=name,
+        datasets_names=datasets_names,
         apply_irf={"psf": False, "exposure": True, "edisp": False},
     )
-
-
-def add_fermi_isotropic_diffuse_model(dataset, filename, **kwargs):
-    """Add Fermi-LAT isotropic model to dataset
-    Parameters
-    ----------
-    dataset : `~gammapy.datasets.MapDataset`
-        Map dataset.
-    filename : str
-        Isotropic filename.
-    kwargs : dict
-        Keyword arguments forwarded to `TemplateSpectralModel`.
-    """
-
-    if dataset.models is None:
-        models = Models()
-    else:
-        models = dataset.models
-
-    kwargs["interp_kwargs"] = {"extrapolate": True}
-    diffuse_iso = create_fermi_isotropic_diffuse_model(filename=filename, **kwargs)
-    diffuse_iso.apply_irf["edisp"] = False
-    diffuse_iso._name = "isotropic_" + dataset.name
-    diffuse_iso.datasets_names = [dataset.name]
-
-    dataset.models = models + [diffuse_iso]

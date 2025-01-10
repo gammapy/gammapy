@@ -7,7 +7,6 @@ from .cube import (
     FoVBackgroundModel,
     SkyModel,
     TemplateNPredModel,
-    add_fermi_isotropic_diffuse_model,
     create_fermi_isotropic_diffuse_model,
 )
 from .prior import GaussianPrior, Prior, UniformPrior
@@ -70,7 +69,6 @@ from .temporal import (
 from .utils import read_hermes_cube
 
 __all__ = [
-    "add_fermi_isotropic_diffuse_model",
     "BrokenPowerLawSpectralModel",
     "CompoundSpectralModel",
     "ConstantFluxSpatialModel",
