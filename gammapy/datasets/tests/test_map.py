@@ -238,6 +238,21 @@ def get_map_dataset(geom, geom_etrue, edisp="edispmap", name="test", **kwargs):
     )
 
 
+@requires_data()
+def test_map_dataset_weight(sky_model, geom, geom_etrue):
+    dataset = get_map_dataset(geom, geom_etrue)
+
+    bkg_model = FoVBackgroundModel(dataset_name=dataset.name)
+    dataset.models = [sky_model, bkg_model]
+
+    dataset.counts = dataset.npred()
+    dataset.mask_safe = dataset.mask_fit
+    assert_allclose(dataset.stat_sum(), 12824.506311)
+
+    dataset.mask_fit = dataset.mask_fit * 3.0
+    assert_allclose(dataset.stat_sum(), 3.0 * 12824.506311)
+
+
 def test_map_dataset_name():
     with pytest.raises(ValueError, match="of type '<class 'int'>"):
         _ = MapDataset(name=6353)
