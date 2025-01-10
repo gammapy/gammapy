@@ -74,7 +74,7 @@ class Parameter:
      min : float, str or `~astropy.units.quantity`, optional
          Minimum (sometimes used in fitting). Default is None, which set the attribute to `np.nan`.
      max : float, str or `~astropy.units.quantity`, optional
-         Minimum (sometimes used in fitting). Default is None, which set the attribute to `np.nan`.
+         Maximum (sometimes used in fitting). Default is None, which set the attribute to `np.nan`.
     frozen : bool, optional
          Frozen (used in fitting).
      error : float
@@ -82,7 +82,7 @@ class Parameter:
      scan_min : float
          Minimum value for the parameter scan. Overwrites scan_n_sigma.
      scan_max : float
-         Minimum value for the parameter scan. Overwrites scan_n_sigma.
+         Maximum value for the parameter scan. Overwrites scan_n_sigma.
      scan_n_values: int
          Number of values to be used for the parameter scan.
      scan_n_sigma : int
