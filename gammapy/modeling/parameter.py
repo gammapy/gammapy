@@ -264,10 +264,9 @@ class Parameter:
         """Logics for min and max setter."""
         if isinstance(value, np.ma.core.MaskedConstant) or (value is None):
             return np.nan
-        elif isinstance(value, u.Quantity):
+        elif isinstance(value, u.Quantity) or isinstance(value, str):
+            value = u.Quantity(value)
             return float(value.to(self.unit).value)
-        elif isinstance(value, str):
-            return float(u.Quantity(value).to(self.unit).value)
         else:
             return float(value)
 
@@ -282,8 +281,12 @@ class Parameter:
             passed and `max` is set to None, the tuple will be decomposed into min and max value.
             Default is None, which set `min` and `max` to `np.nan`.
         """
-        if max is None and np.iterable(min):
-            min, max = min
+        if np.iterable(min):
+            if max is None:
+                min, max = min
+            else:
+                raise ValueError(f"""`min` is set to iterable: {min} and `max` is not None, which is undefined behaviour.
+                Either set `min` and `max` or `min` to an iterable.""")
         self.min = min or np.nan
         self.max = max or np.nan
 
