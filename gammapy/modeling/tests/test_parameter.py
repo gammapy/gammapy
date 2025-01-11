@@ -377,21 +377,10 @@ def test_priorparameters_to_table(priorpars):
     assert table["value"][1] == 99
 
 
-def test_parameter_set_min_max(default_parameter):
+def test_parameter_set_min_max_error(default_parameter):
     par = default_parameter
     assert_equal(par.min, np.nan)
     assert_equal(par.max, np.nan)
-    par.min = 1
-    par.max = "3 TeV"
-    assert par.min == 1
-    assert par.max == 3
-    par.min = 2 * u.TeV
-    par.max = 4e3 * u.GeV
-    assert par.min == 2
-    assert par.max == 4
-
-    with pytest.raises(u.UnitsError):
-        par.min = 1 * u.m
 
     par.set_lim(min=1, max=10)
     assert par.min == 1
@@ -404,3 +393,15 @@ def test_parameter_set_min_max(default_parameter):
     par.set_lim((2, 4))
     assert par.min == 2
     assert par.max == 4
+
+    assert par.error == 0
+
+
+def test_set_quantity_str_float(default_parameter):
+    par = default_parameter
+    assert par._set_quantity_str_float(1) == 1
+    assert par._set_quantity_str_float("3 TeV") == 3
+    assert par._set_quantity_str_float(2 * u.TeV) == 2
+    assert par._set_quantity_str_float(4e3 * u.GeV) == 4
+    with pytest.raises(u.UnitsError):
+        par._set_quantity_str_float(1 * u.m)
