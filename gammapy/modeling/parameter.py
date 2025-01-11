@@ -245,7 +245,8 @@ class Parameter:
         """`~astropy.table.Table` has masked values for NaN. Replacing with NaN."""
         if isinstance(val, np.ma.core.MaskedConstant) or (val is None):
             self._min = np.nan
-        self._min = self._set_quantity_str_float(val)
+        else:
+            self._min = self._set_quantity_str_float(val)
 
     @property
     def max(self):
@@ -265,12 +266,8 @@ class Parameter:
         if isinstance(value, u.Quantity) or isinstance(value, str):
             value = u.Quantity(value)
             return float(value.to(self.unit).value)
-        elif isinstance(value, float):
-            return float(value)
         else:
-            raise TypeError(
-                "Can only set attribute to `~astropy.unit.Quantity`, `str` or `float`."
-            )
+            return float(value)
 
     def set_lim(self, min=None, max=None):
         """
