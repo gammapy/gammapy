@@ -201,12 +201,7 @@ class Parameter:
 
     @error.setter
     def error(self, value):
-        if isinstance(value, u.Quantity):
-            self._error = float(value.to(self.unit).value)
-        elif isinstance(value, str):
-            self._error = float(u.Quantity(value).to(self.unit).value)
-        else:
-            self._error = float(u.Quantity(value, unit=self.unit).value)
+        self._error = self._set_quantity_str_float(value)
 
     @property
     def name(self):
@@ -248,7 +243,9 @@ class Parameter:
     @min.setter
     def min(self, val):
         """`~astropy.table.Table` has masked values for NaN. Replacing with NaN."""
-        self._min = self._set_min_max(val)
+        if isinstance(val, np.ma.core.MaskedConstant) or (val is None):
+            self._min = np.nan
+        self._min = self._set_quantity_str_float(val)
 
     @property
     def max(self):
@@ -258,17 +255,22 @@ class Parameter:
     @max.setter
     def max(self, val):
         """`~astropy.table.Table` has masked values for NaN. Replacing with NaN."""
-        self._max = self._set_min_max(val)
+        if isinstance(val, np.ma.core.MaskedConstant) or (val is None):
+            self._max = np.nan
+        else:
+            self._max = self._set_quantity_str_float(val)
 
-    def _set_min_max(self, value):
+    def _set_quantity_str_float(self, value):
         """Logics for min and max setter."""
-        if isinstance(value, np.ma.core.MaskedConstant) or (value is None):
-            return np.nan
-        elif isinstance(value, u.Quantity) or isinstance(value, str):
+        if isinstance(value, u.Quantity) or isinstance(value, str):
             value = u.Quantity(value)
             return float(value.to(self.unit).value)
-        else:
+        elif isinstance(value, float):
             return float(value)
+        else:
+            raise TypeError(
+                "Can only set attribute to `~astropy.unit.Quantity`, `str` or `float`."
+            )
 
     def set_lim(self, min=None, max=None):
         """
