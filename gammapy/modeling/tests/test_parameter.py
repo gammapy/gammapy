@@ -1,10 +1,24 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
-from numpy.testing import assert_allclose
+from numpy.testing import assert_allclose, assert_equal
 from astropy.table import Table
+import astropy.units as u
 from gammapy.modeling import Parameter, Parameters, PriorParameter, PriorParameters
 from gammapy.modeling.models import GaussianPrior
+
+
+@pytest.fixture
+def default_parameter():
+    return Parameter(
+        "test",
+        value=1e-10,
+        min=None,
+        max=None,
+        frozen=False,
+        unit="TeV",
+        scale_method="scale10",
+    )
 
 
 def test_parameter_init():
@@ -277,16 +291,8 @@ def test_parameter_scan_values():
     assert_allclose(p.scan_values, [0.1, 1, 10])
 
 
-def test_update_from_dict():
-    par = Parameter(
-        "test",
-        value=1e-10,
-        min=None,
-        max=None,
-        frozen=False,
-        unit="TeV",
-        scale_method="scale10",
-    )
+def test_update_from_dict(default_parameter):
+    par = default_parameter
     par.autoscale()
     data = {
         "model": "gc",
@@ -369,3 +375,32 @@ def test_priorparameters_to_table(priorpars):
     assert len(table.columns) == 7
     assert table["name"][0] == "spam"
     assert table["value"][1] == 99
+
+
+def test_parameter_set_min_max(default_parameter):
+    par = default_parameter
+    assert_equal(par.min, np.nan)
+    assert_equal(par.max, np.nan)
+    par.min = 1
+    par.max = "3 TeV"
+    assert par.min == 1
+    assert par.max == 3
+    par.min = 2 * u.TeV
+    par.max = 4e3 * u.GeV
+    assert par.min == 2
+    assert par.max == 4
+
+    with pytest.raises(u.UnitsError):
+        par.min = 1 * u.m
+
+    par.set_lim(min=1, max=10)
+    assert par.min == 1
+    assert par.max == 10
+
+    par.set_lim(max=5)
+    assert par.max == 5
+    assert par.min == 1
+
+    par.set_lim((2, 4))
+    assert par.min == 2
+    assert par.max == 4
