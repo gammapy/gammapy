@@ -287,8 +287,10 @@ class Parameter:
             else:
                 raise ValueError(f"""`min` is set to iterable: {min} and `max` is not None, which is undefined behaviour.
                 Either set `min` and `max` or `min` to an iterable.""")
-        self.min = min or np.nan
-        self.max = max or np.nan
+        if min:
+            self.min = min
+        if max:
+            self.max = max
 
     @property
     def factor_min(self):
