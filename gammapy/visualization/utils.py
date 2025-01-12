@@ -8,6 +8,7 @@ from astropy.visualization import make_lupton_rgb
 import matplotlib.axes as maxes
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+from gammapy.modeling import Fit
 
 __all__ = [
     "add_colorbar",
@@ -350,7 +351,6 @@ def plot_distribution(
     result_list = []
 
     for idx in range(cells_in_grid):
-
         axe = axes.flat[idx]
         if idx > len(data) - 1:
             axe.set_visible(False)
@@ -410,3 +410,47 @@ def plot_distribution(
         axe.legend()
 
     return axes, result_list
+
+
+def plot_stat_profile(result, datasets, model_name, ncols=3, fit=None):
+    total_stat = result.total_stat
+
+    if model_name not in datasets.models.names:
+        raise ValueError(
+            f"`model_name` {model_name} not in `datasets.models`. List of valid model name can be access via `datasets.models.names`."
+        )
+
+    fit = fit or Fit()
+
+    model = datasets.models[model_name]
+    free_parameters = model.parameters.free_parameters
+
+    n_plot = len(free_parameters)
+
+    if n_plot == 0:
+        log.warning(f"No free parameters in model {model_name}.")
+        return None
+
+    cols = min(ncols, n_plot)
+    rows = 1 + (n_plot - 1) // cols
+
+    width = 12
+    figsize = (width, width * rows / cols)
+
+    fig, axes = plt.subplots(
+        nrows=rows,
+        ncols=cols,
+        figsize=figsize,
+    )
+
+    for ax, par in zip(axes.flatten(), free_parameters):
+        par.scan_n_values = 17
+        idx = model.parameters.index(par)
+        name = model.parameters_unique_names[idx]
+        profile = fit.stat_profile(datasets=datasets, parameter=par)
+        ax.plot(profile[f"{model.name}.{name}_scan"], profile["stat_scan"] - total_stat)
+        ax.set_xlabel(f"{par.name} [{par.unit}]")
+        ax.set_ylabel("Delta TS")
+        ax.set_title(f"{name}:\n {par.value:.1e} +- {par.error:.1e}")
+
+    plt.show()
