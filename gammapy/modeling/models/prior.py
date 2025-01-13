@@ -157,7 +157,7 @@ class GaussianPrior(Prior):
         """Evaluate the Gaussian prior."""
         return ((value - mu) / sigma) ** 2
 
-    def inverse_cdf(self, val):
+    def _inverse_cdf(self, val):
         """Return inverse CDF for prior."""
         rv = norm(self.mu, self.sigma)
         return rv.ppf(val)
