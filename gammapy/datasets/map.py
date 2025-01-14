@@ -1459,7 +1459,7 @@ class MapDataset(Dataset):
         return ax_spatial, ax_spectral
 
     def stat_sum(self):
-        """Total statistic function value given the current model parameters and priors."""
+        """Total statistic function value given the current model parameters and priors set on the models."""
         prior_stat_sum = 0.0
         if self.models is not None:
             prior_stat_sum = self.models.parameters.prior_stat_sum()
