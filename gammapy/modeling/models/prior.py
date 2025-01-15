@@ -214,8 +214,8 @@ class LogUniformPrior(Prior):
 
     tag = ["LogUniformPrior"]
     _type = "prior"
-    min = PriorParameter(name="min", value=1e-20, unit="")
-    max = PriorParameter(name="max", value=1, unit="")
+    min = PriorParameter(name="min", value=1e-15, unit="")
+    max = PriorParameter(name="max", value=1e-10, unit="")
 
     @staticmethod
     def evaluate(value, min, max):
