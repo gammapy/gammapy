@@ -2321,7 +2321,9 @@ def test_add_fermi_iso():
         "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc.fits.gz", format="gadf"
     )
     filename = "$GAMMAPY_DATA/fermi_3fhl/iso_P8R2_SOURCE_V6_v06.txt"
-    model = create_fermi_isotropic_diffuse_model(filename, dataset_name=dataset.name)
+    model = create_fermi_isotropic_diffuse_model(
+        filename, datasets_names=[dataset.name]
+    )
     assert dataset.name in model.datasets_names
     dataset.models = model
     assert "isotropic" in dataset.models.names[0]

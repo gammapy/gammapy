@@ -1202,7 +1202,7 @@ class TemplateNPredModel(ModelBase):
             self._spectral_model.unfreeze()
 
 
-def create_fermi_isotropic_diffuse_model(filename, dataset_name=None, **kwargs):
+def create_fermi_isotropic_diffuse_model(filename, datasets_names=None, **kwargs):
     """Read Fermi isotropic diffuse model.
 
     See `LAT Background models <https://fermi.gsfc.nasa.gov/ssc/data/access/lat/BackgroundModels.html>`__.
@@ -1230,11 +1230,9 @@ def create_fermi_isotropic_diffuse_model(filename, dataset_name=None, **kwargs):
         TemplateSpectralModel(energy=energy, values=values, **kwargs)
         * PowerLawNormSpectralModel()
     )
-    if dataset_name:
-        datasets_names = [dataset_name]
-        name = f"isotropic_{dataset_name}"
+    if datasets_names and len(datasets_names) == 1:
+        name = f"isotropic_{datasets_names[0]}"
     else:
-        datasets_names = None
         name = "fermi-diffuse-iso"
     return SkyModel(
         spatial_model=spatial_model,
