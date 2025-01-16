@@ -79,7 +79,7 @@ class Dataset(abc.ABC):
         stat = self.stat_array()
 
         if self.mask is not None:
-            stat = stat[self.mask.data]
+            stat = stat[self.mask.data.astype(bool)]
         return np.sum(stat, dtype=np.float64)
 
     @abc.abstractmethod
