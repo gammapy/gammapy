@@ -17,6 +17,7 @@ from gammapy.datasets import (
     Datasets,
     MapDataset,
     MapDatasetOnOff,
+    MapDatasetWeighted,
     create_empty_map_dataset_from_irfs,
     create_map_dataset_from_observation,
 )
@@ -194,7 +195,9 @@ def sky_model():
     )
 
 
-def get_map_dataset(geom, geom_etrue, edisp="edispmap", name="test", **kwargs):
+def get_map_dataset(
+    geom, geom_etrue, edisp="edispmap", name="test", weighted=False, **kwargs
+):
     """Returns a MapDataset"""
     # define background model
     background = Map.from_geom(geom)
@@ -226,21 +229,47 @@ def get_map_dataset(geom, geom_etrue, edisp="edispmap", name="test", **kwargs):
 
     models = FoVBackgroundModel(dataset_name=name)
 
-    return MapDataset(
-        models=models,
-        exposure=exposure,
-        background=background,
-        psf=psf,
-        edisp=edisp,
-        mask_fit=mask_fit,
-        name=name,
-        **kwargs,
-    )
+    if weighted:
+        return MapDatasetWeighted(
+            models=models,
+            exposure=exposure,
+            background=background,
+            psf=psf,
+            edisp=edisp,
+            mask_fit=mask_fit,
+            name=name,
+            **kwargs,
+        )
+    else:
+        return MapDataset(
+            models=models,
+            exposure=exposure,
+            background=background,
+            psf=psf,
+            edisp=edisp,
+            mask_fit=mask_fit,
+            name=name,
+            **kwargs,
+        )
 
 
 @requires_data()
 def test_map_dataset_weight(sky_model, geom, geom_etrue):
     dataset = get_map_dataset(geom, geom_etrue)
+    dataset.stat_type = "cash_weighted"
+
+    bkg_model = FoVBackgroundModel(dataset_name=dataset.name)
+    dataset.models = [sky_model, bkg_model]
+
+    dataset.counts = dataset.npred()
+    dataset.mask_safe = dataset.mask_fit
+    assert_allclose(dataset.stat_sum(), 12824.506311)
+
+    dataset.mask_fit = dataset.mask_fit * 3.0
+    assert_allclose(dataset.stat_sum(), 3.0 * 12824.506311)
+
+    dataset = get_map_dataset(geom, geom_etrue, weighted=True)
+    assert dataset.stat_type == "cash_weighted"
 
     bkg_model = FoVBackgroundModel(dataset_name=dataset.name)
     dataset.models = [sky_model, bkg_model]
