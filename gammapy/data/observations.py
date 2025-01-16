@@ -194,6 +194,12 @@ class Observation:
         gti = self.obs_filter.filter_gti(self._gti)
         return gti
 
+    @gti.setter
+    def gti(self, value):
+        if not isinstance(value, GTI):
+            raise TypeError(f"GTI must be an GTI instance, got: {type(value)}")
+        self._gti = value
+
     @staticmethod
     def _get_obs_info(
         pointing, deadtime_fraction, time_start, time_stop, reference_time, location

@@ -22,6 +22,8 @@ from .geom import pix_tuple_to_idx
 
 __all__ = ["Map"]
 
+u.add_enabled_units([u.def_unit("transit", u.sday)])
+
 
 class Map(abc.ABC):
     """Abstract map class.
@@ -257,9 +259,7 @@ class Map(abc.ABC):
         map_out : `Map`
             Map object.
         """
-        with fits.open(
-            make_path(filename), memmap=False, checksum=checksum
-        ) as hdulist:
+        with fits.open(make_path(filename), memmap=False, checksum=checksum) as hdulist:
             return Map.from_hdulist(
                 hdulist, hdu, hdu_bands, map_type, format=format, colname=colname
             )
