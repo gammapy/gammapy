@@ -631,6 +631,9 @@ class Geom(abc.ABC):
         ----------
         energy_min, energy_max : `~astropy.units.Quantity`
             Energy range.
+        round_to_edge: bool, optional
+            Whether to round `energy_min` and `energy_max` to the closest axis bin value.
+            See `~gammapy.maps.MapAxis.round`. Default is False.
 
         Returns
         -------
@@ -638,22 +641,48 @@ class Geom(abc.ABC):
             Map containing the energy mask. The geometry of the map
             is the same as the geometry of the instance which called this method.
         """
+        return self.create_mask(
+            "energy",
+            edge_min=energy_min,
+            edge_max=energy_max,
+            round_to_edge=round_to_edge,
+        )
+
+    def create_mask(self, axis_name, edge_min=None, edge_max=None, round_to_edge=False):
+        """Create a mask over a given axis.
+
+        Bins must be fully contained to be included in the mask.
+
+        Parameters
+        ----------
+        edge_min, edge_max : `~astropy.units.Quantity` or float
+            Bounds of the mask. `~astropy.units.Quantity` which unit must be consistent with the axis.
+        round_to_edge: bool, optional
+            Whether to round `energy_min` and `energy_max` to the closest axis bin value.
+            See `~gammapy.maps.MapAxis.round`. Default is False.
+
+        Returns
+        -------
+        mask : `~gammapy.maps.Map`
+            Map containing the mask. The geometry of the map is the same as the initial geometry.
+        """
         from . import Map
 
-        # get energy axes and values
-        energy_axis = self.axes["energy"]
+        axes_names = self.axes_names
+
+        axis = self.axes[axis_name]
+
+        axis_edges = axis.edges
+        edge_min = edge_min if edge_min is not None else axis_edges[0]
+        edge_max = edge_max if edge_max is not None else axis_edges[-1]
 
         if round_to_edge:
-            energy_min, energy_max = energy_axis.round([energy_min, energy_max])
+            edge_min, edge_max = axis.round([edge_min, edge_max])
 
-        # TODO: make this more general
-        shape = (-1, 1) if self.is_hpx else (-1, 1, 1)
-        energy_edges = energy_axis.edges.reshape(shape)
-
-        # set default values
-        energy_min = energy_min if energy_min is not None else energy_edges[0]
-        energy_max = energy_max if energy_max is not None else energy_edges[-1]
-
-        mask = (energy_edges[:-1] >= energy_min) & (energy_edges[1:] <= energy_max)
+        axes_names.reverse()
+        mask = (axis_edges[:-1] >= edge_min) & (axis_edges[1:] <= edge_max)
+        mask = np.expand_dims(
+            mask, axis=tuple(np.where(np.array(axes_names) != axis_name)[0])
+        )
         data = np.broadcast_to(mask, shape=self.data_shape)
         return Map.from_geom(geom=self, data=data, dtype=data.dtype)
