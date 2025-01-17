@@ -632,7 +632,7 @@ class Geom(abc.ABC):
         energy_min, energy_max : `~astropy.units.Quantity`
             Energy range.
         round_to_edge: bool, optional
-            Wether to round `energy_min` and `energy_max` to the closest axis bin value.
+            Whether to round `energy_min` and `energy_max` to the closest axis bin value.
             See `~gammapy.maps.MapAxis.round`. Default is False.
 
         Returns
@@ -656,9 +656,9 @@ class Geom(abc.ABC):
         Parameters
         ----------
         edge_min, edge_max : `~astropy.units.Quantity` or float
-            Bounds of the mask. If the axis used for the mask has a unit, passing `~astropy.units.Quantity` is mandatory.
+            Bounds of the mask. `~astropy.units.Quantity` which unit must be consistent with the axis.
         round_to_edge: bool, optional
-            Wether to round `energy_min` and `energy_max` to the closest axis bin value.
+            Whether to round `energy_min` and `energy_max` to the closest axis bin value.
             See `~gammapy.maps.MapAxis.round`. Default is False.
 
         Returns
