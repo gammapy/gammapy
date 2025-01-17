@@ -4,11 +4,11 @@
 import logging
 import numpy as np
 import astropy.units as u
-from scipy.stats import norm, uniform
+from scipy.stats import norm, uniform, loguniform
 from gammapy.modeling import PriorParameter, PriorParameters
 from .core import ModelBase
 
-__all__ = ["GaussianPrior", "UniformPrior", "Prior"]
+__all__ = ["GaussianPrior", "UniformPrior", "LogUniformPrior", "Prior"]
 
 log = logging.getLogger(__name__)
 
@@ -195,4 +195,38 @@ class UniformPrior(Prior):
     def _inverse_cdf(self, value):
         """Return inverse CDF for prior."""
         rv = uniform(self.min.value, self.max.value - self.min.value)
+        return rv.ppf(value)
+
+
+class LogUniformPrior(Prior):
+    """LogUniform Prior.
+
+     Equivalent to a uniform prior on the log of the parameter
+
+     Parameters
+     ----------
+     logmin : float
+         Log of the minimum value.
+    logmax : float
+         Log of the maximum value.
+    """
+
+    tag = ["LogUniformPrior"]
+    _type = "prior"
+    logmin = PriorParameter(name="logmin", value=-15, unit="")
+    logmax = PriorParameter(name="logmax", value=-10, unit="")
+
+    @staticmethod
+    def evaluate(value, logmin, logmax):
+        """
+        Evaluate the likelihood penalization term (hence -2*).
+        Note that this is currently a different scaling that the Uniform or Gaussian priors.
+        With current implementation the TS of a source with/without LogUniform prior would be different... TBD
+        """
+        rv = loguniform(10**logmin, 10**logmax)
+        return -2 * rv.logpdf(value)
+
+    def _inverse_cdf(self, value):
+        """Return inverse CDF for prior."""
+        rv = loguniform(10**self.logmin.value, 10**self.logmax.value)
         return rv.ppf(value)

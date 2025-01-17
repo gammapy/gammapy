@@ -9,7 +9,7 @@ from .cube import (
     TemplateNPredModel,
     create_fermi_isotropic_diffuse_model,
 )
-from .prior import GaussianPrior, Prior, UniformPrior
+from .prior import GaussianPrior, Prior, UniformPrior, LogUniformPrior
 from .spatial import (
     ConstantFluxSpatialModel,
     ConstantSpatialModel,
@@ -112,6 +112,7 @@ __all__ = [
     "Prior",
     "GaussianPrior",
     "UniformPrior",
+    "LogUniformPrior",
     "scale_plot_flux",
     "ScaleSpectralModel",
     "Shell2SpatialModel",
