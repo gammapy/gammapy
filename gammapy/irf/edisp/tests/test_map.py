@@ -14,7 +14,8 @@ from gammapy.irf import (
 )
 from gammapy.makers.utils import make_edisp_map, make_map_exposure_true_energy
 from gammapy.maps import MapAxis, MapCoord, RegionGeom, WcsGeom
-from gammapy.utils.testing import mpl_plot_check
+from gammapy.utils.testing import mpl_plot_check, requires_data
+from gammapy.utils.scripts import make_path
 
 
 def fake_aeff2d(area=1e6 * u.m**2):
@@ -330,3 +331,16 @@ def test_peek():
 
     with mpl_plot_check():
         edisp.peek()
+
+
+@requires_data()
+def test_read_drm():
+    file_path = make_path("$GAMMAPY_DATA/tests/fermi/drm_00.fits")
+
+    edisp = EDispKernel.read(file_path, format="gtdrm", checksum=True)
+    assert edisp.data.shape == (4, 4)
+    assert_allclose(edisp.data[0, 0], 8.9665985e-01)
+
+    edisp = EDispKernelMap.read(file_path, format="gtdrm", checksum=True)
+    assert edisp.edisp_map.data.shape == (4, 4, 1, 1)
+    assert_allclose(edisp.edisp_map.data[0, 0, 0, 0], 8.9665985e-01)
