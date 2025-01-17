@@ -755,6 +755,7 @@ def test_prior_stat_sum(sky_model, geom, geom_etrue):
 
     uniformprior = UniformPrior(min=0, max=np.inf, weight=1)
     datasets.models.parameters["amplitude"].prior = uniformprior
+    assert_allclose(datasets._stat_sum_likelihood(), 12825.9370, rtol=1e-3)
     assert_allclose(datasets.stat_sum(), 12825.9370, rtol=1e-3)
 
     datasets.models.parameters["amplitude"].value = -1e-12
@@ -1159,11 +1160,38 @@ def test_npred(sky_model, geom, geom_etrue):
     assert_allclose(dataset.npred_background().data.sum(), 4400.0, rtol=1e-3)
     assert_allclose(dataset._background_cached.data.sum(), 4400.0, rtol=1e-3)
 
+    for ev in dataset.evaluators.values():
+        assert ev._computation_cache is not None
+
     with pytest.raises(
         KeyError,
         match="m2",
     ):
         dataset.npred_signal(model_names=["m2"])
+
+
+@requires_data()
+def test_npred_no_cache(sky_model, geom, geom_etrue):
+    import gammapy.datasets.map as dmap
+
+    dmap.USE_NPRED_CACHE = False
+
+    dataset = get_map_dataset(geom, geom_etrue)
+
+    pwl = PowerLawSpectralModel()
+    gauss = GaussianSpatialModel(
+        lon_0="0.0 deg", lat_0="0.0 deg", sigma="0.5 deg", frame="galactic"
+    )
+    model1 = SkyModel(pwl, gauss, name="m1")
+
+    dataset.models = [sky_model, model1]
+
+    dataset.npred()
+    for ev in dataset.evaluators.values():
+        assert ev._computation_cache is None
+        assert ev._cached_parameter_previous is None
+
+    dmap.USE_NPRED_CACHE = True
 
 
 def test_stack_npred():

@@ -1234,5 +1234,5 @@ def create_fermi_isotropic_diffuse_model(filename, **kwargs):
         spatial_model=spatial_model,
         spectral_model=spectral_model,
         name="fermi-diffuse-iso",
-        apply_irf={"psf": False, "exposure": True, "edisp": True},
+        apply_irf={"psf": False, "exposure": True, "edisp": False},
     )
