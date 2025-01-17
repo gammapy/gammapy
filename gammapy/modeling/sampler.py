@@ -41,11 +41,17 @@ class Sampler:
         Defines the Ultranest sampler and options
         Returns the result that contains the samples
         """
+
+        def _prior_inverse_cdf(values):
+            if None in parameters:
+                raise ValueError("Some parameters have no prior set. Check.")
+            return [par.prior._inverse_cdf(val) for par, val in zip(parameters, values)]
+
         # create ultranest object
         self._sampler = ultranest.ReactiveNestedSampler(
             parameters.names,
             like.fcn,
-            transform=parameters.prior_inverse_cdf,  # TODO: would need to be modified
+            transform=_prior_inverse_cdf,
             log_dir=self.sampler_opts["log_dir"],
             resume=self.sampler_opts["resume"],
         )
@@ -71,10 +77,11 @@ class Sampler:
         if self.backend == "ultranest":
             # create log likelihood function
             like = SamplerLikelihood(
-                function=datasets.stat_sum_no_prior, parameters=parameters
+                function=datasets._stat_sum_likelihood, parameters=parameters
             )
             result = self.sampler_ultranest(parameters, like)
 
+        print(self._sampler.print_results())
         return result
 
 
