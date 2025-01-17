@@ -11,12 +11,14 @@ class Sampler:
     """Sampler class.
 
     The sampler class provides a uniform interface to multiple sampler backends.
-    Currently available: "UltraNest", "emcee" in #TODO .
+    Currently available: "UltraNest", ("zeusmc", "emcee"  in #TODO).
 
     Parameters
     ----------
     backend : {"ultranest"}
         Global backend used for sampler. Default is "ultranest".
+        UltraNest: Most options can be found in the UltraNest doc
+        https://johannesbuchner.github.io/UltraNest/ultranest.html#ultranest.integrator.ReactiveNestedSampler
 
     #TODO : describe all parameters
     """
@@ -39,12 +41,14 @@ class Sampler:
     def sampler_ultranest(self, parameters, like):
         """
         Defines the Ultranest sampler and options
-        Returns the result that contains the samples
+        Returns the result dictionary that contains the samples and other information.
         """
 
         def _prior_inverse_cdf(values):
             if None in parameters:
-                raise ValueError("Some parameters have no prior set. Check.")
+                raise ValueError(
+                    "Some parameters have no prior set. You need priors on all parameters."
+                )
             return [par.prior._inverse_cdf(val) for par, val in zip(parameters, values)]
 
         # create ultranest object
