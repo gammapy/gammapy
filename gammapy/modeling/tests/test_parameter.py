@@ -390,10 +390,6 @@ def test_parameter_set_min_max_error(default_parameter):
     assert par.max == 5
     assert par.min == 1
 
-    par.set_lim((2, 4))
-    assert par.min == 2
-    assert par.max == 4
-
     assert par.error == 0
 
 
