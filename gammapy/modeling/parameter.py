@@ -275,20 +275,13 @@ class Parameter:
 
         Parameters
         ----------
-        min, max: float, `~astropy.units.Quantity`, str or tuple of float/`~astropy.units.Quantity`/str
-            Minimum and Maximum value to assign to the parameter `min` and `max`. If a tuple is
-            passed and `max` is set to None, the tuple will be decomposed into min and max value.
+        min, max: float, `~astropy.units.Quantity`, str
+            Minimum and Maximum value to assign to the parameter `min` and `max`.
             Default is None, which set `min` and `max` to `np.nan`.
         """
-        if np.iterable(min):
-            if max is None:
-                min, max = min
-            else:
-                raise ValueError(f"""`min` is set to iterable: {min} and `max` is not None, which is undefined behaviour.
-                Either set `min` and `max` or `min` to an iterable.""")
-        if min:
+        if min is not None:
             self.min = min
-        if max:
+        if max is not None:
             self.max = max
 
     @property
