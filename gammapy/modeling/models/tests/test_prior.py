@@ -40,9 +40,9 @@ TEST_PRIORS = [
     ),
     dict(
         name="loguniform",
-        model=LogUniformPrior(min=1e-14, max=1e-10),
-        prior_0=LogUniformPrior(min=1e-14, max=1e-10)(1e-10 * u.Unit("")),
-        prior_1=LogUniformPrior(min=1e-14, max=1e-10)(1e-14 * u.Unit("")),
+        model=LogUniformPrior(logmin=-14, logmax=-10),
+        prior_0=LogUniformPrior(logmin=-14, logmax=-10)(1e-10 * u.Unit("")),
+        prior_1=LogUniformPrior(logmin=-14, logmax=-10)(1e-14 * u.Unit("")),
         val_at_0=-41.61104824714522,
         val_at_1=-60.03172899109759,
         value_0=0,

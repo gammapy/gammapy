@@ -201,33 +201,32 @@ class UniformPrior(Prior):
 class LogUniformPrior(Prior):
     """LogUniform Prior.
 
-    Equivalent to a uniform prior on the log of the parameter
+     Equivalent to a uniform prior on the log of the parameter
 
-    Parameters
-    ----------
-    min : float
-        Minimum value.
-        Cannot be zero or negative.
-    max : float
-        Maxmimum value.
+     Parameters
+     ----------
+     logmin : float
+         Log of the minimum value.
+    logmax : float
+         Log of the maximum value.
     """
 
     tag = ["LogUniformPrior"]
     _type = "prior"
-    min = PriorParameter(name="min", value=1e-15, unit="")
-    max = PriorParameter(name="max", value=1e-10, unit="")
+    logmin = PriorParameter(name="logmin", value=-15, unit="")
+    logmax = PriorParameter(name="logmax", value=-10, unit="")
 
     @staticmethod
-    def evaluate(value, min, max):
+    def evaluate(value, logmin, logmax):
         """
         Evaluate the likelihood penalization term (hence -2*).
         Note that this is currently a different scaling that the Uniform or Gaussian priors.
         With current implementation the TS of a source with/without LogUniform prior would be different... TBD
         """
-        rv = loguniform(min, max)
+        rv = loguniform(10**logmin, 10**logmax)
         return -2 * rv.logpdf(value)
 
     def _inverse_cdf(self, value):
         """Return inverse CDF for prior."""
-        rv = loguniform(self.min.value, self.max.value)
+        rv = loguniform(10**self.logmin.value, 10**self.logmax.value)
         return rv.ppf(value)
