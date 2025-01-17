@@ -14,7 +14,9 @@ from gammapy.maps import (
     TimeMapAxis,
     WcsGeom,
     WcsNDMap,
+    RegionGeom,
 )
+from regions import CircleSkyRegion
 from gammapy.utils.testing import modify_unit_order_astropy_5_3, mpl_plot_check
 
 pytest.importorskip("healpy")
@@ -1018,3 +1020,21 @@ def test_make_mask_geom():
 
     mask_energy = geom.create_mask("energy", 2 * u.TeV, 2.5 * u.TeV)
     assert ~np.all(mask_energy)
+
+    geom_hpx = HpxGeom.create(binsz=10, frame="galactic", axes=[energy, phase, freq])
+
+    mask_freq = geom_hpx.create_mask("freq", 3 * u.Hz, 5 * u.Hz, round_to_edge=True)
+    assert_allclose(
+        mask_freq.sum_over_axes(["energy", "phase"]).data.sum(axis=3).squeeze(),
+        [0, 23040, 0, 0],
+    )
+
+    geom_region = RegionGeom.create(
+        CircleSkyRegion(SkyCoord(2, 4.5, unit="deg", frame="icrs"), 0.1 * u.deg),
+        axes=[energy, phase, freq],
+    )
+    mask_energy = geom_region.create_mask("energy", 1 * u.TeV, 3 * u.TeV)
+    assert_allclose(
+        mask_energy.sum_over_axes(["phase", "freq"]).data.sum(),
+        48,
+    )
