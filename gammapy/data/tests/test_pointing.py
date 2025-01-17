@@ -15,7 +15,7 @@ from gammapy.utils.time import time_ref_to_dict, time_relative_to_ref
 
 def test_fixed_pointing_icrs():
     """Test new api of FixedPointingInfo in ICRS (POINTING)"""
-    location = observatory_locations["cta_south"]
+    location = observatory_locations["ctao_south"]
     fixed_icrs = SkyCoord(ra=83.28 * u.deg, dec=21.78 * u.deg)
 
     pointing = FixedPointingInfo(
@@ -61,7 +61,7 @@ def test_fixed_pointing_icrs():
 
 def test_fixed_pointing_info_altaz():
     """Test new api of FixedPointingInfo in AltAz (DRIFT)"""
-    location = observatory_locations["cta_south"]
+    location = observatory_locations["ctao_south"]
     fixed_altaz = SkyCoord(alt=70 * u.deg, az=0 * u.deg, frame=AltAz())
     pointing = FixedPointingInfo(
         fixed_altaz=fixed_altaz,
@@ -239,7 +239,7 @@ class TestPointingInfo:
     ],
 )
 def test_fixed_pointing_info_fixed_icrs_from_meta(obs_mode):
-    location = observatory_locations["cta_south"]
+    location = observatory_locations["ctao_south"]
     start = Time("2020-11-01T03:00:00")
     stop = Time("2020-11-01T03:15:00")
     ref = Time("2020-11-01T00:00:00")
@@ -287,7 +287,7 @@ def test_fixed_pointing_info_fixed_icrs_from_meta(obs_mode):
 
 
 def test_fixed_pointing_info_fixed_altaz_from_meta():
-    location = observatory_locations["cta_south"]
+    location = observatory_locations["ctao_south"]
     start = Time("2020-11-01T03:00:00")
     stop = Time("2020-11-01T03:15:00")
     ref = Time("2020-11-01T00:00:00")
