@@ -531,6 +531,15 @@ class MapDataset(Dataset):
 
         self.counts = counts
         self.exposure = exposure
+
+        if counts:
+            if isinstance(counts.geom, WcsGeom):
+                if exposure:
+                    if exposure.geom._wcs != counts.geom._wcs:
+                        log.warning(
+                            "Incompatible wcs between counts and exposure maps!"
+                        )
+
         self.background = background
         self._background_cached = None
         self._background_parameters_cached = None

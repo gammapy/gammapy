@@ -911,7 +911,7 @@ def test_map_fit_one_energy_bin(sky_model, geom_image):
     assert_allclose(pars["amplitude"].error, 8.127593e-14, rtol=1e-2)
 
 
-def test_create():
+def test_create(caplog):
     # tests empty datasets created
     rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="rad")
     e_reco = MapAxis.from_edges(
@@ -938,6 +938,14 @@ def test_create():
     assert_allclose(empty_dataset.edisp.edisp_map.data.sum(), 300)
 
     assert_allclose(empty_dataset.gti.time_delta, 0.0 * u.s)
+
+    # test incompatible geoms
+    exposure = Map.from_geom(WcsGeom.create(binsz=0.02, width=(4, 4), axes=[e_true]))
+
+    MapDataset(counts=empty_dataset.counts, exposure=exposure)
+    message = "Incompatible wcs between counts and exposure maps!"
+    assert "WARNING" in [_.levelname for _ in caplog.records]
+    assert message in [_.message for _ in caplog.records]
 
 
 def test_create_with_migra(tmp_path):
