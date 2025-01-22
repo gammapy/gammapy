@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
+import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.modeling.models import PRIOR_REGISTRY, GaussianPrior, Model, UniformPrior
@@ -12,13 +13,17 @@ TEST_PRIORS = [
         val_at_0=16.0,
         val_at_1=9.0,
         val_with_weight_2=32.0,
+        inverse_cdf_at_0=-np.inf,
+        inverse_cdf_at_1=np.inf,
     ),
     dict(
         name="uni",
-        model=UniformPrior(min=0.0),
+        model=UniformPrior(min=0.0, max=10),
         val_at_0=1.0,
         val_at_1=0.0,
         val_with_weight_2=2.0,
+        inverse_cdf_at_0=0.0,
+        inverse_cdf_at_1=10.0,
     ),
 ]
 
@@ -37,6 +42,11 @@ def test_priors(prior):
     model.weight = 2.0
     value_0_weight = model(0.0 * u.Unit(""))
     assert_allclose(value_0_weight, prior["val_with_weight_2"], rtol=1e-7)
+
+    value_0 = model._inverse_cdf(0.0)
+    value_1 = model._inverse_cdf(1.0)
+    assert_allclose(value_0, prior["inverse_cdf_at_0"], rtol=1e-7)
+    assert_allclose(value_1, prior["inverse_cdf_at_1"], rtol=1e-7)
 
 
 def test_to_from_dict():

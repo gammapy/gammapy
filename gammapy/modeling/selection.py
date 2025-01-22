@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
-from gammapy.modeling import Fit, Parameter
+from gammapy.modeling import Fit, Parameter, Covariance
 from gammapy.stats.utils import sigma_to_ts
 from .fit import FitResult, OptimizeResult
 
@@ -72,9 +72,9 @@ class TestStatisticNested:
          (for example considereing diffuse background or nearby source).
         """
         stat = datasets.stat_sum()
-        object_cache, prev_pars = self._apply_null_hypothesis(datasets)
+        cache = self._apply_null_hypothesis(datasets)
         stat_null = datasets.stat_sum()
-        self._restore_status(datasets, object_cache, prev_pars)
+        self._restore_status(datasets, cache)
         return stat_null - stat
 
     def ts_asimov(self, datasets):
@@ -121,7 +121,7 @@ class TestStatisticNested:
         fit_results = self.fit.run(datasets)
         stat = datasets.stat_sum()
 
-        object_cache, prev_pars = self._apply_null_hypothesis(datasets)
+        cache = self._apply_null_hypothesis(datasets)
 
         if len(datasets.models.parameters.free_parameters) > 0:
             fit_results_null = self.fit.run(datasets)
@@ -143,7 +143,7 @@ class TestStatisticNested:
         ts = stat_null - stat
         if not apply_selection or ts > self.ts_threshold:
             # restore default model if preferred against null hypothesis or if selection is ignored
-            self._restore_status(datasets, object_cache, prev_pars)
+            self._restore_status(datasets, cache)
         return dict(
             ts=ts,
             fit_results=fit_results,
@@ -151,23 +151,30 @@ class TestStatisticNested:
         )
 
     def _apply_null_hypothesis(self, datasets):
-        object_cache = [p.__dict__ for p in datasets.models.parameters]
-        prev_pars = [p.value for p in datasets.models.parameters]
+        cache = dict()
+        cache["object"] = [p.__dict__ for p in datasets.models.parameters]
+        cache["values"] = [p.value for p in datasets.models.parameters]
+        cache["error"] = [p.error for p in datasets.models.parameters]
         for p, val in zip(self.parameters, self.null_values):
             if isinstance(val, Parameter):
                 p.__dict__ = val.__dict__
             else:
                 p.value = val
                 p.frozen = True
-        return object_cache, prev_pars
+        cache["covar"] = Covariance(
+            datasets.models.parameters, datasets.models.covariance.data
+        )
+        return cache
 
-    def _restore_status(self, datasets, object_cache, prev_pars):
-        """Restore parameters to given cached cached objects and values"""
+    def _restore_status(self, datasets, cache):
+        """Restore parameters to given cached objects and values"""
         for p in self.parameters:
             p.frozen = False
         for kp, p in enumerate(datasets.models.parameters):
-            p.__dict__ = object_cache[kp]
-            p.value = prev_pars[kp]
+            p.__dict__ = cache["object"][kp]
+            p.value = cache["values"][kp]
+            p.error = cache["error"][kp]
+        datasets._covariance = cache["covar"]
 
 
 def select_nested_models(
@@ -197,9 +204,10 @@ def select_nested_models(
     n_free_parameters : int, optional
         Number of free parameters to consider between the two hypothesis
         in order to estimate the `ts_threshold` from the `n_sigma` threshold.
-        Default is len(parameters).
+        Default is ``len(parameters)``.
     fit : `Fit`, optional
-        Fit instance specifying the backend and fit options. Default is None.
+        Fit instance specifying the backend and fit options. Default is None, which utilises
+        the "minuit" backend with tol=0.1 and strategy=1.
 
     Returns
     -------

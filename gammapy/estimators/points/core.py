@@ -667,10 +667,29 @@ class FluxPoints(FluxMaps):
         flux = scale_plot_flux(flux=flux.to_unit(flux_unit), energy_power=energy_power)
         if "time" in flux.geom.axes_names:
             flux.geom.axes["time"].time_format = time_format
-        ax = flux.plot(ax=ax, **kwargs)
-        ax.set_ylabel(f"{sed_type} [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]")
-        ax.set_yscale("log")
+            ax = flux.plot(ax=ax, **kwargs)
+        else:
+            ax = flux.plot(ax=ax, **kwargs)
+            ax.set_xlabel(f"Energy [{ax.xaxis.units.to_string(UNIT_STRING_FORMAT)}]")
+            ax.set_xscale("log", nonpositive="clip")
+        self._plot_format_yax(ax=ax, energy_power=energy_power, sed_type=sed_type)
+
+        if len(flux.geom.axes) > 1:
+            ax.legend()
         return ax
+
+    @staticmethod
+    def _plot_format_yax(ax, energy_power, sed_type):
+        if energy_power > 0:
+            ax.set_ylabel(
+                f"e{energy_power} * {sed_type} [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]"
+            )
+        else:
+            ax.set_ylabel(
+                f"{sed_type} [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]"
+            )
+
+        ax.set_yscale("log", nonpositive="clip")
 
     def plot_ts_profiles(
         self,

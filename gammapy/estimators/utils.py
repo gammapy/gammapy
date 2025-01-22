@@ -834,6 +834,7 @@ def combine_significance_maps(maps):
     return dict(
         significance=significance,
         df=df,
+        ts=ts_sum,
         npred_excess=npred_excess_sum,
         estimator_results=maps,
     )
@@ -1398,3 +1399,14 @@ def _get_norm_scan_values(norm, result):
         rand_norms = 20 * np.random.rand(109 - len(sparse_norms)) - 10
         sparse_norms = np.concatenate((sparse_norms, rand_norms))
     return np.sort(sparse_norms)
+
+
+def apply_threshold_sensitivity(
+    background, excess_counts, gamma_min=10, bkg_syst_fraction=0.05
+):
+    """Apply sensitivity  threshold in case it is limited by statistic or background"""
+    is_gamma_limited = excess_counts < gamma_min
+    excess_counts[is_gamma_limited] = gamma_min
+    bkg_syst_limited = excess_counts < bkg_syst_fraction * background
+    excess_counts[bkg_syst_limited] = bkg_syst_fraction * background[bkg_syst_limited]
+    return excess_counts

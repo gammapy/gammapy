@@ -1,12 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Priors for Gammapy."""
+
 import logging
 import numpy as np
 import astropy.units as u
+from scipy.stats import norm, uniform
 from gammapy.modeling import PriorParameter, PriorParameters
 from .core import ModelBase
 
-__all__ = ["GaussianPrior", "UniformPrior"]
+__all__ = ["GaussianPrior", "UniformPrior", "Prior"]
 
 log = logging.getLogger(__name__)
 
@@ -155,6 +157,11 @@ class GaussianPrior(Prior):
         """Evaluate the Gaussian prior."""
         return ((value - mu) / sigma) ** 2
 
+    def _inverse_cdf(self, value):
+        """Return inverse CDF for prior."""
+        rv = norm(self.mu.value, self.sigma.value)
+        return rv.ppf(value)
+
 
 class UniformPrior(Prior):
     """Uniform Prior.
@@ -184,3 +191,8 @@ class UniformPrior(Prior):
             return 0.0
         else:
             return 1.0
+
+    def _inverse_cdf(self, value):
+        """Return inverse CDF for prior."""
+        rv = uniform(self.min.value, self.max.value - self.min.value)
+        return rv.ppf(value)
