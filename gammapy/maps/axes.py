@@ -1818,7 +1818,9 @@ class MapAxes(Sequence):
             for ax in self._axes:
                 if ax.name == idx:
                     return ax
-            raise KeyError(f"No axes: {idx!r}")
+            raise KeyError(
+                f"Axis with name `{idx!r}` not in list of axis names: {self.names}."
+            )
         elif isinstance(idx, slice):
             axes = self._axes[idx]
             return self.__class__(axes=axes)

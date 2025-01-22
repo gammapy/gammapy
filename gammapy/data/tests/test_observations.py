@@ -515,7 +515,7 @@ def test_observations_clustering(data_store):
         names=names,
         apply_standard_scaler=True,
     )
-    features = hierarchical_clustering(features)
+    features = hierarchical_clustering(features, fcluster_kwargs={"t": 2})
     features_array = np.array(
         [
             features[col].data
