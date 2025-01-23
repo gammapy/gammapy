@@ -69,14 +69,18 @@ class Dataset(abc.ABC):
 
     def stat_sum(self):
         """Total statistic given the current model parameters and priors."""
+        prior_stat_sum = 0.0
+        if self.models is not None:
+            prior_stat_sum = self.models.parameters.prior_stat_sum()
+        return self._stat_sum_likelihood() + prior_stat_sum
+
+    def _stat_sum_likelihood(self):
+        """Total statistic given the current model parameters without the priors."""
         stat = self.stat_array()
 
         if self.mask is not None:
             stat = stat[self.mask.data]
-        prior_stat_sum = 0.0
-        if self.models is not None:
-            prior_stat_sum = self.models.parameters.prior_stat_sum()
-        return np.sum(stat, dtype=np.float64) + prior_stat_sum
+        return np.sum(stat, dtype=np.float64)
 
     @abc.abstractmethod
     def stat_array(self):
@@ -235,9 +239,15 @@ class Datasets(collections.abc.MutableSequence):
     def stat_sum(self):
         """Compute joint statistic function value."""
         stat_sum = 0
-        # TODO: add parallel evaluation of likelihoods
         for dataset in self:
             stat_sum += dataset.stat_sum()
+        return stat_sum
+
+    def _stat_sum_likelihood(self):
+        """Total statistic given the current model parameters without the priors."""
+        stat_sum = 0
+        for dataset in self:
+            stat_sum += dataset._stat_sum_likelihood()
         return stat_sum
 
     def select_time(self, time_min, time_max, atol="1e-6 s"):
