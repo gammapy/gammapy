@@ -80,12 +80,14 @@ def test_dataset_split():
     datasets = split_dataset(dataset, width, margin, split_template_models=False)
     assert len(datasets) == 15
     assert len(datasets.models) == 1
+    assert datasets.models[0].name == "diffuse-iem"
 
     datasets = split_dataset(
         dataset, width=width, margin=margin, split_template_models=True
     )
     assert len(datasets.models) == len(datasets)
     assert len(datasets.parameters.free_parameters) == 1
+    assert "diffuse-iem" in datasets.models[0].name
     assert (
         datasets[7].models[0].spatial_model.map.geom.width[0][0] == width + 2 * margin
     )
