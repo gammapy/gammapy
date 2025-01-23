@@ -1,3 +1,4 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 from .core import Dataset
 from gammapy.modeling.models import DatasetModels
 from gammapy.data import EventList
