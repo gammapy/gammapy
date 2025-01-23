@@ -4,6 +4,7 @@ from gammapy.data import EventList
 from gammapy.utils.scripts import make_name
 from gammapy.utils.fits import LazyFitsData
 from gammapy.irf import PSFMap, HDULocation, EDispMap, EDispKernelMap
+import numpy as np
 
 
 class EventDataset(Dataset):
@@ -101,7 +102,7 @@ class EventDataset(Dataset):
 
     @property
     def events(self):
-        return self._events
+        return self._events.select_row_subset(self.event_mask)
 
     @events.setter
     def events(self, value):
@@ -110,3 +111,17 @@ class EventDataset(Dataset):
                 f"'events' must ba an instance of `EventList`, got `{type(value)}` instead."
             )
         self._events = value
+
+    @property
+    def mask_event(self):
+        """Entry for each event whether it is inside the mask or not"""
+        if self.mask is None:
+            return np.ones(len(self.events.table), dtype=bool)
+        coords = self.events.map_coord(self.mask.geom)
+        return self.mask.get_by_coord(coords) == 1
+
+    def info_dict():
+        pass
+
+    def stat_array(self):
+        pass
