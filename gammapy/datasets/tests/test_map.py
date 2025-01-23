@@ -263,6 +263,34 @@ def test_map_dataset_str(sky_model, geom, geom_etrue):
     assert "MapDataset" in str(dataset)
 
 
+@requires_data()
+def test_map_dataset_to_asimov(sky_model, geom, geom_etrue):
+    dataset = get_map_dataset(geom, geom_etrue)
+
+    bkg_model = FoVBackgroundModel(dataset_name=dataset.name)
+    dataset.models = [sky_model, bkg_model]
+
+    npred_sum = dataset.npred().data.sum()
+
+    asimov_dataset = dataset._to_asimov_dataset()
+
+    assert_allclose(asimov_dataset.counts.data.sum(), npred_sum)
+
+    assert len(asimov_dataset.models) == len(dataset.models)
+    assert asimov_dataset.background_model is not None
+
+    dataset2 = dataset.copy()
+    bkg_model2 = FoVBackgroundModel(dataset_name=dataset2.name)
+    dataset2.models = [sky_model, bkg_model2]
+
+    datasets = Datasets([dataset, dataset2])
+
+    asimov_datasets = datasets._to_asimov_datasets()
+    assert len(asimov_datasets.models) == len(datasets.models)
+    assert_allclose(asimov_datasets[0].counts.data.sum(), npred_sum)
+    assert_allclose(asimov_datasets[1].counts.data.sum(), npred_sum)
+
+
 def test_map_dataset_str_empty():
     dataset = MapDataset()
     assert "MapDataset" in str(dataset)
@@ -1342,6 +1370,18 @@ def get_map_dataset_onoff(images, **kwargs):
         name="MapDatasetOnOff-test",
         **kwargs,
     )
+
+
+@requires_data()
+def test_map_dataset_on_off_to_asimov(images):
+    dataset = get_map_dataset_onoff(images)
+
+    npred_sum = dataset.npred().data.sum()
+
+    asimov_dataset = dataset._to_asimov_dataset()
+    counts_asimov = asimov_dataset.counts.data.sum()
+
+    assert_allclose(npred_sum, counts_asimov)
 
 
 @requires_data()

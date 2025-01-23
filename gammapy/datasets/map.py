@@ -1480,6 +1480,35 @@ class MapDataset(Dataset):
         else:
             return cash_sum_cython(counts.ravel(), npred.ravel()) + prior_stat_sum
 
+    def _to_asimov_dataset(self):
+        """Create Asimov dataset from the current models.
+
+        Parameters
+        ----------
+        name : str, optional
+            Name of the new dataset. Default is None.
+
+        """
+        npred = self.npred()
+        data = np.nan_to_num(npred.data, copy=True, nan=0.0, posinf=0.0, neginf=0.0)
+        npred.data = data.astype("float")
+
+        asimov_dataset = self.__class__(
+            models=self.models,
+            counts=npred,
+            exposure=self.exposure,
+            background=self.background,
+            psf=self.psf,
+            edisp=self.edisp,
+            mask_safe=self.mask_safe,
+            mask_fit=self.mask_fit,
+            gti=self.gti,
+            name=self.name,
+            meta=self.meta,
+        )
+        asimov_dataset._evaluators = self._evaluators
+        return asimov_dataset
+
     def fake(self, random_state="random-seed"):
         """Simulate fake counts for the current model and reduced IRFs.
 
@@ -2700,6 +2729,38 @@ class MapDatasetOnOff(MapDataset):
             background=background,
             meta_table=self.meta_table,
         )
+
+    def _to_asimov_dataset(self):
+        """Create Asimov dataset from the current models.
+
+        Parameters
+        ----------
+        name : str, optional
+            Name of the new dataset. Default is None.
+
+        """
+        npred = self.npred()
+        data = np.nan_to_num(npred.data, copy=True, nan=0.0, posinf=0.0, neginf=0.0)
+        npred.data = data.astype("float")
+
+        asimov_dataset = self.__class__(
+            models=self.models,
+            counts=npred,
+            counts_off=self.counts_off,
+            exposure=self.exposure,
+            acceptance=self.acceptance,
+            acceptance_off=self.acceptance_off,
+            psf=self.psf,
+            edisp=self.edisp,
+            mask_safe=self.mask_safe,
+            mask_fit=self.mask_fit,
+            gti=self.gti,
+            name=self.name,
+            meta=self.meta,
+        )
+        asimov_dataset._evaluators = self._evaluators
+
+        return asimov_dataset
 
     @property
     def _is_stackable(self):
