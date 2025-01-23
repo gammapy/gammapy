@@ -367,6 +367,8 @@ def test_interpolate_map_dataset():
         geom=geom_target, energy_axis_true=energy_true, rad_axis=rad_axis, name="test"
     )
     dataset = maker.run(dataset, obs)
+    assert dataset.psf.exposure_map and np.all(dataset.psf.exposure_map.data == 1.0)
+    assert dataset.edisp.exposure_map and np.all(dataset.edisp.exposure_map.data == 0.0)
 
     # test counts
     assert dataset.counts.data.sum() == nr_ev
@@ -483,7 +485,6 @@ def test_dataset_hawc():
     results["NN"] = [6.57154247837e16, 62, 0.76743538]
 
     for which in ["GP", "NN"]:
-
         # paths and file names
         data_path = "$GAMMAPY_DATA/hawc/crab_events_pass4/"
         hdu_filename = "hdu-index-table-" + which + "-Crab.fits.gz"
