@@ -303,17 +303,17 @@ def create_global_dataset(
     energy_true_max=None,
     nbin_per_decade=None,
 ):
-    """Create an empty dataset emcompassing the input datasets.
+    """Create an empty dataset encompassing the input datasets.
 
     Parameters
     ----------
     datasets : `~gammapy.datasets.Datasets`
         Datasets
     name : str, optional
-            Name of the output dataset. Default is None.
+        Name of the output dataset. Default is None.
     position : `~astropy.coordinates.SkyCoord`
         Center position of the output dataset.
-        Defalut is None, and the average postion is taken.
+        Default is None, and the average position is taken.
     binsz : float or tuple or list, optional
         Map pixel size in degrees.
         Default is None, the minimum bin size is taken.
@@ -327,15 +327,13 @@ def create_global_dataset(
     energy_max :  `~astropy.units.Quantity`
         Energy range.
         Default is None, the maximum energy is taken.
-    energy_true_min :  `~astropy.units.Quantity`
-        Energy range.
-        Default is None, the minimum energy is taken.
-    energy_true_max :  `~astropy.units.Quantity`
-        Energy range.
-        Default is None, the maximum energy is taken.
+    energy_true_min, energy_true_max :  `~astropy.units.Quantity`,  `~astropy.units.Quantity`
+        True energy range. If None, minimum and maximum energies of all geometries is used.
+        Default is None.
     nbin_per_decade : int
-        number of energy bin per decade.
+        number of energy bins per decade.
         Default is None, the maximum is taken.
+        
     Returns
     -------
     datasets : `~gammapy.datasets.MapDatset`
@@ -376,8 +374,7 @@ def create_global_dataset(
     if width is None:
         width = np.max(u.Quantity(width_list))
     width = _check_width(width)
-    if energy_true_min is None:
-        energy_true_min = np.min(u.Quantity(energy_true_min_list))
+    energy_true_min = energy_true_min if energy_true_min is not None else u.Quantity(energy_true_min_list).min()
     if energy_true_max is None:
         energy_true_max = np.max(u.Quantity(energy_true_max_list))
     if energy_min is None:
@@ -386,8 +383,7 @@ def create_global_dataset(
         energy_max = np.max(u.Quantity(energy_max_list))
     energy_min = np.maximum(energy_min, energy_true_min)
     energy_max = np.minimum(energy_max, energy_true_max)
-    if nbin_per_decade is None:
-        nbin_per_decade = np.max(nbin_per_decade_list)
+    nbin_per_decade = nbin_per_decade if nbin_per_decade is not None else np.max(nbin_per_decade_list)
     energy_axis = MapAxis.from_energy_bounds(
         energy_min, energy_max, nbin_per_decade, unit="TeV", per_decade=True
     )
