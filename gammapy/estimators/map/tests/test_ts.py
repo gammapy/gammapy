@@ -646,3 +646,15 @@ def test_joint_ts_map_hawc():
         result["dnde_scan_values"].data[0, 0, 59, 59], -3.164557e-13, rtol=1e-3
     )
     assert_allclose(result["stat_scan"].data[0, 0, 59, 59], 7625.040553, rtol=1e-3)
+
+    estimator = TSMapEstimator(
+        kernel_width=2 * u.deg,
+        sum_over_energy_groups=True,
+        selection_optional=["sensitivity"],
+        n_jobs=4,
+    )
+    result = estimator.estimate_sensitivity(datasets)
+    assert_allclose(result["norm_sensitivity"].data[0, 59, 59], 0.025035, rtol=1e-3)
+
+    result = estimator.run(datasets)
+    assert_allclose(result["flux_sensitivity"].data[0, 59, 59], 2.506482e-14, rtol=1e-3)
