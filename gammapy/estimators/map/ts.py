@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Functions to compute test statistic images."""
 
+from copy import deepcopy
 import warnings
 from itertools import repeat
 import numpy as np
@@ -15,6 +16,7 @@ from gammapy.datasets.utils import get_nearest_valid_exposure_position
 from gammapy.maps import Map, MapAxis, Maps
 from gammapy.modeling.models import PointSpatialModel, PowerLawSpectralModel, SkyModel
 from gammapy.stats import cash, cash_sum_cython, f_cash_root_cython, norm_bounds_cython
+from gammapy.stats.utils import ts_to_sigma
 from gammapy.utils.array import shape_2N, symmetric_crop_pad_width
 from gammapy.utils.pbar import progress_bar
 from gammapy.utils.roots import find_roots
@@ -75,6 +77,8 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         Number of sigma for flux error. Default is 1.
     n_sigma_ul : int
         Number of sigma for flux upper limits. Default is 2.
+    n_sigma_sensitivity : int
+        Number of sigma for flux  sensitivity. Default is 5.
     downsampling_factor : int
         Sample down the input maps to speed up the computation. Only integer
         values that are a multiple of 2 are allowed. Note that the kernel is
@@ -170,7 +174,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
     """
 
     tag = "TSMapEstimator"
-    _available_selection_optional = ["errn-errp", "ul", "stat_scan"]
+    _available_selection_optional = ["errn-errp", "ul", "stat_scan", "sensitivity"]
 
     def __init__(
         self,
@@ -179,6 +183,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         downsampling_factor=None,
         n_sigma=1,
         n_sigma_ul=2,
+        n_sigma_sensitivity=5,
         threshold=None,
         rtol=0.01,
         selection_optional=None,
@@ -207,6 +212,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         self.downsampling_factor = downsampling_factor
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
+        self.n_sigma_sensitivity = n_sigma_sensitivity
         self.threshold = threshold
         self.rtol = rtol
         self.n_jobs = n_jobs
@@ -542,6 +548,30 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
         return result
 
+    def estimate_sensitivity(self, datasets):
+        """Estimate sensitivity maps for datasets.
+
+        Parameters
+        ----------
+        dataset : `~gammapy.datasets.Datasets` or `~gammapy.datasets.MapDataset`
+            Map dataset or Datasets (list of MapDataset with the same spatial geometry).
+        """
+        datasets = Datasets(datasets)._to_asimov_datasets()
+
+        estimator = deepcopy(self)
+        estimator.selection_optional = None
+        estimator._flux_estimator = BrentqSensitivityEstimator(
+            rtol=self.rtol,
+            n_sigma=self.n_sigma_sensitivity,
+            n_sigma_ul=self.n_sigma_ul,
+            selection_optional=None,
+            ts_threshold=self.threshold,
+            norm=self.norm,
+            max_niter=self.max_niter,
+        )
+        result = estimator.run(datasets)
+        return dict(norm_sensitivity=result["norm_err"])
+
     def run(self, datasets):
         """
         Run test statistic map estimation.
@@ -630,6 +660,10 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
         maps["success"].data = maps["success"].data.astype(bool)
 
+        if "sensitivity" in self.selection_optional:
+            result = self.estimate_sensitivity(datasets)
+            maps["norm_sensitivity"] = result["norm_sensitivity"]
+
         meta = {"n_sigma": self.n_sigma, "n_sigma_ul": self.n_sigma_ul}
         return FluxMaps(
             data=maps,
@@ -715,7 +749,7 @@ class SimpleMapDataset:
 class BrentqFluxEstimator(Estimator):
     """Single parameter flux estimator."""
 
-    _available_selection_optional = ["errn-errp", "ul", "stat_scan"]
+    _available_selection_optional = ["errn-errp", "ul", "stat_scan", "sensitivity"]
     tag = "BrentqFluxEstimator"
 
     def __init__(
@@ -1042,3 +1076,38 @@ def _ts_value(
         norm_guess=norm_guess,
     )
     return flux_estimator.run(dataset)
+
+
+class BrentqSensitivityEstimator(BrentqFluxEstimator):
+    """Single parameter sensitivity estimator."""
+
+    def _confidence(self, dataset, n_sigma, result, positive):
+        stat_best = result["stat"]
+        norm = result["norm"]
+        norm_err = result["norm_err"]
+
+        def sigma_diff(x):
+            ts_asimov = stat_best - dataset.stat_sum(x)
+            return ts_to_sigma(ts_asimov, ts_asimov=ts_asimov) - self.n_sigma
+
+        if positive:
+            min_norm = norm
+            max_norm = norm + 1e2 * norm_err
+            factor = 1
+        else:
+            min_norm = norm - 1e2 * norm_err
+            max_norm = norm
+            factor = -1
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            roots, res = find_roots(
+                sigma_diff,
+                [min_norm],
+                [max_norm],
+                nbin=1,
+                maxiter=self.max_niter,
+                rtol=self.rtol,
+            )
+            # Where the root finding fails NaN is set as norm
+            return (roots[0] - norm) * factor
