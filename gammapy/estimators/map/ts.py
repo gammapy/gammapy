@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Functions to compute test statistic images."""
 
-from copy import deepcopy
 import warnings
 from itertools import repeat
 import numpy as np
@@ -261,6 +260,8 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
             if "ul" in self.selection_optional:
                 selection += ["norm_ul"]
 
+        if "sensitivity" in self.selection_optional:
+            selection += ["norm_sensitivity"]
         return selection
 
     def estimate_kernel(self, dataset):
@@ -548,30 +549,6 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
         return result
 
-    def estimate_sensitivity(self, datasets):
-        """Estimate sensitivity maps for datasets.
-
-        Parameters
-        ----------
-        dataset : `~gammapy.datasets.Datasets` or `~gammapy.datasets.MapDataset`
-            Map dataset or Datasets (list of MapDataset with the same spatial geometry).
-        """
-        datasets = Datasets(datasets)._to_asimov_datasets()
-
-        estimator = deepcopy(self)
-        estimator.selection_optional = None
-        estimator._flux_estimator = BrentqSensitivityEstimator(
-            rtol=self.rtol,
-            n_sigma=self.n_sigma_sensitivity,
-            n_sigma_ul=self.n_sigma_ul,
-            selection_optional=None,
-            ts_threshold=self.threshold,
-            norm=self.norm,
-            max_niter=self.max_niter,
-        )
-        result = estimator.run(datasets)
-        return dict(norm_sensitivity=result["norm_err"])
-
     def run(self, datasets):
         """
         Run test statistic map estimation.
@@ -660,10 +637,6 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
         maps["success"].data = maps["success"].data.astype(bool)
 
-        if "sensitivity" in self.selection_optional:
-            result = self.estimate_sensitivity(datasets)
-            maps["norm_sensitivity"] = result["norm_sensitivity"]
-
         meta = {"n_sigma": self.n_sigma, "n_sigma_ul": self.n_sigma_ul}
         return FluxMaps(
             data=maps,
@@ -706,6 +679,14 @@ class SimpleMapDataset:
     def stat_sum(self, norm):
         """Statistics sum."""
         return cash_sum_cython(self.counts, self.npred(norm))
+
+    def stat_sum_asimov(self, norm):
+        """Statistics sum."""
+        return cash_sum_cython(self.npred(norm), self.npred(norm))
+
+    def stat_sum_asimov_null(self, norm):
+        """Statistics sum."""
+        return cash_sum_cython(self.npred(norm), self.background)
 
     def stat_derivative(self, norm):
         """Statistics derivative."""
@@ -757,6 +738,7 @@ class BrentqFluxEstimator(Estimator):
         rtol,
         n_sigma,
         n_sigma_ul,
+        n_sigma_sensitivity=5,
         selection_optional=None,
         max_niter=100,
         ts_threshold=None,
@@ -765,6 +747,7 @@ class BrentqFluxEstimator(Estimator):
         self.rtol = rtol
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
+        self.n_sigma_sensitivity = n_sigma_sensitivity
         self.selection_optional = selection_optional
         self.max_niter = max_niter
         self.ts_threshold = ts_threshold
@@ -894,6 +877,32 @@ class BrentqFluxEstimator(Estimator):
         )
         return {"norm_errn": flux_errn, "norm_errp": flux_errp}
 
+    def estimate_sensitivity(self, dataset, result):
+        norm = result["norm"]
+
+        def sigma_diff(x):
+            ts_asimov = dataset.stat_sum_asimov_null(x) - dataset.stat_sum_asimov(x)
+            return (
+                ts_to_sigma(ts_asimov, ts_asimov=ts_asimov) - self.n_sigma_sensitivity
+            )
+
+        min_norm = norm / 1000.0
+        max_norm = norm * 1000.0
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            roots, res = find_roots(
+                sigma_diff,
+                [min_norm],
+                [max_norm],
+                nbin=1,
+                maxiter=self.max_niter,
+                rtol=self.rtol,
+            )
+            # Where the root finding fails NaN is set as norm
+            norm_sensitivity = roots[0]
+        return {"norm_sensitivity": norm_sensitivity}
+
     def estimate_scan(self, dataset, result):
         """Compute likelihood profile.
 
@@ -1012,6 +1021,9 @@ class BrentqFluxEstimator(Estimator):
         if "stat_scan" in self.selection_optional:
             result.update(self.estimate_scan(dataset, result))
 
+        if "sensitivity" in self.selection_optional:
+            result.update(self.estimate_sensitivity(dataset, result))
+
         norm = result["norm"]
         result["npred"] = dataset.npred(norm=norm).sum()
         result["npred_excess"] = result["npred"] - dataset.npred(norm=0).sum()
@@ -1076,38 +1088,3 @@ def _ts_value(
         norm_guess=norm_guess,
     )
     return flux_estimator.run(dataset)
-
-
-class BrentqSensitivityEstimator(BrentqFluxEstimator):
-    """Single parameter sensitivity estimator."""
-
-    def _confidence(self, dataset, n_sigma, result, positive):
-        stat_best = result["stat"]
-        norm = result["norm"]
-        norm_err = result["norm_err"]
-
-        def sigma_diff(x):
-            ts_asimov = stat_best - dataset.stat_sum(x)
-            return ts_to_sigma(ts_asimov, ts_asimov=ts_asimov) - self.n_sigma
-
-        if positive:
-            min_norm = norm
-            max_norm = norm + 1e2 * norm_err
-            factor = 1
-        else:
-            min_norm = norm - 1e2 * norm_err
-            max_norm = norm
-            factor = -1
-
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            roots, res = find_roots(
-                sigma_diff,
-                [min_norm],
-                [max_norm],
-                nbin=1,
-                maxiter=self.max_niter,
-                rtol=self.rtol,
-            )
-            # Where the root finding fails NaN is set as norm
-            return (roots[0] - norm) * factor

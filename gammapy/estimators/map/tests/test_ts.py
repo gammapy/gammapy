@@ -653,8 +653,6 @@ def test_joint_ts_map_hawc():
         selection_optional=["sensitivity"],
         n_jobs=4,
     )
-    result = estimator.estimate_sensitivity(datasets)
-    assert_allclose(result["norm_sensitivity"].data[0, 59, 59], 0.025035, rtol=1e-3)
-
     result = estimator.run(datasets)
-    assert_allclose(result["flux_sensitivity"].data[0, 59, 59], 2.506482e-14, rtol=1e-3)
+    assert_allclose(result["norm_sensitivity"].data[0, 59, 59], 0.04897, rtol=1e-3)
+    assert_allclose(result["flux_sensitivity"].data[0, 59, 59], 4.881527e-14, rtol=1e-3)
