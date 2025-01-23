@@ -539,13 +539,13 @@ class MapDataset(Dataset):
 
         if psf and not isinstance(psf, (PSFMap, HDULocation)):
             raise ValueError(
-                f"'psf' must be a 'PSFMap' or `HDULocation` object, got {type(psf)}"
+                f"'psf' must be a `PSFMap` or `HDULocation` object, got `{type(psf)}` instead."
             )
         self.psf = psf
 
         if edisp and not isinstance(edisp, (EDispMap, EDispKernelMap, HDULocation)):
             raise ValueError(
-                "'edisp' must be a 'EDispMap', `EDispKernelMap` or 'HDULocation' "
+                "'edisp' must be a `EDispMap`, `EDispKernelMap` or `HDULocation` "
                 f"object, got `{type(edisp)}` instead."
             )
 
