@@ -554,10 +554,7 @@ class MapDataset(Dataset):
         self.gti = gti
         self.models = models
         self.meta_table = meta_table
-        if meta is None:
-            self._meta = MapDatasetMetaData()
-        else:
-            self._meta = meta
+        self.meta = meta
 
     @property
     def _psf_kernel(self):
@@ -576,7 +573,10 @@ class MapDataset(Dataset):
 
     @meta.setter
     def meta(self, value):
-        self._meta = value
+        if value is None:
+            self._meta = MapDatasetMetaData()
+        else:
+            self._meta = value
 
     # TODO: keep or remove?
     @property
