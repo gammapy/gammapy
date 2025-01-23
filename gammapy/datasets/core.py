@@ -82,18 +82,6 @@ class Dataset(abc.ABC):
             stat = stat[self.mask.data]
         return np.sum(stat, dtype=np.float64)
 
-<<<<<<< HEAD
-=======
-    def stat_sum_prior(self):
-        """Total statistic given the priors set on the models."""
-        if self.models is not None:
-            return self.models.parameters.prior_stat_sum()
-
-    def stat_sum_posterior(self):
-        """Total statistic given the current model parameters and priors set on the models."""
-        return self.stat_sum() + self.stat_sum_prior()
-
->>>>>>> 9fdf9ef41 (Simplify)
     @abc.abstractmethod
     def stat_array(self):
         """Statistic array, one value per data point."""
