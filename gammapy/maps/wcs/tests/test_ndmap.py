@@ -426,9 +426,61 @@ def test_wcsndmap_downsample(npix, binsz, frame, proj, skydir, axes):
     m = WcsNDMap(geom, unit="m2")
     # Check whether we can downsample
     if np.all(np.mod(geom.npix[0], 2) == 0) and np.all(np.mod(geom.npix[1], 2) == 0):
+        # without weights
         m2 = m.downsample(2, preserve_counts=True)
         assert_allclose(np.nansum(m.data), np.nansum(m2.data))
         assert m.unit == m2.unit
+
+        m3 = m.downsample(2, preserve_counts=False)
+        assert_allclose(np.nanmean(m.data), np.nanmean(m3.data))
+        assert m.unit == m3.unit
+
+        if len(m.data.shape) == 3:
+            # with weights
+            weights = np.random.rand(m.data.shape[0], m.data.shape[1], m.data.shape[2])
+            m4 = m.downsample(2, preserve_counts=False, weights=weights)
+            assert_allclose(
+                np.nan_to_num(
+                    np.nanmean(
+                        (m.data * weights).reshape(
+                            m.data.shape[0],
+                            m.data.shape[1] // 2,
+                            2,
+                            m.data.shape[2] // 2,
+                            2,
+                        ),
+                        axis=(2, -1),
+                    )
+                    / np.nansum(
+                        weights.reshape(
+                            m.data.shape[0],
+                            m.data.shape[1] // 2,
+                            2,
+                            m.data.shape[2] // 2,
+                            2,
+                        ),
+                        axis=(2, -1),
+                    )
+                ),
+                m4.data,
+            )
+            assert m.unit == m4.unit
+
+            m5 = m.downsample(2, preserve_counts=True, weights=weights)
+            assert_allclose(
+                np.nansum(
+                    (m.data * weights).reshape(
+                        m.data.shape[0],
+                        m.data.shape[1] // 2,
+                        2,
+                        m.data.shape[2] // 2,
+                        2,
+                    ),
+                    axis=(2, -1),
+                ),
+                m5.data,
+            )
+            assert m.unit == m5.unit
 
 
 @pytest.mark.parametrize(
