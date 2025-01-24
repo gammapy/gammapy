@@ -285,9 +285,10 @@ class OGIPDatasetReader(DatasetReader):
 
     tag = "ogip"
 
-    def __init__(self, filename, checksum=False):
+    def __init__(self, filename, checksum=False, name=None):
         self.filename = make_path(filename)
         self.checksum = checksum
+        self.name = name
 
     def get_valid_path(self, filename):
         """Get absolute or relative path.
@@ -450,7 +451,10 @@ class OGIPDatasetReader(DatasetReader):
         kwargs = self.read_pha(self.filename, checksum=self.checksum)
         pha_meta = kwargs["counts"].meta
 
-        name = str(pha_meta["OBS_ID"])
+        if self.name is not None:
+            name = self.name
+        else:
+            name = str(pha_meta["OBS_ID"])
         livetime = pha_meta["EXPOSURE"] * u.s
 
         filenames = self.get_filenames(pha_meta=pha_meta)

@@ -19,11 +19,8 @@ execute the following commands in the terminal:
 
 .. note::
 
-    For gammapy versions **prior to v1.2**, if you're using
-    Apple silicon M1 (`arm64`) architectures you have to open the
-    environment file and delete the `sherpa` entry. Currently there are
-    no conda packages available. You can then install `sherpa`
-    in the environment using `python -m pip install sherpa`.
+    To avoid some installation issues, sherpa is not part of the environment file provided. You can nevertheless
+    install `sherpa` in your environment using `python -m pip install sherpa`.
 
 
 The best way to get started and learn Gammapy are the :ref:`tutorials`.

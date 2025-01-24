@@ -61,6 +61,7 @@ from gammapy.catalog import CATALOG_REGISTRY
 # Check setup
 # -----------
 from gammapy.utils.check import check_tutorials_setup
+
 check_tutorials_setup()
 
 
@@ -96,7 +97,6 @@ print(CATALOG_REGISTRY)
 ######################################################################
 # So a catalog can be loaded directly from its corresponding class
 #
-
 
 
 catalog = SourceCatalog4FGL()
@@ -397,6 +397,8 @@ print(lightcurve)
 display(lightcurve.to_table(format="lightcurve", sed_type="flux"))
 
 # %%
+plt.figure(figsize=(8, 6))
+plt.subplots_adjust(bottom=0.2, left=0.2)
 lightcurve.plot()
 plt.show()
 

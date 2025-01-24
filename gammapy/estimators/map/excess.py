@@ -9,7 +9,7 @@ from gammapy.maps import Map
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from gammapy.stats import CashCountsStatistic, WStatCountsStatistic
 from ..core import Estimator
-from ..utils import estimate_exposure_reco_energy
+from ..utils import estimate_exposure_reco_energy, apply_threshold_sensitivity
 from .core import FluxMaps
 
 __all__ = ["ExcessMapEstimator"]
@@ -434,15 +434,11 @@ class ExcessMapEstimator(Estimator):
                     self.n_sigma_sensitivity
                 )
                 if self.apply_threshold_sensitivity:
-                    is_gamma_limited = excess_counts < self.gamma_min_sensitivity
-                    excess_counts[is_gamma_limited] = self.gamma_min_sensitivity
-                    bkg_syst_limited = (
-                        excess_counts
-                        < self.bkg_syst_fraction_sensitivity * dataset.background.data
-                    )
-                    excess_counts[bkg_syst_limited] = (
-                        self.bkg_syst_fraction_sensitivity
-                        * dataset.background.data[bkg_syst_limited]
+                    excess_counts = apply_threshold_sensitivity(
+                        dataset.background.data,
+                        excess_counts,
+                        self.gamma_min_sensitivity,
+                        self.bkg_syst_fraction_sensitivity,
                     )
                 excess = Map.from_geom(geom=geom, data=excess_counts)
                 maps["norm_sensitivity"] = excess / reco_exposure

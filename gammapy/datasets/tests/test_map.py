@@ -13,13 +13,14 @@ from regions import CircleSkyRegion
 import gammapy.irf.psf.map as psf_map_module
 from gammapy.catalog import SourceCatalog3FHL
 from gammapy.data import GTI, DataStore
-from gammapy.datasets import Datasets, MapDataset, MapDatasetOnOff
-from gammapy.datasets.map import (
-    _default_width,
+from gammapy.datasets import (
+    Datasets,
+    MapDataset,
+    MapDatasetOnOff,
+    create_empty_map_dataset_from_irfs,
     create_map_dataset_from_observation,
-    RAD_AXIS_DEFAULT,
 )
-
+from gammapy.datasets.map import RAD_AXIS_DEFAULT
 from gammapy.irf import (
     EDispKernelMap,
     EDispMap,
@@ -42,6 +43,7 @@ from gammapy.maps import (
 )
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
+    create_fermi_isotropic_diffuse_model,
     DiskSpatialModel,
     FoVBackgroundModel,
     GaussianSpatialModel,
@@ -754,6 +756,7 @@ def test_prior_stat_sum(sky_model, geom, geom_etrue):
 
     uniformprior = UniformPrior(min=0, max=np.inf, weight=1)
     datasets.models.parameters["amplitude"].prior = uniformprior
+    assert_allclose(datasets._stat_sum_likelihood(), 12825.9370, rtol=1e-3)
     assert_allclose(datasets.stat_sum(), 12825.9370, rtol=1e-3)
 
     datasets.models.parameters["amplitude"].value = -1e-12
@@ -1158,11 +1161,38 @@ def test_npred(sky_model, geom, geom_etrue):
     assert_allclose(dataset.npred_background().data.sum(), 4400.0, rtol=1e-3)
     assert_allclose(dataset._background_cached.data.sum(), 4400.0, rtol=1e-3)
 
+    for ev in dataset.evaluators.values():
+        assert ev._computation_cache is not None
+
     with pytest.raises(
         KeyError,
         match="m2",
     ):
         dataset.npred_signal(model_names=["m2"])
+
+
+@requires_data()
+def test_npred_no_cache(sky_model, geom, geom_etrue):
+    import gammapy.datasets.map as dmap
+
+    dmap.USE_NPRED_CACHE = False
+
+    dataset = get_map_dataset(geom, geom_etrue)
+
+    pwl = PowerLawSpectralModel()
+    gauss = GaussianSpatialModel(
+        lon_0="0.0 deg", lat_0="0.0 deg", sigma="0.5 deg", frame="galactic"
+    )
+    model1 = SkyModel(pwl, gauss, name="m1")
+
+    dataset.models = [sky_model, model1]
+
+    dataset.npred()
+    for ev in dataset.evaluators.values():
+        assert ev._computation_cache is None
+        assert ev._cached_parameter_previous is None
+
+    dmap.USE_NPRED_CACHE = True
 
 
 def test_stack_npred():
@@ -2248,14 +2278,6 @@ def test_get_psf_kernel_multiscale():
 
 
 @requires_data()
-def test_default_width():
-    datastore_magic = DataStore.from_dir("$GAMMAPY_DATA/magic/rad_max/data")
-    obs = datastore_magic.get_observations(required_irf="point-like")[0]
-    width = _default_width(obs)
-    assert_allclose(width, 0.77459669 * u.deg)
-
-
-@requires_data()
 def test_create_map_dataset_from_observation():
     datastore = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
     observations = datastore.get_observations()
@@ -2263,3 +2285,47 @@ def test_create_map_dataset_from_observation():
 
     assert dataset_new.counts.data.sum() == 0
     assert_allclose(dataset_new.exposure.data.sum(), 43239974121207.85)
+
+
+@requires_data()
+def test_create_empty_map_dataset_from_irfs(geom, geom_etrue):
+    datastore = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
+    obs = datastore.get_observations()[0]
+
+    dataset_new = create_empty_map_dataset_from_irfs(obs)
+
+    assert dataset_new.counts.data.sum() == 0
+    assert dataset_new.exposure.data.sum() == 0
+
+    dataset = get_map_dataset(geom, geom_etrue)
+    obs.psf = dataset.psf
+    obs.edisp = dataset.edisp
+
+    dataset_new = create_empty_map_dataset_from_irfs(obs)
+
+    assert dataset_new.counts.data.sum() == 0
+    assert dataset_new.exposure.data.sum() == 0
+
+    obs.edisp = dataset.edisp.to_edisp_kernel_map(
+        dataset.background.geom.axes["energy"]
+    )
+
+    dataset_new = create_empty_map_dataset_from_irfs(obs)
+
+    assert dataset_new.counts.data.sum() == 0
+    assert dataset_new.exposure.data.sum() == 0
+
+
+@requires_data()
+def test_add_fermi_iso():
+    dataset = MapDataset.read(
+        "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc.fits.gz", format="gadf"
+    )
+    filename = "$GAMMAPY_DATA/fermi_3fhl/iso_P8R2_SOURCE_V6_v06.txt"
+    model = create_fermi_isotropic_diffuse_model(
+        filename, datasets_names=[dataset.name]
+    )
+    assert dataset.name in model.datasets_names
+    dataset.models = model
+    assert "isotropic" in dataset.models.names[0]
+    assert not dataset.models[0].apply_irf["edisp"]
