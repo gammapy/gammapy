@@ -12,29 +12,12 @@ Gammapy. As an example, we will look at the Galactic center region using
 the high-energy dataset that was used for the 3FHL catalog, in the
 energy range 10 GeV to 2 TeV.
 
-We note that support for Fermi-LAT data analysis in Gammapy is very
-limited. For most tasks, we recommend you use
+We note that support for Fermi-LAT data analysis in Gammapy is currently
+limited. For more details on Fermi-LAT analysis, please see
 `Fermipy <http://fermipy.readthedocs.io/>`__, which is based on the
 `Fermi Science
 Tools <https://fermi.gsfc.nasa.gov/ssc/data/analysis/software/>`__
 (Fermi ST).
-
-Using Gammapy with Fermi-LAT data could be an option for you if you want
-to do an analysis that is not easily possible with Fermipy and the Fermi
-Science Tools. For example a joint likelihood fit of Fermi-LAT data with
-data e.g. from H.E.S.S., MAGIC, VERITAS or some other instrument, or
-analysis of Fermi-LAT data with a complex spatial or spectral model that
-is not available in Fermipy or the Fermi ST.
-
-Besides Gammapy, you might want to look at are
-`Sherpa <http://cxc.harvard.edu/sherpa/>`__ or
-`3ML <https://threeml.readthedocs.io/>`__. Or just using Python to roll
-your own analysis using several existing analysis packages. E.g. it it
-possible to use Fermipy and the Fermi ST to evaluate the likelihood on
-Fermi-LAT data, and Gammapy to evaluate it e.g. for IACT data, and to do
-a joint likelihood fit using
-e.g. `iminuit <http://iminuit.readthedocs.io/>`__ or
-`emcee <http://dfm.io/emcee>`__.
 
 To use Fermi-LAT data with Gammapy, you first have to use the Fermi ST
 to prepare an event list (using `gtselect` and `gtmktime`, exposure
@@ -43,9 +26,7 @@ cube (using `gtexpcube2` and PSF (using `gtpsf`). You can then use
 `~gammapy.irf.PSFMap` to read the Fermi-LAT maps and PSF, i.e. support
 for these high level analysis products from the Fermi ST is built in. To
 do a 3D map analysis, you can use Fit for Fermi-LAT data in the same way
-that it’s use for IACT data. This is illustrated in this notebook. A 1D
-region-based spectral analysis is also possible, this will be
-illustrated in a future tutorial.
+that it’s use for IACT data. This is illustrated in this notebook.
 
 Setup
 -----
@@ -150,9 +131,7 @@ counts = Map.create(
     axes=[energy_axis],
     dtype=float,
 )
-# We put this call into the same Jupyter cell as the Map.create
-# because otherwise we could accidentally fill the counts
-# multiple times when executing the `fill_by_coord` multiple times.
+
 counts.fill_events(events)
 
 print(counts.geom.axes[0])
@@ -164,25 +143,14 @@ plt.show()
 # Exposure
 # --------
 #
-# The Fermi-LAT dataset contains the energy-dependent exposure for the
-# whole sky as a HEALPix map computed with `gtexpcube2`. This format is
-# supported by `~gammapy.maps.Map` directly.
-#
-# Interpolating the exposure cube from the Fermi ST to get an exposure
-# cube matching the spatial geometry and energy axis defined above with
-# Gammapy is easy. The only point to watch out for is how exactly you want
-# the energy axis and binning handled.
-#
-# Below we just use the default behaviour, which is linear interpolation
-# in energy on the original exposure cube. Probably log interpolation
-# would be better, but it doesn’t matter much here, because the energy
-# binning is fine. Finally, we just copy the counts map geometry, which
-# contains an energy axis with `node_type="edges"`. This is non-ideal
-# for exposure cubes, but again, acceptable because exposure doesn’t vary
-# much from bin to bin, so the exact way interpolation occurs in later use
-# of that exposure cube doesn’t matter a lot. Of course you could define
-# any energy axis for your exposure cube that you like.
-#
+# The Fermi-LAT dataset contains an energy-dependent exposure for the
+# whole sky as a HEALPix map computed with `gtexpcube2`.
+
+# Note that in Gammapy we require the counts and exposure maps to have the
+# same wcs. To achieve this, we use `interp_to_geom` to interpolate the exposure
+# cube to the counts map geom. Note that the exposure map must be defined in the true
+# energy axis, and thus, it is not necessary to have the same energy binning between
+# the counts and exposure maps.
 
 exposure_hpx = Map.read("$GAMMAPY_DATA/fermi_3fhl/fermi_3fhl_exposure_cube_hpx.fits.gz")
 print(exposure_hpx.geom)
@@ -192,15 +160,15 @@ exposure_hpx.plot()
 plt.show()
 
 ######################################################################
-# For exposure, we choose a geometry with node_type='center',
-axis = MapAxis.from_energy_bounds(
+# For exposure, choose appropriate energy bins,
+energy_axis_true = MapAxis.from_energy_bounds(
     "10 GeV",
     "2 TeV",
     nbin=10,
     per_decade=True,
     name="energy_true",
 )
-geom = WcsGeom(wcs=counts.geom.wcs, npix=counts.geom.npix, axes=[axis])
+geom = WcsGeom(wcs=counts.geom.wcs, npix=counts.geom.npix, axes=[energy_axis_true])
 
 exposure = exposure_hpx.interp_to_geom(geom)
 
@@ -352,7 +320,7 @@ plt.show()
 # Energy Dispersion
 # ~~~~~~~~~~~~~~~~~
 #
-# For simplicity we assume a diagonal energy dispersion:
+# For simplicity we assume a diagonal energy dispersion.
 #
 
 e_true = exposure.geom.axes["energy_true"]
@@ -368,9 +336,9 @@ plt.show()
 # Fit
 # ---
 #
-# Now, the big finale: let’s do a 3D map fit for the source at the
-# Galactic center, to measure it’s position and spectrum. We keep the
-# background normalization free.
+# Now, we do a 3D map fit for the source at the
+# Galactic center, to measure its position and spectrum. We keep the
+# normalizations of the diffuse templates free.
 #
 
 spatial_model = PointSpatialModel(lon_0="0 deg", lat_0="0 deg", frame="galactic")
@@ -435,25 +403,4 @@ print(datasets_read)
 #    G0.9+0.1 <http://gamma-sky.net/#/cat/tev/110>`__.
 # -  Make maps and fit the position and spectrum of the `Crab
 #    nebula <http://gamma-sky.net/#/cat/tev/25>`__.
-#
-
-
-######################################################################
-# Summary
-# -------
-#
-# In this tutorial you have seen how to work with Fermi-LAT data with
-# Gammapy. You have to use the Fermi ST to prepare the exposure cube and
-# PSF, and then you can use Gammapy for any event or map analysis using
-# the same methods that are used to analyse IACT data.
-#
-# This works very well at high energies (here above 10 GeV), where the
-# exposure and PSF is almost constant spatially and only varies a little
-# with energy. It is not expected to give good results for low-energy
-# data, where the Fermi-LAT PSF is very large. If you are interested to
-# help us validate down to what energy Fermi-LAT analysis with Gammapy
-# works well (e.g. by re-computing results from 3FHL or other published
-# analysis results), or to extend the Gammapy capabilities (e.g. to work
-# with energy-dependent multi-resolution maps and PSF), that would be very
-# welcome!
 #
