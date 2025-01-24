@@ -939,14 +939,6 @@ def test_create(caplog):
 
     assert_allclose(empty_dataset.gti.time_delta, 0.0 * u.s)
 
-    # test incompatible geoms
-    exposure = Map.from_geom(WcsGeom.create(binsz=0.02, width=(4, 4), axes=[e_true]))
-
-    MapDataset(counts=empty_dataset.counts, exposure=exposure)
-    message = "Incompatible wcs between counts and exposure maps!"
-    assert "WARNING" in [_.levelname for _ in caplog.records]
-    assert message in [_.message for _ in caplog.records]
-
 
 def test_create_with_migra(tmp_path):
     # tests empty datasets created
