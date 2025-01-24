@@ -360,7 +360,7 @@ class WcsNDMap(WcsMap):
 
         if weights is None:
             weights = np.ones_like(self.data)
-        else:
+        elif not isinstance(weights, np.ndarray):
             weights = weights.data
 
         data = block_reduce(self.data * weights, tuple(block_size), func=np.nansum)
@@ -368,9 +368,12 @@ class WcsNDMap(WcsMap):
         if not preserve_counts:
             weight_sum = block_reduce(weights, tuple(block_size), func=np.nansum)
             data = np.divide(
-                data, weight_sum, out=np.zeros_like(data,dtype='float64'), where=(weight_sum!=0)
+                data,
+                weight_sum,
+                out=np.zeros_like(data, dtype="float64"),
+                where=(weight_sum != 0),
             )
-        
+
         return self._init_copy(geom=geom, data=data.astype(self.data.dtype))
 
     def plot(
