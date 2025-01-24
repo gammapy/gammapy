@@ -152,6 +152,9 @@ plt.show()
 # energy axis, and thus, it is not necessary to have the same energy binning between
 # the counts and exposure maps.
 
+# To correctly account for psf leakage, it is advisable to use a large RoI for both the counts
+# and exposure maps, and then mask the edges of the counts map with a `mask_fit`.
+
 exposure_hpx = Map.read("$GAMMAPY_DATA/fermi_3fhl/fermi_3fhl_exposure_cube_hpx.fits.gz")
 print(exposure_hpx.geom)
 print(exposure_hpx.geom.axes[0])
