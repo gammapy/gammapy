@@ -16,6 +16,7 @@ __all__ = [
     "plot_map_rgb",
     "plot_theta_squared_table",
     "plot_distribution",
+    "plot_stat_profile",
 ]
 
 
@@ -412,7 +413,27 @@ def plot_distribution(
     return axes, result_list
 
 
-def plot_stat_profile(result, datasets, model_name, ncols=3, fit=None):
+def plot_stat_profile(result, datasets, model_name, ncols=3, fit=None, **kwargs):
+    """
+    Plot the fit statistic profile for each free parameter of the model.
+
+    Parameters
+    ----------
+    result: `~gammapy.modelling.FitResult`
+        Result of the fit.
+    datasets: `~gammapy.datasets.Dataset` or `~gammapy.datasets.Datasets`
+        Datasets.
+    model_name: str
+        Name of the model.
+    ncols: int, optional
+        Number of columns to plot. Default is 3.
+    fit: `~gammapy.modelling.Fit`, optional
+        Fit object to compute the profile. If None, use the default version of
+        `~gammapy.modelling.Fit`. Default is None.
+    **kwargs: dict, optional
+        Dictionnary of attributes values to pass to `~gammapy.modelling.parameter`.
+        If None is passed, it will set `~gammapy.modelling.parameter.scan_n_values` to 20.
+    """
     total_stat = result.total_stat
 
     if model_name not in datasets.models.names:
@@ -444,7 +465,10 @@ def plot_stat_profile(result, datasets, model_name, ncols=3, fit=None):
     )
 
     for ax, par in zip(axes.flatten(), free_parameters):
-        par.scan_n_values = 17
+        par.scan_n_values = 20
+        if kwargs is not None:
+            for k, v in kwargs.items():
+                setattr(par, k, v)
         idx = model.parameters.index(par)
         name = model.parameters_unique_names[idx]
         profile = fit.stat_profile(datasets=datasets, parameter=par)
