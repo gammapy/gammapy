@@ -9,6 +9,7 @@ from .utils import (
     plot_distribution,
     plot_map_rgb,
     plot_theta_squared_table,
+    plot_stat_profile,
 )
 
 __all__ = [
@@ -24,4 +25,5 @@ __all__ = [
     "plot_theta_squared_table",
     "plot_npred_signal",
     "plot_distribution",
+    "plot_stat_profile",
 ]
