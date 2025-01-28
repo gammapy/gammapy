@@ -540,7 +540,7 @@ class MapDataset(Dataset):
 
         if psf and not isinstance(psf, (PSFMap, HDULocation)):
             raise ValueError(
-                f"'psf' must be a `PSFMap` or `HDULocation` object, got `{type(psf)}` instead."
+                f"'psf' must be a `PSFMap` or `HDULocation` object, got {type(psf)} instead."
             )
         self.psf = psf
 
