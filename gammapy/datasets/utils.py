@@ -333,7 +333,7 @@ def create_global_dataset(
     nbin_per_decade : int
         number of energy bins per decade.
         Default is None, the maximum is taken.
-        
+
     Returns
     -------
     datasets : `~gammapy.datasets.MapDatset`
@@ -342,8 +342,14 @@ def create_global_dataset(
     from gammapy.datasets import MapDataset
 
     if position is None:
-        positions = SkyCoord([d.exposure.geom.center_skydir for d in datasets])
-        position = SkyCoord(positions.cartesian.mean(), frame=positions.frame)
+        frame = datasets[0].counts.geom.frame
+        positions = SkyCoord(
+            [d.counts.geom.center_skydir.transform_to(frame) for d in datasets]
+        )
+        position = SkyCoord(positions.cartesian.mean(), frame="icrs")
+        position = SkyCoord(position.ra, position.dec, frame="icrs").transform_to(
+            frame
+        )  # drop fake distance
 
     binsz_list = []
     width_list = []
@@ -358,10 +364,10 @@ def create_global_dataset(
             d.counts.geom.width.max()
             + 2 * d.counts.geom.center_skydir.separation(position)
         )
-        energy_min_list.append(d.counts.geom.axes[0].edges.min())
-        energy_max_list.append(d.counts.geom.axes[0].edges.max())
-        energy_true_min_list.append(d.exposure.geom.axes[0].edges.min())
-        energy_true_max_list.append(d.exposure.geom.axes[0].edges.max())
+        energy_min_list.append(d.counts.geom.axes["energy"].edges.min())
+        energy_max_list.append(d.counts.geom.axes["energy"].edges.max())
+        energy_true_min_list.append(d.exposure.geom.axes["energy_true"].edges.min())
+        energy_true_max_list.append(d.exposure.geom.axes["energy_true"].edges.max())
         ndecade = np.log10(energy_true_max_list[-1].value) - np.log10(
             energy_true_min_list[-1].value
         )
@@ -374,26 +380,31 @@ def create_global_dataset(
     if width is None:
         width = np.max(u.Quantity(width_list))
     width = _check_width(width)
-    energy_true_min = energy_true_min if energy_true_min is not None else u.Quantity(energy_true_min_list).min()
+    energy_true_min = (
+        energy_true_min
+        if energy_true_min is not None
+        else u.Quantity(energy_true_min_list).min()
+    )
     if energy_true_max is None:
         energy_true_max = np.max(u.Quantity(energy_true_max_list))
     if energy_min is None:
         energy_min = np.min(u.Quantity(energy_min_list))
     if energy_max is None:
         energy_max = np.max(u.Quantity(energy_max_list))
-    energy_min = np.maximum(energy_min, energy_true_min)
-    energy_max = np.minimum(energy_max, energy_true_max)
-    nbin_per_decade = nbin_per_decade if nbin_per_decade is not None else np.max(nbin_per_decade_list)
+
+    nbin_per_decade = (
+        nbin_per_decade if nbin_per_decade is not None else np.max(nbin_per_decade_list)
+    )
     energy_axis = MapAxis.from_energy_bounds(
         energy_min, energy_max, nbin_per_decade, unit="TeV", per_decade=True
     )
 
     geom = WcsGeom.create(
-        skydir=position.galactic,
+        skydir=position,
         binsz=binsz,
         width=width,
-        frame="galactic",
-        proj="CAR",
+        frame=position.frame,
+        proj=datasets[0].projection,
         axes=[energy_axis],
     )
 
