@@ -213,7 +213,7 @@ class LogUniformPrior(Prior):
 
     tag = ["LogUniformPrior"]
     _type = "prior"
-    min = PriorParameter(name="min", value=1e-15, unit="")
+    min = PriorParameter(name="min", value=1e-14, unit="")
     max = PriorParameter(name="max", value=1e-10, unit="")
 
     @staticmethod
