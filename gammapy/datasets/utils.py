@@ -404,7 +404,7 @@ def create_global_dataset(
         binsz=binsz,
         width=width,
         frame=position.frame,
-        proj=datasets[0].projection,
+        proj=datasets[0].counts.geom.projection,
         axes=[energy_axis],
     )
 
