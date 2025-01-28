@@ -401,7 +401,7 @@ class MapDatasetMaker(Maker):
         if isinstance(observation, Observation):
             kwargs["meta_table"] = self.make_meta_table(observation)
             kwargs["meta"] = self._make_metadata(kwargs["meta_table"])
-        elif isinstance(observation, MapDataset):
+        elif getattr(observation, "meta"):
             kwargs["meta"] = observation.meta
 
         mask_safe = Map.from_geom(dataset.counts.geom, dtype=bool)
