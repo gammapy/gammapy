@@ -548,10 +548,6 @@ class FermipyDatasetsReader(DatasetReader):
                 "Energy true axes of exposure and DRM do not match. Check fermipy configuration."
             )
             edisp_axes = edisp.edisp_map.geom.axes
-        if np.all(edisp_axes["energy"].center == counts.geom.axes["energy"].center):
-            raise ValueError(
-                "Energy axes of counts and DRM do not match. Check fermipy configuration."
-            )
 
         psf_r68s = psf.containment_radius(
             0.68,
@@ -572,9 +568,8 @@ class FermipyDatasetsReader(DatasetReader):
             name=name,
         )
         # standardize dataset interpolating to same geom and axes
-        geom = dataset.counts.geom.to_image().to_cube(
-            [edisp_axes["energy"]]
-        )  # keV->MeV
+        energy_axis = counts.geom.axes["energy"]._init_copy(unit=edisp_axes.unit)
+        geom = dataset.counts.geom.to_image().to_cube([energy_axis])  # keV->MeV
         dataset = create_map_dataset_from_dl4(dataset, geom=geom, name=dataset.name)
 
         if edisp_bins > 0:  # slice edisp_bins
