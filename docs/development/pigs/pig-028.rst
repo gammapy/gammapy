@@ -106,7 +106,7 @@ Case 4: Parallelization of the "fitting"
 -------------------------------------
 How to speed up a fit and the error estimation has been in discussion for a while. UltraNest supports parallelisation out-of-the-box with MPI support.
 This allows to take advantage of the CPUs on a laptop or a cluster. From my experience in X-ray analysis, parallelisation scales well up to 16 cores (but this is probably very data dependent).
-
+Whether or not this interfaces well with gammapy must be explored. 
 
 
 Case 5: Any other suggestions ? 
