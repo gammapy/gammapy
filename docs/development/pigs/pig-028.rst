@@ -9,7 +9,7 @@ PIG 28 - Bayesian Inference using Nested Sampling
 * Author: Fabio Acero, Régis Terrier, Bruno Khelifi
 * Created: ``2024-10-14``
 * Accepted: ``2025-01-29``
-* Status: Draft
+* Status: Accepted
 * Discussion: 
 
 Abstract
