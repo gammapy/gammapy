@@ -96,7 +96,7 @@ In addition by providing a full landscape of the likelihood and with no notion o
 
 
 Case 3: Model comparison using the Bayesian evidence (aka marginal evidence)
----------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 replaces the deltaCstat / AIC/BIC, etc 
 comparing non nested models
