@@ -116,7 +116,7 @@ Case 5: Any other suggestions ?
 
 
 Implementation impact
-==============
+=================
 
 The implementation of the Bayesian inference class implies some addition/modifications to the current codebase.
 
