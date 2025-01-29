@@ -568,7 +568,9 @@ class FermipyDatasetsReader(DatasetReader):
             name=name,
         )
         # standardize dataset interpolating to same geom and axes
-        energy_axis = counts.geom.axes["energy"]._init_copy(unit=edisp_axes.unit)
+        energy_axis = counts.geom.axes["energy"]._init_copy(
+            unit=edisp_axes["energy"].unit
+        )
         geom = dataset.counts.geom.to_image().to_cube([energy_axis])  # keV->MeV
         dataset = create_map_dataset_from_dl4(dataset, geom=geom, name=dataset.name)
 
