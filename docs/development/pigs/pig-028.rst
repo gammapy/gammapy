@@ -134,8 +134,8 @@ Namely:
 
 
 
-Outputs from the Nested Sampling 
-==============
+Outputs from the Nested Sampling
+==========================
 
 Similarly to the MCMC method, the NS sampler will return samples of the posterior distributions. However there are several conceptual differences with the chains returned by the MCMC sampler.
 
