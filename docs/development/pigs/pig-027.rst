@@ -1,9 +1,9 @@
 .. include:: ../../references.txt
 
-.. _pig-028:
+.. _pig-027:
 
 ****************************************************
-PIG 28 - Bayesian Inference using Nested Sampling
+PIG 27 - Bayesian Inference using Nested Sampling
 ****************************************************
 
 * Author: Fabio Acero, Régis Terrier, Bruno Khelifi
