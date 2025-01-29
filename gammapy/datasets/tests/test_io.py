@@ -196,3 +196,6 @@ def test_fermipy_datasets_reader():
     assert_allclose(
         datasets[0]._psf_kernel.psf_kernel_map.data.sum(axis=(1, 2)), 1, rtol=1e-5
     )
+    assert_allclose(
+        datasets[0].edisp.exposure_map.data, datasets[0].psf.exposure_map.data
+    )
