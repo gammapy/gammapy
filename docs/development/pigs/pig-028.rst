@@ -247,7 +247,7 @@ Proposal
 
 
 Serialisation of the samples
--------------
+----------------------------
 In UltraNest, a serialisation is proposed to save to disk the samples and results dictionnary. So this can be used directly to `save` and there is also a `read_file` function.
 
 
