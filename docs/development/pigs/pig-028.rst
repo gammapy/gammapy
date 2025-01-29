@@ -109,8 +109,6 @@ This allows to take advantage of the CPUs on a laptop or a cluster. From my expe
 Whether or not this interfaces well with gammapy must be explored. 
 
 
-Case 5: Any other suggestions ? 
----------------------------------------------------------------
 
 
 
