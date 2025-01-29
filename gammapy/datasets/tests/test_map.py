@@ -43,6 +43,7 @@ from gammapy.maps import (
 )
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
+    create_fermi_isotropic_diffuse_model,
     DiskSpatialModel,
     FoVBackgroundModel,
     GaussianSpatialModel,
@@ -260,6 +261,34 @@ def test_map_dataset_str(sky_model, geom, geom_etrue):
 
     dataset.mask_safe = None
     assert "MapDataset" in str(dataset)
+
+
+@requires_data()
+def test_map_dataset_to_asimov(sky_model, geom, geom_etrue):
+    dataset = get_map_dataset(geom, geom_etrue)
+
+    bkg_model = FoVBackgroundModel(dataset_name=dataset.name)
+    dataset.models = [sky_model, bkg_model]
+
+    npred_sum = dataset.npred().data.sum()
+
+    asimov_dataset = dataset._to_asimov_dataset()
+
+    assert_allclose(asimov_dataset.counts.data.sum(), npred_sum)
+
+    assert len(asimov_dataset.models) == len(dataset.models)
+    assert asimov_dataset.background_model is not None
+
+    dataset2 = dataset.copy()
+    bkg_model2 = FoVBackgroundModel(dataset_name=dataset2.name)
+    dataset2.models = [sky_model, bkg_model2]
+
+    datasets = Datasets([dataset, dataset2])
+
+    asimov_datasets = datasets._to_asimov_datasets()
+    assert len(asimov_datasets.models) == len(datasets.models)
+    assert_allclose(asimov_datasets[0].counts.data.sum(), npred_sum)
+    assert_allclose(asimov_datasets[1].counts.data.sum(), npred_sum)
 
 
 def test_map_dataset_str_empty():
@@ -1344,6 +1373,18 @@ def get_map_dataset_onoff(images, **kwargs):
 
 
 @requires_data()
+def test_map_dataset_on_off_to_asimov(images):
+    dataset = get_map_dataset_onoff(images)
+
+    npred_sum = dataset.npred().data.sum()
+
+    asimov_dataset = dataset._to_asimov_dataset()
+    counts_asimov = asimov_dataset.counts.data.sum()
+
+    assert_allclose(npred_sum, counts_asimov)
+
+
+@requires_data()
 @pytest.mark.parametrize("lazy", [False, True])
 def test_map_dataset_on_off_fits_io(images, lazy, tmp_path):
     dataset = get_map_dataset_onoff(images)
@@ -2043,7 +2084,7 @@ def test_dataset_mixed_geom(tmpdir):
         "1 TeV", "10 TeV", nbin=7, name="energy_true"
     )
 
-    rad_axis = MapAxis.from_bounds(0, 1, nbin=10, name="rad", unit="deg")
+    rad_axis = MapAxis.from_bounds(0, 5, nbin=10, name="rad", unit="deg")
 
     geom = WcsGeom.create(npix=5, axes=[energy_axis])
     geom_exposure = WcsGeom.create(npix=5, axes=[energy_axis_true])
@@ -2060,7 +2101,17 @@ def test_dataset_mixed_geom(tmpdir):
         geom=geom, geom_exposure=geom_exposure, geom_psf=geom_psf, geom_edisp=geom_edisp
     )
     assert isinstance(dataset.psf, PSFMap)
+    dataset.psf.psf_map.data = 1
+    dataset.psf.normalize()
     assert isinstance(dataset._psf_kernel, PSFKernel)
+    assert dataset._psf_kernel.data.shape == (7, 21, 21)
+
+    import gammapy.datasets.evaluator as meval
+
+    meval.PSF_MAX_RADIUS = 2 * u.deg
+    assert dataset._psf_kernel.data.shape == (7, 9, 9)
+    meval.PSF_MAX_RADIUS = None
+    assert dataset._psf_kernel.data.shape == (7, 21, 21)
 
     filename = tmpdir / "test.fits"
     dataset.write(filename)
@@ -2313,3 +2364,18 @@ def test_create_empty_map_dataset_from_irfs(geom, geom_etrue):
 
     assert dataset_new.counts.data.sum() == 0
     assert dataset_new.exposure.data.sum() == 0
+
+
+@requires_data()
+def test_add_fermi_iso():
+    dataset = MapDataset.read(
+        "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc.fits.gz", format="gadf"
+    )
+    filename = "$GAMMAPY_DATA/fermi_3fhl/iso_P8R2_SOURCE_V6_v06.txt"
+    model = create_fermi_isotropic_diffuse_model(
+        filename, datasets_names=[dataset.name]
+    )
+    assert dataset.name in model.datasets_names
+    dataset.models = model
+    assert "isotropic" in dataset.models.names[0]
+    assert not dataset.models[0].apply_irf["edisp"]

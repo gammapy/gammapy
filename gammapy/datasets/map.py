@@ -7,6 +7,7 @@ from astropy.io import fits
 from astropy.table import Table
 from regions import CircleSkyRegion
 import matplotlib.pyplot as plt
+import gammapy.datasets.evaluator as meval
 from gammapy.data import GTI, PointingMode
 from gammapy.irf import EDispKernelMap, EDispMap, PSFKernel, PSFMap, RecoPSFMap
 from gammapy.maps import LabelMapAxis, Map, MapAxes, MapAxis, WcsGeom
@@ -539,13 +540,13 @@ class MapDataset(Dataset):
 
         if psf and not isinstance(psf, (PSFMap, HDULocation)):
             raise ValueError(
-                f"'psf' must be a 'PSFMap' or `HDULocation` object, got {type(psf)}"
+                f"'psf' must be a `PSFMap` or `HDULocation` object, got {type(psf)} instead."
             )
         self.psf = psf
 
         if edisp and not isinstance(edisp, (EDispMap, EDispKernelMap, HDULocation)):
             raise ValueError(
-                "'edisp' must be a 'EDispMap', `EDispKernelMap` or 'HDULocation' "
+                "'edisp' must be a `EDispMap`, `EDispKernelMap` or `HDULocation` "
                 f"object, got `{type(edisp)}` instead."
             )
 
@@ -554,10 +555,7 @@ class MapDataset(Dataset):
         self.gti = gti
         self.models = models
         self.meta_table = meta_table
-        if meta is None:
-            self._meta = MapDatasetMetaData()
-        else:
-            self._meta = meta
+        self.meta = meta
 
     @property
     def _psf_kernel(self):
@@ -568,7 +566,12 @@ class MapDataset(Dataset):
             else:
                 map_ref = self.counts
             if map_ref and not map_ref.geom.is_region:
-                return self.psf.get_psf_kernel(map_ref.geom)
+                return self.psf.get_psf_kernel(
+                    position=map_ref.geom.center_skydir,
+                    geom=map_ref.geom,
+                    containment=meval.PSF_CONTAINMENT,
+                    max_radius=meval.PSF_MAX_RADIUS,
+                )
 
     @property
     def meta(self):
@@ -576,7 +579,10 @@ class MapDataset(Dataset):
 
     @meta.setter
     def meta(self, value):
-        self._meta = value
+        if value is None:
+            self._meta = MapDatasetMetaData()
+        else:
+            self._meta = value
 
     # TODO: keep or remove?
     @property
@@ -1473,6 +1479,35 @@ class MapDataset(Dataset):
             )
         else:
             return cash_sum_cython(counts.ravel(), npred.ravel()) + prior_stat_sum
+
+    def _to_asimov_dataset(self):
+        """Create Asimov dataset from the current models.
+
+        Parameters
+        ----------
+        name : str, optional
+            Name of the new dataset. Default is None.
+
+        """
+        npred = self.npred()
+        data = np.nan_to_num(npred.data, copy=True, nan=0.0, posinf=0.0, neginf=0.0)
+        npred.data = data.astype("float")
+
+        asimov_dataset = self.__class__(
+            models=self.models,
+            counts=npred,
+            exposure=self.exposure,
+            background=self.background,
+            psf=self.psf,
+            edisp=self.edisp,
+            mask_safe=self.mask_safe,
+            mask_fit=self.mask_fit,
+            gti=self.gti,
+            name=self.name,
+            meta=self.meta,
+        )
+        asimov_dataset._evaluators = self._evaluators
+        return asimov_dataset
 
     def fake(self, random_state="random-seed"):
         """Simulate fake counts for the current model and reduced IRFs.
@@ -2694,6 +2729,38 @@ class MapDatasetOnOff(MapDataset):
             background=background,
             meta_table=self.meta_table,
         )
+
+    def _to_asimov_dataset(self):
+        """Create Asimov dataset from the current models.
+
+        Parameters
+        ----------
+        name : str, optional
+            Name of the new dataset. Default is None.
+
+        """
+        npred = self.npred()
+        data = np.nan_to_num(npred.data, copy=True, nan=0.0, posinf=0.0, neginf=0.0)
+        npred.data = data.astype("float")
+
+        asimov_dataset = self.__class__(
+            models=self.models,
+            counts=npred,
+            counts_off=self.counts_off,
+            exposure=self.exposure,
+            acceptance=self.acceptance,
+            acceptance_off=self.acceptance_off,
+            psf=self.psf,
+            edisp=self.edisp,
+            mask_safe=self.mask_safe,
+            mask_fit=self.mask_fit,
+            gti=self.gti,
+            name=self.name,
+            meta=self.meta,
+        )
+        asimov_dataset._evaluators = self._evaluators
+
+        return asimov_dataset
 
     @property
     def _is_stackable(self):
