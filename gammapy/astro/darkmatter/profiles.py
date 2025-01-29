@@ -136,7 +136,7 @@ class ZhaoProfile(DMProfile):
 
     References
     ----------
-    * .. [1] `Zhao (1996), "Analytical models for galactic nuclei"
+    .. [1] `Zhao (1996), "Analytical models for galactic nuclei"
       <https://ui.adsabs.harvard.edu/abs/1996MNRAS.278..488Z>`_
     * `Marco et al. (2011), "PPPC 4 DM ID: a poor particle physicist cookbook for dark matter indirect detection"
       <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_

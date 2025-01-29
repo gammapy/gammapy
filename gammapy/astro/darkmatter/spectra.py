@@ -31,8 +31,10 @@ class PrimaryFlux(TemplateNDSpectralModel):
 
     References
     ----------
-    * `Marco et al. (2011) <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
-    * `Cirelli et al. (2016) <http://www.marcocirelli.net/PPPC4DMID.html>`_
+    * `Marco et al. (2011), "PPPC 4 DM ID: a poor particle physicist cookbook for dark matter indirect detection"
+      <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
+    * `Cirelli et al. (2016), "PPPC 4 DM ID: A Poor Particle Physicist Cookbook for Dark Matter Indirect Detection"
+      <http://www.marcocirelli.net/PPPC4DMID.html>`_
     """
 
     channel_registry = {
