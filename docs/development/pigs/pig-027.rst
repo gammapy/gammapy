@@ -64,7 +64,7 @@ NS approximate the posterior distribution via sparse sampling of the entire like
 At the opposite, MCMC (like gradient descent methods) will only "visit" the landscape in the vicinity of their walk.  
 Below is an illustration of Nested Sampling and MCMC modeling of the dataset `$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits`.
 
-.. image:: pig-028-Landscape-Crab-NestedSampling-MCMC.png
+.. image:: pig-027-Landscape-Crab-NestedSampling-MCMC.png
    :alt: MCMC vs Nested Sampling likelihood exploration
 
 
