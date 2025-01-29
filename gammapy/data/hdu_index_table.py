@@ -131,7 +131,7 @@ class HDUIndexTable(Table):
                 f"Invalid hdu_class: {hdu_class}. Valid values are: {valid}"
             )
 
-        if obs_id not in self["OBS_ID"]:
+        if obs_id not in self.obs_id:
             raise IndexError(f"No entry available with OBS_ID = {obs_id}")
 
     def row_idx(self, obs_id, hdu_type=None, hdu_class=None):
@@ -151,7 +151,7 @@ class HDUIndexTable(Table):
         idx : list of int
             List of row indices matching the selection.
         """
-        selection = self["OBS_ID"] == obs_id
+        selection = self.obs_id == obs_id
 
         if hdu_class:
             is_hdu_class = self._hdu_class_stripped == hdu_class
@@ -184,9 +184,17 @@ class HDUIndexTable(Table):
         return np.array([_.strip() for _ in self["HDU_TYPE"]])
 
     @lazyproperty
+    def obs_id(self):
+        """Observation Id"""
+        if "OBS_TABLE_ROW" in self.keys():
+            return self["OBS_TABLE_ROW"]
+        elif "OBS_ID" in self.keys():
+            return self["OBS_ID"]
+
+    @lazyproperty
     def obs_id_unique(self):
         """Observation IDs (unique)."""
-        return np.unique(np.sort(self["OBS_ID"]))
+        return np.unique(np.sort(self.obs_id))
 
     @lazyproperty
     def hdu_type_unique(self):

@@ -94,7 +94,10 @@ class DataStore:
     @property
     def obs_ids(self):
         """Return the sorted obs_ids contained in the datastore."""
-        return np.unique(self.hdu_table["OBS_ID"].data)
+        if "OBS_ID" in self.hdu_table.keys():
+            return np.unique(self.hdu_table["OBS_ID"].data)
+        else:
+            return np.unique(self.obs_table["OBS_ID"].data)
 
     @classmethod
     def from_file(cls, filename, hdu_hdu="HDU_INDEX", hdu_obs="OBS_INDEX"):
@@ -260,7 +263,13 @@ class DataStore:
         else:
             return s
 
-    def obs(self, obs_id, required_irf="full-enclosure", require_events=True):
+    def obs(
+        self,
+        obs_id,
+        required_irf="full-enclosure",
+        require_events=True,
+        obs_table_row=None,
+    ):
         """Access a given `~gammapy.data.Observation`.
 
         Parameters
@@ -286,6 +295,8 @@ class DataStore:
             Default is `"full-enclosure"`.
         require_events : bool, optional
             Require events and gti table or not. Default is True.
+        obs_table_row : int, optional
+            Row number in the observation table. Default is None
 
         Returns
         -------
@@ -293,8 +304,11 @@ class DataStore:
             Observation container.
 
         """
-        if obs_id not in self.hdu_table["OBS_ID"]:
-            raise ValueError(f"OBS_ID = {obs_id} not in HDU index table.")
+        if obs_id not in self.obs_ids:
+            raise ValueError(f"OBS_ID = {obs_id} not in index tables.")
+
+        if obs_table_row is None:
+            obs_table_row = obs_id
 
         kwargs = {"obs_id": int(obs_id)}
 
@@ -316,7 +330,7 @@ class DataStore:
         missing_hdus = []
         for hdu in ALL_HDUS:
             hdu_location = self.hdu_table.hdu_location(
-                obs_id=obs_id,
+                obs_id=obs_table_row,
                 hdu_type=hdu,
                 warn_missing=False,
             )
@@ -392,14 +406,23 @@ class DataStore:
         if obs_id is None:
             obs_id = self.obs_ids
 
+        if "OBS_TABLE_ROW" in self.hdu_table.keys():
+            selection = [ind in obs_id for ind in self.obs_table["OBS_ID"]]
+            obs_id = self.obs_table["OBS_ID"][selection]
+            obs_table_row = np.where(selection)[0]
+        else:
+            obs_table_row = obs_id
+
         obs_list = []
 
-        for _ in progress_bar(obs_id, desc="Obs Id"):
+        for ind in progress_bar(range(len(obs_id)), desc="Obs Id"):
             try:
-                obs = self.obs(_, required_irf, require_events)
+                obs = self.obs(
+                    obs_id[ind], required_irf, require_events, obs_table_row[ind]
+                )
             except ValueError as err:
                 if skip_missing:
-                    log.warning(f"Skipping missing obs_id: {_!r}")
+                    log.warning(f"Skipping missing obs_id: {obs_id[ind]!r}")
                     continue
                 else:
                     raise err
