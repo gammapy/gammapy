@@ -13,7 +13,6 @@ from gammapy.modeling.models import create_fermi_isotropic_diffuse_model, Models
 from gammapy.utils.scripts import read_yaml, make_path
 from .spectrum import SpectrumDatasetOnOff
 from .utils import create_map_dataset_from_dl4
-from .datasets import MapDataset, Datasets
 
 __all__ = [
     "DatasetReader",
@@ -531,10 +530,11 @@ class FermipyDatasetsReader(DatasetReader):
             Map dataset.
 
         """
+        from gammapy.datasets import MapDataset
 
         path = Path(path)
         counts = Map.read(path / f"ccube_0{str(file_id)}.fits")
-        exposure = Map.read(path / f"bexpmap_roi_0{str(file_id)}.fits")
+        exposure = Map.read(path / f"bexpmap_0{str(file_id)}.fits")
         psf = PSFMap.read(path / f"psf_0{str(file_id)}.fits", format="gtpsf")
         edisp = EDispKernelMap.read(path / f"drm_0{str(file_id)}.fits", format="gtdrm")
 
@@ -542,10 +542,15 @@ class FermipyDatasetsReader(DatasetReader):
         edisp_axes = edisp.edisp_map.geom.axes
         if (
             len(edisp_axes["energy_true"].center)
-            != len(exposure.geom.axes[0].center) - 1
+            != len(exposure.geom.axes["energy_true"].center) - 1
         ):
             raise ValueError(
                 "Energy true axes of exposure and DRM do not match. Check fermipy configuration."
+            )
+            edisp_axes = edisp.edisp_map.geom.axes
+        if np.all(edisp_axes["energy"].center == counts.geom.axes["energy"].center):
+            raise ValueError(
+                "Energy axes of counts and DRM do not match. Check fermipy configuration."
             )
 
         psf_r68s = psf.containment_radius(
@@ -567,7 +572,10 @@ class FermipyDatasetsReader(DatasetReader):
             name=name,
         )
         # standardize dataset interpolating to same geom and axes
-        dataset = create_map_dataset_from_dl4(dataset, name=dataset.name)
+        geom = dataset.counts.geom.to_image().to_cube(
+            [edisp_axes["energy"]]
+        )  # keV->MeV
+        dataset = create_map_dataset_from_dl4(dataset, geom=geom, name=dataset.name)
 
         if edisp_bins > 0:  # slice edisp_bins
             dataset = dataset.slice_by_idx(
@@ -575,12 +583,14 @@ class FermipyDatasetsReader(DatasetReader):
             )
 
         if isotropic_file:
-            model = create_fermi_isotropic_diffuse_model(dataset, isotropic_file)
+            model = create_fermi_isotropic_diffuse_model(
+                isotropic_file, datasets_names=[dataset.name]
+            )
             dataset.models = Models([model])
         return dataset
 
     def read(self):
-        """Create map datasets from Fermi-LAT configuration file.
+        """Create Fermi-LAT map datasets from Fermipy configuration file.
 
         Returns
         -------
@@ -588,6 +598,7 @@ class FermipyDatasetsReader(DatasetReader):
             Map datasets.
 
         """
+        from gammapy.datasets import Datasets
 
         filename = self.filename.resolve()
         cwd = os.getcwd()
