@@ -74,7 +74,7 @@ Use cases
 intro here (TBC)
 
 Case 1: Estimate the posterior distribution with a tuning-parameter free approach
----------------------------------------------------------------
+---------------------------------------------------------------------------------
 Estimating the errors and correlations between the N parameters in a model scales as N*(N-1)/2 and quickly becomes impossible with the regular grid approach of iMinuit.
 MCMC methods can provide an approximation of this posterior distribution and have been used for a while in science (dating back to Los Alamos work by Metropolis et al., 1953).
 However they still have a few fundamental tuning parameters that require human intervention: 
