@@ -87,7 +87,7 @@ In addition as the MCMC only explores a small fraction of the likelihood landsca
 
 
 Case 2: Minuit convergence issues
----------------------------------------------------------------
+-----------------------------------
 
 One of the comment I hear frequently at tutorials, schools or colleagues is not knowing what to do in front of a `Fit failed`` iMinuit message.
 This can be due to multiple good reasons (e.g. hitting a boundary) but most commonly it can be related to a starting point far from the solution (in particular the amplitude parameter).
