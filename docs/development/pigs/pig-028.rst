@@ -287,3 +287,4 @@ Once a dev version is working, we could run a small user testing on experiencied
 Decision
 ========
 
+The PIG is accepted 2025-01-29. First PRs are underway.
