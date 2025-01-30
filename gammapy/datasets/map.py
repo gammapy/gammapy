@@ -15,8 +15,7 @@ from gammapy.modeling.models import DatasetModels, FoVBackgroundModel, Models
 from gammapy.stats import (
     CashCountsStatistic,
     WStatCountsStatistic,
-    cash,
-    cash_sum_cython,
+    FIT_STATISTIC_REGISTRY,
     get_wstat_mu_bkg,
     wstat,
 )
@@ -556,6 +555,8 @@ class MapDataset(Dataset):
         self.models = models
         self.meta_table = meta_table
         self.meta = meta
+
+        self._fit_statistic = FIT_STATISTIC_REGISTRY[self.stat_type]
 
     @property
     def _psf_kernel(self):
@@ -1206,7 +1207,9 @@ class MapDataset(Dataset):
 
     def stat_array(self):
         """Statistic function value per bin given the current model parameters."""
-        return cash(n_on=self.counts.data, mu_on=self.npred().data)
+        return self._fit_statistic.stat_array(
+            n_on=self.counts.data, mu_on=self.npred().data
+        )
 
     def residuals(self, method="diff", **kwargs):
         """Compute residuals map.
@@ -1468,17 +1471,18 @@ class MapDataset(Dataset):
         """Total statistic function value given the current model parameters and priors."""
         prior_stat_sum = 0.0
         if self.models is not None:
-            prior_stat_sum = self.models.parameters.prior_stat_sum()
+            prior_stat_sum = (
+                self.models.parameters.prior_stat_sum()
+            )  # This shouldn't be computed here
 
         counts, npred = self.counts.data.astype(float), self.npred().data
 
         if self.mask is not None:
-            return (
-                cash_sum_cython(counts[self.mask.data], npred[self.mask.data])
-                + prior_stat_sum
-            )
-        else:
-            return cash_sum_cython(counts.ravel(), npred.ravel()) + prior_stat_sum
+            counts, npred = counts[self.mask.data], npred[self.mask.data]
+
+        return (
+            self._fit_statistic.stat_sum(counts.ravel(), npred.ravel()) + prior_stat_sum
+        )
 
     def _to_asimov_dataset(self):
         """Create Asimov dataset from the current models.

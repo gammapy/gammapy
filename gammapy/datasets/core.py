@@ -71,7 +71,9 @@ class Dataset(abc.ABC):
         """Total statistic given the current model parameters and priors."""
         prior_stat_sum = 0.0
         if self.models is not None:
-            prior_stat_sum = self.models.parameters.prior_stat_sum()
+            prior_stat_sum = (
+                self.models.parameters.prior_stat_sum()
+            )  # This shouldn't be computed here
         return self._stat_sum_likelihood() + prior_stat_sum
 
     def _stat_sum_likelihood(self):
