@@ -248,7 +248,7 @@ class FitStatistic(ABC):
 
     @classmethod
     def stat_sum(cls, *args, **kwargs):
-        """Calculate -2 * \sum log(L)."""
+        """Calculate -2 * sum log(L)."""
         raise np.sum(cls.stat_array(*args, **kwargs))
 
     @staticmethod
@@ -259,7 +259,7 @@ class FitStatistic(ABC):
 
     @classmethod
     def loglikelihood(cls, *args, **kwargs):
-        """Calculate \sum log(L)."""
+        """Calculate sum log(L)."""
         return -0.5 * cls.stat_sum(*args, **kwargs)
 
 
