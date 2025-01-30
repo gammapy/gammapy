@@ -330,3 +330,34 @@ def test_data_store_no_events():
     for obs in observations:
         assert not obs.events
         assert not obs.gti
+
+
+@requires_data()
+def test_data_store_future_foramt():
+    irf_dir = "$GAMMAPY_DATA/tests/format/swgo/"
+    datastore = DataStore.from_dir(
+        irf_dir, "hdu-index-multi.fits.gz", "obs-index-multi.fits.gz"
+    )
+    for event_type in np.unique(
+        datastore.obs_table["IRF_NAME"]
+    ):  # for SWGO it could be simply EVENT_TYPE
+        obs_selection = datastore.obs_table["IRF_NAME"] == event_type
+        # obs_selection &= (datastore.obs_table["ALT_PNT"]>=0) & (datastore.obs_table["ALT_PNT"]<=90)
+        hdu_selection = np.array(
+            [
+                row in datastore.obs_table["OBS_TABLE_ROW"][obs_selection]
+                for row in datastore.hdu_table["OBS_TABLE_ROW"]
+            ]
+        )
+        datastore_redu = DataStore(
+            hdu_table=datastore.hdu_table[hdu_selection],
+            obs_table=datastore.obs_table[obs_selection],
+        )
+        # datastore.select({"EVENT_TYPE":event_type}, "ALT_PNT":[0, 90]]}] would be simpler
+        # and I would remore obs_id argument from get_observations and do all selection on datastore.select
+
+        observations = datastore_redu.get_observations()
+        obs = observations[0]
+        obs._events = [_._events for _ in observations]
+        # get_observations should stack the entries with the same IRF_name to avoid repeating data reduction
+        # and allows obs.events to be a list of events lists to avoid having everything in memory in that case
