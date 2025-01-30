@@ -409,7 +409,7 @@ class DataStore:
         if "OBS_TABLE_ROW" in self.hdu_table.keys():
             selection = [ind in obs_id for ind in self.obs_table["OBS_ID"]]
             obs_id = self.obs_table["OBS_ID"][selection]
-            obs_table_row = np.where(selection)[0]
+            obs_table_row = self.obs_table["OBS_TABLE_ROW"][selection]
         else:
             obs_table_row = obs_id
 
