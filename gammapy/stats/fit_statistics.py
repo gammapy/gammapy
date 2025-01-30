@@ -4,10 +4,23 @@
 see :ref:`fit-statistics`
 """
 
+from abc import ABC, abstractmethod
 import numpy as np
-from gammapy.stats.fit_statistics_cython import TRUNCATION_VALUE
+from scipy.special import erfc
+from gammapy.stats.fit_statistics_cython import TRUNCATION_VALUE, cash_sum_cython
 
-__all__ = ["cash", "cstat", "wstat", "get_wstat_mu_bkg", "get_wstat_gof_terms"]
+__all__ = [
+    "cash",
+    "cstat",
+    "wstat",
+    "get_wstat_mu_bkg",
+    "get_wstat_gof_terms",
+    "CashFitStatistic",
+    "WStatFitStatistic",
+    "Chi2FitStatistic",
+    "Chi2AsymmetricErrorFitStatistic",
+    "FIT_STATISTICS_REGISTRY",
+]
 
 
 def cash(n_on, mu_on, truncation_value=TRUNCATION_VALUE):
@@ -228,3 +241,123 @@ def get_wstat_gof_terms(n_on, n_off):
     term += np.where(n_off == 0, 0, term2)
 
     return 2 * term
+
+
+class FitStatistic(ABC):
+    """Abstract base class for FitStatistic objects."""
+
+    @classmethod
+    def stat_sum(cls, *args, **kwargs):
+        """Calculate -2 * \sum log(L)."""
+        raise np.sum(cls.stat_array(*args, **kwargs))
+
+    @staticmethod
+    @abstractmethod
+    def stat_array(*args, **kwargs):
+        """Calculate -2 * log(L)."""
+        raise NotImplementedError
+
+    @classmethod
+    def loglikelihood(cls, *args, **kwargs):
+        """Calculate \sum log(L)."""
+        return -0.5 * cls.stat_sum(*args, **kwargs)
+
+
+class CashFitStatistic(FitStatistic):
+    """Cash statistic class for Poisson with known background."""
+
+    @staticmethod
+    def stat_sum(counts, npred):
+        counts, npred = counts.data.astype(float), npred.data
+        return cash_sum_cython(counts.ravel(), npred.ravel())
+
+    @staticmethod
+    def stat_array(counts, npred):
+        """Statistic function value per bin given the current model parameters."""
+        return cash(n_on=counts.data, mu_on=npred.data)
+
+
+class WStatFitStatistic(FitStatistic):
+    """WStat fit statistic class for ON-OFF Poisson measurements."""
+
+    @staticmethod
+    def stat_array(counts, counts_off, alpha, npred_signal):
+        """Statistic function value per bin given the current model parameters."""
+        mu_sig = npred_signal.data
+        on_stat_ = wstat(
+            n_on=counts.data,
+            n_off=counts_off.data,
+            alpha=alpha.data,
+            mu_sig=mu_sig,
+        )
+        return np.nan_to_num(on_stat_)
+
+
+class Chi2FitStatistic(FitStatistic):
+    """Chi2 fit statistic class for measurements with gaussian symmetric errors."""
+
+    @staticmethod
+    def stat_array(data, model, sigma):
+        """Statistic function value per bin given the current model."""
+        return ((data - model) / sigma).to_value("") ** 2
+
+
+class Chi2AsymmetricErrorFitStatistic(FitStatistic):
+    """Pseudo-Chi2 fit statistic class for measurements with gaussian asymmetric errors with upper limits.
+
+    Assumes that regular data follow asymmetric normal pdf and upper limits follow complementary error functions
+    """
+
+    @staticmethod
+    def stat_array(data, model, errn, errp, is_ul=None, ul=None):
+        """Asymmetric chi2 for asymmetric errors and UL.
+
+        NaNs should be removed before calling in the function. All arrays should have the same size.
+
+        Parameters
+        ----------
+        data : `~numpy.ndarray`
+            the data array
+        model : `~numpy.ndarray`
+            the model array
+        errn : `~numpy.ndarray`
+            the negative error array
+        errp : `~numpy.ndarray`
+            the positive error array
+        is_ul : `~numpy.ndarray`, optional
+            the upper limit mask array. Mandatory if ul is passed.
+        ul : `~numpy.ndarray`, optional
+            the upper limit array. Mandatory if is_ul is passed.
+
+        Returns
+        -------
+        stat_array : `~numpy.ndarray`
+            the statistic array .
+        """
+        stat = np.zeros(model.shape)
+        scale = np.zeros(model.shape)
+
+        mask_p = model >= data
+        scale[mask_p] = errp[mask_p]
+        scale[~mask_p] = errn[~mask_p]
+
+        stat = ((data - model) / scale) ** 2
+
+        if is_ul is not None and ul is not None:
+            value = model[is_ul]
+            loc_ul = data[is_ul]
+            scale_ul = ul[is_ul]
+            stat[is_ul] = 2 * np.log(
+                (erfc((loc_ul - value) / scale_ul) / 2)
+                / (erfc((loc_ul - 0) / scale_ul) / 2)
+            )
+
+        return np.nan_to_num(stat)
+
+
+FIT_STATISTICS_REGISTRY = {
+    "cash": CashFitStatistic,
+    "wstat": WStatFitStatistic,
+    "chi2": Chi2FitStatistic,
+    "distrib": Chi2AsymmetricErrorFitStatistic,
+}
