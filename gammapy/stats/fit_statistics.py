@@ -268,13 +268,13 @@ class CashFitStatistic(FitStatistic):
 
     @staticmethod
     def stat_sum(counts, npred):
-        counts, npred = counts.data.astype(float), npred.data
+        counts = counts.astype(float)  # This might be done in the Dataset
         return cash_sum_cython(counts.ravel(), npred.ravel())
 
     @staticmethod
     def stat_array(counts, npred):
         """Statistic function value per bin given the current model parameters."""
-        return cash(n_on=counts.data, mu_on=npred.data)
+        return cash(n_on=counts, mu_on=npred)
 
 
 class WStatFitStatistic(FitStatistic):
@@ -283,12 +283,11 @@ class WStatFitStatistic(FitStatistic):
     @staticmethod
     def stat_array(counts, counts_off, alpha, npred_signal):
         """Statistic function value per bin given the current model parameters."""
-        mu_sig = npred_signal.data
         on_stat_ = wstat(
-            n_on=counts.data,
-            n_off=counts_off.data,
-            alpha=alpha.data,
-            mu_sig=mu_sig,
+            n_on=counts,
+            n_off=counts_off,
+            alpha=alpha,
+            mu_sig=npred_signal,
         )
         return np.nan_to_num(on_stat_)
 

@@ -1207,9 +1207,7 @@ class MapDataset(Dataset):
 
     def stat_array(self):
         """Statistic function value per bin given the current model parameters."""
-        return self._fit_statistic.stat_array(
-            n_on=self.counts.data, mu_on=self.npred().data
-        )
+        return self._fit_statistic.stat_array(self.counts.data, self.npred().data)
 
     def residuals(self, method="diff", **kwargs):
         """Compute residuals map.
