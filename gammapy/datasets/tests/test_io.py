@@ -204,8 +204,9 @@ def test_fermipy_datasets_reader():
     assert datasets.models.names[0] == "isotropic_P8R3_SOURCEVETO_V3_PSF0_v1"
     assert datasets.models.names[1] == "isotropic_P8R3_SOURCEVETO_V3_PSF1_v1"
 
-    filepath = make_path("$GAMMAPY_DATA/tests/fermi")
-    dataset = reader.create_dataset(filepath)
+    path = make_path("$GAMMAPY_DATA/tests/fermi")
+    file_id = 0
+    dataset = reader.create_dataset(path, file_id=file_id)
     assert not dataset.models
 
     reader = FermipyDatasetsReader(

@@ -560,6 +560,14 @@ class FermipyDatasetsReader(DatasetReader):
                 "PSF is not defined for all true energies. Check fermipy configuration."
             )
 
+        # change counts energy axis unit keV->MeV
+        energy_axis = counts.geom.axes["energy"]._init_copy(
+            nodes=edisp_axes["energy"].edges
+        )
+        geom = counts.geom.to_image().to_cube([energy_axis])
+        counts = Map.from_geom(geom, data=counts.data)
+
+        # standardize dataset interpolating to same geom and axes
         dataset = MapDataset(
             counts=counts,
             exposure=exposure,
@@ -567,12 +575,9 @@ class FermipyDatasetsReader(DatasetReader):
             edisp=edisp,
             name=name,
         )
-        # standardize dataset interpolating to same geom and axes
-        energy_axis = counts.geom.axes["energy"]._init_copy(
-            unit=edisp_axes["energy"].unit
+        dataset = create_map_dataset_from_dl4(
+            dataset, geom=counts.geom, name=dataset.name
         )
-        geom = dataset.counts.geom.to_image().to_cube([energy_axis])  # keV->MeV
-        dataset = create_map_dataset_from_dl4(dataset, geom=geom, name=dataset.name)
 
         if edisp_bins > 0:  # slice edisp_bins
             dataset = dataset.slice_by_idx(
