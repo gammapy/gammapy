@@ -15,7 +15,7 @@ from gammapy.modeling.models import DatasetModels, FoVBackgroundModel, Models
 from gammapy.stats import (
     CashCountsStatistic,
     WStatCountsStatistic,
-    FIT_STATISTIC_REGISTRY,
+    FIT_STATISTICS_REGISTRY,
     get_wstat_mu_bkg,
     wstat,
 )
@@ -556,7 +556,7 @@ class MapDataset(Dataset):
         self.meta_table = meta_table
         self.meta = meta
 
-        self._fit_statistic = FIT_STATISTIC_REGISTRY[self.stat_type]
+        self._fit_statistic = FIT_STATISTICS_REGISTRY[self.stat_type]
 
     @property
     def _psf_kernel(self):
