@@ -410,6 +410,10 @@ def test_interpolate_map_dataset():
     ).data
     assert_allclose(psfkernel_preinterp, psfkernel_postinterp, atol=1e-4)
 
+    # test running maker with dataset
+    maker = MapDatasetMaker(selection=["exposure", "edisp", "psf"])
+    dataset = maker.run(dataset, dataset)
+
 
 @requires_data()
 @pytest.mark.xfail
