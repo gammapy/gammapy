@@ -14,6 +14,7 @@ from .metadata import MapDatasetMetaData
 from .simulate import MapDatasetEventSampler, ObservationEventSampler
 from .spectrum import SpectrumDataset, SpectrumDatasetOnOff
 from .utils import apply_edisp, split_dataset
+from .events import EventDataset
 
 DATASET_REGISTRY = Registry(
     [
@@ -46,4 +47,5 @@ __all__ = [
     "MapDatasetMetaData",
     "apply_edisp",
     "split_dataset",
+    "EventDataset",
 ]
