@@ -8,12 +8,12 @@ abstract: 'Gammapy analyzes gamma-ray data and creates sky images, spectra and l
 type: software
 message: "If you use this software, please cite it using the metadata from this file."
 url: "https://gammapy.org/"
-date-released: 2024-02-29
+date-released: 2024-11-26
 keywords:
 - Astronomy
 - "Gamma-rays"
 - "Data analysis"
-version: v1.2
+version: v1.3
 repository-code: "https://github.com/gammapy/gammapy"
 license: BSD-3-Clause
 contact:
@@ -29,6 +29,11 @@ authors:
   affiliation: "Université Paris-Saclay, Université Paris Cité, CEA, CNRS, AIM, F-91191
     Gif-sur-Yvette, France"
   orcid: "https://orcid.org/0000-0002-6606-2816"
+- given-names: Arnau
+  family-names: Aguasca-Cabot
+  affiliation: "Departament de Física Quàntica i Astrofísica, Institut de Ciències
+    del Cosmos, Universitat de Barcelona, IEEC-UB, Barcelona, Spain"
+  orcid: "https://orcid.org/0000-0001-8816-4920"
 - given-names: Juan
   family-names: Bernete
   affiliation: "Centro de Investigaciones Energéticas Medioambientales y Tecnológicas
@@ -87,15 +92,26 @@ authors:
   family-names: Mender
   affiliation: "Astroparticle Physics Group, TU Dortmund University, Germany"
   orcid: "https://orcid.org/0000-0002-0755-0609"
+- given-names: Lars
+  family-names: Mohrmann
+  affiliation: "Max Planck Institute for Nuclear Physics, Heidelberg, Germany"
+  orcid: "https://orcid.org/0000-0002-9667-8654"
 - given-names: Daniel
   family-names: Morcuende
-  affiliation: Institute of Particle and Cosmos Physics, Instituto de Astrofísica
-    de Andalucía,\ \ Universidad Complutense de Madrid
+  affiliation: "Instituto de Astrofísica de Andalucía-CSIC, Granada, Spain"
   orcid: https://orcid.org/0000-0001-9400-0922
+- given-names: Mireia
+  family-names: Nievas Rosillo
+  affiliation: "Instituto de Astrofísica de Canarias (IAC), C/ Vía Láctea s/n, 38205 La Laguna, Tenerife, Spain"
+  orcid: "https://orcid.org/0000-0002-8321-9168"
 - given-names: Laura
   family-names: Olivera-Nieto
   affiliation: "Max Planck Institute for Nuclear Physics, Heidelberg, Germany"
   orcid: "https://orcid.org/0000-0002-9105-0518"
+- given-names: Michele
+  family-names: Peresano
+  affiliation: "Max-Planck-Institut für Physik, Boltzmannstraße 8, 85748 Garching bei München, Germany"
+  orcid: "https://orcid.org/0000-0002-7537-7334"
 - given-names: Fabio
   family-names: Pintore
   affiliation: "INAF/IASF PALERMO, Italy"
@@ -114,11 +130,19 @@ authors:
   family-names: Remy
   affiliation: "Max Planck Institute for Nuclear Physics, Heidelberg, Germany"
   orcid: "https://orcid.org/0000-0002-8815-6530"
+- given-names: Gerrit
+  family-names: Roellinghoff
+  affiliation: "Friedrich-Alexander-Universität Erlangen-Nürnberg, ECAP, Nikolaus-Fiebiger-Str.
+    2, 91058 Erlangen, Germany"
 - given-names: Atreyee
   family-names: Sinha
   affiliation: "EMFTEL department and IPARCOS, Universidad Complutense de Madrid,
     28040 Madrid, Spain"
   orcid: "https://orcid.org/0000-0002-9238-7163"
+- given-names: "Brigitta M"
+  family-names: Sipőcz
+  affiliation: "Caltech/IPAC, USA"
+  orcid: "https://orcid.org/0000-0002-3713-6337"
 - given-names: Hanna
   family-names: Stapel
   affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
@@ -138,6 +162,14 @@ authors:
   affiliation: "Friedrich-Alexander-Universität Erlangen-Nürnberg, ECAP, Nikolaus-Fiebiger-Str.
     2, 91058 Erlangen, Germany"
   orcid: "https://orcid.org/0000-0002-7378-4024"
+- given-names: Samantha
+  family-names: Wong
+  affiliation: "Physics Department, McGill University, Montreal, QC H3A 2T8, Canada"
+  orcid: "https://orcid.org/0000-0002-2730-2733"
+- given-names: Pei
+  family-names: Yu
+  affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
+    Paris, France"
 preferred-citation:
   authors:
   - family-names: "The Gammapy team"

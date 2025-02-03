@@ -279,7 +279,7 @@ class PSF(IRF):
 
         ax.set_yscale("log")
         ax.set_ylabel(f"PSF [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]")
-        plt.legend()
+        ax.legend()
         return ax
 
     def peek(self, figsize=(15, 5)):

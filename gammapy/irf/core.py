@@ -42,7 +42,7 @@ class IRF(metaclass=abc.ABCMeta):
 
     Parameters
     ----------
-    axes : list of `MapAxis` or `MapAxes`
+    axes : list of `~gammapy.maps.MapAxis` or `~gammapy.maps.MapAxes`
         Axes.
     data : `~numpy.ndarray` or `~astropy.units.Quantity`, optional
         Data. Default is 0.

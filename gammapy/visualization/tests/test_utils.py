@@ -88,6 +88,10 @@ def test_plot_map_rgb():
 
     axis = MapAxis([0, 1, 2, 3], node_type="edges")
     map_allsky = WcsNDMap.create(binsz=10 * u.deg, axes=[axis])
+
+    # Astropy 7 does not support uniformly 0 maps
+    map_allsky.data += 1
+
     with mpl_plot_check():
         plot_map_rgb(map_allsky)
 
