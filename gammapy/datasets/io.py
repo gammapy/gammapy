@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import os
 import abc
 import numpy as np
 from pathlib import Path
@@ -488,9 +487,9 @@ class FermipyDatasetsReader(DatasetReader):
         Configuration file path
     edisp_bins : int
         Number of margin bins to slice in energy. Default is 0.
-        For now only maps created in fermipy with edisp_bins=0 are supported,
-         in that case the emin/emax in the fermipy configuration will correspond to the true energy range for gammapy,
-          and  a value edisp_bins>0 should be set here in order to apply the energy dispersion correctly.
+        For now only maps created with edisp_bins=0 in fermipy configuration are supported,
+        in that case the emin/emax in the fermipy configuration will correspond to the true energy range for gammapy,
+        and  a value edisp_bins>0 should be set here in order to apply the energy dispersion correctly.
         With a binning of 8 to 10 bins per decade, it is recommended to use edisp_bins ≥ 2
         (See https://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Pass8_edisp_usage.html)
 
@@ -522,8 +521,11 @@ class FermipyDatasetsReader(DatasetReader):
             File index (last number of the fits file names). Default is 0.
         edisp_bins : int
             Number of margin bins to slice in energy. Default is 0.
-            If fermipy was configured with edisp_bins=0, it should be set to a value
-            edisp_bins>0 here in order to apply the energy dispersion correclty.
+            For now only maps created with edisp_bins=0 in fermipy configuration are supported,
+            in that case the emin/emax in the fermipy configuration will correspond to the true energy range for gammapy,
+            and  a value edisp_bins>0 should be set here in order to apply the energy dispersion correctly.
+            With a binning of 8 to 10 bins per decade, it is recommended to use edisp_bins ≥ 2
+            (See https://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Pass8_edisp_usage.html)
         name : str, optional
             Dataset name. The default is None, and the name is randomly generated.
 
@@ -606,9 +608,7 @@ class FermipyDatasetsReader(DatasetReader):
         from gammapy.datasets import Datasets
 
         filename = self.filename.resolve()
-        cwd = os.getcwd()
         data = read_yaml(filename)
-        os.chdir(filename.parent)
 
         if "components" in data:
             components = data["components"]
@@ -618,11 +618,13 @@ class FermipyDatasetsReader(DatasetReader):
         datasets = Datasets()
         for file_id, component in enumerate(components):
             if "fileio" in component and "outdir" in component["fileio"]:
-                path = component["fileio"]["outdir"]
+                path = Path(component["fileio"]["outdir"])
             elif "fileio" in data and "outdir" in data["fileio"]:
                 path = Path(data["fileio"]["outdir"])
             else:
-                path = Path("")
+                path = Path(filename.parent)
+            if not path.is_absolute():
+                path = Path(filename.parent) / path
 
             if "model" in component and "isodiff" in component["model"]:
                 isotropic_file = Path(component["model"]["isodiff"])
@@ -642,5 +644,4 @@ class FermipyDatasetsReader(DatasetReader):
                     name=name,
                 )
             )
-        os.chdir(cwd)
         return datasets
