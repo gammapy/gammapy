@@ -1,8 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Sampler parameter classes."""
 
+import numpy as np
 import ultranest
-from gammapy.modeling.utils import _parse_datasets
+from .covariance import Covariance
+from .utils import _parse_datasets
 
 __all__ = ["Sampler", "SamplerLikelihood"]  # , "SamplerResult"
 
@@ -37,6 +39,18 @@ class Sampler:
                 step_sampler=False,
                 nsteps=20,
             )
+
+    @staticmethod
+    def _update_models(models, results):
+        posterior = results["posterior"]
+        samples = results["samples"]
+        for i, par in enumerate(models.parameters.free_parameters):
+            par.value = posterior["mean"][i]
+            par.error = posterior["stdev"][i]
+
+        covariance = Covariance.from_factor_matrix(models.parameters, np.cov(samples.T))
+        models.covariance = covariance
+        return models
 
     def sampler_ultranest(self, parameters, like):
         """
@@ -84,6 +98,8 @@ class Sampler:
                 function=datasets._stat_sum_likelihood, parameters=parameters
             )
             result = self.sampler_ultranest(parameters, like)
+
+        self._update_models(datasets.models, result)
 
         print(self._sampler.print_results())
         return result
