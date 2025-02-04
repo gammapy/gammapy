@@ -484,7 +484,7 @@ class FermipyDatasetsReader(DatasetReader):
 
     Parameters
     ----------
-    path : str
+    filename : str
         Configuration file path
     edisp_bins : int
         Number of margin bins to slice in energy. Default is 0.
