@@ -17,7 +17,7 @@ TRUNCATION_VALUE = 1e-25
 def weighted_cash_sum_cython(np.ndarray[np.float_t, ndim=1] counts,
                              np.ndarray[np.float_t, ndim=1] npred,
                              np.ndarray[np.float_t, ndim=1] weight):
-    """Summed cash fit statistics.
+    """Cash fit statistics with weights.
 
     Parameters
     ----------
