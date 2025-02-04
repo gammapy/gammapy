@@ -503,9 +503,11 @@ class FermipyDatasetsReader(DatasetReader):
 
     @staticmethod
     def create_dataset(
-        path,
+        counts_file,
+        exposure_file,
+        psf_file,
+        edisp_file,
         isotropic_file=None,
-        file_id=0,
         edisp_bins=0,
         name=None,
     ):
@@ -513,12 +515,16 @@ class FermipyDatasetsReader(DatasetReader):
 
         Parameters
         ----------
-        path : str
-            Path to files
+        counts_file : str
+            Counts file path.
+        exposure_file : str
+            Exposure file path.
+        psf_file : str
+            Point spread function file path.
+        edisp_file : str
+            Energy dispersion file path.
         isotropic_file : str, optional
             Isotropic file path. Default is None
-        file_id : int
-            File index (last number of the fits file names). Default is 0.
         edisp_bins : int
             Number of margin bins to slice in energy. Default is 0.
             For now only maps created with edisp_bins=0 in fermipy configuration are supported,
@@ -537,11 +543,10 @@ class FermipyDatasetsReader(DatasetReader):
         """
         from gammapy.datasets import MapDataset
 
-        path = Path(path)
-        counts = Map.read(path / f"ccube_0{str(file_id)}.fits")
-        exposure = Map.read(path / f"bexpmap_0{str(file_id)}.fits")
-        psf = PSFMap.read(path / f"psf_0{str(file_id)}.fits", format="gtpsf")
-        edisp = EDispKernelMap.read(path / f"drm_0{str(file_id)}.fits", format="gtdrm")
+        counts = Map.read(counts_file)
+        exposure = Map.read(exposure_file)
+        psf = PSFMap.read(psf_file, format="gtpsf")
+        edisp = EDispKernelMap.read(edisp_file, format="gtdrm")
 
         # check that fermipy edisp_bins are matching between edisp and exposure
         edisp_axes = edisp.edisp_map.geom.axes
@@ -635,11 +640,14 @@ class FermipyDatasetsReader(DatasetReader):
             else:
                 isotropic_file = None
                 name = None
+
             datasets.append(
                 self.create_dataset(
-                    path=path,
+                    counts_file=path / f"ccube_0{str(file_id)}.fits",
+                    exposure_file=path / f"bexpmap_0{str(file_id)}.fits",
+                    psf_file=path / f"psf_0{str(file_id)}.fits",
+                    edisp_file=path / f"drm_0{str(file_id)}.fits",
                     isotropic_file=isotropic_file,
-                    file_id=file_id,
                     edisp_bins=self.edisp_bins,
                     name=name,
                 )
