@@ -488,8 +488,11 @@ class FermipyDatasetsReader(DatasetReader):
         Configuration file path
     edisp_bins : int
         Number of margin bins to slice in energy. Default is 0.
-        If fermipy was configured with edisp_bins=0, it should be set to a value
-        edisp_bins>0 here in order to apply the energy dispersion correclty.
+        For now only maps created in fermipy with edisp_bins=0 are supported,
+         in that case the emin/emax in the fermipy configuration will correspond to the true energy range for gammapy,
+          and  a value edisp_bins>0 should be set here in order to apply the energy dispersion correctly.
+        With a binning of 8 to 10 bins per decade, it is recommended to use edisp_bins ≥ 2
+        (See https://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Pass8_edisp_usage.html)
 
     """
 

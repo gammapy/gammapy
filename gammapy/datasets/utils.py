@@ -215,12 +215,12 @@ def create_map_dataset_from_dl4(data, geom=None, energy_axis_true=None, name=Non
 
     Parameters
     ----------
-    obs : `~gammapy.dataset.MapDataset` or `~gammapy.data.Observation`
+    data : `~gammapy.dataset.MapDataset` or `~gammapy.data.Observation`
         MapDataset or Observation containing DL4 IRFs
     geom : `~gammapy.maps.WcsGeom`, optional
-        Output dataset maps geometry. The default is None, and it is derived from IRFS
+        Output dataset maps geometry. The default is None, and it is derived from IRFs
     energy_axis_true : `~gammapy.maps.MapAxis`, optional
-        True energy axis used for IRF maps. The default is None, and it is derived from IRFS
+        True energy axis used for IRF maps. The default is None, and it is derived from IRFs
     name : str, optional
         Dataset name. The default is None, and the name is randomly generated.
 
