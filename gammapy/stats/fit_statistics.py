@@ -246,6 +246,12 @@ def get_wstat_gof_terms(n_on, n_off):
 class FitStatistic(ABC):
     """Abstract base class for FitStatistic objects."""
 
+    @staticmethod
+    @abstractmethod
+    def required_inputs():
+        """Define the required argument names for this statistic."""
+        pass
+
     @classmethod
     def stat_sum(cls, *args, **kwargs):
         """Calculate -2 * sum log(L)."""
@@ -267,6 +273,10 @@ class CashFitStatistic(FitStatistic):
     """Cash statistic class for Poisson with known background."""
 
     @staticmethod
+    def required_inputs():
+        return ["counts", "npred"]
+
+    @staticmethod
     def stat_sum(counts, npred):
         counts = counts.astype(float)  # This might be done in the Dataset
         return cash_sum_cython(counts.ravel(), npred.ravel())
@@ -279,6 +289,10 @@ class CashFitStatistic(FitStatistic):
 
 class WStatFitStatistic(FitStatistic):
     """WStat fit statistic class for ON-OFF Poisson measurements."""
+
+    @staticmethod
+    def required_inputs():
+        return ["counts", "counts_off", "alpha", "npred_signal"]
 
     @staticmethod
     def stat_array(counts, counts_off, alpha, npred_signal):

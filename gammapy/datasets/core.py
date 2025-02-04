@@ -67,6 +67,16 @@ class Dataset(abc.ABC):
         elif self.mask_safe is not None:
             return self.mask_safe
 
+    def _get_stat_sum_inputs(self):
+        """Return only requested keys, computing `npred` dynamically if needed."""
+        inputs = {}
+        for key in self._fit_statistic.required_inputs():
+            if "npred" in key:
+                inputs[key] = getattr(self, key)()  # Compute npred dynamically
+            else:
+                inputs[key] = getattr(self, key)
+        return inputs
+
     def stat_sum(self):
         """Total statistic given the current model parameters and priors."""
         prior_stat_sum = 0.0
