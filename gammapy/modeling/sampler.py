@@ -99,16 +99,57 @@ class Sampler:
             )
             result = self.sampler_ultranest(parameters, like)
 
-        self._update_models(datasets.models, result)
+            self._update_models(datasets.models, result)
+            print(self._sampler.print_results())
 
-        print(self._sampler.print_results())
-        return result
+            result = SamplerResult.from_ultranest(result)
+            result.models = datasets.models.copy()
+            return result
+        else:
+            raise ValueError(f"sampler {self.backend} is not supported.")
 
 
-# class SamplerResult:
-#   """SamplerResult class.
-#   This is a placeholder to store the results from the sampler
-#   """
+class SamplerResult:
+    """SamplerResult class.
+    This is a placeholder to store the results from the sampler
+
+    TODO:
+    - Support parameter posteriors: directly on Parameter
+        - e.g. adding a errn and errp entry
+        - or creating a posterior entry on Parameter
+    - Or support with a specific entry on the SamplerResult
+
+    Parameters
+    ----------
+    nfev : int
+        number of likelihood calls/evaluations
+    success : bool
+        Did the sampler succeed in finding a good fit? Definition of convergence depends on the sampler backend.
+    models : `~gammapy.modeling.models`
+        the models used by the sampler
+    samples : `~numpy.ndarray`, optional
+        array of (weighted) samples
+    sampler_results : dict, optional
+        output of sampler.
+    """
+
+    def __init__(
+        self, nfev=0, success=False, models=None, samples=None, sampler_results=None
+    ):
+        self.nfev = nfev
+        self.success = success
+        self.models = models
+        self.samples = samples
+        self.sampler_results = sampler_results
+
+    @classmethod
+    def from_ultranest(cls, ultranest_result):
+        kwargs = {}
+        kwargs["nfev"] = ultranest_result["ncall"]
+        kwargs["success"] = ultranest_result["insertion_order_MWW_test"]["converged"]
+        kwargs["samples"] = ultranest_result["samples"]
+        kwargs["sampler_results"] = ultranest_result
+        return cls(**kwargs)
 
 
 class SamplerLikelihood:
