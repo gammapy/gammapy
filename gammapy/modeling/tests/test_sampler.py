@@ -62,7 +62,7 @@ def test_run(backend):
     }
     result = Sampler(backend=backend, sampler_opts=sampler_opts).run(dataset)
 
-    assert result.success == True
+    assert result.success
     assert (
         result.samples.shape[1]
         == dataset.models.parameters.free_parameters.value.shape[0]
