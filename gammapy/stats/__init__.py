@@ -2,7 +2,18 @@
 """Statistics."""
 
 from .counts_statistic import CashCountsStatistic, WStatCountsStatistic
-from .fit_statistics import cash, cstat, get_wstat_gof_terms, get_wstat_mu_bkg, wstat
+from .fit_statistics import (
+    cash,
+    cstat,
+    get_wstat_gof_terms,
+    get_wstat_mu_bkg,
+    wstat,
+    Chi2FitStatistic,
+    CashFitStatistic,
+    Chi2AsymmetricErrorFitStatistic,
+    ProfileFitStatistic,
+    WStatFitStatistic,
+)
 from .fit_statistics_cython import (
     weighted_cash_sum_cython,
     cash_sum_cython,
@@ -18,6 +29,14 @@ from .variability import (
     discrete_correlation,
     structure_function,
 )
+
+FIT_STATISTICS_REGISTRY = {
+    "cash": CashFitStatistic,
+    "wstat": WStatFitStatistic,
+    "chi2": Chi2FitStatistic,
+    "distrib": Chi2AsymmetricErrorFitStatistic,
+    "profile": ProfileFitStatistic,
+}
 
 __all__ = [
     "cash",

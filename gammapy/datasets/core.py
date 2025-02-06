@@ -72,22 +72,24 @@ class Dataset(abc.ABC):
         prior_stat_sum = 0.0
         if self.models is not None:
             prior_stat_sum = self.models.parameters.prior_stat_sum()
-        return self._stat_sum_likelihood() + prior_stat_sum
+
+        return self._fit_statistic.stat_sum_dataset(self) + prior_stat_sum
 
     def _stat_sum_likelihood(self):
         """Total statistic given the current model parameters without the priors."""
-        stat = self.stat_array()
+        return self._fit_statistic.stat_sum_dataset(self)
 
-        if self.mask is not None:
-            if isinstance(self.mask, np.ndarray):
-                stat = stat[self.mask.astype(bool)]
-            else:
-                stat = stat[self.mask.data.astype(bool)]
-        return np.sum(stat, dtype=np.float64)
+#        if self.mask is not None:
+#            if isinstance(self.mask, np.ndarray):
+#                stat = stat[self.mask.astype(bool)]
+#            else:
+#                stat = stat[self.mask.data.astype(bool)]
+#        return np.sum(stat, dtype=np.float64)
 
     @abc.abstractmethod
     def stat_array(self):
         """Statistic array, one value per data point."""
+        return self._fit_statistic.stat_array_dataset(self)
 
     def copy(self, name=None):
         """A deep copy.

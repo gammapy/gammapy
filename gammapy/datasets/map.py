@@ -19,7 +19,7 @@ from gammapy.stats import (
     cash_sum_cython,
     weighted_cash_sum_cython,
     get_wstat_mu_bkg,
-    wstat,
+    FIT_STATISTICS_REGISTRY,
 )
 from gammapy.utils.fits import HDULocation, LazyFitsData
 from gammapy.utils.random import get_random_state
@@ -558,6 +558,8 @@ class MapDataset(Dataset):
         self.models = models
         self.meta_table = meta_table
         self.meta = meta
+
+        self._fit_statistic = FIT_STATISTICS_REGISTRY[self.stat_type]
 
     @property
     def _psf_kernel(self):
@@ -1205,10 +1207,6 @@ class MapDataset(Dataset):
 
         if self.meta and other.meta:
             self.meta.stack(other.meta)
-
-    def stat_array(self):
-        """Statistic function value per bin given the current model parameters."""
-        return cash(n_on=self.counts.data, mu_on=self.npred().data)
 
     def residuals(self, method="diff", **kwargs):
         """Compute residuals map.
@@ -2482,6 +2480,8 @@ class MapDatasetOnOff(MapDataset):
         else:
             self._meta = meta
 
+        self._fit_statistic = FIT_STATISTICS_REGISTRY[self.stat_type]
+
     def __str__(self):
         str_ = super().__str__()
 
@@ -2585,17 +2585,6 @@ class MapDatasetOnOff(MapDataset):
         if self.counts_off is None:
             return None
         return self.alpha * self.counts_off
-
-    def stat_array(self):
-        """Statistic function value per bin given the current model parameters."""
-        mu_sig = self.npred_signal().data
-        on_stat_ = wstat(
-            n_on=self.counts.data,
-            n_off=self.counts_off.data,
-            alpha=list(self.alpha.data),
-            mu_sig=mu_sig,
-        )
-        return np.nan_to_num(on_stat_)
 
     @property
     def _counts_statistic(self):
@@ -2852,17 +2841,6 @@ class MapDatasetOnOff(MapDataset):
         self.counts_off = total_off
 
         super().stack(other, nan_to_num=nan_to_num)
-
-    def stat_sum(self):
-        """Total statistic function value given the current model parameters.
-
-        If the off counts are passed as None and the elements of the safe mask are False, zero will be returned.
-        Otherwise, the stat sum will be calculated and returned.
-        """
-        if self.counts_off is None and not np.any(self.mask_safe.data):
-            return 0
-        else:
-            return Dataset.stat_sum(self)
 
     def fake(self, npred_background, random_state="random-seed"):
         """Simulate fake counts (on and off) for the current model and reduced IRFs.
