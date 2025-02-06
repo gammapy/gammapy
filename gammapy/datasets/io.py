@@ -479,7 +479,7 @@ class OGIPDatasetReader(DatasetReader):
 
 
 class FermipyDatasetsReader(DatasetReader):
-    """Create datasets from Fermi-LAT configuration file.
+    """Create datasets from Fermi-LAT files.
 
     Parameters
     ----------
@@ -549,10 +549,10 @@ class FermipyDatasetsReader(DatasetReader):
         edisp = EDispKernelMap.read(edisp_file, format="gtdrm")
 
         # check that fermipy edisp_bins are matching between edisp and exposure
+        # as we will interp to edisp axis the exposure axis must be larger or equal
         edisp_axes = edisp.edisp_map.geom.axes
-        if (
-            len(edisp_axes["energy_true"].center)
-            != len(exposure.geom.axes["energy_true"].center) - 1
+        if len(edisp_axes["energy_true"].center) > len(
+            exposure.geom.axes["energy_true"].center
         ):
             raise ValueError(
                 "Energy true axes of exposure and DRM do not match. Check fermipy configuration."
