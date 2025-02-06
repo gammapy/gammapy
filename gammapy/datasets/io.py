@@ -484,7 +484,7 @@ class FermipyDatasetsReader(DatasetReader):
     Parameters
     ----------
     filename : str
-        Configuration file path
+        Path to Fermipy configuration file (tested only for v1.3.1).
     edisp_bins : int
         Number of margin bins to slice in energy. Default is 0.
         For now only maps created with edisp_bins=0 in fermipy configuration are supported,
