@@ -255,11 +255,12 @@ class FitStatistic(ABC):
     @classmethod
     def stat_sum(cls, *args, **kwargs):
         """Calculate -2 * sum log(L)."""
-        raise np.sum(cls.stat_array(*args, **kwargs))
+        #        pass
+        return np.sum(cls.stat_array(*args, **kwargs))
 
-    @staticmethod
-    @abstractmethod
-    def stat_array(*args, **kwargs):
+    @classmethod
+    #    @abstractmethod
+    def stat_array(cls, *args, **kwargs):
         """Calculate -2 * log(L)."""
         raise NotImplementedError
 
@@ -310,6 +311,10 @@ class Chi2FitStatistic(FitStatistic):
     """Chi2 fit statistic class for measurements with gaussian symmetric errors."""
 
     @staticmethod
+    def required_inputs():
+        return ["dnde", "flux_pred", "dnde_err"]
+
+    @staticmethod
     def stat_array(data, model, sigma):
         """Statistic function value per bin given the current model."""
         return ((data - model) / sigma).to_value("") ** 2
@@ -320,6 +325,10 @@ class Chi2AsymmetricErrorFitStatistic(FitStatistic):
 
     Assumes that regular data follow asymmetric normal pdf and upper limits follow complementary error functions
     """
+
+    @staticmethod
+    def required_inputs():
+        return ["dnde", "flux_pred", "dnde_errn", "dnde_errp"]
 
     @staticmethod
     def stat_array(data, model, errn, errp, is_ul=None, ul=None):

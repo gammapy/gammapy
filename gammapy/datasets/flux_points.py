@@ -15,6 +15,7 @@ from gammapy.modeling.models import (
     SkyModel,
     TemplateSpatialModel,
 )
+from gammapy.stats import FIT_STATISTICS_REGISTRY
 from gammapy.utils.interpolation import interpolate_profile
 from gammapy.utils.scripts import make_name, make_path
 from .core import Dataset
@@ -156,6 +157,22 @@ class FluxPointsDataset(Dataset):
         if mask_safe is None:
             mask_safe = np.ones(self.data.dnde.data.shape, dtype=bool)
         self.mask_safe = mask_safe
+
+        self._fit_statistic = FIT_STATISTICS_REGISTRY[self.stat_type]
+
+    @property
+    def dnde(self):
+        """Return flux points dnde quantity."""
+        return self.data.dnde
+
+    @property
+    def dnde_err(self):
+        # beware quantity and units
+        try:
+            sigma = self.data.dnde_err
+        except AttributeError:
+            sigma = (self.data.dnde_errn + self.data.dnde_errp) / 2
+        return sigma
 
     @property
     def available_stat_type(self):
@@ -379,7 +396,8 @@ class FluxPointsDataset(Dataset):
 
     def stat_array(self):
         """Fit statistic array."""
-        return self._available_stat_type[self.stat_type]()
+        inputs = self._get_fit_statistic_inputs()
+        return self._fit_statistic.stat_array(*inputs)
 
     def _stat_array_chi2(self):
         """Chi2 statistics."""

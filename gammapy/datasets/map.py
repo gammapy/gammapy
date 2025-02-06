@@ -17,7 +17,6 @@ from gammapy.stats import (
     WStatCountsStatistic,
     FIT_STATISTICS_REGISTRY,
     get_wstat_mu_bkg,
-    wstat,
 )
 from gammapy.utils.fits import HDULocation, LazyFitsData
 from gammapy.utils.random import get_random_state
@@ -1207,7 +1206,8 @@ class MapDataset(Dataset):
 
     def stat_array(self):
         """Statistic function value per bin given the current model parameters."""
-        return self._fit_statistic.stat_array(self.counts.data, self.npred().data)
+        inputs = self._get_fit_statistic_inputs()
+        return self._fit_statistic.stat_array(*inputs)
 
     def residuals(self, method="diff", **kwargs):
         """Compute residuals map.
@@ -1464,23 +1464,6 @@ class MapDataset(Dataset):
             pix_region.plot(ax=ax_spatial)
 
         return ax_spatial, ax_spectral
-
-    def stat_sum(self):
-        """Total statistic function value given the current model parameters and priors."""
-        prior_stat_sum = 0.0
-        if self.models is not None:
-            prior_stat_sum = (
-                self.models.parameters.prior_stat_sum()
-            )  # This shouldn't be computed here
-
-        counts, npred = self.counts.data.astype(float), self.npred().data
-
-        if self.mask is not None:
-            counts, npred = counts[self.mask.data], npred[self.mask.data]
-
-        return (
-            self._fit_statistic.stat_sum(counts.ravel(), npred.ravel()) + prior_stat_sum
-        )
 
     def _to_asimov_dataset(self):
         """Create Asimov dataset from the current models.
@@ -2472,6 +2455,7 @@ class MapDatasetOnOff(MapDataset):
             self._meta = MapDatasetMetaData()
         else:
             self._meta = meta
+        self._fit_statistic = FIT_STATISTICS_REGISTRY[self.stat_type]
 
     def __str__(self):
         str_ = super().__str__()
@@ -2576,17 +2560,6 @@ class MapDatasetOnOff(MapDataset):
         if self.counts_off is None:
             return None
         return self.alpha * self.counts_off
-
-    def stat_array(self):
-        """Statistic function value per bin given the current model parameters."""
-        mu_sig = self.npred_signal().data
-        on_stat_ = wstat(
-            n_on=self.counts.data,
-            n_off=self.counts_off.data,
-            alpha=list(self.alpha.data),
-            mu_sig=mu_sig,
-        )
-        return np.nan_to_num(on_stat_)
 
     @property
     def _counts_statistic(self):

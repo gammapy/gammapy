@@ -8,6 +8,7 @@ import numpy as np
 from astropy import units as u
 from astropy.table import Table, vstack
 from gammapy.data import GTI
+from gammapy.maps import Map
 from gammapy.modeling.models import DatasetModels, Models
 from gammapy.utils.scripts import make_name, make_path, read_yaml, to_yaml, write_yaml
 
@@ -67,14 +68,17 @@ class Dataset(abc.ABC):
         elif self.mask_safe is not None:
             return self.mask_safe
 
-    def _get_stat_sum_inputs(self):
+    def _get_fit_statistic_inputs(self):
         """Return only requested keys, computing `npred` dynamically if needed."""
-        inputs = {}
+        inputs = []
         for key in self._fit_statistic.required_inputs():
-            if "npred" in key:
-                inputs[key] = getattr(self, key)()  # Compute npred dynamically
+            if "pred" in key:
+                input = getattr(self, key)()
+                inputs.append(
+                    input.quantity if isinstance(input, Map) else input
+                )  # Compute npred dynamically
             else:
-                inputs[key] = getattr(self, key)
+                inputs.append(getattr(self, key).quantity)
         return inputs
 
     def stat_sum(self):
@@ -84,7 +88,14 @@ class Dataset(abc.ABC):
             prior_stat_sum = (
                 self.models.parameters.prior_stat_sum()
             )  # This shouldn't be computed here
-        return self._stat_sum_likelihood() + prior_stat_sum
+
+        inputs = self._get_fit_statistic_inputs()
+        if self.mask is not None:
+            mask = self.mask.data if isinstance(self.mask, Map) else self.mask
+            print(inputs[1])
+            inputs = [_[mask] for _ in inputs]
+
+        return self._fit_statistic.stat_sum(*inputs) + prior_stat_sum
 
     def _stat_sum_likelihood(self):
         """Total statistic given the current model parameters without the priors."""
