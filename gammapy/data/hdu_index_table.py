@@ -186,10 +186,16 @@ class HDUIndexTable(Table):
     @lazyproperty
     def obs_id(self):
         """Observation Id"""
-        if "OBS_TABLE_ROW" in self.keys():
-            return self["OBS_TABLE_ROW"]
+        from gammapy.data.data_store import TABLE_MATCHING_KEY
+
+        if TABLE_MATCHING_KEY in self.keys():
+            return self[TABLE_MATCHING_KEY]
         elif "OBS_ID" in self.keys():
             return self["OBS_ID"]
+        else:
+            raise KeyError(
+                "Table matching key {TABLE_MATCHING_KEY} or OBS_ID not found"
+            )
 
     @lazyproperty
     def obs_id_unique(self):

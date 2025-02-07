@@ -334,6 +334,8 @@ def test_data_store_no_events():
 
 @requires_data()
 def test_data_store_future_foramt():
+    import gammapy.data.data_store as hdu_module
+
     irf_dir = "$GAMMAPY_DATA/tests/format/swgo/"
     datastore = DataStore.from_dir(
         irf_dir, "hdu-index-multi.fits.gz", "obs-index-multi.fits.gz"
@@ -361,3 +363,7 @@ def test_data_store_future_foramt():
         obs._events = [_._events for _ in observations]
         # get_observations should stack the entries with the same IRF_name to avoid repeating data reduction
         # and allows obs.events to be a list of events lists to avoid having everything in memory in that case
+
+    with pytest.raises(KeyError):
+        hdu_module.TABLE_MATCHING_KEY = "WRONG"
+        observations = datastore_redu.get_observations()

@@ -25,6 +25,7 @@ REQUIRED_IRFS = {
     "point-like": {"aeff", "edisp"},
     "all-optional": {},
 }
+TABLE_MATCHING_KEY = "OBS_TABLE_ROW"
 
 
 class MissingRequiredHDU(IOError):
@@ -268,7 +269,7 @@ class DataStore:
         obs_id,
         required_irf="full-enclosure",
         require_events=True,
-        obs_table_row=None,
+        matching_id=None,
     ):
         """Access a given `~gammapy.data.Observation`.
 
@@ -295,8 +296,9 @@ class DataStore:
             Default is `"full-enclosure"`.
         require_events : bool, optional
             Require events and gti table or not. Default is True.
-        obs_table_row : int, optional
-            Row number in the observation table. Default is None
+        matching_id : int, optional
+            ID used to match obs and hdu tables.
+            Default is None, and `obs_id` is used.
 
         Returns
         -------
@@ -307,8 +309,8 @@ class DataStore:
         if obs_id not in self.obs_ids:
             raise ValueError(f"OBS_ID = {obs_id} not in index tables.")
 
-        if obs_table_row is None:
-            obs_table_row = obs_id
+        if matching_id is None:
+            matching_id = obs_id
 
         kwargs = {"obs_id": int(obs_id)}
 
@@ -330,7 +332,7 @@ class DataStore:
         missing_hdus = []
         for hdu in ALL_HDUS:
             hdu_location = self.hdu_table.hdu_location(
-                obs_id=obs_table_row,
+                obs_id=matching_id,
                 hdu_type=hdu,
                 warn_missing=False,
             )
@@ -406,19 +408,23 @@ class DataStore:
         if obs_id is None:
             obs_id = self.obs_ids
 
-        if "OBS_TABLE_ROW" in self.hdu_table.keys():
+        if TABLE_MATCHING_KEY in self.hdu_table.keys():
             selection = [ind in obs_id for ind in self.obs_table["OBS_ID"]]
             obs_id = self.obs_table["OBS_ID"][selection]
-            obs_table_row = self.obs_table["OBS_TABLE_ROW"][selection]
+            matching_id = self.obs_table[TABLE_MATCHING_KEY][selection]
+        elif "OBS_ID" in self.hdu_table.keys():
+            matching_id = obs_id
         else:
-            obs_table_row = obs_id
+            raise KeyError(
+                f"Table matching key {TABLE_MATCHING_KEY} or OBS_ID not found"
+            )
 
         obs_list = []
 
         for ind in progress_bar(range(len(obs_id)), desc="Obs Id"):
             try:
                 obs = self.obs(
-                    obs_id[ind], required_irf, require_events, obs_table_row[ind]
+                    obs_id[ind], required_irf, require_events, matching_id[ind]
                 )
             except ValueError as err:
                 if skip_missing:
