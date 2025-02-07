@@ -5,6 +5,7 @@ from astropy.table import Table
 from regions import PointSkyRegion
 from gammapy.datasets import MapDatasetMetaData
 from gammapy.irf import EDispKernelMap, PSFMap
+from gammapy.data import Observation
 from gammapy.maps import Map
 from .core import Maker
 from .utils import (
@@ -165,6 +166,10 @@ class MapDatasetMaker(Maker):
         exposure : `~gammapy.maps.Map`
             Exposure map.
         """
+        if getattr(observation, "exposure", None):
+            return observation.exposure.interp_to_geom(
+                geom=geom,
+            )
         if isinstance(observation.aeff, Map):
             return observation.aeff.interp_to_geom(
                 geom=geom,
@@ -393,8 +398,11 @@ class MapDatasetMaker(Maker):
             Map dataset.
         """
         kwargs = {"gti": observation.gti}
-        kwargs["meta_table"] = self.make_meta_table(observation)
-        kwargs["meta"] = self._make_metadata(kwargs["meta_table"])
+        if isinstance(observation, Observation):
+            kwargs["meta_table"] = self.make_meta_table(observation)
+            kwargs["meta"] = self._make_metadata(kwargs["meta_table"])
+        elif getattr(observation, "meta"):
+            kwargs["meta"] = observation.meta
 
         mask_safe = Map.from_geom(dataset.counts.geom, dtype=bool)
         mask_safe.data[...] = True
