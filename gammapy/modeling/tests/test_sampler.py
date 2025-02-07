@@ -1,4 +1,5 @@
 import pytest
+from gammapy.utils.testing import requires_dependency
 from numpy.testing import assert_allclose
 from gammapy.modeling import Parameter
 from gammapy.modeling.models import ModelBase, Models
@@ -9,19 +10,6 @@ from gammapy.modeling.models import (
     UniformPrior,
     LogUniformPrior,
 )
-
-
-def require_dependency(module_name):
-    """Decorator to skip test if a module is not installed."""
-    try:
-        __import__(module_name)
-        dependency_available = True
-    except ImportError:
-        dependency_available = False
-
-    return pytest.mark.skipif(
-        not dependency_available, reason=f"Test requires the '{module_name}' module"
-    )
 
 
 class MyModel(ModelBase):
@@ -58,8 +46,8 @@ class MyDataset(Dataset):
         return self.stat_sum()
 
 
+@requires_dependency("ultranest")
 @pytest.mark.parametrize("backend", ["ultranest"])
-@require_dependency("ultranest")
 def test_run(backend):
     dataset = MyDataset()
 
