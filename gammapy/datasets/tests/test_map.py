@@ -281,6 +281,15 @@ def test_map_dataset_weight(sky_model, geom, geom_etrue):
     dataset.mask_fit = dataset.mask_fit * 3.0
     assert_allclose(dataset.stat_sum(), 3.0 * 12824.506311)
 
+    dataset = get_map_dataset(geom, geom_etrue, weighted=True)
+    assert dataset.stat_type == "cash_weighted"
+
+    bkg_model = FoVBackgroundModel(dataset_name=dataset.name)
+    dataset.models = [sky_model, bkg_model]
+
+    dataset.mask_safe = dataset.mask_safe * 3.0
+    assert_allclose(dataset.stat_sum(), 3.0 * 12824.506311)
+
 
 def test_map_dataset_name():
     with pytest.raises(ValueError, match="of type '<class 'int'>"):
