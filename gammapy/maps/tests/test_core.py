@@ -14,7 +14,9 @@ from gammapy.maps import (
     TimeMapAxis,
     WcsGeom,
     WcsNDMap,
+    RegionGeom,
 )
+from regions import CircleSkyRegion
 from gammapy.utils.testing import modify_unit_order_astropy_5_3, mpl_plot_check
 
 pytest.importorskip("healpy")
@@ -990,3 +992,49 @@ def test_data_shape_broadcast():
 
     with pytest.raises(ValueError):
         map2.data = np.ones((1, 1, 2))
+
+
+def test_make_mask_geom():
+    energy = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=5)
+    phase = MapAxis.from_bounds(0, 1, nbin=6, name="phase")
+    freq = MapAxis.from_bounds(1, 10, nbin=4, unit=u.Hz, name="freq")
+
+    geom = WcsGeom.create(10, axes=[energy, phase, freq])
+    with pytest.raises(KeyError):
+        geom.create_mask("fail", 1, 3)
+
+    with pytest.raises(u.UnitConversionError):
+        geom.create_mask("energy", 2, 3)
+
+    with pytest.raises(u.UnitsError):
+        geom.create_mask("freq", 2 * u.m, 4 * u.m)
+
+    mask_freq = geom.create_mask("freq", 3 * u.Hz, 5 * u.Hz, round_to_edge=True)
+    assert_allclose(
+        mask_freq.sum_over_axes(["energy", "phase"]).to_region_nd_map().data.squeeze(),
+        [0, 3000, 0, 0],
+    )
+
+    mask_phase = geom.create_mask("phase", 0, 1)
+    assert np.all(mask_phase)
+
+    mask_energy = geom.create_mask("energy", 2 * u.TeV, 2.5 * u.TeV)
+    assert ~np.all(mask_energy)
+
+    geom_hpx = HpxGeom.create(binsz=10, frame="galactic", axes=[energy, phase, freq])
+
+    mask_freq = geom_hpx.create_mask("freq", 3 * u.Hz, 5 * u.Hz, round_to_edge=True)
+    assert_allclose(
+        mask_freq.sum_over_axes(["energy", "phase"]).data.sum(axis=3).squeeze(),
+        [0, 23040, 0, 0],
+    )
+
+    geom_region = RegionGeom.create(
+        CircleSkyRegion(SkyCoord(2, 4.5, unit="deg", frame="icrs"), 0.1 * u.deg),
+        axes=[energy, phase, freq],
+    )
+    mask_energy = geom_region.create_mask("energy", 1 * u.TeV, 3 * u.TeV)
+    assert_allclose(
+        mask_energy.sum_over_axes(["phase", "freq"]).data.sum(),
+        48,
+    )
