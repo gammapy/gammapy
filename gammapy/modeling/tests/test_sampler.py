@@ -1,4 +1,3 @@
-import pytest
 from gammapy.utils.testing import requires_dependency
 from numpy.testing import assert_allclose
 from gammapy.modeling import Parameter
@@ -46,9 +45,9 @@ class MyDataset(Dataset):
         return self.stat_sum()
 
 
+# @pytest.mark.parametrize("backend", ["ultranest"])
 @requires_dependency("ultranest")
-@pytest.mark.parametrize("backend", ["ultranest"])
-def test_run(backend):
+def test_run(backend="ultranest"):
     dataset = MyDataset()
 
     dataset.models.parameters["x"].prior = GaussianPrior(mu=2, sigma=1)
