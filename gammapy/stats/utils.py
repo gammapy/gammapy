@@ -21,8 +21,8 @@ def sigma_to_ts(n_sigma, df=1, n_sigma_asymov=0):
     n_sigma_asymov : float
         Significance in number of sigma in the Asymov dataset
         (in which counts equal to the predicted counts).
-        In that case it applies the Wald test described in [2] and [3],
-        and the TS is assumned to follow a non-central chi2 distribution.
+        In that case the function applies the Wald test described in [2] and [3],
+        where the TS of H1 under the H0 assumption is assumed to follow a non-central chi2 distribution.
         Should be used only for sensitivity computations.
 
     Returns
@@ -61,8 +61,8 @@ def ts_to_sigma(ts, df=1, ts_asymov=0):
     ts_asymov : float
         TS value in the Asymov dataset
         (in which counts equal to the predicted counts).
-        In that case it applies the Wald test described in [2] and [3],
-        and the TS is assumned to follow a non-central chi2 distribution.
+        In that case the function applies the Wald test described in [2] and [3],
+        and the TS is assumed to follow a non-central chi2 distribution.
         Should be used only for sensitivity computations.
 
 
