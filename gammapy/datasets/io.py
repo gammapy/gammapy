@@ -1,20 +1,24 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import abc
 import numpy as np
+from pathlib import Path
 from astropy import units as u
 from astropy.io import fits
 from astropy.table import Table
 from gammapy.data import GTI
-from gammapy.irf import EDispKernel, EDispKernelMap
-from gammapy.maps import RegionNDMap
-from gammapy.utils.scripts import make_path
+from gammapy.irf import EDispKernel, EDispKernelMap, PSFMap
+from gammapy.maps import RegionNDMap, Map
+from gammapy.modeling.models import create_fermi_isotropic_diffuse_model, Models
+from gammapy.utils.scripts import read_yaml, make_path
 from .spectrum import SpectrumDatasetOnOff
+from .utils import create_map_dataset_from_dl4
 
 __all__ = [
     "DatasetReader",
     "DatasetWriter",
     "OGIPDatasetReader",
     "OGIPDatasetWriter",
+    "FermipyDatasetsReader",
 ]
 
 
@@ -285,9 +289,10 @@ class OGIPDatasetReader(DatasetReader):
 
     tag = "ogip"
 
-    def __init__(self, filename, checksum=False):
+    def __init__(self, filename, checksum=False, name=None):
         self.filename = make_path(filename)
         self.checksum = checksum
+        self.name = name
 
     def get_valid_path(self, filename):
         """Get absolute or relative path.
@@ -450,7 +455,10 @@ class OGIPDatasetReader(DatasetReader):
         kwargs = self.read_pha(self.filename, checksum=self.checksum)
         pha_meta = kwargs["counts"].meta
 
-        name = str(pha_meta["OBS_ID"])
+        if self.name is not None:
+            name = self.name
+        else:
+            name = str(pha_meta["OBS_ID"])
         livetime = pha_meta["EXPOSURE"] * u.s
 
         filenames = self.get_filenames(pha_meta=pha_meta)
@@ -468,3 +476,180 @@ class OGIPDatasetReader(DatasetReader):
             )
 
         return SpectrumDatasetOnOff(name=name, exposure=exposure, **kwargs)
+
+
+class FermipyDatasetsReader(DatasetReader):
+    """Create datasets from Fermi-LAT files.
+
+    Parameters
+    ----------
+    filename : str
+        Path to Fermipy configuration file (tested only for v1.3.1).
+    edisp_bins : int
+        Number of margin bins to slice in energy. Default is 0.
+        For now only maps created with edisp_bins=0 in fermipy configuration are supported,
+        in that case the emin/emax in the fermipy configuration will correspond to the true energy range for gammapy,
+        and  a value edisp_bins>0 should be set here in order to apply the energy dispersion correctly.
+        With a binning of 8 to 10 bins per decade, it is recommended to use edisp_bins ≥ 2
+        (See https://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Pass8_edisp_usage.html)
+
+    """
+
+    tag = "fermipy"
+
+    def __init__(self, filename, edisp_bins=0):
+        self.filename = make_path(filename)
+        self.edisp_bins = edisp_bins
+
+    @staticmethod
+    def create_dataset(
+        counts_file,
+        exposure_file,
+        psf_file,
+        edisp_file,
+        isotropic_file=None,
+        edisp_bins=0,
+        name=None,
+    ):
+        """Create a map dataset from Fermi-LAT files.
+
+        Parameters
+        ----------
+        counts_file : str
+            Counts file path.
+        exposure_file : str
+            Exposure file path.
+        psf_file : str
+            Point spread function file path.
+        edisp_file : str
+            Energy dispersion file path.
+        isotropic_file : str, optional
+            Isotropic file path. Default is None
+        edisp_bins : int
+            Number of margin bins to slice in energy. Default is 0.
+            For now only maps created with edisp_bins=0 in fermipy configuration are supported,
+            in that case the emin/emax in the fermipy configuration will correspond to the true energy range for gammapy,
+            and  a value edisp_bins>0 should be set here in order to apply the energy dispersion correctly.
+            With a binning of 8 to 10 bins per decade, it is recommended to use edisp_bins ≥ 2
+            (See https://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Pass8_edisp_usage.html)
+        name : str, optional
+            Dataset name. The default is None, and the name is randomly generated.
+
+        Returns
+        -------
+        dataset : `~gammapy.datasets.MapDataset`
+            Map dataset.
+
+        """
+        from gammapy.datasets import MapDataset
+
+        counts = Map.read(counts_file)
+        exposure = Map.read(exposure_file)
+        psf = PSFMap.read(psf_file, format="gtpsf")
+        edisp = EDispKernelMap.read(edisp_file, format="gtdrm")
+
+        # check that fermipy edisp_bins are matching between edisp and exposure
+        # as we will interp to edisp axis the exposure axis must be larger or equal
+        edisp_axes = edisp.edisp_map.geom.axes
+        if len(edisp_axes["energy_true"].center) > len(
+            exposure.geom.axes["energy_true"].center
+        ):
+            raise ValueError(
+                "Energy true axes of exposure and DRM do not match. Check fermipy configuration."
+            )
+            edisp_axes = edisp.edisp_map.geom.axes
+
+        psf_r68s = psf.containment_radius(
+            0.68,
+            edisp_axes["energy_true"].center,
+            position=counts.geom.center_skydir,
+        )
+        # check that pdf is well defined (fails if edisp_bins>0 in fermipy)
+        if np.any(psf_r68s.value) == 0.0:
+            raise ValueError(
+                "PSF is not defined for all true energies. Check fermipy configuration."
+            )
+
+        # change counts energy axis unit keV->MeV
+        energy_axis = counts.geom.axes["energy"]._init_copy(
+            nodes=edisp_axes["energy"].edges
+        )
+        geom = counts.geom.to_image().to_cube([energy_axis])
+        counts = Map.from_geom(geom, data=counts.data)
+
+        # standardize dataset interpolating to same geom and axes
+        dataset = MapDataset(
+            counts=counts,
+            exposure=exposure,
+            psf=psf,
+            edisp=edisp,
+            name=name,
+        )
+        dataset = create_map_dataset_from_dl4(
+            dataset, geom=counts.geom, name=dataset.name
+        )
+
+        if edisp_bins > 0:  # slice edisp_bins
+            dataset = dataset.slice_by_idx(
+                dict(energy=slice(edisp_bins, -edisp_bins)), name=dataset.name
+            )
+
+        if isotropic_file:
+            model = create_fermi_isotropic_diffuse_model(
+                isotropic_file, datasets_names=[dataset.name]
+            )
+            dataset.models = Models([model])
+        return dataset
+
+    def read(self):
+        """Create Fermi-LAT map datasets from Fermipy configuration file.
+
+        Returns
+        -------
+        dataset : `~gammapy.datasets.Datasets`
+            Map datasets.
+
+        """
+        from gammapy.datasets import Datasets
+
+        filename = self.filename.resolve()
+        data = read_yaml(filename)
+
+        if "components" in data:
+            components = data["components"]
+        else:
+            components = [data]
+
+        datasets = Datasets()
+        for file_id, component in enumerate(components):
+            if "fileio" in component and "outdir" in component["fileio"]:
+                path = Path(component["fileio"]["outdir"])
+            elif "fileio" in data and "outdir" in data["fileio"]:
+                path = Path(data["fileio"]["outdir"])
+            else:
+                path = Path(filename.parent)
+            if not path.is_absolute():
+                path = Path(filename.parent) / path
+
+            if "model" in component and "isodiff" in component["model"]:
+                isotropic_file = Path(component["model"]["isodiff"])
+                name = isotropic_file.stem[4:]
+            elif "model" in data and "isodiff" in data["model"]:
+                isotropic_file = Path(data["model"]["isodiff"])
+                name = isotropic_file.stem[4:]
+            else:
+                isotropic_file = None
+                name = None
+
+            datasets.append(
+                self.create_dataset(
+                    counts_file=path / f"ccube_0{str(file_id)}.fits",
+                    exposure_file=path / f"bexpmap_0{str(file_id)}.fits",
+                    psf_file=path / f"psf_0{str(file_id)}.fits",
+                    edisp_file=path / f"drm_0{str(file_id)}.fits",
+                    isotropic_file=isotropic_file,
+                    edisp_bins=self.edisp_bins,
+                    name=name,
+                )
+            )
+        return datasets

@@ -52,32 +52,40 @@ def squash_fluxpoints(flux_point, axis):
     if axis.name != "energy":
         geom = geom.to_cube([flux_point.geom.axes["energy"]])
 
-    maps["norm"] = Map.from_geom(geom, data=minimizer.x)
+    maps["norm"] = Map.from_geom(geom, data=minimizer.x.reshape(geom.data_shape))
     maps["norm_err"] = Map.from_geom(
         geom, data=np.sqrt(minimizer.hess_inv.todense()).reshape(geom.data_shape)
     )
-    maps["n_dof"] = Map.from_geom(geom, data=flux_point.geom.axes[axis.name].nbin)
+    maps["n_dof"] = Map.from_geom(
+        geom, data=np.reshape(flux_point.geom.axes[axis.name].nbin, geom.data_shape)
+    )
 
     if "norm_ul" in flux_point.available_quantities:
         delta_ts = flux_point.meta.get("n_sigma_ul", 2) ** 2
         ul = stat_profile_ul_scipy(value_scan, stat_scan, delta_ts=delta_ts)
-        maps["norm_ul"] = Map.from_geom(geom, data=ul.value)
+        maps["norm_ul"] = Map.from_geom(
+            geom, data=np.reshape(ul.value, geom.data_shape)
+        )
 
-    maps["stat"] = Map.from_geom(geom, data=f(minimizer.x))
+    maps["stat"] = Map.from_geom(geom, data=f(minimizer.x).reshape(geom.data_shape))
 
     geom_scan = geom.to_cube([MapAxis.from_nodes(value_scan, name="norm")])
     maps["stat_scan"] = Map.from_geom(
         geom=geom_scan, data=stat_scan.reshape(geom_scan.data_shape)
     )
     try:
-        maps["stat_null"] = Map.from_geom(geom, data=np.sum(flux_point.stat_null.data))
+        maps["stat_null"] = Map.from_geom(
+            geom, data=np.reshape(np.sum(flux_point.stat_null.data), geom.data_shape)
+        )
         maps["ts"] = maps["stat_null"] - maps["stat"]
     except AttributeError:
         log.info(
             "Stat null info not present on original FluxPoints object. TS not computed"
         )
 
-    maps["success"] = Map.from_geom(geom=geom, data=minimizer.success, dtype=bool)
+    maps["success"] = Map.from_geom(
+        geom=geom, data=np.reshape(minimizer.success, geom.data_shape), dtype=bool
+    )
 
     combined_fp = FluxPoints.from_maps(
         maps=maps,
@@ -667,11 +675,8 @@ class FluxPoints(FluxMaps):
         flux = scale_plot_flux(flux=flux.to_unit(flux_unit), energy_power=energy_power)
         if "time" in flux.geom.axes_names:
             flux.geom.axes["time"].time_format = time_format
-            ax = flux.plot(ax=ax, **kwargs)
-        else:
-            ax = flux.plot(ax=ax, **kwargs)
-            ax.set_xlabel(f"Energy [{ax.xaxis.units.to_string(UNIT_STRING_FORMAT)}]")
-            ax.set_xscale("log", nonpositive="clip")
+
+        ax = flux.plot(ax=ax, **kwargs)
         self._plot_format_yax(ax=ax, energy_power=energy_power, sed_type=sed_type)
 
         if len(flux.geom.axes) > 1:

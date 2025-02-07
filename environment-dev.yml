@@ -9,7 +9,6 @@ name: gammapy-dev
 
 channels:
   - conda-forge
-  - https://cxc.cfa.harvard.edu/conda/sherpa
 
 variables:
   PYTHONNOUSERSITE: "1"
@@ -73,7 +72,9 @@ dependencies:
   - nbformat
   - h5py
   - ruamel.yaml
-  - cffconvert
+  # incompatible with current jupyter, results in broken env when present
+  # use e.g. pipx if you need cffconvert
+  # - cffconvert
   - pyinstrument
   - memray
   - pip:
