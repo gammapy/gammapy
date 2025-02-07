@@ -287,7 +287,8 @@ def test_map_dataset_weight(sky_model, geom, geom_etrue):
     bkg_model = FoVBackgroundModel(dataset_name=dataset.name)
     dataset.models = [sky_model, bkg_model]
 
-    dataset.mask_safe = dataset.mask_safe * 3.0
+    dataset.counts = dataset.npred()
+    dataset.mask_safe = dataset.mask_fit * 3.0
     assert_allclose(dataset.stat_sum(), 3.0 * 12824.506311)
 
 
