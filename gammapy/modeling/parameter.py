@@ -54,7 +54,7 @@ class Parameter:
 
      Users should interact with the ``value``, ``quantity``
      or ``min`` and ``max`` properties and consider the fact
-     that there is a ``factor``` and ``scale`` an implementation detail.
+     that there is a ``factor`` and ``scale`` an implementation detail.
 
      That was introduced for numerical stability in parameter and error
      estimation methods, only in the Gammapy optimiser interface do we
