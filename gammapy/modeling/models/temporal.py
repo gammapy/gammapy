@@ -200,18 +200,24 @@ class TemporalModel(ModelBase):
         random_state = get_random_state(random_state)
 
         ontime = (t_max - t_min).to("s")
-        n_step = (ontime / t_delta).to_value("").item()
+        n_step = np.ceil((ontime / t_delta).to_value("")).item()
         t_step = ontime / n_step
 
+        # take n+1 bins
         indices = np.arange(n_step + 1)
-        steps = indices * t_step
-        t = Time(t_min + steps, format="mjd")
 
+        # evaluate model at bin center
+        centers = (indices[:-1] + 0.5) * t_step
+        t = Time(t_min + centers, format="mjd")
         pdf = self(t)
 
+        # build sample list
         sampler = InverseCDFSampler(pdf=pdf, random_state=random_state)
         time_pix = sampler.sample(n_events)[0]
-        time = np.interp(time_pix, indices, steps)
+
+        # transform bin in time after shift by half a pixel
+        steps = indices * t_step
+        time = np.interp(time_pix + 0.5, indices, steps)
         return t_min + time
 
     def integral(self, t_min, t_max, oversampling_factor=100, **kwargs):
