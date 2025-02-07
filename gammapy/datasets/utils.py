@@ -1,11 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 from astropy.coordinates import SkyCoord
+from gammapy.data import Observation
 from gammapy.maps import Map
 from gammapy.modeling.models.utils import cutout_template_models
 from . import Datasets
 
-__all__ = ["apply_edisp", "split_dataset"]
+__all__ = [
+    "apply_edisp",
+    "split_dataset",
+    "create_map_dataset_from_dl4",
+]
 
 
 def apply_edisp(input_map, edisp):
@@ -203,3 +208,82 @@ def split_dataset(dataset, width, margin, split_template_models=True):
                 d.models = dataset.models
             datasets.append(d)
     return datasets
+
+
+def create_map_dataset_from_dl4(data, geom=None, energy_axis_true=None, name=None):
+    """Create a map dataset from a map dataset or an observation containing DL4 IRFs
+
+    Parameters
+    ----------
+    data : `~gammapy.dataset.MapDataset` or `~gammapy.data.Observation`
+        MapDataset or Observation containing DL4 IRFs
+    geom : `~gammapy.maps.WcsGeom`, optional
+        Output dataset maps geometry. The default is None, and it is derived from IRFs
+    energy_axis_true : `~gammapy.maps.MapAxis`, optional
+        True energy axis used for IRF maps. The default is None, and it is derived from IRFs
+    name : str, optional
+        Dataset name. The default is None, and the name is randomly generated.
+
+    Returns
+    -------
+    dataset : `~gammapy.datasets.MapDataset`
+        Map dataset.
+    """
+    from gammapy.makers import MapDatasetMaker
+    from gammapy.datasets import MapDataset
+
+    # define target geom
+    if geom is None:
+        if isinstance(data, Observation):
+            geom_image = data.aeff.geom.to_image()
+        elif isinstance(data, MapDataset):
+            geom_image = data.exposure.geom.to_image()
+
+        geom = geom_image.to_cube([data.edisp.edisp_map.geom.axes["energy"]])
+
+    energy_axis = geom.axes["energy"]
+
+    if energy_axis_true is None:
+        energy_axis_true = data.edisp.edisp_map.geom.axes["energy_true"]
+
+    # ensure that DL4 IRFs have the axes
+    rad_axis = data.psf.psf_map.geom.axes["rad"]
+    geom_psf = data.psf.psf_map.geom.to_image().to_cube([rad_axis, energy_axis_true])
+    geom_edisp = data.edisp.edisp_map.geom.to_image().to_cube(
+        [energy_axis, energy_axis_true]
+    )
+    geom_exposure = geom.to_image().to_cube([energy_axis_true])
+
+    # create dataset and run data reduction / irfs interpolation
+    dataset = MapDataset.from_geoms(
+        geom,
+        geom_exposure=geom_exposure,
+        geom_psf=geom_psf,
+        geom_edisp=geom_edisp,
+        name=name,
+    )
+
+    selection = ["exposure", "edisp", "psf"]
+    if isinstance(data, Observation) and data.events:
+        selection.append("counts")
+    if isinstance(data, Observation) and data.bkg:
+        selection.append("background")
+
+    maker = MapDatasetMaker(selection=selection)
+    dataset = maker.run(dataset, data)
+
+    if isinstance(data, MapDataset) and data.counts:
+        if dataset.counts.geom == data.counts.geom:
+            dataset.counts.data = data.counts.data
+        else:
+            raise ValueError(
+                "Counts geom of input MapDataset and target geom must be identical"
+            )
+
+    if not dataset.background:
+        dataset.background = Map.from_geom(geom, data=0.0)
+
+    if dataset.edisp.exposure_map and np.all(dataset.edisp.exposure_map.data) == 0.0:
+        dataset.edisp.exposure_map.data = dataset.psf.exposure_map.data
+
+    return dataset
