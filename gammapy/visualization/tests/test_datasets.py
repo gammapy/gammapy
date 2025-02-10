@@ -59,7 +59,7 @@ def test_plot_spectrum_datasets_off_regions():
 
     actual = ax.patches[2].get_edgecolor()
     assert_allclose(actual, (1.0, 0.498039, 0.054902, 1.0), rtol=1e-2)
-    assert ax.lines[0].get_color() in ["green", "C0"]
+    assert ax.lines[0].get_color() == "tab:blue"
 
 
 @requires_data()
