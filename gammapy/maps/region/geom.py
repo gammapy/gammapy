@@ -28,7 +28,6 @@ from gammapy.utils.regions import (
     compound_region_to_regions,
     regions_to_compound_region,
 )
-from gammapy.visualization.utils import ARTIST_TO_LINE_PROPERTIES
 from ..axes import MapAxes
 from ..coord import MapCoord
 from ..core import Map
@@ -853,11 +852,7 @@ class RegionGeom(Geom):
             kwargs.setdefault("facecolor", "None")
             kwargs.setdefault("edgecolor", "tab:blue")
             kwargs_point.setdefault("marker", "*")
-
-            for key, value in kwargs.items():
-                key_point = ARTIST_TO_LINE_PROPERTIES.get(key, None)
-                if key_point:
-                    kwargs_point[key_point] = value
+            kwargs_point.setdefault("color", "tab:blue")
 
             for region in compound_region_to_regions(self.region):
                 region_pix = region.to_pixel(wcs=ax.wcs)
