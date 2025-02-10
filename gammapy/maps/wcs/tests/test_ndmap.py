@@ -435,52 +435,32 @@ def test_wcsndmap_downsample(npix, binsz, frame, proj, skydir, axes):
         assert_allclose(np.nanmean(m.data), np.nanmean(m3.data))
         assert m.unit == m3.unit
 
-        if len(m.data.shape) == 3:
-            # with weights
-            weights = np.random.rand(m.data.shape[0], m.data.shape[1], m.data.shape[2])
-            m4 = m.downsample(2, preserve_counts=False, weights=weights)
-            assert_allclose(
-                np.nan_to_num(
-                    np.nanmean(
-                        (m.data * weights).reshape(
-                            m.data.shape[0],
-                            m.data.shape[1] // 2,
-                            2,
-                            m.data.shape[2] // 2,
-                            2,
-                        ),
-                        axis=(2, -1),
-                    )
-                    / np.nansum(
-                        weights.reshape(
-                            m.data.shape[0],
-                            m.data.shape[1] // 2,
-                            2,
-                            m.data.shape[2] // 2,
-                            2,
-                        ),
-                        axis=(2, -1),
-                    )
-                ),
-                m4.data,
-            )
-            assert m.unit == m4.unit
+        # with weights
+        weights = np.random.rand(*m.data.shape)
+        m4 = m.downsample(2, preserve_counts=True, weights=weights)
+        assert_allclose(np.nansum(m.data * weights.data), np.nansum(m4.data))
+        assert m.unit == m4.unit
 
-            m5 = m.downsample(2, preserve_counts=True, weights=weights)
-            assert_allclose(
-                np.nansum(
-                    (m.data * weights).reshape(
-                        m.data.shape[0],
-                        m.data.shape[1] // 2,
-                        2,
-                        m.data.shape[2] // 2,
-                        2,
-                    ),
-                    axis=(2, -1),
-                ),
-                m5.data,
-            )
-            assert m.unit == m5.unit
+
+def test_wcsndmap_downsample_weights():
+    geom = WcsGeom.create(
+        npix=10,
+        binsz=1.0,
+        frame="galactic",
+        proj="AIT",
+        skydir=SkyCoord(110.0, 75.0, unit="deg", frame="icrs"),
+        axes=None,
+    )
+    m = WcsNDMap(geom, data=np.tile(np.array([3.0, 2.0]), (10, 5)), unit="m2")
+
+    # weights array with recurring values to easily test for correct weighted averaging
+    weights = np.tile(np.array([1.0, 2.0]), (m.data.shape[0], m.data.shape[1] // 2))
+    m6 = m.downsample(2, preserve_counts=False, weights=weights)
+
+    assert_allclose(
+        np.nansum(m.data * weights) / np.nansum(weights), np.nanmean(m6.data)
+    )
+    assert m.unit == m6.unit
 
 
 @pytest.mark.parametrize(
