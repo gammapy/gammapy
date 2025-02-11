@@ -446,11 +446,11 @@ class ParameterSensitivityEstimator:
         """Parameter value  matching the target significance"""
 
         if ~np.isfinite(self.parameter.min):
-            vmin = self.parameter.value / 1000
+            vmin = self.parameter.value / 1e2
         else:
             vmin = self.parameter.min
         if ~np.isfinite(self.parameter.max):
-            vmax = self.parameter.value * 1000
+            vmax = self.parameter.value * 1e2
         else:
             vmax = self.parameter.max
 
