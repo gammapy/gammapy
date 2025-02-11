@@ -30,22 +30,26 @@ class Sampler:
         self.backend = backend
         self.sampler_opts = sampler_opts
 
-        if self.sampler_opts is None and self.backend == "ultranest":
-            self.sampler_opts = dict(
-                live_points=100,
-                frac_remain=0.5,
-                log_dir=None,
-                resume="subfolder",
-                step_sampler=False,
-                nsteps=20,
-            )
+        if self.backend == "ultranest":
+            default_opts = {
+                "live_points": 200,
+                "frac_remain": 0.5,
+                "log_dir": None,
+                "resume": "subfolder",
+                "step_sampler": False,
+                "nsteps": 20,
+            }
+
+        self.sampler_opts = default_opts
+        if sampler_opts is not None:
+            self.sampler_opts.update(sampler_opts)
 
     @staticmethod
     def _update_models(models, results):
         posterior = results["posterior"]
         samples = results["samples"]
         for i, par in enumerate(models.parameters.free_parameters):
-            par.value = posterior["mean"][i]
+            par.value = posterior["mean"][i]  # Todo : add option for median, maxLogL
             par.error = posterior["stdev"][i]
 
         covariance = Covariance.from_factor_matrix(models.parameters, np.cov(samples.T))
