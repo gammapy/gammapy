@@ -26,7 +26,7 @@ def test_sigma_ts_conversion():
     sigma_ref = 3
     ts_ref = 9
     df = 1
-    ts = sigma_to_ts(3, df=df, n_sigma_asymov=3)
+    ts = sigma_to_ts(3, df=df, n_sigma_asimov=3)
     assert_allclose(ts, ts_ref)
-    sigma = ts_to_sigma(ts, df=df, ts_asymov=ts)
+    sigma = ts_to_sigma(ts, df=df, ts_asimov=ts)
     assert_allclose(sigma, sigma_ref)
