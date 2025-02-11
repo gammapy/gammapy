@@ -4,7 +4,7 @@ import numpy as np
 from scipy.stats import ncx2
 
 
-def sigma_to_ts(n_sigma, df=1, n_sigma_asymov=0):
+def sigma_to_ts(n_sigma, df=1, n_sigma_asimov=0):
     """Convert number of sigma to delta ts.
 
     Assumes that the TS follows a chi2 distribution according to Wilks theorem [1].
@@ -18,8 +18,8 @@ def sigma_to_ts(n_sigma, df=1, n_sigma_asymov=0):
         Significance in number of sigma.
     df : int
         Number of degree of freedom.
-    n_sigma_asymov : float
-        Significance in number of sigma in the Asymov dataset
+    n_sigma_asimov : float
+        Significance in number of sigma in the Asimov dataset
         (in which counts equal to the predicted counts).
         In that case the function applies the Wald test described in [2] and [3],
         where the TS of H1 under the H0 assumption is assumed to follow a non-central chi2 distribution.
@@ -39,12 +39,12 @@ def sigma_to_ts(n_sigma, df=1, n_sigma_asymov=0):
     .. [3] Cowan et al. (2011), European Physical Journal C, 71, 1554.
         doi:10.1140/epjc/s10052-011-1554-0.
     """
-    ts_asymov = n_sigma_asymov**2
-    p_value = ncx2.sf(n_sigma**2, df=1, nc=ts_asymov)
-    return ncx2.isf(p_value, df=df, nc=ts_asymov)
+    ts_asimov = n_sigma_asimov**2
+    p_value = ncx2.sf(n_sigma**2, df=1, nc=ts_asimov)
+    return ncx2.isf(p_value, df=df, nc=ts_asimov)
 
 
-def ts_to_sigma(ts, df=1, ts_asymov=0):
+def ts_to_sigma(ts, df=1, ts_asimov=0):
     """Convert delta ts to number of sigma.
 
     Assumes that the TS follows a chi2 distribution according to Wilks theorem [1].
@@ -58,8 +58,8 @@ def ts_to_sigma(ts, df=1, ts_asymov=0):
         Test statistic.
     df : int
         Number of degree of freedom.
-    ts_asymov : float
-        TS value in the Asymov dataset
+    ts_asimov : float
+        TS value in the Asimov dataset
         (in which counts equal to the predicted counts).
         In that case the function applies the Wald test described in [2] and [3],
         and the TS is assumed to follow a non-central chi2 distribution.
@@ -80,5 +80,5 @@ def ts_to_sigma(ts, df=1, ts_asymov=0):
     .. [3] Cowan et al. (2011), European Physical Journal C, 71, 1554.
         doi:10.1140/epjc/s10052-011-1554-0.
     """
-    p_value = ncx2.sf(ts, df=df, nc=ts_asymov)
-    return np.sqrt(ncx2.isf(p_value, df=1, nc=ts_asymov))
+    p_value = ncx2.sf(ts, df=df, nc=ts_asimov)
+    return np.sqrt(ncx2.isf(p_value, df=1, nc=ts_asimov))
