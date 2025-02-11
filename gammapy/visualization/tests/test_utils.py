@@ -114,6 +114,8 @@ def test_plot_distribution():
 
     map_ = WcsNDMap.create(npix=(100, 100), axes=[energy_axis])
     map_.data = array_2d
+    mask_ = WcsNDMap.create(npix=(100, 100))
+    mask_.data = np.random.choice([True, False], mask_.data.shape)
 
     energy_axis_10 = MapAxis.from_energy_bounds(1 * u.TeV, 10 * u.TeV, 10)
     map_empty = WcsNDMap.create(npix=(100, 100), axes=[energy_axis_10])
@@ -123,7 +125,7 @@ def test_plot_distribution():
 
     with mpl_plot_check():
         axes, res = plot_distribution(
-            wcs_map=map_, func=fit_func, kwargs_hist={"bins": 40}
+            wcs_map=map_, mask=mask_, func=fit_func, kwargs_hist={"bins": 40}
         )
 
         assert axes.shape == (1,)
@@ -140,7 +142,7 @@ def test_plot_distribution():
         assert axes.shape == (4, 3)
 
         axes, res = plot_distribution(
-            wcs_map=map_, func="norm", kwargs_hist={"bins": 40}
+            wcs_map=map_, mask=mask_, func="norm", kwargs_hist={"bins": 40}
         )
 
         fig, ax = plt.subplots(nrows=1, ncols=1)

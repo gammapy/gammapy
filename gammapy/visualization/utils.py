@@ -266,7 +266,7 @@ def plot_distribution(
     wcs_map : `~gammapy.maps.WcsNDMap`
         A map that contains data to be plotted.
     mask: `~gammapy.maps.WcsNDMap`
-        Mask defining the input data range.
+        Mask defining the input data region.
     ax : `~matplotlib.axes.Axes` or list of `~matplotlib.axes.Axes`
         Axis object to plot on. If a list of Axis is provided it has to be the same length as the length of _map.data.
     ncols : int
@@ -327,8 +327,8 @@ def plot_distribution(
     cutout, cutout_mask = wcs_map.cutout_and_mask_region()
 
     if mask:
-        if mask.geom != wcs_map.geom:
-            raise ValueError("Map and mask geometry must agree!")
+        if mask.geom != wcs_map.geom.to_image():
+            raise ValueError("Map and mask spatial geometry must agree!")
 
         if not mask.is_mask:
             raise ValueError(f"mask must be of boolean type, given {type(wcs_map)}")
