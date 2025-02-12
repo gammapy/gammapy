@@ -446,11 +446,11 @@ class ParameterSensitivityEstimator:
         """Parameter value  matching the target significance"""
 
         if ~np.isfinite(self.parameter.min):
-            vmin = self.parameter.value / 1e2
+            vmin = self.parameter.value / 1e3
         else:
             vmin = self.parameter.min
         if ~np.isfinite(self.parameter.max):
-            vmax = self.parameter.value * 1e2
+            vmax = self.parameter.value * 1e3
         else:
             vmax = self.parameter.max
 
@@ -461,14 +461,17 @@ class ParameterSensitivityEstimator:
                 vmin,
                 vmax,
                 args=(datasets,),
-                nbin=1,
+                nbin=100,
                 maxiter=self.max_niter,
                 rtol=self.rtol,
                 points_scale=self.parameter.interp,
             )
             # Where the root finding fails NaN is set as norm
-
-        return roots[0]
+        roots = roots[roots > 0]
+        if roots:
+            return roots[0]
+        else:
+            return 0.0
 
     def run(self, datasets):
         """Parameter sensitivity
