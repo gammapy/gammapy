@@ -35,12 +35,14 @@ class Sampler:
                 "log_dir": None,
                 "resume": "subfolder",
                 "step_sampler": False,
-                "nsteps": 20,
+                "nsteps": 10,
             }
 
         self.sampler_opts = default_opts
         if sampler_opts is not None:
             self.sampler_opts.update(sampler_opts)
+        if run_opts is None:
+            self.run_opts = {}
 
     @staticmethod
     def _update_models_from_posterior(models, result):
@@ -74,13 +76,16 @@ class Sampler:
         )
 
         if self.sampler_opts["step_sampler"]:
-            self._sampler.stepsampler = ultranest.stepsampler.SliceSampler(
-                nsteps=self.sampler_opts["step_sampler"],
-                generate_direction=ultranest.stepsampler.generate_mixture_random_direction,
-                adaptive_nsteps=False,
+            from ultranest.stepsampler import (
+                SliceSampler,
+                generate_mixture_random_direction,
             )
 
-        print(self.run_opts)
+            self._sampler.stepsampler = SliceSampler(
+                nsteps=self.sampler_opts["nsteps"],
+                generate_direction=generate_mixture_random_direction,
+            )
+
         result = self._sampler.run(
             min_num_live_points=self.sampler_opts["live_points"],
             frac_remain=self.sampler_opts["frac_remain"],
@@ -89,7 +94,7 @@ class Sampler:
 
         return result
 
-    def run(self, datasets, bestfit="mean"):
+    def run(self, datasets):
         datasets, parameters = _parse_datasets(datasets=datasets)
         parameters = parameters.free_parameters
 
@@ -108,7 +113,7 @@ class Sampler:
 
             return result
         else:
-            raise ValueError(f"sampler {self.backend} is not supported.")
+            raise ValueError(f"Sampler {self.backend} is not supported.")
 
 
 class SamplerResult:
@@ -116,7 +121,7 @@ class SamplerResult:
     This is a placeholder to store the results from the sampler
 
     TODO:
-    - Support parameter posteriors: directly on Parameter
+    - Support parameter posteriors directly on Parameter
         - e.g. adding a errn and errp entry
         - or creating a posterior entry on Parameter
     - Or support with a specific entry on the SamplerResult
