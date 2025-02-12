@@ -1,12 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Sampler parameter classes."""
 
-import numpy as np
-import ultranest
-from .covariance import Covariance
 from .utils import _parse_datasets
 
-__all__ = ["Sampler", "SamplerLikelihood"]  # , "SamplerResult"
+__all__ = ["Sampler", "SamplerLikelihood", "SamplerResult"]
 
 
 class Sampler:
@@ -25,10 +22,11 @@ class Sampler:
     #TODO : describe all parameters
     """
 
-    def __init__(self, backend="ultranest", sampler_opts=None):
+    def __init__(self, backend="ultranest", sampler_opts=None, run_opts=None):
         self._sampler = None
         self.backend = backend
         self.sampler_opts = sampler_opts
+        self.run_opts = run_opts
 
         if self.backend == "ultranest":
             default_opts = {
@@ -45,22 +43,20 @@ class Sampler:
             self.sampler_opts.update(sampler_opts)
 
     @staticmethod
-    def _update_models(models, results):
-        posterior = results["posterior"]
-        samples = results["samples"]
+    def _update_models_from_posterior(models, result):
+        # TODO : add option for median, maxLogL once Param object has asym errors
+        posterior = result["posterior"]
         for i, par in enumerate(models.parameters.free_parameters):
-            par.value = posterior["mean"][i]  # Todo : add option for median, maxLogL
+            par.value = posterior["mean"][i]
             par.error = posterior["stdev"][i]
-
-        covariance = Covariance.from_factor_matrix(models.parameters, np.cov(samples.T))
-        models.covariance = covariance
-        return models
+        models._covariance = None
 
     def sampler_ultranest(self, parameters, like):
         """
         Defines the Ultranest sampler and options
         Returns the result dictionary that contains the samples and other information.
         """
+        import ultranest
 
         def _prior_inverse_cdf(values):
             if None in parameters:
@@ -69,7 +65,6 @@ class Sampler:
                 )
             return [par.prior._inverse_cdf(val) for par, val in zip(parameters, values)]
 
-        # create ultranest object
         self._sampler = ultranest.ReactiveNestedSampler(
             parameters.names,
             like.fcn,
@@ -85,29 +80,32 @@ class Sampler:
                 adaptive_nsteps=False,
             )
 
+        print(self.run_opts)
         result = self._sampler.run(
             min_num_live_points=self.sampler_opts["live_points"],
             frac_remain=self.sampler_opts["frac_remain"],
+            **self.run_opts,
         )
 
         return result
 
-    def run(self, datasets):
+    def run(self, datasets, bestfit="mean"):
         datasets, parameters = _parse_datasets(datasets=datasets)
         parameters = parameters.free_parameters
 
         if self.backend == "ultranest":
-            # create log likelihood function
             like = SamplerLikelihood(
                 function=datasets._stat_sum_likelihood, parameters=parameters
             )
-            result = self.sampler_ultranest(parameters, like)
+            result_dict = self.sampler_ultranest(parameters, like)
+            self._sampler.print_results()
 
-            self._update_models(datasets.models, result)
-            print(self._sampler.print_results())
+            models_copy = datasets.models.copy()
+            self._update_models_from_posterior(models_copy, result_dict)
 
-            result = SamplerResult.from_ultranest(result)
-            result.models = datasets.models.copy()
+            result = SamplerResult.from_ultranest(result_dict)
+            result.models = models_copy
+
             return result
         else:
             raise ValueError(f"sampler {self.backend} is not supported.")
