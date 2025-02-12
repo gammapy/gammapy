@@ -466,12 +466,12 @@ class ParameterSensitivityEstimator:
                 rtol=self.rtol,
                 points_scale=self.parameter.interp,
             )
-            # Where the root finding fails NaN is set as norm
+        # Where the root finding fails NaN is set as norm
         roots = roots[roots > 0]
-        if roots:
+        if roots.size > 0:
             return roots[0]
         else:
-            return 0.0
+            return np.nan
 
     def run(self, datasets):
         """Parameter sensitivity
