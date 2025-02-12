@@ -9,7 +9,6 @@ from gammapy.modeling.models import (
 )
 
 
-# @pytest.mark.parametrize("backend", ["ultranest"])
 @requires_dependency("ultranest")
 @requires_data()
 def test_run(backend="ultranest"):

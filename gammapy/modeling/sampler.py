@@ -25,24 +25,16 @@ class Sampler:
     def __init__(self, backend="ultranest", sampler_opts=None, run_opts=None):
         self._sampler = None
         self.backend = backend
-        self.sampler_opts = sampler_opts
-        self.run_opts = run_opts
+        self.sampler_opts = {} if sampler_opts is None else sampler_opts
+        self.run_opts = {} if run_opts is None else run_opts
 
         if self.backend == "ultranest":
-            default_opts = {
-                "live_points": 200,
-                "frac_remain": 0.5,
-                "log_dir": None,
-                "resume": "subfolder",
-                "step_sampler": False,
-                "nsteps": 10,
-            }
-
-        self.sampler_opts = default_opts
-        if sampler_opts is not None:
-            self.sampler_opts.update(sampler_opts)
-        if run_opts is None:
-            self.run_opts = {}
+            self.sampler_opts.setdefault("live_points", 200)
+            self.sampler_opts.setdefault("frac_remain", 0.5)
+            self.sampler_opts.setdefault("log_dir", None)
+            self.sampler_opts.setdefault("resume", "subfolder")
+            self.sampler_opts.setdefault("step_sampler", False)
+            self.sampler_opts.setdefault("nsteps", 10)
 
     @staticmethod
     def _update_models_from_posterior(models, result):
@@ -133,7 +125,7 @@ class SamplerResult:
     success : bool
         Did the sampler succeed in finding a good fit? Definition of convergence depends on the sampler backend.
     models : `~gammapy.modeling.models`
-        the models used by the sampler
+        the models updated after the sampler run
     samples : `~numpy.ndarray`, optional
         array of (weighted) samples
     sampler_results : dict, optional
