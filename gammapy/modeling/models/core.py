@@ -1150,16 +1150,16 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
 
         Examples
         --------
-        from gammapy.datasets import MapDataset
-        from gammapy.catalog import SourceCatalog3FHL
-        fermi_dataset = MapDataset.read(
-            "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc.fits.gz", name="fermi_dataset")
-        catalog = SourceCatalog3FHL()
-        models = catalog.to_models().select_from_geom(fermi_dataset.geoms["geom"])
-        ax = fermi_dataset.excess.sum_over_axes().smooth("0.2 deg").plot(add_cbar=True, cmap="Blues")
-        models.plot_regions(ax=ax, linewidth=1,  color="red",
-            kwargs_point={"marker":"o", "markersize":5, "color":"red"}
-                    )
+        >>> from gammapy.datasets import MapDataset
+        >>> from gammapy.catalog import SourceCatalog3FHL
+        >>> fermi_dataset = MapDataset.read(
+        ...    "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc.fits.gz", name="fermi_dataset")
+        >>> catalog = SourceCatalog3FHL()
+        >>> models = catalog.to_models().select_from_geom(fermi_dataset.geoms["geom"])
+        >>> ax = fermi_dataset.excess.sum_over_axes().smooth("0.2 deg").plot(add_cbar=True, cmap="Blues")
+        >>> ax = models.plot_regions(ax=ax, linewidth=1,  color="red",
+        ...    kwargs_point={"marker":"o", "markersize":5, "color":"red"}
+        ...            )
         """
         regions = self.to_regions()
 
@@ -1188,15 +1188,15 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
         Examples
         --------
 
-        from gammapy.datasets import MapDataset
-        from gammapy.catalog import SourceCatalog3FHL
-        fermi_dataset = MapDataset.read(
-                "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc.fits.gz", name="fermi_dataset"
-                )
-        catalog = SourceCatalog3FHL()
-        models = catalog.to_models().select_from_geom(fermi_dataset.geoms["geom"])
-        ax = fermi_dataset.excess.sum_over_axes().smooth("0.2 deg").plot(add_cbar=True, cmap="Blues")
-        models.plot_positions(ax=ax, color="red", marker="+", linewidth=1)
+        >>> from gammapy.datasets import MapDataset
+        >>> from gammapy.catalog import SourceCatalog3FHL
+        >>> fermi_dataset = MapDataset.read(
+        ...        "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc.fits.gz", name="fermi_dataset"
+        ...        )
+        >>> catalog = SourceCatalog3FHL()
+        >>> models = catalog.to_models().select_from_geom(fermi_dataset.geoms["geom"])
+        >>> ax = fermi_dataset.excess.sum_over_axes().smooth("0.2 deg").plot(add_cbar=True, cmap="Blues")
+        >>> ax = models.plot_positions(ax=ax, color="red", marker="+", linewidth=1)
         """
         from astropy.visualization.wcsaxes import WCSAxes
 
