@@ -419,7 +419,7 @@ def make_edisp_kernel_map(
 
 
 def make_theta_squared_table(
-    observations, theta_squared_axis, position, position_off=None
+    observations, theta_squared_axis, position, position_off=None, energy_edges=None
 ):
     """Make theta squared distribution in the same FoV for a list of `Observation` objects.
 
@@ -441,6 +441,10 @@ def make_theta_squared_table(
     position_off : `astropy.coordinates.SkyCoord`
         Position from which the OFF theta^2 distribution is computed.
         Default is reflected position w.r.t. to the pointing position.
+    energy_edges : list of `~astropy.units.Quantity`, optional
+        Edges of the energy bin where the theta squared distribution
+        is evaluated. For now, only one interval is accepted.
+        Default is None.
 
     Returns
     -------
@@ -465,6 +469,11 @@ def make_theta_squared_table(
 
     create_off = position_off is None
     for observation in observations:
+        if energy_edges is not None:
+            observation = observation.copy()
+            observation.events = observation.events.select_energy(
+                energy_range=energy_edges
+            )
         event_position = observation.events.radec
         pointing = observation.get_pointing_icrs(observation.tmid)
 
