@@ -1,10 +1,24 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
-from numpy.testing import assert_allclose
+from numpy.testing import assert_allclose, assert_equal
 from astropy.table import Table
+import astropy.units as u
 from gammapy.modeling import Parameter, Parameters, PriorParameter, PriorParameters
 from gammapy.modeling.models import GaussianPrior
+
+
+@pytest.fixture
+def default_parameter():
+    return Parameter(
+        "test",
+        value=1e-10,
+        min=None,
+        max=None,
+        frozen=False,
+        unit="TeV",
+        scale_method="scale10",
+    )
 
 
 def test_parameter_init():
@@ -245,6 +259,11 @@ def test_parameters_s():
     assert_allclose(pars[1].factor, 20)
     assert_allclose(pars[1].scale, 1)
 
+    # test for backward compatibilty
+    pars_dict[0]["is_norm"] = True
+    pars = Parameters.from_dict(pars_dict)
+    assert not hasattr(pars[0], "is_norm")
+
 
 def test_parameter_scan_values():
     p = Parameter(name="test", value=0, error=1)
@@ -272,16 +291,8 @@ def test_parameter_scan_values():
     assert_allclose(p.scan_values, [0.1, 1, 10])
 
 
-def test_update_from_dict():
-    par = Parameter(
-        "test",
-        value=1e-10,
-        min="nan",
-        max="nan",
-        frozen=False,
-        unit="TeV",
-        scale_method="scale10",
-    )
+def test_update_from_dict(default_parameter):
+    par = default_parameter
     par.autoscale()
     data = {
         "model": "gc",
@@ -364,3 +375,29 @@ def test_priorparameters_to_table(priorpars):
     assert len(table.columns) == 7
     assert table["name"][0] == "spam"
     assert table["value"][1] == 99
+
+
+def test_parameter_set_min_max_error(default_parameter):
+    par = default_parameter
+    assert_equal(par.min, np.nan)
+    assert_equal(par.max, np.nan)
+
+    par.set_lim(min=1, max=10)
+    assert par.min == 1
+    assert par.max == 10
+
+    par.set_lim(max=5)
+    assert par.max == 5
+    assert par.min == 1
+
+    assert par.error == 0
+
+
+def test_set_quantity_str_float(default_parameter):
+    par = default_parameter
+    assert par._set_quantity_str_float(1) == 1
+    assert par._set_quantity_str_float("3 TeV") == 3
+    assert par._set_quantity_str_float(2 * u.TeV) == 2
+    assert par._set_quantity_str_float(4e3 * u.GeV) == 4
+    with pytest.raises(u.UnitsError):
+        par._set_quantity_str_float(1 * u.m)

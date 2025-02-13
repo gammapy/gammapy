@@ -12,18 +12,22 @@ Here's some good resources with working examples:
 
 - https://doughellmann.com/blog/2010/05/09/defining-custom-roles-in-sphinx/
 - http://docutils.sourceforge.net/docs/howto/rst-directives.html
-- https://github.com/docutils-mirror/docutils/blob/master/docutils/parsers/rst/directives/images.py
+- https://github.com/docutils/docutils/blob/master/docutils/docutils/parsers/rst/directives/images.py
 - https://github.com/sphinx-doc/sphinx/blob/master/sphinx/directives/other.py
-- https://github.com/bokeh/bokeh/tree/master/bokeh/sphinxext
+- https://github.com/bokeh/bokeh/tree/master/src/bokeh/sphinxext
 """
+
 import os
+import re
 from pathlib import Path
 from docutils.parsers.rst import Directive
 from docutils.parsers.rst.directives import register_directive
 from docutils.parsers.rst.directives.body import CodeBlock
 from docutils.parsers.rst.directives.images import Image
 from docutils.parsers.rst.directives.misc import Include, Raw
+from docutils import nodes
 from sphinx.util import logging
+from sphinx.transforms.post_transforms import SphinxPostTransform
 from gammapy.analysis import AnalysisConfig
 
 try:
@@ -44,13 +48,15 @@ class AccordionHeader(Directive):
         raw = f"""
             <div id="accordion" class="shadow tutorial-accordion">
         <div class="card tutorial-card">
-            <div class="card-header collapsed card-link" data-bs-toggle="collapse"
-             data-bs-target="#{self.options["id"]}">
-                <div class="d-flex flex-row tutorial-card-header-1">
-                    <div class="d-flex flex-row tutorial-card-header-2">
-                        <button class="btn btn-dark btn-sm"></button>
-                        {self.options["title"]}
-                    </div>
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center" data-bs-toggle="collapse"
+                data-bs-target="#{self.options["id"]}" style="cursor: pointer;">
+                    <button class="btn btn-dark btn-sm me-2"
+                    style="background-color: #150458; border-radius: 50%; width: 24px; height: 24px;">
+                        <span style="font-size: 14px;">+</span>
+                    </button>
+                    {self.options["title"]}
+                </div>
         """
         if self.options.get("link", None):
             raw += f"""
@@ -60,7 +66,6 @@ class AccordionHeader(Directive):
              """
         raw += f"""
 
-                </div>
             </div>
             <div id="{self.options["id"]}" class="collapse" data-parent="#accordion">
                 <div class="card-body">
@@ -174,6 +179,42 @@ class SubstitutionCodeBlock(CodeBlock):
 
         self.content = new_content
         return list(CodeBlock.run(self))
+
+
+class DynamicPRLinkTransform(SphinxPostTransform):
+    """
+    A Sphinx post-transform that converts [#XXXX] into clickable links to GitHub PR pages.
+    """
+
+    default_priority = 800
+    PR_PATTERN = re.compile(r"\[#(\d+)\]")  # Matches [#XXXX]
+    GITHUB_PR_BASE_URL = "https://github.com/gammapy/gammapy/pull/"  # Fixed URL
+
+    def apply(self):
+        """Apply the transform to convert PR references into links."""
+        for text_node in self.document.traverse(nodes.Text):
+            if "[#" not in text_node:  # Skip nodes unlikely to match
+                continue
+
+            content, last_idx = [], 0
+            # Find the associated pattern
+            for match in self.PR_PATTERN.finditer(text_node.astext()):
+                # Add preceding text
+                content.append(nodes.Text(text_node[last_idx : match.start()]))
+
+                # Create hyperlink node for the PR
+                pr_number = match.group(1)
+                pr_url = f"{self.GITHUB_PR_BASE_URL}{pr_number}"
+                link_node = nodes.reference(text=f"[#{pr_number}]", refuri=pr_url)
+                content.append(link_node)
+
+                last_idx = match.end()
+
+            # Add any remaining text after the last match
+            content.append(nodes.Text(text_node[last_idx:]))
+
+            # Replace the original text node with the new processed nodes
+            text_node.parent.replace(text_node, content)
 
 
 def gammapy_sphinx_ext_activate():

@@ -418,6 +418,10 @@ def test_joint_excess_map(simple_dataset):
     simple_dataset.models = [model]
     simple_dataset.npred()
 
+    simple_dataset2 = simple_dataset.copy()
+    simple_dataset2.models = [model]
+    simple_dataset2.npred()
+
     stacked_dataset = simple_dataset.copy(name="copy")
     stacked_dataset.counts *= 2
     stacked_dataset.exposure *= 2
@@ -430,10 +434,13 @@ def test_joint_excess_map(simple_dataset):
     assert_allclose(result["npred_excess"].data.sum(), 2 * 19733.602, rtol=1e-3)
     assert_allclose(result["sqrt_ts"].data[0, 10, 10], 5.960441, rtol=1e-3)
 
-    result = get_combined_significance_maps(estimator, [simple_dataset, simple_dataset])
+    result = get_combined_significance_maps(
+        estimator, [simple_dataset, simple_dataset2]
+    )
 
     assert_allclose(result["npred_excess"].data.sum(), 2 * 19733.602, rtol=1e-3)
     assert_allclose(result["significance"].data[10, 10], 5.618187, rtol=1e-3)
+    assert_allclose(result["ts"].data[10, 10], 35.526888, rtol=1e-3)
     assert_allclose(
         result["df"].data, 2 * (~np.isnan(result["significance"].data)), rtol=1e-3
     )

@@ -150,6 +150,34 @@ If you get a zsh error try using putting to ignore block inside quotes
 
     pytest --doctest-modules "--ignore-glob=*/tests" gammapy
 
+References can also be added to docstrings for proper documentation of specific equations or usage examples. There are
+a few ways to do this. Firstly if you reference a specific equation you can utilise the following syntax:
+
+.. code-block:: text
+
+        From Equation (1) in [1]_.
+
+        References
+        ----------
+        .. [1] `Author et al. (2023), "Title" <link_to_nasaads>`_
+
+Another option is to create a general list of references, as follows:
+
+.. code-block:: text
+
+        References
+        ----------
+        * `Author et al. (2023), "Title" <link_to_nasaads>`_
+        * `Author2 et al. (2022), "Title2" <link_to_nasaads>`_
+
+It is also important to check that you have correctly formatted your docstring. An easy way to check this
+is with the following for your specific file, i.e.:
+
+.. code-block:: bash
+
+    pydocstyle gammapy/data/event_list.py
+
+
 Sphinx gallery extension
 ------------------------
 
@@ -289,6 +317,27 @@ or Gammapy code a bit (either locally with your editor or online on GitHub or vi
 or search the Numpy or Astropy documentation guidelines mentioned above.
 If that doesn't quickly turn up something useful, please ask by putting a comment on the issue or
 pull request you're working on GitHub, or email the Gammapy mailing list.
+
+
+Correct format for bullet point list
+++++++++++++++++++++++++++++++++++++
+
+To correctly add a bullet point list to the docstring, the following can be implemented:
+
+.. testcode::
+
+        """
+        Docstring explanation.
+
+        Parameters
+        ----------
+        parameter_name : parameter_type
+            Description of the parameter with entries:
+                    * option1 : description1
+                    * option2 : description2
+                    * option3 : description3 over more than
+                    one line.
+        """
 
 Functions or class methods that return a single object
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++

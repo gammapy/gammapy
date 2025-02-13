@@ -18,8 +18,10 @@ CTAO will start taking data in the coming years. For now, to learn how to
 analyse CTAO data and to use Gammapy, if you are a member of the CTAO
 consortium, you can use the simulated dataset from:
 
-- the CTA first data challenge which ran in 2017 and 2018 (https://forge.in2p3.fr/projects/data-challenge-1-dc-1/wiki),
-- the CTAO Science Data Challenge of 2024 (https://ctaoobservatory.sharepoint.com/:f:/r/sites/share-open-data/Shared%20Documents/Reference%20datasets/Internal%20Science%20Data%20Challenge?csf=1&web=1&e=gNuFzI)
+- the CTA first data challenge which ran in 2017 and 2018 (see `here <https://forge.in2p3.fr/projects/data-challenge-1-dc-1/wiki>`__
+  for CTAO members)
+- the CTAO Science Data Challenge of 2024 (see `here <https://ctaoobservatory.sharepoint.com/:f:/r/sites/share-open-data/Shared%20Documents/Reference%20datasets/Internal%20Science%20Data%20Challenge?csf=1&web=1&e=gNuFzI>`__
+  for CTAO members)
 
 Gammapy fully supports the FITS data formats (events, IRFs) used in CTA
 1DC and SDC. The XML sky model format is not supported, but are also not needed
@@ -280,6 +282,7 @@ plt.show()
 # %%
 # This is how for analysis you could slice out the PSF
 # at a given field of view offset
+plt.figure(figsize=(8, 5))
 irfs["psf"].plot_containment_radius_vs_energy(
     offset=[1] * u.deg, fraction=[0.68, 0.8, 0.95]
 )

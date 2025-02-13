@@ -47,54 +47,54 @@ def _get_parameters_str(parameters):
 class Parameter:
     """A model parameter.
 
-    Note that the parameter value has been split into
-    a factor and scale like this::
+     Note that the parameter value has been split into
+     a factor and scale like this::
 
-        value = factor x scale
+         value = factor x scale
 
-    Users should interact with the ``value``, ``quantity``
-    or ``min`` and ``max`` properties and consider the fact
-    that there is a ``factor``` and ``scale`` an implementation detail.
+     Users should interact with the ``value``, ``quantity``
+     or ``min`` and ``max`` properties and consider the fact
+     that there is a ``factor`` and ``scale`` an implementation detail.
 
-    That was introduced for numerical stability in parameter and error
-    estimation methods, only in the Gammapy optimiser interface do we
-    interact with the ``factor``, ``factor_min`` and ``factor_max`` properties,
-    i.e. the optimiser "sees" the well-scaled problem.
+     That was introduced for numerical stability in parameter and error
+     estimation methods, only in the Gammapy optimiser interface do we
+     interact with the ``factor``, ``factor_min`` and ``factor_max`` properties,
+     i.e. the optimiser "sees" the well-scaled problem.
 
-    Parameters
-    ----------
-    name : str
-        Name.
-    value : float or `~astropy.units.Quantity`
-        Value.
-    scale : float, optional
-        Scale (sometimes used in fitting).
-    unit : `~astropy.units.Unit` or str, optional
-        Unit.
-    min : float, optional
-        Minimum (sometimes used in fitting).
-    max : float, optional
-        Maximum (sometimes used in fitting).
+     Parameters
+     ----------
+     name : str
+         Name.
+     value : float or `~astropy.units.Quantity`
+         Value.
+     scale : float, optional
+         Scale (sometimes used in fitting).
+     unit : `~astropy.units.Unit` or str, optional
+         Unit.
+     min : float, str or `~astropy.units.quantity`, optional
+         Minimum (sometimes used in fitting). Default is None, which set the attribute to `np.nan`.
+     max : float, str or `~astropy.units.quantity`, optional
+         Maximum (sometimes used in fitting). Default is None, which set the attribute to `np.nan`.
     frozen : bool, optional
-        Frozen (used in fitting).
-    error : float
-        Parameter error.
-    scan_min : float
-        Minimum value for the parameter scan. Overwrites scan_n_sigma.
-    scan_max : float
-        Minimum value for the parameter scan. Overwrites scan_n_sigma.
-    scan_n_values: int
-        Number of values to be used for the parameter scan.
-    scan_n_sigma : int
-        Number of sigmas to scan.
-    scan_values: `numpy.array`
-        Scan values. Overwrites all the scan keywords before.
-    scale_method : {'scale10', 'factor1', None}
-        Method used to set ``factor`` and ``scale``.
-    interp : {"lin", "sqrt", "log"}
-        Parameter scaling to use for the scan.
-    prior : `~gammapy.modeling.models.Prior`
-        Prior set on the parameter.
+         Frozen (used in fitting).
+     error : float
+         Parameter error.
+     scan_min : float
+         Minimum value for the parameter scan. Overwrites scan_n_sigma.
+     scan_max : float
+         Maximum value for the parameter scan. Overwrites scan_n_sigma.
+     scan_n_values: int
+         Number of values to be used for the parameter scan.
+     scan_n_sigma : int
+         Number of sigmas to scan.
+     scan_values: `numpy.array`
+         Scan values. Overwrites all the scan keywords before.
+     scale_method : {'scale10', 'factor1', None}
+         Method used to set ``factor`` and ``scale``.
+     interp : {"lin", "sqrt", "log"}
+         Parameter scaling to use for the scan.
+     prior : `~gammapy.modeling.models.Prior`
+         Prior set on the parameter.
     """
 
     def __init__(
@@ -122,8 +122,6 @@ class Parameter:
         self._name = name
         self._link_label_io = None
         self.scale = scale
-        self.min = min
-        self.max = max
         self.frozen = frozen
         self._error = error
         self._type = None
@@ -138,6 +136,8 @@ class Parameter:
             self.value = float(value)
             self.unit = unit
 
+        self.min = min
+        self.max = max
         self.scan_min = scan_min
         self.scan_max = scan_max
         self.scan_values = scan_values
@@ -201,7 +201,7 @@ class Parameter:
 
     @error.setter
     def error(self, value):
-        self._error = float(u.Quantity(value, unit=self.unit).value)
+        self._error = self._set_quantity_str_float(value)
 
     @property
     def name(self):
@@ -243,18 +243,10 @@ class Parameter:
     @min.setter
     def min(self, val):
         """`~astropy.table.Table` has masked values for NaN. Replacing with NaN."""
-        if isinstance(val, np.ma.core.MaskedConstant):
+        if isinstance(val, np.ma.core.MaskedConstant) or (val is None):
             self._min = np.nan
         else:
-            self._min = float(val)
-
-    @property
-    def factor_min(self):
-        """Factor minimum as a float.
-
-        This ``factor_min = min / scale`` is for the optimizer interface.
-        """
-        return self.min / self.scale
+            self._min = self._set_quantity_str_float(val)
 
     @property
     def max(self):
@@ -264,10 +256,41 @@ class Parameter:
     @max.setter
     def max(self, val):
         """`~astropy.table.Table` has masked values for NaN. Replacing with NaN."""
-        if isinstance(val, np.ma.core.MaskedConstant):
+        if isinstance(val, np.ma.core.MaskedConstant) or (val is None):
             self._max = np.nan
         else:
-            self._max = float(val)
+            self._max = self._set_quantity_str_float(val)
+
+    def _set_quantity_str_float(self, value):
+        """Logics for min and max setter."""
+        if isinstance(value, u.Quantity) or isinstance(value, str):
+            value = u.Quantity(value)
+            return float(value.to(self.unit).value)
+        else:
+            return float(value)
+
+    def set_lim(self, min=None, max=None):
+        """
+        Set the min and/or max value for the parameter.
+
+        Parameters
+        ----------
+        min, max: float, `~astropy.units.Quantity`, str
+            Minimum and Maximum value to assign to the parameter `min` and `max`.
+            Default is None, which set `min` and `max` to `np.nan`.
+        """
+        if min is not None:
+            self.min = min
+        if max is not None:
+            self.max = max
+
+    @property
+    def factor_min(self):
+        """Factor minimum as a float.
+
+        This ``factor_min = min / scale`` is for the optimizer interface.
+        """
+        return self.min / self.scale
 
     @property
     def factor_max(self):
@@ -692,6 +715,7 @@ class Parameters(collections.abc.Sequence):
 
         for par in data:
             link_label = par.pop("link", None)
+            par.pop("is_norm", None)
             parameter = Parameter(**par)
             parameter._link_label_io = link_label
             parameters.append(parameter)

@@ -17,9 +17,11 @@ log = logging.getLogger(__name__)
 class SafeMaskMaker(Maker):
     """Make safe data range mask for a given observation.
 
+    For more information see :ref:`safe-data-range`.
+
     .. warning::
 
-         Currently some methods computing a safe energy range ("aeff-default",
+         Currently, some methods computing a safe energy range ("aeff-default",
          "aeff-max" and "edisp-bias") determine a true energy range and apply
          it to reconstructed energy, effectively neglecting the energy dispersion.
 
@@ -280,7 +282,7 @@ class SafeMaskMaker(Maker):
         The energy threshold is defined as the lower edge of the energy
         bin with the highest predicted background rate. This is to ensure analysis in
         a region where a  Powerlaw approximation to the background spectrum is valid.
-        The is motivated by its use in the HESS DL3
+        The is motivated by its use in the H.E.S.S. DL3
         validation paper: https://arxiv.org/pdf/1910.08088.pdf
 
         Parameters
@@ -307,7 +309,7 @@ class SafeMaskMaker(Maker):
             background_spectrum = dataset.npred_background().get_spectrum()
             energy_axis = geom.axes["energy"]
 
-        idx = np.argmax(background_spectrum.data, axis=0)
+        idx = np.argmax(background_spectrum.data, axis=0).item()
         return geom.energy_mask(energy_min=energy_axis.edges[idx])
 
     @staticmethod

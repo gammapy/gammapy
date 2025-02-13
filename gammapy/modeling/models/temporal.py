@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Time-dependent models."""
+
 import logging
 import numpy as np
 import scipy.interpolate
@@ -7,8 +8,8 @@ from astropy import units as u
 from astropy.io import fits
 from astropy.table import Table
 from astropy.time import Time
-from astropy.utils import lazyproperty
 from gammapy.maps import MapAxis, RegionNDMap, TimeMapAxis
+from astropy.utils import lazyproperty
 from gammapy.modeling import Parameter
 from gammapy.utils.compat import COPY_IF_NEEDED
 from gammapy.utils.random import InverseCDFSampler, get_random_state
@@ -199,18 +200,24 @@ class TemporalModel(ModelBase):
         random_state = get_random_state(random_state)
 
         ontime = (t_max - t_min).to("s")
-        n_step = (ontime / t_delta).to_value("").item()
+        n_step = np.ceil((ontime / t_delta).to_value("")).item()
         t_step = ontime / n_step
 
+        # take n+1 bins
         indices = np.arange(n_step + 1)
-        steps = indices * t_step
-        t = Time(t_min + steps, format="mjd")
 
+        # evaluate model at bin center
+        centers = (indices[:-1] + 0.5) * t_step
+        t = Time(t_min + centers, format="mjd")
         pdf = self(t)
 
+        # build sample list
         sampler = InverseCDFSampler(pdf=pdf, random_state=random_state)
         time_pix = sampler.sample(n_events)[0]
-        time = np.interp(time_pix, indices, steps)
+
+        # transform bin in time after shift by half a pixel
+        steps = indices * t_step
+        time = np.interp(time_pix + 0.5, indices, steps)
         return t_min + time
 
     def integral(self, t_min, t_max, oversampling_factor=100, **kwargs):
@@ -983,11 +990,25 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
     f2 = Parameter("f2", _f2_default, frozen=True)
 
     def __init__(self, table, filename=None, **kwargs):
-        self.table = table
+        self.table = self._normalise_table(table)
         if filename is not None:
             filename = str(make_path(filename))
         self.filename = filename
         super().__init__(**kwargs)
+
+    @staticmethod
+    def _normalise_table(table):
+        x = table["PHASE"].data
+        y = table["NORM"].data
+
+        interpolator = scipy.interpolate.InterpolatedUnivariateSpline(
+            x, y, k=1, ext=2, bbox=[0.0, 1.0]
+        )
+
+        integral = interpolator.integral(0, 1)
+
+        table["NORM"] *= 1 / integral
+        return table
 
     @classmethod
     def read(
@@ -1010,6 +1031,7 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
             Filename with path.
         """
         filename = str(make_path(path))
+
         return cls(
             Table.read(filename),
             filename=filename,
@@ -1118,11 +1140,15 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         ) - self._interpolator.antiderivative()(ph_min)
 
         # Divide by Jacobian (here we neglect variations of frequency during the integration period)
-        total = (phase_integral + start_integral + end_integral) / frequency
+        total = phase_integral + start_integral + end_integral
         # Normalize by total integration time
-        integral_norm = total / self.time_sum(t_min, t_max)
+        n_period = (self.time_sum(t_min, t_max) * frequency).to("")
+        if int(n_period) == 0:
+            n_period = 1
 
-        return integral_norm.to("")
+        integral_norm = total / n_period
+
+        return integral_norm
 
     @classmethod
     def from_dict(cls, data):

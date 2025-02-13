@@ -150,7 +150,7 @@ Write your own CLI
 This section explains how to write your own command line interface (CLI).
 
 We will focus on the command line aspect, and use a very simple example where we
-just call `gammapy.stats.CashCountsStatistics.sqrt_ts`.
+just call `gammapy.stats.CashCountsStatistic.sqrt_ts`.
 
 From the interactive Python or IPython prompt or from a Jupyter notebook you
 just import the functionality you need and call it, like this:

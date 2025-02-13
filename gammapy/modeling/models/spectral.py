@@ -1526,8 +1526,8 @@ class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
         :math:`E_0`. Default is 1 TeV.
     expfactor : `~astropy.units.Quantity`
         :math:`a`, given as dimensionless value but
-        internally assumes unit of :math:`E_0^{-\Gamma_2}`.
-        Default is 1e-2.
+        internally assumes unit of :math:`{\rm MeV}^{-\Gamma_2}`.
+        Default is 1e-14.
     """
 
     tag = ["SuperExpCutoffPowerLaw4FGLSpectralModel", "secpl-4fgl"]
@@ -1538,7 +1538,7 @@ class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
         interp="log",
     )
     reference = Parameter("reference", "1 TeV", frozen=True)
-    expfactor = Parameter("expfactor", "1e-2")
+    expfactor = Parameter("expfactor", "1e-14")
     index_1 = Parameter("index_1", 1.5)
     index_2 = Parameter("index_2", 2)
 
@@ -1552,7 +1552,7 @@ class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
 
         pwl = amplitude * (energy / reference) ** (-index_1)
         cutoff = np.exp(
-            expfactor / reference.unit**index_2 * (reference**index_2 - energy**index_2)
+            expfactor / u.MeV**index_2 * (reference**index_2 - energy**index_2)
         )
         return pwl * cutoff
 
@@ -2148,16 +2148,17 @@ class EBLAbsorptionNormSpectralModel(SpectralModel):
 
         References
         ----------
-        .. [1] Franceschini et al. (2008), "Extragalactic optical-infrared background radiation, its time evolution and the cosmic photon-photon opacity",  # noqa: E501
-            `Link <https://ui.adsabs.harvard.edu/abs/2008A%26A...487..837F>`__
-        .. [2] Dominguez et al. (2011), " Extragalactic background light inferred from AEGIS galaxy-SED-type fractions"  # noqa: E501
-            `Link <https://ui.adsabs.harvard.edu/abs/2011MNRAS.410.2556D>`__
-        .. [3] Finke et al. (2010), "Modeling the Extragalactic Background Light from Stars and Dust"
-            `Link <https://ui.adsabs.harvard.edu/abs/2010ApJ...712..238F>`__
-        .. [4] Franceschini et al. (2017), "The extragalactic background light revisited and the cosmic photon-photon opacity"
-            `Link <https://ui.adsabs.harvard.edu/abs/2017A%26A...603A..34F/abstract>`__
-        .. [5] Saldana-Lopez et al. (2021) "An observational determination of the evolving extragalactic background light from the multiwavelength HST/CANDELS survey in the Fermi and CTA era"
-            `Link <https://ui.adsabs.harvard.edu/abs/2021MNRAS.507.5144S/abstract>`__
+        * `Franceschini et al. (2008), "Extragalactic optical-infrared background radiation, its time evolution and the
+          cosmic photon-photon opacity" <https://ui.adsabs.harvard.edu/abs/2008A%26A...487..837F>`_
+        * `Dominguez et al. (2011), " Extragalactic background light inferred from AEGIS galaxy-SED-type fractions"
+          <https://ui.adsabs.harvard.edu/abs/2011MNRAS.410.2556D>`_
+        * `Finke et al. (2010), "Modeling the Extragalactic Background Light from Stars and Dust"
+          <https://ui.adsabs.harvard.edu/abs/2010ApJ...712..238F>`_
+        * `Franceschini et al. (2017), "The extragalactic background light revisited and the cosmic photon-photon opacity"
+          <https://ui.adsabs.harvard.edu/abs/2017A%26A...603A..34F/abstract>`_
+        * `Saldana-Lopez et al. (2021), "An observational determination of the evolving extragalactic background light
+          from the multiwavelength HST/CANDELS survey in the Fermi and CTA era"
+          <https://ui.adsabs.harvard.edu/abs/2021MNRAS.507.5144S/abstract>`_
         """
         return cls.read(
             EBL_DATA_BUILTIN[reference],

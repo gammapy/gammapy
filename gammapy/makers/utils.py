@@ -3,7 +3,7 @@ import logging
 import warnings
 import numpy as np
 import astropy.units as u
-from astropy.coordinates import Angle, SkyOffsetFrame
+from astropy.coordinates import Angle
 from astropy.table import Table
 from gammapy.data import FixedPointingInfo
 from gammapy.irf import BackgroundIRF, EDispMap, FoVAlignment, PSFMap
@@ -85,12 +85,15 @@ def _get_fov_coords(pointing, irf, geom, use_region_center=True, obstime=None):
             fov_lon, fov_lat = sky_to_fov(
                 altaz_coord.az, altaz_coord.alt, pointing_altaz.az, pointing_altaz.alt
             )
-        elif irf.fov_alignment == FoVAlignment.RADEC:
-            # Create OffsetFrame
-            frame = SkyOffsetFrame(origin=pointing_icrs)
-            pseudo_fov_coord = sky_coord.transform_to(frame)
-            fov_lon = pseudo_fov_coord.lon
-            fov_lat = pseudo_fov_coord.lat
+        elif irf.fov_alignment in [FoVAlignment.RADEC, FoVAlignment.REVERSE_LON_RADEC]:
+            fov_lon, fov_lat = sky_to_fov(
+                sky_coord.icrs.ra,
+                sky_coord.icrs.dec,
+                pointing_icrs.icrs.ra,
+                pointing_icrs.icrs.dec,
+            )
+            if irf.fov_alignment == FoVAlignment.REVERSE_LON_RADEC:
+                fov_lon = -fov_lon
         else:
             raise ValueError(
                 f"Unsupported background coordinate system: {irf.fov_alignment!r}"
@@ -174,7 +177,7 @@ def make_map_exposure_true_energy(
     coords["energy_true"] = broadcast_axis_values_to_geom(geom, "energy_true")
     exposure = aeff.evaluate(**coords)
 
-    data = (exposure * livetime).to("m2 s")
+    data = (exposure * u.Quantity(livetime)).to("m2 s")
     meta = {"livetime": livetime, "is_pointlike": aeff.is_pointlike}
 
     if not use_region_center:

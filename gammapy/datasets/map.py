@@ -7,6 +7,7 @@ from astropy.io import fits
 from astropy.table import Table
 from regions import CircleSkyRegion
 import matplotlib.pyplot as plt
+import gammapy.datasets.evaluator as meval
 from gammapy.data import GTI, PointingMode
 from gammapy.irf import EDispKernelMap, EDispMap, PSFKernel, PSFMap, RecoPSFMap
 from gammapy.maps import LabelMapAxis, Map, MapAxes, MapAxis, WcsGeom
@@ -16,6 +17,7 @@ from gammapy.stats import (
     WStatCountsStatistic,
     cash,
     cash_sum_cython,
+    weighted_cash_sum_cython,
     get_wstat_mu_bkg,
     wstat,
 )
@@ -31,6 +33,8 @@ from .utils import get_axes
 __all__ = [
     "MapDataset",
     "MapDatasetOnOff",
+    "MapDatasetWeighted",
+    "create_empty_map_dataset_from_irfs",
     "create_map_dataset_geoms",
     "create_map_dataset_from_observation",
 ]
@@ -122,12 +126,31 @@ def create_map_dataset_geoms(
     }
 
 
-def _default_energy_axis(observation, energy_bin_per_decade_max=30):
+def _default_energy_axis(observation, energy_bin_per_decade_max=30, position=None):
     # number of bins per decade estimated from the energy resolution
     # such as diff(ereco.edges)/ereco.center ~ min(eres)
-    etrue = observation.psf.axes[0].edges  # only where psf is defined
-    eres = observation.edisp.to_edisp_kernel(0 * u.deg).get_resolution(etrue)
-    eres = eres[np.isfinite(eres)]
+
+    if isinstance(observation.psf, PSFMap):
+        etrue = observation.psf.psf_map.geom.axes[observation.psf.energy_name]
+        if isinstance(observation.edisp, EDispKernelMap):
+            ekern = observation.edisp.get_edisp_kernel(
+                energy_axis=None, position=position
+            )
+        if isinstance(observation.edisp, EDispMap):
+            ekern = observation.edisp.get_edisp_kernel(
+                energy_axis=etrue.rename("energy"), position=position
+            )
+        eres = ekern.get_resolution(etrue.center)
+    elif hasattr(observation.psf, "axes"):
+        etrue = observation.psf.axes[0]  # only where psf is defined
+        if position:
+            offset = observation.pointing.fixed_icrs.separation(position)
+        else:
+            offset = 0 * u.deg
+        ekern = observation.edisp.to_edisp_kernel(offset)
+        eres = ekern.get_resolution(etrue.center)
+
+    eres = eres[np.isfinite(eres) & (eres > 0.0)]
     if eres.size > 0:
         # remove outliers
         beyond_mad = np.median(eres) - mad(eres) * eres.unit
@@ -139,22 +162,39 @@ def _default_energy_axis(observation, energy_bin_per_decade_max=30):
     else:
         nbin_per_decade = energy_bin_per_decade_max
 
-    energy_axis = MapAxis.from_energy_bounds(
-        etrue[0],
-        etrue[-1],
+    energy_axis_true = MapAxis.from_energy_bounds(
+        etrue.edges[0],
+        etrue.edges[-1],
         nbin=nbin_per_decade,
         per_decade=True,
-        name="energy",
+        name="energy_true",
     )
-    return energy_axis
+    if hasattr(observation, "bkg") and observation.bkg:
+        ereco = observation.bkg.axes["energy"]
+        energy_axis = MapAxis.from_energy_bounds(
+            ereco.edges[0],
+            ereco.edges[-1],
+            nbin=nbin_per_decade,
+            per_decade=True,
+            name="energy",
+        )
+    else:
+        energy_axis = energy_axis_true.rename("energy")
+
+    return energy_axis, energy_axis_true
 
 
 def _default_binsz(observation, spatial_bin_size_min=0.01 * u.deg):
     # bin size estimated from the minimal r68 of the psf
-    etrue = observation.psf.axes[0].edges  # only where psf is defined
-    psf_r68 = observation.psf.containment_radius(
-        0.68, energy_true=etrue, offset=0.0 * u.deg
-    )
+    if isinstance(observation.psf, PSFMap):
+        energy_axis = observation.psf.psf_map.geom.axes[observation.psf.energy_name]
+        psf_r68 = observation.psf.containment_radius(0.68, energy_axis.edges)
+    elif hasattr(observation.psf, "axes"):
+        etrue = observation.psf.axes[0]  # only where psf is defined
+        psf_r68 = observation.psf.containment_radius(
+            0.68, energy_true=etrue.edges, offset=0.0 * u.deg
+        )
+
     psf_r68 = psf_r68[np.isfinite(psf_r68)]
     if psf_r68.size > 0:
         # remove outliers
@@ -169,11 +209,112 @@ def _default_binsz(observation, spatial_bin_size_min=0.01 * u.deg):
 
 def _default_width(observation, spatial_width_max=12 * u.deg):
     # width estimated from the rad_max or the offset_max
-    if observation.rad_max is not None:
-        width = 2.0 * np.max(observation.rad_max)
-    else:
+    if isinstance(observation.psf, PSFMap):
+        width = 2.0 * np.max(observation.psf.psf_map.geom.width)
+    elif hasattr(observation.psf, "axes"):
         width = 2.0 * observation.psf.axes["offset"].edges[-1]
+    else:
+        width = spatial_width_max
     return np.minimum(width, spatial_width_max)
+
+
+def create_empty_map_dataset_from_irfs(
+    observation,
+    dataset_name=None,
+    energy_axis_true=None,
+    energy_axis=None,
+    energy_bin_per_decade_max=30,
+    spatial_width=None,
+    spatial_width_max=12 * u.deg,
+    spatial_bin_size=None,
+    spatial_bin_size_min=0.01 * u.deg,
+    position=None,
+    frame="icrs",
+):
+    """Create a MapDataset, if energy axes, spatial width or bin size are not given
+    they are determined automatically from the IRFs,
+    but the estimated value cannot exceed the given limits.
+
+    Parameters
+    ----------
+    observation : `~gammapy.data.Observation`
+        Observation containing the IRFs.
+    dataset_name : str, optional
+        Default is None. If None it is determined from the observation ID.
+    energy_axis_true : `~gammapy.maps.MapAxis`, optional
+        True energy axis. Default is None.
+        If None it is determined from the observation IRFs.
+    energy_axis : `~gammapy.maps.MapAxis`, optional
+        Reconstructed energy axis. Default is None.
+        If None it is determined from the observation IRFs.
+    energy_bin_per_decade_max : int, optional
+        Maximal number of bin per decade in energy for the reference dataset
+    spatial_width : `~astropy.units.Quantity`, optional
+        Spatial window size. Default is None.
+        If None it is determined from the observation offset max or rad max.
+    spatial_width_max : `~astropy.quantity.Quantity`, optional
+        Maximal spatial width. Default is 12 degree.
+    spatial_bin_size : `~astropy.units.Quantity`, optional
+        Pixel size. Default is None.
+        If None it is determined from the observation PSF R68.
+    spatial_bin_size_min : `~astropy.quantity.Quantity`, optional
+        Minimal spatial bin size. Default is 0.01 degree.
+    position : `~astropy.coordinates.SkyCoord`, optional
+        Center of the geometry. Default is the observation pointing at mid-observation time.
+    frame: str, optional
+        frame of the coordinate system. Default is "icrs".
+    """
+
+    if position is None:
+        if hasattr(observation, "pointing"):
+            if observation.pointing.mode is not PointingMode.POINTING:
+                raise NotImplementedError(
+                    "Only datas with fixed pointing in ICRS are supported"
+                )
+            position = observation.pointing.fixed_icrs
+
+    if spatial_width is None:
+        spatial_width = _default_width(observation, spatial_width_max)
+    if spatial_bin_size is None:
+        spatial_bin_size = _default_binsz(observation, spatial_bin_size_min)
+
+    if energy_axis is None or energy_axis_true is None:
+        energy_axis_, energy_axis_true_ = _default_energy_axis(
+            observation, energy_bin_per_decade_max, position
+        )
+
+        if energy_axis is None:
+            energy_axis = energy_axis_
+
+        if energy_axis_true is None:
+            energy_axis_true = energy_axis_true_
+
+    if dataset_name is None:
+        dataset_name = f"obs_{observation.obs_id}"
+
+    geom = WcsGeom.create(
+        skydir=position.transform_to(frame),
+        width=spatial_width,
+        binsz=spatial_bin_size.to_value(u.deg),
+        frame=frame,
+        axes=[energy_axis],
+    )
+
+    axes = dict(
+        energy_axis_true=energy_axis_true,
+    )
+    if observation.edisp is not None:
+        if isinstance(observation.edisp, EDispMap):
+            axes["migra_axis"] = observation.edisp.edisp_map.geom.axes["migra"]
+        elif hasattr(observation.edisp, "axes"):
+            axes["migra_axis"] = observation.edisp.axes["migra"]
+
+    dataset = MapDataset.create(
+        geom,
+        name=dataset_name,
+        **axes,
+    )
+    return dataset
 
 
 def create_map_dataset_from_observation(
@@ -187,6 +328,8 @@ def create_map_dataset_from_observation(
     spatial_width_max=12 * u.deg,
     spatial_bin_size=None,
     spatial_bin_size_min=0.01 * u.deg,
+    position=None,
+    frame="icrs",
 ):
     """Create a MapDataset, if energy axes, spatial width or bin size are not given
     they are determined automatically from the observation IRFs,
@@ -220,63 +363,44 @@ def create_map_dataset_from_observation(
         If None it is determined from the observation PSF R68.
     spatial_bin_size_min : `~astropy.quantity.Quantity`, optional
         Minimal spatial bin size. Default is 0.01 degree.
-
+    position : `~astropy.coordinates.SkyCoord`, optional
+        Center of the geometry. Defalut is the observation pointing.
+    frame: str, optional
+        frame of the coordinate system. Default is "icrs".
     """
     from gammapy.makers import MapDatasetMaker
 
-    if spatial_width is None:
-        spatial_width = _default_width(observation, spatial_width_max)
-    if spatial_bin_size is None:
-        spatial_bin_size = _default_binsz(observation, spatial_bin_size_min)
-    if energy_axis is None:
-        energy_axis = _default_energy_axis(observation, energy_bin_per_decade_max)
-    if energy_axis_true is None:
-        energy_axis_true = energy_axis.rename("energy_true")
+    dataset = create_empty_map_dataset_from_irfs(
+        observation,
+        dataset_name=dataset_name,
+        energy_axis_true=energy_axis_true,
+        energy_axis=energy_axis,
+        energy_bin_per_decade_max=energy_bin_per_decade_max,
+        spatial_width=spatial_width,
+        spatial_width_max=spatial_width_max,
+        spatial_bin_size=spatial_bin_size,
+        spatial_bin_size_min=spatial_bin_size_min,
+        position=position,
+        frame=frame,
+    )
 
     if models is None:
         models = Models()
-
-    if dataset_name is None:
-        dataset_name = f"obs_{observation.obs_id}"
-
     if not np.any(
         [
-            isinstance(m, FoVBackgroundModel) and m.datasets_names[0] == dataset_name
+            isinstance(m, FoVBackgroundModel) and m.datasets_names[0] == dataset.name
             for m in models
         ]
     ):
-        models.append(FoVBackgroundModel(dataset_name=dataset_name))
-
-    if observation.pointing.mode is not PointingMode.POINTING:
-        raise NotImplementedError(
-            "Only observations with fixed pointing in ICRS are supported"
-        )
-    pointing_icrs = observation.pointing.fixed_icrs
-    geom = WcsGeom.create(
-        skydir=pointing_icrs,
-        width=spatial_width,
-        binsz=spatial_bin_size.to_value(u.deg),
-        frame="icrs",
-        axes=[energy_axis],
-    )
+        models.append(FoVBackgroundModel(dataset_name=dataset.name))
 
     components = ["exposure"]
-    axes = dict(
-        energy_axis_true=energy_axis_true,
-    )
     if observation.edisp is not None:
         components.append("edisp")
-        axes["migra_axis"] = observation.edisp.axes["migra"]
     if observation.bkg is not None:
         components.append("background")
     if observation.psf is not None:
         components.append("psf")
-
-    dataset = MapDataset.create(
-        geom,
-        name=dataset_name,
-        **axes,
-    )
 
     maker = MapDatasetMaker(selection=components)
     dataset = maker.run(dataset, observation)
@@ -418,13 +542,13 @@ class MapDataset(Dataset):
 
         if psf and not isinstance(psf, (PSFMap, HDULocation)):
             raise ValueError(
-                f"'psf' must be a 'PSFMap' or `HDULocation` object, got {type(psf)}"
+                f"'psf' must be a `PSFMap` or `HDULocation` object, got {type(psf)} instead."
             )
         self.psf = psf
 
         if edisp and not isinstance(edisp, (EDispMap, EDispKernelMap, HDULocation)):
             raise ValueError(
-                "'edisp' must be a 'EDispMap', `EDispKernelMap` or 'HDULocation' "
+                "'edisp' must be a `EDispMap`, `EDispKernelMap` or `HDULocation` "
                 f"object, got `{type(edisp)}` instead."
             )
 
@@ -433,10 +557,7 @@ class MapDataset(Dataset):
         self.gti = gti
         self.models = models
         self.meta_table = meta_table
-        if meta is None:
-            self._meta = MapDatasetMetaData()
-        else:
-            self._meta = meta
+        self.meta = meta
 
     @property
     def _psf_kernel(self):
@@ -447,7 +568,12 @@ class MapDataset(Dataset):
             else:
                 map_ref = self.counts
             if map_ref and not map_ref.geom.is_region:
-                return self.psf.get_psf_kernel(map_ref.geom)
+                return self.psf.get_psf_kernel(
+                    position=map_ref.geom.center_skydir,
+                    geom=map_ref.geom,
+                    containment=meval.PSF_CONTAINMENT,
+                    max_radius=meval.PSF_MAX_RADIUS,
+                )
 
     @property
     def meta(self):
@@ -455,7 +581,10 @@ class MapDataset(Dataset):
 
     @meta.setter
     def meta(self, value):
-        self._meta = value
+        if value is None:
+            self._meta = MapDatasetMetaData()
+        else:
+            self._meta = value
 
     # TODO: keep or remove?
     @property
@@ -688,6 +817,7 @@ class MapDataset(Dataset):
 
         return background
 
+    @property
     def _background_parameters_changed(self):
         values = self.background_model.parameters.value
         changed = ~np.all(self._background_parameters_cached == values)
@@ -745,6 +875,8 @@ class MapDataset(Dataset):
                     npred_geom.stack(npred)
                     labels.append(evaluator_name)
                     npred_list.append(npred_geom)
+                if not USE_NPRED_CACHE:
+                    evaluator.reset_cache_properties()
 
         if npred_list != []:
             label_axis = LabelMapAxis(labels=labels, name="models")
@@ -1343,12 +1475,51 @@ class MapDataset(Dataset):
         counts, npred = self.counts.data.astype(float), self.npred().data
 
         if self.mask is not None:
-            return (
-                cash_sum_cython(counts[self.mask.data], npred[self.mask.data])
-                + prior_stat_sum
-            )
+            mask = ~(self.mask.data == False)  # noqa
+            counts = counts[mask]
+            npred = npred[mask]
+            if self.mask.data.dtype == bool or self.stat_type == "cash":
+                cash_sum = cash_sum_cython(counts, npred)
+            elif self.stat_type == "cash_weighted":
+                weight = self.mask.data[mask]
+                cash_sum = weighted_cash_sum_cython(counts, npred, weight)
+            else:
+                raise ValueError(
+                    f"'stat_type' must be a 'cash' or `cash_weighted`."
+                    f", got `{self.stat_type}` instead."
+                )
         else:
-            return cash_sum_cython(counts.ravel(), npred.ravel()) + prior_stat_sum
+            cash_sum = cash_sum_cython(counts.ravel(), npred.ravel())
+        return cash_sum + prior_stat_sum
+
+    def _to_asimov_dataset(self):
+        """Create Asimov dataset from the current models.
+
+        Parameters
+        ----------
+        name : str, optional
+            Name of the new dataset. Default is None.
+
+        """
+        npred = self.npred()
+        data = np.nan_to_num(npred.data, copy=True, nan=0.0, posinf=0.0, neginf=0.0)
+        npred.data = data.astype("float")
+
+        asimov_dataset = self.__class__(
+            models=self.models,
+            counts=npred,
+            exposure=self.exposure,
+            background=self.background,
+            psf=self.psf,
+            edisp=self.edisp,
+            mask_safe=self.mask_safe,
+            mask_fit=self.mask_fit,
+            gti=self.gti,
+            name=self.name,
+            meta=self.meta,
+        )
+        asimov_dataset._evaluators = self._evaluators
+        return asimov_dataset
 
     def fake(self, random_state="random-seed"):
         """Simulate fake counts for the current model and reduced IRFs.
@@ -2222,6 +2393,11 @@ class MapDataset(Dataset):
         plot_mask(ax=axes[3], mask=self.mask_safe_image, hatches=["///"], colors="w")
 
 
+class MapDatasetWeighted(MapDataset):
+    stat_type = "cash_weighted"
+    tag = "MapDatasetWeighted"
+
+
 class MapDatasetOnOff(MapDataset):
     """Map dataset for on-off likelihood fitting.
 
@@ -2570,6 +2746,38 @@ class MapDatasetOnOff(MapDataset):
             background=background,
             meta_table=self.meta_table,
         )
+
+    def _to_asimov_dataset(self):
+        """Create Asimov dataset from the current models.
+
+        Parameters
+        ----------
+        name : str, optional
+            Name of the new dataset. Default is None.
+
+        """
+        npred = self.npred()
+        data = np.nan_to_num(npred.data, copy=True, nan=0.0, posinf=0.0, neginf=0.0)
+        npred.data = data.astype("float")
+
+        asimov_dataset = self.__class__(
+            models=self.models,
+            counts=npred,
+            counts_off=self.counts_off,
+            exposure=self.exposure,
+            acceptance=self.acceptance,
+            acceptance_off=self.acceptance_off,
+            psf=self.psf,
+            edisp=self.edisp,
+            mask_safe=self.mask_safe,
+            mask_fit=self.mask_fit,
+            gti=self.gti,
+            name=self.name,
+            meta=self.meta,
+        )
+        asimov_dataset._evaluators = self._evaluators
+
+        return asimov_dataset
 
     @property
     def _is_stackable(self):
