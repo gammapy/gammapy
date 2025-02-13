@@ -1493,14 +1493,8 @@ class MapDataset(Dataset):
         return cash_sum + prior_stat_sum
 
     def _to_asimov_dataset(self):
-        """Create Asimov dataset from the current models.
+        """Create Asimov dataset from the current models."""
 
-        Parameters
-        ----------
-        name : str, optional
-            Name of the new dataset. Default is None.
-
-        """
         npred = self.npred()
         data = np.nan_to_num(npred.data, copy=True, nan=0.0, posinf=0.0, neginf=0.0)
         npred.data = data.astype("float")
@@ -2748,14 +2742,7 @@ class MapDatasetOnOff(MapDataset):
         )
 
     def _to_asimov_dataset(self):
-        """Create Asimov dataset from the current models.
-
-        Parameters
-        ----------
-        name : str, optional
-            Name of the new dataset. Default is None.
-
-        """
+        """Create Asimov dataset from the current models."""
         npred = self.npred()
         data = np.nan_to_num(npred.data, copy=True, nan=0.0, posinf=0.0, neginf=0.0)
         npred.data = data.astype("float")
