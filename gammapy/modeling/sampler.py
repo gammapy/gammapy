@@ -17,9 +17,31 @@ class Sampler:
     backend : {"ultranest"}
         Global backend used for sampler. Default is "ultranest".
         UltraNest: Most options can be found in the UltraNest doc
+
+    sampler_opts : dict, optional
+        Sampler options passed to the sampler.
+        Noteworthy options:
+        live_points : int
+                Minimum number of live points used in the sampling. Increase this number to get more accurate results. For more samples in the posterior increase this number or the min_ess parameter.
+        frac_remain : float
+             Integrate until this fraction of the integral is left in the remainder. Set to a low number (1e-2 … 1e-5) to make sure peaks are discovered. Set to a higher number (0.5) if you know the posterior is simple.
+        min_ess : int
+             Target number of effective posterior samples. Increase this number to get more accurate results. The default is n_live_point, but you may need to increase it to 1000 or more for complex posteriors.
+        log_dir :  str
+             Where to store output files. If None, the results are not stored.
+        resume : str
+             ‘overwrite’, overwrite previous data. ‘subfolder’, create a fresh subdirectory in log_dir.
+             ‘resume’ or True, continue previous run if available. Only works when dimensionality, transform or likelihood are consistent.
+        step_sampler : bool
+                Use a step sampler. This can be more efficient for higher dimensions (>10 or 15 parameters), but much slower for lower dimensions.
+        nsteps : int
+                Number of steps to take in each direction in the step sampler. Increase this number to get more accurate results at the cost of more computation time.
+        See list of options here:
         https://johannesbuchner.github.io/UltraNest/ultranest.html#ultranest.integrator.ReactiveNestedSampler
 
-    #TODO : describe all parameters
+    run_opts : dict, optional
+        Optional run options passed to the given backend when running the sampler.
+        https://johannesbuchner.github.io/UltraNest/ultranest.html#ultranest.integrator.ReactiveNestedSampler.run
     """
 
     def __init__(self, backend="ultranest", sampler_opts=None, run_opts=None):
@@ -38,7 +60,18 @@ class Sampler:
 
     @staticmethod
     def _update_models_from_posterior(models, result):
-        # TODO : add option for median, maxLogL once Param object has asym errors
+        """
+        Update the models with the posterior distribution.
+        #TODO : add option for median, maxLogL once Param object has asym errors
+        But this raise question on how to estimate the error given the median and maxLogL.
+        Covariance matrix is not defined in this sample approach (could be approximated via the samples).
+        Parameters
+        ----------
+        models : `~gammapy.modeling.models`
+            The models to update
+        result : dict
+            The sampler results dictionary containing the posterior distribution infos.
+        """
         posterior = result["posterior"]
         for i, par in enumerate(models.parameters.free_parameters):
             par.value = posterior["mean"][i]
@@ -47,12 +80,23 @@ class Sampler:
 
     def sampler_ultranest(self, parameters, like):
         """
-        Defines the Ultranest sampler and options
-        Returns the result dictionary that contains the samples and other information.
+        Defines the Ultranest sampler and options.
+        Returns the result in the SamplerResult that contains the updated models, samples, posterior distribution and other information.
+        Parameters
+        ----------
+        parameters : `~gammapy.modeling.Parameters`
+            The models parameters to sample
+        like : `~gammapy.modeling.sampler.SamplerLikelihood`
+            The likelihood function
+        Returns
+        -------
+            result : `~gammapy.modeling.sampler.SamplerResult`
+            The sampler results
         """
         import ultranest
 
         def _prior_inverse_cdf(values):
+            """Returns a list of model parameters for a given list of values (that are bound in [0,1])."""
             if None in parameters:
                 raise ValueError(
                     "Some parameters have no prior set. You need priors on all parameters."
@@ -87,6 +131,17 @@ class Sampler:
         return result
 
     def run(self, datasets):
+        """
+        Run the sampler on the provided datasets.
+        Parameters
+        ----------
+        datasets : `~gammapy.datasets.Datasets`
+            the datasets to fit
+        Returns
+        -------
+        result : `~gammapy.modeling.sampler.SamplerResult`
+            the sampler results
+        """
         datasets, parameters = _parse_datasets(datasets=datasets)
         parameters = parameters.free_parameters
 
@@ -110,8 +165,6 @@ class Sampler:
 
 class SamplerResult:
     """SamplerResult class.
-    This is a placeholder to store the results from the sampler
-
     TODO:
     - Support parameter posteriors directly on Parameter
         - e.g. adding a errn and errp entry
@@ -126,9 +179,9 @@ class SamplerResult:
         Did the sampler succeed in finding a good fit? Definition of convergence depends on the sampler backend.
     models : `~gammapy.modeling.models`
         the models updated after the sampler run
-    samples : `~numpy.ndarray`, optional
-        array of (weighted) samples
-    sampler_results : dict, optional
+    samples : `~numpy.ndarray`
+        array of (weighted) samples that can be used for histograms or corner plots.
+    sampler_results : dict
         output of sampler.
     """
 
@@ -154,7 +207,7 @@ class SamplerResult:
 class SamplerLikelihood:
     """Wrapper of the likelihood function used by the sampler.
     This is needed to modify parameters and likelihood by *-0.5
-    #TODO: can this be done in a simpler manner without a class
+    #TODO: Will be updated with the FitStatistic class when ready.
     Parameters
     ----------
     parameters : `~gammapy.modeling.Parameters`
