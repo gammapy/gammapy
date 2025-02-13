@@ -17,25 +17,31 @@ class Sampler:
     backend : {"ultranest"}
         Global backend used for sampler. Default is "ultranest".
         UltraNest: Most options can be found in the UltraNest doc
-
+        https://johannesbuchner.github.io/UltraNest/
     sampler_opts : dict, optional
         Sampler options passed to the sampler.
         Noteworthy options:
         live_points : int
-                Minimum number of live points used in the sampling. Increase this number to get more accurate results. For more samples in the posterior increase this number or the min_ess parameter.
+            Minimum number of live points used in the sampling. Increase this number to get more accurate results. For more samples in the posterior increase this number or the min_ess parameter.
+            Default is 400 live points.
         frac_remain : float
              Integrate until this fraction of the integral is left in the remainder. Set to a low number (1e-2 … 1e-5) to make sure peaks are discovered. Set to a higher number (0.5) if you know the posterior is simple.
+             Default is 0.5.
         min_ess : int
-             Target number of effective posterior samples. Increase this number to get more accurate results. The default is n_live_point, but you may need to increase it to 1000 or more for complex posteriors.
+             Target number of effective posterior samples. Increase this number to get more accurate results.
+             Default is live_points, but you may need to increase it to 1000 or more for complex posteriors.
         log_dir :  str
-             Where to store output files. If None, the results are not stored.
+             Where to store output files.
+              Default is None and no results are not stored.
         resume : str
              ‘overwrite’, overwrite previous data. ‘subfolder’, create a fresh subdirectory in log_dir.
              ‘resume’ or True, continue previous run if available. Only works when dimensionality, transform or likelihood are consistent.
         step_sampler : bool
                 Use a step sampler. This can be more efficient for higher dimensions (>10 or 15 parameters), but much slower for lower dimensions.
+                Default is False.
         nsteps : int
                 Number of steps to take in each direction in the step sampler. Increase this number to get more accurate results at the cost of more computation time.
+                Default is 10.
         See list of options here:
         https://johannesbuchner.github.io/UltraNest/ultranest.html#ultranest.integrator.ReactiveNestedSampler
 
@@ -51,7 +57,7 @@ class Sampler:
         self.run_opts = {} if run_opts is None else run_opts
 
         if self.backend == "ultranest":
-            self.sampler_opts.setdefault("live_points", 200)
+            self.sampler_opts.setdefault("live_points", 400)
             self.sampler_opts.setdefault("frac_remain", 0.5)
             self.sampler_opts.setdefault("log_dir", None)
             self.sampler_opts.setdefault("resume", "subfolder")
