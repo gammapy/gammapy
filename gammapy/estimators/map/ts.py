@@ -166,7 +166,8 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
     References
     ----------
-    [Stewart2009]_
+    `Stewart (2009), “Maximum-likelihood detection of sources among Poissonian noise”
+    <https://ui.adsabs.harvard.edu/abs/2009A%26A...495..989S/abstract>`_
     """
 
     tag = "TSMapEstimator"
