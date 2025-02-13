@@ -63,7 +63,7 @@ class Sampler:
         """
         Update the models with the posterior distribution.
         #TODO : add option for median, maxLogL once Param object has asym errors
-        But this raise question on how to estimate the error given the median and maxLogL.
+        But this raises the question on how to estimate the error given the median and maxLogL.
         Covariance matrix is not defined in this sample approach (could be approximated via the samples).
         Parameters
         ----------
@@ -174,11 +174,11 @@ class SamplerResult:
     Parameters
     ----------
     nfev : int
-        number of likelihood calls/evaluations
+        number of likelihood calls/evaluations.
     success : bool
         Did the sampler succeed in finding a good fit? Definition of convergence depends on the sampler backend.
     models : `~gammapy.modeling.models`
-        the models updated after the sampler run
+        the models updated after the sampler run.
     samples : `~numpy.ndarray`
         array of (weighted) samples that can be used for histograms or corner plots.
     sampler_results : dict
