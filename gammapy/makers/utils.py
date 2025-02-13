@@ -334,11 +334,15 @@ def make_map_background_irf(
     else:
         image_geom = geom.to_image()
         d_omega = image_geom.solid_angle()
-    if bkg.has_offset_axis or bkg.fov_alignment == FoVAlignment.RADEC:
+    if (
+        bkg.has_offset_axis
+        or bkg.fov_alignment == FoVAlignment.RADEC
+        or bkg.fov_alignment == FoVAlignment.REVERSE_LON_RADEC
+    ):
         data = _evaluate_bkg(
             pointing, ontime, bkg, geom, use_region_center, obstime, d_omega
         )
-    if not bkg.has_offset_axis and bkg.fov_alignment == FoVAlignment.ALTAZ:
+    elif not bkg.has_offset_axis and bkg.fov_alignment == FoVAlignment.ALTAZ:
         endtime = obstime + ontime
         data = np.zeros(geom.data_shape)
         time = obstime
