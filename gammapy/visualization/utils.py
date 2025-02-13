@@ -331,7 +331,7 @@ def plot_distribution(
             raise ValueError("Map and mask spatial geometry must agree!")
 
         if not mask.is_mask:
-            raise ValueError(f"mask must be of boolean type, given {type(mask)}")
+            raise ValueError(f"Mask map must be of boolean type, got {mask.data.dtype} instead.")
 
         cutout_mask.data = np.logical_and(cutout_mask.data, mask.data)
 
