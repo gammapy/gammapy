@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Dark matter profiles."""
+
 import abc
 import html
 import numpy as np
@@ -110,13 +111,15 @@ class DMProfile(abc.ABC):
 class ZhaoProfile(DMProfile):
     r"""Zhao Profile.
 
-    This is taken from equation 1 from Zhao (1996). It is a generalization of the NFW profile. The volume density
+    It is a generalization of the NFW profile. The volume density
     is parametrized with a double power-law. Scale radii smaller than the scale radius are described with a slope of
     :math:`-\gamma` and scale radii larger than the scale radius are described with a slope of :math:`-\beta`.
     :math:`\alpha` is a measure for the width of the transition region.
 
     .. math::
         \rho(r) = \rho_s \left(\frac{r_s}{r}\right)^\gamma \left(1 + \left(\frac{r}{r_s}\right)^\frac{1}{\alpha} \right)^{(\gamma - \beta) \alpha}
+
+    Equation (1) from [1]_.
 
     Parameters
     ----------
@@ -133,8 +136,10 @@ class ZhaoProfile(DMProfile):
 
     References
     ----------
-    * `1996MNRAS.278..488Z <https://ui.adsabs.harvard.edu/abs/1996MNRAS.278..488Z>`_
-    * `2011JCAP...03..051C <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
+    .. [1] `Zhao (1996), "Analytical models for galactic nuclei"
+      <https://ui.adsabs.harvard.edu/abs/1996MNRAS.278..488Z>`_
+    * `Marco et al. (2011), "PPPC 4 DM ID: a poor particle physicist cookbook for dark matter indirect detection"
+      <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
     """
 
     DEFAULT_SCALE_RADIUS = 24.42 * u.kpc
@@ -185,8 +190,10 @@ class NFWProfile(DMProfile):
 
     References
     ----------
-    * `1997ApJ...490..493 <https://ui.adsabs.harvard.edu/abs/1997ApJ...490..493N>`_
-    * `2011JCAP...03..051C <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
+    * `Navarro et al. (1997), "A Universal Density Profile from Hierarchical Clustering"
+      <https://ui.adsabs.harvard.edu/abs/1997ApJ...490..493N>`_
+    * `Marco et al. (2011), "PPPC 4 DM ID: a poor particle physicist cookbook for dark matter indirect detection"
+      <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
     """
 
     DEFAULT_SCALE_RADIUS = 24.42 * u.kpc
@@ -224,8 +231,10 @@ class EinastoProfile(DMProfile):
 
     References
     ----------
-    * `1965TrAlm...5...87E <https://ui.adsabs.harvard.edu/abs/1965TrAlm...5...87E>`_
-    * `2011JCAP...03..051C <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
+    * `Einasto (1965), "On the Construction of a Composite Model for the Galaxy and on the Determination of the System
+      of Galactic Parameters" <https://ui.adsabs.harvard.edu/abs/1965TrAlm...5...87E>`_
+    * `Marco et al. (2011), "PPPC 4 DM ID: a poor particle physicist cookbook for dark matter indirect detection"
+      <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
     """
 
     DEFAULT_SCALE_RADIUS = 28.44 * u.kpc
@@ -265,8 +274,10 @@ class IsothermalProfile(DMProfile):
 
     References
     ----------
-    * `1991MNRAS.249..523B <https://ui.adsabs.harvard.edu/abs/1991MNRAS.249..523B>`_
-    * `2011JCAP...03..051C <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
+    * `Begeman et al. (1991), "Extended rotation curves of spiral galaxies : dark haloes and modified dynamics"
+      <https://ui.adsabs.harvard.edu/abs/1965TrAlm...5...87E>`_
+    * `Marco et al. (2011), "PPPC 4 DM ID: a poor particle physicist cookbook for dark matter indirect detection"
+      <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
     """
 
     DEFAULT_SCALE_RADIUS = 4.38 * u.kpc
@@ -298,8 +309,10 @@ class BurkertProfile(DMProfile):
 
     References
     ----------
-    * `1995ApJ...447L..25B <https://ui.adsabs.harvard.edu/abs/1995ApJ...447L..25B>`_
-    * `2011JCAP...03..051C <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
+    * `Burkert (1995), "The Structure of Dark Matter Halos in Dwarf Galaxies"
+      <https://ui.adsabs.harvard.edu/abs/1965TrAlm...5...87E>`_
+    * `Marco et al. (2011), "PPPC 4 DM ID: a poor particle physicist cookbook for dark matter indirect detection"
+      <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
     """
 
     DEFAULT_SCALE_RADIUS = 12.67 * u.kpc
@@ -333,8 +346,10 @@ class MooreProfile(DMProfile):
 
     References
     ----------
-    * `2004MNRAS.353..624D <https://ui.adsabs.harvard.edu/abs/2004MNRAS.353..624D>`_
-    * `2011JCAP...03..051C <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
+    * `Diemand et al. (2004), "Convergence and scatter of cluster density profiles"
+      <https://ui.adsabs.harvard.edu/abs/1965TrAlm...5...87E>`_
+    * `Marco et al. (2011), "PPPC 4 DM ID: a poor particle physicist cookbook for dark matter indirect detection"
+      <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
     """
 
     DEFAULT_SCALE_RADIUS = 30.28 * u.kpc
