@@ -31,8 +31,10 @@ class PrimaryFlux(TemplateNDSpectralModel):
 
     References
     ----------
-    * `2011JCAP...03..051 <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
-    * Cirelli et al (2016): http://www.marcocirelli.net/PPPC4DMID.html
+    * `Marco et al. (2011), "PPPC 4 DM ID: a poor particle physicist cookbook for dark matter indirect detection"
+      <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
+    * `Cirelli et al. (2016), "PPPC 4 DM ID: A Poor Particle Physicist Cookbook for Dark Matter Indirect Detection"
+      <http://www.marcocirelli.net/PPPC4DMID.html>`_
     """
 
     channel_registry = {
@@ -201,7 +203,8 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
 
     References
     ----------
-    * `2011JCAP...03..051 <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
+    `Marco et al. (2011), "PPPC 4 DM ID: a poor particle physicist cookbook for dark matter indirect detection"
+    <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
     """
 
     THERMAL_RELIC_CROSS_SECTION = 3e-26 * u.Unit("cm3 s-1")
@@ -308,7 +311,8 @@ class DarkMatterDecaySpectralModel(SpectralModel):
 
     References
     ----------
-    * `2011JCAP...03..051 <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
+    `Marco et al. (2011), "PPPC 4 DM ID: a poor particle physicist cookbook for dark matter indirect detection"
+    <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
     """
 
     LIFETIME_AGE_OF_UNIVERSE = 4.3e17 * u.Unit("s")
