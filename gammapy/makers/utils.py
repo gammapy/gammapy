@@ -470,11 +470,11 @@ def make_theta_squared_table(
     create_off = position_off is None
     for observation in observations:
         if energy_edges is not None:
-            observation = observation.copy()
-            observation.events = observation.events.select_energy(
+            event_position = observation.events.select_energy(
                 energy_range=energy_edges
-            )
-        event_position = observation.events.radec
+            ).radec
+        else:
+            event_position = observation.events.radec
         pointing = observation.get_pointing_icrs(observation.tmid)
 
         separation = position.separation(event_position)
