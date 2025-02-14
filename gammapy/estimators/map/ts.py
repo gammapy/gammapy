@@ -453,6 +453,13 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
             "kernel": kernel,
         }
 
+    @staticmethod
+    def _estimate_mask_2d(map_dict):
+        """Compute default mask where to estimate test statistic values."""
+        mask_2d = map_dict["mask"].reduce_over_axes(np.logical_or)
+        mask_2d &= map_dict["background"].reduce_over_axes() > 0
+        return mask_2d.data
+
     def estimate_flux_map(self, datasets):
         """Estimate flux and test statistic maps for single dataset.
 
@@ -463,12 +470,8 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         """
         maps = [self.estimate_fit_input_maps(dataset=d) for d in datasets]
 
-        mask_2d = np.sum([_["mask"].data.sum(axis=0) for _ in maps], axis=0).astype(
-            bool
-        )
-        mask_2d &= np.sum(
-            [_["background"].data.sum(axis=0) for _ in maps], axis=0
-        ).astype(bool)
+        # Combine all masks with an OR
+        mask_2d = np.logical_or.reduce([self._estimate_mask_2d(_) for _ in maps])
 
         if not np.any(mask_2d):
             raise ValueError(
