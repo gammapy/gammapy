@@ -502,9 +502,8 @@ def compute_lightcurve_doublingtime(lightcurve, flux_quantity="flux"):
 
     References
     ----------
-    .. [Brown2013] "Locating the γ-ray emission region
-       of the flat spectrum radio quasar PKS 1510−089", Brown et al. (2013)
-       https://academic.oup.com/mnras/article/431/1/824/1054498
+    `Brown et al. (2013), "Locating the γ-ray emission region of the flat spectrum radio quasar PKS 1510−089"
+    <https://academic.oup.com/mnras/article/431/1/824/1054498>`_
     """
     flux = getattr(lightcurve, flux_quantity)
     flux_err = getattr(lightcurve, flux_quantity + "_err")
@@ -578,9 +577,8 @@ def compute_lightcurve_discrete_correlation(
 
     References
     ----------
-    .. [Edelson1988] "THE DISCRETE CORRELATION FUNCTION: A NEW METHOD FOR ANALYZING
-       UNEVENLY SAMPLED VARIABILITY DATA", Edelson et al. (1988)
-       https://ui.adsabs.harvard.edu/abs/1988ApJ...333..646E/abstract
+    `Edelson et al. (1988), "THE DISCRETE CORRELATION FUNCTION: A NEW METHOD FOR ANALYZING
+    UNEVENLY SAMPLED VARIABILITY DATA" <https://ui.adsabs.harvard.edu/abs/1988ApJ...333..646E/abstract>`_
     """
     flux1 = getattr(lightcurve1, flux_quantity)
     flux_err1 = getattr(lightcurve1, flux_quantity + "_err")

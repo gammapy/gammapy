@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """HAWC catalogs (https://www.hawc-observatory.org)."""
+
 import abc
 import numpy as np
 from astropy.table import Table
@@ -199,8 +200,8 @@ class SourceCatalog2HWC(SourceCatalog):
 
     References
     ----------
-    .. [1] Abeysekara et al, "The 2HWC HAWC Observatory Gamma Ray Catalog",
-       On ADS: `2017ApJ...843...40A <https://ui.adsabs.harvard.edu/abs/2017ApJ...843...40A>`__
+    .. [1] `Abeysekara et al. (2017), "The 2HWC HAWC Observatory Gamma Ray Catalog"
+       <https://ui.adsabs.harvard.edu/abs/2017ApJ...843...40A>`_
     """
 
     tag = "2hwc"
@@ -317,8 +318,8 @@ class SourceCatalog3HWC(SourceCatalog):
 
     References
     ----------
-    .. [1] 3HWC: The Third HAWC Catalog of Very-High-Energy Gamma-ray Sources",
-       https://data.hawc-observatory.org/datasets/3hwc-survey/index.php
+    .. [1] `Albert et al. (2021), "3HWC: The Third HAWC Catalog of Very-High-Energy Gamma-ray Sources"
+       <https://data.hawc-observatory.org/datasets/3hwc-survey/index.php>`_
     """
 
     tag = "3hwc"

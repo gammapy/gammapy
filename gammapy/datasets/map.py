@@ -17,6 +17,7 @@ from gammapy.stats import (
     WStatCountsStatistic,
     cash,
     cash_sum_cython,
+    weighted_cash_sum_cython,
     get_wstat_mu_bkg,
     wstat,
 )
@@ -32,6 +33,7 @@ from .utils import get_axes
 __all__ = [
     "MapDataset",
     "MapDatasetOnOff",
+    "MapDatasetWeighted",
     "create_empty_map_dataset_from_irfs",
     "create_map_dataset_geoms",
     "create_map_dataset_from_observation",
@@ -1473,12 +1475,22 @@ class MapDataset(Dataset):
         counts, npred = self.counts.data.astype(float), self.npred().data
 
         if self.mask is not None:
-            return (
-                cash_sum_cython(counts[self.mask.data], npred[self.mask.data])
-                + prior_stat_sum
-            )
+            mask = ~(self.mask.data == False)  # noqa
+            counts = counts[mask]
+            npred = npred[mask]
+            if self.mask.data.dtype == bool or self.stat_type == "cash":
+                cash_sum = cash_sum_cython(counts, npred)
+            elif self.stat_type == "cash_weighted":
+                weight = self.mask.data[mask]
+                cash_sum = weighted_cash_sum_cython(counts, npred, weight)
+            else:
+                raise ValueError(
+                    f"'stat_type' must be a 'cash' or `cash_weighted`."
+                    f", got `{self.stat_type}` instead."
+                )
         else:
-            return cash_sum_cython(counts.ravel(), npred.ravel()) + prior_stat_sum
+            cash_sum = cash_sum_cython(counts.ravel(), npred.ravel())
+        return cash_sum + prior_stat_sum
 
     def _to_asimov_dataset(self):
         """Create Asimov dataset from the current models.
@@ -2379,6 +2391,11 @@ class MapDataset(Dataset):
         self.background.sum_over_axes().plot(ax=axes[3], add_cbar=True)
         plot_mask(ax=axes[3], mask=self.mask_fit_image, alpha=0.2)
         plot_mask(ax=axes[3], mask=self.mask_safe_image, hatches=["///"], colors="w")
+
+
+class MapDatasetWeighted(MapDataset):
+    stat_type = "cash_weighted"
+    tag = "MapDatasetWeighted"
 
 
 class MapDatasetOnOff(MapDataset):

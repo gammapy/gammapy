@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Galactic radial source distribution probability density functions."""
+
 import numpy as np
 from astropy.modeling import Fittable1DModel, Parameter
 from astropy.units import Quantity
@@ -31,7 +32,7 @@ class Paczynski1990(Fittable1DModel):
     .. math::
         f(r) = A r_{exp}^{-2} \exp \left(-\frac{r}{r_{exp}} \right)
 
-    Formula (2) [Paczynski1990]_.
+    Formula (2) in [1]_.
 
     Parameters
     ----------
@@ -47,7 +48,8 @@ class Paczynski1990(Fittable1DModel):
 
     References
     ----------
-    .. [Paczynski1990] https://ui.adsabs.harvard.edu/abs/1990ApJ...348..485P
+    .. [1] `Paczynski (1990), "A Test of the Galactic Origin of Gamma-Ray Bursts"
+       <https://ui.adsabs.harvard.edu/abs/1990ApJ...348..485P>`_
     """
 
     amplitude = Parameter()
@@ -70,7 +72,7 @@ class CaseBattacharya1998(Fittable1DModel):
         f(r) = A \left( \frac{r}{r_{\odot}} \right) ^ \alpha \exp
         \left[ -\beta \left( \frac{ r - r_{\odot}}{r_{\odot}} \right) \right]
 
-    Formula (14) [CaseBattacharya1998]_.
+    Formula (14) in [1]_.
 
     Parameters
     ----------
@@ -88,7 +90,8 @@ class CaseBattacharya1998(Fittable1DModel):
 
     References
     ----------
-    .. [CaseBattacharya1998] https://ui.adsabs.harvard.edu/abs/1998ApJ...504..761C
+    .. [1] `Case et al. (1998), "A New Σ-D Relation and Its Application to the Galactic Supernova Remnant Distribution"
+       <https://ui.adsabs.harvard.edu/abs/1998ApJ...504..761C>`_
     """
 
     amplitude = Parameter()
@@ -115,9 +118,9 @@ class YusifovKucuk2004(Fittable1DModel):
         f(r) = A \left ( \frac{r + r_1}{r_{\odot} + r_1} \right )^a \exp
         \left [-b \left( \frac{r - r_{\odot}}{r_{\odot} + r_1} \right ) \right ]
 
-    Used by Faucher-Guigere and Kaspi. Density at ``r = 0`` is nonzero.
+    Used by Faucher-Giguère and Kaspi. Density at ``r = 0`` is nonzero.
 
-    Formula (15) [YusifovKucuk2004]_.
+    Formula (15) in [1]_.
 
     Parameters
     ----------
@@ -137,7 +140,8 @@ class YusifovKucuk2004(Fittable1DModel):
 
     References
     ----------
-    .. [YusifovKucuk2004] https://ui.adsabs.harvard.edu/abs/2004A%26A...422..545Y
+    .. [1] `Yusifov et al. (2004), "Revisiting the radial distribution of pulsars in the Galaxy"
+       <https://ui.adsabs.harvard.edu/abs/2004A%26A...422..545Y>`_
     """
 
     amplitude = Parameter()
@@ -167,7 +171,7 @@ class YusifovKucuk2004B(Fittable1DModel):
 
     Derived empirically from OB-stars distribution.
 
-    Formula (17) [YusifovKucuk2004]_.
+    Formula (17) in [1]_.
 
     Parameters
     ----------
@@ -185,8 +189,8 @@ class YusifovKucuk2004B(Fittable1DModel):
 
     References
     ----------
-    .. [YusifovKucuk2004] https://ui.adsabs.harvard.edu/abs/2004A%26A...422..545Y
-
+    .. [1] `Yusifov et al. (2004), "Revisiting the radial distribution of pulsars in the Galaxy"
+       <https://ui.adsabs.harvard.edu/abs/2004A%26A...422..545Y>`_
     """
 
     amplitude = Parameter()
@@ -212,7 +216,7 @@ class FaucherKaspi2006(Fittable1DModel):
         f(r) = A \frac{1}{\sqrt{2 \pi} \sigma} \exp
         \left(- \frac{(r - r_0)^2}{2 \sigma ^ 2}\right)
 
-    Appendix B [FaucherKaspi2006]_.
+    Appendix B in [1]_.
 
     Parameters
     ----------
@@ -230,7 +234,8 @@ class FaucherKaspi2006(Fittable1DModel):
 
     References
     ----------
-    .. [FaucherKaspi2006] https://ui.adsabs.harvard.edu/abs/2006ApJ...643..332F
+    .. [1] `Faucher-Giguère and Kaspi (2006), "Birth and Evolution of Isolated Radio Pulsars"
+       <https://ui.adsabs.harvard.edu/abs/2006ApJ...643..332F>`_
     """
 
     amplitude = Parameter()
@@ -256,7 +261,7 @@ class Lorimer2006(Fittable1DModel):
         f(r) = A \left( \frac{r}{r_{\odot}} \right) ^ B \exp
         \left[ -C \left( \frac{r - r_{\odot}}{r_{\odot}} \right) \right]
 
-    Formula (10) [Lorimer2006]_.
+    Formula (10) in [1]_.
 
     Parameters
     ----------
@@ -274,7 +279,8 @@ class Lorimer2006(Fittable1DModel):
 
     References
     ----------
-    .. [Lorimer2006] https://ui.adsabs.harvard.edu/abs/2006MNRAS.372..777L
+    .. [1] `Lorimer et al. (2006), "The Parkes Multibeam Pulsar Survey - VI. Discovery and timing of 142 pulsars and a
+       Galactic population analysis" <https://ui.adsabs.harvard.edu/abs/2006MNRAS.372..777L>`_
     """
 
     amplitude = Parameter()

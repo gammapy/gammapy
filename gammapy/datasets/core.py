@@ -61,7 +61,7 @@ class Dataset(abc.ABC):
     def mask(self):
         """Combined fit and safe mask."""
         if self.mask_safe is not None and self.mask_fit is not None:
-            return self.mask_safe & self.mask_fit
+            return self.mask_safe * self.mask_fit
         elif self.mask_fit is not None:
             return self.mask_fit
         elif self.mask_safe is not None:
@@ -79,7 +79,10 @@ class Dataset(abc.ABC):
         stat = self.stat_array()
 
         if self.mask is not None:
-            stat = stat[self.mask.data]
+            if isinstance(self.mask, np.ndarray):
+                stat = stat[self.mask.astype(bool)]
+            else:
+                stat = stat[self.mask.data.astype(bool)]
         return np.sum(stat, dtype=np.float64)
 
     @abc.abstractmethod

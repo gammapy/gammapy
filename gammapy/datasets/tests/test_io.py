@@ -4,7 +4,12 @@ import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
 from regions import CircleSkyRegion
-from gammapy.datasets import Datasets, SpectrumDataset, SpectrumDatasetOnOff
+from gammapy.datasets import (
+    Datasets,
+    SpectrumDataset,
+    SpectrumDatasetOnOff,
+    FermipyDatasetsReader,
+)
 from gammapy.modeling.models import DatasetModels
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import requires_data
@@ -173,3 +178,58 @@ def test_datasets_write_checksum(tmp_path):
 
     with pytest.warns(UserWarning):
         Datasets.read(filename=filename, filename_models=bad, checksum=True)
+
+
+@requires_data()
+def test_fermipy_datasets_reader():
+    reader = FermipyDatasetsReader(
+        "$GAMMAPY_DATA/tests/fermi/config_fermipy_std_5deg_qr.yaml", edisp_bins=1
+    )
+    datasets = reader.read()
+
+    assert len(datasets) == 2
+    assert datasets[0].counts.geom.axes[0].unit == "MeV"
+    assert_allclose(datasets[0].background, 0)
+    assert datasets[0].counts.geom.to_image() == datasets[0].exposure.geom.to_image()
+    assert_allclose(datasets[0].exposure.data[0, 0, 0], 1.54938e11)
+    assert_allclose(datasets[0].edisp.edisp_map.data[0, 0, 0, 0], 0.020409, rtol=1e-4)
+    assert_allclose(
+        datasets[0]._psf_kernel.psf_kernel_map.data.sum(axis=(1, 2)), 1, rtol=1e-5
+    )
+    assert_allclose(
+        datasets[0].edisp.exposure_map.data, datasets[0].psf.exposure_map.data
+    )
+    assert datasets[0].name == "P8R3_SOURCEVETO_V3_PSF0_v1"
+    assert datasets[1].name == "P8R3_SOURCEVETO_V3_PSF1_v1"
+    assert datasets.models.names[0] == "isotropic_P8R3_SOURCEVETO_V3_PSF0_v1"
+    assert datasets.models.names[1] == "isotropic_P8R3_SOURCEVETO_V3_PSF1_v1"
+
+    path = make_path("$GAMMAPY_DATA/tests/fermi")
+    dataset = reader.create_dataset(
+        path / "ccube_00.fits",
+        path / "bexpmap_00.fits",
+        path / "psf_00.fits",
+        path / "drm_00.fits",
+    )
+    assert not dataset.models
+
+    reader = FermipyDatasetsReader(
+        "$GAMMAPY_DATA/tests/fermi/config_fermipy_minimal.yaml", edisp_bins=1
+    )
+
+    datasets = reader.read()
+
+    assert len(datasets) == 1
+    assert datasets[0].counts.geom.axes[0].unit == "MeV"
+    assert_allclose(datasets[0].background, 0)
+    assert datasets[0].counts.geom.to_image() == datasets[0].exposure.geom.to_image()
+    assert_allclose(datasets[0].exposure.data[0, 0, 0], 1.54938e11)
+    assert_allclose(datasets[0].edisp.edisp_map.data[0, 0, 0, 0], 0.020409, rtol=1e-4)
+    assert_allclose(
+        datasets[0]._psf_kernel.psf_kernel_map.data.sum(axis=(1, 2)), 1, rtol=1e-5
+    )
+    assert_allclose(
+        datasets[0].edisp.exposure_map.data, datasets[0].psf.exposure_map.data
+    )
+    assert datasets[0].name == "P8R3_SOURCEVETO_V3_PSF1_v1"
+    assert datasets.models.names[0] == "isotropic_P8R3_SOURCEVETO_V3_PSF1_v1"

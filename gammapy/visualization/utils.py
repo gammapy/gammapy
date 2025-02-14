@@ -249,6 +249,7 @@ def plot_theta_squared_table(table):
 
 def plot_distribution(
     wcs_map,
+    mask=None,
     ax=None,
     ncols=3,
     func=None,
@@ -264,6 +265,8 @@ def plot_distribution(
     ----------
     wcs_map : `~gammapy.maps.WcsNDMap`
         A map that contains data to be plotted.
+    mask : `~gammapy.maps.WcsNDMap`, optional
+        2D mask defining the input data region.
     ax : `~matplotlib.axes.Axes` or list of `~matplotlib.axes.Axes`
         Axis object to plot on. If a list of Axis is provided it has to be the same length as the length of _map.data.
     ncols : int
@@ -321,8 +324,18 @@ def plot_distribution(
     kwargs_hist.setdefault("density", True)
     kwargs_fit.setdefault("full_output", True)
 
-    cutout, mask = wcs_map.cutout_and_mask_region()
-    idx_x, idx_y = np.where(mask)
+    cutout, cutout_mask = wcs_map.cutout_and_mask_region()
+
+    if mask:
+        if mask.geom != wcs_map.geom.to_image():
+            raise ValueError("Map and mask spatial geometry must agree!")
+
+        if not mask.is_mask:
+            raise ValueError(f"Mask map must be of boolean type, got {mask.data.dtype} instead.")
+
+        cutout_mask.data = np.logical_and(cutout_mask.data, mask.data)
+
+    idx_x, idx_y = np.where(cutout_mask)
 
     data = cutout.data[..., idx_x, idx_y]
 
@@ -350,7 +363,6 @@ def plot_distribution(
     result_list = []
 
     for idx in range(cells_in_grid):
-
         axe = axes.flat[idx]
         if idx > len(data) - 1:
             axe.set_visible(False)

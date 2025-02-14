@@ -51,7 +51,7 @@ Glossary
       Short for "data level 4": it is used to mention or describe binned-science data, ie
       N-dim maps (multi-dimensional histograms) of the spatial, temporal and/or spectral
       components of the DL3 data in instrumental units (e.g. counts). See :ref:`maps` and
-     :ref:`data flow <data_flow>`.
+      :ref:`data flow <data_flow>`.
 
     DL5
       Short for "data level 5": it is used to mention or describe advanced-science data, ie

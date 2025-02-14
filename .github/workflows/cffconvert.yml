@@ -39,7 +39,7 @@ jobs:
           eossr-metadata-validator codemeta.json 
       
       - name: commit changes
-        uses: stefanzweifel/git-auto-commit-action@v5.0.1
+        uses: stefanzweifel/git-auto-commit-action@v5.1.0
         if: success()
         with:
           commit_author: GitHub Actions <actions@github.com>

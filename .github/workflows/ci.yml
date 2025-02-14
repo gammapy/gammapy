@@ -157,28 +157,3 @@ jobs:
         with:
           name: gammapy-doc-html
           path: docs/_build/html/
-  conda-build:
-    name: Linux python 3.9 conda-build all-deps
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash -l {0}
-    steps:
-      - name: checkout repo
-        uses: actions/checkout@v4
-      - name: create and activate env
-        uses: mamba-org/setup-micromamba@v2
-        with:
-          environment-file: environment-dev.yml
-          cache-downloads: true
-      - name: install gammapy
-        run: |
-          pip install -e .
-      - name: test conda build
-        run: |
-          make clean
-          conda install conda-build
-          conda info
-          conda --version
-          conda build --version
-          python setup.py bdist_conda

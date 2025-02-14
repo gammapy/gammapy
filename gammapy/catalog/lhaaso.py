@@ -155,8 +155,8 @@ class SourceCatalog1LHAASO(SourceCatalog):
 
     References
     ----------
-    .. [1] 1LHAASO: The First LHAASO Catalog of Gamma-Ray Sources,
-       https://ui.adsabs.harvard.edu/abs/2023arXiv230517030C/abstract
+    .. [1] `Cao et al. (2023), "1LHAASO: The First LHAASO Catalog of Gamma-Ray Sources"
+       <https://ui.adsabs.harvard.edu/abs/2023arXiv230517030C/abstract>`_
     """
 
     tag = "1LHAASO"
