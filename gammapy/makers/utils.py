@@ -470,9 +470,16 @@ def make_theta_squared_table(
     create_off = position_off is None
     for observation in observations:
         if energy_edges is not None:
-            event_position = observation.events.select_energy(
-                energy_range=energy_edges
-            ).radec
+            if len(energy_edges) == 2:
+                event_position = observation.events.select_energy(
+                    energy_range=energy_edges
+                ).radec
+
+                table.meta["Energy_filter"] = energy_edges
+            else:
+                raise ValueError(
+                    f"Only supports one energy interval but {len(energy_edges) - 1} passed."
+                )
         else:
             event_position = observation.events.radec
         pointing = observation.get_pointing_icrs(observation.tmid)

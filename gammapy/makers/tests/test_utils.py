@@ -492,6 +492,7 @@ class TestTheta2Table:
         assert_allclose(theta2_table["acceptance"], acceptance)
         assert_allclose(theta2_table["acceptance_off"], acceptance_off)
         assert_allclose(theta2_table["alpha"], alpha)
+        assert_allclose(theta2_table.meta["Energy_filter"], [1.2, 11] * u.TeV)
 
 
 @requires_data()
