@@ -211,8 +211,7 @@ def fpe_map_pwl_reoptimize():
 
 @pytest.fixture(scope="session")
 def fpe_pwl():
-    fpe_pwl = create_fpe(PowerLawSpectralModel())
-    return fpe_pwl
+    return create_fpe(PowerLawSpectralModel())
 
 
 @pytest.fixture(scope="session")

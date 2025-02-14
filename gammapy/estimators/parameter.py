@@ -412,8 +412,8 @@ class ParameterSensitivityEstimator:
 
     References
     ----------
-        Cowan et al. (2011), European Physical Journal C, 71, 1554.
-        doi:10.1140/epjc/s10052-011-1554-0.
+        * `Cowan et al. (2011), "Asymptotic formulae for likelihood-based tests of new physics"
+        <https://arxiv.org/abs/1007.1727>`_
 
     """
 
@@ -475,7 +475,7 @@ class ParameterSensitivityEstimator:
 
     def run(self, datasets):
         """Parameter sensitivity
-        given as the diffrence between vaue matching the target significance and the null value.
+        given as the difference between value matching the target significance and the null value.
         """
         with restore_parameters_status(self.test.parameters):
             value = self.parameter_matching_significance(datasets)
