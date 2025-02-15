@@ -494,6 +494,14 @@ class TestTheta2Table:
         assert_allclose(theta2_table["alpha"], alpha)
         assert_allclose(theta2_table.meta["Energy_filter"], [1.2, 11] * u.TeV)
 
+        with pytest.raises(ValueError):
+            make_theta_squared_table(
+                observations=[self.observations[0]],
+                position=position,
+                theta_squared_axis=axis,
+                energy_edges=[1.2, 11, 20] * u.TeV,
+            )
+
 
 @requires_data()
 def test_guess_instrument_fov(observations):
