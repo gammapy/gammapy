@@ -1,0 +1,207 @@
+********************************
+PIG 29 - SkyModel Restructuring
+********************************
+
+* Author: Atreyee Sinha, Maxime Regard
+* Created: ``2024-12-13``
+* Accepted: ``xx``
+* Status: xx
+* Discussion: `#4381`_
+
+Abstract
+========
+
+This PIG intends to resturcture `gammapy.modelling.models` to allow for flexible model definitions on arbitrary variables.
+
+Motivation
+==========
+
+Currently, gammapy supports Temporal, Spectral and Spatial models, which are bundled together in the `SkyModel` class for modelling and fitting. Despite the underlying `maps` framework being completely flexible, the modelling framework follows a fixed API allowing only spectral (compulsory), temporal and spatial models. If a user wants to model the behaviour in other parameters, say phase or frequency, it requires expert knowledge and is often performed using other fitting packages, eg: see https://github.com/cgalelli/gammapy_SyLC/tree/main/gammapy_SyLC.
+
+Currently, the `MapDataset` and the `FluxPointsDataset` support additional axes, so the main changes are required in the `MapEvaluator` and in the model definitions
+
+
+Use cases
+=========
+
+1. Fitting other parameters like phase, frequency, etc
+2. Reduction of code duplication: Analytic shapes like the power law is defined separately for `PowerLawSpectralModel`, `PowerLawTeLmporalModel` and `PowerLawNormSpectralModel`, which differ only in the unit handling
+3. Separation of units and values: This is a side benefit which can be useful if move to using JAX arrays in the future.
+
+
+Proposed API
+============
+
+We propose to have a general unit-less analytic class definition, inheriting from `ModelBase` The unit handling responsibility lies on the user.
+Internal support and checks and be provided for common input parameters (eg: time/energy) and the expected output units. 
+
+So, we move from 
+
+`SkyModel(spectral_model=, temporal_model=)`
+to 
+
+`SkyModelGeneral(submodels={"energy_true": p, "time":t})`
+
+where the user defines the axes the models are supposed affect.
+
+
+For a simple power law, it will be:
+
+"$\\phi(x) = \\phi_0 \\cdot \\left( \\frac{x-x_{ref}}{x_0} \\right)^{-\\alpha}$\n",
+
+
+```
+def integrate_linear(func, range_min, range_max, ndecade=100, oversampling_factor=100, **kwargs):
+        if isinstance(range_min, Time):
+            range_min=range_min.mjd * u.d
+            range_max=range_max.mjd * u.d
+        x, steps = np.linspace(
+            range_min, range_max, oversampling_factor, retstep=True, axis=-1
+        )
+        values = func(x)
+        integral = np.sum(values, axis=-1) * steps
+        return integral/np.sum(range_max - range_min) 
+
+class PowerLawModel(ModelBase):
+
+    tag = "Generalised_po"
+    alpha = Parameter("alpha", 2, frozen=True)
+    x0 = Parameter("x0", 1, frozen=True)
+    x_ref = Parameter("x_ref", 1, frozen=True)
+    phi0 = Parameter("phi0", 1, frozen=True, scale_method="scale10",
+                    interp="log")
+    
+    def __init__(self, input_units="", norm_units="", **kwargs):
+        super().__init__()
+        par_input_units = ["x0", "x_ref"]
+        self.axis_units = input_units
+        for p in par_input_units:
+            par = getattr(self, p)
+            par.unit = input_units
+        self.phi0.unit = norm_units
+
+    def __call__(self, x):
+        kwargs = {par.name: par.quantity for par in self.parameters}
+        if isinstance(x, Time):
+            x=Time(x, scale=x.scale).mjd * u.d
+        x = x.to(self.axis_units)
+        return self.evaluate(x, **kwargs)
+    
+    @staticmethod
+    def evaluate(x, x_ref, x0, alpha, phi0):
+        """Evaluate the model (static function)"""
+        return phi0*np.power((x-x_ref)/x0, -alpha)
+
+
+    def integral(self, range_min, range_max, scale="linear", **kwargs):
+        """Integrates to 1 if normalise=True"""
+        if scale=="log":
+            integral = integrate_spectrum(self, range_min, range_max, **kwargs)
+        else:
+            integral = integrate_linear(self, range_min, range_max, **kwargs)
+        return integral
+        
+   
+```
+
+2. Create a generalised SkyModel
+
+```
+class SkyModelGeneral():
+
+    def __init__(self, submodels, name="abc"):
+        """Models should be a dict of underlying models"""
+        self.models = submodels
+        self.name = name # replace by make_name()
+
+    def parameters(self):
+        parameters = []
+        for model in self.models:
+            parameters.append(model.parameters)
+        return Parameters.from_stack(parameters)
+
+    def evaluate_geom(self, geom, gti=None):
+        coord = geom.get_coord()
+        eval = Map.from_geom(geom, data=1)
+        for axis, model in self.models.items():
+            ax = geom.axes[axis]
+            if isinstance(ax, TimeMapAxis):
+                val = self._compute_time_integral(geom, ax, model, gti)
+            else:
+                val = model(coord[axis])
+            eval = eval*val
+        return eval.quantity
+
+    def _compute_time_integral(self, geom, time_axis, model, gti):
+        """similar to SkyModel._compute_time_integral"""
+        temp_eval = np.ones(time_axis.nbin)
+        for idx in range(time_axis.nbin):
+            #Doing only for the case of GTI = None
+            t1, t2 = time_axis.time_min[idx], time_axis.time_max[idx]
+            integ = model.integral(t1, t2)
+            temp_eval[idx] = np.sum(integ)
+        value = Map.from_geom(geom, data=1).data
+        value = (value.T * temp_eval).T
+        return value
+        
+
+    def integrate_geom(self, geom, gti=None, oversampling_factor=None):
+        eval = Map.from_geom(geom, data=1)
+        for axis, model in self.models.items():
+            ax = geom.axes[axis]
+            if isinstance(ax, TimeMapAxis):
+                integ = self._compute_time_integral(geom, ax, model, gti)
+            else:
+                edges = ax.edges
+                shape = len(geom.data_shape) * [1,]
+                shape[geom.axes.index_data(axis)] = -1
+                integ = model.integral(edges[:-1], edges[1:], scale=ax.interp).reshape(shape)
+            eval = eval*integ
+        return eval
+        
+```
+
+The serialisation needs to be adapted here
+
+3. Adapt `MapEvaluator`
+
+The Map Evaluation is very closely tied to the parameters order and needs cleanup.
+
+
+
+        
+  
+
+Backward Compatibility
+======================
+
+For backward compatibility, 
+
+1. Deprecate the current scheme and add `submodels` on the side OR
+2. Keep the current classes which can internally use the new generalised models for long term support.
+
+eg:
+
+```
+SkyModelGeneral(spectral_model=):
+    if `spectral_model` is not None:
+        models["energy_true"] = 
+```
+    
+
+
+
+
+Questions
+=========
+
+1. What about 2D models? 
+
+
+Proposed PRs
+============
+
+1. Create generalised 1D definitions for gammapy spectral models
+2. Adapt `ModelBase` to and from dict?
+3. Create a generalised sky model with serialisation
+4. Modify MapEvaluator
