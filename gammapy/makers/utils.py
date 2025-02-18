@@ -432,9 +432,9 @@ def make_theta_squared_table(
 
     Parameters
     ----------
-    observations: `~gammapy.data.Observations`
+    observations: `~gammapy.data.Observation`
         List of observations.
-    theta_squared_axis : `~gammapy.maps.geom.MapAxis`
+    theta_squared_axis : `~gammapy.maps.MapAxis`
         Axis of edges of the theta2 bin used to compute the distribution.
     position : `~astropy.coordinates.SkyCoord`
         Position from which the on theta^2 distribution is computed.
