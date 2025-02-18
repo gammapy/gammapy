@@ -292,7 +292,6 @@ class PolygonPointsPixelRegion(PolygonPixelRegion):
         center = self.center.rotate(center, angle)
 
         return self.copy(vertices=vertices, center=center)
-    
 
 def make_orthogonal_rectangle_sky_regions(start_pos, end_pos, wcs, height, nbin=1):
     """Utility returning an array of regions to make orthogonal projections.
