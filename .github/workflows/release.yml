@@ -10,10 +10,11 @@ jobs:
   release-pypi:
     # if: github.repository_owner == 'gammapy'
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/publish.yml@v1
-    targets: |
-      - linux
-      - macos
-      - windows
+    with:
+      targets: |
+        - linux
+        - macos
+        - windows
     secrets:
       pypi_token: ${{ secrets.PYPI_TOKEN }}
 
