@@ -4,11 +4,10 @@ on:
   push:
     tags-ignore:
       - 'v*.dev'
-  pull_request:
 
 jobs:
   release-pypi:
-    # if: github.repository_owner == 'gammapy'
+    if: github.repository_owner == 'gammapy'
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/publish.yml@v1
     with:
       targets: |
