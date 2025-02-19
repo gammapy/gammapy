@@ -143,8 +143,12 @@ def regions_to_compound_region(regions):
     return region_union
 
 def get_centroid(vertices):
-    """Compute centroid of a polygon.
+    """Compute centroid of a polygon. Implicitly assumes a flat
+    cartesian projection, will probably break for very large polygons.
     
+    Code comes from:
+    https://stackoverflow.com/questions/75699024/finding-the-centroid-of-a-polygon-in-python
+
     Parameters
     ----------
     vertices : `~astropy.coordinates.SkyCoord`
@@ -156,8 +160,8 @@ def get_centroid(vertices):
         Centroid of the polygon.
     """
     polygon = []
-    for i in range(len(vertices)):
-        polygon.append((vertices[i].ra.degree, vertices[i].dec.degree))
+    for vertex in vertices:
+        polygon.append((vertex.ra.degree, vertex.dec.degree))
     polygon = np.array(polygon)
 
     # Same polygon, but with vertices cycled around. Now the polygon
@@ -262,14 +266,11 @@ class PolygonPointsPixelRegion(PolygonPixelRegion):
 
         """
         vertices_sky = wcs.pixel_to_world(self.vertices.x, self.vertices.y)
-        #center = None
-        #if self.center is not None:
-        #    center = wcs.pixel_to_world(self.center.x, self.center.y)
-
+       
         return PolygonPointsSkyRegion(vertices=vertices_sky, meta=self.meta.copy(), 
                                       visual=self.visual.copy())
 
-    def rotate(self, angle):
+    def rotate(self, center, angle):
         """
         Rotate the region.
 
@@ -287,7 +288,6 @@ class PolygonPointsPixelRegion(PolygonPixelRegion):
         region : `PolygonPixelRegion`
             The rotated region (which is an independent copy).
         """
-        center = self.center - self.origin
         vertices = self.vertices.rotate(center, angle)
         center = self.center.rotate(center, angle)
 
