@@ -12,7 +12,8 @@ jobs:
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/publish.yml@v1
     with:
       targets: |
-        - cp3*-linux*
+        - cp3*-manylinux_x86_64*
+        - cp3*-manylinux_aarch64*
         - cp3*-macosx*
         - cp3*-win_amd64*
     secrets:
