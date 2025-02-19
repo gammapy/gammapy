@@ -27,7 +27,7 @@ class ASmoothMapEstimator(Estimator):
 
     Achieves a roughly constant sqrt(TS) of features across the whole image.
 
-    Algorithm based on https://ui.adsabs.harvard.edu/abs/2006MNRAS.368...65E .
+    Algorithm based on [1]_.
 
     The algorithm was slightly adapted to also allow Li & Ma  to estimate the
     sqrt(TS) of a feature in the image.
@@ -60,6 +60,11 @@ class ASmoothMapEstimator(Estimator):
     >>> scales = u.Quantity(np.arange(0.1, 1, 0.1), unit="deg")
     >>> smooth = ASmoothMapEstimator(threshold=3, scales=scales, energy_edges=[1, 10] * u.TeV)
     >>> images = smooth.run(dataset)
+
+    References
+    ----------
+    .. [1] `Ebeling et al. (2006), "ASMOOTH: a simple and efficient algorithm for adaptive kernel smoothing of
+      two-dimensional imaging data" <https://ui.adsabs.harvard.edu/abs/2006MNRAS.368…65E>`_
     """
 
     tag = "ASmoothMapEstimator"

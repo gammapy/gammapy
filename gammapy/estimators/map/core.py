@@ -113,12 +113,12 @@ class FluxMaps:
     It contains a set of `~gammapy.maps.Map` objects that store the estimated
     flux as a function of energy as well as associated quantities (typically
     errors, upper limits, delta TS and possibly raw quantities such counts,
-    excesses etc). It also contains a reference model to convert the flux
+    excesses etc.). It also contains a reference model to convert the flux
     values in different formats. Usually, this should be the model used to
     produce the flux map.
 
-    The associated map geometry can use a `RegionGeom` to store the equivalent
-    of flux points, or a `WcsGeom`/`HpxGeom` to store an energy dependent flux map.
+    The associated map geometry can use a `~gammapy.maps.RegionGeom` to store the equivalent
+    of flux points, or a `~gammapy.maps.WcsGeom`/`~gammapy.maps.HpxGeom` to store an energy dependent flux map.
 
     The container relies internally on the 'Likelihood' SED type defined in
     :ref:`gadf:flux-points` and offers convenience properties to convert to
