@@ -41,6 +41,8 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
         Number of sigma to use for asymmetric error computation. Default is 1.
     n_sigma_ul : int
         Number of sigma to use for upper limit computation. Default is 2.
+    n_sigma_sensitivity : int
+        Sigma to use for sensitivity computation. Default is 5.
     selection_optional : list of str, optional
         Which additional quantities to estimate. Available options are:
 
@@ -48,6 +50,7 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
             * "errn-errp": estimate asymmetric errors on flux.
             * "ul": estimate upper limits.
             * "scan": estimate fit statistic profiles.
+            * "sensitivity": estimate sensitivity for a given significance.
 
         Default is None so the optional steps are not executed.
     energy_edges : list of `~astropy.units.Quantity`, optional
@@ -228,5 +231,8 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
         if "scan" in self.selection_optional:
             norm_scan = self.norm.copy().scan_values
             result.update({"norm_scan": norm_scan, "stat_scan": np.nan * norm_scan})
+
+        if "sensitivity" in self.selection_optional:
+            result.update({"norm_sensitivity": np.nan})
 
         return result

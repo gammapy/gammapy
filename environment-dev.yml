@@ -45,6 +45,7 @@ dependencies:
   - naima
   - pandas
   - reproject
+  - ultranest
   # dev dependencies
   - black=22.6.0
   - codespell
