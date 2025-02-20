@@ -405,7 +405,7 @@ class RegionNDMap(Map):
             idx[idx_axis] = slice(None)
             yield tuple(idx), self.quantity[tuple(idx)]
 
-    def _resample_by_idx(self, idx, weights=None, preserve_counts=False):
+    def _resample_by_idx(self, idx, weights=None, preserve_counts=False, smooth=False):
         # inherited docstring
         # TODO: too complex, simplify!
         idx = pix_tuple_to_idx(idx)
