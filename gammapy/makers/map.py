@@ -40,6 +40,10 @@ class MapDatasetMaker(Maker):
         Pad one bin in offset for 2d background map.
         This avoids extrapolation at edges and use the nearest value.
         Default is True.
+    fov_rotation_step : `~astropy.units.Quantity`, optional
+        Maximum error on the rotation angle between AltAz and RaDec frames during background evaluation.
+        Used only when the Background IRF has an AltAz alignement.
+        Default is 1.0 deg.
 
     Examples
     --------
@@ -108,10 +112,12 @@ class MapDatasetMaker(Maker):
         background_oversampling=None,
         background_interp_missing_data=True,
         background_pad_offset=True,
+        fov_rotation_step=1.0 * u.deg,
     ):
         self.background_oversampling = background_oversampling
         self.background_interp_missing_data = background_interp_missing_data
         self.background_pad_offset = background_pad_offset
+        self.fov_rotation_step = fov_rotation_step
         if selection is None:
             selection = self.available_selection
 
@@ -243,6 +249,7 @@ class MapDatasetMaker(Maker):
             ontime=observation.observation_time_duration,
             bkg=bkg,
             geom=geom,
+            fov_rotation_step=self.fov_rotation_step,
             oversampling=self.background_oversampling,
             use_region_center=use_region_center,
             obstime=observation.tmid,
