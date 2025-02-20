@@ -1606,6 +1606,23 @@ class SuperExpCutoffPowerLaw4FGLDR3SpectralModel(SpectralModel):
         cutoff[mask] = (energy[mask] / reference) ** power
         return pwl * cutoff
 
+    @property
+    def e_peak(self):
+        r"""Spectral energy distribution peak energy (`~astropy.units.Quantity`).
+
+        This is the peak in E^2 x dN/dE and is given by Eq. 21 of https://iopscience.iop.org/article/10.3847/1538-4357/acee67:
+
+        .. math::
+            E_{Peak} = E_{0} \left[1+\frac{\Gamma_2}{a}(2 - \Gamma_1)\right]^{\frac{1}{\Gamma_2}}
+        """
+        reference = self.reference.quantity
+        index_1 = self.index_1.quantity
+        index_2 = self.index_2.quantity
+        expfactor = self.expfactor.quantity
+        if ((index_1 > 2) and (index_2 > 0)) or (expfactor <= 0) or (index_2 <= 0):
+            return np.nan * reference.unit
+        return reference * (1 + (index_2 / expfactor) * (2 - index_1)) ** (1 / index_2)
+
 
 class LogParabolaSpectralModel(SpectralModel):
     r"""Spectral log parabola model.
