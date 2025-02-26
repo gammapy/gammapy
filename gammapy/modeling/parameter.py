@@ -429,8 +429,8 @@ class Parameter:
     def check_limits(self):
         """Emit a warning or error if value is outside the minimum/maximum range."""
         if not self.frozen:
-            if (~np.isnan(self.min) and (self.value <= self.min)) or (
-                ~np.isnan(self.max) and (self.value >= self.max)
+            if (~np.isnan(self.min) and (self.value < self.min)) or (
+                ~np.isnan(self.max) and (self.value > self.max)
             ):
                 log.warning(
                     f"Value {self.value} is outside bounds [{self.min}, {self.max}]"

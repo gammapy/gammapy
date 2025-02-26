@@ -622,7 +622,7 @@ class GaussianSpatialModel(SpatialModel):
     lat_0 = Parameter("lat_0", "0 deg", min=-90, max=90)
     sigma = Parameter("sigma", "1 deg", min=0)
     e = Parameter("e", 0, min=0, max=1, frozen=True)
-    phi = Parameter("phi", "0 deg", frozen=True)
+    phi = Parameter("phi", "0 deg", frozen=True, min=0.0, max=180.0)
 
     @property
     def evaluation_bin_size_min(self):
@@ -752,7 +752,7 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
     r_0 = Parameter("r_0", "1 deg")
     eta = Parameter("eta", 0.5, min=0.01, max=1.0)
     e = Parameter("e", 0.0, min=0.0, max=1.0, frozen=True)
-    phi = Parameter("phi", "0 deg", frozen=True)
+    phi = Parameter("phi", "0 deg", frozen=True, min=0.0, max=180.0)
 
     @staticmethod
     def evaluate(lon, lat, lon_0, lat_0, r_0, eta, e, phi):
@@ -879,7 +879,7 @@ class DiskSpatialModel(SpatialModel):
     lat_0 = Parameter("lat_0", "0 deg", min=-90, max=90)
     r_0 = Parameter("r_0", "1 deg", min=0)
     e = Parameter("e", 0, min=0, max=1, frozen=True)
-    phi = Parameter("phi", "0 deg", frozen=True)
+    phi = Parameter("phi", "0 deg", frozen=True, min=0.0, max=180.0)
     edge_width = Parameter("edge_width", value=0.01, min=0, max=1, frozen=True)
 
     @property
