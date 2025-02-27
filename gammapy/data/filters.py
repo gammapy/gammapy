@@ -45,9 +45,10 @@ class ObservationFilter:
 
     EVENT_FILTER_TYPES = dict(sky_region="select_region", custom="select_parameter")
 
-    def __init__(self, time_filter=None, event_filters=None):
+    def __init__(self, time_filter=None, event_filters=None, inverted_time=False):
         self.time_filter = time_filter
         self.event_filters = event_filters or []
+        self.inverted_time = inverted_time
 
     def _repr_html_(self):
         try:
@@ -67,6 +68,9 @@ class ObservationFilter:
         ----------
         events : `~gammapy.data.EventListBase`
             Event list to which the filters will be applied.
+        inverted_time : bool, optional
+            Invert time selection: keep all entries outside the time range. Default is False.
+
 
         Returns
         -------
@@ -102,7 +106,7 @@ class ObservationFilter:
         Calls the `select_time` method of the data object.
         """
         if self.time_filter:
-            return data.select_time(self.time_filter)
+            return data.select_time(self.time_filter, self.inverted_time)
         else:
             return data
 
