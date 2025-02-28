@@ -596,7 +596,7 @@ class WcsGeom(Geom):
         coord : tuple
             Map pixel coordinate tuple.
         """
-        return self._pix(idx=idx, mode=mode)
+        return self._get_pix(idx=idx, mode=mode)
 
     def _get_pix(self, idx=None, mode="center"):
         """Get map pixel coordinates from the geometry.
