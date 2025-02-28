@@ -114,8 +114,8 @@ class WcsGeom(Geom):
         self._crpix = crpix
 
         # define cached methods
-        self.get_coord = lru_cache()(self.get_coord)
-        self.get_pix = lru_cache()(self.get_pix)
+        self.get_coord = lru_cache()(self._get_coord)
+        self.get_pix = lru_cache()(self._get_pix)
 
     def __setstate__(self, state):
         for key, value in state.items():
@@ -596,6 +596,22 @@ class WcsGeom(Geom):
         coord : tuple
             Map pixel coordinate tuple.
         """
+        return self._pix(idx=idx, mode=mode)
+
+    def _get_pix(self, idx=None, mode="center"):
+        """Get map pixel coordinates from the geometry.
+
+        Parameters
+        ----------
+        mode : {'center', 'edges'}, optional
+            Get center or edge pix coordinates for the spatial axes.
+            Default is "center".
+
+        Returns
+        -------
+        coord : tuple
+            Map pixel coordinate tuple.
+        """
         pix = self._get_pix_all(idx=idx, mode=mode)
         coords = self.pix_to_coord(pix)
         m = np.isfinite(coords[0])
@@ -604,6 +620,33 @@ class WcsGeom(Geom):
         return pix
 
     def get_coord(
+        self, idx=None, mode="center", frame=None, sparse=False, axis_name=None
+    ):
+        """Get map coordinates from the geometry.
+
+        Parameters
+        ----------
+        mode : {'center', 'edges'}, optional
+            Get center or edge coordinates for the spatial axes.
+            Default is "center".
+        frame : str or `~astropy.coordinates.Frame`, optional
+            Coordinate frame. Default is None.
+        sparse : bool, optional
+            Compute sparse coordinates. Default is False.
+        axis_name : str, optional
+            If mode = "edges", the edges will be returned for this axis.
+             Default is None.
+
+        Returns
+        -------
+        coord : `~MapCoord`
+            Map coordinate object.
+        """
+        return self._get_coord(
+            idx=idx, mode=mode, frame=frame, sparse=sparse, axis_name=axis_name
+        )
+
+    def _get_coord(
         self, idx=None, mode="center", frame=None, sparse=False, axis_name=None
     ):
         """Get map coordinates from the geometry.
