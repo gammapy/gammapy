@@ -852,7 +852,16 @@ class RegionGeom(Geom):
             kwargs.setdefault("facecolor", "None")
             kwargs.setdefault("edgecolor", "tab:blue")
             kwargs_point.setdefault("marker", "*")
-            kwargs_point.setdefault("color", "tab:blue")
+
+            for key, value in kwargs.items():
+                key_point = ARTIST_TO_LINE_PROPERTIES.get(key, None)
+                if key_point and key_point not in kwargs_point:
+                    kwargs_point[key_point] = value
+                    
+            if "color" in kwargs:
+                kwargs_point.setdefault("color", kwargs["color"])
+            if "color" in kwargs_point:
+                kwargs_point["markeredgecolor"] = kwargs_point["color"]
 
             for region in compound_region_to_regions(self.region):
                 region_pix = region.to_pixel(wcs=ax.wcs)
