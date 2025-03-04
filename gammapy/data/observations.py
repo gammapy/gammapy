@@ -6,7 +6,6 @@ import inspect
 import itertools
 import logging
 import warnings
-from itertools import zip_longest
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
@@ -14,7 +13,6 @@ from astropy.io import fits
 from astropy.time import Time
 from astropy.units import Quantity
 from astropy.utils import lazyproperty
-import matplotlib.pyplot as plt
 from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.utils.fits import LazyFitsData, earth_location_to_dict
 from gammapy.utils.metadata import CreatorMetaData, TargetMetaData, TimeInfoMetaData
@@ -98,6 +96,19 @@ class Observation:
         self._location = location  # this is part of the meta or is it data?
         self.obs_filter = obs_filter or ObservationFilter()
         self._meta = meta
+        self._plotter = None
+
+    @property
+    def plotter(self):
+        """Access the plotter for this Observation.
+
+        See `~gammapy.data.plotters.ObservationPlotter` for available plotting methods.
+        """
+        if self._plotter is None:
+            from .plotters import ObservationPlotter
+
+            self._plotter = ObservationPlotter(self)
+        return self._plotter
 
     def _repr_html_(self):
         try:
@@ -425,55 +436,7 @@ class Observation:
         figsize : tuple, optional
             Figure size. Default is (15, 10).
         """
-        plottable_hds = ["events", "aeff", "psf", "edisp", "bkg", "rad_max"]
-
-        plot_hdus = list(set(plottable_hds) & set(self.available_hdus))
-        plot_hdus.sort()
-
-        n_irfs = len(plot_hdus)
-        nrows = n_irfs // 2
-        ncols = 2 + n_irfs % 2
-
-        fig, axes = plt.subplots(
-            nrows=nrows,
-            ncols=ncols,
-            figsize=figsize,
-            gridspec_kw={"wspace": 0.3, "hspace": 0.3},
-        )
-
-        for idx, (ax, name) in enumerate(zip_longest(axes.flat, plot_hdus)):
-            if name == "aeff":
-                self.aeff.plot(ax=ax)
-                ax.set_title("Effective area")
-
-            if name == "bkg":
-                bkg = self.bkg
-                if not bkg.has_offset_axis:
-                    bkg = bkg.to_2d()
-                bkg.plot(ax=ax)
-                ax.set_title("Background rate")
-
-            if name == "psf":
-                self.psf.plot_containment_radius_vs_energy(ax=ax)
-                ax.set_title("Point spread function")
-
-            if name == "edisp":
-                self.edisp.plot_bias(ax=ax, add_cbar=True)
-                ax.set_title("Energy dispersion")
-
-            if name == "rad_max":
-                self.rad_max.plot_rad_max_vs_energy(ax=ax)
-                ax.set_title("Rad max")
-
-            if name == "events":
-                m = self.events._counts_image(allsky=False)
-                ax.remove()
-                ax = fig.add_subplot(nrows, ncols, idx + 1, projection=m.geom.wcs)
-                m.plot(ax=ax, stretch="sqrt", vmin=0, add_cbar=True)
-                ax.set_title("Events")
-
-            if name is None:
-                ax.set_visible(False)
+        self.plotter.peek(figsize)
 
     def select_time(self, time_interval):
         """Select a time interval of the observation.

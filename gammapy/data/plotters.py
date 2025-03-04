@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import matplotlib.pyplot as plt  # This could be done lazily in each method to limit import time when no plot is performed
+from itertools import zip_longest
 import numpy as np
 import astropy.units as u
 from astropy.visualization import quantity_support
@@ -259,3 +260,66 @@ class EventListPlotter:
             ax = plt.gca()
         m = self.event_list._counts_image(allsky=allsky)
         m.plot(ax=ax, stretch="sqrt")
+
+
+class ObservationPlotter:
+    def __init__(self, observation):
+        self.observation = observation
+
+    def peek(self, figsize=(15, 10)):
+        """Quick-look plots in a few panels.
+
+        Parameters
+        ----------
+        figsize : tuple, optional
+            Figure size. Default is (15, 10).
+        """
+        plottable_hds = ["events", "aeff", "psf", "edisp", "bkg", "rad_max"]
+
+        plot_hdus = list(set(plottable_hds) & set(self.observation.available_hdus))
+        plot_hdus.sort()
+
+        n_irfs = len(plot_hdus)
+        nrows = n_irfs // 2
+        ncols = 2 + n_irfs % 2
+
+        fig, axes = plt.subplots(
+            nrows=nrows,
+            ncols=ncols,
+            figsize=figsize,
+            gridspec_kw={"wspace": 0.3, "hspace": 0.3},
+        )
+
+        for idx, (ax, name) in enumerate(zip_longest(axes.flat, plot_hdus)):
+            if name == "aeff":
+                self.observation.aeff.plot(ax=ax)
+                ax.set_title("Effective area")
+
+            if name == "bkg":
+                bkg = self.observation.bkg
+                if not bkg.has_offset_axis:
+                    bkg = bkg.to_2d()
+                bkg.plot(ax=ax)
+                ax.set_title("Background rate")
+
+            if name == "psf":
+                self.observation.psf.plot_containment_radius_vs_energy(ax=ax)
+                ax.set_title("Point spread function")
+
+            if name == "edisp":
+                self.observation.edisp.plot_bias(ax=ax, add_cbar=True)
+                ax.set_title("Energy dispersion")
+
+            if name == "rad_max":
+                self.observation.rad_max.plot_rad_max_vs_energy(ax=ax)
+                ax.set_title("Rad max")
+
+            if name == "events":
+                m = self.observation.events._counts_image(allsky=False)
+                ax.remove()
+                ax = fig.add_subplot(nrows, ncols, idx + 1, projection=m.geom.wcs)
+                m.plot(ax=ax, stretch="sqrt", vmin=0, add_cbar=True)
+                ax.set_title("Events")
+
+            if name is None:
+                ax.set_visible(False)
