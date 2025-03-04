@@ -12,6 +12,7 @@ TODO: before Gammapy v1.0, discuss what to do about ``gammapy.utils.regions``.
 Options: keep as-is, hide from the docs, or to remove it completely
 (if the functionality is available in ``astropy-regions`` directly.
 """
+
 import operator
 
 import numpy as np
@@ -27,8 +28,8 @@ from regions import (
     Regions,
 )
 from regions._utils import pixel_scale_angle_at_skycoord
-from regions.core import BoundingBox
-from regions.core.attributes import RegionAttr
+from regions.core import RegionBoundingBox
+from regions.core.attributes import RegionAttribute
 from scipy.optimize import Bounds, minimize
 
 __all__ = [
@@ -284,7 +285,7 @@ def region_circle_to_ellipse(region):
 # This code is only needed because regions forbids array valued attributes
 
 
-class ArrayQuantityLength(RegionAttr):
+class ArrayQuantityLength(RegionAttribute):
     """
     Descriptor class for `~regions.SkyRegion`, which takes a scalar
     `~astropy.units.Quantity` object.
@@ -295,7 +296,7 @@ class ArrayQuantityLength(RegionAttr):
             raise ValueError(f"The {self.name} must be an astropy  `Quantity object`")
 
 
-class ArrayLength(RegionAttr):
+class ArrayLength(RegionAttribute):
     """
     Descriptor class for `~regions.PixelRegion`, which takes a scalar
     python/numpy number.
@@ -323,10 +324,15 @@ class CirclePixelRegionArray(CirclePixelRegion):
 
     @property
     def bounding_box(self):
-        """Bounding box (`~regions.BoundingBox`)."""
+        """Bounding box (`~regions.RegionBoundingBox`)."""
         radius = max(self.radius)
         xmin = self.center.x - radius
         xmax = self.center.x + radius
         ymin = self.center.y - radius
         ymax = self.center.y + radius
-        return BoundingBox.from_float(xmin, xmax, ymin, ymax)
+        return RegionBoundingBox.from_float(xmin, xmax, ymin, ymax)
+
+    @property
+    def area(self):
+        # Extra axes to match dimensions from a RegionGeom
+        return super().area[:, np.newaxis, np.newaxis]
