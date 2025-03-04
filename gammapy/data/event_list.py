@@ -10,10 +10,7 @@ from astropy.coordinates import AltAz, Angle, SkyCoord, angular_separation
 from astropy.io import fits
 from astropy.table import Table
 from astropy.table import vstack as vstack_tables
-from astropy.visualization import quantity_support
-import matplotlib.pyplot as plt
 from gammapy.maps import MapAxis, MapCoord, RegionGeom, WcsNDMap
-from gammapy.maps.axes import UNIT_STRING_FORMAT
 from gammapy.utils.fits import earth_location_from_dict
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
@@ -92,6 +89,19 @@ class EventList:
     def __init__(self, table, meta=None):
         self.table = table
         self.meta = meta
+        self._plotter = None  # Lazy instantiation
+
+    @property
+    def plotter(self):
+        """Access the plotter for this EventList.
+
+        See `EventListPlotter` for available plotting methods.
+        """
+        if self._plotter is None:
+            from .plotters import EventListPlotter
+
+            self._plotter = EventListPlotter(self)
+        return self._plotter
 
     def _repr_html_(self):
         try:
@@ -418,21 +428,7 @@ class EventList:
         ax : `~matplotlib.axes.Axes`
             Matplotlib axes.
         """
-        ax = plt.gca() if ax is None else ax
-
-        energy_axis = self._default_plot_energy_axis
-
-        kwargs.setdefault("log", True)
-        kwargs.setdefault("histtype", "step")
-        kwargs.setdefault("bins", energy_axis.edges)
-
-        with quantity_support():
-            ax.hist(self.energy, **kwargs)
-
-        energy_axis.format_plot_xaxis(ax=ax)
-        ax.set_ylabel("Counts")
-        ax.set_yscale("log")
-        return ax
+        return self.plotter.plot_energy(ax, **kwargs)
 
     def plot_time(self, ax=None, **kwargs):
         """Plot an event rate time curve.
@@ -449,25 +445,7 @@ class EventList:
         ax : `~matplotlib.axes.Axes`
             Matplotlib axes.
         """
-        ax = plt.gca() if ax is None else ax
-
-        # Note the events are not necessarily in time order
-        time = self.table["TIME"]
-        time = time - np.min(time)
-
-        ax.set_xlabel(f"Time [{u.s.to_string(UNIT_STRING_FORMAT)}]")
-        ax.set_ylabel("Counts")
-        y, x_edges = np.histogram(time, bins=20)
-
-        xerr = np.diff(x_edges) / 2
-        x = x_edges[:-1] + xerr
-        yerr = np.sqrt(y)
-
-        kwargs.setdefault("fmt", "none")
-
-        ax.errorbar(x=x, y=y, xerr=xerr, yerr=yerr, **kwargs)
-
-        return ax
+        return self.plotter.plot_time(ax, **kwargs)
 
     def plot_offset2_distribution(
         self, ax=None, center=None, max_percentile=98, **kwargs
@@ -531,24 +509,9 @@ class EventList:
         Note how we passed the ``bins`` option of `matplotlib.pyplot.hist` to control
         the histogram binning, in this case 30 bins ranging from 0 to (0.3 deg)^2.
         """
-        ax = plt.gca() if ax is None else ax
-
-        if center is None:
-            center = self._plot_center
-
-        offset2 = center.separation(self.radec) ** 2
-        max2 = np.percentile(offset2, q=max_percentile)
-
-        kwargs.setdefault("histtype", "step")
-        kwargs.setdefault("bins", 30)
-        kwargs.setdefault("range", (0.0, max2.value))
-
-        with quantity_support():
-            ax.hist(offset2, **kwargs)
-
-        ax.set_xlabel(rf"Offset$^2$ [{ax.xaxis.units.to_string(UNIT_STRING_FORMAT)}]")
-        ax.set_ylabel("Counts")
-        return ax
+        return self.plotter.plot_offset2_distribution(
+            ax, center, max_percentile, **kwargs
+        )
 
     def plot_energy_offset(self, ax=None, center=None, **kwargs):
         """Plot counts histogram with energy and offset axes.
@@ -567,34 +530,7 @@ class EventList:
         ax : `~matplotlib.pyplot.Axis`
             Plot axis.
         """
-        from matplotlib.colors import LogNorm
-
-        ax = plt.gca() if ax is None else ax
-
-        if center is None:
-            center = self._plot_center
-
-        energy_axis = self._default_plot_energy_axis
-
-        offset = center.separation(self.radec)
-        offset_axis = MapAxis.from_bounds(
-            0 * u.deg, offset.max(), nbin=30, name="offset"
-        )
-
-        counts = np.histogram2d(
-            x=self.energy,
-            y=offset,
-            bins=(energy_axis.edges, offset_axis.edges),
-        )[0]
-
-        kwargs.setdefault("norm", LogNorm())
-
-        with quantity_support():
-            ax.pcolormesh(energy_axis.edges, offset_axis.edges, counts.T, **kwargs)
-
-        energy_axis.format_plot_xaxis(ax=ax)
-        offset_axis.format_plot_yaxis(ax=ax)
-        return ax
+        return self.plotter.plot_energy_offset(ax, center, **kwargs)
 
     def check(self, checks="all"):
         """Run checks.
@@ -813,38 +749,19 @@ class EventList:
         allsky : bool, optional
             Whether to look at the events all-sky. Default is False.
         """
-        import matplotlib.gridspec as gridspec
+        self.plotter.peek(allsky)
 
-        if allsky:
-            gs = gridspec.GridSpec(nrows=2, ncols=2)
-            fig = plt.figure(figsize=(8, 8))
-        else:
-            gs = gridspec.GridSpec(nrows=2, ncols=3)
-            fig = plt.figure(figsize=(12, 8))
+    def plot_image(self, ax=None, allsky=False):
+        """Quick look counts map sky plot.
 
-        # energy plot
-        ax_energy = fig.add_subplot(gs[1, 0])
-        self.plot_energy(ax=ax_energy)
-
-        # offset plots
-        if not allsky:
-            ax_offset = fig.add_subplot(gs[0, 1])
-            self.plot_offset2_distribution(ax=ax_offset)
-            ax_energy_offset = fig.add_subplot(gs[0, 2])
-            self.plot_energy_offset(ax=ax_energy_offset)
-
-        # time plot
-        ax_time = fig.add_subplot(gs[1, 1])
-        self.plot_time(ax=ax_time)
-
-        # image plot
-        m = self._counts_image(allsky=allsky)
-        if allsky:
-            ax_image = fig.add_subplot(gs[0, :], projection=m.geom.wcs)
-        else:
-            ax_image = fig.add_subplot(gs[0, 0], projection=m.geom.wcs)
-        m.plot(ax=ax_image, stretch="sqrt", vmin=0)
-        plt.subplots_adjust(wspace=0.3)
+        Parameters
+        ----------
+        ax : `~matplotlib.pyplot.Axes`, optional
+            Matplotlib axes.
+        allsky :  bool, optional
+            Whether to plot on an all sky geom. Default is False.
+        """
+        return self.plotter.plot_image(ax, allsky)
 
     @property
     def _plot_center(self):
@@ -883,21 +800,6 @@ class EventList:
         m.fill_by_coord(self.radec)
         m = m.smooth(width=0.5)
         return m
-
-    def plot_image(self, ax=None, allsky=False):
-        """Quick look counts map sky plot.
-
-        Parameters
-        ----------
-        ax : `~matplotlib.pyplot.Axes`, optional
-            Matplotlib axes.
-        allsky :  bool, optional
-            Whether to plot on an all sky geom. Default is False.
-        """
-        if ax is None:
-            ax = plt.gca()
-        m = self._counts_image(allsky=allsky)
-        m.plot(ax=ax, stretch="sqrt")
 
     def copy(self):
         """Copy event list (`EventList`)."""
