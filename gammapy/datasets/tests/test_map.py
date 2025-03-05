@@ -17,7 +17,6 @@ from gammapy.datasets import (
     Datasets,
     MapDataset,
     MapDatasetOnOff,
-    MapDatasetWeighted,
     create_empty_map_dataset_from_irfs,
     create_map_dataset_from_observation,
 )
@@ -230,7 +229,7 @@ def get_map_dataset(
     models = FoVBackgroundModel(dataset_name=name)
 
     if weighted:
-        return MapDatasetWeighted(
+        return MapDataset(
             models=models,
             exposure=exposure,
             background=background,
@@ -238,6 +237,7 @@ def get_map_dataset(
             edisp=edisp,
             mask_fit=mask_fit,
             name=name,
+            stat_type="cash_weighted",
             **kwargs,
         )
     else:

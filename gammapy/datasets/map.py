@@ -15,11 +15,7 @@ from gammapy.modeling.models import DatasetModels, FoVBackgroundModel, Models
 from gammapy.stats import (
     CashCountsStatistic,
     WStatCountsStatistic,
-    cash,
-    cash_sum_cython,
-    weighted_cash_sum_cython,
     get_wstat_mu_bkg,
-    FIT_STATISTICS_REGISTRY,
 )
 from gammapy.utils.fits import HDULocation, LazyFitsData
 from gammapy.utils.random import get_random_state
@@ -33,7 +29,6 @@ from .utils import get_axes
 __all__ = [
     "MapDataset",
     "MapDatasetOnOff",
-    "MapDatasetWeighted",
     "create_empty_map_dataset_from_irfs",
     "create_map_dataset_geoms",
     "create_map_dataset_from_observation",
@@ -491,7 +486,6 @@ class MapDataset(Dataset):
     MapDatasetOnOff, SpectrumDataset, FluxPointsDataset.
     """
 
-    stat_type = "cash"
     tag = "MapDataset"
     counts = LazyFitsData(cache=True)
     exposure = LazyFitsData(cache=True)
@@ -528,6 +522,7 @@ class MapDataset(Dataset):
         meta_table=None,
         name=None,
         meta=None,
+        stat_type="cash",
     ):
         self._name = make_name(name)
         self._evaluators = {}
@@ -559,7 +554,7 @@ class MapDataset(Dataset):
         self.meta_table = meta_table
         self.meta = meta
 
-        self._fit_statistic = FIT_STATISTICS_REGISTRY[self.stat_type]
+        self.stat_type = stat_type
 
     @property
     def _psf_kernel(self):
@@ -1464,32 +1459,6 @@ class MapDataset(Dataset):
 
         return ax_spatial, ax_spectral
 
-    def stat_sum(self):
-        """Total statistic function value given the current model parameters and priors."""
-        prior_stat_sum = 0.0
-        if self.models is not None:
-            prior_stat_sum = self.models.parameters.prior_stat_sum()
-
-        counts, npred = self.counts.data.astype(float), self.npred().data
-
-        if self.mask is not None:
-            mask = ~(self.mask.data == False)  # noqa
-            counts = counts[mask]
-            npred = npred[mask]
-            if self.mask.data.dtype == bool or self.stat_type == "cash":
-                cash_sum = cash_sum_cython(counts, npred)
-            elif self.stat_type == "cash_weighted":
-                weight = self.mask.data[mask]
-                cash_sum = weighted_cash_sum_cython(counts, npred, weight)
-            else:
-                raise ValueError(
-                    f"'stat_type' must be a 'cash' or `cash_weighted`."
-                    f", got `{self.stat_type}` instead."
-                )
-        else:
-            cash_sum = cash_sum_cython(counts.ravel(), npred.ravel())
-        return cash_sum + prior_stat_sum
-
     def _to_asimov_dataset(self):
         """Create Asimov dataset from the current models."""
 
@@ -2385,9 +2354,9 @@ class MapDataset(Dataset):
         plot_mask(ax=axes[3], mask=self.mask_safe_image, hatches=["///"], colors="w")
 
 
-class MapDatasetWeighted(MapDataset):
-    stat_type = "cash_weighted"
-    tag = "MapDatasetWeighted"
+# class MapDatasetWeighted(MapDataset):
+#    stat_type = "cash_weighted"
+#    tag = "MapDatasetWeighted"
 
 
 class MapDatasetOnOff(MapDataset):
@@ -2440,7 +2409,6 @@ class MapDatasetOnOff(MapDataset):
 
     """
 
-    stat_type = "wstat"
     tag = "MapDatasetOnOff"
 
     def __init__(
@@ -2459,6 +2427,7 @@ class MapDatasetOnOff(MapDataset):
         gti=None,
         meta_table=None,
         meta=None,
+        stat_type="wstat",
     ):
         self._name = make_name(name)
         self._evaluators = {}
@@ -2480,7 +2449,7 @@ class MapDatasetOnOff(MapDataset):
         else:
             self._meta = meta
 
-        self._fit_statistic = FIT_STATISTICS_REGISTRY[self.stat_type]
+        self.stat_type = stat_type
 
     def __str__(self):
         str_ = super().__str__()

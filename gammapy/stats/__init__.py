@@ -13,6 +13,7 @@ from .fit_statistics import (
     Chi2AsymmetricErrorFitStatistic,
     ProfileFitStatistic,
     WStatFitStatistic,
+    WeightedCashFitStatistic,
 )
 from .fit_statistics_cython import (
     weighted_cash_sum_cython,
@@ -36,6 +37,7 @@ FIT_STATISTICS_REGISTRY = {
     "chi2": Chi2FitStatistic,
     "distrib": Chi2AsymmetricErrorFitStatistic,
     "profile": ProfileFitStatistic,
+    "cash_weighted": WeightedCashFitStatistic,
 }
 
 __all__ = [

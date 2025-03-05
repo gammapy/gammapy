@@ -10,6 +10,7 @@ from astropy.table import Table, vstack
 from gammapy.data import GTI
 from gammapy.modeling.models import DatasetModels, Models
 from gammapy.utils.scripts import make_name, make_path, read_yaml, to_yaml, write_yaml
+from gammapy.stats import FIT_STATISTICS_REGISTRY
 
 log = logging.getLogger(__name__)
 
@@ -35,6 +36,17 @@ class Dataset(abc.ABC):
         "diff/model": "(data - model) / model",
         "diff/sqrt(model)": "(data - model) / sqrt(model)",
     }
+
+    @property
+    def stat_type(self):
+        """The Fit Statistic class used."""
+        return self._stat_type
+
+    @stat_type.setter
+    def stat_type(self, stat_type):
+        """Set the Fit Statistic."""
+        self._fit_statistic = FIT_STATISTICS_REGISTRY[stat_type]
+        self._stat_type = stat_type
 
     def _repr_html_(self):
         try:
@@ -79,14 +91,13 @@ class Dataset(abc.ABC):
         """Total statistic given the current model parameters without the priors."""
         return self._fit_statistic.stat_sum_dataset(self)
 
-#        if self.mask is not None:
-#            if isinstance(self.mask, np.ndarray):
-#                stat = stat[self.mask.astype(bool)]
-#            else:
-#                stat = stat[self.mask.data.astype(bool)]
-#        return np.sum(stat, dtype=np.float64)
+    #        if self.mask is not None:
+    #            if isinstance(self.mask, np.ndarray):
+    #                stat = stat[self.mask.astype(bool)]
+    #            else:
+    #                stat = stat[self.mask.data.astype(bool)]
+    #        return np.sum(stat, dtype=np.float64)
 
-    @abc.abstractmethod
     def stat_array(self):
         """Statistic array, one value per data point."""
         return self._fit_statistic.stat_array_dataset(self)

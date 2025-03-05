@@ -265,7 +265,7 @@ class SpectrumDataset(PlotMixin, MapDataset):
     For more information see :ref:`datasets`.
     """
 
-    stat_type = "cash"
+    #    stat_type = "cash"
     tag = "SpectrumDataset"
 
     def cutout(self, *args, **kwargs):
@@ -292,7 +292,6 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
     For more information see :ref:`datasets`.
     """
 
-    stat_type = "wstat"
     tag = "SpectrumDatasetOnOff"
 
     def cutout(self, *args, **kwargs):

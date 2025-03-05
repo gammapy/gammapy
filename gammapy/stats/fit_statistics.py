@@ -8,7 +8,12 @@ from abc import ABC
 import numpy as np
 from scipy.special import erfc
 from gammapy.maps import Map
-from gammapy.stats.fit_statistics_cython import TRUNCATION_VALUE, cash_sum_cython
+from gammapy.stats.fit_statistics_cython import (
+    TRUNCATION_VALUE,
+    cash_sum_cython,
+    weighted_cash_sum_cython,
+)
+
 
 __all__ = [
     "cash",
@@ -284,6 +289,33 @@ class CashFitStatistic(FitStatistic):
     def stat_array_dataset(cls, dataset):
         counts, npred = dataset.counts.data, dataset.npred().data
         return cash(n_on=counts, mu_on=npred)
+
+
+class WeightedCashFitStatistic(FitStatistic):
+    """Cash statistic class for Poisson with known background applying weights."""
+
+    @classmethod
+    def stat_sum_dataset(cls, dataset):
+        counts, npred = dataset.counts.data.astype(float), dataset.npred().data
+
+        if dataset.mask is not None:
+            mask = ~(dataset.mask.data == False)  # noqa
+            counts = counts[mask]
+            npred = npred[mask]
+
+            weights = dataset.mask.data[mask].astype("float")
+            return weighted_cash_sum_cython(counts, npred, weights)
+        else:
+            # No weights back to regular cash statistic
+            return cash_sum_cython(counts.ravel(), npred.ravel())
+
+    @classmethod
+    def stat_array_dataset(cls, dataset):
+        counts, npred = dataset.counts.data, dataset.npred().data
+        weights = 1.0
+        if dataset.mask is not None:
+            weights = dataset.mask.astype("float")
+        return cash(n_on=counts, mu_on=npred) * weights
 
 
 class WStatFitStatistic(FitStatistic):
