@@ -609,7 +609,7 @@ class GaussianSpatialModel(SpatialModel):
         Eccentricity of the Gaussian (:math:`0<= e<= 1`).
         Default is 0.
     phi : `~astropy.coordinates.Angle`
-        Rotation angle :math:`\phi`: of the major semiaxis (0<=phi<=180).
+        Rotation angle :math:`\phi`: of the major semiaxis (:math:`0 <= phi <= 180`).
         Increases counter-clockwise from the North direction.
         Default is 0 deg.
     frame : {"icrs", "galactic"}
@@ -739,7 +739,7 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
         Eccentricity (:math:`0<= e< =1`).
         Default is 0.
     phi : `~astropy.coordinates.Angle`
-        Rotation angle :math:`\phi`: of the major semiaxis (0<=phi<=180).
+        Rotation angle :math:`\phi`: of the major semiaxis (:math:`0<=phi<=180`).
         Increases counter-clockwise from the North direction.
         Default is 0 deg.
     frame : {"icrs", "galactic"}
@@ -862,7 +862,7 @@ class DiskSpatialModel(SpatialModel):
         Eccentricity of the ellipse (:math:`0<= e<= 1`).
         Default is 0.
     phi : `~astropy.coordinates.Angle`
-        Rotation angle :math:`\phi`: of the major semiaxis (0<=phi<=180).
+        Rotation angle :math:`\phi`: of the major semiaxis (:math:`0<=phi<=180`).
         Increases counter-clockwise from the North direction.
         Default is 0 deg.
     edge_width : float
