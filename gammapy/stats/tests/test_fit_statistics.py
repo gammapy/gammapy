@@ -352,9 +352,7 @@ def test_chi2_fit_statistic_with_mask(mock_fp_dataset):
 
 
 def test_chi2_fit_statistic_with_mask_false(mock_fp_dataset):
-    mask = [
-        False,
-    ] * 4
+    mask = [False, False, False, False]
     mock_fp_dataset.mask = np.array(mask)
     stat_sum = Chi2FitStatistic.stat_sum_dataset(mock_fp_dataset)
     assert stat_sum == 0
