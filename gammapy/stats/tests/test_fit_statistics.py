@@ -2,12 +2,12 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-import astropy.units as u
 from gammapy import stats
 from gammapy.stats.fit_statistics import (
     CashFitStatistic,
     WStatFitStatistic,
     Chi2FitStatistic,
+    Chi2AsymmetricErrorFitStatistic,
 )
 
 
@@ -179,10 +179,10 @@ def test_wstat_corner_cases():
 
 class MockDataset:
     @staticmethod
-    def create_region(size):
+    def create_region(size, axis_name="energy"):
         from gammapy.maps import RegionGeom, MapAxis
 
-        axis = MapAxis.from_nodes(np.arange(size), name="energy", unit="")
+        axis = MapAxis.from_nodes(np.arange(size), name=axis_name, unit="TeV")
         return RegionGeom.create(region=None, axes=[axis])
 
 
@@ -227,9 +227,11 @@ class MockFluxPointsDataset(MockDataset):
         self,
         norm,
         norm_err,
-        dnde_pred,
+        norm_pred,
         norm_errn=None,
         norm_errp=None,
+        norm_ul=None,
+        is_ul=None,
         model=None,
         mask=None,
     ):
@@ -248,11 +250,17 @@ class MockFluxPointsDataset(MockDataset):
         data["norm_errp"] = (
             RegionNDMap(geom=geom, data=np.array(norm_errp)) if norm_errp else None
         )
+        data["norm_ul"] = (
+            RegionNDMap(geom=geom, data=np.array(norm_ul)) if norm_ul else None
+        )
+        data["is_ul"] = RegionNDMap(geom=geom, data=np.array(is_ul)) if is_ul else None
 
         model = model if model else ConstantSpectralModel()
 
         self.data = FluxPoints(data, model)
-        self.flux_pred = lambda: dnde_pred * u.Unit("cm-2s-1TeV-1")
+        new_geom = geom.copy(axes=geom.axes.rename_axes(["energy"], ["energy_true"]))
+        ref_flux = self.data.reference_model.evaluate_geom(new_geom)
+        self.flux_pred = lambda: np.array(norm_pred).reshape(ref_flux.shape) * ref_flux
         self.mask = np.array(mask) if mask is not None else None
 
 
@@ -333,9 +341,11 @@ def mock_fp_dataset():
     return MockFluxPointsDataset(
         norm=[1.1, 0.9, 1.2, 0.8],
         norm_err=[0.1, 0.1, 0.2, 0.2],
-        dnde_pred=[1e-12, 1e-12, 1e-12, 1e-12],
+        norm_pred=[1, 1, 1, 1],
         norm_errn=[0.1, 0.1, 0.2, 0.2],
         norm_errp=[0.1, 0.1, 0.1, 0.1],
+        norm_ul=[1.5, 1.5, 1.5, 1.5],
+        is_ul=[False, False, False, True],
         mask=[True, True, False, True],
     )
 
@@ -343,12 +353,12 @@ def mock_fp_dataset():
 def test_chi2_fit_statistic_stat_sum_nomask(mock_fp_dataset):
     mock_fp_dataset.mask = None
     stat_sum = Chi2FitStatistic.stat_sum_dataset(mock_fp_dataset)
-    assert_allclose(stat_sum, 16)
+    assert_allclose(stat_sum, 4)
 
 
 def test_chi2_fit_statistic_with_mask(mock_fp_dataset):
     stat_sum = Chi2FitStatistic.stat_sum_dataset(mock_fp_dataset)
-    assert_allclose(stat_sum, 12)
+    assert_allclose(stat_sum, 3)
 
 
 def test_chi2_fit_statistic_with_mask_false(mock_fp_dataset):
@@ -356,3 +366,14 @@ def test_chi2_fit_statistic_with_mask_false(mock_fp_dataset):
     mock_fp_dataset.mask = np.array(mask)
     stat_sum = Chi2FitStatistic.stat_sum_dataset(mock_fp_dataset)
     assert stat_sum == 0
+
+
+def test_chi2_asym_fit_statistic_stat_sum_nomask(mock_fp_dataset):
+    mock_fp_dataset.mask = None
+    stat_sum = Chi2AsymmetricErrorFitStatistic.stat_sum_dataset(mock_fp_dataset)
+    assert_allclose(stat_sum, 5.798344)
+
+
+def test_chi2_asym_fit_statistic_with_mask(mock_fp_dataset):
+    stat_sum = Chi2AsymmetricErrorFitStatistic.stat_sum_dataset(mock_fp_dataset)
+    assert_allclose(stat_sum, 4.798344)
