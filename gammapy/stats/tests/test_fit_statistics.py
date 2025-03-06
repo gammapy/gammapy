@@ -5,6 +5,7 @@ from numpy.testing import assert_allclose
 from gammapy import stats
 from gammapy.stats.fit_statistics import (
     CashFitStatistic,
+    WeightedCashFitStatistic,
     WStatFitStatistic,
     Chi2FitStatistic,
     Chi2AsymmetricErrorFitStatistic,
@@ -282,7 +283,7 @@ def test_cash_fit_statistic_with_mask(mock_map_dataset):
     assert_allclose(stat_sum, 1.40832626799)
 
 
-def test_fit_statistic_loglikelihood(mock_map_dataset):
+def test_cash_fit_statistic_loglikelihood(mock_map_dataset):
     """Test loglikelihood_dataset method."""
     log_likelihood = CashFitStatistic.loglikelihood_dataset(mock_map_dataset)
     assert_allclose(log_likelihood, 1.40832626799 * -0.5)
@@ -294,6 +295,14 @@ def test_cash_fit_statistic_with_non_bool_mask(mock_map_dataset):
 
     stat_sum = CashFitStatistic.stat_sum_dataset(mock_map_dataset)
     assert_allclose(stat_sum, 1.40832626799)
+
+
+def test_weightedcash_fit_statistic(mock_map_dataset):
+    """Test WeightedCashFitStatistic."""
+    mock_map_dataset.mask.data = np.array([0.5, 0.5, 0.5], dtype="float")
+
+    stat_sum = WeightedCashFitStatistic.stat_sum_dataset(mock_map_dataset)
+    assert_allclose(stat_sum, 2.63573737 * 0.5)
 
 
 @pytest.fixture()
