@@ -280,7 +280,8 @@ class CashFitStatistic(FitStatistic):
         counts, npred = dataset.counts.data, dataset.npred().data
 
         if mask is not None:
-            counts, npred = counts[mask.data], npred[mask.data]
+            mask = mask.data.astype("bool")
+            counts, npred = counts[mask], npred[mask]
 
         counts = counts.astype(float)  # This might be done in the Dataset
         return cash_sum_cython(counts.ravel(), npred.ravel())

@@ -3,6 +3,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from gammapy import stats
+from gammapy.stats.fit_statistics import CashFitStatistic, WStatFitStatistic
 
 
 @pytest.fixture
@@ -169,3 +170,118 @@ def test_wstat_corner_cases():
 
     actual = stats.get_wstat_mu_bkg(n_on=n_on, mu_sig=mu_sig, n_off=n_off, alpha=alpha)
     assert_allclose(actual, 0)
+
+
+class MockMapDataset:
+    """Mock dataset class"""
+
+    def __init__(self, counts, npred, mask=None):
+        from gammapy.maps import RegionNDMap
+
+        geom = self.create_region(len(counts))
+        self.counts = RegionNDMap(geom=geom, data=np.array(counts))
+        self.npred = lambda: RegionNDMap(
+            geom=geom, data=np.array(npred).astype("float")
+        )
+        self.mask = (
+            RegionNDMap(geom=geom, data=np.array(mask)) if mask is not None else None
+        )
+
+    @staticmethod
+    def create_region(size):
+        from gammapy.maps import RegionGeom, MapAxis
+
+        axis = MapAxis.from_nodes(np.arange(size), name="test", unit="")
+        return RegionGeom.create(region=None, axes=[axis])
+
+
+class MockMapDatasetOnOff(MockMapDataset):
+    """Mock dataset for ON-OFF Poisson measurements (WStat)."""
+
+    def __init__(self, counts, npred_signal, counts_off, alpha, mask=None):
+        from gammapy.maps import RegionNDMap
+
+        geom = self.create_region(len(counts))
+        self.counts = RegionNDMap(geom=geom, data=np.array(counts))
+        self.npred_signal = lambda: RegionNDMap(
+            geom=geom, data=np.array(npred_signal).astype("float")
+        )
+        self.mask = (
+            RegionNDMap(geom=geom, data=np.array(mask)) if mask is not None else None
+        )
+        self.counts_off = RegionNDMap(geom=geom, data=np.array(counts_off))
+        self.alpha = RegionNDMap(geom=geom, data=np.array(alpha).astype("float"))
+
+
+@pytest.fixture
+def mock_map_dataset():
+    return MockMapDataset(counts=[1, 2, 3], npred=[1, 2, 3], mask=[True, False, True])
+
+
+def test_cash_fit_statistic_stat_sum_nomask(mock_map_dataset):
+    """Test the stat_sum_dataset method for CashFitStatistic."""
+    mock_map_dataset.mask = None
+    stat_sum = CashFitStatistic.stat_sum_dataset(mock_map_dataset)
+    assert_allclose(stat_sum, 2.63573737)
+
+
+def test_cash_fit_statistic_with_mask(mock_map_dataset):
+    """Test CashFitStatistic with a mask."""
+    stat_sum = CashFitStatistic.stat_sum_dataset(mock_map_dataset)
+    assert_allclose(stat_sum, 1.40832626799)
+
+
+def test_fit_statistic_loglikelihood(mock_map_dataset):
+    """Test loglikelihood_dataset method."""
+    log_likelihood = CashFitStatistic.loglikelihood_dataset(mock_map_dataset)
+    assert_allclose(log_likelihood, 1.40832626799 * -0.5)
+
+
+def test_cash_fit_statistic_with_non_bool_mask(mock_map_dataset):
+    """Ensure stat_sum_dataset handles non-bool masks gracefully."""
+    mock_map_dataset.mask.data = np.array([1, 0, 2], dtype="float")
+
+    stat_sum = CashFitStatistic.stat_sum_dataset(mock_map_dataset)
+    assert_allclose(stat_sum, 1.40832626799)
+
+
+@pytest.fixture()
+def mock_map_dataset_onoff():
+    return MockMapDatasetOnOff(
+        counts=[3, 6, 9],
+        npred_signal=[1, 2, 3],
+        counts_off=[10, 10, 30],
+        alpha=[0.1, 0.2, 0.1],
+        mask=[True, False, True],
+    )
+
+
+def test_wstat_fit_statistic_stat_sum_nomask(mock_map_dataset_onoff):
+    """Test the stat_sum_dataset method for WStatFitStatistic."""
+    mock_map_dataset_onoff.mask = None
+    stat_sum = WStatFitStatistic.stat_sum_dataset(mock_map_dataset_onoff)
+    assert_allclose(stat_sum, 2.4088762929)
+
+
+def test_wstat_fit_statistic_with_mask(mock_map_dataset_onoff):
+    """Test WStatFitStatistic with a mask."""
+    stat_sum = WStatFitStatistic.stat_sum_dataset(mock_map_dataset_onoff)
+    assert_allclose(stat_sum, 1.63526008301)
+
+
+def test_wstat_fit_statistic_with_mask_false(mock_map_dataset_onoff):
+    """Test WStatFitStatistic with mask_safe handling."""
+    mock_map_dataset_onoff.mask.data = np.array(
+        [
+            False,
+        ]
+        * 3
+    )
+    stat_sum = WStatFitStatistic.stat_sum_dataset(mock_map_dataset_onoff)
+    assert stat_sum == 0
+
+
+def test_wstat_fit_statistic_loglikelihood(mock_map_dataset_onoff):
+    """Test loglikelihood_dataset method."""
+    log_likelihood = WStatFitStatistic.loglikelihood_dataset(mock_map_dataset_onoff)
+    assert_allclose(log_likelihood, -0.817630041)
