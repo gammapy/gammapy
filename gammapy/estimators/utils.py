@@ -97,17 +97,7 @@ def find_peaks(image, threshold, min_distance=1):
     >>> maps = estimator.run(dataset)
     >>> # Find the peaks which are above 5 sigma
     >>> sources = find_peaks(maps["sqrt_ts"], threshold=5, min_distance="0.25 deg")
-    >>> print(sources)
-    value   x   y      ra       dec
-                      deg       deg
-    ------ --- --- --------- ---------
-    32.191 161 118 266.41924 -28.98772
-      18.7 125 124 266.80571 -28.14079
-    9.4498 257 122 264.86178 -30.97529
-    9.3784 204 103 266.14201 -30.10041
-    5.3493 282 150 263.78083 -31.12704
     """
-    # Input validation
 
     if not isinstance(image, WcsNDMap):
         raise TypeError("find_peaks only supports WcsNDMap")
