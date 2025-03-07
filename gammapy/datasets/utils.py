@@ -292,6 +292,7 @@ def create_map_dataset_from_dl4(data, geom=None, energy_axis_true=None, name=Non
 
     return dataset
 
+
 def create_energy_mask(dataset, energy_min=None, energy_max=None):
     """Build a mask for the dataset restricting its mask_fit to a given energy range.
 
@@ -299,10 +300,10 @@ def create_energy_mask(dataset, energy_min=None, energy_max=None):
     ----------
     dataset : `~gammapy.datasets.Dataset`
         the dataset to compute a mask for.
-    energy_min : `~astropy.units.Quantity`
-        minimum energy.
-    energy_max : `~astropy.units.Quantity`
-        maximum energy.
+    energy_min : `~astropy.units.Quantity`, optional
+        minimum energy. If None, use lower bound of the energy axis. Default is None.
+    energy_max : `~astropy.units.Quantity`, optional
+        maximum energy. If None, use upper bound of the energy axis. Default is None.
     """
     energy_axis = dataset._geom.axes["energy"]
 
