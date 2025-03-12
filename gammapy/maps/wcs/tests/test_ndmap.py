@@ -426,9 +426,41 @@ def test_wcsndmap_downsample(npix, binsz, frame, proj, skydir, axes):
     m = WcsNDMap(geom, unit="m2")
     # Check whether we can downsample
     if np.all(np.mod(geom.npix[0], 2) == 0) and np.all(np.mod(geom.npix[1], 2) == 0):
+        # without weights
         m2 = m.downsample(2, preserve_counts=True)
         assert_allclose(np.nansum(m.data), np.nansum(m2.data))
         assert m.unit == m2.unit
+
+        m3 = m.downsample(2, preserve_counts=False)
+        assert_allclose(np.nanmean(m.data), np.nanmean(m3.data))
+        assert m.unit == m3.unit
+
+        # with weights
+        weights = np.random.rand(*m.data.shape)
+        m4 = m.downsample(2, preserve_counts=True, weights=weights)
+        assert_allclose(np.nansum(m.data * weights.data), np.nansum(m4.data))
+        assert m.unit == m4.unit
+
+
+def test_wcsndmap_downsample_weights():
+    geom = WcsGeom.create(
+        npix=10,
+        binsz=1.0,
+        frame="galactic",
+        proj="AIT",
+        skydir=SkyCoord(110.0, 75.0, unit="deg", frame="icrs"),
+        axes=None,
+    )
+    m = WcsNDMap(geom, data=np.tile(np.array([3.0, 2.0]), (10, 5)), unit="m2")
+
+    # weights array with recurring values to easily test for correct weighted averaging
+    weights = np.tile(np.array([1.0, 2.0]), (m.data.shape[0], m.data.shape[1] // 2))
+    m6 = m.downsample(2, preserve_counts=False, weights=weights)
+
+    assert_allclose(
+        np.nansum(m.data * weights) / np.nansum(weights), np.nanmean(m6.data)
+    )
+    assert m.unit == m6.unit
 
 
 @pytest.mark.parametrize(

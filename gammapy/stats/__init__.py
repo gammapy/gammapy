@@ -4,6 +4,7 @@
 from .counts_statistic import CashCountsStatistic, WStatCountsStatistic
 from .fit_statistics import cash, cstat, get_wstat_gof_terms, get_wstat_mu_bkg, wstat
 from .fit_statistics_cython import (
+    weighted_cash_sum_cython,
     cash_sum_cython,
     f_cash_root_cython,
     norm_bounds_cython,
@@ -36,4 +37,5 @@ __all__ = [
     "structure_function",
     "discrete_correlation",
     "TimmerKonig_lightcurve_simulator",
+    "weighted_cash_sum_cython",
 ]
