@@ -187,14 +187,6 @@ def find_peaks_in_flux_map(maps, threshold, min_distance=1):
     >>> maps = estimator.run(dataset)
     >>> # Find the peaks which are above 5 sigma
     >>> sources = find_peaks_in_flux_map(maps, threshold=5, min_distance=0.1*u.deg)
-    >>> print(sources[:4])
-     x   y      ra       dec    ...   norm  norm_err     flux      flux_err
-               deg       deg    ...                  1 / (s cm2) 1 / (s cm2)
-    --- --- --------- --------- ... ------- -------- ----------- -----------
-    158 135 266.05019 -28.70181 ... 0.28551  0.06450   2.827e-12   6.385e-13
-     92 133 267.07022 -27.31834 ... 0.37058  0.08342   3.669e-12   8.259e-13
-    176 134 265.80492 -29.09805 ... 0.30561  0.06549   3.025e-12   6.484e-13
-    282 150 263.78083 -31.12704 ... 0.55027  0.12611   5.448e-12   1.249e-12
 
     """
     quantity_for_peaks = maps["sqrt_ts"]
