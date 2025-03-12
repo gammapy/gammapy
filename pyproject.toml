@@ -52,3 +52,53 @@ skip-magic-trailing-comma = false
 
 # Like Black, automatically detect the appropriate line ending.
 line-ending = "auto"
+
+# Including towncrier to create the changelog
+[tool.towncrier]
+  package = "gammapy"
+  directory = "docs/release-notes"
+  filename = "CHANGELOG.rst"
+
+issue_format = "`#{issue} <https://github.com/gammapy/gammapy/issues/{issue}>`_"
+
+# Summary?
+
+  [[tool.towncrier.type]]
+  directory = "api"
+  name = "API changes"
+  showcontent = true
+
+  [[tool.towncrier.type]]
+  directory = "infrastructure"
+  name = "Infrastructure"
+  showcontent = true
+
+  [[tool.towncrier.type]]
+  directory = "doc"
+  name = "Documentation improvements"
+  showcontent = true
+
+    [[tool.towncrier.type]]
+  directory = "new"
+  name = "New features"
+  showcontent = true
+
+  [[tool.towncrier.type]]
+  directory = "bugfix"
+  name = "Bug Fixes"
+  showcontent = true
+
+  [[tool.towncrier.type]]
+  directory = "issues"
+  name = "Known issues"
+  showcontent = true
+
+  [[tool.towncrier.type]]
+  directory = "trivial"
+  name = "Contributors"
+  showcontent = true
+
+  [[tool.towncrier.type]]
+  directory = "trivial"
+  name = "Pull Requests"
+  showcontent = true

@@ -102,6 +102,7 @@ extensions = [
     'sphinx_copybutton',
     "sphinx_design",
     "sphinx_gallery.gen_gallery",
+    "sphinx_changelog",
     "sphinx.ext.doctest",
     "sphinx.ext.mathjax",
     'sphinx.ext.viewcode',
