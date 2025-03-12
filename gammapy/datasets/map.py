@@ -1943,7 +1943,7 @@ class MapDataset(Dataset):
 
         Counts and background of the dataset are integrated in the given region,
         taking the safe mask into account. The exposure is averaged in the
-        region again taking the safe mask into account. The PSF and energy
+        region. The PSF and energy
         dispersion kernel are taken at the center of the region.
 
         Parameters
@@ -1960,6 +1960,17 @@ class MapDataset(Dataset):
         """
         name = make_name(name)
         kwargs = {"gti": self.gti, "name": name, "meta_table": self.meta_table}
+
+        if self.mask:
+            region_mask = self.mask.geom.region_mask(region)
+            for mask_image, region_mask_image in zip(
+                self.mask.iter_by_image(), region_mask.iter_by_image()
+            ):
+                if len(np.unique(mask_image.data[region_mask_image.data])) > 1:
+                    raise NotImplementedError(
+                        """`to_region_map_dataset` can only be applied if the mask
+                        is spatially uniform whitin the region for each enegy bin"""
+                    )
 
         if self.mask_safe:
             kwargs["mask_safe"] = self.mask_safe.to_region_nd_map(region, func=np.any)
