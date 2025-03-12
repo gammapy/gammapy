@@ -1795,13 +1795,8 @@ def test_map_dataset_on_off_to_spectrum_dataset_weights():
         center=dataset.counts.geom.center_skydir, radius=1.5 * u.deg
     )
 
-    spectrum_dataset = dataset.to_spectrum_dataset(on_region)
-
-    assert_allclose(spectrum_dataset.counts.data[:, 0, 0], [0, 2, 2])
-    assert_allclose(spectrum_dataset.counts_off.data[:, 0, 0], [0, 4, 4])
-    assert_allclose(spectrum_dataset.acceptance.data[:, 0, 0], [0, 0.08, 0.08])
-    assert_allclose(spectrum_dataset.acceptance_off.data[:, 0, 0], [0, 0.32, 0.32])
-    assert_allclose(spectrum_dataset.alpha.data[:, 0, 0], [0, 0.25, 0.25])
+    with pytest.raises(Exception):
+        dataset.to_spectrum_dataset(on_region)
 
 
 @requires_data()
