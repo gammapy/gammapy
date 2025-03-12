@@ -1961,7 +1961,7 @@ class MapDataset(Dataset):
         name = make_name(name)
         kwargs = {"gti": self.gti, "name": name, "meta_table": self.meta_table}
 
-        if self.mask:
+        if self.mask and not self.mask.geom.is_region:
             region_mask = self.mask.geom.region_mask(region)
             for mask_image, region_mask_image in zip(
                 self.mask.iter_by_image(), region_mask.iter_by_image()
