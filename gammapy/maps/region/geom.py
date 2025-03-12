@@ -29,7 +29,6 @@ from gammapy.utils.regions import (
     regions_to_compound_region,
 )
 from gammapy.visualization.utils import ARTIST_TO_LINE_PROPERTIES
-from gammapy.visualization.utils import ARTIST_TO_LINE_PROPERTIES
 from ..axes import MapAxes
 from ..coord import MapCoord
 from ..core import Map
@@ -859,7 +858,7 @@ class RegionGeom(Geom):
                 key_point = ARTIST_TO_LINE_PROPERTIES.get(key, None)
                 if key_point and key_point not in kwargs_point:
                     kwargs_point[key_point] = value
-                    
+
             if "color" in kwargs:
                 kwargs_point.setdefault("color", kwargs["color"])
             if "color" in kwargs_point:
