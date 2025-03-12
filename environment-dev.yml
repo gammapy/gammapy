@@ -75,6 +75,7 @@ dependencies:
   - nbformat
   - h5py
   - ruamel.yaml
+  - towncrier
   # incompatible with current jupyter, results in broken env when present
   # use e.g. pipx if you need cffconvert
   # - cffconvert
