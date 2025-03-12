@@ -513,6 +513,34 @@ def test_ts_map_with_model(fake_dataset):
 
 
 @requires_data()
+def test_compute_ts_map_with_mask_fit(fake_dataset):
+    """Test of compute_ts_image with mask_fit"""
+    dataset = fake_dataset.copy()
+    dataset.mask_fit = Map.from_geom(dataset.mask.geom, data=True)
+
+    spatial_model = GaussianSpatialModel(sigma="0.1 deg")
+    spectral_model = PowerLawSpectralModel(index=2)
+    model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
+    ts_estimator = TSMapEstimator(
+        model=model, kernel_width="0.3 deg", selection_optional=[]
+    )
+
+    maps = ts_estimator.run(dataset)
+    assert_allclose(maps["ts"].data[:, 24, 24], 1001.568122, atol=1e-12)
+    assert_allclose(maps["ts"].data[:, 25, 25], 995.89413131329, atol=1e-12)
+
+    dataset.mask_fit.data[1:, 24, 24] = False
+    maps = ts_estimator.run(dataset)
+    assert_allclose(maps["ts"].data[:, 24, 24], 1018.013713, atol=1e-12)
+    assert_allclose(maps["ts"].data[:, 25, 25], 1012.162491, atol=1e-12)
+
+    dataset.background.data[:, 24, 24] = np.nan
+    maps = ts_estimator.run(dataset)
+    assert_allclose(maps["ts"].data[:, 24, 24], np.nan, atol=1e-12)
+    assert_allclose(maps["ts"].data[:, 25, 25], 975.11571, atol=1e-12)
+
+
+@requires_data()
 def test_compute_ts_map_with_hole(fake_dataset):
     """Test of compute_ts_image with a null exposure at the center of the map"""
     holes_dataset = fake_dataset.copy("holes_dataset")
