@@ -1,0 +1,77 @@
+.. include:: ../../references.txt
+
+.. _pig-029:
+
+*************************************************************
+PIG 29 - Separation of Plotting Methods using Plotter classes
+*************************************************************
+
+* Author: Régis Terrier
+* Created: ``2025-03-31``
+* Accepted:
+* Status:
+* Discussion:
+
+Abstract
+========
+
+This PIG proposes to separate plotting methods from Gammapy objects by introducing
+dedicated `Plotter` classes (e.g., `MapDatasetPlotter`). This will improve code maintainability,
+enhance flexibility for users, and optimize efficiency by avoiding unnecessary imports of `matplotlib`.
+
+
+Motivation
+==========
+
+Currently, plotting methods are tightly integrated with Gammapy objects. This presents several issues:
+
+- **Code Complexity**: Plotting code can be large and complex, making files harder to read and maintain.
+- **Performance Overhead**: Always importing `matplotlib` is inefficient for users who do not need plotting functionalities.
+- **Lack of Extensibility**: Users cannot easily extend plotting functionalities without modifying core Gammapy objects.
+
+A more modular approach, using dedicated `Plotter` classes, will resolve these issues while preserving all current plotting functionalities.
+
+
+Proposed Changes
+================
+
+- Introduce separate `Plotter` classes for different Gammapy objects (e.g., `MapDatasetPlotter`, `SpectrumDatasetPlotter`).
+- Move existing plotting methods from core objects to these new `Plotter` classes.
+- Update documentation and user guides to reflect the new structure.
+- Ensure backward compatibility by providing transitional interfaces or deprecation warnings where necessary.
+
+
+Backward Compatibility
+----------------------
+
+- Existing plotting functionalities will remain accessible but may be deprecated in future releases.
+- A transition period will be provided where old methods internally call the new `Plotter` classes.
+- Users will be encouraged to migrate by updating examples and documentation.
+
+
+Implementation
+==============
+
+- Utilize the existing `gammapy.visualization` module to host `Plotter` classes.
+- Define `Plotter` classes for key Gammapy objects and move plotting-related code there.
+- Each `Plotter` class should take its related Gammapy object as an initialization parameter.
+- At a minimum, a `Plotter` class should implement all plotting-related methods currently existing for its associated object.
+- Update imports and references across the library accordingly.
+- Update the documentation with examples and migration guidelines.
+
+
+Alternatives
+============
+
+- Keep the current approach: This would maintain the status quo but does not address the issues outlined.
+- Use mixin classes: This could modularize the code but still tightly couples plotting with core objects.
+- Define standalone plotting functions instead of classes: This would reduce complexity but may lead to less structured and reusable code.
+
+
+Decision
+========
+
+- [Link to relevant Gammapy issues or discussions]
+- [Related PIGs or external references]
+- SunPy `ndcube` implementation as a similar approach reference.
+
