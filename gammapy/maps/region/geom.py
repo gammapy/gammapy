@@ -29,6 +29,7 @@ from gammapy.utils.regions import (
     regions_to_compound_region,
 )
 from gammapy.visualization.utils import ARTIST_TO_LINE_PROPERTIES
+from gammapy.visualization.utils import ARTIST_TO_LINE_PROPERTIES
 from ..axes import MapAxes
 from ..coord import MapCoord
 from ..core import Map
