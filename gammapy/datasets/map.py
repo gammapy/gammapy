@@ -1967,9 +1967,9 @@ class MapDataset(Dataset):
                 self.mask.iter_by_image(), region_mask.iter_by_image()
             ):
                 if len(np.unique(mask_image.data[region_mask_image.data])) > 1:
-                    raise NotImplementedError(
+                    raise Exception(
                         """`to_region_map_dataset` can only be applied if the mask
-                        is spatially uniform whitin the region for each enegy bin"""
+                        is spatially uniform within the region for each enegy bin"""
                     )
 
         if self.mask_safe:

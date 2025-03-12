@@ -2241,7 +2241,7 @@ def test_map_dataset_region_geom_npred():
     dataset_spec = dataset.to_region_map_dataset(region)
     dataset_spec.models = [model_1, model_2]
 
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(Exception):
         invalid_region = dataset.counts.geom.footprint_rectangle_sky_region
         dataset_spec = dataset.to_region_map_dataset(invalid_region)
 
