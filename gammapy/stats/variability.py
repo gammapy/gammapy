@@ -49,9 +49,8 @@ def compute_fvar(flux, flux_err, axis=0):
 
     References
     ----------
-    .. [Vaughan2003] "On characterizing the variability properties of X-ray light
-       curves from active galaxies", Vaughan et al. (2003)
-       https://ui.adsabs.harvard.edu/abs/2003MNRAS.345.1271V
+    `Vaughan et al. (2003), "On characterizing the variability properties of X-ray light
+    curves from active galaxies" <https://ui.adsabs.harvard.edu/abs/2003MNRAS.345.1271V>`_
     """
     flux_mean = np.nanmean(flux, axis=axis)
     n_points = np.count_nonzero(~np.isnan(flux), axis=axis)
@@ -98,10 +97,9 @@ def compute_fpp(flux, flux_err, axis=0):
 
     References
     ----------
-    .. [Edelson2002] "X-Ray Spectral Variability and Rapid Variability
-       of the Soft X-Ray Spectrum Seyfert 1 Galaxies
-       Arakelian 564 and Ton S180", Edelson et al. (2002), equation 3,
-       https://iopscience.iop.org/article/10.1086/323779
+    `Edelson et al. (2002), equation 3, "X-Ray Spectral Variability and Rapid Variability
+    of the Soft X-Ray Spectrum Seyfert 1 Galaxies Arakelian 564 and Ton S180"
+    <https://iopscience.iop.org/article/10.1086/323779>`_
     """
     flux_mean = np.nanmean(flux, axis=axis)
     n_points = np.count_nonzero(~np.isnan(flux), axis=axis)
@@ -152,11 +150,11 @@ def compute_flux_doubling(flux, flux_err, coords, axis=0):
 
     The variable is computed as:
 
-     .. math::
-        doubling = min(\frac{t_(i+1)-t_i}{log_2{f_(i+1)/f_i}})
+    .. math::
+        doubling = min \left( \frac{t_{(i+1)}-t_{i}}{log_2{f_{(i+1)}/f_{i}}} \right)
 
-    where f_i and f_(i+1) are the fluxes measured at subsequent coordinates t_i and t_(i+1).
-    The error is obtained by propagating the relative errors on the flux measures.
+    where :math:`f_i` and :math:`f_{(i+1)}` are the fluxes measured at subsequent coordinates :math:`t_i` and
+    :math:`t_{(i+1)}`. The error is obtained by propagating the relative errors on the flux measures.
 
     Parameters
     ----------
@@ -253,9 +251,8 @@ def structure_function(flux, flux_err, time, tdelta_precision=5):
 
     References
     ----------
-    .. [Emmanoulopoulos2010] "On the use of structure functions to study blazar variability:
-       caveats and problems", Emmanoulopoulos et al. (2010)
-       https://academic.oup.com/mnras/article/404/2/931/968488
+    `Emmanoulopoulos et al. (2010), "On the use of structure functions to study blazar variability:
+    caveats and problems" <https://academic.oup.com/mnras/article/404/2/931/968488>`_
     """
     dist_matrix = (time[np.newaxis, :] - time[:, np.newaxis]).round(
         decimals=tdelta_precision
@@ -311,9 +308,8 @@ def discrete_correlation(flux1, flux_err1, flux2, flux_err2, time1, time2, tau, 
 
     References
     ----------
-    .. [Edelson1988] "THE DISCRETE CORRELATION FUNCTION: A NEW METHOD FOR ANALYZING
-       UNEVENLY SAMPLED VARIABILITY DATA", Edelson et al. (1988)
-       https://ui.adsabs.harvard.edu/abs/1988ApJ...333..646E/abstract
+    `Edelson et al. (1988), "THE DISCRETE CORRELATION FUNCTION: A NEW METHOD FOR ANALYZING
+    UNEVENLY SAMPLED VARIABILITY DATA" <https://ui.adsabs.harvard.edu/abs/1988ApJ...333..646E/abstract>`_
     """
     flux1 = np.rollaxis(flux1, axis, 0)
     flux2 = np.rollaxis(flux2, axis, 0)
@@ -433,8 +429,8 @@ def TimmerKonig_lightcurve_simulator(
 
     References
     ----------
-    .. [Timmer1995] "On generating power law noise", J. Timmer and M, Konig, section 3
-       https://ui.adsabs.harvard.edu/abs/1995A%26A...300..707T/abstract
+    `Timmer and Konig (1995), section 3,  "On generating power law noise"
+    <https://ui.adsabs.harvard.edu/abs/1995A%26A...300..707T/abstract>`_
     """
     if not callable(power_spectrum):
         raise ValueError(

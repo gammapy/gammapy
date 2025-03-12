@@ -39,11 +39,11 @@ def cash(n_on, mu_on, truncation_value=TRUNCATION_VALUE):
 
     References
     ----------
-    * `Sherpa statistics page section on the Cash statistic:
+    * `Sherpa statistics page section on the Cash statistic
       <http://cxc.cfa.harvard.edu/sherpa/statistics/#cash>`_
-    * `Sherpa help page on the Cash statistic:
+    * `Sherpa help page on the Cash statistic
       <http://cxc.harvard.edu/sherpa/ahelp/cash.html>`_
-    * `Cash 1979, ApJ 228, 939,
+    * `Cash (1979), ApJ 228, 939,
       <https://ui.adsabs.harvard.edu/abs/1979ApJ...228..939C>`_
     """
     n_on = np.asanyarray(n_on)
@@ -93,11 +93,11 @@ def cstat(n_on, mu_on, truncation_value=TRUNCATION_VALUE):
 
     References
     ----------
-    * `Sherpa stats page section on the C statistic:
+    * `Sherpa stats page section on the C statistic
       <http://cxc.cfa.harvard.edu/sherpa/statistics/#cstat>`_
-    * `Sherpa help page on the C statistic:
+    * `Sherpa help page on the C statistic
       <http://cxc.harvard.edu/sherpa/ahelp/cash.html>`_
-    * `Cash 1979, ApJ 228, 939,
+    * `Cash (1979), ApJ 228, 939
       <https://ui.adsabs.harvard.edu/abs/1979ApJ...228..939C>`_
     """
     n_on = np.asanyarray(n_on, dtype=np.float64)
@@ -146,9 +146,9 @@ def wstat(n_on, n_off, alpha, mu_sig, mu_bkg=None, extra_terms=True):
 
     References
     ----------
-    * `Habilitation M. de Naurois, p. 141,
+    * `Habilitation M. de Naurois, p. 141
       <http://inspirehep.net/record/1122589/files/these_short.pdf>`_
-    * `XSPEC page on Poisson data with Poisson background,
+    * `XSPEC page on Poisson data with Poisson background
       <https://heasarc.gsfc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html>`_
     """
     # Note: This is equivalent to what's defined on the XSPEC page under the
