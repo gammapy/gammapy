@@ -857,16 +857,12 @@ def get_combined_significance_maps(estimator, datasets):
 
     Examples
     --------
-    >>> from gammapy.datasets import MapDataset
+    >>> from gammapy.datasets import Datasets
     >>> from gammapy.estimators import ExcessMapEstimator
     >>> from gammapy.estimators.utils import get_combined_significance_maps
-    >>> dataset1 = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
-    >>> dataset2 = dataset1.copy(name="copy")
-    >>> dataset2.counts *= 2
-    >>> dataset2.exposure *= 2
-    >>> dataset2.background *= 2
-    >>> estimator = ExcessMapEstimator(correlation_radius="0.1 deg")
-    >>> combined = get_combined_significance_maps(estimator, [dataset1, dataset2])
+    >>> datasets = Datasets.read("$GAMMAPY_DATA/hawc/DL4/HAWC_pass4_public_Crab.yaml")
+    >>> estimator = ExcessMapEstimator(correlation_radius="0.2 deg")
+    >>> combined = get_combined_significance_maps(estimator, datasets)
 
     References
     ----------
@@ -1080,16 +1076,12 @@ def get_combined_flux_maps(
 
     Examples
     --------
-    >>> from gammapy.datasets import MapDataset
-    >>> from gammapy.estimators import ExcessMapEstimator
+    >>> from gammapy.datasets import Datasets
+    >>> from gammapy.estimators import TSMapEstimator
     >>> from gammapy.estimators.utils import get_combined_flux_maps
-    >>> dataset1 = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
-    >>> dataset2 = dataset1.copy(name="copy")
-    >>> dataset2.counts *= 2
-    >>> dataset2.exposure *= 2
-    >>> dataset2.background *= 2
-    >>> estimator = ExcessMapEstimator(correlation_radius="0.1 deg")
-    >>> combined = get_combined_flux_maps(estimator, [dataset1, dataset2])
+    >>> datasets = Datasets.read("$GAMMAPY_DATA/hawc/DL4/HAWC_pass4_public_Crab.yaml")
+    >>> estimator = TSMapEstimator()
+    >>> combined = get_combined_flux_maps(estimator, datasets)
 
     See also
     --------
