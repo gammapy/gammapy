@@ -1969,7 +1969,7 @@ class MapDataset(Dataset):
                 if len(np.unique(mask_image.data[region_mask_image.data])) > 1:
                     raise Exception(
                         """`to_region_map_dataset` can only be applied if the mask
-                        is spatially uniform within the region for each enegy bin"""
+                        is spatially uniform within the region for each energy bin"""
                     )
 
         if self.mask_safe:
