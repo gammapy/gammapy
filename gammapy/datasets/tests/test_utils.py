@@ -3,8 +3,8 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
-from gammapy.datasets import MapDataset
-from gammapy.datasets.utils import apply_edisp, split_dataset
+from gammapy.datasets import Datasets, MapDataset, SpectrumDatasetOnOff
+from gammapy.datasets.utils import apply_edisp, set_and_restore_mask_fit, split_dataset
 from gammapy.irf import EDispKernel
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling.models import (
@@ -103,3 +103,33 @@ def test_dataset_split():
     assert (~datasets[7].mask_fit.data[0, :, :]).sum() == np.prod(
         pixel_width + 2 * margin_width
     ) - np.prod(pixel_width)
+
+
+@requires_data()
+def test_set_and_restore_mask():
+    ds1 = SpectrumDatasetOnOff.read(
+        "$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits"
+    )
+    ds2 = SpectrumDatasetOnOff.read(
+        "$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23526.fits"
+    )
+
+    datasets = Datasets([ds1, ds2])
+    with set_and_restore_mask_fit(datasets, 800 * u.GeV, 5 * u.TeV) as masked_datasets:
+        range1 = masked_datasets[0].energy_range_fit
+        range2 = masked_datasets[1].energy_range_fit
+
+    assert_allclose(range1[0].quantity.to_value("TeV"), 0.7943282)
+    assert_allclose(range1[1].quantity.to_value("TeV"), 5.011872)
+    assert_allclose(range2[0].quantity.to_value("TeV"), 0.7943282)
+
+    range1 = datasets[0].energy_range_fit
+    range2 = datasets[1].energy_range_fit
+    assert_allclose(range1[0].quantity.to_value("TeV"), 0.01)
+    assert_allclose(range1[1].quantity.to_value("TeV"), 100.0)
+    assert_allclose(range2[0].quantity.to_value("TeV"), 0.01)
+
+    with set_and_restore_mask_fit(
+        datasets, 100 * u.TeV, 200 * u.TeV
+    ) as masked_datasets:
+        assert len(masked_datasets) == 0
