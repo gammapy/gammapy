@@ -254,11 +254,12 @@ class ConstantTemporalModel(TemporalModel):
     """
 
     tag = ["ConstantTemporalModel", "const"]
+    const = Parameter("const", "1")
 
     @staticmethod
-    def evaluate(time):
+    def evaluate(time, const):
         """Evaluate at given times."""
-        return np.ones(time.shape) * u.one
+        return const * np.ones(time.shape) * u.one
 
     def integral(self, t_min, t_max):
         """Evaluate the integrated flux within the given time intervals.
