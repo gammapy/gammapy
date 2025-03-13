@@ -256,6 +256,8 @@ class ConstantTemporalModel(TemporalModel):
     tag = ["ConstantTemporalModel", "const"]
     const = Parameter("const", "1")
 
+    const = Parameter("const", "1")
+
     @staticmethod
     def evaluate(time, const):
         """Evaluate at given times."""
