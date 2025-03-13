@@ -1962,15 +1962,15 @@ class MapDataset(Dataset):
         kwargs = {"gti": self.gti, "name": name, "meta_table": self.meta_table}
 
         if self.mask and not self.mask.geom.is_region:
-            region_mask = self.mask.geom.region_mask(region)
-            for mask_image, region_mask_image in zip(
-                self.mask.iter_by_image(), region_mask.iter_by_image()
-            ):
-                if len(np.unique(mask_image.data[region_mask_image.data])) > 1:
-                    raise Exception(
-                        """`to_region_map_dataset` can only be applied if the mask
-                        is spatially uniform within the region for each energy bin"""
-                    )
+            region_mask = self.mask.geom.to_image().region_mask(region)
+            values = np.unique(self.mask.data[:, region_mask.data], axis=1)
+            is_uniform = values.dtype == "bool"
+            is_uniform &= np.all(values, axis=1) | np.all(~values, axis=1)
+            if not np.all(is_uniform):
+                raise Exception(
+                    """`to_region_map_dataset` can only be applied if the mask
+                    is spatially uniform within the region for each energy bin"""
+                )
 
         if self.mask_safe:
             kwargs["mask_safe"] = self.mask_safe.to_region_nd_map(region, func=np.any)
