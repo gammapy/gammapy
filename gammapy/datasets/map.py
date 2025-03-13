@@ -1964,8 +1964,8 @@ class MapDataset(Dataset):
         if self.mask and not self.mask.geom.is_region:
             region_mask = self.mask.geom.to_image().region_mask(region)
             values = np.unique(self.mask.data[:, region_mask.data], axis=1)
-            is_uniform = values.dtype == "bool"
-            is_uniform &= np.all(values, axis=1) | np.all(~values, axis=1)
+            is_uniform = np.all(values == True, axis=1)
+            is_uniform |= np.all(values == False, axis=1)
             if not np.all(is_uniform):
                 raise Exception(
                     """`to_region_map_dataset` can only be applied if the mask
