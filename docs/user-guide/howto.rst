@@ -120,8 +120,8 @@ component, then use the test statistic values from both fits to compute the
 significance or p-value. To obtain the test statistic, call
 `~gammapy.modeling.Dataset.stat_sum` for the model corresponding to your two
 hypotheses (or take this value from the print output when running the fit), and
-take the difference. Note that in Gammapy, the fit statistic is defined as ``S =
-- 2 * log(L)`` for likelihood ``L``, such that ``TS = S_0 - S_1``. See
+take the difference. Note that in Gammapy, the fit statistic is defined as
+:math:`S = - 2 * log(L)` for likelihood :math:`L`, such that :math:`TS = S_0 - S_1`. See
 :ref:`datasets` for an overview of fit statistics used.
 
 .. accordion-footer::
@@ -366,11 +366,10 @@ or
 To do a pulsar analysis, one must compute the pulsar phase of
 each event and put this new information in a new `~gammapy.data.Observation`.
 Computing pulsar phases can be done using an external library such as
-[PINT](https://nanograv-pint.readthedocs.io/en/latest/) or
-[Tempo2](https://www.pulsarastronomy.net/pulsar/software/tempo2). A
-[Gammapy Recipe](https://gammapy.github.io/gammapy-recipes/_build/html/index.html)
-showing how to use PINT within the Gammapy framework is available
-[here](https://gammapy.github.io/gammapy-recipes/_build/html/notebooks/pulsar_phase/pulsar_phase_computation.html).
+`PINT <https://nanograv-pint.readthedocs.io/en/latest/>`__ or
+`Tempo2 <https://www.pulsarastronomy.net/pulsar/software/tempo2>`__. A
+gammapy recipe showing how to use PINT within the Gammapy framework is available
+`here <https://gammapy.github.io/gammapy-recipes/_build/html/notebooks/pulsar_phase/pulsar_phase_computation.html>`__.
 For brevity, the code below shows how to add a dummy phase column to a new
 `~gammapy.data.EventList` and `~gammapy.data.Observation`.
 
