@@ -135,7 +135,7 @@ class ModelBase:
         default_parameters = self.default_parameters.copy()
 
         for key in kwargs.keys():
-            if key not in default_parameters.names:
+            if key != "covariance_data" and key not in default_parameters.names :
                 raise NameError(f"Unknown Parameter name '{key}'")
 
         for par in default_parameters:
