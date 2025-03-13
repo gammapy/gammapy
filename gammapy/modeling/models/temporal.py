@@ -276,7 +276,9 @@ class ConstantTemporalModel(TemporalModel):
         norm : `~astropy.units.Quantity`
             Integrated flux norm on the given time intervals.
         """
-        return (t_max - t_min) / self.time_sum(t_min, t_max)
+        pars = self.parameters
+        const = pars["const"]
+        return const * (t_max - t_min) / self.time_sum(t_min, t_max)
 
 
 class LinearTemporalModel(TemporalModel):
