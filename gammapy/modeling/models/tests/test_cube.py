@@ -755,7 +755,7 @@ def test_sky_model_create():
 
 def test_integrate_geom():
     model = GaussianSpatialModel(
-        lon_0="0d", lat_0="0d", sigma=0.1 * u.deg, frame="icrs"
+        lon_0="0 deg", lat_0="0 deg", sigma=0.1 * u.deg, frame="icrs"
     )
     spectral_model = PowerLawSpectralModel(amplitude="1e-11 cm-2 s-1 TeV-1")
     sky_model = SkyModel(spectral_model=spectral_model, spatial_model=model)
@@ -774,7 +774,7 @@ def test_integrate_geom():
 
 def test_evaluate_integrate_nd_geom():
     model = GaussianSpatialModel(
-        lon_0="0d", lat_0="0d", sigma=0.1 * u.deg, frame="icrs"
+        lon_0="0 deg", lat_0="0 deg", sigma=0.1 * u.deg, frame="icrs"
     )
     spectral_model = PowerLawSpectralModel(amplitude="1e-11 cm-2 s-1 TeV-1")
     sky_model = SkyModel(spectral_model=spectral_model, spatial_model=model)
@@ -820,7 +820,7 @@ def test_evaluate_integrate_nd_geom():
 
 def test_evaluate_integrate_geom_with_time():
     spatial_model = GaussianSpatialModel(
-        lon_0="0d", lat_0="0d", sigma=0.1 * u.deg, frame="icrs"
+        lon_0="0 deg", lat_0="0 deg", sigma=0.1 * u.deg, frame="icrs"
     )
     spectral_model = PowerLawSpectralModel(amplitude="1e-11 cm-2 s-1 TeV-1")
     temporal_model = PowerLawTemporalModel()
@@ -895,7 +895,7 @@ def test_evaluate_integrate_geom_with_time():
 
 def test_evaluate_integrate_geom_with_time_and_gti():
     spatial_model = GaussianSpatialModel(
-        lon_0="0d", lat_0="0d", sigma=0.1 * u.deg, frame="icrs"
+        lon_0="0 deg", lat_0="0 deg", sigma=0.1 * u.deg, frame="icrs"
     )
     spectral_model = PowerLawSpectralModel(amplitude="1e-11 cm-2 s-1 TeV-1")
     temporal_model = PowerLawTemporalModel()
