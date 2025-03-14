@@ -1926,22 +1926,28 @@ class TemplateNDSpectralModel(SpectralModel):
         val = self.map.interp_by_pix(pixels, **self._interp_kwargs)
         return u.Quantity(val, self.map.unit, copy=COPY_IF_NEEDED)
 
-    def write(self, overwrite=False):
+    def write(self, filename=None, overwrite=False):
         """
         Write the map.
 
         Parameters
         ----------
-        overwrite: bool, optional
+        filename : str, optional
+            Filename of the template model. By default, the template model
+            will be saved with the `TemplateNDSpectralModel.filename` attribute,
+            if `filename` is provided this attribute will be updated.
+        overwrite : bool, optional
             Overwrite existing file.
             Default is False, which will raise a warning if the template file exists already.
         """
-        if self.filename is None:
+        if filename:
+            self.filename = filename
+        elif not hasattr(self, "filename") or self.filename is None:
             raise IOError("Missing filename")
-        elif os.path.isfile(self.filename) and not overwrite:
+        if os.path.isfile(make_path(self.filename)) and not overwrite:
             log.warning("Template file already exits, and overwrite is False")
         else:
-            self.map.write(self.filename)
+            self.map.write(self.filename, overwrite=overwrite)
 
     @classmethod
     def from_dict(cls, data, **kwargs):
