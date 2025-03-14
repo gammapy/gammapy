@@ -168,6 +168,7 @@ TEST_MODELS = [
         val_at_2TeV=u.Quantity(0.35212994, "cm-2 s-1 TeV-1"),
         integral_1_10TeV=u.Quantity(1.328499, "cm-2 s-1"),
         eflux_1_10TeV=u.Quantity(4.067067, "TeV cm-2 s-1"),
+        e_peak=10.0498756 * u.TeV,
     ),
     dict(
         name="logpar",
