@@ -1,9 +1,35 @@
+/* Define the gammapy colors */
 :root {
   --gammapy-primary: rgb(224, 10, 52);
   --gammapy-secondary: #1e254a;
   --gammapy-lightgray: #f2f2f2;
 }
 
+/* Set theme of the download button */
+.sphx-glr-download a {
+background-color: #d9edf7 !important;
+border: 1px solid #bce8f1 !important;
+background-image: none !important;
+}
+
+.sphx-glr-download a:hover {
+background-color: #d9edf7 !important;
+}
+
+/* main index page overview cards */
+.intro-card {
+  border-radius: 0;
+  padding: 30px 10px 20px 10px;
+  margin: 10px 0px;
+}
+
+/* Change the size of images on the main index page*/
+.intro-card .sd-card-img-top {
+  height: 52px;
+  width: 52px;
+  margin-left: auto;
+  margin-right: auto;
+}
 
 /* Typography */
 body,
@@ -18,228 +44,30 @@ p {
   --pst-color-secondary: var(--gammapy-secondary);
 }
 
-/* navbar */
-.navbar {
-  background-color: var(--gammapy-secondary) !important;
-  color: white;
+/* Dark Theme */
+[data-theme="dark"] {
+    --gammapy-secondary: #ffffff;
+    --sd-color-secondary: var(--gammapy-secondary);
+    --sd-color-secondary-highlight: var(--gammapy-lightgray);
+    --pst-color-secondary: var(--gammapy-secondary);
+    color: var(--gammapy-lightgray);
 }
-
-.navbar-light .navbar-nav li a.nav-link {
-  color: var(--gammapy-lightgray);
-  font-size: 16px;
+[data-theme="dark"] body,
+[data-theme="dark"] p {
+    color: var(--gammapy-secondary);
 }
-
-.navbar-light .navbar-nav li a.nav-link:hover,
-.navbar-light .navbar-nav > .active > .nav-link {
-  color: rgba(255, 255, 255, 0.5);
+[data-theme="dark"] .sd-card img[src*='.svg'] {
+  filter: invert(0.9) sepia(0.3) saturate(5) hue-rotate(180deg) brightness(0.8) contrast(1.2);
 }
-
-#navbar-icon-links i.fa-github-square::before,
-#navbar-icon-links i.fa-slack::before {
-  color: white;
+[data-theme="dark"] .logo img {
+    display: none;
 }
-
-.navbar-light .navbar-toggler-icon {
-  background-image: urdropdownl("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30'%3E%3Cpath stroke='white' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
-}
-
-.navbar-light .navbar-toggler {
-  border-color: white;
-}
-
-.nav-link, .nav-item {
-  color : rgb(119, 117, 122) !important;
-}
-
-/* Change the color of the font in the navbar */
-.nav-internal {
-  color : white !important;
-  color : rgb(209, 213, 218) !important;
-}
-
-/* This changes the 'version' dropdown, the color of the font is white */
-.dropdown-toggle {
-  color: white !important;
-  font-size: 14px;
-}
-
-/* pre */
-.pre {
-  font-size: 12px;
-}
-
-.docutils > .pre,
-.external > .pre,
-.descname > .pre {
-  font-weight: bold;
-  color: #425bab;
-}
-
-.sig-paren {
-  font-size: 12px;
-}
-
-/* links */
-a,
-.prev-next-area a p.prev-next-title,
-a > .docutils > .pre {
-  color: var(--gammapy-primary);
-}
-
-a:hover,
-.prev-next-area a:hover p.prev-next-title,
-a > .docutils > .pre {
-  color: rgb(0, 91, 129);
-}
-
-/* admonitions */
-.admonition.note {
-  background: var(--gammapy-lightgray);
-}
-
-div.admonition.note > .admonition-title {
-  color: var(--gammapy-lightgray);
-  background-color: var(--gammapy-secondary);
-}
-
-.admonition.note,
-div.admonition.note {
-  border-color: var(--gammapy-secondary);
-}
-
-.admonition.note > .admonition-title::before {
-  color: var(--gammapy-lightgray);
-}
-
-.admonition.warning {
-  background: var(--gammapy-lightgray);
-}
-
-div.admonition.warning > .admonition-title {
-  color: var(--gammapy-lightgray);
-  background-color: var(--gammapy-secondary);
-}
-
-.admonition.warning,
-div.admonition.warning {
-  border-color: var(--gammapy-secondary);
-}
-
-.admonition.warning > .admonition-title::before {
-  color: var(--gammapy-lightgray);
-}
-
-.admonition.seealso {
-  background: var(--gammapy-lightgray);
-}
-
-div.admonition.seealso > .admonition-title {
-  color: var(--gammapy-lightgray);
-  background-color: var(--gammapy-secondary);
-}
-
-.admonition.seealso,
-div.admonition.seealso {
-  border-color: var(--gammapy-secondary);
-}
-
-.admonition.seealso > .admonition-title::before {
-  color: var(--gammapy-lightgray);
-}
-
-/* font size smaller and striped cols in notebook tables */
-.output_area {
-  font-size: 12px;
-}
-
-.output_area tr:nth-child(even) {
-  background-color: var(--gammapy-lightgray);
-}
-
-th {
-  background-color: #f2f2f2;
-  padding-right: 8px;
-  text-align: left;
-}
-
-/* font size smaller and not-stripped cols in API tables */
-table.docutils {
-  font-size: 14px;
-}
-
-.rst-content table.docutils:not(.field-list) tr:nth-child(2n-1) td,
-.wy-table-striped tr:nth-child(2n-1) td,
-.wy-table-odd td {
-  background-color: #fff;
-}
-
-/* main index page overview cards */
-
-.intro-card {
-  background: #fff;
-  border-radius: 0;
-  padding: 30px 10px 20px 10px;
-  margin: 10px 0px;
-}
-
-.intro-card p.sd-card-text {
-  margin: 0px;
-}
-
-/* Change the size of images on the main index page*/
-.intro-card .sd-card-img-top {
-  height: 52px;
-  width: 52px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.intro-card .sd-card-header {
-  border: none;
-  background-color: white;
-  color: #150458 !important;
-  font-size: var(--pst-font-size-h5);
-  font-weight: bold;
-  padding: 2.5rem 0rem 0.5rem 0rem;
-}
-
-.intro-card .sd-card-footer {
-  border: none;
-  background-color: white;
-}
-
-.intro-card .sd-card-footer p.sd-card-text {
-  max-width: 220px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.custom-button {
-  background-color: #dcdcdc;
-  border: none;
-  color: #484848;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 0.9rem;
-  border-radius: 0.5rem;
-  max-width: 120px;
-  padding: 0.5rem 0rem;
-}
-
-.custom-button a {
-  color: #484848;
-}
-
-.custom-button p {
-  margin-top: 0;
-  margin-bottom: 0rem;
-  color: #484848;
-}
-
-.btn-group-sm > .btn,
-.btn-sm {
-  padding: 0 5px;
+[data-theme="dark"] .logo {
+    background-image: url("gammapy_logo_nav.png");
+    background-size: contain;
+    background-repeat: no-repeat;
+    width: 200px;
+    height: 50px;
 }
 
 /* intro to tutorial collapsed cards */
@@ -298,62 +126,3 @@ table.docutils {
   background-color: grey;
 }
 
-/* We could get rid of all the following */
-/* This just sets the look of the download button */
-.sphx-glr-download a {
-background-color: #d9edf7 !important;
-border: 1px solid #bce8f1 !important;
-background-image: none !important;
-}
-
-.sphx-glr-download code {
-color: #3a87ad !important;
-}
-
-.sphx-glr-download a:hover {
-background-color: #d9edf7 !important;
-}
-/* We could get rid of all prior */
-
-.search-button__default-text {
-  color: white;
-}
-
-#pst-version-switcher-button-2 {
-  color: white;
-}
-
-/* This changes the color of the dropdown itself, when there is a smaller screen */
-.fa-bars {
-  color: white !important;
-}
-
-a.dropdown-item {
-  color : black !important;
-}
-
-.show {
-  color : white !important;
-}
-
-.btn {
-  color: white;
-}
-
-.svg-inline--fa {
-  color: lightgrey ;
-}
-
-.sphinx-bs{
-  color : white !important ;
-}
-
-.search-button-field {
-  align-items: center;
-  background-color: var(--pst-color-surface);
-  border: 1px solid var(--pst-color-border);
-  border-radius: 1.5em;
-  display: inline-flex;
-  padding: .5em;
-  background: var(--gammapy-secondary);
-}

@@ -205,7 +205,7 @@ templates_path = ["_templates"]
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
-html_logo = os.path.join(html_static_path[0], "gammapy_logo_nav.png")
+html_logo = os.path.join(html_static_path[0], "gammapy_logo.png")
 html_favicon = os.path.join(html_static_path[0], "gammapy_logo.ico")
 
 # Custom sidebar templates, maps document names to template names.
@@ -247,7 +247,10 @@ html_theme_options = {
         "json_url": "https://docs.gammapy.org/stable/switcher.json",
         "version_match": switch_version,
     },
-    "navbar_end": ["version-switcher", "navbar-icon-links"],
+    "theme_switcher": {
+        "default": "light",
+    },
+    "navbar_end": ["version-switcher", "theme-switcher", "navbar-icon-links"],
     "navigation_with_keys": True,
     # footers
     "footer_start": ["copyright","custom-footer.html"],
