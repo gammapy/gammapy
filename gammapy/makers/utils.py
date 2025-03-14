@@ -419,7 +419,7 @@ def make_edisp_kernel_map(
 
 
 def make_theta_squared_table(
-    observations, theta_squared_axis, position, position_off=None
+    observations, theta_squared_axis, position, position_off=None, energy_edges=None
 ):
     """Make theta squared distribution in the same FoV for a list of `Observation` objects.
 
@@ -432,15 +432,19 @@ def make_theta_squared_table(
 
     Parameters
     ----------
-    observations: `~gammapy.data.Observations`
+    observations: `~gammapy.data.Observation`
         List of observations.
-    theta_squared_axis : `~gammapy.maps.geom.MapAxis`
+    theta_squared_axis : `~gammapy.maps.MapAxis`
         Axis of edges of the theta2 bin used to compute the distribution.
     position : `~astropy.coordinates.SkyCoord`
         Position from which the on theta^2 distribution is computed.
     position_off : `astropy.coordinates.SkyCoord`
         Position from which the OFF theta^2 distribution is computed.
         Default is reflected position w.r.t. to the pointing position.
+    energy_edges : list of `~astropy.units.Quantity`, optional
+        Edges of the energy bin where the theta squared distribution
+        is evaluated. For now, only one interval is accepted.
+        Default is None.
 
     Returns
     -------
@@ -465,7 +469,19 @@ def make_theta_squared_table(
 
     create_off = position_off is None
     for observation in observations:
-        event_position = observation.events.radec
+        if energy_edges is not None:
+            if len(energy_edges) == 2:
+                event_position = observation.events.select_energy(
+                    energy_range=energy_edges
+                ).radec
+
+                table.meta["Energy_filter"] = energy_edges
+            else:
+                raise ValueError(
+                    f"Only supports one energy interval but {len(energy_edges) - 1} passed."
+                )
+        else:
+            event_position = observation.events.radec
         pointing = observation.get_pointing_icrs(observation.tmid)
 
         separation = position.separation(event_position)
