@@ -676,22 +676,26 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         )
         return table
 
-    def write(self, filename, format="table", overwrite=False):
+    def write(self, filename=None, format="table", overwrite=False):
         """Write a model to disk as per the specified format.
 
-        Parameters:
-            filename : str
-                Name of output file.
-            format : {"table" or "map"}
-                If format is "table", it is serialised as a `~astropy.table.Table`.
-                If "map", then it is serialised as a `~gammapy.maps.RegionNDMap`.
-                Default is "table".
-            overwrite : bool, optional
-                Overwrite existing file. Default is False.
+        Parameters
+        ----------
+        filename : str, optional
+            Filename of the template model. By default, the template model
+            will be saved with the `LightCurveTemplateTemporalModel.filename` attribute,
+            if `filename` is provided this attribute will be updated.
+        format : {"table" or "map"}
+            If format is "table", it is serialised as a `~astropy.table.Table`.
+            If "map", then it is serialised as a `~gammapy.maps.RegionNDMap`.
+            Default is "table".
+        overwrite : bool, optional
+            Overwrite existing file. Default is False.
         """
-        if self.filename is None:
+        if filename:
+            self.filename = filename
+        elif not hasattr(self, "filename") or self.filename is None:
             raise IOError("Missing filename")
-
         if format == "table":
             table = self.to_table()
             table.write(filename, overwrite=overwrite)
