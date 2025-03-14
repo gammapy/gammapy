@@ -141,7 +141,7 @@ pointing = FixedPointingInfo(
     fixed_icrs=SkyCoord(0.0, 0.0, frame="galactic", unit="deg").icrs,
 )
 livetime = 1 * u.hr
-location = observatory_locations["cta_south"]
+location = observatory_locations["ctao_south"]
 
 
 irfs = load_irf_dict_from_file(path / irf_filename)
