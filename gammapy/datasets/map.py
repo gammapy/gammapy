@@ -2354,11 +2354,6 @@ class MapDataset(Dataset):
         plot_mask(ax=axes[3], mask=self.mask_safe_image, hatches=["///"], colors="w")
 
 
-# class MapDatasetWeighted(MapDataset):
-#    stat_type = "cash_weighted"
-#    tag = "MapDatasetWeighted"
-
-
 class MapDatasetOnOff(MapDataset):
     """Map dataset for on-off likelihood fitting.
 

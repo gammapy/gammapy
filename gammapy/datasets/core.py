@@ -91,13 +91,6 @@ class Dataset(abc.ABC):
         """Total statistic given the current model parameters without the priors."""
         return self._fit_statistic.stat_sum_dataset(self)
 
-    #        if self.mask is not None:
-    #            if isinstance(self.mask, np.ndarray):
-    #                stat = stat[self.mask.astype(bool)]
-    #            else:
-    #                stat = stat[self.mask.data.astype(bool)]
-    #        return np.sum(stat, dtype=np.float64)
-
     def stat_array(self):
         """Statistic array, one value per data point."""
         return self._fit_statistic.stat_array_dataset(self)
