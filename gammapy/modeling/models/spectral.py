@@ -1693,18 +1693,6 @@ class LogParabolaNormSpectralModel(SpectralModel):
     alpha = Parameter("alpha", 0)
     beta = Parameter("beta", 0)
 
-    def __init__(self, norm=None, reference=None, alpha=None, beta=None, **kwargs):
-        if norm is not None:
-            kwargs.update({"norm": norm})
-        if beta is not None:
-            kwargs.update({"beta": beta})
-        if reference is not None:
-            kwargs.update({"reference": reference})
-        if alpha is not None:
-            kwargs.update({"alpha": alpha})
-
-        super().__init__(**kwargs)
-
     @classmethod
     def from_log10(cls, norm, reference, alpha, beta):
         """Construct from :math:`log_{10}` parametrization."""
