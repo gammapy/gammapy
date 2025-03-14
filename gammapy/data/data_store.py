@@ -25,6 +25,7 @@ REQUIRED_IRFS = {
     "point-like": {"aeff", "edisp"},
     "all-optional": {},
 }
+TABLE_MATCHING_KEY = "OBS_TABLE_ROW"
 
 
 class MissingRequiredHDU(IOError):
@@ -94,7 +95,10 @@ class DataStore:
     @property
     def obs_ids(self):
         """Return the sorted obs_ids contained in the datastore."""
-        return np.unique(self.hdu_table["OBS_ID"].data)
+        if "OBS_ID" in self.hdu_table.keys():
+            return np.unique(self.hdu_table["OBS_ID"].data)
+        else:
+            return np.unique(self.obs_table["OBS_ID"].data)
 
     @classmethod
     def from_file(cls, filename, hdu_hdu="HDU_INDEX", hdu_obs="OBS_INDEX"):
@@ -260,7 +264,13 @@ class DataStore:
         else:
             return s
 
-    def obs(self, obs_id, required_irf="full-enclosure", require_events=True):
+    def obs(
+        self,
+        obs_id,
+        required_irf="full-enclosure",
+        require_events=True,
+        matching_id=None,
+    ):
         """Access a given `~gammapy.data.Observation`.
 
         Parameters
@@ -286,6 +296,9 @@ class DataStore:
             Default is `"full-enclosure"`.
         require_events : bool, optional
             Require events and gti table or not. Default is True.
+        matching_id : int, optional
+            ID used to match obs and hdu tables.
+            Default is None, and `obs_id` is used.
 
         Returns
         -------
@@ -293,8 +306,11 @@ class DataStore:
             Observation container.
 
         """
-        if obs_id not in self.hdu_table["OBS_ID"]:
-            raise ValueError(f"OBS_ID = {obs_id} not in HDU index table.")
+        if obs_id not in self.obs_ids:
+            raise ValueError(f"OBS_ID = {obs_id} not in index tables.")
+
+        if matching_id is None:
+            matching_id = obs_id
 
         kwargs = {"obs_id": int(obs_id)}
 
@@ -316,7 +332,7 @@ class DataStore:
         missing_hdus = []
         for hdu in ALL_HDUS:
             hdu_location = self.hdu_table.hdu_location(
-                obs_id=obs_id,
+                obs_id=matching_id,
                 hdu_type=hdu,
                 warn_missing=False,
             )
@@ -392,14 +408,27 @@ class DataStore:
         if obs_id is None:
             obs_id = self.obs_ids
 
+        if TABLE_MATCHING_KEY in self.hdu_table.keys():
+            selection = [ind in obs_id for ind in self.obs_table["OBS_ID"]]
+            obs_id = self.obs_table["OBS_ID"][selection]
+            matching_id = self.obs_table[TABLE_MATCHING_KEY][selection]
+        elif "OBS_ID" in self.hdu_table.keys():
+            matching_id = obs_id
+        else:
+            raise KeyError(
+                f"Table matching key {TABLE_MATCHING_KEY} or OBS_ID not found"
+            )
+
         obs_list = []
 
-        for _ in progress_bar(obs_id, desc="Obs Id"):
+        for ind in progress_bar(range(len(obs_id)), desc="Obs Id"):
             try:
-                obs = self.obs(_, required_irf, require_events)
+                obs = self.obs(
+                    obs_id[ind], required_irf, require_events, matching_id[ind]
+                )
             except ValueError as err:
                 if skip_missing:
-                    log.warning(f"Skipping missing obs_id: {_!r}")
+                    log.warning(f"Skipping missing obs_id: {obs_id[ind]!r}")
                     continue
                 else:
                     raise err

@@ -139,11 +139,17 @@ class MapDatasetMaker(Maker):
         counts : `~gammapy.maps.Map`
             Counts map.
         """
+
         if geom.is_region and isinstance(geom.region, PointSkyRegion):
             counts = make_counts_rad_max(geom, observation.rad_max, observation.events)
         else:
             counts = Map.from_geom(geom)
-            counts.fill_events(observation.events)
+            if isinstance(observation.events, list):
+                events_lists = observation.events
+            else:
+                events_lists = [observation.events]
+            for events_list in events_lists:
+                counts.fill_events(events_list)
         return counts
 
     @staticmethod
