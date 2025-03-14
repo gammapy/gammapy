@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
-from scipy.special import erfc
 from astropy import units as u
 from astropy.io import fits
 from astropy.table import Table
@@ -15,6 +14,7 @@ from gammapy.modeling.models import (
     SkyModel,
     TemplateSpatialModel,
 )
+from gammapy.stats import FIT_STATISTICS_REGISTRY
 from gammapy.utils.interpolation import interpolate_profile
 from gammapy.utils.scripts import make_name, make_path
 from .core import Dataset
@@ -141,12 +141,6 @@ class FluxPointsDataset(Dataset):
         self.models = models
         self.meta_table = meta_table
 
-        self._available_stat_type = dict(
-            chi2=self._stat_array_chi2,
-            profile=self._stat_array_profile,
-            distrib=self._stat_array_distrib,
-        )
-
         if stat_kwargs is None:
             stat_kwargs = dict()
         self.stat_kwargs = stat_kwargs
@@ -159,7 +153,7 @@ class FluxPointsDataset(Dataset):
 
     @property
     def available_stat_type(self):
-        return list(self._available_stat_type.keys())
+        return ["chi2", "distrib", "profile"]
 
     @property
     def stat_type(self):
@@ -183,6 +177,7 @@ class FluxPointsDataset(Dataset):
             self.stat_kwargs.setdefault("extrapolate", True)
             self._profile_interpolators = self._get_valid_profile_interpolators()
         self._stat_type = stat_type
+        self._fit_statistic = FIT_STATISTICS_REGISTRY[stat_type]
 
     @property
     def mask_valid(self):
@@ -377,30 +372,6 @@ class FluxPointsDataset(Dataset):
             flux += flux_model
         return flux
 
-    def stat_array(self):
-        """Fit statistic array."""
-        return self._available_stat_type[self.stat_type]()
-
-    def _stat_array_chi2(self):
-        """Chi2 statistics."""
-        model = self.flux_pred()
-        data = self.data.dnde.quantity
-        try:
-            sigma = self.data.dnde_err.quantity
-        except AttributeError:
-            sigma = (self.data.dnde_errn + self.data.dnde_errp).quantity / 2
-        return ((data - model) / sigma).to_value("") ** 2
-
-    def _stat_array_profile(self):
-        """Estimate statitistic from interpolation of the likelihood profile."""
-        model = np.zeros(self.data.dnde.data.shape) + (
-            self.flux_pred() / self.data.dnde_ref
-        ).to_value("")
-        stat = np.zeros(model.shape)
-        for idx in np.ndindex(self._profile_interpolators.shape):
-            stat[idx] = self._profile_interpolators[idx](model[idx])
-        return stat
-
     def _get_valid_profile_interpolators(self):
         value_scan = self.data.stat_scan.geom.axes["norm"].center
         shape_axes = self.data.stat_scan.geom._shape[slice(3, None)][::-1]
@@ -419,46 +390,6 @@ class FluxPointsDataset(Dataset):
                 extrapolate=self.stat_kwargs["extrapolate"],
             )
         return interpolators
-
-    def _stat_array_distrib(self):
-        """Estimate statistic from probability distributions,
-        assumes that flux points correspond to asymmetric gaussians
-        and upper limits complementary error functions.
-        """
-
-        model = np.zeros(self.data.dnde.data.shape) + self.flux_pred().to_value(
-            self.data.dnde.unit
-        )
-
-        stat = np.zeros(model.shape)
-
-        mask_valid = ~np.isnan(self.data.dnde.data)
-        loc = self.data.dnde.data[mask_valid]
-        value = model[mask_valid]
-        try:
-            mask_p = (model >= self.data.dnde.data)[mask_valid]
-            scale = np.zeros(mask_p.shape)
-            scale[mask_p] = self.data.dnde_errp.data[mask_valid][mask_p]
-            scale[~mask_p] = self.data.dnde_errn.data[mask_valid][~mask_p]
-
-            mask_invalid = np.isnan(scale)
-            scale[mask_invalid] = self.data.dnde_err.data[mask_valid][mask_invalid]
-        except AttributeError:
-            scale = self.data.dnde_err.data[mask_valid]
-
-        stat[mask_valid] = ((value - loc) / scale) ** 2
-
-        mask_ul = self.data.is_ul.data
-        value = model[mask_ul]
-        loc_ul = self.data.dnde_ul.data[mask_ul]
-        scale_ul = self.data.dnde_ul.data[mask_ul]
-        stat[mask_ul] = 2 * np.log(
-            (erfc((loc_ul - value) / scale_ul) / 2)
-            / (erfc((loc_ul - 0) / scale_ul) / 2)
-        )
-
-        stat[np.isnan(stat.data)] = 0
-        return stat
 
     def residuals(self, method="diff"):
         """Compute flux point residuals.
