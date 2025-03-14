@@ -50,32 +50,40 @@ class JFactory:
             \int_{\mathrm{LoS}} \mathrm d l \rho(l)
         """
         separation = self.geom.separation(self.geom.center_skydir).rad
-        rmin = u.Quantity(
-            value=np.tan(separation) * self.distance, unit=self.distance.unit
-        )
-        rmax = self.distance
+        # only do one for each separation
+        unique_sep, reco_indices = np.unique(separation.ravel(), return_inverse=True)
+        distance_val = self.distance.to_value("cm")
+        rmin = np.tan(unique_sep) * distance_val
+        rmax = distance_val
+        kwargs = {par.name: par.quantity for par in self.profile.parameters}
+        kwargs["r_s"] = kwargs["r_s"].to_value("cm")
+        kwargs["rho_s"] = kwargs["rho_s"].to_value("GeV/cm3")
+
         val = [
             (
                 2
                 * self.profile.integral(
-                    _.value * u.kpc,
+                    r,
                     rmax,
-                    np.arctan(_.value / self.distance.value),
+                    s,
                     ndecade,
                     self.annihilation,
+                    **kwargs,
                 )
                 + self.profile.integral(
-                    self.distance,
+                    distance_val,
                     4 * rmax,
-                    np.arctan(_.value / self.distance.value),
+                    s,
                     ndecade,
                     self.annihilation,
+                    **kwargs,
                 )
             )
-            for _ in rmin.ravel()
+            for r, s in zip(rmin, unique_sep)
         ]
+        val = np.array(val)[reco_indices]
         integral_unit = u.Unit("GeV2 cm-5") if self.annihilation else u.Unit("GeV cm-2")
-        jfact = u.Quantity(val).to(integral_unit).reshape(rmin.shape)
+        jfact = u.Quantity(val, unit=integral_unit).reshape(separation.shape)
         return jfact / u.steradian
 
     def compute_jfactor(self, ndecade=1e4):
