@@ -6,47 +6,47 @@
 PIG 29 - Separation of Plotting Methods using Plotter classes
 *************************************************************
 
-* Author: Régis Terrier
-* Created: ``2025-03-31``
+* Author: Régis Terrier and Atreyee Sinha
+* Created: ``2025-03-14``
 * Accepted:
 * Status:
-* Discussion:
+* Discussion: `#5726`_
 
 Abstract
 ========
 
 This PIG proposes to separate plotting methods from Gammapy objects by introducing
-dedicated `Plotter` classes (e.g., `MapDatasetPlotter`). This will improve code maintainability,
+dedicated `Plotter` classes (e.g., `MapDatasetPlotter`). This would improve code maintainability,
 enhance flexibility for users, and optimize efficiency by avoiding unnecessary imports of `matplotlib`.
-
+This could also facilitate testing beyond the simple execution of the plotting methods.
 
 Motivation
 ==========
 
 Currently, plotting methods are tightly integrated with Gammapy objects. This presents several issues:
 
-- **Code Complexity**: Plotting code can be large and complex, making files harder to read and maintain.
-- **Performance Overhead**: Always importing `matplotlib` is inefficient for users who do not need plotting functionalities.
+- **Code Complexity**: Plotting code can be a large fraction of the code of a given class (see e.g. `Background2D`) . Plot functions are often large and complex,
+  making files harder to read and maintain.
 - **Lack of Extensibility**: Users cannot easily extend plotting functionalities without modifying core Gammapy objects.
+  For instance, Datasets built from different experiment might require different `peek()` methods. See for instance `#5570`_.
+  It should not be necessary to create a new `Dataset` object to support this.
+- **Performance Overhead**: We initially always used delayed imports for matplotlib but removed this at some point. Yet always importing `matplotlib`
+  is inefficient for workflows that do not need plotting functionalities.
 
-A more modular approach, using dedicated `Plotter` classes, will resolve these issues while preserving all current plotting functionalities.
+A more modular approach, using dedicated `Plotter` classes, would resolve these issues while preserving all current plotting functionalities.
 
+Note that SunPy `ndcube` implements as a similar approach `MatplotlibPlotter`_
 
 Proposed Changes
 ================
 
 - Introduce separate `Plotter` classes for different Gammapy objects (e.g., `MapDatasetPlotter`, `SpectrumDatasetPlotter`).
-- Move existing plotting methods from core objects to these new `Plotter` classes.
-- Update documentation and user guides to reflect the new structure.
-- Ensure backward compatibility by providing transitional interfaces or deprecation warnings where necessary.
-
-
-Backward Compatibility
-----------------------
-
-- Existing plotting functionalities will remain accessible but may be deprecated in future releases.
-- A transition period will be provided where old methods internally call the new `Plotter` classes.
-- Users will be encouraged to migrate by updating examples and documentation.
+  - A `Plotter` would take the object to plot on init and reimplement its plot methods.
+  - The `Plotter` would be an attribute of the parent object.
+  - It could be lazily instantiated to import matplotlib only when needed.
+  - Existing plot methods will silently call the `self.plotter` to ensure backward compatibility
+- Move existing plotting methods from core objects to these new `Plotter` classes. Move corresponding tests as well.
+  - Existing plotting functionalities will remain accessible but may be deprecated in future releases.
 
 
 Implementation
@@ -56,22 +56,116 @@ Implementation
 - Define `Plotter` classes for key Gammapy objects and move plotting-related code there.
 - Each `Plotter` class should take its related Gammapy object as an initialization parameter.
 - At a minimum, a `Plotter` class should implement all plotting-related methods currently existing for its associated object.
-- Update imports and references across the library accordingly.
-- Update the documentation with examples and migration guidelines.
 
+The `MapDatasetPlotter` could look like this:
+
+.. code:: python
+
+  import matplotlib.pyplot as plt
+
+  class MapDatasetPlotter:
+    """"""
+    def __init__(self, dataset):
+        self.dataset = dataset
+
+    def peek(self,  figsize=(12, 8)):
+        """Quick-look summary plots.
+
+        Parameters
+        ----------
+        figsize : tuple
+            Size of the figure. Default is (12, 10).
+
+        """
+
+        def plot_mask(ax, mask, **kwargs):
+            if mask is not None:
+                mask.plot_mask(ax=ax, **kwargs)
+
+        fig, axes = plt.subplots(
+            ncols=2,
+            nrows=2,
+            subplot_kw={"projection": self._geom.wcs},
+            figsize=figsize,
+            gridspec_kw={"hspace": 0.25, "wspace": 0.1},
+        )
+
+        axes = axes.flat
+        axes[0].set_title("Counts")
+        self.dataset.counts.sum_over_axes().plot(ax=axes[0], add_cbar=True)
+        self.plot_mask(ax=axes[0], mask=self.mask_fit_image, alpha=0.2)
+        self.plot_mask(ax=axes[0], mask=self.mask_safe_image, hatches=["///"], colors="w")
+
+        axes[1].set_title("Excess counts")
+        self.dataset.excess.sum_over_axes().plot(ax=axes[1], add_cbar=True)
+        self.plot_mask(ax=axes[1], mask=self.mask_fit_image, alpha=0.2)
+        self.plot_mask(ax=axes[1], mask=self.mask_safe_image, hatches=["///"], colors="w")
+
+        axes[2].set_title("Exposure")
+        self.dataset.exposure.sum_over_axes().plot(ax=axes[2], add_cbar=True)
+        self.plot_mask(ax=axes[2], mask=self.mask_safe_image, hatches=["///"], colors="w")
+
+        axes[3].set_title("Background")
+        self.dataset.background.sum_over_axes().plot(ax=axes[3], add_cbar=True)
+        self.plot_mask(ax=axes[3], mask=self.mask_fit_image, alpha=0.2)
+        self.plot_mask(ax=axes[3], mask=self.mask_safe_image, hatches=["///"], colors="w")
+
+    def plot_mask(self,):
+        pass
+
+In the `MapDataset` code one would have:
+
+.. code:: python
+
+        def __init__(self, **lots_of_arguments):
+            self._plotter = None  # Lazy instantiation
+
+        @property
+        def plotter(self):
+            """Access the plotter for this MapDataset.
+
+            See `MapDatasetPlotter` for available plotting methods.
+            """
+            if self._plotter is None:
+                from .plotters import MapDatasetPlotter   # delayed import
+
+                self._plotter = MapDatasetPlotter(self)
+            return self._plotter
+
+        def peek(self, figsize=(12, 8)):
+            self.plotter.peek(figsize)
+
+An example for `gammapy.data` objects is proposed in the PR `#5725`_.
+
+The property getter/setter mechanism could use a `PlotMixin` approach to avoid repeating the boilerplate code.
+
+If a user wants to modify `MapDataset.peek()` to provide more suited visualization of e.g. Fermi data (`#5570`_), they could
+create a class inheriting from `MapDatasetPlotter` anv overload its `peek` method. Similarly, different plotting
+backends could be supported.
 
 Alternatives
 ============
 
+A general drawback of this approach is the large number of plotter classes necessary. Yet given the specialization of plot functions this seems
+unavoidable.
+
+Other strategies can be envisioned:
 - Keep the current approach: This would maintain the status quo but does not address the issues outlined.
 - Use mixin classes: This could modularize the code but still tightly couples plotting with core objects.
-- Define standalone plotting functions instead of classes: This would reduce complexity but may lead to less structured and reusable code.
+  We have this already with `PlotMixin` that is used by `SpectrumDataset`. But this does not allow to have you own plotters
+  nor to have delayed imports.
+- Define standalone plotting functions instead of classes: This would reduce complexity but may lead to less structured and reusable code
+  and probably less maintainable.
 
 
 Decision
 ========
 
-- [Link to relevant Gammapy issues or discussions]
-- [Related PIGs or external references]
-- SunPy `ndcube` implementation as a similar approach reference.
+The PIG is open for discussion
+
+.. _#5570: https://github.com/gammapy/gammapy/issues/5570
+.. _#5725: https://github.com/gammapy/gammapy/issues/5725
+.. _#5726: https://github.com/gammapy/gammapy/issues/5726
+.. _(see e.g. MatplotlibPlotter): https://docs.sunpy.org/projects/ndcube/en/stable/api/ndcube.visualization.mpl_plotter.MatplotlibPlotter.html
+
 
