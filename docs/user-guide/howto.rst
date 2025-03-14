@@ -350,11 +350,10 @@ Please give feedback and suggest additions to this page!
     To do a pulsar analysis, one must compute the pulsar phase of
     each event and put this new information in a new `~gammapy.data.Observation`.
     Computing pulsar phases can be done using an external library such as
-    [PINT](https://nanograv-pint.readthedocs.io/en/latest/) or
-    [Tempo2](https://www.pulsarastronomy.net/pulsar/software/tempo2). A
-    [Gammapy Recipe](https://gammapy.github.io/gammapy-recipes/_build/html/index.html)
-    showing how to use PINT within the Gammapy framework is available
-    [here](https://gammapy.github.io/gammapy-recipes/_build/html/notebooks/pulsar_phase/pulsar_phase_computation.html).
+    `PINT <https://nanograv-pint.readthedocs.io/en/latest/>`__ or
+    `Tempo2 <https://www.pulsarastronomy.net/pulsar/software/tempo2>`__. A
+    gammapy recipe showing how to use PINT within the Gammapy framework is available
+    `here <https://gammapy.github.io/gammapy-recipes/_build/html/notebooks/pulsar_phase/pulsar_phase_computation.html>`__.
     For brevity, the code below shows how to add a dummy phase column to a new
     `~gammapy.data.EventList` and `~gammapy.data.Observation`.
 
