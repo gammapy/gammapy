@@ -15,6 +15,7 @@ from gammapy.datasets.utils import get_nearest_valid_exposure_position
 from gammapy.maps import Map, MapAxis, Maps
 from gammapy.modeling.models import PointSpatialModel, PowerLawSpectralModel, SkyModel
 from gammapy.stats import cash, cash_sum_cython, f_cash_root_cython, norm_bounds_cython
+from gammapy.stats.utils import ts_to_sigma
 from gammapy.utils.array import shape_2N, symmetric_crop_pad_width
 from gammapy.utils.pbar import progress_bar
 from gammapy.utils.roots import find_roots
@@ -75,6 +76,8 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         Number of sigma for flux error. Default is 1.
     n_sigma_ul : int
         Number of sigma for flux upper limits. Default is 2.
+    n_sigma_sensitivity : int
+        Number of sigma for flux  sensitivity. Default is 5.
     downsampling_factor : int
         Sample down the input maps to speed up the computation. Only integer
         values that are a multiple of 2 are allowed. Note that the kernel is
@@ -171,7 +174,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
     """
 
     tag = "TSMapEstimator"
-    _available_selection_optional = ["errn-errp", "ul", "stat_scan"]
+    _available_selection_optional = ["errn-errp", "ul", "stat_scan", "sensitivity"]
 
     def __init__(
         self,
@@ -180,6 +183,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         downsampling_factor=None,
         n_sigma=1,
         n_sigma_ul=2,
+        n_sigma_sensitivity=5,
         threshold=None,
         rtol=0.01,
         selection_optional=None,
@@ -208,6 +212,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         self.downsampling_factor = downsampling_factor
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
+        self.n_sigma_sensitivity = n_sigma_sensitivity
         self.threshold = threshold
         self.rtol = rtol
         self.n_jobs = n_jobs
@@ -256,6 +261,8 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
             if "ul" in self.selection_optional:
                 selection += ["norm_ul"]
 
+        if "sensitivity" in self.selection_optional:
+            selection += ["norm_sensitivity"]
         return selection
 
     def estimate_kernel(self, dataset):
@@ -672,6 +679,14 @@ class SimpleMapDataset:
         """Statistics sum."""
         return cash_sum_cython(self.counts, self.npred(norm))
 
+    def stat_sum_asimov(self, norm):
+        """Statistics sum."""
+        return cash_sum_cython(self.npred(norm), self.npred(norm))
+
+    def stat_sum_asimov_null(self, norm):
+        """Statistics sum."""
+        return cash_sum_cython(self.npred(norm), self.background)
+
     def stat_derivative(self, norm):
         """Statistics derivative."""
         return f_cash_root_cython(norm, self.counts, self.background, self.model)
@@ -712,7 +727,7 @@ class SimpleMapDataset:
 class BrentqFluxEstimator(Estimator):
     """Single parameter flux estimator."""
 
-    _available_selection_optional = ["errn-errp", "ul", "stat_scan"]
+    _available_selection_optional = ["errn-errp", "ul", "stat_scan", "sensitivity"]
     tag = "BrentqFluxEstimator"
 
     def __init__(
@@ -720,6 +735,7 @@ class BrentqFluxEstimator(Estimator):
         rtol,
         n_sigma,
         n_sigma_ul,
+        n_sigma_sensitivity=5,
         selection_optional=None,
         max_niter=100,
         ts_threshold=None,
@@ -728,6 +744,7 @@ class BrentqFluxEstimator(Estimator):
         self.rtol = rtol
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
+        self.n_sigma_sensitivity = n_sigma_sensitivity
         self.selection_optional = selection_optional
         self.max_niter = max_niter
         self.ts_threshold = ts_threshold
@@ -857,6 +874,32 @@ class BrentqFluxEstimator(Estimator):
         )
         return {"norm_errn": flux_errn, "norm_errp": flux_errp}
 
+    def estimate_sensitivity(self, dataset, result):
+        norm = result["norm"]
+
+        def sigma_diff(x):
+            ts_asimov = dataset.stat_sum_asimov_null(x) - dataset.stat_sum_asimov(x)
+            return (
+                ts_to_sigma(ts_asimov, ts_asimov=ts_asimov) - self.n_sigma_sensitivity
+            )
+
+        min_norm = norm / 1000.0
+        max_norm = norm * 1000.0
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            roots, res = find_roots(
+                sigma_diff,
+                [min_norm],
+                [max_norm],
+                nbin=1,
+                maxiter=self.max_niter,
+                rtol=self.rtol,
+            )
+            # Where the root finding fails NaN is set as norm
+            norm_sensitivity = roots[0]
+        return {"norm_sensitivity": norm_sensitivity}
+
     def estimate_scan(self, dataset, result):
         """Compute likelihood profile.
 
@@ -974,6 +1017,9 @@ class BrentqFluxEstimator(Estimator):
 
         if "stat_scan" in self.selection_optional:
             result.update(self.estimate_scan(dataset, result))
+
+        if "sensitivity" in self.selection_optional:
+            result.update(self.estimate_sensitivity(dataset, result))
 
         norm = result["norm"]
         result["npred"] = dataset.npred(norm=norm).sum()
