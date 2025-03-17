@@ -1315,9 +1315,14 @@ class TemplateSpatialModel(SpatialModel):
 
         if filename is not None:
             filename = str(make_path(filename))
+        if filename is None:
+            log.warning(
+                "The filename is not defined therefore the model will not be serialised correctly. "
+                'To set the filename the "model.filename" attribute can be used.'
+            )
+        self.filename = filename
 
         self.normalize = normalize
-
         if normalize:
             # Normalize the diffuse map model so that it integrates to unity
             if map.geom.is_image:
@@ -1352,7 +1357,6 @@ class TemplateSpatialModel(SpatialModel):
         interp_kwargs.setdefault("values_scale", "log")
 
         self._interp_kwargs = interp_kwargs
-        self.filename = filename
         kwargs["frame"] = self.map.geom.frame
         if "lon_0" not in kwargs or (
             isinstance(kwargs["lon_0"], Parameter) and np.isnan(kwargs["lon_0"].value)
@@ -1500,23 +1504,23 @@ class TemplateSpatialModel(SpatialModel):
         data["spatial"]["unit"] = str(self.map.unit)
         return data
 
-    def write(self, filename=None, overwrite=False):
+    def write(self, overwrite=False, filename=None):
         """
         Write the map.
 
         Parameters
         ----------
+        overwrite : bool, optional
+            Overwrite existing file.
+            Default is False, which will raise a warning if the template file exists already.
         filename : str, optional
             Filename of the template model. By default, the template model
             will be saved with the `TemplateSpatialModel.filename` attribute,
             if `filename` is provided this attribute will be updated.
-        overwrite : bool, optional
-            Overwrite existing file.
-            Default is False, which will raise a warning if the template file exists already.
         """
-        if filename:
+        if filename is not None:
             self.filename = filename
-        elif not hasattr(self, "filename") or self.filename is None:
+        if self.filename is None:
             raise IOError("Missing filename")
         if os.path.isfile(make_path(self.filename)) and not overwrite:
             log.warning("Template file already exits, and overwrite is False")
@@ -1580,6 +1584,11 @@ class TemplateNDSpatialModel(SpatialModel):
         self.meta = dict() if meta is None else meta
         if filename is not None:
             filename = str(make_path(filename))
+        if filename is None:
+            log.warning(
+                "The filename is not defined therefore the model will not be serialised correctly. "
+                'To set the filename the "model.filename" attribute can be used.'
+            )
         self.filename = filename
 
         parameters = []
@@ -1629,23 +1638,23 @@ class TemplateNDSpatialModel(SpatialModel):
 
         return u.Quantity(val, self.map.unit, copy=COPY_IF_NEEDED)
 
-    def write(self, filename=None, overwrite=False):
+    def write(self, overwrite=False, filename=None):
         """
         Write the map.
 
         Parameters
         ----------
-        filename : str, optional
-            Filename of the template model. By default, the template model
-            will be saved with the `TemplateNDSpatialModel.filename` attribute,
-            if `filename` is provided this attribute will be updated.
         overwrite : bool, optional
             Overwrite existing file.
             Default is False, which will raise a warning if the template file exists already.
+        filename : str, optional
+            Filename of the template model. By default, the template model
+            will be saved with the `TemplateSpatialModel.filename` attribute,
+            if `filename` is provided this attribute will be updated.
         """
-        if filename:
+        if filename is not None:
             self.filename = filename
-        elif not hasattr(self, "filename") or self.filename is None:
+        if self.filename is None:
             raise IOError("Missing filename")
         if os.path.isfile(make_path(self.filename)) and not overwrite:
             log.warning("Template file already exits, and overwrite is False")
