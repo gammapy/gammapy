@@ -656,7 +656,10 @@ class WcsNDMap(WcsMap):
                 weights_cutout = weights.cutout(
                     position=geom.center_skydir, width=geom.width
                 )
-                cutout.data *= weights_cutout.data
+                if weights.is_mask:
+                    mask.data = np.logical_and(mask.data, weights.data)
+                else:
+                    cutout.data *= weights_cutout.data
 
             idx_y, idx_x = np.where(mask)
             data = func(cutout.data[..., idx_y, idx_x], axis=-1)
