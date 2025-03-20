@@ -130,6 +130,7 @@ def test_run(backend):
     assert_allclose(pars["z"].error, 1, rtol=1e-7)
 
 
+@requires_dependency("jacobi")
 def test_run_scale_interp_change():
     dataset = MyDataset()
     fit = Fit(backend="minuit")
