@@ -72,14 +72,32 @@ class Covariance:
 
         Used in the optimizer interface.
         """
+
         npars = len(parameters)
 
         if not matrix.shape == (npars, npars):
             matrix = cls._expand_factor_matrix(matrix, parameters)
 
-        scales = [par.scale for par in parameters]
-        scale_matrix = np.outer(scales, scales)
-        data = scale_matrix * matrix
+        if np.all([p.scale_interp == "lin" for p in parameters]):
+            scales = [par.scale for par in parameters]
+            scale_matrix = np.outer(scales, scales)
+            data = scale_matrix * matrix
+        elif npars > 0:
+            from jacobi import propagate
+
+            factors = np.array([p.factor for p in parameters])
+
+            def fn(x):
+                return np.array(
+                    [
+                        parameters[k].inverse_transform(factor)
+                        for k, factor in enumerate(x)
+                    ]
+                )
+
+            _, data = propagate(fn, factors, matrix)
+        else:
+            data = None
 
         return cls(parameters, data=data)
 
