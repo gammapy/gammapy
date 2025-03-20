@@ -20,15 +20,15 @@ __all__ = ["Model", "Models", "DatasetModels", "ModelBase"]
 log = logging.getLogger(__name__)
 
 
-def _recursive_dict_filename_update(d, path):
+def _recursive_dict_filename_update(dict_, path):
     """update model filename to full path if exits"""
-    for k, v in d.items():
-        if isinstance(v, dict):
-            _recursive_dict_filename_update(v, path)
-        elif k == "filename":
-            filename = d[k]
+    for key, value in dict_.items():
+        if isinstance(value, dict):
+            _recursive_dict_filename_update(value, path)
+        elif key == "filename":
+            filename = dict_[key]
             if (path / filename).exists():
-                d[k] = path / filename
+                dict_[key] = path / filename
 
 
 def _recursive_model_filename_update(model, path):
