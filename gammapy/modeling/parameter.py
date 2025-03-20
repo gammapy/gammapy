@@ -128,8 +128,6 @@ class Parameter:
         self._scale_interp = scale_interp
         self.interp = interp
         self._scale = float(scale)
-        self.min = min
-        self.max = max
         self.frozen = frozen
         self._error = error
         self._type = None
@@ -222,7 +220,7 @@ class Parameter:
     @factor.setter
     def factor(self, val):
         self._factor = float(val)
-        self._value = self.inverse_transform(self._factor)
+        self._value = float(self.inverse_transform(self._factor))
 
     @property
     def scale(self):
