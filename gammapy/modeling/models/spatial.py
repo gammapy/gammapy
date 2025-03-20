@@ -1649,7 +1649,7 @@ class TemplateNDSpatialModel(SpatialModel):
             Default is False, which will raise a warning if the template file exists already.
         filename : str, optional
             Filename of the template model. By default, the template model
-            will be saved with the `TemplateSpatialModel.filename` attribute,
+            will be saved with the `TemplateNDSpatialModel.filename` attribute,
             if `filename` is provided this attribute will be updated.
         """
         if filename is not None:
