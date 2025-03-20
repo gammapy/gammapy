@@ -255,7 +255,7 @@ class Parameter:
     def factor_min(self):
         """Factor minimum as a float.
 
-        This ``factor_min = min / scale`` is for the optimizer interface.
+        This ``factor_min = transform(min)`` is for the optimizer interface.
         """
         return self.transform(self.min)
 
@@ -271,6 +271,14 @@ class Parameter:
             self._max = np.nan
         else:
             self._max = self._set_quantity_str_float(val)
+
+    @property
+    def factor_max(self):
+        """Factor maximum as a float.
+
+        This ``factor_max = transform(max)`` is for the optimizer interface.
+        """
+        return self.transform(self.max)
 
     def _set_quantity_str_float(self, value):
         """Logics for min and max setter."""
@@ -294,22 +302,6 @@ class Parameter:
             self.min = min
         if max is not None:
             self.max = max
-
-    @property
-    def factor_min(self):
-        """Factor minimum as a float.
-
-        This ``factor_min = min / scale`` is for the optimizer interface.
-        """
-        return self.min / self.scale
-
-    @property
-    def factor_max(self):
-        """Factor maximum as a float.
-
-        This ``factor_max = max / scale`` is for the optimizer interface.
-        """
-        return self.transform(self.max)
 
     @property
     def scale_method(self):
@@ -542,6 +534,15 @@ class Parameter:
             self._scale = value
 
     def transform(self, value, update_scale=False):
+        """Tranform from value to factor (used by the optimizer).
+
+        Parameters
+        ----------
+        value : float
+            Parameter value
+        update_scale : bool
+            Update the scaling (used by the autoscale)
+        """
         interp_scale = interpolation_scale(self.scale_interp)
         factor = interp_scale(value)
         if update_scale:
@@ -549,6 +550,13 @@ class Parameter:
         return factor / self.scale
 
     def inverse_transform(self, factor):
+        """Inverse tranform from factor (used by the optimizer) to value.
+
+        Parameters
+        ----------
+        value : float
+            Parameter factor
+        """
         factor = self.scale * factor
         interp_scale = interpolation_scale(self.scale_interp)
         value = interp_scale.inverse(factor)
