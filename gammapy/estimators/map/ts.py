@@ -15,6 +15,7 @@ from gammapy.datasets.utils import get_nearest_valid_exposure_position
 from gammapy.maps import Map, MapAxis, Maps
 from gammapy.modeling.models import PointSpatialModel, PowerLawSpectralModel, SkyModel
 from gammapy.stats import cash, cash_sum_cython, f_cash_root_cython, norm_bounds_cython
+from gammapy.stats.utils import ts_to_sigma
 from gammapy.utils.array import shape_2N, symmetric_crop_pad_width
 from gammapy.utils.pbar import progress_bar
 from gammapy.utils.roots import find_roots
@@ -75,6 +76,8 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         Number of sigma for flux error. Default is 1.
     n_sigma_ul : int
         Number of sigma for flux upper limits. Default is 2.
+    n_sigma_sensitivity : int
+        Number of sigma for flux  sensitivity. Default is 5.
     downsampling_factor : int
         Sample down the input maps to speed up the computation. Only integer
         values that are a multiple of 2 are allowed. Note that the kernel is
@@ -166,11 +169,12 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
     References
     ----------
-    [Stewart2009]_
+    `Stewart (2009), “Maximum-likelihood detection of sources among Poissonian noise”
+    <https://ui.adsabs.harvard.edu/abs/2009A%26A...495..989S/abstract>`_
     """
 
     tag = "TSMapEstimator"
-    _available_selection_optional = ["errn-errp", "ul", "stat_scan"]
+    _available_selection_optional = ["errn-errp", "ul", "stat_scan", "sensitivity"]
 
     def __init__(
         self,
@@ -179,6 +183,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         downsampling_factor=None,
         n_sigma=1,
         n_sigma_ul=2,
+        n_sigma_sensitivity=5,
         threshold=None,
         rtol=0.01,
         selection_optional=None,
@@ -207,6 +212,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         self.downsampling_factor = downsampling_factor
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
+        self.n_sigma_sensitivity = n_sigma_sensitivity
         self.threshold = threshold
         self.rtol = rtol
         self.n_jobs = n_jobs
@@ -255,6 +261,8 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
             if "ul" in self.selection_optional:
                 selection += ["norm_ul"]
 
+        if "sensitivity" in self.selection_optional:
+            selection += ["norm_sensitivity"]
         return selection
 
     def estimate_kernel(self, dataset):
@@ -340,8 +348,8 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
         flux.quantity = flux.quantity.to("1 / (cm2 s)")
         flux = flux.convolve(kernel)
-        if dataset.mask_safe:
-            flux *= dataset.mask_safe
+        if dataset.mask:
+            flux *= dataset.mask
         return flux.sum_over_axes()
 
     @staticmethod
@@ -358,22 +366,14 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         mask : `WcsNDMap`
             Mask map.
         """
-        geom = dataset.counts.geom.to_image()
-
-        mask = np.ones(geom.data_shape, dtype=bool)
-
-        if dataset.mask is not None:
-            mask &= dataset.mask.reduce_over_axes(func=np.logical_or, keepdims=False)
-
-        # in some image there are pixels, which have exposure, but zero
-        # background, which doesn't make sense and causes the TS computation
-        # to fail, this is a temporary fix
-        npred = dataset.npred()
-        if dataset.mask_safe:
-            npred *= dataset.mask_safe
-        background = npred.sum_over_axes(keepdims=False)
-        mask[background.data == 0] = False
-        return Map.from_geom(data=mask, geom=geom)
+        if dataset.mask_fit:
+            mask = dataset.mask
+        elif dataset.mask_safe:
+            mask = dataset.mask_safe
+        else:
+            mask = Map.from_geom(dataset.counts.geom, data=True, dtype=bool)
+        mask &= np.isfinite(dataset.npred())
+        return mask
 
     def estimate_pad_width(self, dataset, kernel=None):
         """Estimate pad width of the dataset.
@@ -429,10 +429,9 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
             dataset=dataset, kernel=kernel, exposure=exposure
         )
 
-        mask_safe = dataset.mask_safe if dataset.mask_safe else 1.0
-        counts = dataset.counts * mask_safe
-        background = dataset.npred() * mask_safe
-        exposure *= mask_safe
+        counts = dataset.counts * mask
+        background = dataset.npred() * mask
+        exposure *= mask
 
         energy_axis = counts.geom.axes["energy"]
 
@@ -440,28 +439,34 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
             energy_axis.edges[0], energy_axis.edges[-1]
         )
 
-        exposure_npred = (exposure * flux_ref * mask.data).to_unit("")
+        exposure_npred = (exposure * flux_ref).to_unit("")
         norm = (flux / flux_ref).to_unit("")
 
         if self.sum_over_energy_groups:
-            if dataset.mask_safe is None:
-                mask_safe = Map.from_geom(counts.geom, data=True, dtype=bool)
+            weights = mask
             counts = counts.sum_over_axes()
             background = background.sum_over_axes()
             exposure_npred = exposure_npred.sum_over_axes()
 
         else:
-            mask_safe = None  # already applied
+            weights = None  # already applied
 
         return {
             "counts": counts,
             "background": background,
             "norm": norm,
             "mask": mask,
-            "mask_safe": mask_safe,
+            "weights": weights,
             "exposure": exposure_npred,
             "kernel": kernel,
         }
+
+    @staticmethod
+    def _estimate_mask_2d(map_dict):
+        """Compute default mask where to estimate test statistic values."""
+        mask_2d = map_dict["mask"].reduce_over_axes(np.logical_or)
+        mask_2d &= map_dict["background"].reduce_over_axes() > 0
+        return mask_2d.data
 
     def estimate_flux_map(self, datasets):
         """Estimate flux and test statistic maps for single dataset.
@@ -473,17 +478,18 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         """
         maps = [self.estimate_fit_input_maps(dataset=d) for d in datasets]
 
-        mask = np.sum([_["mask"].data for _ in maps], axis=0).astype(bool)
+        # Combine all masks with an OR
+        mask_2d = np.logical_or.reduce([self._estimate_mask_2d(_) for _ in maps])
 
-        if not np.any(mask):
+        if not np.any(mask_2d):
             raise ValueError(
                 """No valid positions found.
             Check that the dataset background is defined and not only zeros,
-            or that the mask_safe is not all False."
+            or that the mask is not all False."
             """
             )
 
-        x, y = np.where(np.squeeze(mask))
+        x, y = np.where(np.squeeze(mask_2d))
         positions = list(zip(x, y))
 
         inputs = zip(
@@ -493,7 +499,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
             repeat([_["background"].data.astype(float) for _ in maps]),
             repeat([_["kernel"].data for _ in maps]),
             repeat([_["norm"].data for _ in maps]),
-            repeat([_["mask_safe"] for _ in maps]),
+            repeat([_["weights"] for _ in maps]),
             repeat(self._flux_estimator),
         )
 
@@ -673,6 +679,14 @@ class SimpleMapDataset:
         """Statistics sum."""
         return cash_sum_cython(self.counts, self.npred(norm))
 
+    def stat_sum_asimov(self, norm):
+        """Statistics sum."""
+        return cash_sum_cython(self.npred(norm), self.npred(norm))
+
+    def stat_sum_asimov_null(self, norm):
+        """Statistics sum."""
+        return cash_sum_cython(self.npred(norm), self.background)
+
     def stat_derivative(self, norm):
         """Statistics derivative."""
         return f_cash_root_cython(norm, self.counts, self.background, self.model)
@@ -685,16 +699,14 @@ class SimpleMapDataset:
         return (term_top / term_bottom)[~mask].sum()
 
     @classmethod
-    def from_arrays(
-        cls, counts, background, exposure, norm, position, kernel, mask_safe
-    ):
+    def from_arrays(cls, counts, background, exposure, norm, position, kernel, weights):
         """"""
-        if mask_safe:
-            # compute mask_safe weighted kernel for the sum_over_axes case
-            mask_safe = _extract_array(mask_safe.data, kernel.shape, position)
-            kernel = (kernel * mask_safe).sum(axis=0, keepdims=True)
+        if weights:
+            # compute mask weighted kernel for the sum_over_axes case
+            weights = _extract_array(weights.data, kernel.shape, position)
+            kernel = (kernel * weights).sum(axis=0, keepdims=True)
             with np.errstate(invalid="ignore", divide="ignore"):
-                kernel /= mask_safe.sum(axis=0, keepdims=True)
+                kernel /= weights.sum(axis=0, keepdims=True)
                 kernel[~np.isfinite(kernel)] = 0
 
         counts_cutout = _extract_array(counts, kernel.shape, position)
@@ -715,7 +727,7 @@ class SimpleMapDataset:
 class BrentqFluxEstimator(Estimator):
     """Single parameter flux estimator."""
 
-    _available_selection_optional = ["errn-errp", "ul", "stat_scan"]
+    _available_selection_optional = ["errn-errp", "ul", "stat_scan", "sensitivity"]
     tag = "BrentqFluxEstimator"
 
     def __init__(
@@ -723,6 +735,7 @@ class BrentqFluxEstimator(Estimator):
         rtol,
         n_sigma,
         n_sigma_ul,
+        n_sigma_sensitivity=5,
         selection_optional=None,
         max_niter=100,
         ts_threshold=None,
@@ -731,6 +744,7 @@ class BrentqFluxEstimator(Estimator):
         self.rtol = rtol
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
+        self.n_sigma_sensitivity = n_sigma_sensitivity
         self.selection_optional = selection_optional
         self.max_niter = max_niter
         self.ts_threshold = ts_threshold
@@ -860,6 +874,32 @@ class BrentqFluxEstimator(Estimator):
         )
         return {"norm_errn": flux_errn, "norm_errp": flux_errp}
 
+    def estimate_sensitivity(self, dataset, result):
+        norm = result["norm"]
+
+        def sigma_diff(x):
+            ts_asimov = dataset.stat_sum_asimov_null(x) - dataset.stat_sum_asimov(x)
+            return (
+                ts_to_sigma(ts_asimov, ts_asimov=ts_asimov) - self.n_sigma_sensitivity
+            )
+
+        min_norm = norm / 1000.0
+        max_norm = norm * 1000.0
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            roots, res = find_roots(
+                sigma_diff,
+                [min_norm],
+                [max_norm],
+                nbin=1,
+                maxiter=self.max_niter,
+                rtol=self.rtol,
+            )
+            # Where the root finding fails NaN is set as norm
+            norm_sensitivity = roots[0]
+        return {"norm_sensitivity": norm_sensitivity}
+
     def estimate_scan(self, dataset, result):
         """Compute likelihood profile.
 
@@ -978,6 +1018,9 @@ class BrentqFluxEstimator(Estimator):
         if "stat_scan" in self.selection_optional:
             result.update(self.estimate_scan(dataset, result))
 
+        if "sensitivity" in self.selection_optional:
+            result.update(self.estimate_sensitivity(dataset, result))
+
         norm = result["norm"]
         result["npred"] = dataset.npred(norm=norm).sum()
         result["npred_excess"] = result["npred"] - dataset.npred(norm=0).sum()
@@ -987,7 +1030,7 @@ class BrentqFluxEstimator(Estimator):
 
 
 def _ts_value(
-    position, counts, exposure, background, kernel, norm, mask_safe, flux_estimator
+    position, counts, exposure, background, kernel, norm, weights, flux_estimator
 ):
     """Compute test statistic value at a given pixel position.
 
@@ -1025,7 +1068,7 @@ def _ts_value(
                 norm=norm[idx],
                 position=position,
                 kernel=kernel[idx],
-                mask_safe=mask_safe[idx],
+                weights=weights[idx],
             )
         )
 

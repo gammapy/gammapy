@@ -1304,3 +1304,8 @@ def test_template_ND_EBL(tmpdir):
     assert_allclose(template_new.map.data, region_map.data)
     assert len(template.parameters) == 1
     assert_allclose(template.parameters["redshift"].value, 0.1)
+
+
+def test_incorrect_param_name():
+    with pytest.raises(NameError):
+        PowerLawSpectralModel(indxe=2)

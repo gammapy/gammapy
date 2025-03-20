@@ -1710,18 +1710,6 @@ class LogParabolaNormSpectralModel(SpectralModel):
     alpha = Parameter("alpha", 0)
     beta = Parameter("beta", 0)
 
-    def __init__(self, norm=None, reference=None, alpha=None, beta=None, **kwargs):
-        if norm is not None:
-            kwargs.update({"norm": norm})
-        if beta is not None:
-            kwargs.update({"beta": beta})
-        if reference is not None:
-            kwargs.update({"reference": reference})
-        if alpha is not None:
-            kwargs.update({"alpha": alpha})
-
-        super().__init__(**kwargs)
-
     @classmethod
     def from_log10(cls, norm, reference, alpha, beta):
         """Construct from :math:`log_{10}` parametrization."""
@@ -2165,16 +2153,17 @@ class EBLAbsorptionNormSpectralModel(SpectralModel):
 
         References
         ----------
-        .. [1] Franceschini et al. (2008), "Extragalactic optical-infrared background radiation, its time evolution and the cosmic photon-photon opacity",  # noqa: E501
-            `Link <https://ui.adsabs.harvard.edu/abs/2008A%26A...487..837F>`__
-        .. [2] Dominguez et al. (2011), " Extragalactic background light inferred from AEGIS galaxy-SED-type fractions"  # noqa: E501
-            `Link <https://ui.adsabs.harvard.edu/abs/2011MNRAS.410.2556D>`__
-        .. [3] Finke et al. (2010), "Modeling the Extragalactic Background Light from Stars and Dust"
-            `Link <https://ui.adsabs.harvard.edu/abs/2010ApJ...712..238F>`__
-        .. [4] Franceschini et al. (2017), "The extragalactic background light revisited and the cosmic photon-photon opacity"
-            `Link <https://ui.adsabs.harvard.edu/abs/2017A%26A...603A..34F/abstract>`__
-        .. [5] Saldana-Lopez et al. (2021) "An observational determination of the evolving extragalactic background light from the multiwavelength HST/CANDELS survey in the Fermi and CTA era"
-            `Link <https://ui.adsabs.harvard.edu/abs/2021MNRAS.507.5144S/abstract>`__
+        * `Franceschini et al. (2008), "Extragalactic optical-infrared background radiation, its time evolution and the
+          cosmic photon-photon opacity" <https://ui.adsabs.harvard.edu/abs/2008A%26A...487..837F>`_
+        * `Dominguez et al. (2011), " Extragalactic background light inferred from AEGIS galaxy-SED-type fractions"
+          <https://ui.adsabs.harvard.edu/abs/2011MNRAS.410.2556D>`_
+        * `Finke et al. (2010), "Modeling the Extragalactic Background Light from Stars and Dust"
+          <https://ui.adsabs.harvard.edu/abs/2010ApJ...712..238F>`_
+        * `Franceschini et al. (2017), "The extragalactic background light revisited and the cosmic photon-photon opacity"
+          <https://ui.adsabs.harvard.edu/abs/2017A%26A...603A..34F/abstract>`_
+        * `Saldana-Lopez et al. (2021), "An observational determination of the evolving extragalactic background light
+          from the multiwavelength HST/CANDELS survey in the Fermi and CTA era"
+          <https://ui.adsabs.harvard.edu/abs/2021MNRAS.507.5144S/abstract>`_
         """
         return cls.read(
             EBL_DATA_BUILTIN[reference],

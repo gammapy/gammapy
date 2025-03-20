@@ -97,17 +97,7 @@ def find_peaks(image, threshold, min_distance=1):
     >>> maps = estimator.run(dataset)
     >>> # Find the peaks which are above 5 sigma
     >>> sources = find_peaks(maps["sqrt_ts"], threshold=5, min_distance="0.25 deg")
-    >>> print(sources)
-    value   x   y      ra       dec
-                      deg       deg
-    ------ --- --- --------- ---------
-    32.191 161 118 266.41924 -28.98772
-      18.7 125 124 266.80571 -28.14079
-    9.4498 257 122 264.86178 -30.97529
-    9.3784 204 103 266.14201 -30.10041
-    5.3493 282 150 263.78083 -31.12704
     """
-    # Input validation
 
     if not isinstance(image, WcsNDMap):
         raise TypeError("find_peaks only supports WcsNDMap")
@@ -197,14 +187,7 @@ def find_peaks_in_flux_map(maps, threshold, min_distance=1):
     >>> maps = estimator.run(dataset)
     >>> # Find the peaks which are above 5 sigma
     >>> sources = find_peaks_in_flux_map(maps, threshold=5, min_distance=0.1*u.deg)
-    >>> print(sources[:4])
-    x   y      ra       dec      npred   npred_excess   counts     ts    sqrt_ts   norm  norm_err     flux      flux_err
-               deg       deg                                                                       1 / (s cm2) 1 / (s cm2)
-    --- --- --------- --------- --------- ------------ --------- -------- ------- ------- -------- ----------- -----------
-    158 135 266.05019 -28.70181 192.00000     61.33788 192.00000 25.11839 5.01183 0.28551  0.06450   2.827e-12   6.385e-13
-     92 133 267.07022 -27.31834 137.00000     51.99467 137.00000 26.78181 5.17511 0.37058  0.08342   3.669e-12   8.259e-13
-    176 134 265.80492 -29.09805 195.00000     65.15990 195.00000 28.29158 5.31898 0.30561  0.06549   3.025e-12   6.484e-13
-    282 150 263.78083 -31.12704  84.00000     39.99004  84.00000 28.61526 5.34932 0.55027  0.12611   5.448e-12   1.249e-12
+
     """
     quantity_for_peaks = maps["sqrt_ts"]
 
@@ -502,9 +485,8 @@ def compute_lightcurve_doublingtime(lightcurve, flux_quantity="flux"):
 
     References
     ----------
-    .. [Brown2013] "Locating the γ-ray emission region
-       of the flat spectrum radio quasar PKS 1510−089", Brown et al. (2013)
-       https://academic.oup.com/mnras/article/431/1/824/1054498
+    `Brown et al. (2013), "Locating the γ-ray emission region of the flat spectrum radio quasar PKS 1510−089"
+    <https://academic.oup.com/mnras/article/431/1/824/1054498>`_
     """
     flux = getattr(lightcurve, flux_quantity)
     flux_err = getattr(lightcurve, flux_quantity + "_err")
@@ -578,9 +560,8 @@ def compute_lightcurve_discrete_correlation(
 
     References
     ----------
-    .. [Edelson1988] "THE DISCRETE CORRELATION FUNCTION: A NEW METHOD FOR ANALYZING
-       UNEVENLY SAMPLED VARIABILITY DATA", Edelson et al. (1988)
-       https://ui.adsabs.harvard.edu/abs/1988ApJ...333..646E/abstract
+    `Edelson et al. (1988), "THE DISCRETE CORRELATION FUNCTION: A NEW METHOD FOR ANALYZING
+    UNEVENLY SAMPLED VARIABILITY DATA" <https://ui.adsabs.harvard.edu/abs/1988ApJ...333..646E/abstract>`_
     """
     flux1 = getattr(lightcurve1, flux_quantity)
     flux_err1 = getattr(lightcurve1, flux_quantity + "_err")
@@ -849,15 +830,11 @@ def get_combined_significance_maps(estimator, datasets):
     that the TS in each independent bin follows a Chi2 distribution,
     then the sum of the TS also follows a Chi2 distribution (with the sum of degree of freedom).
 
-    See, Zhen (2014): https://www.sciencedirect.com/science/article/abs/pii/S0167947313003204,
-    Lancaster (1961): https://onlinelibrary.wiley.com/doi/10.1111/j.1467-842X.1961.tb00058.x
-
-
     Parameters
     ----------
     estimator : `~gammapy.estimators.ExcessMapEstimator` or `~gammapy.estimators.TSMapEstimator`
         Excess Map Estimator or TS Map Estimator
-    dataset : `~gammapy.datasets.Datasets`
+    datasets : `~gammapy.datasets.Datasets`
         Datasets containing only `~gammapy.datasets.MapDataset`.
 
     Returns
@@ -870,10 +847,26 @@ def get_combined_significance_maps(estimator, datasets):
                 * "npred_excess" : summed excess map.
                 * "estimator_results" : dictionary containing the flux maps computed for each dataset.
 
+    Examples
+    --------
+    >>> from gammapy.datasets import Datasets
+    >>> from gammapy.estimators import ExcessMapEstimator
+    >>> from gammapy.estimators.utils import get_combined_significance_maps
+    >>> datasets = Datasets.read("$GAMMAPY_DATA/hawc/DL4/HAWC_pass4_public_Crab.yaml")
+    >>> estimator = ExcessMapEstimator(correlation_radius="0.2 deg")
+    >>> combined = get_combined_significance_maps(estimator, datasets)
+
+    References
+    ----------
+    * `Chen & Nadarajah (2014), "On the optimally weighted z-test for combining probabilities from independent
+      studies" <https://www.sciencedirect.com/science/article/abs/pii/S0167947313003204>`_
+    * `Lancaster (1961), "The Combination of Probabilities: an Application of Orthonormal Functions"
+      <https://onlinelibrary.wiley.com/doi/10.1111/j.1467-842X.1961.tb00058.x>`_
+
+
     See also
     --------
     combine_significance_maps : same method but using directly the significance maps from estimators
-
     """
     from .map.excess import ExcessMapEstimator
     from .map.ts import TSMapEstimator
@@ -1039,7 +1032,7 @@ def get_combined_flux_maps(
     ----------
     estimator : `~gammapy.estimators.ExcessMapEstimator` or `~gammapy.estimators.TSMapEstimator`
         Excess Map Estimator or TS Map Estimator
-    dataset : `~gammapy.datasets.Datasets` or list of `~gammapy.datasets.MapDataset`
+    datasets : `~gammapy.datasets.Datasets` or list of `~gammapy.datasets.MapDataset`
         Datasets containing only `~gammapy.datasets.MapDataset`.
     method : str
         * gaussian_errors :
@@ -1051,7 +1044,7 @@ def get_combined_flux_maps(
             Use available quantities among dnde, dnde_err, dnde_errp, dnde_errn, dnde_ul, and ts.
         * profile :
             Sum the likelihood profile maps.
-            The flux maps must contains the `stat_scan` maps.
+            The flux maps must contain the `stat_scan` maps.
 
         Default is "gaussian_errors" which is the faster but least accurate solution,
         "distrib"  will be more accurate if dnde_errp and dnde_errn are available,
@@ -1059,7 +1052,7 @@ def get_combined_flux_maps(
 
     reference_model : `~gammapy.modeling.models.SkyModel`, optional
         Reference model to use for conversions.
-        Default is None and is will use the reference_model of the first FluxMaps in the list.
+        Default is None and is will use the reference_model of the first `~gammapy.estimators.FluxMaps` in the list.
     dnde_scan_axis : `~gammapy.maps.MapAxis`, optional
         Map axis providing the dnde values used to compute the profile.
         If None, it will be derived from the first FluxMaps in the list. Default is None.
@@ -1072,6 +1065,15 @@ def get_combined_flux_maps(
 
                 * "flux_maps" : `gammapy.estimators.FluxMaps`
                 * "estimator_results" : dictionary containing the flux maps computed for each dataset.
+
+    Examples
+    --------
+    >>> from gammapy.datasets import Datasets
+    >>> from gammapy.estimators import TSMapEstimator
+    >>> from gammapy.estimators.utils import get_combined_flux_maps
+    >>> datasets = Datasets.read("$GAMMAPY_DATA/hawc/DL4/HAWC_pass4_public_Crab.yaml")
+    >>> estimator = TSMapEstimator()
+    >>> combined = get_combined_flux_maps(estimator, datasets)
 
     See also
     --------
