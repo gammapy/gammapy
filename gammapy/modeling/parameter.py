@@ -95,7 +95,7 @@ class Parameter:
          Parameter scaling to use for the scan.
      prior : `~gammapy.modeling.models.Prior`
          Prior set on the parameter.
-    scale_interp : {"lin", "sqrt", "log"}
+    scale_transform : {"lin", "sqrt", "log"}
         Parameter scaling.
     """
 
@@ -117,7 +117,7 @@ class Parameter:
         scale_method="scale10",
         interp="lin",
         prior=None,
-        scale_interp="lin",
+        scale_transform="lin",
     ):
         if not isinstance(name, str):
             raise TypeError(f"Name must be string, got '{type(name)}' instead")
@@ -125,7 +125,7 @@ class Parameter:
         self._name = name
         self._link_label_io = None
         self._scale_method = scale_method
-        self._scale_interp = scale_interp
+        self._scale_transform = scale_transform
         self.interp = interp
         self._scale = float(scale)
         self.frozen = frozen
@@ -314,16 +314,16 @@ class Parameter:
         self._scale_method = val
 
     @property
-    def scale_interp(self):
+    def scale_transform(self):
         """scale interp : {"lin", "sqrt", "log"}"""
-        return self._scale_interp
+        return self._scale_transform
 
-    @scale_interp.setter
-    def scale_interp(self, val):
+    @scale_transform.setter
+    def scale_transform(self, val):
         if val not in ["lin", "log", "sqrt"]:
             raise ValueError(f"Invalid interp: {val}")
         self.reset_autoscale()
-        self._scale_interp = val
+        self._scale_transform = val
 
     @property
     def frozen(self):
@@ -498,7 +498,7 @@ class Parameter:
             "frozen": self.frozen,
             "interp": self.interp,
             "scale_method": self.scale_method,
-            "scale_interp": self.scale_interp,
+            "scale_transform": self.scale_transform,
         }
 
         if self._link_label_io is not None:
@@ -541,7 +541,7 @@ class Parameter:
         update_scale : bool
             Update the scaling (used by the autoscale)
         """
-        interp_scale = interpolation_scale(self.scale_interp)
+        interp_scale = interpolation_scale(self.scale_transform)
         factor = interp_scale(value)
         if update_scale:
             self.update_scale(factor)
@@ -556,7 +556,7 @@ class Parameter:
             Parameter factor
         """
         factor = self.scale * factor
-        interp_scale = interpolation_scale(self.scale_interp)
+        interp_scale = interpolation_scale(self.scale_transform)
         value = interp_scale.inverse(factor)
         return value
 
@@ -904,14 +904,14 @@ class PriorParameter(Parameter):
         max=np.nan,
         error=0,
         scale_method="scale10",
-        scale_interp="lin",
+        scale_transform="lin",
     ):
         if not isinstance(name, str):
             raise TypeError(f"Name must be string, got '{type(name)}' instead")
 
         self._name = name
         self._scale_method = scale_method
-        self._scale_interp = scale_interp
+        self._scale_transform = scale_transform
         self._scale = float(scale)
         self.min = min
         self.max = max

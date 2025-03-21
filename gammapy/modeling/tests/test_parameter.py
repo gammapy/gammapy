@@ -133,14 +133,14 @@ def test_parameter_scale_method_change():
     assert_allclose(par.scale, value)
 
 
-def test_parameter_scale_interp_change():
+def test_parameter_scale_transform_change():
     value = 100
-    par = Parameter("", value, scale_method=None, scale_interp="log")
+    par = Parameter("", value, scale_method=None, scale_transform="log")
     par.autoscale()
     assert_allclose(par.factor, np.log(value))
     assert_allclose(par.scale, 1)
-    par.scale_interp = "sqrt"
-    assert par.scale_interp == "sqrt"
+    par.scale_transform = "sqrt"
+    assert par.scale_transform == "sqrt"
     assert_allclose(par.factor, value)
     assert_allclose(par.scale, 1)
     par.autoscale()

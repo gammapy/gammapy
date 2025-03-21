@@ -131,12 +131,12 @@ def test_run(backend):
 
 
 @requires_dependency("jacobi")
-def test_run_scale_interp_change():
+def test_run_scale_transform_change():
     dataset = MyDataset()
     fit = Fit(backend="minuit")
     stat_ref = dataset.stat_sum()
     for par in dataset.models.parameters:
-        par.scale_interp = "sqrt"
+        par.scale_transform = "sqrt"
     dataset.stat_sum()
     assert_allclose(dataset.stat_sum(), stat_ref)
 
