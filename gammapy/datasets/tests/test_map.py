@@ -1792,9 +1792,18 @@ def test_map_dataset_on_off_to_spectrum_dataset_weights():
     )
 
     on_region = CircleSkyRegion(
-        center=dataset.counts.geom.center_skydir, radius=1.5 * u.deg
+        center=dataset.counts.geom.center_skydir, radius=1.0 * u.deg
     )
 
+    with pytest.raises(Exception):
+        dataset.to_spectrum_dataset(on_region)
+
+    dataset.mask_safe.data = True
+    dataset.to_spectrum_dataset(on_region)
+
+    on_region = CircleSkyRegion(
+        center=dataset.counts.geom.center_skydir, radius=15 * u.deg
+    )
     with pytest.raises(Exception):
         dataset.to_spectrum_dataset(on_region)
 
