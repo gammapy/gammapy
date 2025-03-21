@@ -592,6 +592,9 @@ def test_map_dataset_maker_swgo():
     obs = observations[0]
     obs.gti = gti
 
+    with pytest.raises(ValueError):
+        obs.gti = gti
+
     energy_axis = MapAxis.from_energy_bounds(
         0.3 * u.TeV, 300 * u.TeV, 10, per_decade=True
     )
