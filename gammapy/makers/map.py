@@ -178,7 +178,7 @@ class MapDatasetMaker(Maker):
                     factor = 1.0
                 elif aeff.unit.is_equivalent(u.Unit("m2 s transit-1")):
                     if u.Unit("transit") in aeff.unit.bases:
-                        # TODO : GTI = number of transits is valid only if
+                        # TODO : GTI = number of transits is valid only
                         # if the exposure is flat in right ascension.
                         # It's fine for now as irfs are created like this for HAWC/SWGO
                         # but could change in future.
