@@ -1961,6 +1961,23 @@ class MapDataset(Dataset):
         name = make_name(name)
         kwargs = {"gti": self.gti, "name": name, "meta_table": self.meta_table}
 
+        if not self.counts.geom.is_region:
+            region_mask = (
+                self.counts.geom.to_image().pad(1, axis_name=None).region_mask(region)
+            )
+            not_fully_contained = (
+                np.any(region_mask.data[0, :])
+                | np.any(region_mask.data[-1, :])
+                | np.any(region_mask.data[:, 0])
+                | np.any(region_mask.data[:, -1])
+            )
+            if not_fully_contained:
+                raise Exception(
+                    """`to_region_map_dataset` can only be applied if the region
+                    is fully contained inside the counts geom.
+                    """
+                )
+
         if self.mask and not self.mask.geom.is_region:
             region_mask = self.mask.geom.to_image().region_mask(region)
             values = np.unique(self.mask.data[:, region_mask.data], axis=1)
