@@ -196,6 +196,8 @@ class Observation:
 
     @gti.setter
     def gti(self, value):
+        if self.gti is not None and self.events is not None:
+            raise TypeError("GTI cannot be redefined if events is not None.")
         if not isinstance(value, GTI):
             raise TypeError(f"GTI must be an GTI instance, got: {type(value)}")
         self._gti = value
