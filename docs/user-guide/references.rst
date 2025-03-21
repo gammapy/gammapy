@@ -141,7 +141,7 @@ Glossary
       object, the type of plot (e.g. :math:`dN/dE`, :math:`E^2\ dN/dE`) is typically adjusted
       through the `sed_type` quantity. See :ref:`sedtypes` for a list of options.
 
-..    STI
+    STI
       Short for "stable time interval": it indicates a continuous time interval of data
       acquisition for which the instrument response files are supposed to be constant.
 
