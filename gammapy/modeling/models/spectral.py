@@ -1875,6 +1875,11 @@ class TemplateNDSpectralModel(SpectralModel):
         self.meta = dict() if meta is None else meta
         if filename is not None:
             filename = str(make_path(filename))
+        if filename is None:
+            log.warning(
+                "The filename is not defined therefore the model will not be serialised correctly. "
+                'To set the filename the "model.filename" attribute can be used.'
+            )
         self.filename = filename
 
         parameters = []
