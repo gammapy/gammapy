@@ -478,7 +478,7 @@ def make_theta_squared_table(
             )
 
     for observation in observations:
-        events = observations.events
+        events = observation.events
         if energy_edges is not None:
             events = events.select_energy(energy_range=energy_edges)
 
