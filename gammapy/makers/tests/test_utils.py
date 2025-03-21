@@ -474,6 +474,34 @@ class TestTheta2Table:
         assert_allclose(theta2_table_two_obs["acceptance_off"], acceptance_off_two_obs)
         assert_allclose(theta2_table["alpha"], alpha_two_obs)
 
+        # Test for energy selection
+        axis = MapAxis.from_bounds(0, 1, nbin=4, interp="lin", unit="deg2")
+        theta2_table = make_theta_squared_table(
+            observations=[self.observations[0]],
+            position=position,
+            theta_squared_axis=axis,
+            energy_edges=[1.2, 11] * u.TeV,
+        )
+        on_counts = [0, 0, 0, 1]
+        off_counts = [1, 0, 0, 0]
+        acceptance = [1, 1, 1, 1]
+        acceptance_off = [1, 1, 1, 1]
+        alpha = [1, 1, 1, 1]
+        assert_allclose(theta2_table["counts"], on_counts)
+        assert_allclose(theta2_table["counts_off"], off_counts)
+        assert_allclose(theta2_table["acceptance"], acceptance)
+        assert_allclose(theta2_table["acceptance_off"], acceptance_off)
+        assert_allclose(theta2_table["alpha"], alpha)
+        assert_allclose(theta2_table.meta["Energy_filter"], [1.2, 11] * u.TeV)
+
+        with pytest.raises(ValueError):
+            make_theta_squared_table(
+                observations=[self.observations[0]],
+                position=position,
+                theta_squared_axis=axis,
+                energy_edges=[1.2, 11, 20] * u.TeV,
+            )
+
 
 @requires_data()
 def test_guess_instrument_fov(observations):
