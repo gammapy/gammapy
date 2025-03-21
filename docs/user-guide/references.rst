@@ -159,7 +159,8 @@ Glossary
       functions are represented along a true energy axis.
 
     Transit
-      One path of a source over the sky as seen by drift instruments like HAWC and SWGO.
+      Path of a source over the sky in the course of one full sidereal day 
+      as seen by drift instruments like HAWC and SWGO.
 
     TS
       Short for "test statistics". See :ref:`ts` and :ref:`fit-statistics`.
