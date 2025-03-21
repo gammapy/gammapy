@@ -690,11 +690,11 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         overwrite : bool, optional
             Overwrite existing file. Default is False.
         """
-        if self.filename is None and filename is None :
+        if self.filename is None and filename is None:
             raise IOError("Missing filename")
 
         if filename is None:
-                filename=self.filename
+            filename = self.filename
 
         if format == "table":
             table = self.to_table()
