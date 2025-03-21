@@ -78,7 +78,7 @@ class Covariance:
         if not matrix.shape == (npars, npars):
             matrix = cls._expand_factor_matrix(matrix, parameters)
 
-        if np.all([p.scale_interp == "lin" for p in parameters]):
+        if np.all([p.scale_transform == "lin" for p in parameters]):
             scales = [par.scale for par in parameters]
             scale_matrix = np.outer(scales, scales)
             data = scale_matrix * matrix
