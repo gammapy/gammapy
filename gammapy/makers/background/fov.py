@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """FoV background estimation."""
+
 import logging
 import numpy as np
 from gammapy.maps import Map, RegionGeom
@@ -132,7 +133,7 @@ class FoVBackgroundMaker(Maker):
         if self.exclusion_mask:
             mask = self.exclusion_mask.interp_to_geom(geom=geom)
         else:
-            mask = Map.from_geom(geom=geom, data=1, dtype=bool)
+            mask = Map.from_geom(geom=geom, data=True, dtype=bool)
         return mask
 
     def _make_masked_summed_counts(self, dataset):

@@ -4,10 +4,28 @@
 see :ref:`fit-statistics`
 """
 
+from abc import ABC
 import numpy as np
-from gammapy.stats.fit_statistics_cython import TRUNCATION_VALUE
+from scipy.special import erfc
+from gammapy.maps import Map
+from gammapy.stats.fit_statistics_cython import (
+    TRUNCATION_VALUE,
+    cash_sum_cython,
+    weighted_cash_sum_cython,
+)
 
-__all__ = ["cash", "cstat", "wstat", "get_wstat_mu_bkg", "get_wstat_gof_terms"]
+
+__all__ = [
+    "cash",
+    "cstat",
+    "wstat",
+    "get_wstat_mu_bkg",
+    "get_wstat_gof_terms",
+    "CashFitStatistic",
+    "WStatFitStatistic",
+    "Chi2FitStatistic",
+    "Chi2AsymmetricErrorFitStatistic",
+]
 
 
 def cash(n_on, mu_on, truncation_value=TRUNCATION_VALUE):
@@ -228,3 +246,186 @@ def get_wstat_gof_terms(n_on, n_off):
     term += np.where(n_off == 0, 0, term2)
 
     return 2 * term
+
+
+class FitStatistic(ABC):
+    """Abstract base class for FitStatistic objects."""
+
+    @classmethod
+    def stat_sum_dataset(cls, dataset):
+        """Calculate -2 * sum log(L)."""
+        stat_array = cls.stat_array_dataset(dataset)
+        if dataset.mask is not None:
+            mask = dataset.mask.data if isinstance(dataset.mask, Map) else dataset.mask
+            stat_array = stat_array[mask]
+        return np.sum(stat_array)
+
+    @classmethod
+    def stat_array_dataset(cls, dataset):
+        """Calculate -2 * log(L)."""
+        raise NotImplementedError
+
+    @classmethod
+    def loglikelihood_dataset(cls, dataset):
+        """Calculate sum log(L)."""
+        return -0.5 * cls.stat_sum_dataset(dataset)
+
+
+class CashFitStatistic(FitStatistic):
+    """Cash statistic class for Poisson with known background."""
+
+    @classmethod
+    def stat_sum_dataset(cls, dataset):
+        mask = dataset.mask
+        counts, npred = dataset.counts.data, dataset.npred().data
+
+        if mask is not None:
+            mask = mask.data.astype("bool")
+            counts, npred = counts[mask], npred[mask]
+
+        counts = counts.astype(float)  # This might be done in the Dataset
+        return cash_sum_cython(counts.ravel(), npred.ravel())
+
+    @classmethod
+    def stat_array_dataset(cls, dataset):
+        counts, npred = dataset.counts.data, dataset.npred().data
+        return cash(n_on=counts, mu_on=npred)
+
+
+class WeightedCashFitStatistic(FitStatistic):
+    """Cash statistic class for Poisson with known background applying weights."""
+
+    @classmethod
+    def stat_sum_dataset(cls, dataset):
+        counts, npred = dataset.counts.data.astype(float), dataset.npred().data
+
+        if dataset.mask is not None:
+            mask = ~(dataset.mask.data == False)  # noqa
+            counts = counts[mask]
+            npred = npred[mask]
+
+            weights = dataset.mask.data[mask].astype("float")
+            return weighted_cash_sum_cython(counts, npred, weights)
+        else:
+            # No weights back to regular cash statistic
+            return cash_sum_cython(counts.ravel(), npred.ravel())
+
+    @classmethod
+    def stat_array_dataset(cls, dataset):
+        counts, npred = dataset.counts.data, dataset.npred().data
+        weights = 1.0
+        if dataset.mask is not None:
+            weights = dataset.mask.astype("float")
+        return cash(n_on=counts, mu_on=npred) * weights
+
+
+class WStatFitStatistic(FitStatistic):
+    """WStat fit statistic class for ON-OFF Poisson measurements."""
+
+    @classmethod
+    def stat_array_dataset(cls, dataset):
+        """Statistic function value per bin given the current model parameters."""
+        counts, counts_off, alpha = (
+            dataset.counts.data,
+            dataset.counts_off.data,
+            dataset.alpha.data,
+        )
+        npred_signal = dataset.npred_signal().data
+        on_stat_ = wstat(
+            n_on=counts,
+            n_off=counts_off,
+            alpha=alpha,
+            mu_sig=npred_signal,
+        )
+        return np.nan_to_num(on_stat_)
+
+    @classmethod
+    def stat_sum_dataset(cls, dataset):
+        """Statistic function value per bin given the current model parameters."""
+        if dataset.counts_off is None and not np.any(dataset.mask_safe.data):
+            return 0
+        else:
+            stat_array = cls.stat_array_dataset(dataset)
+            if dataset.mask is not None:
+                stat_array = stat_array[dataset.mask.data]
+            return np.sum(stat_array)
+
+
+class Chi2FitStatistic(FitStatistic):
+    """Chi2 fit statistic class for measurements with gaussian symmetric errors."""
+
+    @classmethod
+    def stat_array_dataset(cls, dataset):
+        """Statistic function value per bin given the current model."""
+        model = dataset.flux_pred()
+        data = dataset.data.dnde.quantity
+        try:
+            sigma = dataset.data.dnde_err.quantity
+        except AttributeError:
+            sigma = (dataset.data.dnde_errn + dataset.data.dnde_errp).quantity / 2
+        return ((data - model) / sigma).to_value("") ** 2
+
+
+class Chi2AsymmetricErrorFitStatistic(FitStatistic):
+    """Pseudo-Chi2 fit statistic class for measurements with gaussian asymmetric errors with upper limits.
+
+    Assumes that regular data follow asymmetric normal pdf and upper limits follow complementary error functions
+    """
+
+    @classmethod
+    def stat_array_dataset(cls, dataset):
+        """Estimate statistic from probability distributions,
+        assumes that flux points correspond to asymmetric gaussians
+        and upper limits complementary error functions.
+        """
+        model = np.zeros(dataset.data.dnde.data.shape) + dataset.flux_pred().to_value(
+            dataset.data.dnde.unit
+        )
+
+        stat = np.zeros(model.shape)
+
+        mask_valid = ~np.isnan(dataset.data.dnde.data)
+        loc = dataset.data.dnde.data[mask_valid]
+        value = model[mask_valid]
+        try:
+            mask_p = (model >= dataset.data.dnde.data)[mask_valid]
+            scale = np.zeros(mask_p.shape)
+            scale[mask_p] = dataset.data.dnde_errp.data[mask_valid][mask_p]
+            scale[~mask_p] = dataset.data.dnde_errn.data[mask_valid][~mask_p]
+
+            mask_invalid = np.isnan(scale)
+            scale[mask_invalid] = dataset.data.dnde_err.data[mask_valid][mask_invalid]
+        except AttributeError:
+            scale = dataset.data.dnde_err.data[mask_valid]
+
+        stat[mask_valid] = ((value - loc) / scale) ** 2
+
+        mask_ul = dataset.data.is_ul.data
+        value = model[mask_ul]
+        loc_ul = dataset.data.dnde_ul.data[mask_ul]
+        scale_ul = dataset.data.dnde_ul.data[mask_ul]
+        stat[mask_ul] = 2 * np.log(
+            (erfc((loc_ul - value) / scale_ul) / 2)
+            / (erfc((loc_ul - 0) / scale_ul) / 2)
+        )
+
+        stat[np.isnan(stat.data)] = 0
+        return stat
+
+
+class ProfileFitStatistic(FitStatistic):
+    """Pseudo-Chi2 fit statistic class for measurements with gaussian asymmetric errors with upper limits.
+
+    Assumes that regular data follow asymmetric normal pdf and upper limits follow complementary error functions
+    """
+
+    @classmethod
+    def stat_array_dataset(cls, dataset):
+        """Estimate statitistic from interpolation of the likelihood profile."""
+        model = np.zeros(dataset.data.dnde.data.shape) + (
+            dataset.flux_pred() / dataset.data.dnde_ref
+        ).to_value("")
+        stat = np.zeros(model.shape)
+        for idx in np.ndindex(dataset._profile_interpolators.shape):
+            stat[idx] = dataset._profile_interpolators[idx](model[idx])
+        return stat
