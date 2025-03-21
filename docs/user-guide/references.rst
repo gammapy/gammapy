@@ -158,6 +158,9 @@ Glossary
       by contrast with the energy reconstructed by the instrument. Instrument response
       functions are represented along a true energy axis.
 
+    Transit
+      One path of a source over the sky as seen by drift instruments like HAWC and SWGO.
+
     TS
       Short for "test statistics". See :ref:`ts` and :ref:`fit-statistics`.
 
