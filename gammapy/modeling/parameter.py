@@ -90,13 +90,13 @@ class Parameter:
      scan_values: `numpy.array`
          Scan values. Overwrites all the scan keywords before.
      scale_method : {'scale10', 'factor1', None}
-         Method used to set ``factor`` and ``scale``.
+         Method used to set ``factor`` and ``scale``.  Default is "scale10".
      interp : {"lin", "sqrt", "log"}
-         Parameter scaling to use for the scan.
+         Parameter scaling to use for the scan.  Default is "lin".
      prior : `~gammapy.modeling.models.Prior`
          Prior set on the parameter.
     scale_transform : {"lin", "sqrt", "log"}
-        Parameter scaling.
+        Parameter scaling. Default is "lin".
     """
 
     def __init__(
@@ -538,8 +538,8 @@ class Parameter:
         ----------
         value : float
             Parameter value
-        update_scale : bool
-            Update the scaling (used by the autoscale)
+        update_scale : bool, optional
+            Update the scaling (used by the autoscale). Default is False.
         """
         interp_scale = interpolation_scale(self.scale_transform)
         factor = interp_scale(value)
