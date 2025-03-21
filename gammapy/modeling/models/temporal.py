@@ -690,12 +690,15 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         overwrite : bool, optional
             Overwrite existing file. Default is False.
         """
-        if self.filename is None:
+        if self.filename is None and filename is None :
             raise IOError("Missing filename")
+
+        if filename is None:
+                filename=self.filename
 
         if format == "table":
             table = self.to_table()
-            table.write(self.filename, overwrite=overwrite)
+            table.write(filename, overwrite=overwrite)
         elif format == "map":
             # RegionNDMap.from_hdulist does not update the header
             hdulist = self.map.to_hdulist()
