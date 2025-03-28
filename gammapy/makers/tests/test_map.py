@@ -581,16 +581,15 @@ def test_map_dataset_maker_swgo():
 
     datastore = DataStore.from_dir(path, "hdu-index.fits.gz", "obs-index.fits.gz")
 
-    event_type = datastore.obs_table["EVENT_TYPE"][0]
-    obs_selection = datastore.obs_table["EVENT_TYPE"] == event_type
-    hdu_selection = datastore.hdu_table["EVENT_TYPE"] == event_type
-    datastore_redu = DataStore(
-        hdu_table=datastore.hdu_table[hdu_selection],
-        obs_table=datastore.obs_table[obs_selection],
-    )
-    observations = datastore_redu.get_observations()
+    observation_groups = datastore.get_observation_groups("EVENT_TYPE")
 
-    obs = observations[0]
+    event_type = datastore.obs_table["EVENT_TYPE"][0]
+    datastore_redu = datastore.select(dict(EVENT_TYPE=event_type))
+    observations_redu = datastore_redu.get_observations()
+
+    assert observations_redu.obs_ids == observation_groups["event_type"].obs_ids
+
+    obs = observations_redu[0]
     obs.gti = gti
 
     with pytest.raises(ValueError):
