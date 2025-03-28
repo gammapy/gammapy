@@ -122,6 +122,7 @@ def test_light_curve_to_dict(light_curve):
 
 @requires_data()
 def test_light_curve_map_serialisation(light_curve, tmp_path):
+    light_curve = light_curve.copy()
     filename = str(make_path(tmp_path / "tmp.fits"))
     light_curve.write(filename, format="map")
     lc1 = LightCurveTemplateTemporalModel.read(filename, format="map")
