@@ -343,7 +343,7 @@ class DataStore:
 
         return Observation(**kwargs)
 
-    def datastore_select(self, selection_dict=None, selection_mask=None, strict=False):
+    def select(self, selection_dict=None, selection_mask=None, strict=False):
         """Select a subset of the datastore.
 
         Parameters
