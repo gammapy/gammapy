@@ -981,27 +981,24 @@ class IRFMap:
         return self.__class__(irf_map, exposure_map=exposure_map)
 
     def downsample(self, factor, axis_name=None, weights=None):
-        """Downsample the spatial dimension by a given factor.
+        """Downsample the dimension of the spatial axes or a non-spatial axis by a given factor.
+        It is not recommended to use this function on a `~gammapy.irf.PSFMap` rad axis.
 
         Parameters
         ----------
         factor : int
             Downsampling factor.
         axis_name : str
-            Axis to downsample. By default, spatial axes are downsampled.
+            Axis to downsample. If None, spatial axes are downsampled.
             It is not recommended to use this function on a `~gammapy.irf.PSFMap` rad axis.
         weights : `~gammapy.maps.Map`, optional
-            Map with weights downsampling. Default is `~gammapy.irf.IRFMap` exposure map.
+            Map with weights downsampling. Default is None.
 
         Returns
         -------
         map : `IRFMap`
             Downsampled IRF map.
         """
-        if weights is None:
-            weights = self.exposure_map
-            if not self.exposure_map:
-                log.warning("IRF exposure map not set. Calculating arithmetic mean.")
 
         if axis_name is None:
             preserve_counts = False
@@ -1009,14 +1006,20 @@ class IRFMap:
             preserve_counts = True
 
         irf_map = self._irf_map.downsample(
-            factor=factor, axis_name=axis_name, preserve_counts=preserve_counts, weights=weights
+            factor=factor,
+            axis_name=axis_name,
+            preserve_counts=preserve_counts,
+            weights=weights,
         )
-        if axis_name is None:
-            exposure_map = self.exposure_map.downsample(
-                factor=factor, preserve_counts=False
-            )
+        if self.exposure_map:
+            if axis_name is (None or "energy_true"):
+                exposure_map = self.exposure_map.downsample(
+                    factor=factor, axis_name=axis_name, preserve_counts=preserve_counts
+                )
+            else:
+                exposure_map = self.exposure_map.copy()
         else:
-            exposure_map = self.exposure_map.copy()
+            exposure_map = None
 
         return self.__class__(irf_map, exposure_map=exposure_map)
 
