@@ -9,6 +9,7 @@ name: gammapy-dev
 
 channels:
   - conda-forge
+  - https://cxc.cfa.harvard.edu/conda/sherpa # c.f. https://sherpa.readthedocs.io/en/latest/install.html
 
 variables:
   PYTHONNOUSERSITE: "1"
@@ -45,6 +46,7 @@ dependencies:
   - naima
   - pandas
   - reproject
+  - ultranest
   # dev dependencies
   - black=22.6.0
   - codespell
@@ -58,6 +60,7 @@ dependencies:
   - pydocstyle
   - pylint
   - setuptools_scm
+  - sherpa>=4.17
   - sphinx
   - sphinx-astropy
   - sphinx-click
@@ -78,7 +81,6 @@ dependencies:
   - pyinstrument
   - memray
   - pip:
-      - sherpa>=4.17
       - pytest-sphinx
       - ray[default]>=2.9
       - PyGithub
