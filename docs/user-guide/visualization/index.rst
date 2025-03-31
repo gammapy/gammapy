@@ -16,6 +16,9 @@ used in gamma-ray astronomy (`colormap_hess` and `colormap_milagro`).
 
 .. plot:: user-guide/visualization/colormap_example.py
 
+Color-blind friendly visualizations can be achieved using the `style sheet of matplotlib <https://matplotlib.org/stable/gallery/style_sheets/style_sheets_reference.html>`_
+(see the :ref:`how_to` section).
+
 Survey panel plots
 ------------------
 
