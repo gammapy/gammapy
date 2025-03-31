@@ -51,7 +51,7 @@ Glossary
       Short for "data level 4": it is used to mention or describe binned-science data, ie
       N-dim maps (multi-dimensional histograms) of the spatial, temporal and/or spectral
       components of the DL3 data in instrumental units (e.g. counts). See :ref:`maps` and
-     :ref:`data flow <data_flow>`.
+      :ref:`data flow <data_flow>`.
 
     DL5
       Short for "data level 5": it is used to mention or describe advanced-science data, ie
@@ -141,9 +141,6 @@ Glossary
       object, the type of plot (e.g. :math:`dN/dE`, :math:`E^2\ dN/dE`) is typically adjusted
       through the `sed_type` quantity. See :ref:`sedtypes` for a list of options.
 
-..    STI
-      Short for "stable time interval": it indicates a continuous time interval of data
-      acquisition for which the instrument response files are supposed to be constant.
 
     Stacked Analysis
       In a stacked analysis individual observations are reduced to datasets which
@@ -157,6 +154,10 @@ Glossary
       The true energy (often written `e_true`) is the energy of the incident photon
       by contrast with the energy reconstructed by the instrument. Instrument response
       functions are represented along a true energy axis.
+
+    Transit
+      Path of a source over the sky in the course of one full sidereal day 
+      as seen by drift instruments like HAWC and SWGO.
 
     TS
       Short for "test statistics". See :ref:`ts` and :ref:`fit-statistics`.

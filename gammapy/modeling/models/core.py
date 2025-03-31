@@ -134,6 +134,10 @@ class ModelBase:
         # Copy default parameters from the class to the instance
         default_parameters = self.default_parameters.copy()
 
+        for key in kwargs.keys():
+            if key != "covariance_data" and key not in default_parameters.names :
+                raise NameError(f"Unknown Parameter name '{key}'")
+
         for par in default_parameters:
             value = kwargs.get(par.name, par)
 
@@ -1147,6 +1151,19 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
         -------
         ax : `~astropy.visualization.WcsAxes`
             WCS axes.
+
+        Examples
+        --------
+        >>> from gammapy.datasets import MapDataset
+        >>> from gammapy.catalog import SourceCatalog3FHL
+        >>> fermi_dataset = MapDataset.read(
+        ...    "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc.fits.gz", name="fermi_dataset")
+        >>> catalog = SourceCatalog3FHL()
+        >>> models = catalog.to_models().select_from_geom(fermi_dataset.geoms["geom"])
+        >>> ax = fermi_dataset.excess.sum_over_axes().smooth("0.2 deg").plot(add_cbar=True, cmap="Blues")
+        >>> ax = models.plot_regions(ax=ax, linewidth=1,  color="red",
+        ...    kwargs_point={"marker":"o", "markersize":5, "color":"red"}
+        ...            )
         """
         regions = self.to_regions()
 
@@ -1171,6 +1188,19 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
         -------
         ax : `~astropy.visualization.WcsAxes`
             WCS axes.
+
+        Examples
+        --------
+
+        >>> from gammapy.datasets import MapDataset
+        >>> from gammapy.catalog import SourceCatalog3FHL
+        >>> fermi_dataset = MapDataset.read(
+        ...        "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc.fits.gz", name="fermi_dataset"
+        ...        )
+        >>> catalog = SourceCatalog3FHL()
+        >>> models = catalog.to_models().select_from_geom(fermi_dataset.geoms["geom"])
+        >>> ax = fermi_dataset.excess.sum_over_axes().smooth("0.2 deg").plot(add_cbar=True, cmap="Blues")
+        >>> ax = models.plot_positions(ax=ax, color="red", marker="+", linewidth=1)
         """
         from astropy.visualization.wcsaxes import WCSAxes
 

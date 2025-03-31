@@ -1,0 +1,37 @@
+observations:
+    datastore: $GAMMAPY_DATA/hess-dl3-dr1
+    obs_cone: {frame: icrs, lon: 83.633 deg, lat: 22.014 deg, radius: 5 deg}
+    obs_ids: [23592, 23559]
+
+datasets:
+    type: 3d
+    stack: true
+    geom:
+        wcs:
+            skydir: {frame: icrs, lon: 83.633 deg, lat: 22.014 deg}
+            binsize: 0.04 deg
+            width: {width: 5 deg, height: 5 deg}
+            binsize_irf: 0.2 deg
+        selection:
+            offset_max: 2.5 deg
+        axes:
+            energy: {min: 1 TeV, max: 10 TeV, nbins: 4}
+            energy_true: {min: 0.7 TeV, max: 12 TeV, nbins: 10}
+    map_selection: ['counts', 'exposure', 'background', 'psf', 'edisp']
+    safe_mask:
+        methods: ['offset-max']
+        parameters: {offset_max: 2.5 deg}
+    background:
+        method: fov_background
+        parameters: {method: 'scale'}
+
+fit:
+    fit_range: {min: 1 TeV, max: 10.1 TeV}
+
+flux_points:
+    energy: {min: 1 TeV, max: 10 TeV, nbins: 2}
+
+excess_map:
+    correlation_radius: 0.1 deg
+    energy_edges: {min: 1 TeV, max: 10 TeV, nbins: 1}
+    parameters: {}

@@ -14,8 +14,14 @@ from gammapy.maps import (
     TimeMapAxis,
     WcsGeom,
     WcsNDMap,
+    RegionGeom,
 )
-from gammapy.utils.testing import modify_unit_order_astropy_5_3, mpl_plot_check
+from regions import CircleSkyRegion
+from gammapy.utils.testing import (
+    modify_unit_order_astropy_5_3,
+    mpl_plot_check,
+    requires_data,
+)
 
 pytest.importorskip("healpy")
 
@@ -783,6 +789,54 @@ def test_wcsndmap_reproject_allsky_car():
     assert_allclose(np.unique(m1.data[mask])[1], expected)
 
 
+@requires_data()
+def test_reproject_not_aligned():
+    # Regression tests for #5622
+
+    bkg = Map.read("$GAMMAPY_DATA/tests/irf/bkg_3d_to_reproject.fits.gz")
+
+    # test preserve_counts case for unaligned geom with diffrent bin size
+    # and data including nan and zeros
+    bkg.data[0, 10:16, 10:16] = np.nan
+    bkg.data[0, 4:8, 4:8] = 0
+
+    bin_size = 0.06
+
+    bkg_map = bkg.slice_by_idx({"energy": slice(0, 1)})
+    geom = WcsGeom.create(
+        skydir=bkg_map.geom.center_skydir,
+        frame="icrs",
+        axes=bkg_map.geom.axes,
+        width=bkg_map.geom.width + bin_size * u.deg,
+        binsz=bin_size,
+    )
+
+    bkg_map_reproj = bkg_map.reproject_to_geom(geom, preserve_counts=True)
+
+    assert_allclose(np.nansum(bkg_map_reproj.data), np.nansum(bkg_map.data), rtol=1e-5)
+    assert_allclose(
+        bkg_map_reproj.data[0, 0, :] / bkg_map_reproj.data[0, 1, :], 1, rtol=1e-4
+    )
+
+    # test that there is no reprojection artefact like overbright stripe
+    center_pos = (40.67, -0.013)
+    fov_size = (0.5, 0.5)
+    energy_axis = MapAxis.from_bounds(
+        0.3, 10.0, nbin=8, name="energy", unit="TeV", interp="log"
+    )
+    geom = WcsGeom.create(
+        skydir=center_pos,
+        frame="icrs",
+        axes=[energy_axis],
+        width=fov_size,
+        binsz=bin_size,
+    )
+
+    bkg_reproj = bkg.reproject_to_geom(geom, preserve_counts=True).sum_over_axes()
+
+    assert not np.all(bkg_reproj.data[0, 1, :] > bkg_reproj.data[0, 0, :])
+
+
 def test_iter_by_image():
     time_axis = MapAxis.from_bounds(
         0, 3, nbin=3, unit="hour", name="time", interp="lin"
@@ -990,3 +1044,49 @@ def test_data_shape_broadcast():
 
     with pytest.raises(ValueError):
         map2.data = np.ones((1, 1, 2))
+
+
+def test_make_mask_geom():
+    energy = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=5)
+    phase = MapAxis.from_bounds(0, 1, nbin=6, name="phase")
+    freq = MapAxis.from_bounds(1, 10, nbin=4, unit=u.Hz, name="freq")
+
+    geom = WcsGeom.create(10, axes=[energy, phase, freq])
+    with pytest.raises(KeyError):
+        geom.create_mask("fail", 1, 3)
+
+    with pytest.raises(u.UnitConversionError):
+        geom.create_mask("energy", 2, 3)
+
+    with pytest.raises(u.UnitsError):
+        geom.create_mask("freq", 2 * u.m, 4 * u.m)
+
+    mask_freq = geom.create_mask("freq", 3 * u.Hz, 5 * u.Hz, round_to_edge=True)
+    assert_allclose(
+        mask_freq.sum_over_axes(["energy", "phase"]).to_region_nd_map().data.squeeze(),
+        [0, 3000, 0, 0],
+    )
+
+    mask_phase = geom.create_mask("phase", 0, 1)
+    assert np.all(mask_phase)
+
+    mask_energy = geom.create_mask("energy", 2 * u.TeV, 2.5 * u.TeV)
+    assert ~np.all(mask_energy)
+
+    geom_hpx = HpxGeom.create(binsz=10, frame="galactic", axes=[energy, phase, freq])
+
+    mask_freq = geom_hpx.create_mask("freq", 3 * u.Hz, 5 * u.Hz, round_to_edge=True)
+    assert_allclose(
+        mask_freq.sum_over_axes(["energy", "phase"]).data.sum(axis=3).squeeze(),
+        [0, 23040, 0, 0],
+    )
+
+    geom_region = RegionGeom.create(
+        CircleSkyRegion(SkyCoord(2, 4.5, unit="deg", frame="icrs"), 0.1 * u.deg),
+        axes=[energy, phase, freq],
+    )
+    mask_energy = geom_region.create_mask("energy", 1 * u.TeV, 3 * u.TeV)
+    assert_allclose(
+        mask_energy.sum_over_axes(["phase", "freq"]).data.sum(),
+        48,
+    )

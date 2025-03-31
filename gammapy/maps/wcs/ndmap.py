@@ -215,7 +215,7 @@ class WcsNDMap(WcsMap):
 
         return vals
 
-    def _resample_by_idx(self, idx, weights=None, preserve_counts=False):
+    def _resample_by_idx(self, idx, weights=None, preserve_counts=False, smooth=False):
         idx = pix_tuple_to_idx(idx)
         msk = np.all(np.stack([t != INVALID_INDEX.int for t in idx]), axis=0)
         idx = [t[msk] for t in idx]
@@ -227,10 +227,18 @@ class WcsNDMap(WcsMap):
 
         idx = np.ravel_multi_index(idx, self.data.T.shape)
         idx, idx_inv = np.unique(idx, return_inverse=True)
-        weights = np.bincount(idx_inv, weights=weights).astype(self.data.dtype)
 
-        if not preserve_counts:
-            weights /= np.bincount(idx_inv).astype(self.data.dtype)
+        weights = np.bincount(idx_inv, weights=weights).astype(self.data.dtype)
+        bincount = np.bincount(idx_inv).astype(self.data.dtype)
+
+        if smooth:
+            weight_sum = np.nansum(weights)
+            weights /= bincount
+            if preserve_counts:
+                factor = weight_sum / np.nansum(weights)
+                weights *= np.nan_to_num(factor, nan=0.0, posinf=0.0, neginf=0.0)
+        elif not preserve_counts:
+            weights /= bincount
 
         self.data.T.flat[idx] += weights
 
@@ -358,14 +366,22 @@ class WcsNDMap(WcsMap):
             idx = self.geom.axes.index_data(axis_name)
             block_size[idx] = factor
 
-        func = np.nansum if preserve_counts else np.nanmean
-
         if weights is None:
-            weights = 1
-        else:
+            weights = np.ones_like(self.data)
+        elif not isinstance(weights, np.ndarray):
             weights = weights.data
 
-        data = block_reduce(self.data * weights, tuple(block_size), func=func)
+        data = block_reduce(self.data * weights, tuple(block_size), func=np.nansum)
+
+        if not preserve_counts:
+            weight_sum = block_reduce(weights, tuple(block_size), func=np.nansum)
+            data = np.divide(
+                data,
+                weight_sum,
+                out=np.zeros_like(data, dtype="float64"),
+                where=(weight_sum != 0),
+            )
+
         return self._init_copy(geom=geom, data=data.astype(self.data.dtype))
 
     def plot(

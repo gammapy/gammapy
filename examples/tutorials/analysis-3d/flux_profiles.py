@@ -134,7 +134,7 @@ plt.show()
 
 flux_profile_estimator = FluxProfileEstimator(
     regions=regions,
-    spectrum=PowerLawSpectralModel(index=2.3),
+    spectral_model=PowerLawSpectralModel(index=2.3),
     energy_edges=[10, 2000] * u.GeV,
     selection_optional=["ul"],
 )
@@ -203,6 +203,7 @@ for quantity in quantities:
     profile[quantity].plot(ax=ax, label=quantity.title())
 
 ax.set_ylabel("Counts")
+ax.legend()
 plt.show()
 
 

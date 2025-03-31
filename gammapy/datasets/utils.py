@@ -1,11 +1,18 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 from astropy.coordinates import SkyCoord
-from gammapy.maps import Map
+from gammapy.data import Observation
+import astropy.units as u
+from gammapy.maps import Map, MapAxis, WcsGeom
+from gammapy.maps.utils import _check_width, _check_binsz
 from gammapy.modeling.models.utils import cutout_template_models
 from . import Datasets
 
-__all__ = ["apply_edisp", "split_dataset"]
+__all__ = [
+    "apply_edisp",
+    "split_dataset",
+    "create_map_dataset_from_dl4",
+]
 
 
 def apply_edisp(input_map, edisp):
@@ -203,3 +210,210 @@ def split_dataset(dataset, width, margin, split_template_models=True):
                 d.models = dataset.models
             datasets.append(d)
     return datasets
+
+
+def create_map_dataset_from_dl4(data, geom=None, energy_axis_true=None, name=None):
+    """Create a map dataset from a map dataset or an observation containing DL4 IRFs
+
+    Parameters
+    ----------
+    data : `~gammapy.dataset.MapDataset` or `~gammapy.data.Observation`
+        MapDataset or Observation containing DL4 IRFs
+    geom : `~gammapy.maps.WcsGeom`, optional
+        Output dataset maps geometry. The default is None, and it is derived from IRFs
+    energy_axis_true : `~gammapy.maps.MapAxis`, optional
+        True energy axis used for IRF maps. The default is None, and it is derived from IRFs
+    name : str, optional
+        Dataset name. The default is None, and the name is randomly generated.
+
+    Returns
+    -------
+    dataset : `~gammapy.datasets.MapDataset`
+        Map dataset.
+    """
+    from gammapy.makers import MapDatasetMaker
+    from gammapy.datasets import MapDataset
+
+    # define target geom
+    if geom is None:
+        if isinstance(data, Observation):
+            geom_image = data.aeff.geom.to_image()
+        elif isinstance(data, MapDataset):
+            geom_image = data.exposure.geom.to_image()
+
+        geom = geom_image.to_cube([data.edisp.edisp_map.geom.axes["energy"]])
+
+    energy_axis = geom.axes["energy"]
+
+    if energy_axis_true is None:
+        energy_axis_true = data.edisp.edisp_map.geom.axes["energy_true"]
+
+    # ensure that DL4 IRFs have the axes
+    rad_axis = data.psf.psf_map.geom.axes["rad"]
+    geom_psf = data.psf.psf_map.geom.to_image().to_cube([rad_axis, energy_axis_true])
+    geom_edisp = data.edisp.edisp_map.geom.to_image().to_cube(
+        [energy_axis, energy_axis_true]
+    )
+    geom_exposure = geom.to_image().to_cube([energy_axis_true])
+
+    # create dataset and run data reduction / irfs interpolation
+    dataset = MapDataset.from_geoms(
+        geom,
+        geom_exposure=geom_exposure,
+        geom_psf=geom_psf,
+        geom_edisp=geom_edisp,
+        name=name,
+    )
+
+    selection = ["exposure", "edisp", "psf"]
+    if isinstance(data, Observation) and data.events:
+        selection.append("counts")
+    if isinstance(data, Observation) and data.bkg:
+        selection.append("background")
+
+    maker = MapDatasetMaker(selection=selection)
+    dataset = maker.run(dataset, data)
+
+    if isinstance(data, MapDataset) and data.counts:
+        if dataset.counts.geom == data.counts.geom:
+            dataset.counts.data = data.counts.data
+        else:
+            raise ValueError(
+                "Counts geom of input MapDataset and target geom must be identical"
+            )
+
+    if not dataset.background:
+        dataset.background = Map.from_geom(geom, data=0.0)
+
+    if dataset.edisp.exposure_map and np.all(dataset.edisp.exposure_map.data) == 0.0:
+        dataset.edisp.exposure_map.data = dataset.psf.exposure_map.data
+
+    return dataset
+
+
+def create_global_dataset(
+    datasets,
+    name=None,
+    position=None,
+    binsz=None,
+    width=None,
+    energy_min=None,
+    energy_max=None,
+    energy_true_min=None,
+    energy_true_max=None,
+    nbin_per_decade=None,
+):
+    """Create an empty dataset encompassing the input datasets.
+
+    Parameters
+    ----------
+    datasets : `~gammapy.datasets.Datasets`
+        Datasets
+    name : str, optional
+        Name of the output dataset. Default is None.
+    position : `~astropy.coordinates.SkyCoord`
+        Center position of the output dataset.
+        Default is None, and the average position is taken.
+    binsz : float or tuple or list, optional
+        Map pixel size in degrees.
+        Default is None, the minimum bin size is taken.
+    width : float or tuple or list or string, optional
+        Width of the map in degrees.
+        Default is None, in that case it is derived as
+        the maximal width + twice the maximal separation between datasets and position.
+    energy_min :  `~astropy.units.Quantity`
+        Energy range.
+        Default is None, the minimum energy is taken.
+    energy_max :  `~astropy.units.Quantity`
+        Energy range.
+        Default is None, the maximum energy is taken.
+    energy_true_min, energy_true_max :  `~astropy.units.Quantity`,  `~astropy.units.Quantity`
+        True energy range. If None, minimum and maximum energies of all geometries is used.
+        Default is None.
+    nbin_per_decade : int
+        number of energy bins per decade.
+        Default is None, the maximum is taken.
+
+    Returns
+    -------
+    datasets : `~gammapy.datasets.MapDatset`
+        Empy global dataset.
+    """
+    from gammapy.datasets import MapDataset
+
+    if position is None:
+        frame = datasets[0].counts.geom.frame
+        positions = SkyCoord(
+            [d.counts.geom.center_skydir.transform_to(frame) for d in datasets]
+        )
+        position = SkyCoord(positions.cartesian.mean(), frame="icrs")
+        position = SkyCoord(position.ra, position.dec, frame="icrs").transform_to(
+            frame
+        )  # drop fake distance
+
+    binsz_list = []
+    width_list = []
+    energy_min_list = []
+    energy_max_list = []
+    energy_true_min_list = []
+    energy_true_max_list = []
+    nbin_per_decade_list = []
+    for d in datasets:
+        binsz_list.append(np.abs(d.counts.geom.pixel_scales).min())
+        width_list.append(
+            d.counts.geom.width.max()
+            + 2 * d.counts.geom.center_skydir.separation(position)
+        )
+        energy_min_list.append(d.counts.geom.axes["energy"].edges.min())
+        energy_max_list.append(d.counts.geom.axes["energy"].edges.max())
+        energy_true_min_list.append(d.exposure.geom.axes["energy_true"].edges.min())
+        energy_true_max_list.append(d.exposure.geom.axes["energy_true"].edges.max())
+        ndecade = np.log10(energy_true_max_list[-1].value) - np.log10(
+            energy_true_min_list[-1].value
+        )
+        nbins = len(d.exposure.geom.axes[0].center)
+        nbin_per_decade_list.append(np.ceil(nbins / ndecade))
+
+    if binsz is None:
+        binsz = np.min(u.Quantity(binsz_list))
+    binsz = _check_binsz(binsz)
+    if width is None:
+        width = np.max(u.Quantity(width_list))
+    width = _check_width(width)
+    energy_true_min = (
+        energy_true_min
+        if energy_true_min is not None
+        else u.Quantity(energy_true_min_list).min()
+    )
+    if energy_true_max is None:
+        energy_true_max = np.max(u.Quantity(energy_true_max_list))
+    if energy_min is None:
+        energy_min = np.min(u.Quantity(energy_min_list))
+    if energy_max is None:
+        energy_max = np.max(u.Quantity(energy_max_list))
+
+    nbin_per_decade = (
+        nbin_per_decade if nbin_per_decade is not None else np.max(nbin_per_decade_list)
+    )
+    energy_axis = MapAxis.from_energy_bounds(
+        energy_min, energy_max, nbin_per_decade, unit="TeV", per_decade=True
+    )
+
+    geom = WcsGeom.create(
+        skydir=position,
+        binsz=binsz,
+        width=width,
+        frame=position.frame,
+        proj=datasets[0].counts.geom.projection,
+        axes=[energy_axis],
+    )
+
+    energy_axis_true = MapAxis.from_energy_bounds(
+        energy_true_min,
+        energy_true_max,
+        nbin_per_decade,
+        unit="TeV",
+        name="energy_true",
+        per_decade=True,
+    )
+    return MapDataset.create(geom=geom, energy_axis_true=energy_axis_true, name=name)

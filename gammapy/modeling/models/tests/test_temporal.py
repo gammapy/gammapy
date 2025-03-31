@@ -162,6 +162,17 @@ def test_time_sampling_template():
     assert_allclose(std - sigma.to("d").value, 0.0, atol=3e-4)
 
 
+def test_time_sampling_uniform():
+    cst = ConstantTemporalModel()
+    t0 = Time.now()
+    t1 = t0 + u.Quantity("100 s")
+    times = cst.sample_time(10000, t0, t1, t_delta="0.5 s").sort()
+    time_diff = (times[1:] - times[:-1]).to_value("s")
+    n_same_time = np.sum(time_diff < 1e-8)
+
+    assert n_same_time == 0
+
+
 def test_time_sampling_gaussian():
     time_ref = Time(55197.00000000, format="mjd")
     sigma = 0.5 * u.h
@@ -376,7 +387,7 @@ def test_with_skymodel(light_curve):
 
 def test_plot_constant_model():
     time_range = [Time.now(), Time.now() + 1 * u.d]
-    constant_model = ConstantTemporalModel(const=1)
+    constant_model = ConstantTemporalModel()
     with mpl_plot_check():
         constant_model.plot(time_range)
 
