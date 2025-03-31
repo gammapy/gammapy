@@ -16,7 +16,6 @@ from astropy.units import Quantity
 from astropy.utils import lazyproperty
 import matplotlib.pyplot as plt
 from gammapy.utils.deprecation import GammapyDeprecationWarning
-from gammapy.irf import FoVAlignment
 from gammapy.utils.fits import LazyFitsData, earth_location_to_dict
 from gammapy.utils.metadata import CreatorMetaData, TargetMetaData, TimeInfoMetaData
 from gammapy.utils.scripts import make_path
@@ -109,6 +108,8 @@ class Observation:
     @property
     def bkg(self):
         """Background of the observation."""
+        from gammapy.irf import FoVAlignment
+
         bkg = self._bkg
         # used for backward compatibility of old HESS data
         try:
@@ -192,6 +193,14 @@ class Observation:
         """GTI of the observation as a `~gammapy.data.GTI`."""
         gti = self.obs_filter.filter_gti(self._gti)
         return gti
+
+    @gti.setter
+    def gti(self, value):
+        if self.gti is not None and self.events is not None:
+            raise ValueError("GTI cannot be redefined if events is not None.")
+        if not isinstance(value, GTI):
+            raise TypeError(f"GTI must be an GTI instance, got: {type(value)}")
+        self._gti = value
 
     @staticmethod
     def _get_obs_info(

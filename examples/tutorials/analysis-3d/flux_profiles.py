@@ -134,7 +134,7 @@ plt.show()
 
 flux_profile_estimator = FluxProfileEstimator(
     regions=regions,
-    spectrum=PowerLawSpectralModel(index=2.3),
+    spectral_model=PowerLawSpectralModel(index=2.3),
     energy_edges=[10, 2000] * u.GeV,
     selection_optional=["ul"],
 )

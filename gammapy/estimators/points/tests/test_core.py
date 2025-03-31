@@ -256,6 +256,40 @@ class TestFluxPoints:
 
 
 @requires_data()
+def test_plot_format_yaxis():
+    path = "$GAMMAPY_DATA/tests/spectrum/flux_points/flux_points.fits"
+    fp = FluxPoints.read(path)
+
+    with mpl_plot_check():
+        ax = fp.plot(sed_type="e2dnde")
+        assert (
+            ax.yaxis.get_label().get_text()
+            == "e2dnde [$\\mathrm{erg\\,s^{-1}\\,cm^{-2}}$]"
+        )
+
+    with mpl_plot_check():
+        ax = fp.plot(sed_type="dnde", energy_power=2)
+        assert (
+            ax.yaxis.get_label().get_text()
+            == "e2 * dnde [$\\mathrm{TeV\\,s^{-1}\\,cm^{-2}}$]"
+        )
+
+    with mpl_plot_check():
+        ax = fp.plot(sed_type="dnde")
+        assert (
+            ax.yaxis.get_label().get_text()
+            == "dnde [$\\mathrm{TeV^{-1}\\,s^{-1}\\,cm^{-2}}$]"
+        )
+
+    with mpl_plot_check():
+        ax = fp.plot(sed_type="dnde", energy_power=2.7)
+        assert (
+            ax.yaxis.get_label().get_text()
+            == "e2.7 * dnde [$\\mathrm{TeV^{17/10}\\,s^{-1}\\,cm^{-2}}$]"
+        )
+
+
+@requires_data()
 def test_flux_points_single_bin_dnde():
     path = make_path("$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits")
     table = Table.read(path)

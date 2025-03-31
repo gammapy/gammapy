@@ -114,12 +114,12 @@ jobs:
         run: tox -e ${{ matrix.tox_env }} -- -n auto
       - name: Upload coverage to codecov
         if: "contains(matrix.tox_env, '-cov')"
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           file: ./coverage.xml
           verbose: true
   sphinx:
-    name: Linux python 3.9 sphinx all-deps
+    name: Linux python 3.11 sphinx all-deps
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -132,10 +132,10 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Set up Python ${{ matrix.python }}
+      - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python }}
+          python-version: '3.11'
       - name: Install base dependencies
         run: |
           python -m pip install --upgrade pip
@@ -147,33 +147,13 @@ jobs:
           gammapy download datasets
       - name: test build docs
         run: |
-          tox -e build_docs -- -j auto
+          tox -e build_docs
       - name: check links
         continue-on-error: true
         run: |
           tox -e linkcheck -- -j auto
-  conda-build:
-    name: Linux python 3.9 conda-build all-deps
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash -l {0}
-    steps:
-      - name: checkout repo
-        uses: actions/checkout@v4
-      - name: create and activate env
-        uses: mamba-org/setup-micromamba@v2
+      - name: Upload HTML output
+        uses: actions/upload-artifact@v4
         with:
-          environment-file: environment-dev.yml
-          cache-downloads: true
-      - name: install gammapy
-        run: |
-          pip install -e .
-      - name: test conda build
-        run: |
-          make clean
-          conda install conda-build
-          conda info
-          conda --version
-          conda build --version
-          python setup.py bdist_conda
+          name: gammapy-doc-html
+          path: docs/_build/html/

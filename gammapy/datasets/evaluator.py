@@ -103,6 +103,8 @@ class MapEvaluator:
         """Reset cached properties."""
         del self._compute_npred
         del self._compute_flux_spatial
+        self._computation_cache = None
+        self._cached_parameter_previous = None
 
     @property
     def geom(self):
@@ -239,8 +241,6 @@ class MapEvaluator:
                 )
 
         self.reset_cache_properties()
-        self._computation_cache = None
-        self._cached_parameter_previous = None
 
     @lazyproperty
     def _edisp_diagonal(self):

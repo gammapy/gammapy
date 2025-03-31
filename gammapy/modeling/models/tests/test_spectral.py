@@ -150,7 +150,7 @@ TEST_MODELS = [
             index_2=2,
             amplitude=1 / u.cm**2 / u.s / u.TeV,
             reference=1 * u.TeV,
-            expfactor=1e-2,
+            expfactor=1e-14,
         ),
         val_at_2TeV=u.Quantity(0.3431043087721737, "cm-2 s-1 TeV-1"),
         integral_1_10TeV=u.Quantity(1.2125247, "cm-2 s-1"),
@@ -168,6 +168,7 @@ TEST_MODELS = [
         val_at_2TeV=u.Quantity(0.35212994, "cm-2 s-1 TeV-1"),
         integral_1_10TeV=u.Quantity(1.328499, "cm-2 s-1"),
         eflux_1_10TeV=u.Quantity(4.067067, "TeV cm-2 s-1"),
+        e_peak=10.0498756 * u.TeV,
     ),
     dict(
         name="logpar",
@@ -681,6 +682,18 @@ def test_ecpl_integrate():
     value = ecpl.integral(1 * u.TeV, 1.1 * u.TeV)
     assert value.isscalar
     assert_quantity_allclose(value, 8.380714e-14 * u.Unit("s-1 cm-2"))
+
+
+def test_call_plsec_4fgl_dr1():
+    model = SuperExpCutoffPowerLaw4FGLSpectralModel(
+        amplitude="2e-12 MeV-1 s-1 cm-2",
+        reference="1000 MeV",
+        expfactor=5e-03,
+        index_1=2,
+        index_2=1,
+    )
+    desired = u.Quantity(3.823779e-20, "MeV-1 s-1 cm-2")
+    assert_allclose(model(4 * u.GeV), desired, rtol=1e-3)
 
 
 def test_pwl_pivot_energy():
@@ -1291,3 +1304,8 @@ def test_template_ND_EBL(tmpdir):
     assert_allclose(template_new.map.data, region_map.data)
     assert len(template.parameters) == 1
     assert_allclose(template.parameters["redshift"].value, 0.1)
+
+
+def test_incorrect_param_name():
+    with pytest.raises(NameError):
+        PowerLawSpectralModel(indxe=2)

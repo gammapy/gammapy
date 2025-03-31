@@ -88,6 +88,10 @@ def test_plot_map_rgb():
 
     axis = MapAxis([0, 1, 2, 3], node_type="edges")
     map_allsky = WcsNDMap.create(binsz=10 * u.deg, axes=[axis])
+
+    # Astropy 7 does not support uniformly 0 maps
+    map_allsky.data += 1
+
     with mpl_plot_check():
         plot_map_rgb(map_allsky)
 
@@ -110,6 +114,8 @@ def test_plot_distribution():
 
     map_ = WcsNDMap.create(npix=(100, 100), axes=[energy_axis])
     map_.data = array_2d
+    mask_ = WcsNDMap.create(npix=(100, 100), dtype="bool")
+    mask_.data[:50, :] = True
 
     energy_axis_10 = MapAxis.from_energy_bounds(1 * u.TeV, 10 * u.TeV, 10)
     map_empty = WcsNDMap.create(npix=(100, 100), axes=[energy_axis_10])
@@ -119,7 +125,7 @@ def test_plot_distribution():
 
     with mpl_plot_check():
         axes, res = plot_distribution(
-            wcs_map=map_, func=fit_func, kwargs_hist={"bins": 40}
+            wcs_map=map_, mask=mask_, func=fit_func, kwargs_hist={"bins": 40}
         )
 
         assert axes.shape == (1,)
@@ -136,8 +142,23 @@ def test_plot_distribution():
         assert axes.shape == (4, 3)
 
         axes, res = plot_distribution(
-            wcs_map=map_, func="norm", kwargs_hist={"bins": 40}
+            wcs_map=map_, mask=mask_, func="norm", kwargs_hist={"bins": 40}
         )
 
         fig, ax = plt.subplots(nrows=1, ncols=1)
         plot_distribution(map_empty, ax=ax)
+
+        # test mask exceptions
+        mask_2 = WcsNDMap.create(npix=(200, 200), dtype="bool")
+        mask_2.data[:50, :] = True
+        with pytest.raises(ValueError):
+            axes, res = plot_distribution(
+                wcs_map=map_, mask=mask_2, func="norm", kwargs_hist={"bins": 40}
+            )
+
+        mask_3 = WcsNDMap.create(npix=(100, 100), dtype="float")
+        mask_3.data = np.ones_like(mask_3.data)
+        with pytest.raises(ValueError):
+            axes, res = plot_distribution(
+                wcs_map=map_, mask=mask_3, func="norm", kwargs_hist={"bins": 40}
+            )
