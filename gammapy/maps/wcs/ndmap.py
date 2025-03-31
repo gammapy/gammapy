@@ -650,19 +650,20 @@ class WcsNDMap(WcsMap):
             # Casting needed as interp_by_coord transforms boolean
             data = data.astype(self.data.dtype)
         else:
-            cutout, mask = self.cutout_and_mask_region(region=region)
+            cutout, cutout_mask = self.cutout_and_mask_region(region=region)
+            mask = cutout.copy()
+            mask.data = np.broadcast_to(cutout_mask.data, mask.data.shape)
 
             if weights is not None:
                 weights_cutout = weights.cutout(
                     position=geom.center_skydir, width=geom.width
                 )
-                if weights.is_mask:
-                    mask.data = np.logical_and(mask.data, weights.data)
+                if weights_cutout.is_mask:
+                    mask.data = np.logical_and(mask.data, weights_cutout.data)
                 else:
                     cutout.data *= weights_cutout.data
 
-            idx_y, idx_x = np.where(mask)
-            data = func(cutout.data[..., idx_y, idx_x], axis=-1)
+            data = func(cutout.data[np.where(mask.data)], axis=-1)
 
         return RegionNDMap(geom=geom, data=data, unit=self.unit, meta=self.meta.copy())
 
