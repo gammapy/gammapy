@@ -1000,7 +1000,7 @@ class IRFMap:
             Downsampled IRF map.
         """
 
-        if axis_name is None:
+        if not axis_name:
             preserve_counts = False
         else:
             preserve_counts = True
@@ -1012,7 +1012,7 @@ class IRFMap:
             weights=weights,
         )
         if self.exposure_map:
-            if axis_name is (None or "energy_true"):
+            if axis_name in [None, "energy_true"]:
                 exposure_map = self.exposure_map.downsample(
                     factor=factor, axis_name=axis_name, preserve_counts=preserve_counts
                 )
