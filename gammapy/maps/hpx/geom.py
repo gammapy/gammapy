@@ -1040,6 +1040,7 @@ class HpxGeom(Geom):
         # TODO: this should return something more friendly than a tuple
         # e.g. a namedtuple or a dict
         tokens = parse_hpxregion(region)
+
         reg_type = tokens[0]
         if reg_type == "DISK":
             lon, lat = float(tokens[1]), float(tokens[2])
