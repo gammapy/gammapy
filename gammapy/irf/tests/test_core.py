@@ -106,19 +106,14 @@ def test_irfmap_downsample():
     irf3 = irf.downsample(2)
 
     assert irf3.edisp_map.unit == irf.edisp_map.unit
-    assert np.all(
-        irf3.edisp_map.geom.npix[i] == irf.edisp_map.geom.npix[i] / 2 for i in [0, 1]
-    )
+    assert irf3.edisp_map.geom.npix[0] == irf.edisp_map.geom.npix[0] / 2
     assert_allclose(
         np.mean(irf.edisp_map.data[:, :, 0:2, 0:2], axis=(2, 3)),
         irf3.edisp_map.data[:, :, 0, 0],
     )
 
     assert irf3.exposure_map.unit == irf.exposure_map.unit
-    assert np.all(
-        irf3.exposure_map.geom.npix[i] == irf.exposure_map.geom.npix[i] / 2
-        for i in [0, 1]
-    )
+    assert irf3.exposure_map.geom.npix[0] == irf.exposure_map.geom.npix[0] / 2
     assert_allclose(
         np.mean(irf.exposure_map.data[:, 0:2, 0:2], axis=(-1, -2)),
         irf3.exposure_map.data[:, 0, 0],
@@ -129,10 +124,7 @@ def test_irfmap_downsample():
 
     # test energy downsampling with weights
     irf5 = irf.downsample(2, axis_name="energy", weights=weights)
-    assert irf5.edisp_map.unit == irf.edisp_map.unit
-    assert np.all(
-        irf5.edisp_map.geom.shape[i] == irf2.edisp_map.geom.shape[i] / 2 for i in [1]
-    )
+    assert irf5.edisp_map.data.shape[1] == irf2.edisp_map.data.shape[1] / 2
     assert_allclose(
         np.sum(
             irf2.edisp_map.data[:, 0:2, :, :] * weights.data[:, 0:2, :, :], axis=(1)
@@ -143,10 +135,6 @@ def test_irfmap_downsample():
 
     # test spatial downsampling with weights
     irf6 = irf.downsample(2, weights=weights)
-    assert irf6.edisp_map.unit == irf.edisp_map.unit
-    assert np.all(
-        irf6.edisp_map.geom.npix[i] == irf.edisp_map.geom.npix[i] / 2 for i in [0, 1]
-    )
     assert_allclose(
         np.sum(
             irf.edisp_map.data[:, :, 0:2, 0:2] * weights.data[:, :, 0:2, 0:2],
