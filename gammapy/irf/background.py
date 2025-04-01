@@ -17,7 +17,7 @@ __all__ = ["Background3D", "Background2D", "BackgroundIRF"]
 
 log = logging.getLogger(__name__)
 
-def     test_function(x):
+def   test_function(x):
     return x**2
 
 class BackgroundIRF(IRF):
