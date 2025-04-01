@@ -10,6 +10,10 @@ from .fit_statistics import cash, wstat
 __all__ = ["WStatCountsStatistic", "CashCountsStatistic"]
 
 
+def x_square(x):
+    return x**2
+
+
 class CountsStatistic(abc.ABC):
     """Counts statistics base class."""
 
