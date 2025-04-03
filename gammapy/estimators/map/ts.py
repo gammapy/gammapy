@@ -677,7 +677,7 @@ class SimpleMapDataset:
 
     def npred(self, norm):
         """Predicted number of counts."""
-        return self.background + norm * self.model
+        return self.background + float(norm) * self.model
 
     def stat_sum(self, norm):
         """Statistics sum."""
@@ -1076,16 +1076,16 @@ def _ts_value(
             )
         )
 
-    norm_guess = np.array([d.norm_guess for d in datasets])
+    norm_guess = np.array([d.norm_guess for d in datasets], dtype=float)
     mask_valid = np.isfinite(norm_guess)
     if np.any(mask_valid):
         norm_guess = np.mean(norm_guess[mask_valid])
     else:
         norm_guess = 1.0
     dataset = SimpleMapDataset(
-        counts=np.concatenate([d.counts for d in datasets]),
-        background=np.concatenate([d.background for d in datasets]),
-        model=np.concatenate([d.model for d in datasets]),
+        counts=np.concatenate([d.counts for d in datasets], dtype=float),
+        background=np.concatenate([d.background for d in datasets], dtype=float),
+        model=np.concatenate([d.model for d in datasets], dtype=float),
         norm_guess=norm_guess,
     )
     return flux_estimator.run(dataset)
