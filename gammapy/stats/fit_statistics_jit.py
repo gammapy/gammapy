@@ -7,7 +7,7 @@ global TRUNCATION_VALUE  # compile time constant
 TRUNCATION_VALUE = 1e-25
 
 
-@jit("f4(f4[:],f4[:],f4[:])", nopython=True, parallel=True, nogil=True)
+@jit(nopython=True, parallel=True, nogil=True)
 def weighted_cash_sum_jit(counts, npred, weight):
     """Cash fit statistics with weights.
 
@@ -41,7 +41,7 @@ def weighted_cash_sum_jit(counts, npred, weight):
     return 2 * stat_sum
 
 
-@jit("f4(f4[:],f4[:])", nopython=True, parallel=True, nogil=True)
+@jit(nopython=True, parallel=True, nogil=True)
 def cash_sum_jit(counts, npred):
     """Summed cash fit statistics.
 
@@ -72,7 +72,7 @@ def cash_sum_jit(counts, npred):
     return 2 * stat_sum
 
 
-@jit("f4(f4,f4[:],f4[:],f4[:])", nopython=True, parallel=True, nogil=True)
+@jit(nopython=True, parallel=True, nogil=True)
 def f_cash_root_jit(x, counts, background, model):
     """Function to find root of. Described in Appendix A, Stewart (2009).
 
