@@ -1472,12 +1472,10 @@ class MapDataset(Dataset):
         if self.models is not None:
             prior_stat_sum = self.models.parameters.prior_stat_sum()
 
-        counts, npred = self.counts.data.astype(float), self.npred().data
-
         if self.mask is not None:
             mask = ~(self.mask.data == False)  # noqa
-            counts = counts[mask]
-            npred = npred[mask]
+            counts = self.counts.data[mask]
+            npred = self.npred().data[mask]
             if self.mask.data.dtype == bool or self.stat_type == "cash":
                 cash_sum = cash_sum_jit(counts, npred)
             elif self.stat_type == "cash_weighted":
@@ -1489,7 +1487,7 @@ class MapDataset(Dataset):
                     f", got `{self.stat_type}` instead."
                 )
         else:
-            cash_sum = cash_sum_jit(counts.ravel(), npred.ravel())
+            cash_sum = cash_sum_jit(self.counts.data.ravel(), self.npred().data.ravel())
         return cash_sum + prior_stat_sum
 
     def _to_asimov_dataset(self):
