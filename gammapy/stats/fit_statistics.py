@@ -8,10 +8,10 @@ from abc import ABC
 import numpy as np
 from scipy.special import erfc
 from gammapy.maps import Map
-from gammapy.stats.fit_statistics_cython import (
+from gammapy.stats.fit_statistics_jit import (
     TRUNCATION_VALUE,
-    cash_sum_cython,
-    weighted_cash_sum_cython,
+    cash_sum_jit,
+    weighted_cash_sum_jit,
 )
 
 
