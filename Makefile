@@ -1,7 +1,6 @@
 # Makefile with some convenient quick ways to do common things
 
 PROJECT = gammapy
-CYTHON ?= cython
 version = dev
 release = $(version)
 
