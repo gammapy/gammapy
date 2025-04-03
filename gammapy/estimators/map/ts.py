@@ -14,7 +14,7 @@ from gammapy.datasets.map import MapEvaluator
 from gammapy.datasets.utils import get_nearest_valid_exposure_position
 from gammapy.maps import Map, MapAxis, Maps
 from gammapy.modeling.models import PointSpatialModel, PowerLawSpectralModel, SkyModel
-from gammapy.stats import cash, cash_sum_cython, f_cash_root_cython, norm_bounds_cython
+from gammapy.stats import cash, cash_sum_jit, f_cash_root_jit, norm_bounds_jit
 from gammapy.stats.utils import ts_to_sigma
 from gammapy.utils.array import shape_2N, symmetric_crop_pad_width
 from gammapy.utils.pbar import progress_bar
@@ -673,7 +673,7 @@ class SimpleMapDataset:
     @lazyproperty
     def norm_bounds(self):
         """Bounds for x."""
-        return norm_bounds_cython(self.counts, self.background, self.model)
+        return norm_bounds_jit(self.counts, self.background, self.model)
 
     def npred(self, norm):
         """Predicted number of counts."""
@@ -681,19 +681,19 @@ class SimpleMapDataset:
 
     def stat_sum(self, norm):
         """Statistics sum."""
-        return cash_sum_cython(self.counts, self.npred(norm))
+        return cash_sum_jit(self.counts, self.npred(norm))
 
     def stat_sum_asimov(self, norm):
         """Statistics sum."""
-        return cash_sum_cython(self.npred(norm), self.npred(norm))
+        return cash_sum_jit(self.npred(norm), self.npred(norm))
 
     def stat_sum_asimov_null(self, norm):
         """Statistics sum."""
-        return cash_sum_cython(self.npred(norm), self.background)
+        return cash_sum_jit(self.npred(norm), self.background)
 
     def stat_derivative(self, norm):
         """Statistics derivative."""
-        return f_cash_root_cython(norm, self.counts, self.background, self.model)
+        return f_cash_root_jit(norm, self.counts, self.background, self.model)
 
     def stat_2nd_derivative(self, norm):
         """Statistics 2nd derivative."""

@@ -1460,7 +1460,6 @@ class MapDataset(Dataset):
             pix_region.plot(ax=ax_spatial)
 
         return ax_spatial, ax_spectral
-
     def _to_asimov_dataset(self):
         """Create Asimov dataset from the current models."""
 
