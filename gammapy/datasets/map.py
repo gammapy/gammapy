@@ -16,8 +16,8 @@ from gammapy.stats import (
     CashCountsStatistic,
     WStatCountsStatistic,
     cash,
-    cash_sum_cython,
-    weighted_cash_sum_cython,
+    cash_sum_jit,
+    weighted_cash_sum_jit,
     get_wstat_mu_bkg,
     wstat,
 )
@@ -1479,17 +1479,17 @@ class MapDataset(Dataset):
             counts = counts[mask]
             npred = npred[mask]
             if self.mask.data.dtype == bool or self.stat_type == "cash":
-                cash_sum = cash_sum_cython(counts, npred)
+                cash_sum = cash_sum_jit(counts, npred)
             elif self.stat_type == "cash_weighted":
                 weight = self.mask.data[mask]
-                cash_sum = weighted_cash_sum_cython(counts, npred, weight)
+                cash_sum = weighted_cash_sum_jit(counts, npred, weight)
             else:
                 raise ValueError(
                     f"'stat_type' must be a 'cash' or `cash_weighted`."
                     f", got `{self.stat_type}` instead."
                 )
         else:
-            cash_sum = cash_sum_cython(counts.ravel(), npred.ravel())
+            cash_sum = cash_sum_jit(counts.ravel(), npred.ravel())
         return cash_sum + prior_stat_sum
 
     def _to_asimov_dataset(self):
