@@ -29,6 +29,7 @@ dependencies:
   - scipy!=1.10
   - iminuit>=2.8.0
   - extension-helpers
+  - numba
   # test dependencies
   - codecov
   - pytest
