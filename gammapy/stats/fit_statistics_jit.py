@@ -52,7 +52,7 @@ def cash_sum_jit(counts, npred):
     npred : `~numpy.ndarray`
         Predicted counts array.
     """
-    stat_sum = 0
+    stat_sum = 0.0
     trunc = TRUNCATION_VALUE
     logtrunc = np.log(TRUNCATION_VALUE)
 
@@ -92,9 +92,9 @@ def f_cash_root_jit(x, counts, background, model):
     for i in range(ni):
         if model[i] > 0.0:
             if counts[i] > 0.0:
-                stat_sum += model[i] * (
-                    1.0 - counts[i] / (x * model[i] + background[i])
-                )
+                denom = x * model[i] + background[i]
+                if denom != 0.0:
+                    stat_sum += model[i] * (1.0 - counts[i] / denom)
             else:
                 stat_sum += model[i]
 
@@ -136,6 +136,10 @@ def norm_bounds_jit(counts, background, model):
             sn = background[i] / model[i]
             if sn < sn_min_total:
                 sn_min_total = sn
-    b_min = c_min / s_model - sn_min
-    b_max = s_counts / s_model - sn_min
+    if s_model == 0.0:
+        b_min = np.nan
+        b_max = np.nan
+    else:
+        b_min = c_min / s_model - sn_min
+        b_max = s_counts / s_model - sn_min
     return b_min, b_max, -sn_min_total
