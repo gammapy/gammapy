@@ -118,8 +118,8 @@ def test_cstat(test_data, reference_values):
 
 
 def test_cash_sum_jit(test_data):
-    counts = np.array(test_data["n_on"], dtype=float)
-    npred = np.array(test_data["mu_sig"], dtype=float)
+    counts = np.array(test_data["n_on"], dtype=np.float32)
+    npred = np.array(test_data["mu_sig"], dtype=np.float32)
     stat = stats.cash_sum_jit(counts=counts, npred=npred)
     ref = stats.cash(counts, npred).sum()
     assert_allclose(stat, ref)
