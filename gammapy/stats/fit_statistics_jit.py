@@ -7,7 +7,7 @@ global TRUNCATION_VALUE  # compile time constant
 TRUNCATION_VALUE = 1e-25
 
 
-@jit(nopython=True, parallel=True, nogil=True)
+@jit(nopython=True, parallel=False, nogil=True)
 def weighted_cash_sum_jit(counts, npred, weight):
     """Cash fit statistics with weights.
 
@@ -41,7 +41,7 @@ def weighted_cash_sum_jit(counts, npred, weight):
     return 2 * stat_sum
 
 
-@jit(nopython=True, parallel=True, nogil=True)
+@jit(nopython=True, parallel=False, nogil=True)
 def cash_sum_jit(counts, npred):
     """Summed cash fit statistics.
 
@@ -104,7 +104,7 @@ def f_cash_root_jit(x, counts, background, model):
     return 2 * stat_sum
 
 
-@jit(nopython=True, parallel=True, nogil=True)
+@jit(nopython=True, parallel=False, nogil=True)
 def norm_bounds_jit(counts, background, model):
     """Compute bounds for the root of `_f_cash_root_jit`.
 
