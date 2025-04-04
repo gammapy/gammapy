@@ -1474,12 +1474,12 @@ class MapDataset(Dataset):
 
         if self.mask is not None:
             mask = ~(self.mask.data == False)  # noqa
-            counts = self.counts.data[mask].astype(float)
-            npred = self.npred().data[mask].astype(float)
+            counts = self.counts.data[mask]
+            npred = self.npred().data[mask]
             if self.mask.data.dtype == bool or self.stat_type == "cash":
                 cash_sum = cash_sum_jit(counts, npred)
             elif self.stat_type == "cash_weighted":
-                weight = self.mask.data[mask].astype(float)
+                weight = self.mask.data[mask]
                 cash_sum = weighted_cash_sum_jit(counts, npred, weight)
             else:
                 raise ValueError(
@@ -1488,8 +1488,8 @@ class MapDataset(Dataset):
                 )
         else:
             cash_sum = cash_sum_jit(
-                self.counts.data.ravel().astype(float),
-                self.npred().data.ravel().astype(float),
+                self.counts.data.ravel(),
+                self.npred().data.ravel(),
             )
         return cash_sum + prior_stat_sum
 
