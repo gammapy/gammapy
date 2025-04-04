@@ -10,6 +10,11 @@ from .fit_statistics import cash, wstat
 __all__ = ["WStatCountsStatistic", "CashCountsStatistic"]
 
 
+def printTT():
+    print("TT by TT")
+    pass
+
+
 class CountsStatistic(abc.ABC):
     """Counts statistics base class."""
 
