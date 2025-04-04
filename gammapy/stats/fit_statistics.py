@@ -5,7 +5,7 @@ see :ref:`fit-statistics`
 """
 
 import numpy as np
-from gammapy.stats.fit_statistics_cython import TRUNCATION_VALUE
+from gammapy.stats.fit_statistics_jit import TRUNCATION_VALUE
 
 __all__ = ["cash", "cstat", "wstat", "get_wstat_mu_bkg", "get_wstat_gof_terms"]
 

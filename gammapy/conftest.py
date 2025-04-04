@@ -31,7 +31,6 @@ def pytest_configure(config):
 
     # Declare for which packages version numbers should be displayed
     # when running the tests
-    PYTEST_HEADER_MODULES["cython"] = "cython"
     PYTEST_HEADER_MODULES["iminuit"] = "iminuit"
     PYTEST_HEADER_MODULES["matplotlib"] = "matplotlib"
     PYTEST_HEADER_MODULES["astropy"] = "astropy"
