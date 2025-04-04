@@ -589,10 +589,19 @@ class MapDataset(Dataset):
     # TODO: keep or remove?
     @property
     def background_model(self):
-        try:
-            return self.models[f"{self.name}-bkg"]
-        except (ValueError, TypeError):
-            pass
+        if self.models is None:
+            return None
+            
+        bkg_model = None
+        for k in self.models.names:
+            v = self.models[k]
+            if isinstance(v,FoVBackgroundModel) and bkg_model is None and self.name in v.datasets_names:
+                bkg_model = k
+            elif isinstance(v,FoVBackgroundModel) and bkg_model is not None and self.name in v.datasets_names:
+                raise AttributeError(f"Only one Background Model per Dataset - already selected {bkg_model.name}")
+        if bkg_model is not None:
+            return self.models[bkg_model]
+
 
     def __str__(self):
         str_ = f"{self.__class__.__name__}\n"
