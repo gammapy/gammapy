@@ -15,6 +15,7 @@ The following example shows how to plot images using colormaps that are commonly
 used in gamma-ray astronomy (`colormap_hess` and `colormap_milagro`).
 
 .. plot:: user-guide/visualization/colormap_example.py
+    :include-source:
 
 Color-blind friendly visualizations can be achieved using the `style sheet of matplotlib <https://matplotlib.org/stable/gallery/style_sheets/style_sheets_reference.html>`_
 (see the :ref:`how_to` section).
@@ -26,6 +27,7 @@ The `~gammapy.visualization.MapPanelPlotter` allows to split e.g. a galactic pla
 a large aspect ratio into multiple panels. Here is a short example:
 
 .. plot::
+    :include-source:
 
     import matplotlib.pyplot as plt
     from astropy.coordinates import SkyCoord, Angle
