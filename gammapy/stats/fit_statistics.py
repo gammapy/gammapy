@@ -284,7 +284,7 @@ class CashFitStatistic(FitStatistic):
             counts, npred = counts[mask], npred[mask]
 
         counts = counts.astype(float)  # This might be done in the Dataset
-        return cash_sum_cython(counts.ravel(), npred.ravel())
+        return cash_sum_jit(counts.ravel(), npred.ravel())
 
     @classmethod
     def stat_array_dataset(cls, dataset):
@@ -305,10 +305,10 @@ class WeightedCashFitStatistic(FitStatistic):
             npred = npred[mask]
 
             weights = dataset.mask.data[mask].astype("float")
-            return weighted_cash_sum_cython(counts, npred, weights)
+            return weighted_cash_sum_jit(counts, npred, weights)
         else:
             # No weights back to regular cash statistic
-            return cash_sum_cython(counts.ravel(), npred.ravel())
+            return cash_sum_jit(counts.ravel(), npred.ravel())
 
     @classmethod
     def stat_array_dataset(cls, dataset):

@@ -557,9 +557,6 @@ class MapDataset(Dataset):
 
         self.stat_type = stat_type
 
-        if self.counts:
-            self.counts.data = self.counts.data.astype(float)
-
     @property
     def _psf_kernel(self):
         """Precompute PSFkernel if there is only one spatial bin in the PSFmap"""
@@ -1463,6 +1460,7 @@ class MapDataset(Dataset):
             pix_region.plot(ax=ax_spatial)
 
         return ax_spatial, ax_spectral
+
     def _to_asimov_dataset(self):
         """Create Asimov dataset from the current models."""
 
