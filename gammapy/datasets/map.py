@@ -557,6 +557,9 @@ class MapDataset(Dataset):
 
         self.stat_type = stat_type
 
+        if self.counts:
+            self.counts.data = self.counts.data.astype(float)
+
     @property
     def _psf_kernel(self):
         """Precompute PSFkernel if there is only one spatial bin in the PSFmap"""
