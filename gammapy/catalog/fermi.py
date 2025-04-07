@@ -1669,7 +1669,7 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
         best_fit: `~gammapy.maps.RegionNDMap`
             Map containing the best fit.
         """
-        table = Table.read(self._auxiliary_filename, hdu=2)
+        table = Table.read(self._auxiliary_filename, hdu="BEST_FIT_LC")
 
         # For best-fit profile, Ph_min and Ph_max are equal and represent bin centers.
         phases = MapAxis.from_nodes(table["Ph_Min"], name="phase", interp="lin")
@@ -1689,10 +1689,7 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
         radio_profile: `~gammapy.maps.RegionNDMap`
             Map containing the radio profile.
         """
-        try:
-            table = Table.read(self._auxiliary_filename, hdu=3)
-        except ValueError:
-            raise ValueError(f"Radio profile is not available for pulsar {self.name}.")
+        table = Table.read(self._auxiliary_filename, hdu="RADIO_PROFILE")
 
         # For radio pulse profile, Ph_min and Ph_max are equal and represent bin centers.
         phases = MapAxis.from_nodes(table["Ph_Min"], name="phase", interp="lin")
@@ -1726,7 +1723,7 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
             Dictionary of map containing the pulse profile in different energy bin.
         """
 
-        table = Table.read(self._auxiliary_filename, hdu=1)
+        table = Table.read(self._auxiliary_filename, hdu="GAMMA_LC")
         phases = MapAxis.from_edges(
             np.unique(np.concatenate([table["Ph_Min"], table["Ph_Max"]])),
             name="phase",
