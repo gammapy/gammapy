@@ -29,6 +29,7 @@ from gammapy.utils.testing import (
     modify_unit_order_astropy_5_3,
     requires_data,
 )
+from gammapy.maps import RegionNDMap
 
 SOURCES_2PC = [
     dict(
@@ -895,12 +896,26 @@ class TestFermi3PCObject:
         desired = [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 5.146455e-08]
         assert_allclose(flux_points.flux_ul.data.flat, desired, rtol=1e-5)
 
-    @pytest.mark.xfail
-    def test_lightcurve(self, ref=SOURCES_3PC_NONE[0]):
-        # TODO: add lightcurve test when lightcurve is introduce to the class.
-        lightcurve = self.cat[ref["idx"]].lightcurve
+    def test_pulse_profile(self, ref=SOURCES_3PC[1]):
+        profiles = self.cat[ref["idx"]].pulse_profiles
+        assert len(profiles) == 14
+        assert list(profiles.keys())[0] == "GT100_WtCnt"
+        assert isinstance(profiles["3000_100000_WtCt"], RegionNDMap)
 
-        assert lightcurve is not None
+        assert_allclose(profiles["300_1000_WtCt"].data[45], 32.64874, rtol=1e-4)
+
+    def test_pulse_radio(self, ref=SOURCES_3PC[0]):
+        profile = self.cat[ref["idx"]].pulse_profile_radio
+        assert isinstance(profile, RegionNDMap)
+        assert_allclose(profile.data[10], 1287.9535, rtol=1e-3)
+
+        with pytest.raises(ValueError):
+            self.cat["J1826-1256"].pulse_profile_radio
+
+    def test_best_fit(self, ref=SOURCES_3PC[1]):
+        profile = self.cat[ref["idx"]].pulse_profile_best_fit
+        assert isinstance(profile, RegionNDMap)
+        assert_allclose(profile.data[67], 69.34279, rtol=1e-4)
 
 
 @requires_data()
