@@ -1689,10 +1689,7 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
         radio_profile: `~gammapy.maps.RegionNDMap`
             Map containing the radio profile.
         """
-        try:
-            table = Table.read(self._auxiliary_filename, hdu="RADIO_PROFILE")
-        except ValueError:
-            raise ValueError(f"Radio profile is not available for pulsar {self.name}.")
+        table = Table.read(self._auxiliary_filename, hdu="RADIO_PROFILE")
 
         # For radio pulse profile, Ph_min and Ph_max are equal and represent bin centers.
         phases = MapAxis.from_nodes(table["Ph_Min"], name="phase", interp="lin")
