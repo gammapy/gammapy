@@ -1674,7 +1674,7 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
         # For radio pulse profile, Ph_min and Ph_max are the equal and are bin center.
         phases = MapAxis.from_nodes(table["Ph_Min"], name="phase", interp="lin")
         profile_map = RegionNDMap.create(
-            region=None, axes=[phases], data=table["Norm_Intensity"]
+            region=None, axes=[phases], data=table["Intensity"]
         )
         return profile_map
 
