@@ -331,7 +331,9 @@ def plot_distribution(
             raise ValueError("Map and mask spatial geometry must agree!")
 
         if not mask.is_mask:
-            raise ValueError(f"Mask map must be of boolean type, got {mask.data.dtype} instead.")
+            raise ValueError(
+                f"Mask map must be of boolean type, got {mask.data.dtype} instead."
+            )
 
         cutout_mask.data = np.logical_and(cutout_mask.data, mask.data)
 
@@ -422,3 +424,132 @@ def plot_distribution(
         axe.legend()
 
     return axes, result_list
+
+
+def plot_pulse_profile_3PC(
+    source, n_period=2, add_radio_profile=True, add_best_fit_profile=True
+):
+    # Import here to avoid circular imports
+    from gammapy.catalog import SourceCatalogObject3PC
+
+    key_names = [
+        "50_100_WtCt",
+        "100_300_WtCt",
+        "300_1000_WtCt",
+        "1000_3000_WtCt",
+        "3000_100000_WtCt",
+        "10000_100000_WtCt",
+    ]
+
+    if not isinstance(source, SourceCatalogObject3PC):
+        raise TypeError(
+            f"`source` must be an instance of `~gammapy.catalog.SourceCatalogObject3PC`, got {type(source)}."
+        )
+    if n_period > 2:
+        raise ValueError(f"`n_preiod` must be either 1 or 2, got {n_period}.")
+
+    fig, axes = plt.subplots(
+        ncols=1,
+        nrows=6,
+        figsize=(7, 12),
+        gridspec_kw={"height_ratios": [1.6, 1, 1, 1, 1, 1]},
+    )
+
+    plt.subplots_adjust(wspace=0, hspace=0)
+    for ax in axes[:-1]:
+        ax.tick_params(
+            axis="x", direction="inout", labelbottom=False, top=True, bottom=True
+        )
+    axes[0].tick_params(
+        axis="x", direction="inout", labeltop=True, top=True, bottom=True
+    )
+
+    ax_ylim = [0, None]
+
+    if add_radio_profile:
+        radio_profile = source.pulse_profile_radio
+        radio_axis = radio_profile.geom.axes["phase"]
+        axes[0].plot(
+            radio_axis.as_plot_center,
+            radio_profile.data.squeeze(),
+            color="#FB462A",
+            lw=0.5,
+            label="Radio",
+        )
+        ax_ylim[0] = (
+            radio_profile.data.squeeze().min()
+            - 0.1 * radio_profile.data.squeeze().min()
+        )
+        ax_ylim[1] = (
+            radio_profile.data.squeeze().max()
+            + 0.1 * radio_profile.data.squeeze().max()
+        )
+
+    if add_best_fit_profile:
+        best_fit_profile = source.pulse_profile_best_fit
+        best_fit_axis = best_fit_profile.geom.axes["phase"]
+        axes[0].plot(
+            best_fit_axis.as_plot_center,
+            best_fit_profile.data.squeeze(),
+            color="#008080",
+            lw=2,
+            ls="--",
+            label="Best-fit",
+        )
+        ax_ylim[0] = min(
+            best_fit_profile.data.squeeze().min()
+            - 0.1 * best_fit_profile.data.squeeze().min(),
+            ax_ylim[0],
+        )
+        ax_ylim[1] = max(
+            best_fit_profile.data.squeeze().max()
+            + 0.1 * best_fit_profile.data.squeeze().max(),
+            ax_ylim[1],
+        )
+
+    profiles = source.pulse_profiles
+    axis = profiles["GT100_WtCnt"].geom.axes["phase"]
+    data = profiles["GT100_WtCnt"].data.squeeze()
+    axes[0].hist(
+        axis.as_plot_center,
+        color="#202449",
+        bins=axis.as_plot_edges,
+        weights=data,
+        histtype="step",
+        lw=1,
+        label="LAT > 100 MeV",
+    )
+    ax_ylim[0] = min(data.min() - 0.1 * data.min(), ax_ylim[0])
+    ax_ylim[1] = max(data.max() + 0.1 * data.max(), ax_ylim[1])
+
+    axes[0].set_ylim(ax_ylim)
+    axes[0].set_xlim(0, int(n_period))
+    axes[0].legend()
+
+    for i, (ax, name) in enumerate(
+        zip(np.concatenate([axes[1:2], axes[1:]]), reversed(key_names))
+    ):
+        kwargs = {}
+        kwargs["color"] = "#202449"
+        kwargs["histtype"] = "step"
+        if i == 0:
+            kwargs["color"] = "grey"
+            kwargs["histtype"] = "stepfilled"
+        axis = profiles[name].geom.axes["phase"]
+        data = profiles[name].data.squeeze()
+        label = (
+            f"LAT {int(name.split('_')[0])/1000} - {int(name.split('_')[1])/1000} GeV"
+        )
+        ax.hist(
+            axis.as_plot_center,
+            bins=axis.as_plot_edges,
+            weights=data,
+            label=label,
+            lw=1,
+            **kwargs,
+        )
+        ax.set_ylim(data.min() - 0.1 * data.min(), data.max() + 0.1 * data.max())
+        ax.set_xlim(0, int(n_period))
+        ax.legend()
+
+    return axes
