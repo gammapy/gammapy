@@ -588,25 +588,13 @@ class MapDataset(Dataset):
     def background_model(self):
         if self.models is None:
             return None
-        bkg_model = None
-        for k in self.models.names:
-            v = self.models[k]
-            if (
-                isinstance(v, FoVBackgroundModel)
-                and bkg_model is None
-                and self.name in v.datasets_names
-            ):
-                bkg_model = k
-            elif (
-                isinstance(v, FoVBackgroundModel)
-                and bkg_model is not None
-                and self.name in v.datasets_names
-            ):
-                raise AttributeError(
-                    f"Only one Background Model per Dataset - already selected {bkg_model.name}"
-                )
-        if bkg_model is not None:
-            return self.models[bkg_model]
+        elif isinstance(self.models, DatasetModels):
+            if self.name in self.models.background_models.keys():
+                return self.models[self.models.background_models[self.name]]
+            else:
+                return None
+        else:
+            pass
 
     def __str__(self):
         str_ = f"{self.__class__.__name__}\n"

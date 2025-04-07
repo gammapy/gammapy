@@ -88,6 +88,32 @@ def _check_name_unique(model, names):
     return
 
 
+def _check_fov_background_models(models):
+    """
+    Checks if maximum of one FoVBackgroundModel assigned to dataset and returns
+    dict mapping dataset_name to bkg model name
+
+    Returns:
+    --------
+    bkg_model_mapping : dict
+        dict mapping dataset name to FoVBackgroundModel name
+    """
+    from . import FoVBackgroundModel
+
+    bkg_model_mapping = {}
+    for model in models:
+        if isinstance(model, FoVBackgroundModel):
+            # Currently always iterating over a single element
+            for n in model.datasets_names:
+                if n not in bkg_model_mapping.keys():
+                    bkg_model_mapping[n] = model.name
+                else:
+                    raise ValueError(
+                        f"Onyl one FoVBackgroundModel per Dataset - already got one for {n}"
+                    )
+    return bkg_model_mapping
+
+
 def _write_models(
     models,
     path,
@@ -408,7 +434,10 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
             _check_name_unique(model, names=unique_names)
             unique_names.append(model.name)
 
+        self._background_models = _check_fov_background_models(models)
+
         self._models = models
+
         self._covar_file = None
 
         self._covariance = Covariance(self.parameters)
@@ -437,6 +466,11 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
     def names(self):
         """List of model names."""
         return [m.name for m in self._models]
+
+    @property
+    def background_models(self):
+        """Dict of datasets and associated FoVBackgroundModels"""
+        return self._background_models
 
     @classmethod
     def read(cls, filename, checksum=False):
