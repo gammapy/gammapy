@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Tools to create profiles (i.e. 1D "slices" from 2D images)."""
 
+import logging
 from itertools import repeat
 import numpy as np
 from astropy import units as u
@@ -12,6 +13,8 @@ from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from .core import FluxPoints
 from .sed import FluxPointsEstimator
 from gammapy.utils.deprecation import deprecated_renamed_argument
+
+log = logging.getLogger(__name__)
 
 __all__ = ["FluxProfileEstimator"]
 
@@ -103,6 +106,14 @@ class FluxProfileEstimator(FluxPointsEstimator):
             spectral_model = PowerLawSpectralModel()
 
         self.spectral_model = spectral_model
+
+        if "reoptimize" in kwargs:
+            if kwargs["reoptimize"] == True:
+                raise ValueError(
+                    f"reoptimize=True is not available for {self}. Set to `False` instead."
+                )
+        else:
+            kwargs["reoptimize"] = False
         super().__init__(**kwargs)
 
     @property
