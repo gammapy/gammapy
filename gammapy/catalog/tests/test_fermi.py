@@ -909,7 +909,7 @@ class TestFermi3PCObject:
         assert isinstance(profile, RegionNDMap)
         assert_allclose(profile.data[10], 1287.9535, rtol=1e-3)
 
-        with pytest.raises(ValueError):
+        with pytest.raises(KeyError):
             self.cat["J1826-1256"].pulse_profile_radio
 
     def test_best_fit(self, ref=SOURCES_3PC[1]):
