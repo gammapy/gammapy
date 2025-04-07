@@ -38,7 +38,10 @@ class FluxProfileEstimator(FluxPointsEstimator):
         Defaults to `~gammapy.utils.parallel.BACKEND_DEFAULT`.
     **kwargs : dict, optional
         Keywords forwarded to the `FluxPointsEstimator` (see documentation
-        there for further description of valid keywords).
+        there for further description of valid keywords). Note that the `reoptimized`
+        keyword is accepted only if set to False. If not, an error is raised.
+        If the keyword is not set by the user, it will be internally set to False
+        by default.
 
     Examples
     --------
