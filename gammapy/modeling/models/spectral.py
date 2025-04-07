@@ -1883,7 +1883,7 @@ class TemplateNDSpectralModel(SpectralModel):
         if filename is None:
             log.warning(
                 "The filename is not defined therefore the model will not be serialised correctly. "
-                'To set the filename the "model.filename" attribute can be used.'
+                'To set the filename the "template_model.filename" attribute can be used.'
             )
         self.filename = filename
 
