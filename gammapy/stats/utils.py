@@ -4,6 +4,9 @@ import numpy as np
 from scipy.stats import ncx2
 
 
+__all__ = ["sigma_to_ts", "ts_to_sigma"]
+
+
 def sigma_to_ts(n_sigma, df=1, n_sigma_asimov=0):
     """Convert number of sigma to delta ts.
 
