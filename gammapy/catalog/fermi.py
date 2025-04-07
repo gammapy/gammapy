@@ -9,7 +9,7 @@ import astropy.units as u
 from astropy.table import Table
 from astropy.wcs import FITSFixedWarning
 from gammapy.estimators import FluxPoints
-from gammapy.maps import MapAxis, Maps, RegionGeom
+from gammapy.maps import MapAxis, Maps, RegionGeom, RegionNDMap
 from gammapy.modeling.models import (
     DiskSpatialModel,
     GaussianSpatialModel,
@@ -1543,6 +1543,16 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
 
     _energy_edges = u.Quantity([50, 100, 300, 1_000, 3e3, 1e4, 3e4, 1e5, 1e6], "MeV")
 
+    _pulse_profile_column_name = [
+        "GT100_WtCnt",
+        "50_100_WtCt",
+        "100_300_WtCt",
+        "300_1000_WtCt",
+        "1000_3000_WtCt",
+        "3000_100000_WtCt",
+        "10000_100000_WtCt",
+    ]
+
     @property
     def _auxiliary_filename(self):
         return make_path(
@@ -1647,6 +1657,40 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
                 d["Unc_PLEC_ExpfactorS_bfr"],
             )
         return ss
+
+    @property
+    def pulse_profiles(self):
+        """
+        The 3PC pulse profiles are provided in different energy ranges, each represented in weighted counts.
+        These profiles are stored in a dictionary of `~gammapy.maps.RegionNDMap` objects, one per energy bin.
+
+        The dictionary keys correspond to specific energy ranges as follows:
+            * `GT100_WtCnt`: > 0.1 MeV
+            * `50_100_WtCt`: 0.05 – 0.1 MeV
+            * `100_300_WtCt`: 0.1 – 0.3 MeV
+            * `300_1000_WtCt`: 0.3 – 1 GeV
+            * `1000_3000_WtCt`: 1 – 3 GeV
+            * `3000_100000_WtCt`: 3 – 1000 GeV
+            * `10000_100000_WtCt`: 10 – 1000 GeV
+
+        Each pulse profile has an associated uncertainty map, which can be accessed by
+        prepending `"Unc_"` to the corresponding key in the dictionary.
+        """
+
+        table = Table.read(self._auxiliary_filename, hdu=1)
+        phases = MapAxis.from_edges(
+            np.unique(np.concatenate([table["Ph_Min"], table["Ph_Max"]])), name="phase"
+        )
+        map_dict = dict()
+        for name in self._pulse_profile_column_name:
+            map_dict[name] = RegionNDMap.create(
+                region=None, axes=[phases], data=table[name]
+            )
+        for name in self._pulse_profile_column_name:
+            map_dict[f"Unc_{name}"] = RegionNDMap.create(
+                region=None, axes=[phases], data=table[f"Unc_{name}"]
+            )
+        return map_dict
 
     def spectral_model(self, fit="auto"):
         """
