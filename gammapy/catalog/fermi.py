@@ -1659,6 +1659,49 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
         return ss
 
     @property
+    def pulse_profile_best_fit(self):
+        """
+        Best fit of the > 100 MeV 3PC pulse profile.
+
+        Returns
+        -------
+
+        best_fit: `~gammapy.maps.RegionNDMap`
+            Map containing the best fit.
+        """
+        table = Table.read(self._auxiliary_filename, hdu=2)
+
+        # For radio pulse profile, Ph_min and Ph_max are the equal and are bin center.
+        phases = MapAxis.from_nodes(table["Ph_Min"], name="phase", interp="lin")
+        profile_map = RegionNDMap.create(
+            region=None, axes=[phases], data=table["Norm_Intensity"]
+        )
+        return profile_map
+
+    @property
+    def pulse_profile_radio(self):
+        """
+        Radio pulse profile provided in the auxiliary file of 3PC.
+
+        Returns
+        -------
+
+        radio_profile: `~gammapy.maps.RegionNDMap`
+            Map containing the radio profile.
+        """
+        try:
+            table = Table.read(self._auxiliary_filename, hdu=3)
+        except ValueError:
+            raise ValueError(f"Radio profile is not available for pulsar {self.name}.")
+
+        # For radio pulse profile, Ph_min and Ph_max are the equal and are bin center.
+        phases = MapAxis.from_nodes(table["Ph_Min"], name="phase", interp="lin")
+        profile_map = RegionNDMap.create(
+            region=None, axes=[phases], data=table["Norm_Intensity"]
+        )
+        return profile_map
+
+    @property
     def pulse_profiles(self):
         """
         The 3PC pulse profiles are provided in different energy ranges, each represented in weighted counts.
@@ -1675,11 +1718,19 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
 
         Each pulse profile has an associated uncertainty map, which can be accessed by
         prepending `"Unc_"` to the corresponding key in the dictionary.
+
+        Returns
+        -------
+
+        dict_map: dict of `~gammapy.maps.RegionNDMap`
+            Dictionary of map containing the pulse profile in different energy bin.
         """
 
         table = Table.read(self._auxiliary_filename, hdu=1)
         phases = MapAxis.from_edges(
-            np.unique(np.concatenate([table["Ph_Min"], table["Ph_Max"]])), name="phase"
+            np.unique(np.concatenate([table["Ph_Min"], table["Ph_Max"]])),
+            name="phase",
+            interp="lin",
         )
         map_dict = dict()
         for name in self._pulse_profile_column_name:
