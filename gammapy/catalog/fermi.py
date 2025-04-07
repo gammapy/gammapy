@@ -1671,7 +1671,7 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
         """
         table = Table.read(self._auxiliary_filename, hdu=2)
 
-        # For radio pulse profile, Ph_min and Ph_max are the equal and are bin center.
+        # For best-fit profile, Ph_min and Ph_max are equal and represent bin centers.
         phases = MapAxis.from_nodes(table["Ph_Min"], name="phase", interp="lin")
         profile_map = RegionNDMap.create(
             region=None, axes=[phases], data=table["Intensity"]
@@ -1694,7 +1694,7 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
         except ValueError:
             raise ValueError(f"Radio profile is not available for pulsar {self.name}.")
 
-        # For radio pulse profile, Ph_min and Ph_max are the equal and are bin center.
+        # For radio pulse profile, Ph_min and Ph_max are equal and represent bin centers.
         phases = MapAxis.from_nodes(table["Ph_Min"], name="phase", interp="lin")
         profile_map = RegionNDMap.create(
             region=None, axes=[phases], data=table["Norm_Intensity"]
