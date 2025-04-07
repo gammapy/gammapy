@@ -12,8 +12,9 @@ def sigma_to_ts(n_sigma, df=1, n_sigma_asimov=0):
 
     Assumes that the TS follows a chi2 distribution according to Wilks theorem [1].
     This is valid only if:
-        * the two hypotheses tested can be defined in the same parameters space
-        * the true value is not at the boundary of this parameters space.
+
+    - the two hypotheses tested can be defined in the same parameters space
+    - the true value is not at the boundary of this parameters space.
 
     Parameters
     ----------
@@ -52,8 +53,9 @@ def ts_to_sigma(ts, df=1, ts_asimov=0):
 
     Assumes that the TS follows a chi2 distribution according to Wilks theorem [1].
     This is valid only if:
-        * the two hypotheses tested can be defined in the same parameters space
-        * the true value is not at the boundary of this parameters space.
+
+    - the two hypotheses tested can be defined in the same parameters space
+    - the true value is not at the boundary of this parameters space.
 
     Parameters
     ----------
