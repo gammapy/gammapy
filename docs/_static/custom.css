@@ -59,6 +59,9 @@ p {
 [data-theme="dark"] .sd-card img[src*='.svg'] {
   filter: invert(0.9) sepia(0.3) saturate(5) hue-rotate(180deg) brightness(0.8) contrast(1.2);
 }
+[data-theme="dark"] .sd-card img[src*='.png'] {
+  filter: invert(0.9) sepia(0.3) saturate(5) hue-rotate(180deg) brightness(0.8) contrast(1.2);
+}
 [data-theme="dark"] .logo img {
     display: none;
 }

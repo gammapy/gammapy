@@ -21,7 +21,7 @@ User guide
     :class-container: sd-text-center
 
     .. grid-item-card:: Analysis workflow and package structure
-        :img-top: ../_static/box.svg
+        :img-top: ../_static/box.png
         :columns: 12 6 6 6
         :class-card: intro-card
         :shadow: md
@@ -57,7 +57,7 @@ User guide
             To the How To
 
     .. grid-item-card:: Model gallery
-        :img-top: ../_static/galleryicon.svg
+        :img-top: ../_static/galleryicon.png
         :columns: 12 6 6 6
         :class-card: intro-card
         :shadow: md
@@ -75,7 +75,7 @@ User guide
             To the model gallery
 
     .. grid-item-card:: Gammapy recipes
-        :img-top: ../_static/glossaryicon.svg
+        :img-top: ../_static/glossaryicon.png
         :columns: 12 6 6 6
         :class-card: intro-card
         :shadow: md
