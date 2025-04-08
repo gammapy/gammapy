@@ -1807,6 +1807,7 @@ def test_map_dataset_on_off_to_spectrum_dataset_weights():
     with pytest.raises(Exception):
         dataset.to_spectrum_dataset(on_region)
 
+
 @requires_data()
 def test_map_dataset_on_off_cutout(images):
     dataset = get_map_dataset_onoff(images)
