@@ -149,12 +149,6 @@ Get set up
 
 .. warning::
 
-    The rest of this page isn't written yet. It's almost identical to
-    https://ctapipe.readthedocs.io/en/latest/developer-guide/getting-started.html so for
-    now, see there. Also, we shouldn't duplicate content from
-    https://docs.astropy.org/en/latest/development/index.html but link
-    there instead.
-
 The first steps are basically identical to
 https://ctapipe.readthedocs.io/en/latest/developer-guide/getting-started.html (until
 section *Setting up the development environment*) and
