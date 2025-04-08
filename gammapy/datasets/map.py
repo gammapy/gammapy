@@ -1350,6 +1350,9 @@ class MapDataset(Dataset):
 
         """
         counts, npred = self.counts.copy(), self.npred()
+        if self.mask is not None:
+            counts *= self.mask
+            npred *= self.mask
         counts_spec = counts.get_spectrum(region)
         npred_spec = npred.get_spectrum(region)
         residuals = self._compute_residuals(counts_spec, npred_spec, method)
