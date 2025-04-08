@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
+import logging
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
@@ -122,6 +123,7 @@ def test_light_curve_to_dict(light_curve):
 
 @requires_data()
 def test_light_curve_map_serialisation(light_curve, tmp_path):
+    light_curve = light_curve.copy()
     filename = str(make_path(tmp_path / "tmp.fits"))
     light_curve.write(filename, format="map")
     lc1 = LightCurveTemplateTemporalModel.read(filename, format="map")
@@ -392,20 +394,25 @@ def test_plot_constant_model():
         constant_model.plot(time_range)
 
 
-def test_phase_curve_model(tmp_path):
+def test_phase_curve_model(tmp_path, caplog):
     phase = np.linspace(0.0, 1, 101)
     norm = phase * (phase < 0.5) + (1 - phase) * (phase >= 0.5)
     table = Table(data={"PHASE": phase, "NORM": norm})
 
     t_ref = Time("2022-06-01")
-    phase_model = TemplatePhaseCurveTemporalModel(
-        table=table,
-        f0="20 Hz",
-        phi_ref=0.0,
-        f1="0 s-2",
-        f2="0 s-3",
-        t_ref=t_ref.mjd * u.d,
-    )
+    with caplog.at_level(logging.WARNING):
+        phase_model = TemplatePhaseCurveTemporalModel(
+            table=table,
+            f0="20 Hz",
+            phi_ref=0.0,
+            f1="0 s-2",
+            f2="0 s-3",
+            t_ref=t_ref.mjd * u.d,
+        )
+        assert (
+            'The filename is not defined. Therefore, the model will not be serialised correctly. To set the filename, the "template_model.filename" attribute can be used.'
+            in [_.message for _ in caplog.records]
+        )
 
     result = phase_model(t_ref + [0, 0.025, 0.05] * u.s)
     assert_allclose(result, [0.000000e00, 1.999989e00, 2.169609e-05], atol=1e-5)
