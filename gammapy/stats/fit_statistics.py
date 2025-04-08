@@ -8,10 +8,10 @@ from abc import ABC
 import numpy as np
 from scipy.special import erfc
 from gammapy.maps import Map
-from gammapy.stats.fit_statistics_cython import (
+from gammapy.stats.fit_statistics_jit import (
     TRUNCATION_VALUE,
-    cash_sum_cython,
-    weighted_cash_sum_cython,
+    cash_sum_jit,
+    weighted_cash_sum_jit,
 )
 
 
@@ -284,7 +284,7 @@ class CashFitStatistic(FitStatistic):
             counts, npred = counts[mask], npred[mask]
 
         counts = counts.astype(float)  # This might be done in the Dataset
-        return cash_sum_cython(counts.ravel(), npred.ravel())
+        return cash_sum_jit(counts.ravel(), npred.ravel())
 
     @classmethod
     def stat_array_dataset(cls, dataset):
@@ -305,10 +305,10 @@ class WeightedCashFitStatistic(FitStatistic):
             npred = npred[mask]
 
             weights = dataset.mask.data[mask].astype("float")
-            return weighted_cash_sum_cython(counts, npred, weights)
+            return weighted_cash_sum_jit(counts, npred, weights)
         else:
             # No weights back to regular cash statistic
-            return cash_sum_cython(counts.ravel(), npred.ravel())
+            return cash_sum_jit(counts.ravel(), npred.ravel())
 
     @classmethod
     def stat_array_dataset(cls, dataset):

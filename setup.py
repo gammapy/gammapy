@@ -62,8 +62,7 @@ if "build_docs" in sys.argv or "build_sphinx" in sys.argv:
 # imports here so that people get the nice error messages above without needing
 # build dependencies
 import numpy as np  # noqa: E402
-from Cython.Build import cythonize  # noqa: E402
-from setuptools import Extension, setup  # noqa: E402
+from setuptools import setup  # noqa: E402
 
 kwargs = dict(
     include_dirs=[np.get_include()],
@@ -75,14 +74,6 @@ kwargs = dict(
     ],
 )
 
-extensions = [
-    Extension(
-        "gammapy.stats.fit_statistics_cython",
-        sources=["gammapy/stats/fit_statistics_cython.pyx"],
-        **kwargs,
-    ),
-]
+extensions = []
 
-setup(
-    ext_modules=cythonize(extensions),
-)
+setup()

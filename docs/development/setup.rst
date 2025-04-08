@@ -53,16 +53,6 @@ The ``environment-dev.yml`` file contains the conda environment specification
 that allows one to quickly set up a conda environment for Gammapy development,
 see :ref:`dev_setup`.
 
-.. _setup_cython:
-
-Cython
-------
-
-We also have some Cython code in Gammapy, at the time of this writing less than
-10% in this file:
-
-* ``gammapy/stats/fit_statistics_cython.pyx``
-
 Others
 ------
 

@@ -208,10 +208,6 @@ To *activate* your development version (branch) of Gammapy in your environment:
 
     python -m pip install -e .
 
-This build is necessary to compile the few Cython code (``*.pyx``). If you skip
-this step, some imports depending on Cython code will fail. If you want to remove the generated
-files run ``make clean``.
-
 For the development it is also convenient to have declared ``$GAMMAPY_DATA`` environment variable.
 You can download the Gammapy datasets with ``gammapy download datasets`` and then point
 your ``$GAMMAPY_DATA`` to the local path you have chosen.
