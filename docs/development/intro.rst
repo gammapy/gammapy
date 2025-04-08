@@ -147,8 +147,6 @@ certainly the same week), are best.
 Get set up
 ==========
 
-.. warning::
-
 The first steps are basically identical to
 https://ctapipe.readthedocs.io/en/latest/developer-guide/getting-started.html (until
 section *Setting up the development environment*) and
