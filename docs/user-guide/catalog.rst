@@ -29,9 +29,11 @@ or to create initial source models for certain energy bands and sky regions.
 Using gammapy.catalog
 ---------------------
 
-.. minigallery:: `~gammapy.catalog.SourceCatalog3FHL`
-    :add-heading:
+.. minigallery::
+    :add-heading: Examples using `~gammapy.catalog`
 
+    ../examples/tutorials/tutorials/api/catalog.py
+    ../examples/tutorials/starting/overview.py
+    ../examples/tutorials/analysis-1d/sed_fitting
+    ../examples/tutorials/api/model_management.py
 
-.. minigallery:: `~gammapy.catalog.SourceCatalogGammaCat`
-    :add-heading:

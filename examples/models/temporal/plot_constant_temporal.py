@@ -6,7 +6,7 @@ Constant temporal model
 
 This model parametrises a constant time model.
 
-.. math:: F(t) = k
+.. math:: F(t) = 1
 
 """
 

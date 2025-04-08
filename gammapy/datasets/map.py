@@ -15,11 +15,7 @@ from gammapy.modeling.models import DatasetModels, FoVBackgroundModel, Models
 from gammapy.stats import (
     CashCountsStatistic,
     WStatCountsStatistic,
-    cash,
-    cash_sum_cython,
-    weighted_cash_sum_cython,
     get_wstat_mu_bkg,
-    wstat,
 )
 from gammapy.utils.fits import HDULocation, LazyFitsData
 from gammapy.utils.random import get_random_state
@@ -33,7 +29,6 @@ from .utils import get_axes
 __all__ = [
     "MapDataset",
     "MapDatasetOnOff",
-    "MapDatasetWeighted",
     "create_empty_map_dataset_from_irfs",
     "create_map_dataset_geoms",
     "create_map_dataset_from_observation",
@@ -491,7 +486,6 @@ class MapDataset(Dataset):
     MapDatasetOnOff, SpectrumDataset, FluxPointsDataset.
     """
 
-    stat_type = "cash"
     tag = "MapDataset"
     counts = LazyFitsData(cache=True)
     exposure = LazyFitsData(cache=True)
@@ -528,6 +522,7 @@ class MapDataset(Dataset):
         meta_table=None,
         name=None,
         meta=None,
+        stat_type="cash",
     ):
         self._name = make_name(name)
         self._evaluators = {}
@@ -558,6 +553,8 @@ class MapDataset(Dataset):
         self.models = models
         self.meta_table = meta_table
         self.meta = meta
+
+        self.stat_type = stat_type
 
     @property
     def _psf_kernel(self):
@@ -1206,10 +1203,6 @@ class MapDataset(Dataset):
         if self.meta and other.meta:
             self.meta.stack(other.meta)
 
-    def stat_array(self):
-        """Statistic function value per bin given the current model parameters."""
-        return cash(n_on=self.counts.data, mu_on=self.npred().data)
-
     def residuals(self, method="diff", **kwargs):
         """Compute residuals map.
 
@@ -1357,6 +1350,9 @@ class MapDataset(Dataset):
 
         """
         counts, npred = self.counts.copy(), self.npred()
+        if self.mask is not None:
+            counts *= self.mask
+            npred *= self.mask
         counts_spec = counts.get_spectrum(region)
         npred_spec = npred.get_spectrum(region)
         residuals = self._compute_residuals(counts_spec, npred_spec, method)
@@ -1465,32 +1461,6 @@ class MapDataset(Dataset):
             pix_region.plot(ax=ax_spatial)
 
         return ax_spatial, ax_spectral
-
-    def stat_sum(self):
-        """Total statistic function value given the current model parameters and priors."""
-        prior_stat_sum = 0.0
-        if self.models is not None:
-            prior_stat_sum = self.models.parameters.prior_stat_sum()
-
-        counts, npred = self.counts.data.astype(float), self.npred().data
-
-        if self.mask is not None:
-            mask = ~(self.mask.data == False)  # noqa
-            counts = counts[mask]
-            npred = npred[mask]
-            if self.mask.data.dtype == bool or self.stat_type == "cash":
-                cash_sum = cash_sum_cython(counts, npred)
-            elif self.stat_type == "cash_weighted":
-                weight = self.mask.data[mask]
-                cash_sum = weighted_cash_sum_cython(counts, npred, weight)
-            else:
-                raise ValueError(
-                    f"'stat_type' must be a 'cash' or `cash_weighted`."
-                    f", got `{self.stat_type}` instead."
-                )
-        else:
-            cash_sum = cash_sum_cython(counts.ravel(), npred.ravel())
-        return cash_sum + prior_stat_sum
 
     def _to_asimov_dataset(self):
         """Create Asimov dataset from the current models."""
@@ -1973,7 +1943,7 @@ class MapDataset(Dataset):
             )
 
         if self.stat_type == "cash" and self.background:
-            kwargs["background"] = self.background.to_region_nd_map(
+            kwargs["background"] = self.npred_background().to_region_nd_map(
                 region, func=np.sum, weights=self.mask_safe
             )
 
@@ -2387,11 +2357,6 @@ class MapDataset(Dataset):
         plot_mask(ax=axes[3], mask=self.mask_safe_image, hatches=["///"], colors="w")
 
 
-class MapDatasetWeighted(MapDataset):
-    stat_type = "cash_weighted"
-    tag = "MapDatasetWeighted"
-
-
 class MapDatasetOnOff(MapDataset):
     """Map dataset for on-off likelihood fitting.
 
@@ -2442,7 +2407,6 @@ class MapDatasetOnOff(MapDataset):
 
     """
 
-    stat_type = "wstat"
     tag = "MapDatasetOnOff"
 
     def __init__(
@@ -2461,6 +2425,7 @@ class MapDatasetOnOff(MapDataset):
         gti=None,
         meta_table=None,
         meta=None,
+        stat_type="wstat",
     ):
         self._name = make_name(name)
         self._evaluators = {}
@@ -2481,6 +2446,8 @@ class MapDatasetOnOff(MapDataset):
             self._meta = MapDatasetMetaData()
         else:
             self._meta = meta
+
+        self.stat_type = stat_type
 
     def __str__(self):
         str_ = super().__str__()
@@ -2585,17 +2552,6 @@ class MapDatasetOnOff(MapDataset):
         if self.counts_off is None:
             return None
         return self.alpha * self.counts_off
-
-    def stat_array(self):
-        """Statistic function value per bin given the current model parameters."""
-        mu_sig = self.npred_signal().data
-        on_stat_ = wstat(
-            n_on=self.counts.data,
-            n_off=self.counts_off.data,
-            alpha=list(self.alpha.data),
-            mu_sig=mu_sig,
-        )
-        return np.nan_to_num(on_stat_)
 
     @property
     def _counts_statistic(self):
@@ -2852,17 +2808,6 @@ class MapDatasetOnOff(MapDataset):
         self.counts_off = total_off
 
         super().stack(other, nan_to_num=nan_to_num)
-
-    def stat_sum(self):
-        """Total statistic function value given the current model parameters.
-
-        If the off counts are passed as None and the elements of the safe mask are False, zero will be returned.
-        Otherwise, the stat sum will be calculated and returned.
-        """
-        if self.counts_off is None and not np.any(self.mask_safe.data):
-            return 0
-        else:
-            return Dataset.stat_sum(self)
 
     def fake(self, npred_background, random_state="random-seed"):
         """Simulate fake counts (on and off) for the current model and reduced IRFs.

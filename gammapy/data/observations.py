@@ -194,6 +194,14 @@ class Observation:
         gti = self.obs_filter.filter_gti(self._gti)
         return gti
 
+    @gti.setter
+    def gti(self, value):
+        if self.gti is not None and self.events is not None:
+            raise ValueError("GTI cannot be redefined if events is not None.")
+        if not isinstance(value, GTI):
+            raise TypeError(f"GTI must be an GTI instance, got: {type(value)}")
+        self._gti = value
+
     @staticmethod
     def _get_obs_info(
         pointing, deadtime_fraction, time_start, time_stop, reference_time, location

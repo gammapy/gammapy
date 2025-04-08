@@ -168,6 +168,7 @@ TEST_MODELS = [
         val_at_2TeV=u.Quantity(0.35212994, "cm-2 s-1 TeV-1"),
         integral_1_10TeV=u.Quantity(1.328499, "cm-2 s-1"),
         eflux_1_10TeV=u.Quantity(4.067067, "TeV cm-2 s-1"),
+        e_peak=10.0498756 * u.TeV,
     ),
     dict(
         name="logpar",
@@ -1308,3 +1309,20 @@ def test_template_ND_EBL(tmpdir):
 def test_incorrect_param_name():
     with pytest.raises(NameError):
         PowerLawSpectralModel(indxe=2)
+
+
+def test_e_peak_super_4FGLDR3():
+    model = SuperExpCutoffPowerLaw4FGLDR3SpectralModel()
+    assert_quantity_allclose(model.e_peak, TEST_MODELS[9]["e_peak"], rtol=1e-2)
+
+    model.index_1.value = 3
+    model.index_2.value = 0.5
+    model.expfactor.value = 0.5
+    assert_quantity_allclose(model.e_peak, np.nan * u.TeV)
+
+    model.index_2.value = 2
+    model.expfactor.value = -1
+    assert_quantity_allclose(model.e_peak, np.nan * u.TeV)
+
+    model.index_2.value = -1
+    assert_quantity_allclose(model.e_peak, np.nan * u.TeV)
