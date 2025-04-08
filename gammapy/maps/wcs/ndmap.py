@@ -619,7 +619,7 @@ class WcsNDMap(WcsMap):
         weights : `WcsNDMap`, optional
             Array to be used as weights.
             Weights are multiplied with the input data and should be defined accordingly, in case a weighted average is desired.
-            If a mask is given the mask is applied to the input map. The geometry must be equivalent.
+            If a mask is given, the mask is applied to the input map. The geometry must be equivalent.
             Default is None.
         method : {"nearest", "linear"}, optional
             How to interpolate if a position is given.
