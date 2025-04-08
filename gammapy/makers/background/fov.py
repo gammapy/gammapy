@@ -37,7 +37,7 @@ class FoVBackgroundMaker(Maker):
     spectral_model : SpectralModel or str
         Reference norm spectral model to use for the `FoVBackgroundModel`, if
         none is defined on the dataset. By default, use pl-norm.
-    spatial_model : SpatialModel or str
+    spatial_model : SpatialModel or str, optional
         Spatial model to use for the `FoVBackgroundModel`, if
         none is defined on the dataset. By default, use None.
         The unit of the spatial model is dropped.
