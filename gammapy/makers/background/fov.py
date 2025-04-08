@@ -34,7 +34,7 @@ class FoVBackgroundMaker(Maker):
         The normalization method to be applied. Default 'scale'.
     exclusion_mask : `~gammapy.maps.WcsNDMap`
         Exclusion mask.
-    spectral_model : SpectralModel or str
+    spectral_model : SpectralModel or str, optional
         Reference norm spectral model to use for the `FoVBackgroundModel`, if
         none is defined on the dataset. By default, use pl-norm.
     spatial_model : SpatialModel or str, optional
