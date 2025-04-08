@@ -1799,9 +1799,9 @@ def test_map_dataset_on_off_to_spectrum_dataset_weights():
 
     assert_allclose(spectrum_dataset.counts.data[:, 0, 0], [0, 2, 2])
     assert_allclose(spectrum_dataset.counts_off.data[:, 0, 0], [0, 4, 4])
-    assert_allclose(spectrum_dataset.acceptance.data[:, 0, 0], [0, 0.08, 0.08])
-    assert_allclose(spectrum_dataset.acceptance_off.data[:, 0, 0], [0, 0.32, 0.32])
-    assert_allclose(spectrum_dataset.alpha.data[:, 0, 0], [0, 0.25, 0.25])
+    assert_allclose(spectrum_dataset.acceptance.data[:, 0, 0], [np.nan, 1, 1])
+    assert_allclose(spectrum_dataset.acceptance_off.data[:, 0, 0], [np.nan, 4, 4])
+    assert_allclose(spectrum_dataset.alpha.data[:, 0, 0], [np.nan, 0.25, 0.25])
 
 
 @requires_data()
