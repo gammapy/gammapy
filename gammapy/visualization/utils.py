@@ -474,8 +474,13 @@ def plot_pulse_profile_3PC(
 
     ax_ylim = [np.inf, 0]
 
-    if add_radio_profile:
+    try:
         radio_profile = source.pulse_profile_radio
+    except KeyError:
+        add_radio_profile = False
+        log.warning(f"No Radio profile available for PSR {source.name}, skipping.")
+
+    if add_radio_profile:
         radio_axis = radio_profile.geom.axes["phase"]
         axes[0].plot(
             radio_axis.as_plot_center,
@@ -492,6 +497,12 @@ def plot_pulse_profile_3PC(
             radio_profile.data.squeeze().max()
             + 0.1 * radio_profile.data.squeeze().max()
         )
+
+    try:
+        best_fit_profile = source.pulse_profile_best_fit
+    except KeyError:
+        best_fit_profile = False
+        log.warning(f"No Best fit profile available for PSR {source.name}, skipping.")
 
     if add_best_fit_profile:
         best_fit_profile = source.pulse_profile_best_fit
