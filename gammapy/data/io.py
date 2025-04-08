@@ -33,11 +33,26 @@ class EventListReader:
         meta = EventListMetaData.from_header(table.meta)
         return EventList(table=table, meta=meta)
 
-    def read(self):
+    @staticmethod
+    def identify_format_from_hduclass(events_hdu):
+        """Identify format for HDU header keywords."""
+        hduclass = events_hdu.header.get("HDUCLASS", "unknown")
+        return hduclass.lower()
+
+    def read(self, format="gadf"):
+        """Read EventList from file.
+
+        Parameters
+        ----------
+        format : {"gadf"}, optional
+            format of the EventList. Default is 'gadf'.
+            If None, will try to guess from header.
+        """
         filename = self.filename
 
         with fits.open(filename) as hdulist:
             events_hdu = hdulist[self.hdu]
+
             if self.checksum:
                 if events_hdu.verify_checksum() != 1:
                     warnings.warn(
@@ -45,11 +60,10 @@ class EventListReader:
                         UserWarning,
                     )
 
-            hduclass = events_hdu.header.get("HDUCLASS", "GADF")
-            if hduclass.upper() == "GADF":
-                return self.from_gadf_hdu(events_hdu)
-            if hduclass.upper() == "OGIP":
-                # Fermi event list for now use same function
+            if format is None:
+                format = self.identify_format_from_hduclass(events_hdu)
+
+            if format == "gadf" or format == "ogip":
                 return self.from_gadf_hdu(events_hdu)
             else:
-                raise ValueError(f"Unknown HDUCLASS :{hduclass}")
+                raise ValueError(f"Unknown format :{format}")
