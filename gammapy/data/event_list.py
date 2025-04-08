@@ -101,7 +101,7 @@ class EventList:
 
         return table
 
-   def _repr_html_(self):
+    def _repr_html_(self):
         try:
             return self.to_html()
         except AttributeError:
