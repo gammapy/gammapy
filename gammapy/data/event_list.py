@@ -390,7 +390,7 @@ class EventList:
             if not isinstance(values, (list, tuple, np.ndarray)) or len(values) != 2:
                 raise ValueError("Range selection requires 2 values [min,max)")
 
-            mask = (values[0] <= col_data) & (col_data < values[1])
+            mask = (col_data >= values[0]) & (col_data < values[1])
         else:
             # Handle exact matching (both strings and numbers)
             if not isinstance(values, (list, tuple, np.ndarray)):
