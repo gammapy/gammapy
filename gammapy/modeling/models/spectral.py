@@ -1619,7 +1619,12 @@ class SuperExpCutoffPowerLaw4FGLDR3SpectralModel(SpectralModel):
         index_1 = self.index_1.quantity
         index_2 = self.index_2.quantity
         expfactor = self.expfactor.quantity
-        if ((index_1 > 2) and (index_2 > 0)) or (expfactor <= 0) or (index_2 <= 0):
+        index_0 = index_1 - expfactor / index_2
+        if (
+            ((index_2 < 0) and (index_0 < 2))
+            or (expfactor <= 0)
+            or ((index_2 > 0) and (index_0 >= 2))
+        ):
             return np.nan * reference.unit
         return reference * (1 + (index_2 / expfactor) * (2 - index_1)) ** (1 / index_2)
 

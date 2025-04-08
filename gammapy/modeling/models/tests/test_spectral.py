@@ -1309,3 +1309,20 @@ def test_template_ND_EBL(tmpdir):
 def test_incorrect_param_name():
     with pytest.raises(NameError):
         PowerLawSpectralModel(indxe=2)
+
+
+def test_e_peak_super_4FGLDR3():
+    model = SuperExpCutoffPowerLaw4FGLDR3SpectralModel()
+    assert_quantity_allclose(model.e_peak, TEST_MODELS[9]["e_peak"], rtol=1e-2)
+
+    model.index_1.value = 3
+    model.index_2.value = 0.5
+    model.expfactor.value = 0.5
+    assert_quantity_allclose(model.e_peak, np.nan * u.TeV)
+
+    model.index_2.value = 2
+    model.expfactor.value = -1
+    assert_quantity_allclose(model.e_peak, np.nan * u.TeV)
+
+    model.index_2.value = -1
+    assert_quantity_allclose(model.e_peak, np.nan * u.TeV)
