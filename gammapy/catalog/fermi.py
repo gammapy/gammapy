@@ -1691,11 +1691,13 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
         """
         table = Table.read(self._auxiliary_filename, hdu="RADIO_PROFILE")
 
+        # Need to do this because some PSR (J0540-6919) has duplicates
+        ph_node, unique_idx = np.unique(table["Ph_Min"], return_index=True)
+        data = table["Norm_Intensity"][unique_idx]
+
         # For radio pulse profile, Ph_min and Ph_max are equal and represent bin centers.
-        phases = MapAxis.from_nodes(table["Ph_Min"], name="phase", interp="lin")
-        profile_map = RegionNDMap.create(
-            region=None, axes=[phases], data=table["Norm_Intensity"]
-        )
+        phases = MapAxis.from_nodes(ph_node, name="phase", interp="lin")
+        profile_map = RegionNDMap.create(region=None, axes=[phases], data=data)
         return profile_map
 
     @property
