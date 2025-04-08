@@ -5,8 +5,10 @@ from scipy.stats import median_abs_deviation as mad
 import astropy.units as u
 from astropy.io import fits
 from astropy.table import Table
-from regions import CircleSkyRegion
+from regions import CircleSkyRegion, RectangleSkyRegion
 import matplotlib.pyplot as plt
+from matplotlib import colormaps
+from matplotlib.colors import LogNorm
 import gammapy.datasets.evaluator as meval
 from gammapy.data import GTI, PointingMode
 from gammapy.irf import EDispKernelMap, EDispMap, PSFKernel, PSFMap, RecoPSFMap
@@ -2340,8 +2342,14 @@ class MapDataset(Dataset):
         energy_axis = self._geom.axes["energy"].squash()
         return self.resample_energy_axis(energy_axis=energy_axis, name=name)
 
-    def peek(self, figsize=(12, 8)):
-        """Quick-look summary plots.
+    def peek(self, figsize=(11, 6.5)):
+        """Quick-look summary plots for a given MapDataset:
+        - Counts map
+        - Npred map
+        - Energy dispersion matrix
+        - Exposure map
+        - Exposure profile
+        - PSF containment radius
 
         Parameters
         ----------
@@ -2350,37 +2358,312 @@ class MapDataset(Dataset):
 
         """
 
+        def make_rgb_transparent(rgba, bg_rgb=(1, 1, 1)):
+            """
+            Mix an RGBA color with a background RGB color based on its alpha value.
+
+            Parameters
+            ----------
+            rgba : iterable
+                A 4-element sequence representing the color in RGBA.
+            bg_rgb : tuple, optional
+                The background RGB color (default is white).
+
+            Returns
+            -------
+            list
+                The blended RGB color as [R, G, B].
+            """
+            rgb = rgba[:3]
+            alpha = rgba[3]
+            return [alpha * c1 + (1 - alpha) * c2 for c1, c2 in zip(rgb, bg_rgb)]
+
+        def create_custom_colormap(npred_min, cmap_name="viridis"):
+            """
+            Create two custom colormaps based on the given colormap and "GnBu".
+
+            This function:
+            - Resamples the specified colormap to 256 colors.
+            - Applies a power-law transform to the RGBA values for a custom transparency ramp.
+            - Sets any "bad" values in the colormap to the color representing `npred_min`.
+            - Returns a second default colormap ("GnBu") for variety.
+
+            Parameters
+            ----------
+            npred_min : float
+                The minimum value of the npred data for color setting.
+            counts_data : ndarray
+                The counts data (used for scaling).
+            cmap_name : str
+                The base colormap name (default is 'viridis').
+
+            Returns
+            -------
+            cmapcustom: colormap
+                Modified colormap
+            """
+            # Custom colormap for counts/npred
+            cmapcustom = colormaps.get_cmap(cmap_name).resampled(256)
+            ncolors = len(cmapcustom.colors)
+
+            # Modify the transparency ramp using a power-law transform
+            cmapcustom.colors *= np.transpose([np.linspace(0, 1, ncolors)] * 4) ** (
+                1.0 / 5
+            )
+            cmapcustom.colors[:, 3] = 1  # Ensure full opacity
+            cmapcustom.set_bad(cmapcustom(npred_min))
+            return cmapcustom
+
+        def adjust_color_limits(npred_data, counts_data):
+            """
+            Determine suitable color limits for log-scale plotting of npred and counts maps.
+
+            Parameters
+            ----------
+            npred_data : `Map`
+                The npred map data (Gammapy Map object).
+            counts_data : `Map`
+                The counts map data (Gammapy Map object).
+
+            Returns
+            -------
+            (float, float)
+                (vmin, vmax) values for log-normal plotting.
+            """
+            vmin = npred_data.data.min()
+            vmax = npred_data.data.max()
+            # Fallback if the map is entirely zero
+            if vmin == 0.0:
+                vmin = np.max([counts_data.data.max() * 0.02, counts_data.data.min()])
+            if vmax == 0.0:
+                vmax = counts_data.data.max()
+            return vmin, vmax
+
+        def plot_counts(ax, counts_data, cmap, vmin, vmax):
+            """
+            Plot the counts map on a given axis.
+
+            Parameters
+            ----------
+            ax : `matplotlib.axes.Axes`
+                The matplotlib Axes to plot on.
+            counts_data : `Map`
+                Gammapy Map containing the counts data.
+            cmap : Colormap
+                The colormap to use for plotting.
+            vmin : float
+                Minimum color limit for the log scale.
+            vmax : float
+                Maximum color limit for the log scale.
+            """
+            counts_data.plot(
+                ax=ax,
+                cmap=cmap,
+                add_cbar=True,
+                interpolation="bilinear",
+                norm=LogNorm(vmin=vmin, vmax=vmax),
+            )
+            ax.set_title("Counts")
+            ax.set_box_aspect(1)
+
+        def plot_npred(ax, npred_data, cmap, vmin, vmax):
+            """
+            Plot the npred map on a given axis.
+
+            Parameters
+            ----------
+            ax : `matplotlib.axes.Axes`
+                The matplotlib Axes to plot on.
+            npred_data : `Map`
+                Gammapy Map containing the npred data.
+            cmap : Colormap
+                The colormap to use for plotting.
+            vmin : float
+                Minimum color limit for the log scale.
+            vmax : float
+                Maximum color limit for the log scale.
+            """
+            npred_data.plot(
+                ax=ax, cmap=cmap, add_cbar=True, norm=LogNorm(vmin=vmin, vmax=vmax)
+            )
+            ax.set_title("npred")
+            ax.set_box_aspect(1)
+
+        def plot_edisp(ax, edisp_kernel):
+            """
+            Plot the energy dispersion matrix on a given axis.
+
+            Parameters
+            ----------
+            ax : `matplotlib.axes.Axes`
+                The matplotlib Axes to plot on.
+            edisp_kernel : `EDispKernel` or `EDispMap`
+                The Gammapy energy dispersion kernel or map to plot.
+
+            Returns
+            -------
+            QuadMesh
+                The resulting QuadMesh object (useful if you need a colorbar reference).
+            """
+            mesh = edisp_kernel.plot_matrix(ax=ax, add_cbar=True)
+            ax.set_xscale("log")
+            ax.set_yscale("log")
+            ax.set_title("Energy Dispersion (at FoV center)")
+            ax.set_xlabel("True Energy (MeV)")
+            ax.set_ylabel("Energy (MeV)")
+            ax.set_box_aspect(1)
+            return mesh
+
+        def plot_exposure_map(ax, exposure_map, cmap):
+            """
+            Plot the exposure map at a specific energy index (e.g. middle of the energy axis).
+
+            Parameters
+            ----------
+            ax : `matplotlib.axes.Axes`
+                The matplotlib Axes to plot on.
+            exposure_map : `Map`
+                Gammapy Map containing the exposure data (with energy axis).
+            cmap : Colormap
+                The colormap to use for plotting.
+            """
+            index = int(exposure_map.geom.axes["energy_true"].nbin / 2)
+            # Dynamically scale the exposure by powers of 10 for improved readability
+            exponent = int(np.log10(exposure_map.data.mean()))
+            exp_data = exposure_map.get_image_by_idx([index]).to_unit(
+                f"10^{exponent} cm2 s"
+            )
+            energy_center = exposure_map.geom.axes["energy_true"].center[index]
+
+            exp_data.plot(ax=ax, cmap=cmap, add_cbar=True)
+            ax.set_title(f'Exposure map at {energy_center.to("GeV"):.1f}')
+            ax.set_box_aspect(1)
+
+        def plot_exposure_profile(ax, exposure_map):
+            """
+            Plot the exposure profile at the center of the field of view vs. energy.
+
+            Parameters
+            ----------
+            ax : `matplotlib.axes.Axes`
+                The matplotlib Axes to plot on.
+            exposure_map : `Map`
+                Gammapy Map containing the exposure data (with energy axis).
+            """
+
+            exposure_map.plot(ax=ax, ls="solid", marker=None, xerr=None)
+            """
+            
+            # Calculate the center pixel index (assuming shape is (energy, x, y))
+            center = np.asarray(exposure_map.data.shape[1:], dtype=int) / 2
+            energy = exposure_map.geom.axes['energy_true'].center
+
+            # Dynamically scale the exposure by powers of 10 for improved readability
+            exponent = int(np.log10(exposure_map.data.mean()))
+            profile = exposure_map.data[:, int(center[0]), int(center[1])] * 10 ** (-exponent)
+
+            ax.plot(energy, profile)
+            """
+            ax.set_title("Exposure (at FoV center)")
+            # ax.set_xscale('log')
+            # ax.set_xlabel('True Energy (MeV)')
+            # ax.set_ylabel(f'Exposure (cm$^2$ s) [$\\times 10^{exponent}$]')
+            ax.set_box_aspect(1)
+
+        def plot_containment_radius(ax, psf):
+            """
+            Plot the PSF containment radius curves. By default, we rely on a built-in
+            Gammapy PSF plotting method if available.
+
+            Parameters
+            ----------
+            ax : `matplotlib.axes.Axes`
+                The matplotlib Axes to plot on.
+            psf : `PSFKernel` or `PSFMap`
+                The Gammapy PSF object.
+            """
+            psf.plot_containment_radius_vs_energy(ax=ax)
+            ax.legend(fontsize="small")
+            ax.set_title("Containment radius")
+            ax.set_xscale("log")
+            ax.set_yscale("log")
+            ax.set_xlabel("True Energy (MeV)")
+            ax.set_ylabel("Radius (deg)")
+            ax.set_box_aspect(1)
+
         def plot_mask(ax, mask, **kwargs):
+            """
+            Plot a mask (if provided) on the given axis.
+
+            Parameters
+            ----------
+            ax : `matplotlib.axes.Axes`
+                The matplotlib Axes to plot on.
+            mask : `Map` or None
+                Gammapy map that is interpreted as a mask (boolean or float).
+                If None, no mask is plotted.
+            kwargs : dict
+                Additional keyword arguments forwarded to mask plotting (e.g. alpha, hatches, colors).
+            """
             if mask is not None:
                 mask.plot_mask(ax=ax, **kwargs)
 
-        fig, axes = plt.subplots(
-            ncols=2,
-            nrows=2,
-            subplot_kw={"projection": self._geom.wcs},
-            figsize=figsize,
-            gridspec_kw={"hspace": 0.25, "wspace": 0.1},
+        # Reduce the datasets to 2D if needed
+        countsmapdata = self.counts.reduce_over_axes()
+        npredmapdata = self.npred().reduce_over_axes()
+
+        # Get the corresponding central pixel SpectrumDataset (exposure, edisp, psf)
+        central_pixel = RectangleSkyRegion(
+            self.counts.geom.center_skydir,
+            width=1.01 * self.counts.geom.pixel_scales[0],
+            height=1.01 * self.counts.geom.pixel_scales[1],
+        )
+        central_spectrum_dataset = self.to_spectrum_dataset(central_pixel)
+
+        # Determine plotting limits
+        vmin, vmax = adjust_color_limits(npredmapdata, countsmapdata)
+
+        # Create custom colormaps
+        cmapcustom = create_custom_colormap(npred_min=npredmapdata.data.min())
+
+        # Create the figure and axes
+        fig, axs = plt.subplots(nrows=2, ncols=3, figsize=(11, 6.5), dpi=120)
+
+        # --- Plot Counts Map ---
+        axs[0, 0].remove()
+        ax_counts = fig.add_subplot(2, 3, 1, projection=self.counts.geom.wcs)
+        plot_counts(ax_counts, countsmapdata, cmapcustom, vmin, vmax)
+        plot_mask(ax=ax_counts, mask=self.mask_fit_image, alpha=0.2)
+        plot_mask(ax=ax_counts, mask=self.mask_safe_image, hatches=["///"], colors="w")
+
+        # --- Plot npred Map ---
+        axs[0, 1].remove()
+        ax_npred = fig.add_subplot(2, 3, 2, projection=self.npred().geom.wcs)
+        plot_npred(ax_npred, npredmapdata, cmapcustom, vmin, vmax)
+        plot_mask(ax=ax_npred, mask=self.mask_fit_image, alpha=0.2)
+        plot_mask(ax=ax_npred, mask=self.mask_safe_image, hatches=["///"], colors="w")
+
+        # --- Plot Energy Dispersion ---
+        ax_edisp = axs[1, 0]
+        _ = plot_edisp(ax_edisp, central_spectrum_dataset.edisp.get_edisp_kernel())
+
+        # --- Plot Exposure Map ---
+        axs[1, 1].remove()
+        ax_exposure = fig.add_subplot(2, 3, 5, projection=self.exposure.geom.wcs)
+        plot_exposure_map(ax_exposure, self.exposure, cmap=cmapcustom)
+        plot_mask(
+            ax=ax_exposure, mask=self.mask_safe_image, hatches=["///"], colors="w"
         )
 
-        axes = axes.flat
-        axes[0].set_title("Counts")
-        self.counts.sum_over_axes().plot(ax=axes[0], add_cbar=True)
-        plot_mask(ax=axes[0], mask=self.mask_fit_image, alpha=0.2)
-        plot_mask(ax=axes[0], mask=self.mask_safe_image, hatches=["///"], colors="w")
+        # --- Plot Exposure Profile ---
+        ax_exp_profile = axs[1, 2]
+        plot_exposure_profile(ax_exp_profile, central_spectrum_dataset.exposure)
 
-        axes[1].set_title("Excess counts")
-        self.excess.sum_over_axes().plot(ax=axes[1], add_cbar=True)
-        plot_mask(ax=axes[1], mask=self.mask_fit_image, alpha=0.2)
-        plot_mask(ax=axes[1], mask=self.mask_safe_image, hatches=["///"], colors="w")
+        # --- Plot Containment Radius ---
+        ax_containment = axs[0, 2]
+        plot_containment_radius(ax_containment, self.psf)
 
-        axes[2].set_title("Exposure")
-        self.exposure.sum_over_axes().plot(ax=axes[2], add_cbar=True)
-        plot_mask(ax=axes[2], mask=self.mask_safe_image, hatches=["///"], colors="w")
-
-        axes[3].set_title("Background")
-        self.background.sum_over_axes().plot(ax=axes[3], add_cbar=True)
-        plot_mask(ax=axes[3], mask=self.mask_fit_image, alpha=0.2)
-        plot_mask(ax=axes[3], mask=self.mask_safe_image, hatches=["///"], colors="w")
+        plt.tight_layout(w_pad=0)
 
 
 class MapDatasetOnOff(MapDataset):
