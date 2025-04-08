@@ -365,36 +365,43 @@ class EventList:
         mask = geom.contains(self.radec)
         return self.select_row_subset(mask)
 
-    def select_parameter(self, parameter, band):
-        """Select events with respect to a specified parameter.
+    def select_parameter(self, parameter, values, is_range=False):
+        """
+        General parameter selection for both strings and numerical values
 
         Parameters
         ----------
         parameter : str
-            Parameter used for the selection. Must be present in `self.table`.
-        band : tuple or `astropy.units.Quantity`
-            Minimum and maximum value for the parameter to be selected (minimum <= parameter < maximum).
-            If parameter is not dimensionless, a Quantity is required.
+        Column name to filter on
+        values : any or list
+        Value(s) to match (single value or list)
+        is_range : bool
+        If True, treat as numerical range [min,max)
 
         Returns
         -------
-        event_list : `EventList`
-            Copy of event list with selection applied.
-
-        Examples
-        --------
-        >>> from astropy import units as u
-        >>> from gammapy.data import EventList
-        >>> filename = "$GAMMAPY_DATA/fermi_3fhl/fermi_3fhl_events_selected.fits.gz"
-        >>> event_list = EventList.read(filename)
-        >>> zd = (0, 30) * u.deg
-        >>> event_list = event_list.select_parameter(parameter='ZENITH_ANGLE', band=zd)
-        >>> print(len(event_list.table))
-        123944
+        Table
+        Subset of rows matching criteria
         """
-        mask = band[0] <= self.table[parameter].quantity
-        mask &= self.table[parameter].quantity < band[1]
-        return self.select_row_subset(mask)
+        col_data = self.table[parameter]
+
+        if is_range:
+            # Handle numerical range case
+            if not isinstance(values, (list, tuple, np.ndarray)) or len(values) != 2:
+                raise ValueError("Range selection requires 2 values [min,max)")
+
+            mask = (values[0] <= col_data) & (col_data < values[1])
+        else:
+            # Handle exact matching (both strings and numbers)
+            if not isinstance(values, (list, tuple, np.ndarray)):
+                values = [values]
+
+                # Universal comparison that works for strings and numbers
+                mask = np.zeros(len(col_data), dtype=bool)
+                for val in values:
+                    mask |= col_data == val  # Works for both strings and numbers
+
+                    return self.table[mask]
 
     @property
     def _default_plot_energy_axis(self):
