@@ -2552,18 +2552,6 @@ class MapDataset(Dataset):
             """
 
             exposure_map.plot(ax=ax, ls="solid", marker=None, xerr=None)
-            """
-            
-            # Calculate the center pixel index (assuming shape is (energy, x, y))
-            center = np.asarray(exposure_map.data.shape[1:], dtype=int) / 2
-            energy = exposure_map.geom.axes['energy_true'].center
-
-            # Dynamically scale the exposure by powers of 10 for improved readability
-            exponent = int(np.log10(exposure_map.data.mean()))
-            profile = exposure_map.data[:, int(center[0]), int(center[1])] * 10 ** (-exponent)
-
-            ax.plot(energy, profile)
-            """
             ax.set_title("Exposure (at FoV center)")
             # ax.set_xscale('log')
             # ax.set_xlabel('True Energy (MeV)')
