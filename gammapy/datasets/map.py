@@ -2480,8 +2480,6 @@ class MapDataset(Dataset):
             ax.set_xscale("log")
             ax.set_yscale("log")
             ax.set_title("Energy Dispersion (at FoV center)")
-            ax.set_xlabel("True Energy (MeV)")
-            ax.set_ylabel("Energy (MeV)")
             ax.set_box_aspect(1)
             return mesh
 
@@ -2524,9 +2522,6 @@ class MapDataset(Dataset):
 
             exposure_map.plot(ax=ax, ls="solid", marker=None, xerr=None)
             ax.set_title("Exposure (at FoV center)")
-            # ax.set_xscale('log')
-            # ax.set_xlabel('True Energy (MeV)')
-            # ax.set_ylabel(f'Exposure (cm$^2$ s) [$\\times 10^{exponent}$]')
             ax.set_box_aspect(1)
 
         def plot_containment_radius(ax, psf):
@@ -2546,8 +2541,6 @@ class MapDataset(Dataset):
             ax.set_title("Containment radius")
             ax.set_xscale("log")
             ax.set_yscale("log")
-            ax.set_xlabel("True Energy (MeV)")
-            ax.set_ylabel("Radius (deg)")
             ax.set_box_aspect(1)
 
         def plot_mask(ax, mask, **kwargs):
