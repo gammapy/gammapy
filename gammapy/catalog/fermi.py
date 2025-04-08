@@ -1666,17 +1666,17 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
         Returns
         -------
 
-        best_fit: `~gammapy.maps.RegionNDMap`
+        best_fit_profile: `~gammapy.maps.RegionNDMap`
             Map containing the best fit.
         """
         table = Table.read(self._auxiliary_filename, hdu="BEST_FIT_LC")
 
         # For best-fit profile, Ph_min and Ph_max are equal and represent bin centers.
         phases = MapAxis.from_nodes(table["Ph_Min"], name="phase", interp="lin")
-        profile_map = RegionNDMap.create(
+        best_fit_profile = RegionNDMap.create(
             region=None, axes=[phases], data=table["Intensity"]
         )
-        return profile_map
+        return best_fit_profile
 
     @property
     def pulse_profile_radio(self):
@@ -1697,8 +1697,8 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
 
         # For radio pulse profile, Ph_min and Ph_max are equal and represent bin centers.
         phases = MapAxis.from_nodes(ph_node, name="phase", interp="lin")
-        profile_map = RegionNDMap.create(region=None, axes=[phases], data=data)
-        return profile_map
+        radio_profile = RegionNDMap.create(region=None, axes=[phases], data=data)
+        return radio_profile
 
     @property
     def pulse_profiles(self):
@@ -1721,7 +1721,7 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
         Returns
         -------
 
-        dict_map: dict of `~gammapy.maps.RegionNDMap`
+        map_dict: dict of `~gammapy.maps.RegionNDMap`
             Dictionary of map containing the pulse profile in different energy bin.
         """
 
