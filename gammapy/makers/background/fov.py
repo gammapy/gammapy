@@ -40,6 +40,7 @@ class FoVBackgroundMaker(Maker):
     spatial_model : SpatialModel or str
         Spatial model to use for the `FoVBackgroundModel`, if
         none is defined on the dataset. By default, use none.
+        The unit of the spatial model is dropped.
     min_counts : int
         Minimum number of counts, or residuals counts if a SkyModel is set,
         required outside the exclusion region.
