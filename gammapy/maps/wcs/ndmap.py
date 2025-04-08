@@ -617,7 +617,9 @@ class WcsNDMap(WcsMap):
             Function to reduce the data. Default is np.nansum.
             For boolean Map, use np.any or np.all.
         weights : `WcsNDMap`, optional
-            Array to be used as weights. The geometry must be equivalent.
+            Array to be used as weights.
+            Weights are multiplied with the input data and should be defined accordingly, in case a weighted average is desired.
+            If a mask is given the mask is applied to the input map. The geometry must be equivalent.
             Default is None.
         method : {"nearest", "linear"}, optional
             How to interpolate if a position is given.
@@ -651,8 +653,7 @@ class WcsNDMap(WcsMap):
             data = data.astype(self.data.dtype)
         else:
             cutout, cutout_mask = self.cutout_and_mask_region(region=region)
-            mask = cutout.copy()
-            mask.data = np.broadcast_to(cutout_mask.data, mask.data.shape)
+            mask = cutout_mask.interp_to_geom(cutout.geom)
 
             if weights is not None:
                 weights_cutout = weights.cutout(
@@ -660,10 +661,13 @@ class WcsNDMap(WcsMap):
                 )
                 if weights_cutout.is_mask:
                     mask.data = np.logical_and(mask.data, weights_cutout.data)
+                    cutout.data *= weights_cutout.data
                 else:
                     cutout.data *= weights_cutout.data
 
-            data = func(cutout.data[np.where(mask.data)], axis=-1)
+            data = func(cutout.data, where=mask.data, axis=(-2, -1)).astype(
+                self.data.dtype
+            )
 
         return RegionNDMap(geom=geom, data=data, unit=self.unit, meta=self.meta.copy())
 
