@@ -156,46 +156,39 @@ Get set up
     there instead.
 
 The first steps are basically identical to
-https://ctapipe.readthedocs.io/en/latest/developer-guide/getting-started.html (until 
+https://ctapipe.readthedocs.io/en/latest/developer-guide/getting-started.html (until
 section *Setting up the development environment*) and
 http://astropy.readthedocs.io/en/latest/development/workflow/get_devel_version.html
 (up to *Create your own private workspace*). The following is a quick summary of
 commands to set up an environment for Gammapy development:
 
+First of all, fork the gammapy repository, https://github.com/gammapy/gammapy, to your personal GitHub. If you have not already done so, copy your public SSH key (normally under ``$HOME/.ssh/*.pub``) to your profile: **Settings/SSH and GPG keys/New SSH key**. Select **Authentication Key** as the key type. If you do not have a SSH key, you may create it following https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent.
+
 .. code-block:: bash
 
-    # Fork the gammapy repository on GitHub, https://github.com/gammapy/gammapy
     cd code # Go somewhere on your machine where you want to code
-    git clone https://github.com/[your-github-username]/gammapy.git
+    git clone git@github.com:[your-github-username]/gammapy.git
     cd gammapy
     conda env create -f environment-dev.yml
+    # mamba env create -f environment-dev.yml   # To speed up the environment solving you can use mamba instead of conda
 
-    # To speed up the environment solving you can use mamba instead of conda
-    # mamba env create -f environment-dev.yml
     conda activate gammapy-dev
-
-    # for conda versions <4.4.0 you may have to execute
-    # 'source activate gammapy-dev' instead
+    # 'source activate gammapy-dev' # for conda versions <4.4.0 you may have to execute
     git remote add gammapy git@github.com:gammapy/gammapy.git
-    git remote rename origin [your-user-name]
 
 `Mamba <https://mamba.readthedocs.io/>`__ is an alternative package manager that offers higher installation
 speed and more reliable environment solutions.
 
-It is also common to stick with the name ``origin`` for your repository and to
-use ``upstream`` for the repository you forked from. In any case, you can use
-``$ git remote -v`` to list all your configured remotes.
+You can use ``$ git remote -v`` to list all your configured remotes.
 
-In case you are working with the development version environment and you want to update this
-environment with the content present in `environment-dev.yml` see below:
+In case you are working with the development version environment and you want to update this environment with the content present in `environment-dev.yml` see below:
 
 .. code-block:: bash
 
     conda env update --file environment-dev.yml --prune
 
 
-When developing Gammapy you never want to work on the ``main`` branch, but
-always on a dedicated feature branch.
+When developing Gammapy you never want to work on the ``main`` branch, but always on a dedicated feature branch.
 
 .. code-block:: bash
 
@@ -212,6 +205,12 @@ This build is necessary to compile the few Cython code (``*.pyx``). If you skip
 this step, some imports depending on Cython code will fail. If you want to remove the generated
 files run ``make clean``.
 
+On the first push of your local branch, you should set your GitHub as the remote repository:
+
+.. code-block:: bash
+
+    git push -u origin [branch-name]
+
 For the development it is also convenient to have declared ``$GAMMAPY_DATA`` environment variable.
 You can download the Gammapy datasets with ``gammapy download datasets`` and then point
 your ``$GAMMAPY_DATA`` to the local path you have chosen.
@@ -220,9 +219,9 @@ your ``$GAMMAPY_DATA`` to the local path you have chosen.
 
     # Download GAMMAPY_DATA
     gammapy download datasets --out GAMMAPY_DATA
-    export GAMMAPY_DATA=$PWD/GAMMAPY_DATA
+    export GAMMAPY_DATA=$PWD/GAMMAPY_DATA/dev
 
-We adhere to the PEP8 coding style. To enforce this, setup the 
+We adhere to the PEP8 coding style. To enforce this, setup the
 `pre-commit hook <https://pre-commit.com/>`_:
 
 .. code-block:: bash
@@ -266,7 +265,7 @@ Additional arguments for `pytest` can be passed after `--`:
 
     tox -e test -- -n auto
 
-Of course you can always use `pytest <https://docs.pytest.org/en/7.1.x/>`__ directly to 
+Of course you can always use `pytest <https://docs.pytest.org/en/7.1.x/>`__ directly to
 run tests, e.g. to run tests in a specific sub-package:
 
 .. code-block:: bash
