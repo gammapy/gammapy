@@ -2528,13 +2528,18 @@ class MapDataset(Dataset):
             index = int(exposure_map.geom.axes["energy_true"].nbin / 2)
             # Dynamically scale the exposure by powers of 10 for improved readability
             exponent = int(np.log10(exposure_map.data.mean()))
+            exp_unit = exposure_map.unit
             exp_data = exposure_map.get_image_by_idx([index]).to_unit(
-                f"10^{exponent} cm2 s"
+                f"10^{exponent} {exp_unit}"
             )
             energy_center = exposure_map.geom.axes["energy_true"].center[index]
 
             exp_data.plot(ax=ax, cmap=cmap, add_cbar=True)
-            ax.set_title(f'Exposure map at {energy_center.to("GeV"):.1f}')
+            if energy_center.value < 1e-2 or energy_center.value > 1e2:
+                ax.set_title(f"Exposure map at {energy_center:.2e}")
+            else:
+                ax.set_title(f"Exposure map at {energy_center:.2f}")
+
             ax.set_box_aspect(1)
 
         def plot_exposure_profile(ax, exposure_map):
