@@ -1945,7 +1945,7 @@ class MapDataset(Dataset):
             )
 
         if self.stat_type == "cash" and self.background:
-            kwargs["background"] = self.background.to_region_nd_map(
+            kwargs["background"] = self.npred_background().to_region_nd_map(
                 region, func=np.sum, weights=self.mask_safe
             )
 
