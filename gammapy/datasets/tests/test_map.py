@@ -2244,6 +2244,7 @@ def test_map_dataset_region_geom_npred():
     npred = dataset_spec.npred()
 
     assert_allclose(npred_ref.data, npred.data, rtol=1e-2)
+    assert_allclose(dataset_spec.background.data[0, 0, 0], 1011.85, rtol=1e-2)
 
 
 @requires_dependency("healpy")
