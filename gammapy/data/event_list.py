@@ -365,7 +365,7 @@ class EventList:
         mask = geom.contains(self.radec)
         return self.select_row_subset(mask)
 
-    def select_parameter(self, parameter, values, is_range=False):
+    def select_parameter(self, parameter, values, is_range=True):
         """
         General parameter selection for both strings and numerical values
 
