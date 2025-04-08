@@ -683,8 +683,8 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         ----------
         filename : str, optional
             Name of output file. By default, the template model will be saved
-            with the `LightCurveTemplateTemporalModel.filename` attribute,
-            if `filename` is provided this attribute will be updated.
+            with the `LightCurveTemplateTemporalModel.filename` attribute.
+            If `filename` is provided, this attribute will be used.
         format : {"table" or "map"}
             If format is "table", it is serialised as a `~astropy.table.Table`.
             If "map", then it is serialised as a `~gammapy.maps.RegionNDMap`.
@@ -1001,8 +1001,8 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
             filename = str(make_path(filename))
         if filename is None:
             log.warning(
-                "The filename is not defined therefore the model will not be serialised correctly. "
-                'To set the filename the "template_model.filename" attribute can be used.'
+                "The filename is not defined. Therefore, the model will not be serialised correctly. "
+                'To set the filename, the "template_model.filename" attribute can be used.'
             )
         self.filename = filename
         super().__init__(**kwargs)

@@ -1882,8 +1882,8 @@ class TemplateNDSpectralModel(SpectralModel):
             filename = str(make_path(filename))
         if filename is None:
             log.warning(
-                "The filename is not defined therefore the model will not be serialised correctly. "
-                'To set the filename the "template_model.filename" attribute can be used.'
+                "The filename is not defined. Therefore, the model will not be serialised correctly. "
+                'To set the filename, the "template_model.filename" attribute can be used.'
             )
         self.filename = filename
 
@@ -1942,8 +1942,8 @@ class TemplateNDSpectralModel(SpectralModel):
             Default is False, which will raise a warning if the template file exists already.
         filename : str, optional
             Filename of the template model. By default, the template model
-            will be saved with the `TemplateNDSpectralModel.filename` attribute,
-            if `filename` is provided this attribute will be updated.
+            will be saved with the `TemplateNDSpectralModel.filename` attribute.
+            If `filename` is provided, this attribute will be used.
         """
         if filename is not None:
             self.filename = filename
