@@ -608,6 +608,4 @@ def plot_pulse_profile_3PC(
         ax.set_ylabel("Weighted Counts")
         ax.set_xlabel("Phase")
 
-    plt.suptitle(f"PSR {source.name}")
-
     return axes
