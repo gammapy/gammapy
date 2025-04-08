@@ -152,7 +152,7 @@ Get set up
 
         This section is based on the
         `instructions <https://ctapipe.readthedocs.io/en/latest/developer-guide/getting-started.html>`_
-        for setting up ctapipe.
+        for setting up ``ctapipe``.
 
 Firstly, fork the `gammapy repository <https://github.com/gammapy/gammapy>`_ to
 your personal GitHub. If you have not already done so, copy your public SSH key
@@ -190,7 +190,7 @@ Activate the environment and add the gammapy remote:
     conda activate gammapy-dev
     git remote add gammapy git@github.com:gammapy/gammapy.git
 
-You can use ``$ git remote -v`` to list all your configured remotes.
+You can use ``git remote -v`` to list all your configured remotes.
 If you followed the steps above, you should see something like this:
 
 .. code-block:: bash
@@ -207,7 +207,7 @@ on a dedicated feature branch. You can create a new branch with
 
     git branch [branch-name]
 
-and move between different branches as
+and switch between different branches as
 
 .. code-block:: bash
 
@@ -236,11 +236,12 @@ Download the Gammapy datasets:
     gammapy download datasets --out GAMMAPY_DATA
 
 Declare the ``$GAMMAPY_DATA`` environment variable by adding the line below to
-your ``$HOME/.bashrc`` or ``$HOME/.bash_profile``.
+your ``$HOME/.bashrc`` and sourcing it.
 
 .. code-block:: bash
 
     export GAMMAPY_DATA=$PWD/GAMMAPY_DATA/dev
+    source $HOME/.bashrc
 
 We adhere to the PEP8 coding style. To enforce this, setup the
 `pre-commit hook <https://pre-commit.com/>`_:
