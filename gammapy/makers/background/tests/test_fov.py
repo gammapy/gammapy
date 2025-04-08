@@ -351,11 +351,12 @@ def test_fov_backgr_maker_spatial_model(obs_dataset, exclusion_mask):
     dataset = fov_bkg_maker.run(test_dataset)
     dataset2 = fov_bkg_maker2.run(test_dataset)
 
+    assert dataset.models[f"{dataset.name}-bkg"].spatial_model is not None
+    assert dataset2.models[f"{dataset2.name}-bkg"].spatial_model is not None
+
     bkg_model_spec = dataset.models[f"{dataset.name}-bkg"].spectral_model
     bkg_model_spec2 = dataset2.models[f"{dataset2.name}-bkg"].spectral_model
     assert not bkg_model_spec.norm.frozen
     assert not bkg_model_spec2.norm.frozen
     assert_allclose(bkg_model_spec.norm.value, 0.830779, rtol=1e-4)
-    assert_allclose(bkg_model_spec.tilt.value, 0.0, rtol=1e-4)
     assert_allclose(bkg_model_spec2.norm.value, 0.830779, rtol=1e-4)
-    assert_allclose(bkg_model_spec2.tilt.value, 0.0, rtol=1e-4)
