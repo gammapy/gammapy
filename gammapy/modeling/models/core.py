@@ -1265,15 +1265,10 @@ class Models(DatasetModels, collections.abc.MutableSequence):
         )
 
         if isinstance(model, (SkyModel, FoVBackgroundModel, TemplateNPredModel)):
-            _check_name_unique(
-                model,
-                [
-                    name
-                    for name in self.names
-                    if name != self._models[self.index(key)].name
-                ],
-            )
-            self._models[self.index(key)] = model
+            ind = self.index(key)
+            other_names = [_ for _ in self.names if _ != self._models[ind].name]
+            _check_name_unique(model, other_names)
+            self._models[ind] = model
         else:
             raise TypeError(f"Invalid type: {model!r}")
 
