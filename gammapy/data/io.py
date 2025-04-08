@@ -48,5 +48,8 @@ class EventListReader:
             hduclass = events_hdu.header.get("HDUCLASS", "GADF")
             if hduclass.upper() == "GADF":
                 return self.from_gadf_hdu(events_hdu)
+            if hduclass.upper() == "OGIP":
+                # Fermi event list for now use same function
+                return self.from_gadf_hdu(events_hdu)
             else:
                 raise ValueError(f"Unknown HDUCLASS :{hduclass}")

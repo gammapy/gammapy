@@ -3,19 +3,16 @@ import collections
 import copy
 import html
 import logging
-import warnings
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import AltAz, Angle, SkyCoord, angular_separation
 from astropy.io import fits
-from astropy.table import Table
 from astropy.table import vstack as vstack_tables
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from gammapy.maps import MapAxis, MapCoord, RegionGeom, WcsNDMap
 from gammapy.maps.axes import UNIT_STRING_FORMAT
 from gammapy.utils.fits import earth_location_from_dict
-from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
 from gammapy.utils.time import time_ref_from_dict
 from .metadata import EventListMetaData
@@ -116,21 +113,9 @@ class EventList:
         checksum : bool
             If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
         """
-        filename = make_path(filename)
+        from gammapy.data.io import EventListReader
 
-        with fits.open(filename) as hdulist:
-            events_hdu = hdulist[hdu]
-            if checksum:
-                if events_hdu.verify_checksum() != 1:
-                    warnings.warn(
-                        f"Checksum verification failed for HDU {hdu} of {filename}.",
-                        UserWarning,
-                    )
-
-            table = Table.read(events_hdu)
-            meta = EventListMetaData.from_header(table.meta)
-
-        return cls(table=table, meta=meta)
+        return EventListReader(filename, hdu, checksum).read()
 
     def to_table_hdu(self, format="gadf"):
         """
