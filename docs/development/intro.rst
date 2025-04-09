@@ -150,8 +150,7 @@ Get set up
 .. note::
         :class: sphx-glr-download-link-note
 
-        This section is based on the
-        `instructions <https://ctapipe.readthedocs.io/en/latest/developer-guide/getting-started.html>`_
+        This section is based on the `instructions <https://ctapipe.readthedocs.io/en/latest/>`_
         for setting up ``ctapipe``.
 
 Firstly, fork the `gammapy repository <https://github.com/gammapy/gammapy>`_ to
@@ -176,6 +175,10 @@ Create the conda environment:
     cd gammapy
     conda env create -f environment-dev.yml
 
+Instead of Conda, you may use `Mamba <https://mamba.readthedocs.io/en/latest/>_` as your
+package manager, which offers higher installation speed and more reliable environment solutions.
+In that case, use ``mamba env create -f environment-dev.yml`` to create the envirinment.
+
 If you are already working with the development version environment and you want
 to update it with the contents of `environment-dev.yml` run the following command:
 
@@ -188,17 +191,25 @@ Activate the environment and add the gammapy remote:
 .. code-block:: bash
 
     conda activate gammapy-dev
-    git remote add gammapy git@github.com:gammapy/gammapy.git
+    git remote add upstream git@github.com:gammapy/gammapy.git
 
 You can use ``git remote -v`` to list all your configured remotes.
 If you followed the steps above, you should see something like this:
 
 .. code-block:: bash
 
-    gammapy	git@github.com:gammapy/gammapy.git (fetch)
-    gammapy	git@github.com:gammapy/gammapy.git (push)
     origin	git@github.com:[your-github-username]/gammapy.git (fetch)
     origin	git@github.com:[your-github-username]/gammapy.git (push)
+    upstream	git@github.com:gammapy/gammapy.git (fetch)
+    upstream	git@github.com:gammapy/gammapy.git (push)
+
+
+Make your ``main``branch track the gammapy repository:
+
+.. code-block:: bash
+
+    git fetch upstream
+    git branch main -u upstream/main
 
 When developing Gammapy you never want to work on the ``main`` branch, but always
 on a dedicated feature branch. You can create a new branch with
@@ -212,6 +223,12 @@ and switch between different branches as
 .. code-block:: bash
 
     git checkout [branch-name]
+
+You can also do both things at once with
+
+.. code-block:: bash
+
+    git checkout -b [branch-name]
 
 To *activate* your development version (branch) of Gammapy in your environment run:
 
@@ -229,19 +246,15 @@ On the first push of your local branch, you should set your GitHub as the remote
 
     git push -u origin [branch-name]
 
-Download the Gammapy datasets:
+Download the Gammapy datasets and declare the corresponding bash environment variable:
 
 .. code-block:: bash
 
     gammapy download datasets --out GAMMAPY_DATA
-
-Declare the ``$GAMMAPY_DATA`` environment variable by adding the line below to
-your ``$HOME/.bashrc`` and sourcing it.
-
-.. code-block:: bash
-
     export GAMMAPY_DATA=$PWD/GAMMAPY_DATA/dev
-    source $HOME/.bashrc
+
+You may include the line ``export GAMMAPY_DATA=$PWD/GAMMAPY_DATA/dev`` to your ``$HOME/.bashrc``
+or ``$HOME/.bash_profile``, so that the variable is available in every terminal session.
 
 We adhere to the PEP8 coding style. To enforce this, setup the
 `pre-commit hook <https://pre-commit.com/>`_:
