@@ -367,13 +367,13 @@ class EventList:
 
     def select_parameter(self, parameter, values, is_range=True):
         """
-        General parameter selection for both strings and numerical values
+        Event selection according to parameter values, either in a range or exact matches.
 
         Parameters
         ----------
         parameter : str
         Column name to filter on
-        values : any or list
+        values : 'str', 'tuple', 'list' or array
         Value(s) to match (single value or list)
         is_range : bool
         If True, treat as numerical range [min,max)
@@ -381,14 +381,16 @@ class EventList:
         Returns
         -------
         Table
-        Subset of rows matching criteria
+        Subset of rows matching selected criteria
         """
         col_data = self.table[parameter]
 
         if is_range:
             # Handle numerical range case
             if not isinstance(values, (list, tuple, np.ndarray)) or len(values) != 2:
-                raise ValueError("Range selection requires 2 values [min,max)")
+                warnings.warn(
+                    "More than two arguments were given while selecting a range, only the first two were used for events selection."
+                )
 
             mask = (values[0] <= col_data) & (col_data < values[1])
         else:
