@@ -371,17 +371,17 @@ class EventList:
 
         Parameters
         ----------
-        parameter : str
-        Column name to filter on
-        values : 'str', 'np.nan', 'tuple', 'list' or array
-        Value(s) to match (single value or list)
-        is_range : bool
-        If True, treat as numerical range [min,max), where min and max can be +. np.inf
+        parameter : `str`
+            Column name to filter on
+            values : `str`, `np.nan`, `tuple`, `list` or `array`
+        Value(s) to match (single value or list) or range bounds (list)
+        is_range : `bool`
+            If True, treat as numerical range [min,max), where min and max can be +. np.inf
 
         Returns
         -------
         Table
-        Subset of rows matching selected criteria
+            Subset of rows matching selected criteria
         """
         col_data = self.table[parameter]
 
