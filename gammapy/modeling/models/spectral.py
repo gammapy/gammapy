@@ -491,6 +491,7 @@ class SpectralModel(ModelBase):
         sed_type="dnde",
         energy_power=0,
         n_points=100,
+        method="lin",
         **kwargs,
     ):
         """Plot spectral model error band.
@@ -560,8 +561,16 @@ class SpectralModel(ModelBase):
             ax.yaxis.set_units(DEFAULT_UNIT[sed_type] * energy.unit**energy_power)
 
         flux, flux_err = self._get_plot_flux(sed_type=sed_type, energy=energy)
-        y_lo = scale_plot_flux(flux - flux_err, energy_power).quantity[:, 0, 0]
-        y_hi = scale_plot_flux(flux + flux_err, energy_power).quantity[:, 0, 0]
+
+        if method == "log":
+            flux_err_log = flux_err.data / flux.data
+            y_lo = flux / np.exp(flux_err_log)
+            y_hi = flux * np.exp(flux_err_log)
+            y_lo = scale_plot_flux(y_lo, energy_power).quantity[:, 0, 0]
+            y_hi = scale_plot_flux(y_hi, energy_power).quantity[:, 0, 0]
+        else:
+            y_lo = scale_plot_flux(flux - flux_err, energy_power).quantity[:, 0, 0]
+            y_hi = scale_plot_flux(flux + flux_err, energy_power).quantity[:, 0, 0]
 
         with quantity_support():
             ax.fill_between(energy.center, y_lo, y_hi, **kwargs)
