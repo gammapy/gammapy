@@ -2358,62 +2358,6 @@ class MapDataset(Dataset):
 
         """
 
-        def make_rgb_transparent(rgba, bg_rgb=(1, 1, 1)):
-            """
-            Mix an RGBA color with a background RGB color based on its alpha value.
-
-            Parameters
-            ----------
-            rgba : iterable
-                A 4-element sequence representing the color in RGBA.
-            bg_rgb : tuple, optional
-                The background RGB color (default is white).
-
-            Returns
-            -------
-            list
-                The blended RGB color as [R, G, B].
-            """
-            rgb = rgba[:3]
-            alpha = rgba[3]
-            return [alpha * c1 + (1 - alpha) * c2 for c1, c2 in zip(rgb, bg_rgb)]
-
-        def create_custom_colormap(npred_min, cmap_name="viridis"):
-            """
-            Create two custom colormaps based on the given colormap and "GnBu".
-
-            This function:
-            - Resamples the specified colormap to 256 colors.
-            - Applies a power-law transform to the RGBA values for a custom transparency ramp.
-            - Sets any "bad" values in the colormap to the color representing `npred_min`.
-            - Returns a second default colormap ("GnBu") for variety.
-
-            Parameters
-            ----------
-            npred_min : float
-                The minimum value of the npred data for color setting.
-            counts_data : ndarray
-                The counts data (used for scaling).
-            cmap_name : str
-                The base colormap name (default is 'viridis').
-
-            Returns
-            -------
-            cmapcustom: colormap
-                Modified colormap
-            """
-            # Custom colormap for counts/npred
-            cmapcustom = colormaps.get_cmap(cmap_name).resampled(256)
-            ncolors = len(cmapcustom.colors)
-
-            # Modify the transparency ramp using a power-law transform
-            cmapcustom.colors *= np.transpose([np.linspace(0, 1, ncolors)] * 4) ** (
-                1.0 / 5
-            )
-            cmapcustom.colors[:, 3] = 1  # Ensure full opacity
-            cmapcustom.set_bad(cmapcustom(npred_min))
-            return cmapcustom
-
         def adjust_color_limits(npred_data, counts_data):
             """
             Determine suitable color limits for log-scale plotting of npred and counts maps.
@@ -2610,7 +2554,8 @@ class MapDataset(Dataset):
         vmin, vmax = adjust_color_limits(npredmapdata, countsmapdata)
 
         # Create custom colormaps
-        cmapcustom = create_custom_colormap(npred_min=npredmapdata.data.min())
+        cmapcustom = colormaps.get_cmap("afmhot")
+        cmapcustom.set_bad(color="black")
 
         # Create the figure and axes
         fig, axs = plt.subplots(nrows=2, ncols=3, figsize=(11, 6.5), dpi=120)
