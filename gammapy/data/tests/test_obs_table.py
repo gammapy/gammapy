@@ -313,6 +313,64 @@ def test_select_sky_regions():
     assert len(obs_table) == 30
 
 
+def test_select_multiple_conditions():
+    random_state = np.random.RandomState(seed=0)
+    obs_table = make_test_observation_table(n_obs=10, random_state=random_state)
+
+    selections = []
+    variable = "ONTIME"
+    value_range = Quantity([0, 2e3], unit="s")
+    selections.append(dict(type="par_box", variable=variable, value_range=value_range))
+
+    variable = "TSTART"
+    value_range = Quantity([66767872.697952315, 155072274], unit="s")
+    selections.append(dict(type="par_box", variable=variable, value_range=value_range))
+
+    variable = "ALT"
+    value_range = Angle([60.0, 70.0], "deg")
+    selection_alt = dict(type="par_box", variable=variable, value_range=value_range)
+
+    variable = "AZ"
+    value_range = Angle([0.0, 180.0], "deg")
+    selections.append(
+        dict(
+            type="par_box",
+            variable=variable,
+            value_range=value_range,
+            condition="OR",
+            other_selection=selection_alt,
+        )
+    )
+
+    obs_table = obs_table.select_observations(selections)
+
+    assert len(obs_table) == 3
+
+    random_state = np.random.RandomState(seed=0)
+    obs_table = make_test_observation_table(n_obs=10, random_state=random_state)
+
+    selections = []
+    variable = "ALT"
+    value_range = Angle([60.0, 70.0], "deg")
+    selection_alt = dict(type="par_box", variable=variable, value_range=value_range)
+
+    variable = "AZ"
+    value_range = Angle([353, 360.0], "deg")
+    selections.append(
+        dict(
+            type="par_box",
+            variable=variable,
+            value_range=value_range,
+            condition="OR",
+            other_selection=selection_alt,
+        )
+    )
+
+    obs_table = obs_table.select_observations(selections)
+
+    assert len(obs_table) == 3
+
+
 @requires_data()
 def test_observation_table_checker():
     path = "$GAMMAPY_DATA/cta-1dc/index/gps/obs-index.fits.gz"

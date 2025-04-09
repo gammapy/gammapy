@@ -1,5 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from collections import namedtuple
+import itertools
+import operator
 import numpy as np
 from astropy.coordinates import Angle, SkyCoord
 from astropy.table import Table
@@ -286,12 +288,49 @@ class ObservationTable(Table):
         >>> selection = dict(type='par_box', variable='N_TELS', value_range=[4, 4])
         >>> selected_obs_table = obs_table.select_observations(selection)
         """
+        if isinstance(selections, list):
+            for selection in selections:
+                if isinstance(selection, dict):
+                    if "condition" in selection:
+                        continue
+                    else:
+                        selection["condition"] = "AND"
+                    continue
+                else:
+                    ValueError(f"{selection} is not a dictionary.")
         if isinstance(selections, dict):
+            if "condition" not in selections:
+                selections["condition"] = "AND"
             selections = [selections]
 
+        selections.sort(key=operator.itemgetter("condition"))
+        groups = itertools.groupby(selections, key=operator.itemgetter("condition"))
+        collected = dict((cls, list(items)) for cls, items in groups)
+
         obs_table = self
-        for selection in selections:
-            obs_table = obs_table._apply_simple_selection(selection)
+        if "AND" in collected:
+            selections = collected["AND"]
+            for selection in selections:
+                selection.pop("condition")
+                obs_table = obs_table._apply_simple_selection(selection)
+
+        if "OR" in collected:
+            mutual_selections = collected["OR"]
+            if "other_selection" in mutual_selections:
+                or_selection = mutual_selections.pop("other_selection")
+                mutual_selections = [mutual_selections, or_selection]
+            else:
+                ValueError("Dictionary with 'OR' condition needs a 'selection' key.")
+
+            for selection in mutual_selections:
+                if "condition" in selection:
+                    selection.pop("condition")
+                obs_table_temp = obs_table.copy()
+                if len(obs_table_temp._apply_simple_selection(selection)) == 0:
+                    continue
+                else:
+                    obs_table = obs_table._apply_simple_selection(selection)
+                    break
 
         return obs_table
 
