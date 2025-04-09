@@ -147,7 +147,6 @@ certainly the same week), are best.
 Get set up
 ==========
 
-
 This section is based on the `instructions <https://ctapipe.readthedocs.io/en/latest/>`_
 for setting up ``ctapipe``.
 
@@ -166,16 +165,17 @@ repository from your GitHub:
     cd [your-working-path]
     git clone git@github.com:[your-github-username]/gammapy.git
 
-Create the conda environment:
+Create the conda environment and activate it:
 
 .. code-block:: bash
 
     cd gammapy
     conda env create -f environment-dev.yml
+    conda activate gammapy-dev
 
 Instead of Conda, you may use `Mamba <https://mamba.readthedocs.io/en/latest/>`_ as your
 package manager, which offers higher installation speed and more reliable environment solutions.
-In that case, use ``mamba env create -f environment-dev.yml`` to create the envirinment.
+In that case, use ``mamba env create -f environment-dev.yml`` to create the environment.
 
 If you are already working with the development version environment and you want
 to update it with the contents of `environment-dev.yml` run the following command:
@@ -184,11 +184,10 @@ to update it with the contents of `environment-dev.yml` run the following comman
 
     conda env update --file environment-dev.yml --prune
 
-Activate the environment and add the gammapy remote:
+Add the gammapy repository as your upstream remote:
 
 .. code-block:: bash
 
-    conda activate gammapy-dev
     git remote add upstream git@github.com:gammapy/gammapy.git
 
 You can use ``git remote -v`` to list all your configured remotes.
@@ -201,13 +200,12 @@ If you followed the steps above, you should see something like this:
     upstream	git@github.com:gammapy/gammapy.git (fetch)
     upstream	git@github.com:gammapy/gammapy.git (push)
 
-
 Make your ``main`` branch track the gammapy repository:
 
 .. code-block:: bash
 
     git fetch upstream
-    git branch main -u upstream/main
+    git branch --set-upstream-to=upstream/main
 
 When developing Gammapy you never want to work on the ``main`` branch, but always
 on a dedicated feature branch. You can create a new branch with:
@@ -238,11 +236,11 @@ This is necessary to compile the few Cython code  (``*.pyx``). If you skip
 this step, some imports depending on Cython code will fail. If you want to remove the generated
 files run ``make clean``.
 
-On the first push of your local branch, you should set your GitHub as the remote repository:
+Every time that you want to ``push`` your local branch to your GitHub repository you should run:
 
 .. code-block:: bash
 
-    git push -u origin [branch-name]
+    git push origin [branch-name]
 
 Download the Gammapy datasets and declare the corresponding bash environment variable:
 
