@@ -1720,7 +1720,6 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
 
         Returns
         -------
-
         map_dict: dict of `~gammapy.maps.RegionNDMap`
             Dictionary of map containing the pulse profile in different energy bin.
         """
