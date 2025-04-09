@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import operator
+import logging
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
@@ -1208,7 +1209,7 @@ def test_integral_exp_cut_off_power_law_large_number_of_bins():
     assert_allclose(flux.value, expected_flux.value, rtol=0.01)
 
 
-def test_template_ND(tmpdir):
+def test_template_ND(tmpdir, caplog):
     energy_axis = MapAxis.from_bounds(
         1.0, 100, 10, interp="log", name="energy_true", unit="GeV"
     )
@@ -1220,7 +1221,12 @@ def test_template_ND(tmpdir):
     region_map.data[:, :, :5, 0, 0] = 1
     region_map.data[:, :, 5:, 0, 0] = 2
 
-    template = TemplateNDSpectralModel(region_map)
+    with caplog.at_level(logging.WARNING):
+        template = TemplateNDSpectralModel(region_map)
+        assert (
+            'The filename is not defined. Therefore, the model will not be serialised correctly. To set the filename, the "template_model.filename" attribute can be used.'
+            in [_.message for _ in caplog.records]
+        )
     assert len(template.parameters) == 2
     assert template.parameters["norm"].value == 5
     assert template.parameters["tilt"].value == 0
@@ -1229,6 +1235,8 @@ def test_template_ND(tmpdir):
     template.parameters["norm"].value = 1
     template.filename = str(tmpdir / "template_ND.fits")
     template.write()
+    template.write(filename=str(tmpdir / "template_ND_2.fits"))
+
     dict_ = template.to_dict()
     template_new = TemplateNDSpectralModel.from_dict(dict_)
     assert_allclose(template_new.map.data, region_map.data)
@@ -1309,3 +1317,20 @@ def test_template_ND_EBL(tmpdir):
 def test_incorrect_param_name():
     with pytest.raises(NameError):
         PowerLawSpectralModel(indxe=2)
+
+
+def test_e_peak_super_4FGLDR3():
+    model = SuperExpCutoffPowerLaw4FGLDR3SpectralModel()
+    assert_quantity_allclose(model.e_peak, TEST_MODELS[9]["e_peak"], rtol=1e-2)
+
+    model.index_1.value = 3
+    model.index_2.value = 0.5
+    model.expfactor.value = 0.5
+    assert_quantity_allclose(model.e_peak, np.nan * u.TeV)
+
+    model.index_2.value = 2
+    model.expfactor.value = -1
+    assert_quantity_allclose(model.e_peak, np.nan * u.TeV)
+
+    model.index_2.value = -1
+    assert_quantity_allclose(model.e_peak, np.nan * u.TeV)
