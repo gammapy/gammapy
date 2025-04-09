@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Metadata base container for Gammapy."""
+
 import json
 from typing import ClassVar, Literal, Optional, get_args
 import astropy.units as u
@@ -111,7 +112,9 @@ class MetaData(BaseModel):
                 else:
                     hdr_dict[item] = value
 
-        extra_keys = set(self.model_fields.keys()) - set(fits_export_keys.keys())
+        extra_keys = set(self.__class__.model_fields.keys()) - set(
+            fits_export_keys.keys()
+        )
 
         for key in extra_keys:
             entry = getattr(self, key)
