@@ -173,7 +173,7 @@ Create the conda environment:
     cd gammapy
     conda env create -f environment-dev.yml
 
-Instead of Conda, you may use `Mamba <https://mamba.readthedocs.io/en/latest/>_` as your
+Instead of Conda, you may use `Mamba <https://mamba.readthedocs.io/en/latest/>`_ as your
 package manager, which offers higher installation speed and more reliable environment solutions.
 In that case, use ``mamba env create -f environment-dev.yml`` to create the envirinment.
 
@@ -202,7 +202,7 @@ If you followed the steps above, you should see something like this:
     upstream	git@github.com:gammapy/gammapy.git (push)
 
 
-Make your ``main``branch track the gammapy repository:
+Make your ``main`` branch track the gammapy repository:
 
 .. code-block:: bash
 
