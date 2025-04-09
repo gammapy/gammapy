@@ -374,8 +374,6 @@ class Observation:
     @property
     def pointing(self):
         """Get the pointing for the observation as a `~gammapy.data.FixedPointingInfo` object."""
-        if self._pointing is None:
-            self._pointing = FixedPointingInfo.from_fits_header(self.events.table.meta)
         return self._pointing
 
     def get_pointing_altaz(self, time):
@@ -578,6 +576,12 @@ class Observation:
         events = self.events
         if events is not None:
             events_hdu = events.to_table_hdu(format=format)
+
+            if self.pointing is None:
+                raise ValueError(
+                    "Cannot write Observation in gadf format: Missing pointing."
+                )
+
             events_hdu.header.update(
                 self.pointing.to_fits_header(time_ref=events.time_ref)
             )
