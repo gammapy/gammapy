@@ -368,7 +368,7 @@ def test_select_multiple_conditions():
 
     obs_table = obs_table.select_observations(selections)
 
-    assert len(obs_table) == 3
+    assert len(obs_table) == 6
 
 
 @requires_data()

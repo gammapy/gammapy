@@ -315,7 +315,7 @@ class ObservationTable(Table):
                 obs_table = obs_table._apply_simple_selection(selection)
 
         if "OR" in collected:
-            mutual_selections = collected["OR"]
+            mutual_selections = collected["OR"][0]
             if "other_selection" in mutual_selections:
                 or_selection = mutual_selections.pop("other_selection")
                 mutual_selections = [mutual_selections, or_selection]
