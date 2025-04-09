@@ -1665,7 +1665,6 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
 
         Returns
         -------
-
         best_fit_profile: `~gammapy.maps.RegionNDMap`
             Map containing the best fit.
         """
