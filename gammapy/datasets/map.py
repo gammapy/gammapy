@@ -2344,11 +2344,11 @@ class MapDataset(Dataset):
 
     def peek(self, figsize=(11, 6.5)):
         """Quick-look summary plots for a given MapDataset:
+        - Exposure map
         - Counts map
         - Npred map
-        - Energy dispersion matrix
-        - Exposure map
         - Exposure profile
+        - Energy dispersion matrix
         - PSF containment radius
 
         Parameters
@@ -2615,38 +2615,38 @@ class MapDataset(Dataset):
         # Create the figure and axes
         fig, axs = plt.subplots(nrows=2, ncols=3, figsize=(11, 6.5), dpi=120)
 
-        # --- Plot Counts Map ---
-        axs[0, 0].remove()
-        ax_counts = fig.add_subplot(2, 3, 1, projection=self.counts.geom.wcs)
-        plot_counts(ax_counts, countsmapdata, cmapcustom, vmin, vmax)
-        plot_mask(ax=ax_counts, mask=self.mask_fit_image, alpha=0.2)
-        plot_mask(ax=ax_counts, mask=self.mask_safe_image, hatches=["///"], colors="w")
-
-        # --- Plot npred Map ---
-        axs[0, 1].remove()
-        ax_npred = fig.add_subplot(2, 3, 2, projection=self.npred().geom.wcs)
-        plot_npred(ax_npred, npredmapdata, cmapcustom, vmin, vmax)
-        plot_mask(ax=ax_npred, mask=self.mask_fit_image, alpha=0.2)
-        plot_mask(ax=ax_npred, mask=self.mask_safe_image, hatches=["///"], colors="w")
-
-        # --- Plot Energy Dispersion ---
-        ax_edisp = axs[1, 0]
-        _ = plot_edisp(ax_edisp, central_spectrum_dataset.edisp.get_edisp_kernel())
-
         # --- Plot Exposure Map ---
-        axs[1, 1].remove()
-        ax_exposure = fig.add_subplot(2, 3, 5, projection=self.exposure.geom.wcs)
+        axs[0, 0].remove()
+        ax_exposure = fig.add_subplot(2, 3, 1, projection=self.exposure.geom.wcs)
         plot_exposure_map(ax_exposure, self.exposure, cmap=cmapcustom)
         plot_mask(
             ax=ax_exposure, mask=self.mask_safe_image, hatches=["///"], colors="w"
         )
 
+        # --- Plot Counts Map ---
+        axs[0, 1].remove()
+        ax_counts = fig.add_subplot(2, 3, 2, projection=self.counts.geom.wcs)
+        plot_counts(ax_counts, countsmapdata, cmapcustom, vmin, vmax)
+        plot_mask(ax=ax_counts, mask=self.mask_fit_image, alpha=0.2)
+        plot_mask(ax=ax_counts, mask=self.mask_safe_image, hatches=["///"], colors="w")
+
+        # --- Plot npred Map ---
+        axs[0, 2].remove()
+        ax_npred = fig.add_subplot(2, 3, 3, projection=self.npred().geom.wcs)
+        plot_npred(ax_npred, npredmapdata, cmapcustom, vmin, vmax)
+        plot_mask(ax=ax_npred, mask=self.mask_fit_image, alpha=0.2)
+        plot_mask(ax=ax_npred, mask=self.mask_safe_image, hatches=["///"], colors="w")
+
         # --- Plot Exposure Profile ---
-        ax_exp_profile = axs[1, 2]
+        ax_exp_profile = axs[1, 0]
         plot_exposure_profile(ax_exp_profile, central_spectrum_dataset.exposure)
 
+        # --- Plot Energy Dispersion ---
+        ax_edisp = axs[1, 1]
+        _ = plot_edisp(ax_edisp, central_spectrum_dataset.edisp.get_edisp_kernel())
+
         # --- Plot Containment Radius ---
-        ax_containment = axs[0, 2]
+        ax_containment = axs[1, 2]
         plot_containment_radius(ax_containment, self.psf)
 
         plt.tight_layout(w_pad=0)
