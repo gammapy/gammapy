@@ -147,11 +147,9 @@ certainly the same week), are best.
 Get set up
 ==========
 
-.. note::
-        :class: sphx-glr-download-link-note
 
-        This section is based on the `instructions <https://ctapipe.readthedocs.io/en/latest/>`_
-        for setting up ``ctapipe``.
+This section is based on the `instructions <https://ctapipe.readthedocs.io/en/latest/>`_
+for setting up ``ctapipe``.
 
 Firstly, fork the `gammapy repository <https://github.com/gammapy/gammapy>`_ to
 your personal GitHub. If you have not already done so, copy your public SSH key
@@ -212,19 +210,19 @@ Make your ``main``branch track the gammapy repository:
     git branch main -u upstream/main
 
 When developing Gammapy you never want to work on the ``main`` branch, but always
-on a dedicated feature branch. You can create a new branch with
+on a dedicated feature branch. You can create a new branch with:
 
 .. code-block:: bash
 
     git branch [branch-name]
 
-and switch between different branches as
+To switch between different branches:
 
 .. code-block:: bash
 
     git checkout [branch-name]
 
-You can also do both things at once with
+You can also do both things at once as:
 
 .. code-block:: bash
 
