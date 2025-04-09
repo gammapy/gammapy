@@ -373,10 +373,10 @@ class EventList:
         ----------
         parameter : str
         Column name to filter on
-        values : 'str', 'tuple', 'list' or array
+        values : 'str', 'np.nan', 'tuple', 'list' or array
         Value(s) to match (single value or list)
         is_range : bool
-        If True, treat as numerical range [min,max)
+        If True, treat as numerical range [min,max), where min and max can be +. np.inf
 
         Returns
         -------
@@ -401,7 +401,10 @@ class EventList:
             # Universal comparison that works for strings and numbers
             mask = np.zeros(len(col_data), dtype=bool)
             for val in values:
-                mask |= col_data == val  # Works for both strings and numbers
+                if type(val) is not str and np.isnan(val):
+                    mask |= np.isnan(col_data.data.astype(float))
+                else:
+                    mask |= col_data == val  # Works for both strings and numbers
 
         return self.table[mask]
 
