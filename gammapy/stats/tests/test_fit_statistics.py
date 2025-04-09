@@ -3,6 +3,13 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from gammapy import stats
+from gammapy.stats.fit_statistics import (
+    CashFitStatistic,
+    WeightedCashFitStatistic,
+    WStatFitStatistic,
+    Chi2FitStatistic,
+    Chi2AsymmetricErrorFitStatistic,
+)
 
 
 @pytest.fixture
@@ -169,3 +176,213 @@ def test_wstat_corner_cases():
 
     actual = stats.get_wstat_mu_bkg(n_on=n_on, mu_sig=mu_sig, n_off=n_off, alpha=alpha)
     assert_allclose(actual, 0)
+
+
+class MockDataset:
+    @staticmethod
+    def create_region(size, axis_name="energy"):
+        from gammapy.maps import RegionGeom, MapAxis
+
+        axis = MapAxis.from_nodes(np.arange(size), name=axis_name, unit="TeV")
+        return RegionGeom.create(region=None, axes=[axis])
+
+
+class MockMapDataset(MockDataset):
+    """Mock dataset class"""
+
+    def __init__(self, counts, npred, mask=None):
+        from gammapy.maps import RegionNDMap
+
+        geom = self.create_region(len(counts))
+        self.counts = RegionNDMap(geom=geom, data=np.array(counts))
+        self.npred = lambda: RegionNDMap(
+            geom=geom, data=np.array(npred).astype("float")
+        )
+        self.mask = (
+            RegionNDMap(geom=geom, data=np.array(mask)) if mask is not None else None
+        )
+
+
+class MockMapDatasetOnOff(MockDataset):
+    """Mock dataset for ON-OFF Poisson measurements (WStat)."""
+
+    def __init__(self, counts, npred_signal, counts_off, alpha, mask=None):
+        from gammapy.maps import RegionNDMap
+
+        geom = self.create_region(len(counts))
+        self.counts = RegionNDMap(geom=geom, data=np.array(counts))
+        self.npred_signal = lambda: RegionNDMap(
+            geom=geom, data=np.array(npred_signal).astype("float")
+        )
+        self.mask = (
+            RegionNDMap(geom=geom, data=np.array(mask)) if mask is not None else None
+        )
+        self.counts_off = RegionNDMap(geom=geom, data=np.array(counts_off))
+        self.alpha = RegionNDMap(geom=geom, data=np.array(alpha).astype("float"))
+
+
+class MockFluxPointsDataset(MockDataset):
+    """Mock dataset for flux measurements (chi2, etc)."""
+
+    def __init__(
+        self,
+        norm,
+        norm_err,
+        norm_pred,
+        norm_errn=None,
+        norm_errp=None,
+        norm_ul=None,
+        is_ul=None,
+        model=None,
+        mask=None,
+    ):
+        from gammapy.maps import RegionNDMap
+        from gammapy.estimators import FluxPoints
+        from gammapy.modeling.models import ConstantSpectralModel
+
+        geom = self.create_region(len(norm))
+
+        data = {}
+        data["norm"] = RegionNDMap(geom=geom, data=np.array(norm))
+        data["norm_err"] = RegionNDMap(geom=geom, data=np.array(norm_err))
+        data["norm_errn"] = (
+            RegionNDMap(geom=geom, data=np.array(norm_errn)) if norm_errn else None
+        )
+        data["norm_errp"] = (
+            RegionNDMap(geom=geom, data=np.array(norm_errp)) if norm_errp else None
+        )
+        data["norm_ul"] = (
+            RegionNDMap(geom=geom, data=np.array(norm_ul)) if norm_ul else None
+        )
+        data["is_ul"] = RegionNDMap(geom=geom, data=np.array(is_ul)) if is_ul else None
+
+        model = model if model else ConstantSpectralModel()
+
+        self.data = FluxPoints(data, model)
+        new_geom = geom.copy(axes=geom.axes.rename_axes(["energy"], ["energy_true"]))
+        ref_flux = self.data.reference_model.evaluate_geom(new_geom)
+        self.flux_pred = lambda: np.array(norm_pred).reshape(ref_flux.shape) * ref_flux
+        self.mask = np.array(mask) if mask is not None else None
+
+
+@pytest.fixture
+def mock_map_dataset():
+    return MockMapDataset(counts=[1, 2, 3], npred=[1, 2, 3], mask=[True, False, True])
+
+
+def test_cash_fit_statistic_stat_sum_nomask(mock_map_dataset):
+    """Test the stat_sum_dataset method for CashFitStatistic."""
+    mock_map_dataset.mask = None
+    stat_sum = CashFitStatistic.stat_sum_dataset(mock_map_dataset)
+    assert_allclose(stat_sum, 2.63573737)
+
+
+def test_cash_fit_statistic_with_mask(mock_map_dataset):
+    """Test CashFitStatistic with a mask."""
+    stat_sum = CashFitStatistic.stat_sum_dataset(mock_map_dataset)
+    assert_allclose(stat_sum, 1.40832626799)
+
+
+def test_cash_fit_statistic_loglikelihood(mock_map_dataset):
+    """Test loglikelihood_dataset method."""
+    log_likelihood = CashFitStatistic.loglikelihood_dataset(mock_map_dataset)
+    assert_allclose(log_likelihood, 1.40832626799 * -0.5)
+
+
+def test_cash_fit_statistic_with_non_bool_mask(mock_map_dataset):
+    """Ensure stat_sum_dataset handles non-bool masks gracefully."""
+    mock_map_dataset.mask.data = np.array([1, 0, 2], dtype="float")
+
+    stat_sum = CashFitStatistic.stat_sum_dataset(mock_map_dataset)
+    assert_allclose(stat_sum, 1.40832626799)
+
+
+def test_weightedcash_fit_statistic(mock_map_dataset):
+    """Test WeightedCashFitStatistic."""
+    mock_map_dataset.mask.data = np.array([0.5, 0.5, 0.5], dtype="float")
+
+    stat_sum = WeightedCashFitStatistic.stat_sum_dataset(mock_map_dataset)
+    assert_allclose(stat_sum, 2.63573737 * 0.5)
+
+
+@pytest.fixture()
+def mock_map_dataset_onoff():
+    return MockMapDatasetOnOff(
+        counts=[3, 6, 9],
+        npred_signal=[1, 2, 3],
+        counts_off=[10, 10, 30],
+        alpha=[0.1, 0.2, 0.1],
+        mask=[True, False, True],
+    )
+
+
+def test_wstat_fit_statistic_stat_sum_nomask(mock_map_dataset_onoff):
+    """Test the stat_sum_dataset method for WStatFitStatistic."""
+    mock_map_dataset_onoff.mask = None
+    stat_sum = WStatFitStatistic.stat_sum_dataset(mock_map_dataset_onoff)
+    assert_allclose(stat_sum, 2.4088762929)
+
+
+def test_wstat_fit_statistic_with_mask(mock_map_dataset_onoff):
+    """Test WStatFitStatistic with a mask."""
+    stat_sum = WStatFitStatistic.stat_sum_dataset(mock_map_dataset_onoff)
+    assert_allclose(stat_sum, 1.63526008301)
+
+
+def test_wstat_fit_statistic_with_mask_false(mock_map_dataset_onoff):
+    """Test WStatFitStatistic with mask_safe handling."""
+    mask = [
+        False,
+    ] * 3
+    mock_map_dataset_onoff.mask.data = np.array(mask)
+    stat_sum = WStatFitStatistic.stat_sum_dataset(mock_map_dataset_onoff)
+    assert stat_sum == 0
+
+
+def test_wstat_fit_statistic_loglikelihood(mock_map_dataset_onoff):
+    """Test loglikelihood_dataset method."""
+    log_likelihood = WStatFitStatistic.loglikelihood_dataset(mock_map_dataset_onoff)
+    assert_allclose(log_likelihood, -0.817630041)
+
+
+@pytest.fixture()
+def mock_fp_dataset():
+    return MockFluxPointsDataset(
+        norm=[1.1, 0.9, 1.2, 0.8],
+        norm_err=[0.1, 0.1, 0.2, 0.2],
+        norm_pred=[1, 1, 1, 1],
+        norm_errn=[0.1, 0.1, 0.2, 0.2],
+        norm_errp=[0.1, 0.1, 0.1, 0.1],
+        norm_ul=[1.5, 1.5, 1.5, 1.5],
+        is_ul=[False, False, False, True],
+        mask=[True, True, False, True],
+    )
+
+
+def test_chi2_fit_statistic_stat_sum_nomask(mock_fp_dataset):
+    mock_fp_dataset.mask = None
+    stat_sum = Chi2FitStatistic.stat_sum_dataset(mock_fp_dataset)
+    assert_allclose(stat_sum, 4)
+
+
+def test_chi2_fit_statistic_with_mask(mock_fp_dataset):
+    stat_sum = Chi2FitStatistic.stat_sum_dataset(mock_fp_dataset)
+    assert_allclose(stat_sum, 3)
+
+
+def test_chi2_fit_statistic_with_mask_false(mock_fp_dataset):
+    mask = [False, False, False, False]
+    mock_fp_dataset.mask = np.array(mask)
+    stat_sum = Chi2FitStatistic.stat_sum_dataset(mock_fp_dataset)
+    assert stat_sum == 0
+
+
+def test_chi2_asym_fit_statistic_stat_sum_nomask(mock_fp_dataset):
+    mock_fp_dataset.mask = None
+    stat_sum = Chi2AsymmetricErrorFitStatistic.stat_sum_dataset(mock_fp_dataset)
+    assert_allclose(stat_sum, 5.798344)
+
+
+def test_chi2_asym_fit_statistic_with_mask(mock_fp_dataset):
+    stat_sum = Chi2AsymmetricErrorFitStatistic.stat_sum_dataset(mock_fp_dataset)
+    assert_allclose(stat_sum, 4.798344)

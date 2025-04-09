@@ -6,7 +6,6 @@ from .io import OGIPDatasetReader, OGIPDatasetWriter, FermipyDatasetsReader
 from .map import (
     MapDataset,
     MapDatasetOnOff,
-    MapDatasetWeighted,
     create_empty_map_dataset_from_irfs,
     create_map_dataset_from_observation,
     create_map_dataset_geoms,
@@ -20,7 +19,6 @@ DATASET_REGISTRY = Registry(
     [
         MapDataset,
         MapDatasetOnOff,
-        MapDatasetWeighted,
         SpectrumDataset,
         SpectrumDatasetOnOff,
         FluxPointsDataset,
@@ -41,7 +39,6 @@ __all__ = [
     "MapDataset",
     "MapDatasetEventSampler",
     "MapDatasetOnOff",
-    "MapDatasetWeighted",
     "ObservationEventSampler",
     "OGIPDatasetWriter",
     "OGIPDatasetReader",
