@@ -1720,8 +1720,8 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
 
         Returns
         -------
-        map_dict: dict of `~gammapy.maps.RegionNDMap`
-            Dictionary of map containing the pulse profile in different energy bin.
+        maps: dict of `~gammapy.maps.Maps`
+            Maps containing the pulse profile in the different energy bin.
         """
 
         table = Table.read(self._auxiliary_filename, hdu="GAMMA_LC")
@@ -1730,16 +1730,19 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
             name="phase",
             interp="lin",
         )
-        map_dict = dict()
-        for name in self._pulse_profile_column_name:
-            map_dict[name] = RegionNDMap.create(
-                region=None, axes=[phases], data=table[name]
-            )
-        for name in self._pulse_profile_column_name:
-            map_dict[f"Unc_{name}"] = RegionNDMap.create(
-                region=None, axes=[phases], data=table[f"Unc_{name}"]
-            )
-        return map_dict
+        geom = RegionGeom(region=None, axes=[phases])
+        names = np.concatenate(
+            [
+                self._pulse_profile_column_name,
+                [f"Unc_{name}" for name in self._pulse_profile_column_name],
+            ]
+        )
+        maps = Maps.from_geom(
+            geom=geom,
+            names=names,
+            kwargs_list=[{"data": table[name].data} for name in names],
+        )
+        return maps
 
     def spectral_model(self, fit="auto"):
         """
