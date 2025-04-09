@@ -73,6 +73,30 @@ for `Fermi-LAT`_ and `HAWC`_ data analysis.
 
             To the user guide
 
+    .. grid-item-card:: Community & support
+        :img-top: _static/help_icon.svg
+        :class-card: intro-card-buttons
+        :columns: 12 12 12 12
+        :shadow: md
+
+        Need help? Want to connect with other users and developers?
+
+        +++
+
+        .. container:: button-row
+
+            .. button-link:: https://gammapy.slack.com/join/signup#/domain-signup
+                :color: secondary
+
+                Join the chat on Slack
+
+            .. button-link:: https://github.com/gammapy/gammapy/issues
+                :color: secondary
+
+                Report an issue
+
+
+
     .. grid-item-card:: API reference
         :img-top: _static/index_api.svg
         :class-card: intro-card

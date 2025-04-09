@@ -31,6 +31,21 @@ background-color: #d9edf7 !important;
   margin-right: auto;
 }
 
+/* Variant of intro-card that supports side-by-side buttons */
+.intro-card-buttons {
+  border-radius: 0;
+  padding: 30px 10px 20px 10px;
+  margin: 10px 0px;
+}
+
+.intro-card-buttons .button-row {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 1em;
+}
+
 /* Typography */
 body,
 p {
