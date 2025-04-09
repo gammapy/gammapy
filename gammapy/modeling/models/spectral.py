@@ -167,7 +167,7 @@ class SpectralModel(ModelBase):
     def __rsub__(self, model):
         return self.__sub__(model)
 
-    def _propagate_error(self, epsilon, fct, **kwargs):
+    def _propagate_error(self, epsilon, fct, islog=False, **kwargs):
         """Evaluate error for a given function with uncertainty propagation.
 
         Parameters
@@ -177,6 +177,9 @@ class SpectralModel(ModelBase):
         epsilon : float
             Step size of the gradient evaluation. Given as a
             fraction of the parameter error.
+        islog : bool, optional
+            Whether the error propagation should be done on the log of
+            the function instead of the function itself.
         **kwargs : dict
             Keyword arguments.
 
@@ -186,26 +189,43 @@ class SpectralModel(ModelBase):
             Error of the given function.
         """
         eps = np.sqrt(np.diag(self.covariance)) * epsilon
-
         n, f_0 = len(self.parameters), fct(**kwargs)
+        unit = f_0.unit
         shape = (n, len(np.atleast_1d(f_0)))
-        df_dp = np.zeros(shape)
+        if islog:
+            log_f0 = np.log(f_0.to(unit).value)
+            dlogf_dp = np.zeros(shape)
+        else:
+            df_dp = np.zeros(shape)
 
         for idx, parameter in enumerate(self.parameters):
             if parameter.frozen or eps[idx] == 0:
                 continue
 
             parameter.value += eps[idx]
-            df = fct(**kwargs) - f_0
+            if islog:
+                dlogf = np.log(fct(**kwargs).to(unit).value) - log_f0
+                dlogf_dp[idx] = dlogf / eps[idx]
+            else:
+                df = fct(**kwargs) - f_0
+                df_dp[idx] = df.value / eps[idx]
 
-            df_dp[idx] = df.value / eps[idx]
             parameter.value -= eps[idx]
 
-        f_cov = df_dp.T @ self.covariance @ df_dp
-        f_err = np.sqrt(np.diagonal(f_cov))
-        return u.Quantity([np.atleast_1d(f_0.value), f_err], unit=f_0.unit).squeeze()
+        if islog:
+            logf_cov = dlogf_dp.T @ self.covariance @ dlogf_dp
+            logf_err = np.sqrt(np.diagonal(logf_cov))
+            return u.Quantity(
+                [np.atleast_1d(log_f0), logf_err], unit=f_0.unit
+            ).squeeze()
+        else:
+            f_cov = df_dp.T @ self.covariance @ df_dp
+            f_err = np.sqrt(np.diagonal(f_cov))
+            return u.Quantity(
+                [np.atleast_1d(f_0.value), f_err], unit=f_0.unit
+            ).squeeze()
 
-    def evaluate_error(self, energy, epsilon=1e-4):
+    def evaluate_error(self, energy, epsilon=1e-4, islog=False):
         """Evaluate spectral model with error propagation.
 
         Parameters
@@ -215,13 +235,19 @@ class SpectralModel(ModelBase):
         epsilon : float, optional
             Step size of the gradient evaluation. Given as a
             fraction of the parameter error. Default is 1e-4.
+        islog : bool, optional
+            Whether the error propagation should be done on the log of
+            the function instead of the function itself.
 
         Returns
         -------
         dnde, dnde_error : tuple of `~astropy.units.Quantity`
             Tuple of flux and flux error.
         """
-        return self._propagate_error(epsilon=epsilon, fct=self, energy=energy)
+
+        return self._propagate_error(
+            epsilon=epsilon, fct=self, energy=energy, islog=islog
+        )
 
     @property
     def pivot_energy(self):
@@ -381,31 +407,56 @@ class SpectralModel(ModelBase):
             "ref_e2dnde": self(energy) * energy**2,
         }
 
-    def _get_plot_flux(self, energy, sed_type):
+    def _get_plot_flux(self, energy, sed_type, islog=False):
         flux = RegionNDMap.create(region=None, axes=[energy])
-        flux_err = RegionNDMap.create(region=None, axes=[energy])
+        flux_errp = RegionNDMap.create(region=None, axes=[energy])
+        flux_errn = RegionNDMap.create(region=None, axes=[energy])
 
-        if sed_type in ["dnde", "norm"]:
-            flux.quantity, flux_err.quantity = self.evaluate_error(energy.center)
-
-        elif sed_type == "e2dnde":
-            flux.quantity, flux_err.quantity = energy.center**2 * self.evaluate_error(
-                energy.center
-            )
+        if sed_type in ["dnde", "norm", "e2dnde"]:
+            flux_q, flux_err_q = self.evaluate_error(energy.center, islog=islog)
 
         elif sed_type == "flux":
-            flux.quantity, flux_err.quantity = self.integral_error(
-                energy.edges_min, energy.edges_max
+            flux_q, flux_err_q = self.integral_error(
+                energy.edges_min,
+                energy.edges_max,
+                islog=islog,
             )
 
         elif sed_type == "eflux":
-            flux.quantity, flux_err.quantity = self.energy_flux_error(
-                energy.edges_min, energy.edges_max
+            flux_q, flux_err_q = self.energy_flux_error(
+                energy.edges_min,
+                energy.edges_max,
+                islog=islog,
             )
         else:
             raise ValueError(f"Not a valid SED type: '{sed_type}'")
 
-        return flux, flux_err
+        # Convert to linear scale flux
+        if islog:
+            flux_q_log = flux_q
+            flux_q = np.exp(flux_q_log.value) * flux_q.unit
+            flux_errp_q = (
+                np.exp(flux_q_log.value + flux_err_q.value) * flux_q.unit - flux_q
+            )
+            flux_errn_q = (
+                flux_q - np.exp(flux_q_log.value - flux_err_q.value) * flux_q.unit
+            )
+
+        else:
+            flux_errp_q = flux_err_q.copy()
+            flux_errn_q = flux_err_q.copy()
+
+        if sed_type == "e2dnde":
+            scale = energy.center**2
+            flux_q *= scale
+            flux_errp_q *= scale
+            flux_errn_q *= scale
+
+        flux.quantity = flux_q
+        flux_errp.quantity = flux_errp_q
+        flux_errn.quantity = flux_errn_q
+
+        return flux, flux_errn, flux_errp
 
     def plot(
         self,
@@ -414,6 +465,7 @@ class SpectralModel(ModelBase):
         sed_type="dnde",
         energy_power=0,
         n_points=100,
+        islog=True,
         **kwargs,
     ):
         """Plot spectral model curve.
@@ -425,7 +477,7 @@ class SpectralModel(ModelBase):
             >>> from astropy import units as u
 
             >>> pwl = ExpCutoffPowerLawSpectralModel()
-            >>> ax = pwl.plot(energy_bounds=(0.1, 100) * u.TeV)
+            >>> ax = pwl.plot(energy_bounds=(0.1, 100) * u.TeV, islog=False)
             >>> ax.set_yscale('linear')
 
         Parameters
@@ -441,6 +493,9 @@ class SpectralModel(ModelBase):
             Power of energy to multiply flux axis with. Default is 0.
         n_points : int, optional
             Number of evaluation nodes. Default is 100.
+        islog : bool, optional
+            Whether the error propagation should be done on the log of
+            the function instead of the function itself.
         **kwargs : dict
             Keyword arguments forwarded to `~matplotlib.pyplot.plot`.
 
@@ -474,8 +529,7 @@ class SpectralModel(ModelBase):
         if ax.yaxis.units is None:
             ax.yaxis.set_units(DEFAULT_UNIT[sed_type] * energy.unit**energy_power)
 
-        flux, _ = self._get_plot_flux(sed_type=sed_type, energy=energy)
-
+        flux, _, _ = self._get_plot_flux(sed_type=sed_type, energy=energy, islog=islog)
         flux = scale_plot_flux(flux, energy_power=energy_power)
 
         with quantity_support():
@@ -491,6 +545,7 @@ class SpectralModel(ModelBase):
         sed_type="dnde",
         energy_power=0,
         n_points=100,
+        islog=True,
         **kwargs,
     ):
         """Plot spectral model error band.
@@ -522,6 +577,9 @@ class SpectralModel(ModelBase):
             Power of energy to multiply flux axis with. Default is 0.
         n_points : int, optional
             Number of evaluation nodes. Default is 100.
+        islog : bool, optional
+            Whether the error propagation should be done on the log of
+            the function instead of the function itself.
         **kwargs : dict
             Keyword arguments forwarded to `matplotlib.pyplot.fill_between`.
 
@@ -559,9 +617,12 @@ class SpectralModel(ModelBase):
         if ax.yaxis.units is None:
             ax.yaxis.set_units(DEFAULT_UNIT[sed_type] * energy.unit**energy_power)
 
-        flux, flux_err = self._get_plot_flux(sed_type=sed_type, energy=energy)
-        y_lo = scale_plot_flux(flux - flux_err, energy_power).quantity[:, 0, 0]
-        y_hi = scale_plot_flux(flux + flux_err, energy_power).quantity[:, 0, 0]
+        flux, flux_errn, flux_errp = self._get_plot_flux(
+            sed_type=sed_type, energy=energy, islog=islog
+        )
+
+        y_lo = scale_plot_flux(flux - flux_errn, energy_power).quantity[:, 0, 0]
+        y_hi = scale_plot_flux(flux + flux_errp, energy_power).quantity[:, 0, 0]
 
         with quantity_support():
             ax.fill_between(energy.center, y_lo, y_hi, **kwargs)
