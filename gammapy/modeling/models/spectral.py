@@ -396,8 +396,8 @@ class SpectralModel(ModelBase):
 
         elif sed_type == "e2dnde":
             flux.quantity, flux_errn.quantity, flux_errp.quantity = (
-                energy.center** 2 * self.evaluate_error(energy.center)
-            )
+                energy.center**2
+            ) * self.evaluate_error(energy.center)
 
         elif sed_type == "flux":
             flux.quantity, flux_errn.quantity, flux_errp.quantity = self.integral_error(
