@@ -8,6 +8,7 @@ from astropy.units import Quantity
 from gammapy.data import GTI, DataStore, EventList, ObservationFilter
 from gammapy.utils.regions import SphericalCircleSkyRegion
 from gammapy.utils.testing import assert_allclose, assert_time_allclose, requires_data
+from gammapy.utils.deprecation import GammapyDeprecationWarning
 
 
 def test_event_filter_types():
@@ -47,10 +48,10 @@ def test_filter_events(observation):
     region_filter = {"type": "sky_region", "opts": {"regions": region}}
 
     time_filter = Time([53090.12, 53090.13], format="mjd", scale="tt")
-
-    obs_filter = ObservationFilter(
-        event_filters=[custom_filter, region_filter], time_filter=time_filter
-    )
+    with pytest.warns(GammapyDeprecationWarning):
+        obs_filter = ObservationFilter(
+            event_filters=[custom_filter, region_filter], time_filter=time_filter
+        )
 
     events = observation.events
     filtered_events = obs_filter.filter_events(events)
