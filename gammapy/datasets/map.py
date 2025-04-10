@@ -2358,31 +2358,6 @@ class MapDataset(Dataset):
 
         """
 
-        def adjust_color_limits(npred_data, counts_data):
-            """
-            Determine suitable color limits for log-scale plotting of npred and counts maps.
-
-            Parameters
-            ----------
-            npred_data : `Map`
-                The npred map data (Gammapy Map object).
-            counts_data : `Map`
-                The counts map data (Gammapy Map object).
-
-            Returns
-            -------
-            (float, float)
-                (vmin, vmax) values for log-normal plotting.
-            """
-            vmin = npred_data.data.min()
-            vmax = npred_data.data.max()
-            # Fallback if the map is entirely zero
-            if vmin == 0.0:
-                vmin = np.max([counts_data.data.max() * 0.02, counts_data.data.min()])
-            if vmax == 0.0:
-                vmax = counts_data.data.max()
-            return vmin, vmax
-
         def plot_counts(ax, counts_data, cmap, vmin, vmax):
             """
             Plot the counts map on a given axis.
@@ -2551,7 +2526,13 @@ class MapDataset(Dataset):
         central_spectrum_dataset = self.to_spectrum_dataset(central_pixel)
 
         # Determine plotting limits
-        vmin, vmax = adjust_color_limits(npredmapdata, countsmapdata)
+        vmin = npredmapdata.data.min()
+        vmax = npredmapdata.data.max()
+        # Fallback if the map is entirely zero
+        if vmin == 0.0:
+            vmin = np.max([countsmapdata.data.max() * 0.02, countsmapdata.data.min()])
+        if vmax == 0.0:
+            vmax = countsmapdata.data.max()
 
         # Create custom colormaps
         cmapcustom = colormaps.get_cmap("afmhot")
