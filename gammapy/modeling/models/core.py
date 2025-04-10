@@ -161,7 +161,7 @@ class ModelBase:
         default_parameters = self.default_parameters.copy()
 
         for key in kwargs.keys():
-            if key != "covariance_data" and key not in default_parameters.names :
+            if key != "covariance_data" and key not in default_parameters.names:
                 raise NameError(f"Unknown Parameter name '{key}'")
 
         for par in default_parameters:
@@ -1265,6 +1265,7 @@ class Models(DatasetModels, collections.abc.MutableSequence):
 
     def __delitem__(self, key):
         del self._models[self.index(key)]
+        self._background_models = _check_fov_background_models(self._models)
 
     def __setitem__(self, key, model):
         from gammapy.modeling.models import (
@@ -1281,6 +1282,7 @@ class Models(DatasetModels, collections.abc.MutableSequence):
     def insert(self, idx, model):
         _check_name_unique(model, self.names)
         self._models.insert(idx, model)
+        self._background_models = _check_fov_background_models(self._models)
 
     def set_prior(self, parameters, priors):
         for parameter, prior in zip(parameters, priors):
