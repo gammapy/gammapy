@@ -676,32 +676,38 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         )
         return table
 
-    def write(self, filename, format="table", overwrite=False):
+    def write(self, filename=None, format="table", overwrite=False):
         """Write a model to disk as per the specified format.
 
-        Parameters:
-            filename : str
-                Name of output file.
-            format : {"table" or "map"}
-                If format is "table", it is serialised as a `~astropy.table.Table`.
-                If "map", then it is serialised as a `~gammapy.maps.RegionNDMap`.
-                Default is "table".
-            overwrite : bool, optional
-                Overwrite existing file. Default is False.
+        Parameters
+        ----------
+        filename : str, optional
+            Name of output file. By default, the template model will be saved
+            with the `LightCurveTemplateTemporalModel.filename` attribute.
+            If `filename` is provided, this attribute will be used.
+        format : {"table" or "map"}
+            If format is "table", it is serialised as a `~astropy.table.Table`.
+            If "map", then it is serialised as a `~gammapy.maps.RegionNDMap`.
+            Default is "table".
+        overwrite : bool, optional
+            Overwrite existing file. Default is False.
         """
+        if filename is not None:
+            self.filename = filename
+
         if self.filename is None:
             raise IOError("Missing filename")
 
         if format == "table":
             table = self.to_table()
-            table.write(filename, overwrite=overwrite)
+            table.write(self.filename, overwrite=overwrite)
         elif format == "map":
             # RegionNDMap.from_hdulist does not update the header
             hdulist = self.map.to_hdulist()
             hdulist["SKYMAP_BANDS"].header.update(
                 time_ref_to_dict(self.reference_time, scale=self.scale)
             )
-            hdulist.writeto(filename, overwrite=overwrite)
+            hdulist.writeto(self.filename, overwrite=overwrite)
         else:
             raise ValueError("Not a valid format, choose from ['map', 'table']")
 
@@ -993,6 +999,11 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         self.table = self._normalise_table(table)
         if filename is not None:
             filename = str(make_path(filename))
+        if filename is None:
+            log.warning(
+                "The filename is not defined. Therefore, the model will not be serialised correctly. "
+                'To set the filename, the "template_model.filename" attribute can be used.'
+            )
         self.filename = filename
         super().__init__(**kwargs)
 
