@@ -167,61 +167,60 @@ class SpectralModel(ModelBase):
     def __rsub__(self, model):
         return self.__sub__(model)
 
-    def _propagate_error(self, epsilon, fct, **kwargs):
-        """Evaluate error for a given function with uncertainty propagation.
+    def _samples(self, fct, n_samples=1000):
+        """Create SED samples from parameters and covariacne
+        using multivariate normal distribution.
 
         Parameters
         ----------
         fct : `~astropy.units.Quantity`
-            Function to estimate the error.
-        epsilon : float
-            Step size of the gradient evaluation. Given as a
-            fraction of the parameter error.
-        **kwargs : dict
-            Keyword arguments.
-
+            Function to estimate the SED.
+        n_samples : int, optional
+            Number of samples to generate. Default is 10000.
         Returns
         -------
-        f_cov : `~astropy.units.Quantity`
-            Error of the given function.
+        sed_samples : np.array
+            Array of SED samples
+
         """
-        eps = np.sqrt(np.diag(self.covariance)) * epsilon
 
-        n, f_0 = len(self.parameters), fct(**kwargs)
-        shape = (n, len(np.atleast_1d(f_0)))
-        df_dp = np.zeros(shape)
+        samples = np.random.multivariate_normal(
+            self.parameters.value, self.covariance, n_samples
+        )
+        return u.Quantity([fct(samples[k, :]) for k in range(n_samples)])
 
-        for idx, parameter in enumerate(self.parameters):
-            if parameter.frozen or eps[idx] == 0:
-                continue
+    def _get_errors(self, samples):
+        """get median value and errors from samples."""
 
-            parameter.value += eps[idx]
-            df = fct(**kwargs) - f_0
+        median = np.percentile(samples, 50, axis=0)
+        errn = median - np.percentile(samples, 16, axis=0)
+        errp = np.percentile(samples, 84, axis=0) - median
+        return median, errn, errp
 
-            df_dp[idx] = df.value / eps[idx]
-            parameter.value -= eps[idx]
-
-        f_cov = df_dp.T @ self.covariance @ df_dp
-        f_err = np.sqrt(np.diagonal(f_cov))
-        return u.Quantity([np.atleast_1d(f_0.value), f_err], unit=f_0.unit).squeeze()
-
-    def evaluate_error(self, energy, epsilon=1e-4):
-        """Evaluate spectral model with error propagation.
+    def evaluate_error(self, energy, n_samples=1000):
+        """Evaluate spectral model error from parameter distribtuion sampling.
 
         Parameters
         ----------
         energy : `~astropy.units.Quantity`
             Energy at which to evaluate.
-        epsilon : float, optional
-            Step size of the gradient evaluation. Given as a
-            fraction of the parameter error. Default is 1e-4.
+        n_samples : int, optional
+            Number of samples to generate. Default is 10000.
 
         Returns
         -------
-        dnde, dnde_error : tuple of `~astropy.units.Quantity`
+        dnde, dnde_errn , dnde_errp: tuple of `~astropy.units.Quantity`
             Tuple of flux and flux error.
+
         """
-        return self._propagate_error(epsilon=epsilon, fct=self, energy=energy)
+        m = self.copy()
+
+        def fct(values):
+            m.parameters.value = values
+            return m(energy)
+
+        samples = self._samples(fct, n_samples=n_samples)
+        return self._get_errors(samples)
 
     @property
     def pivot_energy(self):
@@ -282,16 +281,15 @@ class SpectralModel(ModelBase):
         else:
             return integrate_spectrum(self, energy_min, energy_max, **kwargs)
 
-    def integral_error(self, energy_min, energy_max, epsilon=1e-4, **kwargs):
+    def integral_error(self, energy_min, energy_max, n_samples=10000, **kwargs):
         """Evaluate the error of the integral flux of a given spectrum in a given energy range.
 
         Parameters
         ----------
         energy_min, energy_max :  `~astropy.units.Quantity`
             Lower and upper bound of integration range.
-        epsilon : float, optional
-            Step size of the gradient evaluation. Given as a
-            fraction of the parameter error. Default is 1e-4.
+        n_samples : int, optional
+            Number of samples to generate. Default is 10000.
 
 
         Returns
@@ -299,13 +297,14 @@ class SpectralModel(ModelBase):
         flux, flux_err : tuple of `~astropy.units.Quantity`
             Integral flux and flux error between energy_min and energy_max.
         """
-        return self._propagate_error(
-            epsilon=epsilon,
-            fct=self.integral,
-            energy_min=energy_min,
-            energy_max=energy_max,
-            **kwargs,
-        )
+        m = self.copy()
+
+        def fct(values):
+            m.parameters.value = values
+            return m.integral(energy_min, energy_max, **kwargs)
+
+        samples = self._samples(fct, n_samples=n_samples)
+        return self._get_errors(samples)
 
     def energy_flux(self, energy_min, energy_max, **kwargs):
         r"""Compute energy flux in given energy range.
@@ -331,16 +330,15 @@ class SpectralModel(ModelBase):
         else:
             return integrate_spectrum(f, energy_min, energy_max, **kwargs)
 
-    def energy_flux_error(self, energy_min, energy_max, epsilon=1e-4, **kwargs):
+    def energy_flux_error(self, energy_min, energy_max, n_samples=10000, **kwargs):
         """Evaluate the error of the energy flux of a given spectrum in a given energy range.
 
         Parameters
         ----------
         energy_min, energy_max :  `~astropy.units.Quantity`
             Lower and upper bound of integration range.
-        epsilon : float, optional
-            Step size of the gradient evaluation. Given as a
-            fraction of the parameter error. Default is 1e-4.
+        n_samples : int, optional
+            Number of samples to generate. Default is 10000.
 
 
         Returns
@@ -348,13 +346,15 @@ class SpectralModel(ModelBase):
         energy_flux, energy_flux_err : tuple of `~astropy.units.Quantity`
             Energy flux and energy flux error between energy_min and energy_max.
         """
-        return self._propagate_error(
-            epsilon=epsilon,
-            fct=self.energy_flux,
-            energy_min=energy_min,
-            energy_max=energy_max,
-            **kwargs,
-        )
+
+        m = self.copy()
+
+        def fct(values):
+            m.parameters.value = values
+            return m.energy_flux(energy_min, energy_max, **kwargs)
+
+        samples = self._samples(fct, n_samples=n_samples)
+        return self._get_errors(samples)
 
     def reference_fluxes(self, energy_axis):
         """Get reference fluxes for a given energy axis.
@@ -383,29 +383,35 @@ class SpectralModel(ModelBase):
 
     def _get_plot_flux(self, energy, sed_type):
         flux = RegionNDMap.create(region=None, axes=[energy])
-        flux_err = RegionNDMap.create(region=None, axes=[energy])
+        flux_errn = RegionNDMap.create(region=None, axes=[energy])
+        flux_errp = RegionNDMap.create(region=None, axes=[energy])
 
         if sed_type in ["dnde", "norm"]:
-            flux.quantity, flux_err.quantity = self.evaluate_error(energy.center)
-
-        elif sed_type == "e2dnde":
-            flux.quantity, flux_err.quantity = energy.center**2 * self.evaluate_error(
+            flux.quantity, flux_errn.quantity, flux_errp.quantity = self.evaluate_error(
                 energy.center
             )
 
+        elif sed_type == "e2dnde":
+            flux.quantity, flux_errn.quantity, flux_errp.quantity = self.evaluate_error(
+                energy.center
+            )
+            flux = scale_plot_flux(flux, energy_power=2)
+            flux_errn = scale_plot_flux(flux_errn, energy_power=2)
+            flux_errp = scale_plot_flux(flux_errp, energy_power=2)
+
         elif sed_type == "flux":
-            flux.quantity, flux_err.quantity = self.integral_error(
+            flux.quantity, flux_errn.quantity, flux_errp.quantity = self.integral_error(
                 energy.edges_min, energy.edges_max
             )
 
         elif sed_type == "eflux":
-            flux.quantity, flux_err.quantity = self.energy_flux_error(
-                energy.edges_min, energy.edges_max
+            flux.quantity, flux_errn.quantity, flux_errp.quantity = (
+                self.energy_flux_error(energy.edges_min, energy.edges_max)
             )
         else:
             raise ValueError(f"Not a valid SED type: '{sed_type}'")
 
-        return flux, flux_err
+        return flux, flux_errn, flux_errp
 
     def plot(
         self,
@@ -474,9 +480,10 @@ class SpectralModel(ModelBase):
         if ax.yaxis.units is None:
             ax.yaxis.set_units(DEFAULT_UNIT[sed_type] * energy.unit**energy_power)
 
-        flux, _ = self._get_plot_flux(sed_type=sed_type, energy=energy)
-
+        flux, _, _ = self._get_plot_flux(sed_type=sed_type, energy=energy)
+        print(flux.unit)
         flux = scale_plot_flux(flux, energy_power=energy_power)
+        print(flux.unit)
 
         with quantity_support():
             ax.plot(energy.center, flux.quantity[:, 0, 0], **kwargs)
@@ -538,7 +545,6 @@ class SpectralModel(ModelBase):
         ``n_points`` bins between the given bounds.
         """
         from gammapy.estimators.map.core import DEFAULT_UNIT
-        from gammapy.estimators import FluxMaps
 
         if self.is_norm_spectral_model:
             sed_type = "norm"
@@ -562,53 +568,11 @@ class SpectralModel(ModelBase):
         if ax.yaxis.units is None:
             ax.yaxis.set_units(DEFAULT_UNIT[sed_type] * energy.unit**energy_power)
 
-        flux, flux_err = self._get_plot_flux(sed_type=sed_type, energy=energy)
-
-        if method == "log":
-            flux_err_log = flux_err.data / flux.data
-            y_lo = flux / np.exp(flux_err_log)
-            y_hi = flux * np.exp(flux_err_log)
-            y_lo = scale_plot_flux(y_lo, energy_power).quantity[:, 0, 0]
-            y_hi = scale_plot_flux(y_hi, energy_power).quantity[:, 0, 0]
-        elif method == "lin":
-            y_lo = scale_plot_flux(flux - flux_err, energy_power).quantity[:, 0, 0]
-            y_hi = scale_plot_flux(flux + flux_err, energy_power).quantity[:, 0, 0]
-        elif method == "samples":
-            samples = np.random.multivariate_normal(
-                self.parameters.value, self.covariance, n_samples
-            )
-            f = self(energy.center)
-            spl_ax = MapAxis(range(n_samples), node_type="center", name="sample")
-            f_samples = RegionNDMap.create(region=None, axes=[energy, spl_ax])
-            f_samples.quantity = (
-                np.array(
-                    [
-                        self.evaluate(energy.center.value, *samples[k, :])
-                        for k in range(n_samples)
-                    ]
-                )
-                * f.unit
-            )
-
-            f_samples_map = FluxMaps.from_maps(
-                dict(dnde=f_samples), sed_type="dnde", reference_model=self
-            )
-            f_samples = f_samples_map[sed_type]
-
-            y_lo = RegionNDMap.create(
-                region=None,
-                axes=[energy],
-                unit=f_samples.unit,
-                data=np.percentile(f_samples, 16, axis=0),
-            )
-            y_hi = RegionNDMap.create(
-                region=None,
-                axes=[energy],
-                unit=f_samples.unit,
-                data=np.percentile(f_samples, 84, axis=0),
-            )
-            y_lo = scale_plot_flux(y_lo, energy_power).quantity[:, 0, 0]
-            y_hi = scale_plot_flux(y_hi, energy_power).quantity[:, 0, 0]
+        flux, flux_errn, flux_errp = self._get_plot_flux(
+            sed_type=sed_type, energy=energy
+        )
+        y_lo = scale_plot_flux(flux - flux_errn, energy_power).quantity[:, 0, 0]
+        y_hi = scale_plot_flux(flux + flux_errp, energy_power).quantity[:, 0, 0]
 
         with quantity_support():
             ax.fill_between(energy.center, y_lo, y_hi, **kwargs)
