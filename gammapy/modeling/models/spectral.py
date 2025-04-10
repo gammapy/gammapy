@@ -195,7 +195,10 @@ class SpectralModel(ModelBase):
         median = np.percentile(samples, 50, axis=0)
         errn = median - np.percentile(samples, 16, axis=0)
         errp = np.percentile(samples, 84, axis=0) - median
-        return median, errn, errp
+        return u.Quantity(
+            [np.atleast_1d(median), np.atleast_1d(errn), np.atleast_1d(errp)],
+            unit=samples.unit,
+        )
 
     def evaluate_error(self, energy, n_samples=1000):
         """Evaluate spectral model error from parameter distribtuion sampling.
@@ -392,12 +395,9 @@ class SpectralModel(ModelBase):
             )
 
         elif sed_type == "e2dnde":
-            flux.quantity, flux_errn.quantity, flux_errp.quantity = self.evaluate_error(
-                energy.center
+            flux.quantity, flux_errn.quantity, flux_errp.quantity = (
+                energy.center** 2 * self.evaluate_error(energy.center)
             )
-            flux = scale_plot_flux(flux, energy_power=2)
-            flux_errn = scale_plot_flux(flux_errn, energy_power=2)
-            flux_errp = scale_plot_flux(flux_errp, energy_power=2)
 
         elif sed_type == "flux":
             flux.quantity, flux_errn.quantity, flux_errp.quantity = self.integral_error(
@@ -481,9 +481,7 @@ class SpectralModel(ModelBase):
             ax.yaxis.set_units(DEFAULT_UNIT[sed_type] * energy.unit**energy_power)
 
         flux, _, _ = self._get_plot_flux(sed_type=sed_type, energy=energy)
-        print(flux.unit)
         flux = scale_plot_flux(flux, energy_power=energy_power)
-        print(flux.unit)
 
         with quantity_support():
             ax.plot(energy.center, flux.quantity[:, 0, 0], **kwargs)
