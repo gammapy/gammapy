@@ -148,7 +148,7 @@ Get set up
 ==========
 
 This section is based on the `instructions <https://ctapipe.readthedocs.io/en/latest/>`_
-for setting up ``ctapipe``.
+for setting up ``ctapipe``, a pipeline for the low-level processing of CTAO data.
 
 Firstly, fork the `gammapy repository <https://github.com/gammapy/gammapy>`_ to
 your personal GitHub. If you have not already done so, copy your public SSH key
