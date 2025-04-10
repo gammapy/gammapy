@@ -2342,7 +2342,7 @@ class MapDataset(Dataset):
         energy_axis = self._geom.axes["energy"].squash()
         return self.resample_energy_axis(energy_axis=energy_axis, name=name)
 
-    def peek(self, figsize=(11, 6.5)):
+    def peek(self, figsize=(12, 6.5)):
         """Quick-look summary plots for a given MapDataset:
         - Exposure map
         - Counts map
@@ -2424,7 +2424,7 @@ class MapDataset(Dataset):
             QuadMesh
                 The resulting QuadMesh object (useful if you need a colorbar reference).
             """
-            mesh = edisp_kernel.plot_matrix(ax=ax, add_cbar=True)
+            mesh = edisp_kernel.plot_matrix(ax=ax, add_cbar=False)
             ax.set_xscale("log")
             ax.set_yscale("log")
             ax.set_title("Energy Dispersion (at FoV center)")
@@ -2445,23 +2445,29 @@ class MapDataset(Dataset):
                 The colormap to use for plotting.
             """
             index = int(exposure_map.geom.axes["energy_true"].nbin / 2)
+
             # Dynamically scale the exposure by powers of 10 for improved readability
-            exponent = int(np.log10(exposure_map.data.mean()))
+            exp_data = exposure_map.get_image_by_idx([index])
+            vmin = exp_data.data[exp_data.data > 0].min()
+            vmax = exp_data.data[exp_data.data > 0].max()
+
+            exponent = int(np.log10(vmin))
             exp_unit = exposure_map.unit
-            exp_data = exposure_map.get_image_by_idx([index]).to_unit(
-                f"10^{exponent} {exp_unit}"
-            )
+            exp_data = exp_data.to_unit(f"10^{exponent} {exp_unit}")
             energy_center = exposure_map.geom.axes["energy_true"].center[index]
 
             exp_data.plot(
                 ax=ax,
                 cmap=cmap,
-                add_cbar=True,
                 norm=LogNorm(
-                    vmin=exp_data.data[exp_data.data > 0].min(),
-                    vmax=exp_data.data.max(),
+                    vmin=vmin * 10 ** (-exponent), vmax=vmax * 10 ** (-exponent)
                 ),
+                add_cbar=True,
+                kwargs_colorbar={
+                    "format": "%.1f" if (vmin > 0 and vmax / vmin <= 10) else "%.1e"
+                },
             )
+
             if energy_center.value < 1e-2 or energy_center.value > 1e2:
                 ax.set_title(f"Exposure map at {energy_center:.2e}")
             else:
