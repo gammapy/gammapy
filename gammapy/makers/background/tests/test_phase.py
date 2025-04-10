@@ -10,6 +10,7 @@ from gammapy.datasets import MapDataset, SpectrumDataset
 from gammapy.makers import MapDatasetMaker, PhaseBackgroundMaker, SpectrumDatasetMaker
 from gammapy.maps import MapAxis, RegionGeom, WcsGeom
 from gammapy.utils.testing import requires_data
+from gammapy.utils.deprecation import GammapyDeprecationWarning
 
 POS_CRAB = SkyCoord(83.6331, +22.0145, frame="icrs", unit="deg")
 POS_VELA = SkyCoord("08h35m20.65525s", "-45d10m35.1545s", frame="icrs")
@@ -46,7 +47,6 @@ def test_basic(phase_bkg_maker):
 
 @requires_data()
 def test_run_spectrum(observations_cta, phase_bkg_maker):
-
     maker = SpectrumDatasetMaker()
 
     e_reco = MapAxis.from_edges(np.logspace(0, 2, 5) * u.TeV, name="energy")
@@ -60,7 +60,8 @@ def test_run_spectrum(observations_cta, phase_bkg_maker):
 
     obs = observations_cta[0]
     dataset = maker.run(dataset_empty, obs)
-    dataset_on_off = phase_bkg_maker.run(dataset, obs)
+    with pytest.warns(GammapyDeprecationWarning):
+        dataset_on_off = phase_bkg_maker.run(dataset, obs)
 
     assert_allclose(dataset_on_off.acceptance, 0.1)
     assert_allclose(dataset_on_off.acceptance_off, 0.3)
@@ -71,7 +72,6 @@ def test_run_spectrum(observations_cta, phase_bkg_maker):
 
 @requires_data()
 def test_run_map(observations_cta, phase_bkg_maker):
-
     maker = MapDatasetMaker()
 
     e_reco = MapAxis.from_edges(np.logspace(0, 2, 5) * u.TeV, name="energy")
@@ -83,7 +83,8 @@ def test_run_map(observations_cta, phase_bkg_maker):
 
     obs = observations_cta[0]
     dataset = maker.run(dataset_empty, obs)
-    dataset_on_off = phase_bkg_maker.run(dataset, obs)
+    with pytest.warns(GammapyDeprecationWarning):
+        dataset_on_off = phase_bkg_maker.run(dataset, obs)
 
     assert_allclose(dataset_on_off.acceptance, 0.1)
     assert_allclose(dataset_on_off.acceptance_off, 0.3)
@@ -145,7 +146,6 @@ def test_copy_interval():
     ],
 )
 def test_make_counts(phase_bkg_maker, pars, request):
-
     maker = SpectrumDatasetMaker(
         containment_correction=False, selection=["counts", "exposure", "edisp"]
     )
@@ -166,7 +166,8 @@ def test_make_counts(phase_bkg_maker, pars, request):
     dataset_empty = SpectrumDataset.create(geom=geom, energy_axis_true=e_true)
 
     dataset = maker.run(dataset_empty, obs)
-    dataset_on_off = phase_bkg_maker.run(dataset, obs)
+    with pytest.warns(GammapyDeprecationWarning):
+        dataset_on_off = phase_bkg_maker.run(dataset, obs)
 
     assert_allclose(
         [
