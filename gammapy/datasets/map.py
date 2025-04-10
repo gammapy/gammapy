@@ -1355,6 +1355,9 @@ class MapDataset(Dataset):
 
         """
         counts, npred = self.counts.copy(), self.npred()
+        if self.mask is not None:
+            counts *= self.mask
+            npred *= self.mask
         counts_spec = counts.get_spectrum(region)
         npred_spec = npred.get_spectrum(region)
         residuals = self._compute_residuals(counts_spec, npred_spec, method)
@@ -1915,7 +1918,7 @@ class MapDataset(Dataset):
 
         Counts and background of the dataset are integrated in the given region,
         taking the safe mask into account. The exposure is averaged in the
-        region again taking the safe mask into account. The PSF and energy
+        region. The PSF and energy
         dispersion kernel are taken at the center of the region.
 
         Parameters
@@ -1932,6 +1935,34 @@ class MapDataset(Dataset):
         """
         name = make_name(name)
         kwargs = {"gti": self.gti, "name": name, "meta_table": self.meta_table}
+
+        if not self.counts.geom.is_region:
+            region_mask = (
+                self.counts.geom.to_image().pad(1, axis_name=None).region_mask(region)
+            )
+            not_fully_contained = (
+                np.any(region_mask.data[0, :])
+                | np.any(region_mask.data[-1, :])
+                | np.any(region_mask.data[:, 0])
+                | np.any(region_mask.data[:, -1])
+            )
+            if not_fully_contained:
+                raise Exception(
+                    """`to_region_map_dataset` can only be applied if the region
+                    is fully contained inside the counts geom.
+                    """
+                )
+
+        if self.mask and not self.mask.geom.is_region:
+            region_mask = self.mask.geom.to_image().region_mask(region)
+            values = np.unique(self.mask.data[:, region_mask.data], axis=1)
+            is_uniform = np.all(values, axis=1)
+            is_uniform |= np.all(values == False, axis=1)  # noqa
+            if not np.all(is_uniform):
+                raise Exception(
+                    """`to_region_map_dataset` can only be applied if the mask
+                    is spatially uniform within the region for each energy bin"""
+                )
 
         if self.mask_safe:
             kwargs["mask_safe"] = self.mask_safe.to_region_nd_map(region, func=np.any)

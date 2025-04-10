@@ -20,6 +20,28 @@ __all__ = ["Model", "Models", "DatasetModels", "ModelBase"]
 log = logging.getLogger(__name__)
 
 
+def _recursive_dict_filename_update(dict_, path):
+    """update model filename to full path if exits"""
+    for key, value in dict_.items():
+        if isinstance(value, dict):
+            _recursive_dict_filename_update(value, path)
+        elif key == "filename":
+            filename = dict_[key]
+            if (path / filename).exists():
+                dict_[key] = path / filename
+
+
+def _recursive_model_filename_update(model, path):
+    """update model filename to relative path if child of path"""
+    if hasattr(model, "filename") and path == make_path(model.filename).parent:
+        _, filename = split(model.filename)
+        model.filename = filename
+
+    if hasattr(model, "_models"):
+        for m in model._models:
+            _recursive_model_filename_update(m, path)
+
+
 def _set_link(shared_register, model):
     for param in model.parameters:
         name = param.name
@@ -512,21 +534,21 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
         """Create from dictionary."""
         from . import MODEL_REGISTRY, SkyModel
 
-        models = []
+        path = make_path(path)
 
+        models = []
         for component in data["components"]:
             model_cls = MODEL_REGISTRY.get_cls(component["type"])
+            _recursive_dict_filename_update(component, path)
             model = model_cls.from_dict(component)
+            _recursive_model_filename_update(model, path)
             models.append(model)
-
         models = cls(models)
 
         if "covariance" in data:
             filename = data["covariance"]
-            path = make_path(path)
             if not (path / filename).exists():
                 path, filename = split(filename)
-
             models.read_covariance(path, filename, format="ascii.fixed_width")
 
         shared_register = {}
@@ -571,6 +593,9 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
             When True adds a CHECKSUM entry to the file.
             Default is False.
         """
+        path = make_path(path)
+        for m in self:
+            _recursive_model_filename_update(m, path)
         _write_models(
             self,
             path,
