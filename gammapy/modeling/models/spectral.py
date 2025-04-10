@@ -538,6 +538,7 @@ class SpectralModel(ModelBase):
         ``n_points`` bins between the given bounds.
         """
         from gammapy.estimators.map.core import DEFAULT_UNIT
+        from gammapy.estimators import FluxMaps
 
         if self.is_norm_spectral_model:
             sed_type = "norm"
@@ -576,17 +577,39 @@ class SpectralModel(ModelBase):
             samples = np.random.multivariate_normal(
                 self.parameters.value, self.covariance, n_samples
             )
-            f_samples = np.array(
-                [
-                    self.evaluate(energy.center.value, *samples[k, :])
-                    for k in range(n_samples)
-                ]
+            f = self(energy.center)
+            spl_ax = MapAxis(range(n_samples), node_type="center", name="sample")
+            f_samples = RegionNDMap.create(region=None, axes=[energy, spl_ax])
+            f_samples.quantity = (
+                np.array(
+                    [
+                        self.evaluate(energy.center.value, *samples[k, :])
+                        for k in range(n_samples)
+                    ]
+                )
+                * f.unit
             )
-            f_unit = self(1.0 * energy.center.unit).unit
-            y_lo = flux.copy(data=np.percentile(f_samples, 16, axis=0), unit=f_unit)
-            y_hi = flux.copy(data=np.percentile(f_samples, 84, axis=0), unit=f_unit)
+
+            f_samples_map = FluxMaps.from_maps(
+                dict(dnde=f_samples), sed_type="dnde", reference_model=self
+            )
+            f_samples = f_samples_map[sed_type]
+
+            y_lo = RegionNDMap.create(
+                region=None,
+                axes=[energy],
+                unit=f_samples.unit,
+                data=np.percentile(f_samples, 16, axis=0),
+            )
+            y_hi = RegionNDMap.create(
+                region=None,
+                axes=[energy],
+                unit=f_samples.unit,
+                data=np.percentile(f_samples, 84, axis=0),
+            )
             y_lo = scale_plot_flux(y_lo, energy_power).quantity[:, 0, 0]
             y_hi = scale_plot_flux(y_hi, energy_power).quantity[:, 0, 0]
+
         with quantity_support():
             ax.fill_between(energy.center, y_lo, y_hi, **kwargs)
 
