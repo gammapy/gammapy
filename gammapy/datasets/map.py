@@ -2453,7 +2453,15 @@ class MapDataset(Dataset):
             )
             energy_center = exposure_map.geom.axes["energy_true"].center[index]
 
-            exp_data.plot(ax=ax, cmap=cmap, add_cbar=True)
+            exp_data.plot(
+                ax=ax,
+                cmap=cmap,
+                add_cbar=True,
+                norm=LogNorm(
+                    vmin=exp_data.data[exp_data.data > 0].min(),
+                    vmax=exp_data.data.max(),
+                ),
+            )
             if energy_center.value < 1e-2 or energy_center.value > 1e2:
                 ax.set_title(f"Exposure map at {energy_center:.2e}")
             else:
