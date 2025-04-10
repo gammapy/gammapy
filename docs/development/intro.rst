@@ -178,7 +178,7 @@ package manager, which offers higher installation speed and more reliable enviro
 In that case, use ``mamba env create -f environment-dev.yml`` to create the environment.
 
 If you are already working with the development version environment and you want
-to update it with the contents of `environment-dev.yml` run the following command:
+to update it with the contents of ``environment-dev.yml`` run the following command:
 
 .. code-block:: bash
 
