@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from collections import namedtuple
-import itertools
+from itertools import groupby, chain
 import operator
 import numpy as np
 from astropy.coordinates import Angle, SkyCoord
@@ -249,6 +249,8 @@ class ObservationTable(Table):
         **inverted** flag, in which case, the selection is applied to keep all
         elements outside the selected range.
 
+        Multiple conditions can be also used.
+
         A few examples of selection criteria are given below.
 
         Parameters
@@ -287,50 +289,93 @@ class ObservationTable(Table):
 
         >>> selection = dict(type='par_box', variable='N_TELS', value_range=[4, 4])
         >>> selected_obs_table = obs_table.select_observations(selection)
+
+        Examples for multiple conditions:
+        >>> selection_tels = dict(type='par_box', variable='N_TELS', value_range=[4, 4], operator="AND")
+        >>> selection_alt = dict(type='par_box', variable='ALT_PNT', value_range=value_range, operator="AND")
+        >>> selection_time_box = dict(type='time_box', time_range=time_range, operator="AND")
+        >>> selections = [selection_tels, selection_alt, selection_time_box]
+        >>> selected_obs_table = obs_table.select_observations(selections)
+
+        Examples for multiple, excluding conditions. Here we select observations
+        by N_TEL and TIME. If the latter case gives no observations, then the selection by ALT-PNT
+        is used. The `operator` argument can be either `AND` or `OR`, while the `condition` argument
+        can be a dictionary or a list of dictionaries. By default, `operator` is set to `AND`.
+
+        >>> selection_tels = dict(type='par_box', variable='N_TELS', value_range=[4, 4])
+        >>> selection_alt = dict(type='par_box', variable='ALT_PNT', value_range=value_range, operator="AND")
+        >>> selection_time_box = dict(type='time_box', time_range=time_range, operator="OR", condition=selection_alt)
+        >>> selections = [selection_tels, selection_time_box]
+        >>> selected_obs_table = obs_table.select_observations(selections)
+
+        >>> selection_tels = dict(type='par_box', variable='N_TELS', value_range=[4, 4])
+        >>> selection_alt = dict(type='par_box', variable='ALT_PNT', value_range=value_range, operator="AND")
+        >>> selection_time_box = dict(type='time_box', time_range=time_range, operator="OR", condition=[selection_alt, selection_tels])
+        >>> selected_obs_table = obs_table.select_observations(selection_time_box)
         """
+        # check if the selection is a dictionary or a list of dictionaries
+        # and add the `operator` key to every element.
         if isinstance(selections, list):
             for selection in selections:
                 if isinstance(selection, dict):
-                    if "condition" in selection:
+                    if "operator" in selection:
                         continue
                     else:
-                        selection["condition"] = "AND"
+                        selection["operator"] = "AND"
                     continue
                 else:
-                    ValueError(f"{selection} is not a dictionary.")
-        if isinstance(selections, dict):
-            if "condition" not in selections:
-                selections["condition"] = "AND"
+                    raise ValueError(f"{selection} is not a dictionary.")
+        elif isinstance(selections, dict):
+            if "operator" not in selections:
+                selections["operator"] = "AND"
             selections = [selections]
+        else:
+            raise ValueError(
+                f"{selections} is not a dictionary or a list of dictionaries."
+            )
 
-        selections.sort(key=operator.itemgetter("condition"))
-        groups = itertools.groupby(selections, key=operator.itemgetter("condition"))
+        # convert to list of dictionaries grouped by the `operator` key
+        selections.sort(key=operator.itemgetter("operator"))
+        groups = groupby(selections, key=operator.itemgetter("operator"))
         collected = dict((cls, list(items)) for cls, items in groups)
 
+        # apply selection with `operator='AND'`
         obs_table = self
         if "AND" in collected:
             selections = collected["AND"]
             for selection in selections:
-                selection.pop("condition")
+                selection.pop("operator")
                 obs_table = obs_table._apply_simple_selection(selection)
 
+        # apply selection with `operator='OR'`
         if "OR" in collected:
-            mutual_selections = collected["OR"][0]
-            if "other_selection" in mutual_selections:
-                or_selection = mutual_selections.pop("other_selection")
-                mutual_selections = [mutual_selections, or_selection]
-            else:
-                ValueError("Dictionary with 'OR' condition needs a 'selection' key.")
-
-            for selection in mutual_selections:
-                if "condition" in selection:
-                    selection.pop("condition")
-                obs_table_temp = obs_table.copy()
-                if len(obs_table_temp._apply_simple_selection(selection)) == 0:
-                    continue
+            # convert the collection in a list of dictionaries
+            or_selections = collected["OR"]
+            selections = []
+            for or_sel in or_selections:
+                if "condition" in or_sel:
+                    or_selection = or_sel.pop("condition")
+                    if isinstance(or_sel, dict):
+                        or_sel = [or_sel]
+                    if isinstance(or_selection, dict):
+                        or_selection = [or_selection]
+                    selections.append(list(chain.from_iterable([or_sel, or_selection])))
                 else:
-                    obs_table = obs_table._apply_simple_selection(selection)
-                    break
+                    raise ValueError(
+                        f"'OR' condition in {or_sel} needs a 'selection' key."
+                    )
+
+            # apply selections
+            for selection in selections:
+                for sel in selection:
+                    if "operator" in sel:
+                        sel.pop("operator")
+                    obs_table_temp = obs_table.copy()._apply_simple_selection(sel)
+                    if len(obs_table_temp) == 0:
+                        continue
+                    else:
+                        obs_table = obs_table._apply_simple_selection(sel)
+                        break
 
         return obs_table
 

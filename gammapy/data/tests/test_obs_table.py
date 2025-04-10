@@ -317,58 +317,95 @@ def test_select_multiple_conditions():
     random_state = np.random.RandomState(seed=0)
     obs_table = make_test_observation_table(n_obs=10, random_state=random_state)
 
+    with pytest.raises(ValueError):
+        selection_fake = "fake_key"
+        obs_table = obs_table.select_observations(selection_fake)
+
+    # test multiple conditions
     selections = []
-    variable = "ONTIME"
-    value_range = Quantity([0, 2e3], unit="s")
-    selections.append(dict(type="par_box", variable=variable, value_range=value_range))
+    variable_ontime = "ONTIME"
+    value_range_ontime = Quantity([0, 2e3], unit="s")
+    selections.append(
+        dict(type="par_box", variable=variable_ontime, value_range=value_range_ontime)
+    )
 
-    variable = "TSTART"
-    value_range = Quantity([66767872.697952315, 155072274], unit="s")
-    selections.append(dict(type="par_box", variable=variable, value_range=value_range))
+    variable_tstart = "TSTART"
+    value_range_tstart = Quantity([66767872.697952315, 155072274], unit="s")
+    selections.append(
+        dict(type="par_box", variable=variable_tstart, value_range=value_range_tstart)
+    )
 
-    variable = "ALT"
-    value_range = Angle([60.0, 70.0], "deg")
-    selection_alt = dict(type="par_box", variable=variable, value_range=value_range)
+    variable_alt = "ALT"
+    value_range_alt = Angle([60.0, 70.0], "deg")
+    selection_alt = dict(
+        type="par_box", variable=variable_alt, value_range=value_range_alt
+    )
 
-    variable = "AZ"
-    value_range = Angle([0.0, 180.0], "deg")
+    variable_az = "AZ"
+    value_range_az = Angle([0.0, 180.0], "deg")
     selections.append(
         dict(
             type="par_box",
-            variable=variable,
-            value_range=value_range,
-            condition="OR",
-            other_selection=selection_alt,
+            variable=variable_az,
+            value_range=value_range_az,
+            operator="OR",
+            condition=selection_alt,
         )
     )
 
     obs_table = obs_table.select_observations(selections)
-
     assert len(obs_table) == 3
 
+    with pytest.raises(ValueError):
+        selection_fake = "fake_key"
+        selections.append(selection_fake)
+        obs_table = obs_table.select_observations(selections)
+
+    # test a negative condition
     random_state = np.random.RandomState(seed=0)
     obs_table = make_test_observation_table(n_obs=10, random_state=random_state)
 
     selections = []
-    variable = "ALT"
-    value_range = Angle([60.0, 70.0], "deg")
-    selection_alt = dict(type="par_box", variable=variable, value_range=value_range)
-
-    variable = "AZ"
-    value_range = Angle([353, 360.0], "deg")
+    value_range_az = Angle([353, 360.0], "deg")
     selections.append(
         dict(
             type="par_box",
-            variable=variable,
-            value_range=value_range,
-            condition="OR",
-            other_selection=selection_alt,
+            variable=variable_az,
+            value_range=value_range_az,
+            operator="OR",
+            condition=selection_alt,
         )
     )
 
     obs_table = obs_table.select_observations(selections)
-
     assert len(obs_table) == 6
+
+    # test a double negative condition
+    random_state = np.random.RandomState(seed=0)
+    obs_table = make_test_observation_table(n_obs=10, random_state=random_state)
+
+    selection_tstart = dict(
+        type="par_box", variable=variable_tstart, value_range=value_range_tstart
+    )
+    selections = dict(
+        type="par_box",
+        variable=variable_az,
+        value_range=value_range_az,
+        operator="OR",
+        condition=[selection_alt, selection_tstart],
+    )
+
+    obs_table = obs_table.select_observations(selections)
+    assert len(obs_table) == 6
+
+    with pytest.raises(ValueError):
+        selections = dict(
+            type="par_box",
+            variable=variable_az,
+            value_range=Angle([353, 360.0], "deg"),
+            operator="OR",
+        )
+        obs_table = obs_table.select_observations(selections)
 
 
 @requires_data()
