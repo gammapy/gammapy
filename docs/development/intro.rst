@@ -150,14 +150,14 @@ Get set up
 This section is based on the `instructions <https://ctapipe.readthedocs.io/en/latest/>`_
 for setting up ``ctapipe``, a pipeline for the low-level processing of CTAO data.
 
-Firstly, fork the `gammapy repository <https://github.com/gammapy/gammapy>`_ to
-your personal GitHub. If you have not already done so, copy your public SSH key
-(normally under ``$HOME/.ssh/*.pub``) to your GitHub profile by going into your
-GitHub settings and doing **SSH and GPG keys/New SSH key** and selecting **Authentication Key**
-as the key type. If you do not have a SSH key, you may create it following the instructions in
+Firstly, fork the `gammapy repository <https://github.com/gammapy/gammapy>`_ to your
+personal GitHub. If you have not already done so, copy your public SSH key (normally under
+``$HOME/.ssh/*.pub``) to your GitHub profile. This is done by going into your GitHub settings,
+selecting **SSH and GPG keys** then **New SSH key** and then choosing **Authentication Key**
+as the key type. If you do not have a SSH key, you may create it following the instructions on
 `this page <https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent>`_.
 
-Go to the location in your machine where you want to code and clone the gammapy
+Go to the location on your machine where you want to clone the gammapy
 repository from your GitHub:
 
 .. code-block:: bash
@@ -226,7 +226,7 @@ You can also do both things at once as:
 
     git checkout -b [branch-name]
 
-To *activate* your development version (branch) of Gammapy in your environment run:
+To *activate* your development version (branch) of Gammapy in your environment:
 
 .. code-block:: bash
 
