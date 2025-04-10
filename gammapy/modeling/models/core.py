@@ -131,7 +131,7 @@ def _check_fov_background_models(models):
                     bkg_model_mapping[n] = model.name
                 else:
                     raise ValueError(
-                        f"Onyl one FoVBackgroundModel per Dataset - already got one for {n}"
+                        f"Only one FoVBackgroundModel per Dataset - already got one for {n}"
                     )
     return bkg_model_mapping
 
