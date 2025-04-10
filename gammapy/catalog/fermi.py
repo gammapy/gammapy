@@ -1703,9 +1703,9 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
     def pulse_profiles(self):
         """
         The 3PC pulse profiles are provided in different energy ranges, each represented in weighted counts.
-        These profiles are stored in a dictionary of `~gammapy.maps.RegionNDMap` objects, one per energy bin.
+        These profiles are stored in a `~gammapy.maps.Maps` of `~gammapy.maps.RegionNDMap`, one per energy bin.
 
-        The dictionary keys correspond to specific energy ranges as follows:
+        The `~gammapy.maps.Maps` keys correspond to specific energy ranges as follows:
 
         - `GT100_WtCnt`: > 0.1 GeV
         - `50_100_WtCt`: 0.05 – 0.1 GeV
@@ -1716,11 +1716,11 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
         - `10000_100000_WtCt`: 10 – 1000 GeV
 
         Each pulse profile has an associated uncertainty map, which can be accessed by
-        prepending `"Unc_"` to the corresponding key in the dictionary.
+        prepending `"Unc_"` to the corresponding key.
 
         Returns
         -------
-        maps: dict of `~gammapy.maps.Maps`
+        maps: `~gammapy.maps.Maps`
             Maps containing the pulse profile in the different energy bin.
         """
 
