@@ -2342,7 +2342,7 @@ class MapDataset(Dataset):
         energy_axis = self._geom.axes["energy"].squash()
         return self.resample_energy_axis(energy_axis=energy_axis, name=name)
 
-    def peek(self, figsize=(12, 6.5)):
+    def peek(self, figsize=(13.0, 7)):
         """Quick-look summary plots for a given MapDataset:
         - Exposure map
         - Counts map
@@ -2354,7 +2354,7 @@ class MapDataset(Dataset):
         Parameters
         ----------
         figsize : tuple
-            Size of the figure. Default is (12, 10).
+            Size of the figure. Default is (13.5, 7).
 
         """
 
@@ -2405,7 +2405,7 @@ class MapDataset(Dataset):
             npred_data.plot(
                 ax=ax, cmap=cmap, add_cbar=True, norm=LogNorm(vmin=vmin, vmax=vmax)
             )
-            ax.set_title("npred")
+            ax.set_title("Model npred")
             ax.set_box_aspect(1)
 
         def plot_edisp(ax, edisp_kernel):
@@ -2424,12 +2424,11 @@ class MapDataset(Dataset):
             QuadMesh
                 The resulting QuadMesh object (useful if you need a colorbar reference).
             """
-            mesh = edisp_kernel.plot_matrix(ax=ax, add_cbar=False)
+            edisp_kernel.plot_matrix(ax=ax, add_cbar=False)
             ax.set_xscale("log")
             ax.set_yscale("log")
             ax.set_title("Energy Dispersion (at FoV center)")
             ax.set_box_aspect(1)
-            return mesh
 
         def plot_exposure_map(ax, exposure_map, cmap):
             """
@@ -2451,28 +2450,27 @@ class MapDataset(Dataset):
             vmin = exp_data.data[exp_data.data > 0].min()
             vmax = exp_data.data[exp_data.data > 0].max()
 
-            exponent = int(np.log10(vmin))
-            exp_unit = exposure_map.unit
-            exp_data = exp_data.to_unit(f"10^{exponent} {exp_unit}")
             energy_center = exposure_map.geom.axes["energy_true"].center[index]
 
             exp_data.plot(
                 ax=ax,
                 cmap=cmap,
-                norm=LogNorm(
-                    vmin=vmin * 10 ** (-exponent), vmax=vmax * 10 ** (-exponent)
-                ),
+                norm=LogNorm(vmin=vmin, vmax=vmax),
                 add_cbar=True,
-                kwargs_colorbar={
-                    "format": "%.1f" if (vmin > 0 and vmax / vmin <= 10) else "%.1e"
-                },
             )
 
-            if energy_center.value < 1e-2 or energy_center.value > 1e2:
-                ax.set_title(f"Exposure map at {energy_center:.2e}")
-            else:
-                ax.set_title(f"Exposure map at {energy_center:.2f}")
+            unit = exposure_map.unit.to_string("latex")
+            cbar = ax.images[-1].colorbar  # Access the colorbar
+            cbar.set_label(f"Exposure [{unit}]")  # Set the formatted label
 
+            if energy_center.value < 1e-2 or energy_center.value > 1e2:
+                title = f"Exposure map at {energy_center:.1e}"
+            elif energy_center.value < 1e-1 or energy_center.value > 1e1:
+                title = f"Exposure map at {energy_center:.1f}"
+            else:
+                title = f"Exposure map at {energy_center:.2f}"
+
+            ax.set_title(title)
             ax.set_box_aspect(1)
 
         def plot_exposure_profile(ax, exposure_map):
@@ -2488,6 +2486,9 @@ class MapDataset(Dataset):
             """
 
             exposure_map.plot(ax=ax, ls="solid", marker=None, xerr=None)
+            # Dynamically format the y-axis label
+            unit = exposure_map.unit.to_string("latex")  # Convert unit to LaTeX format
+            ax.set_ylabel(f"Exposure [{unit}]")  # Set the formatted y-axis label
             ax.set_title("Exposure (at FoV center)")
             ax.set_box_aspect(1)
 
@@ -2505,7 +2506,7 @@ class MapDataset(Dataset):
             """
             psf.plot_containment_radius_vs_energy(ax=ax)
             ax.legend(fontsize="small")
-            ax.set_title("Containment radius")
+            ax.set_title("Containment radius (at FoV center)")
             ax.set_xscale("log")
             ax.set_yscale("log")
             ax.set_box_aspect(1)
@@ -2553,7 +2554,7 @@ class MapDataset(Dataset):
         cmapcustom.set_bad(color="black")
 
         # Create the figure and axes
-        fig, axs = plt.subplots(nrows=2, ncols=3, figsize=(11, 6.5), dpi=120)
+        fig, axs = plt.subplots(nrows=2, ncols=3, figsize=figsize)
 
         # --- Plot Exposure Map ---
         axs[0, 0].remove()
@@ -2581,13 +2582,13 @@ class MapDataset(Dataset):
         ax_exp_profile = axs[1, 0]
         plot_exposure_profile(ax_exp_profile, central_spectrum_dataset.exposure)
 
-        # --- Plot Energy Dispersion ---
-        ax_edisp = axs[1, 1]
-        _ = plot_edisp(ax_edisp, central_spectrum_dataset.edisp.get_edisp_kernel())
-
         # --- Plot Containment Radius ---
-        ax_containment = axs[1, 2]
+        ax_containment = axs[1, 1]
         plot_containment_radius(ax_containment, self.psf)
+
+        # --- Plot Energy Dispersion ---
+        ax_edisp = axs[1, 2]
+        plot_edisp(ax_edisp, central_spectrum_dataset.edisp.get_edisp_kernel())
 
         plt.tight_layout(w_pad=0)
 
