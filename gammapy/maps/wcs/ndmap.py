@@ -665,9 +665,8 @@ class WcsNDMap(WcsMap):
                 else:
                     cutout.data *= weights_cutout.data
 
-            data = func(cutout.data, where=mask.data, axis=(-2, -1)).astype(
-                self.data.dtype
-            )
+            *other, idx_y, idx_x = np.where(mask)
+            data = func(cutout.data[..., idx_y, idx_x], axis=(-1))
 
         return RegionNDMap(geom=geom, data=data, unit=self.unit, meta=self.meta.copy())
 
