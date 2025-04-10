@@ -491,6 +491,7 @@ class SpectralModel(ModelBase):
         sed_type="dnde",
         energy_power=0,
         n_points=100,
+        n_samples=10000,
         method="lin",
         **kwargs,
     ):
@@ -568,10 +569,24 @@ class SpectralModel(ModelBase):
             y_hi = flux * np.exp(flux_err_log)
             y_lo = scale_plot_flux(y_lo, energy_power).quantity[:, 0, 0]
             y_hi = scale_plot_flux(y_hi, energy_power).quantity[:, 0, 0]
-        else:
+        elif method == "lin":
             y_lo = scale_plot_flux(flux - flux_err, energy_power).quantity[:, 0, 0]
             y_hi = scale_plot_flux(flux + flux_err, energy_power).quantity[:, 0, 0]
-
+        elif method == "samples":
+            samples = np.random.multivariate_normal(
+                self.parameters.value, self.covariance, n_samples
+            )
+            f_samples = np.array(
+                [
+                    self.evaluate(energy.center.value, *samples[k, :])
+                    for k in range(n_samples)
+                ]
+            )
+            f_unit = self(1.0 * energy.center.unit).unit
+            y_lo = flux.copy(data=np.percentile(f_samples, 16, axis=0), unit=f_unit)
+            y_hi = flux.copy(data=np.percentile(f_samples, 84, axis=0), unit=f_unit)
+            y_lo = scale_plot_flux(y_lo, energy_power).quantity[:, 0, 0]
+            y_hi = scale_plot_flux(y_hi, energy_power).quantity[:, 0, 0]
         with quantity_support():
             ax.fill_between(energy.center, y_lo, y_hi, **kwargs)
 
