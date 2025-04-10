@@ -48,13 +48,13 @@ def test_filter_events(observation):
     region_filter = {"type": "sky_region", "opts": {"regions": region}}
 
     time_filter = Time([53090.12, 53090.13], format="mjd", scale="tt")
+
     with pytest.warns(GammapyDeprecationWarning):
         obs_filter = ObservationFilter(
             event_filters=[custom_filter, region_filter], time_filter=time_filter
         )
-
-    events = observation.events
-    filtered_events = obs_filter.filter_events(events)
+        events = observation.events
+        filtered_events = obs_filter.filter_events(events)
 
     assert np.all(
         (filtered_events.energy >= 0.8 * u.TeV)
