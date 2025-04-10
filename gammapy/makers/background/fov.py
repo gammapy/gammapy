@@ -34,9 +34,13 @@ class FoVBackgroundMaker(Maker):
         The normalization method to be applied. Default 'scale'.
     exclusion_mask : `~gammapy.maps.WcsNDMap`
         Exclusion mask.
-    spectral_model : SpectralModel or str
+    spectral_model : SpectralModel or str, optional
         Reference norm spectral model to use for the `FoVBackgroundModel`, if
         none is defined on the dataset. By default, use pl-norm.
+    spatial_model : SpatialModel or str, optional
+        Spatial model to use for the `FoVBackgroundModel`, if
+        none is defined on the dataset. By default, use None.
+        The unit of the spatial model is dropped.
     min_counts : int
         Minimum number of counts, or residuals counts if a SkyModel is set,
         required outside the exclusion region.
@@ -53,6 +57,7 @@ class FoVBackgroundMaker(Maker):
         method="scale",
         exclusion_mask=None,
         spectral_model="pl-norm",
+        spatial_model=None,
         min_counts=0,
         min_npred_background=0,
         fit=None,
@@ -65,10 +70,14 @@ class FoVBackgroundMaker(Maker):
         if isinstance(spectral_model, str):
             spectral_model = Model.create(tag=spectral_model, model_type="spectral")
 
+        if isinstance(spatial_model, str):
+            spatial_model = Model.create(tag=spatial_model, model_type="spatial")
+
         if not spectral_model.is_norm_spectral_model:
             raise ValueError("Spectral model must be a norm spectral model")
 
         self.default_spectral_model = spectral_model
+        self.default_spatial_model = spatial_model
 
         if fit is None:
             fit = Fit()
@@ -105,8 +114,16 @@ class FoVBackgroundMaker(Maker):
             Map dataset including background model.
 
         """
+
+        if self.default_spatial_model:
+            spatial_model = self.default_spatial_model.copy()
+        else:
+            spatial_model = None
+
         bkg_model = FoVBackgroundModel(
-            dataset_name=dataset.name, spectral_model=self.default_spectral_model.copy()
+            dataset_name=dataset.name,
+            spectral_model=self.default_spectral_model.copy(),
+            spatial_model=spatial_model,
         )
 
         if dataset.models is None:

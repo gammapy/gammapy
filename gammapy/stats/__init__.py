@@ -30,6 +30,7 @@ from .variability import (
     discrete_correlation,
     structure_function,
 )
+from .utils import sigma_to_ts, ts_to_sigma
 
 FIT_STATISTICS_REGISTRY = {
     "cash": CashFitStatistic,
@@ -59,4 +60,6 @@ __all__ = [
     "discrete_correlation",
     "TimmerKonig_lightcurve_simulator",
     "weighted_cash_sum_cython",
+    "sigma_to_ts",
+    "ts_to_sigma",
 ]

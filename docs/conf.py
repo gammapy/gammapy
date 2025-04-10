@@ -95,6 +95,10 @@ source_suffix = '.rst'
 # The master toctree document.
 master_doc = 'index'
 
+# Allow to add the canonical html flag on all the pages
+# This permits to precise to web search engine that the pages for the stable version are privileged
+html_baseurl = 'https://docs.gammapy.org/stable/'
+
 # The reST default role (used for this markup: `text`) to use for all
 # documents. Set to the "smart" one.
 default_role = 'obj'

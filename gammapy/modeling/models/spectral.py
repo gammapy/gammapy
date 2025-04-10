@@ -1880,6 +1880,11 @@ class TemplateNDSpectralModel(SpectralModel):
         self.meta = dict() if meta is None else meta
         if filename is not None:
             filename = str(make_path(filename))
+        if filename is None:
+            log.warning(
+                "The filename is not defined. Therefore, the model will not be serialised correctly. "
+                'To set the filename, the "template_model.filename" attribute can be used.'
+            )
         self.filename = filename
 
         parameters = []
@@ -1926,7 +1931,7 @@ class TemplateNDSpectralModel(SpectralModel):
         val = self.map.interp_by_pix(pixels, **self._interp_kwargs)
         return u.Quantity(val, self.map.unit, copy=COPY_IF_NEEDED)
 
-    def write(self, overwrite=False):
+    def write(self, overwrite=False, filename=None):
         """
         Write the map.
 
@@ -1935,7 +1940,13 @@ class TemplateNDSpectralModel(SpectralModel):
         overwrite: bool, optional
             Overwrite existing file.
             Default is False, which will raise a warning if the template file exists already.
+        filename : str, optional
+            Filename of the template model. By default, the template model
+            will be saved with the `TemplateNDSpectralModel.filename` attribute.
+            If `filename` is provided, this attribute will be used.
         """
+        if filename is not None:
+            self.filename = filename
         if self.filename is None:
             raise IOError("Missing filename")
         elif os.path.isfile(self.filename) and not overwrite:

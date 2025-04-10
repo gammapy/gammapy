@@ -1315,9 +1315,14 @@ class TemplateSpatialModel(SpatialModel):
 
         if filename is not None:
             filename = str(make_path(filename))
+        if filename is None:
+            log.warning(
+                "The filename is not defined. Therefore, the model will not be serialised correctly. "
+                'To set the filename, the "template_model.filename" attribute can be used.'
+            )
+        self.filename = filename
 
         self.normalize = normalize
-
         if normalize:
             # Normalize the diffuse map model so that it integrates to unity
             if map.geom.is_image:
@@ -1352,7 +1357,6 @@ class TemplateSpatialModel(SpatialModel):
         interp_kwargs.setdefault("values_scale", "log")
 
         self._interp_kwargs = interp_kwargs
-        self.filename = filename
         kwargs["frame"] = self.map.geom.frame
         if "lon_0" not in kwargs or (
             isinstance(kwargs["lon_0"], Parameter) and np.isnan(kwargs["lon_0"].value)
@@ -1493,7 +1497,7 @@ class TemplateSpatialModel(SpatialModel):
         return cls(m, normalize=normalize, filename=filename, **kwargs)
 
     def to_dict(self, full_output=False):
-        """Create dictionary for YAML serilisation."""
+        """Create dictionary for YAML serialisation."""
         data = super().to_dict(full_output)
         data["spatial"]["filename"] = self.filename
         data["spatial"]["normalize"] = self.normalize
@@ -1506,10 +1510,10 @@ class TemplateSpatialModel(SpatialModel):
 
         Parameters
         ----------
-        overwrite: bool, optional
+        overwrite : bool, optional
             Overwrite existing file.
             Default is False, which will raise a warning if the template file exists already.
-        filename: str, optional
+        filename : str, optional
             Filename of the template model. By default, the template model
             will be saved with the `TemplateSpatialModel.filename` attribute,
             if `filename` is provided this attribute will be updated.
@@ -1580,6 +1584,11 @@ class TemplateNDSpatialModel(SpatialModel):
         self.meta = dict() if meta is None else meta
         if filename is not None:
             filename = str(make_path(filename))
+        if filename is None:
+            log.warning(
+                "The filename is not defined. Therefore, the model will not be serialised correctly. "
+                'To set the filename, the "template_model.filename" attribute can be used.'
+            )
         self.filename = filename
 
         parameters = []
@@ -1629,22 +1638,28 @@ class TemplateNDSpatialModel(SpatialModel):
 
         return u.Quantity(val, self.map.unit, copy=COPY_IF_NEEDED)
 
-    def write(self, overwrite=False):
+    def write(self, overwrite=False, filename=None):
         """
         Write the map.
 
         Parameters
         ----------
-        overwrite: bool, optional
+        overwrite : bool, optional
             Overwrite existing file.
             Default is False, which will raise a warning if the template file exists already.
+        filename : str, optional
+            Filename of the template model. By default, the template model
+            will be saved with the `TemplateNDSpatialModel.filename` attribute.
+            If `filename` is provided, this attribute will be used.
         """
+        if filename is not None:
+            self.filename = filename
         if self.filename is None:
             raise IOError("Missing filename")
-        elif os.path.isfile(self.filename) and not overwrite:
+        if os.path.isfile(make_path(self.filename)) and not overwrite:
             log.warning("Template file already exits, and overwrite is False")
         else:
-            self.map.write(self.filename)
+            self.map.write(self.filename, overwrite=overwrite)
 
     @classmethod
     def from_dict(cls, data):
