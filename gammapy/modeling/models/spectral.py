@@ -499,7 +499,6 @@ class SpectralModel(ModelBase):
         energy_power=0,
         n_points=100,
         n_samples=10000,
-        method="lin",
         **kwargs,
     ):
         """Plot spectral model error band.
@@ -531,6 +530,8 @@ class SpectralModel(ModelBase):
             Power of energy to multiply flux axis with. Default is 0.
         n_points : int, optional
             Number of evaluation nodes. Default is 100.
+        n_samples : int, optional
+            Number of samples generated to estimate the error band. Default is 10000.
         **kwargs : dict
             Keyword arguments forwarded to `matplotlib.pyplot.fill_between`.
 
