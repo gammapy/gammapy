@@ -933,8 +933,8 @@ class PowerLawNormSpectralModel(SpectralModel):
     """
 
     tag = ["PowerLawNormSpectralModel", "pl-norm"]
-    norm = Parameter("norm", 1, unit="", interp="log")
     tilt = Parameter("tilt", 0, frozen=True)
+    norm = Parameter("norm", 1, unit="", interp="log")
     reference = Parameter("reference", "1 TeV", frozen=True)
 
     @staticmethod
@@ -1163,10 +1163,10 @@ class SmoothBrokenPowerLawSpectralModel(SpectralModel):
         :math:`\Gamma_2`. Default is 2.
     amplitude : `~astropy.units.Quantity`
         :math:`\phi_0`. Default is 1e-12 cm-2 s-1 TeV-1.
-    reference : `~astropy.units.Quantity`
-        :math:`E_0`. Default is 1 TeV.
     ebreak : `~astropy.units.Quantity`
         :math:`E_{break}`. Default is 1 TeV.
+    reference : `~astropy.units.Quantity`
+        :math:`E_0`. Default is 1 TeV.
     beta : `~astropy.units.Quantity`
         :math:`\beta`. Default is 1.
 
@@ -1471,12 +1471,6 @@ class SuperExpCutoffPowerLaw3FGLSpectralModel(SpectralModel):
 
     Parameters
     ----------
-    index_1 : `~astropy.units.Quantity`
-        :math:`\Gamma_1`.
-        Default is 1.5.
-    index_2 : `~astropy.units.Quantity`
-        :math:`\Gamma_2`.
-        Default is 2.
     amplitude : `~astropy.units.Quantity`
         :math:`\phi_0`.
         Default is 1e-12 cm-2 s-1 TeV-1.
@@ -1486,6 +1480,12 @@ class SuperExpCutoffPowerLaw3FGLSpectralModel(SpectralModel):
     ecut : `~astropy.units.Quantity`
         :math:`E_{C}`.
         Default is 10 TeV.
+    index_1 : `~astropy.units.Quantity`
+        :math:`\Gamma_1`.
+        Default is 1.5.
+    index_2 : `~astropy.units.Quantity`
+        :math:`\Gamma_2`.
+        Default is 2.
     """
 
     tag = ["SuperExpCutoffPowerLaw3FGLSpectralModel", "secpl-3fgl"]
@@ -1516,10 +1516,6 @@ class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
 
     Parameters
     ----------
-    index_1 : `~astropy.units.Quantity`
-        :math:`\Gamma_1`. Default is 1.5.
-    index_2 : `~astropy.units.Quantity`
-        :math:`\Gamma_2`. Default is 2.
     amplitude : `~astropy.units.Quantity`
         :math:`\phi_0`. Default is 1e-12 cm-2 s-1 TeV-1.
     reference : `~astropy.units.Quantity`
@@ -1528,6 +1524,10 @@ class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
         :math:`a`, given as dimensionless value but
         internally assumes unit of :math:`{\rm MeV}^{-\Gamma_2}`.
         Default is 1e-14.
+    index_1 : `~astropy.units.Quantity`
+        :math:`\Gamma_1`. Default is 1.5.
+    index_2 : `~astropy.units.Quantity`
+        :math:`\Gamma_2`. Default is 2.
     """
 
     tag = ["SuperExpCutoffPowerLaw4FGLSpectralModel", "secpl-4fgl"]
@@ -1565,16 +1565,16 @@ class SuperExpCutoffPowerLaw4FGLDR3SpectralModel(SpectralModel):
 
     Parameters
     ----------
-    index_1 : `~astropy.units.Quantity`
-        :math:`\Gamma_1`. Default is 1.5.
-    index_2 : `~astropy.units.Quantity`
-        :math:`\Gamma_2`. Default is 2.
     amplitude : `~astropy.units.Quantity`
         :math:`\phi_0`.  Default is 1e-12 cm-2 s-1 TeV-1.
     reference : `~astropy.units.Quantity`
         :math:`E_0`. Default is 1 TeV.
     expfactor : `~astropy.units.Quantity`
         :math:`a`, given as dimensionless value. Default is 1e-2.
+    index_1 : `~astropy.units.Quantity`
+        :math:`\Gamma_1`. Default is 1.5.
+    index_2 : `~astropy.units.Quantity`
+        :math:`\Gamma_2`. Default is 2.
     """
 
     tag = ["SuperExpCutoffPowerLaw4FGLDR3SpectralModel", "secpl-4fgl-dr3"]
@@ -2027,8 +2027,8 @@ class EBLAbsorptionNormSpectralModel(SpectralModel):
     """
 
     tag = ["EBLAbsorptionNormSpectralModel", "ebl-norm"]
-    alpha_norm = Parameter("alpha_norm", 1.0, frozen=True)
     redshift = Parameter("redshift", 0.1, frozen=True)
+    alpha_norm = Parameter("alpha_norm", 1.0, frozen=True)
 
     def __init__(self, energy, param, data, redshift, alpha_norm, interp_kwargs=None):
         self.filename = None
