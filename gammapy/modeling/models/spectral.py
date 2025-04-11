@@ -167,7 +167,7 @@ class SpectralModel(ModelBase):
     def __rsub__(self, model):
         return self.__sub__(model)
 
-    def _samples(self, fct, n_samples=1000):
+    def _samples(self, fct, n_samples=10000):
         """Create SED samples from parameters and covariance
         using multivariate normal distribution.
 
@@ -215,7 +215,7 @@ class SpectralModel(ModelBase):
             unit=samples.unit,
         )
 
-    def evaluate_error(self, energy, n_samples=1000):
+    def evaluate_error(self, energy, n_samples=10000):
         """Evaluate spectral model error from parameter distribtuion sampling.
 
         Parameters
