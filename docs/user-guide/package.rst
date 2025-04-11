@@ -2,8 +2,8 @@
 
 .. _package_structure:
 
-Gammapy analysis workflow and package structure
-===============================================
+Fundamental Concepts: Gammapy analysis workflow and package structure
+=====================================================================
 
 .. toctree::
     :hidden:
@@ -31,8 +31,9 @@ Analysis workflow
 :ref:`Fig. 1 <data_flow>` illustrates the standard analysis flow and the corresponding
 sub-package structure of Gammapy. Gammapy can be typically used with the configuration
 based high level analysis API or as a standard Python library by importing the functionality
-from sub-packages. The different data levels and data reduction steps and how they map to
-the Gammapy API are explained in more detail in the following.
+from sub-packages. Using data distributed following the `Gamma Astro Data Formats`_, the different data levels
+and data reduction steps and how they map to the Gammapy API are explained in more detail in
+the following.
 
 .. _data_flow:
 

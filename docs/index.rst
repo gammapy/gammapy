@@ -30,88 +30,124 @@ but can also be used to analyse data from existing imaging atmospheric Cherenkov
 (IACTs), such as `H.E.S.S.`_, `MAGIC`_ and `VERITAS`_. It also provides some support
 for `Fermi-LAT`_ and `HAWC`_ data analysis.
 
+
 .. grid:: 1 2 2 2
-    :gutter: 2
-    :class-container: sd-text-center
+   :gutter: 2
 
-    .. grid-item-card:: Getting started
-        :img-top: _static/index_getting_started.svg
-        :class-card: intro-card
-        :columns: 12 6 6 6
-        :shadow: md
+   .. grid-item-card::
+      :text-align: center
+      :columns: 12 6 6 6
+      :shadow: md
 
-        New to *Gammapy*? Check out the getting started documents. They contain information
-        on how to install and start using *Gammapy* on your local desktop computer.
+      :octicon:`rocket;4em`
 
-        +++
+      **Getting started**
 
-        .. button-ref:: getting-started
-            :ref-type: ref
-            :click-parent:
-            :color: secondary
-            :expand:
+      New to *Gammapy*? Check out the getting started documents. They contain information
+      on how to install and start using *Gammapy* on your local desktop computer.
 
-            To the quickstart docs
+      +++
 
-    .. grid-item-card:: User guide
-        :img-top: _static/index_user_guide.svg
-        :class-card: intro-card
-        :columns: 12 6 6 6
-        :shadow: md
+      .. button-ref:: getting-started
+         :ref-type: ref
+         :click-parent:
+         :color: secondary
+         :expand:
 
-        The user guide provide in-depth information on the
-        key concepts of Gammapy with useful background information and explanation,
-        as well as tutorials in the form of Jupyter notebooks.
+         To the quickstart docs
 
-        +++
+   .. grid-item-card::
+      :text-align: center
+      :columns: 12 6 6 6
+      :shadow: md
 
-        .. button-ref:: user_guide
-            :ref-type: ref
-            :click-parent:
-            :color: secondary
-            :expand:
+      :octicon:`book;4em`
 
-            To the user guide
+      **User guide**
 
-    .. grid-item-card:: API reference
-        :img-top: _static/index_api.svg
-        :class-card: intro-card
-        :columns: 12 6 6 6
-        :shadow: md
+      The user guide provides in-depth information on the
+      key concepts of *Gammapy* with useful background information and explanation,
+      as well as tutorials in the form of Jupyter notebooks.
 
-        The reference guide contains a detailed description of
-        the Gammapy API. The reference describes how the methods work and which parameters can
-        be used. It assumes that you have an understanding of the key concepts.
+      +++
 
-        +++
+      .. button-ref:: user_guide
+         :ref-type: ref
+         :click-parent:
+         :color: secondary
+         :expand:
 
-        .. button-ref:: api-ref
-            :ref-type: ref
-            :click-parent:
-            :color: secondary
-            :expand:
+         To the user guide
 
-            To the reference guide
+   .. grid-item-card::
+      :text-align: center
+      :columns: 12 12 12 12
+      :shadow: md
 
-    .. grid-item-card:: Developer guide
-        :img-top: _static/index_contribute.svg
-        :class-card: intro-card
-        :columns: 12 6 6 6
-        :shadow: md
+      :octicon:`comment-discussion;4em`
 
-        Saw a typo in the documentation? Want to improve
-        existing functionalities? The contributing guidelines will guide
-        you through the process of improving Gammapy.
+      **Community & support**
 
-        +++
+      Need help? Want to connect with other users and developers?
 
-        .. button-ref:: dev_intro
-            :ref-type: ref
-            :click-parent:
-            :color: secondary
-            :expand:
+      +++
 
-            To the developer guide
+      .. button-link:: https://gammapy.slack.com/join/signup#/domain-signup
+         :color: secondary
+
+         Join the chat on Slack
+
+      .. button-link:: https://github.com/gammapy/gammapy/issues
+         :color: secondary
+
+         Report an issue
+
+   .. grid-item-card::
+      :text-align: center
+      :columns: 12 6 6 6
+      :shadow: md
+
+      :octicon:`database;4em`
+
+      **API reference**
+
+      The reference guide contains a detailed description of
+      the *Gammapy* API. The reference describes how the methods work and which parameters can
+      be used. It assumes that you have an understanding of the key concepts.
+
+      +++
+
+      .. button-ref:: api-ref
+         :ref-type: ref
+         :click-parent:
+         :color: secondary
+         :expand:
+
+         To the reference guide
+
+   .. grid-item-card::
+      :text-align: center
+      :columns: 12 6 6 6
+      :shadow: md
+
+      :octicon:`tools;4em`
+
+      **Developer guide**
+
+      Saw a typo in the documentation? Want to improve
+      existing functionalities? The contributing guidelines will guide
+      you through the process of improving *Gammapy*.
+
+      +++
+
+      .. button-ref:: dev_intro
+         :ref-type: ref
+         :click-parent:
+         :color: secondary
+         :expand:
+
+         To the developer guide
+
 
 
 .. toctree::
