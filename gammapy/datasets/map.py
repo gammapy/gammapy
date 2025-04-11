@@ -2346,7 +2346,7 @@ class MapDataset(Dataset):
         """Quick-look summary plots for a given MapDataset:
         - Exposure map
         - Counts map
-        - Npred map
+        - Predicted counts map (Npred)
         - Exposure profile
         - Energy dispersion matrix
         - PSF containment radius
