@@ -112,13 +112,11 @@ class FluxProfileEstimator(FluxPointsEstimator):
 
         self.spectral_model = spectral_model
 
-        if "reoptimize" in kwargs:
-            if kwargs["reoptimize"] is True:
-                raise ValueError(
-                    f"reoptimize=True is not available for {self}. Set to `False` instead."
-                )
-        else:
-            kwargs["reoptimize"] = False
+        reoptimize = kwargs.get("reoptimize", False)
+        if reoptimize is True:
+            raise ValueError(
+                f"reoptimize=True is not available for {self}. Set to `False` instead."
+            )
         super().__init__(**kwargs)
 
     @property
