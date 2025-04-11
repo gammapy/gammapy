@@ -17,6 +17,7 @@ position.
 # %matplotlib inline
 import matplotlib.pyplot as plt
 from astropy.coordinates import SkyCoord
+from astropy import units as u
 from gammapy.data import DataStore
 from gammapy.maps import MapAxis
 from gammapy.makers.utils import make_theta_squared_table
@@ -69,3 +70,35 @@ theta2_table = make_theta_squared_table(
 plt.figure(figsize=(10, 5))
 plot_theta_squared_table(theta2_table)
 plt.show()
+
+
+######################################################################
+# Making a theta2 plot for a given energy range
+# ---------------------------------------------
+#
+# with the function `make_theta_squared_table`, one can also select a fixed energy range.
+#
+
+theta2_table_en = make_theta_squared_table(
+    observations=observations,
+    position=position,
+    theta_squared_axis=theta2_axis,
+    energy_edges=[1.2, 11] * u.TeV,
+)
+plt.figure(figsize=(10, 5))
+plot_theta_squared_table(theta2_table_en)
+plt.show()
+
+
+######################################################################
+# Statistical significance of a detection
+# ---------------------------------------
+#
+# To get the significance of a signal, the usual method consists on using the reflected background method
+# (see the maker tutorial: :doc:`/user-guide/makers/reflected`) to compute the WStat statistics
+# (see :ref:`wstat`, :doc:`/user-guide/stats/fit_statistics`). This is the well-known method of Li&Ma [LiMa1983]_
+# using ON and OFF regions.
+# The following tutorials are showing how to get an excess significance:
+#  * :doc:`/tutorials/analysis-1d/spectral_analysis`
+#  * :doc:`/tutorials/analysis-1d/extended_source_spectral_analysis.html
+#
