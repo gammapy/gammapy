@@ -587,7 +587,7 @@ class MapDataset(Dataset):
     @property
     def background_model(self):
         if self.models and self.name in self.models.background_models.keys():
-                return self.models[self.models.background_models[self.name]]
+            return self.models[self.models.background_models[self.name]]
 
     def __str__(self):
         str_ = f"{self.__class__.__name__}\n"
