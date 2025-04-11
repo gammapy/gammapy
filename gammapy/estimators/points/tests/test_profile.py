@@ -91,6 +91,22 @@ def test_profile_content():
     assert_allclose(ul, [111.32, 111.32], atol=1e-2)
 
 
+def test_profile_optimization():
+    mapdataset_onoff = get_simple_dataset_on_off()
+    wcs = mapdataset_onoff.counts.geom.wcs
+    boxes = make_horizontal_boxes(wcs)
+
+    with pytest.raises(ValueError):
+        FluxProfileEstimator(
+            regions=boxes,
+            energy_edges=[0.1, 1, 10] * u.TeV,
+            selection_optional="all",
+            n_sigma=1,
+            n_sigma_ul=3,
+            reoptimize=True,
+        )
+
+
 def test_radial_profile():
     dataset = get_simple_dataset_on_off()
     geom = dataset.counts.geom
