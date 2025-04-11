@@ -242,15 +242,18 @@ Every time that you want to ``push`` your local branch to your GitHub repository
 
     git push origin [branch-name]
 
-Download the Gammapy datasets and declare the corresponding bash environment variable:
+Download the Gammapy datasets and set the corresponding environment variable inside
+the conda environment:
 
 .. code-block:: bash
 
-    gammapy download datasets --out GAMMAPY_DATA
-    export GAMMAPY_DATA=$PWD/GAMMAPY_DATA/dev
+    gammapy download datasets --out gammapy-datasets
+    conda env config vars set GAMMAPY_DATA=$PWD/gammapy-datasets/dev
+    conda activate gammapy-dev
 
-You may include the line ``export GAMMAPY_DATA=$PWD/GAMMAPY_DATA/dev`` to your ``$HOME/.bashrc``
-or ``$HOME/.bash_profile``, so that the variable is available in every terminal session.
+Alternatively, you may include the line ``export GAMMAPY_DATA=$PWD/gammapy-datasets/dev``
+to your ``$HOME/.bashrc`` or ``$HOME/.bash_profile``, so that the variable is available
+in every terminal session, independent from the active conda environment.
 
 We adhere to the PEP8 coding style. To enforce this, setup the
 `pre-commit hook <https://pre-commit.com/>`_:
@@ -318,8 +321,6 @@ The codestyle can be checked using the command:
     tox -e codestyle
 
 Which will run the tool `flake8` to check for code style issues.
-
-
 
 
 ..
