@@ -614,7 +614,7 @@ class SpectralModel(ModelBase):
         f2 = self(energy * (1 + epsilon))
         return np.log(f1 / f2) / np.log(1 + epsilon)
 
-    def spectral_index_error(self, energy, epsilon=1e-5):
+    def spectral_index_error(self, energy, epsilon=1e-5, n_samples=10000):
         """Evaluate the error on spectral index at the given energy.
 
         Parameters
@@ -624,15 +624,23 @@ class SpectralModel(ModelBase):
         epsilon : float, optional
             Fractional energy increment to use for determining the spectral index.
             Default is 1e-5.
+        n_samples : int, optional
+            Number of samples to generate. Default is 10000.
 
         Returns
         -------
         index, index_error : tuple of float
             Estimated spectral index and its error.
         """
-        return self._propagate_error(
-            epsilon=epsilon, fct=self.spectral_index, energy=energy
-        )
+
+        m = self.copy()
+
+        def fct(values):
+            m.parameters.value = values
+            return m.spectral_index(energy, epsilon=1e-5)
+
+        samples = self._samples(fct, n_samples=n_samples)
+        return self._get_errors(samples)
 
     def inverse(self, value, energy_min=0.1 * u.TeV, energy_max=100 * u.TeV):
         """Return energy for a given function value of the spectral model.
