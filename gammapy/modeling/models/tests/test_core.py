@@ -357,6 +357,6 @@ def test_two_fov_bkg_models_single_dataset():
     fov2 = FoVBackgroundModel(dataset_name="ds1", name="ds1-2")
     with pytest.raises(
         ValueError,
-        match="Only one FoVBackgroundModel per Dataset - already got one for ds1",
+        match="Only one FoVBackgroundModel per Dataset is permitted - already got one for ds1",
     ):
         Models([fov1, fov2])
