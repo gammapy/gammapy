@@ -374,11 +374,11 @@ class EventList:
         Parameters
         ----------
         parameter : str
-            Column name to filter on
+            Column name to filter on.
         values : tuple, list or `~numpy.ndarray`
             Value(s) for the parameter to be selected on.
         is_range : `bool`, optional
-            Treat as numerical range [min,max). Default is True
+            Treat as numerical range (min,max). Default is True.
 
         Returns
         -------
@@ -396,7 +396,6 @@ class EventList:
         >>> event_list_zd = event_list.select_parameter(parameter='ZENITH_ANGLE', values=zd)
         >>> print(len(event_list_zd.table))
         123944
-
         >>> # Select event list through the run ID
         >>> event_list_id = event_list.select_parameter(parameter='RUN_ID', values=[239557414, 239559565, 459941302], is_range=False)
         >>> print(len(event_list_id.table))
