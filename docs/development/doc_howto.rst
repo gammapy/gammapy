@@ -300,7 +300,7 @@ Documentation guidelines
 
 Like almost all Python projects, the Gammapy documentation is written in a format called
 `restructured text (RST)`_ and built using `Sphinx`_.
-We mostly follow the :ref:`Astropy documentation guidelines <astropy:documentation-guidelines>`,
+We mostly follow the `Astropy documentation guidelines <https://docs.astropy.org/en/latest/development/docguide.html>`,
 which are based on the `Numpy docstring standard`_,
 which is what most scientific Python packages use.
 
