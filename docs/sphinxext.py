@@ -59,7 +59,8 @@ TUTORIAL_SORT_DICT = {
         "priors.py": 2,
         "model_management.py": 10,
         "fitting.py": 11,
-        "estimators.py": 12,
+        "nested_sampling_Crab.py": 12,
+        "estimators.py": 13,
         "catalog.py": 8,
         "astro_dark_matter.py": 3,
     # scripts
