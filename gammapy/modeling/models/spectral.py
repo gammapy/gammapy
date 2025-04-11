@@ -9,6 +9,7 @@ from pathlib import Path
 import numpy as np
 import scipy.optimize
 import scipy.special
+import scipy.stats as stats
 import astropy.units as u
 from astropy import constants as const
 from astropy.table import Table
@@ -190,16 +191,15 @@ class SpectralModel(ModelBase):
         )
         return u.Quantity([fct(samples[k, :]) for k in range(n_samples)])
 
-    def _get_errors(self, samples, fraction=0.68):
+    def _get_errors(self, samples, n_sigma=1):
         """Compute median, negative, and positive errors from samples of SED.
 
         Parameters
         ----------
         sed_samples : `numpy.array`
             Array of SED samples (where samples are along axis zero).
-        fraction : float, optional
-            Containement fraction of the distribution used to compute the errors.
-            Default is 0.68.
+        n_sigma : int
+            Number of sigma to use for asymmetric error computation. Default is 1.
 
         Returns
         -------
@@ -207,9 +207,11 @@ class SpectralModel(ModelBase):
             Median, negative, and positive errors
 
         """
+        cdf = stats.norm.cdf
+
         median = np.percentile(samples, 50, axis=0)
-        errn = median - np.percentile(samples, 50 - 100 * fraction / 2, axis=0)
-        errp = np.percentile(samples, 50 + 100 * fraction / 2, axis=0) - median
+        errn = median - np.percentile(samples, 100 * cdf(-n_sigma), axis=0)
+        errp = np.percentile(samples, 100 * cdf(n_sigma), axis=0) - median
         return u.Quantity(
             [np.atleast_1d(median), np.atleast_1d(errn), np.atleast_1d(errp)],
             unit=samples.unit,
