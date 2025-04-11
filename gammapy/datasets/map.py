@@ -2358,7 +2358,7 @@ class MapDataset(Dataset):
 
         """
 
-        def plot_counts(ax, counts_data, cmap, vmin, vmax, title):
+        def plot_counts(ax, counts_data, cmap, vmin, vmax, title="Counts map"):
             counts_data.plot(
                 ax=ax,
                 cmap=cmap,
@@ -2366,7 +2366,7 @@ class MapDataset(Dataset):
                 interpolation="bilinear",
                 norm=LogNorm(vmin=vmin, vmax=vmax),
             )
-            ax.set_title("Counts")
+            ax.set_title(title)
             ax.set_box_aspect(1)
 
         def plot_edisp(ax, edisp_kernel):
