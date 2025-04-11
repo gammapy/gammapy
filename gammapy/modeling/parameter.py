@@ -350,6 +350,10 @@ class Parameter:
         self.value = val.value
         self.unit = val.unit
 
+    @property
+    def _step(self):
+        return self.error if self.error > 0.0 else np.abs(self.value)
+
     # TODO: possibly allow to set this independently
     @property
     def conf_min(self):
@@ -360,7 +364,7 @@ class Parameter:
         if not np.isnan(self.min):
             return self.min
         else:
-            return self.scan_min
+            return self.value - self._step * self.scan_n_sigma
 
     # TODO: possibly allow to set this independently
     @property
@@ -372,13 +376,13 @@ class Parameter:
         if not np.isnan(self.max):
             return self.max
         else:
-            return self.scan_max
+            return self.value + self._step * self.scan_n_sigma
 
     @property
     def scan_min(self):
         """Stat scan minimum."""
         if self._scan_min is None:
-            return self.value - self.error * self.scan_n_sigma
+            return self.value - self._step * self.scan_n_sigma
 
         return self._scan_min
 
@@ -386,7 +390,7 @@ class Parameter:
     def scan_max(self):
         """Stat scan maximum."""
         if self._scan_max is None:
-            return self.value + self.error * self.scan_n_sigma
+            return self.value + self._step * self.scan_n_sigma
 
         return self._scan_max
 

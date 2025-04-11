@@ -76,7 +76,7 @@ class FluxEstimator(ParameterEstimator):
     ):
         self.source = source
 
-        self.norm = _get_default_norm(norm, interp="log")
+        self.norm = _get_default_norm(norm, scan_n_sigma=n_sigma_ul + 1, interp="log")
 
         super().__init__(
             null_value=0,
