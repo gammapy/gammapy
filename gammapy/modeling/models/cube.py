@@ -638,10 +638,10 @@ class FoVBackgroundModel(ModelBase):
     spatial_model : `~gammapy.modeling.models.SpatialModel`, Optional
         Unitless Spatial model (unit is dropped on evaluation if defined).
         Default is None.
-    covariance_data : `~numpy.ndarray`, Optional
+    covariance_data : `~numpy.ndarray`, optional
         Covariance data array.
         Default is None.
-    name : str, Optional
+    name : str, optional
         Name of the created object.
         Default is None and the name is generated automatically.
     """
