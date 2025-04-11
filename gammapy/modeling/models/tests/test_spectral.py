@@ -423,6 +423,17 @@ def test_models(spectrum):
     assert_quantity_allclose(val[0], spectrum["val_at_2TeV"])
 
 
+def test_evaluate():
+    for m in TEST_MODELS:
+        model = m["model"]
+        energies = [1e-12, 1e-6, 1e-2, 1, 1e2, 1e4] * u.TeV
+        parameters = model.parameters
+        par_list = [p.quantity for p in parameters]
+        result_eval = model.evaluate(energies, *par_list)
+        result_call = model(energies)
+        assert (result_eval == result_call).all()
+
+
 def test_model_unit():
     pwl = PowerLawSpectralModel()
     value = pwl(500 * u.MeV)
