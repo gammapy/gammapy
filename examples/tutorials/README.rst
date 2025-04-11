@@ -6,11 +6,9 @@
 Tutorials
 =========
 
-**Notice :** it is
-advised to first read :ref:`package_structure` of the User Guide before using the
-tutorials.
+.. note::
 
-.. note:: For beginners
+    **For beginners**:
 
     * It is **strongly** advised to first read :ref:`package_structure` of the User Guide before using the
       tutorials.
