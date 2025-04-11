@@ -41,12 +41,12 @@ class FoVBackgroundMaker(Maker):
         Spatial model to use for the `~gammapy.modeling.models.FoVBackgroundModel`, if
         none is defined on the dataset. Default is None.
         The unit of the spatial model is dropped.
-    min_counts : int
-        Minimum number of counts, or residuals counts if a SkyModel is set,
-        required outside the exclusion region.
-    min_npred_background : float
+    min_counts : int, optional
+        Minimum number of counts, or residuals counts if a `~gammapy.modeling.models.SkyModel`
+        is set, required outside the exclusion region. Default is 0.
+    min_npred_background : float, optional
         Minimum number of predicted background counts required outside the
-        exclusion region.
+        exclusion region. Default is 0.
     """
 
     tag = "FoVBackgroundMaker"
