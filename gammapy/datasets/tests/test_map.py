@@ -796,12 +796,12 @@ def test_map_fit(sky_model, geom, geom_etrue):
     assert_allclose(pars["amplitude"].error, 4.216e-13, rtol=1e-2)
 
     # background norm 1
-    assert_allclose(pars[8].value, 0.5, rtol=1e-2)
-    assert_allclose(pars[8].error, 0.015811, rtol=1e-2)
+    assert_allclose(pars[9].value, 0.5, rtol=1e-2)
+    assert_allclose(pars[9].error, 0.015811, rtol=1e-2)
 
     # background norm 2
-    assert_allclose(pars[11].value, 1, rtol=1e-2)
-    assert_allclose(pars[11].error, 0.02147, rtol=1e-2)
+    assert_allclose(pars[12].value, 1, rtol=1e-2)
+    assert_allclose(pars[12].error, 0.02147, rtol=1e-2)
 
     # test mask_safe evaluation
     dataset_1.mask_safe = geom.energy_mask(energy_min=1 * u.TeV)
