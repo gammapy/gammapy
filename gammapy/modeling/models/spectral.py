@@ -168,7 +168,7 @@ class SpectralModel(ModelBase):
         return self.__sub__(model)
 
     def _samples(self, fct, n_samples=1000):
-        """Create SED samples from parameters and covariacne
+        """Create SED samples from parameters and covariance
         using multivariate normal distribution.
 
         Parameters
@@ -177,6 +177,7 @@ class SpectralModel(ModelBase):
             Function to estimate the SED.
         n_samples : int, optional
             Number of samples to generate. Default is 10000.
+
         Returns
         -------
         sed_samples : np.array
@@ -230,7 +231,8 @@ class SpectralModel(ModelBase):
         Returns
         -------
         dnde, dnde_errn , dnde_errp: tuple of `~astropy.units.Quantity`
-            Tuple of flux and flux error.
+            MMedian, negative, and positive errors
+            on the differential flux at the given energy.
 
         """
         m = self.copy()
@@ -314,8 +316,9 @@ class SpectralModel(ModelBase):
 
         Returns
         -------
-        flux, flux_err : tuple of `~astropy.units.Quantity`
-            Integral flux and flux error between energy_min and energy_max.
+        flux, flux_errn, flux_errp : tuple of `~astropy.units.Quantity`
+            Median, negative, and positive errors
+            on the integral flux between energy_min and energy_max.
         """
         m = self.copy()
 
@@ -363,8 +366,9 @@ class SpectralModel(ModelBase):
 
         Returns
         -------
-        energy_flux, energy_flux_err : tuple of `~astropy.units.Quantity`
-            Energy flux and energy flux error between energy_min and energy_max.
+        energy_flux, energy_flux_errn, energy_flux_errp : tuple of `~astropy.units.Quantity`
+            Median, negative, and positive errors on the
+            energy flux between energy_min and energy_max.
         """
 
         m = self.copy()
@@ -407,27 +411,17 @@ class SpectralModel(ModelBase):
         flux_errp = RegionNDMap.create(region=None, axes=[energy])
 
         if sed_type in ["dnde", "norm"]:
-            flux.quantity, flux_errn.quantity, flux_errp.quantity = self.evaluate_error(
-                energy.center
-            )
-
+            output = self.evaluate_error(energy.center)
         elif sed_type == "e2dnde":
-            flux.quantity, flux_errn.quantity, flux_errp.quantity = (
-                energy.center**2
-            ) * self.evaluate_error(energy.center)
-
+            output = energy.center**2 * self.evaluate_error(energy.center)
         elif sed_type == "flux":
-            flux.quantity, flux_errn.quantity, flux_errp.quantity = self.integral_error(
-                energy.edges_min, energy.edges_max
-            )
-
+            output = self.integral_error(energy.edges_min, energy.edges_max)
         elif sed_type == "eflux":
-            flux.quantity, flux_errn.quantity, flux_errp.quantity = (
-                self.energy_flux_error(energy.edges_min, energy.edges_max)
-            )
+            output = self.energy_flux_error(energy.edges_min, energy.edges_max)
         else:
             raise ValueError(f"Not a valid SED type: '{sed_type}'")
 
+        flux.quantity, flux_errn.quantity, flux_errp.quantity = output
         return flux, flux_errn, flux_errp
 
     def plot(
@@ -646,8 +640,8 @@ class SpectralModel(ModelBase):
 
         Returns
         -------
-        index, index_error : tuple of float
-            Estimated spectral index and its error.
+        index, index_errn, index_errp: tuple of float
+            Median, negative, and positive error on the spectral index.
         """
 
         m = self.copy()
