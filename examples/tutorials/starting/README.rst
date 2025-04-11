@@ -9,9 +9,3 @@ The first tutorial is an overview on how to perform a standard analysis workflow
 in a configuration-driven approach, whilst the second deals with the same use-case using the low level API
 and showing what is happening *under-the-hood*. The third tutorial shows a glimpse of how to handle different
 basic data structures like event lists, source catalogs, sky maps, spectral models and flux points tables.
-
-Model Gallery
-=============
-
-:ref:`model-gallery`
-
