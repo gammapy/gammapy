@@ -112,13 +112,13 @@ def _check_name_unique(model, names):
 
 def _check_fov_background_models(models):
     """
-    Checks if maximum of one FoVBackgroundModel assigned to dataset and returns
-    dict mapping dataset_name to bkg model name
+    Checks if a maximum of one `~gammapy.modeling.models.FoVBackgroundModel` is assigned to dataset and returns.
+    a dictionnary mapping `dataset_name` to the background model name.
 
     Returns:
     --------
     bkg_model_mapping : dict
-        dict mapping dataset name to FoVBackgroundModel name
+        Dictionary mapping dataset name to `~gammapy.modeling.models.FoVBackgroundModel` name.
     """
     from . import FoVBackgroundModel
 
@@ -131,7 +131,7 @@ def _check_fov_background_models(models):
                     bkg_model_mapping[n] = model.name
                 else:
                     raise ValueError(
-                        f"Only one FoVBackgroundModel per Dataset - already got one for {n}"
+                        f"Only one FoVBackgroundModel per Dataset is permitted - already got one for {n}"
                     )
     return bkg_model_mapping
 
@@ -491,7 +491,7 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
 
     @property
     def background_models(self):
-        """Dict of datasets and associated FoVBackgroundModels"""
+        """Dictionnary mapping of dataset names with their associated `~gammapy.modeling.models.FoVBackgroundModel` names."""
         return self._background_models
 
     @classmethod
