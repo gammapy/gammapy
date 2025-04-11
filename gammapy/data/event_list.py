@@ -366,7 +366,7 @@ class EventList:
         mask = geom.contains(self.radec)
         return self.select_row_subset(mask)
 
-    @deprecated_renamed_argument(["band"], ["values"], ["2.0"])
+    @deprecated_renamed_argument("band", "values", "2.0")
     def select_parameter(self, parameter, values, is_range=True):
         """
         Event selection according to parameter values, either in a range or exact matches.
@@ -375,16 +375,15 @@ class EventList:
         ----------
         parameter : str
             Column name to filter on
-        values : str, `~numpy.nan`, tuple, list or `~numpy.ndarray`
+        values : tuple, list or `~numpy.ndarray`
             Value(s) for the parameter to be selected on.
-        is_range : `bool`
+        is_range : `bool`, optional
             Treat as numerical range [min,max). Default is True
 
         Returns
         -------
         event_list : `EventList`
             Copy of event list with selection applied.
-
 
         Examples
         --------
@@ -393,16 +392,14 @@ class EventList:
         >>> filename = "$GAMMAPY_DATA/fermi_3fhl/fermi_3fhl_events_selected.fits.gz"
         >>> event_list = EventList.read(filename)
         >>> zd = (0, 30) * u.deg
+        >>> # Select event list through the zenith angle
         >>> event_list_zd = event_list.select_parameter(parameter='ZENITH_ANGLE', values=zd)
         >>> print(len(event_list_zd.table))
         123944
 
-        >>> from astropy import units as u
-        >>> from gammapy.data import EventList
-        >>> filename = "$GAMMAPY_DATA/fermi_3fhl/fermi_3fhl_events_selected.fits.gz"
-        >>> event_list = EventList.read(filename)
-        >>> event_list_run = event_list.select_parameter(parameter='RUN_ID', values=[239557414, 239559565, 459941302], is_range=False)
-        >>> print(len(event_list_run.table))
+        >>> # Select event list through the run ID
+        >>> event_list_id = event_list.select_parameter(parameter='RUN_ID', values=[239557414, 239559565, 459941302], is_range=False)
+        >>> print(len(event_list_id.table))
         38
         """
         col_data = self.table[parameter]

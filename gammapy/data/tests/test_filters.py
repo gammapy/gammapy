@@ -49,11 +49,11 @@ def test_filter_events(observation):
 
     time_filter = Time([53090.12, 53090.13], format="mjd", scale="tt")
 
+    obs_filter = ObservationFilter(
+        event_filters=[custom_filter, region_filter], time_filter=time_filter
+    )
+    events = observation.events
     with pytest.warns(GammapyDeprecationWarning):
-        obs_filter = ObservationFilter(
-            event_filters=[custom_filter, region_filter], time_filter=time_filter
-        )
-        events = observation.events
         filtered_events = obs_filter.filter_events(events)
 
     assert np.all(
