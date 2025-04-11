@@ -2214,7 +2214,7 @@ class EBLAbsorptionNormSpectralModel(SpectralModel):
             interp_kwargs=interp_kwargs,
         )
 
-    def evaluate(self, energy, redshift, alpha_norm):
+    def evaluate(self, energy, alpha_norm, redshift):
         """Evaluate model for energy and parameter value."""
         absorption = np.clip(self._evaluate_table_model((redshift, energy)), 0, 1)
         return np.power(absorption, alpha_norm)
