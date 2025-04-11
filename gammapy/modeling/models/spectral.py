@@ -207,12 +207,9 @@ class SpectralModel(ModelBase):
             Median, negative, and positive errors
 
         """
-        qn = 50 - 100 * fraction / 2
-        qp = 50 + 100 * fraction / 2
-
         median = np.percentile(samples, 50, axis=0)
-        errn = median - np.percentile(samples, qn, axis=0)
-        errp = np.percentile(samples, qp, axis=0) - median
+        errn = median - np.percentile(samples, 50 - 100 * fraction / 2, axis=0)
+        errp = np.percentile(samples, 50 + 100 * fraction / 2, axis=0) - median
         return u.Quantity(
             [np.atleast_1d(median), np.atleast_1d(errn), np.atleast_1d(errp)],
             unit=samples.unit,
