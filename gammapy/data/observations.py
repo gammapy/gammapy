@@ -70,6 +70,7 @@ class Observation:
     _events = LazyFitsData(cache=False)
     _gti = LazyFitsData(cache=True)
     _pointing = LazyFitsData(cache=True)
+    _meta = LazyFitsData(cache=True)
 
     def __init__(
         self,
@@ -97,7 +98,7 @@ class Observation:
         self._pointing = pointing
         self._location = location  # this is part of the meta or is it data?
         self.obs_filter = obs_filter or ObservationFilter()
-        self._meta = meta
+        self._meta = meta or ObservationMetaData()
 
     def _repr_html_(self):
         try:
@@ -132,8 +133,6 @@ class Observation:
     @property
     def meta(self):
         """Return metadata container."""
-        if self._meta is None and self.events:
-            self._meta = ObservationMetaData.from_header(self.events.table.meta)
         return self._meta
 
     @property
@@ -375,8 +374,6 @@ class Observation:
     @property
     def pointing(self):
         """Get the pointing for the observation as a `~gammapy.data.FixedPointingInfo` object."""
-        if self._pointing is None:
-            self._pointing = FixedPointingInfo.from_fits_header(self.events.table.meta)
         return self._pointing
 
     def get_pointing_altaz(self, time):
@@ -571,13 +568,20 @@ class Observation:
 
         primary = fits.PrimaryHDU()
 
-        primary.header.update(self.meta.creation.to_header(format))
+        creation = self.meta.creation or CreatorMetaData()
+        primary.header.update(creation.to_header(format))
 
         hdul = fits.HDUList([primary])
 
         events = self.events
         if events is not None:
             events_hdu = events.to_table_hdu(format=format)
+
+            if self.pointing is None:
+                raise ValueError(
+                    "Cannot write Observation in gadf format: Missing pointing."
+                )
+
             events_hdu.header.update(
                 self.pointing.to_fits_header(time_ref=events.time_ref)
             )

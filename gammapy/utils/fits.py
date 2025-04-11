@@ -103,6 +103,12 @@ class HDULocation:
             from gammapy.data import FixedPointingInfo
 
             return FixedPointingInfo.read(filename, hdu=hdu)
+        elif hdu_class == "observation_metadata":
+            from gammapy.data import ObservationMetaData
+
+            with fits.open(filename) as hdulist:
+                header = hdulist[hdu].header
+                return ObservationMetaData.from_header(header)
         else:
             cls = IRF_REGISTRY.get_cls(hdu_class)
 
