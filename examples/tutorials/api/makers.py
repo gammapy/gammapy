@@ -348,6 +348,7 @@ plt.show()
 ######################################################################
 # Observation duration and effective livetime
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
 # It can often be useful to know the total number of hours spent
 # in the given field of view (without correcting for the acceptance
 # variation). This can be computed using `~gammapy.makers.utils.make_observation_time_map`
