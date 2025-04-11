@@ -8,6 +8,7 @@ from astropy.units import Quantity
 from gammapy.data import GTI, DataStore, EventList, ObservationFilter
 from gammapy.utils.regions import SphericalCircleSkyRegion
 from gammapy.utils.testing import assert_allclose, assert_time_allclose, requires_data
+from gammapy.utils.deprecation import GammapyDeprecationWarning
 
 
 def test_event_filter_types():
@@ -51,9 +52,9 @@ def test_filter_events(observation):
     obs_filter = ObservationFilter(
         event_filters=[custom_filter, region_filter], time_filter=time_filter
     )
-
     events = observation.events
-    filtered_events = obs_filter.filter_events(events)
+    with pytest.warns(GammapyDeprecationWarning):
+        filtered_events = obs_filter.filter_events(events)
 
     assert np.all(
         (filtered_events.energy >= 0.8 * u.TeV)
