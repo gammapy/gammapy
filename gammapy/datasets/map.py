@@ -586,15 +586,8 @@ class MapDataset(Dataset):
     # TODO: keep or remove?
     @property
     def background_model(self):
-        if self.models is None:
-            return None
-        elif isinstance(self.models, DatasetModels):
-            if self.name in self.models.background_models.keys():
+        if self.models and self.name in self.models.background_models.keys():
                 return self.models[self.models.background_models[self.name]]
-            else:
-                return None
-        else:
-            pass
 
     def __str__(self):
         str_ = f"{self.__class__.__name__}\n"
