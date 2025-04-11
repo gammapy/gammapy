@@ -643,7 +643,7 @@ class FoVBackgroundModel(ModelBase):
         Default is None.
     name : str, Optional
         Name of the created object.
-        Default is None.
+        Default is None and the name is generated automatically.
     """
 
     tag = ["FoVBackgroundModel", "fov-bkg"]
