@@ -189,12 +189,29 @@ class SpectralModel(ModelBase):
         )
         return u.Quantity([fct(samples[k, :]) for k in range(n_samples)])
 
-    def _get_errors(self, samples):
-        """get median value and errors from samples."""
+    def _get_errors(self, samples, fraction=0.68):
+        """Compute median, negative, and positive errors from samples of SED.
+
+        Parameters
+        ----------
+        sed_samples : `numpy.array`
+            Array of SED samples (where samples are along axis zero).
+        fraction : float, optional
+            Containement fraction of the distribution used to compute the errors.
+            Default is 0.68.
+
+        Returns
+        -------
+        median, errn , errp: tuple of `~astropy.units.Quantity`
+            Median, negative, and positive errors
+
+        """
+        qn = 50 - 100 * fraction / 2
+        qp = 50 + 100 * fraction / 2
 
         median = np.percentile(samples, 50, axis=0)
-        errn = median - np.percentile(samples, 16, axis=0)
-        errp = np.percentile(samples, 84, axis=0) - median
+        errn = median - np.percentile(samples, qn, axis=0)
+        errp = np.percentile(samples, qp, axis=0) - median
         return u.Quantity(
             [np.atleast_1d(median), np.atleast_1d(errn), np.atleast_1d(errp)],
             unit=samples.unit,
