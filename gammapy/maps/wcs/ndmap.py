@@ -664,7 +664,7 @@ class WcsNDMap(WcsMap):
                 else:
                     cutout.data *= weights_cutout.data
 
-            data = np.empty(cutout.data.shape[:-2])
+            data = np.empty(cutout.data.shape[:-2], dtype=self.data.dtype)
 
             for i, val in np.ndenumerate(data):
                 data[i] = func(cutout.data[i][mask.data[i]]).astype(self.data.dtype)
