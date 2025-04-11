@@ -2440,13 +2440,8 @@ class MapDataset(Dataset):
         central_spectrum_dataset = self.to_spectrum_dataset(central_pixel)
 
         # Determine plotting limits
-        vmin = npredmapdata.data.min()
-        vmax = npredmapdata.data.max()
-        # Fallback if the map is entirely zero
-        if vmin == 0.0:
-            vmin = np.max([countsmapdata.data.max() * 0.02, countsmapdata.data.min()])
-        if vmax == 0.0:
-            vmax = countsmapdata.data.max()
+        vmin = np.minimum(npredmapdata.data.min(), countsmapdata.data.min())
+        vmax = np.maximum(npredmapdata.data.max(), countsmapdata.data.max())
 
         # Create custom colormaps
         cmapcustom = colormaps.get_cmap("afmhot")
