@@ -302,6 +302,7 @@ binder_config = {
 }
 
 sphinx_gallery_conf = {
+    "remove_config_comments": True,
     "examples_dirs": [
         "../examples/models",
         "../examples/tutorials",
