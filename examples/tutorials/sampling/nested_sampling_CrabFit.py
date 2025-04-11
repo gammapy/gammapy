@@ -6,13 +6,14 @@ Perform a Bayesian analysis of a 1D spectrum using a nested sampling technique a
 
 
 ###############################################################################
-# # Context
-# ### Bayesian analysis
+# Context : Bayesian analysis
+# ---------------------------
 #
 # Bayesian inference uses prior knowledge, in the form of a prior distribution, in order to estimate posterior probabilities which we traditionally visualize in the form of corner plots.
 # These distributions contain much more information than a single best-fit as they reveal not only the "best model" but the (not always Gaussian) errors and correlation between parameters.
 #
-# ### Limitations of the Markov Chain Monte Carlo approach
+# Limitations of the Markov Chain Monte Carlo approach
+# ----------------------------------------------------
 #
 # A well-know approach to estimate this posterior distribution is the Markov Chain Monte Carlo (MCMC) which uses an ensemble of walkers to produce a chain of samples that after a convergence period will reach a stationary state.
 # *Once convergence* is reached the successive elements of the chain are samples of the target posterior distribution.
@@ -20,7 +21,8 @@ Perform a Bayesian analysis of a 1D spectrum using a nested sampling technique a
 # Started far from the best likelihood region, the convergence time can be long or never reached if the walkers fall in a local minima.
 # The choice of the initialization point can become critical for complex models with a high number of dimensions and the ability of these walkers to escape a local minimum or to accurately describe a complex likelihood space is not guaranteed.
 #
-# ### Nested sampling approach
+# Nested sampling approach
+# ------------------------
 #
 # To overcome these issues, the nested sampling (NS) algorithm has gained traction in physics and astronomy. It is a Monte Carlo algorithm for computing an integral of the likelihood function over the prior model parameter space introduced in 2004 by John Skilling.
 # The method performs this integral by evolving a collection of points through the parameter space (see recent reviews of [Ashton 2022](https://ui.adsabs.harvard.edu/abs/2022NRvMP...2...39A), and of [Buchner 2023](http://arxiv.org/abs/2101.09675)).
@@ -33,19 +35,22 @@ Perform a Bayesian analysis of a 1D spectrum using a nested sampling technique a
 # For more information on UltraNest see the docs here :  [UltraNest docs](https://johannesbuchner.github.io/UltraNest/)
 # And a nice visualization of the NS method : [sampling visulisation](https://johannesbuchner.github.io/UltraNest/method.html#visualisation)
 #
-# ### Reference :
+# Reference :
+# -----------
 #
 # - Ultranest docs : https://johannesbuchner.github.io/UltraNest
 # - Literature :  [Buchner 2023](http://arxiv.org/abs/2101.09675), [Ashton 2022](https://ui.adsabs.harvard.edu/abs/2022NRvMP...2...39A)
 #
 
 ###############################################################################
-# # Proposed approach
+# Proposed approach
+# -----------------
 #
 # In this example we will perform a Bayesian analysis with multiple 1D spectra of the Crab nebula data and investigate their posterior distributions.
 
 ###############################################################################
-# ## Setup
+# Setup
+# --------
 # First, we setup the analysis by performing required imports.
 """
 
