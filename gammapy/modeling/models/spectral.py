@@ -184,8 +184,8 @@ class SpectralModel(ModelBase):
             Array of SED samples
 
         """
-
-        samples = np.random.multivariate_normal(
+        rng = np.random.default_rng(seed=42)
+        samples = rng.multivariate_normal(
             self.parameters.value, self.covariance, n_samples
         )
         return u.Quantity([fct(samples[k, :]) for k in range(n_samples)])
