@@ -134,7 +134,7 @@ def test_flux_point_dataset_with_time_axis(tmp_path):
     flux_points = FluxPoints.from_table(table=table)
     flux_points_dataset = FluxPointsDataset(data=flux_points)
     temporal_model = ExpDecayTemporalModel()
-    temporal_model.t_ref.value = Time(["2010-01-01"]).mjd
+    temporal_model.t_ref.value = Time(["2010-01-01"]).mjd[0]
     temporal_model.t0.quantity = 5.0 * u.hr
     model = SkyModel(
         spectral_model=PowerLawSpectralModel(), temporal_model=temporal_model
