@@ -125,7 +125,6 @@ def _check_fov_background_models(models):
     bkg_model_mapping = {}
     for model in models:
         if isinstance(model, FoVBackgroundModel):
-            # Currently always iterating over a single element
             for n in model.datasets_names:
                 if n not in bkg_model_mapping.keys():
                     bkg_model_mapping[n] = model.name
