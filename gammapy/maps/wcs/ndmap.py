@@ -661,12 +661,13 @@ class WcsNDMap(WcsMap):
                 )
                 if weights_cutout.is_mask:
                     mask.data = np.logical_and(mask.data, weights_cutout.data)
-                    cutout.data *= weights_cutout.data
                 else:
                     cutout.data *= weights_cutout.data
 
-            *other, idx_y, idx_x = np.where(mask)
-            data = func(cutout.data[..., idx_y, idx_x], axis=(-1))
+            data = np.empty(cutout.data.shape[:-2])
+
+            for i, val in np.ndenumerate(data):
+                data[i] = func(cutout.data[i][mask.data[i]]).astype(self.data.dtype)
 
         return RegionNDMap(geom=geom, data=data, unit=self.unit, meta=self.meta.copy())
 
