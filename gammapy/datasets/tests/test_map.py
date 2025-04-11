@@ -904,12 +904,12 @@ def test_map_fit_ray(sky_model, geom, geom_etrue):
     assert_allclose(pars["amplitude"].error, 4.216e-13, rtol=1e-2)
 
     # background norm 1
-    assert_allclose(pars[8].value, 0.5, rtol=1e-2)
-    assert_allclose(pars[8].error, 0.015811, rtol=1e-2)
+    assert_allclose(pars[9].value, 0.5, rtol=1e-2)
+    assert_allclose(pars[9].error, 0.015811, rtol=1e-2)
 
     # background norm 2
-    assert_allclose(pars[11].value, 1, rtol=1e-2)
-    assert_allclose(pars[11].error, 0.02147, rtol=1e-2)
+    assert_allclose(pars[12].value, 1, rtol=1e-2)
+    assert_allclose(pars[12].error, 0.02147, rtol=1e-2)
 
     with mpl_plot_check():
         actors.plot_residuals()
