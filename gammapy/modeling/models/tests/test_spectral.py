@@ -431,7 +431,7 @@ def test_evaluate():
         par_list = [p.quantity for p in parameters]
         result_eval = model.evaluate(energies, *par_list)
         result_call = model(energies)
-        assert (result_eval == result_call).all()
+        assert_quantity_allclose(result_eval == result_call)
 
 
 def test_model_unit():
