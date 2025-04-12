@@ -356,6 +356,13 @@ def test_models_mutation(sky_model, sky_models, sky_models_2):
         mods.extend(sky_models_2)
     with pytest.raises(ValueError, match="Model names must be unique"):
         mods = sky_models + sky_models_2
+    with pytest.raises(ValueError, match="Model names must be unique"):
+        mods[1] = mods[0]
+
+    mods[1] = mods[1]
+    assert mods.names == ["source-1", "source-2", "source-3", "source-4"]
+    mods[1] = mods[1].copy(name="copy")
+    assert mods.names == ["source-1", "copy", "source-3", "source-4"]
 
 
 class TestSkyModel:
