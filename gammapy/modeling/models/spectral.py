@@ -187,7 +187,7 @@ class SpectralModel(ModelBase):
         """
         rng = np.random.default_rng(seed=42)
         samples = rng.multivariate_normal(
-            self.parameters.value, self.covariance, n_samples
+            self.parameters.value, self.covariance.data, n_samples
         )
         return u.Quantity([fct(samples[k, :]) for k in range(n_samples)])
 
@@ -215,7 +215,7 @@ class SpectralModel(ModelBase):
         return u.Quantity(
             [np.atleast_1d(median), np.atleast_1d(errn), np.atleast_1d(errp)],
             unit=samples.unit,
-        )
+        ).squeeze()
 
     def evaluate_error(self, energy, n_samples=10000):
         """Evaluate spectral model error from parameter distribtuion sampling.
@@ -260,8 +260,8 @@ class SpectralModel(ModelBase):
         def min_func(x):
             """Function to minimise."""
             x = np.exp(x)
-            dnde, dnde_error = self.evaluate_error(x * x_unit)
-            return dnde_error / dnde
+            dnde, dnde_errn, dnde_errp = self.evaluate_error(x * x_unit, n_samples=1000)
+            return np.sqrt(dnde_errn**2 + dnde_errp**2) / dnde
 
         bounds = [np.log(self.reference.value) - 3, np.log(self.reference.value) + 3]
 
@@ -406,17 +406,39 @@ class SpectralModel(ModelBase):
 
     def _get_plot_flux(self, energy, sed_type):
         flux = RegionNDMap.create(region=None, axes=[energy])
+
+        if sed_type in ["dnde", "norm"]:
+            output = self(energy.center)
+        elif sed_type == "e2dnde":
+            output = energy.center**2 * self(energy.center)
+        elif sed_type == "flux":
+            output = self.integral(energy.edges_min, energy.edges_max)
+        elif sed_type == "eflux":
+            output = self.energy_flux(energy.edges_min, energy.edges_max)
+        else:
+            raise ValueError(f"Not a valid SED type: '{sed_type}'")
+        flux.quantity = output
+        return flux
+
+    def _get_plot_flux_error(self, energy, sed_type, n_samples):
+        flux = RegionNDMap.create(region=None, axes=[energy])
         flux_errn = RegionNDMap.create(region=None, axes=[energy])
         flux_errp = RegionNDMap.create(region=None, axes=[energy])
 
         if sed_type in ["dnde", "norm"]:
-            output = self.evaluate_error(energy.center)
+            output = self.evaluate_error(energy.center, n_samples=n_samples)
         elif sed_type == "e2dnde":
-            output = energy.center**2 * self.evaluate_error(energy.center)
+            output = energy.center**2 * self.evaluate_error(
+                energy.center, n_samples=n_samples
+            )
         elif sed_type == "flux":
-            output = self.integral_error(energy.edges_min, energy.edges_max)
+            output = self.integral_error(
+                energy.edges_min, energy.edges_max, n_samples=n_samples
+            )
         elif sed_type == "eflux":
-            output = self.energy_flux_error(energy.edges_min, energy.edges_max)
+            output = self.energy_flux_error(
+                energy.edges_min, energy.edges_max, n_samples=n_samples
+            )
         else:
             raise ValueError(f"Not a valid SED type: '{sed_type}'")
 
@@ -490,7 +512,7 @@ class SpectralModel(ModelBase):
         if ax.yaxis.units is None:
             ax.yaxis.set_units(DEFAULT_UNIT[sed_type] * energy.unit**energy_power)
 
-        flux, _, _ = self._get_plot_flux(sed_type=sed_type, energy=energy)
+        flux = self._get_plot_flux(sed_type=sed_type, energy=energy)
         flux = scale_plot_flux(flux, energy_power=energy_power)
 
         with quantity_support():
@@ -577,8 +599,8 @@ class SpectralModel(ModelBase):
         if ax.yaxis.units is None:
             ax.yaxis.set_units(DEFAULT_UNIT[sed_type] * energy.unit**energy_power)
 
-        flux, flux_errn, flux_errp = self._get_plot_flux(
-            sed_type=sed_type, energy=energy
+        flux, flux_errn, flux_errp = self._get_plot_flux_error(
+            sed_type=sed_type, energy=energy, n_samples=n_samples
         )
         y_lo = scale_plot_flux(flux - flux_errn, energy_power).quantity[:, 0, 0]
         y_hi = scale_plot_flux(flux + flux_errp, energy_power).quantity[:, 0, 0]
