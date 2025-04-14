@@ -41,6 +41,7 @@
 .. _emcee: http://dan.iel.fm/emcee/current/
 .. _ctapipe: https://github.com/cta-observatory/ctapipe
 .. _click: http://click.pocoo.org/
+.. _sphinx-click: https://github.com/click-contrib/sphinx-click
 .. _pycrflux: https://github.com/akira-okumura/pycrflux
 .. _VHEObserverTools: https://github.com/kialio/VHEObserverTools
 .. _PINT: https://github.com/nanograv/PINT
