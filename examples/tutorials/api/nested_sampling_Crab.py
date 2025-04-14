@@ -122,9 +122,7 @@ from gammapy.modeling.sampler import Sampler
 # fit.
 #
 
-import os
 
-os.environ["GAMMAPY_DATA"] = "/Users/facero/Documents/Work/Program/gammapy-data/dev"
 path = "$GAMMAPY_DATA/joint-crab/spectra/hess/"
 
 datasets = Datasets()
