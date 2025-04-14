@@ -7,7 +7,7 @@ from astropy.io import fits
 from astropy.table import Table
 from regions import CircleSkyRegion, RectangleSkyRegion
 import matplotlib.pyplot as plt
-from matplotlib.colors import LogNorm, Colormap
+from matplotlib.colors import LogNorm
 import gammapy.datasets.evaluator as meval
 from gammapy.data import GTI, PointingMode
 from gammapy.irf import EDispKernelMap, EDispMap, PSFKernel, PSFMap, RecoPSFMap
@@ -2448,7 +2448,7 @@ class MapDataset(Dataset):
             vmax = countsmapdata.data.max()
 
         # Create custom colormaps
-        cmapcustom = Colormap("afmhot")
+        cmapcustom = plt.get_cmap("afmhot")
         cmapcustom.set_bad(color="black")
 
         # Create the figure and axes
