@@ -112,8 +112,14 @@ def _check_name_unique(model, names):
 
 def _check_fov_background_models(models):
     """
-    Checks if a maximum of one `~gammapy.modeling.models.FoVBackgroundModel` is assigned to dataset and returns.
-    a dictionnary mapping `dataset_name` to the background model name.
+    Checks if a maximum of one `~gammapy.modeling.models.FoVBackgroundModel` is assigned to dataset
+    and returns a dictionnary mapping `dataset_name` to the background model name.
+
+    Parameters
+    ----------
+    models : list of `~gammapy.modeling.models.ModelBase` or `~gammapy.modeling.models.DatasetModels`
+    or `~gammapy.modeling.models.Models`
+        List of Models
 
     Returns:
     --------
