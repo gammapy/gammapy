@@ -2,8 +2,7 @@
 Bayesian analysis with nested sampling
 ======================================
 
-Perform a Bayesian analysis of a 1D spectrum using a nested sampling
-technique and plotting the posterior distributions.
+Bayesian analysis with nested sampling.
 
 """
 
@@ -145,9 +144,9 @@ model = SkyModel.create(spectral_model="pl")
 
 
 ######################################################################
-# !!Priors!!: unlike a traditional fit where defining priors on the
+# **!!Priors!!: unlike a traditional fit where defining priors on the
 # parameters is optional, here it is inherent to the Bayesian approach and
-# are therefore mandatory.
+# are therefore mandatory.**
 #
 # | In this case we will set (min,max) prior that will define the
 #   boundaries in which the sampling will be performed.
@@ -293,7 +292,7 @@ from ultranest.plot import cornerplot
 cornerplot(result_full.sampler_results, plot_datapoints=True, plot_density=True)
 plt.show()
 
-# sphinx_gallery_thumbnail_number = 1
+# sphinx_gallery_thumbnail_number = 2
 
 
 ######################################################################
@@ -344,7 +343,7 @@ result_2 = sampler.run(datasets[2])
 
 
 """
-.. gp-image:: figures/tutorials/cornerplot-multiple-runs-Crab.png
+.. figure:: ../../../docs/_static/cornerplot-multiple-runs-Crab.png
 
     :scale: 100%
 
