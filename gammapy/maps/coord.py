@@ -262,10 +262,10 @@ class MapCoord:
             lon, lat, frame = skycoord_to_lonlat(self.skycoord, frame=frame)
             data = copy.deepcopy(self._data)
             if isinstance(self.lon, u.Quantity):
-                    lon = u.Quantity(lon, unit="deg", copy=COPY_IF_NEEDED)
+                lon = u.Quantity(lon, unit="deg", copy=COPY_IF_NEEDED)
 
             if isinstance(self.lat, u.Quantity):
-                    lat = u.Quantity(lat, unit="deg", copy=COPY_IF_NEEDED)
+                lat = u.Quantity(lat, unit="deg", copy=COPY_IF_NEEDED)
 
             data["lon"] = lon
             data["lat"] = lat
