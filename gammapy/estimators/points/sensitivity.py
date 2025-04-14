@@ -116,7 +116,7 @@ class SensitivityEstimator(Estimator):
     def _get_criterion(self, excess, bkg):
         is_gamma_limited = excess == self.gamma_min
         is_bkg_syst_limited = excess == bkg * self.bkg_syst_fraction
-        criterion = np.chararray(excess.shape, itemsize=12)
+        criterion = np.array(excess.shape, itemsize=12, dtype="str")
         criterion[is_gamma_limited] = "gamma"
         criterion[is_bkg_syst_limited] = "bkg"
         criterion[~np.logical_or(is_gamma_limited, is_bkg_syst_limited)] = (
