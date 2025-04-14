@@ -105,18 +105,18 @@ default_role = 'obj'
 
 # Add any Sphinx extension module names here, as strings.
 extensions = [
+    # Order for sphinx_automodapi is important
+    "sphinx.ext.autosummary",
+    "sphinx_automodapi.automodapi", # This should come after autosummary
+    "sphinx_automodapi.smart_resolver",
     "sphinx_click.ext",
     'sphinx_copybutton',
     "sphinx_design",
     "sphinx_gallery.gen_gallery",
-    "sphinx.ext.autosummary",
     "sphinx.ext.doctest",
     "sphinx.ext.intersphinx",
     "sphinx.ext.mathjax",
     'sphinx.ext.viewcode',
-    # Order for sphinx_automodapi is important
-    "sphinx_automodapi.automodapi",
-    "sphinx_automodapi.smart_resolver",
     # Allows for mapping to other documentation projects
     "sphinx.ext.intersphinx",
     # Allows for Numpy docstring format
@@ -231,8 +231,10 @@ htmlhelp_basename = f"{project}doc"
 
 html_theme_options = {
     "header_links_before_dropdown": 6,
-    "collapse_navigation": True,
+    # False = allow arrows to show for API reference
+    "collapse_navigation": False,
     "navigation_depth": 2,
+    # False = don't show "Previous" and "Next" buttons at the bottom of each page
     "show_prev_next": False,
     # links in menu
     "icon_links": [
@@ -302,6 +304,7 @@ binder_config = {
 }
 
 sphinx_gallery_conf = {
+    # Remove the sphinx comments i.e. sphinx_gallery_thumbnail_number in tutorials
     "remove_config_comments": True,
     "examples_dirs": [
         "../examples/models",
