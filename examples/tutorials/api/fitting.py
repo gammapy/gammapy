@@ -12,7 +12,7 @@ Alternatively, we could have a Bayesian approach by assigning a prior probabilit
 the parameters and compute the posterior distribution to fit the parameters. This is described in the
 :doc:`/tutorials/api/priors` tutorial.
 
-Also, alternatively, one can perform a Bayesian analysis using a nested sampling technique. This is described
+One can also perform a Bayesian analysis using a nested sampling technique. This is described
 in the :doc:`/tutorials/sampling/nested_sampling_CrabFit` tutorial.
 
 Prerequisites
