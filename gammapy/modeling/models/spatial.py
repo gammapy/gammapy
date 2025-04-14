@@ -27,7 +27,7 @@ from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.interpolation import interpolation_scale
 from gammapy.utils.regions import region_circle_to_ellipse, region_to_frame
 from gammapy.utils.scripts import make_path
-from .core import ModelBase, _build_parameters_from_dict
+from .core import ModelBase, build_parameters_from_dict
 
 __all__ = [
     "ConstantFluxSpatialModel",
@@ -1490,7 +1490,7 @@ class TemplateSpatialModel(SpatialModel):
         m = Map.read(filename)
         pars = data.get("parameters")
         if pars is not None:
-            parameters = _build_parameters_from_dict(pars, cls.default_parameters)
+            parameters = build_parameters_from_dict(pars, cls.default_parameters)
             kwargs = {par.name: par for par in parameters}
         else:
             kwargs = {}
