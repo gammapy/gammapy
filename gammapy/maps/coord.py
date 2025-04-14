@@ -220,7 +220,6 @@ class MapCoord:
         >>> lon, lat = [1, 2], [2, 3]
         >>> skycoord = SkyCoord(lon, lat, unit='deg')
         >>> energy = [1000]
-
         >>> c = MapCoord.create((lon, lat))
         >>> c = MapCoord.create((skycoord,))
         >>> c = MapCoord.create((lon, lat, energy))
