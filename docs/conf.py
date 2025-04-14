@@ -338,7 +338,8 @@ sphinx_gallery_conf = {
     "within_subsection_order": "sphinxext.TutorialExplicitOrder",
     "download_all_examples": True,
     "capture_repr": ("_repr_html_", "__repr__"),
-    "nested_sections": False,
+    # Show sidebar dropdowns for menu
+    "nested_sections": True,
     "min_reported_time": 10,
     "show_memory": False,
     "line_numbers": False,
