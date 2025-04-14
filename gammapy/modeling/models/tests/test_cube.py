@@ -1109,3 +1109,10 @@ def test_piecewise_spatial_model_background(background):
     assert isinstance(copied.spatial_model, PiecewiseNormSpatialModel)
 
     assert "Spatial model type" in copied.__str__()
+
+
+def test_naming_fov_background_model():
+    fov_default = FoVBackgroundModel(dataset_name="one", name=None)
+    assert fov_default.name == "one-bkg"
+    fov_named = FoVBackgroundModel(dataset_name="two", name="custom_name")
+    assert fov_named.name == "custom_name"

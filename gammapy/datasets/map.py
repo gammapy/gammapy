@@ -586,10 +586,8 @@ class MapDataset(Dataset):
     # TODO: keep or remove?
     @property
     def background_model(self):
-        try:
-            return self.models[f"{self.name}-bkg"]
-        except (ValueError, TypeError):
-            pass
+        if self.models and self.name in self.models.background_models.keys():
+            return self.models[self.models.background_models[self.name]]
 
     def __str__(self):
         str_ = f"{self.__class__.__name__}\n"

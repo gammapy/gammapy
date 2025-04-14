@@ -110,6 +110,36 @@ def _check_name_unique(model, names):
     return
 
 
+def _check_fov_background_models(models):
+    """
+    Checks if a maximum of one `~gammapy.modeling.models.FoVBackgroundModel` is assigned to dataset
+    and returns a dictionnary mapping `dataset_name` to the background model name.
+
+    Parameters
+    ----------
+    models : `~gammapy.modeling.models.Models`
+        List of Models
+
+    Returns:
+    --------
+    bkg_model_mapping : dict
+        Dictionary mapping dataset name to `~gammapy.modeling.models.FoVBackgroundModel` name.
+    """
+    from . import FoVBackgroundModel
+
+    bkg_model_mapping = {}
+    for model in models:
+        if isinstance(model, FoVBackgroundModel):
+            for n in model.datasets_names:
+                if n not in bkg_model_mapping.keys():
+                    bkg_model_mapping[n] = model.name
+                else:
+                    raise ValueError(
+                        f"Only one FoVBackgroundModel per Dataset is permitted - already got one for {n}"
+                    )
+    return bkg_model_mapping
+
+
 def _write_models(
     models,
     path,
@@ -430,7 +460,10 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
             _check_name_unique(model, names=unique_names)
             unique_names.append(model.name)
 
+        self._background_models = _check_fov_background_models(models)
+
         self._models = models
+
         self._covar_file = None
 
         self._covariance = Covariance(self.parameters)
@@ -459,6 +492,11 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
     def names(self):
         """List of model names."""
         return [m.name for m in self._models]
+
+    @property
+    def background_models(self):
+        """Dictionnary mapping of dataset names with their associated `~gammapy.modeling.models.FoVBackgroundModel` names."""
+        return self._background_models
 
     @classmethod
     def read(cls, filename, checksum=False):
@@ -1256,6 +1294,7 @@ class Models(DatasetModels, collections.abc.MutableSequence):
 
     def __delitem__(self, key):
         del self._models[self.index(key)]
+        self._background_models = _check_fov_background_models(self._models)
 
     def __setitem__(self, key, model):
         from gammapy.modeling.models import (
@@ -1275,6 +1314,7 @@ class Models(DatasetModels, collections.abc.MutableSequence):
     def insert(self, idx, model):
         _check_name_unique(model, self.names)
         self._models.insert(idx, model)
+        self._background_models = _check_fov_background_models(self._models)
 
     def set_prior(self, parameters, priors):
         for parameter, prior in zip(parameters, priors):
