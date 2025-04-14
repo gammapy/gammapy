@@ -62,6 +62,7 @@ dependencies:
   - setuptools_scm
   - sherpa>=4.17
   - sphinx
+  - sphinx-click
   - sphinx-gallery
   - sphinx-design
   - sphinx-copybutton
