@@ -117,8 +117,7 @@ def _check_fov_background_models(models):
 
     Parameters
     ----------
-    models : list of `~gammapy.modeling.models.ModelBase` or `~gammapy.modeling.models.DatasetModels`
-    or `~gammapy.modeling.models.Models`
+    models : `~gammapy.modeling.models.Models`
         List of Models
 
     Returns:
