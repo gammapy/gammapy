@@ -2376,14 +2376,14 @@ class MapDataset(Dataset):
             ax.set_box_aspect(1)
 
         def plot_exposure_map(ax, exposure_map, cmap):
-            index = int(exposure_map.geom.axes["energy_true"].nbin / 2)
+            index = int(exposure_map.geom.axes[0].nbin / 2)
 
             # Dynamically scale the exposure by powers of 10 for improved readability
             exp_data = exposure_map.get_image_by_idx([index])
             vmin = exp_data.data[exp_data.data > 0].min()
             vmax = exp_data.data[exp_data.data > 0].max()
 
-            energy_center = exposure_map.geom.axes["energy_true"].center[index]
+            energy_center = exposure_map.geom.axes[0].center[index]
 
             exp_data.plot(
                 ax=ax,
