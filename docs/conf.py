@@ -105,6 +105,7 @@ default_role = 'obj'
 
 # Add any Sphinx extension module names here, as strings.
 extensions = [
+    "sphinx_click.ext",
     'sphinx_copybutton',
     "sphinx_design",
     "sphinx_gallery.gen_gallery",
