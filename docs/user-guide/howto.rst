@@ -70,7 +70,7 @@ Please give feedback and suggest additions to this page!
     It can be used to obtain various quantities from your `~gammapy.data.Observations` list, such as livetime.
     The on-axis equivalent number of observation hours on the source can be calculated.
 
-    .. button-link:: ../tutorials/data/hess.html#on-axis-equivalent-livetime
+    .. button-link:: ../tutorials/api/makers.html#observation-duration-and-effective-livetime
        :color: primary
        :shadow:
 

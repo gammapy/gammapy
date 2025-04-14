@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """FoV background estimation."""
+
 import logging
 import numpy as np
 from gammapy.maps import Map, RegionGeom
@@ -33,15 +34,19 @@ class FoVBackgroundMaker(Maker):
         The normalization method to be applied. Default 'scale'.
     exclusion_mask : `~gammapy.maps.WcsNDMap`
         Exclusion mask.
-    spectral_model : SpectralModel or str
-        Reference norm spectral model to use for the `FoVBackgroundModel`, if
-        none is defined on the dataset. By default, use pl-norm.
-    min_counts : int
-        Minimum number of counts, or residuals counts if a SkyModel is set,
-        required outside the exclusion region.
-    min_npred_background : float
+    spectral_model : `~gammapy.modeling.models.SpectralModel` or str, optional
+        Reference norm spectral model to use for the `~gammapy.modeling.models.FoVBackgroundModel`, if
+        none is defined on the dataset. Default is "pl-norm".
+    spatial_model : `~gammapy.modeling.models.SpatialModel` or str, optional
+        Spatial model to use for the `~gammapy.modeling.models.FoVBackgroundModel`, if
+        none is defined on the dataset. Default is None.
+        The unit of the spatial model is dropped.
+    min_counts : int, optional
+        Minimum number of counts, or residuals counts if a `~gammapy.modeling.models.SkyModel`
+        is set, required outside the exclusion region. Default is 0.
+    min_npred_background : float, optional
         Minimum number of predicted background counts required outside the
-        exclusion region.
+        exclusion region. Default is 0.
     """
 
     tag = "FoVBackgroundMaker"
@@ -52,6 +57,7 @@ class FoVBackgroundMaker(Maker):
         method="scale",
         exclusion_mask=None,
         spectral_model="pl-norm",
+        spatial_model=None,
         min_counts=0,
         min_npred_background=0,
         fit=None,
@@ -64,10 +70,14 @@ class FoVBackgroundMaker(Maker):
         if isinstance(spectral_model, str):
             spectral_model = Model.create(tag=spectral_model, model_type="spectral")
 
+        if isinstance(spatial_model, str):
+            spatial_model = Model.create(tag=spatial_model, model_type="spatial")
+
         if not spectral_model.is_norm_spectral_model:
             raise ValueError("Spectral model must be a norm spectral model")
 
         self.default_spectral_model = spectral_model
+        self.default_spatial_model = spatial_model
 
         if fit is None:
             fit = Fit()
@@ -104,8 +114,16 @@ class FoVBackgroundMaker(Maker):
             Map dataset including background model.
 
         """
+
+        if self.default_spatial_model:
+            spatial_model = self.default_spatial_model.copy()
+        else:
+            spatial_model = None
+
         bkg_model = FoVBackgroundModel(
-            dataset_name=dataset.name, spectral_model=self.default_spectral_model.copy()
+            dataset_name=dataset.name,
+            spectral_model=self.default_spectral_model.copy(),
+            spatial_model=spatial_model,
         )
 
         if dataset.models is None:
@@ -132,7 +150,7 @@ class FoVBackgroundMaker(Maker):
         if self.exclusion_mask:
             mask = self.exclusion_mask.interp_to_geom(geom=geom)
         else:
-            mask = Map.from_geom(geom=geom, data=1, dtype=bool)
+            mask = Map.from_geom(geom=geom, data=True, dtype=bool)
         return mask
 
     def _make_masked_summed_counts(self, dataset):
