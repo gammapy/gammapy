@@ -329,8 +329,14 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
             mapd = super().read(
                 filename, format="gadf", checksum=checksum, name=name, **kwargs
             )
-            if mapd.counts is not None:
+            if (
+                mapd.counts is None
+                and mapd.background is None
+                and mapd.exposure is None
+                and mapd.edisp is None
+            ):
                 log.warning("GADF reader returned empty counts map, trying OGIP reader")
+            else:
                 return mapd
 
         reader = OGIPDatasetReader(filename=filename, checksum=checksum, name=name)
