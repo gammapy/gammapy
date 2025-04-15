@@ -516,13 +516,14 @@ class DataStore:
         """
         from gammapy.makers.utils import make_effective_livetime_map
 
+        border = Angle(6, "deg") if border is None else border
         selection = dict(
             type="sky_circle",
             frame="icrs",
             lon=position.ra,
             lat=position.dec,
             radius=Angle(0.1, "deg") if radius is None else radius,
-            border=Angle(6, "deg") if border is None else border,
+            border=border,
         )
         selected_obs_table = self.obs_table.select_observations(selection)
         observations = self.get_observations(selected_obs_table["OBS_ID"])
