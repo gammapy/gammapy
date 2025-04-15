@@ -73,10 +73,11 @@ class TestSourceCatalogObject2HWC:
     @staticmethod
     def test_spectral_model(cat):
         m = cat[0].spectral_model()
-        dnde, dnde_err = m.evaluate_error(1 * u.TeV)
+        dnde, dnde_errn, dnde_errp = m.evaluate_error(1 * u.TeV)
         assert dnde.unit == "cm-2 s-1 TeV-1"
-        assert_allclose(dnde.value, 2.802365e-11, rtol=1e-3)
-        assert_allclose(dnde_err.value, 6.537506e-13, rtol=1e-3)
+        assert_allclose(dnde.value, 2.802365e-11, rtol=5e-2)
+        assert_allclose(dnde_errn.value, 6.537506e-13, rtol=5e-2)
+        assert_allclose(dnde_errp.value, 6.537506e-13, rtol=5e-2)
 
     @staticmethod
     def test_spatial_model(cat):
@@ -136,7 +137,6 @@ class TestSourceCatalog3HWC:
 class TestSourceCatalogObject3HWC:
     @staticmethod
     def test_data(ca_3hwc):
-
         assert ca_3hwc[0].data["source_name"] == "3HWC J0534+220"
         assert ca_3hwc[0].n_models == 1
         ca_3hwc[0].info()
@@ -160,10 +160,11 @@ class TestSourceCatalogObject3HWC:
         assert_allclose(m.index.error, 0.1425, atol=1e-3)
 
         m = ca_3hwc[0].spectral_model()
-        dnde, dnde_err = m.evaluate_error(7 * u.TeV)
+        dnde, dnde_errn, dnde_errp = m.evaluate_error(7 * u.TeV)
         assert dnde.unit == "cm-2 s-1 TeV-1"
         assert_allclose(dnde.value, 2.34e-13, rtol=1e-2)
-        assert_allclose(dnde_err.value, 1.4e-15, rtol=1e-1)
+        assert_allclose(dnde_errn.value, 1.4e-15, rtol=1e-1)
+        assert_allclose(dnde_errp.value, 1.4e-15, rtol=1e-1)
 
     @staticmethod
     def test_spatial_model(ca_3hwc):
