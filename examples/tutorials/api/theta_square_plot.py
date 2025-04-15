@@ -100,5 +100,5 @@ plt.show()
 # using ON and OFF regions.
 # The following tutorials are showing how to get an excess significance:
 #  * :doc:`/tutorials/analysis-1d/spectral_analysis`
-#  * :doc:`/tutorials/analysis-1d/extended_source_spectral_analysis.html
+#  * :doc:`/tutorials/analysis-1d/extended_source_spectral_analysis`
 #
