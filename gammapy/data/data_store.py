@@ -542,6 +542,16 @@ class DataStore:
         livetime_maps = make_effective_livetime_map(
             observations, geom, offset_max=border
         )
+
+        for idx, _ in enumerate(edges[:-1]):
+            val = (
+                livetime_maps.get_image_by_idx((idx,)).get_by_coord(position)[0]
+                * livetime_maps.unit
+            )
+            log.info(
+                f"Effective Livetime at position in [{edges[idx]}, {edges[idx + 1]}]: {val:.2f}"
+            )
+
         return livetime_maps, selected_obs_table["OBS_ID"]
 
 
