@@ -728,7 +728,7 @@ def test_pwl_pivot_energy():
         [6.56889e-14, (5.5e-12) ** 2, 0],
         [0, 0, 0],
     ]
-    assert_quantity_allclose(pwl.pivot_energy, 1.2112653 * u.TeV, rtol=1e-5)
+    assert_quantity_allclose(pwl.pivot_energy, 1.211265 * u.TeV, rtol=1e-5)
 
     ecpl = ExpCutoffPowerLawSpectralModel(
         amplitude="5.35510540e-11 cm-2 s-1 TeV-1", lambda_=0.001 * (1 / u.TeV), index=2
@@ -740,7 +740,7 @@ def test_pwl_pivot_energy():
         [0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0],
     ]
-    assert_quantity_allclose(ecpl.pivot_energy, 1.290777 * u.TeV, rtol=1e-5)
+    assert_quantity_allclose(ecpl.pivot_energy, 1.263819 * u.TeV, rtol=1e-5)
 
 
 def test_num_pivot_energy():
@@ -1093,34 +1093,34 @@ class TestSpectralModelErrorPropagation:
         assert isinstance(out, u.Quantity)
         assert out.unit == "cm-2 s-1 TeV-1"
         assert out.shape == (3,)
-        assert_allclose(out.data, [4.155263e-11, 3.597412e-10, 3.556248e-10], rtol=1e-3)
+        assert_allclose(out.data, [3.755248e-11, 3.099734e-12, 3.171116e-12], rtol=1e-3)
 
     def test_evaluate_error_array(self):
         out = self.model.evaluate_error([1, 100] * u.TeV)
         assert out.shape == (3, 2)
         expected = [
-            [4.155263e-11, 6.559555e-20],
-            [3.597412e-10, 5.671944e-17],
-            [3.556248e-10, 1.112619e-16],
+            [3.755248e-11, 2.623637e-18],
+            [3.099734e-12, 2.565920e-18],
+            [3.171116e-12, 1.083993e-16],
         ]
         assert_allclose(out.data, expected, rtol=1e-3)
 
     def test_evaluate_error_unit(self):
         out = self.model.evaluate_error(1e6 * u.MeV)
         assert out.unit == "cm-2 s-1 TeV-1"
-        assert_allclose(out.data, [4.155263e-11, 3.597412e-10, 3.556248e-10], rtol=1e-3)
+        assert_allclose(out.data, [3.755248e-11, 3.099734e-12, 3.171116e-12], rtol=1e-3)
 
     def test_integral_error(self):
         out = self.model.integral_error(1 * u.TeV, 10 * u.TeV)
         assert out.unit == "cm-2 s-1"
         assert out.shape == (3,)
-        assert_allclose(out.data, [2.438267e-11, 2.119673e-10, 2.086787e-10], rtol=1e-3)
+        assert_allclose(out.data, [2.204901e-11, 2.407973e-12, 2.936075e-12], rtol=1e-3)
 
     def test_energy_flux_error(self):
         out = self.model.energy_flux_error(1 * u.TeV, 10 * u.TeV)
         assert out.unit == "TeV cm-2 s-1"
         assert out.shape == (3,)
-        assert_allclose(out.data, [4.527895e-11, 4.021977e-10, 3.941775e-10], rtol=1e-3)
+        assert_allclose(out.data, [4.127485e-11, 6.611019e-12, 1.006752e-11], rtol=1e-3)
 
 
 def test_logpar_index_error():
@@ -1132,7 +1132,7 @@ def test_logpar_index_error():
     )
     model.alpha.error = 0.4
     out = model.spectral_index_error(energy=1.0 * u.TeV)
-    assert_allclose(out, [2.185831, 0.395948, 0.403136], rtol=1e-3)
+    assert_allclose(out, [2.198321, 0.404178, 0.394804], rtol=1e-3)
 
 
 def test_dnde_error_ecpl_model():
@@ -1153,10 +1153,10 @@ def test_dnde_error_ecpl_model():
     ]
 
     out = model.evaluate_error(1 * u.TeV)
-    assert_allclose(out.data, [1.899294e-12, 3.091417e-13, 2.835443e-13], rtol=1e-3)
+    assert_allclose(out.data, [1.900058e-12, 3.140516e-13, 2.925388e-13], rtol=1e-3)
 
     out = model.evaluate_error(0.1 * u.TeV)
-    assert_allclose(out.data, [1.541150e-10, 1.985489e-11, 1.773401e-11], rtol=1e-3)
+    assert_allclose(out.data, [1.538462e-10, 2.071542e-11, 1.837818e-11], rtol=1e-3)
 
 
 def test_integral_error_power_law():
@@ -1170,9 +1170,9 @@ def test_integral_error_power_law():
 
     flux, flux_errn, flux_errp = powerlaw.integral_error(energy_min, energy_max)
 
-    assert_allclose(flux.value[0] / 1e-13, 4.98536, rtol=1e-3)
-    assert_allclose(flux_errn.value[0] / 1e-14, 7.132487, rtol=1e-3)
-    assert_allclose(flux_errp.value[0] / 1e-14, 8.740244, rtol=1e-3)
+    assert_allclose(flux.value[0] / 1e-13, 4.991835, rtol=1e-3)
+    assert_allclose(flux_errn.value[0] / 1e-14, 7.209218, rtol=1e-3)
+    assert_allclose(flux_errp.value[0] / 1e-14, 8.674678, rtol=1e-3)
 
 
 def test_integral_error_exp_cut_off_power_law():
@@ -1187,9 +1187,9 @@ def test_integral_error_exp_cut_off_power_law():
 
     flux, flux_errn, flux_errp = exppowerlaw.integral_error(energy_min, energy_max)
 
-    assert_allclose(flux.value[0] / 1e-13, 5.05855622, rtol=0.01)
-    assert_allclose(flux_errn.value[0] / 1e-14, 7.975139, rtol=1e-3)
-    assert_allclose(flux_errp.value[0] / 1e-14, 9.578036, rtol=1e-3)
+    assert_allclose(flux.value[0] / 1e-13, 5.058788, rtol=0.01)
+    assert_allclose(flux_errn.value[0] / 1e-14, 7.79546, rtol=1e-3)
+    assert_allclose(flux_errp.value[0] / 1e-14, 9.537771, rtol=1e-3)
 
 
 def test_energy_flux_error_power_law():
@@ -1201,9 +1201,9 @@ def test_energy_flux_error_power_law():
     powerlaw.parameters["amplitude"].error = 1e-13
 
     eflux, eflux_errn, eflux_errp = powerlaw.energy_flux_error(energy_min, energy_max)
-    assert_allclose(eflux.value / 1e-12, 2.280948, rtol=0.001)
-    assert_allclose(eflux_errn.value / 1e-12, 0.810882, rtol=0.001)
-    assert_allclose(eflux_errp.value / 1e-12, 1.502922, rtol=0.001)
+    assert_allclose(eflux.value / 1e-12, 2.306978, rtol=0.001)
+    assert_allclose(eflux_errn.value / 1e-12, 0.819827, rtol=0.001)
+    assert_allclose(eflux_errp.value / 1e-12, 1.501977, rtol=0.001)
 
 
 def test_energy_flux_error_exp_cutoff_power_law():
@@ -1219,9 +1219,9 @@ def test_energy_flux_error_exp_cutoff_power_law():
         energy_min, energy_max
     )
 
-    assert_allclose(eflux.value / 1e-12, 2.806298, rtol=0.001)
-    assert_allclose(eflux_errn.value / 1e-12, 1.076364, rtol=0.001)
-    assert_allclose(eflux_errp.value / 1e-12, 2.038668, rtol=0.001)
+    assert_allclose(eflux.value / 1e-12, 2.751952, rtol=0.001)
+    assert_allclose(eflux_errn.value / 1e-12, 1.043413, rtol=0.001)
+    assert_allclose(eflux_errp.value / 1e-12, 2.052225, rtol=0.001)
 
 
 def test_integral_exp_cut_off_power_law_large_number_of_bins():
