@@ -342,7 +342,7 @@ result_2 = sampler.run(datasets[2])
 # plt.show()
 
 
-"""
+
 .. figure:: ../../../docs/_static/cornerplot-multiple-runs-Crab.png
 
     :scale: 100%
@@ -351,4 +351,4 @@ result_2 = sampler.run(datasets[2])
     The joint run allows to better constrain the parameters than individual runs.  
     One can note as well that one of the run has a notably different amplitude (due to calibrations issues ?).
 
-"""
+
