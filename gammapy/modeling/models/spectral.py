@@ -231,12 +231,12 @@ class SpectralModel(ModelBase):
             fraction of the parameter error. Default is 1e-4.
             Deprecated in v2.0 and unsued.
         n_samples : int, optional
-            Number of samples to generate per parameter. Default is 10000.
+            Number of samples to generate per parameter. Default is 3500.
 
         Returns
         -------
         dnde, dnde_errn , dnde_errp: tuple of `~astropy.units.Quantity`
-            MMedian, negative, and positive errors
+            Median, negative and positive errors
             on the differential flux at the given energy.
 
         """
@@ -330,7 +330,7 @@ class SpectralModel(ModelBase):
             fraction of the parameter error. Default is 1e-4.
             Deprecated in v2.0 and unsued.
         n_samples : int, optional
-            Number of samples to generate. Default is 10000.
+            Number of samples to generate per parameter. Default is 3500.
 
 
         Returns
@@ -395,7 +395,7 @@ class SpectralModel(ModelBase):
             fraction of the parameter error. Default is 1e-4.
             Deprecated in v2.0 and unsued.
         n_samples : int, optional
-            Number of samples to generate. Default is 10000.
+            Number of samples to generate per parameter. Default is 3500.
 
         Returns
         -------
@@ -603,7 +603,7 @@ class SpectralModel(ModelBase):
         n_points : int, optional
             Number of evaluation nodes. Default is 100.
         n_samples : int, optional
-            Number of samples generated to estimate the error band. Default is 10000.
+            Number of samples generated per parameter to estimate the error band. Default is 3500.
         **kwargs : dict
             Keyword arguments forwarded to `matplotlib.pyplot.fill_between`.
 
@@ -699,7 +699,7 @@ class SpectralModel(ModelBase):
             Fractional energy increment to use for determining the spectral index.
             Default is 1e-5. Deprecated in v2.0 and unsued.
         n_samples : int, optional
-            Number of samples to generate. Default is 10000.
+            Number of samples to generate per parameter. Default is 3500.
 
         Returns
         -------
