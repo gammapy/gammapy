@@ -624,7 +624,7 @@ class TestSpectrumOnOff:
         path = tmp_path / "test.fits"
         replace_in_fits_header(path, "unknown")
         with pytest.warns(AstropyUserWarning):
-            SpectrumDatasetOnOff.read(path, checksum=True)
+            SpectrumDatasetOnOff.read(path, checksum=True, format="ogip")
 
     def test_spectrum_dataset_onoff_fits_io(self, tmp_path):
         self.dataset.write(tmp_path / "test.fits", format="gadf")
