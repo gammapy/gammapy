@@ -7,6 +7,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.io import fits
+from astropy.coordinates import SkyCoord
 from gammapy.data import DataStore
 from gammapy.irf import (
     Background3D,
@@ -330,3 +331,14 @@ def test_data_store_no_events():
     for obs in observations:
         assert not obs.events
         assert not obs.gti
+
+
+@requires_data()
+def test_data_store_get_effective_livetime(data_store):
+    """Test the computation of the livetime for a test position"""
+
+    position = SkyCoord.from_name("crab")
+    livetime_maps, sel_ids = data_store.get_effective_livetime(position=position)
+    assert len(livetime_maps) == 1
+    assert len(sel_ids) == 2
+    assert False
