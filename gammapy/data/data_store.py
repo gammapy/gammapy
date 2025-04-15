@@ -13,7 +13,6 @@ from gammapy.utils.pbar import progress_bar
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
 from gammapy.maps import WcsGeom, MapAxis
-from gammapy.makers.utils import make_effective_livetime_map
 from .hdu_index_table import HDUIndexTable
 from .obs_table import ObservationTable, ObservationTableChecker
 from .observations import Observation, ObservationChecker, Observations
@@ -515,6 +514,7 @@ class DataStore:
         >>> livetime_maps.plot(add_cbar=True);
         >>> print(len(sel_ids))
         """
+        from gammapy.makers.utils import make_effective_livetime_map
 
         selection = dict(
             type="sky_circle",
