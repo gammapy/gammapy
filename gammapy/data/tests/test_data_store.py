@@ -334,11 +334,14 @@ def test_data_store_no_events():
 
 
 @requires_data()
-def test_data_store_get_effective_livetime(data_store):
+def test_data_store_get_effective_livetime(data_store, caplog):
     """Test the computation of the livetime for a test position"""
 
     position = SkyCoord.from_name("crab")
-    livetime_maps, sel_ids = data_store.get_effective_livetime(position=position)
-    assert len(livetime_maps) == 1
-    assert len(sel_ids) == 2
-    assert False
+    with caplog.at_level(logging.INFO):
+        livetime_maps, sel_ids = data_store.get_effective_livetime(position=position)
+        assert livetime_maps.geom.shape_axes == (1,)
+        assert len(sel_ids) == 4
+        assert "Effective Livetime at position in [1.0 GeV, 1.0 PeV] : 1.75 h" in [
+            _.message for _ in caplog.records
+        ]
