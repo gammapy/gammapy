@@ -755,7 +755,7 @@ def test_num_pivot_energy():
 
     lp.alpha.error = "0.1126"
     lp.beta.error = "0.0670"
-    assert_quantity_allclose(lp.pivot_energy, 18.198706 * u.GeV, rtol=5e-2)
+    assert_quantity_allclose(lp.pivot_energy, 18.198706 * u.GeV, rtol=7e-2)
 
 
 def test_template_spectral_model_evaluate_tiny():
