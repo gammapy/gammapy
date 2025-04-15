@@ -229,11 +229,11 @@ html_title = "{} v{}".format(project, release)
 # Output file base name for HTML help builder.
 htmlhelp_basename = f"{project}doc"
 
+# Default for the configuration can be found here
+# https://github.com/pydata/pydata-sphinx-theme/blob/main/src/pydata_sphinx_theme/theme/pydata_sphinx_theme/theme.conf
 html_theme_options = {
     "header_links_before_dropdown": 6,
-    # False = allow arrows to show for API reference
-    "collapse_navigation": False,
-    "navigation_depth": 2,
+    "show_toc_level": 2,
     # False = don't show "Previous" and "Next" buttons at the bottom of each page
     "show_prev_next": False,
     # links in menu
