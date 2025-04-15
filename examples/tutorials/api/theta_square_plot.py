@@ -94,7 +94,7 @@ plt.show()
 # Statistical significance of a detection
 # ---------------------------------------
 #
-# To get the significance of a signal, the usual method consists on using the reflected background method
+# To get the significance of a signal, the usual method consists of using the reflected background method
 # (see the maker tutorial: :doc:`/user-guide/makers/reflected`) to compute the WStat statistics
 # (see :ref:`wstat`, :doc:`/user-guide/stats/fit_statistics`). This is the well-known method of Li&Ma [LiMa1983]_
 # using ON and OFF regions.
