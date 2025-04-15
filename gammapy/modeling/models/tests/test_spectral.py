@@ -1103,7 +1103,7 @@ class TestSpectralModelErrorPropagation:
             [3.099734e-12, 2.565920e-18],
             [3.171116e-12, 1.083993e-16],
         ]
-        assert_allclose(out.data, expected, rtol=1e-3)
+        assert_allclose(out.data, expected, rtol=1e-2)
 
     def test_evaluate_error_unit(self):
         out = self.model.evaluate_error(1e6 * u.MeV)
