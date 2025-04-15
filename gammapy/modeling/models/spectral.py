@@ -219,7 +219,7 @@ class SpectralModel(ModelBase):
             unit=samples.unit,
         ).squeeze()
 
-    def evaluate_error(self, energy, n_samples=10000):
+    def evaluate_error(self, energy, n_samples=3500):
         """Evaluate spectral model error from parameter distribtuion sampling.
 
         Parameters
@@ -227,7 +227,7 @@ class SpectralModel(ModelBase):
         energy : `~astropy.units.Quantity`
             Energy at which to evaluate.
         n_samples : int, optional
-            Number of samples to generate. Default is 10000.
+            Number of samples to generate per parameter. Default is 10000.
 
         Returns
         -------
@@ -237,12 +237,13 @@ class SpectralModel(ModelBase):
 
         """
         m = self.copy()
+        n_pars = len(m.parameters)
 
         def fct(values):
             m.parameters.value = values
             return m(energy)
 
-        samples = self._samples(fct, n_samples=n_samples)
+        samples = self._samples(fct, n_samples=n_pars * n_samples)
         return self._get_errors(samples)
 
     @property
@@ -262,7 +263,7 @@ class SpectralModel(ModelBase):
         def min_func(x):
             """Function to minimise."""
             x = np.exp(x)
-            dnde, dnde_errn, dnde_errp = self.evaluate_error(x * x_unit, n_samples=1000)
+            dnde, dnde_errn, dnde_errp = self.evaluate_error(x * x_unit, n_samples=400)
             return np.sqrt(dnde_errn**2 + dnde_errp**2) / dnde
 
         bounds = [np.log(self.reference.value) - 3, np.log(self.reference.value) + 3]
@@ -304,7 +305,7 @@ class SpectralModel(ModelBase):
         else:
             return integrate_spectrum(self, energy_min, energy_max, **kwargs)
 
-    def integral_error(self, energy_min, energy_max, n_samples=10000, **kwargs):
+    def integral_error(self, energy_min, energy_max, n_samples=3500, **kwargs):
         """Evaluate the error of the integral flux of a given spectrum in a given energy range.
 
         Parameters
@@ -322,12 +323,13 @@ class SpectralModel(ModelBase):
             on the integral flux between energy_min and energy_max.
         """
         m = self.copy()
+        n_pars = len(m.parameters)
 
         def fct(values):
             m.parameters.value = values
             return m.integral(energy_min, energy_max, **kwargs)
 
-        samples = self._samples(fct, n_samples=n_samples)
+        samples = self._samples(fct, n_samples=n_pars * n_samples)
         return self._get_errors(samples)
 
     def energy_flux(self, energy_min, energy_max, **kwargs):
@@ -354,7 +356,7 @@ class SpectralModel(ModelBase):
         else:
             return integrate_spectrum(f, energy_min, energy_max, **kwargs)
 
-    def energy_flux_error(self, energy_min, energy_max, n_samples=10000, **kwargs):
+    def energy_flux_error(self, energy_min, energy_max, n_samples=3500, **kwargs):
         """Evaluate the error of the energy flux of a given spectrum in a given energy range.
 
         Parameters
@@ -373,12 +375,13 @@ class SpectralModel(ModelBase):
         """
 
         m = self.copy()
+        n_pars = len(m.parameters)
 
         def fct(values):
             m.parameters.value = values
             return m.energy_flux(energy_min, energy_max, **kwargs)
 
-        samples = self._samples(fct, n_samples=n_samples)
+        samples = self._samples(fct, n_samples=n_pars * n_samples)
         return self._get_errors(samples)
 
     def reference_fluxes(self, energy_axis):
@@ -530,7 +533,7 @@ class SpectralModel(ModelBase):
         sed_type="dnde",
         energy_power=0,
         n_points=100,
-        n_samples=10000,
+        n_samples=3500,
         **kwargs,
     ):
         """Plot spectral model error band.
@@ -648,7 +651,7 @@ class SpectralModel(ModelBase):
         f2 = self(energy * (1 + epsilon))
         return np.log(f1 / f2) / np.log(1 + epsilon)
 
-    def spectral_index_error(self, energy, epsilon=1e-5, n_samples=10000):
+    def spectral_index_error(self, energy, epsilon=1e-5, n_samples=3500):
         """Evaluate the error on spectral index at the given energy.
 
         Parameters
@@ -668,12 +671,13 @@ class SpectralModel(ModelBase):
         """
 
         m = self.copy()
+        n_pars = len(m.parameters)
 
         def fct(values):
             m.parameters.value = values
             return m.spectral_index(energy, epsilon=1e-5)
 
-        samples = self._samples(fct, n_samples=n_samples)
+        samples = self._samples(fct, n_samples=n_pars * n_samples)
         return self._get_errors(samples)
 
     def inverse(self, value, energy_min=0.1 * u.TeV, energy_max=100 * u.TeV):

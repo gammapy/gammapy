@@ -1093,34 +1093,34 @@ class TestSpectralModelErrorPropagation:
         assert isinstance(out, u.Quantity)
         assert out.unit == "cm-2 s-1 TeV-1"
         assert out.shape == (3,)
-        assert_allclose(out.data, [3.755248e-11, 3.099734e-12, 3.171116e-12], rtol=1e-2)
+        assert_allclose(out.data, [3.757824e-11, 3.142095e-12, 3.155082e-12], rtol=1e-2)
 
     def test_evaluate_error_array(self):
         out = self.model.evaluate_error([1, 100] * u.TeV)
         assert out.shape == (3, 2)
         expected = [
-            [3.755248e-11, 2.623637e-18],
-            [3.099734e-12, 2.565920e-18],
-            [3.171116e-12, 1.083993e-16],
+            [3.756851e-11, 2.600163e-18],
+            [3.147163e-12, 2.539555e-18],
+            [3.163654e-12, 1.082997e-16],
         ]
         assert_allclose(out.data, expected, rtol=1e-2)
 
     def test_evaluate_error_unit(self):
         out = self.model.evaluate_error(1e6 * u.MeV)
         assert out.unit == "cm-2 s-1 TeV-1"
-        assert_allclose(out.data, [3.755248e-11, 3.099734e-12, 3.171116e-12], rtol=1e-2)
+        assert_allclose(out.data, [3.757824e-11, 3.142095e-12, 3.155082e-12], rtol=1e-2)
 
     def test_integral_error(self):
         out = self.model.integral_error(1 * u.TeV, 10 * u.TeV)
         assert out.unit == "cm-2 s-1"
         assert out.shape == (3,)
-        assert_allclose(out.data, [2.204901e-11, 2.407973e-12, 2.936075e-12], rtol=1e-2)
+        assert_allclose(out.data, [2.205520e-11, 2.395797e-12, 2.905355e-12], rtol=1e-2)
 
     def test_energy_flux_error(self):
         out = self.model.energy_flux_error(1 * u.TeV, 10 * u.TeV)
         assert out.unit == "TeV cm-2 s-1"
         assert out.shape == (3,)
-        assert_allclose(out.data, [4.127485e-11, 6.611019e-12, 1.006752e-11], rtol=1e-2)
+        assert_allclose(out.data, [4.133955e-11, 6.634629e-12, 9.896814e-12], rtol=1e-2)
 
 
 def test_logpar_index_error():
