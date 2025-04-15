@@ -98,7 +98,7 @@ plt.show()
 # (see the maker tutorial: :doc:`/user-guide/makers/reflected`) to compute the WStat statistics
 # (see :ref:`wstat`, :doc:`/user-guide/stats/fit_statistics`). This is the well-known method of Li&Ma [LiMa1983]_
 # using ON and OFF regions.
-# The following tutorials are showing how to get an excess significance:
+# The following tutorials show how to get an excess significance:
 #  * :doc:`/tutorials/analysis-1d/spectral_analysis`
 #  * :doc:`/tutorials/analysis-1d/extended_source_spectral_analysis`
 #
