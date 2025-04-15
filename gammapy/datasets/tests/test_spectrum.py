@@ -529,9 +529,9 @@ class TestSpectrumOnOff:
             dataset.plot_fit()
 
     def test_to_from_ogip_files(self, tmp_path):
-        dataset = self.dataset.copy(name="test")
-        dataset.write(tmp_path / "test.fits")
-        newdataset = SpectrumDatasetOnOff.read(tmp_path / "test.fits")
+        dataset = self.dataset.copy(name="test", format="ogip")
+        dataset.write(tmp_path / "test.fits", format="ogip")
+        newdataset = SpectrumDatasetOnOff.read(tmp_path / "test.fits", format="ogip")
 
         expected_regions = compound_region_to_regions(self.off_counts.geom.region)
         regions = compound_region_to_regions(newdataset.counts_off.geom.region)
@@ -551,25 +551,27 @@ class TestSpectrumOnOff:
 
     def test_from_ogip_files_overwrite_name(self, tmp_path):
         dataset = self.dataset.copy(name="test")
-        dataset.write(tmp_path / "test.fits")
-        new_dataset = SpectrumDatasetOnOff.read(tmp_path / "test.fits")
+        dataset.write(tmp_path / "test.fits", format="ogip")
+        new_dataset = SpectrumDatasetOnOff.read(tmp_path / "test.fits", format="ogip")
         assert new_dataset.name == dataset.name
 
-        new_dataset = SpectrumDatasetOnOff.read(tmp_path / "test.fits", name="new_name")
+        new_dataset = SpectrumDatasetOnOff.read(
+            tmp_path / "test.fits", name="new_name", format="ogip"
+        )
         assert new_dataset.name == "new_name"
 
     def test_to_from_ogip_files_no_mask(self, tmp_path):
         dataset = self.dataset.copy(name="test")
         dataset.mask_safe = None
-        dataset.write(tmp_path / "test.fits")
-        newdataset = SpectrumDatasetOnOff.read(tmp_path / "test.fits")
+        dataset.write(tmp_path / "test.fits", format="ogip")
+        newdataset = SpectrumDatasetOnOff.read(tmp_path / "test.fits", format="ogip")
 
         assert_allclose(newdataset.mask_safe.data, True)
 
     def test_to_from_ogip_files_zip(self, tmp_path):
         dataset = self.dataset.copy(name="test")
-        dataset.write(tmp_path / "test.fits.gz")
-        newdataset = SpectrumDatasetOnOff.read(tmp_path / "test.fits.gz")
+        dataset.write(tmp_path / "test.fits.gz", format="ogip")
+        newdataset = SpectrumDatasetOnOff.read(tmp_path / "test.fits.gz", format="ogip")
 
         assert newdataset.counts.meta["RESPFILE"] == "test_rmf.fits.gz"
         assert newdataset.counts.meta["BACKFILE"] == "test_bkg.fits.gz"
@@ -591,8 +593,10 @@ class TestSpectrumOnOff:
             acceptance=acceptance,
             name="test",
         )
-        dataset.write(tmp_path / "pha_obstest.fits")
-        newdataset = SpectrumDatasetOnOff.read(tmp_path / "pha_obstest.fits")
+        dataset.write(tmp_path / "pha_obstest.fits", format="ogip")
+        newdataset = SpectrumDatasetOnOff.read(
+            tmp_path / "pha_obstest.fits", format="ogip"
+        )
 
         assert_allclose(self.on_counts.data, newdataset.counts.data)
         assert newdataset.counts_off is None
@@ -624,6 +628,20 @@ class TestSpectrumOnOff:
 
     def test_spectrum_dataset_onoff_fits_io(self, tmp_path):
         self.dataset.write(tmp_path / "test.fits", format="gadf")
+        d1 = SpectrumDatasetOnOff.read(tmp_path / "test.fits", format="gadf")
+        assert isinstance(d1.counts.geom, RegionGeom)
+        assert d1.exposure == self.dataset.exposure
+        assert_allclose(d1.counts_off.data, self.dataset.counts_off.data)
+
+    def test_spectrum_dataset_onoff_default_format(self, tmp_path):
+        self.dataset.write(tmp_path / "test.fits")
+        d1 = SpectrumDatasetOnOff.read(tmp_path / "test.fits")
+        assert isinstance(d1.counts.geom, RegionGeom)
+        assert d1.exposure == self.dataset.exposure
+        assert_allclose(d1.counts_off.data, self.dataset.counts_off.data)
+
+    def test_spectrum_dataset_onoff_fallback_from_gadf(self, tmp_path):
+        self.dataset.write(tmp_path / "test.fits", format="ogip")
         d1 = SpectrumDatasetOnOff.read(tmp_path / "test.fits", format="gadf")
         assert isinstance(d1.counts.geom, RegionGeom)
         assert d1.exposure == self.dataset.exposure
