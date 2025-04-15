@@ -529,7 +529,7 @@ class TestSpectrumOnOff:
             dataset.plot_fit()
 
     def test_to_from_ogip_files(self, tmp_path):
-        dataset = self.dataset.copy(name="test", format="ogip")
+        dataset = self.dataset.copy(name="test")
         dataset.write(tmp_path / "test.fits", format="ogip")
         newdataset = SpectrumDatasetOnOff.read(tmp_path / "test.fits", format="ogip")
 
