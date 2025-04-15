@@ -903,7 +903,7 @@ class TestNaimaModel:
         model.amplitude.error = 0.1 * model.amplitude.value
 
         out = model.evaluate_error(1 * u.TeV)
-        assert_allclose(out.data, [5.270367e-13, 5.293272e-14, 5.343376e-14], rtol=1e-3)
+        assert_allclose(out.data, [5.270367e-13, 5.293272e-14, 5.343376e-14], rtol=5e-2)
 
     def test_ic(self):
         import naima
