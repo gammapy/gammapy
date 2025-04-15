@@ -219,13 +219,17 @@ class SpectralModel(ModelBase):
             unit=samples.unit,
         ).squeeze()
 
-    def evaluate_error(self, energy, n_samples=3500):
+    def evaluate_error(self, energy, epsilon=1e-4, n_samples=3500):
         """Evaluate spectral model error from parameter distribtuion sampling.
 
         Parameters
         ----------
         energy : `~astropy.units.Quantity`
             Energy at which to evaluate.
+        epsilon : float, optional
+            Step size of the gradient evaluation. Given as a
+            fraction of the parameter error. Default is 1e-4.
+            Deprecated in v2.0 and unsued.
         n_samples : int, optional
             Number of samples to generate per parameter. Default is 10000.
 
@@ -236,6 +240,13 @@ class SpectralModel(ModelBase):
             on the differential flux at the given energy.
 
         """
+        if epsilon != 1e-4:  # TODO: remove in v2.1
+            warnings.wrn(
+                "epsilon is unsed and deprecated in v2.0",
+                GammapyDeprecationWarning,
+                stacklevel=2,
+            )
+
         m = self.copy()
         n_pars = len(m.parameters)
 
@@ -305,13 +316,19 @@ class SpectralModel(ModelBase):
         else:
             return integrate_spectrum(self, energy_min, energy_max, **kwargs)
 
-    def integral_error(self, energy_min, energy_max, n_samples=3500, **kwargs):
+    def integral_error(
+        self, energy_min, energy_max, epsilon=1e-4, n_samples=3500, **kwargs
+    ):
         """Evaluate the error of the integral flux of a given spectrum in a given energy range.
 
         Parameters
         ----------
         energy_min, energy_max :  `~astropy.units.Quantity`
             Lower and upper bound of integration range.
+        epsilon : float, optional
+            Step size of the gradient evaluation. Given as a
+            fraction of the parameter error. Default is 1e-4.
+            Deprecated in v2.0 and unsued.
         n_samples : int, optional
             Number of samples to generate. Default is 10000.
 
@@ -322,6 +339,14 @@ class SpectralModel(ModelBase):
             Median, negative, and positive errors
             on the integral flux between energy_min and energy_max.
         """
+
+        if epsilon != 1e-4:  # TODO: remove in v2.1
+            warnings.wrn(
+                "epsilon is unsed and deprecated in v2.0",
+                GammapyDeprecationWarning,
+                stacklevel=2,
+            )
+
         m = self.copy()
         n_pars = len(m.parameters)
 
@@ -356,16 +381,21 @@ class SpectralModel(ModelBase):
         else:
             return integrate_spectrum(f, energy_min, energy_max, **kwargs)
 
-    def energy_flux_error(self, energy_min, energy_max, n_samples=3500, **kwargs):
+    def energy_flux_error(
+        self, energy_min, energy_max, epsilon=1e-4, n_samples=3500, **kwargs
+    ):
         """Evaluate the error of the energy flux of a given spectrum in a given energy range.
 
         Parameters
         ----------
         energy_min, energy_max :  `~astropy.units.Quantity`
             Lower and upper bound of integration range.
+        epsilon : float, optional
+            Step size of the gradient evaluation. Given as a
+            fraction of the parameter error. Default is 1e-4.
+            Deprecated in v2.0 and unsued.
         n_samples : int, optional
             Number of samples to generate. Default is 10000.
-
 
         Returns
         -------
@@ -373,6 +403,13 @@ class SpectralModel(ModelBase):
             Median, negative, and positive errors on the
             energy flux between energy_min and energy_max.
         """
+
+        if epsilon != 1e-4:  # TODO: remove in v2.1
+            warnings.wrn(
+                "epsilon is unsed and deprecated in v2.0",
+                GammapyDeprecationWarning,
+                stacklevel=2,
+            )
 
         m = self.copy()
         n_pars = len(m.parameters)
@@ -660,7 +697,7 @@ class SpectralModel(ModelBase):
             Energy at which to estimate the index.
         epsilon : float, optional
             Fractional energy increment to use for determining the spectral index.
-            Default is 1e-5.
+            Default is 1e-5. Deprecated in v2.0 and unsued.
         n_samples : int, optional
             Number of samples to generate. Default is 10000.
 
@@ -669,6 +706,13 @@ class SpectralModel(ModelBase):
         index, index_errn, index_errp: tuple of float
             Median, negative, and positive error on the spectral index.
         """
+
+        if epsilon != 1e-5:  # TODO: remove in v2.1
+            warnings.wrn(
+                "epsilon is unsed and deprecated in v2.0",
+                GammapyDeprecationWarning,
+                stacklevel=2,
+            )
 
         m = self.copy()
         n_pars = len(m.parameters)
