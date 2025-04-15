@@ -501,7 +501,7 @@ class DataStore:
         livetime_maps : `~gammapy.maps.Map` or list of `~gammapy.maps.Map`
             Effective livetime map(s).
         selected_ids : list
-            List of selected observation IDs
+            List of selected observation IDs.
 
         Examples
         --------
@@ -550,10 +550,10 @@ class DataStore:
                 * livetime_maps.unit
             )
             log.info(
-                f"Effective Livetime at position in [{edges[idx]}, {edges[idx + 1]}]: {val:.2f}"
+                f"Effective Livetime at position in [{edges[idx]}, {edges[idx + 1]}] : {val:.2f}"
             )
 
-        return livetime_maps, selected_obs_table["OBS_ID"]
+        return livetime_maps, selected_obs_table["OBS_ID"].tolist()
 
 
 class DataStoreChecker(Checker):
