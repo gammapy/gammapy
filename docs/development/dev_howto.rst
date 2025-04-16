@@ -557,9 +557,10 @@ Release notes
 In Gammapy we keep :ref:`release_notes` with a list of pull requests.
 We sort by release and within the release by PR number (the largest first).
 
-As explained in the :ref:`astropy:changelog-format` section in the Astropy docs,
-there are (at least) two approaches for adding to the releases, each with pros
-and cons.
+As explained in the
+`Updating and Maintaining the Changelog <https://docs.astropy.org/en/latest/development/maintainers/maintainer_workflow.html#updating-and-maintaining-the-changelog>`__
+of the Astropy docs, there are (at least) two approaches for adding to the releases,
+each with pros and cons.
 
 We've had some pain due to merge conflicts in the releases notes and having to wait
 until the contributor rebases (and having to explain git rebase to new contributors).

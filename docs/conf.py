@@ -251,9 +251,6 @@ html_theme_options = {
         "json_url": "https://docs.gammapy.org/stable/switcher.json",
         "version_match": switch_version,
     },
-    "theme_switcher": {
-        "default": "light",
-    },
     "navbar_end": ["version-switcher", "theme-switcher", "navbar-icon-links"],
     "navigation_with_keys": True,
     # footers
@@ -305,6 +302,7 @@ binder_config = {
 }
 
 sphinx_gallery_conf = {
+    "remove_config_comments": True,
     "examples_dirs": [
         "../examples/models",
         "../examples/tutorials",
