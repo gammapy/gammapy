@@ -486,7 +486,7 @@ def compute_lightcurve_doublingtime(lightcurve, flux_quantity="flux"):
     References
     ----------
     `Brown et al. (2013), "Locating the γ-ray emission region of the flat spectrum radio quasar PKS 1510−089"
-    <https://academic.oup.com/mnras/article/431/1/824/1054498>`_
+    <https://ui.adsabs.harvard.edu/abs/2013MNRAS.431..824B/abstract>`_
     """
     flux = getattr(lightcurve, flux_quantity)
     flux_err = getattr(lightcurve, flux_quantity + "_err")
