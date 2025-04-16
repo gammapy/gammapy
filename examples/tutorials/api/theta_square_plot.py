@@ -38,8 +38,7 @@ check_tutorials_setup()
 # Get some data
 # -------------
 #
-# Here, some data taken on the Crab by the H.E.S.S. test data released are
-# used.
+# Some data taken on the Crab by H.E.S.S. are used.
 #
 
 data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
