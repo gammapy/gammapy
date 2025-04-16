@@ -46,7 +46,7 @@ observations = data_store.get_observations([23523, 23526])
 
 
 ######################################################################
-# Defined a test position
+# Define a test position
 # -----------------------
 #
 
