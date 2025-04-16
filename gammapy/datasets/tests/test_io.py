@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import warnings
 import pytest
+import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from regions import CircleSkyRegion
@@ -124,16 +125,16 @@ def test_spectrum_datasets_to_io(tmp_path):
 @requires_data()
 def test_ogip_writer(tmp_path):
     dataset = SpectrumDatasetOnOff.read(
-        "$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits"
+        "$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits",
+        format="ogip",
     )
-    dataset.counts_off = None
+    dataset.counts_off.data = np.zeros(dataset.counts_off.data.shape)
     datasets = Datasets(dataset)
-
     datasets.write(tmp_path / "written_datasets.yaml")
-
     new_datasets = datasets.read(tmp_path / "written_datasets.yaml")
-
-    assert new_datasets[0].counts_off is None
+    assert_allclose(
+        new_datasets[0].counts_off.data, np.zeros(new_datasets[0].counts_off.data.shape)
+    )
 
 
 @requires_data()
