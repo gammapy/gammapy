@@ -1,10 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Location of gamma-ray observatories."""
+
 import astropy.units as u
 from astropy.coordinates import EarthLocation
-import warnings
-
-warnings.simplefilter('always', DeprecationWarning)
+from gammapy.utils.deprecation import deprecated_key
 
 __all__ = ["observatory_locations"]
 
@@ -50,6 +49,7 @@ class Observatories:
     >>> observatory_locations['hess']
     >>> list(observatory_locations.keys())
     """
+
     def __init__(self):
         self._data = {
             # Values from https://www.ctao.org/emission-to-discovery/array-sites/ctao-south/
@@ -67,20 +67,14 @@ class Observatories:
                 lon="-17d53m31.218s", lat="28d45m43.7904s", height="2147m"
             ),
             # HAWC location taken from https://arxiv.org/pdf/1108.6034v2.pdf
-            "hawc": EarthLocation(
-                lon="-97d18m34s", lat="18d59m48s", height="4100m"
-            ),
+            "hawc": EarthLocation(lon="-97d18m34s", lat="18d59m48s", height="4100m"),
             # https://en.wikipedia.org/wiki/HEGRA
-            "hegra": EarthLocation(
-                lon="28d45m42s", lat="17d53m27s", height="2200m"
-            ),
+            "hegra": EarthLocation(lon="28d45m42s", lat="17d53m27s", height="2200m"),
             # Precision position of HESS from the HESS software (slightly different from Wikipedia)
             "hess": EarthLocation(
                 lon="16d30m00.8s", lat="-23d16m18.4s", height="1835m"
             ),
-            "magic": EarthLocation(
-                lon="-17d53m24s", lat="28d45m43s", height="2200m"
-            ),
+            "magic": EarthLocation(lon="-17d53m24s", lat="28d45m43s", height="2200m"),
             "milagro": EarthLocation(
                 lon="-106.67625d", lat="35.87835d", height="2530m"
             ),
@@ -103,44 +97,32 @@ class Observatories:
                 height=2200 * u.m,
             ),
         }
-        # Map old key names to new ones
-        self._deprecated_keys = {
-            'cta_south': 'ctao_south',
-            'cta_north': 'ctao_north'
-        }
-
-    def _handle_deprecated_key(self, key):
-        """
-        Raise a deprecation warning if provided key is deprecated.
-
-        Returns the corresponding new key if the given is deprecated.
-        """
-        if key in self._deprecated_keys:
-            new_key = self._deprecated_keys[key]
-            warnings.warn(
-                f"'{key}' is deprecated and will be removed in future versions. "
-                f"Use '{new_key}' instead.",
-                DeprecationWarning,
-                stacklevel=3
-            )
-            return new_key
-        return key
 
     def __getitem__(self, key):
-        key = self._handle_deprecated_key(key)
+        old_keys = ["cta_south", "cta_north"]
+        new_keys = ["ctao_south", "ctao_north"]
+        key = deprecated_key(key, old_keys, new_keys, since="2.0")
         return self._data[key]
 
     def __setitem__(self, key, value):
-        """
-        Check if the provided key is deprecated and issues a warning if it is.
-
-        It then stores the value under the appropriate key, either the original or the new key if deprecated.
-        """
-        key = self._handle_deprecated_key(key)
+        # Handle deprecated keys when setting an item
+        old_keys = ["cta_south", "cta_north"]
+        new_keys = ["ctao_south", "ctao_north"]
+        key = deprecated_key(key, old_keys, new_keys, since="2.0")
         self._data[key] = value
 
+    def __delitem__(self, key):
+        # Handle deprecated keys when deleting an item
+        old_keys = ["cta_south", "cta_north"]
+        new_keys = ["ctao_south", "ctao_north"]
+        key = deprecated_key(key, old_keys, new_keys, since="2.0")
+        del self._data[key]
+
     def __contains__(self, key):
-        key = self._handle_deprecated_key(key)
+        # Handle deprecated keys when checking existence
+        old_keys = ["cta_south", "cta_north"]
+        new_keys = ["ctao_south", "ctao_north"]
+        key = deprecated_key(key, old_keys, new_keys, since="2.0")
         return key in self._data
 
     def keys(self):
@@ -154,11 +136,17 @@ class Observatories:
     def items(self):
         """Return the items (key-value pairs) of the dictionary."""
         return list(self._data.items())
-  
+
+    def get(self, key, default=None):
+        """Return the value for the given key, or default if not found."""
+        key = deprecated_key(
+            key, ["cta_south", "cta_north"], ["ctao_south", "ctao_north"], since="2.0"
+        )
+        return self._data.get(key, default)
+
     def get_all(self):
         """Return the entire dictionary."""
         return self._data
-
 
 
 observatory_locations = Observatories()

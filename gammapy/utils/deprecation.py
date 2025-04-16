@@ -51,3 +51,24 @@ def deprecated_attribute(name, since, **kwargs):
 
     kwargs["warning_type"] = GammapyDeprecationWarning
     return deprecated_attribute(name, since, **kwargs)
+
+
+def deprecated_key(key, old_keys, new_keys, since):
+    """
+    Raise a deprecation warning if provided key is deprecated.
+
+    Returns the corresponding new key if the given is deprecated.
+    """
+    import warnings
+
+    if key in old_keys:
+        index = old_keys.index(key)
+        new_key = new_keys[index]
+        warnings.warn(
+            f'"{key}" was deprecated in version {since} and will be removed in a future version. '
+            f'Use "{new_key}" instead.',
+            GammapyDeprecationWarning,
+            stacklevel=2,
+        )
+        return new_key
+    return key
