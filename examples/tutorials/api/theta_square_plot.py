@@ -2,8 +2,8 @@
 Make a theta-square plot
 ========================
 
-This tutorial explains how to make such plot, that is the distribution
-of event counts as a function of the squared angular distance to a test
+This tutorial explains how to make such a plot, that is the distribution
+of event counts as a function of the squared angular distance, to a test
 position.
 
 """
