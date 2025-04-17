@@ -72,3 +72,38 @@ def deprecated_key(key, old_keys, new_keys, since):
         )
         return new_key
     return key
+
+
+class DeprecatedDict(dict):
+    """
+    Raise a deprecation warning if provided key is deprecated.
+
+    Returns the corresponding new key if the given is deprecated.
+    """
+
+    def __init__(self, data, old_keys_to_new_keys, since):
+        super().__init__(data)
+        self._old_keys_to_new_keys = old_keys_to_new_keys or {}
+        self._since = since
+
+    def _warn_and_update_key(self, key):
+        """Helper function to handle deprecated key warnings and return the new key."""
+        import warnings
+
+        if key in self._old_keys_to_new_keys:
+            new_key = self._old_keys_to_new_keys[key]
+            warnings.warn(
+                f'"{key}" was deprecated in version {self._since} and will be removed in a future version. '
+                f'Use "{new_key}" instead.',
+                GammapyDeprecationWarning,
+            )
+            return new_key
+        return key
+
+    def __getitem__(self, key):
+        key = self._warn_and_update_key(key)
+        return super().__getitem__(key)
+
+    def __setitem__(self, key, value):
+        key = self._warn_and_update_key(key)
+        return super().__setitem__(key, value)
