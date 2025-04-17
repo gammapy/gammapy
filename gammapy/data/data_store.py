@@ -453,10 +453,10 @@ class DataStore:
             np.array([_ for _ in self.obs_table["OBS_ID"] if _ in observations.obs_ids])
         ]
         observations_group = observations.group_by_label(obs_table[key])
-        reformated = dict()
-        for old_key, value in observations_group.items():
-            reformated[f"{key}{old_key[5:]}"] = value
-        return reformated
+       return {
+           f"{key}{old_key[5:]}":  value
+           for old_key, value in observations_group.items()
+       } 
 
     def copy_obs(self, obs_id, outdir, hdu_class=None, verbose=False, overwrite=False):
         """Create a new `~gammapy.data.DataStore` containing a subset of observations.
