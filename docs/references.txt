@@ -52,7 +52,6 @@
 .. _NaN: https://en.wikipedia.org/wiki/NaN
 .. _Python: https://www.python.org
 .. _corner: https://corner.readthedocs.io
-.. _gammapy-0.13-environment.yml: https://gammapy.org/download/install/gammapy-0.13-environment.yml
 
 .. _MPIK Heidelberg: https://www.mpi-hd.mpg.de/mpi/en/start/
 .. _APC Paris: http://www.apc.univ-paris7.fr/

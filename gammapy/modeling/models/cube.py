@@ -638,6 +638,12 @@ class FoVBackgroundModel(ModelBase):
     spatial_model : `~gammapy.modeling.models.SpatialModel`, Optional
         Unitless Spatial model (unit is dropped on evaluation if defined).
         Default is None.
+    covariance_data : `~numpy.ndarray`, optional
+        Covariance data array.
+        Default is None.
+    name : str, optional
+        Name of the created object.
+        Default is None and the name is generated automatically.
     """
 
     tag = ["FoVBackgroundModel", "fov-bkg"]
@@ -648,6 +654,7 @@ class FoVBackgroundModel(ModelBase):
         spectral_model=None,
         spatial_model=None,
         covariance_data=None,
+        name=None,
     ):
         # TODO: remove this in v2.0
         if isinstance(dataset_name, SpectralModel):
@@ -667,7 +674,10 @@ class FoVBackgroundModel(ModelBase):
 
         if not spectral_model.is_norm_spectral_model:
             raise ValueError("A norm spectral model is required.")
-
+        if name is not None:
+            self._name = make_name(name)
+        else:
+            self._name = self.datasets_names[0] + "-bkg"
         self._spatial_model = spatial_model
         self._spectral_model = spectral_model
         super().__init__(covariance_data=covariance_data)
@@ -695,7 +705,7 @@ class FoVBackgroundModel(ModelBase):
     @property
     def name(self):
         """Model name."""
-        return self.datasets_names[0] + "-bkg"
+        return self._name
 
     @property
     def parameters(self):
