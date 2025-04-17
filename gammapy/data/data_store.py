@@ -408,19 +408,19 @@ class DataStore:
         if obs_id is None:
             obs_id = obs_id_selection
         else:
-            obs_id = [_ for _ in obs_id_selection if _ in obs_id]
+            for _ in obs_id:
+                if _ not in self.obs_ids:
+                    if skip_missing:
+                        log.warning(f"Skipping missing obs_id: {_!r}")
+                    else:
+                        raise ValueError(f"Missing obs_id: {_!r}")
+            obs_id_selection = [_ for _ in obs_id_selection if _ in obs_id]
 
         obs_list = []
 
-        for _ in progress_bar(obs_id, desc="Obs Id"):
+        for _ in progress_bar(obs_id_selection, desc="Obs Id"):
             try:
                 obs = self.obs(_, required_irf, require_events)
-            except ValueError as err:
-                if skip_missing:
-                    log.warning(f"Skipping missing obs_id: {_!r}")
-                    continue
-                else:
-                    raise err
             except MissingRequiredHDU as e:
                 log.warning(f"Skipping run with missing HDUs; {e}")
                 continue
