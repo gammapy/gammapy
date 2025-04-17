@@ -405,7 +405,7 @@ class EventList:
 
         if is_range:
             # Handle numerical range case
-            if not isinstance(values, (list, tuple, np.ndarray)) or len(values) != 2:
+            if len(values) > 2:
                 warnings.warn(
                     "More than two arguments were given while selecting a range, only the first two were used for events selection."
                 )
