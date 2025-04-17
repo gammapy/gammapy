@@ -306,7 +306,7 @@ class GTI:
 
         return cls.create(start, stop, reference_time)
 
-    def select_time(self, time_interval):
+    def select_time(self, time_interval, inverted=False):
         """Select and crop GTIs in time interval.
 
         Parameters
@@ -334,8 +334,11 @@ class GTI:
         )
 
         gti_within["STOP"] = np.clip(gti_within["STOP"], interval_start, interval_stop)
+        gti_selected = gti_within
+        if inverted:
+            gti_selected = self.table[~mask]
 
-        return self.__class__(gti_within)
+        return self.__class__(gti_selected)
 
     def delete_interval(self, time_interval):
         """Select and crop GTIs in time interval.
