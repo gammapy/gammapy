@@ -580,16 +580,29 @@ def test_map_dataset_maker_swgo():
 
     datastore = DataStore.from_dir(path, "hdu-index.fits.gz", "obs-index.fits.gz")
 
-    event_type = datastore.obs_table["EVENT_TYPE"][0]
-    obs_selection = datastore.obs_table["EVENT_TYPE"] == event_type
-    hdu_selection = datastore.hdu_table["EVENT_TYPE"] == event_type
-    datastore_redu = DataStore(
-        hdu_table=datastore.hdu_table[hdu_selection],
-        obs_table=datastore.obs_table[obs_selection],
-    )
-    observations = datastore_redu.get_observations()
+    observation_groups = datastore.get_observation_groups("EVENT_TYPE")
 
-    obs = observations[0]
+    observation_groups_redu = datastore.get_observations(obs_id=[3, 2])
+    assert observation_groups_redu.ids == ["3", "2"]
+    observation_groups_redu = datastore.get_observation_groups(
+        "EVENT_TYPE", obs_id=[3, 2]
+    )
+
+    event_type = datastore.obs_table["EVENT_TYPE"][3]
+    assert observation_groups_redu["EVENT_TYPE_" + event_type].ids[0] == "3"
+
+    event_type = datastore.obs_table["EVENT_TYPE"][2]
+    assert observation_groups_redu["EVENT_TYPE_" + event_type].ids[0] == "2"
+
+    event_type = datastore.obs_table["EVENT_TYPE"][0]
+    selection_mask = datastore.obs_table["EVENT_TYPE"] == event_type
+    observations_redu = datastore.get_observations(
+        obs_id=datastore.obs_ids, selection_mask=selection_mask
+    )
+
+    assert observations_redu.ids == observation_groups["EVENT_TYPE_" + event_type].ids
+
+    obs = observations_redu[0]
     obs.gti = gti
 
     with pytest.raises(ValueError):
