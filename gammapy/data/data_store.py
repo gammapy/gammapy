@@ -388,10 +388,10 @@ class DataStore:
             Default is `"full-enclosure"`.
         require_events : bool, optional
             Require events and gti table or not. Default is True.
-        selection_mask : `~numpy.ndarray`
+        selection_mask : `~numpy.ndarray`, optional
             Boolean array of the same lenght than the ``obs_table``.
             Observation is kept if  corresponding selection_mask element is True
-            and if they are in the list of obs_id.
+            and if it is in the list of obs_id.
             If None, default is all observations ordered by OBS_ID are returned.
 
         Returns
