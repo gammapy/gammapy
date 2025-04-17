@@ -342,74 +342,13 @@ class DataStore:
 
         return Observation(**kwargs)
 
-    def select(self, selection_dict=None, selection_mask=None, strict=False):
-        """Select a subset of the datastore.
-
-        Parameters
-        ----------
-        selection_dict : dict, optionnal
-            Dictionnary used to filter observations.
-            The dict keys must match one of the key in the observation table.
-            The dict items can be :
-                * a value
-                * a list of values
-                * a range instance
-            Defalut is None, and no selection is applied.
-        selection_mask : numpy.array, optionnal
-            Boolean mask, True for selected observations.
-            The length of the array must match the length of the observation table
-            Default is None, and no mask is applied.
-        strict: bool, optionnal
-            Ignore missing keys if False (Default).
-
-        Returns
-        -------
-        datastore_redu : `DataStore`
-            Filtered Datastore.
-        """
-
-        if len(self.obs_table["OBS_ID"]) != len(np.unique(self.obs_table["OBS_ID"])):
-            raise KeyError("OBS_ID has non unique entries.")
-
-        if selection_mask:
-            obs_selection = selection_mask
-        else:
-            obs_selection = np.ones(len(self.obs_table), dtype=bool)
-
-        if selection_dict:
-            for key, value in selection_dict.items():
-                if not strict and key not in self.obs_table.keys():
-                    log.warning(
-                        f"Missing key {key} in Datastore.obs_table and strict is True"
-                    )
-                    continue
-                if isinstance(value, list):
-                    obs_selection &= np.array([_ in value for _ in self.obs_table[key]])
-                elif isinstance(value, range):
-                    obs_selection &= self.obs_table[key] >= value[0]
-                    obs_selection &= (
-                        self.obs_table[key] <= value[-1] + value[1] - value[0]
-                    )
-                else:
-                    obs_selection &= self.obs_table[key] == value
-        hdu_selection = np.array(
-            [
-                row in self.obs_table["OBS_ID"][obs_selection]
-                for row in self.hdu_table["OBS_ID"]
-            ]
-        )
-        datastore_redu = DataStore(
-            hdu_table=self.hdu_table[hdu_selection],
-            obs_table=self.obs_table[obs_selection],
-        )
-        return datastore_redu
-
     def get_observations(
         self,
         obs_id=None,
         skip_missing=False,
         required_irf="full-enclosure",
         require_events=True,
+        selection_mask=None,
     ):
         """Generate a `~gammapy.data.Observations`.
 
@@ -422,7 +361,8 @@ class DataStore:
         obs_id : list, optional
             Observation IDs.
             If None, default is all observations ordered by OBS_ID are returned.
-            This is not necessarily the order in the ``obs_table``.
+            This is not necessarily the order in the ``obs_table``,
+            but the ouput list will be reordered.
         skip_missing : bool, optional
             Skip missing observations. Default is False.
         required_irf : list of str or str, optional
@@ -448,14 +388,27 @@ class DataStore:
             Default is `"full-enclosure"`.
         require_events : bool, optional
             Require events and gti table or not. Default is True.
+        selection_mask : `~numpy.ndarray`
+            Boolean array of the same lenght than the ``obs_table``.
+            Observation is kept if  corresponding selection_mask element is True
+            and if they are in the list of obs_id.
+            If None, default is all observations ordered by OBS_ID are returned.
 
         Returns
         -------
         observations : `~gammapy.data.Observations`
             Container holding a list of `~gammapy.data.Observation`.
         """
+
+        if selection_mask:
+            obs_id_selection = np.array(self.obs_ids)[selection_mask]
+        else:
+            obs_id_selection = self.obs_ids
+
         if obs_id is None:
-            obs_id = self.obs_ids
+            obs_id = obs_id_selection
+        else:
+            obs_id = [_ for _ in obs_id_selection if _ in obs_id]
 
         obs_list = []
 
@@ -477,7 +430,7 @@ class DataStore:
         log.info(f"Observations selected: {len(obs_list)} out of {len(obs_id)}.")
         return Observations(obs_list)
 
-    def get_observation_groups(self, key):
+    def get_observation_groups(self, key, **kwargs):
         """Generate groups of `~gammapy.data.Observations` with a shared property.
 
         Parameters
@@ -486,6 +439,8 @@ class DataStore:
             Key of the observation table used to apply the grouping.
             For example "EVENT_TYPE" will return group observations
             with the same event type.
+        kwargs : dict, optional
+            Keyword arguments passed to `~gammapy.data.DataStore.get_observations`.
 
         Returns
         -------
@@ -493,8 +448,11 @@ class DataStore:
             Dictionary of Observations instance, one instance for each group.
         """
 
-        observations = self.get_observations()
-        observations_group = observations.group_by_label(self.obs_table[key])
+        observations = self.get_observations(**kwargs)
+        obs_table = self.obs_table[
+            np.array([_ for _ in self.obs_table["OBS_ID"] if _ in observations.obs_ids])
+        ]
+        observations_group = observations.group_by_label(obs_table[key])
         reformated = dict()
         for old_key, value in observations_group.items():
             reformated[f"{key}{old_key[5:]}"] = value
