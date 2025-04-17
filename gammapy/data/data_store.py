@@ -400,10 +400,10 @@ class DataStore:
             Container holding a list of `~gammapy.data.Observation`.
         """
 
-        if selection_mask:
-            obs_id_selection = np.array(self.obs_ids)[selection_mask]
-        else:
+        if selection_mask is None:
             obs_id_selection = self.obs_ids
+        else:
+            obs_id_selection = np.array(self.obs_ids)[selection_mask]
 
         if obs_id is None:
             obs_id = obs_id_selection
@@ -450,7 +450,7 @@ class DataStore:
 
         observations = self.get_observations(**kwargs)
         obs_table = self.obs_table[
-            np.array([_ for _ in self.obs_table["OBS_ID"] if _ in observations.obs_ids])
+            np.array([str(_) in observations.ids for _ in self.obs_table["OBS_ID"]])
         ]
         observations_group = observations.group_by_label(obs_table[key])
         return {
