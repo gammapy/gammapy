@@ -405,6 +405,44 @@ class HpxNDMap(HpxMap):
         data = self.data[..., idx]
         return self.__class__(geom=geom, data=data, unit=self.unit, meta=self.meta)
 
+    def _cutout_view(self, position, width, odd_npix=False):
+        """
+        Create a cutout around a given position without copy of the data.
+
+        Parameters
+        ----------
+        position : `~astropy.coordinates.SkyCoord`
+            Center position of the cutout region.
+        width : tuple of `~astropy.coordinates.Angle`
+            Angular sizes of the region in (lon, lat) in that specific order.
+            If only one value is passed, a square region is extracted.
+        odd_npix : bool, optional
+            Force width to odd number of pixels.
+            Default is False.
+
+        Returns
+        -------
+        cutout : `~gammapy.maps.HpxNDMap`
+            Cutout map.
+        """
+        geom_cutout = self.geom.cutout(
+            position=position, width=width, mode="trim", odd_npix=odd_npix
+        )
+        # cutout_info = geom_cutout.cutout_slices(self.geom, mode="trim")
+
+        if self.geom.is_allsky:
+            idx = geom_cutout._ipix
+        else:
+            idx = self.geom.to_image().global_to_local((geom_cutout._ipix,))[0]
+
+        data = self.quantity[..., idx]
+        # slices = cutout_info["parent-slices"]
+        # parent_slices = Ellipsis, slices[0], slices[1]
+
+        return self.__class__.from_geom(
+            geom=geom_cutout, data=data, unit=self.unit
+        )
+
     def stack(self, other, weights=None, nan_to_num=True):
         """Stack cutout into map.
 
@@ -891,7 +929,6 @@ class HpxNDMap(HpxMap):
                 raise ValueError("Incompatible spatial geoms between map and weights")
 
         geom = RegionGeom(region=region, axes=self.geom.axes)
-
         if isinstance(region, PointSkyRegion):
             coords = geom.get_coord()
             data = self.interp_by_coord(coords=coords, method=method)
@@ -902,7 +939,7 @@ class HpxNDMap(HpxMap):
 
             if weights is not None:
                 weights_cutout = weights.cutout(
-                    position=geom.center_skydir, width=geom.width
+                    position=geom.center_skydir, width=np.max(geom.width)
                 )
                 cutout.data *= weights_cutout.data
 
