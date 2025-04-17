@@ -10,7 +10,8 @@ Introduction
 This notebook explains how to estimate the CTAO sensitivity for a
 point-like IRF at a fixed zenith angle and fixed offset, using the full
 containment IRFs distributed for the CTA 1DC. The significance is
-computed for a 1D analysis (ON-OFF regions) with the Li&Ma formula.
+computed for a 1D analysis (ON-OFF regions) with the
+`Li & Ma formula <https://ui.adsabs.harvard.edu/abs/1983ApJ...272..317L/abstract>`__.
 
 We use here an approximate approach with an energy dependent integration
 radius to take into account the variation of the PSF. We will first
@@ -222,7 +223,7 @@ ax1.plot(
     sensitivity_table["background"],
     "o-",
     color="black",
-    label="blackground",
+    label="background",
 )
 
 ax1.loglog()

@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
+import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import SkyCoord
@@ -20,6 +21,20 @@ class TestEventListBase:
     def test_select_parameter(self):
         events = self.events.select_parameter("ENERGY", (0.8 * u.TeV, 5.0 * u.TeV))
         assert len(events.table) == 2716
+
+        with pytest.warns(UserWarning):
+            events = self.events.select_parameter(
+                "ENERGY", (0.8, 5, 10) * u.TeV, is_range=True
+            )
+            assert len(events.table) == 2716
+
+        events = self.events.select_parameter(
+            "EVENT_ID", [1808181231761, 3594887627737, 3599182594792], is_range=False
+        )
+        assert len(events.table) == 3
+
+        events = self.events.select_parameter("ENERGY", (0.8, np.inf) * u.TeV)
+        assert len(events.table) == 3944
 
     def test_meta(self):
         assert self.events.meta.event_class == "std"

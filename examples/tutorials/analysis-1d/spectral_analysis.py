@@ -89,12 +89,9 @@ In practice, we have to:
 - Apply a `~gammapy.estimators.FluxPointsEstimator` to compute flux points for
   the spectral part of the fit.
 
-
 """
 
 from pathlib import Path
-
-# Check package versions
 import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
@@ -114,7 +111,6 @@ from gammapy.datasets import (
     Datasets,
     FluxPointsDataset,
     SpectrumDataset,
-    SpectrumDatasetOnOff,
 )
 from gammapy.estimators import FluxPointsEstimator
 from gammapy.estimators.utils import resample_energy_edges
@@ -233,6 +229,12 @@ for obs_id, observation in zip(obs_ids, observations):
 print(datasets)
 
 ######################################################################
+# The data reduction loop can also be performed through the
+# `~gammapy.makers.DatasetsMaker` class that take a list of makers as input,
+# as described :doc:`here <tutorials/api/makers.html>`
+
+
+######################################################################
 # Plot off regions
 # ----------------
 #
@@ -285,7 +287,7 @@ plt.show()
 
 
 ######################################################################
-# Finally you can write the extracted datasets to disk using the OGIP
+# Finally you can write the extracted datasets to disk using the OGIP (default)
 # format (PHA, ARF, RMF, BKG, see
 # `here <https://gamma-astro-data-formats.readthedocs.io/en/latest/spectra/ogip/index.html>`__
 # for details):
@@ -293,20 +295,14 @@ plt.show()
 
 path = Path("spectrum_analysis")
 path.mkdir(exist_ok=True)
-
-for dataset in datasets:
-    dataset.write(filename=path / f"obs_{dataset.name}.fits.gz", overwrite=True)
+datasets.write(filename=path / "spectrum_dataset.yaml", overwrite=True)
 
 
 ######################################################################
 # If you want to read back the datasets from disk you can use:
 #
 
-datasets = Datasets()
-
-for obs_id in obs_ids:
-    filename = path / f"obs_{obs_id}.fits.gz"
-    datasets.append(SpectrumDatasetOnOff.read(filename))
+datasets = Datasets.read(filename=path / "spectrum_dataset.yaml")
 
 
 ######################################################################
@@ -332,7 +328,11 @@ datasets.models = [model]
 fit_joint = Fit()
 result_joint = fit_joint.run(datasets=datasets)
 
-# we make a copy here to compare it later
+
+######################################################################
+# Make a copy here to compare it later
+#
+
 model_best_joint = model.copy()
 
 
@@ -358,7 +358,7 @@ display(result_joint.models.to_parameters_table())
 
 ######################################################################
 # A simple way to inspect the model residuals is using the function
-# `~SpectrumDataset.plot_fit()`
+# `~gammapy.datasets.SpectrumDataset.plot_fit()`
 #
 
 ax_spectrum, ax_residuals = datasets[0].plot_fit()
@@ -449,13 +449,16 @@ dataset_stacked.models = model
 stacked_fit = Fit()
 result_stacked = stacked_fit.run([dataset_stacked])
 
+######################################################################
 # Make a copy to compare later
+#
+
 model_best_stacked = model.copy()
 
 print(result_stacked)
 
 ######################################################################
-# And display the parameter table
+# And display the parameter table for both the joint and the stacked models
 
 display(model_best_joint.parameters.to_table())
 
@@ -503,14 +506,13 @@ plt.show()
 #
 # - chi2 : estimate from chi2 statistics.
 # - profile : estimate from interpolation of the likelihood profile.
-# - distrib : estimate from probability distributions,
-#             assuming that flux points correspond to asymmetric gaussians
-#             and upper limits complementary error functions.
+# - distrib : estimate from probability distributions, assuming that flux points
+#   correspond to asymmetric gaussians and upper limits complementary error functions.
 #
-# Default is `chi2`, in that case upper limits are ignored and the mean of asymetrics error is used.
+# Default is `chi2`, in that case upper limits are ignored and the mean of asymmetric error is used.
 # So it is recommended to use `profile` if `stat_scan` is available on flux points.
 # The `distrib` case provides an approximation if the `profile` is not available
-# which allows to take into accounts upper limit and asymetrics error.
+# which allows to take into accounts upper limit and asymmetric error.
 #
 # In the example below we can see that the `profile` case matches exactly the result
 # from the joint analysis of the ON/OFF datasets using `wstat` (as labelled).
@@ -594,7 +596,7 @@ plot_stat(flux_points_dataset_no_ul)
 # What next?
 # ----------
 #
-# The methods shown in this tutorial is valid for point-like or midly
+# The methods shown in this tutorial is valid for point-like or slightly
 # extended sources where we can assume that the IRF taken at the region
 # center is valid over the whole region. If one wants to extract the 1D
 # spectrum of a large source and properly average the response over the
