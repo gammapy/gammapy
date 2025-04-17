@@ -988,7 +988,7 @@ class IRFMap:
         ----------
         factor : int
             Downsampling factor.
-        axis_name : str
+        axis_name : str, optional
             Axis to downsample. If None, spatial axes are downsampled.
             It is not recommended to use this function on a `~gammapy.irf.PSFMap` rad axis.
         weights : `~gammapy.maps.Map`, optional
