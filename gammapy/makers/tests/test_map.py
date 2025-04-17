@@ -584,8 +584,8 @@ def test_map_dataset_maker_swgo():
     observation_groups = datastore.get_observation_groups("EVENT_TYPE")
 
     event_type = datastore.obs_table["EVENT_TYPE"][0]
-    datastore_redu = datastore.select(dict(EVENT_TYPE=event_type))
-    observations_redu = datastore_redu.get_observations()
+    selection = datastore.obs_table["EVENT_TYPE"] == event_type
+    observations_redu = datastore.get_observations(selection)
 
     assert observations_redu.obs_ids == observation_groups[event_type].obs_ids
 
