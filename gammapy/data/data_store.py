@@ -361,8 +361,7 @@ class DataStore:
         obs_id : list, optional
             Observation IDs.
             If None, default is all observations ordered by OBS_ID are returned.
-            This is not necessarily the order in the ``obs_table``,
-            but the ouput list will be reordered.
+            This is not necessarily the order in the ``obs_table``.
         skip_missing : bool, optional
             Skip missing observations. Default is False.
         required_irf : list of str or str, optional
@@ -414,7 +413,7 @@ class DataStore:
                         log.warning(f"Skipping missing obs_id: {_!r}")
                     else:
                         raise ValueError(f"Missing obs_id: {_!r}")
-            obs_id_selection = [_ for _ in obs_id_selection if _ in obs_id]
+            obs_id_selection = [_ for _ in obs_id if _ in obs_id_selection]
 
         obs_list = []
 
@@ -450,9 +449,14 @@ class DataStore:
 
         observations = self.get_observations(**kwargs)
         obs_table = self.obs_table[
-            np.array([str(_) in observations.ids for _ in self.obs_table["OBS_ID"]])
+            [
+                np.where(self.obs_table["OBS_ID"].astype(str) == _)[0]
+                for _ in observations.ids
+            ]
         ]
-        observations_group = observations.group_by_label(obs_table[key])
+        observations_group = observations.group_by_label(
+            obs_table[key].astype(str).squeeze()
+        )
         return {
             f"{key}{old_key[5:]}": value
             for old_key, value in observations_group.items()
