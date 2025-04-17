@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 class HDUIndexTable(Table):
     """HDU index table.
 
-    See :ref:`gadf:hdu-index`.
+    See `HDU index table <https://gamma-astro-data-formats.readthedocs.io/en/latest/data_storage/hdu_index/index.html#hdu-index>`__.
     """
 
     VALID_HDU_TYPE = [
@@ -46,7 +46,7 @@ class HDUIndexTable(Table):
 
     @classmethod
     def read(cls, filename, **kwargs):
-        """Read :ref:`gadf:hdu-index`.
+        """Read `HDU index table <https://gamma-astro-data-formats.readthedocs.io/en/latest/data_storage/hdu_index/index.html#hdu-index>`__.
 
         Parameters
         ----------

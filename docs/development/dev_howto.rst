@@ -546,7 +546,10 @@ one of which involves the `meeseeksmachine <https://github.com/meeseeksmachine>`
 
 2. If you forgot, on your merged PR make the comment: "``@meeseeksdev backport to [BRANCHNAME]``"
 
-3. If this does not work automatically, a set of instructions will be given to you as a comment in the PR to be backported. This involves using the "``cherry-pick``" git command. See `here <https://docs.astropy.org/en/latest/development/releasing.html#backporting-fixes-from-main>`__ for information.
+3. If this does not work automatically, a set of instructions will be given to you as a comment in
+   the PR to be backported. This involves using the "``cherry-pick``" git command.
+   See `here <https://docs.astropy.org/en/latest/development/maintainers/releasing.html#backporting-fixes-from-main>`__
+   for information.
 
 
 
