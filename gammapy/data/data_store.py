@@ -6,12 +6,13 @@ from copy import copy
 from pathlib import Path
 import numpy as np
 from astropy import units as u
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import SkyCoord, Angle
 from astropy.io import fits
 import gammapy.utils.time as tu
 from gammapy.utils.pbar import progress_bar
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
+from gammapy.maps import WcsGeom, MapAxis
 from .hdu_index_table import HDUIndexTable
 from .obs_table import ObservationTable, ObservationTableChecker
 from .observations import Observation, ObservationChecker, Observations
@@ -478,6 +479,85 @@ class DataStore:
         """
         checker = DataStoreChecker(self)
         return checker.run(checks=checks)
+
+    def get_effective_livetime(self, position, radius=None, border=None, en_edges=None):
+        """Compute the effective observation time at a given sky position.
+
+        This function computes the total livetime over observations containing a region of interest. Given the fact
+        that the instrument responses change within the field of view for each observation, this function computes
+        precisely the acceptance-corrected livetime map.
+
+        Parameters
+        ----------
+        position : `~astropy.coordinates.SkyCoord`
+            Central sky position.
+        radius : `~astropy.coordinates.Angle`, optional.
+            Radius of the region of interest.
+            If None, a `radius` of 0.1 deg is used. Default is None.
+        border : `~astropy.coordinates.Angle`, optional.
+            Additional edge summed to the region of interest used for the selection of the observations.The maximum offset FoV. Default is None.
+            If None, a `border` of 6 deg is used. Default is None.
+        en_edges : list of `~astropy.units.Quantity`
+            Edges of true energy bins. Default is None.
+
+        Returns
+        -------
+        livetime_maps : `~gammapy.maps.Map` or list of `~gammapy.maps.Map`
+            Effective livetime map(s).
+        selected_ids : list
+            List of selected observation IDs.
+
+        Examples
+        --------
+        >>> from gammapy.data import DataStore
+        >>> data_store = DataStore.from_dir('$GAMMAPY_DATA/hess-dl3-dr1')
+        >>>
+        >>> from astropy.coordinates import SkyCoord
+        >>> position = SkyCoord.from_name('crab')
+        >>> livetime_maps, sel_ids = data_store.get_effective_livetime(position)
+        >>> livetime_maps.plot(add_cbar=True);
+        >>> print(len(sel_ids))
+        """
+        from gammapy.makers.utils import make_effective_livetime_map
+
+        border = Angle(6, "deg") if border is None else border
+        selection = dict(
+            type="sky_circle",
+            frame="icrs",
+            lon=position.ra,
+            lat=position.dec,
+            radius=Angle(0.1, "deg") if radius is None else radius,
+            border=border,
+        )
+        selected_obs_table = self.obs_table.select_observations(selection)
+        observations = self.get_observations(selected_obs_table["OBS_ID"])
+
+        # Define the geom
+        edges = [1 * u.GeV, 1 * u.PeV] if en_edges is None else en_edges
+        energy_axis_true = MapAxis.from_energy_edges(edges, name="energy_true")
+        geom = WcsGeom.create(
+            skydir=position,
+            binsz=0.02,
+            width=(border.value * 2, border.value * 2),
+            frame="icrs",
+            proj="CAR",
+            axes=[energy_axis_true],
+        )
+
+        livetime_maps = make_effective_livetime_map(
+            observations, geom, offset_max=border
+        )
+
+        for idx, _ in enumerate(edges[:-1]):
+            val = (
+                livetime_maps.get_image_by_idx((idx,)).get_by_coord(position)[0]
+                * livetime_maps.unit
+            )
+            log.info(
+                f"Effective Livetime at position in [{edges[idx]}, {edges[idx + 1]}] : {val:.2f}"
+            )
+
+        return livetime_maps, selected_obs_table["OBS_ID"].tolist()
 
 
 class DataStoreChecker(Checker):
