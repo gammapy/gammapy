@@ -35,7 +35,12 @@ def _build_priorparameters_from_dict(data, default_parameters):
 
 
 class Prior(ModelBase):
-    """Prior base class."""
+    """Prior abstract base class. For now, see existing examples of type of priors:
+
+    - `GaussianPrior`
+    - `UniformPrior`
+    - `LogUniformPrior`
+    """
 
     _unit = ""
 
@@ -173,10 +178,10 @@ class UniformPrior(Prior):
     ----------
     min : float
         Minimum value.
-        Default is -inf.
+        Default is -`np.inf`.
     max : float
         Maxmimum value.
-        Default is inf.
+        Default is `np.inf`.
     """
 
     tag = ["UniformPrior"]
@@ -201,14 +206,14 @@ class UniformPrior(Prior):
 class LogUniformPrior(Prior):
     """LogUniform Prior.
 
-     Equivalent to a uniform prior on the log of the parameter
+    Equivalent to a uniform prior on the log of the parameter
 
-     Parameters
-     ----------
-     min : float
-         minimum value.
+    Parameters
+    ----------
+    min : float
+        minimum value. Default is 1e-14.
     max : float
-         maximum value.
+        maximum value. Default is 1e-10.
     """
 
     tag = ["LogUniformPrior"]
