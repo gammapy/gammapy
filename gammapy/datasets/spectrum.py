@@ -302,7 +302,7 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         raise NotImplementedError("Method not supported on a spectrum dataset")
 
     @classmethod
-    def read(cls, filename, format="ogip", checksum=False, name=None, **kwargs):
+    def read(cls, filename, format="gadf", checksum=False, name=None, **kwargs):
         """Read from file.
 
         For OGIP formats, filename is the name of a PHA file. The BKG, ARF, and RMF file names must be
@@ -315,7 +315,7 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         filename : `~pathlib.Path` or str
             OGIP PHA file to read.
         format : {"ogip", "ogip-sherpa", "gadf"}
-            Format to use. Default is "ogip".
+            Format to use. Default is "gadf".
         checksum : bool, optional
             If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
         name: str, optional
@@ -326,14 +326,23 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         from .io import OGIPDatasetReader
 
         if format == "gadf":
-            return super().read(
+            mapd = super().read(
                 filename, format="gadf", checksum=checksum, name=name, **kwargs
             )
+            if (
+                mapd.counts is None
+                and mapd.background is None
+                and mapd.exposure is None
+                and mapd.edisp is None
+            ):
+                log.warning("GADF reader returned empty counts map, trying OGIP reader")
+            else:
+                return mapd
 
         reader = OGIPDatasetReader(filename=filename, checksum=checksum, name=name)
         return reader.read()
 
-    def write(self, filename, overwrite=False, format="ogip", checksum=False):
+    def write(self, filename, overwrite=False, format="gadf", checksum=False):
         """Write spectrum dataset on off to file.
 
         Can be serialised either as a `MapDataset` with a `RegionGeom`
@@ -347,7 +356,7 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         overwrite : bool, optional
             Overwrite existing file. Default is False.
         format : {"ogip", "ogip-sherpa", "gadf"}
-            Format to use. Default is "ogip".
+            Format to use. Default is "gadf".
         checksum : bool
             When True adds both DATASUM and CHECKSUM cards to the headers written to the file.
             Default is False.
