@@ -875,14 +875,14 @@ class TestFermi3PCObject:
         assert flux_points.norm_ul
 
         desired = [
-            5.431500e-06,
-            5.635604e-06,
-            3.341596e-06,
-            1.058516e-06,
-            2.264139e-07,
-            1.421599e-08,
-            6.306778e-10,
-            3.165719e-12,
+            5.43150044e-06,
+            5.6356044e-06,
+            3.34159577e-06,
+            1.05866529e-06,
+            2.26413922e-07,
+            1.42159871e-08,
+            6.30677817e-10,
+            3.16571939e-12,
         ]
         assert_allclose(flux_points.flux.data.flat, desired, rtol=1e-5)
 

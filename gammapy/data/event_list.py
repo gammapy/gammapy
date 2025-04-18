@@ -19,6 +19,7 @@ from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
 from gammapy.utils.time import time_ref_from_dict
 from .metadata import EventListMetaData
+from gammapy.utils.deprecation import deprecated_renamed_argument
 
 __all__ = ["EventList"]
 
@@ -365,16 +366,19 @@ class EventList:
         mask = geom.contains(self.radec)
         return self.select_row_subset(mask)
 
-    def select_parameter(self, parameter, band):
-        """Select events with respect to a specified parameter.
+    @deprecated_renamed_argument("band", "values", "2.0")
+    def select_parameter(self, parameter, values, is_range=True):
+        """
+        Event selection according to parameter values, either in a range or exact matches.
 
         Parameters
         ----------
         parameter : str
-            Parameter used for the selection. Must be present in `self.table`.
-        band : tuple or `astropy.units.Quantity`
-            Minimum and maximum value for the parameter to be selected (minimum <= parameter < maximum).
-            If parameter is not dimensionless, a Quantity is required.
+            Column name to filter on.
+        values : tuple, list or `~numpy.ndarray`
+            Value(s) for the parameter to be selected on.
+        is_range : `bool`, optional
+            Treat as numerical range (min,max). Default is True.
 
         Returns
         -------
@@ -388,12 +392,34 @@ class EventList:
         >>> filename = "$GAMMAPY_DATA/fermi_3fhl/fermi_3fhl_events_selected.fits.gz"
         >>> event_list = EventList.read(filename)
         >>> zd = (0, 30) * u.deg
-        >>> event_list = event_list.select_parameter(parameter='ZENITH_ANGLE', band=zd)
-        >>> print(len(event_list.table))
+        >>> # Select event list through the zenith angle
+        >>> event_list_zd = event_list.select_parameter(parameter='ZENITH_ANGLE', values=zd)
+        >>> print(len(event_list_zd.table))
         123944
+        >>> # Select event list through the run ID
+        >>> event_list_id = event_list.select_parameter(parameter='RUN_ID', values=[239557414, 239559565, 459941302], is_range=False)
+        >>> print(len(event_list_id.table))
+        38
         """
-        mask = band[0] <= self.table[parameter].quantity
-        mask &= self.table[parameter].quantity < band[1]
+        col_data = self.table[parameter]
+
+        if is_range:
+            # Handle numerical range case
+            if len(values) > 2:
+                warnings.warn(
+                    "More than two arguments were given while selecting a range, only the first two were used for events selection."
+                )
+
+            mask = (values[0] <= col_data) & (col_data < values[1])
+        else:
+            # Universal comparison that works for strings and numbers
+            mask = np.zeros(len(col_data), dtype=bool)
+            for value in values:
+                if not isinstance(value, str) and np.isnan(value):
+                    mask |= np.isnan(col_data.data.astype(float))
+                else:
+                    mask |= col_data == value  # Works for both strings and numbers
+
         return self.select_row_subset(mask)
 
     @property

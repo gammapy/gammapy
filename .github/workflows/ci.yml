@@ -38,8 +38,8 @@ jobs:
             gammapy_data_path: /home/runner/work/gammapy/gammapy/gammapy-datasets/dev
             allowed_fail: false
           - os: macos-latest
-            python: '3.11'
-            tox_env: 'py311-test'
+            python: '3.13'
+            tox_env: 'py313-test'
             gammapy_data_path: /Users/runner/work/gammapy/gammapy/gammapy-datasets/dev
             allowed_fail: false
           - os: macos-14
@@ -47,7 +47,7 @@ jobs:
             tox_env: 'py311-test'
             allowed_fail: false
           - os: windows-latest
-            python: '3.11'
+            python: '3.12'
             tox_env: 'py311-test-alldeps_noray'
             gammapy_data_path:  D:\a\gammapy\gammapy\gammapy-datasets\dev
             allowed_fail: false
@@ -69,15 +69,15 @@ jobs:
             tox_env: 'codestyle'
             allowed_fail: false
           - os: ubuntu-latest
-            python: '3.9'
-            tox_env: 'py39-test-alldeps_noray-astropy50-numpy121'
+            python: '3.10'
+            tox_env: 'py310-test-alldeps_noray-astropy60-numpy126'
             allowed_fail: false
           - os: ubuntu-latest
-            python: '3.9'
+            python: '3.10'
             tox_env: 'oldestdeps'
             allowed_fail: false
           - os: ubuntu-latest
-            python: '3.11'
+            python: '3.12'
             tox_env: 'devdeps'
             allowed_fail: true
     steps:

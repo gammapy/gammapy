@@ -1665,18 +1665,17 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
 
         Returns
         -------
-
-        best_fit: `~gammapy.maps.RegionNDMap`
+        best_fit_profile: `~gammapy.maps.RegionNDMap`
             Map containing the best fit.
         """
         table = Table.read(self._auxiliary_filename, hdu="BEST_FIT_LC")
 
         # For best-fit profile, Ph_min and Ph_max are equal and represent bin centers.
         phases = MapAxis.from_nodes(table["Ph_Min"], name="phase", interp="lin")
-        profile_map = RegionNDMap.create(
+        best_fit_profile = RegionNDMap.create(
             region=None, axes=[phases], data=table["Intensity"]
         )
-        return profile_map
+        return best_fit_profile
 
     @property
     def pulse_profile_radio(self):
@@ -1697,32 +1696,32 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
 
         # For radio pulse profile, Ph_min and Ph_max are equal and represent bin centers.
         phases = MapAxis.from_nodes(ph_node, name="phase", interp="lin")
-        profile_map = RegionNDMap.create(region=None, axes=[phases], data=data)
-        return profile_map
+        radio_profile = RegionNDMap.create(region=None, axes=[phases], data=data)
+        return radio_profile
 
     @property
     def pulse_profiles(self):
         """
         The 3PC pulse profiles are provided in different energy ranges, each represented in weighted counts.
-        These profiles are stored in a dictionary of `~gammapy.maps.RegionNDMap` objects, one per energy bin.
+        These profiles are stored in a `~gammapy.maps.Maps` of `~gammapy.maps.RegionNDMap`, one per energy bin.
 
-        The dictionary keys correspond to specific energy ranges as follows:
-            * `GT100_WtCnt`: > 0.1 GeV
-            * `50_100_WtCt`: 0.05 – 0.1 GeV
-            * `100_300_WtCt`: 0.1 – 0.3 GeV
-            * `300_1000_WtCt`: 0.3 – 1 GeV
-            * `1000_3000_WtCt`: 1 – 3 GeV
-            * `3000_100000_WtCt`: 3 – 1000 GeV
-            * `10000_100000_WtCt`: 10 – 1000 GeV
+        The `~gammapy.maps.Maps` keys correspond to specific energy ranges as follows:
+
+        - `GT100_WtCnt`: > 0.1 GeV
+        - `50_100_WtCt`: 0.05 – 0.1 GeV
+        - `100_300_WtCt`: 0.1 – 0.3 GeV
+        - `300_1000_WtCt`: 0.3 – 1 GeV
+        - `1000_3000_WtCt`: 1 – 3 GeV
+        - `3000_100000_WtCt`: 3 – 1000 GeV
+        - `10000_100000_WtCt`: 10 – 1000 GeV
 
         Each pulse profile has an associated uncertainty map, which can be accessed by
-        prepending `"Unc_"` to the corresponding key in the dictionary.
+        prepending `"Unc_"` to the corresponding key.
 
         Returns
         -------
-
-        dict_map: dict of `~gammapy.maps.RegionNDMap`
-            Dictionary of map containing the pulse profile in different energy bin.
+        maps: `~gammapy.maps.Maps`
+            Maps containing the pulse profile in the different energy bin.
         """
 
         table = Table.read(self._auxiliary_filename, hdu="GAMMA_LC")
@@ -1731,16 +1730,19 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
             name="phase",
             interp="lin",
         )
-        map_dict = dict()
-        for name in self._pulse_profile_column_name:
-            map_dict[name] = RegionNDMap.create(
-                region=None, axes=[phases], data=table[name]
-            )
-        for name in self._pulse_profile_column_name:
-            map_dict[f"Unc_{name}"] = RegionNDMap.create(
-                region=None, axes=[phases], data=table[f"Unc_{name}"]
-            )
-        return map_dict
+        geom = RegionGeom(region=None, axes=[phases])
+        names = np.concatenate(
+            [
+                self._pulse_profile_column_name,
+                [f"Unc_{name}" for name in self._pulse_profile_column_name],
+            ]
+        )
+        maps = Maps.from_geom(
+            geom=geom,
+            names=names,
+            kwargs_list=[{"data": table[name].data} for name in names],
+        )
+        return maps
 
     def spectral_model(self, fit="auto"):
         """

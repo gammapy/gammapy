@@ -933,8 +933,8 @@ class PowerLawNormSpectralModel(SpectralModel):
     """
 
     tag = ["PowerLawNormSpectralModel", "pl-norm"]
-    norm = Parameter("norm", 1, unit="", interp="log")
     tilt = Parameter("tilt", 0, frozen=True)
+    norm = Parameter("norm", 1, unit="", interp="log")
     reference = Parameter("reference", "1 TeV", frozen=True)
 
     @staticmethod
@@ -1163,10 +1163,10 @@ class SmoothBrokenPowerLawSpectralModel(SpectralModel):
         :math:`\Gamma_2`. Default is 2.
     amplitude : `~astropy.units.Quantity`
         :math:`\phi_0`. Default is 1e-12 cm-2 s-1 TeV-1.
-    reference : `~astropy.units.Quantity`
-        :math:`E_0`. Default is 1 TeV.
     ebreak : `~astropy.units.Quantity`
         :math:`E_{break}`. Default is 1 TeV.
+    reference : `~astropy.units.Quantity`
+        :math:`E_0`. Default is 1 TeV.
     beta : `~astropy.units.Quantity`
         :math:`\beta`. Default is 1.
 
@@ -1471,12 +1471,6 @@ class SuperExpCutoffPowerLaw3FGLSpectralModel(SpectralModel):
 
     Parameters
     ----------
-    index_1 : `~astropy.units.Quantity`
-        :math:`\Gamma_1`.
-        Default is 1.5.
-    index_2 : `~astropy.units.Quantity`
-        :math:`\Gamma_2`.
-        Default is 2.
     amplitude : `~astropy.units.Quantity`
         :math:`\phi_0`.
         Default is 1e-12 cm-2 s-1 TeV-1.
@@ -1486,6 +1480,12 @@ class SuperExpCutoffPowerLaw3FGLSpectralModel(SpectralModel):
     ecut : `~astropy.units.Quantity`
         :math:`E_{C}`.
         Default is 10 TeV.
+    index_1 : `~astropy.units.Quantity`
+        :math:`\Gamma_1`.
+        Default is 1.5.
+    index_2 : `~astropy.units.Quantity`
+        :math:`\Gamma_2`.
+        Default is 2.
     """
 
     tag = ["SuperExpCutoffPowerLaw3FGLSpectralModel", "secpl-3fgl"]
@@ -1516,10 +1516,6 @@ class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
 
     Parameters
     ----------
-    index_1 : `~astropy.units.Quantity`
-        :math:`\Gamma_1`. Default is 1.5.
-    index_2 : `~astropy.units.Quantity`
-        :math:`\Gamma_2`. Default is 2.
     amplitude : `~astropy.units.Quantity`
         :math:`\phi_0`. Default is 1e-12 cm-2 s-1 TeV-1.
     reference : `~astropy.units.Quantity`
@@ -1528,6 +1524,10 @@ class SuperExpCutoffPowerLaw4FGLSpectralModel(SpectralModel):
         :math:`a`, given as dimensionless value but
         internally assumes unit of :math:`{\rm MeV}^{-\Gamma_2}`.
         Default is 1e-14.
+    index_1 : `~astropy.units.Quantity`
+        :math:`\Gamma_1`. Default is 1.5.
+    index_2 : `~astropy.units.Quantity`
+        :math:`\Gamma_2`. Default is 2.
     """
 
     tag = ["SuperExpCutoffPowerLaw4FGLSpectralModel", "secpl-4fgl"]
@@ -1565,16 +1565,16 @@ class SuperExpCutoffPowerLaw4FGLDR3SpectralModel(SpectralModel):
 
     Parameters
     ----------
-    index_1 : `~astropy.units.Quantity`
-        :math:`\Gamma_1`. Default is 1.5.
-    index_2 : `~astropy.units.Quantity`
-        :math:`\Gamma_2`. Default is 2.
     amplitude : `~astropy.units.Quantity`
         :math:`\phi_0`.  Default is 1e-12 cm-2 s-1 TeV-1.
     reference : `~astropy.units.Quantity`
         :math:`E_0`. Default is 1 TeV.
     expfactor : `~astropy.units.Quantity`
         :math:`a`, given as dimensionless value. Default is 1e-2.
+    index_1 : `~astropy.units.Quantity`
+        :math:`\Gamma_1`. Default is 1.5.
+    index_2 : `~astropy.units.Quantity`
+        :math:`\Gamma_2`. Default is 2.
     """
 
     tag = ["SuperExpCutoffPowerLaw4FGLDR3SpectralModel", "secpl-4fgl-dr3"]
@@ -1600,7 +1600,7 @@ class SuperExpCutoffPowerLaw4FGLDR3SpectralModel(SpectralModel):
 
         mask = np.abs(index_2 * np.log(energy / reference)) < 1e-2
         ln_ = np.log(energy[mask] / reference)
-        power = expfactor * (
+        power = -expfactor * (
             ln_ / 2.0 + index_2 / 6.0 * ln_**2.0 + index_2**2.0 / 24.0 * ln_**3
         )
         cutoff[mask] = (energy[mask] / reference) ** power
@@ -1619,7 +1619,12 @@ class SuperExpCutoffPowerLaw4FGLDR3SpectralModel(SpectralModel):
         index_1 = self.index_1.quantity
         index_2 = self.index_2.quantity
         expfactor = self.expfactor.quantity
-        if ((index_1 > 2) and (index_2 > 0)) or (expfactor <= 0) or (index_2 <= 0):
+        index_0 = index_1 - expfactor / index_2
+        if (
+            ((index_2 < 0) and (index_0 < 2))
+            or (expfactor <= 0)
+            or ((index_2 > 0) and (index_0 >= 2))
+        ):
             return np.nan * reference.unit
         return reference * (1 + (index_2 / expfactor) * (2 - index_1)) ** (1 / index_2)
 
@@ -1875,6 +1880,11 @@ class TemplateNDSpectralModel(SpectralModel):
         self.meta = dict() if meta is None else meta
         if filename is not None:
             filename = str(make_path(filename))
+        if filename is None:
+            log.warning(
+                "The filename is not defined. Therefore, the model will not be serialised correctly. "
+                'To set the filename, the "template_model.filename" attribute can be used.'
+            )
         self.filename = filename
 
         parameters = []
@@ -1921,7 +1931,7 @@ class TemplateNDSpectralModel(SpectralModel):
         val = self.map.interp_by_pix(pixels, **self._interp_kwargs)
         return u.Quantity(val, self.map.unit, copy=COPY_IF_NEEDED)
 
-    def write(self, overwrite=False):
+    def write(self, overwrite=False, filename=None):
         """
         Write the map.
 
@@ -1930,7 +1940,13 @@ class TemplateNDSpectralModel(SpectralModel):
         overwrite: bool, optional
             Overwrite existing file.
             Default is False, which will raise a warning if the template file exists already.
+        filename : str, optional
+            Filename of the template model. By default, the template model
+            will be saved with the `TemplateNDSpectralModel.filename` attribute.
+            If `filename` is provided, this attribute will be used.
         """
+        if filename is not None:
+            self.filename = filename
         if self.filename is None:
             raise IOError("Missing filename")
         elif os.path.isfile(self.filename) and not overwrite:
@@ -2011,8 +2027,8 @@ class EBLAbsorptionNormSpectralModel(SpectralModel):
     """
 
     tag = ["EBLAbsorptionNormSpectralModel", "ebl-norm"]
-    alpha_norm = Parameter("alpha_norm", 1.0, frozen=True)
     redshift = Parameter("redshift", 0.1, frozen=True)
+    alpha_norm = Parameter("alpha_norm", 1.0, frozen=True)
 
     def __init__(self, energy, param, data, redshift, alpha_norm, interp_kwargs=None):
         self.filename = None
