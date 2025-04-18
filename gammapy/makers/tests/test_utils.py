@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import logging
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
@@ -25,6 +26,7 @@ from gammapy.makers.utils import (
     make_map_background_irf,
     make_map_exposure_true_energy,
     make_observation_time_map,
+    get_effective_livetime,
     make_theta_squared_table,
 )
 from gammapy.maps import HpxGeom, MapAxis, RegionGeom, WcsGeom, WcsNDMap
@@ -564,3 +566,17 @@ def test_make_effective_livetime_map():
     assert_allclose(obs_time_offset, [0, 0.242814], rtol=1e-3)
 
     assert obs_time.unit == u.hr
+
+
+@requires_data()
+def test_data_store_get_effective_livetime(caplog):
+    """Test the computation of the livetime for a test position"""
+    ds = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
+    position = SkyCoord.from_name("crab")
+    with caplog.at_level(logging.INFO):
+        livetime_maps, sel_ids = get_effective_livetime(datastore=ds, position=position)
+        assert livetime_maps.geom.shape_axes == (1,)
+        assert len(sel_ids) == 4
+        assert "Effective Livetime at [1.0 GeV, 1.0 PeV] : 1.75 h" in [
+            _.message for _ in caplog.records
+        ]
