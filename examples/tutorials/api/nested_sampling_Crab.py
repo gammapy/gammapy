@@ -71,6 +71,8 @@ Bayesian analysis with nested sampling.
 #   docs <https://johannesbuchner.github.io/UltraNest/>`__
 # | And a nice visualization of the NS method : `sampling
 #   visulisation <https://johannesbuchner.github.io/UltraNest/method.html#visualisation>`__
+# | Tutorial for UltraNest in X-ray fitting with concrete examples : `BXA
+#   Tutorial <https://peterboorman.com/tutorial_bxa.html>`__
 #
 # Reference :
 # ~~~~~~~~~~~
@@ -101,6 +103,7 @@ Bayesian analysis with nested sampling.
 
 # %matplotlib inline
 import matplotlib.pyplot as plt
+import numpy as np
 from gammapy.datasets import Datasets
 from gammapy.datasets import SpectrumDatasetOnOff
 
@@ -121,7 +124,9 @@ from gammapy.modeling.sampler import Sampler
 # fit.
 #
 
+import os
 
+os.environ["GAMMAPY_DATA"] = "/Users/facero/Documents/Work/Program/gammapy-data/dev"
 path = "$GAMMAPY_DATA/joint-crab/spectra/hess/"
 
 datasets = Datasets()
@@ -159,10 +164,9 @@ model = SkyModel.create(spectral_model="pl")
 #
 
 model.spectral_model.amplitude.prior = LogUniformPrior(min=1e-12, max=1e-10)
-model.spectral_model.index.prior = UniformPrior(min=2, max=3)
+model.spectral_model.index.prior = UniformPrior(min=1, max=5)
 # Now setting the model to the dataset :
 datasets.models = [model]
-
 datasets.models
 
 
@@ -177,9 +181,16 @@ datasets.models
 # | Here is a short description of the most relevant parameters that you
 #   could change :
 #
-# -  `live_points`:
-# -  `frac_remain`:
-# -  `log_dir`:
+# -  `live_points`: minimum number of live points throughout the run.
+#    More points allow to discover multiple peaks if existing but is
+#    slower. To test the Prior boundaries and for debugging, a lower
+#    number (~100) can be used before a production run with more points
+#    (~400 or more).
+# -  `frac_remain`: the cut-off condition for the integration. High
+#    values (e.g., 0.5) are faster and can be used if the posterior
+#    distribution is a relatively simple shape. A low value (1e-1, 1e-2)
+#    is optimal for finding peaks but slower.
+# -  `log_dir`: directory where the output files will be stored.
 #
 # **Important note:** unlike the MCMC method, you don’t need to define the
 # number of steps for which the sampler will run. The algorithm will
@@ -191,9 +202,8 @@ sampler_opts = {
     "frac_remain": 0.3,
     "log_dir": None,
 }
-run_opts = {"min_ess": 300}
 
-sampler = Sampler(backend="ultranest", sampler_opts=sampler_opts, run_opts=run_opts)
+sampler = Sampler(backend="ultranest", sampler_opts=sampler_opts)
 
 
 ######################################################################
@@ -202,56 +212,77 @@ sampler = Sampler(backend="ultranest", sampler_opts=sampler_opts, run_opts=run_o
 # method.
 #
 
-result_full = sampler.run(datasets)
+result_joint = sampler.run(datasets)
 
 
 ######################################################################
+# Understanding the outputs
+# -------------------------
+#
 # In the Jupyter notebook, you should be able to see an interactive
 # visualization of how the parameter space shrinks which starts from the
 # (min,max) shrinks down towards the optimal parameters.
 #
-# The output above is filled with interesting information which are not
-# easy to understand. Here we provide a short description of the most
-# relevant information provided above.
+# | The output above is filled with interesting information. Here we
+#   provide a short description of the most relevant information provided
+#   above.
+# | For more detailed information see the `UltraNest
+#   docs <https://johannesbuchner.github.io/UltraNest/issues.html#what-does-the-status-line-mean>`__.
 #
 # | **During the sampling**
-# | - Z=-68.8(0.53%) \| Like=-63.96..-58.75 [-63.9570..-63.9539]*\|
-#   it/evals=640/1068 eff=73.7327% N=200
+# | `Z=-68.8(0.53%) | Like=-63.96..-58.75 [-63.9570..-63.9539]*| it/evals=640/1068 eff=73.7327% N=300`
+# | Some important information here is : - Progress (0.53%) : The
+#   completed fraction of the integral. This is not a time progress bar.
+#   Stays at zero for a good fraction of the run. - the efficiency (eff
+#   value) of the sampling. This indicates out of the proposed new points,
+#   how many were accepted. If your efficiency is too small (<<1%), maybe
+#   you should revise your priors (e.g. a LogUniform prior for the
+#   normalization).
 #
-# **Final output**
+# **Final printed outputs**
 #
-# -  de"dfze
+# The final lines indicate that all three “convergence” strategies are
+# satisfied (samples, posterior uncertainty, and evidence uncertainty).
+#
+# | `logZ = -63.537 +- 0.291`
+# | The main goal of the Nested sampling algorithm is to estimate Z (the
+#   Bayesian evidence) which is given above together with an uncertainty.
+# | In a similar way to deltaLogLike and deltaAIC, deltaLogZ values can be
+#   used for model comparison.
 #
 # **Results stored on disk**
 #
-# -  dze
+# | if `log_dir` is set to a name where the results will be stored, then
+#   a directory is created containing many useful results and plots.
+# | A description of these outputes is given `here in Ultranest
+#   docs <https://johannesbuchner.github.io/UltraNest/performance.html#output-files>`__.
 #
 
 
 ######################################################################
-# Understanding the results
-# -------------------------
+# Results
+# -------
 #
 
 
 ######################################################################
 # Within a Bayesian analysis, the concept of best-fit has to be viewed
-# differently from what is done in a Minuit fit.
+# differently from what is done in a gradient descent fit.
 #
 # | The output of the Bayesian analysis is the posterior distribution and
 #   there is no “best-fit” output.
-# | One has to define based on the posteriors what we want to consider as
-#   “best-fit” and several options are possible:
+# | One has to define, based on the posteriors, what we want to consider
+#   as “best-fit” and several options are possible:
 #
 # -  the mean of the distribution
 # -  the median
 # -  the lowest likelihood value
 #
-# Be default the `DatasetModels` will be updated with the `mean` of
+# By default the `DatasetModels` will be updated with the `mean` of
 # the posterior distributions.
 #
 
-result_full.models
+result_joint.models
 
 
 ######################################################################
@@ -260,14 +291,23 @@ result_full.models
 #   be found in :
 #
 
-result_full.sampler_results["posterior"]
+result_joint.sampler_results["posterior"]
 
 
 ######################################################################
-# But they are much more information than just mean, errors, etc
+# | Besides mean, errors, etc, an interesting value is the
+#   `information gain` which estimates how much the posterior
+#   distribution has shrinked with respect to the prior (i.e. how much
+#   we’ve learned). A value < 1 means that the parameter is poorly
+#   constrained with the prior range.
+# | For a more physical interpretation see this
+#   `example <https://arxiv.org/abs/2205.00009>`__.
+#
+# The `Sampler Result` dictionnary contains also other interesting
+# information :
 #
 
-result_full.sampler_results.keys()
+result_joint.sampler_results.keys()
 
 
 ######################################################################
@@ -276,7 +316,9 @@ result_full.sampler_results.keys()
 #
 
 for i, n in enumerate(model.parameters.free_parameters.names):
-    plt.hist(result_full.samples[:, i], bins=30)
+    s = result_joint.samples[:, i]
+    plt.hist(s, bins=30)
+    plt.axvline(np.mean(s), ls="--", color="red")
     plt.xlabel(n)
     plt.show()
 
@@ -289,7 +331,7 @@ for i, n in enumerate(model.parameters.free_parameters.names):
 
 from ultranest.plot import cornerplot
 
-cornerplot(result_full.sampler_results, plot_datapoints=True, plot_density=True)
+cornerplot(result_joint.sampler_results, plot_datapoints=True, plot_density=True)
 plt.show()
 
 # sphinx_gallery_thumbnail_number = 2
@@ -299,7 +341,8 @@ plt.show()
 # Individual run analysis
 # =======================
 #
-# Now we’ll analyze several runs individually so that we can compare them.
+# Now we’ll analyze several Crab runs individually so that we can compare
+# them.
 #
 
 result_0 = sampler.run(datasets[0])
@@ -311,8 +354,8 @@ result_2 = sampler.run(datasets[2])
 # Comparing the posterior distribution of all runs
 # ================================================
 #
-# | For an easy comparison of different posterior distribution we can use
-#   the package chainconsumer.
+# | For a comparison of different posterior distribution we can use the
+#   package chainconsumer.
 # | As this is not a gammapy dependency, you’ll need to install it.
 # | More info here : https://samreay.github.io/ChainConsumer/
 #
@@ -334,7 +377,7 @@ result_2 = sampler.run(datasets[2])
 #        show_contour_labels=True,
 #        kde= True
 #    )
-# c.add_chain(create_chain(result_full.samples, "joint"))
+# c.add_chain(create_chain(result_joint.samples, "joint"))
 # c.add_chain(create_chain(result_0.samples, "run0", "g"))
 # c.add_chain(create_chain(result_1.samples, "run1", "b"))
 # c.add_chain(create_chain(result_2.samples, "run2", "y"))
@@ -356,3 +399,12 @@ result_2 = sampler.run(datasets[2])
     One can note as well that one of the run has a notably different amplitude (due to calibrations issues ?).
 
 """
+
+
+######################################################################
+# | We can see the joint analysis allows to better constrain the
+#   parameters than the individual runs (more observation time is of
+#   course better).
+# | One can note as well that one of the run has a notably different
+#   amplitude (due to calibrations issues ?).
+#
