@@ -100,7 +100,7 @@ print(amplitude_maximum_significance)
 ######################################################################
 # There are other methods based on the peak-to-trough difference to assess the variability in a lightcurve.
 # Here we present as example the relative variability amplitude as presented in
-# `Kovalev et al., 2004 <https://iopscience.iop.org/article/10.1086/497430>`__:
+# `Kovalev et al., 2004 <https://ui.adsabs.harvard.edu/abs/2005AJ....130.2473K/abstract>`__:
 
 relative_variability_amplitude = (f_max - f_min) / (f_max + f_min)
 
@@ -165,7 +165,7 @@ print(fpp_table)
 
 ######################################################################
 # The characteristic doubling and halving time of the light curve, as introduced by
-# `Brown, 2013 <https://durham-repository.worktribe.com/output/1478453/>`__, can also be computed.
+# `Brown, 2013 <https://ui.adsabs.harvard.edu/abs/2013MNRAS.431..824B/abstract>`__, can also be computed.
 # This provides information on the shape of the variability feature, in particular how quickly it rises and falls.
 
 dtime_table = compute_lightcurve_doublingtime(lc_1d, flux_quantity="flux")
@@ -179,7 +179,7 @@ print(dtime_table)
 # A good and simple-to-use implementation of the algorithm is found in
 # `astropy.stats.bayesian_blocks`.
 # This implementation uses Gaussian statistics, as opposed to the
-# `first introductory paper <https://iopscience.iop.org/article/10.1086/306064>`__
+# `first introductory paper <https://ui.adsabs.harvard.edu/abs/1998ApJ...504..405S/abstract>`__
 # which is based on Poissonian statistics.
 #
 # By passing the flux and error on the flux as ``measures`` to the method we can obtain the list of optimal bin edges

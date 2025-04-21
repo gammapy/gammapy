@@ -205,7 +205,7 @@ Open Source research software and **are mandatory**.
 CITATION.cff
 ------------
 The file ``CITATION.cff`` is used by Zenodo and GitHub. Its format should follow the rules set up by the
-`Citation File Format project <https://pythonlang.dev/repo/citation-file-format-citation-file-format/>`_. A GitHub
+`Citation File Format project <https://citation-file-format.github.io//>`_. A GitHub
 Action can be used to automatically check the compliance with the latest format. At the date of this PIG, there is no
 official scheme to handle current and past affiliations, that might be needed for LTS releases for example (see the
 CFF project `Issue #268 <https://github.com/citation-file-format/citation-file-format/issues/268>`_).

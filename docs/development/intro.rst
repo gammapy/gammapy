@@ -147,60 +147,84 @@ certainly the same week), are best.
 Get set up
 ==========
 
-.. warning::
+This section is based on the `instructions <https://ctapipe.readthedocs.io/en/latest/>`_
+for setting up ``ctapipe``, a pipeline for the low-level processing of CTAO data.
 
-    The rest of this page isn't written yet. It's almost identical to
-    https://ctapipe.readthedocs.io/en/latest/developer-guide/getting-started.html so for
-    now, see there. Also, we shouldn't duplicate content from
-    https://docs.astropy.org/en/latest/development/index.html but link
-    there instead.
+Firstly, fork the `gammapy repository <https://github.com/gammapy/gammapy>`_ to your
+personal GitHub. If you have not already done so, copy your public SSH key (normally under
+``$HOME/.ssh/*.pub``) to your GitHub profile. This is done by going into your GitHub settings,
+selecting **SSH and GPG keys** then **New SSH key** and then choosing **Authentication Key**
+as the key type. If you do not have a SSH key, you may create it following the instructions on
+`this page <https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent>`_.
 
-The first steps are basically identical to
-https://ctapipe.readthedocs.io/en/latest/developer-guide/getting-started.html (until 
-section *Setting up the development environment*) and
-http://astropy.readthedocs.io/en/latest/development/workflow/get_devel_version.html
-(up to *Create your own private workspace*). The following is a quick summary of
-commands to set up an environment for Gammapy development:
+Go to the location on your machine where you want to clone the gammapy
+repository from your GitHub:
 
 .. code-block:: bash
 
-    # Fork the gammapy repository on GitHub, https://github.com/gammapy/gammapy
-    cd code # Go somewhere on your machine where you want to code
-    git clone https://github.com/[your-github-username]/gammapy.git
+    cd [your-working-path]
+    git clone git@github.com:[your-github-username]/gammapy.git
+
+Create the conda environment and activate it:
+
+.. code-block:: bash
+
     cd gammapy
     conda env create -f environment-dev.yml
-
-    # To speed up the environment solving you can use mamba instead of conda
-    # mamba env create -f environment-dev.yml
     conda activate gammapy-dev
 
-    # for conda versions <4.4.0 you may have to execute
-    # 'source activate gammapy-dev' instead
-    git remote add gammapy git@github.com:gammapy/gammapy.git
-    git remote rename origin [your-user-name]
+Instead of Conda, you may use `Mamba <https://mamba.readthedocs.io/en/latest/>`_ as your
+package manager, which offers higher installation speed and more reliable environment solutions.
+In that case, use ``mamba env create -f environment-dev.yml`` to create the environment.
 
-`Mamba <https://mamba.readthedocs.io/>`__ is an alternative package manager that offers higher installation
-speed and more reliable environment solutions.
-
-It is also common to stick with the name ``origin`` for your repository and to
-use ``upstream`` for the repository you forked from. In any case, you can use
-``$ git remote -v`` to list all your configured remotes.
-
-In case you are working with the development version environment and you want to update this
-environment with the content present in `environment-dev.yml` see below:
+If you are already working with the development version environment and you want
+to update it with the contents of ``environment-dev.yml`` run the following command:
 
 .. code-block:: bash
 
     conda env update --file environment-dev.yml --prune
 
+Add the gammapy repository as your upstream remote:
 
-When developing Gammapy you never want to work on the ``main`` branch, but
-always on a dedicated feature branch.
+.. code-block:: bash
+
+    git remote add upstream git@github.com:gammapy/gammapy.git
+
+You can use ``git remote -v`` to list all your configured remotes.
+If you followed the steps above, you should see something like this:
+
+.. code-block:: bash
+
+    origin	git@github.com:[your-github-username]/gammapy.git (fetch)
+    origin	git@github.com:[your-github-username]/gammapy.git (push)
+    upstream	git@github.com:gammapy/gammapy.git (fetch)
+    upstream	git@github.com:gammapy/gammapy.git (push)
+
+Make your ``main`` branch track the gammapy repository:
+
+.. code-block:: bash
+
+    git fetch upstream
+    git branch --set-upstream-to=upstream/main
+
+When developing Gammapy you never want to work on the ``main`` branch, but always
+on a dedicated feature branch. You can create a new branch with:
 
 .. code-block:: bash
 
     git branch [branch-name]
+
+To switch between different branches:
+
+.. code-block:: bash
+
     git checkout [branch-name]
+
+You can also do both things at once as:
+
+.. code-block:: bash
+
+    git checkout -b [branch-name]
 
 To *activate* your development version (branch) of Gammapy in your environment:
 
@@ -208,21 +232,30 @@ To *activate* your development version (branch) of Gammapy in your environment:
 
     python -m pip install -e .
 
-This build is necessary to compile the few Cython code (``*.pyx``). If you skip
+This is necessary to compile the few Cython code  (``*.pyx``). If you skip
 this step, some imports depending on Cython code will fail. If you want to remove the generated
 files run ``make clean``.
 
-For the development it is also convenient to have declared ``$GAMMAPY_DATA`` environment variable.
-You can download the Gammapy datasets with ``gammapy download datasets`` and then point
-your ``$GAMMAPY_DATA`` to the local path you have chosen.
+Every time that you want to ``push`` your local branch to your GitHub repository you should run:
 
 .. code-block:: bash
 
-    # Download GAMMAPY_DATA
-    gammapy download datasets --out GAMMAPY_DATA
-    export GAMMAPY_DATA=$PWD/GAMMAPY_DATA
+    git push origin [branch-name]
 
-We adhere to the PEP8 coding style. To enforce this, setup the 
+Download the Gammapy datasets and set the corresponding environment variable inside
+the conda environment:
+
+.. code-block:: bash
+
+    gammapy download datasets --out gammapy-datasets
+    conda env config vars set GAMMAPY_DATA=$PWD/gammapy-datasets/dev
+    conda activate gammapy-dev
+
+Alternatively, you may include the line ``export GAMMAPY_DATA=$PWD/gammapy-datasets/dev``
+to your ``$HOME/.bashrc`` or ``$HOME/.bash_profile``, so that the variable is available
+in every terminal session, independent from the active conda environment.
+
+We adhere to the PEP8 coding style. To enforce this, setup the
 `pre-commit hook <https://pre-commit.com/>`_:
 
 .. code-block:: bash
@@ -266,7 +299,7 @@ Additional arguments for `pytest` can be passed after `--`:
 
     tox -e test -- -n auto
 
-Of course you can always use `pytest <https://docs.pytest.org/en/7.1.x/>`__ directly to 
+Of course you can always use `pytest <https://docs.pytest.org/en/7.1.x/>`__ directly to
 run tests, e.g. to run tests in a specific sub-package:
 
 .. code-block:: bash
@@ -288,8 +321,6 @@ The codestyle can be checked using the command:
     tox -e codestyle
 
 Which will run the tool `flake8` to check for code style issues.
-
-
 
 
 ..
