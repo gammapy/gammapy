@@ -11,7 +11,7 @@ Bayesian analysis with nested sampling.
 # Context
 # -------
 #
-# Bayesian analysis
+# 1. Bayesian analysis
 # ~~~~~~~~~~~~~~~~~
 #
 # Bayesian inference uses prior knowledge, in the form of a prior
@@ -21,7 +21,7 @@ Bayesian analysis with nested sampling.
 # only the “best model” but the (not always Gaussian) errors and
 # correlation between parameters.
 #
-# Limitations of the Markov Chain Monte Carlo approach
+# 2. Limitations of the Markov Chain Monte Carlo approach
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # A well-known approach to estimate this posterior distribution is the
@@ -37,7 +37,7 @@ Bayesian analysis with nested sampling.
 # local minimum or to accurately describe a complex likelihood space is
 # not guaranteed.
 #
-# Nested sampling approach
+# 3. Nested sampling approach
 # ~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # To overcome these issues, the nested sampling (NS) algorithm has
@@ -91,7 +91,6 @@ Bayesian analysis with nested sampling.
 # As usual, we’ll start with some setup …
 #
 
-# %matplotlib inline
 import matplotlib.pyplot as plt
 import numpy as np
 from gammapy.datasets import Datasets
@@ -136,7 +135,7 @@ model = SkyModel.create(spectral_model="pl")
 
 
 ######################################################################
-#   **Priors:** unlike a traditional fit where defining priors on the
+#   Priors: unlike a traditional fit where defining priors on the
 #   parameters is optional, here it is inherent to the Bayesian approach and
 #   are therefore mandatory.
 #
@@ -215,25 +214,31 @@ result_joint = sampler.run(datasets)
 # docs <https://johannesbuchner.github.io/UltraNest/issues.html#what-does-the-status-line-mean>`__.
 #
 # **During the sampling**
+#
 # `Z=-68.8(0.53%) | Like=-63.96..-58.75 [-63.9570..-63.9539]*| it/evals=640/1068 eff=73.7327% N=300`
-# Some important information here is : - Progress (0.53%) : The
-# completed fraction of the integral. This is not a time progress bar.
-# Stays at zero for a good fraction of the run. - the efficiency (eff
-# value) of the sampling. This indicates out of the proposed new points,
+#
+# Some important information here is :
+# -  Progress (0.53%) :
+# The completed fraction of the integral. This is not a time progress bar.
+# Stays at zero for a good fraction of the run.
+#  -  the efficiency (eff value) of the sampling.
+# This indicates out of the proposed new points,
 # how many were accepted. If your efficiency is too small (<<1%), maybe
 # you should revise your priors (e.g. a LogUniform prior for the
 # normalization).
 #
-# **Final printed outputs**
+# **Final outputs**
 #
 # The final lines indicate that all three “convergence” strategies are
 # satisfied (samples, posterior uncertainty, and evidence uncertainty).
 #
-# `logZ = -63.537 +- 0.291`
+# `logZ = -65.104 +- 0.292`
 # The main goal of the Nested sampling algorithm is to estimate Z (the
 # Bayesian evidence) which is given above together with an uncertainty.
 # In a similar way to deltaLogLike and deltaAIC, deltaLogZ values can be
 # used for model comparison.
+# For more information see : `on the use of the evidence for model comparison
+# <https://ned.ipac.caltech.edu/level5/Sept13/Trotta/Trotta4.html>`__.
 #
 # **Results stored on disk**
 #
@@ -320,7 +325,7 @@ from ultranest.plot import cornerplot
 cornerplot(result_joint.sampler_results, plot_datapoints=True, plot_density=True)
 plt.show()
 
-# sphinx_gallery_thumbnail_number = 2
+# sphinx_gallery_thumbnail_number = 3
 
 
 ######################################################################
@@ -340,10 +345,10 @@ result_2 = sampler.run(datasets[2])
 # Comparing the posterior distribution of all runs
 # ------------------------------------------------
 #
-#   For a comparison of different posterior distribution we can use the
-#   package chainconsumer.
-#   As this is not a gammapy dependency, you’ll need to install it.
-#   More info here : https://samreay.github.io/ChainConsumer/
+# For a comparison of different posterior distribution we can use the
+# package chainconsumer.
+# As this is not a gammapy dependency, you’ll need to install it.
+# More info here : https://samreay.github.io/ChainConsumer/
 #
 
 # Uncomment this if you have installed chainconsumer
