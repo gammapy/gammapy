@@ -233,8 +233,8 @@ def test_absorption_io_invalid_path(tmp_path):
     model_dict = dominguez.to_dict()
     parnames = [_["name"] for _ in model_dict["spectral"]["parameters"]]
     assert parnames == [
-        "alpha_norm",
         "redshift",
+        "alpha_norm",
     ]
     new_model = EBLAbsorptionNormSpectralModel.from_dict(model_dict)
 
@@ -260,8 +260,8 @@ def test_absorption_io_no_filename(tmp_path):
     model_dict = dominguez.to_dict()
     parnames = [_["name"] for _ in model_dict["spectral"]["parameters"]]
     assert parnames == [
-        "alpha_norm",
         "redshift",
+        "alpha_norm",
     ]
 
     new_model = EBLAbsorptionNormSpectralModel.from_dict(model_dict)
@@ -282,8 +282,8 @@ def test_absorption_io(tmp_path):
     model_dict = dominguez.to_dict()
     parnames = [_["name"] for _ in model_dict["spectral"]["parameters"]]
     assert parnames == [
-        "alpha_norm",
         "redshift",
+        "alpha_norm",
     ]
 
     new_model = EBLAbsorptionNormSpectralModel.from_dict(model_dict)

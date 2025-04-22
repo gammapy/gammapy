@@ -486,7 +486,7 @@ def compute_lightcurve_doublingtime(lightcurve, flux_quantity="flux"):
     References
     ----------
     `Brown et al. (2013), "Locating the γ-ray emission region of the flat spectrum radio quasar PKS 1510−089"
-    <https://academic.oup.com/mnras/article/431/1/824/1054498>`_
+    <https://ui.adsabs.harvard.edu/abs/2013MNRAS.431..824B/abstract>`_
     """
     flux = getattr(lightcurve, flux_quantity)
     flux_err = getattr(lightcurve, flux_quantity + "_err")
@@ -1352,6 +1352,7 @@ def _get_default_norm(
     scan_min=0.2,
     scan_max=5,
     scan_n_values=11,
+    scan_n_sigma=2,
     scan_values=None,
     interp="lin",
 ):
@@ -1366,6 +1367,7 @@ def _get_default_norm(
             scan_min=scan_min,
             scan_max=scan_max,
             scan_n_values=scan_n_values,
+            scan_n_sigma=scan_n_sigma,
             scan_values=scan_values,
         )
         if isinstance(norm, dict):
