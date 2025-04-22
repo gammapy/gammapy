@@ -24,12 +24,12 @@ Bayesian analysis with nested sampling.
 # Limitations of the Markov Chain Monte Carlo approach
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# A well-know approach to estimate this posterior distribution is the
-# Markov Chain Monte Carlo (MCMC) which uses an ensemble of walkers to
+# A well-known approach to estimate this posterior distribution is the
+# Markov Chain Monte Carlo (MCMC). This uses an ensemble of walkers to
 # produce a chain of samples that after a convergence period will reach a
-# stationary state. *Once convergence* is reached the successive elements
-# of the chain are samples of the target posterior distribution. However
-# the weakness of the MCMC approach lies in the *Once convergence* part.
+# stationary state. *Once convergence* is reached, the successive elements
+# of the chain are samples of the target posterior distribution. However,
+# the weakness of the MCMC approach lies in the "*Once convergence*" part.
 # Started far from the best likelihood region, the convergence time can be
 # long or never reached if the walkers fall in a local minima. The choice
 # of the initialization point can become critical for complex models with
@@ -45,9 +45,9 @@ Bayesian analysis with nested sampling.
 #   algorithm for computing an integral of the likelihood function over
 #   the prior model parameter space introduced in 2004 by John Skilling.
 #   The method performs this integral by evolving a collection of points
-#   through the parameter space (see recent reviews of `Ashton
+#   through the parameter space (see recent reviews from `Ashton et al.,
 #   2022 <https://ui.adsabs.harvard.edu/abs/2022NRvMP...2...39A>`__, and
-#   of `Buchner 2023 <http://arxiv.org/abs/2101.09675>`__). Without going
+#   `Buchner, 2023 <http://arxiv.org/abs/2101.09675>`__). Without going
 #   into too many details, one important specificity of the NS method is
 #   that it starts from the entire parameter space and evolves a
 #   collection of live points to map all minima (including multiple modes
@@ -61,26 +61,16 @@ Bayesian analysis with nested sampling.
 #   using the NS framework is more CPU time consuming than a standard
 #   classical fit but provides the full posterior distribution for all
 #   parameters, which is out of reach with traditional fitting techniques
-#   (N*(N-1)/2 contour plots to generate). In addition it is more robust
+#   (N*(N-1)/2 contour plots to generate). In addition, it is more robust
 #   to the choice of initialization, requires less human intervention and
 #   is therefore readily integrated in pipeline analysis. In gammapy, we
-#   used the NS implementation of the UltraNest package, one of the
+#   used the NS implementation of the UltraNest package (see `here <https://johannesbuchner.github.io/UltraNest/>`__ for more information), one of the
 #   leading package in Astronomy (already used in Cosmology and in
 #   X-rays).
-# | For more information on UltraNest see the docs here : `UltraNest
-#   docs <https://johannesbuchner.github.io/UltraNest/>`__
-# | And a nice visualization of the NS method : `sampling
+# - For a nice visualization of the NS method : `sampling
 #   visulisation <https://johannesbuchner.github.io/UltraNest/method.html#visualisation>`__
-# | Tutorial for UltraNest in X-ray fitting with concrete examples : `BXA
+# - Tutorial for UltraNest in X-ray fitting with concrete examples : `BXA
 #   Tutorial <https://peterboorman.com/tutorial_bxa.html>`__
-#
-# Reference :
-# ~~~~~~~~~~~
-#
-# -  Ultranest docs : https://johannesbuchner.github.io/UltraNest
-# -  Literature : `Buchner 2023 <http://arxiv.org/abs/2101.09675>`__,
-#    `Ashton
-#    2022 <https://ui.adsabs.harvard.edu/abs/2022NRvMP...2...39A>`__
 #
 
 
@@ -98,7 +88,7 @@ Bayesian analysis with nested sampling.
 # Setup
 # -----
 #
-# First, we setup the analysis by performing required imports.
+# As usual, we’ll start with some setup …
 #
 
 # %matplotlib inline
@@ -162,7 +152,6 @@ model = SkyModel.create(spectral_model="pl")
 
 model.spectral_model.amplitude.prior = LogUniformPrior(min=1e-12, max=1e-10)
 model.spectral_model.index.prior = UniformPrior(min=1, max=5)
-# Now setting the model to the dataset :
 datasets.models = [model]
 datasets.models
 
@@ -204,9 +193,8 @@ sampler = Sampler(backend="ultranest", sampler_opts=sampler_opts)
 
 
 ######################################################################
-# Next we can run the sampler on a given dataset using `.run()` in the
-# same way that the `Fit` object. No options are accepted in the run
-# method.
+# Next we can run the sampler on a given dataset. 
+# No options are accepted in the run method.
 #
 
 result_joint = sampler.run(datasets)
