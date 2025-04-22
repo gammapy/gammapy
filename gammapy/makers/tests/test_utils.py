@@ -577,6 +577,6 @@ def test_data_store_get_effective_livetime(caplog):
         livetime_maps, sel_ids = get_effective_livetime(datastore=ds, position=position)
         assert livetime_maps.geom.shape_axes == (1,)
         assert len(sel_ids) == 4
-        assert "Effective Livetime at [1.0 GeV, 1.0 PeV] : 1.75 h" in [
+        assert "Effective Livetime in [1.0 GeV, 1.0 PeV] : 1.75 h" in [
             _.message for _ in caplog.records
         ]
