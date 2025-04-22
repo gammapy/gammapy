@@ -324,7 +324,7 @@ plt.show()
 
 ######################################################################
 # Individual run analysis
-# =======================
+# -----------------------
 #
 # Now we’ll analyze several Crab runs individually so that we can compare
 # them.
@@ -337,7 +337,7 @@ result_2 = sampler.run(datasets[2])
 
 ######################################################################
 # Comparing the posterior distribution of all runs
-# ================================================
+# ------------------------------------------------
 #
 #   For a comparison of different posterior distribution we can use the
 #   package chainconsumer.
@@ -371,29 +371,20 @@ result_2 = sampler.run(datasets[2])
 
 
 ######################################################################
+#
 # Corner plot comparison
-# ======================
+# ----------------------
+#
+# .. figure:: ../../_static/cornerplot-multiple-runs-Crab.png
+#     :alt: Corner plot of Crab runs
+#
+#     Corner plot comparing the three Crab runs.
+#
+#
+# We can see the joint analysis allows to better constrain the
+# parameters than the individual runs (more observation time is of
+# course better).
+# One can note as well that one of the run has a notably different
+# amplitude (possibly due to calibrations issues).
 #
 
-
-######################################################################
-# """ .. figure:: ../../../docs/_static/cornerplot-multiple-runs-Crab.png
-# :scale: 100%
-#
-# ::
-#
-#    Corner plot comparing the three Crab runs.
-#    The joint run allows to better constrain the parameters than individual runs.
-#    One can note as well that one of the run has a notably different amplitude (due to calibrations issues ?).
-#
-# """
-#
-
-
-######################################################################
-#   We can see the joint analysis allows to better constrain the
-#   parameters than the individual runs (more observation time is of
-#   course better).
-#   One can note as well that one of the run has a notably different
-#   amplitude (due to calibrations issues ?).
-#
