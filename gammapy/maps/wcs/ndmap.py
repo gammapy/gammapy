@@ -653,7 +653,7 @@ class WcsNDMap(WcsMap):
             data = data.astype(self.data.dtype)
         else:
             cutout, cutout_mask = self.cutout_and_mask_region(region=region)
-            mask = cutout_mask.interp_to_geom(cutout.geom)
+            mask = cutout_mask.interp_to_geom(cutout.geom, method="nearest")
 
             if weights is not None:
                 weights_cutout = weights.cutout(
