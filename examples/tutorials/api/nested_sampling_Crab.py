@@ -124,9 +124,6 @@ from gammapy.modeling.sampler import Sampler
 # fit.
 #
 
-import os
-
-os.environ["GAMMAPY_DATA"] = "/Users/facero/Documents/Work/Program/gammapy-data/dev"
 path = "$GAMMAPY_DATA/joint-crab/spectra/hess/"
 
 datasets = Datasets()
@@ -390,15 +387,19 @@ result_2 = sampler.run(datasets[2])
 # ======================
 #
 
-"""
-.. figure:: ../../../docs/_static/cornerplot-multiple-runs-Crab.png
-    :scale: 100%
 
-    Corner plot comparing the three Crab runs.  
-    The joint run allows to better constrain the parameters than individual runs.  
-    One can note as well that one of the run has a notably different amplitude (due to calibrations issues ?).
-
-"""
+######################################################################
+# """ .. figure:: ../../../docs/_static/cornerplot-multiple-runs-Crab.png
+# :scale: 100%
+#
+# ::
+#
+#    Corner plot comparing the three Crab runs.
+#    The joint run allows to better constrain the parameters than individual runs.
+#    One can note as well that one of the run has a notably different amplitude (due to calibrations issues ?).
+#
+# """
+#
 
 
 ######################################################################
