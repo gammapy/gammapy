@@ -20,6 +20,28 @@ __all__ = ["Model", "Models", "DatasetModels", "ModelBase"]
 log = logging.getLogger(__name__)
 
 
+def _recursive_dict_filename_update(dict_, path):
+    """update model filename to full path if exits"""
+    for key, value in dict_.items():
+        if isinstance(value, dict):
+            _recursive_dict_filename_update(value, path)
+        elif key == "filename":
+            filename = dict_[key]
+            if (path / filename).exists():
+                dict_[key] = path / filename
+
+
+def _recursive_model_filename_update(model, path):
+    """update model filename to relative path if child of path"""
+    if hasattr(model, "filename") and path == make_path(model.filename).parent:
+        _, filename = split(model.filename)
+        model.filename = filename
+
+    if hasattr(model, "_models"):
+        for m in model._models:
+            _recursive_model_filename_update(m, path)
+
+
 def _set_link(shared_register, model):
     for param in model.parameters:
         name = param.name
@@ -88,6 +110,36 @@ def _check_name_unique(model, names):
     return
 
 
+def _check_fov_background_models(models):
+    """
+    Checks if a maximum of one `~gammapy.modeling.models.FoVBackgroundModel` is assigned to dataset
+    and returns a dictionnary mapping `dataset_name` to the background model name.
+
+    Parameters
+    ----------
+    models : `~gammapy.modeling.models.Models`
+        List of Models
+
+    Returns:
+    --------
+    bkg_model_mapping : dict
+        Dictionary mapping dataset name to `~gammapy.modeling.models.FoVBackgroundModel` name.
+    """
+    from . import FoVBackgroundModel
+
+    bkg_model_mapping = {}
+    for model in models:
+        if isinstance(model, FoVBackgroundModel):
+            for n in model.datasets_names:
+                if n not in bkg_model_mapping.keys():
+                    bkg_model_mapping[n] = model.name
+                else:
+                    raise ValueError(
+                        f"Only one FoVBackgroundModel per Dataset is permitted - already got one for {n}"
+                    )
+    return bkg_model_mapping
+
+
 def _write_models(
     models,
     path,
@@ -135,7 +187,7 @@ class ModelBase:
         default_parameters = self.default_parameters.copy()
 
         for key in kwargs.keys():
-            if key != "covariance_data" and key not in default_parameters.names :
+            if key != "covariance_data" and key not in default_parameters.names:
                 raise NameError(f"Unknown Parameter name '{key}'")
 
         for par in default_parameters:
@@ -408,7 +460,10 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
             _check_name_unique(model, names=unique_names)
             unique_names.append(model.name)
 
+        self._background_models = _check_fov_background_models(models)
+
         self._models = models
+
         self._covar_file = None
 
         self._covariance = Covariance(self.parameters)
@@ -437,6 +492,11 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
     def names(self):
         """List of model names."""
         return [m.name for m in self._models]
+
+    @property
+    def background_models(self):
+        """Dictionnary mapping of dataset names with their associated `~gammapy.modeling.models.FoVBackgroundModel` names."""
+        return self._background_models
 
     @classmethod
     def read(cls, filename, checksum=False):
@@ -478,21 +538,21 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
         """Create from dictionary."""
         from . import MODEL_REGISTRY, SkyModel
 
-        models = []
+        path = make_path(path)
 
+        models = []
         for component in data["components"]:
             model_cls = MODEL_REGISTRY.get_cls(component["type"])
+            _recursive_dict_filename_update(component, path)
             model = model_cls.from_dict(component)
+            _recursive_model_filename_update(model, path)
             models.append(model)
-
         models = cls(models)
 
         if "covariance" in data:
             filename = data["covariance"]
-            path = make_path(path)
             if not (path / filename).exists():
                 path, filename = split(filename)
-
             models.read_covariance(path, filename, format="ascii.fixed_width")
 
         shared_register = {}
@@ -537,6 +597,9 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
             When True adds a CHECKSUM entry to the file.
             Default is False.
         """
+        path = make_path(path)
+        for m in self:
+            _recursive_model_filename_update(m, path)
         _write_models(
             self,
             path,
@@ -1231,6 +1294,7 @@ class Models(DatasetModels, collections.abc.MutableSequence):
 
     def __delitem__(self, key):
         del self._models[self.index(key)]
+        self._background_models = _check_fov_background_models(self._models)
 
     def __setitem__(self, key, model):
         from gammapy.modeling.models import (
@@ -1240,13 +1304,17 @@ class Models(DatasetModels, collections.abc.MutableSequence):
         )
 
         if isinstance(model, (SkyModel, FoVBackgroundModel, TemplateNPredModel)):
-            self._models[self.index(key)] = model
+            ind = self.index(key)
+            other_names = [_ for _ in self.names if _ != self._models[ind].name]
+            _check_name_unique(model, other_names)
+            self._models[ind] = model
         else:
             raise TypeError(f"Invalid type: {model!r}")
 
     def insert(self, idx, model):
         _check_name_unique(model, self.names)
         self._models.insert(idx, model)
+        self._background_models = _check_fov_background_models(self._models)
 
     def set_prior(self, parameters, priors):
         for parameter, prior in zip(parameters, priors):

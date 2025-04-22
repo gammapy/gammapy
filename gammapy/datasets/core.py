@@ -472,7 +472,7 @@ class Datasets(collections.abc.MutableSequence):
         overwrite : bool, optional
             Overwrite existing file. Default is False.
         write_covariance : bool
-            save covariance or not. Default is False.
+            save covariance or not. Default is True.
         checksum : bool
             When True adds both DATASUM and CHECKSUM cards to the headers written to the FITS files.
             Default is False.

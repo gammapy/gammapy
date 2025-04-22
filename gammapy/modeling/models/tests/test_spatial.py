@@ -503,6 +503,7 @@ def test_model_from_dict(tmpdir, model_cls):
         filename = str(tmpdir / "template.fits")
         model = model_cls(default_map, filename=filename)
         model.write()
+
     elif model_cls is PiecewiseNormSpatialModel:
         geom = WcsGeom.create(skydir=(0, 0), npix=(2, 2), binsz=0.3, frame="galactic")
         default_coords = MapCoord.create(geom.footprint)
@@ -772,7 +773,7 @@ def test_piecewise_spatial_model_3d():
 
 
 @requires_data()
-def test_template_ND(tmpdir):
+def test_template_ND(tmpdir, caplog):
     filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits"  # noqa: E501
     map_ = Map.read(filename)
     map_.data[map_.data < 0] = 0
@@ -787,7 +788,13 @@ def test_template_ND(tmpdir):
         for kp, cste_value in enumerate(cste.center):
             nd_map.data[kp, kn, :, :] = norm_value * map_.data + cste_value
 
-    template = TemplateNDSpatialModel(nd_map, interp_kwargs={"values_scale": "lin"})
+    # template = TemplateNDSpatialModel(nd_map, interp_kwargs={"values_scale": "lin"})
+    with caplog.at_level(logging.WARNING):
+        template = TemplateNDSpatialModel(nd_map, interp_kwargs={"values_scale": "lin"})
+        assert (
+            'The filename is not defined. Therefore, the model will not be serialised correctly. To set the filename, the "template_model.filename" attribute can be used.'
+            in [_.message for _ in caplog.records]
+        )
     assert len(template.parameters) == 2
     assert_allclose(template.parameters["norm"].value, 5)
     assert_allclose(template.parameters["cste"].value, 0)
@@ -802,10 +809,8 @@ def test_template_ND(tmpdir):
     template.parameters["norm"].value = 2
     template.parameters["cste"].value = 0
     assert_allclose(template.evaluate_geom(geom2d), 2 * map_.data, rtol=0.03, atol=10)
-
     template.filename = str(tmpdir / "template_ND.fits")
     template.write()
-
     dict_ = template.to_dict()
     template_new = TemplateNDSpatialModel.from_dict(dict_)
     assert_allclose(template_new.map.data, nd_map.data)
@@ -815,11 +820,16 @@ def test_template_ND(tmpdir):
 
 
 @requires_data()
-def test_templatespatial_write(tmpdir):
+def test_templatespatial_write(tmpdir, caplog):
     filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits"
     map_ = Map.read(filename)
-    template = TemplateSpatialModel(map_, filename=filename)
-
+    with caplog.at_level(logging.WARNING):
+        template = TemplateSpatialModel(map_)
+        assert (
+            'The filename is not defined. Therefore, the model will not be serialised correctly. To set the filename, the "template_model.filename" attribute can be used.'
+            in [_.message for _ in caplog.records]
+        )
+    template.filename = filename
     filename_new = str(tmpdir / "template_test.fits")
     template.write(overwrite=True, filename=filename_new)
     assert Path(filename_new).is_file()
