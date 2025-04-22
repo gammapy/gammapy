@@ -9,7 +9,7 @@ Bayesian analysis with nested sampling.
 
 ######################################################################
 # Context
-# =======
+# -------
 #
 # Bayesian analysis
 # ~~~~~~~~~~~~~~~~~
@@ -30,7 +30,7 @@ Bayesian analysis with nested sampling.
 # stationary state. *Once convergence* is reached, the successive elements
 # of the chain are samples of the target posterior distribution. However,
 # the weakness of the MCMC approach lies in the "*Once convergence*" part.
-# Started far from the best likelihood region, the convergence time can be
+# If the walkers are started far from the best likelihood region, the convergence time can be
 # long or never reached if the walkers fall in a local minima. The choice
 # of the initialization point can become critical for complex models with
 # a high number of dimensions and the ability of these walkers to escape a
@@ -40,10 +40,10 @@ Bayesian analysis with nested sampling.
 # Nested sampling approach
 # ~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# | To overcome these issues, the nested sampling (NS) algorithm has
+#   To overcome these issues, the nested sampling (NS) algorithm has
 #   gained traction in physics and astronomy. It is a Monte Carlo
 #   algorithm for computing an integral of the likelihood function over
-#   the prior model parameter space introduced in 2004 by John Skilling.
+#   the prior model parameter space introduced in `John Skilling, 2004 <https://ui.adsabs.harvard.edu/abs/2004AIPC..735..395S>`__
 #   The method performs this integral by evolving a collection of points
 #   through the parameter space (see recent reviews from `Ashton et al.,
 #   2022 <https://ui.adsabs.harvard.edu/abs/2022NRvMP...2...39A>`__, and
@@ -55,7 +55,7 @@ Bayesian analysis with nested sampling.
 #   initialization point and the walkers will explore the local
 #   likelihood. The ability of these walkers to escape a local minimum or
 #   to accurately describe a complex likelihood space is not guaranteed.
-#   This is a fundamental difference between MCMC (and Minuit) which will
+#   This is a fundamental difference between MCMC and Minuit which will
 #   only ever probe the vicinity along their minimization paths and do not
 #   have an overview of the global likelihood landscape. The analysis
 #   using the NS framework is more CPU time consuming than a standard
@@ -76,7 +76,7 @@ Bayesian analysis with nested sampling.
 
 ######################################################################
 # Proposed approach
-# =================
+# -----------------
 #
 # In this example we will perform a Bayesian analysis with multiple 1D
 # spectra of the Crab nebula data and investigate their posterior
@@ -126,9 +126,9 @@ for id in ["23526", "23559", "23592"]:
 # Model definition
 # ----------------
 #
-# | Now we want to define the spectral model that will be fitted to the
+#   Now we want to define the spectral model that will be fitted to the
 #   data.
-# | The Crab spectra will be fitted here with a simple powerlaw for
+#   The Crab spectra will be fitted here with a simple powerlaw for
 #   simplicity.
 #
 
@@ -140,12 +140,12 @@ model = SkyModel.create(spectral_model="pl")
 # parameters is optional, here it is inherent to the Bayesian approach and
 # are therefore mandatory.**
 #
-# | In this case we will set (min,max) prior that will define the
+#   In this case we will set (min,max) prior that will define the
 #   boundaries in which the sampling will be performed.
-# | Note that it is usually recommended to use a `LogUniformPrior` for
+#   Note that it is usually recommended to use a `LogUniformPrior` for
 #   the parameters that have a large amplitude range like the
 #   `amplitude` parameter.
-# | A `UniformPrior` means that the samples will be drawn with uniform
+#   A `UniformPrior` means that the samples will be drawn with uniform
 #   probability between the (min,max) values in the linear or log space
 #   (`LogUniformPrior`).
 #
@@ -160,11 +160,11 @@ datasets.models
 # Defining the sampler and options
 # --------------------------------
 #
-# | As for the `Fit` object, the `Sampler` object can receive
+#   As for the `Fit` object, the `Sampler` object can receive
 #   different backend (although just one is available for now).
-# | The `Sampler` comes with “reasonable” default parameters but you can
+#   The `Sampler` comes with “reasonable” default parameters but you can
 #   change them via the `sampler_opts` dictionnary.
-# | Here is a short description of the most relevant parameters that you
+#   Here is a short description of the most relevant parameters that you
 #   could change :
 #
 # -  `live_points`: minimum number of live points throughout the run.
@@ -208,15 +208,15 @@ result_joint = sampler.run(datasets)
 # visualization of how the parameter space shrinks which starts from the
 # (min,max) shrinks down towards the optimal parameters.
 #
-# | The output above is filled with interesting information. Here we
+#   The output above is filled with interesting information. Here we
 #   provide a short description of the most relevant information provided
 #   above.
-# | For more detailed information see the `UltraNest
+#   For more detailed information see the `UltraNest
 #   docs <https://johannesbuchner.github.io/UltraNest/issues.html#what-does-the-status-line-mean>`__.
 #
-# | **During the sampling**
-# | `Z=-68.8(0.53%) | Like=-63.96..-58.75 [-63.9570..-63.9539]*| it/evals=640/1068 eff=73.7327% N=300`
-# | Some important information here is : - Progress (0.53%) : The
+#   **During the sampling**
+#   `Z=-68.8(0.53%) | Like=-63.96..-58.75 [-63.9570..-63.9539]*| it/evals=640/1068 eff=73.7327% N=300`
+#   Some important information here is : - Progress (0.53%) : The
 #   completed fraction of the integral. This is not a time progress bar.
 #   Stays at zero for a good fraction of the run. - the efficiency (eff
 #   value) of the sampling. This indicates out of the proposed new points,
@@ -229,17 +229,17 @@ result_joint = sampler.run(datasets)
 # The final lines indicate that all three “convergence” strategies are
 # satisfied (samples, posterior uncertainty, and evidence uncertainty).
 #
-# | `logZ = -63.537 +- 0.291`
-# | The main goal of the Nested sampling algorithm is to estimate Z (the
+#   `logZ = -63.537 +- 0.291`
+#   The main goal of the Nested sampling algorithm is to estimate Z (the
 #   Bayesian evidence) which is given above together with an uncertainty.
-# | In a similar way to deltaLogLike and deltaAIC, deltaLogZ values can be
+#   In a similar way to deltaLogLike and deltaAIC, deltaLogZ values can be
 #   used for model comparison.
 #
 # **Results stored on disk**
 #
-# | if `log_dir` is set to a name where the results will be stored, then
+#   if `log_dir` is set to a name where the results will be stored, then
 #   a directory is created containing many useful results and plots.
-# | A description of these outputes is given `here in Ultranest
+#   A description of these outputes is given `here in Ultranest
 #   docs <https://johannesbuchner.github.io/UltraNest/performance.html#output-files>`__.
 #
 
@@ -254,9 +254,9 @@ result_joint = sampler.run(datasets)
 # Within a Bayesian analysis, the concept of best-fit has to be viewed
 # differently from what is done in a gradient descent fit.
 #
-# | The output of the Bayesian analysis is the posterior distribution and
+#   The output of the Bayesian analysis is the posterior distribution and
 #   there is no “best-fit” output.
-# | One has to define, based on the posteriors, what we want to consider
+#   One has to define, based on the posteriors, what we want to consider
 #   as “best-fit” and several options are possible:
 #
 # -  the mean of the distribution
@@ -271,8 +271,8 @@ result_joint.models
 
 
 ######################################################################
-# | The Sampler class returns a very rich dictionnary.
-# | The most “standard” information about the posterior distributions can
+#   The Sampler class returns a very rich dictionnary.
+#   The most “standard” information about the posterior distributions can
 #   be found in :
 #
 
@@ -280,12 +280,12 @@ result_joint.sampler_results["posterior"]
 
 
 ######################################################################
-# | Besides mean, errors, etc, an interesting value is the
+#   Besides mean, errors, etc, an interesting value is the
 #   `information gain` which estimates how much the posterior
 #   distribution has shrinked with respect to the prior (i.e. how much
 #   we’ve learned). A value < 1 means that the parameter is poorly
 #   constrained with the prior range.
-# | For a more physical interpretation see this
+#   For a more physical interpretation see this
 #   `example <https://arxiv.org/abs/2205.00009>`__.
 #
 # The `Sampler Result` dictionnary contains also other interesting
@@ -339,10 +339,10 @@ result_2 = sampler.run(datasets[2])
 # Comparing the posterior distribution of all runs
 # ================================================
 #
-# | For a comparison of different posterior distribution we can use the
+#   For a comparison of different posterior distribution we can use the
 #   package chainconsumer.
-# | As this is not a gammapy dependency, you’ll need to install it.
-# | More info here : https://samreay.github.io/ChainConsumer/
+#   As this is not a gammapy dependency, you’ll need to install it.
+#   More info here : https://samreay.github.io/ChainConsumer/
 #
 
 # Uncomment this if you have installed chainconsumer
@@ -391,9 +391,9 @@ result_2 = sampler.run(datasets[2])
 
 
 ######################################################################
-# | We can see the joint analysis allows to better constrain the
+#   We can see the joint analysis allows to better constrain the
 #   parameters than the individual runs (more observation time is of
 #   course better).
-# | One can note as well that one of the run has a notably different
+#   One can note as well that one of the run has a notably different
 #   amplitude (due to calibrations issues ?).
 #
