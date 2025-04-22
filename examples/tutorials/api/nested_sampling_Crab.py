@@ -40,37 +40,37 @@ Bayesian analysis with nested sampling.
 # Nested sampling approach
 # ~~~~~~~~~~~~~~~~~~~~~~~~
 #
-#   To overcome these issues, the nested sampling (NS) algorithm has
-#   gained traction in physics and astronomy. It is a Monte Carlo
-#   algorithm for computing an integral of the likelihood function over
-#   the prior model parameter space introduced in `John Skilling, 2004 <https://ui.adsabs.harvard.edu/abs/2004AIPC..735..395S>`__
-#   The method performs this integral by evolving a collection of points
-#   through the parameter space (see recent reviews from `Ashton et al.,
-#   2022 <https://ui.adsabs.harvard.edu/abs/2022NRvMP...2...39A>`__, and
-#   `Buchner, 2023 <http://arxiv.org/abs/2101.09675>`__). Without going
-#   into too many details, one important specificity of the NS method is
-#   that it starts from the entire parameter space and evolves a
-#   collection of live points to map all minima (including multiple modes
-#   if any) whereas Markov Chain Monte Carlo methods require an
-#   initialization point and the walkers will explore the local
-#   likelihood. The ability of these walkers to escape a local minimum or
-#   to accurately describe a complex likelihood space is not guaranteed.
-#   This is a fundamental difference between MCMC and Minuit which will
-#   only ever probe the vicinity along their minimization paths and do not
-#   have an overview of the global likelihood landscape. The analysis
-#   using the NS framework is more CPU time consuming than a standard
-#   classical fit but provides the full posterior distribution for all
-#   parameters, which is out of reach with traditional fitting techniques
-#   (N*(N-1)/2 contour plots to generate). In addition, it is more robust
-#   to the choice of initialization, requires less human intervention and
-#   is therefore readily integrated in pipeline analysis. In gammapy, we
-#   used the NS implementation of the UltraNest package (see `here <https://johannesbuchner.github.io/UltraNest/>`__ for more information), one of the
-#   leading package in Astronomy (already used in Cosmology and in
-#   X-rays).
-# - For a nice visualization of the NS method : `sampling
-#   visulisation <https://johannesbuchner.github.io/UltraNest/method.html#visualisation>`__
-# - Tutorial for UltraNest in X-ray fitting with concrete examples : `BXA
-#   Tutorial <https://peterboorman.com/tutorial_bxa.html>`__
+# To overcome these issues, the nested sampling (NS) algorithm has
+# gained traction in physics and astronomy. It is a Monte Carlo
+# algorithm for computing an integral of the likelihood function over
+# the prior model parameter space introduced in `John Skilling, 2004 <https://ui.adsabs.harvard.edu/abs/2004AIPC..735..395S>`__
+# The method performs this integral by evolving a collection of points
+# through the parameter space (see recent reviews from `Ashton et al.,
+# 2022 <https://ui.adsabs.harvard.edu/abs/2022NRvMP...2...39A>`__, and
+# `Buchner, 2023 <http://arxiv.org/abs/2101.09675>`__). Without going
+# into too many details, one important specificity of the NS method is
+# that it starts from the entire parameter space and evolves a
+# collection of live points to map all minima (including multiple modes
+# if any) whereas Markov Chain Monte Carlo methods require an
+# initialization point and the walkers will explore the local
+# likelihood. The ability of these walkers to escape a local minimum or
+# to accurately describe a complex likelihood space is not guaranteed.
+# This is a fundamental difference between MCMC and Minuit which will
+# only ever probe the vicinity along their minimization paths and do not
+# have an overview of the global likelihood landscape. The analysis
+# using the NS framework is more CPU time consuming than a standard
+# classical fit but provides the full posterior distribution for all
+# parameters, which is out of reach with traditional fitting techniques
+# (N*(N-1)/2 contour plots to generate). In addition, it is more robust
+# to the choice of initialization, requires less human intervention and
+# is therefore readily integrated in pipeline analysis. In gammapy, we
+# used the NS implementation of the UltraNest package (see `here <https://johannesbuchner.github.io/UltraNest/>`__ for more information), one of the
+# leading package in Astronomy (already used in Cosmology and in
+# X-rays).
+# For a nice visualization of the NS method see here : `sampling
+# visulisation <https://johannesbuchner.github.io/UltraNest/method.html#visualisation>`__.
+# And here for a tutorial of UltraNest applied to X-ray fitting with concrete examples and questions : `BXA
+# Tutorial <https://peterboorman.com/tutorial_bxa.html>`__.
 #
 
 
@@ -126,28 +126,28 @@ for id in ["23526", "23559", "23592"]:
 # Model definition
 # ----------------
 #
-#   Now we want to define the spectral model that will be fitted to the
-#   data.
-#   The Crab spectra will be fitted here with a simple powerlaw for
-#   simplicity.
+# Now we want to define the spectral model that will be fitted to the
+# data.
+# The Crab spectra will be fitted here with a simple powerlaw for
+# simplicity.
 #
 
 model = SkyModel.create(spectral_model="pl")
 
 
 ######################################################################
-# **!!Priors!!: unlike a traditional fit where defining priors on the
-# parameters is optional, here it is inherent to the Bayesian approach and
-# are therefore mandatory.**
+#   **Priors:** unlike a traditional fit where defining priors on the
+#   parameters is optional, here it is inherent to the Bayesian approach and
+#   are therefore mandatory.
 #
-#   In this case we will set (min,max) prior that will define the
-#   boundaries in which the sampling will be performed.
-#   Note that it is usually recommended to use a `LogUniformPrior` for
-#   the parameters that have a large amplitude range like the
-#   `amplitude` parameter.
-#   A `UniformPrior` means that the samples will be drawn with uniform
-#   probability between the (min,max) values in the linear or log space
-#   (`LogUniformPrior`).
+# In this case we will set (min,max) prior that will define the
+# boundaries in which the sampling will be performed.
+# Note that it is usually recommended to use a `LogUniformPrior` for
+# the parameters that have a large amplitude range like the
+# `amplitude` parameter.
+# A `UniformPrior` means that the samples will be drawn with uniform
+# probability between the (min,max) values in the linear or log space
+# (`LogUniformPrior`).
 #
 
 model.spectral_model.amplitude.prior = LogUniformPrior(min=1e-12, max=1e-10)
@@ -160,12 +160,12 @@ datasets.models
 # Defining the sampler and options
 # --------------------------------
 #
-#   As for the `Fit` object, the `Sampler` object can receive
-#   different backend (although just one is available for now).
-#   The `Sampler` comes with “reasonable” default parameters but you can
-#   change them via the `sampler_opts` dictionnary.
-#   Here is a short description of the most relevant parameters that you
-#   could change :
+# As for the `Fit` object, the `Sampler` object can receive
+# different backend (although just one is available for now).
+# The `Sampler` comes with “reasonable” default parameters but you can
+# change them via the `sampler_opts` dictionnary.
+# Here is a short description of the most relevant parameters that you
+# could change :
 #
 # -  `live_points`: minimum number of live points throughout the run.
 #    More points allow to discover multiple peaks if existing but is
@@ -193,7 +193,7 @@ sampler = Sampler(backend="ultranest", sampler_opts=sampler_opts)
 
 
 ######################################################################
-# Next we can run the sampler on a given dataset. 
+# Next we can run the sampler on a given dataset.
 # No options are accepted in the run method.
 #
 
@@ -208,39 +208,39 @@ result_joint = sampler.run(datasets)
 # visualization of how the parameter space shrinks which starts from the
 # (min,max) shrinks down towards the optimal parameters.
 #
-#   The output above is filled with interesting information. Here we
-#   provide a short description of the most relevant information provided
-#   above.
-#   For more detailed information see the `UltraNest
-#   docs <https://johannesbuchner.github.io/UltraNest/issues.html#what-does-the-status-line-mean>`__.
+# The output above is filled with interesting information. Here we
+# provide a short description of the most relevant information provided
+# above.
+# For more detailed information see the `UltraNest
+# docs <https://johannesbuchner.github.io/UltraNest/issues.html#what-does-the-status-line-mean>`__.
 #
-#   **During the sampling**
-#   `Z=-68.8(0.53%) | Like=-63.96..-58.75 [-63.9570..-63.9539]*| it/evals=640/1068 eff=73.7327% N=300`
-#   Some important information here is : - Progress (0.53%) : The
-#   completed fraction of the integral. This is not a time progress bar.
-#   Stays at zero for a good fraction of the run. - the efficiency (eff
-#   value) of the sampling. This indicates out of the proposed new points,
-#   how many were accepted. If your efficiency is too small (<<1%), maybe
-#   you should revise your priors (e.g. a LogUniform prior for the
-#   normalization).
+# **During the sampling**
+# `Z=-68.8(0.53%) | Like=-63.96..-58.75 [-63.9570..-63.9539]*| it/evals=640/1068 eff=73.7327% N=300`
+# Some important information here is : - Progress (0.53%) : The
+# completed fraction of the integral. This is not a time progress bar.
+# Stays at zero for a good fraction of the run. - the efficiency (eff
+# value) of the sampling. This indicates out of the proposed new points,
+# how many were accepted. If your efficiency is too small (<<1%), maybe
+# you should revise your priors (e.g. a LogUniform prior for the
+# normalization).
 #
 # **Final printed outputs**
 #
 # The final lines indicate that all three “convergence” strategies are
 # satisfied (samples, posterior uncertainty, and evidence uncertainty).
 #
-#   `logZ = -63.537 +- 0.291`
-#   The main goal of the Nested sampling algorithm is to estimate Z (the
-#   Bayesian evidence) which is given above together with an uncertainty.
-#   In a similar way to deltaLogLike and deltaAIC, deltaLogZ values can be
-#   used for model comparison.
+# `logZ = -63.537 +- 0.291`
+# The main goal of the Nested sampling algorithm is to estimate Z (the
+# Bayesian evidence) which is given above together with an uncertainty.
+# In a similar way to deltaLogLike and deltaAIC, deltaLogZ values can be
+# used for model comparison.
 #
 # **Results stored on disk**
 #
-#   if `log_dir` is set to a name where the results will be stored, then
-#   a directory is created containing many useful results and plots.
-#   A description of these outputes is given `here in Ultranest
-#   docs <https://johannesbuchner.github.io/UltraNest/performance.html#output-files>`__.
+# if `log_dir` is set to a name where the results will be stored, then
+# a directory is created containing many useful results and plots.
+# A description of these outputes is given `here in Ultranest
+# docs <https://johannesbuchner.github.io/UltraNest/performance.html#output-files>`__.
 #
 
 
@@ -254,10 +254,10 @@ result_joint = sampler.run(datasets)
 # Within a Bayesian analysis, the concept of best-fit has to be viewed
 # differently from what is done in a gradient descent fit.
 #
-#   The output of the Bayesian analysis is the posterior distribution and
-#   there is no “best-fit” output.
-#   One has to define, based on the posteriors, what we want to consider
-#   as “best-fit” and several options are possible:
+# The output of the Bayesian analysis is the posterior distribution and
+# there is no “best-fit” output.
+# One has to define, based on the posteriors, what we want to consider
+# as “best-fit” and several options are possible:
 #
 # -  the mean of the distribution
 # -  the median
@@ -271,22 +271,22 @@ result_joint.models
 
 
 ######################################################################
-#   The Sampler class returns a very rich dictionnary.
-#   The most “standard” information about the posterior distributions can
-#   be found in :
+# The Sampler class returns a very rich dictionnary.
+# The most “standard” information about the posterior distributions can
+# be found in :
 #
 
 result_joint.sampler_results["posterior"]
 
 
 ######################################################################
-#   Besides mean, errors, etc, an interesting value is the
-#   `information gain` which estimates how much the posterior
-#   distribution has shrinked with respect to the prior (i.e. how much
-#   we’ve learned). A value < 1 means that the parameter is poorly
-#   constrained with the prior range.
-#   For a more physical interpretation see this
-#   `example <https://arxiv.org/abs/2205.00009>`__.
+# Besides mean, errors, etc, an interesting value is the
+# `information gain` which estimates how much the posterior
+# distribution has shrinked with respect to the prior (i.e. how much
+# we’ve learned). A value < 1 means that the parameter is poorly
+# constrained with the prior range.
+# For a more physical interpretation see this
+# `example <https://arxiv.org/abs/2205.00009>`__.
 #
 # The `Sampler Result` dictionnary contains also other interesting
 # information :
@@ -302,9 +302,10 @@ result_joint.sampler_results.keys()
 
 for i, n in enumerate(model.parameters.free_parameters.names):
     s = result_joint.samples[:, i]
-    plt.hist(s, bins=30)
-    plt.axvline(np.mean(s), ls="--", color="red")
-    plt.xlabel(n)
+    fig, ax = plt.subplots()
+    ax.hist(s, bins=30)
+    ax.axvline(np.mean(s), ls="--", color="red")
+    ax.set_xlabel(n)
     plt.show()
 
 
@@ -387,4 +388,3 @@ result_2 = sampler.run(datasets[2])
 # One can note as well that one of the run has a notably different
 # amplitude (possibly due to calibrations issues).
 #
-
