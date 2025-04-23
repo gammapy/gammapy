@@ -740,7 +740,7 @@ def get_effective_livetime(
     log.info(f"Time spent on position {position}:")
     for idx, _ in enumerate(edges[:-1]):
         log.info(
-            f"Effective Livetime in [{edges[idx]}, {edges[idx + 1]}]: {effective_times_src[idx]:.2f} * {livetime_maps.unit}"
+            f"Effective Livetime in [{edges[idx]}, {edges[idx + 1]}] : {effective_times_src[idx]:.2f} {livetime_maps.unit}"
         )
 
     return livetime_maps, selected_obs_table["OBS_ID"].tolist()
