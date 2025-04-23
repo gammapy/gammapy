@@ -841,7 +841,7 @@ class restore_parameters_status:
 
 
 class PriorParameter(Parameter):
-    """Prior on model `Parameter`.
+    """Parameter of a `~gammapy.modeling.models.Prior`.
 
     A prior is a probability density function of a model parameter and can take different forms, including Gaussian
     distributions, uniform distributions, etc. The prior includes information or knowledge about the dataset or the
