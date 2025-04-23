@@ -859,14 +859,6 @@ class PriorParameter(Parameter):
          Value.
      unit : `~astropy.units.Unit` or str, optional
          Unit. Default is "".
-     scale : float, optional
-         Scale (sometimes used in fitting). Default is 1.
-     min : float, str or `~astropy.units.quantity`, optional
-         Minimum (sometimes used in fitting). Default is `np.nan`.
-     max : float, str or `~astropy.units.quantity`, optional
-         Maximum (sometimes used in fitting). Default is `np.nan`.
-     error : float
-         Parameter error. Default is 0.
     """
 
     def __init__(
@@ -919,11 +911,11 @@ class PriorParameter(Parameter):
 class PriorParameters(Parameters):
     """Container of parameter priors :
 
-    - List of Parameter objects.
+    - List of `PriorParameter` objects.
 
     Parameters
     ----------
-    parameters : list of `Parameter`
+    parameters : list of `PriorParameter`
         List of parameters.
     """
 
