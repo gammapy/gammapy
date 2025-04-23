@@ -215,3 +215,90 @@ def test_datasets_fit():
     results = fit.run(datasets)
 
     assert_allclose(results.models.covariance.data, datasets.models.covariance.data)
+
+
+def test_select_time():
+    from gammapy.data import GTI
+    from gammapy.datasets import Datasets, SpectrumDataset
+    from astropy.time import Time, TimeDelta
+    import astropy.units as u
+
+    # Create mock datasets with GTIs
+    time_ref = Time("2025-04-23T00:00:00")
+    gti1 = GTI.create(
+        start=Time([time_ref + TimeDelta(0 * u.s)]),
+        stop=Time([time_ref + TimeDelta(10 * u.s)]),
+    )
+    gti2 = GTI.create(
+        start=Time([time_ref + TimeDelta(20 * u.s)]),
+        stop=Time([time_ref + TimeDelta(30 * u.s)]),
+    )
+
+    dataset1 = SpectrumDataset(name="dataset1")
+    dataset1.gti = gti1
+
+    dataset2 = SpectrumDataset(name="dataset2")
+    dataset2.gti = gti2
+
+    datasets = Datasets([dataset1, dataset2])
+
+    # Define the time interval for selection
+    time_min = Time(time_ref + TimeDelta(0 * u.s))
+    time_max = Time(time_ref + TimeDelta(10 * u.s))
+
+    # Call the select_time method
+    selected_datasets = datasets.select_time(time_min, time_max)
+
+    # Verify the results
+    assert len(selected_datasets) == 1
+    assert selected_datasets[0].name == "dataset1"
+    
+    
+def test_select_from_gti():
+    from gammapy.data import GTI
+    from gammapy.datasets import Datasets, SpectrumDataset
+    from astropy.time import Time, TimeDelta
+    import astropy.units as u
+
+    # Create mock datasets with GTIs
+    time_ref = Time("2025-04-23T00:00:00")
+    gti1 = GTI.create(
+        start=Time([time_ref + TimeDelta(0 * u.s)]),
+        stop=Time([time_ref + TimeDelta(10 * u.s)]),
+    )
+    gti2 = GTI.create(
+        start=Time([time_ref + TimeDelta(20 * u.s)]),
+        stop=Time([time_ref + TimeDelta(30 * u.s)]),
+    )
+
+    dataset1 = SpectrumDataset(name="dataset1")
+    dataset1.gti = gti1
+
+    dataset2 = SpectrumDataset(name="dataset2")
+    dataset2.gti = gti2
+
+    datasets = Datasets([dataset1, dataset2])
+
+    # Create a GTI for selection
+    gti_select = GTI.create(
+        start=Time([
+            (time_ref + TimeDelta(5 * u.s)),
+            (time_ref + TimeDelta(20 * u.s)),
+        ]),
+        stop=Time([
+            (time_ref + TimeDelta(15 * u.s)),
+            (time_ref + TimeDelta(30 * u.s)),
+        ]),
+    )
+
+    # Call the select_from_gti method
+    selected_datasets_partial = datasets.select_from_gti(gti_select, allow_partial=True)
+    selected_datasets_fully = datasets.select_from_gti(gti_select, allow_partial=False)
+
+    # Verify the results
+    assert len(selected_datasets_partial) == 2
+    assert len(selected_datasets_fully) == 1
+    assert selected_datasets_partial[0].name == "dataset1"
+    assert selected_datasets_partial[1].name == "dataset2"
+    assert selected_datasets_fully[0].name == "dataset2"
+''
