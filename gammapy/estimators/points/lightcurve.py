@@ -77,7 +77,7 @@ class LightCurveEstimator(FluxPointsEstimator):
     norm : ~gammapy.modeling.Parameter` or dict
         Norm parameter used for the fit
         Default is None and a new parameter is created automatically,
-        with value=1, name="norm", scan_min=0.2, scan_max=5, and scan_n_values = 11.
+        with value=1, name="norm", min=-1e3, max=1e3, scan_min=0.2, scan_max=5, and scan_n_values = 11.
         By default the min and max are not set and derived from the source model,
         unless the source model does not have one and only one norm parameter.
         If a dict is given the entries should be a subset of
