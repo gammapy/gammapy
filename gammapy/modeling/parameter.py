@@ -358,12 +358,12 @@ class Parameter:
     @property
     def conf_min(self):
         """Confidence minimum value as a `float`."""
-        min_ = self.value - self._step * self.scan_n_sigma
-        min_ = np.minimum(min_, self.value / 1e3)
-        min_ = np.minimum(min_, -1e3)
         if not np.isnan(self.min):
             return self.min
         else:
+            min_ = self.value - self._step * self.scan_n_sigma
+            if self._step >= np.abs(self.value):  # error >= value likely ul
+                min_ = np.minimum(min_, -self._step * 1e5)
             return min_
 
     # TODO: possibly allow to set this independently
@@ -371,12 +371,12 @@ class Parameter:
     def conf_max(self):
         """Confidence maximum value as a `float`."""
 
-        max_ = self.value + self._step * self.scan_n_sigma
-        max_ = np.maximum(max_, self.value * 1e3)
-        max_ = np.maximum(max_, 1e3)
         if not np.isnan(self.max):
             return self.max
         else:
+            max_ = self.value + self._step * self.scan_n_sigma
+            if self._step >= np.abs(self.value):  # error >= value likely ul
+                max_ = np.maximum(max_, self._step * 1e5)
             return max_
 
     @property
