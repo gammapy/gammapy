@@ -3,6 +3,9 @@
 Modeling and Fitting (DL4 to DL5)
 =================================
 
+Modeling
+--------
+
 `gammapy.modeling` contains all the functionality related to modeling and fitting
 data. This includes spectral, spatial and temporal model classes, as well as the fit
 and parameter API.
@@ -22,6 +25,32 @@ gamma-ray astronomy are built-in, see the :ref:`model-gallery`.
 It is easy to create user-defined models and
 datasets, Gammapy is very flexible.
 
+
+Built-in models
+^^^^^^^^^^^^^^^
+
+Gammapy provides a large choice of spatial, spectral and temporal models.
+You may check out the whole list of built-in models in the :ref:`model-gallery`.
+
+Custom models
+^^^^^^^^^^^^^
+
+Gammapy provides an easy interface to :ref:`custom-model`.
+
+
+Using gammapy.modeling
+^^^^^^^^^^^^^^^^^^^^^^
+
+.. minigallery::
+
+    ../examples/tutorials/api/models.py
+    ../examples/tutorials/api/model_management.py
+    ../examples/tutorials/api/priors.py
+
+
+Fitting
+-------
+
 The `~gammapy.modeling.Fit` class provides methods to fit, i.e. optimise
 parameters and estimate parameter errors and correlations. It interfaces with a
 `~gammapy.datasets.Datasets` object, which in turn is connected to a
@@ -34,31 +63,17 @@ datasets and thus provide links, allowing e.g. to do a joint fit to multiple
 IACT datasets, or to a joint IACT and Fermi-LAT dataset. Many examples are given
 in the tutorials.
 
-Built-in models
----------------
-
-Gammapy provides a large choice of spatial, spectral and temporal models.
-You may check out the whole list of built-in models in the :ref:`model-gallery`.
-
-Custom models
----------------
-
-Gammapy provides an easy interface to :ref:`custom-model`.
-
 
 Using gammapy.modeling
-----------------------
+^^^^^^^^^^^^^^^^^^^^^^
 
 .. minigallery::
 
     ../examples/tutorials/api/fitting.py
-    ../examples/tutorials/api/models.py
-    ../examples/tutorials/api/model_management.py
     ../examples/tutorials/analysis-1d/spectral_analysis.py
     ../examples/tutorials/analysis-3d/analysis_3d.py
     ../examples/tutorails/analysis-3d/analysis_mwl.py
     ../examples/tutorials/analysis-1d/sed_fitting.py
-    ../examples/tutorials/api/priors.py
 
 .. include:: ../references.txt
 
