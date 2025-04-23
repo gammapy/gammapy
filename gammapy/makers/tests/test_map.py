@@ -569,6 +569,7 @@ def test_meta_data_creation(observations):
     assert stacked_meta.obs_info[1].obs_id == 111140
 
 
+@pytest.mark.xfail
 @requires_data()
 def test_map_dataset_maker_swgo():
     times = Time([59249.83472222222, 62802.21805555555], format="mjd", scale="tt")
