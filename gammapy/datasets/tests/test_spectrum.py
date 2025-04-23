@@ -19,6 +19,7 @@ from gammapy.modeling.models import (
     Models,
     PowerLawSpectralModel,
     SkyModel,
+    GaussianPrior,
 )
 from gammapy.utils.random import get_random_state
 from gammapy.utils.regions import compound_region_to_regions
@@ -1224,3 +1225,33 @@ def test_stat_sum():
     dataset.mask_safe.data[0] = True
     with pytest.raises(AttributeError):
         dataset.stat_sum()
+
+
+@requires_data("gammapy-data")
+def test_priors():
+    datasets = Datasets()
+    obs_ids = [23523, 23526]
+
+    for obs_id in obs_ids:
+        filename = f"$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs{obs_id}.fits"
+        ds = SpectrumDatasetOnOff.read(filename)
+        datasets.append(ds)
+
+    spectral_model = PowerLawSpectralModel(
+        index=2.5, amplitude="3.8e-11 cm-2 s-1 TeV-1"
+    )
+    source_model = SkyModel(spectral_model=spectral_model, name="source")
+
+    datasets.models = [source_model]
+
+    stat_sum = datasets.stat_sum()
+
+    spectral_model.index.prior = GaussianPrior(
+        mu=spectral_model.index.value + 0.1, sigma=0.1
+    )
+
+    stat_sum_with_priors = datasets.stat_sum()
+
+    assert_allclose(stat_sum, 87.928542, atol=1e-1)
+    # Here we check that the prior is applied only once
+    assert_allclose(stat_sum_with_priors, stat_sum + 1)
