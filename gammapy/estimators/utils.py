@@ -1349,6 +1349,8 @@ def _generate_scan_values(power_min=-6, power_max=2, relative_error=1e-2):
 
 def _get_default_norm(
     norm,
+    min=-1e3,
+    max=1e3,
     scan_min=0.2,
     scan_max=5,
     scan_n_values=11,
@@ -1364,6 +1366,8 @@ def _get_default_norm(
             unit="",
             interp=interp,
             frozen=False,
+            min=min,
+            max=max,
             scan_min=scan_min,
             scan_max=scan_max,
             scan_n_values=scan_n_values,

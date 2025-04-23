@@ -361,10 +361,11 @@ class Parameter:
 
         Return parameter minimum if defined, otherwise return the scan_min.
         """
+        min_ = self.value - self._step * self.scan_n_sigma
         if not np.isnan(self.min):
-            return self.min
+            return np.minimum(min_, self.min)
         else:
-            return self.value - self._step * self.scan_n_sigma
+            return min_
 
     # TODO: possibly allow to set this independently
     @property
@@ -373,10 +374,11 @@ class Parameter:
 
         Return parameter maximum if defined, otherwise return the scan_max.
         """
+        max_ = self.value + self._step * self.scan_n_sigma
         if not np.isnan(self.max):
-            return self.max
+            return np.maximum(max_, self.max)
         else:
-            return self.value + self._step * self.scan_n_sigma
+            return max_
 
     @property
     def scan_min(self):
