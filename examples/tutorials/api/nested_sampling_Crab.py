@@ -69,7 +69,7 @@ Bayesian analysis with nested sampling.
 # X-rays).
 # For a nice visualization of the NS method see here : `sampling
 # visulisation <https://johannesbuchner.github.io/UltraNest/method.html#visualisation>`__.
-# And here for a tutorial of UltraNest applied to X-ray fitting with concrete examples and questions : `BXA
+# And for a tutorial of UltraNest applied to X-ray fitting with concrete examples and questions see : `BXA
 # Tutorial <https://peterboorman.com/tutorial_bxa.html>`__.
 #
 
@@ -135,7 +135,8 @@ model = SkyModel.create(spectral_model="pl")
 
 
 ######################################################################
-#   Priors: unlike a traditional fit where defining priors on the
+#   ! Priors definition !
+#   Unlike a traditional fit where priors on the
 #   parameters is optional, here it is inherent to the Bayesian approach and
 #   are therefore mandatory.
 #
@@ -221,7 +222,7 @@ result_joint = sampler.run(datasets)
 # -  Progress (0.53%) :
 # The completed fraction of the integral. This is not a time progress bar.
 # Stays at zero for a good fraction of the run.
-#  -  the efficiency (eff value) of the sampling.
+# -  Efficiency (eff value) of the sampling.
 # This indicates out of the proposed new points,
 # how many were accepted. If your efficiency is too small (<<1%), maybe
 # you should revise your priors (e.g. a LogUniform prior for the
