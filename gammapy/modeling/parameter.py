@@ -362,8 +362,8 @@ class Parameter:
             return self.min
         else:
             min_ = self.value - self._step * self.scan_n_sigma
-            if self._step >= np.abs(self.value):  # error >= value likely ul
-                min_ = np.minimum(min_, -self._step * 1e5)
+            large_step = np.maximum(self._step, np.abs(self.value))
+            min_ = np.minimum(min_, -large_step * 1e5)
             return min_
 
     # TODO: possibly allow to set this independently
@@ -375,8 +375,8 @@ class Parameter:
             return self.max
         else:
             max_ = self.value + self._step * self.scan_n_sigma
-            if self._step >= np.abs(self.value):  # error >= value likely ul
-                max_ = np.maximum(max_, self._step * 1e5)
+            large_step = np.maximum(self._step, np.abs(self.value))
+            max_ = np.maximum(max_, large_step * 1e5)
             return max_
 
     @property
