@@ -212,18 +212,20 @@ class MapCoord:
 
         Examples
         --------
+        Create a MapCoord from longitude and latitude:
+
         >>> from astropy.coordinates import SkyCoord
         >>> from gammapy.maps import MapCoord
-
         >>> lon, lat = [1, 2], [2, 3]
         >>> skycoord = SkyCoord(lon, lat, unit='deg')
         >>> energy = [1000]
-        >>> c = MapCoord.create((lon,lat))
+        >>> c = MapCoord.create((lon, lat))
         >>> c = MapCoord.create((skycoord,))
-        >>> c = MapCoord.create((lon,lat,energy))
-        >>> c = MapCoord.create(dict(lon=lon,lat=lat))
-        >>> c = MapCoord.create(dict(lon=lon,lat=lat,energy=energy))
-        >>> c = MapCoord.create(dict(skycoord=skycoord,energy=energy))
+        >>> c = MapCoord.create((lon, lat, energy))
+        >>> c = MapCoord.create(dict(lon=lon, lat=lat))
+        >>> c = MapCoord.create(dict(lon=lon, lat=lat, energy=energy))
+        >>> c = MapCoord.create(dict(skycoord=skycoord, energy=energy))
+
         """
         if isinstance(data, cls):
             if data.frame is None or frame == data.frame:
@@ -260,7 +262,7 @@ class MapCoord:
             if isinstance(self.lon, u.Quantity):
                 lon = u.Quantity(lon, unit="deg", copy=COPY_IF_NEEDED)
 
-            if isinstance(self.lon, u.Quantity):
+            if isinstance(self.lat, u.Quantity):
                 lat = u.Quantity(lat, unit="deg", copy=COPY_IF_NEEDED)
 
             data["lon"] = lon

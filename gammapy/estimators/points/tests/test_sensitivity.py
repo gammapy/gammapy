@@ -1,11 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 from numpy.testing import assert_allclose
-from gammapy.datasets import SpectrumDataset, SpectrumDatasetOnOff
-from gammapy.estimators import FluxPoints, SensitivityEstimator
+from gammapy.datasets import SpectrumDataset, SpectrumDatasetOnOff, Datasets
+from gammapy.estimators import (
+    FluxPoints,
+    SensitivityEstimator,
+    ParameterSensitivityEstimator,
+)
 from gammapy.irf import EDispKernelMap
 from gammapy.maps import MapAxis, RegionNDMap
-from gammapy.modeling.models import PowerLawSpectralModel
+from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from gammapy.utils.deprecation import GammapyDeprecationWarning
 
 
@@ -26,9 +30,10 @@ def spectrum_dataset():
         region="icrs;circle(0, 0, 0.1)", axes=[e_true], unit="m2 h", data=1e6
     )
 
-    return SpectrumDataset(
+    spectrum_dataset = SpectrumDataset(
         name="test", exposure=exposure, edisp=edisp, background=background
     )
+    return spectrum_dataset
 
 
 def test_cta_sensitivity_estimator(spectrum_dataset, caplog):
@@ -100,3 +105,18 @@ def test_integral_estimation(spectrum_dataset, caplog):
 
     assert_allclose(table["excess"].data.squeeze(), 270540, rtol=1e-3)
     assert_allclose(flux_points.flux.data.squeeze(), 7.52e-9, rtol=1e-3)
+
+
+def test_parameter_sensitivity_estimator(spectrum_dataset):
+    spectral_model = PowerLawSpectralModel()
+    default_value = spectral_model.amplitude.value
+
+    spectrum_dataset.models = SkyModel(spectral_model=spectral_model)
+    datasets = Datasets(spectrum_dataset)
+
+    estimator = ParameterSensitivityEstimator(spectral_model.amplitude, 0, rtol=1e-2)
+
+    value = estimator.run(datasets)
+    assert_allclose(value, 4.570882e-12, rtol=1e-2)
+
+    assert_allclose(spectral_model.amplitude.value, default_value, rtol=1e-2)

@@ -269,6 +269,9 @@ def test_run_pwl(fpe_pwl, tmpdir):
     actual = table["norm_ul"].data
     assert_allclose(actual, [1.216227, 1.035472, 1.316878], rtol=1e-2)
 
+    actual = table["norm_sensitivity"].data
+    assert_allclose(actual, [0.15901235, 0.13117017, 0.55880332], rtol=1e-2)
+
     actual = table["sqrt_ts"].data
     assert_allclose(actual, [18.568429, 18.054651, 7.057121], rtol=1e-2)
 

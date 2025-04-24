@@ -252,7 +252,7 @@ def structure_function(flux, flux_err, time, tdelta_precision=5):
     References
     ----------
     `Emmanoulopoulos et al. (2010), "On the use of structure functions to study blazar variability:
-    caveats and problems" <https://academic.oup.com/mnras/article/404/2/931/968488>`_
+    caveats and problems" <https://ui.adsabs.harvard.edu/abs/2010MNRAS.404..931E/abstract>`_
     """
     dist_matrix = (time[np.newaxis, :] - time[:, np.newaxis]).round(
         decimals=tdelta_precision
