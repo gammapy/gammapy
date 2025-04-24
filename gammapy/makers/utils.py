@@ -62,14 +62,6 @@ def _get_fov_coords(pointing, irf, geom, use_region_center=True, obstime=None):
         coords["offset"] = sky_coord.separation(pointing_icrs)
     else:
         if irf.fov_alignment == FoVAlignment.ALTAZ:
-            if not isinstance(pointing, FixedPointingInfo) and isinstance(
-                irf, BackgroundIRF
-            ):
-                raise TypeError(
-                    "make_map_background_irf requires FixedPointingInfo if "
-                    "BackgroundIRF.fov_alignement is ALTAZ",
-                )
-
             # for backwards compatibility, obstime should be required
             if obstime is None:
                 warnings.warn(
@@ -334,6 +326,11 @@ def make_map_background_irf(
             pointing, ontime, bkg, geom, use_region_center, obstime_start, d_omega
         )
     elif not bkg.has_offset_axis and bkg.fov_alignment == FoVAlignment.ALTAZ:
+        if not isinstance(pointing, FixedPointingInfo):
+            raise TypeError(
+                "make_map_background_irf requires FixedPointingInfo if "
+                "BackgroundIRF.fov_alignement is ALTAZ",
+            )
         endtime = obstime_start + ontime
         data = np.zeros(geom.data_shape)
         time = obstime_start
