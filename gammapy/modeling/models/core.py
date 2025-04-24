@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 from gammapy.maps import Map, RegionGeom
 from gammapy.modeling import Covariance, Parameter, Parameters
 from gammapy.modeling.covariance import CovarianceMixin
+from gammapy.stats.fit_statistics import FitStatisticPenalty
 from gammapy.utils.scripts import from_yaml, make_path, to_yaml, write_yaml
 
 __all__ = ["Model", "Models", "DatasetModels", "ModelBase"]
@@ -457,11 +458,13 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
     ----------
     models : `SkyModel`, list of `SkyModel` or `Models`
         Sky models.
-    covariance_data : `~numpy.ndarray`
-        Covariance data.
+    covariance_data : `~numpy.ndarray`, optional
+        Covariance data. Default is None.
+    penalties : list of `~gammapy.stats.FitStatisticPenalty`, optional
+        Penalties to be applied to the Models parameters when computing a FitStatistic. Default is None.
     """
 
-    def __init__(self, models=None, covariance_data=None):
+    def __init__(self, models=None, covariance_data=None, penalties=None):
         if models is None:
             models = []
 
@@ -491,6 +494,14 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
         # Set separately because this triggers the update mechanism on the sub-models
         if covariance_data is not None:
             self.covariance = covariance_data
+
+        if penalties is not None:
+            if not isinstance(penalties, (list, tuple)):
+                penalties = [penalties]
+            if not all([isinstance(_, FitStatisticPenalty) for _ in penalties]):
+                raise ValueError("Penalties must be FitStatisticPenalty instances.")
+
+        self._penalties = penalties
 
     @property
     def parameters(self):
@@ -1339,6 +1350,17 @@ class Models(DatasetModels, collections.abc.MutableSequence):
     def set_prior(self, parameters, priors):
         for parameter, prior in zip(parameters, priors):
             parameter.prior = prior
+
+    def set_penalties(self, penalties):
+        """Set the list of FitStatisticPenalty to be applied on the Models."""
+        # TODO: check that penalties parameters apply to models parameters...
+        if penalties is not None:
+            if not isinstance(penalties, (list, tuple)):
+                penalties = [penalties]
+            if not all([isinstance(_, FitStatisticPenalty) for _ in penalties]):
+                raise ValueError("Penalties must be FitStatisticPenalty instances.")
+
+        self._penalties = penalties
 
 
 class restore_models_status:
