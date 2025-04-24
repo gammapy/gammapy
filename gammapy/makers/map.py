@@ -284,13 +284,13 @@ class MapDatasetMaker(Maker):
 
         return make_map_background_irf(
             pointing=observation.pointing,
+            obstime_start=observation.tstart,
             ontime=observation.observation_time_duration,
             bkg=bkg,
             geom=geom,
             fov_rotation_step=self.fov_rotation_step,
             oversampling=self.background_oversampling,
             use_region_center=use_region_center,
-            obstime=observation.tmid,
         )
 
     def make_edisp(self, geom, observation):

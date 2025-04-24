@@ -218,7 +218,9 @@ def _map_spectrum_weight(map, spectrum=None):
     return map * weights.reshape(shape.astype(int))
 
 
-def _evaluate_bkg(pointing, steptime, bkg, geom, use_region_center, obstime, d_omega):
+def _evaluate_bkg(
+    pointing, steptime, bkg, geom, use_region_center, time_start, d_omega
+):
     """
     Evaluate the background IRF on a given geometry.
 
@@ -236,7 +238,7 @@ def _evaluate_bkg(pointing, steptime, bkg, geom, use_region_center, obstime, d_o
         For geom as a `~gammapy.maps.RegionGeom`. If True, consider the values at the region center.
         If False, average over the whole region.
         Default is True.
-    obstime : `~astropy.time.Time`
+    time_start : `~astropy.time.Time`
         Observation time to use.
     d_omega : 'astropy.units.Quantity'
         Solid angle of the image geometry.
@@ -252,11 +254,7 @@ def _evaluate_bkg(pointing, steptime, bkg, geom, use_region_center, obstime, d_o
         irf=bkg,
         geom=geom,
         use_region_center=use_region_center,
-        #  TODO `obstime` should be provided in future versions of gammapy.
-        #  TODO Using None is deprecated. if else to be removed.
-        obstime=None
-        if obstime is None
-        else obstime + steptime / (2 * u.dimensionless_unscaled),
+        obstime=time_start + steptime / (2 * u.dimensionless_unscaled),
     )
     coords["energy"] = broadcast_axis_values_to_geom(geom, "energy", False)
 
@@ -266,13 +264,13 @@ def _evaluate_bkg(pointing, steptime, bkg, geom, use_region_center, obstime, d_o
 
 def make_map_background_irf(
     pointing,
+    obstime_start,
     ontime,
     bkg,
     geom,
     fov_rotation_step,
     oversampling=None,
     use_region_center=True,
-    obstime=None,
 ):
     """Compute background map from background IRFs.
 
@@ -286,6 +284,8 @@ def make_map_background_irf(
         - If a `~astropy.coordinates.SkyCoord` is passed, FOV frame rotation
           is not taken into account.
 
+    obstime_start : `~astropy.time.Time`
+        Observation start time.
     ontime : `~astropy.units.Quantity`
         Observation ontime. i.e. not corrected for deadtime
         see https://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/full_enclosure/bkg/index.html#notes)  # noqa: E501
@@ -301,8 +301,6 @@ def make_map_background_irf(
         For geom as a `~gammapy.maps.RegionGeom`. If True, consider the values at the region center.
         If False, average over the whole region.
         Default is True.
-    obstime : `~astropy.time.Time`
-        Observation time to use.
 
     Returns
     -------
@@ -333,12 +331,12 @@ def make_map_background_irf(
         or bkg.fov_alignment == FoVAlignment.REVERSE_LON_RADEC
     ):
         data = _evaluate_bkg(
-            pointing, ontime, bkg, geom, use_region_center, obstime, d_omega
+            pointing, ontime, bkg, geom, use_region_center, obstime_start, d_omega
         )
     elif not bkg.has_offset_axis and bkg.fov_alignment == FoVAlignment.ALTAZ:
-        endtime = obstime + ontime
+        endtime = obstime_start + ontime
         data = np.zeros(geom.data_shape)
-        time = obstime
+        time = obstime_start
         while time < endtime:
             # Evaluate the step time needed to have a FoV rotation of fov_rotation_step
             # Minimum step of 1 second to avoid infinite computation very close to zenith
