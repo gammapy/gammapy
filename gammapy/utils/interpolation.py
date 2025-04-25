@@ -185,6 +185,13 @@ class InterpolationScale:
         else:
             return values
 
+    def _inverse_deriv(self, values):
+        values = self._inverse_derivative(values)
+        if hasattr(self, "_unit"):
+            return u.Quantity(values, self._unit, copy=COPY_IF_NEEDED)
+        else:
+            return values
+
 
 class LogScale(InterpolationScale):
     """Logarithmic scaling."""
@@ -200,6 +207,10 @@ class LogScale(InterpolationScale):
         output = np.exp(values)
         return np.where(abs(output) - cls.tiny <= cls.tiny, 0, output)
 
+    @classmethod
+    def _inverse_derivative(cls, values):
+        return cls._inverse(values)
+
 
 class SqrtScale(InterpolationScale):
     """Square root scaling."""
@@ -212,6 +223,10 @@ class SqrtScale(InterpolationScale):
     @classmethod
     def _inverse(cls, values):
         return np.power(values, 2)
+
+    @classmethod
+    def _inverse_derivative(cls, values):
+        return 2.0 * values
 
 
 class StatProfileScale(InterpolationScale):
@@ -240,6 +255,10 @@ class LinearScale(InterpolationScale):
     @classmethod
     def _inverse(cls, values):
         return values
+
+    @classmethod
+    def _inverse_derivative(cls, values):
+        return 1.0
 
 
 def interpolate_profile(x, y, interp_scale="sqrt", extrapolate=False):

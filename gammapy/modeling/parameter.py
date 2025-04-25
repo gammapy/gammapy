@@ -555,10 +555,20 @@ class Parameter:
         value : float
             Parameter factor
         """
-        factor = self.scale * factor
         interp_scale = interpolation_scale(self.scale_transform)
-        value = interp_scale.inverse(factor)
+        value = interp_scale.inverse(self.scale * factor)
         return value
+
+    def _inverse_transform_derivative(self, factor):
+        """Inverse tranform from factor (used by the optimizer) to value.
+
+        Parameters
+        ----------
+        value : float
+            Parameter factor
+        """
+        interp_scale = interpolation_scale(self.scale_transform)
+        return interp_scale._inverse_deriv(self.scale * factor) * self.scale
 
     def autoscale(self):
         "Apply `interpolation_scale' and `scale_method' to the parameter."
