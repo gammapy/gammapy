@@ -47,7 +47,6 @@ dependencies:
   - pandas
   - reproject
   - ultranest
-  - jacobi
   # dev dependencies
   - black=22.6.0
   - codespell
