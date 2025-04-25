@@ -78,24 +78,11 @@ class Covariance:
         if not matrix.shape == (npars, npars):
             matrix = cls._expand_factor_matrix(matrix, parameters)
 
-        if np.all([p.scale_transform == "lin" for p in parameters]):
-            scales = [par.scale for par in parameters]
-            scale_matrix = np.outer(scales, scales)
-            data = scale_matrix * matrix
-        elif npars > 0:
-            from jacobi import propagate
-
-            factors = np.array([p.factor for p in parameters])
-
-            def fn(x):
-                return np.array(
-                    [
-                        parameters[k].inverse_transform(factor)
-                        for k, factor in enumerate(x)
-                    ]
-                )
-
-            _, data = propagate(fn, factors, matrix)
+        if npars > 0:
+            df = np.diag(
+                [p._inverse_transform_derivative(p.factor) for p in parameters]
+            )
+            data = df.T @ matrix @ df
         else:
             data = None
 
