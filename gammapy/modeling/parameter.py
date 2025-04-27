@@ -251,9 +251,10 @@ class Parameter:
 
     @property
     def factor_min(self):
-        """Factor minimum as a float.
+        """Factor minimum as a float (used by the optimizer).
 
-        This ``factor_min = transform(min)`` is for the optimizer interface.
+        By default when no transform is applied, ``factor_min = min / scale``,
+        otherwise ``factor_min = transform(min)``.
         """
         return self.transform(self.min)
 
@@ -272,9 +273,10 @@ class Parameter:
 
     @property
     def factor_max(self):
-        """Factor maximum as a float.
+        """Factor maximum as a float (used by the optimizer).
 
-        This ``factor_max = transform(max)`` is for the optimizer interface.
+        By default when no transform is applied, ``factor_max = max / scale``,
+        otherwise ``factor_max = transform(max)``.
         """
         return self.transform(self.max)
 
