@@ -544,10 +544,10 @@ class Parameter:
             Update the scaling (used by the autoscale). Default is False.
         """
         interp_scale = interpolation_scale(self.scale_transform)
-        factor = interp_scale(value)
+        transformed_value = interp_scale(value)
         if update_scale:
-            self.update_scale(factor)
-        return factor / self.scale
+            self.update_scale(transformed_value)
+        return transformed_value / self.scale
 
     def inverse_transform(self, factor):
         """Inverse tranform from factor (used by the optimizer) to value.
