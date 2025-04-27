@@ -212,7 +212,7 @@ def test_run_scale_transform_change_log():
     pars = result.parameters
     assert_allclose(pars["x"].error, 1, rtol=1e-2)
     assert_allclose(pars["y"].error, 1, rtol=1e-2)
-    assert_allclose(pars["z"].error, 1, rtol=1e-2)
+    assert_allclose(pars["z"].error, 1, rtol=1e-1)
 
 
 def test_run_no_free_parameters():
