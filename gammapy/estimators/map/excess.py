@@ -167,6 +167,7 @@ class ExcessMapEstimator(Estimator):
             * "acceptance_off": acceptange from the off region.
 
         Default is None, ie only "npred", "npred_excess", "counts", "ts", "sqrt_ts" are computed.
+
         Note: "alpha", "acceptance_on" and "acceptance_off" can only be selected if the dataset is a
         `~gammapy.datasets.MapDatasetOnOff`.
     energy_edges : list of `~astropy.units.Quantity`, optional

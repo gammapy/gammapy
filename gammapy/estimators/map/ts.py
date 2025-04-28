@@ -65,7 +65,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
     in `Stewart (2009) <https://ui.adsabs.harvard.edu/abs/2009A%26A...495..989S/abstract>`_.
 
     The main output of this estimator is a `~gammapy.estimators.FluxMaps` object, from which one
-    can access to all computed quantities (see the example below and the `ExcessMapEstimator.run` function).
+    can access to all computed quantities (see the example below and the `TSMapEstimator.run` function).
 
     Parameters
     ----------
