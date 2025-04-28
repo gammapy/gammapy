@@ -14,7 +14,13 @@ from gammapy.modeling import Covariance, Parameter, Parameters
 from gammapy.modeling.covariance import CovarianceMixin
 from gammapy.utils.scripts import from_yaml, make_name, make_path, to_yaml, write_yaml
 
-__all__ = ["Model", "Models", "DatasetModels", "ModelBase"]
+__all__ = [
+    "Model",
+    "Models",
+    "DatasetModels",
+    "ModelBase",
+    "build_parameters_from_dict",
+]
 
 
 log = logging.getLogger(__name__)
@@ -78,7 +84,7 @@ def _get_model_class_from_dict(data):
     return cls
 
 
-def _build_parameters_from_dict(data, default_parameters):
+def build_parameters_from_dict(data, default_parameters):
     """Build a `~gammapy.modeling.Parameters` object from input dictionary and default parameter values."""
     par_data = []
 
@@ -330,7 +336,7 @@ class ModelBase:
                 f"Invalid model type {data['type']} for class {cls.__name__}"
             )
 
-        parameters = _build_parameters_from_dict(
+        parameters = build_parameters_from_dict(
             data["parameters"], cls.default_parameters
         )
 

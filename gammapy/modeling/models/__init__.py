@@ -2,7 +2,7 @@
 """Built-in models in Gammapy."""
 
 from gammapy.utils.registry import Registry
-from .core import DatasetModels, Model, ModelBase, Models
+from .core import DatasetModels, Model, ModelBase, Models, build_parameters_from_dict
 from .cube import (
     FoVBackgroundModel,
     SkyModel,
@@ -137,6 +137,7 @@ __all__ = [
     "TemporalModel",
     "EBL_DATA_BUILTIN",
     "read_hermes_cube",
+    "build_parameters_from_dict",
 ]
 
 
