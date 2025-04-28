@@ -51,6 +51,8 @@ Using gammapy.modeling
 Fitting
 -------
 
+Frequentist/Bayesian inference of parameters
+
 The `~gammapy.modeling.Fit` class provides methods to fit, i.e. optimise
 parameters and estimate parameter errors and correlations. It interfaces with a
 `~gammapy.datasets.Datasets` object, which in turn is connected to a
