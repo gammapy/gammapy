@@ -16,7 +16,7 @@ Bayesian analysis with nested sampling.
 #
 # Bayesian inference uses prior knowledge, in the form of a prior
 # distribution, in order to estimate posterior probabilities which we
-# traditionally visualize in the form of corner plots. These distributions
+# traditionally visualise in the form of corner plots. These distributions
 # contain much more information than a single best-fit as they reveal not
 # only the “best model” but the (not always Gaussian) errors and
 # correlation between parameters.
@@ -32,7 +32,7 @@ Bayesian analysis with nested sampling.
 # the weakness of the MCMC approach lies in the "*Once convergence*" part.
 # If the walkers are started far from the best likelihood region, the convergence time can be
 # long or never reached if the walkers fall in a local minima. The choice
-# of the initialization point can become critical for complex models with
+# of the initialisation point can become critical for complex models with
 # a high number of dimensions and the ability of these walkers to escape a
 # local minimum or to accurately describe a complex likelihood space is
 # not guaranteed.
@@ -52,22 +52,22 @@ Bayesian analysis with nested sampling.
 # that it starts from the entire parameter space and evolves a
 # collection of live points to map all minima (including multiple modes
 # if any) whereas Markov Chain Monte Carlo methods require an
-# initialization point and the walkers will explore the local
+# initialisation point and the walkers will explore the local
 # likelihood. The ability of these walkers to escape a local minimum or
 # to accurately describe a complex likelihood space is not guaranteed.
 # This is a fundamental difference between MCMC and Minuit which will
-# only ever probe the vicinity along their minimization paths and do not
+# only ever probe the vicinity along their minimisation paths and do not
 # have an overview of the global likelihood landscape. The analysis
 # using the NS framework is more CPU time consuming than a standard
 # classical fit but provides the full posterior distribution for all
 # parameters, which is out of reach with traditional fitting techniques
 # (N*(N-1)/2 contour plots to generate). In addition, it is more robust
-# to the choice of initialization, requires less human intervention and
+# to the choice of initialisation, requires less human intervention and
 # is therefore readily integrated in pipeline analysis. In gammapy, we
 # used the NS implementation of the UltraNest package (see `here <https://johannesbuchner.github.io/UltraNest/>`__ for more information), one of the
 # leading package in Astronomy (already used in Cosmology and in
 # X-rays).
-# For a nice visualization of the NS method see here : `sampling
+# For a nice visualisation of the NS method see here : `sampling
 # visulisation <https://johannesbuchner.github.io/UltraNest/method.html#visualisation>`__.
 # And for a tutorial of UltraNest applied to X-ray fitting with concrete examples and questions see : `BXA
 # Tutorial <https://peterboorman.com/tutorial_bxa.html>`__.
@@ -135,19 +135,20 @@ model = SkyModel.create(spectral_model="pl")
 
 
 ######################################################################
-#   ! Priors definition !
-#   Unlike a traditional fit where priors on the
-#   parameters is optional, here it is inherent to the Bayesian approach and
-#   are therefore mandatory.
+#
+# .. WARNING:: Priors definition:
+#    Unlike a traditional fit where priors on the
+#    parameters is optional, here it is inherent to the Bayesian approach and
+#    are therefore mandatory.
 #
 # In this case we will set (min,max) prior that will define the
 # boundaries in which the sampling will be performed.
-# Note that it is usually recommended to use a `LogUniformPrior` for
+# Note that it is usually recommended to use a `~gammapy.modeling.models.LogUniformPrior` for
 # the parameters that have a large amplitude range like the
 # `amplitude` parameter.
-# A `UniformPrior` means that the samples will be drawn with uniform
+# A `~gammapy.modeling.models.UniformPrior` means that the samples will be drawn with uniform
 # probability between the (min,max) values in the linear or log space
-# (`LogUniformPrior`).
+# in the case of a `~gammapy.modeling.models.LogUniformPrior`.
 #
 
 model.spectral_model.amplitude.prior = LogUniformPrior(min=1e-12, max=1e-10)
@@ -205,7 +206,7 @@ result_joint = sampler.run(datasets)
 # -------------------------
 #
 # In the Jupyter notebook, you should be able to see an interactive
-# visualization of how the parameter space shrinks which starts from the
+# visualisation of how the parameter space shrinks which starts from the
 # (min,max) shrinks down towards the optimal parameters.
 #
 # The output above is filled with interesting information. Here we
@@ -219,14 +220,16 @@ result_joint = sampler.run(datasets)
 # `Z=-68.8(0.53%) | Like=-63.96..-58.75 [-63.9570..-63.9539]*| it/evals=640/1068 eff=73.7327% N=300`
 #
 # Some important information here is :
+#
 # -  Progress (0.53%) :
 # The completed fraction of the integral. This is not a time progress bar.
 # Stays at zero for a good fraction of the run.
+#
 # -  Efficiency (eff value) of the sampling.
 # This indicates out of the proposed new points,
 # how many were accepted. If your efficiency is too small (<<1%), maybe
 # you should revise your priors (e.g. a LogUniform prior for the
-# normalization).
+# normalisation).
 #
 # **Final outputs**
 #
@@ -269,7 +272,7 @@ result_joint = sampler.run(datasets)
 # -  the median
 # -  the lowest likelihood value
 #
-# By default the `DatasetModels` will be updated with the `mean` of
+# By default the `~gammapy.modeling.models.DatasetModels` will be updated with the `mean` of
 # the posterior distributions.
 #
 
@@ -317,7 +320,7 @@ for i, n in enumerate(model.parameters.free_parameters.names):
 
 ######################################################################
 # While the above plots are interesting, the real strength of the Bayesian
-# analysis is to visualize all parameters correlations which is usually
+# analysis is to visualise all parameters correlations which is usually
 # done using “corner plots”.
 #
 
@@ -333,7 +336,7 @@ plt.show()
 # Individual run analysis
 # -----------------------
 #
-# Now we’ll analyze several Crab runs individually so that we can compare
+# Now we’ll analyse several Crab runs individually so that we can compare
 # them.
 #
 
