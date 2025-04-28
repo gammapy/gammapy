@@ -81,11 +81,7 @@ class Dataset(abc.ABC):
 
     def stat_sum(self):
         """Total statistic given the current model parameters and priors."""
-        prior_stat_sum = 0.0
-        if self.models is not None:
-            prior_stat_sum = self.models.parameters.prior_stat_sum()
-
-        return self._fit_statistic.stat_sum_dataset(self) + prior_stat_sum
+        return self._fit_statistic.stat_sum_dataset(self)
 
     def _stat_sum_likelihood(self):
         """Total statistic given the current model parameters without the priors."""
@@ -247,10 +243,15 @@ class Datasets(collections.abc.MutableSequence):
 
     def stat_sum(self):
         """Compute joint statistic function value."""
-        stat_sum = 0
+        prior_stat_sum = 0.0
+        if self.models is not None:
+            prior_stat_sum = self.models.parameters.prior_stat_sum()
+
+        stat_sum = 0.0
         for dataset in self:
             stat_sum += dataset.stat_sum()
-        return stat_sum
+
+        return stat_sum + prior_stat_sum
 
     def _stat_sum_likelihood(self):
         """Total statistic given the current model parameters without the priors."""
