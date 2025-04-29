@@ -9,6 +9,7 @@ from gammapy.maps.axes import UNIT_STRING_FORMAT
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.random import InverseCDFSampler, get_random_state
+from gammapy.utils.units import energy_unit_format
 from ..core import IRFMap
 from .core import PSF
 from .kernel import PSFKernel
@@ -557,7 +558,7 @@ class PSFMap(IRFMap):
                     "rad": rad,
                 }
             )
-            label = f"{value:.0f}"
+            label = f"{energy_unit_format(value)}"
             psf_value *= self.psf_map.unit
             with quantity_support():
                 ax.plot(rad, psf_value, label=label, **kwargs)
