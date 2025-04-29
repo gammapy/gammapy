@@ -552,7 +552,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
     def run(self, datasets):
         """Run test statistic map estimation.
 
-        Can compute correlated excess, Li & Ma significance, flux and error maps, upper limits or sensitivity.
+        Can compute predicted excess, TS, flux and error maps, and optionally upper limits or sensitivity.
 
         Requires a MapDataset with counts, exposure and background_model properly set to run.
 
