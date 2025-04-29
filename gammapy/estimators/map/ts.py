@@ -578,7 +578,6 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
                 * flux_err : symmetric error map
                 * flux_ul : upper limit map.
                 * flux_sensitivity : flux sensitivity for this dataset
-                * etc
 
         """
         datasets = Datasets(datasets)
