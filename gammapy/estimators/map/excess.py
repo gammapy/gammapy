@@ -285,7 +285,6 @@ class ExcessMapEstimator(Estimator):
                 * flux_err : symmetric error map
                 * flux_ul : upper limit map.
                 * flux_sensitivity : flux sensitivity for this dataset
-                * etc
         """
         if not isinstance(dataset, MapDataset):
             raise ValueError(
