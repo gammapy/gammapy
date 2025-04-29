@@ -119,7 +119,7 @@ def convolved_map_dataset_counts_statistics(convolved_maps, stat_type):
 
 
 class ExcessMapEstimator(Estimator):
-    """Computes correlated excess, significance, flux and error maps, upper limits or sensitivity from a map dataset.
+    """Computes correlated excess, significance, flux and error maps,  and optionally upper limits or sensitivity from a map dataset.
 
     The excess map estimator will compute the excess taking into account the predicted counts of the associated
     model (the default one, the user one or the model set on the dataset).
