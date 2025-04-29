@@ -262,7 +262,7 @@ class ExcessMapEstimator(Estimator):
         self._correlation_radius = Angle(correlation_radius)
 
     def run(self, dataset):
-        """Compute correlated excess, Li & Ma significance, flux and error maps, upper limits or sensitivity.
+        """Compute correlated excess, Li & Ma significance, flux and error maps,  and optionally upper limits or sensitivity.
 
         If a model is set on the dataset the excess map estimator will compute
         the excess taking into account the predicted counts of the model.
