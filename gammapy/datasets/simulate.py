@@ -532,11 +532,11 @@ class MapDatasetEventSampler:
         if loc is None:
             if telescope == "CTA":
                 if instrument == "Southern Array":
-                    loc = observatory_locations["cta_south"]
+                    loc = observatory_locations["ctao_south"]
                 elif instrument == "Northern Array":
-                    loc = observatory_locations["cta_north"]
+                    loc = observatory_locations["ctao_north"]
                 else:
-                    loc = observatory_locations["cta_south"]
+                    loc = observatory_locations["ctao_south"]
 
             else:
                 loc = observatory_locations[telescope.lower()]
