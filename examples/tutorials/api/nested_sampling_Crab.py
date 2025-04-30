@@ -19,7 +19,8 @@ Bayesian analysis with nested sampling.
 # traditionally visualise in the form of corner plots. These distributions
 # contain more information than a maximum likelihood fit as they reveal not
 # only the “best model” but provide a more accurate representation of errors and
-# correlation between parameters. In particular, non-Gaussian degeneracies are complex to estimate with a maximum likelihood approach.
+# correlation between parameters. In particular, non-Gaussian degeneracies are
+# complex to estimate with a maximum likelihood approach.
 #
 # 2. Limitations of the Markov Chain Monte Carlo approach
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -43,7 +44,8 @@ Bayesian analysis with nested sampling.
 # To overcome these issues, the nested sampling (NS) algorithm has
 # gained traction in physics and astronomy. It is a Monte Carlo
 # algorithm for computing an integral of the likelihood function over
-# the prior model parameter space introduced in `John Skilling, 2004 <https://ui.adsabs.harvard.edu/abs/2004AIPC..735..395S>`__
+# the prior model parameter space introduced in
+# `John Skilling, 2004 <https://ui.adsabs.harvard.edu/abs/2004AIPC..735..395S>`__
 # The method performs this integral by evolving a collection of points
 # through the parameter space (see recent reviews from `Ashton et al.,
 # 2022 <https://ui.adsabs.harvard.edu/abs/2022NRvMP...2...39A>`__, and
@@ -64,7 +66,8 @@ Bayesian analysis with nested sampling.
 # (N*(N-1)/2 contour plots to generate). In addition, it is more robust
 # to the choice of initialisation, requires less human intervention and
 # is therefore readily integrated in pipeline analysis. In gammapy, we
-# used the NS implementation of the UltraNest package (see `here <https://johannesbuchner.github.io/UltraNest/>`__ for more information), one of the
+# used the NS implementation of the UltraNest package
+# (see `here <https://johannesbuchner.github.io/UltraNest/>`__ for more information), one of the
 # leading package in Astronomy (already used in Cosmology and in
 # X-rays).
 # For a nice visualisation of the NS method see here : `sampling
@@ -327,7 +330,8 @@ for i, n in enumerate(model.parameters.free_parameters.names):
 # Ultranest corner plot function is a wrapper around the `corner
 # <https://corner.readthedocs.io/en/latest/api>`__ package.
 # See the above link for optional keywords.
-# Other packages exist for corner plots, like `chainconsumer <https://chainconsumer.readthedocs.io/en/latest/>`__ which is discussed later in this tutorial.
+# Other packages exist for corner plots, like
+# `chainconsumer <https://chainconsumer.readthedocs.io/en/latest/>`__ which is discussed later in this tutorial.
 
 from ultranest.plot import cornerplot
 
