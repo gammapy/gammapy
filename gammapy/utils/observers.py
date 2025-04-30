@@ -3,7 +3,6 @@
 
 import astropy.units as u
 from astropy.coordinates import EarthLocation
-from gammapy.utils.deprecation import DeprecatedDict
 
 __all__ = ["observatory_locations"]
 
@@ -57,12 +56,17 @@ Examples
 observatory_locations["ctao_south"] = EarthLocation(
     lon="-70d18m58.84s", lat="-24d41m0.34s", height="2150m"
 )
-
+observatory_locations["cta_south"] = EarthLocation(
+    lon="-70d18m58.84s", lat="-24d41m0.34s", height="2150m"
+)
 # Values from https://www.cta-observatory.org/about/array-locations/la-palma/
 # Latitude: 28d45m43.7904s North, Longitude: 17d53m31.218s West, Height: 2200 m
 # Email from Gernot Maier on Sep 8, 2017, stating what they use in the CTA MC group for MST-1:
 # lon=-17.891571d, lat=28.762158d, height=2147m
 observatory_locations["ctao_north"] = EarthLocation(
+    lon="-17d53m31.218s", lat="28d45m43.7904s", height="2147m"
+)
+observatory_locations["cta_north"] = EarthLocation(
     lon="-17d53m31.218s", lat="28d45m43.7904s", height="2147m"
 )
 
@@ -109,9 +113,4 @@ observatory_locations["fact"] = EarthLocation(
     lat=28.761647 * u.deg,
     lon=-17.891116 * u.deg,
     height=2200 * u.m,
-)
-observatory_locations = DeprecatedDict(
-    observatory_locations,
-    {"cta_south": "ctao_south", "cta_north": "ctao_north"},
-    since="v2.0",
 )
