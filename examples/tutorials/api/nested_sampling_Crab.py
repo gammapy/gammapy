@@ -17,9 +17,9 @@ Bayesian analysis with nested sampling.
 # Bayesian inference uses prior knowledge, in the form of a prior
 # distribution, in order to estimate posterior probabilities which we
 # traditionally visualise in the form of corner plots. These distributions
-# contain much more information than a single best-fit as they reveal not
-# only the “best model” but the (not always Gaussian) errors and
-# correlation between parameters.
+# contain more information than a maximum likelihood fit as they reveal not
+# only the “best model” but provide a more accurate representation of errors and
+# correlation between parameters. In particular, non-Gaussian degeneracies are complex to estimate with a maximum likelihood approach.
 #
 # 2. Limitations of the Markov Chain Monte Carlo approach
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -173,7 +173,7 @@ datasets.models
 #    slower. To test the Prior boundaries and for debugging, a lower
 #    number (~100) can be used before a production run with more points
 #    (~400 or more).
-# -  `frac_remain`: the cut-off condition for the integration. High
+# -  `frac_remain`: the cut-off condition for the integration, set by the maximum allowed fraction of posterior mass left in the live points vs the dead points. High
 #    values (e.g., 0.5) are faster and can be used if the posterior
 #    distribution is a relatively simple shape. A low value (1e-1, 1e-2)
 #    is optimal for finding peaks but slower.
@@ -243,7 +243,9 @@ result_joint = sampler.run(datasets)
 # used for model comparison.
 # For more information see : `on the use of the evidence for model comparison
 # <https://ned.ipac.caltech.edu/level5/Sept13/Trotta/Trotta4.html>`__.
-#
+# An interesting comparison of the efficiency and false discovery rate of model selection with deltaLogLike and deltaLogZ
+# is given in Appendix C of `Buchner et al. 2014 <https://ui.adsabs.harvard.edu/abs/2014A%2526A...564A.125B%252F/>`__.
+
 # **Results stored on disk**
 #
 # if `log_dir` is set to a name where the results will be stored, then
@@ -322,11 +324,21 @@ for i, n in enumerate(model.parameters.free_parameters.names):
 # While the above plots are interesting, the real strength of the Bayesian
 # analysis is to visualise all parameters correlations which is usually
 # done using “corner plots”.
-#
+# Ultranest corner plot function is a wrapper around the `corner
+# <https://corner.readthedocs.io/en/latest/api>`__ package.
+# See the above link for optional keywords.
+# Other packages exist for corner plots, like `chainconsumer <https://chainconsumer.readthedocs.io/en/latest/>`__ which is discussed later in this tutorial.
 
 from ultranest.plot import cornerplot
 
-cornerplot(result_joint.sampler_results, plot_datapoints=True, plot_density=True)
+cornerplot(
+    result_joint.sampler_results,
+    plot_datapoints=True,
+    plot_density=True,
+    bins=20,
+    title_fmt=".2e",
+    smooth=False,
+)
 plt.show()
 
 # sphinx_gallery_thumbnail_number = 3
