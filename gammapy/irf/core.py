@@ -347,15 +347,16 @@ class IRF(metaclass=abc.ABCMeta):
         """
         axis = self.axes[axis_name]
         axis_idx = self.axes.index(axis_name)
+        def reshape_axis_values(values, axis_idx, ndim):
+                                    shape = [1] * ndim
+                                    shape[axis_idx] = -1
+                                    return values.reshape(shape)
 
-        shape = [1] * len(self.axes)
-        shape[axis_idx] = -1
-
-        values = self.quantity * axis.bin_width.reshape(shape)
+        values = self.quantity * reshape_axis_values(axis.bin_width, axis_idx, len(self.axes))
 
         if axis_name in ["rad", "offset"]:
-            # take Jacobian into account
-            values = 2 * np.pi * axis.center.reshape(shape) * values
+                           # take Jacobian into account
+                           values = 2 * np.pi * reshape_axis_values(axis.center, axis_idx, len(self.axes)) * values
 
         data = values.cumsum(axis=axis_idx)
 
