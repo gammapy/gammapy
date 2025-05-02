@@ -6,8 +6,7 @@ Fundamental Concepts: Gammapy analysis workflow and package structure
 =====================================================================
 
 .. toctree::
-    :glob:
-    :titleonly:
+    :maxdepth: 1
 
 
 Analysis workflow
