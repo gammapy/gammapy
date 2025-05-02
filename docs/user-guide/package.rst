@@ -8,6 +8,20 @@ Fundamental Concepts: Gammapy analysis workflow and package structure
 .. toctree::
     :maxdepth: 1
 
+    dl3
+    irf/index
+    makers/index
+    maps/index
+    datasets/index
+    modeling
+    estimators
+    hli
+    scripts/index
+    catalog
+    astro/index
+    stats/index
+    visualization/index
+    utils
 
 Analysis workflow
 -----------------
