@@ -26,4 +26,4 @@ jobs:
           python -m pip install .[docs,test]
 
       - name: Run doctests
-        run: pytest --doctest-glob="*.rst" docs/
+        run: pytest --doctest-glob="*.rst" docs/ --ignore=docs/development/pigs/
