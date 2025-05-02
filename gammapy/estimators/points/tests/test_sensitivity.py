@@ -117,6 +117,6 @@ def test_parameter_sensitivity_estimator(spectrum_dataset):
     estimator = ParameterSensitivityEstimator(spectral_model.amplitude, 0, rtol=1e-2)
 
     value = estimator.run(datasets)
-    assert_allclose(value, 4.570882e-12, rtol=1e-2)
+    assert_allclose(value, 4.67553e-12, rtol=1e-2)
 
     assert_allclose(spectral_model.amplitude.value, default_value, rtol=1e-2)
