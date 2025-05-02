@@ -357,7 +357,9 @@ class Parameter:
     # TODO: possibly allow to set this independently
     @property
     def conf_min(self):
-        """Confidence minimum value as a `float`."""
+        """Confidence minimum value as a `float`.
+        Return parameter minimum if defined, otherwise  a default is estimated from value and error.
+        """
         if not np.isnan(self.min):
             return self.min
         else:
@@ -369,7 +371,9 @@ class Parameter:
     # TODO: possibly allow to set this independently
     @property
     def conf_max(self):
-        """Confidence maximum value as a `float`."""
+        """Confidence maximum value as a `float`.
+        Return parameter maximum if defined, otherwise a default is estimated from value and error.
+        """
 
         if not np.isnan(self.max):
             return self.max
