@@ -45,7 +45,7 @@ Bayesian analysis with nested sampling.
 # gained traction in physics and astronomy. It is a Monte Carlo
 # algorithm for computing an integral of the likelihood function over
 # the prior model parameter space introduced in
-# `John Skilling, 2004 <https://ui.adsabs.harvard.edu/abs/2004AIPC..735..395S>`__
+# `John Skilling, 2004 <https://ui.adsabs.harvard.edu/abs/2004AIPC..735..395S>`__.
 # The method performs this integral by evolving a collection of points
 # through the parameter space (see recent reviews from `Ashton et al.,
 # 2022 <https://ui.adsabs.harvard.edu/abs/2022NRvMP...2...39A>`__, and
@@ -53,19 +53,19 @@ Bayesian analysis with nested sampling.
 # into too many details, one important specificity of the NS method is
 # that it starts from the entire parameter space and evolves a
 # collection of live points to map all minima (including multiple modes
-# if any) whereas Markov Chain Monte Carlo methods require an
+# if any), whereas Markov Chain Monte Carlo methods require an
 # initialisation point and the walkers will explore the local
 # likelihood. The ability of these walkers to escape a local minimum or
 # to accurately describe a complex likelihood space is not guaranteed.
-# This is a fundamental difference between MCMC and Minuit which will
+# This is a fundamental difference with MCMC or Minuit which will
 # only ever probe the vicinity along their minimisation paths and do not
 # have an overview of the global likelihood landscape. The analysis
 # using the NS framework is more CPU time consuming than a standard
-# classical fit but provides the full posterior distribution for all
+# classical fit, but it provides the full posterior distribution for all
 # parameters, which is out of reach with traditional fitting techniques
 # (N*(N-1)/2 contour plots to generate). In addition, it is more robust
 # to the choice of initialisation, requires less human intervention and
-# is therefore readily integrated in pipeline analysis. In gammapy, we
+# is therefore readily integrated in pipeline analysis. In Gammapy, we
 # used the NS implementation of the UltraNest package
 # (see `here <https://johannesbuchner.github.io/UltraNest/>`__ for more information), one of the
 # leading package in Astronomy (already used in Cosmology and in
@@ -81,7 +81,7 @@ Bayesian analysis with nested sampling.
 # Proposed approach
 # -----------------
 #
-# In this example we will perform a Bayesian analysis with multiple 1D
+# In this example, we will perform a Bayesian analysis with multiple 1D
 # spectra of the Crab nebula data and investigate their posterior
 # distributions.
 #
@@ -141,7 +141,7 @@ model = SkyModel.create(spectral_model="pl")
 #
 # .. WARNING:: Priors definition:
 #    Unlike a traditional fit where priors on the
-#    parameters is optional, here it is inherent to the Bayesian approach and
+#    parameters are optional, here it is inherent to the Bayesian approach and
 #    are therefore mandatory.
 #
 # In this case we will set (min,max) prior that will define the
@@ -164,22 +164,22 @@ datasets.models
 # Defining the sampler and options
 # --------------------------------
 #
-# As for the `Fit` object, the `Sampler` object can receive
+# As for the `~gammapy.modeling.Fit` object, the `Sampler` object can receive
 # different backend (although just one is available for now).
-# The `Sampler` comes with “reasonable” default parameters but you can
+# The `Sampler` comes with “reasonable” default parameters, but you can
 # change them via the `sampler_opts` dictionnary.
 # Here is a short description of the most relevant parameters that you
 # could change :
 #
 # -  `live_points`: minimum number of live points throughout the run.
-#    More points allow to discover multiple peaks if existing but is
+#    More points allow to discover multiple peaks if existing, but is
 #    slower. To test the Prior boundaries and for debugging, a lower
 #    number (~100) can be used before a production run with more points
 #    (~400 or more).
 # -  `frac_remain`: the cut-off condition for the integration, set by the maximum allowed fraction of posterior mass left in the live points vs the dead points. High
 #    values (e.g., 0.5) are faster and can be used if the posterior
 #    distribution is a relatively simple shape. A low value (1e-1, 1e-2)
-#    is optimal for finding peaks but slower.
+#    is optimal for finding peaks, but slower.
 # -  `log_dir`: directory where the output files will be stored.
 #
 # **Important note:** unlike the MCMC method, you don’t need to define the
@@ -365,13 +365,13 @@ result_2 = sampler.run(datasets[2])
 # Comparing the posterior distribution of all runs
 # ------------------------------------------------
 #
-# For a comparison of different posterior distribution we can use the
+# For a comparison of different posterior distributions, we can use the
 # package chainconsumer.
-# As this is not a gammapy dependency, you’ll need to install it.
+# As this is not a Gammapy dependency, you’ll need to install it.
 # More info here : https://samreay.github.io/ChainConsumer/
 #
 
-# Uncomment this if you have installed chainconsumer
+# Uncomment this if you have installed `chainconsumer`
 
 # from chainconsumer import Chain, ChainConfig, ChainConsumer, PlotConfig, Truth, make_sample
 # from pandas import DataFrame
@@ -411,5 +411,5 @@ result_2 = sampler.run(datasets[2])
 # parameters than the individual runs (more observation time is of
 # course better).
 # One can note as well that one of the run has a notably different
-# amplitude (possibly due to calibrations issues).
+# amplitude (possibly due to calibrations or/and atmospheric issues).
 #
