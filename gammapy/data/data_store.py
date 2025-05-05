@@ -8,6 +8,7 @@ import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
+from astropy.table import table
 import gammapy.utils.time as tu
 from gammapy.utils.pbar import progress_bar
 from gammapy.utils.scripts import make_path
@@ -79,7 +80,7 @@ class DataStore:
 
     def __init__(self, hdu_table=None, obs_table=None):
         self.hdu_table = hdu_table
-        self.obs_table = obs_table
+        self.obs_table = table.unique(obs_table, keys="OBS_ID")
 
     def __str__(self):
         return self.info(show=False)
