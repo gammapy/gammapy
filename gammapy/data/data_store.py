@@ -448,6 +448,11 @@ class DataStore:
             Dictionary of Observations instance, one instance for each group.
         """
 
+        if self.obs_table is None:
+            raise ValueError(
+                "obs_table attribute must not be None to select groups of observations"
+            )
+
         observations = self.get_observations(**kwargs)
         obs_table = self.obs_table[
             [
