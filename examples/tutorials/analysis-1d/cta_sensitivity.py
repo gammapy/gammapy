@@ -89,7 +89,7 @@ empty_dataset = SpectrumDataset.create(geom=geom, energy_axis_true=energy_axis_t
 irfs = load_irf_dict_from_file(
     "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
 )
-location = observatory_locations["cta_south"]
+location = observatory_locations["ctao_south"]
 livetime = 50.0 * u.h
 obs = Observation.create(
     pointing=pointing_info, irfs=irfs, livetime=livetime, location=location

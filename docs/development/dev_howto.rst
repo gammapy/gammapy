@@ -671,24 +671,6 @@ If you have a alternative attribute to use instead, pass its name in the `altern
 Others
 ------
 
-Command line tools using click
-++++++++++++++++++++++++++++++
-
-Command line tools that use the `click <https://click.palletsprojects.com/en/8.0.x/>`__ module should disable
-the unicode literals warnings to clean up the output of the tool:
-
-.. testcode::
-
-    import click
-    click.disable_unicode_literals_warning = True
-
-See `here <https://click.palletsprojects.com/en/5.x/python3/#unicode-literals>`__ for further
-information.
-
-
-
-
-
 Bundled gammapy.extern code
 +++++++++++++++++++++++++++
 
