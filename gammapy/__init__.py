@@ -9,9 +9,10 @@ it only contains this:
 
 ::
 
- test              --- Run Gammapy unit tests
- __version__       --- Gammapy version string
- __maincitation__      --- Gammapy main paper
+ test                --- Run Gammapy unit tests
+ __version__         --- Gammapy version string
+ __maincitation__    --- Gammapy main paper
+ __acknowledgment__  --- Gammapy acknowledgment
 
 
 The Gammapy functionality is available for import from
