@@ -327,7 +327,7 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         """
         from .io import OGIPDatasetReader
 
-        if format == None:
+        if format is None:
             with fits.open(filename) as hdulist:
                 # Check if the file is empty
                 if len(hdulist) == 0:
