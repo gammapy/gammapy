@@ -302,10 +302,10 @@ References
 
 These are references describing the available methods:
 
-  - [LiMa1983]_,
-  - [Cash1979]_,
-  - [Stewart2009]_,
-  - [Rolke2005]_,
-  - [Feldman1998]_,
-  - [Cousins2007]_.
+* [LiMa1983]_,
+* [Cash1979]_,
+* [Stewart2009]_,
+* [Rolke2005]_,
+* [Feldman1998]_,
+* [Cousins2007]_.
 
