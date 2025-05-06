@@ -18,6 +18,12 @@ i.e. if :math:`L` is the likelihood function used, they follow the expression
 All functions compute per-bin statistics. If you want the summed statistics for
 all bins, call sum on the output array yourself.
 
+The likelihood functions used currently in Gammapy are:
+
+* `~gammapy.stats.Chi2FitStatistic`
+* `~gammapy.stats.Chi2AsymmetricErrorFitStatistic`
+* :ref:`cash`
+* :ref:`wstats`
 
 .. _cash:
 
