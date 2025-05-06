@@ -2,7 +2,7 @@
 Bayesian analysis with nested sampling
 ======================================
 
-Bayesian analysis with nested sampling.
+A demonstration of a Bayesian analysis using the nested sampling technique.
 
 """
 
@@ -164,9 +164,9 @@ datasets.models
 # Defining the sampler and options
 # --------------------------------
 #
-# As for the `~gammapy.modeling.Fit` object, the `Sampler` object can receive
+# As for the `~gammapy.modeling.Fit` object, the `~gammapy.modeling.Sampler` object can receive
 # different backend (although just one is available for now).
-# The `Sampler` comes with “reasonable” default parameters, but you can
+# The `~gammapy.modeling.Sampler` comes with “reasonable” default parameters, but you can
 # change them via the `sampler_opts` dictionnary.
 # Here is a short description of the most relevant parameters that you
 # could change :
@@ -286,7 +286,7 @@ result_joint.models
 
 
 ######################################################################
-# The Sampler class returns a very rich dictionnary.
+# The `~gammapy.modeling.Sampler` class returns a very rich dictionnary.
 # The most “standard” information about the posterior distributions can
 # be found in :
 #
@@ -299,11 +299,11 @@ result_joint.sampler_results["posterior"]
 # `information gain` which estimates how much the posterior
 # distribution has shrinked with respect to the prior (i.e. how much
 # we’ve learned). A value < 1 means that the parameter is poorly
-# constrained with the prior range.
-# For a more physical interpretation see this
+# constrained within the prior range (we haven't learned much with respect to our prior assumption).
+# For a physical example see this
 # `example <https://arxiv.org/abs/2205.00009>`__.
 #
-# The `Sampler Result` dictionnary contains also other interesting
+# The `~gammapy.modeling.SamplerResult` dictionnary contains also other interesting
 # information :
 #
 
@@ -372,7 +372,7 @@ result_2 = sampler.run(datasets[2])
 # More info here : https://samreay.github.io/ChainConsumer/
 #
 
-# Uncomment this if you have installed `chainconsumer`
+# Uncomment this if you have installed `chainconsumer`.
 
 # from chainconsumer import Chain, ChainConfig, ChainConsumer, PlotConfig, Truth, make_sample
 # from pandas import DataFrame
