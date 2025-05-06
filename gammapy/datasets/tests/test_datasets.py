@@ -252,8 +252,8 @@ def test_select_time():
     # Verify the results
     assert len(selected_datasets) == 1
     assert selected_datasets[0].name == "dataset1"
-    
-    
+
+
 def test_select_from_gti():
     from gammapy.data import GTI
     from gammapy.datasets import Datasets, SpectrumDataset
@@ -301,4 +301,4 @@ def test_select_from_gti():
     assert selected_datasets_partial[0].name == "dataset1"
     assert selected_datasets_partial[1].name == "dataset2"
     assert selected_datasets_fully[0].name == "dataset2"
-''
+

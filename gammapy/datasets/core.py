@@ -288,7 +288,7 @@ class Datasets(collections.abc.MutableSequence):
                 datasets.append(dataset)
 
         return self.__class__(datasets)
-    
+
     def select_from_gti(self, gti, atol="1e-6 s", allow_partial=False):
         """Select datasets corresponding to each interval in a GTI object.
 
