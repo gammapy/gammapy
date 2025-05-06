@@ -228,6 +228,7 @@ def test_gti_union():
     assert_allclose(gti.met_start.value, [1, 5])
     assert_allclose(gti.met_stop.value, [4, 8])
 
+
 def test_gti_intersect():
     time_ref = Time("2010-01-01")
     gti1 = make_gti({"START": [0, 5] * u.s, "STOP": [3, 8] * u.s}, time_ref=time_ref)
@@ -238,6 +239,7 @@ def test_gti_intersect():
     assert len(intersected_gti.table) == 2
     assert_allclose(intersected_gti.met_start.value, [2, 6])
     assert_allclose(intersected_gti.met_stop.value, [3, 8])
+
 
 def test_gti_create():
     start = u.Quantity([1, 2], "min")
