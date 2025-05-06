@@ -81,21 +81,31 @@ def song(karaoke=False):
 
 # Set the bibtex entry to the article referenced in CITATION.
 def _get_bibtex():
-    refs = (Path(__file__).parent.parent / "CITATION").read_text().split("@article")[1:]
-    return f"@article{refs[0]}" if refs else ""
+    try:
+        refs = (
+            (Path(__file__).parent.parent / "CITATION")
+            .read_text()
+            .split("@article")[1:]
+        )
+        return f"@article{refs[0]}" if refs else ""
+    except FileNotFoundError:
+        return ""
 
 
 __maincitation__ = __bibtex__ = _get_bibtex()
 
 
 def _get_acknowledgment():
-    ackno = None
-    text = (
-        Path("./CITATION").read_text().split("The recommended LaTeX acknowledgment is")
-    )
-    if text:
+    try:
+        text = (
+            (Path(__file__).parent.parent / "CITATION")
+            .read_text()
+            .split("The recommended LaTeX acknowledgment is")
+        )
         ackno = text[1].split("\n\n")[1]
-    return ackno if ackno else ""
+        return ackno
+    except FileNotFoundError:
+        return ""
 
 
 __acknowledgment__ = _get_acknowledgment()
