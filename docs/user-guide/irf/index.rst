@@ -61,8 +61,12 @@ These functions are obtained through Monte-Carlo simulations of gamma-ray shower
 e.g.  detector configuration, zenith angle of the pointing position, detector state and different event reconstruction
 and selection schemes. In the DL3 format, the IRF are distributed for each observing run.
 
-Further details on individuals responses and how they are implemented in gammapy are given in :ref:`irf-aeff`,
-:ref:`irf-edisp`, :ref:`irf-psf` and :ref:`irf-bkg`.
+**Further details on individuals responses** and how they are implemented in gammapy are given in:
+
+  - :ref:`irf-aeff`,
+  - :ref:`irf-edisp`,
+  - :ref:`irf-psf`,
+  - :ref:`irf-bkg`.
 
 Most of the formats defined at :ref:`gadf:iact-irf` are supported.
 At the moment, there is little support for Fermi-LAT or other instruments.
