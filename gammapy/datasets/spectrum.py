@@ -5,6 +5,8 @@ from matplotlib.gridspec import GridSpec
 from gammapy.utils.scripts import make_path
 from .map import MapDataset, MapDatasetOnOff
 from .utils import get_axes
+from astropy.io import fits
+
 
 __all__ = ["SpectrumDatasetOnOff", "SpectrumDataset"]
 
@@ -302,7 +304,7 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         raise NotImplementedError("Method not supported on a spectrum dataset")
 
     @classmethod
-    def read(cls, filename, format="gadf", checksum=False, name=None, **kwargs):
+    def read(cls, filename, format=None, checksum=False, name=None, **kwargs):
         """Read from file.
 
         For OGIP formats, filename is the name of a PHA file. The BKG, ARF, and RMF file names must be
@@ -314,8 +316,8 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         ----------
         filename : `~pathlib.Path` or str
             OGIP PHA file to read.
-        format : {"ogip", "ogip-sherpa", "gadf"}
-            Format to use. Default is "gadf".
+        format : {"ogip", "ogip-sherpa", "gadf", None}, optional
+            Format to use. Default is None, which guesses the format (OGIP or GADF).
         checksum : bool, optional
             If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
         name: str, optional
@@ -325,22 +327,26 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         """
         from .io import OGIPDatasetReader
 
+        if format == None:
+            with fits.open(filename) as hdulist:
+                # Check if the file is empty
+                if len(hdulist) == 0:
+                    raise ValueError(f"File {filename} is empty")
+                # Check for extensions in OGIP format
+                if "SPECTRUM" in hdulist and "OGIP" in hdulist[1].header["HDUCLASS"]:
+                    format = "ogip"
+                # Check for extensions in GADF format
+                elif ("COUNTS" in hdulist and "EXPOSURE" in hdulist and "EDISP" in hdulist):
+                    format = "gadf"
+                    if 'IMAGE' in hdulist[1].header["XTENSION"]:
+                        raise ValueError(f"File {filename} is not a GADF spectrum, but a GADF map") 
+        
         if format == "gadf":
-            mapd = super().read(
-                filename, format="gadf", checksum=checksum, name=name, **kwargs
-            )
-            if (
-                mapd.counts is None
-                and mapd.background is None
-                and mapd.exposure is None
-                and mapd.edisp is None
-            ):
-                log.warning("GADF reader returned empty counts map, trying OGIP reader")
-            else:
-                return mapd
-
-        reader = OGIPDatasetReader(filename=filename, checksum=checksum, name=name)
-        return reader.read()
+            return super().read(filename, format="gadf", checksum=checksum, name=name, **kwargs)
+        elif format == "ogip":
+            return OGIPDatasetReader(filename=filename, checksum=checksum, name=name).read()
+        else:
+            raise ValueError(f"Invalid {format} serialisation format in {filename}.")
 
     def write(self, filename, overwrite=False, format="gadf", checksum=False):
         """Write spectrum dataset on off to file.

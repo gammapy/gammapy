@@ -642,7 +642,7 @@ class TestSpectrumOnOff:
 
     def test_spectrum_dataset_onoff_fallback_from_gadf(self, tmp_path):
         self.dataset.write(tmp_path / "test.fits", format="ogip")
-        d1 = SpectrumDatasetOnOff.read(tmp_path / "test.fits", format="gadf")
+        d1 = SpectrumDatasetOnOff.read(tmp_path / "test.fits")
         assert isinstance(d1.counts.geom, RegionGeom)
         assert d1.exposure == self.dataset.exposure
         assert_allclose(d1.counts_off.data, self.dataset.counts_off.data)
