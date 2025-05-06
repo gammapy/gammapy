@@ -25,33 +25,33 @@ class Sampler:
             For more samples in the posterior increase this number or the min_ess parameter.
             Default is 400 live points.
         frac_remain : float
-             Integrate until this fraction of the integral is left in the remainder. Set to a low number (1e-2 … 1e-5)
-             to make sure peaks are discovered. Set to a higher number (0.5) if you know the posterior is simple.
-             Default is 0.5.
+            Integrate until this fraction of the integral is left in the remainder. Set to a low number (1e-2 … 1e-5)
+            to make sure peaks are discovered. Set to a higher number (0.5) if you know the posterior is simple.
+            Default is 0.5.
         min_ess : int
-             Target number of effective posterior samples. Increase this number to get more accurate results.
-             Default is live_points, but you may need to increase it to 1000 or more for complex posteriors.
-        log_dir :  str
-             Where to store output files.
-              Default is None and no results are not stored.
+            Target number of effective posterior samples. Increase this number to get more accurate results.
+            Default is live_points, but you may need to increase it to 1000 or more for complex posteriors.
+        log_dir : str
+            Where to store output files.
+            Default is None and no results are not stored.
         resume : str
-             ‘overwrite’, overwrite previous data. ‘subfolder’, create a fresh subdirectory in log_dir.
-             ‘resume’ or True, continue previous run if available. Only works when dimensionality, transform or
-             likelihood are consistent.
+            ‘overwrite’, overwrite previous data. ‘subfolder’, create a fresh subdirectory in `log_dir`.
+            ‘resume’ or True, continue previous run if available. Only works when dimensionality, transform or
+            likelihood are consistent.
         step_sampler : bool
-                Use a step sampler. This can be more efficient for higher dimensions (>10 or 15 parameters), but much
-                slower for lower dimensions.
-                Default is False.
+            Use a step sampler. This can be more efficient for higher dimensions (>10 or 15 parameters), but much
+            slower for lower dimensions.
+            Default is False.
         nsteps : int
-                Number of steps to take in each direction in the step sampler. Increase this number to get more
-                accurate results at the cost of more computation time.
-                Default is 10.
+            Number of steps to take in each direction in the step sampler. Increase this number to get more
+            accurate results at the cost of more computation time.
+            Default is 10.
         See the full list of options on the
         `UltraNest documentation <https://johannesbuchner.github.io/UltraNest/ultranest.html#ultranest.integrator.ReactiveNestedSampler>`__.
     run_opts : dict, optional
         Optional run options passed to the given backend when running the sampler.
         See the full list of run options on the
-        `UltraNest documentation <https://johannesbuchner.github.io/UltraNest/ultranest.html#ultranest.integrator.ReactiveNestedSampler.run`__.
+        `UltraNest documentation <https://johannesbuchner.github.io/UltraNest/ultranest.html#ultranest.integrator.ReactiveNestedSampler.run>`__.
 
     Example
     -------
@@ -113,7 +113,7 @@ class Sampler:
 
         Returns
         -------
-            result : `~gammapy.modeling.sampler.SamplerResult`
+        result : `~gammapy.modeling.sampler.SamplerResult`
             The sampler results.
         """
         import ultranest
@@ -165,7 +165,7 @@ class Sampler:
         Returns
         -------
         result : `~gammapy.modeling.sampler.SamplerResult`
-            the sampler results.
+            The sampler results. See the class description to get the exact content.
         """
         datasets, parameters = _parse_datasets(datasets=datasets)
         parameters = parameters.free_parameters
@@ -194,15 +194,15 @@ class SamplerResult:
     Parameters
     ----------
     nfev : int
-        number of likelihood calls/evaluations.
+        Number of likelihood calls/evaluations.
     success : bool
         Did the sampler succeed in finding a good fit? Definition of convergence depends on the sampler backend.
     models : `~gammapy.modeling.models`
-        the models updated after the sampler run.
+        The models updated after the sampler run.
     samples : `~numpy.ndarray`
-        array of (weighted) samples that can be used for histograms or corner plots.
+        Array of (weighted) samples that can be used for histograms or corner plots.
     sampler_results : dict
-        output of sampler.
+        Output of sampler.
         See the :doc:`/tutorials/api/nested_sampling_Crab` tutorial for a complete description.
     """
 
