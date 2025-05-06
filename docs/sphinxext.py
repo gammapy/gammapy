@@ -56,14 +56,6 @@ TUTORIAL_SORT_DICT = {
         "mask_maps.py": 4,
         "makers.py": 5,
         "datasets.py": 6,
-        "models.py": 1,
-        "priors.py": 2,
-        "model_management.py": 10,
-        "fitting.py": 11,
-        "nested_sampling_Crab.py": 12,
-        "estimators.py": 13,
-        "catalog.py": 8,
-        "astro_dark_matter.py": 3,
         "models.py": 7,
         "model_management.py": 8,
         "priors.py": 9,
@@ -71,6 +63,7 @@ TUTORIAL_SORT_DICT = {
         "estimators.py": 11,
         "catalog.py": 12,
         "astro_dark_matter.py": 13,
+        "nested_sampling_Crab.py": 14,
     # scripts
         "survey_map.py": 0,
 }
