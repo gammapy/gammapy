@@ -85,7 +85,7 @@ class LightCurveEstimator(FluxPointsEstimator):
 
     Examples
     --------
-    For a usage example see :doc:`/tutorials/analysis-time/light_curve` tutorial.
+    For a usage example, see :doc:`/tutorials/analysis-time/light_curve` tutorial.
 
     """
 
