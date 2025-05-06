@@ -133,6 +133,8 @@ Counts statistics classes
 To estimate the excess counts significance and errors, gammapy uses two classes for Poisson counts with
 and without known background: `~gammapy.stats.CashCountsStatistic` and `~gammapy.stats.WStatCountsStatistic`
 
+They are described in detail in the page: :doc:`/user-guide/stats/fit_statistics`.
+
 We show below how to use them.
 
 Cash counts statistic
