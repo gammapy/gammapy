@@ -89,6 +89,18 @@ Variable          Definition
 ================= ============================================================================
 
 
+List of the Gammapy IRFs
+------------------------
+
+.. toctree::
+    :maxdepth: 1
+
+    aeff
+    bkg
+    edisp
+    psf
+
+
 Using gammapy.irf
 -----------------
 
@@ -98,11 +110,3 @@ Using gammapy.irf
     ../examples/tutorials/analysis-1d/cta_sensitivity.py
 
 
-.. toctree::
-    :maxdepth: 1
-    :hidden:
-
-    aeff
-    bkg
-    edisp
-    psf
