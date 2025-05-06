@@ -339,8 +339,8 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
                 elif ("COUNTS" in hdulist and "EXPOSURE" in hdulist and "EDISP" in hdulist):
                     format = "gadf"
                     if 'IMAGE' in hdulist[1].header["XTENSION"]:
-                        raise ValueError(f"File {filename} is not a GADF spectrum, but a GADF map") 
-        
+                        raise ValueError(f"File {filename} is not a GADF spectrum, but a GADF map")
+
         if format == "gadf":
             return super().read(filename, format="gadf", checksum=checksum, name=name, **kwargs)
         elif format == "ogip":
