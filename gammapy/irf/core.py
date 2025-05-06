@@ -59,7 +59,10 @@ class IRF(metaclass=abc.ABCMeta):
         Metadata dictionary.
         Default is None.
 
-    See the associated tutorials :doc:`/tutorials/data/cta` and :doc:`/tutorials/api/irfs`.
+    Examples
+    --------
+    For a usage example, see :doc:`/tutorials/data/cta` tutorial and :doc:`/tutorials/api/irfs`.
+
     """
 
     default_interp_kwargs = dict(
