@@ -58,6 +58,9 @@ class IRF(metaclass=abc.ABCMeta):
     meta : dict, optional
         Metadata dictionary.
         Default is None.
+
+    See the associated tutorials: :doc:`/tutorials/data/cta.html` and
+    :doc:`/tutorials/api/irfs`.
     """
 
     default_interp_kwargs = dict(
