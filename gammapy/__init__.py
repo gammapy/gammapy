@@ -11,6 +11,7 @@ it only contains this:
 
  test              --- Run Gammapy unit tests
  __version__       --- Gammapy version string
+ __maincitation__      --- Gammapy main paper
 
 
 The Gammapy functionality is available for import from
@@ -30,9 +31,10 @@ the following sub-packages (e.g. `gammapy.makers`):
  utils        --- Utility functions and classes
 """
 
-__all__ = ["__version__", "song"]
+__all__ = ["__version__", "song", "__maincitation__", "__acknowledgment__"]
 
 from importlib.metadata import PackageNotFoundError, version
+from pathlib import Path
 
 try:
     __version__ = version(__name__)
@@ -74,3 +76,25 @@ def song(karaoke=False):
 
         centered = "\n".join(f"{s:^80}" for s in lyrics.split("\n"))
         sys.stdout.write(centered)
+
+
+# Set the bibtex entry to the article referenced in CITATION.
+def _get_bibtex():
+    refs = (Path(__file__).parent.parent / "CITATION").read_text().split("@article")[1:]
+    return f"@article{refs[0]}" if refs else ""
+
+
+__maincitation__ = __bibtex__ = _get_bibtex()
+
+
+def _get_acknowledgment():
+    ackno = None
+    text = (
+        Path("./CITATION").read_text().split("The recommended LaTeX acknowledgment is")
+    )
+    if text:
+        ackno = text[1].split("\n\n")[1]
+    return ackno if ackno else ""
+
+
+__acknowledgment__ = _get_acknowledgment()
