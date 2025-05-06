@@ -11,8 +11,6 @@ class Sampler:
 
     The sampler class provides a uniform interface to multiple sampler backends. Currently available: "UltraNest".
 
-    See the :doc:`/tutorials/api/nested_sampling_Crab` tutorial for its usage.
-
     Parameters
     ----------
     backend : {"ultranest"}
@@ -54,6 +52,11 @@ class Sampler:
         Optional run options passed to the given backend when running the sampler.
         See the full list of run options on the
         `UltraNest documentation <https://johannesbuchner.github.io/UltraNest/ultranest.html#ultranest.integrator.ReactiveNestedSampler.run`__.
+
+    Example
+    -------
+    For a usage example, see :doc:`/tutorials/api/nested_sampling_Crab` tutorial.
+
     """
 
     # TODO: add "zeusmc", "emcee"
