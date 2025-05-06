@@ -8,7 +8,7 @@ import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
-from astropy.table import table
+from astropy import table
 import gammapy.utils.time as tu
 from gammapy.utils.pbar import progress_bar
 from gammapy.utils.scripts import make_path
