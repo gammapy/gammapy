@@ -62,6 +62,7 @@
 .. _CTAO: https://www.ctao.org/
 .. _H.E.S.S.: https://www.mpi-hd.mpg.de/hfm/HESS/
 .. _HAWC: https://www.hawc-observatory.org/
+.. _SWGO: https://www.swgo.org/
 .. _VERITAS: https://veritas.sao.arizona.edu/
 .. _MAGIC: https://magic.mpp.mpg.de/
 .. _Fermi-LAT: https://fermi.gsfc.nasa.gov/
