@@ -94,6 +94,9 @@ Glossary
       acquisition. In the GADF DL3 format, it also represents a time interval in which the IRFs are
       supposed to be constant.
 
+    IACT
+      Short for "Imaging Atmospheric Cherenkov Technique", as in used for e.g. `CTAO`_.
+
     IRF
       Short for "instrument response function": they are used to model the probability
       to detect a photon with a number of measured characteristics. See :ref:`irf`.
@@ -156,11 +159,14 @@ Glossary
       functions are represented along a true energy axis.
 
     Transit
-      Path of a source over the sky in the course of one full sidereal day 
+      Path of a source over the sky in the course of one full sidereal day
       as seen by drift instruments like HAWC and SWGO.
 
     TS
       Short for "test statistics". See :ref:`ts` and :ref:`fit-statistics`.
+
+    WCD
+      Short for "Water Cherenkov Detector", like the experiments `HAWC`_ or `SWGO`_.
 
     WStat
       The WStat is a Poisson fit statistic usually used for ON-OFF analysis. It is
