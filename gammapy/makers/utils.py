@@ -703,10 +703,8 @@ def get_effective_livetime(
     selected_ids : list of `str`
         List of selected observation IDs.
 
-    # Examples
-    # --------
-    # ToDo: add the tutorial link after
     """
+    # ToDo: add the tutorial link after inside an "Example"
 
     border = Angle(6, "deg") if border is None else border
     selection = dict(
@@ -751,7 +749,6 @@ def guess_instrument_fov(obs):
     Guess the camera field of view for the given observation
     from the IRFs. This simply takes the maximum offset of the
     effective area IRF.
-    TODO: This logic will break for more complex IRF models.
     A better option would be to compute the offset at which
     the effective area is above 10% of the maximum.
 
@@ -765,6 +762,7 @@ def guess_instrument_fov(obs):
     offset_max : `~astropy.units.quantity.Quantity`
         The maximum offset of the effective area IRF.
     """
+    # TODO: This logic will break for more complex IRF models.
 
     if "aeff" not in obs.available_irfs:
         raise ValueError("No Effective area IRF to infer the FoV from")
