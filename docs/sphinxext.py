@@ -63,6 +63,7 @@ TUTORIAL_SORT_DICT = {
         "estimators.py": 11,
         "catalog.py": 12,
         "astro_dark_matter.py": 13,
+        "nested_sampling_Crab.py": 14,
     # scripts
         "survey_map.py": 0,
 }
