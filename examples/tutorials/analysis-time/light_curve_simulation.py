@@ -195,7 +195,7 @@ for idx in range(n_obs):
         irfs=irfs,
         reference_time=gti_t0,
         obs_id=idx,
-        location=observatory_locations["cta_south"],
+        location=observatory_locations["ctao_south"],
     )
     empty_i = empty.copy(name=f"dataset-{idx}")
     dataset = maker.run(empty_i, obs)
