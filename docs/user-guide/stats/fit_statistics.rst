@@ -23,7 +23,7 @@ The likelihood functions used currently in Gammapy are:
 * `~gammapy.stats.Chi2FitStatistic`
 * `~gammapy.stats.Chi2AsymmetricErrorFitStatistic`
 * :ref:`cash`
-* :ref:`wstats`
+* :ref:`wstat`
 
 .. _cash:
 
