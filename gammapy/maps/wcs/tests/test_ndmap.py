@@ -1013,6 +1013,26 @@ def test_double_cutout():
     np.testing.assert_allclose(m_c_new.data, m_cc.data)
 
 
+def test_to_region_nd_map():
+    m = WcsNDMap.create(npix=(200, 200))
+    m.data = np.ones_like(m.data)
+
+    # test with mask as weights
+    weights = WcsNDMap.create(npix=(200, 200))
+    weights.data = np.zeros_like(weights.data, dtype=bool)
+    weights.data[:, 100:] = True
+
+    assert_allclose(m.to_region_nd_map(weights=weights, func=np.mean).data[0, 0], 1.0)
+    assert_allclose(m.to_region_nd_map(weights=weights, func=np.sum).data[0, 0], 2e4)
+
+    # test with non-mask weights
+    weights.data = np.ones_like(weights.data, dtype="float64")
+    m.data[:, 100:] = 4.0
+    weights.data[:, 100:] = 2.0
+    assert_allclose(m.to_region_nd_map(weights=weights, func=np.mean).data[0, 0], 4.5)
+    assert_allclose(m.to_region_nd_map(weights=weights, func=np.sum).data[0, 0], 18e4)
+
+
 def test_to_region_nd_map_histogram_basic():
     random_state = np.random.RandomState(seed=0)
 
