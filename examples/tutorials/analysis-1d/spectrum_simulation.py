@@ -130,7 +130,7 @@ irfs = load_irf_dict_from_file(
     "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
 )
 
-location = observatory_locations["cta_south"]
+location = observatory_locations["ctao_south"]
 obs = Observation.create(
     pointing=pointing,
     livetime=livetime,

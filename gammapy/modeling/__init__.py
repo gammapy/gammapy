@@ -6,6 +6,7 @@ from .fit import CovarianceResult, Fit, FitResult, OptimizeResult
 from .parameter import Parameter, Parameters, PriorParameter, PriorParameters
 from .scipy import stat_profile_ul_scipy
 from .selection import select_nested_models
+from .sampler import Sampler, SamplerResult
 
 __all__ = [
     "Covariance",
@@ -19,4 +20,6 @@ __all__ = [
     "PriorParameter",
     "PriorParameters",
     "stat_profile_ul_scipy",
+    "Sampler",
+    "SamplerResult",
 ]

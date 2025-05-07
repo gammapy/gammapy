@@ -119,10 +119,13 @@ def convolved_map_dataset_counts_statistics(convolved_maps, stat_type):
 
 
 class ExcessMapEstimator(Estimator):
-    """Computes correlated excess, significance and error maps from a map dataset.
+    """Computes correlated excess, significance, flux and error maps,  and optionally upper limits or sensitivity from a map dataset.
 
-    If a model is set on the dataset the excess map estimator will compute the
-    excess taking into account the predicted counts of the model.
+    The excess map estimator will compute the excess taking into account the predicted counts of the associated
+    model (the default one, the user one or the model set on the dataset).
+
+    The main output of this estimator is a `~gammapy.estimators.FluxMaps` object, from which one
+    can access to all computed quantities (see the example below and the `ExcessMapEstimator.run` function).
 
     .. note::
 
@@ -163,7 +166,8 @@ class ExcessMapEstimator(Estimator):
             * "acceptance_on": acceptance from the on region.
             * "acceptance_off": acceptange from the off region.
 
-        Default is None so the optional steps are not executed.
+        Default is None, ie only "npred", "npred_excess", "counts", "ts", "sqrt_ts" are computed.
+
         Note: "alpha", "acceptance_on" and "acceptance_off" can only be selected if the dataset is a
         `~gammapy.datasets.MapDatasetOnOff`.
     energy_edges : list of `~astropy.units.Quantity`, optional
@@ -202,7 +206,8 @@ class ExcessMapEstimator(Estimator):
       n_sigma_ul             : 2
       sqrt_ts_threshold_ul   : 2
       sed type init          : likelihood
-
+    >>> print(result.available_quantities))
+    ['npred', 'npred_excess', 'counts', 'ts', 'sqrt_ts', 'norm', 'norm_err']
     """
 
     tag = "ExcessMapEstimator"
@@ -257,7 +262,7 @@ class ExcessMapEstimator(Estimator):
         self._correlation_radius = Angle(correlation_radius)
 
     def run(self, dataset):
-        """Compute correlated excess, Li & Ma significance and flux maps.
+        """Compute correlated excess, Li & Ma significance, flux and error maps,  and optionally upper limits or sensitivity.
 
         If a model is set on the dataset the excess map estimator will compute
         the excess taking into account the predicted counts of the model.
@@ -269,8 +274,17 @@ class ExcessMapEstimator(Estimator):
 
         Returns
         -------
-        maps : `FluxMaps`
-            Flux maps.
+        maps : `~gammapy.estimators.FluxMaps`
+            See the associated class for a complete description. In particular, it can contain the following maps:
+
+                * npred_excess : predicted excess map
+                * counts : counts map
+                * ts : delta(TS) map
+                * sqrt_ts : sqrt(delta(TS)), or significance map
+                * flux : flux map
+                * flux_err : symmetric error map
+                * flux_ul : upper limit map.
+                * flux_sensitivity : flux sensitivity for this dataset
         """
         if not isinstance(dataset, MapDataset):
             raise ValueError(

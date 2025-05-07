@@ -43,20 +43,16 @@ release 1.
 """
 
 import astropy.units as u
-from astropy.coordinates import SkyCoord
 
 # %matplotlib inline
 import matplotlib.pyplot as plt
 from IPython.display import display
 from gammapy.data import DataStore
-from gammapy.makers.utils import make_theta_squared_table
-from gammapy.maps import MapAxis
 
 ######################################################################
 # Check setup
 # -----------
 from gammapy.utils.check import check_tutorials_setup
-from gammapy.visualization import plot_theta_squared_table
 
 check_tutorials_setup()
 
@@ -112,27 +108,6 @@ obs.psf.peek()
 obs.bkg.to_2d().plot()
 plt.show()
 
-######################################################################
-# Theta squared event distribution
-# --------------------------------
-#
-# As a quick look plot it can be helpful to plot the quadratic offset
-# (theta squared) distribution of the events.
-#
-
-position = SkyCoord(ra=83.63, dec=22.01, unit="deg", frame="icrs")
-theta2_axis = MapAxis.from_bounds(0, 0.2, nbin=20, interp="lin", unit="deg2")
-
-observations = data_store.get_observations([23523, 23526])
-theta2_table = make_theta_squared_table(
-    observations=observations,
-    position=position,
-    theta_squared_axis=theta2_axis,
-)
-
-plt.figure(figsize=(10, 5))
-plot_theta_squared_table(theta2_table)
-plt.show()
 
 ######################################################################
 # Exercises

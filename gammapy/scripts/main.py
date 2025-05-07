@@ -17,9 +17,6 @@ def print_version(ctx, param, value):
 # http://click.pocoo.org/5/documentation/#help-parameter-customization
 CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
 
-# https://click.palletsprojects.com/en/5.x/python3/#unicode-literals
-click.disable_unicode_literals_warning = True
-
 
 @click.group("gammapy", context_settings=CONTEXT_SETTINGS)
 @click.option(
