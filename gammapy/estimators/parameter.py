@@ -445,21 +445,12 @@ class ParameterSensitivityEstimator:
     def parameter_matching_significance(self, datasets):
         """Parameter value  matching the target significance"""
 
-        if ~np.isfinite(self.parameter.min):
-            vmin = self.parameter.value / 1e3
-        else:
-            vmin = self.parameter.min
-        if ~np.isfinite(self.parameter.max):
-            vmax = self.parameter.value * 1e3
-        else:
-            vmax = self.parameter.max
-
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             roots, res = find_roots(
                 self._fcn,
-                vmin,
-                vmax,
+                self.parameter.conf_min,
+                self.parameter.conf_max,
                 args=(datasets,),
                 nbin=100,
                 maxiter=self.max_niter,
