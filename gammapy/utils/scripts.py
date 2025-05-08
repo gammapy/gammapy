@@ -1,6 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities to create scripts and command-line tools."""
 
+
+import ast
 import codecs
 import os.path
 import functools
@@ -9,6 +11,7 @@ import warnings
 from base64 import urlsafe_b64encode
 from pathlib import Path
 from uuid import uuid4
+from astropy.table import Table
 import yaml
 from gammapy.utils.check import add_checksum, verify_checksum
 
@@ -274,3 +277,108 @@ def raise_import_error(module_name, is_property=False):
     """
     kind = "property" if is_property else "method"
     raise ImportError(f"The '{module_name}' module is required to use this {kind}.")
+
+
+def logic_parser(table, expression):
+    """
+    Parse and apply a logical expression to filter rows from an Astropy Table.
+
+    This function evaluates a logical expression on each row of the input table
+    and returns a new table containing only the rows that satisfy the expression.
+    The expression can reference any column in the table by name and supports
+    logical operators (`and`, `or`), comparison operators (`<`, `>`, `==`, `!=`, `in`),
+    lists, and constants.
+
+    Parameters
+    ----------
+    table : astropy.table.Table
+        The input table to filter.
+    expression : str
+        The logical expression to evaluate on each row. The expression can reference
+        any column in the table by name.
+
+    Returns
+    -------
+    astropy.table.Table
+        A new table containing only the rows that satisfy the expression. If no rows
+        match the condition, an empty table with the same column names and data types
+        as the input table is returned.
+
+    Examples
+    --------
+    Given a table with columns 'OBS_ID' and 'EVENT_TYPE':
+
+    >>> from astropy.table import Table
+    >>> data = {'OBS_ID': [1, 2, 3, 4], 'EVENT_TYPE': ['1', '3', '4', '2']}
+    >>> table = Table(data)
+    >>> expression = '(OBS_ID < 3) and (OBS_ID > 1) and ((EVENT_TYPE in ["3", "4"]) or (EVENT_TYPE == "3"))'
+    >>> filtered_table = logic_parser(table, expression)
+    >>> print(filtered_table)
+    OBS_ID EVENT_TYPE
+    ------ ----------
+         2          3
+
+    """
+
+    def eval_expr(expr, row):
+        """
+        Evaluate the logical expression on a given row.
+
+        Parameters
+        ----------
+        expr : ast.Expression
+            The parsed logical expression.
+        row : dict
+            A dictionary representing a row of the table.
+
+        Returns
+        -------
+        bool
+            The result of evaluating the expression on the row.
+        """
+        if isinstance(expr, ast.BoolOp):
+            if isinstance(expr.op, ast.And):
+                return all(eval_expr(value, row) for value in expr.values)
+            elif isinstance(expr.op, ast.Or):
+                return any(eval_expr(value, row) for value in expr.values)
+        elif isinstance(expr, ast.Compare):
+            left = eval_expr(expr.left, row)
+            comparators = [eval_expr(comp, row) for comp in expr.comparators]
+            if isinstance(expr.ops[0], ast.In):
+                return left in comparators[0]
+            elif isinstance(expr.ops[0], ast.NotIn):
+                return left not in comparators[0]
+            elif isinstance(expr.ops[0], ast.Eq):
+                return left == comparators[0]
+            elif isinstance(expr.ops[0], ast.NotEq):
+                return left != comparators[0]
+            elif isinstance(expr.ops[0], ast.Lt):
+                return left < comparators[0]
+            elif isinstance(expr.ops[0], ast.LtE):
+                return left <= comparators[0]
+            elif isinstance(expr.ops[0], ast.Gt):
+                return left > comparators[0]
+            elif isinstance(expr.ops[0], ast.GtE):
+                return left >= comparators[0]
+        elif isinstance(expr, ast.Name):
+            return row[expr.id]
+        elif isinstance(expr, ast.Constant):
+            return expr.value
+        elif isinstance(expr, ast.List):
+            return [eval_expr(elt, row) for elt in expr.elts]
+        else:
+            raise ValueError(f"Unsupported expression type: {type(expr)}")
+
+    # Parse the expression into an AST
+    parsed_expr = ast.parse(expression, mode="eval").body
+
+    # Filter rows based on the evaluated expression
+    filtered_rows = [row for row in table if eval_expr(parsed_expr, row)]
+
+    # Return a new table with the filtered rows
+    if filtered_rows:
+        return Table(rows=filtered_rows, names=table.colnames)
+    else:
+        return Table(
+            names=table.colnames, dtype=[table[col].dtype for col in table.colnames]
+        )
