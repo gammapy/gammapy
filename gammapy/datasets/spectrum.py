@@ -316,7 +316,7 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         ----------
         filename : `~pathlib.Path` or str
             OGIP PHA file to read.
-        format : {"ogip", "ogip-sherpa", "gadf", None}, optional
+        format : {"ogip", "gadf"}, optional
             Format to use. If None, try to guess the format. Default is None
         checksum : bool, optional
             If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
