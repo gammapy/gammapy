@@ -4,6 +4,17 @@ Fitting
 
 Learn how the model, dataset and fit Gammapy classes work together in a detailed modeling and fitting use-case.
 
+Note
+----
+This tutorial describes the fitting steps using a maximum likelihood (Frequentist approach).
+
+Alternatively, we could have a Bayesian approach by assigning a prior probability distribution over
+the parameters and compute the posterior distribution to fit the parameters. This is described in the
+:doc:`/tutorials/api/priors` tutorial.
+
+One can also perform a Bayesian analysis using a nested sampling technique. This is described
+in the :doc:`/tutorials/api/nested_sampling_Crab` tutorial.
+
 Prerequisites
 -------------
 
