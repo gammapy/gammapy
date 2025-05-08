@@ -89,7 +89,7 @@ class Sampler:
         result : dict
             The sampler results dictionary containing the posterior distribution infos.
         """
-        # TODO : add option for median, maxLogL once Param object has asym errors
+        # TODO : add option for median, distribution peak, and maxLogL once Param object has asym errors
 
         posterior = result["posterior"]
         for i, par in enumerate(models.parameters.free_parameters):
