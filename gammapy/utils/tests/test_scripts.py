@@ -3,6 +3,7 @@ import warnings
 import pytest
 import yaml
 from numpy.testing import assert_allclose
+from astropy.table import Table
 from gammapy.utils.scripts import (
     get_images_paths,
     make_path,
@@ -11,6 +12,7 @@ from gammapy.utils.scripts import (
     requires_module,
     to_yaml,
     write_yaml,
+    logic_parser,
 )
 
 
@@ -107,3 +109,86 @@ def test_requires_module():
         @requires_module("nonexistent_module")
         class InvalidUsage:
             pass
+
+
+def test_logic_parser():
+    data = {"OBS_ID": [1, 2, 3, 4], "EVENT_TYPE": ["1", "3", "4", "2"]}
+    table = Table(data)
+
+    # Test 'and' operation
+    result = logic_parser(table, "(OBS_ID < 3) and (OBS_ID > 1)")
+    assert len(result) == 1
+    assert result["OBS_ID"][0] == 2
+
+    # Test 'or' operation
+    result = logic_parser(table, "(OBS_ID < 2) or (OBS_ID > 3)")
+    assert len(result) == 2
+    assert result["OBS_ID"][0] == 1
+    assert result["OBS_ID"][1] == 4
+
+    # Test '==' operation
+    result = logic_parser(table, 'EVENT_TYPE == "3"')
+    assert len(result) == 1
+    assert result["EVENT_TYPE"][0] == "3"
+
+    # Test '!=' operation
+    result = logic_parser(table, 'EVENT_TYPE != "3"')
+    assert len(result) == 3
+    assert result["EVENT_TYPE"][0] == "1"
+    assert result["EVENT_TYPE"][1] == "4"
+    assert result["EVENT_TYPE"][2] == "2"
+
+    # Test '<' operation
+    result = logic_parser(table, "OBS_ID < 3")
+    assert len(result) == 2
+    assert result["OBS_ID"][0] == 1
+    assert result["OBS_ID"][1] == 2
+
+    # Test '<=' operation
+    result = logic_parser(table, "OBS_ID <= 3")
+    assert len(result) == 3
+    assert result["OBS_ID"][0] == 1
+    assert result["OBS_ID"][1] == 2
+    assert result["OBS_ID"][2] == 3
+
+    # Test '>' operation
+    result = logic_parser(table, "OBS_ID > 2")
+    assert len(result) == 2
+    assert result["OBS_ID"][0] == 3
+    assert result["OBS_ID"][1] == 4
+
+    # Test '>=' operation
+    result = logic_parser(table, "OBS_ID >= 2")
+    assert len(result) == 3
+    assert result["OBS_ID"][0] == 2
+    assert result["OBS_ID"][1] == 3
+    assert result["OBS_ID"][2] == 4
+
+    # Test 'in' operation
+    result = logic_parser(table, 'EVENT_TYPE in ["3", "4"]')
+    assert len(result) == 2
+    assert result["EVENT_TYPE"][0] == "3"
+    assert result["EVENT_TYPE"][1] == "4"
+
+    # Test 'not in' operation
+    result = logic_parser(table, 'EVENT_TYPE not in ["3", "4"]')
+    assert len(result) == 2
+    assert result["EVENT_TYPE"][0] == "1"
+    assert result["EVENT_TYPE"][1] == "2"
+
+    # Test no match
+    result = logic_parser(table, "(OBS_ID < 3) and (OBS_ID > 2)")
+    assert len(result) == 0
+
+
+def test_logic_parser_key_error():
+    # Create a sample table
+    data = {"OBS_ID": [1, 2, 3, 4], "EVENT_TYPE": ["1", "3", "4", "2"]}
+    table = Table(data)
+
+    # Define an expression with a non-existent key
+    expression = "(NON_EXISTENT_KEY < 3) and (OBS_ID > 1)"
+
+    # Check if KeyError is raised
+    with pytest.raises(KeyError):
+        logic_parser(table, expression)
