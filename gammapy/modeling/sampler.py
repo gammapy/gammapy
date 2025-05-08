@@ -211,6 +211,7 @@ class SamplerResult:
     #    - e.g. adding a errn and errp entry
     #    - or creating a posterior entry on Parameter
     #  - Or support with a specific entry on the SamplerResult
+    #  - Add write method to be consistent with FitResult
 
     def __init__(
         self, nfev=0, success=False, models=None, samples=None, sampler_results=None
