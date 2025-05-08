@@ -333,7 +333,7 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
                 if len(hdulist) == 0:
                     raise ValueError(f"File {filename} is empty")
                 # Check for extensions in OGIP format
-                if "SPECTRUM" in hdulist and "OGIP" in hdulist[1].header["HDUCLASS"]:
+                if "SPECTRUM" in hdulist and "OGIP" in hdulist["SPECTRUM"].header["HDUCLASS"]:
                     format = "ogip"
                 # Check for extensions in GADF format
                 elif ("COUNTS" in hdulist and "EXPOSURE" in hdulist and "EDISP" in hdulist):
