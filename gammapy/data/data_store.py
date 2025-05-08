@@ -80,7 +80,10 @@ class DataStore:
 
     def __init__(self, hdu_table=None, obs_table=None):
         self.hdu_table = hdu_table
-        self.obs_table = table.unique(obs_table, keys="OBS_ID")
+        if obs_table is not None:
+            self.obs_table = table.unique(obs_table, keys="OBS_ID")
+        else:
+            self.obs_table = None
 
     def __str__(self):
         return self.info(show=False)
