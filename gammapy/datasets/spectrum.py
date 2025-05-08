@@ -326,7 +326,7 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
             Keyword arguments passed to `MapDataset.read`.
         """
         from .io import OGIPDatasetReader
-
+        filename = make_path(filename)
         if format is None:
             with fits.open(filename) as hdulist:
                 # Check if the file is empty
