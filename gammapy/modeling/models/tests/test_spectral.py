@@ -41,6 +41,7 @@ from gammapy.utils.testing import (
     requires_data,
     requires_dependency,
 )
+from gammapy.utils.deprecation import GammapyDeprecationWarning
 
 
 def table_model():
@@ -1110,17 +1111,26 @@ class TestSpectralModelErrorPropagation:
         assert out.unit == "cm-2 s-1 TeV-1"
         assert_allclose(out.data, [3.757824e-11, 3.142095e-12, 3.155082e-12], rtol=7e-2)
 
+        with pytest.warns(GammapyDeprecationWarning):
+            self.model.evaluate_error(1e6 * u.MeV, epsilon=10)
+
     def test_integral_error(self):
         out = self.model.integral_error(1 * u.TeV, 10 * u.TeV)
         assert out.unit == "cm-2 s-1"
         assert out.shape == (3,)
         assert_allclose(out.data, [2.205520e-11, 2.395797e-12, 2.905355e-12], rtol=7e-2)
 
+        with pytest.warns(GammapyDeprecationWarning):
+            self.model.integral_error(1 * u.TeV, 10 * u.TeV, epsilon=10)
+
     def test_energy_flux_error(self):
         out = self.model.energy_flux_error(1 * u.TeV, 10 * u.TeV)
         assert out.unit == "TeV cm-2 s-1"
         assert out.shape == (3,)
         assert_allclose(out.data, [4.133955e-11, 6.634629e-12, 9.896814e-12], rtol=7e-2)
+
+        with pytest.warns(GammapyDeprecationWarning):
+            self.model.energy_flux_error(1 * u.TeV, 10 * u.TeV, epsilon=10)
 
 
 def test_logpar_index_error():
@@ -1157,6 +1167,9 @@ def test_dnde_error_ecpl_model():
 
     out = model.evaluate_error(0.1 * u.TeV)
     assert_allclose(out.data, [1.538462e-10, 2.071542e-11, 1.837818e-11], rtol=7e-1)
+
+    with pytest.warns(GammapyDeprecationWarning):
+        out = model.evaluate_error(0.1 * u.TeV, epsilon=10)
 
 
 def test_integral_error_power_law():
@@ -1239,6 +1252,9 @@ def test_integral_exp_cut_off_power_law_large_number_of_bins():
     flux = exppowerlaw.integral(energy_min, energy_max)
 
     assert_allclose(flux.value, expected_flux.value, rtol=0.01)
+
+
+GammapyDeprecationWarning
 
 
 def test_template_ND(tmpdir, caplog):

@@ -29,6 +29,7 @@ from gammapy.utils.interpolation import (
 )
 from gammapy.utils.roots import find_roots
 from gammapy.utils.scripts import make_path
+from gammapy.utils.random import get_random_state
 from ..covariance import CovarianceMixin
 from .core import ModelBase
 
@@ -168,7 +169,7 @@ class SpectralModel(ModelBase):
     def __rsub__(self, model):
         return self.__sub__(model)
 
-    def _samples(self, fct, n_samples=10000):
+    def _samples(self, fct, n_samples=10000, random_state=42):
         """Create SED samples from parameters and covariance
         using multivariate normal distribution.
 
@@ -178,6 +179,9 @@ class SpectralModel(ModelBase):
             Function to estimate the SED.
         n_samples : int, optional
             Number of samples to generate. Default is 10000.
+        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
+                Defines random number generator initialisation.
+                Passed to `~gammapy.utils.random.get_random_state`. Default is 42.
 
         Returns
         -------
@@ -185,7 +189,8 @@ class SpectralModel(ModelBase):
             Array of SED samples
 
         """
-        rng = np.random.RandomState(seed=42)
+        rng = get_random_state(random_state)
+
         samples = rng.multivariate_normal(
             self.parameters.value,
             self.covariance.data,
@@ -219,7 +224,7 @@ class SpectralModel(ModelBase):
             unit=samples.unit,
         ).squeeze()
 
-    def evaluate_error(self, energy, epsilon=1e-4, n_samples=3500):
+    def evaluate_error(self, energy, epsilon=1e-4, n_samples=3500, random_state=42):
         """Evaluate spectral model error from parameter distribtuion sampling.
 
         Parameters
@@ -232,6 +237,9 @@ class SpectralModel(ModelBase):
             Deprecated in v2.0 and unsued.
         n_samples : int, optional
             Number of samples to generate per parameter. Default is 3500.
+        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
+                Defines random number generator initialisation.
+                Passed to `~gammapy.utils.random.get_random_state`. Default is 42.
 
         Returns
         -------
@@ -254,7 +262,9 @@ class SpectralModel(ModelBase):
             m.parameters.value = values
             return m(energy)
 
-        samples = self._samples(fct, n_samples=n_pars * n_samples)
+        samples = self._samples(
+            fct, n_samples=n_pars * n_samples, random_state=random_state
+        )
         return self._get_errors(samples)
 
     @property
