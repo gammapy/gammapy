@@ -61,10 +61,13 @@ cover the whole observational phase space (p, E) and the instrument variations (
 time, real events are used to build such instrument response. This rate is then delivered by the observatories.
 In the DL3 format, this IRF is distributed for each observing run for the :term:`IACT` observatories.
 
-This IRF is mandatory to make a :term:`3D Analysis` or to make maps with the `~gammapy.makers.RingBackgroundMaker`
+This function is mandatory to make a :term:`3D Analysis` or to make maps with the `~gammapy.makers.RingBackgroundMaker`
 (see :doc:`user-guide/makers/ring`). For other analyses like a :term:`1D Analysis`
 (e.g. :doc:`user-guide/makers/reflected`), the use of such IRF is not necessary and dedicated makers like
 the `~gammapy.makers.ReflectedRegionsBackgroundMaker` can be used to estimate the average value of background events.
+
+Note that this function is expressed as function of the reconstructed quantities (here :math:`p` and :math:`E`).
+
 
 Factorisation of the gamma-ray IRFs
 -----------------------------------
@@ -91,6 +94,9 @@ where:
 
 The implicit assumption here is that energy dispersion and PSF are completely independent. This is not totally
 valid in some situations.
+
+Note that all these functions are expressed as function of the true quantities (here :math:`p_{\rm true}` and
+:math:`E_{\rm true}`).
 
 These functions are obtained through Monte-Carlo simulations of gamma-ray showers for different observing conditions,
 e.g.  detector configuration, zenith angle of the pointing position, detector state and different event reconstruction
