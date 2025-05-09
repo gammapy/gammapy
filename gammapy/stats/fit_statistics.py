@@ -429,3 +429,171 @@ class ProfileFitStatistic(FitStatistic):
         for idx in np.ndindex(dataset._profile_interpolators.shape):
             stat[idx] = dataset._profile_interpolators[idx](model[idx])
         return stat
+
+
+class FitStatisticPenalty:
+    """Base class for fit statistic penalties.
+
+    Parameters
+    ----------
+    parameters : list of `~gammapy.modeling.Parameter`
+        List of parameters to apply the penalty to.
+    lambda_ : float
+        Regularization strength (Lagrange multiplier).
+    """
+
+    def __init__(self, parameters, lambda_=1.0):
+        self.parameters = parameters  # can we keep it here? Is it safe?
+        self.lambda_ = lambda_
+
+    def stat_sum(self):
+        """Compute the penalty term."""
+        raise NotImplementedError
+
+
+class GaussianPriorPenalty(FitStatisticPenalty):
+    """Penalty based on a multivariate Gaussian prior.
+
+    This implements a quadratic penalty of the form:
+
+        lambda * (x - mean)^T C**-1 (x - mean)
+
+    where x are the parameter values, μ is the prior mean vector,
+    and C is the prior covariance matrix.
+
+    If C is the identity matrix (default), this is equivalent to the L2 (ridge) regression.
+
+    Parameters
+    ----------
+    parameters : list of `~gammapy.modeling.Parameter`
+        Parameters to which the penalty is applied.
+    mean : list of float, optional
+        Prior mean values for each parameter. If not provided, defaults to zeros.
+    covariance : array-like, optional
+        Prior covariance matrix. If not provided, an identity matrix is used.
+    lambda_ : float
+        Regularization strength (Lagrange multiplier).
+    """
+
+    def __init__(self, parameters, mean=None, covariance=None, lambda_=1.0):
+        super().__init__(parameters, lambda_)
+        self.mean = np.array(mean) if mean is not None else np.zeros(len(parameters))
+        self.covariance = (
+            covariance if covariance is not None else np.eye(len(parameters))
+        )
+
+    @property
+    def covariance(self):
+        """Return covariance matrix of the multivariate gaussian."""
+        return self._covariance
+
+    @covariance.setter
+    def covariance(self, matrix):
+        """Set covariance matrix."""
+        from gammapy.modeling import Covariance
+
+        self._covariance = Covariance(self.parameters, matrix)
+        self._inverse_covariance = np.linalg.inv(self._covariance.data)
+
+    def stat_sum(self):
+        """Compute the Gaussian prior penalty."""
+        x = np.array([p.value for p in self.parameters])
+        delta = x - self.mean
+        penalty = np.dot(delta, self._inverse_covariance @ delta)
+
+        return self.lambda_ * penalty
+
+    @classmethod
+    def from_precision(cls, parameters, precision, mean=None, lambda_=1.0):
+        """Create a GaussianPriorPenalty from a precision matrix (inverse covariance).
+
+        Internally uses `~scipy.stats.Covariance.from_precision`
+
+        Parameters
+        ----------
+        parameters : list of `~gammapy.modeling.Parameter` or `~gammapy.modeling.Parameters`
+            Parameters to which the penalty is applied.
+        precision : `~numpy.ndarray`
+            Inverse covariance matrix (precision matrix).
+        mean : `~numpy.ndarray` or None
+            Mean values. If None, uses zero array. Default is None.
+        lambda_ : float
+            Penalty strength (Lagrange multiplier).
+        """
+        from scipy.stats import Covariance
+
+        cov = Covariance.from_precision(precision)
+        mean = mean if mean is not None else np.zeros(len(parameters))
+        return cls(
+            parameters=parameters, mean=mean, covariance=cov.covariance, lambda_=lambda_
+        )
+
+    @classmethod
+    def from_diagonal(cls, parameters, sigma, mean=None, lambda_=1.0):
+        """Create a GaussianPriorPenalty with a diagonal covariance matrix.
+
+        Parameters
+        ----------
+        parameters : list of Parameter
+            Parameters to apply the prior to.
+        sigma : ~numpy.ndarray` or float
+            Standard deviation(s) for each parameter.
+        mean : `~numpy.ndarray` or float, optional
+            Mean values. If None, uses zero array. Default is None.
+        lambda_ : float
+            Penalty scaling factor.
+        """
+        from scipy.stats import Covariance
+
+        sigma = np.broadcast_to(sigma, len(parameters))
+
+        mean = mean if mean is not None else 0
+        mean = np.broadcast_to(mean, len(parameters))
+
+        covariance = Covariance.from_diagonal(sigma**2)
+        return cls(
+            parameters=parameters,
+            mean=mean,
+            covariance=covariance.covariance,
+            lambda_=lambda_,
+        )
+
+    @classmethod
+    def L2_penalty(cls, parameters, mean=None, lambda_=1.0):
+        """Standard ridge (L2) regularization penalty.
+
+        Computes a penalty of the form:  lambda * sum ||x_i - mu_i||²
+        which corresponds to applying an identity covariance gaussian prior.
+
+        Parameters
+        ----------
+        parameters : list of `~gammapy.modeling.Parameter`
+            Parameters to which the penalty is applied.
+        mean : list of float, optional
+            Prior mean values for each parameter. If not provided, defaults to zeros.
+        lambda_ : float
+            Regularization strength (Lagrange multiplier).
+        """
+        return cls.from_diagonal(parameters, sigma=1, mean=mean, lambda_=lambda_)
+
+    @classmethod
+    def SmoothnessPenalty(cls, parameters, lambda_=1.0):
+        """Create a smoothness penalty using finite differences.
+
+        Parameters
+        ----------
+        parameters: list of `~gammapy.modeling.Parameter`
+            Parameters to which the penalty is applied.
+        lambda_: float, optional
+            Penalty strength. Default is 1.
+        """
+        from scipy.sparse import diags
+
+        n_params = len(parameters)
+        diagonals = [
+            2 * np.ones(n_params),  # main diagonal
+            -1 * np.ones(n_params - 1),  # upper diagonal
+            -1 * np.ones(n_params - 1),  # lower diagonal
+        ]
+        Q = diags(diagonals, [0, -1, 1]).toarray()
+        return cls.from_precision(parameters, Q, mean=0, lambda_=lambda_)
