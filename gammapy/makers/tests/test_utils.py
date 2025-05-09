@@ -186,10 +186,10 @@ def test_map_background_2d(bkg_2d, fixed_pointing_info):
 
     bkg = make_map_background_irf(
         pointing=skydir,
-        obstime_start=obstime,
         ontime="42 s",
         bkg=bkg_2d,
         geom=geom,
+        time_start=obstime,
         fov_rotation_step=1.0 * u.deg,
     )
 
@@ -198,10 +198,10 @@ def test_map_background_2d(bkg_2d, fixed_pointing_info):
     # Check that function works also passing the FixedPointingInfo
     bkg_fpi = make_map_background_irf(
         pointing=fixed_pointing_info,
-        obstime_start=obstime,
         ontime="42 s",
         bkg=bkg_2d,
         geom=geom,
+        time_start=obstime,
         fov_rotation_step=1.0 * u.deg,
     )
     assert_allclose(bkg.data, bkg_fpi.data, rtol=1e-5)
@@ -212,10 +212,10 @@ def make_map_background_irf_with_symmetry(fpi, symmetry="constant"):
     obstime = Time("2020-01-01T20:00:00")
     return make_map_background_irf(
         pointing=fpi,
-        obstime_start=obstime,
         ontime="42 s",
         bkg=bkg_3d_custom(symmetry),
         geom=WcsGeom.create(npix=(3, 3), binsz=4, axes=[axis], skydir=fpi.fixed_icrs),
+        time_start=obstime,
         fov_rotation_step=1.0 * u.deg,
     )
 
@@ -258,7 +258,6 @@ def geom(map_type, ebounds, skydir):
 def test_make_map_background_irf(bkg_3d, pars, fixed_pointing_info):
     m = make_map_background_irf(
         pointing=fixed_pointing_info,
-        obstime_start=Time("2020-01-01T20:00"),
         ontime="42 s",
         bkg=bkg_3d,
         geom=geom(
@@ -266,6 +265,7 @@ def test_make_map_background_irf(bkg_3d, pars, fixed_pointing_info):
             ebounds=pars["ebounds"],
             skydir=fixed_pointing_info.fixed_icrs,
         ),
+        time_start=Time("2020-01-01T20:00"),
         fov_rotation_step=1.0 * u.deg,
         oversampling=10,
     )
@@ -323,10 +323,10 @@ def test_make_map_background_irf_skycoord(fixed_pointing_info_aligned):
     with pytest.raises(TypeError):
         make_map_background_irf(
             pointing=position,
-            obstime_start=Time("2020-01-01T20:00:00"),
             ontime="42 s",
             bkg=bkg_3d_custom("asymmetric", "ALTAZ"),
             geom=WcsGeom.create(npix=(3, 3), binsz=4, axes=[axis], skydir=position),
+            time_start=Time("2020-01-01T20:00:00"),
             fov_rotation_step=1.0 * u.deg,
         )
 
@@ -337,7 +337,6 @@ def test_make_map_background_irf_altaz_align(fixed_pointing_info):
     obstime = Time("2020-01-01T20:00:00")
     map_long_altaz = make_map_background_irf(
         pointing=fixed_pointing_info,
-        obstime_start=obstime,
         ontime="42000 s",
         bkg=bkg_3d_custom("asymmetric", "ALTAZ"),
         geom=WcsGeom.create(
@@ -346,11 +345,11 @@ def test_make_map_background_irf_altaz_align(fixed_pointing_info):
             axes=[axis],
             skydir=fixed_pointing_info.get_icrs(obstime),
         ),
+        time_start=obstime,
         fov_rotation_step=20.0 * u.deg,
     )
     map_short_altaz = make_map_background_irf(
         pointing=fixed_pointing_info,
-        obstime_start=obstime + "20979 s",
         ontime="42 s",
         bkg=bkg_3d_custom("asymmetric", "ALTAZ"),
         geom=WcsGeom.create(
@@ -359,11 +358,11 @@ def test_make_map_background_irf_altaz_align(fixed_pointing_info):
             axes=[axis],
             skydir=fixed_pointing_info.get_icrs(obstime),
         ),
+        time_start=obstime + "20979 s",
         fov_rotation_step=20.0 * u.deg,
     )
     map_long_radec = make_map_background_irf(
         pointing=fixed_pointing_info,
-        obstime_start=obstime,
         ontime="42000 s",
         bkg=bkg_3d_custom("asymmetric", "RADEC"),
         geom=WcsGeom.create(
@@ -372,11 +371,11 @@ def test_make_map_background_irf_altaz_align(fixed_pointing_info):
             axes=[axis],
             skydir=fixed_pointing_info.get_icrs(obstime),
         ),
+        time_start=obstime,
         fov_rotation_step=20.0 * u.deg,
     )
     map_short_altaz_norotation = make_map_background_irf(
         pointing=fixed_pointing_info,
-        obstime_start=obstime + "20979 s",
         ontime="42 s",
         bkg=bkg_3d_custom("asymmetric", "ALTAZ"),
         geom=WcsGeom.create(
@@ -385,11 +384,11 @@ def test_make_map_background_irf_altaz_align(fixed_pointing_info):
             axes=[axis],
             skydir=fixed_pointing_info.get_icrs(obstime),
         ),
+        time_start=obstime + "20979 s",
         fov_rotation_step=360.0 * u.deg,
     )
     map_altaz_long_norotation = make_map_background_irf(
         pointing=fixed_pointing_info,
-        obstime_start=obstime,
         ontime="42000 s",
         bkg=bkg_3d_custom("asymmetric", "ALTAZ"),
         geom=WcsGeom.create(
@@ -398,6 +397,7 @@ def test_make_map_background_irf_altaz_align(fixed_pointing_info):
             axes=[axis],
             skydir=fixed_pointing_info.get_icrs(obstime),
         ),
+        time_start=obstime,
         fov_rotation_step=360.0 * u.deg,
     )
     # Check that background normalisations are consistent
