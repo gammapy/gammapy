@@ -1,8 +1,8 @@
 If you use Gammapy for work/research presented in a publication (whether
 directly, or as a dependency to another package), we recommend and encourage
-the following citation scheme:
+the following citation scheme (see also https://gammapy.org/acknowledging.html):
 - refer to the Gammapy paper as general citation: A&A, 678, A157 (2023) - the bibtex is given below,
-- AND cite the used version of Gammapy (e.g. for the v1.3 see https://doi.org/10.5281/zenodo.14760974>),
+- AND cite the used version of Gammapy (e.g. see https://doi.org/10.5281/zenodo.14760974 for the v1.3),
 - AND add the acknowledgment given below.
 
 The recommended LaTeX acknowledgment is:
