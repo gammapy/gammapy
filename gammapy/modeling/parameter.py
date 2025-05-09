@@ -70,31 +70,34 @@ class Parameter:
      scale : float, optional
          Scale (sometimes used in fitting).
      unit : `~astropy.units.Unit` or str, optional
-         Unit.
+         Unit. Default is "".
      min : float, str or `~astropy.units.quantity`, optional
-         Minimum (sometimes used in fitting). Default is None, which set the attribute to `np.nan`.
+         Minimum (sometimes used in fitting). If `None`, set to `np.nan`. Default is None.
      max : float, str or `~astropy.units.quantity`, optional
-         Maximum (sometimes used in fitting). Default is None, which set the attribute to `np.nan`.
+         Maximum (sometimes used in fitting). Default is `np.nan`.
     frozen : bool, optional
-         Frozen (used in fitting).
+         Frozen (used in fitting).  Default is False.
      error : float
-         Parameter error.
+         Parameter error. Default is 0.
      scan_min : float
          Minimum value for the parameter scan. Overwrites scan_n_sigma.
+         Default is None.
      scan_max : float
          Maximum value for the parameter scan. Overwrites scan_n_sigma.
+         Default is None.
      scan_n_values: int
-         Number of values to be used for the parameter scan.
+         Number of values to be used for the parameter scan. Default is 11.
      scan_n_sigma : int
-         Number of sigmas to scan.
+         Number of sigmas to scan. Default is 2.
      scan_values: `numpy.array`
          Scan values. Overwrites all the scan keywords before.
+         Default is None.
      scale_method : {'scale10', 'factor1', None}
-         Method used to set ``factor`` and ``scale``.
+         Method used to set ``factor`` and ``scale``. Default is "scale10".
      interp : {"lin", "sqrt", "log"}
-         Parameter scaling to use for the scan.
+         Parameter scaling to use for the scan. Default is "lin".
      prior : `~gammapy.modeling.models.Prior`
-         Prior set on the parameter.
+         Prior set on the parameter. Default is None.
     """
 
     def __init__(
@@ -843,6 +846,26 @@ class restore_parameters_status:
 
 
 class PriorParameter(Parameter):
+    """Parameter of a `~gammapy.modeling.models.Prior`.
+
+    A prior is a probability density function of a model parameter and can take different forms, including Gaussian
+    distributions, uniform distributions, etc. The prior includes information or knowledge about the dataset or the
+    parameters of the fit.
+
+    Examples
+    --------
+    For a usage example see :doc:`/tutorials/api/priors` tutorial.
+
+     Parameters
+     ----------
+     name : str
+         Name.
+     value : float or `~astropy.units.Quantity`
+         Value.
+     unit : `~astropy.units.Unit` or str, optional
+         Unit. Default is "".
+    """
+
     def __init__(
         self,
         name,
@@ -891,6 +914,16 @@ class PriorParameter(Parameter):
 
 
 class PriorParameters(Parameters):
+    """Container of parameter priors :
+
+    - List of `PriorParameter` objects.
+
+    Parameters
+    ----------
+    parameters : list of `PriorParameter`
+        List of parameters.
+    """
+
     def __init__(self, parameters=None):
         if parameters is None:
             parameters = []
