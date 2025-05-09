@@ -45,6 +45,8 @@ __all__ = [
     "cash",
     "cash_sum_cython",
     "CashCountsStatistic",
+    "Chi2FitStatistic",
+    "Chi2AsymmetricErrorFitStatistic",
     "cstat",
     "f_cash_root_cython",
     "get_wstat_gof_terms",

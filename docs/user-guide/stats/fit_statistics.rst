@@ -18,6 +18,12 @@ i.e. if :math:`L` is the likelihood function used, they follow the expression
 All functions compute per-bin statistics. If you want the summed statistics for
 all bins, call sum on the output array yourself.
 
+The likelihood functions used currently in Gammapy are:
+
+* `~gammapy.stats.Chi2FitStatistic`
+* `~gammapy.stats.Chi2AsymmetricErrorFitStatistic`
+* :ref:`cash`
+* :ref:`wstat`
 
 .. _cash:
 
@@ -82,7 +88,7 @@ The WStat fit statistics is given by the following formula:
     - n_{\mathrm{on}} \log{(\mu_{\mathrm{sig}} + \mu_{\mathrm{bkg}})}
     - n_{\mathrm{off}} \log{(\mu_{\mathrm{bkg}}/\alpha)}\big)
 
-To see how to derive it see the :ref:`wstat derivation <wstat_derivation>`.
+To see how to derive it, see the :ref:`WStat derivation <wstat_derivation>` page.
 
 The WStat statistic is implemented in `~gammapy.stats.wstat` and is used as a `stat`
 function by the `~gammapy.datasets.MapDatasetOnOff` and the `~gammapy.datasets.SpectrumDatasetOnOff`.
