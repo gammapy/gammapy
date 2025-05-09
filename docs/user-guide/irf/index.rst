@@ -25,13 +25,13 @@ We can write the expected number of detected events in a bin [:math:`{\rm d}p,\,
 
 .. math::
 
-   N(p, E) {\rm d}p {\rm d}E = {N(p, E)_{\rm bkg}} {\rm d}p {\rm d}E + {N(p, E)_{\rm sce}} {\rm d}p {\rm d}E
+   N(p, E) \, {\rm d}p {\rm d}E = {N(p, E)_{\rm bkg}} \, {\rm d}p {\rm d}E + {N(p, E)_{\rm sce}} \, {\rm d}p {\rm d}E
 
 with:
 
 .. math::
 
-    {N(p, E)_{\rm bkg}} {\rm d}p {\rm d}E = t_{\rm obs} \int_{E} {\rm d}E \, \int_{p} {\rm d}p \, {\rm Bkg}(p, E)
+    {N(p, E)_{\rm bkg}}\,  {\rm d}p {\rm d}E = t_{\rm obs} \int_{E} {\rm d}E \, \int_{p} {\rm d}p \, {\rm Bkg}(p, E)
 
 where :math:`{\rm Bkg}(p, E)` is the instrument response on the residual instrumental background rate (unit: :math:`{\rm s}^{-1}\,{\rm sr}^{-1}`)
 
@@ -39,7 +39,7 @@ and with:
 
 .. math::
 
-   {N(p, E)_{\rm sce}} {\rm d}p {\rm d}E =
+   {N(p, E)_{\rm sce}} \, {\rm d}p {\rm d}E =
    t_{\rm obs} \int_{E_{\rm true}} {\rm d}E_{\rm true} \, \int_{p_{\rm true}} {\rm d}p_{\rm true} \, R(p, E|p_{\rm true}, E_{\rm true}) \times \Phi(p_{\rm true}, E_{\rm true})
 
 where:
@@ -62,8 +62,8 @@ time, real events are used to build such instrument response. This rate is then 
 In the DL3 format, this IRF is distributed for each observing run for the :term:`IACT` observatories.
 
 This function is mandatory to make a :term:`3D Analysis` or to make maps with the `~gammapy.makers.RingBackgroundMaker`
-(see :doc:`user-guide/makers/ring`). For other analyses like a :term:`1D Analysis`
-(e.g. :doc:`user-guide/makers/reflected`), the use of such IRF is not necessary and dedicated makers like
+(see :doc:`/user-guide/makers/ring`). For other analyses like a :term:`1D Analysis`
+(e.g. :doc:`/user-guide/makers/reflected`), the use of such IRF is not necessary and dedicated makers like
 the `~gammapy.makers.ReflectedRegionsBackgroundMaker` can be used to estimate the average value of background events.
 
 Note that this function is expressed as function of the reconstructed quantities (here :math:`p` and :math:`E`).
@@ -106,7 +106,7 @@ Need of four individual responses
 ---------------------------------
 
 In order to statistically estimate a gamma-ray source model, the expected number of detected events in each
-:math:`[{\rm d}p,\,{\rm d}E]` bin are tested in regards to the measured events
+[:math:`{\rm d}p,\,{\rm d}E`] bin are tested in regards to the measured events
 (see :doc:`/user-guide/stats/fit_statistics`). To make such statistical studies, the four individual responses are then
 mandatory to be delivered with a data release by the observatories.
 
