@@ -385,11 +385,11 @@ class ParameterEstimator(Estimator):
 
 
 class ParameterSensitivityEstimator:
-    """Estimate the sensitivity to a given parameter
+    """Estimate the sensitivity to a given parameter.
 
     Computes the TS distribution in the non-null hypothesis using the
     log likelihood of the Asimov dataset (i.e. a dataset with counts = npred)
-    and the non central chi2 distribution.
+    and the non-central chi2 distribution.
     Once the TS distribution under the testing hypothesis is known,
     one can compute the required parameter value
     to have 50% of measurements above a given significance threshold.
@@ -401,19 +401,19 @@ class ParameterSensitivityEstimator:
        Parameter to test
     null_value : float or `~gammapy.modeling.Parameter`
         Value of the parameter for the null hypothesis.
-    n_sigma : int, default=5
-        Number of required significance level.
-    rtol : float
+    n_sigma : int, optional
+        Number of required significance level. Default is 5.
+    rtol : float, optional
         Relative precision of the estimate. Used as a stopping criterion.
         Default is 0.01.
-    max_niter : int
+    max_niter : int, optional
         Maximal number of iterations used by the root finding algorithm.
         Default is 100.
 
     References
     ----------
-        * `Cowan et al. (2011), "Asymptotic formulae for likelihood-based tests of new physics"
-        <https://arxiv.org/abs/1007.1727>`_
+    * `Cowan et al. (2011), "Asymptotic formulae for likelihood-based tests of new physics"
+      <https://arxiv.org/abs/1007.1727>`_
 
     """
 
@@ -445,21 +445,12 @@ class ParameterSensitivityEstimator:
     def parameter_matching_significance(self, datasets):
         """Parameter value  matching the target significance"""
 
-        if ~np.isfinite(self.parameter.min):
-            vmin = self.parameter.value / 1e3
-        else:
-            vmin = self.parameter.min
-        if ~np.isfinite(self.parameter.max):
-            vmax = self.parameter.value * 1e3
-        else:
-            vmax = self.parameter.max
-
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             roots, res = find_roots(
                 self._fcn,
-                vmin,
-                vmax,
+                self.parameter.conf_min,
+                self.parameter.conf_max,
                 args=(datasets,),
                 nbin=100,
                 maxiter=self.max_niter,

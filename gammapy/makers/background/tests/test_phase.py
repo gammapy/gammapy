@@ -46,7 +46,6 @@ def test_basic(phase_bkg_maker):
 
 @requires_data()
 def test_run_spectrum(observations_cta, phase_bkg_maker):
-
     maker = SpectrumDatasetMaker()
 
     e_reco = MapAxis.from_edges(np.logspace(0, 2, 5) * u.TeV, name="energy")
@@ -71,7 +70,6 @@ def test_run_spectrum(observations_cta, phase_bkg_maker):
 
 @requires_data()
 def test_run_map(observations_cta, phase_bkg_maker):
-
     maker = MapDatasetMaker()
 
     e_reco = MapAxis.from_edges(np.logspace(0, 2, 5) * u.TeV, name="energy")
@@ -145,7 +143,6 @@ def test_copy_interval():
     ],
 )
 def test_make_counts(phase_bkg_maker, pars, request):
-
     maker = SpectrumDatasetMaker(
         containment_correction=False, selection=["counts", "exposure", "edisp"]
     )

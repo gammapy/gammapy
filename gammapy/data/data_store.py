@@ -337,6 +337,10 @@ class DataStore:
             pointing_location.hdu_class = "pointing"
             kwargs["pointing"] = pointing_location
 
+            observation_metadata_location = copy(kwargs["events"])
+            observation_metadata_location.hdu_class = "observation_metadata"
+            kwargs["meta"] = observation_metadata_location
+
         return Observation(**kwargs)
 
     def get_observations(

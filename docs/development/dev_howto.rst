@@ -546,7 +546,10 @@ one of which involves the `meeseeksmachine <https://github.com/meeseeksmachine>`
 
 2. If you forgot, on your merged PR make the comment: "``@meeseeksdev backport to [BRANCHNAME]``"
 
-3. If this does not work automatically, a set of instructions will be given to you as a comment in the PR to be backported. This involves using the "``cherry-pick``" git command. See `here <https://docs.astropy.org/en/latest/development/releasing.html#backporting-fixes-from-main>`__ for information.
+3. If this does not work automatically, a set of instructions will be given to you as a comment in
+   the PR to be backported. This involves using the "``cherry-pick``" git command.
+   See `here <https://docs.astropy.org/en/latest/development/maintainers/releasing.html#backporting-fixes-from-main>`__
+   for information.
 
 
 
@@ -557,9 +560,10 @@ Release notes
 In Gammapy we keep :ref:`release_notes` with a list of pull requests.
 We sort by release and within the release by PR number (the largest first).
 
-As explained in the :ref:`astropy:changelog-format` section in the Astropy docs,
-there are (at least) two approaches for adding to the releases, each with pros
-and cons.
+As explained in the
+`Updating and Maintaining the Changelog <https://docs.astropy.org/en/latest/development/maintainers/maintainer_workflow.html#updating-and-maintaining-the-changelog>`__
+of the Astropy docs, there are (at least) two approaches for adding to the releases,
+each with pros and cons.
 
 We've had some pain due to merge conflicts in the releases notes and having to wait
 until the contributor rebases (and having to explain git rebase to new contributors).
@@ -666,24 +670,6 @@ If you have a alternative attribute to use instead, pass its name in the `altern
 
 Others
 ------
-
-Command line tools using click
-++++++++++++++++++++++++++++++
-
-Command line tools that use the `click <https://click.palletsprojects.com/en/8.0.x/>`__ module should disable
-the unicode literals warnings to clean up the output of the tool:
-
-.. testcode::
-
-    import click
-    click.disable_unicode_literals_warning = True
-
-See `here <https://click.palletsprojects.com/en/5.x/python3/#unicode-literals>`__ for further
-information.
-
-
-
-
 
 Bundled gammapy.extern code
 +++++++++++++++++++++++++++

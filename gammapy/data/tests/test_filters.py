@@ -38,7 +38,11 @@ def test_empty_observation_filter(observation):
 def test_filter_events(observation):
     custom_filter = {
         "type": "custom",
-        "opts": {"parameter": "ENERGY", "band": Quantity([0.8 * u.TeV, 10.0 * u.TeV])},
+        "opts": {
+            "parameter": "ENERGY",
+            "values": Quantity([0.8 * u.TeV, 10.0 * u.TeV]),
+            "is_range": True,
+        },
     }
 
     target_position = SkyCoord(ra=229.2, dec=-58.3, unit="deg", frame="icrs")
@@ -51,7 +55,6 @@ def test_filter_events(observation):
     obs_filter = ObservationFilter(
         event_filters=[custom_filter, region_filter], time_filter=time_filter
     )
-
     events = observation.events
     filtered_events = obs_filter.filter_events(events)
 
@@ -64,6 +67,27 @@ def test_filter_events(observation):
         & (filtered_events.time < time_filter[1])
     )
     assert np.all(region.center.separation(filtered_events.radec) < region_radius)
+
+
+@requires_data()
+def test_filter_events_parameter(observation):
+    events = observation.events
+    additional_column = (len(events.table)) * ["AA"]
+    additional_column[-1] = "BB"
+    additional_column[0] = "BB"
+    events.table["CHAR"] = additional_column
+
+    custom_filter = {
+        "type": "custom",
+        "opts": {"parameter": "CHAR", "values": ["BB"], "is_range": False},
+    }
+    observation.events = events
+
+    obs_filter = ObservationFilter(event_filters=[custom_filter])
+    filtered_events = obs_filter.filter_events(events)
+
+    assert np.all(filtered_events.table["CHAR"] == "BB")
+    assert len(filtered_events.table) == 2
 
 
 @requires_data()

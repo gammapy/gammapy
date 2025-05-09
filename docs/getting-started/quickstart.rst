@@ -23,7 +23,7 @@ execute the following commands in the terminal:
     install `sherpa` in your environment using `python -m pip install sherpa`.
 
 
-The best way to get started and learn Gammapy are the :ref:`tutorials`.
+**The best way to get started and learn Gammapy is to understand the** :ref:`package_structure`.
 You can download the Gammapy tutorial notebooks and the example
 datasets. The total size to download is ~180 MB. Select the location where you
 want to install the datasets and proceed with the following commands:

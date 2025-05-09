@@ -5,8 +5,9 @@ from scipy.stats import median_abs_deviation as mad
 import astropy.units as u
 from astropy.io import fits
 from astropy.table import Table
-from regions import CircleSkyRegion
+from regions import CircleSkyRegion, RectangleSkyRegion
 import matplotlib.pyplot as plt
+from matplotlib.colors import LogNorm
 import gammapy.datasets.evaluator as meval
 from gammapy.data import GTI, PointingMode
 from gammapy.irf import EDispKernelMap, EDispMap, PSFKernel, PSFMap, RecoPSFMap
@@ -15,11 +16,7 @@ from gammapy.modeling.models import DatasetModels, FoVBackgroundModel, Models
 from gammapy.stats import (
     CashCountsStatistic,
     WStatCountsStatistic,
-    cash,
-    cash_sum_cython,
-    weighted_cash_sum_cython,
     get_wstat_mu_bkg,
-    wstat,
 )
 from gammapy.utils.fits import HDULocation, LazyFitsData
 from gammapy.utils.random import get_random_state
@@ -33,7 +30,6 @@ from .utils import get_axes
 __all__ = [
     "MapDataset",
     "MapDatasetOnOff",
-    "MapDatasetWeighted",
     "create_empty_map_dataset_from_irfs",
     "create_map_dataset_geoms",
     "create_map_dataset_from_observation",
@@ -491,7 +487,6 @@ class MapDataset(Dataset):
     MapDatasetOnOff, SpectrumDataset, FluxPointsDataset.
     """
 
-    stat_type = "cash"
     tag = "MapDataset"
     counts = LazyFitsData(cache=True)
     exposure = LazyFitsData(cache=True)
@@ -528,6 +523,7 @@ class MapDataset(Dataset):
         meta_table=None,
         name=None,
         meta=None,
+        stat_type="cash",
     ):
         self._name = make_name(name)
         self._evaluators = {}
@@ -559,6 +555,8 @@ class MapDataset(Dataset):
         self.meta_table = meta_table
         self.meta = meta
 
+        self.stat_type = stat_type
+
     @property
     def _psf_kernel(self):
         """Precompute PSFkernel if there is only one spatial bin in the PSFmap"""
@@ -589,10 +587,8 @@ class MapDataset(Dataset):
     # TODO: keep or remove?
     @property
     def background_model(self):
-        try:
-            return self.models[f"{self.name}-bkg"]
-        except (ValueError, TypeError):
-            pass
+        if self.models and self.name in self.models.background_models.keys():
+            return self.models[self.models.background_models[self.name]]
 
     def __str__(self):
         str_ = f"{self.__class__.__name__}\n"
@@ -1206,10 +1202,6 @@ class MapDataset(Dataset):
         if self.meta and other.meta:
             self.meta.stack(other.meta)
 
-    def stat_array(self):
-        """Statistic function value per bin given the current model parameters."""
-        return cash(n_on=self.counts.data, mu_on=self.npred().data)
-
     def residuals(self, method="diff", **kwargs):
         """Compute residuals map.
 
@@ -1357,6 +1349,9 @@ class MapDataset(Dataset):
 
         """
         counts, npred = self.counts.copy(), self.npred()
+        if self.mask is not None:
+            counts *= self.mask
+            npred *= self.mask
         counts_spec = counts.get_spectrum(region)
         npred_spec = npred.get_spectrum(region)
         residuals = self._compute_residuals(counts_spec, npred_spec, method)
@@ -1465,32 +1460,6 @@ class MapDataset(Dataset):
             pix_region.plot(ax=ax_spatial)
 
         return ax_spatial, ax_spectral
-
-    def stat_sum(self):
-        """Total statistic function value given the current model parameters and priors."""
-        prior_stat_sum = 0.0
-        if self.models is not None:
-            prior_stat_sum = self.models.parameters.prior_stat_sum()
-
-        counts, npred = self.counts.data.astype(float), self.npred().data
-
-        if self.mask is not None:
-            mask = ~(self.mask.data == False)  # noqa
-            counts = counts[mask]
-            npred = npred[mask]
-            if self.mask.data.dtype == bool or self.stat_type == "cash":
-                cash_sum = cash_sum_cython(counts, npred)
-            elif self.stat_type == "cash_weighted":
-                weight = self.mask.data[mask]
-                cash_sum = weighted_cash_sum_cython(counts, npred, weight)
-            else:
-                raise ValueError(
-                    f"'stat_type' must be a 'cash' or `cash_weighted`."
-                    f", got `{self.stat_type}` instead."
-                )
-        else:
-            cash_sum = cash_sum_cython(counts.ravel(), npred.ravel())
-        return cash_sum + prior_stat_sum
 
     def _to_asimov_dataset(self):
         """Create Asimov dataset from the current models."""
@@ -1943,7 +1912,7 @@ class MapDataset(Dataset):
 
         Counts and background of the dataset are integrated in the given region,
         taking the safe mask into account. The exposure is averaged in the
-        region again taking the safe mask into account. The PSF and energy
+        region. The PSF and energy
         dispersion kernel are taken at the center of the region.
 
         Parameters
@@ -1961,6 +1930,34 @@ class MapDataset(Dataset):
         name = make_name(name)
         kwargs = {"gti": self.gti, "name": name, "meta_table": self.meta_table}
 
+        if not self.counts.geom.is_region:
+            region_mask = (
+                self.counts.geom.to_image().pad(1, axis_name=None).region_mask(region)
+            )
+            not_fully_contained = (
+                np.any(region_mask.data[0, :])
+                | np.any(region_mask.data[-1, :])
+                | np.any(region_mask.data[:, 0])
+                | np.any(region_mask.data[:, -1])
+            )
+            if not_fully_contained:
+                raise Exception(
+                    """`to_region_map_dataset` can only be applied if the region
+                    is fully contained inside the counts geom.
+                    """
+                )
+
+        if self.mask and not self.mask.geom.is_region:
+            region_mask = self.mask.geom.to_image().region_mask(region)
+            values = np.unique(self.mask.data[:, region_mask.data], axis=1)
+            is_uniform = np.all(values, axis=1)
+            is_uniform |= np.all(values == False, axis=1)  # noqa
+            if not np.all(is_uniform):
+                raise Exception(
+                    """`to_region_map_dataset` can only be applied if the mask
+                    is spatially uniform within the region for each energy bin"""
+                )
+
         if self.mask_safe:
             kwargs["mask_safe"] = self.mask_safe.to_region_nd_map(region, func=np.any)
 
@@ -1973,7 +1970,7 @@ class MapDataset(Dataset):
             )
 
         if self.stat_type == "cash" and self.background:
-            kwargs["background"] = self.background.to_region_nd_map(
+            kwargs["background"] = self.npred_background().to_region_nd_map(
                 region, func=np.sum, weights=self.mask_safe
             )
 
@@ -2344,52 +2341,154 @@ class MapDataset(Dataset):
         energy_axis = self._geom.axes["energy"].squash()
         return self.resample_energy_axis(energy_axis=energy_axis, name=name)
 
-    def peek(self, figsize=(12, 8)):
-        """Quick-look summary plots.
+    def peek(self, figsize=(13.0, 7)):
+        """Quick-look summary plots for a given MapDataset:
+        - Exposure map
+        - Counts map
+        - Predicted counts map (Npred)
+        - Exposure profile at geom center
+        - PSF containment radius at geom center
+        - Energy dispersion matrix at geom center
 
         Parameters
         ----------
         figsize : tuple
-            Size of the figure. Default is (12, 10).
+            Size of the figure. Default is (13.5, 7).
 
         """
+
+        def plot_counts(ax, counts_data, cmap, vmin, vmax, title="Counts map"):
+            counts_data.plot(
+                ax=ax,
+                cmap=cmap,
+                add_cbar=True,
+                interpolation="bilinear",
+                norm=LogNorm(vmin=vmin, vmax=vmax),
+            )
+            ax.set_title(title)
+            ax.set_box_aspect(1)
+
+        def plot_edisp(ax, edisp_kernel):
+            edisp_kernel.plot_matrix(ax=ax, add_cbar=False)
+            ax.set_xscale("log")
+            ax.set_yscale("log")
+            ax.set_title("Energy Dispersion (at FoV center)")
+            ax.set_box_aspect(1)
+
+        def plot_exposure_map(ax, exposure_map, cmap):
+            index = int(exposure_map.geom.axes[0].nbin / 2)
+
+            # Dynamically scale the exposure by powers of 10 for improved readability
+            exp_data = exposure_map.get_image_by_idx([index])
+            vmin = exp_data.data[exp_data.data > 0].min()
+            vmax = exp_data.data[exp_data.data > 0].max()
+
+            energy_center = exposure_map.geom.axes[0].center[index]
+
+            exp_data.plot(
+                ax=ax,
+                cmap=cmap,
+                norm=LogNorm(vmin=vmin, vmax=vmax),
+                add_cbar=True,
+            )
+
+            unit = exposure_map.unit.to_string("latex")
+            cbar = ax.images[-1].colorbar  # Access the colorbar
+            cbar.set_label(f"Exposure [{unit}]")  # Set the formatted label
+
+            if energy_center.value < 1e-2 or energy_center.value > 1e2:
+                title = f"Exposure map at {energy_center:.1e}"
+            elif energy_center.value < 1e-1 or energy_center.value > 1e1:
+                title = f"Exposure map at {energy_center:.1f}"
+            else:
+                title = f"Exposure map at {energy_center:.2f}"
+
+            ax.set_title(title)
+            ax.set_box_aspect(1)
+
+        def plot_exposure_profile(ax, exposure_map):
+            exposure_map.plot(ax=ax, ls="solid", marker=None, xerr=None)
+            # Dynamically format the y-axis label
+            unit = exposure_map.unit.to_string("latex")  # Convert unit to LaTeX format
+            ax.set_ylabel(f"Exposure [{unit}]")  # Set the formatted y-axis label
+            ax.set_title("Exposure (at FoV center)")
+            ax.set_box_aspect(1)
+
+        def plot_containment_radius(ax, psf):
+            psf.plot_containment_radius_vs_energy(ax=ax)
+            ax.legend(fontsize="small")
+            ax.set_title("Containment radius (at FoV center)")
+            ax.set_xscale("log")
+            ax.set_yscale("log")
+            ax.set_box_aspect(1)
 
         def plot_mask(ax, mask, **kwargs):
             if mask is not None:
                 mask.plot_mask(ax=ax, **kwargs)
 
-        fig, axes = plt.subplots(
-            ncols=2,
-            nrows=2,
-            subplot_kw={"projection": self._geom.wcs},
-            figsize=figsize,
-            gridspec_kw={"hspace": 0.25, "wspace": 0.1},
+        # Reduce the datasets to 2D if needed
+        countsmapdata = self.counts.reduce_over_axes()
+        npredmapdata = self.npred().reduce_over_axes()
+
+        # Get the corresponding central pixel SpectrumDataset (exposure, edisp, psf)
+        central_pixel = RectangleSkyRegion(
+            self.counts.geom.center_skydir,
+            width=1.01 * self.counts.geom.pixel_scales[0],
+            height=1.01 * self.counts.geom.pixel_scales[1],
+        )
+        central_spectrum_dataset = self.to_spectrum_dataset(central_pixel)
+
+        # Determine plotting limits
+        vmin = npredmapdata.data.min()
+        vmax = npredmapdata.data.max()
+        # Fallback if the map is entirely zero
+        if vmin == 0.0:
+            vmin = np.max([countsmapdata.data.max() * 0.02, countsmapdata.data.min()])
+        if vmax == 0.0:
+            vmax = countsmapdata.data.max()
+
+        # Create custom colormaps
+        cmapcustom = plt.get_cmap("afmhot")
+        cmapcustom.set_bad(color="black")
+
+        # Create the figure and axes
+        fig, axs = plt.subplots(nrows=2, ncols=3, figsize=figsize)
+
+        # --- Plot Exposure Map ---
+        axs[0, 0].remove()
+        ax_exposure = fig.add_subplot(2, 3, 1, projection=self.exposure.geom.wcs)
+        plot_exposure_map(ax_exposure, self.exposure, cmap=cmapcustom)
+        plot_mask(
+            ax=ax_exposure, mask=self.mask_safe_image, hatches=["///"], colors="w"
         )
 
-        axes = axes.flat
-        axes[0].set_title("Counts")
-        self.counts.sum_over_axes().plot(ax=axes[0], add_cbar=True)
-        plot_mask(ax=axes[0], mask=self.mask_fit_image, alpha=0.2)
-        plot_mask(ax=axes[0], mask=self.mask_safe_image, hatches=["///"], colors="w")
+        # --- Plot Counts Map ---
+        axs[0, 1].remove()
+        ax_counts = fig.add_subplot(2, 3, 2, projection=self.counts.geom.wcs)
+        plot_counts(ax_counts, countsmapdata, cmapcustom, vmin, vmax, "Counts map")
+        plot_mask(ax=ax_counts, mask=self.mask_fit_image, alpha=0.2)
+        plot_mask(ax=ax_counts, mask=self.mask_safe_image, hatches=["///"], colors="w")
 
-        axes[1].set_title("Excess counts")
-        self.excess.sum_over_axes().plot(ax=axes[1], add_cbar=True)
-        plot_mask(ax=axes[1], mask=self.mask_fit_image, alpha=0.2)
-        plot_mask(ax=axes[1], mask=self.mask_safe_image, hatches=["///"], colors="w")
+        # --- Plot npred Map ---
+        axs[0, 2].remove()
+        ax_npred = fig.add_subplot(2, 3, 3, projection=self.npred().geom.wcs)
+        plot_counts(ax_npred, npredmapdata, cmapcustom, vmin, vmax, "Model npred")
+        plot_mask(ax=ax_npred, mask=self.mask_fit_image, alpha=0.2)
+        plot_mask(ax=ax_npred, mask=self.mask_safe_image, hatches=["///"], colors="w")
 
-        axes[2].set_title("Exposure")
-        self.exposure.sum_over_axes().plot(ax=axes[2], add_cbar=True)
-        plot_mask(ax=axes[2], mask=self.mask_safe_image, hatches=["///"], colors="w")
+        # --- Plot Exposure Profile ---
+        ax_exp_profile = axs[1, 0]
+        plot_exposure_profile(ax_exp_profile, central_spectrum_dataset.exposure)
 
-        axes[3].set_title("Background")
-        self.background.sum_over_axes().plot(ax=axes[3], add_cbar=True)
-        plot_mask(ax=axes[3], mask=self.mask_fit_image, alpha=0.2)
-        plot_mask(ax=axes[3], mask=self.mask_safe_image, hatches=["///"], colors="w")
+        # --- Plot Containment Radius ---
+        ax_containment = axs[1, 1]
+        plot_containment_radius(ax_containment, self.psf)
 
+        # --- Plot Energy Dispersion ---
+        ax_edisp = axs[1, 2]
+        plot_edisp(ax_edisp, central_spectrum_dataset.edisp.get_edisp_kernel())
 
-class MapDatasetWeighted(MapDataset):
-    stat_type = "cash_weighted"
-    tag = "MapDatasetWeighted"
+        plt.tight_layout(w_pad=0)
 
 
 class MapDatasetOnOff(MapDataset):
@@ -2442,7 +2541,6 @@ class MapDatasetOnOff(MapDataset):
 
     """
 
-    stat_type = "wstat"
     tag = "MapDatasetOnOff"
 
     def __init__(
@@ -2461,6 +2559,7 @@ class MapDatasetOnOff(MapDataset):
         gti=None,
         meta_table=None,
         meta=None,
+        stat_type="wstat",
     ):
         self._name = make_name(name)
         self._evaluators = {}
@@ -2481,6 +2580,8 @@ class MapDatasetOnOff(MapDataset):
             self._meta = MapDatasetMetaData()
         else:
             self._meta = meta
+
+        self.stat_type = stat_type
 
     def __str__(self):
         str_ = super().__str__()
@@ -2585,17 +2686,6 @@ class MapDatasetOnOff(MapDataset):
         if self.counts_off is None:
             return None
         return self.alpha * self.counts_off
-
-    def stat_array(self):
-        """Statistic function value per bin given the current model parameters."""
-        mu_sig = self.npred_signal().data
-        on_stat_ = wstat(
-            n_on=self.counts.data,
-            n_off=self.counts_off.data,
-            alpha=list(self.alpha.data),
-            mu_sig=mu_sig,
-        )
-        return np.nan_to_num(on_stat_)
 
     @property
     def _counts_statistic(self):
@@ -2852,17 +2942,6 @@ class MapDatasetOnOff(MapDataset):
         self.counts_off = total_off
 
         super().stack(other, nan_to_num=nan_to_num)
-
-    def stat_sum(self):
-        """Total statistic function value given the current model parameters.
-
-        If the off counts are passed as None and the elements of the safe mask are False, zero will be returned.
-        Otherwise, the stat sum will be calculated and returned.
-        """
-        if self.counts_off is None and not np.any(self.mask_safe.data):
-            return 0
-        else:
-            return Dataset.stat_sum(self)
 
     def fake(self, npred_background, random_state="random-seed"):
         """Simulate fake counts (on and off) for the current model and reduced IRFs.

@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Tools to create profiles (i.e. 1D "slices" from 2D images)."""
 
+import logging
 from itertools import repeat
 import numpy as np
 from astropy import units as u
@@ -13,11 +14,15 @@ from .core import FluxPoints
 from .sed import FluxPointsEstimator
 from gammapy.utils.deprecation import deprecated_renamed_argument
 
+log = logging.getLogger(__name__)
+
 __all__ = ["FluxProfileEstimator"]
 
 
 class FluxProfileEstimator(FluxPointsEstimator):
     """Estimate flux profiles.
+    The class is backward folding of FluxPointsEstimator. However, the re-optimization
+    is not available, as only one spectral model can be fitted.
 
     Parameters
     ----------
@@ -35,7 +40,10 @@ class FluxProfileEstimator(FluxPointsEstimator):
         Defaults to `~gammapy.utils.parallel.BACKEND_DEFAULT`.
     **kwargs : dict, optional
         Keywords forwarded to the `FluxPointsEstimator` (see documentation
-        there for further description of valid keywords).
+        there for further description of valid keywords). Note that the `reoptimized`
+        keyword is accepted only if set to False. If not, an error is raised.
+        If the keyword is not set by the user, it will be internally set to False
+        by default.
 
     Examples
     --------
@@ -103,6 +111,12 @@ class FluxProfileEstimator(FluxPointsEstimator):
             spectral_model = PowerLawSpectralModel()
 
         self.spectral_model = spectral_model
+
+        reoptimize = kwargs.get("reoptimize", False)
+        if reoptimize is True:
+            raise ValueError(
+                f"reoptimize=True is not available for {self}. Set to `False` instead."
+            )
         super().__init__(**kwargs)
 
     @property

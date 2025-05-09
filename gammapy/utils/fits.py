@@ -21,7 +21,7 @@ class HDULocation:
     It's more a helper class, that is wrapped by `~gammapy.data.Observation`,
     usually those objects will be used to access data.
 
-    See also :ref:`gadf:hdu-index`.
+    See also `HDU index table <https://gamma-astro-data-formats.readthedocs.io/en/latest/data_storage/hdu_index/index.html#hdu-index>`__.
     """
 
     def __init__(
@@ -103,6 +103,12 @@ class HDULocation:
             from gammapy.data import FixedPointingInfo
 
             return FixedPointingInfo.read(filename, hdu=hdu)
+        elif hdu_class == "observation_metadata":
+            from gammapy.data import ObservationMetaData
+
+            with fits.open(filename) as hdulist:
+                header = hdulist[hdu].header
+                return ObservationMetaData.from_header(header)
         else:
             cls = IRF_REGISTRY.get_cls(hdu_class)
 

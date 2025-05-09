@@ -62,7 +62,10 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
     The map is computed fitting by a single parameter norm fit. The fit is
     simplified by finding roots of the derivative of the fit statistics using
     various root finding algorithms. The approach is described in Appendix A
-    in Stewart (2009).
+    in `Stewart (2009) <https://ui.adsabs.harvard.edu/abs/2009A%26A...495..989S/abstract>`_.
+
+    The main output of this estimator is a `~gammapy.estimators.FluxMaps` object, from which one
+    can access to all computed quantities (see the example below and the `TSMapEstimator.run` function).
 
     Parameters
     ----------
@@ -93,11 +96,13 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         Available options are:
 
             * "all": all the optional steps are executed
-            * "errn-errp": estimate asymmetric error on flux.
+            * "errn-errp": estimate asymmetric error on flux
             * "ul": estimate upper limits on flux.
             * "stat_scan": estimate likelihood profile
+            * "sensitivity": estimate the flux sensitivity
 
-        Default is None so the optional steps are not executed.
+        Default is None, ie only "ts", "norm", "niter", "norm_err", "npred", "npred_excess", "stat", "stat_null" and
+        "success" are computed.
     energy_edges : list of `~astropy.units.Quantity`, optional
         Edges of the target maps energy bins. The resulting bin edges won't be exactly equal to the input ones,
         but rather the closest values to the energy axis edges of the parent dataset.
@@ -165,12 +170,8 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
       n_sigma_ul             : 2
       sqrt_ts_threshold_ul   : 2
       sed type init          : likelihood
-
-
-    References
-    ----------
-    `Stewart (2009), “Maximum-likelihood detection of sources among Poissonian noise”
-    <https://ui.adsabs.harvard.edu/abs/2009A%26A...495..989S/abstract>`_
+    >>> print(maps.available_quantities))
+    ['ts', 'norm', 'niter', 'norm_err', 'npred', 'npred_excess', 'stat', 'stat_null', 'success']
     """
 
     tag = "TSMapEstimator"
@@ -549,11 +550,11 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         return result
 
     def run(self, datasets):
-        """
-        Run test statistic map estimation.
+        """Run test statistic map estimation.
 
-        Requires a MapDataset with counts, exposure and background_model
-        properly set to run.
+        Can compute predicted excess, TS, flux and error maps, and optionally upper limits or sensitivity.
+
+        Requires a MapDataset with counts, exposure and background_model properly set to run.
 
         Notes
         -----
@@ -566,14 +567,17 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
         Returns
         -------
-        maps : dict
-             Dictionary containing result maps. Keys are:
+        maps : `~gammapy.estimators.FluxMaps`
+            See the associated class for a complete description. In particular, it can contain the following maps:
 
+                * npred_excess : predicted excess map
+                * counts : counts map
                 * ts : delta(TS) map
                 * sqrt_ts : sqrt(delta(TS)), or significance map
                 * flux : flux map
                 * flux_err : symmetric error map
                 * flux_ul : upper limit map.
+                * flux_sensitivity : flux sensitivity for this dataset
 
         """
         datasets = Datasets(datasets)

@@ -22,6 +22,7 @@ from gammapy.irf import Background2D, EDispKernelMap, EDispMap, PSFMap
 from gammapy.makers import FoVBackgroundMaker, MapDatasetMaker, SafeMaskMaker
 from gammapy.maps import HpxGeom, Map, MapAxis, WcsGeom
 from gammapy.utils.testing import requires_data, requires_dependency
+from gammapy.utils.scripts import make_path
 
 
 @pytest.fixture(scope="session")
@@ -566,3 +567,62 @@ def test_meta_data_creation(observations):
     stacked_meta = MapDatasetMetaData._from_meta_table(dataset0.meta_table)
     assert stacked_meta.obs_info[0].obs_id == 110380
     assert stacked_meta.obs_info[1].obs_id == 111140
+
+
+@pytest.mark.xfail
+@requires_data()
+def test_map_dataset_maker_swgo():
+    times = Time([59249.83472222222, 62802.21805555555], format="mjd", scale="tt")
+    tref = Time(51544.00074287037, format="mjd", scale="tt")
+
+    gti = GTI.from_time_intervals([times], reference_time=tref)
+
+    path = make_path("$GAMMAPY_DATA/tests/format/swgo/")
+
+    datastore = DataStore.from_dir(path, "hdu-index.fits.gz", "obs-index.fits.gz")
+
+    event_type = datastore.obs_table["EVENT_TYPE"][0]
+    obs_selection = datastore.obs_table["EVENT_TYPE"] == event_type
+    hdu_selection = datastore.hdu_table["EVENT_TYPE"] == event_type
+    datastore_redu = DataStore(
+        hdu_table=datastore.hdu_table[hdu_selection],
+        obs_table=datastore.obs_table[obs_selection],
+    )
+    observations = datastore_redu.get_observations()
+
+    obs = observations[0]
+    obs.gti = gti
+
+    with pytest.raises(ValueError):
+        obs.gti = gti
+
+    energy_axis = MapAxis.from_energy_bounds(
+        0.3 * u.TeV, 300 * u.TeV, 10, per_decade=True
+    )
+    energy_true_axis = MapAxis.from_energy_bounds(
+        0.1 * u.TeV, 1000 * u.TeV, 10, per_decade=True, name="energy_true"
+    )
+
+    geom = obs.aeff.geom.to_image().to_cube([energy_axis])
+
+    rad_axis = obs.psf.psf_map.geom.axes["rad"]
+    geom_psf = obs.psf.psf_map.geom.to_image().to_cube([rad_axis, energy_true_axis])
+    geom_edisp = obs.edisp.edisp_map.geom.to_image().to_cube(
+        [energy_axis, energy_true_axis]
+    )
+    geom_exposure = geom.to_image().to_cube([energy_true_axis])
+
+    dataset_empty = MapDataset.from_geoms(
+        geom,
+        geom_exposure=geom_exposure,
+        geom_psf=geom_psf,
+        geom_edisp=geom_edisp,
+    )
+
+    maker = MapDatasetMaker(selection=["background", "exposure", "edisp", "psf"])
+    dataset = maker.run(dataset_empty, obs)
+
+    assert dataset.exposure.data.shape == (40, 180, 1)
+    assert dataset.psf.psf_map.data.shape == (40, 500, 180, 1)
+    assert dataset.edisp.edisp_map.data.shape == (40, 30, 180, 1)
+    assert dataset.background.data.shape == (30, 180, 1)

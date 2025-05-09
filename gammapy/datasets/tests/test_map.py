@@ -17,7 +17,6 @@ from gammapy.datasets import (
     Datasets,
     MapDataset,
     MapDatasetOnOff,
-    MapDatasetWeighted,
     create_empty_map_dataset_from_irfs,
     create_map_dataset_from_observation,
 )
@@ -230,7 +229,7 @@ def get_map_dataset(
     models = FoVBackgroundModel(dataset_name=name)
 
     if weighted:
-        return MapDatasetWeighted(
+        return MapDataset(
             models=models,
             exposure=exposure,
             background=background,
@@ -238,6 +237,7 @@ def get_map_dataset(
             edisp=edisp,
             mask_fit=mask_fit,
             name=name,
+            stat_type="cash_weighted",
             **kwargs,
         )
     else:
@@ -796,12 +796,12 @@ def test_map_fit(sky_model, geom, geom_etrue):
     assert_allclose(pars["amplitude"].error, 4.216e-13, rtol=1e-2)
 
     # background norm 1
-    assert_allclose(pars[8].value, 0.5, rtol=1e-2)
-    assert_allclose(pars[8].error, 0.015811, rtol=1e-2)
+    assert_allclose(pars[9].value, 0.5, rtol=1e-2)
+    assert_allclose(pars[9].error, 0.015811, rtol=1e-2)
 
     # background norm 2
-    assert_allclose(pars[11].value, 1, rtol=1e-2)
-    assert_allclose(pars[11].error, 0.02147, rtol=1e-2)
+    assert_allclose(pars[12].value, 1, rtol=1e-2)
+    assert_allclose(pars[12].error, 0.02147, rtol=1e-2)
 
     # test mask_safe evaluation
     dataset_1.mask_safe = geom.energy_mask(energy_min=1 * u.TeV)
@@ -904,12 +904,12 @@ def test_map_fit_ray(sky_model, geom, geom_etrue):
     assert_allclose(pars["amplitude"].error, 4.216e-13, rtol=1e-2)
 
     # background norm 1
-    assert_allclose(pars[8].value, 0.5, rtol=1e-2)
-    assert_allclose(pars[8].error, 0.015811, rtol=1e-2)
+    assert_allclose(pars[9].value, 0.5, rtol=1e-2)
+    assert_allclose(pars[9].error, 0.015811, rtol=1e-2)
 
     # background norm 2
-    assert_allclose(pars[11].value, 1, rtol=1e-2)
-    assert_allclose(pars[11].error, 0.02147, rtol=1e-2)
+    assert_allclose(pars[12].value, 1, rtol=1e-2)
+    assert_allclose(pars[12].error, 0.02147, rtol=1e-2)
 
     with mpl_plot_check():
         actors.plot_residuals()
@@ -1792,16 +1792,20 @@ def test_map_dataset_on_off_to_spectrum_dataset_weights():
     )
 
     on_region = CircleSkyRegion(
-        center=dataset.counts.geom.center_skydir, radius=1.5 * u.deg
+        center=dataset.counts.geom.center_skydir, radius=1.0 * u.deg
     )
 
-    spectrum_dataset = dataset.to_spectrum_dataset(on_region)
+    with pytest.raises(Exception):
+        dataset.to_spectrum_dataset(on_region)
 
-    assert_allclose(spectrum_dataset.counts.data[:, 0, 0], [0, 2, 2])
-    assert_allclose(spectrum_dataset.counts_off.data[:, 0, 0], [0, 4, 4])
-    assert_allclose(spectrum_dataset.acceptance.data[:, 0, 0], [0, 0.08, 0.08])
-    assert_allclose(spectrum_dataset.acceptance_off.data[:, 0, 0], [0, 0.32, 0.32])
-    assert_allclose(spectrum_dataset.alpha.data[:, 0, 0], [0, 0.25, 0.25])
+    dataset.mask_safe.data = True
+    dataset.to_spectrum_dataset(on_region)
+
+    on_region = CircleSkyRegion(
+        center=dataset.counts.geom.center_skydir, radius=15 * u.deg
+    )
+    with pytest.raises(Exception):
+        dataset.to_spectrum_dataset(on_region)
 
 
 @requires_data()
@@ -2241,9 +2245,14 @@ def test_map_dataset_region_geom_npred():
     dataset_spec = dataset.to_region_map_dataset(region)
     dataset_spec.models = [model_1, model_2]
 
+    with pytest.raises(Exception):
+        invalid_region = dataset.counts.geom.footprint_rectangle_sky_region
+        dataset_spec = dataset.to_region_map_dataset(invalid_region)
+
     npred = dataset_spec.npred()
 
     assert_allclose(npred_ref.data, npred.data, rtol=1e-2)
+    assert_allclose(dataset_spec.background.data[0, 0, 0], 1011.85, rtol=1e-2)
 
 
 @requires_dependency("healpy")

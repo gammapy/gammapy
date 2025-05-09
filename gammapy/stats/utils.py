@@ -4,11 +4,15 @@ import numpy as np
 from scipy.stats import ncx2
 
 
+__all__ = ["sigma_to_ts", "ts_to_sigma"]
+
+
 def sigma_to_ts(n_sigma, df=1, n_sigma_asimov=0):
     """Convert number of sigma to delta ts.
 
     Assumes that the TS follows a chi2 distribution according to Wilks theorem [1].
     This is valid only if:
+
     - the two hypotheses tested can be defined in the same parameters space
     - the true value is not at the boundary of this parameters space.
 
@@ -16,19 +20,19 @@ def sigma_to_ts(n_sigma, df=1, n_sigma_asimov=0):
     ----------
     n_sigma : float
         Significance in number of sigma.
-    df : int
-        Number of degree of freedom.
-    n_sigma_asimov : float
+    df : int, optional
+        Number of degree of freedom. Default is 1.
+    n_sigma_asimov : float, optional
         Significance in number of sigma in the Asimov dataset
-        (in which counts equal to the predicted counts).
+        (in which counts are equal to the predicted counts).
         In that case the function applies the Wald test described in [2] and [3],
         where the TS of H1 under the H0 assumption is assumed to follow a non-central chi2 distribution.
-        Should be used only for sensitivity computations.
+        Should only be used for sensitivity computations. Default is 0.
 
     Returns
     -------
     ts : float
-        Test statistic
+        Test statistic value.
 
     References
     ----------
@@ -49,21 +53,22 @@ def ts_to_sigma(ts, df=1, ts_asimov=0):
 
     Assumes that the TS follows a chi2 distribution according to Wilks theorem [1].
     This is valid only if:
+
     - the two hypotheses tested can be defined in the same parameters space
     - the true value is not at the boundary of this parameters space.
 
     Parameters
     ----------
     ts : float
-        Test statistic.
-    df : int
-        Number of degree of freedom.
-    ts_asimov : float
+        Test statistic value.
+    df : int, optional
+        Number of degree of freedom. Default is 1.
+    ts_asimov : float, optional
         TS value in the Asimov dataset
         (in which counts equal to the predicted counts).
         In that case the function applies the Wald test described in [2] and [3],
         and the TS is assumed to follow a non-central chi2 distribution.
-        Should be used only for sensitivity computations.
+        Should only be used for sensitivity computations. Default is 0.
 
 
     Returns

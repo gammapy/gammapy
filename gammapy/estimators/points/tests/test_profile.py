@@ -88,7 +88,23 @@ def test_profile_content():
     assert_allclose(errn, [10.75, 10.75], atol=1e-2)
 
     ul = result.npred_excess_ul.data[7].squeeze()
-    assert_allclose(ul, [111.32, 111.32], atol=1e-2)
+    assert_allclose(ul, [115.171875, 115.171874], atol=1e-2)
+
+
+def test_profile_optimization():
+    mapdataset_onoff = get_simple_dataset_on_off()
+    wcs = mapdataset_onoff.counts.geom.wcs
+    boxes = make_horizontal_boxes(wcs)
+
+    with pytest.raises(ValueError):
+        FluxProfileEstimator(
+            regions=boxes,
+            energy_edges=[0.1, 1, 10] * u.TeV,
+            selection_optional="all",
+            n_sigma=1,
+            n_sigma_ul=3,
+            reoptimize=True,
+        )
 
 
 def test_radial_profile():
@@ -124,7 +140,7 @@ def test_radial_profile():
     assert_allclose(errn, [34.075, 34.075], rtol=2e-3)
 
     ul = result.npred_excess_ul.data[0].squeeze()
-    assert_allclose(ul, [72.074, 72.074], rtol=1e-3)
+    assert_allclose(ul, [75.834986, 75.834986], rtol=1e-3)
 
 
 def test_radial_profile_one_interval():
@@ -158,7 +174,7 @@ def test_radial_profile_one_interval():
     assert_allclose(errn, [48.278367], rtol=2e-3)
 
     ul = result.npred_excess_ul.data[0].squeeze()
-    assert_allclose(ul, [130.394824], rtol=1e-3)
+    assert_allclose(ul, [134.285974], rtol=1e-3)
 
 
 def test_serialisation(tmpdir):

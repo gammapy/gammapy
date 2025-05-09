@@ -6,9 +6,17 @@
 Tutorials
 =========
 
-**Notice :** it is
-advised to first read :ref:`package_structure` of the User Guide before using the
-tutorials.
+.. important::
+
+    * It is **strongly** advised to first read :ref:`package_structure` of the User Guide before using the
+      tutorials.
+
+    * In general, all methods and classes are defined with default values that permit a good execution per default.
+      In the tutorials, we frequently use extra values to just illustrate their usage.
+
+    * The Gammapy library is used by many instruments and as consequence can not describe the specificities of each
+      data release of each observatory. Get in touch with the observatory experts to get the best usage of a given
+      data release.
 
 This page lists the Gammapy tutorials that are available as `Jupyter`_ notebooks.
 You can read them here, or execute them using a temporary cloud server in Binder.

@@ -15,6 +15,7 @@ from gammapy.modeling.models import (
     PointSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
+    FoVBackgroundModel,
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data
 
@@ -349,3 +350,13 @@ def test_add_not_unique_models():
         match="Model names must be unique. Models named 'source1' are duplicated.",
     ):
         models1.extend(models2)
+
+
+def test_two_fov_bkg_models_single_dataset():
+    fov1 = FoVBackgroundModel(dataset_name="ds1", name="ds1-1")
+    fov2 = FoVBackgroundModel(dataset_name="ds1", name="ds1-2")
+    with pytest.raises(
+        ValueError,
+        match="Only one FoVBackgroundModel per Dataset is permitted - already got one for ds1",
+    ):
+        Models([fov1, fov2])

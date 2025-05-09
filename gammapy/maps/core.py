@@ -22,6 +22,8 @@ from .geom import pix_tuple_to_idx
 
 __all__ = ["Map"]
 
+u.add_enabled_units([u.def_unit("transit", u.sday)])
+
 
 class Map(abc.ABC):
     """Abstract map class.

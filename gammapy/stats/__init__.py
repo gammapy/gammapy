@@ -2,7 +2,19 @@
 """Statistics."""
 
 from .counts_statistic import CashCountsStatistic, WStatCountsStatistic
-from .fit_statistics import cash, cstat, get_wstat_gof_terms, get_wstat_mu_bkg, wstat
+from .fit_statistics import (
+    cash,
+    cstat,
+    get_wstat_gof_terms,
+    get_wstat_mu_bkg,
+    wstat,
+    Chi2FitStatistic,
+    CashFitStatistic,
+    Chi2AsymmetricErrorFitStatistic,
+    ProfileFitStatistic,
+    WStatFitStatistic,
+    WeightedCashFitStatistic,
+)
 from .fit_statistics_cython import (
     weighted_cash_sum_cython,
     cash_sum_cython,
@@ -18,6 +30,16 @@ from .variability import (
     discrete_correlation,
     structure_function,
 )
+from .utils import sigma_to_ts, ts_to_sigma
+
+FIT_STATISTICS_REGISTRY = {
+    "cash": CashFitStatistic,
+    "wstat": WStatFitStatistic,
+    "chi2": Chi2FitStatistic,
+    "distrib": Chi2AsymmetricErrorFitStatistic,
+    "profile": ProfileFitStatistic,
+    "cash_weighted": WeightedCashFitStatistic,
+}
 
 __all__ = [
     "cash",
@@ -38,4 +60,6 @@ __all__ = [
     "discrete_correlation",
     "TimmerKonig_lightcurve_simulator",
     "weighted_cash_sum_cython",
+    "sigma_to_ts",
+    "ts_to_sigma",
 ]
