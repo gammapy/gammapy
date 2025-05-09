@@ -181,7 +181,7 @@ def test_logic_parser():
     assert len(result) == 0
 
 
-def test_logic_parser_key_error():
+def test_logic_parser_error():
     # Create a sample table
     data = {"OBS_ID": [1, 2, 3, 4], "EVENT_TYPE": ["1", "3", "4", "2"]}
     table = Table(data)
@@ -189,6 +189,10 @@ def test_logic_parser_key_error():
     # Define an expression with a non-existent key
     expression = "(NON_EXISTENT_KEY < 3) and (OBS_ID > 1)"
 
-    # Check if KeyError is raised
-    with pytest.raises(KeyError):
+    with pytest.raises(KeyError) as excinfo:
         logic_parser(table, expression)
+
+    with pytest.raises(ValueError) as excinfo:
+        expression = "unsupported_expression()"
+        logic_parser(table, expression)
+    assert "Unsupported expression type" in str(excinfo.value)
