@@ -130,6 +130,91 @@ def test_run(backend):
     assert_allclose(pars["z"].error, 1, rtol=1e-7)
 
 
+def test_run_scale_transform_change_sqrt():
+    dataset = MyDataset()
+    fit = Fit(backend="minuit")
+    stat_ref = dataset.stat_sum()
+    for par in dataset.models.parameters:
+        par.scale_transform = "sqrt"
+    dataset.stat_sum()
+    assert_allclose(dataset.stat_sum(), stat_ref)
+
+    result = fit.run([dataset])
+    pars = dataset.models.parameters
+
+    assert fit._minuit is not None
+    assert result.success
+    assert result.optimize_result.method == "migrad"
+    assert result.covariance_result.method == "hesse"
+    assert result.covariance_result.success
+
+    assert_allclose(pars["x"].value, 2, rtol=1e-3)
+    assert_allclose(pars["y"].value, 3e2, rtol=1e-3)
+    assert_allclose(pars["z"].value, 4.07e-2, rtol=1e-2)
+
+    assert_allclose(pars["x"].error, 1, rtol=1e-4)
+    assert_allclose(pars["y"].error, 1, rtol=1e-4)
+    assert_allclose(pars["z"].error, 1, rtol=1e-2)
+
+    correlation = dataset.models.covariance.correlation
+    assert_allclose(correlation[0, 1], 0, atol=1e-7)
+    assert_allclose(correlation[0, 2], 0, atol=1e-7)
+    assert_allclose(correlation[1, 2], 0, atol=1e-7)
+
+    # Verify that the fit result models are independent of the dataset ones
+    pars["x"].value = 3
+    assert_allclose(result.parameters["x"].value, 2, rtol=1e-3)
+
+    # check parameters from the result object
+    pars = result.parameters
+    assert_allclose(pars["x"].error, 1, rtol=1e-4)
+    assert_allclose(pars["y"].error, 1, rtol=1e-4)
+    assert_allclose(pars["z"].error, 1, rtol=1e-2)
+
+
+def test_run_scale_transform_change_log():
+    dataset = MyDataset()
+    fit = Fit(backend="minuit")
+    stat_ref = dataset.stat_sum()
+    for par in dataset.models.parameters:
+        par.scale_method = "factor1"
+        par.scale_transform = "log"
+    dataset.stat_sum()
+    assert_allclose(dataset.stat_sum(), stat_ref)
+
+    result = fit.run([dataset])
+    pars = dataset.models.parameters
+    print(result)
+    assert fit._minuit is not None
+    assert result.success
+    assert result.optimize_result.method == "migrad"
+    assert result.covariance_result.method == "hesse"
+    assert result.covariance_result.success
+
+    assert_allclose(pars["x"].value, 2, rtol=1e-2)
+    assert_allclose(pars["y"].value, 3e2, rtol=1e-2)
+    assert_allclose(pars["z"].value, 4.07e-2, rtol=2e-1)
+
+    assert_allclose(pars["x"].error, 1, rtol=1e-2)
+    assert_allclose(pars["y"].error, 1, rtol=1e-2)
+    assert_allclose(pars["z"].error, 1, rtol=1e-1)
+
+    correlation = dataset.models.covariance.correlation
+    assert_allclose(correlation[0, 1], 0, atol=1e-2)
+    assert_allclose(correlation[0, 2], 0, atol=1e-1)
+    assert_allclose(correlation[1, 2], 0, atol=1e-1)
+
+    # Verify that the fit result models are independent of the dataset ones
+    pars["x"].value = 3
+    assert_allclose(result.parameters["x"].value, 2, rtol=1e-2)
+
+    # check parameters from the result object
+    pars = result.parameters
+    assert_allclose(pars["x"].error, 1, rtol=1e-2)
+    assert_allclose(pars["y"].error, 1, rtol=1e-2)
+    assert_allclose(pars["z"].error, 1, rtol=1e-1)
+
+
 def test_run_no_free_parameters():
     dataset = MyDataset()
     for par in dataset.models.parameters.free_parameters:
