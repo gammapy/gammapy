@@ -36,7 +36,7 @@ log.setLevel(logging.INFO)
 
 
 class DataStore:
-    """IACT data store.
+    """Data store of a data release.
 
     The data selection and access happens using an observation
     and an HDU index file as described at :ref:`gadf:iact-storage`.
