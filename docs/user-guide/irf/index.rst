@@ -21,7 +21,7 @@ such a function gives:
   :math:`p` and energy :math:`E` and the effective collection area of the detector at position :math:`p_{\rm true}`
   on the sky and true energy :math:`E_{\rm true}`.
 
-We can write the expected number of detected events in a bin :math:`[{\rm d}p {\rm d}E]`:
+We can write the expected number of detected events in a bin [:math:`{\rm d}p,\,{\rm d}E`]:
 
 .. math::
 
@@ -31,9 +31,9 @@ with:
 
 .. math::
 
-    {N(p, E)_{\rm bkg}} {\rm d}p {\rm d}E = t_{\rm obs} \int_{E} {\rm d}E \, \int_{p} {\rm d}p \, Bkg(p, E)
+    {N(p, E)_{\rm bkg}} {\rm d}p {\rm d}E = t_{\rm obs} \int_{E} {\rm d}E \, \int_{p} {\rm d}p \, {\rm Bkg}(p, E)
 
-where :math:`Bkg(p, E)` is the instrument response on the residual instrumental background rate (unit: :math:`{\rm s}^{-1}`)
+where :math:`{\rm Bkg}(p, E)` is the instrument response on the residual instrumental background rate (unit: :math:`{\rm s}^{-1}\,{\rm sr}^{-1}`)
 
 and with:
 
@@ -51,15 +51,15 @@ where:
 Residual instrumental background rate
 -------------------------------------
 
-The response :math:`Bkg(p, E)` is coming from atmospheric cosmic-rays that are mis-classified as gamma-ray candidates.
+The response :math:`{\rm Bkg}(p, E)` is coming from atmospheric cosmic-rays that are mis-classified as gamma-ray candidates.
 They originate from hadrons (mainly protons) and leptons (mainly electrons), depending on the energy. These events
 constitute an irreducible source of background when studying gamma-ray emissions; they are also subjects of analysis
 (e.g. cosmic ray spectrum, charge composition, isotropy and dipole search), which is beyond the scope of this documentation.
 
-:math:`Bkg(p, E)` predicts the rate of such events. This response is complex to derive by the observatories, in order to
+:math:`{\rm Bkg}(p, E)` predicts the rate of such events. This response is complex to derive by the observatories, in order to
 cover the whole observational phase space (p, E) and the instrument variations (atmosphere and detectors). Most of the
 time, real events are used to build such instrument response. This rate is then delivered by the observatories.
-In the DL3 format, this IRF is distributed for each observing run for the `IACT`_ observatories.
+In the DL3 format, this IRF is distributed for each observing run for the :term:`IACT` observatories.
 
 
 Factorisation of the gamma-ray IRFs
@@ -96,12 +96,11 @@ Need of four individual responses
 ---------------------------------
 
 In order to statistically estimate a gamma-ray source model, the expected number of detected events in each
-:math:`[{\rm d}p {\rm d}E]` bin are tested in regards to the measured events
+:math:`[{\rm d}p,\,{\rm d}E]` bin are tested in regards to the measured events
 (see :doc:`/user-guide/stats/fit_statistics`). To make such statistical studies, the four individual responses are then
 mandatory to be delivered with a data release by the observatories.
 
-Further details on individuals responses and how they are implemented in Gammapy are given in :ref:`irf-aeff`,
-:ref:`irf-edisp`, :ref:`irf-psf` and :ref:`irf-bkg`.
+Further details on individuals responses and how they are implemented in Gammapy are given in:
 
 .. toctree::
     :maxdepth: 1
@@ -113,7 +112,7 @@ Further details on individuals responses and how they are implemented in Gammapy
 
 
 Most of the formats defined at :ref:`gadf:iact-irf` are supported. At the moment, there is little support for
-`Fermi-LAT`_ or other instruments, although efforts are underway to improve this.
+:term:`Fermi-LAT` or other instruments, although efforts are underway to improve this.
 
 Most users will not use `gammapy.irf` directly, but will instead use IRFs as
 part of their spectrum, image or cube analysis to compute exposure and effective

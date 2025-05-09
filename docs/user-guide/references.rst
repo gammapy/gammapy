@@ -95,7 +95,7 @@ Glossary
       supposed to be constant.
 
     IACT
-      Short for "Imaging Atmospheric Cherenkov Technique", as in used for e.g. `CTAO`_.
+      Short for "Imaging Atmospheric Cherenkov Technique", as in used for e.g. :term:`CTAO`.
 
     IRF
       Short for "instrument response function": they are used to model the probability
@@ -166,7 +166,7 @@ Glossary
       Short for "test statistics". See :ref:`ts` and :ref:`fit-statistics`.
 
     WCD
-      Short for "Water Cherenkov Detector", like the experiments `HAWC`_ or `SWGO`_.
+      Short for "Water Cherenkov Detector", like the experiments :term:`HAWC` or :term:`SWGO`.
 
     WStat
       The WStat is a Poisson fit statistic usually used for ON-OFF analysis. It is
