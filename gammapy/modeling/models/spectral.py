@@ -241,7 +241,7 @@ class SpectralModel(ModelBase):
 
         """
         if epsilon != 1e-4:  # TODO: remove in v2.1
-            warnings.wrn(
+            warnings.warn(
                 "epsilon is unsed and deprecated in v2.0",
                 GammapyDeprecationWarning,
                 stacklevel=2,
@@ -341,7 +341,7 @@ class SpectralModel(ModelBase):
         """
 
         if epsilon != 1e-4:  # TODO: remove in v2.1
-            warnings.wrn(
+            warnings.warn(
                 "epsilon is unsed and deprecated in v2.0",
                 GammapyDeprecationWarning,
                 stacklevel=2,
@@ -405,7 +405,7 @@ class SpectralModel(ModelBase):
         """
 
         if epsilon != 1e-4:  # TODO: remove in v2.1
-            warnings.wrn(
+            warnings.warn(
                 "epsilon is unsed and deprecated in v2.0",
                 GammapyDeprecationWarning,
                 stacklevel=2,
@@ -708,7 +708,7 @@ class SpectralModel(ModelBase):
         """
 
         if epsilon != 1e-5:  # TODO: remove in v2.1
-            warnings.wrn(
+            warnings.warn(
                 "epsilon is unsed and deprecated in v2.0",
                 GammapyDeprecationWarning,
                 stacklevel=2,
