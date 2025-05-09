@@ -145,7 +145,7 @@ print(models)
 #
 
 # Create an in-memory observation
-location = observatory_locations["cta_south"]
+location = observatory_locations["ctao_south"]
 obs = Observation.create(
     pointing=pointing, livetime=livetime, irfs=irfs, location=location
 )
