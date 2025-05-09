@@ -1254,9 +1254,6 @@ def test_integral_exp_cut_off_power_law_large_number_of_bins():
     assert_allclose(flux.value, expected_flux.value, rtol=0.01)
 
 
-GammapyDeprecationWarning
-
-
 def test_template_ND(tmpdir, caplog):
     energy_axis = MapAxis.from_bounds(
         1.0, 100, 10, interp="log", name="energy_true", unit="GeV"
