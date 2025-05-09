@@ -3,9 +3,10 @@ Using Gammapy IRFs
 ==================
 
 `gammapy.irf` contains classes for handling Instrument Response
-Functions typically stored as multi-dimensional tables. For a list of
-IRF classes internally supported, see
-https://gamma-astro-data-formats.readthedocs.io/en/v0.3/irfs/full_enclosure/index.html
+Functions typically stored as multi-dimensional tables. Gammapy is currently supporting
+the functions defined in the GADF format (see
+https://gamma-astro-data-formats.readthedocs.io/en/v0.3/irfs/full_enclosure/index.html). The
+detailed list can be found in the :doc:`IRF user guide </user-guide/irf/index>`.
 
 This tutorial is intended for advanced users typically creating IRFs.
 
@@ -75,7 +76,7 @@ print(bkg)
 
 
 ######################################################################
-# Note that the background is given in FoV coordiantes with `fov_lon`
+# Note that the background is given in FoV coordinates with `fov_lon`
 # and `fov_lat` axis, and not in `offset` from the camera center. We
 # can also check the Field of view alignment. Currently, two possible
 # alignments are supported: alignment with the horizontal coordinate
@@ -185,7 +186,7 @@ print(
 
 ######################################################################
 # Effective Area
-# ~~~~~~~~~~~~~~
+# --------------
 #
 
 
@@ -268,8 +269,8 @@ print(aeff_new)
 
 
 ######################################################################
-# Create exposure map
-# ~~~~~~~~~~~~~~~~~~~
+# Create exposure map (DL4 product)
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # DL4 data products can be created from these IRFs.
 #
@@ -400,8 +401,8 @@ edisp_new
 
 
 ######################################################################
-# Create edisp kernel map
-# ~~~~~~~~~~~~~~~~~~~~~~~
+# Create edisp kernel map (DL4 product) - `EDispKernelMap`
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 
 migra = MapAxis.from_edges(np.linspace(0.5, 1.5, 50), unit="", name="migra")
@@ -422,10 +423,11 @@ print(edispmap.edisp_map.data[3][1][3])
 # PSF
 # ---
 #
-# There are two types of asymmetric PSFs that can be considered
-# - Asymmetry about the camera center: Such PSF Tables can be supported
-# - Asymmetry about the source position: These PSF models cannot be supported
-# correctly within the data reduction scheme at present
+# There are two types of asymmetric PSFs that can be considered:
+#
+# -  asymmetry about the camera center: such PSF Tables can be supported,
+# -  asymmetry about the source position: these PSF models cannot be supported correctly within
+#    the data reduction scheme at present
 # Also, analytic PSF models defined within the GADF scheme cannot be
 # directly generalised to the 3D case for use within Gammapy.
 #

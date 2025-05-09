@@ -22,7 +22,7 @@ Glossary
     3D Analysis
       3D analysis or cube analysis, where data are reduced to a 3D cube with
       spatial coordinates and energy axes [Stewart2009]_. In Gammapy, these cube are
-      represented by `Map` objects (see :ref:`maps`) and contained in a `MapDataset` object.
+      represented by `~gammapy.maps.Map` objects (see :ref:`maps`) and contained in a `~gammapy.datasets.MapDataset` object.
 
     Aeff
       Short for "effective area": it is the IRF representing the detector collection
@@ -86,13 +86,16 @@ Glossary
     GADF
       Short for "Gamma Astro Data Format".
       The `open initiative GADF <https://gamma-astro-data-formats.readthedocs.io/en/v0.2/>`_
-      provides a Data Format for gamma-ray data that is currently used by many IACT experiments
-      and by HAWC. Gammapy I/O functions are compliant with this format.
+      provides a Data Format for gamma-ray data that is currently used by many :term:`IACT` experiments
+      and by `HAWC`_. Gammapy I/O functions are compliant with this format.
 
     GTI
       Short for "good time interval": it indicates a continuous time interval of data
       acquisition. In the GADF DL3 format, it also represents a time interval in which the IRFs are
       supposed to be constant.
+
+    IACT
+      Short for "Imaging Atmospheric Cherenkov Technique", as in used for e.g. `CTAO`_.
 
     IRF
       Short for "instrument response function": they are used to model the probability
@@ -156,11 +159,14 @@ Glossary
       functions are represented along a true energy axis.
 
     Transit
-      Path of a source over the sky in the course of one full sidereal day 
-      as seen by drift instruments like HAWC and SWGO.
+      Path of a source over the sky in the course of one full sidereal day
+      as seen by drift instruments like `HAWC`_ and `SWGO`_.
 
     TS
       Short for "test statistics". See :ref:`ts` and :ref:`fit-statistics`.
+
+    WCD
+      Short for "Water Cherenkov Detector", like the experiments `HAWC`_ or `SWGO`_.
 
     WStat
       The WStat is a Poisson fit statistic usually used for ON-OFF analysis. It is
