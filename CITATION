@@ -7,7 +7,7 @@ the following citation scheme (see also https://gammapy.org/acknowledging.html):
 
 The recommended LaTeX acknowledgment is:
 
-  This work made use of Gammapy \citep{gammapy:2023}, a community-developed core Python package. The Gammapy team
+  This work made use of Gammapy \citep{gammapy:2023}, a community-developed Python package. The Gammapy team
   acknowledges all Gammapy past and current contributors, as well as all contributors of the main Gammapy dependency
   libraries: NumPy, SciPy, Astropy, Astropy Regions, iminuit, Matplotlib.
 
