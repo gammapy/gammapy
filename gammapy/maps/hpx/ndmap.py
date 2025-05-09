@@ -428,7 +428,6 @@ class HpxNDMap(HpxMap):
         geom_cutout = self.geom.cutout(
             position=position, width=width, mode="trim", odd_npix=odd_npix
         )
-        # cutout_info = geom_cutout.cutout_slices(self.geom, mode="trim")
 
         if self.geom.is_allsky:
             idx = geom_cutout._ipix
@@ -436,8 +435,6 @@ class HpxNDMap(HpxMap):
             idx = self.geom.to_image().global_to_local((geom_cutout._ipix,))[0]
 
         data = self.quantity[..., idx]
-        # slices = cutout_info["parent-slices"]
-        # parent_slices = Ellipsis, slices[0], slices[1]
 
         return self.__class__.from_geom(
             geom=geom_cutout, data=data, unit=self.unit
