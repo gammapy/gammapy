@@ -12,6 +12,7 @@ TODO: before Gammapy v1.0, discuss what to do about ``gammapy.utils.regions``.
 Options: keep as-is, hide from the docs, or to remove it completely
 (if the functionality is available in ``astropy-regions`` directly.
 """
+
 import operator
 import numpy as np
 from scipy.optimize import Bounds, minimize
@@ -25,7 +26,7 @@ from regions import (
     RectangleSkyRegion,
     Regions,
     PolygonSkyRegion,
-    PolygonPixelRegion
+    PolygonPixelRegion,
 )
 
 from regions.core.pixcoord import PixCoord
@@ -142,10 +143,11 @@ def regions_to_compound_region(regions):
 
     return region_union
 
+
 def get_centroid(vertices):
     """Compute centroid of a polygon. Implicitly assumes a flat
     cartesian projection, will probably break for very large polygons.
-    
+
     Code comes from:
     https://stackoverflow.com/questions/75699024/finding-the-centroid-of-a-polygon-in-python
 
@@ -177,7 +179,8 @@ def get_centroid(vertices):
     # Get average of those centroids, weighted by the signed areas.
     centroid = np.average(centroids, axis=0, weights=signed_areas)
 
-    return SkyCoord(centroid[0]*u.deg, centroid[1]*u.deg, frame=vertices.frame)
+    return SkyCoord(centroid[0] * u.deg, centroid[1] * u.deg, frame=vertices.frame)
+
 
 class SphericalCircleSkyRegion(CircleSkyRegion):
     """Spherical circle sky region.
@@ -198,12 +201,13 @@ class SphericalCircleSkyRegion(CircleSkyRegion):
         separation = self.center.separation(skycoord)
         return separation < self.radius
 
+
 class PolygonPointsSkyRegion(PolygonSkyRegion):
     """Polygon sky region defined by a list of points."""
 
     def __init__(self, vertices, meta=None, visual=None):
         """Create a polygon sky region.
-        
+
         Parameters
         ----------
         vertices : `~astropy.coordinates.SkyCoord`
@@ -221,21 +225,27 @@ class PolygonPointsSkyRegion(PolygonSkyRegion):
     def to_pixel(self, wcs):
         """Convert to pixel region."""
         x, y = wcs.world_to_pixel(self.vertices)
-        center=None
+        center = None
         if self.center is not None:
             center, pixscale, _ = pixel_scale_angle_at_skycoord(self.center, wcs)
 
         vertices_pix = PixCoord(x, y)
-        return PolygonPointsPixelRegion(vertices_pix, center=center, meta=self.meta.copy(),
-                                  visual=self.visual.copy())
+        return PolygonPointsPixelRegion(
+            vertices_pix,
+            center=center,
+            meta=self.meta.copy(),
+            visual=self.visual.copy(),
+        )
+
 
 class PolygonPointsPixelRegion(PolygonPixelRegion):
     """Polygon pixel region defined by a list of points."""
 
-    def __init__(self, vertices, center=None, meta=None, visual=None,
-                origin=PixCoord(0, 0)):
+    def __init__(
+        self, vertices, center=None, meta=None, visual=None, origin=PixCoord(0, 0)
+    ):
         """Create a polygon pixel region.
-        
+
         Parameters
         ----------
         vertices : `~regions.PixCoord`
@@ -258,7 +268,7 @@ class PolygonPointsPixelRegion(PolygonPixelRegion):
 
     def to_sky(self, wcs):
         """Convert to sky region.
-        
+
         Parameters
         ----------
         wcs : `~astropy.wcs.WCS`
@@ -266,9 +276,10 @@ class PolygonPointsPixelRegion(PolygonPixelRegion):
 
         """
         vertices_sky = wcs.pixel_to_world(self.vertices.x, self.vertices.y)
-       
-        return PolygonPointsSkyRegion(vertices=vertices_sky, meta=self.meta.copy(), 
-                                      visual=self.visual.copy())
+
+        return PolygonPointsSkyRegion(
+            vertices=vertices_sky, meta=self.meta.copy(), visual=self.visual.copy()
+        )
 
     def rotate(self, center, angle):
         """
@@ -292,6 +303,7 @@ class PolygonPointsPixelRegion(PolygonPixelRegion):
         center = self.center.rotate(center, angle)
 
         return self.copy(vertices=vertices, center=center)
+
 
 def make_orthogonal_rectangle_sky_regions(start_pos, end_pos, wcs, height, nbin=1):
     """Utility returning an array of regions to make orthogonal projections.
