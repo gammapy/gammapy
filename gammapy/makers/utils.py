@@ -97,31 +97,47 @@ def _get_fov_coords(pointing, irf, geom, use_region_center=True, obstime=None):
     return coords
 
 
-def compute_rotation_time_step(rotation, pointing_altaz):
+def _compute_rotation_time_steps(time_start, time_stop, fov_rotation, pointing_altaz):
     """
-    Compute the time such that the FoV associated to a fixed RaDec position rotates by 'rotation' in AltAz frame.
+    Compute the time intervals between start and stop times, such that the FoV associated to a fixed RaDec position rotates
+    by 'fov_rotation' in AltAz frame during each time step.
     It assumes that the rotation rate at the provided pointing is a good estimate of the rotation rate over the full
     output duration (first order approximation).
 
 
     Parameters
     ----------
-    rotation : `~astropy.units.Quantity`
+    time_start : `~astropy.time.Time`
+        Start time
+    time_stop : `~astropy.time.Time`
+        Stop time
+    fov_rotation : `~astropy.units.Quantity`
         Rotation angle.
     pointing_altaz : `~astropy.coordinates.SkyCoord`
         Pointing direction.
 
     Returns
     -------
-    duration : `~astropy.units.Quantity`
-        Time associated with the requested rotation.
+    times : `~astropy.time.Time`
+        Times associated with the requested rotation.
     """
-    denom = (
-        EARTH_ANGULAR_VELOCITY
-        * np.cos(pointing_altaz.location.lat.rad)
-        * np.abs(np.cos(pointing_altaz.az.rad))
-    )
-    return rotation * np.cos(pointing_altaz.alt.rad) / denom
+
+    def _time_step(rotation, pnt_altaz):
+        denom = (
+            EARTH_ANGULAR_VELOCITY
+            * np.cos(pnt_altaz.location.lat.rad)
+            * np.abs(np.cos(pnt_altaz.az.rad))
+        )
+        return rotation * np.cos(pnt_altaz.alt.rad) / denom
+
+    time = time_start
+    times = [time]
+    while time < time_stop:
+        time_step = _time_step(fov_rotation, pointing_altaz.get_altaz(time))
+        time_step = max(time_step, MINIMUM_TIME_STEP)
+        time = min(time + time_step, time_stop)
+        times.append(time)
+    return Time(times)
 
 
 def make_map_exposure_true_energy(
@@ -308,22 +324,18 @@ def make_map_background_irf(
     #  obtain the RA DEC and time for each interval. This then considers that
     #  the pointing might change slightly over the observation duration
 
-    def _compute_intermediate_times(time_start, time_stop, pointing, fov_rotation_step):
-        """Compute intermediate time steps to account for FoV rotation.
+    # Compute intermediate time ranges if needed
+    times = Time([time_start, time_start + ontime])
 
-        Evaluate the step time needed to have a FoV rotation of fov_rotation_step
-        Minimum step of 1 second to avoid infinite computation very close to zenith
-        """
-        time = time_start
-        times = [time]
-        while time < time_stop:
-            time_step = compute_rotation_time_step(
-                fov_rotation_step, pointing.get_altaz(time)
+    if not bkg.has_offset_axis and bkg.fov_alignment == FoVAlignment.ALTAZ:
+        if not isinstance(pointing, FixedPointingInfo):
+            raise TypeError(
+                "make_map_background_irf requires FixedPointingInfo if "
+                "BackgroundIRF.fov_alignement is ALTAZ",
             )
-            time_step = max(time_step, MINIMUM_TIME_STEP)
-            time = min(time + time_step, time_stop)
-            times.append(time)
-        return Time(times)
+        times = _compute_rotation_time_steps(
+            time_start, time_start + ontime, fov_rotation_step, pointing
+        )
 
     # Get altaz coords for map
     if oversampling is not None:
@@ -338,28 +350,16 @@ def make_map_background_irf(
         image_geom = geom.to_image()
         d_omega = image_geom.solid_angle()
 
-    times = Time([time_start, time_start + ontime])
-    if not bkg.has_offset_axis and bkg.fov_alignment == FoVAlignment.ALTAZ:
-        if not isinstance(pointing, FixedPointingInfo):
-            raise TypeError(
-                "make_map_background_irf requires FixedPointingInfo if "
-                "BackgroundIRF.fov_alignement is ALTAZ",
-            )
-        times = _compute_intermediate_times(
-            time_start, time_start + ontime, pointing, fov_rotation_step
+    data = np.zeros(geom.data_shape)
+    for start, stop in zip(times[:-1], times[1:]):
+        npred = _integrate_bkg(
+            pointing, bkg, geom, start, stop, d_omega, use_region_center
         )
 
-    start, stop = times[0], times[1]
-    data = _integrate_bkg(pointing, bkg, geom, start, stop, d_omega, use_region_center)
-    if len(times) > 2:
-        for start, stop in zip(times[1:-1], times[2:]):
-            data += _integrate_bkg(
-                pointing, bkg, geom, start, stop, d_omega, use_region_center
-            )
-
-    if not use_region_center:
-        region_coord, weights = geom.get_wcs_coord_and_weights()
-        data = np.sum(weights * data, axis=2, keepdims=True)
+        if not use_region_center:
+            region_coord, weights = geom.get_wcs_coord_and_weights()
+            npred = np.sum(weights * npred, axis=2, keepdims=True)
+        data += npred
 
     bkg_map = Map.from_geom(geom, data=data)
 

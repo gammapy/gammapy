@@ -333,31 +333,32 @@ def test_make_map_background_irf_skycoord(fixed_pointing_info_aligned):
 
 @requires_data()
 def test_make_map_background_irf_altaz_align(fixed_pointing_info):
-    axis = MapAxis.from_edges([0.1, 1, 10], name="energy", unit="TeV", interp="log")
+    def _get_geom(pnt_info, time):
+        axis = MapAxis.from_edges([0.1, 1, 10], name="energy", unit="TeV", interp="log")
+
+        return WcsGeom.create(
+            npix=(10, 10),
+            binsz=0.1,
+            axes=[axis],
+            skydir=pnt_info.get_icrs(time),
+        )
+
     obstime = Time("2020-01-01T20:00:00")
+
     map_long_altaz = make_map_background_irf(
         pointing=fixed_pointing_info,
         ontime="42000 s",
         bkg=bkg_3d_custom("asymmetric", "ALTAZ"),
-        geom=WcsGeom.create(
-            npix=(10, 10),
-            binsz=0.1,
-            axes=[axis],
-            skydir=fixed_pointing_info.get_icrs(obstime),
-        ),
+        geom=_get_geom(fixed_pointing_info, obstime),
         time_start=obstime,
         fov_rotation_step=20.0 * u.deg,
     )
+
     map_short_altaz = make_map_background_irf(
         pointing=fixed_pointing_info,
         ontime="42 s",
         bkg=bkg_3d_custom("asymmetric", "ALTAZ"),
-        geom=WcsGeom.create(
-            npix=(10, 10),
-            binsz=0.1,
-            axes=[axis],
-            skydir=fixed_pointing_info.get_icrs(obstime),
-        ),
+        geom=_get_geom(fixed_pointing_info, obstime),
         time_start=obstime + "20979 s",
         fov_rotation_step=20.0 * u.deg,
     )
@@ -365,12 +366,7 @@ def test_make_map_background_irf_altaz_align(fixed_pointing_info):
         pointing=fixed_pointing_info,
         ontime="42000 s",
         bkg=bkg_3d_custom("asymmetric", "RADEC"),
-        geom=WcsGeom.create(
-            npix=(10, 10),
-            binsz=0.1,
-            axes=[axis],
-            skydir=fixed_pointing_info.get_icrs(obstime),
-        ),
+        geom=_get_geom(fixed_pointing_info, obstime),
         time_start=obstime,
         fov_rotation_step=20.0 * u.deg,
     )
@@ -378,12 +374,7 @@ def test_make_map_background_irf_altaz_align(fixed_pointing_info):
         pointing=fixed_pointing_info,
         ontime="42 s",
         bkg=bkg_3d_custom("asymmetric", "ALTAZ"),
-        geom=WcsGeom.create(
-            npix=(10, 10),
-            binsz=0.1,
-            axes=[axis],
-            skydir=fixed_pointing_info.get_icrs(obstime),
-        ),
+        geom=_get_geom(fixed_pointing_info, obstime),
         time_start=obstime + "20979 s",
         fov_rotation_step=360.0 * u.deg,
     )
@@ -391,42 +382,35 @@ def test_make_map_background_irf_altaz_align(fixed_pointing_info):
         pointing=fixed_pointing_info,
         ontime="42000 s",
         bkg=bkg_3d_custom("asymmetric", "ALTAZ"),
-        geom=WcsGeom.create(
-            npix=(10, 10),
-            binsz=0.1,
-            axes=[axis],
-            skydir=fixed_pointing_info.get_icrs(obstime),
-        ),
+        geom=_get_geom(fixed_pointing_info, obstime),
         time_start=obstime,
         fov_rotation_step=360.0 * u.deg,
     )
     # Check that background normalisations are consistent
-    assert np.isclose(
-        np.sum(map_long_altaz.data), np.sum(map_long_radec.data), rtol=1e-2
-    )
+    assert_allclose(np.sum(map_long_altaz.data), np.sum(map_long_radec.data), rtol=1e-2)
     assert np.isclose(
         np.sum(map_long_altaz.data), 1000 * np.sum(map_short_altaz.data), rtol=1e-2
     )
     # Check that results differ when considering short and long observations with
     # AltAz aligned IRFs
-    assert not np.all(
-        np.isclose(map_long_altaz.data / map_short_altaz.data, 1000, rtol=1e-2)
+    assert_allclose(
+        map_long_altaz.data[0, 0, :4], [212869, 217493, 222208, 226608], rtol=1e-5
     )
+    assert_allclose(
+        map_short_altaz.data[0, 0, :4], [202.769, 209.814, 217.103, 224.646], rtol=1e-5
+    )
+
     # Check that results differ when considering RaDec or AltAz aligned IRFs
-    assert not np.all(
-        np.isclose(map_long_altaz.data / map_long_radec.data, 1, rtol=1e-2)
+    assert_allclose(
+        map_long_radec.data[0, 0, :4], [197029, 197029, 197029, 197029.0], rtol=1e-5
     )
-    assert not np.all(
-        np.isclose(map_long_radec.data / map_short_altaz.data, 1000, rtol=1e-2)
-    )
+
     # Check that results are independent of the observation duration with AltAz
     # aligned IRFs when the FoV rotation is ignored
-    assert np.all(
-        np.isclose(
-            map_altaz_long_norotation.data / map_short_altaz_norotation.data,
-            1000,
-            rtol=1e-5,
-        )
+    assert_allclose(
+        map_altaz_long_norotation.data,
+        map_short_altaz_norotation.data * 1000,
+        rtol=1e-5,
     )
 
 
