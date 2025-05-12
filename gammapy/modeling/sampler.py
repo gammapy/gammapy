@@ -59,7 +59,7 @@ class Sampler:
 
     Notes
     -----
-    If you are using the "UltraNet" library, please follow the citation scheme of this project:
+    If you are using the "UltraNest" library, please follow its citation scheme:
     `Cite UltraNest <https://johannesbuchner.github.io/UltraNest/issues.html#how-should-i-cite-ultranest>`__.
 
     """
