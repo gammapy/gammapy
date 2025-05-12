@@ -82,7 +82,7 @@ class Parameter:
      scan_min : float, optional
          Minimum value for the parameter scan. Overwrites scan_n_sigma.
          Default is None.
-     scan_max : float
+     scan_max : float, optional
          Maximum value for the parameter scan. Overwrites scan_n_sigma.
          Default is None.
      scan_n_values: int
