@@ -76,7 +76,7 @@ A demonstration of a Bayesian analysis using the nested sampling technique.
 # Tutorial <https://peterboorman.com/tutorial_bxa.html>`__.
 #
 #
-# **Note: please cite UltraNet is used for a paper**
+# **Note: please cite UltraNest if used for a paper**
 #
 # If you are using the "UltraNet" library for a paper, please follow the citation scheme of this project:
 # `Cite UltraNest < https: // johannesbuchner.github.io / UltraNest / issues.html  # how-should-i-cite-ultranest>`__.
