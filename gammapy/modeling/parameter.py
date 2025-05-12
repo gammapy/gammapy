@@ -79,7 +79,7 @@ class Parameter:
          Frozen (used in fitting).  Default is False.
      error : float, optional
          Parameter error. Default is 0.
-     scan_min : float
+     scan_min : float, optional
          Minimum value for the parameter scan. Overwrites scan_n_sigma.
          Default is None.
      scan_max : float
