@@ -322,6 +322,20 @@ def test_map_dataset_str(sky_model, geom, geom_etrue):
     assert "MapDataset" in str(dataset)
 
 
+def test_assign_incorrect_attributes(geom, sky_model):
+    dataset = MapDataset()
+    mask = Map.from_geom(geom, dtype="bool")
+
+    with pytest.raises(AttributeError):
+        dataset.fit_mask = mask
+
+    with pytest.raises(AttributeError):
+        dataset.model = sky_model
+
+    dataset._private = 3
+    assert dataset._private == 3
+
+
 @requires_data()
 def test_map_dataset_to_asimov(sky_model, geom, geom_etrue):
     dataset = get_map_dataset(geom, geom_etrue)
