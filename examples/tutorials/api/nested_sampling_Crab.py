@@ -78,7 +78,7 @@ A demonstration of a Bayesian analysis using the nested sampling technique.
 #
 # **Note: please cite UltraNest if used for a paper**
 #
-# If you are using the "UltraNet" library for a paper, please follow the citation scheme of this project:
+# If you are using the "UltraNest" library for a paper, please follow its citation scheme:
 # `Cite UltraNest < https: // johannesbuchner.github.io / UltraNest / issues.html  # how-should-i-cite-ultranest>`__.
 #
 #
