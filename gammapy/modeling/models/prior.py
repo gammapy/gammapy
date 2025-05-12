@@ -213,7 +213,7 @@ class LogUniformPrior(Prior):
     min : float
         Minimum value. Default is 1e-14.
     max : float
-        maximum value. Default is 1e-10.
+        Maximum value. Default is 1e-10.
     """
 
     tag = ["LogUniformPrior"]
