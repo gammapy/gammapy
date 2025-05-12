@@ -57,6 +57,11 @@ class Sampler:
     --------
     For a usage example, see :doc:`/tutorials/api/nested_sampling_Crab` tutorial.
 
+    Notes
+    -----
+    If you are using the "UltraNest" library, please follow its citation scheme:
+    `Cite UltraNest <https://johannesbuchner.github.io/UltraNest/issues.html#how-should-i-cite-ultranest>`__.
+
     """
 
     # TODO: add "zeusmc", "emcee"

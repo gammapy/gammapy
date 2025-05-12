@@ -71,11 +71,17 @@ A demonstration of a Bayesian analysis using the nested sampling technique.
 # leading package in Astronomy (already used in Cosmology and in
 # X-rays).
 # For a nice visualisation of the NS method see here : `sampling
-# visulisation <https://johannesbuchner.github.io/UltraNest/method.html#visualisation>`__.
+# visualisation <https://johannesbuchner.github.io/UltraNest/method.html#visualisation>`__.
 # And for a tutorial of UltraNest applied to X-ray fitting with concrete examples and questions see : `BXA
 # Tutorial <https://peterboorman.com/tutorial_bxa.html>`__.
 #
-
+#
+# **Note: please cite UltraNest if used for a paper**
+#
+# If you are using the "UltraNest" library for a paper, please follow its citation scheme:
+# `Cite UltraNest < https: // johannesbuchner.github.io / UltraNest / issues.html  # how-should-i-cite-ultranest>`__.
+#
+#
 
 ######################################################################
 # Proposed approach
