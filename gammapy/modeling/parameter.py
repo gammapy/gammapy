@@ -96,7 +96,7 @@ class Parameter:
          Method used to set ``factor`` and ``scale``. Default is "scale10".
      interp : {"lin", "sqrt", "log"}
          Parameter scaling to use for the scan. Default is "lin".
-     prior : `~gammapy.modeling.models.Prior`
+     prior : `~gammapy.modeling.models.Prior`, optional
          Prior set on the parameter. Default is None.
     """
 
