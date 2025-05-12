@@ -12,7 +12,7 @@ A demonstration of a Bayesian analysis using the nested sampling technique.
 # -------
 #
 # 1. Bayesian analysis
-# ~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~~~~~~~~~
 #
 # Bayesian inference uses prior knowledge, in the form of a prior
 # distribution, in order to estimate posterior probabilities which we
@@ -23,7 +23,7 @@ A demonstration of a Bayesian analysis using the nested sampling technique.
 # complex to estimate with a maximum likelihood approach.
 #
 # 2. Limitations of the Markov Chain Monte Carlo approach
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # A well-known approach to estimate this posterior distribution is the
 # Markov Chain Monte Carlo (MCMC). This uses an ensemble of walkers to
@@ -39,13 +39,13 @@ A demonstration of a Bayesian analysis using the nested sampling technique.
 # not guaranteed.
 #
 # 3. Nested sampling approach
-# ~~~~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # To overcome these issues, the nested sampling (NS) algorithm has
 # gained traction in physics and astronomy. It is a Monte Carlo
 # algorithm for computing an integral of the likelihood function over
 # the prior model parameter space introduced in
-# `John Skilling, 2004 <https://ui.adsabs.harvard.edu/abs/2004AIPC..735..395S>`__.
+# `Skilling, 2004 <https://ui.adsabs.harvard.edu/abs/2004AIPC..735..395S>`__.
 # The method performs this integral by evolving a collection of points
 # through the parameter space (see recent reviews from `Ashton et al.,
 # 2022 <https://ui.adsabs.harvard.edu/abs/2022NRvMP...2...39A>`__, and
@@ -134,7 +134,7 @@ for id in ["23526", "23559", "23592"]:
 # simplicity.
 #
 
-model = SkyModel.create(spectral_model="pl")
+model = SkyModel.create(spectral_model="pl", name="crab")
 
 
 ######################################################################
@@ -157,7 +157,7 @@ model = SkyModel.create(spectral_model="pl")
 model.spectral_model.amplitude.prior = LogUniformPrior(min=1e-12, max=1e-10)
 model.spectral_model.index.prior = UniformPrior(min=1, max=5)
 datasets.models = [model]
-datasets.models
+print(datasets.models)
 
 
 ######################################################################
@@ -176,7 +176,8 @@ datasets.models
 #    slower. To test the Prior boundaries and for debugging, a lower
 #    number (~100) can be used before a production run with more points
 #    (~400 or more).
-# -  `frac_remain`: the cut-off condition for the integration, set by the maximum allowed fraction of posterior mass left in the live points vs the dead points. High
+# -  `frac_remain`: the cut-off condition for the integration, set by the maximum
+#    allowed fraction of posterior mass left in the live points vs the dead points. High
 #    values (e.g., 0.5) are faster and can be used if the posterior
 #    distribution is a relatively simple shape. A low value (1e-1, 1e-2)
 #    is optimal for finding peaks, but slower.
@@ -222,17 +223,15 @@ result_joint = sampler.run(datasets)
 #
 # `Z=-68.8(0.53%) | Like=-63.96..-58.75 [-63.9570..-63.9539]*| it/evals=640/1068 eff=73.7327% N=300`
 #
-# Some important information here is :
+# Some important information here is:
 #
-# -  Progress (0.53%) :
-# The completed fraction of the integral. This is not a time progress bar.
-# Stays at zero for a good fraction of the run.
+# -  Progress (0.53%): the completed fraction of the integral. This is not a time progress bar.
+#    Stays at zero for a good fraction of the run.
 #
-# -  Efficiency (eff value) of the sampling.
-# This indicates out of the proposed new points,
-# how many were accepted. If your efficiency is too small (<<1%), maybe
-# you should revise your priors (e.g. a LogUniform prior for the
-# normalisation).
+# -  Efficiency (eff value) of the sampling: this indicates out of the proposed new points,
+#    how many were accepted. If your efficiency is too small (<<1%), maybe
+#    you should revise your priors (e.g use a LogUniform prior for the
+#    normalisation).
 #
 # **Final outputs**
 #
@@ -247,14 +246,15 @@ result_joint = sampler.run(datasets)
 # used for model comparison.
 # For more information see : `on the use of the evidence for model comparison
 # <https://ned.ipac.caltech.edu/level5/Sept13/Trotta/Trotta4.html>`__.
-# An interesting comparison of the efficiency and false discovery rate of model selection with deltaLogLike and deltaLogZ
-# is given in Appendix C of `Buchner et al. 2014 <https://ui.adsabs.harvard.edu/abs/2014A%2526A...564A.125B%252F/>`__.
+# An interesting comparison of the efficiency and false discovery rate of
+# model selection with deltaLogLike and deltaLogZ is given in Appendix C of
+# `Buchner et al., 2014 <https://ui.adsabs.harvard.edu/abs/2014A%2526A...564A.125B%252F/>`__.
 #
 # **Results stored on disk**
 #
 # if `log_dir` is set to a name where the results will be stored, then
 # a directory is created containing many useful results and plots.
-# A description of these outputes is given `here in Ultranest
+# A description of these outputs is given in the `Ultranest
 # docs <https://johannesbuchner.github.io/UltraNest/performance.html#output-files>`__.
 #
 
@@ -282,7 +282,7 @@ result_joint = sampler.run(datasets)
 # the posterior distributions.
 #
 
-result_joint.models
+print(result_joint.models)
 
 
 ######################################################################
@@ -291,7 +291,7 @@ result_joint.models
 # be found in :
 #
 
-result_joint.sampler_results["posterior"]
+print(result_joint.sampler_results["posterior"])
 
 
 ######################################################################
@@ -303,11 +303,11 @@ result_joint.sampler_results["posterior"]
 # For a physical example see this
 # `example <https://arxiv.org/abs/2205.00009>`__.
 #
-# The `~gammapy.modeling.SamplerResult` dictionnary contains also other interesting
+# The `~gammapy.modeling.SamplerResult` dictionary contains also other interesting
 # information :
 #
 
-result_joint.sampler_results.keys()
+print(result_joint.sampler_results.keys())
 
 
 ######################################################################

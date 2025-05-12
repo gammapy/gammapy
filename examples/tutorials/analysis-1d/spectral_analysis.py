@@ -231,7 +231,7 @@ print(datasets)
 ######################################################################
 # The data reduction loop can also be performed through the
 # `~gammapy.makers.DatasetsMaker` class that take a list of makers as input,
-# as described :doc:`here <tutorials/api/makers.html>`
+# as described :doc:`here </tutorials/api/makers>`
 
 
 ######################################################################
