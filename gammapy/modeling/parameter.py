@@ -85,7 +85,7 @@ class Parameter:
      scan_max : float, optional
          Maximum value for the parameter scan. Overwrites scan_n_sigma.
          Default is None.
-     scan_n_values: int
+     scan_n_values: int, optional
          Number of values to be used for the parameter scan. Default is 11.
      scan_n_sigma : int
          Number of sigmas to scan. Default is 2.
