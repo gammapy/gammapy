@@ -92,7 +92,7 @@ class Parameter:
      scan_values: `numpy.array`
          Scan values. Overwrites all the scan keywords before.
          Default is None.
-     scale_method : {'scale10', 'factor1', None}
+     scale_method : {'scale10', 'factor1', None}, optional
          Method used to set ``factor`` and ``scale``. Default is "scale10".
      interp : {"lin", "sqrt", "log"}, optional
          Parameter scaling to use for the scan. Default is "lin".
