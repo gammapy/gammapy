@@ -211,7 +211,7 @@ class LogUniformPrior(Prior):
     Parameters
     ----------
     min : float
-        minimum value. Default is 1e-14.
+        Minimum value. Default is 1e-14.
     max : float
         maximum value. Default is 1e-10.
     """
