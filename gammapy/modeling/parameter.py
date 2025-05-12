@@ -77,7 +77,7 @@ class Parameter:
          Maximum (sometimes used in fitting). Default is `np.nan`.
     frozen : bool, optional
          Frozen (used in fitting).  Default is False.
-     error : float
+     error : float, optional
          Parameter error. Default is 0.
      scan_min : float
          Minimum value for the parameter scan. Overwrites scan_n_sigma.
