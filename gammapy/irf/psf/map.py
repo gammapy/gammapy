@@ -13,7 +13,6 @@ from gammapy.utils.units import energy_unit_format
 from ..core import IRFMap
 from .core import PSF
 from .kernel import PSFKernel
-from gammapy.utils.deprecation import deprecated_renamed_argument
 
 __all__ = ["PSFMap", "RecoPSFMap"]
 
@@ -449,7 +448,6 @@ class PSFMap(IRFMap):
         )
         return cls(psf_map=psf_map, exposure_map=exposure_map)
 
-    @deprecated_renamed_argument("spectrum", "spectral_model", "v1.3")
     def to_image(self, spectral_model=None, keepdims=True):
         """Reduce to a 2D map after weighing with the associated exposure and a spectrum.
 
