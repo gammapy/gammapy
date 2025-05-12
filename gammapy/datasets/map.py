@@ -487,6 +487,20 @@ class MapDataset(Dataset):
     MapDatasetOnOff, SpectrumDataset, FluxPointsDataset.
     """
 
+    _valid_attrs = {
+        "counts",
+        "exposure",
+        "edisp",
+        "background",
+        "psf",
+        "models",
+        "mask_fit",
+        "mask_safe",
+        "gti",
+        "meta",
+        "meta_table",
+    }
+
     tag = "MapDataset"
     counts = LazyFitsData(cache=True)
     exposure = LazyFitsData(cache=True)
@@ -2541,6 +2555,7 @@ class MapDatasetOnOff(MapDataset):
 
     """
 
+    _valid_attrs = {"counts_off", "acceptance", "acceptance_off"}
     tag = "MapDatasetOnOff"
 
     def __init__(

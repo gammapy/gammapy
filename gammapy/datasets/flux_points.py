@@ -120,6 +120,14 @@ class FluxPointsDataset(Dataset):
     ``gammapy download datasets --tests --out $GAMMAPY_DATA``
     """
 
+    _valid_attrs = {
+        "models",
+        "data",
+        "mask_fit",
+        "mask_safe",
+        "meta_table",
+        "stat_kwargs",
+    }
     tag = "FluxPointsDataset"
 
     def __init__(
