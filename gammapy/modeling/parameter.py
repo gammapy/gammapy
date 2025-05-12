@@ -89,7 +89,7 @@ class Parameter:
          Number of values to be used for the parameter scan. Default is 11.
      scan_n_sigma : int, optional
          Number of sigmas to scan. Default is 2.
-     scan_values: `numpy.array`
+     scan_values: `numpy.array`, optional
          Scan values. Overwrites all the scan keywords before.
          Default is None.
      scale_method : {'scale10', 'factor1', None}, optional
