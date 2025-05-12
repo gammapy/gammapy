@@ -179,7 +179,7 @@ class UniformPrior(Prior):
     min : float, optional
         Minimum value.
         Default is -`np.inf`.
-    max : float
+    max : float, optional
         Maxmimum value.
         Default is `np.inf`.
     """
