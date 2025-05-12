@@ -225,7 +225,7 @@ class SpectralModel(ModelBase):
         ).squeeze()
 
     def evaluate_error(self, energy, epsilon=1e-4, n_samples=3500, random_state=42):
-        """Evaluate spectral model error from parameter distribtuion sampling.
+        """Evaluate spectral model error from parameter distribution sampling.
 
         Parameters
         ----------
@@ -234,23 +234,23 @@ class SpectralModel(ModelBase):
         epsilon : float, optional
             Step size of the gradient evaluation. Given as a
             fraction of the parameter error. Default is 1e-4.
-            Deprecated in v2.0 and unsued.
+            Deprecated in v2.0 and unused.
         n_samples : int, optional
             Number of samples to generate per parameter. Default is 3500.
         random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
-                Defines random number generator initialisation.
-                Passed to `~gammapy.utils.random.get_random_state`. Default is 42.
+            Defines random number generator initialisation.
+            Passed to `~gammapy.utils.random.get_random_state`. Default is 42.
 
         Returns
         -------
-        dnde, dnde_errn , dnde_errp: tuple of `~astropy.units.Quantity`
+        dnde, dnde_errn , dnde_errp : tuple of `~astropy.units.Quantity`
             Median, negative and positive errors
             on the differential flux at the given energy.
 
         """
         if epsilon != 1e-4:  # TODO: remove in v2.1
             warnings.warn(
-                "epsilon is unsed and deprecated in v2.0",
+                "epsilon is unused and deprecated in v2.0",
                 GammapyDeprecationWarning,
                 stacklevel=2,
             )
@@ -338,7 +338,7 @@ class SpectralModel(ModelBase):
         epsilon : float, optional
             Step size of the gradient evaluation. Given as a
             fraction of the parameter error. Default is 1e-4.
-            Deprecated in v2.0 and unsued.
+            Deprecated in v2.0 and unused.
         n_samples : int, optional
             Number of samples to generate per parameter. Default is 3500.
 
@@ -352,7 +352,7 @@ class SpectralModel(ModelBase):
 
         if epsilon != 1e-4:  # TODO: remove in v2.1
             warnings.warn(
-                "epsilon is unsed and deprecated in v2.0",
+                "epsilon is unused and deprecated in v2.0",
                 GammapyDeprecationWarning,
                 stacklevel=2,
             )
@@ -403,7 +403,7 @@ class SpectralModel(ModelBase):
         epsilon : float, optional
             Step size of the gradient evaluation. Given as a
             fraction of the parameter error. Default is 1e-4.
-            Deprecated in v2.0 and unsued.
+            Deprecated in v2.0 and unused.
         n_samples : int, optional
             Number of samples to generate per parameter. Default is 3500.
 
@@ -416,7 +416,7 @@ class SpectralModel(ModelBase):
 
         if epsilon != 1e-4:  # TODO: remove in v2.1
             warnings.warn(
-                "epsilon is unsed and deprecated in v2.0",
+                "epsilon is unused and deprecated in v2.0",
                 GammapyDeprecationWarning,
                 stacklevel=2,
             )
@@ -713,13 +713,13 @@ class SpectralModel(ModelBase):
 
         Returns
         -------
-        index, index_errn, index_errp: tuple of float
+        index, index_errn, index_errp : tuple of float
             Median, negative, and positive error on the spectral index.
         """
 
         if epsilon != 1e-5:  # TODO: remove in v2.1
             warnings.warn(
-                "epsilon is unsed and deprecated in v2.0",
+                "epsilon is unused and deprecated in v2.0",
                 GammapyDeprecationWarning,
                 stacklevel=2,
             )
