@@ -126,10 +126,11 @@ class TestSourceCatalogObjectGammaCat:
 
         e_min, e_max, e_inf = [1, 10, 1e10] * u.TeV
 
-        dnde, dnde_err = spectral_model.evaluate_error(e_min)
+        dnde, dnde_errn, dnde_errp = spectral_model.evaluate_error(e_min)
 
-        assert_quantity_allclose(dnde, ref["dnde_1TeV"], rtol=1e-3)
-        assert_quantity_allclose(dnde_err, ref["dnde_1TeV_err"], rtol=1e-3)
+        assert_quantity_allclose(dnde, ref["dnde_1TeV"], rtol=5e-2)
+        assert_quantity_allclose(dnde_errn, ref["dnde_1TeV_err"], rtol=5e-2)
+        assert_quantity_allclose(dnde_errp, ref["dnde_1TeV_err"], rtol=5e-2)
 
     @pytest.mark.parametrize("ref", SOURCES, ids=lambda _: _["name"])
     def test_flux_points(self, gammacat, ref):

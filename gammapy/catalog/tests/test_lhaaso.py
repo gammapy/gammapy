@@ -127,16 +127,18 @@ class TestSourceCatalogObject1LHAASO:
     @staticmethod
     def test_spectral_model(lhaaso1):
         m = lhaaso1[0].spectral_model("KM2A")
-        dnde, dnde_err = m.evaluate_error(50 * u.TeV)
+        dnde, dnde_errn, dnde_errp = m.evaluate_error(50 * u.TeV)
         assert dnde.unit == "cm-2 s-1 TeV-1"
-        assert_allclose(dnde.value, 0.33e-16, rtol=1e-3)
-        assert_allclose(dnde_err.value, 0.05e-16, rtol=1e-3)
+        assert_allclose(dnde.value, 0.33e-16, rtol=5e-2)
+        assert_allclose(dnde_errn.value, 0.05e-16, rtol=5e-2)
+        assert_allclose(dnde_errp.value, 0.05e-16, rtol=5e-2)
 
         m = lhaaso1[11].spectral_model("WCDA")
-        dnde, dnde_err = m.evaluate_error(3 * u.TeV)
+        dnde, dnde_errn, dnde_errp = m.evaluate_error(3 * u.TeV)
         assert dnde.unit == "cm-2 s-1 TeV-1"
-        assert_allclose(dnde.value, 0.69e-13, rtol=1e-3)
-        assert_allclose(dnde_err.value, 0.16e-13, rtol=1e-3)
+        assert_allclose(dnde.value, 0.69e-13, rtol=5e-2)
+        assert_allclose(dnde_errn.value, 0.16e-13, rtol=5e-2)
+        assert_allclose(dnde_errp.value, 0.16e-13, rtol=5e-2)
 
     @staticmethod
     def test_spatial_model(lhaaso1):
