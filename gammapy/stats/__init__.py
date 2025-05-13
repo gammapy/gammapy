@@ -15,12 +15,7 @@ from .fit_statistics import (
     WStatFitStatistic,
     WeightedCashFitStatistic,
 )
-from .fit_statistics_jit import (
-    weighted_cash_sum_jit,
-    cash_sum_jit,
-    f_cash_root_jit,
-    norm_bounds_jit,
-)
+
 from .variability import (
     TimmerKonig_lightcurve_simulator,
     compute_chisq,
@@ -43,13 +38,10 @@ FIT_STATISTICS_REGISTRY = {
 
 __all__ = [
     "cash",
-    "cash_sum_jit",
     "CashCountsStatistic",
     "cstat",
-    "f_cash_root_jit",
     "get_wstat_gof_terms",
     "get_wstat_mu_bkg",
-    "norm_bounds_jit",
     "wstat",
     "WStatCountsStatistic",
     "compute_fvar",
