@@ -2,6 +2,7 @@
 """Spectral models for Gammapy."""
 
 import logging
+import warnings
 import operator
 import os
 from pathlib import Path
@@ -28,6 +29,7 @@ from gammapy.utils.interpolation import (
 from gammapy.utils.roots import find_roots
 from gammapy.utils.scripts import make_path
 from gammapy.utils.random import get_random_state
+from gammapy.utils.deprecation import GammapyDeprecationWarning
 from ..covariance import CovarianceMixin
 from .core import ModelBase
 
