@@ -2,9 +2,9 @@
 """Spectral models for Gammapy."""
 
 import logging
+import warnings
 import operator
 import os
-import warnings
 from pathlib import Path
 import numpy as np
 import scipy.optimize
@@ -21,7 +21,6 @@ from gammapy.maps import MapAxis, RegionNDMap
 from gammapy.maps.axes import UNIT_STRING_FORMAT
 from gammapy.modeling import Parameter, Parameters
 from gammapy.utils.compat import COPY_IF_NEEDED
-from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.utils.integrate import trapz_loglog
 from gammapy.utils.interpolation import (
     ScaledRegularGridInterpolator,
@@ -30,6 +29,7 @@ from gammapy.utils.interpolation import (
 from gammapy.utils.roots import find_roots
 from gammapy.utils.scripts import make_path
 from gammapy.utils.random import get_random_state
+from gammapy.utils.deprecation import GammapyDeprecationWarning
 from ..covariance import CovarianceMixin
 from .core import ModelBase
 
@@ -1500,12 +1500,6 @@ class ExpCutoffPowerLawNormSpectralModel(SpectralModel):
     def __init__(
         self, index=None, norm=None, reference=None, lambda_=None, alpha=None, **kwargs
     ):
-        if index is None:
-            warnings.warn(
-                "The default index value changed from 1.5 to 0 since v1.3",
-                GammapyDeprecationWarning,
-            )
-
         if norm is not None:
             kwargs.update({"norm": norm})
         if index is not None:
