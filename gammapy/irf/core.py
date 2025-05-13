@@ -309,7 +309,7 @@ class IRF(metaclass=abc.ABCMeta):
     def _mask_out_bounds(invalid):
         return np.any(invalid, axis=0)
 
-    def integrate_log_log(self, axis_name, **kwargs):
+    def integrate_log_log(self, axis_name, method="linear", **kwargs):
         """Integrate along a given axis.
 
         This method uses log-log trapezoidal integration.
@@ -327,7 +327,8 @@ class IRF(metaclass=abc.ABCMeta):
             Returns 2D array with axes offset.
         """
         axis = self.axes.index(axis_name)
-        data = self.evaluate(**kwargs, method="linear")
+        #        method = kwargs.pop("method", "linear")
+        data = self.evaluate(**kwargs, method=method)
         values = kwargs[axis_name]
         return trapz_loglog(data, values, axis=axis)
 
