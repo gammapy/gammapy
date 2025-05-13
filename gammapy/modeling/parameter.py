@@ -72,9 +72,9 @@ class Parameter:
      unit : `~astropy.units.Unit` or str, optional
          Unit. Default is "".
      min : float, str or `~astropy.units.quantity`, optional
-         Minimum (sometimes used in fitting). If `None`, set to `np.nan`. Default is None.
+         Minimum (sometimes used in fitting). If `None`, set to `numpy.nan`. Default is None.
      max : float, str or `~astropy.units.quantity`, optional
-         Maximum (sometimes used in fitting). Default is `np.nan`.
+         Maximum (sometimes used in fitting). Default is `numpy.nan`.
     frozen : bool, optional
          Frozen (used in fitting).  Default is False.
      error : float
