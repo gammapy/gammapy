@@ -75,10 +75,10 @@ class Covariance:
 
         npars = len(parameters)
 
-        if not matrix.shape == (npars, npars):
-            matrix = cls._expand_factor_matrix(matrix, parameters)
-
         if npars > 0:
+            if not matrix.shape == (npars, npars):
+                matrix = cls._expand_factor_matrix(matrix, parameters)
+
             df = np.diag(
                 [p._inverse_transform_derivative(p.factor) for p in parameters]
             )

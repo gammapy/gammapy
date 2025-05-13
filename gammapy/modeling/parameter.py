@@ -323,7 +323,7 @@ class Parameter:
     @scale_transform.setter
     def scale_transform(self, val):
         if val not in ["lin", "log", "sqrt"]:
-            raise ValueError(f"Invalid interp: {val}")
+            raise ValueError(f"Invalid transform: {val}")
         self.reset_autoscale()
         self._scale_transform = val
 
