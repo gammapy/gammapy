@@ -225,9 +225,7 @@ class PolygonPointsSkyRegion(PolygonSkyRegion):
     def to_pixel(self, wcs):
         """Convert to pixel region."""
         x, y = wcs.world_to_pixel(self.vertices)
-        center = None
-        if self.center is not None:
-            center, pixscale, _ = pixel_scale_angle_at_skycoord(self.center, wcs)
+        center, _, _ = pixel_scale_angle_at_skycoord(self.center, wcs)
 
         vertices_pix = PixCoord(x, y)
         return PolygonPointsPixelRegion(
@@ -241,9 +239,7 @@ class PolygonPointsSkyRegion(PolygonSkyRegion):
 class PolygonPointsPixelRegion(PolygonPixelRegion):
     """Polygon pixel region defined by a list of points."""
 
-    def __init__(
-        self, vertices, center=None, meta=None, visual=None, origin=PixCoord(0, 0)
-    ):
+    def __init__(self, vertices, center=None, meta=None, visual=None, origin=None):
         """Create a polygon pixel region.
 
         Parameters
@@ -257,8 +253,12 @@ class PolygonPointsPixelRegion(PolygonPixelRegion):
         visual : `~regions.RegionVisual`, optional
             Region visual meta data.
         origin : `~regions.PixCoord`, optional
-            Origin of the region.
+            Origin of the region. Default is `PixCoord(0, 0)`
         """
+
+        if origin is None:
+            origin = PixCoord(0, 0)
+
         self._vertices = vertices
         self.meta = meta or RegionMeta()
         self.visual = visual or RegionVisual()
