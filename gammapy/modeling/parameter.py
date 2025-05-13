@@ -856,14 +856,14 @@ class PriorParameter(Parameter):
     --------
     For a usage example see :doc:`/tutorials/api/priors` tutorial.
 
-     Parameters
-     ----------
-     name : str
-         Name.
-     value : float or `~astropy.units.Quantity`
-         Value.
-     unit : `~astropy.units.Unit` or str, optional
-         Unit. Default is "".
+    Parameters
+    ----------
+    name : str
+        Name.
+    value : float or `~astropy.units.Quantity`
+        Value.
+    unit : `~astropy.units.Unit` or str, optional
+        Unit. Default is "".
     """
 
     def __init__(
