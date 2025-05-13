@@ -405,9 +405,6 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         filename = make_path(filename)
         if format is None:
             with fits.open(filename) as hdulist:
-                # Check if the file is empty
-                if len(hdulist) == 0:
-                    raise ValueError(f"File {filename} is empty")
                 # Check for extensions in OGIP format
                 if "SPECTRUM" in hdulist and "OGIP" in hdulist["SPECTRUM"].header["HDUCLASS"]:
                     format = "ogip"
@@ -416,6 +413,8 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
                     format = "gadf"
                     if 'REGION' not in hdulist:
                         raise ValueError(f"File {filename} is not a GADF spectrum, but a GADF map")
+                else:
+                    raise ValueError(f"Cannot determine format of {filename}")
 
         if format == "gadf":
             return super().read(filename, format="gadf", checksum=checksum, name=name, **kwargs)
