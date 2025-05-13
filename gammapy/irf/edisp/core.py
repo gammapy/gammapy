@@ -9,7 +9,6 @@ from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from matplotlib.colors import PowerNorm
 from gammapy.maps import MapAxes, MapAxis, RegionGeom
-from gammapy.utils.deprecation import deprecated_renamed_argument
 from gammapy.visualization.utils import add_colorbar
 from ..core import IRF
 
@@ -131,12 +130,6 @@ class EnergyDispersion2D(IRF):
             data=data.value,
         )
 
-    @deprecated_renamed_argument(
-        ["energy_true", "energy"],
-        ["energy_axis_true", "energy_axis"],
-        ["v1.3", "v1.3"],
-        arg_in_kwargs=True,
-    )
     def to_edisp_kernel(self, offset, energy_axis_true=None, energy_axis=None):
         """Detector response R(Delta E_reco, Delta E_true).
 

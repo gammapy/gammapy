@@ -79,7 +79,7 @@ A demonstration of a Bayesian analysis using the nested sampling technique.
 # **Note: please cite UltraNest if used for a paper**
 #
 # If you are using the "UltraNest" library for a paper, please follow its citation scheme:
-# `Cite UltraNest < https: // johannesbuchner.github.io / UltraNest / issues.html  # how-should-i-cite-ultranest>`__.
+# `Cite UltraNest <https://johannesbuchner.github.io/UltraNest/issues.html#how-should-i-cite-ultranest>`__.
 #
 #
 
@@ -188,6 +188,10 @@ print(datasets.models)
 #    distribution is a relatively simple shape. A low value (1e-1, 1e-2)
 #    is optimal for finding peaks, but slower.
 # -  `log_dir`: directory where the output files will be stored.
+#    If set to None, no files will be written. If set to a string, a directory
+#    will be created containing the ongoing status of the run and final results.
+#    For time consuming analysis, it is highly recommended to use that option to monitor
+#    the run and restart it in case of a crash (with `resume=True`).
 #
 # **Important note:** unlike the MCMC method, you don’t need to define the
 # number of steps for which the sampler will run. The algorithm will
