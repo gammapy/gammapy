@@ -147,6 +147,9 @@ def test_parameter_scale_transform_change():
     assert_allclose(par.factor, 10)
     assert_allclose(par.scale, 1)
 
+    with pytest.raises(ValueError):
+        par.scale_transform = "invalid"
+
 
 @pytest.fixture()
 def pars():
