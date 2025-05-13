@@ -178,10 +178,10 @@ class UniformPrior(Prior):
     ----------
     min : float
         Minimum value.
-        Default is -`np.inf`.
+        Default is -`numpy.inf`.
     max : float
-        Maxmimum value.
-        Default is `np.inf`.
+        Maximum value.
+        Default is `numpy.inf`.
     """
 
     tag = ["UniformPrior"]
