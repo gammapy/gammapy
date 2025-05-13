@@ -179,7 +179,7 @@ class UniformPrior(Prior):
     min : float, optional
         Minimum value.
         Default is -`numpy.inf`.
-    max : float
+    max : float, optional
         Maximum value.
         Default is `numpy.inf`.
     """

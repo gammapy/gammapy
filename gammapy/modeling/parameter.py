@@ -47,57 +47,57 @@ def _get_parameters_str(parameters):
 class Parameter:
     """A model parameter.
 
-     Note that the parameter value has been split into
-     a factor and scale like this::
+    Note that the parameter value has been split into
+    a factor and scale like this::
 
-         value = factor x scale
+        value = factor x scale
 
-     Users should interact with the ``value``, ``quantity``
-     or ``min`` and ``max`` properties and consider the fact
-     that there is a ``factor`` and ``scale`` an implementation detail.
+    Users should interact with the ``value``, ``quantity``
+    or ``min`` and ``max`` properties and consider the fact
+    that there is a ``factor`` and ``scale`` an implementation detail.
 
-     That was introduced for numerical stability in parameter and error
-     estimation methods, only in the Gammapy optimiser interface do we
-     interact with the ``factor``, ``factor_min`` and ``factor_max`` properties,
-     i.e. the optimiser "sees" the well-scaled problem.
+    That was introduced for numerical stability in parameter and error
+    estimation methods, only in the Gammapy optimiser interface do we
+    interact with the ``factor``, ``factor_min`` and ``factor_max`` properties,
+    i.e. the optimiser "sees" the well-scaled problem.
 
-     Parameters
-     ----------
-     name : str
-         Name.
-     value : float or `~astropy.units.Quantity`
-         Value.
-     scale : float, optional
-         Scale (sometimes used in fitting).
-     unit : `~astropy.units.Unit` or str, optional
-         Unit. Default is "".
-     min : float, str or `~astropy.units.quantity`, optional
-         Minimum (sometimes used in fitting). If `None`, set to `numpy.nan`. Default is None.
-     max : float, str or `~astropy.units.quantity`, optional
-         Maximum (sometimes used in fitting). Default is `numpy.nan`.
+    Parameters
+    ----------
+    name : str
+        Name.
+    value : float or `~astropy.units.Quantity`
+        Value.
+    scale : float, optional
+        Scale (sometimes used in fitting).
+    unit : `~astropy.units.Unit` or str, optional
+        Unit. Default is "".
+    min : float, str or `~astropy.units.quantity`, optional
+        Minimum (sometimes used in fitting). If `None`, set to `numpy.nan`. Default is None.
+    max : float, str or `~astropy.units.quantity`, optional
+        Maximum (sometimes used in fitting). Default is `numpy.nan`.
     frozen : bool, optional
-         Frozen (used in fitting).  Default is False.
-     error : float, optional
-         Parameter error. Default is 0.
-     scan_min : float, optional
-         Minimum value for the parameter scan. Overwrites scan_n_sigma.
-         Default is None.
-     scan_max : float, optional
-         Maximum value for the parameter scan. Overwrites scan_n_sigma.
-         Default is None.
-     scan_n_values: int, optional
-         Number of values to be used for the parameter scan. Default is 11.
-     scan_n_sigma : int, optional
-         Number of sigmas to scan. Default is 2.
-     scan_values: `numpy.array`, optional
-         Scan values. Overwrites all the scan keywords before.
-         Default is None.
-     scale_method : {'scale10', 'factor1', None}, optional
-         Method used to set ``factor`` and ``scale``. Default is "scale10".
-     interp : {"lin", "sqrt", "log"}, optional
-         Parameter scaling to use for the scan. Default is "lin".
-     prior : `~gammapy.modeling.models.Prior`, optional
-         Prior set on the parameter. Default is None.
+        Frozen (used in fitting).  Default is False.
+    error : float, optional
+        Parameter error. Default is 0.
+    scan_min : float, optional
+        Minimum value for the parameter scan. Overwrites scan_n_sigma.
+        Default is None.
+    scan_max : float, optional
+        Maximum value for the parameter scan. Overwrites scan_n_sigma.
+        Default is None.
+    scan_n_values: int, optional
+        Number of values to be used for the parameter scan. Default is 11.
+    scan_n_sigma : int, optional
+        Number of sigmas to scan. Default is 2.
+    scan_values: `numpy.array`, optional
+        Scan values. Overwrites all the scan keywords before.
+        Default is None.
+    scale_method : {'scale10', 'factor1', None}, optional
+        Method used to set ``factor`` and ``scale``. Default is "scale10".
+    interp : {"lin", "sqrt", "log"}, optional
+        Parameter scaling to use for the scan. Default is "lin".
+    prior : `~gammapy.modeling.models.Prior`, optional
+        Prior set on the parameter. Default is None.
     """
 
     def __init__(
