@@ -352,7 +352,7 @@ class DataStore:
         skip_missing=False,
         required_irf="full-enclosure",
         require_events=True,
-        selection_mask=None,
+        selection=None,
     ):
         """Generate a `~gammapy.data.Observations`.
 
@@ -391,9 +391,9 @@ class DataStore:
             Default is `"full-enclosure"`.
         require_events : bool, optional
             Require events and gti table or not. Default is True.
-        selection_mask : `~numpy.ndarray`, optional
+        selection : `~numpy.ndarray`, optional
             Boolean array of the same lenght than the ``obs_table``.
-            Observation is kept if  corresponding selection_mask element is True
+            Observation is kept if  corresponding selection mask element is True
             and if it is in the list of obs_id.
             If None, default is all observations ordered by OBS_ID are returned.
 
@@ -403,10 +403,10 @@ class DataStore:
             Container holding a list of `~gammapy.data.Observation`.
         """
 
-        if selection_mask is None:
+        if selection is None:
             obs_id_selection = self.obs_ids
         else:
-            obs_id_selection = np.array(self.obs_ids)[selection_mask]
+            obs_id_selection = np.array(self.obs_ids)[selection]
 
         if obs_id is None:
             obs_id = obs_id_selection
