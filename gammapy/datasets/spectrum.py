@@ -412,9 +412,9 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
                 if "SPECTRUM" in hdulist and "OGIP" in hdulist["SPECTRUM"].header["HDUCLASS"]:
                     format = "ogip"
                 # Check for extensions in GADF format
-                elif ("COUNTS" in hdulist and "EXPOSURE" in hdulist and "EDISP" in hdulist):
+                elif ("COUNTS_BANDS" in hdulist):
                     format = "gadf"
-                    if 'IMAGE' in hdulist[1].header["XTENSION"]:
+                    if 'REGION' not in hdulist:
                         raise ValueError(f"File {filename} is not a GADF spectrum, but a GADF map")
 
         if format == "gadf":
