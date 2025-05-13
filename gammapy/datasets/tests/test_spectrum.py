@@ -652,12 +652,27 @@ class TestSpectrumOnOff:
         assert d1.exposure == self.dataset.exposure
         assert_allclose(d1.counts_off.data, self.dataset.counts_off.data)
 
-    def test_spectrum_dataset_onoff_fallback_from_gadf(self, tmp_path):
-        self.dataset.write(tmp_path / "test.fits", format="ogip")
-        d1 = SpectrumDatasetOnOff.read(tmp_path / "test.fits")
+    def test_spectrum_dataset_onoff_discover_formats(self, tmp_path):
+        self.dataset.write(tmp_path / "test_ogip.fits", format="ogip")
+        d1 = SpectrumDatasetOnOff.read(tmp_path / "test_ogip.fits")
         assert isinstance(d1.counts.geom, RegionGeom)
         assert d1.exposure == self.dataset.exposure
         assert_allclose(d1.counts_off.data, self.dataset.counts_off.data)
+
+        self.dataset.write(tmp_path / "test_gadf.fits", format="gadf")
+        d1 = SpectrumDatasetOnOff.read(tmp_path / "test_gadf.fits")
+        assert isinstance(d1.counts.geom, RegionGeom)
+        assert d1.exposure == self.dataset.exposure
+        assert_allclose(d1.counts_off.data, self.dataset.counts_off.data)
+
+    def test_invalid_format_exception(self, tmp_path):
+        with pytest.raises(ValueError, match="Invalid format option"):
+            self.dataset.write(tmp_path / "test.fits", format="invalid_format")
+        
+        # Attempt to read using an invalid format and check for the exception
+        self.dataset.write(tmp_path / "test.fits", format="ogip")
+        with pytest.raises(ValueError, match="Invalid format option"):
+            SpectrumDatasetOnOff.read(tmp_path / "test.fits", format="invalid_format")
 
     def test_energy_mask(self):
         mask = self.dataset.counts.geom.energy_mask(
