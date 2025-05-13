@@ -176,7 +176,7 @@ class UniformPrior(Prior):
 
     Parameters
     ----------
-    min : float
+    min : float, optional
         Minimum value.
         Default is -`numpy.inf`.
     max : float
@@ -210,10 +210,10 @@ class LogUniformPrior(Prior):
 
     Parameters
     ----------
-    min : float
-        minimum value. Default is 1e-14.
-    max : float
-        maximum value. Default is 1e-10.
+    min : float, optional
+        Minimum value. Default is 1e-14.
+    max : float, optional
+        Maximum value. Default is 1e-10.
     """
 
     tag = ["LogUniformPrior"]

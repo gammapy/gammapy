@@ -39,7 +39,7 @@ def test_observation_metadata():
     input = {
         "obs_info": ObsInfoMetaData(**obs_info),
         "pointing": PointingInfoMetaData(),
-        "location": "cta_north",
+        "location": "ctao_north",
         "deadtime_fraction": 0.05,
         "time_info": time_info,
         "target": TargetMetaData(**target),

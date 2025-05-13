@@ -77,26 +77,26 @@ class Parameter:
          Maximum (sometimes used in fitting). Default is `numpy.nan`.
     frozen : bool, optional
          Frozen (used in fitting).  Default is False.
-     error : float
+     error : float, optional
          Parameter error. Default is 0.
-     scan_min : float
+     scan_min : float, optional
          Minimum value for the parameter scan. Overwrites scan_n_sigma.
          Default is None.
-     scan_max : float
+     scan_max : float, optional
          Maximum value for the parameter scan. Overwrites scan_n_sigma.
          Default is None.
-     scan_n_values: int
+     scan_n_values: int, optional
          Number of values to be used for the parameter scan. Default is 11.
-     scan_n_sigma : int
+     scan_n_sigma : int, optional
          Number of sigmas to scan. Default is 2.
-     scan_values: `numpy.array`
+     scan_values: `numpy.array`, optional
          Scan values. Overwrites all the scan keywords before.
          Default is None.
-     scale_method : {'scale10', 'factor1', None}
+     scale_method : {'scale10', 'factor1', None}, optional
          Method used to set ``factor`` and ``scale``. Default is "scale10".
-     interp : {"lin", "sqrt", "log"}
+     interp : {"lin", "sqrt", "log"}, optional
          Parameter scaling to use for the scan. Default is "lin".
-     prior : `~gammapy.modeling.models.Prior`
+     prior : `~gammapy.modeling.models.Prior`, optional
          Prior set on the parameter. Default is None.
     """
 
@@ -361,25 +361,30 @@ class Parameter:
     @property
     def conf_min(self):
         """Confidence minimum value as a `float`.
-
-        Return parameter minimum if defined, otherwise return the scan_min.
+        Return parameter minimum if defined, otherwise  a default is estimated from value and error.
         """
         if not np.isnan(self.min):
             return self.min
         else:
-            return self.value - self._step * self.scan_n_sigma
+            min_ = self.value - self._step * self.scan_n_sigma
+            large_step = np.maximum(self._step, np.abs(self.value))
+            min_ = np.minimum(min_, -large_step * 1e5)
+            return min_
 
     # TODO: possibly allow to set this independently
     @property
     def conf_max(self):
         """Confidence maximum value as a `float`.
-
-        Return parameter maximum if defined, otherwise return the scan_max.
+        Return parameter maximum if defined, otherwise a default is estimated from value and error.
         """
+
         if not np.isnan(self.max):
             return self.max
         else:
-            return self.value + self._step * self.scan_n_sigma
+            max_ = self.value + self._step * self.scan_n_sigma
+            large_step = np.maximum(self._step, np.abs(self.value))
+            max_ = np.maximum(max_, large_step * 1e5)
+            return max_
 
     @property
     def scan_min(self):
@@ -843,22 +848,22 @@ class restore_parameters_status:
 class PriorParameter(Parameter):
     """Parameter of a `~gammapy.modeling.models.Prior`.
 
-    A prior is a probability density function of a model parameter and can take different forms, including Gaussian
-    distributions, uniform distributions, etc. The prior includes information or knowledge about the dataset or the
+    A prior is a probability density function of a model parameter and can take different forms, including but not limited to Gaussian
+    distributions and uniform distributions. The prior includes information or knowledge about the dataset or the
     parameters of the fit.
 
     Examples
     --------
     For a usage example see :doc:`/tutorials/api/priors` tutorial.
 
-     Parameters
-     ----------
-     name : str
-         Name.
-     value : float or `~astropy.units.Quantity`
-         Value.
-     unit : `~astropy.units.Unit` or str, optional
-         Unit. Default is "".
+    Parameters
+    ----------
+    name : str
+        Name.
+    value : float or `~astropy.units.Quantity`
+        Value.
+    unit : `~astropy.units.Unit` or str, optional
+        Unit. Default is "".
     """
 
     def __init__(
