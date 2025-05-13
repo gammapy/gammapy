@@ -2441,6 +2441,7 @@ def test_add_fermi_iso():
 
 
 @requires_data()
+@requires_dependency("healpy")
 def test_map_dataset_hpx_evaluation_with_model():
     filename = "$GAMMAPY_DATA/cta-caldb/Prod5-North-20deg-AverageAz-4LSTs09MSTs.180000s-v0.1.fits.gz"
     pointing = SkyCoord("0d", "0d")
