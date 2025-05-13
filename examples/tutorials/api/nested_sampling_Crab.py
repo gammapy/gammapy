@@ -202,7 +202,6 @@ sampler_opts = {
     "live_points": 300,
     "frac_remain": 0.3,
     "log_dir": None,
-    "resume": False,
 }
 
 sampler = Sampler(backend="ultranest", sampler_opts=sampler_opts)
