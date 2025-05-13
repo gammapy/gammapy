@@ -10,7 +10,6 @@ from gammapy.estimators import (
 from gammapy.irf import EDispKernelMap
 from gammapy.maps import MapAxis, RegionNDMap
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
-from gammapy.utils.deprecation import GammapyDeprecationWarning
 
 
 @pytest.fixture()
@@ -44,10 +43,6 @@ def test_cta_sensitivity_estimator(spectrum_dataset, caplog):
         acceptance=RegionNDMap.from_geom(geom=geom, data=1),
         acceptance_off=RegionNDMap.from_geom(geom=geom, data=5),
     )
-    with pytest.warns(GammapyDeprecationWarning):
-        SensitivityEstimator(
-            gamma_min=25, bkg_syst_fraction=0.075, spectrum=PowerLawSpectralModel()
-        )
 
     sens = SensitivityEstimator(gamma_min=25, bkg_syst_fraction=0.075)
     table = sens.run(dataset_on_off)

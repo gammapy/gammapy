@@ -337,4 +337,4 @@ plt.show()
 
 #####################################################################
 # We can use the sliced lightcurve to understand the variability,
-# as shown in the doc:`/tutorials/analysis-time/variability_estimation` tutorial.
+# as shown in the :doc:`/tutorials/analysis-time/variability_estimation` tutorial.

@@ -64,8 +64,8 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
     various root finding algorithms. The approach is described in Appendix A
     in `Stewart (2009) <https://ui.adsabs.harvard.edu/abs/2009A%26A...495..989S/abstract>`_.
 
-    The main output of this estimator is a `~gammapy.estimators.FluxMaps` object, from which one
-    can access to all computed quantities (see the example below and the `TSMapEstimator.run` function).
+    The main output of this estimator is a `~gammapy.estimators.FluxMaps` object, which provides
+    access to all computed quantities (see the example below and the `TSMapEstimator.run` function).
 
     Parameters
     ----------
@@ -101,7 +101,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
             * "stat_scan": estimate likelihood profile
             * "sensitivity": estimate the flux sensitivity
 
-        Default is None, ie only "ts", "norm", "niter", "norm_err", "npred", "npred_excess", "stat", "stat_null" and
+        Default is None, so only "ts", "norm", "niter", "norm_err", "npred", "npred_excess", "stat", "stat_null" and
         "success" are computed.
     energy_edges : list of `~astropy.units.Quantity`, optional
         Edges of the target maps energy bins. The resulting bin edges won't be exactly equal to the input ones,

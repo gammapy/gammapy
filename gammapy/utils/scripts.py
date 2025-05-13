@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities to create scripts and command-line tools."""
+
 import codecs
 import os.path
 import warnings
@@ -8,7 +9,6 @@ from pathlib import Path
 from uuid import uuid4
 import yaml
 from gammapy.utils.check import add_checksum, verify_checksum
-from gammapy.utils.deprecation import deprecated_renamed_argument
 
 __all__ = [
     "from_yaml",
@@ -112,7 +112,6 @@ def to_yaml(dictionary, sort_keys=False):
     return text + creation.to_yaml()
 
 
-@deprecated_renamed_argument("dictionary", "text", "v1.3")
 def write_yaml(
     text, filename, logger=None, sort_keys=False, checksum=False, overwrite=False
 ):
