@@ -45,10 +45,10 @@ class FluxEstimator(ParameterEstimator):
     fit : `Fit`
         Fit instance specifying the backend and fit options.
     reoptimize : bool
-        If True the free parameters of the other models are fitted in each bin independently,
+        If True, the free parameters of the other models are fitted in each bin independently,
         together with the norm of the source of interest
         (but the other parameters of the source of interest are kept frozen).
-        If False only the norm of the source of interest if fitted,
+        If False, only the norm of the source of interest is fitted,
         and all other parameters are frozen at their current values.
         Default is False.
     norm : `~gammapy.modeling.Parameter` or dict
