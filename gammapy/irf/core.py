@@ -318,6 +318,8 @@ class IRF(metaclass=abc.ABCMeta):
         ----------
         axis_name : str
             Along which axis to integrate.
+        method : {"linear", "nearest"}, optional
+            Interpolation method to use. Default is "linear".
         **kwargs : dict
             Coordinates at which to evaluate the IRF.
 
@@ -327,7 +329,6 @@ class IRF(metaclass=abc.ABCMeta):
             Returns 2D array with axes offset.
         """
         axis = self.axes.index(axis_name)
-        #        method = kwargs.pop("method", "linear")
         data = self.evaluate(**kwargs, method=method)
         values = kwargs[axis_name]
         return trapz_loglog(data, values, axis=axis)
