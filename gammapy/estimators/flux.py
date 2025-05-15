@@ -44,7 +44,7 @@ class FluxEstimator(ParameterEstimator):
         Default is None so the optional steps are not executed.
     fit : `Fit`, optional
         Fit instance specifying the backend and fit options.
-        Default is None, so "minuit" is used.
+        Fit instance specifying the backend and fit options. If None, the `~gammapy.modeling.Fit` instance is created internally. Default is None.
     reoptimize : bool, optional
         If True, the free parameters of the other models are fitted in each bin independently,
         together with the norm of the source of interest
