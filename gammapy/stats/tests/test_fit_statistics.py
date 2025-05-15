@@ -4,6 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 
 from gammapy.utils.compilation import get_fit_statistics_compiled
+from gammapy.utils.testing import requires_dependency
 
 from gammapy import stats
 from gammapy.stats.fit_statistics_cython import cash_sum_cython
@@ -121,6 +122,7 @@ def test_cstat(test_data, reference_values):
     assert_allclose(statsvec, reference_values["cstat"])
 
 
+@requires_dependency("numba")
 def test_cash_sum_compiled(test_data):
     counts = np.array(test_data["n_on"], dtype=float)
     npred = np.array(test_data["mu_sig"], dtype=float)
