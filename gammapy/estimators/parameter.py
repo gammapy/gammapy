@@ -44,7 +44,8 @@ class ParameterEstimator(Estimator):
 
         Default is None, so the optional steps are not executed.
     fit : `~gammapy.modeling.Fit`, optional
-        Fit instance specifying the backend and fit options. Default is None, so "minuit" is used.
+        Fit instance specifying the backend and fit options. If None, the `~gammapy.modeling.Fit` instance is created
+        internally. Default is None.
     reoptimize : bool, optional
         Re-optimize other free model parameters. Default is True.
 

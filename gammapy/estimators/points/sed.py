@@ -69,9 +69,9 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
     sum_over_energy_groups : bool, optional
         Whether to sum over the energy groups or fit the norm on the full energy grid. Default is None.
     n_jobs : int, optional
-        Number of processes used in parallel for the computation. Default is None, unless
-        `~gammapy.utils.parallel.N_JOBS_DEFAULT` was modified. The number of jobs is
-        limited to the number of physical CPUs.
+        Number of processes used in parallel for the computation. The number of jobs is limited to the number of
+        physical CPUs. If None, use `~gammapy.utils.parallel.N_JOBS_DEFAULT`.
+        Default is None.
     parallel_backend : {"multiprocessing", "ray"}, optional
         Which backend to use for multiprocessing. Default is None.
     norm : `~gammapy.modeling.Parameter` or dict, optional
