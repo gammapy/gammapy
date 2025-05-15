@@ -58,7 +58,8 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
         but rather the closest values to the energy axis edges of the parent dataset.
         Default is [1, 10] TeV.
     fit : `Fit`, optional
-        Fit instance specifying the backend and fit options. Default is None, so "scipy" is used.
+        Fit instance specifying the backend and fit options. If None, the `~gammapy.modeling.Fit` instance is created
+        internally. Default is None.
     reoptimize : bool, optional
         If True, the free parameters of the other models are fitted in each bin independently,
         together with the norm of the source of interest
@@ -70,18 +71,16 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
         Whether to sum over the energy groups or fit the norm on the full energy grid. Default is None.
     n_jobs : int, optional
         Number of processes used in parallel for the computation. The number of jobs is limited to the number of
-        physical CPUs. If None, use `~gammapy.utils.parallel.N_JOBS_DEFAULT`.
+        physical CPUs. If None, defaults to `~gammapy.utils.parallel.N_JOBS_DEFAULT`.
         Default is None.
     parallel_backend : {"multiprocessing", "ray"}, optional
-        Which backend to use for multiprocessing. Default is None.
+        Which backend to use for multiprocessing. If None, defaults to `~gammapy.utils.parallel.BACKEND_DEFAULT`.
     norm : `~gammapy.modeling.Parameter` or dict, optional
         Norm parameter used for the fit.
-        Default is None and a new parameter is created automatically,
-        with value=1, name="norm", scan_min=0.2, scan_max=5, and scan_n_values = 11.
-        By default, the min and max are not set and derived from the source model,
-        unless the source model does not have one and only one norm parameter.
-        If a dict is given the entries should be a subset of
-        `~gammapy.modeling.Parameter` arguments.
+        Default is None and a new parameter is created automatically, with value=1, name="norm",
+        scan_min=0.2, scan_max=5, and scan_n_values = 11. By default, the min and max are not set
+        (consider setting them if errors or upper limits computation fails). If a dict is given,
+        the entries should be a subset of `~gammapy.modeling.Parameter` arguments.
 
     Notes
     -----
