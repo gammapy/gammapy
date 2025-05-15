@@ -672,12 +672,15 @@ class SimpleMapDataset:
         self.background = background
         self.norm_guess = norm_guess
 
+        stats = get_fit_statistics_compiled()
+        self._norm_bounds_compiled = stats["norm_bounds_compiled"]
+        self._cash_sum_compiled = stats["cash_sum_compiled"]
+        self._f_cash_root_compiled = stats["f_cash_root_compiled"]
+
     @lazyproperty
     def norm_bounds(self):
         """Bounds for x."""
-        return get_fit_statistics_compiled()["norm_bounds_compiled"](
-            self.counts, self.background, self.model
-        )
+        return self._norm_bounds_compiled(self.counts, self.background, self.model)
 
     def npred(self, norm):
         """Predicted number of counts."""
@@ -685,25 +688,19 @@ class SimpleMapDataset:
 
     def stat_sum(self, norm):
         """Statistics sum."""
-        return get_fit_statistics_compiled()["cash_sum_compiled"](
-            self.counts, self.npred(norm)
-        )
+        return self._cash_sum_compiled(self.counts, self.npred(norm))
 
     def stat_sum_asimov(self, norm):
         """Statistics sum."""
-        return get_fit_statistics_compiled()["cash_sum_compiled"](
-            self.npred(norm), self.npred(norm)
-        )
+        return self._cash_sum_compiled(self.npred(norm), self.npred(norm))
 
     def stat_sum_asimov_null(self, norm):
         """Statistics sum."""
-        return get_fit_statistics_compiled()["cash_sum_compiled"](
-            self.npred(norm), self.background
-        )
+        return self._cash_sum_compiled(self.npred(norm), self.background)
 
     def stat_derivative(self, norm):
         """Statistics derivative."""
-        return get_fit_statistics_compiled()["f_cash_root_compiled"](
+        return self._f_cash_root_compiled(
             norm, self.counts, self.background, self.model
         )
 
