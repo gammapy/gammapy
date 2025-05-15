@@ -25,7 +25,6 @@ from gammapy.modeling.models import (
     SkyModel,
     TemplateNPredModel,
 )
-from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.utils.scripts import make_path, read_yaml, to_yaml, write_yaml
 from gammapy.utils.testing import requires_data, requires_dependency
 import os
@@ -356,8 +355,7 @@ def make_all_models():
     yield Model.create("PowerLawNormSpectralModel", "spectral")
     yield Model.create("PowerLaw2SpectralModel", "spectral")
     yield Model.create("ExpCutoffPowerLawSpectralModel", "spectral")
-    with pytest.warns(GammapyDeprecationWarning):
-        yield Model.create("ExpCutoffPowerLawNormSpectralModel", "spectral")
+    yield Model.create("ExpCutoffPowerLawNormSpectralModel", "spectral")
     yield Model.create("ExpCutoffPowerLaw3FGLSpectralModel", "spectral")
     yield Model.create("SuperExpCutoffPowerLaw3FGLSpectralModel", "spectral")
     yield Model.create("SuperExpCutoffPowerLaw4FGLDR3SpectralModel", "spectral")
