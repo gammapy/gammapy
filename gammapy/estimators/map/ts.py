@@ -685,19 +685,19 @@ class SimpleMapDataset:
 
     def stat_sum(self, norm):
         """Statistics sum."""
-        return get_fit_statistics_compiled["cash_sum_compiled"](
+        return get_fit_statistics_compiled()["cash_sum_compiled"](
             self.counts, self.npred(norm)
         )
 
     def stat_sum_asimov(self, norm):
         """Statistics sum."""
-        return get_fit_statistics_compiled["cash_sum_compiled"](
+        return get_fit_statistics_compiled()["cash_sum_compiled"](
             self.npred(norm), self.npred(norm)
         )
 
     def stat_sum_asimov_null(self, norm):
         """Statistics sum."""
-        return get_fit_statistics_compiled["cash_sum_compiled"](
+        return get_fit_statistics_compiled()["cash_sum_compiled"](
             self.npred(norm), self.background
         )
 
