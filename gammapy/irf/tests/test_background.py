@@ -200,6 +200,39 @@ def test_background_3d_integrate(bkg_3d):
     assert_allclose(rate.to("s-1 sr-1").value, [[99000.0, 99000.0]], rtol=1e-5)
 
 
+def test_bkg2d_integrate_nearest():
+    energy = [0.1, 1, 10, 100, 1000] * u.TeV
+    energy_axis = MapAxis.from_energy_edges(energy)
+
+    offset = [0, 1, 2, 3] * u.deg
+    offset_axis = MapAxis.from_edges(offset, name="offset")
+
+    data = np.arange(4, 0, -1)[:, np.newaxis] * np.ones((4, 3))
+    #    data[3,:] = 0.5
+    bkg_2d = Background2D(
+        axes=[energy_axis, offset_axis], data=data, unit="s-1 TeV-1 sr-1"
+    )
+
+    rate = bkg_2d.integrate_log_log(
+        offset=0.5 * u.deg,
+        energy=[0.2, 2, 20, 200] * u.TeV,
+        axis_name="energy",
+    )
+    assert_allclose(
+        rate.to("s-1 sr-1").value, [6.29251, 44.368654, 257.26371], rtol=1e-5
+    )
+
+    rate = bkg_2d.integrate_log_log(
+        offset=0.5 * u.deg,
+        energy=[0.2, 2, 20, 200] * u.TeV,
+        axis_name="energy",
+        method="nearest",
+    )
+    assert_allclose(
+        rate.to("s-1 sr-1").value, [5.942441, 41.266706, 228.908249], rtol=1e-5
+    )
+
+
 @requires_data()
 def test_background_3d_read():
     filename = (
