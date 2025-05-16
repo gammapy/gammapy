@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 from gammapy.maps.axes import UNIT_STRING_FORMAT
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator, StatProfileScale
 from gammapy.utils.scripts import make_path
+from gammapy.utils.metadata import CreatorMetaData
 from ..axes import MapAxes
 from ..core import Map
 from ..geom import pix_tuple_to_idx
@@ -580,6 +581,9 @@ class RegionNDMap(Map):
             )
             hdulist.extend(hdulist_geom[1:])
 
+        creation = CreatorMetaData()
+        for hdu in hdulist:
+            hdu.header.update(creation.to_header())
         return hdulist
 
     @classmethod

@@ -378,6 +378,10 @@ def test_region_nd_hdulist():
     assert hdulist[2].name == "SKYMAP_BANDS"
     assert hdulist[3].name == "SKYMAP_REGION"
 
+    for hdu in hdulist:
+        assert "CREATOR" in hdu.header
+        assert "CREATED" in hdu.header
+
 
 def test_region_nd_map_interp_no_region():
     energy_axis = MapAxis.from_energy_edges([1, 3, 10] * u.TeV)
