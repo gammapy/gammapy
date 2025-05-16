@@ -8,6 +8,7 @@ import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
+from astropy import table
 import gammapy.utils.time as tu
 from gammapy.utils.pbar import progress_bar
 from gammapy.utils.scripts import make_path
@@ -80,7 +81,10 @@ class DataStore:
 
     def __init__(self, hdu_table=None, obs_table=None):
         self.hdu_table = hdu_table
-        self.obs_table = obs_table
+        if obs_table is not None:
+            self.obs_table = table.unique(obs_table, keys="OBS_ID")
+        else:
+            self.obs_table = None
 
     def __str__(self):
         return self.info(show=False)
@@ -349,6 +353,7 @@ class DataStore:
         skip_missing=False,
         required_irf="full-enclosure",
         require_events=True,
+        selection=None,
     ):
         """Generate a `~gammapy.data.Observations`.
 
@@ -387,26 +392,39 @@ class DataStore:
             Default is `"full-enclosure"`.
         require_events : bool, optional
             Require events and gti table or not. Default is True.
+        selection : `~numpy.ndarray`, optional
+            Boolean array of the same lenght than the ``obs_table``.
+            Observation is kept if  corresponding selection mask element is True
+            and if it is in the list of obs_id.
+            If None, default is all observations ordered by OBS_ID are returned.
 
         Returns
         -------
         observations : `~gammapy.data.Observations`
             Container holding a list of `~gammapy.data.Observation`.
         """
+
+        if selection is None:
+            obs_id_selection = self.obs_ids
+        else:
+            obs_id_selection = np.array(self.obs_ids)[selection]
+
         if obs_id is None:
-            obs_id = self.obs_ids
+            obs_id = obs_id_selection
+        else:
+            for _ in obs_id:
+                if _ not in self.obs_ids:
+                    if skip_missing:
+                        log.warning(f"Skipping missing obs_id: {_!r}")
+                    else:
+                        raise ValueError(f"Missing obs_id: {_!r}")
+            obs_id_selection = [_ for _ in obs_id if _ in obs_id_selection]
 
         obs_list = []
 
-        for _ in progress_bar(obs_id, desc="Obs Id"):
+        for _ in progress_bar(obs_id_selection, desc="Obs Id"):
             try:
                 obs = self.obs(_, required_irf, require_events)
-            except ValueError as err:
-                if skip_missing:
-                    log.warning(f"Skipping missing obs_id: {_!r}")
-                    continue
-                else:
-                    raise err
             except MissingRequiredHDU as e:
                 log.warning(f"Skipping run with missing HDUs; {e}")
                 continue
@@ -415,6 +433,44 @@ class DataStore:
 
         log.info(f"Observations selected: {len(obs_list)} out of {len(obs_id)}.")
         return Observations(obs_list)
+
+    def get_observation_groups(self, key, **kwargs):
+        """Generate groups of `~gammapy.data.Observations` with a shared property.
+
+        Parameters
+        ----------
+        key : str
+            Key of the observation table used to apply the grouping.
+            For example "EVENT_TYPE" will return group observations
+            with the same event type.
+        kwargs : dict, optional
+            Keyword arguments passed to `~gammapy.data.DataStore.get_observations`.
+
+        Returns
+        -------
+        groups : dict of `~gammapy.data.Observations`
+            Dictionary of Observations instance, one instance for each group.
+        """
+
+        if self.obs_table is None:
+            raise ValueError(
+                "obs_table attribute must not be None to select groups of observations"
+            )
+
+        observations = self.get_observations(**kwargs)
+        obs_table = self.obs_table[
+            [
+                np.where(self.obs_table["OBS_ID"].astype(str) == _)[0]
+                for _ in observations.ids
+            ]
+        ]
+        observations_group = observations.group_by_label(
+            obs_table[key].astype(str).squeeze()
+        )
+        return {
+            f"{key}{old_key[5:]}": value
+            for old_key, value in observations_group.items()
+        }
 
     def copy_obs(self, obs_id, outdir, hdu_class=None, verbose=False, overwrite=False):
         """Create a new `~gammapy.data.DataStore` containing a subset of observations.
