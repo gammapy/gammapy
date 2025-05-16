@@ -26,14 +26,14 @@ class ParameterEstimator(Estimator):
 
     Parameters
     ----------
-    n_sigma : int
+    n_sigma : int, optional
         Sigma to use for asymmetric error computation. Default is 1.
-    n_sigma_ul : int
+    n_sigma_ul : int, optional
         Sigma to use for upper limit computation. Default is 2.
-    n_sigma_sensitivity : int
+    n_sigma_sensitivity : int, optional
         Sigma to use for sensitivity computation. Default is 5.
-    null_value : float
-        Which null value to use for the parameter.
+    null_value : float, optional
+        Which null value to use for the parameter. Default is 1e-150.
     selection_optional : list of str, optional
         Which additional quantities to estimate. Available options are:
 
@@ -42,10 +42,11 @@ class ParameterEstimator(Estimator):
             * "ul": estimate upper limits.
             * "scan": estimate fit statistic profiles.
 
-        Default is None so the optional steps are not executed.
-    fit : `~gammapy.modeling.Fit`
-        Fit instance specifying the backend and fit options.
-    reoptimize : bool
+        Default is None, so the optional steps are not executed.
+    fit : `~gammapy.modeling.Fit`, optional
+        Fit instance specifying the backend and fit options. If None, the `~gammapy.modeling.Fit` instance is created
+        internally. Default is None.
+    reoptimize : bool, optional
         Re-optimize other free model parameters. Default is True.
 
     Examples
