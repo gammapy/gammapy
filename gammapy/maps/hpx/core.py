@@ -5,6 +5,7 @@ import numpy as np
 import astropy.units as u
 from astropy.io import fits
 from gammapy.utils.types import JsonQuantityEncoder
+from gammapy.utils.metadata import CreatorMetaData
 from ..core import Map
 from ..io import find_bands_hdu, find_bintable_hdu
 from .geom import HpxGeom
@@ -174,7 +175,9 @@ class HpxMap(Map):
 
         return hpx_map
 
-    def to_hdulist(self, hdu="SKYMAP", hdu_bands=None, sparse=False, format="gadf"):
+    def to_hdulist(
+        self, hdu="SKYMAP", hdu_bands=None, sparse=False, format="gadf", creation=None
+    ):
         """Convert to `~astropy.io.fits.HDUList`.
 
         Parameters
@@ -205,6 +208,10 @@ class HpxMap(Map):
                 - "galprop"
                 - "galprop2"
 
+        creation : `~gammapy.utils.metadata.CreatorMetadata`, optional
+            Creation metadata to add to the file. If None, default metadata is added.
+            Default is None.
+
         Returns
         -------
         hdu_list : `~astropy.io.fits.HDUList`
@@ -231,6 +238,10 @@ class HpxMap(Map):
 
         if self.geom.axes:
             hdu_list.append(hdu_bands_out)
+
+        creation = creation or CreatorMetaData()
+        for hdu in hdu_list:
+            hdu.header.update(creation.to_header())
 
         return hdu_list
 

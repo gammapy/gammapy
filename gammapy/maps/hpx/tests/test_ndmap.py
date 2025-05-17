@@ -130,6 +130,23 @@ def test_hpxmap_read_write_fgst(tmp_path):
     assert_allclose(m.data, m2.data)
 
 
+def test_hpxmap_write_creation_metadata(tmp_path):
+    path = tmp_path / "tmp.fits"
+
+    axis = MapAxis.from_bounds(
+        100.0, 1000.0, 4, name="energy", unit="MeV", interp="log"
+    )
+
+    # Test Counts Cube
+    m = create_map(8, False, "galactic", None, [axis])
+    m.write(path, overwrite=True)
+
+    with fits.open(path, memmap=False) as hdulist:
+        for hdu in hdulist:
+            assert "CREATOR" in hdu.header
+            assert "CREATED" in hdu.header
+
+
 @requires_data()
 def test_read_fgst_exposure():
     exposure = Map.read("$GAMMAPY_DATA/fermi_3fhl/fermi_3fhl_exposure_cube_hpx.fits.gz")
