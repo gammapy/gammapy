@@ -537,7 +537,14 @@ class RegionNDMap(Map):
             filename, overwrite=overwrite, checksum=checksum
         )
 
-    def to_hdulist(self, format="gadf", hdu="SKYMAP", hdu_bands=None, hdu_region=None):
+    def to_hdulist(
+        self,
+        format="gadf",
+        hdu="SKYMAP",
+        hdu_bands=None,
+        hdu_region=None,
+        creation=None,
+    ):
         """Convert to `~astropy.io.fits.HDUList`.
 
         Parameters
@@ -552,6 +559,9 @@ class RegionNDMap(Map):
             Default is None.
         hdu_region : str, optional
             Name or index of the HDU with the region table.
+            Default is None.
+        creation : `~gammapy.utils.metadata.CreatorMetadata`, optional
+            Creation metadata to add to the file. If None, default metadata is added.
             Default is None.
 
         Returns
@@ -581,7 +591,7 @@ class RegionNDMap(Map):
             )
             hdulist.extend(hdulist_geom[1:])
 
-        creation = CreatorMetaData()
+        creation = creation or CreatorMetaData()
         for hdu in hdulist:
             hdu.header.update(creation.to_header())
         return hdulist
