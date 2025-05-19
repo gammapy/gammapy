@@ -202,6 +202,7 @@ class GTI:
 
         # Don't impose the scale. GADF does not require it to be TT
         meta = time_ref_to_dict(self.time_ref, scale=self.time_ref.scale)
+
         start = self.time_start - self.time_ref
         stop = self.time_stop - self.time_ref
         table = Table({"START": start.to("s"), "STOP": stop.to("s")}, meta=meta)

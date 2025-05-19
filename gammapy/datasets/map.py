@@ -1521,16 +1521,23 @@ class MapDataset(Dataset):
         # Update creation metadata before writing
         self.meta.creation.date = Time.now()
         header.update(self.meta.to_header())
+        creation = self.meta.creation
 
         hdulist = fits.HDUList([hdu_primary])
         if self.counts is not None:
-            hdulist += self.counts.to_hdulist(hdu="counts")[exclude_primary]
+            hdulist += self.counts.to_hdulist(hdu="counts", creation=creation)[
+                exclude_primary
+            ]
 
         if self.exposure is not None:
-            hdulist += self.exposure.to_hdulist(hdu="exposure")[exclude_primary]
+            hdulist += self.exposure.to_hdulist(hdu="exposure", creation=creation)[
+                exclude_primary
+            ]
 
         if self.background is not None:
-            hdulist += self.background.to_hdulist(hdu="background")[exclude_primary]
+            hdulist += self.background.to_hdulist(hdu="background", creation=creation)[
+                exclude_primary
+            ]
 
         if self.edisp is not None:
             hdulist += self.edisp.to_hdulist()[exclude_primary]
@@ -1539,10 +1546,14 @@ class MapDataset(Dataset):
             hdulist += self.psf.to_hdulist()[exclude_primary]
 
         if self.mask_safe is not None:
-            hdulist += self.mask_safe.to_hdulist(hdu="mask_safe")[exclude_primary]
+            hdulist += self.mask_safe.to_hdulist(hdu="mask_safe", creation=creation)[
+                exclude_primary
+            ]
 
         if self.mask_fit is not None:
-            hdulist += self.mask_fit.to_hdulist(hdu="mask_fit")[exclude_primary]
+            hdulist += self.mask_fit.to_hdulist(hdu="mask_fit", creation=creation)[
+                exclude_primary
+            ]
 
         if self.gti is not None:
             hdulist.append(self.gti.to_table_hdu())
@@ -2986,19 +2997,25 @@ class MapDatasetOnOff(MapDataset):
         hdulist = super().to_hdulist()
         exclude_primary = slice(1, None)
 
+        creation = self.meta.creation
+
         del hdulist["BACKGROUND"]
         del hdulist["BACKGROUND_BANDS"]
 
         if self.counts_off is not None:
-            hdulist += self.counts_off.to_hdulist(hdu="counts_off")[exclude_primary]
-
-        if self.acceptance is not None:
-            hdulist += self.acceptance.to_hdulist(hdu="acceptance")[exclude_primary]
-
-        if self.acceptance_off is not None:
-            hdulist += self.acceptance_off.to_hdulist(hdu="acceptance_off")[
+            hdulist += self.counts_off.to_hdulist(hdu="counts_off", creation=creation)[
                 exclude_primary
             ]
+
+        if self.acceptance is not None:
+            hdulist += self.acceptance.to_hdulist(hdu="acceptance", creation=creation)[
+                exclude_primary
+            ]
+
+        if self.acceptance_off is not None:
+            hdulist += self.acceptance_off.to_hdulist(
+                hdu="acceptance_off", creation=creation
+            )[exclude_primary]
 
         return hdulist
 

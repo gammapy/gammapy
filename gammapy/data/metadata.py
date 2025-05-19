@@ -11,6 +11,7 @@ from gammapy.utils.metadata import (
     TargetMetaData,
     TimeInfoMetaData,
 )
+from gammapy.utils.time import time_ref_from_dict, time_ref_to_dict
 from gammapy.utils.types import EarthLocationType, TimeType
 
 __all__ = ["ObservationMetaData", "GTIMetaData", "EventListMetaData"]
@@ -38,6 +39,7 @@ EVENTLIST_METADATA_FITS_KEYS = {
 }
 
 METADATA_FITS_KEYS["eventlist"] = EVENTLIST_METADATA_FITS_KEYS
+METADATA_FITS_KEYS["GTI"] = {}
 
 
 class ObservationMetaData(MetaData):
@@ -126,13 +128,27 @@ class GTIMetaData(MetaData):
     ----------
     reference_time : Time, str
         The GTI reference time.
+    creation : `~gammapy.utils.metadata.CreatorMetaData`
+        The creation metadata.
     """
 
     _tag: ClassVar[Literal["GTI"]] = "GTI"
     reference_time: Optional[TimeType] = None
+    creation: Optional[CreatorMetaData] = None
 
+    def to_header(self, format="gadf"):
+        result = super().to_header(format)
+        if self.reference_time is not None:
+            result.update(time_ref_to_dict(self.reference_time))
+        return result
+
+    @classmethod
     def from_header(cls, header, format="gadf"):
         meta = super().from_header(header, format)
+        try:
+            meta.reference_time = time_ref_from_dict(header)
+        except KeyError:
+            meta.reference_time = None
 
         return meta
 
