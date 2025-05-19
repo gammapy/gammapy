@@ -10,6 +10,7 @@ from gammapy.irf import EDispKernel, EDispKernelMap, PSFMap
 from gammapy.maps import RegionNDMap, Map
 from gammapy.modeling.models import create_fermi_isotropic_diffuse_model, Models
 from gammapy.utils.scripts import read_yaml, make_path
+from gammapy.utils.metadata import CreatorMetaData
 from .spectrum import SpectrumDatasetOnOff
 from .utils import create_map_dataset_from_dl4
 
@@ -77,7 +78,9 @@ class OGIPDatasetWriter(DatasetWriter):
 
     tag = ["ogip", "ogip-sherpa"]
 
-    def __init__(self, filename, format="ogip", overwrite=False, checksum=False):
+    def __init__(
+        self, filename, format="ogip", overwrite=False, checksum=False, creation=None
+    ):
         filename = make_path(filename)
         filename.parent.mkdir(exist_ok=True, parents=True)
 
@@ -85,6 +88,7 @@ class OGIPDatasetWriter(DatasetWriter):
         self.format = format
         self.overwrite = overwrite
         self.checksum = checksum
+        self.creation = creation or CreatorMetaData()
 
     @staticmethod
     def get_filenames(filename):
@@ -196,6 +200,7 @@ class OGIPDatasetWriter(DatasetWriter):
             overwrite=self.overwrite,
             format=self.format.replace("ogip", "ogip-arf"),
             checksum=self.checksum,
+            creation=self.creation,
         )
 
     def to_counts_hdulist(self, dataset, is_bkg=False):
@@ -227,6 +232,7 @@ class OGIPDatasetWriter(DatasetWriter):
         table["BACKSCAL"] = acceptance.data[:, 0, 0]
         del table.meta["BACKSCAL"]
 
+        meta.update(self.creation.to_header())
         # adapt meta data
         table.meta.update(meta)
         hdulist["SPECTRUM"] = fits.BinTableHDU(table)
