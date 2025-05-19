@@ -10,6 +10,7 @@ from astropy.coordinates import AltAz, Angle, SkyCoord, angular_separation
 from astropy.io import fits
 from astropy.table import Table
 from astropy.table import vstack as vstack_tables
+from astropy.time import Time
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from gammapy.maps import MapAxis, MapCoord, RegionGeom, WcsNDMap
@@ -20,6 +21,7 @@ from gammapy.utils.testing import Checker
 from gammapy.utils.time import time_ref_from_dict
 from .metadata import EventListMetaData
 from gammapy.utils.deprecation import deprecated_renamed_argument
+from gammapy.utils.metadata import CreatorMetaData
 
 __all__ = ["EventList"]
 
@@ -92,7 +94,7 @@ class EventList:
 
     def __init__(self, table, meta=None):
         self.table = table
-        self.meta = meta
+        self.meta = meta or EventListMetaData()
 
     def _repr_html_(self):
         try:
@@ -148,7 +150,17 @@ class EventList:
         if format != "gadf":
             raise ValueError(f"Only the 'gadf' format supported, got {format}")
 
-        return fits.BinTableHDU(self.table, name="EVENTS")
+        bin_table = fits.BinTableHDU(self.table, name="EVENTS")
+
+        # A priori don't change creator information
+        if self.meta.creation is None:
+            self.meta.creation = CreatorMetaData()
+        else:
+            self.meta.creation.date = Time.now()
+
+        bin_table.header.update(self.meta.to_header())
+
+        return bin_table
 
     # TODO: Pass metadata here. Also check that specific meta contents are consistent
     @classmethod
