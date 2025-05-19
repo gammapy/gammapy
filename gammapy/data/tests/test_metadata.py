@@ -134,7 +134,7 @@ def test_gti_metadata():
     assert_allclose(meta.reference_time.mjd, 59945.0)
 
     assert hdr["MJDREFI"] == 59945
-    assert hdr["TIMESYS"] == "tt"
+    assert hdr["TIMESYS"] == "utc"
     assert hdr["CREATOR"] == "Test"
 
     meta_new = GTIMetaData.from_header(hdr)
