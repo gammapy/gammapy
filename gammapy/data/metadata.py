@@ -139,7 +139,9 @@ class GTIMetaData(MetaData):
     def to_header(self, format="gadf"):
         result = super().to_header(format)
         if self.reference_time is not None:
-            result.update(time_ref_to_dict(self.reference_time))
+            result.update(
+                time_ref_to_dict(self.reference_time, scale=self.reference_time.scale)
+            )
         return result
 
     @classmethod
