@@ -514,7 +514,13 @@ class RegionNDMap(Map):
             )
 
     def write(
-        self, filename, overwrite=False, format="gadf", hdu="SKYMAP", checksum=False
+        self,
+        filename,
+        overwrite=False,
+        format="gadf",
+        hdu="SKYMAP",
+        checksum=False,
+        creation=None,
     ):
         """Write map to file.
 
@@ -531,9 +537,12 @@ class RegionNDMap(Map):
         checksum : bool, optional
             When True adds both DATASUM and CHECKSUM cards to the headers written to the file.
             Default is False.
+        creation : `~gammapy.utils.metadata.CreatorMetadata`, optional
+            Creation metadata to add to the file. If None, default metadata is added.
+            Default is None.
         """
         filename = make_path(filename)
-        self.to_hdulist(format=format, hdu=hdu).writeto(
+        self.to_hdulist(format=format, hdu=hdu, creation=creation).writeto(
             filename, overwrite=overwrite, checksum=checksum
         )
 
