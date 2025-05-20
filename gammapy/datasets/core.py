@@ -11,6 +11,7 @@ from gammapy.data import GTI
 from gammapy.modeling.models import DatasetModels, Models
 from gammapy.utils.scripts import make_name, make_path, read_yaml, to_yaml, write_yaml
 from gammapy.stats import FIT_STATISTICS_REGISTRY
+from gammapy.utils.freeze_attr import freeze
 
 log = logging.getLogger(__name__)
 
@@ -18,6 +19,7 @@ log = logging.getLogger(__name__)
 __all__ = ["Dataset", "Datasets"]
 
 
+@freeze
 class Dataset(abc.ABC):
     """Dataset abstract base class.
     For now, see existing examples of type of datasets:
@@ -31,25 +33,11 @@ class Dataset(abc.ABC):
     TODO: add tutorial how to create your own dataset types.
     """
 
-    _valid_attrs = {"name", "stat_type", "tag"}
-
     _residuals_labels = {
         "diff": "data - model",
         "diff/model": "(data - model) / model",
         "diff/sqrt(model)": "(data - model) / sqrt(model)",
     }
-
-    def __setattr__(self, name, value):
-        valid_attrs = set()
-        for cls in self.__class__.__mro__:
-            valid_attrs.update(getattr(cls, "_valid_attrs", set()))
-
-        if not (name.startswith("_") or name in valid_attrs):
-            raise AttributeError(
-                f"Invalid attribute '{name}' assigned to {self.__class__.__name__}. "
-                f"Check for typos or use an existing attribute."
-            )
-        super().__setattr__(name, value)
 
     @property
     def stat_type(self):

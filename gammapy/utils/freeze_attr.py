@@ -17,28 +17,34 @@ def freeze(cls):
     """
     original_init = cls.__init__
 
-    @staticmethod
-    def set_allowed_attrs(obj):
-        allowed_attrs = {
-            k
-            for k, v in obj.__class__.__dict__.items()
-            if not k.startswith("_") and not callable(v)
-        }
-        allowed_attrs.update({k for k in obj.__dict__ if not k.startswith("_")})
-        return allowed_attrs
+    def find_allowed_attrs(obj):
+        instance_attrs = {k for k in obj.__dict__ if not k.startswith("_")}
+
+        # Public class-level attributes (excluding callables, but include properties with setters)
+        class_attrs = set()
+        for base in obj.__class__.__mro__:
+            for name, value in vars(base).items():
+                if name.startswith("_"):
+                    continue
+                if isinstance(value, property):
+                    if value.fset is not None:
+                        class_attrs.add(name)
+                elif not callable(value):
+                    class_attrs.add(name)
+
+        return instance_attrs | class_attrs
 
     @wraps(original_init)
     def __init__(self, *args, **kwargs):
-        self._frozen = False
+        self._frozen_attrs = False
 
         # Call the original constructor
         original_init(self, *args, **kwargs)
 
-        self._allowed_attrs = set_allowed_attrs(self)
-
         # Freeze the object only if we are in its __init__ method
         if self.__class__ is cls:
-            self._frozen = True
+            self._allowed_attrs = find_allowed_attrs(self)
+            self._frozen_attrs = True
 
     def __setattr__(self, key, value):
         if (

@@ -16,6 +16,14 @@ class Parent:
         self.a = a
         self.b = b
 
+    @property
+    def a(self):
+        return self._a
+
+    @a.setter
+    def a(self, val):
+        self._a = val
+
     def some_function(self):
         return self.a + self.b
 
