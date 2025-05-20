@@ -71,7 +71,7 @@ Counts and fit statistics
 Gamma-ray measurements are counts, :math:`n_{on}`, containing both signal and background events.
 
 Estimation of number of signal events or of quantities in physical models is done through
-Poisson likelihood functions, the fit statistics. In gammapy, they are all log-likelihood
+Poisson likelihood functions, the fit statistics. In Gammapy, they are all log-likelihood
 functions normalized like chi-squares, i.e. if :math:`L` is the likelihood function used,
 they follow the expression :math:`2 \times log L`.
 
@@ -80,7 +80,7 @@ is ``Cash`` (see :ref:`cash`). When the number of background events is unknown, 
 use a background estimate :math:`n_{bkg}` taken from an off measurement where only background events
 are expected. In this case, the statistic function is ``WStat`` (see :ref:`wstat`).
 
-These statistic functions are at the heart of the model fitting approach in gammapy. They are
+These statistic functions are at the heart of the model fitting approach in Gammapy. They are
 used to estimate the best fit values of model parameters and their associated confidence intervals.
 
 They are used also to estimate the excess counts significance, i.e. the probability that
@@ -142,7 +142,7 @@ the following convention is used:
 Counts statistics classes
 -------------------------
 
-To estimate the excess counts significance and errors, gammapy uses two classes for Poisson counts with
+To estimate the excess counts significance and errors, Gammapy uses two classes for Poisson counts with
 and without known background: `~gammapy.stats.CashCountsStatistic` and `~gammapy.stats.WStatCountsStatistic`
 
 They are described in detail in the page: :doc:`/user-guide/stats/fit_statistics`.

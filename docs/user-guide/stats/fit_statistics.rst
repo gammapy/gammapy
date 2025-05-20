@@ -8,10 +8,10 @@ Fit statistics
 Introduction
 ------------
 
-This page describes the fit statistics used in gammapy. These fit statistics are
+This page describes the fit statistics used in Gammapy. These fit statistics are
 used by datasets to perform model fitting and parameter estimation.
 
-Fit statistics in gammapy are all log-likelihood functions normalized like chi-squares,
+Fit statistics in Gammapy are all log-likelihood functions normalized like chi-squares,
 i.e. if :math:`L` is the likelihood function used, they follow the expression
 :math:`2 \times log L`.
 
