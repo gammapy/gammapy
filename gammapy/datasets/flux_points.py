@@ -16,6 +16,7 @@ from gammapy.modeling.models import (
 )
 from gammapy.stats import FIT_STATISTICS_REGISTRY
 from gammapy.utils.interpolation import interpolate_profile
+from gammapy.utils.freeze_attr import freeze
 from gammapy.utils.scripts import make_name, make_path
 from .core import Dataset
 
@@ -38,6 +39,7 @@ def _get_reference_model(model, energy_bounds, margin_percent=70):
         return model.spectral_model
 
 
+@freeze
 class FluxPointsDataset(Dataset):
     """Bundle a set of flux points with a parametric model, to compute fit statistic function using different statistics (see ``stat_type``).
 
@@ -120,14 +122,6 @@ class FluxPointsDataset(Dataset):
     ``gammapy download datasets --tests --out $GAMMAPY_DATA``
     """
 
-    _valid_attrs = {
-        "models",
-        "data",
-        "mask_fit",
-        "mask_safe",
-        "meta_table",
-        "stat_kwargs",
-    }
     tag = "FluxPointsDataset"
 
     def __init__(
