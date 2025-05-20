@@ -102,7 +102,6 @@ These functions are obtained through Monte-Carlo simulations of gamma-ray shower
 e.g.  detector configuration, zenith angle of the pointing position, detector state and different event reconstruction
 and selection schemes. In the DL3 format, the IRF are distributed for each observing run.
 
-
 Need of four individual responses
 ---------------------------------
 
