@@ -121,8 +121,8 @@ Further details on individuals responses and how they are implemented in Gammapy
     psf
 
 
-Most of the formats defined at :ref:`gadf:iact-irf` are supported. At the moment, there is little support for
-:term:`Fermi-LAT` or other instruments, although efforts are underway to improve this.
+Most of the formats defined at :ref:`gadf:iact-irf` are supported. Currently, there is some support for
+:term:`Fermi-LAT` and other instruments, with ongoing efforts to improve this.
 
 Most users will not use `gammapy.irf` directly, but will instead use IRFs as part of their spectrum,
 image or cube analysis (via e.g. the `~gammapy.makers.MapDatasetMaker` during the data reduction,
