@@ -18,10 +18,14 @@ def freeze(cls):
     original_init = cls.__init__
 
     @staticmethod
-    def set_allowed_keys(obj):
-        allowed_keys = {k for k in obj.__class__.__dict__ if not k.startswith("_")}
-        allowed_keys.update({k for k in obj.__dict__ if not k.startswith("_")})
-        return allowed_keys
+    def set_allowed_attrs(obj):
+        allowed_attrs = {
+            k
+            for k, v in obj.__class__.__dict__.items()
+            if not k.startswith("_") and not callable(v)
+        }
+        allowed_attrs.update({k for k in obj.__dict__ if not k.startswith("_")})
+        return allowed_attrs
 
     @wraps(original_init)
     def __init__(self, *args, **kwargs):
@@ -30,15 +34,17 @@ def freeze(cls):
         # Call the original constructor
         original_init(self, *args, **kwargs)
 
-        self._allowed_keys = set_allowed_keys(self)
+        self._allowed_attrs = set_allowed_attrs(self)
 
-        # Freeze the object only if were are in its __init__ method
+        # Freeze the object only if we are in its __init__ method
         if self.__class__ is cls:
             self._frozen = True
 
     def __setattr__(self, key, value):
-        if getattr(self, "_frozen", False) and key not in getattr(
-            self, "_allowed_keys", set()
+        if (
+            getattr(self, "_frozen", False)
+            and not key.startswith("_")
+            and key not in getattr(self, "_allowed_attrs", set())
         ):
             raise AttributeError(
                 f"{key} is not a valid attribute of {type(self).__name__}."
