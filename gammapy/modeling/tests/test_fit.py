@@ -29,8 +29,6 @@ class MyModel(ModelBase):
 class MyDataset(Dataset):
     tag = "MyDataset"
 
-    _valid_attrs = {"model", "data_shape", "meta_table"}
-
     def __init__(self, name="test"):
         self._name = name
         model = MyModel(x=1.99, y=2.99e3, z=3.99e-2)
