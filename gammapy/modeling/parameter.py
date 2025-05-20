@@ -254,7 +254,7 @@ class Parameter:
     def factor_min(self):
         """Factor minimum as a float (used by the optimizer).
 
-        By default when no transform is applied, ``factor_min = min / scale``,
+        By default, when no transform is applied, ``factor_min = min / scale``,
         otherwise ``factor_min = transform(min)``.
         """
         return self.transform(self.min)
@@ -276,7 +276,7 @@ class Parameter:
     def factor_max(self):
         """Factor maximum as a float (used by the optimizer).
 
-        By default when no transform is applied, ``factor_max = max / scale``,
+        By default, when no transform is applied, ``factor_max = max / scale``,
         otherwise ``factor_max = transform(max)``.
         """
         return self.transform(self.max)
@@ -295,9 +295,9 @@ class Parameter:
 
         Parameters
         ----------
-        min, max: float, `~astropy.units.Quantity`, str
+        min, max: float, `~astropy.units.Quantity` or str, optional
             Minimum and Maximum value to assign to the parameter `min` and `max`.
-            Default is None, which set `min` and `max` to `np.nan`.
+            Default is None, which set `min` and `max` to `~numpy.nan`.
         """
         if min is not None:
             self.min = min
@@ -439,7 +439,7 @@ class Parameter:
 
     @property
     def scan_values(self):
-        """Stat scan values as a `~numpy.ndarray`."""
+        """Stat scan values as a `numpy.ndarray`."""
         if self._scan_values is None:
             scale = interpolation_scale(self.interp)
             parmin, parmax = scale([self.scan_min, self.scan_max])
@@ -535,12 +535,12 @@ class Parameter:
             self._scale = value
 
     def transform(self, value, update_scale=False):
-        """Tranform from value to factor (used by the optimizer).
+        """Transform from value to factor (used by the optimizer).
 
         Parameters
         ----------
         value : float
-            Parameter value
+            Parameter value.
         update_scale : bool, optional
             Update the scaling (used by the autoscale). Default is False.
         """
@@ -551,30 +551,30 @@ class Parameter:
         return transformed_value / self.scale
 
     def inverse_transform(self, factor):
-        """Inverse tranform from factor (used by the optimizer) to value.
+        """Inverse transform from factor (used by the optimizer) to value.
 
         Parameters
         ----------
-        value : float
-            Parameter factor
+        factor : float
+            Parameter factor.
         """
         interp_scale = interpolation_scale(self.scale_transform)
         value = interp_scale.inverse(self.scale * factor)
         return value
 
     def _inverse_transform_derivative(self, factor):
-        """Inverse tranform from factor (used by the optimizer) to value.
+        """Inverse transform from factor (used by the optimizer) to value.
 
         Parameters
         ----------
-        value : float
-            Parameter factor
+        factor : float
+            Parameter factor.
         """
         interp_scale = interpolation_scale(self.scale_transform)
         return interp_scale._inverse_deriv(self.scale * factor) * self.scale
 
     def autoscale(self):
-        "Apply `interpolation_scale' and `scale_method' to the parameter."
+        "Apply `~gammapy.utils.interpolation.interpolation_scale` and `scale_method` to the parameter."
         self.factor = self.transform(self.value, update_scale=True)
 
     def reset_autoscale(self):
@@ -913,10 +913,6 @@ class PriorParameter(Parameter):
     distributions and uniform distributions. The prior includes information or knowledge about the dataset or the
     parameters of the fit.
 
-    Examples
-    --------
-    For a usage example see :doc:`/tutorials/api/priors` tutorial.
-
     Parameters
     ----------
     name : str
@@ -925,6 +921,10 @@ class PriorParameter(Parameter):
         Value.
     unit : `~astropy.units.Unit` or str, optional
         Unit. Default is "".
+
+    Examples
+    --------
+    For a usage example see :doc:`/tutorials/api/priors` tutorial.
     """
 
     def __init__(

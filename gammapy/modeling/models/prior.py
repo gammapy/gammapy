@@ -79,7 +79,7 @@ class Prior(ModelBase):
 
     @property
     def weight(self):
-        """Weight mulitplied to the prior when evaluated."""
+        """Weight multiplied to the prior when evaluated."""
         return self._weight
 
     @weight.setter
@@ -88,7 +88,7 @@ class Prior(ModelBase):
 
     def __call__(self, value):
         """Call evaluate method."""
-        # assuming the same unit as the PriorParamater here
+        # assuming the same unit as the PriorParameter here
         kwargs = {par.name: par.value for par in self.parameters}
         return self.weight * self.evaluate(value.value, **kwargs)
 
@@ -144,10 +144,10 @@ class GaussianPrior(Prior):
 
     Parameters
     ----------
-    mu : float
+    mu : float, optional
         Mean of the Gaussian distribution.
         Default is 0.
-    sigma : float
+    sigma : float, optional
         Standard deviation of the Gaussian distribution.
         Default is 1.
     """
@@ -178,10 +178,10 @@ class UniformPrior(Prior):
     ----------
     min : float, optional
         Minimum value.
-        Default is -`numpy.inf`.
+        Default is -`~numpy.inf`.
     max : float, optional
         Maximum value.
-        Default is `numpy.inf`.
+        Default is `~numpy.inf`.
     """
 
     tag = ["UniformPrior"]
