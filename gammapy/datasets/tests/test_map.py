@@ -12,16 +12,19 @@ from astropy.utils.exceptions import AstropyUserWarning
 from regions import CircleSkyRegion
 import gammapy.irf.psf.map as psf_map_module
 from gammapy.catalog import SourceCatalog3FHL
-from gammapy.data import GTI, DataStore
+from gammapy.data import GTI, DataStore, Observation, FixedPointingInfo
 from gammapy.datasets import (
     Datasets,
     MapDataset,
     MapDatasetOnOff,
     create_empty_map_dataset_from_irfs,
     create_map_dataset_from_observation,
+    create_map_dataset_geoms,
 )
+
 from gammapy.datasets.map import RAD_AXIS_DEFAULT
 from gammapy.irf import (
+    load_irf_dict_from_file,
     EDispKernelMap,
     EDispMap,
     EffectiveAreaTable2D,
@@ -31,6 +34,7 @@ from gammapy.irf import (
     PSFMap,
     RecoPSFMap,
 )
+from gammapy.makers import MapDatasetMaker
 from gammapy.makers.utils import make_map_exposure_true_energy, make_psf_map
 from gammapy.maps import (
     HpxGeom,
@@ -52,6 +56,7 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
     UniformPrior,
+    ExpCutoffPowerLawSpectralModel,
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
 from gammapy.utils.types import JsonQuantityEncoder
@@ -2442,3 +2447,63 @@ def test_add_fermi_iso():
     dataset.models = model
     assert "isotropic" in dataset.models.names[0]
     assert not dataset.models[0].apply_irf["edisp"]
+
+
+@requires_data()
+@requires_dependency("healpy")
+def test_map_dataset_hpx_evaluation_with_model():
+    filename = "$GAMMAPY_DATA/cta-caldb/Prod5-North-20deg-AverageAz-4LSTs09MSTs.180000s-v0.1.fits.gz"
+    pointing = SkyCoord("0d", "0d")
+    irfs = load_irf_dict_from_file(filename)
+    obs = Observation.create(
+        pointing=FixedPointingInfo(fixed_icrs=pointing), irfs=irfs, livetime="1h"
+    )
+    energy_axis = MapAxis.from_energy_bounds(0.01, 100.0, 2, unit="TeV", name="energy")
+    energy_true_axis = MapAxis.from_energy_bounds(
+        0.005, 200, 5, unit="TeV", name="energy_true"
+    )
+
+    hpregion_str = "DISK({lon},{lat},{rad})".format(
+        lon=pointing.ra.degree, lat=pointing.dec.degree, rad=2
+    )
+    HPXNSIDE = 128
+    hpxgeom = HpxGeom.create(
+        nside=HPXNSIDE,
+        nest=True,
+        region=hpregion_str,
+        skydir=pointing,
+        frame="icrs",
+        axes=[energy_axis],
+    )
+
+    mixed_geoms = create_map_dataset_geoms(
+        geom=hpxgeom, energy_axis_true=energy_true_axis
+    )
+
+    mixed_geoms["geom_psf"] = mixed_geoms["geom_psf"].to_wcs_geom()
+    mixed_geoms["geom_edisp"] = mixed_geoms["geom_edisp"].to_wcs_geom()
+
+    maker = MapDatasetMaker(selection=["background", "edisp", "psf", "exposure"])
+    hpxmap = MapDataset.from_geoms(**mixed_geoms)
+    hpxmap_dataset = maker.run(hpxmap, obs)
+
+    models = [FoVBackgroundModel(dataset_name="dataset-mcmc")]
+    models.append(
+        SkyModel(
+            spatial_model=PointSpatialModel(
+                lon_0=pointing.ra, lat_0=pointing.dec, frame="icrs"
+            ),
+            spectral_model=ExpCutoffPowerLawSpectralModel(
+                amplitude=1e-11 * u.Unit("cm-2 s-1 TeV-1"),
+                index=2,
+                lambda_=0.1 * u.Unit("TeV-1"),
+                reference=1 * u.TeV,
+            ),
+            name="test",
+        )
+    )
+    hpxmap_dataset.models = models
+    hpxmap_dataset.fake()
+    assert hpxmap_dataset.evaluators["test"].contributes
+
+    assert_allclose(hpxmap_dataset.npred().data[1, 0], 16.300328)

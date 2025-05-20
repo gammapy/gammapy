@@ -69,9 +69,9 @@ Licence
 Gammapy is licensed under a 3-clause BSD style license - see the
 `LICENSE.rst <https://github.com/gammapy/gammapy/blob/master/LICENSE.rst>`_ file.
 
-The Gammapy documentation is licensed under the `CC BY-NC-SA<https://creativecommons.org/licenses/by-nc-sa/4.0/>`_
+The Gammapy documentation is licensed under the `CC BY-NC-SA <https://creativecommons.org/licenses/by-nc-sa/4.0/>`_
 license. Examples, recipes, and other code in the documentation are additionally licensed under the
-`BSD 3-Clause "New" or "Revised"<https://opensource.org/license/BSD-3-Clause>`_ license.
+`BSD 3-Clause "New" or "Revised" <https://opensource.org/license/BSD-3-Clause>`_ license.
 
 Supporting the project
 ++++++++++++++++++++++
