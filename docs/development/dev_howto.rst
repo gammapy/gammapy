@@ -668,6 +668,21 @@ If you have a alternative attribute to use instead, pass its name in the `altern
     print(some_class(10).old_attribute)
 
 
+How to capture a deprecation
+++++++++++++++++++++++++++++
+
+It is important to also catch the deprecation warning in the test files. This can be done in the following way:
+
+.. code::
+
+    # Runs with the renamed argument
+    asmooth = ASmoothMapEstimator(scales=scales, spectral_model=PowerLawSpectralModel())
+
+    # Raises deprecation warning
+    with pytest.warns(GammapyDeprecationWarning):
+        asmooth = ASmoothMapEstimator(scales=scales, spectrum=PowerLawSpectralModel())
+
+
 Others
 ------
 
