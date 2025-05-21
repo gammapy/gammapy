@@ -668,6 +668,23 @@ If you have a alternative attribute to use instead, pass its name in the `altern
     print(some_class(10).old_attribute)
 
 
+How to capture a deprecation
+++++++++++++++++++++++++++++
+
+A deprecation warning raised during CI will be considered an error by `pytest`.
+Nevertheless, it is important to also check that deprecation warnings are correctly
+emitted in the test files. This can be done in the following way:
+
+.. code::
+
+    # Runs with the renamed argument
+    asmooth = ASmoothMapEstimator(scales=scales, spectral_model=PowerLawSpectralModel())
+
+    # Raises deprecation warning
+    with pytest.warns(GammapyDeprecationWarning):
+        ASmoothMapEstimator(scales=scales, spectrum=PowerLawSpectralModel())
+
+
 Others
 ------
 
