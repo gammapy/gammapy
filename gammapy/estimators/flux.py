@@ -27,12 +27,12 @@ class FluxEstimator(ParameterEstimator):
     ----------
     source : str or int
         For which source in the model to compute the flux.
-    n_sigma : int
-        Sigma to use for asymmetric error computation.
-    n_sigma_ul : int
-        Sigma to use for upper limit computation.
-    n_sigma_sensitivity : int
-        Sigma to use for sensitivity computation.
+    n_sigma : int, optional
+        Sigma to use for asymmetric error computation. Default is 1.
+    n_sigma_ul : int, optional
+        Sigma to use for upper limit computation. Default is 2.
+    n_sigma_sensitivity : int, optional
+        Sigma to use for sensitivity computation. Default is 5.
     selection_optional : list of str, optional
         Which additional quantities to estimate. Available options are:
 
@@ -42,16 +42,17 @@ class FluxEstimator(ParameterEstimator):
             * "scan": estimate fit statistic profiles.
 
         Default is None so the optional steps are not executed.
-    fit : `Fit`
+    fit : `Fit`, optional
         Fit instance specifying the backend and fit options.
-    reoptimize : bool
-        If True the free parameters of the other models are fitted in each bin independently,
+        Fit instance specifying the backend and fit options. If None, the `~gammapy.modeling.Fit` instance is created internally. Default is None.
+    reoptimize : bool, optional
+        If True, the free parameters of the other models are fitted in each bin independently,
         together with the norm of the source of interest
         (but the other parameters of the source of interest are kept frozen).
-        If False only the norm of the source of interest if fitted,
+        If False, only the norm of the source of interest is fitted,
         and all other parameters are frozen at their current values.
         Default is False.
-    norm : `~gammapy.modeling.Parameter` or dict
+    norm : `~gammapy.modeling.Parameter` or dict, optional
         Norm parameter used for the fit.
         Default is None and a new parameter is created automatically,
         with value=1, name="norm", scan_min=0.2, scan_max=5, and scan_n_values = 11.

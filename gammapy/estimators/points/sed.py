@@ -37,11 +37,11 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
     ----------
     source : str or int
         For which source in the model to compute the flux points.
-    n_sigma : int
+    n_sigma : int, optional
         Number of sigma to use for asymmetric error computation. Default is 1.
-    n_sigma_ul : int
+    n_sigma_ul : int, optional
         Number of sigma to use for upper limit computation. Default is 2.
-    n_sigma_sensitivity : int
+    n_sigma_sensitivity : int, optional
         Sigma to use for sensitivity computation. Default is 5.
     selection_optional : list of str, optional
         Which additional quantities to estimate. Available options are:
@@ -56,32 +56,35 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
     energy_edges : list of `~astropy.units.Quantity`, optional
         Edges of the flux points energy bins. The resulting bin edges won't be exactly equal to the input ones,
         but rather the closest values to the energy axis edges of the parent dataset.
-        Default is None: apply the estimator in each energy bin of the parent dataset.
-        For further explanation see :ref:`estimators`.
-    fit : `Fit`
-        Fit instance specifying the backend and fit options.
-    reoptimize : bool
-        If True the free parameters of the other models are fitted in each bin independently,
+        Default is [1, 10] TeV.
+    fit : `Fit`, optional
+        Fit instance specifying the backend and fit options. If None, the `~gammapy.modeling.Fit` instance is created
+        internally. Default is None.
+    reoptimize : bool, optional
+        If True, the free parameters of the other models are fitted in each bin independently,
         together with the norm of the source of interest
         (but the other parameters of the source of interest are kept frozen).
-        If False only the norm of the source of interest if fitted,
+        If False, only the norm of the source of interest is fitted,
         and all other parameters are frozen at their current values.
-    sum_over_energy_groups : bool
-        Whether to sum over the energy groups or fit the norm on the full energy grid.
-    n_jobs : int
-        Number of processes used in parallel for the computation. Default is one, unless
-        `~gammapy.utils.parallel.N_JOBS_DEFAULT` was modified. The number of jobs is
-        limited to the number of physical CPUs.
-    parallel_backend : {"multiprocessing", "ray"}
-        Which backend to use for multiprocessing.
-    norm : `~gammapy.modeling.Parameter` or dict
-        Norm parameter used for the fit
-        Default is None and a new parameter is created automatically,
-        with value=1, name="norm", scan_min=0.2, scan_max=5, and scan_n_values = 11.
-        By default the min and max are not set and derived from the source model,
-        unless the source model does not have one and only one norm parameter.
-        If a dict is given the entries should be a subset of
-        `~gammapy.modeling.Parameter` arguments.
+        Default is False.
+    sum_over_energy_groups : bool, optional
+        Whether to sum over the energy groups or fit the norm on the full energy grid. Default is None.
+    n_jobs : int, optional
+        Number of processes used in parallel for the computation. The number of jobs is limited to the number of
+        physical CPUs. If None, defaults to `~gammapy.utils.parallel.N_JOBS_DEFAULT`.
+        Default is None.
+    parallel_backend : {"multiprocessing", "ray"}, optional
+        Which backend to use for multiprocessing. If None, defaults to `~gammapy.utils.parallel.BACKEND_DEFAULT`.
+    norm : `~gammapy.modeling.Parameter` or dict, optional
+        Norm parameter used for the fit.
+        Default is None and a new parameter is created automatically, with value=1, name="norm",
+        scan_min=0.2, scan_max=5, and scan_n_values = 11. By default, the min and max are not set
+        (consider setting them if errors or upper limits computation fails). If a dict is given,
+        the entries should be a subset of `~gammapy.modeling.Parameter` arguments.
+
+    Notes
+    -----
+    For further explanation, see :ref:`estimators`.
     """
 
     tag = "FluxPointsEstimator"
