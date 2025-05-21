@@ -671,7 +671,9 @@ If you have a alternative attribute to use instead, pass its name in the `altern
 How to capture a deprecation
 ++++++++++++++++++++++++++++
 
-It is important to also catch the deprecation warning in the test files. This can be done in the following way:
+A deprecation warning raised during CI will be considered an error by `pytest`.
+Nevertheless, it is important to also check that deprecation warnings are correctly
+emitted in the test files. This can be done in the following way:
 
 .. code::
 
