@@ -682,7 +682,7 @@ emitted in the test files. This can be done in the following way:
 
     # Raises deprecation warning
     with pytest.warns(GammapyDeprecationWarning):
-        asmooth = ASmoothMapEstimator(scales=scales, spectrum=PowerLawSpectralModel())
+        ASmoothMapEstimator(scales=scales, spectrum=PowerLawSpectralModel())
 
 
 Others
