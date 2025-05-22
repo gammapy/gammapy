@@ -156,8 +156,8 @@ def _get_model_parameters_samples(model, n_samples=10000, random_state=42):
 
     Returns
     -------
-    sed_samples : np.array
-        Array of SED samples
+    samples : dict of `~astropy.units.Quantity`
+        Dictionary of parameter samples.
 
     """
     result_samples = {}
