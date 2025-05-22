@@ -28,6 +28,7 @@ from gammapy.utils.interpolation import interpolation_scale
 from gammapy.utils.regions import region_circle_to_ellipse, region_to_frame
 from gammapy.utils.scripts import make_path
 from .core import ModelBase, _build_parameters_from_dict
+from gammapy.utils.units import wrap_at
 
 __all__ = [
     "ConstantFluxSpatialModel",
@@ -622,7 +623,7 @@ class GaussianSpatialModel(SpatialModel):
     lat_0 = Parameter("lat_0", "0 deg", min=-90, max=90)
     sigma = Parameter("sigma", "1 deg", min=0)
     e = Parameter("e", 0, min=0, max=1, frozen=True)
-    phi = Parameter("phi", "0 deg", frozen=True, min=0.0, max=180.0)
+    phi = Parameter("phi", "0 deg", frozen=True)
 
     @property
     def evaluation_bin_size_min(self):
@@ -641,6 +642,7 @@ class GaussianSpatialModel(SpatialModel):
     def evaluate(lon, lat, lon_0, lat_0, sigma, e, phi):
         """Evaluate model."""
         sep = angular_separation(lon, lat, lon_0, lat_0)
+        phi = wrap_at(phi, 0 * u.deg, 180 * u.deg)
 
         if e == 0:
             a = 1.0 - np.cos(sigma)
@@ -752,10 +754,11 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
     r_0 = Parameter("r_0", "1 deg")
     eta = Parameter("eta", 0.5, min=0.01, max=1.0)
     e = Parameter("e", 0.0, min=0.0, max=1.0, frozen=True)
-    phi = Parameter("phi", "0 deg", frozen=True, min=0.0, max=180.0)
+    phi = Parameter("phi", "0 deg", frozen=True)
 
     @staticmethod
     def evaluate(lon, lat, lon_0, lat_0, r_0, eta, e, phi):
+        phi = wrap_at(phi, 0 * u.deg, 180 * u.deg)
         sep = angular_separation(lon, lat, lon_0, lat_0)
         if isinstance(eta, u.Quantity):
             eta = eta.value  # gamma function does not allow quantities
@@ -879,7 +882,7 @@ class DiskSpatialModel(SpatialModel):
     lat_0 = Parameter("lat_0", "0 deg", min=-90, max=90)
     r_0 = Parameter("r_0", "1 deg", min=0)
     e = Parameter("e", 0, min=0, max=1, frozen=True)
-    phi = Parameter("phi", "0 deg", frozen=True, min=0.0, max=180.0)
+    phi = Parameter("phi", "0 deg", frozen=True)
     edge_width = Parameter("edge_width", value=0.01, min=0, max=1, frozen=True)
 
     @property
@@ -928,6 +931,7 @@ class DiskSpatialModel(SpatialModel):
     def evaluate(lon, lat, lon_0, lat_0, r_0, e, phi, edge_width):
         """Evaluate model."""
         sep = angular_separation(lon, lat, lon_0, lat_0)
+        phi = wrap_at(phi, 0 * u.deg, 180 * u.deg)
 
         if e == 0:
             sigma_eff = r_0

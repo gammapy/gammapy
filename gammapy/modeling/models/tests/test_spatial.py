@@ -60,8 +60,6 @@ def test_sky_gaussian():
     sigma = 1 * u.deg
     model = GaussianSpatialModel(lon_0="5 deg", lat_0="15 deg", sigma=sigma)
     assert model.parameters["sigma"].min == 0
-    assert model.parameters["phi"].max == 180.0
-    assert model.parameters["phi"].min == 0.0
     val_0 = model(5 * u.deg, 15 * u.deg)
     val_sigma = model(5 * u.deg, 16 * u.deg)
     assert val_0.unit == "sr-1"
