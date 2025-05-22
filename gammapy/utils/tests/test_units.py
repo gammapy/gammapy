@@ -3,7 +3,8 @@ import pytest
 import numpy as np
 import astropy.units as u
 from gammapy.maps import MapAxis
-from gammapy.utils.units import energy_unit_format, standardise_unit
+from gammapy.utils.units import energy_unit_format, standardise_unit, wrap_at
+from numpy.testing import assert_allclose
 
 
 def test_standardise_unit():
@@ -39,3 +40,8 @@ values = [
 @pytest.mark.parametrize("q, expect", values)
 def test_energy_unit_format(q, expect):
     assert energy_unit_format(q) == expect
+
+
+def test_wrap_at():
+    computed = wrap_at(6.5 * u.deg, 1.0 * u.deg, 3.5 * u.deg)
+    assert_allclose(1.5 * u.deg, computed, rtol=1e-4)
