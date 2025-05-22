@@ -166,6 +166,15 @@ def test_sky_disk():
     assert_allclose(radius.to_value("deg"), 2.222)
     assert_allclose(model.evaluation_bin_size_min, 0.198 * u.deg)
 
+    assert model.phi.min == -20
+    assert model.phi.max == 200
+
+    model.phi.quantity = 210 * u.deg
+    val1 = model(lon, lat)
+    model.phi.value = 30
+    val2 = model(lon, lat)
+    assert_allclose(val1, val2)
+
     # test the normalization for an elongated ellipse near the Galactic Plane
     m_geom_1 = WcsGeom.create(
         binsz=0.015, width=(20, 20), skydir=(2, 2), frame="galactic", proj="AIT"
