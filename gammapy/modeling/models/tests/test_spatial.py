@@ -166,8 +166,8 @@ def test_sky_disk():
     assert_allclose(radius.to_value("deg"), 2.222)
     assert_allclose(model.evaluation_bin_size_min, 0.198 * u.deg)
 
-    assert model.phi.min == -20
-    assert model.phi.max == 200
+    assert model.phi.min == -180
+    assert model.phi.max == 180
 
     model.phi.quantity = 210 * u.deg
     val1 = model(lon, lat)

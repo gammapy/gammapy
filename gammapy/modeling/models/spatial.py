@@ -610,8 +610,7 @@ class GaussianSpatialModel(SpatialModel):
         Eccentricity of the Gaussian (:math:`0<= e<= 1`).
         Default is 0.
     phi : `~astropy.coordinates.Angle`
-        Rotation angle :math:`\phi`: of the major semiaxis (:math:`-20 <= phi <= 200`).
-        phi is wrapped between [0, 180] with the larger range enabled to enable fits for phi close to 0
+        Rotation angle :math:`\phi`: of the major semiaxis (:math:`-180 <= phi <= 180`).
         Increases counter-clockwise from the North direction.
         Default is 0 deg.
     frame : {"icrs", "galactic"}
@@ -624,7 +623,7 @@ class GaussianSpatialModel(SpatialModel):
     lat_0 = Parameter("lat_0", "0 deg", min=-90, max=90)
     sigma = Parameter("sigma", "1 deg", min=0)
     e = Parameter("e", 0, min=0, max=1, frozen=True)
-    phi = Parameter("phi", "0 deg", frozen=True, min=-20, max=200)
+    phi = Parameter("phi", "0 deg", frozen=True, min=-180, max=180)
 
     @property
     def evaluation_bin_size_min(self):
@@ -742,8 +741,7 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
         Eccentricity (:math:`0<= e< =1`).
         Default is 0.
     phi : `~astropy.coordinates.Angle`
-        Rotation angle :math:`\phi`: of the major semiaxis (:math:`-20<=phi<=200`).
-        phi is wrapped between [0, 180] with the larger range enabled to enable fits for phi close to 0
+        Rotation angle :math:`\phi`: of the major semiaxis (:math:`-180<=phi<=180`).
         Increases counter-clockwise from the North direction.
         Default is 0 deg.
     frame : {"icrs", "galactic"}
@@ -756,7 +754,7 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
     r_0 = Parameter("r_0", "1 deg")
     eta = Parameter("eta", 0.5, min=0.01, max=1.0)
     e = Parameter("e", 0.0, min=0.0, max=1.0, frozen=True)
-    phi = Parameter("phi", "0 deg", frozen=True, min=-20, max=200)
+    phi = Parameter("phi", "0 deg", frozen=True, min=-180, max=180)
 
     @staticmethod
     def evaluate(lon, lat, lon_0, lat_0, r_0, eta, e, phi):
@@ -867,8 +865,7 @@ class DiskSpatialModel(SpatialModel):
         Eccentricity of the ellipse (:math:`0<= e<= 1`).
         Default is 0.
     phi : `~astropy.coordinates.Angle`
-        Rotation angle :math:`\phi`: of the major semiaxis (:math:`-20<=phi<=200`).
-        phi is wrapped between [0, 180] with the larger range enabled to enable fits for phi close to 0
+        Rotation angle :math:`\phi`: of the major semiaxis (:math:`-180<=phi<=200`).
         Increases counter-clockwise from the North direction.
         Default is 0 deg.
     edge_width : float
@@ -885,7 +882,7 @@ class DiskSpatialModel(SpatialModel):
     lat_0 = Parameter("lat_0", "0 deg", min=-90, max=90)
     r_0 = Parameter("r_0", "1 deg", min=0)
     e = Parameter("e", 0, min=0, max=1, frozen=True)
-    phi = Parameter("phi", "0 deg", frozen=True, min=-20, max=200)
+    phi = Parameter("phi", "0 deg", frozen=True, min=-180, max=180)
     edge_width = Parameter("edge_width", value=0.01, min=0, max=1, frozen=True)
 
     @property
