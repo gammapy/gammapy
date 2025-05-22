@@ -136,10 +136,11 @@ def integrate_spectrum(
         parameter_samples = func._convert_evaluate_unit(parameter_samples, energy)
         # this will create an array of shape (n_energy, num, n_samples)
         values = func.evaluate(energy[..., np.newaxis], **parameter_samples)
-        # We swap axes to have an array of shape (n_energy, n_samples, num)
+        # We repeat energy n_sample times and reshape to (n_energy, num, n_samples)
+        energy = np.repeat(energy, values.shape[-1]).reshape(values.shape)
+        # We swap axes to have arrays of shape (n_energy, n_samples, num)
         values = np.swapaxes(values, -1, -2)
-        # We resize energy to the same shape
-        energy = np.resize(energy, values.shape)
+        energy = np.swapaxes(energy, -1, -2)
     else:
         values = func(energy)
     # we can call trapz_loglog assuming the last axis is the one to perform integration on.

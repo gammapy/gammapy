@@ -1391,13 +1391,12 @@ def test_vectorized_integrate_spectrum():
 
     energy = [100, 1000, 10000] * u.GeV
 
-    integral = integrate_spectrum(model, energy[:-1], energy[1:], ndecade=10)
+    integral = integrate_spectrum(model, energy[:-1], energy[1:], ndecade=20)
     vector_integral = integrate_spectrum(
-        model, energy[:-1], energy[1:], ndecade=10, parameter_samples=parameter_samples
+        model, energy[:-1], energy[1:], ndecade=20, parameter_samples=parameter_samples
     )
 
     assert integral.shape == (2,)
+    assert_allclose(integral.to_value("cm-2s-1"), [9e-12, 9e-13])
     assert vector_integral.shape == (2, 10)
-    assert_allclose(
-        vector_integral[:, 0].to_value("cm-2s-1"), integral.to_value("cm-2s-1")
-    )
+    assert_allclose(vector_integral[:, 0].to_value("cm-2s-1"), [9e-12, 9e-13])
