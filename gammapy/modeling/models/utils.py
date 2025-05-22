@@ -240,17 +240,25 @@ class FluxPredictionBand:
             return x * model(x)
 
         if hasattr(model, "evaluate_energy_flux"):
-            return model.evaluate_energy_flux(energy_min, energy_max, **samples)
+            return model.evaluate_energy_flux(
+                energy_min[..., np.newaxis], energy_max[..., np.newaxis], **samples
+            )
         else:
             return integrate_spectrum(f, energy_min, energy_max, **samples)
 
     @staticmethod
     def _compute_flux(energy_min, energy_max, model, samples, ndecade=100):
         if hasattr(model, "evaluate_integral"):
-            return model.evaluate_integral(energy_min, energy_max, **samples)
+            return model.evaluate_integral(
+                energy_min[..., np.newaxis], energy_max[..., np.newaxis], **samples
+            )
         else:
             res = integrate_spectrum(
-                model, energy_min, energy_max, ndecade=10, parameter_samples=samples
+                model,
+                energy_min,
+                energy_max,
+                ndecade=ndecade,
+                parameter_samples=samples,
             )
             return res
 
@@ -269,10 +277,15 @@ class FluxPredictionBand:
         fluxes = self._compute_dnde(energy, self.model, samples)
         return self._compute_asymetric_errors(fluxes, n_sigma=n_sigma)
 
-    def integral_error(self, energy_min, energy_max):
+    def integral_error(self, energy_min, energy_max, n_sigma=1):
         samples = self.model._convert_evaluate_unit(self.samples, energy_min)
         fluxes = self._compute_flux(energy_min, energy_max, self.model, samples)
-        return self._compute_asymetric_errors(fluxes, axis=1)
+        return self._compute_asymetric_errors(fluxes, n_sigma=n_sigma)
+
+    def energy_flux_error(self, energy_min, energy_max, n_sigma=1):
+        samples = self.model._convert_evaluate_unit(self.samples, energy_min)
+        fluxes = self._compute_eflux(energy_min, energy_max, self.model, samples)
+        return self._compute_asymetric_errors(fluxes, n_sigma=n_sigma)
 
     @classmethod
     def from_model_covariance(cls, model, n_samples=10000, random_state=42):
