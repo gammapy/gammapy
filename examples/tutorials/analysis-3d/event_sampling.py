@@ -22,7 +22,7 @@ event-sampler and how to obtain an output photon event list.
 The core of the event sampling lies into the Gammapy
 `~gammapy.datasets.MapDatasetEventSampler` class, which is based on
 the inverse cumulative distribution function `(Inverse
-CDF) <https://en.wikipedia.org/wiki/Cumulative_distribution_function#Inverse_distribution_function_(quantile_function)>`__. 
+CDF) <https://en.wikipedia.org/wiki/Cumulative_distribution_function#Inverse_distribution_function_(quantile_function)>`__.
 
 The `~gammapy.datasets.MapDatasetEventSampler` takes in input a
 `~gammapy.datasets.Dataset` object containing the spectral, spatial
@@ -306,7 +306,7 @@ events.table.meta["OBJECT"] = dataset.models[0].name
 
 primary_hdu = fits.PrimaryHDU()
 hdu_evt = fits.BinTableHDU(events.table)
-hdu_gti = fits.BinTableHDU(dataset.gti.table, name="GTI")
+hdu_gti = dataset.gti.to_table_hdu()
 hdu_all = fits.HDUList([primary_hdu, hdu_evt, hdu_gti])
 hdu_all.writeto("./event_sampling/events_0001.fits", overwrite=True)
 
