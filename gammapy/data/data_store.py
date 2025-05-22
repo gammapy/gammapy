@@ -620,10 +620,10 @@ class DataStoreMaker:
         pos = SkyCoord(info["RA_PNT"], info["DEC_PNT"], unit="deg").galactic
         info["GLON_PNT"] = pos.l
         info["GLAT_PNT"] = pos.b
-        info["DATE-OBS"] = header.get("DATE_OBS", na_str)
-        info["TIME-OBS"] = header.get("TIME_OBS", na_str)
-        info["DATE-END"] = header.get("DATE_END", na_str)
-        info["TIME-END"] = header.get("TIME_END", na_str)
+        info["DATE-OBS"] = header.get("DATE-OBS", na_str)
+        info["TIME-OBS"] = header.get("TIME-OBS", na_str)
+        info["DATE-END"] = header.get("DATE-END", na_str)
+        info["TIME-END"] = header.get("TIME-END", na_str)
         info["N_TELS"] = header.get("N_TELS", na_int)
         info["OBJECT"] = header.get("OBJECT", na_str)
 
