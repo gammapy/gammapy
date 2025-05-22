@@ -8,9 +8,17 @@ from astropy.time import Time
 from regions import PointSkyRegion
 from gammapy.maps import HpxNDMap, Map, MapAxis, RegionNDMap
 from gammapy.maps.hpx.io import HPX_FITS_CONVENTIONS, HpxConv
+from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_path, make_name
 from gammapy.utils.time import time_ref_from_dict, time_ref_to_dict
-from . import LightCurveTemplateTemporalModel, Models, SkyModel, TemplateSpatialModel
+from . import (
+    LightCurveTemplateTemporalModel,
+    Models,
+    SkyModel,
+    TemplateSpatialModel,
+    SpectralModel,
+    integrate_spectrum,
+)
 
 __all__ = ["read_hermes_cube"]
 
@@ -131,3 +139,158 @@ def cutout_template_models(models, cutout_kwargs, datasets_names=None):
         else:
             models_cut.append(m)
     return models_cut
+
+
+def _get_model_parameters_samples(model, n_samples=10000, random_state=42):
+    """Create SED samples from parameters and covariance using multivariate normal distribution.
+
+    Parameters
+    ----------
+    model : `~gammapy.modeling.models.Model`
+        Model used to compute the samples
+    n_samples : int, optional
+        Number of samples to generate. Default is 10000.
+    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
+        Defines random number generator initialisation.
+        Passed to `~gammapy.utils.random.get_random_state`. Default is 42.
+
+    Returns
+    -------
+    sed_samples : np.array
+        Array of SED samples
+
+    """
+    result_samples = {}
+    rng = get_random_state(random_state)
+
+    samples = rng.multivariate_normal(
+        model.parameters.value,
+        model.covariance.data,
+        n_samples,
+    )
+
+    for i, par in enumerate(model.parameters):
+        result_samples[par.name] = samples[:, i].T * par.unit
+
+    return result_samples
+
+
+class FluxPredictionBand:
+    """Evaluate flux of a spectral model based on samples of its parameters.
+
+    Parameters
+    ----------
+    model : `~gammapy.modeling.models.SpectralModel`
+        The spectral model.
+    samples : dict
+        The dictionary of samples. It must contain one key per model parameter name.
+        The content of each key is the samples quantities for this parameter.
+    """
+
+    def __init__(self, model, samples):
+        if not isinstance(model, SpectralModel):
+            raise TypeError(
+                f"PredictionBand requires SpectralModel. Got {type(model)} instead."
+            )
+
+        self._model, self._samples = self._validate(model, samples)
+
+    @staticmethod
+    def _validate(model, samples):
+        names = set(model.parameters.names)
+        samples_names = set(samples.keys())
+        if not names == samples_names:
+            raise ValueError(
+                f"Sample dictionary does not match parameters: got {samples_names} instead of {names}"
+            )
+
+        sizes = [len(samples[_]) for _ in samples.keys()]
+        if len(set(sizes)) > 1:
+            raise ValueError("All parameter samples must have the same length.")
+
+        return model, samples
+
+    @property
+    def model(self):
+        return self._model
+
+    @property
+    def samples(self):
+        return self._samples
+
+    @staticmethod
+    def _sigma_to_percentiles(n_sigma=1):
+        """Return percentiles corresponding to -sigma, 0, sigma."""
+        from scipy.stats import norm
+
+        if n_sigma <= 0:
+            raise ValueError(
+                f"Number of sigma is expected to be positive float. Got {n_sigma} instead."
+            )
+
+        return 100 * (1 - norm.sf([-n_sigma, 0.0, n_sigma]))
+
+    @staticmethod
+    def _compute_dnde(energy, model, samples):
+        return model.evaluate(energy[:, np.newaxis], **samples)
+
+    @staticmethod
+    def _compute_eflux(energy_min, energy_max, model, samples):
+        def f(x):
+            return x * model(x)
+
+        if hasattr(model, "evaluate_energy_flux"):
+            return model.evaluate_energy_flux(energy_min, energy_max, **samples)
+        else:
+            return integrate_spectrum(f, energy_min, energy_max, **samples)
+
+    @staticmethod
+    def _compute_flux(energy_min, energy_max, model, samples, ndecade=100):
+        if hasattr(model, "evaluate_integral"):
+            return model.evaluate_integral(energy_min, energy_max, **samples)
+        else:
+            res = integrate_spectrum(
+                model, energy_min, energy_max, ndecade=10, parameter_samples=samples
+            )
+            return res
+
+    @staticmethod
+    def _compute_asymetric_errors(fluxes, n_sigma=1, axis=-1):
+        percentiles = FluxPredictionBand._sigma_to_percentiles(n_sigma)
+
+        flux_min, flux_median, flux_max = np.percentile(fluxes, percentiles, axis=axis)
+        errn = flux_median - flux_min
+        errp = flux_max - flux_median
+
+        return errn, errp
+
+    def evaluate_error(self, energy, n_sigma=1):
+        samples = self.model._convert_evaluate_unit(self.samples, energy)
+        fluxes = self._compute_dnde(energy, self.model, samples)
+        return self._compute_asymetric_errors(fluxes, n_sigma=n_sigma)
+
+    def integral_error(self, energy_min, energy_max):
+        samples = self.model._convert_evaluate_unit(self.samples, energy_min)
+        fluxes = self._compute_flux(energy_min, energy_max, self.model, samples)
+        return self._compute_asymetric_errors(fluxes, axis=1)
+
+    @classmethod
+    def from_model_covariance(cls, model, n_samples=10000, random_state=42):
+        """Create random samples according to model covariance matrix.
+
+        Assumes that samples are distributed following multivariate normal law.
+
+        Parameters
+        ----------
+        model : `~gammapy.modeling.models.SpectralModel`
+            Input spectral model.
+        n_samples : int, optional
+            Number of samples to generate. Default is 10000.
+        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
+            Defines random number generator initialisation.
+            Passed to `~gammapy.utils.random.get_random_state`. Default is 42.
+        """
+        samples = _get_model_parameters_samples(
+            model, n_samples=n_samples, random_state=random_state
+        )
+        return cls(model, samples)

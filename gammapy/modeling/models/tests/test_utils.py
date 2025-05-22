@@ -1,9 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import pytest
+import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.time import Time
-from gammapy.modeling.models import LightCurveTemplateTemporalModel
-from gammapy.modeling.models.utils import _template_model_from_cta_sdc, read_hermes_cube
+from gammapy.modeling.models import LightCurveTemplateTemporalModel, SkyModel
+from gammapy.modeling.models.utils import (
+    _template_model_from_cta_sdc,
+    read_hermes_cube,
+    FluxPredictionBand,
+)
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import requires_data, requires_dependency
 
@@ -45,3 +51,50 @@ def test_read_hermes_cube():
     assert map_.geom.axes[0].unit == "GeV"
     assert_allclose(map_.geom.axes[0].center[3], 1 * u.GeV)
     assert_allclose(map_.get_by_coord((0 * u.deg, 0 * u.deg, 1 * u.GeV)), 2.6391575)
+
+
+def test_flux_prediction_band_validation():
+    model = SkyModel.create(spectral_model="pl")
+    samples = {}
+    for par in model.parameters:
+        samples[par.name] = np.ones(10) * par.quantity
+
+    predict = FluxPredictionBand(model.spectral_model, samples)
+    assert predict.model == model.spectral_model
+    assert "amplitude" in predict.samples.keys()
+
+    with pytest.raises(TypeError):
+        FluxPredictionBand(model, samples)
+
+    bad_samples = samples.copy()
+    bad_samples["index"] = np.ones(5)
+    with pytest.raises(ValueError):
+        FluxPredictionBand(model.spectral_model, bad_samples)
+
+    bad_samples = samples.copy()
+    bad_samples.pop("index")
+    with pytest.raises(ValueError):
+        FluxPredictionBand(model.spectral_model, bad_samples)
+
+
+def test_prediction_percentiles():
+    percentiles = FluxPredictionBand._sigma_to_percentiles(2)
+    assert_allclose(percentiles, [2.275013, 50.0, 97.724987])
+
+    with pytest.raises(ValueError):
+        FluxPredictionBand._sigma_to_percentiles(-1)
+
+
+def test_flux_prediction_band_create_from_covariance():
+    model = SkyModel.create(spectral_model="pl").spectral_model
+    model.covariance = [
+        [0.01, 0, 0],
+        [0, 1e-26, 0],
+        [0, 0, 0.0],
+    ]
+
+    predict = FluxPredictionBand.from_model_covariance(model, n_samples=10000)
+
+    assert predict.samples["index"].shape == (10000,)
+    assert_allclose(predict.samples["amplitude"].mean().value, 1e-12, rtol=1e-2)
+    assert_allclose(predict.samples["amplitude"].std().value, 1e-13, rtol=1e-2)

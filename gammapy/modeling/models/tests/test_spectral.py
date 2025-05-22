@@ -1400,3 +1400,13 @@ def test_vectorized_integrate_spectrum():
     assert_allclose(integral.to_value("cm-2s-1"), [9e-12, 9e-13])
     assert vector_integral.shape == (2, 10)
     assert_allclose(vector_integral[:, 0].to_value("cm-2s-1"), [9e-12, 9e-13])
+
+    # check fail if model is not passed
+    with pytest.raises(TypeError):
+        integrate_spectrum(
+            model.evaluate,
+            energy[:-1],
+            energy[1:],
+            ndecade=20,
+            parameter_samples=parameter_samples,
+        )
