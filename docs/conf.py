@@ -95,24 +95,28 @@ source_suffix = '.rst'
 # The master toctree document.
 master_doc = 'index'
 
+# Allow to add the canonical html flag on all the pages
+# This permits to precise to web search engine that the pages for the stable version are privileged
+html_baseurl = 'https://docs.gammapy.org/stable/'
+
 # The reST default role (used for this markup: `text`) to use for all
 # documents. Set to the "smart" one.
 default_role = 'obj'
 
 # Add any Sphinx extension module names here, as strings.
 extensions = [
+    # Order for sphinx_automodapi is important
+    "sphinx.ext.autosummary",
+    "sphinx_automodapi.automodapi", # This should come after autosummary
+    "sphinx_automodapi.smart_resolver",
     "sphinx_click.ext",
     'sphinx_copybutton',
     "sphinx_design",
     "sphinx_gallery.gen_gallery",
-    "sphinx.ext.autosummary",
     "sphinx.ext.doctest",
     "sphinx.ext.intersphinx",
     "sphinx.ext.mathjax",
     'sphinx.ext.viewcode',
-    # Order for sphinx_automodapi is important
-    "sphinx_automodapi.automodapi",
-    "sphinx_automodapi.smart_resolver",
     # Allows for mapping to other documentation projects
     "sphinx.ext.intersphinx",
     # Allows for Numpy docstring format
@@ -225,10 +229,12 @@ html_title = "{} v{}".format(project, release)
 # Output file base name for HTML help builder.
 htmlhelp_basename = f"{project}doc"
 
+# Default for the configuration can be found here
+# https://github.com/pydata/pydata-sphinx-theme/blob/main/src/pydata_sphinx_theme/theme/pydata_sphinx_theme/theme.conf
 html_theme_options = {
     "header_links_before_dropdown": 6,
-    "collapse_navigation": True,
-    "navigation_depth": 2,
+    "show_toc_level": 2,
+    # False = don't show "Previous" and "Next" buttons at the bottom of each page
     "show_prev_next": False,
     # links in menu
     "icon_links": [
@@ -246,9 +252,6 @@ html_theme_options = {
     "switcher": {
         "json_url": "https://docs.gammapy.org/stable/switcher.json",
         "version_match": switch_version,
-    },
-    "theme_switcher": {
-        "default": "light",
     },
     "navbar_end": ["version-switcher", "theme-switcher", "navbar-icon-links"],
     "navigation_with_keys": True,
@@ -301,6 +304,8 @@ binder_config = {
 }
 
 sphinx_gallery_conf = {
+    # Remove the sphinx comments i.e. sphinx_gallery_thumbnail_number in tutorials
+    "remove_config_comments": True,
     "examples_dirs": [
         "../examples/models",
         "../examples/tutorials",
@@ -333,7 +338,8 @@ sphinx_gallery_conf = {
     "within_subsection_order": "sphinxext.TutorialExplicitOrder",
     "download_all_examples": True,
     "capture_repr": ("_repr_html_", "__repr__"),
-    "nested_sections": False,
+    # Show sidebar dropdowns for menu
+    "nested_sections": True,
     "min_reported_time": 10,
     "show_memory": False,
     "line_numbers": False,

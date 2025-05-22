@@ -6,7 +6,6 @@ from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from gammapy.stats import WStatCountsStatistic
 from ..core import Estimator
 from ..utils import apply_threshold_sensitivity
-from gammapy.utils.deprecation import deprecated_renamed_argument
 
 __all__ = ["SensitivityEstimator"]
 
@@ -39,7 +38,6 @@ class SensitivityEstimator(Estimator):
 
     tag = "SensitivityEstimator"
 
-    @deprecated_renamed_argument("spectrum", "spectral_model", "v1.3")
     def __init__(
         self,
         spectral_model=None,

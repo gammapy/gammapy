@@ -107,11 +107,11 @@ print(dataset.counts)
 #
 
 regions = make_orthogonal_rectangle_sky_regions(
-    start_pos=SkyCoord("10d", "0d", frame="galactic"),
-    end_pos=SkyCoord("350d", "0d", frame="galactic"),
+    start_pos=SkyCoord("9d", "0d", frame="galactic"),
+    end_pos=SkyCoord("351d", "0d", frame="galactic"),
     wcs=counts_image.geom.wcs,
     height="3 deg",
-    nbin=51,
+    nbin=49,
 )
 
 
@@ -268,7 +268,7 @@ plt.show()
 
 flux_profile_estimator = FluxProfileEstimator(
     regions=regions,
-    spectrum=PowerLawSpectralModel(index=2.3),
+    spectral_model=PowerLawSpectralModel(index=2.3),
     energy_edges=[10, 100, 2000] * u.GeV,
     selection_optional=["ul", "scan"],
 )

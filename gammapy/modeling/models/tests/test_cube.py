@@ -356,6 +356,13 @@ def test_models_mutation(sky_model, sky_models, sky_models_2):
         mods.extend(sky_models_2)
     with pytest.raises(ValueError, match="Model names must be unique"):
         mods = sky_models + sky_models_2
+    with pytest.raises(ValueError, match="Model names must be unique"):
+        mods[1] = mods[0]
+
+    mods[1] = mods[1]
+    assert mods.names == ["source-1", "source-2", "source-3", "source-4"]
+    mods[1] = mods[1].copy(name="copy")
+    assert mods.names == ["source-1", "copy", "source-3", "source-4"]
 
 
 class TestSkyModel:
@@ -1102,3 +1109,10 @@ def test_piecewise_spatial_model_background(background):
     assert isinstance(copied.spatial_model, PiecewiseNormSpatialModel)
 
     assert "Spatial model type" in copied.__str__()
+
+
+def test_naming_fov_background_model():
+    fov_default = FoVBackgroundModel(dataset_name="one", name=None)
+    assert fov_default.name == "one-bkg"
+    fov_named = FoVBackgroundModel(dataset_name="two", name="custom_name")
+    assert fov_named.name == "custom_name"

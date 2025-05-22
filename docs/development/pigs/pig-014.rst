@@ -142,7 +142,7 @@ prototype notebook), this will happen at the coding sprint later this week.
 There were no objections to this proposal received, so it's accepted.
 
 .. _The interpretation of errors: http://lmu.web.psi.ch/docu/manuals/software_manuals/minuit2/mnerror.pdf
-.. _Fitting and Estimating Parameter Confidence Limits with Sherpa: http://conference.scipy.org/proceedings/scipy2011/pdfs/brefsdal.pdf
+.. _Fitting and Estimating Parameter Confidence Limits with Sherpa: https://proceedings.scipy.org/articles/Majora-ebaa42b7-001
 .. _Wikipedia - Propagation of uncertainty: https://en.wikipedia.org/wiki/Propagation_of_uncertainty
 .. _Frequentism and Bayesianism - A Python-driven Primer: https://arxiv.org/pdf/1411.5018.pdf
 .. _Error estimation in astronomy - A guide: https://arxiv.org/pdf/1009.2755.pdf
