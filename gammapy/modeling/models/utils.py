@@ -235,16 +235,20 @@ class FluxPredictionBand:
         return model.evaluate(energy[:, np.newaxis], **samples)
 
     @staticmethod
-    def _compute_eflux(energy_min, energy_max, model, samples):
-        def f(x):
-            return x * model(x)
-
+    def _compute_eflux(energy_min, energy_max, model, samples, ndecade=100):
         if hasattr(model, "evaluate_energy_flux"):
             return model.evaluate_energy_flux(
                 energy_min[..., np.newaxis], energy_max[..., np.newaxis], **samples
             )
         else:
-            return integrate_spectrum(f, energy_min, energy_max, **samples)
+            return integrate_spectrum(
+                model,
+                energy_min,
+                energy_max,
+                ndecade=ndecade,
+                parameter_samples=samples,
+                eflux=True,
+            )
 
     @staticmethod
     def _compute_flux(energy_min, energy_max, model, samples, ndecade=100):

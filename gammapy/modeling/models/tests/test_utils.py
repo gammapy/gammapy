@@ -100,7 +100,8 @@ def test_flux_prediction_band_create_from_covariance():
     assert_allclose(predict.samples["amplitude"].std().value, 1e-13, rtol=1e-2)
 
 
-def test_flux_prediction_band():
+# This function tests analytical integration methods
+def test_flux_prediction_band_pl():
     from gammapy.modeling.models import PowerLawSpectralModel
 
     model = PowerLawSpectralModel()
@@ -143,3 +144,50 @@ def test_flux_prediction_band():
     assert eflux_errn.unit == u.Unit("TeV cm-2s-1")
     assert_allclose(eflux_errn.value, [3.27e-13, 3.21e-13, 6.91e-13], rtol=1e-2)
     assert_allclose(eflux_errp.value, [3.72e-13, 3.81e-13, 9.96e-13], rtol=1e-2)
+
+
+# This function tests numerical integration methods
+def test_flux_prediction_band_lpl():
+    from gammapy.modeling.models import LogParabolaSpectralModel
+
+    model = LogParabolaSpectralModel(
+        amplitude=3.76e-11 * u.Unit("cm-2 s-1 TeV-1"),
+        reference=1 * u.TeV,
+        alpha=2.44,
+        beta=0.25,
+    )
+    model.covariance = [
+        [1.31e-23, 0, -6.80e-14, 3.04e-13],
+        [0, 0, 0, 0],
+        [-6.80e-14, 0, 0.00899, 0.00904],
+        [3.04e-13, 0, 0.00904, 0.0284],
+    ]
+
+    pred = FluxPredictionBand.from_model_covariance(model)
+
+    dnde_errn, dnde_errp = pred.evaluate_error([0.1, 1, 10] * u.TeV)
+
+    assert dnde_errn.shape == (3,)
+    assert dnde_errp.shape == (3,)
+    assert_allclose(dnde_errn.value, [1.46e-09, 3.54e-12, 2.32e-14], rtol=1e-2)
+    assert_allclose(dnde_errp.value, [3.01e-09, 3.62e-12, 6.26e-14], rtol=1e-2)
+
+    flux_errn, flux_errp = pred.integral_error(
+        [0.1, 1, 10] * u.TeV, [1, 10, 100] * u.TeV
+    )
+
+    assert flux_errn.shape == (3,)
+    assert flux_errp.shape == (3,)
+    assert flux_errn.unit == u.Unit("cm-2s-1")
+    assert_allclose(flux_errn.value, [8.47e-11, 2.56e-12, 9.60e-14], rtol=1e-2)
+    assert_allclose(flux_errp.value, [1.38e-10, 3.14e-12, 3.98e-13], rtol=1e-2)
+
+    eflux_errn, eflux_errp = pred.energy_flux_error(
+        [0.1, 1, 10] * u.TeV, [1, 10, 100] * u.TeV
+    )
+
+    assert eflux_errn.shape == (3,)
+    assert eflux_errp.shape == (3,)
+    assert eflux_errn.unit == u.Unit("TeV cm-2s-1")
+    assert_allclose(eflux_errn.value, [1.35e-11, 6.87e-12, 1.51e-12], rtol=1e-2)
+    assert_allclose(eflux_errp.value, [2.05e-11, 1.02e-11, 7.93e-12], rtol=1e-2)

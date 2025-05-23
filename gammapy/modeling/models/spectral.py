@@ -100,11 +100,13 @@ def scale_plot_flux(flux, energy_power=0):
 
 
 def integrate_spectrum(
-    func, energy_min, energy_max, ndecade=100, parameter_samples=None
+    func, energy_min, energy_max, ndecade=100, parameter_samples=None, eflux=False
 ):
     """Integrate one-dimensional function using the log-log trapezoidal rule.
 
     Internally an oversampling of the energy bins to "ndecade" is used.
+
+    To compute the integral func(E)*E (e.g. to get an energy flux) one can set eflux to True.
 
     Parameters
     ----------
@@ -121,6 +123,9 @@ def integrate_spectrum(
         Dictionary of parameter quantities to pass to `func.evaluate` if it exists.
         This provides vectorized integral evaluation for parameter samples.
         If None, evaluation is performed with a simple call to `func`. Default is None.
+    eflux : bool, optional
+        If True, the function will integrate func(E)*E, to compute the energy flux.
+        Default is False.
     """
     # Here we impose to duplicate the number
     num = np.maximum(np.max(ndecade * np.log10(energy_max / energy_min)), 2)
@@ -143,6 +148,10 @@ def integrate_spectrum(
         energy = np.swapaxes(energy, -1, -2)
     else:
         values = func(energy)
+
+    if eflux:
+        values *= energy
+
     # we can call trapz_loglog assuming the last axis is the one to perform integration on.
     integral = trapz_loglog(values, energy, axis=-1)
     # integral.shape = (num, n_energy, n_samples) so we sum on axis 0
