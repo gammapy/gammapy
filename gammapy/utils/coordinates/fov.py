@@ -33,10 +33,10 @@ class FoVFrame(BaseCoordinateFrame):
     ----------
     origin: astropy.coordinates.SkyCoord[AltAz]
         Origin of this frame as a HorizonCoordinate
-    obstime: astropy.time.Time
+    obstime: `~astropy.time.Time`
         Observation time
-    location: astropy.coordinates.EarthLocation
-        Location of the telescope
+    location: `~astropy.coordinates.EarthLocation`
+        Location of the telescope/instrument/observatory
     """
 
     frame_specific_representation_info = {
@@ -62,7 +62,7 @@ class FoVFrame(BaseCoordinateFrame):
 
 @frame_transform_graph.transform(FunctionTransform, FoVFrame, FoVFrame)
 def fov_to_fov(from_fov_coord, to_fov_frame):
-    """Transform between two skyoffset frames."""
+    """Transform between two `FoVFrame`."""
     intermediate_from = from_fov_coord.transform_to(from_fov_coord.origin)
     intermediate_to = intermediate_from.transform_to(to_fov_frame.origin)
     return intermediate_to.transform_to(to_fov_frame)
