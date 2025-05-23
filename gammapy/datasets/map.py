@@ -5,7 +5,6 @@ from scipy.stats import median_abs_deviation as mad
 import astropy.units as u
 from astropy.io import fits
 from astropy.table import Table
-from astropy.time import Time
 from regions import CircleSkyRegion, RectangleSkyRegion
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
@@ -1518,8 +1517,6 @@ class MapDataset(Dataset):
 
         header = hdu_primary.header
         header["NAME"] = self.name
-        # Update creation metadata before writing
-        self.meta.creation.date = Time.now()
         header.update(self.meta.to_header())
         creation = self.meta.creation
 

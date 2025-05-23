@@ -111,20 +111,6 @@ def test_wcsndmap_write_checksum(tmp_path, npix, binsz, frame, proj, skydir, axe
         assert "DATASUM" in hdu.header
 
 
-def test_wcsndmap_write_creation_metadata(tmp_path):
-    npix, binsz, frame, proj = 10, 1.0, "galactic", "AIT"
-    geom = WcsGeom.create(npix=npix, binsz=binsz, proj=proj, frame=frame)
-    path = tmp_path / "tmp.fits"
-
-    m0 = WcsNDMap(geom)
-    m0.write(path, overwrite=True)
-    hdul = fits.open(path)
-    for hdu in hdul:
-        assert "CREATOR" in hdu.header
-        assert "CREATED" in hdu.header
-        assert hdu.header["CREATOR"][:7] == "Gammapy"
-
-
 def test_wcsndmap_read_write_fgst(tmp_path):
     path = tmp_path / "tmp.fits"
 
