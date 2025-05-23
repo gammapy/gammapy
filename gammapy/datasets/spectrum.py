@@ -3,6 +3,7 @@ import logging
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 from gammapy.utils.scripts import make_path
+from gammapy.utils.metadata import CreatorMetaData
 from .map import MapDataset, MapDatasetOnOff
 from .utils import get_axes
 
@@ -357,8 +358,13 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         if format == "gadf":
             super().write(filename=filename, overwrite=overwrite, checksum=checksum)
         elif format in ["ogip", "ogip-sherpa"]:
+            creation = self.meta.creation or CreatorMetaData()
             writer = OGIPDatasetWriter(
-                filename=filename, format=format, overwrite=overwrite, checksum=checksum
+                filename=filename,
+                format=format,
+                overwrite=overwrite,
+                checksum=checksum,
+                creation=creation,
             )
             writer.write(self)
         else:

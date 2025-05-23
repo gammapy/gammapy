@@ -4,8 +4,13 @@ from numpy.testing import assert_allclose
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from pydantic import ValidationError
-from gammapy.data import EventListMetaData, ObservationMetaData
-from gammapy.utils.metadata import ObsInfoMetaData, PointingInfoMetaData, TargetMetaData
+from gammapy.data import EventListMetaData, ObservationMetaData, GTIMetaData
+from gammapy.utils.metadata import (
+    ObsInfoMetaData,
+    PointingInfoMetaData,
+    TargetMetaData,
+    CreatorMetaData,
+)
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import requires_data
 
@@ -114,3 +119,23 @@ def test_eventlist_metadata():
     input_bad["location"] = "bad"
     with pytest.raises(ValueError):
         EventListMetaData(**input_bad)
+
+
+def test_gti_metadata():
+    input = {
+        "reference_time": "2023-01-01 00:00:00",
+        "creation": CreatorMetaData(creator="Test"),
+    }
+    meta = GTIMetaData(**input)
+
+    hdr = meta.to_header()
+
+    assert meta.creation.creator == "Test"
+    assert_allclose(meta.reference_time.mjd, 59945.0)
+
+    assert hdr["MJDREFI"] == 59945
+    assert hdr["TIMESYS"] == "utc"
+    assert hdr["CREATOR"] == "Test"
+
+    meta_new = GTIMetaData.from_header(hdr)
+    assert_allclose(meta_new.reference_time.mjd, 59945.0)

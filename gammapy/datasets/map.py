@@ -5,6 +5,7 @@ from scipy.stats import median_abs_deviation as mad
 import astropy.units as u
 from astropy.io import fits
 from astropy.table import Table
+from astropy.time import Time
 from regions import CircleSkyRegion, RectangleSkyRegion
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
@@ -1518,6 +1519,8 @@ class MapDataset(Dataset):
         header = hdu_primary.header
         header["NAME"] = self.name
         header.update(self.meta.to_header())
+        creation = self.meta.creation
+        creation.date = Time.now()
 
         hdulist = fits.HDUList([hdu_primary])
         if self.counts is not None:
@@ -1546,6 +1549,9 @@ class MapDataset(Dataset):
 
         if self.meta_table is not None:
             hdulist.append(fits.BinTableHDU(self.meta_table, name="META_TABLE"))
+
+        for hdu in hdulist:
+            hdu.header.update(creation.to_header())
 
         return hdulist
 
@@ -2983,6 +2989,8 @@ class MapDatasetOnOff(MapDataset):
         hdulist = super().to_hdulist()
         exclude_primary = slice(1, None)
 
+        creation = self.meta.creation
+
         del hdulist["BACKGROUND"]
         del hdulist["BACKGROUND_BANDS"]
 
@@ -2996,6 +3004,9 @@ class MapDatasetOnOff(MapDataset):
             hdulist += self.acceptance_off.to_hdulist(hdu="acceptance_off")[
                 exclude_primary
             ]
+
+        for hdu in hdulist:
+            hdu.header.update(creation.to_header())
 
         return hdulist
 

@@ -513,7 +513,12 @@ class RegionNDMap(Map):
             )
 
     def write(
-        self, filename, overwrite=False, format="gadf", hdu="SKYMAP", checksum=False
+        self,
+        filename,
+        overwrite=False,
+        format="gadf",
+        hdu="SKYMAP",
+        checksum=False,
     ):
         """Write map to file.
 

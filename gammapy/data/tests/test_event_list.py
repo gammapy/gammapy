@@ -80,6 +80,12 @@ class TestEventListBase:
             obs = Observation(events=self.events, gti=gti.table, pointing=pointing)
             obs.write("test.fits", overwrite=True)
 
+    def test_eventlist_hdu_creation_metadata(self):
+        hdu = self.events.to_table_hdu(format="gadf")
+        assert "CREATOR" in hdu.header
+        assert "CREATED" in hdu.header
+        assert hdu.header["CREATOR"] == "SASH FITS::EventListWriter"
+
 
 @requires_data()
 class TestEventListHESS:
