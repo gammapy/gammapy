@@ -233,10 +233,12 @@ class OGIPDatasetWriter(DatasetWriter):
         table["BACKSCAL"] = acceptance.data[:, 0, 0]
         del table.meta["BACKSCAL"]
 
-        meta.update(self.creation.to_header())
         # adapt meta data
         table.meta.update(meta)
         hdulist["SPECTRUM"] = fits.BinTableHDU(table)
+
+        for hdu in hdulist:
+            hdu.header.update(self.creation.to_header())
         return hdulist
 
     def write_pha(self, dataset, filename):
