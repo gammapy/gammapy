@@ -3,7 +3,6 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
-from astropy.io import fits
 from astropy.time import Time
 from regions import CircleSkyRegion
 import matplotlib.pyplot as plt
@@ -379,19 +378,9 @@ def test_region_nd_hdulist():
     assert hdulist[2].name == "SKYMAP_BANDS"
     assert hdulist[3].name == "SKYMAP_REGION"
 
-
-def test_region_write_creation_metadata(tmp_path):
-    path = tmp_path / "tmp.fits"
-
-    energy_axis = MapAxis.from_edges([1, 3, 10] * u.TeV, name="energy")
-    m = RegionNDMap.create(region="icrs;circle(83.63, 22.01, 0.5)", axes=[energy_axis])
-
-    m.write(path, overwrite=True)
-
-    with fits.open(path, memmap=False) as hdulist:
-        for hdu in hdulist:
-            assert "CREATOR" in hdu.header
-            assert "CREATED" in hdu.header
+    for hdu in hdulist:
+        assert "CREATOR" in hdu.header
+        assert "CREATED" in hdu.header
 
 
 def test_region_nd_map_interp_no_region():
