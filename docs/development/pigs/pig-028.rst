@@ -1,15 +1,15 @@
 . include:: ../../references.txt
 
-.. _pig-026:
+.. _pig-028:
 
 ************************************
-PIG 26 - Gammapy version 2.0 Roadmap
+PIG 28 - Gammapy version 2.0 Roadmap
 ************************************
 
 * Author: Axel Donath, Bruno Khélifi, Régis Terrier and others
 * Created: March 20th, 2023
-* Accepted:
-* Status: Draft
+* Accepted: -
+* Status: Withdrawn
 * Discussion: `GH 4388`_
 
 Abstract
@@ -304,17 +304,14 @@ Adjustment of theory-based abaques as spatial/spectral model ? (random axis as p
 Formats for energy dependent temporal models?
 How to handle the handle the FitResult object? Make this more important? Make it serialisable? Rely on it in later API, such as Estimators?
 
+Decision
+========
 
-Features / Algorithm
-Spectral unfolding
-TS cubes
-Creation of an ‘EventDataset’
-Multi-instrument support e.g. SherpaDataset See Luca’s prototype
-Support for Event classes/types
-Support for unbinned likelihood analysis
-Handling of pulsar analysis
-Development of Time Series algorithms: e.g. Bayesian Block, Power Spectral Density (and simulation of PSD folded with the observations mask) (Axel: clarify the interface to Astropy time series, which has support for Baysian blocks etc. see https://docs.gammapy.org/0.20.1/api/gammapy.estimators.FluxPoints.html#gammapy.estimators.FluxPoints.to_table )
-Clarify relation to stingray…
+The PIG discussion has stalled. The roadmap reparation process was not very well organized. This should be improved
+for the next development round.
+
+A number of features discussed in the current draft have been implemented. Many elements
+
 
 .. _GH 3767: https://github.com/gammapy/gammapy/issues/3767
 .. _GH 3863: https://github.com/gammapy/gammapy/issues/3863
