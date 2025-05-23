@@ -213,10 +213,6 @@ class WcsMap(Map):
 
         creation = creation or CreatorMetaData()
         hdu_out.header.update(creation.to_header())
-
-        if self.geom.axes:
-            hdu_bands_out.header.update(creation.to_header())
-
         hdu_out.header["BUNIT"] = self.unit.to_string("fits")
 
         if hdu == "PRIMARY":

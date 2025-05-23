@@ -113,7 +113,7 @@ def test_wcsndmap_write_checksum(tmp_path, npix, binsz, frame, proj, skydir, axe
 
 def test_wcsndmap_write_creation_metadata(tmp_path):
     npix, binsz, frame, proj = 10, 1.0, "galactic", "AIT"
-    geom = WcsGeom.create(npix=npix, binsz=binsz, proj=proj, frame=frame, axes=axes1)
+    geom = WcsGeom.create(npix=npix, binsz=binsz, proj=proj, frame=frame)
     path = tmp_path / "tmp.fits"
 
     m0 = WcsNDMap(geom)
