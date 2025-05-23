@@ -8,7 +8,7 @@ PIG 28 - Gammapy version 2.0 Roadmap
 
 * Author: Axel Donath, Bruno Khélifi, Régis Terrier and others
 * Created: March 20th, 2023
-* Accepted: -
+* Accepted: withdrawn on May 23rd, 2025
 * Status: Withdrawn
 * Discussion: `GH 4388`_
 
@@ -202,11 +202,11 @@ See also the general discussion in `GH 3767`_ . The specific subparts are discus
 Version Support for I/O
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Use ASDF (https://asdf.readthedocs.io/) as default serialization format?
-Add I/O registry system for IRFs, Datasets and Maps
-Supporting versions of formats
-Get rid of code like: https://github.com/gammapy/gammapy/blob/main/gammapy/maps/axes.py#L1220
-Change to something like consistently: https://github.com/gammapy/gammapy/blob/main/gammapy/datasets/io.py
+- Use ASDF (https://asdf.readthedocs.io/) as default serialization format?
+- Add I/O registry system for IRFs, Datasets and Maps
+- Supporting versions of formats
+- Get rid of code like: https://github.com/gammapy/gammapy/blob/main/gammapy/maps/axes.py#L1220
+- Change to something like consistently: https://github.com/gammapy/gammapy/blob/main/gammapy/datasets/io.py
 
 Meta Data Handling
 ~~~~~~~~~~~~~~~~~~
@@ -222,7 +222,7 @@ structures and being able to validate those. See `GH 4491`_
 
 Once this is defined a second question must be tackled: the metadata model:
 what is meta data / and what is data and where to draw the line.
-*How to proceed here?*
+
 
 Estimators
 ++++++++++
@@ -238,9 +238,9 @@ Main documentation
 ~~~~~~~~~~~~~~~~~~
 
 - Introduce a deprecation system
-- Update pydata-sphinx-theme?
-- More detailed and nicer?
-- Use type hints in Gammapy everywhere, no type hints for now?
+- Update pydata-sphinx-theme
+- More detailed
+- Use type hints in Gammapy everywhere?
 
 Gammapy-recipes and additional ressources
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -254,55 +254,48 @@ Several questions should be solved for the long term viability of such a reposit
   work with v1.0.
 
 How to keep track and refer to material designed for hands-on sessions, schools etc?
-Currently we have one GitHub repository.
+Currently we have one GitHub repository: gammapy-handson.
 
 We could also develop tutorial videos.
 
 Infrastructure
 ++++++++++++++
 
-Improve test coverage and quality
-Deployment
-Improve our tools helping to the creation of releases
-Creation of Docker images with an automatized tool
-Re-use docker image for Binder, this config here: https://github.com/gammapy/gammapy-webpage/tree/v1.0rc1 already creates docker image in Binder.
+- Improve test coverage and quality.
+- Improve our tools helping to the creation of releases
+- Creation of Docker images with an automatized tool
+- Re-use docker image for Binder, this config here: https://github.com/gammapy/gammapy-webpage/tree/v1.0rc1 already creates docker image in Binder.
 
 Distributed Computing and Performance
 +++++++++++++++++++++++++++++++++++++
 
-Evaluate Jax for GPU acceleration and autograd (https://jax.readthedocs.io/en/latest/ )
-Ray for distributed computing (https://www.ray.io )
-Make Dataset distributable with same API
-Probably rework Dataset API, split off model handling…
-Split off statistic handling from datasets
+- Evaluate Jax for GPU acceleration and autograd (https://jax.readthedocs.io/en/latest/ )
+- Evaluate Ray for distributed computing (https://www.ray.io )
+- Make Dataset distributable with same API
+- Probably rework Dataset API, split off model handling…
+- Split off statistic handling from datasets
 
 Flexible Statistics API
 +++++++++++++++++++++++
 
-Support for priors in likelihood
-Support for systematics terms in likelihood
-Needs to be serialised, i.e. keep information on which statistics and priors haven been used (meta data / providence)
-Split of statistics definition from datasets…
-Support for statistical test associated with periodic signals, in the frequency domain
-Add more tests on model hypothesis? E.g. AIC, PS (https://arxiv.org/abs/2109.07443)
-What about prior and likelihood weights?
-I think this should be 3 PIGS:
-One adding prior support
-One proposing an UnfoldingFluxPointsEstimator (?)
-One proposing splitting the models from dataset, which relates to distributed computing
+- Support for priors in likelihood
+- Support for systematics terms in likelihood
+- Needs to be serialised, i.e. keep information on which statistics and priors haven been used (meta data / provenance)
+- Split of statistics definition from datasets…
+- Support for statistical test associated with periodic signals, in the frequency domain
+- Add more tests on model hypothesis? E.g. AIC, PS (https://arxiv.org/abs/2109.07443)
+- Add likelihood weights?
 
 
 Models and Modeling
 +++++++++++++++++++
 
-Evaluate joint development with https://astromodels.readthedocs.io/en/latest/
-Deprecate Gammapy models and re-bulld based on Astropy or astromodels?
-Move amplitude parameter to `SkyModel`
-Rely more on the `SkyModel` then the submodel…!
-What about `NPredModel`, deprecate or introduce consistently as concept?
-Adjustment of theory-based abaques as spatial/spectral model ? (random axis as parameters, interpolation features during evaluation, definition of a ‘format’)
-Formats for energy dependent temporal models?
-How to handle the handle the FitResult object? Make this more important? Make it serialisable? Rely on it in later API, such as Estimators?
+- Move amplitude parameter to `SkyModel`
+- Rely more on the `SkyModel` then the submodels
+- What about `NPredModel`, deprecate or introduce consistently as concept?
+- Adjustment of theory-based abaques as spatial/spectral model ? (random axis as parameters, interpolation features during evaluation, definition of a ‘format’)
+- Formats for energy dependent temporal models
+- How to handle the handle the FitResult object? Make this more important? Make it serialisable? Rely on it in later API, such as Estimators?
 
 Decision
 ========
@@ -310,7 +303,8 @@ Decision
 The PIG discussion has stalled. The roadmap reparation process was not very well organized. This should be improved
 for the next development round.
 
-A number of features discussed in the current draft have been implemented. Many elements
+A number of features discussed in the current draft have been implemented. Some of the use cases are supported but
+work remains to be done for several. Many decisions and major changes have been postponed
 
 
 .. _GH 3767: https://github.com/gammapy/gammapy/issues/3767
