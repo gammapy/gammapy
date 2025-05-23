@@ -111,6 +111,32 @@ the code as well as the output value produced.
             (10., 20.)>
         radius: 3.0 deg
 
+To allow the code block to be placed correctly over multiple lines utilise the "...":
+
+.. code-block:: text
+
+        Examples
+        --------
+        >>> from gammapy.maps import WcsGeom, MapAxis
+        >>> energy_axis_true = MapAxis.from_energy_bounds(
+        ...            0.5, 20, 10, unit="TeV", name="energy_true"
+        ...        )
+
+
+For a larger code block it is also possible to utilise the following syntax.
+
+.. code-block:: text
+
+        Examples
+        --------
+        .. testcode::
+
+            from gammapy.maps import MapAxis
+            from gammapy.irf import EnergyDispersion2D
+            filename = '$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz'
+            edisp2d = EnergyDispersion2D.read(filename, hdu="EDISP")
+
+
 In order to perform tests of these snippets of code present in the docstrings of the Python files, you may run the
 following command.
 
@@ -118,11 +144,47 @@ following command.
 
     pytest --doctest-modules --ignore-glob=*/tests gammapy
 
-If you get a zsh error try using putting to ignore block inside quotes 
+If you get a zsh error try using putting to ignore block inside quotes
 
 .. code-block:: bash
 
     pytest --doctest-modules "--ignore-glob=*/tests" gammapy
+
+References can also be added to docstrings for proper documentation of specific equations or usage examples. There are
+a few ways to do this. Firstly if you reference a specific equation you can utilise the following syntax:
+
+.. code-block:: text
+
+        From Equation (1) in [1]_.
+
+        References
+        ----------
+        .. [1] `Author et al. (2023), "Title" <link_to_nasaads>`_
+
+Another option is to create a general list of references, as follows:
+
+.. code-block:: text
+
+        References
+        ----------
+        * `Author et al. (2023), "Title" <link_to_nasaads>`_
+        * `Author2 et al. (2022), "Title2" <link_to_nasaads>`_
+
+
+Docstring formatting
+^^^^^^^^^^^^^^^^^^^^
+
+It is also important to check that you have correctly formatted your docstring.
+An easy way to check this is by utilising `pydocstyle`. `pydocstyle` utilises the
+PEP257 convention by default, which means a number of errors are automatically ignored.
+In gammapy we chose to opt for the `numpy` convention therefore the flag must be added
+to correctly check the docstrings. To check the docstring for your specific file, i.e.:
+
+.. code-block:: bash
+
+    pydocstyle --convention=numpy gammapy/data/event_list.py
+
+
 
 Sphinx gallery extension
 ------------------------
@@ -131,6 +193,7 @@ The documentation built-in process uses the `sphinx-gallery <https://sphinx-gall
 extension to build galleries of illustrated examples on how to use Gammapy (i.e.
 :ref:`model-gallery`). The Python scripts used to produce the model gallery are placed in
 ``examples/models`` and ``examples/tutorials``. The configuration of the ``sphinx-gallery`` module is done in ``docs/conf.py``.
+The tutorials are order using a python dictionary stored in ``docs/sphinxext.py``.
 
 
 Choose a thumbnail and tooltip for the tutorial gallery
@@ -153,30 +216,50 @@ choose the thumbnail for the tutorial by adding a comment before the plot:
     plt.show()
 
 The example is taken from the `sphinx-gallery documentation <https://sphinx-gallery.github.io/stable/auto_examples/plot_4_choose_thumbnail.html>`__,
-please refer to it for more details. 
+please refer to it for more details.
 
-The tooltip is the text that appears when you hover over the thumbnail. It is taken from the first line 
+The tooltip is the text that appears when you hover over the thumbnail. It is taken from the first line
 of the docstring of the tutorial. You can change it by editing the docstring. See e.g.
- `Analysis 1 Tutorial <https://github.com/gammapy/gammapy/blob/main/examples/tutorials/starting/analysis_1.py#L5>`__.
+`Analysis 1 Tutorial <https://github.com/gammapy/gammapy/blob/main/examples/tutorials/starting/analysis_1.py#L5>`__.
 
 
 Dealing with links
 ------------------
 
-Links in tutoials are just handled via normal RST syntax. 
+Links in tutorials are just handled via normal RST syntax.
 
 Links to other tutorials
 ++++++++++++++++++++++++
 
-From docstrings and RST documentation files in Gammapy you can link to other tutorials 
-aned gallery example by using RST syntax like this:
-
+From docstrings and RST documentation files in Gammapy you can link to other tutorials
+and gallery examples by using RST syntax like this:
 
 .. code-block:: rst
+
     :doc:`/tutorials/starting/analysis_2`
-    
-Will link to the tutorial ``analysis_2`` from the tutorial base folder. The file
-suffix will be automatically infered by Sphinx.
+
+This will link to the tutorial :doc:`/tutorials/starting/analysis_2` from the tutorial base folder. The file
+suffix will be automatically inferred by Sphinx.
+
+Links to documentation
+++++++++++++++++++++++
+
+To make a reference to a heading within an RST file, first you need to define an explicit target for the heading:
+
+.. code-block:: rst
+
+    .. _datasets:
+
+    Datasets (DL4)
+    ==============
+
+
+The reference is the rendered as ``datasets``.
+To link to this in the documentation you can use:
+
+.. code-block:: rst
+
+    :ref:`datasets`
 
 
 API Links
@@ -202,7 +285,7 @@ To check for broken external links you can use ``tox``:
 
 .. code-block:: bash
 
-   $ tox -e linkcheck
+   tox -e linkcheck
 
 Include png files as images
 ----------------------------
@@ -225,7 +308,7 @@ Documentation guidelines
 
 Like almost all Python projects, the Gammapy documentation is written in a format called
 `restructured text (RST)`_ and built using `Sphinx`_.
-We mostly follow the :ref:`Astropy documentation guidelines <astropy:documentation-guidelines>`,
+We mostly follow the `Astropy documentation guidelines <https://docs.astropy.org/en/latest/development/docguide.html>`,
 which are based on the `Numpy docstring standard`_,
 which is what most scientific Python packages use.
 
@@ -242,6 +325,27 @@ or Gammapy code a bit (either locally with your editor or online on GitHub or vi
 or search the Numpy or Astropy documentation guidelines mentioned above.
 If that doesn't quickly turn up something useful, please ask by putting a comment on the issue or
 pull request you're working on GitHub, or email the Gammapy mailing list.
+
+
+Correct format for bullet point list
+++++++++++++++++++++++++++++++++++++
+
+To correctly add a bullet point list to the docstring, the following can be implemented:
+
+.. testcode::
+
+        """
+        Docstring explanation.
+
+        Parameters
+        ----------
+        parameter_name : parameter_type
+            Description of the parameter with entries:
+                    * option1 : description1
+                    * option2 : description2
+                    * option3 : description3 over more than
+                    one line.
+        """
 
 Functions or class methods that return a single object
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++

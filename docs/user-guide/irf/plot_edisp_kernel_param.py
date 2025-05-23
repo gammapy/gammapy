@@ -1,4 +1,5 @@
 """Plot an energy dispersion using a gaussian parametrisation"""
+
 import matplotlib.pyplot as plt
 from gammapy.irf import EDispKernel
 from gammapy.maps import MapAxis

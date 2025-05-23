@@ -1,3 +1,4 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utility script to work with the CITATION.cff file"""
 import logging
 import subprocess

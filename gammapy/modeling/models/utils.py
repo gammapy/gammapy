@@ -1,19 +1,25 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
+from astropy.nddata import NoOverlapError
+from astropy.time import Time
 from regions import PointSkyRegion
 from gammapy.maps import HpxNDMap, Map, MapAxis, RegionNDMap
 from gammapy.maps.hpx.io import HPX_FITS_CONVENTIONS, HpxConv
-from gammapy.utils.scripts import make_path
-from gammapy.utils.time import time_ref_from_dict
-from . import LightCurveTemplateTemporalModel
+from gammapy.utils.scripts import make_path, make_name
+from gammapy.utils.time import time_ref_from_dict, time_ref_to_dict
+from . import LightCurveTemplateTemporalModel, Models, SkyModel, TemplateSpatialModel
+
+__all__ = ["read_hermes_cube"]
 
 
-def _template_model_from_cta_sdc(filename):
-    """To create a `LightCurveTemplateTemporalModel`
-    from the energy-dependent temporal model files of the cta-sdc1.
-     This format is subject to change"""
+def _template_model_from_cta_sdc(filename, t_ref=None):
+    """To create a `LightCurveTemplateTemporalModel` from the energy-dependent temporal model files of the cta-sdc1.
+
+    This format is subject to change.
+    """
     filename = str(make_path(filename))
     with fits.open(filename) as hdul:
         frame = hdul[0].header.get("frame", "icrs")
@@ -30,15 +36,16 @@ def _template_model_from_cta_sdc(filename):
         )
         time_hdu = hdul["TIMES"]
         time_header = time_hdu.header
-        time_header.setdefault("MJDREFF", 0.5)
-        time_header.setdefault("MJDREFI", 55555)
-        time_header.setdefault("scale", "tt")
+
+        if t_ref is None:
+            t_ref = Time(55555.5, format="mjd", scale="tt")
+        time_header.update(time_ref_to_dict(t_ref, t_ref.scale))
         time_min = time_hdu.data["Initial Time"]
         time_max = time_hdu.data["Final Time"]
         edges = np.append(time_min, time_max[-1]) * u.Unit(time_header["TUNIT1"])
         data = hdul["SPECTRA"]
 
-        time_ref = time_ref_from_dict(time_header)
+        time_ref = time_ref_from_dict(time_header, scale=t_ref.scale)
         time_axis = MapAxis.from_edges(edges=edges, name="time", interp="log")
 
         reg_map = RegionNDMap.create(
@@ -50,7 +57,7 @@ def _template_model_from_cta_sdc(filename):
 
 
 def read_hermes_cube(filename):
-    """Read 3d templates produced with hermes"""
+    """Read 3d templates produced with hermes."""
     # add hermes conventions to the list used by gammapy
     hermes_conv = HpxConv(
         convname="hermes-template",
@@ -82,3 +89,45 @@ def read_hermes_cube(filename):
         energy_nodes, interp="log", name="energy_true", node_type="center", unit="GeV"
     )
     return Map.from_stack(maps, axis=axis)
+
+
+def cutout_template_models(models, cutout_kwargs, datasets_names=None):
+    """Apply cutout to template models.
+
+    Parameters
+    ----------
+    models : `~gammapy.modeling.Models`
+        List of models
+    cutout_kwargs : dict
+        Arguments passed to `gammap.map.cutout`
+    datasets_names : list of str
+        Names of the datasets to which the new model is applied.
+
+    Returns
+    -------
+    models_cut : `~gammapy.modeling.Models`
+        Models with cutout
+    """
+    models_cut = Models()
+    if models is None:
+        return models_cut
+    for m in models:
+        if isinstance(m.spatial_model, TemplateSpatialModel):
+            try:
+                map_ = m.spatial_model.map.cutout(**cutout_kwargs)
+            except (NoOverlapError, ValueError):
+                continue
+            template_cut = TemplateSpatialModel(
+                map_,
+                normalize=m.spatial_model.normalize,
+            )
+            model_cut = SkyModel(
+                spatial_model=template_cut,
+                spectral_model=m.spectral_model,
+                datasets_names=datasets_names,
+                name=m.name if not datasets_names else f"{m.name}_{make_name()}",
+            )
+            models_cut.append(model_cut)
+        else:
+            models_cut.append(m)
+    return models_cut

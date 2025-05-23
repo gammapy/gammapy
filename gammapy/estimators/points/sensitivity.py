@@ -1,11 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import logging
 import numpy as np
 from astropy.table import Column, Table
 from gammapy.maps import Map
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from gammapy.stats import WStatCountsStatistic
 from ..core import Estimator
+from ..utils import apply_threshold_sensitivity
 
 __all__ = ["SensitivityEstimator"]
 
@@ -21,14 +21,14 @@ class SensitivityEstimator(Estimator):
 
     Parameters
     ----------
-    spectrum : `SpectralModel`
-        Spectral model assumption. Default is Power Law with index 2.
+    spectral_model : `~gammapy.modeling.models.SpectralModel`, optional
+        Spectral model assumption. Default is power-law with spectral index of 2.
     n_sigma : float, optional
         Minimum significance. Default is 5.
     gamma_min : float, optional
         Minimum number of gamma-rays. Default is 10.
     bkg_syst_fraction : float, optional
-        Fraction of background counts above which the number of gamma-rays is. Default is 0.05
+        Fraction of background counts above which the number of gamma-rays is. Default is 0.05.
 
     Examples
     --------
@@ -40,16 +40,17 @@ class SensitivityEstimator(Estimator):
 
     def __init__(
         self,
-        spectrum=None,
+        spectral_model=None,
         n_sigma=5.0,
         gamma_min=10,
         bkg_syst_fraction=0.05,
     ):
+        if spectral_model is None:
+            spectral_model = PowerLawSpectralModel(
+                index=2, amplitude="1 cm-2 s-1 TeV-1"
+            )
 
-        if spectrum is None:
-            spectrum = PowerLawSpectralModel(index=2, amplitude="1 cm-2 s-1 TeV-1")
-
-        self.spectrum = spectrum
+        self.spectral_model = spectral_model
         self.n_sigma = n_sigma
         self.gamma_min = gamma_min
         self.bkg_syst_fraction = bkg_syst_fraction
@@ -60,12 +61,12 @@ class SensitivityEstimator(Estimator):
         Parameters
         ----------
         dataset : `SpectrumDataset`
-            Spectrum dataset
+            Spectrum dataset.
 
         Returns
         -------
-        excess : `RegionNDMap`
-            Minimal excess
+        excess : `~gammapy.maps.RegionNDMap`
+            Minimal excess.
         """
         n_off = dataset.counts_off.data
 
@@ -73,26 +74,26 @@ class SensitivityEstimator(Estimator):
             n_on=dataset.alpha.data * n_off, n_off=n_off, alpha=dataset.alpha.data
         )
         excess_counts = stat.n_sig_matching_significance(self.n_sigma)
-        is_gamma_limited = excess_counts < self.gamma_min
-        excess_counts[is_gamma_limited] = self.gamma_min
-        bkg_syst_limited = (
-            excess_counts < self.bkg_syst_fraction * dataset.background.data
+
+        excess_counts = apply_threshold_sensitivity(
+            dataset.background.data,
+            excess_counts,
+            self.gamma_min,
+            self.bkg_syst_fraction,
         )
-        excess_counts[bkg_syst_limited] = (
-            self.bkg_syst_fraction * dataset.background.data[bkg_syst_limited]
-        )
+
         excess = Map.from_geom(geom=dataset._geom, data=excess_counts)
         return excess
 
     def estimate_min_e2dnde(self, excess, dataset):
-        """Estimate dnde from given min. excess
+        """Estimate dnde from a given minimum excess.
 
         Parameters
         ----------
-        excess : `RegionNDMap`
-            Minimal excess
-        dataset : `SpectrumDataset`
-            Spectrum dataset
+        excess : `~gammapy.maps.RegionNDMap`
+            Minimal excess.
+        dataset : `~gammapy.datasets.SpectrumDataset`
+            Spectrum dataset.
 
         Returns
         -------
@@ -101,12 +102,12 @@ class SensitivityEstimator(Estimator):
         """
         energy = dataset._geom.axes["energy"].center
 
-        dataset.models = SkyModel(spectral_model=self.spectrum)
+        dataset.models = SkyModel(spectral_model=self.spectral_model)
         npred = dataset.npred_signal()
 
         phi_0 = excess / npred
 
-        dnde_model = self.spectrum(energy=energy)
+        dnde_model = self.spectral_model(energy=energy)
         dnde = phi_0.data[:, 0, 0] * dnde_model * energy**2
         return dnde.to("erg / (cm2 s)")
 
@@ -116,13 +117,13 @@ class SensitivityEstimator(Estimator):
         criterion = np.chararray(excess.shape, itemsize=12)
         criterion[is_gamma_limited] = "gamma"
         criterion[is_bkg_syst_limited] = "bkg"
-        criterion[
-            ~np.logical_or(is_gamma_limited, is_bkg_syst_limited)
-        ] = "significance"
+        criterion[~np.logical_or(is_gamma_limited, is_bkg_syst_limited)] = (
+            "significance"
+        )
         return criterion
 
     def run(self, dataset):
-        """Run the sensitivity estimation
+        """Run the sensitivity estimation.
 
         Parameters
         ----------
@@ -132,7 +133,7 @@ class SensitivityEstimator(Estimator):
         Returns
         -------
         sensitivity : `~astropy.table.Table`
-            Sensitivity table
+            Sensitivity table.
         """
         energy = dataset._geom.axes["energy"].center
         excess = self.estimate_min_excess(dataset)
@@ -140,18 +141,9 @@ class SensitivityEstimator(Estimator):
         criterion = self._get_criterion(
             excess.data.squeeze(), dataset.background.data.squeeze()
         )
-        logging.warning(
-            "Table column name energy will be deprecated by e_ref since v1.2"
-        )
 
         return Table(
             [
-                Column(
-                    data=energy,
-                    name="energy",
-                    format="5g",
-                    description="Reconstructed Energy",
-                ),
                 Column(
                     data=energy,
                     name="e_ref",

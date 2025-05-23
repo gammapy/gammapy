@@ -66,10 +66,17 @@ class TestEnergyDispersion2D:
     def test_exporter(self):
         # Check RMF exporter
         offset = Angle(0.612, "deg")
-        e_reco = MapAxis.from_energy_bounds(1, 10, 7, "TeV").edges
-        e_true = MapAxis.from_energy_bounds(0.8, 5, 5, "TeV").edges
-        rmf = self.edisp.to_edisp_kernel(offset, energy_true=e_true, energy=e_reco)
+        e_reco_axis = MapAxis.from_energy_bounds(1, 10, 7, "TeV")
+        e_true_axis = MapAxis.from_energy_bounds(0.8, 5, 5, "TeV", name="energy_true")
+        rmf = self.edisp.to_edisp_kernel(
+            offset, energy_axis_true=e_true_axis, energy_axis=e_reco_axis
+        )
         assert_allclose(rmf.data.data[2, 3], 0.08, atol=5e-2)  # same tolerance as above
+        # Test for v1.3
+        rmf2 = self.edisp.to_edisp_kernel(
+            offset, energy_axis_true=e_true_axis.edges, energy_axis=e_reco_axis.edges
+        )
+        assert_allclose(rmf2.data.data[2, 3], 0.08, atol=5e-2)
 
     def test_write(self):
         energy_axis_true = MapAxis.from_energy_bounds(

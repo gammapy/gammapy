@@ -1,9 +1,17 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import warnings
+import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
 from regions import CircleSkyRegion
-from gammapy.datasets import Datasets, SpectrumDataset, SpectrumDatasetOnOff
+from gammapy.datasets import (
+    Datasets,
+    SpectrumDataset,
+    SpectrumDatasetOnOff,
+    FermipyDatasetsReader,
+)
 from gammapy.modeling.models import DatasetModels
+from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import requires_data
 
 
@@ -55,12 +63,18 @@ def test_datasets_to_io(tmp_path):
         filename_models=tmp_path / "written_models.yaml",
     )
 
+    datasets.write(
+        filename=tmp_path / "written_datasets.yaml",
+        filename_models=tmp_path / "written_models.yaml",
+        overwrite=True,
+    )
+
     datasets_read = Datasets.read(
         filename=tmp_path / "written_datasets.yaml",
         filename_models=tmp_path / "written_models.yaml",
     )
 
-    assert len(datasets.parameters) == 22
+    assert len(datasets.parameters) == 24
 
     assert len(datasets_read) == 2
     dataset0 = datasets_read[0]
@@ -98,7 +112,7 @@ def test_spectrum_datasets_to_io(tmp_path):
         filename_models=tmp_path / "written_models.yaml",
     )
 
-    assert len(datasets_read.parameters) == 19
+    assert len(datasets_read.parameters) == 21
 
     assert len(datasets_read) == 2
 
@@ -109,7 +123,6 @@ def test_spectrum_datasets_to_io(tmp_path):
 
 @requires_data()
 def test_ogip_writer(tmp_path):
-
     dataset = SpectrumDatasetOnOff.read(
         "$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits"
     )
@@ -121,3 +134,102 @@ def test_ogip_writer(tmp_path):
     new_datasets = datasets.read(tmp_path / "written_datasets.yaml")
 
     assert new_datasets[0].counts_off is None
+
+
+@requires_data()
+def test_datasets_write_checksum(tmp_path):
+    filedata = "$GAMMAPY_DATA/tests/models/gc_example_datasets.yaml"
+    filemodel = "$GAMMAPY_DATA/tests/models/gc_example_models.yaml"
+
+    datasets = Datasets.read(
+        filename=filedata,
+        filename_models=filemodel,
+    )
+
+    filename = tmp_path / "written_datasets.yaml"
+    filename_models = tmp_path / "written_models.yaml"
+    datasets.write(
+        filename=filename,
+        filename_models=filename_models,
+        checksum=True,
+    )
+
+    assert "checksum" in filename.read_text()
+    assert "checksum" in filename_models.read_text()
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        Datasets.read(filename=filename, filename_models=filename_models, checksum=True)
+
+    # Remove checksum from datasets.yaml file
+    yaml_content = filename.read_text()
+    index = yaml_content.find("checksum")
+    bad = make_path(tmp_path) / "bad_checksum.yaml"
+    bad.write_text(yaml_content[:index])
+
+    with pytest.warns(UserWarning):
+        Datasets.read(filename=bad, filename_models=filename_models, checksum=True)
+
+    # Modify models yaml file
+    yaml_content = filename_models.read_text()
+    yaml_content = yaml_content.replace("name: gc", "name: bad")
+    bad = make_path(tmp_path) / "bad_models.yaml"
+    bad.write_text(yaml_content)
+
+    with pytest.warns(UserWarning):
+        Datasets.read(filename=filename, filename_models=bad, checksum=True)
+
+
+@requires_data()
+def test_fermipy_datasets_reader():
+    reader = FermipyDatasetsReader(
+        "$GAMMAPY_DATA/tests/fermi/config_fermipy_std_5deg_qr.yaml", edisp_bins=1
+    )
+    datasets = reader.read()
+
+    assert len(datasets) == 2
+    assert datasets[0].counts.geom.axes[0].unit == "MeV"
+    assert_allclose(datasets[0].background, 0)
+    assert datasets[0].counts.geom.to_image() == datasets[0].exposure.geom.to_image()
+    assert_allclose(datasets[0].exposure.data[0, 0, 0], 1.54938e11)
+    assert_allclose(datasets[0].edisp.edisp_map.data[0, 0, 0, 0], 0.020409, rtol=1e-4)
+    assert_allclose(
+        datasets[0]._psf_kernel.psf_kernel_map.data.sum(axis=(1, 2)), 1, rtol=1e-5
+    )
+    assert_allclose(
+        datasets[0].edisp.exposure_map.data, datasets[0].psf.exposure_map.data
+    )
+    assert datasets[0].name == "P8R3_SOURCEVETO_V3_PSF0_v1"
+    assert datasets[1].name == "P8R3_SOURCEVETO_V3_PSF1_v1"
+    assert datasets.models.names[0] == "isotropic_P8R3_SOURCEVETO_V3_PSF0_v1"
+    assert datasets.models.names[1] == "isotropic_P8R3_SOURCEVETO_V3_PSF1_v1"
+
+    path = make_path("$GAMMAPY_DATA/tests/fermi")
+    dataset = reader.create_dataset(
+        path / "ccube_00.fits",
+        path / "bexpmap_00.fits",
+        path / "psf_00.fits",
+        path / "drm_00.fits",
+    )
+    assert not dataset.models
+
+    reader = FermipyDatasetsReader(
+        "$GAMMAPY_DATA/tests/fermi/config_fermipy_minimal.yaml", edisp_bins=1
+    )
+
+    datasets = reader.read()
+
+    assert len(datasets) == 1
+    assert datasets[0].counts.geom.axes[0].unit == "MeV"
+    assert_allclose(datasets[0].background, 0)
+    assert datasets[0].counts.geom.to_image() == datasets[0].exposure.geom.to_image()
+    assert_allclose(datasets[0].exposure.data[0, 0, 0], 1.54938e11)
+    assert_allclose(datasets[0].edisp.edisp_map.data[0, 0, 0, 0], 0.020409, rtol=1e-4)
+    assert_allclose(
+        datasets[0]._psf_kernel.psf_kernel_map.data.sum(axis=(1, 2)), 1, rtol=1e-5
+    )
+    assert_allclose(
+        datasets[0].edisp.exposure_map.data, datasets[0].psf.exposure_map.data
+    )
+    assert datasets[0].name == "P8R3_SOURCEVETO_V3_PSF1_v1"
+    assert datasets.models.names[0] == "isotropic_P8R3_SOURCEVETO_V3_PSF1_v1"

@@ -6,51 +6,53 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 from gammapy.maps.axes import UNIT_STRING_FORMAT
 from gammapy.utils.array import array_stats_str
+from gammapy.visualization.utils import add_colorbar
 from ..core import IRF
 
 
 class PSF(IRF):
-    """PSF base class"""
+    """PSF base class."""
 
     def normalize(self):
-        """Normalise psf"""
+        """Normalise PSF."""
         super().normalize(axis_name="rad")
 
     def containment(self, rad, **kwargs):
-        """Containment tof the PSF at given axes coordinates
+        """Containment tof the PSF at given axes coordinates.
 
         Parameters
         ----------
         rad : `~astropy.units.Quantity`
-            Rad value
+            Rad value.
         **kwargs : dict
-            Other coordinates
+            Other coordinates.
 
         Returns
         -------
         containment : `~numpy.ndarray`
-            Containment
+            Containment.
         """
         containment = self.integral(axis_name="rad", rad=rad, **kwargs)
         return containment.to("")
 
     def containment_radius(self, fraction, factor=20, **kwargs):
-        """Containment radius at given axes coordinates
+        """Containment radius at given axes coordinates.
 
         Parameters
         ----------
         fraction : float or `~numpy.ndarray`
-            Containment fraction
-        factor : int
+            Containment fraction.
+        factor : int, optional
             Up-sampling factor of the rad axis, determines the precision of the
             computed containment radius.
+            Default is 20.
         **kwargs : dict
-            Other coordinates
+            Other coordinates.
 
         Returns
         -------
         radius : `~astropy.coordinates.Angle`
-            Containment radius
+            Containment radius.
         """
         # TODO: this uses a lot of numpy broadcasting tricks, maybe simplify...
         from gammapy.datasets.map import RAD_AXIS_DEFAULT
@@ -79,24 +81,27 @@ class PSF(IRF):
         offset=0 * u.deg,
     ):
         """
-        Print PSF summary info.
+        Print PSF summary information.
 
         The containment radius for given fraction, energies and thetas is
         computed and printed on the command line.
 
         Parameters
         ----------
-        fraction : list
-            Containment fraction to compute containment radius for.
-        energy_true : `~astropy.units.u.Quantity`
+        fraction : list, optional
+            Containment fraction to compute containment radius for, between 0 and 1.
+            Default is (0.68, 0.95).
+        energy_true : `~astropy.units.u.Quantity`, optional
             Energies to compute containment radius for.
-        offset : `~astropy.units.u.Quantity`
+            Default is ([1.0], [10.0]) TeV.
+        offset : `~astropy.units.u.Quantity`, optional
             Offset to compute containment radius for.
+            Default is 0 deg.
 
         Returns
         -------
-        ss : string
-            Formatted string containing the summary info.
+        info : string
+            Formatted string containing the summary information.
         """
         info = "\nSummary PSF info\n"
         info += "----------------\n"
@@ -127,19 +132,21 @@ class PSF(IRF):
 
         Parameters
         ----------
-        ax : `~matplotlib.pyplot.Axes`
-            Axes to plot on.
-        fraction : list of float or `~numpy.ndarray`
+        ax : `~matplotlib.pyplot.Axes`, optional
+            Matplotlib axes. Default is None.
+        fraction : list of float or `~numpy.ndarray`, optional
             Containment fraction between 0 and 1.
-        offset : `~astropy.units.Quantity`
-            Offset array
+            Default is (0.68, 0.95).
+        offset : `~astropy.units.Quantity`, optional
+            Offset array.
+            Default is (0, 1) deg.
         **kwargs : dict
-            Keyword arguments passed to `~matplotlib.pyplot.plot`
+            Keyword arguments passed to `~matplotlib.pyplot.plot`.
 
         Returns
         -------
         ax : `~matplotlib.pyplot.Axes`
-             Axes to plot on.
+             Matplotlib axes.
 
         """
         ax = plt.gca() if ax is None else ax
@@ -161,27 +168,40 @@ class PSF(IRF):
         ax.set_ylabel(
             f"Containment radius [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]"
         )
-        ax.yaxis.set_major_formatter(mtick.FormatStrFormatter("%.1e"))
+        ax.yaxis.set_major_formatter(mtick.FormatStrFormatter("%.2f"))
         return ax
 
-    def plot_containment_radius(self, ax=None, fraction=0.68, add_cbar=True, **kwargs):
+    def plot_containment_radius(
+        self,
+        ax=None,
+        fraction=0.68,
+        add_cbar=True,
+        axes_loc=None,
+        kwargs_colorbar=None,
+        **kwargs,
+    ):
         """Plot containment image with energy and theta axes.
 
         Parameters
         ----------
-        ax : `~matplotlib.pyplot.Axes`
-            Axes to plot on.
-        fraction : float
+        ax : `~matplotlib.pyplot.Axes`, optional
+            Matplotlib axes. Default is None.
+        fraction : float, optional
             Containment fraction between 0 and 1.
-        add_cbar : bool
-            Add a colorbar
+            Default is 0.68.
+        add_cbar : bool, optional
+            Add a colorbar. Default is True.
+        axes_loc : dict, optional
+            Keyword arguments passed to `~mpl_toolkits.axes_grid1.axes_divider.AxesDivider.append_axes`.
+        kwargs_colorbar : dict, optional
+            Keyword arguments passed to `~matplotlib.pyplot.colorbar`.
         **kwargs : dict
-            Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`
+            Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
 
         Returns
         -------
         ax : `~matplotlib.pyplot.Axes`
-             Axes to plot on.
+             Matplotlib axes.
         """
         ax = plt.gca() if ax is None else ax
 
@@ -200,6 +220,8 @@ class PSF(IRF):
         kwargs.setdefault("vmin", np.nanmin(containment.value))
         kwargs.setdefault("vmax", np.nanmax(containment.value))
 
+        kwargs_colorbar = kwargs_colorbar or {}
+
         # Plotting
         with quantity_support():
             caxes = ax.pcolormesh(
@@ -211,7 +233,8 @@ class PSF(IRF):
 
         if add_cbar:
             label = f"Containment radius R{100 * fraction:.0f} ({containment.unit})"
-            ax.figure.colorbar(caxes, ax=ax, label=label)
+            kwargs_colorbar.setdefault("label", label)
+            add_colorbar(caxes, ax=ax, axes_loc=axes_loc, **kwargs_colorbar)
 
         return ax
 
@@ -222,12 +245,16 @@ class PSF(IRF):
 
         Parameters
         ----------
-        ax : `~matplotlib.pyplot.Axes`
-            Axes to plot on.
-        offset : `~astropy.coordinates.Angle`
-            Offset in the field of view. Default offset = 0 deg
-        energy_true : `~astropy.units.Quantity`
-            True energy at which to plot the profile
+        ax : `~matplotlib.pyplot.Axes`, optional
+            Matplotlib axes. Default is None.
+        offset : `~astropy.coordinates.Angle`, optional
+            Offset in the field of view.
+            Default is 0 deg.
+        energy_true : `~astropy.units.Quantity`, optional
+            True energy at which to plot the profile.
+            Default is [0.1, 1, 10] TeV.
+        kwargs : dict
+            Keyword arguments.
 
         """
         from gammapy.datasets.map import RAD_AXIS_DEFAULT
@@ -252,7 +279,7 @@ class PSF(IRF):
 
         ax.set_yscale("log")
         ax.set_ylabel(f"PSF [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]")
-        plt.legend()
+        ax.legend()
         return ax
 
     def peek(self, figsize=(15, 5)):
@@ -260,8 +287,8 @@ class PSF(IRF):
 
         Parameters
         ----------
-        figsize : tuple
-            Size of the figure.
+        figsize : tuple, optional
+            Size of the figure. Default is (15, 5).
 
         """
         fig, axes = plt.subplots(nrows=1, ncols=3, figsize=figsize)

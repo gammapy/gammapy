@@ -15,7 +15,7 @@ Context
 
 A useful tool to study and compare the spatial distribution of flux in
 images and data cubes is the measurement of flux profiles. Flux profiles
-can show spatial correlations of gamma-ray data with e.g. gas maps or
+can show spatial correlations of gamma-ray data with e.g. gas maps or
 other type of gamma-ray data. Most commonly flux profiles are measured
 along some preferred coordinate axis, either radially distance from a
 source of interest, along longitude and latitude coordinate axes or
@@ -34,7 +34,6 @@ We will work on a pre-computed `~gammapy.datasets.MapDataset` of Fermi-LAT data,
 run the flux profile extraction using the `~gammapy.estimators.FluxProfileEstimator`
 
 """
-
 
 import numpy as np
 from astropy import units as u
@@ -108,11 +107,11 @@ print(dataset.counts)
 #
 
 regions = make_orthogonal_rectangle_sky_regions(
-    start_pos=SkyCoord("10d", "0d", frame="galactic"),
-    end_pos=SkyCoord("350d", "0d", frame="galactic"),
+    start_pos=SkyCoord("9d", "0d", frame="galactic"),
+    end_pos=SkyCoord("351d", "0d", frame="galactic"),
     wcs=counts_image.geom.wcs,
     height="3 deg",
-    nbin=51,
+    nbin=49,
 )
 
 
@@ -135,7 +134,7 @@ plt.show()
 
 flux_profile_estimator = FluxProfileEstimator(
     regions=regions,
-    spectrum=PowerLawSpectralModel(index=2.3),
+    spectral_model=PowerLawSpectralModel(index=2.3),
     energy_edges=[10, 2000] * u.GeV,
     selection_optional=["ul"],
 )
@@ -178,7 +177,7 @@ plt.show()
 
 ######################################################################
 # Based on the spectral model we specified above we can also plot in any
-# other sed type, e.g. energy flux and define a different threshold when
+# other sed type, e.g. energy flux and define a different threshold when
 # to plot upper limits:
 #
 
@@ -204,6 +203,7 @@ for quantity in quantities:
     profile[quantity].plot(ax=ax, label=quantity.title())
 
 ax.set_ylabel("Counts")
+ax.legend()
 plt.show()
 
 
@@ -265,21 +265,25 @@ plt.show()
 ######################################################################
 # This time we define two energy bins and include the fit statistic
 # profile in the computation:
-#
 
 flux_profile_estimator = FluxProfileEstimator(
     regions=regions,
-    spectrum=PowerLawSpectralModel(index=2.3),
+    spectral_model=PowerLawSpectralModel(index=2.3),
     energy_edges=[10, 100, 2000] * u.GeV,
     selection_optional=["ul", "scan"],
-    norm_values=np.linspace(-1, 5, 11),
 )
+######################################################################
+# The configuration of the fit statistic profile is done throught the norm parameter:
+flux_profile_estimator.norm.scan_values = np.linspace(-1, 5, 11)
+
+######################################################################
+# Now we can run the estimator,
 
 profile = flux_profile_estimator.run(datasets=dataset)
 
 
 ######################################################################
-# We can directly plot the result:
+# and plot the result:
 #
 
 profile.plot(axis_name="projected-distance", sed_type="flux")

@@ -16,67 +16,88 @@ User guide
     Gammapy recipes <https://gammapy.github.io/gammapy-recipes>
     references
 
-.. panels::
-    :card: + intro-card text-center
-    :column: col-lg-6 col-md-6 col-sm-6 col-xs-12 d-flex
+.. grid:: 1 2 2 2
+   :gutter: 2
 
-    ---
-    :img-top: ../_static/box.png
+   .. grid-item-card::
+      :text-align: center
+      :columns: 12 6 6 6
+      :shadow: md
 
-    Analysis workflow and package structure
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      :octicon:`light-bulb;4em`
 
-    An overview of the main concepts in Gammapy package.
+      **Fundamental concepts**
 
-    +++
+      An overview of the main concepts in Gammapy package.
 
-    .. link-button:: package
-            :type: ref
-            :text: To the package overview
-            :classes: btn-block btn-secondary stretched-link
+      +++
 
+      .. button-ref:: package_structure
+         :ref-type: ref
+         :click-parent:
+         :color: secondary
+         :expand:
 
-    ---
-    :img-top: ../_static/index_contribute.svg
+         To the package overview
 
-    How To
-    ^^^^^^
+   .. grid-item-card::
+      :text-align: center
+      :columns: 12 6 6 6
+      :shadow: md
 
-    A short “frequently asked question” entries for Gammapy.
+      :octicon:`command-palette;4em`
 
-    +++
+      **How To**
 
-    .. link-button:: howto
-            :type: ref
-            :text: To the How To
-            :classes: btn-block btn-secondary stretched-link
+      A short “frequently asked question” entries for Gammapy.
 
-    ---
-    :img-top: ../_static/galleryicon.png
+      +++
 
-    Model gallery
-    ^^^^^^^^^^^^^
+      .. button-ref:: how_to
+         :ref-type: ref
+         :click-parent:
+         :color: secondary
+         :expand:
 
-    Gammapy provides a large choice of spatial, spectral and temporal models.
+         To the How To
 
-    +++
+   .. grid-item-card::
+      :text-align: center
+      :columns: 12 6 6 6
+      :shadow: md
 
-    .. link-button:: model-gallery/index
-            :type: ref
-            :text: To the model gallery
-            :classes: btn-block btn-secondary stretched-link
+      :octicon:`file-media;4em`
 
-    ---
-    :img-top: ../_static/glossaryicon.png
+      **Model gallery**
 
-    Gammapy recipes
-    ^^^^^^^^^^^^^^^
+      Gammapy provides a large choice of spatial, spectral and temporal models.
 
-    A collection of **user contributed** notebooks covering aspects not present in the official tutorials.
+      +++
 
-    +++
+      .. button-ref:: model-gallery
+         :ref-type: ref
+         :click-parent:
+         :color: secondary
+         :expand:
 
-    .. link-button:: https://gammapy.github.io/gammapy-recipes
-            :type: url
-            :text: To the recipes
-            :classes: btn-block btn-secondary stretched-link
+         To the model gallery
+
+   .. grid-item-card::
+      :text-align: center
+      :columns: 12 6 6 6
+      :shadow: md
+
+      :octicon:`number;4em`
+
+      **Gammapy recipes**
+
+      A collection of **user contributed** notebooks covering aspects not present in the official tutorials.
+
+      +++
+
+      .. button-link:: https://gammapy.github.io/gammapy-recipes
+         :click-parent:
+         :color: secondary
+         :expand:
+
+         To the recipes

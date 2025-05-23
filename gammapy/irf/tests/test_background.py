@@ -137,7 +137,6 @@ def test_plot_at_energy(bkg_3d):
 
 
 def test_background_3d_missing_values(bkg_3d_interp):
-
     res = bkg_3d_interp.evaluate(
         fov_lon=0.5 * u.deg,
         fov_lat=0.5 * u.deg,
@@ -199,6 +198,39 @@ def test_background_3d_integrate(bkg_3d):
     )
     assert rate.shape == (1, 2)
     assert_allclose(rate.to("s-1 sr-1").value, [[99000.0, 99000.0]], rtol=1e-5)
+
+
+def test_bkg2d_integrate_nearest():
+    energy = [0.1, 1, 10, 100, 1000] * u.TeV
+    energy_axis = MapAxis.from_energy_edges(energy)
+
+    offset = [0, 1, 2, 3] * u.deg
+    offset_axis = MapAxis.from_edges(offset, name="offset")
+
+    data = np.arange(4, 0, -1)[:, np.newaxis] * np.ones((4, 3))
+    #    data[3,:] = 0.5
+    bkg_2d = Background2D(
+        axes=[energy_axis, offset_axis], data=data, unit="s-1 TeV-1 sr-1"
+    )
+
+    rate = bkg_2d.integrate_log_log(
+        offset=0.5 * u.deg,
+        energy=[0.2, 2, 20, 200] * u.TeV,
+        axis_name="energy",
+    )
+    assert_allclose(
+        rate.to("s-1 sr-1").value, [6.29251, 44.368654, 257.26371], rtol=1e-5
+    )
+
+    rate = bkg_2d.integrate_log_log(
+        offset=0.5 * u.deg,
+        energy=[0.2, 2, 20, 200] * u.TeV,
+        axis_name="energy",
+        method="nearest",
+    )
+    assert_allclose(
+        rate.to("s-1 sr-1").value, [5.942441, 41.266706, 228.908249], rtol=1e-5
+    )
 
 
 @requires_data()
@@ -423,3 +455,21 @@ def test_write_bkg_3d():
     bg = Background3D.read("background.fits", hdu="BACKGROUND")
 
     assert bg.fov_alignment.value == "ALTAZ"
+
+
+def test_to2d_to3d():
+    # Test for issue 4950
+    energy = [0.1, 10, 1000] * u.TeV
+    energy_axis = MapAxis.from_energy_edges(energy)
+    nbin = 21
+    fov_lon_axis = MapAxis.from_bounds(-2 * u.deg, 2 * u.deg, nbin=nbin, name="fov_lon")
+    fov_lat_axis = MapAxis.from_bounds(-2 * u.deg, 2 * u.deg, nbin=nbin, name="fov_lat")
+    data = np.ones((2, nbin, nbin)) * 1.5
+    bkg = Background3D(
+        axes=[energy_axis, fov_lon_axis, fov_lat_axis], data=data, unit="s-1 GeV-1 sr-1"
+    )
+    bkg2d = bkg.to_2d()
+    assert_allclose(bkg2d.axes["offset"].center[0].value, 0.0, atol=1e-5)
+    bkg3d = bkg2d.to_3d()
+    assert bkg3d.axes["fov_lon"].is_allclose(fov_lon_axis)
+    assert_allclose(bkg3d.data[0][10], bkg.data[0][10], rtol=1e-5)

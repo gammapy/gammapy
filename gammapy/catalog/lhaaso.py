@@ -43,13 +43,12 @@ class SourceCatalogObject1LHAASO(SourceCatalogObject):
         return value
 
     def spectral_model(self, which):
-        """Spectral model (`~gammapy.modeling.models.PowerLawSpectralModel`).
+        """Spectral model as a `~gammapy.modeling.models.PowerLawSpectralModel` object.
 
         * ``which="KM2A"`` - Sky model for KM2A analysis only.
         * ``which="WCDA"`` - Sky model for WCDA analysis only.
 
         """
-
         pars = {
             "reference": self._get("E0", which),
             "amplitude": self._get("N0", which),
@@ -69,13 +68,12 @@ class SourceCatalogObject1LHAASO(SourceCatalogObject):
         return model
 
     def spatial_model(self, which):
-        """Spatial model (`~gammapy.modeling.models.SpatialModel`).
+        """Spatial model as a `~gammapy.modeling.models.SpatialModel` object.
 
         * ``which="KM2A"`` - Sky model for KM2A analysis only.
         * ``which="WCDA"`` - Sky model for WCDA analysis only.
 
         """
-
         lat_0 = self._get("DECJ2000", which)
         pars = {"lon_0": self._get("RAJ2000", which), "lat_0": lat_0, "frame": "fk5"}
 
@@ -111,14 +109,14 @@ class SourceCatalogObject1LHAASO(SourceCatalogObject):
         return geom.to_wcs_geom()
 
     def sky_model(self, which="both"):
-        """Sky model (`~gammapy.modeling.models.SkyModel`).
+        """Sky model as a `~gammapy.modeling.models.SkyModel` object.
 
-        * ``which="both"`` -  Create a composite template if both models are available, or, use the available one if only one is present
+        * ``which="both"`` -  Create a composite template if both models are available, or, use the available one
+           if only one is present.
         * ``which="KM2A"`` - Sky model for KM2A analysis if available.
         * ``which="WCDA"`` - Sky model for WCDA analysis if available.
 
         """
-
         if which == "both":
             wcda = self.sky_model(which="WCDA")
             km2a = self.sky_model(which="KM2A")
@@ -157,8 +155,8 @@ class SourceCatalog1LHAASO(SourceCatalog):
 
     References
     ----------
-    .. [1] 1LHAASO: The First LHAASO Catalog of Gamma-Ray Sources,
-       <https://ui.adsabs.harvard.edu/abs/2023arXiv230517030C/abstract>`__
+    .. [1] `Cao et al. (2023), "1LHAASO: The First LHAASO Catalog of Gamma-Ray Sources"
+       <https://ui.adsabs.harvard.edu/abs/2023arXiv230517030C/abstract>`_
     """
 
     tag = "1LHAASO"
@@ -177,7 +175,8 @@ class SourceCatalog1LHAASO(SourceCatalog):
         super().__init__(table=table, source_name_key=source_name_key)
 
     def to_models(self, which="both"):
-        """Create Models object from catalogue
+        """Create Models object from catalog.
+
         * ``which="both"`` - Use first model or create a composite template if both models are available.
         * ``which="KM2A"`` - Sky model for KM2A analysis if available.
         * ``which="WCDA"`` - Sky model for WCDA analysis if available.

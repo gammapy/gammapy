@@ -3,13 +3,20 @@ on: [push, pull_request]
 
 jobs:
   lint:
-    name: Black check
+    name: Run pre-commit hooks
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: psf/black@stable
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          version: "22.6.0"
+          python-version: '3.11'
+      - name: Install pre-commit
+        run: pip install pre-commit
+      - name: Run pre-commit
+        run: pre-commit run
+
   ci-runs:
     name: ${{ matrix.os }}, ${{ matrix.tox_env }}
     runs-on: ${{ matrix.os }}
@@ -21,42 +28,56 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            python: '3.9'
-            tox_env: 'py39-test-alldeps-cov'
+            python: '3.11'
+            tox_env: 'py311-test-alldeps_noray'
+            gammapy_data_path: /home/runner/work/gammapy/gammapy/gammapy-datasets/dev
             allowed_fail: false
           - os: ubuntu-latest
             python: '3.10'
-            tox_env: 'py310-test-alldeps_noray'
+            tox_env: 'py310-test-alldeps-cov'
             gammapy_data_path: /home/runner/work/gammapy/gammapy/gammapy-datasets/dev
             allowed_fail: false
           - os: macos-latest
-            python: '3.10'
-            tox_env: 'py310-test'
+            python: '3.13'
+            tox_env: 'py313-test'
             gammapy_data_path: /Users/runner/work/gammapy/gammapy/gammapy-datasets/dev
             allowed_fail: false
+          - os: macos-14
+            python: '3.11'
+            tox_env: 'py311-test'
+            allowed_fail: false
           - os: windows-latest
-            python: '3.10'
-            tox_env: 'py310-test-alldeps_noray'
+            python: '3.12'
+            tox_env: 'py311-test-alldeps_noray'
             gammapy_data_path:  D:\a\gammapy\gammapy\gammapy-datasets\dev
+            allowed_fail: false
+          - os: ubuntu-latest
+            python: '3.12'
+            tox_env: 'py312-test-alldeps_noray'
+            gammapy_data_path: /home/runner/work/gammapy/gammapy/gammapy-datasets/dev
             allowed_fail: false
           - os: ubuntu-latest
             python: '3.10'
             tox_env: 'py310-test'
+            allowed_fail: false
+          - os: ubuntu-latest
+            python: '3.13'
+            tox_env: 'py313-test'
             allowed_fail: false
           - os: ubuntu-latest
             python: '3.10'
             tox_env: 'codestyle'
             allowed_fail: false
           - os: ubuntu-latest
-            python: '3.9'
-            tox_env: 'py39-test-alldeps_noray-astropylts-numpy121'
+            python: '3.10'
+            tox_env: 'py310-test-alldeps_noray-astropy60-numpy126'
             allowed_fail: false
           - os: ubuntu-latest
-            python: '3.9'
+            python: '3.10'
             tox_env: 'oldestdeps'
             allowed_fail: false
           - os: ubuntu-latest
-            python: '3.9'
+            python: '3.12'
             tox_env: 'devdeps'
             allowed_fail: true
     steps:
@@ -65,7 +86,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Set up Python ${{ matrix.python }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
       - name: Install base dependencies
@@ -78,11 +99,10 @@ jobs:
           python -m pip install tqdm requests
           python -m pip install -e .
           gammapy download datasets
-      - name: Print Python, pip, setuptools, and tox versions
+      - name: Print Python, pip, and tox versions
         run: |
           python -c "import sys; print(f'Python {sys.version}')"
           python -c "import pip; print(f'pip {pip.__version__}')"
-          python -c "import setuptools; print(f'setuptools {setuptools.__version__}')"
           python -c "import tox; print(f'tox {tox.__version__}')"
       - name: Run tests
         if: ${{ !matrix.gammapy_data_path }}
@@ -94,12 +114,12 @@ jobs:
         run: tox -e ${{ matrix.tox_env }} -- -n auto
       - name: Upload coverage to codecov
         if: "contains(matrix.tox_env, '-cov')"
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         with:
           file: ./coverage.xml
           verbose: true
   sphinx:
-    name: Linux python 3.9 sphinx all-deps
+    name: Linux python 3.11 sphinx all-deps
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -112,10 +132,10 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Set up Python ${{ matrix.python }}
-        uses: actions/setup-python@v4
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python }}
+          python-version: '3.11'
       - name: Install base dependencies
         run: |
           python -m pip install --upgrade pip
@@ -127,32 +147,13 @@ jobs:
           gammapy download datasets
       - name: test build docs
         run: |
-          tox -e build_docs -- -j auto
+          tox -e build_docs
       - name: check links
         continue-on-error: true
         run: |
-          tox -e linkcheck -- -j auto  
-  conda-build:
-    name: Linux python 3.9 conda-build all-deps
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash -l {0}
-    steps:
-      - name: checkout repo
-        uses: actions/checkout@v4
-      - name: create and activate env
-        uses: mamba-org/provision-with-micromamba@main
+          tox -e linkcheck -- -j auto
+      - name: Upload HTML output
+        uses: actions/upload-artifact@v4
         with:
-          environment-file: environment-dev.yml
-      - name: install gammapy
-        run: |
-          pip install -e .
-      - name: test conda build
-        run: |
-          make clean
-          conda install conda-build
-          conda info
-          conda --version
-          conda build --version
-          python setup.py bdist_conda
+          name: gammapy-doc-html
+          path: docs/_build/html/

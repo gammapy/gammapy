@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Session class driving the high level interface API"""
+"""Session class driving the high level interface API."""
+import html
 import logging
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
@@ -42,8 +43,8 @@ class Analysis:
 
     Parameters
     ----------
-    config : dict or `AnalysisConfig`
-        Configuration options following `AnalysisConfig` schema
+    config : dict or `~gammapy.analysis.AnalysisConfig`
+        Configuration options following `AnalysisConfig` schema.
     """
 
     def __init__(self, config):
@@ -55,6 +56,12 @@ class Analysis:
         self.fit = Fit()
         self.fit_result = None
         self.flux_points = None
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     @property
     def models(self):
@@ -68,7 +75,7 @@ class Analysis:
 
     @property
     def config(self):
-        """Analysis configuration (`AnalysisConfig`)"""
+        """Analysis configuration as an `~gammapy.analysis.AnalysisConfig` object."""
         return self._config
 
     @config.setter
@@ -129,14 +136,13 @@ class Analysis:
         return selected_obs_table["OBS_ID"].tolist()
 
     def get_observations(self):
-        """Fetch observations from the data store according to criteria defined
-        in the configuration."""
+        """Fetch observations from the data store according to criteria defined in the configuration."""
         observations_settings = self.config.observations
         self._set_data_store()
 
         log.info("Fetching observations.")
         ids = self._make_obs_table_selection()
-        required_irf = [_.value for _ in observations_settings.required_irf]
+        required_irf = observations_settings.required_irf
         self.observations = self.datastore.get_observations(
             ids, skip_missing=True, required_irf=required_irf
         )
@@ -174,14 +180,16 @@ class Analysis:
 
     def set_models(self, models, extend=True):
         """Set models on datasets.
+
         Adds `FoVBackgroundModel` if not present already
 
         Parameters
         ----------
         models : `~gammapy.modeling.models.Models` or str
-            Models object or YAML models string
-        extend : bool
+            Models object or YAML models string.
+        extend : bool, optional
             Extend the exiting models on the datasets or replace them.
+            Default is True.
         """
         if not self.datasets or len(self.datasets) == 0:
             raise RuntimeError("Missing datasets")
@@ -217,11 +225,11 @@ class Analysis:
         Parameters
         ----------
         path : str
-            path to the model file
-        extend : bool
+            Path to the model file.
+        extend : bool, optional
             Extend the exiting models on the datasets or replace them.
+            Default is True.
         """
-
         path = make_path(path)
         models = Models.read(path)
         self.set_models(models, extend=extend)
@@ -229,9 +237,9 @@ class Analysis:
 
     def write_models(self, overwrite=True, write_covariance=True):
         """Write models to YAML file.
+
         File name is taken from the configuration file.
         """
-
         filename_models = self.config.general.models_file
         if filename_models is not None:
             self.models.write(
@@ -243,10 +251,9 @@ class Analysis:
 
     def read_datasets(self):
         """Read datasets from YAML file.
+
         File names are taken from the configuration file.
-
         """
-
         filename = self.config.general.datasets_file
         filename_models = self.config.general.models_file
         if filename is not None:
@@ -259,16 +266,16 @@ class Analysis:
 
     def write_datasets(self, overwrite=True, write_covariance=True):
         """Write datasets to YAML file.
+
         File names are taken from the configuration file.
 
         Parameters
         ----------
-        overwrite : bool
-            overwrite datasets FITS files
-        write_covariance : bool
-            save covariance or not
+        overwrite : bool, optional
+            Overwrite existing file. Default is True.
+        write_covariance : bool, optional
+            Save covariance or not. Default is True.
         """
-
         filename = self.config.general.datasets_file
         filename_models = self.config.general.models_file
         if filename is not None:
@@ -391,6 +398,7 @@ class Analysis:
         )
 
     def update_config(self, config):
+        """Update the configuration."""
         self.config = self.config.update(config=config)
 
     @staticmethod
@@ -474,9 +482,9 @@ class Analysis:
         elif datasets_settings.type == "1d":
             maker_config = {}
             if datasets_settings.containment_correction:
-                maker_config[
-                    "containment_correction"
-                ] = datasets_settings.containment_correction
+                maker_config["containment_correction"] = (
+                    datasets_settings.containment_correction
+                )
 
             maker_config["selection"] = ["counts", "exposure", "edisp"]
 
@@ -528,7 +536,7 @@ class Analysis:
         return bkg_maker
 
     def _map_making(self):
-        """Make maps and datasets for 3d analysis"""
+        """Make maps and datasets for 3d analysis."""
         datasets_settings = self.config.datasets
         offset_max = datasets_settings.geom.selection.offset_max
 

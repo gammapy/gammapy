@@ -1,8 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import html
 import logging
 import sys
 import astropy.units as u
-from astropy.coordinates import Angle, EarthLocation
+from astropy.coordinates import AltAz, Angle, EarthLocation, SkyCoord
 from astropy.io import fits
 from astropy.units import Quantity
 from .scripts import make_path
@@ -20,7 +21,7 @@ class HDULocation:
     It's more a helper class, that is wrapped by `~gammapy.data.Observation`,
     usually those objects will be used to access data.
 
-    See also :ref:`gadf:hdu-index`.
+    See also `HDU index table <https://gamma-astro-data-formats.readthedocs.io/en/latest/data_storage/hdu_index/index.html#hdu-index>`__.
     """
 
     def __init__(
@@ -41,8 +42,14 @@ class HDULocation:
         self.cache = cache
         self.format = format
 
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
+
     def info(self, file=None):
-        """Print some summary info to stdout."""
+        """Print some summary information to stdout."""
         if not file:
             file = sys.stdout
         print(f"HDU_CLASS = {self.hdu_class}", file=file)
@@ -72,10 +79,7 @@ class HDULocation:
         return hdu_list[self.hdu_name]
 
     def load(self):
-        """Load HDU as appropriate class.
-
-        TODO: this should probably go via an extensible registry.
-        """
+        """Load HDU as appropriate class."""
         from gammapy.irf import IRF_REGISTRY
 
         hdu_class = self.hdu_class
@@ -99,6 +103,12 @@ class HDULocation:
             from gammapy.data import FixedPointingInfo
 
             return FixedPointingInfo.read(filename, hdu=hdu)
+        elif hdu_class == "observation_metadata":
+            from gammapy.data import ObservationMetaData
+
+            with fits.open(filename) as hdulist:
+                header = hdulist[hdu].header
+                return ObservationMetaData.from_header(header)
         else:
             cls = IRF_REGISTRY.get_cls(hdu_class)
 
@@ -145,13 +155,10 @@ class LazyFitsData(object):
             instance.__dict__[self.name] = value
 
 
-# TODO: add unit test
 def earth_location_from_dict(meta):
-    """Create `~astropy.coordinates.EarthLocation` from FITS header dict."""
+    """Create `~astropy.coordinates.EarthLocation` from FITS header dictionary."""
     lon = Angle(meta["GEOLON"], "deg")
     lat = Angle(meta["GEOLAT"], "deg")
-    # TODO: should we support both here?
-    # Check latest spec if ALTITUDE is used somewhere.
     if "GEOALT" in meta:
         height = Quantity(meta["GEOALT"], "meter")
     elif "ALTITUDE" in meta:
@@ -163,9 +170,51 @@ def earth_location_from_dict(meta):
 
 
 def earth_location_to_dict(location):
-    """Create `~astropy.coordinates.EarthLocation` from FITS header dict."""
+    """Convert `~astropy.coordinates.EarthLocation` to FITS header dictionary."""
     return {
         "GEOLON": location.lon.deg,
         "GEOLAT": location.lat.deg,
         "ALTITUDE": location.height.to_value(u.m),
     }
+
+
+def skycoord_from_dict(header, frame="icrs", ext="PNT"):
+    """Create `~astropy.coordinates.SkyCoord` from a dictionary of FITS keywords.
+
+    Parameters
+    ----------
+    header : dict
+        The input dictionary.
+    frame : {"icrs", "galactic", "altaz"}
+        The frame to use. Default is 'icrs'.
+    ext: str, optional
+        The keyword extension to apply to the keywords names. Default is 'PNT'.
+
+    Returns
+    -------
+    skycoord : `~astropy.coordinates.skycoord`
+        The input SkyCoord.
+    """
+
+    ext = "_" + ext if ext != "" else ""
+
+    if frame == "altaz":
+        alt = header.get("ALT" + ext, None)
+        az = header.get("AZ" + ext, None)
+        return (
+            AltAz(alt=alt * u.deg, az=az * u.deg)
+            if (alt is not None and az is not None)
+            else None
+        )
+    elif frame == "icrs":
+        coords = header.get("RA" + ext, None), header.get("DEC" + ext, None)
+    elif frame == "galactic":
+        coords = header.get("GLON" + ext, None), header.get("GLAT" + ext, None)
+    else:
+        raise ValueError(
+            f"Unsupported frame {frame}. Select in 'icrs', 'galactic', 'altaz'."
+        )
+    if coords[0] is not None and coords[1] is not None:
+        return SkyCoord(coords[0], coords[1], unit="deg", frame=frame)
+    else:
+        return None

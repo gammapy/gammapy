@@ -32,13 +32,14 @@ the following sub-packages (e.g. `gammapy.makers`):
 
 __all__ = ["__version__", "song"]
 
-import pkg_resources
+from importlib.metadata import PackageNotFoundError, version
 
 try:
-    __version__ = pkg_resources.get_distribution(__name__).version
-except pkg_resources.DistributionNotFound:
+    __version__ = version(__name__)
+except PackageNotFoundError:
     # package is not installed
     pass
+del version, PackageNotFoundError
 
 
 def song(karaoke=False):

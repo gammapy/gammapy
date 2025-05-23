@@ -1,7 +1,14 @@
 .. include:: references.txt
 
 .. image:: _static/gammapy_banner.png
-    :width: 400px
+    :width: 500px
+    :class: only-light
+    :align: center
+
+.. image:: _static/gammapy_banner_white.png
+    :width: 500px
+    :class: only-dark
+    :align: center
 
 |
 
@@ -18,81 +25,129 @@ Gammapy
 
 
 Gammapy is a community-developed, open-source Python package for gamma-ray
-astronomy built on Numpy, Scipy and Astropy. **It is the core library for the** `CTA`_ **Science Tools**
+astronomy built on Numpy, Scipy and Astropy. **It is the core library for the** `CTAO`_ **Science Tools**
 but can also be used to analyse data from existing imaging atmospheric Cherenkov telescopes
 (IACTs), such as `H.E.S.S.`_, `MAGIC`_ and `VERITAS`_. It also provides some support
 for `Fermi-LAT`_ and `HAWC`_ data analysis.
 
-.. panels::
-    :card: + intro-card text-center
-    :column: col-lg-6 col-md-6 col-sm-6 col-xs-12 d-flex
 
-    ---
-    :img-top: _static/index_getting_started.svg
+.. grid:: 1 2 2 2
+   :gutter: 2
 
-    Getting started
-    ^^^^^^^^^^^^^^^
+   .. grid-item-card::
+      :text-align: center
+      :columns: 12 6 6 6
+      :shadow: md
 
-    New to *Gammapy*? Check out the getting started documents. They contain information
-    on how to install and start using *Gammapy* on your local desktop computer.
+      :octicon:`rocket;4em`
 
-    +++
+      **Getting started**
 
-    .. link-button:: getting-started/index
-            :type: ref
-            :text: To the quickstart docs
-            :classes: btn-block btn-secondary stretched-link
+      New to *Gammapy*? Check out the getting started documents. They contain information
+      on how to install and start using *Gammapy* on your local desktop computer.
 
-    ---
-    :img-top: _static/index_user_guide.svg
+      +++
 
-    User guide
-    ^^^^^^^^^^
+      .. button-ref:: getting-started
+         :ref-type: ref
+         :click-parent:
+         :color: secondary
+         :expand:
 
-    The user guide provide in-depth information on the
-    key concepts of Gammapy with useful background information and explanation,
-    as well as tutorials in the form of Jupyter notebooks.
+         To the quickstart docs
 
-    +++
+   .. grid-item-card::
+      :text-align: center
+      :columns: 12 6 6 6
+      :shadow: md
 
-    .. link-button:: user-guide/index
-            :type: ref
-            :text: To the user guide
-            :classes: btn-block btn-secondary stretched-link
+      :octicon:`book;4em`
 
-    ---
-    :img-top: _static/index_api.svg
+      **User guide**
 
-    API reference
-    ^^^^^^^^^^^^^
+      The user guide provides in-depth information on the
+      key concepts of *Gammapy* with useful background information and explanation,
+      as well as tutorials in the form of Jupyter notebooks.
 
-    The reference guide contains a detailed description of
-    the Gammapy API. The reference describes how the methods work and which parameters can
-    be used. It assumes that you have an understanding of the key concepts.
+      +++
 
-    +++
+      .. button-ref:: user_guide
+         :ref-type: ref
+         :click-parent:
+         :color: secondary
+         :expand:
 
-    .. link-button:: api-ref
-            :type: ref
-            :text: To the reference guide
-            :classes: btn-block btn-secondary stretched-link
+         To the user guide
 
-    ---
-    :img-top: _static/index_contribute.svg
+   .. grid-item-card::
+      :text-align: center
+      :columns: 12 12 12 12
+      :shadow: md
 
-    Developer guide
-    ^^^^^^^^^^^^^^^
+      :octicon:`comment-discussion;4em`
 
-    Saw a typo in the documentation? Want to improve
-    existing functionalities? The contributing guidelines will guide
-    you through the process of improving Gammapy.
+      **Community & support**
 
-    +++
+      Need help? Want to connect with other users and developers?
 
-    .. link-button:: development/intro
-            :type: ref
-            :text: To the developer guide
-            :classes: btn-block btn-secondary stretched-link
+      +++
+
+      .. button-link:: https://gammapy.slack.com/join/signup#/domain-signup
+         :color: secondary
+
+         Join the chat on Slack
+
+      .. button-link:: https://github.com/gammapy/gammapy/issues
+         :color: secondary
+
+         Report an issue
+
+   .. grid-item-card::
+      :text-align: center
+      :columns: 12 6 6 6
+      :shadow: md
+
+      :octicon:`database;4em`
+
+      **API reference**
+
+      The reference guide contains a detailed description of
+      the *Gammapy* API. The reference describes how the methods work and which parameters can
+      be used. It assumes that you have an understanding of the key concepts.
+
+      +++
+
+      .. button-ref:: api-ref
+         :ref-type: ref
+         :click-parent:
+         :color: secondary
+         :expand:
+
+         To the reference guide
+
+   .. grid-item-card::
+      :text-align: center
+      :columns: 12 6 6 6
+      :shadow: md
+
+      :octicon:`tools;4em`
+
+      **Developer guide**
+
+      Saw a typo in the documentation? Want to improve
+      existing functionalities? The contributing guidelines will guide
+      you through the process of improving *Gammapy*.
+
+      +++
+
+      .. button-ref:: dev_intro
+         :ref-type: ref
+         :click-parent:
+         :color: secondary
+         :expand:
+
+         To the developer guide
+
 
 
 .. toctree::

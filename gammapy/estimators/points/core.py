@@ -3,6 +3,8 @@ import logging
 from copy import deepcopy
 import numpy as np
 from scipy import stats
+from scipy.interpolate import interp1d
+from scipy.optimize import minimize
 from astropy.io import fits
 from astropy.io.registry import IORegistryError
 from astropy.table import Table, vstack
@@ -10,11 +12,12 @@ from astropy.time import Time
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from gammapy.data import GTI
-from gammapy.maps import MapAxis, Maps, RegionNDMap, TimeMapAxis
+from gammapy.maps import Map, MapAxis, Maps, RegionNDMap, TimeMapAxis
 from gammapy.maps.axes import UNIT_STRING_FORMAT, flat_if_equal
 from gammapy.modeling.models import TemplateSpectralModel
 from gammapy.modeling.models.spectral import scale_plot_flux
 from gammapy.modeling.scipy import stat_profile_ul_scipy
+from gammapy.utils.interpolation import interpolate_profile
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_standardise_units_copy
 from gammapy.utils.time import time_ref_to_dict
@@ -25,10 +28,79 @@ __all__ = ["FluxPoints"]
 log = logging.getLogger(__name__)
 
 
+def squash_fluxpoints(flux_point, axis):
+    """Squash a `~FluxPoints` object into one point.
+
+    The log-likelihoods profiles in each bin are summed
+    to compute the resultant quantities. Stat profiles
+    must be present on the `~FluxPoints` object for
+    this method to work.
+    """
+    value_scan = flux_point.stat_scan.geom.axes["norm"].center
+    stat_scan = np.sum(flux_point.stat_scan.data, axis=0).ravel()
+    f = interp1d(value_scan, stat_scan, kind="quadratic", bounds_error=False)
+    f = interpolate_profile(value_scan, stat_scan)
+    minimizer = minimize(
+        f,
+        x0=value_scan[int(len(value_scan) / 2)],
+        bounds=[(value_scan[0], value_scan[-1])],
+        method="L-BFGS-B",
+    )
+
+    maps = Maps()
+    geom = flux_point.geom.to_image()
+    if axis.name != "energy":
+        geom = geom.to_cube([flux_point.geom.axes["energy"]])
+
+    maps["norm"] = Map.from_geom(geom, data=minimizer.x.reshape(geom.data_shape))
+    maps["norm_err"] = Map.from_geom(
+        geom, data=np.sqrt(minimizer.hess_inv.todense()).reshape(geom.data_shape)
+    )
+    maps["n_dof"] = Map.from_geom(
+        geom, data=np.reshape(flux_point.geom.axes[axis.name].nbin, geom.data_shape)
+    )
+
+    if "norm_ul" in flux_point.available_quantities:
+        delta_ts = flux_point.meta.get("n_sigma_ul", 2) ** 2
+        ul = stat_profile_ul_scipy(value_scan, stat_scan, delta_ts=delta_ts)
+        maps["norm_ul"] = Map.from_geom(
+            geom, data=np.reshape(ul.value, geom.data_shape)
+        )
+
+    maps["stat"] = Map.from_geom(geom, data=f(minimizer.x).reshape(geom.data_shape))
+
+    geom_scan = geom.to_cube([MapAxis.from_nodes(value_scan, name="norm")])
+    maps["stat_scan"] = Map.from_geom(
+        geom=geom_scan, data=stat_scan.reshape(geom_scan.data_shape)
+    )
+    try:
+        maps["stat_null"] = Map.from_geom(
+            geom, data=np.reshape(np.sum(flux_point.stat_null.data), geom.data_shape)
+        )
+        maps["ts"] = maps["stat_null"] - maps["stat"]
+    except AttributeError:
+        log.info(
+            "Stat null info not present on original FluxPoints object. TS not computed"
+        )
+
+    maps["success"] = Map.from_geom(
+        geom=geom, data=np.reshape(minimizer.success, geom.data_shape), dtype=bool
+    )
+
+    combined_fp = FluxPoints.from_maps(
+        maps=maps,
+        sed_type=flux_point.sed_type_init,
+        reference_model=flux_point.reference_model,
+        gti=flux_point.gti,
+        meta=flux_point.meta,
+    )
+    return combined_fp
+
+
 class FluxPoints(FluxMaps):
     """Flux points container.
 
-    The supported formats are described here: :ref:`gadf:flux-points`
+    The supported formats are described here: :ref:`gadf:flux-points`.
 
     In summary, the following formats and minimum required columns are:
 
@@ -40,12 +112,12 @@ class FluxPoints(FluxMaps):
     Parameters
     ----------
     table : `~astropy.table.Table`
-        Table with flux point data
+        Table with flux point data.
 
     Attributes
     ----------
     table : `~astropy.table.Table`
-        Table with flux point data
+        Table with flux point data.
 
     Examples
     --------
@@ -111,35 +183,46 @@ class FluxPoints(FluxMaps):
 
     @classmethod
     def read(
-        cls, filename, sed_type=None, format="gadf-sed", reference_model=None, **kwargs
+        cls,
+        filename,
+        sed_type=None,
+        format=None,
+        reference_model=None,
+        checksum=False,
+        table_format="ascii.ecsv",
+        **kwargs,
     ):
         """Read precomputed flux points.
 
         Parameters
         ----------
         filename : str
-            Filename
+            Filename.
         sed_type : {"dnde", "flux", "eflux", "e2dnde", "likelihood"}
-            Sed type
-        format : {"gadf-sed", "lightcurve"}
-            Format string.
+            SED type.
+        format : {"gadf-sed", "lightcurve", "profile"}, optional
+            Format string. If None, the format is extracted from the input.
+            Default is None.
         reference_model : `SpectralModel`
-            Reference spectral model
-        **kwargs : dict
+            Reference spectral model.
+        checksum : bool
+            If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
+        table_format :  str
+            Format string for the ~astropy.Table object. Default is "ascii.ecsv"
+        **kwargs : dict, optional
             Keyword arguments passed to `astropy.table.Table.read`.
 
         Returns
         -------
         flux_points : `FluxPoints`
-            Flux points
+            Flux points.
         """
         filename = make_path(filename)
         gti = None
-        kwargs.setdefault("format", "ascii.ecsv")
         try:
-            table = Table.read(filename, **kwargs)
+            table = Table.read(filename, format=table_format, **kwargs)
         except (IORegistryError, UnicodeDecodeError):
-            with fits.open(filename) as hdulist:
+            with fits.open(filename, checksum=checksum) as hdulist:
                 if "FLUXPOINTS" in hdulist:
                     fp = hdulist["FLUXPOINTS"]
                 else:
@@ -156,39 +239,48 @@ class FluxPoints(FluxMaps):
             gti=gti,
         )
 
-    def write(self, filename, sed_type=None, format="gadf-sed", overwrite=False):
+    def write(
+        self, filename, sed_type=None, format=None, overwrite=False, checksum=False
+    ):
         """Write flux points.
 
         Parameters
         ----------
         filename : str
-            Filename
-        sed_type : {"dnde", "flux", "eflux", "e2dnde", "likelihood"}
-            Sed type
-        format : {"gadf-sed", "lightcurve", "binned-time-series", "profile"}
+            Filename.
+        sed_type : {"dnde", "flux", "eflux", "e2dnde", "likelihood"}, optional
+            SED type. Default is None.
+        format : {"gadf-sed", "lightcurve", "binned-time-series", "profile"}, optional
             Format specification. The following formats are supported:
 
-            * "gadf-sed": format for sed flux points see :ref:`gadf:flux-points`
-                for details
-            * "lightcurve": Gammapy internal format to store energy dependent
-                lightcurves. Basically a generalisation of the "gadf" format, but
-                currently there is no detailed documentation available.
-            * "binned-time-series": table format support by Astropy's
-                `~astropy.timeseries.BinnedTimeSeries`.
-            * "profile": Gammapy internal format to store energy dependent
-                flux profiles. Basically a generalisation of the "gadf" format, but
-                currently there is no detailed documentation available.
-        overwrite : bool
-            Overwrite existing file.
+                * "gadf-sed": format for SED flux points see :ref:`gadf:flux-points`
+                  for details
+                * "lightcurve": Gammapy internal format to store energy dependent
+                  lightcurves. Basically a generalisation of the "gadf" format, but
+                  currently there is no detailed documentation available.
+                * "binned-time-series": table format support by Astropy's
+                  `~astropy.timeseries.BinnedTimeSeries`.
+                * "profile": Gammapy internal format to store energy dependent
+                  flux profiles. Basically a generalisation of the "gadf" format, but
+                  currently there is no detailed documentation available.
+
+                If None, the format will be guessed by looking at the axes that are present in the object.
+                Default is None.
+
+        overwrite : bool, optional
+            Overwrite existing file. Default is False.
+        checksum : bool, optional
+            When True adds both DATASUM and CHECKSUM cards to the headers written to the file.
+            Default is False.
         """
         filename = make_path(filename)
+
         if sed_type is None:
             sed_type = self.sed_type_init
         table = self.to_table(sed_type=sed_type, format=format)
 
-        # TODO: rather ugly - better method?
         if ".fits" not in filename.suffixes:
-            table.write(filename)
+            table.write(filename, overwrite=overwrite)
             return
 
         primary_hdu = fits.PrimaryHDU()
@@ -197,7 +289,7 @@ class FluxPoints(FluxMaps):
         if self.gti:
             hdu_all.append(self.gti.to_table_hdu())
 
-        hdu_all.writeto(filename, overwrite=overwrite)
+        hdu_all.writeto(filename, overwrite=overwrite, checksum=checksum)
 
     @staticmethod
     def _convert_loglike_columns(table):
@@ -218,34 +310,46 @@ class FluxPoints(FluxMaps):
 
         return table
 
+    @staticmethod
+    def _table_guess_format(table):
+        """Format of the table to be transformed to FluxPoints."""
+        names = table.colnames
+        if "time_min" in names:
+            return "lightcurve"
+        elif "x_min" in names:
+            return "profile"
+        else:
+            return "gadf-sed"
+
     @classmethod
     def from_table(
-        cls, table, sed_type=None, format="gadf-sed", reference_model=None, gti=None
+        cls, table, sed_type=None, format=None, reference_model=None, gti=None
     ):
-        """Create flux points from a table. The table column names must be consistent with the
-        sed_type
+        """Create flux points from a table. The table column names must be consistent with the sed_type.
 
         Parameters
         ----------
         table : `~astropy.table.Table`
-            Table
-        sed_type : {"dnde", "flux", "eflux", "e2dnde", "likelihood"}
-            Sed type
-        format : {"gadf-sed", "lightcurve", "profile"}
-            Table format.
-        reference_model : `SpectralModel`
-            Reference spectral model
-        gti : `GTI`
-            Good time intervals
-        meta : dict
-            Meta data.
+            Table.
+        sed_type : {"dnde", "flux", "eflux", "e2dnde", "likelihood"}, optional
+            SED type. Default is None.
+        format : {"gadf-sed", "lightcurve", "profile"}, optional
+            Table format. If None, it is extracted from the table column content. Default is None.
+        reference_model : `SpectralModel`, optional
+            Reference spectral model. Default is None.
+        gti : `GTI`, optional
+            Good time intervals. Default is None.
 
         Returns
         -------
         flux_points : `FluxPoints`
-            Flux points
+            Flux points.
         """
         table = table_standardise_units_copy(table)
+
+        if format is None:
+            format = cls._table_guess_format(table)
+            log.info("Inferred format: " + format)
 
         if sed_type is None:
             sed_type = table.meta.get("SED_TYPE", None)
@@ -254,7 +358,7 @@ class FluxPoints(FluxMaps):
             sed_type = cls._guess_sed_type(table.colnames)
 
         if sed_type is None:
-            raise ValueError("Specifying the sed type is required")
+            raise ValueError("Specifying the SED type is required")
 
         if sed_type == "likelihood":
             table = cls._convert_loglike_columns(table)
@@ -295,7 +399,7 @@ class FluxPoints(FluxMaps):
 
     @staticmethod
     def _format_table(table):
-        """Format table"""
+        """Format table."""
         for column in table.colnames:
             if column.startswith(("dnde", "eflux", "flux", "e2dnde", "ref")):
                 table[column].format = ".3e"
@@ -306,17 +410,27 @@ class FluxPoints(FluxMaps):
 
         return table
 
-    def to_table(self, sed_type=None, format="gadf-sed", formatted=False):
+    def _guess_format(self):
+        """Format of the FluxPoints object."""
+        names = self.geom.axes.names
+        if "time" in names:
+            return "lightcurve"
+        elif "projected-distance" in names:
+            return "profile"
+        else:
+            return "gadf-sed"
+
+    def to_table(self, sed_type=None, format=None, formatted=False):
         """Create table for a given SED type.
 
         Parameters
         ----------
         sed_type : {"likelihood", "dnde", "e2dnde", "flux", "eflux"}
-            Sed type to convert to. Default is `likelihood`
-        format : {"gadf-sed", "lightcurve", "binned-time-series", "profile"}
+            SED type to convert to. Default is `likelihood`.
+        format : {"gadf-sed", "lightcurve", "binned-time-series", "profile"}, optional
             Format specification. The following formats are supported:
 
-                * "gadf-sed": format for sed flux points see :ref:`gadf:flux-points`
+                * "gadf-sed": format for SED flux points see :ref:`gadf:flux-points`
                   for details
                 * "lightcurve": Gammapy internal format to store energy dependent
                   lightcurves. Basically a generalisation of the "gadf" format, but
@@ -327,32 +441,37 @@ class FluxPoints(FluxMaps):
                   flux profiles. Basically a generalisation of the "gadf" format, but
                   currently there is no detailed documentation available.
 
+                If None, the format will be guessed by looking at the axes that are present in the object.
+                Default is None.
         formatted : bool
             Formatted version with column formats applied. Numerical columns are
-            formatted to .3f and .3e respectively.
+            formatted to .3f and .3e respectively. Default is False.
 
         Returns
         -------
         table : `~astropy.table.Table`
-            Flux points table
+            Flux points table.
 
         Examples
         --------
-
         This is how to read and plot example flux points:
 
         >>> from gammapy.estimators import FluxPoints
         >>> fp = FluxPoints.read("$GAMMAPY_DATA/hawc_crab/HAWC19_flux_points.fits")
-        >>> table = fp.to_table(sed_type="flux", format="gadf-sed", formatted=True)
+        >>> table = fp.to_table(sed_type="flux", formatted=True)
         >>> print(table[:2])
         e_ref e_min e_max     flux      flux_err    flux_ul      ts    sqrt_ts is_ul
-         TeV   TeV   TeV  1 / (cm2 s) 1 / (cm2 s) 1 / (cm2 s)
+         TeV   TeV   TeV  1 / (s cm2) 1 / (s cm2) 1 / (s cm2)
         ----- ----- ----- ----------- ----------- ----------- -------- ------- -----
         1.334 1.000 1.780   1.423e-11   3.135e-13         nan 2734.000  52.288 False
         2.372 1.780 3.160   5.780e-12   1.082e-13         nan 4112.000  64.125 False
         """
         if sed_type is None:
             sed_type = self.sed_type_init
+
+        if format is None:
+            format = self._guess_format()
+            log.info("Inferred format: " + format)
 
         if format == "gadf-sed":
             # TODO: what to do with GTI info?
@@ -480,7 +599,7 @@ class FluxPoints(FluxMaps):
         return model.inverse(dnde_mean)
 
     def _plot_get_flux_err(self, sed_type=None):
-        """Compute flux error for given sed type"""
+        """Compute flux error for given SED type."""
         y_errn, y_errp = None, None
 
         if "norm_err" in self.available_quantities:
@@ -499,21 +618,21 @@ class FluxPoints(FluxMaps):
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`
-            Axis object to plot on.
-        sed_type : {"dnde", "flux", "eflux", "e2dnde"}
-            Sed type
-        energy_power : float
-            Power of energy to multiply flux axis with
+        ax : `~matplotlib.axes.Axes`, optional
+            Axis object to plot on. Default is None.
+        sed_type : {"dnde", "flux", "eflux", "e2dnde"}, optional
+            SED type. Default is None.
+        energy_power : float, optional
+            Power of energy to multiply flux axis with. Default is 0.
         time_format : {"iso", "mjd"}
-            Used time format is a time axis is present. Default: "iso"
-        **kwargs : dict
-            Keyword arguments passed to `~RegionNDMap.plot`
+            Used time format is a time axis is present. Default is "iso".
+        **kwargs : dict, optional
+            Keyword arguments passed to `~RegionNDMap.plot`.
 
         Returns
         -------
         ax : `~matplotlib.axes.Axes`
-            Axis object
+            Axis object.
         """
         if sed_type is None:
             sed_type = self.sed_type_plot_default
@@ -556,10 +675,26 @@ class FluxPoints(FluxMaps):
         flux = scale_plot_flux(flux=flux.to_unit(flux_unit), energy_power=energy_power)
         if "time" in flux.geom.axes_names:
             flux.geom.axes["time"].time_format = time_format
+
         ax = flux.plot(ax=ax, **kwargs)
-        ax.set_ylabel(f"{sed_type} [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]")
-        ax.set_yscale("log")
+        self._plot_format_yax(ax=ax, energy_power=energy_power, sed_type=sed_type)
+
+        if len(flux.geom.axes) > 1:
+            ax.legend()
         return ax
+
+    @staticmethod
+    def _plot_format_yax(ax, energy_power, sed_type):
+        if energy_power > 0:
+            ax.set_ylabel(
+                f"e{energy_power} * {sed_type} [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]"
+            )
+        else:
+            ax.set_ylabel(
+                f"{sed_type} [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]"
+            )
+
+        ax.set_yscale("log", nonpositive="clip")
 
     def plot_ts_profiles(
         self,
@@ -572,19 +707,19 @@ class FluxPoints(FluxMaps):
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`
-            Axis object to plot on.
-        sed_type : {"dnde", "flux", "eflux", "e2dnde"}
-            Sed type
-        add_cbar : bool
-            Whether to add a colorbar to the plot.
-        **kwargs : dict
-            Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`
+        ax : `~matplotlib.axes.Axes`, optional
+            Axis object to plot on. Default is None.
+        sed_type : {"dnde", "flux", "eflux", "e2dnde"}, optional
+            SED type. Default is None.
+        add_cbar : bool, optional
+            Whether to add a colorbar to the plot. Default is True.
+        **kwargs : dict, optional
+            Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
 
         Returns
         -------
         ax : `~matplotlib.axes.Axes`
-            Axis object
+            Axis object.
         """
         if ax is None:
             ax = plt.gca()
@@ -660,19 +795,20 @@ class FluxPoints(FluxMaps):
 
     def recompute_ul(self, n_sigma_ul=2, **kwargs):
         """Recompute upper limits corresponding to the given value.
-        The pre-computed stat profiles must exist for the re-computation.
+
+        The pre-computed statistic profiles must exist for the re-computation.
 
         Parameters
         ----------
         n_sigma_ul : int
             Number of sigma to use for upper limit computation. Default is 2.
-        **kwargs : dict
+        **kwargs : dict, optional
             Keyword arguments passed to `~scipy.optimize.brentq`.
 
         Returns
         -------
-        flux_points : `FluxPoints`
-            A new FluxPoints object with modified upper limits
+        flux_points : `~gammapy.estimators.FluxPoints`
+            A new FluxPoints object with modified upper limits.
 
         Examples
         --------
@@ -685,7 +821,6 @@ class FluxPoints(FluxMaps):
         >>> print(flux_points_recomputed.meta["n_sigma_ul"], flux_points_recomputed.flux_ul.data[0])
         3 [[6.22245374e-09]]
         """
-
         if not self.has_stat_profiles:
             raise ValueError(
                 "Stat profiles not present. Upper limit computation is not possible"
@@ -696,7 +831,7 @@ class FluxPoints(FluxMaps):
         flux_points = deepcopy(self)
 
         value_scan = self.stat_scan.geom.axes["norm"].center
-        shape_axes = self.stat_scan.geom._shape[slice(3, None)]
+        shape_axes = self.stat_scan.geom._shape[slice(3, None)][::-1]
         for idx in np.ndindex(shape_axes):
             stat_scan = np.abs(
                 self.stat_scan.data[idx].squeeze() - self.stat.data[idx].squeeze()
@@ -706,3 +841,37 @@ class FluxPoints(FluxMaps):
             )
         flux_points.meta["n_sigma_ul"] = n_sigma_ul
         return flux_points
+
+    def resample_axis(self, axis_new):
+        """Rebin the flux point object along the new axis.
+
+        The log-likelihoods profiles in each bin are summed
+        to compute the resultant quantities.
+        Stat profiles must be present on the `~gammapy.estimators.FluxPoints` object for
+        this method to work.
+
+        For now, works only for flat `~gammapy.estimators.FluxPoints`.
+
+        Parameters
+        ----------
+        axis_new : `MapAxis` or `TimeMapAxis`
+            The new axis to resample along
+
+        Returns
+        -------
+        flux_points : `~gammapy.estimators.FluxPoints`
+            A new FluxPoints object with modified axis.
+        """
+        if not self.has_stat_profiles:
+            raise ValueError("Stat profiles not present, rebinning is not possible")
+
+        fluxpoints = []
+        for edge_min, edge_max in zip(axis_new.edges_min, axis_new.edges_max):
+            if isinstance(axis_new, TimeMapAxis):
+                edge_min = edge_min + axis_new.reference_time
+                edge_max = edge_max + axis_new.reference_time
+            fp = self.slice_by_coord({axis_new.name: slice(edge_min, edge_max)})
+            fp_new = squash_fluxpoints(fp, axis_new)
+            fluxpoints.append(fp_new)
+
+        return self.__class__.from_stack(fluxpoints, axis=axis_new)

@@ -9,15 +9,14 @@ Troubleshooting
 
 Check your setup
 ----------------
-You might want to display some info about Gammapy installed. You can execute
-the following command, and it should print detailed information about your
-installation to the terminal:
+To access detailed information about your Gammapy installation, you can execute the following
+command. It will provide insight into the installation directly to the terminal.
 
 .. code-block:: bash
 
     gammapy info
 
-If there is some issue, the following commands could help you to figure out
+If you encounter some issues, the following commands can help you in troubleshooting
 your setup:
 
 .. code-block:: bash
@@ -30,24 +29,24 @@ your setup:
     env | grep PATH
     python -c 'import gammapy; print(gammapy); print(gammapy.__version__)'
 
-You can also use the following commands to check which conda environment is active and which
-ones you have set up:
+You can also use the following commands to check which conda environment is active and to
+list all available environments:
 
 .. code-block:: bash
 
     conda info
     conda env list
 
-If you're new to conda, you could also print out the `conda cheat sheet`_, which
-lists the common commands to install packages and work with environments.
+For those that are new to conda, you can consult the `conda cheat sheet`_, which
+lists the common commands for installing packages and working with environments.
 
 
 Install issues
 --------------
 
-If you have problems and think you might not be using the right Python or
-importing Gammapy isn't working or giving you the right version, checking your
-Python executable and import path might help you find the issue:
+If you're experiencing issues and believe you are using the incorrect Python or Gammapy version, or
+if you encounter problems importing Gammapy, you should check your Python executable and import path
+to help you resolve the issue:
 
 .. code-block:: python
 
@@ -55,7 +54,7 @@ Python executable and import path might help you find the issue:
     print(sys.executable)
     print(sys.path)
 
-To check which Gammapy you are using you can use this:
+To check your Gammapy version use the following commands:
 
 .. code-block:: python
 
@@ -63,7 +62,8 @@ To check which Gammapy you are using you can use this:
     print(gammapy)
     print(gammapy.__version__)
 
-Now you should be all set and to use Gammapy. Let's move on to the
+
+You should now be ready to start using Gammapy. Let's move on to the
 :ref:`tutorials`.
 
 
@@ -71,4 +71,4 @@ Help!?
 ------
 
 If you have any questions or issues, please ask for help on the Gammapy Slack,
-mailing list or on GitHub, see `Gammapy contact`_.
+mailing list or on GitHub (see `Gammapy contact`_).

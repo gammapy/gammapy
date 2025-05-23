@@ -34,19 +34,19 @@ def time_to_fits(time, epoch=None, unit=u.s):
     Parameters
     ----------
     time : `~astropy.time.Time`
-        time to be converted
-    epoch : `astropy.time.Time`
-        epoch to use for the time. The corresponding keywords must
+        Time to be converted.
+    epoch : `~astropy.time.Time`, optional
+        Epoch to use for the time. The corresponding keywords must
         be stored in the same FITS header.
-        If None, `DEFAULT_EPOCH` will be used.
-    unit : `astropy.time.Time`
-        If None, `DEFAULT_EPOCH` will be used.
-        Should be stored as `TIMEUNIT` in the same FITS header.
+        Default is None, so the `DEFAULT_EPOCH` is used.
+    unit : `~astropy.units.Unit`, optional
+        Unit, should be stored as `TIMEUNIT` in the same FITS header.
+        Default is u.s.
 
     Returns
     -------
     time : astropy.units.Quantity
-        Duration since epoch
+        Duration since epoch.
     """
     if epoch is None:
         epoch = DEFAULT_EPOCH
@@ -62,19 +62,19 @@ def time_to_fits_header(time, epoch=None, unit=u.s):
     Parameters
     ----------
     time : `~astropy.time.Time`
-        time to be converted
-    epoch : `astropy.time.Time`
-        epoch to use for the time. The corresponding keywords must
+        Time to be converted.
+    epoch : `~astropy.time.Time`, optional
+        Epoch to use for the time. The corresponding keywords must
         be stored in the same FITS header.
-        If None, `DEFAULT_EPOCH` will be used.
-    unit : `astropy.time.Time`
-        If None, `DEFAULT_EPOCH` will be used.
-        Should be stored as `TIMEUNIT` in the same FITS header.
+        Default is None, so `DEFAULT_EPOCH` is used.
+    unit : `~astropy.units.Unit`, optional
+        Unit, should be stored as `TIMEUNIT` in the same FITS header.
+        Default is u.s.
 
     Returns
     -------
     header_entry : tuple(float, string)
-        a float / comment tuple with the time and unit
+        A float / comment tuple with the time and unit.
     """
     if epoch is None:
         epoch = DEFAULT_EPOCH
@@ -88,37 +88,41 @@ def time_ref_from_dict(meta, format="mjd", scale="tt"):
     Parameters
     ----------
     meta : dict
-        FITS time standard header info
-    format: str
-        Format of the `~astropy.time.Time` information
-    scale: str
-        Scale of the `~astropy.time.Time` information
+        FITS time standard header information.
+    format: str, optional
+        Format of the `~astropy.time.Time` information. Default is 'mjd'.
+    scale: str, optional
+        Scale of the `~astropy.time.Time` information. Default is 'tt'.
 
     Returns
     -------
     time : `~astropy.time.Time`
-        Time object with ``format='MJD'``
+        Time object with ``format='MJD'``.
     """
-    # Note: the float call here is to make sure we use 64-bit
-    mjd = float(meta["MJDREFI"]) + float(meta["MJDREFF"])
     scale = meta.get("TIMESYS", scale).lower()
-    return Time(mjd, format=format, scale=scale)
+
+    # some files seem to have MJDREFF as string, not as float
+    mjdrefi = float(meta["MJDREFI"])
+    mjdreff = float(meta["MJDREFF"])
+    return Time(mjdrefi, mjdreff, format=format, scale=scale)
 
 
 def time_ref_to_dict(time=None, scale="tt"):
-    """Convert the epoch to the relevant FITS header keywords
+    """Convert the epoch to the relevant FITS header keywords.
 
     Parameters
     ----------
-    time : `~astropy.time.Time`
+    time : `~astropy.time.Time`, optional
         The reference epoch for storing time in FITS.
-    scale: str
-        Scale of the `~astropy.time.Time` information
+        Default is None, so 'DEFAULT_EPOCH' is used.
+    scale: str, optional
+        Scale of the `~astropy.time.Time` information.
+        Default is "tt".
 
     Returns
     -------
     meta : dict
-        FITS time standard header info
+        FITS time standard header information.
     """
     if time is None:
         time = DEFAULT_EPOCH
@@ -137,50 +141,50 @@ def time_relative_to_ref(time, meta):
     Parameters
     ----------
     time : `~astropy.time.Time`
-        time to be converted
+        Time to be converted.
     meta : dict
-        dictionary with the keywords ``MJDREFI`` and ``MJDREFF``
+        Dictionary with the keywords ``MJDREFI`` and ``MJDREFF``.
 
     Returns
     -------
     time_delta : `~astropy.time.TimeDelta`
-        time in seconds after the reference
+        Time in seconds after the reference.
     """
     time_ref = time_ref_from_dict(meta)
     return TimeDelta(time - time_ref, format="sec")
 
 
 def absolute_time(time_delta, meta):
-    """Convert a MET into human readable date and time.
+    """Convert a MET into human-readable date and time.
 
     Parameters
     ----------
     time_delta : `~astropy.time.TimeDelta`
-        time in seconds after the MET reference
+        Time in seconds after the MET reference.
     meta : dict
-        dictionary with the keywords ``MJDREFI`` and ``MJDREFF``
+        Dictionary with the keywords ``MJDREFI`` and ``MJDREFF``.
 
     Returns
     -------
     time : `~astropy.time.Time`
-        absolute time with ``format='ISOT'`` and ``scale='UTC'``
+        Absolute time with ``format='ISOT'`` and ``scale='UTC'``.
     """
     time = time_ref_from_dict(meta) + time_delta
     return Time(time.utc.isot)
 
 
 def extract_time_info(row):
-    """Extract the timing metadata from an event file header
+    """Extract the timing metadata from an event file header.
 
     Parameters
     ----------
     row : dict
-        dictionary with all the metadata of an event file
+        Dictionary with all the metadata of an event file.
 
     Returns
     -------
     time_row : dict
-        dictionary with only the time metadata
+        Dictionary with only the time metadata.
     """
     time_row = {}
     for name in TIME_KEYWORDS:
@@ -189,17 +193,17 @@ def extract_time_info(row):
 
 
 def unique_time_info(rows):
-    """Check if the time information are identical between all metadata dictionaries
+    """Check if the time information are identical between all metadata dictionaries.
 
     Parameters
     ----------
     rows : list
-        list of dictionaries with a list of time metadata from different observations
+        List of dictionaries with a list of time metadata from different observations.
 
     Returns
     -------
     status : bool
-        True if the time metadata are identical between observations
+        True if the time metadata are identical between observations.
     """
     if len(rows) <= 1:
         return True

@@ -22,7 +22,7 @@ Glossary
     3D Analysis
       3D analysis or cube analysis, where data are reduced to a 3D cube with
       spatial coordinates and energy axes [Stewart2009]_. In Gammapy, these cube are
-      represented by `Map` objects (see :ref:`maps`) and contained in a `MapDataset` object.
+      represented by `~gammapy.maps.Map` objects (see :ref:`maps`) and contained in a `~gammapy.datasets.MapDataset` object.
 
     Aeff
       Short for "effective area": it is the IRF representing the detector collection
@@ -51,7 +51,7 @@ Glossary
       Short for "data level 4": it is used to mention or describe binned-science data, ie
       N-dim maps (multi-dimensional histograms) of the spatial, temporal and/or spectral
       components of the DL3 data in instrumental units (e.g. counts). See :ref:`maps` and
-     :ref:`data flow <data_flow>`.
+      :ref:`data flow <data_flow>`.
 
     DL5
       Short for "data level 5": it is used to mention or describe advanced-science data, ie
@@ -86,13 +86,16 @@ Glossary
     GADF
       Short for "Gamma Astro Data Format".
       The `open initiative GADF <https://gamma-astro-data-formats.readthedocs.io/en/v0.2/>`_
-      provides a Data Format for gamma-ray data that is currently used by many IACT experiments
-      and by HAWC. Gammapy I/O functions are compliant with this format.
+      provides a Data Format for gamma-ray data that is currently used by many :term:`IACT` experiments
+      and by `HAWC`_. Gammapy I/O functions are compliant with this format.
 
     GTI
       Short for "good time interval": it indicates a continuous time interval of data
-      acquisition. In CTA, it also represents a time interval in which the IRFs are
+      acquisition. In the GADF DL3 format, it also represents a time interval in which the IRFs are
       supposed to be constant.
+
+    IACT
+      Short for "Imaging Atmospheric Cherenkov Technique", as in used for e.g. `CTAO`_.
 
     IRF
       Short for "instrument response function": they are used to model the probability
@@ -109,8 +112,12 @@ Glossary
       Gammapy utility classes performing data reduction of the DL3 data to binned datasets (DL4).
       See :ref:`makers` and the :ref:`data flow <data_flow>`.
 
+    MCMC
+      Short for "Markov chain Monte Carlo". See the
+      `following recipe <https://gammapy.github.io/gammapy-recipes/_build/html/notebooks/mcmc-sampling-emcee/mcmc_sampling.html>`_.
+
     MET
-      Short for "mission elapsed time". see also :ref:`MET_definition` in :ref:`time_handling`.
+      Short for "mission elapsed time". See also :ref:`MET_definition` in :ref:`time_handling`.
 
     PSF
       Short for "point spread function": it is the IRF representing the probability density of the angular separation
@@ -132,6 +139,12 @@ Glossary
       data are analyzed. In practice, at each energy it corresponds with the sky region
       in which the dataset mask is True.
 
+    SED
+      Short for "spectral energy distribution". For a spectral model or flux points
+      object, the type of plot (e.g. :math:`dN/dE`, :math:`E^2\ dN/dE`) is typically adjusted
+      through the `sed_type` quantity. See :ref:`sedtypes` for a list of options.
+
+
     Stacked Analysis
       In a stacked analysis individual observations are reduced to datasets which
       are then stacked to produce a single reduced dataset. The latter is then used
@@ -145,8 +158,15 @@ Glossary
       by contrast with the energy reconstructed by the instrument. Instrument response
       functions are represented along a true energy axis.
 
+    Transit
+      Path of a source over the sky in the course of one full sidereal day
+      as seen by drift instruments like `HAWC`_ and `SWGO`_.
+
     TS
       Short for "test statistics". See :ref:`ts` and :ref:`fit-statistics`.
+
+    WCD
+      Short for "Water Cherenkov Detector", like the experiments `HAWC`_ or `SWGO`_.
 
     WStat
       The WStat is a Poisson fit statistic usually used for ON-OFF analysis. It is

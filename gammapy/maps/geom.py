@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import abc
 import copy
+import html
 import inspect
 import logging
 import numpy as np
@@ -32,12 +33,12 @@ def pix_tuple_to_idx(pix):
     Parameters
     ----------
     pix : tuple
-        Tuple of pixel coordinates with one element for each dimension
+        Tuple of pixel coordinates with one element for each dimension.
 
     Returns
     -------
     idx : `~numpy.ndarray`
-        Array of pixel indices
+        Array of pixel indices.
     """
     idx = []
     for p in pix:
@@ -46,7 +47,7 @@ def pix_tuple_to_idx(pix):
             idx += [p]
         else:
             with np.errstate(invalid="ignore"):
-                p_idx = np.rint(p).astype(int)
+                p_idx = np.floor(p + 0.5).astype(int)
             p_idx[~np.isfinite(p)] = INVALID_INDEX.int
             idx += [p_idx]
 
@@ -56,7 +57,7 @@ def pix_tuple_to_idx(pix):
 class Geom(abc.ABC):
     """Map geometry base class.
 
-    See also: `~gammapy.maps.WcsGeom` and `~gammapy.maps.HpxGeom`
+    See also: `~gammapy.maps.WcsGeom` and `~gammapy.maps.HpxGeom`.
     """
 
     # workaround for the lru_cache pickle issue
@@ -68,6 +69,12 @@ class Geom(abc.ABC):
             if func is not None:
                 state[key] = func
         return state
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     @property
     @abc.abstractmethod
@@ -81,13 +88,13 @@ class Geom(abc.ABC):
 
         Parameters
         ----------
-        dtype : data-type
-            The desired data-type for the array. Default is "float32"
+        dtype : str, optional
+            The desired data-type for the array. Default is "float32".
 
         Returns
         -------
         memory : `~astropy.units.Quantity`
-            Estimated memory usage in megabytes (MB)
+            Estimated memory usage in megabytes (MB).
         """
         return (np.empty(self.data_shape, dtype).nbytes * u.byte).to("MB")
 
@@ -119,12 +126,12 @@ class Geom(abc.ABC):
         ----------
         hdulist :  `~astropy.io.fits.HDUList`
             HDU list containing HDUs for map data and bands.
-        hdu : str
-            Name or index of the HDU with the map data.
-        hdu_bands : str
-            Name or index of the HDU with the BANDS table.  If not
+        hdu : str or int, optional
+            Name or index of the HDU with the map data. Default is None.
+        hdu_bands : str, optional
+            Name or index of the HDU with the BANDS table. If not
             defined this will be inferred from the FITS header of the
-            map HDU.
+            map HDU. Default is None.
 
         Returns
         -------
@@ -168,16 +175,16 @@ class Geom(abc.ABC):
         ----------
         idx : tuple, optional
             A tuple of indices with one index for each non-spatial
-            dimension.  If defined only pixels for the image plane with
-            this index will be returned.  If none then all pixels
-            will be returned.
-        local : bool
-            Flag to return local or global pixel indices.  Local
+            dimension. If defined only pixels for the image plane with
+            this index will be returned. If none then all pixels
+            will be returned. Default is None.
+        local : bool, optional
+            Flag to return local or global pixel indices. Local
             indices run from 0 to the number of pixels in a given
-            image plane.
+            image plane. Default is False.
         flat : bool, optional
             Return a flattened array containing only indices for
-            pixels contained in the geometry.
+            pixels contained in the geometry. Default is False.
 
         Returns
         -------
@@ -192,7 +199,7 @@ class Geom(abc.ABC):
         """Get the coordinate array for this geometry.
 
         Returns a coordinate array with the same shape as the data
-        array.  Pixels outside the geometry are set to NaN.
+        array. Pixels outside the geometry are set to NaN.
         Coordinates for a single image plane can be accessed by
         setting ``idx`` to the index tuple of a plane.
 
@@ -200,12 +207,12 @@ class Geom(abc.ABC):
         ----------
         idx : tuple, optional
             A tuple of indices with one index for each non-spatial
-            dimension.  If defined only coordinates for the image
-            plane with this index will be returned.  If none then
-            coordinates for all pixels will be returned.
+            dimension. If defined only coordinates for the image
+            plane with this index will be returned. If none then
+            coordinates for all pixels will be returned. Default is None.
         flat : bool, optional
             Return a flattened array containing only coordinates for
-            pixels contained in the geometry.
+            pixels contained in the geometry. Default is False.
 
         Returns
         -------
@@ -248,8 +255,8 @@ class Geom(abc.ABC):
             coordinate vector for axis i.
         clip : bool
             Choose whether to clip indices to the valid range of the
-            geometry.  If false then indices for coordinates outside
-            the geometry range will be set -1.
+            geometry. If False then indices for coordinates outside
+            the geometry range will be set -1. Default is False.
 
         Returns
         -------
@@ -281,7 +288,7 @@ class Geom(abc.ABC):
     def pix_to_idx(self, pix, clip=False):
         """Convert pixel coordinates to pixel indices.
 
-        Returns -1 for pixel coordinates that lie outside of the map.
+        Returns -1 for pixel coordinates that lie outside the map.
 
         Parameters
         ----------
@@ -289,8 +296,8 @@ class Geom(abc.ABC):
             Tuple of pixel coordinates.
         clip : bool
             Choose whether to clip indices to the valid range of the
-            geometry.  If false then indices for coordinates outside
-            the geometry range will be set -1.
+            geometry. If False then indices for coordinates outside
+            the geometry range will be set -1. Default is False.
 
         Returns
         -------
@@ -337,7 +344,7 @@ class Geom(abc.ABC):
         Parameters
         ----------
         slices : dict
-            Dict of axes names and integers or `slice` object pairs. Contains one
+            Dictionary of axes names and integers or `slice` object pairs. Contains one
             element for each non-spatial dimension. For integer indexing the
             corresponding axes is dropped from the map. Axes not specified in the
             dict are kept unchanged.
@@ -346,19 +353,28 @@ class Geom(abc.ABC):
         -------
         geom : `~Geom`
             Sliced geometry.
+
+        Examples
+        --------
+        >>> from gammapy.maps import MapAxis, WcsGeom
+        >>> import astropy.units as u
+        >>> energy_axis = MapAxis.from_energy_bounds(1*u.TeV, 3*u.TeV, 6)
+        >>> geom = WcsGeom.create(skydir=(83.63, 22.01), axes=[energy_axis], width=5, binsz=0.02)
+        >>> slices = {"energy": slice(0, 2)}
+        >>> sliced_geom = geom.slice_by_idx(slices)
         """
         axes = self.axes.slice_by_idx(slices)
         return self._init_copy(axes=axes)
 
     def rename_axes(self, names, new_names):
-        """Rename axes contained in the geometry
+        """Rename axes contained in the geometry.
 
         Parameters
         ----------
         names : list or str
             Names of the axes.
         new_names : list or str
-            New names of the axes (list must be of same length than `names`).
+            New names of the axes. The list must be of same length than `names`.
 
         Returns
         -------
@@ -370,17 +386,17 @@ class Geom(abc.ABC):
 
     @property
     def as_energy_true(self):
-        """If the geom contains an energy axis rename it to energy true"""
+        """If the geom contains an axis named 'energy' rename it to 'energy_true'."""
         return self.rename_axes(names="energy", new_names="energy_true")
 
     @property
     def has_energy_axis(self):
-        """Whether geom has an energy axis"""
+        """Whether geom has an energy axis (either 'energy' or 'energy_true')."""
         return ("energy" in self.axes.names) ^ ("energy_true" in self.axes.names)
 
     @abc.abstractmethod
     def to_image(self):
-        """Create 2D image geometry (drop non-spatial dimensions).
+        """Create a 2D image geometry (drop non-spatial dimensions).
 
         Returns
         -------
@@ -558,7 +574,7 @@ class Geom(abc.ABC):
 
     @abc.abstractmethod
     def solid_angle(self):
-        """Solid angle (`~astropy.units.Quantity` in ``sr``)."""
+        """Solid angle as a `~astropy.units.Quantity` object (in ``sr``)."""
         pass
 
     @property
@@ -570,7 +586,7 @@ class Geom(abc.ABC):
 
     @property
     def is_flat(self):
-        """Whether the geom non spatial axes have length 1, equivalent to an image."""
+        """Whether the geom non-spatial axes have length 1, equivalent to an image."""
         if self.is_image:
             return True
         else:
@@ -614,29 +630,59 @@ class Geom(abc.ABC):
         Parameters
         ----------
         energy_min, energy_max : `~astropy.units.Quantity`
-            Energy range
+            Energy range.
+        round_to_edge: bool, optional
+            Whether to round `energy_min` and `energy_max` to the closest axis bin value.
+            See `~gammapy.maps.MapAxis.round`. Default is False.
 
         Returns
         -------
-        mask : `~numpy.ndarray`
-            Energy mask
+        mask : `~gammapy.maps.Map`
+            Map containing the energy mask. The geometry of the map
+            is the same as the geometry of the instance which called this method.
+        """
+        return self.create_mask(
+            "energy",
+            edge_min=energy_min,
+            edge_max=energy_max,
+            round_to_edge=round_to_edge,
+        )
+
+    def create_mask(self, axis_name, edge_min=None, edge_max=None, round_to_edge=False):
+        """Create a mask over a given axis.
+
+        Bins must be fully contained to be included in the mask.
+
+        Parameters
+        ----------
+        edge_min, edge_max : `~astropy.units.Quantity` or float
+            Bounds of the mask. `~astropy.units.Quantity` which unit must be consistent with the axis.
+        round_to_edge: bool, optional
+            Whether to round `energy_min` and `energy_max` to the closest axis bin value.
+            See `~gammapy.maps.MapAxis.round`. Default is False.
+
+        Returns
+        -------
+        mask : `~gammapy.maps.Map`
+            Map containing the mask. The geometry of the map is the same as the initial geometry.
         """
         from . import Map
 
-        # get energy axes and values
-        energy_axis = self.axes["energy"]
+        axes_names = self.axes_names
+
+        axis = self.axes[axis_name]
+
+        axis_edges = axis.edges
+        edge_min = edge_min if edge_min is not None else axis_edges[0]
+        edge_max = edge_max if edge_max is not None else axis_edges[-1]
 
         if round_to_edge:
-            energy_min, energy_max = energy_axis.round([energy_min, energy_max])
+            edge_min, edge_max = axis.round([edge_min, edge_max])
 
-        # TODO: make this more general
-        shape = (-1, 1) if self.is_hpx else (-1, 1, 1)
-        energy_edges = energy_axis.edges.reshape(shape)
-
-        # set default values
-        energy_min = energy_min if energy_min is not None else energy_edges[0]
-        energy_max = energy_max if energy_max is not None else energy_edges[-1]
-
-        mask = (energy_edges[:-1] >= energy_min) & (energy_edges[1:] <= energy_max)
+        axes_names.reverse()
+        mask = (axis_edges[:-1] >= edge_min) & (axis_edges[1:] <= edge_max)
+        mask = np.expand_dims(
+            mask, axis=tuple(np.where(np.array(axes_names) != axis_name)[0])
+        )
         data = np.broadcast_to(mask, shape=self.data_shape)
         return Map.from_geom(geom=self, data=data, dtype=data.dtype)

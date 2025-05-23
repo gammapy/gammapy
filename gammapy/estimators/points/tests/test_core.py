@@ -10,6 +10,8 @@ from gammapy.catalog.fermi import SourceCatalog3FGL, SourceCatalog4FGL
 from gammapy.data import GTI
 from gammapy.estimators import FluxPoints
 from gammapy.estimators.map.core import DEFAULT_UNIT
+from gammapy.estimators.utils import get_rebinned_axis
+from gammapy.maps import MapAxis
 from gammapy.modeling.models import PowerLawSpectralModel, SpectralModel
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import (
@@ -148,7 +150,6 @@ def test_compute_flux_points_dnde_exp(method):
 
 @requires_data()
 def test_fermi_to_dnde():
-
     catalog_4fgl = SourceCatalog4FGL("$GAMMAPY_DATA/catalogs/fermi/gll_psc_v20.fit.gz")
     src = catalog_4fgl["FGES J1553.8-5325"]
     fp = src.flux_points
@@ -210,12 +211,14 @@ class TestFluxPoints:
         assert str(flux_points) == str(actual)
 
     def test_write_ecsv(self, tmp_path, flux_points):
+        filename = tmp_path / "flux_points.ecsv"
+        filename.touch()
         flux_points.write(
-            tmp_path / "flux_points.ecsv",
+            filename,
             sed_type=flux_points.sed_type_init,
             overwrite=True,
         )
-        actual = FluxPoints.read(tmp_path / "flux_points.ecsv")
+        actual = FluxPoints.read(filename)
         actual._data.pop("is_ul", None)
         flux_points._data.pop("is_ul", None)
         assert str(flux_points) == str(actual)
@@ -228,7 +231,6 @@ class TestFluxPoints:
         assert flux_points_likelihood.sed_type_init == "likelihood"
 
     def test_plot(self, flux_points):
-
         fig = plt.figure()
         ax = fig.add_axes([0.2, 0.2, 0.7, 0.7])
         ax.xaxis.set_units(u.eV)
@@ -251,6 +253,40 @@ class TestFluxPoints:
             fig = plt.figure()
             ax = fig.add_subplot()
             flux_points_likelihood.plot_ts_profiles(ax=ax)
+
+
+@requires_data()
+def test_plot_format_yaxis():
+    path = "$GAMMAPY_DATA/tests/spectrum/flux_points/flux_points.fits"
+    fp = FluxPoints.read(path)
+
+    with mpl_plot_check():
+        ax = fp.plot(sed_type="e2dnde")
+        assert (
+            ax.yaxis.get_label().get_text()
+            == "e2dnde [$\\mathrm{erg\\,s^{-1}\\,cm^{-2}}$]"
+        )
+
+    with mpl_plot_check():
+        ax = fp.plot(sed_type="dnde", energy_power=2)
+        assert (
+            ax.yaxis.get_label().get_text()
+            == "e2 * dnde [$\\mathrm{TeV\\,s^{-1}\\,cm^{-2}}$]"
+        )
+
+    with mpl_plot_check():
+        ax = fp.plot(sed_type="dnde")
+        assert (
+            ax.yaxis.get_label().get_text()
+            == "dnde [$\\mathrm{TeV^{-1}\\,s^{-1}\\,cm^{-2}}$]"
+        )
+
+    with mpl_plot_check():
+        ax = fp.plot(sed_type="dnde", energy_power=2.7)
+        assert (
+            ax.yaxis.get_label().get_text()
+            == "e2.7 * dnde [$\\mathrm{TeV^{17/10}\\,s^{-1}\\,cm^{-2}}$]"
+        )
 
 
 @requires_data()
@@ -358,3 +394,54 @@ def test_fp_no_is_ul():
     fp = FluxPoints.from_table(table)
     fp_table = fp.to_table()
     assert "is_ul" not in fp_table.colnames
+
+
+def test_table_columns():
+    table = Table()
+    table["e_min"] = np.array([10, 20, 30, 40]) * u.TeV
+    table["e_max"] = np.array([20, 30, 40, 50]) * u.TeV
+    table["flux"] = np.array([42, 52, 62, 72]) / (u.s * u.cm * u.cm)
+    table["other"] = np.array([1, 2, 3, 4])
+    table["n_dof"] = np.array([1, 2, 1, 2])
+
+    # Get values
+    model = PowerLawSpectralModel()
+    table["e_ref"] = FluxPoints._energy_ref_lafferty(
+        model, table["e_min"], table["e_max"]
+    )
+    fp = FluxPoints.from_table(table, reference_model=model)
+
+    assert fp.available_quantities == ["norm", "n_dof"]
+    assert_allclose(fp.n_dof.data.ravel(), table["n_dof"])
+
+
+@requires_data()
+def test_resample_axis():
+    lc_1d = FluxPoints.read(
+        "$GAMMAPY_DATA/estimators/pks2155_hess_lc/pks2155_hess_lc.fits",
+        format="lightcurve",
+    )
+    axis_new = get_rebinned_axis(
+        lc_1d, method="fixed-bins", group_size=5, axis_name="time"
+    )
+    l1 = lc_1d.resample_axis(axis_new=axis_new)
+    assert_allclose(l1.norm.data.ravel()[0:2], [1.56321943, 2.12845751], rtol=1e-3)
+    assert_allclose(l1.norm_err.data.ravel()[0:2], [0.03904136, 0.03977413], rtol=1e-3)
+    assert_allclose(l1.n_dof.data.ravel()[0], 5.0)
+    assert l1.success.data.ravel()[0]
+
+    axis_new = get_rebinned_axis(
+        lc_1d, method="min-ts", ts_threshold=300, axis_name="time"
+    )
+    l1 = lc_1d.resample_axis(axis_new=axis_new)
+    assert_allclose(l1.norm_err.data.ravel()[0:2], [0.072236, 0.092942], rtol=1e-3)
+    assert_allclose(l1.ts.data.ravel()[0:2], [312.742222, 454.99609], rtol=1e-3)
+    assert_allclose(l1.stat_null.data.ravel()[0:2], [319.8675, 462.329], rtol=1e-3)
+    assert l1.success.data.ravel()[0]
+    assert_allclose(l1.n_dof.data[0][0][0][0], 2)
+
+    path = make_path("$GAMMAPY_DATA/tests/spectrum/flux_points/flux_points.fits")
+    table = Table.read(path)
+    fp = FluxPoints.from_table(table)
+    with pytest.raises(ValueError):
+        fp.resample_axis(axis_new=MapAxis.from_nodes([0, 1, 2]))

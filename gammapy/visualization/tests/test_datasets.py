@@ -2,6 +2,7 @@
 import pytest
 from numpy.testing import assert_allclose
 import matplotlib
+import matplotlib.pyplot as plt
 from packaging import version
 from gammapy.datasets.tests.test_map import MapDataset
 from gammapy.modeling.models import (
@@ -12,6 +13,7 @@ from gammapy.modeling.models import (
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data
 from gammapy.visualization import plot_npred_signal, plot_spectrum_datasets_off_regions
+from gammapy.catalog import SourceCatalog3FHL
 
 
 @pytest.fixture
@@ -59,7 +61,69 @@ def test_plot_spectrum_datasets_off_regions():
 
     actual = ax.patches[2].get_edgecolor()
     assert_allclose(actual, (1.0, 0.498039, 0.054902, 1.0), rtol=1e-2)
-    assert ax.lines[0].get_color() in ["green", "C0"]
+    assert ax.lines[0].get_color() == "#2ca02c"
+
+
+@requires_data()
+def test_plot_regions_color_point():
+    fermi_dataset = MapDataset.read(
+        "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc.fits.gz", name="fermi_dataset"
+    )
+    catalog = SourceCatalog3FHL()
+    models = catalog.to_models().select_from_geom(fermi_dataset.geoms["geom"])
+
+    plt.figure()
+    ax = models.plot_regions(linewidth=1)
+    for patch in ax.patches:
+        assert_allclose(
+            patch.get_edgecolor(), (0.121569, 0.466667, 0.705882, 1), rtol=1e-2
+        )
+    for patch in ax.lines:
+        assert patch.get_color() == "C0"
+    # default blue for both lines and points
+
+    plt.figure()
+    ax = models.plot_regions(linewidth=1, color="red")
+    for patch in ax.patches:
+        assert_allclose(patch.get_edgecolor(), (1.0, 0.0, 0.0, 1.0), rtol=1e-2)
+    for patch in ax.lines:
+        assert patch.get_color() == "red"
+    # red because color set for both lines and points
+
+    plt.figure()
+    ax = models.plot_regions(
+        linewidth=1, kwargs_point={"marker": "d", "markersize": 5, "color": "green"}
+    )
+    for patch in ax.patches:
+        assert_allclose(
+            patch.get_edgecolor(), (0.121569, 0.466667, 0.705882, 1), rtol=1e-2
+        )
+    for patch in ax.lines:
+        assert patch.get_color() == "green"
+
+    plt.figure()
+    ax = models.plot_regions(
+        linewidth=1,
+        color="red",
+        kwargs_point={"marker": "d", "markersize": 5, "color": "green"},
+    )
+    for patch in ax.patches:
+        assert_allclose(patch.get_edgecolor(), (1.0, 0.0, 0.0, 1.0), rtol=1e-2)
+    for patch in ax.lines:
+        assert patch.get_color() == "green"
+
+    plt.figure()
+    ax = models.plot_regions(
+        linewidth=1,
+        color="red",
+        edgecolor="green",
+        kwargs_point={"marker": "d", "markersize": 5, "markeredgecolor": "green"},
+    )
+    for patch in ax.patches:
+        assert_allclose(patch.get_edgecolor(), (1.0, 0.0, 0.0, 1.0), rtol=1e-2)
+    for patch in ax.lines:
+        assert patch.get_color() == "red"
+    # red because color has priority over edgecolor as for the lines
 
 
 @requires_data()

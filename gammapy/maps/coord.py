@@ -1,7 +1,10 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 import copy
+import html
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
+from gammapy.utils.compat import COPY_IF_NEEDED
 
 __all__ = ["MapCoord"]
 
@@ -26,20 +29,20 @@ class MapCoord:
     """Represents a sequence of n-dimensional map coordinates.
 
     Contains coordinates for 2 spatial dimensions and an arbitrary
-    number of additional non-spatial dimensions.
+    number of additional non-spatial dimensions. Ensure correct broadcasting of the array
+    to allow for this.
 
-    For further information see :ref:`mapcoord`.
+    For further information and examples see :ref:`mapcoord`.
 
     Parameters
     ----------
     data : `dict` of `~numpy.ndarray`
         Dictionary of coordinate arrays.
-    frame : {"icrs", "galactic", None}
-        Spatial coordinate system.  If None then the coordinate system
-        will be set to the native coordinate system of the geometry.
-    match_by_name : bool
-        Match coordinates to axes by name?
-        If false coordinates will be matched by index.
+    frame : {None, "icrs", "galactic"}
+        Spatial coordinate system. If None then the coordinate system
+        will be set to the native coordinate system of the geometry. Default is None.
+    match_by_name : bool, optional
+        Match coordinates to axes by name. If False, coordinates will be matched by index. Default is True.
     """
 
     def __init__(self, data, frame=None, match_by_name=True):
@@ -63,10 +66,21 @@ class MapCoord:
     def __iter__(self):
         return iter(self._data.values())
 
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
+
     @property
     def ndim(self):
         """Number of dimensions."""
         return len(self._data)
+
+    @property
+    def axis_names(self):
+        """Names of axes."""
+        return list(self._data.keys())
 
     @property
     def shape(self):
@@ -76,6 +90,7 @@ class MapCoord:
 
     @property
     def size(self):
+        """Product of all shape elements."""
         return np.prod(self.shape)
 
     @property
@@ -91,27 +106,28 @@ class MapCoord:
     @property
     def theta(self):
         """Theta co-latitude angle in radians."""
-        theta = u.Quantity(self.lat, unit="deg", copy=False).to_value("rad")
+        theta = u.Quantity(self.lat, unit="deg", copy=COPY_IF_NEEDED).to_value("rad")
         return np.pi / 2.0 - theta
 
     @property
     def phi(self):
         """Phi longitude angle in radians."""
-        phi = u.Quantity(self.lon, unit="deg", copy=False).to_value("rad")
+        phi = u.Quantity(self.lon, unit="deg", copy=COPY_IF_NEEDED).to_value("rad")
         return phi
 
     @property
     def frame(self):
-        """Coordinate system (str)."""
+        """Coordinate system as a string."""
         return self._frame
 
     @property
     def match_by_name(self):
-        """Boolean flag: axis lookup by name (True) or index (False)."""
+        """Boolean flag: axis lookup by name return True or by index return False."""
         return self._match_by_name
 
     @property
     def skycoord(self):
+        """Coordinate object as a `~astropy.coordinates.SkyCoord`."""
         return SkyCoord(self.lon, self.lat, unit="deg", frame=self.frame)
 
     @classmethod
@@ -124,6 +140,12 @@ class MapCoord:
         ----------
         coords : tuple
             Tuple of `~numpy.ndarray`.
+        frame : {"icrs", "galactic", None}
+            Set the coordinate system for longitude and latitude. If
+            None, longitude and latitude will be assumed to be in
+            the coordinate system native to a given map geometry. Default is None.
+        axis_names : list of str, optional
+            Axis names to use.
 
         Returns
         -------
@@ -144,7 +166,7 @@ class MapCoord:
 
     @classmethod
     def _from_tuple(cls, coords, frame=None, axis_names=None):
-        """Create from tuple of coordinate vectors."""
+        """Create from a tuple of coordinate vectors."""
         if isinstance(coords[0], (list, np.ndarray)) or np.isscalar(coords[0]):
             return cls._from_lonlat(coords, frame=frame, axis_names=axis_names)
         elif isinstance(coords[0], SkyCoord):
@@ -181,27 +203,29 @@ class MapCoord:
         ----------
         data : tuple, dict, `~gammapy.maps.MapCoord` or `~astropy.coordinates.SkyCoord`
             Object containing coordinate arrays.
-        frame : {"icrs", "galactic", None}, optional
+        frame : {"icrs", "galactic", None}
             Set the coordinate system for longitude and latitude. If
             None longitude and latitude will be assumed to be in
-            the coordinate system native to a given map geometry.
-        axis_names : list of str
-            Axis names use if a tuple is provided
+            the coordinate system native to a given map geometry. Default is None.
+        axis_names : list of str, optional
+            Axis names uses if a tuple is provided. Default is None.
 
         Examples
         --------
+        Create a MapCoord from longitude and latitude:
+
         >>> from astropy.coordinates import SkyCoord
         >>> from gammapy.maps import MapCoord
-
         >>> lon, lat = [1, 2], [2, 3]
         >>> skycoord = SkyCoord(lon, lat, unit='deg')
         >>> energy = [1000]
-        >>> c = MapCoord.create((lon,lat))
+        >>> c = MapCoord.create((lon, lat))
         >>> c = MapCoord.create((skycoord,))
-        >>> c = MapCoord.create((lon,lat,energy))
-        >>> c = MapCoord.create(dict(lon=lon,lat=lat))
-        >>> c = MapCoord.create(dict(lon=lon,lat=lat,energy=energy))
-        >>> c = MapCoord.create(dict(skycoord=skycoord,energy=energy))
+        >>> c = MapCoord.create((lon, lat, energy))
+        >>> c = MapCoord.create(dict(lon=lon, lat=lat))
+        >>> c = MapCoord.create(dict(lon=lon, lat=lat, energy=energy))
+        >>> c = MapCoord.create(dict(skycoord=skycoord, energy=energy))
+
         """
         if isinstance(data, cls):
             if data.frame is None or frame == data.frame:
@@ -236,10 +260,10 @@ class MapCoord:
             lon, lat, frame = skycoord_to_lonlat(self.skycoord, frame=frame)
             data = copy.deepcopy(self._data)
             if isinstance(self.lon, u.Quantity):
-                lon = u.Quantity(lon, unit="deg", copy=False)
+                lon = u.Quantity(lon, unit="deg", copy=COPY_IF_NEEDED)
 
-            if isinstance(self.lon, u.Quantity):
-                lat = u.Quantity(lat, unit="deg", copy=False)
+            if isinstance(self.lat, u.Quantity):
+                lat = u.Quantity(lat, unit="deg", copy=COPY_IF_NEEDED)
 
             data["lon"] = lon
             data["lat"] = lat
@@ -273,14 +297,14 @@ class MapCoord:
 
     @property
     def flat(self):
-        """Return flattened, valid coordinates"""
+        """Return flattened, valid coordinates."""
         coords = self.broadcasted
         is_finite = np.isfinite(coords[0])
         return coords.apply_mask(is_finite)
 
     @property
     def broadcasted(self):
-        """Return broadcasted coords"""
+        """Return broadcasted coordinates."""
         vals = np.broadcast_arrays(*self._data.values(), subok=True)
         data = dict(zip(self._data.keys(), vals))
         return self.__class__(
@@ -291,7 +315,7 @@ class MapCoord:
         """Copy `MapCoord` object."""
         return copy.deepcopy(self)
 
-    def __repr__(self):
+    def __str__(self):
         return (
             f"{self.__class__.__name__}\n\n"
             f"\taxes     : {list(self._data.keys())}\n"

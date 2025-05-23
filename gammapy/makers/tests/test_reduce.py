@@ -20,13 +20,22 @@ from gammapy.maps import MapAxis, RegionGeom, WcsGeom
 from gammapy.utils.testing import requires_data, requires_dependency
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture()
 def observations_cta():
     data_store = DataStore.from_dir("$GAMMAPY_DATA/cta-1dc/index/gps/")
     return data_store.get_observations()[:3]
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture()
+def observations_cta_with_issue():
+    data_store = DataStore.from_dir("$GAMMAPY_DATA/cta-1dc/index/gps/")
+    list = data_store.get_observations()[:2]
+    empty_obs = Observation()
+    list.append(empty_obs)
+    return list
+
+
+@pytest.fixture()
 def observations_hess():
     datastore = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
     obs_ids = [23523, 23526, 23559, 23592]
@@ -112,6 +121,21 @@ def exclusion_mask():
     return ~geom.region_mask([exclusion_region])
 
 
+@pytest.fixture()
+def full_exclusion_mask():
+    exclusion_region = CircleSkyRegion(
+        center=SkyCoord(183.604, -8.708, unit="deg", frame="galactic"),
+        radius=15 * u.deg,
+    )
+
+    skydir = SkyCoord(ra=83.63, dec=22.01, unit="deg", frame="icrs")
+    geom = WcsGeom.create(
+        npix=(150, 150), binsz=0.05, skydir=skydir, proj="TAN", frame="icrs"
+    )
+
+    return ~geom.region_mask([exclusion_region])
+
+
 @pytest.fixture(scope="session")
 def makers_map():
     return [
@@ -128,6 +152,17 @@ def makers_spectrum(exclusion_mask):
             containment_correction=True, selection=["counts", "exposure", "edisp"]
         ),
         ReflectedRegionsBackgroundMaker(exclusion_mask=exclusion_mask),
+        SafeMaskMaker(methods=["aeff-max"], aeff_percent=10),
+    ]
+
+
+@pytest.fixture()
+def makers_spectrum_large_region(full_exclusion_mask):
+    return [
+        SpectrumDatasetMaker(
+            containment_correction=True, selection=["counts", "exposure", "edisp"]
+        ),
+        ReflectedRegionsBackgroundMaker(exclusion_mask=full_exclusion_mask),
         SafeMaskMaker(methods=["aeff-max"], aeff_percent=10),
     ]
 
@@ -185,6 +220,23 @@ def test_datasets_maker_map(pars, observations_cta, makers_map, map_dataset):
         exposure = datasets[0].exposure
         assert exposure.unit == "m2 s"
         assert_allclose(exposure.data.mean(), 2.436063e09, rtol=3e-3)
+
+
+@requires_data()
+def test_failure_datasets_maker_map(
+    observations_cta_with_issue, makers_map, map_dataset
+):
+    makers = DatasetsMaker(
+        makers_map,
+        stack_datasets=True,
+        cutout_mode="partial",
+        cutout_width="15 deg",
+        n_jobs=4,
+        parallel_backend="multiprocessing",
+    )
+
+    with pytest.raises(RuntimeError):
+        makers.run(map_dataset, observations_cta_with_issue)
 
 
 @requires_data()
@@ -277,6 +329,19 @@ def test_datasets_maker_spectrum(observations_hess, makers_spectrum, spectrum_da
     exposure = datasets[0].exposure
     assert exposure.unit == "m2 s"
     assert_allclose(exposure.data.mean(), 3.94257338e08, rtol=3e-3)
+
+
+@requires_data()
+def test_datasets_maker_spectrum_large_region(
+    observations_hess, makers_spectrum_large_region, spectrum_dataset
+):
+    makers = DatasetsMaker(makers_spectrum_large_region, stack_datasets=True, n_jobs=4)
+    datasets = makers.run(spectrum_dataset, observations_hess)
+
+    counts = datasets[0].counts
+    assert counts.unit == ""
+    assert_allclose(counts.data.sum(), 0, rtol=1e-5)
+    assert_allclose(datasets[0].background.data.sum(), 0, rtol=1e-5)
 
 
 @requires_data()

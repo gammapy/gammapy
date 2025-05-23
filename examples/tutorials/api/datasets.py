@@ -145,7 +145,7 @@ print(dataset_cta)
 
 ######################################################################
 # To further explore the contents of a `Dataset`, you can use
-# e.g. `~gammapy.datasets.MapDataset.info_dict()`
+# e.g. `~gammapy.datasets.MapDataset.info_dict()`
 #
 
 ######################################################################
@@ -166,12 +166,12 @@ plt.show()
 #
 plt.figure()
 counts_image = dataset_cta.counts.sum_over_axes()
-counts_image.smooth("0.1 deg").plot()
+counts_image.smooth("0.1 deg").plot(add_cbar=True)
 plt.show()
 
 
 ######################################################################
-# Of course you can also access IRF related maps, e.g. the psf as
+# Of course you can also access IRF related maps, e.g. the psf as
 # `~gammapy.irf.PSFMap`:
 #
 
@@ -226,7 +226,7 @@ print(dataset_cta)
 #
 
 npred = dataset_cta.npred()
-npred.sum_over_axes().plot()
+npred.sum_over_axes().plot(add_cbar=True)
 plt.show()
 
 
@@ -235,8 +235,8 @@ plt.show()
 # use:
 #
 
-npred_source = dataset_cta.npred_signal(model_name="gc")
-npred_source.sum_over_axes().plot()
+npred_source = dataset_cta.npred_signal(model_names=["gc"])
+npred_source.sum_over_axes().plot(add_cbar=True)
 plt.show()
 
 
@@ -263,7 +263,7 @@ plt.show()
 #    according to the specified selection cuts, and should not be changed
 #    by the user.
 # -  During modelling and fitting, the user might want to additionally
-#    ignore some parts of a reduced dataset, e.g. to restrict the fit to a
+#    ignore some parts of a reduced dataset, e.g. to restrict the fit to a
 #    specific energy range or to ignore parts of the region of interest.
 #    This should be done by applying the `~gammapy.datasets.MapDataset.mask_fit`. To see details of
 #    applying masks, please refer to :ref:`masks-for-fitting`.
@@ -272,18 +272,18 @@ plt.show()
 # have the same `~gammapy.maps.Map.geom` as the `~gammapy.datasets.MapDataset.counts` and
 # `~gammapy.datasets.MapDataset.background` maps.
 #
+# For example to see the safe data range:
+#
 
-# eg: to see the safe data range
-
-dataset_cta.mask_safe.plot_grid()
+dataset_cta.mask_safe.plot_grid(add_cbar=True)
 plt.show()
 
 
 ######################################################################
-# In addition it is possible to define a custom `~gammapy.datasets.MapDataset.mask_fit`:
+# In addition it is possible to define a custom `~gammapy.datasets.MapDataset.mask_fit`.
 #
+# Here we apply a mask fit in energy and space:
 
-# To apply a mask fit - in energy and space
 
 region = CircleSkyRegion(SkyCoord("0d", "0d", frame="galactic"), 1.5 * u.deg)
 
@@ -299,9 +299,9 @@ plt.show()
 ######################################################################
 # To access the energy range defined by the mask you can use:
 #
-# -`~gammapy.datasets.MapDataset.energy_range_safe` : energy range defined by the `~gammapy.datasets.MapDataset.mask_safe`
-# - `~gammapy.datasets.MapDataset.energy_range_fit` : energy range defined by the `~gammapy.datasets.MapDataset.mask_fit`
-# - `~gammapy.datasets.MapDataset.energy_range` : the final energy range used in likelihood computation
+# -  `~gammapy.datasets.MapDataset.energy_range_safe` : energy range defined by the `~gammapy.datasets.MapDataset.mask_safe`
+# -  `~gammapy.datasets.MapDataset.energy_range_fit` : energy range defined by the `~gammapy.datasets.MapDataset.mask_fit`
+# -  `~gammapy.datasets.MapDataset.energy_range` : the final energy range used in likelihood computation
 #
 # These methods return two maps, with the `min` and `max` energy
 # values at each spatial pixel
@@ -314,6 +314,7 @@ e_min, e_max = dataset_cta.energy_range
 e_min.plot(add_cbar=True)
 plt.show()
 
+# %%
 # To see the high energy threshold at each point
 
 e_max.plot(add_cbar=True)
@@ -323,7 +324,7 @@ plt.show()
 ######################################################################
 # Just as for `~gammapy.maps.Map` objects it is possible to cutout a whole
 # `~gammapy.datasets.MapDataset`, which will perform the cutout for all maps in
-# parallel.Optionally one can provide a new name to the resulting dataset:
+# parallel. Optionally one can provide a new name to the resulting dataset:
 #
 
 cutout = dataset_cta.cutout(
@@ -332,7 +333,7 @@ cutout = dataset_cta.cutout(
     name="cta-cutout",
 )
 
-cutout.counts.sum_over_axes().plot()
+cutout.counts.sum_over_axes().plot(add_cbar=True)
 plt.show()
 
 
@@ -343,7 +344,7 @@ plt.show()
 sliced = dataset_cta.slice_by_energy(
     energy_min=1 * u.TeV, energy_max=5 * u.TeV, name="slice-energy"
 )
-sliced.counts.plot_grid()
+sliced.counts.plot_grid(add_cbar=True)
 plt.show()
 
 
@@ -367,7 +368,7 @@ plt.show()
 
 plt.figure()
 downsampled = dataset_cta.downsample(factor=8)
-downsampled.counts.sum_over_axes().plot()
+downsampled.counts.sum_over_axes().plot(add_cbar=True)
 plt.show()
 
 
@@ -378,7 +379,7 @@ plt.show()
 downsampled_energy = dataset_cta.downsample(
     factor=5, axis_name="energy", name="downsampled-energy"
 )
-downsampled_energy.counts.plot_grid()
+downsampled_energy.counts.plot_grid(add_cbar=True)
 plt.show()
 
 
@@ -397,7 +398,7 @@ print(downsampled_energy, dataset_cta)
 
 energy_axis_new = MapAxis.from_energy_edges([0.1, 0.3, 1, 3, 10] * u.TeV)
 resampled = dataset_cta.resample_energy_axis(energy_axis=energy_axis_new)
-resampled.counts.plot_grid(ncols=2)
+resampled.counts.plot_grid(ncols=2, add_cbar=True)
 plt.show()
 
 
@@ -407,7 +408,7 @@ plt.show()
 #
 
 dataset_image = dataset_cta.to_image()
-dataset_image.counts.plot()
+dataset_image.counts.plot(add_cbar=True)
 plt.show()
 
 
@@ -416,8 +417,8 @@ plt.show()
 # ---------------
 #
 # `~gammapy.datasets.SpectrumDataset` inherits from a `~gammapy.datasets.MapDataset`, and is specially
-# adapted for 1D spectral analysis, and uses a `RegionGeom` instead of a
-# `WcsGeom`. A `~gammapy.datasets.MapDataset` can be converted to a `~gammapy.datasets.SpectrumDataset`,
+# adapted for 1D spectral analysis, and uses a `~gammapy.maps.RegionGeom` instead of a
+# `~gammapy.maps.WcsGeom`. A `~gammapy.datasets.MapDataset` can be converted to a `~gammapy.datasets.SpectrumDataset`,
 # by summing the `counts` and `background` inside the `on_region`,
 # which can then be used for classical spectral analysis. Containment
 # correction is feasible only for circular regions.
@@ -484,7 +485,7 @@ print(fp_dataset.data_shape())  # number of data points
 ######################################################################
 #
 # For an example of fitting `~gammapy.estimators.FluxPoints`, see :doc:`/tutorials/analysis-1d/sed_fitting`,
-# and for using source catalogs see :doc:`/tutorials/api/catalog`
+# and for using source catalogs see :doc:`/tutorials/api/catalog`.
 #
 
 
@@ -498,11 +499,12 @@ print(fp_dataset.data_shape())  # number of data points
 #
 # For modelling and fitting of a list of `~gammapy.datasets.Dataset` objects, you can
 # either:
-# (a) Do a joint fitting of all the datasets together OR
-# (b) Stack the datasets together, and then fit them.
+#
+# -  (A) Do a joint fitting of all the datasets together **OR**
+# -  (B) Stack the datasets together, and then fit them.
 #
 # `~gammapy.datasets.Datasets` is a convenient tool to handle joint fitting of
-# simultaneous datasets. As an example, please see :doc:`/tutorials/analysis-3d/analysis_mwl`
+# simultaneous datasets. As an example, please see :doc:`/tutorials/analysis-3d/analysis_mwl`.
 #
 # To see how stacking is performed, please see :ref:`stack`.
 #

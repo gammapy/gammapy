@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import operator
+import logging
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
@@ -32,6 +33,7 @@ from gammapy.modeling.models import (
     TemplateNDSpectralModel,
     TemplateSpectralModel,
 )
+from gammapy.utils.compat import COPY_IF_NEEDED
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import (
     assert_quantity_allclose,
@@ -39,6 +41,7 @@ from gammapy.utils.testing import (
     requires_data,
     requires_dependency,
 )
+from gammapy.utils.deprecation import GammapyDeprecationWarning
 
 
 def table_model():
@@ -149,7 +152,7 @@ TEST_MODELS = [
             index_2=2,
             amplitude=1 / u.cm**2 / u.s / u.TeV,
             reference=1 * u.TeV,
-            expfactor=1e-2,
+            expfactor=1e-14,
         ),
         val_at_2TeV=u.Quantity(0.3431043087721737, "cm-2 s-1 TeV-1"),
         integral_1_10TeV=u.Quantity(1.2125247, "cm-2 s-1"),
@@ -167,6 +170,7 @@ TEST_MODELS = [
         val_at_2TeV=u.Quantity(0.35212994, "cm-2 s-1 TeV-1"),
         integral_1_10TeV=u.Quantity(1.328499, "cm-2 s-1"),
         eflux_1_10TeV=u.Quantity(4.067067, "TeV cm-2 s-1"),
+        e_peak=10.0498756 * u.TeV,
     ),
     dict(
         name="logpar",
@@ -305,6 +309,17 @@ TEST_MODELS = [
         integral_1_10TeV=u.Quantity(24.758255, "TeV"),
         eflux_1_10TeV=u.Quantity(117.745068, "TeV2"),
     ),
+    dict(
+        name="pbpllin",
+        model=PiecewiseNormSpectralModel(
+            energy=[1, 3, 7, 10] * u.TeV,
+            norms=[1, 5, 3, 0.5] * u.Unit(""),
+            interp="lin",
+        ),
+        val_at_2TeV=u.Quantity(3.0, ""),
+        integral_1_10TeV=u.Quantity(27.24066846, "TeV"),
+        eflux_1_10TeV=u.Quantity(133.34487, "TeV2"),
+    ),
 ]
 
 # Add compound models
@@ -382,7 +397,7 @@ def test_models(spectrum):
         isinstance(model, ConstantSpectralModel)
         or spectrum["name"] == "compound6"
         or spectrum["name"] == "GaussianSpectralModel"
-        or spectrum["name"] == "pbpl"
+        or "pbpl" in spectrum["name"]
     ):
         assert_quantity_allclose(model.inverse(value), energy, rtol=0.01)
         inverse = model.inverse_all(values)
@@ -409,6 +424,22 @@ def test_models(spectrum):
     assert_quantity_allclose(val[0], spectrum["val_at_2TeV"])
 
 
+def test_evaluate():
+    for m in TEST_MODELS:
+        model = m["model"]
+        energies = [1e-12, 1e-6, 1e-2, 1, 1e2, 1e4] * u.TeV
+        parameters = model.parameters
+        par_list = [p.quantity for p in parameters]
+        if isinstance(model, PiecewiseNormSpectralModel):
+            # TODO : check if PiecewiseNormSpectralModel evaluate can work like the others
+            result_eval = model.evaluate(energies)
+        else:
+            result_eval = model.evaluate(energies, *par_list)
+
+        result_call = model(energies)
+        assert_quantity_allclose(result_eval, result_call)
+
+
 def test_model_unit():
     pwl = PowerLawSpectralModel()
     value = pwl(500 * u.MeV)
@@ -420,12 +451,31 @@ def test_model_plot():
         amplitude=1e-12 * u.Unit("TeV-1 cm-2 s-1"), reference=1 * u.Unit("TeV"), index=2
     )
     pwl.amplitude.error = 0.1e-12 * u.Unit("TeV-1 cm-2 s-1")
+    energy_axis = MapAxis.from_energy_bounds(1 * u.TeV, 10 * u.TeV, 100)
 
     with mpl_plot_check():
         pwl.plot((1 * u.TeV, 10 * u.TeV))
 
     with mpl_plot_check():
         pwl.plot_error((1 * u.TeV, 10 * u.TeV))
+
+    with mpl_plot_check():
+        pwl.plot([0.08, 20] * u.TeV)
+
+    with mpl_plot_check():
+        pwl.plot_error([0.08, 20] * u.TeV)
+
+    with mpl_plot_check():
+        pwl.plot([0.08 * u.TeV, 20 * u.TeV])
+
+    with mpl_plot_check():
+        pwl.plot_error([0.08 * u.TeV, 20 * u.TeV])
+
+    with mpl_plot_check():
+        pwl.plot(energy_bounds=energy_axis)
+
+    with mpl_plot_check():
+        pwl.plot_error(energy_bounds=energy_axis)
 
 
 def test_model_plot_sed_type():
@@ -544,6 +594,46 @@ def test_to_from_dict_compound():
     assert_quantity_allclose(actual, desired)
 
 
+def test_to_from_dict_piecewise_lin():
+    spectrum = TEST_MODELS[-4]
+    model = spectrum["model"]
+    assert spectrum["name"] == "pbpllin"
+    model_dict = model.to_dict()
+    assert model_dict["spectral"]["interp"] == "lin"
+    model_class = SPECTRAL_MODEL_REGISTRY.get_cls(model_dict["spectral"]["type"])
+    new_model = model_class.from_dict(model_dict)
+    assert isinstance(new_model, PiecewiseNormSpectralModel)
+    actual = [par.value for par in new_model.parameters]
+    desired = [par.value for par in model.parameters]
+    assert_quantity_allclose(actual, desired)
+    assert new_model._interp == model._interp
+
+    model_dict["spectral"].pop("interp")
+    new_model_default = model_class.from_dict(model_dict)
+    assert isinstance(new_model_default, PiecewiseNormSpectralModel)
+    assert new_model_default._interp == "log"
+
+
+def test_to_from_dict_piecewise():
+    spectrum = TEST_MODELS[-5]
+    model = spectrum["model"]
+    assert spectrum["name"] == "pbpl"
+    model_dict = model.to_dict()
+    assert model_dict["spectral"]["interp"] == "log"
+    model_class = SPECTRAL_MODEL_REGISTRY.get_cls(model_dict["spectral"]["type"])
+    new_model = model_class.from_dict(model_dict)
+    assert isinstance(new_model, PiecewiseNormSpectralModel)
+    actual = [par.value for par in new_model.parameters]
+    desired = [par.value for par in model.parameters]
+    assert_quantity_allclose(actual, desired)
+    assert new_model._interp == model._interp
+
+    model_dict["spectral"].pop("interp")
+    new_model_default = model_class.from_dict(model_dict)
+    assert isinstance(new_model_default, PiecewiseNormSpectralModel)
+    assert new_model_default._interp == "log"
+
+
 @requires_data()
 def test_table_model_from_file():
     filename = "$GAMMAPY_DATA/ebl/ebl_franceschini.fits.gz"
@@ -568,6 +658,12 @@ def test_absorption():
     reference = 1 * u.TeV
     pwl = PowerLawSpectralModel(index=index, amplitude=amplitude, reference=reference)
 
+    # Test error propagation
+    pwl.amplitude.error = 0.1 * pwl.amplitude.value
+    dnde, dnde_errn, dnde_errp = pwl.evaluate_error(1 * u.TeV, n_samples=20000)
+    assert_allclose((dnde_errn / dnde), 0.1, rtol=7e-1)
+    assert_allclose((dnde_errp / dnde), 0.1, rtol=7e-1)
+
     # EBL + PWL model
     model = pwl * absorption
     desired = u.Quantity(5.140765e-13, "TeV-1 s-1 cm-2")
@@ -588,9 +684,9 @@ def test_absorption():
     assert_quantity_allclose(model(1 * u.TeV), desired, rtol=1e-3)
 
     # Test error propagation
-    model.model1.amplitude.error = 0.1 * model.model1.amplitude.value
-    dnde, dnde_err = model.evaluate_error(1 * u.TeV)
-    assert_allclose(dnde_err / dnde, 0.1)
+    dnde, dnde_errn, dnde_errp = model.evaluate_error(1 * u.TeV, n_samples=20000)
+    assert_allclose((dnde_errn / dnde).data, 0.1, rtol=3e-2)
+    assert_allclose((dnde_errp / dnde).data, 0.1, rtol=3e-2)
 
 
 @requires_data()
@@ -612,6 +708,18 @@ def test_ecpl_integrate():
     assert_quantity_allclose(value, 8.380714e-14 * u.Unit("s-1 cm-2"))
 
 
+def test_call_plsec_4fgl_dr1():
+    model = SuperExpCutoffPowerLaw4FGLSpectralModel(
+        amplitude="2e-12 MeV-1 s-1 cm-2",
+        reference="1000 MeV",
+        expfactor=5e-03,
+        index_1=2,
+        index_2=1,
+    )
+    desired = u.Quantity(3.823779e-20, "MeV-1 s-1 cm-2")
+    assert_allclose(model(4 * u.GeV), desired, rtol=1e-3)
+
+
 def test_pwl_pivot_energy():
     pwl = PowerLawSpectralModel(amplitude="5.35510540e-11 cm-2 s-1 TeV-1")
     assert_quantity_allclose(pwl.pivot_energy, np.nan * u.TeV, rtol=1e-5)
@@ -621,7 +729,7 @@ def test_pwl_pivot_energy():
         [6.56889e-14, (5.5e-12) ** 2, 0],
         [0, 0, 0],
     ]
-    assert_quantity_allclose(pwl.pivot_energy, 1.2112653 * u.TeV, rtol=1e-5)
+    assert_quantity_allclose(pwl.pivot_energy, 1.211265 * u.TeV, rtol=1e-5)
 
     ecpl = ExpCutoffPowerLawSpectralModel(
         amplitude="5.35510540e-11 cm-2 s-1 TeV-1", lambda_=0.001 * (1 / u.TeV), index=2
@@ -633,7 +741,7 @@ def test_pwl_pivot_energy():
         [0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0],
     ]
-    assert_quantity_allclose(pwl.pivot_energy, ecpl.pivot_energy, rtol=1e-5)
+    assert_quantity_allclose(ecpl.pivot_energy, 1.263819 * u.TeV, rtol=5e-2)
 
 
 def test_num_pivot_energy():
@@ -648,7 +756,7 @@ def test_num_pivot_energy():
 
     lp.alpha.error = "0.1126"
     lp.beta.error = "0.0670"
-    assert_quantity_allclose(lp.pivot_energy, 17.337042 * u.GeV, rtol=1e-5)
+    assert_quantity_allclose(lp.pivot_energy, 18.198706 * u.GeV, rtol=7e-2)
 
 
 def test_template_spectral_model_evaluate_tiny():
@@ -677,9 +785,7 @@ def test_template_spectral_model_single_value():
 
     assert_allclose(result.data, 1e-12)
 
-    model.norm.value = 0.5
     data = model.to_dict()
-    assert_allclose(data["spectral"]["parameters"][0]["value"], 0.5)
     model2 = TemplateSpectralModel.from_dict(data)
     assert model2.to_dict() == data
 
@@ -703,6 +809,32 @@ def test_template_spectral_model_compound():
     new_model = model_class.from_dict(model_dict)
     assert isinstance(new_model, CompoundSpectralModel)
     assert np.allclose(new_model(energy), 2 * values)
+
+
+def test_template_spectral_model_options():
+    energy = [1.00e06, 1.25e06, 1.58e06, 1.99e06] * u.MeV
+    values = [4.39e-7, 1.96e-7, 8.80e-7, 3.94e-7] * u.Unit("MeV-1 s-1 sr-1")
+
+    model = TemplateSpectralModel(
+        energy=energy,
+        values=values,
+        interp_kwargs={"extrapolate": True, "method": "linear"},
+    )
+    assert np.allclose(model(energy), values)
+
+
+def test_covariance_spectral_model_compound():
+    model = TEST_MODELS[2]["model"] + TEST_MODELS[1]["model"]
+    covar = np.eye(len(model.parameters))
+    covar[0, -1] = 1.0
+    covar[-1, 0] = 1.0
+    covar[0, 1] = 1.0
+    covar[-1, -3] = 1.0
+
+    model.covariance = covar
+    assert_allclose(model.covariance.data, covar)
+    assert_allclose(model.model1.covariance.data, covar[:3, :3])
+    assert_allclose(model.model2.covariance.data, covar[-3:, -3:])
 
 
 def test_evaluate_spectral_model_compound():
@@ -772,7 +904,7 @@ class TestNaimaModel:
         model.amplitude.error = 0.1 * model.amplitude.value
 
         out = model.evaluate_error(1 * u.TeV)
-        assert_allclose(out.data, [5.266068e-13, 5.266068e-14], rtol=1e-3)
+        assert_allclose(out.data, [5.270367e-13, 5.293272e-14, 5.343376e-14], rtol=5e-2)
 
     def test_ic(self):
         import naima
@@ -961,31 +1093,44 @@ class TestSpectralModelErrorPropagation:
         out = self.model.evaluate_error(1 * u.TeV)
         assert isinstance(out, u.Quantity)
         assert out.unit == "cm-2 s-1 TeV-1"
-        assert out.shape == (2,)
-        assert_allclose(out.data, [3.7600e-11, 3.6193e-12], rtol=1e-3)
+        assert out.shape == (3,)
+        assert_allclose(out.data, [3.757824e-11, 3.142095e-12, 3.155082e-12], rtol=7e-2)
 
     def test_evaluate_error_array(self):
         out = self.model.evaluate_error([1, 100] * u.TeV)
-        assert out.shape == (2, 2)
-        expected = [[3.76e-11, 2.469e-18], [3.619e-12, 9.375e-18]]
-        assert_allclose(out.data, expected, rtol=1e-3)
+        assert out.shape == (3, 2)
+        expected = [
+            [3.756851e-11, 2.600163e-18],
+            [3.147163e-12, 2.539555e-18],
+            [3.163654e-12, 1.082997e-16],
+        ]
+        assert_allclose(out.data, expected, rtol=7e-1)
 
     def test_evaluate_error_unit(self):
         out = self.model.evaluate_error(1e6 * u.MeV)
         assert out.unit == "cm-2 s-1 TeV-1"
-        assert_allclose(out.data, [3.760e-11, 3.6193e-12], rtol=1e-3)
+        assert_allclose(out.data, [3.757824e-11, 3.142095e-12, 3.155082e-12], rtol=7e-2)
+
+        with pytest.warns(GammapyDeprecationWarning):
+            self.model.evaluate_error(1e6 * u.MeV, epsilon=10)
 
     def test_integral_error(self):
         out = self.model.integral_error(1 * u.TeV, 10 * u.TeV)
         assert out.unit == "cm-2 s-1"
-        assert out.shape == (2,)
-        assert_allclose(out.data, [2.197e-11, 2.796e-12], rtol=1e-3)
+        assert out.shape == (3,)
+        assert_allclose(out.data, [2.205520e-11, 2.395797e-12, 2.905355e-12], rtol=7e-2)
+
+        with pytest.warns(GammapyDeprecationWarning):
+            self.model.integral_error(1 * u.TeV, 10 * u.TeV, epsilon=10)
 
     def test_energy_flux_error(self):
         out = self.model.energy_flux_error(1 * u.TeV, 10 * u.TeV)
         assert out.unit == "TeV cm-2 s-1"
-        assert out.shape == (2,)
-        assert_allclose(out.data, [4.119e-11, 8.157e-12], rtol=1e-3)
+        assert out.shape == (3,)
+        assert_allclose(out.data, [4.133955e-11, 6.634629e-12, 9.896814e-12], rtol=7e-2)
+
+        with pytest.warns(GammapyDeprecationWarning):
+            self.model.energy_flux_error(1 * u.TeV, 10 * u.TeV, epsilon=10)
 
 
 def test_logpar_index_error():
@@ -997,7 +1142,7 @@ def test_logpar_index_error():
     )
     model.alpha.error = 0.4
     out = model.spectral_index_error(energy=1.0 * u.TeV)
-    assert_allclose(out, [2.19, 0.4], rtol=1e-3)
+    assert_allclose(out, [2.198321, 0.404178, 0.394804], rtol=5e-2)
 
 
 def test_dnde_error_ecpl_model():
@@ -1018,10 +1163,13 @@ def test_dnde_error_ecpl_model():
     ]
 
     out = model.evaluate_error(1 * u.TeV)
-    assert_allclose(out.data, [1.903129e-12, 2.979976e-13], rtol=1e-3)
+    assert_allclose(out.data, [1.900058e-12, 3.140516e-13, 2.925388e-13], rtol=7e-1)
 
     out = model.evaluate_error(0.1 * u.TeV)
-    assert_allclose(out.data, [1.548176e-10, 1.933612e-11], rtol=1e-3)
+    assert_allclose(out.data, [1.538462e-10, 2.071542e-11, 1.837818e-11], rtol=7e-1)
+
+    with pytest.warns(GammapyDeprecationWarning):
+        out = model.evaluate_error(0.1 * u.TeV, epsilon=10)
 
 
 def test_integral_error_power_law():
@@ -1033,10 +1181,11 @@ def test_integral_error_power_law():
     powerlaw.parameters["index"].error = 0.4
     powerlaw.parameters["amplitude"].error = 1e-13
 
-    flux, flux_error = powerlaw.integral_error(energy_min, energy_max)
+    flux, flux_errn, flux_errp = powerlaw.integral_error(energy_min, energy_max)
 
-    assert_allclose(flux.value[0] / 1e-13, 5.0, rtol=1e-3)
-    assert_allclose(flux_error.value[0] / 1e-14, 7.915984, rtol=1e-3)
+    assert_allclose(flux.value[0] / 1e-13, 4.991835, rtol=1e-3)
+    assert_allclose(flux_errn.value[0] / 1e-14, 7.209218, rtol=7e-1)
+    assert_allclose(flux_errp.value[0] / 1e-14, 8.674678, rtol=7e-1)
 
 
 def test_integral_error_exp_cut_off_power_law():
@@ -1049,10 +1198,11 @@ def test_integral_error_exp_cut_off_power_law():
     exppowerlaw.parameters["amplitude"].error = 1e-13
     exppowerlaw.parameters["lambda_"].error = 0.03
 
-    flux, flux_error = exppowerlaw.integral_error(energy_min, energy_max)
+    flux, flux_errn, flux_errp = exppowerlaw.integral_error(energy_min, energy_max)
 
-    assert_allclose(flux.value[0] / 1e-13, 5.05855622, rtol=0.01)
-    assert_allclose(flux_error.value[0] / 1e-14, 8.552617, rtol=0.01)
+    assert_allclose(flux.value[0] / 1e-13, 5.058788, rtol=0.01)
+    assert_allclose(flux_errn.value[0] / 1e-14, 7.79546, rtol=7e-1)
+    assert_allclose(flux_errp.value[0] / 1e-14, 9.537771, rtol=7e-1)
 
 
 def test_energy_flux_error_power_law():
@@ -1063,9 +1213,10 @@ def test_energy_flux_error_power_law():
     powerlaw.parameters["index"].error = 0.4
     powerlaw.parameters["amplitude"].error = 1e-13
 
-    enrg_flux, enrg_flux_error = powerlaw.energy_flux_error(energy_min, energy_max)
-    assert_allclose(enrg_flux.value / 1e-12, 2.303, rtol=0.001)
-    assert_allclose(enrg_flux_error.value / 1e-12, 1.085, rtol=0.001)
+    eflux, eflux_errn, eflux_errp = powerlaw.energy_flux_error(energy_min, energy_max)
+    assert_allclose(eflux.value / 1e-12, 2.306978, rtol=7e-1)
+    assert_allclose(eflux_errn.value / 1e-12, 0.819827, rtol=7e-1)
+    assert_allclose(eflux_errp.value / 1e-12, 1.501977, rtol=7e-1)
 
 
 def test_energy_flux_error_exp_cutoff_power_law():
@@ -1077,10 +1228,13 @@ def test_energy_flux_error_exp_cutoff_power_law():
     exppowerlaw.parameters["amplitude"].error = 1e-13
     exppowerlaw.parameters["lambda_"].error = 0.03
 
-    enrg_flux, enrg_flux_error = exppowerlaw.energy_flux_error(energy_min, energy_max)
+    eflux, eflux_errn, eflux_errp = exppowerlaw.energy_flux_error(
+        energy_min, energy_max
+    )
 
-    assert_allclose(enrg_flux.value / 1e-12, 2.788, rtol=0.001)
-    assert_allclose(enrg_flux_error.value / 1e-12, 1.419, rtol=0.001)
+    assert_allclose(eflux.value / 1e-12, 2.751952, rtol=7e-1)
+    assert_allclose(eflux_errn.value / 1e-12, 1.043413, rtol=7e-1)
+    assert_allclose(eflux_errp.value / 1e-12, 2.052225, rtol=7e-1)
 
 
 def test_integral_exp_cut_off_power_law_large_number_of_bins():
@@ -1100,7 +1254,7 @@ def test_integral_exp_cut_off_power_law_large_number_of_bins():
     assert_allclose(flux.value, expected_flux.value, rtol=0.01)
 
 
-def test_template_ND(tmpdir):
+def test_template_ND(tmpdir, caplog):
     energy_axis = MapAxis.from_bounds(
         1.0, 100, 10, interp="log", name="energy_true", unit="GeV"
     )
@@ -1112,7 +1266,12 @@ def test_template_ND(tmpdir):
     region_map.data[:, :, :5, 0, 0] = 1
     region_map.data[:, :, 5:, 0, 0] = 2
 
-    template = TemplateNDSpectralModel(region_map)
+    with caplog.at_level(logging.WARNING):
+        template = TemplateNDSpectralModel(region_map)
+        assert (
+            'The filename is not defined. Therefore, the model will not be serialised correctly. To set the filename, the "template_model.filename" attribute can be used.'
+            in [_.message for _ in caplog.records]
+        )
     assert len(template.parameters) == 2
     assert template.parameters["norm"].value == 5
     assert template.parameters["tilt"].value == 0
@@ -1121,6 +1280,8 @@ def test_template_ND(tmpdir):
     template.parameters["norm"].value = 1
     template.filename = str(tmpdir / "template_ND.fits")
     template.write()
+    template.write(filename=str(tmpdir / "template_ND_2.fits"))
+
     dict_ = template.to_dict()
     template_new = TemplateNDSpectralModel.from_dict(dict_)
     assert_allclose(template_new.map.data, region_map.data)
@@ -1144,7 +1305,6 @@ def test_template_ND_no_energy(tmpdir):
 
 @requires_data()
 def test_template_ND_EBL(tmpdir):
-
     # TODO: add RegionNDMap.read(format="xspec")
     # Create EBL data array
     filename = "$GAMMAPY_DATA/ebl/ebl_franceschini.fits.gz"
@@ -1166,10 +1326,10 @@ def test_template_ND_EBL(tmpdir):
     # Get energy values
     table_energy = Table.read(filename, hdu="ENERGIES")
     energy_lo = u.Quantity(
-        table_energy["ENERG_LO"], "keV", copy=False
+        table_energy["ENERG_LO"], "keV", copy=COPY_IF_NEEDED
     )  # unit not stored in file
     energy_hi = u.Quantity(
-        table_energy["ENERG_HI"], "keV", copy=False
+        table_energy["ENERG_HI"], "keV", copy=COPY_IF_NEEDED
     )  # unit not stored in file
     energy = np.sqrt(energy_lo * energy_hi)
 
@@ -1199,7 +1359,23 @@ def test_template_ND_EBL(tmpdir):
     assert_allclose(template.parameters["redshift"].value, 0.1)
 
 
-def test_is_norm_spectral_models():
-    for test_model in TEST_MODELS:
-        m = test_model["model"]
-        assert np.any([p.is_norm for p in m.parameters])
+def test_incorrect_param_name():
+    with pytest.raises(NameError):
+        PowerLawSpectralModel(indxe=2)
+
+
+def test_e_peak_super_4FGLDR3():
+    model = SuperExpCutoffPowerLaw4FGLDR3SpectralModel()
+    assert_quantity_allclose(model.e_peak, TEST_MODELS[9]["e_peak"], rtol=1e-2)
+
+    model.index_1.value = 3
+    model.index_2.value = 0.5
+    model.expfactor.value = 0.5
+    assert_quantity_allclose(model.e_peak, np.nan * u.TeV)
+
+    model.index_2.value = 2
+    model.expfactor.value = -1
+    assert_quantity_allclose(model.e_peak, np.nan * u.TeV)
+
+    model.index_2.value = -1
+    assert_quantity_allclose(model.e_peak, np.nan * u.TeV)

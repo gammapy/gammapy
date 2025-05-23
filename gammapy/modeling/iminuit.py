@@ -51,16 +51,16 @@ def setup_iminuit(parameters, function, store_trace=False, **kwargs):
 
 
 def optimize_iminuit(parameters, function, store_trace=False, **kwargs):
-    """iminuit optimization
+    """iminuit optimization.
 
     Parameters
     ----------
     parameters : `~gammapy.modeling.Parameters`
-        Parameters with starting values
+        Parameters with starting values.
     function : callable
-        Likelihood function
-    store_trace : bool
-        Store trace of the fit
+        Likelihood function.
+    store_trace : bool, optional
+        Store trace of the fit. Default is False.
     **kwargs : dict
         Options passed to `iminuit.Minuit` constructor. If there is an entry
         'migrad_opts', those options will be passed to `iminuit.Minuit.migrad()`.
@@ -68,7 +68,7 @@ def optimize_iminuit(parameters, function, store_trace=False, **kwargs):
     Returns
     -------
     result : (factors, info, optimizer)
-        Tuple containing the best fit factors, some info and the optimizer instance.
+        Tuple containing the best fit factors, some information and the optimizer instance.
     """
     migrad_opts = kwargs.pop("migrad_opts", {})
 

@@ -1,30 +1,48 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Tools to create profiles (i.e. 1D "slices" from 2D images)."""
+
+import logging
+from itertools import repeat
 import numpy as np
 from astropy import units as u
 from regions import CircleAnnulusSkyRegion
+import gammapy.utils.parallel as parallel
 from gammapy.datasets import Datasets
 from gammapy.maps import MapAxis
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from .core import FluxPoints
 from .sed import FluxPointsEstimator
 
+log = logging.getLogger(__name__)
+
 __all__ = ["FluxProfileEstimator"]
 
 
 class FluxProfileEstimator(FluxPointsEstimator):
-    """Estimate flux profiles
+    """Estimate flux profiles.
+    The class is backward folding of FluxPointsEstimator. However, the re-optimization
+    is not available, as only one spectral model can be fitted.
 
     Parameters
     ----------
     regions : list of `~regions.SkyRegion`
-        regions to use
-    spectrum : `~gammapy.modeling.models.SpectralModel` (optional)
+        Regions to use.
+    spectral_model : `~gammapy.modeling.models.SpectralModel`, optional
         Spectral model to compute the fluxes or brightness.
         Default is power-law with spectral index of 2.
-    **kwargs : dict
+    n_jobs : int, optional
+        Number of processes used in parallel for the computation. Default is one,
+        unless `~gammapy.utils.parallel.N_JOBS_DEFAULT` was modified. The number
+        of jobs is limited to the number of physical CPUs.
+    parallel_backend : {"multiprocessing", "ray"}, optional
+        Which backend to use for multiprocessing.
+        Defaults to `~gammapy.utils.parallel.BACKEND_DEFAULT`.
+    **kwargs : dict, optional
         Keywords forwarded to the `FluxPointsEstimator` (see documentation
-        there for further description of valid keywords)
+        there for further description of valid keywords). Note that the `reoptimized`
+        keyword is accepted only if set to False. If not, an error is raised.
+        If the keyword is not set by the user, it will be internally set to False
+        by default.
 
     Examples
     --------
@@ -51,12 +69,12 @@ class FluxProfileEstimator(FluxPointsEstimator):
     >>> end_pos = SkyCoord("1d", "0d", frame='galactic')
 
     >>> regions = make_orthogonal_rectangle_sky_regions(
-                start_pos=start_pos,
-                end_pos=end_pos,
-                wcs=dataset.counts.geom.wcs,
-                height=2 * u.deg,
-                nbin=21
-            )
+    ...            start_pos=start_pos,
+    ...            end_pos=end_pos,
+    ...            wcs=dataset.counts.geom.wcs,
+    ...            height=2 * u.deg,
+    ...            nbin=21
+    ...        )
 
     >>> # set up profile estimator and run
     >>> prof_maker = FluxProfileEstimator(regions=regions, energy_edges=[10, 2000] * u.GeV)
@@ -68,7 +86,7 @@ class FluxProfileEstimator(FluxPointsEstimator):
       geom                   : RegionGeom
       axes                   : ['lon', 'lat', 'energy', 'projected-distance']
       shape                  : (1, 1, 1, 21)
-      quantities             : ['norm', 'norm_err', 'ts', 'npred', 'npred_excess', 'stat', 'counts', 'success']  # noqa: E501
+      quantities             : ['norm', 'norm_err', 'ts', 'npred', 'npred_excess', 'stat', 'stat_null', 'counts', 'success']
       ref. model             : pl
       n_sigma                : 1
       n_sigma_ul             : 2
@@ -79,7 +97,7 @@ class FluxProfileEstimator(FluxPointsEstimator):
 
     tag = "FluxProfileEstimator"
 
-    def __init__(self, regions, spectrum=None, **kwargs):
+    def __init__(self, regions, spectral_model=None, **kwargs):
         if len(regions) <= 1:
             raise ValueError(
                 "Please provide at least two regions for flux profile estimation."
@@ -87,10 +105,16 @@ class FluxProfileEstimator(FluxPointsEstimator):
 
         self.regions = regions
 
-        if spectrum is None:
-            spectrum = PowerLawSpectralModel()
+        if spectral_model is None:
+            spectral_model = PowerLawSpectralModel()
 
-        self.spectrum = spectrum
+        self.spectral_model = spectral_model
+
+        reoptimize = kwargs.get("reoptimize", False)
+        if reoptimize is True:
+            raise ValueError(
+                f"reoptimize=True is not available for {self}. Set to `False` instead."
+            )
         super().__init__(**kwargs)
 
     @property
@@ -104,7 +128,7 @@ class FluxProfileEstimator(FluxPointsEstimator):
         Returns
         -------
         axis : `MapAxis`
-            Projected distance axis
+            Projected distance axis.
         """
         distances = []
         center = self.regions[0].center
@@ -122,7 +146,7 @@ class FluxProfileEstimator(FluxPointsEstimator):
         )
 
     def run(self, datasets):
-        """Run flux profile estimation
+        """Run flux profile estimation.
 
         Parameters
         ----------
@@ -134,32 +158,43 @@ class FluxProfileEstimator(FluxPointsEstimator):
         profile : `~gammapy.estimators.FluxPoints`
             Profile flux points.
         """
-
         datasets = Datasets(datasets=datasets)
 
-        maps = []
-        for region in self.regions:
-            datasets_to_fit = datasets.to_spectrum_datasets(region=region)
-            for dataset_spec, dataset_map in zip(datasets_to_fit, datasets):
-                dataset_spec.background.data = (
-                    dataset_map.npred()
-                    .to_region_nd_map(
-                        region, func=np.sum, weights=dataset_map.mask_safe
-                    )
-                    .data
-                )
-            datasets_to_fit.models = SkyModel(self.spectrum, name="test-source")
-            fp = super().run(datasets_to_fit)
-            maps.append(fp)
+        maps = parallel.run_multiprocessing(
+            self._run_region,
+            zip(repeat(datasets), self.regions),
+            backend=self.parallel_backend,
+            pool_kwargs=dict(processes=self.n_jobs),
+            task_name="Flux profile estimation",
+        )
 
         return FluxPoints.from_stack(
             maps=maps,
             axis=self.projected_distance_axis,
         )
 
+    def _run_region(self, datasets, region):
+        # TODO: test if it would be more efficient
+        # to not compute datasets_to_fit in parallel
+        # to avoid copying the full datasets
+        datasets_to_fit = datasets.to_spectrum_datasets(region=region)
+        for dataset_spec, dataset_map in zip(datasets_to_fit, datasets):
+            dataset_spec.background.data = (
+                dataset_map.npred()
+                .to_region_nd_map(region, func=np.sum, weights=dataset_map.mask_safe)
+                .data
+            )
+        datasets_to_fit.models = SkyModel(self.spectral_model, name="test-source")
+        estimator = self.copy()
+        estimator.n_jobs = self._n_child_jobs
+        return estimator._run_flux_points(datasets_to_fit)
+
+    def _run_flux_points(self, datasets):
+        return super().run(datasets)
+
     @property
     def config_parameters(self):
-        """Config parameters"""
+        """Configuration parameters."""
         pars = self.__dict__.copy()
         pars = {key.strip("_"): value for key, value in pars.items()}
         pars.pop("regions")

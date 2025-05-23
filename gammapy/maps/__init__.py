@@ -6,6 +6,7 @@ from .core import Map
 from .geom import Geom
 from .hpx import HpxGeom, HpxMap, HpxNDMap
 from .maps import Maps
+from .measure import containment_radius, containment_region
 from .region import RegionGeom, RegionNDMap
 from .wcs import WcsGeom, WcsMap, WcsNDMap
 
@@ -26,4 +27,6 @@ __all__ = [
     "WcsGeom",
     "WcsMap",
     "WcsNDMap",
+    "containment_radius",
+    "containment_region",
 ]

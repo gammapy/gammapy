@@ -1,13 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import logging
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import ICRS, AltAz, SkyCoord
 from astropy.time import Time
-from gammapy.data import FixedPointingInfo, PointingInfo
-from gammapy.data.observers import observatory_locations
+from gammapy.data import FixedPointingInfo, PointingInfo, observatory_locations
 from gammapy.data.pointing import PointingMode
 from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.utils.fits import earth_location_to_dict
@@ -17,7 +15,7 @@ from gammapy.utils.time import time_ref_to_dict, time_relative_to_ref
 
 def test_fixed_pointing_icrs():
     """Test new api of FixedPointingInfo in ICRS (POINTING)"""
-    location = observatory_locations["cta_south"]
+    location = observatory_locations["ctao_south"]
     fixed_icrs = SkyCoord(ra=83.28 * u.deg, dec=21.78 * u.deg)
 
     pointing = FixedPointingInfo(
@@ -54,10 +52,16 @@ def test_fixed_pointing_icrs():
     assert u.isclose(back_trafo.dec, fixed_icrs.dec).all()
     assert np.all(u.isclose(fixed_icrs.ra, icrs.ra))
 
+    header = pointing.to_fits_header()
+
+    assert header["OBS_MODE"] == "POINTING"
+    assert header["RA_PNT"] == fixed_icrs.ra.deg
+    assert header["DEC_PNT"] == fixed_icrs.dec.deg
+
 
 def test_fixed_pointing_info_altaz():
     """Test new api of FixedPointingInfo in AltAz (DRIFT)"""
-    location = observatory_locations["cta_south"]
+    location = observatory_locations["ctao_south"]
     fixed_altaz = SkyCoord(alt=70 * u.deg, az=0 * u.deg, frame=AltAz())
     pointing = FixedPointingInfo(
         fixed_altaz=fixed_altaz,
@@ -99,6 +103,12 @@ def test_fixed_pointing_info_altaz():
     assert u.isclose(back_trafo.alt, fixed_altaz.alt).all()
     assert u.isclose(back_trafo.az, fixed_altaz.az, atol=1e-10 * u.deg).all()
 
+    header = pointing.to_fits_header()
+
+    assert header["OBS_MODE"] == "DRIFT"
+    assert header["AZ_PNT"] == fixed_altaz.az.deg
+    assert header["ALT_PNT"] == fixed_altaz.alt.deg
+
 
 @requires_data()
 def test_read_gadf_drift():
@@ -134,50 +144,30 @@ class TestFixedPointingInfo:
         cls.fpi = FixedPointingInfo.read(filename)
 
     def test_location(self):
-        with pytest.warns(GammapyDeprecationWarning):
-            lon, lat, height = self.fpi.location.geodetic
-
+        lon, lat, height = self.fpi._location.geodetic
         assert_allclose(lon.deg, 16.5002222222222)
         assert_allclose(lat.deg, -23.2717777777778)
         assert_allclose(height.value, 1834.999999999783)
 
     def test_time_ref(self):
         expected = Time(51910.00074287037, format="mjd", scale="tt")
-
-        with pytest.warns(GammapyDeprecationWarning):
-            assert_time_allclose(self.fpi.time_ref, expected)
+        assert_time_allclose(self.fpi._time_ref, expected)
 
     def test_time_start(self):
-        with pytest.warns(GammapyDeprecationWarning):
-            time = self.fpi.time_start
         expected = Time(53025.826414166666, format="mjd", scale="tt")
-        assert_time_allclose(time, expected)
+        assert_time_allclose(self.fpi._time_start, expected)
 
     def test_time_stop(self):
-        with pytest.warns(GammapyDeprecationWarning):
-            time = self.fpi.time_stop
         expected = Time(53025.844770648146, format="mjd", scale="tt")
-        assert_time_allclose(time, expected)
+        assert_time_allclose(self.fpi._time_stop, expected)
 
-    def test_duration(self):
-        with pytest.warns(GammapyDeprecationWarning):
-            duration = self.fpi.duration
-        assert_allclose(duration.sec, 1586.0000000044238)
+    def test_fixed_altaz(self):
+        assert self.fpi._fixed_altaz is None
 
-    def test_radec(self):
-        with pytest.warns(GammapyDeprecationWarning):
-            pos = self.fpi.radec
-
-        assert_allclose(pos.ra.deg, 83.633333333333)
-        assert_allclose(pos.dec.deg, 24.51444444)
-        assert pos.name == "icrs"
-
-    def test_altaz(self):
-        with pytest.warns(GammapyDeprecationWarning):
-            pos = self.fpi.altaz
-        assert_allclose(pos.az.deg, 7.48272)
-        assert_allclose(pos.alt.deg, 41.84191)
-        assert pos.name == "altaz"
+    def test_fixed_icrs(self):
+        fixed_icrs = self.fpi._fixed_icrs
+        assert_allclose(fixed_icrs.ra.deg, 83.633333333333)
+        assert_allclose(fixed_icrs.dec.deg, 24.514444444444)
 
 
 @requires_data()
@@ -240,27 +230,6 @@ class TestPointingInfo:
         assert pos.name == "altaz"
 
 
-def test_altaz_without_location(caplog):
-    meta = {"ALT_PNT": 20.0, "AZ_PNT": 170.0}
-    with pytest.warns(GammapyDeprecationWarning):
-        pointing = FixedPointingInfo(meta)
-
-    with caplog.at_level(logging.WARNING):
-        with pytest.warns(GammapyDeprecationWarning):
-            altaz = pointing.altaz
-        assert altaz.alt.deg == 20.0
-        assert altaz.az.deg == 170.0
-
-    with pytest.warns(GammapyDeprecationWarning):
-        pointing = FixedPointingInfo({})
-
-    with caplog.at_level(logging.WARNING):
-        with pytest.warns(GammapyDeprecationWarning):
-            altaz = pointing.altaz
-        assert np.isnan(altaz.alt.value)
-        assert np.isnan(altaz.az.value)
-
-
 @pytest.mark.parametrize(
     ("obs_mode"),
     [
@@ -270,7 +239,7 @@ def test_altaz_without_location(caplog):
     ],
 )
 def test_fixed_pointing_info_fixed_icrs_from_meta(obs_mode):
-    location = observatory_locations["cta_south"]
+    location = observatory_locations["ctao_south"]
     start = Time("2020-11-01T03:00:00")
     stop = Time("2020-11-01T03:15:00")
     ref = Time("2020-11-01T00:00:00")
@@ -292,9 +261,8 @@ def test_fixed_pointing_info_fixed_icrs_from_meta(obs_mode):
     assert pointing.fixed_icrs == fixed_icrs
     assert pointing.fixed_altaz is None
 
-    with pytest.warns(GammapyDeprecationWarning):
-        altaz = pointing.get_altaz(start)
-        icrs = pointing.get_icrs(start)
+    altaz = pointing.get_altaz(start)
+    icrs = pointing.get_icrs(start)
 
     assert altaz.obstime == start
     assert isinstance(altaz.frame, AltAz)
@@ -305,9 +273,8 @@ def test_fixed_pointing_info_fixed_icrs_from_meta(obs_mode):
     assert u.isclose(back_trafo.dec, fixed_icrs.dec)
 
     times = start + np.linspace(0, 1, 50) * (stop - start)
-    with pytest.warns(GammapyDeprecationWarning):
-        altaz = pointing.get_altaz(times)
-        icrs = pointing.get_icrs(times)
+    altaz = pointing.get_altaz(times)
+    icrs = pointing.get_icrs(times)
 
     assert len(altaz) == len(times)
     assert np.all(altaz.obstime == times)
@@ -320,7 +287,7 @@ def test_fixed_pointing_info_fixed_icrs_from_meta(obs_mode):
 
 
 def test_fixed_pointing_info_fixed_altaz_from_meta():
-    location = observatory_locations["cta_south"]
+    location = observatory_locations["ctao_south"]
     start = Time("2020-11-01T03:00:00")
     stop = Time("2020-11-01T03:15:00")
     ref = Time("2020-11-01T00:00:00")
@@ -344,8 +311,7 @@ def test_fixed_pointing_info_fixed_altaz_from_meta():
     assert u.isclose(pointing.fixed_altaz.alt, fixed_altaz.alt)
     assert u.isclose(pointing.fixed_altaz.az, fixed_altaz.az)
 
-    with pytest.warns(GammapyDeprecationWarning):
-        icrs = pointing.get_icrs(start)
+    icrs = pointing.get_icrs(start)
     assert icrs.obstime == start
     assert isinstance(icrs.frame, ICRS)
 
@@ -354,9 +320,8 @@ def test_fixed_pointing_info_fixed_altaz_from_meta():
     assert u.isclose(back_trafo.az, fixed_altaz.az)
 
     times = start + np.linspace(0, 1, 50) * (stop - start)
-    with pytest.warns(GammapyDeprecationWarning):
-        icrs = pointing.get_icrs(times)
-        altaz = pointing.get_altaz(times)
+    icrs = pointing.get_icrs(times)
+    altaz = pointing.get_altaz(times)
 
     assert len(icrs) == len(times)
     assert np.all(icrs.obstime == times)

@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Source catalog and object base classes."""
 import abc
+import html
 import numbers
 from copy import deepcopy
 import numpy as np
@@ -46,30 +47,48 @@ class SourceCatalogObject:
     it doesn't hold a reference back to it, except for a key
     ``_row_index`` of type ``int`` that links to the catalog table
     row the source information comes from.
+
+    Parameters
+    ----------
+    data : dict
+        Dictionary of data from a catalog for a given source.
+    data_extended : dict
+        Dictionary of data from a catalog for a given source in the case where the
+        catalog contains an extended sources table (Fermi-LAT).
+    data_spectral : dict
+        Dictionary of data from a catalof for a given source in the case where the
+        catalog contains a spectral table (Fermi-LAT 2PC and 3PC).
     """
 
     _source_name_key = "Source_Name"
     _row_index_key = "_row_index"
 
-    def __init__(self, data, data_extended=None):
+    def __init__(self, data, data_extended=None, data_spectral=None):
         self.data = Bunch(**data)
         if data_extended:
             self.data_extended = Bunch(**data_extended)
+        self.data_spectral = Bunch(**data_spectral) if data_spectral else None
+
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
 
     @property
     def name(self):
-        """Source name (str)"""
+        """Source name as a string."""
         name = self.data[self._source_name_key]
         return name.strip()
 
     @property
     def row_index(self):
-        """Row index of source in catalog (int)"""
+        """Row index of source in catalog as an integer."""
         return self.data[self._row_index_key]
 
     @property
     def position(self):
-        """Source position (`~astropy.coordinates.SkyCoord`)."""
+        """Source position as an `~astropy.coordinates.SkyCoord` object."""
         table = Table([self.data])
         return _skycoord_from_table(table)[0]
 
@@ -88,7 +107,7 @@ class SourceCatalog(abc.ABC):
     table : `~astropy.table.Table`
         Table with catalog data.
     source_name_key : str
-        Column with source name information
+        Column with source name information.
     source_name_alias : tuple of str
         Columns with source name aliases. This will allow accessing the source
         row by alias names as well.
@@ -97,7 +116,7 @@ class SourceCatalog(abc.ABC):
     @classmethod
     @abc.abstractmethod
     def description(cls):
-        """Catalog description (str)."""
+        """Catalog description as a string."""
         pass
 
     @property
@@ -134,18 +153,24 @@ class SourceCatalog(abc.ABC):
                         names[alias.strip()] = idx
         return names
 
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
+
     def row_index(self, name):
         """Look up row index of source by name.
 
         Parameters
         ----------
         name : str
-            Source name
+            Source name.
 
         Returns
         -------
         index : int
-            Row index of source in table
+            Row index of source in table.
         """
         index = self._name_to_index_cache[name]
         row = self.table[index]
@@ -167,7 +192,7 @@ class SourceCatalog(abc.ABC):
         Parameters
         ----------
         index : int
-            Row index of source in table
+            Row index of source in table.
         """
         source_name_col = self.table[self._source_name_key]
         name = source_name_col[index]
@@ -179,12 +204,12 @@ class SourceCatalog(abc.ABC):
         Parameters
         ----------
         key : str or int
-            Source name or row index
+            Source name or row index.
 
         Returns
         -------
         source : `SourceCatalogObject`
-            An object representing one source
+            An object representing one source.
         """
         if isinstance(key, str):
             index = self.row_index(key)
@@ -205,12 +230,12 @@ class SourceCatalog(abc.ABC):
         Parameters
         ----------
         index : int
-            Row index
+            Row index.
 
         Returns
         -------
         source : `SourceCatalogObject`
-            Source object
+            Source object.
         """
         data = table_row_to_dict(self.table[index])
         data[SourceCatalogObject._row_index_key] = index
@@ -244,28 +269,52 @@ class SourceCatalog(abc.ABC):
             name_extended = data["Source_Name"].strip()
         else:
             name_extended = None
+
+        name_spectral = self._get_name_spectral(data)
+
         try:
-            idx = self._lookup_extended_source_idx[name_extended]
+            idx = self._lookup_additional_table(
+                self.extended_sources_table[self._source_name_key]
+            )[name_extended]
             data_extended = table_row_to_dict(self.extended_sources_table[idx])
         except (KeyError, AttributeError):
             data_extended = None
 
-        source = self.source_object_class(data, data_extended)
+        try:
+            idx = self._lookup_additional_table(
+                self.spectral_table[self._get_source_name_key]
+            )[name_spectral]
+            data_spectral = table_row_to_dict(self.spectral_table[idx])
+        except (KeyError, AttributeError):
+            data_spectral = None
+
+        source = self.source_object_class(data, data_extended, data_spectral)
         return source
 
-    @lazyproperty
-    def _lookup_extended_source_idx(self):
-        names = [_.strip() for _ in self.extended_sources_table["Source_Name"]]
+    @property
+    def _get_source_name_key(self):
+        return self._source_name_key
+
+    def _get_name_spectral(self, data):
+        if "Source_name" in data:
+            name_spectral = data["Source_name"].strip()
+        else:
+            name_spectral = None
+        return name_spectral
+
+    def _lookup_additional_table(self, selected_table):
+        """"""
+        names = [_.strip() for _ in selected_table]
         idx = range(len(names))
         return dict(zip(names, idx))
 
     @property
     def positions(self):
-        """Source positions (`~astropy.coordinates.SkyCoord`)."""
+        """Source positions as a `~astropy.coordinates.SkyCoord` object."""
         return _skycoord_from_table(self.table)
 
     def to_models(self, **kwargs):
-        """Create Models object from catalogue"""
+        """Create Models object from catalog."""
         return Models([_.sky_model(**kwargs) for _ in self])
 
 
@@ -280,6 +329,8 @@ def _skycoord_from_table(table):
         lon, lat, frame = "RA", "DEC", "icrs"
     elif {"ra", "dec"}.issubset(keys):
         lon, lat, frame = "ra", "dec", "icrs"
+    elif {"RAJD", "DECJD"}.issubset(keys):
+        lon, lat, frame = "RAJD", "DECJD", "icrs"
     else:
         raise KeyError("No column GLON / GLAT or RA / DEC or RAJ2000 / DEJ2000 found.")
 

@@ -1,3 +1,4 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
@@ -6,8 +7,10 @@ from astropy.table import Column, Table
 from astropy.time import Time
 from astropy.timeseries import BinnedTimeSeries, BoxLeastSquares
 from gammapy.data import GTI
-from gammapy.datasets import Datasets
+from gammapy.datasets import Datasets, FluxPointsDataset
+from gammapy.datasets.actors import DatasetsActor
 from gammapy.estimators import FluxPoints, LightCurveEstimator
+from gammapy.estimators.points.lightcurve import parallel as parallel
 from gammapy.estimators.points.tests.test_sed import (
     simulate_map_dataset,
     simulate_spectrum_dataset,
@@ -42,7 +45,7 @@ def lc():
     )
     gti = GTI.create("0h", "1h", "2010-01-01T00:00:00")
 
-    return FluxPoints.from_table(table=table, format="lightcurve", gti=gti)
+    return FluxPoints.from_table(table=table, gti=gti)
 
 
 @pytest.fixture(scope="session")
@@ -63,7 +66,7 @@ def lc_2d():
         ],
     )
 
-    return FluxPoints.from_table(table=table, format="lightcurve")
+    return FluxPoints.from_table(table=table)
 
 
 def test_lightcurve_str(lc):
@@ -94,7 +97,7 @@ def test_lightcurve_properties_time(lc):
 
 
 def test_lightcurve_properties_flux(lc):
-    table = lc.to_table(sed_type="flux", format="lightcurve")
+    table = lc.to_table(sed_type="flux")
     flux = table["flux"].quantity
     assert flux.unit == "cm-2 s-1"
     assert_allclose(flux.value, [[1e-11], [3e-11]])
@@ -107,9 +110,9 @@ def test_lightcurve_properties_flux(lc):
 
 @pytest.mark.parametrize("sed_type", ["dnde", "flux", "likelihood"])
 def test_lightcurve_read_write(tmp_path, lc, sed_type):
-    lc.write(tmp_path / "tmp.fits", format="lightcurve", sed_type=sed_type)
+    lc.write(tmp_path / "tmp.fits", sed_type=sed_type)
 
-    lc = FluxPoints.read(tmp_path / "tmp.fits", format="lightcurve")
+    lc = FluxPoints.read(tmp_path / "tmp.fits")
     assert_allclose(lc.gti.time_start[0].mjd, 55197.000766, rtol=1e-5)
 
     # Check if time-related info round-trips
@@ -222,10 +225,10 @@ def test_lightcurve_estimator_fit_options():
 
     estimator = LightCurveEstimator(
         energy_edges=energy_edges,
-        norm_n_values=3,
         time_intervals=time_intervals,
         selection_optional="all",
         fit=Fit(backend="minuit", optimize_opts=dict(tol=0.2, strategy=1)),
+        norm=dict(scan_n_values=3),
     )
 
     assert_allclose(estimator.fit.optimize_opts["tol"], 0.2)
@@ -245,13 +248,13 @@ def test_lightcurve_estimator_spectrum_datasets():
 
     estimator = LightCurveEstimator(
         energy_edges=[1, 30] * u.TeV,
-        norm_n_values=3,
         time_intervals=time_intervals,
         selection_optional="all",
     )
+    estimator.norm.scan_n_values = 3
 
     lightcurve = estimator.run(datasets)
-    table = lightcurve.to_table(format="lightcurve")
+    table = lightcurve.to_table()
     assert_allclose(table["time_min"], [55197.0, 55197.041667])
     assert_allclose(table["time_max"], [55197.041667, 55197.083333])
     assert_allclose(table["e_ref"], [[5.623413], [5.623413]])
@@ -281,9 +284,7 @@ def test_lightcurve_estimator_spectrum_datasets():
     assert table.meta["MJDREFI"] == 0
 
     # TODO: fix reference model I/O
-    fp = FluxPoints.from_table(
-        table=table, format="lightcurve", reference_model=PowerLawSpectralModel()
-    )
+    fp = FluxPoints.from_table(table=table, reference_model=PowerLawSpectralModel())
     assert fp.norm.geom.axes.names == ["energy", "time"]
     assert fp.counts.geom.axes.names == ["dataset", "energy", "time"]
     assert fp.stat_scan.geom.axes.names == ["norm", "energy", "time"]
@@ -306,12 +307,12 @@ def test_lightcurve_estimator_spectrum_datasets_2_energy_bins():
 
     estimator = LightCurveEstimator(
         energy_edges=[1, 5, 30] * u.TeV,
-        norm_n_values=3,
         time_intervals=time_intervals,
         selection_optional="all",
     )
+    estimator.norm.scan_n_values = 3
     lightcurve = estimator.run(datasets)
-    table = lightcurve.to_table(format="lightcurve")
+    table = lightcurve.to_table()
 
     assert_allclose(table["time_min"], [55197.0, 55197.041667])
     assert_allclose(table["time_max"], [55197.041667, 55197.083333])
@@ -405,9 +406,7 @@ def test_lightcurve_estimator_spectrum_datasets_2_energy_bins():
         rtol=1e-3,
     )
 
-    fp = FluxPoints.from_table(
-        table=table, format="lightcurve", reference_model=PowerLawSpectralModel()
-    )
+    fp = FluxPoints.from_table(table=table, reference_model=PowerLawSpectralModel())
     assert fp.norm.geom.axes.names == ["energy", "time"]
     assert fp.counts.geom.axes.names == ["dataset", "energy", "time"]
     assert fp.stat_scan.geom.axes.names == ["norm", "energy", "time"]
@@ -433,12 +432,12 @@ def test_lightcurve_estimator_spectrum_datasets_with_mask_fit():
     selection = ["scan"]
     estimator = LightCurveEstimator(
         energy_edges=[1, 30] * u.TeV,
-        norm_n_values=3,
         time_intervals=time_intervals,
         selection_optional=selection,
     )
+    estimator.norm.scan_n_values = 3
     lightcurve = estimator.run(datasets)
-    table = lightcurve.to_table(format="lightcurve")
+    table = lightcurve.to_table()
     assert_allclose(table["time_min"], [55197.0, 55197.041667])
     assert_allclose(table["time_max"], [55197.041667, 55197.083333])
     assert_allclose(table["stat"], [[6.603043], [0.421051]], rtol=1e-3)
@@ -452,10 +451,11 @@ def test_lightcurve_estimator_spectrum_datasets_default():
     datasets = get_spectrum_datasets()
     selection = ["scan"]
     estimator = LightCurveEstimator(
-        energy_edges=[1, 30] * u.TeV, norm_n_values=3, selection_optional=selection
+        energy_edges=[1, 30] * u.TeV, selection_optional=selection
     )
+    estimator.norm.scan_n_values = 3
     lightcurve = estimator.run(datasets)
-    table = lightcurve.to_table(format="lightcurve")
+    table = lightcurve.to_table()
     assert_allclose(table["time_min"], [55197.0, 55197.041667])
     assert_allclose(table["time_max"], [55197.041667, 55197.083333])
     assert_allclose(table["norm"], [[0.911963], [0.906931]], rtol=1e-3)
@@ -472,12 +472,12 @@ def test_lightcurve_estimator_spectrum_datasets_notordered():
     ]
     estimator = LightCurveEstimator(
         energy_edges=[1, 100] * u.TeV,
-        norm_n_values=3,
         time_intervals=time_intervals,
         selection_optional=["scan"],
     )
+    estimator.norm.scan_n_values = 3
     lightcurve = estimator.run(datasets)
-    table = lightcurve.to_table(format="lightcurve")
+    table = lightcurve.to_table()
     assert_allclose(table["time_min"], [55197.0, 55197.041667])
     assert_allclose(table["time_max"], [55197.041667, 55197.083333])
     assert_allclose(table["norm"], [[0.911963], [0.906931]], rtol=1e-3)
@@ -490,12 +490,12 @@ def test_lightcurve_estimator_spectrum_datasets_largerbin():
     time_intervals = [Time(["2010-01-01T00:00:00", "2010-01-01T02:00:00"])]
     estimator = LightCurveEstimator(
         energy_edges=[1, 30] * u.TeV,
-        norm_n_values=3,
         time_intervals=time_intervals,
         selection_optional=["scan"],
     )
+    estimator.norm.scan_n_values = 3
     lightcurve = estimator.run(datasets)
-    table = lightcurve.to_table(format="lightcurve")
+    table = lightcurve.to_table()
 
     assert_allclose(table["time_min"], [55197.0])
     assert_allclose(table["time_max"], [55197.083333])
@@ -521,12 +521,12 @@ def test_lightcurve_estimator_spectrum_datasets_emptybin():
     ]
     estimator = LightCurveEstimator(
         energy_edges=[1, 30] * u.TeV,
-        norm_n_values=3,
         time_intervals=time_intervals,
         selection_optional=["scan"],
     )
+    estimator.norm.scan_n_values = 3
     lightcurve = estimator.run(datasets)
-    table = lightcurve.to_table(format="lightcurve")
+    table = lightcurve.to_table()
 
     assert_allclose(table["time_min"], [55197.0])
     assert_allclose(table["time_max"], [55197.083333])
@@ -541,7 +541,8 @@ def test_lightcurve_estimator_spectrum_datasets_timeoverlaped():
         Time(["2010-01-01T01:00:00", "2010-01-01T02:00:00"]),
     ]
     with pytest.raises(ValueError) as excinfo:
-        estimator = LightCurveEstimator(norm_n_values=3, time_intervals=time_intervals)
+        estimator = LightCurveEstimator(time_intervals=time_intervals)
+        estimator.norm.scan_n_values = 3
         estimator.run(datasets)
 
     msg = "Overlapping time bins"
@@ -558,10 +559,10 @@ def test_lightcurve_estimator_spectrum_datasets_gti_not_include_in_time_interval
     ]
     estimator = LightCurveEstimator(
         energy_edges=[1, 30] * u.TeV,
-        norm_n_values=3,
         time_intervals=time_intervals,
         selection_optional=["scan"],
     )
+    estimator.norm.scan_n_values = 3
     with pytest.raises(ValueError) as excinfo:
         estimator.run(datasets)
     msg = "LightCurveEstimator: No datasets in time intervals"
@@ -602,7 +603,7 @@ def test_lightcurve_estimator_map_datasets():
         selection_optional=["scan"],
     )
     lightcurve = estimator.run(datasets)
-    table = lightcurve.to_table(format="lightcurve")
+    table = lightcurve.to_table()
     assert_allclose(table["time_min"], [55197.0, 55197.041667])
     assert_allclose(table["time_max"], [55197.041667, 55197.083333])
     assert_allclose(table["e_ref"], [[10.857111], [10.857111]])
@@ -627,7 +628,66 @@ def test_lightcurve_estimator_map_datasets():
         selection_optional=["scan"],
     )
     lightcurve2 = estimator2.run(datasets)
-    table = lightcurve2.to_table(format="lightcurve")
+    table = lightcurve2.to_table()
+    assert_allclose(table["time_min"][0], [55197.0])
+    assert_allclose(table["time_max"][0], [55197.083333])
+    assert_allclose(table["e_ref"][0], [10.857111], rtol=1e-5)
+    assert_allclose(table["e_min"][0], [1.178769], rtol=1e-5)
+    assert_allclose(table["e_max"][0], [100])
+    assert_allclose(table["ref_dnde"][0], [8.483429e-14], rtol=1e-5)
+    assert_allclose(table["ref_flux"][0], [8.383429e-12], rtol=1e-5)
+    assert_allclose(table["ref_eflux"][0], [4.4407e-11], rtol=1e-5)
+    assert_allclose(table["stat"][0], [18920.54651], rtol=1e-2)
+    assert_allclose(table["norm"][0], [0.967438], rtol=1e-2)
+    assert_allclose(table["norm_err"][0], [0.031508], rtol=1e-2)
+    assert_allclose(table["counts"][0], [[2205, 2220]])
+    assert_allclose(table["ts"][0], [2557.346464], rtol=1e-2)
+
+
+@requires_data()
+@requires_dependency("ray")
+def test_lightcurve_estimator_map_datasets_ray_actors():
+    datasets = get_map_datasets()
+
+    datasets = DatasetsActor(datasets)
+
+    time_intervals = [
+        Time(["2010-01-01T00:00:00", "2010-01-01T01:00:00"]),
+        Time(["2010-01-01T01:00:00", "2010-01-01T02:00:00"]),
+    ]
+    estimator = LightCurveEstimator(
+        energy_edges=[1, 100] * u.TeV,
+        source="test_source",
+        time_intervals=time_intervals,
+        selection_optional=["scan"],
+    )
+    lightcurve = estimator.run(datasets)
+    table = lightcurve.to_table()
+    assert_allclose(table["time_min"], [55197.0, 55197.041667])
+    assert_allclose(table["time_max"], [55197.041667, 55197.083333])
+    assert_allclose(table["e_ref"], [[10.857111], [10.857111]])
+    assert_allclose(table["e_min"], [[1.178769], [1.178769]], rtol=1e-5)
+    assert_allclose(table["e_max"], [[100], [100]])
+    assert_allclose(table["ref_dnde"], [[8.483429e-14], [8.483429e-14]], rtol=1e-5)
+    assert_allclose(table["ref_flux"], [[8.383429e-12], [8.383429e-12]], rtol=1e-5)
+    assert_allclose(table["ref_eflux"], [[4.4407e-11], [4.4407e-11]], rtol=1e-5)
+    assert_allclose(table["stat"], [[9402.778975], [9517.750207]], rtol=1e-2)
+    assert_allclose(table["norm"], [[0.971592], [0.963286]], rtol=1e-2)
+    assert_allclose(table["norm_err"], [[0.044643], [0.044475]], rtol=1e-2)
+    assert_allclose(table["sqrt_ts"], [[35.880361], [35.636547]], rtol=1e-2)
+    assert_allclose(table["ts"], [[1287.4003], [1269.963491]], rtol=1e-2)
+
+    datasets = get_map_datasets()
+
+    time_intervals2 = [Time(["2010-01-01T00:00:00", "2010-01-01T02:00:00"])]
+    estimator2 = LightCurveEstimator(
+        energy_edges=[1, 100] * u.TeV,
+        source="test_source",
+        time_intervals=time_intervals2,
+        selection_optional=["scan"],
+    )
+    lightcurve2 = estimator2.run(datasets)
+    table = lightcurve2.to_table()
     assert_allclose(table["time_min"][0], [55197.0])
     assert_allclose(table["time_max"][0], [55197.083333])
     assert_allclose(table["e_ref"][0], [10.857111], rtol=1e-5)
@@ -648,17 +708,24 @@ def test_recompute_ul():
     datasets = get_spectrum_datasets()
     selection = ["all"]
     estimator = LightCurveEstimator(
-        energy_edges=[1, 3, 30] * u.TeV, selection_optional=selection, n_sigma_ul=2
+        energy_edges=[1, 3, 10, 30] * u.TeV, selection_optional=selection, n_sigma_ul=2
     )
     lightcurve = estimator.run(datasets)
+
     assert_allclose(
-        lightcurve.dnde_ul.data[0], [[[3.260703e-13]], [[1.159354e-14]]], rtol=1e-3
+        lightcurve.dnde_ul.data[0],
+        [[[3.26070325e-13]], [[3.82484628e-14]], [[4.16433528e-15]]],
+        rtol=1e-3,
     )
 
     new_lightcurve = lightcurve.recompute_ul(n_sigma_ul=4)
+
     assert_allclose(
-        new_lightcurve.dnde_ul.data[0], [[[3.774561e-13]], [[1.374421e-14]]], rtol=1e-3
+        new_lightcurve.dnde_ul.data[0],
+        [[[3.75813611e-13]], [[4.63590079e-14]], [[5.64634904e-15]]],
+        rtol=1e-3,
     )
+
     assert new_lightcurve.meta["n_sigma_ul"] == 4
 
     # test if scan is not present
@@ -669,6 +736,43 @@ def test_recompute_ul():
     lightcurve = estimator.run(datasets)
     with pytest.raises(ValueError):
         lightcurve.recompute_ul(n_sigma_ul=4)
+
+
+@requires_data()
+def test_dataset_stat_type():
+    datasets = get_spectrum_datasets()
+    selection = ["all"]
+    estimator = LightCurveEstimator(
+        energy_edges=[1, 3, 30] * u.TeV, selection_optional=selection, n_sigma_ul=2
+    )
+    lightcurve = estimator.run(datasets)
+    assert_allclose(
+        lightcurve.dnde_ul.data[0], [[[3.260703e-13]], [[1.159354e-14]]], rtol=1e-3
+    )
+
+    lightcurve_dataset = FluxPointsDataset(
+        data=lightcurve, models=[lightcurve.reference_model]
+    )
+    lightcurve_dataset.stat_type = "profile"
+    assert_allclose(lightcurve_dataset.stat_sum(), 5.741539, rtol=1e-5)
+    lightcurve_dataset.stat_type = "distrib"
+    assert_allclose(lightcurve_dataset.stat_sum(), 5.824218, rtol=1e-5)
+    lightcurve_dataset.stat_type = "chi2"
+    assert_allclose(lightcurve_dataset.stat_sum(), 6.014128, rtol=1e-5)
+
+    # test if scan is not present
+    selection = []
+    estimator = LightCurveEstimator(
+        energy_edges=[1, 30] * u.TeV, selection_optional=selection
+    )
+    lightcurve = estimator.run(datasets)
+
+    lightcurve_dataset = FluxPointsDataset(
+        data=lightcurve, models=[lightcurve.reference_model]
+    )
+    with pytest.raises(AttributeError):
+        lightcurve_dataset.stat_type = "profile"
+        lightcurve_dataset.stat_sum()
 
 
 @requires_data()
@@ -686,6 +790,15 @@ def test_lightcurve_parallel_multiprocessing():
     assert_allclose(
         lightcurve.dnde_ul.data[0], [[[3.260703e-13]], [[1.159354e-14]]], rtol=1e-3
     )
+    assert estimator._get_n_child_jobs == 1
+
+    parallel.ALLOW_CHILD_JOBS = True
+    lightcurve = estimator.run(datasets)
+    assert_allclose(
+        lightcurve.dnde_ul.data[0], [[[3.260703e-13]], [[1.159354e-14]]], rtol=1e-3
+    )
+    assert estimator._get_n_child_jobs == 2
+    parallel.ALLOW_CHILD_JOBS = False
 
 
 @requires_data()
@@ -702,7 +815,17 @@ def test_lightcurve_parallel_ray():
         parallel_backend="ray",
     )
 
+    assert estimator.n_jobs == 2
     lightcurve = estimator.run(datasets)
     assert_allclose(
         lightcurve.dnde_ul.data[0], [[[3.260703e-13]], [[1.159354e-14]]], rtol=1e-3
     )
+    assert estimator._get_n_child_jobs == 1
+
+    parallel.ALLOW_CHILD_JOBS = True
+    lightcurve = estimator.run(datasets)
+    assert_allclose(
+        lightcurve.dnde_ul.data[0], [[[3.260703e-13]], [[1.159354e-14]]], rtol=1e-3
+    )
+    assert estimator._get_n_child_jobs == 2
+    parallel.ALLOW_CHILD_JOBS = False

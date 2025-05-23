@@ -3,8 +3,9 @@ import json
 import numpy as np
 import astropy.units as u
 from astropy.io import fits
+from gammapy.utils.types import JsonQuantityEncoder
 from ..core import Map
-from ..io import JsonQuantityEncoder, find_bands_hdu, find_hdu
+from ..io import find_bands_hdu, find_hdu
 from .geom import WcsGeom
 from .io import identify_wcs_format
 
@@ -42,44 +43,47 @@ class WcsMap(Map):
 
         Parameters
         ----------
-        map_type : {'wcs', 'wcs-sparse'}
-            Map type.  Selects the class that will be used to
-            instantiate the map.
-        npix : int or tuple or list
+        map_type : {'wcs', 'wcs-sparse'}, optional
+            Map type. Selects the class that will be used to
+            instantiate the map. Default is "wcs".
+        npix : int or tuple or list, optional
             Width of the map in pixels. A tuple will be interpreted as
-            parameters for longitude and latitude axes.  For maps with
+            parameters for longitude and latitude axes. For maps with
             non-spatial dimensions, list input can be used to define a
-            different map width in each image plane.  This option
-            supersedes width.
-        width : float or tuple or list
-            Width of the map in degrees.  A tuple will be interpreted
-            as parameters for longitude and latitude axes.  For maps
-            with non-spatial dimensions, list input can be used to
-            define a different map width in each image plane.
-        binsz : float or tuple or list
-            Map pixel size in degrees.  A tuple will be interpreted
-            as parameters for longitude and latitude axes.  For maps
+            different map width in each image plane. This option
+            supersedes width. Default is None.
+        binsz : float or tuple or list, optional
+            Map pixel size in degrees. A tuple will be interpreted
+            as parameters for longitude and latitude axes. For maps
             with non-spatial dimensions, list input can be used to
             define a different bin size in each image plane.
-        skydir : tuple or `~astropy.coordinates.SkyCoord`
-            Sky position of map center.  Can be either a SkyCoord
-            object or a tuple of longitude and latitude in deg in the
-            coordinate system of the map.
-        frame : {"icrs", "galactic"}, optional
-            Coordinate system, either Galactic ("galactic") or Equatorial ("icrs").
-        axes : list
-            List of non-spatial axes.
+            Default is 0.1.
+        width : float or tuple or list, optional
+            Width of the map in degrees. A tuple will be interpreted
+            as parameters for longitude and latitude axes. For maps
+            with non-spatial dimensions, list input can be used to
+            define a different map width in each image plane.
+            Default is None.
         proj : string, optional
             Any valid WCS projection type. Default is 'CAR' (cartesian).
-        refpix : tuple
-            Reference pixel of the projection.  If None then this will
-            be chosen to be center of the map.
+        frame : {"icrs", "galactic"}, optional
+            Coordinate system, either Galactic ("galactic") or Equatorial ("icrs").
+            Default is "icrs".
+        refpix : tuple, optional
+            Reference pixel of the projection. If None then this will
+            be chosen to be center of the map. Default is None.
+        axes : list, optional
+            List of non-spatial axes. Default is None.
+        skydir : tuple or `~astropy.coordinates.SkyCoord`, optional
+            Sky position of map center. Can be either a SkyCoord
+            object or a tuple of longitude and latitude in degrees in the
+            coordinate system of the map.
         dtype : str, optional
-            Data type, default is float32
-        meta : `dict`
-            Dictionary to store meta data.
-        unit : str or `~astropy.units.Unit`
-            The unit of the map
+            Data type. Default is "float32".
+        meta : `dict`, optional
+            Dictionary to store metadata. Default is None.
+        unit : str or `~astropy.units.Unit`, optional
+            The unit of the map. Default is "".
 
         Returns
         -------
@@ -112,19 +116,21 @@ class WcsMap(Map):
 
         Parameters
         ----------
-        hdu_list :  `~astropy.io.fits.HDUList`
+        hdu_list : `~astropy.io.fits.HDUList`
             HDU list containing HDUs for map data and bands.
-        hdu : str
+        hdu : str, optional
             Name or index of the HDU with the map data.
-        hdu_bands : str
+            Default is None.
+        hdu_bands : str, optional
             Name or index of the HDU with the BANDS table.
-        format : {'gadf', 'fgst-ccube', 'fgst-template'}
-            FITS format convention.
+            Default is None.
+        format : {'gadf', 'fgst-ccube', 'fgst-template'}, optional
+            FITS format convention. Default is "gadf".
 
         Returns
         -------
         wcs_map : `WcsMap`
-            Map object
+            Map object.
         """
         if hdu is None:
             hdu = find_hdu(hdu_list)
@@ -155,20 +161,22 @@ class WcsMap(Map):
 
         Parameters
         ----------
-        hdu : str
+        hdu : str, optional
             Name or index of the HDU with the map data.
-        hdu_bands : str
+            Default is None.
+        hdu_bands : str, optional
             Name or index of the HDU with the BANDS table.
-        sparse : bool
+            Default is None.
+        sparse : bool, optional
             Sparsify the map by only writing pixels with non-zero
-            amplitude.
-        format : {'gadf', 'fgst-ccube','fgst-template'}
-            FITS format convention.
+            amplitude. Default is False.
+        format : {'gadf', 'fgst-ccube','fgst-template'}, optional
+            FITS format convention. Default is "gadf".
 
         Returns
         -------
         hdu_list : `~astropy.io.fits.HDUList`
-
+            HDU list.
         """
         if sparse:
             hdu = "SKYMAP" if hdu is None else hdu.upper()
@@ -214,13 +222,16 @@ class WcsMap(Map):
 
         Parameters
         ----------
-        hdu : str
+        hdu : str, optional
             The HDU extension name.
-        hdu_bands : str
+            Default is "SKYMAP".
+        hdu_bands : str, optional
             The HDU extension name for BANDS table.
-        sparse : bool
+            Default is None.
+        sparse : bool, optional
             Set INDXSCHM to SPARSE and sparsify the map by only
             writing pixels with non-zero amplitude.
+            Default is False.
 
         Returns
         -------

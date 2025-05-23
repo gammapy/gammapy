@@ -1,3 +1,4 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 from .kernel import PSFKernel
 from .map import PSFMap, RecoPSFMap
 from .parametric import EnergyDependentMultiGaussPSF, ParametricPSF, PSFKing

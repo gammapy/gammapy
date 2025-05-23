@@ -37,7 +37,7 @@ def pdf(func):
 
 
 def draw(low, high, size, dist, random_state="random-seed", *args, **kwargs):
-    """Allows drawing of random numbers from any distribution."""
+    """Allow drawing of random numbers from any distribution."""
     from .inverse_cdf import InverseCDFSampler
 
     n = 1000
@@ -100,19 +100,20 @@ def sample_sphere(size, lon_range=None, lat_range=None, random_state="random-see
     Parameters
     ----------
     size : int
-        Number of samples to generate
+        Number of samples to generate.
     lon_range : `~astropy.coordinates.Angle`, optional
-        Longitude range (min, max)
+        Longitude range (min, max).
     lat_range : `~astropy.coordinates.Angle`, optional
-        Latitude range (min, max)
-    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+        Latitude range (min, max).
+    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
         Defines random number generator initialisation.
         Passed to `~gammapy.utils.random.get_random_state`.
+        Default is "random-seed".
 
     Returns
     -------
     lon, lat: `~astropy.coordinates.Angle`
-        Longitude and latitude coordinate arrays
+        Longitude and latitude coordinate arrays.
     """
     random_state = get_random_state(random_state)
 
@@ -147,18 +148,21 @@ def sample_sphere_distance(
 
     Parameters
     ----------
-    distance_min, distance_max : float, optional
-        Distance range in which to sample
+    distance_min : float, optional
+        Minimum distance. Default is 0.
+    distance_max : float, optional
+        Maximum distance. Default is 1.
     size : int or tuple of ints, optional
-        Output shape. Default: one sample. Passed to `numpy.random.uniform`.
-    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+        Output shape. Default is one sample. Passed to `numpy.random.uniform`.
+    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
         Defines random number generator initialisation.
         Passed to `~gammapy.utils.random.get_random_state`.
+        Default is "random-seed".
 
     Returns
     -------
-    distance : array
-        Array of samples
+    distance : `~numpy.ndarray`
+        Array of samples.
     """
     random_state = get_random_state(random_state)
 
@@ -194,21 +198,22 @@ def sample_powerlaw(x_min, x_max, gamma, size=None, random_state="random-seed"):
     Parameters
     ----------
     x_min : float
-        x range minimum
+        Minimum x range.
     x_max : float
-        x range maximum
+        Maximum x range.
     gamma : float
-        Power law index
+        Power law index.
     size : int, optional
-        Number of samples to generate
-    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+        Number of samples to generate. Default is None.
+    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
         Defines random number generator initialisation.
         Passed to `~gammapy.utils.random.get_random_state`.
+        Default is "random-seed".
 
     Returns
     -------
-    x : array
-        Array of samples from the distribution
+    x : `~numpy.ndarray`
+        Array of samples from the distribution.
     """
     random_state = get_random_state(random_state)
 
@@ -241,16 +246,17 @@ def sample_times(
     Parameters
     ----------
     size : int
-        Number of samples
+        Number of samples.
     rate : `~astropy.units.Quantity`
-        Event rate (dimension: 1 / TIME)
+        Event rate.
     dead_time : `~astropy.units.Quantity` or `~astropy.time.TimeDelta`, optional
-        Dead time after event (dimension: TIME)
+        Dead time after event.
     return_diff : bool
-        Return time difference between events? (default: no, return absolute times)
-    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+        Return time difference between events. Default False, return absolute times.
+    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
         Defines random number generator initialisation.
         Passed to `~gammapy.utils.random.get_random_state`.
+        Default is "random-seed".
 
     Returns
     -------

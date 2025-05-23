@@ -9,11 +9,35 @@ from gammapy.maps import Map, MapAxis, WcsNDMap
 from gammapy.utils.random import get_random_state
 from gammapy.utils.testing import mpl_plot_check, requires_data
 from gammapy.visualization import (
+    add_colorbar,
     plot_contour_line,
     plot_distribution,
     plot_map_rgb,
     plot_theta_squared_table,
 )
+
+
+@requires_data()
+def test_add_colorbar():
+    map_ = Map.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
+
+    fig, ax = plt.subplots()
+    with mpl_plot_check():
+        img = ax.imshow(map_.sum_over_axes().data[0, :, :])
+        add_colorbar(img, ax=ax, label="Colorbar label")
+
+    axes_loc = {"position": "left", "size": "2%", "pad": "15%"}
+    fig, ax = plt.subplots()
+    with mpl_plot_check():
+        img = ax.imshow(map_.sum_over_axes().data[0, :, :])
+        add_colorbar(img, ax=ax, axes_loc=axes_loc)
+
+    kwargs = {"use_gridspec": False, "orientation": "horizontal"}
+    fig, ax = plt.subplots()
+    with mpl_plot_check():
+        img = ax.imshow(map_.sum_over_axes().data[0, :, :])
+        cbar = add_colorbar(img, ax=ax, **kwargs)
+        assert cbar.orientation == "horizontal"
 
 
 def test_map_panel_plotter():
@@ -64,6 +88,10 @@ def test_plot_map_rgb():
 
     axis = MapAxis([0, 1, 2, 3], node_type="edges")
     map_allsky = WcsNDMap.create(binsz=10 * u.deg, axes=[axis])
+
+    # Astropy 7 does not support uniformly 0 maps
+    map_allsky.data += 1
+
     with mpl_plot_check():
         plot_map_rgb(map_allsky)
 
@@ -86,6 +114,8 @@ def test_plot_distribution():
 
     map_ = WcsNDMap.create(npix=(100, 100), axes=[energy_axis])
     map_.data = array_2d
+    mask_ = WcsNDMap.create(npix=(100, 100), dtype="bool")
+    mask_.data[:50, :] = True
 
     energy_axis_10 = MapAxis.from_energy_bounds(1 * u.TeV, 10 * u.TeV, 10)
     map_empty = WcsNDMap.create(npix=(100, 100), axes=[energy_axis_10])
@@ -95,7 +125,7 @@ def test_plot_distribution():
 
     with mpl_plot_check():
         axes, res = plot_distribution(
-            wcs_map=map_, func=fit_func, kwargs_hist={"bins": 40}
+            wcs_map=map_, mask=mask_, func=fit_func, kwargs_hist={"bins": 40}
         )
 
         assert axes.shape == (1,)
@@ -112,5 +142,23 @@ def test_plot_distribution():
         assert axes.shape == (4, 3)
 
         axes, res = plot_distribution(
-            wcs_map=map_, func="norm", kwargs_hist={"bins": 40}
+            wcs_map=map_, mask=mask_, func="norm", kwargs_hist={"bins": 40}
         )
+
+        fig, ax = plt.subplots(nrows=1, ncols=1)
+        plot_distribution(map_empty, ax=ax)
+
+        # test mask exceptions
+        mask_2 = WcsNDMap.create(npix=(200, 200), dtype="bool")
+        mask_2.data[:50, :] = True
+        with pytest.raises(ValueError):
+            axes, res = plot_distribution(
+                wcs_map=map_, mask=mask_2, func="norm", kwargs_hist={"bins": 40}
+            )
+
+        mask_3 = WcsNDMap.create(npix=(100, 100), dtype="float")
+        mask_3.data = np.ones_like(mask_3.data)
+        with pytest.raises(ValueError):
+            axes, res = plot_distribution(
+                wcs_map=map_, mask=mask_3, func="norm", kwargs_hist={"bins": 40}
+            )

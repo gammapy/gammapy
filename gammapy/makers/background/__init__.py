@@ -1,3 +1,4 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 from .fov import FoVBackgroundMaker
 from .phase import PhaseBackgroundMaker
 from .reflected import (

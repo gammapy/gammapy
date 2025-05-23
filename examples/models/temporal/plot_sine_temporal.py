@@ -10,7 +10,6 @@ This model parametrises a time model of sinusoidal modulation.
 
 """
 
-
 # %%
 # Example plot
 # ------------

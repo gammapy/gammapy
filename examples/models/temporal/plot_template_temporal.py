@@ -18,7 +18,6 @@ In `map` format, a `~gammapy.maps.RegionNDMap` is serialised, with the `referenc
 in the SKYMAP_BANDS HDU.
 """
 
-
 from astropy.time import Time
 from gammapy.modeling.models import (
     LightCurveTemplateTemporalModel,

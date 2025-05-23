@@ -22,7 +22,7 @@ event-sampler and how to obtain an output photon event list.
 The core of the event sampling lies into the Gammapy
 `~gammapy.datasets.MapDatasetEventSampler` class, which is based on
 the inverse cumulative distribution function `(Inverse
-CDF) <https://en.wikipedia.org/wiki/Cumulative_distribution_function#Inverse_distribution_function_(quantile_function)>`__. 
+CDF) <https://en.wikipedia.org/wiki/Cumulative_distribution_function#Inverse_distribution_function_(quantile_function)>`__.
 
 The `~gammapy.datasets.MapDatasetEventSampler` takes in input a
 `~gammapy.datasets.Dataset` object containing the spectral, spatial
@@ -34,7 +34,7 @@ of predicted counts (`npred`) per bin of the given Sky model, and the
 output of the event-sampler will be a set of events having information
 about their true coordinates, true energies and times of arrival.
 
-To these events, IRF corrections (i.e. PSF and energy dispersion) can
+To these events, IRF corrections (i.e. PSF and energy dispersion) can
 also further be applied in order to obtain reconstructed coordinates and
 energies of the sampled events.
 
@@ -72,6 +72,7 @@ We will work with the following functions and classes:
 -  `~gammapy.modeling.models.SkyModel`
 -  `~gammapy.datasets.MapDatasetEventSampler`
 -  `~gammapy.data.EventList`
+
 """
 
 ######################################################################
@@ -85,7 +86,6 @@ from pathlib import Path
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
-from astropy.io import fits
 from astropy.time import Time
 from regions import CircleSkyRegion
 import matplotlib.pyplot as plt
@@ -99,8 +99,7 @@ from gammapy.data import (
 from gammapy.datasets import MapDataset, MapDatasetEventSampler
 from gammapy.irf import load_irf_dict_from_file
 from gammapy.makers import MapDatasetMaker
-from gammapy.maps import Map, MapAxis, WcsGeom
-from gammapy.modeling import Fit
+from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling.models import (
     ExpDecayTemporalModel,
     FoVBackgroundModel,
@@ -141,7 +140,7 @@ pointing = FixedPointingInfo(
     fixed_icrs=SkyCoord(0.0, 0.0, frame="galactic", unit="deg").icrs,
 )
 livetime = 1 * u.hr
-location = observatory_locations["cta_south"]
+location = observatory_locations["ctao_south"]
 
 
 irfs = load_irf_dict_from_file(path / irf_filename)
@@ -300,57 +299,15 @@ plt.show()
 events.table.meta["OBJECT"] = dataset.models[0].name
 
 ######################################################################
-# Let’s write the event list and its GTI extension to a FITS file. We make
-# use of `fits` library in `astropy`:
+# Let’s write the event list and its GTI extension to a FITS file, adopting
+# the `observation` functions. We firstly link the `events` to the `observation`
+# objects and then we write it into a fits file:
 #
 
-primary_hdu = fits.PrimaryHDU()
-hdu_evt = fits.BinTableHDU(events.table)
-hdu_gti = fits.BinTableHDU(dataset.gti.table, name="GTI")
-hdu_all = fits.HDUList([primary_hdu, hdu_evt, hdu_gti])
-hdu_all.writeto("./event_sampling/events_0001.fits", overwrite=True)
-
-######################################################################
-# Generate a skymap
-# ~~~~~~~~~~~~~~~~~
-#
-# A skymap of the simulated events can be obtained with:
-#
-
-counts = Map.from_geom(geom)
-counts.fill_events(events)
-counts.sum_over_axes().plot(add_cbar=True)
-plt.show()
-
-######################################################################
-# Fit the simulated data
-# ----------------------
-#
-# We can now check the sake of the event sampling by fitting the data.
-#  We make use of the same
-# `~gammapy.modeling.models.Models` adopted for the simulation. Hence,
-# we firstly read the `~gammapy.datasets.Dataset` and the model file,
-# and we fill the `~gammapy.datasets.Dataset` with the sampled events.
-# We set the `counts` map to the `dataset`:
-#
-
-models_fit = Models.read("./event_sampling/point-pwl.yaml")
-
-dataset.counts = counts
-dataset.models = models_fit
-
-######################################################################
-# Let’s fit the data and look at the results:
-#
-
-# %%time
-fit = Fit()
-result = fit.run(dataset)
-print(result)
-
-######################################################################
-# The results looks great!
-#
+observation.events = events
+observation.write(
+    "./event_sampling/events_0001.fits", include_irfs=False, overwrite=True
+)
 
 ######################################################################
 # Time variable source using a lightcurve
@@ -449,7 +406,7 @@ plt.show()
 #
 # The event sampler can also work with a template model. Here we use the
 # interstellar emission model map of the Fermi 3FHL, which can be found in
-# the GAMMAPY data repository.
+# the `$GAMMAPY_DATA` repository.
 #
 # We proceed following the same steps showed above and we finally have a
 # look at the event’s properties:
@@ -475,7 +432,7 @@ models_diffuse.write(file_model, overwrite=True)
 dataset.models = models_diffuse
 print(dataset.models)
 
-""
+
 # %%time
 sampler = MapDatasetEventSampler(random_state=0)
 events = sampler.run(dataset, observation)
@@ -526,7 +483,7 @@ for idx, tstart in enumerate(tstarts):
 
 ######################################################################
 # You can now load the event list and the corresponding IRFs with
-# `DataStore.from_events_files` :
+# `DataStore.from_events_files`:
 #
 
 path = Path("./event_sampling/")
@@ -549,7 +506,7 @@ plt.show()
 # Exercises
 # ---------
 #
-# -  Try to sample events for an extended source (e.g. a radial gaussian
+# -  Try to sample events for an extended source (e.g. a radial gaussian
 #    morphology);
 # -  Change the spatial model and the spectrum of the simulated Sky model;
 # -  Include a temporal model in the simulation

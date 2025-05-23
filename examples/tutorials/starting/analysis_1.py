@@ -64,7 +64,6 @@ Finally, we will compare the results against a reference model.
 
 """
 
-
 ######################################################################
 # Setup
 # -----
@@ -114,7 +113,7 @@ print(config)
 # datastore and a cone search of observations pointing with 5 degrees of
 # the Crab nebula. Parameters can be set directly or as a python dict.
 #
-# PS: do not forget to setup your environment variable *$GAMMAPY_DATA* to
+# PS: do not forget to setup your environment variable `$GAMMAPY_DATA` to
 # your local directory containing the H.E.S.S. DL3-DR1 as described in
 # :ref:`quickstart-setup`.
 #
@@ -259,7 +258,7 @@ print(analysis.observations.ids)
 
 ######################################################################
 # To see how to explore observations, please refer to the following
-# notebook: :doc:`CTA with Gammapy </tutorials/data/cta>` or :doc:`HESS with
+# notebook: :doc:`CTA with Gammapy </tutorials/data/cta>` or :doc:`H.E.S.S. with
 # Gammapy </tutorials/data/hess>`
 #
 

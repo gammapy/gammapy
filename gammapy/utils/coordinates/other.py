@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Other coordinate and distance-related functions"""
+"""Other coordinate and distance-related functions."""
 import numpy as np
 from astropy.units import Quantity, Unit
 
@@ -51,14 +51,14 @@ def velocity_glon_glat(x, y, z, vx, vy, vz):
     Parameters
     ----------
     x, y, z : `~astropy.units.Quantity`
-        Position in x, y, z direction
+        Position in x, y, z direction.
     vx, vy, vz : `~astropy.units.Quantity`
-        Velocity in x, y, z direction
+        Velocity in x, y, z direction.
 
     Returns
     -------
     v_glon, v_glat : `~astropy.units.Quantity`
-        Projected velocity in Galactic sky coordinates
+        Projected velocity in Galactic sky coordinates.
     """
     y_prime = y + D_SUN_TO_GALACTIC_CENTER
     d = np.sqrt(x**2 + y_prime**2 + z**2)
@@ -73,12 +73,12 @@ def velocity_glon_glat(x, y, z, vx, vy, vz):
 
 def motion_since_birth(v, age, theta, phi):
     """
-    Compute motion of a object with given velocity, direction and age.
+    Compute motion of an astrophysical object with a given velocity, direction and age.
 
     Parameters
     ----------
     v : `~astropy.units.Quantity`
-        Absolute value of the velocity
+        Absolute value of the velocity.
     age : `~astropy.units.Quantity`
         Age of the source.
     theta, phi : `~astropy.units.Quantity`
@@ -87,9 +87,9 @@ def motion_since_birth(v, age, theta, phi):
     Returns
     -------
     dx, dy, dz : `~astropy.units.Quantity`
-        Displacement in x, y, z direction
+        Displacement in x, y, z direction.
     vx, vy, vz : `~astropy.units.Quantity`
-        Velocity in x, y, z direction
+        Velocity in x, y, z direction.
     """
     vx = v * np.cos(phi) * np.sin(theta)
     vy = v * np.sin(phi) * np.sin(theta)

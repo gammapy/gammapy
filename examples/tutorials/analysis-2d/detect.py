@@ -7,9 +7,9 @@ Build a list of significant excesses in a Fermi-LAT map.
 Context
 -------
 
-The first task in a source catalogue production is to identify
+The first task in a source catalog production is to identify
 significant excesses in the data that can be associated to unknown
-sources and provide a preliminary parametrization in term of position,
+sources and provide a preliminary parametrization in terms of position,
 extent, and flux. In this notebook we will use Fermi-LAT data to
 illustrate how to detect candidate sources in counts images with known
 background.
@@ -41,7 +41,6 @@ We will work with the following functions and classes:
 
 """
 
-
 ######################################################################
 # Setup
 # -----
@@ -57,7 +56,7 @@ import matplotlib.pyplot as plt
 from IPython.display import display
 from gammapy.datasets import MapDataset
 from gammapy.estimators import ASmoothMapEstimator, TSMapEstimator
-from gammapy.estimators.utils import find_peaks
+from gammapy.estimators.utils import find_peaks, find_peaks_in_flux_map
 from gammapy.irf import EDispKernelMap, PSFMap
 from gammapy.maps import Map
 from gammapy.modeling.models import PointSpatialModel, PowerLawSpectralModel, SkyModel
@@ -131,7 +130,7 @@ plt.show()
 # TS map estimation
 # -----------------
 #
-# The Test Statistic, TS = 2 ∆ log L (`Mattox et
+# The Test Statistic, :math:`TS = 2 \Delta log L` (`Mattox et
 # al. 1996 <https://ui.adsabs.harvard.edu/abs/1996ApJ...461..396M/abstract>`__),
 # compares the likelihood function L optimized with and without a given
 # source. The TS map is computed by fitting by a single amplitude
@@ -151,23 +150,52 @@ spatial_model = PointSpatialModel()
 spectral_model = PowerLawSpectralModel(amplitude="1e-22 cm-2 s-1 keV-1", index=2)
 model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
 
-# %%time
-estimator = TSMapEstimator(
-    model,
-    kernel_width="1 deg",
-    energy_edges=[10, 500] * u.GeV,
-)
-maps = estimator.run(dataset)
-
 
 ######################################################################
-# Plot resulting images
-# ~~~~~~~~~~~~~~~~~~~~~
+# Here we show a full configuration of the estimator. We remind the user of the meaning
+# of the various quantities:
+#
+# -  ``model``: a `~gammapy.modeling.models.SkyModel` which is converted to a source model kernel
+# -  ``kernel_width``: the width for the above kernel
+# -  ``n_sigma``: number of sigma for the flux error
+# -  ``n_sigma_ul``: the number of sigma for the flux upper limits
+# -  ``selection_optional``: what optional maps to compute
+# -  ``n_jobs``: for running in parallel, the number of processes used for the computation
+# -  ``sum_over_energy_groups``: to sum over the energy groups or fit the `norm` on the full energy cube
+
+
+# %%time
+estimator = TSMapEstimator(
+    model=model,
+    kernel_width="1 deg",
+    energy_edges=[10, 500] * u.GeV,
+    n_sigma=1,
+    n_sigma_ul=2,
+    selection_optional=None,
+    n_jobs=1,
+    sum_over_energy_groups=True,
+)
+
+
+maps = estimator.run(dataset)
+
+######################################################################
+# Accessing and visualising results
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# Below we print the result of the `~gammapy.estimators.TSMapEstimator`. We have access to a number of
+# different quantities, as shown below. We can also access the quantities names
+# through ``map_result.available_quantities``.
+#
+
+print(maps)
+
+######################################################################
 #
 
 fig, (ax1, ax2, ax3) = plt.subplots(
     ncols=3,
-    figsize=(15, 3),
+    figsize=(20, 3),
     subplot_kw={"projection": counts.geom.wcs},
     gridspec_kw={"left": 0.1, "right": 0.98},
 )
@@ -179,6 +207,19 @@ ax2.set_title("Flux map")
 maps["niter"].plot(ax=ax3, add_cbar=True)
 ax3.set_title("Iteration map")
 plt.show()
+
+
+######################################################################
+# The flux in each pixel is obtained by multiplying a reference model with a
+# normalisation factor:
+
+print(maps.reference_model)
+
+######################################################################
+#
+maps.norm.plot(add_cbar=True, stretch="sqrt")
+plt.show()
+
 
 ######################################################################
 # Source candidates
@@ -202,7 +243,7 @@ ax = maps["sqrt_ts"].plot(add_cbar=True)
 ax.scatter(
     sources["ra"],
     sources["dec"],
-    transform=plt.gca().get_transform("icrs"),
+    transform=ax.get_transform("icrs"),
     color="none",
     edgecolor="w",
     marker="o",
@@ -212,6 +253,15 @@ ax.scatter(
 plt.show()
 
 # sphinx_gallery_thumbnail_number = 3
+
+
+######################################################################
+# We can also utilise `~gammapy.estimators.utils.find_peaks_in_flux_map`
+# to display various parameters from the FluxMaps
+
+sources_flux_map = find_peaks_in_flux_map(maps, threshold=5, min_distance="0.25 deg")
+display(sources_flux_map)
+
 
 ######################################################################
 # Note that we used the instrument point-spread-function (PSF) as kernel,

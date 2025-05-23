@@ -12,6 +12,7 @@ TODO: before Gammapy v1.0, discuss what to do about ``gammapy.utils.regions``.
 Options: keep as-is, hide from the docs, or to remove it completely
 (if the functionality is available in ``astropy-regions`` directly.
 """
+
 import operator
 import numpy as np
 from scipy.optimize import Bounds, minimize
@@ -24,7 +25,13 @@ from regions import (
     EllipseSkyRegion,
     RectangleSkyRegion,
     Regions,
+    PolygonSkyRegion,
+    PolygonPixelRegion,
 )
+
+from regions.core.pixcoord import PixCoord
+from regions.core.metadata import RegionMeta, RegionVisual
+from regions._utils.wcs_helpers import pixel_scale_angle_at_skycoord
 
 __all__ = [
     "compound_region_to_regions",
@@ -36,7 +43,7 @@ __all__ = [
 
 
 def compound_region_center(compound_region):
-    """Compute center for a CompoundRegion
+    """Compute center for a CompoundRegion.
 
     The center of the compound region is defined here as the geometric median
     of the individual centers of the regions. The geometric median is defined
@@ -45,12 +52,12 @@ def compound_region_center(compound_region):
     Parameters
     ----------
     compound_region : `CompoundRegion`
-        Compound region
+        Compound region.
 
     Returns
     -------
     center : `~astropy.coordinates.SkyCoord`
-        Geometric median of the positions of the individual regions
+        Geometric median of the positions of the individual regions.
     """
     regions = compound_region_to_regions(compound_region)
 
@@ -60,7 +67,7 @@ def compound_region_center(compound_region):
     positions = SkyCoord([region.center.icrs for region in regions])
 
     def f(x, coords):
-        """Function to minimize"""
+        """Function to minimize."""
         lon, lat = x
         center = SkyCoord(lon * u.deg, lat * u.deg)
         return np.sum(center.separation(coords).deg)
@@ -92,7 +99,7 @@ def compound_region_to_regions(region):
     Parameters
     ----------
     region : `~regions.CompoundSkyRegion` or `~regions.SkyRegion`
-        Compound sky region
+        Compound sky region.
 
     Returns
     -------
@@ -127,7 +134,7 @@ def regions_to_compound_region(regions):
     Returns
     -------
     compound : `~regions.CompoundSkyRegion` or `~regions.CompoundPixelRegion`
-        Compound sky region
+        Compound sky region.
     """
     region_union = regions[0]
 
@@ -135,6 +142,44 @@ def regions_to_compound_region(regions):
         region_union = region_union.union(region)
 
     return region_union
+
+
+def get_centroid(vertices):
+    """Compute centroid of a polygon. Implicitly assumes a flat
+    cartesian projection, will probably break for very large polygons.
+
+    Code comes from:
+    https://stackoverflow.com/questions/75699024/finding-the-centroid-of-a-polygon-in-python
+
+    Parameters
+    ----------
+    vertices : `~astropy.coordinates.SkyCoord`
+        List of vertices.
+
+    Returns
+    -------
+    centroid : `~astropy.coordinates.SkyCoord`
+        Centroid of the polygon.
+    """
+    polygon = []
+    for vertex in vertices:
+        polygon.append((vertex.ra.degree, vertex.dec.degree))
+    polygon = np.array(polygon)
+
+    # Same polygon, but with vertices cycled around. Now the polygon
+    # decomposes into triangles of the form origin-polygon[i]-polygon2[i]
+    polygon2 = np.roll(polygon, -1, axis=0)
+
+    # Compute signed area of each triangle
+    signed_areas = 0.5 * np.cross(polygon, polygon2)
+
+    # Compute centroid of each triangle
+    centroids = (polygon + polygon2) / 3.0
+
+    # Get average of those centroids, weighted by the signed areas.
+    centroid = np.average(centroids, axis=0, weights=signed_areas)
+
+    return SkyCoord(centroid[0] * u.deg, centroid[1] * u.deg, frame=vertices.frame)
 
 
 class SphericalCircleSkyRegion(CircleSkyRegion):
@@ -157,26 +202,129 @@ class SphericalCircleSkyRegion(CircleSkyRegion):
         return separation < self.radius
 
 
+class PolygonPointsSkyRegion(PolygonSkyRegion):
+    """Polygon sky region defined by a list of points."""
+
+    def __init__(self, vertices, meta=None, visual=None):
+        """Create a polygon sky region.
+
+        Parameters
+        ----------
+        vertices : `~astropy.coordinates.SkyCoord`
+            List of vertices.
+        meta : `~regions.RegionMeta`, optional
+            Region meta data.
+        visual : `~regions.RegionVisual`, optional
+            Region visual meta data.
+        """
+        self.vertices = vertices
+        self.meta = meta or RegionMeta()
+        self.center = get_centroid(vertices)
+        self.visual = visual or RegionVisual()
+
+    def to_pixel(self, wcs):
+        """Convert to pixel region."""
+        x, y = wcs.world_to_pixel(self.vertices)
+        center, _, _ = pixel_scale_angle_at_skycoord(self.center, wcs)
+
+        vertices_pix = PixCoord(x, y)
+        return PolygonPointsPixelRegion(
+            vertices_pix,
+            center=center,
+            meta=self.meta.copy(),
+            visual=self.visual.copy(),
+        )
+
+
+class PolygonPointsPixelRegion(PolygonPixelRegion):
+    """Polygon pixel region defined by a list of points."""
+
+    def __init__(self, vertices, center=None, meta=None, visual=None, origin=None):
+        """Create a polygon pixel region.
+
+        Parameters
+        ----------
+        vertices : `~regions.PixCoord`
+            List of vertices.
+        center : `~regions.PixCoord`, optional
+            Center of the region.
+        meta : `~regions.RegionMeta`, optional
+            Region meta data.
+        visual : `~regions.RegionVisual`, optional
+            Region visual meta data.
+        origin : `~regions.PixCoord`, optional
+            Origin of the region. Default is `PixCoord(0, 0)`
+        """
+
+        if origin is None:
+            origin = PixCoord(0, 0)
+
+        self._vertices = vertices
+        self.meta = meta or RegionMeta()
+        self.visual = visual or RegionVisual()
+        self.origin = origin
+        self.vertices = vertices + origin
+        self.center = center
+
+    def to_sky(self, wcs):
+        """Convert to sky region.
+
+        Parameters
+        ----------
+        wcs : `~astropy.wcs.WCS`
+            WCS transformation object.
+
+        """
+        vertices_sky = wcs.pixel_to_world(self.vertices.x, self.vertices.y)
+
+        return PolygonPointsSkyRegion(
+            vertices=vertices_sky, meta=self.meta.copy(), visual=self.visual.copy()
+        )
+
+    def rotate(self, center, angle):
+        """
+        Rotate the region.
+
+        Positive ``angle`` corresponds to counter-clockwise rotation.
+
+        Parameters
+        ----------
+        center : `~regions.PixCoord`
+            The rotation center point.
+        angle : `~astropy.coordinates.Angle`
+            The rotation angle.
+
+        Returns
+        -------
+        region : `PolygonPixelRegion`
+            The rotated region (which is an independent copy).
+        """
+        vertices = self.vertices.rotate(center, angle)
+        center = self.center.rotate(center, angle)
+
+        return self.copy(vertices=vertices, center=center)
+
+
 def make_orthogonal_rectangle_sky_regions(start_pos, end_pos, wcs, height, nbin=1):
-    """Utility returning an array of regions to make orthogonal projections
+    """Utility returning an array of regions to make orthogonal projections.
 
     Parameters
     ----------
     start_pos : `~astropy.regions.SkyCoord`
-        First sky coordinate defining the line to which the orthogonal boxes made
+        First sky coordinate defining the line to which the orthogonal boxes made.
     end_pos : `~astropy.regions.SkyCoord`
-        Second sky coordinate defining the line to which the orthogonal boxes made
+        Second sky coordinate defining the line to which the orthogonal boxes made.
     height : `~astropy.quantity.Quantity`
         Height of the rectangle region.
     wcs : `~astropy.wcs.WCS`
-        WCS projection object
-    nbin : int
-        Number of boxes along the line
+        WCS projection object.
+    nbin : int, optional
+        Number of boxes along the line. Default is 1.
 
     Returns
     -------
     regions : list of `~regions.RectangleSkyRegion`
-        Regions in which the profiles are made
+        Regions in which the profiles are made.
     """
     pix_start = start_pos.to_pixel(wcs)
     pix_stop = end_pos.to_pixel(wcs)
@@ -207,18 +355,18 @@ def make_concentric_annulus_sky_regions(
     Parameters
     ----------
     center : `~astropy.coordinates.SkyCoord`
-        Center coordinate
+        Center coordinate.
     radius_max : `~astropy.units.Quantity`
         Maximum radius.
-    radius_min : `~astropy.units.Quantity`
-        Minimum radius.
-    nbin : int
-        Number of boxes along the line
+    radius_min : `~astropy.units.Quantity`, optional
+        Minimum radius. Default is 1e-5 deg.
+    nbin : int, optional
+        Number of boxes along the line. Default is 11.
 
     Returns
     -------
     regions : list of `~regions.RectangleSkyRegion`
-        Regions in which the profiles are made
+        Regions in which the profiles are made.
     """
     regions = []
 
@@ -236,19 +384,19 @@ def make_concentric_annulus_sky_regions(
 
 
 def region_to_frame(region, frame):
-    """Convert a region to a different frame
+    """Convert a region to a different frame.
 
     Parameters
     ----------
     region : `~regions.SkyRegion`
-        region to transform
-    frame : "icrs" or "galactic"
-        frame to tranform the region into
+        Region to transform.
+    frame : {"icrs", "galactic"}
+        Frame to transform the region into.
 
     Returns
     -------
     region_new : `~regions.SkyRegion`
-        region in the given frame
+        Region in the given frame.
     """
     from gammapy.maps import WcsGeom
 
@@ -258,19 +406,18 @@ def region_to_frame(region, frame):
 
 
 def region_circle_to_ellipse(region):
-    """Convert a CircleSkyRegion to an EllipseSkyRegion
+    """Convert a CircleSkyRegion to an EllipseSkyRegion.
 
     Parameters
     ----------
     region : `~regions.CircleSkyRegion`
-        region to transform
+        Region to transform.
 
     Returns
     -------
     region_new : `~regions.EllipseSkyRegion`
-        Elliptical region with same major and minor axis
+        Elliptical region with same major and minor axis.
     """
-
     region_new = EllipseSkyRegion(
         center=region.center, width=region.radius, height=region.radius
     )

@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
+import re
 import numpy as np
 from astropy.table import Table
 from astropy.time import Time
@@ -89,13 +90,16 @@ class GitHubInfoExtractor:
             "" if not pull_request.milestone else pull_request.milestone.title
         )
         result["is_merged"] = pull_request.is_merged()
-        result["date_creation"] = Time(pull_request.created_at)
-        result["date_closed"] = Time(pull_request.closed_at)
+        creation = pull_request.created_at
+        result["date_creation"] = Time(creation) if creation else None
+        closing = pull_request.closed_at
+        result["date_closed"] = Time(closing) if closing else None
         result["user_name"] = pull_request.user.name
         result["user_login"] = pull_request.user.login
         result["user_email"] = pull_request.user.email
         result["labels"] = [label.name for label in pull_request.labels]
         result["changed_files"] = pull_request.changed_files
+        result["base"] = pull_request.base.ref
 
         # extract commits
         commits = pull_request.get_commits()
@@ -170,11 +174,14 @@ def cli(log_level):
 @click.option("--number_min", default=4000, type=int)
 @click.option("--filename", default="table_pr.ecsv", type=str)
 @click.option("--overwrite", default=False, type=bool)
-def create_pull_request_table(repo, token, state, number_min, filename, overwrite):
+@click.option("--include_backports", default=False, type=bool)
+def create_pull_request_table(
+    repo, token, state, number_min, filename, overwrite, include_backports
+):
     """Extract PR table and write it to dosk."""
     extractor = GitHubInfoExtractor(repo=repo, token=token)
     table = extractor.extract_pull_requests_table(
-        state=state, number_min=number_min, include_backports=False
+        state=state, number_min=number_min, include_backports=include_backports
     )
     table.write(filename, overwrite=overwrite)
 
@@ -182,7 +189,8 @@ def create_pull_request_table(repo, token, state, number_min, filename, overwrit
 @cli.command("merged_PR", help="Make a summary of PRs merged with a given milestone")
 @click.argument("filename", type=str, default="table_pr.ecsv")
 @click.argument("milestones", type=str, nargs=-1)
-def list_merged_PRs(filename, milestones):
+@click.option("--from_backports", default=False, type=bool)
+def list_merged_PRs(filename, milestones, from_backports):
     """Make a list of merged PRs."""
     log.info(
         f"Make list of merged PRs from milestones {milestones} from file {filename}."
@@ -194,8 +202,18 @@ def list_merged_PRs(filename, milestones):
 
     # Keep the requested milestones
     valid = np.zeros((len(table)), dtype="bool")
-    for milestone in milestones:
-        valid = np.logical_or(valid, table["milestone"] == milestone)
+
+    for i, pr in enumerate(table):
+        milestone = milestones[0]
+        if from_backports and "Backport" in pr["title"]:
+            # check that the branch and milestone match
+            if np.all(pr["base"].split(".")[:-1] == milestone.split(".")[:-1]):
+                pattern = r"#(\d+)"
+                parent_pr_number = int(re.search(pattern, pr["title"]).group(1))
+                idx = np.where(table["number"] == parent_pr_number)[0]
+                valid[idx] = True
+        elif pr["milestone"] == milestone:
+            valid[i] = True
 
     # filter the table and print info
     table = table[valid]
@@ -207,8 +225,20 @@ def list_merged_PRs(filename, milestones):
     for name, login in zip(names, logins):
         unique_names.add(name if name else login)
 
+    unique_committers = set()
+    unique_reviewers = set()
+    for pr in table:
+        for committer in pr["unique_committers"]:
+            unique_committers.add(committer)
+        for reviewer in pr["unique_reviewers"]:
+            unique_reviewers.add(reviewer)
+
     contributor_names = list(unique_names)
     log.info(f"Found {len(contributor_names)} contributors in the table.")
+    log.info(f"Found {len(unique_committers)} committers in the table.")
+    log.info(f"namely: {unique_committers}")
+    log.info(f"Found {len(unique_reviewers)} reviewers in the table.")
+    log.info(f"namely: {unique_reviewers}")
 
     result = "Contributors\n"
     result += "~~~~~~~~~~~~\n"

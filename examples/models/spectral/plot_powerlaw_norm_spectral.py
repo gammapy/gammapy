@@ -2,7 +2,7 @@ r"""
 .. _powerlaw-spectral-norm-model:
 
 Power law norm spectral model
-========================
+=============================
 
 This model parametrises a power law spectral correction with a norm and tilt parameter.
 
@@ -18,7 +18,6 @@ import matplotlib.pyplot as plt
 from gammapy.modeling.models import (
     Models,
     PowerLawNormSpectralModel,
-    PowerLawSpectralModel,
     SkyModel,
     TemplateSpectralModel,
 )

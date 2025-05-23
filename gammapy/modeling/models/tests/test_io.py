@@ -25,9 +25,9 @@ from gammapy.modeling.models import (
     SkyModel,
     TemplateNPredModel,
 )
-from gammapy.utils.deprecation import GammapyDeprecationWarning
-from gammapy.utils.scripts import read_yaml, write_yaml
-from gammapy.utils.testing import requires_data
+from gammapy.utils.scripts import make_path, read_yaml, to_yaml, write_yaml
+from gammapy.utils.testing import requires_data, requires_dependency
+import os
 
 
 @pytest.fixture(scope="session")
@@ -109,7 +109,6 @@ def test_dict_to_skymodels(models):
 
 @requires_data()
 def test_sky_models_io(tmpdir, models):
-    # TODO: maybe change to a test case where we create a model programmatically?
     models.covariance = np.eye(len(models.parameters))
     models.write(tmpdir / "tmp.yaml", full_output=True, overwrite_templates=False)
     models = Models.read(tmpdir / "tmp.yaml")
@@ -125,9 +124,35 @@ def test_sky_models_io(tmpdir, models):
 
 
 @requires_data()
+def test_sky_models_checksum(tmpdir, models):
+    import yaml
+
+    models.write(
+        tmpdir / "tmp.yaml", full_output=True, overwrite_templates=False, checksum=True
+    )
+    file = open(tmpdir / "tmp.yaml", "rb")
+    yaml_content = file.read()
+    file.close()
+
+    assert "checksum: " in str(yaml_content)
+
+    data = yaml.safe_load(yaml_content)
+    data["checksum"] = "bad"
+    yaml_str = yaml.dump(
+        data, sort_keys=False, indent=4, width=80, default_flow_style=False
+    )
+    path = make_path(tmpdir) / "bad_checksum.yaml"
+    path.write_text(yaml_str)
+
+    with pytest.warns(UserWarning):
+        Models.read(tmpdir / "bad_checksum.yaml", checksum=True)
+
+
+@requires_data()
 def test_sky_models_io_auto_write(tmp_path, models):
     models_new = models.copy()
-    fsource2 = str(tmp_path / "source2_test.fits")
+    os.chdir(tmp_path)
+    fsource2 = str("source2_test.fits")
     fbkg_iem = str(tmp_path / "cube_iem_test.fits")
     fbkg_irf = str(tmp_path / "background_irf_test.fits")
 
@@ -136,11 +161,12 @@ def test_sky_models_io_auto_write(tmp_path, models):
     models_new["background_irf"].filename = fbkg_irf
     models_new.write(tmp_path / "tmp.yaml", full_output=True)
 
+    os.chdir("..")
     models = Models.read(tmp_path / "tmp.yaml")
     assert models._covar_file == "tmp_covariance.dat"
     assert models["source2"].spatial_model.filename == fsource2
-    assert models["cube_iem"].spatial_model.filename == fbkg_iem
-    assert models["background_irf"].filename == fbkg_irf
+    assert models["cube_iem"].spatial_model.filename == "cube_iem_test.fits"
+    assert models["background_irf"].filename == "background_irf_test.fits"
 
     assert_allclose(
         models_new["source2"].spatial_model.map.data,
@@ -206,8 +232,8 @@ def test_absorption_io_invalid_path(tmp_path):
     model_dict = dominguez.to_dict()
     parnames = [_["name"] for _ in model_dict["spectral"]["parameters"]]
     assert parnames == [
-        "alpha_norm",
         "redshift",
+        "alpha_norm",
     ]
     new_model = EBLAbsorptionNormSpectralModel.from_dict(model_dict)
 
@@ -233,8 +259,8 @@ def test_absorption_io_no_filename(tmp_path):
     model_dict = dominguez.to_dict()
     parnames = [_["name"] for _ in model_dict["spectral"]["parameters"]]
     assert parnames == [
-        "alpha_norm",
         "redshift",
+        "alpha_norm",
     ]
 
     new_model = EBLAbsorptionNormSpectralModel.from_dict(model_dict)
@@ -255,8 +281,8 @@ def test_absorption_io(tmp_path):
     model_dict = dominguez.to_dict()
     parnames = [_["name"] for _ in model_dict["spectral"]["parameters"]]
     assert parnames == [
-        "alpha_norm",
         "redshift",
+        "alpha_norm",
     ]
 
     new_model = EBLAbsorptionNormSpectralModel.from_dict(model_dict)
@@ -282,8 +308,21 @@ def test_absorption_io(tmp_path):
     assert_allclose(new_model.param, model.param)
     assert_allclose(new_model.data, model.data)
 
-    write_yaml(model_dict, tmp_path / "tmp.yaml")
+    write_yaml(to_yaml(model_dict), tmp_path / "tmp.yaml")
     read_yaml(tmp_path / "tmp.yaml")
+
+
+@requires_dependency("naima")
+def test_naima_model():
+    import naima
+
+    particle_distribution = naima.models.PowerLaw(
+        amplitude=2e33 / u.eV, e_0=10 * u.TeV, alpha=2.5
+    )
+    radiative_model = naima.radiative.PionDecay(particle_distribution, nh=1 * u.cm**-3)
+    yield Model.create(
+        "NaimaSpectralModel", "spectral", radiative_model=radiative_model
+    )
 
 
 def make_all_models():
@@ -316,15 +355,12 @@ def make_all_models():
     yield Model.create("PowerLawNormSpectralModel", "spectral")
     yield Model.create("PowerLaw2SpectralModel", "spectral")
     yield Model.create("ExpCutoffPowerLawSpectralModel", "spectral")
-    with pytest.warns(GammapyDeprecationWarning):
-        yield Model.create("ExpCutoffPowerLawNormSpectralModel", "spectral")
+    yield Model.create("ExpCutoffPowerLawNormSpectralModel", "spectral")
     yield Model.create("ExpCutoffPowerLaw3FGLSpectralModel", "spectral")
     yield Model.create("SuperExpCutoffPowerLaw3FGLSpectralModel", "spectral")
     yield Model.create("SuperExpCutoffPowerLaw4FGLDR3SpectralModel", "spectral")
     yield Model.create("SuperExpCutoffPowerLaw4FGLSpectralModel", "spectral")
     yield Model.create("LogParabolaSpectralModel", "spectral")
-    with pytest.warns(GammapyDeprecationWarning):
-        yield Model.create("LogParabolaNormSpectralModel", "spectral")
     yield Model.create(
         "TemplateSpectralModel", "spectral", energy=[1, 2] * u.cm, values=[3, 4] * u.cm
     )  # TODO: add unit validation?
@@ -335,9 +371,16 @@ def make_all_models():
         norms=[3, 4] * u.cm,
     )
     yield Model.create("GaussianSpectralModel", "spectral")
-    # TODO: yield Model.create("EBLAbsorptionNormSpectralModel")
-    # TODO: yield Model.create("NaimaSpectralModel")
-    # TODO: yield Model.create("ScaleSpectralModel")
+    yield Model.create(
+        "EBLAbsorptionNormSpectralModel",
+        "spectral",
+        energy=[0, 1, 2] * u.keV,
+        param=[0, 1],
+        data=np.ones((2, 3)),
+        redshift=0.1,
+        alpha_norm=1.0,
+    )
+    yield Model.create("ScaleSpectralModel", "spectral", model=PowerLawSpectralModel())
     yield Model.create("ConstantTemporalModel", "temporal")
     yield Model.create("LinearTemporalModel", "temporal")
     yield Model.create("PowerLawTemporalModel", "temporal")
@@ -444,7 +487,6 @@ def test_to_dict_not_default():
     assert "error" not in index_dict
     assert "interp" not in index_dict
     assert "scale_method" not in index_dict
-    assert "is_norm" not in index_dict
 
     model_2 = model.from_dict(mdict)
     assert model_2.index.min == model.index.min
@@ -475,11 +517,21 @@ def test_compound_models_io(tmp_path):
     assert_allclose(sk1.covariance.data, sk.covariance.data, rtol=1e-3)
     assert_allclose(np.sum(sk1.covariance.data), 0.0)
     assert Models([sk]).parameters_unique_names == [
-        "model.spectral.index",
-        "model.spectral.amplitude",
-        "model.spectral.reference",
-        "model.spectral.amplitude",
-        "model.spectral.reference",
-        "model.spectral.alpha",
-        "model.spectral.beta",
+        "model.spectral.model1.index",
+        "model.spectral.model1.amplitude",
+        "model.spectral.model1.reference",
+        "model.spectral.model2.amplitude",
+        "model.spectral.model2.reference",
+        "model.spectral.model2.alpha",
+        "model.spectral.model2.beta",
     ]
+
+
+def test_meta_io(caplog, tmp_path):
+    m = PowerLawSpectralModel()
+    sk = SkyModel(spectral_model=m, name="model")
+    Models([sk]).write(tmp_path / "test.yaml")
+
+    sk_dict = read_yaml(tmp_path / "test.yaml")
+    assert "metadata" in sk_dict
+    assert "Gammapy" in sk_dict["metadata"]["creator"]

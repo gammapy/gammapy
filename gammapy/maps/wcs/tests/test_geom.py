@@ -1,13 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
-from numpy.testing import assert_allclose
+from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from astropy.io import fits
+from astropy.time import Time
 from regions import CircleSkyRegion
-from gammapy.maps import Map, MapAxis, WcsGeom
+from gammapy.maps import Map, MapAxis, TimeMapAxis, WcsGeom
 from gammapy.maps.utils import _check_binsz, _check_width
+from gammapy.utils.scripts import make_path
+from gammapy.utils.testing import requires_data
 
 axes1 = [MapAxis(np.logspace(0.0, 3.0, 3), interp="log", name="energy")]
 axes2 = [
@@ -107,6 +110,16 @@ def test_wcsgeom_read_write(tmp_path, npix, binsz, frame, proj, skydir, axes):
     assert geom0.frame == geom1.frame
 
 
+@requires_data()
+def test_wcsgeom_from_header():
+    file_path = make_path("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
+    with fits.open(file_path, memmap=False) as hdulist:
+        geom2 = WcsGeom.from_header(hdulist[1].header, hdulist["COUNTS_BANDS"])
+
+    assert geom2.wcs.naxis == 2
+    assert_equal(geom2.wcs._naxis, (240, 320))
+
+
 def test_wcsgeom_to_hdulist():
     npix, binsz, frame, proj, skydir, axes = wcs_test_geoms[3]
     geom = WcsGeom.create(npix=npix, binsz=binsz, proj=proj, frame=frame, axes=axes)
@@ -198,7 +211,7 @@ def test_wcsgeom_solid_angle():
     solid_angle = geom.solid_angle()
 
     # Check array size
-    assert solid_angle.shape == (2, npix, npix)
+    assert solid_angle.shape == (1, npix, npix)
 
     # Test at b = 0 deg
     assert solid_angle.unit == "sr"
@@ -300,8 +313,18 @@ def test_cutout_min_size():
     geom = WcsGeom.create(skydir=(0, 0), npix=10, binsz=0.5)
     position = SkyCoord(0, 0, unit="deg")
     cutout_geom = geom.cutout(position=position, width=["2 deg", "0.1 deg"])
-
     assert cutout_geom.data_shape == (1, 4)
+
+    cutout_geom = geom.cutout(position=position, width=["2 deg", "0.1 deg"], min_npix=3)
+    assert cutout_geom.data_shape == (3, 4)
+
+    geom = WcsGeom.create(skydir=(0, 0), npix=(10, 1), binsz=0.5)
+    position = SkyCoord(0, 0, unit="deg")
+    cutout_geom = geom.cutout(position=position, width=["1 deg", "0.1 deg"])
+    assert cutout_geom.data_shape == (1, 2)
+
+    cutout_geom = geom.cutout(position=position, width=["1 deg", "0.1 deg"], min_npix=3)
+    assert cutout_geom.data_shape == (1, 3)
 
 
 def test_wcs_geom_get_coord():
@@ -380,12 +403,12 @@ def test_wcs_geom_get_pix_coords():
         assert_allclose(idx[0, 0, 0], desired)
 
 
-def test_geom_repr():
+def test_geom_str():
     geom = WcsGeom.create(
         skydir=(0, 0), npix=(10, 4), binsz=50, frame="galactic", proj="AIT"
     )
 
-    str_info = repr(geom)
+    str_info = str(geom)
     assert geom.__class__.__name__ in str_info
     assert "wcs ref" in str_info
     assert "center" in str_info
@@ -614,6 +637,13 @@ def test_non_equal_binsz():
     assert_allclose(coords["lat"].to_value("deg"), [[-60], [0], [60]])
 
 
+def test_wcs_geom_non_equal_dim():
+    geom = WcsGeom.create(skydir=(0, 0), binsz=1, width=(3, 5))
+
+    assert geom.data_shape == (5, 3)
+    assert geom.data_shape == geom.wcs.array_shape
+
+
 def test_wcs_geom_to_even_npix():
     geom = WcsGeom.create(skydir=(0, 0), binsz=1, width=(3, 3))
 
@@ -630,3 +660,30 @@ def test_wcs_geom_no_zero_shape_cut():
 
     assert geom_cut.data_shape != (1, 0)
     assert geom_cut.data_shape == (1, 1)
+
+
+def test_wcs_geom_with_timeaxis():
+    center = SkyCoord("0d", "0d", frame="icrs")
+
+    t_ref = Time(55555, format="mjd")
+
+    energy_axis = MapAxis.from_energy_bounds(
+        "1 TeV", "10 TeV", nbin=3, name="energy_true"
+    )
+
+    time_min = t_ref + [1, 3, 5, 7] * u.day
+    time_max = t_ref + [2, 4, 6, 8] * u.day
+
+    time_axis = TimeMapAxis.from_time_edges(time_min=time_min, time_max=time_max)
+
+    wcs_geom = WcsGeom.create(
+        width=[1, 1.2], binsz=0.2, skydir=center, axes=[energy_axis, time_axis]
+    )
+
+    coords = wcs_geom.get_coord()
+    assert coords.shape == (4, 3, 6, 5)
+    assert_allclose(
+        coords[0][0][0][0:-1:5].value,
+        [[4.000e-01, 2.000e-01, 0.000e00, 3.598e02, 3.596e02]],
+        rtol=1e-5,
+    )

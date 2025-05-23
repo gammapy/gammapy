@@ -42,20 +42,20 @@ def optimize_scipy(parameters, function, store_trace=False, **kwargs):
 
 
 class TSDifference:
-    """Fit statistic function wrapper to compute TS differences"""
+    """Fit statistic function wrapper to compute TS differences."""
 
     def __init__(self, function, parameters, parameter, reoptimize, ts_diff):
         self.stat_null = function()
         self.parameters = parameters
         self.function = function
         self.parameter = parameter
-        self.parameter.frozen = True
         self.ts_diff = ts_diff
         self.reoptimize = reoptimize
 
     def fcn(self, factor):
         self.parameter.factor = factor
         if self.reoptimize:
+            self.parameter.frozen = True
             optimize_scipy(self.parameters, self.function, method="L-BFGS-B")
         value = self.function() - self.stat_null - self.ts_diff
         return value
@@ -148,12 +148,12 @@ def stat_profile_ul_scipy(
         Array of parameter values.
     stat_scan : `~numpy.ndarray`
         Array of delta fit statistic values, with respect to the minimum.
-    delta_ts : float
-        Difference in test statistics for the upper limit.
-    interp_scale : {"sqrt", "lin"}
+    delta_ts : float, optional
+        Difference in test statistics for the upper limit. Default is 4.
+    interp_scale : {"sqrt", "lin"}, optional
         Interpolation scale applied to the fit statistic profile. If the profile is
         of parabolic shape, a "sqrt" scaling is recommended. In other cases or
-        for fine sampled profiles a "lin" can also be used.
+        for fine sampled profiles a "lin" can also be used. Default is "sqrt".
     **kwargs : dict
         Keyword arguments passed to `~scipy.optimize.brentq`.
 
@@ -162,7 +162,6 @@ def stat_profile_ul_scipy(
     ul : float
         Upper limit value.
     """
-
     interp = interpolate_profile(value_scan, stat_scan, interp_scale=interp_scale)
 
     def f(x):

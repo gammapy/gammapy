@@ -46,7 +46,6 @@ def test_basic(phase_bkg_maker):
 
 @requires_data()
 def test_run_spectrum(observations_cta, phase_bkg_maker):
-
     maker = SpectrumDatasetMaker()
 
     e_reco = MapAxis.from_edges(np.logspace(0, 2, 5) * u.TeV, name="energy")
@@ -71,7 +70,6 @@ def test_run_spectrum(observations_cta, phase_bkg_maker):
 
 @requires_data()
 def test_run_map(observations_cta, phase_bkg_maker):
-
     maker = MapDatasetMaker()
 
     e_reco = MapAxis.from_edges(np.logspace(0, 2, 5) * u.TeV, name="energy")
@@ -99,6 +97,7 @@ def test_run_map(observations_cta, phase_bkg_maker):
         {"p_in": [[0.9, 0.1]], "p_out": [[0.9, 1], [0, 0.1]]},
         {"p_in": [[-0.2, 0.1]], "p_out": [[0.8, 1], [0, 0.1]]},
         {"p_in": [[0.8, 1.2]], "p_out": [[0.8, 1], [0, 0.2]]},
+        {"p_in": [[0.8, 1]], "p_out": [[0.8, 1]]},
         {"p_in": [[0.2, 0.4], [0.8, 0.9]], "p_out": [[0.2, 0.4], [0.8, 0.9]]},
     ],
 )
@@ -106,6 +105,14 @@ def test_check_phase_intervals(pars):
     assert_allclose(
         PhaseBackgroundMaker._check_intervals(pars["p_in"]), pars["p_out"], rtol=1e-5
     )
+
+
+def test_copy_interval():
+    on = (0.8, 1.2)
+    off = [(0.1, 0.3), (0.4, 0.5)]
+    PhaseBackgroundMaker(on_phase=on, off_phase=off)
+    assert on == (0.8, 1.2)
+    assert off == [(0.1, 0.3), (0.4, 0.5)]
 
 
 @requires_data()
@@ -136,7 +143,6 @@ def test_check_phase_intervals(pars):
     ],
 )
 def test_make_counts(phase_bkg_maker, pars, request):
-
     maker = SpectrumDatasetMaker(
         containment_correction=False, selection=["counts", "exposure", "edisp"]
     )

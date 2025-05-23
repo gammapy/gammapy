@@ -27,14 +27,15 @@ In general the flux can be estimated using two methods:
 #. **Based on model fitting:** given a (global) best fit model with multiple model components,
    the flux of the component of interest is re-fitted in the chosen energy, time or spatial
    region. The new flux is given as a ``norm`` with respect to the global reference model.
-   Optionally other component parameters in the global model can be re-optimised. This method
-   is also named **forward folding**.
+   Optionally the free parameters of the other models can be re-optimised
+   (but the other parameters of the source of interest are always kept frozen).
+   This method is also named **forward folding**.
 
 #. **Based on excess:** in the case of having one energy bin, neglecting the PSF and
    not re-optimising other parameters, one can estimate the significance based on the
    analytical solution by [LiMa1983]. In this case the "best fit" flux and significance
    are given by the excess over the null hypothesis. This method is also named
-   **backward folding**. This method is currently only exposed in the `ExcessMapEstimator`
+   **backward folding**. This method is currently only exposed in the `~gammapy.estimators.ExcessMapEstimator`
 
 
 Energy edges
@@ -64,10 +65,11 @@ norm_err          Symmetric error on the norm derived from the Hessian matrix. G
 stat              Fit statistics value of the best fit hypothesis
 stat_null         Fit statistics value of the null hypothesis
 ts                Difference in fit statistics (`stat - stat_null` )
-sqrt_ts           Square root of ts time sign(norm), in case of one degree of freedom, corresponds to significance (Wilk's theorem)
+sqrt_ts           Square root of ts time sign(norm), in case of one degree of freedom (n_dof), corresponds to significance (Wilk's theorem)
 npred             Predicted counts of the best fit hypothesis. Equivalent to correlated counts for backward folding
 npred_excess      Predicted excess counts of the best fit hypothesis. Equivalent to correlated excess for backward folding
 npred_background  Predicted background counts of the best fit hypothesis. Equivalent to correlated excess for backward folding
+n_dof             Number of degrees of freedom. If not explicitly present, assumed to be one
 ================= =================================================
 
 In addition, the following optional quantities can be computed:
@@ -78,13 +80,18 @@ Quantity          Definition
 norm_errp         Positive error of the norm, given as absolute difference to the best fit norm
 norm_errn         Negative error of the norm, given as absolute difference to the best fit norm
 norm_ul           Upper limit of the norm
-norm_scan         Norm scan
-stat_scan         Fit statistics scan
+norm_scan         Norm parameter values used for the fit statistic scan
+stat_scan         Fit statistics values associated with norm_scan
 ================= =================================================
 
 To compute the error, asymmetric errors as well as upper limits one can
 specify the arguments ``n_sigma`` and ``n_sigma_ul``. The ``n_sigma``
 arguments are translated into a TS difference assuming ``ts = n_sigma ** 2``.
+
+.. _sedtypes:
+
+SED types
+^^^^^^^^^
 
 In addition to the norm values a reference spectral model and energy ranges
 are given. Using this reference spectral model the norm values can be converted
@@ -105,7 +112,7 @@ e2dnde            Differential energy flux at ``e_ref``
 The same can be applied for the error and upper limit information.
 More information can be found on the `likelihood SED type page`_.
 
-The `FluxPoints` and `FluxMaps` objects can optionally define meta
+The `~gammapy.estimators.FluxPoints` and `~gammapy.estimators.FluxMaps` objects can optionally define meta
 data with the following valid keywords:
 
 ================= =================================================
@@ -134,7 +141,7 @@ A note on negative flux and upper limit values:
 Flux maps
 ---------
 
-This how to compute flux maps with the `ExcessMapEstimator`:
+This how to compute flux maps with the `~gammapy.estimators.ExcessMapEstimator`:
 
 .. testcode::
 
@@ -158,9 +165,9 @@ This how to compute flux maps with the `ExcessMapEstimator`:
     <BLANKLINE>
         geom  : WcsGeom
         axes  : ['lon', 'lat', 'energy']
-        shape : (320, 240, 2)
+        shape : (np.int64(320), np.int64(240), 2)
         ndim  : 3
-        unit  : 1 / (cm2 s)
+        unit  : 1 / (s cm2)
         dtype : float64
     <BLANKLINE>
 
@@ -204,11 +211,22 @@ This is how to compute flux points:
 Using gammapy.estimators
 ------------------------
 
-.. minigallery:: gammapy.estimators.FluxPointsEstimator
-    :add-heading:
+.. minigallery::
 
-.. minigallery:: gammapy.estimators.LightCurveEstimator
-    :add-heading:
+    ../examples/tutorials/api/estimators.py
+
+.. minigallery::
+    :add-heading: Examples using `~gammapy.estimators.FluxPointsEstimator`
+
+    ../examples/tutorials/analysis-1d/spectral_analysis.py
+    ../examples/tutorials/analysis-3d/analysis_mwl.py
+
+.. minigallery::
+    :add-heading: Examples using `~gammapy.estimators.LightCurveEstimator`
+
+    ../examples/tutorials/analysis-time/light_curve.py
+    ../examples/tutorials/analysis-time/light_curve_flare.py
+
 
 
 .. _`likelihood SED type page`: https://gamma-astro-data-formats.readthedocs.io/en/latest/spectra/binned_likelihoods/index.html

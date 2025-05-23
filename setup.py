@@ -3,11 +3,7 @@
 
 # NOTE: The configuration for the package, including the name, version, and
 # other information are set in the setup.cfg file.
-
-import os
 import sys
-from extension_helpers import get_extensions
-from setuptools import setup
 
 # First provide helpful messages if contributors try and run legacy commands
 # for tests or docs.
@@ -62,21 +58,31 @@ if "build_docs" in sys.argv or "build_sphinx" in sys.argv:
     print(DOCS_HELP)
     sys.exit(1)
 
-VERSION_TEMPLATE = """
-# Note that we need to fall back to the hard-coded version if either
-# setuptools_scm can't be imported or setuptools_scm can't determine the
-# version, so we catch the generic 'Exception'.
-try:
-    from setuptools_scm import get_version
-    version = get_version(root='..', relative_to=__file__)
-except Exception:
-    version = '{version}'
-""".lstrip()
+
+# imports here so that people get the nice error messages above without needing
+# build dependencies
+import numpy as np  # noqa: E402
+from Cython.Build import cythonize  # noqa: E402
+from setuptools import Extension, setup  # noqa: E402
+
+kwargs = dict(
+    include_dirs=[np.get_include()],
+    define_macros=[
+        # fixes a warning when compiling
+        ("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION"),
+        # defines the oldest numpy we want to be compatible with
+        ("NPY_TARGET_VERSION", "NPY_1_21_API_VERSION"),
+    ],
+)
+
+extensions = [
+    Extension(
+        "gammapy.stats.fit_statistics_cython",
+        sources=["gammapy/stats/fit_statistics_cython.pyx"],
+        **kwargs,
+    ),
+]
 
 setup(
-    use_scm_version={
-        "write_to": os.path.join("gammapy", "version.py"),
-        "write_to_template": VERSION_TEMPLATE,
-    },
-    ext_modules=get_extensions(),
+    ext_modules=cythonize(extensions),
 )

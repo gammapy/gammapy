@@ -6,6 +6,8 @@ from astropy import units as u
 from astropy.table import Table
 import gammapy.utils.parallel as parallel
 from gammapy.datasets import Datasets
+from gammapy.datasets.actors import DatasetsActor
+from gammapy.datasets.flux_points import _get_reference_model
 from gammapy.maps import MapAxis
 from gammapy.modeling import Fit
 from ..flux import FluxEstimator
@@ -25,58 +27,64 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
     fitted within the energy range defined by the energy group. This is done for
     each group independently. The amplitude is re-normalized using the "norm" parameter,
     which specifies the deviation of the flux from the reference model in this
-    energy group. See https://gamma-astro-data-formats.readthedocs.io/en/latest/spectra/binned_likelihoods/index.html  # noqa: E501
+    energy group. See https://gamma-astro-data-formats.readthedocs.io/en/latest/spectra/binned_likelihoods/index.html
     for details.
 
-    The method is also described in the Fermi-LAT catalog paper
-    https://ui.adsabs.harvard.edu/abs/2015ApJS..218...23A
-    or the HESS Galactic Plane Survey paper
-    https://ui.adsabs.harvard.edu/abs/2018A%26A...612A...1H
+    The method is also described in the `Fermi-LAT catalog paper <https://ui.adsabs.harvard.edu/abs/2015ApJS..218...23A>`__
+    or the `H.E.S.S. Galactic Plane Survey paper <https://ui.adsabs.harvard.edu/abs/2018A%26A...612A...1H>`__
 
     Parameters
     ----------
     source : str or int
         For which source in the model to compute the flux points.
-    norm_min : float
-        Minimum value for the norm used for the fit statistic profile evaluation.
-    norm_max : float
-        Maximum value for the norm used for the fit statistic profile evaluation.
-    norm_n_values : int
-        Number of norm values used for the fit statistic profile.
-    norm_values : `numpy.ndarray`
-        Array of norm values to be used for the fit statistic profile.
-    n_sigma : int
+    n_sigma : int, optional
         Number of sigma to use for asymmetric error computation. Default is 1.
-    n_sigma_ul : int
+    n_sigma_ul : int, optional
         Number of sigma to use for upper limit computation. Default is 2.
-    selection_optional : list of str
+    n_sigma_sensitivity : int, optional
+        Sigma to use for sensitivity computation. Default is 5.
+    selection_optional : list of str, optional
         Which additional quantities to estimate. Available options are:
 
-            * "all": all the optional steps are executed
+            * "all": all the optional steps are executed.
             * "errn-errp": estimate asymmetric errors on flux.
             * "ul": estimate upper limits.
             * "scan": estimate fit statistic profiles.
+            * "sensitivity": estimate sensitivity for a given significance.
 
         Default is None so the optional steps are not executed.
-    energy_edges : list of `~astropy.units.Quantity`
+    energy_edges : list of `~astropy.units.Quantity`, optional
         Edges of the flux points energy bins. The resulting bin edges won't be exactly equal to the input ones,
         but rather the closest values to the energy axis edges of the parent dataset.
-        Default is None: apply the estimator in each energy bin of the parent dataset.
-        For further explanation see :ref:`estimators`.
-    fit : `Fit`
-        Fit instance specifying the backend and fit options.
-    reoptimize : bool
-        Re-optimize other free model parameters. Default is False.
-        If True the available free parameters are fitted together with the norm of the source of interest in each bin independently, otherwise they are frozen at their current value.
-    sum_over_energy_groups : bool
-        Whether to sum over the energy groups or fit the norm on the full energy
-        grid.
-    n_jobs : int
-        Number of processes used in parallel for the computation. Default is one, unless
-        `~gammapy.utils.parallel.N_JOBS_DEFAULT` was modified. The number of jobs is
-        limited to the number of physical CPUs.
-    parallel_backend : {"multiprocessing", "ray"}
-        Which backend to use for multiprocessing.
+        Default is [1, 10] TeV.
+    fit : `Fit`, optional
+        Fit instance specifying the backend and fit options. If None, the `~gammapy.modeling.Fit` instance is created
+        internally. Default is None.
+    reoptimize : bool, optional
+        If True, the free parameters of the other models are fitted in each bin independently,
+        together with the norm of the source of interest
+        (but the other parameters of the source of interest are kept frozen).
+        If False, only the norm of the source of interest is fitted,
+        and all other parameters are frozen at their current values.
+        Default is False.
+    sum_over_energy_groups : bool, optional
+        Whether to sum over the energy groups or fit the norm on the full energy grid. Default is None.
+    n_jobs : int, optional
+        Number of processes used in parallel for the computation. The number of jobs is limited to the number of
+        physical CPUs. If None, defaults to `~gammapy.utils.parallel.N_JOBS_DEFAULT`.
+        Default is None.
+    parallel_backend : {"multiprocessing", "ray"}, optional
+        Which backend to use for multiprocessing. If None, defaults to `~gammapy.utils.parallel.BACKEND_DEFAULT`.
+    norm : `~gammapy.modeling.Parameter` or dict, optional
+        Norm parameter used for the fit.
+        Default is None and a new parameter is created automatically, with value=1, name="norm",
+        scan_min=0.2, scan_max=5, and scan_n_values = 11. By default, the min and max are not set
+        (consider setting them if errors or upper limits computation fails). If a dict is given,
+        the entries should be a subset of `~gammapy.modeling.Parameter` arguments.
+
+    Notes
+    -----
+    For further explanation, see :ref:`estimators`.
     """
 
     tag = "FluxPointsEstimator"
@@ -104,27 +112,28 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
         Parameters
         ----------
         datasets : `~gammapy.datasets.Datasets`
-            Datasets
+            Datasets.
 
         Returns
         -------
         flux_points : `FluxPoints`
             Estimated flux points.
         """
-        datasets = Datasets(datasets=datasets)
+        if not isinstance(datasets, DatasetsActor):
+            datasets = Datasets(datasets=datasets)
 
         if not datasets.energy_axes_are_aligned:
             raise ValueError("All datasets must have aligned energy axes.")
 
-        if "TELESCOP" in datasets.meta_table.colnames:
-            telescopes = datasets.meta_table["TELESCOP"]
-            if not len(np.unique(telescopes)) == 1:
-                raise ValueError(
-                    "All datasets must use the same value of the"
-                    " 'TELESCOP' meta keyword."
-                )
-
-        rows = []
+        telescopes = []
+        for d in datasets:
+            if d.meta_table is not None and "TELESCOP" in d.meta_table.colnames:
+                telescopes.extend(list(d.meta_table["TELESCOP"].flatten()))
+        if len(np.unique(telescopes)) > 1:
+            raise ValueError(
+                "All datasets must use the same value of the"
+                " 'TELESCOP' meta keyword."
+            )
 
         meta = {
             "n_sigma": self.n_sigma,
@@ -145,7 +154,7 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
         )
 
         table = Table(rows, meta=meta)
-        model = datasets.models[self.source]
+        model = _get_reference_model(datasets.models[self.source], self.energy_edges)
         return FluxPoints.from_table(
             table=table,
             reference_model=model.copy(),
@@ -158,34 +167,43 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
 
         Parameters
         ----------
-        datasets : `Datasets`
-            Datasets
+        datasets : `~gammapy.datasets.Datasets`
+            Datasets.
         energy_min, energy_max : `~astropy.units.Quantity`
             Energy bounds to compute the flux point for.
 
         Returns
         -------
         result : dict
-            Dict with results for the flux point.
+            Dictionary with results for the flux point.
         """
         datasets_sliced = datasets.slice_by_energy(
             energy_min=energy_min, energy_max=energy_max
         )
         if self.sum_over_energy_groups:
-            datasets_sliced = Datasets(
+            datasets_sliced = datasets_sliced.__class__(
                 [_.to_image(name=_.name) for _ in datasets_sliced]
             )
 
         if len(datasets_sliced) > 0:
-            datasets_sliced.models = datasets.models.copy()
+            if datasets.models is not None:
+                models_sliced = datasets.models._slice_by_energy(
+                    energy_min=energy_min,
+                    energy_max=energy_max,
+                    sum_over_energy_groups=self.sum_over_energy_groups,
+                )
+                datasets_sliced.models = models_sliced
+
             return super().run(datasets=datasets_sliced)
         else:
             log.warning(f"No dataset contribute in range {energy_min}-{energy_max}")
-            model = datasets.models[self.source].spectral_model
+            model = _get_reference_model(
+                datasets.models[self.source], self.energy_edges
+            )
             return self._nan_result(datasets, model, energy_min, energy_max)
 
     def _nan_result(self, datasets, model, energy_min, energy_max):
-        """NaN result"""
+        """NaN result."""
         energy_axis = MapAxis.from_energy_edges([energy_min, energy_max])
 
         with np.errstate(invalid="ignore", divide="ignore"):
@@ -214,8 +232,10 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
             result.update({"norm_ul": np.nan})
 
         if "scan" in self.selection_optional:
-            norm = super()._set_norm_parameter()
-            norm_scan = norm.scan_values
+            norm_scan = self.norm.copy().scan_values
             result.update({"norm_scan": norm_scan, "stat_scan": np.nan * norm_scan})
+
+        if "sensitivity" in self.selection_optional:
+            result.update({"norm_sensitivity": np.nan})
 
         return result

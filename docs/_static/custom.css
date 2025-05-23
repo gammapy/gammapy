@@ -1,0 +1,55 @@
+/* Define the gammapy colors */
+:root {
+  --gammapy-primary: rgb(224, 10, 52);
+  --gammapy-secondary: #1e254a;
+  --gammapy-lightgray: #f2f2f2;
+}
+
+/* Set theme of the download button */
+.sphx-glr-download a {
+background-color: #d9edf7 !important;
+border: 1px solid #bce8f1 !important;
+background-image: none !important;
+}
+
+.sphx-glr-download a:hover {
+background-color: #d9edf7 !important;
+}
+
+
+/* Typography */
+body,
+p {
+  color: var(--gammapy-secondary);
+  font-family: "Fira Sans", sans-serif;
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 400;
+  --sd-color-secondary: var(--gammapy-secondary);
+  --sd-color-secondary-highlight: #666;
+  --pst-color-secondary: var(--gammapy-secondary);
+}
+
+/* Dark Theme */
+[data-theme="dark"] {
+    --gammapy-secondary: #ffffff;
+    --sd-color-secondary: var(--gammapy-secondary);
+    --sd-color-secondary-highlight: var(--gammapy-lightgray);
+    --pst-color-secondary: var(--gammapy-secondary);
+    color: var(--gammapy-lightgray);
+}
+[data-theme="dark"] body,
+[data-theme="dark"] p {
+    color: var(--gammapy-secondary);
+}
+[data-theme="dark"] .logo img {
+    display: none;
+}
+[data-theme="dark"] .logo {
+    background-image: url("gammapy_logo_nav.png");
+    background-size: contain;
+    background-repeat: no-repeat;
+    width: 200px;
+    height: 50px;
+}
+

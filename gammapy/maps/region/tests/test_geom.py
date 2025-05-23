@@ -281,12 +281,12 @@ def test_downsample(region):
     assert_allclose(geom_down.axes[0].edges.value, [1.0, 10.0], rtol=1e-5)
 
 
-def test_repr(region):
+def test_str(region):
     axis = MapAxis.from_edges([1, 3.162278, 10] * u.TeV, name="energy", interp="log")
     geom = RegionGeom.create(region, axes=[axis])
 
-    assert "RegionGeom" in repr(geom)
-    assert "CircleSkyRegion" in repr(geom)
+    assert "RegionGeom" in str(geom)
+    assert "CircleSkyRegion" in str(geom)
 
 
 def test_eq(region):

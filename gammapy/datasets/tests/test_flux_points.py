@@ -95,7 +95,6 @@ def test_flux_point_dataset_str(dataset):
 
 @requires_data()
 def test_flux_point_dataset_flux_pred(dataset):
-
     assert_allclose(dataset.flux_pred()[0].value, 0.00022766, rtol=1e-2)
     dataset.models[0].temporal_model = ExpDecayTemporalModel(
         t0=5.0 * u.hr, t_ref=51543.5 * u.d
@@ -103,7 +102,20 @@ def test_flux_point_dataset_flux_pred(dataset):
     assert_allclose(dataset.flux_pred()[0].value, 0.000472, rtol=1e-3)
 
 
-def test_flux_point_dataset_creation():
+@requires_data()
+def test_flux_point_dataset_stat(dataset):
+    dataset.stat_type = "chi2"
+    fit = Fit()
+    fit.run([dataset])
+    assert_allclose(dataset.stat_sum(), 25.205933, rtol=1e-3)
+
+    dataset.stat_type = "distrib"
+    fit = Fit()
+    fit.run([dataset])
+    assert_allclose(dataset.stat_sum(), 36.153428, rtol=1e-3)
+
+
+def test_flux_point_dataset_with_time_axis(tmp_path):
     meta = dict(TIMESYS="utc", SED_TYPE="flux")
 
     table = Table(
@@ -119,10 +131,48 @@ def test_flux_point_dataset_creation():
             Column([[False, False], [True, True]], "is_ul"),
         ],
     )
+    flux_points = FluxPoints.from_table(table=table)
+    flux_points_dataset = FluxPointsDataset(data=flux_points)
+    temporal_model = ExpDecayTemporalModel()
+    temporal_model.t_ref.value = Time(["2010-01-01"]).mjd[0]
+    temporal_model.t0.quantity = 5.0 * u.hr
+    model = SkyModel(
+        spectral_model=PowerLawSpectralModel(), temporal_model=temporal_model
+    )
+    flux_points_dataset.models = model
+    assert flux_points_dataset.flux_pred().shape == (2, 2, 1, 1)
+    assert flux_points_dataset.mask.shape == (2, 2, 1, 1)
+    assert_allclose(
+        flux_points_dataset.flux_pred()[0].value,
+        [[[5.21782717e-14]], [[1.30445679e-14]]],
+        rtol=1e-3,
+    )
+    assert_allclose(flux_points_dataset.stat_sum(), 193.8093, rtol=1e-3)
+    assert_allclose(
+        flux_points_dataset.residuals()[0][0].value, 9.94782173e-12, rtol=1e-5
+    )
+    Datasets([flux_points_dataset]).write(
+        filename=tmp_path / "tmp_datasets.yaml",
+        filename_models=tmp_path / "tmp_models.yaml",
+    )
 
-    flux_points = FluxPoints.from_table(table=table, format="lightcurve")
+    datasets = Datasets.read(
+        filename=tmp_path / "tmp_datasets.yaml",
+        filename_models=tmp_path / "tmp_models.yaml",
+    )
+
+    new_dataset = datasets[0]
+    assert_allclose(new_dataset.data.dnde, flux_points_dataset.data.dnde, 1e-4)
+
+    with mpl_plot_check():
+        flux_points_dataset.plot_spectrum(axis_name="time")
     with pytest.raises(ValueError):
-        FluxPointsDataset(data=flux_points)
+        flux_points_dataset.plot_fit()
+    with pytest.raises(ValueError):
+        flux_points_dataset.plot_residuals()
+
+    flux_points_dataset.stat_type = "distrib"
+    assert_allclose(flux_points_dataset.stat_sum(), 193.8093, rtol=1e-3)
 
 
 @requires_data()
@@ -193,6 +243,5 @@ class TestFluxPointFit:
 
     @staticmethod
     def test_fp_dataset_plot_fit(dataset):
-
         with mpl_plot_check():
             dataset.plot_fit(kwargs_residuals=dict(method="diff/model"))

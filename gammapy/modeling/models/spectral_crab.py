@@ -2,6 +2,7 @@
 import numpy as np
 from astropy import units as u
 from gammapy.modeling import Parameter
+from gammapy.utils.compat import COPY_IF_NEEDED
 from .spectral import (
     ExpCutoffPowerLawSpectralModel,
     LogParabolaSpectralModel,
@@ -21,15 +22,16 @@ class MeyerCrabSpectralModel(SpectralModel):
     Reference: https://ui.adsabs.harvard.edu/abs/2010A%26A...523A...2M, Appendix D
     """
 
-    norm = Parameter("norm", value=1, frozen=True, is_norm=True)
+    norm = Parameter("norm", value=1, frozen=True)
     coefficients = [-0.00449161, 0, 0.0473174, -0.179475, -0.53616, -10.2708]
 
     @staticmethod
     def evaluate(energy, norm):
+        """Evaluate the model."""
         polynomial = np.poly1d(MeyerCrabSpectralModel.coefficients)
         log_energy = np.log10(energy.to_value("TeV"))
         log_flux = polynomial(log_energy)
-        flux = u.Quantity(np.power(10, log_flux), "erg / (cm2 s)", copy=False)
+        flux = u.Quantity(np.power(10, log_flux), "erg / (cm2 s)", copy=COPY_IF_NEEDED)
         return norm * flux / energy**2
 
 
@@ -48,26 +50,26 @@ def create_crab_spectral_model(reference="meyer"):
 
     Parameters
     ----------
-    reference : {'meyer', 'hegra', 'hess_pl', 'hess_ecpl', 'magic_lp', 'magic_ecpl'}
-        Which reference to use for the spectral model.
+    reference : {'meyer', 'hegra', 'hess_pl', 'hess_ecpl', 'magic_lp', 'magic_ecpl'}, optional
+        Which reference to use for the spectral model. Default is 'meyer'.
 
     Examples
     --------
     Let's first import what we need::
 
-        import astropy.units as u
-        from gammapy.modeling.models import PowerLaw, create_crab_spectral_model
+        >>> import astropy.units as u
+        >>> from gammapy.modeling.models import PowerLawSpectralModel, create_crab_spectral_model
 
     Plot the 'hess_ecpl' reference Crab spectrum between 1 TeV and 100 TeV::
 
-        crab_hess_ecpl = create_crab_spectral_model('hess_ecpl')
-        crab_hess_ecpl.plot([1, 100] * u.TeV)
+        >>> crab_hess_ecpl = create_crab_spectral_model('hess_ecpl')
+        >>> crab_hess_ecpl.plot([1, 100] * u.TeV)  #doctest: +SKIP
 
     Use a reference crab spectrum as unit to measure a differential flux (at 10 TeV)::
 
         >>> pwl = PowerLawSpectralModel(
-                index=2.3, amplitude=1e-12 * u.Unit('1 / (cm2 s TeV)'), reference=1 * u.TeV
-            )
+        ...        index=2.3, amplitude=1e-12 * u.Unit('1 / (cm2 s TeV)'), reference=1 * u.TeV
+        ...    )
         >>> crab = create_crab_spectral_model('hess_pl')
         >>> energy = 10 * u.TeV
         >>> dnde_cu = (pwl(energy) / crab(energy)).to('%')

@@ -1,11 +1,23 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
+from numpy.testing import assert_allclose
 from astropy.io import fits
 from astropy.table import Column, Table
+from gammapy.utils.fits import earth_location_from_dict, earth_location_to_dict
+from gammapy.utils.scripts import make_path
+from gammapy.utils.testing import requires_data
 
 
-# Need to move to conftest or can import?
+@pytest.fixture()
+def header():
+    filename = make_path(
+        "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_023523.fits.gz"
+    )
+    hdulist = fits.open(filename)
+    return hdulist["EVENTS"].header
+
+
 @pytest.fixture()
 def table():
     t = Table(meta={"version": 42})
@@ -42,3 +54,22 @@ def test_table_fits_io_astropy(table):
     assert table2["b"].unit == "m"
     # Note: description doesn't come back in older versions of Astropy
     # that we still support, so we're not asserting on that here for now.
+
+
+@requires_data()
+def test_earth_location_from_dict(header):
+    location = earth_location_from_dict(header)
+
+    assert_allclose(location.lon.value, 16.50022, rtol=1e-4)
+    assert_allclose(location.lat.value, -23.271777, rtol=1e-4)
+    assert_allclose(location.height.value, 1834.999999, rtol=1e-4)
+
+
+@requires_data()
+def test_earth_location_to_dict(header):
+    location = earth_location_from_dict(header)
+    loc_dict = earth_location_to_dict(location)
+
+    assert_allclose(loc_dict["GEOLON"], 16.50022, rtol=1e-4)
+    assert_allclose(loc_dict["GEOLAT"], -23.271777, rtol=1e-4)
+    assert_allclose(loc_dict["ALTITUDE"], 1834.999999, rtol=1e-4)

@@ -1,22 +1,28 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Utils to create scripts and command-line tools"""
+"""Utilities to create scripts and command-line tools."""
+
 import codecs
 import os.path
+import warnings
 from base64 import urlsafe_b64encode
 from pathlib import Path
 from uuid import uuid4
 import yaml
+from gammapy.utils.check import add_checksum, verify_checksum
 
 __all__ = [
+    "from_yaml",
     "get_images_paths",
     "make_path",
     "read_yaml",
     "recursive_merge_dicts",
+    "to_yaml",
     "write_yaml",
 ]
 
 PATH_DOCS = Path(__file__).resolve().parent / ".." / ".." / "docs"
 SKIP = ["_static", "_build", "_checkpoints", "docs/user-guide/model-gallery/"]
+YAML_FORMAT = dict(sort_keys=False, indent=4, width=80, default_flow_style=False)
 
 
 def get_images_paths(folder=PATH_DOCS):
@@ -25,61 +31,122 @@ def get_images_paths(folder=PATH_DOCS):
     Parameters
     ----------
     folder : str
-        Folder where to search
+        Folder where to search.
     """
     for i in Path(folder).rglob("images/*"):
         if not any(s in str(i) for s in SKIP):
             yield i.resolve()
 
 
-def read_yaml(filename, logger=None):
+def from_yaml(text, sort_keys=False, checksum=False):
+    """Read YAML file.
+
+    Parameters
+    ----------
+    text : str
+        yaml str
+    sort_keys : bool, optional
+        Whether to sort keys. Default is False.
+    checksum : bool
+        Whether to perform checksum verification. Default is False.
+
+    Returns
+    -------
+    data : dict
+        YAML file content as a dictionary.
+
+    """
+    data = yaml.safe_load(text)
+    checksum_str = data.pop("checksum", None)
+    if checksum:
+        yaml_format = YAML_FORMAT.copy()
+        yaml_format["sort_keys"] = sort_keys
+        yaml_str = yaml.dump(data, **yaml_format)
+        if not verify_checksum(yaml_str, checksum_str):
+            warnings.warn("Checksum verification failed.", UserWarning)
+
+    return data
+
+
+def read_yaml(filename, logger=None, checksum=False):
     """Read YAML file.
 
     Parameters
     ----------
     filename : `~pathlib.Path`
-        Filename
+        Filename.
     logger : `~logging.Logger`
-        Logger
+        Logger.
+    checksum : bool
+        Whether to perform checksum verification. Default is False.
 
     Returns
     -------
     data : dict
-        YAML file content as a dict
+        YAML file content as a dictionary.
     """
     path = make_path(filename)
     if logger is not None:
         logger.info(f"Reading {path}")
 
     text = path.read_text()
-    return yaml.safe_load(text)
+    return from_yaml(text, checksum=checksum)
 
 
-def write_yaml(dictionary, filename, logger=None, sort_keys=True):
-    """Write YAML file.
+def to_yaml(dictionary, sort_keys=False):
+    """dict to yaml
 
     Parameters
     ----------
     dictionary : dict
-        Python dictionary
-    filename : `~pathlib.Path`
-        Filename
-    logger : `~logging.Logger`
-        Logger
-    sort_keys : bool
-        Whether to sort keys.
+        Python dictionary.
+    sort_keys : bool, optional
+        Whether to sort keys. Default is False.
     """
-    text = yaml.safe_dump(dictionary, default_flow_style=False, sort_keys=sort_keys)
+    from gammapy.utils.metadata import CreatorMetaData
+
+    yaml_format = YAML_FORMAT.copy()
+    yaml_format["sort_keys"] = sort_keys
+    text = yaml.safe_dump(dictionary, **yaml_format)
+    creation = CreatorMetaData()
+    return text + creation.to_yaml()
+
+
+def write_yaml(
+    text, filename, logger=None, sort_keys=False, checksum=False, overwrite=False
+):
+    """Write YAML file.
+
+    Parameters
+    ----------
+    text : str
+        yaml str
+    filename : `~pathlib.Path`
+        Filename.
+    logger : `~logging.Logger`, optional
+        Logger. Default is None.
+    sort_keys : bool, optional
+        Whether to sort keys. Default is True.
+    checksum : bool, optional
+        Whether to add checksum keyword. Default is False.
+    overwrite : bool, optional
+        Overwrite existing file. Default is False.
+    """
+
+    if checksum:
+        text = add_checksum(text, sort_keys=sort_keys)
 
     path = make_path(filename)
     path.parent.mkdir(exist_ok=True)
+    if path.exists() and not overwrite:
+        raise IOError(f"File exists already: {path}")
     if logger is not None:
         logger.info(f"Writing {path}")
     path.write_text(text)
 
 
 def make_name(name=None):
-    """Make a dataset name"""
+    """Make a dataset name."""
     if name is None:
         name = urlsafe_b64encode(codecs.decode(uuid4().hex, "hex")).decode()[:8]
         while name[0] == "_":
@@ -100,7 +167,7 @@ def make_path(path):
     Parameters
     ----------
     path : str, `pathlib.Path`
-        path to expand
+        Path to expand.
     """
     # TODO: raise error or warning if environment variables that don't resolve are used
     # e.g. "spam/$DAMN/ham" where `$DAMN` is not defined
@@ -114,21 +181,21 @@ def make_path(path):
 def recursive_merge_dicts(a, b):
     """Recursively merge two dictionaries.
 
-    Entries in b override entries in a. The built-in update function cannot be
+    Entries in 'b' override entries in 'a'. The built-in update function cannot be
     used for hierarchical dicts, see:
     http://stackoverflow.com/questions/3232943/update-value-of-a-nested-dictionary-of-varying-depth/3233356#3233356
 
     Parameters
     ----------
     a : dict
-        dictionary to be merged
+        Dictionary to be merged.
     b : dict
-        dictionary to be merged
+        Dictionary to be merged.
 
     Returns
     -------
     c : dict
-        merged dict
+        Merged dictionary.
 
     Examples
     --------

@@ -37,22 +37,26 @@ def optimize_sherpa(parameters, function, store_trace=False, **kwargs):
     parameters : `~gammapy.modeling.Parameters`
         Parameter list with starting values.
     function : callable
-        Likelihood function
+        Likelihood function.
     **kwargs : dict
         Options passed to the optimizer instance.
 
     Returns
     -------
     result : (factors, info, optimizer)
-        Tuple containing the best fit factors, some info and the optimizer instance.
+        Tuple containing the best fit factors, some information and the optimizer instance.
     """
     method = kwargs.pop("method", "simplex")
     optimizer = get_sherpa_optimizer(method)
     optimizer.config.update(kwargs)
 
     pars = [par.factor for par in parameters.free_parameters]
-    parmins = [par.factor_min for par in parameters.free_parameters]
-    parmaxes = [par.factor_max for par in parameters.free_parameters]
+    parmins = np.nan_to_num(
+        [par.factor_min for par in parameters.free_parameters], nan=-np.inf
+    )
+    parmaxes = np.nan_to_num(
+        [par.factor_max for par in parameters.free_parameters], nan=np.inf
+    )
 
     statfunc = SherpaLikelihood(function, parameters, store_trace)
 

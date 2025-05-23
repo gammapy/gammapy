@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Units and Quantity related helper functions"""
+"""Units and Quantity related helper functions."""
 import logging
 from math import floor
 import numpy as np
@@ -21,22 +21,22 @@ def standardise_unit(unit):
     Parameters
     ----------
     unit : `~astropy.units.Unit` or str
-        Any old unit
+        Any old unit.
 
     Returns
     -------
     unit : `~astropy.units.Unit`
-        Shiny new, standardised unit
+        Shiny new, standardised unit.
 
     Examples
     --------
     >>> from gammapy.utils.units import standardise_unit
     >>> standardise_unit('ph cm-2 s-1')
-    Unit("1 / (cm2 s)")
+    Unit("1 / (s cm2)")
     >>> standardise_unit('ct cm-2 s-1')
-    Unit("1 / (cm2 s)")
+    Unit("1 / (s cm2)")
     >>> standardise_unit('cm-2 s-1')
-    Unit("1 / (cm2 s)")
+    Unit("1 / (s cm2)")
     """
     unit = u.Unit(unit)
     bases, powers = [], []
@@ -69,19 +69,19 @@ def unit_from_fits_image_hdu(header):
 
 
 def energy_unit_format(E):
-    """
-    Format energy quantities to a string representation that is more comfortable to read
-    by switching to the most relevant unit (keV, MeV, GeV, TeV) and changing the float precision.
+    """Format energy quantities to a string representation that is more comfortable to read.
+
+    This is done by switching to the most relevant unit (keV, MeV, GeV, TeV) and changing the float precision.
 
     Parameters
     ----------
     E: `~astropy.units.Quantity`
-        Quantity or list of quantities
+        Quantity or list of quantities.
 
     Returns
     -------
     str : str
-        Returns a string or tuple of strings with energy unit formatted
+        A string or tuple of strings with energy unit formatted.
     """
     try:
         iter(E)

@@ -70,9 +70,12 @@ Notes:
   Gammapy names defined here, to the names used in the formats.
   Of course, where formats are not set in stone yet, we advocate and encourage
   the use of the names chosen here.
-* Finally, we realise that eventually probably CTA will define this, and Gammapy
-  is only a prototype. So if CTA chooses something else, probably we will follow
-  suite and do one more backward-incompatible change at some point to align with CTA.
+* Finally, CTAO has proposed a full data model associated to the needed quantities. And
+  the community is working to create a data format for very-high-energy data produced by gamma-ray
+  and neutrino experiments within the open initiative `Very-high-energy Open Data Format`_. This format
+  aims to respect the CTAO data model, to respect the `FAIR principles`_ and to follow as much as
+  possible the `IVOA`_ recommendations. In order to handle past, current and old formats,
+  Gammapy should follow the `FAIR4RS principles`_ by proposing a user-friendly interface.
 
 Clobber or overwrite?
 +++++++++++++++++++++
@@ -526,11 +529,11 @@ Here's to commands to check for and fix this (see `here <http://stackoverflow.co
 
 .. code-block:: bash
 
-    $ git clean -fdx
-    $ find . -type f -print0 | xargs -0 -n 1 -P 4 dos2unix -c mac
-    $ find . -type f -print0 | xargs -0 -n 1 -P 4 dos2unix -c ascii
-    $ git status
-    $ cd astropy_helpers && git checkout -- . && cd ..
+    git clean -fdx
+    find . -type f -print0 | xargs -0 -n 1 -P 4 dos2unix -c mac
+    find . -type f -print0 | xargs -0 -n 1 -P 4 dos2unix -c ascii
+    git status
+    cd astropy_helpers && git checkout -- . && cd ..
 
 Making a pull request that requires backport
 ++++++++++++++++++++++++++++++++++++++++++++
@@ -543,7 +546,10 @@ one of which involves the `meeseeksmachine <https://github.com/meeseeksmachine>`
 
 2. If you forgot, on your merged PR make the comment: "``@meeseeksdev backport to [BRANCHNAME]``"
 
-3. If this does not work automatically, a set of instructions will be given to you as a comment in the PR to be backported. This involves using the "``cherry-pick``" git command. See `here <https://docs.astropy.org/en/latest/development/releasing.html#backporting-fixes-from-main>`__ for information.
+3. If this does not work automatically, a set of instructions will be given to you as a comment in
+   the PR to be backported. This involves using the "``cherry-pick``" git command.
+   See `here <https://docs.astropy.org/en/latest/development/maintainers/releasing.html#backporting-fixes-from-main>`__
+   for information.
 
 
 
@@ -554,9 +560,10 @@ Release notes
 In Gammapy we keep :ref:`release_notes` with a list of pull requests.
 We sort by release and within the release by PR number (the largest first).
 
-As explained in the :ref:`astropy:changelog-format` section in the Astropy docs,
-there are (at least) two approaches for adding to the releases, each with pros
-and cons.
+As explained in the
+`Updating and Maintaining the Changelog <https://docs.astropy.org/en/latest/development/maintainers/maintainer_workflow.html#updating-and-maintaining-the-changelog>`__
+of the Astropy docs, there are (at least) two approaches for adding to the releases,
+each with pros and cons.
 
 We've had some pain due to merge conflicts in the releases notes and having to wait
 until the contributor rebases (and having to explain git rebase to new contributors).
@@ -661,26 +668,25 @@ If you have a alternative attribute to use instead, pass its name in the `altern
     print(some_class(10).old_attribute)
 
 
+How to capture a deprecation
+++++++++++++++++++++++++++++
+
+A deprecation warning raised during CI will be considered an error by `pytest`.
+Nevertheless, it is important to also check that deprecation warnings are correctly
+emitted in the test files. This can be done in the following way:
+
+.. code::
+
+    # Runs with the renamed argument
+    asmooth = ASmoothMapEstimator(scales=scales, spectral_model=PowerLawSpectralModel())
+
+    # Raises deprecation warning
+    with pytest.warns(GammapyDeprecationWarning):
+        ASmoothMapEstimator(scales=scales, spectrum=PowerLawSpectralModel())
+
+
 Others
 ------
-
-Command line tools using click
-++++++++++++++++++++++++++++++
-
-Command line tools that use the `click <https://click.palletsprojects.com/en/8.0.x/>`__ module should disable
-the unicode literals warnings to clean up the output of the tool:
-
-.. testcode::
-
-    import click
-    click.disable_unicode_literals_warning = True
-
-See `here <https://click.palletsprojects.com/en/5.x/python3/#unicode-literals>`__ for further
-information.
-
-
-
-
 
 Bundled gammapy.extern code
 +++++++++++++++++++++++++++
@@ -884,3 +890,72 @@ Example what to put as a test::
         assert str(p).startswith('Hi')
         assert p.info(add_location=True).endswith('Heidelberg')
 
+
+Output in Jupyter notebook cells
+++++++++++++++++++++++++++++++++
+
+In addition to the standard `repr` and `str` outputs, Jupyter notebook
+cells have the option to display nicely formatted (HTML) output, using
+the IPython rich display options (other output options also exist,
+such as LaTeX or SVG, but these are less used). This requires the
+implementation of a `_repr_html_(self)` method (note: single
+underscore) in a class.
+
+By default, this method can just return the string representation of
+the object (which may already produce a nicely formatted output). That
+is often nicer than the default, which is to return the `repr` output,
+which tends to be shorter and may miss details of the object. Thus,
+the following would be a good default for a new class::
+
+    def _repr_html_(self):
+        return f'<pre>html.escape(str(self))</pre>'
+
+The surrounding `<pre>` takes care that the formatting in HTML is the
+same as that for the normal `__str__` method, while `html.escape`
+handles escaping HTML special characters (<, >, &, " and ').
+
+Note that if no `__str__` method is implemented, `__repr__` is used,
+and ultimately, the Python built-in `__repr__` method serves as the
+final fallback (which looks like `<gammapy.data.event_list.EventList
+at 0x129602550>` or similar).
+
+If more specific HTML output is preferred (for example, output
+formatted in a HTML table or list), it is best to create a separate
+`to_html(self)` method in the class, which is more explicit (and can
+be documentated as part of the API), and let `_repr_html_` call this
+method::
+
+    def _repr_html_(self):
+        return self.to_html(self)
+
+Thus very similar to `__str__` calling `info()`, with optional
+parameters if needed.
+
+To allow for both options, the following default `_repr_html_` can be
+implemented instead::
+
+    def _repr_html_(self):
+        try:
+           return self.to_html(self)
+       except AttributeError:
+           return f'<pre>html.escape(str(self))</pre>'
+
+Nearly all base classes in Gammapy implement this default
+`_repr_html_`. If a new class derives from an existing Gammapy class,
+a default implementation is not needed, since it will rely on its
+(grand)parent. As a result, for specific HTML output, only the
+`to_html` method needs to be implented for the relevant class.
+
+Convert a jupyter notebook to python script in the sphinx-gallery format
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The tutorials in Gammapy are represented by python scripts written in the sphinx-gallery format. However, since they are
+displayed as jupyter notebooks in the documentation,
+it is usually easier to first create a tutorial in a jupyter notebook and then convert
+it into a python script. This can be done using ``ipynb_to_gallery.py`` script located in the ``dev`` folder. This
+script can be used as follows::
+
+    python dev/ipynb_to_gallery.py <path_to_notebook> (Optional)<path_to_script>
+
+If the path of the output file is not provided, the script will be written in the same folder as the notebook and with
+the same name.

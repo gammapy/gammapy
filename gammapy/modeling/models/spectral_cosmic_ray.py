@@ -2,7 +2,7 @@
 """Simple models for cosmic ray spectra at Earth.
 
 For measurements, the "Database of Charged Cosmic Rays (CRDB)" is a great resource:
-http://lpsc.in2p3.fr/cosmic-rays-db/
+https://lpsc.in2p3.fr/crdb/
 """
 import numpy as np
 from astropy import units as u
@@ -37,7 +37,7 @@ class _LogGaussianSpectralModel(SpectralModel):
 def create_cosmic_ray_spectral_model(particle="proton"):
     """Cosmic a cosmic ray spectral model at Earth.
 
-    These are the spectra assumed in this CTA study:
+    These are the spectra assumed in this CTAO study:
     Table 3 in https://ui.adsabs.harvard.edu/abs/2013APh....43..171B
 
     The spectrum given is a differential flux ``dnde`` in units of
@@ -53,13 +53,13 @@ def create_cosmic_ray_spectral_model(particle="proton"):
 
     Parameters
     ----------
-    particle : {'electron', 'proton', 'He', 'N', 'Si', 'Fe'}
-        Particle type
+    particle : {'electron', 'proton', 'He', 'N', 'Si', 'Fe'}, optional
+        Particle type. Default is 'proton'.
 
     Returns
     -------
     `~gammapy.modeling.models.SpectralModel`
-        Spectral model (for all-sky cosmic ray flux)
+        Spectral model (for all-sky cosmic ray flux).
     """
     omega = 4 * np.pi * u.sr
     if particle == "proton":

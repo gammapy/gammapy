@@ -20,13 +20,13 @@ class ImageProfileEstimator(Estimator):
 
     Parameters
     ----------
-    x_edges : `~astropy.coordinates.Angle`
-        Coordinate edges to define a custom measument grid (optional).
-    method : ['sum', 'mean']
-        Compute sum or mean within profile bins.
-    axis : ['lon', 'lat', 'radial']
-        Along which axis to estimate the profile.
-    center : `~astropy.coordinates.SkyCoord`
+    x_edges : `~astropy.coordinates.Angle`, optional
+        Coordinate edges to define a custom measurement grid.
+    method : {'sum', 'mean'}
+        Compute sum or mean within profile bins. Default is 'sum'.
+    axis : {'lon', 'lat', 'radial'}
+        Along which axis to estimate the profile. Default is 'lon'.
+    center : `~astropy.coordinates.SkyCoord`, optional
         Center coordinate for the radial profile option.
 
     Examples
@@ -147,8 +147,8 @@ class ImageProfileEstimator(Estimator):
         ----------
         image : `~gammapy.maps.Map`
             Input image to run profile estimator on.
-        image_err : `~gammapy.maps.Map`
-            Input error image to run profile estimator on.
+        image_err : `~gammapy.maps.Map`, optional
+            Input error image to run profile estimator on. Default is None.
         mask : `~gammapy.maps.Map`
             Optional mask to exclude regions from the measurement.
 
@@ -220,12 +220,12 @@ class ImageProfile:
         Parameters
         ----------
         kernel : {'gauss', 'box'}
-            Kernel shape
+            Kernel shape. Default is "box".
         radius : `~astropy.units.Quantity`, str or float
             Smoothing width given as quantity or float. If a float is given it
             is interpreted as smoothing width in pixels. If an (angular) quantity
-            is given it is converted to pixels using `xref[1] - x_ref[0]`.
-        kwargs : dict
+            is given it is converted to pixels using `xref[1] - x_ref[0]`. Default is "0.1 deg".
+        kwargs : dict, optional
             Keyword arguments passed to `~scipy.ndimage.uniform_filter`
             ('box') and `~scipy.ndimage.gaussian_filter` ('gauss').
 
@@ -278,15 +278,15 @@ class ImageProfile:
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`
-            Axes object
-        **kwargs : dict
-            Keyword arguments passed to `~matplotlib.axes.Axes.plot`
+        ax : `~matplotlib.axes.Axes`, optional
+            Axes object. Default is None.
+        **kwargs : dict, optional
+            Keyword arguments passed to `~matplotlib.axes.Axes.plot`.
 
         Returns
         -------
         ax : `~matplotlib.axes.Axes`
-            Axes object
+            Axes object.
         """
         if ax is None:
             ax = plt.gca()
@@ -304,15 +304,15 @@ class ImageProfile:
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`
-            Axes object
-        **kwargs : dict
-            Keyword arguments passed to plt.fill_between()
+        ax : `~matplotlib.axes.Axes`, optional
+            Axes object. Default is None.
+        **kwargs : dict, optional
+            Keyword arguments passed to `~matplotlib.pyplot.fill_between`.
 
         Returns
         -------
         ax : `~matplotlib.axes.Axes`
-            Axes object
+            Axes object.
         """
         if ax is None:
             ax = plt.gca()
@@ -364,14 +364,14 @@ class ImageProfile:
         Parameters
         ----------
         figsize : tuple
-            Size of the figure.
-        **kwargs : dict
-            Keyword arguments passed to `ImageProfile.plot_profile()`
+            Size of the figure. Default is (8, 4.5).
+        **kwargs : dict, optional
+            Keyword arguments passed to `ImageProfile.plot_profile()`.
 
         Returns
         -------
         ax : `~matplotlib.axes.Axes`
-            Axes object
+            Axes object.
         """
         fig = plt.figure(figsize=figsize)
         ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
@@ -389,7 +389,7 @@ class ImageProfile:
         ----------
         mode : ['integral', 'peak']
             Normalize image profile so that it integrates to unity ('integral')
-            or the maximum value corresponds to one ('peak').
+            or the maximum value corresponds to one ('peak'). Default is "peak".
 
         Returns
         -------

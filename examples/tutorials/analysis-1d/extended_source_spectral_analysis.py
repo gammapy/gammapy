@@ -83,6 +83,7 @@ Setup
 As usual, we’ll start with some general imports…
 
 """
+
 import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from regions import CircleSkyRegion
@@ -119,7 +120,7 @@ check_tutorials_setup()
 
 datastore = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
 obs_ids = [20326, 20327, 20349, 20350, 20396, 20397]
-# In case you want to use all RX J1713 data in the HESS DR1
+# In case you want to use all RX J1713 data in the H.E.S.S. DR1
 # other_ids=[20421, 20422, 20517, 20518, 20519, 20521, 20898, 20899, 20900]
 
 observations = datastore.get_observations(obs_ids)
@@ -149,12 +150,13 @@ on_region = CircleSkyRegion(target_position, radius)
 # Define the geometries
 # ~~~~~~~~~~~~~~~~~~~~~
 #
-# This part is especially important. - We have to define first energy
-# axes. They define the axes of the resulting
-# `~gammapy.datasets.SpectrumDatasetOnOff`. In particular, we have to be
-# careful to the true energy axis: it has to cover a larger range than the
-# reconstructed energy one. - Then we define the region geometry itself
-# from the on region.
+# This part is especially important.
+#
+# -  We have to define first energy axes. They define the axes of the resulting
+#    `~gammapy.datasets.SpectrumDatasetOnOff`. In particular, we have to be
+#    careful to the true energy axis: it has to cover a larger range than the
+#    reconstructed energy one.
+# -  Then we define the region geometry itself from the on region.
 #
 
 # The binning of the final spectrum is defined here.
@@ -211,12 +213,12 @@ safe_mask_maker = SafeMaskMaker(methods=["aeff-max"], aeff_percent=10)
 # Perform the data reduction loop.
 # --------------------------------
 #
-# We can now run over selected observations. For each of them, we: -
-# create the `~gammapy.datasets.SpectrumDataset` - Compute the OFF via
-# the reflected background method and create a
-# `~gammapy.datasets.SpectrumDatasetOnOff` object - Run the safe mask
-# maker on it - Add the `~gammapy.datasets.SpectrumDatasetOnOff` to the
-# list.
+# We can now run over selected observations. For each of them, we:
+#
+# -   Create the `~gammapy.datasets.SpectrumDataset`
+# -  Compute the OFF via the reflected background method and create a `~gammapy.datasets.SpectrumDatasetOnOff` object
+# -  Run the safe mask maker on it
+# -  Add the `~gammapy.datasets.SpectrumDatasetOnOff` to the list.
 #
 
 # %%time
@@ -251,7 +253,7 @@ plt.show()
 
 ######################################################################
 # Cumulative excess and significance
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # Finally, we can look at cumulative significance and number of excesses.
 # This is done with the `info_table` method of
@@ -340,5 +342,4 @@ reduced.models = model
 
 # Plot the result
 ax_spectrum, ax_residuals = reduced.plot_fit()
-reduced.plot_masks(ax=ax_spectrum)
 plt.show()

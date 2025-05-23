@@ -10,7 +10,7 @@ Prerequisites
 -  Handling of Fermi-LAT data with Gammapy see the :doc:`/tutorials/data/fermi_lat` tutorial.
 -  Knowledge of spectral analysis to produce 1D On-Off datasets, see
    the following :doc:`/tutorials/analysis-1d/spectral_analysis` tutorial.
--  Using flux points to directly fit a model (without forward-folding) from the 
+-  Using flux points to directly fit a model (without forward-folding) from the
    :doc:`/tutorials/analysis-1d/sed_fitting` tutorial.
 
 Context
@@ -32,12 +32,12 @@ Proposed approach
 This tutorial illustrates how to perform a joint modeling and fitting of
 the Crab Nebula spectrum using different datasets. The spectral
 parameters are optimized by combining a 3D analysis of Fermi-LAT data, a
-ON/OFF spectral analysis of HESS data, and flux points from HAWC.
+ON/OFF spectral analysis of H.E.S.S. data, and flux points from HAWC.
 
 In this tutorial we are going to use pre-made datasets. We prepared maps
 of the Crab region as seen by Fermi-LAT using the same event selection
 than the `3FHL catalog <https://arxiv.org/abs/1702.00664>`__ (7 years of
-data with energy from 10 GeV to 2 TeV). For the HESS ON/OFF analysis we
+data with energy from 10 GeV to 2 TeV). For the H.E.S.S. ON/OFF analysis we
 used two observations from the `first public data
 release <https://arxiv.org/abs/1810.04516>`__ with a significant signal
 from energy of about 600 GeV to 10 TeV. These observations have an
@@ -223,11 +223,11 @@ print(crab_spec)
 
 
 ######################################################################
-# We can compute flux points for Fermi-LAT and HESS datasets in order plot
+# We can compute flux points for Fermi-LAT and H.E.S.S. datasets in order plot
 # them together with the HAWC flux point.
 #
 
-# compute Fermi-LAT and HESS flux points
+# compute Fermi-LAT and H.E.S.S. flux points
 energy_edges = MapAxis.from_energy_bounds("10 GeV", "2 TeV", nbin=5).edges
 
 flux_points_fermi = FluxPointsEstimator(
@@ -258,7 +258,7 @@ crab_spec.plot(ax=ax, energy_bounds=energy_bounds, sed_type=sed_type, label="Mod
 crab_spec.plot_error(ax=ax, energy_bounds=energy_bounds, sed_type=sed_type)
 
 flux_points_fermi.plot(ax=ax, sed_type=sed_type, label="Fermi-LAT")
-flux_points_hess.plot(ax=ax, sed_type=sed_type, label="HESS")
+flux_points_hess.plot(ax=ax, sed_type=sed_type, label="H.E.S.S.")
 flux_points_hawc.plot(ax=ax, sed_type=sed_type, label="HAWC")
 
 ax.set_xlim(energy_bounds)

@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Covariance class"""
+"""Covariance class."""
+
 import numpy as np
 import scipy
 import matplotlib.pyplot as plt
@@ -10,14 +11,14 @@ __all__ = ["Covariance"]
 
 
 class Covariance:
-    """Parameter covariance class
+    """Parameter covariance class.
 
     Parameters
     ----------
     parameters : `~gammapy.modeling.Parameters`
-        Parameter list
+        Parameter list.
     data : `~numpy.ndarray`
-        Covariance data array
+        Covariance data array.
 
     """
 
@@ -30,13 +31,13 @@ class Covariance:
 
     @property
     def shape(self):
-        """Covariance shape"""
+        """Covariance shape."""
         npars = len(self.parameters)
         return npars, npars
 
     @property
     def data(self):
-        """Covariance data (`~numpy.ndarray`)"""
+        """Covariance data as a `~numpy.ndarray`."""
         return self._data
 
     @data.setter
@@ -54,7 +55,7 @@ class Covariance:
 
     @staticmethod
     def _expand_factor_matrix(matrix, parameters):
-        """Expand covariance matrix with zeros for frozen parameters"""
+        """Expand covariance matrix with zeros for frozen parameters."""
         npars = len(parameters)
         matrix_expanded = np.zeros((npars, npars))
         mask_frozen = [par.frozen for par in parameters]
@@ -71,30 +72,35 @@ class Covariance:
 
         Used in the optimizer interface.
         """
+
         npars = len(parameters)
 
-        if not matrix.shape == (npars, npars):
-            matrix = cls._expand_factor_matrix(matrix, parameters)
+        if npars > 0:
+            if not matrix.shape == (npars, npars):
+                matrix = cls._expand_factor_matrix(matrix, parameters)
 
-        scales = [par.scale for par in parameters]
-        scale_matrix = np.outer(scales, scales)
-        data = scale_matrix * matrix
+            df = np.diag(
+                [p._inverse_transform_derivative(p.factor) for p in parameters]
+            )
+            data = df.T @ matrix @ df
+        else:
+            data = None
 
         return cls(parameters, data=data)
 
     @classmethod
     def from_stack(cls, covar_list):
-        """Stack sub-covariance matrices from list
+        """Stack sub-covariance matrices from list.
 
         Parameters
         ----------
         covar_list : list of `Covariance`
-            List of sub-covariances
+            List of sub-covariances.
 
         Returns
         -------
         covar : `Covariance`
-            Stacked covariance
+            Stacked covariance.
         """
         parameters = Parameters.from_stack([_.parameters for _ in covar_list])
 
@@ -106,7 +112,7 @@ class Covariance:
         return covar
 
     def get_subcovariance(self, parameters):
-        """Get sub-covariance matrix
+        """Get sub-covariance matrix.
 
         Parameters
         ----------
@@ -123,13 +129,12 @@ class Covariance:
         return self.__class__(parameters=parameters, data=data)
 
     def set_subcovariance(self, covar):
-        """Set sub-covariance matrix
+        """Set sub-covariance matrix.
 
         Parameters
         ----------
-        parameters : `Parameters`
-            Sub list of parameters.
-
+        covar : `Covariance`
+            Sub-covariance.
         """
         if is_ray_initialized():
             # This copy is required to make the covariance setting work with ray
@@ -143,31 +148,30 @@ class Covariance:
 
         self._data[np.ix_(idx, idx)] = covar.data
 
-    def plot_correlation(self, ax=None, **kwargs):
+    def plot_correlation(self, figsize=None, **kwargs):
         """Plot correlation matrix.
 
         Parameters
         ----------
-        ax : `~matplotlib.axes.Axes`, optional
-            Axis to plot on.
+        figsize : tuple, optional
+            Figure size. Default is None, which takes
+            (number_params*0.9, number_params*0.7).
         **kwargs : dict
-            Keyword arguments passed to `~gammapy.visualization.plot_heatmap`
+            Keyword arguments passed to `~gammapy.visualization.plot_heatmap`.
 
         Returns
         -------
         ax : `~matplotlib.axes.Axes`, optional
-            Axis
+            Matplotlib axes.
 
         """
         from gammapy.visualization import annotate_heatmap, plot_heatmap
 
         npars = len(self.parameters)
-        figsize = (npars * 0.8, npars * 0.65)
+        figsize = (npars * 0.9, npars * 0.7) if figsize is None else figsize
 
         plt.figure(figsize=figsize)
-
-        ax = plt.gca() if ax is None else ax
-
+        ax = plt.gca()
         kwargs.setdefault("cmap", "coolwarm")
 
         names = self.parameters.names
@@ -186,7 +190,7 @@ class Covariance:
 
     @property
     def correlation(self):
-        r"""Correlation matrix (`numpy.ndarray`).
+        r"""Correlation matrix as a `numpy.ndarray`.
 
         Correlation :math:`C` is related to covariance :math:`\Sigma` via:
 
@@ -202,7 +206,6 @@ class Covariance:
 
     @property
     def scipy_mvn(self):
-        # TODO: use this, as in https://github.com/cdeil/multinorm/blob/master/multinorm.py
         return scipy.stats.multivariate_normal(
             self.parameters.value, self.data, allow_singular=True
         )
@@ -212,3 +215,32 @@ class Covariance:
 
     def __array__(self):
         return self.data
+
+
+class CovarianceMixin:
+    """Mixin class for covariance property on multi-components models"""
+
+    def _check_covariance(self):
+        if not self.parameters == self._covariance.parameters:
+            self._covariance = Covariance.from_stack(
+                [model.covariance for model in self._models]
+            )
+
+    @property
+    def covariance(self):
+        """Covariance as a `~gammapy.modeling.Covariance` object."""
+        self._check_covariance()
+
+        for model in self._models:
+            self._covariance.set_subcovariance(model.covariance)
+
+        return self._covariance
+
+    @covariance.setter
+    def covariance(self, covariance):
+        self._check_covariance()
+        self._covariance.data = covariance
+
+        for model in self._models:
+            subcovar = self._covariance.get_subcovariance(model.covariance.parameters)
+            model.covariance = subcovar

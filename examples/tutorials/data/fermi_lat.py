@@ -51,7 +51,7 @@ Setup
 -----
 
 **IMPORTANT**: For this notebook you have to get the prepared `3fhl`
-dataset provided in your $GAMMAPY_DATA.
+dataset provided in your `$GAMMAPY_DATA`.
 
 Note that the `3fhl` dataset is high-energy only, ranging from 10 GeV
 to 2 TeV.
@@ -273,13 +273,13 @@ plt.show()
 #
 # To load the isotropic diffuse model with Gammapy, use the
 # `~gammapy.modeling.models.TemplateSpectralModel`. We are using
-# `'fill_value': 'extrapolate'` to extrapolate the model above 500 GeV:
+# `'extrapolate': True` to extrapolate the model above 500 GeV:
 #
 
 filename = "$GAMMAPY_DATA/fermi_3fhl/iso_P8R2_SOURCE_V6_v06.txt"
 
 diffuse_iso = create_fermi_isotropic_diffuse_model(
-    filename=filename, interp_kwargs={"fill_value": None}
+    filename=filename, interp_kwargs={"extrapolate": True}
 )
 
 
@@ -309,7 +309,7 @@ print(psf)
 
 ######################################################################
 # To get an idea of the size of the PSF we check how the containment radii
-# of the Fermi-LAT PSF vari with energy and different containment
+# of the Fermi-LAT PSF vary with energy and different containment
 # fractions:
 #
 
@@ -329,7 +329,7 @@ energy = [100, 300, 1000] * u.GeV
 psf.plot_psf_vs_rad(energy_true=energy)
 
 spectrum = PowerLawSpectralModel(index=2.3)
-psf_mean = psf.to_image(spectrum=spectrum)
+psf_mean = psf.to_image(spectral_model=spectrum)
 psf_mean.plot_psf_vs_rad(c="k", ls="--", energy_true=[500] * u.GeV)
 
 plt.xlim(1e-3, 0.3)

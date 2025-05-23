@@ -4,6 +4,17 @@ Fitting
 
 Learn how the model, dataset and fit Gammapy classes work together in a detailed modeling and fitting use-case.
 
+Note
+----
+This tutorial describes the fitting steps using a maximum likelihood (Frequentist approach).
+
+Alternatively, we could have a Bayesian approach by assigning a prior probability distribution over
+the parameters and compute the posterior distribution to fit the parameters. This is described in the
+:doc:`/tutorials/api/priors` tutorial.
+
+One can also perform a Bayesian analysis using a nested sampling technique. This is described
+in the :doc:`/tutorials/api/nested_sampling_Crab` tutorial.
+
 Prerequisites
 -------------
 
@@ -20,7 +31,7 @@ This is a hands-on tutorial to `~gammapy.modeling`, showing how to do
 perform a Fit in gammapy. The emphasis here is on interfacing the
 `Fit` class and inspecting the errors. To see an analysis example of
 how datasets and models interact, see the :doc:`/tutorials/api/model_management` tutorial.
-As an example, in this notebook, we are going to work with HESS data of the Crab Nebula and show in
+As an example, in this notebook, we are going to work with H.E.S.S. data of the Crab Nebula and show in
 particular how to :
 
 - perform a spectral analysis
@@ -75,7 +86,7 @@ crab_model = SkyModel(spectral_model=crab_spectrum, name="crab")
 
 ######################################################################
 # The data and background are read from pre-computed ON/OFF datasets of
-# HESS observations, for simplicity we stack them together. Then we set
+# H.E.S.S. observations, for simplicity we stack them together. Then we set
 # the model and fit range to the resulting dataset.
 #
 
@@ -230,12 +241,14 @@ total_stat = result_minuit.total_stat
 
 fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(14, 4))
 
-for ax, par in zip(axes, datasets.parameters.free_parameters):
+for ax, par in zip(axes, crab_model.parameters.free_parameters):
     par.scan_n_values = 17
-    idx = datasets.parameters.index(par)
-    name = datasets.models.parameters_unique_names[idx]
+    idx = crab_model.parameters.index(par)
+    name = crab_model.parameters_unique_names[idx]
     profile = fit.stat_profile(datasets=datasets, parameter=par)
-    ax.plot(profile[f"{name}_scan"], profile["stat_scan"] - total_stat)
+    ax.plot(
+        profile[f"{crab_model.name}.{name}_scan"], profile["stat_scan"] - total_stat
+    )
     ax.set_xlabel(f"{par.name} [{par.unit}]")
     ax.set_ylabel("Delta TS")
     ax.set_title(f"{name}:\n {par.value:.1e} +- {par.error:.1e}")
@@ -263,10 +276,11 @@ print(result_minuit.models.covariance)
 ######################################################################
 # And you can plot the total parameter correlation as well:
 #
-
-result_minuit.models.covariance.plot_correlation()
+result_minuit.models.covariance.plot_correlation(figsize=(7, 5))
 plt.show()
 
+
+######################################################################
 # The covariance information is also propagated to the individual models
 # Therefore, one can also get the error on a specific parameter by directly
 # accessing the `~gammapy.modeling.Parameter.error` attribute:
@@ -298,14 +312,14 @@ plt.show()
 # best-fit value.
 #
 # Gammapy offers two ways of computing confidence contours, in the
-# dedicated methods `~gammapy.modeling.Fit.minos_contour` and `~gammapy.modeling.Fit.stat_profile`. In
+# dedicated methods `~gammapy.modeling.Fit.stat_contour` and `~gammapy.modeling.Fit.stat_profile`. In
 # the following sections we will describe them.
 #
 
 
 ######################################################################
-# An important point to keep in mind is: *what does a :math:`N\sigma`
-# confidence contour really mean?* The answer is it represents the points
+# An important point to keep in mind is: *what does a* :math:`N\sigma`
+# *confidence contour really mean?* The answer is it represents the points
 # of the parameter space for which the model likelihood is :math:`N\sigma`
 # above the minimum. But one always has to keep in mind that **1 standard
 # deviation in two dimensions has a smaller coverage probability than
@@ -327,26 +341,24 @@ plt.show()
 #
 
 
-def make_contours(fit, datasets, result, npoints, sigmas):
+def make_contours(fit, datasets, model, params, npoints, sigmas):
     cts_sigma = []
     for sigma in sigmas:
         contours = dict()
-        for par_1, par_2 in combinations(["alpha", "beta", "amplitude"], r=2):
-            idx1, idx2 = datasets.parameters.index(par_1), datasets.parameters.index(
-                par_2
-            )
-            name1 = datasets.models.parameters_unique_names[idx1]
-            name2 = datasets.models.parameters_unique_names[idx2]
+        for par_1, par_2 in combinations(params, r=2):
+            idx1, idx2 = model.parameters.index(par_1), model.parameters.index(par_2)
+            name1 = model.parameters_unique_names[idx1]
+            name2 = model.parameters_unique_names[idx2]
             contour = fit.stat_contour(
                 datasets=datasets,
-                x=datasets.parameters[par_1],
-                y=datasets.parameters[par_2],
+                x=model.parameters[par_1],
+                y=model.parameters[par_2],
                 numpoints=npoints,
                 sigma=sigma,
             )
             contours[f"contour_{par_1}_{par_2}"] = {
-                par_1: contour[name1].tolist(),
-                par_2: contour[name2].tolist(),
+                par_1: contour[f"{model.name}.{name1}"].tolist(),
+                par_2: contour[f"{model.name}.{name2}"].tolist(),
             }
         cts_sigma.append(contours)
     return cts_sigma
@@ -357,69 +369,52 @@ def make_contours(fit, datasets, result, npoints, sigmas):
 #
 
 # %%time
+params = ["alpha", "beta", "amplitude"]
 sigmas = [1, 2]
 cts_sigma = make_contours(
     fit=fit,
     datasets=datasets,
-    result=result_minuit,
+    model=crab_model,
+    params=params,
     npoints=10,
     sigmas=sigmas,
 )
 
-
-######################################################################
-# Then we prepare some aliases and annotations in order to make the
-# plotting nicer.
+#####################################################################
 #
+# Define the combinations of parameters to plot
+param_pairs = list(combinations(params, r=2))
 
-pars = {
-    "phi": r"$\phi_0 \,/\,(10^{-11}\,{\rm TeV}^{-1} \, {\rm cm}^{-2} {\rm s}^{-1})$",
+#####################################################################
+#
+# Labels for plotting
+labels = {
+    "amplitude": r"$\phi_0 \,/\,({\rm TeV}^{-1} \, {\rm cm}^{-2} {\rm s}^{-1})$",
     "alpha": r"$\alpha$",
     "beta": r"$\beta$",
 }
 
-panels = [
-    {
-        "x": "alpha",
-        "y": "phi",
-        "cx": (lambda ct: ct["contour_alpha_amplitude"]["alpha"]),
-        "cy": (lambda ct: np.array(1e11) * ct["contour_alpha_amplitude"]["amplitude"]),
-    },
-    {
-        "x": "beta",
-        "y": "phi",
-        "cx": (lambda ct: ct["contour_beta_amplitude"]["beta"]),
-        "cy": (lambda ct: np.array(1e11) * ct["contour_beta_amplitude"]["amplitude"]),
-    },
-    {
-        "x": "alpha",
-        "y": "beta",
-        "cx": (lambda ct: ct["contour_alpha_beta"]["alpha"]),
-        "cy": (lambda ct: ct["contour_alpha_beta"]["beta"]),
-    },
-]
 
-
-######################################################################
-# Finally we produce the confidence contours figures.
+#####################################################################
+# Produce the confidence contours figures.
 #
 
-fig, axes = plt.subplots(1, 3, figsize=(16, 5))
+fig, axes = plt.subplots(1, 3, figsize=(10, 3))
 colors = ["m", "b", "c"]
-for p, ax in zip(panels, axes):
-    xlabel = pars[p["x"]]
-    ylabel = pars[p["y"]]
-    for ks in range(len(cts_sigma)):
+
+for (par_1, par_2), ax in zip(param_pairs, axes):
+    for ks, sigma in enumerate(sigmas):
+        contour = cts_sigma[ks][f"contour_{par_1}_{par_2}"]
         plot_contour_line(
             ax,
-            p["cx"](cts_sigma[ks]),
-            p["cy"](cts_sigma[ks]),
+            contour[par_1],
+            contour[par_2],
             lw=2.5,
             color=colors[ks],
             label=f"{sigmas[ks]}" + r"$\sigma$",
         )
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
+    ax.set_xlabel(labels[par_1])
+    ax.set_ylabel(labels[par_2])
 plt.legend()
 plt.tight_layout()
 
@@ -429,7 +424,7 @@ plt.tight_layout()
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # This alternative method for the computation of confidence contours,
-# although more time consuming than `~gammapy.modeling.Fit.minos_contour()`, is expected
+# although more time consuming than `~gammapy.modeling.Fit.stat_contour()`, is expected
 # to be more stable. It consists of a generalization of
 # `~gammapy.modeling.Fit.stat_profile()` to a 2-dimensional parameter space. The algorithm
 # is very simple: - First, passing two arrays of parameters values, a
@@ -455,8 +450,8 @@ plt.tight_layout()
 #
 
 result = result_minuit
-par_alpha = datasets.parameters["alpha"]
-par_beta = datasets.parameters["beta"]
+par_alpha = crab_model.parameters["alpha"]
+par_beta = crab_model.parameters["beta"]
 
 par_alpha.scan_values = np.linspace(1.55, 2.7, 20)
 par_beta.scan_values = np.linspace(-0.05, 0.55, 20)

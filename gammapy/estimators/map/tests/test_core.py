@@ -2,12 +2,14 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
+from scipy import stats
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.time import Time
 from gammapy.data import GTI
 from gammapy.estimators import FluxMaps
+from gammapy.estimators.utils import combine_flux_maps
 from gammapy.maps import MapAxis, Maps, RegionGeom, TimeMapAxis, WcsNDMap
 from gammapy.modeling.models import (
     LogParabolaSpectralModel,
@@ -210,6 +212,65 @@ def test_map_properties(map_flux_estimate):
     assert_allclose(fe.eflux_ul.quantity.value[:, 2, 2], [4.60517e-10, 4.60517e-10])
 
 
+def test_combine_flux_maps(map_flux_estimate, wcs_flux_map, reference_model):
+    start = u.Quantity([1, 2], "min")
+    stop = u.Quantity([1.5, 2.5], "min")
+    gti = GTI.create(start, stop)
+
+    data = map_flux_estimate.copy()
+    ts = data["norm"].copy()
+    data["norm_err"].data[0, 0, 0] = 0.0
+    ts.data = (data["norm"].data / data["norm_err"].data) ** 2
+    data["ts"] = ts
+
+    model = SkyModel(PowerLawSpectralModel(amplitude="1e-10 cm-2s-1TeV-1", index=2))
+    fe = FluxMaps(data=data, reference_model=model, gti=gti)
+    iE = 0
+    energy = fe.geom.axes[0].center[iE]
+
+    fe_new = combine_flux_maps([fe, fe])
+    assert_allclose(fe_new.dnde.quantity, fe.dnde.quantity)
+    assert_allclose(
+        fe_new.dnde_err.quantity.value, fe.dnde_err.quantity.value / np.sqrt(2)
+    )
+
+    fe_new = combine_flux_maps(
+        [fe, fe], reference_model=FluxMaps.reference_model_default.spectral_model
+    )
+    assert_allclose(fe_new.dnde.quantity, fe.dnde.quantity)
+    assert_allclose(
+        fe_new.dnde_err.quantity.value, fe.dnde_err.quantity.value / np.sqrt(2)
+    )
+
+    ratio = model.spectral_model(
+        energy
+    ) / FluxMaps.reference_model_default.spectral_model(energy)
+
+    assert_allclose(
+        fe_new.norm.quantity.value[iE, :, :] / fe.norm.quantity.value[iE, :, :], ratio
+    )
+    assert fe_new.meta == fe.meta
+
+    fe = FluxMaps(data, reference_model)
+
+    fe_new = combine_flux_maps([fe, fe], reference_model=reference_model)
+    assert_allclose(fe_new.dnde.quantity, fe.dnde.quantity)
+    assert_allclose(
+        fe_new.dnde_err.quantity.value, fe.dnde_err.quantity.value / np.sqrt(2)
+    )
+    assert_allclose(fe_new.norm.quantity, fe.norm.quantity)
+
+    ts = (
+        -2
+        * np.log(
+            stats.norm.pdf(0, loc=fe.dnde.data, scale=fe.dnde_err.data)
+            / stats.norm.pdf(fe.dnde.data, loc=fe.dnde.data, scale=fe.dnde_err.data)
+        )
+        + (fe.ts - (fe.norm.data / fe.norm_err.data) ** 2) * 2
+    )
+    assert_allclose(fe_new.ts, ts * 2)
+
+
 def test_flux_map_properties(wcs_flux_map, reference_model):
     fluxmap = FluxMaps(wcs_flux_map, reference_model)
 
@@ -361,6 +422,29 @@ def test_flux_map_read_write_missing_reference_model(
         _ = FluxMaps.from_hdulist(hdulist)
 
 
+def test_flux_map_read_checksum(tmp_path, wcs_flux_map, reference_model):
+    fluxmap = FluxMaps(wcs_flux_map, reference_model)
+    fluxmap.write(
+        tmp_path / "tmp.fits",
+        filename_model=tmp_path / "test.yaml",
+        checksum=True,
+        overwrite=True,
+    )
+
+    path = tmp_path / "test.yaml"
+    text = path.read_text()
+    text.replace("1.0e-12", "1.2e-12")
+
+    with open(tmp_path / "test.yaml", "r+") as file:
+        lines = file.read()
+        lines.replace("1.0e-12", "1.2e-12")
+        file.seek(0)
+        file.write(lines)
+
+    with pytest.warns(UserWarning):
+        FluxMaps.read(tmp_path / "tmp.fits", checksum=True)
+
+
 @pytest.mark.xfail
 def test_flux_map_init_no_reference_model(wcs_flux_map, caplog):
     fluxmap = FluxMaps(data=wcs_flux_map)
@@ -459,7 +543,7 @@ def test_flux_map_iter_by_axis():
 
 
 def test_slice_by_coord():
-    axis1 = MapAxis.from_energy_edges((0.1, 1.0, 10.0), unit="TeV")
+    axis1 = MapAxis.from_energy_edges((0.1, 1.0, 5.0, 10.0), unit="TeV")
     axis2 = TimeMapAxis.from_time_bounds(
         Time(51544, format="mjd"), Time(51548, format="mjd"), 3
     )
@@ -487,3 +571,25 @@ def test_slice_by_coord():
     assert sliced_map.available_quantities == ref_map.available_quantities
     assert_allclose(sliced_map.gti.time_stop.value, 51545.3340, rtol=1e-3)
     assert sliced_map.reference_model == ref_map.reference_model
+
+    sliced_map2 = ref_map.slice_by_coord({"energy": slice(0.5 * u.TeV, 5.0 * u.TeV)})
+    assert sliced_map2.geom.axes["energy"].nbin == 1
+
+    sliced_map3 = ref_map.slice_by_coord({"energy": slice(1.0 * u.TeV, 10.0 * u.TeV)})
+    assert sliced_map3.geom.axes["energy"].nbin == 2
+
+    sliced_map4 = ref_map.slice_by_coord({"time": slice(1 * u.d, 3 * u.d)})
+    assert sliced_map4.geom.axes["time"].nbin == 1
+
+
+def test_copy(map_flux_estimate):
+
+    model = SkyModel(PowerLawSpectralModel(amplitude="1e-10 cm-2s-1TeV-1", index=3))
+
+    fe = FluxMaps(data=map_flux_estimate, reference_model=model)
+    fe_new = fe.copy(reference_model=None)
+    assert fe_new.reference_model.spectral_model.index.value == 3
+
+    model = SkyModel(PowerLawSpectralModel(amplitude="1e-10 cm-2s-1TeV-1", index=4))
+    fe_new = fe.copy(reference_model=model)
+    assert fe_new.reference_model.spectral_model.index.value == 4

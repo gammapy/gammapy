@@ -1,7 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Model parameter classes."""
+
 import collections.abc
 import copy
+import html
 import itertools
 import logging
 import numpy as np
@@ -9,7 +11,7 @@ from astropy import units as u
 from astropy.table import Table
 from gammapy.utils.interpolation import interpolation_scale
 
-__all__ = ["Parameter", "Parameters"]
+__all__ = ["Parameter", "Parameters", "PriorParameter", "PriorParameters"]
 
 log = logging.getLogger(__name__)
 
@@ -52,7 +54,7 @@ class Parameter:
 
     Users should interact with the ``value``, ``quantity``
     or ``min`` and ``max`` properties and consider the fact
-    that there is a ``factor``` and ``scale`` an implementation detail.
+    that there is a ``factor`` and ``scale`` an implementation detail.
 
     That was introduced for numerical stability in parameter and error
     estimation methods, only in the Gammapy optimiser interface do we
@@ -62,37 +64,40 @@ class Parameter:
     Parameters
     ----------
     name : str
-        Name
+        Name.
     value : float or `~astropy.units.Quantity`
-        Value
+        Value.
     scale : float, optional
-        Scale (sometimes used in fitting)
+        Scale (sometimes used in fitting).
     unit : `~astropy.units.Unit` or str, optional
-        Unit
-    min : float, optional
-        Minimum (sometimes used in fitting)
-    max : float, optional
-        Maximum (sometimes used in fitting)
+        Unit. Default is "".
+    min : float, str or `~astropy.units.quantity`, optional
+        Minimum (sometimes used in fitting). If `None`, set to `numpy.nan`. Default is None.
+    max : float, str or `~astropy.units.quantity`, optional
+        Maximum (sometimes used in fitting). Default is `numpy.nan`.
     frozen : bool, optional
-        Frozen? (used in fitting)
-    error : float
-        Parameter error
-    scan_min : float
+        Frozen (used in fitting).  Default is False.
+    error : float, optional
+        Parameter error. Default is 0.
+    scan_min : float, optional
         Minimum value for the parameter scan. Overwrites scan_n_sigma.
-    scan_max : float
-        Minimum value for the parameter scan. Overwrites scan_n_sigma.
-    scan_n_values: int
-        Number of values to be used for the parameter scan.
-    scan_n_sigma : int
-        Number of sigmas to scan.
-    scan_values: `numpy.array`
-        Scan values. Overwrites all of the scan keywords before.
-    scale_method : {'scale10', 'factor1', None}
-        Method used to set ``factor`` and ``scale``
-    interp : {"lin", "sqrt", "log"}
-        Parameter scaling to use for the scan.
-    is_norm : bool
-        Whether the parameter represents the flux norm of the model.
+        Default is None.
+    scan_max : float, optional
+        Maximum value for the parameter scan. Overwrites scan_n_sigma.
+        Default is None.
+    scan_n_values: int, optional
+        Number of values to be used for the parameter scan. Default is 11.
+    scan_n_sigma : int, optional
+        Number of sigmas to scan. Default is 2.
+    scan_values: `numpy.array`, optional
+        Scan values. Overwrites all the scan keywords before.
+        Default is None.
+    scale_method : {'scale10', 'factor1', None}, optional
+        Method used to set ``factor`` and ``scale``. Default is "scale10".
+    interp : {"lin", "sqrt", "log"}, optional
+        Parameter scaling to use for the scan. Default is "lin".
+    prior : `~gammapy.modeling.models.Prior`, optional
+        Prior set on the parameter. Default is None.
     """
 
     def __init__(
@@ -112,19 +117,20 @@ class Parameter:
         scan_values=None,
         scale_method="scale10",
         interp="lin",
-        is_norm=False,
+        prior=None,
+        scale_transform="lin",
     ):
         if not isinstance(name, str):
             raise TypeError(f"Name must be string, got '{type(name)}' instead")
 
         self._name = name
         self._link_label_io = None
-        self.scale = scale
-        self.min = min
-        self.max = max
+        self._scale_method = scale_method
+        self._scale_transform = scale_transform
+        self.interp = interp
+        self._scale = float(scale)
         self.frozen = frozen
         self._error = error
-        self._is_norm = is_norm
         self._type = None
 
         # TODO: move this to a setter method that can be called from `__set__` also!
@@ -137,13 +143,14 @@ class Parameter:
             self.value = float(value)
             self.unit = unit
 
+        self.min = min
+        self.max = max
         self.scan_min = scan_min
         self.scan_max = scan_max
         self.scan_values = scan_values
         self.scan_n_values = scan_n_values
         self.scan_n_sigma = scan_n_sigma
-        self.interp = interp
-        self.scale_method = scale_method
+        self.prior = prior
 
     def __get__(self, instance, owner):
         if instance is None:
@@ -165,9 +172,29 @@ class Parameter:
             raise ValueError(f"Expected parameter name '{name}', got {self._name}")
 
     @property
-    def is_norm(self):
-        """Whether the parameter represents the norm of the model"""
-        return self._is_norm
+    def prior(self):
+        """Prior applied to the parameter  as a `~gammapy.modeling.models.Prior`."""
+        return self._prior
+
+    @prior.setter
+    def prior(self, value):
+        if value is not None:
+            from .models import Prior
+
+            if isinstance(value, dict):
+                from .models import Model
+
+                self._prior = Model.from_dict({"prior": value})
+            elif isinstance(value, Prior):
+                self._prior = value
+            else:
+                raise TypeError(f"Invalid type: {value!r}")
+        else:
+            self._prior = value
+
+    def prior_stat_sum(self):
+        if self.prior is not None:
+            return self.prior(self)
 
     @property
     def type(self):
@@ -179,34 +206,31 @@ class Parameter:
 
     @error.setter
     def error(self, value):
-        self._error = float(u.Quantity(value, unit=self.unit).value)
+        self._error = self._set_quantity_str_float(value)
 
     @property
     def name(self):
-        """Name (str)."""
+        """Name as a string."""
         return self._name
 
     @property
     def factor(self):
-        """Factor (float)."""
+        """Factor as a float."""
         return self._factor
 
     @factor.setter
     def factor(self, val):
         self._factor = float(val)
+        self._value = float(self.inverse_transform(self._factor))
 
     @property
     def scale(self):
-        """Scale (float)."""
+        """Scale as a float."""
         return self._scale
-
-    @scale.setter
-    def scale(self, val):
-        self._scale = float(val)
 
     @property
     def unit(self):
-        """Unit (`~astropy.units.Unit`)."""
+        """Unit as a `~astropy.units.Unit` object."""
         return self._unit
 
     @unit.setter
@@ -215,60 +239,98 @@ class Parameter:
 
     @property
     def min(self):
-        """Minimum (float)."""
+        """Minimum as a float."""
         return self._min
 
     @min.setter
     def min(self, val):
-        "Astropy Table has masked values for NaN. Replacing with np.nan."
-        if isinstance(val, np.ma.core.MaskedConstant):
+        """`~astropy.table.Table` has masked values for NaN. Replacing with NaN."""
+        if isinstance(val, np.ma.core.MaskedConstant) or (val is None):
             self._min = np.nan
         else:
-            self._min = float(val)
+            self._min = self._set_quantity_str_float(val)
 
     @property
     def factor_min(self):
-        """Factor min (float).
+        """Factor minimum as a float (used by the optimizer).
 
-        This ``factor_min = min / scale`` is for the optimizer interface.
+        By default, when no transform is applied, ``factor_min = min / scale``,
+        otherwise ``factor_min = transform(min)``.
         """
-        return self.min / self.scale
+        return self.transform(self.min)
 
     @property
     def max(self):
-        """Maximum (float)."""
+        """Maximum as a float."""
         return self._max
 
     @max.setter
     def max(self, val):
-        "Astropy Table has masked values for NaN. Replacing with np.nan."
-        if isinstance(val, np.ma.core.MaskedConstant):
+        """`~astropy.table.Table` has masked values for NaN. Replacing with NaN."""
+        if isinstance(val, np.ma.core.MaskedConstant) or (val is None):
             self._max = np.nan
         else:
-            self._max = float(val)
+            self._max = self._set_quantity_str_float(val)
 
     @property
     def factor_max(self):
-        """Factor max (float).
+        """Factor maximum as a float (used by the optimizer).
 
-        This ``factor_max = max / scale`` is for the optimizer interface.
+        By default, when no transform is applied, ``factor_max = max / scale``,
+        otherwise ``factor_max = transform(max)``.
         """
-        return self.max / self.scale
+        return self.transform(self.max)
+
+    def _set_quantity_str_float(self, value):
+        """Logics for min and max setter."""
+        if isinstance(value, u.Quantity) or isinstance(value, str):
+            value = u.Quantity(value)
+            return float(value.to(self.unit).value)
+        else:
+            return float(value)
+
+    def set_lim(self, min=None, max=None):
+        """
+        Set the min and/or max value for the parameter.
+
+        Parameters
+        ----------
+        min, max: float, `~astropy.units.Quantity` or str, optional
+            Minimum and Maximum value to assign to the parameter `min` and `max`.
+            Default is None, which set `min` and `max` to `~numpy.nan`.
+        """
+        if min is not None:
+            self.min = min
+        if max is not None:
+            self.max = max
 
     @property
     def scale_method(self):
-        """Method used to set ``factor`` and ``scale``"""
+        """Method used to set ``factor`` and ``scale``."""
         return self._scale_method
 
     @scale_method.setter
     def scale_method(self, val):
         if val not in ["scale10", "factor1"] and val is not None:
             raise ValueError(f"Invalid method: {val}")
+        self.reset_autoscale()
         self._scale_method = val
 
     @property
+    def scale_transform(self):
+        """scale interp : {"lin", "sqrt", "log"}"""
+        return self._scale_transform
+
+    @scale_transform.setter
+    def scale_transform(self, val):
+        if val not in ["lin", "log", "sqrt"]:
+            raise ValueError(f"Invalid transform: {val}")
+        self.reset_autoscale()
+        self._scale_transform = val
+
+    @property
     def frozen(self):
-        """Frozen? (used in fitting) (bool)."""
+        """Frozen (used in fitting) (bool)."""
         return self._frozen
 
     @frozen.setter
@@ -282,15 +344,16 @@ class Parameter:
     @property
     def value(self):
         """Value = factor x scale (float)."""
-        return self._factor * self._scale
+        return self._value
 
     @value.setter
     def value(self, val):
-        self.factor = float(val) / self._scale
+        self._value = float(val)
+        self._factor = self.transform(val)
 
     @property
     def quantity(self):
-        """Value times unit (`~astropy.units.Quantity`)."""
+        """Value times unit as a `~astropy.units.Quantity`."""
         return self.value * self.unit
 
     @quantity.setter
@@ -305,69 +368,78 @@ class Parameter:
         self.value = val.value
         self.unit = val.unit
 
+    @property
+    def _step(self):
+        return self.error if self.error > 0.0 else np.abs(self.value)
+
     # TODO: possibly allow to set this independently
     @property
     def conf_min(self):
-        """Confidence min value (`float`)
-
-        Returns parameter minimum if defined else the scan_min
+        """Confidence minimum value as a `float`.
+        Return parameter minimum if defined, otherwise  a default is estimated from value and error.
         """
         if not np.isnan(self.min):
             return self.min
         else:
-            return self.scan_min
+            min_ = self.value - self._step * self.scan_n_sigma
+            large_step = np.maximum(self._step, np.abs(self.value))
+            min_ = np.minimum(min_, -large_step * 1e5)
+            return min_
 
     # TODO: possibly allow to set this independently
     @property
     def conf_max(self):
-        """Confidence max value (`float`)
-
-        Returns parameter maximum if defined else the scan_max
+        """Confidence maximum value as a `float`.
+        Return parameter maximum if defined, otherwise a default is estimated from value and error.
         """
+
         if not np.isnan(self.max):
             return self.max
         else:
-            return self.scan_max
+            max_ = self.value + self._step * self.scan_n_sigma
+            large_step = np.maximum(self._step, np.abs(self.value))
+            max_ = np.maximum(max_, large_step * 1e5)
+            return max_
 
     @property
     def scan_min(self):
-        """Stat scan min"""
+        """Stat scan minimum."""
         if self._scan_min is None:
-            return self.value - self.error * self.scan_n_sigma
+            return self.value - self._step * self.scan_n_sigma
 
         return self._scan_min
 
     @property
     def scan_max(self):
-        """Stat scan max"""
+        """Stat scan maximum."""
         if self._scan_max is None:
-            return self.value + self.error * self.scan_n_sigma
+            return self.value + self._step * self.scan_n_sigma
 
         return self._scan_max
 
     @scan_min.setter
     def scan_min(self, value):
-        """Stat scan min setter"""
+        """Stat scan minimum setter."""
         self._scan_min = value
 
     @scan_max.setter
     def scan_max(self, value):
-        """Stat scan max setter"""
+        """Stat scan maximum setter."""
         self._scan_max = value
 
     @property
     def scan_n_sigma(self):
-        """Stat scan n sigma"""
+        """Stat scan n sigma."""
         return self._scan_n_sigma
 
     @scan_n_sigma.setter
     def scan_n_sigma(self, n_sigma):
-        """Stat scan n sigma"""
+        """Stat scan n sigma."""
         self._scan_n_sigma = int(n_sigma)
 
     @property
     def scan_values(self):
-        """Stat scan values (`~numpy.ndarray`)"""
+        """Stat scan values as a `numpy.ndarray`."""
         if self._scan_values is None:
             scale = interpolation_scale(self.interp)
             parmin, parmax = scale([self.scan_min, self.scan_max])
@@ -378,11 +450,11 @@ class Parameter:
 
     @scan_values.setter
     def scan_values(self, values):
-        """Set scan values"""
+        """Set scan values."""
         self._scan_values = values
 
     def check_limits(self):
-        """Emit a warning or error if value is outside the min/max range"""
+        """Emit a warning or error if value is outside the minimum/maximum range."""
         if not self.frozen:
             if (~np.isnan(self.min) and (self.value <= self.min)) or (
                 ~np.isnan(self.max) and (self.value >= self.max)
@@ -396,22 +468,29 @@ class Parameter:
         return (
             f"{self.__class__.__name__}(name={self.name!r}, value={self.value!r}, "
             f"factor={self.factor!r}, scale={self.scale!r}, unit={self.unit!r}, "
-            f"min={self.min!r}, max={self.max!r}, frozen={self.frozen!r}, id={hex(id(self))})"
+            f"min={self.min!r}, max={self.max!r}, frozen={self.frozen!r}, prior={self.prior!r}, id={hex(id(self))})"
         )
 
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
+
     def copy(self):
-        """A deep copy"""
+        """Deep copy."""
         return copy.deepcopy(self)
 
     def update_from_dict(self, data):
-        """Update parameters from a dict.
-        Protection against changing parameter model, type, name."""
-        keys = ["value", "unit", "min", "max", "frozen"]
+        """Update parameters from a dictionary."""
+        keys = ["value", "unit", "min", "max", "frozen", "prior"]
         for k in keys:
+            if k == "prior" and data[k] == "":
+                data[k] = None
             setattr(self, k, data[k])
 
     def to_dict(self):
-        """Convert to dict."""
+        """Convert to dictionary."""
         output = {
             "name": self.name,
             "value": self.value,
@@ -422,20 +501,21 @@ class Parameter:
             "frozen": self.frozen,
             "interp": self.interp,
             "scale_method": self.scale_method,
-            "is_norm": self.is_norm,
+            "scale_transform": self.scale_transform,
         }
 
         if self._link_label_io is not None:
             output["link"] = self._link_label_io
-
+        if self.prior is not None:
+            output["prior"] = self.prior.to_dict()["prior"]
         return output
 
-    def autoscale(self):
-        """Autoscale the parameters.
+    def update_scale(self, value):
+        """Update the parameter scale.
 
-        Set ``factor`` and ``scale`` according to ``scale_method`` attribute
+        Set ``factor`` and ``scale`` according to ``scale_method`` attribute.
 
-        Available ``scale_method``
+        Available ``scale_method``.
 
         * ``scale10`` sets ``scale`` to power of 10,
           so that abs(factor) is in the range 1 to 10
@@ -447,15 +527,60 @@ class Parameter:
 
         """
         if self.scale_method == "scale10":
-            value = self.value
             if value != 0:
                 exponent = np.floor(np.log10(np.abs(value)))
-                scale = np.power(10.0, exponent)
-                self.factor = value / scale
-                self.scale = scale
+                self._scale = np.power(10.0, exponent)
 
         elif self.scale_method == "factor1":
-            self.factor, self.scale = 1, self.value
+            self._scale = value
+
+    def transform(self, value, update_scale=False):
+        """Transform from value to factor (used by the optimizer).
+
+        Parameters
+        ----------
+        value : float
+            Parameter value.
+        update_scale : bool, optional
+            Update the scaling (used by the autoscale). Default is False.
+        """
+        interp_scale = interpolation_scale(self.scale_transform)
+        transformed_value = interp_scale(value)
+        if update_scale:
+            self.update_scale(transformed_value)
+        return transformed_value / self.scale
+
+    def inverse_transform(self, factor):
+        """Inverse transform from factor (used by the optimizer) to value.
+
+        Parameters
+        ----------
+        factor : float
+            Parameter factor.
+        """
+        interp_scale = interpolation_scale(self.scale_transform)
+        value = interp_scale.inverse(self.scale * factor)
+        return value
+
+    def _inverse_transform_derivative(self, factor):
+        """Inverse transform from factor (used by the optimizer) to value.
+
+        Parameters
+        ----------
+        factor : float
+            Parameter factor.
+        """
+        interp_scale = interpolation_scale(self.scale_transform)
+        return interp_scale._inverse_deriv(self.scale * factor) * self.scale
+
+    def autoscale(self):
+        "Apply `~gammapy.utils.interpolation.interpolation_scale` and `scale_method` to the parameter."
+        self.factor = self.transform(self.value, update_scale=True)
+
+    def reset_autoscale(self):
+        "Reset scaling such as factor=value, scale=1."
+        self._factor = self._value
+        self._scale = 1.0
 
 
 class Parameters(collections.abc.Sequence):
@@ -467,7 +592,7 @@ class Parameters(collections.abc.Sequence):
     Parameters
     ----------
     parameters : list of `Parameter`
-        List of parameters
+        List of parameters.
     """
 
     def __init__(self, parameters=None):
@@ -478,24 +603,41 @@ class Parameters(collections.abc.Sequence):
 
         self._parameters = parameters
 
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
+
     def check_limits(self):
-        """Check parameter limits and emit a warning"""
+        """Check parameter limits and emit a warning."""
         for par in self:
             par.check_limits()
 
     @property
+    def prior(self):
+        return [par.prior for par in self]
+
+    def prior_stat_sum(self):
+        parameters_stat_sum = 0
+        for par in self:
+            if par.prior is not None:
+                parameters_stat_sum += par.prior_stat_sum()
+        return parameters_stat_sum
+
+    @property
     def types(self):
-        """Parameter types"""
+        """Parameter types."""
         return [par.type for par in self]
 
     @property
     def min(self):
-        """Parameter mins (`numpy.ndarray`)."""
+        """Parameter minima as a `numpy.ndarray`."""
         return np.array([_.min for _ in self._parameters], dtype=np.float64)
 
     @min.setter
     def min(self, min_array):
-        """Parameter minima (`numpy.ndarray`)."""
+        """Parameter minima as a `numpy.ndarray`."""
         if not len(self) == len(min_array):
             raise ValueError("Minima must have same length as parameter list")
 
@@ -504,12 +646,12 @@ class Parameters(collections.abc.Sequence):
 
     @property
     def max(self):
-        """Parameter maxima (`numpy.ndarray`)."""
+        """Parameter maxima as a `numpy.ndarray`."""
         return np.array([_.max for _ in self._parameters], dtype=np.float64)
 
     @max.setter
     def max(self, max_array):
-        """Parameter maxima (`numpy.ndarray`)."""
+        """Parameter maxima as a `numpy.ndarray`."""
         if not len(self) == len(max_array):
             raise ValueError("Maxima must have same length as parameter list")
 
@@ -518,12 +660,12 @@ class Parameters(collections.abc.Sequence):
 
     @property
     def value(self):
-        """Parameter values (`numpy.ndarray`)."""
+        """Parameter values as a `numpy.ndarray`."""
         return np.array([_.value for _ in self._parameters], dtype=np.float64)
 
     @value.setter
     def value(self, values):
-        """Parameter values (`numpy.ndarray`)."""
+        """Parameter values as a `numpy.ndarray`."""
         if not len(self) == len(values):
             raise ValueError("Values must have same length as parameter list")
 
@@ -537,33 +679,28 @@ class Parameters(collections.abc.Sequence):
         Parameters
         ----------
         parameters_list : list of `Parameters`
-            List of `Parameters` objects
+            List of `Parameters` objects.
         """
         pars = itertools.chain(*parameters_list)
         return cls(pars)
 
     def copy(self):
-        """A deep copy"""
+        """Deep copy."""
         return copy.deepcopy(self)
 
     @property
-    def norm_parameters(self):
-        """List of norm parameters"""
-        return self.__class__([par for par in self._parameters if par.is_norm])
-
-    @property
     def free_parameters(self):
-        """List of free parameters"""
+        """List of free parameters."""
         return self.__class__([par for par in self._parameters if not par.frozen])
 
     @property
     def unique_parameters(self):
-        """Unique parameters (`Parameters`)."""
+        """Unique parameters as a `Parameters` object."""
         return self.__class__(dict.fromkeys(self._parameters))
 
     @property
     def names(self):
-        """List of parameter names"""
+        """List of parameter names."""
         return [par.name for par in self._parameters]
 
     def index(self, val):
@@ -585,7 +722,7 @@ class Parameters(collections.abc.Sequence):
             raise TypeError(f"Invalid type: {type(val)!r}")
 
     def __getitem__(self, key):
-        """Access parameter by name, index or boolean mask"""
+        """Access parameter by name, index or boolean mask."""
         if isinstance(key, np.ndarray) and key.dtype == bool:
             return self.__class__(list(np.array(self._parameters)[key]))
         else:
@@ -609,18 +746,31 @@ class Parameters(collections.abc.Sequence):
 
         return data
 
+    @staticmethod
+    def _create_default_table():
+        name_to_type = {
+            "type": "str",
+            "name": "str",
+            "value": "float",
+            "unit": "str",
+            "error": "float",
+            "min": "float",
+            "max": "float",
+            "frozen": "bool",
+            "link": "str",
+            "prior": "str",
+        }
+        return Table(names=name_to_type.keys(), dtype=name_to_type.values())
+
     def to_table(self):
         """Convert parameter attributes to `~astropy.table.Table`."""
-        rows = []
+        table = self._create_default_table()
+
         for p in self._parameters:
-            d = p.to_dict()
-            if "link" not in d:
-                d["link"] = ""
-            for key in ["scale_method", "interp"]:
-                if key in d:
-                    del d[key]
-            rows.append({**dict(type=p.type), **d})
-        table = Table(rows)
+            d = {k: v for k, v in p.to_dict().items() if k in table.colnames}
+            if "prior" in d:
+                d["prior"] = d["prior"]["type"]
+            table.add_row(d)
 
         table["value"].format = ".4e"
         for name in ["error", "min", "max"]:
@@ -638,6 +788,7 @@ class Parameters(collections.abc.Sequence):
 
         for par in data:
             link_label = par.pop("link", None)
+            par.pop("is_norm", None)
             parameter = Parameter(**par)
             parameter._link_label_io = link_label
             parameters.append(parameter)
@@ -658,7 +809,7 @@ class Parameters(collections.abc.Sequence):
     def autoscale(self):
         """Autoscale all parameters.
 
-        See :func:`~gammapy.modeling.Parameter.autoscale`
+        See :func:`~gammapy.modeling.Parameter.autoscale`.
 
         """
         for par in self._parameters:
@@ -670,21 +821,21 @@ class Parameters(collections.abc.Sequence):
         type=None,
         frozen=None,
     ):
-        """Create a mask of models, true if all conditions are verified
+        """Create a mask of models, true if all conditions are verified.
 
         Parameters
         ----------
-        name : str or list
-            Name of the parameter
-        type : {None, spatial, spectral, temporal}
-           type of models
-        frozen : bool
-            Select frozen parameters if True, exclude them if False.
+        name : str or list, optional
+            Name of the parameter. Default is None.
+        type : {None, "spatial", "spectral", "temporal"}
+            Type of models. Default is None.
+        frozen : bool, optional
+            Select frozen parameters if True, exclude them if False. Default is None.
 
         Returns
         -------
         parameters : `Parameters`
-           Selected parameters
+           Selected parameters.
         """
         selection = np.ones(len(self), dtype=bool)
 
@@ -707,12 +858,12 @@ class Parameters(collections.abc.Sequence):
         return self[selection]
 
     def freeze_all(self):
-        """Freeze all parameters"""
+        """Freeze all parameters."""
         for par in self._parameters:
             par.frozen = True
 
     def unfreeze_all(self):
-        """Unfreeze all parameters (even those frozen by default)"""
+        """Unfreeze all parameters (even those frozen by default)."""
         for par in self._parameters:
             par.frozen = False
 
@@ -724,18 +875,16 @@ class Parameters(collections.abc.Sequence):
 
         Parameters
         ----------
-        restore_values : bool
-            Restore values if True, otherwise restore only frozen status.
+        restore_values : bool, optional
+            Restore values if True, otherwise restore only frozen status. Default is None.
 
         Examples
         --------
-        ::
-
-            from gammapy.modeling.models import PowerLawSpectralModel
-            pwl = PowerLawSpectralModel(index=2)
-            with pwl.parameters.restore_status():
-                pwl.parameters["index"].value = 3
-            print(pwl.parameters["index"].value)
+        >>> from gammapy.modeling.models import PowerLawSpectralModel
+        >>> pwl = PowerLawSpectralModel(index=2)
+        >>> with pwl.parameters.restore_status():
+        ...     pwl.parameters["index"].value = 3
+        >>> print(pwl.parameters["index"].value) # doctest: +SKIP
         """
         return restore_parameters_status(self, restore_values)
 
@@ -755,3 +904,120 @@ class restore_parameters_status:
             if self.restore_values:
                 par.value = value
             par.frozen = frozen
+
+
+class PriorParameter(Parameter):
+    """Parameter of a `~gammapy.modeling.models.Prior`.
+
+    A prior is a probability density function of a model parameter and can take different forms, including but not limited to Gaussian
+    distributions and uniform distributions. The prior includes information or knowledge about the dataset or the
+    parameters of the fit.
+
+    Parameters
+    ----------
+    name : str
+        Name.
+    value : float or `~astropy.units.Quantity`
+        Value.
+    unit : `~astropy.units.Unit` or str, optional
+        Unit. Default is "".
+
+    Examples
+    --------
+    For a usage example see :doc:`/tutorials/api/priors` tutorial.
+    """
+
+    def __init__(
+        self,
+        name,
+        value,
+        unit="",
+        scale=1,
+        min=np.nan,
+        max=np.nan,
+        error=0,
+        scale_method="scale10",
+        scale_transform="lin",
+    ):
+        if not isinstance(name, str):
+            raise TypeError(f"Name must be string, got '{type(name)}' instead")
+
+        self._name = name
+        self._scale_method = scale_method
+        self._scale_transform = scale_transform
+        self._scale = float(scale)
+        self.min = min
+        self.max = max
+        self._error = error
+        if isinstance(value, u.Quantity) or isinstance(value, str):
+            val = u.Quantity(value)
+            self.value = val.value
+            self.unit = val.unit
+        else:
+            self.factor = value
+            self.unit = unit
+
+        self._type = "prior"
+
+    def to_dict(self):
+        """Convert to dictionary."""
+        output = {
+            "name": self.name,
+            "value": self.value,
+            "unit": self.unit.to_string("fits"),
+            "error": self.error,
+            "min": self.min,
+            "max": self.max,
+        }
+        return output
+
+    def __repr__(self):
+        return (
+            f"{self.__class__.__name__}(name={self.name!r}, value={self.value!r}, "
+            f"factor={self.factor!r}, scale={self.scale!r}, unit={self.unit!r}, "
+            f"min={self.min!r}, max={self.max!r})"
+        )
+
+
+class PriorParameters(Parameters):
+    """Container of parameter priors :
+
+    - List of `PriorParameter` objects.
+
+    Parameters
+    ----------
+    parameters : list of `PriorParameter`
+        List of parameters.
+    """
+
+    def __init__(self, parameters=None):
+        if parameters is None:
+            parameters = []
+        else:
+            parameters = list(parameters)
+
+        self._parameters = parameters
+
+    def to_table(self):
+        """Convert parameter attributes to `~astropy.table.Table`."""
+        rows = []
+        for p in self._parameters:
+            d = p.to_dict()
+            rows.append({**dict(type=p.type), **d})
+        table = Table(rows)
+
+        table["value"].format = ".4e"
+        for name in ["error", "min", "max"]:
+            table[name].format = ".3e"
+
+        return table
+
+    @classmethod
+    def from_dict(cls, data):
+        parameters = []
+
+        for par in data:
+            parameter = PriorParameter(**par)
+            parameters.append(parameter)
+
+        return cls(parameters=parameters)

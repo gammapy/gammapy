@@ -6,7 +6,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
-from pydantic.error_wrappers import ValidationError
+from pydantic import ValidationError
 from gammapy.analysis import Analysis, AnalysisConfig
 from gammapy.datasets import MapDataset, SpectrumDatasetOnOff
 from gammapy.maps import WcsGeom, WcsNDMap

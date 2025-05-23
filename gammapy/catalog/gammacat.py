@@ -38,7 +38,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         )
 
     def info(self, info="all"):
-        """Info string.
+        """Information string.
 
         Parameters
         ----------
@@ -85,7 +85,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         )
 
     def _info_position(self):
-        """Print position info."""
+        """Print position information."""
         d = self.data
         return (
             f"\n*** Position info ***\n\n"
@@ -103,7 +103,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         )
 
     def _info_morph(self):
-        """Print morphology info."""
+        """Print morphology information."""
         d = self.data
         return (
             f"\n*** Morphology info ***\n\n"
@@ -118,7 +118,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         )
 
     def _info_spectral_fit(self):
-        """Print spectral info."""
+        """Print spectral information."""
         d = self.data
         ss = "\n*** Spectral info ***\n\n"
         ss += f"Significance: {d.significance:.3f}\n"
@@ -158,7 +158,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         return ss
 
     def _info_spectral_points(self):
-        """Print spectral points info."""
+        """Print spectral points information."""
         d = self.data
         ss = "\n*** Spectral points ***\n\n"
         ss += f"SED reference ID: {d.sed_reference_id}\n"
@@ -288,7 +288,7 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         )
 
     def _add_source_meta(self, table):
-        """Copy over some info to table.meta"""
+        """Copy over some information to `table.meta`."""
         d = self.data
         m = table.meta
         m["origin"] = "Data from gamma-cat"
@@ -356,14 +356,11 @@ class SourceCatalogGammaCat(SourceCatalog):
 
     Access source spectral data and plot it:
 
-    >>> ax= plt.subplot()
+    >>> ax = plt.subplot()
     >>> energy_range = [1, 10] * u.TeV
-    >>> source.spectral_model().plot(energy_range, ax=ax) #doctest:+ELLIPSIS
-    <AxesSubplot:...xlabel='Energy [TeV]', ylabel='dnde [1 / (cm2 s TeV)]'>
-    >>> source.spectral_model().plot_error(energy_range, ax=ax) #doctest:+ELLIPSIS
-    <AxesSubplot:...xlabel='Energy [TeV]', ylabel='dnde [1 / (cm2 s TeV)]'>
-    >>> source.flux_points.plot(ax=ax) #doctest:+ELLIPSIS
-    <AxesSubplot:...xlabel='Energy [TeV]', ylabel='dnde [1 / (cm2 s TeV)]'>
+    >>> source.spectral_model().plot(energy_range, ax=ax) # doctest: +SKIP
+    >>> source.spectral_model().plot_error(energy_range, ax=ax) # doctest: +SKIP
+    >>> source.flux_points.plot(ax=ax) # doctest: +SKIP
     """
 
     tag = "gamma-cat"

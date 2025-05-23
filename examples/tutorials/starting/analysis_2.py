@@ -58,7 +58,7 @@ In practice, we have to:
   - Apply the makers sequentially to produce the current `~gammapy.datasets.MapDataset`
   - Stack it on the target one.
 
-- Define the`~gammapy.modeling.models.SkyModel` to apply to the dataset.
+- Define the `~gammapy.modeling.models.SkyModel` to apply to the dataset.
 - Create a `~gammapy.modeling.Fit` object and run it to fit the model
   parameters
 - Apply a `~gammapy.estimators.FluxPointsEstimator` to compute flux points for
@@ -78,7 +78,6 @@ from regions import CircleSkyRegion
 
 # %matplotlib inline
 import matplotlib.pyplot as plt
-from IPython.display import display
 from gammapy.data import DataStore
 from gammapy.datasets import MapDataset
 from gammapy.estimators import FluxPointsEstimator
@@ -184,7 +183,9 @@ stacked = MapDataset.create(
 #
 # The `~gammapy.makers.MapDatasetMaker` object is initialized as well as
 # the `~gammapy.makers.SafeMaskMaker` that carries here a maximum offset
-# selection.
+# selection. The `~gammapy.makers.FoVBackgroundMaker` utilised here has the
+# default ``spectral_model`` but it is possible to set your own. For further
+# details see the :doc:`FoV background </user-guide/makers/fov>`.
 #
 
 offset_max = 2.5 * u.deg
@@ -393,8 +394,10 @@ spec = sky_model.spectral_model
 #
 
 energy_bounds = [1, 10] * u.TeV
-spec.plot(energy_bounds=energy_bounds, energy_power=2)
-ax = spec.plot_error(energy_bounds=energy_bounds, energy_power=2)
+
+fig, ax = plt.subplots(figsize=(8, 6))
+spec.plot(ax=ax, energy_bounds=energy_bounds, sed_type="e2dnde")
+spec.plot_error(ax=ax, energy_bounds=energy_bounds, sed_type="e2dnde")
 plt.show()
 
 
@@ -416,6 +419,8 @@ fpe = FluxPointsEstimator(energy_edges=energy_edges, source="crab")
 # %%time
 flux_points = fpe.run(datasets=[stacked])
 
-ax = spec.plot_error(energy_bounds=energy_bounds, energy_power=2)
-flux_points.plot(ax=ax, energy_power=2)
+fig, ax = plt.subplots(figsize=(8, 6))
+spec.plot(ax=ax, energy_bounds=energy_bounds, sed_type="e2dnde")
+spec.plot_error(ax=ax, energy_bounds=energy_bounds, sed_type="e2dnde")
+flux_points.plot(ax=ax, sed_type="e2dnde")
 plt.show()

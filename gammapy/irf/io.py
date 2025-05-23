@@ -2,11 +2,10 @@
 import logging
 from astropy.io import fits
 from gammapy.data.hdu_index_table import HDUIndexTable
-from gammapy.utils.deprecation import deprecated
 from gammapy.utils.fits import HDULocation
 from gammapy.utils.scripts import make_path
 
-__all__ = ["load_cta_irfs", "load_irf_dict_from_file"]
+__all__ = ["load_irf_dict_from_file"]
 
 log = logging.getLogger(__name__)
 
@@ -139,76 +138,16 @@ IRF_MAP_HDU_SPECIFICATION = {
 
 
 def gadf_is_pointlike(header):
-    """Check if a GADF IRF is pointlike based on the header"""
+    """Check if a GADF IRF is pointlike based on the header."""
     return header.get("HDUCLAS3") == "POINT-LIKE"
 
 
-@deprecated("v1.1", alternative="load_irf_dict_from_file")
-def load_cta_irfs(filename):
-    """Load IRFs from file as written by the CTA DC1 into a dict
-
-    This function has a hardcoded list of IRF types and HDU names
-    and does not check what types of IRFs are actually present in the file.
-
-    Please use `load_irf_dict_from_file` instead..
-
-    The IRF format should be compliant with the one discussed
-    at http://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/.
-
-    The various IRFs are accessible with the following keys:
-
-    - 'aeff' is a `~gammapy.irf.EffectiveAreaTable2D`
-    - 'edisp'  is a `~gammapy.irf.EnergyDispersion2D`
-    - 'psf' is a `~gammapy.irf.EnergyDependentMultiGaussPSF`
-    - 'bkg' is a  `~gammapy.irf.Background3D`
-
-    Parameters
-    ----------
-    filename : str
-        the input filename. Default is
-
-    Returns
-    -------
-    cta_irf : dict
-        the IRF dictionary
-
-    Examples
-    --------
-    Access the CTA 1DC IRFs stored in the gammapy datasets
-
-    >>> from gammapy.irf import load_cta_irfs
-    >>> filename = "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
-    >>> cta_irf = load_cta_irfs(filename)
-    >>> print(cta_irf['aeff'])
-    EffectiveAreaTable2D
-    --------------------
-    <BLANKLINE>
-      axes  : ['energy_true', 'offset']
-      shape : (42, 6)
-      ndim  : 2
-      unit  : m2
-      dtype : >f4
-    <BLANKLINE>
-    """
-    from .background import Background3D
-    from .edisp import EnergyDispersion2D
-    from .effective_area import EffectiveAreaTable2D
-    from .psf import EnergyDependentMultiGaussPSF
-
-    aeff = EffectiveAreaTable2D.read(filename, hdu="EFFECTIVE AREA")
-    bkg = Background3D.read(filename, hdu="BACKGROUND")
-    edisp = EnergyDispersion2D.read(filename, hdu="ENERGY DISPERSION")
-    psf = EnergyDependentMultiGaussPSF.read(filename, hdu="POINT SPREAD FUNCTION")
-
-    return dict(aeff=aeff, bkg=bkg, edisp=edisp, psf=psf)
-
-
 class UnknownHDUClass(IOError):
-    """Raised when a file contains an unknown HDUCLASS"""
+    """Raised when a file contains an unknown HDUCLASS."""
 
 
 def _get_hdu_type_and_class(header):
-    """Get gammapy hdu_type and class from FITS header
+    """Get gammapy hdu_type and class from FITS header.
 
     Contains a workaround to support CTA 1DC irf file.
     """
@@ -233,21 +172,21 @@ def _get_hdu_type_and_class(header):
 
 
 def load_irf_dict_from_file(filename):
-    """Load all available IRF components from given file into a dict.
+    """Load all available IRF components from given file into a dictionary.
 
     If multiple IRFs of the same type are present, the first encountered is returned.
 
     Parameters
     ----------
-    filename : str, Path
-        path to the file containing the IRF components, if EVENTS and GTI HDUs
-        are included in the file, they are ignored
+    filename : str or `~pathlib.Path`
+        Path to the file containing the IRF components, if EVENTS and GTI HDUs
+        are included in the file, they are ignored.
 
     Returns
     -------
     irf_dict : dict of `~gammapy.irf.IRF`
-        dictionary with instances of the Gammapy objects corresponding
-        to the IRF components
+        Dictionary with instances of the Gammapy objects corresponding
+        to the IRF components.
     """
     from .rad_max import RadMax2D
 

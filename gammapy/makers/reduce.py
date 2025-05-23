@@ -1,3 +1,4 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 from astropy.coordinates import Angle
 import gammapy.utils.parallel as parallel
@@ -14,28 +15,31 @@ __all__ = [
 
 
 class DatasetsMaker(Maker, parallel.ParallelMixin):
-    """Run makers in a chain
+    """Run makers in a chain.
 
     Parameters
     ----------
     makers : list of `Maker` objects
-        Makers
-    stack_datasets : bool
-        If True stack into the reference dataset (see `run` method arguments).
-    n_jobs : int
+        Makers.
+    stack_datasets : bool, optional
+        If True, stack into the reference dataset (see `run` method arguments).
+        Default is True.
+    n_jobs : int, optional
         Number of processes to run in parallel.
         Default is one, unless `~gammapy.utils.parallel.N_JOBS_DEFAULT` was modified.
     cutout_mode : {'trim', 'partial', 'strict'}
         Used only to cutout the reference `MapDataset` around each processed observation.
         Mode is an option for Cutout2D, for details see `~astropy.nddata.utils.Cutout2D`.
         Default is "trim".
-    cutout_width : tuple of `~astropy.coordinates.Angle`
+    cutout_width : tuple of `~astropy.coordinates.Angle`, optional
         Angular sizes of the region in (lon, lat) in that specific order.
         If only one value is passed, a square region is extracted.
         If None it returns an error, except if the list of makers includes a `SafeMaskMaker`
         with the offset-max method defined. In that case it is set to two times `offset_max`.
-    parallel_backend : {'multiprocessing', 'ray'}
+        Default is None.
+    parallel_backend : {'multiprocessing', 'ray'}, optional
         Which backend to use for multiprocessing.
+        Default is None.
     """
 
     tag = "DatasetsMaker"
@@ -90,11 +94,10 @@ class DatasetsMaker(Maker, parallel.ParallelMixin):
         Parameters
         ----------
         dataset : `~gammapy.datasets.MapDataset`
-            Reference dataset
+            Reference dataset.
         observation : `Observation`
-            Observation
+            Observation.
         """
-
         if self._apply_cutout:
             cutouts_kwargs = {
                 "position": observation.get_pointing_icrs(observation.tmid).galactic,
@@ -122,9 +125,7 @@ class DatasetsMaker(Maker, parallel.ParallelMixin):
 
     def callback(self, dataset):
         if self.stack_datasets:
-            if isinstance(self._dataset, MapDataset) and isinstance(
-                dataset, MapDatasetOnOff
-            ):
+            if type(self._dataset) is MapDataset and type(dataset) is MapDatasetOnOff:
                 dataset = dataset.to_map_dataset(name=dataset.name)
             self._dataset.stack(dataset)
         else:
@@ -135,24 +136,23 @@ class DatasetsMaker(Maker, parallel.ParallelMixin):
         self._error = True
 
     def run(self, dataset, observations, datasets=None):
-        """Run data reduction
+        """Run data reduction.
 
         Parameters
         ----------
         dataset : `~gammapy.datasets.MapDataset`
-            Reference dataset (used only for stacking if datasets are provided)
+            Reference dataset (used only for stacking if datasets are provided).
         observations : `Observations`
-            Observations
+            Observations.
         datasets : `~gammapy.datasets.Datasets`
-            Base datasets, if provided its length must be the same than the observations.
+            Base datasets, if provided its length must be the same as the observations.
 
         Returns
         -------
         datasets : `~gammapy.datasets.Datasets`
-            Datasets
+            Datasets.
 
         """
-
         if isinstance(dataset, MapDataset):
             # also valid for Spectrum as it inherits from MapDataset
             self._dataset = dataset

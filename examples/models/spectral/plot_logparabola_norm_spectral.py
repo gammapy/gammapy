@@ -2,7 +2,7 @@ r"""
 .. _logparabola-spectral-norm-model:
 
 Log parabola spectral norm model
-===========================
+================================
 
 This model parametrises a log parabola spectral correction with a norm parameter.
 
@@ -17,7 +17,6 @@ from astropy import units as u
 import matplotlib.pyplot as plt
 from gammapy.modeling.models import (
     LogParabolaNormSpectralModel,
-    LogParabolaSpectralModel,
     Models,
     SkyModel,
     TemplateSpectralModel,

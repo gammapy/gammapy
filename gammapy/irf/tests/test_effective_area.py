@@ -54,6 +54,12 @@ def test_from_parametrization():
     assert area.unit == area_ref.unit
     assert area.meta["TELESCOP"] == "HESS"
 
+    area2 = EffectiveAreaTable2D.from_parametrization(axis, "CTAO")
+    assert area2.unit == area_ref.unit
+
+    with pytest.raises(ValueError):
+        area2 = EffectiveAreaTable2D.from_parametrization(axis, "SWIFT")
+
 
 @requires_data()
 def test_plot(aeff):

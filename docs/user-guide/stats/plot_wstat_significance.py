@@ -1,4 +1,5 @@
 """Example plot showing the profile of the Wstat statistic and its connection to significance."""
+
 import numpy as np
 import matplotlib.pyplot as plt
 from gammapy.stats import WStatCountsStatistic

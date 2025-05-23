@@ -1,14 +1,38 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from numpy.testing import assert_allclose
 from astropy.time import Time, TimeDelta
+import astropy.units as u
 from gammapy.utils.time import (
     absolute_time,
     extract_time_info,
+    time_to_fits,
+    time_to_fits_header,
     time_ref_from_dict,
     time_ref_to_dict,
     time_relative_to_ref,
     unique_time_info,
 )
+
+
+def test_time_to_fits():
+    time = Time("2001-01-01T00:00:00")
+    fits_time_simple = time_to_fits(time)
+
+    epoch = Time(10000, format="mjd", scale="tt")
+
+    fits_time_epoch = time_to_fits(time, epoch)
+    fits_time_unit = time_to_fits(time, unit=u.d)
+
+    assert_allclose(fits_time_simple, 4.485024e09 * u.s)
+    assert_allclose(fits_time_epoch, 3.621024e09 * u.s)
+    assert_allclose(fits_time_unit, 51910.000743 * u.d)
+
+
+def test_time_to_fits_header():
+    time = Time("2001-01-01T00:00:00")
+    fits_header_value, fits_header_unit = time_to_fits_header(time)
+    assert_allclose(fits_header_value, 4.485024e09)
+    assert fits_header_unit == "s"
 
 
 def test_time_ref_from_dict():

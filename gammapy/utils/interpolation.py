@@ -1,9 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Interpolation utilities"""
+"""Interpolation utilities."""
+
+import html
 from itertools import compress
 import numpy as np
 import scipy.interpolate
 from astropy import units as u
+from .compat import COPY_IF_NEEDED
 
 __all__ = [
     "interpolate_profile",
@@ -52,7 +55,6 @@ class ScaledRegularGridInterpolator:
         axis=None,
         **kwargs,
     ):
-
         if points_scale is None:
             points_scale = ["lin"] * len(points)
 
@@ -65,8 +67,9 @@ class ScaledRegularGridInterpolator:
         values_scaled = self.scale(values)
         points_scaled = self._scale_points(points=points)
 
+        kwargs.setdefault("bounds_error", False)
+
         if extrapolate:
-            kwargs.setdefault("bounds_error", False)
             kwargs.setdefault("fill_value", None)
 
         method = kwargs.get("method", None)
@@ -90,6 +93,12 @@ class ScaledRegularGridInterpolator:
                 points_scaled[0], values_scaled, axis=axis
             )
 
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
+
     def _scale_points(self, points):
         points_scaled = [scale(p) for p, scale in zip(points, self.scale_points)]
 
@@ -105,10 +114,10 @@ class ScaledRegularGridInterpolator:
         ----------
         points : tuple of `~numpy.ndarray` or `~astropy.units.Quantity`
             Tuple of coordinate arrays of the form (x_1, x_2, x_3, ...). Arrays are
-            broadcasted internally.
+            broadcast internally.
         method : {None, "linear", "nearest"}
-            Linear or nearest neighbour interpolation. None will choose the default
-            defined on init.
+            Linear or nearest neighbour interpolation.
+            Default is None, which is `method` defined on init.
         clip : bool
             Clip values at zero after interpolation.
         """
@@ -156,23 +165,36 @@ class InterpolationScale:
 
     def __call__(self, values):
         if hasattr(self, "_unit"):
-            values = u.Quantity(values, copy=False).to_value(self._unit)
+            values = u.Quantity(values, copy=COPY_IF_NEEDED).to_value(self._unit)
         else:
             if isinstance(values, u.Quantity):
                 self._unit = values.unit
                 values = values.value
         return self._scale(values)
 
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
+
     def inverse(self, values):
         values = self._inverse(values)
         if hasattr(self, "_unit"):
-            return u.Quantity(values, self._unit, copy=False)
+            return u.Quantity(values, self._unit, copy=COPY_IF_NEEDED)
+        else:
+            return values
+
+    def _inverse_deriv(self, values):
+        values = self._inverse_derivative(values)
+        if hasattr(self, "_unit"):
+            return u.Quantity(values, self._unit, copy=COPY_IF_NEEDED)
         else:
             return values
 
 
 class LogScale(InterpolationScale):
-    """Logarithmic scaling"""
+    """Logarithmic scaling."""
 
     tiny = np.finfo(np.float32).tiny
 
@@ -185,9 +207,13 @@ class LogScale(InterpolationScale):
         output = np.exp(values)
         return np.where(abs(output) - cls.tiny <= cls.tiny, 0, output)
 
+    @classmethod
+    def _inverse_derivative(cls, values):
+        return cls._inverse(values)
+
 
 class SqrtScale(InterpolationScale):
-    """Sqrt scaling"""
+    """Square root scaling."""
 
     @staticmethod
     def _scale(values):
@@ -198,9 +224,13 @@ class SqrtScale(InterpolationScale):
     def _inverse(cls, values):
         return np.power(values, 2)
 
+    @classmethod
+    def _inverse_derivative(cls, values):
+        return 2.0 * values
+
 
 class StatProfileScale(InterpolationScale):
-    """Sqrt scaling"""
+    """Square root profile scaling."""
 
     def __init__(self, axis=0):
         self.axis = axis
@@ -216,7 +246,7 @@ class StatProfileScale(InterpolationScale):
 
 
 class LinearScale(InterpolationScale):
-    """Linear scaling"""
+    """Linear scaling."""
 
     @staticmethod
     def _scale(values):
@@ -226,27 +256,37 @@ class LinearScale(InterpolationScale):
     def _inverse(cls, values):
         return values
 
+    @classmethod
+    def _inverse_derivative(cls, values):
+        return 1.0
 
-def interpolate_profile(x, y, interp_scale="sqrt"):
+
+def interpolate_profile(x, y, interp_scale="sqrt", extrapolate=False):
     """Helper function to interpolate one-dimensional profiles.
 
     Parameters
     ----------
     x : `~numpy.ndarray`
-        Array of x values
+        Array of x values.
     y : `~numpy.ndarray`
-        Array of y values
+        Array of y values.
     interp_scale : {"sqrt", "lin"}
         Interpolation scale applied to the profile. If the profile is
         of parabolic shape, a "sqrt" scaling is recommended. In other cases or
         for fine sampled profiles a "lin" can also be used.
+        Default is "sqrt".
+    extrapolate : bool
+        Extrapolate or not if the evaluation value is outside the range of x values.
+        Default is False.
 
     Returns
     -------
-    interp : `ScaledRegularGridInterpolator`
-        Interpolator
+    interp : `interp1d`
+        Interpolator.
     """
-    sign = np.sign(np.gradient(y))
-    return ScaledRegularGridInterpolator(
-        points=(x,), values=sign * y, values_scale=interp_scale
-    )
+    method_dict = {"sqrt": "quadratic", "lin": "linear"}
+    kwargs = dict(kind=method_dict[interp_scale])
+    if extrapolate:
+        kwargs["bounds_error"] = False
+        kwargs["fill_value"] = "extrapolate"
+    return scipy.interpolate.interp1d(x, y, **kwargs)

@@ -10,7 +10,6 @@ This model parametrises a power-law time model.
 
 """
 
-
 # %%
 # Example plot
 # ------------

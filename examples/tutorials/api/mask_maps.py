@@ -25,7 +25,7 @@ template on the data themselves. To limit contamination by real photons,
 one has to exclude parts of the field-of-view where signal is expected
 to be large. To do so, one needs to provide an exclusion mask. The
 latter can be provided in a different geometry as it will be reprojected
-by the `Makers`.
+by the `~gammapy.makers.Makers`.
 
 We explain in more details these two types of masks below:
 
@@ -53,8 +53,7 @@ even if the sources are masked and frozen.
 Note that a dataset contains also a `mask_safe` attribute that is
 created and filled during data reduction. It is not to be modified
 directly by users. The `mask_safe` is defined only from the options
-passed to the `~gammapy.makers.SafeMaskMaker` (for more details see
-`Safe Data Range Handling`_).
+passed to the `~gammapy.makers.SafeMaskMaker`.
 
 Exclusion masks
 ~~~~~~~~~~~~~~~
@@ -75,12 +74,14 @@ Proposed approach
 
 Even if the use cases for exclusion masks and fit masks are different,
 the way to create these masks is exactly the same, so in the following
-we show how to work with masks in general: - Creating masks from scratch
-- Combining multiple masks - Extending and reducing an existing mask -
-Reading and writing masks
+we show how to work with masks in general:
+
+- Creating masks from scratch
+- Combining multiple masks
+- Extending and reducing an existing mask
+- Reading and writing masks
 
 """
-
 
 ######################################################################
 # Setup
@@ -133,7 +134,7 @@ dataset = datasets["Fermi-LAT"]
 # a `mask_fit` it is equal to the safe energy range.
 #
 
-print(f"Fit range : {dataset.energy_range}")
+print(f"Fit range : {dataset.energy_range_total}")
 
 
 ######################################################################
@@ -158,7 +159,7 @@ mask_energy = dataset.counts.geom.energy_mask(10 * u.GeV, 700 * u.GeV)
 #
 
 dataset.mask_fit = mask_energy
-print(f"Fit range : {dataset.energy_range}")
+print(f"Fit range : {dataset.energy_range_total}")
 
 
 ######################################################################
@@ -409,7 +410,7 @@ plt.show()
 
 
 ######################################################################
-# The NOT operator is represented by `~` symbol:
+# The NOT operator is represented by the ``~`` symbol:
 #
 
 significance_mask_inv = ~significance_mask
@@ -428,12 +429,15 @@ plt.show()
 # `binary_dilate` methods, respectively.
 #
 
+fig, (ax1, ax2) = plt.subplots(
+    figsize=(11, 5), ncols=2, subplot_kw={"projection": significance_mask_inv.geom.wcs}
+)
+
 mask = significance_mask_inv.binary_erode(width=0.2 * u.deg, kernel="disk")
-mask.plot()
-plt.show()
+mask.plot(ax=ax1)
 
 mask = significance_mask_inv.binary_dilate(width=0.2 * u.deg)
-mask.plot()
+mask.plot(ax=ax2)
 plt.show()
 
 

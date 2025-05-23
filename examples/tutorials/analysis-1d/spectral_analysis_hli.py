@@ -16,7 +16,7 @@ Context
 This notebook is an introduction to gammapy analysis using the high
 level interface.
 
-Gammapy analysis consists in two main steps.
+Gammapy analysis consists of two main steps.
 
 The first one is data reduction: user selected observations are reduced
 to a geometry defined by the user. It can be 1D (spectrum from a given
@@ -24,7 +24,7 @@ extraction region) or 3D (with a sky projection and an energy axis). The
 resulting reduced data and instrument response functions (IRF) are
 called datasets in Gammapy.
 
-The second step consists in setting a physical model on the datasets and
+The second step consists of setting a physical model on the datasets and
 fitting it to obtain relevant physical information.
 
 **Objective: Create a 1D dataset of the Crab using the H.E.S.S. DL3 data
@@ -62,7 +62,6 @@ In summary, we have to:
    -  Estimating flux points
 
 """
-
 
 from pathlib import Path
 
@@ -151,7 +150,7 @@ print(config)
 # degrees of the Crab nebula. Parameters can be set directly or as a
 # python dict.
 #
-# PS: do not forget to set up your environment variable *$GAMMAPY_DATA* to
+# PS: do not forget to set up your environment variable `$GAMMAPY_DATA` to
 # your local directory containing the H.E.S.S. DL3-DR1 as described in
 # :ref:`quickstart-setup`.
 #
@@ -396,7 +395,6 @@ ax_spectrum, ax_residuals = analysis.datasets[0].plot_fit()
 ax_spectrum.set_ylim(0.1, 200)
 ax_spectrum.set_xlim(0.2, 60)
 ax_residuals.set_xlim(0.2, 60)
-analysis.datasets[0].plot_masks(ax=ax_spectrum)
 plt.show()
 
 

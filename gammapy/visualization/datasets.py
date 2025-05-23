@@ -16,14 +16,14 @@ def plot_spectrum_datasets_off_regions(
     ----------
     datasets : `~gammapy.datasets.Datasets` or list of `~gammapy.datasets.SpectrumDatasetOnOff`
         List of spectrum on-off datasets.
-    ax : `~astropy.visualization.wcsaxes.WCSAxes`
-        Axes object to plot on.
-    legend : bool
+    ax : `~astropy.visualization.wcsaxes.WCSAxes`, optional
+        Axes object to plot on. Default is None.
+    legend : bool, optional
         Whether to add/display the labels of the off regions in a legend. By default True if
-        ``len(datasets) <= 10``.
-    legend_kwargs : dict
+        ``len(datasets) <= 10``. Default is None.
+    legend_kwargs : dict, optional
         Keyword arguments used in `matplotlib.axes.Axes.legend`. The ``handler_map`` cannot be
-        overridden.
+        overridden. Default is None.
     **kwargs : dict
         Keyword arguments used in `gammapy.maps.RegionNDMap.plot_region`. Can contain a
         `~cycler.Cycler` in a ``prop_cycle`` argument.
@@ -126,12 +126,12 @@ def plot_npred_signal(
     ----------
     dataset : an instance of `~gammapy.datasets.MapDataset`
         The dataset from which to plot the npred_signal.
-    ax : `~matplotlib.axes.Axes`
-        Axis object to plot on.
-    model_names : list of str
+    ax : `~matplotlib.axes.Axes`, optional
+        Axis object to plot on. Default is None.
+    model_names : list of str, optional
         The list of models for which the npred_signal is plotted. Default is None.
         If None, all models are considered.
-    region: `~regions.Region` or `~astropy.coordinates.SkyCoord`
+    region : `~regions.Region` or `~astropy.coordinates.SkyCoord`, optional
         Region used to reproject predicted counts. Default is None.
         If None, use the full dataset geometry.
     **kwargs : dict
@@ -140,7 +140,7 @@ def plot_npred_signal(
     Returns
     -------
     axes : `~matplotlib.axes.Axes`
-        Axis object
+        Axis object.
     """
 
     npred_not_stack = dataset.npred_signal(

@@ -2,6 +2,7 @@
 import astropy.units as u
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
+from matplotlib.ticker import FormatStrFormatter
 from gammapy.maps.axes import UNIT_STRING_FORMAT
 from .core import IRF
 
@@ -17,18 +18,18 @@ class RadMax2D(IRF):
     for point-like IRF components when an energy or field of view
     dependent directional cut has been applied.
 
-    Data format specification: :ref:`gadf:rad_max_2d`
+    Data format specification: :ref:`gadf:rad_max_2d`.
 
     Parameters
     ----------
-    energy_axis : `MapAxis`
-        Reconstructed energy axis
-    offset_axis : `MapAxis`
-        Field of view offset axis.
+    axes : list of `~gammapy.maps.MapAxis` or `~gammapy.maps.MapAxes`
+        Required axes (in the given order) are:
+            * energy (reconstructed energy axis)
+            * offset (field of view offset axis)
     data : `~astropy.units.Quantity`
-        Applied directional cut
+        Applied directional cut.
     meta : dict
-        Meta data
+        Metadata dictionary.
     """
 
     tag = "rad_max_2d"
@@ -39,25 +40,25 @@ class RadMax2D(IRF):
     def from_irf(cls, irf):
         """Create a RadMax2D instance from another IRF component.
 
-        This reads the RAD_MAX metadata keyword from the irf and creates
+        This reads the RAD_MAX metadata keyword from the IRF and creates
         a RadMax2D with a single bin in energy and offset using the
-        ranges from the input irf.
+        ranges from the input IRF.
 
         Parameters
         ----------
-        irf: `~gammapy.irf.EffectiveAreaTable2D` or `~gammapy.irf.EnergyDispersion2D`
-            IRF instance from which to read the RAD_MAX and limit information
+        irf : `~gammapy.irf.EffectiveAreaTable2D` or `~gammapy.irf.EnergyDispersion2D`
+            IRF instance from which to read the RAD_MAX and limit information.
 
         Returns
         -------
-        rad_max: `RadMax2D`
+        rad_max : `RadMax2D`
             `RadMax2D` object with a single bin corresponding to the fixed
             RAD_MAX cut.
 
         Notes
         -----
         This assumes the true energy axis limits are also valid for the
-        reco energy limits.
+        reconstructed energy limits.
         """
         if not irf.is_pointlike:
             raise ValueError("RadMax2D.from_irf requires a point-like irf")
@@ -86,15 +87,15 @@ class RadMax2D(IRF):
 
         Parameters
         ----------
-        ax : `~matplotlib.pyplot.Axes`
-            Axes to plot on.
+        ax : `~matplotlib.pyplot.Axes`, optional
+            Matplotlib axes. Default is None.
         **kwargs : dict
-            Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`
+            Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
 
         Returns
         -------
         ax : `~matplotlib.pyplot.Axes`
-             Axes to plot on.
+             Matplotlib axes.
         """
         if ax is None:
             ax = plt.gca()
@@ -113,9 +114,10 @@ class RadMax2D(IRF):
         ax.set_ylim(0 * u.deg, None)
         ax.legend(loc="best")
         ax.set_ylabel(f"Rad max. [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]")
+        ax.yaxis.set_major_formatter(FormatStrFormatter("%.2f"))
         return ax
 
     @property
     def is_fixed_rad_max(self):
-        """Returns True if rad_max axes are flat."""
+        """Return True if rad_max axes are flat."""
         return self.axes.is_flat

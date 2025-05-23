@@ -10,7 +10,6 @@ This model parametrises a linear time model.
 
 """
 
-
 # %%
 # Example plot
 # ------------

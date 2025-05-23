@@ -14,18 +14,18 @@ log = logging.getLogger(__name__)
 
 
 class ParametricPSF(PSF):
-    """Parametric PSF base class
+    """Parametric PSF base class.
 
     Parameters
     ----------
     axes : list of `MapAxis` or `MapAxes`
-        Axes
-    data : dict of `~numpy.ndarray`, or `~numpy.recarray`
-        Data
+        Axes.
+    data : dict of `~numpy.ndarray` or `~numpy.recarray`
+        Data.
     unit : dict of str or `~astropy.units.Unit`
-        Unit
+        Unit.
     meta : dict
-        Meta data
+        Metadata dictionary.
     """
 
     @property
@@ -42,12 +42,12 @@ class ParametricPSF(PSF):
         pass
 
     def normalize(self):
-        """Normalize parametric PSF"""
+        """Normalize parametric PSF."""
         raise NotImplementedError
 
     @property
     def quantity(self):
-        """Quantity"""
+        """Quantity."""
         quantity = {}
 
         for name in self.required_parameters:
@@ -57,7 +57,7 @@ class ParametricPSF(PSF):
 
     @property
     def unit(self):
-        """Map unit (`~astropy.units.Unit`)"""
+        """Map unit as a `~astropy.units.Unit`."""
         return self._unit
 
     def to_unit(self, unit):
@@ -85,14 +85,14 @@ class ParametricPSF(PSF):
         Parameters
         ----------
         energy_true : `~astropy.units.Quantity`
-            energy value
+            Energy value.
         offset : `~astropy.coordinates.Angle`
-            Offset in the field of view
+            Offset in the field of view.
 
         Returns
         -------
         values : `~astropy.units.Quantity`
-            Interpolated value
+            Interpolated value.
         """
         pars = {}
         for name in self.required_parameters:
@@ -107,7 +107,7 @@ class ParametricPSF(PSF):
         Parameters
         ----------
         format : {"gadf-dl3"}
-            Format specification
+            Format specification. Default is "gadf-dl3".
 
 
         Returns
@@ -130,17 +130,19 @@ class ParametricPSF(PSF):
 
     @classmethod
     def from_table(cls, table, format="gadf-dl3"):
-        """Create parametric psf from `~astropy.table.Table`.
+        """Create parametric PSF from `~astropy.table.Table`.
 
         Parameters
         ----------
         table : `~astropy.table.Table`
-            Table  info.
+            Table information.
+        format : {"gadf-dl3"}, optional
+            Format specification. Default is "gadf-dl3".
 
         Returns
         -------
         psf : `~ParametricPSF`
-            PSF class
+            PSF class.
         """
         from gammapy.irf.io import IRF_DL3_HDU_SPECIFICATION
 
@@ -160,7 +162,7 @@ class ParametricPSF(PSF):
             column = table[spec[name]]
             values = column.data[0].transpose()
 
-            # TODO: this fixes some files where sigma is written as zero
+            # This fixes some files where sigma is written as zero
             if "sigma" in name:
                 values[values == 0] = 1.0
 
@@ -173,17 +175,17 @@ class ParametricPSF(PSF):
     def to_psf3d(self, rad=None):
         """Create a PSF3D from a parametric PSF.
 
-        It will be defined on the same energy and offset values than the input psf.
+        It will be defined on the same energy and offset values than the input PSF.
 
         Parameters
         ----------
         rad : `~astropy.units.Quantity`
-            Rad values
+            Rad values.
 
         Returns
         -------
         psf3d : `~gammapy.irf.PSF3D`
-            PSF3D.
+            3D PSF.
         """
         from gammapy.datasets.map import RAD_AXIS_DEFAULT
         from gammapy.irf import PSF3D
@@ -211,19 +213,19 @@ class ParametricPSF(PSF):
         return str_.expandtabs(tabsize=2)
 
     def containment(self, rad, **kwargs):
-        """Containment of the PSF at given axes coordinates
+        """Containment of the PSF at given axes coordinates.
 
         Parameters
         ----------
         rad : `~astropy.units.Quantity`
-            Rad value
+            Rad value.
         **kwargs : dict
-            Other coordinates
+            Other coordinates.
 
         Returns
         -------
         containment : `~numpy.ndarray`
-            Containment
+            Containment.
         """
         pars = self.evaluate_parameters(**kwargs)
         containment = self.evaluate_containment(rad=rad, **pars)
@@ -235,32 +237,32 @@ class ParametricPSF(PSF):
         Parameters
         ----------
         rad : `~astropy.coordinates.Angle`
-            Offset from PSF center used for evaluating the PSF on a grid
+            Offset from PSF center used for evaluating the PSF on a grid.
         **kwargs : dict
-            Other coordinates
+            Other coordinates.
 
         Returns
         -------
         psf_value : `~astropy.units.Quantity`
-            PSF value
+            PSF value.
         """
         pars = self.evaluate_parameters(**kwargs)
         value = self.evaluate_direct(rad=rad, **pars)
         return value
 
     def is_allclose(self, other, rtol_axes=1e-3, atol_axes=1e-6, **kwargs):
-        """Compare two data IRFs for equivalency
+        """Compare two data IRFs for equivalency.
 
         Parameters
         ----------
         other : `gammapy.irfs.ParametricPSF`
-            The PSF to compare against
-        rtol_axes : float
-            Relative tolerance for the axes comparison.
-        atol_axes : float
-            Relative tolerance for the axes comparison.
+            The PSF to compare against.
+        rtol_axes : float, optional
+            Relative tolerance for the axis comparison. Default is 1e-3.
+        atol_axes : float, optional
+            Relative tolerance for the axis comparison. Default is 1e-6.
         **kwargs : dict
-                keywords passed to `numpy.allclose`
+            Keywords passed to `numpy.allclose`.
 
         Returns
         -------
@@ -283,7 +285,7 @@ class ParametricPSF(PSF):
 
 
 def get_sigmas_and_norms(**kwargs):
-    """Convert scale and amplitude to norms"""
+    """Convert scale and amplitude to norms."""
     sigmas = u.Quantity([kwargs[f"sigma_{idx}"] for idx in [1, 2, 3]])
 
     scale = kwargs["scale"]
@@ -298,12 +300,15 @@ class EnergyDependentMultiGaussPSF(ParametricPSF):
 
     Parameters
     ----------
-    axes : list of `MapAxis`
-        Required axes are ["energy_true", "offset"]
+    axes : list of `~gammapy.maps.MapAxis` or `~gammapy.maps.MapAxes`
+        Required axes (in the given order) are:
+            * energy_true (true energy axis)
+            * migra_axis (energy migration axis)
+            * offset_axis (field of view offset axis)
     data : `~numpy.recarray`
-        Data array
+        Data array.
     meta : dict
-        Meta data
+        Metadata dictionary.
 
     Examples
     --------
@@ -326,19 +331,19 @@ class EnergyDependentMultiGaussPSF(ParametricPSF):
 
     @staticmethod
     def evaluate_containment(rad, **kwargs):
-        """Containment of the PSF at given axes coordinates
+        """Containment of the PSF at given axes coordinates.
 
         Parameters
         ----------
         rad : `~astropy.units.Quantity`
-            Rad value
+            Rad value.
         **kwargs : dict
-            Parameters, see `required_parameters`
+            Parameters, see `required_parameters`.
 
         Returns
         -------
         containment : `~numpy.ndarray`
-            Containment
+            Containment.
         """
         sigmas, norms = get_sigmas_and_norms(**kwargs)
         m = MultiGauss2D(sigmas=sigmas, norms=norms)
@@ -348,19 +353,19 @@ class EnergyDependentMultiGaussPSF(ParametricPSF):
 
     @staticmethod
     def evaluate_direct(rad, **kwargs):
-        """Evaluate psf model
+        """Evaluate PSF model.
 
         Parameters
         ----------
         rad : `~astropy.units.Quantity`
-            Rad value
+            Rad value.
         **kwargs : dict
-            Parameters, see `required_parameters`
+            Parameters, see `required_parameters`.
 
         Returns
         -------
         value : `~numpy.ndarray`
-            PSF value
+            PSF value.
         """
         sigmas, norms = get_sigmas_and_norms(**kwargs)
         m = MultiGauss2D(sigmas=sigmas, norms=norms)
@@ -376,9 +381,9 @@ class PSFKing(ParametricPSF):
     Parameters
     ----------
     axes : list of `MapAxis` or `MapAxes`
-        Data axes, required are ["energy_true", "offset"]
+        Data axes, required are ["energy_true", "offset"].
     meta : dict
-        Meta data
+        Metadata dictionary.
 
     """
 
@@ -389,21 +394,21 @@ class PSFKing(ParametricPSF):
 
     @staticmethod
     def evaluate_containment(rad, gamma, sigma):
-        """Containment of the PSF at given axes coordinates
+        """Containment of the PSF at given axes coordinates.
 
         Parameters
         ----------
         rad : `~astropy.units.Quantity`
-            Rad value
+            Rad value.
         gamma : `~astropy.units.Quantity`
-            Gamma parameter
+            Gamma parameter.
         sigma : `~astropy.units.Quantity`
-            Sigma parameter
+            Sigma parameter.
 
         Returns
         -------
         containment : `~numpy.ndarray`
-            Containment
+            Containment.
         """
         with np.errstate(divide="ignore", invalid="ignore"):
             powterm = 1 - gamma
@@ -421,12 +426,12 @@ class PSFKing(ParametricPSF):
         Parameters
         ----------
         rad : `~astropy.coordinates.Angle`
-            Offset from PSF center used for evaluating the PSF on a grid
+            Offset from PSF center used for evaluating the PSF on a grid.
 
         Returns
         -------
         psf_value : `~astropy.units.Quantity`
-            PSF value
+            PSF value.
         """
         with np.errstate(divide="ignore"):
             term1 = 1 / (2 * np.pi * sigma**2)

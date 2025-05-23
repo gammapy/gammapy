@@ -36,7 +36,6 @@ an integrated power law.
 
 """
 
-
 # %matplotlib inline
 import astropy.units as u
 import matplotlib.pyplot as plt
@@ -65,7 +64,7 @@ check_tutorials_setup()
 # Now, we create a config file for out analysis. You may load this from
 # disc if you have a pre-defined config file.
 #
-# Here, we use 3 simulated CTA runs of the galactic center.
+# Here, we use 3 simulated CTAO runs of the galactic center.
 #
 
 config = AnalysisConfig()
@@ -92,7 +91,7 @@ config.datasets.geom.wcs.binsize = "0.02 deg"
 # The FoV radius to use for cutouts
 config.datasets.geom.selection.offset_max = 2.5 * u.deg
 config.datasets.safe_mask.methods = ["offset-max"]
-config.datasets.safe_mask.parameters = {"offset_max": 2.5 * u.deg}
+config.datasets.safe_mask.parameters = {"offset_max": "2.5 deg"}
 config.datasets.background.method = "fov_background"
 config.fit.fit_range = {"min": "0.1 TeV", "max": "30.0 TeV"}
 
@@ -101,7 +100,7 @@ config.datasets.geom.axes.energy.min = "0.1 TeV"
 config.datasets.geom.axes.energy.max = "10 TeV"
 config.datasets.geom.axes.energy.nbins = 1
 
-config.datasets.geom.wcs.binsize_irf = 0.2 * u.deg
+config.datasets.geom.wcs.binsize_irf = "0.2 deg"
 
 print(config)
 

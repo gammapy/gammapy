@@ -54,6 +54,7 @@ import astropy.units as u
 # %matplotlib inline
 import matplotlib.pyplot as plt
 from IPython.display import display
+from gammapy.catalog import SourceCatalog4FGL
 from gammapy.catalog import CATALOG_REGISTRY
 
 ######################################################################
@@ -97,7 +98,6 @@ print(CATALOG_REGISTRY)
 # So a catalog can be loaded directly from its corresponding class
 #
 
-from gammapy.catalog import SourceCatalog4FGL
 
 catalog = SourceCatalog4FGL()
 print("Number of sources :", len(catalog.table))
@@ -397,6 +397,8 @@ print(lightcurve)
 display(lightcurve.to_table(format="lightcurve", sed_type="flux"))
 
 # %%
+plt.figure(figsize=(8, 6))
+plt.subplots_adjust(bottom=0.2, left=0.2)
 lightcurve.plot()
 plt.show()
 

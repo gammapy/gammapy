@@ -157,6 +157,10 @@ def test_safe_mask_maker_aeff_max_fixed_observation(
     )
     assert_allclose(mask_aeff_max_bis.data.sum(), 0)
 
+    maker = SafeMaskMaker(irfs="DL3")
+    with pytest.raises(ValueError):
+        maker.run(dataset)
+
 
 @requires_data()
 def test_safe_mask_maker_aeff_max_fixed_offset(dataset, observation_cta_1dc):
@@ -171,6 +175,13 @@ def test_safe_mask_maker_aeff_max_fixed_offset(dataset, observation_cta_1dc):
 
     with pytest.raises(ValueError):
         mask_aeff_max = safe_mask_maker.make_mask_energy_aeff_max(dataset)
+
+    safe_mask_maker1 = SafeMaskMaker(
+        methods=["aeff-max"], aeff_percent=20, fixed_offset=None, irfs="DL3"
+    )
+
+    mask1 = safe_mask_maker1.make_mask_energy_aeff_max(dataset, observation_cta_1dc)
+    assert_allclose(mask1.data.sum(), 847)
 
 
 @requires_data()
@@ -215,6 +226,15 @@ def test_safe_mask_maker_edisp_bias_fixed_offset(dataset, observation_cta_1dc):
     )
     assert_allclose(mask_edisp_bias_offset.data.sum(), 1694)
 
+    safe_mask_maker1 = SafeMaskMaker(
+        irfs="DL3", bias_percent=0.02, fixed_offset=1.5 * u.deg
+    )
+
+    mask_edisp_bias_offset = safe_mask_maker1.make_mask_energy_edisp_bias(
+        dataset, observation_cta_1dc
+    )
+    assert_allclose(mask_edisp_bias_offset.data.sum(), 1694)
+
 
 @requires_data()
 def test_safe_mask_maker_bkg_peak(dataset, observation_cta_1dc):
@@ -222,6 +242,12 @@ def test_safe_mask_maker_bkg_peak(dataset, observation_cta_1dc):
     safe_mask_maker = SafeMaskMaker(position=pointing)
 
     mask_bkg_peak = safe_mask_maker.make_mask_energy_bkg_peak(dataset)
+    assert_allclose(mask_bkg_peak.data.sum(), 1936)
+
+    safe_mask_maker1 = SafeMaskMaker(fixed_offset=1.0 * u.deg, irfs="DL3")
+    mask_bkg_peak = safe_mask_maker1.make_mask_energy_bkg_peak(
+        dataset, observation_cta_1dc
+    )
     assert_allclose(mask_bkg_peak.data.sum(), 1936)
 
 

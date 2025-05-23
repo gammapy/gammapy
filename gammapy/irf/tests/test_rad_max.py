@@ -1,9 +1,11 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.irf import EffectiveAreaTable2D, RadMax2D
 from gammapy.maps import MapAxis
+from gammapy.utils.compat import COPY_IF_NEEDED
 from gammapy.utils.testing import mpl_plot_check
 
 
@@ -51,7 +53,7 @@ def test_rad_max_from_irf():
     )
     offset_axis = MapAxis.from_bounds(0 * u.deg, 3 * u.deg, nbin=o_bins, name="offset")
     aeff = EffectiveAreaTable2D(
-        data=u.Quantity(np.ones((e_bins, o_bins)), u.m**2, copy=False),
+        data=u.Quantity(np.ones((e_bins, o_bins)), u.m**2, copy=COPY_IF_NEEDED),
         axes=[energy_axis, offset_axis],
         is_pointlike=True,
     )

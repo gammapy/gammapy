@@ -1,11 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
+import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
 from regions import CircleSkyRegion, RectangleSkyRegion
-from gammapy.data import GTI, EventList
+from gammapy.data import GTI, EventList, Observation, FixedPointingInfo
 from gammapy.maps import MapAxis, WcsGeom
 from gammapy.utils.testing import mpl_plot_check, requires_data
 
@@ -21,24 +22,40 @@ class TestEventListBase:
         events = self.events.select_parameter("ENERGY", (0.8 * u.TeV, 5.0 * u.TeV))
         assert len(events.table) == 2716
 
+        with pytest.warns(UserWarning):
+            events = self.events.select_parameter(
+                "ENERGY", (0.8, 5, 10) * u.TeV, is_range=True
+            )
+            assert len(events.table) == 2716
+
+        events = self.events.select_parameter(
+            "EVENT_ID", [1808181231761, 3594887627737, 3599182594792], is_range=False
+        )
+        assert len(events.table) == 3
+
+        events = self.events.select_parameter("ENERGY", (0.8, np.inf) * u.TeV)
+        assert len(events.table) == 3944
+
+    def test_meta(self):
+        assert self.events.meta.event_class == "std"
+        assert self.events.meta.creation.creator == "SASH FITS::EventListWriter"
+        assert self.events.meta.creation.date is None
+        assert self.events.meta.creation.origin == "H.E.S.S. Collaboration"
+        assert self.events.table["EVENT_ID"][0] == 1808181231761
+
     def test_write(self):
-        # Without GTI
-        self.events.write("test.fits", overwrite=True)
-        read_again = EventList.read("test.fits")
+        # Without GTI and pointing
+        obs = Observation(events=self.events)
+        # Write function is through obs
+        with pytest.raises(ValueError):
+            obs.write("test.fits.gz", include_irfs=False, overwrite=True)
 
-        # the meta dictionaries match because the input one
-        # already has the EXTNAME keyword
-        assert self.events.table.meta == read_again.table.meta
+        pointing = FixedPointingInfo.from_fits_header(self.events.table.meta)
+        obs = Observation(events=self.events, pointing=pointing)
+        obs.write("test.fits.gz", include_irfs=False, overwrite=True)
+        read_again = EventList.read("test.fits.gz")
+
         assert (self.events.table == read_again.table).all()
-
-        table = Table()
-        table["RA"] = [1, 2, 3]
-        table["DEC"] = [3, 2, 1]
-
-        dummy_events = EventList(table.copy())
-        dummy_events.write("test.fits", overwrite=True)
-        read_again = EventList.read("test.fits")
-
         assert read_again.table.meta["EXTNAME"] == "EVENTS"
         assert read_again.table.meta["HDUCLASS"] == "GADF"
         assert read_again.table.meta["HDUCLAS1"] == "EVENTS"
@@ -47,40 +64,21 @@ class TestEventListBase:
         gti = GTI.read(
             "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz"
         )
-        self.events.write("test.fits", overwrite=True, gti=gti)
+
+        obs = Observation(events=self.events, gti=gti, pointing=pointing)
+        obs.write("test.fits", overwrite=True)
         read_again_ev = EventList.read("test.fits")
         read_again_gti = GTI.read("test.fits")
 
-        assert self.events.table.meta == read_again_ev.table.meta
         assert (self.events.table == read_again_ev.table).all()
         assert gti.table.meta == read_again_gti.table.meta
         assert_allclose(gti.table["START"].mjd, read_again_gti.table["START"].mjd)
         assert_allclose(gti.table["STOP"].mjd, read_again_gti.table["STOP"].mjd)
 
         # test that it won't work if gti is not a GTI
-        with pytest.raises(TypeError):
-            self.events.write("test.fits", overwrite=True, gti=gti.table)
-        # test that it won't work if format is not "gadf"
-        with pytest.raises(ValueError):
-            self.events.write("test.fits", overwrite=True, format="something")
-        # test that it won't work if the basic headers are wrong
-
-        with pytest.raises(ValueError):
-            dummy_events = EventList(table.copy())
-            dummy_events.table.meta["HDUCLAS1"] = "response"
-            dummy_events.write("test.fits", overwrite=True)
-
-        with pytest.raises(ValueError):
-            dummy_events = EventList(table.copy())
-            dummy_events.table.meta["HDUCLASS"] = "ogip"
-            dummy_events.write("test.fits", overwrite=True)
-
-        # test that it we also get the error when the only the case is wrong
-        with pytest.raises(ValueError):
-            dummy_events = EventList(table.copy())
-            dummy_events.table.meta["HDUCLASS"] = "gadf"
-            dummy_events.table.meta["HDUCLAS1"] = "events"
-            dummy_events.write("test.fits", overwrite=True)
+        with pytest.raises(AttributeError):
+            obs = Observation(events=self.events, gti=gti.table, pointing=pointing)
+            obs.write("test.fits", overwrite=True)
 
 
 @requires_data()
@@ -132,7 +130,6 @@ class TestEventListHESS:
         altaz = self.events.altaz
         assert_allclose(altaz[0].az.deg, 193.337965, atol=1e-3)
         assert_allclose(altaz[0].alt.deg, 53.258024, atol=1e-3)
-        # TODO: add asserts for frame properties
 
     def test_median_position(self):
         coord = self.events.galactic_median

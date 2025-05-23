@@ -2,21 +2,20 @@
 Basic image exploration and fitting
 ===================================
 
-Detect sources, produce a sky image and a spectrum using CTA 1DC data.
+Detect sources, produce a sky image and a spectrum using CTA-1DC data.
 
 Introduction
 ------------
 
 **This notebook shows an example how to make a sky image and spectrum
-for simulated CTA data with Gammapy.**
+for simulated CTAO data with Gammapy.**
 
 The dataset we will use is three observation runs on the Galactic
-center. This is a tiny (and thus quick to process and play with and
-learn) subset of the simulated CTA dataset that was produced for the
+Center. This is a tiny (and thus quick to process and play with and
+learn) subset of the simulated CTAO dataset that was produced for the
 first data challenge in August 2017.
 
 """
-
 
 ######################################################################
 # Setup
@@ -28,12 +27,9 @@ first data challenge in August 2017.
 # Configure the logger, so that the spectral analysis
 # isn't so chatty about what it's doing.
 import logging
-import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
-
-# %matplotlib inline
 import matplotlib.pyplot as plt
 from IPython.display import display
 from gammapy.data import DataStore
@@ -54,7 +50,7 @@ from gammapy.modeling.models import (
     SkyModel,
 )
 from gammapy.visualization import plot_npred_signal, plot_spectrum_datasets_off_regions
-
+from gammapy.utils.check import check_tutorials_setup
 logging.basicConfig()
 log = logging.getLogger("gammapy.spectrum")
 log.setLevel(logging.ERROR)
@@ -62,7 +58,7 @@ log.setLevel(logging.ERROR)
 ######################################################################
 # Check setup
 # -----------
-from gammapy.utils.check import check_tutorials_setup
+
 
 check_tutorials_setup()
 
@@ -74,8 +70,8 @@ check_tutorials_setup()
 # A Gammapy analysis usually starts by creating a
 # `~gammapy.data.DataStore` and selecting observations.
 #
-# This is shown in detail in the other notebook, here we just pick three
-# observations near the galactic center.
+# This is shown in detail in other notebooks (see e.g. the :doc:`/tutorials/starting/analysis_2` tutorial),
+# here we choose three observations near the Galactic Center.
 #
 
 data_store = DataStore.from_dir("$GAMMAPY_DATA/cta-1dc/index/gps")
@@ -108,8 +104,19 @@ display(data_store.obs_table.select_obs_id(obs_id)[obs_cols])
 # analysis
 #
 
-axis = MapAxis.from_edges(
-    np.logspace(-1.0, 1.0, 10), unit="TeV", name="energy", interp="log"
+axis = MapAxis.from_energy_bounds(
+    0.1,
+    10,
+    nbin=10,
+    unit="TeV",
+    name="energy",
+)
+axis_true = MapAxis.from_energy_bounds(
+    0.05,
+    20,
+    nbin=20,
+    name="energy_true",
+    unit="TeV",
 )
 geom = WcsGeom.create(
     skydir=(0, 0), npix=(500, 400), binsz=0.02, frame="galactic", axes=[axis]
@@ -123,8 +130,7 @@ print(geom)
 #
 
 # %%time
-stacked = MapDataset.create(geom=geom)
-stacked.edisp = None
+stacked = MapDataset.create(geom=geom, energy_axis_true=axis_true)
 maker = MapDatasetMaker(selection=["counts", "background", "exposure", "psf"])
 maker_safe_mask = SafeMaskMaker(methods=["offset-max"], offset_max=2.5 * u.deg)
 
@@ -329,7 +335,7 @@ print(stacked_dataset)
 
 
 ######################################################################
-# Call `plot_npred_signal` to plot the predicted counts.
+# Call `~gammapy.visualization.plot_npred_signal` to plot the predicted counts.
 #
 
 
@@ -361,7 +367,7 @@ flux_points.to_table(sed_type="dnde", formatted=True)
 #
 # Let’s plot the spectral model and points. You could do it directly, but
 # for convenience we bundle the model and the flux points in a
-# `FluxPointDataset`:
+# `~gammapy.datasets.FluxPointsDataset`:
 #
 
 flux_points_dataset = FluxPointsDataset(data=flux_points, models=model)
@@ -395,7 +401,7 @@ plt.show()
 # What next?
 # ----------
 #
-# -  This notebook showed an example of a first CTA analysis with Gammapy,
+# -  This notebook showed an example of a first CTAO analysis with Gammapy,
 #    using simulated 1DC data.
 # -  Let us know if you have any questions or issues!
 #

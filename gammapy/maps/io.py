@@ -1,33 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import json
-from astropy import units as u
 from astropy.io import fits
-
-
-class JsonQuantityEncoder(json.JSONEncoder):
-    """Support for quantities that JSON default encoder"""
-
-    def default(self, obj):
-        if isinstance(obj, u.Quantity):
-            return obj.to_string()
-
-        return json.JSONEncoder.default(self, obj)
-
-
-class JsonQuantityDecoder(json.JSONDecoder):
-    """Support for quantities that JSON default encoder"""
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(object_hook=self.object_hook, *args, **kwargs)
-
-    @staticmethod
-    def object_hook(data):
-        for key, value in data.items():
-            try:
-                data[key] = u.Quantity(value)
-            except TypeError:
-                continue
-        return data
 
 
 def find_bands_hdu(hdu_list, hdu):
@@ -36,13 +8,13 @@ def find_bands_hdu(hdu_list, hdu):
     Parameters
     ----------
     hdu_list : `~astropy.io.fits.HDUList`
-
+        The FITS HDU list.
     hdu : `~astropy.io.fits.BinTableHDU` or `~astropy.io.fits.ImageHDU`
-
+        The HDU to check.
     Returns
     -------
     hduname : str
-        Extension name of the BANDS HDU.  None if no BANDS HDU was found.
+        Extension name of the BANDS HDU. Returns None if no BANDS HDU was found.
     """
     if "BANDSHDU" in hdu.header:
         return hdu.header["BANDSHDU"]

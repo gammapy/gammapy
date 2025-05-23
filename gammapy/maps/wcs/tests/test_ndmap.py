@@ -95,6 +95,22 @@ def test_wcsndmap_read_write(tmp_path, npix, binsz, frame, proj, skydir, axes):
     m3 = Map.read(path, map_type="wcs")
 
 
+@pytest.mark.parametrize(
+    ("npix", "binsz", "frame", "proj", "skydir", "axes"), wcs_test_geoms
+)
+def test_wcsndmap_write_checksum(tmp_path, npix, binsz, frame, proj, skydir, axes):
+    geom = WcsGeom.create(npix=npix, binsz=binsz, proj=proj, frame=frame, axes=axes)
+    path = tmp_path / "tmp.fits"
+
+    m0 = WcsNDMap(geom)
+    m0.write(path, overwrite=True, checksum=True)
+
+    hdul = fits.open(path)
+    for hdu in hdul:
+        assert "CHECKSUM" in hdu.header
+        assert "DATASUM" in hdu.header
+
+
 def test_wcsndmap_read_write_fgst(tmp_path):
     path = tmp_path / "tmp.fits"
 
@@ -410,9 +426,41 @@ def test_wcsndmap_downsample(npix, binsz, frame, proj, skydir, axes):
     m = WcsNDMap(geom, unit="m2")
     # Check whether we can downsample
     if np.all(np.mod(geom.npix[0], 2) == 0) and np.all(np.mod(geom.npix[1], 2) == 0):
+        # without weights
         m2 = m.downsample(2, preserve_counts=True)
         assert_allclose(np.nansum(m.data), np.nansum(m2.data))
         assert m.unit == m2.unit
+
+        m3 = m.downsample(2, preserve_counts=False)
+        assert_allclose(np.nanmean(m.data), np.nanmean(m3.data))
+        assert m.unit == m3.unit
+
+        # with weights
+        weights = np.random.rand(*m.data.shape)
+        m4 = m.downsample(2, preserve_counts=True, weights=weights)
+        assert_allclose(np.nansum(m.data * weights.data), np.nansum(m4.data))
+        assert m.unit == m4.unit
+
+
+def test_wcsndmap_downsample_weights():
+    geom = WcsGeom.create(
+        npix=10,
+        binsz=1.0,
+        frame="galactic",
+        proj="AIT",
+        skydir=SkyCoord(110.0, 75.0, unit="deg", frame="icrs"),
+        axes=None,
+    )
+    m = WcsNDMap(geom, data=np.tile(np.array([3.0, 2.0]), (10, 5)), unit="m2")
+
+    # weights array with recurring values to easily test for correct weighted averaging
+    weights = np.tile(np.array([1.0, 2.0]), (m.data.shape[0], m.data.shape[1] // 2))
+    m6 = m.downsample(2, preserve_counts=False, weights=weights)
+
+    assert_allclose(
+        np.nansum(m.data * weights) / np.nansum(weights), np.nanmean(m6.data)
+    )
+    assert m.unit == m6.unit
 
 
 @pytest.mark.parametrize(
@@ -424,6 +472,45 @@ def test_wcsndmap_upsample(npix, binsz, frame, proj, skydir, axes):
     m2 = m.upsample(2, preserve_counts=True)
     assert_allclose(np.nansum(m.data), np.nansum(m2.data))
     assert m.unit == m2.unit
+
+
+@pytest.mark.parametrize(
+    ("npix", "binsz", "frame", "proj", "skydir", "axes"), wcs_test_geoms
+)
+def test_wcsmap_upsample_downsample_wcs(npix, binsz, frame, proj, skydir, axes):
+    geom = WcsGeom.create(npix=npix, binsz=binsz, proj=proj, frame=frame)
+    if geom.is_regular:
+        m = WcsNDMap(geom, unit="m2")
+        pix_scale = np.max(geom.pixel_scales.to_value("deg"))
+
+        factor = 11
+        # alignment check fails for larger odd value due to precision error on the position
+        # seems ok for even values
+        m_up = m.upsample(factor, preserve_counts=True)
+        m_down = m_up.downsample(factor, preserve_counts=True)
+        m.stack(m_down)
+
+        assert_allclose(m.geom.center_skydir.l, m_down.geom.center_skydir.l, atol=1e-10)
+        assert_allclose(m.geom.center_skydir.b, m_down.geom.center_skydir.b, atol=1e-10)
+        assert_allclose(m.geom.data_shape, m_down.geom.data_shape)
+        assert m.geom.is_aligned(m_down.geom)
+
+        mcut = m.cutout(m.geom.center_skydir, 2 * pix_scale)
+        assert m.geom.is_aligned(mcut.geom)
+
+        factor = 49
+        mcut_up = mcut.upsample(factor, preserve_counts=True)
+        mcut_down = mcut_up.downsample(factor, preserve_counts=True)
+        m.stack(mcut_down)
+
+        assert_allclose(
+            m.geom.center_skydir.l, mcut_down.geom.center_skydir.l, atol=1e-10
+        )
+        assert_allclose(
+            m.geom.center_skydir.b, mcut_down.geom.center_skydir.b, atol=1e-10
+        )
+        assert_allclose(mcut.geom.data_shape, mcut_down.geom.data_shape)
+        assert m.geom.is_aligned(mcut_down.geom)
 
 
 def test_wcsndmap_upsample_axis():
@@ -526,6 +613,10 @@ def test_make_cutout(mode):
     assert_allclose(actual, 36.0)
     assert_allclose(cutout.geom.shape_axes, m.geom.shape_axes)
     assert_allclose(cutout.geom.width.to_value("deg"), [[2.0], [3.0]])
+    assert_allclose(cutout.geom.data_shape, (3, 2, 3, 2))
+
+    cutout = m.cutout(position=pos, width=(2.0, 3.0) * u.deg, mode=mode, min_npix=3)
+    assert_allclose(cutout.geom.data_shape, (3, 2, 3, 3))
 
 
 def test_convolve_vs_smooth():
@@ -910,7 +1001,7 @@ def test_memory_usage():
 def test_double_cutout():
     # regression test for https://github.com/gammapy/gammapy/issues/3368
     m = Map.create(width="10 deg")
-    m.data = np.arange(10_000, dtype="float")
+    m.data = np.arange(10_000, dtype="float").reshape((100, 100))
 
     position = SkyCoord("1d", "1d")
     m_c = m.cutout(position=position, width="3 deg")
@@ -920,6 +1011,26 @@ def test_double_cutout():
     m_new.stack(m_cc)
     m_c_new = m_new.cutout(position=position, width="2 deg")
     np.testing.assert_allclose(m_c_new.data, m_cc.data)
+
+
+def test_to_region_nd_map():
+    m = WcsNDMap.create(npix=(200, 200))
+    m.data = np.ones_like(m.data)
+
+    # test with mask as weights
+    weights = WcsNDMap.create(npix=(200, 200))
+    weights.data = np.zeros_like(weights.data, dtype=bool)
+    weights.data[:, 100:] = True
+
+    assert_allclose(m.to_region_nd_map(weights=weights, func=np.mean).data[0, 0], 1.0)
+    assert_allclose(m.to_region_nd_map(weights=weights, func=np.sum).data[0, 0], 2e4)
+
+    # test with non-mask weights
+    weights.data = np.ones_like(weights.data, dtype="float64")
+    m.data[:, 100:] = 4.0
+    weights.data[:, 100:] = 2.0
+    assert_allclose(m.to_region_nd_map(weights=weights, func=np.mean).data[0, 0], 4.5)
+    assert_allclose(m.to_region_nd_map(weights=weights, func=np.sum).data[0, 0], 18e4)
 
 
 def test_to_region_nd_map_histogram_basic():
@@ -970,3 +1081,42 @@ def test_to_region_nd_map_histogram_advanced():
     assert_allclose(
         hist.data[:, :, 2, 0, 0], [[24189, 13587, 9212], [24053, 13410, 9186]]
     )
+
+
+def test_plot_mask():
+    axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=2)
+    geom = WcsGeom.create(
+        binsz=0.02,
+        width=(2, 2),
+        frame="icrs",
+        axes=[axis],
+    )
+
+    mask = Map.from_geom(geom=geom, dtype=bool)
+    mask.data[1] |= True
+
+    with mpl_plot_check():
+        mask.plot_grid()
+
+
+def test_histogram_center_value():
+    evt_energy = np.arange(100.0, 105, 0.5) * u.GeV
+    N_evt = evt_energy.shape[0]
+    center = SkyCoord(0, 0, unit="deg", frame="icrs")
+    radec = SkyCoord(
+        [center.ra] * N_evt, [center.dec] * N_evt, unit="deg"
+    )  # fake position list
+    energy_axis = MapAxis.from_edges(np.arange(100, 106, 1) * u.GeV, name="energy")
+    map1 = WcsNDMap.create(
+        skydir=center, binsz=0.1 * u.deg, width=0.1 * u.deg, axes=[energy_axis]
+    )
+    map1.fill_by_coord({"skycoord": radec, "energy": evt_energy})
+    assert_allclose(map1.data[0:2], [[[2.0]], [[2.0]]])
+
+    map1 = WcsNDMap.create(
+        skydir=center,
+        binsz=1 * u.deg,
+        width=3 * u.deg,
+    )
+    map1.fill_by_pix([[0.0, 0.5, 1.0, 1.5], [0.0, 0.5, 1.0, 1.5]])
+    assert_allclose(map1.data, [[1.0, 0.0, 0.0], [0.0, 2.0, 0.0], [0.0, 0.0, 1.0]])

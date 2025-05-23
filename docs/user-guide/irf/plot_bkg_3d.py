@@ -1,4 +1,5 @@
 """Plot the background rate from the HESS DL3 data release 1."""
+
 import matplotlib.pyplot as plt
 from gammapy.irf import Background3D
 

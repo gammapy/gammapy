@@ -110,7 +110,7 @@ The general design of the ``sample`` method is as follows:
        """Sample events from a ``MapDataset``"""
 
        events_list = []
-    
+
        for evaluator in dataset.evaluators:
             npred = evaluator.compute_npred()
             n_events = random_state.poisson(npred.data.sum())
@@ -119,18 +119,18 @@ The general design of the ``sample`` method is as follows:
             events = hstack(events,time)
             events_list.append(events)
             event_list["MC_ID"] = evaluator.model.name
-    
+
        events_src = vstack(events_list)
        events_src = dataset.psf.sample(events_src, random_state)
        events_src = dataset.edisp.sample(events_src, random_state)
-    
+
        n_events_bkg = random_state.poisson(dataset.background_model.map.data.sum())
        events_bkg = dataset.background_model.sample(n_events, random_state)
-    
+
        events_total = vstack([events_src, events_bkg])
        events_total.meta = get_events_meta_data(dataset)
        return EventList(events_total)
-    
+
 
 In more detail, ``sample`` starts a loop over the sources stored into the
 ``MapDataset`` model. Then, for each source, the ``src.compute_npred`` method
@@ -173,7 +173,7 @@ which are the reconstructed event energies and positions.
 Finally, the times and the energies/coordinates of the events will be merged
 into a single ``~astropy.table.Table`` with the columns:``RA``, ``DEC`` and
 ``ENERGY`` and ``TIME`` .
- 
+
 The ``MapDatasetEventSampler`` can be used to sample background events using the
 ``Map.sample(n_events=, random_state=)`` as well. The time of the events is
 sampled assuming a constant event rate. Finally, the IRF corrections are not
@@ -242,7 +242,7 @@ August 30, 2019.
 
 .. _GH 2136: https://github.com/gammapy/gammapy/pull/2136
 .. _GH 2229: https://github.com/gammapy/gammapy/pull/2229
-.. _rejection sampling in Python: https://wiseodd.github.io/techblog/2015/10/21/rejection-sampling/
+.. _rejection sampling in Python: https://agustinus.kristia.de/blog/rejection-sampling/
 .. _Prototype: https://github.com/fabiopintore/notebooks-public/blob/master/gammapy-event-sampling/prototype.ipynb
 .. _inverseCDF: https://en.wikipedia.org/wiki/Inverse_transform_sampling
 .. _here: https://stackoverflow.com/questions/21100716/fast-arbitrary-distribution-random-sampling/21101584#21101584

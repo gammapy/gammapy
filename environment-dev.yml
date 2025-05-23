@@ -9,20 +9,20 @@ name: gammapy-dev
 
 channels:
   - conda-forge
-  - sherpa
+  - https://cxc.cfa.harvard.edu/conda/sherpa # c.f. https://sherpa.readthedocs.io/en/latest/install.html
 
 variables:
   PYTHONNOUSERSITE: "1"
 
 dependencies:
   # core dependencies
-  - python=3.9
+  - python=3.11
   - pip
   - astropy
-  - click
+  - click>8.0
   - cython
   - numpy>1.20
-  - pydantic<2.0
+  - pydantic>=2.5
   - pyyaml
   - regions>=0.5
   - matplotlib>=3.4
@@ -31,7 +31,7 @@ dependencies:
   - extension-helpers
   # test dependencies
   - codecov
-  - pytest=6
+  - pytest
   - pytest-astropy
   - pytest-cov
   - pytest-xdist
@@ -46,9 +46,9 @@ dependencies:
   - naima
   - pandas
   - reproject
-  - sherpa
+  - ultranest
   # dev dependencies
-  - black
+  - black=22.6.0
   - codespell
   - flake8
   - isort
@@ -60,24 +60,27 @@ dependencies:
   - pydocstyle
   - pylint
   - setuptools_scm
+  - sherpa>=4.17
   - sphinx
-  - sphinx-astropy
   - sphinx-click
-  - sphinx-gallery<0.13
-  - sphinx-panels
+  - sphinx-gallery
+  - sphinx-design
   - sphinx-copybutton
   - tox
-  - pydata-sphinx-theme==0.8.1
+  - pydata-sphinx-theme
   - pre-commit
   - twine
   - yamllint
   - nbformat
   - h5py
   - ruamel.yaml
-  - cffconvert
+  # incompatible with current jupyter, results in broken env when present
+  # use e.g. pipx if you need cffconvert
+  # - cffconvert
   - pyinstrument
   - memray
   - pip:
       - pytest-sphinx
-      - ray
+      - ray[default]>=2.9
       - PyGithub
+      - pypandoc

@@ -72,7 +72,7 @@ Bug fixes and improvements
 *gammapy.irf*
 
 - The interpolation scheme of the energy axis was incorrectly set to "linear" by default for the
- `~gammapy.irf.Background2D`. It is now set to "log".
+  `~gammapy.irf.Background2D`. It is now set to "log".
 
 *gammapy.makers*
 

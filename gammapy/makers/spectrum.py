@@ -11,23 +11,22 @@ log = logging.getLogger(__name__)
 class SpectrumDatasetMaker(MapDatasetMaker):
     """Make spectrum for a single IACT observation.
 
-    The irfs and background are computed at a single fixed offset,
+    The IRFs and background are computed at a single fixed offset,
     which is recommended only for point-sources.
 
     Parameters
     ----------
-    selection : list
-        List of str, selecting which maps to make.
-        Available: 'counts', 'exposure', 'background', 'edisp'
-        By default, all spectra are made.
+    selection : list of str, optional
+        Select which maps to make, the available options are:
+        'counts', 'exposure', 'background', 'edisp'.
+        By default, all maps are made.
     containment_correction : bool
         Apply containment correction for point sources and circular on regions.
     background_oversampling : int
         Background evaluation oversampling factor in energy.
     use_region_center : bool
-        If True, approximate the IRFs by the value at the center of the region
-        If False, the IRFs are averaged over the entire region
-
+        If True, approximate the IRFs by the value at the center of the region.
+        If False, the IRFs are averaged over the entire.
     """
 
     tag = "SpectrumDatasetMaker"
@@ -52,8 +51,8 @@ class SpectrumDatasetMaker(MapDatasetMaker):
         Parameters
         ----------
         geom : `~gammapy.maps.RegionGeom`
-            Reference map geom.
-        observation: `~gammapy.data.Observation`
+            Reference map geometry.
+        observation : `~gammapy.data.Observation`
             Observation to compute effective area for.
 
         Returns
@@ -91,3 +90,45 @@ class SpectrumDatasetMaker(MapDatasetMaker):
             exposure.quantity *= containment.reshape(geom.data_shape)
 
         return exposure
+
+    @staticmethod
+    def make_counts(geom, observation):
+        """Make counts map.
+
+        If the `~gammapy.maps.RegionGeom` is built from a `~regions.CircleSkyRegion`,
+        the latter will be directly used to extract the counts.
+        If instead the `~gammapy.maps.RegionGeom` is built from a `~regions.PointSkyRegion`,
+        the size of the ON region is taken from the `RAD_MAX_2D` table containing energy-dependent theta2 cuts.
+
+        Parameters
+        ----------
+        geom : `~gammapy.maps.Geom`
+            Reference map geometry.
+        observation : `~gammapy.data.Observation`
+            Observation container.
+
+        Returns
+        -------
+        counts : `~gammapy.maps.RegionNDMap`
+            Counts map.
+        """
+        return super(SpectrumDatasetMaker, SpectrumDatasetMaker).make_counts(
+            geom, observation
+        )
+
+    def run(self, dataset, observation):
+        """Make spectrum dataset.
+
+        Parameters
+        ----------
+        dataset : `~gammapy.spectrum.SpectrumDataset`
+            Reference dataset.
+        observation : `~gammapy.data.Observation`
+            Observation.
+
+        Returns
+        -------
+        dataset : `~gammapy.spectrum.SpectrumDataset`
+            Spectrum dataset.
+        """
+        return super(SpectrumDatasetMaker, self).run(dataset, observation)

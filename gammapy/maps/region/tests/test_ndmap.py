@@ -7,7 +7,6 @@ from astropy.time import Time
 from regions import CircleSkyRegion
 import matplotlib.pyplot as plt
 from gammapy.data import EventList
-from gammapy.irf import EDispKernel
 from gammapy.maps import (
     LabelMapAxis,
     Map,
@@ -16,7 +15,6 @@ from gammapy.maps import (
     RegionNDMap,
     TimeMapAxis,
 )
-from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.utils.testing import mpl_plot_check, requires_data
 
 
@@ -108,7 +106,7 @@ def test_region_nd_map_plot_two_axes():
     )
 
     m = RegionNDMap.create("icrs;circle(0, 0, 1)", axes=[energy_axis, time_axis])
-    m.data = 10 + np.random.random(m.data.size)
+    m.data = 10 + np.random.random(m.data.shape)
 
     with mpl_plot_check():
         m.plot(axis_name="energy")
@@ -138,7 +136,7 @@ def test_label_axis_io(tmpdir):
     label_axis = LabelMapAxis(labels=["dataset-1", "dataset-2"], name="dataset")
 
     m = RegionNDMap.create(region=None, axes=[energy_axis, label_axis])
-    m.data = np.arange(m.data.size)
+    m.data = np.arange(m.data.size).reshape((2, 5))
 
     filename = tmpdir / "test.fits"
 
@@ -268,18 +266,6 @@ def test_region_nd_map_fill_events_point_sky_region(point_region_map):
     assert_allclose(region_map.data.sum(), 0)
 
 
-def test_apply_edisp(point_region_map):
-    e_true = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3, name="energy_true")
-    e_reco = point_region_map.geom.axes[0]
-
-    edisp = EDispKernel.from_diagonal_response(
-        energy_axis_true=e_true, energy_axis=e_reco
-    )
-
-    with pytest.raises(GammapyDeprecationWarning):
-        point_region_map.apply_edisp(edisp)
-
-
 def test_region_nd_map_resample_axis():
     axis_1 = MapAxis.from_edges([1, 2, 3, 4, 5], name="test-1")
     axis_2 = MapAxis.from_edges([1, 2, 3, 4], name="test-2")
@@ -405,7 +391,7 @@ def test_region_nd_map_interp_no_region():
     )
 
     m = RegionNDMap.create(region=None, axes=[energy_axis, time_axis])
-    m.data = np.arange(6).reshape((energy_axis.nbin, time_axis.nbin))
+    m.data = np.arange(6).reshape((time_axis.nbin, energy_axis.nbin))
 
     energy = [2, 6] * u.TeV
     time = time_ref + [[0.4], [1.5], [4.2]] * u.d

@@ -1,0 +1,30 @@
+
+*** Basic info ***
+
+Catalog row index (zero-based) : 51
+Source name          : J0834-4159
+
+*** Pulsar info ***
+
+Period               : 0.121
+P_Dot                : 4.281e-15
+E_Dot                : 9.511e+34
+
+*** Position info ***
+
+RA                   : 128.574 deg
+DEC                  : -41.993 deg
+GLON                 : 260.886 deg
+GLAT                 : -1.036 deg
+
+*** Spectral info ***
+
+No spectral info available.
+
+*** Spectral points ***
+
+No spectral points available.
+
+*** Phasogram info ***
+
+No phasogram info available.

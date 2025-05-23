@@ -15,7 +15,7 @@ __all__ = ["ObservationTable"]
 class ObservationTable(Table):
     """Observation table.
 
-    Data format specification: :ref:`gadf:obs-index`
+    Data format specification: :ref:`gadf:obs-index`.
     """
 
     @classmethod
@@ -24,36 +24,38 @@ class ObservationTable(Table):
 
         Parameters
         ----------
-        filename : `pathlib.Path`, str
-            Filename
+        filename : `pathlib.Path` or str
+            Filename.
+        **kwargs : dict, optional
+            Keyword arguments passed to `~astropy.table.Table.read`.
         """
         return super().read(make_path(filename), **kwargs)
 
     @property
     def pointing_radec(self):
-        """Pointing positions as ICRS (`~astropy.coordinates.SkyCoord`)."""
+        """Pointing positions in ICRS as a `~astropy.coordinates.SkyCoord` object."""
         return SkyCoord(self["RA_PNT"], self["DEC_PNT"], unit="deg", frame="icrs")
 
     @property
     def pointing_galactic(self):
-        """Pointing positions as Galactic (`~astropy.coordinates.SkyCoord`)."""
+        """Pointing positions in Galactic coordinates as a `~astropy.coordinates.SkyCoord` object."""
         return SkyCoord(
             self["GLON_PNT"], self["GLAT_PNT"], unit="deg", frame="galactic"
         )
 
     @property
     def time_ref(self):
-        """Time reference (`~astropy.time.Time`)."""
+        """Time reference as a `~astropy.time.Time` object."""
         return time_ref_from_dict(self.meta)
 
     @property
     def time_start(self):
-        """Observation start time (`~astropy.time.Time`)."""
+        """Observation start time as a `~astropy.time.Time` object."""
         return self.time_ref + Quantity(self["TSTART"], "second")
 
     @property
     def time_stop(self):
-        """Observation stop time (`~astropy.time.Time`)."""
+        """Observation stop time as a `~astropy.time.Time` object."""
         return self.time_ref + Quantity(self["TSTOP"], "second")
 
     def select_obs_id(self, obs_id):
@@ -63,8 +65,8 @@ class ObservationTable(Table):
 
         Parameters
         ----------
-        obs_id: int, list
-            observation ids
+        obs_id : int or list of int
+            Observation ids.
         """
         try:
             self.indices["OBS_ID"]
@@ -73,7 +75,7 @@ class ObservationTable(Table):
         return self.__class__(self.loc["OBS_ID", obs_id])
 
     def summary(self):
-        """Summary info string (str)."""
+        """Summary information string."""
         obs_name = self.meta.get(
             "OBSERVATORY_NAME", "N/A"
         )  # This is not GADF compliant
@@ -93,7 +95,7 @@ class ObservationTable(Table):
 
         Generic function to apply a 1D box selection (min, max) to a
         table on any variable that is in the observation table and can
-        be casted into a `~astropy.units.Quantity` object.
+        be cast into a `~astropy.units.Quantity` object.
 
         If the range length is 0 (min = max), the selection is applied
         to the exact value indicated by the min value. This is useful
@@ -112,6 +114,7 @@ class ObservationTable(Table):
             consistent with the selection_variable.
         inverted : bool, optional
             Invert selection: keep all entries outside the (min, max) range.
+            Default is False.
 
         Returns
         -------
@@ -148,9 +151,10 @@ class ObservationTable(Table):
         time_range : `~astropy.time.Time`
             Allowed time range (min, max).
         partial_overlap : bool, optional
-            Include partially overlapping observations. Default is False
+            Include partially overlapping observations. Default is False.
         inverted : bool, optional
             Invert selection: keep all entries outside the (min, max) range.
+            Default is False.
 
         Returns
         -------
@@ -185,13 +189,13 @@ class ObservationTable(Table):
 
         Parameters
         ----------
-        center : `~astropy.coordinate.SkyCoord`
+        center : `~astropy.coordinates.SkyCoord`
             Cone center coordinate.
-        radius : `~astropy.coordinate.Angle`
+        radius : `~astropy.coordinates.Angle`
             Cone opening angle. The maximal separation allowed between the center
             and the observation pointing direction.
         inverted : bool, optional
-            Invert selection: keep all entries outside the cone.
+            Invert selection: keep all entries outside the cone. Default is False.
 
         Returns
         -------
@@ -217,7 +221,7 @@ class ObservationTable(Table):
         - time intervals (min, max)
 
         - intervals (min, max) on any other parameter present in the
-          observation table, that can be casted into an
+          observation table, that can be cast into an
           `~astropy.units.Quantity` object
 
         Allowed selection criteria are interpreted using the following
@@ -247,8 +251,8 @@ class ObservationTable(Table):
 
         Parameters
         ----------
-        selection : list of dict
-            List of selection cuts dictionaries.
+        selections : list of dict, optional
+            Dictionary of selection criteria. Default is None.
 
         Returns
         -------
@@ -315,12 +319,12 @@ class ObservationTable(Table):
 class ObservationTableChecker(Checker):
     """Event list checker.
 
-    Data format specification: ref:`gadf:iact-events`
+    Data format specification: ref:`gadf:iact-events`.
 
     Parameters
     ----------
-    event_list : `~gammapy.data.EventList`
-        Event list
+    obs_table : `~gammapy.data.ObservationTable`
+        Observation table.
     """
 
     CHECKS = {

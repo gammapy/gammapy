@@ -3,8 +3,10 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
+from astropy.io import fits
 from astropy.table import Table
 from astropy.time import Time
+from astropy.utils.exceptions import AstropyUserWarning
 from gammapy.data import GTI
 from gammapy.datasets import Datasets, SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.irf import EDispKernelMap, EffectiveAreaTable2D
@@ -17,6 +19,7 @@ from gammapy.modeling.models import (
     Models,
     PowerLawSpectralModel,
     SkyModel,
+    GaussianPrior,
 )
 from gammapy.utils.random import get_random_state
 from gammapy.utils.regions import compound_region_to_regions
@@ -172,7 +175,7 @@ def test_fit(spectrum_dataset):
     fit = Fit()
     result = fit.run(datasets=[spectrum_dataset])
     assert result.success
-    assert "minuit" in repr(result)
+    assert "minuit" in str(result)
 
     npred = spectrum_dataset.npred().data.sum()
     assert_allclose(npred, 907012.186399, rtol=1e-3)
@@ -546,6 +549,15 @@ class TestSpectrumOnOff:
         assert regions[0].center.is_equivalent_frame(expected_regions[0].center)
         assert_allclose(regions[1].angle, expected_regions[1].angle)
 
+    def test_from_ogip_files_overwrite_name(self, tmp_path):
+        dataset = self.dataset.copy(name="test")
+        dataset.write(tmp_path / "test.fits")
+        new_dataset = SpectrumDatasetOnOff.read(tmp_path / "test.fits")
+        assert new_dataset.name == dataset.name
+
+        new_dataset = SpectrumDatasetOnOff.read(tmp_path / "test.fits", name="new_name")
+        assert new_dataset.name == "new_name"
+
     def test_to_from_ogip_files_no_mask(self, tmp_path):
         dataset = self.dataset.copy(name="test")
         dataset.mask_safe = None
@@ -564,7 +576,6 @@ class TestSpectrumOnOff:
         assert newdataset.counts.meta["ANCRFILE"] == "test_arf.fits.gz"
 
     def test_to_from_ogip_files_no_edisp(self, tmp_path):
-
         mask_safe = RegionNDMap.from_geom(self.on_counts.geom, dtype=bool)
         mask_safe.data += True
 
@@ -587,6 +598,29 @@ class TestSpectrumOnOff:
         assert newdataset.counts_off is None
         assert newdataset.edisp is None
         assert newdataset.gti is None
+
+    def test_to_ogip_files_checksum(self, tmp_path):
+        dataset = self.dataset.copy(name="test")
+        dataset.write(tmp_path / "test.fits", format="ogip", checksum=True)
+
+        for name in ["test.fits", "test_arf.fits", "test_rmf.fits", "test_bkg.fits"]:
+            # TODO: this should not emit AstropyUserWarning
+            with fits.open(tmp_path / name, checksum=True) as hdul:
+                for hdu in hdul:
+                    assert "CHECKSUM" in hdu.header
+                    assert "DATASUM" in hdu.header
+
+        def replace_in_fits_header(filename, string):
+            with open(filename, "r+b") as file:
+                chunk = file.read(10000)
+                index = chunk.find(string.encode("ascii"))
+                file.seek(index)
+                file.write("bad".encode("ascii"))
+
+        path = tmp_path / "test.fits"
+        replace_in_fits_header(path, "unknown")
+        with pytest.warns(AstropyUserWarning):
+            SpectrumDatasetOnOff.read(path, checksum=True)
 
     def test_spectrum_dataset_onoff_fits_io(self, tmp_path):
         self.dataset.write(tmp_path / "test.fits", format="gadf")
@@ -1191,3 +1225,33 @@ def test_stat_sum():
     dataset.mask_safe.data[0] = True
     with pytest.raises(AttributeError):
         dataset.stat_sum()
+
+
+@requires_data("gammapy-data")
+def test_priors():
+    datasets = Datasets()
+    obs_ids = [23523, 23526]
+
+    for obs_id in obs_ids:
+        filename = f"$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs{obs_id}.fits"
+        ds = SpectrumDatasetOnOff.read(filename)
+        datasets.append(ds)
+
+    spectral_model = PowerLawSpectralModel(
+        index=2.5, amplitude="3.8e-11 cm-2 s-1 TeV-1"
+    )
+    source_model = SkyModel(spectral_model=spectral_model, name="source")
+
+    datasets.models = [source_model]
+
+    stat_sum = datasets.stat_sum()
+
+    spectral_model.index.prior = GaussianPrior(
+        mu=spectral_model.index.value + 0.1, sigma=0.1
+    )
+
+    stat_sum_with_priors = datasets.stat_sum()
+
+    assert_allclose(stat_sum, 87.928542, atol=1e-1)
+    # Here we check that the prior is applied only once
+    assert_allclose(stat_sum_with_priors, stat_sum + 1)

@@ -4,6 +4,7 @@ import json
 import numpy as np
 import astropy.units as u
 from astropy.io import fits
+from gammapy.utils.types import JsonQuantityEncoder
 from ..core import Map
 from ..io import find_bands_hdu, find_bintable_hdu
 from .geom import HpxGeom
@@ -21,10 +22,10 @@ class HpxMap(Map):
         HEALPix geometry object.
     data : `~numpy.ndarray`
         Data array.
-    meta : `dict`
-        Dictionary to store meta data.
+    meta : dict
+        Dictionary to store metadata.
     unit : `~astropy.units.Unit`
-        The map unit
+        The map unit.
     """
 
     @classmethod
@@ -48,38 +49,48 @@ class HpxMap(Map):
 
         Parameters
         ----------
-        nside : int or `~numpy.ndarray`
-            HEALPix NSIDE parameter.  This parameter sets the size of
-            the spatial pixels in the map.
-        binsz : float or `~numpy.ndarray`
-            Approximate pixel size in degrees.  An NSIDE will be
+        nside : int or `~numpy.ndarray`, optional
+            HEALPix NSIDE parameter. This parameter sets the size of
+            the spatial pixels in the map. Default is None.
+        binsz : float or `~numpy.ndarray`, optional
+            Approximate pixel size in degrees. An NSIDE will be
             chosen that corresponds to a pixel size closest to this
-            value.  This option is superseded by nside.
-        nest : bool
-            True for HEALPix "NESTED" indexing scheme, False for "RING" scheme.
-        frame : {"icrs", "galactic"}, optional
+            value. This option is superseded by ``nside``.
+            Default is None.
+        nest : bool, optional
+            Indexing scheme. If True, "NESTED" scheme. If False, "RING" scheme.
+            Default is True.
+        map_type : {'hpx', 'hpx-sparse'}, optional
+            Map type. Selects the class that will be used to
+            instantiate the map. Default is "hpx".
+        frame : {"icrs", "galactic"}
             Coordinate system, either Galactic ("galactic") or Equatorial ("icrs").
-        skydir : tuple or `~astropy.coordinates.SkyCoord`
-            Sky position of map center.  Can be either a SkyCoord
+            Default is "icrs".
+        data : `~numpy.ndarray`, optional
+            Data array. Default is None.
+        skydir : tuple or `~astropy.coordinates.SkyCoord`, optional
+            Sky position of map center. Can be either a SkyCoord
             object or a tuple of longitude and latitude in deg in the
-            coordinate system of the map.
-        map_type : {'hpx', 'hpx-sparse'}
-            Map type.  Selects the class that will be used to
-            instantiate the map.
-        width : float
-            Diameter of the map in degrees.  If None then an all-sky
-            geometry will be created.
-        axes : list
+            coordinate system of the map. Default is None.
+        width : float, optional
+            Diameter of the map in degrees. If None then an all-sky
+            geometry will be created. Default is None.
+        dtype : str, optional
+            Data type. Default is "float32".
+        region : str, optional
+            HEALPix region string. Default is None.
+        axes : list, optional
             List of `~MapAxis` objects for each non-spatial dimension.
-        meta : `dict`
-            Dictionary to store meta data.
-        unit : str or `~astropy.units.Unit`
-            The map unit
+            Default is None.
+        meta : `dict`, optional
+            Dictionary to store the metadata. Default is None.
+        unit : str or `~astropy.units.Unit`, optional
+            The map unit. Default is "".
 
         Returns
         -------
         map : `~HpxMap`
-            A HPX map object.
+            A HEALPix map object.
         """
         from .ndmap import HpxNDMap
 
@@ -108,17 +119,19 @@ class HpxMap(Map):
 
         Parameters
         ----------
-        hdu_list :  `~astropy.io.fits.HDUList`
+        hdu_list : `~astropy.io.fits.HDUList`
             HDU list containing HDUs for map data and bands.
-        hdu : str
-            Name or index of the HDU with the map data.  If None then
+        hdu : str, optional
+            Name or index of the HDU with the map data. If None then
             the method will try to load map data from the first
             BinTableHDU in the file.
-        hdu_bands : str
+            Default is None.
+        hdu_bands : str, optional
             Name or index of the HDU with the BANDS table.
+            Default is None.
         format : str, optional
-            FITS format convention.  By default files will be written
-            to the gamma-astro-data-formats (GADF) format.  This
+            FITS format convention. By default, files will be written
+            to the gamma-astro-data-formats (GADF) format. This
             option can be used to write files that are compliant with
             format conventions required by specific software (e.g. the
             Fermi Science Tools). The following formats are supported:
@@ -136,7 +149,7 @@ class HpxMap(Map):
         Returns
         -------
         hpx_map : `HpxMap`
-            Map object
+            Map object.
         """
         if hdu is None:
             hdu_out = find_bintable_hdu(hdu_list)
@@ -166,16 +179,18 @@ class HpxMap(Map):
 
         Parameters
         ----------
-        hdu : str
-            The HDU extension name.
-        hdu_bands : str
+        hdu : str, optional
+            The HDU extension name. Default is "SKYMAP".
+        hdu_bands : str, optional
             The HDU extension name for BANDS table.
-        sparse : bool
+            Default is None.
+        sparse : bool, optional
             Set INDXSCHM to SPARSE and sparsify the map by only
             writing pixels with non-zero amplitude.
+            Default is False.
         format : str, optional
-            FITS format convention.  By default files will be written
-            to the gamma-astro-data-formats (GADF) format.  This
+            FITS format convention. By default, files will be written
+            to the gamma-astro-data-formats (GADF) format. This
             option can be used to write files that are compliant with
             format conventions required by specific software (e.g. the
             Fermi Science Tools). The following formats are supported:
@@ -193,6 +208,7 @@ class HpxMap(Map):
         Returns
         -------
         hdu_list : `~astropy.io.fits.HDUList`
+            The FITS HDUList.
         """
         if hdu_bands is None:
             hdu_bands = f"{hdu.upper()}_BANDS"
@@ -207,7 +223,8 @@ class HpxMap(Map):
         hdu_out = self.to_hdu(
             hdu=hdu, hdu_bands=hdu_bands, sparse=sparse, format=format
         )
-        hdu_out.header["META"] = json.dumps(self.meta)
+        hdu_out.header["META"] = json.dumps(self.meta, cls=JsonQuantityEncoder)
+
         hdu_out.header["BUNIT"] = self.unit.to_string("fits")
 
         hdu_list = fits.HDUList([fits.PrimaryHDU(), hdu_out])
@@ -227,32 +244,35 @@ class HpxMap(Map):
         width_pix=None,
         hpx2wcs=None,
     ):
-        """Make a WCS object and convert HEALPIX data into WCS projection.
+        """Make a WCS object and convert HEALPix data into WCS projection.
 
         Parameters
         ----------
-        sum_bands : bool
-            Sum over non-spatial axes before reprojecting.  If False
+        sum_bands : bool, optional
+            Sum over non-spatial axes before reprojecting. If False
             then the WCS map will have the same dimensionality as the
-            HEALPix one.
-        normalize : bool
-            Preserve integral by splitting HEALPIX values between bins?
-        proj : str
-            WCS-projection
-        oversample : float
+            HEALPix one. Default is False.
+        normalize : bool, optional
+            Preserve integral by splitting HEALPix values between bins.
+            Default is True.
+        proj : str, optional
+            WCS-projection. Default is "AIT".
+        oversample : float, optional
             Oversampling factor for WCS map. This will be the
-            approximate ratio of the width of a HPX pixel to a WCS
+            approximate ratio of the width of a HEALPix pixel to a WCS
             pixel. If this parameter is None then the width will be
-            set from ``width_pix``.
-        width_pix : int
-            Width of the WCS geometry in pixels.  The pixel size will
+            set from ``width_pix``. Default is 2.
+        width_pix : int, optional
+            Width of the WCS geometry in pixels. The pixel size will
             be set to the number of pixels satisfying ``oversample``
-            or ``width_pix`` whichever is smaller.  If this parameter
+            or ``width_pix`` whichever is smaller. If this parameter
             is None then the width will be set from ``oversample``.
-        hpx2wcs : `~HpxToWcsMapping`
-            Set the HPX to WCS mapping object that will be used to
-            generate the WCS map.  If none then a new mapping will be
+            Default is None.
+        hpx2wcs : `~HpxToWcsMapping`, optional
+            Set the HEALPix to WCS mapping object that will be used to
+            generate the WCS map. If None then a new mapping will be
             generated based on ``proj`` and ``oversample`` arguments.
+            Default is None.
 
         Returns
         -------
@@ -277,16 +297,17 @@ class HpxMap(Map):
 
         Parameters
         ----------
-        hdu : str
-            The HDU extension name.
-        hdu_bands : str
-            The HDU extension name for BANDS table.
-        sparse : bool
+        hdu : str, optional
+            The HDU extension name. Default is None.
+        hdu_bands : str, optional
+            The HDU extension name for BANDS table. Default is None.
+        sparse : bool, optional
             Set INDXSCHM to SPARSE and sparsify the map by only
             writing pixels with non-zero amplitude.
-        format : {'fgst-ccube', 'fgst-template', 'gadf', None}, optional
-            FITS format convention.  If None this will be set to the
-            default convention of the map.
+            Default is False.
+        format : {None, 'fgst-ccube', 'fgst-template', 'gadf'}
+            FITS format convention. If None this will be set to the
+            default convention of the map. Default is None.
 
         Returns
         -------

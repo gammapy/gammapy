@@ -8,7 +8,6 @@ This model parametrises a PhaseCurve time model, i.e. with a template phasogram 
 
 """
 
-
 import astropy.units as u
 from astropy.time import Time
 from gammapy.modeling.models import (

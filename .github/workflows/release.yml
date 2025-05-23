@@ -8,26 +8,14 @@ on:
 jobs:
   release-pypi:
     if: github.repository_owner == 'gammapy'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Update tags
-        run: git fetch --tags --force
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.9
-      - name: Install dependencies
-        run: |
-          python --version
-          pip install -U build
-          python -m build --sdist
-      - name: Publish package
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          user: __token__
-          password: ${{ secrets.PYPI_TOKEN }}
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/publish.yml@v1
+    with:
+      targets: |
+        - cp3*-manylinux_x86_64*
+        - cp3*-macosx*
+        - cp3*-win_amd64*
+    secrets:
+      pypi_token: ${{ secrets.PYPI_TOKEN }}
 
   release-github:
     if: github.repository_owner == 'gammapy' && !contains(github.ref_name, 'rc')
@@ -37,7 +25,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           body: |
             Gammapy is a Python package for gamma-ray astronomy. See [changelog for this release](https://github.com/gammapy/gammapy/blob/main/docs/release-notes/${{ github.ref_name }}.rst).
@@ -48,7 +36,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Dispatch Gammapy Docs
-        uses: peter-evans/repository-dispatch@v2
+        uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.REMOTE_DISPATCH }}
           repository: gammapy/gammapy-docs
@@ -61,7 +49,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Dispatch Gammapy Webpage
-        uses: peter-evans/repository-dispatch@v2
+        uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.REMOTE_DISPATCH }}
           repository: gammapy/gammapy-webpage

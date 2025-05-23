@@ -97,7 +97,9 @@ def test_hpxmap_read_write(tmp_path, nside, nested, frame, region, axes):
 def test_hpxmap_read_write_fgst(tmp_path):
     path = tmp_path / "tmp.fits"
 
-    axis = MapAxis.from_bounds(100.0, 1000.0, 4, name="energy", unit="MeV")
+    axis = MapAxis.from_bounds(
+        100.0, 1000.0, 4, name="energy", unit="MeV", interp="log"
+    )
 
     # Test Counts Cube
     m = create_map(8, False, "galactic", None, [axis])
@@ -109,8 +111,10 @@ def test_hpxmap_read_write_fgst(tmp_path):
         assert hdulist["SKYMAP"].header["TTYPE1"] == "CHANNEL1"
 
     m2 = Map.read(path)
-    # TODO: add better asserts here
     assert m2 is not None
+    assert m.geom.axes.is_allclose(m2.geom.axes)
+    assert m.geom.is_allclose(m2.geom)
+    assert m.is_allclose(m2)
 
     # Test Model Cube
     m.write(path, format="fgst-template", overwrite=True)
@@ -121,8 +125,9 @@ def test_hpxmap_read_write_fgst(tmp_path):
         assert hdulist["SKYMAP"].header["TTYPE1"] == "ENERGY1"
 
     m2 = Map.read(path)
-    # TODO: add better asserts here
     assert m2 is not None
+    assert_allclose(m2.geom.axes["energy_true"].edges, axis.edges, atol=1e-3)
+    assert_allclose(m.data, m2.data)
 
 
 @requires_data()
@@ -568,7 +573,7 @@ def test_convolve_full(region):
 
     kernel = psf.get_psf_kernel(geom=wcs_geom, max_radius=1 * u.deg)
     convolved_map = all_sky_map.convolve_full(kernel)
-    assert_allclose(convolved_map.data.sum(), 14, rtol=1e-5)
+    assert_allclose(convolved_map.data.sum(), 14.0, rtol=2e-5)
 
 
 def test_hpxmap_read_healpy(tmp_path):

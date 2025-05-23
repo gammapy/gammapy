@@ -14,8 +14,15 @@ the functionality that is available in the sub-packages to support
 standard analysis use case in a convenient way.
 
 
-Using gammapy.datasets
+Using gammapy.analysis
 ----------------------
 
-.. minigallery:: gammapy.analysis.Analysis
-    :add-heading:
+.. minigallery::
+    :add-heading: Examples using `~gammapy.analysis.Analysis`
+
+    ../examples/tutorials/analysis-1d/spectral_analysis_hli.py
+    ../examples/tutorials/analysis-2d/modeling_2D.py
+    ../examples/tutorials/analysis-2d/ring_background.py
+    ../examples/tutorials/analysis-3d/analysis_3d.py
+    ../examples/tutorials/analysis-time/light_curve.py
+    ../examples/tutorials/starting/analysis_1.py

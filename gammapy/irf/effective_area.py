@@ -5,6 +5,7 @@ from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from gammapy.maps import MapAxes, MapAxis
 from gammapy.maps.axes import UNIT_STRING_FORMAT
+from gammapy.visualization.utils import add_colorbar
 from .core import IRF
 
 __all__ = ["EffectiveAreaTable2D"]
@@ -13,18 +14,18 @@ __all__ = ["EffectiveAreaTable2D"]
 class EffectiveAreaTable2D(IRF):
     """2D effective area table.
 
-    Data format specification: :ref:`gadf:aeff_2d`
+    Data format specification: :ref:`gadf:aeff_2d`.
 
     Parameters
     ----------
-    energy_axis_true : `MapAxis`
-        True energy axis
-    offset_axis : `MapAxis`
-        Field of view offset axis.
+    axes : list of `~gammapy.maps.MapAxis` or `~gammapy.maps.MapAxes`
+        Required axes (in the given order) are:
+            * energy_true (true energy axis)
+            * offset (field of view offset axis)
     data : `~astropy.units.Quantity`
-        Effective area
+        Effective area.
     meta : dict
-        Meta data
+        Metadata dictionary.
 
     Examples
     --------
@@ -49,8 +50,8 @@ class EffectiveAreaTable2D(IRF):
     >>> from gammapy.irf import EffectiveAreaTable2D
     >>> from gammapy.maps import MapAxis
     >>> energy_axis_true = MapAxis.from_energy_bounds(
-            "0.1 TeV", "100 TeV", nbin=30, name="energy_true"
-        )
+    ...        "0.1 TeV", "100 TeV", nbin=30, name="energy_true"
+    ...    )
     >>> offset_axis = MapAxis.from_bounds(0, 5, nbin=4, name="offset")
     >>> aeff = EffectiveAreaTable2D(axes=[energy_axis_true, offset_axis], data=1e10, unit="cm2")
     >>> print(aeff)
@@ -76,16 +77,16 @@ class EffectiveAreaTable2D(IRF):
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`, optional
-            Axis
-        offset : `~astropy.coordinates.Angle`
-            Offset
+            Matplotlib axes. Default is None.
+        offset : list of `~astropy.coordinates.Angle`, optional
+            Offset. Default is None.
         kwargs : dict
-            Forwarded tp plt.plot()
+            Forwarded to plt.plot().
 
         Returns
         -------
         ax : `~matplotlib.axes.Axes`
-            Axis
+            Matplotlib axes.
         """
         ax = plt.gca() if ax is None else ax
 
@@ -114,16 +115,16 @@ class EffectiveAreaTable2D(IRF):
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes`, optional
-            Axis
+            Matplotlib axes. Default is None.
         energy : `~astropy.units.Quantity`
-            Energy
+            Energy.
         **kwargs : dict
-            Keyword argument passed to `~matplotlib.pyplot.plot`
+            Keyword argument passed to `~matplotlib.pyplot.plot`.
 
         Returns
         -------
         ax : `~matplotlib.axes.Axes`
-            Axis
+            Matplotlib axes.
         """
         ax = plt.gca() if ax is None else ax
 
@@ -149,8 +150,29 @@ class EffectiveAreaTable2D(IRF):
         ax.legend(loc="best")
         return ax
 
-    def plot(self, ax=None, add_cbar=True, **kwargs):
-        """Plot effective area image."""
+    def plot(
+        self, ax=None, add_cbar=True, axes_loc=None, kwargs_colorbar=None, **kwargs
+    ):
+        """Plot effective area image.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes`, optional
+            Matplotlib axes. Default is None.
+        add_cbar : bool, optional
+            Add a colorbar to the plot. Default is True.
+        axes_loc : dict, optional
+            Keyword arguments passed to `~mpl_toolkits.axes_grid1.axes_divider.AxesDivider.append_axes`.
+        kwargs_colorbar : dict, optional
+            Keyword arguments passed to `~matplotlib.pyplot.colorbar`.
+        kwargs : dict
+            Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`
+            Matplotlib axes.
+        """
         ax = plt.gca() if ax is None else ax
 
         energy = self.axes["energy_true"]
@@ -166,6 +188,8 @@ class EffectiveAreaTable2D(IRF):
         kwargs.setdefault("vmin", vmin)
         kwargs.setdefault("vmax", vmax)
 
+        kwargs_colorbar = kwargs_colorbar or {}
+
         with quantity_support():
             caxes = ax.pcolormesh(energy.edges, offset.edges, aeff.value.T, **kwargs)
 
@@ -174,7 +198,8 @@ class EffectiveAreaTable2D(IRF):
 
         if add_cbar:
             label = f"Effective Area [{aeff.unit.to_string(UNIT_STRING_FORMAT)}]"
-            ax.figure.colorbar(caxes, ax=ax, label=label)
+            kwargs_colorbar.setdefault("label", label)
+            add_colorbar(caxes, ax=ax, axes_loc=axes_loc, **kwargs_colorbar)
 
         return ax
 
@@ -183,8 +208,8 @@ class EffectiveAreaTable2D(IRF):
 
         Parameters
         ----------
-        figsize : tuple
-            Size of the figure.
+        figsize : tuple, optional
+            Size of the figure. Default is (15, 5).
 
         """
         ncols = 2 if self.is_pointlike else 3
@@ -211,22 +236,23 @@ class EffectiveAreaTable2D(IRF):
 
         Parameters
         ----------
-        energy_axis_true : `MapAxis`
-            Energy binning, analytic function is evaluated at log centers
-        instrument : {'HESS', 'HESS2', 'CTA'}
-            Instrument name
+        energy_axis_true : `MapAxis`, optional
+            Energy binning, analytic function is evaluated at log centers.
+            Default is None.
+        instrument : {'HESS', 'HESS2', 'CTAO'}
+            Instrument name. Default is 'HESS'.
 
         Returns
         -------
         aeff : `EffectiveAreaTable2D`
-            Effective area table
+            Effective area table.
         """  # noqa: E501
         # Put the parameters g in a dictionary.
         # Units: g1 (cm^2), g2 (), g3 (MeV)
         pars = {
             "HESS": [6.85e9, 0.0891, 5e5],
             "HESS2": [2.05e9, 0.0891, 1e5],
-            "CTA": [1.71e11, 0.0891, 1e5],
+            "CTAO": [1.71e11, 0.0891, 1e5],
         }
 
         if instrument not in pars.keys():

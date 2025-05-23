@@ -7,9 +7,15 @@ from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.table import Table
 from gammapy.data import Observation
 from gammapy.data.pointing import FixedPointingInfo
-from gammapy.datasets import MapDataset, SpectrumDatasetOnOff
+from gammapy.datasets import (
+    Datasets,
+    FluxPointsDataset,
+    MapDataset,
+    SpectrumDatasetOnOff,
+)
 from gammapy.datasets.spectrum import SpectrumDataset
 from gammapy.estimators import FluxPoints, FluxPointsEstimator
+from gammapy.estimators.utils import get_rebinned_axis
 from gammapy.irf import EDispKernelMap, EffectiveAreaTable2D, load_irf_dict_from_file
 from gammapy.makers import MapDatasetMaker
 from gammapy.makers.utils import make_map_exposure_true_energy
@@ -19,11 +25,22 @@ from gammapy.modeling.models import (
     ExpCutoffPowerLawSpectralModel,
     FoVBackgroundModel,
     GaussianSpatialModel,
+    Models,
+    PiecewiseNormSpectralModel,
     PowerLawSpectralModel,
     SkyModel,
+    TemplateNPredModel,
+    TemplateSpatialModel,
 )
 from gammapy.utils import parallel
 from gammapy.utils.testing import requires_data, requires_dependency
+
+
+@pytest.fixture()
+def fermi_datasets():
+    filename = "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_datasets.yaml"
+    filename_models = "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_models.yaml"
+    return Datasets.read(filename=filename, filename_models=filename_models)
 
 
 # TODO: use pre-generated data instead
@@ -88,11 +105,11 @@ def create_fpe(model):
     dataset.models = model
     fpe = FluxPointsEstimator(
         energy_edges=energy_edges,
-        norm_n_values=11,
         source="source",
         selection_optional="all",
         fit=Fit(backend="minuit", optimize_opts=dict(tol=0.2, strategy=1)),
     )
+    fpe.norm.scan_n_values = 11
     datasets = [dataset]
     return datasets, fpe
 
@@ -146,10 +163,32 @@ def fpe_map_pwl():
     datasets = [dataset_1, dataset_2]
     fpe = FluxPointsEstimator(
         energy_edges=energy_edges,
-        norm_n_values=3,
         source="source",
         selection_optional="all",
     )
+    fpe.norm.scan_n_values = 3
+
+    return datasets, fpe
+
+
+@pytest.fixture(scope="session")
+def fpe_map_pwl_ray():
+    """duplicate of fpe_map_pwl to avoid fails due to execution order"""
+    dataset_1 = simulate_map_dataset(name="test-map-pwl")
+    dataset_2 = dataset_1.copy(name="test-map-pwl-2")
+    dataset_2.models = dataset_1.models
+
+    dataset_2.mask_safe = RegionNDMap.from_geom(dataset_2.counts.geom, dtype=bool)
+
+    energy_edges = [0.1, 1, 10, 100] * u.TeV
+    datasets = [dataset_1, dataset_2]
+    fpe = FluxPointsEstimator(
+        energy_edges=energy_edges,
+        source="source",
+        selection_optional="all",
+    )
+    fpe.norm.scan_n_values = 3
+
     return datasets, fpe
 
 
@@ -163,10 +202,10 @@ def fpe_map_pwl_reoptimize():
     datasets = [dataset]
     fpe = FluxPointsEstimator(
         energy_edges=energy_edges,
-        norm_values=[0.8, 1, 1.2],
         reoptimize=True,
         source="source",
     )
+    fpe.norm.scan_values = [0.8, 1, 1.2]
     return datasets, fpe
 
 
@@ -230,8 +269,20 @@ def test_run_pwl(fpe_pwl, tmpdir):
     actual = table["norm_ul"].data
     assert_allclose(actual, [1.216227, 1.035472, 1.316878], rtol=1e-2)
 
+    actual = table["norm_sensitivity"].data
+    assert_allclose(actual, [0.15901235, 0.13117017, 0.55880332], rtol=1e-2)
+
     actual = table["sqrt_ts"].data
     assert_allclose(actual, [18.568429, 18.054651, 7.057121], rtol=1e-2)
+
+    actual = table["ts"].data
+    assert_allclose(actual, [344.7866, 325.9704, 49.8029], rtol=1e-2)
+
+    actual = table["stat"].data
+    assert_allclose(actual, [2.76495, 13.11912, 3.70128], rtol=1e-2)
+
+    actual = table["stat_null"].data
+    assert_allclose(actual, [347.55159, 339.08952, 53.50424], rtol=1e-2)
 
     actual = table["norm_scan"][0][[0, 5, -1]]
     assert_allclose(actual, [0.2, 1.0, 5.0])
@@ -261,9 +312,18 @@ def test_run_pwl(fpe_pwl, tmpdir):
     assert_allclose(npred_excess_ul, [742.87486, 479.169719, 49.019125], rtol=1e-3)
 
     # test GADF I/O
-    fp.write(tmpdir / "test.fits", format="gadf-sed")
+    fp.write(tmpdir / "test.fits")
     fp_new = FluxPoints.read(tmpdir / "test.fits")
     assert fp_new.meta["sed_type_init"] == "likelihood"
+
+    # test datasets stat
+    fp_dataset = FluxPointsDataset(data=fp, models=fp.reference_model)
+    fp_dataset.stat_type = "chi2"
+    assert_allclose(fp_dataset.stat_sum(), 3.82374, rtol=1e-4)
+    fp_dataset.stat_type = "profile"
+    assert_allclose(fp_dataset.stat_sum(), 3.790053, rtol=1e-4)
+    fp_dataset.stat_type = "distrib"
+    assert_allclose(fp_dataset.stat_sum(), 3.783325, rtol=1e-4)
 
 
 def test_run_ecpl(fpe_ecpl, tmpdir):
@@ -304,7 +364,7 @@ def test_run_ecpl(fpe_ecpl, tmpdir):
     assert_allclose(actual, [7.678454, 4.735691, 0.399243], rtol=1e-2)
 
     # test GADF I/O
-    fp.write(tmpdir / "test.fits", format="gadf-sed")
+    fp.write(tmpdir / "test.fits")
     fp_new = FluxPoints.read(tmpdir / "test.fits")
     assert fp_new.meta["sed_type_init"] == "likelihood"
 
@@ -347,7 +407,7 @@ def test_run_map_pwl(fpe_map_pwl, tmpdir):
     assert_allclose(actual, [1.628398e02, 1.452456e-01, 2.008018e03], rtol=1e-2)
 
     # test GADF I/O
-    fp.write(tmpdir / "test.fits", format="gadf-sed")
+    fp.write(tmpdir / "test.fits")
     fp_new = FluxPoints.read(tmpdir / "test.fits")
     assert fp_new.meta["sed_type_init"] == "likelihood"
 
@@ -377,6 +437,56 @@ def test_run_map_pwl_reoptimize(fpe_map_pwl_reoptimize):
     assert_allclose(actual, [9.788123, 0.486066, 17.603708], rtol=1e-2)
 
 
+def test_run_no_edip(fpe_pwl, tmpdir):
+    datasets, fpe = fpe_pwl
+
+    datasets = datasets.copy()
+
+    datasets[0].models["source"].apply_irf["edisp"] = False
+    fp = fpe.run(datasets)
+    table = fp.to_table()
+    actual = table["norm"].data
+    assert_allclose(actual, [1.081434, 0.91077, 0.922176], rtol=1e-3)
+
+    datasets[0].edisp = None
+
+    fp = fpe.run(datasets)
+    table = fp.to_table()
+    actual = table["norm"].data
+    assert_allclose(actual, [1.081434, 0.91077, 0.922176], rtol=1e-3)
+
+    datasets[0].models["source"].apply_irf["edisp"] = True
+    fp = fpe.run(datasets)
+    table = fp.to_table()
+    actual = table["norm"].data
+    assert_allclose(actual, [1.081434, 0.91077, 0.922176], rtol=1e-3)
+
+
+@requires_dependency("iminuit")
+@requires_data()
+def test_run_template_npred(fpe_map_pwl, tmpdir):
+    datasets, fpe = fpe_map_pwl
+    dataset = datasets[0]
+    models = Models(dataset.models)
+    model = TemplateNPredModel(dataset.background, datasets_names=[dataset.name])
+    models.append(model)
+    dataset.models = models
+    dataset.background.data = 0
+
+    fp = fpe.run(dataset)
+
+    table = fp.to_table()
+    actual = table["norm"].data
+    assert_allclose(actual, [0.974726, 0.96342, 0.994251], rtol=1e-2)
+
+    fpe.sum_over_energy_groups = True
+    fp = fpe.run(dataset)
+
+    table = fp.to_table()
+    actual = table["norm"].data
+    assert_allclose(actual, [0.955512, 0.965328, 0.995237], rtol=1e-2)
+
+
 @requires_data()
 def test_reoptimize_no_free_parameters(fpe_pwl, caplog):
     datasets, fpe = fpe_pwl
@@ -399,7 +509,7 @@ def test_flux_points_estimator_no_norm_scan(fpe_pwl, tmpdir):
     assert "stat_scan" not in fp._data
 
     # test GADF I/O
-    fp.write(tmpdir / "test.fits", format="gadf-sed")
+    fp.write(tmpdir / "test.fits")
     fp_new = FluxPoints.read(tmpdir / "test.fits")
     assert fp_new.meta["sed_type_init"] == "likelihood"
 
@@ -460,11 +570,11 @@ def test_run_pwl_parameter_range(fpe_pwl):
     datasets, fpe = create_fpe(pl)
 
     fp = fpe.run(datasets)
+
     table_no_bounds = fp.to_table()
 
-    pl.amplitude.min = 0
-    pl.amplitude.max = 1e-12
-
+    fpe.norm.min = 0
+    fpe.norm.max = 1e4
     fp = fpe.run(datasets)
     table_with_bounds = fp.to_table()
 
@@ -520,7 +630,7 @@ def test_flux_points_recompute_ul(fpe_pwl):
     fp1 = fp.recompute_ul(n_sigma_ul=4)
     assert_allclose(
         fp1.flux_ul.data,
-        [[[2.93166296e-12]], [[1.05421128e-12]], [[1.22660055e-13]]],
+        [[[2.92877891e-12]], [[1.04993236e-12]], [[1.22089744e-13]]],
         rtol=1e-3,
     )
     assert fp1.meta["n_sigma_ul"] == 4
@@ -577,6 +687,58 @@ def test_flux_points_parallel_ray(fpe_pwl):
     )
 
 
+@requires_dependency("ray")
+def test_flux_points_parallel_ray_actor_spectrum(fpe_pwl):
+    from gammapy.datasets.actors import DatasetsActor
+
+    datasets, fpe = fpe_pwl
+    with pytest.raises(TypeError):
+        DatasetsActor(datasets)
+
+
+@requires_data()
+@requires_dependency("ray")
+def test_flux_points_parallel_ray_actor_map(fpe_map_pwl_ray):
+    from gammapy.datasets.actors import DatasetsActor
+
+    datasets, fpe = fpe_map_pwl_ray
+    actors = DatasetsActor(datasets)
+
+    fp = fpe.run(actors)
+
+    table = fp.to_table()
+
+    actual = table["e_min"].data
+    assert_allclose(actual, [0.1, 1.178769, 8.48342], rtol=1e-5)
+
+    actual = table["e_max"].data
+    assert_allclose(actual, [1.178769, 8.483429, 100.0], rtol=1e-5)
+
+    actual = table["e_ref"].data
+    assert_allclose(actual, [0.343332, 3.162278, 29.126327], rtol=1e-5)
+
+    actual = table["norm"].data
+    assert_allclose(actual, [0.974726, 0.96342, 0.994251], rtol=1e-2)
+
+    actual = table["norm_err"].data
+    assert_allclose(actual, [0.067637, 0.052022, 0.087059], rtol=3e-2)
+
+    actual = table["counts"].data
+    assert_allclose(actual, [[44611, 0], [1923, 0], [282, 0]])
+
+    actual = table["norm_ul"].data
+    assert_allclose(actual, [1.111852, 1.07004, 1.17829], rtol=1e-2)
+
+    actual = table["sqrt_ts"].data
+    assert_allclose(actual, [16.681221, 28.408676, 21.91912], rtol=1e-2)
+
+    actual = table["norm_scan"][0]
+    assert_allclose(actual, [0.2, 1.0, 5])
+
+    actual = table["stat_scan"][0] - table["stat"][0]
+    assert_allclose(actual, [1.628398e02, 1.452456e-01, 2.008018e03], rtol=1e-2)
+
+
 def test_fpe_non_aligned_energy_axes():
     energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=10)
     geom_1 = RegionGeom.create("icrs;circle(0, 0, 0.1)", axes=[energy_axis])
@@ -609,3 +771,97 @@ def test_fpe_non_uniform_datasets():
 
     with pytest.raises(ValueError, match="same value of the 'TELESCOP' meta keyword"):
         fpe.run(datasets=[dataset_1, dataset_2])
+
+
+@requires_data()
+def test_flux_points_estimator_norm_spectral_model(fermi_datasets):
+    energy_edges = [10, 30, 100, 300, 1000] * u.GeV
+
+    model_ref = fermi_datasets.models["Crab Nebula"]
+    estimator = FluxPointsEstimator(
+        energy_edges=energy_edges,
+        source="Crab Nebula",
+        selection_optional=[],
+        reoptimize=True,
+    )
+    flux_points = estimator.run(fermi_datasets[0])
+    flux_points_dataset = FluxPointsDataset(data=flux_points, models=model_ref)
+    flux_pred_ref = flux_points_dataset.flux_pred()
+
+    models = Models([model_ref])
+    geom = fermi_datasets[0].exposure.geom.to_image()
+    energy_axis = MapAxis.from_energy_bounds(
+        3 * u.GeV, 1.7 * u.TeV, nbin=30, per_decade=True, name="energy_true"
+    )
+    geom = geom.to_cube([energy_axis])
+
+    model = models.to_template_sky_model(geom, name="test")
+    fermi_datasets.models = [fermi_datasets[0].background_model, model]
+    estimator = FluxPointsEstimator(
+        energy_edges=energy_edges, source="test", selection_optional=[], reoptimize=True
+    )
+    flux_points = estimator.run(fermi_datasets[0])
+
+    flux_points_dataset = FluxPointsDataset(data=flux_points, models=model)
+    flux_pred = flux_points_dataset.flux_pred()
+    assert_allclose(flux_pred, flux_pred_ref, rtol=2e-4)
+
+    # test model 2d
+    norms = (
+        model.spatial_model.map.data.sum(axis=(1, 2))
+        / model.spatial_model.map.data.sum()
+    )
+    model.spatial_model = TemplateSpatialModel(
+        model.spatial_model.map.reduce_over_axes(), normalize=False
+    )
+    model.spectral_model = PiecewiseNormSpectralModel(geom.axes[0].center, norms)
+    flux_points_dataset = FluxPointsDataset(data=flux_points, models=model)
+    flux_pred = flux_points_dataset.flux_pred()
+    assert_allclose(flux_pred, flux_pred_ref, rtol=2e-4)
+
+
+@requires_data()
+def test_fpe_diff_lengths():
+    dataset = SpectrumDatasetOnOff.read(
+        "$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits"
+    )
+    dataset1 = SpectrumDatasetOnOff.read(
+        "$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23559.fits"
+    )
+
+    dataset.meta_table = Table(names=["NAME", "TELESCOP"], data=[["23523"], ["hess"]])
+    dataset1.meta_table = Table(names=["NAME", "TELESCOP"], data=[["23559"], ["hess"]])
+    dataset2 = Datasets([dataset, dataset1]).stack_reduce(name="dataset2")
+
+    dataset3 = dataset1.copy()
+    dataset3.meta_table = None
+
+    pwl = PowerLawSpectralModel()
+
+    datasets = Datasets([dataset1, dataset2, dataset3])
+
+    datasets.models = SkyModel(spectral_model=pwl, name="test")
+    energy_edges = [1, 2, 4, 10] * u.TeV
+    fpe = FluxPointsEstimator(energy_edges=energy_edges, source="test")
+
+    fp = fpe.run(datasets)
+
+    assert_allclose(
+        fp.dnde.data,
+        [[[2.034323e-11]], [[3.39049716e-12]], [[2.96231326e-13]]],
+        rtol=1e-3,
+    )
+
+    dataset4 = dataset1.copy()
+    dataset4.meta_table = Table(names=["NAME", "TELESCOP"], data=[["23523"], ["not"]])
+    datasets = Datasets([dataset1, dataset2, dataset3, dataset4])
+    with pytest.raises(ValueError):
+        fp = fpe.run(datasets)
+
+
+def test_resample_axis():
+    ds, fpe = create_fpe(PowerLawSpectralModel())
+    flux_points = fpe.run(ds)
+    axis_new = get_rebinned_axis(flux_points, method="fixed-bins", group_size=3)
+    flux_new = flux_points.resample_axis(axis_new)
+    assert_allclose(flux_new.flux.data, [[[3.1050191 * 1e-12]]], rtol=1e-5)

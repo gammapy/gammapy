@@ -125,12 +125,83 @@ def test_downsample():
         node_type="edges",
         interp="lin",
     )
+
+    # Node_type edge, divisible, strict=True
     axis_down = axis.downsample(2)
 
     assert_allclose(axis_down.nbin, 0.5 * axis.nbin)
     assert_allclose(axis_down.edges[0], axis.edges[0])
     assert_allclose(axis_down.edges[-1], axis.edges[-1])
     assert axis_down.node_type == axis.node_type
+
+    # Node_type edge, divisible, strict=False
+    axis_down1 = axis.downsample(2, strict=False)
+    assert axis_down == axis_down1
+
+    axis = MapAxis(
+        nodes=[0, 1, 2, 3, 4, 5, 6, 7],
+        unit="TeV",
+        name="energy",
+        node_type="edges",
+        interp="lin",
+    )
+    # Node_type edge, not divisible, strict=True
+    with pytest.raises(ValueError) as exc_info:
+        axis.downsample(2, strict=True)
+    assert str(exc_info.value) == "Number of energy bins (7) is not divisible by 2"
+
+    # Node_type edge, not divisible, strict=False
+    axis_down = axis.downsample(2, strict=False)
+    assert_allclose(axis_down.nbin, np.ceil(0.5 * axis.nbin))
+    assert_allclose(axis_down.edges[0], axis.edges[0])
+    assert_allclose(axis_down.edges[-1], axis.edges[-1])
+    assert axis_down.node_type == axis.node_type
+
+    axis = MapAxis(
+        nodes=[
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+        ],
+        unit="TeV",
+        name="energy",
+        node_type="center",
+        interp="lin",
+    )
+
+    # Node_type center, not divisible, strict=True
+    with pytest.raises(ValueError) as exc_info:
+        axis.downsample(2, strict=True)
+    assert str(exc_info.value) == "Number of energy bins - 1 (5) is not divisible by 2"
+    # Node_type center, not divisible, strict=False
+    axis_down = axis.downsample(2, strict=False)
+    assert_allclose(axis_down.nbin, 4)
+    assert_allclose(axis_down.center, [0.0, 2.0, 4.0, 5] * u.TeV)
+    assert axis_down.node_type == "center"
+
+    axis = MapAxis(
+        nodes=[
+            0,
+            1,
+            2,
+            3,
+            4,
+        ],
+        unit="TeV",
+        name="energy",
+        node_type="center",
+        interp="lin",
+    )
+    # Node_type center, divisible, strict=True
+    axis_down = axis.downsample(2, strict=True)
+    assert_allclose(axis_down.nbin, 3)
+    assert_allclose(axis_down.center, [0.0, 2.0, 4.0] * u.TeV)
+    # Node_type center, divisible, strict=False
+    axis_down1 = axis.downsample(2, strict=False)
+    assert axis_down == axis_down1
 
 
 def test_upsample_non_regular():
@@ -187,6 +258,25 @@ def test_one_bin_nodes():
     assert_allclose(axis.coord_to_pix(1 * u.deg), 0)
     assert_allclose(axis.coord_to_pix(2 * u.deg), 0)
     assert_allclose(axis.pix_to_coord(0), 1 * u.deg)
+
+
+def test_table():
+    axis = MapAxis(
+        nodes=[0, 1, 2, 3, 4, 5, 6, 7, 8],
+        unit="TeV",
+        name="energy",
+        node_type="edges",
+        interp="lin",
+    )
+
+    table = axis.to_table()
+    assert table.colnames == ["CHANNEL", "E_MIN", "E_MAX"]
+    assert len(table["CHANNEL"]) == axis.nbin
+    assert table["E_MIN"].unit == table["E_MAX"].unit == u.TeV
+    assert (table["E_MIN"].data == axis.edges_min.value).all()
+
+    table_kev = axis.to_table("ogip-sherpa")
+    assert table_kev["E_MIN"].unit == table_kev["E_MAX"].unit == u.keV
 
 
 def test_group_table_basic(energy_axis_ref):
@@ -535,6 +625,19 @@ def test_coord_to_idx_time_axis(time_intervals):
     assert_allclose(pixels[1::2], [np.nan, 1, 3, 5, 7, 9, 11, 13, 15, 17, 19])
 
 
+def test_timeaxis_table(time_intervals):
+    tmin = time_intervals["t_min"]
+    tmax = time_intervals["t_max"]
+    tref = time_intervals["t_ref"]
+    axis = TimeMapAxis(tmin, tmax, tref, name="time")
+
+    table = axis.to_table()
+
+    assert table.colnames == ["START", "STOP"]
+    assert len(table["START"]) == axis.nbin
+    assert (table["START"] == axis.time_min).all()
+
+
 def test_pix_to_coord_time_axis(time_intervals):
     tmin = time_intervals["t_min"]
     tmax = time_intervals["t_max"]
@@ -544,7 +647,7 @@ def test_pix_to_coord_time_axis(time_intervals):
     pixels = [1.3, 3.2, 5.4, 7, 15.33, 17.21, 19.11]
     coords = axis.pix_to_coord(pixels)
     assert_allclose(
-        coords[0:3].mjd, [58927.0125, 58927.534649, 58928.069298], rtol=1e-5
+        coords[0:3].mjd, [58927.538816, 58928.587281, 58929.648246], rtol=1e-5
     )
 
     # test with nan indices
@@ -552,7 +655,7 @@ def test_pix_to_coord_time_axis(time_intervals):
     coords = axis.pix_to_coord(pixels)
     assert_allclose(
         coords[-3:].mjd,
-        [58929.64032894737, 58930.162478070175, -3.725000e-04],
+        [58935.9561, 58937.0046, -3.72500000e-04],
         rtol=1e-5,
     )
 
@@ -560,13 +663,13 @@ def test_pix_to_coord_time_axis(time_intervals):
     coords = axis.pix_to_coord([[-1.2, 0.6], [1.5, 24.7]])
     assert_allclose(
         coords.mjd,
-        [[-3.725000e-04, 58927.551315789475], [58928.07346491228, -3.725000e-04]],
+        [[-3.72500000e-04, 5.89270250e04], [5.89275471e04, -3.72500000e-04]],
         rtol=1e-5,
     )
 
     # test with one value
     coords = axis.pix_to_coord(3)
-    assert_allclose(coords.mjd, 58927.0, rtol=1e-5)
+    assert_allclose(coords.mjd, axis.time_min[3].mjd, rtol=1e-5)
 
 
 def test_slice_time_axis(time_intervals):
@@ -664,6 +767,15 @@ def test_from_gti_bounds():
     assert_time_allclose(axis.time_max[-1], expected)
 
 
+def test_to_gti(time_intervals):
+    time_axis = TimeMapAxis(
+        time_intervals["t_min"], time_intervals["t_max"], time_intervals["t_ref"]
+    )
+    gti = time_axis.to_gti()
+    assert len(gti.table) == 20
+    assert TimeMapAxis.from_gti(gti) == time_axis
+
+
 def test_map_with_time_axis(time_intervals):
     time_axis = TimeMapAxis(
         time_intervals["t_min"], time_intervals["t_max"], time_intervals["t_ref"]
@@ -724,6 +836,26 @@ def test_axes_basics():
     assert new_axes != axes
 
 
+def test_map_axes_assert_names():
+    axis_a = MapAxis([1, 2, 3], name="axis_a")
+    axis_b = MapAxis([1, 2, 3, 4], name="axis_b")
+    axis_c = LabelMapAxis(["a", "b"], name="axis_c")
+
+    axes = MapAxes([axis_a, axis_b, axis_c])
+
+    axes.assert_names(["axis_a", "axis_b", "axis_c"])
+    axes.assert_names(["axis_a", "axis_b"], allow_extra=True)
+
+    with pytest.raises(ValueError):
+        axes.assert_names(["axis_a", "axis_b"])
+
+    with pytest.raises(ValueError):
+        axes.assert_names(["axis_c", "axis_b", "axis_a"])
+
+    with pytest.raises(ValueError):
+        axes.assert_names(["axis_b"], allow_extra=True)
+
+
 def test_axes_getitem():
     axis1 = MapAxis.from_bounds(1, 4, 3, name="a1")
     axis2 = axis1.copy(name="a2")
@@ -763,6 +895,21 @@ def test_label_map_axis_basics():
 
     axis_copy = axis.copy()
     assert axis_copy.name == "label-axis"
+
+    # Ensure order is correct
+    labels = np.array([1, 4, 5])
+    assert_allclose(labels, [1, 4, 5])
+    assert_allclose(LabelMapAxis(labels).center, labels)
+    assert_allclose(LabelMapAxis(labels)._labels, labels)
+
+    # Test case with non unique labels
+    with pytest.raises(ValueError) as exc_info:
+        LabelMapAxis([1, 1, 1])
+    assert str(exc_info.value) == "Node labels must be unique"
+
+    # Ensure non alphabetical ordering
+    labels = np.array(["b", "a", "d", "c"])
+    assert_equal(LabelMapAxis(labels).center, labels)
 
 
 def test_label_map_axis_coord_to_idx():
@@ -870,6 +1017,37 @@ def test_time_map_axis_format_plot_xaxis(time_intervals):
     assert ax2.axes.axes.get_xlabel().split()[1] == "[mjd]"
 
 
+def test_time_group_table(time_intervals):
+    axis = TimeMapAxis(
+        time_intervals["t_min"],
+        time_intervals["t_max"],
+        time_intervals["t_ref"],
+        name="time",
+    )
+
+    groups = axis.group_table(interval_edges=[5 * u.d - 1 * u.h, 6 * u.d + 2 * u.h])
+    assert_allclose(groups["idx_min"], [10])
+    assert_allclose(groups["idx_max"], [11])
+    assert_allclose(groups["time_min"], [58932.263158])
+    assert_allclose(groups["time_max"], [58932.83114])
+
+    groups_overflow = axis.group_table(interval_edges=[11 * u.d, 12 * u.d])
+    assert_allclose(groups_overflow["idx_min"], [-1])
+
+    groups_timeedges = axis.group_table(
+        interval_edges=[
+            Time("2020-03-19") + 5 * u.d - 1 * u.h,
+            Time("2020-03-19") + 6 * u.d + 2 * u.h,
+        ]
+    )
+    assert_allclose(groups_timeedges["time_min"], [58932.263158])
+    assert_allclose(groups_timeedges["time_max"], [58932.83114])
+
+    groups_exactedges = axis.group_table(interval_edges=[3 * u.d, 7 * u.d + 1 * u.h])
+    assert_allclose(groups_exactedges["idx_min"], [6])
+    assert_allclose(groups_exactedges["idx_max"], [13])
+
+
 def test_single_valued_axis():
     # this will be interpreted as a scalar value
     # that is against the specifications, but we allow it nevertheless
@@ -922,3 +1100,22 @@ def test_energy_bin_per_decade_not_strict_bounds():
     )
 
     assert_allclose(axis.edges[0:-nbin] * 10.0, axis.edges[nbin:], rtol=1e-5, atol=0)
+
+
+def test_periodic_map_axis():
+    axis1 = MapAxis.from_bounds(-0.5, 0.5, 5, boundary_type="periodic")
+    coords = np.array([-1.0, -0.7, 0.1, 1.2])
+    assert_allclose(axis1.wrap_coord(coords), [0.0, 0.3, 0.1, 0.2], rtol=1e-5)
+
+    idx = axis1.coord_to_idx(coord=coords)
+    assert_allclose(idx, [2, 4, 2, 3], rtol=1e-5)
+
+    pix = axis1.coord_to_pix(coord=coords)
+    assert_allclose(pix, [2.0, 3.5, 2.5, 3.0], rtol=1e-5)
+
+    with pytest.raises(ValueError):
+        axis1 = MapAxis.from_bounds(-0.5, 0.5, 5, boundary_type="other")
+    with pytest.raises(ValueError):
+        axis1 = MapAxis.from_bounds(
+            -0.5, 0.5, 5, boundary_type="periodic", interp="log"
+        )

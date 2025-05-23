@@ -5,12 +5,12 @@
 Utility functions
 =================
 
-``gammapy.utils`` is a collection of utility functions that are used in many
+`gammapy.utils` is a collection of utility functions that are used in many
 places or don't fit in one of the other packages.
 
-Since the various sub-modules of ``gammapy.utils`` are mostly unrelated, they
+Since the various sub-modules of `gammapy.utils` are mostly unrelated, they
 are not imported into the top-level namespace. Here are some examples of how to
-import functionality from the ``gammapy.utils`` sub-modules:
+import functionality from the `gammapy.utils` sub-modules:
 
 .. testcode::
 
@@ -39,12 +39,12 @@ In Gammapy, `astropy.time.Time` objects are used to represent times:
 Note that Astropy chose ``format='isot'`` and ``scale='utc'`` as default and in
 Gammapy these are also the recommended format and time scale.
 
-.. warning::
+.. .. warning::
 
-   Actually what's written here is not true. In CTA it hasn't been decided if
+..   Actually what's written here is not true. In CTAO, it hasn't been decided if
    times will be in ``utc`` or ``tt`` (terrestrial time) format.
 
-   Here's a reminder that this needs to be settled / updated:
+..   Here's a reminder that this needs to be settled / updated:
    https://github.com/gammapy/gammapy/issues/284
 
 

@@ -1,0 +1,236 @@
+.. include:: ../references.txt
+
+.. _gammapy_1p3_release:
+
+1.3 (November 26th, 2024)
+-------------------------
+
+- Released November 26th, 2024
+- 25 contributors
+- 212 pull requests since v1.2 (not all listed below)
+- 75 closed issues
+
+Summary
+~~~~~~~
+
+This release introduces a number of performance improvements, new features and bug fixes.
+Improved support is provided for joint analysis with different event types.
+There has been significant code cleanup, specially with respect to the documentation and three new
+tutorials have been added.
+
+This release is compatible with numpy >=2.0.
+Sherpa dependency has been fixed to >4.16, it is not included in the gammapy-1.3-environment.yml file to avoid possible installation issues.
+
+
+API changes
+~~~~~~~~~~~
+
+Few API-breaking changes have been introduced in this version:
+
+- Note that the `~gammapy.irf.Background3D` FOV-lon alignment has been reverted to follow the correct GADF convention. A check is made to ensure compatibility with previous H.E.S.S. bkg models. Please check the alignment if you are building 3D bkg models.
+- The order of arguments in the `~gammapy.modeling.models.FoVBackgroundModel` has been modified; `dataset_name` is now a required first positional argument.
+- All `~gammapy.estimators.Estimator` init functions that require a spectral model now use `spectral_model` as the argument name.
+
+Features deprecated since Gammapy v1.2 have been removed.
+
+Infrastructure
+~~~~~~~~~~~~~~
+
+- Matomo is now used for website analytics, replacing Google Analytics.
+
+
+Documentation improvements
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- The pydata-sphinx-theme version used to build the documentation has been updated. The overall appearance has therefore changed a bit.
+- Tutorials are now ordered in a logical workflow in each category.
+- Three new tutorials have been added: 
+   - one on modeling the EBL absorption
+   - one exposing the general API of `gammapy.estimators` and `~gammapy.estimators.FluxMaps`
+   - one performing time-dependent spectroscopy
+- Code examples have been added in docstrings.
+
+
+New features
+~~~~~~~~~~~~
+
+*gammapy.catalogs*
+
+- Support for the 2PC and 3PC pulsar catalogs from Fermi-LAT has been added.
+
+
+*gammapy.datasets*
+
+- Performance improvement in Fermi-LAT analysis has been implemented with adaptations in PSF kernel computation.
+- Stacking of acceptance maps has been improved.
+
+
+*gammapy.maps*
+
+- Multiple non-spatial axes are now supported in MapDataset creation. Full likelihood computation with additional axes is not yet supported.
+- Map axes with periodic boundary conditions are now supported.
+- An error is raised for maps with invalid input shapes instead of silently broadcasting.
+
+*gammapy.estimators*
+
+- Added support for joint TS map : `TSMapEstimator.run()` now accepts `Datasets` as input.
+- Maps of likelihood profiles can now be computed with the `~gammapy.estimators.TSMapEstimator` via the argument : `selection_optional = ["stat_scan"]`.
+- Bin-wise likelihood profiles are now stored on `~gammapy.estimators.FluxMaps`.
+- `~gammapy.estimtors.FluxMaps` obtained from different datasets (eg: different event types) can be combined.
+- Added a function to combine flux maps in `~gammapy.estimators.utils.combine_flux_maps`. The combination
+  uses the likelihood profile maps if available otherwise Gaussian approximation is used.
+- Added alpha maps to the output of `~gammapy.estimators.ExcessMapEstimator`.
+
+*gammapy.stats*
+
+- Timmer-Koenig algorithm with leakage protection for simulating a time series from a power spectrum has been implemented.
+- Discrete structure function for a variable source using the Emmanoulopoulos et al. (2010) algorithm has been added.
+- Discrete cross correlation function computation has been added.
+
+*gammapy.modeling*
+
+- The `~gammapy.modeling.FitResult` object is now exposed as an important API element, combining the results from the optimisation and covariance of the fit. It can be saved to disk in the form of a yaml file thanks to a new `~gammapy.modeling.FitResult.write()` function.
+- Unique naming of model parameters has been adapted, leading to resolution of issues with covariance matrix computation for complex model lists.
+- Time scale issues in simulation energy dependent temporal models has been resolved.
+
+
+Bug fixes and improvements
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- ON and OFF phase intervals are copied in `~gammapy.makers.PhaseBackgroundMaker`.
+- Added min_pix option in `~gammapy.maps.WcsGeom.cutout`.
+- Added copy method on `~gammapy.estimators.FluxMaps`.
+- Fixed `~gammapy.modeling.select_nested_models` if there is no free parameters for the null hypothesis.
+- Allowed extrapolation only along spatial dimension in `mask_safe_edisp`.
+- Fixed `cutout_template_models` to work if models is None.
+- Fixed angle wrapping of spatial parameters in `~gammapy.modeling.models.PiecewiseNormSpatialModel`.
+- Fixed map evaluation if no ``edisp`` is set.
+- Added missing parallel processing options.
+- Added `~gammapy.maps.TimeMapAxis.to_table()`.
+- Added a warning in `~gammapy.modeling.models.TemplateSpatialModel` for presence of nan values.
+- Fixed ignored overwrite in `~gammapy.datasets.Datasets.write`.
+- Improved plotting of spectral residuals by removing the mask in computation but rather adding a visual mask.
+- Added strict option to `~gammapy.maps.MapAxis.downsample`.
+- Fixed `~gammapy.data.ObservationsEventsSampler` for observations based on full-enclosure IRFs.
+- Added a method to normalize `~gammapy.modeling.models.TemplatePhaseCurveTemporalModel`.
+- Definition of `UniformPrior` has been fixed to return 0 within min and max values instead of 1.
+
+Known issues
+~~~~~~~~~~~~
+
+- Reading a `~gammapy.modeling.models.Models` file created with Gammapy<1.2 which contains a `~gammapy.modeling.models.TemplateSpatialModel` can fail because of the covariance format.
+  A workaround is to remove the covariance entry in the `~gammapy.modeling.models.Models` file.
+
+Contributors
+~~~~~~~~~~~~
+- Fabio Acero
+- Arnau Aguasca-Cabot
+- Axel Donath
+- Kirsty Feijen
+- Stefan Fröse
+- Claudio Galelli
+- Bruno Khélifi
+- Maximilian Linhoff
+- Lars Mohrmann
+- Daniel Morcuende
+- Laura Olivera Nieto
+- Mireia Nievas
+- Michele Peresano
+- Fabio Pintore
+- Maxime Regeard
+- Quentin Remy
+- Gerrit Roellinghoff
+- Vasco Schiavo
+- Atreyee Sinha
+- Brigitta Sipőcz
+- Hanna Stapel
+- Régis Terrier
+- Santiago Vila
+- Samantha Wong
+- Pei Yu
+
+
+Pull Requests
+~~~~~~~~~~~~~
+
+This list is incomplete. Small improvements and bug fixes are not listed here.
+
+- [#5545] Fix ObservationsEventsSampler for observations based on full-enclosure IRFs (Michele Peresano)
+- [#5525] Norm TemplatePhaseCurveTemporalModel (Maxime Regeard)
+- [#5472] Add the Matomo tracker into our documentation web pages (Bruno Khélifi)
+- [#5466] Improve the time resolved spectroscopy tutorial (Claudio Galelli)
+- [#5462] Update all the documentation with the new name of CTA : CTAO (Bruno Khélifi)
+- [#5453] Fix time shift from sampled events with `MapDatasetEventSampler` (Fabio Pintore)
+- [#5449] combine_flux_maps  supports for different energy axes (Quentin Remy)
+- [#5448] Fix typo in Uniform prior returned value (Fabio Acero)
+- [#5445] Add a to_table() method to TimeMapAxis (Claudio Galelli)
+- [#5438] Speed up event sampler (Fabio Pintore)
+- [#5437] Remove mask in residual plotting (Atreyee Sinha)
+- [#5433] Sort sampled events by time in `MapDatasetEventSampler` (Fabio Pintore)
+- [#5427] A time resolved spectroscopy estimator (Atreyee Sinha)
+- [#5423] Function for the discrete cross correlation function (Claudio Galelli)
+- [#5409] Add strict option to `MapAxis.downsample` (Kirsty Feijen)
+- [#5408] Add alpha maps to `ExcessMapEstimator` (Kirsty Feijen)
+- [#5407] Add an API tutorial for Estimators (Kirsty Feijen)
+- [#5405] Add missing parallel options (Quentin Remy)
+- [#5390] Fix region evaluation without psf convolution (Quentin Remy)
+- [#5389] Fix `LabelMapAxis` so it doesn't reorder the labels (Kirsty Feijen)
+- [#5385] Fix reco_exposure computation with mask safe in ExcessMapEstimator (Quentin Remy)
+- [#5382] Fix and tweaks for the stat_scan in TSMapEstimator (Quentin Remy)
+- [#5381] Apply safe mask in TSMapEstimator (Quentin Remy)
+- [#5380] Add max_niter as option in TSMapEstimator (Quentin Remy)
+- [#5378] Observations `__getitem__` method addition (Maxime Regeard)
+- [#5370] Add offset mask to make_effective_livetime_map (Quentin Remy)
+- [#5366] Remove use of np.rint in pix_tuple_to_idx (Atreyee Sinha)
+- [#5356] Brought gammapy.visualization.plot_distribution in line with its documentation (Gerrit Roellinghoff)
+- [#5353] Add support for joint TSmap estimation (Quentin Remy)
+- [#5350] Adapt `RadMax2D.plot_rad_max_vs_energy` (Kirsty Feijen)
+- [#5346] Add examples to fit function docstrings (Kirsty Feijen)
+- [#5342] Fix evaluation if no edisp is set (Quentin Remy)
+- [#5320] Fix parameters unique names (Quentin Remy)
+- [#5316] Add CovarianceMixin for multicomponent models classes (Quentin Remy)
+- [#5314] Improve get_psf_kernel performance (Quentin Remy)
+- [#5312] More complex background spectral model exposed (Kirsty Feijen)
+- [#5304] introducing a `filename` argument to TemplateSpatialModel.write (Fabio Pintore)
+- [#5303] QOL changes in Timmer&Konig (Claudio Galelli)
+- [#5300] Fix wrap in PiecewiseNormSpatialModel (Quentin Remy)
+- [#5298] Coherent units in `TemporalModel.sample_time` (Fabio Pintore)
+- [#5297] Precompute the PSF Kernel if the PSFMap has only one bin (Quentin Remy)
+- [#5289] Add new methods for combine_flux_maps to use likelihood profile or its approximation (Quentin Remy)
+- [#5285] Add support for stat_scan in TSMapEstimator (Quentin Remy)
+- [#5280] Add min_pix option in WcsGeom.cutout and set it to 3 for IRFs (Quentin Remy)
+- [#5279] Add copy method on FluxMaps (Quentin Remy)
+- [#5275] Add a notebook for EBL correction example (Atreyee Sinha)
+- [#5271] Allow extrapolation only along spatial dimension in `mask_safe_edisp` (Quentin Remy)
+- [#5270] Modify acceptance stacking behavior (Régis Terrier)
+- [#5269] Add leakage protection factor in the Timmer Konig algorithm (Claudio Galelli)
+- [#5258] Add write function to `FitResult` (Kirsty Feijen)
+- [#5255] Expose `FitResult` (Kirsty Feijen)
+- [#5254] Make non-FITS table file from FluxPoints overwritable (Michele Peresano)
+- [#5222] Allow `MapAxis` to be passed in `SpectralModel.plot()` (Kirsty Feijen)
+- [#5207] Specify the models with duplicated name in `Models` (Fabio Pintore)
+- [#5206] Convert negative `npred` values to zero in `MapDatasetEventSampler` (Fabio Pintore)
+- [#5205] Specify the sampled model in `MapDatasetEventSampler` (Fabio Pintore)
+- [#5200] Use two argument form of Time to parse reference time (Maximilian Linhoff)
+- [#5188] Raise an error if the geometry of the exclusion mask passed to `ReflectedRegionsBackgroundMaker` is not an image (Maxime Regeard)
+- [#5186] Adjust `to_edisp_kernel` input to `MapAxis` (Kirsty Feijen)
+- [#5184] Support additional axes in Mapdataset.create (Régis Terrier)
+- [#5180] Raise error on invalid input shape in Map (Maximilian Linhoff)
+- [#5176] Fix `observatory_earth_location` (Stefan Fröse)
+- [#5169] Add boundary condition to create a PeriodicMapAxis (Atreyee Sinha)
+- [#5161] Flux maps combination (Quentin Remy)
+- [#5160] Fix select_nested_models if there is no free parameters for the null hypothesis (Quentin Remy)
+- [#5156] Introduction of the structure function for variability studies (Claudio Galelli)
+- [#5145] LightCurveTemplateTemporalModel method to generate a model from a periodogram by using the Timmer algorithm (Claudio Galelli)
+- [#5135] Add different options to compute stat_array on FluxPointsDatasets (Quentin Remy)
+- [#5129] Copy on and off phase intervals in `PhaseBackgroundMaker` (Maxime Regeard)
+- [#5125] Fix implementation of the testing code for larger docstring examples (Kirsty Feijen)
+- [#5118] css for sphinx v15 (Hanna Stapel)
+- [#5115] Add 3 TS definitions to compute with TestStatisticNested class (Quentin Remy)
+- [#5058] 3PC Fermi catalog (Maxime Regeard)
+- [#5057] 2PC Fermi catalog (Maxime Regeard)
+- [#4996] MAINT: use new location for dev wheels (Brigitta Sipőcz)
+- [#4983] Adjust getting-started page (Kirsty Feijen)
+- [#4433] Add a function to combine excess maps (Quentin Remy)
+
+

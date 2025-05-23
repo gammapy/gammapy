@@ -7,7 +7,7 @@ Using Gammapy
 =============
 
 To use Gammapy you need a basic knowledge of Python, Numpy, Astropy, as well as
-matplotlib for plotting. Many standard gamma-ray analyses can be done with few
+matplotlib for plotting. Many standard gamma-ray analyses can be done with a few
 lines of configuration and code, so you can get pretty far by copy and pasting
 and adapting the working examples from the Gammapy documentation. But
 eventually, if you want to script more complex analyses, or inspect analysis
@@ -18,12 +18,13 @@ Jupyter notebooks
 -----------------
 
 To learn more about Gammapy, and also for interactive data analysis in general,
-we recommend you use Jupyter notebooks. Assuming you have followed the steps above to install Gammapy and activate the conda environment, you can start
+we recommend you use Jupyter notebooks. Assuming you have followed the steps above to install
+Gammapy and activate the conda environment, you can start
 `JupyterLab`_ like this:
 
 .. code-block:: bash
 
-    $ jupyter lab
+    jupyter lab
 
 This should open up JupyterLab app in your web browser, where you can
 create new Jupyter notebooks or open up existing ones. If you have downloaded the
@@ -41,14 +42,13 @@ Gammapy is a Python package, so you can of course import and use it from Python:
 
 .. code-block:: bash
 
-    $ python
+    python
     Python 3.6.0 | packaged by conda-forge | (default, Feb 10 2017, 07:08:35)
     [GCC 4.2.1 Compatible Apple LLVM 7.3.0 (clang-703.0.31)] on darwin
     Type "help", "copyright", "credits" or "license" for more information.
     >>> from gammapy.stats import CashCountsStatistic
     >>> CashCountsStatistic(n_on=10, mu_bkg=4.2).sqrt_ts
-    2.397918129147546
-
+    np.float64(2.397918129147546)
 
 IPython
 -------
@@ -57,7 +57,7 @@ IPython is nicer to use for interactive analysis:
 
 .. code-block:: bash
 
-    $ ipython
+    ipython
     Python 3.6.0 | packaged by conda-forge | (default, Feb 10 2017, 07:08:35)
     Type 'copyright', 'credits' or 'license' for more information
     IPython 6.5.0 -- An enhanced Interactive Python. Type '?' for help.
@@ -75,7 +75,7 @@ method** from IPython:
     In [3]: CashCountsStatistic?
 
 Of course, you can also use the Gammapy online docs if you prefer, clicking in links
-(i.e. `gammapy.stats.CashCountsStatistic`) or using *search docs* field in the upper left.
+(i.e. `gammapy.stats.CashCountsStatistic`) or using *Search the docs* field in the upper left.
 
 As an example, here's how you can create `gammapy.data.DataStore` and
 `gammapy.data.EventList` objects and start exploring H.E.S.S. data:
@@ -121,7 +121,7 @@ Python scripts
 --------------
 
 Another common way to use Gammapy is to write a Python script.
-Try it and put the following code into a file called ``example.py``:
+Try it by putting the following code into a file called ``example.py``:
 
 .. testcode::
 
@@ -139,7 +139,7 @@ You can run it with Python:
 
 .. code-block:: bash
 
-    $ python example.py
+    python example.py
     4.418007850646973 TeV
 
 If you want to continue with interactive data or results analysis after
@@ -147,6 +147,6 @@ running some Python code, use IPython like this:
 
 .. code-block:: bash
 
-    $ ipython -i example.py
+    ipython -i example.py
 
-For examples how to run Gammapy analyses from Python scripts, see :ref:`Survey Map Script`.
+For examples how to run Gammapy analyses from Python scripts, see :doc:`/tutorials/scripts/survey_map`.

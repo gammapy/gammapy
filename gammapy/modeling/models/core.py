@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import collections.abc
 import copy
+import html
 import logging
 from os.path import split
 import numpy as np
@@ -8,15 +9,37 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
 import matplotlib.pyplot as plt
-import yaml
 from gammapy.maps import Map, RegionGeom
 from gammapy.modeling import Covariance, Parameter, Parameters
-from gammapy.utils.scripts import make_name, make_path
+from gammapy.modeling.covariance import CovarianceMixin
+from gammapy.utils.scripts import from_yaml, make_name, make_path, to_yaml, write_yaml
 
 __all__ = ["Model", "Models", "DatasetModels", "ModelBase"]
 
 
 log = logging.getLogger(__name__)
+
+
+def _recursive_dict_filename_update(dict_, path):
+    """update model filename to full path if exits"""
+    for key, value in dict_.items():
+        if isinstance(value, dict):
+            _recursive_dict_filename_update(value, path)
+        elif key == "filename":
+            filename = dict_[key]
+            if (path / filename).exists():
+                dict_[key] = path / filename
+
+
+def _recursive_model_filename_update(model, path):
+    """update model filename to relative path if child of path"""
+    if hasattr(model, "filename") and path == make_path(model.filename).parent:
+        _, filename = split(model.filename)
+        model.filename = filename
+
+    if hasattr(model, "_models"):
+        for m in model._models:
+            _recursive_model_filename_update(m, path)
 
 
 def _set_link(shared_register, model):
@@ -33,9 +56,10 @@ def _set_link(shared_register, model):
 
 
 def _get_model_class_from_dict(data):
-    """get a model class from a dict"""
+    """Get a model class from a dictionary."""
     from . import (
         MODEL_REGISTRY,
+        PRIOR_REGISTRY,
         SPATIAL_MODEL_REGISTRY,
         SPECTRAL_MODEL_REGISTRY,
         TEMPORAL_MODEL_REGISTRY,
@@ -49,11 +73,13 @@ def _get_model_class_from_dict(data):
         cls = SPECTRAL_MODEL_REGISTRY.get_cls(data["spectral"]["type"])
     elif "temporal" in data:
         cls = TEMPORAL_MODEL_REGISTRY.get_cls(data["temporal"]["type"])
+    elif "prior" in data:
+        cls = PRIOR_REGISTRY.get_cls(data["prior"]["type"])
     return cls
 
 
 def _build_parameters_from_dict(data, default_parameters):
-    """Build Parameters object from input dict and default  parameter values."""
+    """Build a `~gammapy.modeling.Parameters` object from input dictionary and default parameter values."""
     par_data = []
 
     input_names = [_["name"] for _ in data]
@@ -73,6 +99,84 @@ def _build_parameters_from_dict(data, default_parameters):
     return Parameters.from_dict(par_data)
 
 
+def _check_name_unique(model, names):
+    """Check if a model is not duplicated"""
+    if model.name in names:
+        raise (
+            ValueError(
+                f"Model names must be unique. Models named '{model.name}' are duplicated."
+            )
+        )
+    return
+
+
+def _check_fov_background_models(models):
+    """
+    Checks if a maximum of one `~gammapy.modeling.models.FoVBackgroundModel` is assigned to dataset
+    and returns a dictionnary mapping `dataset_name` to the background model name.
+
+    Parameters
+    ----------
+    models : `~gammapy.modeling.models.Models`
+        List of Models
+
+    Returns:
+    --------
+    bkg_model_mapping : dict
+        Dictionary mapping dataset name to `~gammapy.modeling.models.FoVBackgroundModel` name.
+    """
+    from . import FoVBackgroundModel
+
+    bkg_model_mapping = {}
+    for model in models:
+        if isinstance(model, FoVBackgroundModel):
+            for n in model.datasets_names:
+                if n not in bkg_model_mapping.keys():
+                    bkg_model_mapping[n] = model.name
+                else:
+                    raise ValueError(
+                        f"Only one FoVBackgroundModel per Dataset is permitted - already got one for {n}"
+                    )
+    return bkg_model_mapping
+
+
+def _write_models(
+    models,
+    path,
+    overwrite=False,
+    full_output=False,
+    overwrite_templates=False,
+    write_covariance=True,
+    checksum=False,
+    extra_dict=None,
+):
+    """Write models to YAML file with additionnal informations using an `extra_dict`"""
+
+    base_path, _ = split(path)
+    path = make_path(path)
+    base_path = make_path(base_path)
+
+    if path.exists() and not overwrite:
+        raise IOError(f"File exists already: {path}")
+
+    if (
+        write_covariance
+        and models.covariance is not None
+        and len(models.parameters) != 0
+    ):
+        filecovar = path.stem + "_covariance.dat"
+        kwargs = dict(format="ascii.fixed_width", delimiter="|", overwrite=overwrite)
+        models.write_covariance(base_path / filecovar, **kwargs)
+        models._covar_file = filecovar
+
+    yaml_str = ""
+    if extra_dict is not None:
+        yaml_str += to_yaml(extra_dict)
+    yaml_str += models.to_yaml(full_output, overwrite_templates)
+
+    write_yaml(yaml_str, path, overwrite=overwrite, checksum=checksum)
+
+
 class ModelBase:
     """Model base class."""
 
@@ -81,6 +185,10 @@ class ModelBase:
     def __init__(self, **kwargs):
         # Copy default parameters from the class to the instance
         default_parameters = self.default_parameters.copy()
+
+        for key in kwargs.keys():
+            if key != "covariance_data" and key not in default_parameters.names:
+                raise NameError(f"Unknown Parameter name '{key}'")
 
         for par in default_parameters:
             value = kwargs.get(par.name, par)
@@ -119,17 +227,17 @@ class ModelBase:
 
     @classmethod
     def from_parameters(cls, parameters, **kwargs):
-        """Create model from parameter list
+        """Create model from parameter list.
 
         Parameters
         ----------
         parameters : `Parameters`
-            Parameters for init
+            Parameters for init.
 
         Returns
         -------
         model : `Model`
-            Model instance
+            Model instance.
         """
         for par in parameters:
             kwargs[par.name] = par
@@ -157,22 +265,26 @@ class ModelBase:
 
         for par in self.parameters:
             pars = Parameters([par])
-            variance = self._covariance.get_subcovariance(pars)
-            par.error = np.sqrt(variance)
+            variance = self._covariance.get_subcovariance(pars).data
+            par.error = np.sqrt(variance[0][0])
 
     @property
     def parameters(self):
-        """Parameters (`~gammapy.modeling.Parameters`)"""
+        """Parameters as a `~gammapy.modeling.Parameters` object."""
         return Parameters(
             [getattr(self, name) for name in self.default_parameters.names]
         )
 
+    @property
+    def parameters_unique_names(self):
+        return self.parameters.unique_parameters.names
+
     def copy(self, **kwargs):
-        """A deep copy."""
+        """Deep copy."""
         return copy.deepcopy(self)
 
     def to_dict(self, full_output=False):
-        """Create dict for YAML serialisation"""
+        """Create dictionary for YAML serialisation."""
         tag = self.tag[0] if isinstance(self.tag, list) else self.tag
         params = self.parameters.to_dict()
 
@@ -185,7 +297,7 @@ class ModelBase:
                     "error",
                     "interp",
                     "scale_method",
-                    "is_norm",
+                    "scale_transform",
                 ]:
                     default = init[item]
 
@@ -208,9 +320,7 @@ class ModelBase:
             return {self.type: data}
 
     @classmethod
-    def from_dict(cls, data):
-        kwargs = {}
-
+    def from_dict(cls, data, **kwargs):
         key0 = next(iter(data))
 
         if key0 in ["spatial", "temporal", "spectral"]:
@@ -225,14 +335,6 @@ class ModelBase:
             data["parameters"], cls.default_parameters
         )
 
-        # TODO: this is a special case for spatial models, maybe better move to
-        #  `SpatialModel` base class
-        if "frame" in data:
-            kwargs["frame"] = data["frame"]
-        # TODO: same as above for temporal models
-        if "scale" in data:
-            kwargs["scale"] = data["scale"]
-
         return cls.from_parameters(parameters, **kwargs)
 
     def __str__(self):
@@ -241,27 +343,33 @@ class ModelBase:
             string += f"\n{self.parameters.to_table()}"
         return string
 
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
+
     @property
     def frozen(self):
-        """Frozen status of a model, True if all parameters are frozen"""
+        """Frozen status of a model, True if all parameters are frozen."""
         return np.all([p.frozen for p in self.parameters])
 
     def freeze(self):
-        """Freeze all parameters"""
+        """Freeze all parameters."""
         self.parameters.freeze_all()
 
     def unfreeze(self):
-        """Restore parameters frozen status to default"""
+        """Restore parameters frozen status to default."""
         for p, default in zip(self.parameters, self.default_parameters):
             p.frozen = default.frozen
 
     def reassign(self, datasets_names, new_datasets_names):
-        """Reassign a model from one dataset to another
+        """Reassign a model from one dataset to another.
 
         Parameters
         ----------
         datasets_names : str or list
-            Name of the datasets where the model is currently defined
+            Name of the datasets where the model is currently defined.
         new_datasets_names : str or list
             Name of the datasets where the model should be defined instead.
             If multiple names are given the two list must have the save length,
@@ -304,12 +412,11 @@ class Model:
         --------
         >>> from gammapy.modeling.models import Model
         >>> spectral_model = Model.create(
-                    "pl-2", model_type="spectral", amplitude="1e-10 cm-2 s-1", index=3
-                )
+        ...            "pl-2", model_type="spectral", amplitude="1e-10 cm-2 s-1", index=3
+        ...        )
         >>> type(spectral_model)
         <class 'gammapy.modeling.models.spectral.PowerLaw2SpectralModel'>
         """
-
         data = {"type": tag}
         if model_type is not None:
             data = {model_type: data}
@@ -319,21 +426,20 @@ class Model:
 
     @staticmethod
     def from_dict(data):
-        """Create a model instance from a dict"""
-
+        """Create a model instance from a dictionary."""
         cls = _get_model_class_from_dict(data)
         return cls.from_dict(data)
 
 
-class DatasetModels(collections.abc.Sequence):
-    """Immutable models container
+class DatasetModels(collections.abc.Sequence, CovarianceMixin):
+    """Immutable models container.
 
     Parameters
     ----------
     models : `SkyModel`, list of `SkyModel` or `Models`
-        Sky models
+        Sky models.
     covariance_data : `~numpy.ndarray`
-        Covariance data
+        Covariance data.
     """
 
     def __init__(self, models=None, covariance_data=None):
@@ -341,6 +447,8 @@ class DatasetModels(collections.abc.Sequence):
             models = []
 
         if isinstance(models, (Models, DatasetModels)):
+            if covariance_data is None and models.covariance is not None:
+                covariance_data = models.covariance.data
             models = models._models
         elif isinstance(models, ModelBase):
             models = [models]
@@ -350,11 +458,13 @@ class DatasetModels(collections.abc.Sequence):
         unique_names = []
 
         for model in models:
-            if model.name in unique_names:
-                raise (ValueError("Model names must be unique"))
+            _check_name_unique(model, names=unique_names)
             unique_names.append(model.name)
 
+        self._background_models = _check_fov_background_models(models)
+
         self._models = models
+
         self._covar_file = None
 
         self._covariance = Covariance(self.parameters)
@@ -363,86 +473,87 @@ class DatasetModels(collections.abc.Sequence):
         if covariance_data is not None:
             self.covariance = covariance_data
 
-    def _check_covariance(self):
-        if not self.parameters == self._covariance.parameters:
-            self._covariance = Covariance.from_stack(
-                [model.covariance for model in self._models]
-            )
-
-    @property
-    def covariance(self):
-        """Covariance (`~gammapy.modeling.Covariance`)"""
-        self._check_covariance()
-
-        for model in self._models:
-            self._covariance.set_subcovariance(model.covariance)
-
-        return self._covariance
-
-    @covariance.setter
-    def covariance(self, covariance):
-        self._check_covariance()
-        self._covariance.data = covariance
-
-        for model in self._models:
-            subcovar = self._covariance.get_subcovariance(model.covariance.parameters)
-            model.covariance = subcovar
-
     @property
     def parameters(self):
-        """Parameters (`~gammapy.modeling.Parameters`)"""
+        """Parameters as a `~gammapy.modeling.Parameters` object."""
         return Parameters.from_stack([_.parameters for _ in self._models])
 
     @property
     def parameters_unique_names(self):
-        """List of unique parameter names as model_name.par_type.par_name"""
+        """List of unique parameter names. Return formatted as model_name.par_type.par_name."""
         names = []
-        for model in self:
-            for par in model.parameters:
-                components = [model.name, par.type, par.name]
+        for model in self._models:
+            for par_name in model.parameters_unique_names:
+                components = [model.name, par_name]
                 name = ".".join(components)
                 names.append(name)
-
         return names
 
     @property
     def names(self):
-        """List of model names"""
+        """List of model names."""
         return [m.name for m in self._models]
 
-    @classmethod
-    def read(cls, filename):
-        """Read from YAML file."""
-        yaml_str = make_path(filename).read_text()
-        path, filename = split(filename)
-        return cls.from_yaml(yaml_str, path=path)
+    @property
+    def background_models(self):
+        """Dictionnary mapping of dataset names with their associated `~gammapy.modeling.models.FoVBackgroundModel` names."""
+        return self._background_models
 
     @classmethod
-    def from_yaml(cls, yaml_str, path=""):
-        """Create from YAML string."""
-        data = yaml.safe_load(yaml_str)
+    def read(cls, filename, checksum=False):
+        """Read from YAML file.
+
+        Parameters
+        ----------
+        filename : str
+            input filename
+        checksum : bool, optional
+            Whether to perform checksum verification. Default is False.
+        """
+        yaml_str = make_path(filename).read_text()
+        path, filename = split(filename)
+        return cls.from_yaml(yaml_str, path=path, checksum=checksum)
+
+    @classmethod
+    def from_yaml(cls, yaml_str, path="", checksum=False):
+        """Create from YAML string.
+
+        Parameters
+        ----------
+        yaml_str : str
+            yaml str
+        path : str
+            base path of model files
+        checksum : bool, optional
+            Whether to perform checksum verification. Default is False.
+
+
+        """
+        data = from_yaml(yaml_str, checksum=checksum)
+        # TODO : for now metadata are not kept. Add proper metadata creation.
+        data.pop("metadata", None)
         return cls.from_dict(data, path=path)
 
     @classmethod
     def from_dict(cls, data, path=""):
-        """Create from dict."""
+        """Create from dictionary."""
         from . import MODEL_REGISTRY, SkyModel
 
-        models = []
+        path = make_path(path)
 
+        models = []
         for component in data["components"]:
             model_cls = MODEL_REGISTRY.get_cls(component["type"])
+            _recursive_dict_filename_update(component, path)
             model = model_cls.from_dict(component)
+            _recursive_model_filename_update(model, path)
             models.append(model)
-
         models = cls(models)
 
         if "covariance" in data:
             filename = data["covariance"]
-            path = make_path(path)
             if not (path / filename).exists():
                 path, filename = split(filename)
-
             models.read_covariance(path, filename, format="ascii.fixed_width")
 
         shared_register = {}
@@ -467,52 +578,54 @@ class DatasetModels(collections.abc.Sequence):
         full_output=False,
         overwrite_templates=False,
         write_covariance=True,
+        checksum=False,
     ):
         """Write to YAML file.
 
         Parameters
         ----------
         path : `pathlib.Path` or str
-            path to write files
-        overwrite : bool
-            overwrite YAML files
-        full_output : bool
-            Store full parameter output.
-        overwrite_templates : bool
-            overwrite templates FITS files
-        write_covariance : bool
-            save covariance or not
+            Path to write files.
+        overwrite : bool, optional
+            Overwrite existing file. Default is False.
+        full_output : bool, optional
+            Store full parameter output. Default is False.
+        overwrite_templates : bool, optional
+            Overwrite templates FITS files. Default is False.
+        write_covariance : bool, optional
+            Whether to save the covariance. Default is True.
+        checksum : bool, optional
+            When True adds a CHECKSUM entry to the file.
+            Default is False.
         """
-        base_path, _ = split(path)
         path = make_path(path)
-        base_path = make_path(base_path)
-
-        if path.exists() and not overwrite:
-            raise IOError(f"File exists already: {path}")
-
-        if (
-            write_covariance
-            and self.covariance is not None
-            and len(self.parameters) != 0
-        ):
-            filecovar = path.stem + "_covariance.dat"
-            kwargs = dict(
-                format="ascii.fixed_width", delimiter="|", overwrite=overwrite
-            )
-            self.write_covariance(base_path / filecovar, **kwargs)
-            self._covar_file = filecovar
-
-        path.write_text(self.to_yaml(full_output, overwrite_templates))
-
-    def to_yaml(self, full_output=False, overwrite_templates=False):
-        """Convert to YAML string."""
-        data = self.to_dict(full_output, overwrite_templates)
-        return yaml.dump(
-            data, sort_keys=False, indent=4, width=80, default_flow_style=False
+        for m in self:
+            _recursive_model_filename_update(m, path)
+        _write_models(
+            self,
+            path,
+            overwrite,
+            full_output,
+            overwrite_templates,
+            write_covariance,
+            checksum,
         )
 
+    def to_yaml(self, full_output=False, overwrite_templates=False):
+        """Convert to YAML string.
+
+        Parameters
+        ----------
+         full_output : bool, optional
+            Store full parameter output. Default is False.
+        overwrite_templates : bool, optional
+            Overwrite templates FITS files. Default is False.
+        """
+        data = self.to_dict(full_output, overwrite_templates)
+        return to_yaml(data)
+
     def update_link_label(self):
-        """update linked parameters labels used for serialization and print"""
+        """Update linked parameters labels used for serialisation and print."""
         params_list = []
         params_shared = []
         for param in self.parameters:
@@ -525,8 +638,7 @@ class DatasetModels(collections.abc.Sequence):
             param._link_label_io = param.name + "@" + make_name()
 
     def to_dict(self, full_output=False, overwrite_templates=False):
-        """Convert to dict."""
-
+        """Convert to dictionary."""
         self.update_link_label()
 
         models_data = []
@@ -551,7 +663,7 @@ class DatasetModels(collections.abc.Sequence):
             return {"components": models_data}
 
     def to_parameters_table(self):
-        """Convert Models parameters to an astropy Table."""
+        """Convert model parameters to a `~astropy.table.Table`."""
         table = self.parameters.to_table()
         # Warning: splitting of parameters will break is source name has a "." in its name.
         model_name = [name.split(".")[0] for name in self.parameters_unique_names]
@@ -559,22 +671,22 @@ class DatasetModels(collections.abc.Sequence):
         return table
 
     def update_parameters_from_table(self, t):
-        """Update Models from an astropy Table."""
+        """Update models from a `~astropy.table.Table`."""
         parameters_dict = [dict(zip(t.colnames, row)) for row in t]
         for k, data in enumerate(parameters_dict):
             self.parameters[k].update_from_dict(data)
 
     def read_covariance(self, path, filename="_covariance.dat", **kwargs):
-        """Read covariance data from file
+        """Read covariance data from file.
 
         Parameters
         ----------
         path : str or `Path`
-            Base path
+            Base path.
         filename : str
-            Filename
+            Filename.
         **kwargs : dict
-            Keyword arguments passed to `~astropy.table.Table.read`
+            Keyword arguments passed to `~astropy.table.Table.read`.
 
         """
         path = make_path(path)
@@ -587,14 +699,14 @@ class DatasetModels(collections.abc.Sequence):
         self._covar_file = filename
 
     def write_covariance(self, filename, **kwargs):
-        """Write covariance to file
+        """Write covariance to file.
 
         Parameters
         ----------
         filename : str
-            Filename
+            Filename.
         **kwargs : dict
-            Keyword arguments passed to `~astropy.table.Table.write`
+            Keyword arguments passed to `~astropy.table.Table.write`.
 
         """
         names = self.parameters_unique_names
@@ -618,12 +730,17 @@ class DatasetModels(collections.abc.Sequence):
 
         return str_.expandtabs(tabsize=2)
 
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
+
     def __add__(self, other):
         if isinstance(other, (Models, list)):
             return Models([*self, *other])
         elif isinstance(other, ModelBase):
-            if other.name in self.names:
-                raise (ValueError("Model names must be unique"))
+            _check_name_unique(other, self.names)
             return Models([*self, other])
         else:
             raise TypeError(f"Invalid type: {other!r}")
@@ -651,12 +768,12 @@ class DatasetModels(collections.abc.Sequence):
         return self.names
 
     def copy(self, copy_data=False):
-        """A deep copy.
+        """Deep copy.
 
         Parameters
         ----------
         copy_data : bool
-            Whether to copy data attached to template models
+            Whether to copy data attached to template models.
 
         Returns
         -------
@@ -673,6 +790,30 @@ class DatasetModels(collections.abc.Sequence):
             models=models, covariance_data=self.covariance.data.copy()
         )
 
+    def _slice_by_energy(self, energy_min, energy_max, sum_over_energy_groups=False):
+        """Copy models and slice TemplateNPredModel in energy range.
+
+        Parameters
+        ----------
+        energy_min, energy_max : `~astropy.units.Quantity`
+            Energy bounds of the slice
+        sum_over_energy_groups : bool
+            Whether to sum over the energy groups or not. Default is False.
+
+        Returns
+        -------
+        models : `Models`
+            Sliced models.
+        """
+        models_sliced = Models(self.copy())
+        for k, m in enumerate(models_sliced):
+            if m.tag == "TemplateNPredModel":
+                m_sliced = m.slice_by_energy(energy_min, energy_max)
+                if sum_over_energy_groups:
+                    m_sliced.map = m_sliced.map.sum_over_axes(keepdims=True)
+                models_sliced[k] = m_sliced
+        return models_sliced
+
     def select(
         self,
         name_substring=None,
@@ -681,26 +822,25 @@ class DatasetModels(collections.abc.Sequence):
         model_type=None,
         frozen=None,
     ):
-        """Select models that meet all specified conditions
+        """Select models that meet all specified conditions.
 
         Parameters
         ----------
-
-        name_substring : str
-            Substring contained in the model name
-        datasets_names : str or list
-            Name of the dataset
-        tag : str or list
-            Model tag
-        model_type : {None, spatial, spectral}
-           Type of model, used together with "tag", if the tag is not unique.
-        frozen : bool
-            Select models with all parameters frozen if True, exclude them if False.
+        name_substring : str, optional
+            Substring contained in the model name. Default is None.
+        datasets_names : str or list, optional
+            Name of the dataset. Default is None.
+        tag : str or list, optional
+            Model tag. Default is None.
+        model_type : {'None', 'spatial', 'spectral'}
+           Type of model, used together with "tag", if the tag is not unique. Default is None.
+        frozen : bool, optional
+            If True, select models with all parameters frozen; if False, exclude them.  Default is None.
 
         Returns
         -------
         models : `DatasetModels`
-            Selected models
+            Selected models.
         """
         mask = self.selection_mask(
             name_substring, datasets_names, tag, model_type, frozen
@@ -715,25 +855,25 @@ class DatasetModels(collections.abc.Sequence):
         model_type=None,
         frozen=None,
     ):
-        """Create a mask of models, that meet all specified conditions
+        """Create a mask of models, that meet all specified conditions.
 
         Parameters
         ----------
-        name_substring : str
-            Substring contained in the model name
-        datasets_names : str or list of str
-            Name of the dataset
-        tag : str or list of str
-            Model tag
-        model_type : {None, spatial, spectral}
-           Type of model, used together with "tag", if the tag is not unique.
-        frozen : bool
-            Select models with all parameters frozen if True, exclude them if False.
+        name_substring : str, optional
+            Substring contained in the model name. Default is None.
+        datasets_names : str or list of str, optional
+            Name of the dataset. Default is None.
+        tag : str or list of str, optional
+            Model tag. Default is None.
+        model_type : {'None', 'spatial', 'spectral'}
+           Type of model, used together with "tag", if the tag is not unique. Default is None.
+        frozen : bool, optional
+            Select models with all parameters frozen if True, exclude them if False. Default is None.
 
         Returns
         -------
         mask : `numpy.array`
-            Boolean mask, True for selected models
+            Boolean mask, True for selected models.
         """
         selection = np.ones(len(self), dtype=bool)
 
@@ -777,17 +917,17 @@ class DatasetModels(collections.abc.Sequence):
         Parameters
         ----------
         mask : `~gammapy.maps.WcsNDMap` of boolean type
-            Map containing a boolean mask
-        margin : `~astropy.unit.Quantity`
+            Map containing a boolean mask.
+        margin : `~astropy.unit.Quantity`, optional
             Add a margin in degree to the source evaluation radius.
-            Used to take into account PSF width.
-        use_evaluation_region : bool
-            Account for the extension of the model or not. The default is True.
+            Used to take into account PSF width. Default is "0 deg".
+        use_evaluation_region : bool, optional
+            Account for the extension of the model or not. Default is True.
 
         Returns
         -------
         models : `DatasetModels`
-            Selected models contributing inside the region where mask==True
+            Selected models contributing inside the region where mask==True.
         """
         models = []
 
@@ -805,8 +945,26 @@ class DatasetModels(collections.abc.Sequence):
 
         return self.__class__(models=models)
 
+    def select_from_geom(self, geom, **kwargs):
+        """Select models that fall inside a given geometry.
+
+        Parameters
+        ----------
+        geom : `~gammapy.maps.Geom`
+            Geometry to select models from.
+        **kwargs : dict
+            Keyword arguments passed to `~gammapy.modeling.models.DatasetModels.select_mask`.
+
+        Returns
+        -------
+        models : `DatasetModels`
+            Selected models.
+        """
+        mask = Map.from_geom(geom=geom, data=True, dtype=bool)
+        return self.select_mask(mask=mask, **kwargs)
+
     def select_region(self, regions, wcs=None):
-        """Select sky models with center position contained within a given region
+        """Select sky models with center position contained within a given region.
 
         Parameters
         ----------
@@ -814,13 +972,13 @@ class DatasetModels(collections.abc.Sequence):
             Region or list of regions (pixel or sky regions accepted).
             A region can be defined as a string ind DS9 format as well.
             See http://ds9.si.edu/doc/ref/region.html for details.
-        wcs : `~astropy.wcs.WCS`
-            World coordinate system transformation
+        wcs : `~astropy.wcs.WCS`, optional
+            World coordinate system transformation. Default is None.
 
         Returns
         -------
         models : `DatasetModels`
-            Selected models
+            Selected models.
         """
         geom = RegionGeom.from_regions(regions, wcs=wcs)
 
@@ -840,9 +998,9 @@ class DatasetModels(collections.abc.Sequence):
 
         Parameters
         ----------
-        restore_values : bool
-            Restore values if True,
-            otherwise restore only frozen status and covariance matrix.
+        restore_values : bool, optional
+            Restore values if True, otherwise restore only frozen status and covariance matrix.
+            Default is True.
 
         """
         return restore_models_status(self, restore_values)
@@ -850,22 +1008,22 @@ class DatasetModels(collections.abc.Sequence):
     def set_parameters_bounds(
         self, tag, model_type, parameters_names=None, min=None, max=None, value=None
     ):
-        """Set bounds for the selected models types and parameters names
+        """Set bounds for the selected models types and parameters names.
 
         Parameters
         ----------
         tag : str or list
-            Tag of the models
-        model_type :  {"spatial", "spectral", "temporal"}
-            Type of model
-        parameters_names : str or list
-            parameters names
-        min : float
-            min value
-        max : float
-            max value
-        value : float
-            init value
+            Tag of the models.
+        model_type : {"spatial", "spectral", "temporal"}
+            Type of model.
+        parameters_names : str or list, optional
+            Parameters names. Default is None.
+        min : float, optional
+            Minimum value. Default is None.
+        max : float, optional
+            Maximum value. Default is None.
+        value : float, optional
+            Initial value. Default is None.
         """
         models = self.select(tag=tag, model_type=model_type)
         parameters = models.parameters.select(name=parameters_names, type=model_type)
@@ -879,41 +1037,41 @@ class DatasetModels(collections.abc.Sequence):
             parameters.value = np.ones(n) * value
 
     def freeze(self, model_type=None):
-        """Freeze parameters depending on model type
+        """Freeze parameters depending on model type.
 
         Parameters
         ----------
         model_type : {None, "spatial", "spectral"}
-           freeze all parameters or only spatial or only spectral
+           Freeze all parameters or only spatial or only spectral.
+           Default is None.
         """
-
         for m in self:
             m.freeze(model_type)
 
     def unfreeze(self, model_type=None):
-        """Restore parameters frozen status to default depending on model type
+        """Restore parameters frozen status to default depending on model type.
 
         Parameters
         ----------
         model_type : {None, "spatial", "spectral"}
-           restore frozen status to default for all parameters or only spatial or only spectral
+           Restore frozen status to default for all parameters or only spatial or only spectral.
+           Default is None.
         """
-
         for m in self:
             m.unfreeze(model_type)
 
     @property
     def frozen(self):
-        """Boolean mask, True if all parameters of a given model are frozen"""
+        """Boolean mask, True if all parameters of a given model are frozen."""
         return np.all([m.frozen for m in self])
 
     def reassign(self, dataset_name, new_dataset_name):
-        """Reassign a model from one dataset to another
+        """Reassign a model from one dataset to another.
 
         Parameters
         ----------
         dataset_name : str or list
-            Name of the datasets where the model is currently defined
+            Name of the datasets where the model is currently defined.
         new_dataset_name : str or list
             Name of the datasets where the model should be defined instead.
             If multiple names are given the two list must have the save length,
@@ -923,16 +1081,16 @@ class DatasetModels(collections.abc.Sequence):
         return self.__class__(models)
 
     def to_template_sky_model(self, geom, spectral_model=None, name=None):
-        """Merge a list of models into a single `~gammapy.modeling.models.SkyModel`
+        """Merge a list of models into a single `~gammapy.modeling.models.SkyModel`.
 
         Parameters
         ----------
         geom : `Geom`
             Map geometry of the result template model.
-        spectral_model : `~gammapy.modeling.models.SpectralModel`
-            One of the NormSpectralMdel
-        name : str
-            Name of the new model
+        spectral_model : `~gammapy.modeling.models.SpectralModel`, optional
+            One of the NormSpectralModel. Default is None.
+        name : str, optional
+            Name of the new model. Default is None.
 
         Returns
         -------
@@ -956,9 +1114,45 @@ class DatasetModels(collections.abc.Sequence):
             spectral_model=spectral_model, spatial_model=spatial_model, name=name
         )
 
+    def to_template_spectral_model(self, geom, mask=None):
+        """Merge a list of models into a single `~gammapy.modeling.models.TemplateSpectralModel`.
+
+        For each model the spatial component is integrated over the given geometry where the mask is true
+        and multiplied by the spectral component value in each energy bin.
+
+        Parameters
+        ----------
+        geom : `~gammapy.maps.Geom`
+            Map geometry on which the template model is computed.
+        mask :  `~gammapy.maps.Map` with bool dtype.
+            Evaluate the model only where the mask is True.
+
+        Returns
+        -------
+        model : `~gammapy.modeling.models.TemplateSpectralModel`
+            Template spectral model.
+        """
+
+        from . import TemplateSpectralModel
+
+        energy = geom.axes[0].center
+        if mask is None:
+            mask = Map.from_geom(geom, data=True)
+        elif mask.geom != geom:
+            mask = mask.interp_to_geom(geom, method="nearest")
+        values = 0
+        for m in self:
+            dnde = m.spectral_model(energy)
+            spatial_integ = m.spatial_model.integrate_geom(geom)
+            masked_integ = spatial_integ.data * np.isfinite(spatial_integ.data) * mask
+            spatial_integ.data[~np.isfinite(spatial_integ.data)] = np.nan
+            dnde *= masked_integ.sum(axis=(1, 2)) * spatial_integ.unit
+            values += dnde
+        return TemplateSpectralModel(energy, values)
+
     @property
     def positions(self):
-        """Positions of the models (`~astropy.coordinates.SkyCoord`)"""
+        """Positions of the models as a `~astropy.coordinates.SkyCoord`."""
         positions = []
 
         for model in self.select(tag="sky-model"):
@@ -972,12 +1166,12 @@ class DatasetModels(collections.abc.Sequence):
         return SkyCoord(positions)
 
     def to_regions(self):
-        """Returns a list of the regions for the spatial models
+        """Return a list of the regions for the spatial models.
 
         Returns
         -------
         regions: list of `~regions.SkyRegion`
-            Regions
+            Regions.
         """
         regions = []
 
@@ -993,7 +1187,7 @@ class DatasetModels(collections.abc.Sequence):
 
     @property
     def wcs_geom(self):
-        """Minimum WCS geom in which all the models are contained"""
+        """Minimum WCS geom in which all the models are contained."""
         regions = self.to_regions()
         try:
             return RegionGeom.from_regions(regions).to_wcs_geom()
@@ -1001,26 +1195,39 @@ class DatasetModels(collections.abc.Sequence):
             log.error("No spatial component in any model. Geom not defined")
 
     def plot_regions(self, ax=None, kwargs_point=None, path_effect=None, **kwargs):
-        """Plot extent of the spatial models on a given wcs axis
+        """Plot extent of the spatial models on a given WCS axis.
 
         Parameters
         ----------
-        ax : `~astropy.visualization.WCSAxes`
-            Axes to plot on. If no axes are given, an all-sky wcs
-            is chosen using a CAR projection
-        kwargs_point : dict
+        ax : `~astropy.visualization.WCSAxes`, optional
+            Axes to plot on. If no axes are given, an all-sky WCS
+            is chosen using a CAR projection. Default is None.
+        kwargs_point : dict, optional
             Keyword arguments passed to `~matplotlib.lines.Line2D` for plotting
-            of point sources
-        path_effect : `~matplotlib.patheffects.PathEffect`
-            Path effect applied to artists and lines.
+            of point sources. Default is None.
+        path_effect : `~matplotlib.patheffects.PathEffect`, optional
+            Path effect applied to artists and lines. Default is None.
         **kwargs : dict
-            Keyword arguments passed to `~matplotlib.artists.Artist`
+            Keyword arguments passed to `~matplotlib.artists.Artist`.
 
 
         Returns
         -------
         ax : `~astropy.visualization.WcsAxes`
-            WCS axes
+            WCS axes.
+
+        Examples
+        --------
+        >>> from gammapy.datasets import MapDataset
+        >>> from gammapy.catalog import SourceCatalog3FHL
+        >>> fermi_dataset = MapDataset.read(
+        ...    "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc.fits.gz", name="fermi_dataset")
+        >>> catalog = SourceCatalog3FHL()
+        >>> models = catalog.to_models().select_from_geom(fermi_dataset.geoms["geom"])
+        >>> ax = fermi_dataset.excess.sum_over_axes().smooth("0.2 deg").plot(add_cbar=True, cmap="Blues")
+        >>> ax = models.plot_regions(ax=ax, linewidth=1,  color="red",
+        ...    kwargs_point={"marker":"o", "markersize":5, "color":"red"}
+        ...            )
         """
         regions = self.to_regions()
 
@@ -1030,21 +1237,34 @@ class DatasetModels(collections.abc.Sequence):
         )
 
     def plot_positions(self, ax=None, **kwargs):
-        """ "Plot the centers of the spatial models on a given wcs axis
+        """Plot the centers of the spatial models on a given WCS axis.
 
         Parameters
         ----------
-        ax : `~astropy.visualization.WCSAxes`
-            Axes to plot on. If no axes are given, an all-sky wcs
-            is chosen using a CAR projection
+        ax : `~astropy.visualization.WCSAxes`, optional
+            Axes to plot on. If no axes are given, an all-sky WCS
+            is chosen using a CAR projection. Default is None.
         **kwargs : dict
-            Keyword arguments passed to `~matplotlib.pyplot.scatter`
+            Keyword arguments passed to `~matplotlib.pyplot.scatter`.
 
 
         Returns
         -------
         ax : `~astropy.visualization.WcsAxes`
-            Wcs axes
+            WCS axes.
+
+        Examples
+        --------
+
+        >>> from gammapy.datasets import MapDataset
+        >>> from gammapy.catalog import SourceCatalog3FHL
+        >>> fermi_dataset = MapDataset.read(
+        ...        "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc.fits.gz", name="fermi_dataset"
+        ...        )
+        >>> catalog = SourceCatalog3FHL()
+        >>> models = catalog.to_models().select_from_geom(fermi_dataset.geoms["geom"])
+        >>> ax = fermi_dataset.excess.sum_over_axes().smooth("0.2 deg").plot(add_cbar=True, cmap="Blues")
+        >>> ax = models.plot_positions(ax=ax, color="red", marker="+", linewidth=1)
         """
         from astropy.visualization.wcsaxes import WCSAxes
 
@@ -1070,25 +1290,36 @@ class Models(DatasetModels, collections.abc.MutableSequence):
     Parameters
     ----------
     models : `SkyModel`, list of `SkyModel` or `Models`
-        Sky models
+        Sky models.
     """
 
     def __delitem__(self, key):
         del self._models[self.index(key)]
+        self._background_models = _check_fov_background_models(self._models)
 
     def __setitem__(self, key, model):
-        from gammapy.modeling.models import FoVBackgroundModel, SkyModel
+        from gammapy.modeling.models import (
+            FoVBackgroundModel,
+            SkyModel,
+            TemplateNPredModel,
+        )
 
-        if isinstance(model, (SkyModel, FoVBackgroundModel)):
-            self._models[self.index(key)] = model
+        if isinstance(model, (SkyModel, FoVBackgroundModel, TemplateNPredModel)):
+            ind = self.index(key)
+            other_names = [_ for _ in self.names if _ != self._models[ind].name]
+            _check_name_unique(model, other_names)
+            self._models[ind] = model
         else:
             raise TypeError(f"Invalid type: {model!r}")
 
     def insert(self, idx, model):
-        if model.name in self.names:
-            raise (ValueError("Model names must be unique"))
-
+        _check_name_unique(model, self.names)
         self._models.insert(idx, model)
+        self._background_models = _check_fov_background_models(self._models)
+
+    def set_prior(self, parameters, priors):
+        for parameter, prior in zip(parameters, priors):
+            parameter.prior = prior
 
 
 class restore_models_status:

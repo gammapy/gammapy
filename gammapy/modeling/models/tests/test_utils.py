@@ -1,3 +1,4 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.time import Time
@@ -22,6 +23,15 @@ def test__template_model_from_cta_sdc(tmp_path):
     mod1 = LightCurveTemplateTemporalModel.read(filename=filename, format="map")
 
     assert_allclose(mod1.t_ref.value, mod.t_ref.value, rtol=1e-7)
+
+
+@requires_data()
+def test__reference_time():
+    filename = "$GAMMAPY_DATA/gravitational_waves/GW_example_DC_file.fits.gz"
+    t_ref = Time("2028-01-01T00:00:00", format="isot", scale="utc")
+    mod = _template_model_from_cta_sdc(filename, t_ref=t_ref)
+
+    assert_allclose(mod.reference_time.mjd, t_ref.mjd, rtol=1e-7)
 
 
 @requires_data()

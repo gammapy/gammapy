@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import html
 from collections.abc import MutableMapping
 from astropy.io import fits
 from gammapy.maps import Map
@@ -23,7 +24,7 @@ class Maps(MutableMapping):
 
     @property
     def geom(self):
-        """Map geometry (`Geom`)"""
+        """Map geometry as a `~gammapy.maps.Geom` object."""
         return self._geom
 
     def __setitem__(self, key, value):
@@ -41,7 +42,7 @@ class Maps(MutableMapping):
         return self._data[key]
 
     def __len__(self):
-        """Returns length of MapDict."""
+        """Returns the length of MapDict."""
         return len(self._data)
 
     def __delitem__(self, key):
@@ -66,14 +67,20 @@ class Maps(MutableMapping):
             str_ += "\n"
         return str_
 
+    def _repr_html_(self):
+        try:
+            return self.to_html()
+        except AttributeError:
+            return f"<pre>{html.escape(str(self))}</pre>"
+
     def to_hdulist(self, hdu_bands="BANDS"):
         """Convert map dictionary to list of HDUs.
 
         Parameters
         ----------
-        hdu_bands : str
-            Name of the HDU with the BANDS table. Default is 'BANDS'
-            If set to None, each map will have its own hdu_band
+        hdu_bands : str, optional
+            Name of the HDU with the BANDS table. If set to None, each map will have its own hdu_band.
+            Default is 'BANDS'.
 
         Returns
         -------
@@ -92,17 +99,17 @@ class Maps(MutableMapping):
 
     @classmethod
     def from_hdulist(cls, hdulist, hdu_bands="BANDS"):
-        """Create map dictionary from list of HDUs.
+        """Create map dictionary from a HDU list.
 
-        Because FITS keywords are case insensitive, all key names will return as lower-case.
+        Because FITS keywords are case-insensitive, all key names will return as lower-case.
 
         Parameters
         ----------
         hdulist : `~astropy.io.fits.HDUList`
             List of HDUs.
-        hdu_bands : str
-            Name of the HDU with the BANDS table. Default is 'BANDS'
-            If set to None, each map should have its own hdu_band
+        hdu_bands : str, optional
+            Name of the HDU with the BANDS table. If set to None, each map should have its own hdu_band.
+            Default is 'BANDS'.
 
         Returns
         -------
@@ -120,10 +127,10 @@ class Maps(MutableMapping):
         return maps
 
     @classmethod
-    def read(cls, filename):
+    def read(cls, filename, checksum=False):
         """Read map dictionary from file.
 
-        Because FITS keywords are case insensitive, all key names will return as lower-case.
+        Because FITS keywords are case-insensitive, all key names will return as lower-case.
 
         Parameters
         ----------
@@ -135,36 +142,41 @@ class Maps(MutableMapping):
         maps : `~gammapy.maps.Maps`
             Maps object.
         """
-        with fits.open(str(make_path(filename)), memmap=False) as hdulist:
+        with fits.open(
+            str(make_path(filename)), memmap=False, checksum=checksum
+        ) as hdulist:
             return cls.from_hdulist(hdulist)
 
-    def write(self, filename, overwrite=False):
+    def write(self, filename, overwrite=False, checksum=False):
         """Write map dictionary to file.
 
         Parameters
         ----------
         filename : str
             Filename to write to.
-        overwrite : bool
-            Overwrite file if it exists.
+        overwrite : bool, optional
+            Overwrite existing file. Default is False.
+        checksum : bool, optional
+            When True adds both DATASUM and CHECKSUM cards to the headers written to the file.
+            Default is False.
         """
         filename = make_path(filename)
 
         hdulist = self.to_hdulist()
-        hdulist.writeto(filename, overwrite=overwrite)
+        hdulist.writeto(filename, overwrite=overwrite, checksum=checksum)
 
     @classmethod
     def from_geom(cls, geom, names, kwargs_list=None):
-        """Create map dictionary from geometry.
+        """Create map dictionary from a geometry.
 
         Parameters
         ----------
         geom : `~gammapy.maps.Geom`
-            the input geometry that will be used by all maps
+            The input geometry that will be used by all maps.
         names : list of str
-            the list of all map names
+            The list of all map names.
         kwargs_list : list of dict
-            the list of arguments to be passed to `~gammapy.maps.Map.from_geom()`
+            the list of arguments to be passed to `~gammapy.maps.Map.from_geom()`.
 
         Returns
         -------

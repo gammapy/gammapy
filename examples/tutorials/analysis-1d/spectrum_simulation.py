@@ -25,12 +25,12 @@ using Poisson probability distribution.
 This can be done to check the feasibility of a measurement, to test
 whether fitted parameters really provide a good fit to the data etc.
 
-Here we will see how to perform a 1D spectral simulation of a CTA
+Here we will see how to perform a 1D spectral simulation of a CTAO
 observation, in particular, we will generate OFF observations following
-the template background stored in the CTA IRFs.
+the template background stored in the CTAO IRFs.
 
 **Objective: simulate a number of spectral ON-OFF observations of a
-source with a power-law spectral model with CTA using the CTA 1DC
+source with a power-law spectral model with CTAO using the CTA 1DC
 response, fit them with the assumed spectral model and check that the
 distribution of fitted parameters is consistent with the input values.**
 
@@ -46,7 +46,6 @@ We will use the following classes and functions:
 
 """
 
-
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
@@ -60,7 +59,7 @@ import matplotlib.pyplot as plt
 # -----
 #
 from IPython.display import display
-from gammapy.data import Observation, observatory_locations
+from gammapy.data import FixedPointingInfo, Observation, observatory_locations
 from gammapy.datasets import Datasets, SpectrumDataset, SpectrumDatasetOnOff
 from gammapy.irf import load_irf_dict_from_file
 from gammapy.makers import SpectrumDatasetMaker
@@ -91,7 +90,12 @@ check_tutorials_setup()
 # Define simulation parameters parameters
 livetime = 1 * u.h
 
-pointing = SkyCoord(0, 0, unit="deg", frame="galactic")
+pointing_position = SkyCoord(0, 0, unit="deg", frame="galactic")
+# We want to simulate an observation pointing at a fixed position in the sky.
+# For this, we use the `FixedPointingInfo` class
+pointing = FixedPointingInfo(
+    fixed_icrs=pointing_position.icrs,
+)
 offset = 0.5 * u.deg
 
 # Reconstructed and true energy axis
@@ -104,7 +108,9 @@ energy_axis_true = MapAxis.from_edges(
 
 on_region_radius = Angle("0.11 deg")
 
-center = pointing.directional_offset_by(position_angle=0 * u.deg, separation=offset)
+center = pointing_position.directional_offset_by(
+    position_angle=0 * u.deg, separation=offset
+)
 on_region = CircleSkyRegion(center=center, radius=on_region_radius)
 
 # Define spectral model - a simple Power Law in this case
@@ -124,7 +130,7 @@ irfs = load_irf_dict_from_file(
     "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
 )
 
-location = observatory_locations["cta_south"]
+location = observatory_locations["ctao_south"]
 obs = Observation.create(
     pointing=pointing,
     livetime=livetime,
@@ -164,10 +170,9 @@ print(dataset)
 #
 # To do an on off spectral analysis, which is the usual science case, the
 # standard would be to use `SpectrumDatasetOnOff`, which uses the
-# acceptance to fake off-counts. Please also refer to :doc:`simulations in
-# the absence of a background model
-# <spectral_analysis_rad_max.html#dataset-simulations>`
-# for simulations based on observations of real off counts.
+# acceptance to fake off-counts. Please also refer to the `Dataset simulations`
+# section in the :doc:`/tutorials/analysis-1d/spectral_analysis_rad_max` tutorial,
+# dealing with simulations based on observations of real off counts.
 #
 
 dataset_on_off = SpectrumDatasetOnOff.from_spectrum_dataset(

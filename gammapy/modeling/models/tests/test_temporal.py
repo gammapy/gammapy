@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
+import logging
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
@@ -122,6 +123,7 @@ def test_light_curve_to_dict(light_curve):
 
 @requires_data()
 def test_light_curve_map_serialisation(light_curve, tmp_path):
+    light_curve = light_curve.copy()
     filename = str(make_path(tmp_path / "tmp.fits"))
     light_curve.write(filename, format="map")
     lc1 = LightCurveTemplateTemporalModel.read(filename, format="map")
@@ -160,6 +162,17 @@ def test_time_sampling_template():
 
     assert_allclose(mean - times[500].mjd, 0.0, atol=1e-3)
     assert_allclose(std - sigma.to("d").value, 0.0, atol=3e-4)
+
+
+def test_time_sampling_uniform():
+    cst = ConstantTemporalModel()
+    t0 = Time.now()
+    t1 = t0 + u.Quantity("100 s")
+    times = cst.sample_time(10000, t0, t1, t_delta="0.5 s").sort()
+    time_diff = (times[1:] - times[:-1]).to_value("s")
+    n_same_time = np.sum(time_diff < 1e-8)
+
+    assert n_same_time == 0
 
 
 def test_time_sampling_gaussian():
@@ -354,7 +367,6 @@ def test_sine_temporal_model_integral():
 
 @requires_data()
 def test_to_dict(light_curve):
-
     out = light_curve.to_dict()
     assert out["temporal"]["type"] == "LightCurveTemplateTemporalModel"
     assert "lightcrv_PKSB1222+216.fits" in out["temporal"]["filename"]
@@ -362,7 +374,6 @@ def test_to_dict(light_curve):
 
 @requires_data()
 def test_with_skymodel(light_curve):
-
     sky_model = SkyModel(spectral_model=PowerLawSpectralModel())
     out = sky_model.to_dict()
     assert "temporal" not in out
@@ -378,28 +389,33 @@ def test_with_skymodel(light_curve):
 
 def test_plot_constant_model():
     time_range = [Time.now(), Time.now() + 1 * u.d]
-    constant_model = ConstantTemporalModel(const=1)
+    constant_model = ConstantTemporalModel()
     with mpl_plot_check():
         constant_model.plot(time_range)
 
 
-def test_phase_curve_model(tmp_path):
+def test_phase_curve_model(tmp_path, caplog):
     phase = np.linspace(0.0, 1, 101)
     norm = phase * (phase < 0.5) + (1 - phase) * (phase >= 0.5)
     table = Table(data={"PHASE": phase, "NORM": norm})
 
     t_ref = Time("2022-06-01")
-    phase_model = TemplatePhaseCurveTemporalModel(
-        table=table,
-        f0="20 Hz",
-        phi_ref=0.0,
-        f1="0 s-2",
-        f2="0 s-3",
-        t_ref=t_ref.mjd * u.d,
-    )
+    with caplog.at_level(logging.WARNING):
+        phase_model = TemplatePhaseCurveTemporalModel(
+            table=table,
+            f0="20 Hz",
+            phi_ref=0.0,
+            f1="0 s-2",
+            f2="0 s-3",
+            t_ref=t_ref.mjd * u.d,
+        )
+        assert (
+            'The filename is not defined. Therefore, the model will not be serialised correctly. To set the filename, the "template_model.filename" attribute can be used.'
+            in [_.message for _ in caplog.records]
+        )
 
     result = phase_model(t_ref + [0, 0.025, 0.05] * u.s)
-    assert_allclose(result, [0, 0.5, 0], atol=1e-5)
+    assert_allclose(result, [0.000000e00, 1.999989e00, 2.169609e-05], atol=1e-5)
 
     phase_model.filename = str(make_path(tmp_path / "tmp.fits"))
     phase_model.write()
@@ -415,22 +431,22 @@ def test_phase_curve_model(tmp_path):
     )
 
     assert_allclose(new_model.table["PHASE"].data, phase)
-    assert_allclose(new_model.table["NORM"].data, norm)
+    assert_allclose(new_model.table["NORM"].data, norm * 4)
 
     # exact number of phases
     integral = phase_model.integral(t_ref, t_ref + 10 * u.s)
-    assert_allclose(integral, 0.25, rtol=1e-5)
+    assert_allclose(integral, 1.0, rtol=1e-5)
     # long duration. Should be equal to the phase average
     integral = phase_model.integral(t_ref + 1 * u.h, t_ref + 3 * u.h)
-    assert_allclose(integral, 0.25, rtol=1e-5)
+    assert_allclose(integral, 1.0, rtol=1e-5)
     # 1.25 phase
     integral = phase_model.integral(t_ref, t_ref + 62.5 * u.ms)
-    assert_allclose(integral, 0.225, rtol=1e-5)
+    assert_allclose(integral, 0.9, rtol=1e-5)
 
 
 def test_phase_curve_model_sample_time():
     phase = np.linspace(0.0, 1, 51)
-    norm = 1 * (phase < 0.5)
+    norm = 1.0 * (phase < 0.5)
     table = Table(data={"PHASE": phase, "NORM": norm})
 
     t_ref = Time("2020-06-01", scale="utc")
@@ -472,7 +488,7 @@ def test_phasecurve_DC1():
     times = Time(t_ref, format="mjd") + [0.0, 0.5, 0.65, 1.0] * P0
     norm = model(times)
 
-    assert_allclose(norm, [0.05, 0.15, 1.0, 0.05])
+    assert_allclose(norm, [0.294118, 0.882353, 5.882353, 0.294118], atol=1e-5)
 
     with mpl_plot_check():
         model.plot_phasogram(n_points=200)
@@ -503,3 +519,17 @@ def test_model_scale():
         model = GaussianTemporalModel(
             t_ref=50003.2503033 * u.d, sigma="2.43 day", scale="ms"
         )
+
+
+@requires_data()
+def test_template_temporal_model_format():
+    temporal_model = LightCurveTemplateTemporalModel.read(
+        "$GAMMAPY_DATA/gravitational_waves/GW_example_DC_map_file.fits.gz", format="map"
+    )
+    mod_dict = temporal_model.to_dict()
+    assert mod_dict["temporal"]["format"] == "map"
+
+    path = "$GAMMAPY_DATA/tests/models/light_curve/lightcrv_PKSB1222+216.fits"
+    temporal_model = LightCurveTemplateTemporalModel.read(path)
+    mod_dict = temporal_model.to_dict()
+    assert mod_dict["temporal"]["format"] == "table"

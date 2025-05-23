@@ -1,12 +1,16 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging as log
 import numpy as np
 from scipy.interpolate import CubicSpline
 from scipy.optimize import curve_fit
 from scipy.stats import norm
 from astropy.visualization import make_lupton_rgb
+import matplotlib.axes as maxes
 import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 __all__ = [
+    "add_colorbar",
     "plot_contour_line",
     "plot_map_rgb",
     "plot_theta_squared_table",
@@ -20,9 +24,68 @@ ARTIST_TO_LINE_PROPERTIES = {
     "ec": "markeredgecolor",
     "facecolor": "markerfacecolor",
     "fc": "markerfacecolor",
-    "linewidth": "markerwidth",
-    "lw": "markerwidth",
+    "linewidth": "markeredgewidth",
+    "lw": "markeredgewidth",
 }
+
+
+def add_colorbar(img, ax, axes_loc=None, **kwargs):
+    """
+    Add colorbar to a given axis.
+
+    Parameters
+    ----------
+    img : `~matplotlib.image.AxesImage`
+        The image to plot the colorbar for.
+    ax : `~matplotlib.axes.Axes`
+        Matplotlib axes.
+    axes_loc : dict, optional
+        Keyword arguments passed to `~mpl_toolkits.axes_grid1.axes_divider.AxesDivider.append_axes`.
+    kwargs : dict, optional
+        Keyword arguments passed to `~matplotlib.pyplot.colorbar`.
+
+    Returns
+    -------
+    cbar : `~matplotlib.pyplot.colorbar`
+        The colorbar.
+
+    Examples
+    --------
+    .. testcode::
+
+        from gammapy.maps import Map
+        from gammapy.visualization import add_colorbar
+        import matplotlib.pyplot as plt
+        map_ = Map.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
+        axes_loc = {"position": "right", "size": "2%", "pad": "10%"}
+        kwargs_colorbar = {'label':'Colorbar label'}
+
+        # Example outside gammapy
+        fig = plt.figure(figsize=(6, 3))
+        ax = fig.add_subplot(111)
+        img = ax.imshow(map_.sum_over_axes().data[0,:,:])
+        add_colorbar(img, ax=ax, axes_loc=axes_loc, **kwargs_colorbar)
+
+        # `add_colorbar` is available for the `plot` function here:
+        fig = plt.figure(figsize=(6, 3))
+        ax = fig.add_subplot(111)
+        map_.sum_over_axes().plot(ax=ax, add_cbar=True, axes_loc=axes_loc,
+                                  kwargs_colorbar=kwargs_colorbar)  # doctest: +SKIP
+
+    """
+    kwargs.setdefault("use_gridspec", True)
+    kwargs.setdefault("orientation", "vertical")
+
+    axes_loc = axes_loc or {}
+    axes_loc.setdefault("position", "right")
+    axes_loc.setdefault("size", "5%")
+    axes_loc.setdefault("pad", "2%")
+    axes_loc.setdefault("axes_class", maxes.Axes)
+
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes(**axes_loc)
+    cbar = plt.colorbar(img, cax=cax, **kwargs)
+    return cbar
 
 
 def plot_map_rgb(map_, ax=None, **kwargs):
@@ -45,7 +108,7 @@ def plot_map_rgb(map_, ax=None, **kwargs):
     Returns
     -------
     ax : `~astropy.visualization.wcsaxes.WCSAxes`
-        WCS axis object
+        WCS axis object.
 
     Examples
     --------
@@ -54,11 +117,11 @@ def plot_map_rgb(map_, ax=None, **kwargs):
     >>> import astropy.units as u
     >>> map_ = Map.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
     >>> axis_rgb = MapAxis.from_energy_edges(
-    >>>     [0.1, 0.2, 0.5, 10], unit=u.TeV, name="energy", interp="log"
-    >>> )
+    ...     [0.1, 0.2, 0.5, 10], unit=u.TeV, name="energy", interp="log"
+    ... )
     >>> map_ = map_.resample_axis(axis_rgb)
     >>> kwargs = {"stretch": 0.5, "Q": 1, "minimum": 0.15}
-    >>> plot_map_rgb(map_.smooth(0.08*u.deg), **kwargs)
+    >>> plot_map_rgb(map_.smooth(0.08*u.deg), **kwargs) #doctest: +SKIP
     """
     geom = map_.geom
     if len(geom.axes) != 1 or geom.axes[0].nbin != 3:
@@ -84,7 +147,7 @@ def plot_map_rgb(map_, ax=None, **kwargs):
 
 
 def plot_contour_line(ax, x, y, **kwargs):
-    """Plot smooth curve from contour points"""
+    """Plot smooth curve from contour points."""
     xf = x
     yf = y
 
@@ -119,7 +182,7 @@ def plot_contour_line(ax, x, y, **kwargs):
 
 
 def plot_theta_squared_table(table):
-    """Plot the theta2 distribution of counts, excess and signifiance.
+    """Plot the theta2 distribution of counts, excess and significance.
 
     Take the table containing the ON counts, the OFF counts, the acceptance,
     the off acceptance and the alpha (normalisation between ON and OFF)
@@ -186,6 +249,7 @@ def plot_theta_squared_table(table):
 
 def plot_distribution(
     wcs_map,
+    mask=None,
     ax=None,
     ncols=3,
     func=None,
@@ -199,8 +263,10 @@ def plot_distribution(
 
     Parameters
     ----------
-    wcs_map : an instance of `~gammapy.maps.WcsNDMap`
+    wcs_map : `~gammapy.maps.WcsNDMap`
         A map that contains data to be plotted.
+    mask : `~gammapy.maps.WcsNDMap`, optional
+        2D mask defining the input data region.
     ax : `~matplotlib.axes.Axes` or list of `~matplotlib.axes.Axes`
         Axis object to plot on. If a list of Axis is provided it has to be the same length as the length of _map.data.
     ncols : int
@@ -258,8 +324,18 @@ def plot_distribution(
     kwargs_hist.setdefault("density", True)
     kwargs_fit.setdefault("full_output", True)
 
-    cutout, mask = wcs_map.cutout_and_mask_region()
-    idx_x, idx_y = np.where(mask)
+    cutout, cutout_mask = wcs_map.cutout_and_mask_region()
+
+    if mask:
+        if mask.geom != wcs_map.geom.to_image():
+            raise ValueError("Map and mask spatial geometry must agree!")
+
+        if not mask.is_mask:
+            raise ValueError(f"Mask map must be of boolean type, got {mask.data.dtype} instead.")
+
+        cutout_mask.data = np.logical_and(cutout_mask.data, mask.data)
+
+    idx_x, idx_y = np.where(cutout_mask)
 
     data = cutout.data[..., idx_x, idx_y]
 
@@ -278,8 +354,8 @@ def plot_distribution(
         )
         cells_in_grid = rows * cols
     else:
-        axes = ax
-        cells_in_grid = len(ax.flatten())
+        axes = np.array([ax])
+        cells_in_grid = axes.size
 
     if not isinstance(axes, np.ndarray):
         axes = np.array([axes])
@@ -287,7 +363,6 @@ def plot_distribution(
     result_list = []
 
     for idx in range(cells_in_grid):
-
         axe = axes.flat[idx]
         if idx > len(data) - 1:
             axe.set_visible(False)

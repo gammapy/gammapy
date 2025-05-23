@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
+from copy import deepcopy
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
@@ -60,7 +61,7 @@ OPTIONAL_QUANTITIES = {
     "e2dnde": ["e2dnde_err", "e2dnde_errp", "e2dnde_errn", "e2dnde_ul"],
     "flux": ["flux_err", "flux_errp", "flux_errn", "flux_ul", "flux_sensitivity"],
     "eflux": ["eflux_err", "eflux_errp", "eflux_errn", "eflux_ul"],
-    "likelihood": ["norm_err", "norm_errn", "norm_errp", "norm_ul"],
+    "likelihood": ["norm_err", "norm_errn", "norm_errp", "norm_ul", "norm_sensitivity"],
 }
 
 VALID_QUANTITIES = [
@@ -75,12 +76,17 @@ VALID_QUANTITIES = [
     "npred",
     "npred_excess",
     "stat",
-    "stat_scan",
     "stat_null",
+    "stat_scan",
+    "dnde_scan_values",
     "niter",
     "is_ul",
     "counts",
     "success",
+    "n_dof",
+    "alpha",
+    "acceptance_on",
+    "acceptance_off",
 ]
 
 
@@ -91,10 +97,13 @@ OPTIONAL_QUANTITIES_COMMON = [
     "npred_excess",
     "stat",
     "stat_null",
+    "stat_scan",
+    "dnde_scan_values",
     "niter",
     "is_ul",
     "counts",
     "success",
+    "n_dof",
 ]
 
 
@@ -104,12 +113,12 @@ class FluxMaps:
     It contains a set of `~gammapy.maps.Map` objects that store the estimated
     flux as a function of energy as well as associated quantities (typically
     errors, upper limits, delta TS and possibly raw quantities such counts,
-    excesses etc). It also contains a reference model to convert the flux
+    excesses etc.). It also contains a reference model to convert the flux
     values in different formats. Usually, this should be the model used to
     produce the flux map.
 
-    The associated map geometry can use a `RegionGeom` to store the equivalent
-    of flux points, or a `WcsGeom`/`HpxGeom` to store an energy dependent flux map.
+    The associated map geometry can use a `~gammapy.maps.RegionGeom` to store the equivalent
+    of flux points, or a `~gammapy.maps.WcsGeom`/`~gammapy.maps.HpxGeom` to store an energy dependent flux map.
 
     The container relies internally on the 'Likelihood' SED type defined in
     :ref:`gadf:flux-points` and offers convenience properties to convert to
@@ -119,17 +128,23 @@ class FluxMaps:
     Parameters
     ----------
     data : dict of `~gammapy.maps.Map`
-        the maps dictionary. Expected entries are the following:
-        * norm : the norm factor
+        The maps dictionary. Expected entries are the following:
+
+        * norm : the norm factor.
         * norm_err : optional, the error on the norm factor.
         * norm_errn : optional, the negative error on the norm factor.
         * norm_errp : optional, the positive error on the norm factor.
         * norm_ul : optional, the upper limit on the norm factor.
         * norm_scan : optional, the norm values of the test statistic scan.
         * stat_scan : optional, the test statistic scan values.
-        * ts : optional, the delta TS associated with the flux value.
-        * sqrt_ts : optional, the square root of the TS, when relevant.
-        * success : optional, a boolean tagging the validity of the estimation
+        * ts : optional, the delta test statistic associated with the flux value.
+        * sqrt_ts : optional, the square root of the test statistic, when relevant.
+        * success : optional, a boolean tagging the validity of the estimation.
+        * n_dof : optional, the number of degrees of freedom used in TS computation
+        * alpha : optional, normalisation factor to accounts for differences between the test region and the background
+        * acceptance_off : optional, acceptance from the off region
+        * acceptance_on : optional, acceptance from the on region
+
     reference_model : `~gammapy.modeling.models.SkyModel`, optional
         The reference model to use for conversions. If None, a model consisting
         of a point source with a power law spectrum of index 2 is assumed.
@@ -171,22 +186,22 @@ class FluxMaps:
 
     @property
     def available_quantities(self):
-        """Available quantities"""
+        """Available quantities."""
         return list(self._data.keys())
 
     @staticmethod
     def all_quantities(sed_type):
-        """All quantities allowed for a given sed type.
+        """All quantities allowed for a given SED type.
 
         Parameters
         ----------
         sed_type : {"likelihood", "dnde", "e2dnde", "flux", "eflux"}
-            Sed type.
+            SED type.
 
         Returns
         -------
         list : list of str
-            All allowed quantities for a given sed type.
+            All allowed quantities for a given SED type.
         """
         quantities = []
         quantities += REQUIRED_MAPS[sed_type]
@@ -213,8 +228,9 @@ class FluxMaps:
         if not required.issubset(keys):
             missing = required.difference(keys)
             raise ValueError(
-                "Missing data / column for sed type '{}':"
-                " {}".format(sed_type, missing)
+                "Missing data / column for SED type '{}':" " {}".format(
+                    sed_type, missing
+                )
             )
 
     # TODO: add support for scan
@@ -235,7 +251,7 @@ class FluxMaps:
 
     @property
     def is_convertible_to_flux_sed_type(self):
-        """Check whether differential sed type is convertible to integral sed type"""
+        """Check whether differential SED type is convertible to integral SED type."""
         if self.sed_type_init in ["dnde", "e2dnde"]:
             return self.energy_axis.node_type == "edges"
 
@@ -243,22 +259,22 @@ class FluxMaps:
 
     @property
     def has_ul(self):
-        """Whether the flux estimate has norm_ul defined"""
+        """Whether the flux estimate has norm_ul defined."""
         return "norm_ul" in self._data
 
     @property
     def has_any_ts(self):
-        """Whether the flux estimate has either sqrt(ts) or ts defined"""
+        """Whether the flux estimate has either sqrt(TS) or test statistic defined."""
         return any(_ in self._data for _ in ["ts", "sqrt_ts"])
 
     @property
     def has_stat_profiles(self):
-        """Whether the flux estimate has stat profiles"""
+        """Whether the flux estimate has test statistic profiles."""
         return "stat_scan" in self._data
 
     @property
     def has_success(self):
-        """Whether the flux estimate has the fit status"""
+        """Whether the flux estimate has the fit status."""
         return "success" in self._data
 
     @property
@@ -268,38 +284,38 @@ class FluxMaps:
 
     @property
     def n_sigma_ul(self):
-        """n sigma UL"""
+        """n sigma UL."""
         return self.meta.get("n_sigma_ul")
 
     @property
     def sqrt_ts_threshold_ul(self):
-        """sqrt(TS) threshold for upper limits"""
+        """sqrt(TS) threshold for upper limits."""
         return self.meta.get("sqrt_ts_threshold_ul", 2)
 
     @sqrt_ts_threshold_ul.setter
     def sqrt_ts_threshold_ul(self, value):
-        """sqrt(TS) threshold for upper limits
+        """sqrt(TS) threshold for upper limits.
 
         Parameters
         ----------
         value : int
-            Threshold value in sqrt(TS) for upper limits
+            Threshold value in sqrt(TS) for upper limits.
         """
         self.meta["sqrt_ts_threshold_ul"] = value
 
         if self.has_any_ts:
             self.is_ul = self.sqrt_ts < self.sqrt_ts_threshold_ul
         else:
-            raise ValueError("Either ts or sqrt_ts is required to set the threshold")
+            raise ValueError("Either TS or sqrt_ts is required to set the threshold")
 
     @property
     def sed_type_init(self):
-        """Initial sed type"""
+        """Initial SED type."""
         return self.meta.get("sed_type_init")
 
     @property
     def sed_type_plot_default(self):
-        """Initial sed type"""
+        """Initial SED type."""
         if self.sed_type_init == "likelihood":
             return "dnde"
 
@@ -307,27 +323,27 @@ class FluxMaps:
 
     @property
     def geom(self):
-        """Reference map geometry (`Geom`)"""
+        """Reference map geometry as a `~gammapy.maps.Geom`."""
         return self.norm.geom
 
     @property
     def energy_axis(self):
-        """Energy axis (`MapAxis`)"""
+        """Energy axis as a `~gammapy.maps.MapAxis`."""
         return self.geom.axes["energy"]
 
     @classproperty
     def reference_model_default(self):
-        """Reference model default (`SkyModel`)"""
+        """Reference model default as a `~gammapy.modeling.models.SkyModel`."""
         return SkyModel(PowerLawSpectralModel(index=2))
 
     @property
     def reference_model(self):
-        """Reference model (`SkyModel`)"""
+        """Reference model as a `~gammapy.modeling.models.SkyModel`."""
         return self._reference_model
 
     @property
     def reference_spectral_model(self):
-        """Reference spectral model (`SpectralModel`)"""
+        """Reference spectral model as a `SpectralModel`."""
         return self.reference_model.spectral_model
 
     @property
@@ -346,7 +362,7 @@ class FluxMaps:
 
     @property
     def energy_min(self):
-        """Energy min
+        """Energy minimum.
 
         Returns
         -------
@@ -357,7 +373,7 @@ class FluxMaps:
 
     @property
     def energy_max(self):
-        """Energy max
+        """Energy maximum.
 
         Returns
         -------
@@ -369,19 +385,19 @@ class FluxMaps:
     # TODO: keep or remove?
     @property
     def niter(self):
-        """Number of iterations of fit"""
+        """Number of iterations of fit."""
         self._check_quantity("niter")
         return self._data["niter"]
 
     @property
     def success(self):
-        """Fit success flag"""
+        """Fit success flag."""
         self._check_quantity("success")
         return self._data["success"]
 
     @property
     def is_ul(self):
-        """Whether data is an upper limit"""
+        """Whether data is an upper limit."""
         # TODO: make this a well defined behaviour
         is_ul = self.norm.copy(data=False)
 
@@ -398,7 +414,7 @@ class FluxMaps:
 
     @is_ul.setter
     def is_ul(self, value):
-        """Whether data is an upper limit
+        """Whether data is an upper limit.
 
         Parameters
         ----------
@@ -412,26 +428,26 @@ class FluxMaps:
 
     @property
     def counts(self):
-        """Predicted counts null hypothesis"""
+        """Predicted counts null hypothesis."""
         self._check_quantity("counts")
         return self._data["counts"]
 
     @property
     def npred(self):
-        """Predicted counts from best fit hypothesis"""
+        """Predicted counts from best fit hypothesis."""
         self._check_quantity("npred")
         return self._data["npred"]
 
     @property
     def npred_background(self):
-        """Predicted background counts from best fit hypothesis"""
+        """Predicted background counts from best fit hypothesis."""
         self._check_quantity("npred")
         self._check_quantity("npred_excess")
         return self.npred - self.npred_excess
 
     @property
     def npred_excess(self):
-        """Predicted excess count from best fit hypothesis"""
+        """Predicted excess count from best fit hypothesis."""
         self._check_quantity("npred_excess")
         return self._data["npred_excess"]
 
@@ -453,56 +469,62 @@ class FluxMaps:
 
     @property
     def npred_excess_ref(self):
-        """Predicted excess reference counts"""
+        """Predicted excess reference counts."""
         return self.npred_excess / self._expand_dims(self.norm.data)
 
     @property
     def npred_excess_err(self):
-        """Predicted excess counts error"""
+        """Predicted excess counts error."""
         return self.npred_excess_ref * self._expand_dims(self.norm_err.data)
 
     @property
     def npred_excess_errp(self):
-        """Predicted excess counts positive error"""
+        """Predicted excess counts positive error."""
         return self.npred_excess_ref * self._expand_dims(self.norm_errp.data)
 
     @property
     def npred_excess_errn(self):
-        """Predicted excess counts negative error"""
+        """Predicted excess counts negative error."""
         return self.npred_excess_ref * self._expand_dims(self.norm_errn.data)
 
     @property
     def npred_excess_ul(self):
-        """Predicted excess counts upper limits"""
+        """Predicted excess counts upper limits."""
         return self.npred_excess_ref * self._expand_dims(self.norm_ul.data)
 
     @property
     def stat_scan(self):
-        """Fit statistic scan value"""
+        """Fit statistic scan value."""
         self._check_quantity("stat_scan")
         return self._data["stat_scan"]
 
     @property
+    def dnde_scan_values(self):
+        """Fit statistic norm scan values."""
+        self._check_quantity("dnde_scan_values")
+        return self._data["dnde_scan_values"]
+
+    @property
     def stat(self):
-        """Fit statistic value"""
+        """Fit statistic value."""
         self._check_quantity("stat")
         return self._data["stat"]
 
     @property
     def stat_null(self):
-        """Fit statistic value for the null hypothesis"""
+        """Fit statistic value for the null hypothesis."""
         self._check_quantity("stat_null")
         return self._data["stat_null"]
 
     @property
     def ts(self):
-        """ts map (`Map`)"""
+        """Test statistic map as a `~gammapy.maps.Map` object."""
         self._check_quantity("ts")
         return self._data["ts"]
 
     @property
     def ts_scan(self):
-        """ts scan (`Map`)"""
+        """Test statistic scan as a `~gammapy.maps.Map` object."""
         return self.stat_scan - np.expand_dims(self.stat.data, 2)
 
     # TODO: always derive sqrt(TS) from TS?
@@ -522,7 +544,7 @@ class FluxMaps:
         Returns
         -------
         sqrt_ts : `Map`
-            sqrt(TS) map
+            sqrt(TS) map.
         """
         if "sqrt_ts" in self._data:
             return self._data["sqrt_ts"]
@@ -534,58 +556,82 @@ class FluxMaps:
 
     @property
     def norm(self):
-        """Norm values"""
+        """Norm values."""
         return self._filter_convergence_failure(self._data["norm"])
 
     @property
     def norm_err(self):
-        """Norm error"""
+        """Norm error."""
         self._check_quantity("norm_err")
         return self._filter_convergence_failure(self._data["norm_err"])
 
     @property
     def norm_errn(self):
-        """Negative norm error"""
+        """Negative norm error."""
         self._check_quantity("norm_errn")
         return self._data["norm_errn"]
 
     @property
     def norm_errp(self):
-        """Positive norm error"""
+        """Positive norm error."""
         self._check_quantity("norm_errp")
         return self._data["norm_errp"]
 
     @property
     def norm_ul(self):
-        """Norm upper limit"""
+        """Norm upper limit."""
         self._check_quantity("norm_ul")
         return self._data["norm_ul"]
 
     @property
     def norm_sensitivity(self):
-        """Norm sensitivity"""
+        """Norm sensitivity."""
         self._check_quantity("norm_sensitivity")
         return self._data["norm_sensitivity"]
 
     @property
+    def n_dof(self):
+        """Number of degrees of freedom of the fit per energy bin."""
+        self._check_quantity("n_dof")
+        return self._data["n_dof"]
+
+    @property
+    def alpha(self):
+        """The normalisation, alpha, for differences between the on and off regions."""
+        self._check_quantity("alpha")
+        return self._data["alpha"]
+
+    @property
+    def acceptance_on(self):
+        """The acceptance in the on region."""
+        self._check_quantity("acceptance_on")
+        return self._data["acceptance_on"]
+
+    @property
+    def acceptance_off(self):
+        """The acceptance in the off region."""
+        self._check_quantity("acceptance_off")
+        return self._data["acceptance_off"]
+
+    @property
     def dnde_ref(self):
-        """Reference differential flux"""
+        """Reference differential flux."""
         result = self.reference_spectral_model(self.energy_axis.center)
         return result[self._expand_slice]
 
     @property
     def e2dnde_ref(self):
-        """Reference differential flux * energy ** 2"""
+        """Reference differential flux * energy ** 2."""
         energy = self.energy_axis.center
         result = self.reference_spectral_model(energy) * energy**2
         return result[self._expand_slice]
 
     @property
     def flux_ref(self):
-        """Reference integral flux"""
+        """Reference integral flux."""
         if not self.is_convertible_to_flux_sed_type:
             raise ValueError(
-                "Missing energy range definition, cannot convert to sed type 'flux'."
+                "Missing energy range definition, cannot convert to SED type 'flux'."
             )
 
         energy_min = self.energy_axis.edges[:-1]
@@ -595,10 +641,10 @@ class FluxMaps:
 
     @property
     def eflux_ref(self):
-        """Reference energy flux"""
+        """Reference energy flux."""
         if not self.is_convertible_to_flux_sed_type:
             raise ValueError(
-                "Missing energy range definition, cannot convert to sed type 'eflux'."
+                "Missing energy range definition, cannot convert to SED type 'eflux'."
             )
 
         energy_min = self.energy_axis.edges[:-1]
@@ -683,7 +729,7 @@ class FluxMaps:
 
     @property
     def flux_sensitivity(self):
-        """Sensitivity given as the flux for which the significance is ``self.meta["n_sigma_sensitivity]``"""
+        """Sensitivity given as the flux for which the significance is ``self.meta["n_sigma_sensitivity]``."""
         return self.norm_sensitivity * self.flux_ref
 
     @property
@@ -740,7 +786,7 @@ class FluxMaps:
         Returns
         -------
         flux_points : `~gammapy.estimators.FluxPoints`
-            Flux points object
+            Flux points object.
         """
         from gammapy.estimators import FluxPoints
 
@@ -770,8 +816,8 @@ class FluxMaps:
 
         Parameters
         ----------
-        sed_type : {"likelihood", "dnde", "e2dnde", "flux", "eflux"}
-            sed type to convert to. Default is `Likelihood`
+        sed_type : {"likelihood", "dnde", "e2dnde", "flux", "eflux"}, optional
+            SED type to convert to. If None, set to `Likelihood`. Default is None.
 
         Returns
         -------
@@ -802,7 +848,9 @@ class FluxMaps:
         maps : list of `FluxMaps`
             List of maps to stack.
         axis : `MapAxis`
-            New axis to create
+            New axis to create.
+        meta : dict, optional
+            Metadata of the resulting flux points. Default is None.
 
         Returns
         -------
@@ -831,23 +879,20 @@ class FluxMaps:
             data=data, reference_model=reference.reference_model, meta=meta, gti=gti
         )
 
-    def iter_by_axis(self, axis_name, keepdims=False):
+    def iter_by_axis(self, axis_name):
         """Create a set of FluxMaps by splitting along an axis.
 
         Parameters
         ----------
         axis_name : str
-             Name of the axis to split on
-        keepdims : bool
-            Whether to keep the split axis with a single bin
+             Name of the axis to split on.
 
         Returns
         -------
         flux_maps : `FluxMap`
-            FluxMap iteration
+            FluxMap iteration.
 
         """
-
         split_maps = {}
         axis = self.geom.axes[axis_name]
         gti = self.gti
@@ -878,16 +923,16 @@ class FluxMaps:
         ----------
         maps : `Maps`
             Maps object containing the input maps.
-        sed_type : str
-            SED type of the input maps. Default is `Likelihood`
+        sed_type : str, optional
+            SED type of the input maps. If None, set to "likelihood". Default is None.
         reference_model : `~gammapy.modeling.models.SkyModel`, optional
-            Reference model to use for conversions. Default in None.
+            Reference model to use for conversions.
             If None, a model consisting of a point source with a power
-            law spectrum of index 2 is assumed.
-        gti : `~gammapy.data.GTI`
+            law spectrum of index 2 is assumed. Default is None.
+        gti : `~gammapy.data.GTI`, optional
             Maps GTI information. Default is None.
         meta : `dict`
-            Meta dict.
+            Meta dictionary.
 
         Returns
         -------
@@ -898,7 +943,7 @@ class FluxMaps:
             sed_type = cls._guess_sed_type(maps.keys())
 
         if sed_type is None:
-            raise ValueError("Specifying the sed type is required")
+            raise ValueError("Specifying the SED type is required")
 
         cls._validate_data(data=maps, sed_type=sed_type)
 
@@ -946,11 +991,11 @@ class FluxMaps:
 
         Parameters
         ----------
-        sed_type : str
-            sed type to convert to. Default is `Likelihood`
-        hdu_bands : str
+        sed_type : str, optional
+           SED type to convert to. If None, set to "likelihood". Default is None.
+        hdu_bands : str, optional
             Name of the HDU with the BANDS table. Default is 'BANDS'
-            If set to None, each map will have its own hdu_band
+            If set to None, each map will have its own hdu_band. Default is None.
 
         Returns
         -------
@@ -976,18 +1021,18 @@ class FluxMaps:
         return hdulist
 
     @classmethod
-    def from_hdulist(cls, hdulist, hdu_bands=None, sed_type=None):
+    def from_hdulist(cls, hdulist, hdu_bands=None, sed_type=None, checksum=False):
         """Create flux map dataset from list of HDUs.
 
         Parameters
         ----------
         hdulist : `~astropy.io.fits.HDUList`
             List of HDUs.
-        hdu_bands : str
+        hdu_bands : str, optional
             Name of the HDU with the BANDS table. Default is 'BANDS'
-            If set to None, each map should have its own hdu_band
-        sed_type : {"dnde", "flux", "e2dnde", "eflux", "likelihood"}
-            Sed type
+            If set to None, each map should have its own hdu_band. Default is None.
+        sed_type : {"dnde", "flux", "e2dnde", "eflux", "likelihood"}, optional
+            Sed type. Default is None.
 
         Returns
         -------
@@ -1002,7 +1047,7 @@ class FluxMaps:
         filename = hdulist[0].header.get("MODEL", None)
 
         if filename:
-            reference_model = Models.read(filename)[0]
+            reference_model = Models.read(filename, checksum=checksum)[0]
         else:
             reference_model = None
 
@@ -1015,7 +1060,14 @@ class FluxMaps:
             maps=maps, sed_type=sed_type, reference_model=reference_model, gti=gti
         )
 
-    def write(self, filename, filename_model=None, overwrite=False, sed_type=None):
+    def write(
+        self,
+        filename,
+        filename_model=None,
+        overwrite=False,
+        sed_type=None,
+        checksum=False,
+    ):
         """Write flux map to file.
 
         Parameters
@@ -1024,11 +1076,14 @@ class FluxMaps:
             Filename to write to.
         filename_model : str
             Filename of the model (yaml format).
-            If None, keep string before '.' and add '_model.yaml' suffix
-        overwrite : bool
-            Overwrite file if it exists.
-        sed_type : str
-            sed type to convert to. Default is `likelihood`
+            If None, keep string before '.' and add '_model.yaml' suffix.
+        overwrite : bool, optional
+            Overwrite existing file. Default is False.
+        sed_type : str, optional
+            Sed type to convert to. If None, set to "likelihood". Default is None.
+        checksum : bool, optional
+            When True adds both DATASUM and CHECKSUM cards to the headers written to the file.
+            Default is False.
         """
         if sed_type is None:
             sed_type = self.sed_type_init
@@ -1052,29 +1107,57 @@ class FluxMaps:
         hdulist.writeto(filename, overwrite=overwrite)
 
     @classmethod
-    def read(cls, filename):
+    def read(cls, filename, checksum=False):
         """Read map dataset from file.
 
         Parameters
         ----------
         filename : str
             Filename to read from.
+        checksum : bool
+            If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
 
         Returns
         -------
         flux_maps : `~gammapy.estimators.FluxMaps`
             Flux maps object.
         """
-        with fits.open(str(make_path(filename)), memmap=False) as hdulist:
-            return cls.from_hdulist(hdulist)
+        with fits.open(
+            str(make_path(filename)), memmap=False, checksum=checksum
+        ) as hdulist:
+            return cls.from_hdulist(hdulist, checksum=checksum)
+
+    def copy(self, reference_model=None):
+        """Deep copy.
+
+        Parameters
+        ----------
+        reference_model : `~gammapy.modeling.models.SkyModel`, optional
+            The reference model to use for conversions. If None, the original model is copied.
+            Flux maps have been obtained for a specific reference model.
+            Changing it will change the fluxes. Handle with care.
+
+        Returns
+        -------
+        flux_maps : `~gammapy.estimators.FluxMaps`
+            Copied flux maps object.
+
+        """
+        new = deepcopy(self)
+        if reference_model is not None:
+            new._reference_model = reference_model.copy()
+            log.warning(
+                "Changing the reference model will change the fluxes. Handle with care."
+            )
+        return new
 
     def slice_by_idx(self, slices):
-        """Slice flux maps by idx
+        """Slice flux maps by index.
 
         Parameters
         ----------
         slices : dict
-            Dict of axes names and integers or `slice` object pairs. Contains one
+            Dictionary of axes names and integers or `slice` object pairs. Contains one
             element for each non-spatial dimension. For integer indexing the
             corresponding axes is dropped from the map. Axes not specified in the
             dict are kept unchanged.
@@ -1083,8 +1166,15 @@ class FluxMaps:
         -------
         flux_maps : `FluxMaps`
             Sliced flux maps object.
-        """
 
+        Examples
+        --------
+        >>> from gammapy.estimators import FluxPoints
+        >>> import astropy.units as u
+        >>> fp = FluxPoints.read("$GAMMAPY_DATA/estimators/crab_hess_fp/crab_hess_fp.fits")
+        >>> slices = {"energy": slice(0, 2)}
+        >>> sliced = fp.slice_by_idx(slices)
+        """
         data = {}
 
         for key, item in self._data.items():
@@ -1098,12 +1188,12 @@ class FluxMaps:
         )
 
     def slice_by_coord(self, slices):
-        """Slice flux maps by coordinate values
+        """Slice flux maps by coordinate values.
 
         Parameters
         ----------
         slices : dict
-            Dict of axes names and `astropy.Quantity` or `astropy.Time` or `slice` object pairs.
+            Dictionary of axes names and `astropy.Quantity` or `astropy.Time` or `slice` object pairs.
             Contains one element for each non-spatial dimension. For integer indexing the
             corresponding axes is dropped from the map. Axes not specified in the
             dict are kept unchanged.
@@ -1113,50 +1203,75 @@ class FluxMaps:
         -------
         flux_maps : `FluxMaps`
             Sliced flux maps object.
-        """
 
+        Examples
+        --------
+        >>> from gammapy.estimators import FluxPoints
+        >>> import astropy.units as u
+        >>> lc_1d = FluxPoints.read("$GAMMAPY_DATA/estimators/pks2155_hess_lc/pks2155_hess_lc.fits")
+        >>> slices = {"time": slice(2035.93*u.day, 2036.05*u.day)}
+        >>> sliced = lc_1d.slice_by_coord(slices)
+        """
         idx_intervals = []
 
         for key, interval in zip(slices.keys(), slices.values()):
-            imin = self.geom.axes[key].coord_to_idx(interval.start)
-            imax = self.geom.axes[key].coord_to_idx(interval.stop)
+            axis = self.geom.axes[key]
 
-            idx_intervals.append(slice(imin, imax))
+            group = axis.group_table([interval.start, interval.stop])
+
+            is_normal = group["bin_type"] == "normal   "
+            group = group[is_normal]
+
+            idx_intervals.append(
+                slice(int(group["idx_min"][0]), int(group["idx_max"][0] + 1))
+            )
 
         return self.slice_by_idx(dict(zip(slices.keys(), idx_intervals)))
 
     def slice_by_time(self, time_min, time_max):
-        """Slice flux maps by coordinate values along the time axis
+        """Slice flux maps by coordinate values along the time axis.
 
         Parameters
         ----------
         time_min, time_max : `~astropy.time.Time`
-            Time bounds used to slice the flux map
+            Time bounds used to slice the flux map.
 
         Returns
         -------
         flux_maps : `FluxMaps`
             Sliced flux maps object.
-        """
 
+        Examples
+        --------
+        >>> from gammapy.estimators import FluxPoints
+        >>> import astropy.units as u
+        >>> lc_1d = FluxPoints.read("$GAMMAPY_DATA/estimators/pks2155_hess_lc/pks2155_hess_lc.fits")
+        >>> sliced = lc_1d.slice_by_time(time_min=2035.93*u.day, time_max=2036.05*u.day)
+        """
         time_slice = slice(time_min, time_max)
 
         return self.slice_by_coord({"time": time_slice})
 
     def slice_by_energy(self, energy_min, energy_max):
-        """Slice flux maps by coordinate values along the energy axis
+        """Slice flux maps by coordinate values along the energy axis.
 
         Parameters
         ----------
         energy_min, energy_max : `~astropy.units.Quantity`
-            Energy bounds used to slice the flux map
+            Energy bounds used to slice the flux map.
 
         Returns
         -------
         flux_maps : `FluxMaps`
             Sliced flux maps object.
-        """
 
+        Examples
+        --------
+        >>> from gammapy.estimators import FluxPoints
+        >>> import astropy.units as u
+        >>> fp = FluxPoints.read("$GAMMAPY_DATA/estimators/crab_hess_fp/crab_hess_fp.fits")
+        >>> sliced = fp.slice_by_energy(energy_min=2*u.TeV, energy_max=10*u.TeV)
+        """
         energy_slice = slice(energy_min, energy_max)
 
         return self.slice_by_coord({"energy": energy_slice})

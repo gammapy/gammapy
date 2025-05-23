@@ -1,4 +1,5 @@
 """Plot Fermi PSF."""
+
 from gammapy.irf import PSFMap
 from gammapy.maps import MapAxis, WcsGeom
 
