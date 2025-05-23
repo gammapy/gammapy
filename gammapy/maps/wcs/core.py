@@ -4,7 +4,6 @@ import numpy as np
 import astropy.units as u
 from astropy.io import fits
 from gammapy.utils.types import JsonQuantityEncoder
-from gammapy.utils.metadata import CreatorMetaData
 from ..core import Map
 from ..io import find_bands_hdu, find_hdu
 from .geom import WcsGeom
@@ -157,9 +156,7 @@ class WcsMap(Map):
 
         return wcs_map
 
-    def to_hdulist(
-        self, hdu=None, hdu_bands=None, sparse=False, format="gadf", creation=None
-    ):
+    def to_hdulist(self, hdu=None, hdu_bands=None, sparse=False, format="gadf"):
         """Convert to `~astropy.io.fits.HDUList`.
 
         Parameters
@@ -175,9 +172,6 @@ class WcsMap(Map):
             amplitude. Default is False.
         format : {'gadf', 'fgst-ccube','fgst-template'}, optional
             FITS format convention. Default is "gadf".
-        creation : `~gammapy.utils.metadata.CreatorMetadata`, optional
-            Creation metadata to add to the file. If None, default metadata is added.
-            Default is None.
 
         Returns
         -------
@@ -211,8 +205,6 @@ class WcsMap(Map):
 
         hdu_out.header["META"] = json.dumps(self.meta, cls=JsonQuantityEncoder)
 
-        creation = creation or CreatorMetaData()
-        hdu_out.header.update(creation.to_header())
         hdu_out.header["BUNIT"] = self.unit.to_string("fits")
 
         if hdu == "PRIMARY":
