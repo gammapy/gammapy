@@ -163,14 +163,21 @@ def _get_model_parameters_samples(model, n_samples=10000, random_state=42):
     result_samples = {}
     rng = get_random_state(random_state)
 
+    params = model.parameters.free_parameters
+    covar = model.covariance.get_subcovariance(params)
+
     samples = rng.multivariate_normal(
-        model.parameters.value,
-        model.covariance.data,
+        params.value,
+        covar.data,
         n_samples,
     )
 
-    for i, par in enumerate(model.parameters):
+    for i, par in enumerate(params):
         result_samples[par.name] = samples[:, i].T * par.unit
+
+    for par in model.parameters:
+        if par.name not in result_samples.keys():
+            result_samples[par.name] = np.ones(n_samples) * par.quantity
 
     return result_samples
 

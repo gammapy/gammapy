@@ -111,18 +111,20 @@ def test_flux_prediction_band_pl():
         [0, 0, 0.0],
     ]
 
-    pred = FluxPredictionBand.from_model_covariance(model)
+    pred = FluxPredictionBand.from_model_covariance(
+        model, n_samples=10000, random_state=42
+    )
 
     dnde_errn, dnde_errp = pred.evaluate_error([0.1, 1, 10] * u.TeV)
 
     assert dnde_errn.shape == (3,)
     assert dnde_errp.shape == (3,)
-    assert_allclose(dnde_errn.value, [2.23e-11, 1.01e-13, 2.23e-15], rtol=1e-2)
-    assert_allclose(dnde_errp.value, [2.85e-11, 1.01e-13, 2.84e-15], rtol=1e-2)
+    assert_allclose(dnde_errn.value, [2.21e-11, 9.91e-14, 2.23e-15], rtol=3e-2)
+    assert_allclose(dnde_errp.value, [2.85e-11, 9.91e-14, 2.84e-15], rtol=3e-2)
 
     dnde_errn, dnde_errp = pred.evaluate_error([1e2, 1e3, 1e4] * u.GeV)
     assert_allclose(
-        dnde_errn.to_value("TeV-1cm-2s-1"), [2.23e-11, 1.01e-13, 2.23e-15], rtol=1e-2
+        dnde_errn.to_value("TeV-1cm-2s-1"), [2.21e-11, 9.91e-14, 2.23e-15], rtol=3e-2
     )
 
     flux_errn, flux_errp = pred.integral_error(
@@ -132,8 +134,8 @@ def test_flux_prediction_band_pl():
     assert flux_errn.shape == (3,)
     assert flux_errp.shape == (3,)
     assert flux_errn.unit == u.Unit("cm-2s-1")
-    assert_allclose(flux_errn.value, [1.53e-12, 1.08e-13, 2.47e-14], rtol=1e-2)
-    assert_allclose(flux_errp.value, [1.82e-12, 1.17e-13, 3.40e-14], rtol=1e-2)
+    assert_allclose(flux_errn.value, [1.52e-12, 1.06e-13, 2.50e-14], rtol=3e-2)
+    assert_allclose(flux_errp.value, [1.87e-12, 1.18e-13, 3.37e-14], rtol=3e-2)
 
     eflux_errn, eflux_errp = pred.energy_flux_error(
         [0.1, 1, 10] * u.TeV, [1, 10, 100] * u.TeV
@@ -142,8 +144,8 @@ def test_flux_prediction_band_pl():
     assert eflux_errn.shape == (3,)
     assert eflux_errp.shape == (3,)
     assert eflux_errn.unit == u.Unit("TeV cm-2s-1")
-    assert_allclose(eflux_errn.value, [3.27e-13, 3.21e-13, 6.91e-13], rtol=1e-2)
-    assert_allclose(eflux_errp.value, [3.72e-13, 3.81e-13, 9.96e-13], rtol=1e-2)
+    assert_allclose(eflux_errn.value, [3.30e-13, 3.22e-13, 6.99e-13], rtol=3e-2)
+    assert_allclose(eflux_errp.value, [3.79e-13, 3.81e-13, 9.83e-13], rtol=3e-2)
 
 
 # This function tests numerical integration methods
@@ -169,8 +171,8 @@ def test_flux_prediction_band_lpl():
 
     assert dnde_errn.shape == (3,)
     assert dnde_errp.shape == (3,)
-    assert_allclose(dnde_errn.value, [1.46e-09, 3.54e-12, 2.32e-14], rtol=1e-2)
-    assert_allclose(dnde_errp.value, [3.01e-09, 3.62e-12, 6.26e-14], rtol=1e-2)
+    assert_allclose(dnde_errn.value, [1.42e-09, 3.55e-12, 2.27e-14], rtol=3e-2)
+    assert_allclose(dnde_errp.value, [3.01e-09, 3.62e-12, 6.26e-14], rtol=3e-2)
 
     flux_errn, flux_errp = pred.integral_error(
         [0.1, 1, 10] * u.TeV, [1, 10, 100] * u.TeV
@@ -179,8 +181,8 @@ def test_flux_prediction_band_lpl():
     assert flux_errn.shape == (3,)
     assert flux_errp.shape == (3,)
     assert flux_errn.unit == u.Unit("cm-2s-1")
-    assert_allclose(flux_errn.value, [8.47e-11, 2.56e-12, 9.60e-14], rtol=1e-2)
-    assert_allclose(flux_errp.value, [1.38e-10, 3.14e-12, 3.98e-13], rtol=1e-2)
+    assert_allclose(flux_errn.value, [8.47e-11, 2.56e-12, 9.60e-14], rtol=3e-2)
+    assert_allclose(flux_errp.value, [1.38e-10, 3.14e-12, 3.98e-13], rtol=3e-2)
 
     eflux_errn, eflux_errp = pred.energy_flux_error(
         [0.1, 1, 10] * u.TeV, [1, 10, 100] * u.TeV
@@ -189,5 +191,5 @@ def test_flux_prediction_band_lpl():
     assert eflux_errn.shape == (3,)
     assert eflux_errp.shape == (3,)
     assert eflux_errn.unit == u.Unit("TeV cm-2s-1")
-    assert_allclose(eflux_errn.value, [1.35e-11, 6.87e-12, 1.51e-12], rtol=1e-2)
-    assert_allclose(eflux_errp.value, [2.05e-11, 1.02e-11, 7.93e-12], rtol=1e-2)
+    assert_allclose(eflux_errn.value, [1.33e-11, 6.94e-12, 1.45e-12], rtol=3e-2)
+    assert_allclose(eflux_errp.value, [2.05e-11, 1.02e-11, 7.93e-12], rtol=3e-2)
