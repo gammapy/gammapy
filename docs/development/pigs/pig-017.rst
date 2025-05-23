@@ -8,8 +8,8 @@ PIG 17 - Provenance capture
 
 * Author: José Enrique Ruiz, Mathieu Servillat
 * Created: October 15, 2019
-* Accepted:
-* Status: Draft
+* Accepted: Withdrawn May 23rd, 2025
+* Status: Withdrawn
 * Discussion: `GH 2458`_
 
 Abstract
@@ -183,7 +183,8 @@ Task list
 
 Decision
 ========
-TBD
+
+A prototype has been built but since then the effort has stalled. The PIG is withdrawn as is. A future version can be prepared based on more recent status of Gammapy. 
 
 
 .. _High-level interface: https://docs.gammapy.org/0.14/scripts/index.html
