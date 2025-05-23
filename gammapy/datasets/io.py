@@ -195,13 +195,14 @@ class OGIPDatasetWriter(DatasetWriter):
 
         """
         aeff = dataset.exposure / dataset.exposure.meta["livetime"]
-        aeff.write(
-            filename=filename,
-            overwrite=self.overwrite,
-            format=self.format.replace("ogip", "ogip-arf"),
-            checksum=self.checksum,
-            creation=self.creation,
-        )
+
+        filename = make_path(filename)
+        hdulist = aeff.to_hdulist(format=self.format.replace("ogip", "ogip-arf"))
+
+        for hdu in hdulist:
+            hdu.header.update(self.creation.to_header())
+
+        hdulist.writeto(filename, overwrite=self.overwrite, checksum=self.checksum)
 
     def to_counts_hdulist(self, dataset, is_bkg=False):
         """Convert counts region map to hdulist.
