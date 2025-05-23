@@ -172,6 +172,30 @@ def test_data_store_from_events(data_store_dc1):
 
 
 @requires_data()
+def test_read_events_info(monkeypatch):
+    table = data_store_dc1.obs_table
+
+    assert table["OBS_ID"][0] == 110380
+    assert table["TSTART"][0] == 664502400.0
+    assert table["TSTOP"][0] == 664504192.0
+    assert table["ONTIME"][0] == 1800.0
+    assert table["LIVETIME"][0] == 1764.0
+    assert table["DEADC"][0] == 0.98000001907
+    assert table["TELESCOP"][0] == "CTA"
+    assert table["RA_PNT"][0] == 267.68121338
+    assert table["DEC_PNT"][0] == -29.6075
+    assert table["DATE-OBS"][0] == "2021-01-21"
+    assert table["TIME-OBS"][0] == "11:58:51"
+    assert table["DATE-END"][0] == "2021-01-21"
+    assert table["TIME-END"][0] == "12:28:51"
+    assert table["N_TELS"][0] == 0
+    assert table["OBJECT"][0] == "Galactic Plane Survey"
+    assert table["EVENT_COUNT"][0] == 106217
+    assert table["CALDB"][0] == "1dc"
+    assert table["IRF"][0] == "South_z20_50h"
+
+
+@requires_data()
 def test_data_store_maker_obs_table(data_store_dc1):
     table = data_store_dc1.obs_table
     assert table.__class__.__name__ == "ObservationTable"
