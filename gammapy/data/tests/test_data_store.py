@@ -172,7 +172,7 @@ def test_data_store_from_events(data_store_dc1):
 
 
 @requires_data()
-def test_read_events_info(monkeypatch):
+def test_read_events_info(monkeypatch, data_store_dc1):
     table = data_store_dc1.obs_table
 
     assert table["OBS_ID"][0] == 110380
