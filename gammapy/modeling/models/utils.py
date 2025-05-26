@@ -1,10 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
+import matplotlib.pyplot as plt
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.nddata import NoOverlapError
 from astropy.time import Time
+from astropy.visualization import quantity_support
 from regions import PointSkyRegion
 from gammapy.maps import HpxNDMap, Map, MapAxis, RegionNDMap
 from gammapy.maps.hpx.io import HPX_FITS_CONVENTIONS, HpxConv
@@ -18,6 +20,7 @@ from . import (
     TemplateSpatialModel,
     SpectralModel,
     integrate_spectrum,
+    scale_plot_flux,
 )
 
 __all__ = ["read_hermes_cube"]
@@ -274,6 +277,13 @@ class FluxPredictionBand:
             return res
 
     @staticmethod
+    def _compute_lo_hi(fluxes, n_sigma=1, axis=-1):
+        percentiles = FluxPredictionBand._sigma_to_percentiles(n_sigma)
+
+        flux_lo, flux_median, flux_hi = np.percentile(fluxes, percentiles, axis=axis)
+        return flux_lo, flux_hi
+
+    @staticmethod
     def _compute_asymetric_errors(fluxes, n_sigma=1, axis=-1):
         percentiles = FluxPredictionBand._sigma_to_percentiles(n_sigma)
 
@@ -318,3 +328,108 @@ class FluxPredictionBand:
             model, n_samples=n_samples, random_state=random_state
         )
         return cls(model, samples)
+
+    def _get_plot_flux_error(self, energy, sed_type):
+        flux_lo = RegionNDMap.create(region=None, axes=[energy])
+        flux_hi = RegionNDMap.create(region=None, axes=[energy])
+
+        if sed_type in ["dnde", "norm"]:
+            output = self.evaluate_error(energy.center)
+        elif sed_type == "e2dnde":
+            output = energy.center**2 * self.evaluate_error(energy.center)
+        elif sed_type == "flux":
+            output = self.integral_error(energy.edges_min, energy.edges_max)
+        elif sed_type == "eflux":
+            output = self.energy_flux_error(energy.edges_min, energy.edges_max)
+        else:
+            raise ValueError(f"Not a valid SED type: '{sed_type}'")
+
+        flux_lo.quantity, flux_hi.quantity = output
+        return flux_lo, flux_hi
+
+    def plot_error(
+        self,
+        energy_bounds,
+        ax=None,
+        sed_type="dnde",
+        energy_power=0,
+        n_points=100,
+        **kwargs,
+    ):
+        """Plot spectral model error band.
+
+        .. note::
+
+            This method calls ``ax.set_yscale("log", nonpositive='clip')`` and
+            ``ax.set_xscale("log", nonposx='clip')`` to create a log-log representation.
+            The additional argument ``nonposx='clip'`` avoids artefacts in the plot,
+            when the error band extends to negative values (see also
+            https://github.com/matplotlib/matplotlib/issues/8623).
+
+            When you call ``plt.loglog()`` or ``plt.semilogy()`` explicitly in your
+            plotting code and the error band extends to negative values, it is not
+            shown correctly. To circumvent this issue also use
+            ``plt.loglog(nonposx='clip', nonpositive='clip')``
+            or ``plt.semilogy(nonpositive='clip')``.
+
+        Parameters
+        ----------
+        energy_bounds : `~astropy.units.Quantity`, list of `~astropy.units.Quantity` or `~gammapy.maps.MapAxis`
+            Energy bounds between which the model is to be plotted. Or an
+            axis defining the energy bounds between which the model is to be plotted.
+        ax : `~matplotlib.axes.Axes`, optional
+            Matplotlib axes. Default is None.
+        sed_type : {"dnde", "flux", "eflux", "e2dnde"}
+            Evaluation methods of the model. Default is "dnde".
+        energy_power : int, optional
+            Power of energy to multiply flux axis with. Default is 0.
+        n_points : int, optional
+            Number of evaluation nodes. Default is 100.
+        n_samples : int, optional
+            Number of samples generated per parameter to estimate the error band. Default is 3500.
+        **kwargs : dict
+            Keyword arguments forwarded to `matplotlib.pyplot.fill_between`.
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`, optional
+            Matplotlib axes.
+
+        Notes
+        -----
+        If ``energy_bounds`` is supplied as a list, tuple, or Quantity, an ``energy_axis`` is created internally with
+        ``n_points`` bins between the given bounds.
+        """
+        from gammapy.estimators.map.core import DEFAULT_UNIT
+
+        if self.model.is_norm_spectral_model:
+            sed_type = "norm"
+
+        if isinstance(energy_bounds, (tuple, list, u.Quantity)):
+            energy_min, energy_max = energy_bounds
+            energy = MapAxis.from_energy_bounds(
+                energy_min,
+                energy_max,
+                n_points,
+            )
+        elif isinstance(energy_bounds, MapAxis):
+            energy = energy_bounds
+
+        ax = plt.gca() if ax is None else ax
+
+        kwargs.setdefault("facecolor", "black")
+        kwargs.setdefault("alpha", 0.2)
+        kwargs.setdefault("linewidth", 0)
+
+        if ax.yaxis.units is None:
+            ax.yaxis.set_units(DEFAULT_UNIT[sed_type] * energy.unit**energy_power)
+
+        flux_lo, flux_hi = self._get_plot_flux_error(sed_type=sed_type, energy=energy)
+        y_lo = scale_plot_flux(flux_lo, energy_power).quantity[:, 0, 0]
+        y_hi = scale_plot_flux(flux_hi, energy_power).quantity[:, 0, 0]
+
+        with quantity_support():
+            ax.fill_between(energy.center, y_lo, y_hi, **kwargs)
+
+        self._plot_format_ax(ax, energy_power, sed_type)
+        return ax
