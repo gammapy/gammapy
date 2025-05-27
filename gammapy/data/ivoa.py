@@ -7,7 +7,6 @@ __all__ = ["to_obscore_table"]
 
 
 log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)
 
 DEFAULT_OBSCORE_TEMPLATE = {
     "dataproduct_type": "event",
