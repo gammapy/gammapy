@@ -230,7 +230,7 @@ class FluxPredictionBand:
 
     @staticmethod
     def _sigma_to_percentiles(n_sigma=1):
-        """Return percentiles corresponding to -sigma, 0, sigma."""
+        """Return percentiles corresponding to -n_sigma, n_sigma."""
         from scipy.stats import norm
 
         if n_sigma <= 0:
@@ -238,14 +238,16 @@ class FluxPredictionBand:
                 f"Number of sigma is expected to be positive float. Got {n_sigma} instead."
             )
 
-        return 100 * (1 - norm.sf([-n_sigma, 0.0, n_sigma]))
+        return 100 * (1 - norm.sf([-n_sigma, n_sigma]))
 
     @staticmethod
     def _compute_dnde(energy, model, samples):
+        samples = model._convert_evaluate_unit(samples, energy)
         return model.evaluate(energy[:, np.newaxis], **samples)
 
     @staticmethod
     def _compute_eflux(energy_min, energy_max, model, samples, ndecade=100):
+        samples = model._convert_evaluate_unit(samples, energy_min)
         if hasattr(model, "evaluate_energy_flux"):
             return model.evaluate_energy_flux(
                 energy_min[..., np.newaxis], energy_max[..., np.newaxis], **samples
@@ -262,6 +264,7 @@ class FluxPredictionBand:
 
     @staticmethod
     def _compute_flux(energy_min, energy_max, model, samples, ndecade=100):
+        samples = model._convert_evaluate_unit(samples, energy_min)
         if hasattr(model, "evaluate_integral"):
             return model.evaluate_integral(
                 energy_min[..., np.newaxis], energy_max[..., np.newaxis], **samples
@@ -280,33 +283,20 @@ class FluxPredictionBand:
     def _compute_lo_hi(fluxes, n_sigma=1, axis=-1):
         percentiles = FluxPredictionBand._sigma_to_percentiles(n_sigma)
 
-        flux_lo, flux_median, flux_hi = np.percentile(fluxes, percentiles, axis=axis)
+        flux_lo, flux_hi = np.percentile(fluxes, percentiles, axis=axis)
         return flux_lo, flux_hi
 
-    @staticmethod
-    def _compute_asymetric_errors(fluxes, n_sigma=1, axis=-1):
-        percentiles = FluxPredictionBand._sigma_to_percentiles(n_sigma)
-
-        flux_min, flux_median, flux_max = np.percentile(fluxes, percentiles, axis=axis)
-        errn = flux_median - flux_min
-        errp = flux_max - flux_median
-
-        return errn, errp
-
     def evaluate_error(self, energy, n_sigma=1):
-        samples = self.model._convert_evaluate_unit(self.samples, energy)
-        fluxes = self._compute_dnde(energy, self.model, samples)
-        return self._compute_asymetric_errors(fluxes, n_sigma=n_sigma)
+        fluxes = self._compute_dnde(energy, self.model, self.samples)
+        return self._compute_lo_hi(fluxes, n_sigma=n_sigma)
 
     def integral_error(self, energy_min, energy_max, n_sigma=1):
-        samples = self.model._convert_evaluate_unit(self.samples, energy_min)
-        fluxes = self._compute_flux(energy_min, energy_max, self.model, samples)
-        return self._compute_asymetric_errors(fluxes, n_sigma=n_sigma)
+        fluxes = self._compute_flux(energy_min, energy_max, self.model, self.samples)
+        return self._compute_lo_hi(fluxes, n_sigma=n_sigma)
 
     def energy_flux_error(self, energy_min, energy_max, n_sigma=1):
-        samples = self.model._convert_evaluate_unit(self.samples, energy_min)
-        fluxes = self._compute_eflux(energy_min, energy_max, self.model, samples)
-        return self._compute_asymetric_errors(fluxes, n_sigma=n_sigma)
+        fluxes = self._compute_eflux(energy_min, energy_max, self.model, self.samples)
+        return self._compute_lo_hi(fluxes, n_sigma=n_sigma)
 
     @classmethod
     def from_model_covariance(cls, model, n_samples=10000, random_state=42):
@@ -333,10 +323,10 @@ class FluxPredictionBand:
         flux_lo = RegionNDMap.create(region=None, axes=[energy])
         flux_hi = RegionNDMap.create(region=None, axes=[energy])
 
-        if sed_type in ["dnde", "norm"]:
+        if sed_type in ["dnde", "norm", "e2dnde"]:
             output = self.evaluate_error(energy.center)
-        elif sed_type == "e2dnde":
-            output = energy.center**2 * self.evaluate_error(energy.center)
+            if sed_type == "e2dnde":
+                output = [_ * energy.center**2 for _ in output]
         elif sed_type == "flux":
             output = self.integral_error(energy.edges_min, energy.edges_max)
         elif sed_type == "eflux":
@@ -431,5 +421,5 @@ class FluxPredictionBand:
         with quantity_support():
             ax.fill_between(energy.center, y_lo, y_hi, **kwargs)
 
-        self._plot_format_ax(ax, energy_power, sed_type)
+        self.model._plot_format_ax(ax, energy_power, sed_type)
         return ax
