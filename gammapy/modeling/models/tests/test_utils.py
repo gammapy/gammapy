@@ -11,7 +11,7 @@ from gammapy.modeling.models.utils import (
     FluxPredictionBand,
 )
 from gammapy.utils.scripts import make_path
-from gammapy.utils.testing import requires_data, requires_dependency
+from gammapy.utils.testing import requires_data, requires_dependency, mpl_plot_check
 
 
 @requires_data()
@@ -193,3 +193,15 @@ def test_flux_prediction_band_lpl():
     assert eflux_errn.unit == u.Unit("TeV cm-2s-1")
     assert_allclose(eflux_errn.value, [1.33e-11, 6.94e-12, 1.45e-12], rtol=3e-2)
     assert_allclose(eflux_errp.value, [2.05e-11, 1.02e-11, 7.93e-12], rtol=3e-2)
+
+    with mpl_plot_check():
+        pred.plot_error([0.1, 10] * u.TeV, sed_type="dnde")
+
+    with mpl_plot_check():
+        pred.plot_error([0.1, 10] * u.TeV, sed_type="e2dnde")
+
+    with mpl_plot_check():
+        pred.plot_error([0.1, 10] * u.TeV, sed_type="flux")
+
+    with mpl_plot_check():
+        pred.plot_error([0.1, 10] * u.TeV, sed_type="eflux")
