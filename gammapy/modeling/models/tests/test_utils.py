@@ -79,7 +79,7 @@ def test_flux_prediction_band_validation():
 
 def test_prediction_percentiles():
     percentiles = FluxPredictionBand._sigma_to_percentiles(2)
-    assert_allclose(percentiles, [2.275013, 50.0, 97.724987])
+    assert_allclose(percentiles, [2.275013, 97.724987])
 
     with pytest.raises(ValueError):
         FluxPredictionBand._sigma_to_percentiles(-1)

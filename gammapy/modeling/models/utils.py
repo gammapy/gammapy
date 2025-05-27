@@ -286,17 +286,32 @@ class FluxPredictionBand:
         flux_lo, flux_hi = np.percentile(fluxes, percentiles, axis=axis)
         return flux_lo, flux_hi
 
-    def evaluate_error(self, energy, n_sigma=1):
+    def evaluate_lo_hi(self, energy, n_sigma=1):
         fluxes = self._compute_dnde(energy, self.model, self.samples)
         return self._compute_lo_hi(fluxes, n_sigma=n_sigma)
 
-    def integral_error(self, energy_min, energy_max, n_sigma=1):
+    def evaluate_error(self, energy, n_sigma=1):
+        dnde = self.model(energy)
+        dnde_lo, dnde_hi = self.evaluate_lo_hi(energy, n_sigma)
+        return dnde - dnde_lo, dnde_hi - dnde
+
+    def integral_lo_hi(self, energy_min, energy_max, n_sigma=1):
         fluxes = self._compute_flux(energy_min, energy_max, self.model, self.samples)
         return self._compute_lo_hi(fluxes, n_sigma=n_sigma)
 
-    def energy_flux_error(self, energy_min, energy_max, n_sigma=1):
+    def integral_error(self, energy_min, energy_max, n_sigma=1):
+        flux = self.model.integral(energy_min, energy_max)
+        flux_lo, flux_hi = self.integral_lo_hi(energy_min, energy_max, n_sigma)
+        return flux - flux_lo, flux_hi - flux
+
+    def energy_flux_lo_hi(self, energy_min, energy_max, n_sigma=1):
         fluxes = self._compute_eflux(energy_min, energy_max, self.model, self.samples)
         return self._compute_lo_hi(fluxes, n_sigma=n_sigma)
+
+    def energy_flux_error(self, energy_min, energy_max, n_sigma=1):
+        eflux = self.model.energy_flux(energy_min, energy_max)
+        eflux_lo, eflux_hi = self.energy_flux_lo_hi(energy_min, energy_max, n_sigma)
+        return eflux - eflux_lo, eflux_hi - eflux
 
     @classmethod
     def from_model_covariance(cls, model, n_samples=10000, random_state=42):
