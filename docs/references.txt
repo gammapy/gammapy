@@ -53,41 +53,42 @@
 .. _Python: https://www.python.org
 .. _corner: https://corner.readthedocs.io
 
-.. _MPIK Heidelberg: https://www.mpi-hd.mpg.de/mpi/en/start/
 .. _APC Paris: http://www.apc.univ-paris7.fr/
+.. _MPIK Heidelberg: https://www.mpi-hd.mpg.de/mpi/en/start/
 .. _Paris Observatory: https://www.obspm.fr
 
 .. _Python for gamma-ray astronomy 2015: http://gammapy.github.io/PyGamma15/
 
 .. _CTAO: https://www.ctao.org/
-.. _H.E.S.S.: https://www.mpi-hd.mpg.de/hfm/HESS/
-.. _HAWC: https://www.hawc-observatory.org/
-.. _VERITAS: https://veritas.sao.arizona.edu/
-.. _MAGIC: https://magic.mpp.mpg.de/
 .. _Fermi-LAT: https://fermi.gsfc.nasa.gov/
 .. _Fermi ScienceTools: https://fermi.gsfc.nasa.gov/ssc/data/analysis/software/
 .. _FermiPy: https://github.com/fermiPy/fermipy
 .. _gadf: https://gamma-astro-data-formats.readthedocs.io/
 .. _Gamma Astro Data Formats: https://gamma-astro-data-formats.readthedocs.io/
+.. _H.E.S.S.: https://www.mpi-hd.mpg.de/hfm/HESS/
+.. _HAWC: https://www.hawc-observatory.org/
+.. _MAGIC: https://magic.mpp.mpg.de/
+.. _SWGO: https://www.swgo.org/
+.. _VERITAS: https://veritas.sao.arizona.edu/
 .. _Very-high-energy Open Data Format: https://vodf.readthedocs.io/en/latest/index.html
 
 .. _April 2016 IACT data meeting: https://github.com/open-gamma-ray-astro/2016-04_IACT_DL3_Meeting/
 
-.. _Werner Hofmann: https://en.wikipedia.org/wiki/Werner_Hofmann_(physicist)
-.. _Jim Hinton: https://www.mpi-hd.mpg.de/mpi/en/hinton/home/
-.. _Martin Raue: https://twitter.com/_rmrtn
 .. _Christoph Deil: https://github.com/cdeil
+.. _Jim Hinton: https://www.mpi-hd.mpg.de/mpi/en/hinton/home/
+.. _Werner Hofmann: https://en.wikipedia.org/wiki/Werner_Hofmann_(physicist)
+.. _Martin Raue: https://twitter.com/_rmrtn
 
+.. _First Gammapy coding sprint: https://github.com/gammapy/gammapy/wiki/PyGamma-coding-sprint-1
+.. _First Gammapy presentation at a CTA meeting: https://github.com/gammapy/gammapy-extra/blob/master/presentations/2016-05-16_CTA_Meeting_Gammapy.pdf
+.. _gamma-sky.net: http://gamma-sky.net/
+.. _Gammapy binder: http://mybinder.org/repo/gammapy/gammapy-extra
+.. _Gammapy poster and proceeding at ICRC 2015: https://indico.cern.ch/event/344485/session/142/contribution/695
+.. _Gammapy poster at Gamma 2016: https://github.com/gammapy/gamma2016-gammapy-poster/blob/master/gamma2016-gammapy-poster.pdf
 .. _Google Summer of Code: https://summerofcode.withgoogle.com/
 .. _Manuel Paz Arribas GSoC 2015 on observation handling and cube background modeling: http://mapaz-gsoc2015-blog.blogspot.de/
 .. _Olga Vorokh GSoC 2016 on image analysis and source detection: http://alcyonegammapy.blogspot.de/
-.. _Gammapy poster and proceeding at ICRC 2015: https://indico.cern.ch/event/344485/session/142/contribution/695
-.. _First Gammapy coding sprint: https://github.com/gammapy/gammapy/wiki/PyGamma-coding-sprint-1
-.. _Gammapy poster at Gamma 2016: https://github.com/gammapy/gamma2016-gammapy-poster/blob/master/gamma2016-gammapy-poster.pdf
-.. _First Gammapy presentation at a CTA meeting: https://github.com/gammapy/gammapy-extra/blob/master/presentations/2016-05-16_CTA_Meeting_Gammapy.pdf
 .. _Open TeV source catalog: https://github.com/gammapy/gamma-cat
-.. _gamma-sky.net: http://gamma-sky.net/
-.. _Gammapy binder: http://mybinder.org/repo/gammapy/gammapy-extra
 
 .. _Gammapy mailing list: https://groups.google.com/forum/#!forum/gammapy
 .. _Gammapy Github page: https://github.com/gammapy/gammapy
@@ -99,8 +100,8 @@
 .. _Gammapy contributors page on Github: https://github.com/gammapy/gammapy/graphs/contributors
 .. _Gammapy on Slack: https://gammapy.slack.com
 
-.. _Slack: https://slack.com
 .. _PyPI: https://pypi.org
+.. _Slack: https://slack.com
 
 .. _scientific Python stack: https://www.scipy.org/about.html
 
@@ -108,17 +109,17 @@
 .. _gtpsf: https://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/help/gtpsf.txt
 .. _rsync: https://en.wikipedia.org/wiki/Rsync
 
-.. _PHA: https://heasarc.gsfc.nasa.gov/docs/heasarc/ofwg/docs/spectra/ogip_92_007/node5.html
 .. _ARF: https://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/memos/cal_gen_92_002/cal_gen_92_002.html#tth_sEc4
+.. _PHA: https://heasarc.gsfc.nasa.gov/docs/heasarc/ofwg/docs/spectra/ogip_92_007/node5.html
 .. _RMF: https://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/memos/cal_gen_92_002/cal_gen_92_002.html#tth_sEc3.1
 
 .. _Github clone URL help article: https://help.github.com/articles/which-remote-url-should-i-use/
 
 .. _ipython: https://ipython.org
+.. _Installing Python Packages from a Jupyter Notebook: http://jakevdp.github.io/blog/2017/12/05/installing-python-packages-from-jupyter/
 .. _Jupyter: https://jupyter.org
 .. _JupyterLab: https://jupyterlab.readthedocs.io/
 .. _nbsphinx: https://nbsphinx.readthedocs.io
-.. _Installing Python Packages from a Jupyter Notebook: http://jakevdp.github.io/blog/2017/12/05/installing-python-packages-from-jupyter/
 
 .. _apt-get: https://en.wikipedia.org/wiki/Advanced_Packaging_Tool
 .. _yum: https://en.wikipedia.org/wiki/Yellowdog_Updater,_Modified
@@ -133,9 +134,9 @@
 .. _setuptools console_scripts entry point: https://python-packaging.readthedocs.io/en/latest/command-line-scripts.html
 .. _pydantic: https://pydantic-docs.helpmanual.io
 
+.. _Astropy Hands-On Tutorial: https://github.com/Asterics2020-Obelics/School2019/tree/master/astropy
 .. _A Whirlwind tour of Python: https://nbviewer.org/github/jakevdp/WhirlwindTourOfPython/blob/master/Index.ipynb
 .. _Python data science handbook: https://jakevdp.github.io/PythonDataScienceHandbook/
-.. _Astropy Hands-On Tutorial: https://github.com/Asterics2020-Obelics/School2019/tree/master/astropy
 
 .. _FAIR principles: https://www.go-fair.org/fair-principles/
 .. _FAIR4RS principles: https://www.rd-alliance.org/group_output/fair-principles-for-research-software-fair4rs-principles/

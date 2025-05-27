@@ -290,6 +290,16 @@ however, the user must ensure that the array has been correctly broadcasted.
     (3, 11, 2)
 
 
+Other types of maps
+-------------------
+
+.. toctree::
+    :maxdepth: 1
+
+    hpxmap
+    regionmap
+
+
 Using gammapy.maps
 ------------------
 
@@ -298,10 +308,3 @@ Using gammapy.maps
    ../examples/tutorials/api/maps.py
    ../examples/tutorials/api/mask_maps.py
 
-
-.. toctree::
-    :maxdepth: 1
-    :hidden:
-
-    hpxmap
-    regionmap

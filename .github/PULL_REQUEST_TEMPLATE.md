@@ -1,4 +1,4 @@
-<!-- These are hidden commments. You can leave them or delete them. -->
+<!-- These are hidden comments. You can leave them or delete them. -->
 
 <!-- Don't be shy! Github issues or pull requests are welcome any time. -->
 <!-- But if you first want to chat, use the Gammapy Slack. -->

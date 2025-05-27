@@ -53,9 +53,14 @@ class Sampler:
         See the full list of run options on the
         `UltraNest documentation <https://johannesbuchner.github.io/UltraNest/ultranest.html#ultranest.integrator.ReactiveNestedSampler.run>`__.
 
-    Example
-    -------
+    Examples
+    --------
     For a usage example, see :doc:`/tutorials/api/nested_sampling_Crab` tutorial.
+
+    Notes
+    -----
+    If you are using the "UltraNest" library, please follow its citation scheme:
+    `Cite UltraNest <https://johannesbuchner.github.io/UltraNest/issues.html#how-should-i-cite-ultranest>`__.
 
     """
 

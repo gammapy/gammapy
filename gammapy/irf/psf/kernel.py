@@ -5,7 +5,6 @@ import astropy.units as u
 import matplotlib.pyplot as plt
 from gammapy.maps import Map
 from gammapy.modeling.models import PowerLawSpectralModel
-from gammapy.utils.deprecation import deprecated_renamed_argument
 
 __all__ = ["PSFKernel"]
 
@@ -162,7 +161,6 @@ class PSFKernel:
         """Write the Map object which contains the PSF kernel to file."""
         self.psf_kernel_map.write(*args, **kwargs)
 
-    @deprecated_renamed_argument("spectrum", "spectral_model", "v1.3")
     def to_image(self, spectral_model=None, exposure=None, keepdims=True):
         """Transform 3D PSFKernel into a 2D PSFKernel.
 

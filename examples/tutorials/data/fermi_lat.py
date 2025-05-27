@@ -329,7 +329,7 @@ energy = [100, 300, 1000] * u.GeV
 psf.plot_psf_vs_rad(energy_true=energy)
 
 spectrum = PowerLawSpectralModel(index=2.3)
-psf_mean = psf.to_image(spectrum=spectrum)
+psf_mean = psf.to_image(spectral_model=spectrum)
 psf_mean.plot_psf_vs_rad(c="k", ls="--", energy_true=[500] * u.GeV)
 
 plt.xlim(1e-3, 0.3)

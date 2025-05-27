@@ -28,10 +28,10 @@ More details on the ring background method can be found in [Berge2007]_.
     Fig.1, Illustration of the ring background estimation method, taken from [Abdalla2018]_.
 
 To include the classical ring background estimation into a data reduction
-chain, Gammapy provides the `RingBackgroundMaker` and `AdaptiveRingBackgroundMaker`
+chain, Gammapy provides the `~gammapy.makers.RingBackgroundMaker` and `~gammapy.makers.AdaptiveRingBackgroundMaker`
 classed. These classes can only be used for image based data.
-A given `MapDataset` has to be reduced to a single image by calling
-`MapDataset.to_image()`
+A given `~gammapy.datasets.MapDataset` has to be reduced to a single image by calling
+`gammapy.datasets.MapDataset.to_image()`
 
 .. testcode::
 

@@ -12,7 +12,6 @@ from gammapy.utils.array import scale_cube
 from gammapy.utils.pbar import progress_bar
 from ..core import Estimator
 from ..utils import estimate_exposure_reco_energy
-from gammapy.utils.deprecation import deprecated_renamed_argument
 
 __all__ = ["ASmoothMapEstimator"]
 
@@ -69,7 +68,6 @@ class ASmoothMapEstimator(Estimator):
 
     tag = "ASmoothMapEstimator"
 
-    @deprecated_renamed_argument("spectrum", "spectral_model", "v1.3")
     def __init__(
         self,
         scales=None,
