@@ -22,7 +22,7 @@ environment using either conda** (with Miniconda, Anaconda or Miniforge:
 `link <https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html>`__) **or mamba**
 (see this `link <https://mamba.readthedocs.io/en/latest/installation/mamba-installation.html>`__). For some working
 environments (e.g. ESO, DESY, CEA), you should use
-`miniforge <https://github.com/conda-forge/miniforge>`__ to be able to use conda/mamba without troubles.
+`miniforge <https://github.com/conda-forge/miniforge>`__ to be able to use conda/mamba without trouble.
 Then, there are two methods to quickly install Gammapy.
 
 .. grid:: 1 2 2 2
