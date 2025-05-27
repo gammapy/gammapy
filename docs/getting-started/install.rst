@@ -16,8 +16,12 @@ scientific analysis results**. You can also :ref:`install Gammapy for developmen
 
 Using Anaconda / Miniconda
 --------------------------
-The easiest way to install Gammapy is to install the `Anaconda <https://www.anaconda.com/download/>`__
-or `Miniconda <https://docs.conda.io/en/latest/miniconda.html>`__ Python distribution.
+The easiest way to install Gammapy is to install one of the Python distribution software:
+Miniconda, Anaconda or Miniforge (see this
+`link <https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html>`__).
+For some working environments (e.g. ESO, DESY, CEA), you should use
+`Miniforge <https://github.com/conda-forge/miniforge>`__ to be able to use conda/mamba without troubles.
+
 To install the latest stable version of Gammapy and its dependencies using conda,
 execute this command in a terminal:
 
@@ -71,7 +75,7 @@ using `pip`_:
    python -m pip install gammapy
 
 This will install Gammapy with the required dependencies only.
-    
+
 To install Gammapy with all optional dependencies, you can specify:
 
 .. code-block:: bash
