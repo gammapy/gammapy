@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
-import astropy.units as u
 from astropy.coordinates import SkyCoord
 from gammapy.data import Observation
 import astropy.units as u
@@ -462,39 +461,53 @@ def create_energy_mask(dataset, energy_min=None, energy_max=None):
 
 
 class set_and_restore_mask_fit:
-    """Context manager to set a `mask_fit` oa dataset and restore the initial mask.
+    """Context manager to set a `mask_fit` on dataset and restore the initial mask.
 
     Parameters
     ----------
     datasets : `~gammapy.datasets.datasets`
         the Datasets to apply the energy mask to.
-    energy_min : `~astropy.units.Quantity`
+    energy_min : `~astropy.units.Quantity`, optional
         minimum energy.
-    energy_min : `~astropy.units.Quantity`
+    energy_min : `~astropy.units.Quantity`, optional
         maximum energy.
+    round_to_edge: bool, optional
+        Whether to round `energy_min` and `energy_max` to the closest axis bin value.
+        See `~gammapy.maps.MapAxis.round`. Default is False.
     """
 
-    def __init__(self, datasets, energy_min, energy_max):
+    def __init__(
+        self,
+        datasets,
+        mask_fit=None,
+        energy_min=None,
+        energy_max=None,
+        round_to_edge=False,
+    ):
         self.energy_min = energy_min
         self.energy_max = energy_max
+        self.round_to_edge = round_to_edge
+        self.mask_fit = mask_fit
         self.datasets = datasets
         self.mask_fits = [dataset.mask_fit for dataset in datasets]
 
     def __enter__(self):
         datasets = Datasets()
         for dataset in self.datasets:
-            try:
-                mask_fit = create_energy_mask(dataset, self.energy_min, self.energy_max)
-                if dataset.mask_fit is not None:
-                    mask_fit *= dataset.mask_fit
-                dataset.mask_fit = mask_fit
-            except ValueError:
+            mask_fit = dataset._geom.energy_mask(
+                self.energy_min, self.energy_max, self.round_to_edge
+            )
+            if self.mask_fit is not None:
+                mask_fit *= self.mask_fit.interp_to_geom(
+                    mask_fit.geom, method="nearest"
+                )
+            dataset.mask_fit = mask_fit
+            if np.any(mask_fit.data):
+                datasets.append(dataset)
+            else:
                 log.info(
                     f"Dataset {dataset.name} does not contribute in the energy range"
                 )
-                continue
-
-            datasets.append(dataset)
         return datasets
 
     def __exit__(self, type, value, traceback):
