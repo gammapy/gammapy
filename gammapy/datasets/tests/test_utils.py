@@ -4,7 +4,12 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.datasets import Datasets, MapDataset, SpectrumDatasetOnOff
-from gammapy.datasets.utils import apply_edisp, set_and_restore_mask_fit, split_dataset, create_global_dataset
+from gammapy.datasets.utils import (
+    apply_edisp,
+    set_and_restore_mask_fit,
+    split_dataset,
+    create_global_dataset,
+)
 from gammapy.irf import EDispKernel
 from gammapy.maps import Map, MapAxis
 from gammapy.modeling.models import (
