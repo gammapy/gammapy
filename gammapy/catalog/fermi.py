@@ -219,7 +219,9 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject, abc.ABC):
         ss += "{:<20s} : {}\n".format("Source name", self.name)
 
         if "Extended_Source_Name" in d:
-            ss += "{:<20s} : {}\n".format("Extended name", d["Extended_Source_Name"])
+            ss += "{:<20s} : {}\n".format(
+                "Extended name", get_nonentry_key(d["Extended_Source_Name"])
+            )
 
         associations = get_nonentry_keys(d, keys)
         ss += "{:<16s} : {}\n".format("Associations", associations)
