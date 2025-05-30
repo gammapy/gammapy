@@ -95,8 +95,6 @@ def table_row_to_dict(row, make_quantity=True):
 
         if isinstance(val, np.ma.core.MaskedConstant):
             val = GammapyMaskedConstant()
-        if isinstance(val, str) and val == "":
-            val == "--"
 
         if make_quantity and col.unit:
             val = Quantity(val, unit=col.unit)

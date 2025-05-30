@@ -42,6 +42,18 @@ __all__ = [
 log = logging.getLogger(__name__)
 
 
+def get_nonentry_keys(d, keys):
+    vals = [str(d[_]).strip() for _ in keys]
+    return ", ".join([_ for _ in vals if _ not in ["", "--"]])
+
+
+def get_nonentry_key(key):
+    if key.strip() == "":
+        return "--"
+    else:
+        return key
+
+
 def compute_flux_points_ul(quantity, quantity_errp):
     """Compute UL value for fermi flux points.
 
@@ -206,14 +218,10 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject, abc.ABC):
         ss += "Catalog row index (zero-based) : {}\n".format(self.row_index)
         ss += "{:<20s} : {}\n".format("Source name", self.name)
 
-        def get_nonentry_keys(keys):
-            vals = [str(d[_]).strip() for _ in keys]
-            return ", ".join([_ for _ in vals if _ not in ["", "--"]])
-
         if "Extended_Source_Name" in d:
             ss += "{:<20s} : {}\n".format("Extended name", d["Extended_Source_Name"])
 
-        associations = get_nonentry_keys(keys)
+        associations = get_nonentry_keys(d, keys)
         ss += "{:<16s} : {}\n".format("Associations", associations)
         try:
             ss += "{:<16s} : {:.3f}\n".format("ASSOC_PROB_BAY", d["ASSOC_PROB_BAY"])
@@ -221,11 +229,11 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject, abc.ABC):
         except KeyError:
             pass
         try:
-            ss += "{:<16s} : {}\n".format("Class1", d["CLASS1"])
+            ss += "{:<16s} : {}\n".format("Class1", get_nonentry_key(d["CLASS1"]))
         except KeyError:
-            ss += "{:<16s} : {}\n".format("Class", d["CLASS"])
+            ss += "{:<16s} : {}\n".format("Class", get_nonentry_key(d["CLASS"]))
         try:
-            ss += "{:<16s} : {}\n".format("Class2", d["CLASS2"])
+            ss += "{:<16s} : {}\n".format("Class2", get_nonentry_key(d["CLASS2"]))
         except KeyError:
             pass
         ss += "{:<16s} : {}\n".format("TeVCat flag", d.get("TEVCAT_FLAG", "N/A"))
@@ -264,7 +272,9 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject, abc.ABC):
             ss += "{:<16s} : {}\n".format("Spatial function", e["Spatial_Function"])
         except KeyError:
             pass
-        ss += "{:<16s} : {}\n\n".format("Spatial filename", e["Spatial_Filename"])
+        ss += "{:<16s} : {}\n\n".format(
+            "Spatial filename", get_nonentry_key(e["Spatial_Filename"])
+        )
         return ss
 
     def _info_spectral_fit(self):
