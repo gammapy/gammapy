@@ -1,8 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Table helper utilities."""
+
 import numpy as np
 from astropy.table import Table
 from astropy.units import Quantity
+from astropy.io.ascii.core import MaskedConstant
 from .units import standardise_unit
 
 __all__ = [
@@ -11,6 +13,11 @@ __all__ = [
     "table_standardise_units_copy",
     "table_standardise_units_inplace",
 ]
+
+
+class GammapyMaskedConstant(MaskedConstant):
+    def strip(self):
+        return str(self)
 
 
 def hstack_columns(table, table_other):
@@ -85,6 +92,9 @@ def table_row_to_dict(row, make_quantity=True):
     data = {}
     for name, col in row.columns.items():
         val = row[name]
+
+        if isinstance(val, np.ma.core.MaskedConstant):
+            val = GammapyMaskedConstant()
 
         if make_quantity and col.unit:
             val = Quantity(val, unit=col.unit)

@@ -205,12 +205,13 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject, abc.ABC):
         ss = "\n*** Basic info ***\n\n"
         ss += "Catalog row index (zero-based) : {}\n".format(self.row_index)
         ss += "{:<20s} : {}\n".format("Source name", self.name)
-        if "Extended_Source_Name" in d:
-            ss += "{:<20s} : {}\n".format("Extended name", d["Extended_Source_Name"])
 
         def get_nonentry_keys(keys):
             vals = [str(d[_]).strip() for _ in keys]
-            return ", ".join([_ for _ in vals if _ != ""])
+            return ", ".join([_ for _ in vals if _ not in ["", "--"]])
+
+        if "Extended_Source_Name" in d:
+            ss += "{:<20s} : {}\n".format("Extended name", d["Extended_Source_Name"])
 
         associations = get_nonentry_keys(keys)
         ss += "{:<16s} : {}\n".format("Associations", associations)
@@ -282,7 +283,8 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject, abc.ABC):
 
     @property
     def is_pointlike(self):
-        return self.data["Extended_Source_Name"].strip() == ""
+        name = self.data["Extended_Source_Name"].strip()
+        return name == "" or name.strip() == "--"
 
     # FIXME: this should be renamed `set_position_error`,
     # and `phi_0` isn't filled correctly, other parameters missing
