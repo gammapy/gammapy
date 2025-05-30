@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Unit tests for the Covariance class"""
+
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
@@ -60,3 +61,15 @@ def test_scipy_mvn(covariance):
 def test_plot_correlation(covariance_diagonal):
     with mpl_plot_check():
         covariance_diagonal.plot_correlation()
+
+
+def test_from_factor_matrix():
+    covar = Covariance.from_factor_matrix([], None)
+    assert covar.data.shape == (0, 0)
+
+    x = Parameter("x", 1)
+    y = Parameter("y", 2)
+    parameters = Parameters([x, y])
+    covar = Covariance.from_factor_matrix(parameters, np.ones((2, 2)))
+    assert covar.data.shape == (2, 2)
+    assert_allclose(covar.data, 1)

@@ -72,14 +72,19 @@ class Covariance:
 
         Used in the optimizer interface.
         """
+
         npars = len(parameters)
 
-        if not matrix.shape == (npars, npars):
-            matrix = cls._expand_factor_matrix(matrix, parameters)
+        if npars > 0:
+            if not matrix.shape == (npars, npars):
+                matrix = cls._expand_factor_matrix(matrix, parameters)
 
-        scales = [par.scale for par in parameters]
-        scale_matrix = np.outer(scales, scales)
-        data = scale_matrix * matrix
+            df = np.diag(
+                [p._inverse_transform_derivative(p.factor) for p in parameters]
+            )
+            data = df.T @ matrix @ df
+        else:
+            data = None
 
         return cls(parameters, data=data)
 

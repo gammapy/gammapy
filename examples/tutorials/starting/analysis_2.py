@@ -58,7 +58,7 @@ In practice, we have to:
   - Apply the makers sequentially to produce the current `~gammapy.datasets.MapDataset`
   - Stack it on the target one.
 
-- Define the`~gammapy.modeling.models.SkyModel` to apply to the dataset.
+- Define the `~gammapy.modeling.models.SkyModel` to apply to the dataset.
 - Create a `~gammapy.modeling.Fit` object and run it to fit the model
   parameters
 - Apply a `~gammapy.estimators.FluxPointsEstimator` to compute flux points for

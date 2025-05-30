@@ -164,7 +164,6 @@ def bkg_3d_custom(symmetry="constant", fov_align="RADEC"):
     energy_axis = MapAxis.from_energy_edges([0.1, 10, 1000] * u.TeV)
     fov_lon_axis = MapAxis.from_edges([-3, -1, 1, 3] * u.deg, name="fov_lon")
     fov_lat_axis = MapAxis.from_edges([-3, -1, 1, 3] * u.deg, name="fov_lat")
-
     return Background3D(
         axes=[energy_axis, fov_lon_axis, fov_lat_axis],
         data=data,
@@ -190,6 +189,8 @@ def test_map_background_2d(bkg_2d, fixed_pointing_info):
         ontime="42 s",
         bkg=bkg_2d,
         geom=geom,
+        time_start=obstime,
+        fov_rotation_step=1.0 * u.deg,
     )
 
     assert_allclose(bkg.data[:, 1, 1], [1.869025, 0.186903], rtol=1e-5)
@@ -200,7 +201,8 @@ def test_map_background_2d(bkg_2d, fixed_pointing_info):
         ontime="42 s",
         bkg=bkg_2d,
         geom=geom,
-        obstime=obstime,
+        time_start=obstime,
+        fov_rotation_step=1.0 * u.deg,
     )
     assert_allclose(bkg.data, bkg_fpi.data, rtol=1e-5)
 
@@ -213,7 +215,8 @@ def make_map_background_irf_with_symmetry(fpi, symmetry="constant"):
         ontime="42 s",
         bkg=bkg_3d_custom(symmetry),
         geom=WcsGeom.create(npix=(3, 3), binsz=4, axes=[axis], skydir=fpi.fixed_icrs),
-        obstime=obstime,
+        time_start=obstime,
+        fov_rotation_step=1.0 * u.deg,
     )
 
 
@@ -262,8 +265,9 @@ def test_make_map_background_irf(bkg_3d, pars, fixed_pointing_info):
             ebounds=pars["ebounds"],
             skydir=fixed_pointing_info.fixed_icrs,
         ),
+        time_start=Time("2020-01-01T20:00"),
+        fov_rotation_step=1.0 * u.deg,
         oversampling=10,
-        obstime=Time("2020-01-01T20:00"),
     )
 
     assert m.data.shape == pars["shape"]
@@ -322,7 +326,92 @@ def test_make_map_background_irf_skycoord(fixed_pointing_info_aligned):
             ontime="42 s",
             bkg=bkg_3d_custom("asymmetric", "ALTAZ"),
             geom=WcsGeom.create(npix=(3, 3), binsz=4, axes=[axis], skydir=position),
+            time_start=Time("2020-01-01T20:00:00"),
+            fov_rotation_step=1.0 * u.deg,
         )
+
+
+@requires_data()
+def test_make_map_background_irf_altaz_align(fixed_pointing_info):
+    def _get_geom(pnt_info, time):
+        axis = MapAxis.from_edges([0.1, 1, 10], name="energy", unit="TeV", interp="log")
+
+        return WcsGeom.create(
+            npix=(10, 10),
+            binsz=0.1,
+            axes=[axis],
+            skydir=pnt_info.get_icrs(time),
+        )
+
+    obstime = Time("2020-01-01T20:00:00")
+
+    map_long_altaz = make_map_background_irf(
+        pointing=fixed_pointing_info,
+        ontime="42000 s",
+        bkg=bkg_3d_custom("asymmetric", "ALTAZ"),
+        geom=_get_geom(fixed_pointing_info, obstime),
+        time_start=obstime,
+        fov_rotation_step=20.0 * u.deg,
+    )
+
+    map_short_altaz = make_map_background_irf(
+        pointing=fixed_pointing_info,
+        ontime="42 s",
+        bkg=bkg_3d_custom("asymmetric", "ALTAZ"),
+        geom=_get_geom(fixed_pointing_info, obstime),
+        time_start=obstime + "20979 s",
+        fov_rotation_step=20.0 * u.deg,
+    )
+    map_long_radec = make_map_background_irf(
+        pointing=fixed_pointing_info,
+        ontime="42000 s",
+        bkg=bkg_3d_custom("asymmetric", "RADEC"),
+        geom=_get_geom(fixed_pointing_info, obstime),
+        time_start=obstime,
+        fov_rotation_step=20.0 * u.deg,
+    )
+    map_short_altaz_norotation = make_map_background_irf(
+        pointing=fixed_pointing_info,
+        ontime="42 s",
+        bkg=bkg_3d_custom("asymmetric", "ALTAZ"),
+        geom=_get_geom(fixed_pointing_info, obstime),
+        time_start=obstime + "20979 s",
+        fov_rotation_step=360.0 * u.deg,
+    )
+    map_altaz_long_norotation = make_map_background_irf(
+        pointing=fixed_pointing_info,
+        ontime="42000 s",
+        bkg=bkg_3d_custom("asymmetric", "ALTAZ"),
+        geom=_get_geom(fixed_pointing_info, obstime),
+        time_start=obstime,
+        fov_rotation_step=360.0 * u.deg,
+    )
+    # Check that background normalisations are consistent
+    assert_allclose(np.sum(map_long_altaz.data), np.sum(map_long_radec.data), rtol=1e-2)
+    assert np.isclose(
+        np.sum(map_long_altaz.data), 1000 * np.sum(map_short_altaz.data), rtol=1e-2
+    )
+    # Check that results differ when considering short and long observations with
+    # AltAz aligned IRFs
+    assert_allclose(
+        map_long_altaz.data[0, 0, :4], [212869, 217493, 222208, 226608], rtol=1e-5
+    )
+    assert_allclose(
+        map_short_altaz.data[0, 0, :4], [202.769, 209.814, 217.103, 224.646], rtol=1e-5
+    )
+
+    # Check that results differ when considering RaDec or AltAz aligned IRFs
+    assert_allclose(
+        map_long_radec.data[0, 0, :4], [197029, 197029, 197029, 197029.0], rtol=1e-5
+    )
+
+    # Check that results are independent of the observation duration with AltAz
+    # aligned IRFs when the FoV rotation is ignored
+    assert_allclose(
+        map_altaz_long_norotation.data,
+        map_short_altaz_norotation.data * 1000,
+        rtol=1e-5,
+    )
 
 
 def test_make_edisp_kernel_map():

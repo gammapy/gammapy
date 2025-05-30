@@ -266,7 +266,7 @@ class EDispKernel(IRF):
         checksum : bool
             If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
         format : {"gadf", "gtdrm"}
-            FITS format convention. Defalut is "gadf".
+            FITS format convention. Default is "gadf".
         """
 
         if format == "gadf":

@@ -5,6 +5,7 @@ import numpy as np
 import astropy.units as u
 from astropy.coordinates import Angle
 from astropy.table import Table
+from astropy.time import Time
 from gammapy.data import FixedPointingInfo
 from gammapy.irf import BackgroundIRF, EDispMap, FoVAlignment, PSFMap
 from gammapy.maps import Map, RegionNDMap
@@ -27,6 +28,9 @@ __all__ = [
 ]
 
 log = logging.getLogger(__name__)
+
+MINIMUM_TIME_STEP = 1 * u.s  # Minimum time step used to handle FoV rotations
+EARTH_ANGULAR_VELOCITY = 360 * u.deg / u.day
 
 
 def _get_fov_coords(pointing, irf, geom, use_region_center=True, obstime=None):
@@ -59,14 +63,6 @@ def _get_fov_coords(pointing, irf, geom, use_region_center=True, obstime=None):
         coords["offset"] = sky_coord.separation(pointing_icrs)
     else:
         if irf.fov_alignment == FoVAlignment.ALTAZ:
-            if not isinstance(pointing, FixedPointingInfo) and isinstance(
-                irf, BackgroundIRF
-            ):
-                raise TypeError(
-                    "make_map_background_irf requires FixedPointingInfo if "
-                    "BackgroundIRF.fov_alignement is ALTAZ",
-                )
-
             # for backwards compatibility, obstime should be required
             if obstime is None:
                 warnings.warn(
@@ -99,6 +95,49 @@ def _get_fov_coords(pointing, irf, geom, use_region_center=True, obstime=None):
         coords["fov_lon"] = fov_lon
         coords["fov_lat"] = fov_lat
     return coords
+
+
+def _compute_rotation_time_steps(time_start, time_stop, fov_rotation, pointing_altaz):
+    """
+    Compute the time intervals between start and stop times, such that the FoV associated to a fixed RaDec position rotates
+    by 'fov_rotation' in AltAz frame during each time step.
+    It assumes that the rotation rate at the provided pointing is a good estimate of the rotation rate over the full
+    output duration (first order approximation).
+
+
+    Parameters
+    ----------
+    time_start : `~astropy.time.Time`
+        Start time
+    time_stop : `~astropy.time.Time`
+        Stop time
+    fov_rotation : `~astropy.units.Quantity`
+        Rotation angle.
+    pointing_altaz : `~astropy.coordinates.SkyCoord`
+        Pointing direction.
+
+    Returns
+    -------
+    times : `~astropy.time.Time`
+        Times associated with the requested rotation.
+    """
+
+    def _time_step(rotation, pnt_altaz):
+        denom = (
+            EARTH_ANGULAR_VELOCITY
+            * np.cos(pnt_altaz.location.lat.rad)
+            * np.abs(np.cos(pnt_altaz.az.rad))
+        )
+        return rotation * np.cos(pnt_altaz.alt.rad) / denom
+
+    time = time_start
+    times = [time]
+    while time < time_stop:
+        time_step = _time_step(fov_rotation, pointing_altaz.get_altaz(time))
+        time_step = max(time_step, MINIMUM_TIME_STEP)
+        time = min(time + time_step, time_stop)
+        times.append(time)
+    return Time(times)
 
 
 def make_map_exposure_true_energy(
@@ -188,14 +227,59 @@ def _map_spectrum_weight(map, spectrum=None):
     return map * weights.reshape(shape.astype(int))
 
 
+def _integrate_bkg(
+    pointing, bkg, geom, time_start, time_stop, d_omega, use_region_center
+):
+    """
+    Integrate the background IRF on a given geometry.
+
+    Parameters
+    ----------
+    pointing :  `~gammapy.data.FixedPointingInfo` or `~astropy.coordinates.SkyCoord`
+        Observation pointing.
+    bkg : `~gammapy.irf.Background3D`
+        Background rate model.
+    geom : `~gammapy.maps.WcsGeom`
+        Reference geometry.
+    time_start : `~astropy.time.Time`
+        Observation time start.
+    time_stop : `~astropy.time.Time`
+        Observation time stop.
+    d_omega : 'astropy.units.Quantity'
+        Solid angle of the image geometry.
+    use_region_center : bool, optional
+        For geom as a `~gammapy.maps.RegionGeom`. If True, consider the values at the region center.
+        If False, average over the whole region. Default is True.
+
+    Returns
+    -------
+    evaluated_bkg : `numpy.ndarray`
+        Background IRF evaluated on the provided geometry
+
+    """
+    duration = time_stop - time_start
+    coords = _get_fov_coords(
+        pointing=pointing,
+        irf=bkg,
+        geom=geom,
+        use_region_center=use_region_center,
+        obstime=time_start + duration * 0.5,
+    )
+    coords["energy"] = broadcast_axis_values_to_geom(geom, "energy", False)
+
+    bkg_de = bkg.integrate_log_log(**coords, axis_name="energy")
+    return (bkg_de * d_omega * duration).to_value("")
+
+
 def make_map_background_irf(
     pointing,
     ontime,
     bkg,
     geom,
+    time_start,
+    fov_rotation_step=1.0 * u.deg,
     oversampling=None,
     use_region_center=True,
-    obstime=None,
 ):
     """Compute background map from background IRFs.
 
@@ -216,14 +300,18 @@ def make_map_background_irf(
         Background rate model.
     geom : `~gammapy.maps.WcsGeom`
         Reference geometry.
-    oversampling : int
+    time_start : `~astropy.time.Time`
+        Observation start time.
+    fov_rotation_step : `~astropy.units.Quantity`
+        Maximum rotation error to create sub-time bins if the irf is 3D and in AltAz.
+        Default is 1.0 deg.
+    oversampling : int, optional
         Oversampling factor in energy, used for the background model evaluation.
+        Default is None.
     use_region_center : bool, optional
         For geom as a `~gammapy.maps.RegionGeom`. If True, consider the values at the region center.
         If False, average over the whole region.
         Default is True.
-    obstime : `~astropy.time.Time`
-        Observation time to use.
 
     Returns
     -------
@@ -231,13 +319,23 @@ def make_map_background_irf(
         Background predicted counts sky cube in reconstructed energy.
     """
     # TODO:
-    #  This implementation can be improved in two ways:
-    #  1. Create equal time intervals between TSTART and TSTOP and sum up the
-    #  background IRF for each interval. This is instead of multiplying by
-    #  the total ontime. This then handles the rotation of the FoV.
-    #  2. Use the pointing table (does not currently exist in CTA files) to
+    #  This implementation can be improved in one way:
+    #  Use the pointing table (does not currently exist in CTA files) to
     #  obtain the RA DEC and time for each interval. This then considers that
     #  the pointing might change slightly over the observation duration
+
+    # Compute intermediate time ranges if needed
+    times = Time([time_start, time_start + ontime])
+
+    if not bkg.has_offset_axis and bkg.fov_alignment == FoVAlignment.ALTAZ:
+        if not isinstance(pointing, FixedPointingInfo):
+            raise TypeError(
+                "make_map_background_irf requires FixedPointingInfo if "
+                "BackgroundIRF.fov_alignement is ALTAZ",
+            )
+        times = _compute_rotation_time_steps(
+            time_start, time_start + ontime, fov_rotation_step, pointing
+        )
 
     # Get altaz coords for map
     if oversampling is not None:
@@ -252,21 +350,16 @@ def make_map_background_irf(
         image_geom = geom.to_image()
         d_omega = image_geom.solid_angle()
 
-    coords = _get_fov_coords(
-        pointing=pointing,
-        irf=bkg,
-        geom=geom,
-        use_region_center=use_region_center,
-        obstime=obstime,
-    )
-    coords["energy"] = broadcast_axis_values_to_geom(geom, "energy", False)
+    data = np.zeros(geom.data_shape)
+    for start, stop in zip(times[:-1], times[1:]):
+        npred = _integrate_bkg(
+            pointing, bkg, geom, start, stop, d_omega, use_region_center
+        )
 
-    bkg_de = bkg.integrate_log_log(**coords, axis_name="energy")
-    data = (bkg_de * d_omega * ontime).to_value("")
-
-    if not use_region_center:
-        region_coord, weights = geom.get_wcs_coord_and_weights()
-        data = np.sum(weights * data, axis=2, keepdims=True)
+        if not use_region_center:
+            region_coord, weights = geom.get_wcs_coord_and_weights()
+            npred = np.sum(weights * npred, axis=2, keepdims=True)
+        data += npred
 
     bkg_map = Map.from_geom(geom, data=data)
 

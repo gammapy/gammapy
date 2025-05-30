@@ -369,7 +369,7 @@ class Chi2FitStatistic(FitStatistic):
 class Chi2AsymmetricErrorFitStatistic(FitStatistic):
     """Pseudo-Chi2 fit statistic class for measurements with gaussian asymmetric errors with upper limits.
 
-    Assumes that regular data follow asymmetric normal pdf and upper limits follow complementary error functions
+    Assumes that regular data follow asymmetric normal pdf and upper limits follow complementary error functions.
     """
 
     @classmethod

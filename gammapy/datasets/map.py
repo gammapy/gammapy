@@ -360,7 +360,7 @@ def create_map_dataset_from_observation(
     spatial_bin_size_min : `~astropy.quantity.Quantity`, optional
         Minimal spatial bin size. Default is 0.01 degree.
     position : `~astropy.coordinates.SkyCoord`, optional
-        Center of the geometry. Defalut is the observation pointing.
+        Center of the geometry. Default is the observation pointing.
     frame: str, optional
         frame of the coordinate system. Default is "icrs".
     """

@@ -12,6 +12,7 @@ TODO: before Gammapy v1.0, discuss what to do about ``gammapy.utils.regions``.
 Options: keep as-is, hide from the docs, or to remove it completely
 (if the functionality is available in ``astropy-regions`` directly.
 """
+
 import operator
 import numpy as np
 from scipy.optimize import Bounds, minimize
@@ -24,7 +25,13 @@ from regions import (
     EllipseSkyRegion,
     RectangleSkyRegion,
     Regions,
+    PolygonSkyRegion,
+    PolygonPixelRegion,
 )
+
+from regions.core.pixcoord import PixCoord
+from regions.core.metadata import RegionMeta, RegionVisual
+from regions._utils.wcs_helpers import pixel_scale_angle_at_skycoord
 
 __all__ = [
     "compound_region_to_regions",
@@ -137,6 +144,44 @@ def regions_to_compound_region(regions):
     return region_union
 
 
+def get_centroid(vertices):
+    """Compute centroid of a polygon. Implicitly assumes a flat
+    cartesian projection, will probably break for very large polygons.
+
+    Code comes from:
+    https://stackoverflow.com/questions/75699024/finding-the-centroid-of-a-polygon-in-python
+
+    Parameters
+    ----------
+    vertices : `~astropy.coordinates.SkyCoord`
+        List of vertices.
+
+    Returns
+    -------
+    centroid : `~astropy.coordinates.SkyCoord`
+        Centroid of the polygon.
+    """
+    polygon = []
+    for vertex in vertices:
+        polygon.append((vertex.ra.degree, vertex.dec.degree))
+    polygon = np.array(polygon)
+
+    # Same polygon, but with vertices cycled around. Now the polygon
+    # decomposes into triangles of the form origin-polygon[i]-polygon2[i]
+    polygon2 = np.roll(polygon, -1, axis=0)
+
+    # Compute signed area of each triangle
+    signed_areas = 0.5 * np.cross(polygon, polygon2)
+
+    # Compute centroid of each triangle
+    centroids = (polygon + polygon2) / 3.0
+
+    # Get average of those centroids, weighted by the signed areas.
+    centroid = np.average(centroids, axis=0, weights=signed_areas)
+
+    return SkyCoord(centroid[0] * u.deg, centroid[1] * u.deg, frame=vertices.frame)
+
+
 class SphericalCircleSkyRegion(CircleSkyRegion):
     """Spherical circle sky region.
 
@@ -155,6 +200,109 @@ class SphericalCircleSkyRegion(CircleSkyRegion):
         """Defined by spherical distance."""
         separation = self.center.separation(skycoord)
         return separation < self.radius
+
+
+class PolygonPointsSkyRegion(PolygonSkyRegion):
+    """Polygon sky region defined by a list of points."""
+
+    def __init__(self, vertices, meta=None, visual=None):
+        """Create a polygon sky region.
+
+        Parameters
+        ----------
+        vertices : `~astropy.coordinates.SkyCoord`
+            List of vertices.
+        meta : `~regions.RegionMeta`, optional
+            Region meta data.
+        visual : `~regions.RegionVisual`, optional
+            Region visual meta data.
+        """
+        self.vertices = vertices
+        self.meta = meta or RegionMeta()
+        self.center = get_centroid(vertices)
+        self.visual = visual or RegionVisual()
+
+    def to_pixel(self, wcs):
+        """Convert to pixel region."""
+        x, y = wcs.world_to_pixel(self.vertices)
+        center, _, _ = pixel_scale_angle_at_skycoord(self.center, wcs)
+
+        vertices_pix = PixCoord(x, y)
+        return PolygonPointsPixelRegion(
+            vertices_pix,
+            center=center,
+            meta=self.meta.copy(),
+            visual=self.visual.copy(),
+        )
+
+
+class PolygonPointsPixelRegion(PolygonPixelRegion):
+    """Polygon pixel region defined by a list of points."""
+
+    def __init__(self, vertices, center=None, meta=None, visual=None, origin=None):
+        """Create a polygon pixel region.
+
+        Parameters
+        ----------
+        vertices : `~regions.PixCoord`
+            List of vertices.
+        center : `~regions.PixCoord`, optional
+            Center of the region.
+        meta : `~regions.RegionMeta`, optional
+            Region meta data.
+        visual : `~regions.RegionVisual`, optional
+            Region visual meta data.
+        origin : `~regions.PixCoord`, optional
+            Origin of the region. Default is `PixCoord(0, 0)`
+        """
+
+        if origin is None:
+            origin = PixCoord(0, 0)
+
+        self._vertices = vertices
+        self.meta = meta or RegionMeta()
+        self.visual = visual or RegionVisual()
+        self.origin = origin
+        self.vertices = vertices + origin
+        self.center = center
+
+    def to_sky(self, wcs):
+        """Convert to sky region.
+
+        Parameters
+        ----------
+        wcs : `~astropy.wcs.WCS`
+            WCS transformation object.
+
+        """
+        vertices_sky = wcs.pixel_to_world(self.vertices.x, self.vertices.y)
+
+        return PolygonPointsSkyRegion(
+            vertices=vertices_sky, meta=self.meta.copy(), visual=self.visual.copy()
+        )
+
+    def rotate(self, center, angle):
+        """
+        Rotate the region.
+
+        Positive ``angle`` corresponds to counter-clockwise rotation.
+
+        Parameters
+        ----------
+        center : `~regions.PixCoord`
+            The rotation center point.
+        angle : `~astropy.coordinates.Angle`
+            The rotation angle.
+
+        Returns
+        -------
+        region : `PolygonPixelRegion`
+            The rotated region (which is an independent copy).
+        """
+        vertices = self.vertices.rotate(center, angle)
+        center = self.center.rotate(center, angle)
+
+        return self.copy(vertices=vertices, center=center)
 
 
 def make_orthogonal_rectangle_sky_regions(start_pos, end_pos, wcs, height, nbin=1):

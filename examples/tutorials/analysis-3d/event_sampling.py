@@ -22,7 +22,7 @@ event-sampler and how to obtain an output photon event list.
 The core of the event sampling lies into the Gammapy
 `~gammapy.datasets.MapDatasetEventSampler` class, which is based on
 the inverse cumulative distribution function `(Inverse
-CDF) <https://en.wikipedia.org/wiki/Cumulative_distribution_function#Inverse_distribution_function_(quantile_function)>`__. 
+CDF) <https://en.wikipedia.org/wiki/Cumulative_distribution_function#Inverse_distribution_function_(quantile_function)>`__.
 
 The `~gammapy.datasets.MapDatasetEventSampler` takes in input a
 `~gammapy.datasets.Dataset` object containing the spectral, spatial
@@ -86,7 +86,6 @@ from pathlib import Path
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
-from astropy.io import fits
 from astropy.time import Time
 from regions import CircleSkyRegion
 import matplotlib.pyplot as plt
@@ -300,16 +299,15 @@ plt.show()
 events.table.meta["OBJECT"] = dataset.models[0].name
 
 ######################################################################
-# Let’s write the event list and its GTI extension to a FITS file. We make
-# use of `fits` library in `astropy`:
+# Let’s write the event list and its GTI extension to a FITS file, adopting
+# the `observation` functions. We firstly link the `events` to the `observation`
+# objects and then we write it into a fits file:
 #
 
-primary_hdu = fits.PrimaryHDU()
-hdu_evt = fits.BinTableHDU(events.table)
-hdu_gti = fits.BinTableHDU(dataset.gti.table, name="GTI")
-hdu_all = fits.HDUList([primary_hdu, hdu_evt, hdu_gti])
-hdu_all.writeto("./event_sampling/events_0001.fits", overwrite=True)
-
+observation.events = events
+observation.write(
+    "./event_sampling/events_0001.fits", include_irfs=False, overwrite=True
+)
 
 ######################################################################
 # Time variable source using a lightcurve
