@@ -17,7 +17,7 @@ __all__ = [
 
 class GammapyMaskedConstant(MaskedConstant):
     def strip(self):
-        return str(self)
+        return "--"
 
 
 def hstack_columns(table, table_other):
