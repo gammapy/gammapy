@@ -40,7 +40,7 @@ Model semimajor  : 0.2488 deg
 Model semiminor  : 0.2488 deg
 Position angle   : 0.0000 deg
 Spatial function : RadialDisk 
-Spatial filename :                         
+Spatial filename : --
 
 
 *** Spectral fit info ***
@@ -56,7 +56,7 @@ Energy flux (10 GeV - TeV)       : 1.08e-11 +- 2.9e-12 erg cm-2 s-1
 *** Spectral points ***
 
  e_min   e_max       flux     flux_errn   flux_errp      e2dnde     e2dnde_errn   e2dnde_errp  is_ul   flux_ul     e2dnde_ul   sqrt_ts
-  GeV     GeV    1 / (cm2 s) 1 / (cm2 s) 1 / (cm2 s) erg / (cm2 s) erg / (cm2 s) erg / (cm2 s)       1 / (cm2 s) erg / (cm2 s)        
+  GeV     GeV    1 / (s cm2) 1 / (s cm2) 1 / (s cm2) erg / (s cm2) erg / (s cm2) erg / (s cm2)       1 / (s cm2) erg / (s cm2)        
 ------- -------- ----------- ----------- ----------- ------------- ------------- ------------- ----- ----------- ------------- -------
  10.000   20.000   7.545e-11   1.849e-11   2.071e-11     2.417e-12     5.923e-13     6.632e-13 False         nan           nan   5.446
  20.000   50.000   4.747e-11   1.296e-11   1.507e-11     2.534e-12     6.916e-13     8.042e-13 False         nan           nan   5.218

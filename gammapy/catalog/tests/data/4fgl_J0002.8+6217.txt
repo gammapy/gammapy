@@ -3,12 +3,12 @@
 
 Catalog row index (zero-based) : 7
 Source name          : 4FGL J0002.8+6217
-Extended name        :                   
+Extended name        : --
 Associations     : PSR J0002+6216, 3FGL J0002.6+6218
 ASSOC_PROB_BAY   : 1.000
 ASSOC_PROB_LR    : 0.000
 Class1           : PSR  
-Class2           :      
+Class2           : --
 TeVCat flag      : N
 
 *** Other info ***
@@ -49,7 +49,7 @@ Energy flux (100 MeV - 100 GeV)               : 1.86e-11 +- 1.51e-12 erg cm-2 s-
 *** Spectral points ***
 
   e_min     e_max        flux     flux_errn   flux_errp      e2dnde     e2dnde_errn   e2dnde_errp  is_ul   flux_ul     e2dnde_ul   sqrt_ts
-   MeV       MeV     1 / (cm2 s) 1 / (cm2 s) 1 / (cm2 s) erg / (cm2 s) erg / (cm2 s) erg / (cm2 s)       1 / (cm2 s) erg / (cm2 s)        
+   MeV       MeV     1 / (s cm2) 1 / (s cm2) 1 / (s cm2) erg / (s cm2) erg / (s cm2) erg / (s cm2)       1 / (s cm2) erg / (s cm2)        
 --------- ---------- ----------- ----------- ----------- ------------- ------------- ------------- ----- ----------- ------------- -------
    50.000    100.000   2.846e-11         nan   4.019e-08     4.683e-15           nan     6.613e-12  True   8.041e-08     1.323e-11   0.000
   100.000    300.000   7.734e-09         nan   8.182e-09     1.963e-12           nan     2.077e-12  True   2.410e-08     6.117e-12   0.808
