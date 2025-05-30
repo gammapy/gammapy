@@ -422,44 +422,6 @@ def create_global_dataset(
     return MapDataset.create(geom=geom, energy_axis_true=energy_axis_true, name=name)
 
 
-def create_energy_mask(dataset, energy_min=None, energy_max=None):
-    """Build a mask for the dataset restricting its mask_fit to a given energy range.
-
-    Parameters
-    ----------
-    dataset : `~gammapy.datasets.Dataset`
-        the dataset to compute a mask for.
-    energy_min : `~astropy.units.Quantity`, optional
-        minimum energy. If None, use lower bound of the energy axis. Default is None.
-    energy_max : `~astropy.units.Quantity`, optional
-        maximum energy. If None, use upper bound of the energy axis. Default is None.
-    """
-    energy_axis = dataset._geom.axes["energy"]
-
-    if energy_min is None:
-        energy_min = energy_axis.bounds[0]
-
-    if energy_max is None:
-        energy_max = energy_axis.bounds[1]
-
-    energy_min, energy_max = u.Quantity(energy_min), u.Quantity(energy_max)
-
-    group = energy_axis.group_table(edges=[energy_min, energy_max])
-
-    is_normal = group["bin_type"] == "normal   "
-    group = group[is_normal]
-
-    mask_fit = dataset._geom.energy_mask(
-        group["energy_min"][0] * energy_axis.unit,
-        group["energy_max"][0] * energy_axis.unit,
-    )
-
-    if dataset.mask_fit is not None:
-        mask_fit *= dataset.mask_fit
-
-    return mask_fit
-
-
 class set_and_restore_mask_fit:
     """Context manager to set a `mask_fit` on dataset and restore the initial mask.
 
