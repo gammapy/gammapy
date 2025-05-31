@@ -356,6 +356,13 @@ def test_models_mutation(sky_model, sky_models, sky_models_2):
         mods.extend(sky_models_2)
     with pytest.raises(ValueError, match="Model names must be unique"):
         mods = sky_models + sky_models_2
+    with pytest.raises(ValueError, match="Model names must be unique"):
+        mods[1] = mods[0]
+
+    mods[1] = mods[1]
+    assert mods.names == ["source-1", "source-2", "source-3", "source-4"]
+    mods[1] = mods[1].copy(name="copy")
+    assert mods.names == ["source-1", "copy", "source-3", "source-4"]
 
 
 class TestSkyModel:
@@ -754,7 +761,9 @@ def test_sky_model_create():
 
 
 def test_integrate_geom():
-    model = GaussianSpatialModel(lon="0d", lat="0d", sigma=0.1 * u.deg, frame="icrs")
+    model = GaussianSpatialModel(
+        lon_0="0 deg", lat_0="0 deg", sigma=0.1 * u.deg, frame="icrs"
+    )
     spectral_model = PowerLawSpectralModel(amplitude="1e-11 cm-2 s-1 TeV-1")
     sky_model = SkyModel(spectral_model=spectral_model, spatial_model=model)
 
@@ -771,7 +780,9 @@ def test_integrate_geom():
 
 
 def test_evaluate_integrate_nd_geom():
-    model = GaussianSpatialModel(lon="0d", lat="0d", sigma=0.1 * u.deg, frame="icrs")
+    model = GaussianSpatialModel(
+        lon_0="0 deg", lat_0="0 deg", sigma=0.1 * u.deg, frame="icrs"
+    )
     spectral_model = PowerLawSpectralModel(amplitude="1e-11 cm-2 s-1 TeV-1")
     sky_model = SkyModel(spectral_model=spectral_model, spatial_model=model)
 
@@ -816,7 +827,7 @@ def test_evaluate_integrate_nd_geom():
 
 def test_evaluate_integrate_geom_with_time():
     spatial_model = GaussianSpatialModel(
-        lon="0d", lat="0d", sigma=0.1 * u.deg, frame="icrs"
+        lon_0="0 deg", lat_0="0 deg", sigma=0.1 * u.deg, frame="icrs"
     )
     spectral_model = PowerLawSpectralModel(amplitude="1e-11 cm-2 s-1 TeV-1")
     temporal_model = PowerLawTemporalModel()
@@ -891,7 +902,7 @@ def test_evaluate_integrate_geom_with_time():
 
 def test_evaluate_integrate_geom_with_time_and_gti():
     spatial_model = GaussianSpatialModel(
-        lon="0d", lat="0d", sigma=0.1 * u.deg, frame="icrs"
+        lon_0="0 deg", lat_0="0 deg", sigma=0.1 * u.deg, frame="icrs"
     )
     spectral_model = PowerLawSpectralModel(amplitude="1e-11 cm-2 s-1 TeV-1")
     temporal_model = PowerLawTemporalModel()
@@ -1098,3 +1109,10 @@ def test_piecewise_spatial_model_background(background):
     assert isinstance(copied.spatial_model, PiecewiseNormSpatialModel)
 
     assert "Spatial model type" in copied.__str__()
+
+
+def test_naming_fov_background_model():
+    fov_default = FoVBackgroundModel(dataset_name="one", name=None)
+    assert fov_default.name == "one-bkg"
+    fov_named = FoVBackgroundModel(dataset_name="two", name="custom_name")
+    assert fov_named.name == "custom_name"

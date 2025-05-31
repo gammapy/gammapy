@@ -2,7 +2,7 @@
 from gammapy.utils.registry import Registry
 from .core import Dataset, Datasets
 from .flux_points import FluxPointsDataset
-from .io import OGIPDatasetReader, OGIPDatasetWriter
+from .io import OGIPDatasetReader, OGIPDatasetWriter, FermipyDatasetsReader
 from .map import (
     MapDataset,
     MapDatasetOnOff,
@@ -35,6 +35,7 @@ __all__ = [
     "Dataset",
     "DATASET_REGISTRY",
     "Datasets",
+    "FermipyDatasetsReader",
     "FluxPointsDataset",
     "MapDataset",
     "MapDatasetEventSampler",

@@ -6,7 +6,7 @@ Constant temporal model
 
 This model parametrises a constant time model.
 
-.. math:: F(t) = k
+.. math:: F(t) = 1
 
 """
 
@@ -26,7 +26,7 @@ from gammapy.modeling.models import (
 )
 
 time_range = [Time.now(), Time.now() + 1 * u.d]
-constant_model = ConstantTemporalModel(const=1)
+constant_model = ConstantTemporalModel()
 constant_model.plot(time_range)
 plt.grid(which="both")
 

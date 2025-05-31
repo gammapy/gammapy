@@ -4,11 +4,11 @@
 import logging
 import numpy as np
 import astropy.units as u
-from scipy.stats import norm, uniform
+from scipy.stats import norm, uniform, loguniform
 from gammapy.modeling import PriorParameter, PriorParameters
 from .core import ModelBase
 
-__all__ = ["GaussianPrior", "UniformPrior", "Prior"]
+__all__ = ["GaussianPrior", "UniformPrior", "LogUniformPrior", "Prior"]
 
 log = logging.getLogger(__name__)
 
@@ -35,7 +35,12 @@ def _build_priorparameters_from_dict(data, default_parameters):
 
 
 class Prior(ModelBase):
-    """Prior base class."""
+    """Prior abstract base class. For now, see existing examples of type of priors:
+
+    - `GaussianPrior`
+    - `UniformPrior`
+    - `LogUniformPrior`
+    """
 
     _unit = ""
 
@@ -74,7 +79,7 @@ class Prior(ModelBase):
 
     @property
     def weight(self):
-        """Weight mulitplied to the prior when evaluated."""
+        """Weight multiplied to the prior when evaluated."""
         return self._weight
 
     @weight.setter
@@ -83,7 +88,7 @@ class Prior(ModelBase):
 
     def __call__(self, value):
         """Call evaluate method."""
-        # assuming the same unit as the PriorParamater here
+        # assuming the same unit as the PriorParameter here
         kwargs = {par.name: par.value for par in self.parameters}
         return self.weight * self.evaluate(value.value, **kwargs)
 
@@ -139,10 +144,10 @@ class GaussianPrior(Prior):
 
     Parameters
     ----------
-    mu : float
+    mu : float, optional
         Mean of the Gaussian distribution.
         Default is 0.
-    sigma : float
+    sigma : float, optional
         Standard deviation of the Gaussian distribution.
         Default is 1.
     """
@@ -171,12 +176,12 @@ class UniformPrior(Prior):
 
     Parameters
     ----------
-    min : float
+    min : float, optional
         Minimum value.
-        Default is -inf.
-    max : float
-        Maxmimum value.
-        Default is inf.
+        Default is -`~numpy.inf`.
+    max : float, optional
+        Maximum value.
+        Default is `~numpy.inf`.
     """
 
     tag = ["UniformPrior"]
@@ -195,4 +200,38 @@ class UniformPrior(Prior):
     def _inverse_cdf(self, value):
         """Return inverse CDF for prior."""
         rv = uniform(self.min.value, self.max.value - self.min.value)
+        return rv.ppf(value)
+
+
+class LogUniformPrior(Prior):
+    """LogUniform Prior.
+
+    Equivalent to a uniform prior on the log of the parameter
+
+    Parameters
+    ----------
+    min : float, optional
+        Minimum value. Default is 1e-14.
+    max : float, optional
+        Maximum value. Default is 1e-10.
+    """
+
+    tag = ["LogUniformPrior"]
+    _type = "prior"
+    min = PriorParameter(name="min", value=1e-14, unit="")
+    max = PriorParameter(name="max", value=1e-10, unit="")
+
+    @staticmethod
+    def evaluate(value, min, max):
+        """
+        Evaluate the likelihood penalization term (hence -2*).
+        Note that this is currently a different scaling that the Uniform or Gaussian priors.
+        With current implementation the TS of a source with/without LogUniform prior would be different... TBD
+        """
+        rv = loguniform(min, max)
+        return -2 * rv.logpdf(value)
+
+    def _inverse_cdf(self, value):
+        """Return inverse CDF for prior."""
+        rv = loguniform(self.min.value, self.max.value)
         return rv.ppf(value)
