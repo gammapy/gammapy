@@ -9,10 +9,10 @@ from gammapy.maps.axes import UNIT_STRING_FORMAT
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.random import InverseCDFSampler, get_random_state
+from gammapy.utils.units import energy_unit_format
 from ..core import IRFMap
 from .core import PSF
 from .kernel import PSFKernel
-from gammapy.utils.deprecation import deprecated_renamed_argument
 
 __all__ = ["PSFMap", "RecoPSFMap"]
 
@@ -24,9 +24,7 @@ def _psf_upsampling_factor(psf, geom, position, energy=None, precision_factor=12
     """Minimal factor between the bin half-width of the geom and the median R68% containment radius."""
     if energy is None:
         energy = geom.axes[psf.energy_name].center
-    psf_r68s = psf.containment_radius(
-        0.68, geom.axes[psf.energy_name].center, position=position
-    )
+    psf_r68s = psf.containment_radius(0.68, energy, position=position)
     factors = []
     for psf_r68 in psf_r68s:
         base_factor = (2 * psf_r68 / geom.pixel_scales.max()).to_value("")
@@ -276,7 +274,7 @@ class PSFMap(IRFMap):
             Default is 0.999.
         precision_factor : int, optional
             Factor between the bin half-width of the geom and the median R68% containment radius.
-            Used only for the oversampling method. Default is 10.
+            Used only for the oversampling method. Default is 12.
 
         Returns
         -------
@@ -306,7 +304,9 @@ class PSFMap(IRFMap):
             radii[radii > max_radius] = max_radius
 
         n_radii = len(radii)
-        factor = _psf_upsampling_factor(self, geom, position, precision_factor)
+        factor = _psf_upsampling_factor(
+            self, geom, position, energy=None, precision_factor=precision_factor
+        )
         geom = geom.to_odd_npix(max_radius=max_radius)
         kernel_map = Map.from_geom(geom=geom)
         for im, ind in zip(kernel_map.iter_by_image(keepdims=True), range(n_radii)):
@@ -448,7 +448,6 @@ class PSFMap(IRFMap):
         )
         return cls(psf_map=psf_map, exposure_map=exposure_map)
 
-    @deprecated_renamed_argument("spectrum", "spectral_model", "v1.3")
     def to_image(self, spectral_model=None, keepdims=True):
         """Reduce to a 2D map after weighing with the associated exposure and a spectrum.
 
@@ -557,7 +556,7 @@ class PSFMap(IRFMap):
                     "rad": rad,
                 }
             )
-            label = f"{value:.0f}"
+            label = f"{energy_unit_format(value)}"
             psf_value *= self.psf_map.unit
             with quantity_support():
                 ax.plot(rad, psf_value, label=label, **kwargs)

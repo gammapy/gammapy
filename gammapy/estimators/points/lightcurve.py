@@ -60,7 +60,7 @@ class LightCurveEstimator(FluxPointsEstimator):
         but rather the closest values to the energy axis edges of the parent dataset.
         Default is None: apply the estimator in each energy bin of the parent dataset.
         For further explanation see :ref:`estimators`.
-    fit : `Fit`
+    fit : `~gammapy.modeling.Fit`
         Fit instance specifying the backend and fit options.
     reoptimize : bool
         If True the free parameters of the other models are fitted in each bin independently,
@@ -85,7 +85,7 @@ class LightCurveEstimator(FluxPointsEstimator):
 
     Examples
     --------
-    For a usage example see :doc:`/tutorials/analysis-time/light_curve` tutorial.
+    For a usage example, see :doc:`/tutorials/analysis-time/light_curve` tutorial.
 
     """
 

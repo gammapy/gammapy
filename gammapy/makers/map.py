@@ -2,9 +2,11 @@
 import logging
 import astropy.units as u
 from astropy.table import Table
+import numpy as np
 from regions import PointSkyRegion
 from gammapy.datasets import MapDatasetMetaData
-from gammapy.irf import EDispKernelMap, PSFMap, RecoPSFMap
+from gammapy.irf import EDispKernelMap, PSFMap
+from gammapy.data import Observation
 from gammapy.maps import Map
 from .core import Maker
 from .utils import (
@@ -39,6 +41,10 @@ class MapDatasetMaker(Maker):
         Pad one bin in offset for 2d background map.
         This avoids extrapolation at edges and use the nearest value.
         Default is True.
+    fov_rotation_step : `~astropy.units.Quantity`, optional
+        Maximum error on the rotation angle between AltAz and RaDec frames during background evaluation.
+        Used only when the Background IRF has an AltAz alignement.
+        Default is 1.0 deg.
 
     Examples
     --------
@@ -107,10 +113,12 @@ class MapDatasetMaker(Maker):
         background_oversampling=None,
         background_interp_missing_data=True,
         background_pad_offset=True,
+        fov_rotation_step=1.0 * u.deg,
     ):
         self.background_oversampling = background_oversampling
         self.background_interp_missing_data = background_interp_missing_data
         self.background_pad_offset = background_pad_offset
+        self.fov_rotation_step = fov_rotation_step
         if selection is None:
             selection = self.available_selection
 
@@ -165,10 +173,30 @@ class MapDatasetMaker(Maker):
         exposure : `~gammapy.maps.Map`
             Exposure map.
         """
-        if isinstance(observation.aeff, Map):
-            return observation.aeff.interp_to_geom(
+        if getattr(observation, "exposure", None):
+            return observation.exposure.interp_to_geom(
                 geom=geom,
             )
+        with u.add_enabled_units([u.def_unit("transit", u.sday)]):
+            if isinstance(observation.aeff, Map):
+                aeff = observation.aeff
+                if aeff.unit.is_equivalent(u.Unit("m2 s")):
+                    factor = 1.0
+                elif aeff.unit.is_equivalent(u.Unit("m2 s transit-1")):
+                    if u.Unit("transit") in aeff.unit.bases:
+                        # TODO : GTI = number of transits is valid only
+                        # if the exposure is flat in right ascension.
+                        # It's fine for now as irfs are created like this for HAWC/SWGO
+                        # but could change in future.
+                        factor = observation.gti.time_sum.to("transit")
+                    else:
+                        factor = observation.gti.time_sum
+                else:
+                    raise u.UnitsError(
+                        f"Effective area unit {observation.aeff.unit} is not supported"
+                    )
+                return observation.aeff.interp_to_geom(geom=geom) * factor
+
         return make_map_exposure_true_energy(
             pointing=observation.get_pointing_icrs(observation.tmid),
             livetime=observation.observation_live_time_duration,
@@ -221,9 +249,30 @@ class MapDatasetMaker(Maker):
             Background map.
         """
         bkg = observation.bkg
-
-        if isinstance(bkg, Map):
-            return bkg.interp_to_geom(geom=geom, preserve_counts=True)
+        with u.add_enabled_units([u.def_unit("transit", u.sday)]):
+            if isinstance(bkg, Map):
+                if not bkg.unit or bkg.unit.is_equivalent(u.Unit("")):
+                    return bkg.interp_to_geom(geom=geom, preserve_counts=True)
+                elif bkg.unit.is_equivalent(
+                    u.Unit("TeV-1 sr-1")
+                ) or bkg.unit.is_equivalent(u.Unit("TeV-1 sr-1 transit-1")):
+                    bkg = bkg.interp_to_geom(geom, preserve_counts=False)
+                    bkg.quantity *= bkg.geom.to_image().solid_angle()[None, :, :]
+                    # multipling by energy bins after take less memory than using bin_volume
+                    bkg.quantity *= np.diff(bkg.geom.axes["energy"].edges)[
+                        :, None, None
+                    ]
+                    # TODO : would be better to have proper integration method
+                    if bkg.unit.is_equivalent(u.Unit("transit-1")):
+                        if u.Unit("transit") in bkg.unit.bases:
+                            bkg.quantity *= observation.gti.time_sum.to("transit")
+                        else:
+                            bkg.quantity *= observation.gti.time_sum
+                    return bkg
+                else:
+                    raise u.UnitsError(
+                        f"Background unit {observation.bkg.unit} is not supported"
+                    )
 
         use_region_center = getattr(self, "use_region_center", True)
 
@@ -238,9 +287,10 @@ class MapDatasetMaker(Maker):
             ontime=observation.observation_time_duration,
             bkg=bkg,
             geom=geom,
+            time_start=observation.tstart,
+            fov_rotation_step=self.fov_rotation_step,
             oversampling=self.background_oversampling,
             use_region_center=use_region_center,
-            obstime=observation.tmid,
         )
 
     def make_edisp(self, geom, observation):
@@ -285,9 +335,15 @@ class MapDatasetMaker(Maker):
         edisp : `~gammapy.irf.EDispKernelMap`
             Energy dispersion kernel map.
         """
-        if isinstance(observation.edisp, EDispKernelMap):
-            exposure = None
-            interp_map = observation.edisp.edisp_map.interp_to_geom(geom)
+        edisp = observation.edisp
+        if isinstance(edisp, EDispKernelMap):
+            if edisp.exposure_map:
+                exposure = edisp.exposure_map.interp_to_geom(
+                    geom.squash(axis_name="energy")
+                )
+            else:
+                exposure = None
+            interp_map = edisp.edisp_map.interp_to_geom(geom)
             return EDispKernelMap(edisp_kernel_map=interp_map, exposure_map=exposure)
 
         exposure = self.make_exposure_irf(geom.squash(axis_name="energy"), observation)
@@ -319,10 +375,15 @@ class MapDatasetMaker(Maker):
         """
         psf = observation.psf
 
-        if isinstance(psf, RecoPSFMap):
-            return RecoPSFMap(psf.psf_map.interp_to_geom(geom))
-        elif isinstance(psf, PSFMap):
-            return PSFMap(psf.psf_map.interp_to_geom(geom))
+        if isinstance(psf, PSFMap):
+            if psf.exposure_map:
+                exposure_map = psf.exposure_map.interp_to_geom(
+                    geom.squash(axis_name="rad")
+                )
+            else:
+                exposure_map = None
+            return psf.__class__(psf.psf_map.interp_to_geom(geom), exposure_map)
+
         exposure = self.make_exposure_irf(geom.squash(axis_name="rad"), observation)
 
         return make_psf_map(
@@ -382,8 +443,11 @@ class MapDatasetMaker(Maker):
             Map dataset.
         """
         kwargs = {"gti": observation.gti}
-        kwargs["meta_table"] = self.make_meta_table(observation)
-        kwargs["meta"] = self._make_metadata(kwargs["meta_table"])
+        if isinstance(observation, Observation):
+            kwargs["meta_table"] = self.make_meta_table(observation)
+            kwargs["meta"] = self._make_metadata(kwargs["meta_table"])
+        elif getattr(observation, "meta"):
+            kwargs["meta"] = observation.meta
 
         mask_safe = Map.from_geom(dataset.counts.geom, dtype=bool)
         mask_safe.data[...] = True

@@ -309,7 +309,7 @@ class SafeMaskMaker(Maker):
             background_spectrum = dataset.npred_background().get_spectrum()
             energy_axis = geom.axes["energy"]
 
-        idx = np.argmax(background_spectrum.data, axis=0)
+        idx = np.argmax(background_spectrum.data, axis=0).item()
         return geom.energy_mask(energy_min=energy_axis.edges[idx])
 
     @staticmethod

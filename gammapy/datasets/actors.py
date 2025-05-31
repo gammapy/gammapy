@@ -84,6 +84,13 @@ class DatasetsActor(Datasets):
         results = self._ray_get([d._update_stat_sum_remote() for d in self._datasets])
         return np.sum(results)
 
+    def _to_asimov_datasets(self):
+        """Create Asimov datasets from the current models."""
+        asimov_datasets = Datasets([d._to_asimov_dataset() for d in self])
+        for d in asimov_datasets:
+            d._models = self.models
+        return asimov_datasets
+
 
 class RayFrontendMixin(object):
     """Ray mixin for a local class that interact with a remote instance."""

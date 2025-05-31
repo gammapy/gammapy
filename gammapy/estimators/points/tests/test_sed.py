@@ -15,6 +15,7 @@ from gammapy.datasets import (
 )
 from gammapy.datasets.spectrum import SpectrumDataset
 from gammapy.estimators import FluxPoints, FluxPointsEstimator
+from gammapy.estimators.utils import get_rebinned_axis
 from gammapy.irf import EDispKernelMap, EffectiveAreaTable2D, load_irf_dict_from_file
 from gammapy.makers import MapDatasetMaker
 from gammapy.makers.utils import make_map_exposure_true_energy
@@ -267,6 +268,9 @@ def test_run_pwl(fpe_pwl, tmpdir):
 
     actual = table["norm_ul"].data
     assert_allclose(actual, [1.216227, 1.035472, 1.316878], rtol=1e-2)
+
+    actual = table["norm_sensitivity"].data
+    assert_allclose(actual, [0.15901235, 0.13117017, 0.55880332], rtol=1e-2)
 
     actual = table["sqrt_ts"].data
     assert_allclose(actual, [18.568429, 18.054651, 7.057121], rtol=1e-2)
@@ -853,3 +857,11 @@ def test_fpe_diff_lengths():
     datasets = Datasets([dataset1, dataset2, dataset3, dataset4])
     with pytest.raises(ValueError):
         fp = fpe.run(datasets)
+
+
+def test_resample_axis():
+    ds, fpe = create_fpe(PowerLawSpectralModel())
+    flux_points = fpe.run(ds)
+    axis_new = get_rebinned_axis(flux_points, method="fixed-bins", group_size=3)
+    flux_new = flux_points.resample_axis(axis_new)
+    assert_allclose(flux_new.flux.data, [[[3.1050191 * 1e-12]]], rtol=1e-5)

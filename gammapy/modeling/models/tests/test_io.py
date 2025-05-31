@@ -25,9 +25,9 @@ from gammapy.modeling.models import (
     SkyModel,
     TemplateNPredModel,
 )
-from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.utils.scripts import make_path, read_yaml, to_yaml, write_yaml
 from gammapy.utils.testing import requires_data, requires_dependency
+import os
 
 
 @pytest.fixture(scope="session")
@@ -151,7 +151,8 @@ def test_sky_models_checksum(tmpdir, models):
 @requires_data()
 def test_sky_models_io_auto_write(tmp_path, models):
     models_new = models.copy()
-    fsource2 = str(tmp_path / "source2_test.fits")
+    os.chdir(tmp_path)
+    fsource2 = str("source2_test.fits")
     fbkg_iem = str(tmp_path / "cube_iem_test.fits")
     fbkg_irf = str(tmp_path / "background_irf_test.fits")
 
@@ -160,11 +161,12 @@ def test_sky_models_io_auto_write(tmp_path, models):
     models_new["background_irf"].filename = fbkg_irf
     models_new.write(tmp_path / "tmp.yaml", full_output=True)
 
+    os.chdir("..")
     models = Models.read(tmp_path / "tmp.yaml")
     assert models._covar_file == "tmp_covariance.dat"
     assert models["source2"].spatial_model.filename == fsource2
-    assert models["cube_iem"].spatial_model.filename == fbkg_iem
-    assert models["background_irf"].filename == fbkg_irf
+    assert models["cube_iem"].spatial_model.filename == "cube_iem_test.fits"
+    assert models["background_irf"].filename == "background_irf_test.fits"
 
     assert_allclose(
         models_new["source2"].spatial_model.map.data,
@@ -230,8 +232,8 @@ def test_absorption_io_invalid_path(tmp_path):
     model_dict = dominguez.to_dict()
     parnames = [_["name"] for _ in model_dict["spectral"]["parameters"]]
     assert parnames == [
-        "alpha_norm",
         "redshift",
+        "alpha_norm",
     ]
     new_model = EBLAbsorptionNormSpectralModel.from_dict(model_dict)
 
@@ -257,8 +259,8 @@ def test_absorption_io_no_filename(tmp_path):
     model_dict = dominguez.to_dict()
     parnames = [_["name"] for _ in model_dict["spectral"]["parameters"]]
     assert parnames == [
-        "alpha_norm",
         "redshift",
+        "alpha_norm",
     ]
 
     new_model = EBLAbsorptionNormSpectralModel.from_dict(model_dict)
@@ -279,8 +281,8 @@ def test_absorption_io(tmp_path):
     model_dict = dominguez.to_dict()
     parnames = [_["name"] for _ in model_dict["spectral"]["parameters"]]
     assert parnames == [
-        "alpha_norm",
         "redshift",
+        "alpha_norm",
     ]
 
     new_model = EBLAbsorptionNormSpectralModel.from_dict(model_dict)
@@ -353,8 +355,7 @@ def make_all_models():
     yield Model.create("PowerLawNormSpectralModel", "spectral")
     yield Model.create("PowerLaw2SpectralModel", "spectral")
     yield Model.create("ExpCutoffPowerLawSpectralModel", "spectral")
-    with pytest.warns(GammapyDeprecationWarning):
-        yield Model.create("ExpCutoffPowerLawNormSpectralModel", "spectral")
+    yield Model.create("ExpCutoffPowerLawNormSpectralModel", "spectral")
     yield Model.create("ExpCutoffPowerLaw3FGLSpectralModel", "spectral")
     yield Model.create("SuperExpCutoffPowerLaw3FGLSpectralModel", "spectral")
     yield Model.create("SuperExpCutoffPowerLaw4FGLDR3SpectralModel", "spectral")

@@ -215,7 +215,7 @@ class WcsNDMap(WcsMap):
 
         return vals
 
-    def _resample_by_idx(self, idx, weights=None, preserve_counts=False):
+    def _resample_by_idx(self, idx, weights=None, preserve_counts=False, smooth=False):
         idx = pix_tuple_to_idx(idx)
         msk = np.all(np.stack([t != INVALID_INDEX.int for t in idx]), axis=0)
         idx = [t[msk] for t in idx]
@@ -227,10 +227,18 @@ class WcsNDMap(WcsMap):
 
         idx = np.ravel_multi_index(idx, self.data.T.shape)
         idx, idx_inv = np.unique(idx, return_inverse=True)
-        weights = np.bincount(idx_inv, weights=weights).astype(self.data.dtype)
 
-        if not preserve_counts:
-            weights /= np.bincount(idx_inv).astype(self.data.dtype)
+        weights = np.bincount(idx_inv, weights=weights).astype(self.data.dtype)
+        bincount = np.bincount(idx_inv).astype(self.data.dtype)
+
+        if smooth:
+            weight_sum = np.nansum(weights)
+            weights /= bincount
+            if preserve_counts:
+                factor = weight_sum / np.nansum(weights)
+                weights *= np.nan_to_num(factor, nan=0.0, posinf=0.0, neginf=0.0)
+        elif not preserve_counts:
+            weights /= bincount
 
         self.data.T.flat[idx] += weights
 
@@ -358,14 +366,22 @@ class WcsNDMap(WcsMap):
             idx = self.geom.axes.index_data(axis_name)
             block_size[idx] = factor
 
-        func = np.nansum if preserve_counts else np.nanmean
-
         if weights is None:
-            weights = 1
-        else:
+            weights = np.ones_like(self.data)
+        elif not isinstance(weights, np.ndarray):
             weights = weights.data
 
-        data = block_reduce(self.data * weights, tuple(block_size), func=func)
+        data = block_reduce(self.data * weights, tuple(block_size), func=np.nansum)
+
+        if not preserve_counts:
+            weight_sum = block_reduce(weights, tuple(block_size), func=np.nansum)
+            data = np.divide(
+                data,
+                weight_sum,
+                out=np.zeros_like(data, dtype="float64"),
+                where=(weight_sum != 0),
+            )
+
         return self._init_copy(geom=geom, data=data.astype(self.data.dtype))
 
     def plot(
@@ -601,7 +617,9 @@ class WcsNDMap(WcsMap):
             Function to reduce the data. Default is np.nansum.
             For boolean Map, use np.any or np.all.
         weights : `WcsNDMap`, optional
-            Array to be used as weights. The geometry must be equivalent.
+            Array to be used as weights.
+            Weights are multiplied with the input data and should be defined accordingly, in case a weighted average is desired.
+            If a mask is given, the mask is applied to the input map. The geometry must be equivalent.
             Default is None.
         method : {"nearest", "linear"}, optional
             How to interpolate if a position is given.
@@ -634,16 +652,22 @@ class WcsNDMap(WcsMap):
             # Casting needed as interp_by_coord transforms boolean
             data = data.astype(self.data.dtype)
         else:
-            cutout, mask = self.cutout_and_mask_region(region=region)
+            cutout, cutout_mask = self.cutout_and_mask_region(region=region)
+            mask = cutout_mask.interp_to_geom(cutout.geom, method="nearest")
 
             if weights is not None:
                 weights_cutout = weights.cutout(
                     position=geom.center_skydir, width=geom.width
                 )
-                cutout.data *= weights_cutout.data
+                if weights_cutout.is_mask:
+                    mask.data = np.logical_and(mask.data, weights_cutout.data)
+                else:
+                    cutout.data *= weights_cutout.data
 
-            idx_y, idx_x = np.where(mask)
-            data = func(cutout.data[..., idx_y, idx_x], axis=-1)
+            data = np.empty(cutout.data.shape[:-2], dtype=self.data.dtype)
+
+            for i, val in np.ndenumerate(data):
+                data[i] = func(cutout.data[i][mask.data[i]]).astype(self.data.dtype)
 
         return RegionNDMap(geom=geom, data=data, unit=self.unit, meta=self.meta.copy())
 

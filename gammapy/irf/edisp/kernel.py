@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
+import warnings
 from astropy.io import fits
 from astropy.table import Table
 from astropy.units import Quantity
@@ -249,7 +250,9 @@ class EDispKernel(IRF):
         return cls(axes=[energy_axis_true, energy_axis], data=pdf_matrix)
 
     @classmethod
-    def read(cls, filename, hdu1="MATRIX", hdu2="EBOUNDS", checksum=False):
+    def read(
+        cls, filename, hdu1="MATRIX", hdu2="EBOUNDS", checksum=False, format="gadf"
+    ):
         """Read from file.
 
         Parameters
@@ -262,11 +265,50 @@ class EDispKernel(IRF):
             HDU containing the energy axis information. Default is "EBOUNDS".
         checksum : bool
             If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
+        format : {"gadf", "gtdrm"}
+            FITS format convention. Default is "gadf".
         """
-        with fits.open(
-            str(make_path(filename)), memmap=False, checksum=checksum
-        ) as hdulist:
-            return cls.from_hdulist(hdulist, hdu1=hdu1, hdu2=hdu2)
+
+        if format == "gadf":
+            with fits.open(
+                str(make_path(filename)), memmap=False, checksum=checksum
+            ) as hdulist:
+                return cls.from_hdulist(hdulist, hdu1=hdu1, hdu2=hdu2)
+        elif format == "gtdrm":
+            with fits.open(filename, memmap=False) as hdulist:
+                hdu = hdulist[0]
+                if (
+                    checksum
+                    and hdu.verify_checksum() != 1
+                    and hdu.verify_datasum() != 1
+                ):
+                    warnings.warn(
+                        f"Checksum verification failed for HDU { hdulist[0]} of {filename}.",
+                        UserWarning,
+                    )
+            table_drm = Table.read(filename, hdu="DRM")
+            table_drm["ENERG_LO"].unit = "MeV"
+            table_drm["ENERG_HI"].unit = "MeV"
+
+            energy_true_drm = MapAxis.from_table(table_drm, format="ogip-arf")
+
+            diff = int((energy_true_drm.nbin - table_drm.meta["DETCHANS"]) / 2.0)
+            if diff > 0:
+                energy_axis = energy_true_drm.slice(slice(diff, -diff)).copy(
+                    name="energy"
+                )
+            else:
+                energy_axis = energy_true_drm.copy(name="energy")
+
+            axes = [energy_true_drm, energy_axis]
+            matrix_drm = np.stack(table_drm["MATRIX"].data).astype(np.float32)
+
+            return cls(
+                axes=axes,
+                data=matrix_drm,
+            )
+        else:
+            raise ValueError(f"Unrecognized format: {format}")
 
     def to_hdulist(self, format="ogip", **kwargs):
         """Convert RMF to FITS HDU list format.

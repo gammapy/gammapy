@@ -32,8 +32,8 @@ be found in [Berge2007]_.
     Fig.1, Illustration of the reflected regions background estimation method, taken from [Abdalla2018]_.
 
 The extraction of the OFF events from the `~gammapy.data.EventList` of a
-set of observations is performed by the `ReflectedRegionsBackgroundMaker`.
-The latter uses the `~gammapy.makers.background.ReflectedRegionsFinder` to create reflected
+set of observations is performed by the `~gammapy.makers.ReflectedRegionsBackgroundMaker`.
+The latter uses the `~gammapy.makers.ReflectedRegionsFinder` to create reflected
 regions for a given circular on region and exclusion mask.
 
 .. code-block:: python

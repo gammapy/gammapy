@@ -150,12 +150,40 @@ If you get a zsh error try using putting to ignore block inside quotes
 
     pytest --doctest-modules "--ignore-glob=*/tests" gammapy
 
-It is also important to check that you have correctly formatted your docstring. An easy way to check this
-is with the following for your specific file, i.e.:
+References can also be added to docstrings for proper documentation of specific equations or usage examples. There are
+a few ways to do this. Firstly if you reference a specific equation you can utilise the following syntax:
+
+.. code-block:: text
+
+        From Equation (1) in [1]_.
+
+        References
+        ----------
+        .. [1] `Author et al. (2023), "Title" <link_to_nasaads>`_
+
+Another option is to create a general list of references, as follows:
+
+.. code-block:: text
+
+        References
+        ----------
+        * `Author et al. (2023), "Title" <link_to_nasaads>`_
+        * `Author2 et al. (2022), "Title2" <link_to_nasaads>`_
+
+
+Docstring formatting
+^^^^^^^^^^^^^^^^^^^^
+
+It is also important to check that you have correctly formatted your docstring.
+An easy way to check this is by utilising `pydocstyle`. `pydocstyle` utilises the
+PEP257 convention by default, which means a number of errors are automatically ignored.
+In gammapy we chose to opt for the `numpy` convention therefore the flag must be added
+to correctly check the docstrings. To check the docstring for your specific file, i.e.:
 
 .. code-block:: bash
 
-    pydocstyle gammapy/data/event_list.py
+    pydocstyle --convention=numpy gammapy/data/event_list.py
+
 
 
 Sphinx gallery extension
@@ -280,7 +308,7 @@ Documentation guidelines
 
 Like almost all Python projects, the Gammapy documentation is written in a format called
 `restructured text (RST)`_ and built using `Sphinx`_.
-We mostly follow the :ref:`Astropy documentation guidelines <astropy:documentation-guidelines>`,
+We mostly follow the `Astropy documentation guidelines <https://docs.astropy.org/en/latest/development/docguide.html>`,
 which are based on the `Numpy docstring standard`_,
 which is what most scientific Python packages use.
 

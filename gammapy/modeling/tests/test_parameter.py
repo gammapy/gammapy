@@ -1,10 +1,24 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
-from numpy.testing import assert_allclose
+from numpy.testing import assert_allclose, assert_equal
 from astropy.table import Table
+import astropy.units as u
 from gammapy.modeling import Parameter, Parameters, PriorParameter, PriorParameters
 from gammapy.modeling.models import GaussianPrior
+
+
+@pytest.fixture
+def default_parameter():
+    return Parameter(
+        "test",
+        value=1e-10,
+        min=None,
+        max=None,
+        frozen=False,
+        unit="TeV",
+        scale_method="scale10",
+    )
 
 
 def test_parameter_init():
@@ -44,6 +58,7 @@ def test_parameter_scale():
 
     assert par.value == 420
     assert par.min == 400
+    assert_allclose(par.scale, 10)
     assert_allclose(par.factor_min, 40)
     assert par.max == 500
     assert_allclose(par.factor_max, 50)
@@ -91,6 +106,8 @@ def test_parameter_to_dict():
         # Checks for the simpler method="factor1"
         ("factor1", 2e10, 1, 2e10),
         ("factor1", -2e10, 1, -2e10),
+        # Check no scaling
+        (None, 2e10, 2e10, 1),
     ],
 )
 def test_parameter_autoscale(method, value, factor, scale):
@@ -99,6 +116,39 @@ def test_parameter_autoscale(method, value, factor, scale):
     assert_allclose(par.factor, factor)
     assert_allclose(par.scale, scale)
     assert isinstance(par.scale, float)
+
+
+def test_parameter_scale_method_change():
+    value = 2e10
+    par = Parameter("", value, scale_method="scale10")
+    par.autoscale()
+    assert_allclose(par.factor, 2)
+    assert_allclose(par.scale, 1e10)
+    par.scale_method = "factor1"
+    assert par.scale_method == "factor1"
+    assert_allclose(par.factor, value)
+    assert_allclose(par.scale, 1)
+    par.autoscale()
+    assert_allclose(par.factor, 1)
+    assert_allclose(par.scale, value)
+
+
+def test_parameter_scale_transform_change():
+    value = 100
+    par = Parameter("", value, scale_method=None, scale_transform="log")
+    par.autoscale()
+    assert_allclose(par.factor, np.log(value))
+    assert_allclose(par.scale, 1)
+    par.scale_transform = "sqrt"
+    assert par.scale_transform == "sqrt"
+    assert_allclose(par.factor, value)
+    assert_allclose(par.scale, 1)
+    par.autoscale()
+    assert_allclose(par.factor, 10)
+    assert_allclose(par.scale, 1)
+
+    with pytest.raises(ValueError):
+        par.scale_transform = "invalid"
 
 
 @pytest.fixture()
@@ -277,16 +327,8 @@ def test_parameter_scan_values():
     assert_allclose(p.scan_values, [0.1, 1, 10])
 
 
-def test_update_from_dict():
-    par = Parameter(
-        "test",
-        value=1e-10,
-        min="nan",
-        max="nan",
-        frozen=False,
-        unit="TeV",
-        scale_method="scale10",
-    )
+def test_update_from_dict(default_parameter):
+    par = default_parameter
     par.autoscale()
     data = {
         "model": "gc",
@@ -369,3 +411,29 @@ def test_priorparameters_to_table(priorpars):
     assert len(table.columns) == 7
     assert table["name"][0] == "spam"
     assert table["value"][1] == 99
+
+
+def test_parameter_set_min_max_error(default_parameter):
+    par = default_parameter
+    assert_equal(par.min, np.nan)
+    assert_equal(par.max, np.nan)
+
+    par.set_lim(min=1, max=10)
+    assert par.min == 1
+    assert par.max == 10
+
+    par.set_lim(max=5)
+    assert par.max == 5
+    assert par.min == 1
+
+    assert par.error == 0
+
+
+def test_set_quantity_str_float(default_parameter):
+    par = default_parameter
+    assert par._set_quantity_str_float(1) == 1
+    assert par._set_quantity_str_float("3 TeV") == 3
+    assert par._set_quantity_str_float(2 * u.TeV) == 2
+    assert par._set_quantity_str_float(4e3 * u.GeV) == 4
+    with pytest.raises(u.UnitsError):
+        par._set_quantity_str_float(1 * u.m)

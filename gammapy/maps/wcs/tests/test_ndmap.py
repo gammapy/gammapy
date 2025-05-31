@@ -426,9 +426,41 @@ def test_wcsndmap_downsample(npix, binsz, frame, proj, skydir, axes):
     m = WcsNDMap(geom, unit="m2")
     # Check whether we can downsample
     if np.all(np.mod(geom.npix[0], 2) == 0) and np.all(np.mod(geom.npix[1], 2) == 0):
+        # without weights
         m2 = m.downsample(2, preserve_counts=True)
         assert_allclose(np.nansum(m.data), np.nansum(m2.data))
         assert m.unit == m2.unit
+
+        m3 = m.downsample(2, preserve_counts=False)
+        assert_allclose(np.nanmean(m.data), np.nanmean(m3.data))
+        assert m.unit == m3.unit
+
+        # with weights
+        weights = np.random.rand(*m.data.shape)
+        m4 = m.downsample(2, preserve_counts=True, weights=weights)
+        assert_allclose(np.nansum(m.data * weights.data), np.nansum(m4.data))
+        assert m.unit == m4.unit
+
+
+def test_wcsndmap_downsample_weights():
+    geom = WcsGeom.create(
+        npix=10,
+        binsz=1.0,
+        frame="galactic",
+        proj="AIT",
+        skydir=SkyCoord(110.0, 75.0, unit="deg", frame="icrs"),
+        axes=None,
+    )
+    m = WcsNDMap(geom, data=np.tile(np.array([3.0, 2.0]), (10, 5)), unit="m2")
+
+    # weights array with recurring values to easily test for correct weighted averaging
+    weights = np.tile(np.array([1.0, 2.0]), (m.data.shape[0], m.data.shape[1] // 2))
+    m6 = m.downsample(2, preserve_counts=False, weights=weights)
+
+    assert_allclose(
+        np.nansum(m.data * weights) / np.nansum(weights), np.nanmean(m6.data)
+    )
+    assert m.unit == m6.unit
 
 
 @pytest.mark.parametrize(
@@ -979,6 +1011,26 @@ def test_double_cutout():
     m_new.stack(m_cc)
     m_c_new = m_new.cutout(position=position, width="2 deg")
     np.testing.assert_allclose(m_c_new.data, m_cc.data)
+
+
+def test_to_region_nd_map():
+    m = WcsNDMap.create(npix=(200, 200))
+    m.data = np.ones_like(m.data)
+
+    # test with mask as weights
+    weights = WcsNDMap.create(npix=(200, 200))
+    weights.data = np.zeros_like(weights.data, dtype=bool)
+    weights.data[:, 100:] = True
+
+    assert_allclose(m.to_region_nd_map(weights=weights, func=np.mean).data[0, 0], 1.0)
+    assert_allclose(m.to_region_nd_map(weights=weights, func=np.sum).data[0, 0], 2e4)
+
+    # test with non-mask weights
+    weights.data = np.ones_like(weights.data, dtype="float64")
+    m.data[:, 100:] = 4.0
+    weights.data[:, 100:] = 2.0
+    assert_allclose(m.to_region_nd_map(weights=weights, func=np.mean).data[0, 0], 4.5)
+    assert_allclose(m.to_region_nd_map(weights=weights, func=np.sum).data[0, 0], 18e4)
 
 
 def test_to_region_nd_map_histogram_basic():
