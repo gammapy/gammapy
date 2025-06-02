@@ -19,7 +19,7 @@ Using Anaconda / Miniconda
 The easiest way to install Gammapy is to use one of the Python distribution software:
 Miniconda, Anaconda or Miniforge (see this
 `link <https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html>`__).
-For some working environments (e.g. ESO, DESY, CEA), you should use
+For some working environments (e.g. ESO, DESY, MPIK, CEA), you should use
 `Miniforge <https://github.com/conda-forge/miniforge>`__ to be able to use conda/mamba without trouble.
 
 To install the latest stable version of Gammapy and its dependencies using conda,
