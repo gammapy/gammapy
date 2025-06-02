@@ -45,3 +45,8 @@ def test_energy_unit_format(q, expect):
 def test_wrap_at():
     computed = wrap_at(6.5 * u.deg, 1.0 * u.deg, 3.5 * u.deg)
     assert_allclose(1.5 * u.deg, computed, rtol=1e-4)
+    
+    computed = wrap_at(np.arange(10), 1.0, 3.5)
+    assert_allclose(computed.min(), (1.0, rtol=1e-4)
+    assert_allclose(computed.max(), (3.5, rtol=1e-4)
+
