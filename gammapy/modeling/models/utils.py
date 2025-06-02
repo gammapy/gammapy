@@ -242,13 +242,19 @@ class FluxPredictionBand:
 
     @staticmethod
     def _compute_dnde(energy, model, samples):
+        energy = np.atleast_1d(energy)
         samples = model._convert_evaluate_unit(samples, energy)
+        #        args = [samples[par.name] for par in model.parameters]
         return model.evaluate(energy[:, np.newaxis], **samples)
 
     @staticmethod
-    def _compute_eflux(energy_min, energy_max, model, samples, ndecade=100):
+    def _compute_eflux(energy_min, energy_max, model, samples, ndecade=20):
+        energy_min = np.atleast_1d(energy_min)
+        energy_max = np.atleast_1d(energy_max)
+
         samples = model._convert_evaluate_unit(samples, energy_min)
         if hasattr(model, "evaluate_energy_flux"):
+            #            args = [samples[par.name] for par in model.parameters]
             return model.evaluate_energy_flux(
                 energy_min[..., np.newaxis], energy_max[..., np.newaxis], **samples
             )
@@ -263,9 +269,10 @@ class FluxPredictionBand:
             )
 
     @staticmethod
-    def _compute_flux(energy_min, energy_max, model, samples, ndecade=100):
+    def _compute_flux(energy_min, energy_max, model, samples, ndecade=20):
         samples = model._convert_evaluate_unit(samples, energy_min)
         if hasattr(model, "evaluate_integral"):
+            #            args = [samples[par.name] for par in model.parameters]
             return model.evaluate_integral(
                 energy_min[..., np.newaxis], energy_max[..., np.newaxis], **samples
             )
@@ -287,31 +294,47 @@ class FluxPredictionBand:
         return flux_lo, flux_hi
 
     def evaluate_lo_hi(self, energy, n_sigma=1):
+        energy = np.atleast_1d(energy)
         fluxes = self._compute_dnde(energy, self.model, self.samples)
         return self._compute_lo_hi(fluxes, n_sigma=n_sigma)
 
     def evaluate_error(self, energy, n_sigma=1):
+        energy = np.atleast_1d(energy)
         dnde = self.model(energy)
         dnde_lo, dnde_hi = self.evaluate_lo_hi(energy, n_sigma)
-        return dnde - dnde_lo, dnde_hi - dnde
+        return u.Quantity(
+            [dnde, dnde - dnde_lo, dnde_hi - dnde], unit=dnde.unit
+        ).squeeze()
 
     def integral_lo_hi(self, energy_min, energy_max, n_sigma=1):
+        energy_min = np.atleast_1d(energy_min)
+        energy_max = np.atleast_1d(energy_max)
         fluxes = self._compute_flux(energy_min, energy_max, self.model, self.samples)
         return self._compute_lo_hi(fluxes, n_sigma=n_sigma)
 
     def integral_error(self, energy_min, energy_max, n_sigma=1):
+        energy_min = np.atleast_1d(energy_min)
+        energy_max = np.atleast_1d(energy_max)
         flux = self.model.integral(energy_min, energy_max)
         flux_lo, flux_hi = self.integral_lo_hi(energy_min, energy_max, n_sigma)
-        return flux - flux_lo, flux_hi - flux
+        return u.Quantity(
+            [flux, flux - flux_lo, flux_hi - flux], unit=flux.unit
+        ).squeeze()
 
     def energy_flux_lo_hi(self, energy_min, energy_max, n_sigma=1):
+        energy_min = np.atleast_1d(energy_min)
+        energy_max = np.atleast_1d(energy_max)
         fluxes = self._compute_eflux(energy_min, energy_max, self.model, self.samples)
         return self._compute_lo_hi(fluxes, n_sigma=n_sigma)
 
     def energy_flux_error(self, energy_min, energy_max, n_sigma=1):
+        energy_min = np.atleast_1d(energy_min)
+        energy_max = np.atleast_1d(energy_max)
         eflux = self.model.energy_flux(energy_min, energy_max)
         eflux_lo, eflux_hi = self.energy_flux_lo_hi(energy_min, energy_max, n_sigma)
-        return eflux - eflux_lo, eflux_hi - eflux
+        return u.Quantity(
+            [eflux, eflux - eflux_lo, eflux_hi - eflux], unit=eflux.unit
+        ).squeeze()
 
     @classmethod
     def from_model_covariance(cls, model, n_samples=10000, random_state=42):
@@ -339,13 +362,13 @@ class FluxPredictionBand:
         flux_hi = RegionNDMap.create(region=None, axes=[energy])
 
         if sed_type in ["dnde", "norm", "e2dnde"]:
-            output = self.evaluate_error(energy.center)
+            output = self.evaluate_lo_hi(energy.center)
             if sed_type == "e2dnde":
                 output = [_ * energy.center**2 for _ in output]
         elif sed_type == "flux":
-            output = self.integral_error(energy.edges_min, energy.edges_max)
+            output = self.integral_lo_hi(energy.edges_min, energy.edges_max)
         elif sed_type == "eflux":
-            output = self.energy_flux_error(energy.edges_min, energy.edges_max)
+            output = self.energy_flux_lo_hi(energy.edges_min, energy.edges_max)
         else:
             raise ValueError(f"Not a valid SED type: '{sed_type}'")
 

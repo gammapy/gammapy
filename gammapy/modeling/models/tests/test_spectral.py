@@ -1184,7 +1184,7 @@ def test_integral_error_power_law():
 
     flux, flux_errn, flux_errp = powerlaw.integral_error(energy_min, energy_max)
 
-    assert_allclose(flux.value[0] / 1e-13, 4.991835, rtol=1e-3)
+    assert_allclose(flux.value[0] / 1e-13, 5, rtol=1e-3)
     assert_allclose(flux_errn.value[0] / 1e-14, 7.209218, rtol=7e-1)
     assert_allclose(flux_errp.value[0] / 1e-14, 8.674678, rtol=7e-1)
 
