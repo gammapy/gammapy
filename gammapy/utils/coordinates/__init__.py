@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Astronomical coordinate calculation utility functions."""
 
-from .fov import fov_to_sky, sky_to_fov, FoVFrame
+from .fov import fov_to_sky, sky_to_fov, FoVFrame, FoVICRSFrame
 from .other import (
     D_SUN_TO_GALACTIC_CENTER,
     cartesian,
@@ -15,6 +15,7 @@ __all__ = [
     "cartesian",
     "D_SUN_TO_GALACTIC_CENTER",
     "FoVFrame",
+    "FoVICRSFrame",
     "fov_to_sky",
     "galactic",
     "motion_since_birth",
