@@ -320,9 +320,7 @@ def test_naima_model():
         amplitude=2e33 / u.eV, e_0=10 * u.TeV, alpha=2.5
     )
     radiative_model = naima.radiative.PionDecay(particle_distribution, nh=1 * u.cm**-3)
-    yield Model.create(
-        "NaimaSpectralModel", "spectral", radiative_model=radiative_model
-    )
+    Model.create("NaimaSpectralModel", "spectral", radiative_model=radiative_model)
 
 
 def make_all_models():
