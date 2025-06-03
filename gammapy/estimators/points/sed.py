@@ -86,6 +86,29 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
     -----
     - For further explanation, see :ref:`estimators`.
     - In case of failure of upper limits computation (e.g. nan), see the User Guide :ref:`how_to`.
+
+    Examples
+    --------
+    .. testcode::
+
+        from astropy import units as u
+        from gammapy.datasets import SpectrumDatasetOnOff
+        from gammapy.estimators import FluxPointsEstimator
+        from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
+
+        path = "$GAMMAPY_DATA/joint-crab/spectra/hess/"
+        dataset = SpectrumDatasetOnOff.read(path + "pha_obs23523.fits")
+
+        pwl = PowerLawSpectralModel(index=2, amplitude='1e-12  cm-2 s-1 TeV-1')
+
+        dataset.models = SkyModel(spectral_model=pwl, name="crab")
+
+        estimator = FluxPointsEstimator(
+            source="crab",
+            energy_edges=[0.1, 0.3, 1, 3, 10, 30, 100] * u.TeV,
+        )
+
+        fp = estimator.run(dataset)
     """
 
     tag = "FluxPointsEstimator"
