@@ -299,6 +299,21 @@ class EnergyDependentMorphologyEstimator(Estimator):
         -------
         results : `dict`
             Dictionary with the various energy-dependence estimation values.
+            There are two top level keys ``energy_dependence`` and ``src_above_bkg``.
+
+            ``energy_dependence`` (dict)
+
+                * "delta_ts" : delta(TS) between the different hypotheses
+                * "df" : the degrees of freedom
+                * "result" (dict) : contains the results of the two hypotheses with columns 'Hypothesis', 'Emin', 'Emax' and each free parameter with its error
+
+            ``src_above_bkg`` (dict)
+
+                * "Emin" : the minimum energy of the energy band
+                * "Emax" : the maximum energy of the energy band
+                * "delta_ts" : difference in ts
+                * "df" : the degrees of freedom between null and alternative hypothesis
+                * "significance" : significance of the result
         """
         if not isinstance(datasets, Datasets) or datasets.is_all_same_type is False:
             raise ValueError("Unsupported datasets type.")
