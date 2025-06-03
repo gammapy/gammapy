@@ -19,7 +19,7 @@ from astropy.coordinates import (
 )
 from astropy.coordinates.matrix_utilities import matrix_transpose, rotation_matrix
 
-__all__ = ["FoVFrame", "fov_to_sky", "sky_to_fov"]
+__all__ = ["FoVFrame", "FoVICRSFrame", "fov_to_sky", "sky_to_fov"]
 
 reflect_lon_matrix = np.array([[1, 0, 0], [0, -1, 0], [0, 0, 1]])
 

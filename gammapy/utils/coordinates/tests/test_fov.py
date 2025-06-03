@@ -5,10 +5,11 @@ from astropy.coordinates import (
     SkyCoord,
     EarthLocation,
     AltAz,
+    ICRS,
     UnitSphericalRepresentation,
 )
 from astropy.time import Time
-from gammapy.utils.coordinates import FoVFrame, fov_to_sky, sky_to_fov
+from gammapy.utils.coordinates import FoVFrame, FoVICRSFrame, fov_to_sky, sky_to_fov
 
 
 class TestFoVFrame:
@@ -96,6 +97,78 @@ def test_checked_hess_values():
     altaz = fov_coord.transform_to(altaz_pnt)
     assert_allclose(altaz.az.value, [51.320575, 50.899125, 52.154053, 48.233023])
     assert_allclose(altaz.alt.value, [49.505451, 50.030165, 51.811739, 54.700102])
+
+
+class TestFoVICRSFrame:
+    @classmethod
+    def setup_class(cls):
+        # Basic setup
+        origin = ICRS(ra=45 * u.deg, dec=10 * u.deg)
+
+        cls.fov_icrs_frame = FoVICRSFrame(origin=origin)
+        cls.origin = origin
+
+    def test_creation(self):
+        # Construct a coordinate in FoVFrame
+        fov_coord = SkyCoord(
+            fov_lon=10 * u.deg, fov_lat=5 * u.deg, frame=self.fov_icrs_frame
+        )
+
+        # Check that the frame exists and properties are as expected
+        assert isinstance(fov_coord.frame, FoVICRSFrame)
+
+        # Check representation type
+        assert isinstance(fov_coord.data, UnitSphericalRepresentation)
+        assert fov_coord.fov_lon.unit == u.deg
+        assert fov_coord.fov_lat.unit == u.deg
+
+    def test_icrs_transform(self):
+        target = SkyCoord(ra=[50, 60] * u.deg, dec=[20, 62] * u.deg, frame="icrs")
+
+        # Transform to FoVICRSFrame and back
+        fov_icrs = target.transform_to(self.fov_icrs_frame)
+        roundtrip = fov_icrs.transform_to("icrs")
+
+        assert_allclose(roundtrip.ra.deg, [50, 60])
+        assert_allclose(roundtrip.dec.deg, [20, 62])
+
+    def test_fovframe_transform(self):
+        fov_icrs_frame = FoVICRSFrame(
+            origin=SkyCoord(ra=150 * u.deg, dec=-10 * u.deg, frame="icrs")
+        )
+
+        target = SkyCoord(
+            fov_lon=[50, 60] * u.deg, fov_lat=[20, 62] * u.deg, frame=fov_icrs_frame
+        )
+
+        # Transform to FoVFrame and back
+        fov = target.transform_to(self.fov_icrs_frame)
+        roundtrip = fov.transform_to(fov_icrs_frame)
+
+        assert_allclose(roundtrip.fov_lon.deg, [50, 60])
+        assert_allclose(roundtrip.fov_lat.deg, [20, 62])
+
+
+def test_altaz_transform():
+    location = EarthLocation(lat=45 * u.deg, lon=10 * u.deg)
+    obstime = Time("2025-01-01T00:00:00")
+
+    altaz_frame = AltAz(location=location, obstime=obstime)
+    target = SkyCoord(
+        alt=[30, 45, 75] * u.deg, az=[-60, -30, 60] * u.deg, frame=altaz_frame
+    )
+
+    origin = target[0].icrs
+    fov_icrs_frame = FoVICRSFrame(origin=origin)
+
+    # Transform to FoVFrame and back
+    fov_icrs = target.transform_to(fov_icrs_frame)
+    roundtrip = fov_icrs.transform_to(altaz_frame)
+
+    assert_allclose(fov_icrs.fov_lat.deg, [0.0, 27.74973, 44.89433], atol=1e-6)
+
+    assert_allclose(roundtrip.alt.deg, [30, 45, 75])
+    assert_allclose(roundtrip.az.deg, [300, 330, 60])
 
 
 def test_simple_altaz_to_fov():
