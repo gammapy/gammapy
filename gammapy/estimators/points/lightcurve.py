@@ -71,6 +71,9 @@ class LightCurveEstimator(FluxPointsEstimator):
         (but the other parameters of the source of interest are kept frozen).
         If False only the norm of the source of interest if fitted,
         and all other parameters are frozen at their current values.
+    stack_over_time_inverval : bool, optional
+        Whether to stacked over the time intervals or fit the norm on the
+        individual times. Default is None.
     n_jobs : int
         Number of processes used in parallel for the computation. Default is one,
         unless `~gammapy.utils.parallel.N_JOBS_DEFAULT` was modified. The number
@@ -97,9 +100,16 @@ class LightCurveEstimator(FluxPointsEstimator):
 
     tag = "LightCurveEstimator"
 
-    def __init__(self, time_intervals=None, atol="1e-6 s", **kwargs):
+    def __init__(
+        self,
+        time_intervals=None,
+        atol="1e-6 s",
+        stack_over_time_inverval=False,
+        **kwargs,
+    ):
         self.time_intervals = time_intervals
         self.atol = u.Quantity(atol)
+        self.stack_over_time_inverval = stack_over_time_inverval
 
         super().__init__(**kwargs)
 
@@ -150,6 +160,20 @@ class LightCurveEstimator(FluxPointsEstimator):
                 continue
 
             valid_intervals.append([t_min, t_max])
+
+            if self.stack_over_time_inverval:
+                name = f"timebin_{t_min.mjd:.0f}_{t_max.mjd:.0f}"
+                dataset_reduced = datasets_to_fit.stack_reduce(name=name)
+                datasets_to_fit = Datasets([dataset_reduced])
+                datasets_to_fit.models = datasets.models
+                if self.n_jobs == 1:
+                    fp = self.estimate_time_bin_flux(
+                        datasets_to_fit, datasets_to_fit.names
+                    )
+                    rows.append(fp)
+                else:
+                    parallel_datasets.append(datasets_to_fit)
+                continue
 
             if self.n_jobs == 1:
                 fp = self.estimate_time_bin_flux(datasets_to_fit, dataset_names)
