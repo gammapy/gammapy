@@ -9,6 +9,7 @@ from astropy.coordinates import (
     DynamicMatrixTransform,
     EarthLocationAttribute,
     FunctionTransform,
+    ICRS,
     RepresentationMapping,
     SkyCoord,
     SkyOffsetFrame,
@@ -31,8 +32,8 @@ class FoVFrame(BaseCoordinateFrame):
 
     Attributes
     ----------
-    origin: astropy.coordinates.SkyCoord[AltAz]
-        Origin of this frame as a HorizonCoordinate
+    origin: `~astropy.coordinates.AltAz`
+        Origin of this frame as an Altaz coordinate
     obstime: `~astropy.time.Time`
         Observation time
     location: `~astropy.coordinates.EarthLocation`
@@ -85,6 +86,64 @@ def fov_to_altaz(fov_coord, altaz_frame):
     """Convert an sky offset frame coordinate to the reference frame"""
     # use the forward transform, but just invert it
     mat = altaz_to_fov(altaz_frame, fov_coord)
+    return matrix_transpose(mat)
+
+
+class FoVICRSFrame(BaseCoordinateFrame):
+    """
+    FoV coordinate frame aligned on ICRS frame. Centered on `origin` an ICRS coordinate and aligned on ICRS frame.
+
+    Longitudes are reversed.
+
+    Attributes
+    ----------
+    origin: `~astropy.coordinates.ICRS`
+        Origin of this frame as an ICRS coordinate
+    """
+
+    frame_specific_representation_info = {
+        UnitSphericalRepresentation: [
+            RepresentationMapping("lon", "fov_lon"),
+            RepresentationMapping("lat", "fov_lat"),
+        ]
+    }
+    default_representation = UnitSphericalRepresentation
+
+    origin = CoordinateAttribute(default=None, frame=ICRS)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # make sure telescope coordinate is in range [-180°, 180°]
+        if isinstance(self._data, UnitSphericalRepresentation):
+            self._data.lon.wrap_angle = Angle(180, unit=u.deg)
+
+
+@frame_transform_graph.transform(FunctionTransform, FoVICRSFrame, FoVICRSFrame)
+def fov_icrs_to_fov_icrs(from_fov_icrs_coord, to_fov_icrs_frame):
+    """Transform between two `FoVFrame`."""
+    intermediate_from = from_fov_icrs_coord.transform_to(from_fov_icrs_coord.origin)
+    intermediate_to = intermediate_from.transform_to(to_fov_icrs_frame.origin)
+    return intermediate_to.transform_to(to_fov_icrs_frame)
+
+
+@frame_transform_graph.transform(DynamicMatrixTransform, ICRS, FoVICRSFrame)
+def icrs_to_fov_icrs(icrs_coord, fov_icrs_frame):
+    """Convert a reference coordinate to a sky offset frame."""
+    # Define rotation matrices along the position angle vector, and
+    # relative to the origin.
+    origin = fov_icrs_frame.origin.represent_as(UnitSphericalRepresentation)
+    mat1 = rotation_matrix(-origin.lat, "y")
+    mat2 = rotation_matrix(origin.lon, "z")
+
+    return reflect_lon_matrix @ mat1 @ mat2
+
+
+@frame_transform_graph.transform(DynamicMatrixTransform, FoVICRSFrame, ICRS)
+def fov_icrs_to_icrs(fov_icrs_coord, icrs_frame):
+    """Convert an sky offset frame coordinate to the reference frame"""
+    # use the forward transform, but just invert it
+    mat = altaz_to_fov(icrs_frame, fov_icrs_coord)
     return matrix_transpose(mat)
 
 
