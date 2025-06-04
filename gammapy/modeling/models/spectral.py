@@ -99,15 +99,19 @@ def scale_plot_flux(flux, energy_power=0):
     return y.to_unit(flux.unit * eunit**energy_power)
 
 
-def integrate_spectrum(func, energy_min, energy_max, ndecade=100):
+def integrate_spectrum(
+    func, energy_min, energy_max, ndecade=100, parameter_samples=None, eflux=False
+):
     """Integrate one-dimensional function using the log-log trapezoidal rule.
 
     Internally an oversampling of the energy bins to "ndecade" is used.
 
+    To compute the integral func(E)*E (e.g. to get an energy flux) one can set eflux to True.
+
     Parameters
     ----------
     func : callable
-        Function to integrate.
+        Function to integrate. Usually this is a `~gammapy.modeling.models.SpectralModel`
     energy_min : `~astropy.units.Quantity`
         Integration range minimum.
     energy_max : `~astropy.units.Quantity`
@@ -115,11 +119,42 @@ def integrate_spectrum(func, energy_min, energy_max, ndecade=100):
     ndecade : int, optional
         Number of grid points per decade used for the integration.
         Default is 100.
+    parameter_samples : dict, optional
+        Dictionary of parameter quantities to pass to `func.evaluate` if it exists.
+        This provides vectorized integral evaluation for parameter samples.
+        If None, evaluation is performed with a simple call to `func`. Default is None.
+    eflux : bool, optional
+        If True, the function will integrate func(E)*E, to compute the energy flux.
+        Default is False.
     """
     # Here we impose to duplicate the number
     num = np.maximum(np.max(ndecade * np.log10(energy_max / energy_min)), 2)
+    # the shape of energy is (n_energy, num)
     energy = np.geomspace(energy_min, energy_max, num=int(num), axis=-1)
-    integral = trapz_loglog(func(energy), energy, axis=-1)
+
+    if parameter_samples is not None:
+        if not isinstance(func, SpectralModel):
+            raise TypeError(
+                "Integration with parameter samples requires SpectralModel. Got type(func) instead."
+            )
+        # need to convert
+        parameter_samples = func._convert_evaluate_unit(parameter_samples, energy)
+        # this will create an array of shape (n_energy, num, n_samples)
+        values = func.evaluate(energy[..., np.newaxis], **parameter_samples)
+        # We repeat energy n_sample times and reshape to (n_energy, num, n_samples)
+        energy = np.repeat(energy, values.shape[-1]).reshape(values.shape)
+        # We swap axes to have arrays of shape (n_energy, n_samples, num)
+        values = np.swapaxes(values, -1, -2)
+        energy = np.swapaxes(energy, -1, -2)
+    else:
+        values = func(energy)
+
+    if eflux:
+        values *= energy
+
+    # we can call trapz_loglog assuming the last axis is the one to perform integration on.
+    integral = trapz_loglog(values, energy, axis=-1)
+    # integral.shape = (num, n_energy, n_samples) so we sum on axis 0
     return integral.sum(axis=0)
 
 
