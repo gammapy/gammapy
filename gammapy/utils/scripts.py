@@ -3,6 +3,8 @@
 
 import codecs
 import os.path
+import functools
+import types
 import warnings
 from base64 import urlsafe_b64encode
 from pathlib import Path
@@ -213,3 +215,56 @@ def recursive_merge_dicts(a, b):
         else:
             c[k] = v
     return c
+
+
+def requires_module(module_name):
+    """
+    Decorator that conditionally enables a method or property based on the availability of a module.
+
+    If the specified module is available, the decorated method or property is returned as-is.
+    If the module is not available:
+      - For methods: replaces the method with one that raises ImportError when called.
+      - For properties: replaces the property with one that raises ImportError when accessed.
+
+    Args:
+        module_name (str): The name of the module to check for.
+
+    Returns:
+        function or property: The original object if the module is available, otherwise a fallback.
+    """
+
+    def decorator(obj):
+        try:
+            __import__(module_name)
+            return obj  # Module is available
+        except ImportError:
+            if isinstance(obj, property):
+                return property(
+                    lambda self: raise_import_error(module_name, is_property=True)
+                )
+            elif isinstance(obj, (types.FunctionType, types.MethodType)):
+
+                @functools.wraps(obj)
+                def wrapper(*args, **kwargs):
+                    raise_import_error(module_name)
+
+                return wrapper
+            else:
+                return obj  # Fallback: return as-is
+
+    return decorator
+
+
+def raise_import_error(module_name, is_property=False):
+    """
+    Raises an ImportError with a descriptive message about a missing module.
+
+    Args:
+        module_name (str): The name of the required module.
+        is_property (bool): Whether the error is for a property (affects the error message).
+
+    Raises:
+        ImportError: Always raised with a formatted message.
+    """
+    kind = "property" if is_property else "method"
+    raise ImportError(f"The '{module_name}' module is required to use this {kind}.")
