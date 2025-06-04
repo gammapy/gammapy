@@ -396,6 +396,7 @@ class DataStore:
             Observation is kept if  corresponding selection mask element is True
             and if it is in the list of obs_id.
             If None, default is all observations ordered by OBS_ID are returned.
+            Default is None.
 
         Returns
         -------
@@ -440,7 +441,7 @@ class DataStore:
         ----------
         key : str
             Key of the observation table used to apply the grouping.
-            For example "EVENT_TYPE" will return group observations
+            For example, "EVENT_TYPE" will return group observations
             with the same event type.
         kwargs : dict, optional
             Keyword arguments passed to `~gammapy.data.DataStore.get_observations`.
