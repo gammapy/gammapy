@@ -10,6 +10,7 @@ from gammapy.irf import EDispKernel, EDispKernelMap, PSFMap
 from gammapy.maps import RegionNDMap, Map
 from gammapy.modeling.models import create_fermi_isotropic_diffuse_model, Models
 from gammapy.utils.scripts import read_yaml, make_path
+from gammapy.utils.metadata import CreatorMetaData
 from .spectrum import SpectrumDatasetOnOff
 from .utils import create_map_dataset_from_dl4
 
@@ -77,7 +78,9 @@ class OGIPDatasetWriter(DatasetWriter):
 
     tag = ["ogip", "ogip-sherpa"]
 
-    def __init__(self, filename, format="ogip", overwrite=False, checksum=False):
+    def __init__(
+        self, filename, format="ogip", overwrite=False, checksum=False, creation=None
+    ):
         filename = make_path(filename)
         filename.parent.mkdir(exist_ok=True, parents=True)
 
@@ -85,6 +88,7 @@ class OGIPDatasetWriter(DatasetWriter):
         self.format = format
         self.overwrite = overwrite
         self.checksum = checksum
+        self.creation = creation or CreatorMetaData()
 
     @staticmethod
     def get_filenames(filename):
@@ -191,12 +195,14 @@ class OGIPDatasetWriter(DatasetWriter):
 
         """
         aeff = dataset.exposure / dataset.exposure.meta["livetime"]
-        aeff.write(
-            filename=filename,
-            overwrite=self.overwrite,
-            format=self.format.replace("ogip", "ogip-arf"),
-            checksum=self.checksum,
-        )
+
+        filename = make_path(filename)
+        hdulist = aeff.to_hdulist(format=self.format.replace("ogip", "ogip-arf"))
+
+        for hdu in hdulist:
+            hdu.header.update(self.creation.to_header())
+
+        hdulist.writeto(filename, overwrite=self.overwrite, checksum=self.checksum)
 
     def to_counts_hdulist(self, dataset, is_bkg=False):
         """Convert counts region map to hdulist.
@@ -230,6 +236,9 @@ class OGIPDatasetWriter(DatasetWriter):
         # adapt meta data
         table.meta.update(meta)
         hdulist["SPECTRUM"] = fits.BinTableHDU(table)
+
+        for hdu in hdulist:
+            hdu.header.update(self.creation.to_header())
         return hdulist
 
     def write_pha(self, dataset, filename):
