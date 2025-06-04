@@ -276,7 +276,8 @@ Please give feedback and suggest additions to this page!
 
     Sometimes, upper limit values may show as ``nan`` while running a `~gammapy.estimators.FluxPointsEstimator`
     or a `~gammapy.estimators.LightCurveEstimator`. This often arises because the range of the norm parameter
-    being scanned over is not sufficient. Increasing this range usually solves the problem. In some cases,
+    being scanned over is not sufficient. Increasing this range usually solves the problem (e.g.
+    `fpe.norm.scan_min=1.e-5`, `fpe.norm.scan_max=1.e4`, `fpe.norm.scan_n_values=30`). In some cases,
     you can also consider configuring the estimator with a different `~gammapy.modeling.Fit` backend.
 
     .. button-link:: ../tutorials/api/estimators.html#a-fully-configured-flux-points-estimatio
