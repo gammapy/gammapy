@@ -47,6 +47,7 @@ dependencies:
   - pandas
   - reproject
   - ultranest
+  - numba
   # dev dependencies
   - black=22.6.0
   - codespell
