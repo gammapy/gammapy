@@ -489,7 +489,8 @@ class ParameterSensitivityEstimator:
         Returns
         -------
         result : float
-            The difference between the value matching the target significance and the null value.
+            Parameter sensitivity
+        given as the difference between the value matching the target significance and the null value.
         """
         with restore_parameters_status(self.test.parameters):
             value = self.parameter_matching_significance(datasets)
