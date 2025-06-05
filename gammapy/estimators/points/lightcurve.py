@@ -87,6 +87,9 @@ class LightCurveEstimator(FluxPointsEstimator):
     --------
     For a usage example, see :doc:`/tutorials/analysis-time/light_curve` tutorial.
 
+    Notes
+    -----
+    In case of failure of upper limits computation (e.g. nan), see the User Guide :ref:`how_to`.
     """
 
     tag = "LightCurveEstimator"

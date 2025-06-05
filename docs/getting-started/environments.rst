@@ -16,7 +16,7 @@ For convenience we provide, for each stable release of Gammapy,
 a pre-defined conda environment file, so you can
 get additional useful packages together with Gammapy in a virtual isolated
 environment. First install `Miniconda <https://docs.conda.io/en/latest/miniconda.html>`__
-and then just execute the following commands in the terminal:
+(or Mamba, Miniforge), and then just execute the following commands in the terminal:
 
 .. code-block:: bash
 
