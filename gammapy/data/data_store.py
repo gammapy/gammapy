@@ -450,6 +450,16 @@ class DataStore:
         -------
         groups : dict of `~gammapy.data.Observations`
             Dictionary of Observations instance, one instance for each group.
+
+
+        Examples
+        --------
+        Create groups of observation with the same event type.
+
+        >>> from gammapy.data import DataStore
+        >>> path = "$GAMMAPY_DATA/tests/format/swgo/"
+        >>> datastore = DataStore.from_dir(path, "hdu-index.fits.gz", "obs-index.fits.gz")
+        >>> observation_groups = datastore.get_observation_groups("EVENT_TYPE")
         """
 
         if self.obs_table is None:
