@@ -84,7 +84,8 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
 
     Notes
     -----
-    For further explanation, see :ref:`estimators`.
+    - For further explanation, see :ref:`estimators`.
+    - In case of failure of upper limits computation (e.g. nan), see the User Guide :ref:`how_to`.
     """
 
     tag = "FluxPointsEstimator"
