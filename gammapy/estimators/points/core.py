@@ -27,6 +27,8 @@ __all__ = ["FluxPoints"]
 
 log = logging.getLogger(__name__)
 
+DEFAULT_LABEL_TEMPLATE = "{quantity} [{unit}]"
+
 
 def squash_fluxpoints(flux_point, axis):
     """Squash a `~FluxPoints` object into one point.
@@ -686,14 +688,16 @@ class FluxPoints(FluxMaps):
     @staticmethod
     def _plot_format_yax(ax, energy_power, sed_type):
         if energy_power > 0:
-            ax.set_ylabel(
-                f"e{energy_power} * {sed_type} [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]"
+            ylabel = DEFAULT_LABEL_TEMPLATE.format(
+                quantity=f"e{energy_power} * {sed_type}",
+                unit=ax.yaxis.units.to_string(UNIT_STRING_FORMAT),
             )
         else:
-            ax.set_ylabel(
-                f"{sed_type} [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]"
+            ylabel = DEFAULT_LABEL_TEMPLATE.format(
+                quantity=f"{sed_type}",
+                unit=ax.yaxis.units.to_string(UNIT_STRING_FORMAT),
             )
-
+        ax.set_ylabel(ylabel)
         ax.set_yscale("log", nonpositive="clip")
 
     def plot_ts_profiles(
