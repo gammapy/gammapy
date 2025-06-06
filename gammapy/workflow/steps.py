@@ -38,13 +38,13 @@ except ImportError:
 class Product:
     """Represents a product generated during a processing step in a workflow."""
 
-    def __init__(self, tag=None, step_name=None, data=None):
+    def __init__(self, name=None, step_name=None, data=None):
         """
         Initialize a Product instance.
 
         Parameters
         ----------
-        tag : str, optional
+        name : str, optional
             A label or identifier for the product.
         step_name : str, optional
             The name of the processing step that produced this product.
@@ -52,10 +52,12 @@ class Product:
             The data associated with the product. Can be any object, including a Ray ObjectRef.
         """
 
-        self.tag = tag
         self.step_name = step_name
         self.data = data
-        self.name = make_name()  # unique id
+        if name is None:
+            name = make_name()
+        self.name = name
+        self.pid = make_name()  # unique id generated for each product
 
     @property
     @requires_module("ray")
@@ -82,7 +84,7 @@ class Product:
             A new `Product` instance with the same `tag`, `step_name`, and `data`,
             but a newly generated `name`.
         """
-        return self.__class__(tag=self.tag, step_name=self.step_name, data=self.data)
+        return self.__class__(name=self.name, step_name=self.step_name, data=self.data)
 
 
 class Products(collections.abc.MutableSequence):
@@ -108,6 +110,16 @@ class Products(collections.abc.MutableSequence):
     def names(self):
         """List of product names."""
         return [p.name for p in self._products]
+
+    @property
+    def products_unique_names(self):
+        """List of unique product names. Return formatted as step_name.product_name.product_id."""
+        names = []
+        for p in self._products:
+            components = [p.step_name, p.name, p.id]
+            name = ".".join(components)
+            names.append(name)
+        return names
 
     @property
     def data(self):
@@ -182,18 +194,18 @@ class Products(collections.abc.MutableSequence):
             selection.extend(self.select(**req))
         return selection
 
-    def select(self, tag=None, step_name=None, name=None):
+    def select(self, name=None, step_name=None, pid=None):
         """
         Select products matching the given criteria.
 
         Parameters
         ----------
         tag : str, optional
-            Tag to match.
+            Name to match.
         step_name : str, optional
             Step name to match.
-        name : str, optional
-            Product name to match.
+        pid : str, optional
+            Product pid to match.
 
         Returns
         -------
@@ -201,21 +213,21 @@ class Products(collections.abc.MutableSequence):
             A new `Products` instance with matching products.
         """
 
-        mask = self.selection_mask(tag=tag, step_name=step_name, name=name)
+        mask = self.selection_mask(name=name, step_name=step_name, pid=pid)
         return self[mask]
 
-    def selection_mask(self, tag=None, step_name=None, name=None):
+    def selection_mask(self, name=None, step_name=None, pid=None):
         """
         Create a boolean mask for selecting products.
 
         Parameters
         ----------
-        tag : str, optional
-            Tag to match.
-        step_name : str, optional
-            Step name to match.
         name : str, optional
-            Product name to match.
+            Names to match.
+        step_name : str, optional
+            Step names to match.
+        pid : str, optional
+            Product pid to match.
 
         Returns
         -------
@@ -225,16 +237,24 @@ class Products(collections.abc.MutableSequence):
 
         mask = np.ones(len(self), dtype=bool)
         for idx, p in enumerate(self._products):
-            if tag is not None:
-                mask[idx] &= p.tag == tag
+            if name is not None:
+                mask[idx] &= p.name == name
             if step_name is not None:
                 mask[idx] &= p.step_name == step_name
             if name is not None:
-                mask[idx] &= p.name == name
+                mask[idx] &= p.pid == pid
         return mask
 
     @requires_module("ray")
     def get(self):
+        """
+        Resolve and update products whose data is a Ray ObjectRef.
+        Only available if `ray` is available.
+
+        This method fetches remote data using `ray.get()` and updates
+        the corresponding products in-place.
+
+        """
         ind = np.where([p.needs_update for p in self._products])[0]
         refs_to_run = {data for data in np.array(self.data)[ind]}  # unique objects
         if refs_to_run:
@@ -262,9 +282,9 @@ class WorkflowStepBase(abc.ABC):
 
     tag = "workflow-step"
     required_data = []
-    products_tag = []
+    products_names = []
     parallel = False
-    products_as_workfllow_attributes = False
+    _products_as_workfllow_attributes = False
 
     def __init__(self, config, log=None, name=None, overwrite=True):
         self.config = config
@@ -272,7 +292,7 @@ class WorkflowStepBase(abc.ABC):
         self.name = make_name(name)
         self._data = Products()
         self.products = Products(
-            [Product(tag=_, step_name=name) for _ in self.products_tag]
+            [Product(name=_, step_name=name) for _ in self.products_names]
         )
         if log is None:
             log = logging.getLogger(__name__)
@@ -332,10 +352,8 @@ class WorkflowStepBase(abc.ABC):
         self.set_data(
             data, extend=extend
         )  # copied or reference if data is on the object store ?
-        if self.products_as_workfllow_attributes:
-            self.products = self.data
-        else:
-            self.products = self.products.copy()  # generate new name id at each run
+        if not self.overwrite:
+            self.products = self.products.copy()  # generate new id at each run
         if parallel is None:
             parallel = self.parallel
         if parallel and ray is not None:
@@ -345,6 +363,10 @@ class WorkflowStepBase(abc.ABC):
                 p.data = ref
         else:
             self._run()
+
+        if self._products_as_workfllow_attributes:
+            for product_tag in self.products_names:
+                setattr(self.data, product_tag, self.products[product_tag].data)
         return self.products
 
     @abc.abstractmethod
@@ -477,7 +499,8 @@ class ObservationsWorkflowStep(WorkflowStepBase):
 
 class DatasetsWorkflowStep(WorkflowStepBase):
     tag = "datasets"
-    products_as_workfllow_attributes = True
+    products_names = ["datasets"]
+    _products_as_workfllow_attributes = True
 
     def _run(self):
         # TODO: check if exits and read else run and write
@@ -656,7 +679,8 @@ class DatasetsWorkflowStep(WorkflowStepBase):
             cutout_mode="trim",
             cutout_width=2 * offset_max,
         )
-        self.products.datasets = datasets_maker.run(stacked, self.data.observations)
+        datasets = datasets_maker.run(stacked, self.data.observations)
+        self.products["datasets"].data = Datasets(datasets)
 
     def _spectrum_extraction(self):
         """Run all steps for the spectrum extraction."""
@@ -682,11 +706,11 @@ class DatasetsWorkflowStep(WorkflowStepBase):
             dataset = safe_mask_maker.run(dataset, obs)
             self.log.debug(dataset)
             datasets.append(dataset)
-        self.products.datasets = Datasets(datasets)
 
         if datasets_settings.stack:
-            stacked = self.data.datasets.stack_reduce(name="stacked")
-            self.products.datasets = Datasets([stacked])
+            datasets = Datasets(datasets).stack_reduce(name="stacked")
+
+        self.products["datasets"].data = Datasets(datasets)
 
 
 def make_energy_axis(axis, name="energy"):
@@ -708,7 +732,8 @@ def make_energy_axis(axis, name="energy"):
 
 class ExcessMapWorkflowStep(WorkflowStepBase):
     tag = "excess-map"
-    products_as_workfllow_attributes = True
+    products_names = ["excess_map"]
+    _products_as_workfllow_attributes = True
 
     def _run(self):
         """Calculate excess map with respect to the current model."""
@@ -732,12 +757,15 @@ class ExcessMapWorkflowStep(WorkflowStepBase):
             energy_edges=energy_edges,
             **excess_settings.parameters,
         )
-        self.products.excess_map = excess_map_estimator.run(self.data.datasets[0])
+        self.products["excess_map"].data = excess_map_estimator.run(
+            self.data.datasets[0]
+        )
 
 
 class FitWorkflowStep(WorkflowStepBase):
     tag = "fit"
-    products_as_workfllow_attributes = True
+    products_names = ["fit_result"]
+    _products_as_workfllow_attributes = True
 
     def _run(self):
         """Fitting reduced datasets to model."""
@@ -755,13 +783,14 @@ class FitWorkflowStep(WorkflowStepBase):
 
         self.log.info("Fitting datasets.")
         result = self.data.fit.run(datasets=self.data.datasets)
-        self.products.fit_result = result
-        self.log.info(self.products.fit_result)
+        self.products["fit_result"].data = result
+        self.log.info(result)
 
 
 class FluxPointsWorkflowStep(WorkflowStepBase):
     tag = "flux-points"
-    products_as_workfllow_attributes = True
+    products_names = ["flux_points"]
+    _products_as_workfllow_attributes = True
 
     def _run(self):
         """Calculate flux points for a specific model component."""
@@ -783,17 +812,19 @@ class FluxPointsWorkflowStep(WorkflowStepBase):
 
         fp = flux_point_estimator.run(datasets=self.data.datasets)
 
-        self.products.flux_points = FluxPointsDataset(
+        flux_points = FluxPointsDataset(
             data=fp, models=self.data.models[fp_settings.source]
         )
         cols = ["e_ref", "dnde", "dnde_ul", "dnde_err", "sqrt_ts"]
-        table = self.products.flux_points.data.to_table(sed_type="dnde")
+        table = flux_points.data.to_table(sed_type="dnde")
         self.log.info("\n{}".format(table[cols]))
+        self.products["flux_points"].data = flux_points
 
 
 class LightCurveWorkflowStep(WorkflowStepBase):
     tag = "light-curve"
-    products_as_workfllow_attributes = True
+    products_names = ["light_curve"]
+    _products_as_workfllow_attributes = True
 
     def _run(self):
         """Calculate light curve for a specific model component."""
@@ -825,9 +856,5 @@ class LightCurveWorkflowStep(WorkflowStepBase):
             **lc_settings.parameters,
         )
         lc = light_curve_estimator.run(datasets=self.data.datasets)
-        self.products.light_curve = lc
-        self.log.info(
-            "\n{}".format(
-                self.products.light_curve.to_table(format="lightcurve", sed_type="flux")
-            )
-        )
+        self.products["light_curve"].data = lc
+        self.log.info("\n{}".format(lc.to_table(format="lightcurve", sed_type="flux")))
