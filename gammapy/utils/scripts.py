@@ -263,9 +263,12 @@ def raise_import_error(module_name, is_property=False):
     """
     Raises an ImportError with a descriptive message about a missing module.
 
-    Args:
-        module_name (str): The name of the required module.
-        is_property (bool): Whether the error is for a property (affects the error message).
+    Parameters
+    ----------
+        module_name : str
+            The name of the required module.
+        is_property : bool
+            Whether the error is for a property (affects the error message).
 
     """
     kind = "property" if is_property else "method"
