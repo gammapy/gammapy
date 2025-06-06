@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
-from astropy.coordinates import EarthLocation, SkyCoord
+from astropy.coordinates import SkyCoord
 from astropy.table import Table
 from astropy.time import Time
 from regions import PointSkyRegion
@@ -117,17 +117,9 @@ def fixed_pointing_info():
 def fixed_pointing_info_aligned():
     # Create Fixed Pointing Info aligned between sky and horizon coordinates
     # (removes rotation in FoV and results in predictable solid angles)
-    time_start = Time("2000-09-21 11:55:00")
-    time_stop = Time("2000-09-12 12:05:00")
-    location = EarthLocation(lat=90 * u.deg, lon=0 * u.deg)
     fixed_icrs = SkyCoord(0 * u.deg, 0 * u.deg, frame="icrs")
 
-    return FixedPointingInfo(
-        fixed_icrs=fixed_icrs,
-        location=location,
-        time_start=time_start,
-        time_stop=time_stop,
-    )
+    return FixedPointingInfo(fixed_icrs=fixed_icrs)
 
 
 @pytest.fixture(scope="session")
