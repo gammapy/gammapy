@@ -3,12 +3,12 @@
 
 Catalog row index (zero-based) : 1391
 Source name          : 4FGL J0534.5+2200
-Extended name        :                   
+Extended name        : --
 Associations     : PSR J0534+2200, Crab IC field, Crab pulsar, 3FGL J0534.5+2201, 3FHL J0534.5+2201, 2AGL J0534+2205, EGR J0534+2159
 ASSOC_PROB_BAY   : 1.000
 ASSOC_PROB_LR    : 1.000
 Class1           : PSR  
-Class2           :           
+Class2           : --
 TeVCat flag      : P
 
 *** Other info ***
