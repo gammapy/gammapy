@@ -342,7 +342,7 @@ for i, n in enumerate(model.parameters.free_parameters.names):
 # <https://corner.readthedocs.io/en/latest/api>`__ package.
 # See the above link for optional keywords.
 # Other packages exist for corner plots, like
-# `chainconsumer <https://chainconsumer.readthedocs.io/en/latest/>`__ which is discussed later in this tutorial.
+# `chainconsumer <https://samreay.github.io/ChainConsumer>`__ which is discussed later in this tutorial.
 
 from ultranest.plot import cornerplot
 
