@@ -228,13 +228,13 @@ def requires_module(module_name):
 
     Parameters
     ----------
-        module_name : str
-            The name of the module to check for.
+    module_name : str
+        The name of the module to check for.
 
     Returns
     -------
-        function or property
-            The original object if the module is available, otherwise a fallback.
+    function or property
+        The original object if the module is available, otherwise a fallback.
     """
 
     def decorator(obj):
@@ -265,11 +265,10 @@ def raise_import_error(module_name, is_property=False):
 
     Parameters
     ----------
-        module_name : str
-            The name of the required module.
-        is_property : bool
-            Whether the error is for a property (affects the error message).
-
+    module_name : str
+        The name of the required module.
+    is_property : bool
+        Whether the error is for a property (affects the error message).
     """
     kind = "property" if is_property else "method"
     raise ImportError(f"The '{module_name}' module is required to use this {kind}.")
