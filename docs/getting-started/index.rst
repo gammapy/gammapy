@@ -18,9 +18,9 @@ Installation
 ------------
 
 There are various ways for users to install Gammapy. **We recommend setting up a virtual
-environment using either conda
+environment using either conda**
 (with `Miniconda, Anaconda or Miniforge <https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html>`__)
-or `mamba <https://mamba.readthedocs.io/en/latest/installation/mamba-installation.html>`__**.
+**or mamba** (see `this link <https://mamba.readthedocs.io/en/latest/installation/mamba-installation.html>`__).
 For certain working environments (e.g. ESO, DESY, CEA, MPIK),
 `miniforge <https://github.com/conda-forge/miniforge>`__ is recommended to use conda/mamba without trouble.
 Then, there are two methods to quickly install Gammapy.
