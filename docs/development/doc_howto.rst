@@ -293,7 +293,7 @@ Include png files as images
 In the RST files
 ++++++++++++++++
 
-To include an image is your rst file first add it to the `docs/_static` folder.
+To include an image in your rst file, first add it to the `docs/_static` folder.
 Then you can use the usual Sphinx ``image`` directive like this:
 
 .. code-block:: rst
