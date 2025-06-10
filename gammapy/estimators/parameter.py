@@ -359,14 +359,14 @@ class ParameterEstimator(Estimator):
             If used without the optional steps, it contains the following keys:
 
                 * parameter.name : best fit parameter value
-                * 'stat' : best fit total stat
-                * 'success' : boolean flag for fit success
+                * "stat" : best fit total stat
+                * "success" : boolean flag for fit success
                 * parameter.name_err: covariance-based error estimate on parameter value
-                * 'ts' : delta(TS) value
-                * 'npred' : predicted number of counts per dataset
-                * 'stat_null' : total stat corresponding to the null hypothesis
-                * 'counts' : counts value
-                * 'datasets' : names of the datasets
+                * "ts" : delta(TS) value
+                * "npred" : predicted number of counts per dataset
+                * "stat_null" : total stat corresponding to the null hypothesis
+                * "counts" : counts value per dataset
+                * "datasets" : names of the datasets
         """
         if not isinstance(datasets, DatasetsActor):
             datasets = Datasets(datasets)
@@ -416,7 +416,7 @@ class ParameterSensitivityEstimator:
     n_sigma : int, optional
         Number of required significance level. Default is 5.
     n_free_parameters : int, optional
-        Number of free parameters. Default is None.
+        Number of free parameters. Default is None, which utilises len(parameters).
     rtol : float, optional
         Relative precision of the estimate. Used as a stopping criterion.
         Default is 0.01.
@@ -489,7 +489,7 @@ class ParameterSensitivityEstimator:
         Returns
         -------
         result : float
-            Parameter sensitivity given as the difference between the value matching 
+            Parameter sensitivity given as the difference between the value matching
             the target significance and the null value.
         """
         with restore_parameters_status(self.test.parameters):
