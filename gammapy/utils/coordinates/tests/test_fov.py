@@ -9,10 +9,15 @@ from astropy.coordinates import (
     UnitSphericalRepresentation,
 )
 from astropy.time import Time
-from gammapy.utils.coordinates import FoVFrame, FoVICRSFrame, fov_to_sky, sky_to_fov
+from gammapy.utils.coordinates import (
+    FoVAltAzFrame,
+    FoVICRSFrame,
+    fov_to_sky,
+    sky_to_fov,
+)
 
 
-class TestFoVFrame:
+class TestFoVAltAzFrame:
     @classmethod
     def setup_class(cls):
         # Basic setup
@@ -20,7 +25,7 @@ class TestFoVFrame:
         obstime = Time("2025-01-01T00:00:00")
         origin = AltAz(alt=45 * u.deg, az=120 * u.deg)
 
-        cls.fov_frame = FoVFrame(origin=origin, obstime=obstime, location=location)
+        cls.fov_frame = FoVAltAzFrame(origin=origin, obstime=obstime, location=location)
         cls.obstime = obstime
         cls.origin = origin
         cls.location = location
@@ -32,7 +37,7 @@ class TestFoVFrame:
         )
 
         # Check that the frame exists and properties are as expected
-        assert isinstance(fov_coord.frame, FoVFrame)
+        assert isinstance(fov_coord.frame, FoVAltAzFrame)
         assert fov_coord.frame.obstime == self.obstime
         assert fov_coord.frame.location == self.location
 
@@ -53,7 +58,7 @@ class TestFoVFrame:
         assert_allclose(roundtrip.alt.deg, [20, 62])
 
     def test_fovframe_transform(self):
-        fov_frame = FoVFrame(
+        fov_frame = FoVAltAzFrame(
             origin=AltAz(alt=50 * u.deg, az=110 * u.deg),
             obstime=self.obstime + 15 * u.min,
             location=self.location,
@@ -62,7 +67,7 @@ class TestFoVFrame:
             fov_lon=[50, 60] * u.deg, fov_lat=[20, 62] * u.deg, frame=fov_frame
         )
 
-        # Transform to FoVFrame and back
+        # Transform to FoVAltAzFrame and back
         fov = target.transform_to(self.fov_frame)
         roundtrip = fov.transform_to(fov_frame)
 
@@ -92,7 +97,7 @@ def test_checked_hess_values():
     alt_pointing = [51.11908203, 51.23454751, 51.35376141, 51.48385814] * u.deg
     altaz_pnt = AltAz(az=az_pointing, alt=alt_pointing)
 
-    fov_frame = FoVFrame(origin=altaz_pnt)
+    fov_frame = FoVAltAzFrame(origin=altaz_pnt)
     fov_coord = SkyCoord(fov_lon=fov_altaz_lon, fov_lat=fov_altaz_lat, frame=fov_frame)
     altaz = fov_coord.transform_to(altaz_pnt)
     assert_allclose(altaz.az.value, [51.320575, 50.899125, 52.154053, 48.233023])
@@ -173,23 +178,23 @@ def test_altaz_transform():
 
 def test_simple_altaz_to_fov():
     altaz_pnt = AltAz(az=0 * u.deg, alt=0 * u.deg)
-    coord = SkyCoord(1, 1, unit="deg", frame=FoVFrame(origin=altaz_pnt)).transform_to(
-        altaz_pnt
-    )
+    coord = SkyCoord(
+        1, 1, unit="deg", frame=FoVAltAzFrame(origin=altaz_pnt)
+    ).transform_to(altaz_pnt)
     assert_allclose(coord.az.value, 359)
     assert_allclose(coord.alt.value, 1)
 
     altaz_pnt = AltAz(az=180 * u.deg, alt=0 * u.deg)
-    coord = SkyCoord(-1, 1, unit="deg", frame=FoVFrame(origin=altaz_pnt)).transform_to(
-        altaz_pnt
-    )
+    coord = SkyCoord(
+        -1, 1, unit="deg", frame=FoVAltAzFrame(origin=altaz_pnt)
+    ).transform_to(altaz_pnt)
     assert_allclose(coord.az.value, 181)
     assert_allclose(coord.alt.value, 1)
 
     altaz_pnt = AltAz(az=0 * u.deg, alt=60 * u.deg)
-    coord = SkyCoord(1, 0, unit="deg", frame=FoVFrame(origin=altaz_pnt)).transform_to(
-        altaz_pnt
-    )
+    coord = SkyCoord(
+        1, 0, unit="deg", frame=FoVAltAzFrame(origin=altaz_pnt)
+    ).transform_to(altaz_pnt)
     assert_allclose(coord.az.value, 358, rtol=1e-3)
     assert_allclose(coord.alt.value, 59.985, rtol=1e-3)
 
