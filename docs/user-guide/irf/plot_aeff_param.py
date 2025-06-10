@@ -4,7 +4,7 @@ from gammapy.irf import EffectiveAreaTable2D
 
 ax = plt.subplot()
 
-for instrument in ["HESS", "HESS2", "CTA"]:
+for instrument in ["HESS", "HESS2", "CTAO"]:
     aeff = EffectiveAreaTable2D.from_parametrization(instrument=instrument)
     aeff.plot_energy_dependence(ax=ax, label=instrument, offset=[0] * u.deg)
 
