@@ -74,6 +74,8 @@ class OGIPDatasetWriter(DatasetWriter):
     checksum : bool
         When True adds both DATASUM and CHECKSUM cards to the headers written to the files.
         Default is False.
+    creation : `~gammapy.utils.metadata.CreatorMetaData`, optional.
+        The creation metadata to write to disk. If None, use default creator metadata object.
     """
 
     tag = ["ogip", "ogip-sherpa"]
@@ -153,6 +155,8 @@ class OGIPDatasetWriter(DatasetWriter):
             Dataset to write.
         """
         filenames = self.get_filenames(self.filename)
+
+        self.creation.update_time()
 
         self.write_pha(dataset, filename=self.filename)
 

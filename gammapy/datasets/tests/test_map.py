@@ -8,6 +8,7 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.table import Table
+from astropy.time import Time
 from astropy.utils.exceptions import AstropyUserWarning
 from regions import CircleSkyRegion
 import gammapy.irf.psf.map as psf_map_module
@@ -769,6 +770,8 @@ def test_map_dataset_fits_creation_metadata(tmp_path, sky_model, geom, geom_etru
         assert "CREATED" in hdu.header
         assert hdu.header["CREATOR"] == "MySoftware"
         assert hdu.header["ORIGIN"] == "MyOrganization"
+        # Check that day is OK
+        assert hdu.header["CREATED"][:10] == Time.now().iso[:10]
 
 
 @requires_data()

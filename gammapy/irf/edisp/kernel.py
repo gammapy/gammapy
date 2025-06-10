@@ -362,6 +362,8 @@ class EDispKernel(IRF):
         prim_hdu = fits.PrimaryHDU()
 
         creation = creation or CreatorMetaData()
+        creation.update_time()
+
         for hd in [prim_hdu, hdu, ebounds_hdu]:
             hd.header.update(creation.to_header())
 
