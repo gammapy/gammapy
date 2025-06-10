@@ -110,7 +110,7 @@ jobs:
       - name: Run tests with data
         if: ${{ matrix.gammapy_data_path }}
         env:
-          GAMMAPY_DATA: ${{ matrix.gammapy_data_path}}
+          GAMMAPY_DATA: ${{ github.workspace }}/gammapy-datasets/dev
         run: tox -e ${{ matrix.tox_env }} -- -n auto
       - name: Upload coverage to codecov
         if: "contains(matrix.tox_env, '-cov')"
