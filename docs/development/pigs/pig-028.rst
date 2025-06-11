@@ -153,14 +153,16 @@ We discuss here some aspects that should be explored.
 - ``IRF`` and ``Map`` share a similar data model. A N-dimensional ``Quantity`` with a
   ``MapAxes`` and an interpolator. In addition, ``Maps`` use the ``Geom`` object to
   represent the spherical coordinates.
-    - Having a common data structure could help make maps fully re-usable for IRFs.
-      This might be a common use case with pyirf.
-    - One could allow ``Maps`` and ``MapCoord`` objects without spatial axes.
-      Introducing specialized spatial axes such as `WcsMapAxis`, `RegionMapAxis` or
-      `HpxMapAxis` could allow avoiding using ``Geom`` objects.
-    - The evaluation of the feasibility will require some detailed prototyping.
-      Such a major change would probably be possible at best only when releasing v2.0.
-      Having a prototype at this timescale would be nice.
+
+  - Having a common data structure could help make maps fully re-usable for IRFs.
+    This might be a common use case with pyirf.
+  - One could allow ``Maps`` and ``MapCoord`` objects without spatial axes.
+    Introducing specialized spatial axes such as `WcsMapAxis`, `RegionMapAxis` or
+    `HpxMapAxis` could allow avoiding using ``Geom`` objects.
+  - The evaluation of the feasibility will require some detailed prototyping.
+    Such a major change would probably be possible at best only when releasing v2.0.
+    Having a prototype at this timescale would be nice.
+
 - Migrate from the healpy dependency to using https://github.com/astropy/astropy-healpix
   or https://github.com/cds-astro/cds-healpix-python. Another option could be to interface
   multi resolution HPX maps: https://mhealpy.readthedocs.io ?
@@ -184,6 +186,7 @@ that could have been caught on input file reading or object creation.
 - Writing data out is harder
 
 We should:
+
 - define the internal data model, via the corresponding data classes (EventList, IRFs, etc. )
   and introduce a validation mechanism on input.
 - build a clear IO boundary between internal and external data representations that supports
@@ -249,9 +252,8 @@ The Gammapy-recipes gallery offers a nice additional source of tutorials for adv
 standard use cases.
 
 Several questions should be solved for the long term viability of such a repository:
-
-- Should the recipes be updated to e.g. the latest LTS? Currently, none of the existing recipes
-  work with v1.0.
+e.g. should the recipes be updated to e.g. the latest LTS? Currently, none of the existing recipes
+work with v1.0.
 
 How to keep track and refer to material designed for hands-on sessions, schools etc?
 Currently we have one GitHub repository: gammapy-handson.
