@@ -30,17 +30,17 @@ jobs:
           - os: ubuntu-latest
             python: '3.11'
             tox_env: 'py311-test-alldeps_noray'
-            gammapy_data_path: /home/runner/work/gammapy/gammapy/gammapy-datasets/dev
+            gammapy_data: true
             allowed_fail: false
           - os: ubuntu-latest
             python: '3.10'
             tox_env: 'py310-test-alldeps-cov'
-            gammapy_data_path: /home/runner/work/gammapy/gammapy/gammapy-datasets/dev
+            gammapy_data: true
             allowed_fail: false
           - os: macos-latest
             python: '3.13'
             tox_env: 'py313-test'
-            gammapy_data_path: /Users/runner/work/gammapy/gammapy/gammapy-datasets/dev
+            gammapy_data: true
             allowed_fail: false
           - os: macos-14
             python: '3.11'
@@ -48,13 +48,13 @@ jobs:
             allowed_fail: false
           - os: windows-latest
             python: '3.12'
-            tox_env: 'py311-test-alldeps_noray'
-            gammapy_data_path:  D:\a\gammapy\gammapy\gammapy-datasets\dev
+            tox_env: 'py312-test-alldeps_noray'
+            gammapy_data: true
             allowed_fail: false
           - os: ubuntu-latest
             python: '3.12'
             tox_env: 'py312-test-alldeps_noray'
-            gammapy_data_path: /home/runner/work/gammapy/gammapy/gammapy-datasets/dev
+            gammapy_data: true
             allowed_fail: false
           - os: ubuntu-latest
             python: '3.10'
@@ -94,7 +94,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install tox
       - name: download datasets
-        if: ${{ matrix.gammapy_data_path }}
+        if: ${{ matrix.gammapy_data }}
         run: |
           python -m pip install tqdm requests
           python -m pip install -e .
@@ -105,12 +105,12 @@ jobs:
           python -c "import pip; print(f'pip {pip.__version__}')"
           python -c "import tox; print(f'tox {tox.__version__}')"
       - name: Run tests
-        if: ${{ !matrix.gammapy_data_path }}
+        if: ${{ !matrix.gammapy_data }}
         run: tox -e ${{ matrix.tox_env }} -- -n auto
       - name: Run tests with data
-        if: ${{ matrix.gammapy_data_path }}
+        if: ${{ matrix.gammapy_data }}
         env:
-          GAMMAPY_DATA: ${{ matrix.gammapy_data_path}}
+          GAMMAPY_DATA: ${{ github.workspace }}/gammapy-datasets/dev
         run: tox -e ${{ matrix.tox_env }} -- -n auto
       - name: Upload coverage to codecov
         if: "contains(matrix.tox_env, '-cov')"
