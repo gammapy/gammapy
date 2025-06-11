@@ -38,6 +38,26 @@ class FoVAltAzFrame(BaseCoordinateFrame):
         Observation time
     location: `~astropy.coordinates.EarthLocation`
         Location of the telescope/instrument/observatory
+
+    Examples
+    --------
+    .. testcode::
+
+        import astropy.units as u
+        from astropy.time import Time
+        from astropy.coordinates import AltAz, SkyCoord
+        from gammapy.utils.observers import observatory_locations
+        from gammapy.utils.coordinates import FoVAltAzFrame
+
+        location = observatory_locations.get("ctao_north")
+        obstime = Time("2025-01-01T00:00:00")
+        origin = AltAz(alt=80*u.deg, az=172*u.deg, location=location, obstime=obstime)
+
+        fov_frame = FoVAltAzFrame(origin=origin, location=location, obstime=obstime)
+
+        crab= SkyCoord(83.63333333, 22.01444444, unit="deg", frame="icrs")
+        crab.transform_to(fov_frame)
+
     """
 
     frame_specific_representation_info = {
@@ -99,6 +119,25 @@ class FoVICRSFrame(BaseCoordinateFrame):
     ----------
     origin: `~astropy.coordinates.ICRS`
         Origin of this frame as an ICRS coordinate
+
+    Examples
+    --------
+    .. testcode::
+
+        import astropy.units as u
+        from astropy.time import Time
+        from astropy.coordinates import SkyCoord
+        from gammapy.utils.observers import observatory_locations
+        from gammapy.utils.coordinates import FoVICRSFrame
+
+        location = observatory_locations.get("ctao_north")
+        obstime = Time("2025-01-01T00:00:00")
+        origin = SkyCoord(85.63333333, 20.01444444, unit="deg", frame="icrs")
+
+        fov_frame = FoVICRSFrame(origin=origin)
+
+        crab = SkyCoord(83.63333333, 22.01444444, unit="deg", frame="icrs")
+        crab.transform_to(fov_frame)
     """
 
     frame_specific_representation_info = {
