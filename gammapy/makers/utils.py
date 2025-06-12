@@ -426,19 +426,14 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None, use_region_center=T
     edispmap : `~gammapy.irf.EDispMap`
         The resulting energy dispersion map.
     """
-    coords = _get_fov_coords(pointing, edisp, geom, use_region_center=use_region_center)
-    coords["energy_true"] = broadcast_axis_values_to_geom(geom, "energy_true")
-    coords["migra"] = broadcast_axis_values_to_geom(geom, "migra")
+    if isinstance(pointing, FixedPointingInfo):
+        origin = pointing.get_icrs(pointing.obstime)
+    else:
+        origin = pointing
 
-    # Compute EDisp values
-    data = edisp.evaluate(**coords)
+    fov_frame = FoVICRSFrame(origin=origin)
 
-    if not use_region_center:
-        _, weights = geom.get_wcs_coord_and_weights()
-        data = np.average(data, axis=-1, weights=weights, keepdims=True)
-
-    # Create Map and fill relevant entries
-    edisp_map = Map.from_geom(geom, data=data.to_value(""), unit="")
+    edisp_map = project_irf_on_geom(geom, edisp, fov_frame).to_unit("")
     edisp_map.normalize(axis_name="migra")
     return EDispMap(edisp_map, exposure_map)
 
@@ -474,15 +469,6 @@ def make_edisp_kernel_map(
     edispmap : `~gammapy.irf.EDispKernelMap`
         the resulting EDispKernel map
     """
-
-    coords = _get_fov_coords(
-        pointing=pointing,
-        irf=edisp,
-        geom=geom,
-        use_region_center=use_region_center,
-    )
-    coords["energy_true"] = geom.axes["energy_true"].edges.reshape((-1, 1, 1, 1))
-
     # Use EnergyDispersion2D migra axis.
     migra_axis = edisp.axes["migra"]
 
@@ -781,7 +767,10 @@ def guess_instrument_fov(obs):
 def project_irf_on_geom(geom, irf, fov_frame, use_region_center=True):
     """Project an IRF on a given `~gammapy.maps.Geom` object according to a given FoV Frame.
 
-    If irf is a `~gammapy.irf.BackgroundIRF`, the IRF is integrated in energy and multiplied by the solid angle.
+    If ``irf`` is a `~gammapy.irf.BackgroundIRF`, the IRF is integrated in energy and multiplied by the solid angle.
+
+    When ``geom`` is a `~gammapy.maps.RegionGeom`, the IRF is evaluated at the region center when
+    ``user_region_center is True``. Otherwise, the IRF is evaluated and averaged over the whole region.
 
     Parameters
     ----------
