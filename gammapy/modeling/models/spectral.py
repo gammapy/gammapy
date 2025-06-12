@@ -74,6 +74,8 @@ EBL_DATA_BUILTIN = {
     "saldana-lopez21": "$GAMMAPY_DATA/ebl/ebl_saldana-lopez_2021.fits.gz",
 }
 
+DEFAULT_LABEL_TEMPLATE = "{quantity} [{unit}]"
+
 
 def scale_plot_flux(flux, energy_power=0):
     """Scale flux to plot.
@@ -508,7 +510,7 @@ class SpectralModel(ModelBase):
     ):
         """Plot spectral model curve.
 
-        By default a log-log scaling of the axes is used, if you want to change
+        By default, a log-log scaling of the axes is used, if you want to change
         the y-axis scaling to linear you can use::
 
             >>> from gammapy.modeling.models import ExpCutoffPowerLawSpectralModel
@@ -665,15 +667,22 @@ class SpectralModel(ModelBase):
 
     @staticmethod
     def _plot_format_ax(ax, energy_power, sed_type):
-        ax.set_xlabel(f"Energy [{ax.xaxis.units.to_string(UNIT_STRING_FORMAT)}]")
+        xlabel = DEFAULT_LABEL_TEMPLATE.format(
+            quantity="Energy",
+            unit=ax.xaxis.units.to_string(UNIT_STRING_FORMAT),
+        )
+        ax.set_xlabel(xlabel)
         if energy_power > 0:
-            ax.set_ylabel(
-                f"e{energy_power} * {sed_type} [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]"
+            ylabel = DEFAULT_LABEL_TEMPLATE.format(
+                quantity=f"e{energy_power} * {sed_type}",
+                unit=ax.yaxis.units.to_string(UNIT_STRING_FORMAT),
             )
         else:
-            ax.set_ylabel(
-                f"{sed_type} [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]"
+            ylabel = DEFAULT_LABEL_TEMPLATE.format(
+                quantity=f"{sed_type}",
+                unit=ax.yaxis.units.to_string(UNIT_STRING_FORMAT),
             )
+        ax.set_ylabel(ylabel)
 
         ax.set_xscale("log", nonpositive="clip")
         ax.set_yscale("log", nonpositive="clip")
