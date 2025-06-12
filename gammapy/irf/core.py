@@ -114,6 +114,10 @@ class IRF(metaclass=abc.ABCMeta):
         pass
 
     @property
+    def required_arguments(self):
+        return self.required_axes
+
+    @property
     def is_pointlike(self):
         """Whether the IRF is pointlike of full containment."""
         return self._is_pointlike

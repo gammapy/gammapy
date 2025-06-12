@@ -328,6 +328,7 @@ class EnergyDependentMultiGaussPSF(ParametricPSF):
     tag = "psf_3gauss"
     required_axes = ["energy_true", "offset"]
     required_parameters = ["sigma_1", "sigma_2", "sigma_3", "scale", "ampl_2", "ampl_3"]
+    required_arguments = ["rad", "energy_true", "offset"]
 
     @staticmethod
     def evaluate_containment(rad, **kwargs):
@@ -390,6 +391,7 @@ class PSFKing(ParametricPSF):
     tag = "psf_king"
     required_axes = ["energy_true", "offset"]
     required_parameters = ["gamma", "sigma"]
+    required_arguments = ["rad", "energy_true", "offset"]
     default_interp_kwargs = dict(bounds_error=False, fill_value=None)
 
     @staticmethod
