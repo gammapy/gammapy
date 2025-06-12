@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-import warnings
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import Angle
+from astropy.coordinates.erfa_astrom import erfa_astrom, ErfaAstromInterpolator
 from astropy.table import Table
 from astropy.time import Time
 from gammapy.data import FixedPointingInfo, PointingMode
@@ -12,7 +12,7 @@ from gammapy.maps import Map, RegionNDMap
 from gammapy.maps.utils import broadcast_axis_values_to_geom
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.stats import WStatCountsStatistic
-from gammapy.utils.coordinates import sky_to_fov, FoVICRSFrame, FoVAltAzFrame
+from gammapy.utils.coordinates import FoVICRSFrame, FoVAltAzFrame
 from gammapy.utils.regions import compound_region_to_regions
 
 __all__ = [
@@ -31,70 +31,6 @@ log = logging.getLogger(__name__)
 
 MINIMUM_TIME_STEP = 1 * u.s  # Minimum time step used to handle FoV rotations
 EARTH_ANGULAR_VELOCITY = 360 * u.deg / u.day
-
-
-def _get_fov_coords(pointing, irf, geom, use_region_center=True, obstime=None):
-    # TODO: create dedicated coordinate handling see #5041
-    coords = {}
-    if isinstance(pointing, FixedPointingInfo):
-        # for backwards compatibility, obstime should be required
-        if obstime is None:
-            if isinstance(obstime, BackgroundIRF):
-                warnings.warn(
-                    "Future versions of gammapy will require the obstime keyword for this function",
-                    DeprecationWarning,
-                )
-            obstime = pointing.obstime
-
-        pointing_icrs = pointing.get_icrs(obstime)
-    else:
-        pointing_icrs = pointing
-
-    if not use_region_center:
-        region_coord, weights = geom.get_wcs_coord_and_weights()
-        sky_coord = region_coord.skycoord
-
-    else:
-        image_geom = geom.to_image()
-        map_coord = image_geom.get_coord()
-        sky_coord = map_coord.skycoord
-
-    if irf.has_offset_axis:
-        coords["offset"] = sky_coord.separation(pointing_icrs)
-    else:
-        if irf.fov_alignment == FoVAlignment.ALTAZ:
-            # for backwards compatibility, obstime should be required
-            if obstime is None:
-                warnings.warn(
-                    "Future versions of gammapy will require the obstime keyword for this function",
-                    DeprecationWarning,
-                )
-                obstime = pointing.obstime
-
-            pointing_altaz = pointing.get_altaz(obstime)
-            altaz_coord = sky_coord.transform_to(pointing_altaz.frame)
-
-            # Compute FOV coordinates of map relative to pointing
-            fov_lon, fov_lat = sky_to_fov(
-                altaz_coord.az, altaz_coord.alt, pointing_altaz.az, pointing_altaz.alt
-            )
-        elif irf.fov_alignment in [FoVAlignment.RADEC, FoVAlignment.REVERSE_LON_RADEC]:
-            fov_lon, fov_lat = sky_to_fov(
-                sky_coord.icrs.ra,
-                sky_coord.icrs.dec,
-                pointing_icrs.icrs.ra,
-                pointing_icrs.icrs.dec,
-            )
-            if irf.fov_alignment == FoVAlignment.REVERSE_LON_RADEC:
-                fov_lon = -fov_lon
-        else:
-            raise ValueError(
-                f"Unsupported background coordinate system: {irf.fov_alignment!r}"
-            )
-
-        coords["fov_lon"] = fov_lon
-        coords["fov_lat"] = fov_lat
-    return coords
 
 
 def _compute_rotation_time_steps(time_start, time_stop, fov_rotation, pointing_altaz):
@@ -221,50 +157,6 @@ def _map_spectrum_weight(map, spectrum=None):
     shape = np.ones(len(map.geom.data_shape))
     shape[0] = -1
     return map * weights.reshape(shape.astype(int))
-
-
-def _integrate_bkg(
-    pointing, bkg, geom, time_start, time_stop, d_omega, use_region_center
-):
-    """
-    Integrate the background IRF on a given geometry.
-
-    Parameters
-    ----------
-    pointing :  `~gammapy.data.FixedPointingInfo` or `~astropy.coordinates.SkyCoord`
-        Observation pointing.
-    bkg : `~gammapy.irf.Background3D`
-        Background rate model.
-    geom : `~gammapy.maps.WcsGeom`
-        Reference geometry.
-    time_start : `~astropy.time.Time`
-        Observation time start.
-    time_stop : `~astropy.time.Time`
-        Observation time stop.
-    d_omega : 'astropy.units.Quantity'
-        Solid angle of the image geometry.
-    use_region_center : bool, optional
-        For geom as a `~gammapy.maps.RegionGeom`. If True, consider the values at the region center.
-        If False, average over the whole region. Default is True.
-
-    Returns
-    -------
-    evaluated_bkg : `numpy.ndarray`
-        Background IRF evaluated on the provided geometry
-
-    """
-    duration = time_stop - time_start
-    coords = _get_fov_coords(
-        pointing=pointing,
-        irf=bkg,
-        geom=geom,
-        use_region_center=use_region_center,
-        obstime=time_start + duration * 0.5,
-    )
-    coords["energy"] = broadcast_axis_values_to_geom(geom, "energy", False)
-
-    bkg_de = bkg.integrate_log_log(**coords, axis_name="energy")
-    return (bkg_de * d_omega * duration).to_value("")
 
 
 def make_map_background_irf(
@@ -764,6 +656,26 @@ def guess_instrument_fov(obs):
     return obs.aeff.axes["offset"].center[-1]
 
 
+def _get_fov_coord(
+    skycoord, fov_frame, use_offset=True, reverse_lon=False, time_resolution=1000 * u.s
+):
+    """Return coord dict in fov_coord."""
+    coords = {}
+
+    if use_offset:
+        coords["offset"] = skycoord.separation(fov_frame.origin)
+    else:
+        sign = -1.0 if reverse_lon else 1.0
+
+        with erfa_astrom.set(ErfaAstromInterpolator(time_resolution)):
+            fov_coords = skycoord.transform_to(fov_frame)
+
+        coords["fov_lon"] = sign * fov_coords.fov_lon
+        coords["fov_lat"] = fov_coords.fov_lat
+
+    return coords
+
+
 def project_irf_on_geom(geom, irf, fov_frame, use_region_center=True):
     """Project an IRF on a given `~gammapy.maps.Geom` object according to a given FoV Frame.
 
@@ -790,10 +702,6 @@ def project_irf_on_geom(geom, irf, fov_frame, use_region_center=True):
     map : `~gammapy.maps.Map`
         Map containing the projected IRF.
     """
-    from gammapy.irf.background import BackgroundIRF
-
-    coords = {}
-
     if not use_region_center:
         image_geom = geom.to_wcs_geom().to_image()
         region_coord, weights = geom.get_wcs_coord_and_weights()
@@ -802,25 +710,19 @@ def project_irf_on_geom(geom, irf, fov_frame, use_region_center=True):
         image_geom = geom.to_image()
         skycoord = image_geom.get_coord().skycoord
 
-    axes = irf.required_arguments.copy()
+    if len(fov_frame.shape) == 1:
+        skycoord = skycoord[..., np.newaxis]
 
-    if irf.has_offset_axis:
-        coords["offset"] = skycoord.separation(fov_frame.origin)
-        axes.remove("offset")
-    else:
-        sign = 1.0
-        if irf.fov_alignment == "REVERSE_LON_RADEC":
-            sign = -1.0
-        fov_coords = skycoord.transform_to(fov_frame)
-        coords["fov_lon"] = sign * fov_coords.fov_lon
-        coords["fov_lat"] = fov_coords.fov_lat
-        axes.remove("fov_lon")
-        axes.remove("fov_lat")
+    reverse_lon = irf.fov_alignment == "REVERSE_LON_RADEC"
+    coords = _get_fov_coord(skycoord, fov_frame, irf.has_offset_axis, reverse_lon)
+
+    non_spatial_axes = set(irf.required_arguments.copy()) - set(
+        ["offset", "fov_lon", "fov_lat"]
+    )
 
     is_bkg = isinstance(irf, BackgroundIRF)
 
-    for axis_name in axes:  # geom.axes.names:
-        print(axis_name)
+    for axis_name in non_spatial_axes:
         coords[axis_name] = broadcast_axis_values_to_geom(geom, axis_name, not is_bkg)
 
     if not is_bkg:
