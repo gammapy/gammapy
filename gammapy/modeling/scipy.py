@@ -4,6 +4,7 @@ import scipy.optimize
 from gammapy.utils.interpolation import interpolate_profile
 from gammapy.utils.roots import find_roots
 from .likelihood import Likelihood
+from gammapy.utils.deprecation import deprecated_renamed_argument
 
 __all__ = [
     "confidence_scipy",
@@ -64,7 +65,6 @@ class TSDifference:
 def _confidence_scipy_brentq(
     parameters, parameter, function, sigma, reoptimize, upper=True, **kwargs
 ):
-
     ts_diff = TSDifference(
         function, parameters, parameter, reoptimize, ts_diff=sigma**2
     )
@@ -102,7 +102,6 @@ def _confidence_scipy_brentq(
 
 
 def confidence_scipy(parameters, parameter, function, sigma, reoptimize=True, **kwargs):
-
     if len(parameters.free_parameters) <= 1:
         reoptimize = False
 
@@ -137,8 +136,9 @@ def covariance_scipy(parameters, function):
     raise NotImplementedError
 
 
+@deprecated_renamed_argument("stat_scan", "delta_fit_stat", "2.0")
 def stat_profile_ul_scipy(
-    value_scan, stat_scan, delta_ts=4, interp_scale="sqrt", **kwargs
+    value_scan, delta_fit_stat, delta_ts=4, interp_scale="sqrt", **kwargs
 ):
     """Compute upper limit of a parameter from a likelihood profile.
 
@@ -146,7 +146,7 @@ def stat_profile_ul_scipy(
     ----------
     value_scan : `~numpy.ndarray`
         Array of parameter values.
-    stat_scan : `~numpy.ndarray`
+    delta_fit_stat : `~numpy.ndarray`
         Array of delta fit statistic values, with respect to the minimum.
     delta_ts : float, optional
         Difference in test statistics for the upper limit. Default is 4.
@@ -162,12 +162,12 @@ def stat_profile_ul_scipy(
     ul : float
         Upper limit value.
     """
-    interp = interpolate_profile(value_scan, stat_scan, interp_scale=interp_scale)
+    interp = interpolate_profile(value_scan, delta_fit_stat, interp_scale=interp_scale)
 
     def f(x):
         return interp((x,)) - delta_ts
 
-    idx = np.argmin(stat_scan)
+    idx = np.argmin(delta_fit_stat)
     norm_best_fit = value_scan[idx]
     roots, res = find_roots(
         f, lower_bound=norm_best_fit, upper_bound=value_scan[-1], nbin=1, **kwargs
