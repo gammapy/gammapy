@@ -193,7 +193,7 @@ def select_nested_models(
     n_sigma : float, optional
         Threshold in number of sigma to switch from the null hypothesis
         to the alternative one. Default is 2.
-        The TS is converted to sigma assuming that the Wilk's theorem is verified.
+        The TS is converted to sigma assuming that the Wilks' theorem is verified.
     n_free_parameters : int, optional
         Number of free parameters to consider between the two hypothesis
         in order to estimate the `ts_threshold` from the `n_sigma` threshold.
