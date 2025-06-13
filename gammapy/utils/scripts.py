@@ -254,7 +254,9 @@ def requires_module(module_name):
 
                 return wrapper
             else:
-                return obj  # Fallback: return as-is
+                raise TypeError(
+                    "requires_module can only be used on methods or properties."
+                )
 
     return decorator
 

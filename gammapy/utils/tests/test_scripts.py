@@ -99,3 +99,11 @@ def test_requires_module():
         match="The 'nonexistent_module' module is required to use this property.",
     ):
         _ = result.prop_unavailable
+
+    with pytest.raises(
+        TypeError, match="requires_module can only be used on methods or properties."
+    ):
+
+        @requires_module("nonexistent_module")
+        class InvalidUsage:
+            pass
