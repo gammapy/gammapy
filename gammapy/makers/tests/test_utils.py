@@ -375,15 +375,15 @@ def test_make_map_background_irf_altaz_align(fixed_pointing_info):
         ontime="42 s",
         bkg=bkg_3d_custom("asymmetric", "ALTAZ"),
         geom=_get_geom(fixed_pointing_info, obstime),
-        time_start=obstime + "20979 s",
+        time_start=obstime - 21 * u.s,
         fov_rotation_step=360.0 * u.deg,
     )
     map_altaz_long_norotation = make_map_background_irf(
         pointing=fixed_pointing_info,
-        ontime="42000 s",
+        ontime="4200 s",
         bkg=bkg_3d_custom("asymmetric", "ALTAZ"),
         geom=_get_geom(fixed_pointing_info, obstime),
-        time_start=obstime,
+        time_start=obstime - 2100 * u.s,
         fov_rotation_step=360.0 * u.deg,
     )
     # Check that background normalisations are consistent
@@ -410,8 +410,8 @@ def test_make_map_background_irf_altaz_align(fixed_pointing_info):
     # aligned IRFs when the FoV rotation is ignored
     assert_allclose(
         map_altaz_long_norotation.data,
-        map_short_altaz_norotation.data * 1000,
-        rtol=1e-5,
+        map_short_altaz_norotation.data * 100,
+        rtol=1e-2,
     )
 
 

@@ -680,9 +680,7 @@ def _get_fov_coord(
 
 
 def project_irf_on_geom(geom, irf, fov_frame, use_region_center=True):
-    """Project an IRF on a given `~gammapy.maps.Geom` object according to a given FoV Frame.
-
-    If ``irf`` is a `~gammapy.irf.BackgroundIRF`, the IRF is integrated in energy and multiplied by the solid angle.
+    """Evaluate and project an IRF on a given `~gammapy.maps.Geom` object according to a given FoV Frame.
 
     When ``geom`` is a `~gammapy.maps.RegionGeom`, the IRF is evaluated at the region center when
     ``user_region_center is True``. Otherwise, the IRF is evaluated and averaged over the whole region.
