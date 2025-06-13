@@ -473,6 +473,10 @@ def test_link_label(models):
             n_link += 1
     assert n_link == 2
 
+    table = skymodels.parameters.to_table()
+
+    assert table["link"][2] == table["link"][9] and table["link"][2] != table["link"][1]
+
 
 def test_to_dict_not_default():
     model = PowerLawSpectralModel()
