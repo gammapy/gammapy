@@ -155,6 +155,7 @@ class Datasets(collections.abc.MutableSequence):
 
         self._datasets = datasets
         self._covariance = None
+        self._penalties = None
 
     @property
     def parameters(self):
@@ -181,7 +182,9 @@ class Datasets(collections.abc.MutableSequence):
         models = DatasetModels(list(models.keys()))
 
         if self._covariance and self._covariance.parameters == models.parameters:
-            return DatasetModels(models, covariance_data=self._covariance.data)
+            return DatasetModels(
+                models, covariance_data=self._covariance.data, penalties=self._penalties
+            )
         else:
             return models
 
@@ -193,7 +196,9 @@ class Datasets(collections.abc.MutableSequence):
         The order of the unique models remains.
         """
         if models:
-            self._covariance = DatasetModels(models).covariance
+            datasetmodels = DatasetModels(models)
+            self._covariance = datasetmodels.covariance
+            self._penalties = datasetmodels._penalties
         for dataset in self:
             dataset.models = models
 
@@ -246,6 +251,9 @@ class Datasets(collections.abc.MutableSequence):
         prior_stat_sum = 0.0
         if self.models is not None:
             prior_stat_sum = self.models.parameters.prior_stat_sum()
+            if self.models._penalties is not None:
+                for penalty in self.models._penalties:
+                    prior_stat_sum += penalty.stat_sum()
 
         stat_sum = 0.0
         for dataset in self:
