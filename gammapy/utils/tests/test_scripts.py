@@ -70,8 +70,8 @@ def test_requires_module():
         def method_unavailable(self):
             return "Should not be called"
 
-        @property
         @requires_module("math")
+        @property
         def prop(self):
             import math
 
