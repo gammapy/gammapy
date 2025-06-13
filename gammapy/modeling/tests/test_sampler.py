@@ -6,6 +6,8 @@ from gammapy.modeling.sampler import Sampler
 from gammapy.modeling.models import (
     UniformPrior,
     LogUniformPrior,
+    PowerLawSpectralModel,
+    Models,
 )
 
 
@@ -19,11 +21,17 @@ def test_run(backend="ultranest"):
         )
         datasets.append(dataset)
 
-    datasets.models = [SkyModel.create(spectral_model="pl")]
-    datasets.models.parameters["index"].prior = UniformPrior(min=2, max=3)
-    datasets.models.parameters["amplitude"].prior = LogUniformPrior(
-        min=1e-12, max=1e-10
-    )
+    # test with linked parameters
+    pwl1 = PowerLawSpectralModel(index=2.3)
+    pwl1.amplitude.prior = LogUniformPrior(min=1e-12, max=1e-10)
+    pwl1.index.prior = UniformPrior(min=2, max=3)
+    pwl2 = PowerLawSpectralModel()
+    pwl2.amplitude.prior = LogUniformPrior(min=1e-12, max=1e-10)
+    pwl2.index = pwl1.index
+    pwl2.amplitude = pwl1.amplitude
+    models = Models([SkyModel(pwl1, name="source1"), SkyModel(pwl2, name="source2")])
+    models[0].spectral_model.index.prior = UniformPrior(min=1, max=5)
+    datasets.models = models
 
     sampler_opts = {"live_points": 300}
     sampler = Sampler(backend=backend, sampler_opts=sampler_opts)
@@ -48,7 +56,7 @@ def test_run(backend="ultranest"):
     assert set(required_keys).issubset(result.sampler_results.keys())
 
     assert_allclose(result.models.parameters["index"].value, 2.6, rtol=0.1)
-    assert_allclose(result.models.parameters["amplitude"].value, 4e-11, rtol=0.2)
+    assert_allclose(result.models.parameters["amplitude"].value, 4e-11 / 2.0, rtol=0.2)
 
     assert result.models.parameters["index"].error > 0
     assert result.models.parameters["amplitude"].error > 0
