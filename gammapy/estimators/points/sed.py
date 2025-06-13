@@ -99,7 +99,7 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
         path = "$GAMMAPY_DATA/joint-crab/spectra/hess/"
         dataset = SpectrumDatasetOnOff.read(path + "pha_obs23523.fits")
 
-        pwl = PowerLawSpectralModel(index=2, amplitude='1e-12  cm-2 s-1 TeV-1')
+        pwl = PowerLawSpectralModel(index=2.7, amplitude='3e-11  cm-2 s-1 TeV-1')
 
         dataset.models = SkyModel(spectral_model=pwl, name="crab")
 
