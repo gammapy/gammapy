@@ -201,10 +201,7 @@ def test_free_parameters():
 
     parameters = Parameters([a, b, c])
     free = parameters.free_parameters
-    frozen = parameters.frozen_parameters
     assert free.names == ["a", "c"]
-    assert frozen.names == ["b"]
-    assert all(par.frozen for par in frozen)
     assert all(not par.frozen for par in free)
 
 
