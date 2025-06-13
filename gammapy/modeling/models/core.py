@@ -42,7 +42,7 @@ def _recursive_model_filename_update(model, path):
             _recursive_model_filename_update(m, path)
 
 
-def _set_link(shared_register, model):
+def _set_model_link(shared_register, model):
     for param in model.parameters:
         name = param.name
         link_label = param._link_label_io
@@ -53,6 +53,24 @@ def _set_link(shared_register, model):
             else:
                 shared_register[link_label] = param
     return shared_register
+
+
+def _set_models_link(models):
+    from . import SkyModel
+
+    shared_register = {}
+    for model in models:
+        if isinstance(model, SkyModel):
+            submodels = [
+                model.spectral_model,
+                model.spatial_model,
+                model.temporal_model,
+            ]
+            for submodel in submodels:
+                if submodel is not None:
+                    shared_register = _set_model_link(shared_register, submodel)
+        else:
+            shared_register = _set_model_link(shared_register, model)
 
 
 def _get_model_class_from_dict(data):
@@ -537,7 +555,7 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
     @classmethod
     def from_dict(cls, data, path=""):
         """Create from dictionary."""
-        from . import MODEL_REGISTRY, SkyModel
+        from . import MODEL_REGISTRY
 
         path = make_path(path)
 
@@ -556,19 +574,8 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
                 path, filename = split(filename)
             models.read_covariance(path, filename, format="ascii.fixed_width")
 
-        shared_register = {}
-        for model in models:
-            if isinstance(model, SkyModel):
-                submodels = [
-                    model.spectral_model,
-                    model.spatial_model,
-                    model.temporal_model,
-                ]
-                for submodel in submodels:
-                    if submodel is not None:
-                        shared_register = _set_link(shared_register, submodel)
-            else:
-                shared_register = _set_link(shared_register, model)
+        _set_models_link(models)
+
         return models
 
     def write(
@@ -785,6 +792,7 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
         for model in self:
             model_copy = model.copy(name=model.name, copy_data=copy_data)
             models.append(model_copy)
+        _set_models_link(models)
 
         return self.__class__(
             models=models, covariance_data=self.covariance.data.copy()
