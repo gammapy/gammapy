@@ -148,7 +148,7 @@ jobs:
       - name: test build docs
         run: |
           tox -e build_docs -- -j auto
-#      - name: check links
+#      - name: check  links
 #        continue-on-error: true
 #        run: |
 #          tox -e linkcheck -- -j auto
