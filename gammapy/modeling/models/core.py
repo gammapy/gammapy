@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 from gammapy.maps import Map, RegionGeom
 from gammapy.modeling import Covariance, Parameter, Parameters
 from gammapy.modeling.covariance import CovarianceMixin
-from gammapy.utils.scripts import from_yaml, make_name, make_path, to_yaml, write_yaml
+from gammapy.utils.scripts import from_yaml, make_path, to_yaml, write_yaml
 
 __all__ = ["Model", "Models", "DatasetModels", "ModelBase"]
 
@@ -633,16 +633,7 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
 
     def update_link_label(self):
         """Update linked parameters labels used for serialisation and print."""
-        params_list = []
-        params_shared = []
-        for param in self.parameters:
-            if param not in params_list:
-                params_list.append(param)
-                params_list.append(param)
-            elif param not in params_shared:
-                params_shared.append(param)
-        for param in params_shared:
-            param._link_label_io = param.name + "@" + make_name()
+        self.parameters.update_link_label()
 
     def to_dict(self, full_output=False, overwrite_templates=False):
         """Convert to dictionary."""
