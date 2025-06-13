@@ -792,6 +792,7 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
         for model in self:
             model_copy = model.copy(name=model.name, copy_data=copy_data)
             models.append(model_copy)
+        _set_models_link(models)
 
         return self.__class__(
             models=models, covariance_data=self.covariance.data.copy()
