@@ -268,16 +268,10 @@ def estimate_exposure_reco_energy(dataset, spectral_model=None, normalize=True):
     .. testcode::
 
         from gammapy.datasets import MapDataset
-        from gammapy.estimators import ExcessMapEstimator
         from gammapy.estimators.utils import estimate_exposure_reco_energy
         from gammapy.modeling.models import PowerLawSpectralModel
         dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
-        spectral_model = PowerLawSpectralModel(index=15)
-        estimator = ExcessMapEstimator(
-            correlate_off=True,
-            spectral_model=spectral_model,
-        )
-        result = estimator.run(dataset)
+        spectral_model = PowerLawSpectralModel()
         reco_exposure = estimate_exposure_reco_energy(
             dataset,
             spectral_model=spectral_model,
