@@ -11,6 +11,20 @@ from gammapy.maps import MapAxis, WcsGeom
 from gammapy.utils.testing import mpl_plot_check, requires_data
 
 
+class TestEventListBasic:
+    def setup_class(self):
+        table = Table()
+        table["RA"] = [0.0, 0.0, 0.0, 10.0] * u.deg
+        table["DEC"] = [0.0, 0.9, 10.0, 10.0] * u.deg
+        table["ENERGY"] = [1.0, 1.5, 1.5, 10.0] * u.TeV
+        table["OFFSET"] = [0.1, 0.5, 1.0, 1.5] * u.deg
+
+        self.events = EventList(table)
+
+    def test_eventlist_printin(self):
+        print(self.events)
+
+
 @requires_data()
 class TestEventListBase:
     def setup_class(self):
