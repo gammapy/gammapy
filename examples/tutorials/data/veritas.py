@@ -127,7 +127,7 @@ obs_ids = observations.ids
 # information. You should verify that the IRFs are filled correctly and
 # that there are no values set to zero within your analysis range.
 # 
-# Here we peek at the first run in the data release; 64080. The Crab
+# Here we peek at the first run in the data release: 64080. The Crab
 # should be visible in the events plot.
 # 
 # You can peek other runs by changing the index 0 to the appropriate
