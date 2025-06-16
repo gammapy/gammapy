@@ -22,8 +22,9 @@ class HpxMap(Map):
         HEALPix geometry object.
     data : `~numpy.ndarray`
         Data array.
-    meta : dict
+    meta : dict, optional
         Dictionary to store metadata.
+        Default is None.
     unit : `~astropy.units.Unit`
         The map unit.
 
