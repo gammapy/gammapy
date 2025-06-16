@@ -1316,7 +1316,15 @@ class MapDataset(Dataset):
         ax = residuals.plot(ax, **kwargs)
         return ax
 
-    def plot_residuals_spectral(self, ax=None, method="diff", region=None, **kwargs):
+    def plot_residuals_spectral(
+        self,
+        ax=None,
+        method="diff",
+        region=None,
+        kwargs_fit=None,
+        kwargs_safe=None,
+        **kwargs,
+    ):
         """Plot spectral residuals.
 
         The residuals are extracted from the provided region, and the normalization
@@ -1392,6 +1400,21 @@ class MapDataset(Dataset):
         ymin = 1.05 * np.nanmin(residuals.data - yerr)
         ymax = 1.05 * np.nanmax(residuals.data + yerr)
         ax.set_ylim(ymin, ymax)
+
+        kwargs_fit = kwargs_fit or {}
+        kwargs_safe = kwargs_safe or {}
+
+        kwargs_fit.setdefault("label", "Mask fit")
+        kwargs_fit.setdefault("color", "tab:green")
+        kwargs_safe.setdefault("label", "Mask safe")
+        kwargs_safe.setdefault("color", "black")
+
+        if self.mask_fit:
+            self.mask_fit.to_region_nd_map().plot_mask(ax=ax, **kwargs_fit)
+
+        if self.mask_safe:
+            self.mask_safe.to_region_nd_map().plot_mask(ax=ax, **kwargs_safe)
+        ax.legend()
         return ax
 
     def plot_residuals(
