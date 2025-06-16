@@ -121,7 +121,7 @@ obs_ids = observations.ids
 
 
 ######################################################################
-# Peek at the IRFs included - point source files will contain effective
+# Peek at the IRFs included : point source files will contain effective
 # areas, energy dispersion matrices, and events for both VEGAS and
 # Eventdisplay files. Eventdisplay point-like files also contain PSF
 # information. You should verify that the IRFs are filled correctly and
