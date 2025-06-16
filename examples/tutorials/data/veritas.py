@@ -26,7 +26,7 @@ calculate Li & Ma significance, spectra, and fluxes.
 # packages to produce DL3 files (using
 # `V2DL3 <https://github.com/VERITAS-Observatory/V2DL3>`__), which can be
 # used in Gammapy to produce high-level analysis products. A small sub-set
-# of archival Crab nebula data have been publically released to accompany
+# of archival Crab nebula data has been publically released to accompany
 # this tutorial, which provide an introduction to VERITAS data analysis
 # using gammapy for VERITAS members and external users alike.
 # 
