@@ -86,7 +86,7 @@ data_store.info()
 
 
 ######################################################################
-# We filter our data store by only taking observations within
+# We filter our data by only taking observations within
 # :math:`5 \deg` of the Crab Nebula. In order to select all observations
 # in the datastore, simply use
 # ``observations = data_store.get_observations(required_irf=["aeff","edisp"])``
