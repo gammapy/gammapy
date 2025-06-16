@@ -26,6 +26,10 @@ class HpxMap(Map):
         Dictionary to store metadata.
     unit : `~astropy.units.Unit`
         The map unit.
+
+    Notes
+    -----
+    - For examples, see :doc:`/user-guide/maps/hpxmap`
     """
 
     @classmethod
