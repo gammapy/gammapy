@@ -359,11 +359,13 @@
         "active"
     ],
     "email": "GAMMAPY-COORDINATION-L@IN2P3.FR",
-    "dateModified": "2025-06-12",
-    "softwareRequirements": [
+
+    "dateModified": "2024-11-29",
+
+  "softwareRequirements": [
         "numpy>=1.21",
         "scipy>=1.5,!=1.10",
-        "astropy>=5.0, <7.1",
+        "astropy>=5.0",
         "regions>=0.5.0",
         "pyyaml>=5.3",
         "click>=7.0",
