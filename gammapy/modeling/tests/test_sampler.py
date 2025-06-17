@@ -21,7 +21,6 @@ def test_run(backend="ultranest"):
         )
         datasets.append(dataset)
 
-    # test with linked parameters
     pwl1 = PowerLawSpectralModel(index=2.3)
     pwl1.amplitude.prior = LogUniformPrior(min=1e-12, max=1e-10)
     pwl1.index.prior = UniformPrior(min=2, max=3)
