@@ -25,12 +25,12 @@ def test_run(backend="ultranest"):
     pwl1 = PowerLawSpectralModel(index=2.3)
     pwl1.amplitude.prior = LogUniformPrior(min=1e-12, max=1e-10)
     pwl1.index.prior = UniformPrior(min=2, max=3)
+
     pwl2 = PowerLawSpectralModel()
-    pwl2.amplitude.prior = LogUniformPrior(min=1e-12, max=1e-10)
     pwl2.index = pwl1.index
     pwl2.amplitude = pwl1.amplitude
+
     models = Models([SkyModel(pwl1, name="source1"), SkyModel(pwl2, name="source2")])
-    models[0].spectral_model.index.prior = UniformPrior(min=1, max=5)
     datasets.models = models
 
     sampler_opts = {"live_points": 300}
