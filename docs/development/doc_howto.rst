@@ -36,6 +36,21 @@ This should work::
 
 You need a bunch or LaTeX stuff, specifically ``texlive-fonts-extra`` is needed.
 
+
+Accessing documentation build on a Pull Request
++++++++++++++++++++++++++++++++++++++++++++++++
+
+When working with pull requests (PRs), you can preview the generated documentation through the CI.
+This preview is produced automatically during the CI workflow and uploaded as an artifact.
+To access it:
+
+* Open the Pull Request (PR) you are interested in
+* Navigate to the "Checks" tab at the top of the PR page
+* Click on the CI workflow on the left hand side
+* Scroll down to the "Artifacts" section at the bottom
+* Download the documentation preview artifact named `gammapy-doc-html`
+
+
 Check Python code
 -----------------
 
@@ -417,4 +432,4 @@ sections, which is confusing to users ("what's the difference between attributes
 One solution is to always use properties, but that can get very verbose if we have to write
 so many getters and setters. We could start using descriptors.
 
-TODO: make a decision on this and describe the issue / solution here.
+.. TODO: make a decision on this and describe the issue / solution here.
