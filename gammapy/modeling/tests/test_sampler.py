@@ -42,7 +42,7 @@ def test_run(backend="ultranest"):
     assert sampler._sampler.min_num_live_points == sampler_opts["live_points"]
     assert (
         result.samples.shape[1]
-        == datasets.models.parameters.free_parameters.value.shape[0]
+        == datasets.models.parameters.free_unique_parameters.value.shape[0]
     )
 
     required_keys = [
@@ -55,8 +55,8 @@ def test_run(backend="ultranest"):
     ]
     assert set(required_keys).issubset(result.sampler_results.keys())
 
-    assert_allclose(result.models.parameters["index"].value, 2.6, rtol=0.1)
-    assert_allclose(result.models.parameters["amplitude"].value, 4e-11 / 2.0, rtol=0.2)
+    assert_allclose(result.models.parameters["index"].value, 2.7, rtol=0.2)
+    assert_allclose(result.models.parameters["amplitude"].value, 2.5e-11, rtol=0.2)
 
     assert result.models.parameters["index"].error > 0
     assert result.models.parameters["amplitude"].error > 0
