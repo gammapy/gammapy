@@ -61,7 +61,7 @@ def test_run(backend="ultranest"):
 
 @requires_dependency("ultranest")
 @requires_data()
-def test_run_linked(backend="ultranest"):
+def test_run_linked_params(backend="ultranest"):
     datasets = Datasets()
     for obs_id in [23523, 23526]:
         dataset = SpectrumDatasetOnOff.read(
