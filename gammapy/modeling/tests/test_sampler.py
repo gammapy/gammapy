@@ -42,7 +42,7 @@ def test_run(backend="ultranest"):
     assert sampler._sampler.min_num_live_points == sampler_opts["live_points"]
     assert (
         result.samples.shape[1]
-        == datasets.models.parameters.free_parameters.value.shape[0]
+        == datasets.models.parameters.free_unique_parameters.value.shape[0]
     )
 
     required_keys = [
