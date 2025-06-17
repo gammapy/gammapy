@@ -310,6 +310,7 @@ If you wish to add an image to a tutorial you can utilise the following:
     #
     #   Gammapy Maps Illustration
 
+Where `:alt` is used to create a caption for the image. 
 More information on the image directive can be found `here <http://www.sphinx-doc.org/en/stable/rest.html#images>`__.
 
 Documentation guidelines
