@@ -148,10 +148,6 @@ jobs:
       - name: test build docs
         run: |
           tox -e build_docs
-      - name: check links
-        continue-on-error: true
-        run: |
-          tox -e linkcheck -- -j auto
       - name: Upload HTML output
         uses: actions/upload-artifact@v4
         with:
