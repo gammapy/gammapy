@@ -10,13 +10,11 @@ import gammapy
 
 def test_get_acknowledgment():
     text = gammapy.__acknowledgment__
-    print(text)
-    print(text.__class__)
     assert "Astropy" in text
 
 
 def test_bibtex():
     text = gammapy.__bibtex__
-    print(text)
-    print(text.__class__)
+    for item in ["article", "author", "DOI", "title", "journal"]:
+        assert item in text
     assert "https://doi.org/10.1051/0004-6361/202346488" in text
