@@ -258,17 +258,17 @@ different regions by passing keyword arguments forwarded to `~regions.PixelRegio
     # An annulus in a different location
     annulus = RegionGeom.create("icrs;annulus(82.8, 22.91, 0.1,0.3)")
 
-    m.plot(add_cbar=True)
+    ax = m.plot(add_cbar=True)
 
     # Default plotting settings
-    circle.plot_region()
+    circle.plot_region(ax=ax)
 
     # Different line styles, widths and colors
-    box.plot_region(lw=2, linestyle='--', ec='k')
-    ellipse.plot_region(lw=2, linestyle=':', ec='white')
+    box.plot_region(ax=ax, lw=2, linestyle='--', ec='k')
+    ellipse.plot_region(ax=ax, lw=2, linestyle=':', ec='white')
 
     # Filling the region with a color
-    annulus.plot_region(lw=2, ec='purple', fc='purple')
+    annulus.plot_region(ax=ax, lw=2, ec='purple', fc='purple')
 
 
 RegionNDMap
