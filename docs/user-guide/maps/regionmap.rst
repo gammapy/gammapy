@@ -15,7 +15,7 @@ In particular, they are suited for so-called 1D analysis (see :ref:`references`)
 RegionGeom
 ==========
 A `~gammapy.maps.RegionGeom` describes the underlying geometry of a region in the sky with any number of
-non-spatial axes associated to it. It is analogous to a map geometry `~gammapy.maps.Geom`, but instead of a fine spatial
+non-spatial axes associated to it. It is analogous to a map geometry `~gammapy.maps.WcsGeom`, but instead of a fine spatial
 grid on a rectangular region, the spatial dimension is reduced to a single bin with an arbitrary shape, which
 describes a region in the sky with that same shape. Besides the spatial region, a `~gammapy.maps.RegionGeom`
 can also have any number of non-spatial dimensions, the most common case being an additional energy axis.
