@@ -11,6 +11,7 @@ import gammapy
 def test_get_acknowledgment():
     text = gammapy.__acknowledgment__
     assert "Astropy" in text
+    assert "iminuit" in text
 
 
 def test_bibtex():

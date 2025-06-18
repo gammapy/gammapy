@@ -100,7 +100,9 @@ def _get_acknowledgment():
         text = (
             (Path(__file__).parent.parent / "CITATION")
             .read_text()
-            .split("The recommended LaTeX acknowledgment is")
+            .split(
+                "If possible, we propose to add the following acknowledgment in LaTeX"
+            )
         )
         ackno = text[1].split("\n\n")[1]
         return ackno
