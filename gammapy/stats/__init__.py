@@ -15,12 +15,7 @@ from .fit_statistics import (
     WStatFitStatistic,
     WeightedCashFitStatistic,
 )
-from .fit_statistics_cython import (
-    weighted_cash_sum_cython,
-    cash_sum_cython,
-    f_cash_root_cython,
-    norm_bounds_cython,
-)
+
 from .variability import (
     TimmerKonig_lightcurve_simulator,
     compute_chisq,
@@ -43,15 +38,12 @@ FIT_STATISTICS_REGISTRY = {
 
 __all__ = [
     "cash",
-    "cash_sum_cython",
     "CashCountsStatistic",
     "Chi2FitStatistic",
     "Chi2AsymmetricErrorFitStatistic",
     "cstat",
-    "f_cash_root_cython",
     "get_wstat_gof_terms",
     "get_wstat_mu_bkg",
-    "norm_bounds_cython",
     "wstat",
     "WStatCountsStatistic",
     "compute_fvar",
@@ -61,7 +53,6 @@ __all__ = [
     "structure_function",
     "discrete_correlation",
     "TimmerKonig_lightcurve_simulator",
-    "weighted_cash_sum_cython",
     "sigma_to_ts",
     "ts_to_sigma",
 ]
