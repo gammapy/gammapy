@@ -196,6 +196,10 @@ class CreatorMetaData(MetaData):
     date: Optional[TimeType] = Field(default_factory=Time.now)
     origin: Optional[str] = None
 
+    def update_time(self):
+        """Change creation date to Time.now()"""
+        self.date = Time.now()
+
 
 class ObsInfoMetaData(MetaData):
     """General metadata information about the observation.
