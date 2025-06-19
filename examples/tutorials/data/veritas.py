@@ -32,9 +32,7 @@ calculate Li & Ma significance, spectra, and fluxes.
 # 
 # This notebook is only intended for use with these publically released
 # Crab nebula files and the use of other sources or datasets may require
-# modifications to this notebook. Please note that the flux calculations
-# in this notebook will not work well for upper limits and it is advised
-# to only use this notebook for detected sources.
+# modifications to this notebook.
 # 
 
 import numpy as np
