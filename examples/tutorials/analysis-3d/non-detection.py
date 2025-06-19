@@ -71,7 +71,7 @@ check_tutorials_setup()
 # When we don’t detect a source
 # -----------------------------
 #
-# As usual, let’s start with some general imports…
+# 
 #
 
 
