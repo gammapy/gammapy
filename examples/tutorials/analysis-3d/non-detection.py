@@ -78,7 +78,7 @@ check_tutorials_setup()
 ######################################################################
 # Now, load and inspect the dataset. For computational purposes, we have
 # already created a `MapDataset` from observation id 20275 from the
-# public H.E.S.S. data release and stored it in `GAMMAPY_DATA`
+# public H.E.S.S. data release and stored it in `$GAMMAPY_DATA`
 #
 
 dataset = MapDataset.read("$GAMMAPY_DATA/empty_dl4/empty-dl4.fits.gz")
