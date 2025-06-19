@@ -21,7 +21,6 @@ def test_run(backend="ultranest"):
         )
         datasets.append(dataset)
 
-    # test with linked parameters
     pwl1 = PowerLawSpectralModel(index=2.3)
     pwl1.amplitude.prior = LogUniformPrior(min=1e-12, max=1e-10)
     pwl1.index.prior = UniformPrior(min=2, max=3)
@@ -61,7 +60,7 @@ def test_run(backend="ultranest"):
 
 @requires_dependency("ultranest")
 @requires_data()
-def test_run_linked(backend="ultranest"):
+def test_run_linked_params(backend="ultranest"):
     datasets = Datasets()
     for obs_id in [23523, 23526]:
         dataset = SpectrumDatasetOnOff.read(
