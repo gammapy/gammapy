@@ -124,7 +124,7 @@ print(res.models)
 ######################################################################
 # We can see that there is a slight negative excess in the centre, and
 # thus, the fitted model has a negative amplitude. We can use the
-# `select_nested_models` function to perform a likelihood ratio test to
+# `~gammapy.modeling.select_nested_models` function to perform a likelihood ratio test to
 # see if this is significant.
 #
 
