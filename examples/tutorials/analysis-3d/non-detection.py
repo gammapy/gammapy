@@ -87,8 +87,9 @@ plt.show()
 
 
 ######################################################################
-# We will first use the `ExcessMapEstimator` to see if there are any
-# hotspots in the field. You can also use the `TSMapEstimator`
+# We will first use the `ExcessMapEstimator` for a quick check to see if
+# there are any hotspots in the field. You may also use the
+# `TSMapEstimator`.
 #
 
 estimator = ExcessMapEstimator(sum_over_energy_groups=True, selection_optional="all")
@@ -141,7 +142,9 @@ print(LLR)
 # Here, it is important to **set a reasonable model** on the dataset
 # before proceeding with the estimator. This model can come from
 # measurements from other instruments, be an extrapolation of the flux
-# observed at other wavelengths, come from theoretical estimations, etc.
+# observed at other wavelengths, come from theoretical estimations, etc. A
+# model with a negative amplitude as obtained above should should not be
+# used.
 #
 # Note that the computed upper limits can depend on the assumed model. The
 # values of the amplitude should not matter as long as the values are not
@@ -171,15 +174,17 @@ plt.show()
 ######################################################################
 # We can then ask, would I have seen my source given this irf/ exposure
 # time? The `FluxPointsEstimator` can be used to obtain the sensitivity,
-# which can be compared to the expected flux. Lets see if we would have
-# seen if a Crab-like source was present in the center.
+# which can be compared to the expected flux. We have the 5-sigma
+# sensitivity here, which can be configured using `n_sigma_sensitivity`
+# on init. Lets see if we would have seen if a Crab-like source was
+# present in the center.
 #
 
 crab_model = create_crab_spectral_model()
 
 fp1.flux_sensitivity.plot(label="sensitivity")
 crab_model.plot(
-    energy_bounds=fp1.geom.axes["energy"], sed_type="flux", label="Crab model"
+    energy_bounds=fp1.geom.axes["energy"], sed_type="flux", label="Crab spectrum"
 )
 plt.legend()
 plt.show()
@@ -196,8 +201,9 @@ plt.show()
 # -------------------------------
 #
 # We will now use a precomputed blazar dataset to see how to contrain
-# model parameters. We will try to constrain the spectral cutoff in the
-# source.
+# model parameters. Detailed modeling of this dataset may be found in the
+# :doc:`/tutorials/utorials/analysis-1d/ebl` notebook. We will try to
+# constrain the spectral cutoff in the source. To see
 #
 
 dataset_onoff = SpectrumDatasetOnOff.read(
@@ -226,8 +232,8 @@ print(res_pks.models)
 
 parameter = model_pks.parameters["lambda_"]
 parameter.scan_n_values = 25
-parameter.scan_min = 0.01
-parameter.scan_max = 5.0
+parameter.scan_min = 0.05
+parameter.scan_max = 5
 parameter.interp = "log"
 profile = fit.stat_profile(datasets=dataset_onoff, parameter=parameter, reoptimize=True)
 
@@ -247,11 +253,13 @@ ax.set_ylabel(r"$\Delta$TS")
 secay = ax.secondary_yaxis("right", functions=(ts_to_sigma, sigma_to_ts))
 secay.set_ylabel("Significance [$\sigma$]")
 plt.title("Cutoff likelihood profile", fontsize=20, y=1.05)
+plt.show()
 
 
 ######################################################################
-# Thus, this dataset does not yield a spectral cutoff in PKS2155-304. We
-# can compute the limits of the cutoff from the pdf
+# Thus, this dataset does not yield a significant spectral cutoff in
+# PKS2155-304. In particular, we cannot constrain the lower limit from
+# this profile. We can compute the limits of the cutoff from the pdf.
 #
 
 from scipy.interpolate import CubicSpline
@@ -292,15 +300,43 @@ def compute_lower_limit(theta_values, pdf, confidence_level=0.95):
 
 
 pdf = likelihood_to_pdf(values, loglike)
+plt.plot(values, pdf)
+plt.xlabel("Cutoff value (1/TeV)")
+plt.ylabel("pdf")
+plt.show()
 
 conf_level = 0.68
 # Compute one-sided limits
 UL = compute_upper_limit(values, pdf, confidence_level=conf_level)
 LL = compute_lower_limit(values, pdf, confidence_level=conf_level)
+print("lower limit, upper limit: ", LL, UL)
+
+if LL > parameter.value:
+    print("lower limit is not constrained")
+if UL < parameter.value:
+    print("upper limit is not constrained")
 
 unit = parameter.unit**-1  # Give in units of energy since lambda_ = 1/cutoff energy
-print(f"{conf_level*100:.2f}% lower limit: {1/UL:.4f} ({unit.to_string()})")
-print(f"{conf_level*100:.2f}% upper limit: {1/LL:.4f} ({unit.to_string()})")
+print(
+    f"{conf_level*100:.2f}% lower limit of energy cutoff: {1/UL:.4f} ({unit.to_string()})"
+)
+# print(f"{conf_level*100:.2f}% upper limit: {1/LL:.4f} ({unit.to_string()})")
+
+
+######################################################################
+# Since our dataset actually starts from `200 GeV`, all that we did from
+# this analysis is rule out any cut-off features!
+#
+
+ax = plt.gca()
+ax.plot(1.0 / values, loglike - np.min(loglike))
+ax.set_xlabel("Energy cutoff (TeV)")
+ax.set_ylabel(r"$\Delta$TS")
+
+ax.axhline(9, ls="dashed", color="black")
+ax.axvline(1.0 / UL, ls="dotted", color="brown")
+plt.title("Cutoff likelihood profile", fontsize=20, y=1.05)
+plt.xscale("log")
 
 
 ######################################################################
