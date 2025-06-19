@@ -2,11 +2,13 @@
 import warnings
 import pytest
 import yaml
+from numpy.testing import assert_allclose
 from gammapy.utils.scripts import (
     get_images_paths,
     make_path,
     read_yaml,
     recursive_merge_dicts,
+    requires_module,
     to_yaml,
     write_yaml,
 )
@@ -54,3 +56,54 @@ def test_read_write_yaml_checksum(tmp_path):
 
     with pytest.warns(UserWarning):
         read_yaml(bad, checksum=True)
+
+
+def test_requires_module():
+    class MyClass:
+        @requires_module("math")
+        def method(self):
+            import math
+
+            return math.sqrt(9)
+
+        @requires_module("nonexistent_module")
+        def method_unavailable(self):
+            return "Should not be called"
+
+        @requires_module("math")
+        @property
+        def prop(self):
+            import math
+
+            return math.sqrt(16)
+
+        @requires_module("nonexistent_module")
+        @property
+        def prop_unavailable(self):
+            return "Should not be called"
+
+    result = MyClass()
+
+    assert_allclose(result.method(), 3.0)
+
+    with pytest.raises(
+        ImportError,
+        match="The 'nonexistent_module' module is required to use this method.",
+    ):
+        result.method_unavailable()
+
+    assert_allclose(result.prop, 4.0)
+
+    with pytest.raises(
+        ImportError,
+        match="The 'nonexistent_module' module is required to use this property.",
+    ):
+        _ = result.prop_unavailable
+
+    with pytest.raises(
+        TypeError, match="requires_module can only be used on methods or properties."
+    ):
+
+        @requires_module("nonexistent_module")
+        class InvalidUsage:
+            pass

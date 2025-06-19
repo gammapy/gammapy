@@ -722,6 +722,16 @@ class TestSpectrumOnOff:
         assert_allclose(np.squeeze(grouped.acceptance), 4)
         assert_allclose(np.squeeze(grouped.acceptance_off), 40)
 
+    def test_spectrum_dataset_ogip_creation_metadata(self, tmp_path):
+        dataset = self.dataset.copy(name="test")
+        dataset.write(tmp_path / "test.fits", format="ogip")
+
+        for name in ["test.fits", "test_arf.fits", "test_bkg.fits", "test_rmf.fits"]:
+            with fits.open(tmp_path / name) as hdul:
+                for hdu in hdul[1:]:
+                    assert "CREATOR" in hdu.header
+                    assert "CREATED" in hdu.header
+
 
 @requires_data()
 class TestSpectralFit:
