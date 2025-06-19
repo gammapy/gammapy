@@ -699,6 +699,11 @@ class Parameters(collections.abc.Sequence):
         return self.__class__(dict.fromkeys(self._parameters))
 
     @property
+    def free_unique_parameters(self):
+        """List of free and unique parameters."""
+        return self.__class__([par for par in self.unique_parameters if not par.frozen])
+
+    @property
     def names(self):
         """List of parameter names."""
         return [par.name for par in self._parameters]
