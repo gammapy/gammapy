@@ -39,7 +39,10 @@ class BackgroundIRF(IRF):
     meta : dict
         Metadata dictionary.
     interp_kwargs : dict, optional
-        Interpolation kwargs to extrapolate.
+        Keyword arguments passed to
+        `~gammapy.utils.interpolation.ScaledRegularGridInterpolator`.
+        If None, the following inputs are used ``bounds_error=False``, ``fill_value=0.0``
+        and ``values_scale="log"``.
         Default is None.
     """
 
@@ -136,7 +139,10 @@ class Background3D(BackgroundIRF):
     meta : dict
         Metadata dictionary.
     interp_kwargs : dict, optional
-        Interpolation kwargs to extrapolate.
+        Keyword arguments passed to
+        `~gammapy.utils.interpolation.ScaledRegularGridInterpolator`.
+        If None, the following inputs are used ``bounds_error=False``, ``fill_value=0.0``
+        and ``values_scale="log"``.
         Default is None.
 
     Examples
@@ -298,7 +304,10 @@ class Background2D(BackgroundIRF):
     meta : dict
         Metadata dictionary.
     interp_kwargs : dict, optional
-        Interpolation kwargs to extrapolate.
+        Keyword arguments passed to
+        `~gammapy.utils.interpolation.ScaledRegularGridInterpolator`.
+        If None, the following inputs are used ``bounds_error=False``, ``fill_value=0.0``
+        and ``values_scale="log"``.
         Default is None.
     """
 

@@ -58,6 +58,11 @@ class IRF(metaclass=abc.ABCMeta):
     meta : dict, optional
         Metadata dictionary.
         Default is None.
+    interp_kwargs : dict, optional
+        Keyword arguments passed to
+        `~gammapy.utils.interpolation.ScaledRegularGridInterpolator`.
+        If None, the following inputs are used ``bounds_error=False`` and ``fill_value=0.0``.
+        Default is None.
 
     Examples
     --------
