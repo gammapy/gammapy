@@ -89,7 +89,7 @@ plt.show()
 ######################################################################
 # We will first use the `~gammapy.estimators.ExcessMapEstimator` for a quick check to see if
 # there are any hotspots in the field. You may also use the
-# `TSMapEstimator`.
+# `~gammapy.estimators.TSMapEstimator`.
 #
 
 estimator = ExcessMapEstimator(sum_over_energy_groups=True, selection_optional="all")
