@@ -143,7 +143,7 @@ print(LLR)
 # before proceeding with the estimator. This model can come from
 # measurements from other instruments, be an extrapolation of the flux
 # observed at other wavelengths, come from theoretical estimations, etc. A
-# model with a negative amplitude as obtained above should should not be
+# model with a negative amplitude as obtained above should not be
 # used.
 #
 # Note that the computed upper limits can depend on the assumed model. The
