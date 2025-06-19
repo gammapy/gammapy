@@ -1,6 +1,8 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
+
 """
-Event sampling
-==============
+Upper limits
+==========
 
 Explore how to deal with upper limits on parameters for a significant source,  or flux upper limits
 for a non-detected source.
@@ -32,7 +34,6 @@ In this section, we will
 
 """
 
-
 ######################################################################
 # Setup
 # -----
@@ -42,6 +43,9 @@ In this section, we will
 
 # %matplotlib inline
 import matplotlib.pyplot as plt
+
+import numpy as np
+import astropy.units as u
 
 from gammapy.datasets import MapDataset, Datasets, SpectrumDatasetOnOff
 from gammapy.estimators import FluxPointsEstimator, ExcessMapEstimator
@@ -54,7 +58,6 @@ from gammapy.modeling.models import (
     create_crab_spectral_model,
 )
 from gammapy.stats.utils import ts_to_sigma, sigma_to_ts
-import numpy as np
 
 
 ######################################################################
@@ -68,12 +71,11 @@ check_tutorials_setup()
 
 
 ######################################################################
-# When we don’t detect a source
+# Flux upper limits for non-detected sources
 # -----------------------------
 #
-# 
 #
-
+#
 
 ######################################################################
 # Now, load and inspect the dataset. For computational purposes, we have
@@ -92,17 +94,39 @@ plt.show()
 # `~gammapy.estimators.TSMapEstimator`.
 #
 
-estimator = ExcessMapEstimator(sum_over_energy_groups=True, selection_optional="all")
-res1 = estimator.run(dataset)
-res1.sqrt_ts.plot(add_cbar=True)
+estimator = ExcessMapEstimator(
+    sum_over_energy_groups=True,
+    selection_optional="all",
+    correlate_off=True,
+    correlation_radius=0.15 * u.deg,
+)
+
+lima_maps = estimator.run(dataset)
+
+significance_map = lima_maps["sqrt_ts"]
+excess_map = lima_maps["npred_excess"]
+
+# We can plot the excess and significance maps
+fig, (ax1, ax2) = plt.subplots(
+    figsize=(11, 4), subplot_kw={"projection": lima_maps.geom.wcs}, ncols=2
+)
+ax1.set_title("Significance map")
+significance_map.plot(ax=ax1, add_cbar=True)
+ax2.set_title("Excess map")
+excess_map.plot(ax=ax2, add_cbar=True)
 plt.show()
 
+######################################################################
+# The significance map looks rather flat! Lets look at a map of the flux upper limits computed from simple LiMa statistics.
+
+lima_maps.flux_ul.plot(add_cbar=True, cmap="viridis")
+plt.show()
 
 ######################################################################
-# The significance map looks rather flat! Suppose we were expecting a
+# Suppose we were expecting a
 # source at the centre of our map. Lets try see if we can fit a point
 # source there.
-# Note that it is necessary to constrain the range of the position, otherwise the fit might not converge. 
+# Note that it is necessary to constrain the range of the position, otherwise the fit might not converge.
 
 spectral = PowerLawSpectralModel()
 spatial = PointSpatialModel(frame="icrs")
@@ -125,7 +149,7 @@ print(res.models)
 # We can see that there is a slight negative excess in the centre, and
 # thus, the fitted model has a negative amplitude. We can use the
 # `~gammapy.modeling.select_nested_models` function to perform a likelihood ratio test to
-# see if this is significant.
+# see if this is significant (See :doc:`docs/user-guide/howto.rst`).
 #
 
 LLR = select_nested_models(
@@ -146,11 +170,7 @@ print(LLR)
 # model with a negative amplitude as obtained above should not be
 # used.
 #
-# Note that the computed upper limits can depend on the assumed model. The
-# values of the amplitude should not matter as long as the values are not
-# too absurd. Here, we compute the 3-simga upper limits for assuming a
-# spectral index of 2.0
-#
+# Note that the computed upper limits can depend on the spectral parameters of the assumed model. Here, we compute the 3-simga upper limits for assuming a spectral index of 2.0.
 
 model1 = skymodel.copy(name="model1")
 model1.parameters["amplitude"].value = 1e-14
@@ -172,13 +192,16 @@ plt.show()
 
 
 ######################################################################
+# Sensitivity estimation
+# ------------------
+#
 # We can then ask, would I have seen my source given this irf/ exposure
-# time? The `FluxPointsEstimator` can be used to obtain the sensitivity,
+# time? The `~gammapy.estimators.FluxPointsEstimator` can be used to obtain the sensitivity,
 # which can be compared to the expected flux. We have the 5-sigma
 # sensitivity here, which can be configured using `n_sigma_sensitivity`
 # on init. Lets see if we would have seen if a Crab-like source was
 # present in the center.
-#
+# Note that this computed sensitivity does not take into account the into factors like the minimum number of gamma-ray, etc (see :doc:`/tutorials/analysis-1d/cta_sensitivity.py`) and is dependent on the analysis configuration.
 
 crab_model = create_crab_spectral_model()
 
@@ -195,7 +218,6 @@ plt.show()
 # around ~ 4 TeV
 #
 
-
 ######################################################################
 # Constraining model upper limits
 # -------------------------------
@@ -203,7 +225,7 @@ plt.show()
 # We will now use a precomputed blazar dataset to see how to contrain
 # model parameters. Detailed modeling of this dataset may be found in the
 # :doc:`/tutorials/utorials/analysis-1d/ebl` notebook. We will try to
-# constrain the spectral cutoff in the source. To see
+# constrain the spectral cutoff in the source.
 #
 
 dataset_onoff = SpectrumDatasetOnOff.read(
@@ -259,7 +281,7 @@ plt.show()
 ######################################################################
 # Thus, this dataset does not yield a significant spectral cutoff in
 # PKS2155-304. In particular, we cannot constrain the lower limit from
-# this profile. We can compute the limits of the cutoff from the pdf.
+# this profile. We can compute the limits of the cutoff from the Probability Density Function (PDF).
 #
 
 from scipy.interpolate import CubicSpline
@@ -327,6 +349,8 @@ print(
 # Since our dataset actually starts from `200 GeV`, all that we did from
 # this analysis is rule out any cut-off features!
 #
+# We could also have used `stat_profile_ul_scipy` for computing the UL, which uses rootfing to obtain the n-sigma limits, but this can fail if the limits are not constrained as we have here.
+#
 
 ax = plt.gca()
 ax.plot(1.0 / values, loglike - np.min(loglike))
@@ -341,6 +365,6 @@ plt.xscale("log")
 
 ######################################################################
 # This logic can be extended to any spectral or spatial feature. As an
-# exercise, try to compute the 95% spatial extent on the MSH 1552 dataset
+# exercise, try to compute the 95% spatial extent on the MSH 15 52 dataset
 # used for the ring background notebook.
 #
