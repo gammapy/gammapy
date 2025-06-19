@@ -18,12 +18,19 @@ class ParametricPSF(PSF):
 
     Parameters
     ----------
-    axes : list of `MapAxis` or `MapAxes`
+    axes : list of `~gammapy.maps.MapAxis` or `~gammapy.maps.MapAxes`
         Axes.
     data : dict of `~numpy.ndarray` or `~numpy.recarray`
         Data.
     unit : dict of str or `~astropy.units.Unit`
         Unit.
+    is_pointlike : bool, optional
+        Whether the IRF is point-like.
+        True for point-like IRFs, False for full-containment.
+        Default is False.
+    fov_alignment : `~gammapy.irf.FoVAlignment`, optional
+        The orientation of the field of view coordinate system.
+        Default is FoVAlignment.RADEC.
     meta : dict
         Metadata dictionary.
     """
