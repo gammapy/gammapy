@@ -360,7 +360,7 @@ def create_map_dataset_from_observation(
     spatial_bin_size_min : `~astropy.quantity.Quantity`, optional
         Minimal spatial bin size. Default is 0.01 degree.
     position : `~astropy.coordinates.SkyCoord`, optional
-        Center of the geometry. Defalut is the observation pointing.
+        Center of the geometry. Default is the observation pointing.
     frame: str, optional
         frame of the coordinate system. Default is "icrs".
     """
@@ -1518,6 +1518,8 @@ class MapDataset(Dataset):
         header = hdu_primary.header
         header["NAME"] = self.name
         header.update(self.meta.to_header())
+        creation = self.meta.creation
+        creation.update_time()
 
         hdulist = fits.HDUList([hdu_primary])
         if self.counts is not None:
@@ -1546,6 +1548,9 @@ class MapDataset(Dataset):
 
         if self.meta_table is not None:
             hdulist.append(fits.BinTableHDU(self.meta_table, name="META_TABLE"))
+
+        for hdu in hdulist:
+            hdu.header.update(creation.to_header())
 
         return hdulist
 
@@ -2983,6 +2988,8 @@ class MapDatasetOnOff(MapDataset):
         hdulist = super().to_hdulist()
         exclude_primary = slice(1, None)
 
+        creation = self.meta.creation
+
         del hdulist["BACKGROUND"]
         del hdulist["BACKGROUND_BANDS"]
 
@@ -2996,6 +3003,9 @@ class MapDatasetOnOff(MapDataset):
             hdulist += self.acceptance_off.to_hdulist(hdu="acceptance_off")[
                 exclude_primary
             ]
+
+        for hdu in hdulist:
+            hdu.header.update(creation.to_header())
 
         return hdulist
 

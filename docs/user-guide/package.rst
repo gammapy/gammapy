@@ -6,7 +6,8 @@ Fundamental Concepts: Gammapy analysis workflow and package structure
 =====================================================================
 
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 1
+    :hidden:
 
     dl3
     irf/index
@@ -22,7 +23,6 @@ Fundamental Concepts: Gammapy analysis workflow and package structure
     stats/index
     visualization/index
     utils
-
 
 Analysis workflow
 -----------------

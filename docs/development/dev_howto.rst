@@ -668,26 +668,25 @@ If you have a alternative attribute to use instead, pass its name in the `altern
     print(some_class(10).old_attribute)
 
 
+How to capture a deprecation
+++++++++++++++++++++++++++++
+
+A deprecation warning raised during CI will be considered an error by `pytest`.
+Nevertheless, it is important to also check that deprecation warnings are correctly
+emitted in the test files. This can be done in the following way:
+
+.. code::
+
+    # Runs with the renamed argument
+    asmooth = ASmoothMapEstimator(scales=scales, spectral_model=PowerLawSpectralModel())
+
+    # Raises deprecation warning
+    with pytest.warns(GammapyDeprecationWarning):
+        ASmoothMapEstimator(scales=scales, spectrum=PowerLawSpectralModel())
+
+
 Others
 ------
-
-Command line tools using click
-++++++++++++++++++++++++++++++
-
-Command line tools that use the `click <https://click.palletsprojects.com/en/8.0.x/>`__ module should disable
-the unicode literals warnings to clean up the output of the tool:
-
-.. testcode::
-
-    import click
-    click.disable_unicode_literals_warning = True
-
-See `here <https://click.palletsprojects.com/en/5.x/python3/#unicode-literals>`__ for further
-information.
-
-
-
-
 
 Bundled gammapy.extern code
 +++++++++++++++++++++++++++

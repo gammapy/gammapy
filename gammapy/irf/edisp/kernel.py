@@ -10,6 +10,7 @@ from matplotlib.colors import PowerNorm
 from gammapy.maps import MapAxis
 from gammapy.maps.axes import UNIT_STRING_FORMAT
 from gammapy.utils.scripts import make_path
+from gammapy.utils.metadata import CreatorMetaData
 from gammapy.visualization.utils import add_colorbar
 from ..core import IRF
 
@@ -266,7 +267,7 @@ class EDispKernel(IRF):
         checksum : bool
             If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
         format : {"gadf", "gtdrm"}
-            FITS format convention. Defalut is "gadf".
+            FITS format convention. Default is "gadf".
         """
 
         if format == "gadf":
@@ -310,13 +311,16 @@ class EDispKernel(IRF):
         else:
             raise ValueError(f"Unrecognized format: {format}")
 
-    def to_hdulist(self, format="ogip", **kwargs):
+    def to_hdulist(self, format="ogip", creation=None, **kwargs):
         """Convert RMF to FITS HDU list format.
 
         Parameters
         ----------
         format : {"ogip", "ogip-sherpa"}
             Format to use. Default is "ogip".
+        creation : `~gammapy.utils.metadata.CreatorMetadata`, optional
+            Creation metadata to add to the file. If None, default metadata is added.
+            Default is None.
 
         Returns
         -------
@@ -356,6 +360,12 @@ class EDispKernel(IRF):
 
         ebounds_hdu = self.axes["energy"].to_table_hdu(format=format)
         prim_hdu = fits.PrimaryHDU()
+
+        creation = creation or CreatorMetaData()
+        creation.update_time()
+
+        for hd in [prim_hdu, hdu, ebounds_hdu]:
+            hd.header.update(creation.to_header())
 
         return fits.HDUList([prim_hdu, hdu, ebounds_hdu])
 
@@ -429,7 +439,7 @@ class EDispKernel(IRF):
 
         return table
 
-    def write(self, filename, format="ogip", checksum=False, **kwargs):
+    def write(self, filename, format="ogip", checksum=False, creation=None, **kwargs):
         """Write to file.
 
         Parameters
@@ -440,10 +450,13 @@ class EDispKernel(IRF):
             Format to use. Default is "ogip".
         checksum : bool
             If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
+        creation : `~gammapy.utils.metadata.CreatorMetadata`, optional
+            Creation metadata to add to the file. If None, default metadata is added.
+            Default is None.
 
         """
         filename = str(make_path(filename))
-        hdulist = self.to_hdulist(format=format)
+        hdulist = self.to_hdulist(format=format, creation=creation)
 
         hdulist.writeto(filename, checksum=checksum, **kwargs)
 

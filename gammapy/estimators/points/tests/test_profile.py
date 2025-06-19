@@ -17,7 +17,6 @@ from gammapy.utils.regions import (
     make_orthogonal_rectangle_sky_regions,
 )
 from gammapy.utils.testing import requires_data, requires_dependency
-from gammapy.utils.deprecation import GammapyDeprecationWarning
 
 
 def get_simple_dataset_on_off():
@@ -54,13 +53,6 @@ def test_profile_content():
     mapdataset_onoff = get_simple_dataset_on_off()
     wcs = mapdataset_onoff.counts.geom.wcs
     boxes = make_horizontal_boxes(wcs)
-
-    with pytest.warns(GammapyDeprecationWarning):
-        FluxProfileEstimator(
-            regions=boxes,
-            energy_edges=[0.1, 1, 10] * u.TeV,
-            spectrum=PowerLawSpectralModel(),
-        )
 
     prof_maker = FluxProfileEstimator(
         regions=boxes,

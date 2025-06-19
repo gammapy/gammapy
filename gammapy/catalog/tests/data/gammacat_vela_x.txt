@@ -63,7 +63,7 @@ theta: 1.2 deg
 
 
 Derived fluxes:
-Spectral model norm (1 TeV): 1.36e-11 1 / (cm2 s TeV) +- 7.53e-13 1 / (cm2 s TeV) (stat) cm-2 s-1 TeV-1
+Spectral model norm (1 TeV): 1.36e-11 1 / (TeV s cm2) +- 7.53e-13 1 / (TeV s cm2) (stat) cm-2 s-1 TeV-1
 Integrated flux (>1 TeV): 2.1e-11 +- 1.97e-12 (stat) cm-2 s-1
 Integrated flux (>1 TeV): 101.425 +- 9.511 (% Crab)
 Integrated flux (1-10 TeV): 9.27e-11 +- 9.59e-12 (stat) erg cm-2 s-1
@@ -75,7 +75,7 @@ Number of spectral points: 24
 Number of upper limits: 0
 
 e_ref        dnde         dnde_errn       dnde_errp   
- TeV   1 / (cm2 s TeV) 1 / (cm2 s TeV) 1 / (cm2 s TeV)
+ TeV   1 / (TeV s cm2) 1 / (TeV s cm2) 1 / (TeV s cm2)
 ------ --------------- --------------- ---------------
  0.719       1.055e-11       3.284e-12       3.280e-12
  0.868       1.304e-11       2.130e-12       2.130e-12

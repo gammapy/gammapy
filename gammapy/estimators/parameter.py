@@ -26,14 +26,14 @@ class ParameterEstimator(Estimator):
 
     Parameters
     ----------
-    n_sigma : int
+    n_sigma : int, optional
         Sigma to use for asymmetric error computation. Default is 1.
-    n_sigma_ul : int
+    n_sigma_ul : int, optional
         Sigma to use for upper limit computation. Default is 2.
-    n_sigma_sensitivity : int
+    n_sigma_sensitivity : int, optional
         Sigma to use for sensitivity computation. Default is 5.
-    null_value : float
-        Which null value to use for the parameter.
+    null_value : float, optional
+        Which null value to use for the parameter. Default is 1e-150.
     selection_optional : list of str, optional
         Which additional quantities to estimate. Available options are:
 
@@ -42,10 +42,11 @@ class ParameterEstimator(Estimator):
             * "ul": estimate upper limits.
             * "scan": estimate fit statistic profiles.
 
-        Default is None so the optional steps are not executed.
-    fit : `~gammapy.modeling.Fit`
-        Fit instance specifying the backend and fit options.
-    reoptimize : bool
+        Default is None, so the optional steps are not executed.
+    fit : `~gammapy.modeling.Fit`, optional
+        Fit instance specifying the backend and fit options. If None, the `~gammapy.modeling.Fit` instance is created
+        internally. Default is None.
+    reoptimize : bool, optional
         Re-optimize other free model parameters. Default is True.
 
     Examples
@@ -101,7 +102,7 @@ class ParameterEstimator(Estimator):
         ----------
         datasets : `~gammapy.datasets.Datasets`
             Datasets.
-        parameter : `Parameter`
+        parameter : `~gammapy.modeling.Parameter`
             For which parameter to get the value.
 
         Returns
@@ -136,7 +137,7 @@ class ParameterEstimator(Estimator):
         ----------
         datasets : `~gammapy.datasets.Datasets`
             Datasets.
-        parameter : `Parameter`
+        parameter : `~gammapy.modeling.Parameter`
             For which parameter to get the value.
 
         Returns
@@ -176,7 +177,7 @@ class ParameterEstimator(Estimator):
         ----------
         datasets : `~gammapy.datasets.Datasets`
             Datasets.
-        parameter : `Parameter`
+        parameter : `~gammapy.modeling.Parameter`
             For which parameter to get the value.
 
         Returns
@@ -301,7 +302,7 @@ class ParameterEstimator(Estimator):
 
         Parameters
         ----------
-        datasets : Datasets
+        datasets : `~gammapy.datasets.Datasets`
             Datasets.
 
         Returns
@@ -355,6 +356,17 @@ class ParameterEstimator(Estimator):
         -------
         result : dict
             Dictionary with the various parameter estimation values.
+            If used without the optional steps, it contains the following keys:
+
+                * parameter.name : best fit parameter value
+                * "stat" : best fit total stat
+                * "success" : boolean flag for fit success
+                * parameter.name_err: covariance-based error estimate on parameter value
+                * "ts" : delta(TS) value
+                * "npred" : predicted number of counts per dataset
+                * "stat_null" : total stat corresponding to the null hypothesis
+                * "counts" : counts value per dataset
+                * "datasets" : names of the datasets
         """
         if not isinstance(datasets, DatasetsActor):
             datasets = Datasets(datasets)
@@ -403,6 +415,8 @@ class ParameterSensitivityEstimator:
         Value of the parameter for the null hypothesis.
     n_sigma : int, optional
         Number of required significance level. Default is 5.
+    n_free_parameters : int, optional
+        Number of free parameters. Default is None, which utilises len(parameters).
     rtol : float, optional
         Relative precision of the estimate. Used as a stopping criterion.
         Default is 0.01.
@@ -445,21 +459,12 @@ class ParameterSensitivityEstimator:
     def parameter_matching_significance(self, datasets):
         """Parameter value  matching the target significance"""
 
-        if ~np.isfinite(self.parameter.min):
-            vmin = self.parameter.value / 1e3
-        else:
-            vmin = self.parameter.min
-        if ~np.isfinite(self.parameter.max):
-            vmax = self.parameter.value * 1e3
-        else:
-            vmax = self.parameter.max
-
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             roots, res = find_roots(
                 self._fcn,
-                vmin,
-                vmax,
+                self.parameter.conf_min,
+                self.parameter.conf_max,
                 args=(datasets,),
                 nbin=100,
                 maxiter=self.max_niter,
@@ -474,8 +479,18 @@ class ParameterSensitivityEstimator:
             return np.nan
 
     def run(self, datasets):
-        """Parameter sensitivity
-        given as the difference between value matching the target significance and the null value.
+        """Run the parameter sensitivity estimator.
+
+        Parameters
+        ----------
+        datasets : `~gammapy.datasets.Datasets`
+            The datasets used to estimate the parameter sensitivity.
+
+        Returns
+        -------
+        result : float
+            Parameter sensitivity given as the difference between the value matching
+            the target significance and the null value.
         """
         with restore_parameters_status(self.test.parameters):
             value = self.parameter_matching_significance(datasets)

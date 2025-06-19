@@ -1,14 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities to create scripts and command-line tools."""
+
 import codecs
 import os.path
+import functools
+import types
 import warnings
 from base64 import urlsafe_b64encode
 from pathlib import Path
 from uuid import uuid4
 import yaml
 from gammapy.utils.check import add_checksum, verify_checksum
-from gammapy.utils.deprecation import deprecated_renamed_argument
 
 __all__ = [
     "from_yaml",
@@ -112,7 +114,6 @@ def to_yaml(dictionary, sort_keys=False):
     return text + creation.to_yaml()
 
 
-@deprecated_renamed_argument("dictionary", "text", "v1.3")
 def write_yaml(
     text, filename, logger=None, sort_keys=False, checksum=False, overwrite=False
 ):
@@ -214,3 +215,62 @@ def recursive_merge_dicts(a, b):
         else:
             c[k] = v
     return c
+
+
+def requires_module(module_name):
+    """
+    Decorator that conditionally enables a method or property based on the availability of a module.
+
+    If the specified module is available, the decorated method or property is returned as-is.
+    If the module is not available:
+      - For methods: replaces the method with one that raises ImportError when called.
+      - For properties: replaces the property with one that raises ImportError when accessed.
+
+    Parameters
+    ----------
+    module_name : str
+        The name of the module to check for.
+
+    Returns
+    -------
+    function or property
+        The original object if the module is available, otherwise a fallback.
+    """
+
+    def decorator(obj):
+        try:
+            __import__(module_name)
+            return obj  # Module is available
+        except ImportError:
+            if isinstance(obj, property):
+                return property(
+                    lambda self: raise_import_error(module_name, is_property=True)
+                )
+            elif isinstance(obj, (types.FunctionType, types.MethodType)):
+
+                @functools.wraps(obj)
+                def wrapper(*args, **kwargs):
+                    raise_import_error(module_name)
+
+                return wrapper
+            else:
+                raise TypeError(
+                    "requires_module can only be used on methods or properties."
+                )
+
+    return decorator
+
+
+def raise_import_error(module_name, is_property=False):
+    """
+    Raises an ImportError with a descriptive message about a missing module.
+
+    Parameters
+    ----------
+    module_name : str
+        The name of the required module.
+    is_property : bool
+        Whether the error is for a property (affects the error message).
+    """
+    kind = "property" if is_property else "method"
+    raise ImportError(f"The '{module_name}' module is required to use this {kind}.")
