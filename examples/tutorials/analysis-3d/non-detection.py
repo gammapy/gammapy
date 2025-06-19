@@ -2,7 +2,7 @@
 Event sampling
 ==============
 
-Explore how to deal with upper limits on parameters or flux upper limits
+Explore how to deal with upper limits on parameters for a significant source,  or flux upper limits
 for a non-detected source.
 
 Prerequisites
