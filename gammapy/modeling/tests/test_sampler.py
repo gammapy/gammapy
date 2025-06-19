@@ -51,8 +51,8 @@ def test_run(backend="ultranest"):
     ]
     assert set(required_keys).issubset(result.sampler_results.keys())
 
-    assert_allclose(result.models.parameters["index"].value, 2.7, rtol=0.2)
-    assert_allclose(result.models.parameters["amplitude"].value, 4.0e-11, rtol=0.2)
+    assert_allclose(result.models.parameters["index"].value, 2.7, rtol=0.1)
+    assert_allclose(result.models.parameters["amplitude"].value, 4.0e-11, rtol=0.1)
 
     assert result.models.parameters["index"].error > 0
     assert result.models.parameters["amplitude"].error > 0
@@ -103,8 +103,8 @@ def test_run_linked(backend="ultranest"):
     ]
     assert set(required_keys).issubset(result.sampler_results.keys())
 
-    assert_allclose(result.models.parameters["index"].value, 2.7, rtol=0.2)
-    assert_allclose(result.models.parameters["amplitude"].value, 2.0e-11, rtol=0.2)
+    assert_allclose(result.models.parameters["index"].value, 2.7, rtol=0.1)
+    assert_allclose(result.models.parameters["amplitude"].value, 2.0e-11, rtol=0.1)
 
     assert result.models.parameters["index"].error > 0
     assert result.models.parameters["amplitude"].error > 0
