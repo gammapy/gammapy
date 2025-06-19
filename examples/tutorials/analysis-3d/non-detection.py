@@ -102,7 +102,7 @@ plt.show()
 # The significance map looks rather flat! Suppose we were expecting a
 # source at the centre of our map. Lets try see if we can fit a point
 # source there.
-#
+# Note that it is necessary to constrain the range of the position, otherwise the fit might not converge. 
 
 spectral = PowerLawSpectralModel()
 spatial = PointSpatialModel(frame="icrs")
