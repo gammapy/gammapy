@@ -87,7 +87,7 @@ plt.show()
 
 
 ######################################################################
-# We will first use the `ExcessMapEstimator` for a quick check to see if
+# We will first use the `~gammapy.estimators.ExcessMapEstimator` for a quick check to see if
 # there are any hotspots in the field. You may also use the
 # `TSMapEstimator`.
 #
