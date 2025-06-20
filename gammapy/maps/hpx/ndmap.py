@@ -33,13 +33,20 @@ class HpxNDMap(HpxMap):
     ----------
     geom : `~gammapy.maps.HpxGeom`
         HEALPix geometry object.
-    data : `~numpy.ndarray`
+    data : `~numpy.ndarray`, optional
         HEALPix data array.
         If None, then an empty array will be allocated.
-    meta : `dict`
-        Dictionary to store metadata.
+        Default is None.
+    dtype : str, optional
+        Data type. Default is 'float32'.
+    meta : `dict`, optional
+        Dictionary to store metadata. Default is None.
     unit : str or `~astropy.units.Unit`
         The map unit.
+
+    Notes
+    -----
+    - For examples, see :doc:`/user-guide/maps/hpxmap`
     """
 
     def __init__(self, geom, data=None, dtype="float32", meta=None, unit=""):
