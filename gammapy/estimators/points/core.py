@@ -813,13 +813,13 @@ class FluxPoints(FluxMaps):
         Examples
         --------
         >>> from gammapy.estimators import FluxPoints
-        >>> filename = '$GAMMAPY_DATA/tests/spectrum/flux_points/binlike.fits'
+        >>> filename = "$GAMMAPY_DATA/estimators/crab_hess_fp/crab_hess_fp.fits"
         >>> flux_points = FluxPoints.read(filename)
         >>> flux_points_recomputed = flux_points.recompute_ul(n_sigma_ul=3)
-        >>> print(flux_points.meta["n_sigma_ul"], flux_points.flux_ul.data[0])
-        2.0 [[3.95451985e-09]]
-        >>> print(flux_points_recomputed.meta["n_sigma_ul"], flux_points_recomputed.flux_ul.data[0])
-        3 [[6.22245374e-09]]
+        >>> print(flux_points.meta["n_sigma_ul"], flux_points.flux_ul.data[1])
+        3.0 [[3.99250033e-11]]
+        >>> print(flux_points_recomputed.meta["n_sigma_ul"], flux_points_recomputed.flux_ul.data[1])
+        3 [[3.99323829e-11]]
         """
         if not self.has_stat_profiles:
             raise ValueError(
