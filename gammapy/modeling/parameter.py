@@ -10,6 +10,8 @@ import numpy as np
 from astropy import units as u
 from astropy.table import Table
 from gammapy.utils.interpolation import interpolation_scale
+from gammapy.utils.scripts import make_name
+
 
 __all__ = ["Parameter", "Parameters", "PriorParameter", "PriorParameters"]
 
@@ -767,8 +769,22 @@ class Parameters(collections.abc.Sequence):
         }
         return Table(names=name_to_type.keys(), dtype=name_to_type.values())
 
+    def update_link_label(self):
+        """Update linked parameters labels used for serialisation and print."""
+        params_list = []
+        params_shared = []
+        for param in self:
+            if param not in params_list:
+                params_list.append(param)
+                params_list.append(param)
+            elif param not in params_shared:
+                params_shared.append(param)
+        for param in params_shared:
+            param._link_label_io = param.name + "@" + make_name()
+
     def to_table(self):
         """Convert parameter attributes to `~astropy.table.Table`."""
+        self.update_link_label()
         table = self._create_default_table()
 
         for p in self._parameters:
