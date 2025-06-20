@@ -21,7 +21,7 @@ jobs:
     name: ${{ matrix.os }}, ${{ matrix.tox_env }}
     runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.allowed_fail }}
-    if: github.event.pull_request.labels.*.name !contains 'skip tests'
+    if: contains(github.event.pull_request.labels.*.name, 'skip tests') == false
     env:
       PYTEST_ADDOPTS: --color=yes -n auto --dist=loadscope
       
@@ -132,7 +132,7 @@ jobs:
       PYTEST_ADDOPTS: --color=yes -n auto --dist=loadscope
       GAMMAPY_DATA: /home/runner/work/gammapy/gammapy/gammapy-datasets/dev
     
-    if: github.event.pull_request.labels.*.name !contains 'skip docs'
+    if: contains(github.event.pull_request.labels.*.name, 'skip docs') == false
 
     steps:
       - name: Check out repository
