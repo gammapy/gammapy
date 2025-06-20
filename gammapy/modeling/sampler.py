@@ -97,7 +97,7 @@ class Sampler:
         # TODO : add option for median, distribution peak, and maxLogL once Param object has asym errors
 
         posterior = result["posterior"]
-        for i, par in enumerate(models.parameters.free_parameters):
+        for i, par in enumerate(models.parameters.free_unique_parameters):
             par.value = posterior["mean"][i]
             par.error = posterior["stdev"][i]
         models._covariance = None
@@ -173,7 +173,7 @@ class Sampler:
             The sampler results. See the class description to get the exact content.
         """
         datasets, parameters = _parse_datasets(datasets=datasets)
-        parameters = parameters.free_parameters
+        parameters = parameters.free_unique_parameters
 
         if self.backend == "ultranest":
             like = SamplerLikelihood(
