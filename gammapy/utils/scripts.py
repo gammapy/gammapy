@@ -4,14 +4,15 @@
 
 import ast
 import codecs
+import operator
 import os.path
 import functools
 import types
 import warnings
+import numpy as np
 from base64 import urlsafe_b64encode
 from pathlib import Path
 from uuid import uuid4
-from astropy.table import Table
 import yaml
 from gammapy.utils.check import add_checksum, verify_checksum
 
@@ -279,6 +280,21 @@ def raise_import_error(module_name, is_property=False):
     raise ImportError(f"The '{module_name}' module is required to use this {kind}.")
 
 
+# Mapping of AST operators to NumPy functions
+_OPERATORS = {
+    ast.And: np.logical_and,
+    ast.Or: np.logical_or,
+    ast.Eq: operator.eq,
+    ast.NotEq: operator.ne,
+    ast.Lt: operator.lt,
+    ast.LtE: operator.le,
+    ast.Gt: operator.gt,
+    ast.GtE: operator.ge,
+    ast.In: lambda a, b: np.isin(a, b),
+    ast.NotIn: lambda a, b: ~np.isin(a, b),
+}
+
+
 def logic_parser(table, expression):
     """
     Parse and apply a logical expression to filter rows from an Astropy Table.
@@ -300,7 +316,7 @@ def logic_parser(table, expression):
     Returns
     -------
     table : `~astropy.table.Table`
-        A new table containing only the rows that satisfy the expression. If no rows
+        A table view containing only the rows that satisfy the expression. If no rows
         match the condition, an empty table with the same column names and data types
         as the input table is returned.
 
@@ -320,65 +336,34 @@ def logic_parser(table, expression):
 
     """
 
-    def eval_expr(expr, row):
-        """
-        Evaluate the logical expression on a given row.
-
-        Parameters
-        ----------
-        expr : ast.Expression
-            The parsed logical expression.
-        row : dict
-            A dictionary representing a row of the table.
-
-        Returns
-        -------
-        bool
-            The result of evaluating the expression on the row.
-        """
-        if isinstance(expr, ast.BoolOp):
-            if isinstance(expr.op, ast.And):
-                return all(eval_expr(value, row) for value in expr.values)
-            elif isinstance(expr.op, ast.Or):
-                return any(eval_expr(value, row) for value in expr.values)
-        elif isinstance(expr, ast.Compare):
-            left = eval_expr(expr.left, row)
-            comparators = [eval_expr(comp, row) for comp in expr.comparators]
-            if isinstance(expr.ops[0], ast.In):
-                return left in comparators[0]
-            elif isinstance(expr.ops[0], ast.NotIn):
-                return left not in comparators[0]
-            elif isinstance(expr.ops[0], ast.Eq):
-                return left == comparators[0]
-            elif isinstance(expr.ops[0], ast.NotEq):
-                return left != comparators[0]
-            elif isinstance(expr.ops[0], ast.Lt):
-                return left < comparators[0]
-            elif isinstance(expr.ops[0], ast.LtE):
-                return left <= comparators[0]
-            elif isinstance(expr.ops[0], ast.Gt):
-                return left > comparators[0]
-            elif isinstance(expr.ops[0], ast.GtE):
-                return left >= comparators[0]
-        elif isinstance(expr, ast.Name):
-            return row[expr.id]
-        elif isinstance(expr, ast.Constant):
-            return expr.value
-        elif isinstance(expr, ast.List):
-            return [eval_expr(elt, row) for elt in expr.elts]
+    def eval_node(node):
+        if isinstance(node, ast.BoolOp):
+            op_func = _OPERATORS[type(node.op)]
+            values = [eval_node(v) for v in node.values]
+            result = values[0]
+            for v in values[1:]:
+                result = op_func(result, v)
+            return result
+        elif isinstance(node, ast.Compare):
+            left = eval_node(node.left)
+            for op, comparator in zip(node.ops, node.comparators):
+                right = eval_node(comparator)
+                op_func = _OPERATORS[type(op)]
+                left = op_func(left, right)
+            return left
+        elif isinstance(node, ast.Name):
+            if node.id not in table.colnames:
+                raise KeyError(
+                    f"Column '{node.id}' not found in the table. Available columns: {table.colnames}"
+                )
+            return table[node.id]
+        elif isinstance(node, ast.Constant):
+            return node.value
+        elif isinstance(node, ast.List):
+            return [eval_node(elt) for elt in node.elts]
         else:
-            raise ValueError(f"Unsupported expression type: {type(expr)}")
+            raise ValueError(f"Unsupported expression type: {type(node)}")
 
-    # Parse the expression into an AST
-    parsed_expr = ast.parse(expression, mode="eval").body
-
-    # Filter rows based on the evaluated expression
-    filtered_rows = [row for row in table if eval_expr(parsed_expr, row)]
-
-    # Return a new table with the filtered rows
-    if filtered_rows:
-        return Table(rows=filtered_rows, names=table.colnames)
-    else:
-        return Table(
-            names=table.colnames, dtype=[table[col].dtype for col in table.colnames]
-        )
+    expr_ast = ast.parse(expression, mode="eval")
+    mask = eval_node(expr_ast.body)
+    return table[mask]
