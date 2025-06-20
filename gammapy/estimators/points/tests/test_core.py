@@ -21,9 +21,7 @@ from gammapy.utils.testing import (
 )
 
 FLUX_POINTS_FILES = [
-    "diff_flux_points.ecsv",
     "diff_flux_points.fits",
-    "flux_points.ecsv",
     "flux_points.fits",
 ]
 
