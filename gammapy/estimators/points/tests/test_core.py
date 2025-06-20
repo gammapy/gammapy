@@ -227,7 +227,7 @@ class TestFluxPoints:
         assert flux_points_likelihood.sqrt_ts
         assert flux_points_likelihood.ts
         assert flux_points_likelihood.stat
-        assert_allclose(flux_points_likelihood.n_sigma_ul, 2)
+        assert_allclose(flux_points_likelihood.n_sigma_ul, 3)
         assert flux_points_likelihood.sed_type_init == "likelihood"
 
     def test_plot(self, flux_points):
