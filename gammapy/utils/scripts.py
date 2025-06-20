@@ -291,7 +291,7 @@ def logic_parser(table, expression):
 
     Parameters
     ----------
-    table : astropy.table.Table
+    table : `~astropy.table.Table`
         The input table to filter.
     expression : str
         The logical expression to evaluate on each row. The expression can reference
@@ -299,7 +299,7 @@ def logic_parser(table, expression):
 
     Returns
     -------
-    astropy.table.Table
+    table : `~astropy.table.Table`
         A new table containing only the rows that satisfy the expression. If no rows
         match the condition, an empty table with the same column names and data types
         as the input table is returned.
