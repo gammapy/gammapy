@@ -169,7 +169,7 @@ def flux_points(request):
 
 @pytest.fixture(scope="session")
 def flux_points_likelihood():
-    path = "$GAMMAPY_DATA/tests/spectrum/flux_points/binlike.fits"
+    path = "$GAMMAPY_DATA/estimators/crab_hess_fp/crab_hess_fp.fits"
     return FluxPoints.read(path)
 
 
