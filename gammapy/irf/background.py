@@ -25,13 +25,25 @@ class BackgroundIRF(IRF):
     ----------
     axes : list of `~gammapy.maps.MapAxis` or `~gammapy.maps.MapAxes`
         Axes.
-    data : `~np.ndarray`
+    data : `~numpy.ndarray`
         Data array.
     unit : str or `~astropy.units.Unit`
         Data unit usually ``s^-1 MeV^-1 sr^-1``.
+    is_pointlike : bool, optional
+        Whether the IRF is point-like.
+        True for point-like IRFs, False for full-containment.
+        Default is False.
+    fov_alignment : `~gammapy.irf.FoVAlignment`, optional
+        The orientation of the field of view coordinate system.
+        Default is FoVAlignment.RADEC.
     meta : dict
         Metadata dictionary.
-
+    interp_kwargs : dict, optional
+        Keyword arguments passed to
+        `~gammapy.utils.interpolation.ScaledRegularGridInterpolator`.
+        If None, the following inputs are used ``bounds_error=False``, ``fill_value=0.0``
+        and ``values_scale="log"``.
+        Default is None.
     """
 
     default_interp_kwargs = dict(bounds_error=False, fill_value=0.0, values_scale="log")
@@ -113,14 +125,25 @@ class Background3D(BackgroundIRF):
             * energy (reconstructed energy axis)
             * fov_lon (field of view longitude)
             * fov_lon (field of view latitude)
-    data : `~np.ndarray`
+    data : `~numpy.ndarray`
         Data array.
     unit : str or `~astropy.units.Unit`
         Data unit usually ``s^-1 MeV^-1 sr^-1``.
-    fov_alignment : `~gammapy.irf.FoVAlignment`
+    is_pointlike : bool, optional
+        Whether the IRF is point-like.
+        True for point-like IRFs, False for full-containment.
+        Default is False.
+    fov_alignment : `~gammapy.irf.FoVAlignment`, optional
         The orientation of the field of view coordinate system.
+        Default is FoVAlignment.RADEC.
     meta : dict
         Metadata dictionary.
+    interp_kwargs : dict, optional
+        Keyword arguments passed to
+        `~gammapy.utils.interpolation.ScaledRegularGridInterpolator`.
+        If None, the following inputs are used ``bounds_error=False``, ``fill_value=0.0``
+        and ``values_scale="log"``.
+        Default is None.
 
     Examples
     --------
@@ -267,12 +290,25 @@ class Background2D(BackgroundIRF):
         Required axes (in the given order) are:
             * energy (reconstructed energy axis)
             * offset (field of view offset axis)
-    data : `~np.ndarray`
+    data : `~numpy.ndarray`
         Data array.
     unit : str or `~astropy.units.Unit`
         Data unit usually ``s^-1 MeV^-1 sr^-1``.
+    is_pointlike : bool, optional
+        Whether the IRF is point-like.
+        True for point-like IRFs, False for full-containment.
+        Default is False.
+    fov_alignment : `~gammapy.irf.FoVAlignment`, optional
+        The orientation of the field of view coordinate system.
+        Default is FoVAlignment.RADEC.
     meta : dict
         Metadata dictionary.
+    interp_kwargs : dict, optional
+        Keyword arguments passed to
+        `~gammapy.utils.interpolation.ScaledRegularGridInterpolator`.
+        If None, the following inputs are used ``bounds_error=False``, ``fill_value=0.0``
+        and ``values_scale="log"``.
+        Default is None.
     """
 
     tag = "bkg_2d"
