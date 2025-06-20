@@ -22,6 +22,15 @@ class PSF3D(PSF):
             * rad (rad axis)
     data : `~astropy.units.Quantity`
         PSF (3-dim with axes: psf[rad_index, offset_index, energy_index].
+    unit : dict of str or `~astropy.units.Unit`
+        Unit.
+    is_pointlike : bool, optional
+        Whether the IRF is point-like.
+        True for point-like IRFs, False for full-containment.
+        Default is False.
+    fov_alignment : `~gammapy.irf.FoVAlignment`, optional
+        The orientation of the field of view coordinate system.
+        Default is FoVAlignment.RADEC.
     meta : dict
         Metadata dictionary.
     """
