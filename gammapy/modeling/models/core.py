@@ -787,8 +787,8 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
         models: `Models`
             Copied models.
         """
+        self.update_link_label()
         models = []
-
         for model in self:
             model_copy = model.copy(name=model.name, copy_data=copy_data)
             models.append(model_copy)
