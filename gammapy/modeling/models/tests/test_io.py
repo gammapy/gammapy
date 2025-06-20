@@ -487,7 +487,7 @@ def test_link_label(models):
     assert table["link"][2] == table["link"][9] and table["link"][2] != table["link"][1]
 
     txt = skymodels.__str__()
-    lines = txt.splitlines()
+    lines = txt.splitlines()  # noqa: E303
     n_link = 0
     for line in lines:
         if "@" in line:
