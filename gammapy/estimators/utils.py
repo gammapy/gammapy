@@ -276,6 +276,18 @@ def estimate_exposure_reco_energy(dataset, spectral_model=None, normalize=True):
             dataset,
             spectral_model=spectral_model,
         )
+        print(reco_exposure)
+
+    .. testoutput::
+
+        WcsNDMap
+
+        geom  : WcsGeom
+        axes  : ['lon', 'lat', 'energy']
+        shape : (320, 240, 10)
+        ndim  : 3
+        unit  : cm2 s
+        dtype : float64
     """
     if spectral_model is None:
         spectral_model = PowerLawSpectralModel()

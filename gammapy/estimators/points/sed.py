@@ -109,6 +109,22 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
         )
 
         fp = estimator.run(dataset)
+        print(fp)
+
+    .. testoutput::
+
+        FluxPoints
+        ----------
+
+          geom                   : RegionGeom
+          axes                   : ['lon', 'lat', 'energy']
+          shape                  : (1, 1, 6)
+          quantities             : ['norm', 'norm_err', 'ts', 'npred', 'npred_excess', 'stat', 'stat_null', 'counts', 'success']
+          ref. model             : pl
+          n_sigma                : 1
+          n_sigma_ul             : 2
+          sqrt_ts_threshold_ul   : 2
+          sed type init          : likelihood
     """
 
     tag = "FluxPointsEstimator"
