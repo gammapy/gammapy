@@ -60,6 +60,11 @@ class RegionGeom(Geom):
         quantities in the region. Default is "0.1 deg". This default
         value is adequate for the majority of use cases. If a WCS object
         is provided, the input of ``binsz_wcs`` is overridden.
+
+    Notes
+    -----
+    - For further explanation and examples, see :doc:`/user-guide/maps/regionmap`
+
     """
 
     is_regular = True
