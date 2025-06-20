@@ -8,12 +8,12 @@ abstract: 'Gammapy analyzes gamma-ray data and creates sky images, spectra and l
 type: software
 message: "If you use this software, please cite it using the metadata from this file."
 url: "https://gammapy.org/"
-date-released: 2024-11-26
+date-released: 2025-07-26
 keywords:
 - Astronomy
 - "Gamma-rays"
 - "Data analysis"
-version: v1.3
+version: v2.0
 repository-code: "https://github.com/gammapy/gammapy"
 license: BSD-3-Clause
 contact:
@@ -34,6 +34,18 @@ authors:
   affiliation: "Departament de Física Quàntica i Astrofísica, Institut de Ciències
     del Cosmos, Universitat de Barcelona, IEEC-UB, Barcelona, Spain"
   orcid: "https://orcid.org/0000-0001-8816-4920"
+- given-names: Tora
+  family-names: Arnesen
+  affiliation:
+  orcid:
+- given-names: Luis
+  family-names: Barrios-Jimenez
+  affiliation:
+  orcid:
+- given-names: Anushka
+  family-names: Batt
+  affiliation:
+  orcid:
 - given-names: Juan
   family-names: Bernete
   affiliation: "Centro de Investigaciones Energéticas Medioambientales y Tecnológicas
@@ -43,6 +55,14 @@ authors:
   family-names: Biederbeck
   affiliation: "Astroparticle Physics Group, TU Dortmund University, Germany"
   orcid: "https://orcid.org/0000-0003-3708-9785"
+- given-names: Johannes
+  family-names: Büchner
+  affiliation:
+  orcid:
+- given-names: Tomas
+  family-names: Bylund
+  affiliation:
+  orcid:
 - given-names: Julia
   family-names: Djuvsland
   affiliation: "University of Bergen, Norway and Max Planck Institute for Nuclear
@@ -52,6 +72,19 @@ authors:
   family-names: Donath
   affiliation: "Center for Astrophysics | Harvard & Smithsonian, USA"
   orcid: "https://orcid.org/0000-0003-4568-7005"
+- given-names: Katharina
+  family-names: Egg
+  affiliation: "Friedrich-Alexander-Universität Erlangen-Nürnberg, ECAP, Nikolaus-Fiebiger-Str.
+    2, 91058 Erlangen, Germany"
+  orcid:
+- given-names: Gabriel
+  family-names: Emery
+  affiliation:
+  orcid:
+- given-names: Matthew
+  family-names: Feickert
+  affiliation:
+  orcid:
 - given-names: Kirsty
   family-names: Feijen
   affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
@@ -92,6 +125,10 @@ authors:
   family-names: Mender
   affiliation: "Astroparticle Physics Group, TU Dortmund University, Germany"
   orcid: "https://orcid.org/0000-0002-0755-0609"
+- given-names: Edgar
+  family-names: Molina
+  affiliation:
+  orcid:
 - given-names: Lars
   family-names: Mohrmann
   affiliation: "Max Planck Institute for Nuclear Physics, Heidelberg, Germany"
@@ -108,6 +145,18 @@ authors:
   family-names: Olivera-Nieto
   affiliation: "Max Planck Institute for Nuclear Physics, Heidelberg, Germany"
   orcid: "https://orcid.org/0000-0002-9105-0518"
+- given-names: Sebastian
+  family-names: Panny
+  affiliation:
+  orcid:
+- given-names: Daniel
+  family-names: Parsons
+  affiliation:
+  orcid:
+- given-names: Natthan
+  family-names: Pigoux
+  affiliation:
+  orcid:
 - given-names: Michele
   family-names: Peresano
   affiliation: "Max-Planck-Institut für Physik, Boltzmannstraße 8, 85748 Garching bei München, Germany"
@@ -116,6 +165,10 @@ authors:
   family-names: Pintore
   affiliation: "INAF/IASF PALERMO, Italy"
   orcid: "https://orcid.org/0000-0002-3869-2925"
+- given-names: Tobi
+  family-names: Preis
+  affiliation:
+  orcid:
 - given-names: Michael
   family-names: Punch
   affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
@@ -134,6 +187,10 @@ authors:
   family-names: Roellinghoff
   affiliation: "Friedrich-Alexander-Universität Erlangen-Nürnberg, ECAP, Nikolaus-Fiebiger-Str.
     2, 91058 Erlangen, Germany"
+- given-names: Vasco
+  family-names: Schiavo
+  affiliation:
+  orcid:
 - given-names: Atreyee
   family-names: Sinha
   affiliation: "EMFTEL department and IPARCOS, Universidad Complutense de Madrid,
@@ -152,6 +209,10 @@ authors:
   affiliation: "Friedrich-Alexander-Universität Erlangen-Nürnberg, ECAP, Nikolaus-Fiebiger-Str.
     2, 91058 Erlangen, Germany"
   orcid: "https://orcid.org/0009-0005-7886-1825"
+- given-names: Mitsunari
+  family-names: Takahashi
+  affiliation:
+  orcid:
 - given-names: Régis
   family-names: Terrier
   affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
