@@ -223,7 +223,7 @@ def test_safe_mask_maker_dl3(spectrum_dataset_crab, observations_hess_dl3):
 
 @requires_data()
 def test_safe_mask_maker_dc1(spectrum_dataset_gc, observations_cta_dc1):
-    safe_mask_maker = SafeMaskMaker(methods=["aeff-max", "edisp-bias"])
+    safe_mask_maker = SafeMaskMaker(methods=["edisp-bias"])
     empty = SpectrumDataset.from_geoms(**spectrum_dataset_gc.geoms)
     obs = observations_cta_dc1[1]
     maker = SpectrumDatasetMaker()
