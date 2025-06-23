@@ -75,16 +75,17 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         spectral model: PowerLawSpectral Model of index 2
     kernel_width : `~astropy.coordinates.Angle`
         Width of the kernel to use: the kernel will be truncated at this size
-    n_sigma : int
-        Number of sigma for flux error. Default is 1.
-    n_sigma_ul : int
-        Number of sigma for flux upper limits. Default is 2.
-    n_sigma_sensitivity : int
-        Number of sigma for flux  sensitivity. Default is 5.
-    downsampling_factor : int
+    n_sigma : float, optional
+        Number of sigma for flux error. Should be positive. Default is 1.
+    n_sigma_ul : float, optional
+        Number of sigma for flux upper limits. Should be positive. Default is 2.
+    n_sigma_sensitivity : float, optional
+        Number of sigma for flux sensitivity. Should be positive. Default is 5.
+    downsampling_factor : int, optional
         Sample down the input maps to speed up the computation. Only integer
         values that are a multiple of 2 are allowed. Note that the kernel is
         not sampled down, but must be provided with the downsampled bin size.
+        Default is None.
     threshold : float, optional
         If the test statistic value corresponding to the initial flux estimate is not above
         this threshold, the optimizing step is omitted to save computing time. Default is None.
