@@ -3,6 +3,7 @@ import numpy as np
 from astropy.table import Table
 from regions import *
 from astropy.coordinates import SkyCoord
+import os
 
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Exclusion regions for source position, stars, and other gamma-ray sources"""
@@ -34,8 +35,7 @@ def make_exclusion_mask(source_position,geom,rad=3*u.deg,max_star_mag=6,other_ex
 
     for src in other_exc:
         exc.append(src)
-
-    star_data = np.loadtxt("$GAMMAPY_DATA/veritas/crab-point-like-ED/Hipparcos_MAG8_1997.dat",usecols=(0, 1, 2, 3))
+    star_data = np.loadtxt(os.environ.get("GAMMAPY_DATA")+"/veritas/crab-point-like-ED/Hipparcos_MAG8_1997.dat",usecols=(0, 1, 2, 3))
     star_cat = Table(
     {
         "ra": star_data[:, 0],
@@ -46,9 +46,9 @@ def make_exclusion_mask(source_position,geom,rad=3*u.deg,max_star_mag=6,other_ex
     )
     star_mask = (
     np.sqrt(
-        (star_cat["ra"] - source_position.ra.deg) ** 2
-        + (star_cat["dec"] - source_position.dec.deg) ** 2
-    ) < rad
+        (star_cat["ra"] - source_position.center.ra.deg) ** 2
+        + (star_cat["dec"] - source_position.center.dec.deg) ** 2
+    ) < rad.value
     )
 
     for src in star_cat[(star_mask) & (star_cat["mag"] < max_star_mag)]:
