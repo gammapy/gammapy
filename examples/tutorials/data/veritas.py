@@ -70,13 +70,7 @@ from astropy.time import Time
 # First, we select and load VERITAS observations of the Crab Nebula. These
 # files are processed with **EventDisplay**, but VEGAS analysis should be
 # identical apart from the integration region size, which is specified in
-# the relevant section. We can either select the whole directory and
-# filter by source location, which is shown below, or filter by obs_id,
-# e.g.:
-# 
-# ``obs_ids = [64080,64081,64082,64083]``
-# 
-# ``observations = data_store.obs_table.select_obs_id(obs_id=obs_ids)``
+# the relevant section.
 # 
 
 data_store = DataStore.from_dir("$GAMMAPY_DATA/veritas/crab-point-like-ED")
@@ -85,9 +79,8 @@ data_store.info()
 
 ######################################################################
 # We filter our data by only taking observations within
-# :math:`5 \deg` of the Crab Nebula. In order to select all observations
-# in the datastore, simply use
-# ``observations = data_store.get_observations(required_irf=["aeff","edisp"])``
+# :math:`5 \deg` of the Crab Nebula. See 
+# 
 # 
 
 target_position = SkyCoord(83.6333,22.0145,unit='deg')
@@ -101,7 +94,7 @@ selection = dict(
 )
 obs_table = data_store.obs_table.select_observations(selection)
 obs_ids = obs_table["OBS_ID"]
-observations = data_store.get_observations(obs_id=obs_ids,required_irf=["aeff","edisp"])
+observations = data_store.get_observations(obs_id=obs_ids,required_irf="point-like")
 
 obs_ids = observations.ids
 
@@ -121,8 +114,7 @@ obs_ids = observations.ids
 ######################################################################
 # Peek at the IRFs included : point source files will contain effective
 # areas, energy dispersion matrices, and events for both VEGAS and
-# Eventdisplay files. Eventdisplay point-like files also contain PSF
-# information. You should verify that the IRFs are filled correctly and
+# Eventdisplay files. You should verify that the IRFs are filled correctly and
 # that there are no values set to zero within your analysis range.
 # 
 # Here we peek at the first run in the data release: 64080. The Crab
@@ -137,8 +129,8 @@ observations[0].peek(figsize=(25,5))
 
 ######################################################################
 # Peek at the events and their time/energy/spatial distributions for run
-# 64080
-# 
+# 64080. We can also peek at the effective area (``aeff``) or energy migration
+# matrics (``edisp``) with the ``peek()`` method. 
 
 observations[0].events.peek()
 
@@ -155,13 +147,13 @@ observations[0].events.peek()
 # 
 # The energy axis will determine the bins in which energy is calculated,
 # while the true energy axis defines the binning of the energy dispersion
-# matrix. Generally, the true energy axis should be more finely binned
-# than the energy axis and span an equal or larger range of energies, and
-# the energy axis should be binned to match the needs of spectral
+# matrix and effective area. Generally, the true energy axis should be more 
+# finely binned than the energy axis and span a larger range of 
+# energies, and the energy axis should be binned to match the needs of spectral
 # reconstruction.
 # 
-# Note that if the ``SafeMaskMaker`` (which we will define later) is set
-# to cut on events below a given percentage of the effective area, it will
+# Note that if the ``~gammapy.makers.SafeMaskMaker`` (which we will define later) is set
+# to exclude events below a given percentage of the effective area, it will
 # remove the entire bin containing the energy that corresponds to that
 # percentage (which is why the energy axis below extends to broader
 # energies than the VERITAS energy sensitivity, in addition to catching
@@ -170,10 +162,11 @@ observations[0].events.peek()
 # the energy axis and cannot be finer or offset from the energy axis bin
 # edges.
 # 
-# Depending on your analysis requirements and your ``SafeMaskMaker``
+# Depending on your analysis requirements and your safe mask maker
 # definition, ``energy_axis`` may need to be rebinned to ensure that the
 # required energies are included. Note that finer binning will result in
-# slower spectral/light curve calculations.
+# slower spectral/light curve calculations. See :doc:`/tutorials/api/makers.html#safe-data-range-handling`
+# for more information on how the safe mask maker works. 
 # 
 
 energy_axis = MapAxis.from_energy_bounds("0.01 TeV", "100 TeV", nbin=100)
@@ -210,7 +203,6 @@ exclusion_geom = WcsGeom.create(
     width=(4, 4),
     frame="icrs",
     proj="CAR",
-    axes=[energy_axis],
 )
 
 regions = CircleSkyRegion(center=target_position, radius=0.35 * u.deg)
@@ -267,19 +259,40 @@ on_region_radius = Angle(f"{np.sqrt(0.008)} deg")
 on_region = CircleSkyRegion(center=target_position, radius=on_region_radius)
 geom = RegionGeom.create(region=on_region, axes=[energy_axis])
 
+######################################################################
+# SafeMaskMaker
+# -------------
+# 
+# The ``SafeMaskMaker`` sets the boundaries of our analysis based on the
+# uncertainties contained in the instrument response functions (IRFs).
+# 
+# For VERITAS point-like analysis (both ED and VEGAS), the following
+# methods are strongly recommended: \* ``offset-max``: Sets the maximum
+# radial offset from the camera center within which we accept events. This
+# is set to slightly below the edge of the VERITAS FoV to reduce artifacts
+# at the edge of the FoV and events with poor angular reconstruction. \*
+# ``edisp-bias``: Removes events which are reconstructed with energies
+# that have :math:`>5\%` energy bias. \* ``aeff-max``: Removes events
+# which are reconstructed to :math:`<10\%` of the maximum value of the
+# effective area. These are important to remove for spectral analysis,
+# since they have large uncertainties on their reconstructed energies.
+# 
+
+safe_mask_maker = SafeMaskMaker(methods=["offset-max","aeff-max","edisp-bias"], aeff_percent=5,bias_percent=5,offset_max=1.70*u.deg)
+
+
 
 ######################################################################
 # We will now run the data reduction chain to calculate our ON and OFF
-# counts. Initially, we’ll do this to get a significance, so we run the
-# whole dataset without removing any areas of high systematics. We will do
-# this more carefully in the spectral analysis stage.
+# counts. To get a significance for the whole energy range (to match VERITAS packages), 
+# remove the ``SafeMaskMaker`` from being applied to `dataset_on_off`. 
 # 
 # You need to add ``containment_correction=True`` as an argument to
 # ``dataset_maker`` if you are using full-enclosure DL3 files.
 # 
 # The parameters of the reflected background regions can be changed using
 # the
-# ```ReflectedRegionsFinder`` <https://docs.gammapy.org/1.3/api/gammapy.makers.ReflectedRegionsFinder.html>`__,
+# ```ReflectedRegionsFinder`` :doc:`/tutorials/api/gammapy.makers.ReflectedRegionsFinder`
 # which is passed as an argument to the
 # ``ReflectedRegionsBackgroundMaker``). To use the default values, do not
 # pass a region_finder argument.
@@ -295,6 +308,7 @@ datasets = Datasets()
 
 for obs_id, observation in zip(obs_ids, observations):
     dataset = dataset_maker.run(dataset_empty.copy(name=str(obs_id)), observation)
+    dataset_on_off = safe_mask_maker.run(dataset_on_off, observation)
     dataset_on_off = bkg_maker.run(dataset, observation)
     datasets.append(dataset_on_off)
 
@@ -372,44 +386,6 @@ plt.show()
 # =========================
 # 
 
-
-######################################################################
-# SafeMaskMaker
-# -------------
-# 
-# The ``SafeMaskMaker`` sets the boundaries of our analysis based on the
-# uncertainties contained in the instrument response functions (IRFs).
-# 
-# For VERITAS point-like analysis (both ED and VEGAS), the following
-# methods are strongly recommended: \* ``offset-max``: Sets the maximum
-# radial offset from the camera center within which we accept events. This
-# is set to slightly below the edge of the VERITAS FoV to reduce artifacts
-# at the edge of the FoV and events with poor angular reconstruction. \*
-# ``edisp-bias``: Removes events which are reconstructed with energies
-# that have :math:`>5\%` energy bias. \* ``aeff-max``: Removes events
-# which are reconstructed to :math:`<10\%` of the maximum value of the
-# effective area. These are important to remove for spectral analysis,
-# since they have large uncertainties on their reconstructed energies.
-# 
-
-safe_mask_maker = SafeMaskMaker(methods=["offset-max","aeff-max","edisp-bias"], aeff_percent=5,bias_percent=5,offset_max=1.70*u.deg)
-
-
-######################################################################
-# We run the reflected regions background estimator together with the safe
-# mask maker on each dataset, then stack the resulting
-# ``SpectrumDatasetOnOff`` together.
-# 
-
-datasets = Datasets()
-
-for obs_id, observation in zip(obs_ids, observations):
-    dataset = dataset_maker.run(dataset_empty.copy(name=str(obs_id)), observation)
-    dataset_on_off = bkg_maker.run(dataset, observation)
-    dataset_on_off = safe_mask_maker.run(dataset_on_off, observation)
-    datasets.append(dataset_on_off)
-
-
 ######################################################################
 # Now, we’ll calculate the source spectrum. This uses a forward-folding
 # approach that will assume a given spectrum and fit the counts calculated
@@ -423,20 +399,8 @@ for obs_id, observation in zip(obs_ids, observations):
 # so we assign only the spectral model to the datasets’ ``SkyModel``
 # before running the fit on our datasets.
 # 
-# If you wish to freeze any of the parameters, that can be done by (e.g.,
-# to freeze alpha):
-# 
-# ::
-# 
-#    spectral_model.alpha.frozen = True 
-# 
-# Uncertainties can be added with (e.g., to add an uncertainty of 0.1 to
-# the value of alpha):
-# 
-# ::
-# 
-#    spectral_model.alpha.error = 0.1
-# 
+# See 
+
 
 spectral_model = LogParabolaSpectralModel(
     amplitude=3.75e-11 * u.Unit("cm-2 s-1 TeV-1"),
