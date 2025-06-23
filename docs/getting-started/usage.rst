@@ -34,6 +34,8 @@ folder with Jupyterlab and execute them there.
 If you haven't used Jupyter before, try typing ``print("Hello Jupyter")`` in the
 first input cell, and use the keyboard shortcut ``SHIFT + ENTER`` to execute it.
 
+Note that one can utilise the ipykernel functionality of Jupyter Notebook to select
+a specific pre-installed Gammapy version from your system (see :ref:`quickstart-setup`).
 
 Python
 ------

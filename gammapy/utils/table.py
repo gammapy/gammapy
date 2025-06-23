@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Table helper utilities."""
+
 import numpy as np
 from astropy.table import Table
 from astropy.units import Quantity
@@ -85,6 +86,10 @@ def table_row_to_dict(row, make_quantity=True):
     data = {}
     for name, col in row.columns.items():
         val = row[name]
+
+        is_str = np.issubdtype(col.dtype, np.str_) | np.issubdtype(col.dtype, np.bytes_)
+        if isinstance(val, np.ma.core.MaskedConstant) and is_str:
+            val = str(val)
 
         if make_quantity and col.unit:
             val = Quantity(val, unit=col.unit)

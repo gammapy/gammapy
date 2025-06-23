@@ -3,7 +3,7 @@
 
 Catalog row index (zero-based) : 4
 Source name          : 3FGL J0001.4+2120
-Extended name        :                   
+Extended name        : --
 Associations     : TXS 2358+209, 3EG J2359+2041
 Class1           : fsrq 
 TeVCat flag      : N
@@ -43,7 +43,7 @@ Energy flux (100 MeV - 100 GeV)               : 8.07e-12 +- 8.38e-13 erg cm-2 s-
 *** Spectral points ***
 
   e_min     e_max        flux     flux_errn   flux_errp      e2dnde     e2dnde_errn   e2dnde_errp  is_ul   flux_ul     e2dnde_ul   sqrt_ts
-   MeV       MeV     1 / (cm2 s) 1 / (cm2 s) 1 / (cm2 s) erg / (cm2 s) erg / (cm2 s) erg / (cm2 s)       1 / (cm2 s) erg / (cm2 s)        
+   MeV       MeV     1 / (s cm2) 1 / (s cm2) 1 / (s cm2) erg / (s cm2) erg / (s cm2) erg / (s cm2)       1 / (s cm2) erg / (s cm2)        
 --------- ---------- ----------- ----------- ----------- ------------- ------------- ------------- ----- ----------- ------------- -------
   100.000    300.000   1.524e-08   2.378e-09   2.390e-09     3.773e-12     5.888e-13     5.918e-13 False         nan           nan   6.788
   300.000   1000.000   3.640e-09   5.311e-10   5.450e-10     2.260e-12     3.297e-13     3.384e-13 False         nan           nan   7.591

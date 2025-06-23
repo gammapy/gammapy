@@ -3,7 +3,7 @@
 
 Catalog row index (zero-based) : 960
 Source name          : 3FGL J0835.3-4510
-Extended name        :                   
+Extended name        : --
 Associations     : PSR J0835-4510, Vela, Vela Pulsar, 1AGL J0835-4509
 Class1           : PSR  
 TeVCat flag      : P
@@ -43,7 +43,7 @@ Energy flux (100 MeV - 100 GeV)               : 8.93e-09 +- 1.73e-11 erg cm-2 s-
 *** Spectral points ***
 
   e_min     e_max        flux     flux_errn   flux_errp      e2dnde     e2dnde_errn   e2dnde_errp  is_ul   flux_ul     e2dnde_ul   sqrt_ts
-   MeV       MeV     1 / (cm2 s) 1 / (cm2 s) 1 / (cm2 s) erg / (cm2 s) erg / (cm2 s) erg / (cm2 s)       1 / (cm2 s) erg / (cm2 s)        
+   MeV       MeV     1 / (s cm2) 1 / (s cm2) 1 / (s cm2) erg / (s cm2) erg / (s cm2) erg / (s cm2)       1 / (s cm2) erg / (s cm2)        
 --------- ---------- ----------- ----------- ----------- ------------- ------------- ------------- ----- ----------- ------------- -------
   100.000    300.000   5.376e-06   2.615e-08   2.615e-08     1.372e-09     6.673e-12     6.673e-12 False         nan           nan 160.971
   300.000   1000.000   3.217e-06   7.406e-09   7.406e-09     2.292e-09     5.278e-12     5.278e-12 False         nan           nan 528.538

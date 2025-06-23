@@ -10,6 +10,8 @@ import numpy as np
 from astropy import units as u
 from astropy.table import Table
 from gammapy.utils.interpolation import interpolation_scale
+from gammapy.utils.scripts import make_name
+
 
 __all__ = ["Parameter", "Parameters", "PriorParameter", "PriorParameters"]
 
@@ -456,8 +458,8 @@ class Parameter:
     def check_limits(self):
         """Emit a warning or error if value is outside the minimum/maximum range."""
         if not self.frozen:
-            if (~np.isnan(self.min) and (self.value <= self.min)) or (
-                ~np.isnan(self.max) and (self.value >= self.max)
+            if (~np.isnan(self.min) and (self.value < self.min)) or (
+                ~np.isnan(self.max) and (self.value > self.max)
             ):
                 log.warning(
                     f"Value {self.value} is outside bounds [{self.min}, {self.max}]"
@@ -699,6 +701,11 @@ class Parameters(collections.abc.Sequence):
         return self.__class__(dict.fromkeys(self._parameters))
 
     @property
+    def free_unique_parameters(self):
+        """List of free and unique parameters."""
+        return self.__class__([par for par in self.unique_parameters if not par.frozen])
+
+    @property
     def names(self):
         """List of parameter names."""
         return [par.name for par in self._parameters]
@@ -762,8 +769,22 @@ class Parameters(collections.abc.Sequence):
         }
         return Table(names=name_to_type.keys(), dtype=name_to_type.values())
 
+    def update_link_label(self):
+        """Update linked parameters labels used for serialisation and print."""
+        params_list = []
+        params_shared = []
+        for param in self:
+            if param not in params_list:
+                params_list.append(param)
+                params_list.append(param)
+            elif param not in params_shared:
+                params_shared.append(param)
+        for param in params_shared:
+            param._link_label_io = param.name + "@" + make_name()
+
     def to_table(self):
         """Convert parameter attributes to `~astropy.table.Table`."""
+        self.update_link_label()
         table = self._create_default_table()
 
         for p in self._parameters:

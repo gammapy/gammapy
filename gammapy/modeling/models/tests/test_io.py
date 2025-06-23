@@ -26,8 +26,9 @@ from gammapy.modeling.models import (
     TemplateNPredModel,
 )
 from gammapy.utils.scripts import make_path, read_yaml, to_yaml, write_yaml
-from gammapy.utils.testing import requires_data, requires_dependency
+from gammapy.utils.testing import requires_data
 import os
+import importlib
 
 
 @pytest.fixture(scope="session")
@@ -312,19 +313,6 @@ def test_absorption_io(tmp_path):
     read_yaml(tmp_path / "tmp.yaml")
 
 
-@requires_dependency("naima")
-def test_naima_model():
-    import naima
-
-    particle_distribution = naima.models.PowerLaw(
-        amplitude=2e33 / u.eV, e_0=10 * u.TeV, alpha=2.5
-    )
-    radiative_model = naima.radiative.PionDecay(particle_distribution, nh=1 * u.cm**-3)
-    yield Model.create(
-        "NaimaSpectralModel", "spectral", radiative_model=radiative_model
-    )
-
-
 def make_all_models():
     """Make an instance of each model, for testing."""
     yield Model.create("ConstantSpatialModel", "spatial")
@@ -401,6 +389,19 @@ def make_all_models():
     )
     yield Model.create("TemplateNPredModel", map=m2)
 
+    if importlib.util.find_spec("naima"):
+        import naima
+
+        particle_distribution = naima.models.PowerLaw(
+            amplitude=2e33 / u.eV, e_0=10 * u.TeV, alpha=2.5
+        )
+        radiative_model = naima.radiative.PionDecay(
+            particle_distribution, nh=1 * u.cm**-3
+        )
+        yield Model.create(
+            "NaimaSpectralModel", "spectral", radiative_model=radiative_model
+        )
+
 
 @pytest.mark.parametrize("model_class", MODEL_REGISTRY)
 def test_all_model_classes(model_class):
@@ -465,6 +466,28 @@ def test_link_label(models):
 
     txt = skymodels.__str__()
     lines = txt.splitlines()
+    n_link = 0
+    for line in lines:
+        if "@" in line:
+            assert "reference" in line
+            n_link += 1
+    assert n_link == 2
+
+    table = skymodels.parameters.to_table()
+    skymodels_copy = skymodels.copy()
+    assert (
+        skymodels_copy[0].spectral_model.reference
+        == skymodels_copy[1].spectral_model.reference
+    )
+    dict_ = skymodels_copy.to_dict()
+    label0 = dict_["components"][0]["spectral"]["parameters"][2]["link"]
+    label1 = dict_["components"][1]["spectral"]["parameters"][2]["link"]
+    assert label0 == label1
+
+    assert table["link"][2] == table["link"][9] and table["link"][2] != table["link"][1]
+
+    txt = skymodels.__str__()
+    lines = txt.splitlines()  # noqa: E303
     n_link = 0
     for line in lines:
         if "@" in line:
