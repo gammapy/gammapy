@@ -3,6 +3,7 @@ import collections
 import copy
 import html
 import logging
+import warnings
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import AltAz, Angle, SkyCoord, angular_separation
