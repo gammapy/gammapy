@@ -2,7 +2,7 @@
 import astropy.units as u
 import numpy as np
 from astropy.table import Table
-from regions import *
+from regions import CircleSkyRegion
 from astropy.coordinates import SkyCoord
 import os
 
