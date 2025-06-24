@@ -122,11 +122,11 @@ Further details on individuals responses and how they are implemented in Gammapy
 
 
 Most of the formats defined at :ref:`gadf:iact-irf` are supported. Currently, there is some support for
-:term:`Fermi-LAT` and other instruments, with ongoing efforts to improve this.
+Fermi-LAT and other instruments, with ongoing efforts to improve this.
 
 Most users will not use `gammapy.irf` directly, but will instead use IRFs as part of their spectrum,
 image or cube analysis (via e.g. the `~gammapy.makers.MapDatasetMaker` during the data reduction,
-see :doc:`user-guide/makers/index`).
+see :doc:`/user-guide/makers/index`).
 
 
 

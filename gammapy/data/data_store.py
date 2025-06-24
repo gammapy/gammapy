@@ -32,7 +32,6 @@ class MissingRequiredHDU(IOError):
 
 
 log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)
 
 
 class DataStore:

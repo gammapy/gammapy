@@ -20,6 +20,8 @@ class PSFKernel:
     ----------
     psf_kernel_map : `~gammapy.maps.Map`
         PSF kernel stored in a Map.
+    normalize : bool, optional
+        Normalize the kernel. Default is True.
 
     Examples
     --------

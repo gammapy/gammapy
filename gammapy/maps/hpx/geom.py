@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities for dealing with HEALPix projections and mappings."""
+
 import copy
 import numpy as np
 from astropy import units as u
@@ -53,18 +54,23 @@ class HpxGeom(Geom):
         a scalar then its dimensionality should match that of the
         non-spatial axes. If nest is True, ``nside`` must be a power of 2,
         less than 2**30.
-    nest : bool
+    nest : bool, optional
         Indexing scheme. If True, "NESTED" scheme. If False, "RING" scheme.
+        Default is True.
     frame : {"icrs", "galactic"}
         Coordinate system. Default is "icrs".
-    region : str or tuple
+    region : str or tuple, optional
         Spatial geometry for partial-sky maps. If None, the map will
         encompass the whole sky. String input will be parsed
         according to HPX_REG header keyword conventions. Tuple
         input can be used to define an explicit list of pixels
-        encompassed by the geometry.
+        encompassed by the geometry. Default is None.
     axes : list
         Axes for non-spatial dimensions.
+
+    Notes
+    -----
+    - For examples, see :doc:`/user-guide/maps/hpxmap`
     """
 
     is_hpx = True
@@ -311,7 +317,6 @@ class HpxGeom(Geom):
         idx = pix_tuple_to_idx(pix)
         idx_local = self.global_to_local(idx)
         for i, _ in enumerate(idx):
-
             if clip:
                 if i > 0:
                     np.clip(idx[i], 0, self.axes[i - 1].nbin - 1, out=idx[i])
@@ -1239,7 +1244,6 @@ class HpxGeom(Geom):
 
         # Non-regular all-sky
         elif self.is_allsky and not self.is_regular:
-
             shape = (np.max(self.npix),)
             if idx is None:
                 shape = shape + self.shape_axes
@@ -1247,7 +1251,6 @@ class HpxGeom(Geom):
                 shape = shape + (1,) * len(self.axes)
             pix = [np.full(shape, -1, dtype=int) for i in range(1 + len(self.axes))]
             for idx_img in np.ndindex(self.shape_axes):
-
                 if idx is not None and idx_img != idx:
                     continue
 
@@ -1264,7 +1267,6 @@ class HpxGeom(Geom):
 
         # Explicit pixel indices
         else:
-
             if idx is not None:
                 npix_sum = np.concatenate(([0], np.cumsum(self._npix)))
                 idx_ravel = np.ravel_multi_index(idx, self.shape_axes)
@@ -1281,7 +1283,6 @@ class HpxGeom(Geom):
             pix = [np.full(shape, -1, dtype=int) for _ in range(1 + len(self.axes))]
 
             for idx_img in np.ndindex(self.shape_axes):
-
                 if idx is not None and idx_img != idx:
                     continue
 

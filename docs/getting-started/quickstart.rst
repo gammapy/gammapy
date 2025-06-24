@@ -17,11 +17,6 @@ execute the following commands in the terminal:
     lines with ``sherpa`` and ``healpy``. Those are optional dependencies that
     currently aren't available on Windows.
 
-.. note::
-
-    To avoid some installation issues, sherpa is not part of the environment file provided. You can nevertheless
-    install `sherpa` in your environment using `python -m pip install sherpa`.
-
 
 **The best way to get started and learn Gammapy is to understand the** :ref:`package_structure`.
 You can download the Gammapy tutorial notebooks and the example
@@ -53,6 +48,14 @@ variable directly in your shell with:
     On Windows, you should set the ``GAMMAPY_DATA`` environment variable in the
     "Environment Variables" settings dialog, as explained e.g.
     `here <https://docs.python.org/3/using/windows.html#excursus-setting-environment-variables>`__.
+
+
+To check that the gammapy environment is working, open a terminal and type:
+
+.. substitution-code-block:: console
+
+    conda activate gammapy-|release|
+    gammapy info
 
 
 Jupyter

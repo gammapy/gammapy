@@ -120,7 +120,7 @@ class PSFMap(IRFMap):
 
         Parameters
         ----------
-        geom : `Geom`
+        geom : `~gammapy.maps.Geom`
             PSF map geometry.
 
         Returns
@@ -412,7 +412,7 @@ class PSFMap(IRFMap):
             Offset angle wrt source position axis.
         sigma : `~astropy.coordinates.Angle`
             Gaussian width.
-        geom : `Geom`
+        geom : `~gammapy.maps.Geom`
             Image geometry. By default, an all-sky geometry is created.
 
         Returns
@@ -645,7 +645,7 @@ class RecoPSFMap(PSFMap):
             Offset angle wrt source position axis.
         sigma : `~astropy.coordinates.Angle`
             Gaussian width.
-        geom : `Geom`
+        geom : `~gammapy.maps.Geom`
             Image geometry. By default, an all-sky geometry is created.
 
         Returns

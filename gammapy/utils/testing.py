@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities for testing."""
+
 import os
 import sys
 from numpy.testing import assert_allclose
@@ -182,8 +183,9 @@ def _unquantify_allclose_arguments(actual, desired, rtol, atol):
         desired = desired.to(actual.unit)
     except u.UnitsError:
         raise u.UnitsError(
-            "Units for 'desired' ({}) and 'actual' ({}) "
-            "are not convertible".format(desired.unit, actual.unit)
+            "Units for 'desired' ({}) and 'actual' ({}) " "are not convertible".format(
+                desired.unit, actual.unit
+            )
         )
 
     if atol is None:
@@ -195,8 +197,9 @@ def _unquantify_allclose_arguments(actual, desired, rtol, atol):
             atol = atol.to(actual.unit)
         except u.UnitsError:
             raise u.UnitsError(
-                "Units for 'atol' ({}) and 'actual' ({}) "
-                "are not convertible".format(atol.unit, actual.unit)
+                "Units for 'atol' ({}) and 'actual' ({}) " "are not convertible".format(
+                    atol.unit, actual.unit
+                )
             )
 
     rtol = u.Quantity(rtol, subok=True, copy=COPY_IF_NEEDED)
@@ -252,12 +255,3 @@ UNIT_REPLACEMENTS_ASTROPY_5_3 = {
     "1 / (cm2 s)": "1 / (s cm2)",
     "erg / (cm2 s)": "erg / (s cm2)",
 }
-
-
-def modify_unit_order_astropy_5_3(expected_str):
-    """Modify unit order for tests with astropy >= 5.3."""
-    if ASTROPY_LT_5_3:
-        for old, new in UNIT_REPLACEMENTS_ASTROPY_5_3.items():
-            expected_str = expected_str.replace(old, new)
-
-    return expected_str

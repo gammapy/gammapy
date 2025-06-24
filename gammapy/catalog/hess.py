@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """HESS Galactic plane survey (HGPS) catalog."""
+
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import Angle
@@ -837,7 +838,7 @@ class SourceCatalogHGPS(SourceCatalog):
         """Make `SourceCatalogObject` for given row index."""
         source = super()._make_source_object(index)
 
-        if source.data["Components"] != "":
+        if source.data["Components"] not in ["", "--"]:
             source.components = list(self._get_gaussian_components(source))
 
         self._attach_association_info(source)

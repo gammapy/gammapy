@@ -1,13 +1,39 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Units and Quantity related helper functions."""
+
 import logging
 from math import floor
 import numpy as np
 import astropy.units as u
 
-__all__ = ["standardise_unit", "unit_from_fits_image_hdu"]
+__all__ = ["standardise_unit", "unit_from_fits_image_hdu", "wrap_at"]
 
 log = logging.getLogger(__name__)
+
+
+def wrap_at(value, min_value, max_value):
+    """Wraps a value to be within the range [min_value, max_value).
+
+    Parameters
+    ----------
+    value : float or `~astropy.units.Unit`
+        The value to wrap
+    min_value : float or `~astropy.units.Unit`
+        The minimum value of the range (inclusive).
+    max_value : float or `~astropy.units.Unit`
+        The maximum value of the range (exclusive).
+
+    Returns
+    -------
+    wrapped_val : float or `~astropy.units.Unit`
+        Wrapped value
+    """
+
+    # Note: Astropy wrap_at currently works only for wrapping
+    # between [0, 360] and [-180, 180]
+    range_size = max_value - min_value
+    wrapped_val = ((value - min_value) % range_size) + min_value
+    return wrapped_val
 
 
 def standardise_unit(unit):

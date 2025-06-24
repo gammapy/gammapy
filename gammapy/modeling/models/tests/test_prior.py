@@ -7,6 +7,8 @@ from gammapy.modeling.models import (
     PRIOR_REGISTRY,
     GaussianPrior,
     Model,
+    Models,
+    SkyModel,
     UniformPrior,
     LogUniformPrior,
 )
@@ -105,3 +107,19 @@ def test_to_from_dict():
     desired = [par.value for par in model.parameters]
     assert_quantity_allclose(actual, desired)
     assert_allclose(model.weight, new_model.weight, rtol=1e-7)
+
+
+@pytest.mark.parametrize("prior", TEST_PRIORS)
+def test_serialisation(prior, tmpdir):
+    prior = TEST_PRIORS[1]
+    model = SkyModel.create(spectral_model="pl", name="crab")
+    model.spectral_model.amplitude.prior = prior["model"]
+    models = Models([model])
+    filename = str(tmpdir / "model_prior.yaml")
+    models.write(filename)
+
+    loaded_models = Models.read(filename)
+    loaded_model = loaded_models[0]
+    loaded_prior = loaded_model.spectral_model.amplitude.prior
+
+    assert isinstance(loaded_prior, type(prior["model"]))
