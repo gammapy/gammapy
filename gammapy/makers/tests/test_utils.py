@@ -671,3 +671,23 @@ def test_data_store_get_effective_livetime(caplog):
         assert "Effective Livetime in [1.0 GeV, 1.0 PeV] : 1.75 h" in [
             _.message for _ in caplog.records
         ]
+    with caplog.at_level(logging.INFO):
+        livetime_maps, sel_ids = get_effective_livetime(
+            datastore=ds, position=position, en_edges=[0.1 * u.TeV, 1 * u.TeV]
+        )
+        assert "Effective Livetime in [1.0 GeV, 1.0 PeV] : 1.75 h" in [
+            _.message for _ in caplog.records
+        ]
+        assert "Effective Livetime in [0.1 TeV, 1.0 TeV] : 0.00 h" in [
+            _.message for _ in caplog.records
+        ]
+
+    ds2 = DataStore.from_dir("$GAMMAPY_DATA/magic/rad_max/data/")
+    with caplog.at_level(logging.INFO):
+        livetime_maps2, sel_ids2 = get_effective_livetime(
+            datastore=ds2, position=position
+        )
+        assert len(sel_ids2) == 2
+        assert "Effective Livetime in [1.0 GeV, 1.0 PeV] : 0.00 h" in [
+            _.message for _ in caplog.records
+        ]
