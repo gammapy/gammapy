@@ -672,7 +672,7 @@ def test_data_store_get_effective_livetime(caplog):
             _.message for _ in caplog.records
         ]
     with caplog.at_level(logging.INFO):
-        livetime_maps, sel_ids = get_effective_livetime(
+        _, _ = get_effective_livetime(
             datastore=ds, position=position, en_edges=[0.1 * u.TeV, 1 * u.TeV]
         )
         assert "Effective Livetime in [1.0 GeV, 1.0 PeV] : 1.75 h" in [
