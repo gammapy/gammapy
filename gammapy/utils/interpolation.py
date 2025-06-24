@@ -28,9 +28,9 @@ class ScaledRegularGridInterpolator:
     Parameters
     ----------
     points : tuple of `~numpy.ndarray` or `~astropy.units.Quantity`
-        Tuple of points passed to `RegularGridInterpolator`.
+        Tuple of points passed to `~scipy.interpolate.RegularGridInterpolator`.
     values : `~numpy.ndarray`
-        Values passed to `RegularGridInterpolator`.
+        Values passed to `~scipy.interpolate.RegularGridInterpolator`.
     points_scale : tuple of str
         Interpolation scale used for the points.
     values_scale : {'lin', 'log', 'sqrt'}
@@ -42,7 +42,7 @@ class ScaledRegularGridInterpolator:
         Default interpolation method. Can be overwritten when calling the
         `ScaledRegularGridInterpolator`.
     **kwargs : dict
-        Keyword arguments passed to `RegularGridInterpolator`.
+        Keyword arguments passed to `~scipy.interpolate.RegularGridInterpolator`.
     """
 
     def __init__(
