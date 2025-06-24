@@ -719,8 +719,8 @@ def make_observation_time_map(observations, geom, offset_max=None):
 
 def make_effective_livetime_map(observations, geom, offset_max=None):
     """
-    Compute the acceptance corrected livetime map
-    for a list of observations.
+    Compute the acceptance corrected livetime map for a list of observations.
+    This function uses observations with full-enclosure IRFs.
 
     Parameters
     ----------
@@ -744,6 +744,8 @@ def make_effective_livetime_map(observations, geom, offset_max=None):
         geom_obs = geom.cutout(
             position=obs.get_pointing_icrs(obs.tmid), width=2.0 * offset_max
         )
+        if obs.rad_max:
+            continue
         coords = geom_obs.get_coord()
         offset = coords.skycoord.separation(obs.get_pointing_icrs(obs.tmid))
         mask = offset < offset_max
@@ -796,6 +798,9 @@ def get_effective_livetime(
     selected_ids : list of `str`
         List of selected observation IDs.
 
+    Notes
+    -----
+    This function is not yet functional for HAWC data sets.
     """
     # ToDo: add the tutorial link after inside an "Example"
 
@@ -809,7 +814,10 @@ def get_effective_livetime(
         border=border,
     )
     selected_obs_table = datastore.obs_table.select_observations(selection)
-    observations = datastore.get_observations(selected_obs_table["OBS_ID"])
+    required_irf = ["aeff"]
+    observations = datastore.get_observations(
+        selected_obs_table["OBS_ID"], required_irf=required_irf
+    )
 
     # Define the geom
     edges = [1 * u.GeV, 1 * u.PeV] if en_edges is None else en_edges
