@@ -85,15 +85,8 @@ data_store.info()
 
 target_position = SkyCoord(83.6333,22.0145,unit='deg')
 
-selection = dict(
-    type="sky_circle",
-    frame="icrs",
-    lon=f"{target_position.ra.value} deg",
-    lat=f"{target_position.dec.value} deg",
-    radius="5 deg",
-)
-obs_table = data_store.obs_table.select_observations(selection)
-obs_ids = obs_table["OBS_ID"]
+selected_obs_table = data_store.obs_table.select_sky_circle(target_position, 5*u.deg)
+obs_ids = selected_obs_table["OBS_ID"]
 observations = data_store.get_observations(obs_id=obs_ids,required_irf="point-like")
 
 obs_ids = observations.ids
