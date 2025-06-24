@@ -5,6 +5,8 @@ jobs:
   lint:
     name: Run pre-commit hooks
     runs-on: ubuntu-latest
+    if: contains(github.event.pull_request.labels.*.name, 'skip lint') == false
+
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -131,7 +133,7 @@ jobs:
     env:
       PYTEST_ADDOPTS: --color=yes -n auto --dist=loadscope
       GAMMAPY_DATA: /home/runner/work/gammapy/gammapy/gammapy-datasets/dev
-    
+
     if: contains(github.event.pull_request.labels.*.name, 'skip docs') == false
 
     steps:
