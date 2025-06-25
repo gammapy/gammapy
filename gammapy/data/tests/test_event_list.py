@@ -32,7 +32,7 @@ def simple_event_table():
     ra = zeros * u.deg
     dec = zeros * u.deg
     time = Time(zeros, format="mjd", scale="tt")
-    return QTable({"energy": energy, "RA": ra, "DEC": dec, "time": time})
+    return QTable({"ENERGY": energy, "RA": ra, "DEC": dec, "TIME": time})
 
 
 def test_validation(simple_event_table):
@@ -44,11 +44,11 @@ def test_validation(simple_event_table):
 
     bad = simple_event_table.copy()
 
-    bad["energy"] *= 1 * u.s
+    bad["ENERGY"] *= 1 * u.s
     with pytest.raises(u.UnitConversionError):
         EventList(bad)
 
-    del bad["energy"]
+    del bad["ENERGY"]
     with pytest.raises(KeyError):
         EventList(bad)
 

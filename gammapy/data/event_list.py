@@ -99,7 +99,7 @@ class EventList:
             table.colnames
         )
         if len(missing_columns) > 0:
-            raise ValueError(
+            raise KeyError(
                 f"EventList table invalid: columns {missing_columns} are missing."
             )
 
