@@ -4,6 +4,7 @@ from astropy.io import fits
 from astropy.table import Table
 from gammapy.data import EventListMetaData, EventList
 from gammapy.utils.scripts import make_path
+from gammapy.utils.metadata import CreatorMetaData
 
 
 class EventListReader:
@@ -66,3 +67,43 @@ class EventListReader:
                 return self.from_gadf_hdu(events_hdu)
             else:
                 raise ValueError(f"Unknown format :{format}")
+
+
+class EventListWriter:
+    """Writer class for EventList."""
+
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def _to_gadf_table_hdu(event_list):
+        """Convert input event list to a `~astropy.io.fits.BinTableHDU` according gadf."""
+        bin_table = fits.BinTableHDU(event_list.table, name="EVENTS")
+
+        # A priori don't change creator information
+        if event_list.meta.creation is None:
+            event_list.meta.creation = CreatorMetaData()
+        else:
+            event_list.meta.creation.update_time()
+
+        bin_table.header.update(event_list.meta.to_header())
+        return bin_table
+
+    def to_hdu(self, event_list, format="gadf"):
+        """
+        Convert input event list to a `~astropy.io.fits.BinTableHDU` according to format.
+
+        Parameters
+        ----------
+        format : str, optional
+            Output format, currently only "gadf" is supported. Default is "gadf".
+
+        Returns
+        -------
+        hdu : `astropy.io.fits.BinTableHDU`
+            EventList converted to FITS representation.
+        """
+        if format != "gadf":
+            raise ValueError(f"Only the 'gadf' format supported, got {format}")
+
+        return self._to_gadf_table_hdu(event_list)

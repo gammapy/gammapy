@@ -7,7 +7,6 @@ import warnings
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import AltAz, Angle, SkyCoord, angular_separation
-from astropy.io import fits
 from astropy.table import vstack as vstack_tables
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
@@ -18,7 +17,6 @@ from gammapy.utils.testing import Checker
 from gammapy.utils.time import time_ref_from_dict
 from .metadata import EventListMetaData
 from gammapy.utils.deprecation import deprecated_renamed_argument
-from gammapy.utils.metadata import CreatorMetaData
 
 __all__ = ["EventList"]
 
@@ -132,20 +130,9 @@ class EventList:
         hdu : `astropy.io.fits.BinTableHDU`
             EventList converted to FITS representation.
         """
-        if format != "gadf":
-            raise ValueError(f"Only the 'gadf' format supported, got {format}")
+        from gammapy.data.io import EventListWriter
 
-        bin_table = fits.BinTableHDU(self.table, name="EVENTS")
-
-        # A priori don't change creator information
-        if self.meta.creation is None:
-            self.meta.creation = CreatorMetaData()
-        else:
-            self.meta.creation.update_time()
-
-        bin_table.header.update(self.meta.to_header())
-
-        return bin_table
+        return EventListWriter().to_hdu(self, format)
 
     # TODO: Pass metadata here. Also check that specific meta contents are consistent
     @classmethod
