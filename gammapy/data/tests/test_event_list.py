@@ -30,9 +30,10 @@ class TestEventListBasic:
 def simple_event_table():
     zeros = np.zeros(5)
     energy = zeros * u.TeV
-    position = SkyCoord(zeros, zeros, unit="deg", frame="icrs")
+    ra = zeros * u.deg
+    dec = zeros * u.deg
     time = Time(zeros, format="mjd", scale="tt")
-    return QTable({"energy": energy, "position": position, "time": time})
+    return QTable({"energy": energy, "RA": ra, "DEC": dec, "time": time})
 
 
 def test_validation(simple_event_table):
@@ -45,11 +46,11 @@ def test_validation(simple_event_table):
     bad = simple_event_table.copy()
 
     bad["energy"] *= 1 * u.s
-    with pytest.raises(TypeError):
+    with pytest.raises(u.UnitConversionError):
         EventList(bad)
 
     del bad["energy"]
-    with pytest.raises(TypeError):
+    with pytest.raises(KeyError):
         EventList(bad)
 
 

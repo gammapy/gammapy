@@ -75,14 +75,16 @@ class EventList:
 
     """
 
-    REQUIRED_COLUMNS = {"radec": SkyCoord, "energy": u.Quantity, "time": Time}
+    REQUIRED_COLUMNS = {
+        "RA": u.Unit("deg"),
+        "DEC": u.Unit("deg"),
+        "ENERGY": u.Unit("TeV"),
+        "TIME": Time,
+    }
 
     def __init__(self, table, meta=None):
-        if "RA" in table.colnames:
-            table = self._from_gadf_table(table)
         self.table = self._validate_table(table)
         self.meta = meta
-        print(self.meta)
 
     @staticmethod
     def _validate_table(table):
@@ -92,17 +94,25 @@ class EventList:
             raise TypeError(
                 f"EventList expects astropy Table, got {type(table)} instead."
             )
-        #
-        #     missing_columns = set(cls.REQUIRED_COLUMNS.keys()).difference(table.colnames)
-        #     if len(missing_columns) > 0:
-        #         raise ValueError(
-        #             f"EventList table invalid: columns {missing_columns} are missing."
-        #         )
-        #
-        #     for name, check in REQUIRED_COLUMNS.items():
-        #         if not isinstance(table[name], check):
-        #             raise TypeError(f"Column {name} is not a {check} object.")
-        #
+
+        missing_columns = set(EventList.REQUIRED_COLUMNS.keys()).difference(
+            table.colnames
+        )
+        if len(missing_columns) > 0:
+            raise ValueError(
+                f"EventList table invalid: columns {missing_columns} are missing."
+            )
+
+        for name, check in EventList.REQUIRED_COLUMNS.items():
+            if not isinstance(check, u.Unit):
+                if not isinstance(table[name], check):
+                    raise TypeError(f"Column {name} is not a {check} object.")
+            else:
+                if not check.is_equivalent(table[name].unit):
+                    raise u.UnitConversionError(
+                        f"Column {name} is not in {check} unit."
+                    )
+
         return table
 
     def _repr_html_(self):
@@ -114,18 +124,23 @@ class EventList:
     @staticmethod
     def _from_gadf_table(table):
         """Temporary gadf table converter."""
+        if not isinstance(table, Table):
+            raise TypeError(
+                f"_form_fgadf_table expects astropy Table, got {type(table)} instead."
+            )
 
         met = u.Quantity(table["TIME"].astype("float64"), "second")
         time = time_ref_from_dict(table.meta) + met
 
         energy = table["ENERGY"].quantity
 
-        radec = SkyCoord(table["RA"], table["DEC"], unit="deg", frame="icrs")
+        ra = table["RA"].quantity
+        dec = table["DEC"].quantity
 
         removed_colnames = ["RA", "DEC", "GLON", "GLAT", "TIME", "ENERGY"]
 
         new_table = Table(
-            {"TIME": time, "ENERGY": energy, "RADEC": radec}, meta=table.meta
+            {"TIME": time, "ENERGY": energy, "RA": ra, "DEC": dec}, meta=table.meta
         )
         for name in table.colnames:
             if name not in removed_colnames:
@@ -261,7 +276,7 @@ class EventList:
     @property
     def radec(self):
         """Event RA / DEC sky coordinates as a `~astropy.coordinates.SkyCoord` object."""
-        return self.table["RADEC"]
+        return SkyCoord(self.table["RA"], self.table["DEC"], unit="deg", frame="icrs")
 
     @property
     def galactic(self):
