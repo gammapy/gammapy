@@ -1,0 +1,447 @@
+.. include:: ../../references.txt
+
+.. _pig-027:
+
+**************************************
+PIG 30 - Systematics Modifier API
+**************************************
+
+* Author: Stefan Fröse, Axel Donath, Tim Unbehaun
+* Created: ``2025-06-14``
+* Status: Draft
+* Discussion: `#XXXX`_
+
+Abstract
+========
+
+This PIG proposes an API for modeling IRF systematics in Gammapy using a ``Modifier`` system, similar to the implementation found in
+`evermore <https://evermore.readthedocs.io/en/latest/>`_.
+It is centered around the ``NPredSystematicsModel`` class
+which wraps an existing ``SkyModel`` and updates the ``MapEvaluator`` with ``IRFs``
+by user-defined ``Modifiers``.
+Each ``Modifier`` applies an ``Effect`` (i.e., a transformation) to an ``IRF``,
+based on one or more ``Parameters``, enabling flexible, parameter-driven changes to ``IRF`` data or ``IRF`` coordinates.
+
+
+Motivation
+==========
+
+Gammapy currently lacks a general mechanism to incorporate instrumental systematics into likelihood fitting.
+While the ``IRFs`` can technically be modified before fitting,
+no standard interface exists for linking such modifications to fit parameters and priors.
+This limits reproducibility, composability, and clarity of systematic treatments.
+
+The ``NPredSystematicsModel`` enables this by encapsulating parameter-dependent transformations applied to the ``IRFs`` with ``Modifiers`` and ``Effects``,
+while leaving datasets untouched.
+This mirrors the approach taken in particle physics (e.g. modifiers + nuisance parameters) and provides a modern, modular system for handling systematics.
+
+Use cases
+=========
+
+1. Exposure scaling
+
+.. code-block:: python
+
+    exp_parameter = Parameter('exp_scaling', 1)
+    exp_parameter.prior = GaussianPrior(mu=1, sigma=0.2)
+
+    scale_effect = ScalingEffect()
+
+    exposure_modifier = Modifier(exp_parameter, scale_effect)
+
+    model = crab_point_source_model()
+
+    model_npred = NPredSystematicsModel.from_dataset(
+        model=model,
+        dataset=dataset,
+        exposure_modifier=exposure_modifier,
+    )
+    dataset.models = model_npred
+
+
+2. PSF scaling by radial axis
+
+.. code-block:: python
+
+    psf_parameter = Parameter('psf_scaling', 1)
+    psf_parameter.prior = GaussianPrior(mu=1, sigma=0.2)
+
+    scale_effect = ScalingEffect()
+
+    psf_modifier = Modifier(psf_parameter, scale_effect, axis='rad') # applied to axis of IRF
+
+    model = crab_point_source_model()
+
+    model_npred = NPredSystematicsModel.from_dataset(
+        model=model,
+        dataset=dataset,
+        psf_modifier=psf_modifier,
+    )
+    dataset.models = model_npred
+
+3. Energy scale bias in EDisp
+
+.. code-block:: python
+
+    edisp_parameter = Parameter('edisp_scaling', 0)
+    edisp_parameter.prior = GaussianPrior(mu=0, sigma=0.2)
+    shift_effect = LogShiftEffect()
+
+    edisp_modifier = Modifier(edisp_parameter, shift_effect, axis='energy')
+
+    model = crab_point_source_model()
+
+    model_npred = NPredSystematicsModel.from_dataset(
+        model=model,
+        dataset=dataset,
+        edisp_modifier=edisp_modifier,
+    )
+    dataset.models = model_npred
+
+4. All of the above at once
+
+.. code-block:: python
+
+
+    model_npred = NPredSystematicsModel.from_dataset(
+        model=model,
+        dataset=dataset,
+        exposure_modifier=exposure_modifier,
+        psf_modifier=psf_modifier,
+        edisp_modifier=edisp_modifier,
+    )
+    dataset.models = model_npred
+
+5. PSF modification with increasing Energy
+
+.. code-block:: python
+
+    # apply scaling linear as scaling = slope * energy + intersect
+    psf_parameter_slope = Parameter('psf_scaling_slope', 1)
+    psf_parameter_slope.prior = GaussianPrior(mu=1, sigma=0.2)
+    psf_parameter_intersect = Parameter('psf_scaling_intersect', 1)
+    psf_parameter_intersect.prior = GaussianPrior(mu=1, sigma=0.2)
+
+    offset_effect = LinearScalingEffect(depends_on_axes=['energy_true']) # change scaling with energy_true
+
+    psf_modifier = Modifier([psf_parameter_slope, psf_parameter_intersect], offset_effect, axis='rad') # applied to rad axis
+
+    model = crab_point_source_model()
+
+    model_npred = NPredSystematicsModel.from_dataset(
+        model=model,
+        dataset=dataset,
+        psf_modifier=psf_modifier,
+    )
+    dataset.models = model_npred
+
+
+Implementation
+==============
+
+Modifier
+--------
+
+A ``Modifier`` links a single instance or list of ``Parameter`` instances to an ``Effect``.
+The modifier is responsible for calling the effect with the current parameter values and applying it to
+either the IRF *data* or its *axis* coordinates (e.g. shifting the ``energy`` axis).
+In the latter case the transformation defined by the ``Effect`` is applied by interpolating the ``IRF`` to new transformed coordinates.
+
+.. code-block:: python
+
+    class Modifier:
+        def __init__(self, parameters, effect, axis=None):
+            self.parameters = parameters
+            self.effect = effect
+            self.axis = axis
+
+        def __call__(self, irf):
+            if self.axis is None:
+                # Direct modification of data
+                return self.effect(irf, self.parameters)
+
+            # Axis-based coordinate transformation
+            coords = self.effect(irf.geom, self.parameters, self.axis)
+            coords_scaled = MapCoord.create(coords, frame=irf.geom.frame)
+            new_data = irf.interp_by_coord(coords_scaled)
+            return irf.copy(data=new_data)
+
+Effects
+-------
+
+``Effects`` define the mathematical transformation applied to the ``IRF`` *data* or *coordiantes*/*axes*.
+Moreover, ``Effects`` can depend on one or multiple axes, which leads to parameterized transformations, e.g. ``f(enery, offset, ...)``.
+We distinguish between ``ScalingEffects`` and ``ShiftingEffects``.
+
+.. code-block:: python
+
+   class Effect(abc.ABC):
+        def __init__(self, depends_on_axes=None) -> None:
+            self.depends_on_axes = depends_on_axes
+
+        @abc.abstractmethod
+        def __call__(self, data, parameters, apply_to_axes=None):
+            pass
+
+
+    class ScalingEffect(Effect):
+        def __call__(self, data, parameters, apply_to_axes=None):
+            if apply_to_axes is None:
+                if isinstance(parameters, list):
+                    raise ...
+                return data * parameters.value
+            else:
+                coords = data.get_coord()
+                coord_dict = {}
+                for ax, param in zip(coords.axis_names, parameters):
+                    if ax not in apply_to_axes:
+                        coord_dict[ax] = coords[ax]
+                    else:
+                        coord_dict[ax] = coords[ax] * param.value
+                return coord_dict
+
+
+    class ShiftingEffect(Effect):
+        def __call__(self, data, parameters, apply_to_axes=None):
+            if apply_to_axes is None:
+                if isinstance(parameters, list):
+                    raise ...
+                return data + parameters.value
+            else:
+                coords = data.get_coord()
+                coord_dict = {}
+                for ax, param in zip(coords.axis_names, parameters):
+                    if ax not in apply_to_axes:
+                        coord_dict[ax] = coords[ax]
+                    else:
+                        coord_dict[ax] = coords[ax] + param.value
+                return coord_dict
+
+An axis-dependent ``Effect`` can be implemented as
+
+.. code-block:: python
+
+   class LinearScalingEffect(Effect):
+        def __call__(self, data, parameters, apply_to_axes=None):
+            coords = data.get_coord()
+            scaling = 1
+            for i, ax in enumerate(self.depends_on_axes):
+                alpha = parameters[2 * i].value
+                beta = parameters[2 * i + 1].value
+
+                coord = coords[ax]
+                coord_min = coord.min()
+                coord_max = coord.max()
+                norm = (coord - coord_min) / (coord_max - coord_min)
+
+                scaling *= alpha * norm + beta
+
+            if apply_to_axes is None:
+                return data * scaling
+            else:
+                coord_dict = {}
+                for ax in coords.axis_names:
+                    if ax not in apply_to_axes:
+                        coord_dict[ax] = coords[ax]
+                    else:
+                        coord_dict[ax] = coords[ax] * scaling
+                return coord_dict
+
+
+Axis-dependent Effects
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+    class LogShiftEffect:
+        def __call__(self, geom, parameters, axis):
+            coords = geom.get_coord()
+            coords[axis] = coords[axis] * np.exp(parameters[0].value)
+            return coords
+
+    class LinearScalingEffect:
+        def __init__(self, depends_on_axes):
+            self.depends_on_axes = depends_on_axes
+
+        def __call__(self, geom, parameters, axis):
+            coords = geom.get_coord()
+            scaling = 1
+            for i, ax in enumerate(self.depends_on_axes):
+                alpha = parameters[2 * i].value
+                beta = parameters[2 * i + 1].value
+                coord = coords[ax]
+                norm = (coord - coord.min()) / (coord.max() - coord.min())
+                scaling *= alpha * norm + beta
+            coords[axis] = coords[axis] * scaling
+            return coords
+
+NPredSystematicsModel
+---------------------
+
+.. code-block:: python
+
+   class NPredSystematicsModel(TemplateNPredModel):
+        """NPred model."""
+
+        def __init__(
+            self,
+            model,
+            exposure,
+            psf,
+            edisp,
+            dataset_name,
+            dataset_geom,
+            dataset_mask_img,
+            exposure_modifier=None,
+            psf_modifier=None,
+            edisp_modifier=None,
+        ):
+            self.model = model
+            self.exposure = exposure
+            self.exposure_modifier = exposure_modifier
+
+            self.psf = psf
+            self.psf_modifier = psf_modifier
+
+            self.edisp = edisp
+            self.edisp_modifier = edisp_modifier
+
+            self.dataset_name = dataset_name
+            self._name = self.model.name
+            self.dataset_geom = dataset_geom
+            self.dataset_mask_img = dataset_mask_img
+
+        @property
+        def datasets_names(self):
+            """Dataset name."""
+            return [self.dataset_name]
+
+        @classmethod
+        def from_dataset(cls, model, dataset, **kwargs):
+            """Create NPredModel from a dataset."""
+            return cls(
+                model=model,
+                exposure=dataset.exposure,
+                psf=dataset.psf,
+                edisp=dataset.edisp,
+                dataset_name=dataset.name,
+                dataset_geom=dataset._geom,
+                dataset_mask_img=dataset.mask_image,
+                **kwargs,
+            )
+
+        @property
+        def parameters(self):
+            """Model parameters."""
+            # TODO: Fix this later
+            parameters = []
+
+            parameters.append(self.model.parameters)
+
+            if self.exposure_modifier is not None:
+                parameters.append(self.exposure_modifier.parameters)
+
+            if self.psf_modifier is not None:
+                parameters.append(self.psf_modifier.parameters)
+
+            if self.edisp_modifier is not None:
+                parameters.append(self.edisp_modifier.parameters)
+
+            return Parameters.from_stack(parameters)
+
+        @property
+        def exposure_modified(self):
+            """Modified exposure."""
+            if self.exposure_modifier is None:
+                return self.exposure
+
+            return self.exposure_modifier(self.exposure)
+
+        @property
+        def psf_modified(self):
+            """Modified PSF."""
+            if self.psf_modifier is None:
+                return self.psf
+
+            psf_map = self.psf.psf_map
+            psf_exposure_map = self.psf.exposure_map
+            if self.exposure_modifier is not None:
+                # Do need to modify this exposure map???
+                psf_exposure_map = self.exposure_modifier(psf_exposure_map)
+
+            psf = PSFMap(self.psf_modifier(psf_map), psf_exposure_map)
+            psf.normalize()
+            return psf
+
+        @property
+        def edisp_modified(self):
+            """Modified energy dispersion."""
+            if self.edisp_modifier is None:
+                return self.edisp
+
+            edisp_map = self.edisp.edisp_map
+            edisp_exposure_map = self.edisp.exposure_map
+            if self.exposure_modifier is not None:
+                # Do need to modify this exposure map???
+                edisp_exposure_map = self.exposure_modifier(edisp_exposure_map)
+
+            edisp_map.normalize(axis_name="energy")
+            edisp_map_new = self.edisp_modifier(edisp_map)
+
+            edisp = EDispKernelMap(edisp_map_new, edisp_exposure_map)
+            return edisp
+
+        @property
+        def _evaluator(self):
+            # reuse the MapEvaluator from gammapy
+            evaluator = MapEvaluator(self.model)
+            evaluator.update(
+                geom=self.dataset_geom,
+                exposure=self.exposure_modified,
+                psf=self.psf_modified,
+                edisp=self.edisp_modified,
+                mask=self.dataset_mask_img,
+            )
+            return evaluator
+
+        def evaluate(self):
+            return self._evaluator.compute_npred()
+
+
+Serialization
+=============
+
+Modifiers can be expressed in YAML like:
+
+.. code-block:: yaml
+
+    modifier:
+      - parameters:
+          name: gamma
+          value: 0.0
+          prior:
+            tag: GaussianPrior
+            parameters:
+              - {name: mu, value: 0}
+              - {name: sigma, value: 0.2}
+      - effect: LogShiftEffect
+      - axis: energy
+
+Implementation Plan
+===================
+
+- [ ] Add ``Modifier``, ``Effect`` base classes and examples
+- [ ] Add ``NPredSystematicsModel`` to ``gammapy_sensitivity.systematics``
+- [ ] Extend serialization for modifiers
+- [ ] Add tutorials + visual validation (PSF/EDISP plots)
+
+TODO/Thoughts
+=============
+- Use ``Parameters`` class instead of accepting single ``Parameter`` or ``list[Parameter]`` in ``Effect``.
+
+Decision
+========
+
+To be reviewed and approved by the Gammapy Coordination Committee (CC)
+
+.. _#XXXX: https://github.com/gammapy/gammapy/issues/XXXX
