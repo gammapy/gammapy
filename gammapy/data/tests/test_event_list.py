@@ -10,7 +10,6 @@ from regions import CircleSkyRegion, RectangleSkyRegion
 from gammapy.data import GTI, EventList, Observation, FixedPointingInfo
 from gammapy.maps import MapAxis, WcsGeom
 from gammapy.utils.testing import mpl_plot_check, requires_data
-from gammapy.utils.time import time_ref_to_dict
 
 
 class TestEventListBasic:
@@ -264,7 +263,8 @@ class TestEventSelection:
         table["RA"] = [0.0, 0.0, 0.0, 10.0] * u.deg
         table["DEC"] = [0.0, 0.9, 10.0, 10.0] * u.deg
         table["ENERGY"] = [1.0, 1.5, 1.5, 10.0] * u.TeV
-        table["TIME"] = [0.1, 0.5, 1.0, 1.5] * u.second
+        table["OFFSET"] = [0.1, 0.5, 1.0, 1.5] * u.deg
+        table["TIME"] = Time("2025-01-01") + [0.1, 0.5, 1.0, 1.5] * u.s
 
         self.events = EventList(table)
 

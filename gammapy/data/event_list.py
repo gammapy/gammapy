@@ -289,7 +289,7 @@ class EventList:
     @property
     def energy(self):
         """Event energies as a `~astropy.units.Quantity`."""
-        return self.table["ENERGY"]
+        return self.table["ENERGY"].quantity
 
     @property
     def galactic_median(self):
@@ -515,7 +515,7 @@ class EventList:
 
         ax.set_xlabel(f"Time [{u.s.to_string(UNIT_STRING_FORMAT)}]")
         ax.set_ylabel("Counts")
-        y, x_edges = np.histogram(delta_time, bins=20)
+        y, x_edges = np.histogram(delta_time.to("s"), bins=20)
 
         xerr = np.diff(x_edges) / 2
         x = x_edges[:-1] + xerr
