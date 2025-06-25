@@ -66,7 +66,6 @@ We will cover the following topics:
 # setup is correct you can execute the following cell:
 #
 
-
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 import matplotlib.pyplot as plt
@@ -175,7 +174,7 @@ plt.show()
 
 ######################################################################
 # For a more detailed introduction to `~gammapy.maps`, take a look a the
-# :doc:`/tutorials/api/maps` notebook.
+# :doc:`/tutorials/key-steps/maps` notebook.
 #
 # Exercises
 # ~~~~~~~~~
