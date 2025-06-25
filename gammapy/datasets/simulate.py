@@ -7,7 +7,7 @@ from copy import deepcopy
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord, SkyOffsetFrame
-from astropy.table import Table
+from astropy.table import Table, vstack
 from astropy.time import Time
 from gammapy import __version__
 from gammapy.data import EventList, observatory_locations
@@ -66,15 +66,13 @@ class MapDatasetEventSampler:
         except AttributeError:
             return f"<pre>{html.escape(str(self))}</pre>"
 
-    def _make_table(self, coords, time_ref):
+    def _make_table(self, coords):
         """Create a table for sampled events.
 
         Parameters
         ----------
         coords : `~gammapy.maps.MapCoord`
             Coordinates of the sampled events.
-        time_ref : `~astropy.time.Time`
-            Reference time of the event list.
 
         Returns
         -------
@@ -87,7 +85,7 @@ class MapDatasetEventSampler:
         except KeyError:
             energy = coords["energy"]
 
-        table["TIME"] = (coords["time"] - time_ref).to("s")
+        table["TIME"] = coords["time"]
         table["ENERGY_TRUE"] = energy
 
         table["RA_TRUE"] = coords.skycoord.icrs.ra.to("deg")
@@ -210,7 +208,7 @@ class MapDatasetEventSampler:
             coords["time"], format="mjd", scale=dataset.gti.time_ref.scale
         )
 
-        table = self._make_table(coords, dataset.gti.time_ref)
+        table = self._make_table(coords)
 
         return table
 
@@ -237,7 +235,7 @@ class MapDatasetEventSampler:
 
         coords = npred.sample_coord(n_events=n_events, random_state=self.random_state)
 
-        time_start, time_stop, time_ref = (gti.time_start, gti.time_stop, gti.time_ref)
+        time_start, time_stop = (gti.time_start, gti.time_stop)
         coords["time"] = temporal_model.sample_time(
             n_events=n_events,
             t_min=time_start,
@@ -246,7 +244,7 @@ class MapDatasetEventSampler:
             t_delta=self.t_delta,
         )
 
-        table = self._make_table(coords, time_ref)
+        table = self._make_table(coords)
 
         return table
 
@@ -271,7 +269,7 @@ class MapDatasetEventSampler:
         else:
             psf_update = None
 
-        events_all = EventList(Table())
+        events_all = Table()
         for idx, evaluator in enumerate(dataset.evaluators.values()):
             log.info(f"Evaluating model: {evaluator.model.name}")
             if evaluator.needs_update:
@@ -306,7 +304,7 @@ class MapDatasetEventSampler:
                 table.meta["MID{:05d}".format(idx + 1)] = idx + 1
                 table.meta["MMN{:05d}".format(idx + 1)] = evaluator.model.name
 
-            events_all.stack(EventList(table))
+            events_all = vstack([events_all, table])
 
         return events_all
 
@@ -342,28 +340,28 @@ class MapDatasetEventSampler:
                 table.meta["MID{:05d}".format(0)] = 0
                 table.meta["MMN{:05d}".format(0)] = dataset.background_model.name
 
-        return EventList(table)
+        return table  # EventList(table)
 
-    def sample_edisp(self, edisp_map, events):
+    def sample_edisp(self, edisp_map, events_table):
         """Sample energy dispersion map.
 
         Parameters
         ----------
         edisp_map : `~gammapy.irf.EDispMap`
             Energy dispersion map.
-        events : `~gammapy.data.EventList`
+        events_table : `~astropy.table.Table`
             Event list with the true energies.
 
         Returns
         -------
-        events : `~gammapy.data.EventList`
+        events_table : `~astropy.table.Table`
             Event list with reconstructed energy column.
         """
         coord = MapCoord(
             {
-                "lon": events.table["RA_TRUE"].quantity,
-                "lat": events.table["DEC_TRUE"].quantity,
-                "energy_true": events.table["ENERGY_TRUE"].quantity,
+                "lon": events_table["RA_TRUE"].quantity,
+                "lat": events_table["DEC_TRUE"].quantity,
+                "energy_true": events_table["ENERGY_TRUE"].quantity,
             },
             frame="icrs",
         )
@@ -371,10 +369,10 @@ class MapDatasetEventSampler:
         coords_reco = edisp_map.sample_coord(
             coord, self.random_state, self.n_event_bunch
         )
-        events.table["ENERGY"] = coords_reco["energy"]
-        return events
+        events_table["ENERGY"] = coords_reco["energy"]
+        return events_table
 
-    def sample_psf(self, psf_map, events):
+    def sample_psf(self, psf_map, events_table):
         """Sample PSF map.
 
         Parameters
@@ -386,23 +384,23 @@ class MapDatasetEventSampler:
 
         Returns
         -------
-        events : `~gammapy.data.EventList`
+        events_table : `~astropy.table.Table`
             Event list with reconstructed position columns.
         """
         coord = MapCoord(
             {
-                "lon": events.table["RA_TRUE"].quantity,
-                "lat": events.table["DEC_TRUE"].quantity,
-                "energy_true": events.table["ENERGY_TRUE"].quantity,
+                "lon": events_table["RA_TRUE"].quantity,
+                "lat": events_table["DEC_TRUE"].quantity,
+                "energy_true": events_table["ENERGY_TRUE"].quantity,
             },
             frame="icrs",
         )
 
         coords_reco = psf_map.sample_coord(coord, self.random_state, self.n_event_bunch)
 
-        events.table["RA"] = coords_reco["lon"] * u.deg
-        events.table["DEC"] = coords_reco["lat"] * u.deg
-        return events
+        events_table["RA"] = coords_reco["lon"] * u.deg
+        events_table["DEC"] = coords_reco["lat"] * u.deg
+        return events_table
 
     @staticmethod
     def event_det_coords(observation, events):
@@ -579,20 +577,21 @@ class MapDatasetEventSampler:
         """
         events_src = self.sample_sources(dataset)
 
-        if len(events_src.table) > 0:
+        if len(events_src) > 0:
             if dataset.psf:
                 events_src = self.sample_psf(dataset.psf, events_src)
             else:
-                events_src.table["RA"] = events_src.table["RA_TRUE"]
-                events_src.table["DEC"] = events_src.table["DEC_TRUE"]
+                events_src["RA"] = events_src["RA_TRUE"]
+                events_src["DEC"] = events_src["DEC_TRUE"]
 
             if dataset.edisp:
                 events_src = self.sample_edisp(dataset.edisp, events_src)
             else:
-                events_src.table["ENERGY"] = events_src.table["ENERGY_TRUE"]
+                events_src["ENERGY"] = events_src["ENERGY_TRUE"]
 
         events_bkg = self.sample_background(dataset)
-        events = EventList.from_stack([events_bkg, events_src])
+        events = vstack([events_src, events_bkg])
+        events = EventList(events)
 
         events.table["EVENT_ID"] = np.arange(len(events.table))
         if observation is not None:

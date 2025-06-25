@@ -83,13 +83,25 @@ class EventList:
     }
 
     def __init__(self, table, meta=None):
+        if table is None:
+            table = self._create_empty_list()
         self.table = self._validate_table(table)
-        self.meta = meta
+        self.meta = meta or EventListMetaData()
+
+    @staticmethod
+    def _create_empty_list():
+        """Create empty event list table."""
+        table = Table()
+        for name, unit in EventList.REQUIRED_COLUMNS.items():
+            if name == "TIME":
+                table[name] = Time((), format="mjd")
+            else:
+                table[name] = () * unit
+        return table
 
     @staticmethod
     def _validate_table(table):
         """Checks that the input table follows the gammapy internal model."""
-
         if not isinstance(table, Table):
             raise TypeError(
                 f"EventList expects astropy Table, got {type(table)} instead."

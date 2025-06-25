@@ -375,30 +375,30 @@ def test_sample_coord_time_energy_unit(dataset, energy_dependent_temporal_sky_mo
 def test_mde_sample_sources(dataset, models):
     dataset.models = models
     sampler = MapDatasetEventSampler(random_state=0)
-    events = sampler.sample_sources(dataset=dataset)
+    events_table = sampler.sample_sources(dataset=dataset)
 
-    assert len(events.table["ENERGY_TRUE"]) == 90
-    assert_allclose(events.table["ENERGY_TRUE"][0], 2.383778805, rtol=1e-5)
-    assert events.table["ENERGY_TRUE"].unit == "TeV"
+    assert len(events_table["ENERGY_TRUE"]) == 90
+    assert_allclose(events_table["ENERGY_TRUE"][0], 2.383778805, rtol=1e-5)
+    assert events_table["ENERGY_TRUE"].unit == "TeV"
 
-    assert_allclose(events.table["RA_TRUE"][0], 266.56408893, rtol=1e-5)
-    assert events.table["RA_TRUE"].unit == "deg"
+    assert_allclose(events_table["RA_TRUE"][0], 266.56408893, rtol=1e-5)
+    assert events_table["RA_TRUE"].unit == "deg"
 
-    assert_allclose(events.table["DEC_TRUE"][0], -28.748145, rtol=1e-5)
-    assert events.table["DEC_TRUE"].unit == "deg"
+    assert_allclose(events_table["DEC_TRUE"][0], -28.748145, rtol=1e-5)
+    assert events_table["DEC_TRUE"].unit == "deg"
 
-    assert_allclose(events.table["TIME"][0], 120.62471, rtol=1e-5)
-    assert events.table["TIME"].unit == "s"
+    assert_allclose(events_table["TIME"][0], 120.62471, rtol=1e-5)
+    assert events_table["TIME"].unit == "s"
 
-    assert_allclose(events.table["MC_ID"][0], 1, rtol=1e-5)
+    assert_allclose(events_table["MC_ID"][0], 1, rtol=1e-5)
 
 
 @requires_data()
 def test_mde_sample_sources_psf_update(dataset, models):
     dataset.models = models
     sampler = MapDatasetEventSampler(random_state=0)
-    events = sampler.sample_sources(dataset=dataset, psf_update=False)
-    assert len(events.table["ENERGY_TRUE"]) == 90
+    events_table = sampler.sample_sources(dataset=dataset, psf_update=False)
+    assert len(events_table["ENERGY_TRUE"]) == 90
 
 
 @requires_data()
@@ -406,18 +406,18 @@ def test_sample_sources_energy_dependent(dataset, energy_dependent_temporal_sky_
     dataset.models = energy_dependent_temporal_sky_model
 
     sampler = MapDatasetEventSampler(random_state=0)
-    events = sampler.sample_sources(dataset=dataset)
+    events_table = sampler.sample_sources(dataset=dataset)
 
-    assert len(events.table["ENERGY_TRUE"]) == 1268
-    assert_allclose(events.table["ENERGY_TRUE"][0], 6.456526, rtol=1e-5)
+    assert len(events_table["ENERGY_TRUE"]) == 1268
+    assert_allclose(events_table["ENERGY_TRUE"][0], 6.456526, rtol=1e-5)
 
-    assert_allclose(events.table["RA_TRUE"][0], 266.404988, rtol=1e-5)
+    assert_allclose(events_table["RA_TRUE"][0], 266.404988, rtol=1e-5)
 
-    assert_allclose(events.table["DEC_TRUE"][0], -28.936178, rtol=1e-5)
+    assert_allclose(events_table["DEC_TRUE"][0], -28.936178, rtol=1e-5)
 
-    assert_allclose(events.table["TIME"][0], 95.464699, rtol=1e-5)
+    assert_allclose(events_table["TIME"][0], 95.464699, rtol=1e-5)
 
-    dt = np.max(events.table["TIME"]) - np.min(events.table["TIME"])
+    dt = np.max(events_table["TIME"]) - np.min(events_table["TIME"])
     assert dt <= dataset.gti.time_sum.to("s").value + sampler.t_delta.to("s").value
 
 
@@ -455,24 +455,24 @@ def test_mde_sample_weak_src(dataset, models):
 def test_mde_sample_background(dataset, models):
     dataset.models = models
     sampler = MapDatasetEventSampler(random_state=0)
-    events = sampler.sample_background(dataset=dataset)
+    events_table = sampler.sample_background(dataset=dataset)
 
-    assert len(events.table) == 15
+    assert len(events_table) == 15
 
-    assert_allclose(np.mean(events.table["ENERGY"]), 4.1, rtol=0.1)
-    assert events.table["ENERGY"].unit == "TeV"
+    assert_allclose(np.mean(events_table["ENERGY"]), 4.1, rtol=0.1)
+    assert events_table["ENERGY"].unit == "TeV"
 
-    assert np.all(events.table["RA"] < 269.95)
-    assert np.all(events.table["RA"] > 262.90)
-    assert events.table["RA"].unit == "deg"
+    assert np.all(events_table["RA"] < 269.95)
+    assert np.all(events_table["RA"] > 262.90)
+    assert events_table["RA"].unit == "deg"
 
-    assert np.all(events.table["DEC"] < -25.43)
-    assert np.all(events.table["DEC"] > -32.43)
-    assert events.table["DEC"].unit == "deg"
+    assert np.all(events_table["DEC"] < -25.43)
+    assert np.all(events_table["DEC"] > -32.43)
+    assert events_table["DEC"].unit == "deg"
 
-    assert events.table["DEC_TRUE"][0] == events.table["DEC"][0]
+    assert events_table["DEC_TRUE"][0] == events_table["DEC"][0]
 
-    assert_allclose(events.table["MC_ID"][0], 0, rtol=1e-5)
+    assert_allclose(events_table["MC_ID"][0], 0, rtol=1e-5)
 
 
 @requires_data()
@@ -480,17 +480,17 @@ def test_mde_sample_psf(dataset, models):
     dataset.models = models
     sampler = MapDatasetEventSampler(random_state=0)
     events = sampler.sample_sources(dataset=dataset)
-    events = sampler.sample_psf(dataset.psf, events)
+    events_table = sampler.sample_psf(dataset.psf, events)
 
-    assert len(events.table) == 90
-    assert_allclose(events.table["ENERGY_TRUE"][0], 2.38377880, rtol=1e-5)
-    assert events.table["ENERGY_TRUE"].unit == "TeV"
+    assert len(events_table) == 90
+    assert_allclose(events_table["ENERGY_TRUE"][0], 2.38377880, rtol=1e-5)
+    assert events_table["ENERGY_TRUE"].unit == "TeV"
 
-    assert_allclose(events.table["RA"][0], 266.542912, rtol=1e-5)
-    assert events.table["RA"].unit == "deg"
+    assert_allclose(events_table["RA"][0], 266.542912, rtol=1e-5)
+    assert events_table["RA"].unit == "deg"
 
-    assert_allclose(events.table["DEC"][0], -28.78829, rtol=1e-5)
-    assert events.table["DEC"].unit == "deg"
+    assert_allclose(events_table["DEC"][0], -28.78829, rtol=1e-5)
+    assert events_table["DEC"].unit == "deg"
 
 
 @requires_data()
@@ -498,19 +498,19 @@ def test_mde_sample_edisp(dataset, models):
     dataset.models = models
     sampler = MapDatasetEventSampler(random_state=0)
     events = sampler.sample_sources(dataset=dataset)
-    events = sampler.sample_edisp(dataset.edisp, events)
+    events_table = sampler.sample_edisp(dataset.edisp, events)
 
-    assert len(events.table) == 90
-    assert_allclose(events.table["ENERGY"][0], 2.383778805, rtol=1e-5)
-    assert events.table["ENERGY"].unit == "TeV"
+    assert len(events_table) == 90
+    assert_allclose(events_table["ENERGY"][0], 2.383778805, rtol=1e-5)
+    assert events_table["ENERGY"].unit == "TeV"
 
-    assert_allclose(events.table["RA_TRUE"][0], 266.564088, rtol=1e-5)
-    assert events.table["RA_TRUE"].unit == "deg"
+    assert_allclose(events_table["RA_TRUE"][0], 266.564088, rtol=1e-5)
+    assert events_table["RA_TRUE"].unit == "deg"
 
-    assert_allclose(events.table["DEC_TRUE"][0], -28.7481450, rtol=1e-5)
-    assert events.table["DEC_TRUE"].unit == "deg"
+    assert_allclose(events_table["DEC_TRUE"][0], -28.7481450, rtol=1e-5)
+    assert events_table["DEC_TRUE"].unit == "deg"
 
-    assert_allclose(events.table["MC_ID"][0], 1, rtol=1e-5)
+    assert_allclose(events_table["MC_ID"][0], 1, rtol=1e-5)
 
 
 @requires_data()
