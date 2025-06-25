@@ -11,7 +11,7 @@ Prerequisites
 -  Knowledge of spectral analysis to produce 1D spectral datasets, see
    the :doc:`/tutorials/analysis-1d/spectral_analysis` tutorial.
 -  Knowledge of fitting models to datasets, see
-   :doc:`/tutorials/api/fitting` tutorial
+   :doc:`/tutorials/key-steps/fitting` tutorial
 -  General knowledge of statistics and priors
 
 Context
@@ -34,7 +34,7 @@ However, for now, they should not be correlated.
 
 The spectral dataset used here contains a simulated power-law source and
 its IRFs are based on H.E.S.S. data of the Crab Nebula (similar to
-:doc:`/tutorials/api/fitting`). We are simulating the source here, so
+:doc:`/tutorials/key-steps/fitting`). We are simulating the source here, so
 that we can control the input and check the correctness of the fit
 results.
 
@@ -415,7 +415,7 @@ plt.show()
 # symmetrical. This can lead to incorrect
 # uncertainties, especially with asymmetrical priors like the previous
 # uniform. Calculating the uncertainties from the profile likelihood
-# is advised. For more details see the :doc:`/tutorials/api/fitting` tutorial.
+# is advised. For more details see the :doc:`/tutorials/key-steps/fitting` tutorial.
 #
 
 ######################################################################
