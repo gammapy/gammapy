@@ -315,11 +315,11 @@ sphinx_gallery_conf = {
             "../examples/tutorials/starting",
             "../examples/tutorials/model-gallery",
             "../examples/tutorials/data",
+            "../examples/tutorials/key-steps",
             "../examples/tutorials/analysis-1d",
             "../examples/tutorials/analysis-2d",
             "../examples/tutorials/analysis-3d",
             "../examples/tutorials/analysis-time",
-            "../examples/tutorials/api",
             "../examples/tutorials/scripts",
         ]
     ),

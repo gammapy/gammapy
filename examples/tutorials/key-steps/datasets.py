@@ -10,7 +10,7 @@ Introduction
 `gammapy.datasets` are a crucial part of the gammapy API. `~gammapy.datasets.Dataset`
 objects constitute ``DL4`` data - binned counts, IRFs, models and the associated
 likelihoods. `~gammapy.datasets.Datasets` from the end product of the data reduction stage,
-see :doc:`/tutorials/api/makers` tutorial and are passed on to the `~gammapy.modeling.Fit`
+see :doc:`/tutorials/key-steps/makers` tutorial and are passed on to the `~gammapy.modeling.Fit`
 or estimator classes for modelling and fitting purposes.
 
 To find the different types of `~gammapy.datasets.Dataset` objects that are supported see
@@ -213,7 +213,7 @@ dataset_cta.models = [model, model_bkg]
 
 
 ######################################################################
-# Assigning models to datasets is covered in more detail in :doc:`/tutorials/api/model_management`.
+# Assigning models to datasets is covered in more detail in :doc:`/tutorials/key-steps/model_management`.
 # Printing the dataset will now show the model components:
 #
 
@@ -485,7 +485,7 @@ print(fp_dataset.data_shape())  # number of data points
 ######################################################################
 #
 # For an example of fitting `~gammapy.estimators.FluxPoints`, see :doc:`/tutorials/analysis-1d/sed_fitting`,
-# and for using source catalogs see :doc:`/tutorials/api/catalog`.
+# and for using source catalogs see :doc:`/tutorials/key-steps/catalog`.
 #
 
 
