@@ -5,13 +5,6 @@ VERITAS with gammapy
 Explore VERITAS point-like DL3 files, including event lists and IRFs and
 calculate Li & Ma significance, spectra, and fluxes.
 
-"""
-
-import gammapy
-
-gammapy.__file__
-
-
 ######################################################################
 # Introduction
 # ------------
@@ -38,7 +31,7 @@ gammapy.__file__
 # nebula files and the use of other sources or datasets may require
 # modifications to this notebook.
 #
-
+"""
 import numpy as np
 from matplotlib import pyplot as plt
 
