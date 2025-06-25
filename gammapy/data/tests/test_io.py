@@ -4,7 +4,7 @@ import pytest
 
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import requires_data
-from ..io import EventListReader
+from ..io import EventListReader, EventListWriter
 
 
 @requires_data()
@@ -33,3 +33,8 @@ def test_eventlist_reader_unkwnown_format(tmpdir):
 
     with pytest.raises(ValueError):
         EventListReader().read(tmpdir / "tmp.fits", format=None)
+
+
+def test_eventlist_writer_unkwnown_format():
+    with pytest.raises(ValueError):
+        EventListWriter().to_hdu("tmp.fits", format="unknown")
