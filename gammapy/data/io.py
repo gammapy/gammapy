@@ -13,16 +13,13 @@ class EventListReader:
 
     Parameters
     ----------
-    filename : `pathlib.Path`, str
-        Filename
     hdu : str
         Name of events HDU. Default is "EVENTS".
     checksum : bool
         If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
     """
 
-    def __init__(self, filename, hdu="EVENTS", checksum=False):
-        self.filename = make_path(filename)
+    def __init__(self, hdu="EVENTS", checksum=False):
         self.hdu = hdu
         self.checksum = checksum
 
@@ -39,16 +36,18 @@ class EventListReader:
         hduclass = events_hdu.header.get("HDUCLASS", "unknown")
         return hduclass.lower()
 
-    def read(self, format="gadf"):
+    def read(self, filename, format="gadf"):
         """Read EventList from file.
 
         Parameters
         ----------
+        filename : `pathlib.Path`, str
+            Filename
         format : {"gadf"}, optional
             format of the EventList. Default is 'gadf'.
             If None, will try to guess from header.
         """
-        filename = self.filename
+        filename = make_path(filename)
 
         with fits.open(filename) as hdulist:
             events_hdu = hdulist[self.hdu]

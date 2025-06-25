@@ -116,7 +116,7 @@ class EventList:
         """
         from gammapy.data.io import EventListReader
 
-        return EventListReader(filename, hdu, checksum).read()
+        return EventListReader(hdu, checksum).read(filename)
 
     def to_table_hdu(self, format="gadf"):
         """
