@@ -3,9 +3,11 @@ import astropy.io.fits as fits
 import pytest
 
 from gammapy.utils.scripts import make_path
+from gammapy.utils.testing import requires_data
 from ..io import EventListReader
 
 
+@requires_data()
 def test_eventlist_reader_no_format():
     hess_events = "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz"
     fermi_events = "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-events.fits.gz"
@@ -17,6 +19,7 @@ def test_eventlist_reader_no_format():
     assert len(events.table) == 32843
 
 
+@requires_data()
 def test_eventlist_reader_unkwnown_format(tmpdir):
     hess_events = make_path(
         "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz"
