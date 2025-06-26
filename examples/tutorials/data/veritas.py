@@ -32,6 +32,7 @@ calculate Li & Ma significance, spectra, and fluxes.
 # modifications to this notebook.
 #
 """
+
 import numpy as np
 from matplotlib import pyplot as plt
 
@@ -77,9 +78,8 @@ check_tutorials_setup()
 # ~~~~~~~~~~~~~
 #
 # First, we select and load VERITAS observations of the Crab Nebula. These
-# files are processed with **EventDisplay**, but VEGAS analysis should be
-# identical apart from the integration region size, which is specified in
-# the relevant section.
+# files are processed with EventDisplay, but VEGAS analysis should be
+# identical apart from the integration region size, which is handled by `RAD_MAX`.
 #
 
 data_store = DataStore.from_dir("$GAMMAPY_DATA/veritas/crab-point-like-ED")
@@ -107,8 +107,7 @@ observations = data_store.get_observations(obs_id=obs_ids, required_irf="point-l
 
 
 ######################################################################
-# Peek at the IRFs included: point source files will contain effective
-# areas, energy dispersion matrices, and events. You should verify that
+# Peek at the IRFs included. You should verify that
 # the IRFs are filled correctly and that there are no values set to zero
 # within your analysis range. We can also peek at the effective area
 # (`aeff`) or energy migration matrices (`edisp`) with the `peek()`
@@ -119,25 +118,6 @@ observations[0].peek()
 
 
 ######################################################################
-# Peek at the IRFs included : point source files will contain effective
-# areas, energy dispersion matrices, and events for both VEGAS and
-# Eventdisplay files. You should verify that the IRFs are filled correctly and
-# that there are no values set to zero within your analysis range.
-#
-# Here we peek at the first run in the data release: 64080. The Crab
-# should be visible in the events plot.
-#
-# You can peek other runs by changing the index 0 to the appropriate
-# index.
-#
-
-observations[0].peek(figsize=(25, 5))
-
-
-######################################################################
-# Peek at the events and their time/energy/spatial distributions for run
-# 64080. We can also peek at the effective area (``aeff``) or energy migration
-# matrics (``edisp``) with the ``peek()`` method.
 # Peek the events and their time/energy/spatial distributions.
 #
 
@@ -166,12 +146,7 @@ observations[0].events.peek()
 # effective area, it will remove the entire bin containing the energy that
 # corresponds to that percentage. Additionally, spectral bins are
 # determined based on the energy axis and cannot be finer or offset from
-# the energy axis bin edges.
-#
-# Depending on your analysis requirements and your safe mask maker
-# definition, `energy_axis` may need to be rebinned to ensure that the
-# required energies are included. Note that finer binning will result in
-# slower spectral/light curve calculations. See
+# the energy axis bin edges. See
 # :doc:`/tutorials/api/makers html#safe-data-range-handling`\ for more
 # information on how the safe mask maker works.
 #
@@ -187,9 +162,9 @@ energy_axis_true = MapAxis.from_energy_bounds(
 # ~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # Here, we create a spatial mask and append exclusion regions for the
-# source region and stars (< 6th magnitude) within 1.75 deg of the source
-# location.
-#
+# source region and stars (< 6th magnitude) contained within the `exclusion_geom`.
+# We define a star exclusion region of 0.3 deg, which should contain bright stars
+# within the VERITAS optical PSF.
 
 exclusion_geom = WcsGeom.create(
     skydir=(target_position.ra.value, target_position.dec.value),
@@ -200,9 +175,9 @@ exclusion_geom = WcsGeom.create(
 )
 
 exclusion_mask = exclusion.make_exclusion_mask(
-    source_position=CircleSkyRegion(center=target_position, radius=0.35 * u.deg),
+    source_region=CircleSkyRegion(center=target_position, radius=0.35 * u.deg),
     geom=exclusion_geom,
-    rad=1.75 * u.deg,
+    star_rad=0.3 * u.deg,
 )
 
 
@@ -212,15 +187,14 @@ exclusion_mask = exclusion.make_exclusion_mask(
 #
 # Point-like DL3 files can only be analyzed using the reflected regions
 # background method and for a pre-determined integration region (which is
-# the :math:`\sqrt{\theta^2}` used in IRF simulations), where the number
-# of ON counts are determined.
+# the :math:`\sqrt{\theta^2}` used in IRF simulations).
 #
 # The default values for moderate/medium cuts are determined by the DL3
 # file’s `RAD_MAX` keyword. For VERITAS data (ED and VEGAS), `RAD_MAX`
 # is not energy dependent.
 #
-# *Note that full-enclosure files are required to use any non-point-like
-# integration region*
+# Note that full-enclosure files are required to use any non-point-like
+# integration region.
 #
 
 on_region = PointSkyRegion(target_position)
@@ -234,13 +208,13 @@ geom = RegionGeom.create(region=on_region, axes=[energy_axis])
 # uncertainties contained in the instrument response functions (IRFs).
 #
 # For VERITAS point-like analysis (both ED and VEGAS), the following
-# methods are strongly recommended: \* ``offset-max``: Sets the maximum
-# radial offset from the camera center within which we accept events. This
-# is set to slightly below the edge of the VERITAS FoV to reduce artifacts
-# at the edge of the FoV and events with poor angular reconstruction. \*
-# ``edisp-bias``: Removes events which are reconstructed with energies
-# that have :math:`>5\%` energy bias. \* ``aeff-max``: Removes events
-# which are reconstructed to :math:`<10\%` of the maximum value of the
+# methods are strongly recommended:
+# * ``offset-max``: Sets the maximum radial offset from the camera center within which we accept events. This
+# is set to the edge of the VERITAS FoV.
+# at the edge of the FoV and events with poor angular reconstruction.
+# * ``edisp-bias``: Removes events which are reconstructed with energies
+# that have :math:`>5\%` energy bias.
+# * ``aeff-max``: Removes events which are reconstructed to :math:`<10\%` of the maximum value of the
 # effective area. These are important to remove for spectral analysis,
 # since they have large uncertainties on their reconstructed energies.
 #
@@ -249,7 +223,7 @@ safe_mask_maker = SafeMaskMaker(
     methods=["offset-max", "aeff-max", "edisp-bias"],
     aeff_percent=5,
     bias_percent=5,
-    offset_max=1.70 * u.deg,
+    offset_max=1.75 * u.deg,
 )
 
 
@@ -257,9 +231,6 @@ safe_mask_maker = SafeMaskMaker(
 # We will now run the data reduction chain to calculate our ON and OFF
 # counts. To get a significance for the whole energy range (to match VERITAS packages),
 # remove the ``SafeMaskMaker`` from being applied to `dataset_on_off`.
-#
-# You need to add `containment_correction=True` as an argument to
-# `dataset_maker` if you are using full-enclosure DL3 files.
 #
 # The parameters of the reflected background regions can be changed using
 # the :doc:`~gammapy.makers.WobbleRegionsFinder`, which is passed as an
@@ -273,30 +244,6 @@ dataset_empty = SpectrumDataset.create(geom=geom, energy_axis_true=energy_axis_t
 region_finder = WobbleRegionsFinder(n_off_regions=16)
 bkg_maker = ReflectedRegionsBackgroundMaker(
     exclusion_mask=exclusion_mask, region_finder=region_finder
-)
-
-
-######################################################################
-# SafeMaskMaker
-# ~~~~~~~~~~~~~
-#
-# The :doc:`~gammapy.makers.SafeMaskMaker` sets the boundaries of our
-# analysis based on the uncertainties contained in the instrument response
-# functions (IRFs).
-#
-# For VERITAS point-like analysis, we use the following methods: \*
-# `offset-max`: Set to the edge of the VERITAS FoV to reduce artifacts
-# at the edge of the FoV and events with poor angular reconstruction. \*
-# `aeff-max`: Removes events which are reconstructed to :math:`<10\%` of
-# the maximum value of the effective area.
-#
-# Run the cells below without the :doc:`~gammapy.makers.SafeMaskMaker`
-# to get significance, counts, etc. to run the significance analysis on
-# the full energy range, which will better match VERITAS packages.
-#
-
-safe_mask_maker = SafeMaskMaker(
-    methods=["offset-max", "aeff-max"], aeff_percent=10, offset_max=1.75 * u.deg
 )
 
 datasets = Datasets()
@@ -388,11 +335,7 @@ plt.show()
 #
 # For this reason, it’s important that spectral model be set as closely as
 # possible to the expected spectrum - for the Crab nebula, this is a
-# `~gammapy.models.LogParabolaSpectralModel`. If you don’t know the
-# spectrum a priori, this can be adjusted iteratively to get the best fit.
-# Here, we are doing a 1D fit, so we assign only the spectral model to the
-# datasets’ `~gammapy.models.SkyModel` before running the fit on our
-# datasets.
+# `~gammapy.models.LogParabolaSpectralModel`.
 #
 
 spectral_model = LogParabolaSpectralModel(
@@ -450,9 +393,6 @@ flux_points = fpe.run(datasets=datasets)
 
 ######################################################################
 # Now, we can plot our flux points along with the best-fit spectral model.
-# For the Crab, curvature is clearly present in the spectrum and we can
-# see that the flux points closely follow the
-# `~gammapy.models.LogParabolaSpectralModel`.
 #
 
 flux_points_dataset = FluxPointsDataset(data=flux_points, models=datasets.models)
@@ -474,8 +414,6 @@ plt.show()
 # Integral flux can be calculated by integrating the spectral model we fit
 # earlier. This will be a model-dependent flux estimate, so the choice of
 # spectral model should match the data as closely as possible.
-# Additionally, sources with poor spectral fits due to low statistics may
-# have inaccurate flux estimations.
 #
 # `e_min` and `e_max` should be adjusted depending on the analysis
 # requirements. Note that the actual energy threshold will use the closest
