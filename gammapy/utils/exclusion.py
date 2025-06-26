@@ -61,4 +61,3 @@ def make_exclusion_mask(
     exclusion_mask = ~geom.region_mask(exc)
 
     return exclusion_mask
-
