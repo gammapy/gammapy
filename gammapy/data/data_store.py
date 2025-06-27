@@ -97,7 +97,7 @@ class DataStore:
     @property
     def obs_ids(self):
         """Return the sorted obs_ids contained in the datastore."""
-        return set(np.unique(self.hdu_table["OBS_ID"].data))
+        return np.unique(self.hdu_table["OBS_ID"].data)
 
     @classmethod
     def from_file(cls, filename, hdu_hdu="HDU_INDEX", hdu_obs="OBS_INDEX"):
@@ -407,7 +407,7 @@ class DataStore:
         if selection is None:
             obs_id_selection = self.obs_ids
         else:
-            obs_id_selection = set(np.array(list(self.obs_ids))[selection])
+            obs_id_selection = set(np.array(self.obs_ids)[selection])
 
         if obs_id is None:
             obs_id = obs_id_selection
@@ -511,7 +511,7 @@ class DataStore:
         if selection is not None:
             obs_table = obs_table[selection]
             if obs_id is not None:
-                obs_id_selection = set(np.array(list(self.obs_ids))[selection])
+                obs_id_selection = set(np.array(self.obs_ids)[selection])
                 obs_id = [_ for _ in obs_id if _ in obs_id_selection]
         if obs_id is not None:
             obs_table = obs_table.select_obs_id(obs_id)
