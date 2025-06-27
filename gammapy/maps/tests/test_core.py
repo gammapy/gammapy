@@ -784,7 +784,7 @@ def test_wcsndmap_reproject_allsky_car():
 
     geom1 = HpxGeom.create(binsz=5.0, frame="icrs")
     m1 = m.reproject_to_geom(geom1)
-    mask = np.abs(m1.geom.get_coord()[0] - 180) <= 5
+    mask = np.abs(m1.geom.get_coord()[0].to_value("deg") - 180) <= 5
     assert_allclose(np.unique(m1.data[mask])[1], expected)
 
 
