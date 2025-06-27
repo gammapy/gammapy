@@ -29,7 +29,8 @@ class EventListReader:
         """Create EventList from gadf HDU."""
         table = Table.read(events_hdu)
         meta = EventListMetaData.from_header(table.meta)
-        return EventList(table=table, meta=meta)
+        table = EventList._from_gadf_table(table)
+        return EventList(table, meta)
 
     @staticmethod
     def identify_format_from_hduclass(events_hdu):
@@ -78,7 +79,7 @@ class EventListWriter:
     @staticmethod
     def _to_gadf_table_hdu(event_list):
         """Convert input event list to a `~astropy.io.fits.BinTableHDU` according gadf."""
-        gadf_table = event_list.__to_gadf_table()
+        gadf_table = event_list._to_gadf_table()
 
         bin_table = fits.BinTableHDU(gadf_table, name="EVENTS")
 
