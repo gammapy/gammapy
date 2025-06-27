@@ -78,7 +78,9 @@ class EventListWriter:
     @staticmethod
     def _to_gadf_table_hdu(event_list):
         """Convert input event list to a `~astropy.io.fits.BinTableHDU` according gadf."""
-        bin_table = fits.BinTableHDU(event_list.table, name="EVENTS")
+        gadf_table = event_list.__to_gadf_table()
+
+        bin_table = fits.BinTableHDU(gadf_table, name="EVENTS")
 
         # A priori don't change creator information
         if event_list.meta.creation is None:

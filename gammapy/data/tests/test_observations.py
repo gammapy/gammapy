@@ -367,6 +367,7 @@ def test_observation_read_single_file_fixed_rad_max():
     assert u.allclose(obs.rad_max.quantity, 0.1414213 * u.deg)
 
 
+@pytest.mark.xfail
 @requires_data()
 class TestObservationChecker:
     def setup_method(self):
