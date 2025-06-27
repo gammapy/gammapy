@@ -9,7 +9,7 @@ import os
 
 
 def make_exclusion_mask(
-    source_region, geom, max_star_mag=6, star_rad=3 * u.deg, other_exc=[]
+    source_region, geom, max_star_mag=6, star_rad=0.3 * u.deg, other_exc=[]
 ):
     """
     Create an exclusion mask for the source position, any stars in the field of view,
