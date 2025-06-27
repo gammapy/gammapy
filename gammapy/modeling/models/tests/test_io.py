@@ -473,6 +473,28 @@ def test_link_label(models):
             n_link += 1
     assert n_link == 2
 
+    table = skymodels.parameters.to_table()
+    skymodels_copy = skymodels.copy()
+    assert (
+        skymodels_copy[0].spectral_model.reference
+        == skymodels_copy[1].spectral_model.reference
+    )
+    dict_ = skymodels_copy.to_dict()
+    label0 = dict_["components"][0]["spectral"]["parameters"][2]["link"]
+    label1 = dict_["components"][1]["spectral"]["parameters"][2]["link"]
+    assert label0 == label1
+
+    assert table["link"][2] == table["link"][9] and table["link"][2] != table["link"][1]
+
+    txt = skymodels.__str__()
+    lines = txt.splitlines()  # noqa: E303
+    n_link = 0
+    for line in lines:
+        if "@" in line:
+            assert "reference" in line
+            n_link += 1
+    assert n_link == 2
+
 
 def test_to_dict_not_default():
     model = PowerLawSpectralModel()

@@ -8,6 +8,7 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.table import Table
+from astropy.time import Time
 from astropy.utils.exceptions import AstropyUserWarning
 from regions import CircleSkyRegion
 import gammapy.irf.psf.map as psf_map_module
@@ -744,6 +745,33 @@ def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
 
     assert_allclose(stacked1.psf.psf_map, stacked.psf.psf_map)
     assert_allclose(stacked1.edisp.edisp_map, stacked.edisp.edisp_map)
+
+
+@requires_data()
+def test_map_dataset_fits_creation_metadata(tmp_path, sky_model, geom, geom_etrue):
+    dataset = get_map_dataset(geom, geom_etrue)
+
+    bkg_model = FoVBackgroundModel(dataset_name=dataset.name)
+    dataset.models = [sky_model, bkg_model]
+
+    dataset.meta.creation.creator = "MySoftware"
+    dataset.meta.creation.origin = "MyOrganization"
+
+    dataset.counts = dataset.npred()
+    dataset.mask_safe = dataset.mask_fit
+    gti = GTI.create([0 * u.s], [1 * u.h], reference_time="2010-01-01T00:00:00")
+    dataset.gti = gti
+
+    dataset.write(tmp_path / "test.fits")
+
+    hdul = fits.open(tmp_path / "test.fits")
+    for hdu in hdul:
+        assert "CREATOR" in hdu.header
+        assert "CREATED" in hdu.header
+        assert hdu.header["CREATOR"] == "MySoftware"
+        assert hdu.header["ORIGIN"] == "MyOrganization"
+        # Check that day is OK
+        assert hdu.header["CREATED"][:10] == Time.now().iso[:10]
 
 
 @requires_data()
