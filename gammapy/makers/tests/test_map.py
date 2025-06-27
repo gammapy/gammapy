@@ -594,6 +594,13 @@ def test_map_dataset_maker_swgo():
     event_type = datastore.obs_table["EVENT_TYPE"][2]
     assert observation_groups_redu["EVENT_TYPE_" + event_type].ids[0] == "2"
 
+    selection_mask = np.array([1, 0, 1, 0, 1, 1], dtype=bool)
+    observation_groups_redu = datastore.get_observation_groups(
+        "EVENT_TYPE", obs_id=[2, 3], selection=selection_mask
+    )
+    assert observation_groups_redu["EVENT_TYPE_" + event_type].ids[0] == "2"
+    assert len(observation_groups_redu) == 1
+
     event_type = datastore.obs_table["EVENT_TYPE"][0]
     selection_mask = datastore.obs_table["EVENT_TYPE"] == event_type
     observations_redu = datastore.get_observations(

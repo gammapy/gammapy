@@ -97,7 +97,7 @@ class DataStore:
     @property
     def obs_ids(self):
         """Return the sorted obs_ids contained in the datastore."""
-        return np.unique(self.hdu_table["OBS_ID"].data)
+        return set(np.unique(self.hdu_table["OBS_ID"].data))
 
     @classmethod
     def from_file(cls, filename, hdu_hdu="HDU_INDEX", hdu_obs="OBS_INDEX"):
@@ -407,7 +407,7 @@ class DataStore:
         if selection is None:
             obs_id_selection = self.obs_ids
         else:
-            obs_id_selection = np.array(self.obs_ids)[selection]
+            obs_id_selection = set(np.array(list(self.obs_ids))[selection])
 
         if obs_id is None:
             obs_id = obs_id_selection
@@ -507,10 +507,16 @@ class DataStore:
                 "obs_table attribute must not be None to select groups of observations"
             )
 
+        obs_table = self.obs_table
+        if selection is not None:
+            obs_table = obs_table[selection]
+            if obs_id is not None:
+                obs_id_selection = set(np.array(list(self.obs_ids))[selection])
+                obs_id = [_ for _ in obs_id if _ in obs_id_selection]
         if obs_id is not None:
-            grouped = self.obs_table.select_obs_id(obs_id).group_by(key)
-        else:
-            grouped = self.obs_table.group_by(key)
+            obs_table = obs_table.select_obs_id(obs_id)
+
+        grouped = obs_table.group_by(key)
 
         result = {}
         for key_value, group in zip(grouped.groups.keys, grouped.groups):
@@ -519,7 +525,6 @@ class DataStore:
                 skip_missing=skip_missing,
                 required_irf=required_irf,
                 require_events=require_events,
-                selection=selection,
             )
         return result
 
