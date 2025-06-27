@@ -246,16 +246,15 @@ def test_sample_coord_time_energy(dataset, energy_dependent_temporal_sky_model):
     dataset.models = energy_dependent_temporal_sky_model
     evaluator = dataset.evaluators["test-source"]
 
-    expected = np.array([854.26361, 7.840697, 266.404988, -28.936178])
+    time_ref = dataset.gti.time_ref
+
+    expected = np.array([7.840697, 266.404988, -28.936178])
     events = sampler._sample_coord_time_energy(dataset, evaluator.model)
+    met = (events["TIME"] - time_ref).to_value("s")
 
     assert len(events) == 2514
-
-    assert_allclose(
-        [events[0][0], events[0][1], events[0][2], events[0][3]],
-        expected,
-        rtol=1e-6,
-    )
+    assert_allclose(met[0], 854.26361, rtol=1e-6)
+    assert_allclose((events[0][1], events[0][2], events[0][3]), expected, rtol=1e-6)
 
     irfs = load_irf_dict_from_file(
         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
@@ -338,11 +337,8 @@ def test_sample_coord_time_energy_random_seed(
     )
 
     # Important: do not increase the tolerance!
-    assert_allclose(
-        events[0][0],
-        0.29982,
-        rtol=1.5e-6,
-    )
+    met = events["TIME"] - dataset.gti.time_ref
+    assert_allclose(met[0].to_value("s"), 0.29982, rtol=1.5e-6)
 
 
 @requires_data()
@@ -364,11 +360,8 @@ def test_sample_coord_time_energy_unit(dataset, energy_dependent_temporal_sky_mo
     )
 
     # Important: do not increase the tolerance!
-    assert_allclose(
-        events[0][0],
-        854.10859,
-        rtol=1.5e-6,
-    )
+    met = events["TIME"] - dataset.gti.time_ref
+    assert_allclose(met[0].to_value("s"), 854.10859, rtol=1.5e-6)
 
 
 @requires_data()
@@ -387,8 +380,7 @@ def test_mde_sample_sources(dataset, models):
     assert_allclose(events_table["DEC_TRUE"][0], -28.748145, rtol=1e-5)
     assert events_table["DEC_TRUE"].unit == "deg"
 
-    assert_allclose(events_table["TIME"][0], 120.62471, rtol=1e-5)
-    assert events_table["TIME"].unit == "s"
+    assert_allclose(events_table["TIME"][0].mjd, 51544.0013961193, rtol=1e-9)
 
     assert_allclose(events_table["MC_ID"][0], 1, rtol=1e-5)
 
@@ -415,10 +407,13 @@ def test_sample_sources_energy_dependent(dataset, energy_dependent_temporal_sky_
 
     assert_allclose(events_table["DEC_TRUE"][0], -28.936178, rtol=1e-5)
 
-    assert_allclose(events_table["TIME"][0], 95.464699, rtol=1e-5)
+    assert_allclose(events_table["TIME"][0].mjd, 51544.001847785, rtol=1e-9)
 
     dt = np.max(events_table["TIME"]) - np.min(events_table["TIME"])
-    assert dt <= dataset.gti.time_sum.to("s").value + sampler.t_delta.to("s").value
+    assert (
+        dt.to_value("s")
+        <= dataset.gti.time_sum.to("s").value + sampler.t_delta.to("s").value
+    )
 
 
 @requires_data()
@@ -580,7 +575,7 @@ def test_mde_run(dataset, models, caplog, tmp_path):
 
     assert captured[1].message == str[0]
     assert captured[2].message == str[1]
-    assert captured[4].message == str[2]
+    assert captured[3].message == str[2]
 
     dataset_bkg = dataset.copy(name="new-dataset")
     dataset_bkg.models = [FoVBackgroundModel(dataset_name=dataset_bkg.name)]
@@ -967,8 +962,8 @@ def test_sort_evt_by_time(dataset):
     sampler = MapDatasetEventSampler(random_state=0, n_event_bunch=1000)
     events = sampler.run(dataset=dataset)
 
-    dt = np.diff(events.table["TIME"])
-    assert np.all(dt >= 0)
+    dt = events.table["TIME"][1:] - events.table["TIME"][:-1]
+    assert np.all(dt.to("s") >= 0.0)
 
 
 @requires_data()
