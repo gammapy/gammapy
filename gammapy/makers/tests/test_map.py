@@ -569,7 +569,6 @@ def test_meta_data_creation(observations):
     assert stacked_meta.obs_info[1].obs_id == 111140
 
 
-@pytest.mark.xfail
 @requires_data()
 def test_map_dataset_maker_swgo():
     times = Time([59249.83472222222, 62802.21805555555], format="mjd", scale="tt")
@@ -581,16 +580,36 @@ def test_map_dataset_maker_swgo():
 
     datastore = DataStore.from_dir(path, "hdu-index.fits.gz", "obs-index.fits.gz")
 
-    event_type = datastore.obs_table["EVENT_TYPE"][0]
-    obs_selection = datastore.obs_table["EVENT_TYPE"] == event_type
-    hdu_selection = datastore.hdu_table["EVENT_TYPE"] == event_type
-    datastore_redu = DataStore(
-        hdu_table=datastore.hdu_table[hdu_selection],
-        obs_table=datastore.obs_table[obs_selection],
-    )
-    observations = datastore_redu.get_observations()
+    observation_groups = datastore.get_observation_groups("EVENT_TYPE")
 
-    obs = observations[0]
+    observation_groups_redu = datastore.get_observations(obs_id=[3, 2])
+    assert observation_groups_redu.ids == ["3", "2"]
+    observation_groups_redu = datastore.get_observation_groups(
+        "EVENT_TYPE", obs_id=[3, 2]
+    )
+
+    event_type = datastore.obs_table["EVENT_TYPE"][3]
+    assert observation_groups_redu["EVENT_TYPE_" + event_type].ids[0] == "3"
+
+    event_type = datastore.obs_table["EVENT_TYPE"][2]
+    assert observation_groups_redu["EVENT_TYPE_" + event_type].ids[0] == "2"
+
+    selection_mask = np.array([1, 0, 1, 0, 1, 1], dtype=bool)
+    observation_groups_redu = datastore.get_observation_groups(
+        "EVENT_TYPE", obs_id=[2, 3], selection=selection_mask
+    )
+    assert observation_groups_redu["EVENT_TYPE_" + event_type].ids[0] == "2"
+    assert len(observation_groups_redu) == 1
+
+    event_type = datastore.obs_table["EVENT_TYPE"][0]
+    selection_mask = datastore.obs_table["EVENT_TYPE"] == event_type
+    observations_redu = datastore.get_observations(
+        obs_id=datastore.obs_ids, selection=selection_mask
+    )
+
+    assert observations_redu.ids == observation_groups["EVENT_TYPE_" + event_type].ids
+
+    obs = observations_redu[0]
     obs.gti = gti
 
     with pytest.raises(ValueError):
