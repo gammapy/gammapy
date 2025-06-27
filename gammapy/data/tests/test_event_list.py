@@ -40,7 +40,7 @@ def test_validation(simple_event_table):
     assert len(events.table) == 5
 
     with pytest.raises(TypeError):
-        EventList(simple_event_table.to_pandas())
+        EventList(simple_event_table["TIME"])
 
     bad = simple_event_table.copy()
 

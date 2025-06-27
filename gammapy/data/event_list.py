@@ -32,14 +32,11 @@ class EventList:
 
     The required columns are:
 
-    - ``time`` - event time
-    - ``position`` - ICRS system reconstructed position
+    - ``RA`` - ICRS system reconstructed right ascension
+    - ``DEC`` - ICRS system reconstructed declination
+    - ``TIME`` - event time as an `~astropy.time.Time` object
     - ``energy`` - Reconstructed energy (usually MeV for Fermi and TeV for IACTs)
 
-    Other optional (columns) that are sometimes useful for high level analysis:
-
-    - ``GLON``, ``GLAT`` - Galactic coordinates (deg)
-    - ``DETX``, ``DETY`` - Field of view coordinates (deg)
 
     Parameters
     ----------
