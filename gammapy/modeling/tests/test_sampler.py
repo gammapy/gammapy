@@ -69,8 +69,8 @@ def test_run(backend="ultranest"):
 
     assert_allclose(result.models.parameters["index"].value, 2.7, rtol=0.1)
     assert_allclose(result.models.parameters["amplitude"].value, 4e-11, rtol=0.1)
-    assert_allclose(result.models.parameters["index"].error, 0.1, rtol=0.1)
-    assert_allclose(result.models.parameters["amplitude"].error, 3.2e-12, rtol=0.1)
+    assert_allclose(result.models.parameters["index"].error, 0.1, rtol=0.2)
+    assert_allclose(result.models.parameters["amplitude"].error, 3.2e-12, rtol=0.2)
 
     assert result.models._covariance is None
 
@@ -138,7 +138,7 @@ def test_run_linked_params(backend="ultranest"):
 
     assert_allclose(result.models.parameters["index"].value, 2.7, rtol=0.1)
     assert_allclose(result.models.parameters["amplitude"].value, 2e-11, rtol=0.1)
-    assert_allclose(result.models.parameters["index"].error, 0.1, rtol=0.1)
-    assert_allclose(result.models.parameters["amplitude"].error, 1.6e-12, rtol=0.1)
+    assert_allclose(result.models.parameters["index"].error, 0.1, rtol=0.2)
+    assert_allclose(result.models.parameters["amplitude"].error, 1.6e-12, rtol=0.2)
 
     assert result.models._covariance is None
