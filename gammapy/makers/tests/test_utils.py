@@ -475,7 +475,7 @@ class TestTheta2Table:
             events["DEC"] = sign * ([0.0, 0.05, 0.9, 10.0, 10.0] * u.deg)
             events["ENERGY"] = [1.0, 1.0, 1.5, 1.5, 10.0] * u.TeV
             events["OFFSET"] = [0.1, 0.1, 0.5, 1.0, 1.5] * u.deg
-            events["TIME"] = [0.1, 0.2, 0.3, 0.4, 0.5] * u.s
+            events["TIME"] = Time("2025-01-01") + [0.1, 0.2, 0.3, 0.4, 0.5] * u.s
 
             obs_info = dict(
                 OBS_ID=0,
