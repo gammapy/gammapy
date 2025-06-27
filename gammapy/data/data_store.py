@@ -392,7 +392,7 @@ class DataStore:
         require_events : bool, optional
             Require events and gti table or not. Default is True.
         selection : `~numpy.ndarray`, optional
-            Boolean array of the same lenght than the ``obs_table``.
+            Boolean array of the same length than the ``obs_table``.
             Observation is kept if  corresponding selection mask element is True
             and if it is in the list of obs_id.
             If None, default is all observations ordered by OBS_ID are returned.
@@ -434,7 +434,15 @@ class DataStore:
         log.info(f"Observations selected: {len(obs_list)} out of {len(obs_id)}.")
         return Observations(obs_list)
 
-    def get_observation_groups(self, key, **kwargs):
+    def get_observation_groups(
+        self,
+        key,
+        obs_id=None,
+        skip_missing=False,
+        required_irf="full-enclosure",
+        require_events=True,
+        selection=None,
+    ):
         """Generate groups of `~gammapy.data.Observations` with a shared property.
 
         Parameters
@@ -442,9 +450,41 @@ class DataStore:
         key : str
             Key of the observation table used to apply the grouping.
             For example, "EVENT_TYPE" will return group observations
-            with the same event type.
-        kwargs : dict, optional
-            Keyword arguments passed to `~gammapy.data.DataStore.get_observations`.
+        obs_id : list, optional
+            Observation IDs.
+            If None, default is all observations ordered by OBS_ID are returned.
+            This is not necessarily the order in the ``obs_table``.
+        skip_missing : bool, optional
+            Skip missing observations. Default is False.
+        required_irf : list of str or str, optional
+            Runs will be added to the list of observations only if the
+            required HDUs are present. Otherwise, the given run will be skipped
+            The list can include the following options:
+
+            * `"events"` : Events
+            * `"gti"` :  Good time intervals
+            * `"aeff"` : Effective area
+            * `"bkg"` : Background
+            * `"edisp"` : Energy dispersion
+            * `"psf"` : Point Spread Function
+            * `"rad_max"` : Maximal radius
+
+            Alternatively single string can be used as shortcut:
+
+            * `"full-enclosure"` : includes `["events", "gti", "aeff", "edisp", "psf", "bkg"]`
+            * `"point-like"` : includes `["events", "gti", "aeff", "edisp"]`
+            * `"all-optional"` : no HDUs are required, only warnings will be emitted
+              for missing HDUs among all possibilities.
+
+            Default is `"full-enclosure"`.
+        require_events : bool, optional
+            Require events and gti table or not. Default is True.
+        selection : `~numpy.ndarray`, optional
+            Boolean array of the same length than the ``obs_table``.
+            Observation is kept if  corresponding selection mask element is True
+            and if it is in the list of obs_id.
+            If None, default is all observations ordered by OBS_ID are returned.
+            Default is None.
 
         Returns
         -------
@@ -467,20 +507,21 @@ class DataStore:
                 "obs_table attribute must not be None to select groups of observations"
             )
 
-        observations = self.get_observations(**kwargs)
-        obs_table = self.obs_table[
-            [
-                np.where(self.obs_table["OBS_ID"].astype(str) == _)[0]
-                for _ in observations.ids
-            ]
-        ]
-        observations_group = observations.group_by_label(
-            obs_table[key].astype(str).squeeze()
-        )
-        return {
-            f"{key}{old_key[5:]}": value
-            for old_key, value in observations_group.items()
-        }
+        if obs_id is not None:
+            grouped = self.obs_table.select_obs_id(obs_id).group_by(key)
+        else:
+            grouped = self.obs_table.group_by(key)
+
+        result = {}
+        for key_value, group in zip(grouped.groups.keys, grouped.groups):
+            result[f"{key}_{key_value[0]}"] = self.get_observations(
+                group["OBS_ID"],
+                skip_missing=skip_missing,
+                required_irf=required_irf,
+                require_events=require_events,
+                selection=selection,
+            )
+        return result
 
     def copy_obs(self, obs_id, outdir, hdu_class=None, verbose=False, overwrite=False):
         """Create a new `~gammapy.data.DataStore` containing a subset of observations.
