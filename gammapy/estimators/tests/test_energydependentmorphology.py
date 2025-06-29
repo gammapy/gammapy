@@ -57,6 +57,7 @@ def estimator_result(create_model):
     return estimator.run(stacked_dataset)
 
 
+@requires_data()
 def test_edep(estimator_result):
     results_edep = estimator_result["energy_dependence"]["result"]
     assert_allclose(
@@ -77,6 +78,7 @@ def test_edep(estimator_result):
     assert_allclose(estimator_result["energy_dependence"]["delta_ts"], 75.62, rtol=1e-3)
 
 
+@requires_data()
 def test_significance(estimator_result):
     results_src = estimator_result["src_above_bkg"]
     assert_allclose(
@@ -91,6 +93,7 @@ def test_significance(estimator_result):
     )
 
 
+@requires_data()
 def test_chi2(estimator_result):
     results_edep = estimator_result["energy_dependence"]["result"]
     chi2_sigma = weighted_chi2_parameter(
