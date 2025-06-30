@@ -30,25 +30,37 @@ class SafeMaskMaker(Maker):
     methods : {"aeff-default", "aeff-max", "edisp-bias", "offset-max", "bkg-peak"}
         Method to use for the safe energy range. Can be a
         list with a combination of those. Resulting masks
-        are combined with logical `and`. "aeff-default"
-        uses the energy ranged specified in the DL3 data
-        files, if available.
-    aeff_percent : float
+        are combined with logical `and`.
+
+            * "aeff-default" : uses the energy ranged specified in the DL3 data
+              files, if available
+            * "aeff-max": the lower energy threshold is determined such as the effective
+              area is above a given percentage of its maximum
+            * "edisp-bias" : the lower energy threshold is determined such as the energy
+              bias is below a given percentage
+            * "offset-max" : the data beyond a given offset radius from the observation center are excluded
+            * "bkg-peak" : the energy threshold is defined as the upper edge of the energy bin
+              with the highest predicted background rate. This method was introduced in
+              the `H.E.S.S. DL3 validation paper <https://arxiv.org/pdf/1910.08088.pdf>`__
+
+    aeff_percent : float, optional
         Percentage of the maximal effective area to be used
         as lower energy threshold for method "aeff-max".
-    bias_percent : float
+        Default is 10.
+    bias_percent : float, optional
         Percentage of the energy bias to be used as lower
         energy threshold for method "edisp-bias".
+        Default is 10.
     position : `~astropy.coordinates.SkyCoord`
-        Position at which the `aeff_percent` or `bias_percent` are computed.
+        Position at which the ``aeff_percent`` or ``bias_percent`` are computed.
     fixed_offset : `~astropy.coordinates.Angle`
         Offset, calculated from the pointing position, at which
-        the `aeff_percent` or `bias_percent` are computed.
+        the ``aeff_percent`` or ``bias_percent`` are computed.
         If neither the position nor fixed_offset is specified,
         it uses the position of the center of the map by default.
-    offset_max : str or `~astropy.units.Quantity`
-        Maximum offset cut.
-    irfs : {"DL4", "DL3"}
+    offset_max : str or `~astropy.units.Quantity`, optional
+        Maximum offset cut. Default is '3 deg'.
+    irfs : {"DL4", "DL3"}, optional
         Whether to use reprojected ("DL4") or raw ("DL3") irfs.
         Default is "DL4".
     """
