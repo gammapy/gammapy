@@ -227,7 +227,7 @@ class SafeMaskMaker(Maker):
 
             model = TemplateSpectralModel.from_region_map(aeff)
 
-            energy_true = model.energy
+            energy_true = dataset._geom.axes["energy"].edges
             energy_min = energy_true[np.where(model.values > 0)[0][0]]
             energy_max = energy_true[-1]
 
