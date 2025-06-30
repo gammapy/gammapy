@@ -1,5 +1,6 @@
 import pytest
 from numpy.testing import assert_allclose
+import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from gammapy.datasets import MapDataset
@@ -12,6 +13,7 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
 )
+from gammapy.utils.testing import requires_data
 
 
 @pytest.fixture(scope="module")
@@ -46,7 +48,7 @@ def create_model():
 
 @pytest.fixture(scope="module")
 def estimator_result(create_model):
-    energy_edges = [1, 3, 5, 20] * u.TeV
+    energy_edges = [1, 5, 20] * u.TeV
     stacked_dataset = MapDataset.read(
         "$GAMMAPY_DATA/estimators/mock_DL4/dataset_energy_dependent.fits.gz"
     )
@@ -62,20 +64,22 @@ def test_edep(estimator_result):
     results_edep = estimator_result["energy_dependence"]["result"]
     assert_allclose(
         results_edep["lon_0"],
-        [5.6067162, 5.601791, 5.6180701, 5.5973948] * u.deg,
+        [5.606467, 5.608664, 5.597394] * u.deg,
         rtol=1e-3,
     )
     assert_allclose(
         results_edep["lat_0"],
-        [0.20237541, 0.21819575, 0.18371523, 0.18106852] * u.deg,
+        [0.20289353, 0.20589559, 0.18106776] * u.deg,
         rtol=1e-3,
     )
     assert_allclose(
         results_edep["sigma"],
-        [0.21563528, 0.25686477, 0.19736596, 0.13505605] * u.deg,
+        [0.21709024, 0.2315993, 0.13505759] * u.deg,
         rtol=1e-3,
     )
-    assert_allclose(estimator_result["energy_dependence"]["delta_ts"], 75.62, rtol=1e-3)
+    assert_allclose(
+        estimator_result["energy_dependence"]["delta_ts"], 50.719, rtol=1e-3
+    )
 
 
 @requires_data()
@@ -83,12 +87,12 @@ def test_significance(estimator_result):
     results_src = estimator_result["src_above_bkg"]
     assert_allclose(
         results_src["delta_ts"],
-        [998.0521965029693, 712.8735641098574, 289.81556949490914],
+        [1683.1128, 289.8156],
         rtol=1e-3,
     )
     assert_allclose(
         results_src["significance"],
-        [31.27752315246094, 26.34612970747113, 16.54625269423397],
+        [np.inf, 16.546],
         rtol=1e-3,
     )
 
@@ -102,12 +106,12 @@ def test_chi2(estimator_result):
 
     assert_allclose(
         chi2_sigma["chi2"],
-        [87.84278516393066, 4.605432972153188, 1.320491077667271],
+        [75.735899, 1.962729, 0.413059],
         rtol=1e-3,
     )
 
     assert_allclose(
         chi2_sigma["significance"],
-        [9.107664118611664, 1.6449173252682943, 0.6484028260024965],
+        [8.7026, 1.4009, 0.64269],
         rtol=1e-3,
     )
