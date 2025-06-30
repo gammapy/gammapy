@@ -4,7 +4,6 @@ import scipy.optimize
 from gammapy.utils.interpolation import interpolate_profile
 from gammapy.utils.roots import find_roots
 from .likelihood import Likelihood
-from gammapy.utils.deprecation import deprecated_renamed_argument
 
 __all__ = [
     "confidence_scipy",
@@ -136,9 +135,8 @@ def covariance_scipy(parameters, function):
     raise NotImplementedError
 
 
-@deprecated_renamed_argument("stat_scan", "delta_fit_stat", "2.0")
 def stat_profile_ul_scipy(
-    value_scan, delta_fit_stat, delta_ts=4, interp_scale="sqrt", **kwargs
+    value_scan, stat_scan, delta_ts=4, interp_scale="sqrt", **kwargs
 ):
     """Compute upper limit of a parameter from a likelihood profile.
 
@@ -146,8 +144,8 @@ def stat_profile_ul_scipy(
     ----------
     value_scan : `~numpy.ndarray`
         Array of parameter values.
-    delta_fit_stat : `~numpy.ndarray`
-        Array of delta fit statistic values, with respect to the minimum.
+    stat_scan : `~numpy.ndarray`
+        Array of fit statistic values.
     delta_ts : float, optional
         Difference in test statistics for the upper limit. Default is 4.
     interp_scale : {"sqrt", "lin"}, optional
@@ -162,13 +160,14 @@ def stat_profile_ul_scipy(
     ul : float
         Upper limit value.
     """
-    interp = interpolate_profile(value_scan, delta_fit_stat, interp_scale=interp_scale)
+    interp = interpolate_profile(value_scan, stat_scan, interp_scale=interp_scale)
+
+    idx = np.argmin(stat_scan)
+    norm_best_fit = value_scan[idx]
 
     def f(x):
-        return interp((x,)) - delta_ts
+        return interp((x,)) - stat_scan[idx] - delta_ts
 
-    idx = np.argmin(delta_fit_stat)
-    norm_best_fit = value_scan[idx]
     roots, res = find_roots(
         f, lower_bound=norm_best_fit, upper_bound=value_scan[-1], nbin=1, **kwargs
     )
