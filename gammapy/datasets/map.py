@@ -1305,12 +1305,8 @@ class MapDataset(Dataset):
         )
         residuals = self._compute_residuals(counts_spatial, npred_spatial, method)
 
-        if self.mask_safe is not None:
-            mask = self.mask_safe.reduce_over_axes(func=np.logical_or, keepdims=True)
-            residuals.data[~mask.data] = np.nan
-
-        if self.mask_fit is not None:
-            mask = self.mask_fit.reduce_over_axes(func=np.logical_or, keepdims=True)
+        if self.mask is not None:
+            mask = self.mask.reduce_over_axes(func=np.logical_or, keepdims=True)
             residuals.data[~mask.data] = np.nan
 
         kwargs.setdefault("add_cbar", True)
