@@ -320,6 +320,7 @@ sphinx_gallery_conf = {
             "../examples/models/spectral",
             "../examples/models/temporal",
             "../examples/tutorials/starting",
+            "../examples/tutorials/model-gallery",
             "../examples/tutorials/data",
             "../examples/tutorials/key-steps",
             "../examples/tutorials/analysis-1d",
