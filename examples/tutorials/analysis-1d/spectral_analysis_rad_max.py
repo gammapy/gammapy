@@ -21,7 +21,7 @@ Context
 
 As already explained in the :doc:`/tutorials/analysis-1d/spectral_analysis`
 tutorial, the background is estimated from the field of view of the observation.
-In particular, the source and background events are counted within a circular 
+In particular, the source and background events are counted within a circular
 ON region enclosing the source. The background to be subtracted is then estimated
 from one or more OFF regions with an expected background rate similar to the one
 in the ON region (i.e. from regions with similar acceptance).
@@ -318,7 +318,7 @@ plt.show()
 
 ######################################################################
 # For more ways of assessing fit quality, please refer to the dedicated
-# :doc:`/tutorials/api/fitting` tutorial.
+# :doc:`/tutorials/key-steps/fitting` tutorial.
 #
 
 
