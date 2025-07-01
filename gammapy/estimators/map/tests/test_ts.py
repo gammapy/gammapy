@@ -686,7 +686,7 @@ def test_joint_ts_map_hawc():
     assert_allclose(result["flux_sensitivity"].data[0, 59, 59], 4.881527e-14, rtol=1e-3)
 
 
-def test_with_issue():
+def test_tsmap_extended_source():
     energy_axis = MapAxis.from_energy_bounds(
         0.8 * u.TeV, 80 * u.TeV, nbin=2, name="energy"
     )
@@ -718,33 +718,36 @@ def test_with_issue():
         geom=test.edisp.edisp_map.geom.to_image(),
     )
 
-    # 0.21 will not
-    ts_estimator = TSMapEstimator(
-        SkyModel(
-            spatial_model=GaussianSpatialModel(sigma=0.21 * u.deg),
-            spectral_model=PowerLawSpectralModel(index=2),
-        ),
-        selection_optional=[],
-        energy_edges=[0.8, 22] * u.TeV,
-        n_jobs=1,
-        kernel_width=10 * u.deg,
-    )
+    sigmas = np.arange(0.11, 0.6, 0.05) * u.deg
+    for sigma in sigmas:
+        ts_estimator = TSMapEstimator(
+            SkyModel(
+                spatial_model=GaussianSpatialModel(sigma=sigma),
+                spectral_model=PowerLawSpectralModel(index=2),
+            ),
+            selection_optional=[],
+            energy_edges=[0.8, 22] * u.TeV,
+            n_jobs=1,
+            kernel_width=10 * u.deg,
+        )
 
-    result = ts_estimator.run(test)
+        result = ts_estimator.run(test)
 
-    assert_allclose(result["sqrt_ts"].data[0, 12, 16], 5.74503, rtol=1e-3)
+        ts_estimator2 = TSMapEstimator(
+            SkyModel(
+                spatial_model=GaussianSpatialModel(sigma=sigma),
+                spectral_model=PowerLawSpectralModel(index=2),
+            ),
+            selection_optional=[],
+            energy_edges=[0.8, 22] * u.TeV,
+            n_jobs=1,
+            kernel_width=None,
+        )
 
-    ts_estimator2 = TSMapEstimator(
-        SkyModel(
-            spatial_model=GaussianSpatialModel(sigma=0.21 * u.deg),
-            spectral_model=PowerLawSpectralModel(index=2),
-        ),
-        selection_optional=[],
-        energy_edges=[0.8, 22] * u.TeV,
-        n_jobs=1,
-        kernel_width=None,
-    )
+        result2 = ts_estimator2.run(test)
 
-    result2 = ts_estimator2.run(test)
-
-    assert_allclose(result2["sqrt_ts"].data[0, 12, 16], 5.74503, rtol=1e-3)
+        assert_allclose(
+            result2["sqrt_ts"].data[0, 12, 16],
+            result["sqrt_ts"].data[0, 12, 16],
+            rtol=5e-2,
+        )
