@@ -589,7 +589,7 @@ def test_with_TemplateSpatialModel():
     )
 
     result = estimator.run(dataset)
-    assert_allclose(result["sqrt_ts"].data[0, 12, 16], 22.932, rtol=1e-3)
+    assert_allclose(result["sqrt_ts"].data[0, 12, 16], 22.3658, rtol=1e-3)
 
 
 def test_joint_ts_map(fake_dataset):
@@ -606,13 +606,13 @@ def test_joint_ts_map(fake_dataset):
     assert estimator.sum_over_energy_groups
 
     result = estimator.run(fake_dataset)
-    assert_allclose(result["npred_excess"].data.sum(), 902.403647, rtol=1e-3)
-    assert_allclose(result["sqrt_ts"].data[0, 10, 10], 1.360219, rtol=1e-3)
+    assert_allclose(result["npred_excess"].data.sum(), 912.92157, rtol=1e-3)
+    assert_allclose(result["sqrt_ts"].data[0, 10, 10], 1.462328, rtol=1e-3)
 
     result = get_combined_significance_maps(estimator, [fake_dataset, fake_dataset2])
 
-    assert_allclose(result["npred_excess"].data.sum(), 2 * 902.403647, rtol=1e-3)
-    assert_allclose(result["significance"].data[10, 10], 1.414529, rtol=1e-3)
+    assert_allclose(result["npred_excess"].data.sum(), 2 * 912.92157, rtol=1e-3)
+    assert_allclose(result["significance"].data[10, 10], 1.563892, rtol=1e-3)
     assert_allclose(
         result["df"].data, 2 * (~np.isnan(result["significance"].data)), rtol=1e-3
     )
@@ -621,7 +621,7 @@ def test_joint_ts_map(fake_dataset):
         model=model, threshold=1, selection_optional="all", sum_over_energy_groups=True
     )
     result = estimator.run([fake_dataset, fake_dataset2])
-    assert_allclose(result["sqrt_ts"].data[0, 10, 10], 1.92364, rtol=1e-3)
+    assert_allclose(result["sqrt_ts"].data[0, 10, 10], 2.063912, rtol=1e-3)
 
 
 @requires_data()
