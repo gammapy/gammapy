@@ -2,6 +2,7 @@
 """Functions to compute test statistic images."""
 
 import warnings
+import astropy.units as u
 from itertools import repeat
 import numpy as np
 import scipy.optimize
@@ -594,9 +595,15 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         datasets_models = datasets.models
 
         pad_width = (0, 0)
+        kernel_width = 0 * u.deg
         for dataset in datasets:
             pad_width_dataset = self.estimate_pad_width(dataset=dataset)
+            kernel_width_dataset = np.max(self.estimate_kernel(dataset).geom.width)
             pad_width = tuple(np.maximum(pad_width, pad_width_dataset))
+            kernel_width = np.maximum(kernel_width, kernel_width_dataset)
+
+        if self.kernel_width is None:
+            self.kernel_width = kernel_width
 
         datasets_padded = Datasets()
         for dataset in datasets:
