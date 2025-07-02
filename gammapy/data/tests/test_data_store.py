@@ -255,6 +255,16 @@ def test_data_store_header_info_in_meta(data_store):
 def test_data_store_bad_name():
     with pytest.raises(IOError):
         DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/", "hdu-index.fits.gz", "bad")
+  
+
+@requires_data()
+def test_data_store_doubled_id():
+    """Test that doubled id in obs_id causes UserWarning"""
+
+    # Using example provided in Issue #5943:
+    datastore = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
+    with pytest.raises(UserWarning):
+        datastore.get_observations(obs_id=[23523, 23523])
 
 
 @requires_data()

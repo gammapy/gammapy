@@ -395,6 +395,9 @@ class DataStore:
         if obs_id is None:
             obs_id = self.obs_ids
 
+        if len(np.unique(obs_id)) != len(obs_id):
+            raise UserWarning(f"List of obs_id is not unique!")
+
         obs_list = []
 
         for _ in progress_bar(obs_id, desc="Obs Id"):
