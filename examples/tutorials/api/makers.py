@@ -110,11 +110,11 @@ plt.show()
 
 
 ######################################################################
-# The `~gammapy.makers.MapDatasetMaker` fills the corresponding `counts`,
-# `exposure`, `background`, `psf` and `edisp` map per observation.
-# The `~gammapy.makers.MapDatasetMaker` has a `selection` parameter, in case some of
+# The `~gammapy.makers.MapDatasetMaker` fills the corresponding ``counts``,
+# ``exposure``, ``background``, ``psf`` and ``edisp`` map per observation.
+# The `~gammapy.makers.MapDatasetMaker` has a ``selection`` parameter, in case some of
 # the maps should not be computed. There is also a
-# `background_oversampling` parameter that defines the oversampling
+# ``background_oversampling`` parameter that defines the oversampling
 # factor in energy used to compute the background (default is None).
 #
 # .. _safe-data-range:
@@ -276,7 +276,7 @@ print(stacked)
 # To maintain good performance it is always recommended to do a cutout of
 # the `~gammapy.datasets.MapDataset` as shown above. In case you want to increase the
 # offset-cut later, you can also choose a larger width of the cutout than
-# `2 * offset_max`.
+# ``2 * offset_max``.
 #
 # Note that we stack the individual `~gammapy.datasets.MapDataset`, which are computed per
 # observation into a larger dataset. During the stacking the safe data
@@ -287,8 +287,8 @@ print(stacked)
 # The data reduction loop shown above can be done through the
 # `~gammapy.makers.DatasetsMaker` class that take as argument a list of makers. **Note
 # that the order of the makers list is important as it determines their
-# execution order.** Moreover the `stack_datasets` option offers the
-# possibility to stack or not the output datasets, and the `n_jobs` option
+# execution order.** Moreover the ``stack_datasets`` option offers the
+# possibility to stack or not the output datasets, and the ``n_jobs`` option
 # allow to use multiple processes on run.
 #
 

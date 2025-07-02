@@ -47,7 +47,7 @@ print(aeff)
 
 ######################################################################
 # We can see that the Effective Area Table is defined in terms of
-# `energy_true` and `offset` from the camera center
+# ``energy_true`` and ``offset`` from the camera center
 #
 
 # To see the IRF axes binning, eg, offset
@@ -76,8 +76,8 @@ print(bkg)
 
 
 ######################################################################
-# Note that the background is given in FoV coordinates with `fov_lon`
-# and `fov_lat` axis, and not in `offset` from the camera center. We
+# Note that the background is given in FoV coordinates with ``fov_lon``
+# and ``fov_lat`` axis, and not in ``offset`` from the camera center. We
 # can also check the Field of view alignment. Currently, two possible
 # alignments are supported: alignment with the horizontal coordinate
 # system (ALTAZ) and alignment with the equatorial coordinate system
@@ -109,7 +109,7 @@ print(ev)
 
 ######################################################################
 # We can customise the interpolation scheme. Here, we adapt to fill
-# `nan` instead of `0` for extrapolated values
+# ``nan`` instead of ``0`` for extrapolated values
 #
 
 bkg.interp_kwargs["fill_value"] = np.nan
@@ -123,7 +123,7 @@ print(ev2)
 
 
 ######################################################################
-# The interpolation scheme along each axis is taken from the `MapAxis`
+# The interpolation scheme along each axis is taken from the `~gammapy.maps.MapAxis`
 # specification. eg
 #
 
@@ -144,10 +144,10 @@ print(psf)
 
 
 ######################################################################
-# The PointSpreadFunction for the CTA DC1 is stored as a combination of 3
-# Gaussians. Other PSFs, like a `PSF_TABLE` and analytic expressions
+# The point spread function for the CTA DC1 is stored as a combination of 3
+# Gaussians. Other PSFs, like a ``PSF_TABLE`` and analytic expressions
 # like KING function are also supported. All PSF classes inherit from a
-# common base `PSF` class.
+# common base ``PSF`` class.
 #
 
 print(psf.axes.names)
@@ -175,9 +175,9 @@ print(
 
 ######################################################################
 # While Gammapy does not have inbuilt classes for supporting asymmetric
-# IRFs (except for `Background3D`), custom classes can be created. For
-# this to work correctly with the `MapDatasetMaker`, only variations
-# with `fov_lon` and `fov_lat` can be allowed.
+# IRFs (except for `~gammapy.irf.Background3D`), custom classes can be created. For
+# this to work correctly with the `~gammapy.makers.MapDatasetMaker`, only variations
+# with ``fov_lon`` and ``fov_lat`` can be allowed.
 #
 # The main idea is that the list of required axes should be correctly
 # mentioned in the class definition.
@@ -248,7 +248,7 @@ aeff_3d.fov_alignment
 # ~~~~~~~~~~~~~
 #
 # For serialisation, we need to add the class definition to the
-# `IRF_DL3_HDU_SPECIFICATION` dictionary
+# ``IRF_DL3_HDU_SPECIFICATION`` dictionary
 #
 
 IRF_DL3_HDU_SPECIFICATION["aeff_3d"] = {
@@ -401,8 +401,8 @@ edisp_new
 
 
 ######################################################################
-# Create edisp kernel map (DL4 product) - `EDispKernelMap`
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Create edisp kernel map (DL4 product) - `~gammapy.irf.EDispKernelMap`
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 
 migra = MapAxis.from_edges(np.linspace(0.5, 1.5, 50), unit="", name="migra")
@@ -494,8 +494,8 @@ psf_assym.write("test_psf.fits.gz", overwrite=True)
 psf_new = PSF_assym.read("test_psf.fits.gz")
 
 ######################################################################
-# Create DL4 product - `PSFMap`
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Create DL4 product - `~gammapy.irf.PSFMap`
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 
 rad = MapAxis.from_edges(np.linspace(0.5, 3.0, 10), unit="deg", name="rad")
