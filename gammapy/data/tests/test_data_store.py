@@ -255,7 +255,7 @@ def test_data_store_header_info_in_meta(data_store):
 def test_data_store_bad_name():
     with pytest.raises(IOError):
         DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/", "hdu-index.fits.gz", "bad")
-  
+
 
 @requires_data()
 def test_data_store_doubled_id():
