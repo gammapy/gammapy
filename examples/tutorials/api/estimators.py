@@ -2,7 +2,7 @@
 Estimators
 ==========
 
-This tutorial provides an overview of the `Estimator` API. All estimators live in the
+This tutorial provides an overview of the ``Estimator`` API. All estimators live in the
 `gammapy.estimators` sub-module, offering a range of algorithms and classes for high-level flux and
 significance estimation. This is accomplished through a common functionality allowing the estimation of
 flux points, light curves, flux maps and profiles via a common API.
