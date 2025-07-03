@@ -8,7 +8,7 @@ from astropy.table import Table
 from astropy.time import Time
 from gammapy.data import FixedPointingInfo
 from gammapy.irf import BackgroundIRF, EDispMap, FoVAlignment, PSFMap
-from gammapy.maps import Map, RegionNDMap
+from gammapy.maps import Map, RegionNDMap, WcsGeom, MapAxis
 from gammapy.maps.utils import broadcast_axis_values_to_geom
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.stats import WStatCountsStatistic
@@ -25,6 +25,7 @@ __all__ = [
     "make_theta_squared_table",
     "make_effective_livetime_map",
     "make_observation_time_map",
+    "get_effective_livetime",
 ]
 
 log = logging.getLogger(__name__)
@@ -718,8 +719,8 @@ def make_observation_time_map(observations, geom, offset_max=None):
 
 def make_effective_livetime_map(observations, geom, offset_max=None):
     """
-    Compute the acceptance corrected livetime map
-    for a list of observations.
+    Compute the acceptance corrected livetime map for a list of observations.
+    This function uses observations with full-enclosure IRFs.
 
     Parameters
     ----------
@@ -734,6 +735,10 @@ def make_effective_livetime_map(observations, geom, offset_max=None):
     -------
      exposure : `~gammapy.maps.Map`
         Effective livetime.
+
+    Notes
+    -----
+    This function is not yet functional for HAWC data sets.
     """
 
     livetime = Map.from_geom(geom, unit=u.hr)
@@ -743,6 +748,8 @@ def make_effective_livetime_map(observations, geom, offset_max=None):
         geom_obs = geom.cutout(
             position=obs.get_pointing_icrs(obs.tmid), width=2.0 * offset_max
         )
+        if obs.rad_max:
+            continue
         coords = geom_obs.get_coord()
         offset = coords.skycoord.separation(obs.get_pointing_icrs(obs.tmid))
         mask = offset < offset_max
@@ -764,12 +771,89 @@ def make_effective_livetime_map(observations, geom, offset_max=None):
     return livetime
 
 
+def get_effective_livetime(
+    datastore, position, radius=None, border=None, en_edges=None
+):
+    """Compute the effective observation time at a given sky position.
+
+    This function computes the total livetime over observations containing a region of interest. Given the fact
+    that the instrument responses change within the field of view for each observation, this function computes
+    precisely the acceptance-corrected livetime map.
+
+    Parameters
+    ----------
+    datastore: `~gammapy.data.DataStore`
+        Data store of a data release.
+    position : `~astropy.coordinates.SkyCoord`
+        Central sky position.
+    radius : `~astropy.coordinates.Angle`, optional.
+        Radius of the region of interest.
+        If None, a `radius` of 0.1 deg is used. Default is None.
+    border : `~astropy.coordinates.Angle`, optional.
+        Additional edge summed to the region of interest used for the selection of the observations.The maximum offset FoV. Default is None.
+        If None, a `border` of 6 deg is used. Default is None.
+    en_edges : list of `~astropy.units.Quantity`
+        Edges of true energy bins. Default is None.
+
+    Returns
+    -------
+    livetime_maps : `~gammapy.maps.Map` or list of `~gammapy.maps.Map`
+        Effective livetime map(s).
+    selected_ids : list of `str`
+        List of selected observation IDs.
+
+    Notes
+    -----
+    This function is not yet functional for HAWC data sets.
+    """
+    # ToDo: add the tutorial link after inside an "Example"
+
+    border = Angle(6, "deg") if border is None else border
+    selection = dict(
+        type="sky_circle",
+        frame="icrs",
+        lon=position.ra,
+        lat=position.dec,
+        radius=Angle(0.1, "deg") if radius is None else radius,
+        border=border,
+    )
+    selected_obs_table = datastore.obs_table.select_observations(selection)
+    required_irf = ["aeff"]
+    observations = datastore.get_observations(
+        selected_obs_table["OBS_ID"], required_irf=required_irf
+    )
+
+    # Define the geom
+    edges = [1 * u.GeV, 1 * u.PeV] if en_edges is None else en_edges
+    energy_axis_true = MapAxis.from_energy_edges(edges, name="energy_true")
+    geom = WcsGeom.create(
+        skydir=position,
+        binsz=0.02,
+        width=(border.value * 2, border.value * 2),
+        frame="icrs",
+        proj="CAR",
+        axes=[energy_axis_true],
+    )
+
+    livetime_maps = make_effective_livetime_map(observations, geom, offset_max=border)
+
+    effective_times_src = livetime_maps.get_by_coord(
+        (position, energy_axis_true.center)
+    )
+    log.info(f"Time spent on position {position}:")
+    for idx, _ in enumerate(edges[:-1]):
+        log.info(
+            f"Effective Livetime in [{edges[idx]}, {edges[idx + 1]}] : {effective_times_src[idx]:.2f} {livetime_maps.unit}"
+        )
+
+    return livetime_maps, selected_obs_table["OBS_ID"].tolist()
+
+
 def guess_instrument_fov(obs):
     """
     Guess the camera field of view for the given observation
     from the IRFs. This simply takes the maximum offset of the
     effective area IRF.
-    TODO: This logic will break for more complex IRF models.
     A better option would be to compute the offset at which
     the effective area is above 10% of the maximum.
 
@@ -783,6 +867,7 @@ def guess_instrument_fov(obs):
     offset_max : `~astropy.units.quantity.Quantity`
         The maximum offset of the effective area IRF.
     """
+    # TODO: This logic will break for more complex IRF models.
 
     if "aeff" not in obs.available_irfs:
         raise ValueError("No Effective area IRF to infer the FoV from")

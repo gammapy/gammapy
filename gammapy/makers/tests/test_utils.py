@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import logging
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
@@ -25,6 +26,7 @@ from gammapy.makers.utils import (
     make_map_background_irf,
     make_map_exposure_true_energy,
     make_observation_time_map,
+    get_effective_livetime,
     make_theta_squared_table,
 )
 from gammapy.maps import HpxGeom, MapAxis, RegionGeom, WcsGeom, WcsNDMap
@@ -653,3 +655,39 @@ def test_make_effective_livetime_map():
     assert_allclose(obs_time_offset, [0, 0.242814], rtol=1e-3)
 
     assert obs_time.unit == u.hr
+
+
+@requires_data()
+def test_data_store_get_effective_livetime(caplog):
+    """Test the computation of the livetime for a test position"""
+    ds = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
+    position = SkyCoord(
+        ra=83.6324, dec=22.0174, frame="icrs", unit="deg"
+    )  # Crab position
+    with caplog.at_level(logging.INFO):
+        livetime_maps, sel_ids = get_effective_livetime(datastore=ds, position=position)
+        assert livetime_maps.geom.shape_axes == (1,)
+        assert len(sel_ids) == 4
+        assert "Effective Livetime in [1.0 GeV, 1.0 PeV] : 1.75 h" in [
+            _.message for _ in caplog.records
+        ]
+    with caplog.at_level(logging.INFO):
+        _, _ = get_effective_livetime(
+            datastore=ds, position=position, en_edges=[0.1 * u.TeV, 1 * u.TeV]
+        )
+        assert "Effective Livetime in [1.0 GeV, 1.0 PeV] : 1.75 h" in [
+            _.message for _ in caplog.records
+        ]
+        assert "Effective Livetime in [0.1 TeV, 1.0 TeV] : 0.00 h" in [
+            _.message for _ in caplog.records
+        ]
+
+    ds2 = DataStore.from_dir("$GAMMAPY_DATA/magic/rad_max/data/")
+    with caplog.at_level(logging.INFO):
+        livetime_maps2, sel_ids2 = get_effective_livetime(
+            datastore=ds2, position=position
+        )
+        assert len(sel_ids2) == 2
+        assert "Effective Livetime in [1.0 GeV, 1.0 PeV] : 0.00 h" in [
+            _.message for _ in caplog.records
+        ]
