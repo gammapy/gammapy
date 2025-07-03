@@ -735,6 +735,10 @@ def make_effective_livetime_map(observations, geom, offset_max=None):
     -------
      exposure : `~gammapy.maps.Map`
         Effective livetime.
+
+    Notes
+    -----
+    This function is not yet functional for HAWC data sets.
     """
 
     livetime = Map.from_geom(geom, unit=u.hr)
