@@ -72,7 +72,7 @@ check_tutorials_setup()
 # public H.E.S.S. data release and stored it in `$GAMMAPY_DATA`
 #
 
-dataset = MapDataset.read("$GAMMAPY_DATA/datasets/empty-dl4.fits.gz")
+dataset = MapDataset.read("$GAMMAPY_DATA/datasets/empty-dl4/empty-dl4.fits.gz")
 dataset.peek()
 plt.show()
 
