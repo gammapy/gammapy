@@ -19,8 +19,8 @@ allowing only for the calculation of confidence intervals.
 Proposed approach
 -----------------
 
-In this section, we will use 6 observations of the blazars PKS 2155-304 taken in 2008 by
-  H.E.S.S to constrain the curvature in the spectrum
+In this section, we will use 6 observations of the blazar PKS 2155-304, taken in 2008 by
+H.E.S.S, to constrain the curvature in the spectrum
 
 """
 
