@@ -9,7 +9,7 @@ Explore how to deal with upper limits on parameters
 Prerequisites
 -------------
 It is advisable to understand the general Gammapy modelling and fitting framework before proceeding
-with this notebook, eg see :doc:`/user-guide/modeling`
+with this notebook, eg see :doc:`docs/user-guide/modeling`
 
 Context
 -------
