@@ -55,7 +55,7 @@ check_tutorials_setup()
 
 ######################################################################
 # Load observation
-# -----------
+# ----------------
 #
 # We will now use a precomputed blazar dataset to see how to contrain
 # model parameters. Detailed modeling of this dataset may be found in the
