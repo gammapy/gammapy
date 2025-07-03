@@ -9,7 +9,7 @@ Explore how to deal with upper limits on parameters
 Prerequisites
 -------------
 It is advisable to understand the general Gammapy modelling and fitting framework before proceeding
-with this notebook.
+with this notebook, eg see :doc:`/user-guide/modeling`
 
 Context
 -------
@@ -59,7 +59,7 @@ check_tutorials_setup()
 #
 # We will now use a precomputed blazar dataset to see how to contrain
 # model parameters. Detailed modeling of this dataset may be found in the
-# :doc:`/tutorials/utorials/analysis-1d/ebl` notebook. We will try to
+# :doc:`/tutorials/analysis-1d/ebl` notebook. We will try to
 # constrain the spectral cutoff in the source. To see
 #
 
@@ -91,7 +91,7 @@ print(res_pks.models)
 
 ######################################################################
 # We see that the parameter `lambda_` is not well constrained. In this
-# case, it is helpful to look at the likelihood profile of the parameter.
+# case, it can be helpful to look at the likelihood profile of the parameter.
 # We will use the `~gammapy.modeling.Fit.stat_profile` function, and refit the other free
 # parameters in the process by setting `reoptimize=True`
 #
@@ -106,7 +106,7 @@ profile = fit.stat_profile(datasets=dataset_onoff, parameter=parameter, reoptimi
 
 ######################################################################
 # `profile` is a dictionary that stores the values of `lambda_` and the
-# corresponding likelihood values. Lets try to visualise it.
+# corresponding likelihood values. Let's try to visualise it.
 #
 
 values = profile["model_pks.spectral.lambda__scan"]
@@ -128,7 +128,8 @@ plt.show()
 # Thus, this dataset does not yield a significant spectral cutoff in
 # PKS2155-304. In particular, we cannot constrain the lower limit from
 # this profile. We can compute the limits of the cutoff from the Probability Density Function (PDF).
-#
+# For this, we will first convert the likelihood profile into a normalised PDF with `likelihood_to_pdf`
+# and then use it to compute the intervals from the Cumulative Distribution Function (CDF).
 
 from scipy.interpolate import CubicSpline
 from scipy.integrate import cumulative_trapezoid
@@ -191,12 +192,15 @@ print(
 
 
 ######################################################################
-# Since our dataset actually starts from 200 GeV, all this analysis has 
-# done is rule out any cut-off features!
+# Since our dataset actually starts from 200 GeV, all this analysis has
+# done is rule out any cut-off features at 68% confidence!
 #
-# We could also have used `stat_profile_ul_scipy` for computing the UL, which uses rootfing to obtain the n-sigma limits,
-# but this can fail if the limits are not constrained.
+# We could also have used `stat_profile_ul_scipy` for computing the UL, which uses
+# rootfinding to obtain the n-sigma limits,
+# but note that this can fail if the limits are not constrained.
 #
+# We now plot, in energy units, the likelihood profile of the cutoff with a brown dotted
+# line showing the lower cutoff.
 
 ax = plt.gca()
 ax.plot(1.0 / values, loglike - np.min(loglike))
