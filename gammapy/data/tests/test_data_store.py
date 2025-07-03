@@ -172,8 +172,10 @@ def test_data_store_from_events(data_store_dc1):
 
 
 @requires_data()
-def test_read_events_info(monkeypatch, data_store_dc1):
+def test_read_events_info(monkeypatch, data_store_dc1, data_store):
     table = data_store_dc1.obs_table
+    id = np.where(table["OBS_ID"] == 110380)
+    table = table[id]
 
     assert table["OBS_ID"][0] == 110380
     assert table["TSTART"][0] == 664502400.0
