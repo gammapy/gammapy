@@ -5,7 +5,6 @@ jobs:
   lint:
     name: Run pre-commit hooks
     runs-on: ubuntu-latest
-    if: contains(github.event.pull_request.labels.*.name, 'skip-lint') == false
 
     steps:
       - name: Check out repository
