@@ -41,6 +41,7 @@ TUTORIAL_SORT_DICT = {
         "event_sampling.py": 5,
         "event_sampling_nrg_depend_models.py": 6,
         "flux_profiles.py": 7,
+        "non_detected_source.py": 8,
     # time
         "light_curve.py": 0,
         "light_curve_flare.py": 1,
