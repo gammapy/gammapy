@@ -72,7 +72,7 @@ check_tutorials_setup()
 # public H.E.S.S. data release and stored it in `$GAMMAPY_DATA`
 #
 
-dataset = MapDataset.read("$GAMMAPY_DATA/empty_dl4/empty-dl4.fits.gz")
+dataset = MapDataset.read("$GAMMAPY_DATA/datasets/empty-dl4.fits.gz")
 dataset.peek()
 plt.show()
 
@@ -158,7 +158,7 @@ print(LLR)
 ######################################################################
 # You can see that the `ts ~ 4.7`, thus suggesting that the observed
 # fluctuations are not significant over the background. Note the here we have
-# only 1 free parameter, and thus, significance ~ sqrt(ts).
+# only 1 free parameter, and thus, significance = sqrt(ts) ~ 2.2.
 # Now, we will estimate the differential upper limits of the source.
 
 ###############################################################################
