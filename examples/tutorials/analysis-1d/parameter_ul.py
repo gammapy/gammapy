@@ -13,8 +13,8 @@ with this notebook.
 
 Context
 -------
-Given significant detection of a source, it may still be difficult to constrain some model parameters,
-and we can only provide some confidence intervals.
+Even with significant detection of a source, constraining specific model parameters may remain difficult,
+allowing only for the calculation of confidence intervals.
 
 Proposed approach
 -----------------
