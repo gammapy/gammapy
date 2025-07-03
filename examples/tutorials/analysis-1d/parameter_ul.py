@@ -2,7 +2,7 @@
 
 """
 Constraining parameter limits
-================
+=============================
 
 Explore how to deal with upper limits on parameters
 
