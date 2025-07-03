@@ -74,7 +74,7 @@ plt.show()
 # Fit spectrum
 # ------------
 #
-# Fit a spectral model with cutoff
+# Fit a spectral model with a cutoff
 #
 
 spectral1 = ExpCutoffPowerLawSpectralModel()
@@ -92,7 +92,7 @@ print(res_pks.models)
 ######################################################################
 # We see that the parameter `lambda_` is not well constrained. In this
 # case, it is helpful to look at the likelihood profile of the parameter.
-# We will use the `fit.stat_profile` function, and refit the other free
+# We will use the `~gammapy.modeling.Fit.stat_profile` function, and refit the other free
 # parameters in the process by setting `reoptimize=True`
 #
 
@@ -105,8 +105,8 @@ profile = fit.stat_profile(datasets=dataset_onoff, parameter=parameter, reoptimi
 
 
 ######################################################################
-# `profile` is a dict storing the values of `lambda_` and the
-# likelihood value. Lets try to visualise it.
+# `profile` is a dictionary that stores the values of `lambda_` and the
+# corresponding likelihood values. Lets try to visualise it.
 #
 
 values = profile["model_pks.spectral.lambda__scan"]
@@ -124,7 +124,7 @@ plt.show()
 
 ######################################################################
 # Constrain the limits on the parameter
-# ---------------
+# -------------------------------------
 # Thus, this dataset does not yield a significant spectral cutoff in
 # PKS2155-304. In particular, we cannot constrain the lower limit from
 # this profile. We can compute the limits of the cutoff from the Probability Density Function (PDF).
@@ -191,8 +191,8 @@ print(
 
 
 ######################################################################
-# Since our dataset actually starts from `200 GeV`, all that we did from
-# this analysis is rule out any cut-off features!
+# Since our dataset actually starts from 200 GeV, all this analysis has 
+# done is rule out any cut-off features!
 #
 # We could also have used `stat_profile_ul_scipy` for computing the UL, which uses rootfing to obtain the n-sigma limits,
 # but this can fail if the limits are not constrained.
