@@ -620,6 +620,8 @@ class DataStoreMaker:
         pos = SkyCoord(info["RA_PNT"], info["DEC_PNT"], unit="deg").galactic
         info["GLON_PNT"] = pos.l
         info["GLAT_PNT"] = pos.b
+
+        # ToDo: the future I/O scheme should handle the keyword depending on the format version
         if all(
             key in list(header.keys())
             for key in ("DATE-OBS", "TIME-OBS", "DATE-END", "TIME-END")
