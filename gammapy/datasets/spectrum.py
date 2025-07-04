@@ -1,7 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
+import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
+from gammapy.maps import RegionNDMap
 from gammapy.utils.scripts import make_path
 from .map import MapDataset, MapDatasetOnOff
 from .utils import get_axes
@@ -429,3 +431,163 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
             SpectrumDataset with Cash statistic.
         """
         return self.to_map_dataset(name=name).to_spectrum_dataset(on_region=None)
+
+
+class SpectrumDatasetChi2(SpectrumDataset):
+    def __init__(self, *, counts, sigma, **kwargs):
+        """
+        Parameters
+        ----------
+        counts : `~gammapy.maps.RegionNDMap`
+            On counts.
+        sigma : `~gammapy.maps.RegionNDMap`, optional
+            Uncertainties on counts. Must have same geometry as counts.
+            If None, will default to sqrt(counts).
+        kwargs : dict
+            Other keyword arguments passed to `SpectrumDataset`.
+        """
+        background = counts.copy(data=np.zeros_like(counts.data))
+
+        super().__init__(counts=counts, background=background, **kwargs)
+        self.stat_type = "chi2"
+
+        if sigma is None:
+            # Default to sqrt(counts) for errors (Poisson)
+            sigma = RegionNDMap.from_geom(counts.geom)
+            sigma.data = np.sqrt(counts.data)
+            sigma.unit = counts.unit
+
+        self.sigma = sigma
+
+    @property
+    def stat_name(self):
+        return "chi2"
+
+    def npred(self):
+        """Total predicted source and background counts.
+
+        Returns
+        -------
+        npred : `Map`
+            Total predicted counts.
+        """
+        return self.npred_signal()
+
+    def plot_counts(
+        self, ax=None, kwargs_counts=None, kwargs_background=None, **kwargs
+    ):
+        """Plot counts and background.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes`, optional
+            Axes to plot on. Default is None.
+        kwargs_counts : dict, optional
+            Keyword arguments passed to `~matplotlib.axes.Axes.hist` for the counts. Default is None.
+        kwargs_background : dict, optional
+            Keyword arguments passed to `~matplotlib.axes.Axes.hist` for the background. Default is None.
+        **kwargs : dict, optional
+            Keyword arguments passed to both `~matplotlib.axes.Axes.hist`.
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`
+            Axes object.
+        """
+        kwargs_counts = kwargs_counts or {}
+        kwargs_background = kwargs_background or {}
+
+        plot_kwargs = kwargs.copy()
+        plot_kwargs.update(kwargs_counts)
+        plot_kwargs.setdefault("label", "Counts")
+        ax = self.counts.plot_hist(ax=ax, **plot_kwargs)
+
+        # Get energy axis edges and centers from geometry
+        energy_centers = self.counts.geom.axes["energy"].center.value
+
+        # Extract counts and errors from data arrays
+        counts = self.counts.data
+        errors = self.sigma.data  # same shape, same geom
+
+        # Calculate upper and lower bounds for error band
+        y_upper = counts + errors
+        y_lower = counts - errors
+        y_lower = np.clip(y_lower, 0, None)  # avoid negative lower errors
+
+        # Plot shaded error region with fill_between at bin centers
+        ax.fill_between(
+            energy_centers,
+            y_lower.flatten(),
+            y_upper.flatten(),
+            color="gray",
+            alpha=0.3,
+            label="Counts uncertainty",
+        )
+
+        if np.sum(self.counts.data < 0) > 0:
+            ax.set_yscale("linear")
+
+        plot_kwargs = kwargs.copy()
+        plot_kwargs.update(kwargs_background)
+        plot_kwargs.setdefault("label", "Background")
+
+        ax.legend(numpoints=1)
+        return ax
+
+    def plot_residuals_spectral(self, ax=None, method="diff", region=None, **kwargs):
+        import matplotlib.pyplot as plt
+
+        ax = ax or plt.gca()
+
+        counts_data = self.counts.data
+        sigma_data = self.sigma.data
+        npred_data = self.npred().data
+        energy_axis = self.counts.geom.axes[0]
+        energy_centers = energy_axis.center
+
+        if self.stat_type == "chi2":
+            residuals = counts_data - npred_data
+            residual_error = sigma_data
+        else:
+            raise NotImplementedError(f"Stat type {self.stat_type} not supported")
+
+        if method == "diff":
+            y = residuals
+            yerr = residual_error
+            ax.errorbar(
+                energy_centers.value,
+                y.flatten(),
+                yerr=yerr.flatten(),
+                fmt="o",
+                **kwargs,
+            )
+            ax.axhline(0, color="k", ls="--", lw=1)
+            ax.set_ylabel("Residuals (diff)")
+        elif method == "ratio":
+            y = residuals / npred_data
+            yerr = residual_error / npred_data
+            ax.errorbar(
+                energy_centers.value,
+                y.flatten(),
+                yerr=yerr.flatten(),
+                fmt="o",
+                **kwargs,
+            )
+            ax.axhline(1, color="k", ls="--", lw=1)
+            ax.set_ylabel("Residuals (ratio)")
+        else:
+            raise ValueError(f"Residual method {method} not supported")
+
+        ax.set_xlabel(f"Energy [{energy_axis.unit}]")
+        return ax
+
+    # here is the to_html method properly indented inside the class
+    def to_html(self):
+        base_html = super(SpectrumDataset, self).to_html()
+        extra_html = f"""
+        <div>
+            <h4>Chi-squared statistics</h4>
+            <p>Sum of chi-squared values: {self.stat_sum():.3f}</p>
+        </div>
+        """
+        return base_html + extra_html
