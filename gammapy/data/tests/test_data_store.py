@@ -264,7 +264,9 @@ def test_data_store_doubled_id(caplog):
     # Using example provided in Issue #5943:
     datastore = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
     datastore.get_observations(obs_id=[23523, 23523])
-    assert "List of obs_id is not unique!" in [_.message for _ in caplog.records]
+    assert "List of obs_id is not unique! Multiples are: [23523]" in [
+        _.message for _ in caplog.records
+    ]
 
 
 @requires_data()
