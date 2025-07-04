@@ -39,7 +39,7 @@ class SafeMaskMaker(Maker):
             * "edisp-bias" : the lower energy threshold is determined such as the energy
               bias is below a given percentage
             * "offset-max" : the data beyond a given offset radius from the observation center are excluded
-            * "bkg-peak" : the energy threshold is defined as the upper edge of the energy bin
+            * "bkg-peak" : the energy threshold is defined as the lower edge of the energy bin
               with the highest predicted background rate. This method was introduced in
               the `H.E.S.S. DL3 validation paper <https://arxiv.org/pdf/1910.08088.pdf>`__
 
