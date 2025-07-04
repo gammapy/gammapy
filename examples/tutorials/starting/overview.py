@@ -66,7 +66,6 @@ We will cover the following topics:
 # setup is correct you can execute the following cell:
 #
 
-
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 import matplotlib.pyplot as plt
@@ -121,7 +120,7 @@ print(gc_3fhl.geom)
 
 
 ######################################################################
-# Let’s take a closer look a the ``.data`` attribute:
+# Let’s take a closer look at the ``.data`` attribute:
 #
 
 print(gc_3fhl.data)
@@ -162,7 +161,7 @@ plt.show()
 # The smoothed plot already looks much nicer, but still the image is
 # rather large. As we are mostly interested in the inner part of the
 # image, we will cut out a quadratic region of the size 9 deg x 9 deg
-# around Vela. Therefore we use `~gammapy.maps.Map.cutout` to make a
+# around Vela. Therefore, we use `~gammapy.maps.Map.cutout` to make a
 # cutout map:
 #
 
@@ -174,13 +173,13 @@ plt.show()
 
 
 ######################################################################
-# For a more detailed introduction to `~gammapy.maps`, take a look a the
+# For a more detailed introduction to `~gammapy.maps`, take a look at the
 # :doc:`/tutorials/api/maps` notebook.
 #
 # Exercises
 # ~~~~~~~~~
 #
-# -  Add a marker and circle at the position of ``Sgr A*`` (you can find
+# -  Add a marker and circle at the position of Sgr A* (you can find
 #    examples in
 #    `astropy.visualization.wcsaxes <https://docs.astropy.org/en/stable/visualization/wcsaxes/>`__).
 #
@@ -197,7 +196,7 @@ plt.show()
 # In this section we will learn how to:
 #
 # -  Read event lists from FITS files
-# -  Access and work with the ``EventList`` attributes such as ``.table``
+# -  Access and work with the `~gammapy.data.EventList` attributes such as ``.table``
 #    and ``.energy``
 # -  Filter events lists using convenience methods
 #
@@ -215,8 +214,7 @@ events_3fhl = EventList.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-events.f
 
 
 ######################################################################
-# This time the actual data is stored as an
-# `~astropy.table.Table `
+# This time the actual data is stored as an `~astropy.table.Table`
 # object. It can be accessed with ``.table`` attribute:
 #
 
@@ -224,7 +222,7 @@ print(events_3fhl.table)
 
 
 ######################################################################
-# You can do *len* over event_3fhl.table to find the total number of
+# You can do ``len`` over ``event_3fhl.table`` to find the total number of
 # events.
 #
 
@@ -232,7 +230,7 @@ print(len(events_3fhl.table))
 
 
 ######################################################################
-# And we can access any other attribute of the ``Table`` object as well:
+# And we can access any other attribute of the `~astropy.table.Table` object as well:
 #
 
 print(events_3fhl.table.colnames)
@@ -240,13 +238,10 @@ print(events_3fhl.table.colnames)
 
 ######################################################################
 # For convenience we can access the most important event parameters as
-# properties on the ``EventList`` objects. The attributes will return
+# properties on the `~gammapy.data.EventList` objects. The attributes will return
 # corresponding Astropy objects to represent the data, such as
-# `~astropy.units.Quantity`,
-# `~astropy.coordinates.SkyCoord`
-# or
-# `~astropy.time.Time`
-# objects:
+# `~astropy.units.Quantity`, `~astropy.coordinates.SkyCoord` or
+# `~astropy.time.Time` objects:
 #
 
 print(events_3fhl.energy.to("GeV"))
@@ -260,7 +255,7 @@ print(events_3fhl.time)
 
 
 ######################################################################
-# In addition ``EventList`` provides convenience methods to filter the
+# In addition `~gammapy.data.EventList` provides convenience methods to filter the
 # event lists. One possible use case is to find the highest energy event
 # within a radius of 0.5 deg around the vela position:
 #
@@ -318,7 +313,7 @@ print(fermi_3fhl.table)
 ######################################################################
 # This looks very familiar again. The data is just stored as an
 # `~astropy.table.Table`
-# object. We have all the methods and attributes of the ``Table`` object
+# object. We have all the methods and attributes of the `~astropy.table.Table` object
 # available. E.g. we can sort the underlying table by ``Signif_Avg`` to
 # find the top 5 most significant sources:
 #

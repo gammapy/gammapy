@@ -100,8 +100,7 @@ check_tutorials_setup()
 # **For convenience**, since the 1DC data files are large and not publicly
 # available to anyone, we have taken a tiny subset of the CTA 1DC data,
 # four observations with the southern array from the GPS survey, pointing
-# near the Galactic center, and **included them at `$GAMMAPY_DATA/cta-1dc`**
-# which you get via `gammapy download datasets`.
+# near the Galactic center, and **included them at** `$GAMMAPY_DATA/cta-1dc`.
 #
 # Files
 # ~~~~~
@@ -143,7 +142,7 @@ print(data_store)
 
 ######################################################################
 # If you can’t download the index files, or got errors related to the data
-# access using them, you can generate the `DataStore` directly from the
+# access using them, you can generate the `~gammapy.data.DataStore` directly from the
 # event files.
 #
 
@@ -389,7 +388,7 @@ plt.show()
 #
 # -  Load the EVENTS file for `obs_id=111159` as a
 #    `~gammapy.data.EventList` object.
-# -  Use `~gammapy.data.EventList.table` to find the energy, sky coordinate and time of
+# -  Use ``EventList.table`` to find the energy, sky coordinate and time of
 #    the highest-energy event.
 # -  Use `~gammapy.data.EventList.pointing_radec` to find the pointing position of this
 #    observation, and use `astropy.coordinates.SkyCoord` methods to find
@@ -403,8 +402,6 @@ plt.show()
 #    zenith versus 20 deg zenith for the `South_z40_50h` and
 #    `South_z20_50h` configurations.
 #
-
-# start typing here ...
 
 
 ######################################################################

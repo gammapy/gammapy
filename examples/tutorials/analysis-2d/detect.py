@@ -112,8 +112,8 @@ dataset = MapDataset(
 # `Ebeling et
 # al. (2006) <https://ui.adsabs.harvard.edu/abs/2006MNRAS.368...65E/abstract>`__.
 #
-# In the following example the `ASmoothMapEstimator.threshold` argument gives the minimum
-# significance expected, values below are clipped.
+# In the following example the `~gammapy.estimators.ASmoothMapEstimator.threshold`
+# argument gives the minimum significance expected, values below are clipped.
 #
 
 # %%time
@@ -185,7 +185,7 @@ maps = estimator.run(dataset)
 #
 # Below we print the result of the `~gammapy.estimators.TSMapEstimator`. We have access to a number of
 # different quantities, as shown below. We can also access the quantities names
-# through ``map_result.available_quantities``.
+# through ``maps.available_quantities``.
 #
 
 print(maps)
