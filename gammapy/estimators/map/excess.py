@@ -139,19 +139,22 @@ class ExcessMapEstimator(Estimator):
 
     Parameters
     ----------
-    correlation_radius : `~astropy.coordinates.Angle`
-        Correlation radius to use.
-    n_sigma : float
-        Confidence level for the asymmetric errors expressed in number of sigma.
-    n_sigma_ul : float
-        Confidence level for the upper limits expressed in number of sigma.
-    n_sigma_sensitivity : float
-        Confidence level for the sensitivity expressed in number of sigma.
+    correlation_radius : `~astropy.coordinates.Angle`, optional
+        Correlation radius to use. Default is "0.1 deg".
+    n_sigma : float, optional
+        Confidence level for the asymmetric errors expressed in number of sigma. Should be positive.
+        Default is 1.
+    n_sigma_ul : float, optional
+        Confidence level for the upper limits expressed in number of sigma. Should be positive.
+        Default is 2.
+    n_sigma_sensitivity : float, optional
+        Confidence level for the sensitivity expressed in number of sigma. Should be positive.
+        Default is 5.
     gamma_min_sensitivity : float, optional
         Minimum number of gamma-rays. Default is 10.
     bkg_syst_fraction_sensitivity : float, optional
         Fraction of background counts that are above the gamma-ray counts. Default is 0.05.
-    apply_threshold_sensitivity : bool
+    apply_threshold_sensitivity : bool, optional
         If True, use `bkg_syst_fraction_sensitivity` and `gamma_min_sensitivity` in the sensitivity computation.
         Default is False which is the same setting as the HGPS catalog.
     selection_optional : list of str, optional
