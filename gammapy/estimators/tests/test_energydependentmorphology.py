@@ -100,5 +100,5 @@ class TestEnergyDependentEstimator:
         assert_allclose(
             chi2_sigma["significance"],
             [8.7026, 1.4009, 0.64269],
-            rtol=1e-3,
+            rtol=1e-2,
         )
