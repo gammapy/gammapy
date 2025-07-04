@@ -395,6 +395,12 @@ class DataStore:
         if obs_id is None:
             obs_id = self.obs_ids
 
+        if len(np.unique(obs_id)) != len(obs_id):
+            multiples = np.array(
+                np.unique(obs_id)[(np.unique(obs_id, return_counts=True)[1] > 1)]
+            )
+            log.warning(f"List of obs_id is not unique! Multiples are: {multiples}")
+
         obs_list = []
 
         for _ in progress_bar(obs_id, desc="Obs Id"):
