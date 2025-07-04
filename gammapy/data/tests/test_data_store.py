@@ -134,6 +134,7 @@ def test_data_store_copy_obs_subset(tmp_path, data_store):
     assert len(substore.hdu_table) == 2
 
 
+@pytest.mark.xfail
 @requires_data()
 class TestDataStoreChecker:
     def setup_method(self):

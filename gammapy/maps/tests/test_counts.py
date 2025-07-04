@@ -4,6 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.table import Table
+from astropy.time import Time
 from gammapy.data import EventList
 from gammapy.maps import HpxGeom, Map, MapAxis, WcsNDMap
 from gammapy.utils.testing import requires_dependency
@@ -16,7 +17,7 @@ def events():
     t["RA"] = [5, 11] * u.deg
     t["DEC"] = [0, 0] * u.deg
     t["ENERGY"] = [10, 12] * u.TeV
-    t["TIME"] = [3, 4] * u.s
+    t["TIME"] = Time("2025-01-01") + [3, 4] * u.s
     return EventList(t)
 
 
