@@ -1,11 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities to create scripts and command-line tools."""
 
+
+import ast
 import codecs
+import operator
 import os.path
 import functools
 import types
 import warnings
+import numpy as np
 from base64 import urlsafe_b64encode
 from pathlib import Path
 from uuid import uuid4
@@ -274,3 +278,92 @@ def raise_import_error(module_name, is_property=False):
     """
     kind = "property" if is_property else "method"
     raise ImportError(f"The '{module_name}' module is required to use this {kind}.")
+
+
+# Mapping of AST operators to NumPy functions
+_OPERATORS = {
+    ast.And: np.logical_and,
+    ast.Or: np.logical_or,
+    ast.Eq: operator.eq,
+    ast.NotEq: operator.ne,
+    ast.Lt: operator.lt,
+    ast.LtE: operator.le,
+    ast.Gt: operator.gt,
+    ast.GtE: operator.ge,
+    ast.In: lambda a, b: np.isin(a, b),
+    ast.NotIn: lambda a, b: ~np.isin(a, b),
+}
+
+
+def logic_parser(table, expression):
+    """
+    Parse and apply a logical expression to filter rows from an Astropy Table.
+
+    This function evaluates a logical expression on each row of the input table
+    and returns a new table containing only the rows that satisfy the expression.
+    The expression can reference any column in the table by name and supports
+    logical operators (`and`, `or`), comparison operators (`<`, `>`, `==`, `!=`, `in`),
+    lists, and constants.
+
+    Parameters
+    ----------
+    table : `~astropy.table.Table`
+        The input table to filter.
+    expression : str
+        The logical expression to evaluate on each row. The expression can reference
+        any column in the table by name.
+
+    Returns
+    -------
+    table : `~astropy.table.Table`
+        A table view containing only the rows that satisfy the expression. If no rows
+        match the condition, an empty table with the same column names and data types
+        as the input table is returned.
+
+    Examples
+    --------
+    Given a table with columns 'OBS_ID' and 'EVENT_TYPE':
+
+    >>> from astropy.table import Table
+    >>> data = {'OBS_ID': [1, 2, 3, 4], 'EVENT_TYPE': ['1', '3', '4', '2']}
+    >>> table = Table(data)
+    >>> expression = '(OBS_ID < 3) and (OBS_ID > 1) and ((EVENT_TYPE in ["3", "4"]) or (EVENT_TYPE == "3"))'
+    >>> filtered_table = logic_parser(table, expression)
+    >>> print(filtered_table)
+    OBS_ID EVENT_TYPE
+    ------ ----------
+         2          3
+
+    """
+
+    def eval_node(node):
+        if isinstance(node, ast.BoolOp):
+            op_func = _OPERATORS[type(node.op)]
+            values = [eval_node(v) for v in node.values]
+            result = values[0]
+            for v in values[1:]:
+                result = op_func(result, v)
+            return result
+        elif isinstance(node, ast.Compare):
+            left = eval_node(node.left)
+            for op, comparator in zip(node.ops, node.comparators):
+                right = eval_node(comparator)
+                op_func = _OPERATORS[type(op)]
+                left = op_func(left, right)
+            return left
+        elif isinstance(node, ast.Name):
+            if node.id not in table.colnames:
+                raise KeyError(
+                    f"Column '{node.id}' not found in the table. Available columns: {table.colnames}"
+                )
+            return table[node.id]
+        elif isinstance(node, ast.Constant):
+            return node.value
+        elif isinstance(node, ast.List):
+            return [eval_node(elt) for elt in node.elts]
+        else:
+            raise ValueError(f"Unsupported expression type: {type(node)}")
+
+    expr_ast = ast.parse(expression, mode="eval")
+    mask = eval_node(expr_ast.body)
+    return table[mask]
