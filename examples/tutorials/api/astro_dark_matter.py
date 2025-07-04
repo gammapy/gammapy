@@ -8,7 +8,7 @@ Introduction
 ------------
 
 Gammapy has some convenience methods for dark matter analyses in
-`~gammapy.astro.darkmatter`. These include J-Factor computation and
+`gammapy.astro.darkmatter`. These include J-Factor computation and
 calculation the expected gamma flux for a number of annihilation
 channels. They are presented in this notebook.
 

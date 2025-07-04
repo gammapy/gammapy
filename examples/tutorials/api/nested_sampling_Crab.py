@@ -154,7 +154,7 @@ model = SkyModel.create(spectral_model="pl", name="crab")
 # boundaries in which the sampling will be performed.
 # Note that it is usually recommended to use a `~gammapy.modeling.models.LogUniformPrior` for
 # the parameters that have a large amplitude range like the
-# `amplitude` parameter.
+# ``amplitude`` parameter.
 # A `~gammapy.modeling.models.UniformPrior` means that the samples will be drawn with uniform
 # probability between the (min,max) values in the linear or log space
 # in the case of a `~gammapy.modeling.models.LogUniformPrior`.
@@ -173,25 +173,25 @@ print(datasets.models)
 # As for the `~gammapy.modeling.Fit` object, the `~gammapy.modeling.Sampler` object can receive
 # different backend (although just one is available for now).
 # The `~gammapy.modeling.Sampler` comes with “reasonable” default parameters, but you can
-# change them via the `sampler_opts` dictionnary.
+# change them via the ``sampler_opts`` dictionary.
 # Here is a short description of the most relevant parameters that you
 # could change :
 #
-# -  `live_points`: minimum number of live points throughout the run.
+# -  ``live_points``: minimum number of live points throughout the run.
 #    More points allow to discover multiple peaks if existing, but is
 #    slower. To test the Prior boundaries and for debugging, a lower
 #    number (~100) can be used before a production run with more points
 #    (~400 or more).
-# -  `frac_remain`: the cut-off condition for the integration, set by the maximum
+# -  ``frac_remain``: the cut-off condition for the integration, set by the maximum
 #    allowed fraction of posterior mass left in the live points vs the dead points. High
 #    values (e.g., 0.5) are faster and can be used if the posterior
 #    distribution is a relatively simple shape. A low value (1e-1, 1e-2)
 #    is optimal for finding peaks, but slower.
-# -  `log_dir`: directory where the output files will be stored.
+# -  ``log_dir``: directory where the output files will be stored.
 #    If set to None, no files will be written. If set to a string, a directory
 #    will be created containing the ongoing status of the run and final results.
 #    For time consuming analysis, it is highly recommended to use that option to monitor
-#    the run and restart it in case of a crash (with `resume=True`).
+#    the run and restart it in case of a crash (with ``resume=True``).
 #
 # **Important note:** unlike the MCMC method, you don’t need to define the
 # number of steps for which the sampler will run. The algorithm will
@@ -231,7 +231,7 @@ result_joint = sampler.run(datasets)
 #
 # **During the sampling**
 #
-# `Z=-68.8(0.53%) | Like=-63.96..-58.75 [-63.9570..-63.9539]*| it/evals=640/1068 eff=73.7327% N=300`
+# ``Z=-68.8(0.53%) | Like=-63.96..-58.75 [-63.9570..-63.9539]*| it/evals=640/1068 eff=73.7327% N=300``
 #
 # Some important information here is:
 #
@@ -248,7 +248,7 @@ result_joint = sampler.run(datasets)
 # The final lines indicate that all three “convergence” strategies are
 # satisfied (samples, posterior uncertainty, and evidence uncertainty).
 #
-# `logZ = -65.104 +- 0.292`
+# ``logZ = -65.104 +- 0.292``
 #
 # The main goal of the Nested sampling algorithm is to estimate Z (the
 # Bayesian evidence) which is given above together with an uncertainty.
@@ -262,7 +262,7 @@ result_joint = sampler.run(datasets)
 #
 # **Results stored on disk**
 #
-# if `log_dir` is set to a name where the results will be stored, then
+# if ``log_dir`` is set to a name where the results will be stored, then
 # a directory is created containing many useful results and plots.
 # A description of these outputs is given in the `Ultranest
 # docs <https://johannesbuchner.github.io/UltraNest/performance.html#output-files>`__.
@@ -288,7 +288,7 @@ result_joint = sampler.run(datasets)
 # -  the median
 # -  the lowest likelihood value
 #
-# By default the `~gammapy.modeling.models.DatasetModels` will be updated with the `mean` of
+# By default the `~gammapy.modeling.models.DatasetModels` will be updated with the ``mean`` of
 # the posterior distributions.
 #
 
@@ -296,7 +296,7 @@ print(result_joint.models)
 
 
 ######################################################################
-# The `~gammapy.modeling.Sampler` class returns a very rich dictionnary.
+# The `~gammapy.modeling.Sampler` class returns a very rich dictionary.
 # The most “standard” information about the posterior distributions can
 # be found in :
 #
@@ -306,7 +306,7 @@ print(result_joint.sampler_results["posterior"])
 
 ######################################################################
 # Besides mean, errors, etc, an interesting value is the
-# `information gain` which estimates how much the posterior
+# ``information gain`` which estimates how much the posterior
 # distribution has shrinked with respect to the prior (i.e. how much
 # we’ve learned). A value < 1 means that the parameter is poorly
 # constrained within the prior range (we haven't learned much with respect to our prior assumption).
