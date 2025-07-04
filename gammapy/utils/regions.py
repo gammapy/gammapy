@@ -14,10 +14,12 @@ Options: keep as-is, hide from the docs, or to remove it completely
 """
 
 import operator
+import os
 import numpy as np
 from scipy.optimize import Bounds, minimize
 from astropy import units as u
 from astropy.coordinates import SkyCoord
+from astropy.table import Table
 from regions import (
     CircleAnnulusSkyRegion,
     CircleSkyRegion,
@@ -422,3 +424,46 @@ def region_circle_to_ellipse(region):
         center=region.center, width=region.radius, height=region.radius
     )
     return region_new
+
+
+def extract_bright_star_regions(geom, max_star_mag=6, star_rad=0.3 * u.deg):
+    """
+    Find bright star exclusion regions contained in a given `~gammapy.maps.Geom` and returns a 2D exclusion mask to remove these sources from bacgkround estimation.
+
+    Parameters
+    ----------
+    geom: `~gammapy.maps.WcsGeom`
+        Map geometry for the exclusion mask.
+    max_star_mag :
+        The maximum stellar magnitude (Johnson-Cousins B-band) to exclude. Maximum value is 8th magnitude.
+    star_rad : `~astropy.units.Quantity`
+        Radius to exclude for each star.
+
+    Returns
+    -------
+    regions : list of `~regions.CircleSkyRegion`
+        Star exclusion regions.
+    """
+    regions = []
+    star_cat = Table.read(
+        os.environ.get("GAMMAPY_DATA")
+        + "/veritas/crab-point-like-ED/Hipparcos_MAG8_1997.dat",
+        format="ascii.commented_header",
+    )
+    star_mask = geom.contains(
+        SkyCoord(star_cat["_RAJ2000"] * u.deg, star_cat["_DEJ2000"] * u.deg)
+    )
+
+    for src in star_cat[
+        (star_mask) & (star_cat["B-V"] + star_cat["Vmag"] < max_star_mag)
+    ]:
+        regions.append(
+            CircleSkyRegion(
+                center=SkyCoord(
+                    src["_RAJ2000"], src["_DEJ2000"], unit="deg", frame="icrs"
+                ),
+                radius=star_rad,
+            )
+        )
+
+    return regions
