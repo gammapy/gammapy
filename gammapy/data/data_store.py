@@ -396,7 +396,7 @@ class DataStore:
             obs_id = self.obs_ids
 
         if len(np.unique(obs_id)) != len(obs_id):
-            raise UserWarning("List of obs_id is not unique!")
+            log.warning("List of obs_id is not unique!")
 
         obs_list = []
 
