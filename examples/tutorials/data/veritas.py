@@ -50,7 +50,7 @@ from gammapy.makers import (
 )
 from astropy.coordinates import SkyCoord
 from gammapy.visualization import plot_spectrum_datasets_off_regions
-from gammapy.utils import exclusion
+from gammapy.utils.regions import extract_bright_star_regions
 
 
 ######################################################################
@@ -170,12 +170,11 @@ exclusion_geom = WcsGeom.create(
     proj="CAR",
 )
 
-exclusion_mask = exclusion.make_exclusion_mask(
-    source_region=CircleSkyRegion(center=target_position, radius=0.35 * u.deg),
-    geom=exclusion_geom,
-    star_rad=0.3 * u.deg,
-)
+source_exclusion_region = CircleSkyRegion(center=target_position, radius=0.35 * u.deg)
+exclusion_regions = extract_bright_star_regions(exclusion_geom)
+exclusion_regions.append(source_exclusion_region)
 
+exclusion_mask = ~exclusion_geom.region_mask(exclusion_regions)
 
 ######################################################################
 # Define the integration region
