@@ -8,7 +8,7 @@ from gammapy.utils.scripts import make_path
 from .map import MapDataset, MapDatasetOnOff
 from .utils import get_axes
 
-__all__ = ["SpectrumDatasetOnOff", "SpectrumDataset"]
+__all__ = ["SpectrumDatasetOnOff", "SpectrumDataset", "SpectrumDatasetChi2"]
 
 log = logging.getLogger(__name__)
 
