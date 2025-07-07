@@ -150,7 +150,7 @@ print(res.minuit)
 # We can see that there is a slight negative excess in the centre, and
 # thus, the fitted model has a negative amplitude. We can use the
 # `~gammapy.modeling.select_nested_models` function to perform a likelihood ratio test to
-# see if this number is significant (See :doc:`docs/user-guide/howto.rst`).
+# see if this number is significant (See :doc:`/docs/user-guide/howto.rst`).
 #
 
 LLR = select_nested_models(
@@ -160,7 +160,7 @@ print(LLR)
 
 ######################################################################
 # You can see that the `ts ~ 4.7`, thus suggesting that the observed
-# fluctuations are not significant over the background. Note the here we have
+# fluctuations are not significant over the background. Note that here we have
 # only 1 free parameter, and thus, significance = sqrt(ts) ~ 2.2.
 # Now, we will estimate the differential upper limits of the source.
 
@@ -176,7 +176,7 @@ print(LLR)
 # used.
 #
 # Note that **the computed upper limits depend on the spectral parameters of the assumed model**.
-# Here, we compute the 3-simga upper limits for assuming a spectral index of 2.0.
+# Here, we compute the 3-sigma upper limits for assuming a spectral index of 2.0.
 # We also fix the spatial parameters of the model to prevent the minimiser
 # from wandering off to different regions in the FoV.
 #
