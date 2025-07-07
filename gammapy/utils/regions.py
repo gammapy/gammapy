@@ -438,7 +438,7 @@ def extract_bright_star_regions(geom, max_star_mag=6, star_rad=0.3 * u.deg):
         The maximum stellar magnitude (Johnson-Cousins B-band) to exclude. Maximum value is 8th magnitude.
         Default is 6.
     star_rad : `~astropy.units.Quantity`, optional
-        Radius to exclude for each star.
+        Radius to exclude around each star. Default is 0.3 degrees.
 
     Returns
     -------
