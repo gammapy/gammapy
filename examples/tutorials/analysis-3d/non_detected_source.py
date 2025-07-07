@@ -175,7 +175,7 @@ print(LLR)
 # model with a negative amplitude as obtained above should not be
 # used.
 #
-# Note that the computed upper limits can depend on the spectral parameters of the assumed model.
+# Note that **the computed upper limits depend on the spectral parameters of the assumed model**.
 # Here, we compute the 3-simga upper limits for assuming a spectral index of 2.0.
 # We also fix the spatial parameters of the model to prevent the minimiser
 # from wandering off to different regions in the FoV.
