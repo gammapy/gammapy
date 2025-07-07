@@ -2,7 +2,7 @@
 
 """
 Computing flux upper limits
-=======================
+===========================
 
 Explore how to compute flux upper limits for a non-detected source.
 
@@ -17,18 +17,16 @@ Context
 
 In the study of VHE sources, one often encounters no significant
 detection even after long exposures. In that case, it may be useful to
-compute flux upper limits for the said target consistent with the observation.
+compute flux upper limits (UL) for the said target consistent with the observation.
 
 Proposed approach
 -----------------
 
 In this section, we will use an empty observation from the H.E.S.S. DL3 DR1 to understand how
-to quantify non-detections. We will
-- Compute excess and significance maps
-- Perform a source model fit and do a likelihood ratio test
-- Compute differential upper limits
-- Compute integral upper limits
-- Look at the differential sensitivity of our observation/analysis
+to quantify non-detections. There are two distinct approaches to consider
+- Test for the presence of emission anywhere in a map and compute an integral flux upper limit at any position (i.e. UL map).
+- Test the presence of emission from a potential source with given position and morphology and compute integral and differential UL
+
 """
 
 ######################################################################
@@ -77,11 +75,11 @@ dataset.peek()
 plt.show()
 
 ######################################################################
-# Compute excess maps
-# -------------------
+# Create Upper Limit maps
+# -----------------------
 #
 # We will first use the `~gammapy.estimators.ExcessMapEstimator` for a quick check to see if
-# there are any hotspots in the field. You may also use the
+# there are any potential sources in the field. You may also use the
 # `~gammapy.estimators.TSMapEstimator`.
 
 estimator = ExcessMapEstimator(
@@ -108,16 +106,20 @@ plt.show()
 
 ######################################################################
 # The significance map looks rather flat! You can plot a histogram of the
-# significance distribution to confirm that it is a standard Gaussian. Departure
-# from the same can suggest the presence of gamma-ray sources, or can also
-# originate from incorrect modeling of the residual hadronic background.
-# We will now do a likelihood fit to search for significant emission.
-#
+# significance distribution to confirm that it is a standard Gaussian.
+# Deviations from a standard normal can suggest the presence of gamma-ray sources,
+# or can also originate from incorrect modeling of the residual hadronic background.
+# We can also see the correlated upper limits at any position in the map. But note that
+# this is **not** a source UL, as the containment correction is not applied here.
 #
 
+lima_maps.flux_ul.plot(add_cbar=True, cmap="viridis")
+plt.show()
+
+
 ###############################################################################
-# Perform a fit
-# -------------
+# Compute upper limits for a source
+# ---------------------------------
 #
 # Suppose we were expecting a
 # source at the centre of our map. Let's try see if we can fit a point
@@ -141,6 +143,7 @@ dataset.models = skymodel
 fit = Fit()
 res = fit.run(dataset)
 print(res.models)
+
 ######################################################################
 # It is good to ensure that the fit has converged
 
@@ -161,12 +164,12 @@ print(LLR)
 ######################################################################
 # You can see that the `ts ~ 4.7`, thus suggesting that the observed
 # fluctuations are not significant over the background. Note that here we have
-# only 1 free parameter, and thus, significance = sqrt(ts) ~ 2.2.
+# only 1 free parameter, the amplitude, and thus, significance = sqrt(ts) ~ 2.2.
 # Now, we will estimate the differential upper limits of the source.
 
 ###############################################################################
 # Differential upper limits
-# -------------------------
+# ~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # Here, it is important to **set a reasonable model** on the dataset
 # before proceeding with the `~gammapy.estimators.FluxPointsEstimator` estimator. This model can come from
@@ -204,7 +207,7 @@ plt.show()
 
 ######################################################################
 # Integral upper limits
-# ---------------------
+# ~~~~~~~~~~~~~~~~~~~~~
 #
 # To compute the integral upper limits between certain energies,
 # we can simply run  `~gammapy.estimators.FluxPointsEstimator`
@@ -218,16 +221,10 @@ print(
     f"Integral upper limit between ${emin:.1f} and ${emax:.1f} is ${fp2.flux_ul.quantity.ravel()[0]:.2f}"
 )
 
-######################################################################
-# Note that this can be different from the correlated upper limits computed with the `~gammapy.estimators.ExcessMapEstimator`.
-
-lima_maps.flux_ul.plot(add_cbar=True, cmap="viridis")
-plt.show()
-
 
 ######################################################################
 # Sensitivity estimation
-# ----------------------
+# ~~~~~~~~~~~~~~~~~~~~~~
 #
 # We can then ask, would I have seen my source given this irf/ exposure
 # time? The `~gammapy.estimators.FluxPointsEstimator` can be used to obtain the sensitivity,
