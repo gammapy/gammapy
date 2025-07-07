@@ -299,16 +299,16 @@ class HpxGeom(Geom):
             ipix = np.round(pix[0]).astype(int)
             m = ipix == INVALID_INDEX.int
             ipix[m] = 0
-            theta, phi = hp.pix2ang(nside, ipix, nest=self.nest)
-            coords = [np.degrees(phi), np.degrees(np.pi / 2.0 - theta)]
+            theta, phi = hp.pix2ang(nside, ipix, nest=self.nest) * u.rad
+            coords = [phi.to("deg"), 90 * u.deg - theta.to("deg")]
             coords = tuple(coords + vals)
             if np.any(m):
                 for c in coords:
                     c[m] = INVALID_INDEX.float
         else:
             ipix = np.round(pix[0]).astype(int)
-            theta, phi = hp.pix2ang(self.nside, ipix, nest=self.nest)
-            coords = (np.degrees(phi), np.degrees(np.pi / 2.0 - theta))
+            theta, phi = hp.pix2ang(self.nside, ipix, nest=self.nest) * u.rad
+            coords = (phi.to("deg"), 90 * u.deg - theta.to("deg"))
 
         return coords
 
@@ -1203,7 +1203,10 @@ class HpxGeom(Geom):
             width = boundaries.separation(boundaries[:, np.newaxis]).max()
 
             wcs_tile_geom = WcsGeom.create(
-                skydir=(float(skydir[0].item()), float(skydir[1].item())),
+                skydir=(
+                    skydir[0].item().to_value("deg"),
+                    skydir[1].item().to_value("deg"),
+                ),
                 width=width + margin,
                 binsz=binsz,
                 frame=hpx.frame,
