@@ -219,7 +219,7 @@ print(
 )
 
 ######################################################################
-# Note that this can be different the from correlated upper limits computed with the `ExcessMapEstimator`
+# Note that this can be different from the correlated upper limits computed with the `~gammapy.estimators.ExcessMapEstimator`.
 
 lima_maps.flux_ul.plot(add_cbar=True, cmap="viridis")
 plt.show()
