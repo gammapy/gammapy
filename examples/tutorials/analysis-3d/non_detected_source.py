@@ -215,7 +215,7 @@ emax = energy_edges[-1]
 est2 = FluxPointsEstimator(selection_optional=["ul"], energy_edges=[emin, emax])
 fp2 = est2.run(dataset)
 print(
-    f"Integral upper limit between ${emin} and ${emax} is ${fp2.flux_ul.quantity.ravel()[0]}"
+    f"Integral upper limit between ${emin:.1f} and ${emax:.1f} is ${fp2.flux_ul.quantity.ravel()[0]:.2f}"
 )
 
 ######################################################################
