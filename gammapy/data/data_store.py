@@ -396,9 +396,8 @@ class DataStore:
             obs_id = self.obs_ids
 
         if len(np.unique(obs_id)) != len(obs_id):
-            multiples = np.array(
-                np.unique(obs_id)[(np.unique(obs_id, return_counts=True)[1] > 1)]
-            )
+            uniques = np.unique(obs_id, return_counts=True)
+            multiples = np.array(uniques[0][(uniques[1] > 1)])
             log.warning(f"List of obs_id is not unique! Multiples are: {multiples}")
 
         obs_list = []
