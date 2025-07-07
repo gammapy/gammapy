@@ -58,6 +58,11 @@ class IRF(metaclass=abc.ABCMeta):
     meta : dict, optional
         Metadata dictionary.
         Default is None.
+    interp_kwargs : dict, optional
+        Keyword arguments passed to
+        `~gammapy.utils.interpolation.ScaledRegularGridInterpolator`.
+        If None, the following inputs are used ``bounds_error=False`` and ``fill_value=0.0``.
+        Default is None.
 
     Examples
     --------
@@ -237,7 +242,7 @@ class IRF(metaclass=abc.ABCMeta):
 
         Parameters
         ----------
-        unit : `~astropy.unit.Unit` or str
+        unit : `~astropy.units.Unit` or str
             New unit.
 
         Returns
@@ -252,7 +257,7 @@ class IRF(metaclass=abc.ABCMeta):
 
     @property
     def axes(self):
-        """`MapAxes`."""
+        """`~gammapy.maps.MapAxes`."""
         return self._axes
 
     def __str__(self):
@@ -420,7 +425,7 @@ class IRF(metaclass=abc.ABCMeta):
 
         Parameters
         ----------
-        hdulist : `~astropy.io.HDUList`
+        hdulist : `~astropy.io.fits.HDUList`
             HDU list.
         hdu : str
             HDU name.
@@ -623,7 +628,7 @@ class IRF(metaclass=abc.ABCMeta):
 
         Parameters
         ----------
-        other : `~gammapy.irfs.IRF`
+        other : `~gammapy.irf.IRF`
             The IRF to compare against.
         rtol_axes : float, optional
             Relative tolerance for the axis comparison.

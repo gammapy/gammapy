@@ -5,6 +5,7 @@ import numpy as np
 from gammapy.datasets import Datasets
 from gammapy.modeling import Fit
 from gammapy.modeling.models import FoVBackgroundModel, Models
+from gammapy.datasets.actors import DatasetsActor
 from gammapy.modeling.selection import TestStatisticNested
 from gammapy.stats.utils import ts_to_sigma
 from .core import Estimator
@@ -299,7 +300,28 @@ class EnergyDependentMorphologyEstimator(Estimator):
         -------
         results : `dict`
             Dictionary with the various energy-dependence estimation values.
+            There are two top level keys ``energy_dependence`` (detailing the morphology energy dependence
+            and its significance) and ``src_above_bkg`` (giving significance of the source per energy bin).
+
+            ``energy_dependence`` (dict):
+
+                * "delta_ts" : delta(TS) between the different hypotheses
+                * "df" : the number of degrees of freedom
+                * "result" (dict) : contains the results of the two hypotheses with columns
+                  'Hypothesis', 'Emin', 'Emax' and each free parameter with its error
+
+            ``src_above_bkg`` (dict):
+
+                * "Emin" : the minimum energy of the energy band
+                * "Emax" : the maximum energy of the energy band
+                * "delta_ts" : difference in ts
+                * "df" : the number of degrees of freedom between null and alternative hypothesis
+                * "significance" : significance of the result
         """
+
+        if not isinstance(datasets, DatasetsActor):
+            datasets = Datasets(datasets=datasets)
+
         if not isinstance(datasets, Datasets) or datasets.is_all_same_type is False:
             raise ValueError("Unsupported datasets type.")
 

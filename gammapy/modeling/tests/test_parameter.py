@@ -194,6 +194,29 @@ def test_unique_parameters():
     assert parameters_unique.names == ["a", "b", "c"]
 
 
+def test_free_parameters():
+    a = Parameter("a", 1, frozen=False)
+    b = Parameter("b", 2, frozen=True)
+    c = Parameter("c", 2, frozen=False)
+
+    parameters = Parameters([a, b, c])
+    free = parameters.free_parameters
+    assert free.names == ["a", "c"]
+    assert all(not par.frozen for par in free)
+
+
+def test_free_unique_parameters():
+    a = Parameter("a", 1, frozen=False)
+    b = Parameter("b", 2, frozen=True)
+    c = Parameter("c", 4, frozen=False)
+    d = Parameter("d", 4, frozen=False)
+    d = a
+    parameters = Parameters([a, b, c, d])
+    free_unique = parameters.free_unique_parameters
+    assert free_unique.names == ["a", "c"]
+    assert all(not par.frozen for par in free_unique)
+
+
 def test_parameters_getitem(pars):
     assert pars[1].name == "ham"
     assert pars["ham"].name == "ham"
