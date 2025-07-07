@@ -65,7 +65,6 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
 )
-from gammapy.utils.check import check_tutorials_setup
 
 log = logging.getLogger(__name__)
 
@@ -73,6 +72,7 @@ log = logging.getLogger(__name__)
 # Check setup
 # -----------
 
+from gammapy.utils.check import check_tutorials_setup
 
 check_tutorials_setup()
 
@@ -208,11 +208,12 @@ lc_3d = lc_maker_3d.run(analysis_3d.datasets)
 
 
 ######################################################################
-# The lightcurve `~gammapy.estimators.FluxPoints` object `lc_3d` contains a table which we can explore.
+# The lightcurve `~gammapy.estimators.FluxPoints` object ``lc_3d`` contains
+# a table which we can explore.
 #
-
 # Example showing how to change just before plotting the threshold on the signal significance
 # (points vs upper limits), even if this has no effect with this data set.
+
 fig, ax = plt.subplots(
     figsize=(8, 6),
     gridspec_kw={"left": 0.16, "bottom": 0.2, "top": 0.98, "right": 0.98},

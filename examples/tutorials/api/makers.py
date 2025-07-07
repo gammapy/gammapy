@@ -185,7 +185,7 @@ plt.show()
 # FoV background
 # ~~~~~~~~~~~~~~
 #
-# If the background energy dependent morphology is well reproduced by the
+# If the background energy dependent morphology is not well reproduced by the
 # background model stored in the IRF, it might be that its normalization
 # is incorrect and that some spectral corrections are necessary. This is
 # made possible thanks to the `~gammapy.makers.FoVBackgroundMaker`. This

@@ -51,15 +51,15 @@ from gammapy.datasets import MapDataset
 from gammapy.estimators import FluxPoints, FluxProfileEstimator
 from gammapy.maps import RegionGeom
 from gammapy.modeling.models import PowerLawSpectralModel
+from gammapy.utils.regions import (
+    make_concentric_annulus_sky_regions,
+    make_orthogonal_rectangle_sky_regions,
+)
 
 ######################################################################
 # Check setup
 # -----------
 from gammapy.utils.check import check_tutorials_setup
-from gammapy.utils.regions import (
-    make_concentric_annulus_sky_regions,
-    make_orthogonal_rectangle_sky_regions,
-)
 
 check_tutorials_setup()
 
@@ -102,7 +102,7 @@ print(dataset.counts)
 # `~gammapy.utils.regions.make_orthogonal_rectangle_sky_regions`. The individual region bins
 # for the profile have a height of 3 deg and in total there are 31 bins.
 # Its starts from lon = 10 deg and goes to lon = 350 deg. In addition, we
-# have to specify the `wcs` to take into account possible projections
+# have to specify the ``wcs`` to take into account possible projections
 # effects on the region definition:
 #
 
@@ -162,8 +162,8 @@ print(profile)
 
 ######################################################################
 # We can see the flux profile is represented by a `~gammapy.estimators.FluxPoints` object
-# with a `projected-distance` axis, which defines the main axis the flux
-# profile is measured along. The `lon` and `lat` axes can be ignored.
+# with a ``projected-distance`` axis, which defines the main axis the flux
+# profile is measured along. The ``lon`` and ``lat`` axes can be ignored.
 #
 # Plotting Results
 # ~~~~~~~~~~~~~~~~

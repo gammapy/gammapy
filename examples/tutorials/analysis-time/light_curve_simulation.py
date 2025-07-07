@@ -8,7 +8,7 @@ Prerequisites
 -------------
 
 -  To understand how a single binned simulation works, please refer to
-   :doc:`/tutorials/analysis-1d/spectrum_simulation` tutorial and 
+   :doc:`/tutorials/analysis-1d/spectrum_simulation` tutorial and
    :doc:`/tutorials/analysis-3d/simulate_3d` tutorial for 1D and 3D simulations,
    respectively.
 -  For details of light curve extraction using gammapy, refer to the two
@@ -114,7 +114,7 @@ TimeMapAxis.time_format = "iso"
 # We will simulate 10 spectra between 300 GeV and 10 TeV using an
 # `~gammapy.modeling.models.PowerLawSpectralModel` and a
 # `~gammapy.modeling.models.ExpDecayTemporalModel`. The important
-# thing to note here is how to attach a different `GTI` to each dataset.
+# thing to note here is how to attach a different ``GTI`` to each dataset.
 # Since we use spectrum datasets here, we will use a `~gammapy.maps.RegionGeom`.
 #
 
@@ -308,6 +308,8 @@ display(result.parameters.to_table())
 # temporal model in relative units for one particular energy range
 #
 
+plt.figure(figsize=(8, 7))
+plt.subplots_adjust(bottom=0.3)
 dataset_fp.plot_spectrum(axis_name="time")
 
 ######################################################################

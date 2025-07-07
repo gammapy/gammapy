@@ -59,12 +59,12 @@ from gammapy.estimators import FluxPoints, FluxPointsEstimator
 from gammapy.maps import MapAxis
 from gammapy.modeling import Fit
 from gammapy.modeling.models import Models, create_crab_spectral_model
+from gammapy.utils.scripts import make_path
 
 ######################################################################
 # Check setup
 # -----------
 from gammapy.utils.check import check_tutorials_setup
-from gammapy.utils.scripts import make_path
 
 check_tutorials_setup()
 
@@ -76,8 +76,6 @@ check_tutorials_setup()
 # The datasets serialization produce YAML files listing the datasets and
 # models. In the following cells we show an example containing only the
 # Fermi-LAT dataset and the Crab model.
-#
-# Fermi-LAT-3FHL_datasets.yaml:
 #
 
 path = make_path("$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_datasets.yaml")
@@ -92,8 +90,6 @@ with path.open("r") as f:
 # `4FGL <https://arxiv.org/abs/1902.10045>`__, then we have re-optimized
 # the spectral parameters for our dataset in the 10 GeV - 2 TeV energy
 # range (fixing the source position).
-#
-# Fermi-LAT-3FHL_models.yaml:
 #
 
 path = make_path("$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_models.yaml")
@@ -110,7 +106,7 @@ with path.open("r") as f:
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # For now we let’s use the datasets serialization only to read the 3D
-# `MapDataset` associated to Fermi-LAT 3FHL data and models.
+# `~gammapy.datasets.MapDataset` associated to Fermi-LAT 3FHL data and models.
 #
 
 path = Path("$GAMMAPY_DATA/fermi-3fhl-crab")
@@ -161,7 +157,7 @@ print(datasets)
 #
 # The HAWC flux point are taken from https://arxiv.org/pdf/1905.12518.pdf
 # Then these flux points are read from a pre-made FITS file and passed to
-# a `FluxPointsDataset` together with the source spectral model.
+# a `~gammapy.datasets.FluxPointsDataset` together with the source spectral model.
 #
 
 # read flux points from https://arxiv.org/pdf/1905.12518.pdf
@@ -181,9 +177,9 @@ print(datasets)
 # Datasets serialization
 # ----------------------
 #
-# The `datasets` object contains each dataset previously defined. It can
+# The ``datasets`` object contains each dataset previously defined. It can
 # be saved on disk as datasets.yaml, models.yaml, and several data files
-# specific to each dataset. Then the `datasets` can be rebuild later
+# specific to each dataset. Then the ``datasets`` can be rebuild later
 # from these files.
 #
 
@@ -204,7 +200,7 @@ print(datasets)
 # Joint analysis
 # --------------
 #
-# We run the fit on the `Datasets` object that include a dataset for
+# We run the fit on the `~gammapy.datasets.Datasets` object that include a dataset for
 # each instrument
 #
 
@@ -227,7 +223,6 @@ print(crab_spec)
 # them together with the HAWC flux point.
 #
 
-# compute Fermi-LAT and H.E.S.S. flux points
 energy_edges = MapAxis.from_energy_bounds("10 GeV", "2 TeV", nbin=5).edges
 
 flux_points_fermi = FluxPointsEstimator(
@@ -248,7 +243,6 @@ flux_points_hess = FluxPointsEstimator(
 # instrument.
 #
 
-# display spectrum and flux points
 fig, ax = plt.subplots(figsize=(8, 6))
 
 energy_bounds = [0.01, 300] * u.TeV

@@ -273,9 +273,9 @@ print(result.models.to_parameters_table())
 # We first create the `~gammapy.estimators.LightCurveEstimator` for the
 # list of datasets we just produced. We give the estimator the name of the
 # source component to be fitted. We can directly compute the light curve in multiple energy
-# bins by supplying a list of `energy_edges`.
+# bins by supplying a list of ``energy_edges``.
 #
-# By default the likelihood scan is computed from 0.2 to 5.0.
+# By default, the likelihood scan is computed from 0.2 to 5.0.
 # Here, we increase the max value to 10.0, because we are
 # dealing with a large flare.
 
@@ -314,7 +314,7 @@ plt.show()
 # Light curves once obtained can be rebinned using the likelihood profiles.
 # Here, we rebin 3 adjacent bins together, to get 30 minute bins.
 #
-# We will first slice `lc_1d` to obtain the lightcurve in the first energy bin
+# We will first slice ``lc_1d`` to obtain the lightcurve in the first energy bin
 #
 
 slices = {"energy": slice(0, 1)}

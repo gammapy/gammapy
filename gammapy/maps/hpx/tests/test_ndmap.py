@@ -143,16 +143,16 @@ def test_hpxmap_set_get_by_pix(nside, nested, frame, region, axes):
     m = create_map(nside, nested, frame, region, axes)
     coords = m.geom.get_coord(flat=True)
     idx = m.geom.get_idx(flat=True)
-    m.set_by_pix(idx, coords[0])
-    assert_allclose(coords[0], m.get_by_pix(idx))
+    m.set_by_pix(idx, coords[0].value)  # note: set_by_pix does not use unit
+    assert_allclose(coords[0].value, m.get_by_pix(idx))
 
 
 @pytest.mark.parametrize(("nside", "nested", "frame", "region", "axes"), hpx_test_geoms)
 def test_hpxmap_set_get_by_coord(nside, nested, frame, region, axes):
     m = create_map(nside, nested, frame, region, axes)
     coords = m.geom.get_coord(flat=True)
-    m.set_by_coord(coords, coords[0])
-    assert_allclose(coords[0], m.get_by_coord(coords))
+    m.set_by_coord(coords, coords[0].value)
+    assert_allclose(coords[0].value, m.get_by_coord(coords))
 
     # Test with SkyCoords
     m = create_map(nside, nested, frame, region, axes)
@@ -160,8 +160,8 @@ def test_hpxmap_set_get_by_coord(nside, nested, frame, region, axes):
     skydir = SkyCoord(coords[0], coords[1], unit="deg", frame=m.geom.frame)
     skydir_cel = skydir.transform_to("icrs")
     skydir_gal = skydir.transform_to("galactic")
-    m.set_by_coord((skydir_gal,) + tuple(coords[2:]), coords[0])
-    assert_allclose(coords[0], m.get_by_coord(coords))
+    m.set_by_coord((skydir_gal,) + tuple(coords[2:]), coords[0].value)
+    assert_allclose(coords[0].value, m.get_by_coord(coords))
     assert_allclose(
         m.get_by_coord((skydir_cel,) + tuple(coords[2:])),
         m.get_by_coord((skydir_gal,) + tuple(coords[2:])),
@@ -197,9 +197,9 @@ def test_hpxmap_interp_by_coord_quantities():
 def test_hpxmap_fill_by_coord(nside, nested, frame, region, axes):
     m = create_map(nside, nested, frame, region, axes)
     coords = m.geom.get_coord(flat=True)
-    m.fill_by_coord(coords, coords[1])
-    m.fill_by_coord(coords, coords[1])
-    assert_allclose(m.get_by_coord(coords), 2.0 * coords[1])
+    m.fill_by_coord(coords, coords[1].value)
+    m.fill_by_coord(coords, coords[1].value)
+    assert_allclose(m.get_by_coord(coords), 2.0 * coords[1].value)
 
 
 @pytest.mark.parametrize(("nside", "nested", "frame", "region", "axes"), hpx_test_geoms)
@@ -235,9 +235,11 @@ def test_hpxmap_pad(nside, nested, frame, region, axes):
     coords_pad = m_pad.geom.get_coord(flat=True)
     msk = m.geom.contains(coords_pad)
     coords_out = tuple([c[~msk] for c in coords_pad])
-    assert_allclose(m_pad.get_by_coord(coords_out), cval * np.ones_like(coords_out[0]))
+    assert_allclose(
+        m_pad.get_by_coord(coords_out), cval * np.ones_like(coords_out[0].value)
+    )
     coords_in = tuple([c[msk] for c in coords_pad])
-    assert_allclose(m_pad.get_by_coord(coords_in), np.ones_like(coords_in[0]))
+    assert_allclose(m_pad.get_by_coord(coords_in), np.ones_like(coords_in[0].value))
 
 
 def test_hpx_nd_map_pad_axis():
@@ -292,7 +294,7 @@ def test_hpxmap_sum_over_axes(nside, nested, frame, region, axes):
         HpxGeom(nside=nside, nest=nested, frame=frame, region=region, axes=axes)
     )
     coords = m.geom.get_coord(flat=True)
-    m.fill_by_coord(coords, coords[0])
+    m.fill_by_coord(coords, coords[0].value)
     msum = m.sum_over_axes()
 
     if m.geom.is_regular:

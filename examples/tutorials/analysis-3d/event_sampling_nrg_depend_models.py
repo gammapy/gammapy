@@ -100,50 +100,49 @@ plt.show()
 
 ######################################################################
 # Let's now create the temporal model (if you already have this model,
-# please go directly to the `Read the energy-dependent model` section),
-# that will be defined as a `LightCurveTemplateTemporalModel`. The latter
-# take as input a `RegionNDMap` with temporal and energy axes, on which
+# please go directly to the :ref:`read-the-energy-dependent-model` section),
+# that will be defined as a `~gammapy.modeling.models.LightCurveTemplateTemporalModel`. The latter
+# take as input a `~gammapy.maps.RegionNDMap` with temporal and energy axes, on which
 # the fluxes are stored.
 #
-# To create such map, we first need to define a time axis with `MapAxis`:
+# To create such map, we first need to define a time axis with `~gammapy.maps.MapAxis`:
 # here we consider 5 time bins of 720 s (i.e. 1 hr in total).
 # As a second step, we create an energy axis with 10 bins where the
 # powerlaw spectral models will be evaluated.
 #
 
-# source position
 pointing_position = SkyCoord("100 deg", "30 deg", frame="icrs")
 position = FixedPointingInfo(fixed_icrs=pointing_position.icrs)
 
-# time axis
 time_axis = MapAxis.from_bounds(0 * u.s, 3600 * u.s, nbin=5, name="time", interp="lin")
 
-# energy axis
 energy_axis = MapAxis.from_energy_bounds(
     energy_min=0.2 * u.TeV, energy_max=100 * u.TeV, nbin=10
 )
 
 
 ######################################################################
-# Now let's create the `RegionNDMap` and fill it with the expected
+# Now let's create the `~gammapy.maps.RegionNDMap` and fill it with the expected
 # spectral values:
 #
 
-# create the RegionNDMap containing fluxes
 m = RegionNDMap.create(
     region=PointSkyRegion(center=pointing_position),
     axes=[energy_axis, time_axis],
     unit="cm-2s-1TeV-1",
 )
 
+######################################################################
 # to compute the spectra as a function of time we extract the coordinates of the geometry
 coords = m.geom.get_coord(sparse=True)
 
+######################################################################
 # We reshape the indices and amplitudes array to perform broadcasting
 indices = indices.reshape(coords["time"].shape)
 amplitudes = amplitudes.reshape(coords["time"].shape)
 
-# evaluate the spectra and fill the RegionNDMap
+######################################################################
+# evaluate the spectra and fill the `~gammapy.maps.RegionNDMap`
 m.quantity = PowerLawSpectralModel.evaluate(
     coords["energy"], indices, amplitudes, 1 * u.TeV
 )
@@ -152,7 +151,7 @@ m.quantity = PowerLawSpectralModel.evaluate(
 # Create the temporal model and write it to disk
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# Now, we define the `LightCurveTemplateTemporalModel`. It needs the
+# Now, we define the `~gammapy.modeling.models.LightCurveTemplateTemporalModel`. It needs the
 # map we created above and a reference time. The latter
 # is crucial to evaluate the model as a function of time.
 # We show also how to write the model on disk, noting that we explicitly
@@ -170,37 +169,37 @@ temp.write(filename, format="map", overwrite=True)
 # Read the energy-dependent model
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# We read the map written on disc again with `LightCurveTemplateTemporalModel.read`.
-# When the model is from a map, the arguments `format="map"` is mandatory.
-# The map is `fits` file, with 3 extensions:
+# We read the map written on disc again with `~gammapy.modeling.models.LightCurveTemplateTemporalModel.read()`.
+# When the model is from a map, the arguments ``format="map"`` is mandatory.
+# The map is ``fits`` file, with 3 extensions:
 #
-# 1) `SKYMAP`: a table with a `CHANNEL` and `DATA` column; the number of rows is given
-# by the product of the energy and time bins. The `DATA` represent the values of the model
-# at each energy;
+# - 1) ``SKYMAP``: a table with a ``CHANNEL`` and ``DATA`` column; the number of rows is given
+#   by the product of the energy and time bins. The ``DATA`` represent the values of the model
+#   at each energy;
 #
-# 2) `SKYMAP_BANDS`: a table with `CHANNEL`, `ENERGY`, `E_MIN`, `E_MAX`, `TIME`,
-# `TIME_MIN` and `TIME_MAX`. `ENERGY` is the mean of `E_MIN` and `E_MAX`, as well as
-# `TIME` is the mean of `TIME_MIN` and `TIME_MAX`; this extension should contain the
-# reference time in the header, through the keywords `MJDREFI` and `MJDREFF`.
+# - 2) ``SKYMAP_BANDS``: a table with ``CHANNEL``, ``ENERGY``, ``E_MIN``, ``E_MAX``, ``TIME``,
+#   ``TIME_MIN`` and ``TIME_MAX``. ``ENERGY`` is the mean of ``E_MIN`` and ``E_MAX``, as well as
+#   ``TIME`` is the mean of ``TIME_MIN`` and ``TIME_MAX``; this extension should contain the
+#   reference time in the header, through the keywords ``MJDREFI`` and ``MJDREFF``.
 #
-# 3) `SKYMAP_REGION`: it gives information on the spatial morphology, i.e. `SHAPE`
-# (only `point` is accepted), `X` and `Y` (source position), `R` (the radius if
-# extended; not used in our case) and `ROTANG` (the angular rotation of the spatial
-# model, if extended; not used in our case).
+# - 3) ``SKYMAP_REGION``: it gives information on the spatial morphology, i.e. ``SHAPE``
+#   (only `point` is accepted), ``X`` and ``Y`` (source position), ``R`` (the radius if
+#   extended; not used in our case) and ``ROTANG`` (the angular rotation of the spatial
+#   model, if extended; not used in our case).
 #
 
 temporal_model = LightCurveTemplateTemporalModel.read(filename, format="map")
 
 ######################################################################
 # We note that an interpolation scheme is also provided when loading
-# a map: for an energy-dependent temporal model, the `method` and
-# `values_scale` arguments by default are set to `linear` and `log`.
+# a map: for an energy-dependent temporal model, the ``method`` and
+# ``values_scale`` arguments by default are set to ``linear`` and ``log``.
 # We warn the reader to carefully check the interpolation method used
 # for the time axis while creating the template model, as different
 # methods provide different results.
-# By default, we assume `linear` interpolation for the time, `log`
+# By default, we assume ``linear`` interpolation for the time, ``log``
 # for the energies and values.
-# Users can modify the `method` and `values_scale` arguments but we
+# Users can modify the ``method`` and ``values_scale`` arguments but we
 # warn that this should be done only when the user knows the consequences
 # of the changes. Here, we show how to set them explicitly:
 #
@@ -226,10 +225,10 @@ plt.show()
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # Now that the temporal model is complete, we create the whole source
-# `SkyModel`. We define its spatial morphology as `point-like`. This
+# `~gammapy.modeling.models.SkyModel`. We define its spatial morphology as ``point-like``. This
 # is a mandatory condition to simulate energy-dependent temporal model.
 # Other morphologies will raise an error!
-# Note also that the source `spectral_model` is a `ConstantSpectralModel`:
+# Note also that the source ``spectral_model`` is a `~gammapy.modeling.models.ConstantSpectralModel`:
 # this is necessary and mandatory, as the real source spectrum is actually
 # passed through the map.
 #
@@ -255,8 +254,8 @@ models = [model, bkg_model]
 #
 # In the following, we define an observation of 1 hr with CTAO in the
 # alpha-configuration for the south array, and we also create a dataset
-# to be passed to the event sampler. The full `SkyModel` created above
-# is passed to the dataset.
+# to be passed to the event sampler. The full `~gammapy.modeling.models.SkyModel`
+# created above is passed to the dataset.
 #
 
 path = Path("$GAMMAPY_DATA/cta-caldb")
@@ -313,11 +312,11 @@ print(dataset.models)
 # Let's simulate the model
 # ~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# Initialize and run the `MapDatasetEventSampler` class. We also define
-# the `oversample_energy_factor` arguments: this should be carefully
-# considered by the user, as a higher `oversample_energy_factor` gives
+# Initialize and run the `~gammapy.datasets.MapDatasetEventSampler` class. We also define
+# the ``oversample_energy_factor`` arguments: this should be carefully
+# considered by the user, as a higher ``oversample_energy_factor`` gives
 # a more precise source flux estimate, at the expense of computational
-# time. Here we adopt an `oversample_energy_factor` of 10:
+# time. Here we adopt an ``oversample_energy_factor`` of 10:
 #
 
 sampler = MapDatasetEventSampler(random_state=0, oversample_energy_factor=10)
