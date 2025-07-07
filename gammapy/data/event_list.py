@@ -7,20 +7,16 @@ import warnings
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import AltAz, Angle, SkyCoord, angular_separation
-from astropy.io import fits
-from astropy.table import Table
 from astropy.table import vstack as vstack_tables
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from gammapy.maps import MapAxis, MapCoord, RegionGeom, WcsNDMap
 from gammapy.maps.axes import UNIT_STRING_FORMAT
 from gammapy.utils.fits import earth_location_from_dict
-from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
 from gammapy.utils.time import time_ref_from_dict
 from .metadata import EventListMetaData
 from gammapy.utils.deprecation import deprecated_renamed_argument
-from gammapy.utils.metadata import CreatorMetaData
 
 __all__ = ["EventList"]
 
@@ -116,21 +112,9 @@ class EventList:
         checksum : bool
             If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
         """
-        filename = make_path(filename)
+        from gammapy.data.io import EventListReader
 
-        with fits.open(filename) as hdulist:
-            events_hdu = hdulist[hdu]
-            if checksum:
-                if events_hdu.verify_checksum() != 1:
-                    warnings.warn(
-                        f"Checksum verification failed for HDU {hdu} of {filename}.",
-                        UserWarning,
-                    )
-
-            table = Table.read(events_hdu)
-            meta = EventListMetaData.from_header(table.meta)
-
-        return cls(table=table, meta=meta)
+        return EventListReader(hdu, checksum).read(filename)
 
     def to_table_hdu(self, format="gadf"):
         """
@@ -146,20 +130,9 @@ class EventList:
         hdu : `astropy.io.fits.BinTableHDU`
             EventList converted to FITS representation.
         """
-        if format != "gadf":
-            raise ValueError(f"Only the 'gadf' format supported, got {format}")
+        from gammapy.data.io import EventListWriter
 
-        bin_table = fits.BinTableHDU(self.table, name="EVENTS")
-
-        # A priori don't change creator information
-        if self.meta.creation is None:
-            self.meta.creation = CreatorMetaData()
-        else:
-            self.meta.creation.update_time()
-
-        bin_table.header.update(self.meta.to_header())
-
-        return bin_table
+        return EventListWriter().to_hdu(self, format)
 
     # TODO: Pass metadata here. Also check that specific meta contents are consistent
     @classmethod

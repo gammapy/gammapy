@@ -50,7 +50,7 @@ from gammapy.modeling.models import (
     SkyModel,
 )
 from gammapy.visualization import plot_npred_signal, plot_spectrum_datasets_off_regions
-from gammapy.utils.check import check_tutorials_setup
+
 logging.basicConfig()
 log = logging.getLogger("gammapy.spectrum")
 log.setLevel(logging.ERROR)
@@ -59,6 +59,7 @@ log.setLevel(logging.ERROR)
 # Check setup
 # -----------
 
+from gammapy.utils.check import check_tutorials_setup
 
 check_tutorials_setup()
 
@@ -140,6 +141,7 @@ for obs in observations:
     dataset = maker_safe_mask.run(dataset, obs)
     stacked.stack(dataset)
 
+# %%
 #
 # The maps are cubes, with an energy axis.
 # Let's also make some images:
