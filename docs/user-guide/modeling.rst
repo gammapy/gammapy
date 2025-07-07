@@ -95,7 +95,8 @@ For some physics use cases, some parameters of the models might have some astrop
 the usual case of positive flux, spectral index range. These knowledge can be used when estimating
 parameters. To do so, we incorporate a `~gammapy.modeling.models.Prior` density over the quantities
 one wants to estimate and the `~gammapy.modeling.Fit` class is used to determine the best parameters by
-by regularizing the maximum a posteriori likelihood.
+by regularizing the maximum a posteriori likelihood (a combination of the data likelihood term and of the prior
+term).
 
 With the MAP estimation, one can also realise hypothesis testing, compute confidence intervals and confidence
 limits.
@@ -116,8 +117,9 @@ the Markov Chain Monte Carlo (MCMC) approach or the Nested sampling (NS) approac
 Gammapy.
 
 This method is quite powerful in case of non-Gaussian degeneracies, larger number of parameters, or to
-identify posterior solutions around local likelihood maximum. However, the computation time to make
-Bayesian Inference is generally larger than for the Maximum Likelihood Estimation using ``iminuit``.
+map likelihood landscapes with multiple solutions (local maxima in which a classical fit would fall into).
+However, the computation time to make Bayesian Inference is generally larger than for the Maximum
+Likelihood Estimation using ``iminuit``.
 
 The tutorial :doc:`/examples/tutorials/api/nested_sampling_Crab` describes in detail this estimation
 method.
