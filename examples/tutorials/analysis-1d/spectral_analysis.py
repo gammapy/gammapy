@@ -575,24 +575,6 @@ flux_points_dataset_no_ul = FluxPointsDataset(
 plot_stat(flux_points_dataset_no_ul)
 
 ######################################################################
-# Exercises
-# ---------
-#
-# Now you have learned the basics of a spectral analysis with Gammapy. To
-# practice you can continue with the following exercises:
-#
-# -  Fit a different spectral model to the data. You could try
-#    `~gammapy.modeling.models.ExpCutoffPowerLawSpectralModel` or
-#    `~gammapy.modeling.models.LogParabolaSpectralModel`.
-# -  Compute flux points for the stacked dataset.
-# -  Create a `~gammapy.datasets.FluxPointsDataset` with the flux points
-#    you have computed for the stacked dataset and fit the flux points
-#    again with obe of the spectral models. How does the result compare to
-#    the best fit model, that was directly fitted to the counts data?
-#
-
-
-######################################################################
 # What next?
 # ----------
 #

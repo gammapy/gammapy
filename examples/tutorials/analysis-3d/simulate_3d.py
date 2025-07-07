@@ -34,16 +34,16 @@ Proposed approach
 -----------------
 
 Here we can’t use the regular observation objects that are connected to
-a `DataStore`. Instead we will create a fake
+a `~gammapy.data.DataStore`. Instead, we will create a fake
 `~gammapy.data.Observation` that contain some pointing information and
 the CTA 1DC IRFs (that are loaded with `~gammapy.irf.load_irf_dict_from_file`).
 
-Then we will create a `~gammapy.datasets.MapDataset` geometry and
-create it with the `~gammapy.makers.MapDatasetMaker`.
+Next, we will create a `~gammapy.datasets.MapDataset` geometry through
+the `~gammapy.makers.MapDatasetMaker`.
 
-Then we will be able to define a model consisting of a
+Finally, we will define a model consisting of a
 `~gammapy.modeling.models.PowerLawSpectralModel` and a
-`~gammapy.modeling.models.GaussianSpatialModel`. We will assign it to
+`~gammapy.modeling.models.GaussianSpatialModel`. This model will be assigned to
 the dataset and fake the count data.
 
 """
@@ -139,9 +139,9 @@ print(models)
 ######################################################################
 # Now, comes the main part of dataset simulation. We create an in-memory
 # observation and an empty dataset. We then predict the number of counts
-# for the given model, and Poisson fluctuate it using `fake()` to make
+# for the given model, and Poisson fluctuate it using ``fake()`` to make
 # a simulated counts maps. Keep in mind that it is important to specify
-# the `selection` of the maps that you want to produce
+# the ``selection`` of the maps that you want to produce
 #
 
 # Create an in-memory observation
