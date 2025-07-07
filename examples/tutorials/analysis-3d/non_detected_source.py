@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 
 """
-Upper limits
+Computing flux upper limits
 ============
 
 Explore how to deal with flux upper limits for a non-detected source.
@@ -10,7 +10,7 @@ Prerequisites
 -------------
 
 It is advisable to understand the general Gammapy modelling and fitting
-framework before proceeding with this notebook, eg doc:`docs/user-guide/modeling`
+framework before proceeding with this notebook, eg doc:`docs/user-guide/modeling`.
 
 Context
 -------
@@ -23,7 +23,7 @@ Proposed approach
 -----------------
 
 In this section, we will use an empty observation from the H.E.S.S. DL3 DR1 to understand how
-  to quantify non-detections. We will
+to quantify non-detections. We will
 - Compute excess and significance maps
 - Perform a source model fit and do a likelihood ratio test
 - Compute differential upper limits
@@ -111,7 +111,7 @@ plt.show()
 # significance distribution to confirm that it is a standard Gaussian. Departure
 # from the same can suggest the presence of gamma-ray sources, or can also
 # originate from incorrect modeling of the residual hadronic background.
-# We will now do a likelihood fit to search for significant emission
+# We will now do a likelihood fit to search for significant emission.
 #
 #
 
@@ -141,7 +141,10 @@ dataset.models = skymodel
 fit = Fit()
 res = fit.run(dataset)
 print(res.models)
+######################################################################
+# It is good to ensure that the fit has converged
 
+print(res.minuit)
 
 ######################################################################
 # We can see that there is a slight negative excess in the centre, and
