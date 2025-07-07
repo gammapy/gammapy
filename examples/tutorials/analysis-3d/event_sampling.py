@@ -29,8 +29,8 @@ The `~gammapy.datasets.MapDatasetEventSampler` takes in input a
 and temporal properties of the source(s) of interest.
 
 The `~gammapy.datasets.MapDatasetEventSampler` class evaluates the map
-of predicted counts (`npred`) per bin of the given Sky model, and the
-`npred` map is then used to sample the events. In particular, the
+of predicted counts (``npred``) per bin of the given Sky model, and the
+``npred`` map is then used to sample the events. In particular, the
 output of the event-sampler will be a set of events having information
 about their true coordinates, true energies and times of arrival.
 
@@ -114,13 +114,14 @@ from gammapy.modeling.models import (
 ######################################################################
 # Check setup
 # -----------
+
 from gammapy.utils.check import check_tutorials_setup
 
 check_tutorials_setup()
 
 ######################################################################
-# Define an Observation
-# ---------------------
+# Define an `~gammapy.data.Observation`
+# -------------------------------------
 #
 # You can firstly create a `~gammapy.data.Observations` object that
 # contains the pointing position, the GTIs and the IRF you want to
@@ -159,8 +160,8 @@ observation = Observation.create(
 print(observation)
 
 ######################################################################
-# Define the MapDataset
-# ---------------------
+# Define the `~gammapy.datasets.MapDataset`
+# -----------------------------------------
 #
 # Let’s generate the `~gammapy.datasets.Dataset` object (for more info
 # on `~gammapy.datasets.Dataset` objects, please checkout
@@ -199,8 +200,8 @@ geom = WcsGeom.create(
 ######################################################################
 # In the following, the dataset is created by selecting the effective
 # area, background model, the PSF and the Edisp from the IRF. The dataset
-# thus produced can be saved into a FITS file just using the `write()`
-# function. We put it into the `evt_sampling` sub-folder:
+# thus produced can be saved into a FITS file just using the ``write()``
+# function. We put it into the ``event_sampling`` sub-folder:
 #
 
 # %%time
@@ -217,8 +218,8 @@ Path("event_sampling").mkdir(exist_ok=True)
 dataset.write("./event_sampling/dataset.fits", overwrite=True)
 
 ######################################################################
-# Define the Sky model: a point-like source
-# -----------------------------------------
+# Define the `~gammapy.modeling.models.SkyModel`: a point-like source
+# -------------------------------------------------------------------
 #
 # Now let’s define a sky model for a point-like source centered 0.5
 # deg far from the Galactic Center and with a power-law spectrum. We then
@@ -377,8 +378,8 @@ print(f"Background events: {(events.table['MC_ID'] == 0).sum()}")
 
 ######################################################################
 # We can now inspect the properties of the simulated source. To do that,
-# we adopt the `select_region` function that extracts only the events
-# into a given `SkyRegion` of a `~gammapy.data.EventList` object:
+# we adopt the `~gammapy.data.EventList.select_region()` function that extracts only the events
+# into a given `~regions.Region` of a `~gammapy.data.EventList` object:
 #
 
 src_position = SkyCoord(0.0, 0.5, frame="galactic", unit="deg")
@@ -389,7 +390,7 @@ on_region = CircleSkyRegion(center=src_position, radius=on_region_radius)
 src_events = events.select_region(on_region)
 
 ######################################################################
-# Then we can have a quick look to the data with the `peek` function:
+# Then we can have a quick look to the data with the ``peek`` function:
 #
 
 src_events.peek()
@@ -483,7 +484,7 @@ for idx, tstart in enumerate(tstarts):
 
 ######################################################################
 # You can now load the event list and the corresponding IRFs with
-# `DataStore.from_events_files`:
+# `~gammapy.data.DataStore.from_events_files()`:
 #
 
 path = Path("./event_sampling/")

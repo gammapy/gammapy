@@ -3,7 +3,7 @@ Pulsar analysis
 ===============
 
 Produce a phasogram, phased-resolved maps and spectra for pulsar analysis.
- 
+
 Introduction
 ------------
 
@@ -28,7 +28,6 @@ in the CTA 1DC dataset shipped with Gammapy.
 
 """
 
-# Remove warnings
 import warnings
 import numpy as np
 import astropy.units as u
@@ -51,7 +50,6 @@ from gammapy.modeling import Fit
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from gammapy.stats import WStatCountsStatistic
 from gammapy.utils.regions import SphericalCircleSkyRegion
-from gammapy.utils.check import check_tutorials_setup
 
 warnings.filterwarnings("ignore")
 
@@ -59,6 +57,8 @@ warnings.filterwarnings("ignore")
 ######################################################################
 # Check setup
 # -----------
+
+from gammapy.utils.check import check_tutorials_setup
 
 check_tutorials_setup()
 
@@ -284,7 +284,8 @@ for obs in obs_list_vela:
 ######################################################################
 # Once the data reduction is done, we can plot the map of the counts-ON (i.e. in the ON-phase)
 # and the map of the background (i.e. the counts-OFF, selected in the OFF-phase, multiplied by alpha).
-# If one wants to plot the counts-OFF instead, `~background` should be replaced by `~counts_off` in the following cell.
+# If one wants to plot the counts-OFF instead, ``background`` should be replaced by ``counts_off`` in
+# the following cell.
 
 counts = (
     map_datasets[0].counts.smooth(kernel="gauss", width=0.1 * u.deg).sum_over_axes()
@@ -343,7 +344,7 @@ plt.show()
 #
 # Here to create the `~gammapy.datasets.SpectrumDatasetOnOff`, we are going to redo the whole data reduction.
 # However, note that one can use the `~gammapy.datasets.MapDatasetOnOff.to_spectrum_dataset()` method
-# (with the `containment_correction` parameter set to True) if such a `~gammapy.datasets.MapDatasetOnOff`
+# (with the ``containment_correction`` parameter set to True) if such a `~gammapy.datasets.MapDatasetOnOff`
 # has been created as shown above.
 
 e_true = MapAxis.from_energy_bounds(0.003, 10, 100, unit="TeV", name="energy_true")
