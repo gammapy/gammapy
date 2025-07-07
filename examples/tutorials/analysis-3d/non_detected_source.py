@@ -2,14 +2,14 @@
 
 """
 Computing flux upper limits
-============
+=======================
 
-Explore how to deal with flux upper limits for a non-detected source.
+Explore how to compute flux upper limits for a non-detected source.
 
 Prerequisites
 -------------
 
-It is advisable to understand the general Gammapy modelling and fitting
+It is advisable to understand the general Gammapy modeling and fitting
 framework before proceeding with this notebook, eg doc:`docs/user-guide/modeling`.
 
 Context
@@ -68,8 +68,8 @@ check_tutorials_setup()
 # -----------
 #
 # For computational purposes, we have
-# already created a `~gammapy.datasets.MapDataset` from observation id `20275` from the
-# public H.E.S.S. data release and stored it in `$GAMMAPY_DATA`
+# already created a `~gammapy.datasets.MapDataset` from observation id ``20275`` from the
+# public H.E.S.S. data release and stored it in ``$GAMMAPY_DATA``
 #
 
 dataset = MapDataset.read("$GAMMAPY_DATA/datasets/empty-dl4/empty-dl4.fits.gz")
@@ -208,7 +208,7 @@ plt.show()
 #
 # To compute the integral upper limits between certain energies,
 # we can simply run  `~gammapy.estimators.FluxPointsEstimator`
-# with one bin in energy
+# with one bin in energy.
 
 emin = energy_edges[0]
 emax = energy_edges[-1]
@@ -232,13 +232,13 @@ plt.show()
 # We can then ask, would I have seen my source given this irf/ exposure
 # time? The `~gammapy.estimators.FluxPointsEstimator` can be used to obtain the sensitivity,
 # which can be compared to the expected flux. We have the 5-sigma
-# sensitivity here, which can be configured using `n_sigma_sensitivity`
-# on init. Lets see if we would have seen if a Crab-like source was
+# sensitivity here, which can be configured using ``n_sigma_sensitivity``
+# parameter of this estimator. Lets see what we would have seen if a Crab-like source was
 # present in the center.
-# Note that this computed sensitivity does not take into account the into factors
+# Note that this computed sensitivity does not take into account the factors
 # like the minimum number of gamma-rays, etc (see :doc:`/tutorials/analysis-1d/cta_sensitivity.py`)
 # and is dependent on the analysis configuration.
-# We compare this with the know Crab spectrum.
+# We compare this with the known Crab spectrum.
 
 crab_model = create_crab_spectral_model()
 
@@ -251,4 +251,4 @@ plt.show()
 
 
 ######################################################################
-# Thus, a Crab-like source should have been above our sensitivity till around ~ 4 TeV
+# Thus, a Crab-like source should have been above our sensitivity till around ~ 4 TeV for this specific observation.
