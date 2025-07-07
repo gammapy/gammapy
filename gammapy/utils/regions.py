@@ -428,7 +428,8 @@ def region_circle_to_ellipse(region):
 
 def extract_bright_star_regions(geom, max_star_mag=6, star_rad=0.3 * u.deg):
     """
-    Find bright star exclusion regions contained in a given `~gammapy.maps.Geom` and returns a 2D exclusion mask to remove these sources from bacgkround estimation.
+    Find bright star exclusion regions from the Hipparcos Catalog (Perryman et al., 1997)
+    contained in a given `~gammapy.maps.Geom` and returns a 2D exclusion mask to remove these sources from bacgkround estimation.
 
     Parameters
     ----------
