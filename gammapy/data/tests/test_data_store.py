@@ -258,6 +258,18 @@ def test_data_store_bad_name():
 
 
 @requires_data()
+def test_data_store_doubled_id(caplog):
+    """Test that doubled id in obs_id causes corresponding log.warning message"""
+
+    # Using example provided in Issue #5943:
+    datastore = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
+    datastore.get_observations(obs_id=[23523, 23523])
+    assert "List of obs_id is not unique! Multiples are: [23523]" in [
+        _.message for _ in caplog.records
+    ]
+
+
+@requires_data()
 def test_data_store_from_dir_no_obs_index(caplog, tmpdir):
     """Test the `from_dir` method."""
 
