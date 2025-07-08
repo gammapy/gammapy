@@ -126,6 +126,6 @@ def test_warning_for_bad_model(caplog):
 
     assert "WARNING" in [_.levelname for _ in caplog.records]
     assert (
-        "Source model predicts negative counts. Results of estimator should be interpreted with caution"
+        "Spectral model predicts negative counts. Results of estimator should be interpreted with caution"
         in [_.message for _ in caplog.records]
     )
