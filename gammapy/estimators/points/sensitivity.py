@@ -1,11 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
+import logging
+
 from astropy.table import Column, Table
 from gammapy.maps import Map
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from gammapy.stats import WStatCountsStatistic
 from ..core import Estimator
 from ..utils import apply_threshold_sensitivity
+
+log = logging.getLogger(__name__)
 
 __all__ = ["SensitivityEstimator"]
 
@@ -48,6 +52,10 @@ class SensitivityEstimator(Estimator):
         if spectral_model is None:
             spectral_model = PowerLawSpectralModel(
                 index=2, amplitude="1 cm-2 s-1 TeV-1"
+            )
+        if spectral_model.integral("1 TeV", "10 TeV") < 0.0:
+            log.warning(
+                "Source model predicts negative counts. Results of estimator should be interpreted with caution"
             )
 
         self.spectral_model = spectral_model

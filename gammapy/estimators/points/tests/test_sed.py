@@ -865,3 +865,16 @@ def test_resample_axis():
     axis_new = get_rebinned_axis(flux_points, method="fixed-bins", group_size=3)
     flux_new = flux_points.resample_axis(axis_new)
     assert_allclose(flux_new.flux.data, [[[3.1050191 * 1e-12]]], rtol=1e-5)
+
+
+def test_warning_for_bad_model(caplog):
+    ds, fpe = create_fpe(PowerLawSpectralModel())
+    spectral_model = PowerLawSpectralModel()
+    spectral_model.amplitude.value = -3e-14
+    ds[0].models = SkyModel(spectral_model, name="source")
+    fpe.run(ds)
+    assert "WARNING" in [_.levelname for _ in caplog.records]
+    assert (
+        "Source model predicts negative counts. Results of estimator should be interpreted with caution"
+        in [_.message for _ in caplog.records]
+    )
