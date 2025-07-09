@@ -116,7 +116,7 @@ data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
 # observations. Here we use a cone search which we define with a python
 # dict.
 #
-# We then filter the `ObservationTable` with
+# We then filter the `~gammapy.data.ObservationTable` with
 # `~gammapy.data.ObservationTable.select_observations`.
 #
 
@@ -316,7 +316,7 @@ print(result)
 
 ######################################################################
 # The fitted parameters are visible from the
-# `~astropy.modeling.models.Models` object.
+# `~gammapy.modeling.models.Models` object.
 #
 
 print(stacked.models.to_parameters_table())
