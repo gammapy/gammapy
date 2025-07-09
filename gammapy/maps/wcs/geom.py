@@ -15,7 +15,7 @@ from astropy.wcs.utils import (
     proj_plane_pixel_scales,
     wcs_to_celestial_frame,
 )
-from regions import RectangleSkyRegion, PointSkyRegion, CircleSkyRegion, Regions
+from regions import RectangleSkyRegion
 from gammapy.utils.array import round_up_to_even, round_up_to_odd
 from gammapy.utils.compat import COPY_IF_NEEDED
 from ..axes import MapAxes
@@ -971,9 +971,10 @@ class WcsGeom(Geom):
             For ``inside=False``, set pixels in the region to False.
             Default is True.
         point_to_radius : `~astropy.units.Quantity`, optional
-            If specified a `~regions.PointSkyRegion` is converted
+            If specified, a `~regions.PointSkyRegion` is converted
             to a `~regions.CircleSkyRegion` of radius `point_to_radius`
             while creating the mask.
+            Default is None.
 
         Returns
         -------
@@ -1008,16 +1009,9 @@ class WcsGeom(Geom):
         if not self.is_regular:
             raise ValueError("Multi-resolution maps not supported yet")
 
-        if not isinstance(regions, list) or isinstance(regions, Regions):
-            regions = [regions]
-
-        regions1 = []
-        for reg in regions:
-            if isinstance(reg, PointSkyRegion) and point_to_radius is not None:
-                reg = CircleSkyRegion(reg.center, radius=point_to_radius)
-            regions1.append(reg)
-
-        geom = RegionGeom.from_regions(regions1, wcs=self.wcs)
+        geom = RegionGeom.from_regions(
+            regions, wcs=self.wcs, point_to_radius=point_to_radius
+        )
         idx = self.get_idx()
         mask = geom.contains_wcs_pix(idx)
 

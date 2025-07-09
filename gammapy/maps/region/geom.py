@@ -21,6 +21,7 @@ from regions import (
     RectanglePixelRegion,
     Regions,
     SkyRegion,
+    CircleSkyRegion,
 )
 import matplotlib.pyplot as plt
 from gammapy.utils.regions import (
@@ -720,7 +721,7 @@ class RegionGeom(Geom):
         return hdulist
 
     @classmethod
-    def from_regions(cls, regions, **kwargs):
+    def from_regions(cls, regions, point_to_radius=None, **kwargs):
         """Create region geometry from list of regions.
 
         The regions are combined with union to a compound region.
@@ -729,6 +730,10 @@ class RegionGeom(Geom):
         ----------
         regions : list of `~regions.SkyRegion` or str
             Regions.
+        point_to_radius : `~astropy.units.Quantity`, optional
+            If specified, a `~regions.PointSkyRegion` is converted
+            to a `~regions.CircleSkyRegion` of radius `point_to_radius`.
+            Default is None.
         **kwargs: dict
             Keyword arguments forwarded to `RegionGeom`.
 
@@ -747,7 +752,12 @@ class RegionGeom(Geom):
             regions = None
 
         if regions:
-            regions = regions_to_compound_region(regions)
+            regions1 = []
+            for reg in regions:
+                if isinstance(reg, PointSkyRegion) and point_to_radius is not None:
+                    reg = CircleSkyRegion(reg.center, radius=point_to_radius)
+                regions1.append(reg)
+            regions = regions_to_compound_region(regions1)
 
         return cls(region=regions, **kwargs)
 
