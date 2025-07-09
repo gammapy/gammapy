@@ -1169,7 +1169,7 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
 
         Parameters
         ----------
-        x_width : float
+        x_width : float, optional
             Number of :math:`\sigma for `GaussianSpatialModel`
             or :math:`x_r_0` for `GeneralizedGaussianSpatialModel`
             If not specified, the defaults for the models will be used.
