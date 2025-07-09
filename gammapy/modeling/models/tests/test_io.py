@@ -504,7 +504,7 @@ def test_link_label_compound():
     norm1 = PowerLawNormSpectralModel(norm=1.0, tilt=0.0)
     norm2 = PowerLawNormSpectralModel(norm=0.5, tilt=0.0)
     model1 = SkyModel(name="model-1", spectral_model=shared_pl * norm1)
-    model2 = SkyModel(name="model-2", spectral_model=shared_pl * norm2)
+    model2 = SkyModel(name="model-2", spectral_model=shared_pl * norm2 * norm1)
     models = Models([model1, model2])
     models.parameters.free_unique_parameters.to_table()
     assert len(models.parameters.free_unique_parameters.to_table()) == 4
@@ -514,11 +514,11 @@ def test_link_label_compound():
     assert len(models_copy.parameters.free_unique_parameters.to_table()) == 4
     assert (
         models_copy[0].spectral_model.model1.index
-        == models_copy[1].spectral_model.model1.index
+        == models_copy[1].spectral_model.model1.model1.index
     )
     assert (
         models_copy[0].spectral_model.model1.amplitude
-        == models_copy[1].spectral_model.model1.amplitude
+        == models_copy[1].spectral_model.model1.model1.amplitude
     )
 
 
