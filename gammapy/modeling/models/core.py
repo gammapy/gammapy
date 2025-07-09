@@ -56,16 +56,20 @@ def _set_model_link(shared_register, model):
 
 
 def _set_models_link(models):
-    from . import SkyModel
+    from . import SkyModel, CompoundSpectralModel
 
     shared_register = {}
     for model in models:
         if isinstance(model, SkyModel):
-            submodels = [
-                model.spectral_model,
+            if isinstance(model.spectral_model, CompoundSpectralModel):
+                spectral_models = model.spectral_model._models
+            else:
+                spectral_models = [model.spectral_model]
+            submodels = spectral_models + [
                 model.spatial_model,
                 model.temporal_model,
             ]
+
             for submodel in submodels:
                 if submodel is not None:
                     shared_register = _set_model_link(shared_register, submodel)
