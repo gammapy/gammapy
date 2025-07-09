@@ -694,7 +694,7 @@ class GaussianSpatialModel(SpatialModel):
         Parameters
         ----------
         x_sigma : float
-            Number of :math:`\sigma
+            Number of :math:`\sigma`
             Default is :math:`1.5\sigma` which corresponds to about 68%
             containment for a 2D symmetric Gaussian.
 
