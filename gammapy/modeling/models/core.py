@@ -1164,19 +1164,29 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
 
         return SkyCoord(positions)
 
-    def to_regions(self):
+    def to_regions(self, x_width=None, **kwargs):
         """Return a list of the regions for the spatial models.
+
+        Parameters
+        ----------
+        x_width : float
+            Number of :math:`\sigma for `GaussianSpatialModel`
+            or :math:`x_r_0` for `GeneralizedGaussianSpatialModel`
+            If not specified, the defaults for the models will be used
+        kwargs : dict, optional
+            Keyword arguments passed to `Spatial_model.to_region`
 
         Returns
         -------
-        regions: list of `~regions.SkyRegion`
+        regions : list of `~regions.SkyRegion`
             Regions.
         """
         regions = []
-
+        if x_width:
+            kwargs["x_width"] = x_width
         for model in self.select(tag="sky-model"):
             try:
-                region = model.spatial_model.to_region()
+                region = model.spatial_model.to_region(**kwargs)
                 regions.append(region)
             except AttributeError:
                 log.warning(
@@ -1193,7 +1203,9 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
         except IndexError:
             log.error("No spatial component in any model. Geom not defined")
 
-    def plot_regions(self, ax=None, kwargs_point=None, path_effect=None, **kwargs):
+    def plot_regions(
+        self, ax=None, kwargs_point=None, path_effect=None, x_width=None, **kwargs
+    ):
         """Plot extent of the spatial models on a given WCS axis.
 
         Parameters
@@ -1206,9 +1218,12 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
             of point sources. Default is None.
         path_effect : `~matplotlib.patheffects.PathEffect`, optional
             Path effect applied to artists and lines. Default is None.
+        x_width : float
+            Number of :math:`\sigma for `GaussianSpatialModel`
+            or :math:`x_r_0` for `GeneralizedGaussianSpatialModel`
+            If not specified, the defaults for the models will be used
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.artists.Artist`.
-
 
         Returns
         -------
@@ -1228,7 +1243,7 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
         ...    kwargs_point={"marker":"o", "markersize":5, "color":"red"}
         ...            )
         """
-        regions = self.to_regions()
+        regions = self.to_regions(x_width)
 
         geom = RegionGeom.from_regions(regions=regions)
         return geom.plot_region(

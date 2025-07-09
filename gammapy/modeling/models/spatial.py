@@ -590,6 +590,7 @@ class PointSpatialModel(SpatialModel):
 
     def to_region(self, **kwargs):
         """Model outline as a `~regions.PointSkyRegion`."""
+        kwargs.pop("x_width", None)
         return PointSkyRegion(center=self.position, **kwargs)
 
 
@@ -672,6 +673,7 @@ class GaussianSpatialModel(SpatialModel):
         region : `~regions.EllipseSkyRegion`
             Model outline.
         """
+        x_sigma = kwargs.pop("x_width", x_sigma)
         minor_axis = Angle(self.sigma.quantity * np.sqrt(1 - self.e.quantity**2))
         return EllipseSkyRegion(
             center=self.position,
@@ -800,6 +802,7 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
         region : `~regions.EllipseSkyRegion`
             Model outline.
         """
+        x_r_0 = kwargs.pop("x_width", x_r_0)
         minor_axis = Angle(self.r_0.quantity * np.sqrt(1 - self.e.quantity**2))
         return EllipseSkyRegion(
             center=self.position,
@@ -947,6 +950,7 @@ class DiskSpatialModel(SpatialModel):
 
     def to_region(self, **kwargs):
         """Model outline as a `~regions.EllipseSkyRegion`."""
+        kwargs.pop("x_width", None)
         minor_axis = Angle(self.r_0.quantity * np.sqrt(1 - self.e.quantity**2))
         return EllipseSkyRegion(
             center=self.position,
@@ -1089,6 +1093,7 @@ class ShellSpatialModel(SpatialModel):
 
     def to_region(self, **kwargs):
         """Model outline as a `~regions.CircleAnnulusSkyRegion`."""
+        kwargs.pop("x_width", None)
         return CircleAnnulusSkyRegion(
             center=self.position,
             inner_radius=self.radius.quantity,
@@ -1167,6 +1172,7 @@ class Shell2SpatialModel(SpatialModel):
 
     def to_region(self, **kwargs):
         """Model outline as a `~regions.CircleAnnulusSkyRegion`."""
+        kwargs.pop("x_width", None)
         return CircleAnnulusSkyRegion(
             center=self.position,
             inner_radius=self.r_in,
@@ -1208,6 +1214,7 @@ class ConstantSpatialModel(SpatialModel):
 
     def to_region(self, **kwargs):
         """Model outline as a `~regions.RectangleSkyRegion`."""
+        kwargs.pop("x_width", None)
         return RectangleSkyRegion(
             center=SkyCoord(0 * u.deg, 0 * u.deg, frame=self.frame),
             height=180 * u.deg,
@@ -1253,6 +1260,7 @@ class ConstantFluxSpatialModel(SpatialModel):
 
     def to_region(self, **kwargs):
         """Model outline as a `~regions.RectangleSkyRegion`."""
+        kwargs.pop("x_width", None)
         return RectangleSkyRegion(
             center=SkyCoord(0 * u.deg, 0 * u.deg, frame=self.frame),
             height=180 * u.deg,
@@ -1533,6 +1541,7 @@ class TemplateSpatialModel(SpatialModel):
 
     def to_region(self, **kwargs):
         """Model outline from template map boundary as a `~regions.RectangleSkyRegion`."""
+        kwargs.pop("x_width", None)
         return RectangleSkyRegion(
             center=self.map.geom.center_skydir,
             width=self.map.geom.width[0][0],
