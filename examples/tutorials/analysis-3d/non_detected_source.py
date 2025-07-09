@@ -10,7 +10,7 @@ Prerequisites
 -------------
 
 It is advisable to understand the general Gammapy modeling and fitting
-framework before proceeding with this notebook, eg doc:`docs/user-guide/modeling`.
+framework before proceeding with this notebook, eg doc:`/docs/user-guide/modeling`.
 
 Context
 -------
@@ -24,8 +24,8 @@ Proposed approach
 
 In this section, we will use an empty observation from the H.E.S.S. DL3 DR1 to understand how
 to quantify non-detections. There are two distinct approaches to consider
-- Test for the presence of emission anywhere in a map and compute an integral flux upper limit at any position (i.e. UL map).
-- Test the presence of emission from a potential source with given position and morphology and compute integral and differential UL
+- test for the presence of emission anywhere in a map and compute an integral flux upper limit at any position (i.e. UL map),
+- test the presence of emission from a potential source with given position and morphology and compute integral and differential ULs.
 
 """
 
@@ -145,7 +145,7 @@ res = fit.run(dataset)
 print(res.models)
 
 ######################################################################
-# It is good to ensure that the fit has converged
+# It is good to ensure that the fit has converged.
 
 print(res.minuit)
 
