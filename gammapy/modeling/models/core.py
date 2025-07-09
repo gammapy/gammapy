@@ -1172,7 +1172,7 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
         x_width : float
             Number of :math:`\sigma for `GaussianSpatialModel`
             or :math:`x_r_0` for `GeneralizedGaussianSpatialModel`
-            If not specified, the defaults for the models will be used
+            If not specified, the defaults for the models will be used.
         kwargs : dict, optional
             Keyword arguments passed to `Spatial_model.to_region`
 
