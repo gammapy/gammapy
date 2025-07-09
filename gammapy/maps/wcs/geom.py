@@ -15,7 +15,7 @@ from astropy.wcs.utils import (
     proj_plane_pixel_scales,
     wcs_to_celestial_frame,
 )
-from regions import RectangleSkyRegion, PointSkyRegion, CircleSkyRegion
+from regions import RectangleSkyRegion, PointSkyRegion, CircleSkyRegion, Regions
 from gammapy.utils.array import round_up_to_even, round_up_to_odd
 from gammapy.utils.compat import COPY_IF_NEEDED
 from ..axes import MapAxes
@@ -1007,6 +1007,9 @@ class WcsGeom(Geom):
 
         if not self.is_regular:
             raise ValueError("Multi-resolution maps not supported yet")
+
+        if not isinstance(regions, list) or isinstance(regions, Regions):
+            regions = [regions]
 
         regions1 = []
         for reg in regions:
