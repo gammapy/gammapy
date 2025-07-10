@@ -70,13 +70,13 @@ from gammapy.modeling.models import (
     SkyModel,
     UniformPrior,
 )
-from gammapy.utils.check import check_tutorials_setup
 
 ######################################################################
 # Check setup
 # -----------
 #
 
+from gammapy.utils.check import check_tutorials_setup
 
 check_tutorials_setup()
 
@@ -422,7 +422,8 @@ plt.show()
 # Implementing a custom prior
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# For now, only ``GaussianPrior`` and ``UniformPrior`` are implemented.
+# For now, only `~gammapy.modeling.models.GaussianPrior` and
+# `~gammapy.modeling.models.UniformPrior` are implemented.
 # To add a use case specific prior one has to create a prior subclass
 # containing:
 #

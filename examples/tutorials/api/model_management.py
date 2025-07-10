@@ -141,7 +141,7 @@ print(datasets)
 # Assigning background models to datasets
 # ---------------------------------------
 #
-# For any IACT dataset (in this case `cta_dataset`) , we have to create
+# For any IACT dataset (in this case ``cta_dataset``) , we have to create
 # a `~gammapy.modeling.models.FoVBackgroundModel`. Note that
 # `~gammapy.modeling.models.FoVBackgroundModel` must be
 # specified to one dataset only
@@ -189,8 +189,8 @@ print(datasets)
 # --------------------------------
 #
 # In this section, we show how to add a model to multiple datasets. For
-# this, we specify a list of `datasets_names` to the model.
-# Alternatively, not specifying any `datasets_names` will add it to all
+# this, we specify a list of ``datasets_names`` to the model.
+# Alternatively, not specifying any ``datasets_names`` will add it to all
 # the datasets.
 #
 # For this example, we use a template model of the galactic diffuse
@@ -223,7 +223,7 @@ print(datasets)
 
 
 ######################################################################
-# The `diffuse-iem` model is correctly present on both. Now, you can
+# The ``diffuse-iem`` model is correctly present on both. Now, you can
 # proceed with the fit. For computational purposes, we skip it in this
 # notebook
 #
@@ -242,7 +242,6 @@ print(datasets)
 # functions. For more details on using Gammapy catalog, see the
 # :doc:`/tutorials/api/catalog` tutorial.
 #
-
 
 
 catalog = SourceCatalog3FHL()
@@ -279,10 +278,10 @@ print(len(models_selected))
 
 
 ######################################################################
-# We now want to assign `models_3fhl` to the Fermi dataset, and
-# `models_selected` to both the CTA and Fermi datasets. For this, we
-# explicitly mention the `datasets_names` to the former, and leave it
-# `None` (default) for the latter.
+# We now want to assign ``models_3fhl`` to the Fermi dataset, and
+# ``models_selected`` to both the CTA and Fermi datasets. For this, we
+# explicitly mention the ``datasets_names`` to the former, and leave it
+# ``None`` (default) for the latter.
 #
 
 for model in models_3fhl:
@@ -331,7 +330,7 @@ print(model)
 ######################################################################
 # `~gammapy.modeling.models.Models.select` can be used to select all models satisfying a list of
 # conditions. To select all models applied on the ``cta_dataset`` with the
-# characters `1748` in the name
+# characters ``1748`` in the name
 #
 
 models = models_3fhl.select(datasets_names=cta_dataset.name, name_substring="1748")
@@ -340,7 +339,7 @@ print(models)
 
 ######################################################################
 # Note that `~gammapy.modeling.models.Models.select` combines the different conditions with an
-# `AND` operator. If one needs to combine conditions with a `OR`
+# ``AND`` operator. If one needs to combine conditions with a ``OR``
 # operator, the `~gammapy.modeling.models.Models.selection_mask` method can generate a boolean
 # array that can be used for selection. For example:
 #
@@ -408,7 +407,7 @@ plt.show()
 # ----------------------------------------
 #
 # For a given model, any parameter can be (un)frozen individually.
-# Additionally, `model.freeze` and `model.unfreeze` can be used to
+# Additionally, ``model.freeze`` and ``model.unfreeze`` can be used to
 # freeze and unfreeze all parameters in one go.
 #
 
@@ -465,8 +464,8 @@ print(models_selected.parameters.free_parameters.names)
 
 ######################################################################
 # There are more functionalities which you can explore. In general, using
-# `help()` on any function is a quick and useful way to access the
-# documentation. For ex, `Models.unfreeze_all` will unfreeze all
+# ``help()`` on any function is a quick and useful way to access the
+# documentation. For ex, ``Models.unfreeze_all`` will unfreeze all
 # parameters, even those which are fixed by default. To see its usage, you
 # can simply type
 #
