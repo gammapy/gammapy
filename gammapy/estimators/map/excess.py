@@ -142,13 +142,13 @@ class ExcessMapEstimator(Estimator):
     correlation_radius : `~astropy.coordinates.Angle`, optional
         Correlation radius to use. Default is "0.1 deg".
     n_sigma : float, optional
-        Confidence level for the asymmetric errors expressed in number of sigma. Should be positive.
+        Confidence level for the asymmetric errors expressed in number of sigma. Only positive value can be used.
         Default is 1.
     n_sigma_ul : float, optional
-        Confidence level for the upper limits expressed in number of sigma. Should be positive.
+        Confidence level for the upper limits expressed in number of sigma. Only positive value can be used.
         Default is 2.
     n_sigma_sensitivity : float, optional
-        Confidence level for the sensitivity expressed in number of sigma. Should be positive.
+        Confidence level for the sensitivity expressed in number of sigma. Only positive value can be used.
         Default is 5.
     gamma_min_sensitivity : float, optional
         Minimum number of gamma-rays. Default is 10.
@@ -178,12 +178,12 @@ class ExcessMapEstimator(Estimator):
         but rather the closest values to the energy axis edges of the parent dataset.
         Default is None: apply the estimator in each energy bin of the parent dataset.
         For further explanation see :ref:`estimators`.
-    correlate_off : bool
+    correlate_off : bool, optional
         Correlate OFF events. Default is True.
-    spectral_model : `~gammapy.modeling.models.SpectralModel`
+    spectral_model : `~gammapy.modeling.models.SpectralModel`, optional
         Spectral model used for the computation of the flux map.
         If None, a `~gammapy.modeling.models.PowerLawSpectralModel` of index 2 is assumed (default).
-    sum_over_energy_groups : bool
+    sum_over_energy_groups : bool, optional
         Only used if ``energy_edges`` is None.
         If False, apply the estimator in each energy bin of the parent dataset.
         If True, apply the estimator in only one bin defined by the energy edges of the parent dataset.
