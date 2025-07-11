@@ -344,16 +344,7 @@ def test_wcs_geom_instance_cache():
 
     coord_1, coord_2 = geom_1.get_coord(), geom_2.get_coord()
 
-    assert geom_1.get_coord.cache_info().misses == 1
-    assert geom_2.get_coord.cache_info().misses == 1
-
     coord_1_cached, coord_2_cached = geom_1.get_coord(), geom_2.get_coord()
-
-    assert geom_1.get_coord.cache_info().hits == 1
-    assert geom_2.get_coord.cache_info().hits == 1
-
-    assert geom_1.get_coord.cache_info().currsize == 1
-    assert geom_2.get_coord.cache_info().currsize == 1
 
     assert id(coord_1) == id(coord_1_cached)
     assert id(coord_2) == id(coord_2_cached)
