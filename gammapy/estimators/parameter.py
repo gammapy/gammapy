@@ -27,11 +27,14 @@ class ParameterEstimator(Estimator):
     Parameters
     ----------
     n_sigma : float, optional
-        Sigma to use for asymmetric error computation. Should be positive. Default is 1.
+        Sigma to use for asymmetric error computation. Only positive value can be used.
+        Default is 1.
     n_sigma_ul : float, optional
-        Sigma to use for upper limit computation. Should be positive. Default is 2.
+        Sigma to use for upper limit computation. Only positive value can be used.
+        Default is 2.
     n_sigma_sensitivity : float, optional
-        Sigma to use for sensitivity computation. Should be positive. Default is 5.
+        Sigma to use for sensitivity computation. Only positive value can be used.
+        Default is 5.
     null_value : float, optional
         Which null value to use for the parameter. Default is 1e-150.
     selection_optional : list of str, optional

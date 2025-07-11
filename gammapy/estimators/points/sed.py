@@ -38,11 +38,14 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
     source : str or int
         For which source in the model to compute the flux points.
     n_sigma : float, optional
-        Number of sigma to use for asymmetric error computation. Should be positive. Default is 1.
+        Number of sigma to use for asymmetric error computation. Only positive value can be used.
+        Default is 1.
     n_sigma_ul : float, optional
-        Number of sigma to use for upper limit computation. Should be positive. Default is 2.
+        Number of sigma to use for upper limit computation. Only positive value can be used.
+        Default is 2.
     n_sigma_sensitivity : float, optional
-        Sigma to use for sensitivity computation. Should be positive. Default is 5.
+        Sigma to use for sensitivity computation. Only positive value can be used.
+        Default is 5.
     selection_optional : list of str, optional
         Which additional quantities to estimate. Available options are:
 
