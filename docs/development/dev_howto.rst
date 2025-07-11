@@ -959,3 +959,9 @@ script can be used as follows::
 
 If the path of the output file is not provided, the script will be written in the same folder as the notebook and with
 the same name.
+
+Skip GitHub Actions on local fork
++++++++++++++++++++++++++++++++++
+If not explicitly needed, it can be convenient to skip the GitHub Actions for pushes onto local forks and only perform them on the upstream, once a pull request is opened.
+This way computation power is saved and automatic commits by the Actions are avoided in the forks commit-history. An easy way to achieve this, is to deactivate the
+GitHub Actions completely for the fork, following the GitHub documentation: `here. <https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository#allowing-select-actions-and-reusable-workflows-to-run>`__.
