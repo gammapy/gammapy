@@ -16,6 +16,7 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
     FoVBackgroundModel,
+    DiskSpatialModel,
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data
 
@@ -293,7 +294,6 @@ def test_select_models():
 
 
 def test_to_template():
-
     energy_bounds = [1, 100] * u.TeV
     energy_axis = MapAxis.from_energy_bounds(
         energy_bounds[0], energy_bounds[1], nbin=2, per_decade=True, name="energy_true"
@@ -360,3 +360,27 @@ def test_two_fov_bkg_models_single_dataset():
         match="Only one FoVBackgroundModel per Dataset is permitted - already got one for ds1",
     ):
         Models([fov1, fov2])
+
+
+def test_to_regions():
+    spatial1 = PointSpatialModel(lon_0=6.0 * u.deg, lat_0=0.0 * u.deg, frame="galactic")
+    spatial2 = GaussianSpatialModel(
+        lon_0=0.0 * u.deg, lat_0=0.0 * u.deg, sigma=0.4 * u.deg, frame="galactic"
+    )
+    spatial3 = DiskSpatialModel(
+        lon_0=8.5 * u.deg, lat_0=0.0 * u.deg, r_0=0.2 * u.deg, frame="galactic"
+    )
+    spectral = PowerLawSpectralModel()
+    sky1 = SkyModel(spectral, spatial1, name="m1")
+    sky2 = SkyModel(spectral, spatial2, name="m2")
+    sky3 = SkyModel(spectral, spatial3, name="m3")
+    models = Models([sky1, sky2, sky3])
+
+    regs1 = models.to_regions()
+    assert len(regs1) == 3
+    assert_allclose(regs1[1].width, 1.2 * u.deg, rtol=1e-5)
+    assert_allclose(regs1[2].width, 0.4 * u.deg, rtol=1e-5)
+
+    regs2 = models.to_regions(x_width=3)
+    assert_allclose(regs2[1].width, 2.4 * u.deg, rtol=1e-5)
+    assert_allclose(regs1[2].width, 0.4 * u.deg, rtol=1e-5)
