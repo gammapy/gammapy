@@ -192,7 +192,7 @@ config.datasets.background.exclusion = (
 # Setting modeling and fitting parameters
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# ``Analysis`` can perform a few modeling and fitting tasks besides data
+# `~gammapy.analysis.Analysis` can perform a few modeling and fitting tasks besides data
 # reduction. Parameters have then to be passed to the configuration
 # object.
 #
@@ -209,7 +209,7 @@ config.excess_map.correlation_radius = 0.1 * u.deg
 
 ######################################################################
 # We’re all set. But before we go on let’s see how to save or import
-# ``AnalysisConfig`` objects though YAML files.
+# `~gammapy.analysis.AnalysisConfig` objects though YAML files.
 #
 
 
@@ -217,7 +217,7 @@ config.excess_map.correlation_radius = 0.1 * u.deg
 # Using YAML configuration files
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# One can export/import the `~gammapy.modeling.AnalysisConfig` to/from a YAML file.
+# One can export/import the `~gammapy.analysis.AnalysisConfig` to/from a YAML file.
 #
 
 config.write("config.yaml", overwrite=True)
@@ -249,7 +249,7 @@ analysis.get_observations()
 
 
 ######################################################################
-# The observations are now available on the `~gammapy.modeling.Analysis` object. The
+# The observations are now available on the `~gammapy.analysis.Analysis` object. The
 # selection corresponds to the following ids:
 #
 
@@ -258,7 +258,7 @@ print(analysis.observations.ids)
 
 ######################################################################
 # To see how to explore observations, please refer to the following
-# notebook: :doc:`CTA with Gammapy </tutorials/data/cta>` or :doc:`H.E.S.S. with
+# notebook: :doc:`CTAO with Gammapy </tutorials/data/cta>` or :doc:`H.E.S.S. with
 # Gammapy </tutorials/data/hess>`
 #
 
@@ -269,7 +269,7 @@ print(analysis.observations.ids)
 #
 # Now we proceed to the data reduction. In the config file we have chosen
 # a WCS map geometry, energy axis and decided to stack the maps. We can
-# run the reduction using `~gammapy.modeling.Analysis.get_datasets()`:
+# run the reduction using `~gammapy.analysis.Analysis.get_datasets()`:
 #
 
 # %%time
@@ -443,8 +443,8 @@ plt.show()
 # -----------
 #
 # You can look at the same analysis without the high level interface in
-# :doc:`/tutorials/starting/analysis_2`
+# :doc:`/tutorials/starting/analysis_2`.
 #
 # You can see how to perform a 1D spectral analysis of the same data in
-# :doc:`/tutorials/analysis-1d/spectral_analysis`
+# :doc:`/tutorials/analysis-1d/spectral_analysis`.
 #
