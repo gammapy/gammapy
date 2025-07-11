@@ -27,12 +27,15 @@ class FluxEstimator(ParameterEstimator):
     ----------
     source : str or int
         For which source in the model to compute the flux.
-    n_sigma : int, optional
-        Sigma to use for asymmetric error computation. Default is 1.
-    n_sigma_ul : int, optional
-        Sigma to use for upper limit computation. Default is 2.
-    n_sigma_sensitivity : int, optional
-        Sigma to use for sensitivity computation. Default is 5.
+    n_sigma : float, optional
+        Sigma to use for asymmetric error computation. Only positive value can be used.
+        Default is 1.
+    n_sigma_ul : float, optional
+        Sigma to use for upper limit computation. Only positive value can be used.
+        Default is 2.
+    n_sigma_sensitivity : float, optional
+        Sigma to use for sensitivity computation. Only positive value can be used.
+        Default is 5.
     selection_optional : list of str, optional
         Which additional quantities to estimate. Available options are:
 
@@ -44,7 +47,7 @@ class FluxEstimator(ParameterEstimator):
         Default is None so the optional steps are not executed.
     fit : `Fit`, optional
         Fit instance specifying the backend and fit options.
-        Fit instance specifying the backend and fit options. If None, the `~gammapy.modeling.Fit` instance is created internally. Default is None.
+        If None, the `~gammapy.modeling.Fit` instance is created internally. Default is None.
     reoptimize : bool, optional
         If True, the free parameters of the other models are fitted in each bin independently,
         together with the norm of the source of interest
