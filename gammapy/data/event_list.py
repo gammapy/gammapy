@@ -7,7 +7,9 @@ import warnings
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import AltAz, Angle, SkyCoord, angular_separation
+from astropy.table import Table
 from astropy.table import vstack as vstack_tables
+from astropy.time import Time
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from gammapy.maps import MapAxis, MapCoord, RegionGeom, WcsNDMap
@@ -28,30 +30,13 @@ class EventList:
 
     Event list data is stored as ``table`` (`~astropy.table.Table`) data member.
 
-    The most important reconstructed event parameters
-    are available as the following columns:
+    The required columns are:
 
-    - ``TIME`` - Mission elapsed time (sec)
-    - ``RA``, ``DEC`` - ICRS system position (deg)
-    - ``ENERGY`` - Energy (usually MeV for Fermi and TeV for IACTs)
+    - ``RA`` - ICRS system reconstructed right ascension
+    - ``DEC`` - ICRS system reconstructed declination
+    - ``TIME`` - event time as an `~astropy.time.Time` object
+    - ``energy`` - Reconstructed energy (usually MeV for Fermi and TeV for IACTs)
 
-    Note that ``TIME`` is usually sorted, but sometimes it is not.
-    E.g. when simulating data, or processing it in certain ways.
-    So generally any analysis code should assume ``TIME`` is not sorted.
-
-    Other optional (columns) that are sometimes useful for high level analysis:
-
-    - ``GLON``, ``GLAT`` - Galactic coordinates (deg)
-    - ``DETX``, ``DETY`` - Field of view coordinates (deg)
-
-    Note that when reading data for analysis you shouldn't use those
-    values directly, but access them via properties which create objects
-    of the appropriate class:
-
-    - `time` for ``TIME``
-    - `radec` for ``RA``, ``DEC``
-    - `energy` for ``ENERGY``
-    - `galactic` for ``GLON``, ``GLAT``
 
     Parameters
     ----------
@@ -87,15 +72,99 @@ class EventList:
 
     """
 
+    REQUIRED_COLUMNS = {
+        "RA": u.Unit("deg"),
+        "DEC": u.Unit("deg"),
+        "ENERGY": u.Unit("TeV"),
+        "TIME": Time,
+    }
+
     def __init__(self, table, meta=None):
-        self.table = table
+        if table is None:
+            table = self._create_empty_list()
+        self.table = self._validate_table(table)
         self.meta = meta or EventListMetaData()
+
+    @staticmethod
+    def _create_empty_list():
+        """Create empty event list table."""
+        table = Table()
+        for name, unit in EventList.REQUIRED_COLUMNS.items():
+            if name == "TIME":
+                table[name] = Time((), format="mjd")
+            else:
+                table[name] = () * unit
+        return table
+
+    @staticmethod
+    def _validate_table(table):
+        """Checks that the input table follows the gammapy internal model."""
+        if not isinstance(table, Table):
+            raise TypeError(
+                f"EventList expects astropy Table, got {type(table)} instead."
+            )
+
+        missing_columns = set(EventList.REQUIRED_COLUMNS.keys()).difference(
+            table.colnames
+        )
+        if len(missing_columns) > 0:
+            raise KeyError(
+                f"EventList table invalid: columns {missing_columns} are missing."
+            )
+
+        for name, check in EventList.REQUIRED_COLUMNS.items():
+            if not isinstance(check, u.Unit):
+                if not isinstance(table[name], check):
+                    raise TypeError(f"Column {name} is not a {check} object.")
+            else:
+                if not check.is_equivalent(table[name].unit):
+                    raise u.UnitConversionError(
+                        f"Column {name} is not in {check} unit."
+                    )
+
+        return table
 
     def _repr_html_(self):
         try:
             return self.to_html()
         except AttributeError:
             return f"<pre>{html.escape(str(self))}</pre>"
+
+    @staticmethod
+    def _from_gadf_table(table):
+        """Temporary gadf table converter."""
+        if not isinstance(table, Table):
+            raise TypeError(
+                f"_form_fgadf_table expects astropy Table, got {type(table)} instead."
+            )
+
+        met = u.Quantity(table["TIME"].astype("float64"), "second")
+        time = time_ref_from_dict(table.meta) + met
+
+        energy = table["ENERGY"].quantity
+
+        ra = table["RA"].quantity
+        dec = table["DEC"].quantity
+
+        removed_colnames = ["RA", "DEC", "GLON", "GLAT", "TIME", "ENERGY"]
+
+        new_table = Table(
+            {"TIME": time, "ENERGY": energy, "RA": ra, "DEC": dec}, meta=table.meta
+        )
+        for name in table.colnames:
+            if name not in removed_colnames:
+                new_table.add_column(table[name])
+
+        return new_table
+
+    def _to_gadf_table(self):
+        """Temporary gadf table converter."""
+        gadf_table = self.table.copy()
+        gadf_table.remove_column("TIME")
+
+        reference_time = time_ref_from_dict(gadf_table.meta)
+        gadf_table["TIME"] = (self.time - reference_time).to("s")
+        return gadf_table
 
     @classmethod
     def read(cls, filename, hdu="EVENTS", checksum=False, **kwargs):
@@ -210,8 +279,7 @@ class EventList:
         With 32-bit floats times will be incorrect by a few seconds
         when e.g. adding them to the reference time.
         """
-        met = u.Quantity(self.table["TIME"].astype("float64"), "second")
-        return self.time_ref + met
+        return self.table["TIME"]
 
     @property
     def observation_time_start(self):
@@ -226,8 +294,7 @@ class EventList:
     @property
     def radec(self):
         """Event RA / DEC sky coordinates as a `~astropy.coordinates.SkyCoord` object."""
-        lon, lat = self.table["RA"], self.table["DEC"]
-        return SkyCoord(lon, lat, unit="deg", frame="icrs")
+        return SkyCoord(self.table["RA"], self.table["DEC"], unit="deg", frame="icrs")
 
     @property
     def galactic(self):
@@ -462,12 +529,11 @@ class EventList:
         ax = plt.gca() if ax is None else ax
 
         # Note the events are not necessarily in time order
-        time = self.table["TIME"]
-        time = time - np.min(time)
+        delta_time = self.time - np.min(self.time)
 
         ax.set_xlabel(f"Time [{u.s.to_string(UNIT_STRING_FORMAT)}]")
         ax.set_ylabel("Counts")
-        y, x_edges = np.histogram(time, bins=20)
+        y, x_edges = np.histogram(delta_time.to("s"), bins=20)
 
         xerr = np.diff(x_edges) / 2
         x = x_edges[:-1] + xerr
