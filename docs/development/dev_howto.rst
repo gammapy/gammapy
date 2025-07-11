@@ -964,4 +964,4 @@ Skip GitHub Actions on local fork
 +++++++++++++++++++++++++++++++++
 If not explicitly needed, it can be convenient to skip the GitHub Actions for pushes onto local forks and only perform them on the upstream, once a pull request is opened.
 This way computation power is saved and automatic commits by the Actions are avoided in the forks commit-history. An easy way to achieve this, is to deactivate the
-GitHub Actions completely for the fork, following the GitHub documentation: `here. <https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository#allowing-select-actions-and-reusable-workflows-to-run>`__.
+GitHub Actions completely for the fork, following the GitHub documentation, `see here. <https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository#managing-github-actions-permissions-for-your-repository>`
