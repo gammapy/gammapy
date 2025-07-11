@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import copy
-from functools import lru_cache
+from gammapy.utils.cache import cachemethod
 import numpy as np
 import astropy.units as u
 from astropy.convolution import Tophat2DKernel
@@ -112,17 +112,6 @@ class WcsGeom(Geom):
             crpix = tuple(1.0 + (np.array(self._npix) - 1.0) / 2.0)
 
         self._crpix = crpix
-
-        # define cached methods
-        self.get_coord = lru_cache()(self.get_coord)
-        self.get_pix = lru_cache()(self.get_pix)
-
-    def __setstate__(self, state):
-        for key, value in state.items():
-            if key in ["get_coord", "get_pix"]:
-                state[key] = lru_cache()(value)
-
-        self.__dict__ = state
 
     @property
     def data_shape(self):
@@ -556,6 +545,7 @@ class WcsGeom(Geom):
         header["WCSSHAPE"] = f"({shape})"
         return header
 
+    @cachemethod
     def get_idx(self, idx=None, flat=False):
         pix = self.get_pix(idx=idx, mode="center")
         if flat:
@@ -603,6 +593,7 @@ class WcsGeom(Geom):
             _[~m] = INVALID_INDEX.float
         return pix
 
+    @cachemethod
     def get_coord(
         self, idx=None, mode="center", frame=None, sparse=False, axis_name=None
     ):
