@@ -5,16 +5,16 @@
 import functools as ft
 import inspect
 import weakref
-from collections.abc import Callable
-from typing import Concatenate, ParamSpec, TypeVar
+from typing import ParamSpec, TypeVar
 
 _Self = TypeVar("_Self")
 _Params = ParamSpec("_Params")
 _Return = TypeVar("_Return")
 
 
-# Like `weakref.WeakKeyDictionary`, but uses identity-based hashing and equality.
 class _WeakIdDict:
+    """Like `weakref.WeakKeyDictionary`, but uses identity-based hashing and equality."""
+
     __slots__ = ("_dict",)
 
     def __init__(self):
@@ -30,8 +30,9 @@ class _WeakIdDict:
         self._dict[id_key] = (value, ref)
 
 
-# Used to compute an object's hash just once.
 class _CacheKey:
+    "Cache key used to compute an object's hash just once."
+
     __slots__ = ("hashvalue", "value")
 
     def __init__(self, value):
@@ -46,15 +47,14 @@ class _CacheKey:
         return self.value == other.value
 
 
-def cachemethod(
-    fn: Callable[Concatenate[_Self, _Params], _Return],
-) -> Callable[Concatenate[_Self, _Params], _Return]:
+def cachemethod(fn):
     """Like `functools.cache`, except that it only holds a weak reference to its first argument.
 
     Note that `functools.cached_property` (which also uses a weak reference) can often be used for similar purposes.
-    The differences are that (a) `cached_property` will be pickled whilst `cachemethod` will not, and (b) `cachemethod`
-    can be used on functions with additional arguments, and (c) `cachemethod` requires brackets to call, helping to
-    visually emphasise that computationl work may be being performed.
+    The differences are that:
+        (a) `cached_property` will be pickled while `cachemethod` will not,
+        (b) `cachemethod`can be used on functions with additional arguments,
+        (c) `cachemethod` requires brackets to call, helping to visually emphasise that computationl work may be being performed.
     """
     cache1 = _WeakIdDict()
     sig = inspect.signature(fn)
@@ -74,9 +74,7 @@ def cachemethod(
     sig = sig.replace(parameters=parameters)
 
     @ft.wraps(fn)
-    def fn_wrapped(
-        self: _Self, *args: _Params.args, **kwargs: _Params.kwargs
-    ) -> _Return:
+    def fn_wrapped(self, *args, **kwargs):
         # Standardise arguments to a single form to encourage cache hits.
         # Not binding `self` (and instead doing the signature-adjustment above) in order to avoid keeping a strong
         # reference to `self` via `argkey`.
