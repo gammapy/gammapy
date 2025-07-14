@@ -133,7 +133,10 @@ class CacheEquivalentMixin:
 
         # Create a temporary instance to compare
         temp = super().__new__(cls)
-        temp.__init__(*args, **kwargs)
+        try:
+            temp.__init__(*args, **kwargs)
+        except TypeError:
+            return temp  # ignore cache for unpickle
 
         # Search for an equivalent instance
         for ref in cls._instances:
