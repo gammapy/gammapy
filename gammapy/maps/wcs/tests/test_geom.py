@@ -678,3 +678,19 @@ def test_wcs_geom_with_timeaxis():
         [[4.000e-01, 2.000e-01, 0.000e00, 3.598e02, 3.596e02]],
         rtol=1e-5,
     )
+
+
+def test_instance_cache():
+    kwargs = dict(skydir=(83.63, 22.01), width=5, binsz=0.02)
+
+    geom1 = WcsGeom.create(**kwargs)
+    geom2 = WcsGeom.create(**kwargs)
+    geom3 = WcsGeom.create(width=5, binsz=0.02, skydir=(83.63, 22.01))  # reordered
+
+    assert geom1 is geom2
+    assert geom1 is geom3
+    assert len([ref for ref in WcsGeom._instances if ref() is not None]) == 1
+
+    geom4 = WcsGeom.create(width=5, binsz=0.05, skydir=(83.63, 22.01))  # different
+    assert geom4 is not geom1
+    assert len([ref for ref in WcsGeom._instances if ref() is not None]) == 2
