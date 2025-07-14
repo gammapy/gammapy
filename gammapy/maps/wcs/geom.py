@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import copy
+from gammapy.utils.cache import CacheEquivalentMixin
 from functools import lru_cache
 import numpy as np
 import astropy.units as u
@@ -60,7 +61,7 @@ def get_resampled_wcs(wcs, factor, downsampled):
     return wcs
 
 
-class WcsGeom(Geom):
+class WcsGeom(Geom, CacheEquivalentMixin):
     """Geometry class for WCS maps.
 
     This class encapsulates both the WCS transformation object and
