@@ -407,6 +407,7 @@ class ObservationTableChecker(Checker):
 class ObservationTablePrototype(Table):
     """Prototype for modified ObservationTable class
        Used as reference: gammapy, gammapy/data/obs_table.py, https://docs.python.org/3/reference/, https://docs.astropy.org/en/latest/table/construct_table.html#construct-table, https://numpy.org/doc/stable/reference/generated/numpy.dtype.html
+                          https://docs.astropy.org/en/latest/table/index.html
        Looked into https://github.com/gammasky/cta-dc/blob/master/data/cta_1dc_make_data_index_files.py, maybe used l. 233. Copyright (c) 2016 gammasky
        See: https://github.com/gammapy/gammapy/issues/4238
 
@@ -596,11 +597,10 @@ class ObservationTablePrototype(Table):
                 print(f"Did not found {el} required for GADF v0.3.")
 
         """3. Fill internal table accordingly, FROM HERE ON separation from file on disk!"""
-        for el in (
-            self.names_min_req
-        ):  # for now internal data model: minimum (could also be complete gadf)
-            for val in table_disk[el]:
-                table_internal[el] = val  # does not work yet
+        for i in range(len(table_disk)):  # create rows (slow acc. to documentation)
+            table_internal.add_row()
+        for el in self.names_min_req:  # fill dolumns. for now internal data model: minimum (could also be complete gadf)
+            table_internal[el] = table_disk[el]
 
         """4. return table AS IS INTERNAL """
         return table_internal  # old: for now return table AS IS on disk, as before
