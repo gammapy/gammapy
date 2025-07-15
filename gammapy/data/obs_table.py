@@ -579,7 +579,6 @@ class ObservationTablePrototype(Table):
         print(table_internal)
 
         """1. (IO) mostly taken from ObservationTable"""
-        """Is not what is intended in the end!"""
         """Read an observation table from file.
 
         Parameters
@@ -596,8 +595,15 @@ class ObservationTablePrototype(Table):
             if el not in table_disk.columns:
                 print(f"Did not found {el} required for GADF v0.3.")
 
-        """3. return table AS IS on disk, as before """
-        return table_disk  # for now return table AS IS on disk, as before
+        """3. Fill internal table accordingly, FROM HERE ON separation from file on disk!"""
+        for el in (
+            self.names_min_req
+        ):  # for now internal data model: minimum (could also be complete gadf)
+            for val in table_disk[el]:
+                table_internal[el] = val  # does not work yet
+
+        """4. return table AS IS INTERNAL """
+        return table_internal  # old: for now return table AS IS on disk, as before
 
     def read2(self, filename, **kwargs):
         # References: based on gammapy, FITS, astropy, hess-dl3-dr1 obs_index.fits.gz
