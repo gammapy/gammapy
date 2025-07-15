@@ -404,7 +404,8 @@ class ObservationTableChecker(Checker):
 
 class ObservationTablePrototype(Table):
     """Prototype for modified ObservationTable class
-       Used as reference: gammapy/data/obs_table.py, https://docs.python.org/3/reference/
+       Used as reference: gammapy, gammapy/data/obs_table.py, https://docs.python.org/3/reference/, https://docs.astropy.org/en/latest/table/construct_table.html#construct-table, https://numpy.org/doc/stable/reference/generated/numpy.dtype.html
+       Looked into https://github.com/gammasky/cta-dc/blob/master/data/cta_1dc_make_data_index_files.py, maybe used l. 233. Copyright (c) 2016 gammasky
        See: https://github.com/gammapy/gammapy/issues/4238
 
     Data format specification: for now based on GADF-documentation, as next step analogue to metadata.
@@ -551,7 +552,16 @@ class ObservationTablePrototype(Table):
     def read(self, filename, **kwargs):
         """Modified reader for ObservationTablePrototype"""
 
-        """First part (IO) taken from ObservationTable"""
+        """ 0. Internal ObservationTablePrototype table container"""
+        # for now, GADF complete table, later it should be meta-data oriented as sugg. in #4238 by @registerrier.
+        table_internal = self(
+            names=self.gadf_req["name"] + self.gadf_opt["name"],
+            units=self.gadf_req["unit"] + self.gadf_opt["unit"],
+            dtype=self.gadf_req["type"] + self.gadf_opt["type"],
+        )
+        print(table_internal)
+
+        """1. (IO) mostly taken from ObservationTable"""
         """Is not what is intended in the end!"""
         """Read an observation table from file.
 
@@ -564,10 +574,10 @@ class ObservationTablePrototype(Table):
         """
         table_disk = super().read(make_path(filename), **kwargs)
 
-        """Second part (CHECKS) : Check if table from disk fulfills GADF requirements"""
+        """2.  (CHECKS) : Check if table from disk fulfills GADF requirements"""
         for el in self.gadf_req["name"]:
             if el not in table_disk.columns:
                 print(f"Did not found {el} required for GADF v0.3.")
 
-        """THIRD PART: return table AS IS on disk, as before """
+        """3. return table AS IS on disk, as before """
         return table_disk  # for now return table AS IS on disk, as before
