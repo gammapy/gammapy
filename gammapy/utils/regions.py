@@ -426,20 +426,23 @@ def region_circle_to_ellipse(region):
     return region_new
 
 
-def extract_bright_star_regions(geom, max_star_mag=6, star_rad=0.3 * u.deg):
+def extract_bright_star_regions(
+    geom, max_star_mag=6, star_rad=0.3 * u.deg, star_table=None
+):
     """
-    Find bright star exclusion regions from the Hipparcos Catalog (Perryman et al., 1997)
-    contained in a given `~gammapy.maps.Geom` and returns a 2D exclusion mask to remove these sources from bacgkround estimation.
+    Find bright star exclusion regions from a catalog `~astropy.table.Table`
+    contained in a given `~gammapy.maps.Geom` and returns a list of `~regions.CircleSkyRegion`.
 
     Parameters
     ----------
     geom : `~gammapy.maps.WcsGeom`
         Map geometry for the exclusion mask.
     max_star_mag : float, optional
-        The maximum stellar magnitude (Johnson-Cousins B-band) to exclude. Maximum value is 8th magnitude.
-        Default is 6.
+        The maximum stellar magnitude (Johnson-Cousins B-band) to exclude. Default is 6th magnitude.
     star_rad : `~astropy.units.Quantity`, optional
         Radius to exclude around each star. Default is 0.3 degrees.
+    star_table : `~astropy.table.Table`, optional
+        Table containing the list of stars to search for exclusion regions. If ``None``, the Hipparcos Catalog (Perryman et al., 1997) contained in ``$GAMMAPY_DATA//veritas/crab-point-like-ED``. The table's column names should match those in ``$GAMMAPY_DATA//veritas/crab-point-like-ED``.
 
     Returns
     -------
@@ -447,11 +450,16 @@ def extract_bright_star_regions(geom, max_star_mag=6, star_rad=0.3 * u.deg):
         Star exclusion regions.
     """
     regions = []
-    star_cat = Table.read(
-        os.environ.get("GAMMAPY_DATA")
-        + "/veritas/crab-point-like-ED/Hipparcos_MAG8_1997.dat",
-        format="ascii.commented_header",
-    )
+
+    if star_table is None:
+        star_cat = Table.read(
+            os.environ.get("GAMMAPY_DATA")
+            + "/veritas/crab-point-like-ED/Hipparcos_MAG8_1997.dat",
+            format="ascii.commented_header",
+        )
+    else:
+        star_cat = Table.read(star_table)
+
     star_mask = geom.contains(
         SkyCoord(star_cat["_RAJ2000"] * u.deg, star_cat["_DEJ2000"] * u.deg)
     )
