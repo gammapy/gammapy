@@ -159,7 +159,7 @@ class FluxEstimator(ParameterEstimator):
         energy_axis = MapAxis.from_energy_edges([energy_min.min(), energy_max.max()])
         if model.evaluate(energy_max.max(), norm=self.norm.quantity).value < 0.0:
             log.warning(
-                "Source model predicts negative counts. Results of estimator should be interpreted with caution"
+                "Reference source model predicts negative counts. Results of estimator should be interpreted with caution"
             )
 
         with np.errstate(invalid="ignore", divide="ignore"):
