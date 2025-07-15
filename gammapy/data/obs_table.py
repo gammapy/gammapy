@@ -446,7 +446,7 @@ class ObservationTablePrototype(Table):
         "TIME-OBS",
         "DATE-END",
         "TIME-END",
-        "N-TELS",
+        "N_TELS",
         "TELLIST",
         "QUALITY",
         "OBJECT",
@@ -539,9 +539,9 @@ class ObservationTablePrototype(Table):
         "Hz",
         None,
         None,
-        "C",
+        "deg C",
         "hPa",
-        "a.U.",
+        "a.u.",
         None,
     ]
 
