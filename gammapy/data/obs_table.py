@@ -554,25 +554,11 @@ class ObservationTablePrototype(Table):
     # see discussion in #4238
 
     # pot. minimum, in disc. with @maxnoe, @registerrier, @bkhelifi
-    OBS_MODE = "TEST"
-    if OBS_MODE == "A":
-        names_min_req = [
-            "OBS_ID",
-            "OBS_MODE",
-            "RA_PNT",
-            "DEC_PNT",
-            "TSTART",
-            "TSTOP",
-        ]
-    elif OBS_MODE == "B":
-        names_min_req = [
-            "OBS_ID",
-            "OBS_MODE",
-            "ALT_PNT",
-            "AZ_PNT",
-            "TSTART",
-            "TSTOP",
-        ]
+    names_min_req = [
+        "OBS_ID",
+        "TSTART",
+        "TSTOP",
+    ]
 
     # as sugg. by @registerrier in #4238 oriented at metadata:
     # construct internal table using METADATA_FITS_KEYS?
@@ -614,6 +600,32 @@ class ObservationTablePrototype(Table):
         return table_disk  # for now return table AS IS on disk, as before
 
     def read2(self, filename, **kwargs):
-        # References: based on gammapy, FITS, astropy
+        # References: based on gammapy, FITS, astropy, hess-dl3-dr1 obs_index.fits.gz
         hdul = fits.open(filename)
-        print(hdul[1].header)
+        obs_index = hdul[1].header
+
+        number_fields = obs_index["TFIELDS"]
+        keys = ["TTYPE", "TFORM", "TUNIT"]
+        print(keys)
+        names = []
+        for number in range(number_fields):
+            for key in ["TTYPE"]:
+                # names.append(obs_index[key + str(number + 1)])
+                names.append(0)
+        print(names)
+
+        # If OBS_MODE given, adapt required columns to proceed
+        # needed at all, if maybe optional in anay case?
+        str = "OBS_MODE"
+        if str in obs_index:
+            obs_mode = obs_index[str]  # wont work, bec. str in TTYPE
+            # like in data_store.py:
+            if obs_mode == "DRIFT":
+                self.names_min_req.append("ALT_PNT")
+                self.names_min_req.append("AZ_PNT")
+            else:
+                self.names_min_req.append("RA_PNT")
+                self.names_min_req.append("DEC_PNT")
+
+        for el in self.names_min_req:
+            print(el, obs_index[el])
