@@ -9,6 +9,7 @@ from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
 from gammapy.utils.time import time_ref_from_dict
 from gammapy.utils.metadata import METADATA_FITS_KEYS
+from astropy.io import fits
 
 __all__ = ["ObservationTable", "ObservationTablePrototype"]
 
@@ -611,3 +612,8 @@ class ObservationTablePrototype(Table):
 
         """3. return table AS IS on disk, as before """
         return table_disk  # for now return table AS IS on disk, as before
+
+    def read2(self, filename, **kwargs):
+        # References: based on gammapy, FITS, astropy
+        hdul = fits.open(filename)
+        print(hdul[1].header)
