@@ -8,6 +8,7 @@ from gammapy.utils.regions import SphericalCircleSkyRegion
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
 from gammapy.utils.time import time_ref_from_dict
+from gammapy.utils.metadata import METADATA_FITS_KEYS
 
 __all__ = ["ObservationTable", "ObservationTablePrototype"]
 
@@ -574,8 +575,8 @@ class ObservationTablePrototype(Table):
 
     # as sugg. by @registerrier in #4238 oriented at metadata:
     # construct internal table using METADATA_FITS_KEYS?
-    # print(METADATA_FITS_KEYS["obs_info"].values())
-    # print(METADATA_FITS_KEYS["pointing"].values())
+    print(METADATA_FITS_KEYS["obs_info"].values())
+    print(METADATA_FITS_KEYS["pointing"].values())
 
     @classmethod
     def read(self, filename, **kwargs):
