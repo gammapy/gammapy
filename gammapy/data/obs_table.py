@@ -548,6 +548,35 @@ class ObservationTablePrototype(Table):
 
     gadf_opt = dict(name=names_gadf_opt, type=types_gadf_opt, unit=units_gadf_opt)
 
+    """Prototype of Observation Index Table specification"""
+    # see discussion in #4238
+
+    # pot. minimum, in disc. with @maxnoe, @registerrier, @bkhelifi
+    OBS_MODE = "TEST"
+    if OBS_MODE == "A":
+        names_min_req = [
+            "OBS_ID",
+            "OBS_MODE",
+            "RA_PNT",
+            "DEC_PNT",
+            "TSTART",
+            "TSTOP",
+        ]
+    elif OBS_MODE == "B":
+        names_min_req = [
+            "OBS_ID",
+            "OBS_MODE",
+            "ALT_PNT",
+            "AZ_PNT",
+            "TSTART",
+            "TSTOP",
+        ]
+
+    # as sugg. by @registerrier in #4238 oriented at metadata:
+    # construct internal table using METADATA_FITS_KEYS?
+    # print(METADATA_FITS_KEYS["obs_info"].values())
+    # print(METADATA_FITS_KEYS["pointing"].values())
+
     @classmethod
     def read(self, filename, **kwargs):
         """Modified reader for ObservationTablePrototype"""
