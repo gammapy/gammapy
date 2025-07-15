@@ -9,7 +9,7 @@ from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
 from gammapy.utils.time import time_ref_from_dict
 
-__all__ = ["ObservationTable"]
+__all__ = ["ObservationTable", "ObservationTablePrototype"]
 
 
 class ObservationTable(Table):
@@ -400,3 +400,12 @@ class ObservationTableChecker(Checker):
                     yield self._record(
                         level="error", msg=f"Invalid unit for column: {name!r}"
                     )
+
+
+class ObservationTablePrototype(Table):
+    """Prototype for modified ObservationTable class
+       Used as reference: gammapy/data/obs_table.py, https://docs.python.org/3/reference/
+       See: https://github.com/gammapy/gammapy/issues/4238
+
+    Data format specification: for now based on GADF-documentation, as next step analogue to metadata.
+    """
