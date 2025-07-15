@@ -546,3 +546,28 @@ class ObservationTablePrototype(Table):
     ]
 
     gadf_opt = dict(name=names_gadf_opt, type=types_gadf_opt, unit=units_gadf_opt)
+
+    @classmethod
+    def read(self, filename, **kwargs):
+        """Modified reader for ObservationTablePrototype"""
+
+        """First part (IO) taken from ObservationTable"""
+        """Is not what is intended in the end!"""
+        """Read an observation table from file.
+
+        Parameters
+        ----------
+        filename : `pathlib.Path` or str
+            Filename.
+        **kwargs : dict, optional
+            Keyword arguments passed to `~astropy.table.Table.read`.
+        """
+        table_disk = super().read(make_path(filename), **kwargs)
+
+        """Second part (CHECKS) : Check if table from disk fulfills GADF requirements"""
+        for el in self.gadf_req["name"]:
+            if el not in table_disk.columns:
+                print(f"Did not found {el} required for GADF v0.3.")
+
+        """THIRD PART: return table AS IS on disk, as before """
+        return table_disk  # for now return table AS IS on disk, as before
