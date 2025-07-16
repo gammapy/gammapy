@@ -29,7 +29,7 @@ In the following introduction we will learn all the basics of working
 with WCS based maps. HEALPix based maps will be covered in a future
 tutorial. Make sure you have worked through the :doc:`Gammapy
 overview </tutorials/starting/overview>`, because a solid knowledge
-about working with `~astropy.coordinates.SkyCoord` and `~astropy.coordinates.Quantity` objects as well as
+about working with `~astropy.coordinates.SkyCoord` and `~astropy.units.Quantity` objects as well as
 `Numpy <http://www.numpy.org/>`__ is required for this tutorial.
 
 This notebook is rather lengthy, but getting to know the `~gammapy.maps.Map` data
@@ -205,7 +205,7 @@ print(wcs_geom.solid_angle())
 # ~~~~~~~~~~~~~~~~~~~~~~~
 #
 # In many analysis scenarios we would like to add extra dimension to the
-# maps to study e.g. energy or time dependency of the data. Those
+# maps to study e.g. energy or time dependency of the data. Those
 # non-spatial dimensions are handled with the `~gammapy.maps.MapAxis` object. Let us
 # first define an energy axis, with 4 bins:
 #
@@ -234,7 +234,7 @@ print(m_cube.geom)
 #
 # We can also add further axes by passing a list of `~gammapy.maps.MapAxis` objects.
 # To demonstrate this we create a time axis with linearly spaced bins and
-# pass both axes to `Map.create()`:
+# pass both axes to `~gammapy.maps.Map.create()`:
 #
 
 time_axis = MapAxis.from_bounds(0, 24, nbin=24, unit="hour", name="time", interp="lin")
@@ -249,10 +249,10 @@ print(m_4d.geom)
 # The `~gammapy.maps.MapAxis` object internally stores the coordinates or “position
 # values” associated with every map axis bin or “node”. We distinguish
 # between two node types: ``"edges"`` and ``"center"``. The node type
-# ``"edges"``\ (which is also the default) specifies that the data
+# ``"edges"`` (which is also the default) specifies that the data
 # associated with this axis is integrated between the edges of the bin
-# (e.g. counts data). The node type ``"center"`` specifies that the data is
-# given at the center of the bin (e.g. exposure or differential fluxes).
+# (e.g. counts data). The node type ``"center"`` specifies that the data is
+# given at the center of the bin (e.g. exposure or differential fluxes).
 #
 # The edges of the bins can be checked with `~gammapy.maps.MapAxis.edges` attribute:
 #
@@ -533,7 +533,7 @@ print(Map.from_hdulist(hdulist=hdulist))
 # Writing Maps
 # ~~~~~~~~~~~~
 #
-# Writing FITS files on disk via the `Map.write()` method.
+# Writing FITS files on disk via the `~gammapy.maps.Map.write()` method.
 # Here is a first example:
 #
 
@@ -542,8 +542,8 @@ m_cube.write("example_cube.fits", overwrite=True)
 
 ######################################################################
 # By default Gammapy does not overwrite files. In this example we set
-# `overwrite=True` in case the cell gets executed multiple times. Now we
-# can read back the cube from disk using `Map.read()`:
+# ``overwrite=True`` in case the cell gets executed multiple times. Now we
+# can read back the cube from disk using `~gammapy.maps.Map.read()`:
 #
 
 m_cube = Map.read("example_cube.fits")
@@ -695,7 +695,7 @@ print(m_sub)
 # energy axes is dropped from the map.
 #
 # To extract a sub-cube with a sliced energy axes we can use a normal
-# ``slice()`` object:
+# ``slice`` object:
 #
 
 m_sub = m_cube.slice_by_idx({"energy": slice(1, 3)})
@@ -965,7 +965,7 @@ print(np.all(is_null.data[~np.isnan(iem_minus_iem)]))
 # Cutouts
 # ~~~~~~~
 #
-# The `~gammapy.maps.WCSNDMap` objects features a `~gammapy.maps.WCSNDMap.cutout()` method, which allows
+# The `~gammapy.maps.WcsNDMap` objects features a `~gammapy.maps.WcsNDMap.cutout()` method, which allows
 # you to cut out a smaller part of a larger map. This can be useful,
 # e.g. when working with all-sky diffuse maps. Here is an example:
 #

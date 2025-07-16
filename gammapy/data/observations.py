@@ -405,12 +405,12 @@ class Observation:
         time : `~astropy.time.Time`
             Times at which to extract the frame.
         alignment : `~gammapy.irf.FoVAlignment`
-            Alignement of the FoVFrame
+            Alignment of the FoVFrame.
 
         Returns
         -------
         fov_frame : `~gammapy.utils.coordinates.FoVICRSFrame` or `~gammapy.utils.coordinates.FoVAltAzFrame`
-            The Field-of-view frame with the required alignement (on ICRS or AltAz)
+            The Field-of-view frame with the required alignment (on ICRS or AltAz).
         """
         if alignment in [FoVAlignment.RADEC, FoVAlignment.REVERSE_LON_RADEC]:
             return self._get_fov_icrs_frame(time)

@@ -25,7 +25,7 @@ template on the data themselves. To limit contamination by real photons,
 one has to exclude parts of the field-of-view where signal is expected
 to be large. To do so, one needs to provide an exclusion mask. The
 latter can be provided in a different geometry as it will be reprojected
-by the `~gammapy.makers.Makers`.
+by the `~gammapy.makers.Maker` class.
 
 We explain in more details these two types of masks below:
 
@@ -115,13 +115,13 @@ check_tutorials_setup()
 # ---------------------------
 #
 # One can build a ``mask_fit`` to restrict the energy range of pixels used
-# to fit a `~gammapy.datasets.Dataset`. The mask being a `~gammapy.maps.Map` it needs to use the same
-# geometry (i.e. a `Geom` object) as the `~gammapy.datasets.Dataset` it will be applied
-# to.
+# to fit a `~gammapy.datasets.Dataset`. As the mask is a `~gammapy.maps.Map` object,
+# it must use the same geometry (i.e. a `~gammapy.maps.Geom` object) as the `~gammapy.datasets.Dataset`
+# it is applied to.
 #
 # We show here how to proceed on a `~gammapy.datasets.MapDataset` taken from Fermi data
 # used in the 3FHL catalog. The dataset is already in the form of a
-# `~gammapy.datasets.Datasets` object. We read it from disk.
+# `~gammapy.datasets.Datasets` object, and we begin by reading it from disk.
 #
 
 filename = "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_datasets.yaml"
@@ -142,7 +142,7 @@ print(f"Fit range : {dataset.energy_range_total}")
 # ~~~~~~~~~~~~~~~~~~~~~~~
 #
 # We show first how to use a simple helper function
-# `~gammapy.maps.Geom.energy_range()`.
+# `~gammapy.maps.Geom.energy_mask`.
 #
 # We obtain the `~gammapy.maps.Geom` that is stored on the ``counts`` map inside the
 # `~gammapy.datasets.Dataset` and we can directly create the `~gammapy.maps.Map`.
@@ -207,7 +207,7 @@ plt.show()
 # If you are more familiar with the `~gammapy.maps.Geom` and `~gammapy.maps.Map` API, you can also
 # create the mask manually from the coordinates of all pixels in the
 # geometry. Here we simply show how to obtain the same behaviour as the
-# ``energy_mask`` helper method.
+# `~gammapy.maps.Geom.energy_mask` helper method.
 #
 # In practice, this allows to create complex energy dependent masks.
 #
@@ -223,7 +223,7 @@ mask_energy = Map.from_geom(dataset.counts.geom, data=mask_data)
 #
 # Exclusion masks are typically used for background estimation to mask out
 # regions where gamma-ray signal is expected. An exclusion mask is usually
-# a simple 2D boolean `Map` where excluded positions are stored as
+# a simple 2D boolean `~gammapy.maps.Map` where excluded positions are stored as
 # `False`. Their actual geometries are independent of the target
 # datasets that a user might want to build. The first thing to do is to
 # build the geometry.
@@ -248,12 +248,12 @@ geom = WcsGeom.create(skydir=position, width="5 deg", binsz=0.02, frame="galacti
 # proceed.
 #
 # We can rely on known sources positions and properties to build a list of
-# regions (here `~regions.SkyRegions`) enclosing most of the signal that
+# regions (here `~regions.SkyRegion`) enclosing most of the signal that
 # our detector would see from these objects.
 #
 # A useful function to create region objects is
-# `~regions.regions.parse`. It can take strings defining regions
-# e.g. following the “ds9” format and convert them to `regions`.
+# `~regions.Regions.parse`. It can take strings defining regions
+# e.g. following the “ds9” format and convert them to `regions`.
 #
 # Here we use a region enclosing the Crab nebula with 0.3 degrees. The
 # actual region size should depend on the expected PSF of the data used.
@@ -267,7 +267,7 @@ print(regions)
 
 ######################################################################
 # Equivalently the regions can be read from a ds9 file, this time using
-# `Regions.read`.
+# `~regions.Regions.read`.
 #
 
 # regions = Regions.read('ds9.reg', format="ds9")
@@ -449,7 +449,7 @@ plt.show()
 # add its ``mask_fit`` taking into account a margin based on the psf
 # width. The margin width is determined using the `~gammapy.irf.PSFMap.containment_radius`
 # method of the psf object and the mask is created using the
-# `~gammapy.maps.WcsNDMap.boundary_mask` method available on the geometry object.
+# `~gammapy.maps.WcsGeom.boundary_mask` method available on the geometry object.
 #
 
 # get PSF 95% containment radius
