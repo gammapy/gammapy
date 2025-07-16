@@ -442,7 +442,7 @@ def extract_bright_star_regions(
     star_rad : `~astropy.units.Quantity`, optional
         Radius to exclude around each star. Default is 0.3 degrees.
     star_table : `~astropy.table.Table`, optional
-        Table containing the list of stars to search for exclusion regions. If None, the Hipparcos Catalog (Perryman et al., 1997) contained in ``$GAMMAPY_DATA//veritas/crab-point-like-ED``. The table's column names should match those in ``$GAMMAPY_DATA//veritas/crab-point-like-ED``.
+        Table containing the list of stars to search for exclusion regions. If None, the Hipparcos Catalog (Perryman et al., 1997) contained in ``$GAMMAPY_DATA//veritas/crab-point-like-ED`` is used. The table's column names should match those in ``$GAMMAPY_DATA//veritas/crab-point-like-ED``.
         Default is None.
 
     Returns
