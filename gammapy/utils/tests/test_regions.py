@@ -31,7 +31,10 @@ from gammapy.utils.regions import (
     get_centroid,
     PolygonPointsSkyRegion,
     PolygonPointsPixelRegion,
+    extract_bright_star_regions,
 )
+
+from gammapy.maps import WcsGeom
 
 
 def test_compound_region_center():
@@ -184,3 +187,40 @@ def test_polygon_points_pixel_region_rotate():
     expected_vertices = PixCoord([0, 1], [0, 1])
     assert_allclose(rotated_region.vertices.x, expected_vertices.x, atol=1e-7)
     assert_allclose(rotated_region.vertices.y, expected_vertices.y, atol=1e-7)
+
+
+def test_star_exclusion_no_region_bright():
+    max_star_mag = -0.5
+    geom = WcsGeom.create(
+        skydir=(0, 0),
+        binsz=0.02,
+        width=(4, 4),
+        frame="icrs",
+        proj="CAR",
+    )
+    regions = extract_bright_star_regions(geom, max_star_mag=max_star_mag)
+    assert len(regions) == 0
+
+
+def test_star_exclusion_no_region_no_stars():
+    geom = WcsGeom.create(
+        skydir=(253.4666667, 39.7602778),
+        binsz=0.02,
+        width=(4, 4),
+        frame="icrs",
+        proj="CAR",
+    )
+    regions = extract_bright_star_regions(geom)
+    assert len(regions) == 0
+
+
+def test_star_exclusion_known_field():
+    geom = WcsGeom.create(
+        skydir=(83.6333, 22.0145),
+        binsz=0.02,
+        width=(4, 4),
+        frame="icrs",
+        proj="CAR",
+    )
+    regions = extract_bright_star_regions(geom)
+    assert len(regions) == 2
