@@ -519,6 +519,7 @@ Making a pull request which skips GitHub Actions
 For minor PRs (eg: correcting typos in doc-strings) we can skip GitHub Actions.
 Adding ``[ci skip]`` in a specific commit message will skip CI for that specific commit which can be useful for draft or incomplete PR.
 For details, `see here. <https://github.blog/changelog/2021-02-08-github-actions-skip-pull-request-and-push-workflows-with-skip-ci/>`__
+See also section: Skip GitHub Actions on local fork, below.
 
 Fix non-Unix line endings
 +++++++++++++++++++++++++
@@ -959,3 +960,10 @@ script can be used as follows::
 
 If the path of the output file is not provided, the script will be written in the same folder as the notebook and with
 the same name.
+
+Skip GitHub Actions on local fork
++++++++++++++++++++++++++++++++++
+If not explicitly needed, it can be convenient to skip the GitHub Actions for pushes onto local forks and only perform them on the upstream, once a pull request is opened.
+This way computation power is saved and automatic commits by the Actions are avoided in the forks commit-history. An easy way to achieve this, is to deactivate the
+GitHub Actions completely for the fork, following the GitHub documentation, `see here. <https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository#managing-github-actions-permissions-for-your-repository>`__
+See also section: Making a pull request which skips GitHub Actions, above.
