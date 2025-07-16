@@ -61,8 +61,8 @@ authors:
   orcid:
 - given-names: Tomas
   family-names: Bylund
-  affiliation:
-  orcid:
+  affiliation: "LUX, Observatoire de Paris, Université PSL, Sorbonne Université, CNRS, 92190 Meudon, France"
+  orcid: "https://orcid.org/0000-0003-2946-1313"
 - given-names: Julia
   family-names: Djuvsland
   affiliation: "University of Bergen, Norway and Max Planck Institute for Nuclear
@@ -76,7 +76,7 @@ authors:
   family-names: Egg
   affiliation: "Friedrich-Alexander-Universität Erlangen-Nürnberg, ECAP, Nikolaus-Fiebiger-Str.
     2, 91058 Erlangen, Germany"
-  orcid:
+  orcid: "https://orcid.org/0009-0002-4238-034X"
 - given-names: Gabriel
   family-names: Emery
   affiliation:
