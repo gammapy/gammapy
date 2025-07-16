@@ -447,8 +447,8 @@ print(reg_dataset)
 
 
 ######################################################################
-# `~gammapy.datasetsFluxPointsDataset`
-# ------------------------------------
+# `~gammapy.datasets.FluxPointsDataset`
+# -------------------------------------
 #
 # `~gammapy.datasets.FluxPointsDataset` is a `~gammapy.datasets.Dataset` container for precomputed flux
 # points, which can be then used in fitting.

@@ -319,7 +319,7 @@ plt.show()
 
 
 ######################################################################
-# The `~gammapy.modeling.models.SpatialModel.to_region()` method can also be useful to write e.g. ds9 region
+# The `~gammapy.modeling.models.GaussianSpatialModel.to_region()` method can also be useful to write e.g. ds9 region
 # files using ``write_ds9`` from the `regions` package:
 #
 
@@ -473,7 +473,7 @@ print(diffuse)
 # Note that if the spatial model is not normalized over the sky it has to
 # be combined with a normalized spectral model, for example
 # `~gammapy.modeling.models.PowerLawNormSpectralModel`. This is the only
-# case in ``~gammapy.modeling.models.SkyModel` where the unit is fully attached to
+# case in `~gammapy.modeling.models.SkyModel` where the unit is fully attached to
 # the spatial model.
 #
 
