@@ -436,7 +436,7 @@ def extract_bright_star_regions(
     Parameters
     ----------
     geom : `~gammapy.maps.WcsGeom`
-        Map geometry for the exclusion mask.
+        WcsGeom within which to search for bright stars
     max_star_mag : float, optional
         The maximum stellar magnitude (Johnson-Cousins B-band) to exclude. Default is 6th magnitude.
     star_rad : `~astropy.units.Quantity`, optional
