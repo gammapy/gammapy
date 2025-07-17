@@ -453,11 +453,8 @@ def extract_bright_star_regions(
     regions = []
 
     if star_table is None:
-        star_cat = Table.read(
-            os.environ.get("GAMMAPY_DATA")
-            + "/veritas/crab-point-like-ED/Hipparcos_MAG8_1997.dat",
-            format="ascii.commented_header",
-        )
+        filename = make_path("$GAMMAPY_DATA/veritas/crab-point-like-ED/Hipparcos_MAG8_1997.dat")
+        star_cat = Table.read(filename, format="ascii.commented_header")
     else:
         star_cat = Table.read(star_table)
 
