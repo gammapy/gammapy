@@ -443,9 +443,9 @@ lc = lc_maker.run(datasets)
 #
 
 fig, ax = plt.subplots()
-plt.tight_layout()
 lc.sqrt_ts_threshold_ul = 2
 lc.plot(ax=ax, axis_name="time", sed_type="flux")
+plt.tight_layout()
 
 table = lc.to_table(format="lightcurve", sed_type="flux")
 print(table["time_min", "time_max", "flux", "flux_err"])
