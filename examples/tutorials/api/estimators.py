@@ -2,7 +2,7 @@
 Estimators
 ==========
 
-This tutorial provides an overview of the `Estimator` API. All estimators live in the
+This tutorial provides an overview of the ``Estimator`` API. All estimators live in the
 `gammapy.estimators` sub-module, offering a range of algorithms and classes for high-level flux and
 significance estimation. This is accomplished through a common functionality allowing the estimation of
 flux points, light curves, flux maps and profiles via a common API.
@@ -137,7 +137,7 @@ fp_estimator.norm.scan_max = 10
 # **Important note**: the output ``energy_edges`` are taken from the parent dataset energy bins,
 # selecting the bins closest to the requested ``energy_edges``. To match the input bins directly,
 # specific binning must be defined based on the parent dataset geometry. This could be done in the following way:
-# `energy_edges = datasets[0].geoms["geom"].axes["energy"].downsample(factor=5).edges`
+# ``energy_edges = datasets[0].geoms["geom"].axes["energy"].downsample(factor=5).edges``
 #
 
 

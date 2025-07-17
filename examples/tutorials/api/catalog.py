@@ -70,8 +70,8 @@ check_tutorials_setup()
 # -----------------------
 #
 # `~gammapy.catalog` contains a catalog registry `~gammapy.catalog.CATALOG_REGISTRY`,
-# which maps catalog names (e.g. “3fhl”) to catalog classes
-# (e.g. `SourceCatalog3FHL`).
+# which maps catalog names (e.g. “3fhl”) to catalog classes
+# (e.g. `~gammapy.catalog.SourceCatalog3FHL`).
 #
 
 print(CATALOG_REGISTRY)
@@ -81,9 +81,9 @@ print(CATALOG_REGISTRY)
 # Load catalogs
 # -------------
 #
-# If you have run `gammapy download datasets` or
-# `gammapy download tutorials`, you have a copy of the catalogs as FITS
-# files in `$GAMMAPY_DATA/catalogs`, and that is the default location
+# If you have run ``gammapy download datasets`` or
+# ``gammapy download tutorials``, you have a copy of the catalogs as FITS
+# files in ``$GAMMAPY_DATA/catalogs``, and that is the default location
 # where `~gammapy.catalog` loads from.
 #
 
@@ -105,7 +105,7 @@ print("Number of sources :", len(catalog.table))
 
 ######################################################################
 # Note that it loads the default catalog from `$GAMMAPY_DATA/catalogs`,
-# you could pass a different `filename` when creating the catalog. For
+# you could pass a different ``filename`` when creating the catalog. For
 # example here we load an older version of 4FGL catalog:
 #
 
@@ -115,7 +115,7 @@ print("Number of sources :", len(catalog.table))
 
 ######################################################################
 # Alternatively you can load a catalog by name via
-# `CATALOG_REGISTRY.get_cls(name)()` (note the `()` to instantiate a
+# ``CATALOG_REGISTRY.get_cls(name)()`` (note the ``()`` to instantiate a
 # catalog object from the catalog class - only this will load the catalog
 # and be useful), or by importing the catalog class
 # (e.g. `~gammapy.catalog.SourceCatalog3FGL`) directly. The two ways are equivalent, the
@@ -138,7 +138,7 @@ catalog_hgps = CATALOG_REGISTRY.get_cls("hgps")()
 # Catalog table
 # -------------
 #
-# Source catalogs are given as `FITS` files that contain one or multiple
+# Source catalogs are given as ``FITS`` files that contain one or multiple
 # tables.
 #
 # However, you can also access the underlying `astropy.table.Table` for
@@ -175,8 +175,8 @@ print(catalog_3fhl.positions[:3])
 #
 # The catalog entries for a single source are represented by a
 # `~gammapy.catalog.SourceCatalogObject`. In order to select a source object index into
-# the catalog using `[]`, with a catalog table row index (zero-based,
-# first row is `[0]`), or a source name. If a name is given, catalog
+# the catalog using ``[]``, with a catalog table row index (zero-based,
+# first row is ``[0]``), or a source name. If a name is given, catalog
 # table columns with source names and association names (“ASSOC1” in the
 # example below) are searched top to bottom. There is no name resolution
 # web query.
@@ -201,13 +201,13 @@ print(source.row_index, source.name)
 
 
 ######################################################################
-# Note that you can also do a `for source in catalog` loop, to find or
+# Note that you can also do a ``for source in catalog`` loop, to find or
 # process sources of interest.
 #
 # Source information
 # ~~~~~~~~~~~~~~~~~~
 #
-# The source objects have a `data` property that contains the
+# The source objects have a ``data`` property that contains the
 # information of the catalog row corresponding to the source.
 #
 
@@ -218,7 +218,7 @@ print(source.data["GLON"], source.data["GLAT"])
 
 
 ######################################################################
-# As for the catalog object, the source object has a `position`
+# As for the catalog object, the source object has a ``position``
 # property.
 #
 
@@ -233,8 +233,8 @@ print(source.position.galactic)
 # length), so one can create a new catalog as a subset of the main catalog
 # that verify a set of conditions.
 #
-# In the next example we selection only few of the brightest sources
-# brightest sources in the 100 to 200 GeV energy band.
+# In the next example we select only few of the brightest sources
+# in the 100 to 200 GeV energy band.
 #
 
 mask_bright = np.zeros(len(catalog_3fhl.table), dtype=bool)
@@ -254,7 +254,7 @@ print(catalog_3fhl_bright.table["Source_Name"])
 
 ######################################################################
 # Similarly we can select only sources within a region of interest. Here
-# for example we use the `position` property of the catalog object to
+# for example we use the ``position`` property of the catalog object to
 # select sources within 5 degrees from “PKS 0008-222”:
 #
 
@@ -362,7 +362,7 @@ display(catalog_hgps.table_large_scale_component[:5])
 # Flux points
 # -----------
 #
-# The flux points are available via the `~gammapy.catalog.SourceCatalogObject.flux_points` property as a
+# The flux points are available via the ``flux_points`` property as a
 # `~gammapy.estimators.FluxPoints` object.
 #
 
@@ -385,7 +385,7 @@ plt.show()
 # -----------
 #
 # The Fermi catalogs contain lightcurves for each source. It is available
-# via the `source.lightcurve` method as a
+# via the ``source.lightcurve`` method as a
 # `~gammapy.estimators.FluxPoints` object with a time axis.
 #
 
@@ -415,9 +415,9 @@ print(source)
 
 
 ######################################################################
-# You can also call `source.info()` instead and pass as an option what
+# You can also call ``source.info()`` instead and pass as an option what
 # information to print. The options available depend on the catalog, you
-# can learn about them using `help()`
+# can learn about them using ``help()``
 #
 
 help(source.info)
