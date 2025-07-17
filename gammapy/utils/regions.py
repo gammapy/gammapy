@@ -14,7 +14,6 @@ Options: keep as-is, hide from the docs, or to remove it completely
 """
 
 import operator
-import os
 import numpy as np
 from scipy.optimize import Bounds, minimize
 from astropy import units as u
@@ -443,7 +442,9 @@ def extract_bright_star_regions(
     star_rad : `~astropy.units.Quantity`, optional
         Radius to exclude around each star. Default is 0.3 degrees.
     star_table : str, optional
-        Full name of the file containing a table containing the list of stars to search for exclusion regions. If None, the Hipparcos Catalog (Perryman et al., 1997) contained in ``$GAMMAPY_DATA//veritas/crab-point-like-ED`` is used. The table's column names should match those in ``$GAMMAPY_DATA//veritas/crab-point-like-ED``.
+        Full name of the file containing a table containing the list of stars to search for exclusion regions.
+        If None, the Hipparcos Catalog (Perryman et al., 1997) contained in ``$GAMMAPY_DATA//veritas/crab-point-like-ED`` is used.
+        The table's column names should match those in ``$GAMMAPY_DATA//veritas/crab-point-like-ED``.
         Default is None.
 
     Returns
@@ -454,7 +455,9 @@ def extract_bright_star_regions(
     regions = []
 
     if star_table is None:
-        filename = make_path("$GAMMAPY_DATA/veritas/crab-point-like-ED/Hipparcos_MAG8_1997.dat")
+        filename = make_path(
+            "$GAMMAPY_DATA/veritas/crab-point-like-ED/Hipparcos_MAG8_1997.dat"
+        )
         star_cat = Table.read(filename, format="ascii.commented_header")
     else:
         star_cat = Table.read(star_table)
