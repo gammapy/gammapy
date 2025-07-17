@@ -189,6 +189,7 @@ def test_polygon_points_pixel_region_rotate():
     assert_allclose(rotated_region.vertices.y, expected_vertices.y, atol=1e-7)
 
 
+@requires_data()
 def test_star_exclusion_no_region_bright():
     max_star_mag = -0.5
     geom = WcsGeom.create(
