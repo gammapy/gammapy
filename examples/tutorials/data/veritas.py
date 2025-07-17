@@ -446,9 +446,7 @@ lc = lc_maker.run(datasets)
 # curve.
 #
 
-fig, ax = plt.subplots(
-    figsize=(8, 6),
-)
+fig, ax = plt.subplots()
 lc.sqrt_ts_threshold_ul = 2
 lc.plot(ax=ax, axis_name="time", sed_type="flux")
 
