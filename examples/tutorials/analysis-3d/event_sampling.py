@@ -165,7 +165,7 @@ print(observation)
 #
 # Let’s generate the `~gammapy.datasets.Dataset` object (for more info
 # on `~gammapy.datasets.Dataset` objects, please checkout
-# :doc:`/tutorials/api/datasets` tutorial):
+# :doc:`/tutorials/key-steps/datasets` tutorial):
 # we define the energy axes (true and reconstructed), the migration axis
 # and the geometry of the observation.
 #
