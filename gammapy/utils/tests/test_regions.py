@@ -203,6 +203,7 @@ def test_star_exclusion_no_region_bright():
     assert len(regions) == 0
 
 
+@requires_data()
 def test_star_exclusion_no_region_no_stars():
     geom = WcsGeom.create(
         skydir=(253.4666667, 39.7602778),
