@@ -442,7 +442,7 @@ def extract_bright_star_regions(
         The maximum stellar magnitude (Johnson-Cousins B-band) to exclude. Default is 6th magnitude.
     star_rad : `~astropy.units.Quantity`, optional
         Radius to exclude around each star. Default is 0.3 degrees.
-    star_table : path to file containing a Table
+    star_table : str, optional
         Table containing the list of stars to search for exclusion regions. If None, the Hipparcos Catalog (Perryman et al., 1997) contained in ``$GAMMAPY_DATA//veritas/crab-point-like-ED`` is used. The table's column names should match those in ``$GAMMAPY_DATA//veritas/crab-point-like-ED``.
         Default is None.
 
