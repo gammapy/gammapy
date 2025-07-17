@@ -74,8 +74,7 @@ class LightCurveEstimator(FluxPointsEstimator):
         and all other parameters are frozen at their current values.
         Default is False.
     stack_over_time_interval : bool, optional
-        Whether to stacked over the time intervals or fit the norm on the
-        individual times. Default is None.
+        Whether to stack datasets within each time interval. Default is False.
     n_jobs : int, optional
         Number of processes used in parallel for the computation. Default is one,
         unless `~gammapy.utils.parallel.N_JOBS_DEFAULT` was modified. The number
@@ -166,8 +165,12 @@ class LightCurveEstimator(FluxPointsEstimator):
             if self.stack_over_time_interval:
                 name = f"timebin_{t_min.mjd:.0f}_{t_max.mjd:.0f}"
                 dataset_reduced = datasets_to_fit.stack_reduce(name=name)
+                models = datasets.models.copy()
+                for dataset in datasets:
+                    models.reassign(dataset.name, dataset_reduced.name)
+                dataset_reduced.models = models
                 datasets_to_fit = Datasets([dataset_reduced])
-                datasets_to_fit.models = datasets.models
+
                 if self.n_jobs == 1:
                     fp = self.estimate_time_bin_flux(
                         datasets_to_fit, datasets_to_fit.names

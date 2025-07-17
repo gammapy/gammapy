@@ -863,7 +863,7 @@ def test_lightcurve_stacking():
     estimator = LightCurveEstimator(
         energy_edges=energy_edges,
         time_intervals=time_intervals,
-        stack_over_time_interval=False,  # best to be explicit
+        stack_over_time_interval=False,
     )
     results_stacked = estimator.run(stacked_datasets)
     table_stack_outside = results_stacked.to_table()
