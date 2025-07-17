@@ -101,6 +101,11 @@ observations = data_store.get_observations(obs_id=obs_ids, required_irf="point-l
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 
+######################################################################
+# Peek the events and their time/energy/spatial distributions.
+#
+
+observations[0].events.peek()
 
 ######################################################################
 # Peek at the IRFs included. You should verify that
@@ -111,14 +116,6 @@ observations = data_store.get_observations(obs_id=obs_ids, required_irf="point-l
 #
 
 observations[0].peek()
-
-
-######################################################################
-# Peek the events and their time/energy/spatial distributions.
-#
-
-observations[0].events.peek()
-
 
 ######################################################################
 # Estimate counts and significance
@@ -151,7 +148,6 @@ energy_axis = MapAxis.from_energy_bounds("0.05 TeV", "100 TeV", nbin=50)
 energy_axis_true = MapAxis.from_energy_bounds(
     "0.01 TeV", "110 TeV", nbin=200, name="energy_true"
 )
-
 
 ######################################################################
 # Create an exclusion mask
@@ -447,6 +443,7 @@ lc = lc_maker.run(datasets)
 #
 
 fig, ax = plt.subplots()
+plt.tight_layout()
 lc.sqrt_ts_threshold_ul = 2
 lc.plot(ax=ax, axis_name="time", sed_type="flux")
 
