@@ -20,6 +20,7 @@ from scipy.optimize import Bounds, minimize
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
+from gammapy.utils.scripts import make_path
 from regions import (
     CircleAnnulusSkyRegion,
     CircleSkyRegion,
