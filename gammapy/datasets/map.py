@@ -1330,6 +1330,8 @@ class MapDataset(Dataset):
         The residuals are extracted from the provided region, and the normalization
         used for its computation can be controlled using the method parameter.
 
+        Both the mask fit and mask safe are taken into account.
+
         The error bars are computed using the uncertainty on the excess with a symmetric assumption.
 
         Parameters
