@@ -35,6 +35,7 @@ from gammapy.utils.regions import (
 )
 
 from gammapy.maps import WcsGeom
+from gammapy.utils.testing import requires_data
 
 
 def test_compound_region_center():
