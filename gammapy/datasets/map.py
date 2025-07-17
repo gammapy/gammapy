@@ -1337,9 +1337,16 @@ class MapDataset(Dataset):
         ax : `~matplotlib.axes.Axes`, optional
             Axes to plot on. Default is None.
         method : {"diff", "diff/sqrt(model)"}
-            Normalization used to compute the residuals, see `SpectrumDataset.residuals`. Default is "diff".
+            Normalization used to compute the residuals, see `SpectrumDataset.residuals`.
+            Default is "diff".
         region : `~regions.SkyRegion` (required)
             Target sky region. Default is None.
+        kwargs_fit : dict, optional
+            Keyword arguments passed to `~RegionNDMap.plot_mask()` for mask fit.
+            Default is None.
+        kwargs_safe : dict, optional
+            Keyword arguments passed to `~RegionNDMap.plot_mask()` for mask safe.
+            Default is None.
         **kwargs : dict, optional
             Keyword arguments passed to `~matplotlib.axes.Axes.errorbar`.
 
