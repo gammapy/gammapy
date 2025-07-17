@@ -460,7 +460,7 @@ class Datasets(collections.abc.MutableSequence):
         filename_models=None,
         overwrite=False,
         write_covariance=True,
-        checksum=False,
+        checksum=True,
     ):
         """Serialize datasets to YAML and FITS files.
 
@@ -476,7 +476,7 @@ class Datasets(collections.abc.MutableSequence):
             save covariance or not. Default is True.
         checksum : bool
             When True adds both DATASUM and CHECKSUM cards to the headers written to the FITS files.
-            Default is False.
+            Default is True.
         """
         path = make_path(filename)
 
