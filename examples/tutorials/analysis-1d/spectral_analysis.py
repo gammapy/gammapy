@@ -75,8 +75,8 @@ In practice, we have to:
 
 - Create the necessary makers :
 
-  - the spectrum dataset maker : `~gammapy.makers.SpectrumDatasetMaker` -
-    the OFF background maker, here a `~gammapy.makers.ReflectedRegionsBackgroundMaker`
+  - the spectrum dataset maker : `~gammapy.makers.SpectrumDatasetMaker`
+  - the OFF background maker, here a `~gammapy.makers.ReflectedRegionsBackgroundMaker`
   - and the safe range maker : `~gammapy.makers.SafeMaskMaker`
 
 - Perform the data reduction loop. And for every observation:
@@ -126,12 +126,12 @@ from gammapy.modeling.models import (
     SkyModel,
     create_crab_spectral_model,
 )
+from gammapy.visualization import plot_spectrum_datasets_off_regions
 
 ######################################################################
 # Check setup
 # -----------
 from gammapy.utils.check import check_tutorials_setup
-from gammapy.visualization import plot_spectrum_datasets_off_regions
 
 check_tutorials_setup()
 
@@ -157,7 +157,7 @@ observations = datastore.get_observations(obs_ids)
 #
 # The next step is to define a signal extraction region, also known as on
 # region. In the simplest case this is just a
-# `CircleSkyRegion <http://astropy-regions.readthedocs.io/en/latest/api/regions.CircleSkyRegion.html>`__.
+# `~regions.CircleSkyRegion`.
 #
 
 target_position = SkyCoord(ra=83.63, dec=22.01, unit="deg", frame="icrs")
@@ -573,24 +573,6 @@ flux_points_dataset_no_ul = FluxPointsDataset(
 )
 
 plot_stat(flux_points_dataset_no_ul)
-
-######################################################################
-# Exercises
-# ---------
-#
-# Now you have learned the basics of a spectral analysis with Gammapy. To
-# practice you can continue with the following exercises:
-#
-# -  Fit a different spectral model to the data. You could try
-#    `~gammapy.modeling.models.ExpCutoffPowerLawSpectralModel` or
-#    `~gammapy.modeling.models.LogParabolaSpectralModel`.
-# -  Compute flux points for the stacked dataset.
-# -  Create a `~gammapy.datasets.FluxPointsDataset` with the flux points
-#    you have computed for the stacked dataset and fit the flux points
-#    again with obe of the spectral models. How does the result compare to
-#    the best fit model, that was directly fitted to the counts data?
-#
-
 
 ######################################################################
 # What next?
