@@ -196,8 +196,8 @@ on_region = PointSkyRegion(target_position)
 geom = RegionGeom.create(region=on_region, axes=[energy_axis])
 
 ######################################################################
-# SafeMaskMaker
-# -------------
+# `~gammapy.makers.SafeMaskMaker`
+# -------------------------------
 #
 # The `~gammapy.makers.SafeMaskMaker` sets the boundaries of our analysis based on the
 # uncertainties contained in the instrument response functions (IRFs).
