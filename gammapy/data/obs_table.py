@@ -10,6 +10,7 @@ from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
 from gammapy.utils.time import time_ref_from_dict
 from gammapy.utils.metadata import METADATA_FITS_KEYS
+from gammapy.data.metadata import OBSERVATION_METADATA_FITS_KEYS
 from astropy.io import fits
 
 __all__ = ["ObservationTable", "ObservationTablePrototype"]
@@ -405,7 +406,7 @@ class ObservationTableChecker(Checker):
                     )
 
 
-class ObservationTablePrototype(Table):
+class ObservationTablePrototype(ObservationTable):
     """Prototype for modified ObservationTable class
        Used as reference: gammapy, gammapy/data/obs_table.py, https://docs.python.org/3/reference/, https://docs.astropy.org/en/latest/table/construct_table.html#construct-table, https://numpy.org/doc/stable/reference/generated/numpy.dtype.html
                           https://docs.astropy.org/en/latest/table/index.html
@@ -619,14 +620,43 @@ class ObservationTablePrototype(Table):
         "OBS_ID",
     ]
 
+    names_to_load_from_gadf = [
+        "TELESCOP",
+        "INSTRUME",
+        "OBS_MODE",
+        "OBS_ID",
+        "SUB_ARRA",
+        "OBJECT",
+        "RADEC_OBJ",
+        "CREATOR",
+        "CREATED",
+        "ORIGIN",
+        "TSTART",
+        "TSTOP",
+        "DEADC",
+        "GEOLON",
+        "GEOLAT",
+        "ALTITUDE",
+        "POINTING",
+    ]
+
     # as sugg. by @registerrier in #4238 oriented at metadata:
     # construct internal table using METADATA_FITS_KEYS?
+    # or use them? they seem to be export keys
+    METADATA_FITS_KEYS["observation"] = (
+        OBSERVATION_METADATA_FITS_KEYS  # taken from data/metadata.py
+    )
+    print(METADATA_FITS_KEYS["observation"])
     print(METADATA_FITS_KEYS["obs_info"].values())
     print(METADATA_FITS_KEYS["pointing"].values())
 
     @classmethod
     def read(self, filename, **kwargs):
         """Modified reader for ObservationTablePrototype"""
+
+        """Checks which dataformat is present on disk"""
+
+        """Reads from GADF v0.3 into internal table"""
 
         """ 0. Internal ObservationTablePrototype table container"""
         # for now, GADF complete table, later it should be meta-data oriented as sugg. in #4238 by @registerrier.
@@ -640,7 +670,6 @@ class ObservationTablePrototype(Table):
             units=self.internal_full_def["unit"],
             dtype=self.internal_full_def["type"],
         )
-        print(table_internal)
 
         """1. (IO) mostly taken from ObservationTable"""
         """Read an observation table from file.
