@@ -111,7 +111,7 @@ Please give feedback and suggest additions to this page!
         fp.plot(ax=ax, sed_type="e2dnde")
 
 
-.. dropdown:: Compute the significance of a detected source
+.. dropdown:: Compute the significance of a source
 
     Estimating the significance of a source, or more generally of an additional model
     component (such as e.g. a spectral line on top of a power-law spectrum), is done
