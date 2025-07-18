@@ -4,6 +4,7 @@ import numpy as np
 from astropy.coordinates import Angle, SkyCoord
 from astropy.table import Table
 from astropy.units import Quantity, Unit
+from astropy import units as u
 from gammapy.utils.regions import SphericalCircleSkyRegion
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
@@ -552,13 +553,70 @@ class ObservationTablePrototype(Table):
     gadf_opt = dict(name=names_gadf_opt, type=types_gadf_opt, unit=units_gadf_opt)
 
     """Prototype of Observation Index Table specification"""
-    # see discussion in #4238
+    # See discussion in #4238, thanks to @registerrier, @bkhelifi, @maxnoe.
 
-    # pot. minimum, in disc. with @maxnoe, @registerrier, @bkhelifi
-    names_min_req = [
+    # Full internal-table, oriented at metadata in gammapy. See design in #4238
+    # 15 columns
+    names_internal_table = [
+        "TELESCOP",
+        "INSTRUME",
+        "OBS_MODE",
         "OBS_ID",
+        "SUB_ARRA",
+        "OBJECT",
+        "RADEC_OBJ",
+        "CREATOR",
+        "CREATED",
+        "ORIGIN",
         "TSTART",
         "TSTOP",
+        "DEADC",
+        "OBSGEO",
+        "POINTING",
+    ]
+    units_internal_table = [
+        u.dimensionless_unscaled,
+        u.dimensionless_unscaled,
+        u.dimensionless_unscaled,
+        u.dimensionless_unscaled,
+        u.dimensionless_unscaled,
+        u.dimensionless_unscaled,
+        u.dimensionless_unscaled,
+        u.dimensionless_unscaled,
+        u.dimensionless_unscaled,
+        u.dimensionless_unscaled,
+        u.dimensionless_unscaled,
+        u.dimensionless_unscaled,
+        u.s,
+        u.dimensionless_unscaled,
+        u.dimensionless_unscaled,
+    ]
+    types_internal_table = [
+        np.dtype(str),
+        np.dtype(str),
+        np.dtype(str),
+        np.dtype(int),
+        np.dtype(str),
+        np.dtype(str),
+        np.dtype(object),
+        np.dtype(str),
+        np.dtype(object),
+        np.dtype(str),
+        np.dtype(object),
+        np.dtype(object),
+        np.dtype(float),
+        np.dtype(object),
+        np.dtype(object),
+    ]
+
+    internal_full_def = dict(
+        name=names_internal_table, type=types_internal_table, unit=units_internal_table
+    )
+
+    # Required Minimum in disk-table, see #4238.
+    # 1 column
+    names_min_req = [
+        "OBS_ID",
     ]
 
     # as sugg. by @registerrier in #4238 oriented at metadata:
@@ -572,10 +630,15 @@ class ObservationTablePrototype(Table):
 
         """ 0. Internal ObservationTablePrototype table container"""
         # for now, GADF complete table, later it should be meta-data oriented as sugg. in #4238 by @registerrier.
+        # table_internal = self(
+        #     names=self.gadf_req["name"] + self.gadf_opt["name"],
+        #     units=self.gadf_req["unit"] + self.gadf_opt["unit"],
+        #     dtype=self.gadf_req["type"] + self.gadf_opt["type"],
+        # )
         table_internal = self(
-            names=self.gadf_req["name"] + self.gadf_opt["name"],
-            units=self.gadf_req["unit"] + self.gadf_opt["unit"],
-            dtype=self.gadf_req["type"] + self.gadf_opt["type"],
+            names=self.internal_full_def["name"],
+            units=self.internal_full_def["unit"],
+            dtype=self.internal_full_def["type"],
         )
         print(table_internal)
 
