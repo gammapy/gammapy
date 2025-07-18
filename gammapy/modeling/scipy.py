@@ -64,7 +64,6 @@ class TSDifference:
 def _confidence_scipy_brentq(
     parameters, parameter, function, sigma, reoptimize, upper=True, **kwargs
 ):
-
     ts_diff = TSDifference(
         function, parameters, parameter, reoptimize, ts_diff=sigma**2
     )
@@ -102,7 +101,6 @@ def _confidence_scipy_brentq(
 
 
 def confidence_scipy(parameters, parameter, function, sigma, reoptimize=True, **kwargs):
-
     if len(parameters.free_parameters) <= 1:
         reoptimize = False
 
@@ -147,7 +145,7 @@ def stat_profile_ul_scipy(
     value_scan : `~numpy.ndarray`
         Array of parameter values.
     stat_scan : `~numpy.ndarray`
-        Array of delta fit statistic values, with respect to the minimum.
+        Array of fit statistic values.
     delta_ts : float, optional
         Difference in test statistics for the upper limit. Default is 4.
     interp_scale : {"sqrt", "lin"}, optional
@@ -164,11 +162,12 @@ def stat_profile_ul_scipy(
     """
     interp = interpolate_profile(value_scan, stat_scan, interp_scale=interp_scale)
 
-    def f(x):
-        return interp((x,)) - delta_ts
-
     idx = np.argmin(stat_scan)
     norm_best_fit = value_scan[idx]
+
+    def f(x):
+        return interp((x,)) - stat_scan[idx] - delta_ts
+
     roots, res = find_roots(
         f, lower_bound=norm_best_fit, upper_bound=value_scan[-1], nbin=1, **kwargs
     )
