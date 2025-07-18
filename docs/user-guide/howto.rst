@@ -113,7 +113,7 @@ Please give feedback and suggest additions to this page!
 
 .. dropdown:: Compute the significance of a detected source
 
-    Estimating the significance of a detected source, or more generally of an additional model
+    Estimating the significance of a source, or more generally of an additional model
     component (such as e.g. a spectral line on top of a power-law spectrum), is done
     via a hypothesis test. You fit two models: one including the source or component and one without it. Then, 
     compute the difference in the test statistic (TS) between the two fits to determine the 
