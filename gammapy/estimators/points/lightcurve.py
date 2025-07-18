@@ -38,14 +38,17 @@ class LightCurveEstimator(FluxPointsEstimator):
     ----------
     time_intervals : list of `astropy.time.Time`
         Start and stop time for each interval to compute the LC.
-    source : str or int
-        For which source in the model to compute the flux points. Default is 0.
+    source : str or int, optional
+        For which source in the model to compute the flux points.
+        Default is 0, i.e. the first source of the models.
     atol : `~astropy.units.Quantity`
         Tolerance value for time comparison with different scale. Default 1e-6 sec.
-    n_sigma : int
-        Number of sigma to use for asymmetric error computation. Default is 1.
-    n_sigma_ul : int
-        Number of sigma to use for upper limit computation. Default is 2.
+    n_sigma : float, optional
+        Number of sigma to use for asymmetric error computation. Must be a positive value.
+        Default is 1.
+    n_sigma_ul : float, optional
+        Number of sigma to use for upper limit computation. Must be a positive value.
+        Default is 2.
     selection_optional : list of str, optional
         Which steps to execute. Available options are:
 

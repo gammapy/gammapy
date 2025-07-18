@@ -139,21 +139,14 @@ class ExcessMapEstimator(Estimator):
 
     Parameters
     ----------
-    correlation_radius : `~astropy.coordinates.Angle`
-        Correlation radius to use.
-    n_sigma : float
-        Confidence level for the asymmetric errors expressed in number of sigma.
-    n_sigma_ul : float
-        Confidence level for the upper limits expressed in number of sigma.
-    n_sigma_sensitivity : float
-        Confidence level for the sensitivity expressed in number of sigma.
-    gamma_min_sensitivity : float, optional
-        Minimum number of gamma-rays. Default is 10.
-    bkg_syst_fraction_sensitivity : float, optional
-        Fraction of background counts that are above the gamma-ray counts. Default is 0.05.
-    apply_threshold_sensitivity : bool
-        If True, use `bkg_syst_fraction_sensitivity` and `gamma_min_sensitivity` in the sensitivity computation.
-        Default is False which is the same setting as the HGPS catalog.
+    correlation_radius : `~astropy.coordinates.Angle`, optional
+        Correlation radius to use. Default is "0.1 deg".
+    n_sigma : float, optional
+        Confidence level for the asymmetric errors expressed in number of sigma. Must be a positive value.
+        Default is 1.
+    n_sigma_ul : float, optional
+        Confidence level for the upper limits expressed in number of sigma. Must be a positive value.
+        Default is 2.
     selection_optional : list of str, optional
         Which additional maps to estimate besides delta TS, significance and symmetric error.
         Available options are:
@@ -175,12 +168,22 @@ class ExcessMapEstimator(Estimator):
         but rather the closest values to the energy axis edges of the parent dataset.
         Default is None: apply the estimator in each energy bin of the parent dataset.
         For further explanation see :ref:`estimators`.
-    correlate_off : bool
+    correlate_off : bool, optional
         Correlate OFF events. Default is True.
-    spectral_model : `~gammapy.modeling.models.SpectralModel`
+    spectral_model : `~gammapy.modeling.models.SpectralModel`, optional
         Spectral model used for the computation of the flux map.
         If None, a `~gammapy.modeling.models.PowerLawSpectralModel` of index 2 is assumed (default).
-    sum_over_energy_groups : bool
+    n_sigma_sensitivity : float, optional
+        Confidence level for the sensitivity expressed in number of sigma. Must be a positive value.
+        Default is 5.
+    gamma_min_sensitivity : float, optional
+        Minimum number of gamma-rays. Default is 10.
+    bkg_syst_fraction_sensitivity : float, optional
+        Fraction of background counts that are above the gamma-ray counts. Default is 0.05.
+    apply_threshold_sensitivity : bool, optional
+        If True, use `bkg_syst_fraction_sensitivity` and `gamma_min_sensitivity` in the sensitivity computation.
+        Default is False which is the same setting as the HGPS catalog.
+    sum_over_energy_groups : bool, optional
         Only used if ``energy_edges`` is None.
         If False, apply the estimator in each energy bin of the parent dataset.
         If True, apply the estimator in only one bin defined by the energy edges of the parent dataset.
