@@ -7,8 +7,8 @@ Learn how to work with datasets
 Introduction
 ------------
 
-`~gammapy.datasets` are a crucial part of the gammapy API. `~gammapy.datasets.Dataset`
-objects constitute `DL4` data - binned counts, IRFs, models and the associated
+`gammapy.datasets` are a crucial part of the gammapy API. `~gammapy.datasets.Dataset`
+objects constitute ``DL4`` data - binned counts, IRFs, models and the associated
 likelihoods. `~gammapy.datasets.Datasets` from the end product of the data reduction stage,
 see :doc:`/tutorials/api/makers` tutorial and are passed on to the `~gammapy.modeling.Fit`
 or estimator classes for modelling and fitting purposes.
@@ -36,12 +36,12 @@ from gammapy.datasets import (
 from gammapy.estimators import FluxPoints
 from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling.models import FoVBackgroundModel, PowerLawSpectralModel, SkyModel
+from gammapy.utils.scripts import make_path
 
 ######################################################################
 # Check setup
 # -----------
 from gammapy.utils.check import check_tutorials_setup
-from gammapy.utils.scripts import make_path
 
 # %matplotlib inline
 
@@ -50,12 +50,12 @@ check_tutorials_setup()
 
 
 ######################################################################
-# MapDataset
-# ----------
+# `~gammapy.datasets.MapDataset`
+# ------------------------------
 #
 # The counts, exposure, background, masks, and IRF maps are bundled
-# together in a data structure named `~gammapy.datasets.MapDataset`. While the `counts`,
-# and `background` maps are binned in reconstructed energy and must have
+# together in a data structure named `~gammapy.datasets.MapDataset`. While the ``counts``,
+# and ``background`` maps are binned in reconstructed energy and must have
 # the same geometry, the IRF maps can have a different spatial (coarsely
 # binned and larger) geometry and spectral range (binned in true
 # energies). It is usually recommended that the true energy bin should be
@@ -83,7 +83,7 @@ dataset_empty = MapDataset.create(geom=geom, name="my-dataset")
 
 ######################################################################
 # It is good practice to define a name for the dataset, such that you can
-# identify it later by name. However if you define a name it **must** be
+# identify it later by name. However, if you define a name it **must** be
 # unique. Now we can already print the dataset:
 #
 
@@ -94,7 +94,7 @@ print(dataset_empty)
 # The printout shows the key summary information of the dataset, such as
 # total counts, fit statistics, model information etc.
 #
-# `~gammapy.datasetsMapDataset.from_geom` has additional keywords, that can be used to
+# `~gammapy.datasets.MapDataset.from_geom` has additional keywords, that can be used to
 # define the binning of the IRF related maps:
 #
 
@@ -144,7 +144,7 @@ print(dataset_cta)
 
 
 ######################################################################
-# To further explore the contents of a `Dataset`, you can use
+# To further explore the contents of a `~gammapy.datasets.Dataset`, you can use
 # e.g. `~gammapy.datasets.MapDataset.info_dict()`
 #
 
@@ -413,13 +413,13 @@ plt.show()
 
 
 ######################################################################
-# SpectrumDataset
-# ---------------
+# `~gammapy.datasets.SpectrumDataset`
+# -----------------------------------
 #
 # `~gammapy.datasets.SpectrumDataset` inherits from a `~gammapy.datasets.MapDataset`, and is specially
 # adapted for 1D spectral analysis, and uses a `~gammapy.maps.RegionGeom` instead of a
 # `~gammapy.maps.WcsGeom`. A `~gammapy.datasets.MapDataset` can be converted to a `~gammapy.datasets.SpectrumDataset`,
-# by summing the `counts` and `background` inside the `on_region`,
+# by summing the ``counts`` and ``background`` inside the ``on_region``,
 # which can then be used for classical spectral analysis. Containment
 # correction is feasible only for circular regions.
 #
@@ -436,7 +436,7 @@ plt.show()
 
 
 ######################################################################
-# A `~gammapy.datasets.MapDataset` can also be integrated over the `on_region` to create
+# A `~gammapy.datasets.MapDataset` can also be integrated over the ``on_region`` to create
 # a `~gammapy.datasets.MapDataset` with a `~gammapy.maps.RegionGeom`. Complex regions can be handled
 # and since the full IRFs are used, containment correction is not
 # required.
@@ -447,8 +447,8 @@ print(reg_dataset)
 
 
 ######################################################################
-# FluxPointsDataset
-# -----------------
+# `~gammapy.datasets.FluxPointsDataset`
+# -------------------------------------
 #
 # `~gammapy.datasets.FluxPointsDataset` is a `~gammapy.datasets.Dataset` container for precomputed flux
 # points, which can be then used in fitting.
@@ -467,7 +467,7 @@ plt.show()
 ######################################################################
 # The masks on `~gammapy.datasets.FluxPointsDataset` are `~numpy.ndarray` objects
 # and the data is a
-# `~gammapy.datasets.FluxPoints` object. The `~gammapy.datasets.FluxPointsDataset.mask_safe`,
+# `~gammapy.estimators.FluxPoints` object. The `~gammapy.datasets.FluxPointsDataset.mask_safe`,
 # by default, masks the upper limit points.
 #
 
@@ -528,7 +528,7 @@ print(datasets.names)  # unique name of each dataset
 
 
 ######################################################################
-# We can access individual datasets in `Datasets` object by name:
+# We can access individual datasets in `~gammapy.datasets.Datasets` object by name:
 #
 
 print(datasets["dataset-empty"])  # extracts the first dataset
