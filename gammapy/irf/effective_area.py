@@ -208,6 +208,12 @@ class EffectiveAreaTable2D(IRF):
     def peek(self, figsize=(15, 5)):
         """Quick-look summary plots.
 
+        This method creates a figure with three subplots:
+
+        * Energy dependence plot : effective area versus energy for a given offset
+        * Offset dependence plot : effective area versus energy for a given offset
+        * Effective area map
+
         Parameters
         ----------
         figsize : tuple, optional

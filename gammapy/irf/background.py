@@ -190,6 +190,13 @@ class Background3D(BackgroundIRF):
     def peek(self, figsize=(10, 8)):
         """Quick-look summary plots.
 
+        This method creates a figure with four subplots:
+
+        * Offset dependence plot : background rate versus offset for the energy bins in your axis
+        * Integrated spectrum plot : angle integrated background rate versus energy
+        * Energy dependence plot : background rate versus energy for a given offset
+        * Energy offset dependence of the background model map
+
         Parameters
         ----------
         figsize : tuple, optional
@@ -523,7 +530,21 @@ class Background2D(BackgroundIRF):
         return ax
 
     def peek(self, figsize=(10, 8)):
-        """Quick-look summary plots."""
+        """Quick-look summary plots.
+
+        This method creates a figure with four subplots:
+
+        * Offset dependence plot : background rate versus offset for the energy bins in your axis
+        * Integrated spectrum plot : angle integrated background rate versus energy
+        * Energy dependence plot : background rate versus energy for a given offset
+        * Energy offset dependence of the background model map
+
+        Parameters
+        ----------
+        figsize : tuple, optional
+            Size of the figure. Default is (10, 8).
+
+        """
         fig, axes = plt.subplots(nrows=2, ncols=2, figsize=figsize)
         self.plot(ax=axes[1][1])
         self.plot_offset_dependence(ax=axes[0][0])

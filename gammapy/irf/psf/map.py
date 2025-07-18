@@ -574,6 +574,14 @@ class PSFMap(IRFMap):
     def peek(self, figsize=(12, 10)):
         """Quick-look summary plots.
 
+        This method creates a figure with four subplots:
+
+        * Containment radius at center of map plot : Containment radius as a function of energy for
+          containment fractions of 65% and 95%.
+        * PSF at center of map plot : PSF vs radius.
+        * Exposure map :
+        * Containment radius map :
+
         Parameters
         ----------
         figsize : tuple
