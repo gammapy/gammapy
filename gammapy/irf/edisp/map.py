@@ -277,6 +277,11 @@ class EDispMap(IRFMap):
 
         Plots corresponding to the center of the map.
 
+        This method creates a figure with two subplots:
+
+        * Bias plot : reconstruction bias as a function of true energy
+        * Energy dispersion matrix plot : probability density function matrix
+
         Parameters
         ----------
         figsize : tuple
@@ -530,6 +535,11 @@ class EDispKernelMap(IRFMap):
         """Quick-look summary plots.
 
         Plots corresponding to the center of the map.
+
+        This method creates a figure with two subplots:
+
+        * Bias plot : reconstruction bias as a function of true energy
+        * Energy dispersion matrix plot : probability density function matrix
 
         Parameters
         ----------
