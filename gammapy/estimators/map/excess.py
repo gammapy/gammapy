@@ -147,16 +147,6 @@ class ExcessMapEstimator(Estimator):
     n_sigma_ul : float, optional
         Confidence level for the upper limits expressed in number of sigma. Must be a positive value.
         Default is 2.
-    n_sigma_sensitivity : float, optional
-        Confidence level for the sensitivity expressed in number of sigma. Must be a positive value.
-        Default is 5.
-    gamma_min_sensitivity : float, optional
-        Minimum number of gamma-rays. Default is 10.
-    bkg_syst_fraction_sensitivity : float, optional
-        Fraction of background counts that are above the gamma-ray counts. Default is 0.05.
-    apply_threshold_sensitivity : bool, optional
-        If True, use `bkg_syst_fraction_sensitivity` and `gamma_min_sensitivity` in the sensitivity computation.
-        Default is False which is the same setting as the HGPS catalog.
     selection_optional : list of str, optional
         Which additional maps to estimate besides delta TS, significance and symmetric error.
         Available options are:
@@ -183,6 +173,16 @@ class ExcessMapEstimator(Estimator):
     spectral_model : `~gammapy.modeling.models.SpectralModel`, optional
         Spectral model used for the computation of the flux map.
         If None, a `~gammapy.modeling.models.PowerLawSpectralModel` of index 2 is assumed (default).
+    n_sigma_sensitivity : float, optional
+        Confidence level for the sensitivity expressed in number of sigma. Must be a positive value.
+        Default is 5.
+    gamma_min_sensitivity : float, optional
+        Minimum number of gamma-rays. Default is 10.
+    bkg_syst_fraction_sensitivity : float, optional
+        Fraction of background counts that are above the gamma-ray counts. Default is 0.05.
+    apply_threshold_sensitivity : bool, optional
+        If True, use `bkg_syst_fraction_sensitivity` and `gamma_min_sensitivity` in the sensitivity computation.
+        Default is False which is the same setting as the HGPS catalog.
     sum_over_energy_groups : bool, optional
         Only used if ``energy_edges`` is None.
         If False, apply the estimator in each energy bin of the parent dataset.
