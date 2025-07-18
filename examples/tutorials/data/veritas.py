@@ -245,7 +245,7 @@ for obs_id, observation in zip(obs_ids, observations):
 
 
 ######################################################################
-# The plot below will show your exclusion regions in black and your
+# The plot below will show your exclusion regions in black and the center of your
 # background regions with coloured stars. You should check to make sure
 # these regions are sensible and that none of your background regions
 # overlap with your exclusion regions.
@@ -384,12 +384,10 @@ flux_points = fpe.run(datasets=datasets)
 # Now, we can plot our flux points along with the best-fit spectral model.
 #
 
-flux_points_dataset = FluxPointsDataset(data=flux_points, models=datasets.models)
+ax = flux_points.plot()
+spectral_model.plot(ax=ax, energy_bounds=(0.1, 30)*u.TeV)
+spectral_model.plot_error(ax=ax, energy_bounds=(0.1, 30)*u.TeV)
 
-flux_points_dataset.plot_fit()
-plt.ylim(
-    1e-20,
-)
 plt.show()
 
 
