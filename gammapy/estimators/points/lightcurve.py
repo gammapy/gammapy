@@ -40,7 +40,7 @@ class LightCurveEstimator(FluxPointsEstimator):
         Start and stop time for each interval to compute the LC.
     source : str or int, optional
         For which source in the model to compute the flux points.
-        Default is 0, ie the first source of the models.
+        Default is 0, i.e. the first source of the models.
     atol : `~astropy.units.Quantity`
         Tolerance value for time comparison with different scale. Default 1e-6 sec.
     n_sigma : float, optional
