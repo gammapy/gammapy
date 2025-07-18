@@ -80,6 +80,11 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
     kernel_width : `~astropy.coordinates.Angle`, optional
         Width of the kernel to use: the kernel will be truncated at this size.
         Default is None.
+    downsampling_factor : int, optional
+        Sample down the input maps to speed up the computation. Only integer
+        values that are a multiple of 2 are allowed. Note that the kernel is
+        not sampled down, but must be provided with the downsampled bin size.
+        Default is None.
     n_sigma : float, optional
         Number of sigma for flux error. Must be a positive value.
         Default is 1.
@@ -89,11 +94,6 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
     n_sigma_sensitivity : float, optional
         Number of sigma for flux sensitivity. Must be a positive value.
         Default is 5.
-    downsampling_factor : int, optional
-        Sample down the input maps to speed up the computation. Only integer
-        values that are a multiple of 2 are allowed. Note that the kernel is
-        not sampled down, but must be provided with the downsampled bin size.
-        Default is None.
     threshold : float, optional
         If the test statistic value corresponding to the initial flux estimate is not above
         this threshold, the optimizing step is omitted to save computing time. Default is None.
@@ -120,6 +120,12 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
     sum_over_energy_groups : bool, optional
         Whether to sum over the energy groups or fit the norm on the full energy
         cube. Default is True.
+    n_jobs : int, optional
+        Number of processes used in parallel for the computation. Default is one,
+        unless `~gammapy.utils.parallel.N_JOBS_DEFAULT` was modified. The number
+        of jobs limited to the number of physical CPUs.
+    parallel_backend : {"multiprocessing", "ray"}, optional
+        Which backend to use for multiprocessing. Defaults to `~gammapy.utils.parallel.BACKEND_DEFAULT`.
     norm : `~gammapy.modeling.Parameter` or dict, optional
         Norm parameter used for the likelihood profile computation on a fixed norm range.
         Only used for "stat_scan" in `selection_optional`.
@@ -128,12 +134,6 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         Default is None and a new parameter is created automatically,
         with value=1, name="norm", scan_min=-100, scan_max=100,
         and values sampled such as we can probe a 0.1% relative error on the norm.
-    n_jobs : int, optional
-        Number of processes used in parallel for the computation. Default is one,
-        unless `~gammapy.utils.parallel.N_JOBS_DEFAULT` was modified. The number
-        of jobs limited to the number of physical CPUs.
-    parallel_backend : {"multiprocessing", "ray"}, optional
-        Which backend to use for multiprocessing. Defaults to `~gammapy.utils.parallel.BACKEND_DEFAULT`.
     max_niter : int, optional
         Maximal number of iterations used by the root finding algorithm.
         Default is 100.
