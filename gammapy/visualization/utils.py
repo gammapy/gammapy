@@ -14,6 +14,7 @@ __all__ = [
     "plot_map_rgb",
     "plot_theta_squared_table",
     "plot_distribution",
+    "parse_percentage",
 ]
 
 
@@ -103,6 +104,7 @@ def add_colorbar(img, ax, axes_loc=None, **kwargs):
 
 
 def parse_percentage(value):
+    """From the input, return the percentage as a float."""
     if isinstance(value, str) and value.endswith("%"):
         return float(value.strip("%")) / 100.0
     elif isinstance(value, (int, float)):
