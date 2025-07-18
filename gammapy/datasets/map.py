@@ -1305,8 +1305,8 @@ class MapDataset(Dataset):
         )
         residuals = self._compute_residuals(counts_spatial, npred_spatial, method)
 
-        if self.mask_safe is not None:
-            mask = self.mask_safe.reduce_over_axes(func=np.logical_or, keepdims=True)
+        if self.mask is not None:
+            mask = self.mask.reduce_over_axes(func=np.logical_or, keepdims=True)
             residuals.data[~mask.data] = np.nan
 
         kwargs.setdefault("add_cbar", True)
@@ -1316,11 +1316,21 @@ class MapDataset(Dataset):
         ax = residuals.plot(ax, **kwargs)
         return ax
 
-    def plot_residuals_spectral(self, ax=None, method="diff", region=None, **kwargs):
+    def plot_residuals_spectral(
+        self,
+        ax=None,
+        method="diff",
+        region=None,
+        kwargs_fit=None,
+        kwargs_safe=None,
+        **kwargs,
+    ):
         """Plot spectral residuals.
 
         The residuals are extracted from the provided region, and the normalization
         used for its computation can be controlled using the method parameter.
+
+        Both the mask fit and mask safe are taken into account.
 
         The error bars are computed using the uncertainty on the excess with a symmetric assumption.
 
@@ -1328,10 +1338,19 @@ class MapDataset(Dataset):
         ----------
         ax : `~matplotlib.axes.Axes`, optional
             Axes to plot on. Default is None.
-        method : {"diff", "diff/sqrt(model)"}
-            Normalization used to compute the residuals, see `SpectrumDataset.residuals`. Default is "diff".
-        region : `~regions.SkyRegion` (required)
-            Target sky region. Default is None.
+        method : {"diff", "diff/sqrt(model)"}, optional
+            Normalization used to compute the residuals, see `SpectrumDataset.residuals`.
+            Default is "diff".
+        region : `~regions.SkyRegion`, optional
+            Target sky region. If None, the full dataset region
+            (i.e., `~gammapy.maps.WcsGeom.footprint_rectangle_sky_region`) is used as the default.
+            Default is None.
+        kwargs_fit : dict, optional
+            Keyword arguments passed to `~RegionNDMap.plot_mask()` for mask fit.
+            Default is None.
+        kwargs_safe : dict, optional
+            Keyword arguments passed to `~RegionNDMap.plot_mask()` for mask safe.
+            Default is None.
         **kwargs : dict, optional
             Keyword arguments passed to `~matplotlib.axes.Axes.errorbar`.
 
@@ -1392,6 +1411,21 @@ class MapDataset(Dataset):
         ymin = 1.05 * np.nanmin(residuals.data - yerr)
         ymax = 1.05 * np.nanmax(residuals.data + yerr)
         ax.set_ylim(ymin, ymax)
+
+        kwargs_fit = kwargs_fit or {}
+        kwargs_safe = kwargs_safe or {}
+
+        kwargs_fit.setdefault("label", "Mask fit")
+        kwargs_fit.setdefault("color", "tab:green")
+        kwargs_safe.setdefault("label", "Mask safe")
+        kwargs_safe.setdefault("color", "black")
+
+        if self.mask_fit:
+            self.mask_fit.to_region_nd_map().plot_mask(ax=ax, **kwargs_fit)
+
+        if self.mask_safe:
+            self.mask_safe.to_region_nd_map().plot_mask(ax=ax, **kwargs_safe)
+        ax.legend()
         return ax
 
     def plot_residuals(
