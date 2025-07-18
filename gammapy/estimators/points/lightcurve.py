@@ -44,10 +44,10 @@ class LightCurveEstimator(FluxPointsEstimator):
     atol : `~astropy.units.Quantity`
         Tolerance value for time comparison with different scale. Default 1e-6 sec.
     n_sigma : float, optional
-        Number of sigma to use for asymmetric error computation. Only positive value can be used.
+        Number of sigma to use for asymmetric error computation. Must be a positive value.
         Default is 1.
     n_sigma_ul : float, optional
-        Number of sigma to use for upper limit computation. Only positive value can be used.
+        Number of sigma to use for upper limit computation. Must be a positive value.
         Default is 2.
     selection_optional : list of str, optional
         Which steps to execute. Available options are:

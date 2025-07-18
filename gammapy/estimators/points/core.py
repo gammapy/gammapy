@@ -805,7 +805,7 @@ class FluxPoints(FluxMaps):
         Parameters
         ----------
         n_sigma_ul : float, optional
-            Number of sigma to use for upper limit computation. Only positive value can be used.
+            Number of sigma to use for upper limit computation. Must be a positive value.
             Default is 2.
         **kwargs : dict, optional
             Keyword arguments passed to `~scipy.optimize.brentq`.

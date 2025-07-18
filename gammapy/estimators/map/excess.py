@@ -142,13 +142,13 @@ class ExcessMapEstimator(Estimator):
     correlation_radius : `~astropy.coordinates.Angle`, optional
         Correlation radius to use. Default is "0.1 deg".
     n_sigma : float, optional
-        Confidence level for the asymmetric errors expressed in number of sigma. Only positive value can be used.
+        Confidence level for the asymmetric errors expressed in number of sigma. Must be a positive value.
         Default is 1.
     n_sigma_ul : float, optional
-        Confidence level for the upper limits expressed in number of sigma. Only positive value can be used.
+        Confidence level for the upper limits expressed in number of sigma. Must be a positive value.
         Default is 2.
     n_sigma_sensitivity : float, optional
-        Confidence level for the sensitivity expressed in number of sigma. Only positive value can be used.
+        Confidence level for the sensitivity expressed in number of sigma. Must be a positive value.
         Default is 5.
     gamma_min_sensitivity : float, optional
         Minimum number of gamma-rays. Default is 10.

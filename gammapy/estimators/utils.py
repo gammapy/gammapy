@@ -1331,9 +1331,9 @@ def get_flux_map_from_profile(
     flux_maps : `~gammapy.estimators.FluxMaps` or dict of `~gammapy.maps.WcsNDMap`
         Flux map or dict containing  a `stat_scan` entry
     n_sigma : float, optional
-        Number of sigma for flux error. Only positive value can be used. Default is 1.
+        Number of sigma for flux error. Must be a positive value. Default is 1.
     n_sigma_ul : float, optional
-        Number of sigma for flux upper limits. Only positive value can be used. Default is 2.
+        Number of sigma for flux upper limits. Must be a positive value. Default is 2.
     reference_model : `~gammapy.modeling.models.SkyModel`, optional
         The reference model to use for conversions. If None, a model consisting
         of a point source with a power law spectrum of index 2 is assumed.

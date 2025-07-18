@@ -81,13 +81,13 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         Width of the kernel to use: the kernel will be truncated at this size.
         Default is None.
     n_sigma : float, optional
-        Number of sigma for flux error. Only positive value can be used.
+        Number of sigma for flux error. Must be a positive value.
         Default is 1.
     n_sigma_ul : float, optional
-        Number of sigma for flux upper limits. Only positive value can be used.
+        Number of sigma for flux upper limits. Must be a positive value.
         Default is 2.
     n_sigma_sensitivity : float, optional
-        Number of sigma for flux sensitivity. Only positive value can be used.
+        Number of sigma for flux sensitivity. Must be a positive value.
         Default is 5.
     downsampling_factor : int, optional
         Sample down the input maps to speed up the computation. Only integer
