@@ -20,6 +20,7 @@ from gammapy.data.pointing import FixedPointingInfo
 from gammapy.data.utils import get_irfs_features
 from gammapy.irf import PSF3D, load_irf_dict_from_file
 from gammapy.utils.cluster import hierarchical_clustering
+from gammapy.utils.coordinates import FoVICRSFrame, FoVAltAzFrame
 from gammapy.utils.fits import HDULocation
 from gammapy.utils.testing import (
     assert_skycoord_allclose,
@@ -50,6 +51,26 @@ def test_observation(data_store):
 
     c = SkyCoord(83.63333129882812, 22.01444435119629, unit="deg")
     assert_skycoord_allclose(obs.target_radec, c)
+
+
+@requires_data()
+def test_observation_get_fov_frame(data_store):
+    """Test Observation class"""
+    obs = data_store.obs(23523)
+
+    fov_icrs_frame = obs.get_fov_frame(obs.tmid, "RADEC")
+    fov_altaz_frame = obs.get_fov_frame(obs.tmid, "ALTAZ")
+
+    pnt_icrs = SkyCoord(83.63333129882812, 21.51444435119629, unit="deg", frame="icrs")
+
+    assert isinstance(fov_icrs_frame, FoVICRSFrame)
+    assert_allclose(
+        fov_icrs_frame.origin.separation(pnt_icrs).to_value("deg"), 0.0, atol=1e-5
+    )
+
+    assert isinstance(fov_altaz_frame, FoVAltAzFrame)
+    assert_allclose(fov_altaz_frame.origin.alt.deg, 41.950807)
+    assert_allclose(fov_altaz_frame.origin.az.deg, 22.558341)
 
 
 @requires_data()

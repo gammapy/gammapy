@@ -2,6 +2,7 @@
 """Functions to compute test statistic images."""
 
 import warnings
+import astropy.units as u
 from itertools import repeat
 import numpy as np
 import scipy.optimize
@@ -14,11 +15,13 @@ from gammapy.datasets.map import MapEvaluator
 from gammapy.datasets.utils import get_nearest_valid_exposure_position
 from gammapy.maps import Map, MapAxis, Maps
 from gammapy.modeling.models import PointSpatialModel, PowerLawSpectralModel, SkyModel
-from gammapy.stats import cash, cash_sum_cython, f_cash_root_cython, norm_bounds_cython
 from gammapy.stats.utils import ts_to_sigma
+from gammapy.stats import cash
 from gammapy.utils.array import shape_2N, symmetric_crop_pad_width
+from gammapy.utils.compilation import get_fit_statistics_compiled
 from gammapy.utils.pbar import progress_bar
 from gammapy.utils.roots import find_roots
+
 from ..core import Estimator
 from ..utils import (
     _generate_scan_values,
@@ -594,9 +597,15 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         datasets_models = datasets.models
 
         pad_width = (0, 0)
+        kernel_width = 0 * u.deg
         for dataset in datasets:
             pad_width_dataset = self.estimate_pad_width(dataset=dataset)
+            kernel_width_dataset = np.max(self.estimate_kernel(dataset).geom.width)
             pad_width = tuple(np.maximum(pad_width, pad_width_dataset))
+            kernel_width = np.maximum(kernel_width, kernel_width_dataset)
+
+        if self.kernel_width is None:
+            self.kernel_width = kernel_width
 
         datasets_padded = Datasets()
         for dataset in datasets:
@@ -670,10 +679,15 @@ class SimpleMapDataset:
         self.background = background
         self.norm_guess = norm_guess
 
+        stats = get_fit_statistics_compiled()
+        self._norm_bounds_compiled = stats["norm_bounds_compiled"]
+        self._cash_sum_compiled = stats["cash_sum_compiled"]
+        self._f_cash_root_compiled = stats["f_cash_root_compiled"]
+
     @lazyproperty
     def norm_bounds(self):
         """Bounds for x."""
-        return norm_bounds_cython(self.counts, self.background, self.model)
+        return self._norm_bounds_compiled(self.counts, self.background, self.model)
 
     def npred(self, norm):
         """Predicted number of counts."""
@@ -681,19 +695,21 @@ class SimpleMapDataset:
 
     def stat_sum(self, norm):
         """Statistics sum."""
-        return cash_sum_cython(self.counts, self.npred(norm))
+        return self._cash_sum_compiled(self.counts, self.npred(norm))
 
     def stat_sum_asimov(self, norm):
         """Statistics sum."""
-        return cash_sum_cython(self.npred(norm), self.npred(norm))
+        return self._cash_sum_compiled(self.npred(norm), self.npred(norm))
 
     def stat_sum_asimov_null(self, norm):
         """Statistics sum."""
-        return cash_sum_cython(self.npred(norm), self.background)
+        return self._cash_sum_compiled(self.npred(norm), self.background)
 
     def stat_derivative(self, norm):
         """Statistics derivative."""
-        return f_cash_root_cython(norm, self.counts, self.background, self.model)
+        return self._f_cash_root_compiled(
+            norm, self.counts, self.background, self.model
+        )
 
     def stat_2nd_derivative(self, norm):
         """Statistics 2nd derivative."""

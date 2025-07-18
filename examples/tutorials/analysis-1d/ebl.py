@@ -39,9 +39,9 @@ from gammapy.modeling.models import (
 #
 # We will use 6 observations of the blazars PKS 2155-304 taken in 2008 by
 # H.E.S.S. when it was in a steady state. The data have already been
-# reduced to OGIP format `SpectrumDatasetOnOff` following the procedure
+# reduced to OGIP format `~gammapy.datasets.SpectrumDatasetOnOff` following the procedure
 # :doc:`/tutorials/analysis-1d/spectral_analysis` tutorial using a
-# `ReflectedRegions` background estimation. The spectra and IRFs from the
+# reflected regions background estimation. The spectra and IRFs from the
 # 6 observations have been stacked together.
 #
 # We will load this dataset as a `~gammapy.datasets.SpectrumDatasetOnOff` and proceed with
@@ -61,8 +61,8 @@ print(dataset)
 #
 # The observed spectrum is already attenuated due to the EBL. Assuming
 # that the intrinsic spectrum is a power law, the observed spectrum is a
-# `gammapy.modeling.models.CompoundSpectralModel` given by the product of an EBL model with the
-# intrinsic model.
+# `~gammapy.modeling.models.CompoundSpectralModel` given by the product of an
+# EBL model with the intrinsic model.
 #
 
 
@@ -146,9 +146,11 @@ flux_points_intrinsic = flux_points_obs.copy(
     reference_model=SkyModel(spectral_model=pwl)
 )
 
+######################################################################
 #
 print(flux_points_obs.reference_model)
 
+######################################################################
 #
 print(flux_points_intrinsic.reference_model)
 

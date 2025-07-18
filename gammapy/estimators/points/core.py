@@ -27,6 +27,8 @@ __all__ = ["FluxPoints"]
 
 log = logging.getLogger(__name__)
 
+DEFAULT_LABEL_TEMPLATE = "{quantity} [{unit}]"
+
 
 def squash_fluxpoints(flux_point, axis):
     """Squash a `~FluxPoints` object into one point.
@@ -686,14 +688,16 @@ class FluxPoints(FluxMaps):
     @staticmethod
     def _plot_format_yax(ax, energy_power, sed_type):
         if energy_power > 0:
-            ax.set_ylabel(
-                f"e{energy_power} * {sed_type} [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]"
+            ylabel = DEFAULT_LABEL_TEMPLATE.format(
+                quantity=f"e{energy_power} * {sed_type}",
+                unit=ax.yaxis.units.to_string(UNIT_STRING_FORMAT),
             )
         else:
-            ax.set_ylabel(
-                f"{sed_type} [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]"
+            ylabel = DEFAULT_LABEL_TEMPLATE.format(
+                quantity=f"{sed_type}",
+                unit=ax.yaxis.units.to_string(UNIT_STRING_FORMAT),
             )
-
+        ax.set_ylabel(ylabel)
         ax.set_yscale("log", nonpositive="clip")
 
     def plot_ts_profiles(
@@ -813,13 +817,13 @@ class FluxPoints(FluxMaps):
         Examples
         --------
         >>> from gammapy.estimators import FluxPoints
-        >>> filename = '$GAMMAPY_DATA/tests/spectrum/flux_points/binlike.fits'
+        >>> filename = "$GAMMAPY_DATA/estimators/crab_hess_fp/crab_hess_fp.fits"
         >>> flux_points = FluxPoints.read(filename)
-        >>> flux_points_recomputed = flux_points.recompute_ul(n_sigma_ul=3)
-        >>> print(flux_points.meta["n_sigma_ul"], flux_points.flux_ul.data[0])
-        2.0 [[3.95451985e-09]]
-        >>> print(flux_points_recomputed.meta["n_sigma_ul"], flux_points_recomputed.flux_ul.data[0])
-        3 [[6.22245374e-09]]
+        >>> flux_points_recomputed = flux_points.recompute_ul(n_sigma_ul=4)
+        >>> print(flux_points.meta["n_sigma_ul"], flux_points.flux_ul.data[1])
+        3.0 [[3.99250033e-11]]
+        >>> print(flux_points_recomputed.meta["n_sigma_ul"], flux_points_recomputed.flux_ul.data[1])
+        4 [[4.24707167e-11]]
         """
         if not self.has_stat_profiles:
             raise ValueError(

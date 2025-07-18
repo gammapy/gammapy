@@ -177,7 +177,7 @@ plt.show()
 # in energy on the original exposure cube. Probably log interpolation
 # would be better, but it doesn’t matter much here, because the energy
 # binning is fine. Finally, we just copy the counts map geometry, which
-# contains an energy axis with `node_type="edges"`. This is non-ideal
+# contains an energy axis with ``node_type="edges"``. This is non-ideal
 # for exposure cubes, but again, acceptable because exposure doesn’t vary
 # much from bin to bin, so the exact way interpolation occurs in later use
 # of that exposure cube doesn’t matter a lot. Of course you could define
@@ -192,7 +192,7 @@ exposure_hpx.plot()
 plt.show()
 
 ######################################################################
-# For exposure, we choose a geometry with node_type='center',
+# For exposure, we choose a geometry with ``node_type='center'``,
 axis = MapAxis.from_energy_bounds(
     "10 GeV",
     "2 TeV",
