@@ -1338,11 +1338,13 @@ class MapDataset(Dataset):
         ----------
         ax : `~matplotlib.axes.Axes`, optional
             Axes to plot on. Default is None.
-        method : {"diff", "diff/sqrt(model)"}
+        method : {"diff", "diff/sqrt(model)"}, optional
             Normalization used to compute the residuals, see `SpectrumDataset.residuals`.
             Default is "diff".
-        region : `~regions.SkyRegion` (required)
-            Target sky region. Default is None.
+        region : `~regions.SkyRegion`, optional
+            Target sky region. If None, the full dataset region
+            (i.e., `~gammapy.maps.WcsGeom.footprint_rectangle_sky_region`) is used as the default.
+            Default is None.
         kwargs_fit : dict, optional
             Keyword arguments passed to `~RegionNDMap.plot_mask()` for mask fit.
             Default is None.
