@@ -55,22 +55,21 @@ def _set_model_link(shared_register, model):
     return shared_register
 
 
-def _set_models_link(models):
-    from . import SkyModel
-
-    shared_register = {}
+def _flatten_models(models):
+    flat_models = []
     for model in models:
-        if isinstance(model, SkyModel):
-            submodels = [
-                model.spectral_model,
-                model.spatial_model,
-                model.temporal_model,
-            ]
-            for submodel in submodels:
-                if submodel is not None:
-                    shared_register = _set_model_link(shared_register, submodel)
+        if hasattr(model, "_models"):
+            flat_models.extend(_flatten_models(model._models))
         else:
-            shared_register = _set_model_link(shared_register, model)
+            flat_models.append(model)
+    return flat_models
+
+
+def _set_models_link(models):
+    shared_register = {}
+    flat_models = _flatten_models(models)
+    for model in flat_models:
+        shared_register = _set_model_link(shared_register, model)
 
 
 def _get_model_class_from_dict(data):
