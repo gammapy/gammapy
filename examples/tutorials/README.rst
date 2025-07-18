@@ -24,7 +24,12 @@ You can read them here, or execute them using a temporary cloud server in Binder
 To execute them locally, you have to first install Gammapy locally (see
 :ref:`installation`) and download the tutorial notebooks and example datasets (see
 :ref:`getting-started`). Once Gammapy is installed, remember that you can always
-use ``gammapy info`` to check your setup.
+use ``gammapy tutorial setup`` to check your tutorial setup, or in your script with
+
+.. code-block:: python
+
+    from gammapy.utils.check import check_tutorials_setup
+    check_tutorials_setup()
 
 Gammapy is a Python package built on `Numpy`_ and `Astropy`_, so to use it
 effectively, you have to learn the basics. Many good free resources are
