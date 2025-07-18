@@ -299,6 +299,11 @@ class EDispMap(IRFMap):
         self.get_edisp_kernel(energy_axis=e_reco).peek(figsize)
 
 
+class UnbinnedEDispMap(EDispMap):
+    tag = "unbinned_edisp_map"
+    required_axes = ["events", "energy_true"]
+
+
 class EDispKernelMap(IRFMap):
     """Energy dispersion kernel map.
 

@@ -18,7 +18,7 @@ from gammapy.utils.interpolation import interpolation_scale
 from gammapy.utils.time import time_ref_from_dict, time_ref_to_dict
 from .utils import INVALID_INDEX, INVALID_VALUE, edges_from_lo_hi
 
-__all__ = ["MapAxes", "MapAxis", "TimeMapAxis", "LabelMapAxis"]
+__all__ = ["MapAxes", "MapAxis", "TimeMapAxis", "LabelMapAxis", "ParallelLabelMapAxis"]
 
 log = logging.getLogger(__name__)
 
@@ -3160,10 +3160,9 @@ class LabelMapAxis:
     node_type = "label"
 
     def __init__(self, labels, name=""):
-        unique_labels = np.unique(labels)
-
-        if not len(unique_labels) == len(labels):
-            raise ValueError("Node labels must be unique")
+        # unique_labels = np.unique(labels)
+        # if not len(unique_labels) == len(labels):
+        #    raise ValueError("Node labels must be unique")
 
         self._labels = np.array(labels)
         self._name = name
@@ -3562,3 +3561,34 @@ class LabelMapAxis:
         return LabelMapAxis(
             labels=[self.center[0] + "..." + self.center[-1]], name=self._name
         )
+
+
+class ParallelLabelMapAxis(LabelMapAxis):
+    def __init__(self, parallel_labels, parallel_names, name=""):
+        self._label_mapaxis = {}
+
+        self._name = name
+        self._labels = np.array(parallel_labels)
+        for label, name in zip(self._labels.T, parallel_names):
+            self._label_mapaxis[name] = LabelMapAxis(label, name=name)
+
+    def __repr__(self):
+        str_ = self.__class__.__name__ + "\n"
+        str_ += "-" * len(self.__class__.__name__) + "\n\n"
+        fmt = "\t{:<10s} : {:<10s}\n"
+        str_ += fmt.format("name", self.name)
+        str_ += fmt.format("nbins", str(len(self._labels)))
+        str_ += fmt.format("parallel labels", str(self.parallel_names))
+        return str_.expandtabs(tabsize=2)
+
+    @property
+    def parallel_names(self):
+        return self._label_mapaxis.keys()
+
+    def __getitem__(self, item):
+        if isinstance(item, str):
+            return self._label_mapaxis[item]
+        else:
+            raise TypeError(
+                f"Unsupported type {type(item)} for ParallelLabelMapAxis.__getitem__"
+            )

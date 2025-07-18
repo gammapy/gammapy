@@ -16,7 +16,7 @@ from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.scripts import make_path
 from gammapy.utils.types import JsonQuantityDecoder
 from gammapy.utils.units import energy_unit_format
-from .axes import MapAxis
+from .axes import MapAxis, ParallelLabelMapAxis
 from .coord import MapCoord
 from .geom import pix_tuple_to_idx
 
@@ -1651,13 +1651,15 @@ class Map(abc.ABC):
             # take Jacobian into account
             values = 2 * np.pi * axis.center.reshape(shape) * values
 
-        data = np.insert(values.cumsum(axis=axis_idx), 0, 0, axis=axis_idx)
-
-        axis_shifted = MapAxis.from_nodes(
-            axis.edges, name=axis.name, interp=axis.interp
-        )
-        axes = self.geom.axes.replace(axis_shifted)
-        geom = self.geom.to_image().to_cube(axes)
+        if isinstance(axis, ParallelLabelMapAxis):
+            data = values.cumsum(axis=axis_idx)  # SHOULD BE IMPROVED
+            geom = self.geom
+        else:
+            axis_shifted = MapAxis.from_nodes(
+                axis.edges, name=axis.name, interp=axis.interp
+            )
+            axes = self.geom.axes.replace(axis_shifted)
+            geom = self.geom.to_image().to_cube(axes)
         return self.__class__(geom=geom, data=data.value, unit=data.unit)
 
     def integral(self, axis_name, coords, **kwargs):

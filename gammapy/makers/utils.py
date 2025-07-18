@@ -2,13 +2,13 @@
 import logging
 import numpy as np
 import astropy.units as u
-from astropy.coordinates import Angle
+from astropy.coordinates import Angle, SkyCoord
 from astropy.coordinates.erfa_astrom import erfa_astrom, ErfaAstromInterpolator
 from astropy.table import Table
 from astropy.time import Time
 from gammapy.data import FixedPointingInfo, PointingMode
-from gammapy.irf import EDispMap, FoVAlignment, PSFMap
-from gammapy.maps import Map, RegionNDMap, MapAxis
+from gammapy.irf import EDispMap, FoVAlignment, PSFMap, UnbinnedEDispMap
+from gammapy.maps import Map, RegionNDMap, MapAxis, UnbinnedRegionGeom
 from gammapy.maps.utils import broadcast_axis_values_to_geom
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.stats import WStatCountsStatistic
@@ -330,8 +330,12 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None, use_region_center=T
     fov_frame = FoVICRSFrame(origin=origin)
 
     edisp_map = project_irf_on_geom(geom, edisp, fov_frame).to_unit("")
-    edisp_map.normalize(axis_name="migra")
-    return EDispMap(edisp_map, exposure_map)
+    if isinstance(geom, UnbinnedRegionGeom):
+        edisp_map.normalize(axis_name="events")
+        return UnbinnedEDispMap(edisp_map, exposure_map)
+    else:
+        edisp_map.normalize(axis_name="migra")
+        return EDispMap(edisp_map, exposure_map)
 
 
 def make_edisp_kernel_map(
@@ -702,6 +706,36 @@ def project_irf_on_geom(geom, irf, fov_frame, use_region_center=True):
     map : `~gammapy.maps.Map`
         Map containing the projected IRF.
     """
+    if isinstance(geom, UnbinnedRegionGeom):
+        skycoord = SkyCoord(
+            ra=geom.axes["events"]["ra"].center * u.deg,
+            dec=geom.axes["events"]["dec"].center * u.deg,
+        )
+        coords = _get_fov_coord(skycoord, fov_frame, irf.has_offset_axis)
+        coords["offset"] = (
+            np.ones((len(irf.axes["energy_true"].center), 1))
+            @ np.array([coords["offset"]])
+        ).T.tolist() * coords["offset"].unit
+        non_spatial_axes = set(irf.required_arguments) - set(
+            ["offset", "fov_lon", "fov_lat"]
+        )
+
+        for axis_name in non_spatial_axes:
+            if axis_name == "migra":
+                coords[axis_name] = (
+                    np.array([geom.axes["events"]["energy"].center]).T
+                    @ np.array([irf.axes["energy_true"].center])
+                ).tolist()
+            elif axis_name == "energy_true":
+                coords[axis_name] = (
+                    np.ones((len(geom.axes["events"]["energy"].center), 1))
+                    @ np.array([irf.axes["energy_true"].center])
+                ).tolist() * irf.axes["energy_true"].unit
+
+        data = irf.evaluate(**coords)
+
+        return Map.from_geom(geom=geom, data=data.value.T, unit=data.unit)
+
     if not use_region_center:
         image_geom = geom.to_wcs_geom().to_image()
         region_coord, weights = geom.get_wcs_coord_and_weights()
