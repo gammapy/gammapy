@@ -21,7 +21,7 @@ class LightCurveEstimator(FluxPointsEstimator):
     """Estimate light curve.
 
     The estimator will apply flux point estimation on the source model component to datasets
-    in each of the provided time intervals.  The normalisation, `norm`, is the only
+    in each of the provided time intervals.  The normalisation, ``norm``, is the only
     parameter of the source model left free to vary. Other model components
     can be left free to vary with the reoptimize option.
 
@@ -36,15 +36,15 @@ class LightCurveEstimator(FluxPointsEstimator):
 
     Parameters
     ----------
-    time_intervals : list of `astropy.time.Time`
+    time_intervals : list of `~astropy.time.Time` objects
         Start and stop time for each interval to compute the LC.
     source : str or int
         For which source in the model to compute the flux points. Default is 0.
-    atol : `~astropy.units.Quantity`
+    atol : `~astropy.units.Quantity`, optional
         Tolerance value for time comparison with different scale. Default 1e-6 sec.
-    n_sigma : int
+    n_sigma : int, optional
         Number of sigma to use for asymmetric error computation. Default is 1.
-    n_sigma_ul : int
+    n_sigma_ul : int, optional
         Number of sigma to use for upper limit computation. Default is 2.
     selection_optional : list of str, optional
         Which steps to execute. Available options are:
@@ -60,25 +60,29 @@ class LightCurveEstimator(FluxPointsEstimator):
         but rather the closest values to the energy axis edges of the parent dataset.
         Default is None: apply the estimator in each energy bin of the parent dataset.
         For further explanation see :ref:`estimators`.
-    fit : `~gammapy.modeling.Fit`
-        Fit instance specifying the backend and fit options.
-    reoptimize : bool
+    fit : `~gammapy.modeling.Fit`, optional
+        Fit instance specifying the backend and fit options. If None, the `~gammapy.modeling.Fit` instance is created
+        internally. Default is None.
+    reoptimize : bool, optional
         If True the free parameters of the other models are fitted in each bin independently,
         together with the norm of the source of interest
         (but the other parameters of the source of interest are kept frozen).
         If False only the norm of the source of interest if fitted,
         and all other parameters are frozen at their current values.
-    n_jobs : int
+        Default is False.
+    stack_over_time_interval : bool, optional
+        Whether to stack datasets within each time interval. Default is False.
+    n_jobs : int, optional
         Number of processes used in parallel for the computation. Default is one,
         unless `~gammapy.utils.parallel.N_JOBS_DEFAULT` was modified. The number
         of jobs is limited to the number of physical CPUs.
-    parallel_backend : {"multiprocessing", "ray"}
+    parallel_backend : {"multiprocessing", "ray"}, optional
         Which backend to use for multiprocessing. Defaults to `~gammapy.utils.parallel.BACKEND_DEFAULT`.
-    norm : ~gammapy.modeling.Parameter` or dict
-        Norm parameter used for the fit
+    norm : ~gammapy.modeling.Parameter` or dict, optional
+        Norm parameter used for the fit.
         Default is None and a new parameter is created automatically,
         with value=1, name="norm", scan_min=0.2, scan_max=5, and scan_n_values = 11.
-        By default the min and max are not set and derived from the source model,
+        By default, the min and max are not set and derived from the source model,
         unless the source model does not have one and only one norm parameter.
         If a dict is given the entries should be a subset of
         `~gammapy.modeling.Parameter` arguments.
@@ -94,9 +98,16 @@ class LightCurveEstimator(FluxPointsEstimator):
 
     tag = "LightCurveEstimator"
 
-    def __init__(self, time_intervals=None, atol="1e-6 s", **kwargs):
+    def __init__(
+        self,
+        time_intervals=None,
+        atol="1e-6 s",
+        stack_over_time_interval=False,
+        **kwargs,
+    ):
         self.time_intervals = time_intervals
         self.atol = u.Quantity(atol)
+        self.stack_over_time_interval = stack_over_time_interval
 
         super().__init__(**kwargs)
 
@@ -148,6 +159,24 @@ class LightCurveEstimator(FluxPointsEstimator):
 
             valid_intervals.append([t_min, t_max])
 
+            if self.stack_over_time_interval:
+                name = f"timebin_{t_min.mjd:.0f}_{t_max.mjd:.0f}"
+                dataset_reduced = datasets_to_fit.stack_reduce(name=name)
+                models = datasets.models.copy()
+                for dataset in datasets:
+                    models.reassign(dataset.name, dataset_reduced.name)
+                dataset_reduced.models = models
+                datasets_to_fit = Datasets([dataset_reduced])
+
+                if self.n_jobs == 1:
+                    fp = self.estimate_time_bin_flux(
+                        datasets_to_fit, datasets_to_fit.names
+                    )
+                    rows.append(fp)
+                else:
+                    parallel_datasets.append(datasets_to_fit)
+                continue
+
             if self.n_jobs == 1:
                 fp = self.estimate_time_bin_flux(datasets_to_fit, dataset_names)
                 rows.append(fp)
@@ -183,14 +212,14 @@ class LightCurveEstimator(FluxPointsEstimator):
 
         Parameters
         ----------
-        map : `Map`
+        map : `~gammapy.maps.Map`
             Map to expand.
         dataset_names : list of str
             Dataset names.
 
         Returns
         -------
-        map : `Map`
+        map : `~gammapy.maps.Map`
             Expanded map.
         """
         label_axis = LabelMapAxis(labels=dataset_names, name="dataset")
@@ -206,8 +235,10 @@ class LightCurveEstimator(FluxPointsEstimator):
 
         Parameters
         ----------
-        datasets : `~gammapy.modeling.Datasets`
+        datasets : `~gammapy.datasets.Datasets`
             List of dataset objects.
+        dataset_names : list of str
+            Dataset names.
 
         Returns
         -------
