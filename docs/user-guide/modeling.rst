@@ -22,8 +22,8 @@ depending of the type of `~gammapy.datasets.Datasets`.
 
 Most commonly used models in gamma-ray astronomy are built-in, see the :ref:`model-gallery`.
 It is easy to sum models, create compound spectral models (see
-:doc:`/user-guide/model-gallery/spectral/plot_compound`), or to create user-defined models (see the section
-`Implementing a custom model` of :doc:`/tutorials/api/models`). Gammapy is very flexible!
+:doc:`/user-guide/model-gallery/spectral/plot_compound`), or to create user-defined models (see
+:ref:`custom-model`). Gammapy is very flexible!
 
 Models can be unique for a given dataset, or contribute to multiple datasets and thus provide links,
 allowing e.g. to do a joint fit to multiple :term:`IACT` datasets, or to a joint :term:`IACT` and
@@ -83,8 +83,7 @@ Three different fitting backend are offered:
 - `scipy <https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html>`__,
 - `sherpa <http://cxc.cfa.harvard.edu/sherpa/methods/index.html>`__.
 
-``Sherpa`` is not installed by default, but this is quite easy (see the section `Recommended Setup` of
-:doc:`getting-started/index`).
+``Sherpa`` is not installed by default, but this is quite easy (see :ref:`quickstart-setup`).
 
 The tutorial :doc:`/tutorials/api/fitting` describes in detail the API.
 
@@ -101,7 +100,7 @@ term).
 With the MAP estimation, one can also realise hypothesis testing, compute confidence intervals and confidence
 limits.
 
-The tutorial :doc:`/examples/tutorials/api/priors` describes in detail this estimation method.
+The tutorial :doc:`/tutorials/api/priors` describes in detail this estimation method.
 
 Bayesian Inference
 ^^^^^^^^^^^^^^^^^^
@@ -121,7 +120,7 @@ map likelihood landscapes with multiple solutions (local maxima in which a class
 However, the computation time to make Bayesian Inference is generally larger than for the Maximum
 Likelihood Estimation using ``iminuit``.
 
-The tutorial :doc:`/examples/tutorials/api/nested_sampling_Crab` describes in detail this estimation
+The tutorial :doc:`/tutorials/api/nested_sampling_Crab` describes in detail this estimation
 method.
 
 
