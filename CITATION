@@ -1,8 +1,14 @@
 If you use Gammapy for work/research presented in a publication (whether
 directly, or as a dependency to another package), we recommend and encourage
-the following citation scheme:
-- refer to the Gammapy paper as general citation: A&A, 678, A157 (2023) - the bibtex is given below
-- AND cite the version of Gammapy used with the DOI 10.5281/zenodo.4701488
+the following citation scheme (see also https://gammapy.org/acknowledging.html):
+- refer to the Gammapy paper as general citation: A&A, 678, A157 (2023) - the bibtex is given below,
+- AND cite the used version of Gammapy (e.g. see https://doi.org/10.5281/zenodo.14760974 for the v1.3),
+
+If possible, we propose to add the following acknowledgment in LaTeX:
+
+  This work made use of Gammapy \citep{gammapy:2023}, a community-developed Python package. The Gammapy team
+  acknowledges all Gammapy past and current contributors, as well as all contributors of the main Gammapy dependency
+  libraries: NumPy, SciPy, Astropy, Astropy Regions, iminuit, Matplotlib.
 
 Recommended BibTeX entry for the above citation:
 
