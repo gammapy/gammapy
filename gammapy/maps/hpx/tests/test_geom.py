@@ -395,44 +395,49 @@ def test_hpxgeom_get_coord():
     # 2D all-sky
     hpx = HpxGeom(16, False, "galactic")
     c = hpx.get_coord()
-    assert_allclose(c[0][:3], np.array([45.0, 135.0, 225.0]))
-    assert_allclose(c[1][:3], np.array([87.075819, 87.075819, 87.075819]))
+    assert c[0].unit == "deg"
+    assert c[1].unit == "deg"
+    assert_allclose(c[0][:3].value, np.array([45.0, 135.0, 225.0]))
+    assert_allclose(c[1][:3].value, np.array([87.075819, 87.075819, 87.075819]))
 
     # 3D all-sky
     hpx = HpxGeom(16, False, "galactic", axes=[ax0])
     c = hpx.get_coord()
-    assert_allclose(c[0][0, :3], np.array([45.0, 135.0, 225.0]))
-    assert_allclose(c[1][0, :3], np.array([87.075819, 87.075819, 87.075819]))
-    assert_allclose(c[2][0, :3], np.array([0.5, 0.5, 0.5]))
+    assert_allclose(c[0][0, :3].value, np.array([45.0, 135.0, 225.0]))
+    assert_allclose(c[1][0, :3].value, np.array([87.075819, 87.075819, 87.075819]))
+    assert_allclose(c[2][0, :3].value, np.array([0.5, 0.5, 0.5]))
 
     # 2D partial-sky
     hpx = HpxGeom(64, False, "galactic", region="DISK(110.,75.,2.)")
     c = hpx.get_coord()
-    assert_allclose(c[0][:3], np.array([107.5, 112.5, 106.57894737]))
-    assert_allclose(c[1][:3], np.array([76.813533, 76.813533, 76.07742]))
+    assert_allclose(c[0][:3].value, np.array([107.5, 112.5, 106.57894737]))
+    assert_allclose(c[1][:3].value, np.array([76.813533, 76.813533, 76.07742]))
 
     # 3D partial-sky
     hpx = HpxGeom(64, False, "galactic", region="DISK(110.,75.,2.)", axes=[ax0])
     c = hpx.get_coord()
-    assert_allclose(c[0][0, :3], np.array([107.5, 112.5, 106.57894737]))
-    assert_allclose(c[1][0, :3], np.array([76.813533, 76.813533, 76.07742]))
-    assert_allclose(c[2][0, :3], np.array([0.5, 0.5, 0.5]))
+    assert_allclose(c[0][0, :3].value, np.array([107.5, 112.5, 106.57894737]))
+    assert_allclose(c[1][0, :3].value, np.array([76.813533, 76.813533, 76.07742]))
+    assert_allclose(c[2][0, :3].value, np.array([0.5, 0.5, 0.5]))
 
     # 3D partial-sky w/ variable bin size
     hpx = HpxGeom(
         [16, 32, 64], False, "galactic", region="DISK(110.,75.,2.)", axes=[ax0]
     )
     c = hpx.get_coord(flat=True)
-    assert_allclose(c[0][:3], np.array([117.0, 103.5, 112.5]))
-    assert_allclose(c[1][:3], np.array([75.340734, 75.340734, 75.340734]))
-    assert_allclose(c[2][:3], np.array([0.5, 1.5, 1.5]))
+    assert c[0].unit == "deg"
+    assert c[1].unit == "deg"
+    assert c[2].unit == ""
+    assert_allclose(c[0][:3].value, np.array([117.0, 103.5, 112.5]))
+    assert_allclose(c[1][:3].value, np.array([75.340734, 75.340734, 75.340734]))
+    assert_allclose(c[2][:3].value, np.array([0.5, 1.5, 1.5]))
 
 
 @pytest.mark.parametrize(("nside", "nested", "frame", "region", "axes"), hpx_test_geoms)
 def test_hpxgeom_contains(nside, nested, frame, region, axes):
     geom = HpxGeom(nside, nested, frame, region=region, axes=axes)
     coords = geom.get_coord(flat=True)
-    assert_allclose(geom.contains(coords), np.ones_like(coords[0], dtype=bool))
+    assert_allclose(geom.contains(coords), np.ones_like(coords[0].value, dtype=bool))
 
     if axes is not None:
         coords = [c[0] for c in coords[:2]] + [ax.edges[-1] + 1.0 for ax in axes]

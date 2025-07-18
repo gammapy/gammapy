@@ -19,6 +19,8 @@ from gammapy.modeling.models import (
     Model,
     Models,
     PiecewiseNormSpectralModel,
+    PointSpatialModel,
+    PowerLawNormSpectralModel,
     PowerLawSpectralModel,
     PowerLawTemporalModel,
     SineTemporalModel,
@@ -473,6 +475,7 @@ def test_link_label(models):
             n_link += 1
     assert n_link == 2
 
+    table = skymodels.parameters.to_table()
     skymodels_copy = skymodels.copy()
     assert (
         skymodels_copy[0].spectral_model.reference
@@ -483,14 +486,48 @@ def test_link_label(models):
     label1 = dict_["components"][1]["spectral"]["parameters"][2]["link"]
     assert label0 == label1
 
+    assert table["link"][2] == table["link"][9] and table["link"][2] != table["link"][1]
+
     txt = skymodels.__str__()
-    lines = txt.splitlines()
+    lines = txt.splitlines()  # noqa: E303
     n_link = 0
     for line in lines:
         if "@" in line:
             assert "reference" in line
             n_link += 1
     assert n_link == 2
+
+
+def test_link_label_compound():
+    shared_pl = PowerLawSpectralModel(
+        index=2.2, amplitude="1e-12 cm-2 s-1 TeV-1", reference="1 TeV"
+    )
+    shared_point = PointSpatialModel()
+    norm1 = PowerLawNormSpectralModel(norm=1.0, tilt=0.0)
+    norm2 = PowerLawNormSpectralModel(norm=0.5, tilt=0.0)
+    model1 = SkyModel(
+        name="model-1", spatial_model=shared_point, spectral_model=shared_pl * norm1
+    )
+    model2 = SkyModel(
+        name="model-2",
+        spatial_model=shared_point,
+        spectral_model=shared_pl * norm2 * norm1,
+    )
+    models = Models([model1, model2])
+
+    assert len(models.parameters.free_unique_parameters.to_table()) == 6
+    assert len(models.parameters.free_unique_parameters) == 6
+
+    models_copy = models.copy()
+    assert len(models_copy.parameters.free_unique_parameters.to_table()) == 6
+    assert (
+        models_copy[0].spectral_model.model1.index
+        == models_copy[1].spectral_model.model1.model1.index
+    )
+    assert (
+        models_copy[0].spectral_model.model1.amplitude
+        == models_copy[1].spectral_model.model1.model1.amplitude
+    )
 
 
 def test_to_dict_not_default():
