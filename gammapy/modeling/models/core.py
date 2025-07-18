@@ -1170,11 +1170,11 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
         Parameters
         ----------
         x_width : float, optional
-            Number of :math:`sigma` for `GaussianSpatialModel`
-            or `x_r_0` for `GeneralizedGaussianSpatialModel`
+            Number of ``sigma`` for `GaussianSpatialModel`
+            or ``x_r_0`` for `GeneralizedGaussianSpatialModel`
             If not specified, the defaults for the models will be used.
         kwargs : dict, optional
-            Keyword arguments passed to `Spatial_model.to_region`
+            Keyword arguments passed to ``model.spatial_model.to_region``.
 
         Returns
         -------
@@ -1219,15 +1219,15 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
         path_effect : `~matplotlib.patheffects.PathEffect`, optional
             Path effect applied to artists and lines. Default is None.
         x_width : float, optional
-            Number of :math:`sigma` for `GaussianSpatialModel`
-            or `x_r_0` for `GeneralizedGaussianSpatialModel`.
+            Number of ``sigma`` for `GaussianSpatialModel`
+            or ``x_r_0`` for `GeneralizedGaussianSpatialModel`.
             If not specified, the defaults for the models will be used.
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.artists.Artist`.
 
         Returns
         -------
-        ax : `~astropy.visualization.WcsAxes`
+        ax : `~astropy.visualization.wcsaxes.WCSAxes`
             WCS axes.
 
         Examples
