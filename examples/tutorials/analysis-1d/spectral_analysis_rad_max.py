@@ -21,7 +21,7 @@ Context
 
 As already explained in the :doc:`/tutorials/analysis-1d/spectral_analysis`
 tutorial, the background is estimated from the field of view of the observation.
-In particular, the source and background events are counted within a circular 
+In particular, the source and background events are counted within a circular
 ON region enclosing the source. The background to be subtracted is then estimated
 from one or more OFF regions with an expected background rate similar to the one
 in the ON region (i.e. from regions with similar acceptance).
@@ -51,7 +51,7 @@ specifications offer two different ways to store this information:
   values are stored in additional `FITS` data unit, named
   `RAD_MAX_2D <https://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/point_like/#rad-max-2d>`__.
 
-`Gammapy` provides a class to automatically read these values,
+Gammapy provides a class to automatically read these values,
 `~gammapy.irf.RadMax2D`, for both cases (fixed or energy-dependent
 :math:`\\theta` cut). In this notebook we will focus on how to perform a
 spectral extraction with a point-like IRF with an energy-dependent
@@ -79,8 +79,8 @@ We load two MAGIC observations in the
 IRF component with a :math:`\\theta` cut.
 
 We define the ON region, this time as a `~regions.PointSkyRegion` instead of a
-`CircleSkyRegion`, i.e. we specify only the center of our ON region.
-We create a `RegionGeom` adding to the region the estimated energy
+`~regions.CircleSkyRegion`, i.e. we specify only the center of our ON region.
+We create a `~gammapy.maps.RegionGeom` adding to the region the estimated energy
 axis of the `~gammapy.datasets.SpectrumDataset` object we want to
 produce. The corresponding dataset maker will automatically use the
 :math:`\\theta` values in `~gammapy.irf.RadMax2D` to set the
@@ -129,12 +129,12 @@ from gammapy.modeling.models import (
     SkyModel,
     create_crab_spectral_model,
 )
+from gammapy.visualization import plot_spectrum_datasets_off_regions
 
 ######################################################################
 # Check setup
 # -----------
 from gammapy.utils.check import check_tutorials_setup
-from gammapy.visualization import plot_spectrum_datasets_off_regions
 
 check_tutorials_setup()
 
@@ -206,14 +206,14 @@ dataset_empty = SpectrumDataset.create(geom=geom, energy_axis_true=energy_axis_t
 
 
 ######################################################################
-# The `SpectrumDataset` is now based on a geometry consisting of a
+# The `~gammapy.datasets.SpectrumDataset` is now based on a geometry consisting of a
 # single coordinate and an estimated energy axis. The
-# `SpectrumDatasetMaker` and `ReflectedRegionsBackgroundMaker` will
+# `~gammapy.datasets.SpectrumDatasetMaker` and `~gammapy.datasets.ReflectedRegionsBackgroundMaker` will
 # take care of producing ON and OFF with the proper sizes, automatically
-# adopting the :math:`\theta` values in `Observation.rad_max`.
+# adopting the :math:`\theta` values in `~gammapy.data.Observation.rad_max`.
 #
-# As explained in the introduction, we use a `WobbleRegionsFinder`, to
-# determine the OFF positions. The parameter `n_off_positions` specifies
+# As explained in the introduction, we use a `~gammapy.makers.WobbleRegionsFinder`, to
+# determine the OFF positions. The parameter ``n_off_positions`` specifies
 # the number of OFF regions to be considered.
 #
 
@@ -259,9 +259,8 @@ plt.show()
 # Fit spectrum
 # ------------
 #
-# | We perform a joint likelihood fit of the two datasets.
-# | For this particular datasets we select a fit range between
-#   :math:`80\,{\rm GeV}` and :math:`20\,{\rm TeV}`.
+# We perform a joint likelihood fit of the two datasets. For this particular datasets
+# we select a fit range between :math:`80\,{\rm GeV}` and :math:`20\,{\rm TeV}`.
 #
 
 e_min = 80 * u.GeV
