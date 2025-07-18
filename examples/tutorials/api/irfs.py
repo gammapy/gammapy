@@ -226,7 +226,7 @@ print(res)
 # sphinx_gallery_thumbnail_number = 1
 aeff_eval = aeff_3d.evaluate(energy_true=[1.0] * u.TeV)
 
-ax = plt.subplot(figsize=(9, 9))
+ax = plt.subplots(1, 1, figsize=(9, 9))
 with quantity_support():
     caxes = ax.pcolormesh(
         fov_lat_axis.edges, fov_lon_axis.edges, aeff_eval.value.squeeze()
