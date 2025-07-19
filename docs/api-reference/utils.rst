@@ -8,6 +8,10 @@ utils - Utilities
 
 .. currentmodule:: gammapy.utils
 
+.. automodapi:: gammapy.utils.cache
+    :no-inheritance-diagram:
+    :include-all-objects:
+    
 .. automodapi:: gammapy.utils.cluster
     :no-inheritance-diagram:
     :include-all-objects:
