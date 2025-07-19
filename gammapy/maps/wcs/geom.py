@@ -953,7 +953,7 @@ class WcsGeom(Geom):
             width=2 * u.Quantity(width), kernel="box"
         )
 
-    def region_mask(self, regions, inside=True):
+    def region_mask(self, regions, inside=True, point_to_radius=None):
         """Create a mask from a given list of regions.
 
         The mask is filled such that a pixel inside the region is filled with
@@ -970,6 +970,11 @@ class WcsGeom(Geom):
             For ``inside=True``, set pixels in the region to True.
             For ``inside=False``, set pixels in the region to False.
             Default is True.
+        point_to_radius : `~astropy.units.Quantity`, optional
+            If specified, a `~regions.PointSkyRegion` is converted
+            to a `~regions.CircleSkyRegion` of radius `point_to_radius`
+            while creating the mask.
+            Default is None.
 
         Returns
         -------
@@ -1004,7 +1009,9 @@ class WcsGeom(Geom):
         if not self.is_regular:
             raise ValueError("Multi-resolution maps not supported yet")
 
-        geom = RegionGeom.from_regions(regions, wcs=self.wcs)
+        geom = RegionGeom.from_regions(
+            regions, wcs=self.wcs, point_to_radius=point_to_radius
+        )
         idx = self.get_idx()
         mask = geom.contains_wcs_pix(idx)
 
