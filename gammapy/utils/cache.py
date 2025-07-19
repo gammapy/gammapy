@@ -2,7 +2,7 @@
 """Utilities for caching"""
 
 # from https://github.com/python/cpython/issues/102618#issuecomment-2839489762.
-import functools as ft
+import functools
 import inspect
 import weakref
 from typing import ParamSpec, TypeVar
@@ -73,7 +73,7 @@ def cachemethod(fn):
     parameters = parameters[1:]
     sig = sig.replace(parameters=parameters)
 
-    @ft.wraps(fn)
+    @ functools.wraps(fn)
     def fn_wrapped(self, *args, **kwargs):
         # Standardise arguments to a single form to encourage cache hits.
         # Not binding `self` (and instead doing the signature-adjustment above) in order to avoid keeping a strong
