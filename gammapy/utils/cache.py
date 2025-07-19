@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities for caching"""
 
+import cloudpickle
 import functools
 import inspect
 import hashlib
@@ -125,25 +126,27 @@ class CacheEquivalentMixin:
     Simpler for classes with complex arguements that are not hashable.
     """
 
-    _instances = []
+    # Sort arguments by name to ensure order-independence
+    normalized_args = dict(sorted(bound.arguments.items()))
+    # Remove 'self' if present
+    normalized_args.pop("self", None)
+
+    # Serialize and hash compatible with pickle
+    data = cloudpickle.dumps(normalized_args)
+    return hashlib.sha256(data).hexdigest()
+
+
+class CacheEquivalentMixin:
+    """Cache class instance"""
 
     def __new__(cls, *args, **kwargs):
-        # Clean up dead references
-        cls._instances = [ref for ref in cls._instances if ref() is not None]
+        # Ensure each subclass has its own cache
+        if not hasattr(cls, "_instances"):
+            cls._instances = weakref.WeakValueDictionary()
 
-        # Create a temporary instance to compare
-        temp = super().__new__(cls)
-        try:
-            temp.__init__(*args, **kwargs)
-        except TypeError:
-            return temp  # ignore cache for unpickle
-
-        # Search for an equivalent instance
-        for ref in cls._instances:
-            instance = ref()
-            if instance is not None and instance == temp:
-                return instance
-
-        # Store a weak reference to the new instance
-        cls._instances.append(weakref.ref(temp))
-        return temp
+        key = make_key(cls, *args, **kwargs)
+        if key in cls._instances:
+            return cls._instances[key]
+        instance = super().__new__(cls)
+        cls._instances[key] = instance
+        return instance
