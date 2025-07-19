@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import pickle
 from gammapy.utils.cache import CacheEquivalentMixin
 
 
@@ -10,9 +11,6 @@ class Dummy(CacheEquivalentMixin):
     def __eq__(self, other):
         return isinstance(other, Dummy) and self.a == other.a and self.b == other.b
 
-    def __repr__(self):
-        return f"MyObject(x={self.x}, y={self.y})"
-
 
 class Dummy2(CacheEquivalentMixin):
     def __init__(self, a, b):
@@ -21,9 +19,6 @@ class Dummy2(CacheEquivalentMixin):
 
     def __eq__(self, other):
         return isinstance(other, Dummy2) and self.a == other.a and self.b == other.b
-
-    def __repr__(self):
-        return f"MyObject(x={self.x}, y={self.y})"
 
 
 def test_dummy_cache():
@@ -39,5 +34,12 @@ def test_dummy_cache():
     assert z is not y
 
     assert u is not x
+    assert u is not v
     assert v is not z
     assert v is w
+
+    # the cache is not propagated through pickle
+    # (implementing that would be too complx)
+    data = pickle.dumps(x)
+    xnew = pickle.loads(data)
+    assert xnew is not x
