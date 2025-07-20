@@ -48,7 +48,7 @@ def make_key(sig, *args, **kwargs):
     bound.apply_defaults()
     normalized_args = dict(sorted(bound.arguments.items()))
     normalized_args.pop("self", None)
-    return _hash(normalized_args)
+    return _hash(tuple(normalized_args.items()))
 
 
 class _WeakIdDict:
