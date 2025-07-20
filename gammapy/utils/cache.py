@@ -5,7 +5,7 @@ import functools
 import inspect
 import hashlib
 import weakref
-from gammpy.utils.parallel import is_ray_available
+from gammapy.utils.parallel import is_ray_available
 
 if is_ray_available():
     import ray
