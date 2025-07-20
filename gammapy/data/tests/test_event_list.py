@@ -5,6 +5,7 @@ from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
+from astropy.time import Time
 from regions import CircleSkyRegion, RectangleSkyRegion
 from gammapy.data import GTI, EventList, Observation, FixedPointingInfo
 from gammapy.maps import MapAxis, WcsGeom
@@ -198,6 +199,10 @@ class TestEventListHESS:
     def test_peek(self):
         with mpl_plot_check():
             self.events.peek()
+
+    def test_select_time(self):
+        interval = Time([53090.12346118, 53090.12431144], scale="tt", format="mjd")
+        assert len(self.events.select_time(interval).time) == 499
 
 
 @requires_data()
