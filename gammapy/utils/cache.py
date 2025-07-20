@@ -1,19 +1,53 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities for caching"""
 
-# from https://github.com/python/cpython/issues/102618#issuecomment-2839489762.
 import functools
 import inspect
+import hashlib
 import weakref
-from typing import ParamSpec, TypeVar
+from gammapy.utils.parallel import is_ray_available
 
-_Self = TypeVar("_Self")
-_Params = ParamSpec("_Params")
-_Return = TypeVar("_Return")
+if is_ray_available:
+    import ray
+
+
+def make_key(sig, *args, **kwargs):
+    """
+    Generate a unique hash key for caching based on normalized constructor arguments.
+
+    This function uses the signature of the class constructor (`__init__`) to normalize
+    the input arguments, serializes them using `ray.cloudpickle`, and returns a SHA-256 hash
+    digest. The resulting key is suitable for use in caching mechanisms.
+
+    Parameters
+    ----------
+    sig : inspect.Signature
+        The signature of the method or function used to normalize arguments.
+    *args : tuple
+        Positional arguments to be normalized.
+    **kwargs : dict
+        Keyword arguments to be normalized.
+
+    Returns
+    -------
+    key : str
+        A SHA-256 hexadecimal digest representing the normalized arguments.
+    """
+    bound = sig.bind_partial(None, *args, **kwargs)
+    bound.apply_defaults()
+    normalized_args = dict(sorted(bound.arguments.items()))
+    normalized_args.pop("self", None)
+    try:
+        return hash(normalized_args)
+    except TypeError:
+        data = ray.cloudpickle.dumps(normalized_args)
+        return hashlib.sha256(data).hexdigest()
 
 
 class _WeakIdDict:
-    """Like `weakref.WeakKeyDictionary`, but uses identity-based hashing and equality."""
+    """Like `weakref.WeakKeyDictionary`, but uses identity-based hashing and equality.
+    from https://github.com/python/cpython/issues/102618#issuecomment-2839489762.
+    """
 
     __slots__ = ("_dict",)
 
@@ -30,57 +64,42 @@ class _WeakIdDict:
         self._dict[id_key] = (value, ref)
 
 
-class _CacheKey:
-    "Cache key used to compute an object's hash just once."
-
-    __slots__ = ("hashvalue", "value")
-
-    def __init__(self, value):
-        self.hashvalue = hash(value)
-        self.value = value
-
-    def __hash__(self) -> int:
-        return self.hashvalue
-
-    def __eq__(self, other) -> bool:
-        # Assume `type(other) is _Key`
-        return self.value == other.value
-
-
 def cachemethod(fn):
-    """Like `functools.cache`, except that it only holds a weak reference to its first argument.
-
-    Note that `functools.cached_property` (which also uses a weak reference) can often be used for similar purposes.
-    The differences are that:
-        (a) `cached_property` will be pickled while `cachemethod` will not,
-        (b) `cachemethod`can be used on functions with additional arguments,
-        (c) `cachemethod` requires brackets to call, helping to visually emphasise that computationl work may be being performed.
     """
+    Decorator to cache method results on a per-instance basis using weak references.
+
+    This decorator stores cached results of method calls in a `WeakKeyDictionary`,
+    ensuring that the cache is automatically cleared when the instance is garbage collected.
+    The cache key is generated using `make_key`, which normalizes and hashes the method
+    arguments to ensure consistent and order-independent caching.
+
+    Parameters
+    ----------
+    fn : callable
+        The method to be decorated.
+
+    Returns
+    -------
+    wrapper : callable
+        The wrapped method with caching behavior.
+    """
+
     cache1 = _WeakIdDict()
     sig = inspect.signature(fn)
+
     parameters = list(sig.parameters.values())
-    if len(parameters) == 0:
-        raise ValueError(
-            "Cannot use `cachemethod` on a function without a `self` argument."
-        )
-    if parameters[0].kind not in {
+    if len(parameters) == 0 or parameters[0].kind not in {
         inspect.Parameter.POSITIONAL_ONLY,
         inspect.Parameter.POSITIONAL_OR_KEYWORD,
     }:
         raise ValueError(
-            "Cannot use `cachemethod` on a function without a positional argument."
+            "The `@cachemethod` decorator can only be used on instance methods "
+            "with a positional `self` argument."
         )
-    parameters = parameters[1:]
-    sig = sig.replace(parameters=parameters)
 
-    @ functools.wraps(fn)
-    def fn_wrapped(self, *args, **kwargs):
-        # Standardise arguments to a single form to encourage cache hits.
-        # Not binding `self` (and instead doing the signature-adjustment above) in order to avoid keeping a strong
-        # reference to `self` via `argkey`.
-        bound = sig.bind(*args, **kwargs)
-        del args, kwargs
-        argkey = _CacheKey((bound.args, tuple(bound.kwargs.items())))
+    @functools.wraps(fn)
+    def wrapper(self, *args, **kwargs):
+        argkey = make_key(sig, *args, **kwargs)
         try:
             out = cache1[self][argkey]
         except KeyError:
@@ -88,7 +107,7 @@ def cachemethod(fn):
                 cache2 = cache1[self]
             except KeyError:
                 cache2 = cache1[self] = {}
-            out = cache2[argkey] = fn(self, *bound.args, **bound.kwargs)
+            out = cache2[argkey] = fn(self, *args, **kwargs)
         return out
 
-    return fn_wrapped
+    return wrapper
