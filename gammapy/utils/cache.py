@@ -5,10 +5,21 @@ import functools
 import inspect
 import hashlib
 import weakref
-from gammapy.utils.parallel import is_ray_available
+from gammpy.utils.parallel import is_ray_available
 
-if is_ray_available:
+if is_ray_available():
     import ray
+
+    def _hash(value):
+        try:
+            return hash(value)
+        except TypeError:
+            data = ray.cloudpickle.dumps(value)
+            return hashlib.sha256(data).hexdigest()
+else:
+
+    def _hash(value):
+        return hash(value)
 
 
 def make_key(sig, *args, **kwargs):
@@ -37,11 +48,7 @@ def make_key(sig, *args, **kwargs):
     bound.apply_defaults()
     normalized_args = dict(sorted(bound.arguments.items()))
     normalized_args.pop("self", None)
-    try:
-        return hash(normalized_args)
-    except TypeError:
-        data = ray.cloudpickle.dumps(normalized_args)
-        return hashlib.sha256(data).hexdigest()
+    return _hash(normalized_args)
 
 
 class _WeakIdDict:
