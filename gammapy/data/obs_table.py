@@ -654,12 +654,10 @@ class ObservationTablePrototype(ObservationTable):
             Keyword arguments passed to `~astropy.table.Table.read`.
         """
 
-        """Checks which dataformat is present on disk"""
-        """Reads from GADF v0.3 into internal table"""
+        """Reads from GADF v0.3 into internal, independent table"""
 
         """ 0. Internal ObservationTablePrototype table container"""
         # meta-data oriented as sugg. in #4238 by @registerrier.
-
         table_internal = self(
             names=self.internal_full_def["name"],
             units=self.internal_full_def["unit"],
@@ -668,7 +666,6 @@ class ObservationTablePrototype(ObservationTable):
 
         """1. (IO) mostly taken from ObservationTable"""
         """Here the table is read from disk as before, pot. lazy loading in future."""
-
         table_disk = super().read(make_path(filename), **kwargs)
 
         """2. Understand disk table to prepare loading of internal table, effectively reader"""
@@ -706,15 +703,17 @@ class ObservationTablePrototype(ObservationTable):
 
         """Fill per row"""
         for i in range(len(table_disk)):
-            obs_id = table_disk[i]["OBS_ID"]
-            # prepare row:
+            obs_id = table_disk[i]["OBS_ID"]  # First, get OBS_ID
+            # Then, prepare corresponding row
+
             # POINTING
             # table_internal["POINTING"] = skycoord_from_dict
             # TIME
-            # telescope = table_disk[i]["TELESCOP"]
+
             # REST
             if "TELESCOP" in table_disk.columns:
                 telescope = table_disk[i]["TELESCOP"]
+                print("T GIVEN")
             else:
                 telescope = ""
 
@@ -743,6 +742,7 @@ class ObservationTablePrototype(ObservationTable):
             else:
                 origin = ""
 
+            # Used https://docs.astropy.org
             radec_obj = SkyCoord(0, 0, unit="deg")  # "RADEC_OBJ",
             created = Time(
                 "2025-01-01T00:00:00", format="isot", scale="utc"
@@ -755,7 +755,7 @@ class ObservationTablePrototype(ObservationTable):
             obsgeo = EarthLocation(0, 0, 0)  # "OBSGEO",
             pointing = SkyCoord(0, 0, unit="deg")  # "POINTING",
 
-            # add row (fill table)
+            # And finally, add row to internal table (fill table).
             table_internal.add_row(
                 [
                     telescope,
