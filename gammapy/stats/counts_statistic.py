@@ -160,7 +160,7 @@ class CountsStatistic(abc.ABC):
     def compute_upper_limit(self, n_sigma=3):
         """Compute upper limit on the signal.
 
-        Searches the signal value for which the test statistic is n_sigma**2 
+        Searches the signal value for which the test statistic is n_sigma**2
         away from the maximum.
 
 
