@@ -30,8 +30,7 @@ Setup
 **IMPORTANT**: For this notebook you have to get the prepared
 `fermi-gc` data provided in your $GAMMAPY_DATA.
 
-Note that this dataset contains only high energy photons, ranging from 4 GeV to 2
-TeV.
+We are going to analyses high-energy data from 10 GeV from 1 TeV (in reconstructed energy).
 
 """
 
@@ -167,16 +166,16 @@ check_tutorials_setup()
 #
 # The spatial binning should be of the same order of the PSF 68%
 # containment radius which is in average 0.1 degree above 10 GeV and
-# rapidly increases at lower energy. Ideally it should remain whitin of
-# factor of 2 or 3 of the PSF radius at most. in order to properly take
+# rapidly increases at lower energy. Ideally it should remain within a
+# factor of 2 or 3 of the PSF radius at most. In order to properly take
 # into account for the sources outside of the region of interest that
-# contributes inside due to the PSF we have to define a wider `roiwidth`
-# than our actual region of interest typicaly we need a margin egal to the
+# contribute inside due to the PSF we have to define a wider `roiwidth`
+# than our actual region of interest. Typically, we need a margin equal to the
 # 99% containment of the PSF on each side. Above 10 GeV considering only
-# PSF2&3 the 99% PSF containment radius is about 1 degree, assuming we
+# PSF2&3 the 99% PSF containment radius is about 1 degree. Thus, if we
 # want to study 3 degree around the GC we have to take a `roiwidth` of 8
 # deg. (At 1 GeV and 100 MeV the margin should rather be of about 3 deg
-# and 10 deg respectively, considering PSF0 and PSF1 it should be even
+# and 10 deg respectively. If including PSF0 and PSF1, it should be even
 # larger).
 #
 
@@ -195,7 +194,7 @@ check_tutorials_setup()
 #
 #    gta.compute_psf(overwrite=True) # this create the psf kernel
 #    gta.compute_drm(edisp_bins=0, overwrite=True) # this create the energy dispersion matrix
-#    # DO NOT CHANGE edisp_bins will be redefined by gammapy later on
+#    # DO NOT CHANGE edisp_bins here, it will be redefined by gammapy later on
 #
 # This will produce a number of files including: \* “ccube_00.fits”
 # (counts) \* “bexpmap_00.fits” (exposure) \* “psf_00.fits” (psf) \*
@@ -244,7 +243,7 @@ print(datasets[0].counts.geom.axes["energy"])
 ######################################################################
 # Note that choosing instead `edisp_bins=2` means that the reconstructed energy
 # of the counts geom would have start  at $10^0.8$ ~ 6.3 GeV$.
-# In that case to start the analysis at 10 GeV we would have to
+# In that case if we want to start the analysis at 10 GeV we would have to
 # update the `mask_fit` to ignore the 2 first reconstructed energy bins.
 # Considering more `edisp_bins` is in general safer but consumes more memory
 # and will increase computation time.
