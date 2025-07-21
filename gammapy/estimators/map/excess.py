@@ -199,14 +199,14 @@ class ExcessMapEstimator(Estimator):
     <BLANKLINE>
       geom                   : WcsGeom
       axes                   : ['lon', 'lat', 'energy']
-      shape                  : (np.int64(320), np.int64(240), 1)
+      shape                  : (320, 240, 1)
       quantities             : ['npred', 'npred_excess', 'counts', 'ts', 'sqrt_ts', 'norm', 'norm_err']
       ref. model             : pl
       n_sigma                : 1
       n_sigma_ul             : 2
       sqrt_ts_threshold_ul   : 2
       sed type init          : likelihood
-    >>> print(result.available_quantities))
+    >>> print(result.available_quantities)
     ['npred', 'npred_excess', 'counts', 'ts', 'sqrt_ts', 'norm', 'norm_err']
     """
 

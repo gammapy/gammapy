@@ -166,14 +166,14 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
     <BLANKLINE>
       geom                   : WcsGeom
       axes                   : ['lon', 'lat', 'energy']
-      shape                  : (np.int64(400), np.int64(200), 1)
+      shape                  : (400, 200, 1)
       quantities             : ['ts', 'norm', 'niter', 'norm_err', 'npred', 'npred_excess', 'stat', 'stat_null', 'success']
       ref. model             : pl
       n_sigma                : 1
       n_sigma_ul             : 2
       sqrt_ts_threshold_ul   : 2
       sed type init          : likelihood
-    >>> print(maps.available_quantities))
+    >>> print(maps.available_quantities)
     ['ts', 'norm', 'niter', 'norm_err', 'npred', 'npred_excess', 'stat', 'stat_null', 'success']
     """
 
