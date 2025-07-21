@@ -21,7 +21,7 @@ analysis of Fermi-LAT data with a complex spatial or spectral model that
 is not available in Fermipy or the Fermi ST.
 
 This tutorial will show you how to convert Fermi-LAT data into a DL4
-format that can be used by Gammapy and perform a 3D analysis. As an
+format  that can be used by Gammapy (`~gammapy.datasets.MapDataset`) and perform a 3D analysis. As an
 example, we will look at the Galactic center.
 
 Setup
@@ -30,7 +30,7 @@ Setup
 **IMPORTANT**: For this notebook you have to get the prepared
 `fermi-gc` data provided in your $GAMMAPY_DATA.
 
-Note that the this dataset is high-energy only, ranging from 4 GeV to 2
+Note that this dataset contains only high energy photons, ranging from 4 GeV to 2
 TeV.
 
 """
@@ -143,8 +143,8 @@ check_tutorials_setup()
 # | The most important points for gammapy users are: \* `emin`/`emax`
 #   in this file should be considered as the energy true range. \*
 #   `edisp_bins : 0` is strongly recommended at this stage otherwise you
-#   might face inconsitancies in the energies axes of the different IRFs.
-# | The reconstructed energy axis will be configurated with gammapy later
+#   might face inconsitancies in the energies axes of the different IRFs created by fermipy.
+# | The `edisp_bins` value will be redefined later on as a positive value by gammapy in order to create the reconstructed energy axis properly.
 #   on. \* if you want to use the `$FERMI_DIR` variable it must also be
 #   defined in your gammapy environemnt, otherwise you have to define your
 #   own paths.
@@ -188,7 +188,8 @@ check_tutorials_setup()
 #    gta.setup()
 #
 #    gta.compute_psf(overwrite=True) # this create the psf kernel
-#    gta.compute_drm(edisp_bins=0, overwrite=True) # this create the energy dispersion matrix
+#    gta.compute_drm(edisp_bins=0, overwrite=True) # this create the energy dispersion matrix 
+#    # DO NOT CHANGE edisp_bins, it will be handled by gammapy
 #
 # This will produce a number of files including: \* “ccube_00.fits”
 # (counts) \* “bexpmap_00.fits” (exposure) \* “psf_00.fits” (psf) \*
@@ -235,6 +236,10 @@ print(datasets[0].counts.geom.axes["energy"])
 
 
 ######################################################################
+# Note that choosing instead `edisp_bins=2` means that the reconstructed energy of the counts geom
+# would have start  at $10^0.8$ ~ 6.3 GeV$. In that case to start the analysis at 10 GeV we would have to
+# update the `mask_fit` to ignore the 2 first reconstructed energy bins.
+# Considering more `edisp_bins` is in general safer but consumes more memory and will increase computation time.
 # Alternatively if you created the counts and irfs files from the
 # Fermi-LAT science tools without fermipy you can use the
 # `create_dataset` method. Note that in this case we cannot garantee
@@ -265,7 +270,7 @@ dataset1 = reader.create_dataset(
 datasets_fromST = Datasets([dataset0, dataset1])
 
 
-del dataset0, dataset1, datasets_fromST  # we don't need those
+del dataset0, dataset1, datasets_fromST  # the above was an alternative reading method we don't need those after
 
 
 ######################################################################
@@ -295,7 +300,7 @@ plt.show()
 #
 # | For Fermi-LAT, the PSF only varies little within a given regions of
 #   the sky, especially at high energies like what we have here.
-# | So we have only one PSF kerne.
+# | So we have only one PSF kernel.
 #
 
 
@@ -392,7 +397,7 @@ models_diffuse = models_iso + model_iem
 # Sources
 # -------
 #
-# Sources models can ce loaded from the 4FGL catalog directly available in
+# Sources models can be loaded from the 4FGL catalog directly available in
 # $GAMMAPY_DATA. For details see the `Fermi-LAT catalog
 # page <https://fermi.gsfc.nasa.gov/ssc/data/access/lat/14yr_catalog/>`__
 #
@@ -403,7 +408,7 @@ catalog_4fgl = CATALOG_REGISTRY.get_cls("4fgl")()  # load 4FGL catalog
 
 
 ######################################################################
-# we want to select only the sources inside the dataset:
+# we want to select only the sources inside the dataset spatial geometry:
 #
 
 in_geom = geom.to_image().contains(catalog_4fgl.positions)
@@ -438,7 +443,7 @@ models_sources = sources_inside_roi + sources_outside_roi
 # Fit
 # ===
 #
-# Now, the big finale: let’s do a 3D of the brightes sources and IEM
+# Now, the big finale: let’s do a 3D of the brightest sources and IEM
 # models
 #
 # First we attach the models to the datasets
@@ -452,7 +457,7 @@ print("Number of models", len(models))
 
 
 ######################################################################
-# Let’s find the 3 brightess sources:
+# Let’s find the 3 brightest sources:
 #
 
 n_brightess = 3
@@ -510,7 +515,6 @@ ts_estimator = TSMapEstimator(
     selection_optional=[],
     sum_over_energy_groups=True,
     energy_edges=[10, 1000] * u.GeV,
-    n_jobs=1,
 )
 
 
