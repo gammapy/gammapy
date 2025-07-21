@@ -2221,7 +2221,7 @@ class MapDataset(Dataset):
         WcsGeom
         <BLANKLINE>
             axes       : ['lon', 'lat', 'energy']
-            shape      : (np.int64(320), np.int64(240), 3)
+            shape      : (320, 240, 3)
             ndim       : 3
             frame      : galactic
             projection : CAR
@@ -2277,7 +2277,7 @@ class MapDataset(Dataset):
         >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
         >>> sliced = dataset.slice_by_energy(energy_min="1 TeV", energy_max="5 TeV")
         >>> sliced.data_shape
-        (3, np.int64(240), np.int64(320))
+        (3, 240, 320)
         """
         name = make_name(name)
 
