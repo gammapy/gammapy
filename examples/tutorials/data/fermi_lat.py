@@ -25,14 +25,14 @@ is not available in Fermipy or the Fermi ST.
 This tutorial will show you how to convert Fermi-LAT data into a DL4
 format  that can be used by Gammapy (`~gammapy.datasets.MapDataset`) and perform a 3D analysis. As an
 example, we will look at the Galactic center.
+We are going to analyses high-energy data from 10 GeV from 1 TeV (in reconstructed energy).
 
 Setup
 -----
 
-**IMPORTANT**: For this notebook you have to get the prepared
+For this notebook you have to get the prepared
 `fermi-gc` data provided in your `$GAMMAPY_DATA`.
 
-We are going to analyses high-energy data from 10 GeV from 1 TeV (in reconstructed energy).
 
 """
 
@@ -143,13 +143,13 @@ check_tutorials_setup()
 
 ######################################################################
 # | The most important points for Gammapy users are:
-#   \* `emin`/`emax`in this file should be considered as the energy true range.
+# - `emin`/`emax`in this file should be considered as the energy true range.
 #   It should be larger that the recosntructed energy range.
-#   \* `edisp_bins : 0` is strongly recommended at this stage otherwise you
+# - `edisp_bins : 0` is strongly recommended at this stage otherwise you
 #   might face inconsitancies in the energy axes of the different IRFs created by Fermipy.
 # | The `edisp_bins` value will be redefined later on by Gammapy as a positive value
 #   in order to create the reconstructed energy axis properly.
-#   \* If you want to use the `$FERMI_DIR` variable to read the background models
+# - If you want to use the `$FERMI_DIR` variable to read the background models
 #   it must also be defined in your Gammapy environemnt,
 #   otherwise you have to define your own paths.
 # | For this tutorial we copied the iso files in
@@ -166,7 +166,7 @@ check_tutorials_setup()
 # dependence. That is why we recommend a binning with 8 to 10 bins per
 # decade. The energy axes will be created such as it is linear in log space
 # so it's better to define `emin`/`emax` such as they align with a log binning.
-# Here we have as true energy range $emin = 10^0.6$ ~ 4 GeV to $emax = 10^3.4$ ~ 2500 GeV`.
+# Here we have as true energy range log(emin) = 0.6 ~ 4 GeV to $log(emax) = 3.4 ~ 2500 GeV.
 # While the reconstructed energy range of our analysis will be 10 GeV to 1000 GeV.
 
 #
@@ -180,7 +180,7 @@ check_tutorials_setup()
 # 99% containment of the PSF on each side. Above 10 GeV considering only
 # PSF2&3 the 99% PSF containment radius is about 1 degree. Thus, if we
 # want to study a 3 degree radius around the GC we have to take a `roiwidth` of 8
-# deg. (If considering lower energies or including PSF0 and PSF1, it should be even
+# deg. (If considering lower energies or including PSF0 and PSF1, it should be much
 # larger).
 #
 
@@ -202,10 +202,10 @@ check_tutorials_setup()
 #    # DO NOT CHANGE edisp_bins here, it will be redefined by Gammapy later on
 #
 # This will produce a number of files including:
-#    \* “ccube_00.fits” (counts)
-#    \* “bexpmap_00.fits” (exposure)
-#    \* “psf_00.fits” (psf)
-#    \* “drm_00.fits” (edisp)
+# - “ccube_00.fits” (counts)
+# - “bexpmap_00.fits” (exposure)
+# - “psf_00.fits” (psf)
+# - “drm_00.fits” (edisp)
 #
 #
 
@@ -237,7 +237,6 @@ print(datasets)
 # least equal to 0.2. With a binning of 8 to 10 bins per decade, it
 # corresponds to \|edisp_bins\| ≥ 2. For more details see
 # `Pass8_edisp_usage <https://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Pass8_edisp_usage.html>`__.
-#
 # In our case the we have 10 bins per decade and true energy axis starts
 # at about 4 GeV, so with `edisp_bins=4` the reconstructed enegry axis
 # starts at 10 GeV:
@@ -254,6 +253,7 @@ print(datasets[0].counts.geom.axes["energy"])
 # update the `mask_fit` to ignore the 2 first reconstructed energy bins.
 # Considering more `edisp_bins` is in general safer but consumes more memory
 # and will increase computation time.
+#
 # Alternatively if you created the counts and irfs files from the
 # Fermi-LAT science tools without Fermipy you can use the
 # `create_dataset` method. Note that in this case we cannot guarantee
@@ -340,7 +340,7 @@ mask_fit = Map.from_geom(geom, data=True, dtype=bool)
 mask_fit = mask_fit.binary_erode(width=margin, kernel="disk")
 
 mask_fit.plot_interactive()
-
+plt.show()
 
 ######################################################################
 # Now we attach it the datasets
@@ -431,6 +431,10 @@ in_geom = geom.to_image().contains(catalog_4fgl.positions)
 catalog_4fgl_gc = catalog_4fgl[in_geom]
 
 models_4fgl_gc = catalog_4fgl_gc.to_models()
+
+######################################################################
+# That's still quite a lot of sources
+#
 print("Number of source models", len(models_4fgl_gc))
 
 
@@ -453,6 +457,9 @@ sources_outside_roi.spatial_model.filename = "sources_outside.fits"
 sources_outside_roi.spatial_model.map.plot_interactive(add_cbar=True)
 plt.show()
 
+######################################################################
+# Now we have less models to describe the sources
+#
 models_sources = sources_inside_roi + sources_outside_roi
 
 print("Number of source models", len(models_sources))
