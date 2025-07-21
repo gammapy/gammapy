@@ -2,13 +2,15 @@
 Fermi-LAT with Gammapy
 ======================
 
+Data inspection and preliminary analysis with Fermi-LAT data.
+
 Introduction
 ------------
 
 Gammapy fully supports Fermi-LAT data analysis from DL4 level (binned
 maps). In order to perform data reduction from the events list and
 spacecrast files to binned counts and IRFs maps we recommend to use
-`Fermipy <http://Fermipy.readthedocs.io/>`__\ *, which is based on
+`Fermipy <http://fermipy.readthedocs.io/>`__\ *, which is based on
 the*\ `Fermi Science
 Tools <https://fermi.gsfc.nasa.gov/ssc/data/analysis/software/>`__
 (Fermi ST).
@@ -67,16 +69,16 @@ check_tutorials_setup()
 
 
 ######################################################################
-# Fermipy Congifuration file
+# Fermipy congifuration file
 # --------------------------
 #
 # Gammapy can re-use the same configuration file than Fermipy to convert
 # the Fermipy maps to Gammapy datasets. For details on these files
 # struture see the `Fermipy configuration
-# page <https://Fermipy.readthedocs.io/en/latest/config.html>`__. In this
+# page <https://fermipy.readthedocs.io/en/latest/config.html>`__. In this
 # tutorial we will analyse Galactic center data generated with Fermipy version 1.3 and the
 # configuration given in
-# `$GAMMAPY_DATA/fermi-gc/config_Fermipy_gc_example.yaml`:
+# `$GAMMAPY_DATA/fermi-gc/config_fermipy_gc_example.yaml`:
 #
 
 
@@ -84,7 +86,7 @@ check_tutorials_setup()
 # .. code:: yaml
 #
 #    # Fermipy example configuration
-#    # for details, see https://Fermipy.readthedocs.io/en/latest/config.html
+#    # for details, see https://fermipy.readthedocs.io/en/latest/config.html
 #    # For IRFs, event type and event class options, see https://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Cicerone/Cicerone_Data/LAT_DP.html
 #    components:
 #      - model: {isodiff: $FERMI_DIR/refdata/fermi/galdiffuse/iso_P8R3_CLEAN_V3_PSF2_v1.txt}
@@ -185,14 +187,14 @@ check_tutorials_setup()
 
 ######################################################################
 # From Fermipy maps to Gammapy datasets
-# =====================================
+# -------------------------------------
 #
 # In your Fermipy environment you have to run the following commands
 #
 # .. code:: python
 #
 #    from fermipy.gtanalysis import GTAnalysis
-#    gta = GTAnalysis('config_Fermipy_gc_example.yaml',logging={'verbosity' : 3})
+#    gta = GTAnalysis('config_fermipy_gc_example.yaml',logging={'verbosity' : 3})
 #    gta.setup()
 #
 #    gta.compute_psf(overwrite=True) # this create the psf kernel
@@ -212,7 +214,7 @@ check_tutorials_setup()
 
 
 reader = FermipyDatasetsReader(
-    "$GAMMAPY_DATA/fermi-gc/config_Fermipy_gc_example.yaml", edisp_bins=4
+    "$GAMMAPY_DATA/fermi-gc/config_fermipy_gc_example.yaml", edisp_bins=4
 )
 datasets = reader.read()
 print(datasets)
@@ -234,7 +236,7 @@ print(datasets)
 # `Pass8_edisp_usage <https://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Pass8_edisp_usage.html>`__.
 #
 # In our case the we have 10 bins per decade and true energy axis starts
-# at about 4 GeV, so with edisp_bins=4 the reconstructed enegry axis
+# at about 4 GeV, so with `edisp_bins=4` the reconstructed enegry axis
 # starts at 10 GeV:
 #
 
@@ -244,7 +246,7 @@ print(datasets[0].counts.geom.axes["energy"])
 
 ######################################################################
 # Note that choosing instead `edisp_bins=2` means that the reconstructed energy
-# of the counts geom would have start  at $10^0.8$ ~ 6.3 GeV$.
+# of the counts geom would have start  at $10^0.8$ ~ 6.3 GeV.
 # In that case if we want to start the analysis at 10 GeV we would have to
 # update the `mask_fit` to ignore the 2 first reconstructed energy bins.
 # Considering more `edisp_bins` is in general safer but consumes more memory
@@ -285,13 +287,13 @@ del dataset0, dataset1, datasets_fromST
 
 ######################################################################
 # Fermi-LAT irfs properties
-# =========================
+# -------------------------
 #
 
 
 ######################################################################
 # Exposure
-# --------
+# ~~~~~~~~
 #
 
 
@@ -306,20 +308,20 @@ plt.show()
 
 ######################################################################
 # PSF
-# ---
+# ~~~
 #
 # | For Fermi-LAT, the PSF only varies little within a given regions of
 #   the sky, especially at high energies like what we have here.
 # | So we have only one PSF kernel.
 #
 
-datasets[0].psf.plot_containment_radius_vs_energy()
+datasets[0].psf.plot_containment_radius_vs_energy(fraction=(0.68, 0.95, 0.99))
 plt.show()
 
 
 ######################################################################
 # Region of interest and Mask definition
-# ======================================
+# --------------------------------------
 #
 # As mention previously the width of dataset is larger that our actual
 # region of interest in order to properly take into account for the
@@ -347,10 +349,10 @@ for d in datasets:
 
 ######################################################################
 # Models
-# ======
+# ------
 #
 # Isotropic diffuse background
-# ----------------------------
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # The `FermipyDatasetsReader` also created one isotropic diffuse model
 # for each dataset:
@@ -362,7 +364,7 @@ print(models_iso)
 
 ######################################################################
 # Galactic diffuse background
-# ---------------------------
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 
 
@@ -408,7 +410,7 @@ models_diffuse = models_iso + model_iem
 
 ######################################################################
 # Sources
-# -------
+# ~~~~~~~
 #
 # Sources models can be loaded from the 4FGL catalog directly available in
 # $GAMMAPY_DATA. For details see the `Fermi-LAT catalog
@@ -454,7 +456,7 @@ print("Number of source models", len(models_sources))
 
 ######################################################################
 # Fit
-# ===
+# ---
 #
 # Now, the big finale: let’s do a 3D of the brightest sources and IEM
 # models
@@ -509,7 +511,7 @@ print(result)
 
 ######################################################################
 # Residual TS map
-# ===============
+# ---------------
 #
 # Now we can look at the residual TS map to check there is no signifiant
 # excess left:
