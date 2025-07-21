@@ -162,7 +162,8 @@ class CountsStatistic(abc.ABC):
 
         Searches the signal value for which the test statistic is n_sigma**2 
         away from the maximum.
-        
+
+
         Parameters
         ----------
         n_sigma : float
