@@ -142,10 +142,10 @@ check_tutorials_setup()
 
 
 ######################################################################
-# | The most important points for Gammapy users are: \* `emin`/`emax`
-#   in this file should be considered as the energy true range.
-#   It should be larger that the recosntructed energy range.\*
-#   `edisp_bins : 0` is strongly recommended at this stage otherwise you
+# | The most important points for Gammapy users are:
+#   \* `emin`/`emax`in this file should be considered as the energy true range.
+#   It should be larger that the recosntructed energy range.
+#   \* `edisp_bins : 0` is strongly recommended at this stage otherwise you
 #   might face inconsitancies in the energy axes of the different IRFs created by Fermipy.
 # | The `edisp_bins` value will be redefined later on by Gammapy as a positive value
 #   in order to create the reconstructed energy axis properly.
@@ -201,9 +201,12 @@ check_tutorials_setup()
 #    gta.compute_drm(edisp_bins=0, overwrite=True) # this create the energy dispersion matrix
 #    # DO NOT CHANGE edisp_bins here, it will be redefined by Gammapy later on
 #
-# This will produce a number of files including: \* “ccube_00.fits”
-# (counts) \* “bexpmap_00.fits” (exposure) \* “psf_00.fits” (psf) \*
-# “drm_00.fits” (edisp)
+# This will produce a number of files including:
+#    \* “ccube_00.fits” (counts)
+#    \* “bexpmap_00.fits” (exposure)
+#    \* “psf_00.fits” (psf)
+#    \* “drm_00.fits” (edisp)
+#
 #
 
 
