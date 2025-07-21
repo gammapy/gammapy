@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from collections import namedtuple
 import numpy as np
-from astropy.coordinates import Angle, SkyCoord
+from astropy.coordinates import Angle, SkyCoord, EarthLocation
 from astropy.table import Table
 from astropy.units import Quantity, Unit
 from astropy import units as u
@@ -11,6 +11,7 @@ from gammapy.utils.testing import Checker
 from gammapy.utils.time import time_ref_from_dict
 from gammapy.utils.metadata import METADATA_FITS_KEYS
 from gammapy.data.metadata import OBSERVATION_METADATA_FITS_KEYS
+from astropy.time import Time
 
 __all__ = ["ObservationTable", "ObservationTablePrototype"]
 
@@ -613,31 +614,23 @@ class ObservationTablePrototype(ObservationTable):
         name=names_internal_table, type=types_internal_table, unit=units_internal_table
     )
 
-    # Required Minimum in disk-table, see #4238.
-    # at least OBS_ID, and per OBS_ID later the internal table is filled.
-    # additionally required for selection mechanims TSTART,TSTOP (to construct time)
-    # +RADEC/ALTAZ depending on what is given (appended in reader)
+    # Required Minimum in disk-table, see #4238, to construct internal table for minimum use case.
+    # For this purpose, at least OBS_ID is needed (and per OBS_ID later the internal table is filled)
+    # and additionally required for selection mechanims are TSTART,TSTOP (to construct time),
+    # RADEC/ALTAZ (depending on what is given and thereby appended in reader)
     names_min_req = ["OBS_ID", "TSTART", "TSTOP"]
 
-    # to be updated!
-    names_to_load_from_gadf = [
+    # To fill internal table as much as possible, these optional (not required by names_min_req and appendices) data is copied from disk
+    opt_names_to_load_from_gadf = [
         "TELESCOP",
         "INSTRUME",
         "OBS_MODE",
-        "OBS_ID",
         "SUB_ARRA",
         "OBJECT",
-        "RADEC_OBJ",
         "CREATOR",
         "CREATED",
         "ORIGIN",
-        "TSTART",
-        "TSTOP",
         "DEADC",
-        "GEOLON",
-        "GEOLAT",
-        "ALTITUDE",
-        "POINTING",
     ]
 
     # as sugg. by @registerrier in #4238 oriented at metadata:
@@ -705,18 +698,82 @@ class ObservationTablePrototype(ObservationTable):
         """TIME"""
 
         """3. Fill internal table accordingly, FROM HERE ON separation from file on disk!"""
-        for i in range(len(table_disk)):  # create rows (slow acc. to documentation)
-            table_internal.add_row()
+        # for i in range(len(table_disk)):  # create rows (slow acc. to documentation)
+        #    table_internal.add_row()
         """Easy filler - fills by taking data from same named columns. will be replaced for better int mem-repr."""
         # for el in self.names_min_req:  # fill dolumns. for now internal data model: minimum
         #    table_internal[el] = table_disk[el]
 
-        # Fill per observation id "OBS_ID"
-        for obs_id in table_disk["OBS_ID"]:
-            table_internal["OBS_ID"] = table_disk["OBS_ID"]
+        """Fill per row"""
+        for i in range(len(table_disk)):
+            obs_id = table_disk[i]["OBS_ID"]
+            # prepare row:
             # POINTING
             # table_internal["POINTING"] = skycoord_from_dict
-            print(obs_id)
+            # TIME
+            # telescope = table_disk[i]["TELESCOP"]
+            # REST
+            if "TELESCOP" in table_disk.columns:
+                telescope = table_disk[i]["TELESCOP"]
+            else:
+                telescope = ""
 
+            if "INSTRUME" in table_disk.columns:
+                instrument = table_disk[i]["INSTRUME"]
+            else:
+                instrument = ""
+            if "OBS_MODE" in table_disk.columns:
+                obs_mode = table_disk[i]["OBS_MODE"]
+            else:
+                obs_mode = ""
+            if "SUB_ARRA" in table_disk.columns:
+                sub_array = table_disk[i]["SUB_ARRA"]
+            else:
+                sub_array = ""
+            if "OBJECT" in table_disk.columns:
+                object = table_disk[i]["OBJECT"]
+            else:
+                object = ""
+            if "CREATOR" in table_disk.columns:
+                creator = table_disk[i]["CREATOR"]
+            else:
+                creator = ""
+            if "ORIGIN" in table_disk.columns:
+                origin = table_disk[i]["ORIGIN"]
+            else:
+                origin = ""
+
+            radec_obj = SkyCoord(0, 0, unit="deg")  # "RADEC_OBJ",
+            created = Time(
+                "2025-01-01T00:00:00", format="isot", scale="utc"
+            )  # "CREATED",
+            tstart = Time(
+                "2025-01-01T00:00:00", format="isot", scale="utc"
+            )  # "TSTART",
+            tstop = Time("2025-01-01T00:00:00", format="isot", scale="utc")  # "TSTOP",
+            deadc = 2 * u.day  # "DEADC",
+            obsgeo = EarthLocation(0, 0, 0)  # "OBSGEO",
+            pointing = SkyCoord(0, 0, unit="deg")  # "POINTING",
+
+            # add row (fill table)
+            table_internal.add_row(
+                [
+                    telescope,
+                    instrument,
+                    obs_mode,
+                    obs_id,
+                    sub_array,
+                    object,
+                    radec_obj,
+                    creator,
+                    created,
+                    origin,
+                    tstart,
+                    tstop,
+                    deadc,
+                    obsgeo,
+                    pointing,
+                ]
+            )
         """4. return internal table (instead of copy of disk-table, as before) """
         return table_internal
