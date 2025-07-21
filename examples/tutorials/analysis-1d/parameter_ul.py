@@ -4,12 +4,12 @@
 Constraining parameter limits
 =============================
 
-Explore how to deal with upper limits on parameters
+Explore how to deal with upper limits on parameters.
 
 Prerequisites
 -------------
 It is advisable to understand the general Gammapy modelling and fitting framework before proceeding
-with this notebook, eg see :doc:`docs/user-guide/modeling`
+with this notebook, eg see :doc:`/docs/user-guide/modeling`.
 
 Context
 -------
@@ -20,7 +20,7 @@ Proposed approach
 -----------------
 
 In this section, we will use 6 observations of the blazar PKS 2155-304, taken in 2008 by
-H.E.S.S, to constrain the curvature in the spectrum
+H.E.S.S, to constrain the curvature in the spectrum.
 
 """
 
@@ -57,7 +57,7 @@ check_tutorials_setup()
 # Load observation
 # ----------------
 #
-# We will now use a precomputed blazar dataset to see how to contrain
+# We will now use a precomputed blazar dataset to see how to constrain
 # model parameters. Detailed modeling of this dataset may be found in the
 # :doc:`/tutorials/analysis-1d/ebl` notebook. We will try to
 # constrain the spectral cutoff in the source. To see
@@ -114,7 +114,7 @@ loglike = profile["stat_scan"]
 
 ax = plt.gca()
 ax.plot(values, loglike - np.min(loglike))
-ax.set_xlabel("Cutoff value (1/TeV)")
+ax.set_xlabel("Cutoff value [1/TeV]")
 ax.set_ylabel(r"$\Delta$TS")
 secay = ax.secondary_yaxis("right", functions=(ts_to_sigma, sigma_to_ts))
 secay.set_ylabel("Significance [$\sigma$]")
@@ -123,7 +123,7 @@ plt.show()
 
 
 ######################################################################
-# Constrain the limits on the parameter
+# Estimate the limits on the parameter
 # -------------------------------------
 # Thus, this dataset does not yield a significant spectral cutoff in
 # PKS2155-304. In particular, we cannot constrain the lower limit from
@@ -170,15 +170,15 @@ def compute_lower_limit(theta_values, pdf, confidence_level=0.95):
 
 pdf = likelihood_to_pdf(values, loglike)
 plt.plot(values, pdf)
-plt.xlabel("Cutoff value (1/TeV)")
-plt.ylabel("pdf")
+plt.xlabel("Cutoff value [1/TeV]")
+plt.ylabel("PDF")
 plt.show()
 
 conf_level = 0.68
 # Compute one-sided limits
 UL = compute_upper_limit(values, pdf, confidence_level=conf_level)
 LL = compute_lower_limit(values, pdf, confidence_level=conf_level)
-print("lower limit, upper limit: ", LL, UL)
+print(f"lower limit, upper limit: {LL:.3f}, {UL:.3f}")
 
 if LL > parameter.value:
     print("lower limit is not constrained")
@@ -204,7 +204,7 @@ print(
 
 ax = plt.gca()
 ax.plot(1.0 / values, loglike - np.min(loglike))
-ax.set_xlabel("Energy cutoff (TeV)")
+ax.set_xlabel("Energy cutoff [TeV]")
 ax.set_ylabel(r"$\Delta$TS")
 ax.axvline(1.0 / UL, ls="dotted", color="brown")
 plt.title("Cutoff likelihood profile", fontsize=20, y=1.05)
@@ -213,6 +213,6 @@ plt.xscale("log")
 
 ######################################################################
 # This logic can be extended to any spectral or spatial feature. As an
-# exercise, try to compute the 95% spatial extent on the MSH 15 52 dataset
+# exercise, try to compute the 95% spatial extent on the MSH 15-52 dataset
 # used for the ring background notebook.
 #
