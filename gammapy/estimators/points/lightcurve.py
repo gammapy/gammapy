@@ -170,15 +170,7 @@ class LightCurveEstimator(FluxPointsEstimator):
                     models.reassign(dataset.name, dataset_reduced.name)
                 dataset_reduced.models = models
                 datasets_to_fit = Datasets([dataset_reduced])
-
-                if self.n_jobs == 1:
-                    fp = self.estimate_time_bin_flux(
-                        datasets_to_fit, datasets_to_fit.names
-                    )
-                    rows.append(fp)
-                else:
-                    parallel_datasets.append(datasets_to_fit)
-                continue
+                dataset_names = datasets_to_fit.names
 
             if self.n_jobs == 1:
                 fp = self.estimate_time_bin_flux(datasets_to_fit, dataset_names)
