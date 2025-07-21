@@ -111,12 +111,12 @@ Please give feedback and suggest additions to this page!
         fp.plot(ax=ax, sed_type="e2dnde")
 
 
-.. dropdown:: Compute source significance
+.. dropdown:: Compute the significance of a source
 
-    Estimate the significance of a source, or more generally of an additional model
+    Estimating the significance of a source, or more generally of an additional model
     component (such as e.g. a spectral line on top of a power-law spectrum), is done
-    via a hypothesis test. You fit two models, with and without the extra source or
-    component, then use the test statistic values from both fits to compute the
+    via a hypothesis test. You fit two models: one including the source or component and one without it. Then, 
+    compute the difference in the test statistic (TS) between the two fits to determine the 
     significance or p-value. To obtain the test statistic, call
     `~gammapy.modeling.Dataset.stat_sum` for the model corresponding to your two
     hypotheses (or take this value from the print output when running the fit), and
@@ -139,7 +139,7 @@ Please give feedback and suggest additions to this page!
        To the tutorial...
 
 
-.. dropdown:: Compute cumulative significance
+.. dropdown:: Compute cumulative significance over time
 
     A classical plot in gamma-ray astronomy is the cumulative significance of a
     source as a function of observing time. In Gammapy, you can produce it with 1D
