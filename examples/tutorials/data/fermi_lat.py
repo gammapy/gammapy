@@ -84,8 +84,8 @@ check_tutorials_setup()
 # .. code:: yaml
 #
 #    # Fermipy example configuration
-#    # for details see https://fermipy.readthedocs.io/en/latest/config.html
-#    # for irfs, evtype and evclass options see https://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Cicerone/Cicerone_Data/LAT_DP.html
+#    # for details, see https://fermipy.readthedocs.io/en/latest/config.html
+#    # For IRFs, event type and event class options, see https://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Cicerone/Cicerone_Data/LAT_DP.html
 #    components:
 #      - model: {isodiff: $FERMI_DIR/refdata/fermi/galdiffuse/iso_P8R3_CLEAN_V3_PSF2_v1.txt}
 #        selection: {evtype: 16}  #4 is PSF0, 8 PSF1, 16 PSF2, 32 PSF3
@@ -107,19 +107,19 @@ check_tutorials_setup()
 #      projtype: WCS
 #
 #    selection :
-#    #gtselect parameters
-#      emin : 3981.0717055349733 #ENERGY TRUE for gammapy
-#      emax : 2511886.4315095823 #ENERGY TRUE for gammapy
+#    # gtselect parameters
+#      emin : 3981.0717055349733 # ENERGY TRUE for Gammapy
+#      emax : 2511886.4315095823 # ENERGY TRUE for Gammapy
 #      zmax    : 105 # deg
-#      evclass : 256 #CLEAN
+#      evclass : 256 # CLEAN
 #      tmin    : 239557417
 #      tmax    : 752112005
 #
-#    #gtmktime parameters
+#    # gtmktime parameters
 #      filter : 'DATA_QUAL>0 && LAT_CONFIG==1'
 #      roicut : 'no'
 #
-#    #Set the ROI center to the coordinates of this source
+#    # Set the ROI center to the coordinates of this source
 #      glon : 0.
 #      glat : 0.
 #
@@ -131,11 +131,11 @@ check_tutorials_setup()
 #
 #    gtlike:
 #      edisp : True
-#      edisp_bins : 0 # DO NOT CHANGE edisp_bins will be handled by gammapy
+#      edisp_bins : 0 # DO NOT CHANGE edisp_bins will be handled by Gammapy
 #      irfs : 'P8R3_CLEAN_V3'
 #
 #    model:
-#      src_roiwidth : 10.0 #This is used by fermipy to compute the PSF RADMAX even if no models are set
+#      src_roiwidth : 10.0 # This is used by Fermipy to compute the PSF RADMAX, even if no models are set
 #
 
 
