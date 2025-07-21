@@ -571,7 +571,12 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
             filename = data["covariance"]
             if not (path / filename).exists():
                 path, filename = split(filename)
-            models.read_covariance(path, filename, format="ascii.fixed_width")
+            try:
+                models.read_covariance(path, filename, format="ascii.fixed_width")
+            except ValueError:
+                log.warning(
+                    f"Impossible to read correctly the covariance! \n Might be due to bad filename [{filename}] or a bad formatting (not backward compatible)... "
+                )
 
         _set_models_link(models)
 
