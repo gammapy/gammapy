@@ -110,8 +110,9 @@ following syntax.
         >>> from gammapy.data import EventList
         >>> event_list = EventList.read('events.fits') # doctest: +SKIP
 
-In the case above, we could check the execution of the first two lines importing the ``Quantity`` and ``EventList``
-modules, whilst the third line will be skipped. On the contrary, in the example below we could check the execution of
+In the case above, we could check the execution of the first two lines importing the
+`~astropy.units.Quantity` and '~gammapy.data.EventList` modules, whilst the third line will be skipped.
+On the contrary, in the example below we could check the execution of
 the code as well as the output value produced.
 
 .. code-block:: text
@@ -325,7 +326,7 @@ If you wish to add an image to a tutorial you can utilise the following:
     #
     #   Gammapy Maps Illustration
 
-Where `:alt` is used to create a caption for the image. 
+Where `:alt` is used to create a caption for the image.
 More information on the image directive can be found `here <http://www.sphinx-doc.org/en/stable/rest.html#images>`__.
 
 Documentation guidelines

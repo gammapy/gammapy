@@ -55,13 +55,18 @@ The index tables
 A typical way to organize the files relevant to the data we are interested in are the index tables.
 There are two tables:
 
-* **Observation index table:** this table collects the information on each observation or run, with meta data about each of them, such as the pointing direction, the duration, the run ID...
+* **Observation index table:** this table collects the information on each observation or run, with
+  meta data about each of them, such as the pointing direction, the duration, the run ID...
 
-* **HDU index table:** this table provides, for each observation listed in the index table, the location of the corresponding data and instrument response files.
+* **HDU index table:** this table provides, for each observation listed in the index table, the location
+  of the corresponding data and instrument response files.
 
-A `~gammapy.data.DataStore` can then be created by providing each of these two tables in the same file with `~gammapy.data.Datastore.from_file()`, or instead by the directory where they can be found with `~gammapy.data.Datastore.from_dir()` as shown above.
+A `~gammapy.data.DataStore` can then be created by providing each of these two tables in the same file
+with `~gammapy.data.Datastore.from_file`, or instead by the directory where they can be found with
+`~gammapy.data.Datastore.from_dir` as shown above.
 
-More details on these tables and their content can be found in https://gamma-astro-data-formats.readthedocs.io/en/latest/data_storage/index.html.
+More details on these tables and their content can be found in
+https://gamma-astro-data-formats.readthedocs.io/en/latest/data_storage/index.html.
 
 
 Working with event lists
@@ -111,7 +116,8 @@ of the sky.
 Combining event lists and GTIs
 ------------------------------
 
-Both event lists and GTIs can be stacked into a larger one. An `~gammapy.data.EventList` can also be created `~gammapy.data.EventList.from_stack`, that is,
+Both event lists and GTIs can be stacked into a larger one. An `~gammapy.data.EventList` can
+also be created `~gammapy.data.EventList.from_stack`, that is,
 from a list of `~gammapy.data.EventList` objects.
 
 .. testcode::
@@ -154,7 +160,7 @@ same FITS file according to the format specifications. To avoid writing IRFs alo
     gti = GTI.read(filename)
 
     # Save separately
-    gti.write("test_gti.fits.gz")
+    gti.write("test_gti.fits.gz", overwrite=True)
 
     # Save together. First initiate an Observation object
     obs = Observation(gti=gti, events=events)
