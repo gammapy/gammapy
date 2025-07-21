@@ -747,8 +747,39 @@ class ObservationTablePrototype(ObservationTable):
             else:
                 origin = ""
 
+            # Get POINTING (in the future, use Pointing-table!)
             # Used https://docs.astropy.org
-            radec_obj = SkyCoord(0, 0, unit="deg")  # "RADEC_OBJ",
+            # Used data_store.py.
+            # Used commit 16ce9840f38bea55982d2cd986daa08a3088b434 by @registerrier in 16ce9840f38bea55982d2cd986daa08a3088b434
+            names_pointing = []
+            if "OBS_MODE" in table_disk.columns:
+                # of "OBS_MODE" given, decide based on this what is additionally required
+                # like in data_store.py:
+                if table_disk["OBS_MODE"] == "DRIFT":
+                    names_pointing.append("ALT_PNT", "AZ_PNT")
+                else:
+                    names_pointing.append("RA_PNT", "DEC_PNT")
+            else:
+                # if "OBS_MODE" not given, decide based on what is given, RADEC or ALTAZ
+                if "RA_PNT" in table_disk.columns:
+                    # print(METADATA_FITS_KEYS["pointing"]["radec_mean"])
+                    names_pointing.append("RA_PNT")
+                    names_pointing.append("DEC_PNT")
+                elif "ALT_PNT" in table_disk.columns:
+                    # print(METADATA_FITS_KEYS["pointing"]["altaz_mean"])
+                    names_pointing.append("ALT_PNT")
+                    names_pointing.append("AZ_PNT")
+                else:
+                    print("BUG: Neither RADEC nor ALTAZ is given in table on disk!")
+            # like @registerrier in 16ce9840f38bea55982d2cd986daa08a3088b434
+            pointing = SkyCoord(
+                table_disk[i][names_pointing[0]],
+                table_disk[i][names_pointing[1]],
+                unit="deg",
+                frame="icrs",
+            )
+
+            radec_obj = SkyCoord(0, 0, unit="deg")  # radec_obj
             created = Time(
                 "2025-01-01T00:00:00", format="isot", scale="utc"
             )  # "CREATED",
@@ -758,7 +789,6 @@ class ObservationTablePrototype(ObservationTable):
             tstop = Time("2025-01-01T00:00:00", format="isot", scale="utc")  # "TSTOP",
             deadc = 2 * u.day  # "DEADC",
             obsgeo = EarthLocation(0, 0, 0)  # "OBSGEO",
-            pointing = SkyCoord(0, 0, unit="deg")  # "POINTING",
 
             # And finally, add row to internal table (fill table).
             table_internal.add_row(
