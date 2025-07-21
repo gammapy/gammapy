@@ -8,6 +8,7 @@ from gammapy.modeling.scipy import (
     optimize_scipy,
     stat_profile_ul_scipy,
 )
+from gammapy.estimators import FluxPoints
 
 
 class MyDataset:
@@ -106,5 +107,14 @@ def test_stat_profile_ul_scipy():
     ul = stat_profile_ul_scipy(x, y)
     assert_allclose(ul, 2)
 
-    ul = stat_profile_ul_scipy(x, x, interp_scale="lin")
+    ul = stat_profile_ul_scipy(y, y, interp_scale="lin")
     assert_allclose(ul, 4)
+
+    flux_point = FluxPoints.read(
+        "$GAMMAPY_DATA/estimators/pks2155_hess_lc/pks2155_hess_lc.fits",
+        format="lightcurve",
+    )
+    value_scan = flux_point.stat_scan.geom.axes["norm"].center
+    stat_scan = np.sum(flux_point.stat_scan.data, axis=0).ravel()
+    ul = stat_profile_ul_scipy(value_scan, stat_scan, delta_ts=4)
+    assert_allclose(ul, 1.1644624)
