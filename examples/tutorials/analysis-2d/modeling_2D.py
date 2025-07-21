@@ -49,13 +49,6 @@ import matplotlib.pyplot as plt
 from IPython.display import display
 from gammapy.analysis import Analysis, AnalysisConfig
 
-######################################################################
-# Check setup
-# -----------
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
-
 
 ######################################################################
 # Creating the config file

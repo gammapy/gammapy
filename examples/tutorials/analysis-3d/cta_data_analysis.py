@@ -56,15 +56,6 @@ log = logging.getLogger("gammapy.spectrum")
 log.setLevel(logging.ERROR)
 
 ######################################################################
-# Check setup
-# -----------
-
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
-
-
-######################################################################
 # Select observations
 # -------------------
 #
