@@ -575,7 +575,9 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
                 models.read_covariance(path, filename, format="ascii.fixed_width")
             except ValueError:
                 log.warning(
-                    f"Impossible to read correctly the covariance! \n Might be due to bad filename [{filename}] or a bad formatting (not backward compatible)... "
+                    "Impossible to read correctly the covariance! \n"
+                    "Might be due to bad filename [{filename}] or "
+                    "a bad formatting (not backward compatible)... "
                 )
 
         _set_models_link(models)
