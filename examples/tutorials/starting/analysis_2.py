@@ -139,7 +139,7 @@ selected_obs_table = data_store.obs_table.select_observations(selection)
 observations = data_store.get_observations(selected_obs_table["OBS_ID"])
 
 ######################################################################
-# We can have a quick look on the content of each observation with
+# We can have a quick look at the content of each observation with
 # the following instructions:
 #
 
