@@ -30,7 +30,7 @@ Setup
 -----
 
 **IMPORTANT**: For this notebook you have to get the prepared
-`fermi-gc` data provided in your $GAMMAPY_DATA.
+`fermi-gc` data provided in your `$GAMMAPY_DATA`.
 
 We are going to analyses high-energy data from 10 GeV from 1 TeV (in reconstructed energy).
 
