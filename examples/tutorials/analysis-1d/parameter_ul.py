@@ -192,12 +192,9 @@ print(
 
 
 ######################################################################
-# Since our dataset actually starts from 200 GeV, all this analysis has
-# done is rule out any cut-off features at 68% confidence!
+# Since our dataset actually starts from 200 GeV, this analysis
+#  rule out a cut-off at 68% confidence in the energy range considered.
 #
-# We could also have used `stat_profile_ul_scipy` for computing the UL, which uses
-# rootfinding to obtain the n-sigma limits,
-# but note that this can fail if the limits are not constrained.
 #
 # We now plot, in energy units, the likelihood profile of the cutoff with a brown dotted
 # line showing the lower cutoff.
