@@ -646,9 +646,6 @@ class ObservationTablePrototype(ObservationTable):
     METADATA_FITS_KEYS["observation"] = (
         OBSERVATION_METADATA_FITS_KEYS  # taken from data/metadata.py
     )
-    # print(METADATA_FITS_KEYS["observation"])
-    # print(METADATA_FITS_KEYS["obs_info"].values())
-    # print(METADATA_FITS_KEYS["pointing"].values())
 
     @classmethod
     def read(self, filename, **kwargs):
@@ -684,7 +681,6 @@ class ObservationTablePrototype(ObservationTable):
         """2. Understand disk table to prepare loading of internal table, effectively reader"""
 
         """POINTING"""
-
         if "OBS_MODE" in table_disk.columns:
             # of "OBS_MODE" given, decide based on this what is additionally required
             # like in data_store.py:
@@ -715,12 +711,12 @@ class ObservationTablePrototype(ObservationTable):
         # for el in self.names_min_req:  # fill dolumns. for now internal data model: minimum
         #    table_internal[el] = table_disk[el]
 
-        # Fill per observation id
+        # Fill per observation id "OBS_ID"
         for obs_id in table_disk["OBS_ID"]:
             table_internal["OBS_ID"] = table_disk["OBS_ID"]
             # POINTING
-            # table_internal["POINTING"] =
+            # table_internal["POINTING"] = skycoord_from_dict
             print(obs_id)
 
-        """4. return table AS IS INTERNAL """
+        """4. return internal table (instead of copy of disk-table, as before) """
         return table_internal
