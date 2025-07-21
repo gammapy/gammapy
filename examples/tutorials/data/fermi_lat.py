@@ -8,7 +8,7 @@ Introduction
 Gammapy fully supports Fermi-LAT data analysis from DL4 level (binned
 maps). In order to perform data reduction from the events list and
 spacecrast files to binned counts and IRFs maps we recommend to use
-`Fermipy <http://fermipy.readthedocs.io/>`__\ *, which is based on
+`Fermipy <http://Fermipy.readthedocs.io/>`__\ *, which is based on
 the*\ `Fermi Science
 Tools <https://fermi.gsfc.nasa.gov/ssc/data/analysis/software/>`__
 (Fermi ST).
@@ -38,21 +38,22 @@ We are going to analyses high-energy data from 10 GeV from 1 TeV (in reconstruct
 
 import numpy as np
 from astropy import units as u
-
-# %matplotlib inline
 import matplotlib.pyplot as plt
+
+from gammapy.catalog import CATALOG_REGISTRY
+from gammapy.datasets import Datasets, FermipyDatasetsReader
+from gammapy.estimators import TSMapEstimator
 from gammapy.maps import Map
-from gammapy.datasets import Datasets
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
     Models,
+    PointSpatialModel,
     PowerLawSpectralModel,
     TemplateSpatialModel,
     SkyModel,
     PowerLawNormSpectralModel,
 )
 from gammapy.utils.scripts import make_path
-
 
 ######################################################################
 # Check setup
@@ -69,13 +70,13 @@ check_tutorials_setup()
 # Fermipy Congifuration file
 # --------------------------
 #
-# Gammapy can re-use the same configuration file than fermipy to convert
-# the fermipy maps to gammapy datasets. For details on these files
-# struture see the `fermipy configuration
-# page <https://fermipy.readthedocs.io/en/latest/config.html>`__. In this
-# tutorial we will analyse Galactic center data generated with fermipy version 1.3 and the
+# Gammapy can re-use the same configuration file than Fermipy to convert
+# the Fermipy maps to Gammapy datasets. For details on these files
+# struture see the `Fermipy configuration
+# page <https://Fermipy.readthedocs.io/en/latest/config.html>`__. In this
+# tutorial we will analyse Galactic center data generated with Fermipy version 1.3 and the
 # configuration given in
-# `$GAMMAPY_DATA/fermi-gc/config_fermipy_gc_example.yaml`:
+# `$GAMMAPY_DATA/fermi-gc/config_Fermipy_gc_example.yaml`:
 #
 
 
@@ -83,7 +84,7 @@ check_tutorials_setup()
 # .. code:: yaml
 #
 #    # Fermipy example configuration
-#    # for details, see https://fermipy.readthedocs.io/en/latest/config.html
+#    # for details, see https://Fermipy.readthedocs.io/en/latest/config.html
 #    # For IRFs, event type and event class options, see https://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Cicerone/Cicerone_Data/LAT_DP.html
 #    components:
 #      - model: {isodiff: $FERMI_DIR/refdata/fermi/galdiffuse/iso_P8R3_CLEAN_V3_PSF2_v1.txt}
@@ -139,14 +140,15 @@ check_tutorials_setup()
 
 
 ######################################################################
-# | The most important points for gammapy users are: \* `emin`/`emax`
-#   in this file should be considered as the energy true range. \*
+# | The most important points for Gammapy users are: \* `emin`/`emax`
+#   in this file should be considered as the energy true range.
+#   It should be larger that the recosntructed energy range.\*
 #   `edisp_bins : 0` is strongly recommended at this stage otherwise you
-#   might face inconsitancies in the energies axes of the different IRFs created by fermipy.
-# | The `edisp_bins` value will be redefined later on by gammapy as a positive value
+#   might face inconsitancies in the energy axes of the different IRFs created by Fermipy.
+# | The `edisp_bins` value will be redefined later on by Gammapy as a positive value
 #   in order to create the reconstructed energy axis properly.
-#   \* if you want to use the `$FERMI_DIR` variable to read the background models
-#   it must also be defined in your gammapy environemnt,
+#   \* If you want to use the `$FERMI_DIR` variable to read the background models
+#   it must also be defined in your Gammapy environemnt,
 #   otherwise you have to define your own paths.
 # | For this tutorial we copied the iso files in
 #   `$GAMMAPY_DATA/fermi-gc` and edited the paths in the yaml file for
@@ -161,8 +163,10 @@ check_tutorials_setup()
 # choose an energy binning that is fine enough to capture this energy
 # dependence. That is why we recommend a binning with 8 to 10 bins per
 # decade. The energy axes will be created such as it is linear in log space
-# so it's better to define `emin`/`emax` such as they align with a log binning
-# here we have $emin = 10^0.6$ ~ 4 GeV and $emax = 10^3.4$ ~ 2500 GeV`.
+# so it's better to define `emin`/`emax` such as they align with a log binning.
+# Here we have as true energy range $emin = 10^0.6$ ~ 4 GeV to $emax = 10^3.4$ ~ 2500 GeV`.
+# While the reconstructed energy range of our analysis will be 10 GeV to 1000 GeV.
+
 #
 # The spatial binning should be of the same order of the PSF 68%
 # containment radius which is in average 0.1 degree above 10 GeV and
@@ -173,28 +177,27 @@ check_tutorials_setup()
 # than our actual region of interest. Typically, we need a margin equal to the
 # 99% containment of the PSF on each side. Above 10 GeV considering only
 # PSF2&3 the 99% PSF containment radius is about 1 degree. Thus, if we
-# want to study 3 degree around the GC we have to take a `roiwidth` of 8
-# deg. (At 1 GeV and 100 MeV the margin should rather be of about 3 deg
-# and 10 deg respectively. If including PSF0 and PSF1, it should be even
+# want to study a 3 degree radius around the GC we have to take a `roiwidth` of 8
+# deg. (If considering lower energies or including PSF0 and PSF1, it should be even
 # larger).
 #
 
 
 ######################################################################
-# From fermipy maps to gammapy datasets
+# From Fermipy maps to Gammapy datasets
 # =====================================
 #
-# In your fermipy environment you have to run the following commands
+# In your Fermipy environment you have to run the following commands
 #
 # .. code:: python
 #
 #    from fermipy.gtanalysis import GTAnalysis
-#    gta = GTAnalysis('config_fermipy_gc_example.yaml',logging={'verbosity' : 3})
+#    gta = GTAnalysis('config_Fermipy_gc_example.yaml',logging={'verbosity' : 3})
 #    gta.setup()
 #
 #    gta.compute_psf(overwrite=True) # this create the psf kernel
 #    gta.compute_drm(edisp_bins=0, overwrite=True) # this create the energy dispersion matrix
-#    # DO NOT CHANGE edisp_bins here, it will be redefined by gammapy later on
+#    # DO NOT CHANGE edisp_bins here, it will be redefined by Gammapy later on
 #
 # This will produce a number of files including: \* “ccube_00.fits”
 # (counts) \* “bexpmap_00.fits” (exposure) \* “psf_00.fits” (psf) \*
@@ -203,14 +206,13 @@ check_tutorials_setup()
 
 
 ######################################################################
-# Then is your gammapy environment you can create the datasets using the
+# Then is your Gammapy environment you can create the datasets using the
 # same configuration file.
 #
 
-from gammapy.datasets import FermipyDatasetsReader
 
 reader = FermipyDatasetsReader(
-    "$GAMMAPY_DATA/fermi-gc/config_fermipy_gc_example.yaml", edisp_bins=4
+    "$GAMMAPY_DATA/fermi-gc/config_Fermipy_gc_example.yaml", edisp_bins=4
 )
 datasets = reader.read()
 print(datasets)
@@ -218,8 +220,8 @@ print(datasets)
 
 ######################################################################
 # Note that the `edisp_bins` is set again here as a positive number so
-# gammapy can create its reconstructed enerygy axis properly. The energy
-# dispersion correction implemented gammapy is closer to the version
+# Gammapy can create its reconstructed enerygy axis properly. The energy
+# dispersion correction implemented Gammapy is closer to the version
 # implemented in Fermitools >1.2.0, which take into account the interplay
 # between the energy dispersion and PSF.
 #
@@ -248,10 +250,10 @@ print(datasets[0].counts.geom.axes["energy"])
 # Considering more `edisp_bins` is in general safer but consumes more memory
 # and will increase computation time.
 # Alternatively if you created the counts and irfs files from the
-# Fermi-LAT science tools without fermipy you can use the
+# Fermi-LAT science tools without Fermipy you can use the
 # `create_dataset` method. Note that in this case we cannot guarantee
 # that your maps have the correct axes dimensions to be properly converted
-# into gammapy datasets.
+# into Gammapy datasets.
 #
 
 path = make_path("$GAMMAPY_DATA/fermi-gc")
@@ -311,6 +313,9 @@ plt.show()
 # | So we have only one PSF kernel.
 #
 
+datasets[0].psf.plot_containment_radius_vs_energy()
+plt.show()
+
 
 ######################################################################
 # Region of interest and Mask definition
@@ -369,7 +374,7 @@ print(models_iso)
 # `gll_iem_v07.fits <https://fermi.gsfc.nasa.gov/ssc/data/analysis/software/aux/4fgl/gll_iem_v07.fits>`__.
 # For details see the `BackgroundModels
 # page <https://fermi.gsfc.nasa.gov/ssc/data/access/lat/BackgroundModels.html>`__
-# If you have fermipy installed it can also be found in
+# If you have Fermipy installed it can also be found in
 # `$FERMI_DIR/refdata/fermi/galdiffuse/gll_iem_v07.fits`
 #
 # Diffuse model maps are very large (100s of MB), so as an example here,
@@ -409,8 +414,6 @@ models_diffuse = models_iso + model_iem
 # $GAMMAPY_DATA. For details see the `Fermi-LAT catalog
 # page <https://fermi.gsfc.nasa.gov/ssc/data/access/lat/14yr_catalog/>`__
 #
-
-from gammapy.catalog import CATALOG_REGISTRY
 
 catalog_4fgl = CATALOG_REGISTRY.get_cls("4fgl")()  # load 4FGL catalog
 
@@ -511,9 +514,6 @@ print(result)
 # Now we can look at the residual TS map to check there is no signifiant
 # excess left:
 #
-
-from gammapy.estimators import TSMapEstimator
-from gammapy.modeling.models import PointSpatialModel
 
 spatial_model = PointSpatialModel()
 spectral_model = PowerLawSpectralModel(index=2)
