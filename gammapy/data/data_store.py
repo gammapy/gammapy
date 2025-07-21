@@ -621,7 +621,7 @@ class DataStoreMaker:
         info["GLON_PNT"] = pos.l
         info["GLAT_PNT"] = pos.b
 
-        # ToDo: the future I/O scheme should handle the keyword depending on the format version
+        # TODO: the future I/O scheme should handle the keyword depending on the format version
         if all(
             key in list(header.keys())
             for key in ("DATE-OBS", "TIME-OBS", "DATE-END", "TIME-END")
