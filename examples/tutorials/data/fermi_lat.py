@@ -16,7 +16,7 @@ Tools <https://fermi.gsfc.nasa.gov/ssc/data/analysis/software/>`__
 Using Gammapy with Fermi-LAT data could be an option for you if you want
 to do an analysis that is not easily possible with Fermipy and the Fermi
 Science Tools. For example a joint likelihood fit of Fermi-LAT data with
-data e.g. from H.E.S.S., MAGIC, VERITAS or some other instrument, or
+data e.g. from H.E.S.S., MAGIC, VERITAS or some other instrument, or
 analysis of Fermi-LAT data with a complex spatial or spectral model that
 is not available in Fermipy or the Fermi ST.
 
@@ -144,10 +144,11 @@ check_tutorials_setup()
 #   in this file should be considered as the energy true range. \*
 #   `edisp_bins : 0` is strongly recommended at this stage otherwise you
 #   might face inconsitancies in the energies axes of the different IRFs created by fermipy.
-# | The `edisp_bins` value will be redefined later on as a positive value by gammapy in order to create the reconstructed energy axis properly.
-#   on. \* if you want to use the `$FERMI_DIR` variable it must also be
-#   defined in your gammapy environemnt, otherwise you have to define your
-#   own paths.
+# | The `edisp_bins` value will be redefined later on by gammapy as a positive value
+#   in order to create the reconstructed energy axis properly.
+#   \* if you want to use the `$FERMI_DIR` variable to read the background models
+#   it must also be defined in your gammapy environemnt,
+#   otherwise you have to define your own paths.
 # | For this tutorial we copied the iso files in
 #   `$GAMMAPY_DATA/fermi-gc` and edited the paths in the yaml file for
 #   simplicity.
@@ -156,10 +157,15 @@ check_tutorials_setup()
 # the instrument resolution, for that you can have a quick look at the
 # irfs in the `Fermi-LAT performamce
 # page <https://www.slac.stanford.edu/exp/glast/groups/canda/lat_Performance.htm>`__.
+#
 # Since the energy resolution varies with energy, it is important to
 # choose an energy binning that is fine enough to capture this energy
 # dependence. That is why we recommend a binning with 8 to 10 bins per
-# decade. The spatial binning should be of the same order of the PSF 68%
+# decade. The energy axes will be created such as it is linear in log space
+# so it's better to define `emin`/`emax` such as they align with a log binning
+# here we have $emin = 10^0.6$ ~ 4 GeV and $emax = 10^3.4$ ~ 2500 GeV`.
+#
+# The spatial binning should be of the same order of the PSF 68%
 # containment radius which is in average 0.1 degree above 10 GeV and
 # rapidly increases at lower energy. Ideally it should remain whitin of
 # factor of 2 or 3 of the PSF radius at most. in order to properly take
@@ -188,8 +194,8 @@ check_tutorials_setup()
 #    gta.setup()
 #
 #    gta.compute_psf(overwrite=True) # this create the psf kernel
-#    gta.compute_drm(edisp_bins=0, overwrite=True) # this create the energy dispersion matrix 
-#    # DO NOT CHANGE edisp_bins, it will be handled by gammapy
+#    gta.compute_drm(edisp_bins=0, overwrite=True) # this create the energy dispersion matrix
+#    # DO NOT CHANGE edisp_bins will be redefined by gammapy later on
 #
 # This will produce a number of files including: \* “ccube_00.fits”
 # (counts) \* “bexpmap_00.fits” (exposure) \* “psf_00.fits” (psf) \*
@@ -236,10 +242,12 @@ print(datasets[0].counts.geom.axes["energy"])
 
 
 ######################################################################
-# Note that choosing instead `edisp_bins=2` means that the reconstructed energy of the counts geom
-# would have start  at $10^0.8$ ~ 6.3 GeV$. In that case to start the analysis at 10 GeV we would have to
+# Note that choosing instead `edisp_bins=2` means that the reconstructed energy
+# of the counts geom would have start  at $10^0.8$ ~ 6.3 GeV$.
+# In that case to start the analysis at 10 GeV we would have to
 # update the `mask_fit` to ignore the 2 first reconstructed energy bins.
-# Considering more `edisp_bins` is in general safer but consumes more memory and will increase computation time.
+# Considering more `edisp_bins` is in general safer but consumes more memory
+# and will increase computation time.
 # Alternatively if you created the counts and irfs files from the
 # Fermi-LAT science tools without fermipy you can use the
 # `create_dataset` method. Note that in this case we cannot guarantee
@@ -270,7 +278,8 @@ dataset1 = reader.create_dataset(
 datasets_fromST = Datasets([dataset0, dataset1])
 
 
-del dataset0, dataset1, datasets_fromST  # the above was an alternative reading method we don't need those after
+# the above was an alternative reading method we don't need those after
+del dataset0, dataset1, datasets_fromST
 
 
 ######################################################################
@@ -415,6 +424,7 @@ in_geom = geom.to_image().contains(catalog_4fgl.positions)
 catalog_4fgl_gc = catalog_4fgl[in_geom]
 
 models_4fgl_gc = catalog_4fgl_gc.to_models()
+print("Number of source models", len(models_4fgl_gc))
 
 
 ######################################################################
@@ -438,6 +448,7 @@ plt.show()
 
 models_sources = sources_inside_roi + sources_outside_roi
 
+print("Number of source models", len(models_sources))
 
 ######################################################################
 # Fit
@@ -460,12 +471,12 @@ print("Number of models", len(models))
 # Let’s find the 3 brightest sources:
 #
 
-n_brightess = 3
+n_brightest = 3
 intergrated_flux = u.Quantity(
     [m.spectral_model.integral(10 * u.GeV, 1 * u.TeV) for m in sources_inside_roi]
 )
 order = np.argsort(intergrated_flux)
-selected_sources = Models([sources_inside_roi[int(ii)] for ii in order[:n_brightess]])
+selected_sources = Models([sources_inside_roi[int(ii)] for ii in order[:n_brightest]])
 
 print(selected_sources.names)
 
