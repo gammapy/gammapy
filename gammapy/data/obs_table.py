@@ -12,6 +12,7 @@ from gammapy.utils.time import time_ref_from_dict
 from gammapy.utils.metadata import METADATA_FITS_KEYS
 from gammapy.data.metadata import OBSERVATION_METADATA_FITS_KEYS
 from astropy.time import Time
+# from gammapy.data import EventList #for functionality of EVENT-HDUList Reader
 
 __all__ = ["ObservationTable", "ObservationTablePrototype"]
 
@@ -710,7 +711,11 @@ class ObservationTablePrototype(ObservationTable):
             # table_internal["POINTING"] = skycoord_from_dict
             # TIME
 
-            # REST
+            # Use example from events_list.py to try to retrieve mising info for obstable
+            # events = EventList.read(filename)
+            # print(events["INSTRUME"])
+
+            # REST, prob mostly in EVENTS-HEADER hudl[1]
             if "TELESCOP" in table_disk.columns:
                 telescope = table_disk[i]["TELESCOP"]
                 print("T GIVEN")
