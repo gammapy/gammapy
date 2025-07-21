@@ -60,7 +60,7 @@ def get_resampled_wcs(wcs, factor, downsampled):
     return wcs
 
 
-class WcsGeom(Geom, CacheEquivalentMixin):
+class WcsGeom(Geom, CacheInstanceMixin):
     """Geometry class for WCS maps.
 
     This class encapsulates both the WCS transformation object and

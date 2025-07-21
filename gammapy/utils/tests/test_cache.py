@@ -1,9 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pickle
-from gammapy.utils.cache import CacheEquivalentMixin
+import gammapy.utils.cache as cache
+from gammapy.utils.testing import requires_dependency
 
 
-class Dummy(CacheEquivalentMixin):
+class Dummy(cache.CacheInstanceMixin):
     def __init__(self, a, b):
         self.a = a
         self.b = b
@@ -12,7 +13,7 @@ class Dummy(CacheEquivalentMixin):
         return isinstance(other, Dummy) and self.a == other.a and self.b == other.b
 
 
-class Dummy2(CacheEquivalentMixin):
+class Dummy2(cache.CacheInstanceMixin):
     def __init__(self, a, b):
         self.a = a
         self.b = b
@@ -21,7 +22,10 @@ class Dummy2(CacheEquivalentMixin):
         return isinstance(other, Dummy2) and self.a == other.a and self.b == other.b
 
 
+@requires_dependency("ray")
 def test_dummy_cache():
+    cache.USE_INSTANCE_CACHE = True
+
     x = Dummy(1, 2)
     y = Dummy(1, 2)
     z = Dummy2(1, 2)
@@ -39,7 +43,16 @@ def test_dummy_cache():
     assert v is w
 
     # the cache is not propagated through pickle
-    # (implementing that would be too complx)
+    # (implementing that would be more complex)
     data = pickle.dumps(x)
     xnew = pickle.loads(data)
     assert xnew is not x
+
+    cache.USE_INSTANCE_CACHE = False
+
+    x = Dummy(1, 2)
+    y = Dummy(1, 2)
+    z = Dummy2(1, 2)
+
+    assert x is not y
+    assert z is not y
