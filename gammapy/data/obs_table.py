@@ -414,6 +414,11 @@ class ObservationTablePrototype(ObservationTable):
        Looked into https://github.com/gammasky/cta-dc/blob/master/data/cta_1dc_make_data_index_files.py, maybe used l. 233. Copyright (c) 2016 gammasky
        See: https://github.com/gammapy/gammapy/issues/4238
 
+
+    # ATTRIBUTION copied from HESS-DL3-DR1 README.txt (gammapy-data/hess-dl3-dr1/README.txt):
+    # This work made use of data from the H.E.S.S. DL3 public test
+    # data release 1 (HESS DL3 DR1, H.E.S.S. collaboration, 2018).
+
     Data format specification: for now based on GADF-documentation, as next step analogue to metadata.
     """
 
@@ -705,17 +710,14 @@ class ObservationTablePrototype(ObservationTable):
         """Fill per row"""
         for i in range(len(table_disk)):
             obs_id = table_disk[i]["OBS_ID"]  # First, get OBS_ID
-            # Then, prepare corresponding row
-
-            # POINTING
-            # table_internal["POINTING"] = skycoord_from_dict
-            # TIME
-
-            # Use example from events_list.py to try to retrieve mising info for obstable
-            # events = EventList.read(filename)
-            # print(events["INSTRUME"])
+            # Then, prepare corresponding row.
 
             # REST, prob mostly in EVENTS-HEADER hudl[1]
+            # checked HESS-DL3-DR1 dataset events HDU (attribution see above) and see #3767 analysis by @maxnoe
+
+            # Use example from events_list.py to try to retrieve missing info for obs-table
+            # events = EventList.read(filename)
+            # print(events["INSTRUME"])
             if "TELESCOP" in table_disk.columns:
                 telescope = table_disk[i]["TELESCOP"]
                 print("T GIVEN")
@@ -779,7 +781,11 @@ class ObservationTablePrototype(ObservationTable):
                 frame="icrs",
             )
 
-            radec_obj = SkyCoord(0, 0, unit="deg")  # radec_obj
+            # also in EVENTS-Table! see HESS-DL3-DR1-dataset (attribution above)
+            radec_obj = SkyCoord(
+                table_disk[i]["GLON_PNT"], table_disk[i]["GLAT_PNT"], unit="deg"
+            )  # radec_obj
+            radec_obj = SkyCoord(0, 0, unit="deg")  # dummy
             created = Time(
                 "2025-01-01T00:00:00", format="isot", scale="utc"
             )  # "CREATED",
