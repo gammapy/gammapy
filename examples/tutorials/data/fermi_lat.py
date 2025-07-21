@@ -74,7 +74,7 @@ check_tutorials_setup()
 # the fermipy maps to gammapy datasets. For details on these files
 # struture see the `fermipy configuration
 # page <https://fermipy.readthedocs.io/en/latest/config.html>`__. In this
-# tutorial we will analyse Galactic center data generated with the
+# tutorial we will analyse Galactic center data generated with fermipy version 1.3 and the
 # configuration given in
 # `$GAMMAPY_DATA/fermi-gc/config_fermipy_gc_example.yaml`:
 #
@@ -242,7 +242,7 @@ print(datasets[0].counts.geom.axes["energy"])
 # Considering more `edisp_bins` is in general safer but consumes more memory and will increase computation time.
 # Alternatively if you created the counts and irfs files from the
 # Fermi-LAT science tools without fermipy you can use the
-# `create_dataset` method. Note that in this case we cannot garantee
+# `create_dataset` method. Note that in this case we cannot guarantee
 # that your maps have the correct axes dimensions to be properly converted
 # into gammapy datasets.
 #
