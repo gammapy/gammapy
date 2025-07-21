@@ -738,10 +738,21 @@ class DataStoreMaker:
         pos = SkyCoord(info["RA_PNT"], info["DEC_PNT"], unit="deg").galactic
         info["GLON_PNT"] = pos.l
         info["GLAT_PNT"] = pos.b
-        info["DATE-OBS"] = header.get("DATE_OBS", na_str)
-        info["TIME-OBS"] = header.get("TIME_OBS", na_str)
-        info["DATE-END"] = header.get("DATE_END", na_str)
-        info["TIME-END"] = header.get("TIME_END", na_str)
+
+        # TODO: the future I/O scheme should handle the keyword depending on the format version
+        if all(
+            key in list(header.keys())
+            for key in ("DATE-OBS", "TIME-OBS", "DATE-END", "TIME-END")
+        ):
+            info["DATE-OBS"] = header.get("DATE-OBS")
+            info["TIME-OBS"] = header.get("TIME-OBS")
+            info["DATE-END"] = header.get("DATE-END")
+            info["TIME-END"] = header.get("TIME-END")
+        else:
+            info["DATE-OBS"] = header.get("DATE_OBS", na_str)
+            info["TIME-OBS"] = header.get("TIME_OBS", na_str)
+            info["DATE-END"] = header.get("DATE_END", na_str)
+            info["TIME-END"] = header.get("TIME_END", na_str)
         info["N_TELS"] = header.get("N_TELS", na_int)
         info["OBJECT"] = header.get("OBJECT", na_str)
 
