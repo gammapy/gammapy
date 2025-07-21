@@ -228,7 +228,6 @@ print(datasets)
 # notebook
 #
 
-# %%time
 # fit2 = Fit()
 # result2 = fit2.run(datasets)
 # print(result2.success)

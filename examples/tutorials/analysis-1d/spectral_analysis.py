@@ -217,7 +217,6 @@ dataset_maker = SpectrumDatasetMaker(
 bkg_maker = ReflectedRegionsBackgroundMaker(exclusion_mask=exclusion_mask)
 safe_mask_maker = SafeMaskMaker(methods=["aeff-max"], aeff_percent=10)
 
-# %%time
 datasets = Datasets()
 
 for obs_id, observation in zip(obs_ids, observations):

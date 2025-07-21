@@ -127,7 +127,6 @@ config_stacked = AnalysisConfig.read(path=path / "config_stack.yaml")
 
 analysis_stacked = Analysis(config_stacked)
 
-# %%time
 # select observations:
 analysis_stacked.get_observations()
 
@@ -229,7 +228,6 @@ models_stacked = Models([model, bkg_model])
 
 dataset_stacked.models = models_stacked
 
-# %%time
 fit = Fit(optimize_opts={"print_level": 1})
 result = fit.run(datasets=[dataset_stacked])
 
@@ -343,7 +341,6 @@ plt.show()
 # ~~~~~~~~~~~~~~
 #
 
-# %%time
 
 # Read the yaml file from disk
 config_joint = AnalysisConfig.read(path=path / "config_joint.yaml")
@@ -389,7 +386,6 @@ print(models_joint)
 # and set the new model
 analysis_joint.datasets.models = models_joint
 
-# %%time
 fit_joint = Fit()
 result_joint = fit_joint.run(datasets=analysis_joint.datasets)
 

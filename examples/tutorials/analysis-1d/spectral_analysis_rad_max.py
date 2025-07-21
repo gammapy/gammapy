@@ -228,7 +228,6 @@ bkg_maker = ReflectedRegionsBackgroundMaker(region_finder=region_finder)
 # use the energy threshold specified in the DL3 files
 safe_mask_masker = SafeMaskMaker(methods=["aeff-default"])
 
-# %%time
 datasets = Datasets()
 
 # create a counts map for visualisation later...
