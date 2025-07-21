@@ -11,7 +11,6 @@ from gammapy.utils.testing import Checker
 from gammapy.utils.time import time_ref_from_dict
 from gammapy.utils.metadata import METADATA_FITS_KEYS
 from gammapy.data.metadata import OBSERVATION_METADATA_FITS_KEYS
-from astropy.io import fits
 
 __all__ = ["ObservationTable", "ObservationTablePrototype"]
 
@@ -615,11 +614,12 @@ class ObservationTablePrototype(ObservationTable):
     )
 
     # Required Minimum in disk-table, see #4238.
-    # 1 column
-    names_min_req = [
-        "OBS_ID",
-    ]
+    # at least OBS_ID, and per OBS_ID later the internal table is filled.
+    # additionally required for selection mechanims TSTART,TSTOP (to construct time)
+    # +RADEC/ALTAZ depending on what is given (appended in reader)
+    names_min_req = ["OBS_ID", "TSTART", "TSTOP"]
 
+    # to be updated!
     names_to_load_from_gadf = [
         "TELESCOP",
         "INSTRUME",
@@ -646,32 +646,14 @@ class ObservationTablePrototype(ObservationTable):
     METADATA_FITS_KEYS["observation"] = (
         OBSERVATION_METADATA_FITS_KEYS  # taken from data/metadata.py
     )
-    print(METADATA_FITS_KEYS["observation"])
-    print(METADATA_FITS_KEYS["obs_info"].values())
-    print(METADATA_FITS_KEYS["pointing"].values())
+    # print(METADATA_FITS_KEYS["observation"])
+    # print(METADATA_FITS_KEYS["obs_info"].values())
+    # print(METADATA_FITS_KEYS["pointing"].values())
 
     @classmethod
     def read(self, filename, **kwargs):
         """Modified reader for ObservationTablePrototype"""
 
-        """Checks which dataformat is present on disk"""
-
-        """Reads from GADF v0.3 into internal table"""
-
-        """ 0. Internal ObservationTablePrototype table container"""
-        # for now, GADF complete table, later it should be meta-data oriented as sugg. in #4238 by @registerrier.
-        # table_internal = self(
-        #     names=self.gadf_req["name"] + self.gadf_opt["name"],
-        #     units=self.gadf_req["unit"] + self.gadf_opt["unit"],
-        #     dtype=self.gadf_req["type"] + self.gadf_opt["type"],
-        # )
-        table_internal = self(
-            names=self.internal_full_def["name"],
-            units=self.internal_full_def["unit"],
-            dtype=self.internal_full_def["type"],
-        )
-
-        """1. (IO) mostly taken from ObservationTable"""
         """Read an observation table from file.
 
         Parameters
@@ -681,49 +663,64 @@ class ObservationTablePrototype(ObservationTable):
         **kwargs : dict, optional
             Keyword arguments passed to `~astropy.table.Table.read`.
         """
+
+        """Checks which dataformat is present on disk"""
+        """Reads from GADF v0.3 into internal table"""
+
+        """ 0. Internal ObservationTablePrototype table container"""
+        # meta-data oriented as sugg. in #4238 by @registerrier.
+
+        table_internal = self(
+            names=self.internal_full_def["name"],
+            units=self.internal_full_def["unit"],
+            dtype=self.internal_full_def["type"],
+        )
+
+        """1. (IO) mostly taken from ObservationTable"""
+        """Here the table is read from disk as before, pot. lazy loading in future."""
+
         table_disk = super().read(make_path(filename), **kwargs)
 
-        """2.  (CHECKS) : Check if table from disk fulfills GADF requirements"""
-        for el in self.gadf_req["name"]:
-            if el not in table_disk.columns:
-                print(f"Did not found {el} required for GADF v0.3.")
+        """2. Understand disk table to prepare loading of internal table, effectively reader"""
+
+        """POINTING"""
+
+        if "OBS_MODE" in table_disk.columns:
+            # of "OBS_MODE" given, decide based on this what is additionally required
+            # like in data_store.py:
+            if table_disk["OBS_MODE"] == "DRIFT":
+                self.names_min_req.append("ALT_PNT", "AZ_PNT")
+            else:
+                self.names_min_req.append("RA_PNT", "DEC_PNT")
+        else:
+            # if "OBS_MODE" not given, decide based on what is given, RADEC or ALTAZ
+            if "RA_PNT" in table_disk.columns:
+                print(METADATA_FITS_KEYS["pointing"]["radec_mean"])
+                self.names_min_req.append("RA_PNT")
+                self.names_min_req.append("DEC_PNT")
+            elif "ALT_PNT" in table_disk.columns:
+                print(METADATA_FITS_KEYS["pointing"]["altaz_mean"])
+                self.names_min_req.append("ALT_PNT")
+                self.names_min_req.append("AZ_PNT")
+            else:
+                print("BUG: Neither RADEC nor ALTAZ is given in table on disk!")
+        # print(self.names_min_req)
+
+        """TIME"""
 
         """3. Fill internal table accordingly, FROM HERE ON separation from file on disk!"""
         for i in range(len(table_disk)):  # create rows (slow acc. to documentation)
             table_internal.add_row()
-        for el in self.names_min_req:  # fill dolumns. for now internal data model: minimum (could also be complete gadf)
-            table_internal[el] = table_disk[el]
+        """Easy filler - fills by taking data from same named columns. will be replaced for better int mem-repr."""
+        # for el in self.names_min_req:  # fill dolumns. for now internal data model: minimum
+        #    table_internal[el] = table_disk[el]
+
+        # Fill per observation id
+        for obs_id in table_disk["OBS_ID"]:
+            table_internal["OBS_ID"] = table_disk["OBS_ID"]
+            # POINTING
+            # table_internal["POINTING"] =
+            print(obs_id)
 
         """4. return table AS IS INTERNAL """
-        return table_internal  # old: for now return table AS IS on disk, as before
-
-    def read2(self, filename, **kwargs):
-        # References: based on gammapy, FITS, astropy, hess-dl3-dr1 obs_index.fits.gz
-        hdul = fits.open(filename)
-        obs_index = hdul[1].header
-
-        number_fields = obs_index["TFIELDS"]
-        keys = ["TTYPE", "TFORM", "TUNIT"]
-        print(keys)
-        names = []
-        for number in range(number_fields):
-            for key in ["TTYPE"]:
-                # names.append(obs_index[key + str(number + 1)])
-                names.append(0)
-        print(names)
-
-        # If OBS_MODE given, adapt required columns to proceed
-        # needed at all, if maybe optional in anay case?
-        str = "OBS_MODE"
-        if str in obs_index:
-            obs_mode = obs_index[str]  # wont work, bec. str in TTYPE
-            # like in data_store.py:
-            if obs_mode == "DRIFT":
-                self.names_min_req.append("ALT_PNT")
-                self.names_min_req.append("AZ_PNT")
-            else:
-                self.names_min_req.append("RA_PNT")
-                self.names_min_req.append("DEC_PNT")
-
-        for el in self.names_min_req:
-            print(el, obs_index[el])
+        return table_internal
