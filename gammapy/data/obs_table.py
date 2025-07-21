@@ -627,6 +627,7 @@ class ObservationTablePrototype(ObservationTable):
     names_min_req = ["OBS_ID", "TSTART", "TSTOP"]
 
     # To fill internal table as much as possible, these optional (not required by names_min_req and appendices) data is copied from disk
+    # this is still to fill internal table as designed, additional cols that may be present in GADF are loaded later (step 4)
     opt_names_to_load_from_gadf = [
         "TELESCOP",
         "INSTRUME",
@@ -786,6 +787,7 @@ class ObservationTablePrototype(ObservationTable):
                 table_disk[i]["GLON_PNT"], table_disk[i]["GLAT_PNT"], unit="deg"
             )  # radec_obj
             radec_obj = SkyCoord(0, 0, unit="deg")  # dummy
+            # print(table_disk[i]["TSTART"])
             created = Time(
                 "2025-01-01T00:00:00", format="isot", scale="utc"
             )  # "CREATED",
@@ -816,5 +818,20 @@ class ObservationTablePrototype(ObservationTable):
                     pointing,
                 ]
             )
-        """4. return internal table (instead of copy of disk-table, as before) """
+
+        """4. load optional columns automatically, if present in file. this makes use of GADF v.0.3 standard"""
+        """remove already handled names to load the rest per column, automatically"""
+        opt_names = self.names_gadf_opt  # take names specified for GADF v.0.3
+        opt_names.remove(
+            "GLON_PNT"
+        )  # remove all handled names ... #see (?) PR #5954 by @registerrier event_list.py
+        opt_names.remove("GLAT_PNT")
+        opt_names.remove("RA_OBJ")
+        opt_names.remove("DEC_OBJ")
+
+        for el in opt_names:  # add column-wise all optional data specified in GADF v.0.3 automatically by copying from disk.
+            if el in table_disk.columns:
+                table_internal[el] = table_disk[el]
+
+        """5. return internal table (instead of copy of disk-table, as before) """
         return table_internal
