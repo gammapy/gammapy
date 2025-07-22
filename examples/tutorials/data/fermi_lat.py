@@ -9,9 +9,9 @@ Introduction
 
 Gammapy fully supports Fermi-LAT data analysis from DL4 level (binned
 maps). In order to perform data reduction from the events list and
-spacecrast files to binned counts and IRFs maps we recommend to use
-`Fermipy <http://fermipy.readthedocs.io/>`__\ *, which is based on
-the*\ `Fermi Science
+spacecraft files to binned counts and IRFs maps we recommend to use
+`Fermipy <http://fermipy.readthedocs.io/>`__, which is based on
+the `Fermi Science
 Tools <https://fermi.gsfc.nasa.gov/ssc/data/analysis/software/>`__
 (Fermi ST).
 
@@ -59,25 +59,26 @@ from gammapy.utils.scripts import make_path
 
 ######################################################################
 # Check setup
-# -----------
+# ^^^^^^^^^^^
 #
+# We check the setup in this tutorial, as we require specific files to be
+# downloaded to continue.
 
-# %%capture
 from gammapy.utils.check import check_tutorials_setup
 
 check_tutorials_setup()
 
 
 ######################################################################
-# Fermipy congifuration file
+# Fermipy configuration file
 # --------------------------
 #
-# Gammapy can re-use the same configuration file than Fermipy to convert
-# the Fermipy maps to Gammapy datasets. For details on these files
-# struture see the `Fermipy configuration
+# Gammapy can utilise the same configuration file as Fermipy to convert
+# the Fermipy-generated maps into Gammapy datasets. For more information on the
+# structure of these files, refer to the `Fermipy configuration
 # page <https://fermipy.readthedocs.io/en/latest/config.html>`__. In this
-# tutorial we will analyse Galactic center data generated with Fermipy version 1.3 and the
-# configuration given in
+# tutorial, we will analyse Galactic center data generated with Fermipy version 1.3 and
+# the configuration given in
 # `$GAMMAPY_DATA/fermi-gc/config_fermipy_gc_example.yaml`:
 #
 
@@ -142,44 +143,44 @@ check_tutorials_setup()
 
 
 ######################################################################
-# | The most important points for Gammapy users are:
-# - `emin`/`emax`in this file should be considered as the energy true range.
-#   It should be larger that the recosntructed energy range.
-# - `edisp_bins : 0` is strongly recommended at this stage otherwise you
-#   might face inconsitancies in the energy axes of the different IRFs created by Fermipy.
-# | The `edisp_bins` value will be redefined later on by Gammapy as a positive value
+# The most important points for Gammapy users are:
+#
+# - ``emin`` and ``emax`` in this file should be considered as the energy true range.
+#   It should be larger that the reconstructed energy range.
+# - ``edisp_bins : 0`` is strongly recommended at this stage otherwise you
+#   might face inconsistencies in the energy axes of the different IRFs created by Fermipy.
+# - The ``edisp_bins`` value will be redefined later on by Gammapy as a positive value
 #   in order to create the reconstructed energy axis properly.
 # - If you want to use the `$FERMI_DIR` variable to read the background models
-#   it must also be defined in your Gammapy environemnt,
+#   it must also be defined in your Gammapy environment,
 #   otherwise you have to define your own paths.
-# | For this tutorial we copied the iso files in
-#   `$GAMMAPY_DATA/fermi-gc` and edited the paths in the yaml file for
-#   simplicity.
+# - For this tutorial we copied the iso files in $GAMMAPY_DATA/fermi-gc` and
+#   edited the paths in the yaml file for simplicity.
 #
 # More generally in order to select a good binning it is important to know
 # the instrument resolution, for that you can have a quick look at the
-# irfs in the `Fermi-LAT performamce
+# IRFs in the `Fermi-LAT performance
 # page <https://www.slac.stanford.edu/exp/glast/groups/canda/lat_Performance.htm>`__.
 #
 # Since the energy resolution varies with energy, it is important to
 # choose an energy binning that is fine enough to capture this energy
 # dependence. That is why we recommend a binning with 8 to 10 bins per
 # decade. The energy axes will be created such as it is linear in log space
-# so it's better to define `emin`/`emax` such as they align with a log binning.
-# Here we have as true energy range log(emin) = 0.6 ~ 4 GeV to $log(emax) = 3.4 ~ 2500 GeV.
+# so it's better to define ``emin`` and ``emax`` such as they align with a log binning.
+# Here we have as true energy range :math:`log(emin) = 0.6 ~ 4`GeV to
+# :math:`log(emax) = 3.4 ~ 2500`GeV.
 # While the reconstructed energy range of our analysis will be 10 GeV to 1000 GeV.
-
 #
 # The spatial binning should be of the same order of the PSF 68%
 # containment radius which is in average 0.1 degree above 10 GeV and
 # rapidly increases at lower energy. Ideally it should remain within a
 # factor of 2 or 3 of the PSF radius at most. In order to properly take
-# into account for the sources outside of the region of interest that
-# contribute inside due to the PSF we have to define a wider `roiwidth`
+# into account for the sources outside the region of interest that
+# contribute inside due to the PSF we have to define a wider ``roiwidth``
 # than our actual region of interest. Typically, we need a margin equal to the
 # 99% containment of the PSF on each side. Above 10 GeV considering only
 # PSF2&3 the 99% PSF containment radius is about 1 degree. Thus, if we
-# want to study a 3 degree radius around the GC we have to take a `roiwidth` of 8
+# want to study a 3 degree radius around the GC we have to take a ``roiwidth`` of 8
 # deg. (If considering lower energies or including PSF0 and PSF1, it should be much
 # larger).
 #
@@ -197,11 +198,12 @@ check_tutorials_setup()
 #    gta = GTAnalysis('config_fermipy_gc_example.yaml',logging={'verbosity' : 3})
 #    gta.setup()
 #
-#    gta.compute_psf(overwrite=True) # this create the psf kernel
-#    gta.compute_drm(edisp_bins=0, overwrite=True) # this create the energy dispersion matrix
+#    gta.compute_psf(overwrite=True) # this creates the psf kernel
+#    gta.compute_drm(edisp_bins=0, overwrite=True) # this creates the energy dispersion matrix
 #    # DO NOT CHANGE edisp_bins here, it will be redefined by Gammapy later on
 #
 # This will produce a number of files including:
+#
 # - “ccube_00.fits” (counts)
 # - “bexpmap_00.fits” (exposure)
 # - “psf_00.fits” (psf)
@@ -211,7 +213,7 @@ check_tutorials_setup()
 
 
 ######################################################################
-# Then is your Gammapy environment you can create the datasets using the
+# In your Gammapy environment you can create the datasets using the
 # same configuration file.
 #
 
@@ -224,39 +226,38 @@ print(datasets)
 
 
 ######################################################################
-# Note that the `edisp_bins` is set again here as a positive number so
-# Gammapy can create its reconstructed enerygy axis properly. The energy
+# Note that the ``edisp_bins`` is set again here as a positive number so
+# Gammapy can create its reconstructed energy axis properly. The energy
 # dispersion correction implemented Gammapy is closer to the version
 # implemented in Fermitools >1.2.0, which take into account the interplay
 # between the energy dispersion and PSF.
 #
-# For most of the Fermi energy range, the level of migration in log10(E)
-# due to energy dispersion is within 0.2 (when going below 100 MeV it
-# increases up to about 0.4). As a consequence we recommend that the
-# product of \|edisp_bins\| times the width of the log10(E) bins is at
-# least equal to 0.2. With a binning of 8 to 10 bins per decade, it
-# corresponds to \|edisp_bins\| ≥ 2. For more details see
+# Across most of the Fermi energy range, the level of migration in log10(E)
+# remains within 0.2, increasing up to 0.4 below 100 MeV,
+# due to energy dispersion. Therefore, we recommend that the
+# product of \|edisp_bins\| and the width of the log10(E) bins be at
+# least equal to 0.2. For a binning of 8 to 10 bins per decade, this
+# corresponds to \|edisp_bins\| ≥ 2. For further information, see
 # `Pass8_edisp_usage <https://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Pass8_edisp_usage.html>`__.
-# In our case the we have 10 bins per decade and true energy axis starts
-# at about 4 GeV, so with `edisp_bins=4` the reconstructed enegry axis
+# In our case, we have 10 bins per decade and true energy axis starts
+# at about 4 GeV, so with ``edisp_bins=4`` the reconstructed energy axis
 # starts at 10 GeV:
 #
 
 print(datasets[0].exposure.geom.axes["energy_true"])
 print(datasets[0].counts.geom.axes["energy"])
 
-
 ######################################################################
-# Note that choosing instead `edisp_bins=2` means that the reconstructed energy
-# of the counts geom would have start  at $10^0.8$ ~ 6.3 GeV.
-# In that case if we want to start the analysis at 10 GeV we would have to
-# update the `mask_fit` to ignore the 2 first reconstructed energy bins.
-# Considering more `edisp_bins` is in general safer but consumes more memory
-# and will increase computation time.
+# Note that selecting ``edisp_bins=2`` means the reconstructed energy
+# of the counts geometry will start at :math:`10^{0.8} ~ 6.3`GeV.
+# If we want to start the analysis at 10 GeV in this case, we need to
+# update the ``mask_fit`` to exclude the first 2 reconstructed energy bins.
+# Considering more ``edisp_bins`` is generally safer but requires more memory
+# and increases computation time.
 #
-# Alternatively if you created the counts and irfs files from the
+# Alternatively, if you created the counts and IRF files from the
 # Fermi-LAT science tools without Fermipy you can use the
-# `create_dataset` method. Note that in this case we cannot guarantee
+# ``create_dataset``  method. Note that in this case we cannot guarantee
 # that your maps have the correct axes dimensions to be properly converted
 # into Gammapy datasets.
 #
@@ -284,13 +285,13 @@ dataset1 = reader.create_dataset(
 datasets_fromST = Datasets([dataset0, dataset1])
 
 
-# the above was an alternative reading method we don't need those after
+# The above was an alternative reading method we don't need those after
 del dataset0, dataset1, datasets_fromST
 
 
 ######################################################################
-# Fermi-LAT irfs properties
-# -------------------------
+# Fermi-LAT IRF properties
+# ------------------------
 #
 
 
@@ -302,7 +303,7 @@ del dataset0, dataset1, datasets_fromST
 
 ######################################################################
 # Exposure is almost constant across the field of view, with less than 5%
-# variations at a given energy.
+# variation at a given energy.
 #
 
 datasets[0].exposure.plot_interactive(add_cbar=True)
@@ -313,9 +314,9 @@ plt.show()
 # PSF
 # ~~~
 #
-# | For Fermi-LAT, the PSF only varies little within a given regions of
-#   the sky, especially at high energies like what we have here.
-# | So we have only one PSF kernel.
+# For Fermi-LAT, the PSF only varies little within a given regions of
+# the sky, especially at high energies like what we have here.
+# So we have only one PSF kernel.
 #
 
 datasets[0].psf.plot_containment_radius_vs_energy(fraction=(0.68, 0.95, 0.99))
@@ -323,13 +324,13 @@ plt.show()
 
 
 ######################################################################
-# Region of interest and Mask definition
+# Region of interest and mask definition
 # --------------------------------------
 #
-# As mention previously the width of dataset is larger that our actual
+# As mentioned previously, the width of dataset is larger that our actual
 # region of interest in order to properly take into account for the
 # sources outside that contributes inside due to the PSF. So we define the
-# valid RoI for fitting by creating a `mask_fit`.
+# valid RoI for fitting by creating a ``mask_fit``.
 #
 
 margin = (
@@ -357,7 +358,7 @@ for d in datasets:
 # Isotropic diffuse background
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# The `FermipyDatasetsReader` also created one isotropic diffuse model
+# The `~gammapy.datasets.FermipyDatasetsReader` also created one isotropic diffuse model
 # for each dataset:
 #
 
@@ -374,11 +375,11 @@ print(models_iso)
 ######################################################################
 # The Fermi-LAT collaboration provides a galactic diffuse emission model,
 # that can be used as a background model for Fermi-LAT source analysis.
-# These files are called usually IEM for intersellar emission model, the
+# These files are called usually IEM for interstellar emission model, the
 # latest is
 # `gll_iem_v07.fits <https://fermi.gsfc.nasa.gov/ssc/data/analysis/software/aux/4fgl/gll_iem_v07.fits>`__.
 # For details see the `BackgroundModels
-# page <https://fermi.gsfc.nasa.gov/ssc/data/access/lat/BackgroundModels.html>`__
+# page <https://fermi.gsfc.nasa.gov/ssc/data/access/lat/BackgroundModels.html>`__.
 # If you have Fermipy installed it can also be found in
 # `$FERMI_DIR/refdata/fermi/galdiffuse/gll_iem_v07.fits`
 #
@@ -407,6 +408,8 @@ model_iem = SkyModel(
 
 template_iem.map.plot_interactive(add_cbar=True)
 plt.show()
+# sphinx_gallery_thumbnail_number = 4
+
 
 models_diffuse = models_iso + model_iem
 
@@ -415,16 +418,16 @@ models_diffuse = models_iso + model_iem
 # Sources
 # ~~~~~~~
 #
-# Sources models can be loaded from the 4FGL catalog directly available in
-# $GAMMAPY_DATA. For details see the `Fermi-LAT catalog
-# page <https://fermi.gsfc.nasa.gov/ssc/data/access/lat/14yr_catalog/>`__
+# Source models can be loaded from the 4FGL catalog directly available in
+# `$GAMMAPY_DATA`. For details see the `Fermi-LAT catalog
+# page <https://fermi.gsfc.nasa.gov/ssc/data/access/lat/14yr_catalog/>`__.
 #
 
 catalog_4fgl = CATALOG_REGISTRY.get_cls("4fgl")()  # load 4FGL catalog
 
 
 ######################################################################
-# we want to select only the sources inside the dataset spatial geometry:
+# We want to select only the sources inside the dataset spatial geometry:
 #
 
 in_geom = geom.to_image().contains(catalog_4fgl.positions)
@@ -439,8 +442,8 @@ print("Number of source models", len(models_4fgl_gc))
 
 
 ######################################################################
-# In order to improve performaces we can store all the sources outside of
-# the `mask_fit` region into a single template (the same could be done
+# In order to improve performances we can store all the sources outside
+# the ``mask_fit`` region into a single template (the same could be done
 # for all the sources we want to keep frozen).
 #
 
@@ -469,9 +472,9 @@ print("Number of source models", len(models_sources))
 # ---
 #
 # Now, the big finale: let’s do a 3D of the brightest sources and IEM
-# models
+# models.
 #
-# First we attach the models to the datasets
+# First we attach the models to the datasets.
 #
 
 models = models_sources + models_diffuse
@@ -486,10 +489,10 @@ print("Number of models", len(models))
 #
 
 n_brightest = 3
-intergrated_flux = u.Quantity(
+integrated_flux = u.Quantity(
     [m.spectral_model.integral(10 * u.GeV, 1 * u.TeV) for m in sources_inside_roi]
 )
-order = np.argsort(intergrated_flux)
+order = np.argsort(integrated_flux)
 selected_sources = Models([sources_inside_roi[int(ii)] for ii in order[:n_brightest]])
 
 print(selected_sources.names)
@@ -498,20 +501,18 @@ free_models = selected_sources + model_iem
 
 
 ######################################################################
-# we keep only their normalisation free for simplicity:
+# We keep only their normalisation free for simplicity:
 #
 
 models.freeze()  # freeze all parameters
 
-# and unfreeze only the ampltitude or norm of the selected models
+# and unfreeze only the amplitude or norm of the selected models
 for p in free_models.parameters:
     if p.name in ["amplitude", "norm"]:
         p.frozen = False
         p.min = 0
 
 print("Number of free parameters", len(models.parameters.free_parameters))
-
-# %%time
 
 fit = Fit()
 result = fit.run(datasets=datasets)
@@ -523,7 +524,7 @@ print(result)
 # Residual TS map
 # ---------------
 #
-# Now we can look at the residual TS map to check there is no signifiant
+# Now we can look at the residual TS map to check there is no significant
 # excess left:
 #
 
@@ -546,7 +547,7 @@ import matplotlib as mpl
 
 
 def plot_significance_map(estimator_results, source_models=None, margin=None):
-    fig = plt.figure(figsize=(11, 4), dpi=130)
+    fig = plt.figure(figsize=(7, 5))
     image = estimator_results["sqrt_ts"]
     if margin is not None:
         image = image.cutout(
@@ -594,9 +595,9 @@ datasets_read = Datasets.read(
 # ---------
 #
 # - Fit the position and spectrum of the source `SNR
-#   G0.9+0.1 <http://gamma-sky.net/#/cat/tev/110>`__\ \_.
+#   G0.9+0.1 <http://gamma-sky.net/#/cat/tev/110>`__.
 # - Make maps and fit the position and spectrum of the `Crab
-#   nebula <http://gamma-sky.net/#/cat/tev/25>`__\ \_.
+#   nebula <http://gamma-sky.net/#/cat/tev/25>`__.
 #
 
 
