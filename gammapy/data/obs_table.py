@@ -9,10 +9,7 @@ from gammapy.utils.regions import SphericalCircleSkyRegion
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
 from gammapy.utils.time import time_ref_from_dict
-from gammapy.utils.metadata import METADATA_FITS_KEYS
-from gammapy.data.metadata import OBSERVATION_METADATA_FITS_KEYS
 from astropy.time import Time
-# from gammapy.data import EventList #for functionality of EVENT-HDUList Reader
 
 __all__ = ["ObservationTable", "ObservationTablePrototype"]
 
@@ -409,216 +406,16 @@ class ObservationTableChecker(Checker):
 
 class ObservationTablePrototype(ObservationTable):
     """Prototype for modified ObservationTable class
-       Used as reference: gammapy, gammapy/data/obs_table.py, https://docs.python.org/3/reference/, https://docs.astropy.org/en/latest/table/construct_table.html#construct-table, https://numpy.org/doc/stable/reference/generated/numpy.dtype.html
-                          https://docs.astropy.org/en/latest/table/index.html, https://gamma-astro-data-formats.readthedocs.io/en/v0.3/, esp. data_storage/obs_index/index.html
-       Looked into https://github.com/gammasky/cta-dc/blob/master/data/cta_1dc_make_data_index_files.py, maybe used l. 233. Copyright (c) 2016 gammasky
-       See: https://github.com/gammapy/gammapy/issues/4238
+    See discussion and development: https://github.com/gammapy/gammapy/issues/3767, https://github.com/gammapy/gammapy/issues/4238
+    Co-authors: @maxnoe, @registerrier, @bkhelifi
+    Used as reference: gammapy, gammapy/data/obs_table.py, https://docs.python.org/3/reference/, https://docs.astropy.org/en/latest/table/construct_table.html#construct-table, https://numpy.org/doc/stable/reference/generated/numpy.dtype.html
+                       https://docs.astropy.org/en/latest/table/index.html, https://gamma-astro-data-formats.readthedocs.io/en/v0.3/, esp. data_storage/obs_index/index.html
+    Looked into: https://github.com/gammasky/cta-dc/blob/master/data/cta_1dc_make_data_index_files.py, maybe used l. 233. Copyright (c) 2016 gammasky
 
-
-    # ATTRIBUTION copied from HESS-DL3-DR1 README.txt (gammapy-data/hess-dl3-dr1/README.txt):
+    # ATTRIBUTION copied from hess-dl3-dr1 README.txt (gammapy-data/hess-dl3-dr1/README.txt) for testing and learning from this dataset:
     # This work made use of data from the H.E.S.S. DL3 public test
     # data release 1 (HESS DL3 DR1, H.E.S.S. collaboration, 2018).
-
-    Data format specification: for now based on GADF-documentation, as next step analogue to metadata.
     """
-
-    """GADF specification for "Observation index table" (https://gamma-astro-data-formats.readthedocs.io/en/v0.3/data_storage/obs_index/index.html)"""
-    # entries of table that are required by GADF v 0.3
-    names_gadf_req = [
-        "OBS_ID",
-        "OBS_MODE",
-        "RA_PNT",
-        "DEC_PNT",
-        "ALT_PNT",
-        "AZ_PNT",
-        "TSTART",
-        "TSTOP",
-    ]
-    types_gadf_req = [
-        np.dtype(int),
-        np.dtype(str),
-        np.dtype(float),
-        np.dtype(float),
-        np.dtype(float),
-        np.dtype(float),
-        np.dtype(float),
-        np.dtype(float),
-    ]
-    units_gadf_req = [None, None, "deg", "deg", "deg", "deg", "s", "s"]
-
-    gadf_req = dict(name=names_gadf_req, type=types_gadf_req, unit=units_gadf_req)
-
-    # entries of table that are optional by GADF v 0.3
-    names_gadf_opt = [
-        "ZEN_PNT",
-        "ONTIME",
-        "LIVETIME",
-        "DEADC",
-        "DATE-OBS",
-        "TIME-OBS",
-        "DATE-END",
-        "TIME-END",
-        "N_TELS",
-        "TELLIST",
-        "QUALITY",
-        "OBJECT",
-        "GLON_PNT",
-        "GLAT_PNT",
-        "RA_OBJ",
-        "DEC_OBJ",
-        "TMID",
-        "TMID_STR",
-        "EVENT_COUNT",
-        "EVENT_RA_MEDIAN",
-        "EVENT_DEC_MEDIAN",
-        "EVENT_ENERGY_MEDIAN",
-        "EVENT_TIME_MIN",
-        "EVENT_TIME_MAX",
-        "BKG_SCALE",
-        "TRGRATE",
-        "ZTRGRATE",
-        "MUONEFF",
-        "BROKPIX",
-        "AIRTEMP",
-        "PRESSURE",
-        "NSBLEVEL",
-        "RELHUM",
-    ]
-
-    types_gadf_opt = [
-        np.dtype(float),
-        np.dtype(float),
-        np.dtype(float),
-        np.dtype(float),
-        np.dtype(str),
-        np.dtype(str),
-        np.dtype(str),
-        np.dtype(str),
-        np.dtype(int),
-        np.dtype(str),
-        np.dtype(int),
-        np.dtype(str),
-        np.dtype(float),
-        np.dtype(float),
-        np.dtype(float),
-        np.dtype(float),
-        np.dtype(float),
-        np.dtype(str),
-        np.dtype(int),
-        np.dtype(float),
-        np.dtype(float),
-        np.dtype(float),
-        np.dtype(float),
-        np.dtype(float),  # f,f,d,d
-        np.dtype(float),
-        np.dtype(float),
-        np.dtype(float),
-        np.dtype(float),
-        np.dtype(float),
-        np.dtype(float),
-        np.dtype(float),
-        np.dtype(float),
-        np.dtype(float),
-    ]
-
-    units_gadf_opt = [
-        "deg",
-        "s",
-        "s",
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        "deg",
-        "deg",
-        "deg",
-        "deg",
-        "s",
-        None,
-        None,
-        "deg",
-        "deg",
-        "deg",
-        "s",
-        "s",
-        None,
-        "Hz",
-        "Hz",
-        None,
-        None,
-        "deg C",
-        "hPa",
-        "a.u.",
-        None,
-    ]
-
-    gadf_opt = dict(name=names_gadf_opt, type=types_gadf_opt, unit=units_gadf_opt)
-
-    """Prototype of Observation Index Table specification"""
-    # See discussion in #4238, thanks to @registerrier, @bkhelifi, @maxnoe.
-
-    # Full internal-table, oriented at metadata in gammapy. See design in #4238
-    # 15 columns
-    names_internal_table = [
-        "TELESCOP",
-        "INSTRUME",
-        "OBS_MODE",
-        "OBS_ID",
-        "SUB_ARRA",
-        "OBJECT",
-        "RADEC_OBJ",
-        "CREATOR",
-        "CREATED",
-        "ORIGIN",
-        "TSTART",
-        "TSTOP",
-        "DEADC",
-        "OBSGEO",
-        "POINTING",
-    ]
-    units_internal_table = [
-        u.dimensionless_unscaled,
-        u.dimensionless_unscaled,
-        u.dimensionless_unscaled,
-        u.dimensionless_unscaled,
-        u.dimensionless_unscaled,
-        u.dimensionless_unscaled,
-        u.dimensionless_unscaled,
-        u.dimensionless_unscaled,
-        u.dimensionless_unscaled,
-        u.dimensionless_unscaled,
-        u.dimensionless_unscaled,
-        u.dimensionless_unscaled,
-        u.s,
-        u.dimensionless_unscaled,
-        u.dimensionless_unscaled,
-    ]
-    types_internal_table = [
-        np.dtype(str),
-        np.dtype(str),
-        np.dtype(str),
-        np.dtype(int),
-        np.dtype(str),
-        np.dtype(str),
-        np.dtype(object),
-        np.dtype(str),
-        np.dtype(object),
-        np.dtype(str),
-        np.dtype(object),
-        np.dtype(object),
-        np.dtype(float),
-        np.dtype(object),
-        np.dtype(object),
-    ]
-
-    internal_full_def = dict(
-        name=names_internal_table, type=types_internal_table, unit=units_internal_table
-    )
 
     # Required Minimum in disk-table, see #4238, to construct internal table for minimum use case.
     # For this purpose, at least OBS_ID is needed (and per OBS_ID later the internal table is filled)
@@ -626,30 +423,10 @@ class ObservationTablePrototype(ObservationTable):
     # RADEC/ALTAZ (depending on what is given and thereby appended in reader)
     names_min_req = ["OBS_ID", "TSTART", "TSTOP"]
 
-    # To fill internal table as much as possible, these optional (not required by names_min_req and appendices) data is copied from disk
-    # this is still to fill internal table as designed, additional cols that may be present in GADF are loaded later (step 4)
-    opt_names_to_load_from_gadf = [
-        "TELESCOP",
-        "INSTRUME",
-        "OBS_MODE",
-        "SUB_ARRA",
-        "OBJECT",
-        "CREATOR",
-        "CREATED",
-        "ORIGIN",
-        "DEADC",
-    ]
-
-    # as sugg. by @registerrier in #4238 oriented at metadata:
-    # construct internal table using METADATA_FITS_KEYS?
-    # or use them? they seem to be export keys
-    METADATA_FITS_KEYS["observation"] = (
-        OBSERVATION_METADATA_FITS_KEYS  # taken from data/metadata.py
-    )
-
     @classmethod
     def read(self, filename, **kwargs):
         """Modified reader for ObservationTablePrototype"""
+        """Header and disk-read mostly taken from class ObservationTable"""
 
         """Read an observation table from file.
 
@@ -661,7 +438,7 @@ class ObservationTablePrototype(ObservationTable):
             Keyword arguments passed to `~astropy.table.Table.read`.
         """
 
-        """Reads from GADF v0.3 into internal, independent table"""
+        """Reads from specified format into internal, independent table"""
 
         """ 0. Internal ObservationTablePrototype table container"""
         # meta-data oriented as sugg. in #4238 by @registerrier.
@@ -688,25 +465,15 @@ class ObservationTablePrototype(ObservationTable):
         else:
             # if "OBS_MODE" not given, decide based on what is given, RADEC or ALTAZ
             if "RA_PNT" in table_disk.columns:
-                print(METADATA_FITS_KEYS["pointing"]["radec_mean"])
                 self.names_min_req.append("RA_PNT")
                 self.names_min_req.append("DEC_PNT")
             elif "ALT_PNT" in table_disk.columns:
-                print(METADATA_FITS_KEYS["pointing"]["altaz_mean"])
                 self.names_min_req.append("ALT_PNT")
                 self.names_min_req.append("AZ_PNT")
             else:
                 print("BUG: Neither RADEC nor ALTAZ is given in table on disk!")
         # print(self.names_min_req)
-
-        """TIME"""
-
         """3. Fill internal table accordingly, FROM HERE ON separation from file on disk!"""
-        # for i in range(len(table_disk)):  # create rows (slow acc. to documentation)
-        #    table_internal.add_row()
-        """Easy filler - fills by taking data from same named columns. will be replaced for better int mem-repr."""
-        # for el in self.names_min_req:  # fill dolumns. for now internal data model: minimum
-        #    table_internal[el] = table_disk[el]
 
         """Fill per row"""
         for i in range(len(table_disk)):
@@ -716,9 +483,6 @@ class ObservationTablePrototype(ObservationTable):
             # REST, prob mostly in EVENTS-HEADER hudl[1]
             # checked HESS-DL3-DR1 dataset events HDU (attribution see above) and see #3767 analysis by @maxnoe
 
-            # Use example from events_list.py to try to retrieve missing info for obs-table
-            # events = EventList.read(filename)
-            # print(events["INSTRUME"])
             if "TELESCOP" in table_disk.columns:
                 telescope = table_disk[i]["TELESCOP"]
                 print("T GIVEN")
@@ -819,18 +583,8 @@ class ObservationTablePrototype(ObservationTable):
                 ]
             )
 
-        """4. load optional columns automatically, if present in file. this makes use of GADF v.0.3 standard"""
-        """remove already handled names to load the rest per column, automatically"""
-        opt_names = self.names_gadf_opt  # take names specified for GADF v.0.3
-        opt_names.remove(
-            "GLON_PNT"
-        )  # remove all handled names ... #see (?) PR #5954 by @registerrier event_list.py
-        opt_names.remove("GLAT_PNT")
-        opt_names.remove("RA_OBJ")
-        opt_names.remove("DEC_OBJ")
-        opt_names.remove("OBJECT")
-        opt_names.remove("DEADC")
-
+        """4. load optional columns automatically, if present in file."""
+        opt_names = []
         for el in opt_names:  # add column-wise all optional data specified in GADF v.0.3 automatically by copying from disk.
             if el in table_disk.columns:
                 table_internal[el] = table_disk[el]
