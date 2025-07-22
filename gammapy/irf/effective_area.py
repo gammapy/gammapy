@@ -228,7 +228,6 @@ class EffectiveAreaTable2D(IRF):
             kwargs_colorbar.setdefault("labelsize", 7)
             add_colorbar(caxes, ax=ax, axes_loc=axes_loc, **kwargs_colorbar)
 
-        # ax.figure.tight_layout()
         return ax
 
     def peek(self, figsize=(15, 5)):
