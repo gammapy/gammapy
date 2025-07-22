@@ -576,10 +576,13 @@ class ObservationTablePrototype(ObservationTable):
             # obsgeo = EarthLocation(0, 0, 0)  # "OBSGEO",
 
         """4. load optional columns automatically, if present in file."""
-        opt_names = []
-        for el in opt_names:  # add column-wise all optional data specified in GADF v.0.3 automatically by copying from disk.
-            if el in table_disk.columns:
-                table_internal[el] = table_disk[el]
+        opt_names = list(table_disk.columns)
+        for name in names_internal:
+            opt_names.remove(name)
+
+        for name in opt_names:  # add column-wise all optional column-data present in file, independent of format.
+            if name in table_disk.columns:
+                table_internal[name] = table_disk[name]
 
         """5. return internal table (instead of copy of disk-table, as before) """
         return table_internal
