@@ -167,8 +167,8 @@ check_tutorials_setup()
 # dependence. That is why we recommend a binning with 8 to 10 bins per
 # decade. The energy axes will be created such as it is linear in log space
 # so it's better to define ``emin`` and ``emax`` such as they align with a log binning.
-# Here we have as true energy range :math:`log(emin) = 0.6 ~ 4`GeV to
-# :math:`log(emax) = 3.4 ~ 2500`GeV.
+# Here we have as true energy range :math:`\log(emin) = 0.6 \sim 4` GeV to
+# :math:`\log(emax) = 3.4 \sim 2500` GeV.
 # While the reconstructed energy range of our analysis will be 10 GeV to 1000 GeV.
 #
 # The spatial binning should be of the same order of the PSF 68%
@@ -249,7 +249,7 @@ print(datasets[0].counts.geom.axes["energy"])
 
 ######################################################################
 # Note that selecting ``edisp_bins=2`` means the reconstructed energy
-# of the counts geometry will start at :math:`10^{0.8} ~ 6.3`GeV.
+# of the counts geometry will start at :math:`10^{0.8} \sim 6.3` GeV.
 # If we want to start the analysis at 10 GeV in this case, we need to
 # update the ``mask_fit`` to exclude the first 2 reconstructed energy bins.
 # Considering more ``edisp_bins`` is generally safer but requires more memory
@@ -293,9 +293,6 @@ del dataset0, dataset1, datasets_fromST
 # Fermi-LAT IRF properties
 # ------------------------
 #
-
-
-######################################################################
 # Exposure
 # ~~~~~~~~
 #
