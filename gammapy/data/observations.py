@@ -480,17 +480,15 @@ class Observation:
         )
 
         for idx, (ax, name) in enumerate(zip_longest(axes.flat, plot_hdus)):
-            ax.set_box_aspect(1)
-
             if name == "aeff":
-                self.aeff.plot(ax=ax)
+                self.aeff.plot(ax=ax, squared=True)
                 ax.set_title("Effective area")
 
             if name == "bkg":
                 bkg = self.bkg
                 if not bkg.has_offset_axis:
                     bkg = bkg.to_2d()
-                bkg.plot(ax=ax)
+                bkg.plot(ax=ax, squared=True)
                 ax.set_title("Background rate")
 
             if name == "psf":
@@ -498,7 +496,7 @@ class Observation:
                 ax.set_title("Point spread function")
 
             if name == "edisp":
-                self.edisp.plot_bias(ax=ax, add_cbar=True)
+                self.edisp.plot_bias(ax=ax, add_cbar=True, squared=True)
                 ax.set_title("Energy dispersion")
 
             if name == "rad_max":
@@ -509,13 +507,11 @@ class Observation:
                 m = self.events._counts_image(allsky=False)
                 ax.remove()
                 ax = fig.add_subplot(nrows, ncols, idx + 1, projection=m.geom.wcs)
-                m.plot(ax=ax, stretch="sqrt", vmin=0, add_cbar=True)
+                m.plot(ax=ax, stretch="sqrt", vmin=0, add_cbar=True, squared=True)
                 ax.set_title("Events")
 
             if name is None:
                 ax.set_visible(False)
-
-        fig.tight_layout()
 
     def select_time(self, time_interval):
         """Select a time interval of the observation.
