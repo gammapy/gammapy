@@ -410,7 +410,7 @@ class ObservationTableChecker(Checker):
 class ObservationTablePrototype(ObservationTable):
     """Prototype for modified ObservationTable class
        Used as reference: gammapy, gammapy/data/obs_table.py, https://docs.python.org/3/reference/, https://docs.astropy.org/en/latest/table/construct_table.html#construct-table, https://numpy.org/doc/stable/reference/generated/numpy.dtype.html
-                          https://docs.astropy.org/en/latest/table/index.html
+                          https://docs.astropy.org/en/latest/table/index.html, https://gamma-astro-data-formats.readthedocs.io/en/v0.3/, esp. data_storage/obs_index/index.html
        Looked into https://github.com/gammasky/cta-dc/blob/master/data/cta_1dc_make_data_index_files.py, maybe used l. 233. Copyright (c) 2016 gammasky
        See: https://github.com/gammapy/gammapy/issues/4238
 
@@ -782,11 +782,11 @@ class ObservationTablePrototype(ObservationTable):
                 frame="icrs",
             )
 
-            # also in EVENTS-Table! see HESS-DL3-DR1-dataset (attribution above)
+            # also in EVENTS-Table, could be only there! see HESS-DL3-DR1-dataset (attribution above)
+            # also CREATOR, ORIGIN, ...
             radec_obj = SkyCoord(
-                table_disk[i]["GLON_PNT"], table_disk[i]["GLAT_PNT"], unit="deg"
+                table_disk[i]["RA_OBJ"], table_disk[i]["DEC_OBJ"], unit="deg"
             )  # radec_obj
-            radec_obj = SkyCoord(0, 0, unit="deg")  # dummy
             # print(table_disk[i]["TSTART"])
             created = Time(
                 "2025-01-01T00:00:00", format="isot", scale="utc"
@@ -828,6 +828,8 @@ class ObservationTablePrototype(ObservationTable):
         opt_names.remove("GLAT_PNT")
         opt_names.remove("RA_OBJ")
         opt_names.remove("DEC_OBJ")
+        opt_names.remove("OBJECT")
+        opt_names.remove("DEADC")
 
         for el in opt_names:  # add column-wise all optional data specified in GADF v.0.3 automatically by copying from disk.
             if el in table_disk.columns:
