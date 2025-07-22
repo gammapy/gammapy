@@ -576,7 +576,7 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
             except ValueError:
                 log.warning(
                     "Impossible to read correctly the covariance! \n"
-                    "Might be due to bad filename [{filename}] or "
+                    f"Might be due to bad filename [{filename}] or "
                     "a bad formatting (not backward compatible)... "
                 )
 
