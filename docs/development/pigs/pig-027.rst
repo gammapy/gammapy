@@ -44,19 +44,20 @@ The following PIG focuses on the implementation of the NS with the UltraNest pac
 However, UltraNest is claimed to be more robust, provide safer uncertainties, and better parallelization (see `UltraNest doc <https://johannesbuchner.github.io/UltraNest/issues.html#what-is-the-difference-between-ultranest-and-multinest-dynesty>`_)
 
 Reference :
+
 - Ultranest : https://johannesbuchner.github.io/UltraNest
 - Literature : `Buchner 2023, <http://arxiv.org/abs/2101.09675>`_ , `Ashton 2022, <https://ui.adsabs.harvard.edu/abs/2022NRvMP...2...39A>`_
 
 
-**Potential limitations of MCMC in a BayesianInference class ?**
+**Potential limitations of MCMC in a BayesianInference class?**
 
 Besides the many advantages of the NS described above, one technical specificity of the MCMC method is that the user needs to specify a warmup/burn period *that can only be estimated once the chain has run*.
 From an implementation point of view of the class this means that the user would need to run the sampler, then look at the chain, specify the burn period and then estimate the best model parameters.
 This implies that the class will not be able to update the model parameters in a single round like the Fit class does.
-In addition, there is no convergence criteria in the MCMC so the MCMC can not return a `convergence successful : True ` status.
+In addition, there is no convergence criteria in the MCMC so the MCMC can not return a `convergence successful : True` status.
 NS has no warmup period, a well defined convergence criteria, and can estimate convergence success.
 
-However we might want to keep the class general enough so that MCMC can be plugged easily in the future ?
+However we might want to keep the class general enough so that MCMC can be plugged easily in the future?
 
 **A visual comparison of the approaches of MCMC vs NS**
 
