@@ -493,6 +493,7 @@ class ObservationTablePrototype(ObservationTable):
             table_disk
         )  # Get number of observations, equal to number of rows in table on disk.
         for i in range(number_of_observations):
+            row_internal = []
             for name in names_internal:
                 type_internal = format["name"][name]["internal"][
                     "type"
@@ -507,25 +508,24 @@ class ObservationTablePrototype(ObservationTable):
                     ][
                         "name"
                     ]  # Get for the column(s!) to be loaded the name(s!) on disk, for selected fileformat.
-                    type_disk = format["name"][name]["disk"]["type"]
+                    # type_disk = format["name"][name]["disk"]["type"]
                     if type_internal == "int64":
-                        table_internal[name] = int(
-                            table_disk[i][names_disk]
+                        row_internal.append(
+                            int(table_disk[i][names_disk])
                         )  # NOTE: Implicit assumption that for int64-type, always only one name is given in gadf.
                     elif type_internal == "str":
-                        table_internal[name] = str(
-                            table_disk[i][names_disk]
+                        row_internal.append(
+                            str(table_disk[i][names_disk])
                         )  # NOTE: Implicit assumption that for str-type, always only one name is given in gadf.
                 else:
                     print(
                         "EXCEPTION: Mandatory columns not present in file."
                     )  # TODO: Check and exception on init!
 
-                # row_internal = [] #New empty row for internal table.
-
-                print(type_disk)  # TODO: Typecast as noted by @bkhelifi.
-
-                # table_internal.add_row(row_internal) #Add row to internal table (fill table).
+            table_internal.add_row(
+                row_internal
+            )  # Add row to internal table (fill table).
+            # print(table_internal)  # TODO: Typecast as noted by @bkhelifi.
 
             # Get POINTING (in the future, use Pointing-table!)
             # Used https://docs.astropy.org
