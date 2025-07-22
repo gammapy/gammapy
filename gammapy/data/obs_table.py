@@ -441,8 +441,6 @@ class ObservationTablePrototype(ObservationTable):
             Keyword arguments passed to `~astropy.table.Table.read`.
         """
 
-        """ 0. Internal ObservationTablePrototype table container"""
-
         # Read info on internal format and on correspondance to selected fileformat.
         format = read_yaml(
             "../gammapy/gammapy/utils/formats/obs_index_" + fileformat + ".yaml"
@@ -459,7 +457,7 @@ class ObservationTablePrototype(ObservationTable):
             types_internal.append(format["name"][name]["internal"]["type"])
             description_internal.append(format["name"][name]["internal"]["description"])
 
-        # Create internal table.
+        # Create internal table "table_internal".
         table_internal = self(
             names=names_internal,
             units=units_internal,
@@ -467,73 +465,50 @@ class ObservationTablePrototype(ObservationTable):
             descriptions=description_internal,
         )
 
-        print(table_internal.info)
-
-        """1. (IO) mostly taken from ObservationTable"""
-        """Here the table is read from disk as before, pot. lazy loading in future."""
+        # Read disk table "table_disk", taken from class ObervationTable. TODO: Pot. lazy loading in future?"""
         table_disk = super().read(make_path(filename), **kwargs)
 
-        """2. Understand disk table to prepare loading of internal table, effectively reader"""
+        # """2. Understand disk table to prepare loading of internal table, effectively reader"""
 
-        """POINTING"""
-        if "OBS_MODE" in table_disk.columns:
-            # of "OBS_MODE" given, decide based on this what is additionally required
-            # like in data_store.py:
-            if table_disk["OBS_MODE"] == "DRIFT":
-                self.names_min_req.append("ALT_PNT", "AZ_PNT")
-            else:
-                self.names_min_req.append("RA_PNT", "DEC_PNT")
-        else:
-            # if "OBS_MODE" not given, decide based on what is given, RADEC or ALTAZ
-            if "RA_PNT" in table_disk.columns:
-                self.names_min_req.append("RA_PNT")
-                self.names_min_req.append("DEC_PNT")
-            elif "ALT_PNT" in table_disk.columns:
-                self.names_min_req.append("ALT_PNT")
-                self.names_min_req.append("AZ_PNT")
-            else:
-                print("BUG: Neither RADEC nor ALTAZ is given in table on disk!")
+        # """POINTING"""
+        # if "OBS_MODE" in table_disk.columns:
+        #     # of "OBS_MODE" given, decide based on this what is additionally required
+        #     # like in data_store.py:
+        #     if table_disk["OBS_MODE"] == "DRIFT":
+        #         self.names_min_req.append("ALT_PNT", "AZ_PNT")
+        #     else:
+        #         self.names_min_req.append("RA_PNT", "DEC_PNT")
+        # else:
+        #     # if "OBS_MODE" not given, decide based on what is given, RADEC or ALTAZ
+        #     if "RA_PNT" in table_disk.columns:
+        #         self.names_min_req.append("RA_PNT")
+        #         self.names_min_req.append("DEC_PNT")
+        #     elif "ALT_PNT" in table_disk.columns:
+        #         self.names_min_req.append("ALT_PNT")
+        #         self.names_min_req.append("AZ_PNT")
+        #     else:
+        #         print("BUG: Neither RADEC nor ALTAZ is given in table on disk!")
         # print(self.names_min_req)
-        """3. Fill internal table accordingly, FROM HERE ON separation from file on disk!"""
 
-        """Fill per row"""
-        for i in range(len(table_disk)):
-            obs_id = table_disk[i]["OBS_ID"]  # First, get OBS_ID
-            # Then, prepare corresponding row.
-
-            # REST, prob mostly in EVENTS-HEADER hudl[1]
-            # checked HESS-DL3-DR1 dataset events HDU (attribution see above) and see #3767 analysis by @maxnoe
-
-            if "TELESCOP" in table_disk.columns:
-                telescope = table_disk[i]["TELESCOP"]
-                print("T GIVEN")
-            else:
-                telescope = ""
-
-            if "INSTRUME" in table_disk.columns:
-                instrument = table_disk[i]["INSTRUME"]
-            else:
-                instrument = ""
-            if "OBS_MODE" in table_disk.columns:
-                obs_mode = table_disk[i]["OBS_MODE"]
-            else:
-                obs_mode = ""
-            if "SUB_ARRA" in table_disk.columns:
-                sub_array = table_disk[i]["SUB_ARRA"]
-            else:
-                sub_array = ""
-            if "OBJECT" in table_disk.columns:
-                object = table_disk[i]["OBJECT"]
-            else:
-                object = ""
-            if "CREATOR" in table_disk.columns:
-                creator = table_disk[i]["CREATOR"]
-            else:
-                creator = ""
-            if "ORIGIN" in table_disk.columns:
-                origin = table_disk[i]["ORIGIN"]
-            else:
-                origin = ""
+        # Fill internal table for mandatory columns by appending rows.
+        number_of_observations = len(
+            table_disk
+        )  # Get number of observations, equal to number of rows in tbale on disk.
+        for i in range(number_of_observations):
+            for name in names_internal:
+                if name in table_disk.columns:
+                    name_disk = format[
+                        "name"
+                    ][
+                        name
+                    ][
+                        "disk"
+                    ][
+                        "name"
+                    ]  # Get for the column to be loaded the name on disk, for selected fileformat.
+                    type_disk = format["name"][name]["disk"]["type"]
+                    table_internal[name] = table_disk[i][name_disk]
+                    print(type_disk)  # TODO: Typecast as noted by @bkhelifi.
 
             # Get POINTING (in the future, use Pointing-table!)
             # Used https://docs.astropy.org
@@ -586,16 +561,8 @@ class ObservationTablePrototype(ObservationTable):
             # And finally, add row to internal table (fill table).
             table_internal.add_row(
                 [
-                    telescope,
-                    instrument,
-                    obs_mode,
-                    obs_id,
-                    sub_array,
-                    object,
                     radec_obj,
-                    creator,
                     created,
-                    origin,
                     tstart,
                     tstop,
                     deadc,

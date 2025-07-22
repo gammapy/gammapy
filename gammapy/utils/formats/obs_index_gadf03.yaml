@@ -10,6 +10,7 @@ name:
       type: int64
       description: ID of observation run 
     disk:
+      name: OBS_ID
       unit: None
       type: int64
       description: Unique observation identifier (Run number)
@@ -20,6 +21,7 @@ name:
       type: str
       description: Name of object 
     disk:
+      name: OBJECT
       unit: None
       type: str
       description: Primary target of the observation
