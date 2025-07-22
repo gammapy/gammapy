@@ -8,7 +8,7 @@ from gammapy.data import GTI
 from gammapy.datasets import Datasets
 from gammapy.datasets.actors import DatasetsActor
 from gammapy.maps import LabelMapAxis, Map, TimeMapAxis
-from gammapy.modeling.models import FoVBackgroundModel, Models
+from gammapy.modeling.models import Models
 from gammapy.utils.pbar import progress_bar
 from .core import FluxPoints
 from .sed import FluxPointsEstimator
@@ -162,7 +162,7 @@ class LightCurveEstimator(FluxPointsEstimator):
                 continue
 
             valid_intervals.append([t_min, t_max])
-            if self.stack_over_time_interval:
+            if self.stack_over_time_interval and not self.reoptimize:
                 name = f"timebin_{idx}"
                 dataset_reduced = datasets_to_fit.stack_reduce(name=name)
                 models = Models(datasets.models.copy())
@@ -171,8 +171,6 @@ class LightCurveEstimator(FluxPointsEstimator):
                     models.remove(model_name)
                 for dataset in datasets:
                     models.reassign(dataset.name, dataset_reduced.name)
-                bkg_model = FoVBackgroundModel(dataset_name=dataset_reduced.name)
-                models.append(bkg_model)
                 dataset_reduced.models = models
                 datasets_to_fit = Datasets([dataset_reduced])
                 dataset_names = datasets_to_fit.names
