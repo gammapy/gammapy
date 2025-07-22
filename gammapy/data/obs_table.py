@@ -1,16 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from collections import namedtuple
 import numpy as np
-from astropy.coordinates import Angle, SkyCoord, EarthLocation
+from astropy.coordinates import Angle, SkyCoord
 from astropy.table import Table
 from astropy.units import Quantity, Unit
-from astropy import units as u
 from gammapy.utils.regions import SphericalCircleSkyRegion
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
 from gammapy.utils.time import time_ref_from_dict
 from gammapy.utils.scripts import read_yaml
-from astropy.time import Time
 
 __all__ = ["ObservationTable", "ObservationTablePrototype"]
 
@@ -490,14 +488,17 @@ class ObservationTablePrototype(ObservationTable):
         #         print("BUG: Neither RADEC nor ALTAZ is given in table on disk!")
         # print(self.names_min_req)
 
-        # Fill internal table for mandatory columns by appending rows.
+        # Fill internal table for mandatory columns by appending columns. TODO: CHECK by rows?
         number_of_observations = len(
             table_disk
-        )  # Get number of observations, equal to number of rows in tbale on disk.
+        )  # Get number of observations, equal to number of rows in table on disk.
         for i in range(number_of_observations):
             for name in names_internal:
+                type_internal = format["name"][name]["internal"][
+                    "type"
+                ]  # TODO: DO not use format-dict here anymore?
                 if name in table_disk.columns:
-                    name_disk = format[
+                    names_disk = format[
                         "name"
                     ][
                         name
@@ -505,10 +506,26 @@ class ObservationTablePrototype(ObservationTable):
                         "disk"
                     ][
                         "name"
-                    ]  # Get for the column to be loaded the name on disk, for selected fileformat.
+                    ]  # Get for the column(s!) to be loaded the name(s!) on disk, for selected fileformat.
                     type_disk = format["name"][name]["disk"]["type"]
-                    table_internal[name] = table_disk[i][name_disk]
-                    print(type_disk)  # TODO: Typecast as noted by @bkhelifi.
+                    if type_internal == "int64":
+                        table_internal[name] = int(
+                            table_disk[i][names_disk]
+                        )  # NOTE: Implicit assumption that for int64-type, always only one name is given in gadf.
+                    elif type_internal == "str":
+                        table_internal[name] = str(
+                            table_disk[i][names_disk]
+                        )  # NOTE: Implicit assumption that for str-type, always only one name is given in gadf.
+                else:
+                    print(
+                        "EXCEPTION: Mandatory columns not present in file."
+                    )  # TODO: Check and exception on init!
+
+                # row_internal = [] #New empty row for internal table.
+
+                print(type_disk)  # TODO: Typecast as noted by @bkhelifi.
+
+                # table_internal.add_row(row_internal) #Add row to internal table (fill table).
 
             # Get POINTING (in the future, use Pointing-table!)
             # Used https://docs.astropy.org
@@ -535,41 +552,28 @@ class ObservationTablePrototype(ObservationTable):
                 else:
                     print("BUG: Neither RADEC nor ALTAZ is given in table on disk!")
             # like @registerrier in 16ce9840f38bea55982d2cd986daa08a3088b434
-            pointing = SkyCoord(
-                table_disk[i][names_pointing[0]],
-                table_disk[i][names_pointing[1]],
-                unit="deg",
-                frame="icrs",
-            )
+            # pointing = SkyCoord(
+            #     table_disk[i][names_pointing[0]],
+            #     table_disk[i][names_pointing[1]],
+            #     unit="deg",
+            #     frame="icrs",
+            # )
 
-            # also in EVENTS-Table, could be only there! see HESS-DL3-DR1-dataset (attribution above)
-            # also CREATOR, ORIGIN, ...
-            radec_obj = SkyCoord(
-                table_disk[i]["RA_OBJ"], table_disk[i]["DEC_OBJ"], unit="deg"
-            )  # radec_obj
-            # print(table_disk[i]["TSTART"])
-            created = Time(
-                "2025-01-01T00:00:00", format="isot", scale="utc"
-            )  # "CREATED",
-            tstart = Time(
-                "2025-01-01T00:00:00", format="isot", scale="utc"
-            )  # "TSTART",
-            tstop = Time("2025-01-01T00:00:00", format="isot", scale="utc")  # "TSTOP",
-            deadc = 2 * u.day  # "DEADC",
-            obsgeo = EarthLocation(0, 0, 0)  # "OBSGEO",
-
-            # And finally, add row to internal table (fill table).
-            table_internal.add_row(
-                [
-                    radec_obj,
-                    created,
-                    tstart,
-                    tstop,
-                    deadc,
-                    obsgeo,
-                    pointing,
-                ]
-            )
+            # # also in EVENTS-Table, could be only there! see HESS-DL3-DR1-dataset (attribution above)
+            # # also CREATOR, ORIGIN, ...
+            # radec_obj = SkyCoord(
+            #     table_disk[i]["RA_OBJ"], table_disk[i]["DEC_OBJ"], unit="deg"
+            # )  # radec_obj
+            # # print(table_disk[i]["TSTART"])
+            # created = Time(
+            #     "2025-01-01T00:00:00", format="isot", scale="utc"
+            # )  # "CREATED",
+            # tstart = Time(
+            #     "2025-01-01T00:00:00", format="isot", scale="utc"
+            # )  # "TSTART",
+            # tstop = Time("2025-01-01T00:00:00", format="isot", scale="utc")  # "TSTOP",
+            # deadc = 2 * u.day  # "DEADC",
+            # obsgeo = EarthLocation(0, 0, 0)  # "OBSGEO",
 
         """4. load optional columns automatically, if present in file."""
         opt_names = []
