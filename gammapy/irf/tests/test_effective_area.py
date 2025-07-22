@@ -163,3 +163,15 @@ def test_eq():
     aeff2 = EffectiveAreaTable2D(data=data2, axes=[energy2, offset_axis])
 
     assert not aeff1 == aeff2
+
+
+@requires_data("gammapy-data")
+def test_plots():
+    filename = "$GAMMAPY_DATA/joint-crab/dl3/magic/run_05029748_DL3.fits"
+
+    aeff = EffectiveAreaTable2D.read(filename)
+    with mpl_plot_check():
+        aeff.peek()
+
+    with mpl_plot_check():
+        aeff.plot(squared=True)
