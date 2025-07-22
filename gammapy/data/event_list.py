@@ -826,26 +826,30 @@ class EventList:
         import matplotlib.gridspec as gridspec
 
         if allsky:
-            gs = gridspec.GridSpec(nrows=2, ncols=2)
+            gs = gridspec.GridSpec(nrows=2, ncols=2, wspace=0.45, hspace=0.1)
             fig = plt.figure(figsize=(8, 8))
         else:
-            gs = gridspec.GridSpec(nrows=2, ncols=3)
+            gs = gridspec.GridSpec(nrows=2, ncols=3, wspace=0.45, hspace=0.1)
             fig = plt.figure(figsize=(12, 8))
 
         # energy plot
         ax_energy = fig.add_subplot(gs[1, 0])
         self.plot_energy(ax=ax_energy)
+        ax_energy.set_box_aspect(1)
 
         # offset plots
         if not allsky:
             ax_offset = fig.add_subplot(gs[0, 1])
             self.plot_offset2_distribution(ax=ax_offset)
+            ax_offset.set_box_aspect(1)
             ax_energy_offset = fig.add_subplot(gs[0, 2])
             self.plot_energy_offset(ax=ax_energy_offset)
+            ax_energy_offset.set_box_aspect(1)
 
         # time plot
         ax_time = fig.add_subplot(gs[1, 1])
         self.plot_time(ax=ax_time)
+        ax_time.set_box_aspect(1)
 
         # image plot
         m = self._counts_image(allsky=allsky)
@@ -853,7 +857,8 @@ class EventList:
             ax_image = fig.add_subplot(gs[0, :], projection=m.geom.wcs)
         else:
             ax_image = fig.add_subplot(gs[0, 0], projection=m.geom.wcs)
-        m.plot(ax=ax_image, stretch="sqrt", vmin=0, add_cbar=True)
+
+        m.plot(ax=ax_image, stretch="sqrt", vmin=0, add_cbar=True, squared=True)
         plt.subplots_adjust(wspace=0.3)
 
     @property
@@ -894,7 +899,7 @@ class EventList:
         m = m.smooth(width=0.5)
         return m
 
-    def plot_image(self, ax=None, allsky=False):
+    def plot_image(self, ax=None, allsky=False, add_cbar=False):
         """Quick look counts map sky plot.
 
         Parameters
@@ -903,11 +908,13 @@ class EventList:
             Matplotlib axes.
         allsky :  bool, optional
             Whether to plot on an all sky geom. Default is False.
+        add_cbar : bool, optional
+            Add a colorbar to the plot. Default is False.
         """
         if ax is None:
             ax = plt.gca()
         m = self._counts_image(allsky=allsky)
-        m.plot(ax=ax, stretch="sqrt")
+        m.plot(ax=ax, stretch="sqrt", add_cbar=add_cbar)
 
     def copy(self):
         """Copy event list (`EventList`)."""
