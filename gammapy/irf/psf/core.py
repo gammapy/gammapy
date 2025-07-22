@@ -153,6 +153,11 @@ class PSF(IRF):
 
         energy_true = self.axes["energy_true"]
 
+        squared = False
+        if "squared" in kwargs:
+            squared = kwargs["squared"]
+            kwargs.pop("squared")
+
         for theta in offset:
             for frac in fraction:
                 plot_kwargs = kwargs.copy()
@@ -162,6 +167,9 @@ class PSF(IRF):
                 plot_kwargs.setdefault("label", f"{theta}, {100 * frac:.1f}%")
                 with quantity_support():
                     ax.plot(energy_true.center, radius, **plot_kwargs)
+
+        if squared:  # The order matters
+            ax.set_box_aspect(1)
 
         energy_true.format_plot_xaxis(ax=ax)
         ax.legend(loc="best")
@@ -222,11 +230,19 @@ class PSF(IRF):
 
         kwargs_colorbar = kwargs_colorbar or {}
 
+        squared = False
+        if "squared" in kwargs:
+            squared = kwargs["squared"]
+            kwargs.pop("squared")
+
         # Plotting
         with quantity_support():
             caxes = ax.pcolormesh(
                 energy.edges, offset.edges, containment.value.T, **kwargs
             )
+
+        if squared:  # The order matters
+            ax.set_box_aspect(1)
 
         energy.format_plot_xaxis(ax=ax)
         offset.format_plot_yaxis(ax=ax)
@@ -291,9 +307,14 @@ class PSF(IRF):
             Size of the figure. Default is (15, 5).
 
         """
-        fig, axes = plt.subplots(nrows=1, ncols=3, figsize=figsize)
+        fig, axes = plt.subplots(
+            nrows=1,
+            ncols=3,
+            figsize=figsize,
+            gridspec_kw={"wspace": 0.45, "hspace": 0.1},
+        )
 
-        self.plot_containment_radius(fraction=0.68, ax=axes[0])
-        self.plot_containment_radius(fraction=0.95, ax=axes[1])
-        self.plot_containment_radius_vs_energy(ax=axes[2])
-        plt.tight_layout()
+        self.plot_containment_radius(fraction=0.68, ax=axes[0], squared=True)
+        self.plot_containment_radius(fraction=0.95, ax=axes[1], squared=True)
+        self.plot_containment_radius_vs_energy(ax=axes[2], squared=True)
+        # plt.tight_layout()
