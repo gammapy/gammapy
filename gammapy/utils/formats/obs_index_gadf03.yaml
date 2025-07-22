@@ -1,0 +1,28 @@
+#YAML file containing the correspondance of the internal obs-index table in gammapy to the obs-index table format of GADF v.0.3.
+#Concept:    For every name of the internal obs-index table, for either representation, "internal" or "disk", the corresponding unit, type and description are specified.
+#Note:       This is a prototype containing only two names, "OBS_ID", "OBJECT".
+#References: https://spacelift.io/blog/yaml#yaml-vs-json, https://docs.gammapy.org/dev/user-guide/model-gallery/spectral/plot_broken_powerlaw.html#yaml-representation
+
+name:
+  OBS_ID:
+    internal:
+      unit: None
+      type: int64
+      description: ID of observation run 
+    disk:
+      unit: None
+      type: int64
+      description: Unique observation identifier (Run number)
+  
+  OBJECT:
+    internal:
+      unit: None
+      type: str
+      description: Name of object 
+    disk:
+      unit: None
+      type: str
+      description: Primary target of the observation
+
+
+

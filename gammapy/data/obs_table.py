@@ -9,6 +9,7 @@ from gammapy.utils.regions import SphericalCircleSkyRegion
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
 from gammapy.utils.time import time_ref_from_dict
+from gammapy.utils.scripts import read_yaml
 from astropy.time import Time
 
 __all__ = ["ObservationTable", "ObservationTablePrototype"]
@@ -421,12 +422,12 @@ class ObservationTablePrototype(ObservationTable):
     # For this purpose, at least OBS_ID is needed (and per OBS_ID later the internal table is filled)
     # and additionally required for selection mechanims are TSTART,TSTOP (to construct time),
     # RADEC/ALTAZ (depending on what is given and thereby appended in reader)
-    names_min_req = ["OBS_ID", "TSTART", "TSTOP"]
+    names_min_req = ["OBS_ID", "OBJECT"]
 
     @classmethod
-    def read(self, filename, **kwargs):
+    def read(self, filename, fileformat="gadf03", **kwargs):
         """Modified reader for ObservationTablePrototype"""
-        """Header and disk-read mostly taken from class ObservationTable"""
+        """Header and super().read(make_path(filename), **kwargs) taken from class ObservationTable, except "cls" named to "self"."""
 
         """Read an observation table from file.
 
@@ -434,19 +435,39 @@ class ObservationTablePrototype(ObservationTable):
         ----------
         filename : `pathlib.Path` or str
             Filename.
+        fileformat : str
+            Fileformat, default is "gadf03" for GADF v.0.3.
         **kwargs : dict, optional
             Keyword arguments passed to `~astropy.table.Table.read`.
         """
 
-        """Reads from specified format into internal, independent table"""
-
         """ 0. Internal ObservationTablePrototype table container"""
-        # meta-data oriented as sugg. in #4238 by @registerrier.
+
+        # Read info on internal format and on correspondance to selected fileformat.
+        format = read_yaml(
+            "../gammapy/gammapy/utils/formats/obs_index_" + fileformat + ".yaml"
+        )  # TODO: replace absolute path!
+
+        # For minimal required columns, infer the units, the types and the description for the internal table columns.
+        names_internal = self.names_min_req
+
+        units_internal = []
+        types_internal = []
+        description_internal = []
+        for name in names_internal:
+            units_internal.append(format["name"][name]["internal"]["unit"])
+            types_internal.append(format["name"][name]["internal"]["type"])
+            description_internal.append(format["name"][name]["internal"]["description"])
+
+        # Create internal table.
         table_internal = self(
-            names=self.internal_full_def["name"],
-            units=self.internal_full_def["unit"],
-            dtype=self.internal_full_def["type"],
+            names=names_internal,
+            units=units_internal,
+            dtype=types_internal,
+            descriptions=description_internal,
         )
+
+        print(table_internal.info)
 
         """1. (IO) mostly taken from ObservationTable"""
         """Here the table is read from disk as before, pot. lazy loading in future."""
