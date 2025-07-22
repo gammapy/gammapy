@@ -229,6 +229,7 @@ class Background3D(BackgroundIRF):
         """
         kwargs_colorbar = kwargs_colorbar or {}
 
+        energy = np.atleast_1d(energy)
         n = len(energy)
         cols = min(ncols, n)
         rows = 1 + (n - 1) // cols
@@ -372,8 +373,9 @@ class Background2D(BackgroundIRF):
             Add a colorbar to the plot. Default is True.
         axes_loc : dict, optional
             Keyword arguments passed to `~mpl_toolkits.axes_grid1.axes_divider.AxesDivider.append_axes`.
+            Default is None.
         kwargs_colorbar : dict, optional
-            Keyword arguments passed to `~matplotlib.pyplot.colorbar`.
+            Keyword arguments passed to `~matplotlib.pyplot.colorbar`. Default is None.
         kwargs : dict
             Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
 
@@ -393,6 +395,11 @@ class Background2D(BackgroundIRF):
 
         kwargs_colorbar = kwargs_colorbar or {}
 
+        squared = False
+        if "squared" in kwargs:
+            squared = kwargs["squared"]
+            kwargs.pop("squared")
+
         with quantity_support():
             caxes = ax.pcolormesh(
                 energy_axis.edges, offset_axis.edges, data.T, **kwargs
@@ -400,6 +407,9 @@ class Background2D(BackgroundIRF):
 
         energy_axis.format_plot_xaxis(ax=ax)
         offset_axis.format_plot_yaxis(ax=ax)
+
+        if squared:  # The order matters
+            ax.set_box_aspect(1)
 
         if add_cbar:
             label = (
@@ -524,9 +534,13 @@ class Background2D(BackgroundIRF):
 
     def peek(self, figsize=(10, 8)):
         """Quick-look summary plots."""
-        fig, axes = plt.subplots(nrows=2, ncols=2, figsize=figsize)
+        fig, axes = plt.subplots(
+            nrows=2,
+            ncols=2,
+            figsize=figsize,
+            gridspec_kw={"wspace": 0.3, "hspace": 0.2},
+        )
         self.plot(ax=axes[1][1])
         self.plot_offset_dependence(ax=axes[0][0])
         self.plot_energy_dependence(ax=axes[1][0])
         self.plot_spectrum(ax=axes[0][1])
-        plt.tight_layout()
