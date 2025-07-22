@@ -17,7 +17,7 @@ import operator
 import numpy as np
 from scipy.optimize import Bounds, minimize
 from astropy import units as u
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import SkyCoord, Angle
 from astropy.table import Table
 from gammapy.utils.scripts import make_path
 from regions import (
@@ -39,6 +39,7 @@ __all__ = [
     "compound_region_to_regions",
     "make_concentric_annulus_sky_regions",
     "make_orthogonal_rectangle_sky_regions",
+    "make_grid_rectangle_sky_regions",
     "regions_to_compound_region",
     "region_to_frame",
 ]
@@ -345,6 +346,47 @@ def make_orthogonal_rectangle_sky_regions(start_pos, end_pos, wcs, height, nbin=
             center=center, width=width, height=u.Quantity(height), angle=angle
         )
         regions.append(reg)
+
+    return regions
+
+
+def make_grid_rectangle_sky_regions(geom, nbinx, nbiny):
+    """Utility function to create a list of grid of rectangular
+    spatial regions within a given geometry
+
+    Parameters
+    ----------
+    geom : `~gammapy.maps.WcsGeom`
+        Geometry to split into smaller regions
+    nbinx : int
+        Number of boxes along x-axis (RA/longitude)
+    nbiny : int
+        Number of boxes along y-axis (Dec/latitude)
+
+    Returns
+    -------
+    regions : list of `~regions.RectangleSkyRegion`
+        Regions inside the geom
+    """
+    geom = geom.to_image()
+    sky_start = geom.pix_to_coord([-0.5, -0.5])
+    sky_end = geom.pix_to_coord([geom.npix[0][0] - 0.5, geom.npix[1][0] - 0.5])
+
+    lon_max, lat_min = sky_start
+    lon_min, lat_max = sky_end
+
+    width = Angle((lon_max - lon_min)).wrap_at(360 * u.deg) / nbinx
+    height = (lat_max - lat_min) / nbiny
+
+    regions = []
+
+    for iy in range(nbiny):
+        for ix in range(nbinx):
+            lon = lon_max - (ix + 0.5) * width
+            lat = lat_min + (iy + 0.5) * height
+            center = SkyCoord(lon, lat, unit="deg", frame=geom.frame)
+            region = RectangleSkyRegion(center=center, width=width, height=height)
+            regions.append(region)
 
     return regions
 
