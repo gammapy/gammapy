@@ -473,6 +473,7 @@ fig, ax = plt.subplots()
 
 plot_kwargs = {
     "energy_bounds": [0.1, 30] * u.TeV,
+    "sed_type": "e2dnde",
     "ax": ax,
 }
 ax.yaxis.set_units(u.Unit("erg cm-2 s-1"))
