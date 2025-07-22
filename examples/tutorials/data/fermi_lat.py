@@ -59,7 +59,7 @@ from gammapy.utils.scripts import make_path
 
 ######################################################################
 # Check setup
-# ^^^^^^^^^^^
+# ~~~~~~~~~~~
 #
 # We check the setup in this tutorial, as we require specific files to be
 # downloaded to continue.
