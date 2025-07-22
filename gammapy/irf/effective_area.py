@@ -90,6 +90,11 @@ class EffectiveAreaTable2D(IRF):
         """
         ax = plt.gca() if ax is None else ax
 
+        squared = False
+        if "squared" in kwargs:
+            squared = kwargs["squared"]
+            kwargs.pop("squared")
+
         if offset is None:
             off_min, off_max = self.axes["offset"].bounds
             offset = np.linspace(off_min, off_max, 4)
@@ -101,6 +106,9 @@ class EffectiveAreaTable2D(IRF):
             label = kwargs.pop("label", f"offset = {off:.1f}")
             with quantity_support():
                 ax.plot(energy_axis.center, area, label=label, **kwargs)
+
+        if squared:  # The order matters
+            ax.set_box_aspect(1)
 
         energy_axis.format_plot_xaxis(ax=ax)
         ax.set_ylabel(
@@ -128,6 +136,11 @@ class EffectiveAreaTable2D(IRF):
         """
         ax = plt.gca() if ax is None else ax
 
+        squared = False
+        if "squared" in kwargs:
+            squared = kwargs["squared"]
+            kwargs.pop("squared")
+
         if energy is None:
             energy_axis = self.axes["energy_true"]
             e_min, e_max = energy_axis.center[[0, -1]]
@@ -143,6 +156,9 @@ class EffectiveAreaTable2D(IRF):
             label = f"energy = {ee:.1f}"
             with quantity_support():
                 ax.plot(offset_axis.center, area, label=label, **kwargs)
+
+        if squared:  # The order matters
+            ax.set_box_aspect(1)
 
         offset_axis.format_plot_xaxis(ax=ax)
         ax.set_ylim(0, 1.1)
@@ -164,8 +180,8 @@ class EffectiveAreaTable2D(IRF):
         axes_loc : dict, optional
             Keyword arguments passed to `~mpl_toolkits.axes_grid1.axes_divider.AxesDivider.append_axes`.
         kwargs_colorbar : dict, optional
-            Keyword arguments passed to `~matplotlib.pyplot.colorbar`.
-        kwargs : dict
+            Keyword arguments passed to `~matplotlib.pyplot.colorbar`. Default is None.
+        kwargs : dict, optional
             Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
 
         Returns
@@ -187,14 +203,23 @@ class EffectiveAreaTable2D(IRF):
         kwargs.setdefault("edgecolors", "face")
         kwargs.setdefault("vmin", vmin)
         kwargs.setdefault("vmax", vmax)
-
+        if add_cbar:
+            kwargs.setdefault("squared", True)
         kwargs_colorbar = kwargs_colorbar or {}
+
+        squared = False
+        if "squared" in kwargs:
+            squared = kwargs["squared"]
+            kwargs.pop("squared")
 
         with quantity_support():
             caxes = ax.pcolormesh(energy.edges, offset.edges, aeff.value.T, **kwargs)
 
         energy.format_plot_xaxis(ax=ax)
         offset.format_plot_yaxis(ax=ax)
+
+        if squared:  # The order matters
+            ax.set_box_aspect(1)
 
         if add_cbar:
             kwargs_colorbar.setdefault("format", "%.1e")
@@ -203,6 +228,7 @@ class EffectiveAreaTable2D(IRF):
             kwargs_colorbar.setdefault("labelsize", 7)
             add_colorbar(caxes, ax=ax, axes_loc=axes_loc, **kwargs_colorbar)
 
+        # ax.figure.tight_layout()
         return ax
 
     def peek(self, figsize=(15, 5)):
@@ -215,12 +241,20 @@ class EffectiveAreaTable2D(IRF):
 
         """
         ncols = 2 if self.is_pointlike else 3
-        fig, axes = plt.subplots(nrows=1, ncols=ncols, figsize=figsize)
-        self.plot(ax=axes[ncols - 1])
-        self.plot_energy_dependence(ax=axes[0])
+        fig, axes = plt.subplots(
+            nrows=1,
+            ncols=ncols,
+            figsize=figsize,
+            gridspec_kw={"wspace": 0.3, "hspace": 0.3},
+        )
+
+        kwargs = {}
+        kwargs.setdefault("squared", True)
+
+        self.plot(ax=axes[ncols - 1], **kwargs)
+        self.plot_energy_dependence(ax=axes[0], **kwargs)
         if self.is_pointlike is False:
-            self.plot_offset_dependence(ax=axes[1])
-        plt.tight_layout()
+            self.plot_offset_dependence(ax=axes[1], **kwargs)
 
     @classmethod
     def from_parametrization(cls, energy_axis_true=None, instrument="HESS"):
