@@ -8,6 +8,7 @@ from gammapy.data import GTI
 from gammapy.datasets import Datasets
 from gammapy.datasets.actors import DatasetsActor
 from gammapy.maps import LabelMapAxis, Map, TimeMapAxis
+from gammapy.modeling.models import FoVBackgroundModel, Models
 from gammapy.utils.pbar import progress_bar
 from .core import FluxPoints
 from .sed import FluxPointsEstimator
@@ -147,8 +148,8 @@ class LightCurveEstimator(FluxPointsEstimator):
         valid_intervals = []
         parallel_datasets = []
         dataset_names = datasets.names
-        for t_min, t_max in progress_bar(
-            gti.time_intervals, desc="Time intervals selection"
+        for idx, (t_min, t_max) in enumerate(
+            progress_bar(gti.time_intervals, desc="Time intervals selection")
         ):
             datasets_to_fit = datasets.select_time(
                 time_min=t_min, time_max=t_max, atol=self.atol
@@ -161,13 +162,17 @@ class LightCurveEstimator(FluxPointsEstimator):
                 continue
 
             valid_intervals.append([t_min, t_max])
-
             if self.stack_over_time_interval:
-                name = f"timebin_{t_min.mjd:.0f}_{t_max.mjd:.0f}"
+                name = f"timebin_{idx}"
                 dataset_reduced = datasets_to_fit.stack_reduce(name=name)
-                models = datasets.models.copy()
+                models = Models(datasets.models.copy())
+                # Remove background models already applied in stack_reduce
+                for model_name in models.background_models.values():
+                    models.remove(model_name)
                 for dataset in datasets:
                     models.reassign(dataset.name, dataset_reduced.name)
+                bkg_model = FoVBackgroundModel(dataset_name=dataset_reduced.name)
+                models.append(bkg_model)
                 dataset_reduced.models = models
                 datasets_to_fit = Datasets([dataset_reduced])
                 dataset_names = datasets_to_fit.names
@@ -193,7 +198,6 @@ class LightCurveEstimator(FluxPointsEstimator):
 
         if len(rows) == 0:
             raise ValueError("LightCurveEstimator: No datasets in time intervals")
-
         gti = GTI.from_time_intervals(valid_intervals)
         axis = TimeMapAxis.from_gti(gti=gti)
         return FluxPoints.from_stack(
