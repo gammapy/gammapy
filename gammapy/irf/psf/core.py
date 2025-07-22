@@ -317,4 +317,3 @@ class PSF(IRF):
         self.plot_containment_radius(fraction=0.68, ax=axes[0], squared=True)
         self.plot_containment_radius(fraction=0.95, ax=axes[1], squared=True)
         self.plot_containment_radius_vs_energy(ax=axes[2], squared=True)
-        # plt.tight_layout()
