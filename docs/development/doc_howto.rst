@@ -284,12 +284,32 @@ Links to Gammapy API are handled via normal Sphinx syntax in comments:
 
 .. code-block:: python
 
-   # Create an `~gammapy.analysis.AnalysisConfig` object and edit it to
-   # define the analysis configuration:
+   # Create a `~gammapy.modeling.models.PowerLawSpectralModel` object:
 
-   config = AnalysisConfig()
+   pwl = PowerLawSpectralModel()
 
-This will resolve to a link to the ``AnalysisConfig`` class in the API documentation.
+The ``~`` prefix hides the full module path in the rendered documentation, so that link will appear
+as ``PowerLawSpectralModel`` which points to the API documentation.
+
+General guidelines
+^^^^^^^^^^^^^^^^^^
+
+- Use the ``~`` prefix to hide long paths unless showing the full path provide clarity
+- Use the full path when the shortened name is unclear or ambiguous
+- For example, ``~gammapy.datasets.FluxPointsDataset.residuals`` will render as ``residuals``, which may
+  not be informative. Instead use the full path ``gammapy.datasets.FluxPointsDataset.residuals``, so that
+  one knows the explicit class name where this belongs.
+
+
+Referencing APIs in the same module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+When referencing classes or functions defined in the same module, you can omit full path. For example,
+as ``PowerLawNormSpectralModel`` is in the same file as ``PowerLawSpectralModel``, you can simply write
+``PowerLawSpectralModel``, instead of the full path and without the ``~``.
+
+
+
 
 .. _dev-check_html_links:
 
@@ -325,7 +345,7 @@ If you wish to add an image to a tutorial you can utilise the following:
     #
     #   Gammapy Maps Illustration
 
-Where `:alt` is used to create a caption for the image. 
+Where `:alt` is used to create a caption for the image.
 More information on the image directive can be found `here <http://www.sphinx-doc.org/en/stable/rest.html#images>`__.
 
 Documentation guidelines
