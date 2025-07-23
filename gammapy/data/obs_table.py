@@ -467,7 +467,7 @@ class ObservationTablePrototype(ObservationTable):
                 n
             ][
                 "name"
-            ]  # Get for the column(s!) to be loaded the name(s!) on disk, for selected fileformat.
+            ]  # Get for the column(s) to be loaded the name(s) on disk, for selected fileformat.
             correspondance.append(name_disk)
         return correspondance
 
