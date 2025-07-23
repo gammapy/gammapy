@@ -498,41 +498,25 @@ class ObservationTablePrototype(ObservationTable):
             descriptions=description_internal,
         )
 
-        # """2. Understand disk table to prepare loading of internal table, effectively reader"""
-
-        # """POINTING"""
-        # if "OBS_MODE" in table_disk.columns:
-        #     # of "OBS_MODE" given, decide based on this what is additionally required
-        #     # like in data_store.py:
-        #     if table_disk["OBS_MODE"] == "DRIFT":
-        #         self.names_min_req.append("ALT_PNT", "AZ_PNT")
-        #     else:
-        #         self.names_min_req.append("RA_PNT", "DEC_PNT")
-        # else:
-        #     # if "OBS_MODE" not given, decide based on what is given, RADEC or ALTAZ
-        #     if "RA_PNT" in table_disk.columns:
-        #         self.names_min_req.append("RA_PNT")
-        #         self.names_min_req.append("DEC_PNT")
-        #     elif "ALT_PNT" in table_disk.columns:
-        #         self.names_min_req.append("ALT_PNT")
-        #         self.names_min_req.append("AZ_PNT")
-        #     else:
-        #         print("BUG: Neither RADEC nor ALTAZ is given in table on disk!")
-        # print(self.names_min_req)
-
-        # Fill internal table for mandatory columns by appending columns. TODO: CHECK by rows?
+        # Fill internal table for mandatory columns by constructing the table row-wise with the internal representations.
         number_of_observations = len(
             table_disk
         )  # Get number of observations, equal to number of rows in table on disk.
         for i in range(number_of_observations):
             row_internal = []
             for name in names_internal:
-                type_internal = format["name"][name]["internal"][
-                    "type"
-                ]  # TODO: DO not use format-dict here anymore?
+                # type_internal = format[
+                #     "name"
+                # ][
+                #     name
+                # ][
+                #     "internal"
+                # ][
+                #     "type"
+                # ]  # TODO: Already loaded into internal_table dict, use this one instead?
                 n_disk_names = format["name"][name]["internal"][
                     "n_disk_names"
-                ]  # Get number of corresponding names on disk
+                ]  # Get number of corresponding names on disk.
                 names_disk = []
                 for n in range(n_disk_names):
                     name_disk = format[
@@ -549,15 +533,15 @@ class ObservationTablePrototype(ObservationTable):
                     names_disk.append(name_disk)
                     # type_disk = format["name"][name]["disk"]["type"]
 
-                if type_internal == "int64":
-                    row_internal.append(
-                        int(table_disk[i][names_disk[0]])
-                    )  # NOTE: Implicit assumption that for int64-type, always only one name is given in gadf.
-                elif type_internal == "str":
-                    row_internal.append(
-                        str(table_disk[i][names_disk[0]])
-                    )  # NOTE: Implicit assumption that for str-type, always only one name is given in gadf.
-                elif type_internal == "object":
+                # Construction of in-mem representation of metadata.
+                # TODO: Typecast as noted by @bkhelifi.
+                if name == "OBS_ID":
+                    row_internal.append(int(table_disk[i][names_disk[0]]))
+                elif name == "OBJECT":
+                    row_internal.append(str(table_disk[i][names_disk[0]]))
+                elif (
+                    name == "POINTING"
+                ):  # build object like @registerrier in 16ce9840f38bea55982d2cd986daa08a3088b434
                     row_internal.append(
                         SkyCoord(
                             table_disk[i][names_disk[0]],
@@ -570,57 +554,8 @@ class ObservationTablePrototype(ObservationTable):
             table_internal.add_row(
                 row_internal
             )  # Add row to internal table (fill table).
-            # print(table_internal)  # TODO: Typecast as noted by @bkhelifi.
 
-            # Get POINTING (in the future, use Pointing-table!)
-            # Used https://docs.astropy.org
-            # Used data_store.py.
-            # Used commit 16ce9840f38bea55982d2cd986daa08a3088b434 by @registerrier in 16ce9840f38bea55982d2cd986daa08a3088b434
-            names_pointing = []
-            if "OBS_MODE" in table_disk.columns:
-                # of "OBS_MODE" given, decide based on this what is additionally required
-                # like in data_store.py:
-                if table_disk["OBS_MODE"] == "DRIFT":
-                    names_pointing.append("ALT_PNT", "AZ_PNT")
-                else:
-                    names_pointing.append("RA_PNT", "DEC_PNT")
-            else:
-                # if "OBS_MODE" not given, decide based on what is given, RADEC or ALTAZ
-                if "RA_PNT" in table_disk.columns:
-                    # print(METADATA_FITS_KEYS["pointing"]["radec_mean"])
-                    names_pointing.append("RA_PNT")
-                    names_pointing.append("DEC_PNT")
-                elif "ALT_PNT" in table_disk.columns:
-                    # print(METADATA_FITS_KEYS["pointing"]["altaz_mean"])
-                    names_pointing.append("ALT_PNT")
-                    names_pointing.append("AZ_PNT")
-                else:
-                    print("BUG: Neither RADEC nor ALTAZ is given in table on disk!")
-            # like @registerrier in 16ce9840f38bea55982d2cd986daa08a3088b434
-            # pointing = SkyCoord(
-            #     table_disk[i][names_pointing[0]],
-            #     table_disk[i][names_pointing[1]],
-            #     unit="deg",
-            #     frame="icrs",
-            # )
-
-            # # also in EVENTS-Table, could be only there! see HESS-DL3-DR1-dataset (attribution above)
-            # # also CREATOR, ORIGIN, ...
-            # radec_obj = SkyCoord(
-            #     table_disk[i]["RA_OBJ"], table_disk[i]["DEC_OBJ"], unit="deg"
-            # )  # radec_obj
-            # # print(table_disk[i]["TSTART"])
-            # created = Time(
-            #     "2025-01-01T00:00:00", format="isot", scale="utc"
-            # )  # "CREATED",
-            # tstart = Time(
-            #     "2025-01-01T00:00:00", format="isot", scale="utc"
-            # )  # "TSTART",
-            # tstop = Time("2025-01-01T00:00:00", format="isot", scale="utc")  # "TSTOP",
-            # deadc = 2 * u.day  # "DEADC",
-            # obsgeo = EarthLocation(0, 0, 0)  # "OBSGEO",
-
-        """4. load optional columns automatically, if present in file."""
+        # Load optional columns, whose names are not already processed, automatically into internal table.
         opt_names = list(table_disk.columns)
         for name in names_internal_to_disk:
             opt_names.remove(name)
@@ -629,5 +564,5 @@ class ObservationTablePrototype(ObservationTable):
             if name in table_disk.columns:
                 table_internal[name] = table_disk[name]
 
-        """5. return internal table (instead of copy of disk-table, as before) """
+        # return internal table, instead of copy of disk-table like before.
         return table_internal
