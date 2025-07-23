@@ -416,10 +416,7 @@ class ObservationTablePrototype(ObservationTable):
     # data release 1 (HESS DL3 DR1, H.E.S.S. collaboration, 2018).
     """
 
-    # Required Minimum in disk-table, see #4238, to construct internal table for minimum use case.
-    # For this purpose, at least OBS_ID is needed (and per OBS_ID later the internal table is filled)
-    # and additionally required for selection mechanims are TSTART,TSTOP (to construct time),
-    # RADEC/ALTAZ (depending on what is given and thereby appended in reader)
+    # Required minimum names of internal table. These will be translated into needed names on disk, depending on the fileformat, in the reader.
     names_min_req = ["OBS_ID", "OBJECT", "POINTING"]
 
     @classmethod
@@ -447,10 +444,10 @@ class ObservationTablePrototype(ObservationTable):
             "../gammapy/gammapy/utils/formats/obs_index_" + fileformat + ".yaml"
         )  # TODO: replace absolute path!
 
-        # For minimal required columns, infer the units, the types and the description for the internal table columns.
+        # internal names are equal to minimal internal names.
         names_internal = self.names_min_req
 
-        # Get correspondance of names
+        # Get correspondance of names.
         for name in names_internal:
             n_disk_names = format["name"][name]["internal"][
                 "n_disk_names"
@@ -482,6 +479,7 @@ class ObservationTablePrototype(ObservationTable):
                 )
 
         # Create internal table "table_internal".
+        # For minimal required columns, infer therefore the units, the types and the description for the internal table columns.
         units_internal = []
         types_internal = []
         description_internal = []
