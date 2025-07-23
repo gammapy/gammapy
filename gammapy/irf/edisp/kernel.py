@@ -669,7 +669,8 @@ class EDispKernel(IRF):
         This method creates a figure with two subplots:
 
         * Bias plot : reconstruction bias as a function of true energy
-        * Energy dispersion matrix plot : probability density function matrix
+        * Energy dispersion matrix plot : probability density function matrix to have
+          ``energy`` as a function of ``energy_true``
 
         Parameters
         ----------

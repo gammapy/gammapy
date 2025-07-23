@@ -193,7 +193,7 @@ class Background3D(BackgroundIRF):
         This method creates a figure with four subplots:
 
         * Offset dependence plot : background rate versus offset for the energy bins in your axis
-        * Integrated spectrum plot : angle integrated background rate versus energy
+        * Integrated spectrum plot : background rate integrated over the full field of view versus energy
         * Energy dependence plot : background rate versus energy for a given offset
         * Energy offset dependence of the background model map
 
@@ -535,7 +535,7 @@ class Background2D(BackgroundIRF):
         This method creates a figure with four subplots:
 
         * Offset dependence plot : background rate versus offset for the energy bins in your axis
-        * Integrated spectrum plot : angle integrated background rate versus energy
+        * Integrated spectrum plot : background rate integrated over the full field of view versus energy
         * Energy dependence plot : background rate versus energy for a given offset
         * Energy offset dependence of the background model map
 

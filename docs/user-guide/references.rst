@@ -119,6 +119,9 @@ Glossary
     MET
       Short for "mission elapsed time". See also :ref:`MET_definition` in :ref:`time_handling`.
 
+    Migration
+        This is a quantity described by the true and reconstructed energy: :math:`\mu = E_{\rm{reco}} / E_{\rm{true}}`
+
     PSF
       Short for "point spread function": it is the IRF representing the probability density of the angular separation
       between true and reconstructed directions. See :ref:`irf` and :ref:`irf-psf`.

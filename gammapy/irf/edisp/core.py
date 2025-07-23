@@ -297,7 +297,8 @@ class EnergyDispersion2D(IRF):
 
         * Bias plot : migration as a function of true energy for a given offset
         * Migration matrix plot : energy dispersion for given offset and true energy
-        * Energy dispersion matrix plot : probability density function matrix
+        * Energy dispersion matrix plot : probability density function matrix to have
+          ``energy`` as a function of ``energy_true``
 
         Parameters
         ----------

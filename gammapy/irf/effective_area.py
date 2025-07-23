@@ -210,9 +210,9 @@ class EffectiveAreaTable2D(IRF):
 
         This method creates a figure with three subplots:
 
-        * Energy dependence plot : effective area versus energy for a given offset
-        * Offset dependence plot : effective area versus energy for a given offset
-        * Effective area map
+        * Energy dependence plot : effective area versus true energy for a given offset
+        * Offset dependence plot : effective area versus true energy for a given offset
+        * Effective area 2D map
 
         Parameters
         ----------
