@@ -420,7 +420,7 @@ class ObservationTablePrototype(ObservationTable):
     # For this purpose, at least OBS_ID is needed (and per OBS_ID later the internal table is filled)
     # and additionally required for selection mechanims are TSTART,TSTOP (to construct time),
     # RADEC/ALTAZ (depending on what is given and thereby appended in reader)
-    names_min_req = ["OBS_ID", "OBJECT"]
+    names_min_req = ["OBS_ID", "OBJECT", "POINTING"]
 
     @classmethod
     def read(self, filename, fileformat="gadf03", **kwargs):
@@ -439,6 +439,14 @@ class ObservationTablePrototype(ObservationTable):
             Keyword arguments passed to `~astropy.table.Table.read`.
         """
 
+        # Read disk table "table_disk", taken from class ObervationTable. TODO: Pot. lazy loading in future?"""
+        table_disk = super().read(make_path(filename), **kwargs)
+
+        # Check first, if mandatory columns are present.
+        # for name in self.names_min_req:
+        #    if name not in table_disk.columns:
+        #        print("EXCEPTION")
+
         # Read info on internal format and on correspondance to selected fileformat.
         format = read_yaml(
             "../gammapy/gammapy/utils/formats/obs_index_" + fileformat + ".yaml"
@@ -446,6 +454,26 @@ class ObservationTablePrototype(ObservationTable):
 
         # For minimal required columns, infer the units, the types and the description for the internal table columns.
         names_internal = self.names_min_req
+
+        # Get correspondance of names
+        for name in names_internal:
+            n_disk_names = format["name"][name]["internal"][
+                "n_disk_names"
+            ]  # Get number of corresponding names on disk
+            names_internal_to_disk = []
+            for n in range(n_disk_names):
+                name_disk = format[
+                    "name"
+                ][
+                    name
+                ][
+                    "disk"
+                ][
+                    n
+                ][
+                    "name"
+                ]  # Get for the column(s!) to be loaded the name(s!) on disk, for selected fileformat.
+                names_internal_to_disk.append(name_disk)
 
         units_internal = []
         types_internal = []
@@ -462,9 +490,6 @@ class ObservationTablePrototype(ObservationTable):
             dtype=types_internal,
             descriptions=description_internal,
         )
-
-        # Read disk table "table_disk", taken from class ObervationTable. TODO: Pot. lazy loading in future?"""
-        table_disk = super().read(make_path(filename), **kwargs)
 
         # """2. Understand disk table to prepare loading of internal table, effectively reader"""
 
@@ -498,29 +523,42 @@ class ObservationTablePrototype(ObservationTable):
                 type_internal = format["name"][name]["internal"][
                     "type"
                 ]  # TODO: DO not use format-dict here anymore?
-                if name in table_disk.columns:
-                    names_disk = format[
+                n_disk_names = format["name"][name]["internal"][
+                    "n_disk_names"
+                ]  # Get number of corresponding names on disk
+                names_disk = []
+                for n in range(n_disk_names):
+                    name_disk = format[
                         "name"
                     ][
                         name
                     ][
                         "disk"
                     ][
+                        n
+                    ][
                         "name"
                     ]  # Get for the column(s!) to be loaded the name(s!) on disk, for selected fileformat.
+                    names_disk.append(name_disk)
                     # type_disk = format["name"][name]["disk"]["type"]
-                    if type_internal == "int64":
-                        row_internal.append(
-                            int(table_disk[i][names_disk])
-                        )  # NOTE: Implicit assumption that for int64-type, always only one name is given in gadf.
-                    elif type_internal == "str":
-                        row_internal.append(
-                            str(table_disk[i][names_disk])
-                        )  # NOTE: Implicit assumption that for str-type, always only one name is given in gadf.
-                else:
-                    print(
-                        "EXCEPTION: Mandatory columns not present in file."
-                    )  # TODO: Check and exception on init!
+
+                if type_internal == "int64":
+                    row_internal.append(
+                        int(table_disk[i][names_disk[0]])
+                    )  # NOTE: Implicit assumption that for int64-type, always only one name is given in gadf.
+                elif type_internal == "str":
+                    row_internal.append(
+                        str(table_disk[i][names_disk[0]])
+                    )  # NOTE: Implicit assumption that for str-type, always only one name is given in gadf.
+                elif type_internal == "object":
+                    row_internal.append(
+                        SkyCoord(
+                            table_disk[i][names_disk[0]],
+                            table_disk[i][names_disk[1]],
+                            unit="deg",
+                            frame="icrs",
+                        )
+                    )
 
             table_internal.add_row(
                 row_internal
@@ -577,7 +615,7 @@ class ObservationTablePrototype(ObservationTable):
 
         """4. load optional columns automatically, if present in file."""
         opt_names = list(table_disk.columns)
-        for name in names_internal:
+        for name in names_internal_to_disk:
             opt_names.remove(name)
 
         for name in opt_names:  # add column-wise all optional column-data present in file, independent of format.
