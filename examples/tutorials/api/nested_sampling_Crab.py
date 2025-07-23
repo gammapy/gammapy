@@ -258,7 +258,7 @@ result_joint = sampler.run(datasets)
 # <https://ned.ipac.caltech.edu/level5/Sept13/Trotta/Trotta4.html>`__.
 # An interesting comparison of the efficiency and false discovery rate of
 # model selection with deltaLogLike and deltaLogZ is given in Appendix C of
-# `Buchner et al., 2014 <https://ui.adsabs.harvard.edu/abs/2014A%2526A...564A.125B%252F/>`__.
+# `Buchner et al., 2014 <https://ui.adsabs.harvard.edu/abs/2014A%26A...564A.125B>`__.
 #
 # **Results stored on disk**
 #

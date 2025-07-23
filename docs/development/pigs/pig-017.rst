@@ -184,7 +184,7 @@ Task list
 Decision
 ========
 
-A prototype has been built but since then the effort has stalled. The PIG is withdrawn as is. A future version can be prepared based on more recent status of Gammapy. 
+A prototype has been built but since then the effort has stalled. The PIG is withdrawn as is. A future version can be prepared based on more recent status of Gammapy.
 
 
 .. _High-level interface: https://docs.gammapy.org/0.14/scripts/index.html
@@ -209,7 +209,7 @@ A prototype has been built but since then the effort has stalled. The PIG is wit
 .. _GH 2452: https://github.com/gammapy/gammapy/issues/2452
 .. _Logging: https://docs.gammapy.org/0.14/development/howto.html#logging
 .. _OPUS: https://github.com/mservillat/OPUS
-.. _RAVE: https://www.rave-survey.org/project
+.. _RAVE: https://www.rave-survey.org
 .. _Pollux: http://pollux.graal.univ-montp2.fr
 .. _JSON Schema: https://json-schema.org
 .. _GH 2458: https://github.com/gammapy/gammapy/pull/2458
