@@ -494,8 +494,11 @@ class ObservationTablePrototype(ObservationTable):
         # Read info on internal format and on correspondance to selected fileformat.
         format = self.get_format_dict(fileformat)
 
-        # Internal names are for now equal to minimal internal names, they can be more, if internal format knows more names.
-        # They are distinguished from other optional names, that could be present in the file and will later be loaded without checks.
+        # Note: List of internal names called "names_internal" is for now set equal equal to minimal/mandatory internal names, called "names_min_req".
+        # They can be more, if internal format knows more names. These could be viewed as optional-internal.
+        # They are distinguished from other optional names optional-external, that could be present in the file.
+        # These optional-external names are later copied into the table without processing, like it is the case for
+        # both the set "names_min_req", as well as the potentially larger set "names_internal".
         names_internal = self.names_min_req
 
         # Get correspondance of internal names to (multiple) disk-names, called "correspondance_dict".
