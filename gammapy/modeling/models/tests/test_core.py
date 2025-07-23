@@ -386,5 +386,5 @@ def test_bad_covariance(caplog, tmp_path):
     with caplog.at_level(logging.WARNING):
         Models.read(models_file)
         assert (
-            "Impossible to read correctly the covariance" in caplog.records[0].message
+            "Impossible to read the covariance correctly" in caplog.records[0].message
         )
