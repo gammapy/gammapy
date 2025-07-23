@@ -119,7 +119,7 @@ using git branches.
 
 So how large should one pull request be?
 
-Our experience in Gammapy (and others confirm, see e.g. `here
+Our experience in Gammapy (and others confirm, see e.g. `this link
 <https://alexgaynor.net/2015/dec/29/shrinking-code-review/>`__) is that smaller
 is better. Working on a pull request for an hour or maximum a day, and having a
 diff of a few to maximum a few 100 lines to review and discuss is pleasant.
@@ -154,8 +154,8 @@ Firstly, fork the `gammapy repository <https://github.com/gammapy/gammapy>`_ to 
 personal GitHub. If you have not already done so, copy your public SSH key (normally under
 ``$HOME/.ssh/*.pub``) to your GitHub profile. This is done by going into your GitHub settings,
 selecting **SSH and GPG keys** then **New SSH key** and then choosing **Authentication Key**
-as the key type. If you do not have a SSH key, you may create it following the instructions on
-`this page <https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent>`_.
+as the key type. If you do not have a SSH key, you may create it following
+`these instructions <https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent>`_.
 
 Go to the location on your machine where you want to clone the gammapy
 repository from your GitHub:
