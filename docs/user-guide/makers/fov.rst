@@ -15,11 +15,12 @@ The field-of-view background technique is used to adjust the predicted counts on
 an exclusion mask. This technique is recommended for 3D analysis, in particular when stacking `~gammapy.datasets.Datasets`.
 
 Gammapy provides the `~gammapy.makers.FoVBackgroundMaker`. The latter creates a
-`~gammapy.modeling.models.FoVBackgroundModel` which combines the `background` predicted number of counts
-and a `~gammapy.modeling.models.NormSpectralModel` which allows to renormalize the background cube, and
-possibly to change its spectral distribution. By default, only the `norm` parameter of a
-`~gammapy.modeling.models.PowerLawNormSpectralModel` is left free. Here we show the addition of a `~gammapy.modeling.models.PowerLawNormSpectralModel`
-in which the `norm` and `tilt` parameters are unfrozen as an example.
+`~gammapy.modeling.models.FoVBackgroundModel` which combines the ``background`` predicted number of counts
+and a ``NormSpectralModel`` which allows to renormalize the background cube, and
+possibly to change its spectral distribution. By default, only the ``norm`` parameter of a
+`~gammapy.modeling.models.PowerLawNormSpectralModel` is left free. Here we show the addition of a
+`~gammapy.modeling.models.PowerLawNormSpectralModel`
+in which the ``norm`` and ``tilt`` parameters are unfrozen as an example.
 
 .. testcode::
 
@@ -68,8 +69,8 @@ in which the `norm` and `tilt` parameters are unfrozen as an example.
 
 It is also possible to implement other normed models, such as the
 `~gammapy.modeling.models.PiecewiseNormSpectralModel`. To do so,
-you can utilise most of the above code with an adaption to the `spectral_model` applied
-in the `fov_bkg_maker`.
+you can utilise most of the above code with an adaption to the ``spectral_model`` applied
+in the ``fov_bkg_maker``.
 
 .. code-block:: python
 
@@ -87,10 +88,13 @@ in the `fov_bkg_maker`.
     )
 
 
-Note: to prevent poorly constrained `norm` parameters or large variance in
+Note: to prevent poorly constrained ``norm`` parameters or large variance in
 the last bins, the binning should be adjusted to have wider bins at higher energies.
 This ensures there are enough statistics per bin, enabling the fit to converge.
 
 
-.. minigallery:: gammapy.makers.FoVBackgroundMaker
-    :add-heading:
+.. minigallery::
+    :add-heading: Examples using `~gammapy.makers.FoVBackgroundMaker`
+
+    ../examples/tutorials/api/makers.py
+    ../examples/tutorials/starting/analysis_2.py
