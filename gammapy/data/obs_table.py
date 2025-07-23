@@ -588,10 +588,8 @@ class ObservationTablePrototype(ObservationTable):
         opt_names = list(table_disk.columns)
         for name in correspondance_dict_flat:
             opt_names.remove(name)
-
         for name in opt_names:  # add column-wise all optional column-data present in file, independent of format.
-            if name in table_disk.columns:
-                table_internal[name] = table_disk[name]
+            table_internal[name] = table_disk[name]
 
         # return internal table, instead of copy of disk-table like before.
         return table_internal
