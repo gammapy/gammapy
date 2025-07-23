@@ -107,8 +107,8 @@ def test_stat_profile_ul_scipy():
     ul = stat_profile_ul_scipy(x, y)
     assert_allclose(ul, 2)
 
-    ul = stat_profile_ul_scipy(y, y, interp_scale="lin")
-    assert_allclose(ul, 4)
+    ul = stat_profile_ul_scipy(x, y, interp_scale="lin")
+    assert_allclose(ul, 1.9111111)
 
     flux_point = FluxPoints.read(
         "$GAMMAPY_DATA/estimators/pks2155_hess_lc/pks2155_hess_lc.fits",
