@@ -2391,7 +2391,7 @@ class MapDataset(Dataset):
 
         Parameters
         ----------
-        figsize : tuple
+        figsize : tuple, optional
             Size of the figure. Default is (13.5, 7).
 
         """
@@ -2403,9 +2403,9 @@ class MapDataset(Dataset):
                 add_cbar=True,
                 interpolation="bilinear",
                 norm=LogNorm(vmin=vmin, vmax=vmax),
+                squared=True,
             )
             ax.set_title(title)
-            ax.set_box_aspect(1)
 
         def plot_edisp(ax, edisp_kernel):
             edisp_kernel.plot_matrix(ax=ax, add_cbar=False)
@@ -2429,6 +2429,7 @@ class MapDataset(Dataset):
                 cmap=cmap,
                 norm=LogNorm(vmin=vmin, vmax=vmax),
                 add_cbar=True,
+                squared=True,
             )
 
             unit = exposure_map.unit.to_string("latex")
@@ -2491,7 +2492,12 @@ class MapDataset(Dataset):
         cmapcustom.set_bad(color="black")
 
         # Create the figure and axes
-        fig, axs = plt.subplots(nrows=2, ncols=3, figsize=figsize)
+        fig, axs = plt.subplots(
+            nrows=2,
+            ncols=3,
+            figsize=figsize,
+            gridspec_kw={"wspace": 0.6, "hspace": 0.35},
+        )
 
         # --- Plot Exposure Map ---
         axs[0, 0].remove()
@@ -2526,8 +2532,6 @@ class MapDataset(Dataset):
         # --- Plot Energy Dispersion ---
         ax_edisp = axs[1, 2]
         plot_edisp(ax_edisp, central_spectrum_dataset.edisp.get_edisp_kernel())
-
-        plt.tight_layout(w_pad=0)
 
 
 class MapDatasetOnOff(MapDataset):
