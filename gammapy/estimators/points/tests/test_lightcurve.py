@@ -722,7 +722,7 @@ def test_recompute_ul():
 
     assert_allclose(
         new_lightcurve.dnde_ul.data[0],
-        [[[3.75813611e-13]], [[4.63590079e-14]], [[5.64634904e-15]]],
+        [[[3.83426382e-13]], [[4.63837924e-14]], [[5.66447006e-15]]],
         rtol=1e-3,
     )
 

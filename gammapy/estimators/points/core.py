@@ -838,9 +838,7 @@ class FluxPoints(FluxMaps):
         value_scan = self.stat_scan.geom.axes["norm"].center
         shape_axes = self.stat_scan.geom._shape[slice(3, None)][::-1]
         for idx in np.ndindex(shape_axes):
-            stat_scan = np.abs(
-                self.stat_scan.data[idx].squeeze() - self.stat.data[idx].squeeze()
-            )
+            stat_scan = self.stat_scan.data[idx].squeeze()
             flux_points.norm_ul.data[idx] = stat_profile_ul_scipy(
                 value_scan, stat_scan, delta_ts=delta_ts, **kwargs
             )
