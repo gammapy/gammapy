@@ -447,7 +447,10 @@ class ObservationTablePrototype(ObservationTable):
         # internal names are equal to minimal internal names.
         names_internal = self.names_min_req
 
-        # Get correspondance of names.
+        # Get correspondance of internal names to (multiple) disk-names, called "correspondance_dict".
+        # Also, flattened version in "names_internal_to_disk", which will be used to check later, which disk-names are (truly) optional (and not already processed).
+        correspondance_dict = {}
+        names_internal_to_disk = []
         for name in names_internal:
             n_disk_names = format["name"][name]["internal"][
                 "n_disk_names"
@@ -466,6 +469,7 @@ class ObservationTablePrototype(ObservationTable):
                     "name"
                 ]  # Get for the column(s!) to be loaded the name(s!) on disk, for selected fileformat.
                 names_internal_to_disk.append(name_disk)
+            correspondance_dict[name] = names_internal_to_disk
 
         # Check first, if mandatory columns are present.
         # TODO: Adapt this for case of alternative names, e.g. for pointing.
@@ -503,6 +507,8 @@ class ObservationTablePrototype(ObservationTable):
         for i in range(number_of_observations):
             row_internal = []
             for name in names_internal:
+                # Outcommented: Preparation of Type-Casting
+                # TODO: Typecast as noted by @bkhelifi.
                 # type_internal = format[
                 #     "name"
                 # ][
@@ -512,27 +518,11 @@ class ObservationTablePrototype(ObservationTable):
                 # ][
                 #     "type"
                 # ]  # TODO: Already loaded into internal_table dict, use this one instead?
-                n_disk_names = format["name"][name]["internal"][
-                    "n_disk_names"
-                ]  # Get number of corresponding names on disk.
-                names_disk = []
-                for n in range(n_disk_names):
-                    name_disk = format[
-                        "name"
-                    ][
-                        name
-                    ][
-                        "disk"
-                    ][
-                        n
-                    ][
-                        "name"
-                    ]  # Get for the column(s!) to be loaded the name(s!) on disk, for selected fileformat.
-                    names_disk.append(name_disk)
-                    # type_disk = format["name"][name]["disk"]["type"]
+                # type_disk = format["name"][name]["disk"]["type"]
+
+                names_disk = correspondance_dict[name]
 
                 # Construction of in-mem representation of metadata.
-                # TODO: Typecast as noted by @bkhelifi.
                 if name == "OBS_ID":
                     row_internal.append(int(table_disk[i][names_disk[0]]))
                 elif name == "OBJECT":
