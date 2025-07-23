@@ -9,6 +9,7 @@ from gammapy.modeling.scipy import (
     stat_profile_ul_scipy,
 )
 from gammapy.estimators import FluxPoints
+from gammapy.utils.testing import requires_data
 
 
 class MyDataset:
@@ -101,6 +102,7 @@ def test_scipy_confidence(pars):
     assert_allclose(result["errn"], 0.2, rtol=1e-3)
 
 
+@requires_data()
 def test_stat_profile_ul_scipy():
     x = np.linspace(-5, 5, 7)
     y = x**2
