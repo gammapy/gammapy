@@ -442,11 +442,6 @@ class ObservationTablePrototype(ObservationTable):
         # Read disk table "table_disk", taken from class ObervationTable. TODO: Pot. lazy loading in future?"""
         table_disk = super().read(make_path(filename), **kwargs)
 
-        # Check first, if mandatory columns are present.
-        # for name in self.names_min_req:
-        #    if name not in table_disk.columns:
-        #        print("EXCEPTION")
-
         # Read info on internal format and on correspondance to selected fileformat.
         format = read_yaml(
             "../gammapy/gammapy/utils/formats/obs_index_" + fileformat + ".yaml"
@@ -475,15 +470,27 @@ class ObservationTablePrototype(ObservationTable):
                 ]  # Get for the column(s!) to be loaded the name(s!) on disk, for selected fileformat.
                 names_internal_to_disk.append(name_disk)
 
+        # Check first, if mandatory columns are present.
+        # TODO: Adapt this for case of alternative names, e.g. for pointing.
+        for name in names_internal_to_disk:
+            if name not in table_disk.columns:
+                print(
+                    "Exception, not all required names in "
+                    + fileformat
+                    + " found, missed name: "
+                    + name
+                )
+
+        # Create internal table "table_internal".
         units_internal = []
         types_internal = []
         description_internal = []
+
         for name in names_internal:
             units_internal.append(format["name"][name]["internal"]["unit"])
             types_internal.append(format["name"][name]["internal"]["type"])
             description_internal.append(format["name"][name]["internal"]["description"])
 
-        # Create internal table "table_internal".
         table_internal = self(
             names=names_internal,
             units=units_internal,
