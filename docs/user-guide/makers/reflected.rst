@@ -73,9 +73,9 @@ Using regions
 -------------
 
 The on region is a `~regions.SkyRegion`. It is typically a circle
-(`~regions.CircleSkyRegion`) for pointlike source analysis, but can be a more
-complex region such as a `~regions.CircleAnnulusSkyRegion` a
-`~regions.EllipseSkyRegion`, a `~regions.RectangleSkyRegion` etc.
+(`~regions.CircleSkyRegion`) for point-like source analysis, but it can also be a more
+complex region such as a `~regions.CircleAnnulusSkyRegion`,
+`~regions.EllipseSkyRegion`, `~regions.RectangleSkyRegion` etc.
 
 The following example shows how to create such regions:
 
@@ -87,7 +87,7 @@ The reflected region finder
 
 The following example illustrates how to create reflected regions for a given
 circular on region and exclusion mask using the
-`~gammapy.makers.background.ReflectedRegionsFinder`. In particular, it shows how to
+`~gammapy.makers.ReflectedRegionsFinder`. In particular, it shows how to
 change the minimal distance between the ON region and the reflected regions.
 This is useful to limit contamination by events leaking out the ON region. It
 also shows how to change the minimum distance between adjacent regions as well
@@ -100,7 +100,7 @@ Using the reflected background estimator
 ----------------------------------------
 
 In practice, the user does not usually need to directly interact with the
-`~gammapy.makers.background.ReflectedRegionsFinder`. This actually is done via the
+`~gammapy.makers.ReflectedRegionsFinder`. This actually is done via the
 `~gammapy.makers.ReflectedRegionsBackgroundMaker`, which extracts the ON
 and OFF events for an `~gammapy.data.Observations` object. The last example
 shows how to run it on a few observations with a rectangular region.
@@ -109,5 +109,9 @@ shows how to run it on a few observations with a rectangular region.
     :include-source:
 
 
-.. minigallery:: gammapy.makers.ReflectedRegionsBackgroundMaker
-    :add-heading:
+.. minigallery::
+    :add-heading: Examples using `~gammapy.makers.ReflectedRegionsBackgroundMaker`
+
+    ../examples/tutorials/analysis-1d/spectral_analysis.py
+    ../examples/tutorials/analysis-1d/extended_source_spectral_analysis.py
+    ../examples/tutorials/analysis-1d/spectral_analysis_rad_max.py
