@@ -497,7 +497,7 @@ class ObservationTablePrototype(ObservationTable):
         # Note: List of internal names called "names_internal" is for now set equal equal to minimal/mandatory internal names, called "names_min_req".
         # They can be more, if internal format knows more names. These could be viewed as optional-internal.
         # They are distinguished from other optional names optional-external, that could be present in the file.
-        # These optional-external names are later copied into the table without processing, that is done for
+        # These optional-external names are later copied into the table without the processing, that is done for
         # the set "names_internal".
         names_internal = self.names_min_req
 
@@ -524,7 +524,7 @@ class ObservationTablePrototype(ObservationTable):
                     )
 
         # Create internal table "table_internal".
-        # For minimal required columns, infer therefore the units, the types and the description for the internal table columns.
+        # For set internal columns (min+optional-internal), infer therefore the units, the types and the description for the internal table columns.
         units_internal = []
         types_internal = []
         description_internal = []
