@@ -407,7 +407,7 @@ class ObservationTablePrototype(ObservationTable):
     """Prototype for modified ObservationTable class
     See discussion and development: https://github.com/gammapy/gammapy/issues/3767, https://github.com/gammapy/gammapy/issues/4238
     Co-authors: @maxnoe, @registerrier, @bkhelifi
-    Used as reference: gammapy, gammapy/data/obs_table.py, https://docs.python.org/3/reference/, https://docs.astropy.org/en/latest/table/construct_table.html#construct-table, https://numpy.org/doc/stable/reference/generated/numpy.dtype.html
+    Used as reference: gammapy, gammapy/data/obs_table.py, https://docs.python.org/3, https://docs.astropy.org/en/latest/table/construct_table.html#construct-table, https://numpy.org/doc/stable/reference/generated/numpy.dtype.html
                        https://docs.astropy.org/en/latest/table/index.html, https://gamma-astro-data-formats.readthedocs.io/en/v0.3/, esp. data_storage/obs_index/index.html
     Looked into: https://github.com/gammasky/cta-dc/blob/master/data/cta_1dc_make_data_index_files.py, maybe used l. 233. Copyright (c) 2016 gammasky
 
@@ -418,6 +418,58 @@ class ObservationTablePrototype(ObservationTable):
 
     # Required minimum names of internal table. These will be translated into needed names on disk, depending on the fileformat, in the reader.
     names_min_req = ["OBS_ID", "OBJECT", "POINTING"]
+
+    def get_format_dict(fileformat):
+        """Read info on the internal table format and its correspondance to the selected fileformat from a YAML-file.
+
+        Parameters
+        ----------
+        fileformat : str
+            Fileformat, default is "gadf03" for GADF v.0.3.
+
+        Returns
+        -------
+        The loaded dictionary is returned as format.
+        """
+
+        format = read_yaml(
+            "../gammapy/gammapy/utils/formats/obs_index_" + fileformat + ".yaml"
+        )  # TODO: replace absolute path!
+        return format
+
+    def get_corresponding_names(name, format):
+        """For a given format and internal table name, get the corresponding disk-name(s).
+
+        Parameters
+        ----------
+        name : str
+            Column name of internal table-format.
+        format : dict
+            Dictionary containing the internal table-format definition and its correspondance to a fileformat.
+
+        Returns
+        -------
+        List with the corresponding names per internal name.
+        """
+
+        n_disk_names = format["name"][name]["internal"][
+            "n_disk_names"
+        ]  # Get number of corresponding names on disk
+        correspondance = []
+        for n in range(n_disk_names):
+            name_disk = format[
+                "name"
+            ][
+                name
+            ][
+                "disk"
+            ][
+                n
+            ][
+                "name"
+            ]  # Get for the column(s!) to be loaded the name(s!) on disk, for selected fileformat.
+            correspondance.append(name_disk)
+        return correspondance
 
     @classmethod
     def read(self, filename, fileformat="gadf03", **kwargs):
@@ -440,49 +492,33 @@ class ObservationTablePrototype(ObservationTable):
         table_disk = super().read(make_path(filename), **kwargs)
 
         # Read info on internal format and on correspondance to selected fileformat.
-        format = read_yaml(
-            "../gammapy/gammapy/utils/formats/obs_index_" + fileformat + ".yaml"
-        )  # TODO: replace absolute path!
+        format = self.get_format_dict(fileformat)
 
-        # internal names are equal to minimal internal names.
+        # Internal names are for now equal to minimal internal names, they can be more, if internal format knows more names.
+        # They are distinguished from other optional names, that could be present in the file and will later be loaded without checks.
         names_internal = self.names_min_req
 
         # Get correspondance of internal names to (multiple) disk-names, called "correspondance_dict".
-        # Also, flattened version in "all_disk_names", which will be used to check later, which disk-names are (truly) optional (and not already processed).
+        # Also, flattened version in "correspondance_dict_flat", which will be used to check later, which disk-names are (truly) optional (and not already processed).
         correspondance_dict = {}
-        all_disk_names = []
+        correspondance_dict_flat = []
 
         for name in names_internal:
-            n_disk_names = format["name"][name]["internal"][
-                "n_disk_names"
-            ]  # Get number of corresponding names on disk
-            names_internal_to_disk = []
-            for n in range(n_disk_names):
-                name_disk = format[
-                    "name"
-                ][
-                    name
-                ][
-                    "disk"
-                ][
-                    n
-                ][
-                    "name"
-                ]  # Get for the column(s!) to be loaded the name(s!) on disk, for selected fileformat.
-                names_internal_to_disk.append(name_disk)
-                all_disk_names.append(name_disk)
-            correspondance_dict[name] = names_internal_to_disk
+            correspondance_dict[name] = self.get_corresponding_names(name, format)
+            correspondance_dict_flat.extend(self.get_corresponding_names(name, format))
 
-        # Check first, if mandatory columns are present.
+        # Get corresponding names now only for minimal set of required names, to check if present on disk.
         # TODO: Adapt this for case of alternative names, e.g. for pointing.
-        for name in all_disk_names:
-            if name not in table_disk.columns:
-                print(
-                    "Exception, not all required names in "
-                    + fileformat
-                    + " found, missed name: "
-                    + name
-                )
+        for name in self.names_min_req:
+            names = self.get_corresponding_names(name, format)
+            for el in names:
+                if el not in table_disk.columns:
+                    print(
+                        "Exception, not all required names in "
+                        + fileformat
+                        + " found, missed name: "
+                        + name
+                    )
 
         # Create internal table "table_internal".
         # For minimal required columns, infer therefore the units, the types and the description for the internal table columns.
@@ -547,7 +583,7 @@ class ObservationTablePrototype(ObservationTable):
 
         # Load optional columns, whose names are not already processed, automatically into internal table.
         opt_names = list(table_disk.columns)
-        for name in all_disk_names:
+        for name in correspondance_dict_flat:
             opt_names.remove(name)
 
         for name in opt_names:  # add column-wise all optional column-data present in file, independent of format.
