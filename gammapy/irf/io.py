@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 from astropy.io import fits
-from gammapy.data.hdu_index_table import HDUIndexTable
 from gammapy.utils.fits import HDULocation
 from gammapy.utils.scripts import make_path
 
@@ -151,6 +150,8 @@ def _get_hdu_type_and_class(header):
 
     Contains a workaround to support CTA 1DC irf file.
     """
+    from gammapy.data.hdu_index_table import HDUIndexTable
+
     hdu_clas2 = header.get("HDUCLAS2", "")
     hdu_clas4 = header.get("HDUCLAS4", "")
 
