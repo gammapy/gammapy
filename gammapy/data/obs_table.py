@@ -448,9 +448,10 @@ class ObservationTablePrototype(ObservationTable):
         names_internal = self.names_min_req
 
         # Get correspondance of internal names to (multiple) disk-names, called "correspondance_dict".
-        # Also, flattened version in "names_internal_to_disk", which will be used to check later, which disk-names are (truly) optional (and not already processed).
+        # Also, flattened version in "all_disk_names", which will be used to check later, which disk-names are (truly) optional (and not already processed).
         correspondance_dict = {}
-        names_internal_to_disk = []
+        all_disk_names = []
+
         for name in names_internal:
             n_disk_names = format["name"][name]["internal"][
                 "n_disk_names"
@@ -469,11 +470,12 @@ class ObservationTablePrototype(ObservationTable):
                     "name"
                 ]  # Get for the column(s!) to be loaded the name(s!) on disk, for selected fileformat.
                 names_internal_to_disk.append(name_disk)
+                all_disk_names.append(name_disk)
             correspondance_dict[name] = names_internal_to_disk
 
         # Check first, if mandatory columns are present.
         # TODO: Adapt this for case of alternative names, e.g. for pointing.
-        for name in names_internal_to_disk:
+        for name in all_disk_names:
             if name not in table_disk.columns:
                 print(
                     "Exception, not all required names in "
@@ -545,7 +547,7 @@ class ObservationTablePrototype(ObservationTable):
 
         # Load optional columns, whose names are not already processed, automatically into internal table.
         opt_names = list(table_disk.columns)
-        for name in names_internal_to_disk:
+        for name in all_disk_names:
             opt_names.remove(name)
 
         for name in opt_names:  # add column-wise all optional column-data present in file, independent of format.
