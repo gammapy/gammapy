@@ -470,6 +470,14 @@ class ObservationTablePrototype(ObservationTable):
             correspondance.append(name_disk)
         return correspondance
 
+    def cast_func(value, type):
+        """Cast value into dtype specified by type and return casted value."""
+        if type in ["str"]:
+            value = str(value)
+        elif type == ["int", "int64"]:
+            value = int(float(value))
+        return value
+
     @classmethod
     def read(self, filename, fileformat="gadf03", **kwargs):
         """Modified reader for ObservationTablePrototype"""
@@ -543,26 +551,22 @@ class ObservationTablePrototype(ObservationTable):
         for i in range(number_of_observations):
             row_internal = []
             for name in names_internal:
-                # Outcommented: Preparation of Type-Casting
-                # TODO: Typecast as noted by @bkhelifi.
-                # type_internal = format[
-                #     "name"
-                # ][
-                #     name
-                # ][
-                #     "internal"
-                # ][
-                #     "type"
-                # ]  # TODO: Already loaded into internal_table dict, use this one instead?
-                # type_disk = format["name"][name]["disk"]["type"]
-
                 names_disk = correspondance_dict[name]
 
                 # Construction of in-mem representation of metadata.
+                # Typecasting as noted by @bkhelifi for now here, by function cast_func.
                 if name == "OBS_ID":
-                    row_internal.append(str(table_disk[i][names_disk[0]]))
+                    row_internal.append(
+                        self.cast_func(
+                            table_disk[i][names_disk[0]], format[name]["type"]
+                        )
+                    )
                 elif name == "OBJECT":
-                    row_internal.append(str(table_disk[i][names_disk[0]]))
+                    row_internal.append(
+                        self.cast_func(
+                            table_disk[i][names_disk[0]], format[name]["type"]
+                        )
+                    )
                 elif (
                     name == "POINTING"
                 ):  # build object like @registerrier in 16ce9840f38bea55982d2cd986daa08a3088b434
