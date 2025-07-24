@@ -383,7 +383,7 @@ def test_to_regions():
     assert_allclose(regs1[1].width, 0.8 * u.deg, rtol=1e-5)
     assert_allclose(regs1[2].width, 0.4 * u.deg, rtol=1e-5)
 
-    regs2 = models.to_regions(containment_factor=3)
+    regs2 = models.to_regions(size_factor=3)
     assert_allclose(regs2[1].width, 2.4 * u.deg, rtol=1e-5)
     assert_allclose(regs1[2].width, 0.4 * u.deg, rtol=1e-5)
 
