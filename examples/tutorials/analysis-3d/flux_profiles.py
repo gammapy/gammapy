@@ -154,7 +154,6 @@ print(flux_profile_estimator)
 # Now we can run the profile estimation and explore the results:
 #
 
-# %%time
 profile = flux_profile_estimator.run(datasets=dataset)
 
 print(profile)

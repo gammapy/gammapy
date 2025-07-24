@@ -299,7 +299,9 @@ print(model.spectral_model)
 
 # %%
 energy_bounds = (100 * u.MeV, 100 * u.GeV)
-opts = dict(sed_type="e2dnde", yunits=u.Unit("TeV cm-2 s-1"))
+opts = dict(sed_type="e2dnde")
+fig, ax = plt.subplots(figsize=(8, 5))
+ax.yaxis.set_units(u.Unit("TeV cm-2 s-1"))
 model.spectral_model.plot(energy_bounds, **opts)
 model.spectral_model.plot_error(energy_bounds, **opts)
 plt.show()

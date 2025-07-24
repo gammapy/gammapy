@@ -228,7 +228,6 @@ bkg_maker = ReflectedRegionsBackgroundMaker(region_finder=region_finder)
 # use the energy threshold specified in the DL3 files
 safe_mask_masker = SafeMaskMaker(methods=["aeff-default"])
 
-# %%time
 datasets = Datasets()
 
 # create a counts map for visualisation later...
@@ -333,11 +332,10 @@ fig, ax = plt.subplots()
 plot_kwargs = {
     "energy_bounds": [0.08, 20] * u.TeV,
     "sed_type": "e2dnde",
-    "yunits": u.Unit("TeV cm-2 s-1"),
-    "xunits": u.GeV,
     "ax": ax,
 }
-
+ax.yaxis.set_units(u.Unit("TeV cm-2 s-1"))
+ax.xaxis.set_units(u.Unit("GeV"))
 crab_magic_lp = create_crab_spectral_model("magic_lp")
 
 best_fit_model.spectral_model.plot(

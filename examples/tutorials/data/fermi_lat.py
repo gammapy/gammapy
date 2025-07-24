@@ -395,7 +395,6 @@ dataset = MapDataset(
     name="fermi-dataset",
 )
 
-# %%time
 fit = Fit()
 result = fit.run(datasets=[dataset])
 

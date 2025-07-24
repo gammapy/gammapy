@@ -244,7 +244,6 @@ print(analysis.observations.ids)
 # run the reduction using `.get_datasets()`:
 #
 
-# %%time
 analysis.get_datasets()
 
 
@@ -372,7 +371,6 @@ analysis.set_models(model_1d)
 # ~~~~~~~~~~~~~~~
 #
 
-# %%time
 analysis.run_fit()
 
 

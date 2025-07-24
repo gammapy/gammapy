@@ -116,7 +116,6 @@ print(config)
 # `counts`, `background`, `exposure`, `psf` and `edisp` maps.
 #
 
-# %%time
 analysis = Analysis(config)
 analysis.get_observations()
 analysis.get_datasets()

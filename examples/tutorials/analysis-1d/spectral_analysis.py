@@ -217,7 +217,6 @@ dataset_maker = SpectrumDatasetMaker(
 bkg_maker = ReflectedRegionsBackgroundMaker(exclusion_mask=exclusion_mask)
 safe_mask_maker = SafeMaskMaker(methods=["aeff-max"], aeff_percent=10)
 
-# %%time
 datasets = Datasets()
 
 for obs_id, observation in zip(obs_ids, observations):
@@ -475,10 +474,9 @@ fig, ax = plt.subplots()
 plot_kwargs = {
     "energy_bounds": [0.1, 30] * u.TeV,
     "sed_type": "e2dnde",
-    "yunits": u.Unit("erg cm-2 s-1"),
     "ax": ax,
 }
-
+ax.yaxis.set_units(u.Unit("erg cm-2 s-1"))
 # plot stacked model
 model_best_stacked.spectral_model.plot(**plot_kwargs, label="Stacked analysis result")
 model_best_stacked.spectral_model.plot_error(facecolor="blue", alpha=0.3, **plot_kwargs)
