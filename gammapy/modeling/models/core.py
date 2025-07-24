@@ -1210,7 +1210,7 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
             log.error("No spatial component in any model. Geom not defined")
 
     def plot_regions(
-        self, ax=None, kwargs_point=None, path_effect=None, x_width=None, **kwargs
+        self, ax=None, kwargs_point=None, path_effect=None, size_factor=None, **kwargs
     ):
         """Plot extent of the spatial models on a given WCS axis.
 
@@ -1224,9 +1224,8 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
             of point sources. Default is None.
         path_effect : `~matplotlib.patheffects.PathEffect`, optional
             Path effect applied to artists and lines. Default is None.
-        x_width : float, optional
-            Number of ``sigma`` for `GaussianSpatialModel`
-            or ``x_r_0`` for `GeneralizedGaussianSpatialModel`.
+        size_factor : float, optional
+            Factor applied to the size of the model
             If not specified, the defaults for the models will be used.
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.artists.Artist`.
@@ -1249,7 +1248,7 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
         ...    kwargs_point={"marker":"o", "markersize":5, "color":"red"}
         ...            )
         """
-        regions = self.to_regions(x_width)
+        regions = self.to_regions(size_factor)
 
         geom = RegionGeom.from_regions(regions=regions)
         return geom.plot_region(
