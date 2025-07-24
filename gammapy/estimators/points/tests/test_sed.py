@@ -630,14 +630,14 @@ def test_flux_points_recompute_ul(fpe_pwl):
     fp1 = fp.recompute_ul(n_sigma_ul=4)
     assert_allclose(
         fp1.flux_ul.data,
-        [[[2.95783832e-12]], [[1.06456106e-12]], [[1.22481571e-13]]],
+        [[[2.92877891e-12]], [[1.04993236e-12]], [[1.22089744e-13]]],
         rtol=1e-3,
     )
     assert fp1.meta["n_sigma_ul"] == 4
 
     # check that it returns a sensible value
     fp2 = fp.recompute_ul(n_sigma_ul=2)
-    assert_allclose(fp2.flux_ul.data, fp.flux_ul.data, rtol=1e-1)
+    assert_allclose(fp2.flux_ul.data, fp.flux_ul.data, rtol=1e-2)
 
 
 def test_flux_points_parallel_multiprocessing(fpe_pwl):

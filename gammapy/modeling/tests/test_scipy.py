@@ -104,6 +104,7 @@ def test_scipy_confidence(pars):
 
 @requires_data()
 def test_stat_profile_ul_scipy():
+    # Test normal profile with a minima
     x = np.linspace(-5, 5, 7)
     y = x**2
     ul = stat_profile_ul_scipy(x, y)
@@ -112,6 +113,7 @@ def test_stat_profile_ul_scipy():
     ul = stat_profile_ul_scipy(x, y, interp_scale="lin")
     assert_allclose(ul, 1.9111111)
 
+    # Test with real data
     flux_point = FluxPoints.read(
         "$GAMMAPY_DATA/estimators/pks2155_hess_lc/pks2155_hess_lc.fits",
         format="lightcurve",
@@ -119,4 +121,23 @@ def test_stat_profile_ul_scipy():
     value_scan = flux_point.stat_scan.geom.axes["norm"].center
     stat_scan = np.sum(flux_point.stat_scan.data, axis=0).ravel()
     ul = stat_profile_ul_scipy(value_scan, stat_scan, delta_ts=4)
-    assert_allclose(ul, 1.1644624)
+    assert_allclose(ul, 1.1123425)
+
+    # Test a flat profile i.e. all minima
+    x = np.linspace(0, 10, 10)
+    y = np.ones_like(x) * 5
+
+    with pytest.raises(
+        ValueError,
+        match="Statistic profile is flat therefore no best-fit value can be determined.",
+    ):
+        stat_profile_ul_scipy(x, y)
+
+    # Test with NaN result
+    x = np.linspace(0, 5, 20)
+    y = (x - 2.5) ** 2 + 10
+
+    with pytest.raises(
+        RuntimeError, match="Failed to find upper limit: no valid root found."
+    ):
+        stat_profile_ul_scipy(x, y, delta_ts=20)

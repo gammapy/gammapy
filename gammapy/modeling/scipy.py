@@ -162,13 +162,26 @@ def stat_profile_ul_scipy(
     """
     interp = interpolate_profile(value_scan, stat_scan, interp_scale=interp_scale)
 
-    idx = np.argmin(stat_scan)
-    norm_best_fit = value_scan[idx]
+    if np.allclose(stat_scan, stat_scan[0]):
+        raise ValueError(
+            "Statistic profile is flat therefore no best-fit value can be determined."
+        )
+
+    result = scipy.optimize.minimize_scalar(
+        interp, bounds=(value_scan[0], value_scan[-1]), method="bounded"
+    )
+    if not result.success:
+        raise RuntimeError("Failed to find minimum in interpolated profile.")
+
+    norm_best_fit = result.x
+    stat_best_fit = result.fun
 
     def f(x):
-        return interp((x,)) - stat_scan[idx] - delta_ts
+        return interp((x,)) - stat_best_fit - delta_ts
 
     roots, res = find_roots(
         f, lower_bound=norm_best_fit, upper_bound=value_scan[-1], nbin=1, **kwargs
     )
+    if not np.isfinite(roots[0]):
+        raise RuntimeError("Failed to find upper limit: no valid root found.")
     return roots[0]
