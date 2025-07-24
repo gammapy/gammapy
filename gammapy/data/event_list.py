@@ -822,7 +822,7 @@ class EventList:
 
         * 2D counts map
         * Offset squared distribution of the events
-        * Counts histogram plot : full field of view offset versus energy with energy
+        * Counts 2D histogram plot : full field of view offset versus energy
         * Counts plot : counts as a function of energy
         * Event rate time plot : counts as a function of time
 

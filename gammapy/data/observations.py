@@ -458,11 +458,12 @@ class Observation:
     def peek(self, figsize=(15, 10)):
         """Quick-look plots in a few panels.
 
-        This method creates a figure with five subplots
+        This method creates a figure displaying the available events and IRFs.
+        For example:
 
-        * Events 2D map : counts sky map
-        * Effective area 2D map : FoV offset as a function of true energy
-        * Background rate 2D map : background rate versus energy for a given offset
+        * Events 2D map : events sky map
+        * Effective area 2D map : effective area as a function of FoV offset and true energy
+        * Background rate 2D map : background rate as a function of FoV offset and energy
         * Energy dispersion 2D map : migration as a function of true energy for a given offset
         * Point spread function plot : containment radius as a function of energy for various
           containment fractions
