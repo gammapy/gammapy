@@ -516,12 +516,13 @@ class ObservationTablePrototype(ObservationTable):
             names = self.get_corresponding_names(name, format)
             for el in names:
                 if el not in table_disk.columns:
-                    print(
-                        "Exception, not all required names in "
+                    raise RuntimeError(
+                        "Not all required names in "
                         + fileformat
-                        + " found, missed name: "
-                        + name
-                    )
+                        + "-file found, first missed name: "
+                        + el
+                        + "."
+                    )  # looked into gammapy/workflow/core.py
 
         # Create internal table "table_internal".
         # For set internal columns (min+optional-internal), infer therefore the units, the types and the description for the internal table columns.
