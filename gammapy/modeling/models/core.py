@@ -1216,7 +1216,7 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
 
         Parameters
         ----------
-        ax : `~astropy.visualization.WCSAxes`, optional
+        ax : `~astropy.visualization.wcsaxes.WCSAxes`, optional
             Axes to plot on. If no axes are given, an all-sky WCS
             is chosen using a CAR projection. Default is None.
         kwargs_point : dict, optional

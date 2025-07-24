@@ -659,7 +659,7 @@ class GaussianSpatialModel(SpatialModel):
         exponent = -0.5 * ((1 - np.cos(sep)) / a)
         return u.Quantity(norm * np.exp(exponent).value, "sr-1", copy=COPY_IF_NEEDED)
 
-    @deprecated_renamed_argument(["x_sigma", "containment_factor"])
+    @deprecated_renamed_argument("x_sigma", "containment_factor", "2.0")
     def to_region(self, containment_factor=1.0, **kwargs):
         r"""Model outline at a given number of :math:`\sigma`.
 
@@ -791,7 +791,7 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
         """
         return self.r_0.quantity * (1 + 8 * self.eta.value)
 
-    @deprecated_renamed_argument(["x_r_0", "containment_factor"])
+    @deprecated_renamed_argument("x_r_0", "containment_factor", "2.0")
     def to_region(self, containment_factor=1, **kwargs):
         r"""Model outline at a given number of :math:`r_0`.
 
@@ -819,7 +819,7 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
     def evaluation_region(self):
         """Evaluation region consistent with evaluation radius."""
         scale = self.evaluation_radius / self.r_0.quantity
-        return self.to_region(x_r_0=scale)
+        return self.to_region(containment_factor=scale)
 
     def _to_region_error(self, x_r_0=1):
         r"""Model error at a given number of :math:`r_0`.
