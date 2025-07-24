@@ -571,7 +571,14 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
             filename = data["covariance"]
             if not (path / filename).exists():
                 path, filename = split(filename)
-            models.read_covariance(path, filename, format="ascii.fixed_width")
+            try:
+                models.read_covariance(path, filename, format="ascii.fixed_width")
+            except ValueError as exception:
+                log.warning(
+                    "Impossible to read the covariance correctly: \n"
+                    f"{exception} \n "
+                    "Covariance will be created from errors and non-diagonal terms ignored."
+                )
 
         _set_models_link(models)
 

@@ -1,6 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import sys
 import pytest
+import logging
+import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
@@ -362,6 +364,7 @@ def test_two_fov_bkg_models_single_dataset():
         Models([fov1, fov2])
 
 
+
 def test_to_regions():
     spatial1 = PointSpatialModel(lon_0=6.0 * u.deg, lat_0=0.0 * u.deg, frame="galactic")
     spatial2 = GaussianSpatialModel(
@@ -384,3 +387,31 @@ def test_to_regions():
     regs2 = models.to_regions(x_width=3)
     assert_allclose(regs2[1].width, 2.4 * u.deg, rtol=1e-5)
     assert_allclose(regs1[2].width, 0.4 * u.deg, rtol=1e-5)
+
+    
+def test_bad_covariance(caplog, tmp_path):
+    # Step 1: Create a simple spectral model
+    spectral_model = PowerLawSpectralModel()
+    model = SkyModel(spectral_model=spectral_model, name="test-model")
+    models = Models([model])
+
+    # Step 2: Assign a valid 3x3 identity covariance matrix
+    models.covariance = np.identity(3)
+
+    # Step 3: Write models.yaml and covariance.dat
+    models_file = tmp_path / "models.yaml"
+    models.write(models_file, write_covariance=True, overwrite=True)
+
+    # Step 4: Overwrite covariance.dat with an invalid 1x1 matrix
+    covariance_file = tmp_path / "models_covariance.dat"
+    with open(covariance_file, "w") as f:
+        f.write("|                    Parameters |   0 |\n")
+        f.write("|     test-model.spectral.index | 1.0 |\n")
+
+    # Step 5: Attempt to read the model and catch the expected error
+    with caplog.at_level(logging.WARNING):
+        Models.read(models_file)
+        assert (
+            "Impossible to read the covariance correctly" in caplog.records[0].message
+        )
+

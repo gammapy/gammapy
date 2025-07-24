@@ -111,8 +111,6 @@ class Observation:
     @property
     def bkg(self):
         """Background of the observation."""
-        from gammapy.irf import FoVAlignment
-
         bkg = self._bkg
         # used for backward compatibility of old HESS data
         try:
@@ -465,10 +463,10 @@ class Observation:
         figsize : tuple, optional
             Figure size. Default is (15, 10).
         """
-        plottable_hds = ["events", "aeff", "psf", "edisp", "bkg", "rad_max"]
-
+        plottable_hds = ["events", "aeff", "edisp", "psf", "bkg", "rad_max"]
         plot_hdus = list(set(plottable_hds) & set(self.available_hdus))
         plot_hdus.sort()
+        plot_hdus.insert(0, plot_hdus.pop(plot_hdus.index("events")))
 
         n_irfs = len(plot_hdus)
         nrows = n_irfs // 2
@@ -478,10 +476,12 @@ class Observation:
             nrows=nrows,
             ncols=ncols,
             figsize=figsize,
-            gridspec_kw={"wspace": 0.3, "hspace": 0.3},
+            gridspec_kw={"wspace": 0.55, "hspace": 0.3},
         )
 
         for idx, (ax, name) in enumerate(zip_longest(axes.flat, plot_hdus)):
+            ax.set_box_aspect(1)
+
             if name == "aeff":
                 self.aeff.plot(ax=ax)
                 ax.set_title("Effective area")
@@ -514,6 +514,8 @@ class Observation:
 
             if name is None:
                 ax.set_visible(False)
+
+        fig.tight_layout()
 
     def select_time(self, time_interval):
         """Select a time interval of the observation.
@@ -895,7 +897,7 @@ class ObservationChecker(Checker):
         contain various observation and event time information.
         """
         # http://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Cicerone/Cicerone_Data/Time_in_ScienceTools.html
-        # https://hess-confluence.desy.de/confluence/display/HESS/HESS+FITS+data+-+References+and+checks#HESSFITSdata-Referencesandchecks-Time
+        # https://cchesswiki.in2p3.fr/hess/working_groups/analysis_and_reconstruction_working_group/ar_active_tasks/hess_fits_data/hess_fits_data__references_and_checks
         telescope_met_refs = {
             "FERMI": Time("2001-01-01T00:00:00"),
             "HESS": Time("2001-01-01T00:00:00"),
