@@ -172,7 +172,7 @@ class UniformPrior(Prior):
     """Uniform Prior.
 
     Returns 0 if the parameter value is in ]min, max[.
-    1, if otherwise.
+    Returns 1, if otherwise.
 
     Parameters
     ----------
