@@ -9,6 +9,7 @@ from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
 from gammapy.utils.time import time_ref_from_dict
 from gammapy.utils.scripts import read_yaml
+from pathlib import Path
 
 __all__ = ["ObservationTable", "ObservationTablePrototype"]
 
@@ -431,10 +432,10 @@ class ObservationTablePrototype(ObservationTable):
         -------
         The loaded dictionary is returned as format.
         """
-
-        format = read_yaml(
-            "../gammapy/gammapy/utils/formats/obs_index_" + fileformat + ".yaml"
-        )  # TODO: replace absolute path!
+        PATH_FORMATS = (
+            Path(__file__).resolve().parent / ".." / "utils" / "formats"
+        )  # like gammapy/utils/scripts.py l.29, commit: 753fb3e
+        format = read_yaml(str(PATH_FORMATS) + "/obs_index_" + fileformat + ".yaml")
         return format
 
     def get_corresponding_names(name, format):
