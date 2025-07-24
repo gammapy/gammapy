@@ -818,6 +818,17 @@ class EventList:
     def peek(self, allsky=False):
         """Quick look plots.
 
+        This method creates a figure with five subplots for ``allsky=False``:
+
+        * 2D counts map
+        * Offset squared distribution of the events
+        * Counts histogram plot : full field of view offset versus energy with energy
+        * Counts plot : counts as a function of energy
+        * Event rate time plot : counts as a function of time
+
+        If ``allsky=True`` the first three subplots are replaced by an all-sky map of the counts.
+
+
         Parameters
         ----------
         allsky : bool, optional
