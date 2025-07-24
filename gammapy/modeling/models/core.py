@@ -1170,15 +1170,15 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
 
         return SkyCoord(positions)
 
-    def to_regions(self, x_width=None, **kwargs):
+    def to_regions(self, containment_factor=None, **kwargs):
         """Return a list of the regions for the spatial models.
 
         Parameters
         ----------
-        x_width : float, optional
-            Number of ``sigma`` for `GaussianSpatialModel`
-            or ``x_r_0`` for `GeneralizedGaussianSpatialModel`
-            If not specified, the defaults for the models will be used.
+        containment_factor : float, optional
+            Number of ``containment_factor`` for `GaussianSpatialModel`
+            or ``GeneralizedGaussianSpatialModel`
+            If not specified, the default of 1.5 will be used.
         kwargs : dict, optional
             Keyword arguments passed to ``model.spatial_model.to_region``.
 
@@ -1188,8 +1188,8 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
             Regions.
         """
         regions = []
-        if x_width:
-            kwargs["x_width"] = x_width
+        if containment_factor:
+            kwargs["containment_factor"] = containment_factor
         for model in self.select(tag="sky-model"):
             try:
                 region = model.spatial_model.to_region(**kwargs)

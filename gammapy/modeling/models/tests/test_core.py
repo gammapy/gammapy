@@ -364,7 +364,6 @@ def test_two_fov_bkg_models_single_dataset():
         Models([fov1, fov2])
 
 
-
 def test_to_regions():
     spatial1 = PointSpatialModel(lon_0=6.0 * u.deg, lat_0=0.0 * u.deg, frame="galactic")
     spatial2 = GaussianSpatialModel(
@@ -384,11 +383,11 @@ def test_to_regions():
     assert_allclose(regs1[1].width, 1.2 * u.deg, rtol=1e-5)
     assert_allclose(regs1[2].width, 0.4 * u.deg, rtol=1e-5)
 
-    regs2 = models.to_regions(x_width=3)
+    regs2 = models.to_regions(containment_factor=3)
     assert_allclose(regs2[1].width, 2.4 * u.deg, rtol=1e-5)
     assert_allclose(regs1[2].width, 0.4 * u.deg, rtol=1e-5)
 
-    
+
 def test_bad_covariance(caplog, tmp_path):
     # Step 1: Create a simple spectral model
     spectral_model = PowerLawSpectralModel()
@@ -414,4 +413,3 @@ def test_bad_covariance(caplog, tmp_path):
         assert (
             "Impossible to read the covariance correctly" in caplog.records[0].message
         )
-

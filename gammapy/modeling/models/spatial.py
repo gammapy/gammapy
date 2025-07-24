@@ -29,6 +29,7 @@ from gammapy.utils.regions import region_circle_to_ellipse, region_to_frame
 from gammapy.utils.scripts import make_path
 from .core import ModelBase, _build_parameters_from_dict
 from gammapy.utils.units import wrap_at
+from gammapy.utils.deprecation import deprecated_renamed_argument
 
 __all__ = [
     "ConstantFluxSpatialModel",
@@ -658,14 +659,15 @@ class GaussianSpatialModel(SpatialModel):
         exponent = -0.5 * ((1 - np.cos(sep)) / a)
         return u.Quantity(norm * np.exp(exponent).value, "sr-1", copy=COPY_IF_NEEDED)
 
-    def to_region(self, x_sigma=1.5, **kwargs):
+    @deprecated_renamed_argument(["x_sigma", "containment_factor"])
+    def to_region(self, containment_factor=1.0, **kwargs):
         r"""Model outline at a given number of :math:`\sigma`.
 
         Parameters
         ----------
         x_sigma : float
             Number of :math:`\sigma
-            Default is :math:`1.5\sigma` which corresponds to about 68%
+            Default is :math:`1.0\sigma` which corresponds to about 39%
             containment for a 2D symmetric Gaussian.
 
         Returns
@@ -673,7 +675,7 @@ class GaussianSpatialModel(SpatialModel):
         region : `~regions.EllipseSkyRegion`
             Model outline.
         """
-        x_sigma = kwargs.pop("x_width", x_sigma)
+        x_sigma = kwargs.pop("containment_factor")
         minor_axis = Angle(self.sigma.quantity * np.sqrt(1 - self.e.quantity**2))
         return EllipseSkyRegion(
             center=self.position,
@@ -789,20 +791,21 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
         """
         return self.r_0.quantity * (1 + 8 * self.eta.value)
 
-    def to_region(self, x_r_0=1, **kwargs):
+    @deprecated_renamed_argument(["x_r_0", "containment_factor"])
+    def to_region(self, containment_factor=1, **kwargs):
         r"""Model outline at a given number of :math:`r_0`.
 
         Parameters
         ----------
-        x_r_0 : float, optional
-            Number of :math:`r_0`. Default is 1.
+        containment_factor : float, optional
+            Number of :math:`r_0`. Default is 1.0
 
         Returns
         -------
         region : `~regions.EllipseSkyRegion`
             Model outline.
         """
-        x_r_0 = kwargs.pop("x_width", x_r_0)
+        x_r_0 = kwargs.pop("containment_factor")
         minor_axis = Angle(self.r_0.quantity * np.sqrt(1 - self.e.quantity**2))
         return EllipseSkyRegion(
             center=self.position,
