@@ -875,6 +875,6 @@ def test_warning_for_bad_model(caplog):
     fpe.run(ds)
     assert "WARNING" in [_.levelname for _ in caplog.records]
     assert (
-        "Reference source model predicts negative counts. Results of estimator should be interpreted with caution"
+        "Reference source model predicts negative flux. Results of estimator should be interpreted with caution"
         in [_.message for _ in caplog.records]
     )

@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 import logging
-import astropy.units as u
 from astropy.table import Column, Table
 from gammapy.maps import Map
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
@@ -52,10 +51,6 @@ class SensitivityEstimator(Estimator):
         if spectral_model is None:
             spectral_model = PowerLawSpectralModel(
                 index=2, amplitude="1 cm-2 s-1 TeV-1"
-            )
-        if spectral_model.integral(1 * u.TeV, 10 * u.TeV).value < 0.0:
-            log.warning(
-                "Spectral model predicts negative counts. Results of estimator should be interpreted with caution"
             )
 
         self.spectral_model = spectral_model
@@ -153,6 +148,12 @@ class SensitivityEstimator(Estimator):
 
         """
         energy = dataset._geom.axes["energy"].center
+
+        if np.any(self.spectral_model(energy).value < 0.0):
+            log.warning(
+                "Spectral model predicts negative flux. Results of estimator should be interpreted with caution"
+            )
+
         excess = self.estimate_min_excess(dataset)
         e2dnde = self.estimate_min_e2dnde(excess, dataset)
         criterion = self._get_criterion(
