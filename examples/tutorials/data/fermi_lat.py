@@ -540,32 +540,22 @@ ts_estimator = TSMapEstimator(
 
 ts_results = ts_estimator.run(datasets)
 
-import matplotlib as mpl
 
+image = ts_results["sqrt_ts"]
+image = image.cutout(
+    image.geom.center_skydir, width=np.max(image.geom.width) - 2 * margin
+)
 
-def plot_significance_map(estimator_results, source_models=None, margin=None):
-    fig = plt.figure(figsize=(7, 5))
-    image = estimator_results["sqrt_ts"]
-    if margin is not None:
-        image = image.cutout(
-            image.geom.center_skydir, width=np.max(image.geom.width) - 2 * margin
-        )
-    ax = image.plot(clim=[-8, 8], cmap=plt.cm.RdBu_r)
-    im = [obj for obj in ax.get_children() if isinstance(obj, mpl.image.AxesImage)][0]
-    if source_models:
-        source_models.plot_regions(
-            ax=ax, edgecolor="g", linestyle="-", kwargs_point=dict(marker=".")
-        )
-    plt.title(r"$\sqrt{TS}$", loc="left", fontsize=12, pad=10)
-    cb_ax = fig.add_axes([0.5, 0.91, 0.15, 0.04])
-    cb = fig.colorbar(im, cax=cb_ax, orientation="horizontal")
-    cb.ax.xaxis.set_ticks_position("top")
-    cb.ax.xaxis.set_label_position("top")
-    cb.ax.tick_params(axis="both", which="major", labelsize=12)
-    cb.ax.set_xlabel(r"[$\sigma$]", fontsize=12, labelpad=-28, x=-0.1)
-
-
-plot_significance_map(ts_results, source_models=sources_inside_roi, margin=margin)
+fig = plt.figure(figsize=(7, 5))
+ax = image.plot(
+    clim=[-8, 8],
+    cmap=plt.cm.RdBu_r,
+    add_cbar=True,
+    kwargs_colorbar={"label": r"$\sqrt{TS}$ [$\sigma$]"},
+)
+sources_inside_roi.plot_regions(
+    ax=ax, edgecolor="g", linestyle="-", kwargs_point=dict(marker=".")
+)
 plt.show()
 
 
