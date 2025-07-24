@@ -458,6 +458,16 @@ class Observation:
     def peek(self, figsize=(15, 10)):
         """Quick-look plots in a few panels.
 
+        This method creates a figure with five subplots
+
+        * Events 2D map : counts sky map
+        * Effective area 2D map : FoV offset as a function of true energy
+        * Background rate 2D map : background rate versus energy for a given offset
+        * Energy dispersion 2D map : migration as a function of true energy for a given offset
+        * Point spread function plot : containment radius as a function of energy for various
+          containment fractions
+
+
         Parameters
         ----------
         figsize : tuple, optional
