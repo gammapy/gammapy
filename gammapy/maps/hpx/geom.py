@@ -8,7 +8,6 @@ from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.units import Quantity
 from gammapy.utils.array import is_power2
-from gammapy.utils.cache import CacheInstanceMixin
 from ..axes import MapAxes
 from ..coord import MapCoord, skycoord_to_lonlat
 from ..geom import Geom, pix_tuple_to_idx
@@ -32,7 +31,7 @@ from .utils import (
 __all__ = ["HpxGeom"]
 
 
-class HpxGeom(Geom, CacheInstanceMixin):
+class HpxGeom(Geom):
     """Geometry class for HEALPix maps.
 
     This class performs mapping between partial-sky indices (pixel
