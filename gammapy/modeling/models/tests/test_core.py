@@ -380,7 +380,7 @@ def test_to_regions():
 
     regs1 = models.to_regions()
     assert len(regs1) == 3
-    assert_allclose(regs1[1].width, 1.2 * u.deg, rtol=1e-5)
+    assert_allclose(regs1[1].width, 0.8 * u.deg, rtol=1e-5)
     assert_allclose(regs1[2].width, 0.4 * u.deg, rtol=1e-5)
 
     regs2 = models.to_regions(containment_factor=3)
