@@ -489,15 +489,10 @@ class ObservationTablePrototype(ObservationTable):
         # Read disk table "table_disk", taken from class ObervationTable. TODO: Pot. lazy loading in future?"""
         table_disk = super().read(make_path(filename), **kwargs)
 
-        # Read info on internal format and on correspondance to selected fileformat.
+        # TODO: Infer file format of table_disk as sugg. by @bkhelifi. For now: Use fileformat-argument, default is "gadf03".
+        # Read then info on internal format and on correspondance to the selected fileformat.
         format = self.get_format_dict(fileformat)
-
-        # Note: List of internal names called "names_internal" is for now set equal equal to minimal/mandatory internal names, called "names_min_req".
-        # They can be more, if internal format knows more names. These could be viewed as optional-internal.
-        # They are distinguished from other optional names optional-external, that could be present in the file.
-        # These optional-external names are later copied into the table without the processing, that is done for
-        # the set "names_internal".
-        names_internal = self.names_min_req
+        names_internal = list(format.keys())
 
         # Get correspondance of internal names to (multiple) disk-names, called "correspondance_dict".
         # Also, flattened version in "correspondance_dict_flat", which will be used to check later, which disk-names are (truly) optional (and not already processed).
