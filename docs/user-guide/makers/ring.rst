@@ -68,3 +68,9 @@ A given `~gammapy.datasets.MapDataset` has to be reduced to a single image by ca
 		dataset = safe_mask_maker.run(dataset, obs)
 		dataset_on_off = ring_bkg_maker.run(dataset)
 		stacked.stack(dataset_on_off)
+
+
+.. minigallery::
+    :add-heading: Examples using `~gammapy.makers.RingBackgroundMaker`
+
+    ../examples/tutorials/analysis-2d/ring_background.py

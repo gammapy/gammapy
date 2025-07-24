@@ -72,26 +72,32 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
     Parameters
     ----------
-    model : `~gammapy.modeling.models.SkyModel`
+    model : `~gammapy.modeling.models.SkyModel`, optional
         Source model kernel. If set to None,
-        assume spatail model: point source model, PointSpatialModel.
-        spectral model: PowerLawSpectral Model of index 2
-    kernel_width : `~astropy.coordinates.Angle`
-        Width of the kernel to use: the kernel will be truncated at this size
-    n_sigma : int
-        Number of sigma for flux error. Default is 1.
-    n_sigma_ul : int
-        Number of sigma for flux upper limits. Default is 2.
-    n_sigma_sensitivity : int
-        Number of sigma for flux  sensitivity. Default is 5.
-    downsampling_factor : int
+        the assumes spatial model is `~gammapy.modeling.models.PointSpatialModel` and the
+        spectral model is `~gammapy.modeling.models.PowerLawSpectralModel` with an index of 2.
+        Default is None.
+    kernel_width : `~astropy.coordinates.Angle`, optional
+        Width of the kernel to use: the kernel will be truncated at this size.
+        Default is None.
+    downsampling_factor : int, optional
         Sample down the input maps to speed up the computation. Only integer
         values that are a multiple of 2 are allowed. Note that the kernel is
         not sampled down, but must be provided with the downsampled bin size.
+        Default is None.
+    n_sigma : float, optional
+        Number of sigma for flux error. Must be a positive value.
+        Default is 1.
+    n_sigma_ul : float, optional
+        Number of sigma for flux upper limits. Must be a positive value.
+        Default is 2.
+    n_sigma_sensitivity : float, optional
+        Number of sigma for flux sensitivity. Must be a positive value.
+        Default is 5.
     threshold : float, optional
         If the test statistic value corresponding to the initial flux estimate is not above
         this threshold, the optimizing step is omitted to save computing time. Default is None.
-    rtol : float
+    rtol : float, optional
         Relative precision of the flux estimate. Used as a stopping criterion for
         the norm fit. Default is 0.01.
     selection_optional : list of str, optional
@@ -111,24 +117,24 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         but rather the closest values to the energy axis edges of the parent dataset.
         Default is None: apply the estimator in each energy bin of the parent dataset.
         For further explanation see :ref:`estimators`.
-    sum_over_energy_groups : bool
+    sum_over_energy_groups : bool, optional
         Whether to sum over the energy groups or fit the norm on the full energy
-        cube.
-    norm : `~gammapy.modeling.Parameter` or dict
-        Norm parameter used for the likelihood profile computation on a fixed norm range.
-        Only used for "stat_scan" in `selection_optional`.
-        Default is None and a new parameter is created automatically,
-        with value=1, name="norm", scan_min=-100, scan_max=100,
-        and values sampled such as we can probe a 0.1% relative error on the norm.
-        If a dict is given the entries should be a subset of
-        `~gammapy.modeling.Parameter` arguments.
-    n_jobs : int
+        cube. Default is True.
+    n_jobs : int, optional
         Number of processes used in parallel for the computation. Default is one,
         unless `~gammapy.utils.parallel.N_JOBS_DEFAULT` was modified. The number
         of jobs limited to the number of physical CPUs.
-    parallel_backend : {"multiprocessing", "ray"}
+    parallel_backend : {"multiprocessing", "ray"}, optional
         Which backend to use for multiprocessing. Defaults to `~gammapy.utils.parallel.BACKEND_DEFAULT`.
-    max_niter : int
+    norm : `~gammapy.modeling.Parameter` or dict, optional
+        Norm parameter used for the likelihood profile computation on a fixed norm range.
+        Only used for "stat_scan" in `selection_optional`.
+        If a dict is given the entries should be a subset of
+        `~gammapy.modeling.Parameter` arguments.
+        Default is None and a new parameter is created automatically,
+        with value=1, name="norm", scan_min=-100, scan_max=100,
+        and values sampled such as we can probe a 0.1% relative error on the norm.
+    max_niter : int, optional
         Maximal number of iterations used by the root finding algorithm.
         Default is 100.
 
@@ -166,14 +172,14 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
     <BLANKLINE>
       geom                   : WcsGeom
       axes                   : ['lon', 'lat', 'energy']
-      shape                  : (np.int64(400), np.int64(200), 1)
+      shape                  : (400, 200, 1)
       quantities             : ['ts', 'norm', 'niter', 'norm_err', 'npred', 'npred_excess', 'stat', 'stat_null', 'success']
       ref. model             : pl
       n_sigma                : 1
       n_sigma_ul             : 2
       sqrt_ts_threshold_ul   : 2
       sed type init          : likelihood
-    >>> print(maps.available_quantities))
+    >>> print(maps.available_quantities)
     ['ts', 'norm', 'niter', 'norm_err', 'npred', 'npred_excess', 'stat', 'stat_null', 'success']
     """
 

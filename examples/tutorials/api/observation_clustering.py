@@ -47,7 +47,8 @@ from gammapy.utils.cluster import hierarchical_clustering, standard_scaler
 # data. Next, utilise a cone search to select only the observations of interest.
 # In this case, we choose PKS 2155-304 as the object of interest.
 #
-# The `~gammapy.data.ObservationTable` is then filtered using the `select_observations` tool.
+# The `~gammapy.data.ObservationTable` is then filtered using the
+# `~gammapy.data.ObservationTable.select_observations()` tool.
 #
 
 data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
@@ -143,7 +144,7 @@ plt.show()
 # are observations which have a zenith angle less than the median value,
 # whilst the circles are observations above the median.
 #
-# The `grouped_observations` provide a list of `~gammapy.data.Observations`
+# The ``grouped_observations`` provide a list of `~gammapy.data.Observations`
 # which can be utilised in the usual way to show the various properties
 # of the observations i.e. see the :doc:`/tutorials/data/cta` tutorial.
 #
@@ -155,14 +156,14 @@ plt.show()
 #
 # This method shows how to cluster observations based on their IRF quantities,
 # in this case those that have a similar edisp and psf. The
-# `~gammapy.data.utils.get_irfs_features` is utilised to achieve this. The
+# `~gammapy.data.get_irfs_features()` is utilised to achieve this. The
 # observations are then clustered based on these criteria using
 # `~gammapy.utils.cluster.hierarchical_clustering`. The idea here is to minimise
 # the variance of both edisp and psf within a specific group to limit the error
 # on the quantity when they are stacked at the dataset level.
 #
-# In this example, the irf features are computed for the `edisp-res` and
-# `psf-radius` at 1 TeV. This is stored as a `~astropy.table.table.Table`, as shown below.
+# In this example, the irf features are computed for the ``edisp-res`` and
+# ``psf-radius`` at 1 TeV. This is stored as a `~astropy.table.table.Table`, as shown below.
 #
 
 source_position = SkyCoord(329.71693826 * u.deg, -30.2255890 * u.deg, frame="icrs")

@@ -26,12 +26,15 @@ class ParameterEstimator(Estimator):
 
     Parameters
     ----------
-    n_sigma : int, optional
-        Sigma to use for asymmetric error computation. Default is 1.
-    n_sigma_ul : int, optional
-        Sigma to use for upper limit computation. Default is 2.
-    n_sigma_sensitivity : int, optional
-        Sigma to use for sensitivity computation. Default is 5.
+    n_sigma : float, optional
+        Sigma to use for asymmetric error computation. Must be a positive value.
+        Default is 1.
+    n_sigma_ul : float, optional
+        Sigma to use for upper limit computation. Must be a positive value.
+        Default is 2.
+    n_sigma_sensitivity : float, optional
+        Sigma to use for sensitivity computation. Must be a positive value.
+        Default is 5.
     null_value : float, optional
         Which null value to use for the parameter. Default is 1e-150.
     selection_optional : list of str, optional
@@ -413,7 +416,7 @@ class ParameterSensitivityEstimator:
        Parameter to test
     null_value : float or `~gammapy.modeling.Parameter`
         Value of the parameter for the null hypothesis.
-    n_sigma : int, optional
+    n_sigma : float, optional
         Number of required significance level. Default is 5.
     n_free_parameters : int, optional
         Number of free parameters. Default is None, which utilises len(parameters).

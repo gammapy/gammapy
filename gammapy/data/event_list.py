@@ -179,12 +179,12 @@ class EventList:
         info += f"\tObs. ID          : {obs_id}\n\n"
 
         info += f"\tNumber of events : {len(self.table)}\n"
+        if self.table.meta.get("TSTART", False):
+            rate = len(self.table) / self.observation_time_duration
+            info += f"\tEvent rate       : {rate:.3f}\n\n"
 
-        rate = len(self.table) / self.observation_time_duration
-        info += f"\tEvent rate       : {rate:.3f}\n\n"
-
-        info += f"\tTime start       : {self.observation_time_start}\n"
-        info += f"\tTime stop        : {self.observation_time_stop}\n\n"
+            info += f"\tTime start       : {self.observation_time_start}\n"
+            info += f"\tTime stop        : {self.observation_time_stop}\n\n"
 
         info += f"\tMin. energy      : {np.min(self.energy):.2e}\n"
         info += f"\tMax. energy      : {np.max(self.energy):.2e}\n"
@@ -853,7 +853,7 @@ class EventList:
             ax_image = fig.add_subplot(gs[0, :], projection=m.geom.wcs)
         else:
             ax_image = fig.add_subplot(gs[0, 0], projection=m.geom.wcs)
-        m.plot(ax=ax_image, stretch="sqrt", vmin=0)
+        m.plot(ax=ax_image, stretch="sqrt", vmin=0, add_cbar=True)
         plt.subplots_adjust(wspace=0.3)
 
     @property
