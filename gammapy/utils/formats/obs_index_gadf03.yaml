@@ -1,50 +1,47 @@
-#YAML file containing the correspondance of the internal obs-index table in gammapy to the obs-index table format of GADF v.0.3.
-#Concept:    For every name of the internal obs-index table, for either representation, "internal" or "disk", the corresponding unit, type and description are specified
-#            and in case of the disk, grouped by corresponding names.
+########################################################################################################################################
+#YAML file containing the correspondance of the internal obs-index table in gammapy to the obs-index table format of *** GADF v.0.3 ***.
+########################################################################################################################################
+
+#Concept:    For every name of the internal obs-index table its corresponding properties (type, unit, description)
+#            and its disk-correspondences (number of names in fileformat, names and properties in fileformat) are specified.
+#            Idea and concept by @bkhelifi.
+
 #Note:       This is a prototype containing only three internal names, "OBS_ID", "OBJECT", "POINTING".
+
 #References: https://spacelift.io/blog/yaml#yaml-vs-json, https://docs.gammapy.org/dev/user-guide/model-gallery/spectral/plot_broken_powerlaw.html#yaml-representation
 #            https://gamma-astro-data-formats.readthedocs.io/en/v0.3/data_storage/obs_index/index.html
 
-name:
-  OBS_ID:
-    internal:
+
+OBS_ID:
+  type: str
+  unit: None
+  description: ID of observation run
+  disk:
+    - name: OBS_ID
+      type: i8
       unit: None
-      type: int64
-      description: ID of observation run
-      n_disk_names: 1 
-    disk:
-      - name: OBS_ID
-        unit: None
-        type: int64
-        description: Unique observation identifier (Run number)
-  
-  OBJECT:
-    internal:
-      unit: None
+      description: Unique observation identifier (Run number)
+
+OBJECT:
+  type: str
+  unit: None
+  description: Name of object
+  disk:
+    - name: OBJECT
       type: str
-      description: Name of object
-      n_disk_names: 1
-    disk:
-      - name: OBJECT
-        unit: None
-        type: str
-        description: Primary target of the observation
+      unit: None
+      description: Primary target of the observation
 
-  POINTING:
-    internal:
+POINTING:
+  type: object
+  unit: deg
+  description: Pointing of observation 
+  disk:
+    - name: RA_PNT
+      type: float
       unit: deg
-      type: object
-      description: Pointing of observation 
-      n_disk_names: 2
-    disk:
-        - name: RA_PNT
-          unit: deg
-          type: float
-          description: Pointing Right Ascension (see RA / DEC). Not mandatory if OBS_MODE=DRIFT, but average values could optionally be provided.
-        - name: DEC_PNT
-          unit: deg
-          type: float
-          description: Pointing declination (see RA / DEC). Not mandatory if OBS_MODE=DRIFT, but average values could optionally be provided.
-
-
-
+      description: Pointing Right Ascension (see RA / DEC). Not mandatory if OBS_MODE=DRIFT, but average values could optionally be provided.
+    - name: DEC_PNT
+      type: float
+      unit: deg
+      description: Pointing declination (see RA / DEC). Not mandatory if OBS_MODE=DRIFT, but average values could optionally be provided.

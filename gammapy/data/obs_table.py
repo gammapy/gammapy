@@ -452,14 +452,12 @@ class ObservationTablePrototype(ObservationTable):
         List with the corresponding names per internal name.
         """
 
-        n_disk_names = format["name"][name]["internal"][
-            "n_disk_names"
-        ]  # Get number of corresponding names on disk
+        n_disk_names = len(
+            format[name]["disk"]
+        )  # Get number of corresponding names on disk
         correspondance = []
         for n in range(n_disk_names):
             name_disk = format[
-                "name"
-            ][
                 name
             ][
                 "disk"
@@ -531,9 +529,9 @@ class ObservationTablePrototype(ObservationTable):
         description_internal = []
 
         for name in names_internal:
-            units_internal.append(format["name"][name]["internal"]["unit"])
-            types_internal.append(format["name"][name]["internal"]["type"])
-            description_internal.append(format["name"][name]["internal"]["description"])
+            units_internal.append(format[name]["unit"])
+            types_internal.append(format[name]["type"])
+            description_internal.append(format[name]["description"])
 
         table_internal = self(
             names=names_internal,
@@ -566,7 +564,7 @@ class ObservationTablePrototype(ObservationTable):
 
                 # Construction of in-mem representation of metadata.
                 if name == "OBS_ID":
-                    row_internal.append(int(table_disk[i][names_disk[0]]))
+                    row_internal.append(str(table_disk[i][names_disk[0]]))
                 elif name == "OBJECT":
                     row_internal.append(str(table_disk[i][names_disk[0]]))
                 elif (
