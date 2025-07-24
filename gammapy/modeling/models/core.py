@@ -1176,9 +1176,8 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
         Parameters
         ----------
         size_factor : float, optional
-            Number of ``size_factor`` for `GaussianSpatialModel`
-            or ``GeneralizedGaussianSpatialModel`
-            If not specified, the default of 1.5 will be used.
+            Factor applied to the size of the models.
+            If not specified, the defaults for the models will be used.
         kwargs : dict, optional
             Keyword arguments passed to ``model.spatial_model.to_region``.
 
@@ -1248,7 +1247,7 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
         ...    kwargs_point={"marker":"o", "markersize":5, "color":"red"}
         ...            )
         """
-        regions = self.to_regions(size_factor)
+        regions = self.to_regions(size_factor=size_factor)
 
         geom = RegionGeom.from_regions(regions=regions)
         return geom.plot_region(
