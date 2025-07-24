@@ -952,14 +952,13 @@ class DiskSpatialModel(SpatialModel):
         )
         return u.Quantity(norm * in_ellipse, "sr-1", copy=COPY_IF_NEEDED)
 
-    def to_region(self, **kwargs):
+    def to_region(self, size_factor=1.0, **kwargs):
         """Model outline as a `~regions.EllipseSkyRegion`."""
-        kwargs.pop("size_factor", None)
         minor_axis = Angle(self.r_0.quantity * np.sqrt(1 - self.e.quantity**2))
         return EllipseSkyRegion(
             center=self.position,
-            height=2 * self.r_0.quantity,
-            width=2 * minor_axis,
+            height=2 * size_factor * self.r_0.quantity,
+            width=2 * size_factor * minor_axis,
             angle=self.phi.quantity,
             **kwargs,
         )
@@ -1095,13 +1094,12 @@ class ShellSpatialModel(SpatialModel):
 
         return norm * value
 
-    def to_region(self, **kwargs):
+    def to_region(self, size_factor=1.0, **kwargs):
         """Model outline as a `~regions.CircleAnnulusSkyRegion`."""
-        kwargs.pop("size_factor", None)
         return CircleAnnulusSkyRegion(
             center=self.position,
-            inner_radius=self.radius.quantity,
-            outer_radius=self.radius.quantity + self.width.quantity,
+            inner_radius=size_factor * self.radius.quantity,
+            outer_radius=size_factor * (self.radius.quantity + self.width.quantity),
             **kwargs,
         )
 
@@ -1174,13 +1172,12 @@ class Shell2SpatialModel(SpatialModel):
 
         return norm * value
 
-    def to_region(self, **kwargs):
+    def to_region(self, size_factor=1.0, **kwargs):
         """Model outline as a `~regions.CircleAnnulusSkyRegion`."""
-        kwargs.pop("size_factor", None)
         return CircleAnnulusSkyRegion(
             center=self.position,
-            inner_radius=self.r_in,
-            outer_radius=self.r_0.quantity,
+            inner_radius=size_factor * self.r_in,
+            outer_radius=size_factor * self.r_0.quantity,
             **kwargs,
         )
 
