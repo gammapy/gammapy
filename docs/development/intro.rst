@@ -23,7 +23,9 @@ Before attempting to make a contribution, you should *use* Gammapy a bit at leas
 
 * Install Gammapy.
 * Execute one or two of the tutorial notebooks for Gammapy and do the exercises there.
-* Ask questions or complain about issues on the Gammapy `slack channel <https://gammapy.slack.com/>`__, `GitHub discussions <https://github.com/gammapy/gammapy/discussions>`__ or `GitHub issues tracker <https://github.com/gammapy/gammapy/issues>`__.
+* Ask questions or complain about issues on the Gammapy `slack channel <https://gammapy.slack.com/>`__,
+  `GitHub discussions <https://github.com/gammapy/gammapy/discussions>`__ or
+  `GitHub issues tracker <https://github.com/gammapy/gammapy/issues>`__.
 
 We'd like to note that there are many ways to contribute to the Gammapy project.
 For example if you mention it to a colleague or suggest it to a student, or if
