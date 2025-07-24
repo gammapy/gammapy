@@ -11,6 +11,9 @@ from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling import Parameter, Parameters
 from gammapy.modeling.models import (
     GaussianSpatialModel,
+    GeneralizedGaussianSpatialModel,
+    Shell2SpatialModel,
+    ShellSpatialModel,
     Model,
     ModelBase,
     Models,
@@ -365,27 +368,32 @@ def test_two_fov_bkg_models_single_dataset():
 
 
 def test_to_regions():
-    spatial1 = PointSpatialModel(lon_0=6.0 * u.deg, lat_0=0.0 * u.deg, frame="galactic")
-    spatial2 = GaussianSpatialModel(
-        lon_0=0.0 * u.deg, lat_0=0.0 * u.deg, sigma=0.4 * u.deg, frame="galactic"
-    )
-    spatial3 = DiskSpatialModel(
-        lon_0=8.5 * u.deg, lat_0=0.0 * u.deg, r_0=0.2 * u.deg, frame="galactic"
-    )
     spectral = PowerLawSpectralModel()
-    sky1 = SkyModel(spectral, spatial1, name="m1")
-    sky2 = SkyModel(spectral, spatial2, name="m2")
-    sky3 = SkyModel(spectral, spatial3, name="m3")
-    models = Models([sky1, sky2, sky3])
+    spatials = [
+        PointSpatialModel(),
+        GaussianSpatialModel(sigma="1deg"),
+        DiskSpatialModel(r_0="1deg"),
+        GeneralizedGaussianSpatialModel(r_0="1deg"),
+        ShellSpatialModel(
+            radius="0.5deg",
+            width="0.5deg",
+        ),
+        Shell2SpatialModel(r_0="1deg", eta=0.5),
+    ]
+    models = Models([SkyModel(spectral, spatial) for spatial in spatials])
 
     regs1 = models.to_regions()
-    assert len(regs1) == 3
-    assert_allclose(regs1[1].width, 0.8 * u.deg, rtol=1e-5)
-    assert_allclose(regs1[2].width, 0.4 * u.deg, rtol=1e-5)
-
     regs2 = models.to_regions(size_factor=3)
-    assert_allclose(regs2[1].width, 2.4 * u.deg, rtol=1e-5)
-    assert_allclose(regs1[2].width, 0.4 * u.deg, rtol=1e-5)
+    assert len(regs1) == 6
+    for reg1, reg2 in zip(regs1[1:], regs2[1:]):
+        try:
+            assert_allclose(reg1.width, 2 * u.deg, rtol=1e-5)
+            assert_allclose(reg2.width, 6 * u.deg, rtol=1e-5)
+        except AttributeError:
+            assert_allclose(reg1.inner_radius, 0.5 * u.deg, rtol=1e-5)
+            assert_allclose(reg2.inner_radius, 1.5 * u.deg, rtol=1e-5)
+            assert_allclose(reg1.outer_radius, 1 * u.deg, rtol=1e-5)
+            assert_allclose(reg2.outer_radius, 3 * u.deg, rtol=1e-5)
 
 
 def test_bad_covariance(caplog, tmp_path):
