@@ -120,7 +120,7 @@ class PSFMap(IRFMap):
 
         Parameters
         ----------
-        geom : `Geom`
+        geom : `~gammapy.maps.Geom`
             PSF map geometry.
 
         Returns
@@ -412,7 +412,7 @@ class PSFMap(IRFMap):
             Offset angle wrt source position axis.
         sigma : `~astropy.coordinates.Angle`
             Gaussian width.
-        geom : `Geom`
+        geom : `~gammapy.maps.Geom`
             Image geometry. By default, an all-sky geometry is created.
 
         Returns
@@ -533,8 +533,9 @@ class PSFMap(IRFMap):
         ----------
         ax : `~matplotlib.pyplot.Axes`, optional
             Matplotlib axes. Default is None.
-        energy : `~astropy.units.Quantity`
+        energy_true : `~astropy.units.Quantity`, optional
             Energies where to plot the PSF.
+            Default is [0.1, 1, 10] TeV.
         **kwargs : dict
             Keyword arguments pass to `~matplotlib.pyplot.plot`.
 
@@ -574,10 +575,18 @@ class PSFMap(IRFMap):
     def peek(self, figsize=(12, 10)):
         """Quick-look summary plots.
 
+        This method creates a figure with four subplots:
+
+        * Containment radius at center of map plot : Containment radius as a function of energy for
+          containment fractions of 65% and 95%.
+        * PSF at center of map plot : PSF vs radius.
+        * Exposure 2D map : exposure summed over true energy
+        * Containment radius map : 2D sky map of the 68% containment radius at 1 TeV
+
         Parameters
         ----------
-        figsize : tuple
-            Size of figure.
+        figsize : tuple, optional
+            Size of figure. Default is (12, 10).
         """
         fig, axes = plt.subplots(
             ncols=2,
@@ -645,7 +654,7 @@ class RecoPSFMap(PSFMap):
             Offset angle wrt source position axis.
         sigma : `~astropy.coordinates.Angle`
             Gaussian width.
-        geom : `Geom`
+        geom : `~gammapy.maps.Geom`
             Image geometry. By default, an all-sky geometry is created.
 
         Returns
@@ -720,8 +729,9 @@ class RecoPSFMap(PSFMap):
         ----------
         ax : `~matplotlib.pyplot.Axes`, optional
             Matplotlib axes. Default is None.
-        energy : `~astropy.units.Quantity`
+        energy : `~astropy.units.Quantity`, optional
             Energies where to plot the PSF.
+            Default is [0.1, 1, 10] TeV.
         **kwargs : dict
             Keyword arguments pass to `~matplotlib.pyplot.plot`.
 

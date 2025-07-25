@@ -42,12 +42,15 @@ class EnergyDispersion2D(IRF):
     >>> filename = '$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz'
     >>> edisp2d = EnergyDispersion2D.read(filename, hdu="EDISP")
 
-    Create energy dispersion matrix (`~gammapy.irf.EnergyDispersion`)
+    Create energy dispersion matrix (`~gammapy.irf.EnergyDispersion2D`)
     for a given field of view offset and energy binning:
 
     >>> energy_axis = MapAxis.from_bounds(0.1, 20, nbin=60, unit="TeV", interp="log", name='energy')
-    >>> edisp = edisp2d.to_edisp_kernel(offset='1.2 deg', energy_axis=energy_axis,
-    ...                                 energy_axis_true=energy_axis.copy(name='energy_true'))
+    >>> edisp = edisp2d.to_edisp_kernel(
+    ... offset='1.2 deg',
+    ... energy_axis=energy_axis,
+    ... energy_axis_true=energy_axis.copy(name='energy_true'),
+    ... )
 
     Create energy dispersion IRF from axes:
 
@@ -56,10 +59,6 @@ class EnergyDispersion2D(IRF):
     >>> migra_axis = MapAxis.from_bounds(0, 3, nbin=3, name="migra", node_type="edges")
     >>> axes = MapAxes([energy_axis_true, migra_axis, offset_axis])
     >>> edisp2d_axes = EnergyDispersion2D(axes=axes)
-
-    See Also
-    --------
-    EnergyDispersion.
     """
 
     tag = "edisp_2d"
@@ -293,6 +292,13 @@ class EnergyDispersion2D(IRF):
 
     def peek(self, figsize=(15, 5)):
         """Quick-look summary plots.
+
+        This method creates a figure with three subplots:
+
+        * Bias plot : migration as a function of true energy for a given offset
+        * Migration matrix plot : energy dispersion for given offset and true energy
+        * Energy dispersion matrix plot : probability density function matrix to have
+          ``energy`` as a function of ``energy_true``
 
         Parameters
         ----------

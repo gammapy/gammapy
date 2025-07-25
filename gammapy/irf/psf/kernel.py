@@ -20,6 +20,8 @@ class PSFKernel:
     ----------
     psf_kernel_map : `~gammapy.maps.Map`
         PSF kernel stored in a Map.
+    normalize : bool, optional
+        Normalize the kernel. Default is True.
 
     Examples
     --------
@@ -250,6 +252,11 @@ class PSFKernel:
 
     def peek(self, figsize=(15, 5)):
         """Quick-look summary plots.
+
+        This method creates a figure with two subplots:
+
+        * PSF kernel plot : PSF kernel summed over the energy axis
+        * PSF kernel plot : PSF kernel at 1 TeV
 
         Parameters
         ----------

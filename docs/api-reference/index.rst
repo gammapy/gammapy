@@ -10,7 +10,7 @@ methods. All classes and functions exposed in ``gammapy.*`` namespace are public
 
 
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 1
 
     data
     irf

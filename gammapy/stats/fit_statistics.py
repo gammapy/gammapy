@@ -8,11 +8,8 @@ from abc import ABC
 import numpy as np
 from scipy.special import erfc
 from gammapy.maps import Map
-from gammapy.stats.fit_statistics_cython import (
-    TRUNCATION_VALUE,
-    cash_sum_cython,
-    weighted_cash_sum_cython,
-)
+
+from gammapy.utils.compilation import get_fit_statistics_compiled
 
 
 __all__ = [
@@ -28,7 +25,7 @@ __all__ = [
 ]
 
 
-def cash(n_on, mu_on, truncation_value=TRUNCATION_VALUE):
+def cash(n_on, mu_on, truncation_value=None):
     r"""Cash statistic, for Poisson data.
 
     The Cash statistic is defined as:
@@ -64,6 +61,10 @@ def cash(n_on, mu_on, truncation_value=TRUNCATION_VALUE):
     * `Cash (1979), ApJ 228, 939,
       <https://ui.adsabs.harvard.edu/abs/1979ApJ...228..939C>`_
     """
+
+    if truncation_value is None:
+        truncation_value = get_fit_statistics_compiled()["TRUNCATION_VALUE"]
+
     n_on = np.asanyarray(n_on)
     mu_on = np.asanyarray(mu_on)
     truncation_value = np.asanyarray(truncation_value)
@@ -78,7 +79,7 @@ def cash(n_on, mu_on, truncation_value=TRUNCATION_VALUE):
     return stat
 
 
-def cstat(n_on, mu_on, truncation_value=TRUNCATION_VALUE):
+def cstat(n_on, mu_on, truncation_value=None):
     r"""C statistic, for Poisson data.
 
     The C statistic is defined as:
@@ -118,6 +119,10 @@ def cstat(n_on, mu_on, truncation_value=TRUNCATION_VALUE):
     * `Cash (1979), ApJ 228, 939
       <https://ui.adsabs.harvard.edu/abs/1979ApJ...228..939C>`_
     """
+
+    if truncation_value is None:
+        truncation_value = get_fit_statistics_compiled()["TRUNCATION_VALUE"]
+
     n_on = np.asanyarray(n_on, dtype=np.float64)
     mu_on = np.asanyarray(mu_on, dtype=np.float64)
     truncation_value = np.asanyarray(truncation_value, dtype=np.float64)
@@ -284,7 +289,9 @@ class CashFitStatistic(FitStatistic):
             counts, npred = counts[mask], npred[mask]
 
         counts = counts.astype(float)  # This might be done in the Dataset
-        return cash_sum_cython(counts.ravel(), npred.ravel())
+        return get_fit_statistics_compiled()["cash_sum_compiled"](
+            counts.ravel(), npred.ravel()
+        )
 
     @classmethod
     def stat_array_dataset(cls, dataset):
@@ -305,10 +312,14 @@ class WeightedCashFitStatistic(FitStatistic):
             npred = npred[mask]
 
             weights = dataset.mask.data[mask].astype("float")
-            return weighted_cash_sum_cython(counts, npred, weights)
+            return get_fit_statistics_compiled()["weighted_cash_sum_compiled"](
+                counts, npred, weights
+            )
         else:
             # No weights back to regular cash statistic
-            return cash_sum_cython(counts.ravel(), npred.ravel())
+            return get_fit_statistics_compiled()["cash_sum_compiled"](
+                counts.ravel(), npred.ravel()
+            )
 
     @classmethod
     def stat_array_dataset(cls, dataset):
@@ -369,7 +380,7 @@ class Chi2FitStatistic(FitStatistic):
 class Chi2AsymmetricErrorFitStatistic(FitStatistic):
     """Pseudo-Chi2 fit statistic class for measurements with gaussian asymmetric errors with upper limits.
 
-    Assumes that regular data follow asymmetric normal pdf and upper limits follow complementary error functions
+    Assumes that regular data follow asymmetric normal pdf and upper limits follow complementary error functions.
     """
 
     @classmethod

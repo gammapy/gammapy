@@ -43,6 +43,10 @@ class RegionNDMap(Map):
     unit : str or `~astropy.units.Unit`, optional
         The map unit.
         Default is "".
+
+    Notes
+    -----
+    - For further explanation and examples, see :doc:`/user-guide/maps/regionmap`
     """
 
     def __init__(self, geom, data=None, dtype="float32", meta=None, unit=""):
@@ -513,7 +517,12 @@ class RegionNDMap(Map):
             )
 
     def write(
-        self, filename, overwrite=False, format="gadf", hdu="SKYMAP", checksum=False
+        self,
+        filename,
+        overwrite=False,
+        format="gadf",
+        hdu="SKYMAP",
+        checksum=False,
     ):
         """Write map to file.
 

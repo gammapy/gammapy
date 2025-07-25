@@ -91,10 +91,10 @@ class PSF(IRF):
         fraction : list, optional
             Containment fraction to compute containment radius for, between 0 and 1.
             Default is (0.68, 0.95).
-        energy_true : `~astropy.units.u.Quantity`, optional
+        energy_true : `~astropy.units.Quantity`, optional
             Energies to compute containment radius for.
             Default is ([1.0], [10.0]) TeV.
-        offset : `~astropy.units.u.Quantity`, optional
+        offset : `~astropy.units.Quantity`, optional
             Offset to compute containment radius for.
             Default is 0 deg.
 
@@ -132,7 +132,7 @@ class PSF(IRF):
 
         Parameters
         ----------
-        ax : `~matplotlib.pyplot.Axes`, optional
+        ax : `~matplotlib.axes.Axes`, optional
             Matplotlib axes. Default is None.
         fraction : list of float or `~numpy.ndarray`, optional
             Containment fraction between 0 and 1.
@@ -145,7 +145,7 @@ class PSF(IRF):
 
         Returns
         -------
-        ax : `~matplotlib.pyplot.Axes`
+        ax : `~matplotlib.axes.Axes`
              Matplotlib axes.
 
         """
@@ -184,7 +184,7 @@ class PSF(IRF):
 
         Parameters
         ----------
-        ax : `~matplotlib.pyplot.Axes`, optional
+        ax : `~matplotlib.axes.Axes`, optional
             Matplotlib axes. Default is None.
         fraction : float, optional
             Containment fraction between 0 and 1.
@@ -200,7 +200,7 @@ class PSF(IRF):
 
         Returns
         -------
-        ax : `~matplotlib.pyplot.Axes`
+        ax : `~matplotlib.axes.Axes`
              Matplotlib axes.
         """
         ax = plt.gca() if ax is None else ax
@@ -245,7 +245,7 @@ class PSF(IRF):
 
         Parameters
         ----------
-        ax : `~matplotlib.pyplot.Axes`, optional
+        ax : `~matplotlib.axes.Axes`, optional
             Matplotlib axes. Default is None.
         offset : `~astropy.coordinates.Angle`, optional
             Offset in the field of view.

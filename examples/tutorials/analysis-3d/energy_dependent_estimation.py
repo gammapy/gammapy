@@ -64,11 +64,12 @@ from gammapy.modeling.models import (
     SkyModel,
 )
 from gammapy.stats.utils import ts_to_sigma
-from gammapy.utils.check import check_tutorials_setup
 
 ######################################################################
 # Check setup
 # -----------
+
+from gammapy.utils.check import check_tutorials_setup
 
 check_tutorials_setup()
 
@@ -179,7 +180,7 @@ df = results["energy_dependence"]["df"]
 sigma = ts_to_sigma(ts, df=df)
 
 print(f"The delta_ts for the energy-dependent study: {ts:.3f}.")
-print(f"Converting this to a significance gives: {sigma:.3f} \u03C3")
+print(f"Converting this to a significance gives: {sigma:.3f} \u03c3")
 
 results_table = Table(results["energy_dependence"]["result"])
 display(results_table)
@@ -221,7 +222,7 @@ empty_map = Map.create(
 colors = ["red", "blue", "green", "magenta"]
 
 fig = plt.figure(figsize=(6, 4))
-ax = empty_map.plot()
+ax = empty_map.plot(cmap="Greys")
 
 lat_0 = results["energy_dependence"]["result"]["lat_0"][1:]
 lat_0_err = results["energy_dependence"]["result"]["lat_0_err"][1:]

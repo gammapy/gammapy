@@ -3,12 +3,12 @@
 
 Catalog row index (zero-based) : 3
 Source name          : 4FGL J0001.5+2113
-Extended name        :                   
+Extended name        : --
 Associations     : TXS 2358+209, 3FGL J0001.4+2120, 3EG J2359+2041
 ASSOC_PROB_BAY   : 0.998
 ASSOC_PROB_LR    : 0.958
 Class1           : fsrq 
-Class2           :      
+Class2           : --
 TeVCat flag      : N
 
 *** Other info ***
@@ -48,7 +48,7 @@ Energy flux (100 MeV - 100 GeV)               : 1.93e-11 +- 8.21e-13 erg cm-2 s-
 *** Spectral points ***
 
   e_min     e_max        flux     flux_errn   flux_errp      e2dnde     e2dnde_errn   e2dnde_errp  is_ul   flux_ul     e2dnde_ul   sqrt_ts
-   MeV       MeV     1 / (cm2 s) 1 / (cm2 s) 1 / (cm2 s) erg / (cm2 s) erg / (cm2 s) erg / (cm2 s)       1 / (cm2 s) erg / (cm2 s)        
+   MeV       MeV     1 / (s cm2) 1 / (s cm2) 1 / (s cm2) erg / (s cm2) erg / (s cm2) erg / (s cm2)       1 / (s cm2) erg / (s cm2)        
 --------- ---------- ----------- ----------- ----------- ------------- ------------- ------------- ----- ----------- ------------- -------
    50.000    100.000   6.076e-08   3.257e-08   2.360e-08     9.694e-12     5.197e-12     3.766e-12 False         nan           nan   1.869
   100.000    300.000   3.663e-08   3.812e-09   3.848e-09     8.493e-12     8.838e-13     8.922e-13 False         nan           nan  10.183

@@ -221,7 +221,6 @@ safe_mask_maker = SafeMaskMaker(methods=["aeff-max"], aeff_percent=10)
 # -  Add the `~gammapy.datasets.SpectrumDatasetOnOff` to the list.
 #
 
-# %%time
 datasets = Datasets()
 
 for obs in observations:

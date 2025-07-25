@@ -18,12 +18,19 @@ class ParametricPSF(PSF):
 
     Parameters
     ----------
-    axes : list of `MapAxis` or `MapAxes`
+    axes : list of `~gammapy.maps.MapAxis` or `~gammapy.maps.MapAxes`
         Axes.
     data : dict of `~numpy.ndarray` or `~numpy.recarray`
         Data.
     unit : dict of str or `~astropy.units.Unit`
         Unit.
+    is_pointlike : bool, optional
+        Whether the IRF is point-like.
+        True for point-like IRFs, False for full-containment.
+        Default is False.
+    fov_alignment : `~gammapy.irf.FoVAlignment`, optional
+        The orientation of the field of view coordinate system.
+        Default is FoVAlignment.RADEC.
     meta : dict
         Metadata dictionary.
     """
@@ -328,6 +335,7 @@ class EnergyDependentMultiGaussPSF(ParametricPSF):
     tag = "psf_3gauss"
     required_axes = ["energy_true", "offset"]
     required_parameters = ["sigma_1", "sigma_2", "sigma_3", "scale", "ampl_2", "ampl_3"]
+    required_arguments = ["rad", "energy_true", "offset"]
 
     @staticmethod
     def evaluate_containment(rad, **kwargs):
@@ -390,6 +398,7 @@ class PSFKing(ParametricPSF):
     tag = "psf_king"
     required_axes = ["energy_true", "offset"]
     required_parameters = ["gamma", "sigma"]
+    required_arguments = ["rad", "energy_true", "offset"]
     default_interp_kwargs = dict(bounds_error=False, fill_value=None)
 
     @staticmethod

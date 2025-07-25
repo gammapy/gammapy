@@ -1,7 +1,19 @@
 .. _stats:
 
+Statistics in Gammapy
+=====================
+
+.. toctree::
+    :hidden:
+
+    fit_statistics
+    wstat_derivation
+
+This page describes the main functions to handle statistics and probability computation within Gammapy. The detailed
+description of the used Likelihood functions is given in :ref:`fit-statistics`.
+
 Statistical utility functions
-=============================
+-----------------------------
 
 `gammapy.stats` holds statistical estimators, fit statistics and algorithms
 commonly used in gamma-ray astronomy.
@@ -14,7 +26,7 @@ counts measurements.
 .. _stats_notation:
 
 Notations
----------
+^^^^^^^^^
 
 For statistical analysis we use the following variable names following mostly the
 notation in [LiMa1983]_. For the `~gammapy.datasets.MapDataset` attributes we chose more verbose
@@ -54,12 +66,12 @@ likelihood estimation.
 
 
 Counts and fit statistics
--------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Gamma-ray measurements are counts, :math:`n_{on}`, containing both signal and background events.
 
 Estimation of number of signal events or of quantities in physical models is done through
-Poisson likelihood functions, the fit statistics. In gammapy, they are all log-likelihood
+Poisson likelihood functions, the fit statistics. In Gammapy, they are all log-likelihood
 functions normalized like chi-squares, i.e. if :math:`L` is the likelihood function used,
 they follow the expression :math:`2 \times log L`.
 
@@ -68,7 +80,7 @@ is ``Cash`` (see :ref:`cash`). When the number of background events is unknown, 
 use a background estimate :math:`n_{bkg}` taken from an off measurement where only background events
 are expected. In this case, the statistic function is ``WStat`` (see :ref:`wstat`).
 
-These statistic functions are at the heart of the model fitting approach in gammapy. They are
+These statistic functions are at the heart of the model fitting approach in Gammapy. They are
 used to estimate the best fit values of model parameters and their associated confidence intervals.
 
 They are used also to estimate the excess counts significance, i.e. the probability that
@@ -78,7 +90,7 @@ as well as the errors associated to this estimated number of signal counts.
 .. _ts:
 
 Estimating TS
--------------
+^^^^^^^^^^^^^
 
 A classical approach to modeling and fitting relies on hypothesis testing. One wants to estimate whether
 an hypothesis :math:`H_1` is statistically preferred over the reference, or null-hypothesis, :math:`H_0`.
@@ -128,15 +140,17 @@ the following convention is used:
     \right.
 
 Counts statistics classes
-=========================
+-------------------------
 
-To estimate the excess counts significance and errors, gammapy uses two classes for Poisson counts with
+To estimate the excess counts significance and errors, Gammapy uses two classes for Poisson counts with
 and without known background: `~gammapy.stats.CashCountsStatistic` and `~gammapy.stats.WStatCountsStatistic`
+
+They are described in detail in the page: :doc:`/user-guide/stats/fit_statistics`.
 
 We show below how to use them.
 
 Cash counts statistic
----------------------
+^^^^^^^^^^^^^^^^^^^^^
 
 Excess and Significance
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -213,7 +227,7 @@ relate to the Cash statistic profile.
 .. plot:: user-guide/stats/plot_cash_errors.py
 
 WStat counts statistic
-----------------------
+^^^^^^^^^^^^^^^^^^^^^^
 
 Excess and Significance
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -283,15 +297,12 @@ relate to the WStat statistic profile.
 
 .. plot:: user-guide/stats/plot_wstat_errors.py
 
+References
+----------
 
-These are references describing the available methods: [LiMa1983]_, [Cash1979]_,
-[Stewart2009]_, [Rolke2005]_, [Feldman1998]_, [Cousins2007]_.
+These are references describing the available methods:
 
+* [LiMa1983]_,
+* [Cash1979]_,
+* [Stewart2009]_,
 
-
-.. toctree::
-    :maxdepth: 1
-    :hidden:
-
-    fit_statistics
-    wstat_derivation

@@ -111,12 +111,12 @@ Please give feedback and suggest additions to this page!
         fp.plot(ax=ax, sed_type="e2dnde")
 
 
-.. dropdown:: Compute source significance
+.. dropdown:: Compute the significance of a source
 
-    Estimate the significance of a source, or more generally of an additional model
+    Estimating the significance of a source, or more generally of an additional model
     component (such as e.g. a spectral line on top of a power-law spectrum), is done
-    via a hypothesis test. You fit two models, with and without the extra source or
-    component, then use the test statistic values from both fits to compute the
+    via a hypothesis test. You fit two models: one including the source or component and one without it. Then,
+    compute the difference in the test statistic (TS) between the two fits to determine the
     significance or p-value. To obtain the test statistic, call
     `~gammapy.modeling.Dataset.stat_sum` for the model corresponding to your two
     hypotheses (or take this value from the print output when running the fit), and
@@ -139,7 +139,7 @@ Please give feedback and suggest additions to this page!
        To the tutorial...
 
 
-.. dropdown:: Compute cumulative significance
+.. dropdown:: Compute cumulative significance over time
 
     A classical plot in gamma-ray astronomy is the cumulative significance of a
     source as a function of observing time. In Gammapy, you can produce it with 1D
@@ -275,9 +275,11 @@ Please give feedback and suggest additions to this page!
 .. dropdown:: Avoid NaN results in Flux Point estimation
 
     Sometimes, upper limit values may show as ``nan`` while running a `~gammapy.estimators.FluxPointsEstimator`
-    or a `~gammapy.estimators.LightCurveEstimator`. This often arises because the range of the norm parameter
-    being scanned over is not sufficient. Increasing this range usually solves the problem. In some cases,
-    you can also consider configuring the estimator with a different `~gammapy.modeling.Fit` backend.
+    or a `~gammapy.estimators.LightCurveEstimator`. This likely arises because the min/max range of the `norm` parameter
+    attribute attached to the estimator is not well-chosen (the automatic default may not be valid for all use cases).
+    Setting these min/max to large values usually solves the problem (see the attributes of `norm`
+    `~gammapy.modeling.Parameter`). In some cases, you can also consider configuring the estimator with a different
+    `~gammapy.modeling.Fit` backend.
 
     .. button-link:: ../tutorials/api/estimators.html#a-fully-configured-flux-points-estimatio
        :color: primary
@@ -378,7 +380,7 @@ Please give feedback and suggest additions to this page!
         obs2 = obs.copy(events=new_events, in_memory=True)
 
         # The new observation and the new events table can be serialised independently
-        obs2.write("new_obs.fits.gz")
-        obs2.write("events.fits.gz", include_irfs=False)
+        obs2.write("new_obs.fits.gz", overwrite=True)
+        obs2.write("events.fits.gz", include_irfs=False, overwrite=True)
 
 

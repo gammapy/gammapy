@@ -50,7 +50,7 @@ from gammapy.modeling.models import (
     SkyModel,
 )
 from gammapy.visualization import plot_npred_signal, plot_spectrum_datasets_off_regions
-from gammapy.utils.check import check_tutorials_setup
+
 logging.basicConfig()
 log = logging.getLogger("gammapy.spectrum")
 log.setLevel(logging.ERROR)
@@ -59,6 +59,7 @@ log.setLevel(logging.ERROR)
 # Check setup
 # -----------
 
+from gammapy.utils.check import check_tutorials_setup
 
 check_tutorials_setup()
 
@@ -129,7 +130,6 @@ print(geom)
 # ~~~~~~~~~~~~~~
 #
 
-# %%time
 stacked = MapDataset.create(geom=geom, energy_axis_true=axis_true)
 maker = MapDatasetMaker(selection=["counts", "background", "exposure", "psf"])
 maker_safe_mask = SafeMaskMaker(methods=["offset-max"], offset_max=2.5 * u.deg)
@@ -140,6 +140,7 @@ for obs in observations:
     dataset = maker_safe_mask.run(dataset, obs)
     stacked.stack(dataset)
 
+# %%
 #
 # The maps are cubes, with an energy axis.
 # Let's also make some images:
@@ -195,7 +196,6 @@ ts_image_estimator = TSMapEstimator(
     energy_edges=[0.1, 10] * u.TeV,
 )
 
-# %%time
 images_ts = ts_image_estimator.run(stacked)
 
 sources = find_peaks(
@@ -275,7 +275,6 @@ safe_mask_masker = SafeMaskMaker(methods=["aeff-max"], aeff_percent=10)
 ######################################################################
 # Run data reduction
 
-# %%time
 datasets = Datasets()
 
 for observation in observations:
@@ -305,7 +304,6 @@ plt.show()
 # “global” fit, using all energies).
 #
 
-# %%time
 spectral_model = PowerLawSpectralModel(
     index=2, amplitude=1e-11 * u.Unit("cm-2 s-1 TeV-1"), reference=1 * u.TeV
 )

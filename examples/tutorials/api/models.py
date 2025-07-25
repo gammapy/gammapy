@@ -146,13 +146,13 @@ plt.show()
 # Normed spectral models are a special class of Spectral Models, which
 # have a dimension-less normalisation. These spectral models feature a
 # norm parameter instead of amplitude and are named using the
-# `NormSpectralModel` suffix. They **must** be used along with another
+# ``NormSpectralModel`` suffix. They **must** be used along with another
 # spectral model, as a multiplicative correction factor according to their
 # spectral shape. They can be typically used for adjusting template based
 # models, or adding a EBL correction to some analytic model.
 #
 # To check if a given `~gammapy.modeling.models.SpectralModel` is a norm model, you can simply
-# look at the `is_norm_spectral_model` property
+# look at the ``is_norm_spectral_model`` property
 #
 
 # To see the available norm models shipped with gammapy:
@@ -201,9 +201,9 @@ plt.show()
 # Compound Spectral Model
 # ~~~~~~~~~~~~~~~~~~~~~~~
 #
-# A `CompoundSpectralModel` is an arithmetic combination of two spectral
-# models. The model `normed_template` created in the preceding example
-# is an example of a `CompoundSpectralModel`
+# A `~gammapy.modeling.models.CompoundSpectralModel` is an arithmetic combination of two spectral
+# models. The model ``normed_template`` created in the preceding example
+# is an example of a `~gammapy.modeling.models.CompoundSpectralModel`
 #
 
 print(normed_template)
@@ -235,7 +235,7 @@ print(gauss)
 
 
 ######################################################################
-# Again you can check the `SPATIAL_MODELS` registry to see which models
+# Again you can check the ``SPATIAL_MODELS`` registry to see which models
 # are available or take a look at the :ref:`model-gallery`
 #
 
@@ -245,8 +245,8 @@ print(SPATIAL_MODEL_REGISTRY)
 
 
 ######################################################################
-# The default coordinate frame for all spatial models is `"icrs"`, but
-# the frame can be modified using the `frame` argument:
+# The default coordinate frame for all spatial models is ``"icrs"``, but
+# the frame can be modified using the ``frame`` argument:
 #
 
 gauss = GaussianSpatialModel(
@@ -257,7 +257,7 @@ gauss = GaussianSpatialModel(
 ######################################################################
 # You can specify any valid `astropy.coordinates` frame. The center
 # position of the model can be retrieved as a
-# `astropy.coordinates.SkyCoord` object using `SpatialModel.position`:
+# `astropy.coordinates.SkyCoord` object using `~gammapy.modeling.models.SpatialModel.position`:
 #
 
 print(gauss.position)
@@ -319,8 +319,8 @@ plt.show()
 
 
 ######################################################################
-# The `~gammapy.modeling.models.SpatialModel.to_region()` method can also be useful to write e.g. ds9 region
-# files using `write_ds9` from the `regions` package:
+# The `~gammapy.modeling.models.GaussianSpatialModel.to_region()` method can also be useful to write e.g. ds9 region
+# files using ``write_ds9`` from the `regions` package:
 #
 
 from regions import Regions
@@ -355,7 +355,7 @@ print(gauss_temp)
 
 
 ######################################################################
-# To check the `TEMPORAL_MODELS` registry to see which models are
+# To check the ``TEMPORAL_MODELS`` registry to see which models are
 # available:
 #
 
@@ -385,8 +385,8 @@ plt.show()
 
 
 ######################################################################
-# SkyModel
-# --------
+# `~gammapy.modeling.models.SkyModel`
+# -----------------------------------
 #
 # The `~gammapy.modeling.models.SkyModel` class combines a spectral, and
 # optionally, a spatial model and a temporal. It can be created from
@@ -473,7 +473,7 @@ print(diffuse)
 # Note that if the spatial model is not normalized over the sky it has to
 # be combined with a normalized spectral model, for example
 # `~gammapy.modeling.models.PowerLawNormSpectralModel`. This is the only
-# case in `~gammapy.models.SkyModel` where the unit is fully attached to
+# case in `~gammapy.modeling.models.SkyModel` where the unit is fully attached to
 # the spatial model.
 #
 
@@ -745,8 +745,8 @@ models.write("my-custom-models.yaml", overwrite=True)
 #
 # To use full 3D models, ie :math:`f(l, b, E) = F(l, b, E) \cdot \ G(E)`,
 # you have to implement your own custom
-# `SpatialModel`. Note that it is still necessary to multiply by a
-# `SpectralModel`, :math:`G(E)` to be dimensionally consistent.
+# `~gammapy.modeling.models.SpatialModel`. Note that it is still necessary to multiply by a
+# `~gammapy.modeling.models.SpectralModel`, :math:`G(E)` to be dimensionally consistent.
 #
 # In this example, we create Gaussian Spatial Model with the extension
 # varying with energy. For simplicity, we assume a linear dependency on
@@ -828,7 +828,7 @@ plt.show()
 
 ######################################################################
 # For computational purposes, it is useful to specify a
-# ``evaluation_radius`` for `~gammapy.modeling.models.SpatialModels` - this gives a size on which
+# ``evaluation_radius`` for `~gammapy.modeling.models.SpatialModel` - this gives a size on which
 # to compute the model. Though optional, it is highly recommended for
 # Custom Spatial Models. This can be done, for ex, by defining the
 # following function inside the above class:

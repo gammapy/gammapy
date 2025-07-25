@@ -18,6 +18,8 @@ import numpy as np
 from scipy.optimize import Bounds, minimize
 from astropy import units as u
 from astropy.coordinates import SkyCoord
+from astropy.table import Table
+from gammapy.utils.scripts import make_path
 from regions import (
     CircleAnnulusSkyRegion,
     CircleSkyRegion,
@@ -422,3 +424,58 @@ def region_circle_to_ellipse(region):
         center=region.center, width=region.radius, height=region.radius
     )
     return region_new
+
+
+def extract_bright_star_regions(
+    geom, max_star_mag=6, star_rad=0.3 * u.deg, star_table=None
+):
+    """
+    Find bright star exclusion regions from a catalog `~astropy.table.Table`
+    contained in a given `~gammapy.maps.Geom` and returns a list of `~regions.CircleSkyRegion`.
+
+    Parameters
+    ----------
+    geom : `~gammapy.maps.WcsGeom`
+        WcsGeom within which to search for bright stars
+    max_star_mag : float, optional
+        The maximum stellar magnitude (Johnson-Cousins B-band) to exclude. Default is 6th magnitude.
+    star_rad : `~astropy.units.Quantity`, optional
+        Radius to exclude around each star. Default is 0.3 degrees.
+    star_table : str, optional
+        Full name of the file containing a table containing the list of stars to search for exclusion regions.
+        If None, the Hipparcos Catalog (Perryman et al., 1997) contained in ``$GAMMAPY_DATA//veritas/crab-point-like-ED`` is used.
+        The table's column names should match those in ``$GAMMAPY_DATA//veritas/crab-point-like-ED``.
+        Default is None.
+
+    Returns
+    -------
+    regions : list of `~regions.CircleSkyRegion`
+        Star exclusion regions.
+    """
+    regions = []
+
+    if star_table is None:
+        filename = make_path(
+            "$GAMMAPY_DATA/veritas/crab-point-like-ED/Hipparcos_MAG8_1997.dat"
+        )
+        star_cat = Table.read(filename, format="ascii.commented_header")
+    else:
+        star_cat = Table.read(star_table)
+
+    star_mask = geom.contains(
+        SkyCoord(star_cat["_RAJ2000"] * u.deg, star_cat["_DEJ2000"] * u.deg)
+    )
+
+    for src in star_cat[
+        (star_mask) & (star_cat["B-V"] + star_cat["Vmag"] < max_star_mag)
+    ]:
+        regions.append(
+            CircleSkyRegion(
+                center=SkyCoord(
+                    src["_RAJ2000"], src["_DEJ2000"], unit="deg", frame="icrs"
+                ),
+                radius=star_rad,
+            )
+        )
+
+    return regions

@@ -1,18 +1,18 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-import warnings
 import numpy as np
 import astropy.units as u
 from astropy.coordinates import Angle
+from astropy.coordinates.erfa_astrom import erfa_astrom, ErfaAstromInterpolator
 from astropy.table import Table
 from astropy.time import Time
-from gammapy.data import FixedPointingInfo
-from gammapy.irf import BackgroundIRF, EDispMap, FoVAlignment, PSFMap
-from gammapy.maps import Map, RegionNDMap
+from gammapy.data import FixedPointingInfo, PointingMode
+from gammapy.irf import EDispMap, FoVAlignment, PSFMap
+from gammapy.maps import Map, RegionNDMap, MapAxis
 from gammapy.maps.utils import broadcast_axis_values_to_geom
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.stats import WStatCountsStatistic
-from gammapy.utils.coordinates import sky_to_fov
+from gammapy.utils.coordinates import FoVICRSFrame, FoVAltAzFrame
 from gammapy.utils.regions import compound_region_to_regions
 
 __all__ = [
@@ -31,70 +31,6 @@ log = logging.getLogger(__name__)
 
 MINIMUM_TIME_STEP = 1 * u.s  # Minimum time step used to handle FoV rotations
 EARTH_ANGULAR_VELOCITY = 360 * u.deg / u.day
-
-
-def _get_fov_coords(pointing, irf, geom, use_region_center=True, obstime=None):
-    # TODO: create dedicated coordinate handling see #5041
-    coords = {}
-    if isinstance(pointing, FixedPointingInfo):
-        # for backwards compatibility, obstime should be required
-        if obstime is None:
-            if isinstance(obstime, BackgroundIRF):
-                warnings.warn(
-                    "Future versions of gammapy will require the obstime keyword for this function",
-                    DeprecationWarning,
-                )
-            obstime = pointing.obstime
-
-        pointing_icrs = pointing.get_icrs(obstime)
-    else:
-        pointing_icrs = pointing
-
-    if not use_region_center:
-        region_coord, weights = geom.get_wcs_coord_and_weights()
-        sky_coord = region_coord.skycoord
-
-    else:
-        image_geom = geom.to_image()
-        map_coord = image_geom.get_coord()
-        sky_coord = map_coord.skycoord
-
-    if irf.has_offset_axis:
-        coords["offset"] = sky_coord.separation(pointing_icrs)
-    else:
-        if irf.fov_alignment == FoVAlignment.ALTAZ:
-            # for backwards compatibility, obstime should be required
-            if obstime is None:
-                warnings.warn(
-                    "Future versions of gammapy will require the obstime keyword for this function",
-                    DeprecationWarning,
-                )
-                obstime = pointing.obstime
-
-            pointing_altaz = pointing.get_altaz(obstime)
-            altaz_coord = sky_coord.transform_to(pointing_altaz.frame)
-
-            # Compute FOV coordinates of map relative to pointing
-            fov_lon, fov_lat = sky_to_fov(
-                altaz_coord.az, altaz_coord.alt, pointing_altaz.az, pointing_altaz.alt
-            )
-        elif irf.fov_alignment in [FoVAlignment.RADEC, FoVAlignment.REVERSE_LON_RADEC]:
-            fov_lon, fov_lat = sky_to_fov(
-                sky_coord.icrs.ra,
-                sky_coord.icrs.dec,
-                pointing_icrs.icrs.ra,
-                pointing_icrs.icrs.dec,
-            )
-            if irf.fov_alignment == FoVAlignment.REVERSE_LON_RADEC:
-                fov_lon = -fov_lon
-        else:
-            raise ValueError(
-                f"Unsupported background coordinate system: {irf.fov_alignment!r}"
-            )
-
-        coords["fov_lon"] = fov_lon
-        coords["fov_lat"] = fov_lat
-    return coords
 
 
 def _compute_rotation_time_steps(time_start, time_stop, fov_rotation, pointing_altaz):
@@ -168,24 +104,20 @@ def make_map_exposure_true_energy(
     map : `~gammapy.maps.WcsNDMap`
         Exposure map.
     """
-    coords = _get_fov_coords(
-        pointing=pointing,
-        geom=geom,
-        use_region_center=use_region_center,
-        irf=aeff,
-        obstime=None,
-    )
+    if isinstance(pointing, FixedPointingInfo):
+        origin = pointing.get_icrs(pointing.obstime)
+    else:
+        origin = pointing
 
-    coords["energy_true"] = broadcast_axis_values_to_geom(geom, "energy_true")
-    exposure = aeff.evaluate(**coords)
+    fov_frame = FoVICRSFrame(origin=origin)
 
-    data = (exposure * u.Quantity(livetime)).to("m2 s")
-    meta = {"livetime": livetime, "is_pointlike": aeff.is_pointlike}
+    exposure = project_irf_on_geom(geom, aeff, fov_frame, use_region_center)
 
-    if not use_region_center:
-        _, weights = geom.get_wcs_coord_and_weights()
-        data = np.average(data, axis=-1, weights=weights, keepdims=True)
-    return Map.from_geom(geom=geom, data=data.value, unit=data.unit, meta=meta)
+    exposure *= u.Quantity(livetime)
+    exposure = exposure.to_unit("m2 s")
+    exposure.meta.update({"livetime": livetime, "is_pointlike": aeff.is_pointlike})
+
+    return exposure
 
 
 def _map_spectrum_weight(map, spectrum=None):
@@ -225,50 +157,6 @@ def _map_spectrum_weight(map, spectrum=None):
     shape = np.ones(len(map.geom.data_shape))
     shape[0] = -1
     return map * weights.reshape(shape.astype(int))
-
-
-def _integrate_bkg(
-    pointing, bkg, geom, time_start, time_stop, d_omega, use_region_center
-):
-    """
-    Integrate the background IRF on a given geometry.
-
-    Parameters
-    ----------
-    pointing :  `~gammapy.data.FixedPointingInfo` or `~astropy.coordinates.SkyCoord`
-        Observation pointing.
-    bkg : `~gammapy.irf.Background3D`
-        Background rate model.
-    geom : `~gammapy.maps.WcsGeom`
-        Reference geometry.
-    time_start : `~astropy.time.Time`
-        Observation time start.
-    time_stop : `~astropy.time.Time`
-        Observation time stop.
-    d_omega : 'astropy.units.Quantity'
-        Solid angle of the image geometry.
-    use_region_center : bool, optional
-        For geom as a `~gammapy.maps.RegionGeom`. If True, consider the values at the region center.
-        If False, average over the whole region. Default is True.
-
-    Returns
-    -------
-    evaluated_bkg : `numpy.ndarray`
-        Background IRF evaluated on the provided geometry
-
-    """
-    duration = time_stop - time_start
-    coords = _get_fov_coords(
-        pointing=pointing,
-        irf=bkg,
-        geom=geom,
-        use_region_center=use_region_center,
-        obstime=time_start + duration * 0.5,
-    )
-    coords["energy"] = broadcast_axis_values_to_geom(geom, "energy", False)
-
-    bkg_de = bkg.integrate_log_log(**coords, axis_name="energy")
-    return (bkg_de * d_omega * duration).to_value("")
 
 
 def make_map_background_irf(
@@ -336,37 +224,33 @@ def make_map_background_irf(
         times = _compute_rotation_time_steps(
             time_start, time_start + ontime, fov_rotation_step, pointing
         )
+        origin = pointing.get_altaz(times)
+        fov_frame = FoVAltAzFrame(
+            origin=origin, location=origin.location, obstime=times
+        )
+    else:
+        if isinstance(pointing, FixedPointingInfo):
+            if pointing.mode == PointingMode.POINTING:
+                origin = pointing.fixed_icrs
+            else:
+                raise NotImplementedError(
+                    "Drift pointing mode is not supported for background calculation."
+                )
+        else:
+            origin = pointing
 
-    # Get altaz coords for map
+        fov_frame = FoVICRSFrame(origin=origin)
+
     if oversampling is not None:
         geom = geom.upsample(factor=oversampling, axis_name="energy")
 
-    if not use_region_center:
-        image_geom = geom.to_wcs_geom().to_image()
-        region_coord, weights = geom.get_wcs_coord_and_weights()
-        idx = image_geom.coord_to_idx(region_coord)
-        d_omega = image_geom.solid_angle().T[idx]
-    else:
-        image_geom = geom.to_image()
-        d_omega = image_geom.solid_angle()
-
-    data = np.zeros(geom.data_shape)
-    for start, stop in zip(times[:-1], times[1:]):
-        npred = _integrate_bkg(
-            pointing, bkg, geom, start, stop, d_omega, use_region_center
-        )
-
-        if not use_region_center:
-            region_coord, weights = geom.get_wcs_coord_and_weights()
-            npred = np.sum(weights * npred, axis=2, keepdims=True)
-        data += npred
-
-    bkg_map = Map.from_geom(geom, data=data)
+    bkg_map = integrate_project_irf_on_geom(geom, bkg, fov_frame, use_region_center)
+    bkg_map *= ontime
 
     if oversampling is not None:
         bkg_map = bkg_map.downsample(factor=oversampling, axis_name="energy")
 
-    return bkg_map
+    return bkg_map.to_unit("")
 
 
 def make_psf_map(psf, pointing, geom, exposure_map=None):
@@ -393,22 +277,14 @@ def make_psf_map(psf, pointing, geom, exposure_map=None):
     psfmap : `~gammapy.irf.PSFMap`
         The resulting PSF map.
     """
-    coords = _get_fov_coords(
-        pointing=pointing,
-        irf=psf,
-        geom=geom,
-        use_region_center=True,
-        obstime=None,
-    )
+    if isinstance(pointing, FixedPointingInfo):
+        origin = pointing.get_icrs(pointing.obstime)
+    else:
+        origin = pointing
 
-    coords["energy_true"] = broadcast_axis_values_to_geom(geom, "energy_true")
-    coords["rad"] = broadcast_axis_values_to_geom(geom, "rad")
+    fov_frame = FoVICRSFrame(origin=origin)
 
-    # Compute PSF values
-    data = psf.evaluate(**coords)
-
-    # Create Map and fill relevant entries
-    psf_map = Map.from_geom(geom, data=data.value, unit=data.unit)
+    psf_map = project_irf_on_geom(geom, psf, fov_frame)
     psf_map.normalize(axis_name="rad")
     return PSFMap(psf_map, exposure_map)
 
@@ -441,19 +317,14 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None, use_region_center=T
     edispmap : `~gammapy.irf.EDispMap`
         The resulting energy dispersion map.
     """
-    coords = _get_fov_coords(pointing, edisp, geom, use_region_center=use_region_center)
-    coords["energy_true"] = broadcast_axis_values_to_geom(geom, "energy_true")
-    coords["migra"] = broadcast_axis_values_to_geom(geom, "migra")
+    if isinstance(pointing, FixedPointingInfo):
+        origin = pointing.get_icrs(pointing.obstime)
+    else:
+        origin = pointing
 
-    # Compute EDisp values
-    data = edisp.evaluate(**coords)
+    fov_frame = FoVICRSFrame(origin=origin)
 
-    if not use_region_center:
-        _, weights = geom.get_wcs_coord_and_weights()
-        data = np.average(data, axis=-1, weights=weights, keepdims=True)
-
-    # Create Map and fill relevant entries
-    edisp_map = Map.from_geom(geom, data=data.to_value(""), unit="")
+    edisp_map = project_irf_on_geom(geom, edisp, fov_frame).to_unit("")
     edisp_map.normalize(axis_name="migra")
     return EDispMap(edisp_map, exposure_map)
 
@@ -489,15 +360,6 @@ def make_edisp_kernel_map(
     edispmap : `~gammapy.irf.EDispKernelMap`
         the resulting EDispKernel map
     """
-
-    coords = _get_fov_coords(
-        pointing=pointing,
-        irf=edisp,
-        geom=geom,
-        use_region_center=use_region_center,
-    )
-    coords["energy_true"] = geom.axes["energy_true"].edges.reshape((-1, 1, 1, 1))
-
     # Use EnergyDispersion2D migra axis.
     migra_axis = edisp.axes["migra"]
 
@@ -791,3 +653,154 @@ def guess_instrument_fov(obs):
     if "offset" not in obs.aeff.axes.names:
         raise ValueError("Offset axis not present!")
     return obs.aeff.axes["offset"].center[-1]
+
+
+def _get_fov_coord(
+    skycoord, fov_frame, use_offset=True, reverse_lon=False, time_resolution=1000 * u.s
+):
+    """Return coord dict in fov_coord."""
+    coords = {}
+
+    if use_offset:
+        coords["offset"] = skycoord.separation(fov_frame.origin)
+    else:
+        sign = -1.0 if reverse_lon else 1.0
+
+        with erfa_astrom.set(ErfaAstromInterpolator(time_resolution)):
+            fov_coords = skycoord.transform_to(fov_frame)
+
+        if len(fov_frame.shape) == 1:
+            coords["fov_lon"] = np.moveaxis(fov_coords.fov_lon, -1, 0)
+            coords["fov_lat"] = np.moveaxis(fov_coords.fov_lat, -1, 0)
+        else:
+            coords["fov_lon"] = sign * fov_coords.fov_lon
+            coords["fov_lat"] = fov_coords.fov_lat
+
+    return coords
+
+
+def project_irf_on_geom(geom, irf, fov_frame, use_region_center=True):
+    """Evaluate and project an IRF on a given `~gammapy.maps.Geom` object according to a given FoV Frame.
+
+    When ``geom`` is a `~gammapy.maps.RegionGeom`, the IRF is evaluated at the region center when
+    ``user_region_center is True``. Otherwise, the IRF is evaluated and averaged over the whole region.
+
+    Parameters
+    ----------
+    geom : `~gammapy.maps.Geom`
+        Geometry to project on. It must follow the required axes of the input IRF.
+    irf : `~gammapy.itf.IRF`
+        IRF to reproject.
+    fov_frame : `~gammapy.utils.coordinate.FoVICRSFrame` or `~gammapy.utils.coordinate.FoVAltAzFrame`
+        FoV frame to convert geometry to FoV coordinates.
+    use_region_center : bool, optional
+        For geom as a `~gammapy.maps.RegionGeom`. If True, consider the values at the region center.
+        If False, average over the whole region.
+        Default is True.
+
+    Returns
+    -------
+    map : `~gammapy.maps.Map`
+        Map containing the projected IRF.
+    """
+    if not use_region_center:
+        image_geom = geom.to_wcs_geom().to_image()
+        region_coord, weights = geom.get_wcs_coord_and_weights()
+        skycoord = region_coord.skycoord
+    else:
+        image_geom = geom.to_image()
+        skycoord = image_geom.get_coord().skycoord
+
+    coords = _get_fov_coord(skycoord, fov_frame, irf.has_offset_axis)
+
+    non_spatial_axes = set(irf.required_arguments) - set(
+        ["offset", "fov_lon", "fov_lat"]
+    )
+
+    for axis_name in non_spatial_axes:
+        coords[axis_name] = broadcast_axis_values_to_geom(geom, axis_name)
+
+    data = irf.evaluate(**coords)
+    if not use_region_center:
+        data = np.average(data, axis=-1, weights=weights, keepdims=True)
+
+    return Map.from_geom(geom=geom, data=data.value, unit=data.unit)
+
+
+def integrate_project_irf_on_geom(geom, irf, fov_frame, use_region_center=True):
+    """Integrate and project an IRF on a given `~gammapy.maps.Geom` object according to a given FoV Frame.
+
+    The IRF is integrated in energy and multiplied by the solid angle.
+
+    When ``geom`` is a `~gammapy.maps.RegionGeom`, the IRF is evaluated at the region center when
+    ``user_region_center is True``. Otherwise, the IRF is evaluated and averaged over the whole region.
+
+    Parameters
+    ----------
+    geom : `~gammapy.maps.Geom`
+        Geometry to project on. It must follow the required axes of the input IRF.
+    irf : `~gammapy.irf.BackgroundIRF`
+        IRF to reproject. Typically a background IRF.
+    fov_frame : `~gammapy.utils.coordinate.FoVICRSFrame` or `~gammapy.utils.coordinate.FoVAltAzFrame`
+        FoV frame to convert geometry to FoV coordinates.
+    use_region_center : bool, optional
+        For geom as a `~gammapy.maps.RegionGeom`. If True, consider the values at the region center.
+        If False, average over the whole region.
+        Default is True.
+
+    Returns
+    -------
+    map : `~gammapy.maps.Map`
+        Map containing the projected IRF.
+    """
+    from scipy.integrate import trapezoid
+
+    if not use_region_center:
+        image_geom = geom.to_wcs_geom().to_image()
+        region_coord, weights = geom.get_wcs_coord_and_weights()
+        skycoord = region_coord.skycoord
+    else:
+        image_geom = geom.to_image()
+        skycoord = image_geom.get_coord().skycoord
+
+    new_geom = geom
+    # In case we need to integrate over time
+    if len(fov_frame.shape) == 1:
+        skycoord = skycoord[..., np.newaxis]
+
+        # Assume ordered times
+        time = MapAxis.from_edges(
+            (fov_frame.obstime - fov_frame.obstime[0]).to_value("s"),
+            unit="s",
+            name="time",
+        )
+        axes = geom.axes
+
+        new_geom = image_geom.to_cube([time, *axes])
+
+    reverse_lon = irf.fov_alignment == "REVERSE_LON_RADEC"
+    coords = _get_fov_coord(skycoord, fov_frame, irf.has_offset_axis, reverse_lon)
+
+    non_spatial_axes = set(irf.required_arguments) - set(
+        ["offset", "fov_lon", "fov_lat"]
+    )
+
+    for axis_name in non_spatial_axes:
+        coords[axis_name] = broadcast_axis_values_to_geom(new_geom, axis_name, False)
+
+    data = irf.integrate_log_log(**coords, axis_name="energy")
+
+    if len(fov_frame.shape) == 1:
+        time = new_geom.axes["time"]
+        ontime = time.bin_width.sum().to_value("s")
+        delta = np.reshape(time.edges.to_value("s"), (1, time.nbin + 1, 1, 1))
+        data = trapezoid(data, delta, axis=1) / ontime
+
+    if use_region_center:
+        data *= image_geom.solid_angle()
+    else:
+        idx = image_geom.coord_to_idx(region_coord)
+        data *= image_geom.solid_angle().T[idx]
+        data = np.sum(weights * data, axis=2, keepdims=True)
+
+    return Map.from_geom(geom=geom, data=data.value, unit=data.unit)

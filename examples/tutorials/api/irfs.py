@@ -3,9 +3,10 @@ Using Gammapy IRFs
 ==================
 
 `gammapy.irf` contains classes for handling Instrument Response
-Functions typically stored as multi-dimensional tables. For a list of
-IRF classes internally supported, see
-https://gamma-astro-data-formats.readthedocs.io/en/v0.3/irfs/full_enclosure/index.html
+Functions typically stored as multi-dimensional tables. Gammapy is currently supporting
+the functions defined in the GADF format (see
+https://gamma-astro-data-formats.readthedocs.io/en/v0.3/irfs/full_enclosure/index.html). The
+detailed list can be found in the :doc:`IRF user guide </user-guide/irf/index>`.
 
 This tutorial is intended for advanced users typically creating IRFs.
 
@@ -46,7 +47,7 @@ print(aeff)
 
 ######################################################################
 # We can see that the Effective Area Table is defined in terms of
-# `energy_true` and `offset` from the camera center
+# ``energy_true`` and ``offset`` from the camera center
 #
 
 # To see the IRF axes binning, eg, offset
@@ -75,8 +76,8 @@ print(bkg)
 
 
 ######################################################################
-# Note that the background is given in FoV coordiantes with `fov_lon`
-# and `fov_lat` axis, and not in `offset` from the camera center. We
+# Note that the background is given in FoV coordinates with ``fov_lon``
+# and ``fov_lat`` axis, and not in ``offset`` from the camera center. We
 # can also check the Field of view alignment. Currently, two possible
 # alignments are supported: alignment with the horizontal coordinate
 # system (ALTAZ) and alignment with the equatorial coordinate system
@@ -108,7 +109,7 @@ print(ev)
 
 ######################################################################
 # We can customise the interpolation scheme. Here, we adapt to fill
-# `nan` instead of `0` for extrapolated values
+# ``nan`` instead of ``0`` for extrapolated values
 #
 
 bkg.interp_kwargs["fill_value"] = np.nan
@@ -122,7 +123,7 @@ print(ev2)
 
 
 ######################################################################
-# The interpolation scheme along each axis is taken from the `MapAxis`
+# The interpolation scheme along each axis is taken from the `~gammapy.maps.MapAxis`
 # specification. eg
 #
 
@@ -143,10 +144,10 @@ print(psf)
 
 
 ######################################################################
-# The PointSpreadFunction for the CTA DC1 is stored as a combination of 3
-# Gaussians. Other PSFs, like a `PSF_TABLE` and analytic expressions
+# The point spread function for the CTA DC1 is stored as a combination of 3
+# Gaussians. Other PSFs, like a ``PSF_TABLE`` and analytic expressions
 # like KING function are also supported. All PSF classes inherit from a
-# common base `PSF` class.
+# common base ``PSF`` class.
 #
 
 print(psf.axes.names)
@@ -174,9 +175,9 @@ print(
 
 ######################################################################
 # While Gammapy does not have inbuilt classes for supporting asymmetric
-# IRFs (except for `Background3D`), custom classes can be created. For
-# this to work correctly with the `MapDatasetMaker`, only variations
-# with `fov_lon` and `fov_lat` can be allowed.
+# IRFs (except for `~gammapy.irf.Background3D`), custom classes can be created. For
+# this to work correctly with the `~gammapy.makers.MapDatasetMaker`, only variations
+# with ``fov_lon`` and ``fov_lat`` can be allowed.
 #
 # The main idea is that the list of required axes should be correctly
 # mentioned in the class definition.
@@ -185,7 +186,7 @@ print(
 
 ######################################################################
 # Effective Area
-# ~~~~~~~~~~~~~~
+# --------------
 #
 
 
@@ -225,7 +226,8 @@ print(res)
 # sphinx_gallery_thumbnail_number = 1
 aeff_eval = aeff_3d.evaluate(energy_true=[1.0] * u.TeV)
 
-ax = plt.subplot()
+plt.figure(figsize=(9, 9))
+ax = plt.gca()
 with quantity_support():
     caxes = ax.pcolormesh(
         fov_lat_axis.edges, fov_lon_axis.edges, aeff_eval.value.squeeze()
@@ -247,7 +249,7 @@ aeff_3d.fov_alignment
 # ~~~~~~~~~~~~~
 #
 # For serialisation, we need to add the class definition to the
-# `IRF_DL3_HDU_SPECIFICATION` dictionary
+# ``IRF_DL3_HDU_SPECIFICATION`` dictionary
 #
 
 IRF_DL3_HDU_SPECIFICATION["aeff_3d"] = {
@@ -268,8 +270,8 @@ print(aeff_new)
 
 
 ######################################################################
-# Create exposure map
-# ~~~~~~~~~~~~~~~~~~~
+# Create exposure map (DL4 product)
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # DL4 data products can be created from these IRFs.
 #
@@ -400,8 +402,8 @@ edisp_new
 
 
 ######################################################################
-# Create edisp kernel map
-# ~~~~~~~~~~~~~~~~~~~~~~~
+# Create edisp kernel map (DL4 product) - `~gammapy.irf.EDispKernelMap`
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 
 migra = MapAxis.from_edges(np.linspace(0.5, 1.5, 50), unit="", name="migra")
@@ -422,10 +424,11 @@ print(edispmap.edisp_map.data[3][1][3])
 # PSF
 # ---
 #
-# There are two types of asymmetric PSFs that can be considered
-# - Asymmetry about the camera center: Such PSF Tables can be supported
-# - Asymmetry about the source position: These PSF models cannot be supported
-# correctly within the data reduction scheme at present
+# There are two types of asymmetric PSFs that can be considered:
+#
+# -  asymmetry about the camera center: such PSF Tables can be supported,
+# -  asymmetry about the source position: these PSF models cannot be supported correctly within
+#    the data reduction scheme at present
 # Also, analytic PSF models defined within the GADF scheme cannot be
 # directly generalised to the 3D case for use within Gammapy.
 #
@@ -492,8 +495,8 @@ psf_assym.write("test_psf.fits.gz", overwrite=True)
 psf_new = PSF_assym.read("test_psf.fits.gz")
 
 ######################################################################
-# Create DL4 product - `PSFMap`
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Create DL4 product - `~gammapy.irf.PSFMap`
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 
 rad = MapAxis.from_edges(np.linspace(0.5, 3.0, 10), unit="deg", name="rad")
@@ -511,4 +514,5 @@ plt.show()
 #
 # **NOTE**: Support for asymmetric IRFs is preliminary at the moment, and
 # will evolve depending on feedback.
+#
 #

@@ -139,7 +139,6 @@ analysis.get_observations()
 
 print(analysis.config)
 
-# %%time
 # Data extraction:
 analysis.get_datasets()
 
@@ -198,7 +197,6 @@ stacked_on_off = MapDatasetOnOff.create(
     geom=geom_image, energy_axis_true=energy_axis_true, name="stacked"
 )
 
-# %%time
 for dataset in analysis.datasets:
     # Ring extracting makes sense only for 2D analysis
     dataset_on_off = ring_maker.run(dataset.to_image())

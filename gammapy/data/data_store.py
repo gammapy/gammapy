@@ -8,6 +8,7 @@ import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
+from astropy import table
 import gammapy.utils.time as tu
 from gammapy.utils.pbar import progress_bar
 from gammapy.utils.scripts import make_path
@@ -32,7 +33,6 @@ class MissingRequiredHDU(IOError):
 
 
 log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)
 
 
 class DataStore:
@@ -80,7 +80,10 @@ class DataStore:
 
     def __init__(self, hdu_table=None, obs_table=None):
         self.hdu_table = hdu_table
-        self.obs_table = obs_table
+        if obs_table is not None:
+            self.obs_table = table.unique(obs_table, keys="OBS_ID")
+        else:
+            self.obs_table = None
 
     def __str__(self):
         return self.info(show=False)
@@ -349,6 +352,7 @@ class DataStore:
         skip_missing=False,
         required_irf="full-enclosure",
         require_events=True,
+        selection=None,
     ):
         """Generate a `~gammapy.data.Observations`.
 
@@ -387,26 +391,45 @@ class DataStore:
             Default is `"full-enclosure"`.
         require_events : bool, optional
             Require events and gti table or not. Default is True.
+        selection : `~numpy.ndarray`, optional
+            Boolean array of the same length than the ``obs_table``.
+            Observation is kept if  corresponding selection mask element is True
+            and if it is in the list of obs_id.
+            If None, default is all observations ordered by OBS_ID are returned.
+            Default is None.
 
         Returns
         -------
         observations : `~gammapy.data.Observations`
             Container holding a list of `~gammapy.data.Observation`.
         """
+
+        if selection is None:
+            obs_id_selection = self.obs_ids
+        else:
+            obs_id_selection = set(np.array(self.obs_ids)[selection])
+
         if obs_id is None:
-            obs_id = self.obs_ids
+            obs_id = obs_id_selection
+        else:
+            for _ in obs_id:
+                if _ not in self.obs_ids:
+                    if skip_missing:
+                        log.warning(f"Skipping missing obs_id: {_!r}")
+                    else:
+                        raise ValueError(f"Missing obs_id: {_!r}")
+            obs_id_selection = [_ for _ in obs_id if _ in obs_id_selection]
+
+        if len(np.unique(obs_id)) != len(obs_id):
+            uniques = np.unique(obs_id, return_counts=True)
+            multiples = np.array(uniques[0][(uniques[1] > 1)])
+            log.warning(f"List of obs_id is not unique! Multiples are: {multiples}")
 
         obs_list = []
 
-        for _ in progress_bar(obs_id, desc="Obs Id"):
+        for _ in progress_bar(obs_id_selection, desc="Obs Id"):
             try:
                 obs = self.obs(_, required_irf, require_events)
-            except ValueError as err:
-                if skip_missing:
-                    log.warning(f"Skipping missing obs_id: {_!r}")
-                    continue
-                else:
-                    raise err
             except MissingRequiredHDU as e:
                 log.warning(f"Skipping run with missing HDUs; {e}")
                 continue
@@ -415,6 +438,100 @@ class DataStore:
 
         log.info(f"Observations selected: {len(obs_list)} out of {len(obs_id)}.")
         return Observations(obs_list)
+
+    def get_observation_groups(
+        self,
+        key,
+        obs_id=None,
+        skip_missing=False,
+        required_irf="full-enclosure",
+        require_events=True,
+        selection=None,
+    ):
+        """Generate groups of `~gammapy.data.Observations` with a shared property.
+
+        Parameters
+        ----------
+        key : str
+            Key of the observation table used to apply the grouping.
+            For example, "EVENT_TYPE" will return group observations
+        obs_id : list, optional
+            Observation IDs.
+            If None, default is all observations ordered by OBS_ID are returned.
+            This is not necessarily the order in the ``obs_table``.
+        skip_missing : bool, optional
+            Skip missing observations. Default is False.
+        required_irf : list of str or str, optional
+            Runs will be added to the list of observations only if the
+            required HDUs are present. Otherwise, the given run will be skipped
+            The list can include the following options:
+
+            * `"events"` : Events
+            * `"gti"` :  Good time intervals
+            * `"aeff"` : Effective area
+            * `"bkg"` : Background
+            * `"edisp"` : Energy dispersion
+            * `"psf"` : Point Spread Function
+            * `"rad_max"` : Maximal radius
+
+            Alternatively single string can be used as shortcut:
+
+            * `"full-enclosure"` : includes `["events", "gti", "aeff", "edisp", "psf", "bkg"]`
+            * `"point-like"` : includes `["events", "gti", "aeff", "edisp"]`
+            * `"all-optional"` : no HDUs are required, only warnings will be emitted
+              for missing HDUs among all possibilities.
+
+            Default is `"full-enclosure"`.
+        require_events : bool, optional
+            Require events and gti table or not. Default is True.
+        selection : `~numpy.ndarray`, optional
+            Boolean array of the same length than the ``obs_table``.
+            Observation is kept if  corresponding selection mask element is True
+            and if it is in the list of obs_id.
+            If None, default is all observations ordered by OBS_ID are returned.
+            Default is None.
+
+        Returns
+        -------
+        groups : dict of `~gammapy.data.Observations`
+            Dictionary of Observations instance, one instance for each group.
+
+
+        Examples
+        --------
+        Create groups of observation with the same event type.
+
+        >>> from gammapy.data import DataStore
+        >>> path = "$GAMMAPY_DATA/tests/format/swgo/"
+        >>> datastore = DataStore.from_dir(path, "hdu-index.fits.gz", "obs-index.fits.gz")
+        >>> observation_groups = datastore.get_observation_groups("EVENT_TYPE")
+        """
+
+        if self.obs_table is None:
+            raise ValueError(
+                "obs_table attribute must not be None to select groups of observations"
+            )
+
+        obs_table = self.obs_table
+        if selection is not None:
+            obs_table = obs_table[selection]
+            if obs_id is not None:
+                obs_id_selection = set(np.array(self.obs_ids)[selection])
+                obs_id = [_ for _ in obs_id if _ in obs_id_selection]
+        if obs_id is not None:
+            obs_table = obs_table.select_obs_id(obs_id)
+
+        grouped = obs_table.group_by(key)
+
+        result = {}
+        for key_value, group in zip(grouped.groups.keys, grouped.groups):
+            result[f"{key}_{key_value[0]}"] = self.get_observations(
+                group["OBS_ID"],
+                skip_missing=skip_missing,
+                required_irf=required_irf,
+                require_events=require_events,
+            )
+        return result
 
     def copy_obs(self, obs_id, outdir, hdu_class=None, verbose=False, overwrite=False):
         """Create a new `~gammapy.data.DataStore` containing a subset of observations.
@@ -621,10 +738,21 @@ class DataStoreMaker:
         pos = SkyCoord(info["RA_PNT"], info["DEC_PNT"], unit="deg").galactic
         info["GLON_PNT"] = pos.l
         info["GLAT_PNT"] = pos.b
-        info["DATE-OBS"] = header.get("DATE_OBS", na_str)
-        info["TIME-OBS"] = header.get("TIME_OBS", na_str)
-        info["DATE-END"] = header.get("DATE_END", na_str)
-        info["TIME-END"] = header.get("TIME_END", na_str)
+
+        # TODO: the future I/O scheme should handle the keyword depending on the format version
+        if all(
+            key in list(header.keys())
+            for key in ("DATE-OBS", "TIME-OBS", "DATE-END", "TIME-END")
+        ):
+            info["DATE-OBS"] = header.get("DATE-OBS")
+            info["TIME-OBS"] = header.get("TIME-OBS")
+            info["DATE-END"] = header.get("DATE-END")
+            info["TIME-END"] = header.get("TIME-END")
+        else:
+            info["DATE-OBS"] = header.get("DATE_OBS", na_str)
+            info["TIME-OBS"] = header.get("TIME_OBS", na_str)
+            info["DATE-END"] = header.get("DATE_END", na_str)
+            info["TIME-END"] = header.get("TIME_END", na_str)
         info["N_TELS"] = header.get("N_TELS", na_int)
         info["OBJECT"] = header.get("OBJECT", na_str)
 

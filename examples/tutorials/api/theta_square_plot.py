@@ -49,8 +49,10 @@ observations = data_store.get_observations([23523, 23526])
 # Define a test position
 # -----------------------
 #
+# Here we define the position of Crab
+#
 
-position = SkyCoord.from_name("crab")
+position = SkyCoord(83.6324, 22.0174, unit="deg")
 print(position)
 
 
@@ -75,7 +77,8 @@ plt.show()
 # Making a theta2 plot for a given energy range
 # ---------------------------------------------
 #
-# with the function `make_theta_squared_table`, one can also select a fixed energy range.
+# with the function `~gammapy.makers.utils.make_theta_squared_table`, one can
+# also select a fixed energy range.
 #
 
 theta2_table_en = make_theta_squared_table(
@@ -95,9 +98,11 @@ plt.show()
 #
 # To get the significance of a signal, the usual method consists of using the reflected background method
 # (see the maker tutorial: :doc:`/user-guide/makers/reflected`) to compute the WStat statistics
-# (see :ref:`wstat`, :doc:`/user-guide/stats/fit_statistics`). This is the well-known method of Li&Ma [LiMa1983]_
+# (see :ref:`wstat`, :doc:`/user-guide/stats/fit_statistics`). This is the well-known method of [LiMa1983]_
 # using ON and OFF regions.
+#
 # The following tutorials show how to get an excess significance:
-#  * :doc:`/tutorials/analysis-1d/spectral_analysis`
-#  * :doc:`/tutorials/analysis-1d/extended_source_spectral_analysis`
+#
+# -  :doc:`/tutorials/analysis-1d/spectral_analysis`
+# -  :doc:`/tutorials/analysis-1d/extended_source_spectral_analysis`
 #
