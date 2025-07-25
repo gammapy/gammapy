@@ -55,7 +55,7 @@ from gammapy.visualization import plot_distribution
 
 ######################################################################
 # Load observation
-# -----------
+# ----------------
 #
 # For computational purposes, we have
 # already created a `~gammapy.datasets.MapDataset` from observation id ``20275`` from the
@@ -113,11 +113,12 @@ plot_distribution(
 plt.show()
 
 
+######################################################################
 # We can also see the correlated upper limits at any position in the map. But note that
 # this is **not** a source UL, as the containment correction is not applied here. This gives the
-# flux upper limits contained within the `correlation_radius` at each pixel. This can be useful,
-# eg: when making quick look plots to search for the presence of new sources with a field
-# (eg: in case of alerts from Gravitational Wave detectors, etc).
+# flux upper limits contained within the ``correlation_radius`` at each pixel. This can be useful,
+# e.g.: when making quick look plots to search for the presence of new sources with a field
+# (e.g.: in case of alerts from Gravitational Wave detectors, etc).
 #
 
 lima_maps.flux_ul.plot(add_cbar=True, cmap="viridis")
@@ -134,7 +135,7 @@ plt.show()
 # Note that it is necessary to constrain the range of the position, otherwise the fit might not converge.
 # For this, one needs to model (1) only the background (2) model the background + a point source
 # and then check the difference in test statistic between the two cases to see if the second model is significantly
-# preferred. There is an inbuilt gammapy function, `select_nested_models` which will do this internally. Case (1)
+# preferred. There is an inbuilt gammapy function, `~gammapy.modeling.select_nested_models` which will do this internally. Case (1)
 # corresponds to the case of source ``amplitude=0``, which we put as our null hypothesis. We freeze the spatial
 # parameters to avoid the fit from converging to other locations. You can alternatively consider constraining
 # the parameter ranges within your expected regions
@@ -156,15 +157,17 @@ LLR = select_nested_models(
 )
 print(LLR)
 
+######################################################################
 # To get the fitted parameters of the spectral model under the alternative hypothesis
 # (Case 2),
 
 print(LLR["fit_results"].parameters.to_table())
 
 ######################################################################
-# You can see that the `ts ~ 4.7`, thus suggesting that the observed
-# fluctuations are not significant over the background. Note that here we have
-# only 1 free parameter, the amplitude, and thus, significance = sqrt(ts) ~ 2.2.
+# You can see that the ``ts ~ 4.7``, thus suggesting that the observed
+# fluctuations are not significant above the background. Note that here we have
+# only 1 free parameter, the amplitude, and thus, we can assume the simple conversion
+# ``significance = :math:`\sqrt{ts}` ~ 2.2``.
 # Now, we will estimate the differential upper limits of the source.
 
 ###############################################################################
@@ -174,7 +177,7 @@ print(LLR["fit_results"].parameters.to_table())
 # In the absence of a detection, using the model directly from the fit is meaningless as its features can be
 # simply due to background fluctuations.
 # It is important to **set a reasonable model** on the dataset
-# before proceeding with the `~gammapy.estimators.FluxPointsEstimator` estimator. This model can come from
+# before proceeding with the `~gammapy.estimators.FluxPointsEstimator`. This model can come from
 # measurements from other instruments, be an extrapolation of the flux
 # observed at other wavelengths, come from theoretical estimations, etc.
 # In particular, a model with a negative amplitude as obtained above should not be used.
@@ -227,7 +230,7 @@ print(
 # Sensitivity estimation
 # ~~~~~~~~~~~~~~~~~~~~~~
 #
-# We can then ask,  **would this source have been detectable given this IRF/exposure time?*
+# We can then ask,  **would this source have been detectable given this IRF/exposure time?**
 # The `~gammapy.estimators.FluxPointsEstimator` can be used to obtain the sensitivity,
 # which can be compared to the expected flux. We have the 5-sigma
 # sensitivity here, which can be configured using ``n_sigma_sensitivity``
