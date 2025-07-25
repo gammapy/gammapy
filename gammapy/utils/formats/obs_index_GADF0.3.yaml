@@ -1,0 +1,47 @@
+########################################################################################################################################
+#YAML file containing the correspondance of the internal obs-index table in gammapy to the obs-index table format of *** GADF v.0.3 ***.
+########################################################################################################################################
+
+#Concept:    For every name of the internal obs-index table its corresponding properties (type, unit, description)
+#            and its disk-correspondences (number of names in fileformat, names and properties in fileformat) are specified.
+#            Idea and concept by @bkhelifi.
+
+#Note:       This is a prototype containing only three internal names, "OBS_ID", "OBJECT", "POINTING".
+
+#References: https://spacelift.io/blog/yaml#yaml-vs-json, https://docs.gammapy.org/dev/user-guide/model-gallery/spectral/plot_broken_powerlaw.html#yaml-representation
+#            https://gamma-astro-data-formats.readthedocs.io/en/v0.3/data_storage/obs_index/index.html
+
+
+OBS_ID:
+  type: str
+  unit: None
+  description: ID of observation run
+  disk:
+    - name: OBS_ID
+      type: i8
+      unit: None
+      description: Unique observation identifier (Run number)
+
+OBJECT:
+  type: str
+  unit: None
+  description: Name of object
+  disk:
+    - name: OBJECT
+      type: str
+      unit: None
+      description: Primary target of the observation
+
+POINTING:
+  type: object
+  unit: deg
+  description: Pointing of observation 
+  disk:
+    - name: RA_PNT
+      type: float
+      unit: deg
+      description: Pointing Right Ascension (see RA / DEC). Not mandatory if OBS_MODE=DRIFT, but average values could optionally be provided.
+    - name: DEC_PNT
+      type: float
+      unit: deg
+      description: Pointing declination (see RA / DEC). Not mandatory if OBS_MODE=DRIFT, but average values could optionally be provided.

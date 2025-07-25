@@ -472,7 +472,7 @@ class ObservationTablePrototype(ObservationTable):
         return correspondance
 
     @classmethod
-    def read(self, filename, fileformat="gadf03", **kwargs):
+    def read(self, filename, fileformat=None, **kwargs):
         """Modified reader for ObservationTablePrototype"""
         """Header and super().read(make_path(filename), **kwargs) taken from class ObservationTable, except "cls" named to "self"."""
 
@@ -483,16 +483,25 @@ class ObservationTablePrototype(ObservationTable):
         filename : `pathlib.Path` or str
             Filename.
         fileformat : str
-            Fileformat, default is "gadf03" for GADF v.0.3.
+            Fileformat, default is "GADF0.3" for GADF v.0.3.
         **kwargs : dict, optional
             Keyword arguments passed to `~astropy.table.Table.read`.
         """
 
         # Read disk table "table_disk", taken from class ObervationTable. TODO: Pot. lazy loading in future?"""
         table_disk = super().read(make_path(filename), **kwargs)
+        # Get header of obs-index table.
+        meta = table_disk.meta
 
-        # TODO: Infer file format of table_disk as sugg. by @bkhelifi. For now: Use fileformat-argument, default is "gadf03".
-        # Read then info on internal format and on correspondance to the selected fileformat.
+        # If no file-format specified, try to infer file format of table_disk, otherwise use GADF v.0.3. As discussed with @bkhelifi.
+        if fileformat is None:
+            if "HDUCLASS" in meta.keys():
+                if "HDUVERS" in meta.keys():
+                    fileformat = meta["HDUCLASS"] + meta["HDUVERS"]
+            else:
+                fileformat = "GADF0.3"  # Use default "GADF0.3".
+
+        # For the chosen fileformat, read then info on internal format and on correspondance to the selected fileformat.
         format = self.get_format_dict(fileformat)
         names_internal = list(format.keys())
 
@@ -579,7 +588,7 @@ class ObservationTablePrototype(ObservationTable):
                     # )
                     # )
                     print(
-                        time_ref_from_dict(table_disk.meta)
+                        time_ref_from_dict(meta)
                     )  # like in event_list.py, l.201, commit: 08c6f6a
             table_internal.add_row(
                 row_internal
