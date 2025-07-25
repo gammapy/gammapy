@@ -141,7 +141,6 @@ fp_estimator.norm.scan_max = 10
 #
 
 
-# %%time
 fp_result = fp_estimator.run(datasets=datasets)
 
 ######################################################################

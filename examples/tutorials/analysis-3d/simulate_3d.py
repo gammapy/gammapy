@@ -198,7 +198,6 @@ models_fit["dataset-simu-bkg"].spectral_model.tilt.frozen = True
 dataset.models = models_fit
 print(dataset.models)
 
-# %%time
 fit = Fit(optimize_opts={"print_level": 1})
 result = fit.run(datasets=[dataset])
 

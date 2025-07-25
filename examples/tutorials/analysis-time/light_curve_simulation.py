@@ -92,13 +92,6 @@ warnings.filterwarnings(
     action="ignore", message="overflow encountered in exp", module="astropy"
 )
 
-######################################################################
-# Check setup
-# -----------
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
-
 
 ######################################################################
 # We first define our preferred time format:
@@ -232,7 +225,6 @@ model_fit = SkyModel(spectral_model=spectral_model, name="model-fit")
 # Attach model to all datasets
 datasets.models = model_fit
 
-# %%time
 lc_maker_1d = LightCurveEstimator(
     energy_edges=[0.3, 0.6, 1.0, 10] * u.TeV,
     source="model-fit",
@@ -296,7 +288,6 @@ dataset_fp.models = model
 print(dataset_fp)
 
 
-# %%time
 # Fit the dataset
 fit = Fit()
 result = fit.run(dataset_fp)
@@ -340,7 +331,6 @@ display(model2.parameters.to_table())
 
 datasets.models = model2
 
-# %%time
 # Perform a joint fit
 fit = Fit()
 result = fit.run(datasets=datasets)

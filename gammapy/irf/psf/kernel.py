@@ -253,6 +253,11 @@ class PSFKernel:
     def peek(self, figsize=(15, 5)):
         """Quick-look summary plots.
 
+        This method creates a figure with two subplots:
+
+        * PSF kernel plot : PSF kernel summed over the energy axis
+        * PSF kernel plot : PSF kernel at 1 TeV
+
         Parameters
         ----------
         figsize : tuple, optional

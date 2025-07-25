@@ -56,13 +56,6 @@ from gammapy.utils.regions import (
     make_orthogonal_rectangle_sky_regions,
 )
 
-######################################################################
-# Check setup
-# -----------
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
-
 
 ######################################################################
 # Read and Introduce Data
@@ -154,7 +147,6 @@ print(flux_profile_estimator)
 # Now we can run the profile estimation and explore the results:
 #
 
-# %%time
 profile = flux_profile_estimator.run(datasets=dataset)
 
 print(profile)

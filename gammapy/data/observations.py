@@ -893,7 +893,7 @@ class ObservationChecker(Checker):
         contain various observation and event time information.
         """
         # http://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Cicerone/Cicerone_Data/Time_in_ScienceTools.html
-        # https://hess-confluence.desy.de/confluence/display/HESS/HESS+FITS+data+-+References+and+checks#HESSFITSdata-Referencesandchecks-Time
+        # https://cchesswiki.in2p3.fr/hess/working_groups/analysis_and_reconstruction_working_group/ar_active_tasks/hess_fits_data/hess_fits_data__references_and_checks
         telescope_met_refs = {
             "FERMI": Time("2001-01-01T00:00:00"),
             "HESS": Time("2001-01-01T00:00:00"),

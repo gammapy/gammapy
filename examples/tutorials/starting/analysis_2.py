@@ -211,7 +211,6 @@ maker_fov = FoVBackgroundMaker(method="fit", exclusion_mask=exclusion_mask)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 
-# %%time
 
 for obs in observations:
     # First a cutout of the target map is produced
@@ -308,7 +307,6 @@ stacked.models = [sky_model, bkg_model]
 # Its constructor takes a list of dataset as argument.
 #
 
-# %%time
 fit = Fit(optimize_opts={"print_level": 1})
 result = fit.run([stacked])
 
@@ -423,7 +421,6 @@ plt.show()
 energy_edges = [1, 2, 4, 10] * u.TeV
 fpe = FluxPointsEstimator(energy_edges=energy_edges, source="crab")
 
-# %%time
 flux_points = fpe.run(datasets=[stacked])
 
 fig, ax = plt.subplots(figsize=(8, 6))

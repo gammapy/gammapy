@@ -61,13 +61,6 @@ from gammapy.irf import EDispKernelMap, PSFMap
 from gammapy.maps import Map
 from gammapy.modeling.models import PointSpatialModel, PowerLawSpectralModel, SkyModel
 
-######################################################################
-# Check setup
-# -----------
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
-
 
 ######################################################################
 # Read in input images
@@ -116,7 +109,6 @@ dataset = MapDataset(
 # argument gives the minimum significance expected, values below are clipped.
 #
 
-# %%time
 scales = u.Quantity(np.arange(0.05, 1, 0.05), unit="deg")
 smooth = ASmoothMapEstimator(threshold=3, scales=scales, energy_edges=[10, 500] * u.GeV)
 images = smooth.run(dataset)
@@ -164,7 +156,6 @@ model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
 # -  ``sum_over_energy_groups``: to sum over the energy groups or fit the `norm` on the full energy cube
 
 
-# %%time
 estimator = TSMapEstimator(
     model=model,
     kernel_width="1 deg",

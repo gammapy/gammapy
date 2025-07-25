@@ -76,12 +76,6 @@ from IPython.display import display
 from gammapy.analysis import Analysis, AnalysisConfig
 from gammapy.modeling.models import Models
 
-######################################################################
-# Check setup
-# -----------
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
 
 ######################################################################
 # Analysis configuration
@@ -244,7 +238,6 @@ print(analysis.observations.ids)
 # run the reduction using `.get_datasets()`:
 #
 
-# %%time
 analysis.get_datasets()
 
 
@@ -372,7 +365,6 @@ analysis.set_models(model_1d)
 # ~~~~~~~~~~~~~~~
 #
 
-# %%time
 analysis.run_fit()
 
 

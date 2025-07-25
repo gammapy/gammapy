@@ -272,7 +272,6 @@ print(analysis.observations.ids)
 # run the reduction using `~gammapy.analysis.Analysis.get_datasets()`:
 #
 
-# %%time
 analysis.get_datasets()
 
 
@@ -377,7 +376,6 @@ analysis.set_models(model_config)
 # Finally we run the fit:
 #
 
-# %%time
 analysis.run_fit()
 
 print(analysis.fit_result)
