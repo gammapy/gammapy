@@ -80,13 +80,6 @@ from gammapy.modeling.models import (
 )
 
 ######################################################################
-# Check setup
-# -----------
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
-
-######################################################################
 # Events
 # ------
 #

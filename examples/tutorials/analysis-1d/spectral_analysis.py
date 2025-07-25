@@ -128,13 +128,6 @@ from gammapy.modeling.models import (
 )
 from gammapy.visualization import plot_spectrum_datasets_off_regions
 
-######################################################################
-# Check setup
-# -----------
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
-
 
 ######################################################################
 # Load Data
