@@ -1352,7 +1352,7 @@ class Map(abc.ABC):
             nrows=rows,
             subplot_kw={"projection": wcs},
             figsize=figsize,
-            gridspec_kw={"hspace": 0.1, "wspace": 0.1},
+            gridspec_kw={"hspace": 0.8, "wspace": 0.2},
         )
 
         for idx in range(cols * rows):
