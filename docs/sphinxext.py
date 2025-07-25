@@ -29,6 +29,7 @@ TUTORIAL_SORT_DICT = {
         "spectrum_simulation.py": 5,
         "sed_fitting.py": 6,
         "ebl.py": 7,
+        "parameter_ul.py": 8,
     #  2d
         "detect.py": 0,
         "ring_background.py": 1,
