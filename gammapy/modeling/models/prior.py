@@ -171,8 +171,8 @@ class GaussianPrior(Prior):
 class UniformPrior(Prior):
     """Uniform Prior.
 
-    Returns 1 if the parameter value is in (min, max).
-    0, if otherwise.
+    Returns 0 if the parameter value is in ]min, max[.
+    Returns 1, if otherwise.
 
     Parameters
     ----------
