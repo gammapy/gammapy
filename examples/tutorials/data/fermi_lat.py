@@ -154,7 +154,7 @@ check_tutorials_setup()
 # - If you want to use the `$FERMI_DIR` variable to read the background models
 #   it must also be defined in your Gammapy environment,
 #   otherwise you have to define your own paths.
-# - For this tutorial we copied the iso files in $GAMMAPY_DATA/fermi-gc` and
+# - For this tutorial we copied the iso files in `$GAMMAPY_DATA/fermi-gc` and
 #   edited the paths in the yaml file for simplicity.
 #
 # More generally in order to select a good binning it is important to know
