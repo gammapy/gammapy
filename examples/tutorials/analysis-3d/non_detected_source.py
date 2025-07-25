@@ -10,7 +10,7 @@ Prerequisites
 -------------
 
 It is advisable to understand the general Gammapy modeling and fitting
-framework before proceeding with this notebook, eg doc:`docs/user-guide/modeling`.
+framework before proceeding with this notebook, e.g. :doc:`/user-guide/modeling`.
 
 Context
 -------
@@ -23,9 +23,12 @@ Proposed approach
 -----------------
 
 In this section, we will use an empty observation from the H.E.S.S. DL3 DR1 to understand how
-to quantify non-detections. There are two distinct approaches to consider
-- Test for the presence of emission anywhere in a map and compute an integral flux upper limit at any position (i.e. UL map).
-- Test the presence of emission from a potential source with given position and morphology and compute integral and differential UL
+to quantify non-detections. There are two distinct approaches to consider:
+
+- Test for the presence of emission anywhere in a map and compute an integral flux upper limit at
+  any position (i.e. UL map).
+- Test the presence of emission from a potential source with given position and morphology and compute
+  integral and differential UL
 
 """
 
@@ -87,7 +90,6 @@ lima_maps = estimator.run(dataset)
 significance_map = lima_maps["sqrt_ts"]
 excess_map = lima_maps["npred_excess"]
 
-# We can plot the excess and significance maps
 fig, (ax1, ax2) = plt.subplots(
     figsize=(11, 4), subplot_kw={"projection": lima_maps.geom.wcs}, ncols=2
 )
@@ -114,11 +116,11 @@ plt.show()
 
 
 ######################################################################
-# We can also see the correlated upper limits at any position in the map. But note that
-# this is **not** a source UL, as the containment correction is not applied here. This gives the
-# flux upper limits contained within the ``correlation_radius`` at each pixel. This can be useful,
-# e.g.: when making quick look plots to search for the presence of new sources with a field
-# (e.g.: in case of alerts from Gravitational Wave detectors, etc).
+# We can also see the correlated upper limits at any position in the map. However, it is important to note
+# that this is **not** a source UL, as the containment correction is not applied here. Instead, it gives the
+# flux upper limits contained within the ``correlation_radius`` at each pixel. This can be useful
+# when making quick look plots to search for the presence of new sources with a field - for example
+# in the case of alerts from Gravitational Wave detectors.
 #
 
 lima_maps.flux_ul.plot(add_cbar=True, cmap="viridis")
@@ -130,15 +132,15 @@ plt.show()
 # ---------------------------------
 #
 # Now, we address a more specific question. Suppose we were expecting a
-# source at a specific position, say the center of our map. Let's try see if we can fit a point
-# source there.
-# Note that it is necessary to constrain the range of the position, otherwise the fit might not converge.
+# source at a specific position, say the center of our map. Let’s try fitting a point source at that location.
+#
+# To ensure the fit converges, we need to constrain the position range.
 # For this, one needs to model (1) only the background (2) model the background + a point source
 # and then check the difference in test statistic between the two cases to see if the second model is significantly
-# preferred. There is an inbuilt gammapy function, `~gammapy.modeling.select_nested_models` which will do this internally. Case (1)
-# corresponds to the case of source ``amplitude=0``, which we put as our null hypothesis. We freeze the spatial
-# parameters to avoid the fit from converging to other locations. You can alternatively consider constraining
-# the parameter ranges within your expected regions
+# preferred. There is an inbuilt gammapy function, `~gammapy.modeling.select_nested_models` which will do this
+# internally. Case (1) corresponds to the case of source ``amplitude=0``, which we put as our null hypothesis.
+# We freeze the spatial parameters to avoid the fit from converging to other locations. You can alternatively
+# consider constraining the parameter ranges within your expected regions.
 
 spectral_model = PowerLawSpectralModel()
 spatial_model = PointSpatialModel(frame="icrs")
@@ -159,7 +161,7 @@ print(LLR)
 
 ######################################################################
 # To get the fitted parameters of the spectral model under the alternative hypothesis
-# (Case 2),
+# (Case 2):
 
 print(LLR["fit_results"].parameters.to_table())
 
@@ -167,7 +169,7 @@ print(LLR["fit_results"].parameters.to_table())
 # You can see that the ``ts ~ 4.7``, thus suggesting that the observed
 # fluctuations are not significant above the background. Note that here we have
 # only 1 free parameter, the amplitude, and thus, we can assume the simple conversion
-# ``significance = :math:`\sqrt{ts}` ~ 2.2``.
+# significance = :math:`\sqrt{ts} \approx 2.2`.
 # Now, we will estimate the differential upper limits of the source.
 
 ###############################################################################
@@ -181,8 +183,6 @@ print(LLR["fit_results"].parameters.to_table())
 # measurements from other instruments, be an extrapolation of the flux
 # observed at other wavelengths, come from theoretical estimations, etc.
 # In particular, a model with a negative amplitude as obtained above should not be used.
-
-
 #
 # Note that **the computed upper limits depend on the spectral parameters of the assumed model**.
 # Here, we compute the 3-sigma upper limits for assuming a spectral index of 2.0.
@@ -231,13 +231,14 @@ print(
 # ~~~~~~~~~~~~~~~~~~~~~~
 #
 # We can then ask,  **would this source have been detectable given this IRF/exposure time?**
+#
 # The `~gammapy.estimators.FluxPointsEstimator` can be used to obtain the sensitivity,
 # which can be compared to the expected flux. We have the 5-sigma
 # sensitivity here, which can be configured using ``n_sigma_sensitivity``
 # parameter of this estimator. Let us see what we would have seen if a Crab-like source was
 # present in the center.
 # Note that this computed sensitivity does not take into account the factors
-# like the minimum number of gamma-rays, etc (see :doc:`/tutorials/analysis-1d/cta_sensitivity`)
+# such as the minimum number of gamma-rays (see :doc:`/tutorials/analysis-1d/cta_sensitivity`)
 # and is dependent on the analysis configuration.
 # We compare this with the known Crab spectrum.
 
