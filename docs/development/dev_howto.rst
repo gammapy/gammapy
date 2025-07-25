@@ -12,7 +12,7 @@ General conventions
 Python version support
 ++++++++++++++++++++++
 
-In Gammapy we currently support Python 3.8 or later.
+In Gammapy we currently support Python 3.9 or later.
 
 Coordinate and axis names
 +++++++++++++++++++++++++
