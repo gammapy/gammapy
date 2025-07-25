@@ -8,6 +8,7 @@ from pydantic import PlainSerializer
 from pydantic.functional_validators import AfterValidator, BeforeValidator
 from .observers import observatory_locations
 from .scripts import make_path
+from numpy import dtype
 
 __all__ = [
     "AngleType",
@@ -207,3 +208,32 @@ PathType = Annotated[
     PlainSerializer(lambda p: str(p), **SERIALIZE_KWARGS),
     BeforeValidator(make_path),
 ]
+
+
+def cast_func(value, type):
+    """Cast value into dtype specified by type and return casted value.
+
+    Parameters
+    ----------
+    value : str, int, float ...
+        Value to be casted.
+    type : dtype
+        Desired datatype.
+
+    Returns
+    -------
+    casted_value : dtype
+        Casted value.
+    """
+
+    casted_value = value  # init
+
+    if type in [dtype(str)]:  # str
+        casted_value = str(value)
+    elif type in [dtype(int)]:  # int
+        casted_value = int(float(value))
+    elif type in [dtype(float)]:  # float
+        casted_value == float(value)
+    else:
+        raise UserWarning("Could not cast value to dtype: " + str(type) + ".")
+    return casted_value
