@@ -138,7 +138,6 @@ fit_scipy = Fit(store_trace=True, optimize_opts=scipy_opts)
 # | https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html
 #
 
-# %%time
 result_scipy = fit_scipy.run(datasets)
 
 
@@ -151,7 +150,6 @@ result_scipy = fit_scipy.run(datasets)
 #   page https://cxc.cfa.harvard.edu/sherpa/methods/opt_methods.html
 #
 
-# %%time
 sherpa_opts = {"method": "simplex", "ftol": 1e-3, "maxfev": int(1e4)}
 fit_sherpa = Fit(store_trace=True, backend="sherpa", optimize_opts=sherpa_opts)
 results_simplex = fit_sherpa.run(datasets)
@@ -173,7 +171,6 @@ results_simplex = fit_sherpa.run(datasets)
 # you should run the final fit with strategy 2.
 #
 
-# %%time
 fit = Fit(store_trace=True)
 minuit_opts = {"tol": 0.001, "strategy": 1}
 fit.backend = "minuit"
@@ -368,7 +365,6 @@ def make_contours(fit, datasets, model, params, npoints, sigmas):
 # Now we can compute few contours.
 #
 
-# %%time
 params = ["alpha", "beta", "amplitude"]
 sigmas = [1, 2]
 cts_sigma = make_contours(

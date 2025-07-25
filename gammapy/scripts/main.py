@@ -152,5 +152,9 @@ def add_subcommands():
 
     cli_workflow.add_command(cli_run_workflow)
 
+    from .tutorial_info import cli_tutorial
+
+    cli.add_command(cli_tutorial)
+
 
 add_subcommands()

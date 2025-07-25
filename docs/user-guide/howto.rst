@@ -115,8 +115,8 @@ Please give feedback and suggest additions to this page!
 
     Estimating the significance of a source, or more generally of an additional model
     component (such as e.g. a spectral line on top of a power-law spectrum), is done
-    via a hypothesis test. You fit two models: one including the source or component and one without it. Then, 
-    compute the difference in the test statistic (TS) between the two fits to determine the 
+    via a hypothesis test. You fit two models: one including the source or component and one without it. Then,
+    compute the difference in the test statistic (TS) between the two fits to determine the
     significance or p-value. To obtain the test statistic, call
     `~gammapy.modeling.Dataset.stat_sum` for the model corresponding to your two
     hypotheses (or take this value from the print output when running the fit), and
@@ -380,7 +380,7 @@ Please give feedback and suggest additions to this page!
         obs2 = obs.copy(events=new_events, in_memory=True)
 
         # The new observation and the new events table can be serialised independently
-        obs2.write("new_obs.fits.gz")
-        obs2.write("events.fits.gz", include_irfs=False)
+        obs2.write("new_obs.fits.gz", overwrite=True)
+        obs2.write("events.fits.gz", include_irfs=False, overwrite=True)
 
 

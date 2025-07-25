@@ -571,7 +571,14 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
             filename = data["covariance"]
             if not (path / filename).exists():
                 path, filename = split(filename)
-            models.read_covariance(path, filename, format="ascii.fixed_width")
+            try:
+                models.read_covariance(path, filename, format="ascii.fixed_width")
+            except ValueError as exception:
+                log.warning(
+                    "Impossible to read the covariance correctly: \n"
+                    f"{exception} \n "
+                    "Covariance will be created from errors and non-diagonal terms ignored."
+                )
 
         _set_models_link(models)
 
@@ -1163,19 +1170,28 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
 
         return SkyCoord(positions)
 
-    def to_regions(self):
+    def to_regions(self, size_factor=None, **kwargs):
         """Return a list of the regions for the spatial models.
+
+        Parameters
+        ----------
+        size_factor : float, optional
+            Factor applied to the size of the models.
+            If not specified, the defaults for the models will be used.
+        kwargs : dict, optional
+            Keyword arguments passed to ``model.spatial_model.to_region``.
 
         Returns
         -------
-        regions: list of `~regions.SkyRegion`
+        regions : list of `~regions.SkyRegion`
             Regions.
         """
         regions = []
-
+        if size_factor:
+            kwargs["size_factor"] = size_factor
         for model in self.select(tag="sky-model"):
             try:
-                region = model.spatial_model.to_region()
+                region = model.spatial_model.to_region(**kwargs)
                 regions.append(region)
             except AttributeError:
                 log.warning(
@@ -1192,12 +1208,14 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
         except IndexError:
             log.error("No spatial component in any model. Geom not defined")
 
-    def plot_regions(self, ax=None, kwargs_point=None, path_effect=None, **kwargs):
+    def plot_regions(
+        self, ax=None, kwargs_point=None, path_effect=None, size_factor=None, **kwargs
+    ):
         """Plot extent of the spatial models on a given WCS axis.
 
         Parameters
         ----------
-        ax : `~astropy.visualization.WCSAxes`, optional
+        ax : `~astropy.visualization.wcsaxes.WCSAxes`, optional
             Axes to plot on. If no axes are given, an all-sky WCS
             is chosen using a CAR projection. Default is None.
         kwargs_point : dict, optional
@@ -1205,13 +1223,15 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
             of point sources. Default is None.
         path_effect : `~matplotlib.patheffects.PathEffect`, optional
             Path effect applied to artists and lines. Default is None.
+        size_factor : float, optional
+            Factor applied to the size of the model
+            If not specified, the defaults for the models will be used.
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.artists.Artist`.
 
-
         Returns
         -------
-        ax : `~astropy.visualization.WcsAxes`
+        ax : `~astropy.visualization.wcsaxes.WCSAxes`
             WCS axes.
 
         Examples
@@ -1227,7 +1247,7 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
         ...    kwargs_point={"marker":"o", "markersize":5, "color":"red"}
         ...            )
         """
-        regions = self.to_regions()
+        regions = self.to_regions(size_factor=size_factor)
 
         geom = RegionGeom.from_regions(regions=regions)
         return geom.plot_region(

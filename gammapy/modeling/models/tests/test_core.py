@@ -1,6 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import sys
 import pytest
+import logging
+import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import SkyCoord
@@ -9,6 +11,9 @@ from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling import Parameter, Parameters
 from gammapy.modeling.models import (
     GaussianSpatialModel,
+    GeneralizedGaussianSpatialModel,
+    Shell2SpatialModel,
+    ShellSpatialModel,
     Model,
     ModelBase,
     Models,
@@ -16,6 +21,7 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
     FoVBackgroundModel,
+    DiskSpatialModel,
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data
 
@@ -293,7 +299,6 @@ def test_select_models():
 
 
 def test_to_template():
-
     energy_bounds = [1, 100] * u.TeV
     energy_axis = MapAxis.from_energy_bounds(
         energy_bounds[0], energy_bounds[1], nbin=2, per_decade=True, name="energy_true"
@@ -360,3 +365,59 @@ def test_two_fov_bkg_models_single_dataset():
         match="Only one FoVBackgroundModel per Dataset is permitted - already got one for ds1",
     ):
         Models([fov1, fov2])
+
+
+def test_to_regions():
+    spectral = PowerLawSpectralModel()
+    spatials = [
+        PointSpatialModel(),
+        GaussianSpatialModel(sigma="1deg"),
+        DiskSpatialModel(r_0="1deg"),
+        GeneralizedGaussianSpatialModel(r_0="1deg"),
+        ShellSpatialModel(
+            radius="0.5deg",
+            width="0.5deg",
+        ),
+        Shell2SpatialModel(r_0="1deg", eta=0.5),
+    ]
+    models = Models([SkyModel(spectral, spatial) for spatial in spatials])
+
+    regs1 = models.to_regions()
+    regs2 = models.to_regions(size_factor=3)
+    assert len(regs1) == 6
+    for reg1, reg2 in zip(regs1[1:], regs2[1:]):
+        try:
+            assert_allclose(reg1.width, 2 * u.deg, rtol=1e-5)
+            assert_allclose(reg2.width, 6 * u.deg, rtol=1e-5)
+        except AttributeError:
+            assert_allclose(reg1.inner_radius, 0.5 * u.deg, rtol=1e-5)
+            assert_allclose(reg2.inner_radius, 1.5 * u.deg, rtol=1e-5)
+            assert_allclose(reg1.outer_radius, 1 * u.deg, rtol=1e-5)
+            assert_allclose(reg2.outer_radius, 3 * u.deg, rtol=1e-5)
+
+
+def test_bad_covariance(caplog, tmp_path):
+    # Step 1: Create a simple spectral model
+    spectral_model = PowerLawSpectralModel()
+    model = SkyModel(spectral_model=spectral_model, name="test-model")
+    models = Models([model])
+
+    # Step 2: Assign a valid 3x3 identity covariance matrix
+    models.covariance = np.identity(3)
+
+    # Step 3: Write models.yaml and covariance.dat
+    models_file = tmp_path / "models.yaml"
+    models.write(models_file, write_covariance=True, overwrite=True)
+
+    # Step 4: Overwrite covariance.dat with an invalid 1x1 matrix
+    covariance_file = tmp_path / "models_covariance.dat"
+    with open(covariance_file, "w") as f:
+        f.write("|                    Parameters |   0 |\n")
+        f.write("|     test-model.spectral.index | 1.0 |\n")
+
+    # Step 5: Attempt to read the model and catch the expected error
+    with caplog.at_level(logging.WARNING):
+        Models.read(models_file)
+        assert (
+            "Impossible to read the covariance correctly" in caplog.records[0].message
+        )

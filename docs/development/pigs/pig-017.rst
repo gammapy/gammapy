@@ -184,16 +184,16 @@ Task list
 Decision
 ========
 
-A prototype has been built but since then the effort has stalled. The PIG is withdrawn as is. A future version can be prepared based on more recent status of Gammapy. 
+A prototype has been built but since then the effort has stalled. The PIG is withdrawn as is. A future version can be prepared based on more recent status of Gammapy.
 
 
 .. _High-level interface: https://docs.gammapy.org/0.14/scripts/index.html
 .. _PROV-Overview: https://www.w3.org/TR/prov-overview/
 .. _PROV-DM: https://www.w3.org/TR/2013/REC-prov-dm-20130430/
 .. _IVOA Provenance Data Model: http://www.ivoa.net/documents/ProvenanceDM/20190719/index.html
-.. _ctapipe.core.provenance: https://cta-observatory.github.io/ctapipe/api/ctapipe.core.Provenance.html
-.. _ctapipe provenance service: https://cta-observatory.github.io/ctapipe/examples/provenance.html
-.. _ctapipe tools: https://cta-observatory.github.io/ctapipe/ctapipe_api/tools/index.html
+.. _ctapipe.core.provenance: https://ctapipe.readthedocs.io/en/stable/api/ctapipe.core.Provenance.html
+.. _ctapipe provenance service: https://ctapipe.readthedocs.io/en/stable/auto_examples/core/provenance.html
+.. _ctapipe tools: https://ctapipe.readthedocs.io/en/stable/api-reference/tools/index.html
 .. _prov package: http://prov.readthedocs.io
 .. _Eliot: https://eliot.readthedocs.io/en/stable/
 .. _Structlog: http://www.structlog.org/en/stable/
@@ -209,7 +209,7 @@ A prototype has been built but since then the effort has stalled. The PIG is wit
 .. _GH 2452: https://github.com/gammapy/gammapy/issues/2452
 .. _Logging: https://docs.gammapy.org/0.14/development/howto.html#logging
 .. _OPUS: https://github.com/mservillat/OPUS
-.. _RAVE: https://www.rave-survey.org/project
+.. _RAVE: https://www.rave-survey.org
 .. _Pollux: http://pollux.graal.univ-montp2.fr
 .. _JSON Schema: https://json-schema.org
 .. _GH 2458: https://github.com/gammapy/gammapy/pull/2458
