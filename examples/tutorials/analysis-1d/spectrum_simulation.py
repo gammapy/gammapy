@@ -67,13 +67,6 @@ from gammapy.maps import MapAxis, RegionGeom
 from gammapy.modeling import Fit
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 
-######################################################################
-# Check setup
-# -----------
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
-
 
 ######################################################################
 # Simulation of a single spectrum
@@ -169,8 +162,8 @@ print(dataset)
 # ~~~~~~~~~~~~~~~
 #
 # To do an on off spectral analysis, which is the usual science case, the
-# standard would be to use `SpectrumDatasetOnOff`, which uses the
-# acceptance to fake off-counts. Please also refer to the `Dataset simulations`
+# standard would be to use `~gammapy.datasets.SpectrumDatasetOnOff`, which uses the
+# acceptance to fake off-counts. Please also refer to the ``Dataset simulations``
 # section in the :doc:`/tutorials/analysis-1d/spectral_analysis_rad_max` tutorial,
 # dealing with simulations based on observations of real off counts.
 #
@@ -187,7 +180,6 @@ print(dataset_on_off)
 # several spectra using the same set of observation conditions.
 #
 
-# %%time
 
 n_obs = 100
 datasets = Datasets()
@@ -221,7 +213,6 @@ plt.show()
 # Now, we fit each simulated spectrum individually
 #
 
-# %%time
 results = []
 
 fit = Fit()

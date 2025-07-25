@@ -169,7 +169,7 @@ def flux_points(request):
 
 @pytest.fixture(scope="session")
 def flux_points_likelihood():
-    path = "$GAMMAPY_DATA/tests/spectrum/flux_points/binlike.fits"
+    path = "$GAMMAPY_DATA/estimators/crab_hess_fp/crab_hess_fp.fits"
     return FluxPoints.read(path)
 
 
@@ -227,7 +227,7 @@ class TestFluxPoints:
         assert flux_points_likelihood.sqrt_ts
         assert flux_points_likelihood.ts
         assert flux_points_likelihood.stat
-        assert_allclose(flux_points_likelihood.n_sigma_ul, 2)
+        assert_allclose(flux_points_likelihood.n_sigma_ul, 3)
         assert flux_points_likelihood.sed_type_init == "likelihood"
 
     def test_plot(self, flux_points):

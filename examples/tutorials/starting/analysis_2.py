@@ -116,7 +116,7 @@ data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
 # observations. Here we use a cone search which we define with a python
 # dict.
 #
-# We then filter the `ObservationTable` with
+# We then filter the `~gammapy.data.ObservationTable` with
 # `~gammapy.data.ObservationTable.select_observations`.
 #
 
@@ -138,6 +138,13 @@ selected_obs_table = data_store.obs_table.select_observations(selection)
 
 observations = data_store.get_observations(selected_obs_table["OBS_ID"])
 
+######################################################################
+# We can have a quick look at the content of each observation with
+# the following instructions:
+#
+
+observations[0].peek()
+print(observations[0])
 
 ######################################################################
 # Preparing reduced datasets geometry
@@ -204,7 +211,6 @@ maker_fov = FoVBackgroundMaker(method="fit", exclusion_mask=exclusion_mask)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 
-# %%time
 
 for obs in observations:
     # First a cutout of the target map is produced
@@ -301,7 +307,6 @@ stacked.models = [sky_model, bkg_model]
 # Its constructor takes a list of dataset as argument.
 #
 
-# %%time
 fit = Fit(optimize_opts={"print_level": 1})
 result = fit.run([stacked])
 
@@ -316,7 +321,7 @@ print(result)
 
 ######################################################################
 # The fitted parameters are visible from the
-# `~astropy.modeling.models.Models` object.
+# `~gammapy.modeling.models.Models` object.
 #
 
 print(stacked.models.to_parameters_table())
@@ -416,7 +421,6 @@ plt.show()
 energy_edges = [1, 2, 4, 10] * u.TeV
 fpe = FluxPointsEstimator(energy_edges=energy_edges, source="crab")
 
-# %%time
 flux_points = fpe.run(datasets=[stacked])
 
 fig, ax = plt.subplots(figsize=(8, 6))

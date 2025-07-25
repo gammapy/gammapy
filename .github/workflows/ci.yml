@@ -5,6 +5,7 @@ jobs:
   lint:
     name: Run pre-commit hooks
     runs-on: ubuntu-latest
+
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -21,8 +22,10 @@ jobs:
     name: ${{ matrix.os }}, ${{ matrix.tox_env }}
     runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.allowed_fail }}
+    if: contains(github.event.pull_request.labels.*.name, 'skip-tests') == false
     env:
       PYTEST_ADDOPTS: --color=yes -n auto --dist=loadscope
+      
     strategy:
       fail-fast: true
       matrix:
@@ -80,6 +83,7 @@ jobs:
             python: '3.12'
             tox_env: 'devdeps'
             allowed_fail: true
+
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -118,6 +122,7 @@ jobs:
         with:
           file: ./coverage.xml
           verbose: true
+
   sphinx:
     name: Linux python 3.11 sphinx all-deps
     runs-on: ubuntu-latest
@@ -127,6 +132,9 @@ jobs:
     env:
       PYTEST_ADDOPTS: --color=yes -n auto --dist=loadscope
       GAMMAPY_DATA: /home/runner/work/gammapy/gammapy/gammapy-datasets/dev
+
+    if: contains(github.event.pull_request.labels.*.name, 'skip-docs') == false
+
     steps:
       - name: Check out repository
         uses: actions/checkout@v4

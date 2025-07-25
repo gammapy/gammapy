@@ -18,6 +18,7 @@ TUTORIAL_SORT_DICT = {
         "cta.py": 1,
         "fermi_lat.py": 2,
         "hawc.py": 3,
+        "veritas.py": 4,
     #  data analysis
     #  1d
         "cta_sensitivity.py": 0,

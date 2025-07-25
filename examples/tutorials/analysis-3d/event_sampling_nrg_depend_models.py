@@ -61,13 +61,6 @@ from gammapy.modeling.models import (
     SkyModel,
 )
 
-######################################################################
-# Check setup
-# -----------
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
-
 
 ######################################################################
 # Create the energy-dependent temporal model

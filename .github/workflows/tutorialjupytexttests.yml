@@ -1,0 +1,29 @@
+name: TutorialJupytext
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 2 * * 5'  # Every Friday at 02:00 UTC
+
+jobs:
+  execute-tutorials:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Gammapy and dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install jupytext
+          python -m pip install .
+
+      - name: Execute tutorials with Jupytext
+        run: jupytext --execute examples/tutorials/*/*.py

@@ -68,14 +68,6 @@ from gammapy.modeling.models import (
 
 log = logging.getLogger(__name__)
 
-######################################################################
-# Check setup
-# -----------
-
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
-
 
 ######################################################################
 # Analysis configuration

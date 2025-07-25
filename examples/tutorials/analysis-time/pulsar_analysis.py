@@ -55,15 +55,6 @@ warnings.filterwarnings("ignore")
 
 
 ######################################################################
-# Check setup
-# -----------
-
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
-
-
-######################################################################
 # Load the data store (which is a subset of CTA-DC1 data):
 
 

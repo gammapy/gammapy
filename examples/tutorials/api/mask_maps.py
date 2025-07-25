@@ -18,14 +18,14 @@ There are two main categories of masks in Gammapy for different use
 cases. - Fitting often requires to ignore some parts of a reduced
 dataset, e.g. to restrict the fit to a specific energy range or to
 ignore parts of the region of interest that the user does not want to
-model, or both. Gammapy’s `Datasets` therefore contain a `mask_fit`
-sharing the same geometry as the data (i.e. `counts`). - During data
+model, or both. Gammapy’s `~gammapy.datasets.Datasets` therefore contain a ``mask_fit``
+sharing the same geometry as the data (i.e. ``counts``). - During data
 reduction, some background makers will normalize the background model
 template on the data themselves. To limit contamination by real photons,
 one has to exclude parts of the field-of-view where signal is expected
 to be large. To do so, one needs to provide an exclusion mask. The
 latter can be provided in a different geometry as it will be reprojected
-by the `~gammapy.makers.Makers`.
+by the `~gammapy.makers.Maker` class.
 
 We explain in more details these two types of masks below:
 
@@ -33,7 +33,7 @@ Masks for fitting
 ~~~~~~~~~~~~~~~~~
 
 The region of interest used for the fit can defined through the dataset
-`mask_fit` attribute. The `mask_fit` is a map containing boolean
+``mask_fit`` attribute. The ``mask_fit`` is a map containing boolean
 values where pixels used in the fit are stored as True.
 
 A spectral fit (1D or 3D) can be restricted to a specific energy range
@@ -41,18 +41,18 @@ where e.g. the background is well estimated or where the number of
 counts is large enough. Similarly, 2D and 3D analyses usually require to
 work with a wider map than the region of interest so sources laying
 outside but reconstructed inside because of the PSF are correctly taken
-into account. Then the `mask_fit` have to include a margin that take
+into account. Then the ``mask_fit`` have to include a margin that take
 into account the PSF width. We will show an example in the boundary mask
 sub-section.
 
-The `mask_fit` also can be used to exclude sources or complex regions
+The ``mask_fit`` also can be used to exclude sources or complex regions
 for which we don’t have good enough models. In that case the masking is
 an extra security, it is preferable to include the available models
 even if the sources are masked and frozen.
 
-Note that a dataset contains also a `mask_safe` attribute that is
+Note that a dataset contains also a ``mask_safe`` attribute that is
 created and filled during data reduction. It is not to be modified
-directly by users. The `mask_safe` is defined only from the options
+directly by users. The ``mask_safe`` is defined only from the options
 passed to the `~gammapy.makers.SafeMaskMaker`.
 
 Exclusion masks
@@ -114,14 +114,14 @@ check_tutorials_setup()
 # Creating a mask for fitting
 # ---------------------------
 #
-# One can build a `mask_fit` to restrict the energy range of pixels used
-# to fit a `Dataset`. The mask being a `Map` it needs to use the same
-# geometry (i.e. a `Geom` object) as the `Dataset` it will be applied
-# to.
+# One can build a ``mask_fit`` to restrict the energy range of pixels used
+# to fit a `~gammapy.datasets.Dataset`. As the mask is a `~gammapy.maps.Map` object,
+# it must use the same geometry (i.e. a `~gammapy.maps.Geom` object) as the `~gammapy.datasets.Dataset`
+# it is applied to.
 #
-# We show here how to proceed on a `MapDataset` taken from Fermi data
+# We show here how to proceed on a `~gammapy.datasets.MapDataset` taken from Fermi data
 # used in the 3FHL catalog. The dataset is already in the form of a
-# `Datasets` object. We read it from disk.
+# `~gammapy.datasets.Datasets` object, and we begin by reading it from disk.
 #
 
 filename = "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_datasets.yaml"
@@ -131,7 +131,7 @@ dataset = datasets["Fermi-LAT"]
 
 ######################################################################
 # We can check the default energy range of the dataset. In the absence of
-# a `mask_fit` it is equal to the safe energy range.
+# a ``mask_fit`` it is equal to the safe energy range.
 #
 
 print(f"Fit range : {dataset.energy_range_total}")
@@ -142,17 +142,17 @@ print(f"Fit range : {dataset.energy_range_total}")
 # ~~~~~~~~~~~~~~~~~~~~~~~
 #
 # We show first how to use a simple helper function
-# `~gammapy.maps.Geom.energy_range()`.
+# `~gammapy.maps.Geom.energy_mask`.
 #
-# We obtain the `Geom` that is stored on the `counts` map inside the
-# `Dataset` and we can directly create the `Map`.
+# We obtain the `~gammapy.maps.Geom` that is stored on the ``counts`` map inside the
+# `~gammapy.datasets.Dataset` and we can directly create the `~gammapy.maps.Map`.
 #
 
 mask_energy = dataset.counts.geom.energy_mask(10 * u.GeV, 700 * u.GeV)
 
 
 ######################################################################
-# We can now set the dataset `mask_fit` attribute.
+# We can now set the dataset ``mask_fit`` attribute.
 #
 # And we check that the total fit range has changed accordingly. The bin
 # edges closest to requested range provide the actual fit range.
@@ -169,12 +169,12 @@ print(f"Fit range : {dataset.energy_range_total}")
 # One might also exclude some specific part of the sky for the fit. For
 # instance, if one wants not to model a specific source in the region of
 # interest, or if one want to reduce the region of interest in the dataset
-# `Geom`.
+# `~gammapy.maps.Geom`.
 #
 # In the following we restrict the fit region to a square around the Crab
 # nebula. **Note**: the dataset geometry is aligned on the galactic frame,
 # we use the same frame to define the box to ensure a correct alignment.
-# We can now create the map. We use the `WcsGeom.region_mask` method
+# We can now create the map. We use the `~gammapy.maps.WcsGeom.region_mask` method
 # putting all pixels outside the regions to False (because we only want to
 # consider pixels inside the region. For convenience, we can directly pass
 # a ds9 region string to the method:
@@ -204,10 +204,10 @@ plt.show()
 # Creating a mask manually
 # ~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# If you are more familiar with the `Geom` and `Map` API, you can also
+# If you are more familiar with the `~gammapy.maps.Geom` and `~gammapy.maps.Map` API, you can also
 # create the mask manually from the coordinates of all pixels in the
 # geometry. Here we simply show how to obtain the same behaviour as the
-# `energy_mask` helper method.
+# `~gammapy.maps.Geom.energy_mask` helper method.
 #
 # In practice, this allows to create complex energy dependent masks.
 #
@@ -223,7 +223,7 @@ mask_energy = Map.from_geom(dataset.counts.geom, data=mask_data)
 #
 # Exclusion masks are typically used for background estimation to mask out
 # regions where gamma-ray signal is expected. An exclusion mask is usually
-# a simple 2D boolean `Map` where excluded positions are stored as
+# a simple 2D boolean `~gammapy.maps.Map` where excluded positions are stored as
 # `False`. Their actual geometries are independent of the target
 # datasets that a user might want to build. The first thing to do is to
 # build the geometry.
@@ -231,7 +231,7 @@ mask_energy = Map.from_geom(dataset.counts.geom, data=mask_data)
 # Define the geometry
 # ~~~~~~~~~~~~~~~~~~~
 #
-# Masks are stored in `Map` objects. We must first define its geometry
+# Masks are stored in `~gammapy.maps.Map` objects. We must first define its geometry
 # and then we can determine which pixels to exclude. Here we consider a
 # region at the Galactic anti-centre around the crab nebula.
 #
@@ -248,12 +248,12 @@ geom = WcsGeom.create(skydir=position, width="5 deg", binsz=0.02, frame="galacti
 # proceed.
 #
 # We can rely on known sources positions and properties to build a list of
-# regions (here `~regions.SkyRegions`) enclosing most of the signal that
+# regions (here `~regions.SkyRegion`) enclosing most of the signal that
 # our detector would see from these objects.
 #
 # A useful function to create region objects is
-# `~regions.regions.parse`. It can take strings defining regions
-# e.g. following the “ds9” format and convert them to `regions`.
+# `~regions.Regions.parse`. It can take strings defining regions
+# e.g. following the “ds9” format and convert them to `regions`.
 #
 # Here we use a region enclosing the Crab nebula with 0.3 degrees. The
 # actual region size should depend on the expected PSF of the data used.
@@ -267,7 +267,7 @@ print(regions)
 
 ######################################################################
 # Equivalently the regions can be read from a ds9 file, this time using
-# `Regions.read`.
+# `~regions.Regions.read`.
 #
 
 # regions = Regions.read('ds9.reg', format="ds9")
@@ -277,7 +277,7 @@ print(regions)
 # Create the mask map
 # ^^^^^^^^^^^^^^^^^^^
 #
-# We can now create the map. We use the `WcsGeom.region_mask` method
+# We can now create the map. We use the `~gammapy.maps.WcsGeom.region_mask` method
 # putting all pixels inside the regions to False.
 #
 
@@ -332,10 +332,10 @@ plt.show()
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # Here we want to determine an exclusion from the data directly. We will
-# estimate the significance of the data using the `ExcessMapEstimator`,
+# estimate the significance of the data using the `~gammapy.estimators.ExcessMapEstimator`,
 # and exclude all pixels above a given threshold.
 #
-# Here we use the `MapDataset` taken from the Fermi data used above.
+# Here we use the `~gammapy.datasets.MapDataset` taken from the Fermi data used above.
 #
 
 
@@ -358,7 +358,7 @@ significance_mask = result["sqrt_ts"] < 5.0
 
 
 ######################################################################
-# Because the `ExcessMapEstimator` returns NaN for masked pixels, we
+# Because the `~gammapy.estimators.ExcessMapEstimator` returns NaN for masked pixels, we
 # need to put the NaN values to `True` to avoid incorrectly excluding
 # them.
 #
@@ -390,9 +390,9 @@ plt.show()
 # ----------------
 #
 # If two masks share the same geometry it is easy to combine them with
-# `Map` arithmetic.
+# `~gammapy.maps.Map` arithmetic.
 #
-# OR condition is represented by `|` operator :
+# OR condition is represented by ``|`` operator :
 #
 
 mask = mask_map | mask_map_catalog
@@ -401,7 +401,7 @@ plt.show()
 
 
 ######################################################################
-# AND condition is represented by `&` or `*` operators :
+# AND condition is represented by ``&`` or ``*`` operators :
 #
 
 mask_map &= mask_map_catalog
@@ -425,8 +425,8 @@ plt.show()
 # Mask dilation and erosion
 # ~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# One can reduce or extend a mask using `binary_erode` and
-# `binary_dilate` methods, respectively.
+# One can reduce or extend a mask using `~gammapy.maps.WcsNDMap.binary_erode` and
+# `~gammapy.maps.WcsNDMap.binary_dilate` methods, respectively.
 #
 
 fig, (ax1, ax2) = plt.subplots(
@@ -446,10 +446,10 @@ plt.show()
 # ~~~~~~~~~~~~~
 #
 # In the following example we use the Fermi dataset previously loaded and
-# add its `mask_fit` taking into account a margin based on the psf
-# width. The margin width is determined using the `containment_radius`
+# add its ``mask_fit`` taking into account a margin based on the psf
+# width. The margin width is determined using the `~gammapy.irf.PSFMap.containment_radius`
 # method of the psf object and the mask is created using the
-# `boundary_mask` method available on the geometry object.
+# `~gammapy.maps.WcsGeom.boundary_mask` method available on the geometry object.
 #
 
 # get PSF 95% containment radius

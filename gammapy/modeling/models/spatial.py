@@ -29,6 +29,7 @@ from gammapy.utils.regions import region_circle_to_ellipse, region_to_frame
 from gammapy.utils.scripts import make_path
 from .core import ModelBase, _build_parameters_from_dict
 from gammapy.utils.units import wrap_at
+from gammapy.utils.deprecation import deprecated_renamed_argument
 
 __all__ = [
     "ConstantFluxSpatialModel",
@@ -590,6 +591,7 @@ class PointSpatialModel(SpatialModel):
 
     def to_region(self, **kwargs):
         """Model outline as a `~regions.PointSkyRegion`."""
+        kwargs.pop("size_factor", None)
         return PointSkyRegion(center=self.position, **kwargs)
 
 
@@ -657,14 +659,15 @@ class GaussianSpatialModel(SpatialModel):
         exponent = -0.5 * ((1 - np.cos(sep)) / a)
         return u.Quantity(norm * np.exp(exponent).value, "sr-1", copy=COPY_IF_NEEDED)
 
-    def to_region(self, x_sigma=1.5, **kwargs):
+    @deprecated_renamed_argument("x_sigma", "size_factor", "2.0")
+    def to_region(self, size_factor=1.0, **kwargs):
         r"""Model outline at a given number of :math:`\sigma`.
 
         Parameters
         ----------
-        x_sigma : float
+        size_factor : float
             Number of :math:`\sigma
-            Default is :math:`1.5\sigma` which corresponds to about 68%
+            Default is :math:`1.0\sigma` which corresponds to about 39%
             containment for a 2D symmetric Gaussian.
 
         Returns
@@ -672,11 +675,12 @@ class GaussianSpatialModel(SpatialModel):
         region : `~regions.EllipseSkyRegion`
             Model outline.
         """
+
         minor_axis = Angle(self.sigma.quantity * np.sqrt(1 - self.e.quantity**2))
         return EllipseSkyRegion(
             center=self.position,
-            height=2 * x_sigma * self.sigma.quantity,
-            width=2 * x_sigma * minor_axis,
+            height=2 * size_factor * self.sigma.quantity,
+            width=2 * size_factor * minor_axis,
             angle=self.phi.quantity,
             **kwargs,
         )
@@ -684,15 +688,16 @@ class GaussianSpatialModel(SpatialModel):
     @property
     def evaluation_region(self):
         """Evaluation region consistent with evaluation radius."""
-        return self.to_region(x_sigma=5)
+        return self.to_region(size_factor=5)
 
-    def _to_region_error(self, x_sigma=1.5):
+    @deprecated_renamed_argument("x_sigma", "size_factor", "2.0")
+    def _to_region_error(self, size_factor=1.5):
         r"""Plot model error at a given number of :math:`\sigma`.
 
         Parameters
         ----------
-        x_sigma : float
-            Number of :math:`\sigma
+        size_factor : float
+            Number of :math:`\sigma`
             Default is :math:`1.5\sigma` which corresponds to about 68%
             containment for a 2D symmetric Gaussian.
 
@@ -701,6 +706,7 @@ class GaussianSpatialModel(SpatialModel):
         region : `~regions.EllipseSkyRegion`
             Model error region.
         """
+
         sigma_hi = self.sigma.quantity + (self.sigma.error * self.sigma.unit)
         sigma_lo = self.sigma.quantity - (self.sigma.error * self.sigma.unit)
 
@@ -713,10 +719,10 @@ class GaussianSpatialModel(SpatialModel):
 
         return EllipseAnnulusSkyRegion(
             center=self.position,
-            inner_height=2 * x_sigma * sigma_lo,
-            outer_height=2 * x_sigma * sigma_hi,
-            inner_width=2 * x_sigma * minor_axis_lo,
-            outer_width=2 * x_sigma * minor_axis_hi,
+            inner_height=2 * size_factor * sigma_lo,
+            outer_height=2 * size_factor * sigma_hi,
+            inner_width=2 * size_factor * minor_axis_lo,
+            outer_width=2 * size_factor * minor_axis_hi,
             angle=self.phi.quantity,
         )
 
@@ -787,13 +793,14 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
         """
         return self.r_0.quantity * (1 + 8 * self.eta.value)
 
-    def to_region(self, x_r_0=1, **kwargs):
+    @deprecated_renamed_argument("x_r_0", "size_factor", "2.0")
+    def to_region(self, size_factor=1, **kwargs):
         r"""Model outline at a given number of :math:`r_0`.
 
         Parameters
         ----------
-        x_r_0 : float, optional
-            Number of :math:`r_0`. Default is 1.
+        size_factor : float, optional
+            Number of :math:`r_0`. Default is 1.0
 
         Returns
         -------
@@ -803,8 +810,8 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
         minor_axis = Angle(self.r_0.quantity * np.sqrt(1 - self.e.quantity**2))
         return EllipseSkyRegion(
             center=self.position,
-            height=2 * x_r_0 * self.r_0.quantity,
-            width=2 * x_r_0 * minor_axis,
+            height=2 * size_factor * self.r_0.quantity,
+            width=2 * size_factor * minor_axis,
             angle=self.phi.quantity,
             **kwargs,
         )
@@ -813,14 +820,14 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
     def evaluation_region(self):
         """Evaluation region consistent with evaluation radius."""
         scale = self.evaluation_radius / self.r_0.quantity
-        return self.to_region(x_r_0=scale)
+        return self.to_region(size_factor=scale)
 
-    def _to_region_error(self, x_r_0=1):
+    def _to_region_error(self, size_factor=1):
         r"""Model error at a given number of :math:`r_0`.
 
         Parameters
         ----------
-        x_r_0 : float, optional
+        size_factor : float, optional
             Number of :math:`r_0`. Default is 1.
 
         Returns
@@ -840,10 +847,10 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
 
         return EllipseAnnulusSkyRegion(
             center=self.position,
-            inner_height=2 * x_r_0 * r_0_lo,
-            outer_height=2 * x_r_0 * r_0_hi,
-            inner_width=2 * x_r_0 * minor_axis_lo,
-            outer_width=2 * x_r_0 * minor_axis_hi,
+            inner_height=2 * size_factor * r_0_lo,
+            outer_height=2 * size_factor * r_0_hi,
+            inner_width=2 * size_factor * minor_axis_lo,
+            outer_width=2 * size_factor * minor_axis_hi,
             angle=self.phi.quantity,
         )
 
@@ -945,13 +952,13 @@ class DiskSpatialModel(SpatialModel):
         )
         return u.Quantity(norm * in_ellipse, "sr-1", copy=COPY_IF_NEEDED)
 
-    def to_region(self, **kwargs):
+    def to_region(self, size_factor=1.0, **kwargs):
         """Model outline as a `~regions.EllipseSkyRegion`."""
         minor_axis = Angle(self.r_0.quantity * np.sqrt(1 - self.e.quantity**2))
         return EllipseSkyRegion(
             center=self.position,
-            height=2 * self.r_0.quantity,
-            width=2 * minor_axis,
+            height=2 * size_factor * self.r_0.quantity,
+            width=2 * size_factor * minor_axis,
             angle=self.phi.quantity,
             **kwargs,
         )
@@ -1087,12 +1094,12 @@ class ShellSpatialModel(SpatialModel):
 
         return norm * value
 
-    def to_region(self, **kwargs):
+    def to_region(self, size_factor=1.0, **kwargs):
         """Model outline as a `~regions.CircleAnnulusSkyRegion`."""
         return CircleAnnulusSkyRegion(
             center=self.position,
-            inner_radius=self.radius.quantity,
-            outer_radius=self.radius.quantity + self.width.quantity,
+            inner_radius=size_factor * self.radius.quantity,
+            outer_radius=size_factor * (self.radius.quantity + self.width.quantity),
             **kwargs,
         )
 
@@ -1165,12 +1172,12 @@ class Shell2SpatialModel(SpatialModel):
 
         return norm * value
 
-    def to_region(self, **kwargs):
+    def to_region(self, size_factor=1.0, **kwargs):
         """Model outline as a `~regions.CircleAnnulusSkyRegion`."""
         return CircleAnnulusSkyRegion(
             center=self.position,
-            inner_radius=self.r_in,
-            outer_radius=self.r_0.quantity,
+            inner_radius=size_factor * self.r_in,
+            outer_radius=size_factor * self.r_0.quantity,
             **kwargs,
         )
 
@@ -1208,6 +1215,7 @@ class ConstantSpatialModel(SpatialModel):
 
     def to_region(self, **kwargs):
         """Model outline as a `~regions.RectangleSkyRegion`."""
+        kwargs.pop("size_factor", None)
         return RectangleSkyRegion(
             center=SkyCoord(0 * u.deg, 0 * u.deg, frame=self.frame),
             height=180 * u.deg,
@@ -1253,6 +1261,7 @@ class ConstantFluxSpatialModel(SpatialModel):
 
     def to_region(self, **kwargs):
         """Model outline as a `~regions.RectangleSkyRegion`."""
+        kwargs.pop("size_factor", None)
         return RectangleSkyRegion(
             center=SkyCoord(0 * u.deg, 0 * u.deg, frame=self.frame),
             height=180 * u.deg,
@@ -1533,6 +1542,7 @@ class TemplateSpatialModel(SpatialModel):
 
     def to_region(self, **kwargs):
         """Model outline from template map boundary as a `~regions.RectangleSkyRegion`."""
+        kwargs.pop("size_factor", None)
         return RectangleSkyRegion(
             center=self.map.geom.center_skydir,
             width=self.map.geom.width[0][0],

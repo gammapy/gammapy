@@ -62,14 +62,6 @@ from gammapy.modeling.models import Models, create_crab_spectral_model
 from gammapy.utils.scripts import make_path
 
 ######################################################################
-# Check setup
-# -----------
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
-
-
-######################################################################
 # Data and models files
 # ---------------------
 #
@@ -204,7 +196,6 @@ print(datasets)
 # each instrument
 #
 
-# %%time
 fit_joint = Fit()
 results_joint = fit_joint.run(datasets=datasets)
 print(results_joint)

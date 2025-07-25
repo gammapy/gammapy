@@ -34,7 +34,7 @@ Proposed approach
 -----------------
 
 This notebook uses the high level `~gammapy.analysis.Analysis` class to orchestrate data
-reduction and run the data fits. In its current state, `Analysis`
+reduction and run the data fits. In its current state, `~gammapy.analysis.Analysis`
 supports the standard analysis cases of joint or stacked 3D and 1D
 analyses. It is instantiated with an `~gammapy.analysis.AnalysisConfig` object that
 gives access to analysis parameters either directly or via a YAML config
@@ -76,12 +76,6 @@ from IPython.display import display
 from gammapy.analysis import Analysis, AnalysisConfig
 from gammapy.modeling.models import Models
 
-######################################################################
-# Check setup
-# -----------
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
 
 ######################################################################
 # Analysis configuration
@@ -130,7 +124,7 @@ print(config)
 
 ######################################################################
 # Note that you can save this string into a yaml file and load it as
-# follow:
+# follows:
 #
 
 # config = AnalysisConfig.read("config-1d.yaml")
@@ -222,8 +216,8 @@ analysis.get_observations()
 
 
 ######################################################################
-# The observations are now available on the `Analysis` object. The
-# selection corresponds to the following ids:
+# The observations are now available on the `~gammapy.analysis.Analysis` object.
+# The selection corresponds to the following ids:
 #
 
 print(analysis.observations.ids)
@@ -244,7 +238,6 @@ print(analysis.observations.ids)
 # run the reduction using `.get_datasets()`:
 #
 
-# %%time
 analysis.get_datasets()
 
 
@@ -361,7 +354,7 @@ analysis.set_models(model_1d)
 # Setting fitting parameters
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# `Analysis` can perform a few modeling and fitting tasks besides data
+# `~gammapy.analysis.Analysis` can perform a few modeling and fitting tasks besides data
 # reduction. Parameters have then to be passed to the configuration
 # object.
 #
@@ -372,7 +365,6 @@ analysis.set_models(model_1d)
 # ~~~~~~~~~~~~~~~
 #
 
-# %%time
 analysis.run_fit()
 
 
@@ -475,7 +467,7 @@ plt.show()
 # ------------
 #
 # You can look at the same analysis without the high level interface in
-# :doc:`/tutorials/analysis-1d/spectral_analysis`
+# :doc:`/tutorials/analysis-1d/spectral_analysis`.
 #
 # As we can store the best model fit, you can overlay the fit results of
 # both methods on a unique plot.
