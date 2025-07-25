@@ -43,23 +43,15 @@ import astropy.units as u
 
 from gammapy.datasets import MapDataset, Datasets
 from gammapy.estimators import FluxPointsEstimator, ExcessMapEstimator
-from gammapy.modeling import Fit, select_nested_models
+from gammapy.modeling import select_nested_models
 from gammapy.modeling.models import (
     PointSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
     create_crab_spectral_model,
 )
+from gammapy.visualization import plot_distribution
 
-
-######################################################################
-# Check setup
-# -----------
-#
-
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
 
 ######################################################################
 # Load observation
@@ -79,7 +71,8 @@ plt.show()
 # -----------------------
 #
 # We will first use the `~gammapy.estimators.ExcessMapEstimator` for a quick check to see if
-# there are any potential sources in the field. You may also use the
+# there are any potential sources in the field. The ``correlation_radius`` should be around the
+# size of the source you are searching for. You may also use the
 # `~gammapy.estimators.TSMapEstimator`.
 
 estimator = ExcessMapEstimator(
@@ -105,12 +98,26 @@ excess_map.plot(ax=ax2, add_cbar=True)
 plt.show()
 
 ######################################################################
-# The significance map looks rather flat! You can plot a histogram of the
-# significance distribution to confirm that it is a standard Gaussian.
+# The significance map looks featureless. We will plot a histogram of the
+# significance distribution and fit it with a standard normal.
 # Deviations from a standard normal can suggest the presence of gamma-ray sources,
 # or can also originate from incorrect modeling of the residual hadronic background.
+
+ax = plt.subplot()
+plot_distribution(
+    significance_map,
+    func="norm",
+    ax=ax,
+    kwargs_hist={"bins": 50, "range": (-4, 4), "density": True},
+)
+plt.show()
+
+
 # We can also see the correlated upper limits at any position in the map. But note that
-# this is **not** a source UL, as the containment correction is not applied here.
+# this is **not** a source UL, as the containment correction is not applied here. This gives the
+# flux upper limits contained within the `correlation_radius` at each pixel. This can be useful,
+# eg: when making quick look plots to search for the presence of new sources with a field
+# (eg: in case of alerts from Gravitational Wave detectors, etc).
 #
 
 lima_maps.flux_ul.plot(add_cbar=True, cmap="viridis")
@@ -121,45 +128,38 @@ plt.show()
 # Compute upper limits for a source
 # ---------------------------------
 #
-# Suppose we were expecting a
-# source at the centre of our map. Let's try see if we can fit a point
+# Now, we address a more specific question. Suppose we were expecting a
+# source at a specific position, say the center of our map. Let's try see if we can fit a point
 # source there.
 # Note that it is necessary to constrain the range of the position, otherwise the fit might not converge.
-#
+# For this, one needs to model (1) only the background (2) model the background + a point source
+# and then check the difference in test statistic between the two cases to see if the second model is significantly
+# preferred. There is an inbuilt gammapy function, `select_nested_models` which will do this internally. Case (1)
+# corresponds to the case of source ``amplitude=0``, which we put as our null hypothesis. We freeze the spatial
+# parameters to avoid the fit from converging to other locations. You can alternatively consider constraining
+# the parameter ranges within your expected regions
+
+spectral_model = PowerLawSpectralModel()
+spatial_model = PointSpatialModel(frame="icrs")
+spatial_model.lon_0.value = 187.0
+spatial_model.lat_0.value = 2.6
+spatial_model.lat_0.frozen = True
+spatial_model.lon_0.frozen = True
 
 
-spectral = PowerLawSpectralModel()
-spatial = PointSpatialModel(frame="icrs")
-spatial.lon_0.value = 187.0
-spatial.lat_0.value = 2.6
-spatial.lat_0.min = 1.0
-spatial.lat_0.max = 4.0
-spatial.lon_0.min = 185
-spatial.lon_0.max = 187
-
-skymodel = SkyModel(spatial_model=spatial, spectral_model=spectral, name="test")
-
-dataset.models = skymodel
-fit = Fit()
-res = fit.run(dataset)
-print(res.models)
-
-######################################################################
-# It is good to ensure that the fit has converged
-
-print(res.minuit)
-
-######################################################################
-# We can see that there is a slight negative excess in the centre, and
-# thus, the fitted model has a negative amplitude. We can use the
-# `~gammapy.modeling.select_nested_models` function to perform a likelihood ratio test to
-# see if this number is significant (See :doc:`/docs/user-guide/howto.rst`).
-#
-
+sky_model = SkyModel(
+    spatial_model=spatial_model, spectral_model=spectral_model, name="test"
+)
+dataset.models = sky_model
 LLR = select_nested_models(
-    Datasets(dataset), parameters=[skymodel.parameters["amplitude"]], null_values=[0]
+    Datasets(dataset), parameters=[sky_model.parameters["amplitude"]], null_values=[0]
 )
 print(LLR)
+
+# To get the fitted parameters of the spectral model under the alternative hypothesis
+# (Case 2),
+
+print(LLR["fit_results"].parameters.to_table())
 
 ######################################################################
 # You can see that the `ts ~ 4.7`, thus suggesting that the observed
@@ -171,12 +171,15 @@ print(LLR)
 # Differential upper limits
 # ~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# Here, it is important to **set a reasonable model** on the dataset
+# In the absence of a detection, using the model directly from the fit is meaningless as its features can be
+# simply due to background fluctuations.
+# It is important to **set a reasonable model** on the dataset
 # before proceeding with the `~gammapy.estimators.FluxPointsEstimator` estimator. This model can come from
 # measurements from other instruments, be an extrapolation of the flux
-# observed at other wavelengths, come from theoretical estimations, etc. A
-# model with a negative amplitude as obtained above should not be
-# used.
+# observed at other wavelengths, come from theoretical estimations, etc.
+# In particular, a model with a negative amplitude as obtained above should not be used.
+
+
 #
 # Note that **the computed upper limits depend on the spectral parameters of the assumed model**.
 # Here, we compute the 3-sigma upper limits for assuming a spectral index of 2.0.
@@ -185,7 +188,7 @@ print(LLR)
 #
 
 
-model1 = skymodel.copy(name="model1")
+model1 = sky_model.copy(name="model1")
 model1.parameters["amplitude"].value = 1e-14
 model1.parameters["index"].value = 2.0
 model1.freeze(model_type="spatial")
@@ -194,8 +197,6 @@ energy_edges = dataset.geoms["geom"].axes["energy"].edges
 fp_est = FluxPointsEstimator(
     selection_optional="all", energy_edges=energy_edges, n_sigma_ul=3
 )
-fp_est.norm.scan_min = 5
-fp_est.norm.scan_max = 100  # set this to a high value for large upper limits
 
 dataset.models = model1
 fp1 = fp_est.run(dataset)
@@ -218,7 +219,7 @@ emax = energy_edges[-1]
 est2 = FluxPointsEstimator(selection_optional=["ul"], energy_edges=[emin, emax])
 fp2 = est2.run(dataset)
 print(
-    f"Integral upper limit between ${emin:.1f} and ${emax:.1f} is ${fp2.flux_ul.quantity.ravel()[0]:.2f}"
+    f"Integral upper limit between ${emin:.1f} and ${emax:.1f} is ${fp2.flux_ul.quantity.ravel()[0]:.2e}"
 )
 
 
@@ -226,14 +227,14 @@ print(
 # Sensitivity estimation
 # ~~~~~~~~~~~~~~~~~~~~~~
 #
-# We can then ask, would I have seen my source given this irf/ exposure
-# time? The `~gammapy.estimators.FluxPointsEstimator` can be used to obtain the sensitivity,
+# We can then ask,  **would this source have been detectable given this IRF/exposure time?*
+# The `~gammapy.estimators.FluxPointsEstimator` can be used to obtain the sensitivity,
 # which can be compared to the expected flux. We have the 5-sigma
 # sensitivity here, which can be configured using ``n_sigma_sensitivity``
-# parameter of this estimator. Lets see what we would have seen if a Crab-like source was
+# parameter of this estimator. Let us see what we would have seen if a Crab-like source was
 # present in the center.
 # Note that this computed sensitivity does not take into account the factors
-# like the minimum number of gamma-rays, etc (see :doc:`/tutorials/analysis-1d/cta_sensitivity.py`)
+# like the minimum number of gamma-rays, etc (see :doc:`/tutorials/analysis-1d/cta_sensitivity`)
 # and is dependent on the analysis configuration.
 # We compare this with the known Crab spectrum.
 
@@ -243,8 +244,11 @@ fp1.flux_sensitivity.plot(label="sensitivity")
 crab_model.plot(
     energy_bounds=fp1.geom.axes["energy"], sed_type="flux", label="Crab spectrum"
 )
+plt.grid(which="minor", alpha=0.3)
+
 plt.legend()
 plt.show()
+# sphinx_gallery_thumbnail_number = 6
 
 
 ######################################################################
