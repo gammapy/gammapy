@@ -162,6 +162,11 @@ class LightCurveEstimator(FluxPointsEstimator):
                 continue
 
             valid_intervals.append([t_min, t_max])
+            if self.stack_over_time_interval and self.reoptimize:
+                raise ValueError(
+                    "It is not possible to stack the light curve if ``reoptimize=True``. You should set this value to False."
+                )
+
             if self.stack_over_time_interval and not self.reoptimize:
                 name = f"timebin_{idx}"
                 dataset_reduced = datasets_to_fit.stack_reduce(name=name)
