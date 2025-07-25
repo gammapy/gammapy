@@ -492,7 +492,7 @@ class Observation:
                 ax.set_title("Background rate")
 
             if name == "psf":
-                self.psf.plot_containment_radius_vs_energy(ax=ax)
+                self.psf.plot_containment_radius_vs_energy(ax=ax, squared=True)
                 ax.set_title("Point spread function")
 
             if name == "edisp":
@@ -500,7 +500,7 @@ class Observation:
                 ax.set_title("Energy dispersion")
 
             if name == "rad_max":
-                self.rad_max.plot_rad_max_vs_energy(ax=ax)
+                self.rad_max.plot_rad_max_vs_energy(ax=ax, squared=True)
                 ax.set_title("Rad max")
 
             if name == "events":
