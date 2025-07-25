@@ -426,10 +426,12 @@ class WcsNDMap(WcsMap):
         if not self.geom.is_flat:
             raise TypeError("Use .plot_interactive() for Map dimension > 2")
 
-        ax = self._plot_default_axes(ax=ax)
-
         if fig is None:
             fig = plt.gcf()
+
+        if add_cbar is True and ax is None:
+            ax = fig.add_axes([0.1, 0.1, 0.75, 0.8])
+        ax = self._plot_default_axes(ax=ax)
 
         if self.geom.is_image:
             data = self.data.astype(float)
