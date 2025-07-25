@@ -195,7 +195,7 @@ plt.show()
 # Here we are going to use a `~gammapy.makers.FoVBackgroundMaker` that
 # will rescale the background model to the data excluding the region where
 # a known source is present. For more details on the way to create
-# exclusion masks see the :doc:`mask maps </tutorials/key-steps/mask_maps>` notebook.
+# exclusion masks see the :doc:`mask maps </tutorials/details/mask_maps>` notebook.
 #
 
 circle = CircleSkyRegion(center=geom.center_skydir, radius=0.2 * u.deg)

@@ -12,8 +12,8 @@ the class name. An overview of all the available models can be found in
 the :ref:`model-gallery`.
 
 Note that there are separate tutorials,
-:doc:`/tutorials/key-steps/model_management` and
-:doc:`/tutorials/key-steps/fitting` that explains about
+:doc:`/tutorials/details/model_management` and
+:doc:`/tutorials/details/fitting` that explains about
 `~gammapy.modeling`, the Gammapy modeling and fitting framework. You
 have to read that to learn how to work with models in order to analyse
 data.
@@ -546,7 +546,7 @@ print(models.names)
 # This `~gammapy.modeling.models.Models`
 # container object will be assigned to `~gammapy.datasets.Dataset` or `~gammapy.datasets.Datasets`
 # together with the data to be fitted. Checkout e.g. the
-# :doc:`/tutorials/key-steps/model_management` tutorial for details.
+# :doc:`/tutorials/details/model_management` tutorial for details.
 #
 # The `~gammapy.modeling.models.Models` class also has in place ``.append()`` and ``.extend()``
 # methods:

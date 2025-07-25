@@ -19,7 +19,7 @@ TUTORIAL_SORT_DICT = {
         "fermi_lat.py": 2,
         "hawc.py": 3,
         "veritas.py": 4,
-    # key-steps
+    # details
         "irfs.py": 0,
         "observation_clustering.py": 1,
         "theta_square_plot.py": 2,
@@ -34,7 +34,6 @@ TUTORIAL_SORT_DICT = {
         "fitting.py": 11,
         "nested_sampling_Crab.py": 12,
         "estimators.py": 13,
-        "astro_dark_matter.py": 14,
     #  data analysis
     #  1d
         "cta_sensitivity.py": 0,
@@ -44,7 +43,6 @@ TUTORIAL_SORT_DICT = {
         "extended_source_spectral_analysis.py": 4,
         "spectrum_simulation.py": 5,
         "sed_fitting.py": 6,
-        "ebl.py": 7,
     #  2d
         "detect.py": 0,
         "ring_background.py": 1,
@@ -52,7 +50,6 @@ TUTORIAL_SORT_DICT = {
     # 3d
         "analysis_3d.py": 0,
         "cta_data_analysis.py": 1,
-        "energy_dependent_estimation.py": 2,
         "analysis_mwl.py": 3,
         "simulate_3d.py": 4,
         "event_sampling.py": 5,
@@ -64,7 +61,11 @@ TUTORIAL_SORT_DICT = {
         "variability_estimation.py": 2,
         "time_resolved_spectroscopy.py": 3,
         "light_curve_simulation.py": 4,
-        "pulsar_analysis.py": 5,
+    #astro
+        "ebl.py": 0,
+        "energy_dependent_estimation.py": 1,
+        "pulsar_analysis.py": 2,
+        "astro_dark_matter.py": 3,
     # scripts
         "survey_map.py": 0,
 }
