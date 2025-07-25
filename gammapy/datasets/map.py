@@ -2392,7 +2392,7 @@ class MapDataset(Dataset):
         Parameters
         ----------
         figsize : tuple, optional
-            Size of the figure. Default is (13.5, 7).
+            Size of the figure. Default is (13.0, 7).
 
         """
 
