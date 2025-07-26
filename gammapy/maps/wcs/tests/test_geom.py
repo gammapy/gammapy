@@ -10,7 +10,8 @@ from regions import CircleSkyRegion
 from gammapy.maps import Map, MapAxis, TimeMapAxis, WcsGeom
 from gammapy.maps.utils import _check_binsz, _check_width
 from gammapy.utils.scripts import make_path
-from gammapy.utils.testing import requires_data
+from gammapy.utils.testing import requires_data, requires_dependency
+import gammapy.utils.cache as cache
 
 axes1 = [MapAxis(np.logspace(0.0, 3.0, 3), interp="log", name="energy")]
 axes2 = [
@@ -678,3 +679,31 @@ def test_wcs_geom_with_timeaxis():
         [[4.000e-01, 2.000e-01, 0.000e00, 3.598e02, 3.596e02]],
         rtol=1e-5,
     )
+
+
+@requires_dependency("ray")
+def test_instance_cache():
+    cache.USE_INSTANCE_CACHE = True
+
+    kwargs = dict(skydir=(83.63, 22.01), width=5, binsz=0.02)
+
+    geom1 = WcsGeom.create(**kwargs)
+    geom2 = WcsGeom.create(**kwargs)
+    geom3 = WcsGeom.create(width=5, binsz=0.02, skydir=(83.63, 22.01))  # reordered
+
+    assert geom1 is geom2
+    assert geom1 is geom3
+    assert len(list(WcsGeom._instances._dict[id(WcsGeom)][0].keys())) == 1
+
+    geom4 = WcsGeom.create(width=5, binsz=0.05, skydir=(83.63, 22.01))  # different
+    assert geom4 is not geom1
+    assert len(list(WcsGeom._instances._dict[id(WcsGeom)][0].keys())) == 2
+
+    cache.USE_INSTANCE_CACHE = False
+
+    kwargs = dict(skydir=(83.63, 22.01), width=5, binsz=0.02)
+
+    geom1 = WcsGeom.create(**kwargs)
+    geom2 = WcsGeom.create(**kwargs)
+
+    assert geom1 is not geom2
