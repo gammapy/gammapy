@@ -1,5 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+
 import pickle
+import numpy as np
 import gammapy.utils.cache as cache
 from gammapy.utils.testing import requires_dependency
 
@@ -26,13 +28,13 @@ class Dummy2(cache.CacheInstanceMixin):
 def test_dummy_cache():
     cache.USE_INSTANCE_CACHE = True
 
-    x = Dummy(1, 2)
-    y = Dummy(1, 2)
-    z = Dummy2(1, 2)
+    x = Dummy(1, np.array(2))
+    y = Dummy(1, np.array(2))
+    z = Dummy2(1, np.array(2))
 
-    u = Dummy(1, 3)
-    v = Dummy2(1, 3)
-    w = Dummy2(1, 3)
+    u = Dummy(1, np.array(3))
+    v = Dummy2(1, np.array(3))
+    w = Dummy2(1, np.array(3))
 
     assert x is y
     assert z is not y
@@ -50,9 +52,9 @@ def test_dummy_cache():
 
     cache.USE_INSTANCE_CACHE = False
 
-    x = Dummy(1, 2)
-    y = Dummy(1, 2)
-    z = Dummy2(1, 2)
+    x = Dummy(1, np.array(2))
+    y = Dummy(1, np.array(2))
+    z = Dummy2(1, np.array(2))
 
     assert x is not y
     assert z is not y
