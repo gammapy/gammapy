@@ -126,17 +126,27 @@ class CacheInstanceMixin:
     """Cache class instance based on init arguments equivalence"""
 
     def __new__(cls, *args, **kwargs):
+        new = super().__new__(cls)
         if not USE_INSTANCE_CACHE or not is_ray_available():
-            return super().__new__(cls)
+            return new
 
         # Ensure each subclass has its own cache
         if not hasattr(cls, "_instances"):
-            cls._instances = weakref.WeakValueDictionary()
+            cls._instances = _WeakIdDict()
+
+        try:
+            new.__init__(*args, **kwargs)
+        except TypeError:
+            return new  # ignore cache for unpickle
 
         sig = inspect.signature(cls.__init__)
-        key = make_key(sig, *args, **kwargs)
-        if key in cls._instances:
-            return cls._instances[key]
-        instance = super().__new__(cls)
-        cls._instances[key] = instance
-        return instance
+        argkey = make_key(sig, *args, **kwargs)
+        try:
+            out = cls._instances[cls][argkey]
+        except KeyError:
+            try:
+                cache2 = cls._instances[cls]
+            except KeyError:
+                cache2 = cls._instances[cls] = {}
+            out = cache2[argkey] = new
+        return out
