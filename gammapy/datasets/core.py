@@ -289,6 +289,42 @@ class Datasets(collections.abc.MutableSequence):
 
         return self.__class__(datasets)
 
+    def select_from_gti(self, gti, atol="1e-6 s", allow_partial=False):
+        """Select datasets corresponding to each interval in a GTI object.
+
+        Parameters
+        ----------
+        gti : `~gammapy.data.GTI`
+            GTI object containing the time intervals.
+        atol : `~astropy.units.Quantity`
+            Tolerance value for time comparison with different scales. Default is "1e-6 s".
+        allow_partial : bool, optional
+            If True, include datasets that are partially contained in the GTI intervals.
+            Default is False.
+
+        Returns
+        -------
+        datasets_by_gti : list of `Dataset`
+            List of `Dataset` objects belonging to GTI intervals.
+        """
+        atol = u.Quantity(atol)
+        selected_datasets = []
+
+        for t_start, t_stop in gti.time_intervals:
+            for dataset in self:
+                ds_t_start = dataset.gti.time_start[0]
+                ds_t_stop = dataset.gti.time_stop[-1]
+
+                # Check if the dataset is fully or partially within the GTI interval
+                if allow_partial:
+                    if ds_t_stop >= (t_start - atol) and ds_t_start <= (t_stop + atol):
+                        selected_datasets.append(dataset)
+                else:
+                    if ds_t_start >= (t_start - atol) and ds_t_stop <= (t_stop + atol):
+                        selected_datasets.append(dataset)
+
+        return self.__class__(selected_datasets)
+
     def slice_by_energy(self, energy_min, energy_max):
         """Select and slice datasets in energy range.
 
