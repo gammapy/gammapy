@@ -829,3 +829,42 @@ def test_lightcurve_parallel_ray():
     )
     assert estimator._get_n_child_jobs == 2
     parallel.ALLOW_CHILD_JOBS = False
+
+
+@requires_data()
+def test_lightcurve_stacking():
+    datasets = get_spectrum_datasets()
+    time_intervals = [
+        Time(["2010-01-01T00:00:00", "2010-01-01T01:00:00"]),
+        Time(["2010-01-01T01:00:00", "2010-01-01T02:00:00"]),
+    ]
+    energy_edges = [1, 10] * u.TeV
+
+    # Internal stacking
+    estimator_stack = LightCurveEstimator(
+        energy_edges=energy_edges,
+        time_intervals=time_intervals,
+        stack_over_time_interval=True,
+    )
+    results_stack = estimator_stack.run(datasets)
+    table_stack = results_stack.to_table()
+
+    # External stacking
+    datasets = Datasets(datasets)
+    models = datasets.models
+    stacked_datasets = Datasets()
+
+    for t_min, t_max in time_intervals:
+        selected = datasets.select_time(time_min=t_min, time_max=t_max, atol="1e-6 s")
+        stacked = selected.stack_reduce()
+        stacked_datasets.append(stacked)
+
+    stacked_datasets.models = models
+    estimator = LightCurveEstimator(
+        energy_edges=energy_edges,
+        time_intervals=time_intervals,
+        stack_over_time_interval=False,
+    )
+    results_stacked = estimator.run(stacked_datasets)
+    table_stack_outside = results_stacked.to_table()
+    assert_allclose(table_stack["stat_null"], table_stack_outside["stat_null"])

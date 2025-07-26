@@ -98,12 +98,12 @@ class FluxEstimator(ParameterEstimator):
 
         Parameters
         ----------
-        models : `Models`
+        models : `~gammapy.modeling.Models`
             Models.
 
         Returns
         -------
-        model : `ScaleSpectralModel`
+        model : `~gammapy.modeling.ScaleSpectralModel`
             Scale spectral model.
         """
         ref_model = models[self.source].spectral_model
@@ -116,7 +116,7 @@ class FluxEstimator(ParameterEstimator):
 
         Parameters
         ----------
-        datasets : Datasets
+        datasets : `~gammapy.datasets.Datasets`
             Datasets.
 
         Returns
