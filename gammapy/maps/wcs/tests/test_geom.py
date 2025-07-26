@@ -693,11 +693,11 @@ def test_instance_cache():
 
     assert geom1 is geom2
     assert geom1 is geom3
-    assert len(list(WcsGeom._instances.keys())) == 1
+    assert len(list(WcsGeom._instances._dict[id(WcsGeom)][0].keys())) == 1
 
     geom4 = WcsGeom.create(width=5, binsz=0.05, skydir=(83.63, 22.01))  # different
     assert geom4 is not geom1
-    assert len(list(WcsGeom._instances.keys())) == 2
+    assert len(list(WcsGeom._instances._dict[id(WcsGeom)][0].keys())) == 2
 
     cache.USE_INSTANCE_CACHE = False
 
