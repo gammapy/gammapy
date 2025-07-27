@@ -3,15 +3,18 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
+from astropy.coordinates import SkyCoord
+from gammapy.data import ObservationTable, HDUIndexTable, DataStore
 from gammapy.datasets import Datasets, MapDataset, SpectrumDatasetOnOff
 from gammapy.datasets.utils import (
     apply_edisp,
     set_and_restore_mask_fit,
     split_dataset,
     create_global_dataset,
+    create_map_dataset_from_dl4,
 )
 from gammapy.irf import EDispKernel
-from gammapy.maps import Map, MapAxis
+from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling.models import (
     Models,
     PowerLawNormSpectralModel,
@@ -239,3 +242,50 @@ def test_set_and_restore_mask_3d():
     assert_allclose(range1[1].quantity[100, 220].to_value("GeV"), 500.0)
     assert_allclose(range1[0].quantity[0, 0].to_value("GeV"), 10.0)
     assert_allclose(range1[1].quantity[0, 0].to_value("GeV"), 500.0)
+
+
+@requires_data()
+def test_create_map_dataset_from_dl4_hawc():
+    energy_estimator = "NN"
+    data_path = "$GAMMAPY_DATA/hawc/crab_events_pass4/"
+    hdu_filename = f"hdu-index-table-{energy_estimator}-Crab.fits.gz"
+    obs_filename = f"obs-index-table-{energy_estimator}-Crab.fits.gz"
+    obs_table = ObservationTable.read(data_path + obs_filename)
+
+    fHit = 6
+    hdu_table = HDUIndexTable.read(data_path + hdu_filename, hdu=fHit)
+    data_store = DataStore(hdu_table=hdu_table, obs_table=obs_table)
+    obs = data_store.get_observations()[0]
+
+    energy_axis = MapAxis.from_edges(
+        [1.00, 1.78, 3.16, 5.62, 10.0, 17.8, 31.6, 56.2, 100, 177, 316] * u.TeV,
+        name="energy",
+        interp="log",
+    )
+
+    energy_axis_true = MapAxis.from_energy_bounds(
+        1e-3, 1e4, nbin=140, unit="TeV", name="energy_true"
+    )
+
+    geom = WcsGeom.create(
+        skydir=SkyCoord(ra=83.63, dec=22.01, unit="deg", frame="icrs"),
+        width=6 * u.deg,
+        axes=[energy_axis],
+        binsz=0.05,
+    )
+
+    dataset = create_map_dataset_from_dl4(
+        obs, geom=geom, energy_axis_true=energy_axis_true, name=f"fHit {fHit}"
+    )
+
+    assert dataset.psf.energy_name == "energy"
+    assert dataset.psf.psf_map.geom.to_image() == obs.psf.psf_map.geom.to_image()
+    assert dataset.psf.psf_map.geom.axes["rad"] == obs.psf.psf_map.geom.axes["rad"]
+    assert (
+        dataset.psf.psf_map.geom.axes["energy"] != obs.psf.psf_map.geom.axes["energy"]
+    )
+
+    assert (
+        dataset.edisp.edisp_map.geom.to_image() == obs.edisp.edisp_map.geom.to_image()
+    )
+    assert dataset.edisp.edisp_map.geom != obs.edisp.edisp_map.geom
