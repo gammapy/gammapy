@@ -55,7 +55,7 @@ class Sampler:
 
     Examples
     --------
-    For a usage example, see :doc:`/tutorials/api/nested_sampling_Crab` tutorial.
+    For a usage example, see :doc:`/tutorials/details/nested_sampling_Crab` tutorial.
 
     Notes
     -----
@@ -208,7 +208,7 @@ class SamplerResult:
         Array of (weighted) samples that can be used for histograms or corner plots.
     sampler_results : dict
         Output of sampler.
-        See the :doc:`/tutorials/api/nested_sampling_Crab` tutorial for a complete description.
+        See the :doc:`/tutorials/details/nested_sampling_Crab` tutorial for a complete description.
     """
 
     # TODO:

@@ -191,7 +191,7 @@ plt.show()
 # can rely on the `~gammapy.maps.Geom.energy_mask()` method.
 #
 # For more details on masks and the techniques to create them in gammapy,
-# please checkout the dedicated :doc:`/tutorials/api/mask_maps` tutorial.
+# please checkout the dedicated :doc:`/tutorials/details/mask_maps` tutorial.
 #
 
 dataset_stacked.mask_fit = dataset_stacked.counts.geom.energy_mask(

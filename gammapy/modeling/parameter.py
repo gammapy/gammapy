@@ -945,7 +945,7 @@ class PriorParameter(Parameter):
 
     Examples
     --------
-    For a usage example see :doc:`/tutorials/api/priors` tutorial.
+    For a usage example see :doc:`/tutorials/details/priors` tutorial.
     """
 
     def __init__(
