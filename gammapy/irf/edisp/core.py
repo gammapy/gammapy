@@ -248,8 +248,9 @@ class EnergyDispersion2D(IRF):
             Add a colorbar to the plot. Default is False.
         axes_loc : dict, optional
             Keyword arguments passed to `~mpl_toolkits.axes_grid1.axes_divider.AxesDivider.append_axes`.
+            Default is None.
         kwargs_colorbar : dict, optional
-            Keyword arguments passed to `~matplotlib.pyplot.colorbar`.
+            Keyword arguments passed to `~matplotlib.pyplot.colorbar`. Default is None.
         kwargs : dict
             Keyword arguments passed to `~matplotlib.pyplot.pcolormesh`.
 
@@ -262,6 +263,11 @@ class EnergyDispersion2D(IRF):
         kwargs.setdefault("norm", PowerNorm(gamma=0.5))
 
         kwargs_colorbar = kwargs_colorbar or {}
+
+        squared = False
+        if "squared" in kwargs:
+            squared = kwargs["squared"]
+            kwargs.pop("squared")
 
         ax = plt.gca() if ax is None else ax
 
@@ -282,6 +288,9 @@ class EnergyDispersion2D(IRF):
 
         energy_true.format_plot_xaxis(ax=ax)
         migra.format_plot_yaxis(ax=ax)
+
+        if squared:  # The order matters
+            ax.set_box_aspect(1)
 
         if add_cbar:
             label = "Probability density [A.U]."

@@ -71,6 +71,7 @@ def add_colorbar(img, ax, axes_loc=None, **kwargs):
         ax = fig.add_subplot(111)
         map_.sum_over_axes().plot(ax=ax, add_cbar=True, axes_loc=axes_loc,
                                   kwargs_colorbar=kwargs_colorbar)  # doctest: +SKIP
+        plt.show()
 
     """
     kwargs.setdefault("use_gridspec", True)
@@ -78,28 +79,29 @@ def add_colorbar(img, ax, axes_loc=None, **kwargs):
 
     axes_loc = axes_loc or {}
     axes_loc.setdefault("size", "5%")
-    axes_loc.setdefault("pad", "2%")
+    axes_loc.setdefault("pad", "1%")
     axes_loc.setdefault("axes_class", maxes.Axes)
 
     csize = parse_percentage(axes_loc["size"])
     cpad = parse_percentage(axes_loc["pad"])
+
     pos = ax.get_position()
     ax_width = pos.width
     cbar_pad = cpad * ax_width
     cbar_width = csize * ax_width
 
     fig = ax.figure
-    cbar_ax = fig.add_axes(
+    cax = fig.add_axes(
         [pos.x1 + cbar_pad, pos.y0, cbar_width, pos.height],
         axes_class=axes_loc["axes_class"],
     )
 
     if "labelsize" in kwargs:
         fontsize = kwargs["labelsize"]
-        cbar_ax.tick_params(labelsize=fontsize)
+        cax.tick_params(labelsize=fontsize)
         kwargs.pop("labelsize")
 
-    cbar = fig.colorbar(img, cax=cbar_ax, **kwargs)
+    cbar = ax.figure.colorbar(img, cax=cax, **kwargs)
     return cbar
 
 
