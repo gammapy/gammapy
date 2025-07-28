@@ -689,23 +689,6 @@ emitted in the test files. This can be done in the following way:
 Others
 ------
 
-Bundled gammapy.extern code
-+++++++++++++++++++++++++++
-
-We bundle some code in ``gammapy.extern``.
-This is external code that we don't maintain or modify in Gammapy.
-We only bundle small pure-Python files (currently all single-file modules) purely for convenience,
-because having to explain about these modules as Gammapy dependencies to end-users would be annoying.
-And in some cases the file was extracted from some other project, i.e. can't be installed
-separately as a dependency.
-
-For ``gammapy.extern`` we don't generate Sphinx API docs.
-To see what is there, check out the ``gammapy/extern`` directory locally or on
-`GitHub <https://github.com/gammapy/gammapy/tree/master/gammapy/extern>`__.
-Notes on the bundled files are kept in the docstring of
-`gammapy/extern/__init__.py <https://github.com/gammapy/gammapy/blob/master/gammapy/extern/__init__.py>`__.
-
-
 
 Locate origin of warnings
 +++++++++++++++++++++++++
