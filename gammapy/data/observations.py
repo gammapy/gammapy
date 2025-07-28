@@ -467,6 +467,7 @@ class Observation:
         * Energy dispersion 2D map : migration as a function of true energy for a given offset
         * Point spread function plot : containment radius as a function of energy for various
           containment fractions
+        * Rad max plot : radius of the directional cut (rad max) as a function of energy
 
 
         Parameters
