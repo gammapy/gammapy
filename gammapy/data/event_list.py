@@ -823,7 +823,7 @@ class EventList:
         * 2D counts map
         * Offset squared distribution of the events
         * Counts 2D histogram plot : full field of view offset versus energy
-        * Counts plot : counts as a function of energy
+        * Counts spectrum plot : counts as a function of energy
         * Event rate time plot : counts as a function of time
 
         If ``allsky=True`` the first three subplots are replaced by an all-sky map of the counts.
