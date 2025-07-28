@@ -1,5 +1,3 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
-
 """
 Constraining parameter limits
 =============================
@@ -8,11 +6,13 @@ Explore how to deal with upper limits on parameters.
 
 Prerequisites
 -------------
+
 It is advisable to understand the general Gammapy modelling and fitting framework before proceeding
-with this notebook, eg see :doc:`/docs/user-guide/modeling`.
+with this notebook, e.g. see :doc:`/user-guide/modeling`.
 
 Context
 -------
+
 Even with significant detection of a source, constraining specific model parameters may remain difficult,
 allowing only for the calculation of confidence intervals.
 
@@ -43,16 +43,6 @@ from gammapy.modeling.models import (
 from gammapy.stats.utils import ts_to_sigma, sigma_to_ts
 import numpy as np
 
-
-######################################################################
-# Check setup
-# -----------
-#
-
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
-
 ######################################################################
 # Load observation
 # ----------------
@@ -60,7 +50,7 @@ check_tutorials_setup()
 # We will now use a precomputed blazar dataset to see how to constrain
 # model parameters. Detailed modeling of this dataset may be found in the
 # :doc:`/tutorials/analysis-1d/ebl` notebook. We will try to
-# constrain the spectral cutoff in the source. To see
+# constrain the spectral cutoff in the source.
 #
 
 dataset_onoff = SpectrumDatasetOnOff.read(
@@ -77,23 +67,24 @@ plt.show()
 # Fit a spectral model with a cutoff
 #
 
-spectral1 = ExpCutoffPowerLawSpectralModel()
-spectral1.amplitude.value = 5e-12
-spectral1.alpha.value = 2.0
+spectral_model = ExpCutoffPowerLawSpectralModel(
+    amplitude="5e-12 TeV-1 s-1 cm-2", alpha=2
+)
 
-model_pks = SkyModel(spectral1, name="model_pks")
+model_pks = SkyModel(spectral_model, name="model_pks")
 dataset_onoff.models = model_pks
 
 fit = Fit()
-res_pks = fit.run(dataset_onoff)
-print(res_pks.models)
+result_pks = fit.run(dataset_onoff)
+print(result_pks.models)
 
 
 ######################################################################
-# We see that the parameter `lambda_` is not well constrained. In this
+# We see that the parameter ``lambda_`` (inverse of the cut-off energy) is not well
+# constrained as the errors are very large. In this
 # case, it can be helpful to look at the likelihood profile of the parameter.
 # We will use the `~gammapy.modeling.Fit.stat_profile` function, and refit the other free
-# parameters in the process by setting `reoptimize=True`
+# parameters in the process by setting ``reoptimize=True``
 #
 
 parameter = model_pks.parameters["lambda_"]
@@ -105,7 +96,7 @@ profile = fit.stat_profile(datasets=dataset_onoff, parameter=parameter, reoptimi
 
 
 ######################################################################
-# `profile` is a dictionary that stores the values of `lambda_` and the
+# `profile` is a dictionary that stores the values of ``lambda_`` and the
 # corresponding likelihood values. Let's try to visualise it.
 #
 
@@ -118,17 +109,18 @@ ax.set_xlabel("Cutoff value [1/TeV]")
 ax.set_ylabel(r"$\Delta$TS")
 secay = ax.secondary_yaxis("right", functions=(ts_to_sigma, sigma_to_ts))
 secay.set_ylabel("Significance [$\sigma$]")
-plt.title("Cutoff likelihood profile", fontsize=20, y=1.05)
+ax.set_title("Cutoff likelihood profile")
 plt.show()
 
 
 ######################################################################
 # Estimate the limits on the parameter
 # -------------------------------------
+#
 # Thus, this dataset does not yield a significant spectral cutoff in
 # PKS2155-304. In particular, we cannot constrain the lower limit from
 # this profile. We can compute the limits of the cutoff from the Probability Density Function (PDF).
-# For this, we will first convert the likelihood profile into a normalised PDF with `likelihood_to_pdf`
+# For this, we will first convert the likelihood profile into a normalised PDF with ``likelihood_to_pdf``
 # and then use it to compute the intervals from the Cumulative Distribution Function (CDF).
 
 from scipy.interpolate import CubicSpline
@@ -168,14 +160,19 @@ def compute_lower_limit(theta_values, pdf, confidence_level=0.95):
     return float(lower_limit)
 
 
+######################################################################
+# Plot the normalised probability density function (PDF):
+
 pdf = likelihood_to_pdf(values, loglike)
 plt.plot(values, pdf)
 plt.xlabel("Cutoff value [1/TeV]")
 plt.ylabel("PDF")
 plt.show()
 
+######################################################################
+# Compute one-sided limits with a confidence level of 68%
+
 conf_level = 0.68
-# Compute one-sided limits
 UL = compute_upper_limit(values, pdf, confidence_level=conf_level)
 LL = compute_lower_limit(values, pdf, confidence_level=conf_level)
 print(f"lower limit, upper limit: {LL:.3f}, {UL:.3f}")
@@ -185,7 +182,7 @@ if LL > parameter.value:
 if UL < parameter.value:
     print("upper limit is not constrained")
 
-unit = parameter.unit**-1  # Give in units of energy since lambda_ = 1/cutoff energy
+unit = parameter.unit**-1  # Given in units of energy since lambda_ = 1/cutoff energy
 print(
     f"{conf_level*100:.2f}% lower limit of energy cutoff: {1/UL:.4f} ({unit.to_string()})"
 )
@@ -193,7 +190,7 @@ print(
 
 ######################################################################
 # Since our dataset actually starts from 200 GeV, this analysis
-#  rule out a cut-off at 68% confidence in the energy range considered.
+# rule out a cut-off at 68% confidence in the energy range considered.
 #
 #
 # We now plot, in energy units, the likelihood profile of the cutoff with a brown dotted
@@ -203,9 +200,10 @@ ax = plt.gca()
 ax.plot(1.0 / values, loglike - np.min(loglike))
 ax.set_xlabel("Energy cutoff [TeV]")
 ax.set_ylabel(r"$\Delta$TS")
+ax.set_xscale("log")
 ax.axvline(1.0 / UL, ls="dotted", color="brown")
-plt.title("Cutoff likelihood profile", fontsize=20, y=1.05)
-plt.xscale("log")
+ax.set_title("Cutoff likelihood profile")
+plt.show()
 
 
 ######################################################################
