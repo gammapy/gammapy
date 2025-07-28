@@ -1,5 +1,3 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
-
 """
 Computing flux upper limits
 ===========================
@@ -233,7 +231,7 @@ print(
 # We can then ask,  **would this source have been detectable given this IRF/exposure time?**
 #
 # The `~gammapy.estimators.FluxPointsEstimator` can be used to obtain the sensitivity,
-# which can be compared to the expected flux. We have the 5-sigma
+# which can be compared to the flux prediction for a given (hypothetical) source. We have the 5-sigma
 # sensitivity here, which can be configured using ``n_sigma_sensitivity``
 # parameter of this estimator. Let us see what we would have seen if a Crab-like source was
 # present in the center.
