@@ -517,8 +517,8 @@ class ObservationTablePrototype(ObservationTable):
         # Get corresponding names now only for minimal set of required names, to check if present on disk.
         # TODO: Adapt this for case of alternative names, e.g. for pointing.
         for name in self.names_min_req:
-            names = self.get_corresponding_names(name, format)
-            for el in names:
+            names_min_req_on_disk = correspondance_dict[name]
+            for el in names_min_req_on_disk:
                 if el not in table_disk.columns:
                     raise RuntimeError(
                         "Not all required names in "
@@ -528,8 +528,8 @@ class ObservationTablePrototype(ObservationTable):
                         + "."
                     )  # looked into gammapy/workflow/core.py
 
-        # Create internal table "table_internal".
-        # For set internal columns (min+optional-internal), infer therefore the units, the types and the description for the internal table columns.
+        # Create internal table "table_internal" with all names, corresp. units, types and descriptions, for the internal table model.
+        # The internal table model may know more names than minimal required on disk for the read/fill-process.
         units_internal = []
         types_internal = []
         description_internal = []
