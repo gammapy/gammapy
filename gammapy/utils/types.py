@@ -8,7 +8,7 @@ from pydantic import PlainSerializer
 from pydantic.functional_validators import AfterValidator, BeforeValidator
 from .observers import observatory_locations
 from .scripts import make_path
-from numpy import dtype
+import numpy as np
 
 __all__ = [
     "AngleType",
@@ -226,14 +226,7 @@ def cast_func(value, type):
         Casted value.
     """
 
-    casted_value = value  # init
+    value = np.array([value])
+    casted_value = value.astype(type)[0]
 
-    if type in [dtype(str)]:  # str
-        casted_value = str(value)
-    elif type in [dtype(int)]:  # int
-        casted_value = int(float(value))
-    elif type in [dtype(float)]:  # float
-        casted_value == float(value)
-    else:
-        raise UserWarning("Could not cast value to dtype: " + str(type) + ".")
     return casted_value
