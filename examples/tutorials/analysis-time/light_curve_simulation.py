@@ -92,13 +92,6 @@ warnings.filterwarnings(
     action="ignore", message="overflow encountered in exp", module="astropy"
 )
 
-######################################################################
-# Check setup
-# -----------
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
-
 
 ######################################################################
 # We first define our preferred time format:

@@ -47,12 +47,6 @@ from gammapy.makers import SpectrumDatasetMaker
 from gammapy.maps import MapAxis, RegionGeom
 from gammapy.maps.axes import UNIT_STRING_FORMAT
 
-######################################################################
-# Check setup
-# -----------
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
 
 ######################################################################
 # Define analysis region and energy binning

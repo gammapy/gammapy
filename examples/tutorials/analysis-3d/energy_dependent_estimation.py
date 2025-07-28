@@ -66,14 +66,6 @@ from gammapy.modeling.models import (
 from gammapy.stats.utils import ts_to_sigma
 
 ######################################################################
-# Check setup
-# -----------
-
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
-
-######################################################################
 # Obtain the data to use
 # ----------------------
 #

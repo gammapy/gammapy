@@ -11,6 +11,9 @@ from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling import Parameter, Parameters
 from gammapy.modeling.models import (
     GaussianSpatialModel,
+    GeneralizedGaussianSpatialModel,
+    Shell2SpatialModel,
+    ShellSpatialModel,
     Model,
     ModelBase,
     Models,
@@ -18,6 +21,7 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
     FoVBackgroundModel,
+    DiskSpatialModel,
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data
 
@@ -361,6 +365,35 @@ def test_two_fov_bkg_models_single_dataset():
         match="Only one FoVBackgroundModel per Dataset is permitted - already got one for ds1",
     ):
         Models([fov1, fov2])
+
+
+def test_to_regions():
+    spectral = PowerLawSpectralModel()
+    spatials = [
+        PointSpatialModel(),
+        GaussianSpatialModel(sigma="1deg"),
+        DiskSpatialModel(r_0="1deg"),
+        GeneralizedGaussianSpatialModel(r_0="1deg"),
+        ShellSpatialModel(
+            radius="0.5deg",
+            width="0.5deg",
+        ),
+        Shell2SpatialModel(r_0="1deg", eta=0.5),
+    ]
+    models = Models([SkyModel(spectral, spatial) for spatial in spatials])
+
+    regs1 = models.to_regions()
+    regs2 = models.to_regions(size_factor=3)
+    assert len(regs1) == 6
+    for reg1, reg2 in zip(regs1[1:], regs2[1:]):
+        try:
+            assert_allclose(reg1.width, 2 * u.deg, rtol=1e-5)
+            assert_allclose(reg2.width, 6 * u.deg, rtol=1e-5)
+        except AttributeError:
+            assert_allclose(reg1.inner_radius, 0.5 * u.deg, rtol=1e-5)
+            assert_allclose(reg2.inner_radius, 1.5 * u.deg, rtol=1e-5)
+            assert_allclose(reg1.outer_radius, 1 * u.deg, rtol=1e-5)
+            assert_allclose(reg2.outer_radius, 3 * u.deg, rtol=1e-5)
 
 
 def test_bad_covariance(caplog, tmp_path):

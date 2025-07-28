@@ -40,7 +40,7 @@ from regions import CircleSkyRegion, PointSkyRegion
 from gammapy.data import DataStore
 from gammapy.modeling.models import SkyModel, LogParabolaSpectralModel
 from gammapy.modeling import Fit
-from gammapy.datasets import Datasets, SpectrumDataset, FluxPointsDataset
+from gammapy.datasets import Datasets, SpectrumDataset
 from gammapy.estimators import FluxPointsEstimator, LightCurveEstimator
 from gammapy.makers import (
     ReflectedRegionsBackgroundMaker,
@@ -51,17 +51,6 @@ from gammapy.makers import (
 from astropy.coordinates import SkyCoord
 from gammapy.visualization import plot_spectrum_datasets_off_regions
 from gammapy.utils.regions import extract_bright_star_regions
-
-
-######################################################################
-# Check setup
-# -----------
-#
-
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
-
 
 ######################################################################
 # Data exploration
@@ -385,8 +374,8 @@ flux_points = fpe.run(datasets=datasets)
 #
 
 ax = flux_points.plot()
-spectral_model.plot(ax=ax, energy_bounds=(0.1, 30)*u.TeV)
-spectral_model.plot_error(ax=ax, energy_bounds=(0.1, 30)*u.TeV)
+spectral_model.plot(ax=ax, energy_bounds=(0.1, 30) * u.TeV)
+spectral_model.plot_error(ax=ax, energy_bounds=(0.1, 30) * u.TeV)
 
 plt.show()
 
