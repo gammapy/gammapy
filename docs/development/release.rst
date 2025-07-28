@@ -28,7 +28,7 @@ Feature Freeze and Branching
    * To generate the list of pull requests and issues run ``python dev/github_summary.py create_pull_request_table``.
      This will create a list of all closed pull requests and save it to ``table_pr.ecsv``.
      Next, use the option ``merged_PR`` to extract a relevant list corresponding to the release.
-     You can then manually delete the any entries which correspond to small improvements or bug fixes.
+     You can then manually delete any entries which correspond to small improvements or bug fixes.
 #. Update the author list manually in the  ``CITATION.cff``.
 
     * You can use the helper script ``dev/authors.py`` for this.
