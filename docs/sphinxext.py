@@ -61,7 +61,7 @@ TUTORIAL_SORT_DICT = {
         "variability_estimation.py": 2,
         "time_resolved_spectroscopy.py": 3,
         "light_curve_simulation.py": 4,
-    #astro
+    # astro
         "ebl.py": 0,
         "energy_dependent_estimation.py": 1,
         "pulsar_analysis.py": 2,
