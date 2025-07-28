@@ -24,7 +24,14 @@ Feature Freeze and Branching
 **A few days before the feature freeze:**
 
 #. Fill the changelog ``docs/release-notes/<version>.rst`` for the version you are about to release.
+
+   * To generate the list of pull requests and issues run ``python dev/github_summary.py create_pull_request_table``.
+     This will create a list of all closed pull requests and save it to ``table_pr.ecsv``.
+     Next, use the option ``merged_PR`` to extract a relevant list corresponding to the release.
+     You can then manually delete any entries which correspond to small improvements or bug fixes.
 #. Update the author list manually in the  ``CITATION.cff``.
+
+    * You can use the helper script ``dev/authors.py`` for this.
 #. Open a PR including both changes and mark it with the ``backport-v<version>.x`` label.
    Gather feedback from the Gammapy user and dev community and finally merge and backport to the
    ``v<version>.x`` branch.
