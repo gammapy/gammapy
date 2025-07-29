@@ -213,7 +213,7 @@ print(intrinsic_model)
 ######################################################################
 # We add Gaussian priors on the `alpha` and `beta` parameters based on the 4FGL
 # measurements and the associated errors. For more details on using priors, see
-# :doc:`/tutorials/api/priors`
+# :doc:`/tutorials/details/priors`
 #
 
 intrinsic_model.alpha.prior = GaussianPrior(
@@ -252,7 +252,7 @@ print(result1.parameters.to_table())
 # ---------------------------------------
 #
 # For more information about stat profiles, see
-# :doc:`/tutorials/api/fitting`
+# :doc:`/tutorials/details/fitting`
 #
 
 total_stat = result1.total_stat

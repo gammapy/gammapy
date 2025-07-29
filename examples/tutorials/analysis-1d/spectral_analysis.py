@@ -223,7 +223,7 @@ print(datasets)
 ######################################################################
 # The data reduction loop can also be performed through the
 # `~gammapy.makers.DatasetsMaker` class that take a list of makers as input,
-# as described :doc:`here </tutorials/api/makers>`
+# as described :doc:`here </tutorials/details/makers>`
 
 
 ######################################################################
@@ -360,7 +360,7 @@ plt.show()
 
 ######################################################################
 # For more ways of assessing fit quality, please refer to the dedicated
-# :doc:`/tutorials/api/fitting` tutorial.
+# :doc:`/tutorials/details/fitting` tutorial.
 #
 
 
