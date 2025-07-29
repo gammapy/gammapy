@@ -1,3 +1,4 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 from gammapy.utils.testing import requires_data, requires_dependency
 from numpy.testing import assert_allclose
 from gammapy.modeling.models import SkyModel
