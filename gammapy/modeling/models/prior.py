@@ -164,7 +164,8 @@ class GaussianPrior(Prior):
     @staticmethod
     def evaluate(value, mu, sigma):
         """Evaluate the Gaussian prior."""
-        return ((value - mu) / sigma) ** 2
+        rv = norm(mu, sigma)
+        return -2 * rv.logpdf(value)
 
     @property
     def _random_variable(self):
@@ -175,31 +176,30 @@ class GaussianPrior(Prior):
 class UniformPrior(Prior):
     """Uniform Prior.
 
-    Returns 0 if the parameter value is in ]min, max[.
-    Returns 1, if otherwise.
+    Returns 2log(max-min) if the parameter value is in [min, max].
+    Returns inf, otherwise.
+    Only well defined for finite values of min and max.
 
     Parameters
     ----------
     min : float, optional
         Minimum value.
-        Default is -`~numpy.inf`.
+        Default is 0.
     max : float, optional
         Maximum value.
-        Default is `~numpy.inf`.
+        Default is 1.
     """
 
     tag = ["UniformPrior"]
     _type = "prior"
-    min = PriorParameter(name="min", value=-np.inf, unit="")
-    max = PriorParameter(name="max", value=np.inf, unit="")
+    min = PriorParameter(name="min", value=0.0, unit="")
+    max = PriorParameter(name="max", value=1.0, unit="")
 
     @staticmethod
     def evaluate(value, min, max):
         """Evaluate the uniform prior."""
-        if min < value < max:
-            return 0.0
-        else:
-            return 1.0
+        rv = uniform(min, max - min)
+        return -2 * rv.logpdf(value)
 
     @property
     def _random_variable(self):
