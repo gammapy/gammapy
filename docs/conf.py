@@ -61,7 +61,7 @@ linkcheck_ignore = [
     "https://ipython.org",
     "https://jupyter.org",
     # private pages
-    "https://cchesswiki.in2p3.fr/hess/*"
+    "https://cchesswiki.in2p3.fr/*",
     "https://github.com/VERITAS-Observatory/VEGAS",
 ]
 

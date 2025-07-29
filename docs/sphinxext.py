@@ -3,7 +3,7 @@
 #
 # Gammapy documentation ordering configuration file.
 #
-# GalleryExplicitOrder is a re-implemation of private sphinx_gallery class `_SortKey`.
+# GalleryExplicitOrder is a re-implementation of private sphinx_gallery class `_SortKey`.
 #
 
 
