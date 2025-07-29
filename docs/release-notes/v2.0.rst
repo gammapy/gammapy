@@ -133,7 +133,7 @@ Contributors
 - lgreaux
 - Arnau Aguasca-Cabot
 - Fabio Acero
-- npigoux
+- Natthan Pigoux
 - Mitsunari-Takahashi
 - Tobi Preis
 - Samantha Wong
