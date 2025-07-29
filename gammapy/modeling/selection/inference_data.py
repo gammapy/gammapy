@@ -296,7 +296,7 @@ def add_sample_wise_quantities(inference_data, datasets, group_name):
                 )  # assuming we have stat as -2lnL
                 prior_stat_sum = np.sum(
                     [
-                        p.prior.random_variable.logpdf(p.value)
+                        p.prior._random_variable.logpdf(p.value)
                         for p in datasets.models.parameters.free_unique_parameters
                     ]
                 )
