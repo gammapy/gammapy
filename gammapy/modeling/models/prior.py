@@ -79,7 +79,7 @@ class Prior(ModelBase):
 
     def _inverse_cdf(self, value):
         """Return inverse CDF for prior."""
-        return self.random_variable.ppf(value)
+        return self._random_variable.ppf(value)
 
     @property
     def weight(self):
@@ -167,11 +167,9 @@ class GaussianPrior(Prior):
         return ((value - mu) / sigma) ** 2
 
     @property
-    def random_variable(self):
+    def _random_variable(self):
         """Return random variable object for prior."""
         return norm(self.mu.value, self.sigma.value)
-
-
 
 
 class UniformPrior(Prior):
@@ -204,7 +202,7 @@ class UniformPrior(Prior):
             return 1.0
 
     @property
-    def random_variable(self):
+    def _random_variable(self):
         """Return random variable object for prior."""
         return uniform(self.min.value, self.max.value - self.min.value)
 
@@ -238,6 +236,6 @@ class LogUniformPrior(Prior):
         return -2 * rv.logpdf(value)
 
     @property
-    def random_variable(self):
+    def _random_variable(self):
         """Return random variable object for prior."""
         return loguniform(self.min.value, self.max.value)
