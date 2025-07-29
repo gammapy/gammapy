@@ -11,6 +11,8 @@ from gammapy.utils.time import time_ref_from_dict
 from gammapy.utils.scripts import read_yaml
 from gammapy.utils.types import cast_func
 from pathlib import Path
+# from astropy.time import Time
+
 
 __all__ = ["ObservationTable", "ObservationTablePrototype"]
 
@@ -580,16 +582,16 @@ class ObservationTablePrototype(ObservationTable):
                             frame="icrs",
                         )
                     )
-                elif name == "TSTART":
-                    # row_internal.append(
-                    # Time(
-                    # time_ref_from_dict(table_disk.meta)) + table_disk[i][names_disk[0]],
-                    # time_ref_from_dict(table_disk.meta)) + table_disk[i][names_disk[1]],
-                    # )
-                    # )
-                    print(
-                        time_ref_from_dict(meta)
-                    )  # like in event_list.py, l.201, commit: 08c6f6a
+                # elif name == "TSTART":
+                # row_internal.append(
+
+                # time_ref_from_dict(table_disk.meta) + Time(table_disk[i][names_disk[0]],format="mjd",scale="tt"),
+                # time_ref_from_dict(table_disk.meta) + Time(table_disk[i][names_disk[1]],format="mjd",scale="tt")
+
+                # )
+                # print(
+                # time_ref_from_dict(meta)
+                # )  # like in event_list.py, l.201, commit: 08c6f6a
             table_internal.add_row(
                 row_internal
             )  # Add row to internal table (fill table).
