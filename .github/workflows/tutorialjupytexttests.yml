@@ -10,20 +10,26 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
 
+    env:
+      GAMMAPY_DATA: /home/runner/work/gammapy/gammapy/gammapy-datasets/dev
+
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Mamba setup
+        uses: mamba-org/setup-micromamba@v2
         with:
-          python-version: '3.11'
+          environment-file: environment-dev.yml
+          cache-downloads: true
 
-      - name: Install Gammapy and dependencies
+      - name: Install Gammapy
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install jupytext
           python -m pip install .
+
+      - name: download datasets
+        run: |
+          gammapy download datasets
 
       - name: Execute tutorials with Jupytext
         run: jupytext --execute examples/tutorials/*/*.py
