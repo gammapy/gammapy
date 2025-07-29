@@ -229,7 +229,10 @@ def test_fermipy_datasets_reader():
         datasets[0]._psf_kernel.psf_kernel_map.data.sum(axis=(1, 2)), 1, rtol=1e-5
     )
     assert_allclose(
-        datasets[0].edisp.exposure_map.data, datasets[0].psf.exposure_map.data
+        datasets[0].edisp.exposure_map.quantity, datasets[0].psf.exposure_map.quantity
     )
+    assert datasets[0].edisp.exposure_map.unit == datasets[0].psf.exposure_map.unit
+    assert datasets[0].edisp.exposure_map.unit == datasets[0].exposure.unit
+
     assert datasets[0].name == "P8R3_SOURCEVETO_V3_PSF1_v1"
     assert datasets.models.names[0] == "isotropic_P8R3_SOURCEVETO_V3_PSF1_v1"

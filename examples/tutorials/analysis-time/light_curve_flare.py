@@ -88,13 +88,6 @@ from gammapy.maps import MapAxis, RegionGeom
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from gammapy.modeling import Fit
 
-######################################################################
-# Check setup
-# -----------
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
-
 
 ######################################################################
 # Select the data
@@ -222,7 +215,6 @@ safe_mask_masker = SafeMaskMaker(methods=["aeff-max"], aeff_percent=10)
 # Now we perform the actual data reduction in the ``time_intervals``.
 #
 
-# %%time
 datasets = Datasets()
 
 dataset_empty = SpectrumDataset.create(geom=geom, energy_axis_true=energy_axis_true)
@@ -261,7 +253,6 @@ sky_model = SkyModel(spatial_model=None, spectral_model=spectral_model, name="pk
 datasets.models = sky_model
 
 
-# %%time
 fit = Fit()
 result = fit.run(datasets)
 print(result.models.to_parameters_table())
@@ -296,7 +287,6 @@ lc_maker_1d.norm.scan_max = 10
 # we select the 0.7-20 TeV range.
 #
 
-# %%time
 lc_1d = lc_maker_1d.run(datasets)
 
 

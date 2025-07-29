@@ -112,14 +112,6 @@ from gammapy.modeling.models import (
 )
 
 ######################################################################
-# Check setup
-# -----------
-
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
-
-######################################################################
 # Define an `~gammapy.data.Observation`
 # -------------------------------------
 #
@@ -165,7 +157,7 @@ print(observation)
 #
 # Let’s generate the `~gammapy.datasets.Dataset` object (for more info
 # on `~gammapy.datasets.Dataset` objects, please checkout
-# :doc:`/tutorials/api/datasets` tutorial):
+# :doc:`/tutorials/details/datasets` tutorial):
 # we define the energy axes (true and reconstructed), the migration axis
 # and the geometry of the observation.
 #
@@ -204,7 +196,6 @@ geom = WcsGeom.create(
 # function. We put it into the ``event_sampling`` sub-folder:
 #
 
-# %%time
 empty = MapDataset.create(
     geom,
     energy_axis_true=energy_axis_true,
@@ -268,7 +259,6 @@ print(dataset.models)
 # data information.
 #
 
-# %%time
 sampler = MapDatasetEventSampler(random_state=0)
 events = sampler.run(dataset, observation)
 
@@ -369,7 +359,6 @@ print(dataset.models)
 # And now, let’s simulate the variable source:
 #
 
-# %%time
 sampler = MapDatasetEventSampler(random_state=0)
 events = sampler.run(dataset, observation)
 
@@ -434,7 +423,6 @@ dataset.models = models_diffuse
 print(dataset.models)
 
 
-# %%time
 sampler = MapDatasetEventSampler(random_state=0)
 events = sampler.run(dataset, observation)
 
@@ -457,7 +445,6 @@ plt.show()
 tstarts = Time("2020-01-01 00:00:00") + [1, 5, 7] * u.hr
 livetimes = [1, 1, 1] * u.hr
 
-# %%time
 n_obs = len(tstarts)
 irf_paths = [path / irf_filename] * n_obs
 events_paths = []

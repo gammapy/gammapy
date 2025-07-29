@@ -77,7 +77,8 @@ plt.show()
 # Making a theta2 plot for a given energy range
 # ---------------------------------------------
 #
-# with the function `make_theta_squared_table`, one can also select a fixed energy range.
+# with the function `~gammapy.makers.utils.make_theta_squared_table`, one can
+# also select a fixed energy range.
 #
 
 theta2_table_en = make_theta_squared_table(

@@ -157,7 +157,7 @@ just import the functionality you need and call it, like this:
 
    >>> from gammapy.stats import CashCountsStatistic
    >>> CashCountsStatistic(n_on=10, mu_bkg=4.2).sqrt_ts
-   np.float64(2.397918129147546)
+   2.397918129147546
 
 If you imagine that the actual computation involves many lines of code (and not
 just a one-line function call), and that you need to do this computation

@@ -10,10 +10,10 @@ This tutorial describes the fitting steps using a maximum likelihood (Frequentis
 
 Alternatively, we could have a Bayesian approach by assigning a prior probability distribution over
 the parameters and compute the posterior distribution to fit the parameters. This is described in the
-:doc:`/tutorials/api/priors` tutorial.
+:doc:`/tutorials/details/priors` tutorial.
 
 One can also perform a Bayesian analysis using a nested sampling technique. This is described
-in the :doc:`/tutorials/api/nested_sampling_Crab` tutorial.
+in the :doc:`/tutorials/details/nested_sampling_Crab` tutorial.
 
 Prerequisites
 -------------
@@ -29,8 +29,8 @@ Proposed approach
 
 This is a hands-on tutorial to `~gammapy.modeling`, showing how to do
 perform a Fit in gammapy. The emphasis here is on interfacing the
-`Fit` class and inspecting the errors. To see an analysis example of
-how datasets and models interact, see the :doc:`/tutorials/api/model_management` tutorial.
+`~gammapy.modeling.Fit` class and inspecting the errors. To see an analysis example of
+how datasets and models interact, see the :doc:`/tutorials/details/model_management` tutorial.
 As an example, in this notebook, we are going to work with H.E.S.S. data of the Crab Nebula and show in
 particular how to :
 
@@ -39,7 +39,7 @@ particular how to :
 - access covariance matrix information and parameter errors
 - compute likelihood profile - compute confidence contours
 
-See also: :doc:`/tutorials/api/models` and :ref:`modeling`.
+See also: :doc:`/tutorials/details/models` and :ref:`modeling`.
 
 The setup
 ---------
@@ -54,12 +54,12 @@ from IPython.display import display
 from gammapy.datasets import Datasets, SpectrumDatasetOnOff
 from gammapy.modeling import Fit
 from gammapy.modeling.models import LogParabolaSpectralModel, SkyModel
+from gammapy.visualization.utils import plot_contour_line
 
 ######################################################################
 # Check setup
 # -----------
 from gammapy.utils.check import check_tutorials_setup
-from gammapy.visualization.utils import plot_contour_line
 
 check_tutorials_setup()
 
@@ -111,7 +111,7 @@ dataset_hess.mask_fit = dataset_hess.counts.geom.energy_mask(e_min, e_max)
 # Fitting options
 # ---------------
 #
-# First let’s create a `Fit` instance:
+# First let’s create a `~gammapy.modeling.Fit` instance:
 #
 
 scipy_opts = {
@@ -124,8 +124,8 @@ fit_scipy = Fit(store_trace=True, optimize_opts=scipy_opts)
 
 ######################################################################
 # By default the fit is performed using MINUIT, you can select alternative
-# optimizers and set their option using the `optimize_opts` argument of
-# the `Fit.run()` method. In addition we have specified to store the
+# optimizers and set their option using the ``optimize_opts`` argument of
+# the `~gammapy.modeling.Fit.run()` method. In addition we have specified to store the
 # trace of parameter values of the fit.
 #
 # Note that, for now, covariance matrix and errors are computed only for
@@ -138,7 +138,6 @@ fit_scipy = Fit(store_trace=True, optimize_opts=scipy_opts)
 # | https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html
 #
 
-# %%time
 result_scipy = fit_scipy.run(datasets)
 
 
@@ -151,7 +150,6 @@ result_scipy = fit_scipy.run(datasets)
 #   page https://cxc.cfa.harvard.edu/sherpa/methods/opt_methods.html
 #
 
-# %%time
 sherpa_opts = {"method": "simplex", "ftol": 1e-3, "maxfev": int(1e4)}
 fit_sherpa = Fit(store_trace=True, backend="sherpa", optimize_opts=sherpa_opts)
 results_simplex = fit_sherpa.run(datasets)
@@ -173,7 +171,6 @@ results_simplex = fit_sherpa.run(datasets)
 # you should run the final fit with strategy 2.
 #
 
-# %%time
 fit = Fit(store_trace=True)
 minuit_opts = {"tol": 0.001, "strategy": 1}
 fit.backend = "minuit"
@@ -368,7 +365,6 @@ def make_contours(fit, datasets, model, params, npoints, sigmas):
 # Now we can compute few contours.
 #
 
-# %%time
 params = ["alpha", "beta", "amplitude"]
 sigmas = [1, 2]
 cts_sigma = make_contours(
@@ -444,8 +440,8 @@ plt.tight_layout()
 # meaning that it can be run with MINUIT, sherpa or scipy as fitting
 # tools. Here we will stick with MINUIT, which is the default choice:
 #
-# As an example, we can compute the confidence contour for the `alpha`
-# and `beta` parameters of the `dataset_hess`. Here we define the
+# As an example, we can compute the confidence contour for the ``alpha``
+# and ``beta`` parameters of the ``dataset_hess``. Here we define the
 # parameter space:
 #
 
@@ -458,9 +454,9 @@ par_beta.scan_values = np.linspace(-0.05, 0.55, 20)
 
 
 ######################################################################
-# Then we run the algorithm, by choosing `reoptimize=False` for the sake
+# Then we run the algorithm, by choosing ``reoptimize=False`` for the sake
 # of time saving. In real life applications, we strongly recommend to use
-# `reoptimize=True`, so that all free nuisance parameters will be fit at
+# ``reoptimize=True``, so that all free nuisance parameters will be fit at
 # each grid node. This is the correct way, statistically speaking, of
 # computing confidence contours, but is expected to be time consuming.
 #
@@ -520,7 +516,7 @@ ax.clabel(contours, fmt="%.0f $\\sigma$", inline=3, fontsize=15)
 plt.show()
 
 ######################################################################
-# Note that, if computed with `reoptimize=True`, this plot would be
+# Note that, if computed with ``reoptimize=True``, this plot would be
 # completely consistent with the third panel of the plot produced with
 # `~gammapy.modeling.Fit.stat_contour` (try!).
 #

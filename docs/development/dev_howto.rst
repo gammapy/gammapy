@@ -12,7 +12,7 @@ General conventions
 Python version support
 ++++++++++++++++++++++
 
-In Gammapy we currently support Python 3.8 or later.
+In Gammapy we currently support Python 3.9 or later.
 
 Coordinate and axis names
 +++++++++++++++++++++++++
@@ -519,6 +519,7 @@ Making a pull request which skips GitHub Actions
 For minor PRs (eg: correcting typos in doc-strings) we can skip GitHub Actions.
 Adding ``[ci skip]`` in a specific commit message will skip CI for that specific commit which can be useful for draft or incomplete PR.
 For details, `see here. <https://github.blog/changelog/2021-02-08-github-actions-skip-pull-request-and-push-workflows-with-skip-ci/>`__
+See also section: Skip GitHub Actions on local fork, below.
 
 Fix non-Unix line endings
 +++++++++++++++++++++++++
@@ -687,23 +688,6 @@ emitted in the test files. This can be done in the following way:
 
 Others
 ------
-
-Bundled gammapy.extern code
-+++++++++++++++++++++++++++
-
-We bundle some code in ``gammapy.extern``.
-This is external code that we don't maintain or modify in Gammapy.
-We only bundle small pure-Python files (currently all single-file modules) purely for convenience,
-because having to explain about these modules as Gammapy dependencies to end-users would be annoying.
-And in some cases the file was extracted from some other project, i.e. can't be installed
-separately as a dependency.
-
-For ``gammapy.extern`` we don't generate Sphinx API docs.
-To see what is there, check out the ``gammapy/extern`` directory locally or on
-`GitHub <https://github.com/gammapy/gammapy/tree/master/gammapy/extern>`__.
-Notes on the bundled files are kept in the docstring of
-`gammapy/extern/__init__.py <https://github.com/gammapy/gammapy/blob/master/gammapy/extern/__init__.py>`__.
-
 
 
 Locate origin of warnings
@@ -959,3 +943,10 @@ script can be used as follows::
 
 If the path of the output file is not provided, the script will be written in the same folder as the notebook and with
 the same name.
+
+Skip GitHub Actions on local fork
++++++++++++++++++++++++++++++++++
+If not explicitly needed, it can be convenient to skip the GitHub Actions for pushes onto local forks and only perform them on the upstream, once a pull request is opened.
+This way computation power is saved and automatic commits by the Actions are avoided in the forks commit-history. An easy way to achieve this, is to deactivate the
+GitHub Actions completely for the fork, following the GitHub documentation, `see here. <https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository#managing-github-actions-permissions-for-your-repository>`__
+See also section: Making a pull request which skips GitHub Actions, above.

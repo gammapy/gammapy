@@ -66,7 +66,7 @@ class IRF(metaclass=abc.ABCMeta):
 
     Examples
     --------
-    For a usage example, see :doc:`/tutorials/data/cta` tutorial and :doc:`/tutorials/api/irfs`.
+    For a usage example, see :doc:`/tutorials/data/cta` tutorial and :doc:`/tutorials/details/irfs`.
 
     """
 
@@ -117,6 +117,10 @@ class IRF(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def required_axes(self):
         pass
+
+    @property
+    def required_arguments(self):
+        return self.required_axes
 
     @property
     def is_pointlike(self):

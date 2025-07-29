@@ -1,11 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
+import logging
 from astropy.table import Column, Table
 from gammapy.maps import Map
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from gammapy.stats import WStatCountsStatistic
 from ..core import Estimator
 from ..utils import apply_threshold_sensitivity
+
+log = logging.getLogger(__name__)
 
 __all__ = ["SensitivityEstimator"]
 
@@ -145,6 +148,12 @@ class SensitivityEstimator(Estimator):
 
         """
         energy = dataset._geom.axes["energy"].center
+
+        if np.any(self.spectral_model(energy).value < 0.0):
+            log.warning(
+                "Spectral model predicts negative flux. Results of estimator should be interpreted with caution"
+            )
+
         excess = self.estimate_min_excess(dataset)
         e2dnde = self.estimate_min_e2dnde(excess, dataset)
         criterion = self._get_criterion(
