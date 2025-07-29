@@ -149,8 +149,8 @@ plt.show()
 
 
 ######################################################################
-# Data reduction into a MapDataset
-# --------------------------------
+# Data reduction into a `~gammapy.datasets.MapDataset`
+# ----------------------------------------------------
 #
 # We will now produce a `~gammapy.datasets.MapDataset` using the data from one of the
 # fHit bins. In order to use all bins, one just needs to repeat this
