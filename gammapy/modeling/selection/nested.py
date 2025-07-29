@@ -179,6 +179,8 @@ def select_nested_models(
     provides a statistically significant improvement (larger than the given threshold)
     over a simpler model (null hypothesis), where those parameters are fixed to given values.
 
+    The model is updated to the alternative hypothesis if there is a significant
+    improvement (larger than the given threshold, ``n_sigma``).
 
     Parameters
     ----------

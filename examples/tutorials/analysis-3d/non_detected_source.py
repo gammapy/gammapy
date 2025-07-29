@@ -135,13 +135,13 @@ plt.show()
 # We’ll attempt to fit a point source at that location to determine whether the signal
 # is significant above the background.
 #
-# For this, we compared two hypotheses:
+# For this, we compare two hypotheses:
 #
 # - Null hypothesis, :math:`H_0` - only the background is present (i.e., no source)
 # - Alternative hypothesis, :math:`H_1` - the background plus a point source
 #
-# The difference in test statistic (TS) between the two cases indicates whether the alternative
-# hypothesis is significantly preferred.
+# The difference in test statistic (TS) between the two cases indicates the
+# significance of the alternative hypothesis.
 #
 # For this purpose, we can utilise the function `~gammapy.modeling.select_nested_models` which
 # performs these comparisons internally.
@@ -149,7 +149,7 @@ plt.show()
 # the source has no flux.
 #
 # To prevent the fit from converging to unrelated positions, we freeze the spatial parameters.
-# Alternatively, you could constrain the parameter ranges to stay within your expected region.
+# Alternatively, you can constrain the parameter ranges to stay within your expected region.
 
 
 spectral_model = PowerLawSpectralModel()
