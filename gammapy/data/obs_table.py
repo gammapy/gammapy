@@ -34,7 +34,7 @@ class ObservationTable(Table):
     names_min_req = ["OBS_ID", "OBJECT", "POINTING"]
 
     @classmethod
-    def read(cls, filename, fileformat, **kwargs):
+    def read(cls, filename, fileformat=None, **kwargs):
         """Modified reader for ObservationTablePrototype"""
         """Header and super().read(make_path(filename), **kwargs) taken from class ObservationTable, except "cls" named to "self"."""
 
