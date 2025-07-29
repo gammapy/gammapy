@@ -172,10 +172,6 @@ class GaussianPrior(Prior):
         return norm(self.mu.value, self.sigma.value)
 
 
-@property
-def loguniform_rv(self):
-    """Return random variable object for prior."""
-    return loguniform(self.min.value, self.max.value)
 
 
 class UniformPrior(Prior):
