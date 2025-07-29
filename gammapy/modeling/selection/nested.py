@@ -1,13 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
-from gammapy.modeling import Fit, Parameter, Covariance
+from gammapy.modeling import Fit, Parameter, Covariance, FitResult, OptimizeResult
 from gammapy.stats.utils import sigma_to_ts
-from .fit import FitResult, OptimizeResult
 
-__all__ = ["select_nested_models"]
+__all__ = ["select_nested_models", "NestedModelSelection"]
 
 
-class TestStatisticNested:
+class NestedModelSelection:
     """Compute the test statistic (TS) between two nested hypothesis.
 
     The null hypothesis is the minimal one, for which a set of parameters
@@ -34,8 +33,6 @@ class TestStatisticNested:
     fit : `Fit`
         Fit instance specifying the backend and fit options.
     """
-
-    __test__ = False
 
     def __init__(
         self, parameters, null_values, n_sigma=2, n_free_parameters=None, fit=None
@@ -248,5 +245,7 @@ def select_nested_models(
                                       n_sigma=4,
                                       )
     """
-    test = TestStatisticNested(parameters, null_values, n_sigma, n_free_parameters, fit)
+    test = NestedModelSelection(
+        parameters, null_values, n_sigma, n_free_parameters, fit
+    )
     return test.run(datasets)

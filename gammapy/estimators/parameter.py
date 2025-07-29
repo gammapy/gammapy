@@ -6,7 +6,7 @@ import numpy as np
 from gammapy.datasets import Datasets
 from gammapy.datasets.actors import DatasetsActor
 from gammapy.modeling import Fit
-from gammapy.modeling.selection import TestStatisticNested
+from gammapy.modeling.selection import NestedModelSelection
 from gammapy.modeling.parameter import restore_parameters_status
 from gammapy.stats.utils import ts_to_sigma
 from gammapy.utils.roots import find_roots
@@ -445,7 +445,7 @@ class ParameterSensitivityEstimator:
         rtol=0.01,
         max_niter=100,
     ):
-        self.test = TestStatisticNested(
+        self.test = NestedModelSelection(
             [parameter], [null_value], n_free_parameters=n_free_parameters
         )
         self.parameter = parameter

@@ -4,7 +4,7 @@ import pytest
 from numpy.testing import assert_allclose
 from gammapy.modeling.fit import Fit
 from gammapy.modeling.models import Models
-from gammapy.modeling.selection import TestStatisticNested, select_nested_models
+from gammapy.modeling.selection import NestedModelSelection, select_nested_models
 from gammapy.utils.testing import requires_data
 
 
@@ -28,7 +28,7 @@ def test_test_statistic_detection(fermi_datasets):
     assert_allclose(results["ts"], 20905.667798, rtol=1e-5)
     assert fermi_datasets.models.parameters["amplitude"].error != 0.0
 
-    ts_eval = TestStatisticNested([model.spectral_model.amplitude], [0])
+    ts_eval = NestedModelSelection([model.spectral_model.amplitude], [0])
     ts_known_bkg = ts_eval.ts_known_bkg(fermi_datasets)
     ts_asimov = ts_eval.ts_asimov(fermi_datasets)
     ts = ts_eval.ts(fermi_datasets)
@@ -39,7 +39,7 @@ def test_test_statistic_detection(fermi_datasets):
     # bad model
     bias_factor = 1.2
     model.spectral_model.amplitude.value *= bias_factor
-    ts_eval = TestStatisticNested([model.spectral_model.amplitude], [0])
+    ts_eval = NestedModelSelection([model.spectral_model.amplitude], [0])
     ts_known_bkg = ts_eval.ts_known_bkg(fermi_datasets)
     ts_asimov = ts_eval.ts_asimov(fermi_datasets)
     ts = ts_eval.ts(fermi_datasets)
@@ -84,7 +84,7 @@ def test_test_statistic_link(fermi_datasets):
     fit.backend = "minuit"
     fit.optimize_opts = minuit_opts
 
-    ts_eval = TestStatisticNested(
+    ts_eval = NestedModelSelection(
         [model.spectral_model.alpha], [model2.spectral_model.alpha], fit=fit
     )
     results = ts_eval.run(fermi_datasets)
@@ -94,7 +94,7 @@ def test_test_statistic_link(fermi_datasets):
     assert model2.spectral_model.alpha.error != model.spectral_model.alpha.error
     assert model2.spectral_model.alpha.error != 0
 
-    ts_eval = TestStatisticNested(
+    ts_eval = NestedModelSelection(
         [model.spectral_model.alpha],
         [model2.spectral_model.alpha],
         fit=fit,
