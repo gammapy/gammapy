@@ -294,9 +294,11 @@ def add_sample_wise_quantities(inference_data, datasets, group_name):
                 stat_array = (
                     np.hstack([d.stat_array()[d.mask] for d in datasets]) / -2.0
                 )  # assuming we have stat as -2lnL
-                prior_stat_sum = (
-                    datasets.models.parameters.free_unique_parameters.prior_stat_sum()
-                    / -2.0
+                prior_stat_sum = np.sum(
+                    [
+                        p.prior.random_variable.logpdf(p.value)
+                        for p in datasets.models.parameters.free_unique_parameters
+                    ]
                 )
                 log_likelihood_matrix.append(stat_array)
                 log_prior_matrix.append(prior_stat_sum)
