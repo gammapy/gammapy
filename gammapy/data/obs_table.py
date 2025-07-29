@@ -14,27 +14,208 @@ from pathlib import Path
 # from astropy.time import Time
 
 
-__all__ = ["ObservationTable", "ObservationTablePrototype"]
+__all__ = ["ObservationTable"]
 
 
 class ObservationTable(Table):
-    """Observation table.
+    """Prototype for modified ObservationTable class
+    See discussion and development: https://github.com/gammapy/gammapy/issues/3767, https://github.com/gammapy/gammapy/issues/4238
+    Co-authors: @maxnoe, @registerrier, @bkhelifi
+    Used as reference: gammapy, gammapy/data/obs_table.py, https://docs.python.org/3, https://docs.astropy.org/en/latest/table/construct_table.html#construct-table, https://numpy.org/doc/stable/reference/generated/numpy.dtype.html
+                       https://docs.astropy.org/en/latest/table/index.html, https://gamma-astro-data-formats.readthedocs.io/en/v0.3/, esp. data_storage/obs_index/index.html
+    Looked into: https://github.com/gammasky/cta-dc/blob/master/data/cta_1dc_make_data_index_files.py, maybe used l. 233. Copyright (c) 2016 gammasky
 
-    Data format specification: :ref:`gadf:obs-index`.
+    # ATTRIBUTION copied from hess-dl3-dr1 README.txt (gammapy-data/hess-dl3-dr1/README.txt) for testing and learning from this dataset:
+    # This work made use of data from the H.E.S.S. DL3 public test
+    # data release 1 (HESS DL3 DR1, H.E.S.S. collaboration, 2018).
     """
 
+    # Required minimum names of internal table. These will be translated into needed names on disk, depending on the fileformat, in the reader.
+    names_min_req = ["OBS_ID", "OBJECT", "POINTING"]
+
     @classmethod
-    def read(cls, filename, **kwargs):
+    def read(cls, filename, fileformat, **kwargs):
+        """Modified reader for ObservationTablePrototype"""
+        """Header and super().read(make_path(filename), **kwargs) taken from class ObservationTable, except "cls" named to "self"."""
+
         """Read an observation table from file.
 
         Parameters
         ----------
         filename : `pathlib.Path` or str
             Filename.
+        fileformat : str
+            Fileformat, default is "GADF0.3" for GADF v.0.3.
         **kwargs : dict, optional
             Keyword arguments passed to `~astropy.table.Table.read`.
         """
-        return super().read(make_path(filename), **kwargs)
+
+        # Read disk table "table_disk", taken from class ObervationTable. TODO: Pot. lazy loading in future?"""
+        table_disk = super().read(make_path(filename), **kwargs)
+
+        # Get header of obs-index table.
+        meta = table_disk.meta
+
+        # If no file-format specified, try to infer file format of table_disk, otherwise use GADF v.0.3. As discussed with @bkhelifi.
+        if fileformat is None:
+            if "HDUCLASS" in meta.keys():
+                if "HDUVERS" in meta.keys():
+                    fileformat = meta["HDUCLASS"] + meta["HDUVERS"]
+            else:
+                fileformat = "GADF0.3"  # Use default "GADF0.3".
+
+        # For the chosen fileformat, read then info on internal format and on correspondance to the selected fileformat.
+        format = cls.get_format_dict(fileformat)
+        names_internal = list(format.keys())
+
+        # Get correspondance of internal names to (multiple) disk-names, called "correspondance_dict".
+        # Also, flattened version in "correspondance_dict_flat", which will be used to check later, which disk-names are (truly) optional (and not already processed).
+        correspondance_dict = {}
+        correspondance_dict_flat = []
+
+        for name in names_internal:
+            correspondance_dict[name] = cls.get_corresponding_names(name, format)
+            correspondance_dict_flat.extend(cls.get_corresponding_names(name, format))
+
+        # Get corresponding names now only for minimal set of required names, to check if present on disk.
+        # TODO: Adapt this for case of alternative names, e.g. for pointing.
+        for name in cls.names_min_req:
+            names_min_req_on_disk = correspondance_dict[name]
+            for el in names_min_req_on_disk:
+                if el not in table_disk.columns:
+                    raise RuntimeError(
+                        "Not all required names in "
+                        + fileformat
+                        + "-file found, first missed name: "
+                        + el
+                        + "."
+                    )  # looked into gammapy/workflow/core.py
+
+        # Create internal table "table_internal" with all names, corresp. units, types and descriptions, for the internal table model.
+        # The internal table model may know more names than minimal required on disk for the read/fill-process.
+        units_internal = []
+        types_internal = []
+        description_internal = []
+
+        for name in names_internal:
+            units_internal.append(format[name]["unit"])
+            types_internal.append(format[name]["type"])
+            description_internal.append(format[name]["description"])
+
+        table_internal = cls(
+            names=names_internal,
+            units=units_internal,
+            dtype=types_internal,
+            descriptions=description_internal,
+        )
+
+        # Fill internal table for mandatory columns by constructing the table row-wise with the internal representations.
+        number_of_observations = len(
+            table_disk
+        )  # Get number of observations, equal to number of rows in table on disk.
+        for i in range(number_of_observations):
+            row_internal = []
+            for name in names_internal:
+                names_disk = correspondance_dict[name]
+
+                # Construction of in-mem representation of metadata.
+                # Typecasting as noted by @bkhelifi for now here, by using function cast_func(value, type) in utils/types.py
+                if name == "OBS_ID":
+                    row_internal.append(
+                        cast_func(
+                            table_disk[i][names_disk[0]], np.dtype(format[name]["type"])
+                        )
+                    )
+                elif name == "OBJECT":
+                    row_internal.append(
+                        cast_func(
+                            table_disk[i][names_disk[0]], np.dtype(format[name]["type"])
+                        )
+                    )
+                elif (
+                    name == "POINTING"
+                ):  # build object like @registerrier in 16ce9840f38bea55982d2cd986daa08a3088b434
+                    row_internal.append(
+                        SkyCoord(
+                            cast_func(table_disk[i][names_disk[0]], np.dtype(float)),
+                            cast_func(table_disk[i][names_disk[1]], np.dtype(float)),
+                            unit="deg",
+                            frame="icrs",
+                        )
+                    )
+                # elif name == "TSTART":
+                # row_internal.append(
+
+                # time_ref_from_dict(table_disk.meta) + Time(table_disk[i][names_disk[0]],format="mjd",scale="tt"),
+                # time_ref_from_dict(table_disk.meta) + Time(table_disk[i][names_disk[1]],format="mjd",scale="tt")
+
+                # )
+                # print(
+                # time_ref_from_dict(meta)
+                # )  # like in event_list.py, l.201, commit: 08c6f6a
+            table_internal.add_row(
+                row_internal
+            )  # Add row to internal table (fill table).
+
+        # Load optional columns, whose names are not already processed, automatically into internal table.
+        opt_names = list(table_disk.columns)
+        for name in correspondance_dict_flat:
+            opt_names.remove(name)
+        for name in opt_names:  # add column-wise all optional column-data present in file, independent of format.
+            table_internal[name] = table_disk[name]
+
+        # return internal table, instead of copy of disk-table like before.
+        return table_internal
+
+    def get_format_dict(fileformat):
+        """Read info on the internal table format and its correspondance to the selected fileformat from a YAML-file.
+
+        Parameters
+        ----------
+        fileformat : str
+            Fileformat, default is "gadf03" for GADF v.0.3.
+
+        Returns
+        -------
+        The loaded dictionary is returned as format.
+        """
+        PATH_FORMATS = (
+            Path(__file__).resolve().parent / ".." / "utils" / "formats"
+        )  # like gammapy/utils/scripts.py l.29, commit: 753fb3e
+        format = read_yaml(str(PATH_FORMATS) + "/obs_index_" + fileformat + ".yaml")
+        return format
+
+    def get_corresponding_names(name, format):
+        """For a given format and internal table name, get the corresponding disk-name(s).
+
+        Parameters
+        ----------
+        name : str
+            Column name of internal table-format.
+        format : dict
+            Dictionary containing the internal table-format definition and its correspondance to a fileformat.
+
+        Returns
+        -------
+        List with the corresponding names per internal name.
+        """
+
+        n_disk_names = len(
+            format[name]["disk"]
+        )  # Get number of corresponding names on disk
+        correspondance = []
+        for n in range(n_disk_names):
+            name_disk = format[
+                name
+            ][
+                "disk"
+            ][
+                n
+            ][
+                "name"
+            ]  # Get for the column(s) to be loaded the name(s) on disk, for selected fileformat.
+            correspondance.append(name_disk)
+        return correspondance
 
     @property
     def pointing_radec(self):
@@ -405,203 +586,3 @@ class ObservationTableChecker(Checker):
                     yield self._record(
                         level="error", msg=f"Invalid unit for column: {name!r}"
                     )
-
-
-class ObservationTablePrototype(ObservationTable):
-    """Prototype for modified ObservationTable class
-    See discussion and development: https://github.com/gammapy/gammapy/issues/3767, https://github.com/gammapy/gammapy/issues/4238
-    Co-authors: @maxnoe, @registerrier, @bkhelifi
-    Used as reference: gammapy, gammapy/data/obs_table.py, https://docs.python.org/3, https://docs.astropy.org/en/latest/table/construct_table.html#construct-table, https://numpy.org/doc/stable/reference/generated/numpy.dtype.html
-                       https://docs.astropy.org/en/latest/table/index.html, https://gamma-astro-data-formats.readthedocs.io/en/v0.3/, esp. data_storage/obs_index/index.html
-    Looked into: https://github.com/gammasky/cta-dc/blob/master/data/cta_1dc_make_data_index_files.py, maybe used l. 233. Copyright (c) 2016 gammasky
-
-    # ATTRIBUTION copied from hess-dl3-dr1 README.txt (gammapy-data/hess-dl3-dr1/README.txt) for testing and learning from this dataset:
-    # This work made use of data from the H.E.S.S. DL3 public test
-    # data release 1 (HESS DL3 DR1, H.E.S.S. collaboration, 2018).
-    """
-
-    # Required minimum names of internal table. These will be translated into needed names on disk, depending on the fileformat, in the reader.
-    names_min_req = ["OBS_ID", "OBJECT", "POINTING"]
-
-    def get_format_dict(fileformat):
-        """Read info on the internal table format and its correspondance to the selected fileformat from a YAML-file.
-
-        Parameters
-        ----------
-        fileformat : str
-            Fileformat, default is "gadf03" for GADF v.0.3.
-
-        Returns
-        -------
-        The loaded dictionary is returned as format.
-        """
-        PATH_FORMATS = (
-            Path(__file__).resolve().parent / ".." / "utils" / "formats"
-        )  # like gammapy/utils/scripts.py l.29, commit: 753fb3e
-        format = read_yaml(str(PATH_FORMATS) + "/obs_index_" + fileformat + ".yaml")
-        return format
-
-    def get_corresponding_names(name, format):
-        """For a given format and internal table name, get the corresponding disk-name(s).
-
-        Parameters
-        ----------
-        name : str
-            Column name of internal table-format.
-        format : dict
-            Dictionary containing the internal table-format definition and its correspondance to a fileformat.
-
-        Returns
-        -------
-        List with the corresponding names per internal name.
-        """
-
-        n_disk_names = len(
-            format[name]["disk"]
-        )  # Get number of corresponding names on disk
-        correspondance = []
-        for n in range(n_disk_names):
-            name_disk = format[
-                name
-            ][
-                "disk"
-            ][
-                n
-            ][
-                "name"
-            ]  # Get for the column(s) to be loaded the name(s) on disk, for selected fileformat.
-            correspondance.append(name_disk)
-        return correspondance
-
-    @classmethod
-    def read(self, filename, fileformat=None, **kwargs):
-        """Modified reader for ObservationTablePrototype"""
-        """Header and super().read(make_path(filename), **kwargs) taken from class ObservationTable, except "cls" named to "self"."""
-
-        """Read an observation table from file.
-
-        Parameters
-        ----------
-        filename : `pathlib.Path` or str
-            Filename.
-        fileformat : str
-            Fileformat, default is "GADF0.3" for GADF v.0.3.
-        **kwargs : dict, optional
-            Keyword arguments passed to `~astropy.table.Table.read`.
-        """
-
-        # Read disk table "table_disk", taken from class ObervationTable. TODO: Pot. lazy loading in future?"""
-        table_disk = super().read(make_path(filename), **kwargs)
-        # Get header of obs-index table.
-        meta = table_disk.meta
-
-        # If no file-format specified, try to infer file format of table_disk, otherwise use GADF v.0.3. As discussed with @bkhelifi.
-        if fileformat is None:
-            if "HDUCLASS" in meta.keys():
-                if "HDUVERS" in meta.keys():
-                    fileformat = meta["HDUCLASS"] + meta["HDUVERS"]
-            else:
-                fileformat = "GADF0.3"  # Use default "GADF0.3".
-
-        # For the chosen fileformat, read then info on internal format and on correspondance to the selected fileformat.
-        format = self.get_format_dict(fileformat)
-        names_internal = list(format.keys())
-
-        # Get correspondance of internal names to (multiple) disk-names, called "correspondance_dict".
-        # Also, flattened version in "correspondance_dict_flat", which will be used to check later, which disk-names are (truly) optional (and not already processed).
-        correspondance_dict = {}
-        correspondance_dict_flat = []
-
-        for name in names_internal:
-            correspondance_dict[name] = self.get_corresponding_names(name, format)
-            correspondance_dict_flat.extend(self.get_corresponding_names(name, format))
-
-        # Get corresponding names now only for minimal set of required names, to check if present on disk.
-        # TODO: Adapt this for case of alternative names, e.g. for pointing.
-        for name in self.names_min_req:
-            names_min_req_on_disk = correspondance_dict[name]
-            for el in names_min_req_on_disk:
-                if el not in table_disk.columns:
-                    raise RuntimeError(
-                        "Not all required names in "
-                        + fileformat
-                        + "-file found, first missed name: "
-                        + el
-                        + "."
-                    )  # looked into gammapy/workflow/core.py
-
-        # Create internal table "table_internal" with all names, corresp. units, types and descriptions, for the internal table model.
-        # The internal table model may know more names than minimal required on disk for the read/fill-process.
-        units_internal = []
-        types_internal = []
-        description_internal = []
-
-        for name in names_internal:
-            units_internal.append(format[name]["unit"])
-            types_internal.append(format[name]["type"])
-            description_internal.append(format[name]["description"])
-
-        table_internal = self(
-            names=names_internal,
-            units=units_internal,
-            dtype=types_internal,
-            descriptions=description_internal,
-        )
-
-        # Fill internal table for mandatory columns by constructing the table row-wise with the internal representations.
-        number_of_observations = len(
-            table_disk
-        )  # Get number of observations, equal to number of rows in table on disk.
-        for i in range(number_of_observations):
-            row_internal = []
-            for name in names_internal:
-                names_disk = correspondance_dict[name]
-
-                # Construction of in-mem representation of metadata.
-                # Typecasting as noted by @bkhelifi for now here, by using function cast_func(value, type) in utils/types.py
-                if name == "OBS_ID":
-                    row_internal.append(
-                        cast_func(
-                            table_disk[i][names_disk[0]], np.dtype(format[name]["type"])
-                        )
-                    )
-                elif name == "OBJECT":
-                    row_internal.append(
-                        cast_func(
-                            table_disk[i][names_disk[0]], np.dtype(format[name]["type"])
-                        )
-                    )
-                elif (
-                    name == "POINTING"
-                ):  # build object like @registerrier in 16ce9840f38bea55982d2cd986daa08a3088b434
-                    row_internal.append(
-                        SkyCoord(
-                            cast_func(table_disk[i][names_disk[0]], np.dtype(float)),
-                            cast_func(table_disk[i][names_disk[1]], np.dtype(float)),
-                            unit="deg",
-                            frame="icrs",
-                        )
-                    )
-                # elif name == "TSTART":
-                # row_internal.append(
-
-                # time_ref_from_dict(table_disk.meta) + Time(table_disk[i][names_disk[0]],format="mjd",scale="tt"),
-                # time_ref_from_dict(table_disk.meta) + Time(table_disk[i][names_disk[1]],format="mjd",scale="tt")
-
-                # )
-                # print(
-                # time_ref_from_dict(meta)
-                # )  # like in event_list.py, l.201, commit: 08c6f6a
-            table_internal.add_row(
-                row_internal
-            )  # Add row to internal table (fill table).
-
-        # Load optional columns, whose names are not already processed, automatically into internal table.
-        opt_names = list(table_disk.columns)
-        for name in correspondance_dict_flat:
-            opt_names.remove(name)
-        for name in opt_names:  # add column-wise all optional column-data present in file, independent of format.
-            table_internal[name] = table_disk[name]
-
-        # return internal table, instead of copy of disk-table like before.
-        return table_internal
