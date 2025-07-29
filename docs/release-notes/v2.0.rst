@@ -41,7 +41,8 @@ Infrastructure
 Documentation improvements
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- Documentation appearance has been updated using less custom css code.
+- Documentation appearance has been updated using less custom css code,
+and the ordering of tutorials restructured for clarity.
 - Four new tutorials have been added:
    - one explaining VERITAS analysis along with addition of VERITAS data in `$GAMMAPY_DATA`
    - one explaining computation of upper limits for non-detected sources
@@ -113,13 +114,110 @@ Bug fixes and improvements
 - Fix e_peak implementation of SuperExpCutoffPowerLaw4FGLDR3SpectralModel
 - Fix of a HpXGeom simulation error
 
+
 Contributors
 ~~~~~~~~~~~~
-
+- Leander Schlegel
+- Luis Barrios-Jiménez
+- Quentin Remy
+- Tomas Bylund
+- Tora T H Arnesen
+- Anushka Bhatt
+- Bruno Khélifi
+- REGEARD Maxime
+- Daniel Morcuende
+- Robert Daniel Parsons
+- Mireia Nievas-Rosillo
+- Fabio PINTORE
+- Atreyee Sinha
+- lgreaux
+- Arnau Aguasca-Cabot
+- Fabio Acero
+- npigoux
+- Mitsunari-Takahashi
+- Tobi Preis
+- Samantha Wong
+- Edgar Molina
+- Hanna Stapel
+- Régis Terrier
+- Katharina Egg
+- Maximilian Linhoff
+- Kirsty Feijen
 
 
 Pull Requests
 ~~~~~~~~~~~~~
+
+This list is incomplete. Small improvements and bug fixes are not listed here.
+- [#6013] Install gammapy and jupytext in check notebooks action (Daniel Morcuende)
+- [#6001] Sphinx guidelines for links (Kirsty Feijen)
+- [#6000] Tutorials run as notebooks (Kirsty Feijen)
+- [#5999] Handling non-backward compatible format of the covariance matrix (Bruno Khélifi)
+- [#5998] Remove tutorial setup (Kirsty Feijen)
+- [#5997] Run doctests (Kirsty Feijen)
+- [#5995] Update Fermi-LAT tutorial (Quentin Remy)
+- [#5992] Update the peek function (Bruno Khélifi)
+- [#5984] Coherent checksum behavior in the IO function of `Datasets` (Bruno Khélifi)
+- [#5979] Fix memory leak related to lru_cache (Quentin Remy)
+- [#5975] Allow configuration of a size_factor in Models.to_regions (Atreyee Sinha)
+- [#5973] Warn users when using negative amplitude models in FluxEstimator (Atreyee Sinha)
+- [#5969] Add tutorial for non-detected sources (Atreyee Sinha)
+- [#5958] Fix TSmapEstimator pad_width (Quentin Remy)
+- [#5945] Create exclusion mask for bright stars in FoV (Samantha Wong)
+- [#5944] Add unit support on HpxGeom (Régis Terrier)
+- [#5936] Update of the user guide documentation of `Modelling and Fitting` (Bruno Khélifi)
+- [#5929] Add note on PR doc build access (Kirsty Feijen)
+- [#5927] Add mask plot for spectral (Kirsty Feijen)
+- [#5923] simple fix to problem with EventList printing (Tomas Bylund)
+- [#5918] Adding VERITAS tutorial (Samantha Wong)
+- [#5915] Fix parameters links after models copy (Quentin Remy)
+- [#5914] Modify sampler to handle linked params in models (Fabio Acero)
+- [#5913] Add a function to retrieve free and unique parameters (Fabio Acero)
+- [#5912] moving linkcheck from ci to a separate workflow (Hanna Stapel)
+- [#5911] Introducing generic reproject_irf_on_geom functions using FoVFrame classes (Régis Terrier)
+- [#5888] Fix gammapy.catalog to support astropy v7.1 (Quentin Remy)
+- [#5884] Rm setting log levels in modules (Tobi Preis)
+- [#5880] Serialization of GTI extension is not correct in the event sampling tutorial (Fabio PINTORE)
+- [#5870] Add method option to Irf.integrate_log_log (Régis Terrier)
+- [#5860] Introduce a FoVFrame in gammapy.utils.coordinates (Régis Terrier)
+- [#5855] Utility to filter a table parsing string of  logical operations (Quentin Remy)
+- [#5797] Sampling tutorial (Fabio Acero)
+- [#5766] Modification of peek() in MapDataset to show more information (Mireia Nievas-Rosillo)
+- [#5760] Added spatial model to FoVBackgroundMaker init (Katharina Egg)
+- [#5756] 3PC pulse profile (REGEARD Maxime)
+- [#5748] Replace cython code by jitted code (Quentin Remy)
+- [#5744] Fix of a HpXGeom simulation error (Mitsunari-Takahashi)
+- [#5740] Apply mask in MapDataset.plot_residuals_spectral (Quentin Remy)
+- [#5733] Remove the unneeded css code for the dropdowns (Kirsty Feijen)
+- [#5731] fix: install sherpa using conda instead of pip in dev env (npigoux)
+- [#5722] Color-blind friendly links (Bruno Khélifi)
+- [#5719] Limit misusage of `to_region_map_dataset` (Quentin Remy)
+- [#5716] Documentation appearance (Kirsty Feijen)
+- [#5715] Modified Polygon region for use as ON region (Robert Daniel Parsons)
+- [#5703] Make theta squared distribution selected in energy (Fabio PINTORE)
+- [#5699] Add `mask` option to `plot_distribution()` (Katharina Egg)
+- [#5696] Introducing FitStatistic (Régis Terrier)
+- [#5669] Add Log uniform prior (Fabio Acero)
+- [#5667] Refactor `min` and `max` setter on `Parameter` and `set_lim` method (REGEARD Maxime)
+- [#5663] Support weighted likelihood in MapDataset (Quentin Remy)
+- [#5656] Implicit support of map dataset instead of observation in DatasetMaker (Quentin Remy)
+- [#5654] Support "gtdrm" format in .read() of EDispKernelMap and EDispKernel (Quentin Remy)
+- [#5653] Preserve model names in cutout_template_models (Quentin Remy)
+- [#5649] Add functions to create MapDataset from Fermi-LAT files (Quentin Remy)
+- [#5648] Adding inverse_cdf to existing priors (Fabio Acero)
+- [#5644] Add ts in combine_significance_maps output (Quentin Remy)
+- [#5639] Add ParameterSensitivityEstimator and support sensitivity option on FluxpointsEstimator (Quentin Remy)
+- [#5638] Add a new method to compute ts and sigma in gammapy.stats.utils (Quentin Remy)
+- [#5637] Add Datasets.to_asimov_datasets method (Quentin Remy)
+- [#5632] Improve DL4 irfs support in gammapy.makers (Quentin Remy)
+- [#5631] Clear cache immediately after npred_signal computation If USE_NPRED_CACHE = False (Quentin Remy)
+- [#5617] Update release notes from recent release (Kirsty Feijen)
+- [#5588] Updates to documentation conf and css (Kirsty Feijen)
+- [#5538] Add a helper function to create a global dataset from a list of dataset. (Quentin Remy)
+- [#5513] Use `ctao_south` and `ctao_north` in observatory locations defined in Gammapy (Daniel Morcuende)
+- [#5499] PIG Bayesian inference for nested sampling (Fabio Acero)
+
+
 
 This list is incomplete. Small improvements and bug fixes are not listed here.
 
