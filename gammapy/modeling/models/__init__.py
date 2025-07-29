@@ -9,7 +9,13 @@ from .cube import (
     TemplateNPredModel,
     create_fermi_isotropic_diffuse_model,
 )
-from .prior import GaussianPrior, Prior, UniformPrior, LogUniformPrior
+from .prior import (
+    GaussianPrior,
+    Prior,
+    UniformPrior,
+    LogUniformPrior,
+    CompoundUniformPrior,
+)
 from .spatial import (
     ConstantFluxSpatialModel,
     ConstantSpatialModel,
@@ -71,6 +77,7 @@ from .utils import read_hermes_cube
 __all__ = [
     "BrokenPowerLawSpectralModel",
     "CompoundSpectralModel",
+    "CompoundUniformPrior",
     "ConstantFluxSpatialModel",
     "ConstantSpatialModel",
     "ConstantSpectralModel",

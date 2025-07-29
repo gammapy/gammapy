@@ -11,6 +11,7 @@ from gammapy.modeling.models import (
     SkyModel,
     UniformPrior,
     LogUniformPrior,
+    CompoundUniformPrior,
 )
 from gammapy.utils.testing import assert_quantity_allclose
 
@@ -45,6 +46,16 @@ TEST_PRIORS = [
         val_at_1=-60.03172899109759,
         inverse_cdf_at_0=1e-14,
         inverse_cdf_at_1=1e-10,
+    ),
+    dict(
+        name="compounduniform",
+        model=CompoundUniformPrior(min=0, max=10),
+        prior_0=0 * u.Unit(""),
+        prior_1=11 * u.Unit(""),
+        val_at_0=5.4161,
+        val_at_1=8.188689,
+        inverse_cdf_at_0=-10,
+        inverse_cdf_at_1=20.0,
     ),
 ]
 

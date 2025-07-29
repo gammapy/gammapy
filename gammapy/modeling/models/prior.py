@@ -8,7 +8,13 @@ from scipy.stats import norm, uniform, loguniform
 from gammapy.modeling import PriorParameter, PriorParameters
 from .core import ModelBase
 
-__all__ = ["GaussianPrior", "UniformPrior", "LogUniformPrior", "Prior"]
+__all__ = [
+    "CompoundUniformPrior",
+    "GaussianPrior",
+    "UniformPrior",
+    "LogUniformPrior",
+    "Prior",
+]
 
 log = logging.getLogger(__name__)
 
@@ -239,3 +245,84 @@ class LogUniformPrior(Prior):
     def _random_variable(self):
         """Return random variable object for prior."""
         return loguniform(self.min.value, self.max.value)
+
+
+class CompoundUniformPrior(Prior):
+    """Composite Uniform Prior.
+
+    Compound uniform prior composed of a inner window surrounded by two outer windows of same width.
+    The min/max paramters control the position of the inner window.
+    The scale parameter control the relative scale of the inner to the outer windows.
+    So increasing the scale parameter penalize more the outer windows.
+    The pdf is normalized such as ot integrates to unity.
+
+    Parameters
+    ----------
+    min : float, optional
+        Minimum value.
+        Default is 0.
+    max : float, optional
+        Maximum value.
+        Default is 1.
+    scale : float, optional
+        Relative weight of the inner to the outer windows
+        Default is 2.
+    """
+
+    tag = ["CompoundUniformPrior"]
+    _type = "prior"
+    min = PriorParameter(name="min", value=0.0, unit="")
+    max = PriorParameter(name="max", value=1.0, unit="")
+    scale = PriorParameter(name="scale", value=2, min=0, unit="")
+
+    @staticmethod
+    def evaluate(value, min, max, scale):
+        """Evaluate the uniform prior."""
+
+        weight_sum = 2 * scale + 2
+        width = max - min
+        if value < min:
+            pdf = uniform(min - width, width).pdf(value) / weight_sum
+        elif min <= value <= max:
+            pdf = 2 * scale * uniform(min, width).pdf(value) / weight_sum
+        else:
+            pdf = uniform(max, width).pdf(value) / weight_sum
+        return -2 * np.log(pdf)
+
+    def _inverse_cdf(self, value):
+        """Return inverse CDF for prior."""
+        inner_min = self.min.value
+        inner_max = self.max.value
+        scale = self.scale.value
+
+        width = inner_max - inner_min
+
+        outer_min = inner_min - width
+
+        weight_sum = 2 * scale + 2
+
+        inner_height = 2 * scale / (width * weight_sum)
+        outer_height = 1 / (width * weight_sum)
+
+        # Cumulative probabilities
+        p_left = outer_height * width
+        p_inner = inner_height * width
+
+        # Cumulative boundaries
+        c_left = p_left
+        c_inner = c_left + p_inner
+
+        # Define the analytical PPF
+        q = np.asarray(value)
+        result = np.zeros_like(q, dtype=float)
+
+        mask_left = q < c_left
+        result[mask_left] = outer_min + (q[mask_left] / outer_height)
+
+        mask_inner = (q >= c_left) & (q < c_inner)
+        result[mask_inner] = inner_min + ((q[mask_inner] - c_left) / inner_height)
+
+        mask_right = q >= c_inner
+        result[mask_right] = inner_max + ((q[mask_right] - c_inner) / outer_height)
+
+        return result
