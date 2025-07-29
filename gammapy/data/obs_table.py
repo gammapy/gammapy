@@ -13,12 +13,12 @@ from gammapy.utils.types import cast_func
 from pathlib import Path
 # from astropy.time import Time
 
-
 __all__ = ["ObservationTable"]
 
 
 class ObservationTable(Table):
-    """Prototype for modified ObservationTable class
+    """Modified ObservationTable class, based on existing ObservationTable class.
+
     See discussion and development: https://github.com/gammapy/gammapy/issues/3767, https://github.com/gammapy/gammapy/issues/4238
     Co-authors: @maxnoe, @registerrier, @bkhelifi
     Used as reference: gammapy, gammapy/data/obs_table.py, https://docs.python.org/3, https://docs.astropy.org/en/latest/table/construct_table.html#construct-table, https://numpy.org/doc/stable/reference/generated/numpy.dtype.html
@@ -35,8 +35,8 @@ class ObservationTable(Table):
 
     @classmethod
     def read(cls, filename, fileformat=None, **kwargs):
-        """Modified reader for ObservationTablePrototype"""
-        """Header and super().read(make_path(filename), **kwargs) taken from class ObservationTable, except "cls" named to "self"."""
+        """Modified reader for ObservationTable"""
+        """Header and super().read(make_path(filename), **kwargs) taken from legacy class ObservationTable."""
 
         """Read an observation table from file.
 
