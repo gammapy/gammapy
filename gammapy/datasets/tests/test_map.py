@@ -57,6 +57,7 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
     UniformPrior,
+    CompoundUniformPrior,
     ExpCutoffPowerLawSpectralModel,
 )
 from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
@@ -869,17 +870,28 @@ def test_prior_stat_sum(sky_model, geom, geom_etrue):
     datasets.models = models
     dataset.counts = dataset.npred()
 
-    uniformprior = UniformPrior(min=0, max=np.inf, weight=1)
+    uniformprior = UniformPrior(min=0, max=1, weight=1)
+    compounduniformprior = CompoundUniformPrior(min=0, max=1, weight=1)
+
     datasets.models.parameters["amplitude"].prior = uniformprior
     assert_allclose(datasets._stat_sum_likelihood(), 12825.9370, rtol=1e-3)
     assert_allclose(datasets.stat_sum(), 12825.9370, rtol=1e-3)
 
+    datasets.models.parameters["amplitude"].prior = compounduniformprior
+    assert_allclose(datasets._stat_sum_likelihood(), 12825.9370, rtol=1e-3)
+    assert_allclose(datasets.stat_sum(), 12825.9370, rtol=1e-3)
+
     datasets.models.parameters["amplitude"].value = -1e-12
+    datasets.models.parameters["amplitude"].prior = uniformprior
+    stat_sum_neg = datasets.stat_sum()
+    assert_allclose(stat_sum_neg, np.inf, rtol=1e-3)
+
+    datasets.models.parameters["amplitude"].prior = compounduniformprior
     stat_sum_neg = datasets.stat_sum()
     assert_allclose(stat_sum_neg, 470298.864993, rtol=1e-3)
 
     datasets.models.parameters["amplitude"].prior.weight = 100
-    assert_allclose(datasets.stat_sum() - stat_sum_neg, 99, rtol=1e-3)
+    assert_allclose(datasets.stat_sum() - stat_sum_neg, 354.768375, rtol=1e-3)
 
 
 @requires_data()
