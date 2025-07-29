@@ -68,7 +68,7 @@ from gammapy.modeling.models import (
     GaussianPrior,
     PowerLawSpectralModel,
     SkyModel,
-    UniformPrior,
+    CompoundUniformPrior,
 )
 
 
@@ -143,7 +143,7 @@ model_prior.parameters["index"].prior = gaussianprior
 # For the visualisation, the values are appended to the list; this is not a necessity for the fitting
 prior_stat_sums = []
 with model_prior.parameters.restore_status():
-    i_scan = np.linspace(1.8, 2.3, 100)
+    i_scan = np.linspace(1.8, 2.4, 100)
     for a in i_scan:
         model_prior.parameters["index"].value = a
         prior_stat_sums.append(model_prior.parameters.prior_stat_sum())
@@ -160,8 +160,6 @@ plt.axvline(x=gaussianprior.mu.value, color="red")
 plt.xlabel("Index Value")
 plt.ylabel("Prior")
 plt.legend()
-plt.xlim(2.0, 2.2)
-plt.ylim(-0.05, 1.1)
 plt.show()
 
 
@@ -216,7 +214,7 @@ scan_prior = fit.stat_profile(
 # getting minimized. The Cash statistics minimum is the actual value of
 # the index we used for the simulation (:math:`2.3`). Therefore, the
 # best-fit value was found to be :math:`2.3`. Note how the error bars
-# correspond to the :math:`1\sigma` error, i.e. where the stat sum equals
+# correspond to the :math:`1\sigma` error, i.e. where the stat sum equals
 # the minimum + 1.
 #
 # The plot also shows the prior we set on the index for the second
@@ -295,8 +293,8 @@ plt.show()
 # ------------------------------------------------
 #
 # In the next example, we want to encourage the amplitude to have
-# positive, i.e. physical, values. Instead of setting hard bounds, we can
-# also set a uniform prior, which prefers positive values to negatives.
+# positive, i.e. physical, values. Instead of setting hard bounds, we can
+# also set a compound uniform prior, which prefers positive values to negatives.
 #
 # We set the amplitude of the power-law used to simulate the source to a very
 # small value. Together with statistical fluctuations, this could result in some
@@ -310,19 +308,15 @@ model_weak = SkyModel(
     name="weak-model",
 )
 model_weak_prior = model_weak.copy(name="weak-model-prior")
-uniform = UniformPrior(min=0)
-uniform.weight = 2
+uniform = CompoundUniformPrior(min=0, max=1, scale=2)
 model_weak_prior.parameters["amplitude"].prior = uniform
 
 
 ######################################################################
-# We set the minimum value to zero and per default, the maximum value
-# is set to positive infinity. Therefore, the uniform prior penalty
-# is zero, i.e. no influence on the fit at all, if the amplitude value
-# is positive and a penalty (the weight) in the form of a prior likelihood
-# for negative values.
-# Here, we are setting it to 2. This value is only applied if the
-# amplitude value goes below zero.
+# We set the minimum value to zero and the maximum value
+# is set to a large positive value. The probablity to be within [min, max] will
+# be larger by a factor of 2 as given by the scale paramater.
+#
 #
 
 uni_prior_stat_sums = []
@@ -337,7 +331,7 @@ plt.plot(
     uni_prior_stat_sums,
     color="tab:orange",
     linestyle="dashed",
-    label=f"Uniform Prior\n $min={uniform.min.value}$, weight={uniform.weight}",
+    label=f"Uniform Prior\n $min={uniform.min.value}$, scale={uniform.scale}",
 )
 plt.xlabel("Amplitude Value [1 / (TeV s cm2)]")
 plt.ylabel("Prior")
@@ -399,8 +393,8 @@ plt.show()
 # The distribution of the best-fit amplitudes shows how less best-fit
 # amplitudes have negative values. This also has an effect on the
 # distribution of the best-fit indices. How exactly the distribution
-# changes depends on the weight assigned to the uniform prior. The
-# stronger the weight, the less negative amplitudes.
+# changes depends on the scale assigned to the uniform prior. The
+# larger the scale, the less negative amplitudes.
 #
 # Note that the model parameters uncertainties are, per default, computed
 # symmetrical. This can lead to incorrect
