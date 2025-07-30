@@ -27,7 +27,7 @@ API changes
 
 Two API-breaking changes have been introduced in this version:
 
-- `~gammapy.EventList.select_parameter` now takes a ``values`` and ``is_range`` argument instead of ``band`` to allow exact matches
+- ``gammapy.EventList.select_parameter`` now takes a ``values`` and ``is_range`` argument instead of ``band`` to allow exact matches
 - ``cta_south`` and `cta_north` have been renamed as ``ctao_south`` and ``ctao_north``, resp. in `~gammapy.data.observatory_locations`
 Features deprecated since Gammapy v1.3 have been removed.
 
@@ -47,8 +47,7 @@ Infrastructure
 Documentation improvements
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- Documentation appearance has been updated using less custom css code,
-and the ordering of tutorials restructured for clarity.
+- Documentation appearance has been updated using less custom css code, and the ordering of tutorials restructured for clarity.
 - Four new tutorials have been added:
    - one explaining VERITAS analysis along with addition of VERITAS data in `$GAMMAPY_DATA`
    - one explaining computation of upper limits for non-detected sources
