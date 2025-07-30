@@ -1349,7 +1349,7 @@ class Map(abc.ABC):
 
         gridspec_kw = {"hspace": 0.2, "wspace": 0.2}
         if "add_cbar" in kwargs and kwargs["add_cbar"] is True:
-            gridspec_kw = {"hspace": 0.5, "wspace": 0.2}
+            gridspec_kw = {"hspace": 0.6, "wspace": 0.2}
 
         fig, axes = plt.subplots(
             ncols=cols,
