@@ -5,6 +5,10 @@ VERITAS with Gammapy
 Explore VERITAS point-like DL3 files, including event lists and IRFs and
 calculate Li & Ma significance, spectra, and fluxes.
 
+
+Introduction
+------------
+
 `VERITAS <https://veritas.sao.arizona.edu/>`__ (Very Energetic Radiation
 Imaging Telescope Array System) is a ground-based gamma-ray instrument
 operating at the Fred Lawrence Whipple Observatory (FLWO) in southern
@@ -181,8 +185,8 @@ on_region = PointSkyRegion(target_position)
 geom = RegionGeom.create(region=on_region, axes=[energy_axis])
 
 ######################################################################
-# `~gammapy.makers.SafeMaskMaker`
-# -------------------------------
+# Define the `~gammapy.makers.SafeMaskMaker`
+# ------------------------------------------
 #
 # The `~gammapy.makers.SafeMaskMaker` sets the boundaries of our analysis based on the
 # uncertainties contained in the instrument response functions (IRFs).
@@ -206,6 +210,9 @@ safe_mask_maker = SafeMaskMaker(
 
 
 ######################################################################
+# Data reduction
+# --------------
+#
 # We will now run the data reduction chain to calculate our ON and OFF
 # counts. To get a significance for the whole energy range (to match VERITAS packages),
 # remove the `~gammapy.makers.SafeMaskMaker` from being applied to ``dataset_on_off``.
@@ -352,13 +359,13 @@ plt.show()
 # We can now calculate flux points to get a spectrum by fitting the
 # ``result_joint`` model’s amplitude in selected energy bands (defined by
 # ``energy_edges``). We set ``selection_optional = "all"`` in
-# `~gammapy.estimators.FluxPointsEstimator`, which will include a calcuation for the upper
+# `~gammapy.estimators.FluxPointsEstimator`, which will include a calculation for the upper
 # limits in bins with a significance :math:`< 2\sigma`.
 #
 # In the case of a non-detection or to obtain better upper limits,
 # consider expanding the scan range for the norm parameter in
 # `~gammapy.estimators.FluxPointsEstimator`. See
-# :doc:`../api/estimators` for more details on how to do this.
+# :doc:`/tutorials/details/estimators` for more details on how to do this.
 #
 
 fpe = FluxPointsEstimator(
@@ -381,7 +388,7 @@ plt.show()
 
 
 ######################################################################
-# Make a lightcurve and caluclate integral flux
+# Make a lightcurve and calculate integral flux
 # ------------------------------------------------------
 #
 

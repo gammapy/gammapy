@@ -174,7 +174,7 @@ plt.show()
 
 ######################################################################
 # For a more detailed introduction to `~gammapy.maps`, take a look at the
-# :doc:`/tutorials/api/maps` notebook.
+# :doc:`/tutorials/details/maps` notebook.
 #
 # Exercises
 # ~~~~~~~~~

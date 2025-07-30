@@ -7,219 +7,378 @@ Data inspection and preliminary analysis with Fermi-LAT data.
 Introduction
 ------------
 
-This tutorial will show you how to work with Fermi-LAT data with
-Gammapy. As an example, we will look at the Galactic center region using
-the high-energy dataset that was used for the 3FHL catalog, in the
-energy range 10 GeV to 2 TeV.
-
-We note that support for Fermi-LAT data analysis in Gammapy is very
-limited. For most tasks, we recommend you use
-`Fermipy <http://fermipy.readthedocs.io/>`__, which is based on the
-`Fermi Science
+Gammapy fully supports Fermi-LAT data analysis from DL4 level (binned
+maps). In order to perform data reduction from the events list and
+spacecraft files to binned counts and IRFs maps we recommend to use
+`Fermipy <http://fermipy.readthedocs.io/>`__, which is based on
+the `Fermi Science
 Tools <https://fermi.gsfc.nasa.gov/ssc/data/analysis/software/>`__
 (Fermi ST).
 
 Using Gammapy with Fermi-LAT data could be an option for you if you want
 to do an analysis that is not easily possible with Fermipy and the Fermi
 Science Tools. For example a joint likelihood fit of Fermi-LAT data with
-data e.g. from H.E.S.S., MAGIC, VERITAS or some other instrument, or
+data e.g. from H.E.S.S., MAGIC, VERITAS or some other instrument, or
 analysis of Fermi-LAT data with a complex spatial or spectral model that
 is not available in Fermipy or the Fermi ST.
 
-Besides Gammapy, you might want to look at are
-`Sherpa <http://cxc.harvard.edu/sherpa/>`__ or
-`3ML <https://threeml.readthedocs.io/>`__. Or just using Python to roll
-your own analysis using several existing analysis packages. E.g. it it
-possible to use Fermipy and the Fermi ST to evaluate the likelihood on
-Fermi-LAT data, and Gammapy to evaluate it e.g. for IACT data, and to do
-a joint likelihood fit using
-e.g. `iminuit <http://iminuit.readthedocs.io/>`__ or
-`emcee <http://dfm.io/emcee>`__.
-
-To use Fermi-LAT data with Gammapy, you first have to use the Fermi ST
-to prepare an event list (using `gtselect` and `gtmktime`, exposure
-cube (using `gtexpcube2` and PSF (using `gtpsf`). You can then use
-`~gammapy.data.EventList`, `~gammapy.maps` and the
-`~gammapy.irf.PSFMap` to read the Fermi-LAT maps and PSF, i.e. support
-for these high level analysis products from the Fermi ST is built in. To
-do a 3D map analysis, you can use Fit for Fermi-LAT data in the same way
-that it’s use for IACT data. This is illustrated in this notebook. A 1D
-region-based spectral analysis is also possible, this will be
-illustrated in a future tutorial.
+This tutorial will show you how to convert Fermi-LAT data into a DL4
+format  that can be used by Gammapy (`~gammapy.datasets.MapDataset`) and perform a 3D analysis. As an
+example, we will look at the Galactic center.
+We are going to analyses high-energy data from 10 GeV from 1 TeV (in reconstructed energy).
 
 Setup
 -----
 
-**IMPORTANT**: For this notebook you have to get the prepared `3fhl`
-dataset provided in your `$GAMMAPY_DATA`.
+For this notebook you have to get the prepared
+`fermi-gc` data provided in your `$GAMMAPY_DATA`.
 
-Note that the `3fhl` dataset is high-energy only, ranging from 10 GeV
-to 2 TeV.
 
 """
 
-from astropy import units as u
-from astropy.coordinates import SkyCoord
-
 # %matplotlib inline
+
+import numpy as np
+from astropy import units as u
 import matplotlib.pyplot as plt
-from IPython.display import display
-from gammapy.data import EventList
-from gammapy.datasets import Datasets, MapDataset
-from gammapy.irf import EDispKernelMap, PSFMap
-from gammapy.maps import Map, MapAxis, WcsGeom
+
+from gammapy.catalog import CATALOG_REGISTRY
+from gammapy.datasets import Datasets, FermipyDatasetsReader
+from gammapy.estimators import TSMapEstimator
+from gammapy.maps import Map
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
     Models,
     PointSpatialModel,
-    PowerLawNormSpectralModel,
     PowerLawSpectralModel,
-    SkyModel,
     TemplateSpatialModel,
-    create_fermi_isotropic_diffuse_model,
+    SkyModel,
+    PowerLawNormSpectralModel,
+)
+from gammapy.utils.scripts import make_path
+
+######################################################################
+# Check setup
+# ~~~~~~~~~~~
+#
+# We check the setup in this tutorial, as we require specific files to be
+# downloaded to continue.
+
+from gammapy.utils.check import check_tutorials_setup
+
+check_tutorials_setup()
+
+
+######################################################################
+# Fermipy configuration file
+# --------------------------
+#
+# Gammapy can utilise the same configuration file as Fermipy to convert
+# the Fermipy-generated maps into Gammapy datasets. For more information on the
+# structure of these files, refer to the `Fermipy configuration
+# page <https://fermipy.readthedocs.io/en/latest/config.html>`__. In this
+# tutorial, we will analyse Galactic center data generated with Fermipy version 1.3 and
+# the configuration given in
+# `$GAMMAPY_DATA/fermi-gc/config_fermipy_gc_example.yaml`:
+#
+
+
+######################################################################
+# .. code:: yaml
+#
+#    # Fermipy example configuration
+#    # for details, see https://fermipy.readthedocs.io/en/latest/config.html
+#    # For IRFs, event type and event class options, see https://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Cicerone/Cicerone_Data/LAT_DP.html
+#    components:
+#      - model: {isodiff: $FERMI_DIR/refdata/fermi/galdiffuse/iso_P8R3_CLEAN_V3_PSF2_v1.txt}
+#        selection: {evtype: 16}  #4 is PSF0, 8 PSF1, 16 PSF2, 32 PSF3
+#        data: {ltcube: null}
+#      - model: {isodiff: $FERMI_DIR/refdata/fermi/galdiffuse/iso_P8R3_CLEAN_V3_PSF3_v1.txt}
+#        selection: {evtype: 32}
+#        data: {ltcube: null}
+#
+#    data:
+#      evfile : ./raw/events_list.lst
+#      scfile : ./raw/L241227031840F357373F12_SC00.fits
+#
+#    binning:
+#      roiwidth   : 8.0
+#      binsz      : 0.1
+#      binsperdec   : 10
+#      coordsys : GAL
+#      proj: CAR
+#      projtype: WCS
+#
+#    selection :
+#    # gtselect parameters
+#      emin : 3981.0717055349733 # ENERGY TRUE for Gammapy
+#      emax : 2511886.4315095823 # ENERGY TRUE for Gammapy
+#      zmax    : 105 # deg
+#      evclass : 256 # CLEAN
+#      tmin    : 239557417
+#      tmax    : 752112005
+#
+#    # gtmktime parameters
+#      filter : 'DATA_QUAL>0 && LAT_CONFIG==1'
+#      roicut : 'no'
+#
+#    # Set the ROI center to the coordinates of this source
+#      glon : 0.
+#      glat : 0.
+#
+#    fileio:
+#       outdir : ''
+#       logfile : 'out.log'
+#       usescratch : False
+#       scratchdir  : '/scratch'
+#
+#    gtlike:
+#      edisp : True
+#      edisp_bins : 0 # DO NOT CHANGE edisp_bins will be handled by Gammapy
+#      irfs : 'P8R3_CLEAN_V3'
+#
+#    model:
+#      src_roiwidth : 10.0 # This is used by Fermipy to compute the PSF RADMAX, even if no models are set
+#
+
+
+######################################################################
+# The most important points for Gammapy users are:
+#
+# - ``emin`` and ``emax`` in this file should be considered as the energy true range.
+#   It should be larger that the reconstructed energy range.
+# - ``edisp_bins : 0`` is strongly recommended at this stage otherwise you
+#   might face inconsistencies in the energy axes of the different IRFs created by Fermipy.
+# - The ``edisp_bins`` value will be redefined later on by Gammapy as a positive value
+#   in order to create the reconstructed energy axis properly.
+# - If you want to use the `$FERMI_DIR` variable to read the background models
+#   it must also be defined in your Gammapy environment,
+#   otherwise you have to define your own paths.
+# - For this tutorial we copied the iso files in `$GAMMAPY_DATA/fermi-gc` and
+#   edited the paths in the yaml file for simplicity.
+#
+# More generally in order to select a good binning it is important to know
+# the instrument resolution, for that you can have a quick look at the
+# IRFs in the `Fermi-LAT performance
+# page <https://www.slac.stanford.edu/exp/glast/groups/canda/lat_Performance.htm>`__.
+#
+# Since the energy resolution varies with energy, it is important to
+# choose an energy binning that is fine enough to capture this energy
+# dependence. That is why we recommend a binning with 8 to 10 bins per
+# decade. The energy axes will be created such as it is linear in log space
+# so it's better to define ``emin`` and ``emax`` such as they align with a log binning.
+# Here we have as true energy range :math:`\log(emin) = 0.6 \sim 4` GeV to
+# :math:`\log(emax) = 3.4 \sim 2500` GeV.
+# While the reconstructed energy range of our analysis will be 10 GeV to 1000 GeV.
+#
+# The spatial binning should be of the same order of the PSF 68%
+# containment radius which is in average 0.1 degree above 10 GeV and
+# rapidly increases at lower energy. Ideally it should remain within a
+# factor of 2 or 3 of the PSF radius at most. In order to properly take
+# into account for the sources outside the region of interest that
+# contribute inside due to the PSF we have to define a wider ``roiwidth``
+# than our actual region of interest. Typically, we need a margin equal to the
+# 99% containment of the PSF on each side. Above 10 GeV considering only
+# PSF2&3 the 99% PSF containment radius is about 1 degree. Thus, if we
+# want to study a 3 degree radius around the GC we have to take a ``roiwidth`` of 8
+# deg. (If considering lower energies or including PSF0 and PSF1, it should be much
+# larger).
+#
+
+
+######################################################################
+# From Fermipy maps to Gammapy datasets
+# -------------------------------------
+#
+# In your Fermipy environment you have to run the following commands
+#
+# .. code:: python
+#
+#    from fermipy.gtanalysis import GTAnalysis
+#    gta = GTAnalysis('config_fermipy_gc_example.yaml',logging={'verbosity' : 3})
+#    gta.setup()
+#
+#    gta.compute_psf(overwrite=True) # this creates the psf kernel
+#    gta.compute_drm(edisp_bins=0, overwrite=True) # this creates the energy dispersion matrix
+#    # DO NOT CHANGE edisp_bins here, it will be redefined by Gammapy later on
+#
+# This will produce a number of files including:
+#
+# - “ccube_00.fits” (counts)
+# - “bexpmap_00.fits” (exposure)
+# - “psf_00.fits” (psf)
+# - “drm_00.fits” (edisp)
+#
+#
+
+
+######################################################################
+# In your Gammapy environment you can create the datasets using the
+# same configuration file.
+#
+
+
+reader = FermipyDatasetsReader(
+    "$GAMMAPY_DATA/fermi-gc/config_fermipy_gc_example.yaml", edisp_bins=4
+)
+datasets = reader.read()
+print(datasets)
+
+
+######################################################################
+# Note that the ``edisp_bins`` is set again here as a positive number so
+# Gammapy can create its reconstructed energy axis properly. The energy
+# dispersion correction implemented Gammapy is closer to the version
+# implemented in Fermitools >1.2.0, which take into account the interplay
+# between the energy dispersion and PSF.
+#
+# Across most of the Fermi energy range, the level of migration in log10(E)
+# remains within 0.2, increasing up to 0.4 below 100 MeV,
+# due to energy dispersion. Therefore, we recommend that the
+# product of \|edisp_bins\| and the width of the log10(E) bins be at
+# least equal to 0.2. For a binning of 8 to 10 bins per decade, this
+# corresponds to \|edisp_bins\| ≥ 2. For further information, see
+# `Pass8_edisp_usage <https://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Pass8_edisp_usage.html>`__.
+# In our case, we have 10 bins per decade and true energy axis starts
+# at about 4 GeV, so with ``edisp_bins=4`` the reconstructed energy axis
+# starts at 10 GeV:
+#
+
+print(datasets[0].exposure.geom.axes["energy_true"])
+print(datasets[0].counts.geom.axes["energy"])
+
+######################################################################
+# Note that selecting ``edisp_bins=2`` means the reconstructed energy
+# of the counts geometry will start at :math:`10^{0.8} \sim 6.3` GeV.
+# If we want to start the analysis at 10 GeV in this case, we need to
+# update the ``mask_fit`` to exclude the first 2 reconstructed energy bins.
+# Considering more ``edisp_bins`` is generally safer but requires more memory
+# and increases computation time.
+#
+# Alternatively, if you created the counts and IRF files from the
+# Fermi-LAT science tools without Fermipy you can use the
+# ``create_dataset``  method. Note that in this case we cannot guarantee
+# that your maps have the correct axes dimensions to be properly converted
+# into Gammapy datasets.
+#
+
+path = make_path("$GAMMAPY_DATA/fermi-gc")
+dataset0 = reader.create_dataset(
+    path / "ccube_00.fits",
+    path / "bexpmap_00.fits",
+    path / "psf_00.fits",
+    path / "drm_00.fits",
+    isotropic_file=None,
+    edisp_bins=0,
+    name="fermi_lat_gc_psf2",
+)
+dataset1 = reader.create_dataset(
+    path / "ccube_01.fits",
+    path / "bexpmap_01.fits",
+    path / "psf_01.fits",
+    path / "drm_01.fits",
+    isotropic_file=None,
+    edisp_bins=0,
+    name="fermi_lat_gc_psf3",
 )
 
-######################################################################
-# Events
-# ------
-#
-# To load up the Fermi-LAT event list, use the `~gammapy.data.EventList`
-# class:
-#
+datasets_fromST = Datasets([dataset0, dataset1])
 
-events = EventList.read("$GAMMAPY_DATA/fermi_3fhl/fermi_3fhl_events_selected.fits.gz")
-print(events)
+
+# The above was an alternative reading method we don't need those after
+del dataset0, dataset1, datasets_fromST
 
 
 ######################################################################
-# The event data is stored in a
-# `astropy.table.Table <http://docs.astropy.org/en/stable/api/astropy.table.Table.html>`__
-# object. In case of the Fermi-LAT event list this contains all the
-# additional information on position, zenith angle, earth azimuth angle,
-# event class, event type etc.
+# Fermi-LAT IRF properties
+# ------------------------
 #
-
-print(events.table.colnames)
-
-display(events.table[:5][["ENERGY", "RA", "DEC"]])
-
-print(events.time[0].iso)
-print(events.time[-1].iso)
-
-energy = events.energy
-energy.info("stats")
-
-
-######################################################################
-# As a short analysis example we will count the number of events above a
-# certain minimum energy:
-#
-
-for e_min in [10, 100, 1000] * u.GeV:
-    n = (events.energy > e_min).sum()
-    print(f"Events above {e_min:4.0f}: {n:5.0f}")
-
-
-######################################################################
-# Counts
-# ------
-#
-# Let us start to prepare things for an 3D map analysis of the Galactic
-# center region with Gammapy. The first thing we do is to define the map
-# geometry. We chose a TAN projection centered on position
-# `(glon, glat) = (0, 0)` with pixel size 0.1 deg, and four energy bins.
-#
-
-gc_pos = SkyCoord(0, 0, unit="deg", frame="galactic")
-energy_axis = MapAxis.from_edges(
-    [1e4, 3e4, 1e5, 3e5, 2e6], name="energy", unit="MeV", interp="log"
-)
-counts = Map.create(
-    skydir=gc_pos,
-    npix=(100, 80),
-    proj="TAN",
-    frame="galactic",
-    binsz=0.1,
-    axes=[energy_axis],
-    dtype=float,
-)
-# We put this call into the same Jupyter cell as the Map.create
-# because otherwise we could accidentally fill the counts
-# multiple times when executing the `fill_by_coord` multiple times.
-counts.fill_events(events)
-
-print(counts.geom.axes[0])
-
-counts.sum_over_axes().smooth(2).plot(stretch="sqrt", vmax=30)
-plt.show()
-
-######################################################################
 # Exposure
-# --------
-#
-# The Fermi-LAT dataset contains the energy-dependent exposure for the
-# whole sky as a HEALPix map computed with `gtexpcube2`. This format is
-# supported by `~gammapy.maps.Map` directly.
-#
-# Interpolating the exposure cube from the Fermi ST to get an exposure
-# cube matching the spatial geometry and energy axis defined above with
-# Gammapy is easy. The only point to watch out for is how exactly you want
-# the energy axis and binning handled.
-#
-# Below we just use the default behaviour, which is linear interpolation
-# in energy on the original exposure cube. Probably log interpolation
-# would be better, but it doesn’t matter much here, because the energy
-# binning is fine. Finally, we just copy the counts map geometry, which
-# contains an energy axis with ``node_type="edges"``. This is non-ideal
-# for exposure cubes, but again, acceptable because exposure doesn’t vary
-# much from bin to bin, so the exact way interpolation occurs in later use
-# of that exposure cube doesn’t matter a lot. Of course you could define
-# any energy axis for your exposure cube that you like.
+# ~~~~~~~~
 #
 
-exposure_hpx = Map.read("$GAMMAPY_DATA/fermi_3fhl/fermi_3fhl_exposure_cube_hpx.fits.gz")
-print(exposure_hpx.geom)
-print(exposure_hpx.geom.axes[0])
 
-exposure_hpx.plot()
+######################################################################
+# Exposure is almost constant across the field of view, with less than 5%
+# variation at a given energy.
+#
+
+datasets[0].exposure.plot_interactive(add_cbar=True)
+plt.show()
+
+
+######################################################################
+# PSF
+# ~~~
+#
+# For Fermi-LAT, the PSF only varies little within a given regions of
+# the sky, especially at high energies like what we have here.
+# So we have only one PSF kernel.
+#
+
+datasets[0].psf.plot_containment_radius_vs_energy(fraction=(0.68, 0.95, 0.99))
+plt.show()
+
+
+######################################################################
+# Region of interest and mask definition
+# --------------------------------------
+#
+# As mentioned previously, the width of dataset is larger that our actual
+# region of interest in order to properly take into account for the
+# sources outside that contributes inside due to the PSF. So we define the
+# valid RoI for fitting by creating a ``mask_fit``.
+#
+
+margin = (
+    2.0 * u.deg
+)  # >1 deg should be fine for this dataset we take 2 so the notebook is faster
+geom = datasets[0].counts.geom
+mask_fit = Map.from_geom(geom, data=True, dtype=bool)
+mask_fit = mask_fit.binary_erode(width=margin, kernel="disk")
+
+mask_fit.plot_interactive()
 plt.show()
 
 ######################################################################
-# For exposure, we choose a geometry with ``node_type='center'``,
-axis = MapAxis.from_energy_bounds(
-    "10 GeV",
-    "2 TeV",
-    nbin=10,
-    per_decade=True,
-    name="energy_true",
-)
-geom = WcsGeom(wcs=counts.geom.wcs, npix=counts.geom.npix, axes=[axis])
+# Now we attach it the datasets
+#
 
-exposure = exposure_hpx.interp_to_geom(geom)
+for d in datasets:
+    d.mask_fit = mask_fit
 
-print(exposure.geom)
-print(exposure.geom.axes[0])
 
 ######################################################################
-# Exposure is almost constant across the field of view
-exposure.slice_by_idx({"energy_true": 0}).plot(add_cbar=True)
-plt.show()
+# Models
+# ------
+#
+# Isotropic diffuse background
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# The `~gammapy.datasets.FermipyDatasetsReader` also created one isotropic diffuse model
+# for each dataset:
+#
 
-######################################################################
-# Exposure varies very little with energy at these high energies
-energy = [10, 100, 1000] * u.GeV
-print(exposure.get_by_coord({"skycoord": gc_pos, "energy_true": energy}))
+models_iso = Models(datasets.models)
+print(models_iso)
 
 
 ######################################################################
 # Galactic diffuse background
-# ---------------------------
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 
 
 ######################################################################
 # The Fermi-LAT collaboration provides a galactic diffuse emission model,
 # that can be used as a background model for Fermi-LAT source analysis.
+# These files are called usually IEM for interstellar emission model, the
+# latest is
+# `gll_iem_v07.fits <https://fermi.gsfc.nasa.gov/ssc/data/analysis/software/aux/4fgl/gll_iem_v07.fits>`__.
+# For details see the `BackgroundModels
+# page <https://fermi.gsfc.nasa.gov/ssc/data/access/lat/BackgroundModels.html>`__.
+# If you have Fermipy installed it can also be found in
+# `$FERMI_DIR/refdata/fermi/galdiffuse/gll_iem_v07.fits`
 #
 # Diffuse model maps are very large (100s of MB), so as an example here,
 # we just load one that represents a small cutout for the Galactic center
@@ -229,204 +388,203 @@ print(exposure.get_by_coord({"skycoord": gc_pos, "energy_true": energy}))
 # want to normalise it again.
 #
 
-template_diffuse = TemplateSpatialModel.read(
-    filename="$GAMMAPY_DATA/fermi-3fhl-gc/gll_iem_v06_gc.fits.gz", normalize=False
+template_iem = TemplateSpatialModel.read(
+    filename="$GAMMAPY_DATA/fermi-gc/gll_iem_v07_gc.fits.gz", normalize=False
 )
 
-print(template_diffuse.map)
-
-diffuse_iem = SkyModel(
+model_iem = SkyModel(
     spectral_model=PowerLawNormSpectralModel(),
-    spatial_model=template_diffuse,
+    spatial_model=template_iem,
     name="diffuse-iem",
 )
 
 
 ######################################################################
-# Let’s look at the map of first energy band of the cube:
+# Let’s look at the template :
 #
-template_diffuse.map.slice_by_idx({"energy_true": 0}).plot(add_cbar=True)
+
+template_iem.map.plot_interactive(add_cbar=True)
 plt.show()
+# sphinx_gallery_thumbnail_number = 4
+
+
+models_diffuse = models_iso + model_iem
 
 
 ######################################################################
-# Here is the spectrum at the Galactic center:
+# Sources
+# ~~~~~~~
+#
+# Source models can be loaded from the 4FGL catalog directly available in
+# `$GAMMAPY_DATA`. For details see the `Fermi-LAT catalog
+# page <https://fermi.gsfc.nasa.gov/ssc/data/access/lat/14yr_catalog/>`__.
 #
 
-dnde = template_diffuse.map.to_region_nd_map(region=gc_pos)
-dnde.plot()
-plt.xlabel("Energy (GeV)")
-plt.ylabel("Flux (cm-2 s-1 MeV-1 sr-1)")
-plt.show()
+catalog_4fgl = CATALOG_REGISTRY.get_cls("4fgl")()  # load 4FGL catalog
 
 
 ######################################################################
-# Isotropic diffuse background
-# ----------------------------
-#
-# To load the isotropic diffuse model with Gammapy, use the
-# `~gammapy.modeling.models.TemplateSpectralModel`. We are using
-# `'extrapolate': True` to extrapolate the model above 500 GeV:
+# We want to select only the sources inside the dataset spatial geometry:
 #
 
-filename = "$GAMMAPY_DATA/fermi_3fhl/iso_P8R2_SOURCE_V6_v06.txt"
+in_geom = geom.to_image().contains(catalog_4fgl.positions)
+catalog_4fgl_gc = catalog_4fgl[in_geom]
 
-diffuse_iso = create_fermi_isotropic_diffuse_model(
-    filename=filename, interp_kwargs={"extrapolate": True}
+models_4fgl_gc = catalog_4fgl_gc.to_models()
+
+######################################################################
+# That's still quite a lot of sources
+#
+print("Number of source models", len(models_4fgl_gc))
+
+
+######################################################################
+# In order to improve performances we can store all the sources outside
+# the ``mask_fit`` region into a single template (the same could be done
+# for all the sources we want to keep frozen).
+#
+
+sources_ouside_roi = models_4fgl_gc.select_mask(~mask_fit, use_evaluation_region=False)
+sources_inside_roi = Models([m for m in models_4fgl_gc if m not in sources_ouside_roi])
+
+geom_true = datasets[0].exposure.geom
+sources_outside_roi = sources_ouside_roi.to_template_sky_model(
+    geom_true, name="sources_outside"
 )
 
+sources_outside_roi.spatial_model.filename = "sources_outside.fits"
 
-######################################################################
-# We can plot the model in the energy range between 50 GeV and 2000 GeV:
-#
-energy_bounds = [50, 2000] * u.GeV
-diffuse_iso.spectral_model.plot(energy_bounds, yunits=u.Unit("1 / (cm2 MeV s)"))
-plt.show()
-
-
-######################################################################
-# PSF
-# ---
-#
-# Next we will tke a look at the PSF. It was computed using `gtpsf`, in
-# this case for the Galactic center position. Note that generally for
-# Fermi-LAT, the PSF only varies little within a given regions of the sky,
-# especially at high energies like what we have here. We use the
-# `~gammapy.irf.PSFMap` class to load the PSF and use some of it’s
-# methods to get some information about it.
-#
-
-psf = PSFMap.read("$GAMMAPY_DATA/fermi_3fhl/fermi_3fhl_psf_gc.fits.gz", format="gtpsf")
-print(psf)
-
-
-######################################################################
-# To get an idea of the size of the PSF we check how the containment radii
-# of the Fermi-LAT PSF vary with energy and different containment
-# fractions:
-#
-
-plt.figure(figsize=(8, 5))
-psf.plot_containment_radius_vs_energy()
-plt.show()
-
-
-######################################################################
-# In addition we can check how the actual shape of the PSF varies with
-# energy and compare it against the mean PSF between 50 GeV and 2000 GeV:
-#
-
-plt.figure(figsize=(8, 5))
-
-energy = [100, 300, 1000] * u.GeV
-psf.plot_psf_vs_rad(energy_true=energy)
-
-spectrum = PowerLawSpectralModel(index=2.3)
-psf_mean = psf.to_image(spectral_model=spectrum)
-psf_mean.plot_psf_vs_rad(c="k", ls="--", energy_true=[500] * u.GeV)
-
-plt.xlim(1e-3, 0.3)
-plt.ylim(1e3, 1e6)
-plt.legend()
+sources_outside_roi.spatial_model.map.plot_interactive(add_cbar=True)
 plt.show()
 
 ######################################################################
-# This is what the corresponding PSF kernel looks like:
+# Now we have less models to describe the sources
 #
+models_sources = sources_inside_roi + sources_outside_roi
 
-psf_kernel = psf.get_psf_kernel(
-    position=geom.center_skydir, geom=geom, max_radius="1 deg"
-)
-psf_kernel.to_image().psf_kernel_map.plot(stretch="log", add_cbar=True)
-plt.show()
-
-
-######################################################################
-# Energy Dispersion
-# ~~~~~~~~~~~~~~~~~
-#
-# For simplicity we assume a diagonal energy dispersion:
-#
-
-e_true = exposure.geom.axes["energy_true"]
-edisp = EDispKernelMap.from_diagonal_response(
-    energy_axis_true=e_true, energy_axis=energy_axis
-)
-
-edisp.get_edisp_kernel().plot_matrix()
-plt.show()
-
+print("Number of source models", len(models_sources))
 
 ######################################################################
 # Fit
 # ---
 #
-# Now, the big finale: let’s do a 3D map fit for the source at the
-# Galactic center, to measure it’s position and spectrum. We keep the
-# background normalization free.
+# Now, the big finale: let’s do a 3D of the brightest sources and IEM
+# models.
+#
+# First we attach the models to the datasets.
 #
 
-spatial_model = PointSpatialModel(lon_0="0 deg", lat_0="0 deg", frame="galactic")
-spectral_model = PowerLawSpectralModel(
-    index=2.7, amplitude="5.8e-10 cm-2 s-1 TeV-1", reference="100 GeV"
-)
+models = models_sources + models_diffuse
 
-source = SkyModel(
-    spectral_model=spectral_model,
-    spatial_model=spatial_model,
-    name="source-gc",
-)
+datasets.models = models
 
-models = Models([source, diffuse_iem, diffuse_iso])
+print("Number of models", len(models))
 
-dataset = MapDataset(
-    models=models,
-    counts=counts,
-    exposure=exposure,
-    psf=psf,
-    edisp=edisp,
-    name="fermi-dataset",
+
+######################################################################
+# Let’s find the 3 brightest sources:
+#
+
+n_brightest = 3
+integrated_flux = u.Quantity(
+    [m.spectral_model.integral(10 * u.GeV, 1 * u.TeV) for m in sources_inside_roi]
 )
+order = np.argsort(integrated_flux)
+selected_sources = Models([sources_inside_roi[int(ii)] for ii in order[:n_brightest]])
+
+print(selected_sources.names)
+
+free_models = selected_sources + model_iem
+
+
+######################################################################
+# We keep only their normalisation free for simplicity:
+#
+
+models.freeze()  # freeze all parameters
+
+# and unfreeze only the amplitude or norm of the selected models
+for p in free_models.parameters:
+    if p.name in ["amplitude", "norm"]:
+        p.frozen = False
+        p.min = 0
+
+print("Number of free parameters", len(models.parameters.free_parameters))
 
 fit = Fit()
-result = fit.run(datasets=[dataset])
+result = fit.run(datasets=datasets)
 
 print(result)
 
-print(models)
 
-residual = counts - dataset.npred()
+######################################################################
+# Residual TS map
+# ---------------
+#
+# Now we can look at the residual TS map to check there is no significant
+# excess left:
+#
 
-residual.sum_over_axes().smooth("0.1 deg").plot(
-    cmap="coolwarm", vmin=-3, vmax=3, add_cbar=True
+spatial_model = PointSpatialModel()
+spectral_model = PowerLawSpectralModel(index=2)
+model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
+
+ts_estimator = TSMapEstimator(
+    model,
+    kernel_width="1 deg",  # this set close to the 95-99% containment radius of the PSF
+    selection_optional=[],
+    sum_over_energy_groups=True,
+    energy_edges=[10, 1000] * u.GeV,
+)
+
+
+ts_results = ts_estimator.run(datasets)
+
+
+image = ts_results["sqrt_ts"]
+image = image.cutout(
+    image.geom.center_skydir, width=np.max(image.geom.width) - 2 * margin
+)
+
+fig = plt.figure(figsize=(7, 5))
+ax = image.plot(
+    clim=[-8, 8],
+    cmap=plt.cm.RdBu_r,
+    add_cbar=True,
+    kwargs_colorbar={"label": r"$\sqrt{TS}$ [$\sigma$]"},
+)
+sources_inside_roi.plot_regions(
+    ax=ax, edgecolor="g", linestyle="-", kwargs_point=dict(marker=".")
 )
 plt.show()
+
 
 ######################################################################
 # Serialisation
 # -------------
 #
-# To serialise the created dataset, you must proceed through the
-# Datasets API
+# To serialise the created dataset, you must proceed through the Datasets
+# API
 #
 
-Datasets([dataset]).write(
-    filename="fermi_dataset.yaml", filename_models="fermi_models.yaml", overwrite=True
+datasets.write(
+    filename="fermi_lat_gc_datasets.yaml",
+    filename_models="fermi_lat_gc_models.yaml",
+    overwrite=True,
 )
 datasets_read = Datasets.read(
-    filename="fermi_dataset.yaml", filename_models="fermi_models.yaml"
+    filename="fermi_lat_gc_datasets.yaml", filename_models="fermi_lat_gc_models.yaml"
 )
-print(datasets_read)
 
 
 ######################################################################
 # Exercises
 # ---------
 #
-# -  Fit the position and spectrum of the source `SNR
-#    G0.9+0.1 <http://gamma-sky.net/#/cat/tev/110>`__.
-# -  Make maps and fit the position and spectrum of the `Crab
-#    nebula <http://gamma-sky.net/#/cat/tev/25>`__.
+# - Fit the position and spectrum of the source `SNR
+#   G0.9+0.1 <http://gamma-sky.net/#/cat/tev/110>`__.
+# - Make maps and fit the position and spectrum of the `Crab
+#   nebula <http://gamma-sky.net/#/cat/tev/25>`__.
 #
 
 
@@ -435,17 +593,7 @@ print(datasets_read)
 # -------
 #
 # In this tutorial you have seen how to work with Fermi-LAT data with
-# Gammapy. You have to use the Fermi ST to prepare the exposure cube and
-# PSF, and then you can use Gammapy for any event or map analysis using
-# the same methods that are used to analyse IACT data.
-#
-# This works very well at high energies (here above 10 GeV), where the
-# exposure and PSF is almost constant spatially and only varies a little
-# with energy. It is not expected to give good results for low-energy
-# data, where the Fermi-LAT PSF is very large. If you are interested to
-# help us validate down to what energy Fermi-LAT analysis with Gammapy
-# works well (e.g. by re-computing results from 3FHL or other published
-# analysis results), or to extend the Gammapy capabilities (e.g. to work
-# with energy-dependent multi-resolution maps and PSF), that would be very
-# welcome!
+# Gammapy. You have to use Fermipy or the Fermi ST to perform the data
+# reduction then you can use Gammapy for analysis using the same methods
+# that are used to analyse IACT data.
 #

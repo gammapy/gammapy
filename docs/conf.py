@@ -61,7 +61,7 @@ linkcheck_ignore = [
     "https://ipython.org",
     "https://jupyter.org",
     # private pages
-    "https://cchesswiki.in2p3.fr/hess/*"
+    "https://cchesswiki.in2p3.fr/*",
     "https://github.com/VERITAS-Observatory/VEGAS",
 ]
 
@@ -313,13 +313,14 @@ sphinx_gallery_conf = {
             "../examples/models/spectral",
             "../examples/models/temporal",
             "../examples/tutorials/starting",
-            "../examples/tutorials/model-gallery",
             "../examples/tutorials/data",
+            "../examples/tutorials/model-gallery",
+            "../examples/tutorials/details",
             "../examples/tutorials/analysis-1d",
             "../examples/tutorials/analysis-2d",
             "../examples/tutorials/analysis-3d",
             "../examples/tutorials/analysis-time",
-            "../examples/tutorials/api",
+            "../examples/tutorials/astrophysics",
             "../examples/tutorials/scripts",
         ]
     ),

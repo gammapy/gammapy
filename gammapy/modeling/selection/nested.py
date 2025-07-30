@@ -1,13 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
-from gammapy.modeling import Fit, Parameter, Covariance
+from gammapy.modeling import Fit, Parameter, Covariance, FitResult, OptimizeResult
 from gammapy.stats.utils import sigma_to_ts
-from .fit import FitResult, OptimizeResult
 
-__all__ = ["select_nested_models"]
+__all__ = ["select_nested_models", "NestedModelSelection"]
 
 
-class TestStatisticNested:
+class NestedModelSelection:
     """Compute the test statistic (TS) between two nested hypothesis.
 
     The null hypothesis is the minimal one, for which a set of parameters
@@ -26,7 +25,7 @@ class TestStatisticNested:
     n_sigma : float
         Threshold in number of sigma to switch from the null hypothesis
         to the alternative one. Default is 2.
-        The TS is converted to sigma assuming that the Wilk's theorem is verified.
+        The TS is converted to sigma assuming that the Wilks' theorem is verified.
     n_free_parameters : int
         Number of free parameters to consider between the two hypothesis
         in order to estimate the `ts_threshold` from the `n_sigma` threshold.
@@ -34,8 +33,6 @@ class TestStatisticNested:
     fit : `Fit`
         Fit instance specifying the backend and fit options.
     """
-
-    __test__ = False
 
     def __init__(
         self, parameters, null_values, n_sigma=2, n_free_parameters=None, fit=None
@@ -66,10 +63,13 @@ class TestStatisticNested:
 
     def ts_known_bkg(self, datasets):
         """Perform the alternative hypothesis testing assuming known background (all parameters frozen).
-        This implicitly assumes that the non-null model is a good representation of the true model.
-        If the assumption is true the ts_known_bkg should tend to the ts_asimov (deviation would indicate a bad fit of the data).
-        Deviations between ts and frozen_ts can be used to identify potential sources of confusion depending on which parameters are let free for the ts computation
-         (for example considereing diffuse background or nearby source).
+
+        This implicitly assumes that the alternative model is a good representation of the true model.
+        If the assumption is true, the ``ts_known_bkg`` should tend to the ``ts_asimov`` (deviation would
+        indicate a bad fit of the data).
+        Deviations between ``ts`` and ``frozen_ts`` can be used to identify potential sources of confusion
+        depending on which parameters are let free for the ``ts`` computation
+         (for example considering diffuse background or nearby source).
         """
         stat = datasets.stat_sum()
         cache = self._apply_null_hypothesis(datasets)
@@ -95,7 +95,7 @@ class TestStatisticNested:
         ----------
         datasets : `~gammapy.datasets.Datasets`
             Datasets.
-        apply_selection : bool
+        apply_selection : bool, optional
             Apply or not the model selection. Default is True.
 
         Returns
@@ -173,11 +173,14 @@ class TestStatisticNested:
 def select_nested_models(
     datasets, parameters, null_values, n_sigma=2, n_free_parameters=None, fit=None
 ):
-    """Compute the test statistic (TS) between two nested hypothesis.
+    """Compute the test statistic (TS) between two nested hypotheses.
 
-    The null hypothesis is the minimal one, for which a set of parameters
-    are frozen to given values. The model is updated to the alternative hypothesis
-    if there is a significant improvement (larger than the given threshold).
+    This function evaluates whether adding one or more parameters (alternative hypothesis)
+    provides a statistically significant improvement (larger than the given threshold)
+    over a simpler model (null hypothesis), where those parameters are fixed to given values.
+
+    The model is updated to the alternative hypothesis if there is a significant
+    improvement (larger than the given threshold, ``n_sigma``).
 
     Parameters
     ----------
@@ -186,17 +189,17 @@ def select_nested_models(
     parameters : `~gammapy.modeling.Parameters` or list of `~gammapy.modeling.Parameter`
         List of parameters frozen for the null hypothesis but free for the test hypothesis.
     null_values : list of float or `~gammapy.modeling.Parameters`
-        Values of the parameters frozen for the null hypothesis.
-        If a `Parameters` object or a list of `Parameters` is given
-        the null hypothesis follows the values of these parameters,
-        so this tests linked parameters versus unliked.
+        Values of the parameters frozen under the null hypothesis.
+        If a `Parameters` object or a list of `Parameters` is provided,
+        the null hypothesis assumes these values.
+        This allows testing of linked versus unlinked parameters.
     n_sigma : float, optional
-        Threshold in number of sigma to switch from the null hypothesis
-        to the alternative one. Default is 2.
+        Threshold in number of sigma for rejecting the null hypothesis in favour of
+        the alternative. Default is 2.
         The TS is converted to sigma assuming that the Wilks' theorem is verified.
     n_free_parameters : int, optional
-        Number of free parameters to consider between the two hypothesis
-        in order to estimate the `ts_threshold` from the `n_sigma` threshold.
+        Number of free parameters to consider between the two hypotheses
+        when estimating the `ts_threshold` from the ``n_sigma`` threshold.
         Default is ``len(parameters)``.
     fit : `Fit`, optional
         Fit instance specifying the backend and fit options. Default is None, which utilises
@@ -212,6 +215,14 @@ def select_nested_models(
             * "fit_results" : results for the best fit
             * "fit_results_null" : fit results for the null hypothesis
 
+    Notes
+    -----
+    This is useful for testing the significance of adding model components, such as
+    a spectral cutoff or a source detection. It assumes the two models are *nested* —
+    the null hypothesis is a special case of the alternative with fixed parameters.
+
+    See below for two simple examples and :ref:`compute_upper_lims` for a more in-depth example.
+
     Examples
     --------
     .. testcode::
@@ -221,16 +232,19 @@ def select_nested_models(
         from gammapy.modeling.models import SkyModel
 
         # Test if cutoff is significant
+
         dataset = SpectrumDatasetOnOff.read("$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits")
         datasets = Datasets(dataset)
         model = SkyModel.create(spectral_model="ecpl", spatial_model="point", name='hess')
         datasets.models = model
+        # If there is no cutoff (null hypothesis) then the spectral cutoff (`lambda`) is zero
         result = select_nested_models(datasets,
                                       parameters=[model.spectral_model.lambda_],
                                       null_values=[0],
                                       )
 
         # Test if source is significant
+
         filename = "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_datasets.yaml"
         filename_models = "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_models.yaml"
         fermi_datasets = Datasets.read(filename=filename, filename_models=filename_models)
@@ -241,6 +255,7 @@ def select_nested_models(
         # to replace the source of interest during the null hypothesis test.
         # (with all parameters free you test N vs. N+1 models and not the detection of a specific source.)
         fermi_datasets.models.freeze(model_type='spatial')
+        # Null hypothesis value for the amplitude should be 0, i.e. the flux of the source is 0
         results = select_nested_models(fermi_datasets,
                                       parameters=[model.spectral_model.amplitude],
                                       null_values=[0],
@@ -248,5 +263,7 @@ def select_nested_models(
                                       n_sigma=4,
                                       )
     """
-    test = TestStatisticNested(parameters, null_values, n_sigma, n_free_parameters, fit)
+    test = NestedModelSelection(
+        parameters, null_values, n_sigma, n_free_parameters, fit
+    )
     return test.run(datasets)
