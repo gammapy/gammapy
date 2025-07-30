@@ -7,7 +7,14 @@ from astropy.coordinates import SkyCoord
 from astropy.table import Table
 from astropy.time import Time
 from regions import PointSkyRegion
-from gammapy.data import GTI, DataStore, EventList, FixedPointingInfo, Observation
+from gammapy.data import (
+    GTI,
+    DataStore,
+    EventList,
+    FixedPointingInfo,
+    Observation,
+    observatory_locations,
+)
 from gammapy.irf import (
     Background2D,
     Background3D,
@@ -336,6 +343,7 @@ def test_make_map_background_irf_altaz_align(fixed_pointing_info):
         )
 
     obstime = Time("2020-01-01T20:00:00")
+    location = observatory_locations["ctao_south"]
 
     map_long_altaz = make_map_background_irf(
         pointing=fixed_pointing_info,
@@ -344,6 +352,7 @@ def test_make_map_background_irf_altaz_align(fixed_pointing_info):
         geom=_get_geom(fixed_pointing_info, obstime),
         time_start=obstime,
         fov_rotation_step=20.0 * u.deg,
+        location=location,
     )
 
     map_short_altaz = make_map_background_irf(
@@ -353,6 +362,7 @@ def test_make_map_background_irf_altaz_align(fixed_pointing_info):
         geom=_get_geom(fixed_pointing_info, obstime),
         time_start=obstime + "20979 s",
         fov_rotation_step=20.0 * u.deg,
+        location=location,
     )
     map_long_radec = make_map_background_irf(
         pointing=fixed_pointing_info,
@@ -361,6 +371,7 @@ def test_make_map_background_irf_altaz_align(fixed_pointing_info):
         geom=_get_geom(fixed_pointing_info, obstime),
         time_start=obstime,
         fov_rotation_step=20.0 * u.deg,
+        location=location,
     )
     map_short_altaz_norotation = make_map_background_irf(
         pointing=fixed_pointing_info,
@@ -369,6 +380,7 @@ def test_make_map_background_irf_altaz_align(fixed_pointing_info):
         geom=_get_geom(fixed_pointing_info, obstime),
         time_start=obstime - 21 * u.s,
         fov_rotation_step=360.0 * u.deg,
+        location=location,
     )
     map_altaz_long_norotation = make_map_background_irf(
         pointing=fixed_pointing_info,
@@ -377,6 +389,7 @@ def test_make_map_background_irf_altaz_align(fixed_pointing_info):
         geom=_get_geom(fixed_pointing_info, obstime),
         time_start=obstime - 2100 * u.s,
         fov_rotation_step=360.0 * u.deg,
+        location=location,
     )
     # Check that background normalisations are consistent
     assert_allclose(np.sum(map_long_altaz.data), np.sum(map_long_radec.data), rtol=1e-2)
@@ -386,11 +399,13 @@ def test_make_map_background_irf_altaz_align(fixed_pointing_info):
     # Check that results differ when considering short and long observations with
     # AltAz aligned IRFs
     assert_allclose(
-        map_long_altaz.data[0, 0, :4], [215862, 219369, 222672, 225783], rtol=1e-2
+        map_long_altaz.data[0, 0, :4], [252123, 250654, 249086, 247564.0], rtol=1e-2
     )
-    #    [212869, 217493, 222208, 226608]
+    #    [252123, 250654, 249086, 247564.]
     assert_allclose(
-        map_short_altaz.data[0, 0, :4], [202.769, 209.814, 217.103, 224.646], rtol=1e-5
+        map_short_altaz.data[0, 0, :4],
+        [260.9476, 258.2620, 255.6040, 252.973375],
+        rtol=1e-5,
     )
 
     # Check that results differ when considering RaDec or AltAz aligned IRFs
