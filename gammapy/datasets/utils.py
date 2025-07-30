@@ -253,7 +253,13 @@ def create_map_dataset_from_dl4(data, geom=None, energy_axis_true=None, name=Non
 
     # ensure that DL4 IRFs have the axes
     rad_axis = data.psf.psf_map.geom.axes["rad"]
-    geom_psf = data.psf.psf_map.geom.to_image().to_cube([rad_axis, energy_axis_true])
+    if data.psf.energy_name == "energy":
+        geom_psf = data.psf.psf_map.geom.to_image().to_cube([rad_axis, energy_axis])
+    else:
+        geom_psf = data.psf.psf_map.geom.to_image().to_cube(
+            [rad_axis, energy_axis_true]
+        )
+
     geom_edisp = data.edisp.edisp_map.geom.to_image().to_cube(
         [energy_axis, energy_axis_true]
     )
@@ -289,7 +295,7 @@ def create_map_dataset_from_dl4(data, geom=None, energy_axis_true=None, name=Non
         dataset.background = Map.from_geom(geom, data=0.0)
 
     if dataset.edisp.exposure_map and np.all(dataset.edisp.exposure_map.data) == 0.0:
-        dataset.edisp.exposure_map.data = dataset.psf.exposure_map.data
+        dataset.edisp.exposure_map.quantity = dataset.psf.exposure_map.quantity
 
     return dataset
 

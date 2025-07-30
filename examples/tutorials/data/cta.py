@@ -71,13 +71,6 @@ from IPython.display import display
 from gammapy.data import DataStore, EventList
 from gammapy.irf import EffectiveAreaTable2D, load_irf_dict_from_file
 
-######################################################################
-# Check setup
-# -----------
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
-
 
 ######################################################################
 # CTA 1DC

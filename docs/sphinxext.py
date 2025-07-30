@@ -3,7 +3,7 @@
 #
 # Gammapy documentation ordering configuration file.
 #
-# GalleryExplicitOrder is a re-implemation of private sphinx_gallery class `_SortKey`.
+# GalleryExplicitOrder is a re-implementation of private sphinx_gallery class `_SortKey`.
 #
 
 
@@ -19,6 +19,21 @@ TUTORIAL_SORT_DICT = {
         "fermi_lat.py": 2,
         "hawc.py": 3,
         "veritas.py": 4,
+    # details
+        "irfs.py": 0,
+        "observation_clustering.py": 1,
+        "theta_square_plot.py": 2,
+        "makers.py": 3,
+        "datasets.py": 4,
+        "maps.py": 5,
+        "mask_maps.py": 6,
+        "catalog.py": 7,
+        "models.py": 8,
+        "priors.py": 9,
+        "model_management.py": 10,
+        "fitting.py": 11,
+        "nested_sampling_Crab.py": 12,
+        "estimators.py": 13,
     #  data analysis
     #  1d
         "cta_sensitivity.py": 0,
@@ -28,7 +43,6 @@ TUTORIAL_SORT_DICT = {
         "extended_source_spectral_analysis.py": 4,
         "spectrum_simulation.py": 5,
         "sed_fitting.py": 6,
-        "ebl.py": 7,
     #  2d
         "detect.py": 0,
         "ring_background.py": 1,
@@ -36,35 +50,23 @@ TUTORIAL_SORT_DICT = {
     # 3d
         "analysis_3d.py": 0,
         "cta_data_analysis.py": 1,
-        "energy_dependent_estimation.py": 2,
         "analysis_mwl.py": 3,
         "simulate_3d.py": 4,
         "event_sampling.py": 5,
         "event_sampling_nrg_depend_models.py": 6,
         "flux_profiles.py": 7,
+        "non_detected_source.py": 8,
     # time
         "light_curve.py": 0,
         "light_curve_flare.py": 1,
         "variability_estimation.py": 2,
         "time_resolved_spectroscopy.py": 3,
         "light_curve_simulation.py": 4,
-        "pulsar_analysis.py": 5,
-    # api
-        "irfs.py": 0,
-        "theta_square_plot.py": 1,
-        "observation_clustering.py": 2,
-        "maps.py": 3,
-        "mask_maps.py": 4,
-        "makers.py": 5,
-        "datasets.py": 6,
-        "models.py": 7,
-        "model_management.py": 8,
-        "priors.py": 9,
-        "fitting.py": 10,
-        "estimators.py": 11,
-        "catalog.py": 12,
-        "astro_dark_matter.py": 13,
-        "nested_sampling_Crab.py": 14,
+    # astro
+        "ebl.py": 0,
+        "energy_dependent_estimation.py": 1,
+        "pulsar_analysis.py": 2,
+        "astro_dark_matter.py": 3,
     # scripts
         "survey_map.py": 0,
 }

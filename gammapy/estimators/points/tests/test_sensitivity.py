@@ -35,7 +35,7 @@ def spectrum_dataset():
     return spectrum_dataset
 
 
-def test_cta_sensitivity_estimator(spectrum_dataset, caplog):
+def test_cta_sensitivity_estimator(spectrum_dataset):
     geom = spectrum_dataset.background.geom
 
     dataset_on_off = SpectrumDatasetOnOff.from_spectrum_dataset(
@@ -82,7 +82,7 @@ def test_cta_sensitivity_estimator(spectrum_dataset, caplog):
     assert row["criterion"] == "gamma"
 
 
-def test_integral_estimation(spectrum_dataset, caplog):
+def test_integral_estimation(spectrum_dataset):
     dataset = spectrum_dataset.to_image()
     geom = dataset.background.geom
 
@@ -115,3 +115,26 @@ def test_parameter_sensitivity_estimator(spectrum_dataset):
     assert_allclose(value, 4.67553e-12, rtol=1e-2)
 
     assert_allclose(spectral_model.amplitude.value, default_value, rtol=1e-2)
+
+
+def test_warning_for_bad_model(caplog, spectrum_dataset):
+    geom = spectrum_dataset.background.geom
+    spectral_model = PowerLawSpectralModel()
+    spectral_model.amplitude.value = -3e-14
+    spectrum_dataset.models = SkyModel(spectral_model=spectral_model)
+
+    dataset_on_off = SpectrumDatasetOnOff.from_spectrum_dataset(
+        dataset=spectrum_dataset,
+        acceptance=RegionNDMap.from_geom(geom=geom, data=1),
+        acceptance_off=RegionNDMap.from_geom(geom=geom, data=5),
+    )
+
+    estimator = SensitivityEstimator(
+        gamma_min=25, bkg_syst_fraction=0.075, spectral_model=spectral_model
+    )
+    estimator.run(dataset_on_off)
+    assert "WARNING" in [_.levelname for _ in caplog.records]
+    assert (
+        "Spectral model predicts negative flux. Results of estimator should be interpreted with caution"
+        in [_.message for _ in caplog.records]
+    )

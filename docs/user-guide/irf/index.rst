@@ -152,7 +152,7 @@ Using gammapy.irf
 
 .. minigallery::
 
-    ../examples/tutorials/api/irfs.py
+    ../examples/tutorials/details/irfs.py
     ../examples/tutorials/analysis-1d/cta_sensitivity.py
 
 

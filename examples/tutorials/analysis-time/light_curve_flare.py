@@ -88,13 +88,6 @@ from gammapy.maps import MapAxis, RegionGeom
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from gammapy.modeling import Fit
 
-######################################################################
-# Check setup
-# -----------
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
-
 
 ######################################################################
 # Select the data

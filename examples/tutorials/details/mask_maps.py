@@ -9,7 +9,7 @@ Prerequisites
 
 -  Understanding of basic analyses in 1D or 3D.
 -  Usage of `~regions` and catalogs, see the :doc:`catalog
-   notebook </tutorials/api/catalog>`.
+   notebook </tutorials/details/catalog>`.
 
 Context
 -------

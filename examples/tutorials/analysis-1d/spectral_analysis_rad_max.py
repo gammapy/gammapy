@@ -131,13 +131,6 @@ from gammapy.modeling.models import (
 )
 from gammapy.visualization import plot_spectrum_datasets_off_regions
 
-######################################################################
-# Check setup
-# -----------
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
-
 
 ######################################################################
 # Load data
@@ -316,7 +309,7 @@ plt.show()
 
 ######################################################################
 # For more ways of assessing fit quality, please refer to the dedicated
-# :doc:`/tutorials/api/fitting` tutorial.
+# :doc:`/tutorials/details/fitting` tutorial.
 #
 
 

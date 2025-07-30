@@ -128,13 +128,6 @@ from gammapy.modeling.models import (
 )
 from gammapy.visualization import plot_spectrum_datasets_off_regions
 
-######################################################################
-# Check setup
-# -----------
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
-
 
 ######################################################################
 # Load Data
@@ -230,7 +223,7 @@ print(datasets)
 ######################################################################
 # The data reduction loop can also be performed through the
 # `~gammapy.makers.DatasetsMaker` class that take a list of makers as input,
-# as described :doc:`here </tutorials/api/makers>`
+# as described :doc:`here </tutorials/details/makers>`
 
 
 ######################################################################
@@ -367,7 +360,7 @@ plt.show()
 
 ######################################################################
 # For more ways of assessing fit quality, please refer to the dedicated
-# :doc:`/tutorials/api/fitting` tutorial.
+# :doc:`/tutorials/details/fitting` tutorial.
 #
 
 
