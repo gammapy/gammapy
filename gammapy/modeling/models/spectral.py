@@ -260,9 +260,9 @@ class SpectralModel(ModelBase):
         """
         cdf = stats.norm.cdf
 
-        median = np.percentile(samples, 50, axis=1)
-        errn = median - np.percentile(samples, 100 * cdf(-n_sigma), axis=1)
-        errp = np.percentile(samples, 100 * cdf(n_sigma), axis=1) - median
+        median = np.percentile(samples, 50, axis=-1)
+        errn = median - np.percentile(samples, 100 * cdf(-n_sigma), axis=-1)
+        errp = np.percentile(samples, 100 * cdf(n_sigma), axis=-1) - median
         return u.Quantity(
             [np.atleast_1d(median), np.atleast_1d(errn), np.atleast_1d(errp)],
             unit=samples.unit,
@@ -313,6 +313,7 @@ class SpectralModel(ModelBase):
             random_state=random_state,
             samples=samples,
         )
+
         return self._get_errors(samples)
 
     @property
