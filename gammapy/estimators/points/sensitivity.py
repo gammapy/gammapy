@@ -1,12 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
+import logging
 from astropy.table import Column, Table
 from gammapy.maps import Map
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from gammapy.stats import WStatCountsStatistic
 from ..core import Estimator
 from ..utils import apply_threshold_sensitivity
-from gammapy.utils.deprecation import deprecated_renamed_argument
+
+log = logging.getLogger(__name__)
 
 __all__ = ["SensitivityEstimator"]
 
@@ -39,7 +41,6 @@ class SensitivityEstimator(Estimator):
 
     tag = "SensitivityEstimator"
 
-    @deprecated_renamed_argument("spectrum", "spectral_model", "v1.3")
     def __init__(
         self,
         spectral_model=None,
@@ -62,7 +63,7 @@ class SensitivityEstimator(Estimator):
 
         Parameters
         ----------
-        dataset : `SpectrumDataset`
+        dataset : `~gammapy.datasets.SpectrumDataset`
             Spectrum dataset.
 
         Returns
@@ -129,15 +130,30 @@ class SensitivityEstimator(Estimator):
 
         Parameters
         ----------
-        dataset : `SpectrumDatasetOnOff`
+        dataset : `~gammapy.datasets.SpectrumDatasetOnOff`
             Dataset to compute sensitivity for.
 
         Returns
         -------
         sensitivity : `~astropy.table.Table`
-            Sensitivity table.
+            Sensitivity table. Containing the following columns:
+
+                * e_ref : energy center
+                * e_min : minimum energy values
+                * e_max : maximum energy values
+                * e2dnde : minimal differential flux
+                * excess : number of excess counts in the bin
+                * background : number of background counts in the bin
+                * criterion : sensitivity-limiting criterion
+
         """
         energy = dataset._geom.axes["energy"].center
+
+        if np.any(self.spectral_model(energy).value < 0.0):
+            log.warning(
+                "Spectral model predicts negative flux. Results of estimator should be interpreted with caution"
+            )
+
         excess = self.estimate_min_excess(dataset)
         e2dnde = self.estimate_min_e2dnde(excess, dataset)
         criterion = self._get_criterion(

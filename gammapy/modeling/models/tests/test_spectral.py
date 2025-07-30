@@ -41,6 +41,7 @@ from gammapy.utils.testing import (
     requires_data,
     requires_dependency,
 )
+from gammapy.utils.deprecation import GammapyDeprecationWarning
 
 
 def table_model():
@@ -657,6 +658,12 @@ def test_absorption():
     reference = 1 * u.TeV
     pwl = PowerLawSpectralModel(index=index, amplitude=amplitude, reference=reference)
 
+    # Test error propagation
+    pwl.amplitude.error = 0.1 * pwl.amplitude.value
+    dnde, dnde_errn, dnde_errp = pwl.evaluate_error(1 * u.TeV, n_samples=20000)
+    assert_allclose((dnde_errn / dnde), 0.1, rtol=7e-1)
+    assert_allclose((dnde_errp / dnde), 0.1, rtol=7e-1)
+
     # EBL + PWL model
     model = pwl * absorption
     desired = u.Quantity(5.140765e-13, "TeV-1 s-1 cm-2")
@@ -677,9 +684,9 @@ def test_absorption():
     assert_quantity_allclose(model(1 * u.TeV), desired, rtol=1e-3)
 
     # Test error propagation
-    model.model1.amplitude.error = 0.1 * model.model1.amplitude.value
-    dnde, dnde_err = model.evaluate_error(1 * u.TeV)
-    assert_allclose(dnde_err / dnde, 0.1)
+    dnde, dnde_errn, dnde_errp = model.evaluate_error(1 * u.TeV, n_samples=20000)
+    assert_allclose((dnde_errn / dnde).data, 0.1, rtol=3e-2)
+    assert_allclose((dnde_errp / dnde).data, 0.1, rtol=3e-2)
 
 
 @requires_data()
@@ -722,7 +729,7 @@ def test_pwl_pivot_energy():
         [6.56889e-14, (5.5e-12) ** 2, 0],
         [0, 0, 0],
     ]
-    assert_quantity_allclose(pwl.pivot_energy, 1.2112653 * u.TeV, rtol=1e-5)
+    assert_quantity_allclose(pwl.pivot_energy, 1.211265 * u.TeV, rtol=1e-5)
 
     ecpl = ExpCutoffPowerLawSpectralModel(
         amplitude="5.35510540e-11 cm-2 s-1 TeV-1", lambda_=0.001 * (1 / u.TeV), index=2
@@ -734,7 +741,7 @@ def test_pwl_pivot_energy():
         [0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0],
     ]
-    assert_quantity_allclose(pwl.pivot_energy, ecpl.pivot_energy, rtol=1e-5)
+    assert_quantity_allclose(ecpl.pivot_energy, 1.263819 * u.TeV, rtol=5e-2)
 
 
 def test_num_pivot_energy():
@@ -749,7 +756,7 @@ def test_num_pivot_energy():
 
     lp.alpha.error = "0.1126"
     lp.beta.error = "0.0670"
-    assert_quantity_allclose(lp.pivot_energy, 17.337042 * u.GeV, rtol=1e-5)
+    assert_quantity_allclose(lp.pivot_energy, 18.198706 * u.GeV, rtol=7e-2)
 
 
 def test_template_spectral_model_evaluate_tiny():
@@ -897,7 +904,7 @@ class TestNaimaModel:
         model.amplitude.error = 0.1 * model.amplitude.value
 
         out = model.evaluate_error(1 * u.TeV)
-        assert_allclose(out.data, [5.266068e-13, 5.266068e-14], rtol=1e-3)
+        assert_allclose(out.data, [5.270367e-13, 5.293272e-14, 5.343376e-14], rtol=5e-2)
 
     def test_ic(self):
         import naima
@@ -1086,31 +1093,44 @@ class TestSpectralModelErrorPropagation:
         out = self.model.evaluate_error(1 * u.TeV)
         assert isinstance(out, u.Quantity)
         assert out.unit == "cm-2 s-1 TeV-1"
-        assert out.shape == (2,)
-        assert_allclose(out.data, [3.7600e-11, 3.6193e-12], rtol=1e-3)
+        assert out.shape == (3,)
+        assert_allclose(out.data, [3.757824e-11, 3.142095e-12, 3.155082e-12], rtol=7e-2)
 
     def test_evaluate_error_array(self):
         out = self.model.evaluate_error([1, 100] * u.TeV)
-        assert out.shape == (2, 2)
-        expected = [[3.76e-11, 2.469e-18], [3.619e-12, 9.375e-18]]
-        assert_allclose(out.data, expected, rtol=1e-3)
+        assert out.shape == (3, 2)
+        expected = [
+            [3.756851e-11, 2.600163e-18],
+            [3.147163e-12, 2.539555e-18],
+            [3.163654e-12, 1.082997e-16],
+        ]
+        assert_allclose(out.data, expected, rtol=7e-1)
 
     def test_evaluate_error_unit(self):
         out = self.model.evaluate_error(1e6 * u.MeV)
         assert out.unit == "cm-2 s-1 TeV-1"
-        assert_allclose(out.data, [3.760e-11, 3.6193e-12], rtol=1e-3)
+        assert_allclose(out.data, [3.757824e-11, 3.142095e-12, 3.155082e-12], rtol=7e-2)
+
+        with pytest.warns(GammapyDeprecationWarning):
+            self.model.evaluate_error(1e6 * u.MeV, epsilon=10)
 
     def test_integral_error(self):
         out = self.model.integral_error(1 * u.TeV, 10 * u.TeV)
         assert out.unit == "cm-2 s-1"
-        assert out.shape == (2,)
-        assert_allclose(out.data, [2.197e-11, 2.796e-12], rtol=1e-3)
+        assert out.shape == (3,)
+        assert_allclose(out.data, [2.205520e-11, 2.395797e-12, 2.905355e-12], rtol=7e-2)
+
+        with pytest.warns(GammapyDeprecationWarning):
+            self.model.integral_error(1 * u.TeV, 10 * u.TeV, epsilon=10)
 
     def test_energy_flux_error(self):
         out = self.model.energy_flux_error(1 * u.TeV, 10 * u.TeV)
         assert out.unit == "TeV cm-2 s-1"
-        assert out.shape == (2,)
-        assert_allclose(out.data, [4.119e-11, 8.157e-12], rtol=1e-3)
+        assert out.shape == (3,)
+        assert_allclose(out.data, [4.133955e-11, 6.634629e-12, 9.896814e-12], rtol=7e-2)
+
+        with pytest.warns(GammapyDeprecationWarning):
+            self.model.energy_flux_error(1 * u.TeV, 10 * u.TeV, epsilon=10)
 
 
 def test_logpar_index_error():
@@ -1122,7 +1142,7 @@ def test_logpar_index_error():
     )
     model.alpha.error = 0.4
     out = model.spectral_index_error(energy=1.0 * u.TeV)
-    assert_allclose(out, [2.19, 0.4], rtol=1e-3)
+    assert_allclose(out, [2.198321, 0.404178, 0.394804], rtol=5e-2)
 
 
 def test_dnde_error_ecpl_model():
@@ -1143,10 +1163,13 @@ def test_dnde_error_ecpl_model():
     ]
 
     out = model.evaluate_error(1 * u.TeV)
-    assert_allclose(out.data, [1.903129e-12, 2.979976e-13], rtol=1e-3)
+    assert_allclose(out.data, [1.900058e-12, 3.140516e-13, 2.925388e-13], rtol=7e-1)
 
     out = model.evaluate_error(0.1 * u.TeV)
-    assert_allclose(out.data, [1.548176e-10, 1.933612e-11], rtol=1e-3)
+    assert_allclose(out.data, [1.538462e-10, 2.071542e-11, 1.837818e-11], rtol=7e-1)
+
+    with pytest.warns(GammapyDeprecationWarning):
+        out = model.evaluate_error(0.1 * u.TeV, epsilon=10)
 
 
 def test_integral_error_power_law():
@@ -1158,10 +1181,11 @@ def test_integral_error_power_law():
     powerlaw.parameters["index"].error = 0.4
     powerlaw.parameters["amplitude"].error = 1e-13
 
-    flux, flux_error = powerlaw.integral_error(energy_min, energy_max)
+    flux, flux_errn, flux_errp = powerlaw.integral_error(energy_min, energy_max)
 
-    assert_allclose(flux.value[0] / 1e-13, 5.0, rtol=1e-3)
-    assert_allclose(flux_error.value[0] / 1e-14, 7.915984, rtol=1e-3)
+    assert_allclose(flux.value[0] / 1e-13, 4.991835, rtol=1e-3)
+    assert_allclose(flux_errn.value[0] / 1e-14, 7.209218, rtol=7e-1)
+    assert_allclose(flux_errp.value[0] / 1e-14, 8.674678, rtol=7e-1)
 
 
 def test_integral_error_exp_cut_off_power_law():
@@ -1174,10 +1198,11 @@ def test_integral_error_exp_cut_off_power_law():
     exppowerlaw.parameters["amplitude"].error = 1e-13
     exppowerlaw.parameters["lambda_"].error = 0.03
 
-    flux, flux_error = exppowerlaw.integral_error(energy_min, energy_max)
+    flux, flux_errn, flux_errp = exppowerlaw.integral_error(energy_min, energy_max)
 
-    assert_allclose(flux.value[0] / 1e-13, 5.05855622, rtol=0.01)
-    assert_allclose(flux_error.value[0] / 1e-14, 8.552617, rtol=0.01)
+    assert_allclose(flux.value[0] / 1e-13, 5.058788, rtol=0.01)
+    assert_allclose(flux_errn.value[0] / 1e-14, 7.79546, rtol=7e-1)
+    assert_allclose(flux_errp.value[0] / 1e-14, 9.537771, rtol=7e-1)
 
 
 def test_energy_flux_error_power_law():
@@ -1188,9 +1213,10 @@ def test_energy_flux_error_power_law():
     powerlaw.parameters["index"].error = 0.4
     powerlaw.parameters["amplitude"].error = 1e-13
 
-    enrg_flux, enrg_flux_error = powerlaw.energy_flux_error(energy_min, energy_max)
-    assert_allclose(enrg_flux.value / 1e-12, 2.303, rtol=0.001)
-    assert_allclose(enrg_flux_error.value / 1e-12, 1.085, rtol=0.001)
+    eflux, eflux_errn, eflux_errp = powerlaw.energy_flux_error(energy_min, energy_max)
+    assert_allclose(eflux.value / 1e-12, 2.306978, rtol=7e-1)
+    assert_allclose(eflux_errn.value / 1e-12, 0.819827, rtol=7e-1)
+    assert_allclose(eflux_errp.value / 1e-12, 1.501977, rtol=7e-1)
 
 
 def test_energy_flux_error_exp_cutoff_power_law():
@@ -1202,10 +1228,13 @@ def test_energy_flux_error_exp_cutoff_power_law():
     exppowerlaw.parameters["amplitude"].error = 1e-13
     exppowerlaw.parameters["lambda_"].error = 0.03
 
-    enrg_flux, enrg_flux_error = exppowerlaw.energy_flux_error(energy_min, energy_max)
+    eflux, eflux_errn, eflux_errp = exppowerlaw.energy_flux_error(
+        energy_min, energy_max
+    )
 
-    assert_allclose(enrg_flux.value / 1e-12, 2.788, rtol=0.001)
-    assert_allclose(enrg_flux_error.value / 1e-12, 1.419, rtol=0.001)
+    assert_allclose(eflux.value / 1e-12, 2.751952, rtol=7e-1)
+    assert_allclose(eflux_errn.value / 1e-12, 1.043413, rtol=7e-1)
+    assert_allclose(eflux_errp.value / 1e-12, 2.052225, rtol=7e-1)
 
 
 def test_integral_exp_cut_off_power_law_large_number_of_bins():

@@ -32,7 +32,7 @@ Using gammapy.makers
 
 .. minigallery::
 
-    ../examples/tutorials/api/makers.py
+    ../examples/tutorials/details/makers.py
 
 
 .. minigallery::

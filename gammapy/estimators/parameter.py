@@ -6,7 +6,7 @@ import numpy as np
 from gammapy.datasets import Datasets
 from gammapy.datasets.actors import DatasetsActor
 from gammapy.modeling import Fit
-from gammapy.modeling.selection import TestStatisticNested
+from gammapy.modeling.selection import NestedModelSelection
 from gammapy.modeling.parameter import restore_parameters_status
 from gammapy.stats.utils import ts_to_sigma
 from gammapy.utils.roots import find_roots
@@ -26,14 +26,17 @@ class ParameterEstimator(Estimator):
 
     Parameters
     ----------
-    n_sigma : int
-        Sigma to use for asymmetric error computation. Default is 1.
-    n_sigma_ul : int
-        Sigma to use for upper limit computation. Default is 2.
-    n_sigma_sensitivity : int
-        Sigma to use for sensitivity computation. Default is 5.
-    null_value : float
-        Which null value to use for the parameter.
+    n_sigma : float, optional
+        Sigma to use for asymmetric error computation. Must be a positive value.
+        Default is 1.
+    n_sigma_ul : float, optional
+        Sigma to use for upper limit computation. Must be a positive value.
+        Default is 2.
+    n_sigma_sensitivity : float, optional
+        Sigma to use for sensitivity computation. Must be a positive value.
+        Default is 5.
+    null_value : float, optional
+        Which null value to use for the parameter. Default is 1e-150.
     selection_optional : list of str, optional
         Which additional quantities to estimate. Available options are:
 
@@ -42,10 +45,11 @@ class ParameterEstimator(Estimator):
             * "ul": estimate upper limits.
             * "scan": estimate fit statistic profiles.
 
-        Default is None so the optional steps are not executed.
-    fit : `~gammapy.modeling.Fit`
-        Fit instance specifying the backend and fit options.
-    reoptimize : bool
+        Default is None, so the optional steps are not executed.
+    fit : `~gammapy.modeling.Fit`, optional
+        Fit instance specifying the backend and fit options. If None, the `~gammapy.modeling.Fit` instance is created
+        internally. Default is None.
+    reoptimize : bool, optional
         Re-optimize other free model parameters. Default is True.
 
     Examples
@@ -101,7 +105,7 @@ class ParameterEstimator(Estimator):
         ----------
         datasets : `~gammapy.datasets.Datasets`
             Datasets.
-        parameter : `Parameter`
+        parameter : `~gammapy.modeling.Parameter`
             For which parameter to get the value.
 
         Returns
@@ -136,7 +140,7 @@ class ParameterEstimator(Estimator):
         ----------
         datasets : `~gammapy.datasets.Datasets`
             Datasets.
-        parameter : `Parameter`
+        parameter : `~gammapy.modeling.Parameter`
             For which parameter to get the value.
 
         Returns
@@ -176,7 +180,7 @@ class ParameterEstimator(Estimator):
         ----------
         datasets : `~gammapy.datasets.Datasets`
             Datasets.
-        parameter : `Parameter`
+        parameter : `~gammapy.modeling.Parameter`
             For which parameter to get the value.
 
         Returns
@@ -301,7 +305,7 @@ class ParameterEstimator(Estimator):
 
         Parameters
         ----------
-        datasets : Datasets
+        datasets : `~gammapy.datasets.Datasets`
             Datasets.
 
         Returns
@@ -355,6 +359,17 @@ class ParameterEstimator(Estimator):
         -------
         result : dict
             Dictionary with the various parameter estimation values.
+            If used without the optional steps, it contains the following keys:
+
+                * parameter.name : best fit parameter value
+                * "stat" : best fit total stat
+                * "success" : boolean flag for fit success
+                * parameter.name_err: covariance-based error estimate on parameter value
+                * "ts" : delta(TS) value
+                * "npred" : predicted number of counts per dataset
+                * "stat_null" : total stat corresponding to the null hypothesis
+                * "counts" : counts value per dataset
+                * "datasets" : names of the datasets
         """
         if not isinstance(datasets, DatasetsActor):
             datasets = Datasets(datasets)
@@ -401,8 +416,10 @@ class ParameterSensitivityEstimator:
        Parameter to test
     null_value : float or `~gammapy.modeling.Parameter`
         Value of the parameter for the null hypothesis.
-    n_sigma : int, optional
+    n_sigma : float, optional
         Number of required significance level. Default is 5.
+    n_free_parameters : int, optional
+        Number of free parameters. Default is None, which utilises len(parameters).
     rtol : float, optional
         Relative precision of the estimate. Used as a stopping criterion.
         Default is 0.01.
@@ -428,7 +445,7 @@ class ParameterSensitivityEstimator:
         rtol=0.01,
         max_niter=100,
     ):
-        self.test = TestStatisticNested(
+        self.test = NestedModelSelection(
             [parameter], [null_value], n_free_parameters=n_free_parameters
         )
         self.parameter = parameter
@@ -465,8 +482,18 @@ class ParameterSensitivityEstimator:
             return np.nan
 
     def run(self, datasets):
-        """Parameter sensitivity
-        given as the difference between value matching the target significance and the null value.
+        """Run the parameter sensitivity estimator.
+
+        Parameters
+        ----------
+        datasets : `~gammapy.datasets.Datasets`
+            The datasets used to estimate the parameter sensitivity.
+
+        Returns
+        -------
+        result : float
+            Parameter sensitivity given as the difference between the value matching
+            the target significance and the null value.
         """
         with restore_parameters_status(self.test.parameters):
             value = self.parameter_matching_significance(datasets)

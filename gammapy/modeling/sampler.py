@@ -53,9 +53,14 @@ class Sampler:
         See the full list of run options on the
         `UltraNest documentation <https://johannesbuchner.github.io/UltraNest/ultranest.html#ultranest.integrator.ReactiveNestedSampler.run>`__.
 
-    Example
-    -------
-    For a usage example, see :doc:`/tutorials/api/nested_sampling_Crab` tutorial.
+    Examples
+    --------
+    For a usage example, see :doc:`/tutorials/details/nested_sampling_Crab` tutorial.
+
+    Notes
+    -----
+    If you are using the "UltraNest" library, please follow its citation scheme:
+    `Cite UltraNest <https://johannesbuchner.github.io/UltraNest/issues.html#how-should-i-cite-ultranest>`__.
 
     """
 
@@ -92,7 +97,7 @@ class Sampler:
         # TODO : add option for median, distribution peak, and maxLogL once Param object has asym errors
 
         posterior = result["posterior"]
-        for i, par in enumerate(models.parameters.free_parameters):
+        for i, par in enumerate(models.parameters.free_unique_parameters):
             par.value = posterior["mean"][i]
             par.error = posterior["stdev"][i]
         models._covariance = None
@@ -168,7 +173,7 @@ class Sampler:
             The sampler results. See the class description to get the exact content.
         """
         datasets, parameters = _parse_datasets(datasets=datasets)
-        parameters = parameters.free_parameters
+        parameters = parameters.free_unique_parameters
 
         if self.backend == "ultranest":
             like = SamplerLikelihood(
@@ -203,7 +208,7 @@ class SamplerResult:
         Array of (weighted) samples that can be used for histograms or corner plots.
     sampler_results : dict
         Output of sampler.
-        See the :doc:`/tutorials/api/nested_sampling_Crab` tutorial for a complete description.
+        See the :doc:`/tutorials/details/nested_sampling_Crab` tutorial for a complete description.
     """
 
     # TODO:

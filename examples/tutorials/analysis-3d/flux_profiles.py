@@ -51,17 +51,10 @@ from gammapy.datasets import MapDataset
 from gammapy.estimators import FluxPoints, FluxProfileEstimator
 from gammapy.maps import RegionGeom
 from gammapy.modeling.models import PowerLawSpectralModel
-
-######################################################################
-# Check setup
-# -----------
-from gammapy.utils.check import check_tutorials_setup
 from gammapy.utils.regions import (
     make_concentric_annulus_sky_regions,
     make_orthogonal_rectangle_sky_regions,
 )
-
-check_tutorials_setup()
 
 
 ######################################################################
@@ -102,7 +95,7 @@ print(dataset.counts)
 # `~gammapy.utils.regions.make_orthogonal_rectangle_sky_regions`. The individual region bins
 # for the profile have a height of 3 deg and in total there are 31 bins.
 # Its starts from lon = 10 deg and goes to lon = 350 deg. In addition, we
-# have to specify the `wcs` to take into account possible projections
+# have to specify the ``wcs`` to take into account possible projections
 # effects on the region definition:
 #
 
@@ -154,7 +147,6 @@ print(flux_profile_estimator)
 # Now we can run the profile estimation and explore the results:
 #
 
-# %%time
 profile = flux_profile_estimator.run(datasets=dataset)
 
 print(profile)
@@ -162,8 +154,8 @@ print(profile)
 
 ######################################################################
 # We can see the flux profile is represented by a `~gammapy.estimators.FluxPoints` object
-# with a `projected-distance` axis, which defines the main axis the flux
-# profile is measured along. The `lon` and `lat` axes can be ignored.
+# with a ``projected-distance`` axis, which defines the main axis the flux
+# profile is measured along. The ``lon`` and ``lat`` axes can be ignored.
 #
 # Plotting Results
 # ~~~~~~~~~~~~~~~~
@@ -268,7 +260,7 @@ plt.show()
 
 flux_profile_estimator = FluxProfileEstimator(
     regions=regions,
-    spectrum=PowerLawSpectralModel(index=2.3),
+    spectral_model=PowerLawSpectralModel(index=2.3),
     energy_edges=[10, 100, 2000] * u.GeV,
     selection_optional=["ul", "scan"],
 )

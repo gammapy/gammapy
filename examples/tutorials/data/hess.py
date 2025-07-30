@@ -49,13 +49,6 @@ import matplotlib.pyplot as plt
 from IPython.display import display
 from gammapy.data import DataStore
 
-######################################################################
-# Check setup
-# -----------
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
-
 
 ######################################################################
 # A useful way to organize the relevant files are the index tables. The

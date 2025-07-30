@@ -18,7 +18,6 @@ from gammapy.maps import (
 )
 from regions import CircleSkyRegion
 from gammapy.utils.testing import (
-    modify_unit_order_astropy_5_3,
     mpl_plot_check,
     requires_data,
 )
@@ -250,7 +249,7 @@ def test_map_properties():
     assert isinstance(m.unit, u.CompositeUnit)
     assert m._unit == u.one
     m._unit = u.Unit("cm-2 s-1")
-    assert m.unit.to_string() == modify_unit_order_astropy_5_3("1 / (cm2 s)")
+    assert m.unit.to_string() == "1 / (s cm2)"
 
     assert isinstance(m.meta, dict)
     m.meta = {"spam": 42}
@@ -785,7 +784,7 @@ def test_wcsndmap_reproject_allsky_car():
 
     geom1 = HpxGeom.create(binsz=5.0, frame="icrs")
     m1 = m.reproject_to_geom(geom1)
-    mask = np.abs(m1.geom.get_coord()[0] - 180) <= 5
+    mask = np.abs(m1.geom.get_coord()[0].to_value("deg") - 180) <= 5
     assert_allclose(np.unique(m1.data[mask])[1], expected)
 
 

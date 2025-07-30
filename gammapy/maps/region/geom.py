@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import copy
 import logging
-from functools import lru_cache
+from gammapy.utils.cache import cachemethod
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord
@@ -60,6 +60,11 @@ class RegionGeom(Geom):
         quantities in the region. Default is "0.1 deg". This default
         value is adequate for the majority of use cases. If a WCS object
         is provided, the input of ``binsz_wcs`` is overridden.
+
+    Notes
+    -----
+    - For further explanation and examples, see :doc:`/user-guide/maps/regionmap`
+
     """
 
     is_regular = True
@@ -100,15 +105,6 @@ class RegionGeom(Geom):
 
         self._wcs = wcs
         self.ndim = len(self.data_shape)
-
-        # define cached methods
-        self.get_wcs_coord_and_weights = lru_cache()(self.get_wcs_coord_and_weights)
-
-    def __setstate__(self, state):
-        for key, value in state.items():
-            if key in ["get_wcs_coord_and_weights"]:
-                state[key] = lru_cache()(value)
-        self.__dict__ = state
 
     @property
     def frame(self):
@@ -430,6 +426,7 @@ class RegionGeom(Geom):
         new_geom = RegionGeom(self.region, axes=self.axes, binsz_wcs=binsz)
         return new_geom
 
+    @cachemethod
     def get_wcs_coord_and_weights(self, factor=10):
         """Get the array of spatial coordinates and corresponding weights.
 

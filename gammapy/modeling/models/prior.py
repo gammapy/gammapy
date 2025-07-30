@@ -35,7 +35,12 @@ def _build_priorparameters_from_dict(data, default_parameters):
 
 
 class Prior(ModelBase):
-    """Prior base class."""
+    """Prior abstract base class. For now, see existing examples of type of priors:
+
+    - `GaussianPrior`
+    - `UniformPrior`
+    - `LogUniformPrior`
+    """
 
     _unit = ""
 
@@ -72,9 +77,13 @@ class Prior(ModelBase):
             [_ for _ in cls.__dict__.values() if isinstance(_, PriorParameter)]
         )
 
+    def _inverse_cdf(self, value):
+        """Return inverse CDF for prior."""
+        return self._random_variable.ppf(value)
+
     @property
     def weight(self):
-        """Weight mulitplied to the prior when evaluated."""
+        """Weight multiplied to the prior when evaluated."""
         return self._weight
 
     @weight.setter
@@ -83,7 +92,7 @@ class Prior(ModelBase):
 
     def __call__(self, value):
         """Call evaluate method."""
-        # assuming the same unit as the PriorParamater here
+        # assuming the same unit as the PriorParameter here
         kwargs = {par.name: par.value for par in self.parameters}
         return self.weight * self.evaluate(value.value, **kwargs)
 
@@ -139,10 +148,10 @@ class GaussianPrior(Prior):
 
     Parameters
     ----------
-    mu : float
+    mu : float, optional
         Mean of the Gaussian distribution.
         Default is 0.
-    sigma : float
+    sigma : float, optional
         Standard deviation of the Gaussian distribution.
         Default is 1.
     """
@@ -157,26 +166,26 @@ class GaussianPrior(Prior):
         """Evaluate the Gaussian prior."""
         return ((value - mu) / sigma) ** 2
 
-    def _inverse_cdf(self, value):
-        """Return inverse CDF for prior."""
-        rv = norm(self.mu.value, self.sigma.value)
-        return rv.ppf(value)
+    @property
+    def _random_variable(self):
+        """Return random variable object for prior."""
+        return norm(self.mu.value, self.sigma.value)
 
 
 class UniformPrior(Prior):
     """Uniform Prior.
 
-    Returns 1 if the parameter value is in (min, max).
-    0, if otherwise.
+    Returns 0 if the parameter value is in ]min, max[.
+    Returns 1, if otherwise.
 
     Parameters
     ----------
-    min : float
+    min : float, optional
         Minimum value.
-        Default is -inf.
-    max : float
-        Maxmimum value.
-        Default is inf.
+        Default is -`~numpy.inf`.
+    max : float, optional
+        Maximum value.
+        Default is `~numpy.inf`.
     """
 
     tag = ["UniformPrior"]
@@ -192,23 +201,23 @@ class UniformPrior(Prior):
         else:
             return 1.0
 
-    def _inverse_cdf(self, value):
-        """Return inverse CDF for prior."""
-        rv = uniform(self.min.value, self.max.value - self.min.value)
-        return rv.ppf(value)
+    @property
+    def _random_variable(self):
+        """Return random variable object for prior."""
+        return uniform(self.min.value, self.max.value - self.min.value)
 
 
 class LogUniformPrior(Prior):
     """LogUniform Prior.
 
-     Equivalent to a uniform prior on the log of the parameter
+    Equivalent to a uniform prior on the log of the parameter
 
-     Parameters
-     ----------
-     min : float
-         minimum value.
-    max : float
-         maximum value.
+    Parameters
+    ----------
+    min : float, optional
+        Minimum value. Default is 1e-14.
+    max : float, optional
+        Maximum value. Default is 1e-10.
     """
 
     tag = ["LogUniformPrior"]
@@ -226,7 +235,7 @@ class LogUniformPrior(Prior):
         rv = loguniform(min, max)
         return -2 * rv.logpdf(value)
 
-    def _inverse_cdf(self, value):
-        """Return inverse CDF for prior."""
-        rv = loguniform(self.min.value, self.max.value)
-        return rv.ppf(value)
+    @property
+    def _random_variable(self):
+        """Return random variable object for prior."""
+        return loguniform(self.min.value, self.max.value)

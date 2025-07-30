@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import logging
 import numpy as np
 from astropy.coordinates import SkyCoord
 from gammapy.data import Observation
@@ -13,6 +14,8 @@ __all__ = [
     "split_dataset",
     "create_map_dataset_from_dl4",
 ]
+
+log = logging.getLogger(__name__)
 
 
 def apply_edisp(input_map, edisp):
@@ -55,7 +58,7 @@ def apply_edisp(input_map, edisp):
     <BLANKLINE>
         geom  : WcsGeom
         axes  : ['lon', 'lat', 'energy']
-        shape : (np.int64(50), np.int64(50), 3)
+        shape : (50, 50, 3)
         ndim  : 3
         unit  :
         dtype : float64
@@ -250,7 +253,13 @@ def create_map_dataset_from_dl4(data, geom=None, energy_axis_true=None, name=Non
 
     # ensure that DL4 IRFs have the axes
     rad_axis = data.psf.psf_map.geom.axes["rad"]
-    geom_psf = data.psf.psf_map.geom.to_image().to_cube([rad_axis, energy_axis_true])
+    if data.psf.energy_name == "energy":
+        geom_psf = data.psf.psf_map.geom.to_image().to_cube([rad_axis, energy_axis])
+    else:
+        geom_psf = data.psf.psf_map.geom.to_image().to_cube(
+            [rad_axis, energy_axis_true]
+        )
+
     geom_edisp = data.edisp.edisp_map.geom.to_image().to_cube(
         [energy_axis, energy_axis_true]
     )
@@ -286,7 +295,7 @@ def create_map_dataset_from_dl4(data, geom=None, energy_axis_true=None, name=Non
         dataset.background = Map.from_geom(geom, data=0.0)
 
     if dataset.edisp.exposure_map and np.all(dataset.edisp.exposure_map.data) == 0.0:
-        dataset.edisp.exposure_map.data = dataset.psf.exposure_map.data
+        dataset.edisp.exposure_map.quantity = dataset.psf.exposure_map.quantity
 
     return dataset
 
@@ -417,3 +426,58 @@ def create_global_dataset(
         per_decade=True,
     )
     return MapDataset.create(geom=geom, energy_axis_true=energy_axis_true, name=name)
+
+
+class set_and_restore_mask_fit:
+    """Context manager to set a `mask_fit` on dataset and restore the initial mask.
+
+    Parameters
+    ----------
+    datasets : `~gammapy.datasets.datasets`
+        the Datasets to apply the energy mask to.
+    energy_min : `~astropy.units.Quantity`, optional
+        minimum energy.
+    energy_min : `~astropy.units.Quantity`, optional
+        maximum energy.
+    round_to_edge: bool, optional
+        Whether to round `energy_min` and `energy_max` to the closest axis bin value.
+        See `~gammapy.maps.MapAxis.round`. Default is False.
+    """
+
+    def __init__(
+        self,
+        datasets,
+        mask_fit=None,
+        energy_min=None,
+        energy_max=None,
+        round_to_edge=False,
+    ):
+        self.energy_min = energy_min
+        self.energy_max = energy_max
+        self.round_to_edge = round_to_edge
+        self.mask_fit = mask_fit
+        self.datasets = datasets
+        self.mask_fits = [dataset.mask_fit for dataset in datasets]
+
+    def __enter__(self):
+        datasets = Datasets()
+        for dataset in self.datasets:
+            mask_fit = dataset._geom.energy_mask(
+                self.energy_min, self.energy_max, self.round_to_edge
+            )
+            if self.mask_fit is not None:
+                mask_fit *= self.mask_fit.interp_to_geom(
+                    mask_fit.geom, method="nearest"
+                )
+            dataset.mask_fit = mask_fit
+            if np.any(mask_fit.data):
+                datasets.append(dataset)
+            else:
+                log.info(
+                    f"Dataset {dataset.name} does not contribute in the energy range"
+                )
+        return datasets
+
+    def __exit__(self, type, value, traceback):
+        for dataset, mask_fit in zip(self.datasets, self.mask_fits):
+            dataset.mask_fit = mask_fit

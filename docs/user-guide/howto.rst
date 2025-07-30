@@ -44,7 +44,7 @@ Please give feedback and suggest additions to this page!
     contained in an observation. This is usually done thanks to their ``peek()``
     methods.
 
-    .. button-link:: ../tutorials/api/makers.html#observation-duration-and-effective-livetime
+    .. button-link:: ../tutorials/details/makers.html#observation-duration-and-effective-livetime
        :color: primary
        :shadow:
 
@@ -57,7 +57,7 @@ Please give feedback and suggest additions to this page!
     The two methods to do so are manual grouping and hierarchical clustering. The quantity
     you group by can be adjusted according to each science case.
 
-    .. button-link:: ../tutorials/api/observation_clustering.html
+    .. button-link:: ../tutorials/details/observation_clustering.html
        :color: primary
        :shadow:
 
@@ -70,7 +70,7 @@ Please give feedback and suggest additions to this page!
     It can be used to obtain various quantities from your `~gammapy.data.Observations` list, such as livetime.
     The on-axis equivalent number of observation hours on the source can be calculated.
 
-    .. button-link:: ../tutorials/api/makers.html#observation-duration-and-effective-livetime
+    .. button-link:: ../tutorials/details/makers.html#observation-duration-and-effective-livetime
        :color: primary
        :shadow:
 
@@ -111,12 +111,12 @@ Please give feedback and suggest additions to this page!
         fp.plot(ax=ax, sed_type="e2dnde")
 
 
-.. dropdown:: Compute source significance
+.. dropdown:: Compute the significance of a source
 
-    Estimate the significance of a source, or more generally of an additional model
+    Estimating the significance of a source, or more generally of an additional model
     component (such as e.g. a spectral line on top of a power-law spectrum), is done
-    via a hypothesis test. You fit two models, with and without the extra source or
-    component, then use the test statistic values from both fits to compute the
+    via a hypothesis test. You fit two models: one including the source or component and one without it. Then,
+    compute the difference in the test statistic (TS) between the two fits to determine the
     significance or p-value. To obtain the test statistic, call
     `~gammapy.modeling.Dataset.stat_sum` for the model corresponding to your two
     hypotheses (or take this value from the print output when running the fit), and
@@ -132,14 +132,14 @@ Please give feedback and suggest additions to this page!
     run the full reduction chain, or the reduction is performed with multi-processing tools by
     utilising the `~gammapy.makers.DatasetsMaker` to perform the loop internally.
 
-    .. button-link:: ../tutorials/api/makers.html#data-reduction-loop
+    .. button-link:: ../tutorials/details/makers.html#data-reduction-loop
        :color: primary
        :shadow:
 
        To the tutorial...
 
 
-.. dropdown:: Compute cumulative significance
+.. dropdown:: Compute cumulative significance over time
 
     A classical plot in gamma-ray astronomy is the cumulative significance of a
     source as a function of observing time. In Gammapy, you can produce it with 1D
@@ -158,7 +158,7 @@ Please give feedback and suggest additions to this page!
 
     Gammapy allows the flexibility of using user-defined models for analysis.
 
-    .. button-link:: ../tutorials/api/models.html#implementing-a-custom-model
+    .. button-link:: ../tutorials/details/models.html#implementing-a-custom-model
        :color: primary
        :shadow:
 
@@ -170,7 +170,7 @@ Please give feedback and suggest additions to this page!
     While Gammapy does not ship energy dependent spatial models, it is possible to define
     such models within the modeling framework.
 
-    .. button-link:: ../tutorials/api/models.html#models-with-energy-dependent-morphology
+    .. button-link:: ../tutorials/details/models.html#models-with-energy-dependent-morphology
        :color: primary
        :shadow:
 
@@ -214,8 +214,7 @@ Please give feedback and suggest additions to this page!
 
     The simple solution is to add a physically-motivated range on the model's position, e.g. within
     the field of view or around an excess position. Most of the time, this tip solves the issue.
-    The documentation of the
-    `models sub-package <https://docs.gammapy.org/1.0/tutorials/api/models.html#modifying-model-parameters>`_
+    The documentation of the :ref:`models sub-package <modifying-model-parameters>`
     explains how to add a validity range of a model parameter.
 
 
@@ -248,7 +247,7 @@ Please give feedback and suggest additions to this page!
 
     To interpolate maps onto a different geometry use `~gammapy.maps.Map.interp_to_geom`.
 
-    .. button-link:: ../tutorials/api/maps.html#filling-maps-from-interpolation
+    .. button-link:: ../tutorials/details/maps.html#filling-maps-from-interpolation
        :color: primary
        :shadow:
 
@@ -275,11 +274,13 @@ Please give feedback and suggest additions to this page!
 .. dropdown:: Avoid NaN results in Flux Point estimation
 
     Sometimes, upper limit values may show as ``nan`` while running a `~gammapy.estimators.FluxPointsEstimator`
-    or a `~gammapy.estimators.LightCurveEstimator`. This often arises because the range of the norm parameter
-    being scanned over is not sufficient. Increasing this range usually solves the problem. In some cases,
-    you can also consider configuring the estimator with a different `~gammapy.modeling.Fit` backend.
+    or a `~gammapy.estimators.LightCurveEstimator`. This likely arises because the min/max range of the `norm` parameter
+    attribute attached to the estimator is not well-chosen (the automatic default may not be valid for all use cases).
+    Setting these min/max to large values usually solves the problem (see the attributes of `norm`
+    `~gammapy.modeling.Parameter`). In some cases, you can also consider configuring the estimator with a different
+    `~gammapy.modeling.Fit` backend.
 
-    .. button-link:: ../tutorials/api/estimators.html#a-fully-configured-flux-points-estimatio
+    .. button-link:: ../tutorials/details/estimators.html#a-fully-configured-flux-points-estimatio
        :color: primary
        :shadow:
 
@@ -378,7 +379,7 @@ Please give feedback and suggest additions to this page!
         obs2 = obs.copy(events=new_events, in_memory=True)
 
         # The new observation and the new events table can be serialised independently
-        obs2.write("new_obs.fits.gz")
-        obs2.write("events.fits.gz", include_irfs=False)
+        obs2.write("new_obs.fits.gz", overwrite=True)
+        obs2.write("events.fits.gz", include_irfs=False, overwrite=True)
 
 

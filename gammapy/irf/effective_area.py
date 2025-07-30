@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import warnings
 import numpy as np
 import astropy.units as u
 from astropy.visualization import quantity_support
@@ -8,7 +7,6 @@ from gammapy.maps import MapAxes, MapAxis
 from gammapy.maps.axes import UNIT_STRING_FORMAT
 from gammapy.visualization.utils import add_colorbar
 from .core import IRF
-from gammapy.utils.deprecation import GammapyDeprecationWarning
 
 __all__ = ["EffectiveAreaTable2D"]
 
@@ -199,14 +197,22 @@ class EffectiveAreaTable2D(IRF):
         offset.format_plot_yaxis(ax=ax)
 
         if add_cbar:
+            kwargs_colorbar.setdefault("format", "%.1e")
             label = f"Effective Area [{aeff.unit.to_string(UNIT_STRING_FORMAT)}]"
             kwargs_colorbar.setdefault("label", label)
+            kwargs_colorbar.setdefault("labelsize", 7)
             add_colorbar(caxes, ax=ax, axes_loc=axes_loc, **kwargs_colorbar)
 
         return ax
 
     def peek(self, figsize=(15, 5)):
         """Quick-look summary plots.
+
+        This method creates a figure with three subplots:
+
+        * Energy dependence plot : effective area versus true energy for a given offset
+        * Offset dependence plot : effective area versus true energy for a given offset
+        * Effective area 2D map
 
         Parameters
         ----------
@@ -257,12 +263,6 @@ class EffectiveAreaTable2D(IRF):
             "CTAO": [1.71e11, 0.0891, 1e5],
         }
 
-        if instrument == "CTA":
-            instrument = "CTAO"
-            warnings.warn(
-                "Since v1.3, the value 'CTA' is replaced by 'CTAO' for the argument instrument.",
-                GammapyDeprecationWarning,
-            )
         if instrument not in pars.keys():
             ss = f"Unknown instrument: {instrument}\n"
             ss += f"Valid instruments: {list(pars.keys())}"

@@ -8,7 +8,7 @@ Prerequisites
 -------------
 
 -  To understand how a single binned simulation works, please refer to
-   :doc:`/tutorials/analysis-1d/spectrum_simulation` tutorial and 
+   :doc:`/tutorials/analysis-1d/spectrum_simulation` tutorial and
    :doc:`/tutorials/analysis-3d/simulate_3d` tutorial for 1D and 3D simulations,
    respectively.
 -  For details of light curve extraction using gammapy, refer to the two
@@ -92,13 +92,6 @@ warnings.filterwarnings(
     action="ignore", message="overflow encountered in exp", module="astropy"
 )
 
-######################################################################
-# Check setup
-# -----------
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
-
 
 ######################################################################
 # We first define our preferred time format:
@@ -114,7 +107,7 @@ TimeMapAxis.time_format = "iso"
 # We will simulate 10 spectra between 300 GeV and 10 TeV using an
 # `~gammapy.modeling.models.PowerLawSpectralModel` and a
 # `~gammapy.modeling.models.ExpDecayTemporalModel`. The important
-# thing to note here is how to attach a different `GTI` to each dataset.
+# thing to note here is how to attach a different ``GTI`` to each dataset.
 # Since we use spectrum datasets here, we will use a `~gammapy.maps.RegionGeom`.
 #
 
@@ -232,7 +225,6 @@ model_fit = SkyModel(spectral_model=spectral_model, name="model-fit")
 # Attach model to all datasets
 datasets.models = model_fit
 
-# %%time
 lc_maker_1d = LightCurveEstimator(
     energy_edges=[0.3, 0.6, 1.0, 10] * u.TeV,
     source="model-fit",
@@ -296,7 +288,6 @@ dataset_fp.models = model
 print(dataset_fp)
 
 
-# %%time
 # Fit the dataset
 fit = Fit()
 result = fit.run(dataset_fp)
@@ -308,6 +299,8 @@ display(result.parameters.to_table())
 # temporal model in relative units for one particular energy range
 #
 
+plt.figure(figsize=(8, 7))
+plt.subplots_adjust(bottom=0.3)
 dataset_fp.plot_spectrum(axis_name="time")
 
 ######################################################################
@@ -338,7 +331,6 @@ display(model2.parameters.to_table())
 
 datasets.models = model2
 
-# %%time
 # Perform a joint fit
 fit = Fit()
 result = fit.run(datasets=datasets)

@@ -262,6 +262,32 @@ def estimate_exposure_reco_energy(dataset, spectral_model=None, normalize=True):
     -------
     exposure : `~gammapy.maps.Map`
         Exposure map in reconstructed energy.
+
+    Examples
+    --------
+    .. testcode::
+
+        from gammapy.datasets import MapDataset
+        from gammapy.estimators.utils import estimate_exposure_reco_energy
+        from gammapy.modeling.models import PowerLawSpectralModel
+        dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
+        spectral_model = PowerLawSpectralModel()
+        reco_exposure = estimate_exposure_reco_energy(
+            dataset,
+            spectral_model=spectral_model,
+        )
+        print(reco_exposure)
+
+    .. testoutput::
+
+        WcsNDMap
+
+        geom  : WcsGeom
+        axes  : ['lon', 'lat', 'energy']
+        shape : (320, 240, 10)
+        ndim  : 3
+        unit  : cm2 s
+        dtype : float64
     """
     if spectral_model is None:
         spectral_model = PowerLawSpectralModel()
@@ -388,13 +414,26 @@ def compute_lightcurve_fvar(lightcurve, flux_quantity="flux"):
     ----------
     lightcurve : `~gammapy.estimators.FluxPoints`
         The lightcurve object.
-    flux_quantity : str
+    flux_quantity : str, optional
         Flux quantity to use for calculation. Should be 'dnde', 'flux', 'e2dnde' or 'eflux'. Default is 'flux'.
 
     Returns
     -------
     fvar : `~astropy.table.Table`
         Table of fractional excess variance and associated error for each energy bin of the lightcurve.
+
+    Examples
+    --------
+    .. testcode::
+
+        from gammapy.estimators import FluxPoints
+        from gammapy.estimators.utils import compute_lightcurve_fvar
+
+        lightcurve = FluxPoints.read(
+            "$GAMMAPY_DATA/estimators/pks2155_hess_lc/pks2155_hess_lc.fits",
+            format="lightcurve",
+        )
+        fvar = compute_lightcurve_fvar(lightcurve)
     """
     flux = getattr(lightcurve, flux_quantity)
     flux_err = getattr(lightcurve, flux_quantity + "_err")
@@ -425,13 +464,26 @@ def compute_lightcurve_fpp(lightcurve, flux_quantity="flux"):
     ----------
     lightcurve : `~gammapy.estimators.FluxPoints`
         The lightcurve object.
-    flux_quantity : str
+    flux_quantity : str, optional
         Flux quantity to use for calculation. Should be 'dnde', 'flux', 'e2dnde' or 'eflux'. Default is 'flux'.
 
     Returns
     -------
     table : `~astropy.table.Table`
         Table of point-to-point excess variance and associated error for each energy bin of the lightcurve.
+
+    Examples
+    --------
+    .. testcode::
+
+        from gammapy.estimators import FluxPoints
+        from gammapy.estimators.utils import compute_lightcurve_fpp
+
+        lightcurve = FluxPoints.read(
+            "$GAMMAPY_DATA/estimators/pks2155_hess_lc/pks2155_hess_lc.fits",
+            format="lightcurve",
+        )
+        fpp = compute_lightcurve_fpp(lightcurve)
     """
     flux = getattr(lightcurve, flux_quantity)
     flux_err = getattr(lightcurve, flux_quantity + "_err")
@@ -470,9 +522,7 @@ def compute_lightcurve_doublingtime(lightcurve, flux_quantity="flux"):
     ----------
     lightcurve : `~gammapy.estimators.FluxPoints`
         The lightcurve object.
-    axis_name : str
-        Name of the axis over which to compute the flux doubling.
-    flux_quantity : str
+    flux_quantity : str, optional
         Flux quantity to use for calculation. Should be 'dnde', 'flux', 'e2dnde' or 'eflux'.
         Default is 'flux'.
 
@@ -482,6 +532,18 @@ def compute_lightcurve_doublingtime(lightcurve, flux_quantity="flux"):
         Table of flux doubling/halving and associated error for each energy bin of the lightcurve
         with axis coordinates at which they were found.
 
+    Examples
+    --------
+    .. testcode::
+
+        from gammapy.estimators import FluxPoints
+        from gammapy.estimators.utils import compute_lightcurve_doublingtime
+
+        lightcurve = FluxPoints.read(
+            "$GAMMAPY_DATA/estimators/pks2155_hess_lc/pks2155_hess_lc.fits",
+            format="lightcurve",
+        )
+        doublingtime = compute_lightcurve_doublingtime(lightcurve)
 
     References
     ----------
@@ -542,7 +604,7 @@ def compute_lightcurve_discrete_correlation(
     lightcurve2 : `~gammapy.estimators.FluxPoints`, optional
         The second lightcurve object. If not provided, the autocorrelation for the first lightcurve will be computed.
         Default is None.
-    flux_quantity : str
+    flux_quantity : str, optional
         Flux quantity to use for calculation. Should be 'dnde', 'flux', 'e2dnde' or 'eflux'.
         The choice does not affect the computation. Default is 'flux'.
     tau : `~astropy.units.Quantity`, optional
@@ -557,6 +619,23 @@ def compute_lightcurve_discrete_correlation(
                 * "bins" : the array of discrete time bins
                 * "discrete_correlation" : discrete correlation function values
                 * "discrete_correlation_err" : associated error
+
+    Examples
+    --------
+    .. testcode::
+
+        from gammapy.estimators import FluxPoints
+        from gammapy.estimators.utils import compute_lightcurve_discrete_correlation
+        import astropy.units as u
+
+        lightcurve = FluxPoints.read(
+            "$GAMMAPY_DATA/estimators/pks2155_hess_lc/pks2155_hess_lc.fits",
+            format="lightcurve",
+        )
+        discrete_correlation = compute_lightcurve_discrete_correlation(
+            lightcurve,
+            tau=3*u.d,
+        )
 
     References
     ----------
@@ -1251,10 +1330,10 @@ def get_flux_map_from_profile(
     ----------
     flux_maps : `~gammapy.estimators.FluxMaps` or dict of `~gammapy.maps.WcsNDMap`
         Flux map or dict containing  a `stat_scan` entry
-    n_sigma : int
-        Number of sigma for flux error. Default is 1.
-    n_sigma_ul : int
-        Number of sigma for flux upper limits. Default is 2.
+    n_sigma : float, optional
+        Number of sigma for flux error. Must be a positive value. Default is 1.
+    n_sigma_ul : float, optional
+        Number of sigma for flux upper limits. Must be a positive value. Default is 2.
     reference_model : `~gammapy.modeling.models.SkyModel`, optional
         The reference model to use for conversions. If None, a model consisting
         of a point source with a power law spectrum of index 2 is assumed.

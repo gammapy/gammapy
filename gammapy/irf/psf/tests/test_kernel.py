@@ -5,9 +5,8 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from gammapy.irf import PSFKernel
 from gammapy.maps import MapAxis, WcsGeom
-from gammapy.modeling.models import DiskSpatialModel, PowerLawSpectralModel
+from gammapy.modeling.models import DiskSpatialModel
 from gammapy.utils.testing import mpl_plot_check
-from gammapy.utils.deprecation import GammapyDeprecationWarning
 
 
 @pytest.fixture
@@ -51,9 +50,6 @@ def test_psf_kernel_to_image():
     rad_max = 2.5 * u.deg
     kernel1 = PSFKernel.from_spatial_model(disk_1, geom, max_radius=rad_max, factor=4)
     kernel2 = PSFKernel.from_spatial_model(disk_2, geom, max_radius=rad_max, factor=4)
-
-    with pytest.warns(GammapyDeprecationWarning):
-        kernel1.to_image(spectrum=PowerLawSpectralModel())
 
     kernel1.psf_kernel_map.data[1, :, :] = kernel2.psf_kernel_map.data[1, :, :]
 

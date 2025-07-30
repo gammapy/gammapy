@@ -12,7 +12,6 @@ from gammapy.maps import MapAxis
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from .core import FluxPoints
 from .sed import FluxPointsEstimator
-from gammapy.utils.deprecation import deprecated_renamed_argument
 
 log = logging.getLogger(__name__)
 
@@ -98,7 +97,6 @@ class FluxProfileEstimator(FluxPointsEstimator):
 
     tag = "FluxProfileEstimator"
 
-    @deprecated_renamed_argument("spectrum", "spectral_model", "v1.3")
     def __init__(self, regions, spectral_model=None, **kwargs):
         if len(regions) <= 1:
             raise ValueError(

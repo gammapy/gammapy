@@ -7,7 +7,6 @@ from gammapy.catalog import SourceCatalogGammaCat
 from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.testing import (
     assert_quantity_allclose,
-    modify_unit_order_astropy_5_3,
     requires_data,
 )
 
@@ -97,7 +96,7 @@ class TestSourceCatalogObjectGammaCat:
         with open(get_pkg_data_filename(ref["str_ref_file"])) as fh:
             expected = fh.read()
 
-        assert actual == modify_unit_order_astropy_5_3(expected)
+        assert actual == expected
 
     @pytest.mark.parametrize("ref", SOURCES, ids=lambda _: _["name"])
     def test_spectral_model(self, gammacat, ref):
@@ -126,10 +125,11 @@ class TestSourceCatalogObjectGammaCat:
 
         e_min, e_max, e_inf = [1, 10, 1e10] * u.TeV
 
-        dnde, dnde_err = spectral_model.evaluate_error(e_min)
+        dnde, dnde_errn, dnde_errp = spectral_model.evaluate_error(e_min)
 
-        assert_quantity_allclose(dnde, ref["dnde_1TeV"], rtol=1e-3)
-        assert_quantity_allclose(dnde_err, ref["dnde_1TeV_err"], rtol=1e-3)
+        assert_quantity_allclose(dnde, ref["dnde_1TeV"], rtol=5e-2)
+        assert_quantity_allclose(dnde_errn, ref["dnde_1TeV_err"], rtol=5e-2)
+        assert_quantity_allclose(dnde_errp, ref["dnde_1TeV_err"], rtol=5e-2)
 
     @pytest.mark.parametrize("ref", SOURCES, ids=lambda _: _["name"])
     def test_flux_points(self, gammacat, ref):

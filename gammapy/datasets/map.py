@@ -360,7 +360,7 @@ def create_map_dataset_from_observation(
     spatial_bin_size_min : `~astropy.quantity.Quantity`, optional
         Minimal spatial bin size. Default is 0.01 degree.
     position : `~astropy.coordinates.SkyCoord`, optional
-        Center of the geometry. Defalut is the observation pointing.
+        Center of the geometry. Default is the observation pointing.
     frame: str, optional
         frame of the coordinate system. Default is "icrs".
     """
@@ -1305,8 +1305,8 @@ class MapDataset(Dataset):
         )
         residuals = self._compute_residuals(counts_spatial, npred_spatial, method)
 
-        if self.mask_safe is not None:
-            mask = self.mask_safe.reduce_over_axes(func=np.logical_or, keepdims=True)
+        if self.mask is not None:
+            mask = self.mask.reduce_over_axes(func=np.logical_or, keepdims=True)
             residuals.data[~mask.data] = np.nan
 
         kwargs.setdefault("add_cbar", True)
@@ -1316,11 +1316,21 @@ class MapDataset(Dataset):
         ax = residuals.plot(ax, **kwargs)
         return ax
 
-    def plot_residuals_spectral(self, ax=None, method="diff", region=None, **kwargs):
+    def plot_residuals_spectral(
+        self,
+        ax=None,
+        method="diff",
+        region=None,
+        kwargs_fit=None,
+        kwargs_safe=None,
+        **kwargs,
+    ):
         """Plot spectral residuals.
 
         The residuals are extracted from the provided region, and the normalization
         used for its computation can be controlled using the method parameter.
+
+        Both the mask fit and mask safe are taken into account.
 
         The error bars are computed using the uncertainty on the excess with a symmetric assumption.
 
@@ -1328,10 +1338,19 @@ class MapDataset(Dataset):
         ----------
         ax : `~matplotlib.axes.Axes`, optional
             Axes to plot on. Default is None.
-        method : {"diff", "diff/sqrt(model)"}
-            Normalization used to compute the residuals, see `SpectrumDataset.residuals`. Default is "diff".
-        region : `~regions.SkyRegion` (required)
-            Target sky region. Default is None.
+        method : {"diff", "diff/sqrt(model)"}, optional
+            Normalization used to compute the residuals, see `SpectrumDataset.residuals`.
+            Default is "diff".
+        region : `~regions.SkyRegion`, optional
+            Target sky region. If None, the full dataset region
+            (i.e., `~gammapy.maps.WcsGeom.footprint_rectangle_sky_region`) is used as the default.
+            Default is None.
+        kwargs_fit : dict, optional
+            Keyword arguments passed to `~RegionNDMap.plot_mask()` for mask fit.
+            Default is None.
+        kwargs_safe : dict, optional
+            Keyword arguments passed to `~RegionNDMap.plot_mask()` for mask safe.
+            Default is None.
         **kwargs : dict, optional
             Keyword arguments passed to `~matplotlib.axes.Axes.errorbar`.
 
@@ -1392,6 +1411,21 @@ class MapDataset(Dataset):
         ymin = 1.05 * np.nanmin(residuals.data - yerr)
         ymax = 1.05 * np.nanmax(residuals.data + yerr)
         ax.set_ylim(ymin, ymax)
+
+        kwargs_fit = kwargs_fit or {}
+        kwargs_safe = kwargs_safe or {}
+
+        kwargs_fit.setdefault("label", "Mask fit")
+        kwargs_fit.setdefault("color", "tab:green")
+        kwargs_safe.setdefault("label", "Mask safe")
+        kwargs_safe.setdefault("color", "black")
+
+        if self.mask_fit:
+            self.mask_fit.to_region_nd_map().plot_mask(ax=ax, **kwargs_fit)
+
+        if self.mask_safe:
+            self.mask_safe.to_region_nd_map().plot_mask(ax=ax, **kwargs_safe)
+        ax.legend()
         return ax
 
     def plot_residuals(
@@ -1518,6 +1552,8 @@ class MapDataset(Dataset):
         header = hdu_primary.header
         header["NAME"] = self.name
         header.update(self.meta.to_header())
+        creation = self.meta.creation
+        creation.update_time()
 
         hdulist = fits.HDUList([hdu_primary])
         if self.counts is not None:
@@ -1546,6 +1582,9 @@ class MapDataset(Dataset):
 
         if self.meta_table is not None:
             hdulist.append(fits.BinTableHDU(self.meta_table, name="META_TABLE"))
+
+        for hdu in hdulist:
+            hdu.header.update(creation.to_header())
 
         return hdulist
 
@@ -2182,7 +2221,7 @@ class MapDataset(Dataset):
         WcsGeom
         <BLANKLINE>
             axes       : ['lon', 'lat', 'energy']
-            shape      : (np.int64(320), np.int64(240), 3)
+            shape      : (320, 240, 3)
             ndim       : 3
             frame      : galactic
             projection : CAR
@@ -2238,7 +2277,7 @@ class MapDataset(Dataset):
         >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
         >>> sliced = dataset.slice_by_energy(energy_min="1 TeV", energy_max="5 TeV")
         >>> sliced.data_shape
-        (3, np.int64(240), np.int64(320))
+        (3, 240, 320)
         """
         name = make_name(name)
 
@@ -2983,6 +3022,8 @@ class MapDatasetOnOff(MapDataset):
         hdulist = super().to_hdulist()
         exclude_primary = slice(1, None)
 
+        creation = self.meta.creation
+
         del hdulist["BACKGROUND"]
         del hdulist["BACKGROUND_BANDS"]
 
@@ -2996,6 +3037,9 @@ class MapDatasetOnOff(MapDataset):
             hdulist += self.acceptance_off.to_hdulist(hdu="acceptance_off")[
                 exclude_primary
             ]
+
+        for hdu in hdulist:
+            hdu.header.update(creation.to_header())
 
         return hdulist
 
