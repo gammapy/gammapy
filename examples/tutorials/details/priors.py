@@ -71,15 +71,6 @@ from gammapy.modeling.models import (
     UniformPrior,
 )
 
-######################################################################
-# Check setup
-# -----------
-#
-
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
-
 
 ######################################################################
 # Model and dataset
