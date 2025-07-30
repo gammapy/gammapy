@@ -37,12 +37,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 import astropy.units as u
 from gammapy.datasets import SpectrumDatasetOnOff, Datasets
-from gammapy.modeling import Fit, select_nested_models
+from gammapy.modeling import Fit, select_nested_models, stat_profile_ul_scipy
 from gammapy.modeling.models import (
     SkyModel,
     LogParabolaSpectralModel,
 )
 from gammapy.estimators import FluxPointsEstimator
+
 ######################################################################
 # Load observation
 # ----------------
@@ -157,9 +158,10 @@ plt.show()
 # the allowed range of the non-significant parameter (eg: to rule
 # out parameter values, to compare from theoretical predications, etc).
 # For this, we will look at the stat profile of our parameter of interest.
+# First, we reset the alternative model on the dataset
 
-
-parameter = model_pks.parameters["beta"]
+dataset_onoff.models = LLR["fit_results"].models
+parameter = dataset_onoff.models.parameters["beta"]
 parameter.scan_n_values = 25
 parameter.scan_min = -1
 parameter.scan_max = 10
@@ -187,9 +189,52 @@ plt.show()
 # the error on the parameter quoted from the covariance matrix is not sufficient.
 # We can compute the asymmetric errors on the parameter
 
+errors1sig = fit.confidence(datasets=dataset_onoff, parameter=parameter, sigma=1)
+errors2sig = fit.confidence(datasets=dataset_onoff, parameter=parameter, sigma=2)
 errors = fit.confidence(datasets=dataset_onoff, parameter=parameter, sigma=1)
-print(errors)
+print(errors1sig)
+print(errors2sig)
 
+
+######################################################################
+# Using the likelihood profile, we can set upper limits
+# on the parameter.
+
+ul_2sigma = stat_profile_ul_scipy(values, loglike, delta_ts=4)
+print(f"2-sigma upper limit on beta is {ul_2sigma:.2f}")
+
+######################################################################
+# To compute higher sigma upper limits, you will need to increase the range
+# of the likelihood scan such that $\Delta$TS value is at least n_sigma**2.
+# We will now plot the likelihood profile along with the 1 and 2-sigma parameter limits
+
+values = profile["model_pks.spectral.beta_scan"]
+loglike = profile["stat_scan"]
+ax = plt.gca()
+ax.plot(values, loglike - np.min(loglike))
+ax.set_xlabel("Beta")
+ax.set_ylabel(r"$\Delta$TS")
+ax.set_title(r"$\beta$-parameter likelihood profile")
+ax.fill_betweenx(
+    x1=parameter.value - errors2sig["errn"],
+    x2=parameter.value + errors2sig["errp"],
+    y=[-0.5, 25],
+    alpha=0.3,
+    color="pink",
+    label="1-sigma range",
+)
+ax.fill_betweenx(
+    x1=parameter.value - errors1sig["errn"],
+    x2=parameter.value + errors1sig["errp"],
+    y=[-0.5, 25],
+    alpha=0.3,
+    color="salmon",
+    label="2-sigma range",
+)
+ax.set_ylim(-0.5, 25)
+plt.legend()
+plt.show()
+# sphinx_gallery_thumbnail_number = 4
 
 ######################################################################
 # This logic can be extended to any spectral or spatial feature. As an
