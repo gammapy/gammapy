@@ -2514,7 +2514,7 @@ class NaimaSpectralModel(SpectralModel):
         if "B" in self.radiative_model.param_names:
             self.radiative_model.B = self.B.quantity
 
-    def evaluate(self, energy, **kwargs):
+    def evaluate(self, energy, *args):
         """Evaluate the model.
 
         Parameters
@@ -2527,20 +2527,47 @@ class NaimaSpectralModel(SpectralModel):
         dnde : `~astropy.units.Quantity`
             Differential flux at given energy.
         """
-        self._update_naima_parameters(**kwargs)
 
-        if self.include_ssc:
-            dnde = self._evaluate_ssc(energy.flatten())
-        elif self.seed is not None:
-            dnde = self.radiative_model.flux(
-                energy.flatten(), seed=self.seed, distance=self.distance
-            )
+        def compute_dnde(energy, **kwargs):
+            self._update_naima_parameters(**kwargs)
+            if self.include_ssc:
+                dnde = self._evaluate_ssc(energy.flatten())
+            elif self.seed is not None:
+                dnde = self.radiative_model.flux(
+                    energy.flatten(), seed=self.seed, distance=self.distance
+                )
+            else:
+                dnde = self.radiative_model.flux(
+                    energy.flatten(), distance=self.distance
+                )
+            return dnde
+
+        n_energy = np.atleast_1d(energy).shape[0]
+        n_samples = np.atleast_1d(args[0]).shape[0] if args else 1
+
+        if n_samples > 1:
+            dnde = np.zeros((n_energy, n_samples))
+            for k in range(n_samples):
+                kwargs = {
+                    name: q[k] for name, q in zip(self.default_parameters.names, args)
+                }
+                dnde_sample = compute_dnde(energy, **kwargs)
+                dnde_sample_unit = dnde_sample.unit
+                dnde[:, k] = dnde_sample.value
+            dnde = dnde * dnde_sample_unit
         else:
-            dnde = self.radiative_model.flux(energy.flatten(), distance=self.distance)
+            kwargs = {name: q for name, q in zip(self.default_parameters.names, args)}
+            dnde = compute_dnde(energy, **kwargs)
+            dnde = dnde.reshape(energy.shape)
 
-        dnde = dnde.reshape(energy.shape)
         unit = 1 / (energy.unit * u.cm**2 * u.s)
         return dnde.to(unit)
+
+    def __call__(self, energy):
+        kwargs = {par.name: par.quantity for par in self.parameters}
+        kwargs = self._convert_evaluate_unit(kwargs, energy)
+        args = list(kwargs.values())
+        return self.evaluate(energy, *args)
 
     def to_dict(self, full_output=True):
         # for full_output to True otherwise broken
