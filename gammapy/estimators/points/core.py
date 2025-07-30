@@ -64,10 +64,12 @@ def squash_fluxpoints(flux_point, axis):
 
     if "norm_ul" in flux_point.available_quantities:
         delta_ts = flux_point.meta.get("n_sigma_ul", 2) ** 2
-        ul = stat_profile_ul_scipy(value_scan, stat_scan, delta_ts=delta_ts)
-        maps["norm_ul"] = Map.from_geom(
-            geom, data=np.reshape(ul.value, geom.data_shape)
-        )
+        try:
+            ul = stat_profile_ul_scipy(value_scan, stat_scan, delta_ts=delta_ts)
+            ul = ul.value
+        except (ValueError, RuntimeError):
+            ul = np.nan
+        maps["norm_ul"] = Map.from_geom(geom, data=np.reshape(ul, geom.data_shape))
 
     maps["stat"] = Map.from_geom(geom, data=f(minimizer.x).reshape(geom.data_shape))
 
@@ -838,9 +840,7 @@ class FluxPoints(FluxMaps):
         value_scan = self.stat_scan.geom.axes["norm"].center
         shape_axes = self.stat_scan.geom._shape[slice(3, None)][::-1]
         for idx in np.ndindex(shape_axes):
-            stat_scan = np.abs(
-                self.stat_scan.data[idx].squeeze() - self.stat.data[idx].squeeze()
-            )
+            stat_scan = self.stat_scan.data[idx].squeeze()
             flux_points.norm_ul.data[idx] = stat_profile_ul_scipy(
                 value_scan, stat_scan, delta_ts=delta_ts, **kwargs
             )
