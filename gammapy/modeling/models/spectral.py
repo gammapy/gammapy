@@ -101,15 +101,19 @@ def scale_plot_flux(flux, energy_power=0):
     return y.to_unit(flux.unit * eunit**energy_power)
 
 
-def integrate_spectrum(func, energy_min, energy_max, ndecade=100):
+def integrate_spectrum(
+    func, energy_min, energy_max, ndecade=100, eflux=False, parameter_samples=None
+):
     """Integrate one-dimensional function using the log-log trapezoidal rule.
 
     Internally an oversampling of the energy bins to "ndecade" is used.
 
+    To compute the integral func(E)*E (e.g. to get an energy flux) one can set eflux to True.
+
     Parameters
     ----------
     func : callable
-        Function to integrate.
+        Function to integrate. Usually this is a `~gammapy.modeling.models.SpectralModel`
     energy_min : `~astropy.units.Quantity`
         Integration range minimum.
     energy_max : `~astropy.units.Quantity`
@@ -117,11 +121,46 @@ def integrate_spectrum(func, energy_min, energy_max, ndecade=100):
     ndecade : int, optional
         Number of grid points per decade used for the integration.
         Default is 100.
+    parameter_samples : list, optional
+        List of parameter quantities to pass to `func.evaluate` if it exists.
+        This provides vectorized integral evaluation for parameter samples.
+        If None, evaluation is performed with a simple call to `func`. Default is None.
+    eflux : bool, optional
+        If True, the function will integrate func(E)*E, to compute the energy flux.
+        Default is False.
     """
     # Here we impose to duplicate the number
     num = np.maximum(np.max(ndecade * np.log10(energy_max / energy_min)), 2)
+    # the shape of energy is (n_energy, num)
     energy = np.geomspace(energy_min, energy_max, num=int(num), axis=-1)
-    integral = trapz_loglog(func(energy), energy, axis=-1)
+
+    if parameter_samples is not None:
+        if not isinstance(func, SpectralModel):
+            raise TypeError(
+                "Integration with parameter samples requires SpectralModel. Got type(func) instead."
+            )
+
+        # need to convert
+        args = [
+            q.to(energy.unit) if q.unit.physical_type == "energy" else q
+            for q in parameter_samples
+        ]
+        # this will create an array of shape (n_energy, num, n_samples)
+        values = func.evaluate(energy[..., np.newaxis], *args)
+        # We repeat energy n_sample times and reshape to (n_energy, num, n_samples)
+        energy = np.repeat(energy, values.shape[-1]).reshape(values.shape)
+        # We swap axes to have arrays of shape (n_energy, n_samples, num)
+        values = np.swapaxes(values, -1, -2)
+        energy = np.swapaxes(energy, -1, -2)
+    else:
+        values = func(energy)
+
+    if eflux:
+        values *= energy
+
+    # we can call trapz_loglog assuming the last axis is the one to perform integration on.
+    integral = trapz_loglog(values, energy, axis=-1)
+    # integral.shape = (num, n_energy, n_samples) so we sum on axis 0
     return integral.sum(axis=0)
 
 
@@ -171,34 +210,37 @@ class SpectralModel(ModelBase):
     def __rsub__(self, model):
         return self.__sub__(model)
 
-    def _samples(self, fct, n_samples=10000, random_state=42):
+    def _samples(self, fct, n_samples=10000, random_state=42, samples=None):
         """Create SED samples from parameters and covariance
         using multivariate normal distribution.
 
         Parameters
         ----------
-        fct : `~astropy.units.Quantity`
+        fct : callable
             Function to estimate the SED.
         n_samples : int, optional
             Number of samples to generate. Default is 10000.
         random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
                 Defines random number generator initialisation.
                 Passed to `~gammapy.utils.random.get_random_state`. Default is 42.
-
+        samples : list of `~astropy.units.Quantity`, optional
+            List of parameter samples
         Returns
         -------
         sed_samples : np.array
             Array of SED samples
 
         """
-        rng = get_random_state(random_state)
 
-        samples = rng.multivariate_normal(
-            self.parameters.value,
-            self.covariance.data,
-            n_samples,
-        )
-        return u.Quantity([fct(samples[k, :]) for k in range(n_samples)])
+        if samples is None:
+            rng = get_random_state(random_state)
+            samples = rng.multivariate_normal(
+                self.parameters.value,
+                self.covariance.data,
+                n_samples,
+            )
+            samples = [samples[:, k] * p.unit for k, p in enumerate(self.parameters)]
+        return u.Quantity(fct(*samples))
 
     def _get_errors(self, samples, n_sigma=1):
         """Compute median, negative, and positive errors from samples of SED.
@@ -218,15 +260,17 @@ class SpectralModel(ModelBase):
         """
         cdf = stats.norm.cdf
 
-        median = np.percentile(samples, 50, axis=0)
-        errn = median - np.percentile(samples, 100 * cdf(-n_sigma), axis=0)
-        errp = np.percentile(samples, 100 * cdf(n_sigma), axis=0) - median
+        median = np.percentile(samples, 50, axis=1)
+        errn = median - np.percentile(samples, 100 * cdf(-n_sigma), axis=1)
+        errp = np.percentile(samples, 100 * cdf(n_sigma), axis=1) - median
         return u.Quantity(
             [np.atleast_1d(median), np.atleast_1d(errn), np.atleast_1d(errp)],
             unit=samples.unit,
         ).squeeze()
 
-    def evaluate_error(self, energy, epsilon=1e-4, n_samples=3500, random_state=42):
+    def evaluate_error(
+        self, energy, epsilon=1e-4, n_samples=3500, random_state=42, samples=None
+    ):
         """Evaluate spectral model error from parameter distribution sampling.
 
         Parameters
@@ -260,12 +304,14 @@ class SpectralModel(ModelBase):
         m = self.copy()
         n_pars = len(m.parameters)
 
-        def fct(values):
-            m.parameters.value = values
-            return m(energy)
+        def fct(*args):
+            return m.evaluate(energy[..., np.newaxis], *args)
 
         samples = self._samples(
-            fct, n_samples=n_pars * n_samples, random_state=random_state
+            fct,
+            n_samples=n_pars * n_samples,
+            random_state=random_state,
+            samples=samples,
         )
         return self._get_errors(samples)
 
@@ -362,9 +408,15 @@ class SpectralModel(ModelBase):
         m = self.copy()
         n_pars = len(m.parameters)
 
-        def fct(values):
-            m.parameters.value = values
-            return m.integral(energy_min, energy_max, **kwargs)
+        def fct(*args):
+            return integrate_spectrum(
+                self,
+                energy_min,
+                energy_max,
+                parameter_samples=args,
+                eflux=False,
+                **kwargs,
+            )
 
         samples = self._samples(fct, n_samples=n_pars * n_samples)
         return self._get_errors(samples)
@@ -426,9 +478,15 @@ class SpectralModel(ModelBase):
         m = self.copy()
         n_pars = len(m.parameters)
 
-        def fct(values):
-            m.parameters.value = values
-            return m.energy_flux(energy_min, energy_max, **kwargs)
+        def fct(*args):
+            return integrate_spectrum(
+                self,
+                energy_min,
+                energy_max,
+                parameter_samples=args,
+                eflux=True,
+                **kwargs,
+            )
 
         samples = self._samples(fct, n_samples=n_pars * n_samples)
         return self._get_errors(samples)
@@ -707,6 +765,12 @@ class SpectralModel(ModelBase):
         f2 = self(energy * (1 + epsilon))
         return np.log(f1 / f2) / np.log(1 + epsilon)
 
+    def _evaluate_spectral_index(self, energy, *args, epsilon=1e-5):
+        """Same as spectral_index but with parameters samples quantities as *args"""
+        f1 = self.evaluate(energy, *args)
+        f2 = self.evaluate(energy * (1 + epsilon), *args)
+        return np.log(f1 / f2) / np.log(1 + epsilon)
+
     def spectral_index_error(self, energy, epsilon=1e-5, n_samples=3500):
         """Evaluate the error on spectral index at the given energy.
 
@@ -736,9 +800,10 @@ class SpectralModel(ModelBase):
         m = self.copy()
         n_pars = len(m.parameters)
 
-        def fct(values):
-            m.parameters.value = values
-            return m.spectral_index(energy, epsilon=1e-5)
+        def fct(*args):
+            return m._evaluate_spectral_index(
+                energy[..., np.newaxis], *args, epsilon=1e-5
+            )
 
         samples = self._samples(fct, n_samples=n_pars * n_samples)
         return self._get_errors(samples)
