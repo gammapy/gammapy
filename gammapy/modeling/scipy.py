@@ -160,12 +160,21 @@ def stat_profile_ul_scipy(
     ul : float
         Upper limit value.
     """
-    interp = interpolate_profile(value_scan, stat_scan, interp_scale=interp_scale)
 
     if np.allclose(stat_scan, stat_scan[0]):
         raise ValueError(
             "Statistic profile is flat therefore no best-fit value can be determined."
         )
+
+    mask_valid = np.isfinite(stat_scan) & np.isfinite(value_scan)
+    if mask_valid.sum() == 0.0:
+        raise ValueError(
+            "Statistic profile has no finite value therefore no best-fit value can be determined."
+        )
+
+    value_scan = value_scan[mask_valid]
+    stat_scan = stat_scan[mask_valid]
+    interp = interpolate_profile(value_scan, stat_scan, interp_scale=interp_scale)
 
     result = scipy.optimize.minimize_scalar(
         interp, bounds=(value_scan[0], value_scan[-1]), method="bounded"
