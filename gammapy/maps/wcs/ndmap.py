@@ -432,7 +432,7 @@ class WcsNDMap(WcsMap):
         pos = None
         if add_cbar is True and ax is None:
             pos = [0.1, 0.1, 0.75, 0.8]
-        ax = self._plot_default_axes(pos=pos)
+        ax = self._plot_default_axes(ax=ax, pos=pos)
 
         if self.geom.is_image:
             data = self.data.astype(float)
@@ -512,7 +512,13 @@ class WcsNDMap(WcsMap):
                 "`.plot_mask()` only supports maps containing boolean values."
             )
 
-        ax = self._plot_default_axes(ax=ax)
+        add_cbar = False
+        if "add_cbar" in kwargs:
+            add_cbar = True
+        pos = None
+        if add_cbar is True and ax is None:
+            pos = [0.1, 0.1, 0.75, 0.8]
+        ax = self._plot_default_axes(ax=ax, pos=pos)
 
         kwargs.setdefault("alpha", 0.5)
         kwargs.setdefault("colors", "w")
