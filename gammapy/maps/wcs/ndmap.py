@@ -429,9 +429,10 @@ class WcsNDMap(WcsMap):
         if fig is None:
             fig = plt.gcf()
 
+        pos = None
         if add_cbar is True and ax is None:
-            ax = fig.add_axes([0.1, 0.1, 0.75, 0.8])
-        ax = self._plot_default_axes(ax=ax)
+            pos = [0.1, 0.1, 0.75, 0.8]
+        ax = self._plot_default_axes(pos=pos)
 
         if self.geom.is_image:
             data = self.data.astype(float)
@@ -529,17 +530,21 @@ class WcsNDMap(WcsMap):
         ax.autoscale(enable=False)
         return ax
 
-    def _plot_default_axes(self, ax):
+    def _plot_default_axes(self, ax=None, pos=None):
         from astropy.visualization.wcsaxes.frame import EllipticalFrame
 
         if ax is None:
             fig = plt.gcf()
-            if self.geom.projection in ["AIT"]:
-                ax = fig.add_subplot(
-                    1, 1, 1, projection=self.geom.wcs, frame_class=EllipticalFrame
+            frame_class = EllipticalFrame if self.geom.projection in ["AIT"] else None
+
+            if pos:
+                ax = fig.add_axes(
+                    pos, projection=self.geom.wcs, frame_class=frame_class
                 )
             else:
-                ax = fig.add_subplot(1, 1, 1, projection=self.geom.wcs)
+                ax = fig.add_subplot(
+                    1, 1, 1, projection=self.geom.wcs, frame_class=frame_class
+                )
 
         return ax
 
