@@ -512,7 +512,7 @@ class Observation:
                 ax.set_title("Energy dispersion")
 
             if name == "rad_max":
-                self.rad_max.plot_rad_max_vs_energy(ax=ax, squared=True)
+                self.rad_max.plot_rad_max_vs_energy(ax=ax)
                 ax.set_title("Rad max")
 
             if name == "events":
