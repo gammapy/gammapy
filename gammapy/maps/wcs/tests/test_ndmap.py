@@ -703,6 +703,10 @@ def test_plot():
     m = WcsNDMap.create(binsz=0.1 * u.deg, width=1 * u.deg, axes=[axis])
     with mpl_plot_check():
         m.plot(add_cbar=True)
+    with mpl_plot_check():
+        m.plot()
+    with mpl_plot_check():
+        m.plot(squared=True)
 
 
 def test_plot_grid():
@@ -1097,6 +1101,13 @@ def test_plot_mask():
 
     with mpl_plot_check():
         mask.plot_grid()
+
+    summed_mask = mask.sum_over_axes()
+    summed_mask.data = np.array(summed_mask.data, dtype=bool)
+    with mpl_plot_check():
+        summed_mask.plot_mask()
+    with mpl_plot_check():
+        summed_mask.plot_mask(add_cbar=True)
 
 
 def test_histogram_center_value():
