@@ -19,8 +19,7 @@ This release introduces a number of performance improvements, new features and b
 Improved support is provided for Fermi-LAT analysis, and full analysis for VERITAS telescope is supported.
 Bayesian inference with nester sampling is now supported.
 There has been significant code cleanup, specially with respect to the documentation and the tutorial structure has
-been cleaned up. cython code for computation of fit statistics is now replaced by jit code.
-Dependence on `lru_cache` is removed.
+been cleaned up.
 
 
 API changes
@@ -35,7 +34,14 @@ Features deprecated since Gammapy v1.3 have been removed.
 Infrastructure
 ~~~~~~~~~~~~~~
 
-- TODO
+- removed dependency on sphinx-astropy
+- utilise OpenAstronomy in our release workflow to build wheels
+- added extra workflows:
+   - scheduled run for doctests in rst and examples
+   - scheduled link check (separated from ci)
+- added the docs build to PRs
+- support of astropy v7.1
+- allow skipping of ci actions through labels: skip-docs, skip-tests
 
 
 Documentation improvements
@@ -48,16 +54,13 @@ and the ordering of tutorials restructured for clarity.
    - one explaining computation of upper limits for non-detected sources
    - one explaining computation of upper limits on parameters
    - one introducing Bayesian inference with nested sampling
-- The tutorial exposing FERMI-LAT analysis has been rewritten to expose the support for FERMI analysis
+- The tutorial showing how to handle Fermi-LAT data has been rewritten to expose a full Fermi-LAT analysis.
 - Code examples have been added in docstrings.
 
 
 New features
 ~~~~~~~~~~~~
 
-*gammapy.analysis*
-
-- Improvement of the High Level Interface using the `Analysis` class
 
 *gammapy.catalog*
 
@@ -69,23 +72,23 @@ New features
 
 *gammapy.datasets*
 
-- Add `Datasets.to_asimov_datasets`
 - Add a helper function to create a global dataset from a list of datasets
 
 *gammapy.estimators*
 
-- Add optional sensitivity computation on TSMapEstimator
+- Add optional sensitivity computation on TSMapEstimator and FluxPointsEstimator
 
 *gammapy.makers*
 
 - Added spatial model to `gammapy.makers.FoVBackgroundMaker` init
-- Add a `FermiDatasetMaker`
+- Add a `FermipyDatasetsReader` to convert Fermi-LAT maps from Fermipy into a gammapy Datasets.
 
 *gammapy.modeling*
 
-- Support for weighted likelihood as implemented in, eg: FERMI-LAT
+- Support for pixel-wise weighted likelihood as implemented in Fermi-LAT science tools
 - Support for nested sampling
 - Addition of a `LogUniformPrior`
+- Implement a more robust error propagation method using sampling
 - Add ``datasets_names argument`` to ``create_fermi_isotropic_diffuse_model``
 - Add interp_scale to parameter scaling
 - Make a distinction between `free_parameters` and `free_unique_parameters`
@@ -105,9 +108,9 @@ Bug fixes and improvements
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - Improvement of the `MapDataset.peek` function to show relevant info
-- Fix reading of `TemplateSpatialModels` written with Gammapy v1.1 and earlier.
 - Fix memory leak related to lru_cache
 - Fix TSmapEstimator pad_width
+- Fix mask handling in TSMapEstimator
 - Fix parameters links after models copy
 - Fix link label display in parameters.to_table
 - Correct small bug in PSFMap
@@ -182,6 +185,7 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 - [#5860] Introduce a FoVFrame in gammapy.utils.coordinates (Régis Terrier)
 - [#5855] Utility to filter a table parsing string of  logical operations (Quentin Remy)
 - [#5797] Sampling tutorial (Fabio Acero)
+- [#5786] More robust error propagation approach using sampling  (Quentin Remy)
 - [#5766] Modification of peek() in MapDataset to show more information (Mireia Nievas-Rosillo)
 - [#5760] Added spatial model to FoVBackgroundMaker init (Katharina Egg)
 - [#5756] 3PC pulse profile (REGEARD Maxime)
@@ -197,6 +201,7 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 - [#5703] Make theta squared distribution selected in energy (Fabio PINTORE)
 - [#5699] Add `mask` option to `plot_distribution()` (Katharina Egg)
 - [#5696] Introducing FitStatistic (Régis Terrier)
+- [#5690] Fix and cleanup mask handling in TSMapEstimator (Quentin Remy)
 - [#5669] Add Log uniform prior (Fabio Acero)
 - [#5667] Refactor `min` and `max` setter on `Parameter` and `set_lim` method (REGEARD Maxime)
 - [#5663] Support weighted likelihood in MapDataset (Quentin Remy)
