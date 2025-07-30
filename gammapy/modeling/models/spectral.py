@@ -1778,11 +1778,11 @@ class SuperExpCutoffPowerLaw4FGLDR3SpectralModel(SpectralModel):
         )
 
         mask = np.abs(index_2 * np.log(energy / reference)) < 1e-2
-        ln_ = np.log(energy[mask] / reference)
+        ln_ = np.log(energy / reference)
         power = -expfactor * (
             ln_ / 2.0 + index_2 / 6.0 * ln_**2.0 + index_2**2.0 / 24.0 * ln_**3
         )
-        cutoff[mask] = (energy[mask] / reference) ** power
+        cutoff[mask] = ((energy / reference) ** power)[mask]
         return pwl * cutoff
 
     @property
