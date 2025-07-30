@@ -86,7 +86,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # Allow to add the canonical html flag on all the pages
-# This permits to precise to web search engine that the pages for the stable version are privileged
+# This allows you to indicate to the web search engine that the pages for the stable version are privileged
 html_baseurl = 'https://docs.gammapy.org/stable/'
 
 # The reST default role (used for this markup: `text`) to use for all
@@ -155,6 +155,10 @@ automodapi_toctreedirnm = 'api'
 
 # Suppress member summaries
 numpydoc_show_class_members = False
+
+# autodoc options to make the AnalysisConfig look nice
+autodoc_class_signature = "separated"
+autodoc_typehints = "description"
 
 # Ensures that when users click the "Copy" button, only the actual code is copied,
 # excluding interactive prompts and indentation markers
