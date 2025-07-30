@@ -76,8 +76,8 @@ class LightCurveEstimator(FluxPointsEstimator):
         Default is False.
     stack_over_time_interval : bool, optional
         Whether to stack datasets within each time interval. Default is False.
-        The predicted background counts from all datasets in the given interval 
-        will be stacked together, and the final background model (if any) will not 
+        The predicted background counts from all datasets in the given interval
+        will be stacked together, and the final background model (if any) will not
         have any free parameters. Available only if ``reoptimize`` is False.
     n_jobs : int, optional
         Number of processes used in parallel for the computation. Default is one,
