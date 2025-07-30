@@ -26,6 +26,8 @@ from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
 import matplotlib.pyplot as plt
 from IPython.display import display
+
+# %matplotlib inline
 from gammapy.data import GTI
 from gammapy.datasets import (
     Datasets,
@@ -37,16 +39,6 @@ from gammapy.estimators import FluxPoints
 from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling.models import FoVBackgroundModel, PowerLawSpectralModel, SkyModel
 from gammapy.utils.scripts import make_path
-
-######################################################################
-# Check setup
-# -----------
-from gammapy.utils.check import check_tutorials_setup
-
-# %matplotlib inline
-
-
-check_tutorials_setup()
 
 
 ######################################################################

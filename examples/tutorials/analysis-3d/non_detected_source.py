@@ -126,49 +126,59 @@ plt.show()
 
 
 ###############################################################################
+# .. _compute_upper_lims:
 # Compute upper limits for a source
 # ---------------------------------
 #
-# Now, we address a more specific question. Suppose we were expecting a
-# source at a specific position, say the center of our map. Let’s try fitting a point source at that location.
+# Now, we address a more specific question.
+# Suppose we were expecting a source at a specific position, say the center of our map.
+# We’ll attempt to fit a point source at that location to determine whether the signal
+# is significant above the background.
 #
-# To ensure the fit converges, we need to constrain the position range.
-# For this, one needs to model (1) only the background (2) model the background + a point source
-# and then check the difference in test statistic between the two cases to see if the second model is significantly
-# preferred. There is an inbuilt gammapy function, `~gammapy.modeling.select_nested_models` which will do this
-# internally. Case (1) corresponds to the case of source ``amplitude=0``, which we put as our null hypothesis.
-# We freeze the spatial parameters to avoid the fit from converging to other locations. You can alternatively
-# consider constraining the parameter ranges within your expected regions.
+# For this, we compare two hypotheses:
+#
+# - Null hypothesis, :math:`H_0` - only the background is present (i.e., no source)
+# - Alternative hypothesis, :math:`H_1` - the background plus a point source
+#
+# The difference in test statistic (TS) between the two cases indicates the
+# significance of the alternative hypothesis.
+#
+# For this purpose, we can utilise the function `~gammapy.modeling.select_nested_models` which
+# performs these comparisons internally.
+# As the null hypothesis, :math:`H_0`, corresponds to the case of no source, we set the amplitude to 0, in other words
+# the source has no flux.
+#
+# To prevent the fit from converging to unrelated positions, we freeze the spatial parameters.
+# Alternatively, you can constrain the parameter ranges to stay within your expected region.
+
 
 spectral_model = PowerLawSpectralModel()
-spatial_model = PointSpatialModel(frame="icrs")
-spatial_model.lon_0.value = 187.0
-spatial_model.lat_0.value = 2.6
+spatial_model = PointSpatialModel(lon_0=187 * u.deg, lat_0=2.6 * u.deg, frame="icrs")
 spatial_model.lat_0.frozen = True
 spatial_model.lon_0.frozen = True
-
 
 sky_model = SkyModel(
     spatial_model=spatial_model, spectral_model=spectral_model, name="test"
 )
 dataset.models = sky_model
 LLR = select_nested_models(
-    Datasets(dataset), parameters=[sky_model.parameters["amplitude"]], null_values=[0]
+    datasets=Datasets(dataset),
+    parameters=[sky_model.parameters["amplitude"]],
+    null_values=[0],
 )
 print(LLR)
 
 ######################################################################
-# To get the fitted parameters of the spectral model under the alternative hypothesis
-# (Case 2):
+# The fitted parameters under the alternative hypothesis:
 
 print(LLR["fit_results"].parameters.to_table())
 
 ######################################################################
-# You can see that the ``ts ~ 4.7``, thus suggesting that the observed
-# fluctuations are not significant above the background. Note that here we have
+# The test statistic is ``ts ~ 4.7``. Note that here we have
 # only 1 free parameter, the amplitude, and thus, we can assume the simple conversion
 # significance = :math:`\sqrt{ts} \approx 2.2`.
-# Now, we will estimate the differential upper limits of the source.
+# Therefore, the observed fluctuations are not significant above the background.
+# Next, we will estimate the differential upper limits of the source.
 
 ###############################################################################
 # Differential upper limits
@@ -195,12 +205,12 @@ model1.parameters["index"].value = 2.0
 model1.freeze(model_type="spatial")
 
 energy_edges = dataset.geoms["geom"].axes["energy"].edges
-fp_est = FluxPointsEstimator(
+fpe = FluxPointsEstimator(
     selection_optional="all", energy_edges=energy_edges, n_sigma_ul=3
 )
 
 dataset.models = model1
-fp1 = fp_est.run(dataset)
+fp1 = fpe.run(dataset)
 
 
 fp1.plot(sed_type="dnde")
@@ -217,10 +227,10 @@ plt.show()
 
 emin = energy_edges[0]
 emax = energy_edges[-1]
-est2 = FluxPointsEstimator(selection_optional=["ul"], energy_edges=[emin, emax])
-fp2 = est2.run(dataset)
+fpe2 = FluxPointsEstimator(selection_optional=["ul"], energy_edges=[emin, emax])
+fp2 = fpe2.run(dataset)
 print(
-    f"Integral upper limit between ${emin:.1f} and ${emax:.1f} is ${fp2.flux_ul.quantity.ravel()[0]:.2e}"
+    f"Integral upper limit between {emin:.1f} and {emax:.1f} is {fp2.flux_ul.quantity.ravel()[0]:.2e}"
 )
 
 

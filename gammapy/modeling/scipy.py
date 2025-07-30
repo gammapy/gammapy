@@ -64,7 +64,6 @@ class TSDifference:
 def _confidence_scipy_brentq(
     parameters, parameter, function, sigma, reoptimize, upper=True, **kwargs
 ):
-
     ts_diff = TSDifference(
         function, parameters, parameter, reoptimize, ts_diff=sigma**2
     )
@@ -102,7 +101,6 @@ def _confidence_scipy_brentq(
 
 
 def confidence_scipy(parameters, parameter, function, sigma, reoptimize=True, **kwargs):
-
     if len(parameters.free_parameters) <= 1:
         reoptimize = False
 
@@ -147,7 +145,7 @@ def stat_profile_ul_scipy(
     value_scan : `~numpy.ndarray`
         Array of parameter values.
     stat_scan : `~numpy.ndarray`
-        Array of delta fit statistic values, with respect to the minimum.
+        Array of fit statistic values.
     delta_ts : float, optional
         Difference in test statistics for the upper limit. Default is 4.
     interp_scale : {"sqrt", "lin"}, optional
@@ -162,14 +160,37 @@ def stat_profile_ul_scipy(
     ul : float
         Upper limit value.
     """
+
+    if np.allclose(stat_scan, stat_scan[0]):
+        raise ValueError(
+            "Statistic profile is flat therefore no best-fit value can be determined."
+        )
+
+    mask_valid = np.isfinite(stat_scan) & np.isfinite(value_scan)
+    if mask_valid.sum() == 0.0:
+        raise ValueError(
+            "Statistic profile has no finite value therefore no best-fit value can be determined."
+        )
+
+    value_scan = value_scan[mask_valid]
+    stat_scan = stat_scan[mask_valid]
     interp = interpolate_profile(value_scan, stat_scan, interp_scale=interp_scale)
 
-    def f(x):
-        return interp((x,)) - delta_ts
+    result = scipy.optimize.minimize_scalar(
+        interp, bounds=(value_scan[0], value_scan[-1]), method="bounded"
+    )
+    if not result.success:
+        raise RuntimeError("Failed to find minimum in interpolated profile.")
 
-    idx = np.argmin(stat_scan)
-    norm_best_fit = value_scan[idx]
+    norm_best_fit = result.x
+    stat_best_fit = result.fun
+
+    def f(x):
+        return interp((x,)) - stat_best_fit - delta_ts
+
     roots, res = find_roots(
         f, lower_bound=norm_best_fit, upper_bound=value_scan[-1], nbin=1, **kwargs
     )
+    if not np.isfinite(roots[0]):
+        raise RuntimeError("Failed to find upper limit: no valid root found.")
     return roots[0]

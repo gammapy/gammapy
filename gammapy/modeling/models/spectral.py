@@ -1895,9 +1895,6 @@ class TemplateSpectralModel(SpectralModel):
         The input is a table containing absorbed values from a XSPEC model as a
         function of energy.
 
-        TODO: Format of the file should be described and discussed in
-        https://gamma-astro-data-formats.readthedocs.io/en/latest/index.html
-
         Parameters
         ----------
         filename : str
@@ -1913,6 +1910,8 @@ class TemplateSpectralModel(SpectralModel):
         >>> filename = '$GAMMAPY_DATA/ebl/ebl_franceschini.fits.gz'
         >>> table_model = TemplateSpectralModel.read_xspec_model(filename=filename, param=0.3)
         """
+        # TODO: Format of the file should be described and discussed in
+        # https://gamma-astro-data-formats.readthedocs.io/en/latest/index.html
         filename = make_path(filename)
 
         # Check if parameter value is in range
