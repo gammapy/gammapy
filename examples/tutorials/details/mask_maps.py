@@ -100,13 +100,6 @@ from gammapy.datasets import Datasets
 from gammapy.estimators import ExcessMapEstimator
 from gammapy.maps import Map, WcsGeom
 
-######################################################################
-# Check setup
-# -----------
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
-
 
 ######################################################################
 # .. _masks-for-fitting:

@@ -32,13 +32,6 @@ import matplotlib.pyplot as plt
 from IPython.display import display
 from gammapy.maps import Map, MapAxis, WcsGeom
 
-######################################################################
-# Check setup
-# -----------
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
-
 
 ######################################################################
 # Spectral models

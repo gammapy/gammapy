@@ -43,13 +43,6 @@ from gammapy.astro.darkmatter import (
 )
 from gammapy.maps import WcsGeom, WcsNDMap
 
-######################################################################
-# Check setup
-# -----------
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
-
 
 ######################################################################
 # Profiles

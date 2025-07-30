@@ -36,13 +36,6 @@ from gammapy.makers import (
 from gammapy.makers.utils import make_effective_livetime_map, make_observation_time_map
 from gammapy.maps import MapAxis, RegionGeom, WcsGeom
 
-######################################################################
-# Check setup
-# -----------
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
-
 
 ######################################################################
 # Dataset
