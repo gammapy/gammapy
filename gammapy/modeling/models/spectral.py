@@ -286,6 +286,8 @@ class SpectralModel(ModelBase):
         random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
             Defines random number generator initialisation.
             Passed to `~gammapy.utils.random.get_random_state`. Default is 42.
+        samples : list of `~astropy.units.Quantity`, optional
+            List of parameter samples
 
         Returns
         -------
@@ -307,14 +309,14 @@ class SpectralModel(ModelBase):
         def fct(*args):
             return m.evaluate(energy[..., np.newaxis], *args)
 
-        samples = self._samples(
+        propagated_samples = self._samples(
             fct,
             n_samples=n_pars * n_samples,
             random_state=random_state,
             samples=samples,
         )
 
-        return self._get_errors(samples)
+        return self._get_errors(propagated_samples)
 
     @property
     def pivot_energy(self):
@@ -376,7 +378,14 @@ class SpectralModel(ModelBase):
             return integrate_spectrum(self, energy_min, energy_max, **kwargs)
 
     def integral_error(
-        self, energy_min, energy_max, epsilon=1e-4, n_samples=3500, **kwargs
+        self,
+        energy_min,
+        energy_max,
+        epsilon=1e-4,
+        n_samples=3500,
+        random_state=42,
+        samples=None,
+        **kwargs,
     ):
         """Evaluate the error of the integral flux of a given spectrum in a given energy range.
 
@@ -390,7 +399,11 @@ class SpectralModel(ModelBase):
             Deprecated in v2.0 and unused.
         n_samples : int, optional
             Number of samples to generate per parameter. Default is 3500.
-
+        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
+            Defines random number generator initialisation.
+            Passed to `~gammapy.utils.random.get_random_state`. Default is 42.
+        samples : list of `~astropy.units.Quantity`, optional
+            List of parameter samples
 
         Returns
         -------
@@ -419,8 +432,13 @@ class SpectralModel(ModelBase):
                 **kwargs,
             )
 
-        samples = self._samples(fct, n_samples=n_pars * n_samples)
-        return self._get_errors(samples)
+        propagated_samples = self._samples(
+            fct,
+            n_samples=n_pars * n_samples,
+            random_state=random_state,
+            samples=samples,
+        )
+        return self._get_errors(propagated_samples)
 
     def energy_flux(self, energy_min, energy_max, **kwargs):
         r"""Compute energy flux in given energy range.
@@ -447,7 +465,14 @@ class SpectralModel(ModelBase):
             return integrate_spectrum(f, energy_min, energy_max, **kwargs)
 
     def energy_flux_error(
-        self, energy_min, energy_max, epsilon=1e-4, n_samples=3500, **kwargs
+        self,
+        energy_min,
+        energy_max,
+        epsilon=1e-4,
+        n_samples=3500,
+        random_state=42,
+        samples=None,
+        **kwargs,
     ):
         """Evaluate the error of the energy flux of a given spectrum in a given energy range.
 
@@ -461,6 +486,11 @@ class SpectralModel(ModelBase):
             Deprecated in v2.0 and unused.
         n_samples : int, optional
             Number of samples to generate per parameter. Default is 3500.
+        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
+            Defines random number generator initialisation.
+            Passed to `~gammapy.utils.random.get_random_state`. Default is 42.
+        samples : list of `~astropy.units.Quantity`, optional
+            List of parameter samples
 
         Returns
         -------
@@ -489,8 +519,13 @@ class SpectralModel(ModelBase):
                 **kwargs,
             )
 
-        samples = self._samples(fct, n_samples=n_pars * n_samples)
-        return self._get_errors(samples)
+        propagated_samples = self._samples(
+            fct,
+            n_samples=n_pars * n_samples,
+            random_state=random_state,
+            samples=samples,
+        )
+        return self._get_errors(propagated_samples)
 
     def reference_fluxes(self, energy_axis):
         """Get reference fluxes for a given energy axis.
@@ -772,7 +807,9 @@ class SpectralModel(ModelBase):
         f2 = self.evaluate(energy * (1 + epsilon), *args)
         return np.log(f1 / f2) / np.log(1 + epsilon)
 
-    def spectral_index_error(self, energy, epsilon=1e-5, n_samples=3500):
+    def spectral_index_error(
+        self, energy, epsilon=1e-5, n_samples=3500, random_state=42, samples=None
+    ):
         """Evaluate the error on spectral index at the given energy.
 
         Parameters
@@ -784,6 +821,11 @@ class SpectralModel(ModelBase):
             Default is 1e-5. Deprecated in v2.0 and unsued.
         n_samples : int, optional
             Number of samples to generate per parameter. Default is 3500.
+        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
+            Defines random number generator initialisation.
+            Passed to `~gammapy.utils.random.get_random_state`. Default is 42.
+        samples : list of `~astropy.units.Quantity`, optional
+            List of parameter samples
 
         Returns
         -------
@@ -806,8 +848,13 @@ class SpectralModel(ModelBase):
                 energy[..., np.newaxis], *args, epsilon=1e-5
             )
 
-        samples = self._samples(fct, n_samples=n_pars * n_samples)
-        return self._get_errors(samples)
+        propagated_samples = self._samples(
+            fct,
+            n_samples=n_pars * n_samples,
+            random_state=random_state,
+            samples=samples,
+        )
+        return self._get_errors(propagated_samples)
 
     def inverse(self, value, energy_min=0.1 * u.TeV, energy_max=100 * u.TeV):
         """Return energy for a given function value of the spectral model.
