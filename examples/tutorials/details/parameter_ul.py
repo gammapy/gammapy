@@ -98,7 +98,7 @@ print(LLR)
 # curvature is only ~0.3, which corresponds to a significance of only 0.5.
 # Thus, we can safely conclude that the addition of the curvature parameter does
 # not improve the fit. Thus, the function has internally updated
-# the best fit model to the one corresponding to the hull hypothesis
+# the best fit model to the one corresponding to the null hypothesis
 
 print(dataset_onoff.models)
 
