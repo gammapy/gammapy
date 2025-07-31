@@ -321,10 +321,10 @@ plt.show()
 # for a given source, and convert it into the sky model format Gammapy
 # understands.
 #
-# Uncomment this if you have installed `xmltodict`.
-
-
-# This is what the XML file looks like
+# With the following command we can see what the XML file looks like
+# (uncomment it if you have installed `xmltodict`).
+ 
+ 
 # !tail -n 20 $CTADATA/models/models_gps.xml
 
 ######################################################################
