@@ -27,32 +27,39 @@ API changes
 
 Two API-breaking changes have been introduced in this version:
 
-- ``gammapy.EventList.select_parameter`` now takes a ``values`` and ``is_range`` argument instead of ``band`` to allow exact matches
-- ``cta_south`` and `cta_north` have been renamed as ``ctao_south`` and ``ctao_north``, resp. in `~gammapy.data.observatory_locations`
+- `gammapy.data.EventList.select_parameter` now takes a ``values`` and ``is_range`` argument
+  instead of ``band`` to allow exact matches
+- ``cta_south`` and ``cta_north`` have been renamed as ``ctao_south`` and ``ctao_north``, respectively,
+  in `~gammapy.data.observatory_locations`
 Features deprecated since Gammapy v1.3 have been removed.
 
 Infrastructure
 ~~~~~~~~~~~~~~
 
-- removed dependency on sphinx-astropy
+- removed dependency on ``sphinx-astropy``
 - utilise OpenAstronomy in our release workflow to build wheels
 - added extra workflows:
+
    - scheduled run for doctests in rst and examples
    - scheduled link check (separated from ci)
+
 - added the docs build to PRs
 - support of astropy v7.1
-- allow skipping of ci actions through labels: skip-docs, skip-tests
+- allow skipping of ci actions through labels: ``skip-docs``, ``skip-tests``
 
 
 Documentation improvements
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- Documentation appearance has been updated using less custom css code, and the ordering of tutorials restructured for clarity.
+- Documentation appearance has been updated using less custom css code, and the
+  ordering of tutorials restructured for clarity.
 - Four new tutorials have been added:
+
    - one explaining VERITAS analysis along with addition of VERITAS data in `$GAMMAPY_DATA`
    - one explaining computation of upper limits for non-detected sources
    - one explaining computation of upper limits on parameters
    - one introducing Bayesian inference with nested sampling
+
 - The tutorial showing how to handle Fermi-LAT data has been rewritten to expose a full Fermi-LAT analysis.
 - Code examples have been added in docstrings.
 
@@ -63,11 +70,11 @@ New features
 
 *gammapy.catalog*
 
-- Add pulse profiles for Fermi 3PC catalog
+- Add pulse profiles for Fermi `~gammapy.catalog.SourceCatalog3PC`
 
 *gammapy.data*
 
-- ￼Helper method for observation selection at Datastore level, specially for WCD
+- Helper method for observation selection at Datastore level, specially for WCD
 
 *gammapy.datasets*
 
@@ -75,32 +82,35 @@ New features
 
 *gammapy.estimators*
 
-- Add optional sensitivity computation on TSMapEstimator and FluxPointsEstimator
+- Add optional sensitivity computation on `~gammapy.estimators.TSMapEstimator`
+  and `~gammapy.estimators.FluxPointsEstimator`
 
 *gammapy.makers*
 
 - Added spatial model to `gammapy.makers.FoVBackgroundMaker` init
-- Add a `FermipyDatasetsReader` to convert Fermi-LAT maps from Fermipy into a gammapy Datasets.
+- Add a `~gammapy.datasets.FermipyDatasetsReader` to convert Fermi-LAT maps from Fermipy
+  into a gammapy `~gammapy.datasets.Datasets`.
 
 *gammapy.modeling*
 
 - Support for pixel-wise weighted likelihood as implemented in Fermi-LAT science tools
 - Support for nested sampling
-- Addition of a `LogUniformPrior`
+- Addition of a `~gammapy.modeling.models.LogUniformPrior`
 - Implement a more robust error propagation method using sampling
-- Add ``datasets_names argument`` to ``create_fermi_isotropic_diffuse_model``
+- Add ``datasets_names`` argument to `~gammapy.modeling.models.create_fermi_isotropic_diffuse_model`
 - Add interp_scale to parameter scaling
-- Make a distinction between `free_parameters` and `free_unique_parameters`
+- Make a distinction between `~gammapy.modeling.Parameters.free_parameters` and
+  `~gammapy.modeling.Parameters.free_unique_parameters`
 
 *gammapy.stats*
 
-- Addition of a `FIT_STATISTIC_REGISTRY` to allow configuration of the statistic on a dataset.
+- Addition of a ``FIT_STATISTIC_REGISTRY`` to allow configuration of the statistic on a dataset.
 
 *gammapy.utils*
 
 - Introduce a FoVFrame in `gammapy.utils.coordinates`
 - Get regions of bright stars in FoV
-- Allow energy selection in `gammapy.makers.utils.make_theta_squared_table`
+- Allow energy selection in `~gammapy.makers.utils.make_theta_squared_table`
 - Introduction of a ``PolygonPointsSkyRegion``
 
 Bug fixes and improvements
@@ -108,49 +118,50 @@ Bug fixes and improvements
 
 - Improvement of the `MapDataset.peek` function to show relevant info
 - Fix memory leak related to lru_cache
-- Fix TSmapEstimator pad_width
-- Fix mask handling in TSMapEstimator
+- Fix `~gammapy.estimators.TSMapEstimator` pad_width
+- Fix mask handling in `~gammapy.estimators.TSMapEstimator`
 - Fix parameters links after models copy
 - Fix link label display in parameters.to_table
 - Correct small bug in PSFMap
-- Fix e_peak implementation of SuperExpCutoffPowerLaw4FGLDR3SpectralModel
-- Fix of a HpXGeom simulation error
+- Fix ``e_peak`` implementation of `~gammapy.modeling.models.SuperExpCutoffPowerLaw4FGLDR3SpectralModel`
+- Fix of a `~gammapy.maps.HpxGeom` simulation error
 
 
 Contributors
 ~~~~~~~~~~~~
-- Leander Schlegel
-- Luis Barrios-Jiménez
-- Quentin Remy
-- Tomas Bylund
-- Tora T H Arnesen
-- Anushka Bhatt
-- Bruno Khélifi
-- REGEARD Maxime
-- Daniel Morcuende
-- Robert Daniel Parsons
-- Mireia Nievas-Rosillo
-- Fabio PINTORE
-- Atreyee Sinha
-- lgreaux
-- Arnau Aguasca-Cabot
 - Fabio Acero
-- Natthan Pigoux
+- Arnau Aguasca-Cabot
+- Tora T H Arnesen
+- Luis Barrios-Jiménez
+- Anushka Bhatt
+- Tomas Bylund
+- Katharina Egg
+- Kirsty Feijen
+- Bruno Khélifi
+- lgreaux
+- Maximilian Linhoff
 - Mitsunari-Takahashi
-- Tobi Preis
-- Samantha Wong
 - Edgar Molina
+- Daniel Morcuende
+- Mireia Nievas-Rosillo
+- Robert Daniel Parsons
+- Natthan Pigoux
+- Fabio Pintore
+- Tobi Preis
+- Maxime Regeard
+- Quentin Remy
+- Leander Schlegel
+- Atreyee Sinha
 - Hanna Stapel
 - Régis Terrier
-- Katharina Egg
-- Maximilian Linhoff
-- Kirsty Feijen
+- Samantha Wong
 
 
 Pull Requests
 ~~~~~~~~~~~~~
 
 This list is incomplete. Small improvements and bug fixes are not listed here.
+
 - [#6013] Install gammapy and jupytext in check notebooks action (Daniel Morcuende)
 - [#6001] Sphinx guidelines for links (Kirsty Feijen)
 - [#6000] Tutorials run as notebooks (Kirsty Feijen)
@@ -179,7 +190,7 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 - [#5911] Introducing generic reproject_irf_on_geom functions using FoVFrame classes (Régis Terrier)
 - [#5888] Fix gammapy.catalog to support astropy v7.1 (Quentin Remy)
 - [#5884] Rm setting log levels in modules (Tobi Preis)
-- [#5880] Serialization of GTI extension is not correct in the event sampling tutorial (Fabio PINTORE)
+- [#5880] Serialization of GTI extension is not correct in the event sampling tutorial (Fabio Pintore)
 - [#5870] Add method option to Irf.integrate_log_log (Régis Terrier)
 - [#5860] Introduce a FoVFrame in gammapy.utils.coordinates (Régis Terrier)
 - [#5855] Utility to filter a table parsing string of  logical operations (Quentin Remy)
@@ -187,7 +198,7 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 - [#5786] More robust error propagation approach using sampling  (Quentin Remy)
 - [#5766] Modification of peek() in MapDataset to show more information (Mireia Nievas-Rosillo)
 - [#5760] Added spatial model to FoVBackgroundMaker init (Katharina Egg)
-- [#5756] 3PC pulse profile (REGEARD Maxime)
+- [#5756] 3PC pulse profile (Maxime Regeard)
 - [#5748] Replace cython code by jitted code (Quentin Remy)
 - [#5744] Fix of a HpXGeom simulation error (Mitsunari-Takahashi)
 - [#5740] Apply mask in MapDataset.plot_residuals_spectral (Quentin Remy)
@@ -197,12 +208,12 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 - [#5719] Limit misusage of `to_region_map_dataset` (Quentin Remy)
 - [#5716] Documentation appearance (Kirsty Feijen)
 - [#5715] Modified Polygon region for use as ON region (Robert Daniel Parsons)
-- [#5703] Make theta squared distribution selected in energy (Fabio PINTORE)
+- [#5703] Make theta squared distribution selected in energy (Fabio Pintore)
 - [#5699] Add `mask` option to `plot_distribution()` (Katharina Egg)
 - [#5696] Introducing FitStatistic (Régis Terrier)
 - [#5690] Fix and cleanup mask handling in TSMapEstimator (Quentin Remy)
 - [#5669] Add Log uniform prior (Fabio Acero)
-- [#5667] Refactor `min` and `max` setter on `Parameter` and `set_lim` method (REGEARD Maxime)
+- [#5667] Refactor `min` and `max` setter on `Parameter` and `set_lim` method (Maxime Regeard)
 - [#5663] Support weighted likelihood in MapDataset (Quentin Remy)
 - [#5656] Implicit support of map dataset instead of observation in DatasetMaker (Quentin Remy)
 - [#5654] Support "gtdrm" format in .read() of EDispKernelMap and EDispKernel (Quentin Remy)
