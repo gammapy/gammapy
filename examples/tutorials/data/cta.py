@@ -321,10 +321,14 @@ plt.show()
 # for a given source, and convert it into the sky model format Gammapy
 # understands.
 #
-
 # Uncomment this if you have installed `xmltodict`.
+
+
 # This is what the XML file looks like
 # !tail -n 20 $CTADATA/models/models_gps.xml
+
+######################################################################
+# Here is an example on how to create a gammapy source model from this
 
 # import xmltodict
 # from astropy import units as u
@@ -363,8 +367,8 @@ plt.show()
 # # Create the spatial model
 # spatial_params = spatial0["parameter"]
 # spatial_model = PointSpatialModel(
-#     lon=get_param(spatial_params, "RA") * u.deg,
-#     lat=get_param(spatial_params, "DEC") * u.deg,
+#     lon_0=get_param(spatial_params, "RA") * u.deg,
+#     lat_0=get_param(spatial_params, "DEC") * u.deg,
 #     frame="icrs"
 # )
 # print(spatial_model)
