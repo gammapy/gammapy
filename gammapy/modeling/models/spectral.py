@@ -688,6 +688,8 @@ class SpectralModel(ModelBase):
         energy_power=0,
         n_points=100,
         n_samples=3500,
+        random_state=42,
+        samples=None,
         **kwargs,
     ):
         """Plot spectral model error band.
@@ -721,6 +723,11 @@ class SpectralModel(ModelBase):
             Number of evaluation nodes. Default is 100.
         n_samples : int, optional
             Number of samples generated per parameter to estimate the error band. Default is 3500.
+        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
+            Defines random number generator initialisation.
+            Passed to `~gammapy.utils.random.get_random_state`. Default is 42.
+        samples : list of `~astropy.units.Quantity`, optional
+            List of parameter samples
         **kwargs : dict
             Keyword arguments forwarded to `matplotlib.pyplot.fill_between`.
 
