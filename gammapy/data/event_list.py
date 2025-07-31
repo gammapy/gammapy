@@ -7,7 +7,7 @@ import warnings
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import AltAz, Angle, SkyCoord, angular_separation
-from astropy.table import Table
+from astropy.table import Table, Column
 from astropy.table import vstack as vstack_tables
 from astropy.time import Time
 from astropy.visualization import quantity_support
@@ -32,8 +32,8 @@ class EventList:
 
     The required columns are:
 
-    - ``RA`` - ICRS system reconstructed right ascension
-    - ``DEC`` - ICRS system reconstructed declination
+    - ``RA`` - ICRS system reconstructed right ascension (deg)
+    - ``DEC`` - ICRS system reconstructed declination (deg)
     - ``TIME`` - event time as an `~astropy.time.Time` object
     - ``energy`` - Reconstructed energy (usually MeV for Fermi and TeV for IACTs)
 
@@ -72,13 +72,6 @@ class EventList:
 
     """
 
-    REQUIRED_COLUMNS = {
-        "RA": u.Unit("deg"),
-        "DEC": u.Unit("deg"),
-        "ENERGY": u.Unit("TeV"),
-        "TIME": Time,
-    }
-
     def __init__(self, table, meta=None):
         if table is None:
             table = self._create_empty_list()
@@ -88,13 +81,15 @@ class EventList:
     @staticmethod
     def _create_empty_list():
         """Create empty event list table."""
-        table = Table()
-        for name, unit in EventList.REQUIRED_COLUMNS.items():
-            if name == "TIME":
-                table[name] = Time((), format="mjd")
-            else:
-                table[name] = () * unit
-        return table
+        reference_table = Table(
+            [
+                Column(name="RA", unit=u.deg, description="Event right ascension"),
+                Column(name="DEC", unit=u.deg, description="Event declination"),
+                Column(name="ENERGY", unit=u.TeV, description="Event energy"),
+            ]
+        )
+        reference_table["TIME"] = Time([], format="mjd", scale="tt")
+        return reference_table
 
     @staticmethod
     def _validate_table(table):
@@ -104,20 +99,20 @@ class EventList:
                 f"EventList expects astropy Table, got {type(table)} instead."
             )
 
-        missing_columns = set(EventList.REQUIRED_COLUMNS.keys()).difference(
-            table.colnames
-        )
+        reference_table = EventList._create_empty_list()
+        missing_columns = set(reference_table.colnames).difference(table.colnames)
         if len(missing_columns) > 0:
             raise KeyError(
                 f"EventList table invalid: columns {missing_columns} are missing."
             )
 
-        for name, check in EventList.REQUIRED_COLUMNS.items():
-            if not isinstance(check, u.Unit):
-                if not isinstance(table[name], check):
+        for name in reference_table.colnames:
+            check = reference_table[name]
+            if not isinstance(check, Column):
+                if not isinstance(table[name], type(check)):
                     raise TypeError(f"Column {name} is not a {check} object.")
             else:
-                if not check.is_equivalent(table[name].unit):
+                if not check.unit.is_equivalent(table[name].unit):
                     raise u.UnitConversionError(
                         f"Column {name} is not in {check} unit."
                     )
