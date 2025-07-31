@@ -113,7 +113,7 @@ class FluxPoints(FluxMaps):
 
     Parameters
     ----------
-    data : dict of `~gammapy.maps.Map`
+    data : dict of `~gammapy.maps.RegionNDMap`
         The maps dictionary. Expected entries are the following:
 
         * norm : the norm factor.
