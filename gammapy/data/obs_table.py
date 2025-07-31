@@ -8,9 +8,10 @@ from gammapy.utils.regions import SphericalCircleSkyRegion
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
 from gammapy.utils.time import time_ref_from_dict
-from gammapy.utils.scripts import read_yaml
-from gammapy.utils.types import cast_func
-from pathlib import Path
+
+# from gammapy.utils.scripts import read_yaml
+# from pathlib import Path
+from gammapy.data.metadata import METADATA_FITS_KEYS
 # from astropy.time import Time
 
 __all__ = ["ObservationTable"]
@@ -64,32 +65,22 @@ class ObservationTable(Table):
             else:
                 fileformat = "GADF0.3"  # Use default "GADF0.3".
 
-        # For the chosen fileformat, read then info on internal format and on correspondance to the selected fileformat.
-        format = cls.get_format_dict(fileformat)
-        names_internal = list(format.keys())
-
-        # Get correspondance of internal names to (multiple) disk-names, called "correspondance_dict".
-        # Also, flattened version in "correspondance_dict_flat", which will be used to check later, which disk-names are (truly) optional (and not already processed).
-        correspondance_dict = {}
-        correspondance_dict_flat = []
-
-        for name in names_internal:
-            correspondance_dict[name] = cls.get_corresponding_names(name, format)
-            correspondance_dict_flat.extend(cls.get_corresponding_names(name, format))
+        print(METADATA_FITS_KEYS)
+        names_internal = cls.names_min_req
 
         # Get corresponding names now only for minimal set of required names, to check if present on disk.
         # TODO: Adapt this for case of alternative names, e.g. for pointing.
-        for name in cls.names_min_req:
-            names_min_req_on_disk = correspondance_dict[name]
-            for el in names_min_req_on_disk:
-                if el not in table_disk.columns:
-                    raise RuntimeError(
-                        "Not all required names in "
-                        + fileformat
-                        + "-file found, first missed name: "
-                        + el
-                        + "."
-                    )  # looked into gammapy/workflow/core.py
+        # for name in cls.names_min_req:
+        #     names_min_req_on_disk = correspondance_dict[name]
+        #     for el in names_min_req_on_disk:
+        #         if el not in table_disk.columns:
+        #             raise RuntimeError(
+        #                 "Not all required names in "
+        #                 + fileformat
+        #                 + "-file found, first missed name: "
+        #                 + el
+        #                 + "."
+        #             )  # looked into gammapy/workflow/core.py
 
         # Create internal table "table_internal" with all names, corresp. units, types and descriptions, for the internal table model.
         # The internal table model may know more names than minimal required on disk for the read/fill-process.
@@ -116,33 +107,34 @@ class ObservationTable(Table):
         for i in range(number_of_observations):
             row_internal = []
             for name in names_internal:
-                names_disk = correspondance_dict[name]
+                row_internal = [0]
+                # names_disk = correspondance_dict[name]
 
-                # Construction of in-mem representation of metadata.
-                # Typecasting as noted by @bkhelifi for now here, by using function cast_func(value, type) in utils/types.py
-                if name == "OBS_ID":
-                    row_internal.append(
-                        cast_func(
-                            table_disk[i][names_disk[0]], np.dtype(format[name]["type"])
-                        )
-                    )
-                elif name == "OBJECT":
-                    row_internal.append(
-                        cast_func(
-                            table_disk[i][names_disk[0]], np.dtype(format[name]["type"])
-                        )
-                    )
-                elif (
-                    name == "POINTING"
-                ):  # build object like @registerrier in 16ce9840f38bea55982d2cd986daa08a3088b434
-                    row_internal.append(
-                        SkyCoord(
-                            cast_func(table_disk[i][names_disk[0]], np.dtype(float)),
-                            cast_func(table_disk[i][names_disk[1]], np.dtype(float)),
-                            unit="deg",
-                            frame="icrs",
-                        )
-                    )
+                # # Construction of in-mem representation of metadata.
+                # # Typecasting as noted by @bkhelifi for now here, by using function cast_func(value, type) in utils/types.py
+                # if name == "OBS_ID":
+                #     row_internal.append(
+                #         cast_func(
+                #             table_disk[i][names_disk[0]], np.dtype(format[name]["type"])
+                #         )
+                #     )
+                # elif name == "OBJECT":
+                #     row_internal.append(
+                #         cast_func(
+                #             table_disk[i][names_disk[0]], np.dtype(format[name]["type"])
+                #         )
+                #     )
+                # elif (
+                #     name == "POINTING"
+                # ):  # build object like @registerrier in 16ce9840f38bea55982d2cd986daa08a3088b434
+                #     row_internal.append(
+                #         SkyCoord(
+                #             cast_func(table_disk[i][names_disk[0]], np.dtype(float)),
+                #             cast_func(table_disk[i][names_disk[1]], np.dtype(float)),
+                #             unit="deg",
+                #             frame="icrs",
+                #         )
+                #     )
                 # elif name == "TSTART":
                 # row_internal.append(
 
@@ -159,63 +151,11 @@ class ObservationTable(Table):
 
         # Load optional columns, whose names are not already processed, automatically into internal table.
         opt_names = list(table_disk.columns)
-        for name in correspondance_dict_flat:
-            opt_names.remove(name)
         for name in opt_names:  # add column-wise all optional column-data present in file, independent of format.
             table_internal[name] = table_disk[name]
 
         # return internal table, instead of copy of disk-table like before.
         return table_internal
-
-    def get_format_dict(fileformat):
-        """Read info on the internal table format and its correspondance to the selected fileformat from a YAML-file.
-
-        Parameters
-        ----------
-        fileformat : str
-            Fileformat, default is "gadf03" for GADF v.0.3.
-
-        Returns
-        -------
-        The loaded dictionary is returned as format.
-        """
-        PATH_FORMATS = (
-            Path(__file__).resolve().parent / ".." / "utils" / "formats"
-        )  # like gammapy/utils/scripts.py l.29, commit: 753fb3e
-        format = read_yaml(str(PATH_FORMATS) + "/obs_index_" + fileformat + ".yaml")
-        return format
-
-    def get_corresponding_names(name, format):
-        """For a given format and internal table name, get the corresponding disk-name(s).
-
-        Parameters
-        ----------
-        name : str
-            Column name of internal table-format.
-        format : dict
-            Dictionary containing the internal table-format definition and its correspondance to a fileformat.
-
-        Returns
-        -------
-        List with the corresponding names per internal name.
-        """
-
-        n_disk_names = len(
-            format[name]["disk"]
-        )  # Get number of corresponding names on disk
-        correspondance = []
-        for n in range(n_disk_names):
-            name_disk = format[
-                name
-            ][
-                "disk"
-            ][
-                n
-            ][
-                "name"
-            ]  # Get for the column(s) to be loaded the name(s) on disk, for selected fileformat.
-            correspondance.append(name_disk)
-        return correspondance
 
     @property
     def pointing_radec(self):
