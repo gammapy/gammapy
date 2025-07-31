@@ -226,6 +226,7 @@ class SpectralModel(ModelBase):
                 Passed to `~gammapy.utils.random.get_random_state`. Default is 42.
         samples : list of `~astropy.units.Quantity`, optional
             List of parameter samples
+
         Returns
         -------
         sed_samples : np.array
@@ -346,7 +347,7 @@ class SpectralModel(ModelBase):
         def min_func(x):
             """Function to minimise."""
             x = np.exp(x)
-            dnde, dnde_errn, dnde_errp = self.evaluate_error(x * x_unit, n_samples=400)
+            dnde, dnde_errn, dnde_errp = self.evaluate_error(x * x_unit, n_samples=500)
             return np.sqrt(dnde_errn**2 + dnde_errp**2) / dnde
 
         bounds = [np.log(self.reference.value) - 3, np.log(self.reference.value) + 3]
@@ -579,24 +580,40 @@ class SpectralModel(ModelBase):
         flux.quantity = output
         return flux
 
-    def _get_plot_flux_error(self, energy, sed_type, n_samples):
+    def _get_plot_flux_error(self, energy, sed_type, n_samples, random_state, samples):
         flux = RegionNDMap.create(region=None, axes=[energy])
         flux_errn = RegionNDMap.create(region=None, axes=[energy])
         flux_errp = RegionNDMap.create(region=None, axes=[energy])
 
         if sed_type in ["dnde", "norm"]:
-            output = self.evaluate_error(energy.center, n_samples=n_samples)
+            output = self.evaluate_error(
+                energy.center,
+                n_samples=n_samples,
+                random_state=random_state,
+                samples=samples,
+            )
         elif sed_type == "e2dnde":
             output = energy.center**2 * self.evaluate_error(
-                energy.center, n_samples=n_samples
+                energy.center,
+                n_samples=n_samples,
+                random_state=random_state,
+                samples=samples,
             )
         elif sed_type == "flux":
             output = self.integral_error(
-                energy.edges_min, energy.edges_max, n_samples=n_samples
+                energy.edges_min,
+                energy.edges_max,
+                n_samples=n_samples,
+                random_state=random_state,
+                samples=samples,
             )
         elif sed_type == "eflux":
             output = self.energy_flux_error(
-                energy.edges_min, energy.edges_max, n_samples=n_samples
+                energy.edges_min,
+                energy.edges_max,
+                n_samples=n_samples,
+                random_state=random_state,
+                samples=samples,
             )
         else:
             raise ValueError(f"Not a valid SED type: '{sed_type}'")
@@ -766,7 +783,11 @@ class SpectralModel(ModelBase):
             ax.yaxis.set_units(DEFAULT_UNIT[sed_type] * energy.unit**energy_power)
 
         flux, flux_errn, flux_errp = self._get_plot_flux_error(
-            sed_type=sed_type, energy=energy, n_samples=n_samples
+            sed_type=sed_type,
+            energy=energy,
+            n_samples=n_samples,
+            random_state=random_state,
+            samples=samples,
         )
         y_lo = scale_plot_flux(flux - flux_errn, energy_power).quantity[:, 0, 0]
         y_hi = scale_plot_flux(flux + flux_errp, energy_power).quantity[:, 0, 0]
