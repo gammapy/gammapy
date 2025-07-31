@@ -15,8 +15,11 @@
 Summary
 ~~~~~~~
 
-This release introduces a number of performance improvements, new features and bug fixes.
-Improved support is provided for Fermi-LAT analysis, and full analysis for VERITAS telescope is supported.
+This is a new Long term stable release. Gammapy 2.0 will be maintained for the next two years, and we removes support for
+Gammapy 1.x versions. With Gammapy 2.0, we provide analysis support for major Imaging Atmospheric Cherenkov Telescope like H.E.S.S.,
+VERITAS, MAGIC, LST1 and Water Cherenkov Telesope like HAWC and SWGO, and Fermi-LAT. 
+
+Since Gammapy 1.3, improved support is provided for Fermi-LAT analysis, and full analysis for VERITAS telescope is supported.
 Bayesian inference with nester sampling is now supported.
 There has been significant code cleanup, specially with respect to the documentation and the tutorial structure has
 been cleaned up.
