@@ -11,7 +11,7 @@ from gammapy.data import GTI
 from gammapy.estimators import FluxPoints
 from gammapy.estimators.map.core import DEFAULT_UNIT
 from gammapy.estimators.utils import get_rebinned_axis
-from gammapy.maps import MapAxis
+from gammapy.maps import MapAxis, RegionNDMap
 from gammapy.modeling.models import PowerLawSpectralModel, SpectralModel
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import (
@@ -445,3 +445,22 @@ def test_resample_axis():
     fp = FluxPoints.from_table(table)
     with pytest.raises(ValueError):
         fp.resample_axis(axis_new=MapAxis.from_nodes([0, 1, 2]))
+
+
+def test_flux_point_init():
+    table = Table()
+    table["norm"] = np.array([10, 20, 30, 40])
+    table["e_min"] = np.array([10, 20, 30, 40]) * u.TeV
+    table["e_max"] = np.array([20, 30, 40, 50]) * u.TeV
+    norm_map = RegionNDMap.from_table(table=table, colname="norm", format="gadf-sed")
+
+    maps = dict(norm=norm_map)
+    # Get values
+    model = PowerLawSpectralModel()
+    table["e_ref"] = FluxPoints._energy_ref_lafferty(
+        model, table["e_min"], table["e_max"]
+    )
+    fp = FluxPoints(maps, reference_model=model)
+
+    assert fp.available_quantities == ["norm"]
+    assert_allclose(fp.norm.data.ravel(), [10, 20, 30, 40])
