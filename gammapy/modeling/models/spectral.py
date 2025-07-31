@@ -29,6 +29,7 @@ from gammapy.utils.interpolation import (
 from gammapy.utils.roots import find_roots
 from gammapy.utils.scripts import make_path
 from gammapy.utils.random import get_random_state
+import gammapy.utils.parallel as parallel
 from gammapy.utils.deprecation import GammapyDeprecationWarning
 from ..covariance import CovarianceMixin
 from .core import ModelBase
@@ -240,7 +241,17 @@ class SpectralModel(ModelBase):
                 n_samples,
             )
             samples = [samples[:, k] * p.unit for k, p in enumerate(self.parameters)]
-        return u.Quantity(fct(*samples))
+
+        try:
+            return u.Quantity(fct(*samples))
+        except ValueError:
+            # fallback if function is not vectorized
+            output = parallel.run_multiprocessing(
+                fct,
+                zip(*samples),
+                pool_kwargs=dict(processes=1),
+            )
+            return u.Quantity(output).T
 
     def _get_errors(self, samples, n_sigma=1):
         """Compute median, negative, and positive errors from samples of SED.
@@ -2575,38 +2586,17 @@ class NaimaSpectralModel(SpectralModel):
             Differential flux at given energy.
         """
 
-        def compute_dnde(energy, **kwargs):
-            self._update_naima_parameters(**kwargs)
-            if self.include_ssc:
-                dnde = self._evaluate_ssc(energy.flatten())
-            elif self.seed is not None:
-                dnde = self.radiative_model.flux(
-                    energy.flatten(), seed=self.seed, distance=self.distance
-                )
-            else:
-                dnde = self.radiative_model.flux(
-                    energy.flatten(), distance=self.distance
-                )
-            return dnde
-
-        n_energy = np.atleast_1d(energy).shape[0]
-        n_samples = np.atleast_1d(args[0]).shape[0] if args else 1
-
-        if n_samples > 1:
-            dnde = np.zeros((n_energy, n_samples))
-            for k in range(n_samples):
-                kwargs = {
-                    name: q[k] for name, q in zip(self.default_parameters.names, args)
-                }
-                dnde_sample = compute_dnde(energy, **kwargs)
-                dnde_sample_unit = dnde_sample.unit
-                dnde[:, k] = dnde_sample.value
-            dnde = dnde * dnde_sample_unit
+        kwargs = {name: q for name, q in zip(self.default_parameters.names, args)}
+        self._update_naima_parameters(**kwargs)
+        if self.include_ssc:
+            dnde = self._evaluate_ssc(energy.flatten())
+        elif self.seed is not None:
+            dnde = self.radiative_model.flux(
+                energy.flatten(), seed=self.seed, distance=self.distance
+            )
         else:
-            kwargs = {name: q for name, q in zip(self.default_parameters.names, args)}
-            dnde = compute_dnde(energy, **kwargs)
-            dnde = dnde.reshape(energy.shape)
-
+            dnde = self.radiative_model.flux(energy.flatten(), distance=self.distance)
+        dnde = dnde.reshape(energy.shape)
         unit = 1 / (energy.unit * u.cm**2 * u.s)
         return dnde.to(unit)
 
