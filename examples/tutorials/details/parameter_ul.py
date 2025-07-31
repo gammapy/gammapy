@@ -46,9 +46,9 @@ from gammapy.estimators import FluxPointsEstimator
 # ----------------
 #
 # We will use a `~gammapy.datasets.SpectrumDatasetOnOff` to see how to constrain
-# model parameters. This dataset was obtained from H.E.S.S. observation of the blazar PKS~2155-304.
-# Detailed modeling of this dataset may be found in the
-# :doc:`/tutorials/analysis-1d/ebl` notebook.
+# model parameters. This dataset was obtained from H.E.S.S. observation of the blazar PKS 2155-304.
+# Detailed modeling of this dataset can be found in the
+# :doc:`/tutorials/astrophysics/ebl` notebook.
 #
 
 dataset_onoff = SpectrumDatasetOnOff.read(
@@ -62,9 +62,8 @@ plt.show()
 # Fit spectrum
 # ------------
 #
-# We will search for the presence of curvature in the spectrum. For this,
-# we will use a ~gammapy.modeling.models.LogParabolaSpectralModel to model the
-# observed spectrum.
+# We will investigate the presence of spectral curvature by modeling the
+# observed spectrum using a `~gammapy.modeling.models.LogParabolaSpectralModel`.
 #
 
 spectral_model = LogParabolaSpectralModel(
@@ -80,10 +79,11 @@ print(result_pks.models)
 
 
 ######################################################################
-# We see that the parameter ``beta`` (the curvature parameter) is not well
-# constrained as the errors are very large. In this
-# case, we will first use a likelihood ratio test to see how significant is the
-# curvature, as compared to the null hypothesis, ie no curvature.
+# We see that the parameter ``beta`` (the curvature parameter) is poorly
+# constrained as the errors are very large.
+# Therefore, we will perform a likelihood ratio test to evaluate the significance
+# of the curvature compared to the null hypothesis of no curvature. In the null
+# hypothesis, ``beta=0``.
 
 LLR = select_nested_models(
     datasets=Datasets(dataset_onoff),
@@ -94,49 +94,51 @@ print(LLR)
 
 
 ######################################################################
-# We can see that the change in improvement in test statistic after adding the
+# We can see that the improvement in the test statistic after including the
 # curvature is only ~0.3, which corresponds to a significance of only 0.5.
-# Thus, we can safely conclude that the addition of the curvature parameter does
-# not improve the fit. Thus, the function has internally updated
-# the best fit model to the one corresponding to the null hypothesis
+#
+# We can safely conclude that the addition of the curvature parameter does
+# not significantly improve the fit. As a result, the function has internally updated
+# the best fit model to the one corresponding to the null hypothesis (i.e. ``beta=0``).
 
 print(dataset_onoff.models)
 
 
 ######################################################################
-# Compute parameter asymmetric erros and upper limits
-# ---------------------------------------------------
+# Compute parameter asymmetric errors and upper limits
+# ----------------------------------------------------
 # In such a case, it can still be useful to be able to constrain
-# the allowed range of the non-significant parameter (eg: to rule
-# out parameter values, to compare from theoretical predications, etc).
+# the allowed range of the non-significant parameter (e.g.: to rule
+# out parameter values, to compare from theoretical predications, etc.).
 #
-# First, we reset the alternative model on the dataset
+# First, we reset the alternative model on the dataset:
 
 dataset_onoff.models = LLR["fit_results"].models
 parameter = dataset_onoff.models.parameters["beta"]
 
 ######################################################################
-# then we can compute the asymmetric errors and upper limits on the parameter
+# We can then compute the asymmetric errors and upper limits on the parameter
+# of interest
 
 res_1sig = fit.confidence(datasets=dataset_onoff, parameter=parameter, sigma=1)
 print(res_1sig)
 
 ######################################################################
-# and the upper limits on the parameter.
+# The :math:`2\sigma` upper limits on the parameter:
 
 res_2sig = fit.confidence(datasets=dataset_onoff, parameter=parameter, sigma=2)
 ll_2sigma = res_2sig["errn"] + parameter.value
 ul_2sigma = res_2sig["errp"] + parameter.value
 
-print(f"2-sigma lower limit on beta is {ul_2sigma:.2f}")
+print(f"2-sigma lower limit on beta is {ll_2sigma:.2f}")
 print(f"2-sigma upper limit on beta is {ul_2sigma:.2f}")
 
 ######################################################################
-# Likekihood profile
+# Likelihood profile
 # ------------------
-# We can also compute the likelihood profile on the parameter.
-# First we define the scan range such as it emcompasses the 1 and 2-sigma parameter limits.
-# Then we call `fit.stat_profile` :
+# We can also compute the likelihood profile of the parameter.
+# First we define the scan range such that it encompasses the 1 and 2-sigma parameter limits.
+# Then we call `~gammapy.modeling.Fit.stat_profile` :
 
 parameter.scan_n_values = 25
 parameter.scan_min = -1
@@ -180,24 +182,25 @@ ax.fill_betweenx(
 ax.set_ylim(-0.5, 25)
 plt.legend()
 plt.show()
-# sphinx_gallery_thumbnail_number = 4
+# sphinx_gallery_thumbnail_number = 2
 
 
 ######################################################################
-
 # Impact of the model choice on the flux upper limits
 # ---------------------------------------------------
 # The flux points depends on the underlying model assumption.
-# This can have an non-negligible impact on the flux upper limits in the energy range
+# This can have a non-negligible impact on the flux upper limits in the energy range
 # where the model is not well constrained as illustrated in the following figure.
 # So quote preferably upper limits from the model which is the most supported by the data.
 
 energies = dataset_onoff.geoms["geom"].axes["energy"].edges
 
-# null hypothesis
+# Null hypothesis -- no curvature
 dataset_onoff.models = LLR["fit_results_null"].models
 fpe = FluxPointsEstimator(energy_edges=energies, n_jobs=4, selection_optional=["ul"])
 fp = fpe.run(dataset_onoff)
+
+
 ax = fp.plot(sed_type="e2dnde", color="blue")
 LLR["fit_results_null"].models[0].spectral_model.plot(
     ax=ax,
@@ -214,7 +217,7 @@ LLR["fit_results_null"].models[0].spectral_model.plot_error(
     alpha=0.2,
 )
 
-# alternative hypothesis
+# Alternative hypothesis -- with curvature
 dataset_onoff.models = LLR["fit_results"].models
 fpe = FluxPointsEstimator(energy_edges=energies, n_jobs=4, selection_optional=["ul"])
 fp = fpe.run(dataset_onoff)
