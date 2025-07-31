@@ -118,17 +118,18 @@ parameter = dataset_onoff.models.parameters["beta"]
 
 ######################################################################
 # We can then compute the asymmetric errors and upper limits on the parameter
-# of interest
+# of interest. It is always useful to ensure that the fit the converged by looking at the
+# ``success`` and ``message`` keywords.
 
 res_1sig = fit.confidence(datasets=dataset_onoff, parameter=parameter, sigma=1)
 print(res_1sig)
 
 ######################################################################
-# The :math:`2\sigma` upper limits on the parameter:
+# We can directly use this to compute :math:`n\sigma` upper limits on the parameter:
 
 res_2sig = fit.confidence(datasets=dataset_onoff, parameter=parameter, sigma=2)
-ll_2sigma = res_2sig["errn"] + parameter.value
-ul_2sigma = res_2sig["errp"] + parameter.value
+ll_2sigma = parameter.value - res_2sig["errn"]
+ul_2sigma = parameter.value + res_2sig["errp"]
 
 print(f"2-sigma lower limit on beta is {ll_2sigma:.2f}")
 print(f"2-sigma upper limit on beta is {ul_2sigma:.2f}")
@@ -137,12 +138,12 @@ print(f"2-sigma upper limit on beta is {ul_2sigma:.2f}")
 # Likelihood profile
 # ------------------
 # We can also compute the likelihood profile of the parameter.
-# First we define the scan range such that it encompasses the 1 and 2-sigma parameter limits.
+# First we define the scan range such that it encompasses more than the 2-sigma parameter limits.
 # Then we call `~gammapy.modeling.Fit.stat_profile` :
 
 parameter.scan_n_values = 25
-parameter.scan_min = -1
-parameter.scan_max = 10
+parameter.scan_min = parameter.value - 2.5 * res_2sig["errn"]
+parameter.scan_max = parameter.value + 2.5 * res_2sig["errp"]
 parameter.interp = "lin"
 profile = fit.stat_profile(datasets=dataset_onoff, parameter=parameter, reoptimize=True)
 
@@ -194,14 +195,20 @@ plt.show()
 # So quote preferably upper limits from the model which is the most supported by the data.
 
 energies = dataset_onoff.geoms["geom"].axes["energy"].edges
+fpe = FluxPointsEstimator(energy_edges=energies, n_jobs=4, selection_optional=["ul"])
 
 # Null hypothesis -- no curvature
 dataset_onoff.models = LLR["fit_results_null"].models
-fpe = FluxPointsEstimator(energy_edges=energies, n_jobs=4, selection_optional=["ul"])
-fp = fpe.run(dataset_onoff)
+fp_null = fpe.run(dataset_onoff)
 
+# Alternative hypothesis -- with curvature
+dataset_onoff.models = LLR["fit_results"].models
+fp_alt = fpe.run(dataset_onoff)
 
-ax = fp.plot(sed_type="e2dnde", color="blue")
+#####################################################################
+# Plot them together
+
+ax = fp_null.plot(sed_type="e2dnde", color="blue")
 LLR["fit_results_null"].models[0].spectral_model.plot(
     ax=ax,
     energy_bounds=(energies[0], energies[-1]),
@@ -217,11 +224,8 @@ LLR["fit_results_null"].models[0].spectral_model.plot_error(
     alpha=0.2,
 )
 
-# Alternative hypothesis -- with curvature
-dataset_onoff.models = LLR["fit_results"].models
-fpe = FluxPointsEstimator(energy_edges=energies, n_jobs=4, selection_optional=["ul"])
-fp = fpe.run(dataset_onoff)
-ax = fp.plot(sed_type="e2dnde", color="red")
+
+fp_alt.plot(ax=ax, sed_type="e2dnde", color="red")
 LLR["fit_results"].models[0].spectral_model.plot(
     ax=ax,
     energy_bounds=(energies[0], energies[-1]),
