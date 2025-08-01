@@ -111,6 +111,8 @@ class Observation:
     @property
     def bkg(self):
         """Background of the observation."""
+        from gammapy.irf import FoVAlignment
+
         bkg = self._bkg
         # used for backward compatibility of old HESS data
         try:
@@ -488,12 +490,12 @@ class Observation:
             nrows=nrows,
             ncols=ncols,
             figsize=figsize,
-            gridspec_kw={"wspace": 0.45, "hspace": 0.3},
+            gridspec_kw={"wspace": 0.3, "hspace": 0.3},
         )
 
         for idx, (ax, name) in enumerate(zip_longest(axes.flat, plot_hdus)):
             if name == "aeff":
-                self.aeff.plot(ax=ax, kwargs_colorbar={"format": "%.1e"})
+                self.aeff.plot(ax=ax)
                 ax.set_title("Effective area")
 
             if name == "bkg":
