@@ -1,7 +1,164 @@
+.. include:: ../references.txt
+
+
 .. _gammapy_2p0_release:
 
-2.0 (unreleased)
+2.0 (August XX, 2025)
 ----------------
 
 
-- No changes yet
+- Released August XX, 2025
+- 25 contributors
+- 235 (XX)  pull requests since v1.3, 400 (XX) pull requests since 1.0
+- 100 (XX) closed issues
+
+Summary
+~~~~~~~
+
+This is a new Long term stable release. Gammapy 2.0 will be maintained for the next two years, and we remove support for
+Gammapy 1.x versions. With Gammapy 2.0, we provide analysis support for major Imaging Atmospheric Cherenkov Telescope like H.E.S.S.,
+VERITAS, MAGIC, LST1 and Water Cherenkov Telesope like HAWC and SWGO, and Fermi-LAT. 
+
+Since Gammapy 1.3, improved support is provided for Fermi-LAT analysis, and full analysis for VERITAS telescope is supported.
+Bayesian inference with nester sampling is now supported.
+There has been significant code cleanup, specially with respect to the documentation and the tutorial structure has
+been cleaned up.
+
+
+API changes
+~~~~~~~~~~~
+
+Two API-breaking changes have been introduced in this version:
+
+- `gammapy.data.EventList.select_parameter` now takes a ``values`` and ``is_range`` argument
+  instead of ``band`` to allow exact matches
+- ``cta_south`` and ``cta_north`` have been renamed as ``ctao_south`` and ``ctao_north``, respectively,
+  in `~gammapy.data.observatory_locations`
+Features deprecated since Gammapy v1.3 have been removed.
+
+
+
+Documentation improvements
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Documentation appearance has been updated using less custom css code, and the
+  ordering of tutorials restructured for clarity.
+- Four new tutorials have been added:
+
+   - one explaining VERITAS analysis along with addition of VERITAS data in `$GAMMAPY_DATA`
+   - one explaining computation of upper limits for non-detected sources
+   - one explaining computation of upper limits on parameters
+   - one introducing Bayesian inference with nested sampling
+
+- The tutorial showing how to handle Fermi-LAT data has been rewritten to expose a full Fermi-LAT analysis.
+- Code examples have been added in docstrings.
+
+
+New features
+~~~~~~~~~~~~
+
+
+*gammapy.catalog*
+
+- Add pulse profiles for Fermi `~gammapy.catalog.SourceCatalog3PC`
+
+*gammapy.data*
+
+- Helper method for observation selection at Datastore level, specially for WCD
+
+*gammapy.datasets*
+
+- Add a helper function to create a global dataset from a list of datasets
+
+*gammapy.estimators*
+
+- Add optional sensitivity computation on `~gammapy.estimators.TSMapEstimator`
+  and `~gammapy.estimators.FluxPointsEstimator`
+
+*gammapy.makers*
+
+- Added spatial model to `gammapy.makers.FoVBackgroundMaker` init
+- Add a `~gammapy.datasets.FermipyDatasetsReader` to convert Fermi-LAT maps from Fermipy
+  into a gammapy `~gammapy.datasets.Datasets`.
+
+*gammapy.modeling*
+
+- Support for pixel-wise weighted likelihood as implemented in Fermi-LAT science tools
+- Support for nested sampling
+- Addition of a `~gammapy.modeling.models.LogUniformPrior`
+- Implement a more robust error propagation method using sampling
+- Add ``datasets_names`` argument to `~gammapy.modeling.models.create_fermi_isotropic_diffuse_model`
+- Add interp_scale to parameter scaling
+- Make a distinction between `~gammapy.modeling.Parameters.free_parameters` and
+  `~gammapy.modeling.Parameters.free_unique_parameters`
+
+*gammapy.stats*
+
+- Addition of a ``FIT_STATISTIC_REGISTRY`` to allow configuration of the statistic on a dataset.
+
+*gammapy.utils*
+
+- Introduce a FoVFrame in `gammapy.utils.coordinates`
+- Get regions of bright stars in FoV
+- Allow energy selection in `~gammapy.makers.utils.make_theta_squared_table`
+- Introduction of a ``PolygonPointsSkyRegion``
+
+Bug fixes and improvements
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Improvement of the `MapDataset.peek` function to show relevant info
+- Fix memory leak related to lru_cache
+- Fix `~gammapy.estimators.TSMapEstimator` pad_width
+- Fix mask handling in `~gammapy.estimators.TSMapEstimator`
+- Fix parameters links after models copy
+- Fix link label display in parameters.to_table
+- Correct small bug in PSFMap
+- Fix ``e_peak`` implementation of `~gammapy.modeling.models.SuperExpCutoffPowerLaw4FGLDR3SpectralModel`
+- Fix of a `~gammapy.maps.HpxGeom` simulation error
+
+
+Infrastructure
+~~~~~~~~~~~~~~
+
+- removed dependency on ``sphinx-astropy``
+- utilise OpenAstronomy in our release workflow to build wheels
+- added extra workflows:
+
+   - scheduled run for doctests in rst and examples
+   - scheduled link check (separated from ci)
+
+- added the docs build to PRs
+- support of astropy v7.1
+- allow skipping of ci actions through labels: ``skip-docs``, ``skip-tests``
+
+
+Contributors
+~~~~~~~~~~~~
+- Fabio Acero
+- Arnau Aguasca-Cabot
+- Tora T H Arnesen
+- Luis Barrios-Jiménez
+- Anushka Bhatt
+- Tomas Bylund
+- Katharina Egg
+- Kirsty Feijen
+- Bruno Khélifi
+- lgreaux
+- Maximilian Linhoff
+- Mitsunari-Takahashi
+- Edgar Molina
+- Daniel Morcuende
+- Mireia Nievas-Rosillo
+- Robert Daniel Parsons
+- Natthan Pigoux
+- Fabio Pintore
+- Tobi Preis
+- Maxime Regeard
+- Quentin Remy
+- Leander Schlegel
+- Atreyee Sinha
+- Hanna Stapel
+- Régis Terrier
+- Samantha Wong
+
+
