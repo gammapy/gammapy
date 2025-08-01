@@ -106,7 +106,11 @@ class EventListWriter:
     @staticmethod
     def _to_gadf_table_hdu(event_list):
         """Convert input event list to a `~astropy.io.fits.BinTableHDU` according gadf."""
-        gadf_table = event_list._to_gadf_table()
+        gadf_table = event_list.table.copy()
+        gadf_table.remove_column("TIME")
+
+        reference_time = time_ref_from_dict(gadf_table.meta)
+        gadf_table["TIME"] = (event_list.time - reference_time).to("s")
 
         bin_table = fits.BinTableHDU(gadf_table, name="EVENTS")
 

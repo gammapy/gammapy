@@ -125,15 +125,6 @@ class EventList:
         except AttributeError:
             return f"<pre>{html.escape(str(self))}</pre>"
 
-    def _to_gadf_table(self):
-        """Temporary gadf table converter."""
-        gadf_table = self.table.copy()
-        gadf_table.remove_column("TIME")
-
-        reference_time = time_ref_from_dict(gadf_table.meta)
-        gadf_table["TIME"] = (self.time - reference_time).to("s")
-        return gadf_table
-
     @classmethod
     def read(cls, filename, hdu="EVENTS", checksum=False, **kwargs):
         """Read from FITS file.
