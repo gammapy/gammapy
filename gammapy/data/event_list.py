@@ -130,7 +130,15 @@ class EventList:
         """Temporary gadf table converter."""
         if not isinstance(table, Table):
             raise TypeError(
-                f"_form_fgadf_table expects astropy Table, got {type(table)} instead."
+                f"_from_gadf_table expects astropy Table, got {type(table)} instead."
+            )
+
+        # This is not a strict check on input. It just checks that required information is there.
+        required_colnames = set(["RA", "DEC", "TIME", "ENERGY"])
+        if not required_colnames.issubset(set(table.colnames)):
+            missing_columns = required_colnames.difference(set(table.colnames))
+            raise ValueError(
+                f"GADF event table does not contain required columns {missing_columns}"
             )
 
         met = u.Quantity(table["TIME"].astype("float64"), "second")
