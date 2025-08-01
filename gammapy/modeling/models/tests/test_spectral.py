@@ -1385,9 +1385,7 @@ def test_e_peak_super_4FGLDR3():
 def test_vectorized_integrate_spectrum():
     model = PowerLawSpectralModel()
 
-    parameter_samples = {}
-    for par in model.parameters:
-        parameter_samples[par.name] = np.ones(10) * par.quantity
+    parameter_samples = [np.ones(10) * par.quantity for par in model.parameters]
 
     energy = [100, 1000, 10000] * u.GeV
 
