@@ -27,10 +27,9 @@ class Dataset(abc.ABC):
     - `gammapy.datasets.FluxPointsDataset`
 
     For more information see :ref:`datasets`.
-
-    TODO: add tutorial how to create your own dataset types.
     """
 
+    # TODO: add tutorial how to create your own dataset types.
     _residuals_labels = {
         "diff": "data - model",
         "diff/model": "(data - model) / model",

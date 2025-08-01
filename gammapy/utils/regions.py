@@ -7,10 +7,6 @@ https://astropy-regions.readthedocs.io
 
 We might add in other conveniences and features here, e.g. sky coord contains
 without a WCS (see "sky and pixel regions" in PIG 10), or some HEALPix integration.
-
-TODO: before Gammapy v1.0, discuss what to do about ``gammapy.utils.regions``.
-Options: keep as-is, hide from the docs, or to remove it completely
-(if the functionality is available in ``astropy-regions`` directly.
 """
 
 import operator

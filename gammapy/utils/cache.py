@@ -7,6 +7,8 @@ import hashlib
 import weakref
 from gammapy.utils.parallel import is_ray_available
 
+USE_INSTANCE_CACHE = False
+
 if is_ray_available():
     import ray
 
@@ -118,3 +120,33 @@ def cachemethod(fn):
         return out
 
     return wrapper
+
+
+class CacheInstanceMixin:
+    """Cache class instance based on init arguments equivalence"""
+
+    def __new__(cls, *args, **kwargs):
+        new = super().__new__(cls)
+        if not USE_INSTANCE_CACHE or not is_ray_available():
+            return new
+
+        # Ensure each subclass has its own cache
+        if not hasattr(cls, "_instances"):
+            cls._instances = _WeakIdDict()
+
+        try:
+            new.__init__(*args, **kwargs)
+        except TypeError:
+            return new  # ignore cache for unpickle
+
+        sig = inspect.signature(cls.__init__)
+        argkey = make_key(sig, *args, **kwargs)
+        try:
+            out = cls._instances[cls][argkey]
+        except KeyError:
+            try:
+                cache2 = cls._instances[cls]
+            except KeyError:
+                cache2 = cls._instances[cls] = {}
+            out = cache2[argkey] = new
+        return out

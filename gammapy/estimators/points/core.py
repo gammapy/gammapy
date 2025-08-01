@@ -64,10 +64,12 @@ def squash_fluxpoints(flux_point, axis):
 
     if "norm_ul" in flux_point.available_quantities:
         delta_ts = flux_point.meta.get("n_sigma_ul", 2) ** 2
-        ul = stat_profile_ul_scipy(value_scan, stat_scan, delta_ts=delta_ts)
-        maps["norm_ul"] = Map.from_geom(
-            geom, data=np.reshape(ul.value, geom.data_shape)
-        )
+        try:
+            ul = stat_profile_ul_scipy(value_scan, stat_scan, delta_ts=delta_ts)
+            ul = ul.value
+        except (ValueError, RuntimeError):
+            ul = np.nan
+        maps["norm_ul"] = Map.from_geom(geom, data=np.reshape(ul, geom.data_shape))
 
     maps["stat"] = Map.from_geom(geom, data=f(minimizer.x).reshape(geom.data_shape))
 
@@ -113,13 +115,33 @@ class FluxPoints(FluxMaps):
 
     Parameters
     ----------
-    table : `~astropy.table.Table`
-        Table with flux point data.
+    data : dict of `~gammapy.maps.RegionNDMap`
+        The maps dictionary. Expected entries are the following:
 
-    Attributes
-    ----------
-    table : `~astropy.table.Table`
-        Table with flux point data.
+        * norm : the norm factor.
+        * norm_err : optional, the error on the norm factor.
+        * norm_errn : optional, the negative error on the norm factor.
+        * norm_errp : optional, the positive error on the norm factor.
+        * norm_ul : optional, the upper limit on the norm factor.
+        * norm_scan : optional, the norm values of the test statistic scan.
+        * stat_scan : optional, the test statistic scan values.
+        * ts : optional, the delta test statistic associated with the flux value.
+        * sqrt_ts : optional, the square root of the test statistic, when relevant.
+        * success : optional, a boolean tagging the validity of the estimation.
+        * n_dof : optional, the number of degrees of freedom used in TS computation
+        * alpha : optional, normalisation factor to accounts for differences between the test region and the background
+        * acceptance_off : optional, acceptance from the off region
+        * acceptance_on : optional, acceptance from the on region
+
+    reference_model : `~gammapy.modeling.models.SkyModel`, optional
+        The reference model to use for conversions. If None, a model consisting
+        of a point source with a power law spectrum of index 2 is assumed.
+    meta : dict, optional
+        Dict of metadata.
+    gti : `~gammapy.data.GTI`, optional
+        Maps GTI information.
+    filter_success_nan : boolean, optional
+        Set fitted norm and error to NaN when the fit has not succeeded.
 
     Examples
     --------
@@ -838,9 +860,7 @@ class FluxPoints(FluxMaps):
         value_scan = self.stat_scan.geom.axes["norm"].center
         shape_axes = self.stat_scan.geom._shape[slice(3, None)][::-1]
         for idx in np.ndindex(shape_axes):
-            stat_scan = np.abs(
-                self.stat_scan.data[idx].squeeze() - self.stat.data[idx].squeeze()
-            )
+            stat_scan = self.stat_scan.data[idx].squeeze()
             flux_points.norm_ul.data[idx] = stat_profile_ul_scipy(
                 value_scan, stat_scan, delta_ts=delta_ts, **kwargs
             )
