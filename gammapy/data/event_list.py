@@ -125,41 +125,6 @@ class EventList:
         except AttributeError:
             return f"<pre>{html.escape(str(self))}</pre>"
 
-    @staticmethod
-    def _from_gadf_table(table):
-        """Temporary gadf table converter."""
-        if not isinstance(table, Table):
-            raise TypeError(
-                f"_from_gadf_table expects astropy Table, got {type(table)} instead."
-            )
-
-        # This is not a strict check on input. It just checks that required information is there.
-        required_colnames = set(["RA", "DEC", "TIME", "ENERGY"])
-        if not required_colnames.issubset(set(table.colnames)):
-            missing_columns = required_colnames.difference(set(table.colnames))
-            raise ValueError(
-                f"GADF event table does not contain required columns {missing_columns}"
-            )
-
-        met = u.Quantity(table["TIME"].astype("float64"), "second")
-        time = time_ref_from_dict(table.meta) + met
-
-        energy = table["ENERGY"].quantity
-
-        ra = table["RA"].quantity
-        dec = table["DEC"].quantity
-
-        removed_colnames = ["RA", "DEC", "GLON", "GLAT", "TIME", "ENERGY"]
-
-        new_table = Table(
-            {"TIME": time, "ENERGY": energy, "RA": ra, "DEC": dec}, meta=table.meta
-        )
-        for name in table.colnames:
-            if name not in removed_colnames:
-                new_table.add_column(table[name])
-
-        return new_table
-
     def _to_gadf_table(self):
         """Temporary gadf table converter."""
         gadf_table = self.table.copy()

@@ -2,9 +2,11 @@
 import warnings
 from astropy.io import fits
 from astropy.table import Table
+import astropy.units as u
 from gammapy.data import EventListMetaData, EventList
 from gammapy.utils.scripts import make_path
 from gammapy.utils.metadata import CreatorMetaData
+from gammapy.utils.time import time_ref_from_dict
 
 
 class EventListReader:
@@ -29,8 +31,33 @@ class EventListReader:
         """Create EventList from gadf HDU."""
         table = Table.read(events_hdu)
         meta = EventListMetaData.from_header(table.meta)
-        table = EventList._from_gadf_table(table)
-        return EventList(table, meta)
+
+        # This is not a strict check on input. It just checks that required information is there.
+        required_colnames = set(["RA", "DEC", "TIME", "ENERGY"])
+        if not required_colnames.issubset(set(table.colnames)):
+            missing_columns = required_colnames.difference(set(table.colnames))
+            raise ValueError(
+                f"GADF event table does not contain required columns {missing_columns}"
+            )
+
+        met = u.Quantity(table["TIME"].astype("float64"), "second")
+        time = time_ref_from_dict(table.meta) + met
+
+        energy = table["ENERGY"].quantity
+
+        ra = table["RA"].quantity
+        dec = table["DEC"].quantity
+
+        removed_colnames = ["RA", "DEC", "GLON", "GLAT", "TIME", "ENERGY"]
+
+        new_table = Table(
+            {"TIME": time, "ENERGY": energy, "RA": ra, "DEC": dec}, meta=table.meta
+        )
+        for name in table.colnames:
+            if name not in removed_colnames:
+                new_table.add_column(table[name])
+
+        return EventList(new_table, meta)
 
     @staticmethod
     def identify_format_from_hduclass(events_hdu):

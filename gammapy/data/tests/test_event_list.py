@@ -23,7 +23,7 @@ class TestEventListBasic:
         self.events = EventList(table)
 
     def test_eventlist_printin(self):
-        print(self.events)
+        assert "Instrument" in str(self.events)
 
 
 @pytest.fixture()
