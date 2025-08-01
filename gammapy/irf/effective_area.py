@@ -197,10 +197,8 @@ class EffectiveAreaTable2D(IRF):
         offset.format_plot_yaxis(ax=ax)
 
         if add_cbar:
-            kwargs_colorbar.setdefault("format", "%.1e")
             label = f"Effective Area [{aeff.unit.to_string(UNIT_STRING_FORMAT)}]"
             kwargs_colorbar.setdefault("label", label)
-            kwargs_colorbar.setdefault("labelsize", 7)
             add_colorbar(caxes, ax=ax, axes_loc=axes_loc, **kwargs_colorbar)
 
         return ax

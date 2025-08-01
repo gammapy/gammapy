@@ -7,6 +7,7 @@ from scipy.stats import norm
 from astropy.visualization import make_lupton_rgb
 import matplotlib.axes as maxes
 import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 __all__ = [
     "add_colorbar",
@@ -14,7 +15,6 @@ __all__ = [
     "plot_map_rgb",
     "plot_theta_squared_table",
     "plot_distribution",
-    "parse_percentage",
 ]
 
 
@@ -57,8 +57,8 @@ def add_colorbar(img, ax, axes_loc=None, **kwargs):
         from gammapy.visualization import add_colorbar
         import matplotlib.pyplot as plt
         map_ = Map.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
-        axes_loc = {"size": "2%", "pad": "10%"}
-        kwargs_colorbar = {'label':'Colorbar label', 'labelsize':6}
+        axes_loc = {"position": "right", "size": "2%", "pad": "10%"}
+        kwargs_colorbar = {'label':'Colorbar label'}
 
         # Example outside gammapy
         fig = plt.figure(figsize=(6, 3))
@@ -77,40 +77,15 @@ def add_colorbar(img, ax, axes_loc=None, **kwargs):
     kwargs.setdefault("orientation", "vertical")
 
     axes_loc = axes_loc or {}
+    axes_loc.setdefault("position", "right")
     axes_loc.setdefault("size", "5%")
     axes_loc.setdefault("pad", "2%")
     axes_loc.setdefault("axes_class", maxes.Axes)
 
-    csize = parse_percentage(axes_loc["size"])
-    cpad = parse_percentage(axes_loc["pad"])
-    pos = ax.get_position()
-    ax_width = pos.width
-    cbar_pad = cpad * ax_width
-    cbar_width = csize * ax_width
-
-    fig = ax.figure
-    cbar_ax = fig.add_axes(
-        [pos.x1 + cbar_pad, pos.y0, cbar_width, pos.height],
-        axes_class=axes_loc["axes_class"],
-    )
-
-    if "labelsize" in kwargs:
-        fontsize = kwargs["labelsize"]
-        cbar_ax.tick_params(labelsize=fontsize)
-        kwargs.pop("labelsize")
-
-    cbar = fig.colorbar(img, cax=cbar_ax, **kwargs)
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes(**axes_loc)
+    cbar = plt.colorbar(img, cax=cax, **kwargs)
     return cbar
-
-
-def parse_percentage(value):
-    """From the input, return the percentage as a float."""
-    if isinstance(value, str) and value.endswith("%"):
-        return float(value.strip("%")) / 100.0
-    elif isinstance(value, (int, float)):
-        return float(value)  # Already absolute
-    else:
-        raise ValueError(f"Invalid value for percentage-based size: {value}")
 
 
 def plot_map_rgb(map_, ax=None, **kwargs):
@@ -356,9 +331,7 @@ def plot_distribution(
             raise ValueError("Map and mask spatial geometry must agree!")
 
         if not mask.is_mask:
-            raise ValueError(
-                f"Mask map must be of boolean type, got {mask.data.dtype} instead."
-            )
+            raise ValueError(f"Mask map must be of boolean type, got {mask.data.dtype} instead.")
 
         cutout_mask.data = np.logical_and(cutout_mask.data, mask.data)
 
