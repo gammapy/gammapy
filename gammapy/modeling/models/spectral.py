@@ -101,15 +101,19 @@ def scale_plot_flux(flux, energy_power=0):
     return y.to_unit(flux.unit * eunit**energy_power)
 
 
-def integrate_spectrum(func, energy_min, energy_max, ndecade=100):
+def integrate_spectrum(
+    func, energy_min, energy_max, ndecade=100, parameter_samples=None, eflux=False
+):
     """Integrate one-dimensional function using the log-log trapezoidal rule.
 
     Internally an oversampling of the energy bins to "ndecade" is used.
 
+    To compute the integral func(E)*E (e.g. to get an energy flux) one can set eflux to True.
+
     Parameters
     ----------
     func : callable
-        Function to integrate.
+        Function to integrate. Usually this is a `~gammapy.modeling.models.SpectralModel`
     energy_min : `~astropy.units.Quantity`
         Integration range minimum.
     energy_max : `~astropy.units.Quantity`
@@ -117,11 +121,42 @@ def integrate_spectrum(func, energy_min, energy_max, ndecade=100):
     ndecade : int, optional
         Number of grid points per decade used for the integration.
         Default is 100.
+    parameter_samples : dict, optional
+        Dictionary of parameter quantities to pass to `func.evaluate` if it exists.
+        This provides vectorized integral evaluation for parameter samples.
+        If None, evaluation is performed with a simple call to `func`. Default is None.
+    eflux : bool, optional
+        If True, the function will integrate func(E)*E, to compute the energy flux.
+        Default is False.
     """
     # Here we impose to duplicate the number
     num = np.maximum(np.max(ndecade * np.log10(energy_max / energy_min)), 2)
+    # the shape of energy is (n_energy, num)
     energy = np.geomspace(energy_min, energy_max, num=int(num), axis=-1)
-    integral = trapz_loglog(func(energy), energy, axis=-1)
+
+    if parameter_samples is not None:
+        if not isinstance(func, SpectralModel):
+            raise TypeError(
+                "Integration with parameter samples requires SpectralModel. Got type(func) instead."
+            )
+        # need to convert
+        parameter_samples = func._convert_evaluate_unit(parameter_samples, energy)
+        # this will create an array of shape (n_energy, num, n_samples)
+        values = func.evaluate(energy[..., np.newaxis], **parameter_samples)
+        # We repeat energy n_sample times and reshape to (n_energy, num, n_samples)
+        energy = np.repeat(energy, values.shape[-1]).reshape(values.shape)
+        # We swap axes to have arrays of shape (n_energy, n_samples, num)
+        values = np.swapaxes(values, -1, -2)
+        energy = np.swapaxes(energy, -1, -2)
+    else:
+        values = func(energy)
+
+    if eflux:
+        values *= energy
+
+    # we can call trapz_loglog assuming the last axis is the one to perform integration on.
+    integral = trapz_loglog(values, energy, axis=-1)
+    # integral.shape = (num, n_energy, n_samples) so we sum on axis 0
     return integral.sum(axis=0)
 
 
@@ -250,6 +285,8 @@ class SpectralModel(ModelBase):
             on the differential flux at the given energy.
 
         """
+        from .utils import FluxPredictionBand
+
         if epsilon != 1e-4:  # TODO: remove in v2.1
             warnings.warn(
                 "epsilon is unused and deprecated in v2.0",
@@ -257,17 +294,10 @@ class SpectralModel(ModelBase):
                 stacklevel=2,
             )
 
-        m = self.copy()
-        n_pars = len(m.parameters)
-
-        def fct(values):
-            m.parameters.value = values
-            return m(energy)
-
-        samples = self._samples(
-            fct, n_samples=n_pars * n_samples, random_state=random_state
+        predict = FluxPredictionBand.from_model_covariance(
+            self, n_samples=n_samples, random_state=random_state
         )
-        return self._get_errors(samples)
+        return predict.evaluate_error(energy, n_sigma=1)
 
     @property
     def pivot_energy(self):
@@ -329,7 +359,7 @@ class SpectralModel(ModelBase):
             return integrate_spectrum(self, energy_min, energy_max, **kwargs)
 
     def integral_error(
-        self, energy_min, energy_max, epsilon=1e-4, n_samples=3500, **kwargs
+        self, energy_min, energy_max, epsilon=1e-4, n_samples=10000, **kwargs
     ):
         """Evaluate the error of the integral flux of a given spectrum in a given energy range.
 
@@ -342,7 +372,7 @@ class SpectralModel(ModelBase):
             fraction of the parameter error. Default is 1e-4.
             Deprecated in v2.0 and unused.
         n_samples : int, optional
-            Number of samples to generate per parameter. Default is 3500.
+            Number of samples to generate per parameter. Default is 10000.
 
 
         Returns
@@ -351,6 +381,7 @@ class SpectralModel(ModelBase):
             Median, negative, and positive errors
             on the integral flux between energy_min and energy_max.
         """
+        from .utils import FluxPredictionBand
 
         if epsilon != 1e-4:  # TODO: remove in v2.1
             warnings.warn(
@@ -359,15 +390,9 @@ class SpectralModel(ModelBase):
                 stacklevel=2,
             )
 
-        m = self.copy()
-        n_pars = len(m.parameters)
+        predict = FluxPredictionBand.from_model_covariance(self, n_samples=n_samples)
 
-        def fct(values):
-            m.parameters.value = values
-            return m.integral(energy_min, energy_max, **kwargs)
-
-        samples = self._samples(fct, n_samples=n_pars * n_samples)
-        return self._get_errors(samples)
+        return predict.integral_error(energy_min, energy_max, n_sigma=1)
 
     def energy_flux(self, energy_min, energy_max, **kwargs):
         r"""Compute energy flux in given energy range.
@@ -415,6 +440,7 @@ class SpectralModel(ModelBase):
             Median, negative, and positive errors on the
             energy flux between energy_min and energy_max.
         """
+        from .utils import FluxPredictionBand
 
         if epsilon != 1e-4:  # TODO: remove in v2.1
             warnings.warn(
@@ -423,15 +449,9 @@ class SpectralModel(ModelBase):
                 stacklevel=2,
             )
 
-        m = self.copy()
-        n_pars = len(m.parameters)
+        predict = FluxPredictionBand.from_model_covariance(self, n_samples=n_samples)
 
-        def fct(values):
-            m.parameters.value = values
-            return m.energy_flux(energy_min, energy_max, **kwargs)
-
-        samples = self._samples(fct, n_samples=n_pars * n_samples)
-        return self._get_errors(samples)
+        return predict.energy_flux_error(energy_min, energy_max, n_sigma=1)
 
     def reference_fluxes(self, energy_axis):
         """Get reference fluxes for a given energy axis.
@@ -473,31 +493,6 @@ class SpectralModel(ModelBase):
             raise ValueError(f"Not a valid SED type: '{sed_type}'")
         flux.quantity = output
         return flux
-
-    def _get_plot_flux_error(self, energy, sed_type, n_samples):
-        flux = RegionNDMap.create(region=None, axes=[energy])
-        flux_errn = RegionNDMap.create(region=None, axes=[energy])
-        flux_errp = RegionNDMap.create(region=None, axes=[energy])
-
-        if sed_type in ["dnde", "norm"]:
-            output = self.evaluate_error(energy.center, n_samples=n_samples)
-        elif sed_type == "e2dnde":
-            output = energy.center**2 * self.evaluate_error(
-                energy.center, n_samples=n_samples
-            )
-        elif sed_type == "flux":
-            output = self.integral_error(
-                energy.edges_min, energy.edges_max, n_samples=n_samples
-            )
-        elif sed_type == "eflux":
-            output = self.energy_flux_error(
-                energy.edges_min, energy.edges_max, n_samples=n_samples
-            )
-        else:
-            raise ValueError(f"Not a valid SED type: '{sed_type}'")
-
-        flux.quantity, flux_errn.quantity, flux_errp.quantity = output
-        return flux, flux_errn, flux_errp
 
     def plot(
         self,
@@ -582,7 +577,7 @@ class SpectralModel(ModelBase):
         sed_type="dnde",
         energy_power=0,
         n_points=100,
-        n_samples=3500,
+        n_samples=10000,
         **kwargs,
     ):
         """Plot spectral model error band.
@@ -629,41 +624,18 @@ class SpectralModel(ModelBase):
         If ``energy_bounds`` is supplied as a list, tuple, or Quantity, an ``energy_axis`` is created internally with
         ``n_points`` bins between the given bounds.
         """
-        from gammapy.estimators.map.core import DEFAULT_UNIT
+        from .utils import FluxPredictionBand
 
-        if self.is_norm_spectral_model:
-            sed_type = "norm"
+        predict = FluxPredictionBand.from_model_covariance(self, n_samples=n_samples)
 
-        if isinstance(energy_bounds, (tuple, list, Quantity)):
-            energy_min, energy_max = energy_bounds
-            energy = MapAxis.from_energy_bounds(
-                energy_min,
-                energy_max,
-                n_points,
-            )
-        elif isinstance(energy_bounds, MapAxis):
-            energy = energy_bounds
-
-        ax = plt.gca() if ax is None else ax
-
-        kwargs.setdefault("facecolor", "black")
-        kwargs.setdefault("alpha", 0.2)
-        kwargs.setdefault("linewidth", 0)
-
-        if ax.yaxis.units is None:
-            ax.yaxis.set_units(DEFAULT_UNIT[sed_type] * energy.unit**energy_power)
-
-        flux, flux_errn, flux_errp = self._get_plot_flux_error(
-            sed_type=sed_type, energy=energy, n_samples=n_samples
+        return predict.plot_error(
+            energy_bounds=energy_bounds,
+            ax=ax,
+            energy_power=energy_power,
+            sed_type=sed_type,
+            n_points=n_points,
+            **kwargs,
         )
-        y_lo = scale_plot_flux(flux - flux_errn, energy_power).quantity[:, 0, 0]
-        y_hi = scale_plot_flux(flux + flux_errp, energy_power).quantity[:, 0, 0]
-
-        with quantity_support():
-            ax.fill_between(energy.center, y_lo, y_hi, **kwargs)
-
-        self._plot_format_ax(ax, energy_power, sed_type)
-        return ax
 
     @staticmethod
     def _plot_format_ax(ax, energy_power, sed_type):
@@ -987,14 +959,17 @@ class PowerLawSpectralModel(SpectralModel):
         lower = (energy_min / reference) ** val
         energy_flux = prefactor * (upper - lower)
 
-        mask = np.isclose(val, 0)
+        if len(energy_flux.shape) > 2:
+            mask = np.zeros(energy_flux.shape, dtype=bool)
+            mask[:, ...] = np.isclose(val, 0)
+        else:
+            mask = np.isclose(val, 0)
 
         if mask.any():
             # see https://www.wolframalpha.com/input/?i=a+*+x+*+(x%2Fb)+%5E+(-2)
             # for reference
-            energy_flux[mask] = (
-                amplitude * reference**2 * np.log(energy_max / energy_min)[mask]
-            )
+            values = amplitude * reference**2 * np.log(energy_max / energy_min)
+            energy_flux[mask] = values[mask]
 
         return energy_flux
 
@@ -1088,14 +1063,17 @@ class PowerLawNormSpectralModel(SpectralModel):
         lower = (energy_min / reference) ** val
         energy_flux = prefactor * (upper - lower)
 
-        mask = np.isclose(val, 0)
+        if len(energy_flux.shape) > 2:
+            mask = np.zeros(energy_flux.shape, dtype=bool)
+            mask[:, ...] = np.isclose(val, 0)
+        else:
+            mask = np.isclose(val, 0)
 
         if mask.any():
             # see https://www.wolframalpha.com/input/?i=a+*+x+*+(x%2Fb)+%5E+(-2)
             # for reference
-            energy_flux[mask] = (
-                norm * reference**2 * np.log(energy_max / energy_min)[mask]
-            )
+            values = norm * reference**2 * np.log(energy_max / energy_min)
+            energy_flux[mask] = values[mask]
 
         return energy_flux
 
