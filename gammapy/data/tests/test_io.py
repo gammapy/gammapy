@@ -38,3 +38,15 @@ def test_eventlist_reader_unkwnown_format(tmpdir):
 def test_eventlist_writer_unkwnown_format():
     with pytest.raises(ValueError):
         EventListWriter().to_hdu("tmp.fits", format="unknown")
+
+
+@requires_data()
+def test_eventlist_reader_empty_gadf_table():
+    swgo_events = "$GAMMAPY_DATA/tests/format/swgo/map_irfs/DummyEvents.fits.gz"
+
+    with pytest.raises(ValueError) as err:
+        EventListReader().read(swgo_events, format="gadf")
+    assert "ENERGY" in str(err.value)
+    assert "TIME" in str(err.value)
+    assert "RA" in str(err.value)
+    assert "DEC" in str(err.value)
