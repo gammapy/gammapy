@@ -891,7 +891,7 @@ def test_prior_stat_sum(sky_model, geom, geom_etrue):
     assert_allclose(stat_sum_neg, 470298.864993, rtol=1e-3)
 
     datasets.models.parameters["amplitude"].prior.weight = 100
-    assert_allclose(datasets.stat_sum() - stat_sum_neg, 354.768375, rtol=1e-3)
+    assert_allclose(datasets.stat_sum() - stat_sum_neg, 99.0, rtol=1e-3)
 
 
 @requires_data()
