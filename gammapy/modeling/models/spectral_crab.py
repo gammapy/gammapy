@@ -53,6 +53,11 @@ def create_crab_spectral_model(reference="meyer"):
     reference : {'meyer', 'hegra', 'hess_pl', 'hess_ecpl', 'magic_lp', 'magic_ecpl'}, optional
         Which reference to use for the spectral model. Default is 'meyer'.
 
+    Returns
+    -------
+    `~gammapy.modeling.models.SpectralModel`
+        Spectral model (for all-sky cosmic ray flux).
+
     Examples
     --------
     Let's first import what we need::

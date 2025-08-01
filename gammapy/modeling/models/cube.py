@@ -1208,6 +1208,8 @@ def create_fermi_isotropic_diffuse_model(filename, datasets_names=None, **kwargs
     ----------
     filename : str
         Filename.
+    datasets_names : str or list of str, optional
+        Dataset names. Default is None.
     kwargs : dict
         Keyword arguments forwarded to `TemplateSpectralModel`.
 

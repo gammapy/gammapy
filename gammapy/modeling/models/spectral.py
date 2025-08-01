@@ -82,14 +82,14 @@ def scale_plot_flux(flux, energy_power=0):
 
     Parameters
     ----------
-    flux : `Map`
+    flux : `~gammapy.maps.Map`
         Flux map.
     energy_power : int, optional
         Power of energy to multiply flux axis with. Default is 0.
 
     Returns
     -------
-    flux : `Map`
+    flux : `~gammapy.maps.Map`
         Scaled flux map.
     """
     energy = flux.geom.get_coord(sparse=True)["energy"]

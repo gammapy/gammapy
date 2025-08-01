@@ -86,7 +86,7 @@ class EnergyDependentMorphologyEstimator(Estimator):
 
     Examples
     --------
-    For a usage example see :doc:`/tutorials/analysis-3d/energy_dependent_estimation` tutorial.
+    For a usage example see :doc:`/tutorials/astrophysics/energy_dependent_estimation` tutorial.
     """
 
     tag = "EnergyDependentMorphologyEstimator"
