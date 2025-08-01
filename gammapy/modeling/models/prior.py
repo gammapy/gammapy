@@ -283,8 +283,7 @@ class UniformPenalty(Prior):
 
     @property
     def _random_variable(self):
-        """Return random variable object for prior."""
-        return ValueError(
+        raise ValueError(
             "UniformPenalty is not a distribution use UniformPrior to generate random numbers"
         )
 
