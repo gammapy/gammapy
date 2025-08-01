@@ -72,7 +72,7 @@ class ObservationTable(Table):
         """
 
         # Read disk table "table_disk", taken from class ObervationTable. TODO: Pot. lazy loading in future?"""
-        table_disk = super().read(make_path(filename), **kwargs)
+        table_disk = Table.read(make_path(filename), **kwargs)
 
         # Get header of obs-index table.
         meta = table_disk.meta
@@ -103,22 +103,7 @@ class ObservationTable(Table):
         #             )  # looked into gammapy/workflow/core.py
 
         # Create internal table "table_internal" with all names, corresp. units, types and descriptions, for the internal table model.
-        # The internal table model may know more names than minimal required on disk for the read/fill-process.
-        units_internal = []
-        types_internal = []
-        description_internal = []
-
-        for name in names_internal:
-            units_internal.append(format[name]["unit"])
-            types_internal.append(format[name]["type"])
-            description_internal.append(format[name]["description"])
-
-        table_internal = cls(
-            names=names_internal,
-            units=units_internal,
-            dtype=types_internal,
-            descriptions=description_internal,
-        )
+        table_internal = cls
 
         # Fill internal table for mandatory columns by constructing the table row-wise with the internal representations.
         number_of_observations = len(
@@ -127,7 +112,7 @@ class ObservationTable(Table):
         for i in range(number_of_observations):
             row_internal = []
             for name in names_internal:
-                row_internal = [0]
+                row_internal = ["1", "TEST"]
                 # names_disk = correspondance_dict[name]
 
                 # # Construction of in-mem representation of metadata.
