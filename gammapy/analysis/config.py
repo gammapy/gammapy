@@ -77,6 +77,11 @@ class MapSelectionEnum(str, Enum):
 
 
 class GammapyBaseConfig(BaseModel):
+    """Base configuration class.
+
+    Provides Pydantic model settings.
+    """
+
     model_config = ConfigDict(
         arbitrary_types_allowed=True,
         validate_assignment=True,
@@ -93,6 +98,14 @@ class GammapyBaseConfig(BaseModel):
 
 
 class SkyCoordConfig(GammapyBaseConfig):
+    """Configuration for sky coordinates.
+
+    Attributes:
+        frame : coordinate frame (e.g., 'icrs', 'galactic').
+        lon : Longitude or right ascension.
+        lat : Latitude or declination.
+    """
+
     frame: Optional[FrameEnum] = None
     lon: Optional[AngleType] = None
     lat: Optional[AngleType] = None
@@ -196,6 +209,17 @@ class DatasetsConfig(GammapyBaseConfig):
 
 
 class ObservationsConfig(GammapyBaseConfig):
+    """Configuration for `~gammapy.data.Observations`.
+
+    Attributes:
+        datastore (str): Path to the data store.
+        obs_ids (list of int): List of observation IDs.
+        obs_file (str): Path to a YAML observation file.
+        obs_cone (frame, lat, lon, radius): Cone selection for observations.
+        obs_time (start, stop): Observation time filtering.
+        required_irf (list): Required IRF components, options are "aeff", "edisp", "psf", "bkg"
+    """
+
     datastore: PathType = Path("$GAMMAPY_DATA/hess-dl3-dr1/")
     obs_ids: List[int] = []
     obs_file: Optional[PathType] = None
@@ -205,6 +229,16 @@ class ObservationsConfig(GammapyBaseConfig):
 
 
 class LogConfig(GammapyBaseConfig):
+    """Configuration for logging.
+
+    Attributes:
+        level (str): Logging level (e.g., 'info', 'debug').
+        filename (str): Log file path.
+        filemode (str): File mode ('w' for overwrite, 'a' for append).
+        format (str): Logging format string.
+        datefmt (str): Format for timestamps.
+    """
+
     level: str = "info"
     filename: Optional[PathType] = None
     filemode: Optional[str] = None
@@ -213,6 +247,16 @@ class LogConfig(GammapyBaseConfig):
 
 
 class GeneralConfig(GammapyBaseConfig):
+    """Top-level general configuration.
+
+    Attributes:
+        log (`LogConfig`): Logging configuration.
+        outdir (str): Output directory.
+        n_jobs (int): Number of parallel jobs.
+        datasets_file (str): Path to datasets config file.
+        models_file (str): Path to models config file.
+    """
+
     log: LogConfig = LogConfig()
     outdir: str = "."
     n_jobs: int = 1
