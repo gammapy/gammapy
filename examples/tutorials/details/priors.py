@@ -396,8 +396,8 @@ plt.show()
 # The distribution of the best-fit amplitudes shows how less best-fit
 # amplitudes have negative values. This also has an effect on the
 # distribution of the best-fit indices. How exactly the distribution
-# changes depends on the scale assigned to the uniform prior. The
-# larger the scale, the less negative amplitudes.
+# changes depends on the value assigned to the uniform penalty. The
+# larger the penalty, the less negative amplitudes.
 #
 # Note that the model parameters uncertainties are, per default, computed
 # symmetrical. This can lead to incorrect
