@@ -19,7 +19,6 @@ jobs:
         with:
           environment-file: environment-dev.yml
           cache-downloads: true
-          cache-environment: true
           post-cleanup: 'all'
 
       - name: Install Gammapy
