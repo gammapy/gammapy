@@ -2,7 +2,7 @@
 from collections import namedtuple
 import numpy as np
 from astropy.coordinates import Angle, SkyCoord
-from astropy.table import Table
+from astropy.table import Table, Column
 from astropy.units import Quantity, Unit
 from gammapy.utils.regions import SphericalCircleSkyRegion
 from gammapy.utils.scripts import make_path
@@ -24,7 +24,8 @@ class ObservationTable(Table):
     Co-authors: @maxnoe, @registerrier, @bkhelifi
     Used as reference: gammapy, gammapy/data/obs_table.py, https://docs.python.org/3, https://docs.astropy.org/en/latest/table/construct_table.html#construct-table, https://numpy.org/doc/stable/reference/generated/numpy.dtype.html
                        https://docs.astropy.org/en/latest/table/index.html, https://gamma-astro-data-formats.readthedocs.io/en/v0.3/, esp. data_storage/obs_index/index.html
-    Looked into: https://github.com/gammasky/cta-dc/blob/master/data/cta_1dc_make_data_index_files.py, maybe used l. 233. Copyright (c) 2016 gammasky
+    Looked into: https://github.com/gammasky/cta-dc/blob/master/data/cta_1dc_make_data_index_files.py, maybe used l. 233. Copyright (c) 2016 gammasky,
+    Oriented also at PR by @registerrier: https://github.com/gammapy/gammapy/pull/5954/files
 
     # ATTRIBUTION copied from hess-dl3-dr1 README.txt (gammapy-data/hess-dl3-dr1/README.txt) for testing and learning from this dataset:
     # This work made use of data from the H.E.S.S. DL3 public test
@@ -33,6 +34,25 @@ class ObservationTable(Table):
 
     # Required minimum names of internal table. These will be translated into needed names on disk, depending on the fileformat, in the reader.
     names_min_req = ["OBS_ID", "OBJECT", "POINTING"]
+
+    def __init__(self):
+        """Constructor for internal observation table."""
+
+        # Used for constructor: https://stackoverflow.com/questions/6535832/python-inherit-the-superclass-init
+
+        # Init with basic reference table, like suggested by @registerrier. It could be completed by adding the complex objects (Time, SkyCoord, EarthLocation,...) in the reader.
+        super(ObservationTable, self).__init__(
+            Table(
+                [
+                    Column(
+                        name="OBSID",
+                        unit=None,
+                        description="Obervation ID per observation run",
+                    ),
+                    Column(name="OBJECT", unit=None, description="Name of the object"),
+                ]
+            )
+        )
 
     @classmethod
     def read(cls, filename, fileformat=None, **kwargs):
