@@ -410,8 +410,9 @@ class WcsNDMap(WcsMap):
              Default is "linear".
         axes_loc : dict, optional
             Keyword arguments passed to `~mpl_toolkits.axes_grid1.axes_divider.AxesDivider.append_axes`.
+            Default is None.
         kwargs_colorbar : dict, optional
-            Keyword arguments passed to `~matplotlib.pyplot.colorbar`.
+            Keyword arguments passed to `~matplotlib.pyplot.colorbar`. Default is None.
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.pyplot.imshow`.
 
@@ -425,10 +426,13 @@ class WcsNDMap(WcsMap):
         if not self.geom.is_flat:
             raise TypeError("Use .plot_interactive() for Map dimension > 2")
 
-        ax = self._plot_default_axes(ax=ax)
-
         if fig is None:
             fig = plt.gcf()
+
+        pos = None
+        if add_cbar is True and ax is None:
+            pos = [0.1, 0.1, 0.75, 0.8]
+        ax = self._plot_default_axes(ax=ax, pos=pos)
 
         if self.geom.is_image:
             data = self.data.astype(float)
@@ -460,7 +464,15 @@ class WcsNDMap(WcsMap):
                 )
             kwargs.setdefault("norm", norm)
 
+        squared = False
+        if "squared" in kwargs:
+            squared = kwargs["squared"]
+            kwargs.pop("squared")
+
         im = ax.imshow(data, **kwargs)
+
+        if squared:  # The order matters
+            ax.set_box_aspect(1)
 
         if add_cbar:
             label = str(self.unit)
@@ -500,7 +512,13 @@ class WcsNDMap(WcsMap):
                 "`.plot_mask()` only supports maps containing boolean values."
             )
 
-        ax = self._plot_default_axes(ax=ax)
+        add_cbar = False
+        if "add_cbar" in kwargs:
+            add_cbar = True
+        pos = None
+        if add_cbar is True and ax is None:
+            pos = [0.1, 0.1, 0.75, 0.8]
+        ax = self._plot_default_axes(ax=ax, pos=pos)
 
         kwargs.setdefault("alpha", 0.5)
         kwargs.setdefault("colors", "w")
@@ -518,17 +536,21 @@ class WcsNDMap(WcsMap):
         ax.autoscale(enable=False)
         return ax
 
-    def _plot_default_axes(self, ax):
+    def _plot_default_axes(self, ax=None, pos=None):
         from astropy.visualization.wcsaxes.frame import EllipticalFrame
 
         if ax is None:
             fig = plt.gcf()
-            if self.geom.projection in ["AIT"]:
-                ax = fig.add_subplot(
-                    1, 1, 1, projection=self.geom.wcs, frame_class=EllipticalFrame
+            frame_class = EllipticalFrame if self.geom.projection in ["AIT"] else None
+
+            if pos:
+                ax = fig.add_axes(
+                    pos, projection=self.geom.wcs, frame_class=frame_class
                 )
             else:
-                ax = fig.add_subplot(1, 1, 1, projection=self.geom.wcs)
+                ax = fig.add_subplot(
+                    1, 1, 1, projection=self.geom.wcs, frame_class=frame_class
+                )
 
         return ax
 

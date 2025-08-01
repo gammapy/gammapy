@@ -517,6 +517,8 @@ def test_map_plot_mask():
 
     with mpl_plot_check():
         mask.plot_mask()
+    with mpl_plot_check():
+        mask.plot_mask(add_cbar=True)
 
 
 def test_reproject_2d():

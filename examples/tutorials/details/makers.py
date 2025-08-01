@@ -336,7 +336,6 @@ for observation in observations:
     datasets.append(dataset_on_off)
 print(datasets)
 
-plt.show()
 
 ######################################################################
 # Observation duration and effective livetime

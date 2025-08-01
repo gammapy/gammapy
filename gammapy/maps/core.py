@@ -1347,12 +1347,16 @@ class Map(abc.ABC):
         else:
             wcs = self.geom.wcs
 
+        gridspec_kw = {"hspace": 0.2, "wspace": 0.2}
+        if "add_cbar" in kwargs and kwargs["add_cbar"] is True:
+            gridspec_kw = {"hspace": 0.6, "wspace": 0.2}
+
         fig, axes = plt.subplots(
             ncols=cols,
             nrows=rows,
             subplot_kw={"projection": wcs},
             figsize=figsize,
-            gridspec_kw={"hspace": 0.1, "wspace": 0.1},
+            gridspec_kw=gridspec_kw,
         )
 
         for idx in range(cols * rows):
