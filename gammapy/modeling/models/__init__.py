@@ -66,7 +66,6 @@ from .temporal import (
     TemplatePhaseCurveTemporalModel,
     TemporalModel,
 )
-from .utils import read_hermes_cube
 
 __all__ = [
     "BrokenPowerLawSpectralModel",
@@ -136,7 +135,6 @@ __all__ = [
     "TEMPORAL_MODEL_REGISTRY",
     "TemporalModel",
     "EBL_DATA_BUILTIN",
-    "read_hermes_cube",
 ]
 
 
