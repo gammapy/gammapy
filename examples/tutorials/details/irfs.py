@@ -12,11 +12,12 @@ This tutorial is intended for advanced users typically creating IRFs.
 
 """
 
-import numpy as np
 import astropy.units as u
+import matplotlib.pyplot as plt
+import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.visualization import quantity_support
-import matplotlib.pyplot as plt
+
 from gammapy.irf import (
     IRF,
     Background3D,
@@ -226,8 +227,7 @@ print(res)
 # sphinx_gallery_thumbnail_number = 1
 aeff_eval = aeff_3d.evaluate(energy_true=[1.0] * u.TeV)
 
-plt.figure(figsize=(9, 9))
-ax = plt.gca()
+ax = plt.subplot()
 with quantity_support():
     caxes = ax.pcolormesh(
         fov_lat_axis.edges, fov_lon_axis.edges, aeff_eval.value.squeeze()
