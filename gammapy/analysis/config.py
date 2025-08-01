@@ -221,7 +221,45 @@ class GeneralConfig(GammapyBaseConfig):
 
 
 class AnalysisConfig(GammapyBaseConfig):
-    """Gammapy analysis configuration."""
+    """Gammapy analysis configuration.
+
+    This class defines the full analysis configuration schema, organised into different sections.
+    It can be read from or written to a YAML file using `.read()` and `.write()`, respectively.
+
+    Parameters
+    ----------
+    general : `GeneralConfig`
+        General settings for output, logging, and file paths.
+    observations : `ObservationsConfig`
+        Settings for the `~gammapy.data.Observation` selection including IDs, regions, and time filters.
+    datasets : `DatasetsConfig`
+        Settings for the `~gammapy.datasets.Dataset` Including but not limited to geometry (`GeomConfig`),
+        background (`BackgroundConfig`), safe mask (`SafeMaskConfig`), and stacking.
+    fit : `FitConfig`
+        Settings for the `~gammapy.modeling.Fit` strategy and global fit energy range.
+    flux_points : `FluxPointsConfig`
+        Settings for the `~gammapy.estimators.FluxPointsEstimator`.
+    excess_map : `ExcessMapConfig`
+        Settings for the `~gammapy.estimators.ExcessMapEstimator`.
+    light_curve : `LightCurveConfig`
+        Settings for the `~gammapy.estimators.LightCurveEstimator`.
+
+    Examples
+    --------
+    Read from a yaml file::
+
+    >>> from gammapy.analysis import AnalysisConfig
+    >>> config = AnalysisConfig.read("config.yaml") # doctest: +SKIP
+    >>> print(config.datasets.geom) # doctest: +SKIP
+
+    Create from scratch
+
+    >>> config = AnalysisConfig()
+    >>> config.observations.datastore = "$GAMMAPY_DATA/hess-dl3-dr1"
+    >>> config.observations.obs_cone = {"frame": "icrs", "lon": "83.633 deg", "lat": "22.014 deg", "radius": "5 deg"}
+    >>> print(config.observations.obs_cone.lat.deg)
+    22.014
+    """
 
     general: GeneralConfig = GeneralConfig()
     observations: ObservationsConfig = ObservationsConfig()
