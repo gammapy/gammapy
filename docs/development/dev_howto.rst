@@ -9,10 +9,13 @@ Developer How To
 General conventions
 -------------------
 
-Python version support
-++++++++++++++++++++++
+Python and NumPy version support
+++++++++++++++++++++++++++++++++
 
-In Gammapy we currently support Python 3.9 or later.
+Gammapy follows the `NEP 29 guidelines <https://numpy.org/neps/nep-0029-deprecation_policy.html>`__
+for version support, which implements a time-based deprecation policy for
+Python and NumPy versions. This ensures compatibility with actively supported
+versions while maintaining stability.
 
 Coordinate and axis names
 +++++++++++++++++++++++++

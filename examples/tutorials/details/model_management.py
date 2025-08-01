@@ -74,13 +74,6 @@ from gammapy.modeling.models import (
     create_fermi_isotropic_diffuse_model,
 )
 
-######################################################################
-# Check setup
-# -----------
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
-
 
 ######################################################################
 # Read the datasets

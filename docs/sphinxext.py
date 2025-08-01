@@ -34,6 +34,7 @@ TUTORIAL_SORT_DICT = {
         "fitting.py": 11,
         "nested_sampling_Crab.py": 12,
         "estimators.py": 13,
+        "parameter_ul.py": 14,
     #  data analysis
     #  1d
         "cta_sensitivity.py": 0,

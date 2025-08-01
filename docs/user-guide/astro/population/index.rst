@@ -48,7 +48,7 @@ surface density of pulsars and related objects used in literature:
 
 .. plot:: user-guide/astro/population/plot_radial_distributions.py
 
-TODO: add illustration of Galactocentric z-distribution model and combined (r,
+.. TODO: add illustration of Galactocentric z-distribution model and combined (r,
 z) distribution for the Besancon model.
 
 Spiral arm models
