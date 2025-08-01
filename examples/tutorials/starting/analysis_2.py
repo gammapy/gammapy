@@ -72,12 +72,13 @@ First, we setup the analysis by performing required imports.
 """
 
 from pathlib import Path
+
+# %matplotlib inline
+import matplotlib.pyplot as plt
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
 
-# %matplotlib inline
-import matplotlib.pyplot as plt
 from gammapy.data import DataStore
 from gammapy.datasets import MapDataset
 from gammapy.estimators import FluxPointsEstimator
