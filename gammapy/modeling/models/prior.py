@@ -4,11 +4,17 @@
 import logging
 import numpy as np
 import astropy.units as u
-from scipy.stats import norm, uniform, loguniform
+from scipy.stats import norm, uniform, loguniform, gennorm
 from gammapy.modeling import PriorParameter, PriorParameters
 from .core import ModelBase
 
-__all__ = ["GaussianPrior", "UniformPrior", "LogUniformPrior", "Prior"]
+__all__ = [
+    "GaussianPrior",
+    "GeneralizedGaussianPrior",
+    "UniformPrior",
+    "LogUniformPrior",
+    "Prior",
+]
 
 log = logging.getLogger(__name__)
 
@@ -164,7 +170,8 @@ class GaussianPrior(Prior):
     @staticmethod
     def evaluate(value, mu, sigma):
         """Evaluate the Gaussian prior."""
-        return ((value - mu) / sigma) ** 2
+        rv = norm(mu, sigma)
+        return -2 * rv.logpdf(value)
 
     @property
     def _random_variable(self):
@@ -175,31 +182,30 @@ class GaussianPrior(Prior):
 class UniformPrior(Prior):
     """Uniform Prior.
 
-    Returns 0 if the parameter value is in ]min, max[.
-    Returns 1, if otherwise.
+    Returns 2log(max-min) if the parameter value is in [min, max].
+    Returns inf, otherwise.
+    Only well defined for finite values of min and max.
 
     Parameters
     ----------
     min : float, optional
         Minimum value.
-        Default is -`~numpy.inf`.
+        Default is 0.
     max : float, optional
         Maximum value.
-        Default is `~numpy.inf`.
+        Default is 1.
     """
 
     tag = ["UniformPrior"]
     _type = "prior"
-    min = PriorParameter(name="min", value=-np.inf, unit="")
-    max = PriorParameter(name="max", value=np.inf, unit="")
+    min = PriorParameter(name="min", value=0.0, unit="")
+    max = PriorParameter(name="max", value=1.0, unit="")
 
     @staticmethod
     def evaluate(value, min, max):
         """Evaluate the uniform prior."""
-        if min < value < max:
-            return 0.0
-        else:
-            return 1.0
+        rv = uniform(min, max - min)
+        return -2 * rv.logpdf(value)
 
     @property
     def _random_variable(self):
@@ -239,3 +245,43 @@ class LogUniformPrior(Prior):
     def _random_variable(self):
         """Return random variable object for prior."""
         return loguniform(self.min.value, self.max.value)
+
+
+class GeneralizedGaussianPrior(Prior):
+    """One-dimensional Generalized Gaussian Prior.
+
+    Parameters
+    ----------
+    mu : float, optional
+        Mean of the Gaussian distribution.
+        Default is 0.
+    sigma : float, optional
+        Standard deviation of the Gaussian distribution.
+        Default is 1.
+    eta : `float`, optional
+        eta is a shape parameter
+        For eta=1 it is identical to a Laplace distribution (scaled by sqrt(2)).
+        For eta=0.5 it is identical to a normal distribution.
+        Default is 0.5.
+    """
+
+    tag = ["GeneralizedGaussianPrior"]
+    _type = "prior"
+    mu = PriorParameter(name="mu", value=0)
+    sigma = PriorParameter(name="sigma", value=1)
+    eta = PriorParameter(name="eta", value=0.5)
+
+    @staticmethod
+    def evaluate(value, mu, sigma, eta):
+        """Evaluate the Gaussian prior."""
+        rv = gennorm(beta=1.0 / eta, loc=mu, scale=sigma * np.sqrt(2))
+        return -2 * rv.logpdf(value)
+
+    @property
+    def _random_variable(self):
+        """Return random variable object for prior."""
+        return gennorm(
+            beta=1.0 / self.eta.value,
+            loc=self.mu.value,
+            scale=self.sigma.value * np.sqrt(2),
+        )

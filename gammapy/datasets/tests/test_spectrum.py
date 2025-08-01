@@ -1260,8 +1260,10 @@ def test_priors():
         mu=spectral_model.index.value + 0.1, sigma=0.1
     )
 
+    prior_stat_sum = spectral_model.index.prior_stat_sum()
+
     stat_sum_with_priors = datasets.stat_sum()
 
     assert_allclose(stat_sum, 87.928542, atol=1e-1)
     # Here we check that the prior is applied only once
-    assert_allclose(stat_sum_with_priors, stat_sum + 1)
+    assert_allclose(stat_sum_with_priors, stat_sum + prior_stat_sum)
