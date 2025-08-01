@@ -40,6 +40,7 @@ def test_eventlist_writer_unkwnown_format():
         EventListWriter().to_hdu("tmp.fits", format="unknown")
 
 
+@requires_data()
 def test_eventlist_reader_empty_gadf_table():
     swgo_events = "$GAMMAPY_DATA/tests/format/swgo/map_irfs/DummyEvents.fits.gz"
 
