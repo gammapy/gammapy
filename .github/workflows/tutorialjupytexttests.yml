@@ -1,4 +1,4 @@
-name: TutorialJupytext
+name: Tutorial Jupytext
 
 on:
   workflow_dispatch:
@@ -18,7 +18,6 @@ jobs:
         uses: mamba-org/setup-micromamba@v2
         with:
           environment-file: environment-dev.yml
-          cache-downloads: true
           post-cleanup: 'all'
 
       - name: Install Gammapy
