@@ -864,7 +864,7 @@ class EventList:
             ax_image = fig.add_subplot(gs[0, :], projection=m.geom.wcs)
         else:
             ax_image = fig.add_subplot(gs[0, 0], projection=m.geom.wcs)
-        m.plot(ax=ax_image, stretch="sqrt", vmin=0, add_cbar=True)
+        m.plot(ax=ax_image, stretch="sqrt", vmin=0)
         plt.subplots_adjust(wspace=0.3)
 
     @property
