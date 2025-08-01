@@ -10,7 +10,6 @@ from gammapy.modeling.models import (
     Model,
     Models,
     SkyModel,
-    UniformPenalty,
     UniformPrior,
     LogUniformPrior,
 )
@@ -135,27 +134,3 @@ def test_serialisation(prior, tmpdir):
     loaded_prior = loaded_model.spectral_model.amplitude.prior
 
     assert isinstance(loaded_prior, type(prior["model"]))
-
-
-def test_uniform_penalty():
-    prior = dict(
-        name="uniformpenalty",
-        model=UniformPenalty(min=0, max=10),
-        prior_0=0.0 * u.Unit(""),
-        prior_1=1.0 * u.Unit(""),
-        val_at_0=1.0,
-        val_at_1=0.0,
-        val_with_weight_2=2.0,
-        inverse_cdf_at_0=0.0,
-        inverse_cdf_at_1=10.0,
-    )
-    model = prior["model"]
-    # Test the evaluation of the prior at specific points
-    assert_allclose(model(prior["prior_0"]), prior["val_at_0"], rtol=1e-7)
-    assert_allclose(model(prior["prior_1"]), prior["val_at_1"], rtol=1e-7)
-
-    with pytest.raises(ValueError):
-        model._inverse_cdf(1)
-
-    with pytest.raises(ValueError):
-        model._random_variable

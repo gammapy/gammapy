@@ -13,7 +13,6 @@ from .prior import (
     GaussianPrior,
     GeneralizedGaussianPrior,
     Prior,
-    UniformPenalty,
     UniformPrior,
     LogUniformPrior,
 )
@@ -119,7 +118,6 @@ __all__ = [
     "Prior",
     "GaussianPrior",
     "GeneralizedGaussianPrior",
-    "UniformPenalty",
     "UniformPrior",
     "LogUniformPrior",
     "scale_plot_flux",

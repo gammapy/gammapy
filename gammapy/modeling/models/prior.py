@@ -11,7 +11,6 @@ from .core import ModelBase
 __all__ = [
     "GaussianPrior",
     "GeneralizedGaussianPrior",
-    "UniformPenalty",
     "UniformPrior",
     "LogUniformPrior",
     "Prior",
@@ -246,46 +245,6 @@ class LogUniformPrior(Prior):
     def _random_variable(self):
         """Return random variable object for prior."""
         return loguniform(self.min.value, self.max.value)
-
-
-class UniformPenalty(Prior):
-    """Uniform Prior.
-
-    Returns 0 if the parameter value is in ]min, max[.
-    Returns 1, if otherwise.
-
-    Parameters
-    ----------
-    min : float, optional
-        Minimum value.
-        Default is -`~numpy.inf`.
-    max : float, optional
-        Maximum value.
-        Default is `~numpy.inf`.
-    penalty : float, optional
-        Penalization constant.
-        Default is 1.
-    """
-
-    tag = ["UniformPrior"]
-    _type = "prior"
-    min = PriorParameter(name="min", value=-np.inf, unit="")
-    max = PriorParameter(name="max", value=np.inf, unit="")
-    penalty = PriorParameter(name="penalty", value=1, unit="")
-
-    @staticmethod
-    def evaluate(value, min, max, penalty):
-        """Evaluate the uniform prior."""
-        if min < value < max:
-            return 0.0
-        else:
-            return penalty
-
-    @property
-    def _random_variable(self):
-        raise ValueError(
-            "UniformPenalty is not a distribution use UniformPrior to generate random numbers"
-        )
 
 
 class GeneralizedGaussianPrior(Prior):
