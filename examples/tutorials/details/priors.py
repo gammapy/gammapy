@@ -68,7 +68,7 @@ from gammapy.modeling.models import (
     GaussianPrior,
     PowerLawSpectralModel,
     SkyModel,
-    CompoundUniformPrior,
+    UniformPenalty,
 )
 
 
@@ -114,6 +114,8 @@ dataset1.counts = dataset1.npred()
 # Example 1: Including Prior Information about the Sources Index
 # --------------------------------------------------------------
 #
+# This example illustrate the maximum a posteriori (MAP) method which
+# differs from the maximum likelihood by the introduction of priors.
 # The index was assumed to be :math:`2.3`. However, let us assume you
 # have reasons to believe that the index value of the source is actually
 # :math:`2.1`. This can be due to theoretical predictions, other
@@ -292,9 +294,10 @@ plt.show()
 # Example 2: Encouraging Positive Amplitude Values
 # ------------------------------------------------
 #
-# In the next example, we want to encourage the amplitude to have
+# This second example is a form of penalized likelihood.
+# Let's asssume we want to encourage the amplitude to have
 # positive, i.e. physical, values. Instead of setting hard bounds, we can
-# also set a compound uniform prior, which prefers positive values to negatives.
+# also set a uniform penalisation, which prefers positive values to negatives.
 #
 # We set the amplitude of the power-law used to simulate the source to a very
 # small value. Together with statistical fluctuations, this could result in some
@@ -308,15 +311,14 @@ model_weak = SkyModel(
     name="weak-model",
 )
 model_weak_prior = model_weak.copy(name="weak-model-prior")
-uniform = CompoundUniformPrior(min=0, max=1, scale=2)
-model_weak_prior.parameters["amplitude"].prior = uniform
+uniform_penalty = UniformPenalty(min=0, max=np.inf, penalty=2)
+model_weak_prior.parameters["amplitude"].prior = uniform_penalty
 
 
 ######################################################################
 # We set the minimum value to zero and the maximum value
-# is set to a large positive value. The probablity to be within [min, max] will
-# be larger by a factor of 2 as given by the scale paramater.
-#
+# to infinity. Outside of ]min, max[ the prior statistic will be penalized by
+# a contant value of 2 as given by the penalty parameter.
 #
 
 uni_prior_stat_sums = []
@@ -331,11 +333,12 @@ plt.plot(
     uni_prior_stat_sums,
     color="tab:orange",
     linestyle="dashed",
-    label=f"Uniform Prior\n $min={uniform.min.value}$, scale={uniform.scale}",
+    label=f"Uniform Prior\n $min={uniform_penalty.min.value}$, penalty={uniform_penalty.penalty.value}",
 )
 plt.xlabel("Amplitude Value [1 / (TeV s cm2)]")
 plt.ylabel("Prior")
 plt.legend()
+plt.xlim([-1, 1])
 plt.show()
 
 ######################################################################
@@ -352,7 +355,7 @@ dataset2 = dataset.copy()
 for n in range(N):
     # simulating the dataset
     dataset2.models = model_weak.copy()
-    dataset2.fake()
+    dataset2.fake(random_state=42 + n)
 
     dataset2_prior = dataset2.copy()
     dataset2_prior.models = model_weak_prior.copy()
@@ -407,8 +410,6 @@ plt.show()
 # Implementing a custom prior
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# For now, only `~gammapy.modeling.models.GaussianPrior` and
-# `~gammapy.modeling.models.UniformPrior` are implemented.
 # To add a use case specific prior one has to create a prior subclass
 # containing:
 #
