@@ -68,7 +68,6 @@ from gammapy.modeling.models import (
     GaussianPrior,
     PowerLawSpectralModel,
     SkyModel,
-    UniformPenalty,
 )
 
 
@@ -289,6 +288,70 @@ plt.show()
 # same.
 #
 
+######################################################################
+# Implementing a custom prior
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# To add a use case specific prior one has to create a prior subclass
+# containing:
+#
+# -  a `tag` and a `_type` used for the serialization
+# -  an instantiation of each `PriorParameter` with their unit and default values
+# -  the` evaluate` function where the mathematical expression for the prior is defined.
+# -  if the prior has to be used for sampling it should also define a `_inverse_cdf` function
+#    (in that case the pdf has to integrate to unity).
+#
+# As an example for a custom prior a Jeffrey prior for a scale parameter is chosen.
+# The only parameter is ``sigma`` and the evaluation method return the squared inverse of ``sigma``.
+
+
+from gammapy.modeling import PriorParameter
+from gammapy.modeling.models import Model, Prior
+
+
+class MyCustomPrior(Prior):
+    """Custom Prior.
+
+
+    Parameters
+    ----------
+    min : float
+        Minimum value.
+        Default is -inf.
+    max : float
+        Maximum value.
+        Default is inf.
+    """
+
+    tag = ["MyCustomPrior"]
+    sigma = PriorParameter(name="sigma", value=1, unit="")
+    _type = "prior"
+
+    @staticmethod
+    def evaluate(value, sigma):
+        """Evaluate the custom prior."""
+        return value / sigma**2
+
+
+# The custom prior is added to the PRIOR_REGISTRY so that it can be serialised.
+
+from gammapy.modeling.models import PRIOR_REGISTRY
+
+PRIOR_REGISTRY.append(MyCustomPrior)
+
+# The custom prior is set on the index of a powerlaw spectral model and is evaluated.
+customprior = MyCustomPrior(sigma=0.5)
+pwl = PowerLawSpectralModel()
+pwl.parameters["index"].prior = customprior
+customprior(pwl.parameters["index"])
+
+# The power law spectral model can be written into a dictionary.
+# If a model is read in from this dictionary, the custom prior is still set on the index.
+
+print(pwl.to_dict())
+model_read = Model.from_dict(pwl.to_dict())
+model_read.parameters.prior
+
 
 ######################################################################
 # Example 2: Encouraging Positive Amplitude Values
@@ -298,7 +361,50 @@ plt.show()
 # Let's asssume we want to encourage the amplitude to have
 # positive, i.e. physical, values. Instead of setting hard bounds, we can
 # also set a uniform penalisation, which prefers positive values to negatives.
-#
+# For this use case we are going to define a `UniformPenalty`.
+
+
+class UniformPenalty(Prior):
+    """Uniform Penalty.
+
+    Returns 0 if the parameter value is in ]min, max[.
+    Returns the penalty value, if otherwise.
+
+    Parameters
+    ----------
+    min : float, optional
+        Minimum value.
+        Default is -`~numpy.inf`.
+    max : float, optional
+        Maximum value.
+        Default is `~numpy.inf`.
+    penalty : float, optional
+        Penalization constant.
+        Default is 1.
+    """
+
+    tag = ["UniformPenalty"]
+    _type = "prior"
+    min = PriorParameter(name="min", value=-np.inf, unit="")
+    max = PriorParameter(name="max", value=np.inf, unit="")
+    penalty = PriorParameter(name="penalty", value=1, unit="")
+
+    @staticmethod
+    def evaluate(value, min, max, penalty):
+        """Evaluate the uniform prior."""
+        if min < value < max:
+            return 0.0
+        else:
+            return penalty
+
+    @property
+    def _inverse_cdf(self):
+        raise ValueError(
+            "UniformPenalty is not a distribution it cannot be used for sampling"
+        )
+
+
+######################################################################
 # We set the amplitude of the power-law used to simulate the source to a very
 # small value. Together with statistical fluctuations, this could result in some
 # negative amplitude best-fit values.
@@ -405,65 +511,3 @@ plt.show()
 # uniform. Calculating the uncertainties from the profile likelihood
 # is advised. For more details see the :doc:`/tutorials/details/fitting` tutorial.
 #
-
-######################################################################
-# Implementing a custom prior
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-#
-# To add a use case specific prior one has to create a prior subclass
-# containing:
-#
-# -  a tag and a _type used for the serialization
-# -  an instantiation of each PriorParameter with their unit and default values
-# -  the evaluate function where the mathematical expression for the prior is defined.
-#
-# As an example for a custom prior a Jeffrey prior for a scale parameter is chosen.
-# The only parameter is ``sigma`` and the evaluation method return the squared inverse of ``sigma``.
-
-
-from gammapy.modeling import PriorParameter
-from gammapy.modeling.models import Model, Prior
-
-
-class MyCustomPrior(Prior):
-    """Custom Prior.
-
-
-    Parameters
-    ----------
-    min : float
-        Minimum value.
-        Default is -inf.
-    max : float
-        Maximum value.
-        Default is inf.
-    """
-
-    tag = ["MyCustomPrior"]
-    sigma = PriorParameter(name="sigma", value=1, unit="")
-    _type = "prior"
-
-    @staticmethod
-    def evaluate(value, sigma):
-        """Evaluate the custom prior."""
-        return value / sigma**2
-
-
-# The custom prior is added to the PRIOR_REGISTRY so that it can be serialised.
-
-from gammapy.modeling.models import PRIOR_REGISTRY
-
-PRIOR_REGISTRY.append(MyCustomPrior)
-
-# The custom prior is set on the index of a powerlaw spectral model and is evaluated.
-customprior = MyCustomPrior(sigma=0.5)
-pwl = PowerLawSpectralModel()
-pwl.parameters["index"].prior = customprior
-customprior(pwl.parameters["index"])
-
-# The power law spectral model can be written into a dictionary.
-# If a model is read in from this dictionary, the custom prior is still set on the index.
-
-print(pwl.to_dict())
-model_read = Model.from_dict(pwl.to_dict())
-model_read.parameters.prior
