@@ -10,9 +10,9 @@ from gammapy.modeling.models import (
     Model,
     Models,
     SkyModel,
+    UniformPenalty,
     UniformPrior,
     LogUniformPrior,
-    CompoundUniformPrior,
 )
 from gammapy.utils.testing import assert_quantity_allclose
 
@@ -49,8 +49,8 @@ TEST_PRIORS = [
         inverse_cdf_at_1=1e-10,
     ),
     dict(
-        name="compounduniform",
-        model=CompoundUniformPrior(min=0, max=10),
+        name="uniformpenalty",
+        model=UniformPenalty(min=0, max=10),
         prior_0=0 * u.Unit(""),
         prior_1=11 * u.Unit(""),
         val_at_0=5.4161,

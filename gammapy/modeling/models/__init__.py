@@ -13,9 +13,9 @@ from .prior import (
     GaussianPrior,
     GeneralizedGaussianPrior,
     Prior,
+    UniformPenalty,
     UniformPrior,
     LogUniformPrior,
-    CompoundUniformPrior,
 )
 from .spatial import (
     ConstantFluxSpatialModel,
@@ -78,7 +78,6 @@ from .utils import read_hermes_cube
 __all__ = [
     "BrokenPowerLawSpectralModel",
     "CompoundSpectralModel",
-    "CompoundUniformPrior",
     "ConstantFluxSpatialModel",
     "ConstantSpatialModel",
     "ConstantSpectralModel",
@@ -120,6 +119,7 @@ __all__ = [
     "Prior",
     "GaussianPrior",
     "GeneralizedGaussianPrior",
+    "UniformPenalty",
     "UniformPrior",
     "LogUniformPrior",
     "scale_plot_flux",
