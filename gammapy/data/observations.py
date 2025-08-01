@@ -475,10 +475,10 @@ class Observation:
         figsize : tuple, optional
             Figure size. Default is (15, 10).
         """
-        plottable_hds = ["events", "aeff", "edisp", "psf", "bkg", "rad_max"]
+        plottable_hds = ["events", "aeff", "psf", "edisp", "bkg", "rad_max"]
+
         plot_hdus = list(set(plottable_hds) & set(self.available_hdus))
         plot_hdus.sort()
-        plot_hdus.insert(0, plot_hdus.pop(plot_hdus.index("events")))
 
         n_irfs = len(plot_hdus)
         nrows = n_irfs // 2
@@ -488,14 +488,12 @@ class Observation:
             nrows=nrows,
             ncols=ncols,
             figsize=figsize,
-            gridspec_kw={"wspace": 0.55, "hspace": 0.3},
+            gridspec_kw={"wspace": 0.45, "hspace": 0.3},
         )
 
         for idx, (ax, name) in enumerate(zip_longest(axes.flat, plot_hdus)):
-            ax.set_box_aspect(1)
-
             if name == "aeff":
-                self.aeff.plot(ax=ax)
+                self.aeff.plot(ax=ax, kwargs_colorbar={"format": "%.1e"})
                 ax.set_title("Effective area")
 
             if name == "bkg":
@@ -526,8 +524,6 @@ class Observation:
 
             if name is None:
                 ax.set_visible(False)
-
-        fig.tight_layout()
 
     def select_time(self, time_interval):
         """Select a time interval of the observation.
