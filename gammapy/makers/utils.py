@@ -33,7 +33,9 @@ MINIMUM_TIME_STEP = 1 * u.s  # Minimum time step used to handle FoV rotations
 EARTH_ANGULAR_VELOCITY = 360 * u.deg / u.day
 
 
-def _compute_rotation_time_steps(time_start, time_stop, fov_rotation, pointing_altaz):
+def _compute_rotation_time_steps(
+    time_start, time_stop, fov_rotation, pointing_altaz, location
+):
     """
     Compute the time intervals between start and stop times, such that the FoV associated to a fixed RaDec position rotates
     by 'fov_rotation' in AltAz frame during each time step.
@@ -51,7 +53,8 @@ def _compute_rotation_time_steps(time_start, time_stop, fov_rotation, pointing_a
         Rotation angle.
     pointing_altaz : `~astropy.coordinates.SkyCoord`
         Pointing direction.
-
+    location : `astropy.coordinates.EarthLocation`
+        Observatory location
     Returns
     -------
     times : `~astropy.time.Time`
@@ -69,7 +72,7 @@ def _compute_rotation_time_steps(time_start, time_stop, fov_rotation, pointing_a
     time = time_start
     times = [time]
     while time < time_stop:
-        time_step = _time_step(fov_rotation, pointing_altaz.get_altaz(time))
+        time_step = _time_step(fov_rotation, pointing_altaz.get_altaz(time, location))
         time_step = max(time_step, MINIMUM_TIME_STEP)
         time = min(time + time_step, time_stop)
         times.append(time)
@@ -168,6 +171,7 @@ def make_map_background_irf(
     fov_rotation_step=1.0 * u.deg,
     oversampling=None,
     use_region_center=True,
+    location=None,
 ):
     """Compute background map from background IRFs.
 
@@ -200,7 +204,8 @@ def make_map_background_irf(
         For geom as a `~gammapy.maps.RegionGeom`. If True, consider the values at the region center.
         If False, average over the whole region.
         Default is True.
-
+    location : `astropy.coordinates.EarthLocation`, optional
+        Observatory location
     Returns
     -------
     background : `~gammapy.maps.WcsNDMap`
@@ -222,9 +227,9 @@ def make_map_background_irf(
                 "BackgroundIRF.fov_alignement is ALTAZ",
             )
         times = _compute_rotation_time_steps(
-            time_start, time_start + ontime, fov_rotation_step, pointing
+            time_start, time_start + ontime, fov_rotation_step, pointing, location
         )
-        origin = pointing.get_altaz(times)
+        origin = pointing.get_altaz(times, location)
         fov_frame = FoVAltAzFrame(
             origin=origin, location=origin.location, obstime=times
         )
