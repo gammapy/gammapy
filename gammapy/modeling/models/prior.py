@@ -263,7 +263,7 @@ class UniformPenalty(Prior):
         Maximum value.
         Default is `~numpy.inf`.
     penalty : float, optional
-        Penalization weight.
+        Penalization constant.
         Default is 1.
     """
 
