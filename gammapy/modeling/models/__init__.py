@@ -66,6 +66,7 @@ from .temporal import (
     TemplatePhaseCurveTemporalModel,
     TemporalModel,
 )
+from .utils import read_hermes_cube
 
 __all__ = [
     "BrokenPowerLawSpectralModel",
@@ -112,6 +113,7 @@ __all__ = [
     "GaussianPrior",
     "UniformPrior",
     "LogUniformPrior",
+    "read_hermes_cube",
     "scale_plot_flux",
     "ScaleSpectralModel",
     "Shell2SpatialModel",
