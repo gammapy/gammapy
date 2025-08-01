@@ -171,8 +171,7 @@ class LightCurveEstimator(FluxPointsEstimator):
                 )
 
             if self.stack_over_time_interval and not self.reoptimize:
-                name = f"timebin_{idx}"
-                dataset_reduced = datasets_to_fit.stack_reduce(name=name)
+                dataset_reduced = datasets_to_fit.stack_reduce(name="stacked")
                 models = Models(datasets.models.copy())
                 # Remove background models already applied in stack_reduce
                 for model_name in models.background_models.values():
