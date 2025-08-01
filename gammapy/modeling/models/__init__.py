@@ -11,6 +11,7 @@ from .cube import (
 )
 from .prior import (
     GaussianPrior,
+    GeneralizedGaussianPrior,
     Prior,
     UniformPrior,
     LogUniformPrior,
@@ -118,6 +119,7 @@ __all__ = [
     "PowerLawTemporalModel",
     "Prior",
     "GaussianPrior",
+    "GeneralizedGaussianPrior",
     "UniformPrior",
     "LogUniformPrior",
     "scale_plot_flux",

@@ -6,6 +6,7 @@ import astropy.units as u
 from gammapy.modeling.models import (
     PRIOR_REGISTRY,
     GaussianPrior,
+    GeneralizedGaussianPrior,
     Model,
     Models,
     SkyModel,
@@ -56,6 +57,16 @@ TEST_PRIORS = [
         val_at_1=8.188689,
         inverse_cdf_at_0=-10,
         inverse_cdf_at_1=20.0,
+    ),
+    dict(
+        name="gennorm",
+        model=GeneralizedGaussianPrior(mu=4, sigma=1.0, eta=0.5),
+        prior_0=0.0 * u.Unit(""),
+        prior_1=1.0 * u.Unit(""),
+        val_at_0=17.837877,
+        val_at_1=10.837877,
+        inverse_cdf_at_0=-np.inf,
+        inverse_cdf_at_1=np.inf,
     ),
 ]
 
