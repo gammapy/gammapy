@@ -353,7 +353,7 @@ class FixedPointingInfo:
 
         if self.mode == PointingMode.DRIFT:
             # see https://github.com/astropy/astropy/issues/12965
-            # should be solved in astropy v6.0. Simplify once the astropy dependency imposes >=6.0
+            # TODO: should be solved in astropy v6.0. Simplify once the astropy dependency imposes >=6.0
             alt = self.fixed_altaz.alt
             az = self.fixed_altaz.az
             return SkyCoord(
