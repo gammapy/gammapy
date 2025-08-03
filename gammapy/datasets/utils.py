@@ -66,11 +66,11 @@ def apply_edisp(input_map, edisp):
     """
     # TODO: either use sparse matrix multiplication or something like edisp.is_diagonal
     if edisp is not None:
-        loc = input_map.geom.axes.index("energy_true")
-        data = np.rollaxis(input_map.data, loc, len(input_map.data.shape))
-        data = np.matmul(data, edisp.pdf_matrix)
-        data = np.rollaxis(data, -1, loc)
-        energy_axis = edisp.axes["energy"].copy(name="energy")
+        data = np.einsum("pn...,pn...->n...", input_map.data, edisp.pdf_matrix)
+        if edisp.is_reco_binned:
+            energy_axis = edisp.axes["energy"].copy()
+        else:
+            energy_axis = edisp.axes["energy"].copy(name="energy")
     else:
         data = input_map.data
         energy_axis = input_map.geom.axes["energy_true"].copy(name="energy")

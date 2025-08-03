@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
-from gammapy.maps import Map, MapAxis, MapCoord, RegionGeom, WcsGeom
+from gammapy.maps import Map, MapAxis, MapCoord, RegionGeom, WcsGeom, LabelMapAxis
 from gammapy.utils.random import InverseCDFSampler, get_random_state
 from ..core import IRFMap
 from .kernel import EDispKernel
@@ -132,7 +132,11 @@ class EDispMap(IRFMap):
         geom_image = self.edisp_map.geom.to_image()
         geom = geom_image.to_cube([energy_axis, energy_axis_true])
 
-        coords = geom.get_coord(sparse=True, mode="edges", axis_name="energy")
+        if isinstance(energy_axis, LabelMapAxis):
+            mode = "center"
+        else:
+            mode = "edges"
+        coords = geom.get_coord(sparse=True, mode=mode, axis_name="energy")
 
         migra = coords["energy"] / coords["energy_true"]
 
@@ -145,12 +149,14 @@ class EDispMap(IRFMap):
         values = self.edisp_map.integral(axis_name="migra", coords=coords)
 
         axis = self.edisp_map.geom.axes.index_data("migra")
-        data = np.clip(np.diff(values, axis=axis), 0, np.inf)
-
+        if not (isinstance(energy_axis, LabelMapAxis)):
+            values = np.diff(values, axis=axis)
+        data = np.clip(values, 0, np.inf)
         edisp_kernel_map = Map.from_geom(geom=geom, data=data.to_value(""), unit="")
 
         if self.exposure_map:
-            geom = geom.squash(axis_name=energy_axis.name)
+            if not (isinstance(energy_axis, LabelMapAxis)):
+                geom = geom.squash(axis_name=energy_axis.name)
             exposure_map = self.exposure_map.copy(geom=geom)
         else:
             exposure_map = None
@@ -302,6 +308,15 @@ class EDispMap(IRFMap):
 class UnbinnedEDispMap(EDispMap):
     tag = "unbinned_edisp_map"
     required_axes = ["events", "energy_true"]
+
+    @property
+    def pdf_matrix(self):
+        """Energy dispersion PDF matrix as a `~numpy.ndarray`.
+
+        Rows (first index): True Energy
+        Columns (second index): events
+        """
+        return self.edisp_map.data
 
 
 class EDispKernelMap(IRFMap):

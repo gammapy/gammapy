@@ -1655,6 +1655,7 @@ class Map(abc.ABC):
             data = values.cumsum(axis=axis_idx)  # SHOULD BE IMPROVED
             geom = self.geom
         else:
+            data = np.insert(values.cumsum(axis=axis_idx), 0, 0, axis=axis_idx)
             axis_shifted = MapAxis.from_nodes(
                 axis.edges, name=axis.name, interp=axis.interp
             )

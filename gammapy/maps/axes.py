@@ -3154,24 +3154,26 @@ class LabelMapAxis:
         Labels to be used for the axis nodes.
     name : str, optional
         Name of the axis. Default is "".
-
+    unit : str or `~astropy.units.Unit`, optional
+        Unit of the axis. Default is "".
     """
 
     node_type = "label"
 
-    def __init__(self, labels, name=""):
+    def __init__(self, labels, unit="", name=""):
         # unique_labels = np.unique(labels)
         # if not len(unique_labels) == len(labels):
         #    raise ValueError("Node labels must be unique")
 
         self._labels = np.array(labels)
         self._name = name
+        self._unit = u.Unit(unit)
 
     @property
     def unit(self):
         # TODO: should we allow units for label axis?
         """Unit of the axis."""
-        return u.Unit("")
+        return self._unit
 
     @property
     def name(self):
@@ -3280,7 +3282,7 @@ class LabelMapAxis:
     @property
     def center(self):
         """Center of the label axis."""
-        return self._labels
+        return self._labels * self.unit
 
     @property
     def edges(self):
@@ -3291,12 +3293,12 @@ class LabelMapAxis:
     @property
     def edges_min(self):
         """Edges of the label axis."""
-        return self._labels
+        return self._labels * self.unit
 
     @property
     def edges_max(self):
         """Edges of the label axis."""
-        return self._labels
+        return self._labels * self.unit
 
     @property
     def bin_width(self):
@@ -3564,13 +3566,13 @@ class LabelMapAxis:
 
 
 class ParallelLabelMapAxis(LabelMapAxis):
-    def __init__(self, parallel_labels, parallel_names, name=""):
+    def __init__(self, parallel_labels, parallel_names, parallel_units, name=""):
         self._label_mapaxis = {}
 
         self._name = name
         self._labels = np.array(parallel_labels)
-        for label, name in zip(self._labels.T, parallel_names):
-            self._label_mapaxis[name] = LabelMapAxis(label, name=name)
+        for label, name, unit in zip(self._labels.T, parallel_names, parallel_units):
+            self._label_mapaxis[name] = LabelMapAxis(label, name=name, unit=unit)
 
     def __repr__(self):
         str_ = self.__class__.__name__ + "\n"

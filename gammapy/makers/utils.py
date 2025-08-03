@@ -14,6 +14,7 @@ from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.stats import WStatCountsStatistic
 from gammapy.utils.coordinates import FoVICRSFrame, FoVAltAzFrame
 from gammapy.utils.regions import compound_region_to_regions
+from gammapy.maps import RegionGeom
 
 __all__ = [
     "make_counts_off_rad_max",
@@ -331,7 +332,8 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None, use_region_center=T
 
     edisp_map = project_irf_on_geom(geom, edisp, fov_frame).to_unit("")
     if isinstance(geom, UnbinnedRegionGeom):
-        edisp_map.normalize(axis_name="events")
+        # edisp_map.normalize(axis_name="events")
+        edisp_map.normalize(axis_name="migra")
         return UnbinnedEDispMap(edisp_map, exposure_map)
     else:
         edisp_map.normalize(axis_name="migra")
@@ -374,12 +376,19 @@ def make_edisp_kernel_map(
 
     # Create temporary EDispMap Geom
     new_geom = geom.to_image().to_cube([migra_axis, geom.axes["energy_true"]])
-
+    new_geom = RegionGeom.create(
+        region=geom.region,
+        axes=new_geom.axes,
+    )
+    # CREATE REGIONGEOM WITH NEW AXIS
     edisp_map = make_edisp_map(
         edisp, pointing, new_geom, exposure_map, use_region_center
     )
-
-    return edisp_map.to_edisp_kernel_map(geom.axes["energy"])
+    if isinstance(geom, UnbinnedRegionGeom):
+        energy_axes = geom.axes["events"]["energy"]
+    else:
+        energy_axes = geom.axes["energy"]
+    return edisp_map.to_edisp_kernel_map(energy_axes)
 
 
 def make_theta_squared_table(
@@ -708,8 +717,8 @@ def project_irf_on_geom(geom, irf, fov_frame, use_region_center=True):
     """
     if isinstance(geom, UnbinnedRegionGeom):
         skycoord = SkyCoord(
-            ra=geom.axes["events"]["ra"].center * u.deg,
-            dec=geom.axes["events"]["dec"].center * u.deg,
+            ra=geom.axes["events"]["ra"].center,
+            dec=geom.axes["events"]["dec"].center,
         )
         coords = _get_fov_coord(skycoord, fov_frame, irf.has_offset_axis)
         coords["offset"] = (
@@ -724,7 +733,7 @@ def project_irf_on_geom(geom, irf, fov_frame, use_region_center=True):
             if axis_name == "migra":
                 coords[axis_name] = (
                     np.array([geom.axes["events"]["energy"].center]).T
-                    @ np.array([irf.axes["energy_true"].center])
+                    @ np.array([1 / irf.axes["energy_true"].center])
                 ).tolist()
             elif axis_name == "energy_true":
                 coords[axis_name] = (
