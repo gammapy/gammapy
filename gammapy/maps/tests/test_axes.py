@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
+import logging
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
@@ -541,7 +542,7 @@ def test_single_interval_time_axis(time_interval):
     assert_allclose(pix, [0.15, 0.35, np.nan])
 
 
-def test_slice_squash_time_axis(time_intervals):
+def test_slice_squash_time_axis(time_intervals, caplog):
     axis = TimeMapAxis(
         time_intervals["t_min"], time_intervals["t_max"], time_intervals["t_ref"]
     )
@@ -553,7 +554,11 @@ def test_slice_squash_time_axis(time_intervals):
     assert_allclose(axis_squash.time_delta.to_value("d"), 10.04166666)
     assert axis_slice.nbin == 4
     assert_allclose(axis_slice.time_delta.to_value("d")[0], 0.04166666666)
+    caplog.set_level(logging.INFO)
+
     assert axis_squash != axis_slice
+    assert caplog.records[0].message == "TimeMapAxis time is not equal"
+    assert caplog.records[0].levelname == "INFO"
 
 
 def test_from_time_edges_time_axis():
@@ -807,7 +812,7 @@ def test_time_axis_plot_helpers():
     assert edges[0].year == 1999
 
 
-def test_axes_basics():
+def test_axes_basics(caplog):
     energy_axis = MapAxis.from_energy_edges([1, 3] * u.TeV)
 
     time_ref = Time("1999-01-01T00:00:00.123456789")
@@ -833,7 +838,10 @@ def test_axes_basics():
 
     energy_axis = MapAxis.from_energy_edges([1, 4] * u.TeV)
     new_axes = MapAxes([energy_axis, time_axis.copy()])
+    caplog.set_level(logging.INFO)
     assert new_axes != axes
+    assert "MapAxis energy is not equal" in [_.message for _ in caplog.records]
+    assert "INFO" in [_.levelname for _ in caplog.records]
 
 
 def test_map_axes_assert_names():

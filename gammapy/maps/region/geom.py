@@ -36,6 +36,9 @@ from ..geom import Geom, pix_tuple_to_idx
 from ..utils import _check_width
 from ..wcs import WcsGeom
 
+log = logging.getLogger(__name__)
+
+
 __all__ = ["RegionGeom"]
 
 
@@ -639,9 +642,12 @@ class RegionGeom(Geom):
             return TypeError(f"Cannot compare {type(self)} and {type(other)}")
 
         if self.data_shape != other.data_shape:
+            log.info("RegionGeom data shape is not equal")
             return False
 
         axes_eq = self.axes.is_allclose(other.axes, rtol=rtol_axes, atol=atol_axes)
+        if not axes_eq:
+            log.info("RegionGeom axes are not equal")
         # TODO: compare regions based on masks...
         regions_eq = True
         return axes_eq and regions_eq
