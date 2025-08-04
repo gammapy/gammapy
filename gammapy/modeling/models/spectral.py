@@ -103,7 +103,7 @@ def scale_plot_flux(flux, energy_power=0):
 
 
 def integrate_spectrum(
-    func, energy_min, energy_max, ndecade=100, eflux=False, parameter_samples=None
+    func, energy_min, energy_max, ndecade=100, energy_flux=False, parameter_samples=None
 ):
     """Integrate one-dimensional function using the log-log trapezoidal rule.
 
