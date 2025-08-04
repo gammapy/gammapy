@@ -144,9 +144,11 @@ class ObservationTable:
         if "OBS_MODE" in names_disk:
             # like in data_store.py:
             if table_disk["OBS_MODE"] == "DRIFT":
-                required_names_on_disk.append("ALT_PNT", "AZ_PNT")
+                required_names_on_disk.append("ALT_PNT")
+                required_names_on_disk.append("AZ_PNT")
             else:
-                required_names_on_disk.append("RA_PNT", "DEC_PNT")
+                required_names_on_disk.append("RA_PNT")
+                required_names_on_disk.append("DEC_PNT")
         else:
             # if "OBS_MODE" not given, decide based on what is given, RADEC or ALTAZ
             if "RA_PNT" in names_disk:
