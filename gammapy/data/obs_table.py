@@ -48,8 +48,14 @@ class ObservationTable(Table):
                         name="OBSID",
                         unit=None,
                         description="Obervation ID per observation run",
+                        dtype=str,
                     ),
-                    Column(name="OBJECT", unit=None, description="Name of the object"),
+                    Column(
+                        name="OBJECT",
+                        unit=None,
+                        description="Name of the object",
+                        dtype=str,
+                    ),
                 ]
             )
         )
@@ -57,7 +63,7 @@ class ObservationTable(Table):
     @classmethod
     def read(cls, filename, fileformat=None, **kwargs):
         """Modified reader for ObservationTable"""
-        """Header and super().read(make_path(filename), **kwargs) taken from legacy class ObservationTable."""
+        """Header and super().read(make_path(filename), **kwargs) modified from legacy class ObservationTable."""
 
         """Read an observation table from file.
 
@@ -112,7 +118,7 @@ class ObservationTable(Table):
         for i in range(number_of_observations):
             row_internal = []
             for name in names_internal:
-                row_internal = ["1", "TEST"]
+                row_internal = ["TEST1", "TEST2"]
                 # names_disk = correspondance_dict[name]
 
                 # # Construction of in-mem representation of metadata.
