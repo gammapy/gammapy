@@ -642,7 +642,7 @@ class RegionGeom(Geom):
             return TypeError(f"Cannot compare {type(self)} and {type(other)}")
 
         if self.data_shape != other.data_shape:
-            log.info("RegionGeom data shape is not equal")
+            log.debug("RegionGeom data shape is not equal")
             return False
 
         axes_eq = self.axes.is_allclose(other.axes, rtol=rtol_axes, atol=atol_axes)

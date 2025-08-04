@@ -248,7 +248,7 @@ class MapAxis:
                 and self._boundary_type == other._boundary_type
             )
         if state is False:
-            log.info(f"MapAxis {self.name} is not equal")
+            log.debug(f"MapAxis {self.name} is not equal")
         return state
 
     def __eq__(self, other):
@@ -2266,7 +2266,7 @@ class MapAxes(Sequence):
             [ax0.is_allclose(ax1, **kwargs) for ax0, ax1 in zip(other, self)]
         )
         if state is False:
-            log.info("MapAxes are not equal")
+            log.debug("MapAxes are not equal")
         return state
 
     def __eq__(self, other):
@@ -2600,7 +2600,7 @@ class TimeMapAxis:
             )
 
         if state is False:
-            log.info(f"TimeMapAxis {self.name} is not equal")
+            log.debug(f"TimeMapAxis {self.name} is not equal")
         return state
 
     def __eq__(self, other):
@@ -3438,7 +3438,7 @@ class LabelMapAxis:
         state = name_equal & labels_equal
 
         if not state:
-            log.info(f"TimeMapAxis {self.name} is not equal")
+            log.debug(f"TimeMapAxis {self.name} is not equal")
         return state
 
     def __eq__(self, other):

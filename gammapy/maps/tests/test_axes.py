@@ -554,11 +554,11 @@ def test_slice_squash_time_axis(time_intervals, caplog):
     assert_allclose(axis_squash.time_delta.to_value("d"), 10.04166666)
     assert axis_slice.nbin == 4
     assert_allclose(axis_slice.time_delta.to_value("d")[0], 0.04166666666)
-    caplog.set_level(logging.INFO)
+    caplog.set_level(logging.DEBUG)
 
     assert axis_squash != axis_slice
     assert caplog.records[0].message == "TimeMapAxis time is not equal"
-    assert caplog.records[0].levelname == "INFO"
+    assert caplog.records[0].levelname == "DEBUG"
 
 
 def test_from_time_edges_time_axis():
@@ -838,10 +838,10 @@ def test_axes_basics(caplog):
 
     energy_axis = MapAxis.from_energy_edges([1, 4] * u.TeV)
     new_axes = MapAxes([energy_axis, time_axis.copy()])
-    caplog.set_level(logging.INFO)
+    caplog.set_level(logging.DEBUG)
     assert new_axes != axes
     assert "MapAxis energy is not equal" in [_.message for _ in caplog.records]
-    assert "INFO" in [_.levelname for _ in caplog.records]
+    assert "DEBUG" in [_.levelname for _ in caplog.records]
 
 
 def test_map_axes_assert_names():

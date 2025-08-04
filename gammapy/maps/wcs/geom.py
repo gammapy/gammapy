@@ -1189,19 +1189,19 @@ class WcsGeom(Geom, CacheInstanceMixin):
             return TypeError(f"Cannot compare {type(self)} and {type(other)}")
 
         if self.data_shape != other.data_shape:
-            log.info("WcsGeom data shape is not equal")
+            log.debug("WcsGeom data shape is not equal")
             return False
 
         axes_eq = self.axes.is_allclose(other.axes, rtol=rtol_axes, atol=atol_axes)
         if not axes_eq:
-            log.info("WcsGeom axes are not equal")
+            log.debug("WcsGeom axes are not equal")
 
         # check WCS consistency with a priori tolerance of 1e-6
         # cmp=1 parameter ensures no comparison with ancillary information
         # see https://github.com/astropy/astropy/pull/4522/files
         wcs_eq = self.wcs.wcs.compare(other.wcs.wcs, cmp=1, tolerance=rtol_wcs)
         if not wcs_eq:
-            log.info("WcsGeom wcs is not equal")
+            log.debug("WcsGeom wcs is not equal")
         return axes_eq and wcs_eq
 
     def __eq__(self, other):

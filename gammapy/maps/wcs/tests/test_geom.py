@@ -714,15 +714,15 @@ def test_caplog(caplog):
     geom1 = WcsGeom.create(width=5, binsz=0.05, skydir=(83.63, 22.01))
     geom2 = WcsGeom.create(width=1, binsz=0.05, skydir=(83.63, 22.01))
 
-    caplog.set_level(logging.INFO)
+    caplog.set_level(logging.DEBUG)
     assert geom1 != geom2
     assert "WcsGeom data shape is not equal" in [_.message for _ in caplog.records]
-    assert "INFO" in [_.levelname for _ in caplog.records]
+    assert "DEBUG" in [_.levelname for _ in caplog.records]
 
     geom2 = WcsGeom.create(width=5, binsz=0.05, skydir=(8.63, 22.01))
     assert geom1 != geom2
     assert "WcsGeom wcs is not equal" in [_.message for _ in caplog.records]
-    assert "INFO" in [_.levelname for _ in caplog.records]
+    assert "DEBUG" in [_.levelname for _ in caplog.records]
 
     axis1 = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3, name="energy_true")
     axis2 = MapAxis.from_energy_bounds("2 TeV", "10 TeV", nbin=3, name="energy")
@@ -730,4 +730,4 @@ def test_caplog(caplog):
     geom2 = WcsGeom.create(width=5, binsz=0.05, skydir=(83.63, 22.01), axes=[axis2])
     assert geom1 != geom2
     assert "WcsGeom axes are not equal" in [_.message for _ in caplog.records]
-    assert "INFO" in [_.levelname for _ in caplog.records]
+    assert "DEBUG" in [_.levelname for _ in caplog.records]

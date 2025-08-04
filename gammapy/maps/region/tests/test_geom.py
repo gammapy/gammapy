@@ -431,7 +431,7 @@ def test_caplog(caplog):
         region="galactic;point(0, 0)", axes=[axis2], binsz_wcs=0.01 * u.deg
     )
 
-    caplog.set_level(logging.INFO)
+    caplog.set_level(logging.DEBUG)
     assert geom1 != geom2
     assert "RegionGeom axes are not equal" in [_.message for _ in caplog.records]
-    assert "INFO" in [_.levelname for _ in caplog.records]
+    assert "DEBUG" in [_.levelname for _ in caplog.records]
