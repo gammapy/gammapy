@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from collections import namedtuple
 import numpy as np
-from astropy.coordinates import Angle, SkyCoord
+from astropy.coordinates import Angle, SkyCoord, EarthLocation
 from astropy.table import Table, Column
 from astropy.units import Quantity, Unit
 from gammapy.utils.regions import SphericalCircleSkyRegion
@@ -9,7 +9,7 @@ from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
 from gammapy.utils.time import time_ref_from_dict
 from gammapy.data.metadata import METADATA_FITS_KEYS
-# from astropy.time import Time
+from astropy.time import Time
 
 __all__ = ["ObservationTable"]
 
@@ -32,29 +32,49 @@ class ObservationTable:
     # Required minimum names of internal table. These will be translated into needed names on disk, depending on the fileformat, in the reader.
     names_min_req = ["OBS_ID", "OBJECT", "POINTING"]
 
-    def __init__(self, table=None):
-        """Constructor for internal observation table."""
+    def __init__(self, table=None, meta=None):
+        """Constructor for internal observation table.
 
-        # Init with basic reference table, like suggested by @registerrier. It could be completed by adding the complex objects (Time, SkyCoord, EarthLocation,...) in the reader.
+         Parameters
+        ----------
+        table : `astropy.table.Table'
+            Table to init ObservationTable from.
+
+        Creates instance of ObservationTable either from given table or from reference table.
+        """
+
+        # If no table given, init with reference table, like suggested by @registerrier.
         if table is None:
-            self.table = Table(
-                [
-                    Column(
-                        name="OBSID",
-                        unit=None,
-                        description="Obervation ID per observation run",
-                        dtype=str,
-                    ),
-                    Column(
-                        name="OBJECT",
-                        unit=None,
-                        description="Name of the object",
-                        dtype=str,
-                    ),
-                ]
-            )
+            self.table = self.reference_table()
         else:
             self.table = table
+        self.meta = meta
+
+    def reference_table(self):
+        """Definition of internal observation table model in form of reference table object."""
+
+        table = Table(
+            [
+                Column(
+                    name="OBS_ID",
+                    unit=None,
+                    description="Observation ID per observation run",
+                    dtype=str,
+                ),
+                Column(
+                    name="OBJECT",
+                    unit=None,
+                    description="Name of the object",
+                    dtype=str,
+                ),
+            ]
+        )
+        table["POINTING"] = SkyCoord([], [], unit="deg", frame="icrs")
+        table["LOCATION"] = EarthLocation.from_geodetic([], [], [])
+        table["TSTART"] = Time([], format="mjd")
+        table["TSTOP"] = Time([], format="mjd")
+
+        return table
 
     def read(self, filename, fileformat=None, **kwargs):
         """Modified reader for ObservationTable"""
@@ -113,7 +133,14 @@ class ObservationTable:
         for i in range(number_of_observations):
             row_internal = []
             for name in names_internal:
-                row_internal = ["TEST1", "TEST2"]
+                row_internal = [
+                    "TEST1",
+                    "TEST2",
+                    SkyCoord([0], [0], unit="deg", frame="icrs"),
+                    EarthLocation.from_geodetic([0], [0], [0]),
+                    Time([0], format="mjd"),
+                    Time([0], format="mjd"),
+                ]
                 # names_disk = correspondance_dict[name]
 
                 # # Construction of in-mem representation of metadata.
