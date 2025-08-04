@@ -225,7 +225,7 @@ class SpectralModel(ModelBase):
                 Defines random number generator initialisation.
                 Passed to `~gammapy.utils.random.get_random_state`. Default is 42.
         samples : list of `~astropy.units.Quantity`, optional
-            List of parameter samples
+            List of parameter samples in the same order as model.parameters
 
         Returns
         -------
@@ -299,7 +299,7 @@ class SpectralModel(ModelBase):
             Defines random number generator initialisation.
             Passed to `~gammapy.utils.random.get_random_state`. Default is 42.
         samples : list of `~astropy.units.Quantity`, optional
-            List of parameter samples
+            List of parameter samples in the same order as model.parameters
 
         Returns
         -------
@@ -415,7 +415,7 @@ class SpectralModel(ModelBase):
             Defines random number generator initialisation.
             Passed to `~gammapy.utils.random.get_random_state`. Default is 42.
         samples : list of `~astropy.units.Quantity`, optional
-            List of parameter samples
+            List of parameter samples in the same order as model.parameters
 
         Returns
         -------
