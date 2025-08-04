@@ -129,6 +129,9 @@ class ObservationTable:
         # Get colnames of disk_table
         names_disk = table_disk.colnames
 
+        # Get header of obs-index table.
+        meta = table_disk.meta
+
         # Check which info is given for POINTING
         # Used commit 16ce9840f38bea55982d2cd986daa08a3088b434 by @registerrier in 16ce9840f38bea55982d2cd986daa08a3088b434
         # names_pointing = []
@@ -208,7 +211,15 @@ class ObservationTable:
                     )
                 )
 
-            row_internal.append(EarthLocation.from_geodetic([0], [0], [0]))
+            row_internal.append(
+                METADATA_FITS_KEYS["observation"]["location"]["input"](
+                    {
+                        "GEOLON": meta["GEOLON"],
+                        "GEOLAT": meta["GEOLAT"],
+                        "ALTITUDE": meta["ALTITUDE"],
+                    }
+                )
+            )
             row_internal.append(Time([0], format="mjd"))
             row_internal.append(Time([0], format="mjd"))
 
