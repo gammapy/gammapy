@@ -29,9 +29,6 @@ class ObservationTable:
     # data release 1 (HESS DL3 DR1, H.E.S.S. collaboration, 2018).
     """
 
-    # Required minimum names of internal table. These will be translated into needed names on disk, depending on the fileformat, in the reader.
-    names_min_req = ["OBS_ID", "OBJECT", "POINTING"]
-
     def __init__(self, table=None, meta=None):
         """Constructor for internal observation table.
 
@@ -49,6 +46,7 @@ class ObservationTable:
         else:
             self.table = table
         self.meta = meta
+        self.names_min_req = ["OBS_ID", "OBJECT", "POINTING"]
 
     def reference_table(self):
         """Definition of internal observation table model in form of reference table object."""
@@ -110,15 +108,23 @@ class ObservationTable:
         if fileformat == "GADF0.2":
             return self.read_from_gadf02(table_disk)
         elif fileformat == "GADF0.3":
-            return self.read_from_gadf02(table_disk)
+            return self.read_from_gadf03(table_disk)
 
     def read_from_gadf03(self, table_disk):
         """Converter from GADF v.0.3 to internal table model."""
-        """For now, returns only disk-table."""
-        return table_disk
+        """ Based on specification: https://gamma-astro-data-formats.readthedocs.io/en/v0.3/"""
+
+        # Create internal table "table_internal" with all names, corresp. units, types and descriptions, for the internal table model.
+        table_internal = self.table
+
+        return table_internal
 
     def read_from_gadf02(self, table_disk):
         """Converter from GADF v.0.2 to internal table model."""
+        """Based on specification: https://gamma-astro-data-formats.readthedocs.io/en/v0.2/"""
+
+        # Create internal table "table_internal" with all names, corresp. units, types and descriptions, for the internal table model.
+        table_internal = self.table
 
         print(METADATA_FITS_KEYS)
         names_internal = self.names_min_req
@@ -136,9 +142,6 @@ class ObservationTable:
         #                 + el
         #                 + "."
         #             )  # looked into gammapy/workflow/core.py
-
-        # Create internal table "table_internal" with all names, corresp. units, types and descriptions, for the internal table model.
-        table_internal = self.table
 
         # Fill internal table for mandatory columns by constructing the table row-wise with the internal representations.
         number_of_observations = len(
