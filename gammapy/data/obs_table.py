@@ -179,7 +179,6 @@ class ObservationTable:
         )  # Get number of observations, equal to number of rows in table on disk.
 
         for i in range(number_of_observations):
-            row_internal = []
             row_internal = [str(table_disk[i]["OBS_ID"]), str(table_disk[i]["OBJECT"])]
 
             if "RA_PNT" in required_names_on_disk:
@@ -210,20 +209,21 @@ class ObservationTable:
                     }
                 )
             )
-            row_internal.append(Time([0], format="mjd"))
-            row_internal.append(Time([0], format="mjd"))
 
-            # print(
-            # time_ref_from_dict(meta)
+            # from @properties "time_ref", "time_start", "time_stop"
+            time_ref = time_ref_from_dict(meta)
+            row_internal.append(time_ref + Quantity(table_disk[i]["TSTART"], "second"))
+            row_internal.append(time_ref + Quantity(table_disk[i]["TSTOP"], "second"))
+
             # )  # like in event_list.py, l.201, commit: 08c6f6a
             table_internal.add_row(
                 row_internal
             )  # Add row to internal table (fill table).
 
         # Load optional columns, whose names are not already processed, automatically into internal table.
-        # opt_names = list(table_disk.columns)
-        # for name in opt_names:  # add column-wise all optional column-data present in file, independent of format.
-        #    table_internal[name] = table_disk[name]
+        opt_names = set(names_disk).difference(required_names_on_disk)
+        for name in opt_names:  # add column-wise all optional column-data present in file, independent of format.
+            table_internal[name] = table_disk[name]
 
         # return internal table, instead of copy of disk-table like before.
         return table_internal
