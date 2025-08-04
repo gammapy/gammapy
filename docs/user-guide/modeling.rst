@@ -83,8 +83,6 @@ Three different fitting backend are offered:
 - `scipy <https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html>`__,
 - `sherpa <http://cxc.cfa.harvard.edu/sherpa/methods/index.html>`__.
 
-``Sherpa`` is not installed by default, but this is quite easy (see :ref:`quickstart-setup`).
-
 The tutorial :doc:`/tutorials/details/fitting` describes in detail the API.
 
 Maximum A Posteriori estimation (MAP)
