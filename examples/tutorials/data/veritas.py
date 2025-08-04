@@ -108,7 +108,7 @@ observations[0].events.peek()
 # method.
 #
 
-observations[0].peek()
+observations[0].peek()figsize=(25,5)
 
 ######################################################################
 # Estimate counts and significance
