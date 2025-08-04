@@ -145,8 +145,9 @@ authors:
   orcid: "https://orcid.org/0000-0002-9105-0518"
 - given-names: Sebastian
   family-names: Panny
-  affiliation:
-  orcid:
+  affiliation: "Universität Innsbruck, Institut für Astro- und Teilchenphysik,
+Technikerstraße 25, 6020 Innsbruck, Austria"
+  orcid: "https://orcid.org/0000-0001-5770-3805"
 - given-names: Daniel
   family-names: Parsons
   affiliation:
