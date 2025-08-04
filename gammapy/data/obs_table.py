@@ -106,6 +106,20 @@ class ObservationTable:
             else:
                 fileformat = "GADF0.3"  # Use default "GADF0.3".
 
+        # For specified fileformat call reader to convert to internal data model, as discussed with @bkhelifi, @registerrier.
+        if fileformat == "GADF0.2":
+            return self.read_from_gadf02(table_disk)
+        elif fileformat == "GADF0.3":
+            return self.read_from_gadf02(table_disk)
+
+    def read_from_gadf03(self, table_disk):
+        """Converter from GADF v.0.3 to internal table model."""
+        """For now, returns only disk-table."""
+        return table_disk
+
+    def read_from_gadf02(self, table_disk):
+        """Converter from GADF v.0.2 to internal table model."""
+
         print(METADATA_FITS_KEYS)
         names_internal = self.names_min_req
 
