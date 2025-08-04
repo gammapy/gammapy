@@ -25,7 +25,6 @@ identifiers:
   value: 10.5281/zenodo.4701488
 authors:
 - name: "The Gammapy team"
-  type: organization
 - given-names: Fabio
   family-names: Acero
   affiliation: "Université Paris-Saclay, Université Paris Cité, CEA, CNRS, AIM, F-91191
@@ -58,9 +57,9 @@ authors:
   affiliation: "Astroparticle Physics Group, TU Dortmund University, Germany"
   orcid: "https://orcid.org/0000-0003-3708-9785"
 - given-names: Johannes
-  family-names: Büchner
-  affiliation:
-  orcid:
+  family-names: Buchner
+  affiliation: "Max Planck Institute for Extraterrestrial Physics, Giessenbachstrasse 1, 85748 Garching, Germany"
+  orcid: "https://orcid.org/0000-0003-0426-6634"
 - given-names: Tomas
   family-names: Bylund
   affiliation: "LUX, Observatoire de Paris, Université PSL, Sorbonne Université, CNRS, 92190 Meudon, France"
@@ -166,8 +165,8 @@ Technikerstraße 25, 6020 Innsbruck, Austria"
   orcid: "https://orcid.org/0000-0002-3869-2925"
 - given-names: Tobi
   family-names: Preis
-  affiliation:
-  orcid:
+  affiliation: "Universität Innsbruck, Institut für Astro- und Teilchenphysik, Technikerstraße 25, 6020 Innsbruck, Austria"
+  orcid: "https://orcid.org/0009-0001-7110-6764"
 - given-names: Michael
   family-names: Punch
   affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
@@ -188,8 +187,11 @@ Technikerstraße 25, 6020 Innsbruck, Austria"
     2, 91058 Erlangen, Germany"
 - given-names: Vasco
   family-names: Schiavo
-  affiliation:
-  orcid:
+- given-names: Leander
+  family-names: Schlegel
+  affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
+    Paris, France"
+  orcid: "https://orcid.org/0009-0002-3619-951X"
 - given-names: Atreyee
   family-names: Sinha
   affiliation: "Dept. of High Energy Physics, Tata Institute of Fundamental Research,
@@ -208,6 +210,9 @@ Technikerstraße 25, 6020 Innsbruck, Austria"
   affiliation: "Friedrich-Alexander-Universität Erlangen-Nürnberg, ECAP, Nikolaus-Fiebiger-Str.
     2, 91058 Erlangen, Germany"
   orcid: "https://orcid.org/0009-0005-7886-1825"
+- given-names: Gnana Sindhu
+  family-names: Subramanya
+  affiliation: "GSI Helmholtzzentrum für Schwerionenforschung, Planckstraße 1 64291 Darmstadt, Germany"
 - given-names: Mitsunari
   family-names: Takahashi
   affiliation:
