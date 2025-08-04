@@ -17,13 +17,13 @@ from gammapy.data.metadata import METADATA_FITS_KEYS
 __all__ = ["ObservationTable"]
 
 
-class ObservationTable(Table):
+class ObservationTable:
     """Modified ObservationTable class, based on existing ObservationTable class.
 
     See discussion and development: https://github.com/gammapy/gammapy/issues/3767, https://github.com/gammapy/gammapy/issues/4238
     Co-authors: @maxnoe, @registerrier, @bkhelifi
     Used as reference: gammapy, gammapy/data/obs_table.py, https://docs.python.org/3, https://docs.astropy.org/en/latest/table/construct_table.html#construct-table, https://numpy.org/doc/stable/reference/generated/numpy.dtype.html
-                       https://docs.astropy.org/en/latest/table/index.html, https://gamma-astro-data-formats.readthedocs.io/en/v0.3/, esp. data_storage/obs_index/index.html
+                       https://docs.astropy.org/en/latest/table/index.html, https://gamma-astro-data-formats.readthedocs.io/en/v0.3/, esp. data_storage/obs_index/index.html, https://www.programiz.com/python-programming/methods/built-in/classmethod
     Looked into: https://github.com/gammasky/cta-dc/blob/master/data/cta_1dc_make_data_index_files.py, maybe used l. 233. Copyright (c) 2016 gammasky,
     Oriented also at PR by @registerrier: https://github.com/gammapy/gammapy/pull/5954/files
 
@@ -35,14 +35,12 @@ class ObservationTable(Table):
     # Required minimum names of internal table. These will be translated into needed names on disk, depending on the fileformat, in the reader.
     names_min_req = ["OBS_ID", "OBJECT", "POINTING"]
 
-    def __init__(self):
+    def __init__(self, table=None):
         """Constructor for internal observation table."""
 
-        # Used for constructor: https://stackoverflow.com/questions/6535832/python-inherit-the-superclass-init
-
         # Init with basic reference table, like suggested by @registerrier. It could be completed by adding the complex objects (Time, SkyCoord, EarthLocation,...) in the reader.
-        super(ObservationTable, self).__init__(
-            Table(
+        if table is None:
+            self.table = Table(
                 [
                     Column(
                         name="OBSID",
@@ -58,10 +56,10 @@ class ObservationTable(Table):
                     ),
                 ]
             )
-        )
+        else:
+            self.table = table
 
-    @classmethod
-    def read(cls, filename, fileformat=None, **kwargs):
+    def read(self, filename, fileformat=None, **kwargs):
         """Modified reader for ObservationTable"""
         """Header and super().read(make_path(filename), **kwargs) modified from legacy class ObservationTable."""
 
@@ -92,7 +90,7 @@ class ObservationTable(Table):
                 fileformat = "GADF0.3"  # Use default "GADF0.3".
 
         print(METADATA_FITS_KEYS)
-        names_internal = cls.names_min_req
+        names_internal = self.names_min_req
 
         # Get corresponding names now only for minimal set of required names, to check if present on disk.
         # TODO: Adapt this for case of alternative names, e.g. for pointing.
@@ -109,7 +107,7 @@ class ObservationTable(Table):
         #             )  # looked into gammapy/workflow/core.py
 
         # Create internal table "table_internal" with all names, corresp. units, types and descriptions, for the internal table model.
-        table_internal = cls
+        table_internal = self.table
 
         # Fill internal table for mandatory columns by constructing the table row-wise with the internal representations.
         number_of_observations = len(
@@ -161,9 +159,9 @@ class ObservationTable(Table):
             )  # Add row to internal table (fill table).
 
         # Load optional columns, whose names are not already processed, automatically into internal table.
-        opt_names = list(table_disk.columns)
-        for name in opt_names:  # add column-wise all optional column-data present in file, independent of format.
-            table_internal[name] = table_disk[name]
+        # opt_names = list(table_disk.columns)
+        # for name in opt_names:  # add column-wise all optional column-data present in file, independent of format.
+        #    table_internal[name] = table_disk[name]
 
         # return internal table, instead of copy of disk-table like before.
         return table_internal
