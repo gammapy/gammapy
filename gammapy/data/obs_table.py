@@ -46,7 +46,6 @@ class ObservationTable:
         else:
             self.table = table
         self.meta = meta
-        self.names_min_req = ["OBS_ID", "OBJECT", "POINTING"]
 
     def reference_table(self):
         """Definition of internal observation table model in form of reference table object."""
@@ -123,8 +122,16 @@ class ObservationTable:
         """Converter from GADF v.0.2 to internal table model."""
         """Based on specification: https://gamma-astro-data-formats.readthedocs.io/en/v0.2/"""
 
-        # Create internal table "table_internal" with all names, corresp. units, types and descriptions, for the internal table model.
-        table_internal = self.table
+        # Required names to fill internal table format, for GADF v.0.2, will be extended after checking POINTING. Similar to PR#5954.
+        required_names_on_disk = [
+            "OBS_ID",
+            "OBJECT",
+            "GEOLON",
+            "GEOLAT",
+            "ALTITUDE",
+            "TSTART",
+            "TSTOP",
+        ]
 
         # Get colnames of disk_table
         names_disk = table_disk.colnames
@@ -133,55 +140,36 @@ class ObservationTable:
         meta = table_disk.meta
 
         # Check which info is given for POINTING
-        # Used commit 16ce9840f38bea55982d2cd986daa08a3088b434 by @registerrier in 16ce9840f38bea55982d2cd986daa08a3088b434
-        # names_pointing = []
-        # if "OBS_MODE" in table_disk.columns:
-        #     # of "OBS_MODE" given, decide based on this what is additionally required
-        #     # like in data_store.py:
-        #     if table_disk["OBS_MODE"] == "DRIFT":
-        #         names_pointing.append("ALT_PNT", "AZ_PNT")
-        #     else:
-        #         names_pointing.append("RA_PNT", "DEC_PNT")
-        # else:
-        #     # if "OBS_MODE" not given, decide based on what is given, RADEC or ALTAZ
-        #     if "RA_PNT" in table_disk.columns:
-        #         # print(METADATA_FITS_KEYS["pointing"]["radec_mean"])
-        #         names_pointing.append("RA_PNT")
-        #         names_pointing.append("DEC_PNT")
-        #     elif "ALT_PNT" in table_disk.columns:
-        #         # print(METADATA_FITS_KEYS["pointing"]["altaz_mean"])
-        #         names_pointing.append("ALT_PNT")
-        #         names_pointing.append("AZ_PNT")
-        #     else:
-        #         print("BUG: Neither RADEC nor ALTAZ is given in table on disk!")
-        radec_given = False
-        altaz_given = False
-        if "RA_PNT" in names_disk:
-            if "DEC_PNT" in names_disk:
-                radec_given = True
+        # Used commit 16ce9840f38bea55982d2cd986daa08a3088b434 by @registerrier
+        if "OBS_MODE" in names_disk:
+            # like in data_store.py:
+            if table_disk["OBS_MODE"] == "DRIFT":
+                required_names_on_disk.append("ALT_PNT", "AZ_PNT")
             else:
-                RuntimeError("Missing info for RADEC.")
-        elif "ALT_PNT" in names_disk:
-            if "AZ_PNT" in names_disk:
-                altaz_given = True
-            else:
-                RuntimeError("Missing info for ALTAZ.")
+                required_names_on_disk.append("RA_PNT", "DEC_PNT")
         else:
-            RuntimeError("Missing info for POINTING.")
+            # if "OBS_MODE" not given, decide based on what is given, RADEC or ALTAZ
+            if "RA_PNT" in names_disk:
+                required_names_on_disk.append("RA_PNT")
+                required_names_on_disk.append("DEC_PNT")
+            elif "ALT_PNT" in names_disk:
+                required_names_on_disk.append("ALT_PNT")
+                required_names_on_disk.append("AZ_PNT")
+            else:
+                raise RuntimeError("Neither RADEC nor ALTAZ is given in table on disk!")
 
-        # Get corresponding names now only for minimal set of required names, to check if present on disk.
-        # TODO: Adapt this for case of alternative names, e.g. for pointing.
-        # for name in cls.names_min_req:
-        #     names_min_req_on_disk = correspondance_dict[name]
-        #     for el in names_min_req_on_disk:
-        #         if el not in table_disk.columns:
-        #             raise RuntimeError(
-        #                 "Not all required names in "
-        #                 + fileformat
-        #                 + "-file found, first missed name: "
-        #                 + el
-        #                 + "."
+        # Used: aeb1ea01e60e1f02c5fb59f50141c81e0b2fb8f6:
+        missing_names = set(required_names_on_disk).difference(
+            names_disk + list(meta.keys())
+        )
+        if len(missing_names) != 0:
+            raise RuntimeError(
+                f"Not all columns required for GADF v.0.2 were found in file. Missing: {missing_names}"
+            )
         #             )  # looked into gammapy/workflow/core.py
+
+        # Create internal table "table_internal" with all names, corresp. units, types and descriptions, for the internal table model.
+        table_internal = self.table
 
         # Fill internal table for mandatory columns by constructing the table row-wise with the internal representations.
         number_of_observations = len(
@@ -192,7 +180,7 @@ class ObservationTable:
             row_internal = []
             row_internal = [str(table_disk[i]["OBS_ID"]), str(table_disk[i]["OBJECT"])]
 
-            if radec_given == True:
+            if "RA_PNT" in required_names_on_disk:
                 row_internal.append(
                     METADATA_FITS_KEYS["pointing"]["radec_mean"]["input"](
                         {
@@ -201,7 +189,7 @@ class ObservationTable:
                         }
                     )
                 )
-            elif altaz_given == True:
+            elif "ALT_PNT" in required_names_on_disk:
                 row_internal.append(
                     METADATA_FITS_KEYS["pointing"]["altaz_mean"]["input"](
                         {
