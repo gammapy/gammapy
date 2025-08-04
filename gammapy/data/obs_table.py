@@ -8,9 +8,6 @@ from gammapy.utils.regions import SphericalCircleSkyRegion
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
 from gammapy.utils.time import time_ref_from_dict
-
-# from gammapy.utils.scripts import read_yaml
-# from pathlib import Path
 from gammapy.data.metadata import METADATA_FITS_KEYS
 # from astropy.time import Time
 
