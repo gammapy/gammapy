@@ -109,7 +109,7 @@ def integrate_spectrum(
 
     Internally an oversampling of the energy bins to "ndecade" is used.
 
-    To compute the integral func(E)*E (e.g. to get an energy flux) one can set eflux to True.
+    To compute the integral func(E)*E (e.g. to get an energy flux) one can set `energy_flux` to True.
 
     Parameters
     ----------
@@ -126,7 +126,7 @@ def integrate_spectrum(
         List of parameter quantities to pass to `func.evaluate` if it exists.
         This provides vectorized integral evaluation for parameter samples.
         If None, evaluation is performed with a simple call to `func`. Default is None.
-    eflux : bool, optional
+    energy_flux : bool, optional
         If True, the function will integrate func(E)*E, to compute the energy flux.
         Default is False.
     """
@@ -156,7 +156,7 @@ def integrate_spectrum(
     else:
         values = func(energy)
 
-    if eflux:
+    if energy_flux:
         values *= energy
 
     # we can call trapz_loglog assuming the last axis is the one to perform integration on.
@@ -440,7 +440,7 @@ class SpectralModel(ModelBase):
                 energy_min,
                 energy_max,
                 parameter_samples=args,
-                eflux=False,
+                energy_flux=False,
                 **kwargs,
             )
 
@@ -502,7 +502,7 @@ class SpectralModel(ModelBase):
             Defines random number generator initialisation.
             Passed to `~gammapy.utils.random.get_random_state`. Default is 42.
         samples : list of `~astropy.units.Quantity`, optional
-            List of parameter samples
+            List of parameter samples in the same order as model.parameters
 
         Returns
         -------
@@ -527,7 +527,7 @@ class SpectralModel(ModelBase):
                 energy_min,
                 energy_max,
                 parameter_samples=args,
-                eflux=True,
+                energy_flux=True,
                 **kwargs,
             )
 
@@ -744,7 +744,7 @@ class SpectralModel(ModelBase):
             Defines random number generator initialisation.
             Passed to `~gammapy.utils.random.get_random_state`. Default is 42.
         samples : list of `~astropy.units.Quantity`, optional
-            List of parameter samples
+            List of parameter samples in the same order as model.parameters
         **kwargs : dict
             Keyword arguments forwarded to `matplotlib.pyplot.fill_between`.
 
@@ -864,7 +864,7 @@ class SpectralModel(ModelBase):
             Defines random number generator initialisation.
             Passed to `~gammapy.utils.random.get_random_state`. Default is 42.
         samples : list of `~astropy.units.Quantity`, optional
-            List of parameter samples
+            List of parameter samples in the same order as model.parameters
 
         Returns
         -------
