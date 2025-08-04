@@ -215,8 +215,8 @@ Technikerstraße 25, 6020 Innsbruck, Austria"
   affiliation: "GSI Helmholtzzentrum für Schwerionenforschung, Planckstraße 1 64291 Darmstadt, Germany"
 - given-names: Mitsunari
   family-names: Takahashi
-  affiliation:
-  orcid:
+  affiliation: "Institute for Space--Earth Environmental Research, Nagoya University, Furo-cho, Chikusa-ku, Nagoya 464-8601, Japan"
+  orcid: "https://orcid.org/0000-0002-0574-6018"
 - given-names: Régis
   family-names: Terrier
   affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
