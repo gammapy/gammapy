@@ -236,16 +236,16 @@ class MapAxis:
         state = True
         if self.edges.shape != other.edges.shape:
             state = False
-        if not self.unit.is_equivalent(other.unit):
+        if state and not self.unit.is_equivalent(other.unit):
             state = False
-        state = (
-            state
-            and np.allclose(self.edges, other.edges, **kwargs)
-            and self._node_type == other._node_type
-            and self._interp == other._interp
-            and self.name.upper() == other.name.upper()
-            and self._boundary_type == other._boundary_type
-        )
+        if state:
+          state = (
+              and np.allclose(self.edges, other.edges, **kwargs)
+              and self._node_type == other._node_type
+              and self._interp == other._interp
+              and self.name.upper() == other.name.upper()
+              and self._boundary_type == other._boundary_type
+          )
         if state is False:
             log.info(f"MapAxis {self.name} is not equal")
         return state
@@ -2589,13 +2589,13 @@ class TimeMapAxis:
         delta_min = self.time_min - other.time_min
         delta_max = self.time_max - other.time_max
 
-        state = (
-            state
-            and np.allclose(delta_min.to_value("s"), 0.0, **kwargs)
-            and np.allclose(delta_max.to_value("s"), 0.0, **kwargs)
-            and self._interp == other._interp
-            and self.name.upper() == other.name.upper()
-        )
+        if state:
+          state = (
+              and np.allclose(delta_min.to_value("s"), 0.0, **kwargs)
+              and np.allclose(delta_max.to_value("s"), 0.0, **kwargs)
+              and self._interp == other._interp
+              and self.name.upper() == other.name.upper()
+          )
 
         if state is False:
             log.info(f"TimeMapAxis {self.name} is not equal")
