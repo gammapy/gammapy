@@ -126,8 +126,45 @@ class ObservationTable:
         # Create internal table "table_internal" with all names, corresp. units, types and descriptions, for the internal table model.
         table_internal = self.table
 
-        print(METADATA_FITS_KEYS)
-        names_internal = self.names_min_req
+        # Get colnames of disk_table
+        names_disk = table_disk.colnames
+
+        # Check which info is given for POINTING
+        # Used commit 16ce9840f38bea55982d2cd986daa08a3088b434 by @registerrier in 16ce9840f38bea55982d2cd986daa08a3088b434
+        # names_pointing = []
+        # if "OBS_MODE" in table_disk.columns:
+        #     # of "OBS_MODE" given, decide based on this what is additionally required
+        #     # like in data_store.py:
+        #     if table_disk["OBS_MODE"] == "DRIFT":
+        #         names_pointing.append("ALT_PNT", "AZ_PNT")
+        #     else:
+        #         names_pointing.append("RA_PNT", "DEC_PNT")
+        # else:
+        #     # if "OBS_MODE" not given, decide based on what is given, RADEC or ALTAZ
+        #     if "RA_PNT" in table_disk.columns:
+        #         # print(METADATA_FITS_KEYS["pointing"]["radec_mean"])
+        #         names_pointing.append("RA_PNT")
+        #         names_pointing.append("DEC_PNT")
+        #     elif "ALT_PNT" in table_disk.columns:
+        #         # print(METADATA_FITS_KEYS["pointing"]["altaz_mean"])
+        #         names_pointing.append("ALT_PNT")
+        #         names_pointing.append("AZ_PNT")
+        #     else:
+        #         print("BUG: Neither RADEC nor ALTAZ is given in table on disk!")
+        radec_given = False
+        altaz_given = False
+        if "RA_PNT" in names_disk:
+            if "DEC_PNT" in names_disk:
+                radec_given = True
+            else:
+                RuntimeError("Missing info for RADEC.")
+        elif "ALT_PNT" in names_disk:
+            if "AZ_PNT" in names_disk:
+                altaz_given = True
+            else:
+                RuntimeError("Missing info for ALTAZ.")
+        else:
+            RuntimeError("Missing info for POINTING.")
 
         # Get corresponding names now only for minimal set of required names, to check if present on disk.
         # TODO: Adapt this for case of alternative names, e.g. for pointing.
@@ -147,54 +184,37 @@ class ObservationTable:
         number_of_observations = len(
             table_disk
         )  # Get number of observations, equal to number of rows in table on disk.
+
         for i in range(number_of_observations):
             row_internal = []
-            for name in names_internal:
-                row_internal = [
-                    "TEST1",
-                    "TEST2",
-                    SkyCoord([0], [0], unit="deg", frame="icrs"),
-                    EarthLocation.from_geodetic([0], [0], [0]),
-                    Time([0], format="mjd"),
-                    Time([0], format="mjd"),
-                ]
-                # names_disk = correspondance_dict[name]
+            row_internal = [str(table_disk[i]["OBS_ID"]), str(table_disk[i]["OBJECT"])]
 
-                # # Construction of in-mem representation of metadata.
-                # # Typecasting as noted by @bkhelifi for now here, by using function cast_func(value, type) in utils/types.py
-                # if name == "OBS_ID":
-                #     row_internal.append(
-                #         cast_func(
-                #             table_disk[i][names_disk[0]], np.dtype(format[name]["type"])
-                #         )
-                #     )
-                # elif name == "OBJECT":
-                #     row_internal.append(
-                #         cast_func(
-                #             table_disk[i][names_disk[0]], np.dtype(format[name]["type"])
-                #         )
-                #     )
-                # elif (
-                #     name == "POINTING"
-                # ):  # build object like @registerrier in 16ce9840f38bea55982d2cd986daa08a3088b434
-                #     row_internal.append(
-                #         SkyCoord(
-                #             cast_func(table_disk[i][names_disk[0]], np.dtype(float)),
-                #             cast_func(table_disk[i][names_disk[1]], np.dtype(float)),
-                #             unit="deg",
-                #             frame="icrs",
-                #         )
-                #     )
-                # elif name == "TSTART":
-                # row_internal.append(
+            if radec_given == True:
+                row_internal.append(
+                    METADATA_FITS_KEYS["pointing"]["radec_mean"]["input"](
+                        {
+                            "RA_PNT": table_disk[i]["RA_PNT"],
+                            "DEC_PNT": table_disk[i]["DEC_PNT"],
+                        }
+                    )
+                )
+            elif altaz_given == True:
+                row_internal.append(
+                    METADATA_FITS_KEYS["pointing"]["altaz_mean"]["input"](
+                        {
+                            "ALT_PNT": table_disk[i]["ALT_PNT"],
+                            "AZ_PNT": table_disk[i]["AZ_PNT"],
+                        }
+                    )
+                )
 
-                # time_ref_from_dict(table_disk.meta) + Time(table_disk[i][names_disk[0]],format="mjd",scale="tt"),
-                # time_ref_from_dict(table_disk.meta) + Time(table_disk[i][names_disk[1]],format="mjd",scale="tt")
+            row_internal.append(EarthLocation.from_geodetic([0], [0], [0]))
+            row_internal.append(Time([0], format="mjd"))
+            row_internal.append(Time([0], format="mjd"))
 
-                # )
-                # print(
-                # time_ref_from_dict(meta)
-                # )  # like in event_list.py, l.201, commit: 08c6f6a
+            # print(
+            # time_ref_from_dict(meta)
+            # )  # like in event_list.py, l.201, commit: 08c6f6a
             table_internal.add_row(
                 row_internal
             )  # Add row to internal table (fill table).
