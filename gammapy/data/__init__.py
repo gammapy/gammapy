@@ -28,7 +28,6 @@ __all__ = [
     "Observations",
     "ObservationsEventsSampler",
     "ObservationTable",
-    "ObservationTablePrototype",
     "observatory_locations",
     "PointingInfo",
     "PointingMode",
