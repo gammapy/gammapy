@@ -227,6 +227,7 @@ result = fit.run(datasets=[dataset_stacked])
 
 ######################################################################
 # .. _mapdataset_fit_quality:
+#
 # Fit quality assessment and model residuals for a `~gammapy.datasets.MapDataset`
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
@@ -385,6 +386,7 @@ result_joint = fit_joint.run(datasets=analysis_joint.datasets)
 
 ######################################################################
 # .. _dataset_fit_quality:
+#
 # Fit quality assessment and model residuals for a joint `~gammapy.datasets.Datasets`
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
@@ -461,6 +463,7 @@ plt.show()
 
 ######################################################################
 # .. image:: ../../_static/DC1_3d.png
+#
 #
 
 

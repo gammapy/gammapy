@@ -473,6 +473,7 @@ print(diffuse)
 
 ######################################################################
 # .. _modifying-model-parameters:
+#
 # Modifying model parameters
 # --------------------------
 #
