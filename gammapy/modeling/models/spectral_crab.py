@@ -56,7 +56,7 @@ def create_crab_spectral_model(reference="meyer"):
     Returns
     -------
     `~gammapy.modeling.models.SpectralModel`
-        Spectral model (for all-sky cosmic ray flux).
+        Spectral model (for the crab).
 
     Examples
     --------
