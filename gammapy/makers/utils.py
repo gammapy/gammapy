@@ -16,6 +16,7 @@ from gammapy.utils.coordinates import FoVICRSFrame, FoVAltAzFrame
 from gammapy.utils.regions import compound_region_to_regions
 
 __all__ = [
+    "make_counts_off_rad_max",
     "make_counts_rad_max",
     "make_edisp_kernel_map",
     "make_edisp_map",
