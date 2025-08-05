@@ -7,7 +7,6 @@ from astropy.coordinates import ICRS, AltAz, SkyCoord
 from astropy.time import Time
 from gammapy.data import FixedPointingInfo, PointingInfo, observatory_locations
 from gammapy.data.pointing import PointingMode
-from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.utils.fits import earth_location_to_dict
 from gammapy.utils.testing import assert_time_allclose, requires_data
 from gammapy.utils.time import time_ref_to_dict, time_relative_to_ref
@@ -20,7 +19,6 @@ def test_fixed_pointing_icrs():
 
     pointing = FixedPointingInfo(
         fixed_icrs=fixed_icrs,
-        location=location,
     )
 
     assert pointing.mode == PointingMode.POINTING
@@ -143,24 +141,6 @@ class TestFixedPointingInfo:
         filename = "$GAMMAPY_DATA/tests/pointing_table.fits.gz"
         cls.fpi = FixedPointingInfo.read(filename)
 
-    def test_location(self):
-        lon, lat, height = self.fpi._location.geodetic
-        assert_allclose(lon.deg, 16.5002222222222)
-        assert_allclose(lat.deg, -23.2717777777778)
-        assert_allclose(height.value, 1834.999999999783)
-
-    def test_time_ref(self):
-        expected = Time(51910.00074287037, format="mjd", scale="tt")
-        assert_time_allclose(self.fpi._time_ref, expected)
-
-    def test_time_start(self):
-        expected = Time(53025.826414166666, format="mjd", scale="tt")
-        assert_time_allclose(self.fpi._time_start, expected)
-
-    def test_time_stop(self):
-        expected = Time(53025.844770648146, format="mjd", scale="tt")
-        assert_time_allclose(self.fpi._time_stop, expected)
-
     def test_fixed_altaz(self):
         assert self.fpi._fixed_altaz is None
 
@@ -253,16 +233,15 @@ def test_fixed_pointing_info_fixed_icrs_from_meta(obs_mode):
     meta["RA_PNT"] = fixed_icrs.ra.deg
     meta["DEC_PNT"] = fixed_icrs.dec.deg
 
-    with pytest.warns(GammapyDeprecationWarning):
-        pointing = FixedPointingInfo(meta=meta)
+    pointing = FixedPointingInfo.from_fits_header(meta)
 
     # not given, but assumed if missing
     assert pointing.mode == PointingMode.POINTING
     assert pointing.fixed_icrs == fixed_icrs
     assert pointing.fixed_altaz is None
 
-    altaz = pointing.get_altaz(start)
-    icrs = pointing.get_icrs(start)
+    altaz = pointing.get_altaz(start, location)
+    icrs = pointing.get_icrs(start, location)
 
     assert altaz.obstime == start
     assert isinstance(altaz.frame, AltAz)
@@ -273,8 +252,8 @@ def test_fixed_pointing_info_fixed_icrs_from_meta(obs_mode):
     assert u.isclose(back_trafo.dec, fixed_icrs.dec)
 
     times = start + np.linspace(0, 1, 50) * (stop - start)
-    altaz = pointing.get_altaz(times)
-    icrs = pointing.get_icrs(times)
+    altaz = pointing.get_altaz(times, location)
+    icrs = pointing.get_icrs(times, location)
 
     assert len(altaz) == len(times)
     assert np.all(altaz.obstime == times)
@@ -302,8 +281,7 @@ def test_fixed_pointing_info_fixed_altaz_from_meta():
     meta["ALT_PNT"] = fixed_altaz.alt.deg
     meta["AZ_PNT"] = fixed_altaz.az.deg
 
-    with pytest.warns(GammapyDeprecationWarning):
-        pointing = FixedPointingInfo(meta=meta)
+    pointing = FixedPointingInfo.from_fits_header(meta)
 
     # not given, but assumed if missing
     assert pointing.mode == PointingMode.DRIFT
@@ -311,7 +289,10 @@ def test_fixed_pointing_info_fixed_altaz_from_meta():
     assert u.isclose(pointing.fixed_altaz.alt, fixed_altaz.alt)
     assert u.isclose(pointing.fixed_altaz.az, fixed_altaz.az)
 
-    icrs = pointing.get_icrs(start)
+    with pytest.raises(ValueError):
+        pointing.get_icrs(start)
+
+    icrs = pointing.get_icrs(start, location)
     assert icrs.obstime == start
     assert isinstance(icrs.frame, ICRS)
 
@@ -320,8 +301,8 @@ def test_fixed_pointing_info_fixed_altaz_from_meta():
     assert u.isclose(back_trafo.az, fixed_altaz.az)
 
     times = start + np.linspace(0, 1, 50) * (stop - start)
-    icrs = pointing.get_icrs(times)
-    altaz = pointing.get_altaz(times)
+    icrs = pointing.get_icrs(times, location)
+    altaz = pointing.get_altaz(times, location)
 
     assert len(icrs) == len(times)
     assert np.all(icrs.obstime == times)
