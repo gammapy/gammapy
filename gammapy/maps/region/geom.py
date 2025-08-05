@@ -222,19 +222,17 @@ class RegionGeom(Geom):
         """Number of spatial pixels."""
         return ([1], [1])
 
-    def contains(self, coords, pointTrue=True):
+    def contains(self, coords):
         """Check if a given map coordinate is contained in the region.
 
         Requires the `.region` attribute to be set.
+        For `PointSkyRegion` the method always returns True.
 
         Parameters
         ----------
         coords : tuple, dict, `MapCoord` or `~astropy.coordinates.SkyCoord`
             Object containing coordinate arrays we wish to check for inclusion
             in the region.
-        pointTrue : bool
-            Whether to return all True or False for PointSkyRegion
-            Default is True
 
         Returns
         -------
@@ -248,23 +246,19 @@ class RegionGeom(Geom):
         coords = MapCoord.create(coords, frame=self.frame, axis_names=self.axes.names)
 
         if self.is_all_point_sky_regions:
-            if pointTrue:
-                return np.ones(coords.skycoord.shape, dtype=bool)
-            else:
-                return np.zeros(coords.skycoord.shape, dtype=bool)
+            return np.ones(coords.skycoord.shape, dtype=bool)
 
         return self.region.contains(coords.skycoord, self.wcs)
 
-    def contains_wcs_pix(self, pix, pointTrue=True):
+    def contains_wcs_pix(self, pix):
         """Check if a given WCS pixel coordinate is contained in the region.
+
+        For `PointSkyRegion` the method always returns True.
 
         Parameters
         ----------
         pix : tuple
             Tuple of pixel coordinates.
-        pointTrue : bool
-            Whether to return all True or False for PointSkyRegion
-            Default is True
 
         Returns
         -------
@@ -272,10 +266,7 @@ class RegionGeom(Geom):
             Boolean array.
         """
         if self.is_all_point_sky_regions:
-            if pointTrue:
-                return np.ones(pix[0].shape, dtype=bool)
-            else:
-                return np.zeros(pix[0].shape, dtype=bool)
+            return np.ones(pix[0].shape, dtype=bool)
 
         region_pix = self.region.to_pixel(self.wcs)
         return region_pix.contains(PixCoord(pix[0], pix[1]))

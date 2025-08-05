@@ -999,19 +999,25 @@ class WcsGeom(Geom, CacheInstanceMixin):
             raise ValueError("Multi-resolution maps not supported yet")
 
         regions = _parse_regions(regions)
-        geom = RegionGeom.from_regions(regions, wcs=self.wcs)
-        idx = self.get_idx()
-        mask = geom.contains_wcs_pix(idx, pointTrue=False)
+
+        mask = Map.from_geom(self, data=False)
+        extended_regions = []
         for reg in regions:
             if isinstance(reg, PointSkyRegion):
                 spatial_model = PointSpatialModel.from_position(reg.center)
-                data = spatial_model.evaluate_geom(self) > 0.0
-                mask = mask | data
+                mask.data |= spatial_model.evaluate_geom(self) > 0.0
+            else:
+                extended_regions.append(reg)
+
+        if extended_regions:
+            geom = RegionGeom.from_regions(extended_regions, wcs=self.wcs)
+            idx = self.get_idx()
+            mask.data |= geom.contains_wcs_pix(idx)
 
         if not inside:
-            np.logical_not(mask, out=mask)
+            mask = ~mask
 
-        return Map.from_geom(self, data=mask)
+        return mask
 
     def region_weights(self, regions, oversampling_factor=10):
         """Compute regions weights.
