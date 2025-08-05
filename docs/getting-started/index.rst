@@ -62,10 +62,7 @@ Then, there are two methods to quickly install Gammapy.
             Learn more
 
 
-.. toctree::
-   :maxdepth: 1
-
-   quickstart
+.. include:: quickstart.rst
 
 
 Tutorials Overview
