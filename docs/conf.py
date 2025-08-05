@@ -18,10 +18,10 @@
 import datetime
 import sys
 import os
+import gammapy
 
 # Get configuration information from setup.cfg
 from configparser import ConfigParser
-from pkg_resources import get_distribution
 
 # Sphinx-gallery config
 from sphinx_gallery.sorting import ExplicitOrder
@@ -181,7 +181,8 @@ project = setup_cfg["name"]
 author = setup_cfg["author"]
 copyright = "{}, {}".format(datetime.datetime.now().year, setup_cfg["author"])
 
-version = get_distribution(project).version
+
+version = str(gammapy.__version__)
 release = "X.Y.Z" if "dev" in version else version
 switch_version = "dev" if "dev" in version else release
 

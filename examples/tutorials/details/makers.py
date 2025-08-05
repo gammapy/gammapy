@@ -111,6 +111,7 @@ plt.show()
 # factor in energy used to compute the background (default is None).
 #
 # .. _safe-data-range:
+#
 # Safe data range handling
 # ------------------------
 #
