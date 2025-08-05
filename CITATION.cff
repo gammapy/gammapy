@@ -35,10 +35,11 @@ authors:
   affiliation: "Departament de Física Quàntica i Astrofísica, Institut de Ciències
     del Cosmos, Universitat de Barcelona, IEEC-UB, Barcelona, Spain"
   orcid: "https://orcid.org/0000-0001-8816-4920"
-- given-names: Tora
+- given-names: Tora T.H.
   family-names: Arnesen
-  affiliation:
-  orcid:
+  affiliation: "Instituto de Astrofísica de Canarias and Dpto. de Astrofísica, Universidad de La Laguna,
+C/ Vía Láctea s/n, E-38205 La Laguna, Tenerife, Spain"
+  orcid: "https://orcid.org/0009-0004-0816-0700"
 - given-names: Luis
   family-names: Barrios-Jimenez
   affiliation:
@@ -80,8 +81,8 @@ authors:
   orcid: "https://orcid.org/0009-0002-4238-034X"
 - given-names: Gabriel
   family-names: Emery
-  affiliation:
-  orcid:
+  affiliation:  "Instituto de Astrofísica de Andalucía-CSIC, Glorieta de la Astronomía s/n, 18008, Granada, Spain"
+  orcid: "https://orcid.org/0000-0001-6155-4742"
 - given-names: Kirsty
   family-names: Feijen
   affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
@@ -124,8 +125,9 @@ authors:
   orcid: "https://orcid.org/0000-0002-0755-0609"
 - given-names: Edgar
   family-names: Molina
-  affiliation:
-  orcid:
+  affiliation: "Instituto de Astrofísica de Canarias and Dpto. de Astrofísica, Universidad de La Laguna,
+    C/ Vía Láctea s/n, E-38205 La Laguna, Tenerife, Spain"
+  orcid: "https://orcid.org/0000-0003-1204-5516"
 - given-names: Lars
   family-names: Mohrmann
   affiliation: "Max Planck Institute for Nuclear Physics, Heidelberg, Germany"
@@ -153,8 +155,8 @@ Technikerstraße 25, 6020 Innsbruck, Austria"
   orcid:
 - given-names: Natthan
   family-names: Pigoux
-  affiliation:
-  orcid:
+  affiliation: "Laboratoire Univers et Particules de Montpellier, CNRS, Université de Montpellier, Montpellier, France"
+  orcid: "https://orcid.org/0009-0001-0100-9846"
 - given-names: Michele
   family-names: Peresano
   affiliation: "Max-Planck-Institut für Physik, Boltzmannstraße 8, 85748 Garching bei München, Germany"
