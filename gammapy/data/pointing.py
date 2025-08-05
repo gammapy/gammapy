@@ -20,9 +20,9 @@ from astropy.units import Quantity
 from astropy.utils import lazyproperty
 from gammapy.utils.compat import COPY_IF_NEEDED
 from gammapy.utils.deprecation import GammapyDeprecationWarning
-from gammapy.utils.fits import earth_location_from_dict, earth_location_to_dict
+from gammapy.utils.fits import earth_location_from_dict
 from gammapy.utils.scripts import make_path
-from gammapy.utils.time import time_ref_from_dict, time_ref_to_dict, time_to_fits_header
+from gammapy.utils.time import time_ref_from_dict
 
 log = logging.getLogger(__name__)
 
@@ -124,48 +124,7 @@ class FixedPointingInfo:
         (83.633, 22.014)>
     """
 
-    def __init__(
-        self,
-        meta=None,
-        *,
-        mode=None,
-        fixed_icrs=None,
-        fixed_altaz=None,
-        # these have nothing really to do with pointing_info
-        # needed for backwards compatibility but should be removed and accessed
-        # from the observation, not the pointing info.
-        location=None,
-        time_start=None,
-        time_stop=None,
-        time_ref=None,
-        legacy_altaz=None,  # store altaz given for mode=POINTING separately so it can be removed easily
-    ):
-        self._meta = None
-
-        # TODO: for backwards compatibility, remove in 2.0
-        # and make other keywards required
-        if meta is not None:
-            warnings.warn(
-                "Initializing a FixedPointingInfo using a `meta` dict is deprecated",
-                GammapyDeprecationWarning,
-            )
-            self._meta = meta
-            self.__dict__.update(self.from_fits_header(meta).__dict__)
-            return
-
-        if mode is not None:
-            warnings.warn(
-                "Passing mode is deprecated and the argument will be removed in Gammapy 1.3."
-                " pointing mode is deduced from whether fixed_icrs or fixed_altaz is given",
-                GammapyDeprecationWarning,
-            )
-
-        self._location = location
-        self._time_start = time_start
-        self._time_stop = time_stop
-        self._time_ref = time_ref
-        self._legacy_altaz = legacy_altaz or AltAz(np.nan * u.deg, np.nan * u.deg)
-
+    def __init__(self, fixed_icrs=None, fixed_altaz=None):
         if fixed_icrs is not None and fixed_altaz is not None:
             raise ValueError("fixed_icrs and fixed_altaz are mutually exclusive")
 
@@ -212,64 +171,32 @@ class FixedPointingInfo:
         """
         obs_mode = header.get("OBS_MODE", "POINTING")
         mode = PointingMode.from_gadf_string(obs_mode)
-        try:
-            location = earth_location_from_dict(header)
-        except KeyError:
-            location = None
-
-        # we allow missing RA_PNT / DEC_PNT in POINTING for some reason...
-        # FIXME: actually enforce this to be present instead of using nan
-        ra = u.Quantity(header.get("RA_PNT", np.nan), u.deg)
-        dec = u.Quantity(header.get("DEC_PNT", np.nan), u.deg)
-        alt = header.get("ALT_PNT")
-        az = header.get("AZ_PNT")
-        legacy_altaz = None
 
         fixed_icrs = None
         pointing_altaz = None
 
         # we can be more strict with DRIFT, as support was only added recently
         if mode is PointingMode.DRIFT:
+            alt = header.get("ALT_PNT", None)
+            az = header.get("AZ_PNT", None)
             if alt is None or az is None:
                 raise IOError(
                     "Keywords ALT_PNT and AZ_PNT are required for OBSMODE=DRIFT"
                 )
             pointing_altaz = AltAz(alt=alt * u.deg, az=az * u.deg)
         else:
+            ra = u.Quantity(header.get("RA_PNT", np.nan), u.deg)
+            dec = u.Quantity(header.get("DEC_PNT", np.nan), u.deg)
+
             fixed_icrs = SkyCoord(ra, dec)
             if np.isnan(ra.value) or np.isnan(dec.value):
-                warnings.warn(
-                    "RA_PNT / DEC_PNT will be required in a future version of"
-                    " gammapy for pointing-mode POINTING",
-                    GammapyDeprecationWarning,
+                raise IOError(
+                    "Keywords RA_PNT / DEC_PNT are required for pointing-mode POINTING"
                 )
-            # store given altaz also for POINTING for backwards compatibility,
-            # FIXME: remove in 2.0
-            if alt is not None and az is not None:
-                legacy_altaz = AltAz(alt=alt * u.deg, az=az * u.deg)
-
-        time_start = header.get("TSTART")
-        time_stop = header.get("TSTOP")
-        time_ref = None
-
-        if time_start is not None or time_stop is not None:
-            time_ref = time_ref_from_dict(header)
-            time_unit = u.Unit(header.get("TIMEUNIT", "s"), format="fits")
-
-            if time_start is not None:
-                time_start = time_ref + u.Quantity(time_start, time_unit)
-
-            if time_stop is not None:
-                time_stop = time_ref + u.Quantity(time_stop, time_unit)
 
         return cls(
-            location=location,
             fixed_icrs=fixed_icrs,
             fixed_altaz=pointing_altaz,
-            time_start=time_start,
-            time_stop=time_stop,
-            time_ref=time_ref,
-            legacy_altaz=legacy_altaz,
         )
 
     def to_fits_header(self, format="gadf", version="0.3", time_ref=None):
@@ -309,24 +236,6 @@ class FixedPointingInfo:
             header["OBS_MODE"] = "DRIFT"
             header["AZ_PNT"] = self.fixed_altaz.az.deg, u.deg.to_string("fits")
             header["ALT_PNT"] = self.fixed_altaz.alt.deg, u.deg.to_string("fits")
-
-        # FIXME: remove in 2.0
-        if self._legacy_altaz is not None and not np.isnan(
-            self._legacy_altaz.alt.value
-        ):
-            header["AZ_PNT"] = self._legacy_altaz.az.deg, u.deg.to_string("fits")
-            header["ALT_PNT"] = self._legacy_altaz.alt.deg, u.deg.to_string("fits")
-
-        if self._time_start is not None:
-            header["TSTART"] = time_to_fits_header(self._time_start, epoch=time_ref)
-        if self._time_stop is not None:
-            header["TSTOP"] = time_to_fits_header(self._time_stop, epoch=time_ref)
-
-        if self._time_start is not None or self._time_stop is not None:
-            header.update(time_ref_to_dict(time_ref))
-
-        if self._location is not None:
-            header.update(earth_location_to_dict(self._location))
 
         return header
 
@@ -400,9 +309,10 @@ class FixedPointingInfo:
             return SkyCoord(self._fixed_icrs.data, location=location, obstime=obstime)
 
         if self.mode == PointingMode.DRIFT:
-            if obstime is None:
-                obstime = self.obstime
-
+            if obstime is None or location is None:
+                raise ValueError(
+                    "FixedPointingInfo.get_icrs() in DRIFT mode requires both obstime and location inputs."
+                )
             return self.get_altaz(obstime, location=location).icrs
 
         raise ValueError(f"Unsupported pointing mode: {self.mode}.")
@@ -431,7 +341,10 @@ class FixedPointingInfo:
         altaz : `astropy.coordinates.SkyCoord`
             Pointing position in alt-az frame.
         """
-        location = location if location is not None else self._location
+        if obstime is None or location is None:
+            raise ValueError(
+                "FixedPointingInfo.get_altaz() requires both obstime and location inputs."
+            )
 
         frame = AltAz(location=location, obstime=obstime)
 
@@ -440,6 +353,7 @@ class FixedPointingInfo:
 
         if self.mode == PointingMode.DRIFT:
             # see https://github.com/astropy/astropy/issues/12965
+            # TODO: should be solved in astropy v6.0. Simplify once the astropy dependency imposes >=6.0
             alt = self.fixed_altaz.alt
             az = self.fixed_altaz.az
             return SkyCoord(
