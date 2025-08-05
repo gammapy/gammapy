@@ -248,12 +248,12 @@ def create_empty_map_dataset_from_irfs(
     spatial_width : `~astropy.units.Quantity`, optional
         Spatial window size. Default is None.
         If None it is determined from the observation offset max or rad max.
-    spatial_width_max : `~astropy.quantity.Quantity`, optional
+    spatial_width_max : `~astropy.units.Quantity`, optional
         Maximal spatial width. Default is 12 degree.
     spatial_bin_size : `~astropy.units.Quantity`, optional
         Pixel size. Default is None.
         If None it is determined from the observation PSF R68.
-    spatial_bin_size_min : `~astropy.quantity.Quantity`, optional
+    spatial_bin_size_min : `~astropy.units.Quantity`, optional
         Minimal spatial bin size. Default is 0.01 degree.
     position : `~astropy.coordinates.SkyCoord`, optional
         Center of the geometry. Default is the observation pointing at mid-observation time.
@@ -335,12 +335,12 @@ def create_map_dataset_from_observation(
     ----------
     observation : `~gammapy.data.Observation`
         Observation to be simulated.
-    models : `~gammapy.modeling.Models`, optional
+    models : `~gammapy.modeling.models.Models`, optional
         Models. Default is None.
     dataset_name : str, optional
-        If `models` contains one or multiple `FoVBackgroundModel`
-        it should match the `dataset_name` of the background model to use.
-        Default is None. If None it is determined from the observation ID.
+        If ``models`` contains one or multiple `~gammapy.modeling.models.FoVBackgroundModel`
+        it should match the ``dataset_name`` of the background model to use.
+        Default is None. If None, it is determined from the observation ID.
     energy_axis_true : `~gammapy.maps.MapAxis`, optional
         True energy axis. Default is None.
         If None it is determined from the observation IRFs.
@@ -352,12 +352,12 @@ def create_map_dataset_from_observation(
     spatial_width : `~astropy.units.Quantity`, optional
         Spatial window size. Default is None.
          If None it is determined from the observation offset max or rad max.
-    spatial_width_max : `~astropy.quantity.Quantity`, optional
+    spatial_width_max : `~astropy.units.Quantity`, optional
         Maximal spatial width. Default is 12 degree.
     spatial_bin_size : `~astropy.units.Quantity`, optional
         Pixel size. Default is None.
         If None it is determined from the observation PSF R68.
-    spatial_bin_size_min : `~astropy.quantity.Quantity`, optional
+    spatial_bin_size_min : `~astropy.units.Quantity`, optional
         Minimal spatial bin size. Default is 0.01 degree.
     position : `~astropy.coordinates.SkyCoord`, optional
         Center of the geometry. Default is the observation pointing.

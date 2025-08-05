@@ -113,6 +113,7 @@ __all__ = [
     "GaussianPrior",
     "UniformPrior",
     "LogUniformPrior",
+    "read_hermes_cube",
     "scale_plot_flux",
     "ScaleSpectralModel",
     "Shell2SpatialModel",
@@ -136,7 +137,6 @@ __all__ = [
     "TEMPORAL_MODEL_REGISTRY",
     "TemporalModel",
     "EBL_DATA_BUILTIN",
-    "read_hermes_cube",
 ]
 
 
