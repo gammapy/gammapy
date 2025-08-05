@@ -993,10 +993,12 @@ class WcsGeom(Geom, CacheInstanceMixin):
         """
         from gammapy.maps import Map, RegionGeom
         from gammapy.modeling.models import PointSpatialModel
+        from ..region.geom import _parse_regions
 
         if not self.is_regular:
             raise ValueError("Multi-resolution maps not supported yet")
 
+        regions = _parse_regions(regions)
         geom = RegionGeom.from_regions(regions, wcs=self.wcs)
         idx = self.get_idx()
         mask = geom.contains_wcs_pix(idx)
