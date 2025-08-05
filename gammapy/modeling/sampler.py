@@ -18,7 +18,9 @@ class Sampler:
         UltraNest: Most options can be found in the
         `UltraNest doc <https://johannesbuchner.github.io/UltraNest/>`__.
     sampler_opts : dict, optional
-        Sampler options passed to the sampler. Noteworthy options:
+        Sampler options passed to the sampler. See the full list of options on the
+        `UltraNest documentation <https://johannesbuchner.github.io/UltraNest/ultranest.html#ultranest.integrator.ReactiveNestedSampler>`__.
+        Noteworthy options:
 
         live_points : int
             Minimum number of live points used in the sampling. Increase this number to get more accurate results.
@@ -38,7 +40,7 @@ class Sampler:
             ‘overwrite’, overwrite previous data. ‘subfolder’, create a fresh subdirectory in `log_dir`.
             ‘resume’ or True, continue previous run if available. Only works when dimensionality, transform or
             likelihood are consistent.
-        step_sampler : bool
+        step_sampler : bool, optional
             Use a step sampler. This can be more efficient for higher dimensions (>10 or 15 parameters), but much
             slower for lower dimensions.
             Default is False.
@@ -46,8 +48,6 @@ class Sampler:
             Number of steps to take in each direction in the step sampler. Increase this number to get more
             accurate results at the cost of more computation time.
             Default is 10.
-        See the full list of options on the
-        `UltraNest documentation <https://johannesbuchner.github.io/UltraNest/ultranest.html#ultranest.integrator.ReactiveNestedSampler>`__.
     run_opts : dict, optional
         Optional run options passed to the given backend when running the sampler.
         See the full list of run options on the

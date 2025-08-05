@@ -428,6 +428,7 @@ print(edispmap.edisp_map.data[3][1][3])
 # -  asymmetry about the camera center: such PSF Tables can be supported,
 # -  asymmetry about the source position: these PSF models cannot be supported correctly within
 #    the data reduction scheme at present
+#
 # Also, analytic PSF models defined within the GADF scheme cannot be
 # directly generalised to the 3D case for use within Gammapy.
 #
