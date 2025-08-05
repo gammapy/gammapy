@@ -527,7 +527,7 @@ class Observation:
             if name is None:
                 ax.set_visible(False)
 
-    def select_time(self, time_interval):
+    def select_time(self, time_interval, inverted=False):
         """Select a time interval of the observation.
 
         Parameters
@@ -543,6 +543,7 @@ class Observation:
         """
         new_obs_filter = self.obs_filter.copy()
         new_obs_filter.time_filter = time_interval
+        new_obs_filter.inverted_time = inverted
         obs = copy.deepcopy(self)
         obs.obs_filter = new_obs_filter
         return obs
@@ -766,13 +767,15 @@ class Observations(collections.abc.MutableSequence):
         """List of observation IDs (`list`)."""
         return [str(obs.obs_id) for obs in self]
 
-    def select_time(self, time_intervals):
+    def select_time(self, time_intervals, inverted=False):
         """Select a time interval of the observations.
 
         Parameters
         ----------
         time_intervals : `astropy.time.Time` or list of `astropy.time.Time`
             List of start and stop time of the time intervals or one time interval.
+        inverted : `bool`, optional
+            Invert selection: keep all entries outside the time range. Default is False.
 
         Returns
         -------
@@ -785,10 +788,14 @@ class Observations(collections.abc.MutableSequence):
 
         for time_interval in time_intervals:
             for obs in self:
-                if (obs.tstart < time_interval[1]) & (obs.tstop > time_interval[0]):
-                    new_obs = obs.select_time(time_interval)
-                    new_obs_list.append(new_obs)
-
+                if not inverted:
+                    if (obs.tstart < time_interval[1]) & (obs.tstop > time_interval[0]):
+                        new_obs = obs.select_time(time_interval)
+                        new_obs_list.append(new_obs)
+                else:
+                    if (obs.tstart > time_interval[1]) | (obs.tstop < time_interval[0]):
+                        new_obs = obs.select_time(time_interval, inverted)
+                        new_obs_list.append(new_obs)
         return self.__class__(new_obs_list)
 
     def _ipython_key_completions_(self):
