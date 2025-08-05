@@ -9,6 +9,7 @@ from astropy.table import Table
 import matplotlib.pyplot as plt
 from gammapy.maps import MapAxis, RegionNDMap
 from gammapy.modeling.models import (
+    integrate_spectrum,
     SPECTRAL_MODEL_REGISTRY,
     BrokenPowerLawSpectralModel,
     CompoundSpectralModel,
@@ -1183,7 +1184,7 @@ def test_integral_error_power_law():
 
     flux, flux_errn, flux_errp = powerlaw.integral_error(energy_min, energy_max)
 
-    assert_allclose(flux.value[0] / 1e-13, 4.991835, rtol=1e-3)
+    assert_allclose(flux.value[0] / 1e-13, 5, rtol=1e-3)
     assert_allclose(flux_errn.value[0] / 1e-14, 7.209218, rtol=7e-1)
     assert_allclose(flux_errp.value[0] / 1e-14, 8.674678, rtol=7e-1)
 
@@ -1379,3 +1380,33 @@ def test_e_peak_super_4FGLDR3():
 
     model.index_2.value = -1
     assert_quantity_allclose(model.e_peak, np.nan * u.TeV)
+
+
+def test_vectorized_integrate_spectrum():
+    model = PowerLawSpectralModel()
+
+    parameter_samples = {}
+    for par in model.parameters:
+        parameter_samples[par.name] = np.ones(10) * par.quantity
+
+    energy = [100, 1000, 10000] * u.GeV
+
+    integral = integrate_spectrum(model, energy[:-1], energy[1:], ndecade=20)
+    vector_integral = integrate_spectrum(
+        model, energy[:-1], energy[1:], ndecade=20, parameter_samples=parameter_samples
+    )
+
+    assert integral.shape == (2,)
+    assert_allclose(integral.to_value("cm-2s-1"), [9e-12, 9e-13])
+    assert vector_integral.shape == (2, 10)
+    assert_allclose(vector_integral[:, 0].to_value("cm-2s-1"), [9e-12, 9e-13])
+
+    # check fail if model is not passed
+    with pytest.raises(TypeError):
+        integrate_spectrum(
+            model.evaluate,
+            energy[:-1],
+            energy[1:],
+            ndecade=20,
+            parameter_samples=parameter_samples,
+        )

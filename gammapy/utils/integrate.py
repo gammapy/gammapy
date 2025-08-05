@@ -27,6 +27,7 @@ def trapz_loglog(y, x, axis=-1):
     from gammapy.modeling.models import PowerLawSpectralModel as pl
 
     # see https://stackoverflow.com/a/56840428
+    # move integration axis from last position to first
     x, y = np.moveaxis(x, axis, 0), np.moveaxis(y, axis, 0)
 
     energy_min, energy_max = x[:-1], x[1:]

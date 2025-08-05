@@ -1,16 +1,27 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
+import matplotlib.pyplot as plt
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.nddata import NoOverlapError
 from astropy.time import Time
+from astropy.visualization import quantity_support
 from regions import PointSkyRegion
 from gammapy.maps import HpxNDMap, Map, MapAxis, RegionNDMap
 from gammapy.maps.hpx.io import HPX_FITS_CONVENTIONS, HpxConv
+from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_path, make_name
 from gammapy.utils.time import time_ref_from_dict, time_ref_to_dict
-from . import LightCurveTemplateTemporalModel, Models, SkyModel, TemplateSpatialModel
+from . import (
+    LightCurveTemplateTemporalModel,
+    Models,
+    SkyModel,
+    TemplateSpatialModel,
+    SpectralModel,
+    integrate_spectrum,
+    scale_plot_flux,
+)
 
 __all__ = ["read_hermes_cube"]
 
@@ -131,3 +142,322 @@ def cutout_template_models(models, cutout_kwargs, datasets_names=None):
         else:
             models_cut.append(m)
     return models_cut
+
+
+def _get_model_parameters_samples(model, n_samples=10000, random_state=42):
+    """Create SED samples from parameters and covariance using multivariate normal distribution.
+
+    Parameters
+    ----------
+    model : `~gammapy.modeling.models.Model`
+        Model used to compute the samples
+    n_samples : int, optional
+        Number of samples to generate. Default is 10000.
+    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
+        Defines random number generator initialisation.
+        Passed to `~gammapy.utils.random.get_random_state`. Default is 42.
+
+    Returns
+    -------
+    samples : dict of `~astropy.units.Quantity`
+        Dictionary of parameter samples.
+
+    """
+    result_samples = {}
+    rng = get_random_state(random_state)
+
+    params = model.parameters.free_parameters
+    covar = model.covariance.get_subcovariance(params)
+
+    samples = rng.multivariate_normal(
+        params.value,
+        covar.data,
+        n_samples,
+    )
+
+    for i, par in enumerate(params):
+        result_samples[par.name] = samples[:, i].T * par.unit
+
+    for par in model.parameters:
+        if par.name not in result_samples.keys():
+            result_samples[par.name] = np.ones(n_samples) * par.quantity
+
+    return result_samples
+
+
+class FluxPredictionBand:
+    """Evaluate flux of a spectral model based on samples of its parameters.
+
+    Parameters
+    ----------
+    model : `~gammapy.modeling.models.SpectralModel`
+        The spectral model.
+    samples : dict
+        The dictionary of samples. It must contain one key per model parameter name.
+        The content of each key is the samples quantities for this parameter.
+    """
+
+    def __init__(self, model, samples):
+        if not isinstance(model, SpectralModel):
+            raise TypeError(
+                f"PredictionBand requires SpectralModel. Got {type(model)} instead."
+            )
+
+        self._model, self._samples = self._validate(model, samples)
+
+    @staticmethod
+    def _validate(model, samples):
+        names = set(model.parameters.names)
+        samples_names = set(samples.keys())
+        if not names == samples_names:
+            raise ValueError(
+                f"Sample dictionary does not match parameters: got {samples_names} instead of {names}"
+            )
+
+        sizes = [len(samples[_]) for _ in samples.keys()]
+        if len(set(sizes)) > 1:
+            raise ValueError("All parameter samples must have the same length.")
+
+        return model, samples
+
+    @property
+    def model(self):
+        return self._model
+
+    @property
+    def samples(self):
+        return self._samples
+
+    @staticmethod
+    def _sigma_to_percentiles(n_sigma=1):
+        """Return percentiles corresponding to -n_sigma, n_sigma."""
+        from scipy.stats import norm
+
+        if n_sigma <= 0:
+            raise ValueError(
+                f"Number of sigma is expected to be positive float. Got {n_sigma} instead."
+            )
+
+        return 100 * (1 - norm.sf([-n_sigma, n_sigma]))
+
+    @staticmethod
+    def _compute_dnde(energy, model, samples):
+        energy = np.atleast_1d(energy)
+        samples = model._convert_evaluate_unit(samples, energy)
+        #        args = [samples[par.name] for par in model.parameters]
+        return model.evaluate(energy[:, np.newaxis], **samples)
+
+    @staticmethod
+    def _compute_eflux(energy_min, energy_max, model, samples, ndecade=20):
+        energy_min = np.atleast_1d(energy_min)
+        energy_max = np.atleast_1d(energy_max)
+
+        samples = model._convert_evaluate_unit(samples, energy_min)
+        if hasattr(model, "evaluate_energy_flux"):
+            #            args = [samples[par.name] for par in model.parameters]
+            return model.evaluate_energy_flux(
+                energy_min[..., np.newaxis], energy_max[..., np.newaxis], **samples
+            )
+        else:
+            return integrate_spectrum(
+                model,
+                energy_min,
+                energy_max,
+                ndecade=ndecade,
+                parameter_samples=samples,
+                eflux=True,
+            )
+
+    @staticmethod
+    def _compute_flux(energy_min, energy_max, model, samples, ndecade=20):
+        samples = model._convert_evaluate_unit(samples, energy_min)
+        if hasattr(model, "evaluate_integral"):
+            #            args = [samples[par.name] for par in model.parameters]
+            return model.evaluate_integral(
+                energy_min[..., np.newaxis], energy_max[..., np.newaxis], **samples
+            )
+        else:
+            res = integrate_spectrum(
+                model,
+                energy_min,
+                energy_max,
+                ndecade=ndecade,
+                parameter_samples=samples,
+            )
+            return res
+
+    @staticmethod
+    def _compute_lo_hi(fluxes, n_sigma=1, axis=-1):
+        percentiles = FluxPredictionBand._sigma_to_percentiles(n_sigma)
+
+        flux_lo, flux_hi = np.percentile(fluxes, percentiles, axis=axis)
+        return flux_lo, flux_hi
+
+    def evaluate_lo_hi(self, energy, n_sigma=1):
+        energy = np.atleast_1d(energy)
+        fluxes = self._compute_dnde(energy, self.model, self.samples)
+        return self._compute_lo_hi(fluxes, n_sigma=n_sigma)
+
+    def evaluate_error(self, energy, n_sigma=1):
+        energy = np.atleast_1d(energy)
+        dnde = self.model(energy)
+        dnde_lo, dnde_hi = self.evaluate_lo_hi(energy, n_sigma)
+        return u.Quantity(
+            [dnde, dnde - dnde_lo, dnde_hi - dnde], unit=dnde.unit
+        ).squeeze()
+
+    def integral_lo_hi(self, energy_min, energy_max, n_sigma=1):
+        energy_min = np.atleast_1d(energy_min)
+        energy_max = np.atleast_1d(energy_max)
+        fluxes = self._compute_flux(energy_min, energy_max, self.model, self.samples)
+        return self._compute_lo_hi(fluxes, n_sigma=n_sigma)
+
+    def integral_error(self, energy_min, energy_max, n_sigma=1):
+        energy_min = np.atleast_1d(energy_min)
+        energy_max = np.atleast_1d(energy_max)
+        flux = self.model.integral(energy_min, energy_max)
+        flux_lo, flux_hi = self.integral_lo_hi(energy_min, energy_max, n_sigma)
+        return u.Quantity(
+            [flux, flux - flux_lo, flux_hi - flux], unit=flux.unit
+        ).squeeze()
+
+    def energy_flux_lo_hi(self, energy_min, energy_max, n_sigma=1):
+        energy_min = np.atleast_1d(energy_min)
+        energy_max = np.atleast_1d(energy_max)
+        fluxes = self._compute_eflux(energy_min, energy_max, self.model, self.samples)
+        return self._compute_lo_hi(fluxes, n_sigma=n_sigma)
+
+    def energy_flux_error(self, energy_min, energy_max, n_sigma=1):
+        energy_min = np.atleast_1d(energy_min)
+        energy_max = np.atleast_1d(energy_max)
+        eflux = self.model.energy_flux(energy_min, energy_max)
+        eflux_lo, eflux_hi = self.energy_flux_lo_hi(energy_min, energy_max, n_sigma)
+        return u.Quantity(
+            [eflux, eflux - eflux_lo, eflux_hi - eflux], unit=eflux.unit
+        ).squeeze()
+
+    @classmethod
+    def from_model_covariance(cls, model, n_samples=10000, random_state=42):
+        """Create random samples according to model covariance matrix.
+
+        Assumes that samples are distributed following multivariate normal law.
+
+        Parameters
+        ----------
+        model : `~gammapy.modeling.models.SpectralModel`
+            Input spectral model.
+        n_samples : int, optional
+            Number of samples to generate. Default is 10000.
+        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
+            Defines random number generator initialisation.
+            Passed to `~gammapy.utils.random.get_random_state`. Default is 42.
+        """
+        samples = _get_model_parameters_samples(
+            model, n_samples=n_samples, random_state=random_state
+        )
+        return cls(model, samples)
+
+    def _get_plot_flux_error(self, energy, sed_type):
+        flux_lo = RegionNDMap.create(region=None, axes=[energy])
+        flux_hi = RegionNDMap.create(region=None, axes=[energy])
+
+        if sed_type in ["dnde", "norm", "e2dnde"]:
+            output = self.evaluate_lo_hi(energy.center)
+            if sed_type == "e2dnde":
+                output = [_ * energy.center**2 for _ in output]
+        elif sed_type == "flux":
+            output = self.integral_lo_hi(energy.edges_min, energy.edges_max)
+        elif sed_type == "eflux":
+            output = self.energy_flux_lo_hi(energy.edges_min, energy.edges_max)
+        else:
+            raise ValueError(f"Not a valid SED type: '{sed_type}'")
+
+        flux_lo.quantity, flux_hi.quantity = output
+        return flux_lo, flux_hi
+
+    def plot_error(
+        self,
+        energy_bounds,
+        ax=None,
+        sed_type="dnde",
+        energy_power=0,
+        n_points=100,
+        **kwargs,
+    ):
+        """Plot spectral model error band.
+
+        .. note::
+
+            This method calls ``ax.set_yscale("log", nonpositive='clip')`` and
+            ``ax.set_xscale("log", nonposx='clip')`` to create a log-log representation.
+            The additional argument ``nonposx='clip'`` avoids artefacts in the plot,
+            when the error band extends to negative values (see also
+            https://github.com/matplotlib/matplotlib/issues/8623).
+
+            When you call ``plt.loglog()`` or ``plt.semilogy()`` explicitly in your
+            plotting code and the error band extends to negative values, it is not
+            shown correctly. To circumvent this issue also use
+            ``plt.loglog(nonposx='clip', nonpositive='clip')``
+            or ``plt.semilogy(nonpositive='clip')``.
+
+        Parameters
+        ----------
+        energy_bounds : `~astropy.units.Quantity`, list of `~astropy.units.Quantity` or `~gammapy.maps.MapAxis`
+            Energy bounds between which the model is to be plotted. Or an
+            axis defining the energy bounds between which the model is to be plotted.
+        ax : `~matplotlib.axes.Axes`, optional
+            Matplotlib axes. Default is None.
+        sed_type : {"dnde", "flux", "eflux", "e2dnde"}
+            Evaluation methods of the model. Default is "dnde".
+        energy_power : int, optional
+            Power of energy to multiply flux axis with. Default is 0.
+        n_points : int, optional
+            Number of evaluation nodes. Default is 100.
+        n_samples : int, optional
+            Number of samples generated per parameter to estimate the error band. Default is 3500.
+        **kwargs : dict
+            Keyword arguments forwarded to `matplotlib.pyplot.fill_between`.
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`, optional
+            Matplotlib axes.
+
+        Notes
+        -----
+        If ``energy_bounds`` is supplied as a list, tuple, or Quantity, an ``energy_axis`` is created internally with
+        ``n_points`` bins between the given bounds.
+        """
+        from gammapy.estimators.map.core import DEFAULT_UNIT
+
+        if self.model.is_norm_spectral_model:
+            sed_type = "norm"
+
+        if isinstance(energy_bounds, (tuple, list, u.Quantity)):
+            energy_min, energy_max = energy_bounds
+            energy = MapAxis.from_energy_bounds(
+                energy_min,
+                energy_max,
+                n_points,
+            )
+        elif isinstance(energy_bounds, MapAxis):
+            energy = energy_bounds
+
+        ax = plt.gca() if ax is None else ax
+
+        kwargs.setdefault("facecolor", "black")
+        kwargs.setdefault("alpha", 0.2)
+        kwargs.setdefault("linewidth", 0)
+
+        if ax.yaxis.units is None:
+            ax.yaxis.set_units(DEFAULT_UNIT[sed_type] * energy.unit**energy_power)
+
+        flux_lo, flux_hi = self._get_plot_flux_error(sed_type=sed_type, energy=energy)
+        y_lo = scale_plot_flux(flux_lo, energy_power).quantity[:, 0, 0]
+        y_hi = scale_plot_flux(flux_hi, energy_power).quantity[:, 0, 0]
+
+        with quantity_support():
+            ax.fill_between(energy.center, y_lo, y_hi, **kwargs)
+
+        self.model._plot_format_ax(ax, energy_power, sed_type)
+        return ax
