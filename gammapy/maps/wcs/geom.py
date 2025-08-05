@@ -1001,7 +1001,7 @@ class WcsGeom(Geom, CacheInstanceMixin):
         regions = _parse_regions(regions)
         geom = RegionGeom.from_regions(regions, wcs=self.wcs)
         idx = self.get_idx()
-        mask = geom.contains_wcs_pix(idx)
+        mask = geom.contains_wcs_pix(idx, pointTrue=False)
         for reg in regions:
             if isinstance(reg, PointSkyRegion):
                 spatial_model = PointSpatialModel.from_position(reg.center)

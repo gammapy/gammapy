@@ -424,15 +424,19 @@ def test_region_mask():
 
     r1 = CircleSkyRegion(SkyCoord(0, 0, unit="deg"), 1 * u.deg)
     r2 = CircleSkyRegion(SkyCoord(20, 20, unit="deg"), 1 * u.deg)
-    r3 = PointSkyRegion(SkyCoord(2, -2, unit="deg"))
-    regions = [r1, r2, r3]
+    r3 = PointSkyRegion(SkyCoord(0.5, 0.5, unit="deg"))
+    regions = [r1, r2]
 
     mask = geom.region_mask(regions)
     assert mask.data.dtype == bool
-    assert np.sum(mask.data) == 2
+    assert np.sum(mask.data) == 1
 
     mask = geom.region_mask(regions, inside=False)
-    assert np.sum(mask.data) == 7
+    assert np.sum(mask.data) == 8
+
+    mask = geom.region_mask([r3])
+    assert np.sum(mask.data) == 4
+    assert mask.data.dtype == bool
 
 
 def test_energy_mask():
