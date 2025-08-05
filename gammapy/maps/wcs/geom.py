@@ -2,6 +2,7 @@
 import copy
 from gammapy.utils.cache import CacheInstanceMixin, cachemethod
 import numpy as np
+from regions import PointSkyRegion
 import astropy.units as u
 from astropy.convolution import Tophat2DKernel
 from astropy.coordinates import Angle, SkyCoord
@@ -991,6 +992,7 @@ class WcsGeom(Geom, CacheInstanceMixin):
         since this method expects a list of regions.
         """
         from gammapy.maps import Map, RegionGeom
+        from gammapy.modeling.models import PointSpatialModel
 
         if not self.is_regular:
             raise ValueError("Multi-resolution maps not supported yet")
@@ -998,6 +1000,11 @@ class WcsGeom(Geom, CacheInstanceMixin):
         geom = RegionGeom.from_regions(regions, wcs=self.wcs)
         idx = self.get_idx()
         mask = geom.contains_wcs_pix(idx)
+        for reg in regions:
+            if isinstance(reg, PointSkyRegion):
+                spatial_model = PointSpatialModel.from_position(reg.center)
+                data = spatial_model.evaluate_geom(self) > 0.0
+                mask = mask | data
 
         if not inside:
             np.logical_not(mask, out=mask)
