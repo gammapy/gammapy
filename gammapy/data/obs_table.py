@@ -104,11 +104,11 @@ class ObservationTable(Table):
 
         # For specified fileformat call reader to convert to internal data model, as discussed with @bkhelifi, @registerrier.
         if fileformat == "GADF0.2":
-            return self.read_from_gadf02(table_disk)
+            return self._read_from_gadf02(table_disk)
         elif fileformat == "GADF0.3":
-            return self.read_from_gadf03(table_disk)
+            return self._read_from_gadf03(table_disk)
 
-    def read_from_gadf03(self, table_disk):
+    def _read_from_gadf03(self, table_disk):
         """Converter from GADF v.0.3 to internal table model."""
         """ Based on specification: https://gamma-astro-data-formats.readthedocs.io/en/v0.3/"""
 
@@ -117,7 +117,7 @@ class ObservationTable(Table):
 
         return table_internal
 
-    def read_from_gadf02(self, table_disk):
+    def _read_from_gadf02(self, table_disk):
         """Converter from GADF v.0.2 to internal table model."""
         """Based on specification: https://gamma-astro-data-formats.readthedocs.io/en/v0.2/"""
 
