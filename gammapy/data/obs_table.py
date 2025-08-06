@@ -14,7 +14,7 @@ from astropy.time import Time
 __all__ = ["ObservationTable"]
 
 
-class ObservationTable:
+class ObservationTable(Table):
     """Modified ObservationTable class, based on existing ObservationTable class.
 
     See discussion and development: https://github.com/gammapy/gammapy/issues/3767, https://github.com/gammapy/gammapy/issues/4238
@@ -29,7 +29,7 @@ class ObservationTable:
     # data release 1 (HESS DL3 DR1, H.E.S.S. collaboration, 2018).
     """
 
-    def __init__(self, table=None, meta=None):
+    def __init__(self):
         """Constructor for internal observation table.
 
          Parameters
@@ -39,15 +39,13 @@ class ObservationTable:
 
         Creates instance of ObservationTable either from given table or from reference table.
         """
+        # Used for constructor: https://stackoverflow.com/questions/6535832/python-inherit-the-superclass-init
 
-        # If no table given, init with reference table, like suggested by @registerrier.
-        if table is None:
-            self.table = self.reference_table()
-        else:
-            self.table = table
-        self.meta = meta
+        # Init with basic reference table, like suggested by @registerrier.
+        super(ObservationTable, self).__init__(self._reference_table())
 
-    def reference_table(self):
+    @staticmethod
+    def _reference_table():
         """Definition of internal observation table model in form of reference table object."""
 
         table = Table(
