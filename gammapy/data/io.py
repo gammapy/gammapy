@@ -40,7 +40,7 @@ class ObservationTableReader:
         filename : `pathlib.Path`, str
             Filename
         format : {"gadf0.2", "gadf0.3"}, optional
-            format of the ObservationTable. Default is 'gadf0.3'.
+            format and its version, of the ObservationTable. Default is 'gadf0.3'.
             If None, will try to guess from header.
         """
         filename = make_path(filename)
