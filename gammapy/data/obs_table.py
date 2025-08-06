@@ -30,21 +30,21 @@ class ObservationTable(Table):
     # data release 1 (HESS DL3 DR1, H.E.S.S. collaboration, 2018).
     """
 
-    def __init__(self):
-        """Constructor for internal observation table.
+    # def __init__(self):
+    #     """Constructor for internal observation table.
 
-         Parameters
-        ----------
-        table : `astropy.table.Table'
-            Table to init ObservationTable from.
+    #      Parameters
+    #     ----------
+    #     table : `astropy.table.Table'
+    #         Table to init ObservationTable from.
 
-        Creates instance of ObservationTable either from reference table.
-        """
-        # Used for constructor: https://stackoverflow.com/questions/6535832/python-inherit-the-superclass-init
-        # https://stackoverflow.com/questions/2399307/how-to-invoke-the-super-constructor-in-python
+    #     Creates instance of ObservationTable either from reference table.
+    #     """
+    #     # Used for constructor: https://stackoverflow.com/questions/6535832/python-inherit-the-superclass-init
+    #     # https://stackoverflow.com/questions/2399307/how-to-invoke-the-super-constructor-in-python
 
-        # Init with basic reference table, like suggested by @registerrier.
-        super().__init__(self._reference_table())
+    #     # Init with basic reference table, like suggested by @registerrier.
+    #     super().__init__(self._reference_table())
 
     @staticmethod
     def _reference_table():
@@ -171,7 +171,7 @@ class ObservationTable(Table):
         #             )  # looked into gammapy/workflow/core.py
 
         # Create internal table "table_internal" with all names, corresp. units, types and descriptions, for the internal table model.
-        table_internal = self
+        table_internal = self._reference_table()
 
         # Fill internal table for mandatory columns by constructing the table row-wise with the internal representations.
         number_of_observations = len(
@@ -273,7 +273,7 @@ class ObservationTable(Table):
             self.indices["OBS_ID"]
         except IndexError:
             self.add_index("OBS_ID")
-        return super.__class__(self.loc["OBS_ID", obs_id])
+        return self.__class__(self.loc["OBS_ID", obs_id])
 
     def summary(self):
         """Summary information string."""
