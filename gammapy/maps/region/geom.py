@@ -39,6 +39,18 @@ from ..wcs import WcsGeom
 __all__ = ["RegionGeom"]
 
 
+def _parse_regions(regions):
+    if isinstance(regions, str):
+        regions = Regions.parse(data=regions, format="ds9")
+    elif isinstance(regions, SkyRegion):
+        regions = [regions]
+    elif isinstance(regions, SkyCoord):
+        regions = [PointSkyRegion(center=regions)]
+    elif isinstance(regions, list) and len(regions) == 0:
+        regions = None
+    return regions
+
+
 class RegionGeom(Geom):
     """Map geometry representing a region on the sky.
 
@@ -729,14 +741,7 @@ class RegionGeom(Geom):
         geom : `RegionGeom`
             Region map geometry.
         """
-        if isinstance(regions, str):
-            regions = Regions.parse(data=regions, format="ds9")
-        elif isinstance(regions, SkyRegion):
-            regions = [regions]
-        elif isinstance(regions, SkyCoord):
-            regions = [PointSkyRegion(center=regions)]
-        elif isinstance(regions, list) and len(regions) == 0:
-            regions = None
+        regions = _parse_regions(regions)
 
         if regions:
             regions = regions_to_compound_region(regions)

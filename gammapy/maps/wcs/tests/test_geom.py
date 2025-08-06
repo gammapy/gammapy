@@ -6,7 +6,7 @@ import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from astropy.io import fits
 from astropy.time import Time
-from regions import CircleSkyRegion
+from regions import CircleSkyRegion, PointSkyRegion
 from gammapy.maps import Map, MapAxis, TimeMapAxis, WcsGeom
 from gammapy.maps.utils import _check_binsz, _check_width
 from gammapy.utils.scripts import make_path
@@ -424,6 +424,7 @@ def test_region_mask():
 
     r1 = CircleSkyRegion(SkyCoord(0, 0, unit="deg"), 1 * u.deg)
     r2 = CircleSkyRegion(SkyCoord(20, 20, unit="deg"), 1 * u.deg)
+    r3 = PointSkyRegion(SkyCoord(0.5, 0.5, unit="deg"))
     regions = [r1, r2]
 
     mask = geom.region_mask(regions)
@@ -432,6 +433,10 @@ def test_region_mask():
 
     mask = geom.region_mask(regions, inside=False)
     assert np.sum(mask.data) == 8
+
+    mask = geom.region_mask([r3])
+    assert np.sum(mask.data) == 4
+    assert mask.data.dtype == bool
 
 
 def test_energy_mask():
