@@ -10,6 +10,7 @@ from gammapy.utils.testing import Checker
 from gammapy.utils.time import time_ref_from_dict
 from gammapy.data.metadata import METADATA_FITS_KEYS
 from astropy.time import Time
+from astropy import units as u
 
 __all__ = ["ObservationTable"]
 
@@ -37,7 +38,7 @@ class ObservationTable(Table):
         table : `astropy.table.Table'
             Table to init ObservationTable from.
 
-        Creates instance of ObservationTable either from given table or from reference table.
+        Creates instance of ObservationTable either from reference table.
         """
         # Used for constructor: https://stackoverflow.com/questions/6535832/python-inherit-the-superclass-init
 
@@ -64,7 +65,7 @@ class ObservationTable(Table):
                 ),
             ]
         )
-        table["POINTING"] = SkyCoord([], [], unit="deg", frame="icrs")
+        table["POINTING"] = SkyCoord([], [], unit=u.deg, frame="icrs")
         table["LOCATION"] = EarthLocation.from_geodetic([], [], [])
         table["TSTART"] = Time([], format="mjd")
         table["TSTOP"] = Time([], format="mjd")
@@ -169,7 +170,7 @@ class ObservationTable(Table):
         #             )  # looked into gammapy/workflow/core.py
 
         # Create internal table "table_internal" with all names, corresp. units, types and descriptions, for the internal table model.
-        table_internal = self.table
+        table_internal = self
 
         # Fill internal table for mandatory columns by constructing the table row-wise with the internal representations.
         number_of_observations = len(
