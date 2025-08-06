@@ -35,7 +35,7 @@ class EventList:
     - ``RA`` - ICRS system reconstructed right ascension (deg)
     - ``DEC`` - ICRS system reconstructed declination (deg)
     - ``TIME`` - event time as an `~astropy.time.Time` object
-    - ``energy`` - Reconstructed energy (usually MeV for Fermi and TeV for IACTs)
+    - ``ENERGY`` - Reconstructed energy (usually MeV for Fermi and TeV for IACTs or WCDs)
 
 
     Parameters
