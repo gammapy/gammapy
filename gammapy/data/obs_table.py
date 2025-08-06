@@ -83,7 +83,7 @@ class ObservationTable(Table):
         filename : `pathlib.Path` or str
             Filename.
         fileformat : str
-            Fileformat, default is "GADF0.3" for GADF v.0.3.
+            Fileformat, default is to infer from file if specified as None, if not possible, "GADF0.3" for GADF v.0.3 is chosen.
         **kwargs : dict, optional
             Keyword arguments passed to `~astropy.table.Table.read`.
         """
@@ -211,8 +211,12 @@ class ObservationTable(Table):
 
             # from @properties "time_ref", "time_start", "time_stop"
             time_ref = time_ref_from_dict(meta)
-            row_internal.append(time_ref + Quantity(table_disk[i]["TSTART"], "second"))
-            row_internal.append(time_ref + Quantity(table_disk[i]["TSTOP"], "second"))
+            if "TIMEUNIT" in meta.keys():
+                time_unit = meta["TIMEUNIT"]
+            else:
+                time_unit = "s"
+            row_internal.append(time_ref + Quantity(table_disk[i]["TSTART"], time_unit))
+            row_internal.append(time_ref + Quantity(table_disk[i]["TSTOP"], time_unit))
 
             # )  # like in event_list.py, l.201, commit: 08c6f6a
             table_internal.add_row(
@@ -247,12 +251,12 @@ class ObservationTable(Table):
     @property
     def time_start(self):
         """Observation start time as a `~astropy.time.Time` object."""
-        return self.time_ref + Quantity(self["TSTART"], "second")
+        return self["TSTART"]  # self.time_ref + Quantity(self["TSTART"], "second")
 
     @property
     def time_stop(self):
         """Observation stop time as a `~astropy.time.Time` object."""
-        return self.time_ref + Quantity(self["TSTOP"], "second")
+        return self["TSTOP"]  # self.time_ref + Quantity(self["TSTOP"], "second")
 
     def select_obs_id(self, obs_id):
         """Get `~gammapy.data.ObservationTable` containing only ``obs_id``.
@@ -261,14 +265,14 @@ class ObservationTable(Table):
 
         Parameters
         ----------
-        obs_id : int or list of int
+        obs_id : str or list of str
             Observation ids.
         """
         try:
             self.indices["OBS_ID"]
         except IndexError:
             self.add_index("OBS_ID")
-        return self.__class__(self.loc["OBS_ID", obs_id])
+        return super.__class__(self.loc["OBS_ID", obs_id])
 
     def summary(self):
         """Summary information string."""
