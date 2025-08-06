@@ -26,6 +26,7 @@ class PSF(IRF):
             Rad value.
         **kwargs : dict
             Other coordinates.
+            You can view the available options through "psf.axes.names".
 
         Returns
         -------
@@ -48,11 +49,20 @@ class PSF(IRF):
             Default is 20.
         **kwargs : dict
             Other coordinates.
+            You can view the available options through "psf.axes.names".
 
         Returns
         -------
         radius : `~astropy.coordinates.Angle`
             Containment radius.
+
+        Examples
+        --------
+        >>> from gammapy.data import DataStore
+        >>> import astropy.units as u
+        >>> data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
+        >>> obs = data_store.obs(23523)
+        >>> containment_radius = obs.psf.containment_radius(energy_true=0.1*u.TeV ,offset=0.3*u.deg, fraction=0.68)
         """
         # TODO: this uses a lot of numpy broadcasting tricks, maybe simplify...
         from gammapy.datasets.map import RAD_AXIS_DEFAULT
