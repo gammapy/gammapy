@@ -171,7 +171,7 @@ class ObservationTable(Table):
         #             )  # looked into gammapy/workflow/core.py
 
         # Create internal table "table_internal" with all names, corresp. units, types and descriptions, for the internal table model.
-        table_internal = self._reference_table()
+        table_internal = ObservationTable(self._reference_table())
 
         # Fill internal table for mandatory columns by constructing the table row-wise with the internal representations.
         number_of_observations = len(
