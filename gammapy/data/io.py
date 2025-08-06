@@ -5,6 +5,7 @@ from astropy.table import Table
 from gammapy.data import EventListMetaData, EventList
 from gammapy.utils.scripts import make_path
 from gammapy.utils.metadata import CreatorMetaData
+from .metadata import ObservationMetaData
 
 
 class ObservationTableReader:
@@ -60,18 +61,25 @@ class ObservationTableReader:
                 version = self.identify_format_from_hdu(obs_hdu)[1]
 
             if format == "gadf" or format == "ogip":
-                if version == 0.2:
+                if version == "0.2":
                     return self.from_gadf02_hdu(obs_hdu)
-                elif version == 0.3:
+                elif version == "0.3":
                     return self.from_gadf03_hdu(obs_hdu)
                 else:
                     raise ValueError(f"Unknown version :{version}")
             else:
                 raise ValueError(f"Unknown format :{format}")
 
+    @staticmethod
     def from_gadf02_hdu(obs_hdu):
+        """Create ObservationTable from gadf0.2 HDU."""
+        table = Table.read(obs_hdu)
+        meta = ObservationMetaData.from_header(table.meta)
+        print(table, meta)
         return 0
+        # return ObservationTable(table=table, meta=meta)
 
+    @staticmethod
     def from_gadf03_hdu(obs_hdu):
         return 0
 
