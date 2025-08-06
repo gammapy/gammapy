@@ -5,7 +5,6 @@ from astropy.table import Table
 from gammapy.data import EventListMetaData, EventList
 from gammapy.utils.scripts import make_path
 from gammapy.utils.metadata import CreatorMetaData
-from .metadata import ObservationMetaData
 
 
 class ObservationTableReader:
@@ -73,10 +72,10 @@ class ObservationTableReader:
     @staticmethod
     def from_gadf02_hdu(obs_hdu):
         """Create ObservationTable from gadf0.2 HDU."""
-        table = Table.read(obs_hdu)
-        meta = ObservationMetaData.from_header(table.meta)
-        print(table, meta)
-        return 0
+        table = Table.read(obs_hdu)  # table_disk !
+        # meta = ObservationMetaData.from_header(table.meta)
+        # print(meta)
+        return table
         # return ObservationTable(table=table, meta=meta)
 
     @staticmethod
