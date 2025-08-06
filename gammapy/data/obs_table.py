@@ -41,9 +41,10 @@ class ObservationTable(Table):
         Creates instance of ObservationTable either from reference table.
         """
         # Used for constructor: https://stackoverflow.com/questions/6535832/python-inherit-the-superclass-init
+        # https://stackoverflow.com/questions/2399307/how-to-invoke-the-super-constructor-in-python
 
         # Init with basic reference table, like suggested by @registerrier.
-        super(ObservationTable, self).__init__(self._reference_table())
+        super().__init__(self._reference_table())
 
     @staticmethod
     def _reference_table():
