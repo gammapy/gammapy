@@ -38,7 +38,7 @@ authors:
 - given-names: Tora T.H.
   family-names: Arnesen
   affiliation: "Instituto de Astrofísica de Canarias and Dpto. de Astrofísica, Universidad de La Laguna,
-C/ Vía Láctea s/n, E-38205 La Laguna, Tenerife, Spain"
+    C/ Vía Láctea s/n, E-38205 La Laguna, Tenerife, Spain"
   orcid: "https://orcid.org/0009-0004-0816-0700"
 - given-names: Luis
   family-names: Barrios-Jimenez
@@ -97,6 +97,10 @@ C/ Vía Láctea s/n, E-38205 La Laguna, Tenerife, Spain"
   affiliation: Laboratoire Univers et Théories, Observatoire de Paris, Université
     PSL,\ \ Université Paris Cité, CNRS, F-92190 Meudon, France
   orcid: "https://orcid.org/0000-0002-7372-9703"
+- given-names: Lucas
+  family-names: Gréaux
+  affiliation: "Fakultät für Physik & Astronomie, Ruhr-Universität Bochum, D-44780 Bochum, Germany"
+  orcid: "https://orcid.org/0000-0003-0627-8436"
 - given-names: Bruno
   family-names: Khélifi
   affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
@@ -108,13 +112,16 @@ C/ Vía Láctea s/n, E-38205 La Laguna, Tenerife, Spain"
   orcid: "https://orcid.org/0009-0000-1257-4771"
 - given-names: Paula
   family-names: Kornecki
-  affiliation: Laboratoire Univers et Théories, Observatoire de Paris, Université
-    PSL,\ \ Université Paris Cité, CNRS, F-92190 Meudon, France
-  orcid: https://orcid.org/0000-0002-2706-7438
+  affiliation: "Instituto de Astrofísica de Andalucía (IAA-CSIC), Glorieta de la Astronomía s/n, 18008, Granada, Spain"
+  orcid: "https://orcid.org/0000-0002-2706-7438"
 - given-names: Maximilian
   family-names: Linhoff
   affiliation: "Astroparticle Physics Group, TU Dortmund University, Germany"
   orcid: "https://orcid.org/0000-0001-7993-8189"
+- given-names: Matthew
+  family-names: Lundy
+  affiliation: "Physics Department, McGill University, Montreal, QC H3A 2T8, Canada"
+  orcid: "https://orcid.org/0000-0003-3802-1619"
 - given-names: 'Kurt'
   family-names: 'McKee'
   affiliation: 'University of Chicago, USA'
@@ -147,7 +154,7 @@ C/ Vía Láctea s/n, E-38205 La Laguna, Tenerife, Spain"
 - given-names: Sebastian
   family-names: Panny
   affiliation: "Universität Innsbruck, Institut für Astro- und Teilchenphysik,
-Technikerstraße 25, 6020 Innsbruck, Austria"
+    Technikerstraße 25, 6020 Innsbruck, Austria"
   orcid: "https://orcid.org/0000-0001-5770-3805"
 - given-names: Daniel
   family-names: Parsons
