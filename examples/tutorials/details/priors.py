@@ -40,9 +40,9 @@ results.
 
 The tutorial addresses three examples:
 
-1. Including prior information about the sources index
-2. Encouraging positive amplitude values
-3. How to add a custom prior class?
+-  Including prior information about the sources index
+-  How to add a custom prior class?
+-  Encouraging positive amplitude values
 
 In the first example, the Gaussian prior is used. It is shown how to set
 a prior on a model parameter and how it modifies the fit statistics. A
@@ -68,7 +68,6 @@ from gammapy.modeling.models import (
     GaussianPrior,
     PowerLawSpectralModel,
     SkyModel,
-    UniformPrior,
 )
 
 
@@ -114,6 +113,8 @@ dataset1.counts = dataset1.npred()
 # Example 1: Including Prior Information about the Sources Index
 # --------------------------------------------------------------
 #
+# This example illustrate the maximum a posteriori (MAP) method which
+# differs from the maximum likelihood by the introduction of priors.
 # The index was assumed to be :math:`2.3`. However, let us assume you
 # have reasons to believe that the index value of the source is actually
 # :math:`2.1`. This can be due to theoretical predictions, other
@@ -143,7 +144,7 @@ model_prior.parameters["index"].prior = gaussianprior
 # For the visualisation, the values are appended to the list; this is not a necessity for the fitting
 prior_stat_sums = []
 with model_prior.parameters.restore_status():
-    i_scan = np.linspace(1.8, 2.3, 100)
+    i_scan = np.linspace(1.8, 2.4, 100)
     for a in i_scan:
         model_prior.parameters["index"].value = a
         prior_stat_sums.append(model_prior.parameters.prior_stat_sum())
@@ -160,8 +161,6 @@ plt.axvline(x=gaussianprior.mu.value, color="red")
 plt.xlabel("Index Value")
 plt.ylabel("Prior")
 plt.legend()
-plt.xlim(2.0, 2.2)
-plt.ylim(-0.05, 1.1)
 plt.show()
 
 
@@ -216,7 +215,7 @@ scan_prior = fit.stat_profile(
 # getting minimized. The Cash statistics minimum is the actual value of
 # the index we used for the simulation (:math:`2.3`). Therefore, the
 # best-fit value was found to be :math:`2.3`. Note how the error bars
-# correspond to the :math:`1\sigma` error, i.e. where the stat sum equals
+# correspond to the :math:`1\sigma` error, i.e. where the stat sum equals
 # the minimum + 1.
 #
 # The plot also shows the prior we set on the index for the second
@@ -289,138 +288,18 @@ plt.show()
 # same.
 #
 
-
-######################################################################
-# Example 2: Encouraging Positive Amplitude Values
-# ------------------------------------------------
-#
-# In the next example, we want to encourage the amplitude to have
-# positive, i.e. physical, values. Instead of setting hard bounds, we can
-# also set a uniform prior, which prefers positive values to negatives.
-#
-# We set the amplitude of the power-law used to simulate the source to a very
-# small value. Together with statistical fluctuations, this could result in some
-# negative amplitude best-fit values.
-#
-
-model_weak = SkyModel(
-    PowerLawSpectralModel(
-        amplitude=1e-13 / u.cm**2 / u.s / u.TeV,
-    ),
-    name="weak-model",
-)
-model_weak_prior = model_weak.copy(name="weak-model-prior")
-uniform = UniformPrior(min=0)
-uniform.weight = 2
-model_weak_prior.parameters["amplitude"].prior = uniform
-
-
-######################################################################
-# We set the minimum value to zero and per default, the maximum value
-# is set to positive infinity. Therefore, the uniform prior penalty
-# is zero, i.e. no influence on the fit at all, if the amplitude value
-# is positive and a penalty (the weight) in the form of a prior likelihood
-# for negative values.
-# Here, we are setting it to 2. This value is only applied if the
-# amplitude value goes below zero.
-#
-
-uni_prior_stat_sums = []
-with model_weak_prior.parameters.restore_status():
-    a_scan = np.linspace(-1, 1, 100)
-    for a in a_scan:
-        model_weak_prior.parameters["amplitude"].value = a
-        uni_prior_stat_sums.append(model_weak_prior.parameters.prior_stat_sum())
-
-plt.plot(
-    a_scan,
-    uni_prior_stat_sums,
-    color="tab:orange",
-    linestyle="dashed",
-    label=f"Uniform Prior\n $min={uniform.min.value}$, weight={uniform.weight}",
-)
-plt.xlabel("Amplitude Value [1 / (TeV s cm2)]")
-plt.ylabel("Prior")
-plt.legend()
-plt.show()
-
-######################################################################
-# Fitting Multiple Datasets with and without the Prior
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-#
-# To showcase how the uniform prior affects the fit results, :math:`100`
-# datasets are created and fitted without and with the prior
-#
-
-results, results_prior = [], []
-N = 100
-dataset2 = dataset.copy()
-for n in range(N):
-    # simulating the dataset
-    dataset2.models = model_weak.copy()
-    dataset2.fake()
-
-    dataset2_prior = dataset2.copy()
-    dataset2_prior.models = model_weak_prior.copy()
-    # fitting without the prior
-    fit = Fit()
-    result = fit.optimize(dataset2)
-    results.append(
-        {
-            "index": result.parameters["index"].value,
-            "amplitude": result.parameters["amplitude"].value,
-        }
-    )
-    # fitting with the prior
-    fit_prior = Fit()
-    result = fit_prior.optimize(dataset2_prior)
-    results_prior.append(
-        {
-            "index": result.parameters["index"].value,
-            "amplitude": result.parameters["amplitude"].value,
-        }
-    )
-
-
-fig, axs = plt.subplots(1, 2, figsize=(7, 4))
-for i, parname in enumerate(["index", "amplitude"]):
-    par = np.array([_[parname] for _ in results])
-    c, bins, _ = axs[i].hist(par, bins=20, alpha=0.5, label="Without Prior")
-    par = np.array([_[parname] for _ in results_prior])
-    axs[i].hist(par, bins=bins, alpha=0.5, color="tab:green", label="With Prior")
-    axs[i].axvline(x=model_weak.parameters[parname].value, color="red")
-    axs[i].set_xlabel(f"Reconstructed spectral\n {parname}")
-    axs[i].legend()
-plt.tight_layout()
-plt.show()
-
-
-######################################################################
-# The distribution of the best-fit amplitudes shows how less best-fit
-# amplitudes have negative values. This also has an effect on the
-# distribution of the best-fit indices. How exactly the distribution
-# changes depends on the weight assigned to the uniform prior. The
-# stronger the weight, the less negative amplitudes.
-#
-# Note that the model parameters uncertainties are, per default, computed
-# symmetrical. This can lead to incorrect
-# uncertainties, especially with asymmetrical priors like the previous
-# uniform. Calculating the uncertainties from the profile likelihood
-# is advised. For more details see the :doc:`/tutorials/details/fitting` tutorial.
-#
-
 ######################################################################
 # Implementing a custom prior
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# For now, only `~gammapy.modeling.models.GaussianPrior` and
-# `~gammapy.modeling.models.UniformPrior` are implemented.
 # To add a use case specific prior one has to create a prior subclass
 # containing:
 #
-# -  a tag and a _type used for the serialization
-# -  an instantiation of each PriorParameter with their unit and default values
-# -  the evaluate function where the mathematical expression for the prior is defined.
+# -  a `tag` and a `_type` used for the serialization
+# -  an instantiation of each `PriorParameter` with their unit and default values
+# -  the` evaluate` function where the mathematical expression for the prior is defined.
+# -  if the prior has to be used for sampling it should also define a `_inverse_cdf` function
+#    (in that case the pdf has to integrate to unity).
 #
 # As an example for a custom prior a Jeffrey prior for a scale parameter is chosen.
 # The only parameter is ``sigma`` and the evaluation method return the squared inverse of ``sigma``.
@@ -472,3 +351,163 @@ customprior(pwl.parameters["index"])
 print(pwl.to_dict())
 model_read = Model.from_dict(pwl.to_dict())
 model_read.parameters.prior
+
+
+######################################################################
+# Example 2: Encouraging Positive Amplitude Values
+# ------------------------------------------------
+#
+# This second example is a form of penalized likelihood.
+# Let's asssume we want to encourage the amplitude to have
+# positive, i.e. physical, values. Instead of setting hard bounds, we can
+# also set a uniform penalisation, which prefers positive values to negatives.
+# For this use case we are going to define a `UniformPenalty`.
+
+
+class UniformPenalty(Prior):
+    """Uniform Penalty.
+
+    Returns 0 if the parameter value is in ]min, max[.
+    Returns the penalty value, if otherwise.
+
+    Parameters
+    ----------
+    min : float, optional
+        Minimum value.
+        Default is -`~numpy.inf`.
+    max : float, optional
+        Maximum value.
+        Default is `~numpy.inf`.
+    penalty : float, optional
+        Penalization constant.
+        Default is 1.
+    """
+
+    tag = ["UniformPenalty"]
+    _type = "prior"
+    min = PriorParameter(name="min", value=-np.inf, unit="")
+    max = PriorParameter(name="max", value=np.inf, unit="")
+    penalty = PriorParameter(name="penalty", value=1, unit="")
+
+    @staticmethod
+    def evaluate(value, min, max, penalty):
+        """Evaluate the uniform prior."""
+        if min < value < max:
+            return 0.0
+        else:
+            return penalty
+
+    @property
+    def _inverse_cdf(self):
+        raise ValueError(
+            "UniformPenalty is not a distribution it cannot be used for sampling"
+        )
+
+
+######################################################################
+# We set the amplitude of the power-law used to simulate the source to a very
+# small value. Together with statistical fluctuations, this could result in some
+# negative amplitude best-fit values.
+#
+
+model_weak = SkyModel(
+    PowerLawSpectralModel(
+        amplitude=1e-13 / u.cm**2 / u.s / u.TeV,
+    ),
+    name="weak-model",
+)
+model_weak_prior = model_weak.copy(name="weak-model-prior")
+uniform_penalty = UniformPenalty(min=0, max=np.inf, penalty=2)
+model_weak_prior.parameters["amplitude"].prior = uniform_penalty
+
+
+######################################################################
+# We set the minimum value to zero and the maximum value
+# to infinity. Outside of ]min, max[ the prior statistic will be penalized by
+# a contant value of 2 as given by the penalty parameter.
+#
+
+uni_prior_stat_sums = []
+with model_weak_prior.parameters.restore_status():
+    a_scan = np.linspace(-1, 1, 100)
+    for a in a_scan:
+        model_weak_prior.parameters["amplitude"].value = a
+        uni_prior_stat_sums.append(model_weak_prior.parameters.prior_stat_sum())
+
+plt.plot(
+    a_scan,
+    uni_prior_stat_sums,
+    color="tab:orange",
+    linestyle="dashed",
+    label=f"Uniform Prior\n $min={uniform_penalty.min.value}$, penalty={uniform_penalty.penalty.value}",
+)
+plt.xlabel("Amplitude Value [1 / (TeV s cm2)]")
+plt.ylabel("Prior")
+plt.legend()
+plt.xlim([-1, 1])
+plt.show()
+
+######################################################################
+# Fitting Multiple Datasets with and without the Prior
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# To showcase how the uniform prior affects the fit results, :math:`100`
+# datasets are created and fitted without and with the prior
+#
+
+results, results_prior = [], []
+N = 100
+dataset2 = dataset.copy()
+for n in range(N):
+    # simulating the dataset
+    dataset2.models = model_weak.copy()
+    dataset2.fake(random_state=42 + n)
+
+    dataset2_prior = dataset2.copy()
+    dataset2_prior.models = model_weak_prior.copy()
+    # fitting without the prior
+    fit = Fit()
+    result = fit.optimize(dataset2)
+    results.append(
+        {
+            "index": result.parameters["index"].value,
+            "amplitude": result.parameters["amplitude"].value,
+        }
+    )
+    # fitting with the prior
+    fit_prior = Fit()
+    result = fit_prior.optimize(dataset2_prior)
+    results_prior.append(
+        {
+            "index": result.parameters["index"].value,
+            "amplitude": result.parameters["amplitude"].value,
+        }
+    )
+
+
+fig, axs = plt.subplots(1, 2, figsize=(7, 4))
+for i, parname in enumerate(["index", "amplitude"]):
+    par = np.array([_[parname] for _ in results])
+    c, bins, _ = axs[i].hist(par, bins=20, alpha=0.5, label="Without Prior")
+    par = np.array([_[parname] for _ in results_prior])
+    axs[i].hist(par, bins=bins, alpha=0.5, color="tab:green", label="With Prior")
+    axs[i].axvline(x=model_weak.parameters[parname].value, color="red")
+    axs[i].set_xlabel(f"Reconstructed spectral\n {parname}")
+    axs[i].legend()
+plt.tight_layout()
+plt.show()
+
+
+######################################################################
+# The distribution of the best-fit amplitudes shows how less best-fit
+# amplitudes have negative values. This also has an effect on the
+# distribution of the best-fit indices. How exactly the distribution
+# changes depends on the value assigned to the uniform penalty. The
+# larger the penalty, the less negative amplitudes.
+#
+# Note that the model parameters uncertainties are, per default, computed
+# symmetrical. This can lead to incorrect
+# uncertainties, especially with asymmetrical priors like the previous
+# uniform. Calculating the uncertainties from the profile likelihood
+# is advised. For more details see the :doc:`/tutorials/details/fitting` tutorial.
+#

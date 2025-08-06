@@ -9,7 +9,13 @@ from .cube import (
     TemplateNPredModel,
     create_fermi_isotropic_diffuse_model,
 )
-from .prior import GaussianPrior, Prior, UniformPrior, LogUniformPrior
+from .prior import (
+    GaussianPrior,
+    GeneralizedGaussianPrior,
+    Prior,
+    UniformPrior,
+    LogUniformPrior,
+)
 from .spatial import (
     ConstantFluxSpatialModel,
     ConstantSpatialModel,
@@ -111,6 +117,7 @@ __all__ = [
     "PowerLawTemporalModel",
     "Prior",
     "GaussianPrior",
+    "GeneralizedGaussianPrior",
     "UniformPrior",
     "LogUniformPrior",
     "read_hermes_cube",
