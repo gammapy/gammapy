@@ -340,7 +340,7 @@ class MapDatasetEventSampler:
                 table.meta["MID{:05d}".format(0)] = 0
                 table.meta["MMN{:05d}".format(0)] = dataset.background_model.name
 
-        return table  # EventList(table)
+        return table
 
     def sample_edisp(self, edisp_map, events_table):
         """Sample energy dispersion map.
