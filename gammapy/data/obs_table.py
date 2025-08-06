@@ -90,7 +90,7 @@ class ObservationTable(Table):
         """
 
         # Read disk table "table_disk", taken from class ObervationTable. TODO: Pot. lazy loading in future?"""
-        table_disk = Table.read(make_path(filename), **kwargs)
+        table_disk = super().read(make_path(filename), **kwargs)
 
         # Get header of obs-index table.
         meta = table_disk.meta
