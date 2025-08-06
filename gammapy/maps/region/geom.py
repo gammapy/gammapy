@@ -647,7 +647,7 @@ class RegionGeom(Geom):
 
         axes_eq = self.axes.is_allclose(other.axes, rtol=rtol_axes, atol=atol_axes)
         if not axes_eq:
-            log.info("RegionGeom axes are not equal")
+            log.debug("RegionGeom axes are not equal")
         # TODO: compare regions based on masks...
         regions_eq = True
         return axes_eq and regions_eq
