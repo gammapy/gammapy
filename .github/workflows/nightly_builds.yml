@@ -1,0 +1,16 @@
+name: Nightly wheel building
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 5 * * *'  # Every day at 05:00 UTC
+
+jobs:
+  build_wheels:
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/publish.yml@v2
+    with:
+      upload_to_pypi: false
+      targets: |
+        - cp3*-manylinux_x86_64*
+        - cp3*-macosx*
+        - cp3*-win_amd64*
