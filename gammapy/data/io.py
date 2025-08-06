@@ -7,6 +7,75 @@ from gammapy.utils.scripts import make_path
 from gammapy.utils.metadata import CreatorMetaData
 
 
+class ObservationTableReader:
+    """Reader class for ObservationTable"""
+
+    """Based on class EventListReader!!!
+    
+    
+    Parameters
+    ----------
+    hdu : str
+        Name of observation table HDU. Default is "OBS_INDEX".
+    checksum : bool
+        If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
+    """
+
+    def __init__(self, hdu="OBS_INDEX", checksum=False):
+        self.hdu = hdu
+        self.checksum = checksum
+
+    @staticmethod
+    def identify_format_from_hdu(obs_hdu):
+        """Identify format for HDU header keywords."""
+        hduclass = obs_hdu.header.get("HDUCLASS", "unknown")
+        hduvers = obs_hdu.header.get("HDUVERS", "unknown")
+        return [hduclass.lower(), hduvers.lower()]
+
+    def read(self, filename, format="gadf0.3"):
+        """Read EventList from file.
+
+        Parameters
+        ----------
+        filename : `pathlib.Path`, str
+            Filename
+        format : {"gadf0.2", "gadf0.3"}, optional
+            format of the ObservationTable. Default is 'gadf0.3'.
+            If None, will try to guess from header.
+        """
+        filename = make_path(filename)
+
+        with fits.open(filename) as hdulist:
+            obs_hdu = hdulist[self.hdu]
+
+            if self.checksum:
+                if obs_hdu.verify_checksum() != 1:
+                    warnings.warn(
+                        f"Checksum verification failed for HDU {self.hdu} of {filename}.",
+                        UserWarning,
+                    )
+
+            if format is None:
+                format = self.identify_format_from_hdu(obs_hdu)[0]
+                version = self.identify_format_from_hdu(obs_hdu)[1]
+
+            if format == "gadf" or format == "ogip":
+                if version == 0.2:
+                    return self.from_gadf02_hdu(obs_hdu)
+                elif version == 0.3:
+                    return self.from_gadf03_hdu(obs_hdu)
+                else:
+                    raise ValueError(f"Unknown version :{version}")
+            else:
+                raise ValueError(f"Unknown format :{format}")
+
+    def from_gadf02_hdu(obs_hdu):
+        return 0
+
+    def from_gadf03_hdu(obs_hdu):
+        return 0
+
+
 class EventListReader:
     """Reader class for EventList.
 
