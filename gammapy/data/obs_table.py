@@ -17,7 +17,7 @@ class ObservationTable(Table):
     """Modified ObservationTable class, based on existing ObservationTable class.
 
     See discussion and development: https://github.com/gammapy/gammapy/issues/3767, https://github.com/gammapy/gammapy/issues/4238
-    Co-authors: @maxnoe, @registerrier, @bkhelifi
+    Co-authors: @maxnoe, @registerrier, @bkhelifi, @cdeil, @Astro-Kirsty
     Used as reference: gammapy, gammapy/data/obs_table.py, https://docs.python.org/3, https://docs.astropy.org/en/latest/table/construct_table.html#construct-table, https://numpy.org/doc/stable/reference/generated/numpy.dtype.html
                        https://docs.astropy.org/en/latest/table/index.html, https://gamma-astro-data-formats.readthedocs.io/en/v0.3/, esp. data_storage/obs_index/index.html, https://www.programiz.com/python-programming/methods/built-in/classmethod
     Looked into: https://github.com/gammasky/cta-dc/blob/master/data/cta_1dc_make_data_index_files.py, maybe used l. 233. Copyright (c) 2016 gammasky,
