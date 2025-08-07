@@ -20,6 +20,7 @@ __all__ = ["Dataset", "Datasets"]
 
 class Dataset(abc.ABC):
     """Dataset abstract base class.
+
     For now, see existing examples of type of datasets:
 
     - `gammapy.datasets.MapDataset`
@@ -91,7 +92,7 @@ class Dataset(abc.ABC):
         return self._fit_statistic.stat_array_dataset(self)
 
     def copy(self, name=None):
-        """A deep copy.
+        """Deep copy.
 
         Parameters
         ----------
@@ -367,7 +368,6 @@ class Datasets(collections.abc.MutableSequence):
         energy_min, energy_max : `~astropy.units.Quantity`
             Energy range.
         """
-
         energy_mins, energy_maxs = [], []
 
         for dataset in self:
@@ -405,7 +405,7 @@ class Datasets(collections.abc.MutableSequence):
             return f"<pre>{html.escape(str(self))}</pre>"
 
     def copy(self):
-        """A deep copy."""
+        """Deep copy."""
         return copy.deepcopy(self)
 
     @classmethod

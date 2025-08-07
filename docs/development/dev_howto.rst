@@ -624,7 +624,7 @@ If you change the name of an argument, you can use the ``deprecated_renamed_argu
 It will replace the old argument with the new one in a call to the function and will raise the
 ``GammapyDeprecationWarning``. You can change several arguments at once.
 
-.. testcode::
+.. code-block:: python
 
     from gammapy.utils.deprecation import deprecated_renamed_argument
 
@@ -636,7 +636,7 @@ It will replace the old argument with the new one in a call to the function and 
 
 If you rename a `kwarg` you simply need to set the `arg_in_kwargs` argument to `True`:
 
-.. testcode::
+.. code-block:: python
 
     from gammapy.utils.deprecation import deprecated_renamed_argument
 
@@ -652,7 +652,7 @@ Removing an attribute
 You can also remove an attribute from a class using the ``deprecated_attribute`` decorator.
 If you have a alternative attribute to use instead, pass its name in the `alternative` argument.
 
-.. testcode::
+.. code-block:: python
 
     from gammapy.utils.deprecation import deprecated_attribute
 

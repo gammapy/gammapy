@@ -403,7 +403,6 @@ class DataStore:
         observations : `~gammapy.data.Observations`
             Container holding a list of `~gammapy.data.Observation`.
         """
-
         if selection is None:
             obs_id_selection = self.obs_ids
         else:
@@ -506,7 +505,6 @@ class DataStore:
         >>> datastore = DataStore.from_dir(path, "hdu-index.fits.gz", "obs-index.fits.gz")
         >>> observation_groups = datastore.get_observation_groups("EVENT_TYPE")
         """
-
         if self.obs_table is None:
             raise ValueError(
                 "obs_table attribute must not be None to select groups of observations"

@@ -1,13 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Simulate observations"""
-
 from itertools import repeat
 from gammapy.utils import parallel as parallel
 from gammapy.utils.scripts import make_path
 
 
 class ObservationsEventsSampler(parallel.ParallelMixin):
-    """Run event sampling for an emsemble of observations
+    """Run event sampling for an ensemble of observations.
 
     Parameters
     ----------
@@ -77,7 +75,7 @@ class ObservationsEventsSampler(parallel.ParallelMixin):
             return observation
 
     def run(self, observations, models=None):
-        """Run event sampling for an ensemble of onservations
+        """Run event sampling for an ensemble of observations.
 
         Parameters
         ----------
@@ -87,7 +85,6 @@ class ObservationsEventsSampler(parallel.ParallelMixin):
             Models to simulate.
             Can be None to only sample background events. Default is None.
         """
-
         n_jobs = min(self.n_jobs, len(observations))
 
         observations = parallel.run_multiprocessing(
