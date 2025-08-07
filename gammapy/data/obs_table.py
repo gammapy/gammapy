@@ -5,10 +5,8 @@ from astropy.coordinates import Angle, SkyCoord, EarthLocation
 from astropy.table import Table, Column
 from astropy.units import Quantity, Unit
 from gammapy.utils.regions import SphericalCircleSkyRegion
-from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
 from gammapy.utils.time import time_ref_from_dict
-from gammapy.data.metadata import METADATA_FITS_KEYS
 from astropy.time import Time
 from astropy import units as u
 
@@ -73,164 +71,24 @@ class ObservationTable(Table):
 
         return table
 
-    def read(self, filename, fileformat=None, **kwargs):
-        """Modified reader for ObservationTable"""
-        """Header and super().read(make_path(filename), **kwargs) modified from legacy class ObservationTable."""
+    @classmethod
+    def read(cls, filename, hdu="OBS_INDEX", checksum=False, **kwargs):
+        """Read from FITS file.
 
-        """Read an observation table from file.
+        Format specification: :ref:`gadf0.2/0.3:obs-index`
 
         Parameters
         ----------
-        filename : `pathlib.Path` or str
-            Filename.
-        fileformat : str
-            Fileformat, default is to infer from file if specified as None, if not possible, "GADF0.3" for GADF v.0.3 is chosen.
-        **kwargs : dict, optional
-            Keyword arguments passed to `~astropy.table.Table.read`.
+        filename : `pathlib.Path`, str
+            Filename
+        hdu : str
+            Name of observation-index HDU. Default is "OBS_INDEX".
+        checksum : bool
+            If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
         """
+        from gammapy.data.io import ObservationTableReader
 
-        # Read disk table "table_disk", taken from class ObervationTable. TODO: Pot. lazy loading in future?"""
-        table_disk = super().read(make_path(filename), **kwargs)
-
-        # Get header of obs-index table.
-        meta = table_disk.meta
-
-        # If no file-format specified, try to infer file format of table_disk, otherwise use GADF v.0.3. As discussed with @bkhelifi.
-        if fileformat is None:
-            if "HDUCLASS" in meta.keys():
-                if "HDUVERS" in meta.keys():
-                    fileformat = meta["HDUCLASS"] + meta["HDUVERS"]
-            else:
-                fileformat = "GADF0.3"  # Use default "GADF0.3".
-
-        # For specified fileformat call reader to convert to internal data model, as discussed with @bkhelifi, @registerrier.
-        if fileformat == "GADF0.2":
-            return self._read_from_gadf02(table_disk)
-        elif fileformat == "GADF0.3":
-            return self._read_from_gadf03(table_disk)
-
-    def _read_from_gadf03(self, table_disk):
-        """Converter from GADF v.0.3 to internal table model."""
-        """ Based on specification: https://gamma-astro-data-formats.readthedocs.io/en/v0.3/"""
-
-        # Create internal table "table_internal" with all names, corresp. units, types and descriptions, for the internal table model.
-        table_internal = self.table
-
-        return table_internal
-
-    def _read_from_gadf02(self, table_disk):
-        """Converter from GADF v.0.2 to internal table model."""
-        """Based on specification: https://gamma-astro-data-formats.readthedocs.io/en/v0.2/"""
-
-        # Required names to fill internal table format, for GADF v.0.2, will be extended after checking POINTING. Similar to PR#5954.
-        required_names_on_disk = [
-            "OBS_ID",
-            "OBJECT",
-            "GEOLON",
-            "GEOLAT",
-            "ALTITUDE",
-            "TSTART",
-            "TSTOP",
-        ]
-
-        # Get colnames of disk_table
-        names_disk = table_disk.colnames
-
-        # Get header of obs-index table.
-        meta = table_disk.meta
-
-        # Check which info is given for POINTING
-        # Used commit 16ce9840f38bea55982d2cd986daa08a3088b434 by @registerrier
-        if "OBS_MODE" in names_disk:
-            # like in data_store.py:
-            if table_disk["OBS_MODE"] == "DRIFT":
-                required_names_on_disk.append("ALT_PNT")
-                required_names_on_disk.append("AZ_PNT")
-            else:
-                required_names_on_disk.append("RA_PNT")
-                required_names_on_disk.append("DEC_PNT")
-        else:
-            # if "OBS_MODE" not given, decide based on what is given, RADEC or ALTAZ
-            if "RA_PNT" in names_disk:
-                required_names_on_disk.append("RA_PNT")
-                required_names_on_disk.append("DEC_PNT")
-            elif "ALT_PNT" in names_disk:
-                required_names_on_disk.append("ALT_PNT")
-                required_names_on_disk.append("AZ_PNT")
-            else:
-                raise RuntimeError("Neither RADEC nor ALTAZ is given in table on disk!")
-
-        # Used: aeb1ea01e60e1f02c5fb59f50141c81e0b2fb8f6:
-        missing_names = set(required_names_on_disk).difference(
-            names_disk + list(meta.keys())
-        )
-        if len(missing_names) != 0:
-            raise RuntimeError(
-                f"Not all columns required for GADF v.0.2 were found in file. Missing: {missing_names}"
-            )
-        #             )  # looked into gammapy/workflow/core.py
-
-        # Create internal table "table_internal" with all names, corresp. units, types and descriptions, for the internal table model.
-        table_internal = ObservationTable(self._reference_table())
-
-        # Fill internal table for mandatory columns by constructing the table row-wise with the internal representations.
-        number_of_observations = len(
-            table_disk
-        )  # Get number of observations, equal to number of rows in table on disk.
-
-        for i in range(number_of_observations):
-            row_internal = [str(table_disk[i]["OBS_ID"]), str(table_disk[i]["OBJECT"])]
-
-            if "RA_PNT" in required_names_on_disk:
-                row_internal.append(
-                    METADATA_FITS_KEYS["pointing"]["radec_mean"]["input"](
-                        {
-                            "RA_PNT": table_disk[i]["RA_PNT"],
-                            "DEC_PNT": table_disk[i]["DEC_PNT"],
-                        }
-                    )
-                )
-            elif "ALT_PNT" in required_names_on_disk:
-                row_internal.append(
-                    METADATA_FITS_KEYS["pointing"]["altaz_mean"]["input"](
-                        {
-                            "ALT_PNT": table_disk[i]["ALT_PNT"],
-                            "AZ_PNT": table_disk[i]["AZ_PNT"],
-                        }
-                    )
-                )
-
-            row_internal.append(
-                METADATA_FITS_KEYS["observation"]["location"]["input"](
-                    {
-                        "GEOLON": meta["GEOLON"],
-                        "GEOLAT": meta["GEOLAT"],
-                        "ALTITUDE": meta["ALTITUDE"],
-                    }
-                )
-            )
-
-            # from @properties "time_ref", "time_start", "time_stop"
-            time_ref = time_ref_from_dict(meta)
-            if "TIMEUNIT" in meta.keys():
-                time_unit = meta["TIMEUNIT"]
-            else:
-                time_unit = "s"
-            row_internal.append(time_ref + Quantity(table_disk[i]["TSTART"], time_unit))
-            row_internal.append(time_ref + Quantity(table_disk[i]["TSTOP"], time_unit))
-
-            # )  # like in event_list.py, l.201, commit: 08c6f6a
-            table_internal.add_row(
-                row_internal
-            )  # Add row to internal table (fill table).
-
-        # Load optional columns, whose names are not already processed, automatically into internal table.
-        opt_names = set(names_disk).difference(required_names_on_disk)
-        for name in opt_names:  # add column-wise all optional column-data present in file, independent of format.
-            table_internal[name] = table_disk[name]
-
-        # return internal table, instead of copy of disk-table like before.
-        return table_internal
+        return ObservationTableReader(hdu, checksum).read(filename)
 
     @property
     def pointing_radec(self):

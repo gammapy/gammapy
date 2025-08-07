@@ -2,9 +2,12 @@
 import warnings
 from astropy.io import fits
 from astropy.table import Table
-from gammapy.data import EventListMetaData, EventList
+from gammapy.data import EventListMetaData, EventList, ObservationTable
 from gammapy.utils.scripts import make_path
 from gammapy.utils.metadata import CreatorMetaData
+from gammapy.data.metadata import METADATA_FITS_KEYS
+from gammapy.utils.time import time_ref_from_dict
+from astropy.units import Quantity
 
 
 class ObservationTableReader:
@@ -32,15 +35,16 @@ class ObservationTableReader:
         hduvers = obs_hdu.header.get("HDUVERS", "unknown")
         return [hduclass.lower(), hduvers.lower()]
 
-    def read(self, filename, format="gadf0.3"):
+    def read(self, filename, format=None, version=None):
         """Read EventList from file.
 
         Parameters
         ----------
         filename : `pathlib.Path`, str
             Filename
-        format : {"gadf0.2", "gadf0.3"}, optional
-            format and its version, of the ObservationTable. Default is 'gadf0.3'.
+        format : {"gadf"}, optional
+        version : {"0.2","0.3"}
+            format and its version, of the ObservationTable. Default is 'gadf' with version '0.3'.
             If None, will try to guess from header.
         """
         filename = make_path(filename)
@@ -75,7 +79,116 @@ class ObservationTableReader:
         table_disk = Table.read(obs_hdu)  # table_disk !
         # meta = ObservationMetaData.from_header(table.meta)
         # print(meta)
-        return table_disk
+
+        # Required names to fill internal table format, for GADF v.0.2, will be extended after checking POINTING. Similar to PR#5954.
+        required_names_on_disk = [
+            "OBS_ID",
+            "OBJECT",
+            "GEOLON",
+            "GEOLAT",
+            "ALTITUDE",
+            "TSTART",
+            "TSTOP",
+        ]
+
+        # Get colnames of disk_table
+        names_disk = table_disk.colnames
+
+        # Get header of obs-index table.
+        meta = table_disk.meta
+
+        # Check which info is given for POINTING
+        # Used commit 16ce9840f38bea55982d2cd986daa08a3088b434 by @registerrier
+        if "OBS_MODE" in names_disk:
+            # like in data_store.py:
+            if table_disk["OBS_MODE"] == "DRIFT":
+                required_names_on_disk.append("ALT_PNT")
+                required_names_on_disk.append("AZ_PNT")
+            else:
+                required_names_on_disk.append("RA_PNT")
+                required_names_on_disk.append("DEC_PNT")
+        else:
+            # if "OBS_MODE" not given, decide based on what is given, RADEC or ALTAZ
+            if "RA_PNT" in names_disk:
+                required_names_on_disk.append("RA_PNT")
+                required_names_on_disk.append("DEC_PNT")
+            elif "ALT_PNT" in names_disk:
+                required_names_on_disk.append("ALT_PNT")
+                required_names_on_disk.append("AZ_PNT")
+            else:
+                raise RuntimeError("Neither RADEC nor ALTAZ is given in table on disk!")
+
+        # Used: aeb1ea01e60e1f02c5fb59f50141c81e0b2fb8f6:
+        missing_names = set(required_names_on_disk).difference(
+            names_disk + list(meta.keys())
+        )
+        if len(missing_names) != 0:
+            raise RuntimeError(
+                f"Not all columns required for GADF v.0.2 were found in file. Missing: {missing_names}"
+            )
+        #             )  # looked into gammapy/workflow/core.py
+
+        # Create internal table "table_internal" with all names, corresp. units, types and descriptions, for the internal table model.
+        table_internal = ObservationTable(ObservationTable._reference_table())
+
+        # Fill internal table for mandatory columns by constructing the table row-wise with the internal representations.
+        number_of_observations = len(
+            table_disk
+        )  # Get number of observations, equal to number of rows in table on disk.
+
+        for i in range(number_of_observations):
+            row_internal = [str(table_disk[i]["OBS_ID"]), str(table_disk[i]["OBJECT"])]
+
+            if "RA_PNT" in required_names_on_disk:
+                row_internal.append(
+                    METADATA_FITS_KEYS["pointing"]["radec_mean"]["input"](
+                        {
+                            "RA_PNT": table_disk[i]["RA_PNT"],
+                            "DEC_PNT": table_disk[i]["DEC_PNT"],
+                        }
+                    )
+                )
+            elif "ALT_PNT" in required_names_on_disk:
+                row_internal.append(
+                    METADATA_FITS_KEYS["pointing"]["altaz_mean"]["input"](
+                        {
+                            "ALT_PNT": table_disk[i]["ALT_PNT"],
+                            "AZ_PNT": table_disk[i]["AZ_PNT"],
+                        }
+                    )
+                )
+
+            row_internal.append(
+                METADATA_FITS_KEYS["observation"]["location"]["input"](
+                    {
+                        "GEOLON": meta["GEOLON"],
+                        "GEOLAT": meta["GEOLAT"],
+                        "ALTITUDE": meta["ALTITUDE"],
+                    }
+                )
+            )
+
+            # from @properties "time_ref", "time_start", "time_stop"
+            time_ref = time_ref_from_dict(meta)
+            if "TIMEUNIT" in meta.keys():
+                time_unit = meta["TIMEUNIT"]
+            else:
+                time_unit = "s"
+            row_internal.append(time_ref + Quantity(table_disk[i]["TSTART"], time_unit))
+            row_internal.append(time_ref + Quantity(table_disk[i]["TSTOP"], time_unit))
+
+            # )  # like in event_list.py, l.201, commit: 08c6f6a
+            table_internal.add_row(
+                row_internal
+            )  # Add row to internal table (fill table).
+
+        # Load optional columns, whose names are not already processed, automatically into internal table.
+        opt_names = set(names_disk).difference(required_names_on_disk)
+        for name in opt_names:  # add column-wise all optional column-data present in file, independent of format.
+            table_internal[name] = table_disk[name]
+
+        # return internal table, instead of copy of disk-table like before.
+        return table_internal
         # return ObservationTable(table=table, meta=meta)
 
     @staticmethod
