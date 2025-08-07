@@ -1516,7 +1516,6 @@ class SourceCatalogObject2PC(SourceCatalogObjectFermiPCBase):
     @property
     def flux_points_table(self):
         """Flux points (`~astropy.table.Table`)."""
-
         try:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", u.UnitsWarning)
@@ -1693,12 +1692,10 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
 
     @property
     def pulse_profile_radio(self):
-        """
-        Radio pulse profile provided in the auxiliary file of 3PC.
+        """Radio pulse profile provided in the auxiliary file of 3PC.
 
         Returns
         -------
-
         radio_profile: `~gammapy.maps.RegionNDMap`
             Map containing the radio profile.
         """
@@ -1737,7 +1734,6 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
         maps: `~gammapy.maps.Maps`
             Maps containing the pulse profile in the different energy bin.
         """
-
         table = Table.read(self._auxiliary_filename, hdu="GAMMA_LC")
         phases = MapAxis.from_edges(
             np.unique(np.concatenate([table["Ph_Min"], table["Ph_Max"]])),
