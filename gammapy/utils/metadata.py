@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Metadata base container for Gammapy."""
 
+import logging
 import json
 from typing import ClassVar, Literal, Optional, get_args
 import astropy.units as u
@@ -59,6 +60,8 @@ METADATA_FITS_KEYS = {
         },
     },
 }
+
+log = logging.getLogger(__name__)
 
 
 class MetaData(BaseModel):
@@ -149,11 +152,13 @@ class MetaData(BaseModel):
         for key, item in fits_export_keys.items():
             if not isinstance(item, str):
                 # Not a one to one conversion
-                if key in header.keys():
+                try:
                     kwargs[key] = item["input"](header)
-                else:
+                except KeyError:
                     kwargs[key] = None
-                    UserWarning(f"Could not get metadata from header for key: {key}")
+                    log.warning(
+                        f"Metadata from header: Could not retrieve '{key}' from header."
+                    )
             else:
                 kwargs[key] = header.get(item)
 
