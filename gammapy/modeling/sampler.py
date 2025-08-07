@@ -84,6 +84,7 @@ class Sampler:
     def _update_models_from_posterior(models, result):
         """
         Update the models with the posterior distribution.
+
         But this raises the question on how to estimate the error given the median and maxLogL.
         Covariance matrix is not defined in this sample approach (could be approximated via the samples).
 
@@ -239,6 +240,7 @@ class SamplerResult:
 
 class SamplerLikelihood:
     """Wrapper of the likelihood function used by the sampler.
+
     This is needed to modify parameters and likelihood by *-0.5
 
     Parameters

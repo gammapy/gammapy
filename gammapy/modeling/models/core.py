@@ -21,7 +21,7 @@ log = logging.getLogger(__name__)
 
 
 def _recursive_dict_filename_update(dict_, path):
-    """update model filename to full path if exits"""
+    """Update model filename to full path if exits."""
     for key, value in dict_.items():
         if isinstance(value, dict):
             _recursive_dict_filename_update(value, path)
@@ -32,7 +32,7 @@ def _recursive_dict_filename_update(dict_, path):
 
 
 def _recursive_model_filename_update(model, path):
-    """update model filename to relative path if child of path"""
+    """Update model filename to relative path if child of path."""
     if hasattr(model, "filename") and path == make_path(model.filename).parent:
         _, filename = split(model.filename)
         model.filename = filename
@@ -117,7 +117,7 @@ def _build_parameters_from_dict(data, default_parameters):
 
 
 def _check_name_unique(model, names):
-    """Check if a model is not duplicated"""
+    """Check if a model is not duplicated."""
     if model.name in names:
         raise (
             ValueError(
@@ -129,16 +129,16 @@ def _check_name_unique(model, names):
 
 def _check_fov_background_models(models):
     """
-    Checks if a maximum of one `~gammapy.modeling.models.FoVBackgroundModel` is assigned to dataset
-    and returns a dictionnary mapping `dataset_name` to the background model name.
+    Check if a maximum of one `~gammapy.modeling.models.FoVBackgroundModel` is assigned to dataset
+    and returns a dictionary mapping `dataset_name` to the background model name.
 
     Parameters
     ----------
     models : `~gammapy.modeling.models.Models`
         List of Models
 
-    Returns:
-    --------
+    Returns
+    -------
     bkg_model_mapping : dict
         Dictionary mapping dataset name to `~gammapy.modeling.models.FoVBackgroundModel` name.
     """
@@ -167,7 +167,7 @@ def _write_models(
     checksum=False,
     extra_dict=None,
 ):
-    """Write models to YAML file with additionnal informations using an `extra_dict`"""
+    """Write models to YAML file with additional information using an `extra_dict`."""
 
     base_path, _ = split(path)
     path = make_path(path)
@@ -1137,7 +1137,6 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
         model : `~gammapy.modeling.models.TemplateSpectralModel`
             Template spectral model.
         """
-
         from . import TemplateSpectralModel
 
         energy = geom.axes[0].center

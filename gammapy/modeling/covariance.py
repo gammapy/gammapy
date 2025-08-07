@@ -72,7 +72,6 @@ class Covariance:
 
         Used in the optimizer interface.
         """
-
         npars = len(parameters)
 
         if npars > 0:
@@ -218,7 +217,7 @@ class Covariance:
 
 
 class CovarianceMixin:
-    """Mixin class for covariance property on multi-components models"""
+    """Mixin class for covariance property on multi-components models."""
 
     def _check_covariance(self):
         if not self.parameters == self._covariance.parameters:

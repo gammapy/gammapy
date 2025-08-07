@@ -675,7 +675,6 @@ class GaussianSpatialModel(SpatialModel):
         region : `~regions.EllipseSkyRegion`
             Model outline.
         """
-
         minor_axis = Angle(self.sigma.quantity * np.sqrt(1 - self.e.quantity**2))
         return EllipseSkyRegion(
             center=self.position,
@@ -706,7 +705,6 @@ class GaussianSpatialModel(SpatialModel):
         region : `~regions.EllipseSkyRegion`
             Model error region.
         """
-
         sigma_hi = self.sigma.quantity + (self.sigma.error * self.sigma.unit)
         sigma_lo = self.sigma.quantity - (self.sigma.error * self.sigma.unit)
 
@@ -1473,7 +1471,6 @@ class TemplateSpatialModel(SpatialModel):
         Note that, if the map data assume negative values, these are
         clipped to zero.
         """
-
         offset_lon = 0.0 * u.deg if lon_0 is None else lon_0 - self.map_center.data.lon
         offset_lat = 0.0 * u.deg if lat_0 is None else lat_0 - self.map_center.data.lat
 

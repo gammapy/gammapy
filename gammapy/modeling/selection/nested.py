@@ -79,6 +79,7 @@ class NestedModelSelection:
 
     def ts_asimov(self, datasets):
         """Perform the alternative hypothesis testing in the Asimov dataset.
+
         The Asimov dataset is defined by counts=npred such as the non-null model is the true model.
         """
         asimov_datasets = datasets._to_asimov_datasets()
@@ -108,7 +109,6 @@ class NestedModelSelection:
                 * "fit_results" : results for the best fit
                 * "fit_results_null" : fit results for the null hypothesis
         """
-
         for p in self.parameters:
             p.frozen = False
         fit_results = self.fit.run(datasets)
@@ -160,7 +160,7 @@ class NestedModelSelection:
         return cache
 
     def _restore_status(self, datasets, cache):
-        """Restore parameters to given cached objects and values"""
+        """Restore parameters to given cached objects and values."""
         for p in self.parameters:
             p.frozen = False
         for kp, p in enumerate(datasets.models.parameters):
