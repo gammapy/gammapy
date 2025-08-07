@@ -320,7 +320,7 @@ class Parameter:
 
     @property
     def scale_transform(self):
-        """scale interp : {"lin", "sqrt", "log"}"""
+        """Scale interp : {"lin", "sqrt", "log"}."""
         return self._scale_transform
 
     @scale_transform.setter
@@ -378,6 +378,7 @@ class Parameter:
     @property
     def conf_min(self):
         """Confidence minimum value as a `float`.
+
         Return parameter minimum if defined, otherwise  a default is estimated from value and error.
         """
         if not np.isnan(self.min):
@@ -392,9 +393,9 @@ class Parameter:
     @property
     def conf_max(self):
         """Confidence maximum value as a `float`.
+
         Return parameter maximum if defined, otherwise a default is estimated from value and error.
         """
-
         if not np.isnan(self.max):
             return self.max
         else:
@@ -576,11 +577,11 @@ class Parameter:
         return interp_scale._inverse_deriv(self.scale * factor) * self.scale
 
     def autoscale(self):
-        "Apply `~gammapy.utils.interpolation.interpolation_scale` and `scale_method` to the parameter."
+        """Apply `~gammapy.utils.interpolation.interpolation_scale` and `scale_method` to the parameter."""
         self.factor = self.transform(self.value, update_scale=True)
 
     def reset_autoscale(self):
-        "Reset scaling such as factor=value, scale=1."
+        """Reset scaling such as factor=value, scale=1."""
         self._factor = self._value
         self._scale = 1.0
 
@@ -1001,7 +1002,7 @@ class PriorParameter(Parameter):
 
 
 class PriorParameters(Parameters):
-    """Container of parameter priors :
+    """Container of parameter priors.
 
     - List of `PriorParameter` objects.
 
