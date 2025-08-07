@@ -318,7 +318,6 @@ class EnergyDependentMorphologyEstimator(Estimator):
                 * "df" : the number of degrees of freedom between null and alternative hypothesis
                 * "significance" : significance of the result
         """
-
         if not isinstance(datasets, DatasetsActor):
             datasets = Datasets(datasets=datasets)
 

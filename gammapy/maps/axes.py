@@ -811,7 +811,7 @@ class MapAxis:
         return u.Quantity(values, unit=self.unit, copy=COPY_IF_NEEDED)
 
     def wrap_coord(self, coord):
-        """Wrap coords between axis edges for a periodic boundary condition
+        """Wrap coords between axis edges for a periodic boundary condition.
 
         Parameters
         ----------
@@ -823,7 +823,6 @@ class MapAxis:
         coord : `~numpy.ndarray`
             Wrapped array of axis coordinate values.
         """
-
         m1, m2 = self.edges_min[0], self.edges_max[-1]
         out_of_range = (coord >= m2) | (coord < m1)
         return np.where(out_of_range, (coord - m1) % (m2 - m1) + m1, coord)
@@ -1661,8 +1660,9 @@ class MapAxes(Sequence):
         return self.__class__(axes=axes)
 
     def replace(self, axis):
-        """Replace a given axis. In order to be replaced,
-        the name of the new axis must match the name of the old axis.
+        """Replace a given axis.
+
+        In order to be replaced, the name of the new axis must match the name of the old axis.
 
         Parameters
         ----------
@@ -2656,6 +2656,7 @@ class TimeMapAxis:
 
     def pix_to_coord(self, pix):
         """Transform from pixel position to time coordinate.
+
         Currently, works only for linear interpolation scheme.
 
         Parameters
@@ -2881,7 +2882,7 @@ class TimeMapAxis:
     # TODO: how configurable should that be? column names?
     @classmethod
     def from_table(cls, table, format="gadf", idx=0):
-        """Create time map axis from table
+        """Create time map axis from table.
 
         Parameters
         ----------
@@ -3109,7 +3110,6 @@ class TimeMapAxis:
             * "overflow" for the bins falling above  the maximum axis threshold
             * "outflow" for other states
         """
-
         for _, edge in enumerate(interval_edges):
             if not isinstance(edge, Time):
                 interval_edges[_] = self.reference_time + interval_edges[_]
@@ -3254,7 +3254,7 @@ class LabelMapAxis:
         return self.coord_to_idx(coord).astype("float")
 
     def pix_to_idx(self, pix, clip=False):
-        """Convert pixel to idx
+        """Convert pixel to idx.
 
         Parameters
         ----------
@@ -3515,7 +3515,6 @@ class LabelMapAxis:
         axis : `LabelMapAxis`
             Stacked axis.
         """
-
         axis_stacked = axes[0]
 
         for ax in axes[1:]:

@@ -269,7 +269,6 @@ class EDispKernel(IRF):
         format : {"gadf", "gtdrm"}
             FITS format convention. Default is "gadf".
         """
-
         if format == "gadf":
             with fits.open(
                 str(make_path(filename)), memmap=False, checksum=checksum

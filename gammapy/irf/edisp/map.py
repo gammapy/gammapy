@@ -571,7 +571,6 @@ class EDispKernelMap(IRFMap):
             Energy dispersion kernel map.
 
         """
-
         if format == "gadf":
             return super().read(filename, format, hdu, checksum)
         elif format == "gtdrm":

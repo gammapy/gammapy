@@ -27,7 +27,7 @@ class Estimator(abc.ABC):
 
     @property
     def selection_optional(self):
-        """"""
+        """Set optional selection."""
         return self._selection_optional
 
     @selection_optional.setter

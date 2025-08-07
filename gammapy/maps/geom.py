@@ -440,7 +440,7 @@ class Geom(abc.ABC):
             Name of the axis to remove.
 
         Returns
-            -------
+        -------
         geom : `Geom`
             New geom with the axis removed.
         """
