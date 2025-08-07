@@ -158,7 +158,6 @@ def split_dataset(dataset, width, margin, split_template_models=True):
     ...     dataset, width=width, margin=margin, split_template_models=True
     ... )
     """
-
     if margin >= width / 2.0:
         raise ValueError("margin should be lower than width/2.")
 
@@ -216,7 +215,7 @@ def split_dataset(dataset, width, margin, split_template_models=True):
 
 
 def create_map_dataset_from_dl4(data, geom=None, energy_axis_true=None, name=None):
-    """Create a map dataset from a map dataset or an observation containing DL4 IRFs
+    """Create a map dataset from a map dataset or an observation containing DL4 IRFs.
 
     Parameters
     ----------

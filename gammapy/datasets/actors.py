@@ -15,6 +15,7 @@ __all__ = ["DatasetsActor"]
 
 class DatasetsActor(Datasets):
     """A modified Dataset collection for parallel evaluation using ray actors.
+
     Support only datasets composed of MapDataset.
 
     Parameters

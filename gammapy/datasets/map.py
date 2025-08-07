@@ -227,7 +227,9 @@ def create_empty_map_dataset_from_irfs(
     position=None,
     frame="icrs",
 ):
-    """Create a MapDataset, if energy axes, spatial width or bin size are not given
+    """Create an empty `MapDataset` from IRFs.
+
+    If energy axes, spatial width or bin size are not given
     they are determined automatically from the IRFs,
     but the estimated value cannot exceed the given limits.
 
@@ -260,7 +262,6 @@ def create_empty_map_dataset_from_irfs(
     frame: str, optional
         frame of the coordinate system. Default is "icrs".
     """
-
     if position is None:
         if hasattr(observation, "pointing"):
             if observation.pointing.mode is not PointingMode.POINTING:
@@ -327,7 +328,9 @@ def create_map_dataset_from_observation(
     position=None,
     frame="icrs",
 ):
-    """Create a MapDataset, if energy axes, spatial width or bin size are not given
+    """Create a `MapDataset` from an observation.
+
+    If energy axes, spatial width or bin size are not given
     they are determined automatically from the observation IRFs,
     but the estimated value cannot exceed the given limits.
 
@@ -440,10 +443,8 @@ class MapDataset(Dataset):
     meta : `~gammapy.datasets.MapDatasetMetaData`
         Associated meta data container
 
-
     Notes
     -----
-
     If an `HDULocation` is passed the map is loaded lazily. This means the
     map data is only loaded in memory as the corresponding data attribute
     on the MapDataset is accessed. If it was accessed once it is cached for
@@ -559,7 +560,7 @@ class MapDataset(Dataset):
 
     @property
     def _psf_kernel(self):
-        """Precompute PSFkernel if there is only one spatial bin in the PSFmap"""
+        """Precompute PSFkernel if there is only one spatial bin in the PSFmap."""
         if self.psf and self.psf.has_single_spatial_bin:
             if self.psf.energy_name == "energy_true":
                 map_ref = self.exposure
@@ -892,7 +893,7 @@ class MapDataset(Dataset):
         **kwargs,
     ):
         """
-        Create a MapDataset object with zero filled maps according to the specified geometries.
+        Create a `MapDataset` object with zero filled maps according to the specified geometries.
 
         Parameters
         ----------
@@ -959,7 +960,7 @@ class MapDataset(Dataset):
         reco_psf=False,
         **kwargs,
     ):
-        """Create a MapDataset object with zero filled maps.
+        """Create a `MapDataset` object with zero filled maps.
 
         Parameters
         ----------
@@ -1007,7 +1008,6 @@ class MapDataset(Dataset):
         ...        )
         >>> empty = MapDataset.create(geom=geom, energy_axis_true=energy_axis_true, name="empty")
         """
-
         geoms = create_map_dataset_geoms(
             geom=geom,
             energy_axis_true=energy_axis_true,
@@ -1497,7 +1497,6 @@ class MapDataset(Dataset):
 
     def _to_asimov_dataset(self):
         """Create Asimov dataset from the current models."""
-
         npred = self.npred()
         data = np.nan_to_num(npred.data, copy=True, nan=0.0, posinf=0.0, neginf=0.0)
         npred.data = data.astype("float")
@@ -1742,7 +1741,6 @@ class MapDataset(Dataset):
         dataset : `MapDataset`
             Map dataset.
         """
-
         if name is None:
             header = fits.getheader(str(make_path(filename)))
             name = header.get("NAME", name)
@@ -3306,7 +3304,6 @@ class MapDatasetOnOff(MapDataset):
         dataset : `MapDatasetOnOff`
             Downsampled map dataset.
         """
-
         dataset = super().downsample(factor, axis_name, name)
 
         counts_off = None

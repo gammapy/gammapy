@@ -98,8 +98,7 @@ class MapDatasetEventSampler:
         dataset,
         model,
     ):
-        """Calculate Npred for a given `dataset.model` by evaluating
-        it on a region geometry.
+        """Calculate Npred for a given `dataset.model` by evaluating it on a region geometry.
 
         Parameters
         ----------
@@ -321,7 +320,6 @@ class MapDatasetEventSampler:
         events : `gammapy.data.EventList`
             Background events.
         """
-
         table = Table()
         if dataset.background:
             log.info("Evaluating background...")
@@ -429,6 +427,7 @@ class MapDatasetEventSampler:
     @staticmethod
     def event_list_meta(dataset, observation, keep_mc_id=True):
         """Event list meta info.
+
         Please, note that this function will be updated in the future.
 
         Parameters
@@ -671,12 +670,12 @@ class ObservationEventSampler(MapDatasetEventSampler):
             If `models` contains one or multiple `FoVBackgroundModel`
             it should match the `dataset_name` of the background model to use.
             Default is None.
+
         Returns
         -------
         observation : `~gammapy.data.Observation`
             A copy of the input observation with event list filled.
         """
-
         dataset = create_map_dataset_from_observation(
             observation, models, dataset_name, **self.dataset_kwargs
         )
