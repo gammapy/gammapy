@@ -192,6 +192,7 @@ class ObservationTableReader:
         for name in opt_names:  # add column-wise all optional column-data present in file, independent of format.
             table_internal[name] = table_disk[name]
 
+        table_internal.meta = meta
         # return internal table, instead of copy of disk-table like before.
         return table_internal
         # return ObservationTable(table=table, meta=meta)
