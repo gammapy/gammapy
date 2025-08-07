@@ -281,7 +281,6 @@ class PSFMap(IRFMap):
         kernel : `~gammapy.irf.PSFKernel` or list of `PSFKernel`
             The resulting kernel.
         """
-
         if geom.is_region or geom.is_hpx:
             geom = geom.to_wcs_geom()
 

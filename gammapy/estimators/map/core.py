@@ -279,12 +279,12 @@ class FluxMaps:
 
     @property
     def n_sigma(self):
-        """n sigma"""
+        """Number of sigma."""
         return self.meta.get("n_sigma", 1)
 
     @property
     def n_sigma_ul(self):
-        """n sigma UL."""
+        """Number of sigma UL."""
         return self.meta.get("n_sigma_ul")
 
     @property
