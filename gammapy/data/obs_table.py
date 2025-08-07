@@ -88,7 +88,7 @@ class ObservationTable(Table):
         """
         from gammapy.data.io import ObservationTableReader
 
-        return ObservationTableReader(hdu, checksum).read(filename)
+        return ObservationTableReader(hdu, checksum).read(filename, **kwargs)
 
     @property
     def pointing_radec(self):
