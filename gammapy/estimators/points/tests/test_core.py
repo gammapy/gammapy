@@ -19,6 +19,8 @@ from gammapy.utils.testing import (
     mpl_plot_check,
     requires_data,
 )
+from gammapy.modeling.scipy import stat_profile_ul_scipy
+
 
 FLUX_POINTS_FILES = [
     "diff_flux_points.ecsv",
@@ -464,3 +466,23 @@ def test_flux_point_init():
 
     assert fp.available_quantities == ["norm"]
     assert_allclose(fp.norm.data.ravel(), [10, 20, 30, 40])
+
+
+@requires_data()
+def test_recompute_ul():
+    flux_points = FluxPoints.read(
+        "$GAMMAPY_DATA/estimators/crab_hess_fp/crab_hess_fp.fits"
+    )
+    value_scan = flux_points.stat_scan.geom.axes["norm"].center
+    idx = 0
+    stat_scan = flux_points.stat_scan.data[idx].squeeze()
+
+    with pytest.raises(
+        ValueError,
+        match="Statistic profile has no finite value therefore no best-fit value can be determined.",
+    ):
+        stat_profile_ul_scipy(value_scan, stat_scan, delta_ts=4)
+
+    # As we have the above error, the recompute_ul should set this first value to NaN
+    recomputed = flux_points.recompute_ul()
+    assert_allclose(recomputed.norm_ul.data[0][0], np.nan)
