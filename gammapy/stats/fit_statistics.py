@@ -61,7 +61,6 @@ def cash(n_on, mu_on, truncation_value=None):
     * `Cash (1979), ApJ 228, 939,
       <https://ui.adsabs.harvard.edu/abs/1979ApJ...228..939C>`_
     """
-
     if truncation_value is None:
         truncation_value = get_fit_statistics_compiled()["TRUNCATION_VALUE"]
 
@@ -119,7 +118,6 @@ def cstat(n_on, mu_on, truncation_value=None):
     * `Cash (1979), ApJ 228, 939
       <https://ui.adsabs.harvard.edu/abs/1979ApJ...228..939C>`_
     """
-
     if truncation_value is None:
         truncation_value = get_fit_statistics_compiled()["TRUNCATION_VALUE"]
 
@@ -432,7 +430,7 @@ class ProfileFitStatistic(FitStatistic):
 
     @classmethod
     def stat_array_dataset(cls, dataset):
-        """Estimate statitistic from interpolation of the likelihood profile."""
+        """Estimate statistic from interpolation of the likelihood profile."""
         model = np.zeros(dataset.data.dnde.data.shape) + (
             dataset.flux_pred() / dataset.data.dnde_ref
         ).to_value("")

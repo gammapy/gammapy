@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 
 
 def wrap_at(value, min_value, max_value):
-    """Wraps a value to be within the range [min_value, max_value).
+    """Wrap a value to be within the range [min_value, max_value).
 
     Parameters
     ----------
@@ -28,7 +28,6 @@ def wrap_at(value, min_value, max_value):
     wrapped_val : float or `~astropy.units.Unit`
         Wrapped value
     """
-
     # Note: Astropy wrap_at currently works only for wrapping
     # between [0, 360] and [-180, 180]
     range_size = max_value - min_value

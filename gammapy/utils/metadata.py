@@ -197,7 +197,7 @@ class CreatorMetaData(MetaData):
     origin: Optional[str] = None
 
     def update_time(self):
-        """Change creation date to Time.now()"""
+        """Change creation date to Time.now()."""
         self.date = Time.now()
 
 
@@ -254,7 +254,8 @@ class TimeInfoMetaData(MetaData):
     time_stop : `~astropy.time.Time` or str
         The observation stop time.
     reference_time : `~astropy.time.Time` or str
-        The observation reference time."""
+        The observation reference time.
+    """
 
     _tag: ClassVar[Literal["time_info"]] = "time_info"
 
