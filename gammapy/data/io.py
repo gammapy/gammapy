@@ -35,16 +35,15 @@ class ObservationTableReader:
         hduvers = obs_hdu.header.get("HDUVERS", "unknown")
         return [hduclass.lower(), hduvers.lower()]
 
-    def read(self, filename, format=None, version=None):
+    def read(self, filename, format="gadf0.3"):
         """Read EventList from file.
 
         Parameters
         ----------
         filename : `pathlib.Path`, str
             Filename
-        format : {"gadf"}, optional
-        version : {"0.2","0.3"}
-            format and its version, of the ObservationTable. Default is 'gadf' with version '0.3'.
+        format : {"gadf0.2/0.3"}, optional
+            format and its version, of the ObservationTable. Default is 'gadf0.3'.
             If None, will try to guess from header.
         """
         filename = make_path(filename)
@@ -60,10 +59,13 @@ class ObservationTableReader:
                     )
 
             if format is None:
-                format = self.identify_format_from_hdu(obs_hdu)[0]
+                formatname = self.identify_format_from_hdu(obs_hdu)[0]
                 version = self.identify_format_from_hdu(obs_hdu)[1]
+            else:
+                formatname = format[0:4]
+                version = format[4:]
 
-            if format == "gadf" or format == "ogip":
+            if formatname == "gadf" or formatname == "ogip":
                 if version == "0.2":
                     return self.from_gadf02_hdu(obs_hdu)
                 elif version == "0.3":
