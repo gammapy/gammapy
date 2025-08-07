@@ -232,6 +232,13 @@ class PlotMixin:
     def peek(self, figsize=(16, 4)):
         """Quick-look summary plots.
 
+        This method creates a figure displaying the elements of your `SpectrumDataset`.
+        For example:
+
+        * Counts map
+        * Exposure map
+        * Energy dispersion matrix at the geometry center
+
         Parameters
         ----------
         figsize : tuple

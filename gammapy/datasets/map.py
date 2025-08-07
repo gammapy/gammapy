@@ -2378,20 +2378,23 @@ class MapDataset(Dataset):
         energy_axis = self._geom.axes["energy"].squash()
         return self.resample_energy_axis(energy_axis=energy_axis, name=name)
 
-    def peek(self, figsize=(13.0, 7)):
-        """Quick-look summary plots for a given MapDataset:
-        - Exposure map
-        - Counts map
-        - Predicted counts map (Npred)
-        - Exposure profile at geom center
-        - PSF containment radius at geom center
-        - Energy dispersion matrix at geom center
+    def peek(self, figsize=(13, 7)):
+        """Quick-look summary plots.
+
+        This method creates a figure displaying the elements of your `MapDataset`.
+        For example:
+
+        * Exposure map
+        * Counts map
+        * Predicted counts map (Npred)
+        * Exposure profile at the geometry center
+        * PSF containment radius at the geometry center
+        * Energy dispersion matrix at the geometry center
 
         Parameters
         ----------
         figsize : tuple
-            Size of the figure. Default is (13.5, 7).
-
+            Size of the figure. Default is (13, 7).
         """
 
         def plot_counts(ax, counts_data, cmap, vmin, vmax, title="Counts map"):

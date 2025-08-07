@@ -519,6 +519,10 @@ class MapEvaluator:
     def peek(self, figsize=(12, 15)):
         """Quick-look summary plots.
 
+        This method creates a figure displaying the elements of your `Dataset`.
+        The subplots depend on whether you have a `MapDataset` or `SpectrumDataset`
+        and which IRFs are available.
+
         Parameters
         ----------
         figsize : tuple
