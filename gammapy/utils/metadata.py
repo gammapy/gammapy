@@ -149,7 +149,11 @@ class MetaData(BaseModel):
         for key, item in fits_export_keys.items():
             if not isinstance(item, str):
                 # Not a one to one conversion
-                kwargs[key] = item["input"](header)
+                if key in header.keys():
+                    kwargs[key] = item["input"](header)
+                else:
+                    kwargs[key] = None
+                    UserWarning(f"Could not get metadata from header for key: {key}")
             else:
                 kwargs[key] = header.get(item)
 
