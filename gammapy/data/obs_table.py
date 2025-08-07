@@ -376,7 +376,7 @@ class ObservationTable(Table):
 
 
 class ObservationTableChecker(Checker):
-    """Event list checker.
+    """Observation table checker.
 
     Data format specification: ref:`gadf:iact-events`.
 

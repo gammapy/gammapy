@@ -174,8 +174,13 @@ class ObservationTableReader:
                 time_unit = meta["TIMEUNIT"]
             else:
                 time_unit = "s"
-            row_internal.append(time_ref + Quantity(table_disk[i]["TSTART"], time_unit))
-            row_internal.append(time_ref + Quantity(table_disk[i]["TSTOP"], time_unit))
+            row_internal.append(
+                time_ref
+                + Quantity(table_disk[i]["TSTART"].astype("float64"), time_unit)
+            )
+            row_internal.append(
+                time_ref + Quantity(table_disk[i]["TSTOP"].astype("float64"), time_unit)
+            )
 
             # )  # like in event_list.py, l.201, commit: 08c6f6a
             table_internal.add_row(
