@@ -20,7 +20,7 @@ from gammapy.utils.testing import (
     requires_data,
 )
 from gammapy.modeling.scipy import stat_profile_ul_scipy
-
+from ..core import squash_fluxpoints
 
 FLUX_POINTS_FILES = [
     "diff_flux_points.ecsv",
@@ -486,3 +486,23 @@ def test_recompute_ul():
     # As we have the above error, the recompute_ul should set this first value to NaN
     recomputed = flux_points.recompute_ul()
     assert_allclose(recomputed.norm_ul.data[0][0], np.nan)
+
+
+@requires_data()
+def test_sqush_fluxpoints():
+    fp1 = FluxPoints.read("$GAMMAPY_DATA/estimators/crab_hess_fp/crab_hess_fp.fits")
+    energy_axis = fp1.geom.axes["energy"]
+    squash_fp1 = squash_fluxpoints(flux_point=fp1, axis=energy_axis)
+    assert squash_fp1.geom.axes.names == []
+    assert len(fp1.stat.data) == 5
+    assert len(squash_fp1.stat.data) == 1
+
+    fp2 = FluxPoints.read(
+        "$GAMMAPY_DATA/estimators/pks2155_hess_lc/pks2155_hess_lc.fits",
+        format="lightcurve",
+    )
+    time_axis = fp2.geom.axes["time"]
+    squash_fp2 = squash_fluxpoints(fp2, axis=time_axis)
+    assert squash_fp2.geom.axes["energy"].nbin == 1
+    assert len(fp2.stat.data) == 34
+    assert len(squash_fp2.stat.data) == 1

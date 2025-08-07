@@ -37,6 +37,18 @@ def squash_fluxpoints(flux_point, axis):
     to compute the resultant quantities. Stat profiles
     must be present on the `~FluxPoints` object for
     this method to work.
+
+    Parameters
+    ----------
+    flux_point : `~gammapy.estimators.FluxPoints`
+        Flux points object to squash.
+    axis : `MapAxis` or `TimeMapAxis`
+        Axis along which to squash the flux points.
+
+    Returns
+    -------
+    combined_fp : `~gammapy.estimators.FluxPoints`
+        New flux points object.
     """
     value_scan = flux_point.stat_scan.geom.axes["norm"].center
     stat_scan = np.sum(flux_point.stat_scan.data, axis=0).ravel()
@@ -899,6 +911,7 @@ class FluxPoints(FluxMaps):
                 edge_min = edge_min + axis_new.reference_time
                 edge_max = edge_max + axis_new.reference_time
             fp = self.slice_by_coord({axis_new.name: slice(edge_min, edge_max)})
+            print(axis_new)
             fp_new = squash_fluxpoints(fp, axis_new)
             fluxpoints.append(fp_new)
 
