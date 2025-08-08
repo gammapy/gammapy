@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities to create scripts and command-line tools."""
 
-
 import ast
 import codecs
 import operator
@@ -100,7 +99,7 @@ def read_yaml(filename, logger=None, checksum=False):
 
 
 def to_yaml(dictionary, sort_keys=False):
-    """dict to yaml
+    """Dictionary to yaml file.
 
     Parameters
     ----------
@@ -138,7 +137,6 @@ def write_yaml(
     overwrite : bool, optional
         Overwrite existing file. Default is False.
     """
-
     if checksum:
         text = add_checksum(text, sort_keys=sort_keys)
 

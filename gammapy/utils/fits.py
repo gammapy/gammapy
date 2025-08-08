@@ -195,7 +195,6 @@ def skycoord_from_dict(header, frame="icrs", ext="PNT"):
     skycoord : `~astropy.coordinates.skycoord`
         The input SkyCoord.
     """
-
     ext = "_" + ext if ext != "" else ""
 
     if frame == "altaz":
