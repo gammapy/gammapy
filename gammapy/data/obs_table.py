@@ -28,21 +28,24 @@ class ObservationTable(Table):
     # data release 1 (HESS DL3 DR1, H.E.S.S. collaboration, 2018).
     """
 
-    # def __init__(self):
-    #     """Constructor for internal observation table.
+    def __init__(self, table=None, **kwargs):
+        """Constructor for internal observation table.
 
-    #      Parameters
-    #     ----------
-    #     table : `astropy.table.Table'
-    #         Table to init ObservationTable from.
+         Parameters
+        ----------
+        table : `astropy.table.Table'
+            Table to init ObservationTable from.
 
-    #     Creates instance of ObservationTable either from reference table.
-    #     """
-    #     # Used for constructor: https://stackoverflow.com/questions/6535832/python-inherit-the-superclass-init
-    #     # https://stackoverflow.com/questions/2399307/how-to-invoke-the-super-constructor-in-python
+        Creates instance of ObservationTable either from reference table.
+        """
+        # Used for constructor: https://stackoverflow.com/questions/6535832/python-inherit-the-superclass-init
+        # https://stackoverflow.com/questions/2399307/how-to-invoke-the-super-constructor-in-python
 
-    #     # Init with basic reference table, like suggested by @registerrier.
-    #     super().__init__(self._reference_table())
+        # Init with basic reference table, like suggested by @registerrier.
+        if table is None:
+            super().__init__(self._reference_table())
+        else:
+            super().__init__(table)
 
     @staticmethod
     def _reference_table():
