@@ -161,6 +161,8 @@ class MetaData(BaseModel):
                     )
             else:
                 kwargs[key] = header.get(item)
+                if kwargs[key] is None:  # TEST
+                    print(key, header)  # TEST
 
         extra_keys = set(cls.model_fields.keys()) - set(fits_export_keys.keys())
 

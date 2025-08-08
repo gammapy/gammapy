@@ -5,7 +5,7 @@ from astropy.table import Table
 from gammapy.data import EventListMetaData, EventList, ObservationTable
 from gammapy.utils.scripts import make_path
 from gammapy.utils.metadata import CreatorMetaData
-from gammapy.data.metadata import METADATA_FITS_KEYS
+from gammapy.data.metadata import METADATA_FITS_KEYS, ObservationMetaData
 from gammapy.utils.time import time_ref_from_dict
 from astropy.units import Quantity
 
@@ -79,8 +79,8 @@ class ObservationTableReader:
     def from_gadf02_hdu(obs_hdu):
         """Create ObservationTable from gadf0.2 HDU."""
         table_disk = Table.read(obs_hdu)  # table_disk !
-        # meta = ObservationMetaData.from_header(table.meta)
-        # print(meta)
+        meta = ObservationMetaData.from_header(table_disk.meta)  # TEST
+        print(meta)  # TEST
 
         # Required names to fill internal table format, for GADF v.0.2, will be extended after checking POINTING. Similar to PR#5954.
         required_names_on_disk = [
