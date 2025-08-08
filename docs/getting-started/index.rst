@@ -97,7 +97,7 @@ Tutorials Overview
         :width: 100%
 
     :bdg-link-primary:`1D analysis tutorial <../tutorials/analysis-1d/spectral_analysis.html>`
-    :bdg-link-primary:`1D analysis tutorial with point-like IRFs <../tutorials/analysis-1d/spectral_analysis_rad_max.html>`
+    :bdg-link-primary:`1D analysis tutorial with point-like IRFs <../tutorials/data/magic.html>`
     :bdg-link-primary:`1D analysis tutorial of extended sources <../tutorials/analysis-1d/extended_source_spectral_analysis.html>`
 
 

@@ -39,7 +39,7 @@ Using gammapy.makers
     :add-heading: Examples using `~gammapy.makers.SpectrumDatasetMaker`
 
     ../examples/tutorials/analysis-1d/spectral_analysis.py
-    ../examples/tutorials/analysis-1d/spectral_analysis_rad_max.py
+    ../examples/tutorials/data/magic.py
     ../examples/tutorials/analysis-1d/extended_source_spectral_analysis.py
 
 
