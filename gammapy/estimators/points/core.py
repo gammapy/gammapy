@@ -911,7 +911,6 @@ class FluxPoints(FluxMaps):
                 edge_min = edge_min + axis_new.reference_time
                 edge_max = edge_max + axis_new.reference_time
             fp = self.slice_by_coord({axis_new.name: slice(edge_min, edge_max)})
-            print(axis_new)
             fp_new = squash_fluxpoints(fp, axis_new)
             fluxpoints.append(fp_new)
 

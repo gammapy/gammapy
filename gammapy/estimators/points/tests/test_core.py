@@ -489,7 +489,7 @@ def test_recompute_ul():
 
 
 @requires_data()
-def test_sqush_fluxpoints():
+def test_squash_fluxpoints():
     fp1 = FluxPoints.read("$GAMMAPY_DATA/estimators/crab_hess_fp/crab_hess_fp.fits")
     energy_axis = fp1.geom.axes["energy"]
     squash_fp1 = squash_fluxpoints(flux_point=fp1, axis=energy_axis)
