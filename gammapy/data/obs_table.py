@@ -66,8 +66,8 @@ class ObservationTable(Table):
         )
         table["POINTING"] = SkyCoord([], [], unit=u.deg, frame="icrs")
         table["LOCATION"] = EarthLocation.from_geodetic([], [], [])
-        table["TSTART"] = Time([], format="mjd")
-        table["TSTOP"] = Time([], format="mjd")
+        table["TSTART"] = Time([], scale="tt", format="mjd")
+        table["TSTOP"] = Time([], scale="tt", format="mjd")
 
         return table
 
