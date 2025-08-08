@@ -40,12 +40,14 @@ class ObservationTable(Table):
         """
         # Used for constructor: https://stackoverflow.com/questions/6535832/python-inherit-the-superclass-init
         # https://stackoverflow.com/questions/2399307/how-to-invoke-the-super-constructor-in-python
+        # Google KI, query: "python konstruktor geerbte klasse"
 
         # Init with basic reference table, like suggested by @registerrier.
         if table is None:
-            super().__init__(self._reference_table())
+            super().__init__(**kwargs)
+            self.table = self._reference_table()
         else:
-            super().__init__(table)
+            super().__init__(data=table, **kwargs)
 
     @staticmethod
     def _reference_table():
