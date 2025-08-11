@@ -18,10 +18,10 @@
 import datetime
 import sys
 import os
+import gammapy
 
 # Get configuration information from setup.cfg
 from configparser import ConfigParser
-from pkg_resources import get_distribution
 
 # Sphinx-gallery config
 from sphinx_gallery.sorting import ExplicitOrder
@@ -61,7 +61,7 @@ linkcheck_ignore = [
     "https://ipython.org",
     "https://jupyter.org",
     # private pages
-    "https://cchesswiki.in2p3.fr/hess/*"
+    "https://cchesswiki.in2p3.fr/*",
     "https://github.com/VERITAS-Observatory/VEGAS",
 ]
 
@@ -86,7 +86,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # Allow to add the canonical html flag on all the pages
-# This permits to precise to web search engine that the pages for the stable version are privileged
+# This allows you to indicate to the web search engine that the pages for the stable version are privileged
 html_baseurl = 'https://docs.gammapy.org/stable/'
 
 # The reST default role (used for this markup: `text`) to use for all
@@ -156,6 +156,10 @@ automodapi_toctreedirnm = 'api'
 # Suppress member summaries
 numpydoc_show_class_members = False
 
+# autodoc options to make the AnalysisConfig look nice
+autodoc_class_signature = "separated"
+autodoc_typehints = "description"
+
 # Ensures that when users click the "Copy" button, only the actual code is copied,
 # excluding interactive prompts and indentation markers
 # https://sphinx-copybutton.readthedocs.io/en/latest/use.html#using-regexp-prompt-identifiers
@@ -181,7 +185,8 @@ project = setup_cfg["name"]
 author = setup_cfg["author"]
 copyright = "{}, {}".format(datetime.datetime.now().year, setup_cfg["author"])
 
-version = get_distribution(project).version
+
+version = str(gammapy.__version__)
 release = "X.Y.Z" if "dev" in version else version
 switch_version = "dev" if "dev" in version else release
 
@@ -313,13 +318,14 @@ sphinx_gallery_conf = {
             "../examples/models/spectral",
             "../examples/models/temporal",
             "../examples/tutorials/starting",
-            "../examples/tutorials/model-gallery",
             "../examples/tutorials/data",
+            "../examples/tutorials/model-gallery",
+            "../examples/tutorials/details",
             "../examples/tutorials/analysis-1d",
             "../examples/tutorials/analysis-2d",
             "../examples/tutorials/analysis-3d",
             "../examples/tutorials/analysis-time",
-            "../examples/tutorials/api",
+            "../examples/tutorials/astrophysics",
             "../examples/tutorials/scripts",
         ]
     ),

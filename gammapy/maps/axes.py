@@ -233,18 +233,23 @@ class MapAxis:
         """
         if not isinstance(other, self.__class__):
             return TypeError(f"Cannot compare {type(self)} and {type(other)}")
-
+        state = True
         if self.edges.shape != other.edges.shape:
-            return False
-        if not self.unit.is_equivalent(other.unit):
-            return False
-        return (
-            np.allclose(self.edges, other.edges, **kwargs)
-            and self._node_type == other._node_type
-            and self._interp == other._interp
-            and self.name.upper() == other.name.upper()
-            and self._boundary_type == other._boundary_type
-        )
+            state = False
+        if state and not self.unit.is_equivalent(other.unit):
+            state = False
+        if state:
+            state = (
+                state
+                and np.allclose(self.edges, other.edges, **kwargs)
+                and self._node_type == other._node_type
+                and self._interp == other._interp
+                and self.name.upper() == other.name.upper()
+                and self._boundary_type == other._boundary_type
+            )
+        if state is False:
+            log.debug(f"MapAxis {self.name} is not equal")
+        return state
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
@@ -806,7 +811,7 @@ class MapAxis:
         return u.Quantity(values, unit=self.unit, copy=COPY_IF_NEEDED)
 
     def wrap_coord(self, coord):
-        """Wrap coords between axis edges for a periodic boundary condition
+        """Wrap coords between axis edges for a periodic boundary condition.
 
         Parameters
         ----------
@@ -818,7 +823,6 @@ class MapAxis:
         coord : `~numpy.ndarray`
             Wrapped array of axis coordinate values.
         """
-
         m1, m2 = self.edges_min[0], self.edges_max[-1]
         out_of_range = (coord >= m2) | (coord < m1)
         return np.where(out_of_range, (coord - m1) % (m2 - m1) + m1, coord)
@@ -1656,8 +1660,9 @@ class MapAxes(Sequence):
         return self.__class__(axes=axes)
 
     def replace(self, axis):
-        """Replace a given axis. In order to be replaced,
-        the name of the new axis must match the name of the old axis.
+        """Replace a given axis.
+
+        In order to be replaced, the name of the new axis must match the name of the old axis.
 
         Parameters
         ----------
@@ -2257,7 +2262,12 @@ class MapAxes(Sequence):
         if not isinstance(other, self.__class__):
             return TypeError(f"Cannot compare {type(self)} and {type(other)}")
 
-        return np.all([ax0.is_allclose(ax1, **kwargs) for ax0, ax1 in zip(other, self)])
+        state = np.all(
+            [ax0.is_allclose(ax1, **kwargs) for ax0, ax1 in zip(other, self)]
+        )
+        if state is False:
+            log.debug("MapAxes are not equal")
+        return state
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
@@ -2572,20 +2582,26 @@ class TimeMapAxis:
         """
         if not isinstance(other, self.__class__):
             return TypeError(f"Cannot compare {type(self)} and {type(other)}")
-
+        state = True
         if self._edges_min.shape != other._edges_min.shape:
-            return False
+            state = False
 
         # This will test equality at microsec level.
         delta_min = self.time_min - other.time_min
         delta_max = self.time_max - other.time_max
 
-        return (
-            np.allclose(delta_min.to_value("s"), 0.0, **kwargs)
-            and np.allclose(delta_max.to_value("s"), 0.0, **kwargs)
-            and self._interp == other._interp
-            and self.name.upper() == other.name.upper()
-        )
+        if state:
+            state = (
+                state
+                and np.allclose(delta_min.to_value("s"), 0.0, **kwargs)
+                and np.allclose(delta_max.to_value("s"), 0.0, **kwargs)
+                and self._interp == other._interp
+                and self.name.upper() == other.name.upper()
+            )
+
+        if state is False:
+            log.debug(f"TimeMapAxis {self.name} is not equal")
+        return state
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
@@ -2640,6 +2656,7 @@ class TimeMapAxis:
 
     def pix_to_coord(self, pix):
         """Transform from pixel position to time coordinate.
+
         Currently, works only for linear interpolation scheme.
 
         Parameters
@@ -2865,7 +2882,7 @@ class TimeMapAxis:
     # TODO: how configurable should that be? column names?
     @classmethod
     def from_table(cls, table, format="gadf", idx=0):
-        """Create time map axis from table
+        """Create time map axis from table.
 
         Parameters
         ----------
@@ -3093,7 +3110,6 @@ class TimeMapAxis:
             * "overflow" for the bins falling above  the maximum axis threshold
             * "outflow" for other states
         """
-
         for _, edge in enumerate(interval_edges):
             if not isinstance(edge, Time):
                 interval_edges[_] = self.reference_time + interval_edges[_]
@@ -3238,7 +3254,7 @@ class LabelMapAxis:
         return self.coord_to_idx(coord).astype("float")
 
     def pix_to_idx(self, pix, clip=False):
-        """Convert pixel to idx
+        """Convert pixel to idx.
 
         Parameters
         ----------
@@ -3419,7 +3435,11 @@ class LabelMapAxis:
 
         name_equal = self.name.upper() == other.name.upper()
         labels_equal = np.all(self.center == other.center)
-        return name_equal & labels_equal
+        state = name_equal & labels_equal
+
+        if not state:
+            log.debug(f"TimeMapAxis {self.name} is not equal")
+        return state
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
@@ -3495,7 +3515,6 @@ class LabelMapAxis:
         axis : `LabelMapAxis`
             Stacked axis.
         """
-
         axis_stacked = axes[0]
 
         for ax in axes[1:]:

@@ -1122,7 +1122,7 @@ class TemplateNPredModel(ModelBase):
         self.spectral_model.tilt.value = 0
 
     def slice_by_energy(self, energy_min=None, energy_max=None, name=None):
-        """Select and slice model template in energy range
+        """Select and slice model template in energy range.
 
         Parameters
         ----------
@@ -1208,6 +1208,8 @@ def create_fermi_isotropic_diffuse_model(filename, datasets_names=None, **kwargs
     ----------
     filename : str
         Filename.
+    datasets_names : str or list of str, optional
+        Dataset names. Default is None.
     kwargs : dict
         Keyword arguments forwarded to `TemplateSpectralModel`.
 

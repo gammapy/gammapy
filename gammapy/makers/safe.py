@@ -206,7 +206,6 @@ class SafeMaskMaker(Maker):
         mask_safe : `~numpy.ndarray`
             Safe data range mask.
         """
-
         if self.fixed_offset is not None and observation is None:
             raise ValueError(
                 f"{observation} argument is mandatory with {self.fixed_offset}"
@@ -268,7 +267,6 @@ class SafeMaskMaker(Maker):
         mask_safe : `~numpy.ndarray`
             Safe data range mask.
         """
-
         if self.fixed_offset is not None and observation is None:
             raise ValueError(
                 f"{observation} argument is mandatory with {self.fixed_offset}"
@@ -361,7 +359,6 @@ class SafeMaskMaker(Maker):
         dataset : `Dataset`
             Dataset with defined safe range mask.
         """
-
         if self.irfs == "DL3":
             if observation is None:
                 raise ValueError("observation argument is mandatory with DL3 irfs")

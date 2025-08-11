@@ -98,12 +98,12 @@ class FluxEstimator(ParameterEstimator):
 
         Parameters
         ----------
-        models : `Models`
+        models : `~gammapy.modeling.Models`
             Models.
 
         Returns
         -------
-        model : `ScaleSpectralModel`
+        model : `~gammapy.modeling.ScaleSpectralModel`
             Scale spectral model.
         """
         ref_model = models[self.source].spectral_model
@@ -116,7 +116,7 @@ class FluxEstimator(ParameterEstimator):
 
         Parameters
         ----------
-        datasets : Datasets
+        datasets : `~gammapy.datasets.Datasets`
             Datasets.
 
         Returns
@@ -157,6 +157,10 @@ class FluxEstimator(ParameterEstimator):
 
         energy_min, energy_max = datasets.energy_ranges
         energy_axis = MapAxis.from_energy_edges([energy_min.min(), energy_max.max()])
+        if np.any(model(energy_axis.edges).value < 0.0):
+            log.warning(
+                "Reference source model predicts negative flux. Results of estimator should be interpreted with caution"
+            )
 
         with np.errstate(invalid="ignore", divide="ignore"):
             result = model.reference_fluxes(energy_axis=energy_axis)

@@ -6,7 +6,7 @@ import numpy as np
 from gammapy.datasets import Datasets
 from gammapy.datasets.actors import DatasetsActor
 from gammapy.modeling import Fit
-from gammapy.modeling.selection import TestStatisticNested
+from gammapy.modeling.selection import NestedModelSelection
 from gammapy.modeling.parameter import restore_parameters_status
 from gammapy.stats.utils import ts_to_sigma
 from gammapy.utils.roots import find_roots
@@ -292,7 +292,6 @@ class ParameterEstimator(Estimator):
             Dictionary with an array with one entry per dataset with the sum of the
             masked npred.
         """
-
         estimator = ParameterSensitivityEstimator(
             parameter, self.null_value, n_sigma=self.n_sigma_sensitivity
         )
@@ -445,7 +444,7 @@ class ParameterSensitivityEstimator:
         rtol=0.01,
         max_niter=100,
     ):
-        self.test = TestStatisticNested(
+        self.test = NestedModelSelection(
             [parameter], [null_value], n_free_parameters=n_free_parameters
         )
         self.parameter = parameter
@@ -460,8 +459,7 @@ class ParameterSensitivityEstimator:
         return ts_to_sigma(ts_asimov, ts_asimov=ts_asimov) - self.n_sigma
 
     def parameter_matching_significance(self, datasets):
-        """Parameter value  matching the target significance"""
-
+        """Parameter value  matching the target significance."""
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             roots, res = find_roots(

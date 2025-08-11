@@ -48,7 +48,6 @@ This is how to access data and IRFs from the HAWC Crab event data release.
 
 """
 
-
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 import matplotlib.pyplot as plt
@@ -58,12 +57,6 @@ from gammapy.estimators import ExcessMapEstimator
 from gammapy.makers import MapDatasetMaker, SafeMaskMaker
 from gammapy.maps import Map, MapAxis, WcsGeom
 
-######################################################################
-# Check setup
-# -----------
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
 
 ######################################################################
 # Chose which estimator we will use
@@ -156,8 +149,8 @@ plt.show()
 
 
 ######################################################################
-# Data reduction into a MapDataset
-# --------------------------------
+# Data reduction into a `~gammapy.datasets.MapDataset`
+# ----------------------------------------------------
 #
 # We will now produce a `~gammapy.datasets.MapDataset` using the data from one of the
 # fHit bins. In order to use all bins, one just needs to repeat this

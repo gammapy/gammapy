@@ -47,9 +47,9 @@ Using gammapy.modeling
 
 .. minigallery::
 
-    ../examples/tutorials/api/models.py
-    ../examples/tutorials/api/model_management.py
-    ../examples/tutorials/api/priors.py
+    ../examples/tutorials/details/models.py
+    ../examples/tutorials/details/model_management.py
+    ../examples/tutorials/details/priors.py
 
 
 Fitting
@@ -85,7 +85,7 @@ Three different fitting backend are offered:
 
 ``Sherpa`` is not installed by default, but this is quite easy (see :ref:`quickstart-setup`).
 
-The tutorial :doc:`/tutorials/api/fitting` describes in detail the API.
+The tutorial :doc:`/tutorials/details/fitting` describes in detail the API.
 
 Maximum A Posteriori estimation (MAP)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -100,7 +100,7 @@ term).
 With the MAP estimation, one can also realise hypothesis testing, compute confidence intervals and confidence
 limits.
 
-The tutorial :doc:`/tutorials/api/priors` describes in detail this estimation method.
+The tutorial :doc:`/tutorials/details/priors` describes in detail this estimation method.
 
 Bayesian Inference
 ^^^^^^^^^^^^^^^^^^
@@ -120,7 +120,7 @@ map likelihood landscapes with multiple solutions (local maxima in which a class
 However, the computation time to make Bayesian Inference is generally larger than for the Maximum
 Likelihood Estimation using ``iminuit``.
 
-The tutorial :doc:`/tutorials/api/nested_sampling_Crab` describes in detail this estimation
+The tutorial :doc:`/tutorials/details/nested_sampling_Crab` describes in detail this estimation
 method.
 
 
@@ -129,13 +129,13 @@ Using gammapy.modeling
 
 .. minigallery::
 
-    ../examples/tutorials/api/fitting.py
+    ../examples/tutorials/details/fitting.py
     ../examples/tutorials/analysis-1d/spectral_analysis.py
     ../examples/tutorials/analysis-3d/analysis_3d.py
     ../examples/tutorails/analysis-3d/analysis_mwl.py
     ../examples/tutorials/analysis-1d/sed_fitting.py
-    ../examples/tutorials/api/priors.py
-    ../examples/tutorials/api/nested_sampling_Crab.py
+    ../examples/tutorials/details/priors.py
+    ../examples/tutorials/details/nested_sampling_Crab.py
 
 .. include:: ../references.txt
 

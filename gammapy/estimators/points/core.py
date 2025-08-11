@@ -37,6 +37,18 @@ def squash_fluxpoints(flux_point, axis):
     to compute the resultant quantities. Stat profiles
     must be present on the `~FluxPoints` object for
     this method to work.
+
+    Parameters
+    ----------
+    flux_point : `~gammapy.estimators.FluxPoints`
+        Flux points object to squash.
+    axis : `MapAxis` or `TimeMapAxis`
+        Axis along which to squash the flux points.
+
+    Returns
+    -------
+    combined_fp : `~gammapy.estimators.FluxPoints`
+        New flux points object.
     """
     value_scan = flux_point.stat_scan.geom.axes["norm"].center
     stat_scan = np.sum(flux_point.stat_scan.data, axis=0).ravel()
@@ -64,10 +76,11 @@ def squash_fluxpoints(flux_point, axis):
 
     if "norm_ul" in flux_point.available_quantities:
         delta_ts = flux_point.meta.get("n_sigma_ul", 2) ** 2
-        ul = stat_profile_ul_scipy(value_scan, stat_scan, delta_ts=delta_ts)
-        maps["norm_ul"] = Map.from_geom(
-            geom, data=np.reshape(ul.value, geom.data_shape)
-        )
+        try:
+            ul = stat_profile_ul_scipy(value_scan, stat_scan, delta_ts=delta_ts)
+        except (ValueError, RuntimeError):
+            ul = np.nan
+        maps["norm_ul"] = Map.from_geom(geom, data=np.reshape(ul, geom.data_shape))
 
     maps["stat"] = Map.from_geom(geom, data=f(minimizer.x).reshape(geom.data_shape))
 
@@ -113,13 +126,33 @@ class FluxPoints(FluxMaps):
 
     Parameters
     ----------
-    table : `~astropy.table.Table`
-        Table with flux point data.
+    data : dict of `~gammapy.maps.RegionNDMap`
+        The maps dictionary. Expected entries are the following:
 
-    Attributes
-    ----------
-    table : `~astropy.table.Table`
-        Table with flux point data.
+        * norm : the norm factor.
+        * norm_err : optional, the error on the norm factor.
+        * norm_errn : optional, the negative error on the norm factor.
+        * norm_errp : optional, the positive error on the norm factor.
+        * norm_ul : optional, the upper limit on the norm factor.
+        * norm_scan : optional, the norm values of the test statistic scan.
+        * stat_scan : optional, the test statistic scan values.
+        * ts : optional, the delta test statistic associated with the flux value.
+        * sqrt_ts : optional, the square root of the test statistic, when relevant.
+        * success : optional, a boolean tagging the validity of the estimation.
+        * n_dof : optional, the number of degrees of freedom used in TS computation
+        * alpha : optional, normalisation factor to accounts for differences between the test region and the background
+        * acceptance_off : optional, acceptance from the off region
+        * acceptance_on : optional, acceptance from the on region
+
+    reference_model : `~gammapy.modeling.models.SkyModel`, optional
+        The reference model to use for conversions. If None, a model consisting
+        of a point source with a power law spectrum of index 2 is assumed.
+    meta : dict, optional
+        Dict of metadata.
+    gti : `~gammapy.data.GTI`, optional
+        Maps GTI information.
+    filter_success_nan : boolean, optional
+        Set fitted norm and error to NaN when the fit has not succeeded.
 
     Examples
     --------
@@ -821,10 +854,10 @@ class FluxPoints(FluxMaps):
         >>> filename = "$GAMMAPY_DATA/estimators/crab_hess_fp/crab_hess_fp.fits"
         >>> flux_points = FluxPoints.read(filename)
         >>> flux_points_recomputed = flux_points.recompute_ul(n_sigma_ul=4)
-        >>> print(flux_points.meta["n_sigma_ul"], flux_points.flux_ul.data[1])
-        3.0 [[3.99250033e-11]]
-        >>> print(flux_points_recomputed.meta["n_sigma_ul"], flux_points_recomputed.flux_ul.data[1])
-        4 [[4.24707167e-11]]
+        >>> print(f'{flux_points.meta["n_sigma_ul"]}, {float(flux_points.flux_ul.data[1][0]):.2e}')
+        3.0, 3.99e-11
+        >>> print(f'{flux_points_recomputed.meta["n_sigma_ul"]}, {float(flux_points_recomputed.flux_ul.data[1][0]):.2e}')
+        4, 4.25e-11
         """
         if not self.has_stat_profiles:
             raise ValueError(
@@ -838,12 +871,14 @@ class FluxPoints(FluxMaps):
         value_scan = self.stat_scan.geom.axes["norm"].center
         shape_axes = self.stat_scan.geom._shape[slice(3, None)][::-1]
         for idx in np.ndindex(shape_axes):
-            stat_scan = np.abs(
-                self.stat_scan.data[idx].squeeze() - self.stat.data[idx].squeeze()
-            )
-            flux_points.norm_ul.data[idx] = stat_profile_ul_scipy(
-                value_scan, stat_scan, delta_ts=delta_ts, **kwargs
-            )
+            stat_scan = self.stat_scan.data[idx].squeeze()
+            try:
+                ul = stat_profile_ul_scipy(
+                    value_scan, stat_scan, delta_ts=delta_ts, **kwargs
+                )
+            except (ValueError, RuntimeError):
+                ul = np.nan
+            flux_points.norm_ul.data[idx] = ul
         flux_points.meta["n_sigma_ul"] = n_sigma_ul
         return flux_points
 

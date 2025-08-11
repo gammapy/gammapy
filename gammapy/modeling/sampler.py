@@ -18,7 +18,9 @@ class Sampler:
         UltraNest: Most options can be found in the
         `UltraNest doc <https://johannesbuchner.github.io/UltraNest/>`__.
     sampler_opts : dict, optional
-        Sampler options passed to the sampler. Noteworthy options:
+        Sampler options passed to the sampler. See the full list of options on the
+        `UltraNest documentation <https://johannesbuchner.github.io/UltraNest/ultranest.html#ultranest.integrator.ReactiveNestedSampler>`__.
+        Noteworthy options:
 
         live_points : int
             Minimum number of live points used in the sampling. Increase this number to get more accurate results.
@@ -38,7 +40,7 @@ class Sampler:
             ‘overwrite’, overwrite previous data. ‘subfolder’, create a fresh subdirectory in `log_dir`.
             ‘resume’ or True, continue previous run if available. Only works when dimensionality, transform or
             likelihood are consistent.
-        step_sampler : bool
+        step_sampler : bool, optional
             Use a step sampler. This can be more efficient for higher dimensions (>10 or 15 parameters), but much
             slower for lower dimensions.
             Default is False.
@@ -46,8 +48,6 @@ class Sampler:
             Number of steps to take in each direction in the step sampler. Increase this number to get more
             accurate results at the cost of more computation time.
             Default is 10.
-        See the full list of options on the
-        `UltraNest documentation <https://johannesbuchner.github.io/UltraNest/ultranest.html#ultranest.integrator.ReactiveNestedSampler>`__.
     run_opts : dict, optional
         Optional run options passed to the given backend when running the sampler.
         See the full list of run options on the
@@ -55,7 +55,7 @@ class Sampler:
 
     Examples
     --------
-    For a usage example, see :doc:`/tutorials/api/nested_sampling_Crab` tutorial.
+    For a usage example, see :doc:`/tutorials/details/nested_sampling_Crab` tutorial.
 
     Notes
     -----
@@ -84,6 +84,7 @@ class Sampler:
     def _update_models_from_posterior(models, result):
         """
         Update the models with the posterior distribution.
+
         But this raises the question on how to estimate the error given the median and maxLogL.
         Covariance matrix is not defined in this sample approach (could be approximated via the samples).
 
@@ -208,7 +209,7 @@ class SamplerResult:
         Array of (weighted) samples that can be used for histograms or corner plots.
     sampler_results : dict
         Output of sampler.
-        See the :doc:`/tutorials/api/nested_sampling_Crab` tutorial for a complete description.
+        See the :doc:`/tutorials/details/nested_sampling_Crab` tutorial for a complete description.
     """
 
     # TODO:
@@ -239,6 +240,7 @@ class SamplerResult:
 
 class SamplerLikelihood:
     """Wrapper of the likelihood function used by the sampler.
+
     This is needed to modify parameters and likelihood by *-0.5
 
     Parameters

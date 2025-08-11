@@ -111,6 +111,8 @@ class Observation:
     @property
     def bkg(self):
         """Background of the observation."""
+        from gammapy.irf import FoVAlignment
+
         bkg = self._bkg
         # used for backward compatibility of old HESS data
         try:
@@ -458,15 +460,27 @@ class Observation:
     def peek(self, figsize=(15, 10)):
         """Quick-look plots in a few panels.
 
+        This method creates a figure displaying the available events and IRFs.
+        For example:
+
+        * Events 2D map : events sky map
+        * Effective area 2D map : effective area as a function of FoV offset and true energy
+        * Background rate 2D map : background rate as a function of FoV offset and energy
+        * Energy dispersion 2D map : migration as a function of true energy for a given offset
+        * Point spread function plot : containment radius as a function of energy for various
+          containment fractions
+        * Rad max plot : radius of the directional cut (rad max) as a function of energy
+
+
         Parameters
         ----------
         figsize : tuple, optional
             Figure size. Default is (15, 10).
         """
-        plottable_hds = ["events", "aeff", "edisp", "psf", "bkg", "rad_max"]
+        plottable_hds = ["events", "aeff", "psf", "edisp", "bkg", "rad_max"]
+
         plot_hdus = list(set(plottable_hds) & set(self.available_hdus))
         plot_hdus.sort()
-        plot_hdus.insert(0, plot_hdus.pop(plot_hdus.index("events")))
 
         n_irfs = len(plot_hdus)
         nrows = n_irfs // 2
@@ -476,12 +490,10 @@ class Observation:
             nrows=nrows,
             ncols=ncols,
             figsize=figsize,
-            gridspec_kw={"wspace": 0.55, "hspace": 0.3},
+            gridspec_kw={"wspace": 0.3, "hspace": 0.3},
         )
 
         for idx, (ax, name) in enumerate(zip_longest(axes.flat, plot_hdus)):
-            ax.set_box_aspect(1)
-
             if name == "aeff":
                 self.aeff.plot(ax=ax)
                 ax.set_title("Effective area")
@@ -514,8 +526,6 @@ class Observation:
 
             if name is None:
                 ax.set_visible(False)
-
-        fig.tight_layout()
 
     def select_time(self, time_interval):
         """Select a time interval of the observation.
@@ -824,7 +834,7 @@ class Observations(collections.abc.MutableSequence):
         return cls(list(obs))
 
     def in_memory_generator(self):
-        """A generator that iterates over observation. Yield an in memory copy of the observation."""
+        """Iterate over the observation and yield an in memory copy of the observation."""
         for obs in self:
             obs_copy = obs.copy(in_memory=True)
             yield obs_copy

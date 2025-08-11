@@ -2,9 +2,11 @@
 import warnings
 from astropy.io import fits
 from astropy.table import Table
+import astropy.units as u
 from gammapy.data import EventListMetaData, EventList
 from gammapy.utils.scripts import make_path
 from gammapy.utils.metadata import CreatorMetaData
+from gammapy.utils.time import time_ref_from_dict
 
 
 class EventListReader:
@@ -29,7 +31,33 @@ class EventListReader:
         """Create EventList from gadf HDU."""
         table = Table.read(events_hdu)
         meta = EventListMetaData.from_header(table.meta)
-        return EventList(table=table, meta=meta)
+
+        # This is not a strict check on input. It just checks that required information is there.
+        required_colnames = set(["RA", "DEC", "TIME", "ENERGY"])
+        if not required_colnames.issubset(set(table.colnames)):
+            missing_columns = required_colnames.difference(set(table.colnames))
+            raise ValueError(
+                f"GADF event table does not contain required columns {missing_columns}"
+            )
+
+        met = u.Quantity(table["TIME"].astype("float64"), "second")
+        time = time_ref_from_dict(table.meta) + met
+
+        energy = table["ENERGY"].quantity
+
+        ra = table["RA"].quantity
+        dec = table["DEC"].quantity
+
+        removed_colnames = ["RA", "DEC", "GLON", "GLAT", "TIME", "ENERGY"]
+
+        new_table = Table(
+            {"TIME": time, "ENERGY": energy, "RA": ra, "DEC": dec}, meta=table.meta
+        )
+        for name in table.colnames:
+            if name not in removed_colnames:
+                new_table.add_column(table[name])
+
+        return EventList(new_table, meta)
 
     @staticmethod
     def identify_format_from_hduclass(events_hdu):
@@ -78,7 +106,13 @@ class EventListWriter:
     @staticmethod
     def _to_gadf_table_hdu(event_list):
         """Convert input event list to a `~astropy.io.fits.BinTableHDU` according gadf."""
-        bin_table = fits.BinTableHDU(event_list.table, name="EVENTS")
+        gadf_table = event_list.table.copy()
+        gadf_table.remove_column("TIME")
+
+        reference_time = time_ref_from_dict(gadf_table.meta)
+        gadf_table["TIME"] = (event_list.time - reference_time).to("s")
+
+        bin_table = fits.BinTableHDU(gadf_table, name="EVENTS")
 
         # A priori don't change creator information
         if event_list.meta.creation is None:

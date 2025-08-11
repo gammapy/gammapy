@@ -112,14 +112,6 @@ from gammapy.modeling.models import (
 )
 
 ######################################################################
-# Check setup
-# -----------
-
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
-
-######################################################################
 # Define an `~gammapy.data.Observation`
 # -------------------------------------
 #
@@ -165,7 +157,7 @@ print(observation)
 #
 # Let’s generate the `~gammapy.datasets.Dataset` object (for more info
 # on `~gammapy.datasets.Dataset` objects, please checkout
-# :doc:`/tutorials/api/datasets` tutorial):
+# :doc:`/tutorials/details/datasets` tutorial):
 # we define the energy axes (true and reconstructed), the migration axis
 # and the geometry of the observation.
 #

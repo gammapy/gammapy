@@ -142,7 +142,6 @@ def plot_npred_signal(
     axes : `~matplotlib.axes.Axes`
         Axis object.
     """
-
     npred_not_stack = dataset.npred_signal(
         model_names=model_names, stack=False
     ).to_region_nd_map(region)

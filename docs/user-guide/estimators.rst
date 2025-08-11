@@ -213,7 +213,7 @@ Using gammapy.estimators
 
 .. minigallery::
 
-    ../examples/tutorials/api/estimators.py
+    ../examples/tutorials/details/estimators.py
 
 .. minigallery::
     :add-heading: Examples using `~gammapy.estimators.FluxPointsEstimator`

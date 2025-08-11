@@ -226,8 +226,7 @@ print(res)
 # sphinx_gallery_thumbnail_number = 1
 aeff_eval = aeff_3d.evaluate(energy_true=[1.0] * u.TeV)
 
-plt.figure(figsize=(9, 9))
-ax = plt.gca()
+ax = plt.subplot()
 with quantity_support():
     caxes = ax.pcolormesh(
         fov_lat_axis.edges, fov_lon_axis.edges, aeff_eval.value.squeeze()
@@ -429,6 +428,7 @@ print(edispmap.edisp_map.data[3][1][3])
 # -  asymmetry about the camera center: such PSF Tables can be supported,
 # -  asymmetry about the source position: these PSF models cannot be supported correctly within
 #    the data reduction scheme at present
+#
 # Also, analytic PSF models defined within the GADF scheme cannot be
 # directly generalised to the 3D case for use within Gammapy.
 #

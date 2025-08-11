@@ -67,13 +67,6 @@ from gammapy.maps import (
     WcsNDMap,
 )
 
-######################################################################
-# Check setup
-# -----------
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
-
 
 ######################################################################
 # Creating WCS Maps

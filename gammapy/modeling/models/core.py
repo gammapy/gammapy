@@ -21,7 +21,7 @@ log = logging.getLogger(__name__)
 
 
 def _recursive_dict_filename_update(dict_, path):
-    """update model filename to full path if exits"""
+    """Update model filename to full path if exits."""
     for key, value in dict_.items():
         if isinstance(value, dict):
             _recursive_dict_filename_update(value, path)
@@ -32,7 +32,7 @@ def _recursive_dict_filename_update(dict_, path):
 
 
 def _recursive_model_filename_update(model, path):
-    """update model filename to relative path if child of path"""
+    """Update model filename to relative path if child of path."""
     if hasattr(model, "filename") and path == make_path(model.filename).parent:
         _, filename = split(model.filename)
         model.filename = filename
@@ -117,7 +117,7 @@ def _build_parameters_from_dict(data, default_parameters):
 
 
 def _check_name_unique(model, names):
-    """Check if a model is not duplicated"""
+    """Check if a model is not duplicated."""
     if model.name in names:
         raise (
             ValueError(
@@ -129,16 +129,16 @@ def _check_name_unique(model, names):
 
 def _check_fov_background_models(models):
     """
-    Checks if a maximum of one `~gammapy.modeling.models.FoVBackgroundModel` is assigned to dataset
-    and returns a dictionnary mapping `dataset_name` to the background model name.
+    Check if a maximum of one `~gammapy.modeling.models.FoVBackgroundModel` is assigned to dataset
+    and returns a dictionary mapping `dataset_name` to the background model name.
 
     Parameters
     ----------
     models : `~gammapy.modeling.models.Models`
         List of Models
 
-    Returns:
-    --------
+    Returns
+    -------
     bkg_model_mapping : dict
         Dictionary mapping dataset name to `~gammapy.modeling.models.FoVBackgroundModel` name.
     """
@@ -167,7 +167,7 @@ def _write_models(
     checksum=False,
     extra_dict=None,
 ):
-    """Write models to YAML file with additionnal informations using an `extra_dict`"""
+    """Write models to YAML file with additional information using an `extra_dict`."""
 
     base_path, _ = split(path)
     path = make_path(path)
@@ -1137,7 +1137,6 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
         model : `~gammapy.modeling.models.TemplateSpectralModel`
             Template spectral model.
         """
-
         from . import TemplateSpectralModel
 
         energy = geom.axes[0].center
@@ -1170,19 +1169,28 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
 
         return SkyCoord(positions)
 
-    def to_regions(self):
+    def to_regions(self, size_factor=None, **kwargs):
         """Return a list of the regions for the spatial models.
+
+        Parameters
+        ----------
+        size_factor : float, optional
+            Factor applied to the size of the models.
+            If not specified, the defaults for the models will be used.
+        kwargs : dict, optional
+            Keyword arguments passed to ``model.spatial_model.to_region``.
 
         Returns
         -------
-        regions: list of `~regions.SkyRegion`
+        regions : list of `~regions.SkyRegion`
             Regions.
         """
         regions = []
-
+        if size_factor:
+            kwargs["size_factor"] = size_factor
         for model in self.select(tag="sky-model"):
             try:
-                region = model.spatial_model.to_region()
+                region = model.spatial_model.to_region(**kwargs)
                 regions.append(region)
             except AttributeError:
                 log.warning(
@@ -1199,12 +1207,14 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
         except IndexError:
             log.error("No spatial component in any model. Geom not defined")
 
-    def plot_regions(self, ax=None, kwargs_point=None, path_effect=None, **kwargs):
+    def plot_regions(
+        self, ax=None, kwargs_point=None, path_effect=None, size_factor=None, **kwargs
+    ):
         """Plot extent of the spatial models on a given WCS axis.
 
         Parameters
         ----------
-        ax : `~astropy.visualization.WCSAxes`, optional
+        ax : `~astropy.visualization.wcsaxes.WCSAxes`, optional
             Axes to plot on. If no axes are given, an all-sky WCS
             is chosen using a CAR projection. Default is None.
         kwargs_point : dict, optional
@@ -1212,13 +1222,15 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
             of point sources. Default is None.
         path_effect : `~matplotlib.patheffects.PathEffect`, optional
             Path effect applied to artists and lines. Default is None.
+        size_factor : float, optional
+            Factor applied to the size of the model
+            If not specified, the defaults for the models will be used.
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.artists.Artist`.
 
-
         Returns
         -------
-        ax : `~astropy.visualization.WcsAxes`
+        ax : `~astropy.visualization.wcsaxes.WCSAxes`
             WCS axes.
 
         Examples
@@ -1234,7 +1246,7 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
         ...    kwargs_point={"marker":"o", "markersize":5, "color":"red"}
         ...            )
         """
-        regions = self.to_regions()
+        regions = self.to_regions(size_factor=size_factor)
 
         geom = RegionGeom.from_regions(regions=regions)
         return geom.plot_region(

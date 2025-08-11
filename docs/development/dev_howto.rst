@@ -9,10 +9,13 @@ Developer How To
 General conventions
 -------------------
 
-Python version support
-++++++++++++++++++++++
+Python and NumPy version support
+++++++++++++++++++++++++++++++++
 
-In Gammapy we currently support Python 3.8 or later.
+Gammapy follows the `NEP 29 guidelines <https://numpy.org/neps/nep-0029-deprecation_policy.html>`__
+for version support, which implements a time-based deprecation policy for
+Python and NumPy versions. This ensures compatibility with actively supported
+versions while maintaining stability.
 
 Coordinate and axis names
 +++++++++++++++++++++++++
@@ -621,7 +624,7 @@ If you change the name of an argument, you can use the ``deprecated_renamed_argu
 It will replace the old argument with the new one in a call to the function and will raise the
 ``GammapyDeprecationWarning``. You can change several arguments at once.
 
-.. testcode::
+.. code-block:: python
 
     from gammapy.utils.deprecation import deprecated_renamed_argument
 
@@ -633,7 +636,7 @@ It will replace the old argument with the new one in a call to the function and 
 
 If you rename a `kwarg` you simply need to set the `arg_in_kwargs` argument to `True`:
 
-.. testcode::
+.. code-block:: python
 
     from gammapy.utils.deprecation import deprecated_renamed_argument
 
@@ -649,7 +652,7 @@ Removing an attribute
 You can also remove an attribute from a class using the ``deprecated_attribute`` decorator.
 If you have a alternative attribute to use instead, pass its name in the `alternative` argument.
 
-.. testcode::
+.. code-block:: python
 
     from gammapy.utils.deprecation import deprecated_attribute
 
@@ -688,23 +691,6 @@ emitted in the test files. This can be done in the following way:
 
 Others
 ------
-
-Bundled gammapy.extern code
-+++++++++++++++++++++++++++
-
-We bundle some code in ``gammapy.extern``.
-This is external code that we don't maintain or modify in Gammapy.
-We only bundle small pure-Python files (currently all single-file modules) purely for convenience,
-because having to explain about these modules as Gammapy dependencies to end-users would be annoying.
-And in some cases the file was extracted from some other project, i.e. can't be installed
-separately as a dependency.
-
-For ``gammapy.extern`` we don't generate Sphinx API docs.
-To see what is there, check out the ``gammapy/extern`` directory locally or on
-`GitHub <https://github.com/gammapy/gammapy/tree/master/gammapy/extern>`__.
-Notes on the bundled files are kept in the docstring of
-`gammapy/extern/__init__.py <https://github.com/gammapy/gammapy/blob/master/gammapy/extern/__init__.py>`__.
-
 
 
 Locate origin of warnings

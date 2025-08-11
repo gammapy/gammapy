@@ -1,2 +1,2 @@
-Time
-----
+Time series
+-----------

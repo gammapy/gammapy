@@ -66,7 +66,7 @@ class IRF(metaclass=abc.ABCMeta):
 
     Examples
     --------
-    For a usage example, see :doc:`/tutorials/data/cta` tutorial and :doc:`/tutorials/api/irfs`.
+    For a usage example, see :doc:`/tutorials/data/cta` tutorial and :doc:`/tutorials/details/irfs`.
 
     """
 
@@ -986,7 +986,6 @@ class IRFMap:
         cutout : `IRFMap`
             Cutout IRF map.
         """
-
         irf_map = self._irf_map.cutout(position, width, mode, min_npix=min_npix)
         if self.exposure_map:
             exposure_map = self.exposure_map.cutout(
@@ -998,6 +997,7 @@ class IRFMap:
 
     def downsample(self, factor, axis_name=None, weights=None):
         """Downsample the dimension of the spatial axes or a non-spatial axis by a given factor.
+
         It is not recommended to use this function on a `~gammapy.irf.PSFMap` rad axis.
 
         Parameters
@@ -1015,7 +1015,6 @@ class IRFMap:
         map : `IRFMap`
             Downsampled IRF map.
         """
-
         if not axis_name:
             preserve_counts = False
         else:

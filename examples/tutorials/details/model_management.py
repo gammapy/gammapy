@@ -24,7 +24,7 @@ Prerequisites
 
 -  Knowledge of 3D analysis, dataset reduction and fitting see the :doc:`/tutorials/starting/analysis_2`
    tutorial.
--  Understanding of gammapy models, see the :doc:`/tutorials/api/models` tutorial.
+-  Understanding of gammapy models, see the :doc:`/tutorials/details/models` tutorial.
 -  Analysis of the Galactic Center with Fermi-LAT, shown in the  :doc:`/tutorials/data/fermi_lat` tutorial.
 -  Analysis of the Galactic Center with CTA-DC1 , shown in the  :doc:`/tutorials/analysis-3d/analysis_3d` tutorial.
 
@@ -73,13 +73,6 @@ from gammapy.modeling.models import (
     TemplateSpatialModel,
     create_fermi_isotropic_diffuse_model,
 )
-
-######################################################################
-# Check setup
-# -----------
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
 
 
 ######################################################################
@@ -239,7 +232,7 @@ print(datasets)
 #
 # We now load the Fermi 3FHL catalog and demonstrate some convenience
 # functions. For more details on using Gammapy catalog, see the
-# :doc:`/tutorials/api/catalog` tutorial.
+# :doc:`/tutorials/details/catalog` tutorial.
 #
 
 

@@ -1,7 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import copy
-from functools import lru_cache
+import logging
+from gammapy.utils.cache import CacheInstanceMixin, cachemethod
 import numpy as np
+from regions import PointSkyRegion
 import astropy.units as u
 from astropy.convolution import Tophat2DKernel
 from astropy.coordinates import Angle, SkyCoord
@@ -22,6 +24,8 @@ from ..axes import MapAxes
 from ..coord import MapCoord, skycoord_to_lonlat
 from ..geom import Geom, get_shape, pix_tuple_to_idx
 from ..utils import INVALID_INDEX, _check_binsz, _check_width
+
+log = logging.getLogger(__name__)
 
 __all__ = ["WcsGeom"]
 
@@ -60,7 +64,7 @@ def get_resampled_wcs(wcs, factor, downsampled):
     return wcs
 
 
-class WcsGeom(Geom):
+class WcsGeom(Geom, CacheInstanceMixin):
     """Geometry class for WCS maps.
 
     This class encapsulates both the WCS transformation object and
@@ -112,17 +116,6 @@ class WcsGeom(Geom):
             crpix = tuple(1.0 + (np.array(self._npix) - 1.0) / 2.0)
 
         self._crpix = crpix
-
-        # define cached methods
-        self.get_coord = lru_cache()(self.get_coord)
-        self.get_pix = lru_cache()(self.get_pix)
-
-    def __setstate__(self, state):
-        for key, value in state.items():
-            if key in ["get_coord", "get_pix"]:
-                state[key] = lru_cache()(value)
-
-        self.__dict__ = state
 
     @property
     def data_shape(self):
@@ -556,6 +549,7 @@ class WcsGeom(Geom):
         header["WCSSHAPE"] = f"({shape})"
         return header
 
+    @cachemethod
     def get_idx(self, idx=None, flat=False):
         pix = self.get_pix(idx=idx, mode="center")
         if flat:
@@ -603,6 +597,7 @@ class WcsGeom(Geom):
             _[~m] = INVALID_INDEX.float
         return pix
 
+    @cachemethod
     def get_coord(
         self, idx=None, mode="center", frame=None, sparse=False, axis_name=None
     ):
@@ -1000,18 +995,32 @@ class WcsGeom(Geom):
         since this method expects a list of regions.
         """
         from gammapy.maps import Map, RegionGeom
+        from gammapy.modeling.models import PointSpatialModel
+        from ..region.geom import _parse_regions
 
         if not self.is_regular:
             raise ValueError("Multi-resolution maps not supported yet")
 
-        geom = RegionGeom.from_regions(regions, wcs=self.wcs)
-        idx = self.get_idx()
-        mask = geom.contains_wcs_pix(idx)
+        regions = _parse_regions(regions)
+
+        mask = Map.from_geom(self, data=False)
+        extended_regions = []
+        for reg in regions:
+            if isinstance(reg, PointSkyRegion):
+                spatial_model = PointSpatialModel.from_position(reg.center)
+                mask.data |= spatial_model.evaluate_geom(self) > 0.0
+            else:
+                extended_regions.append(reg)
+
+        if extended_regions:
+            geom = RegionGeom.from_regions(extended_regions, wcs=self.wcs)
+            idx = self.get_idx()
+            mask.data |= geom.contains_wcs_pix(idx)
 
         if not inside:
-            np.logical_not(mask, out=mask)
+            mask = ~mask
 
-        return Map.from_geom(self, data=mask)
+        return mask
 
     def region_weights(self, regions, oversampling_factor=10):
         """Compute regions weights.
@@ -1195,15 +1204,19 @@ class WcsGeom(Geom):
             return TypeError(f"Cannot compare {type(self)} and {type(other)}")
 
         if self.data_shape != other.data_shape:
+            log.debug("WcsGeom data shape is not equal")
             return False
 
         axes_eq = self.axes.is_allclose(other.axes, rtol=rtol_axes, atol=atol_axes)
+        if not axes_eq:
+            log.debug("WcsGeom axes are not equal")
 
         # check WCS consistency with a priori tolerance of 1e-6
         # cmp=1 parameter ensures no comparison with ancillary information
         # see https://github.com/astropy/astropy/pull/4522/files
         wcs_eq = self.wcs.wcs.compare(other.wcs.wcs, cmp=1, tolerance=rtol_wcs)
-
+        if not wcs_eq:
+            log.debug("WcsGeom wcs is not equal")
         return axes_eq and wcs_eq
 
     def __eq__(self, other):

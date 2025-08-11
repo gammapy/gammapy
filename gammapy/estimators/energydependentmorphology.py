@@ -6,7 +6,7 @@ from gammapy.datasets import Datasets
 from gammapy.modeling import Fit
 from gammapy.modeling.models import FoVBackgroundModel, Models
 from gammapy.datasets.actors import DatasetsActor
-from gammapy.modeling.selection import TestStatisticNested
+from gammapy.modeling.selection import NestedModelSelection
 from gammapy.stats.utils import ts_to_sigma
 from .core import Estimator
 
@@ -86,7 +86,7 @@ class EnergyDependentMorphologyEstimator(Estimator):
 
     Examples
     --------
-    For a usage example see :doc:`/tutorials/analysis-3d/energy_dependent_estimation` tutorial.
+    For a usage example see :doc:`/tutorials/astrophysics/energy_dependent_estimation` tutorial.
     """
 
     tag = "EnergyDependentMorphologyEstimator"
@@ -177,7 +177,7 @@ class EnergyDependentMorphologyEstimator(Estimator):
                 ].spatial_model.parameters.free_parameters
             ]
 
-            test = TestStatisticNested(
+            test = NestedModelSelection(
                 parameters=parameters,
                 null_values=null_values,
                 n_sigma=-np.inf,
@@ -318,7 +318,6 @@ class EnergyDependentMorphologyEstimator(Estimator):
                 * "df" : the number of degrees of freedom between null and alternative hypothesis
                 * "significance" : significance of the result
         """
-
         if not isinstance(datasets, DatasetsActor):
             datasets = Datasets(datasets=datasets)
 

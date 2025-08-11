@@ -36,13 +36,6 @@ from gammapy.makers import (
 from gammapy.makers.utils import make_effective_livetime_map, make_observation_time_map
 from gammapy.maps import MapAxis, RegionGeom, WcsGeom
 
-######################################################################
-# Check setup
-# -----------
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
-
 
 ######################################################################
 # Dataset
@@ -118,6 +111,7 @@ plt.show()
 # factor in energy used to compute the background (default is None).
 #
 # .. _safe-data-range:
+#
 # Safe data range handling
 # ------------------------
 #
@@ -195,7 +189,7 @@ plt.show()
 # Here we are going to use a `~gammapy.makers.FoVBackgroundMaker` that
 # will rescale the background model to the data excluding the region where
 # a known source is present. For more details on the way to create
-# exclusion masks see the :doc:`mask maps </tutorials/api/mask_maps>` notebook.
+# exclusion masks see the :doc:`mask maps </tutorials/details/mask_maps>` notebook.
 #
 
 circle = CircleSkyRegion(center=geom.center_skydir, radius=0.2 * u.deg)

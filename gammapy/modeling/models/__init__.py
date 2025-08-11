@@ -9,7 +9,13 @@ from .cube import (
     TemplateNPredModel,
     create_fermi_isotropic_diffuse_model,
 )
-from .prior import GaussianPrior, Prior, UniformPrior, LogUniformPrior
+from .prior import (
+    GaussianPrior,
+    GeneralizedGaussianPrior,
+    Prior,
+    UniformPrior,
+    LogUniformPrior,
+)
 from .spatial import (
     ConstantFluxSpatialModel,
     ConstantSpatialModel,
@@ -111,8 +117,10 @@ __all__ = [
     "PowerLawTemporalModel",
     "Prior",
     "GaussianPrior",
+    "GeneralizedGaussianPrior",
     "UniformPrior",
     "LogUniformPrior",
+    "read_hermes_cube",
     "scale_plot_flux",
     "ScaleSpectralModel",
     "Shell2SpatialModel",
@@ -136,7 +144,6 @@ __all__ = [
     "TEMPORAL_MODEL_REGISTRY",
     "TemporalModel",
     "EBL_DATA_BUILTIN",
-    "read_hermes_cube",
 ]
 
 

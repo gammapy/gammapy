@@ -56,13 +56,6 @@ from gammapy.utils.regions import (
     make_orthogonal_rectangle_sky_regions,
 )
 
-######################################################################
-# Check setup
-# -----------
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
-
 
 ######################################################################
 # Read and Introduce Data

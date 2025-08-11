@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Command line tool to download datasets and notebooks."""
+
 import logging
 import tarfile
 import zipfile
@@ -54,7 +55,7 @@ class DownloadIndex:
 
     @property
     def environment_url(self):
-        """Environment URL"""
+        """Environment URL."""
         return self.index[self._environment_key]
 
     @property
@@ -64,7 +65,8 @@ class DownloadIndex:
 
 
 def progress_download(source, destination):
-    """
+    """Progress of the download.
+
     Notes
     -----
     The progress bar can be displayed for this function.

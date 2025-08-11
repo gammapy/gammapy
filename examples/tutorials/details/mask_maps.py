@@ -9,7 +9,7 @@ Prerequisites
 
 -  Understanding of basic analyses in 1D or 3D.
 -  Usage of `~regions` and catalogs, see the :doc:`catalog
-   notebook </tutorials/api/catalog>`.
+   notebook </tutorials/details/catalog>`.
 
 Context
 -------
@@ -99,13 +99,6 @@ from gammapy.catalog import CATALOG_REGISTRY
 from gammapy.datasets import Datasets
 from gammapy.estimators import ExcessMapEstimator
 from gammapy.maps import Map, WcsGeom
-
-######################################################################
-# Check setup
-# -----------
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
 
 
 ######################################################################

@@ -269,7 +269,6 @@ class EDispKernel(IRF):
         format : {"gadf", "gtdrm"}
             FITS format convention. Default is "gadf".
         """
-
         if format == "gadf":
             with fits.open(
                 str(make_path(filename)), memmap=False, checksum=checksum
@@ -665,6 +664,12 @@ class EDispKernel(IRF):
 
     def peek(self, figsize=(15, 5)):
         """Quick-look summary plots.
+
+        This method creates a figure with two subplots:
+
+        * Bias plot : reconstruction bias as a function of true energy
+        * Energy dispersion matrix plot : probability density function matrix to have
+          ``energy`` as a function of ``energy_true``
 
         Parameters
         ----------

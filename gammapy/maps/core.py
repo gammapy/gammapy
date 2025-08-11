@@ -449,7 +449,7 @@ class Map(abc.ABC):
         map : `Map`
             Map iteration.
 
-        See also
+        See Also
         --------
         iter_by_image : iterate by image returning a map.
         """
@@ -472,7 +472,7 @@ class Map(abc.ABC):
         map : `Map`
             Map iteration.
 
-        See also
+        See Also
         --------
         iter_by_image_data : iterate by image returning data and index.
         """
@@ -496,7 +496,7 @@ class Map(abc.ABC):
             Where ``data`` is a `numpy.ndarray` view of the image plane data,
             and ``idx`` is a tuple of int, the index of the image plane.
 
-        See also
+        See Also
         --------
         iter_by_image : iterate by image returning a map.
         """
@@ -514,7 +514,7 @@ class Map(abc.ABC):
         idx : tuple
             ``idx`` is a tuple of int, the index of the image plane.
 
-        See also
+        See Also
         --------
         iter_by_image : iterate by image returning a map.
         """
@@ -860,7 +860,7 @@ class Map(abc.ABC):
         return self.get_image_by_idx(idx)
 
     def get_image_by_pix(self, pix):
-        """Return spatial map at the given axis pixel coordinates
+        """Return spatial map at the given axis pixel coordinates.
 
         Parameters
         ----------
@@ -1998,7 +1998,6 @@ class Map(abc.ABC):
         coords : `~gammapy.maps.MapCoord` object.
             Sequence of coordinates and energies of the sampled events.
         """
-
         random_state = get_random_state(random_state)
         sampler = InverseCDFSampler(pdf=self.data, random_state=random_state)
 

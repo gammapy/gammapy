@@ -76,12 +76,6 @@ from IPython.display import display
 from gammapy.analysis import Analysis, AnalysisConfig
 from gammapy.modeling.models import Models
 
-######################################################################
-# Check setup
-# -----------
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
 
 ######################################################################
 # Analysis configuration

@@ -291,6 +291,7 @@ class MapDatasetMaker(Maker):
             fov_rotation_step=self.fov_rotation_step,
             oversampling=self.background_oversampling,
             use_region_center=use_region_center,
+            location=observation.observatory_earth_location,
         )
 
     def make_edisp(self, geom, observation):

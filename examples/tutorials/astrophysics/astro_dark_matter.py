@@ -15,7 +15,7 @@ channels. They are presented in this notebook.
 The basic concepts of indirect dark matter searches, however, are not
 explained. So this is aimed at people who already know what the want to
 do. A good introduction to indirect dark matter searches is given for
-example in https://arxiv.org/pdf/1012.4515.pdf (Chapter 1 and 5)
+example `here <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C/abstract>`__ (Chapter 1 and 5).
 
 """
 
@@ -42,13 +42,6 @@ from gammapy.astro.darkmatter import (
     profiles,
 )
 from gammapy.maps import WcsGeom, WcsNDMap
-
-######################################################################
-# Check setup
-# -----------
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
 
 
 ######################################################################
@@ -89,7 +82,9 @@ print("DISTANCE_GC:", profiles.DMProfile.DISTANCE_GC)
 
 profile = profiles.NFWProfile(r_s=20 * u.kpc)
 
+######################################################################
 # Adopt standard values used in H.E.S.S.
+
 profiles.DMProfile.DISTANCE_GC = 8.5 * u.kpc
 profiles.DMProfile.LOCAL_DENSITY = 0.39 * u.Unit("GeV / cm3")
 
@@ -106,7 +101,9 @@ plt.figure()
 ax = jfact_map.plot(cmap="viridis", norm=LogNorm(), add_cbar=True)
 plt.title(f"J-Factor [{jfact_map.unit}]")
 
+######################################################################
 # 1 deg circle usually used in H.E.S.S. analyses without the +/- 0.3 deg band around the plane
+
 sky_reg = CircleSkyRegion(center=position, radius=1 * u.deg)
 pix_reg = sky_reg.to_pixel(wcs=geom.wcs)
 pix_reg.plot(ax=ax, facecolor="none", edgecolor="red", label="1 deg circle")
@@ -118,7 +115,10 @@ pix_reg_rec.plot(ax=ax, facecolor="none", edgecolor="orange", label="+/- 0.3 deg
 plt.legend()
 plt.show()
 
-# NOTE: https://arxiv.org/abs/1607.08142 quote 2.67e21
+######################################################################
+# Note the value quoted by H.E.S.S. in `this paper <https://arxiv.org/abs/1607.08142>`__
+# is :math:`2.67\times10^{21}`
+
 total_jfact = (
     pix_reg.to_mask().multiply(jfact).sum()
     - pix_reg_rec.to_mask().multiply(jfact).sum()
@@ -134,6 +134,7 @@ print(
 
 ######################################################################
 # The J-Factor can also be computed for dark matter decay
+
 jfactory = JFactory(
     geom=geom,
     profile=profile,
@@ -147,7 +148,9 @@ plt.figure()
 ax = jfact_map.plot(cmap="viridis", norm=LogNorm(), add_cbar=True)
 plt.title(f"J-Factor [{jfact_map.unit}]")
 
+######################################################################
 # 1 deg circle usually used in H.E.S.S. analyses without the +/- 0.3 deg band around the plane
+
 sky_reg = CircleSkyRegion(center=position, radius=1 * u.deg)
 pix_reg = sky_reg.to_pixel(wcs=geom.wcs)
 pix_reg.plot(ax=ax, facecolor="none", edgecolor="red", label="1 deg circle")

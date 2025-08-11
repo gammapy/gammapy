@@ -34,13 +34,6 @@ from gammapy.modeling.models import (
 )
 from gammapy.visualization import plot_distribution
 
-######################################################################
-# Check setup
-# -----------
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
-
 
 ######################################################################
 # Analysis configuration
@@ -198,7 +191,7 @@ plt.show()
 # can rely on the `~gammapy.maps.Geom.energy_mask()` method.
 #
 # For more details on masks and the techniques to create them in gammapy,
-# please checkout the dedicated :doc:`/tutorials/api/mask_maps` tutorial.
+# please checkout the dedicated :doc:`/tutorials/details/mask_maps` tutorial.
 #
 
 dataset_stacked.mask_fit = dataset_stacked.counts.geom.energy_mask(
@@ -234,6 +227,7 @@ result = fit.run(datasets=[dataset_stacked])
 
 ######################################################################
 # .. _mapdataset_fit_quality:
+#
 # Fit quality assessment and model residuals for a `~gammapy.datasets.MapDataset`
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
@@ -392,6 +386,7 @@ result_joint = fit_joint.run(datasets=analysis_joint.datasets)
 
 ######################################################################
 # .. _dataset_fit_quality:
+#
 # Fit quality assessment and model residuals for a joint `~gammapy.datasets.Datasets`
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
@@ -468,6 +463,7 @@ plt.show()
 
 ######################################################################
 # .. image:: ../../_static/DC1_3d.png
+#
 #
 
 

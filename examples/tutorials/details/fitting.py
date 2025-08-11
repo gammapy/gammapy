@@ -10,10 +10,10 @@ This tutorial describes the fitting steps using a maximum likelihood (Frequentis
 
 Alternatively, we could have a Bayesian approach by assigning a prior probability distribution over
 the parameters and compute the posterior distribution to fit the parameters. This is described in the
-:doc:`/tutorials/api/priors` tutorial.
+:doc:`/tutorials/details/priors` tutorial.
 
 One can also perform a Bayesian analysis using a nested sampling technique. This is described
-in the :doc:`/tutorials/api/nested_sampling_Crab` tutorial.
+in the :doc:`/tutorials/details/nested_sampling_Crab` tutorial.
 
 Prerequisites
 -------------
@@ -30,7 +30,7 @@ Proposed approach
 This is a hands-on tutorial to `~gammapy.modeling`, showing how to do
 perform a Fit in gammapy. The emphasis here is on interfacing the
 `~gammapy.modeling.Fit` class and inspecting the errors. To see an analysis example of
-how datasets and models interact, see the :doc:`/tutorials/api/model_management` tutorial.
+how datasets and models interact, see the :doc:`/tutorials/details/model_management` tutorial.
 As an example, in this notebook, we are going to work with H.E.S.S. data of the Crab Nebula and show in
 particular how to :
 
@@ -39,7 +39,7 @@ particular how to :
 - access covariance matrix information and parameter errors
 - compute likelihood profile - compute confidence contours
 
-See also: :doc:`/tutorials/api/models` and :ref:`modeling`.
+See also: :doc:`/tutorials/details/models` and :ref:`modeling`.
 
 The setup
 ---------
@@ -55,14 +55,6 @@ from gammapy.datasets import Datasets, SpectrumDatasetOnOff
 from gammapy.modeling import Fit
 from gammapy.modeling.models import LogParabolaSpectralModel, SkyModel
 from gammapy.visualization.utils import plot_contour_line
-
-######################################################################
-# Check setup
-# -----------
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
-
 
 ######################################################################
 # Model and dataset
