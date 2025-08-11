@@ -11,10 +11,12 @@ Introduction
 `MAGIC <https://magic.mpp.mpg.de/>`__ (Major Atmospheric Gamma Imaging
 Cherenkov Telescopes) consists of two Imaging Atmospheric Cherenkov telescopes in La Palma, Spain.
 These 17m diameter telescopes detect gamma-rays from ~ 30 GeV to 100 TeV.
-This notebook provides an introduction to using the MAGIC DL3 data products, to produce a
-`~gammapy.datasets.SpectrumDataset`. Importantly it shows the uses how to a spectral analysis
-with energy-dependent directional cuts. This is described further below.
-
+The MAGIC public data release contains around 100 hours of data and can be found `here <https://opendata.magic.pic.es/>`__.
+This notebook presents an analysis based on just two runs of the Crab Nebula.
+It provides an introduction to using the MAGIC DL3 data products, to produce a
+`~gammapy.datasets.SpectrumDatasetOnOff`. Importantly it shows how to perform a data reduction
+with energy-dependent directional cuts, as described further below.
+For further information, see `this paper <https://ui.adsabs.harvard.edu/abs/2024JHEAp..44..266A/abstract>`__.
 
 Prerequisites
 -------------
@@ -32,11 +34,15 @@ Context
 -------
 
 As described in the :doc:`/tutorials/analysis-1d/spectral_analysis`
-tutorial, the background is estimated from the field of view of the observation.
+tutorial, the background is estimated from the field of view (FoV) of the observation.
+Since the MAGIC data release does not include a dedicated background IRF, this estimation
+must be performed directly from the FoV.
 In particular, the source and background events are counted within a circular
 ON region enclosing the source. The background to be subtracted is then estimated
 from one or more OFF regions with an expected background rate similar to the one
 in the ON region (i.e. from regions with similar acceptance).
+Mention that since the MAGIC data release does not include any background IRF, we have to estimate
+it from the FoV of the observation.
 
 *Full-containment* IRFs have no directional cut applied, when employed
 for a 1D analysis, it is required to apply a correction to the IRF
@@ -133,7 +139,7 @@ observations = data_store.get_observations(required_irf="point-like")
 #
 
 observations[0].peek()
-
+# sphinx_gallery_thumbnail_number = 1
 
 ######################################################################
 # The ``rad_max`` attribute, containing the `RAD_MAX_2D` table, is
@@ -367,7 +373,6 @@ dataset_simulated.fake(
 )
 dataset_simulated.peek()
 plt.show()
-# sphinx_gallery_thumbnail_number = 5
 
 
 ######################################################################
