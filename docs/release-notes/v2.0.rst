@@ -15,12 +15,11 @@
 Summary
 ~~~~~~~
 
-This is a new Long term stable release. Gammapy 2.0 will be maintained for the next two years, and we remove support for
-Gammapy 1.x versions. With Gammapy 2.0, we provide analysis support for major Imaging Atmospheric Cherenkov Telescope like H.E.S.S.,
-VERITAS, MAGIC, LST1 and Water Cherenkov Telesope like HAWC and SWGO, and Fermi-LAT. 
+This is a new Long term stable release. Gammapy 2.0 will be maintained for the next two years, and we remove support for Gammapy 1.x versions. With Gammapy 2.0, we provide analysis support for major Imaging Atmospheric Cherenkov Telescope including H.E.S.S.,
+VERITAS, MAGIC, LST1, Water Cherenkov Telesope like HAWC and SWGO, and Fermi-LAT.
 
 Since Gammapy 1.3, improved support is provided for Fermi-LAT analysis, and full analysis for VERITAS telescope is supported.
-Bayesian inference with nester sampling is now supported.
+Bayesian inference with nested sampling is now supported.
 There has been significant code cleanup, specially with respect to the documentation and the tutorial structure has
 been cleaned up.
 
@@ -41,16 +40,16 @@ Features deprecated since Gammapy v1.3 have been removed.
 Documentation improvements
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- Documentation appearance has been updated using less custom css code, and the
-  ordering of tutorials restructured for clarity.
+- Documentation appearance has been updated using less custom css code, and now support a dark theme.
+- The ordering of tutorials has been restructured for clarity.
 - Four new tutorials have been added:
 
-   - one explaining VERITAS analysis along with addition of VERITAS data in `$GAMMAPY_DATA`
-   - one explaining computation of upper limits for non-detected sources
-   - one explaining computation of upper limits on parameters
-   - one introducing Bayesian inference with nested sampling
+   - one explaining VERITAS analysis along with addition of VERITAS data in `$GAMMAPY_DATA` (:doc:`/tutorials/data/veritas`)
+   - one explaining computation of upper limits for non-detected sources (:doc:`/tutorials/analysis-3d/non_detected_source`)
+   - one explaining computation of upper limits on parameters (:doc:`/tutorials/details/parameter_ul`)
+   - one introducing Bayesian inference with nested sampling (:doc:`/tutorials/details/nested_sampling_Crab`)
 
-- The tutorial showing how to handle Fermi-LAT data has been rewritten to expose a full Fermi-LAT analysis.
+- The tutorial showing how to handle Fermi-LAT data (:doc:`/tutorials/data/fermi_lat`) has been rewritten to expose a full Fermi-LAT analysis.
 - Code examples have been added in docstrings.
 
 
@@ -101,7 +100,6 @@ New features
 - Introduce a FoVFrame in `gammapy.utils.coordinates`
 - Get regions of bright stars in FoV
 - Allow energy selection in `~gammapy.makers.utils.make_theta_squared_table`
-- Introduction of a ``PolygonPointsSkyRegion``
 
 Bug fixes and improvements
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -112,24 +110,23 @@ Bug fixes and improvements
 - Fix mask handling in `~gammapy.estimators.TSMapEstimator`
 - Preserve parameters links in `Models.copy()`
 - Fix link label display in parameters.to_table
-- Correct small bug in PSFMap
-- Fix ``e_peak`` implementation of `~gammapy.modeling.models.SuperExpCutoffPowerLaw4FGLDR3SpectralModel`
+- Fix ``e_peak`` implementation of `~gammapy.modeling.models.SuperExpCutoffPowerLaw4FGLDR3SpectralModel` to give results compatible with Eq 21 of  https://iopscience.iop.org/article/10.3847/1538-4357/acee67
 - Fix of a `~gammapy.maps.HpxGeom` simulation error
 
 
 Infrastructure
 ~~~~~~~~~~~~~~
 
-- removed dependency on ``sphinx-astropy``
-- utilise OpenAstronomy in our release workflow to build wheels
-- added extra workflows:
+- Remove dependency on ``sphinx-astropy``
+- Utilise OpenAstronomy in our release workflow to build wheels
+- Added extra workflows for:
 
-   - scheduled run for doctests in rst and examples
-   - scheduled link check (separated from ci)
+   - Scheduling run for doctests in rst and examples
+   - Scheduling link check (separated from CI)
 
-- added the docs build to PRs
-- support of astropy v7.1
-- allow skipping of ci actions through labels: ``skip-docs``, ``skip-tests``
+- Add the docs build to PRs
+- Support of astropy v7.1
+- Allow skipping of ci actions through labels: ``skip-docs``, ``skip-tests``
 
 
 Contributors
@@ -160,5 +157,4 @@ Contributors
 - Hanna Stapel
 - Régis Terrier
 - Samantha Wong
-
 
