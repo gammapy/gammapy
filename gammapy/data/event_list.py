@@ -142,7 +142,7 @@ class EventList:
         """
         from gammapy.data.io import EventListReader
 
-        return EventListReader(hdu, checksum).read(filename)
+        return EventListReader(hdu, checksum).read(filename, **kwargs)
 
     def to_table_hdu(self, format="gadf"):
         """
