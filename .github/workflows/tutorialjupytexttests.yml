@@ -25,7 +25,7 @@ jobs:
       - name: Install Gammapy and needed dependencies
         run: |
           pip install --upgrade pip
-          pip install tqdm requests jupyter jupytext jupyter-client ipykernel sherpa
+          pip install tqdm requests jupyter jupytext jupyter_client ipykernel sherpa
           pip install .
 
       - name: Download datasets
