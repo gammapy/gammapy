@@ -66,7 +66,7 @@ specifications offer two different ways to store this information:
   keyword is added to the header of the data units containing IRF components. This
   should be used to define the size of the ON and OFF regions;
 * in case an energy-dependent (and offset-dependent) :math:`\\theta` cut is applied, its
-  values are stored in additional `FITS` data unit, named
+  values are stored in additional ``FITS`` data unit, named
   `RAD_MAX_2D <https://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/point_like/#rad-max-2d>`__.
 
 Gammapy provides a class to automatically read these values,
@@ -77,26 +77,19 @@ spectral extraction with a point-like IRF with an energy-dependent
 `~regions.PointSkyRegion` (and not a `~regions.CircleSkyRegion`)
 should be used to define the ON region. If a geometry based on a
 `~regions.PointSkyRegion` is fed to the spectra and the background
-`Makers`, the latter will automatically use the values stored in the
-`RAD_MAX` keyword / table for defining the size of the ON and OFF
+`~gammapy.makers.Maker`, the latter will automatically use the values stored in the
+``RAD_MAX`` keyword / table for defining the size of the ON and OFF
 regions.
 
 Beside the definition of the ON region during the data reduction, the
 remaining steps are identical to the other :doc:`/tutorials/analysis-1d/spectral_analysis`
-tutorial., so we will not detail the data reduction steps already
+tutorial, so we will not detail the data reduction steps already
 presented in the other tutorial.
 
 **Objective: perform the data reduction and analysis of 2 Crab Nebula
 observations of MAGIC and fit the resulting datasets.**
 
 """
-
-import astropy.units as u
-from astropy.coordinates import SkyCoord
-from regions import PointSkyRegion
-
-# %matplotlib inline
-import matplotlib.pyplot as plt
 
 ######################################################################
 # Setup
@@ -105,6 +98,13 @@ import matplotlib.pyplot as plt
 # As usual, we’ll start with some setup …
 #
 from IPython.display import display
+import astropy.units as u
+from astropy.coordinates import SkyCoord
+from regions import PointSkyRegion
+
+# %matplotlib inline
+import matplotlib.pyplot as plt
+
 from gammapy.data import DataStore
 from gammapy.datasets import Datasets, SpectrumDataset
 from gammapy.makers import (
@@ -139,10 +139,11 @@ observations = data_store.get_observations(required_irf="point-like")
 #
 
 observations[0].peek()
+plt.show()
 # sphinx_gallery_thumbnail_number = 1
 
 ######################################################################
-# The ``rad_max`` attribute, containing the `RAD_MAX_2D` table, is
+# The ``rad_max`` attribute, containing the ``RAD_MAX_2D`` table, is
 # automatically loaded in the observation. As we can see from the IRF
 # component axes, the table has a single offset value and 28 estimated
 # energy values.
@@ -165,7 +166,7 @@ plt.show()
 # Define the ON region
 # --------------------
 #
-# To use the `RAD_MAX_2D` values to define the sizes of the ON and OFF
+# To use the ``RAD_MAX_2D`` values to define the sizes of the ON and OFF
 # regions it is necessary to specify the ON region as
 # a `~regions.PointSkyRegion`  i.e. we specify only the center of our ON region.
 #
@@ -311,7 +312,7 @@ display(datasets.models.to_parameters_table())
 
 ######################################################################
 # A simple way to inspect the model residuals is using the function
-# `~SpectrumDataset.plot_fit()`
+# `~SpectrumDatasetOnOff.plot_fit()`
 #
 ax_spectrum, ax_residuals = datasets[0].plot_fit()
 ax_spectrum.set_ylim(0.1, 120)
