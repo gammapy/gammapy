@@ -44,9 +44,10 @@ class ObservationTable(Table):
 
         # Init with basic reference table, like suggested by @registerrier.
         if table is None:
-            super().__init__(**kwargs)
+            super().__init__(data=self._reference_table(), **kwargs)
             self.table = self._reference_table()
         else:
+            print("ELSE")  # for read
             super().__init__(data=table, **kwargs)
 
     @staticmethod
@@ -56,12 +57,14 @@ class ObservationTable(Table):
         table = Table(
             [
                 Column(
+                    [],
                     name="OBS_ID",
                     unit=None,
                     description="Observation ID per observation run",
                     dtype=str,
                 ),
                 Column(
+                    [],
                     name="OBJECT",
                     unit=None,
                     description="Name of the object",
