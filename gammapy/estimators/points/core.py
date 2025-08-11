@@ -37,6 +37,18 @@ def squash_fluxpoints(flux_point, axis):
     to compute the resultant quantities. Stat profiles
     must be present on the `~FluxPoints` object for
     this method to work.
+
+    Parameters
+    ----------
+    flux_point : `~gammapy.estimators.FluxPoints`
+        Flux points object to squash.
+    axis : `MapAxis` or `TimeMapAxis`
+        Axis along which to squash the flux points.
+
+    Returns
+    -------
+    combined_fp : `~gammapy.estimators.FluxPoints`
+        New flux points object.
     """
     value_scan = flux_point.stat_scan.geom.axes["norm"].center
     stat_scan = np.sum(flux_point.stat_scan.data, axis=0).ravel()
@@ -66,7 +78,6 @@ def squash_fluxpoints(flux_point, axis):
         delta_ts = flux_point.meta.get("n_sigma_ul", 2) ** 2
         try:
             ul = stat_profile_ul_scipy(value_scan, stat_scan, delta_ts=delta_ts)
-            ul = ul.value
         except (ValueError, RuntimeError):
             ul = np.nan
         maps["norm_ul"] = Map.from_geom(geom, data=np.reshape(ul, geom.data_shape))
@@ -843,10 +854,10 @@ class FluxPoints(FluxMaps):
         >>> filename = "$GAMMAPY_DATA/estimators/crab_hess_fp/crab_hess_fp.fits"
         >>> flux_points = FluxPoints.read(filename)
         >>> flux_points_recomputed = flux_points.recompute_ul(n_sigma_ul=4)
-        >>> print(flux_points.meta["n_sigma_ul"], flux_points.flux_ul.data[1])
-        3.0 [[3.99250033e-11]]
-        >>> print(flux_points_recomputed.meta["n_sigma_ul"], flux_points_recomputed.flux_ul.data[1])
-        4 [[4.24707167e-11]]
+        >>> print(f'{flux_points.meta["n_sigma_ul"]}, {float(flux_points.flux_ul.data[1][0]):.2e}')
+        3.0, 3.99e-11
+        >>> print(f'{flux_points_recomputed.meta["n_sigma_ul"]}, {float(flux_points_recomputed.flux_ul.data[1][0]):.2e}')
+        4, 4.25e-11
         """
         if not self.has_stat_profiles:
             raise ValueError(
@@ -861,9 +872,13 @@ class FluxPoints(FluxMaps):
         shape_axes = self.stat_scan.geom._shape[slice(3, None)][::-1]
         for idx in np.ndindex(shape_axes):
             stat_scan = self.stat_scan.data[idx].squeeze()
-            flux_points.norm_ul.data[idx] = stat_profile_ul_scipy(
-                value_scan, stat_scan, delta_ts=delta_ts, **kwargs
-            )
+            try:
+                ul = stat_profile_ul_scipy(
+                    value_scan, stat_scan, delta_ts=delta_ts, **kwargs
+                )
+            except (ValueError, RuntimeError):
+                ul = np.nan
+            flux_points.norm_ul.data[idx] = ul
         flux_points.meta["n_sigma_ul"] = n_sigma_ul
         return flux_points
 
