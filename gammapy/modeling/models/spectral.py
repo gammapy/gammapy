@@ -1516,13 +1516,16 @@ class PiecewiseNormSpectralModel(SpectralModel):
         """Norm values."""
         return u.Quantity([p.value for p in self.parameters])
 
-    def evaluate(self, energy, **norms):
+    def evaluate(self, energy, *norms):
         scale = interpolation_scale(scale=self._interp)
         e_eval = scale(np.atleast_1d(energy.value))
         e_nodes = scale(self.energy.to(energy.unit).value)
-        v_nodes = scale(self.norms)
+        v_nodes = scale(norms)
         log_interp = scale.inverse(np.interp(e_eval, e_nodes, v_nodes))
         return log_interp
+
+    def __call__(self, energy):
+        return self.evaluate(energy, *self.norms)
 
     def to_dict(self, full_output=False):
         data = super().to_dict(full_output=full_output)
