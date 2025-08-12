@@ -121,3 +121,11 @@ plt.show()
 # tutorials and documentation apply to H.E.S.S. and CTAO or any other IACT
 # that provides DL3 data and IRFs in the standard format.
 #
+# You can see the following tutorials for more detailed analysis using H.E.S.S. data
+#
+# -  :doc:`/tutorials/starting/analysis_1`
+# -  :doc:`/tutorials/starting/analysis_2`
+# -  :doc:`/tutorials/analysis-1d/spectral_analysis`
+# -  :doc:`/tutorials/analysis-1d/extended_source_spectral_analysis`
+# -  :doc:`/tutorials/analysis-2d/ring_background`
+#
