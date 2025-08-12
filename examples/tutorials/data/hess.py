@@ -121,7 +121,7 @@ plt.show()
 # tutorials and documentation apply to H.E.S.S. and CTAO or any other IACT
 # that provides DL3 data and IRFs in the standard format.
 #
-# The following tutorials utilise the H.E.S.S. data:
+# You can see the following tutorials for more detailed analysis using H.E.S.S. data
 #
 # -  :doc:`/tutorials/starting/analysis_1`
 # -  :doc:`/tutorials/starting/analysis_2`
