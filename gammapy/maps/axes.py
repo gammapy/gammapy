@@ -1543,10 +1543,24 @@ class MapAxes(Sequence):
     def iter_with_reshape(self):
         # TODO: The name is misleading. Maybe iter_axis_and_shape?
         """Generator that iterates over axes and their shape."""
-        for idx, axis in enumerate(self):
-            # Extract values for each axis, default: nodes
-            shape = [1] * len(self)
-            shape[idx] = -1
+        size = 0
+        for axis in self : 
+            if isinstance(axis, ParallelLabelMapAxis) :
+                size += 2
+            else : 
+                size += 1
+        idx = 0
+        for axis in self:
+            # Extract values for each axis, default: nodes 
+            shape = [1] * size
+            if isinstance(axis, ParallelLabelMapAxis) : 
+                #shape[idx:idx +2] = (len(axis.parallel_names),axis.nbin)
+                #idx += 2
+                shape[idx] = axis.nbin
+                idx += 1
+            else :
+                shape[idx] = -1
+                idx += 1
             if self._n_spatial_axes:
                 shape = (
                     shape[::-1]
@@ -1579,7 +1593,10 @@ class MapAxes(Sequence):
                 coord = axis.edges
             else:
                 coord = axis.center
-            coords[axis.name] = coord.reshape(shape)
+            if isinstance(axis,ParallelLabelMapAxis) : 
+                coords[axis.name] = coord[0].reshape(shape)#TO BE CHANGED
+            else : 
+                coords[axis.name] = coord.reshape(shape)
 
         return coords
 
@@ -3586,6 +3603,11 @@ class ParallelLabelMapAxis(LabelMapAxis):
     @property
     def parallel_names(self):
         return self._label_mapaxis.keys()
+    
+    @property
+    def center(self):
+        """Center of the label axis."""
+        return np.array([label_mapaxis.center for label_mapaxis in self._label_mapaxis.values()])
 
     def __getitem__(self, item):
         if isinstance(item, str):
