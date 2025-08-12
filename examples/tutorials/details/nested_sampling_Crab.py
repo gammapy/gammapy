@@ -102,6 +102,7 @@ A demonstration of a Bayesian analysis using the nested sampling technique.
 
 import matplotlib.pyplot as plt
 import numpy as np
+import astropy.units as u
 from gammapy.datasets import Datasets
 from gammapy.datasets import SpectrumDatasetOnOff
 
@@ -358,6 +359,45 @@ plt.show()
 
 # sphinx_gallery_thumbnail_number = 3
 
+######################################################################
+# Using the samples to draw the spectral model error band.
+# -----------------------
+#
+# While the spectral error band is usually computed from the
+# covariance matrix of the parameters, it can also be computed from the
+# samples of the posterior distribution.
+# This is a more robust way to compute the error band as it takes into
+# account the full posterior distribution and not just the covariance
+# matrix.
+# For this we will need to convert the list of samples back to the spectral
+# model parameters with the revelant units (e.g. normalization units).
+
+
+def get_samples_from_posterior(spectral_model, results):
+    """
+    Create a list of spectral parameters with correct units
+    from the unitless parameters returned by the sampler.
+    """
+    n = results.samples.shape[0]
+    samples = []
+    for p in spectral_model.parameters:
+        try:
+            idx = spectral_model.parameters.free_unique_parameters.index(p)
+            samples.append(results.samples[:, idx] * p.unit)
+        except ValueError:
+            samples.append(np.ones(n) * p.quantity)
+    return samples
+
+
+samples = get_samples_from_posterior(datasets.models[0].spectral_model, result_joint)
+
+######################################################################
+# Next we can provide these samples to the `plot_error`
+# method of the `~gammapy.modeling.models.SpectralModel` class.
+
+ax = datasets.models[0].spectral_model.plot_error(
+    energy_bounds=[0.5 * u.TeV, 50 * u.TeV], sed_type="e2dnde", samples=samples
+)
 
 ######################################################################
 # Individual run analysis
