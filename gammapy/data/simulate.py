@@ -20,7 +20,7 @@ class ObservationsEventsSampler(parallel.ParallelMixin):
         Overwrite existing file. Default is True.
     n_jobs : int, optional
         Number of processes to run in parallel.
-        Default is None, unless `~gammapy.utils.parallel.N_JOBS_DEFAULT` was modified.
+        By default, the value is 1, unless `~gammapy.utils.parallel.N_JOBS_DEFAULT` has been modified.
     parallel_backend : {'multiprocessing', 'ray'}, optional
         Which backend to use for multiprocessing.
         Default is None.
