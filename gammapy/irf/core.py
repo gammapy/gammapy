@@ -109,7 +109,7 @@ class IRF(metaclass=abc.ABCMeta):
         self.interp_kwargs = interp_kwargs
 
     @property
-    def is_reco_binned(self):
+    def is_reco_unbinned(self):
         """Whether the IRF is reco binned."""
         return isinstance(self.axes["energy"], LabelMapAxis)
 
@@ -681,7 +681,7 @@ class IRFMap:
         return self._irf_map.geom.axes
 
     @property
-    def is_reco_binned(self):
+    def is_reco_unbinned(self):
         """Whether the IRF is reco binned."""
         return isinstance(self.axes["energy"], LabelMapAxis)
 
