@@ -41,8 +41,6 @@ In particular, the source and background events are counted within a circular
 ON region enclosing the source. The background to be subtracted is then estimated
 from one or more OFF regions with an expected background rate similar to the one
 in the ON region (i.e. from regions with similar acceptance).
-Mention that since the MAGIC data release does not include any background IRF, we have to estimate
-it from the FoV of the observation.
 
 *Full-containment* IRFs have no directional cut applied, when employed
 for a 1D analysis, it is required to apply a correction to the IRF
