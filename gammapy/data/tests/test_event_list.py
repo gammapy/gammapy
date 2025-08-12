@@ -136,10 +136,7 @@ class TestEventListBase:
         assert "CREATED" in hdu.header
         assert hdu.header["CREATOR"] == "SASH FITS::EventListWriter"
 
-    def test_eventlist_format_keyword_is_passed_to_EventListReader(self):
-        # Read eventlist with unknown format specification, to test that the keyword argument is correctly
-        # passed through to the read-method in the EventListReader class. There, this is expected, to
-        # cause a ValueError due to the received unknown format, testing the passing of the keyword argument.
+    def test_eventlist_read_kwargs(self):
         with pytest.raises(ValueError):
             EventList.read(
                 "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz",
