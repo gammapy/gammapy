@@ -145,12 +145,13 @@ class EDispMap(IRFMap):
             "energy_true": coords["energy_true"],
             "migra": migra,
         }
-
-        values = self.edisp_map.integral(axis_name="migra", coords=coords)
-
-        axis = self.edisp_map.geom.axes.index_data("migra")
+        
         if not (isinstance(energy_axis, LabelMapAxis)):
+            values = self.edisp_map.integral(axis_name="migra", coords=coords)
+            axis = self.edisp_map.geom.axes.index_data("migra")
             values = np.diff(values, axis=axis)
+        else : 
+            values = self.edisp_map.evaluate(axis_name="migra", coords=coords)
         data = np.clip(values, 0, np.inf)
         edisp_kernel_map = Map.from_geom(geom=geom, data=data.to_value(""), unit="")
 
