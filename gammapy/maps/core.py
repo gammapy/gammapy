@@ -1688,6 +1688,28 @@ class Map(abc.ABC):
             cumsum.interp_by_coord(coords, **kwargs), cumsum.unit, copy=COPY_IF_NEEDED
         )
 
+    def evaluate(self, axis_name, coords, **kwargs):
+        cumsum = self.cumsum(axis_name=axis_name)
+        cumsum = cumsum.pad(pad_width=1, axis_name=axis_name, mode="edge")
+        axis_upsample = cumsum.geom.axes[axis_name].upsample(100)
+        upsample_geom = cumsum.geom.to_image().to_cube(
+            cumsum.geom.axes.replace(axis=axis_upsample)
+        )
+        upsample_coords = upsample_geom.get_coord(sparse=True, mode="center", axis_name=axis_name)
+        gradient_data = np.gradient(
+            cumsum.interp_by_coord(upsample_coords, **kwargs),
+            axis = cumsum.geom.axes.index_data(axis_name),
+        )
+        gradient = cumsum.__class__(
+            geom=upsample_geom,
+            data=gradient_data,
+            unit=cumsum.unit,
+        )
+        return u.Quantity(
+            gradient.interp_by_coord(coords, **kwargs), gradient.unit, copy=COPY_IF_NEEDED
+        )
+    
+
     def normalize(self, axis_name=None):
         """Normalise data in place along a given axis.
 
