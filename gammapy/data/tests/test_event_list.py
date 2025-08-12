@@ -136,6 +136,13 @@ class TestEventListBase:
         assert "CREATED" in hdu.header
         assert hdu.header["CREATOR"] == "SASH FITS::EventListWriter"
 
+    def test_eventlist_read_kwargs(self):
+        with pytest.raises(ValueError):
+            EventList.read(
+                "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz",
+                format="unknown-format",
+            )
+
 
 @requires_data()
 class TestEventListHESS:
