@@ -3,6 +3,8 @@ import pytest
 import astropy.units as u
 from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.time import Time
+from astropy.table import Table
+import numpy as np
 from gammapy.data import DataStore, Observation, ObservationsEventsSampler
 from gammapy.data.pointing import FixedPointingInfo
 from gammapy.datasets.tests.test_simulate import get_energy_dependent_temporal_model
@@ -10,10 +12,11 @@ from gammapy.irf import load_irf_dict_from_file
 from gammapy.maps import MapAxis
 from gammapy.modeling.models import (
     ConstantSpectralModel,
-    FoVBackgroundModel,
     Models,
+    GaussianSpatialModel,
     PointSpatialModel,
     PowerLawSpectralModel,
+    LightCurveTemplateTemporalModel,
     SkyModel,
 )
 from gammapy.utils.testing import requires_data
@@ -22,31 +25,55 @@ LOCATION = EarthLocation(lon="-70d18m58.84s", lat="-24d41m0.34s", height="2000m"
 
 
 @pytest.fixture()
-def models(signal_model):
-    bkg_model = FoVBackgroundModel(dataset_name="test")
-    return [signal_model, bkg_model]
+def signal_model():
+    spatial_model = GaussianSpatialModel(
+        lon_0="0 deg", lat_0="0 deg", sigma="0.2 deg", frame="galactic"
+    )
+
+    spectral_model = PowerLawSpectralModel(amplitude="1e-11 cm-2 s-1 TeV-1")
+
+    t_max = 1000 * u.s
+
+    time = np.arange(t_max.value) * u.s
+    tau = u.Quantity("2e2 s")
+    norm = np.exp(-time / tau)
+
+    table = Table()
+    table["TIME"] = time
+    table["NORM"] = norm / norm.max()
+    t_ref = Time("2000-01-01")
+    table.meta = dict(MJDREFI=t_ref.mjd, MJDREFF=0, TIMEUNIT="s", TIMESYS="utc")
+    temporal_model = LightCurveTemplateTemporalModel.from_table(table)
+
+    return SkyModel(
+        spatial_model=spatial_model,
+        spectral_model=spectral_model,
+        temporal_model=temporal_model,
+        name="test-source",
+    )
 
 
 @pytest.fixture()
-@requires_data()
-def energy_dependent_temporal_sky_model(models):
-    models[0].spatial_model = PointSpatialModel(
-        lon_0="0 deg", lat_0="0 deg", frame="galactic"
+def energy_dependent_temporal_sky_model():
+    spatial_model = PointSpatialModel(lon_0="0 deg", lat_0="0 deg", frame="galactic")
+    spectral_model = ConstantSpectralModel(const="1 cm-2 s-1 TeV-1")
+    temporal_model = get_energy_dependent_temporal_model()
+    model = SkyModel(
+        spectral_model=spectral_model,
+        spatial_model=spatial_model,
+        temporal_model=temporal_model,
     )
-    models[0].spectral_model = ConstantSpectralModel(const="1 cm-2 s-1 TeV-1")
-    models[0].temporal_model = get_energy_dependent_temporal_model()
-    return models[0]
+    return model
 
 
 @requires_data()
-def test_observation_event_sampler(signal_model, tmp_path):
+def test_observation_event_sampler(signal_model):
     from gammapy.datasets.simulate import ObservationEventSampler
 
     datastore = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
     obs = datastore.get_observations()[0]
 
-    # first test defaults with HESS
-    # otherwise with CTA the EdispMap computation takes too much time and memory
+    # Use H.E.S.S. for testing otherwise the EdispMap computation takes too much time and memory with CTAO
     maker = ObservationEventSampler()
 
     sim_obs = maker.run(obs, None)
