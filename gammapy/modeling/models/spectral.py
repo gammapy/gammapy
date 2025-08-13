@@ -1522,7 +1522,7 @@ class PiecewiseNormSpectralModel(SpectralModel):
         e_nodes = scale(self.energy.to(energy.unit).value)
         v_nodes = scale(norms)
         log_interp = scale.inverse(np.interp(e_eval, e_nodes, v_nodes))
-        return log_interp
+        return u.Quantity(log_interp)
 
     def __call__(self, energy):
         return self.evaluate(energy, *self.norms)
