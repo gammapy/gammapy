@@ -53,6 +53,11 @@ class ObservationTable(Table):
         table = self._validate_table(table)
         super().__init__(data=table, **kwargs)
 
+    # def __setitem__(self, index, value):
+    #     for i in range(len(value)):
+    #         self.add_row([])
+    #     super().__setitem__(index,value)
+
     @staticmethod
     def _reference_table():
         """Definition of internal observation table model in form of reference table object."""
