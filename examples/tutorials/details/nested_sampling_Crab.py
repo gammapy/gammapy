@@ -370,7 +370,7 @@ plt.show()
 # account the full posterior distribution and not just the covariance
 # matrix.
 # For this we will need to convert the list of samples back to the spectral
-# model parameters with the revelant units (e.g. normalization units).
+# model parameters with the relevant units (e.g. normalisation units).
 
 
 def get_samples_from_posterior(spectral_model, results):
