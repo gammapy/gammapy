@@ -363,12 +363,12 @@ plt.show()
 # Spectral model error band from samples
 # --------------------------------------
 #
-# While the spectral error band is usually computed from the
-# covariance matrix of the parameters, it can also be computed from the
-# samples of the posterior distribution.
-# This is a more robust way to compute the error band as it takes into
-# account the full posterior distribution and not just the covariance
-# matrix.
+# To compute the spectral error band ("butterfly plots"), we will directly
+# use the samples of the posterior distribution. This is more robust as
+# compared to the traditional method of using the covariance matrix of
+# the parameters which implicitly assumes gaussian errors while for the posterior
+# distribution there is no shape assumed.
+# This difference can become significant when the parameter errors are non-Gaussian.
 # For this we will need to convert the list of samples back to the spectral
 # model parameters with the relevant units (e.g. normalisation units).
 
@@ -378,14 +378,14 @@ def get_samples_from_posterior(spectral_model, results):
     Create a list of spectral parameters with correct units
     from the unitless parameters returned by the sampler.
     """
-    n = results.samples.shape[0]
+    n_samples = results.samples.shape[0]
     samples = []
     for p in spectral_model.parameters:
         try:
             idx = spectral_model.parameters.free_unique_parameters.index(p)
             samples.append(results.samples[:, idx] * p.unit)
         except ValueError:
-            samples.append(np.ones(n) * p.quantity)
+            samples.append(np.ones(n_samples) * p.quantity)
     return samples
 
 
@@ -396,9 +396,7 @@ samples = get_samples_from_posterior(datasets.models[0].spectral_model, result_j
 # method.
 
 datasets.models[0].spectral_model.plot_error(
-    energy_bounds=[0.5 * u.TeV, 50 * u.TeV],
-    sed_type="e2dnde",
-    samples=samples
+    energy_bounds=[0.5 * u.TeV, 50 * u.TeV], sed_type="e2dnde", samples=samples
 )
 plt.show()
 
