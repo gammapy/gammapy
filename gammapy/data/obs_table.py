@@ -43,12 +43,15 @@ class ObservationTable(Table):
         # Google KI, query: "python konstruktor geerbte klasse"
 
         # Init with basic reference table, like suggested by @registerrier.
+        # if table is None:
+        #     super().__init__(data=self._reference_table(), **kwargs)
+        #     self.table = self._reference_table()
+        # else:
+        # print("ELSE")  # for read
         if table is None:
-            super().__init__(data=self._reference_table(), **kwargs)
-            self.table = self._reference_table()
-        else:
-            print("ELSE")  # for read
-            super().__init__(data=table, **kwargs)
+            table = self._reference_table()
+        table = self._validate_table(table)
+        super().__init__(data=table, **kwargs)
 
     @staticmethod
     def _reference_table():
@@ -76,6 +79,36 @@ class ObservationTable(Table):
         table["LOCATION"] = EarthLocation.from_geodetic([], [], [])
         table["TSTART"] = Time([], scale="tt", format="mjd")
         table["TSTOP"] = Time([], scale="tt", format="mjd")
+
+        return table
+
+    @staticmethod
+    def _validate_table(table):
+        """taken from event_list.py and adapted, code by @registerrier."""
+        """Checks that the input table follows the gammapy internal model."""
+        if not isinstance(table, Table):
+            raise TypeError(
+                f"ObservationTable expects astropy Table, got {type(table)} instead."
+            )
+
+        reference_table = ObservationTable._reference_table()
+        missing_columns = set(reference_table.colnames).difference(table.colnames)
+        if len(missing_columns) > 0:
+            raise KeyError(
+                f"ObservationTable table invalid: columns {missing_columns} are missing."
+            )
+
+        for name in reference_table.colnames:
+            check = reference_table[name]
+            if not isinstance(check, Column):
+                if not isinstance(table[name], type(check)):
+                    raise TypeError(f"Column {name} is not a {check} object.")
+            else:
+                if check.dtype != "<U1":  # no unit check if object is a string
+                    if not check.unit.is_equivalent(table[name].unit):
+                        raise u.UnitConversionError(
+                            f"Column {name} is not in {check} unit."
+                        )
 
         return table
 
