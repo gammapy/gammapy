@@ -392,8 +392,8 @@ def get_samples_from_posterior(spectral_model, results):
 samples = get_samples_from_posterior(datasets.models[0].spectral_model, result_joint)
 
 ######################################################################
-# Next we can provide these samples to the `plot_error`
-# method of the `~gammapy.modeling.models.SpectralModel` class.
+# Next we can provide these samples to the `~gammapy.modeling.models.SpectralModel.plot_error`
+# method.
 
 ax = datasets.models[0].spectral_model.plot_error(
     energy_bounds=[0.5 * u.TeV, 50 * u.TeV], sed_type="e2dnde", samples=samples
