@@ -360,8 +360,8 @@ plt.show()
 # sphinx_gallery_thumbnail_number = 3
 
 ######################################################################
-# Using the samples to draw the spectral model error band.
-# -----------------------
+# Spectral model error band from samples
+# --------------------------------------
 #
 # While the spectral error band is usually computed from the
 # covariance matrix of the parameters, it can also be computed from the
