@@ -5,11 +5,10 @@ from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.time import Time
 from astropy.table import Table
 import numpy as np
-from gammapy.data import DataStore, Observation, ObservationsEventsSampler
+from gammapy.data import Observation, ObservationsEventsSampler
 from gammapy.data.pointing import FixedPointingInfo
 from gammapy.datasets.tests.test_simulate import get_energy_dependent_temporal_model
 from gammapy.irf import load_irf_dict_from_file
-from gammapy.maps import MapAxis
 from gammapy.modeling.models import (
     ConstantSpectralModel,
     Models,
@@ -64,56 +63,6 @@ def energy_dependent_temporal_sky_model():
         temporal_model=temporal_model,
     )
     return model
-
-
-@requires_data()
-def test_observation_event_sampler(signal_model):
-    from gammapy.datasets.simulate import ObservationEventSampler
-
-    datastore = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
-    obs = datastore.get_observations()[0]
-
-    # Use H.E.S.S. for testing otherwise the EdispMap computation takes too much time and memory with CTAO
-    maker = ObservationEventSampler()
-
-    sim_obs = maker.run(obs, None)
-    assert sim_obs.events is not None
-    assert len(sim_obs.events.table) > 0
-
-    irfs = load_irf_dict_from_file(
-        "$GAMMAPY_DATA/cta-caldb/Prod5-South-20deg-AverageAz-14MSTs37SSTs.180000s-v0.1.fits.gz"
-    )
-    pointing = FixedPointingInfo(
-        fixed_icrs=SkyCoord(83.63311446, 22.01448714, unit="deg", frame="icrs"),
-    )
-    time_start = Time("2021-11-20T03:00:00")
-    time_stop = Time("2021-11-20T03:30:00")
-
-    obs = Observation.create(
-        pointing=pointing,
-        location=LOCATION,
-        obs_id=1,
-        tstart=time_start,
-        tstop=time_stop,
-        irfs=irfs,
-        deadtime_fraction=0.01,
-    )
-
-    dataset_kwargs = dict(
-        spatial_width=5 * u.deg,
-        spatial_bin_size=0.01 * u.deg,
-        energy_axis=MapAxis.from_energy_bounds(
-            10 * u.GeV, 100 * u.TeV, nbin=5, per_decade=True
-        ),
-        energy_axis_true=MapAxis.from_energy_bounds(
-            10 * u.GeV, 100 * u.TeV, nbin=5, per_decade=True, name="energy_true"
-        ),
-    )
-    maker = ObservationEventSampler(dataset_kwargs=dataset_kwargs)
-
-    sim_obs = maker.run(obs, [signal_model])
-    assert sim_obs.events is not None
-    assert len(sim_obs.events.table) > 0
 
 
 @pytest.fixture(scope="session")
