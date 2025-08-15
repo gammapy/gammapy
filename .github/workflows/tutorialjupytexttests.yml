@@ -34,4 +34,5 @@ jobs:
 
       - name: Execute tutorials with Jupytext
         run: |
+          python -m ipykernel install --name gammapy-dev --user
           jupytext --execute examples/tutorials/*/*.py
