@@ -431,11 +431,7 @@ def test_evaluate():
         energies = [1e-12, 1e-6, 1e-2, 1, 1e2, 1e4] * u.TeV
         parameters = model.parameters
         par_list = [p.quantity for p in parameters]
-        if isinstance(model, PiecewiseNormSpectralModel):
-            # TODO : check if PiecewiseNormSpectralModel evaluate can work like the others
-            result_eval = model.evaluate(energies)
-        else:
-            result_eval = model.evaluate(energies, *par_list)
+        result_eval = model.evaluate(energies, *par_list)
 
         result_call = model(energies)
         assert_quantity_allclose(result_eval, result_call)
@@ -1132,6 +1128,17 @@ class TestSpectralModelErrorPropagation:
 
         with pytest.warns(GammapyDeprecationWarning):
             self.model.energy_flux_error(1 * u.TeV, 10 * u.TeV, epsilon=10)
+
+
+def test_piecesenorm_model_error():
+    model = PiecewiseNormSpectralModel(
+        energy=[1, 3, 7, 10] * u.TeV,
+        norms=[1, 5, 3, 0.5] * u.Unit(""),
+    )
+    for p in model.parameters:
+        p.error = 1.0
+    assert_allclose(model.evaluate_error(5 * u.GeV), 1.0, rtol=5e-2)
+    assert_allclose(model.integral_error(5 * u.GeV, 10 * u.GeV).value, 5.0, rtol=5e-2)
 
 
 def test_logpar_index_error():
