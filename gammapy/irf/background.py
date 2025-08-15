@@ -65,9 +65,6 @@ class BackgroundIRF(IRF):
         bkg : `Background2D` or `Background2D`
             Background IRF class.
         """
-        # TODO: some of the existing background files have missing HDUCLAS keywords
-        #  which are required to define the correct Gammapy axis names
-
         if "HDUCLAS2" not in table.meta:
             log.warning("Missing 'HDUCLAS2' keyword assuming 'BKG'")
             table = table.copy()

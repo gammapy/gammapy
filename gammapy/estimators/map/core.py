@@ -41,7 +41,6 @@ REQUIRED_COLUMNS = {
     "e2dnde": ["e_ref", "e2dnde"],
     "flux": ["e_min", "e_max", "flux"],
     "eflux": ["e_min", "e_max", "eflux"],
-    # TODO: extend required columns
     "likelihood": [
         "e_min",
         "e_max",
