@@ -366,7 +366,7 @@ plt.show()
 # To compute the spectral error band ("butterfly plots"), we will directly
 # use the samples of the posterior distribution. This is more robust as
 # compared to the traditional method of using the covariance matrix of
-# the parameters which implicitly assumes gaussian errors while for the posterior
+# the parameters which implicitly assumes Gaussian errors while for the posterior
 # distribution there is no shape assumed.
 # This difference can become significant when the parameter errors are non-Gaussian.
 # For this we will need to convert the list of samples back to the spectral
