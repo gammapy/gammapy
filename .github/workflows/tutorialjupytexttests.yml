@@ -27,7 +27,7 @@ jobs:
           pip install --upgrade pip
           pip install tqdm requests jupyter jupytext jupyter_client ipykernel 
           pip install .
-          pip install sherpa
+          pip install sherpa healpy
 
       - name: Download datasets
         run: |
