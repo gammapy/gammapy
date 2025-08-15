@@ -42,12 +42,13 @@ authors:
   orcid: "https://orcid.org/0009-0004-0816-0700"
 - given-names: Luis
   family-names: Barrios-Jimenez
-  affiliation:
-  orcid:
+  affiliation: "Instituto de Astrofísica de Canarias and Dpto. de Astrofísica, Universidad de La Laguna,
+    C/ Vía Láctea s/n, E-38205 La Laguna, Tenerife, Spain"
+  orcid: "https://orcid.org/0009-0008-6006-175X"
 - given-names: Anushka
   family-names: Batt
-  affiliation:
-  orcid:
+  affiliation: "Department of Instrumentation and Control Engineering, Vishwakarma Institute of Technology, Pune, Maharashtra India"
+  orcid: "https://orcid.org/0009-0004-4179-3163"
 - given-names: Juan
   family-names: Bernete
   affiliation: "Centro de Investigaciones Energéticas Medioambientales y Tecnológicas
