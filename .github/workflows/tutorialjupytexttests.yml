@@ -25,9 +25,8 @@ jobs:
       - name: Install Gammapy and needed dependencies
         run: |
           pip install --upgrade pip
-          pip install tqdm requests jupyter jupytext jupyter_client ipykernel 
-          pip install .
-          pip install sherpa healpy
+          pip install jupyter jupytext jupyter_client ipykernel 
+          pip install .[all]
 
       - name: Download datasets
         run: |
@@ -35,5 +34,4 @@ jobs:
 
       - name: Execute tutorials with Jupytext
         run: |
-          python -m ipykernel install --user --name gammapy-dev
           jupytext --execute examples/tutorials/*/*.py
