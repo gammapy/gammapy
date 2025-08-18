@@ -42,7 +42,7 @@ undergoing re-structuring efforts:
 - The separation of the internal DL3 data model from GADF specification is close to be over. In particular,
   the `~gammapy.data.EventList` internal table does no longer follow the GADF structure now.
 
-Significant effort has been put in cleaning upthe documentation and re-organizing the tutorial structure.
+Significant effort has been put in cleaning up the documentation and re-organizing the tutorial structure.
 
 
 API changes
