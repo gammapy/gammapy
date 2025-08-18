@@ -15,7 +15,7 @@
 Summary
 ~~~~~~~
 
-This is a new Long term stable release. Gammapy 2.0 will be maintained for the next two years, and we remove support for Gammapy 1.x versions. With Gammapy 2.0, we provide analysis support for major Imaging Atmospheric Cherenkov Telescope including H.E.S.S.,
+This is a new Long Term Stable (LTS) release. Gammapy 2.0 will be maintained for the next two years, and we remove support for Gammapy 1.x versions. With Gammapy 2.0, we provide analysis support for major Imaging Atmospheric Cherenkov Telescope including H.E.S.S.,
 VERITAS, MAGIC, LST1, Water Cherenkov Telesope like HAWC and SWGO, and Fermi-LAT.
 
 Since Gammapy 1.3, improved support is provided for Fermi-LAT analysis, and full analysis for VERITAS telescope is supported.
@@ -104,11 +104,11 @@ New features
 Bug fixes and improvements
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- Improvement of the `MapDataset.peek` function to show relevant info
+- Improvement of the `gammapy.datasets.MapDataset.peek` function to show relevant info
 - Fix memory leak related to lru_cache and caching coordinates in WcsGeom
 - Fix `~gammapy.estimators.TSMapEstimator` pad_width
 - Fix mask handling in `~gammapy.estimators.TSMapEstimator`
-- Preserve parameters links in `Models.copy()`
+- Preserve parameters links in `gammapy.modeling.models.Models.copy()`
 - Fix link label display in parameters.to_table
 - Fix ``e_peak`` implementation of `~gammapy.modeling.models.SuperExpCutoffPowerLaw4FGLDR3SpectralModel` to give results compatible with Eq 21 of  https://iopscience.iop.org/article/10.3847/1538-4357/acee67
 - Fix of a `~gammapy.maps.HpxGeom` simulation error
