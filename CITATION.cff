@@ -8,12 +8,12 @@ abstract: 'Gammapy analyzes gamma-ray data and creates sky images, spectra and l
 type: software
 message: "If you use this software, please cite it using the metadata from this file."
 url: "https://gammapy.org/"
-date-released: 2025-07-26
+date-released: 2025-08-18
 keywords:
 - Astronomy
 - "Gamma-rays"
 - "Data analysis"
-version: v2.0
+version: v2.0rc1
 repository-code: "https://github.com/gammapy/gammapy"
 license: BSD-3-Clause
 contact:
@@ -37,17 +37,18 @@ authors:
   orcid: "https://orcid.org/0000-0001-8816-4920"
 - given-names: Tora T.H.
   family-names: Arnesen
-  affiliation: "Instituto de Astrofísica de Canarias and Dpto. de Astrofísica, Universidad de La Laguna,
-    C/ Vía Láctea s/n, E-38205 La Laguna, Tenerife, Spain"
+  affiliation: "Instituto de Astrofísica de Canarias and Dpto. de Astrofísica, Universidad
+    de La Laguna, C/ Vía Láctea s/n, E-38205 La Laguna, Tenerife, Spain"
   orcid: "https://orcid.org/0009-0004-0816-0700"
 - given-names: Luis
   family-names: Barrios-Jimenez
-  affiliation: "Instituto de Astrofísica de Canarias and Dpto. de Astrofísica, Universidad de La Laguna,
-    C/ Vía Láctea s/n, E-38205 La Laguna, Tenerife, Spain"
+  affiliation: "Instituto de Astrofísica de Canarias and Dpto. de Astrofísica, Universidad
+    de La Laguna, C/ Vía Láctea s/n, E-38205 La Laguna, Tenerife, Spain"
   orcid: "https://orcid.org/0009-0008-6006-175X"
 - given-names: Anushka
   family-names: Batt
-  affiliation: "Department of Instrumentation and Control Engineering, Vishwakarma Institute of Technology, Pune, Maharashtra India"
+  affiliation: "Department of Instrumentation and Control Engineering, Vishwakarma
+    Institute of Technology, Pune, Maharashtra India"
   orcid: "https://orcid.org/0009-0004-4179-3163"
 - given-names: Juan
   family-names: Bernete
@@ -60,11 +61,13 @@ authors:
   orcid: "https://orcid.org/0000-0003-3708-9785"
 - given-names: Johannes
   family-names: Buchner
-  affiliation: "Max Planck Institute for Extraterrestrial Physics, Giessenbachstrasse 1, 85748 Garching, Germany"
+  affiliation: "Max Planck Institute for Extraterrestrial Physics, Giessenbachstrasse
+    1, 85748 Garching, Germany"
   orcid: "https://orcid.org/0000-0003-0426-6634"
 - given-names: Tomas
   family-names: Bylund
-  affiliation: "LUX, Observatoire de Paris, Université PSL, Sorbonne Université, CNRS, 92190 Meudon, France"
+  affiliation: "LUX, Observatoire de Paris, Université PSL, Sorbonne Université, CNRS,
+    92190 Meudon, France"
   orcid: "https://orcid.org/0000-0003-2946-1313"
 - given-names: Julia
   family-names: Djuvsland
@@ -82,7 +85,8 @@ authors:
   orcid: "https://orcid.org/0009-0002-4238-034X"
 - given-names: Gabriel
   family-names: Emery
-  affiliation:  "Instituto de Astrofísica de Andalucía-CSIC, Glorieta de la Astronomía s/n, 18008, Granada, Spain"
+  affiliation: "Instituto de Astrofísica de Andalucía-CSIC, Glorieta de la Astronomía
+    s/n, 18008, Granada, Spain"
   orcid: "https://orcid.org/0000-0001-6155-4742"
 - given-names: Kirsty
   family-names: Feijen
@@ -100,7 +104,8 @@ authors:
   orcid: "https://orcid.org/0000-0002-7372-9703"
 - given-names: Lucas
   family-names: Gréaux
-  affiliation: "Fakultät für Physik & Astronomie, Ruhr-Universität Bochum, D-44780 Bochum, Germany"
+  affiliation: "Fakultät für Physik & Astronomie, Ruhr-Universität Bochum, D-44780
+    Bochum, Germany"
   orcid: "https://orcid.org/0000-0003-0627-8436"
 - given-names: Bruno
   family-names: Khélifi
@@ -113,7 +118,8 @@ authors:
   orcid: "https://orcid.org/0009-0000-1257-4771"
 - given-names: Paula
   family-names: Kornecki
-  affiliation: "Instituto de Astrofísica de Andalucía (IAA-CSIC), Glorieta de la Astronomía s/n, 18008, Granada, Spain"
+  affiliation: "Instituto de Astrofísica de Andalucía (IAA-CSIC), Glorieta de la Astronomía
+    s/n, 18008, Granada, Spain"
   orcid: "https://orcid.org/0000-0002-2706-7438"
 - given-names: Maximilian
   family-names: Linhoff
@@ -133,8 +139,8 @@ authors:
   orcid: "https://orcid.org/0000-0002-0755-0609"
 - given-names: Edgar
   family-names: Molina
-  affiliation: "Instituto de Astrofísica de Canarias and Dpto. de Astrofísica, Universidad de La Laguna,
-    C/ Vía Láctea s/n, E-38205 La Laguna, Tenerife, Spain"
+  affiliation: "Instituto de Astrofísica de Canarias and Dpto. de Astrofísica, Universidad
+    de La Laguna, C/ Vía Láctea s/n, E-38205 La Laguna, Tenerife, Spain"
   orcid: "https://orcid.org/0000-0003-1204-5516"
 - given-names: Lars
   family-names: Mohrmann
@@ -142,11 +148,13 @@ authors:
   orcid: "https://orcid.org/0000-0002-9667-8654"
 - given-names: Daniel
   family-names: Morcuende
-  affiliation: "CTAO Central Organisation, Science Data Management Centre, Platanenallee 6, 15738 Zeuthen, Germany"
+  affiliation: "CTAO Central Organisation, Science Data Management Centre, Platanenallee
+    6, 15738 Zeuthen, Germany"
   orcid: https://orcid.org/0000-0001-9400-0922
 - given-names: Mireia
   family-names: Nievas Rosillo
-  affiliation: "Instituto de Astrofísica de Canarias (IAC), C/ Vía Láctea s/n, 38205 La Laguna, Tenerife, Spain"
+  affiliation: "Instituto de Astrofísica de Canarias (IAC), C/ Vía Láctea s/n, 38205
+    La Laguna, Tenerife, Spain"
   orcid: "https://orcid.org/0000-0002-8321-9168"
 - given-names: Laura
   family-names: Olivera-Nieto
@@ -154,20 +162,23 @@ authors:
   orcid: "https://orcid.org/0000-0002-9105-0518"
 - given-names: Sebastian
   family-names: Panny
-  affiliation: "Universität Innsbruck, Institut für Astro- und Teilchenphysik,
-    Technikerstraße 25, 6020 Innsbruck, Austria"
+  affiliation: "Universität Innsbruck, Institut für Astro- und Teilchenphysik, Technikerstraße
+    25, 6020 Innsbruck, Austria"
   orcid: "https://orcid.org/0000-0001-5770-3805"
 - given-names: Robert Daniel
   family-names: Parsons
-  affiliation: "Institut für Physik, Humboldt-Universität zu Berlin, D 12489 Berlin, Germany"
-  orcid:  "https://orcid.org/0000-0003-3457-9308"
+  affiliation: "Institut für Physik, Humboldt-Universität zu Berlin, D 12489 Berlin,
+    Germany"
+  orcid: "https://orcid.org/0000-0003-3457-9308"
 - given-names: Natthan
   family-names: Pigoux
-  affiliation: "Laboratoire Univers et Particules de Montpellier, CNRS, Université de Montpellier, Montpellier, France"
+  affiliation: "Laboratoire Univers et Particules de Montpellier, CNRS, Université
+    de Montpellier, Montpellier, France"
   orcid: "https://orcid.org/0009-0001-0100-9846"
 - given-names: Michele
   family-names: Peresano
-  affiliation: "Max-Planck-Institut für Physik, Boltzmannstraße 8, 85748 Garching bei München, Germany"
+  affiliation: "Max-Planck-Institut für Physik, Boltzmannstraße 8, 85748 Garching
+    bei München, Germany"
   orcid: "https://orcid.org/0000-0002-7537-7334"
 - given-names: Fabio
   family-names: Pintore
@@ -175,7 +186,8 @@ authors:
   orcid: "https://orcid.org/0000-0002-3869-2925"
 - given-names: Tobi
   family-names: Preis
-  affiliation: "Universität Innsbruck, Institut für Astro- und Teilchenphysik, Technikerstraße 25, 6020 Innsbruck, Austria"
+  affiliation: "Universität Innsbruck, Institut für Astro- und Teilchenphysik, Technikerstraße
+    25, 6020 Innsbruck, Austria"
   orcid: "https://orcid.org/0009-0001-7110-6764"
 - given-names: Michael
   family-names: Punch
@@ -222,10 +234,12 @@ authors:
   orcid: "https://orcid.org/0009-0005-7886-1825"
 - given-names: Gnana Sindhu
   family-names: Subramanya
-  affiliation: "GSI Helmholtzzentrum für Schwerionenforschung, Planckstraße 1 64291 Darmstadt, Germany"
+  affiliation: "GSI Helmholtzzentrum für Schwerionenforschung, Planckstraße 1 64291
+    Darmstadt, Germany"
 - given-names: Mitsunari
   family-names: Takahashi
-  affiliation: "Institute for Space--Earth Environmental Research, Nagoya University, Furo-cho, Chikusa-ku, Nagoya 464-8601, Japan"
+  affiliation: "Institute for Space--Earth Environmental Research, Nagoya University,
+    Furo-cho, Chikusa-ku, Nagoya 464-8601, Japan"
   orcid: "https://orcid.org/0000-0002-0574-6018"
 - given-names: Régis
   family-names: Terrier
