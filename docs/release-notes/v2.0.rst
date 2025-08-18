@@ -19,7 +19,7 @@ Summary
 Gammapy v2.0 is a new Long Term Stable (LTS) release. It will be maintained for the for the next development cycle
 (approximately two years), while support for Gammapy 1.x versions is now dropped.
 With Gammapy 2.0, we provide analysis support for major Imaging Atmospheric Cherenkov Telescope including H.E.S.S.,
-VERITAS, MAGIC, LST1, Water Cherenkov Telesope like HAWC and SWGO, as well as Fermi-LAT.
+VERITAS, MAGIC, LST1, Water Cherenkov Telescopes like HAWC and SWGO, as well as Fermi-LAT.
 
 Since Gammapy 1.3, improved support is provided for Fermi-LAT analysis, and analysis
 of VERITAS telescope data has been validated.
