@@ -16,7 +16,7 @@ def update_codemeta(maintainer, filename, setup_file=None):
         data = json.load(f)
 
     for author in data["author"]:
-        if author["familyName"] == maintainer:
+        if "familyName" in author.keys() and author["familyName"] == maintainer:
             log.info(f"Setting maintainer to {maintainer}")
             data["maintainer"] = author
 
