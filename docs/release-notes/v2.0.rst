@@ -4,7 +4,7 @@
 .. _gammapy_2p0_release:
 
 2.0 (August XX, 2025)
-----------------
+---------------------
 
 
 - Released August XX, 2025
@@ -54,6 +54,7 @@ Two API-breaking changes have been introduced in this version:
   instead of ``band`` to allow exact matches
 - ``cta_south`` and ``cta_north`` have been renamed as ``ctao_south`` and ``ctao_north``, respectively,
   in `~gammapy.data.observatory_locations`
+
 Features deprecated since Gammapy v1.3 have been removed.
 
 
