@@ -100,7 +100,7 @@ class LightCurveEstimator(FluxPointsEstimator):
 
     Notes
     -----
-    In case of failure of upper limits computation (e.g. nan), see the User Guide :ref:`how_to`.
+    In case of failure of upper limits computation (e.g. nan), see the User Guide: :ref:`dropdown-UL`.
     """
 
     tag = "LightCurveEstimator"
