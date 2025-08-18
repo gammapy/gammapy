@@ -15,13 +15,31 @@
 Summary
 ~~~~~~~
 
-This is a new Long Term Stable (LTS) release. Gammapy 2.0 will be maintained for the next two years, and we remove support for Gammapy 1.x versions. With Gammapy 2.0, we provide analysis support for major Imaging Atmospheric Cherenkov Telescope including H.E.S.S.,
-VERITAS, MAGIC, LST1, Water Cherenkov Telesope like HAWC and SWGO, and Fermi-LAT.
 
-Since Gammapy 1.3, improved support is provided for Fermi-LAT analysis, and full analysis for VERITAS telescope is supported.
+Gammapy v2.0 is a new Long Term Stable (LTS) release. It will be maintained for the for the next development cycle
+(approximately two years), while support for Gammapy 1.x versions is now dropped.
+With Gammapy 2.0, we provide analysis support for major Imaging Atmospheric Cherenkov Telescope including H.E.S.S.,
+VERITAS, MAGIC, LST1, Water Cherenkov Telesope like HAWC and SWGO, as well as Fermi-LAT.
+
+Since Gammapy 1.3, improved support is provided for Fermi-LAT analysis, and analysis
+of VERITAS telescope data has been validated.
+
 Bayesian inference with nested sampling is now supported.
-There has been significant code cleanup, specially with respect to the documentation and the tutorial structure has
-been cleaned up.
+
+There has been significant code cleanup and restructuring. They should not break user codes
+but might marginally change analysis results. We mention here a number of changes and
+undergoing re-structuring efforts:
+
+- The computation of flux errors is no longer performed with regular error propagation.
+  Because the latter is a linear approximation, it frequently leads to unexpected flux ranges
+  when extrapolating over a wide range of energies. Butterfly plots computed this way can become
+  incorrect far from the decorrelation energy. To overcome this, error bands are now computed using
+  multi-normal sampling of spectral parameters taking into account all correlations. The `plot_error`
+  method now builds an envelope of the sampled spectra using vectorized evaluation of the model.
+- The separation of the internal DL3 data model from GADF specification is close to be over. In particular,
+  the `~gammapy.data.EventList` internal table does no longer follow the GADF structure now.
+
+Significant effort has been put in cleaning upthe documentation and re-organizing the tutorial structure.
 
 
 API changes
