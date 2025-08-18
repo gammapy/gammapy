@@ -65,7 +65,7 @@ Documentation improvements
 - The ordering of tutorials has been restructured for clarity.
 - Four new tutorials have been added:
 
-   - one explaining VERITAS analysis along with addition of VERITAS data in `$GAMMAPY_DATA` (:doc:`/tutorials/data/veritas`)
+   - one exposing VERITAS analysis along with addition of VERITAS data in `$GAMMAPY_DATA` (:doc:`/tutorials/data/veritas`)
    - one exposing computation of upper limits for non-detected sources (:doc:`/tutorials/analysis-3d/non_detected_source`)
    - one explaining computation of upper limits on parameters (:doc:`/tutorials/details/parameter_ul`)
    - one introducing Bayesian inference with nested sampling (:doc:`/tutorials/details/nested_sampling_Crab`)
