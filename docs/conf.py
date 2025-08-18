@@ -40,6 +40,15 @@ def setup(app):
     app.add_directive("substitution-code-block", SubstitutionCodeBlock)
     app.add_post_transform(DynamicPRLinkTransform)
 
+    # Skip documenting Pydantic to suppress warnings
+    def filter_pydantic_docstrings(app, what, name, obj, options, lines):
+        module = getattr(obj, "__module__", "")
+        if module and module.startswith("pydantic"):
+            # wipe docstring to silence parsing warnings
+            lines[:] = []
+
+    app.connect("autodoc-process-docstring", filter_pydantic_docstrings)
+
 
 conf = ConfigParser()
 conf.read([os.path.join(os.path.dirname(__file__), "..", "setup.cfg")])
@@ -104,7 +113,6 @@ extensions = [
     "sphinx_design",
     "sphinx_gallery.gen_gallery",
     "sphinx.ext.doctest",
-    "sphinx.ext.intersphinx",
     "sphinx.ext.mathjax",
     'sphinx.ext.viewcode',
     # Allows for mapping to other documentation projects
@@ -280,13 +288,10 @@ man_pages = [("index", project.lower(), f"{project} Documentation", [author], 1)
 
 github_issues_url = "https://github.com/gammapy/gammapy/issues/"
 
-# In `about.rst` and `references.rst` we are giving lists of citations
-# (e.g. papers using Gammapy) that partly aren't referenced from anywhere
-# in the Gammapy docs. This is normal, but Sphinx emits a warning.
-# The following config option suppresses the warning.
-# http://www.sphinx-doc.org/en/stable/rest.html#citations
-# http://www.sphinx-doc.org/en/stable/config.html#confval-suppress_warnings
-suppress_warnings = ["ref.citation"]
+# In `references.rst` we provide a list of citations which might not
+# be referenced elsewhere in the docs. Sphinx emits a warning that we can suppress.
+# Pydantic also has a number of errors so we suppress those too.
+suppress_warnings = ["ref.citation", "autodoc.pydantic"]
 
 branch = "main" if switch_version == "dev" else f"v{switch_version}"
 
@@ -294,7 +299,7 @@ binder_config = {
     # Required keys
     "org": "gammapy",
     "repo": "gammapy-webpage",
-    "branch": branch,  # Can be any branch, tag, or commit hash. Use a branch that hosts your docs.
+    "branch": branch,
     "binderhub_url": "https://mybinder.org",  # Any URL of a binderhub deployment. Must be full URL (e.g. https://mybinder.org).
     "dependencies": "./binder/requirements.txt",
     "notebooks_dir": f"notebooks/{switch_version}",
