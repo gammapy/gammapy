@@ -42,7 +42,7 @@ undergoing re-structuring efforts:
 - The separation of the internal DL3 data model from GADF specification is close to be over. In particular,
   the `~gammapy.data.EventList` internal table does no longer follow the GADF structure now.
 
-Significant effort has been put in cleaning up the documentation and re-organizing the tutorial structure.
+Significant effort has been put in cleaning up the documentation and re-organising the tutorial structure.
 
 
 API changes
@@ -85,7 +85,7 @@ New features
 
 *gammapy.data*
 
-- Helper method for observation selection at Datastore level, specially for WCD
+- Helper method for observation selection at data store level, specially for WCD
 
 *gammapy.datasets*
 
@@ -161,10 +161,9 @@ Contributors
 - Tomas Bylund
 - Katharina Egg
 - Kirsty Feijen
-- Bruno Khélifi
 - Lucas Gréaux
+- Bruno Khélifi
 - Maximilian Linhoff
-- Mitsunari Takahashi
 - Edgar Molina
 - Daniel Morcuende
 - Mireia Nievas-Rosillo
@@ -177,6 +176,7 @@ Contributors
 - Leander Schlegel
 - Atreyee Sinha
 - Hanna Stapel
+- Mitsunari Takahashi
 - Régis Terrier
 - Samantha Wong
 
