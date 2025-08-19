@@ -99,6 +99,7 @@ observations = data_store.get_observations(obs_id=obs_ids, required_irf="point-l
 #
 
 observations[0].events.peek()
+plt.show()
 
 ######################################################################
 # Peek at the IRFs included. You should verify that
@@ -108,7 +109,7 @@ observations[0].events.peek()
 # method.
 #
 
-observations[0].peek(figsize=(25,5))
+observations[0].peek(figsize=(25, 5))
 plt.show()
 
 ######################################################################
