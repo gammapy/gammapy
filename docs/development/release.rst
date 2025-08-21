@@ -36,7 +36,7 @@ Feature Freeze and Branching
 
 #. Add a new milestone to the `GitHub issue tracker <https://github.com/gammapy/gammapy/milestones>`__ for the version
    ``v<version>.x`` (this will also be used for the next bugfix release). Also create a ``backport-v<version>.x``
-   `label <https://github.com/gammapy/gammapy/labels>`__.
+   `label <https://github.com/gammapy/gammapy/labels>`__. Put the description as ``on merge: backport to v<version.x`` for the automatic backport triggering.
 #. Update your local ``main`` branch to the latest from remote::
 
     git fetch upstream --tags --prune
