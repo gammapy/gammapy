@@ -1701,7 +1701,7 @@ class PiecewiseNormSpatialModel(SpatialModel):
     ----------
     coord : `gammapy.maps.MapCoord`
         Flat coordinates list at which the model values are given (nodes).
-    norms : `~numpy.ndarray` or list of `Parameter`
+    norms : `~numpy.ndarray` or list of `gammapy.modeling.Parameter`
         Array with the initial norms of the model at energies ``energy``.
         Normalisation parameters are created for each value.
         Default is one at each node.
