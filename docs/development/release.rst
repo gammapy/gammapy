@@ -81,6 +81,7 @@ Releasing the first major release candidate
    `gammapy-docs <https://github.com/gammapy/gammapy-docs>`__  to check that the necessary actions have started.
 #. Once the docs build is successful find the ``tutorials_jupyter.zip`` file for the release candidate in the
    `gammapy-docs repo <https://github.com/gammapy/gammapy-docs>`__ and adapt the ``download/index.json`` to point to it.
+#. Edit `docs/stable/index.html` so that the url points to the last stable version, eg: `url=../1.3` instead of `url=../${release}`.
 #. Update the entry for the release candidate in the
    `Gammapy release calendar <https://github.com/gammapy/gammapy/wiki/Release-Calendar>`__.
 #. Create a testing page like
