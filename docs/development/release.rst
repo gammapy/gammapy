@@ -25,12 +25,8 @@ Feature Freeze and Branching
 
 #. Fill the changelog ``docs/release-notes/<version>.rst`` for the version you are about to release.
 
-   * To generate the list of pull requests and issues run ``python dev/github_summary.py create_pull_request_table``.
-     This will create a list of all closed pull requests and save it to ``table_pr.ecsv``.
-     Next, use the option ``merged_PR`` to extract a relevant list corresponding to the release.
-     You can then manually delete any entries which correspond to small improvements or bug fixes.
+   * To generate the list of pull requests and issues, and list of authors run ``python dev/github_summary.py create_pull_request_table``. Note that you will need to use your github token here.
 #. Update the author list manually in the  ``CITATION.cff``.
-
     * You can use the helper script ``dev/authors.py`` for this.
 #. Open a PR including both changes and mark it with the ``backport-v<version>.x`` label.
    Gather feedback from the Gammapy user and dev community and finally merge and backport to the
@@ -46,12 +42,7 @@ Feature Freeze and Branching
     git fetch upstream --tags --prune
     git checkout -B main upstream/main
 
-#. Create a new branch with the name of the version::
-
-    git branch v<version>.x
-
-#. Stay on the ``main`` branch and make a copy and update the ``docs/release-notes/<version>.rst``
-#. Commit the changes and push to GitHub ``main``.
+#. From the github online interface, create a new branch v<version>.x
 #. Update the entry for the feature freeze in the
    `Gammapy release calendar <https://github.com/gammapy/gammapy/wiki/Release-Calendar>`__.
 
@@ -59,13 +50,14 @@ Feature Freeze and Branching
 Releasing the first major release candidate
 -------------------------------------------
 
+#. First, make sure you have `gpg` keys generated for your github account (https://docs.github.com/en/authentication/managing-commit-signature-verification/generating-a-new-gpg-key).
 #. In the `gammapy-webpage repo <https://github.com/gammapy/gammapy-webpage>`__:
 
    * Add an entry for the release candidate like ``v1.0rc1`` or ``v1.1rc1`` in the ``download/index.json`` file,
      by copying the entry for ``dev`` tag. As we do not handle release candidates nor bug fix releases for data,
-     this still allows to fix bugs in the data during the release candidate testing.
+     this still allows to fix bugs in the data during the release candidate testing. Update the link to the conda environment.
    * In the ``download/install`` folder, copy a previous environment file file as ``gammapy-1.0rc1-environment.yml``.
-   * Adapt the dependency conda env name and versions as required in this file.
+   * Adapt the dependency conda env name and versions as required in this file. Normally, it should be the latest versions of the packages. Note that for the release candidates, `gammapy` must be included under pip.   
 
 #. Switch to the correct branch and update the ``CITATION.cff`` date and version by running the
    ``dev/prepare-release.py`` script::
@@ -80,7 +72,7 @@ Releasing the first major release candidate
 #. Locally create a new release candidate tag on the ``v1.0.x``, like ``v1.0rc1`` for Gammapy and push::
 
     git tag -s v1.0rc1 -m "Tagging v1.0rc1"
-    git push upstream v1.0.x
+    git push upstream tag v1.0.x
 
 #. Once the tag is pushed, the ``release`` action in charge of packaging and uploading to `PyPi <https://pypi.org/>`__
    should be triggered automatically. Once complete, it will trigger the docs build on the  ``gammapy-docs``
