@@ -1472,7 +1472,7 @@ class PiecewiseNormSpectralModel(SpectralModel):
     ----------
     energy : `~astropy.units.Quantity`
         Array of energies at which the model values are given (nodes).
-    norms : `~numpy.ndarray` or list of `Parameter`
+    norms : `~numpy.ndarray` or list of `gammapy.modeling.Parameter`
         Array with the initial norms of the model at energies ``energy``.
         Normalisation parameters are created for each value.
         Default is one at each node.
