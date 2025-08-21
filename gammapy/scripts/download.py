@@ -134,7 +134,7 @@ def show_info_datasets(outfolder, release):
 @click.option(
     "--release",
     default=RELEASE,
-    help="Number of stable release - ex: 0.18.2)",
+    help="Number of stable release - ex: 2.0)",
     show_default=True,
 )
 @click.option(
@@ -174,7 +174,7 @@ def cli_download_notebooks(release, out):
 @click.option(
     "--release",
     default=RELEASE,
-    help="Number of stable release - ex: 0.18.2)",
+    help="Number of stable release - ex: 2.0)",
     show_default=True,
 )
 @click.option(
