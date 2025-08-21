@@ -26,7 +26,7 @@ environment. First install `Miniconda <https://docs.conda.io/en/latest/miniconda
 .. note::
 
     On Windows, you have to open up the conda environment file and delete the
-    lines with ``healpy``. This is an optional dependencies that
+    line with ``healpy``. This is an optional dependency that
     currently isn't available on Windows.
 
 .. note::
