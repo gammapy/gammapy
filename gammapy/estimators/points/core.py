@@ -531,9 +531,9 @@ class FluxPoints(FluxMaps):
                 )
 
             if sed_type == "likelihood":
-                table["ref_dnde"] = self.dnde_ref[idx]
-                table["ref_flux"] = self.flux_ref[idx]
-                table["ref_eflux"] = self.eflux_ref[idx]
+                table["ref_dnde"] = self.dnde_ref[idx].to(DEFAULT_UNIT["dnde"])
+                table["ref_flux"] = self.flux_ref[idx].to(DEFAULT_UNIT["flux"])
+                table["ref_eflux"] = self.eflux_ref[idx].to(DEFAULT_UNIT["e2dnde"])
 
             for quantity in self.all_quantities(sed_type=sed_type):
                 data = getattr(self, quantity, None)
