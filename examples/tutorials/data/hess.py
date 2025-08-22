@@ -81,20 +81,24 @@ obs = data_store.obs(23523)
 # Select and peek events
 
 obs.events.select_offset([0, 2.5] * u.deg).peek()
+plt.show()
 
 ######################################################################
 # Peek the effective area
 
 obs.aeff.peek()
+plt.show()
 
 ######################################################################
 # Peek the energy dispersion
 
 obs.edisp.peek()
+plt.show()
 
 ######################################################################
 # Peek the psf
 obs.psf.peek()
+plt.show()
 
 ######################################################################
 # Peek the background rate

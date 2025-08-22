@@ -234,6 +234,7 @@ with quantity_support():
 fov_lat_axis.format_plot_xaxis(ax)
 fov_lon_axis.format_plot_yaxis(ax)
 ax.set_title("Asymmetric effective area")
+plt.show()
 
 
 ######################################################################
@@ -397,7 +398,7 @@ IRF_DL3_HDU_SPECIFICATION["edisp_3d"] = {
 edisp3d.write("test_edisp.fits", overwrite=True)
 
 edisp_new = EnergyDispersion3D.read("test_edisp.fits")
-edisp_new
+print(edisp_new)
 
 
 ######################################################################
