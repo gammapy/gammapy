@@ -91,10 +91,10 @@ print(config)
 # future reference.
 #
 
-config_stack = config.copy(deep=True)
+config_stack = config.model_copy(deep=True)
 config_stack.datasets.stack = True
 
-config_joint = config.copy(deep=True)
+config_joint = config.model_copy(deep=True)
 config_joint.datasets.stack = False
 
 # To prevent unnecessary cluttering, we write it in a separate folder.
