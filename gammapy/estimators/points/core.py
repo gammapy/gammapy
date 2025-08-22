@@ -505,6 +505,7 @@ class FluxPoints(FluxMaps):
             sed_type = self.sed_type_init
 
         sed_unit = DEFAULT_UNIT[sed_type]
+
         if format is None:
             format = self._guess_format()
             log.info("Inferred format: " + format)
@@ -536,7 +537,7 @@ class FluxPoints(FluxMaps):
 
             for quantity in self.all_quantities(sed_type=sed_type):
                 data = getattr(self, quantity, None)
-                if data and data.unit.is_unity():
+                if data and (data.unit.is_unity() or sed_type == "likelihood"):
                     table[quantity] = data.quantity[idx]
                 elif data:
                     table[quantity] = data.quantity[idx].to(sed_unit)
