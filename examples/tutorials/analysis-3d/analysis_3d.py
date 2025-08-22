@@ -417,8 +417,8 @@ print(models_joint)
 stacked = analysis_joint.datasets.stack_reduce()
 stacked.models = [model_joint]
 
-plt.figure()
 stacked.plot_residuals_spatial(vmin=-1, vmax=1)
+plt.show()
 
 
 ######################################################################
