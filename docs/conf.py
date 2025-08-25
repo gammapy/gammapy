@@ -40,15 +40,6 @@ def setup(app):
     app.add_directive("substitution-code-block", SubstitutionCodeBlock)
     app.add_post_transform(DynamicPRLinkTransform)
 
-    # Skip documenting Pydantic to suppress warnings
-    def filter_pydantic_docstrings(app, what, name, obj, options, lines):
-        module = getattr(obj, "__module__", "")
-        if module and module.startswith("pydantic"):
-            # wipe docstring to silence parsing warnings
-            lines[:] = []
-
-    app.connect("autodoc-process-docstring", filter_pydantic_docstrings)
-
 
 conf = ConfigParser()
 conf.read([os.path.join(os.path.dirname(__file__), "..", "setup.cfg")])
@@ -105,8 +96,7 @@ default_role = 'obj'
 # Add any Sphinx extension module names here, as strings.
 extensions = [
     # Order for sphinx_automodapi is important
-    "sphinx.ext.autosummary",
-    "sphinx_automodapi.automodapi", # This should come after autosummary
+    "sphinx_automodapi.automodapi",
     "sphinx_automodapi.smart_resolver",
     "sphinx_click.ext",
     'sphinx_copybutton',
@@ -148,13 +138,7 @@ intersphinx_mapping = {
 	"pandas": ("https://pandas.pydata.org/pandas-docs/stable/", None),
 	}
 
-# -- Options for autosummary/autodoc output ------------------------------------
-# Enable generation of stub files
-autosummary_generate = True
-
-# Document inherited members
-automodsumm_inherited_members = True
-
+# -- Options for autodoc output ------------------------------------
 # Include class and __init__ docstrings
 autoclass_content = "both"
 
@@ -290,8 +274,7 @@ github_issues_url = "https://github.com/gammapy/gammapy/issues/"
 
 # In `references.rst` we provide a list of citations which might not
 # be referenced elsewhere in the docs. Sphinx emits a warning that we can suppress.
-# Pydantic also has a number of errors so we suppress those too.
-suppress_warnings = ["ref.citation", "autodoc.pydantic"]
+suppress_warnings = ["ref.citation"]
 
 branch = "main" if switch_version == "dev" else f"v{switch_version}"
 
