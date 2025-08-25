@@ -43,20 +43,10 @@ class ObservationTable(Table):
         # Google KI, query: "python konstruktor geerbte klasse"
 
         # Init with basic reference table, like suggested by @registerrier.
-        # if table is None:
-        #     super().__init__(data=self._reference_table(), **kwargs)
-        #     self.table = self._reference_table()
-        # else:
-        # print("ELSE")  # for read
         if table is None:
             table = self._reference_table()
         table = self._validate_table(table)
         super().__init__(data=table, **kwargs)
-
-    # def __setitem__(self, index, value):
-    #     for i in range(len(value)):
-    #         self.add_row([])
-    #     super().__setitem__(index,value)
 
     @staticmethod
     def _reference_table():
