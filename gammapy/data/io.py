@@ -36,7 +36,7 @@ class ObservationTableReader:
         return [hduclass.lower(), hduvers.lower()]
 
     def read(self, filename, format="gadf0.3"):
-        """Read EventList from file.
+        """Read ObservationTable from file.
 
         Parameters
         ----------

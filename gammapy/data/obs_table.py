@@ -155,12 +155,12 @@ class ObservationTable(Table):
     @property
     def time_start(self):
         """Observation start time as a `~astropy.time.Time` object."""
-        return self["TSTART"]  # self.time_ref + Quantity(self["TSTART"], "second")
+        return self["TSTART"]
 
     @property
     def time_stop(self):
         """Observation stop time as a `~astropy.time.Time` object."""
-        return self["TSTOP"]  # self.time_ref + Quantity(self["TSTOP"], "second")
+        return self["TSTOP"]
 
     def select_obs_id(self, obs_id):
         """Get `~gammapy.data.ObservationTable` containing only ``obs_id``.
