@@ -9,8 +9,8 @@
 
 - Released August 26, 2025
 - 25 contributors
-- 312 pull requests since v1.3, 497 (XX) pull requests since 1.0
-- 118 (XX) closed issues
+- 312 pull requests since v1.3, 497 pull requests since 1.0
+- 118 closed issues
 
 Summary
 ~~~~~~~
