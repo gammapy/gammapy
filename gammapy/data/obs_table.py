@@ -68,22 +68,29 @@ class ObservationTable(Table):
                     [],
                     name="OBS_ID",
                     unit=None,
-                    description="Observation ID per observation run",
+                    description="Observation ID",
                     dtype=str,
                 ),
                 Column(
                     [],
                     name="OBJECT",
                     unit=None,
-                    description="Name of the object",
+                    description="Observation object name",
                     dtype=str,
                 ),
             ]
         )
         table["POINTING"] = SkyCoord([], [], unit=u.deg, frame="icrs")
+        table["POINTING"].info.description = "Observation pointing"
+
         table["LOCATION"] = EarthLocation.from_geodetic([], [], [])
+        table["LOCATION"].info.description = "Observation observatory location"
+
         table["TSTART"] = Time([], scale="tt", format="mjd")
+        table["TSTART"].info.description = "Observation start time"
+
         table["TSTOP"] = Time([], scale="tt", format="mjd")
+        table["TSTOP"].info.description = "Observation end time"
 
         return table
 
