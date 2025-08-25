@@ -5,8 +5,9 @@ from astropy.table import Table
 from gammapy.data import EventListMetaData, EventList, ObservationTable
 from gammapy.utils.scripts import make_path
 from gammapy.utils.metadata import CreatorMetaData
-from gammapy.data.metadata import METADATA_FITS_KEYS, ObservationMetaData
+from gammapy.data.metadata import ObservationMetaData
 from gammapy.utils.time import time_ref_from_dict
+from gammapy.utils.fits import skycoord_from_dict, earth_location_from_dict
 from astropy.units import Quantity
 
 
@@ -143,25 +144,29 @@ class ObservationTableReader:
 
             if "RA_PNT" in required_names_on_disk:
                 row_internal.append(
-                    METADATA_FITS_KEYS["pointing"]["radec_mean"]["input"](
+                    skycoord_from_dict(
                         {
                             "RA_PNT": table_disk[i]["RA_PNT"],
                             "DEC_PNT": table_disk[i]["DEC_PNT"],
-                        }
+                        },
+                        frame="icrs",
+                        ext="PNT",
                     )
                 )
             elif "ALT_PNT" in required_names_on_disk:
                 row_internal.append(
-                    METADATA_FITS_KEYS["pointing"]["altaz_mean"]["input"](
+                    skycoord_from_dict(
                         {
                             "ALT_PNT": table_disk[i]["ALT_PNT"],
                             "AZ_PNT": table_disk[i]["AZ_PNT"],
-                        }
+                        },
+                        frame="altaz",
+                        ext="PNT",
                     )
                 )
 
             row_internal.append(
-                METADATA_FITS_KEYS["observation"]["location"]["input"](
+                earth_location_from_dict(
                     {
                         "GEOLON": meta["GEOLON"],
                         "GEOLAT": meta["GEOLAT"],
