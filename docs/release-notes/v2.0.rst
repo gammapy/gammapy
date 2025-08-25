@@ -8,7 +8,7 @@
 
 
 - Released August 26, 2025
-- 25 contributors
+- 26 contributors (10 new contributors)
 - 312 pull requests since v1.3, 497 pull requests since 1.0
 - 118 closed issues
 
@@ -29,6 +29,10 @@ A ``Sampler`` class that wraps around sampler libraries is introduced. It provid
 an interface similar to the Fit class. For now, the ``Sampler`` relies on the ``ultranest`` library.
 A detailed tutorial is provided.
 
+Flux sensitivity can now be computed by the various flux estimator classes such as `~gammapy.estimators.FluxPointsEstimator`,
+with the ``"sensitivity"`` option. The calculation is based on the Asimov dataset following the method described in `~gammapy.estimator.ParameterSensitivityEstimator`.
+
+
 There has been significant code cleanup and restructuring. They should not break user codes
 but might marginally change analysis results. We mention here a number of changes and
 undergoing re-structuring efforts:
@@ -41,6 +45,8 @@ undergoing re-structuring efforts:
   method now builds an envelope of the sampled spectra using vectorized evaluation of the model.
 - The separation of the internal DL3 data model from GADF specification is close to being over. In particular,
   the `~gammapy.data.EventList` internal table does no longer follow the GADF structure now.
+- The restructuring of statistics and `Dataset` has started with the addition of ``FitStatistic`` classes 
+  and a ``FIT_STATISTIC_REGISTRY`` to allow configuration of the statistic on a dataset.
 
 Significant effort has been put in cleaning up the documentation and re-organising the tutorial structure.
 
@@ -99,15 +105,16 @@ New features
 *gammapy.makers*
 
 - Added spatial model to `gammapy.makers.FoVBackgroundMaker` init
+- Add time integration of 3D background model aligned on Alt-Az during an observation in `~gammapy.maps.MapDatasetMaker` 
 - Add a `~gammapy.datasets.FermipyDatasetsReader` to convert Fermi-LAT maps from Fermipy
   into a gammapy `~gammapy.datasets.Datasets`.
 
 *gammapy.modeling*
 
 - Support for pixel-wise weighted likelihood as implemented in Fermi-LAT science tools
-- Support for nested sampling
+- Add `~gammapy.modeling.Sampler` class to support nested sampling for bayesian analysis
 - Addition of a `~gammapy.modeling.models.LogUniformPrior`
-- Implement a more robust error propagation method using sampling
+- Implement a more robust error propagation method using parameter sampling
 - Add ``datasets_names`` argument to `~gammapy.modeling.models.create_fermi_isotropic_diffuse_model`
 - Add interp_scale to parameter scaling
 - Make a distinction between `~gammapy.modeling.Parameters.free_parameters` and
@@ -115,12 +122,11 @@ New features
 
 *gammapy.stats*
 
-- Addition of a ``FIT_STATISTIC_REGISTRY`` to allow configuration of the statistic on a dataset.
+- Introduce optional numba optimized fit statistic functions. By default, Gammapy v2.0 still relies on Cython optimized code.
 
 *gammapy.utils*
 
 - Introduce a FoVFrame in `gammapy.utils.coordinates`
-- Get regions of bright stars in FoV
 - Allow energy selection in `~gammapy.makers.utils.make_theta_squared_table`
 
 Bug fixes and improvements
@@ -146,9 +152,6 @@ Infrastructure
 
    - Scheduling run for doctests in rst and examples
    - Scheduling link check (separated from CI)
-
-- Add the docs build to PRs
-- Allow skipping of ci actions through labels: ``skip-docs``, ``skip-tests``
 
 
 Contributors
