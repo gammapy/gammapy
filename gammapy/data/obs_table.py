@@ -6,9 +6,9 @@ from astropy.table import Table, Column
 from astropy.units import Quantity, Unit
 from gammapy.utils.regions import SphericalCircleSkyRegion
 from gammapy.utils.testing import Checker
-from gammapy.utils.time import time_ref_from_dict
 from astropy.time import Time
 from astropy import units as u
+from gammapy.utils.deprecation import deprecated
 
 __all__ = ["ObservationTable"]
 
@@ -19,7 +19,8 @@ class ObservationTable(Table):
     See discussion and development: https://github.com/gammapy/gammapy/issues/3767, https://github.com/gammapy/gammapy/issues/4238
     Co-authors: @maxnoe, @registerrier, @bkhelifi, @cdeil, @Astro-Kirsty
     Used as reference: gammapy, gammapy/data/obs_table.py, https://docs.python.org/3, https://docs.astropy.org/en/latest/table/construct_table.html#construct-table, https://numpy.org/doc/stable/reference/generated/numpy.dtype.html
-                       https://docs.astropy.org/en/latest/table/index.html, https://gamma-astro-data-formats.readthedocs.io/en/v0.3/, esp. data_storage/obs_index/index.html, https://www.programiz.com/python-programming/methods/built-in/classmethod
+                       https://docs.astropy.org/en/latest/table/index.html, https://gamma-astro-data-formats.readthedocs.io/en/v0.3/, esp. data_storage/obs_index/index.html, https://www.programiz.com/python-programming/methods/built-in/classmethod,
+                       https://docs.gammapy.org/dev/development/dev_howto.html
     Looked into: https://github.com/gammasky/cta-dc/blob/master/data/cta_1dc_make_data_index_files.py, maybe used l. 233. Copyright (c) 2016 gammasky,
     Oriented also at PR by @registerrier: https://github.com/gammapy/gammapy/pull/5954/files
 
@@ -146,9 +147,10 @@ class ObservationTable(Table):
         )
 
     @property
+    @deprecated("2.1")
     def time_ref(self):
-        """Time reference as a `~astropy.time.Time` object."""
-        return time_ref_from_dict(self.meta)
+        """Deprecated: Time reference as a `~astropy.time.Time` object."""
+        return None
 
     @property
     def time_start(self):
