@@ -91,7 +91,7 @@ New features
 
 *gammapy.data*
 
-- Helper method for observation selection at ``Datastore`` level, specially usful for WCD
+- Helper method for observation selection at ``Datastore`` level, specially useful for WCD
 
 *gammapy.datasets*
 
