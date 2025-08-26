@@ -72,10 +72,10 @@ Documentation improvements
 - The ordering of tutorials has been restructured for clarity.
 - Four new tutorials have been added:
 
-   - one exposing VERITAS analysis along with addition of VERITAS data in `$GAMMAPY_DATA` (:doc:`/tutorials/data/veritas`)
-   - one exposing computation of upper limits for non-detected sources (:doc:`/tutorials/analysis-3d/non_detected_source`)
-   - one explaining computation of upper limits on parameters (:doc:`/tutorials/details/parameter_ul`)
-   - one introducing Bayesian inference with nested sampling (:doc:`/tutorials/details/nested_sampling_Crab`)
+  - one exposing VERITAS analysis along with addition of VERITAS data in `$GAMMAPY_DATA` (:doc:`/tutorials/data/veritas`)
+  - one exposing computation of upper limits for non-detected sources (:doc:`/tutorials/analysis-3d/non_detected_source`)
+  - one explaining computation of upper limits on parameters (:doc:`/tutorials/details/parameter_ul`)
+  - one introducing Bayesian inference with nested sampling (:doc:`/tutorials/details/nested_sampling_Crab`)
 
 - The tutorial showing how to handle Fermi-LAT data (:doc:`/tutorials/data/fermi_lat`) has been rewritten to expose a full Fermi-LAT analysis.
 - Code examples have been added in docstrings.
@@ -138,7 +138,7 @@ Bug fixes and improvements
 - Fix mask handling in `~gammapy.estimators.TSMapEstimator`
 - Preserve parameters links in `gammapy.modeling.models.Models.copy()`
 - Fix link label display in parameters.to_table
-- Fix ``e_peak`` implementation of `~gammapy.modeling.models.SuperExpCutoffPowerLaw4FGLDR3SpectralModel` to give results compatible with Eq 21 of  https://iopscience.iop.org/article/10.3847/1538-4357/acee67
+- Fix ``e_peak`` implementation of `~gammapy.modeling.models.SuperExpCutoffPowerLaw4FGLDR3SpectralModel` to give results compatible with Eq 21 of https://iopscience.iop.org/article/10.3847/1538-4357/acee67
 - Fix of a `~gammapy.maps.HpxGeom` simulation error
 
 
@@ -148,10 +148,10 @@ Infrastructure
 - Remove dependency on ``sphinx-astropy``
 - Support of astropy v7.1
 - Utilise OpenAstronomy in our release workflow to build wheels
-- Added extra workflows for:
+- Added extra workflows for
 
-   - Scheduling run for doctests in rst and examples
-   - Scheduling link check (separated from CI)
+  - Scheduling run for doctests in rst and examples
+  - Scheduling link check (separated from CI)
 
 
 Contributors
