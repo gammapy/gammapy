@@ -125,7 +125,7 @@ class DataStore:
 
         obs_table = None
         if hdu_obs:
-            obs_table = ObservationTable.read(filename, hdu=hdu_obs, format="fits")
+            obs_table = ObservationTable.read(filename, hdu=hdu_obs)
 
         return cls(hdu_table=hdu_table, obs_table=obs_table)
 
@@ -183,7 +183,7 @@ class DataStore:
             obs_table = None
         else:
             log.debug(f"Reading {obs_table_filename}")
-            obs_table = ObservationTable.read(obs_table_filename, format="fits")
+            obs_table = ObservationTable.read(obs_table_filename)
 
         return cls(hdu_table=hdu_table, obs_table=obs_table)
 
