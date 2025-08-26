@@ -85,7 +85,7 @@ Releasing the first major release candidate
 #. Once the tag is pushed, the ``release`` action in charge of packaging and uploading to `PyPi <https://pypi.org/>`__
    should be triggered automatically. Once complete, it will trigger the docs build on the  ``gammapy-docs``
    repository.
-#. Check the ``Actions`` on `gammapy repo <https://github.com/gammapy/gammapy>`__  and 
+#. Check the ``Actions`` on `gammapy repo <https://github.com/gammapy/gammapy>`__  and
    `gammapy-docs <https://github.com/gammapy/gammapy-docs>`__  to check that the necessary actions have started.
 #. Once the docs build is successful find the ``tutorials_jupyter.zip`` file for the release candidate in the
    `gammapy-docs repo <https://github.com/gammapy/gammapy-docs>`__ and adapt the ``download/index.json`` to point to it.
@@ -103,6 +103,8 @@ Releasing the final version of the major release
 #. Create a new tag in the `gammapy-data repo <https://github.com/gammapy/gammapy-data>`__, like ``v1.0``
    or ``v1.1``.
 
+#. Create a new tag in the `gammapy-benchmarks repo <https://github.com/gammapy/gammapy-benchmarks>`__
+
 #. In the `gammapy-webpage repo <https://github.com/gammapy/gammapy-webpage>`__:
 
    * In the ``download/install`` folder, copy a previous environment file as ``gammapy-1.0-environment.yml``.
@@ -110,6 +112,16 @@ Releasing the final version of the major release
      into the dependencies list.
    * Update the datasets entry in the ``download/index.json`` to point to this new release tag. Also update the
      notebook entry, typically the link extensions are the same between versions.
+
+#. Switch to the correct branch and update the ``CITATION.cff`` date and version by running the
+   ``dev/prepare-release.py`` script::
+
+    git checkout v1.0.x
+    python ./dev/prepare-release.py --release v1.0
+
+#. Commit and push the branch back to GitHub::
+
+    git push upstream v1.0.x
 
 #. Locally create a new release tag like ``v1.0`` for Gammapy and push::
 
@@ -135,7 +147,7 @@ Releasing the final version of the major release
 
 #. Finally:
 
-   * The Gammapy conda-forge package at https://github.com/conda-forge/gammapy-feedstock should be automatically updated within hours and a PR opened. Check that this is the case and if not, perform the manual update of the recipe meta.yaml on your gammapy-feedstock fork and open the PR. Finally, when all tests for all distributions successfully ran, merge the PR.   
+   * The Gammapy conda-forge package at https://github.com/conda-forge/gammapy-feedstock should be automatically updated within hours and a PR opened. Check that this is the case and if not, perform the manual update of the recipe meta.yaml on your gammapy-feedstock fork and open the PR. Finally, when all tests for all distributions successfully ran, merge the PR.
    * Encourage the Gammapy developers to try out the new stable version (update and run tests) via the GitHub
      issue for the release and wait a day or two for feedback.
 
