@@ -81,7 +81,6 @@ class ObservationTableReader:
         """Create ObservationTable from gadf0.2 HDU."""
         table_disk = Table.read(obs_hdu)  # table_disk !
         meta = ObservationMetaData.from_header(table_disk.meta)  # TEST
-        print(meta)  # TEST
 
         # Required names to fill internal table format, for GADF v.0.2, will be extended after checking POINTING. Similar to PR#5954.
         required_names_on_disk = [
