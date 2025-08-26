@@ -50,14 +50,15 @@ Feature Freeze and Branching
 Releasing the first major release candidate
 -------------------------------------------
 
-#. First, make sure you have `gpg` keys generated for your github account (https://docs.github.com/en/authentication/managing-commit-signature-verification/generating-a-new-gpg-key).
+#. First, make sure you have a [`gpg key`](https://docs.github.com/en/authentication/managing-commit-signature-verification/generating-a-new-gpg-key) generated for your GitHub account.
 #. In the `gammapy-webpage repo <https://github.com/gammapy/gammapy-webpage>`__:
 
    * Add an entry for the release candidate like ``v1.0rc1`` or ``v1.1rc1`` in the ``download/index.json`` file,
      by copying the entry for ``dev`` tag. As we do not handle release candidates nor bug fix releases for data,
      this still allows to fix bugs in the data during the release candidate testing. Update the link to the conda environment.
-   * In the ``download/install`` folder, copy a previous environment file file as ``gammapy-1.0rc1-environment.yml``.
-   * Adapt the dependency conda env name and versions as required in this file. Normally, it should be the latest versions of the packages. Note that for the release candidates, `gammapy` must be included under pip.   
+   * In the ``download/install`` folder, copy a previous environment file as ``gammapy-1.0rc1-environment.yml``.
+   * Adapt the dependency conda env name and versions as required in this file. Normally, it should be the latest versions of the packages. 
+     Note that for the release candidates, `gammapy` must be included under pip.   
 
 #. Switch to the correct branch and update the ``CITATION.cff`` date and version by running the
    ``dev/prepare-release.py`` script::
@@ -81,7 +82,7 @@ Releasing the first major release candidate
    `gammapy-docs <https://github.com/gammapy/gammapy-docs>`__  to check that the necessary actions have started.
 #. Once the docs build is successful find the ``tutorials_jupyter.zip`` file for the release candidate in the
    `gammapy-docs repo <https://github.com/gammapy/gammapy-docs>`__ and adapt the ``download/index.json`` to point to it.
-#. Edit `docs/stable/index.html` so that the url points to the last stable version, eg: `url=../1.3` instead of `url=../${release}`.
+#. Edit `docs/stable/index.html` so that the URL points to the last stable version, e.g.: `url=../1.3` instead of `url=../${release}`.
 #. Update the entry for the release candidate in the
    `Gammapy release calendar <https://github.com/gammapy/gammapy/wiki/Release-Calendar>`__.
 #. Create a testing page like
