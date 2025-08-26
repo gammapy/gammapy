@@ -125,6 +125,7 @@ Releasing the final version of the major release
    * Kill the possible ``dev-docs`` build actions as they might interfere with the ``release`` docs build.
    * Wait for the triggered ``release`` docs build to finish.
    * Edit ``docs/stable/switcher.json`` to add the new version.
+   * Edit ``docs/stable/index.html`` so that the url points to the new version.
 
 #. In the `gammapy-webpage repo <https://github.com/gammapy/gammapy-webpage>`__:
 
