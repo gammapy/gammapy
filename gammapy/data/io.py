@@ -5,10 +5,10 @@ from astropy.table import Table
 from gammapy.data import EventListMetaData, EventList, ObservationTable
 from gammapy.utils.scripts import make_path
 from gammapy.utils.metadata import CreatorMetaData
-from gammapy.data.metadata import ObservationMetaData
 from gammapy.utils.time import time_ref_from_dict
 from gammapy.utils.fits import skycoord_from_dict, earth_location_from_dict
 from astropy.units import Quantity
+import numpy as np
 
 
 class ObservationTableReader:
@@ -80,7 +80,7 @@ class ObservationTableReader:
     def from_gadf02_hdu(obs_hdu):
         """Create ObservationTable from gadf0.2 HDU."""
         table_disk = Table.read(obs_hdu)  # table_disk !
-        meta = ObservationMetaData.from_header(table_disk.meta)  # TEST
+        # meta = ObservationMetaData.from_header(table_disk.meta)  # TEST
 
         # Required names to fill internal table format, for GADF v.0.2, will be extended after checking POINTING. Similar to PR#5954.
         required_names_on_disk = [
@@ -131,86 +131,85 @@ class ObservationTableReader:
         #             )  # looked into gammapy/workflow/core.py
 
         # Create internal table "table_internal" with all names, corresp. units, types and descriptions, for the internal table model.
-        table_internal = ObservationTable(ObservationTable._reference_table())
+        # table_internal = ObservationTable(ObservationTable._reference_table())
 
-        # Fill internal table for mandatory columns by constructing the table row-wise with the internal representations.
-        number_of_observations = len(
-            table_disk
-        )  # Get number of observations, equal to number of rows in table on disk.
+        obs_id = table_disk["OBS_ID"]
+        object = table_disk["OBJECT"]
 
-        for i in range(number_of_observations):
-            row_internal = [str(table_disk[i]["OBS_ID"]), str(table_disk[i]["OBJECT"])]
-
-            if "RA_PNT" in required_names_on_disk:
-                row_internal.append(
-                    skycoord_from_dict(
-                        {
-                            "RA_PNT": table_disk[i]["RA_PNT"],
-                            "DEC_PNT": table_disk[i]["DEC_PNT"],
-                        },
-                        frame="icrs",
-                        ext="PNT",
-                    )
-                )
-            elif "ALT_PNT" in required_names_on_disk:
-                row_internal.append(
-                    skycoord_from_dict(
-                        {
-                            "ALT_PNT": table_disk[i]["ALT_PNT"],
-                            "AZ_PNT": table_disk[i]["AZ_PNT"],
-                        },
-                        frame="altaz",
-                        ext="PNT",
-                    )
-                )
-
-            row_internal.append(
-                earth_location_from_dict(
-                    {
-                        "GEOLON": meta["GEOLON"],
-                        "GEOLAT": meta["GEOLAT"],
-                        "ALTITUDE": meta["ALTITUDE"],
-                    }
-                )
+        if "RA_PNT" in required_names_on_disk:
+            pointing = skycoord_from_dict(
+                {
+                    "RA_PNT": table_disk["RA_PNT"],
+                    "DEC_PNT": table_disk["DEC_PNT"],
+                },
+                frame="icrs",
+                ext="PNT",
             )
-
-            # from @properties "time_ref", "time_start", "time_stop"
-            time_ref = time_ref_from_dict(meta)
-            if "TIMEUNIT" in meta.keys():
-                time_unit = meta["TIMEUNIT"]
-            else:
-                time_unit = "s"
-            row_internal.append(
-                time_ref
-                + Quantity(table_disk[i]["TSTART"].astype("float64"), time_unit)
+        elif "ALT_PNT" in required_names_on_disk:
+            pointing = skycoord_from_dict(
+                {
+                    "ALT_PNT": table_disk["ALT_PNT"],
+                    "AZ_PNT": table_disk["AZ_PNT"],
+                },
+                frame="altaz",
+                ext="PNT",
             )
-            row_internal.append(
-                time_ref + Quantity(table_disk[i]["TSTOP"].astype("float64"), time_unit)
-            )
+        # https://stackoverflow.com/questions/74412503/cannot-access-local-variable-a-where-it-is-not-associated-with-a-value-but used for debugging
+        location = earth_location_from_dict(
+            {
+                "GEOLON": float(meta["GEOLON"]) * np.ones(len(obs_id)),
+                "GEOLAT": float(meta["GEOLAT"]) * np.ones(len(obs_id)),
+                "ALTITUDE": float(meta["ALTITUDE"]) * np.ones(len(obs_id)),
+            }
+        )
 
-            # )  # like in event_list.py, l.201, commit: 08c6f6a
-            table_internal.add_row(
-                row_internal
-            )  # Add row to internal table (fill table).
+        # from @properties "time_ref", "time_start", "time_stop"
+        time_ref = time_ref_from_dict(meta)
+        if "TIMEUNIT" in meta.keys():
+            time_unit = meta["TIMEUNIT"]
+        else:
+            time_unit = "s"
+        tstart = time_ref + Quantity(table_disk["TSTART"].astype("float64"), time_unit)
+        tstop = time_ref + Quantity(table_disk["TSTOP"].astype("float64"), time_unit)
+
+        # )  # like in event_list.py, l.201, commit: 08c6f6a
+        # table_internal.add_row(
+        #     row_internal
+        # )  # Add row to internal table (fill table).
+        # print(len(obs_id),len(object),len(pointing),len(location),len(tstart),len(tstop))
+        print(meta)
+        new_table = Table(
+            {
+                "OBS_ID": obs_id,
+                "OBJECT": object,
+                "POINTING": pointing,
+                "LOCATION": location,
+                "TSTART": tstart,
+                "TSTOP": tstop,
+            },
+            meta=meta,
+        )
 
         # Load optional columns, whose names are not already processed, automatically into internal table.
         opt_names = set(names_disk).difference(required_names_on_disk)
         for name in opt_names:  # add column-wise all optional column-data present in file, independent of format.
-            table_internal[name] = table_disk[name]
+            new_table.add_column(table_disk[name])
+            # table_internal[name] = table_disk[name]
 
-        table_internal.meta = meta
+        # table_internal.meta = meta
         # return internal table, instead of copy of disk-table like before.
-        return table_internal
-        # return ObservationTable(table=table, meta=meta)
+        # return table_internal
+        return ObservationTable(table=new_table, meta=meta)
 
-    @staticmethod
-    def from_gadf03_hdu(obs_hdu):
-        """Create ObservationTable from gadf0.3 HDU."""
-        table_disk = Table.read(obs_hdu)  # table_disk !
-        # meta = ObservationMetaData.from_header(table.meta)
-        # print(meta)
-        return table_disk
-        # return ObservationTable(table=table, meta=meta)
+
+@staticmethod
+def from_gadf03_hdu(obs_hdu):
+    """Create ObservationTable from gadf0.3 HDU."""
+    table_disk = Table.read(obs_hdu)  # table_disk !
+    # meta = ObservationMetaData.from_header(table.meta)
+    # print(meta)
+    return table_disk
+    # return ObservationTable(table=table, meta=meta)
 
 
 class EventListReader:
