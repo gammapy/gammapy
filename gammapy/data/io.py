@@ -79,8 +79,8 @@ class ObservationTableReader:
     @staticmethod
     def from_gadf02_hdu(obs_hdu):
         """Create ObservationTable from gadf0.2 HDU."""
-        table_disk = Table.read(obs_hdu)  # table_disk !
-        # meta = ObservationMetaData.from_header(table_disk.meta)  # TEST
+        table_disk = Table.read(obs_hdu)
+        meta = table_disk.meta
 
         # Required names to fill internal table format, for GADF v.0.2, will be extended after checking POINTING. Similar to PR#5954.
         required_names_on_disk = [
@@ -95,9 +95,6 @@ class ObservationTableReader:
 
         # Get colnames of disk_table
         names_disk = table_disk.colnames
-
-        # Get header of obs-index table.
-        meta = table_disk.meta
 
         # Check which info is given for POINTING
         # Used commit 16ce9840f38bea55982d2cd986daa08a3088b434 by @registerrier
@@ -129,9 +126,6 @@ class ObservationTableReader:
                 f"Not all columns required for GADF v.0.2 were found in file. Missing: {missing_names}"
             )
         #             )  # looked into gammapy/workflow/core.py
-
-        # Create internal table "table_internal" with all names, corresp. units, types and descriptions, for the internal table model.
-        # table_internal = ObservationTable(ObservationTable._reference_table())
 
         obs_id = table_disk["OBS_ID"]
         object = table_disk["OBJECT"]
@@ -171,13 +165,8 @@ class ObservationTableReader:
             time_unit = "s"
         tstart = time_ref + Quantity(table_disk["TSTART"].astype("float64"), time_unit)
         tstop = time_ref + Quantity(table_disk["TSTOP"].astype("float64"), time_unit)
+        # like in event_list.py, l.201, commit: 08c6f6a
 
-        # )  # like in event_list.py, l.201, commit: 08c6f6a
-        # table_internal.add_row(
-        #     row_internal
-        # )  # Add row to internal table (fill table).
-        # print(len(obs_id),len(object),len(pointing),len(location),len(tstart),len(tstop))
-        print(meta)
         new_table = Table(
             {
                 "OBS_ID": obs_id,
@@ -194,11 +183,7 @@ class ObservationTableReader:
         opt_names = set(names_disk).difference(required_names_on_disk)
         for name in opt_names:  # add column-wise all optional column-data present in file, independent of format.
             new_table.add_column(table_disk[name])
-            # table_internal[name] = table_disk[name]
 
-        # table_internal.meta = meta
-        # return internal table, instead of copy of disk-table like before.
-        # return table_internal
         return ObservationTable(table=new_table, meta=meta)
 
 
