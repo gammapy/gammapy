@@ -96,6 +96,9 @@ Releasing the final version of the major release
 #. Create a new tag in the `gammapy-data repo <https://github.com/gammapy/gammapy-data>`__, like ``v1.0``
    or ``v1.1``.
 
+#. Create a new tag in the `gammapy-benchmarks repo <https://github.com/gammapy/gammapy-benchmarks>`__, like ``v1.0``
+   or ``v1.1``.
+
 #. In the `gammapy-webpage repo <https://github.com/gammapy/gammapy-webpage>`__:
 
    * In the ``download/install`` folder, copy a previous environment file as ``gammapy-1.0-environment.yml``.
@@ -103,6 +106,13 @@ Releasing the final version of the major release
      into the dependencies list.
    * Update the datasets entry in the ``download/index.json`` to point to this new release tag. Also update the
      notebook entry, typically the link extensions are the same between versions.
+
+#. In the gammapy repo, switch to the correct branch and update the ``CITATION.cff`` date and version by running the
+   ``dev/prepare-release.py`` script::
+
+    git checkout v1.0.x
+    python ./dev/prepare-release.py --release v1.0rc1
+    git push 
 
 #. Locally create a new release tag like ``v1.0`` for Gammapy and push::
 
