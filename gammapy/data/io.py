@@ -6,7 +6,10 @@ from gammapy.data import EventListMetaData, EventList, ObservationTable
 from gammapy.utils.scripts import make_path
 from gammapy.utils.metadata import CreatorMetaData
 from gammapy.utils.time import time_ref_from_dict
-from gammapy.utils.fits import skycoord_from_dict, earth_location_from_dict
+from gammapy.utils.fits import (
+    skycoord_from_dict,
+    earth_location_to_dict,
+)
 from astropy.units import Quantity
 from gammapy.data import observatory_locations
 
@@ -149,20 +152,24 @@ class ObservationTableReader:
                 ext="PNT",
             )
         # https://stackoverflow.com/questions/74412503/cannot-access-local-variable-a-where-it-is-not-associated-with-a-value-but used for debugging
-        location = earth_location_from_dict(
-            {
-                "GEOLON": float(meta["GEOLON"]),
-                "GEOLAT": float(meta["GEOLAT"]),
-                "ALTITUDE": float(meta["ALTITUDE"]),
-            }
-        )
+        # location = earth_location_from_dict(
+        #     {
+        #         "GEOLON": float(meta["GEOLON"]),
+        #         "GEOLAT": float(meta["GEOLAT"]),
+        #         "ALTITUDE": float(meta["ALTITUDE"]),
+        #     }
+        # )
 
         # Find instrument from location and save it in meta.
         meta["INSTRUME"] = "UNKNOWN"  # if not found, UNKNOWN.
         for instrument in observatory_locations.keys():
-            if observatory_locations[instrument] == location:
-                meta["INSTRUME"] = instrument
-                break
+            # Ideally compare if observatory_locations[instrument] == location.
+            loc = earth_location_to_dict(observatory_locations[instrument])
+            tol = 1e-5
+            if float(meta["GEOLON"]) < loc["GEOLON"] * 1 + tol:
+                if float(meta["GEOLON"]) > loc["GEOLON"] * 1 - tol:
+                    meta["INSTRUME"] = instrument
+                    break
 
         # from @properties "time_ref", "time_start", "time_stop"
         time_ref = time_ref_from_dict(meta)
