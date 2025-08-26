@@ -96,15 +96,13 @@ default_role = 'obj'
 # Add any Sphinx extension module names here, as strings.
 extensions = [
     # Order for sphinx_automodapi is important
-    "sphinx.ext.autosummary",
-    "sphinx_automodapi.automodapi", # This should come after autosummary
+    "sphinx_automodapi.automodapi",
     "sphinx_automodapi.smart_resolver",
     "sphinx_click.ext",
     'sphinx_copybutton',
     "sphinx_design",
     "sphinx_gallery.gen_gallery",
     "sphinx.ext.doctest",
-    "sphinx.ext.intersphinx",
     "sphinx.ext.mathjax",
     'sphinx.ext.viewcode',
     # Allows for mapping to other documentation projects
@@ -140,13 +138,7 @@ intersphinx_mapping = {
 	"pandas": ("https://pandas.pydata.org/pandas-docs/stable/", None),
 	}
 
-# -- Options for autosummary/autodoc output ------------------------------------
-# Enable generation of stub files
-autosummary_generate = True
-
-# Document inherited members
-automodsumm_inherited_members = True
-
+# -- Options for autodoc output ------------------------------------
 # Include class and __init__ docstrings
 autoclass_content = "both"
 
@@ -280,12 +272,8 @@ man_pages = [("index", project.lower(), f"{project} Documentation", [author], 1)
 
 github_issues_url = "https://github.com/gammapy/gammapy/issues/"
 
-# In `about.rst` and `references.rst` we are giving lists of citations
-# (e.g. papers using Gammapy) that partly aren't referenced from anywhere
-# in the Gammapy docs. This is normal, but Sphinx emits a warning.
-# The following config option suppresses the warning.
-# http://www.sphinx-doc.org/en/stable/rest.html#citations
-# http://www.sphinx-doc.org/en/stable/config.html#confval-suppress_warnings
+# In `references.rst` we provide a list of citations which might not
+# be referenced elsewhere in the docs. Sphinx emits a warning that we can suppress.
 suppress_warnings = ["ref.citation"]
 
 branch = "main" if switch_version == "dev" else f"v{switch_version}"
@@ -294,7 +282,7 @@ binder_config = {
     # Required keys
     "org": "gammapy",
     "repo": "gammapy-webpage",
-    "branch": branch,  # Can be any branch, tag, or commit hash. Use a branch that hosts your docs.
+    "branch": branch,
     "binderhub_url": "https://mybinder.org",  # Any URL of a binderhub deployment. Must be full URL (e.g. https://mybinder.org).
     "dependencies": "./binder/requirements.txt",
     "notebooks_dir": f"notebooks/{switch_version}",
