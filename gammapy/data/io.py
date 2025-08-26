@@ -186,15 +186,14 @@ class ObservationTableReader:
 
         return ObservationTable(table=new_table, meta=meta)
 
-
-@staticmethod
-def from_gadf03_hdu(obs_hdu):
-    """Create ObservationTable from gadf0.3 HDU."""
-    table_disk = Table.read(obs_hdu)  # table_disk !
-    # meta = ObservationMetaData.from_header(table.meta)
-    # print(meta)
-    return table_disk
-    # return ObservationTable(table=table, meta=meta)
+    @staticmethod
+    def from_gadf03_hdu(obs_hdu):
+        """Create ObservationTable from gadf0.3 HDU."""
+        table_disk = Table.read(obs_hdu)  # table_disk !
+        # meta = ObservationMetaData.from_header(table.meta)
+        # print(meta)
+        return table_disk
+        # return ObservationTable(table=table, meta=meta)
 
 
 class EventListReader:
