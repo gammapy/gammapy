@@ -8,7 +8,7 @@ from gammapy.utils.metadata import CreatorMetaData
 from gammapy.utils.time import time_ref_from_dict
 from gammapy.utils.fits import skycoord_from_dict, earth_location_from_dict
 from astropy.units import Quantity
-import numpy as np
+from gammapy.data import observatory_locations
 
 
 class ObservationTableReader:
@@ -151,11 +151,18 @@ class ObservationTableReader:
         # https://stackoverflow.com/questions/74412503/cannot-access-local-variable-a-where-it-is-not-associated-with-a-value-but used for debugging
         location = earth_location_from_dict(
             {
-                "GEOLON": float(meta["GEOLON"]) * np.ones(len(obs_id)),
-                "GEOLAT": float(meta["GEOLAT"]) * np.ones(len(obs_id)),
-                "ALTITUDE": float(meta["ALTITUDE"]) * np.ones(len(obs_id)),
+                "GEOLON": float(meta["GEOLON"]),
+                "GEOLAT": float(meta["GEOLAT"]),
+                "ALTITUDE": float(meta["ALTITUDE"]),
             }
         )
+
+        # Find instrument from location and save it in meta.
+        meta["INSTRUME"] = "UNKNOWN"  # if not found, UNKNOWN.
+        for instrument in observatory_locations.keys():
+            if observatory_locations[instrument] == location:
+                meta["INSTRUME"] = instrument
+                break
 
         # from @properties "time_ref", "time_start", "time_stop"
         time_ref = time_ref_from_dict(meta)
@@ -172,7 +179,6 @@ class ObservationTableReader:
                 "OBS_ID": obs_id,
                 "OBJECT": object,
                 "POINTING": pointing,
-                "LOCATION": location,
                 "TSTART": tstart,
                 "TSTOP": tstop,
             },

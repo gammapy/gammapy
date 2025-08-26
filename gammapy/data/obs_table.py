@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from collections import namedtuple
 import numpy as np
-from astropy.coordinates import Angle, SkyCoord, EarthLocation
+from astropy.coordinates import Angle, SkyCoord
 from astropy.table import Table, Column
 from astropy.units import Quantity, Unit
 from gammapy.utils.regions import SphericalCircleSkyRegion
@@ -73,9 +73,6 @@ class ObservationTable(Table):
         )
         table["POINTING"] = SkyCoord([], [], unit=u.deg, frame="icrs")
         table["POINTING"].info.description = "Observation pointing"
-
-        table["LOCATION"] = EarthLocation.from_geodetic([], [], [])
-        table["LOCATION"].info.description = "Observation observatory location"
 
         table["TSTART"] = Time([], scale="tt", format="mjd")
         table["TSTART"].info.description = "Observation start time"
