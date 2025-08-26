@@ -30,7 +30,7 @@ an interface similar to the Fit class. For now, the ``Sampler`` relies on the ``
 A detailed tutorial is provided.
 
 Flux sensitivity can now be computed by the various flux estimator classes such as `~gammapy.estimators.FluxPointsEstimator`,
-with the ``"sensitivity"`` option. The calculation is based on the Asimov dataset following the method described in `~gammapy.estimator.ParameterSensitivityEstimator`.
+with the ``"sensitivity"`` option. The calculation is based on the Asimov dataset following the method described in `~gammapy.estimators.ParameterSensitivityEstimator`.
 
 
 There has been significant code cleanup and restructuring. They should not break user codes
@@ -46,7 +46,7 @@ undergoing re-structuring efforts:
 - The separation of the internal DL3 data model from GADF specification is close to being over. In particular,
   the `~gammapy.data.EventList` internal table does no longer follow the GADF structure now.
 - The restructuring of statistics and `Dataset` has started with the addition of ``FitStatistic`` classes 
-  and a ``FIT_STATISTIC_REGISTRY`` to allow configuration of the statistic on a dataset.
+  and a registry to allow configuration of the statistic on a dataset.
 
 Significant effort has been put in cleaning up the documentation and re-organising the tutorial structure.
 
