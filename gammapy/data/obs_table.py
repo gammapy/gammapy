@@ -135,6 +135,11 @@ class ObservationTable(Table):
         return ObservationTableReader(hdu, checksum).read(filename, **kwargs)
 
     @property
+    def pointing(self):
+        """Pointing positions in ICRS as a `~astropy.coordinates.SkyCoord` object."""
+        return self["POINTING"]
+
+    @property
     def pointing_radec(self):
         """Pointing positions in ICRS as a `~astropy.coordinates.SkyCoord` object."""
         return SkyCoord(self["RA_PNT"], self["DEC_PNT"], unit="deg", frame="icrs")
@@ -169,7 +174,7 @@ class ObservationTable(Table):
 
         Parameters
         ----------
-        obs_id : str or list of str
+        obs_id : list of str
             Observation ids.
         """
         try:
@@ -307,7 +312,7 @@ class ObservationTable(Table):
             Observation table after selection.
         """
         region = SphericalCircleSkyRegion(center=center, radius=radius)
-        mask = region.contains(self.pointing_radec)
+        mask = region.contains(self.pointing)
         if inverted:
             mask = np.invert(mask)
         return self[mask]
