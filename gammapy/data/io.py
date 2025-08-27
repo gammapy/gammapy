@@ -89,7 +89,6 @@ class ObservationTableReader:
         # Required names to fill internal table format, for GADF v.0.2, will be extended after checking POINTING. Similar to PR#5954.
         required_names_on_disk = [
             "OBS_ID",
-            "OBJECT",
             "TSTART",
             "TSTOP",
         ]
@@ -157,7 +156,6 @@ class ObservationTableReader:
         #             )  # looked into gammapy/workflow/core.py
 
         obs_id = table_disk["OBS_ID"]
-        object = table_disk["OBJECT"]
 
         if "RA_PNT" in required_names_on_disk:
             pointing = skycoord_from_dict(
@@ -188,16 +186,25 @@ class ObservationTableReader:
         tstop = time_ref + Quantity(table_disk["TSTOP"].astype("float64"), time_unit)
         # like in event_list.py, l.201, commit: 08c6f6a
 
-        new_table = Table(
-            {
-                "OBS_ID": obs_id,
-                "OBJECT": object,
-                "POINTING": pointing,
-                "TSTART": tstart,
-                "TSTOP": tstop,
-            },
-            meta=meta,
-        )
+        if have_pointing:
+            new_table = Table(
+                {
+                    "OBS_ID": obs_id,
+                    "POINTING": pointing,
+                    "TSTART": tstart,
+                    "TSTOP": tstop,
+                },
+                meta=meta,
+            )
+        else:
+            new_table = Table(
+                {
+                    "OBS_ID": obs_id,
+                    "TSTART": tstart,
+                    "TSTOP": tstop,
+                },
+                meta=meta,
+            )
 
         # Load optional columns, whose names are not already processed, automatically into internal table.
         opt_names = set(names_disk).difference(required_names_on_disk)

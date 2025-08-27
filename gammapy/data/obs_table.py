@@ -66,14 +66,7 @@ class ObservationTable(Table):
                     unit=None,
                     description="Observation ID",
                     dtype=str,
-                ),
-                Column(
-                    [],
-                    name="OBJECT",
-                    unit=None,
-                    description="Observation object name",
-                    dtype=str,
-                ),
+                )
             ]
         )
         table["POINTING"] = SkyCoord([], [], unit=u.deg, frame="icrs")
