@@ -137,11 +137,13 @@ class ObservationTable(Table):
         return self["POINTING"]
 
     @property
+    @deprecated("2.1")
     def pointing_radec(self):
         """Pointing positions in ICRS as a `~astropy.coordinates.SkyCoord` object."""
         return SkyCoord(self["RA_PNT"], self["DEC_PNT"], unit="deg", frame="icrs")
 
     @property
+    @deprecated("2.1")
     def pointing_galactic(self):
         """Pointing positions in Galactic coordinates as a `~astropy.coordinates.SkyCoord` object."""
         return SkyCoord(
