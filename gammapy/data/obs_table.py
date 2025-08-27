@@ -46,7 +46,7 @@ class ObservationTable(Table):
         # Init with basic reference table, like suggested by @registerrier.
         if table is None:
             table = self._reference_table(have_pointing)
-        table = self._validate_table(table)
+        table = self._validate_table(table, have_pointing)
         super().__init__(data=table, **kwargs)
 
     @staticmethod
@@ -84,7 +84,7 @@ class ObservationTable(Table):
         return table
 
     @staticmethod
-    def _validate_table(table):
+    def _validate_table(table, have_pointing):
         """taken from event_list.py and adapted, code by @registerrier."""
         """Checks that the input table follows the gammapy internal model.
         
@@ -98,7 +98,7 @@ class ObservationTable(Table):
                 f"ObservationTable expects astropy Table, got {type(table)} instead."
             )
 
-        reference_table = ObservationTable._reference_table()
+        reference_table = ObservationTable._reference_table(have_pointing)
         missing_columns = set(reference_table.colnames).difference(table.colnames)
         if len(missing_columns) > 0:
             raise KeyError(
