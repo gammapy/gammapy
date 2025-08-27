@@ -99,26 +99,52 @@ class ObservationTableReader:
         # Get colnames of disk_table
         names_disk = table_disk.colnames
 
-        # Check which info is given for POINTING
-        # Used commit 16ce9840f38bea55982d2cd986daa08a3088b434 by @registerrier
-        if "OBS_MODE" in names_disk:
-            # like in data_store.py:
-            if table_disk["OBS_MODE"] == "DRIFT":
-                required_names_on_disk.append("ALT_PNT")
-                required_names_on_disk.append("AZ_PNT")
+        # https://stackoverflow.com/questions/74412503/cannot-access-local-variable-a-where-it-is-not-associated-with-a-value-but used for debugging
+        # location = earth_location_from_dict(
+        #     {
+        #         "GEOLON": float(meta["GEOLON"]),
+        #         "GEOLAT": float(meta["GEOLAT"]),
+        #         "ALTITUDE": float(meta["ALTITUDE"]),
+        #     }
+        # )
+
+        # Find instrument from location and save it in meta.
+        have_pointing = False
+        meta["INSTRUME"] = "UNKNOWN"  # if not found, UNKNOWN.
+        for instrument in observatory_locations.keys():
+            # Ideally compare if observatory_locations[instrument] == location.
+            loc = earth_location_to_dict(observatory_locations[instrument])
+            tol = 1e-5
+            if float(meta["GEOLON"]) < loc["GEOLON"] * 1 + tol:
+                if float(meta["GEOLON"]) > loc["GEOLON"] * 1 - tol:
+                    meta["INSTRUME"] = instrument
+                    break
+        if meta["INSTRUME"] not in ["hawc", "swgo", "fermi", "km3net"]:
+            have_pointing = True
+
+        if have_pointing:
+            # Check which info is given for POINTING
+            # Used commit 16ce9840f38bea55982d2cd986daa08a3088b434 by @registerrier
+            if "OBS_MODE" in names_disk:
+                # like in data_store.py:
+                if table_disk["OBS_MODE"] == "DRIFT":
+                    required_names_on_disk.append("ALT_PNT")
+                    required_names_on_disk.append("AZ_PNT")
+                else:
+                    required_names_on_disk.append("RA_PNT")
+                    required_names_on_disk.append("DEC_PNT")
             else:
-                required_names_on_disk.append("RA_PNT")
-                required_names_on_disk.append("DEC_PNT")
-        else:
-            # if "OBS_MODE" not given, decide based on what is given, RADEC or ALTAZ
-            if "RA_PNT" in names_disk:
-                required_names_on_disk.append("RA_PNT")
-                required_names_on_disk.append("DEC_PNT")
-            elif "ALT_PNT" in names_disk:
-                required_names_on_disk.append("ALT_PNT")
-                required_names_on_disk.append("AZ_PNT")
-            else:
-                raise RuntimeError("Neither RADEC nor ALTAZ is given in table on disk!")
+                # if "OBS_MODE" not given, decide based on what is given, RADEC or ALTAZ
+                if "RA_PNT" in names_disk:
+                    required_names_on_disk.append("RA_PNT")
+                    required_names_on_disk.append("DEC_PNT")
+                elif "ALT_PNT" in names_disk:
+                    required_names_on_disk.append("ALT_PNT")
+                    required_names_on_disk.append("AZ_PNT")
+                else:
+                    raise RuntimeError(
+                        "Neither RADEC nor ALTAZ is given in table on disk!"
+                    )
 
         # Used: aeb1ea01e60e1f02c5fb59f50141c81e0b2fb8f6:
         missing_names = set(required_names_on_disk).difference(
@@ -151,25 +177,6 @@ class ObservationTableReader:
                 frame="altaz",
                 ext="PNT",
             )
-        # https://stackoverflow.com/questions/74412503/cannot-access-local-variable-a-where-it-is-not-associated-with-a-value-but used for debugging
-        # location = earth_location_from_dict(
-        #     {
-        #         "GEOLON": float(meta["GEOLON"]),
-        #         "GEOLAT": float(meta["GEOLAT"]),
-        #         "ALTITUDE": float(meta["ALTITUDE"]),
-        #     }
-        # )
-
-        # Find instrument from location and save it in meta.
-        meta["INSTRUME"] = "UNKNOWN"  # if not found, UNKNOWN.
-        for instrument in observatory_locations.keys():
-            # Ideally compare if observatory_locations[instrument] == location.
-            loc = earth_location_to_dict(observatory_locations[instrument])
-            tol = 1e-5
-            if float(meta["GEOLON"]) < loc["GEOLON"] * 1 + tol:
-                if float(meta["GEOLON"]) > loc["GEOLON"] * 1 - tol:
-                    meta["INSTRUME"] = instrument
-                    break
 
         # from @properties "time_ref", "time_start", "time_stop"
         time_ref = time_ref_from_dict(meta)
@@ -197,7 +204,7 @@ class ObservationTableReader:
         for name in opt_names:  # add column-wise all optional column-data present in file, independent of format.
             new_table.add_column(table_disk[name])
 
-        return ObservationTable(table=new_table, meta=meta)
+        return ObservationTable(table=new_table, meta=meta, have_pointing=have_pointing)
 
     @staticmethod
     def from_gadf03_hdu(obs_hdu):

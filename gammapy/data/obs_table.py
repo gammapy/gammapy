@@ -29,7 +29,7 @@ class ObservationTable(Table):
     # data release 1 (HESS DL3 DR1, H.E.S.S. collaboration, 2018).
     """
 
-    def __init__(self, table=None, **kwargs):
+    def __init__(self, table=None, have_pointing=False, **kwargs):
         """Constructor for internal observation table.
 
          Parameters
@@ -45,13 +45,18 @@ class ObservationTable(Table):
 
         # Init with basic reference table, like suggested by @registerrier.
         if table is None:
-            table = self._reference_table()
+            table = self._reference_table(have_pointing)
         table = self._validate_table(table)
         super().__init__(data=table, **kwargs)
 
     @staticmethod
-    def _reference_table():
-        """Definition of internal observation table model in form of reference table object."""
+    def _reference_table(have_pointing=False):
+        """Definition of internal observation table model in form of reference table object.
+
+        Parameters
+        ----------
+        have_pointing: 'bool'
+            Flag indicating, if pointing is mandatory or removed."""
 
         table = Table(
             [
@@ -80,12 +85,21 @@ class ObservationTable(Table):
         table["TSTOP"] = Time([], scale="tt", format="mjd")
         table["TSTOP"].info.description = "Observation end time"
 
+        if have_pointing == False:
+            table.remove_column("POINTING")
+
         return table
 
     @staticmethod
     def _validate_table(table):
         """taken from event_list.py and adapted, code by @registerrier."""
-        """Checks that the input table follows the gammapy internal model."""
+        """Checks that the input table follows the gammapy internal model.
+        
+        Parameters
+        ----------
+        table : `ObservationTable'
+            Table to validate."""
+
         if not isinstance(table, Table):
             raise TypeError(
                 f"ObservationTable expects astropy Table, got {type(table)} instead."
