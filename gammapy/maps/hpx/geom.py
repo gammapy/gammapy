@@ -219,7 +219,7 @@ class HpxGeom(Geom):
         else:
             return ravel_hpx_index(idx_local, self.npix)
 
-    def cutout(self, position, width, **kwargs):
+    def cutout(self, position, width):
         """Create a cutout around a given position.
 
         Parameters
