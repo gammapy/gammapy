@@ -120,7 +120,7 @@ class ObservationTable(Table):
         return table
 
     @classmethod
-    def read(cls, filename, hdu="OBS_INDEX", checksum=False, **kwargs):
+    def read(cls, filename, checksum=False, **kwargs):
         """Read from FITS file.
 
         Format specification: :ref:`gadf0.2/0.3:obs-index`
@@ -129,14 +129,12 @@ class ObservationTable(Table):
         ----------
         filename : `pathlib.Path`, str
             Filename
-        hdu : str
-            Name of observation-index HDU. Default is "OBS_INDEX".
         checksum : bool
             If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
         """
         from gammapy.data.io import ObservationTableReader
 
-        return ObservationTableReader(hdu, checksum).read(filename, **kwargs)
+        return ObservationTableReader(checksum).read(filename, **kwargs)
 
     @property
     def pointing(self):

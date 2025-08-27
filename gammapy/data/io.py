@@ -28,8 +28,7 @@ class ObservationTableReader:
         If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
     """
 
-    def __init__(self, hdu="OBS_INDEX", checksum=False):
-        self.hdu = hdu
+    def __init__(self, checksum=False):
         self.checksum = checksum
 
     @staticmethod
@@ -39,7 +38,7 @@ class ObservationTableReader:
         hduvers = obs_hdu.header.get("HDUVERS", "unknown")
         return [hduclass.lower(), hduvers.lower()]
 
-    def read(self, filename, format="gadf0.3"):
+    def read(self, filename, format="gadf0.3", hdu=None):
         """Read ObservationTable from file.
         For now, only gadf 0.2 reader implemented and called for both gadf 0.2 and gadf 0.3.
 
@@ -54,7 +53,11 @@ class ObservationTableReader:
         filename = make_path(filename)
 
         with fits.open(filename) as hdulist:
-            obs_hdu = hdulist[self.hdu]
+            # In case of hdu specification in kwarg, use it, otherwise assume, HDU has only obs-index-table.
+            if hdu is not None:
+                obs_hdu = hdulist[hdu]
+            else:
+                obs_hdu = hdulist
 
             if self.checksum:
                 if obs_hdu.verify_checksum() != 1:
