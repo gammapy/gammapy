@@ -15,6 +15,7 @@ from gammapy.utils.testing import Checker
 from .hdu_index_table import HDUIndexTable
 from .obs_table import ObservationTable, ObservationTableChecker
 from .observations import Observation, ObservationChecker, Observations
+from astropy.table import Table
 
 __all__ = ["DataStore"]
 
@@ -787,7 +788,7 @@ class DataStoreMaker:
             time_rows.append(time_row)
 
         names = list(rows[0].keys())
-        table = ObservationTable(rows=rows, names=names)
+        table = ObservationTable(Table(rows=rows, names=names))
 
         m = table.meta
         if not tu.unique_time_info(time_rows):
