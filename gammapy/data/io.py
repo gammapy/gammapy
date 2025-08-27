@@ -41,6 +41,7 @@ class ObservationTableReader:
 
     def read(self, filename, format="gadf0.3"):
         """Read ObservationTable from file.
+        For now, only gadf 0.2 reader implemented and called for both gadf 0.2 and gadf 0.3.
 
         Parameters
         ----------
@@ -73,7 +74,7 @@ class ObservationTableReader:
                 if version == "0.2":
                     return self.from_gadf02_hdu(obs_hdu)
                 elif version == "0.3":
-                    return self.from_gadf03_hdu(obs_hdu)
+                    return self.from_gadf02_hdu(obs_hdu)
                 else:
                     raise ValueError(f"Unknown version :{version}")
             else:
@@ -205,15 +206,6 @@ class ObservationTableReader:
             new_table.add_column(table_disk[name])
 
         return ObservationTable(table=new_table, meta=meta, have_pointing=have_pointing)
-
-    @staticmethod
-    def from_gadf03_hdu(obs_hdu):
-        """Create ObservationTable from gadf0.3 HDU."""
-        table_disk = Table.read(obs_hdu)  # table_disk !
-        # meta = ObservationMetaData.from_header(table.meta)
-        # print(meta)
-        return table_disk
-        # return ObservationTable(table=table, meta=meta)
 
 
 class EventListReader:
