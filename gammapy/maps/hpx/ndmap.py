@@ -387,7 +387,7 @@ class HpxNDMap(HpxMap):
         """Interpolate map values at the given pixel coordinates."""
         raise NotImplementedError
 
-    def cutout(self, position, width):
+    def cutout(self, position, width, *args, **kwargs):
         """Create a cutout around a given position.
 
         Parameters
