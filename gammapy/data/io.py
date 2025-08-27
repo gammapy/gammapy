@@ -86,15 +86,15 @@ class ObservationTableReader:
         table_disk = Table.read(obs_hdu)
         meta = table_disk.meta
 
-        # Required names to fill internal table format, for GADF v.0.2, will be extended after checking POINTING. Similar to PR#5954.
+        names_disk = table_disk.colnames
+
+        # Mandatory names to fill internal table format from GADF v.0.2, will be extended after checking POINTING.
+        # Subset of: https://gamma-astro-data-formats.readthedocs.io/en/v0.2/data_storage/obs_index/index.html#required-columns
         required_names_on_disk = [
             "OBS_ID",
             "TSTART",
             "TSTOP",
         ]
-
-        # Get colnames of disk_table
-        names_disk = table_disk.colnames
 
         # https://stackoverflow.com/questions/74412503/cannot-access-local-variable-a-where-it-is-not-associated-with-a-value-but used for debugging
         # location = earth_location_from_dict(
@@ -151,9 +151,9 @@ class ObservationTableReader:
         )
         if len(missing_names) != 0:
             raise RuntimeError(
-                f"Not all columns required for GADF v.0.2 were found in file. Missing: {missing_names}"
+                f"Not all columns required to read from GADF v.0.2 were found in file. Missing: {missing_names}"
             )
-        #             )  # looked into gammapy/workflow/core.py
+        # looked into gammapy/workflow/core.py
 
         obs_id = table_disk["OBS_ID"]
 
@@ -206,9 +206,8 @@ class ObservationTableReader:
                 meta=meta,
             )
 
-        # Load optional columns, whose names are not already processed, automatically into internal table.
         opt_names = set(names_disk).difference(required_names_on_disk)
-        for name in opt_names:  # add column-wise all optional column-data present in file, independent of format.
+        for name in opt_names:
             new_table.add_column(table_disk[name])
 
         return ObservationTable(table=new_table, meta=meta, have_pointing=have_pointing)
