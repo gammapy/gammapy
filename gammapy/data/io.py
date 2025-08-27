@@ -90,9 +90,6 @@ class ObservationTableReader:
         required_names_on_disk = [
             "OBS_ID",
             "OBJECT",
-            "GEOLON",
-            "GEOLAT",
-            "ALTITUDE",
             "TSTART",
             "TSTOP",
         ]
@@ -109,19 +106,21 @@ class ObservationTableReader:
         #     }
         # )
 
-        # Find instrument from location and save it in meta.
+        # If observatory location is given, try to find instrument name and add to meta.
+        # If instrument pointing instrument, POINTING is mandatory.
         have_pointing = False
         meta["INSTRUME"] = "UNKNOWN"  # if not found, UNKNOWN.
-        for instrument in observatory_locations.keys():
-            # Ideally compare if observatory_locations[instrument] == location.
-            loc = earth_location_to_dict(observatory_locations[instrument])
-            tol = 1e-5
-            if float(meta["GEOLON"]) < loc["GEOLON"] * 1 + tol:
-                if float(meta["GEOLON"]) > loc["GEOLON"] * 1 - tol:
-                    meta["INSTRUME"] = instrument
-                    break
-        if meta["INSTRUME"] not in ["hawc", "swgo", "fermi", "km3net"]:
-            have_pointing = True
+        if "GEOLON" in meta.keys():
+            for instrument in observatory_locations.keys():
+                # Ideally compare if observatory_locations[instrument] == location.
+                loc = earth_location_to_dict(observatory_locations[instrument])
+                tol = 1e-5
+                if float(meta["GEOLON"]) < loc["GEOLON"] * 1 + tol:
+                    if float(meta["GEOLON"]) > loc["GEOLON"] * 1 - tol:
+                        meta["INSTRUME"] = instrument
+                        break
+            if meta["INSTRUME"] not in ["hawc", "swgo", "fermi", "km3net"]:
+                have_pointing = True
 
         if have_pointing:
             # Check which info is given for POINTING
