@@ -26,8 +26,8 @@ OBSERVATION_METADATA_FITS_KEYS = {
         },
     },
     "deadtime_fraction": {
-        "input": lambda v: 1 - v["DEADC"],  # MJDREFI
-        "output": lambda v: {"DEADC": 1 - v},  # MJDREFI
+        "input": lambda v: 1 - v["DEADC"],
+        "output": lambda v: {"DEADC": 1 - v},
     },
 }
 
