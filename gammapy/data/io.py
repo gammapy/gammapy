@@ -178,30 +178,32 @@ class ObservationTableReader:
         #     new_table["POINTING"] = pointing
 
         # from @properties "time_ref", "time_start", "time_stop"
-        if "TSTART" in names_disk:
+        if "TSTART" in names_disk or "TSTOP" in names_disk:
             if "MJDREFI" in meta:  # mandatory!!!
                 if "TIMEUNIT" in meta.keys():
                     time_unit = meta["TIMEUNIT"]
                 else:
                     time_unit = "s"
                 time_ref = time_ref_from_dict(meta)
-                tstart = time_ref + Quantity(
-                    table_disk["TSTART"].astype("float64"), time_unit
-                )
-                tstop = time_ref + Quantity(
-                    table_disk["TSTOP"].astype("float64"), time_unit
-                )
-                new_table["TSTART"] = tstart
+                if "TSTART" in names_disk:
+                    tstart = time_ref + Quantity(
+                        table_disk["TSTART"].astype("float64"), time_unit
+                    )
+                    new_table["TSTART"] = tstart
+                    removed_names.append("TSTART")
+                if "TSTOP" in names_disk:
+                    tstop = time_ref + Quantity(
+                        table_disk["TSTOP"].astype("float64"), time_unit
+                    )
                 new_table["TSTOP"] = tstop
-                removed_names.append("TSTART")
                 removed_names.append("TSTOP")
             else:
                 raise RuntimeError(
-                    "Could not found metainformation to calculate reference time."
+                    "Metadata of table on disk does not contain mandatory keywords to calculate reference time."
                 )
+
         # like in event_list.py, l.201, commit: 08c6f6a
-        print(removed_names)
-        # opt_names = set(names_disk).difference(required_names_on_disk)
+
         for name in names_disk:
             if name not in removed_names:
                 new_table.add_column(table_disk[name])
