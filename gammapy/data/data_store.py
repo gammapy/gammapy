@@ -788,11 +788,7 @@ class DataStoreMaker:
             time_rows.append(time_row)
 
         names = list(rows[0].keys())
-        table = ObservationTable.from_gadf02_table(
-            Table(rows=rows, names=names)
-        )  # ObservationTable(Table(rows=rows, names=names))
-
-        m = table.meta
+        m = {}
         if not tu.unique_time_info(time_rows):
             raise RuntimeError(
                 "The time information in the EVENT header are not consistent between observations"
@@ -805,6 +801,10 @@ class DataStoreMaker:
         m["HDUVERS"] = "0.2"
         m["HDUCLAS1"] = "INDEX"
         m["HDUCLAS2"] = "OBS"
+
+        table = ObservationTable.from_gadf02_table(
+            Table(rows=rows, names=names, meta=m)
+        )
 
         return table
 
