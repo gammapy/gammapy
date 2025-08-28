@@ -65,7 +65,10 @@ class ObservationTableReader:
                         f"Checksum verification failed for HDU {self.hdu} of {filename}.",
                         UserWarning,
                     )
+            # Read Table as is on disk.
+            table_disk = Table.read(obs_hdu)
 
+            # Convert table on disk, by calling converter for specific format.
             if format is None:
                 formatname = self.identify_format_from_hdu(obs_hdu)[0]
                 version = self.identify_format_from_hdu(obs_hdu)[1]
@@ -75,20 +78,30 @@ class ObservationTableReader:
 
             if formatname == "gadf" or formatname == "ogip":
                 if version == "0.2":
-                    return self.from_gadf02_hdu(obs_hdu)
+                    return self.from_gadf02_table(table_disk)
                 elif version == "0.3":
-                    return self.from_gadf02_hdu(obs_hdu)
+                    return self.from_gadf02_table(table_disk)
                 else:
                     raise ValueError(f"Unknown version :{version}")
             else:
                 raise ValueError(f"Unknown format :{format}")
 
     @staticmethod
-    def from_gadf02_hdu(obs_hdu):
-        """Create ObservationTable from gadf0.2 HDU."""
-        table_disk = Table.read(obs_hdu)
-        names_disk = table_disk.colnames
+    def from_gadf02_table(table_disk):
+        """Convert gadf 0.2 observation table into internal table model.
 
+        Parameters
+        ----------
+        table_disk : `~astropy.Table.table`
+            Table on disk, in gadf 0.2 format.
+
+        Returns
+        -------
+        ObservationTable : `~gammapy.data.ObservationTable`
+            ObservationTable in internal data format.
+        """
+
+        names_disk = table_disk.colnames
         meta = table_disk.meta
 
         # Mandatory names to fill internal table format from GADF v.0.2.
