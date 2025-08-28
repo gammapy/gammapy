@@ -552,8 +552,8 @@ class ObservationTableChecker(Checker):
         _col(name="OBS_ID", unit=""),
         _col(name="RA_PNT", unit="deg"),
         _col(name="DEC_PNT", unit="deg"),
-        _col(name="TSTART", unit="s"),
-        _col(name="TSTOP", unit="s"),
+        _col(name="TSTART", unit=""),
+        _col(name="TSTOP", unit=""),
     ]
 
     def __init__(self, obs_table):
@@ -587,7 +587,8 @@ class ObservationTableChecker(Checker):
             if name not in t.colnames:
                 yield self._record(level="error", msg=f"Missing table column: {name!r}")
             else:
-                if Unit(unit) != (t[name].unit or ""):
-                    yield self._record(
-                        level="error", msg=f"Invalid unit for column: {name!r}"
-                    )
+                if name not in ["TSTART", "TSTOP"]:
+                    if Unit(unit) != (t[name].unit or ""):
+                        yield self._record(
+                            level="error", msg=f"Invalid unit for column: {name!r}"
+                        )
