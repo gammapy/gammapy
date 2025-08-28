@@ -10,7 +10,6 @@ from gammapy.utils.random import get_random_state, sample_sphere
 from gammapy.utils.testing import requires_data
 from gammapy.utils.time import time_ref_from_dict, time_relative_to_ref
 from astropy.table import Table
-from gammapy.data.io import ObservationTableReader
 
 
 def make_test_observation_table(
@@ -210,7 +209,7 @@ def make_test_observation_table(
 def test_basics():
     random_state = np.random.RandomState(seed=0)
     obs_table = make_test_observation_table(n_obs=10, random_state=random_state)
-    obs_table = ObservationTableReader.from_gadf02_table(obs_table)
+    obs_table = ObservationTable.from_gadf02_table(obs_table)
     assert obs_table.summary().startswith("Observation table")
 
     filtered = obs_table.select_obs_id(1)
@@ -224,7 +223,7 @@ def test_select_parameter_box():
     # create random observation table
     random_state = np.random.RandomState(seed=0)
     obs_table = make_test_observation_table(n_obs=10, random_state=random_state)
-    obs_table = ObservationTableReader.from_gadf02_table(obs_table)
+    obs_table = ObservationTable.from_gadf02_table(obs_table)
     # select some pars and check the corresponding values in the columns
 
     # test box selection in obs_id
@@ -273,7 +272,7 @@ def test_select_time_box():
         use_abs_time=False,
         random_state=random_state,
     )
-    obs_table_time = ObservationTableReader.from_gadf02_table(obs_table_time)
+    obs_table_time = ObservationTable.from_gadf02_table(obs_table_time)
     # test box selection in time: (time_start, time_stop) within value_range
     value_range = Time(["2012-01-01T01:00:00", "2012-01-01T02:00:00"])
     selection = dict(type="time_box", time_range=value_range)
@@ -297,7 +296,7 @@ def test_select_time_box():
 def test_select_sky_regions():
     random_state = np.random.RandomState(seed=0)
     obs_table = make_test_observation_table(n_obs=100, random_state=random_state)
-    obs_table = ObservationTableReader.from_gadf02_table(obs_table)
+    obs_table = ObservationTable.from_gadf02_table(obs_table)
 
     selection = dict(
         type="sky_circle",

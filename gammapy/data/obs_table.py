@@ -9,6 +9,12 @@ from gammapy.utils.testing import Checker
 from astropy.time import Time
 from astropy import units as u
 from gammapy.utils.deprecation import deprecated
+from gammapy.data import observatory_locations
+from gammapy.utils.fits import (
+    skycoord_from_dict,
+    earth_location_to_dict,
+)
+from gammapy.utils.time import time_ref_from_dict
 
 __all__ = ["ObservationTable"]
 
@@ -131,6 +137,137 @@ class ObservationTable(Table):
         from gammapy.data.io import ObservationTableReader
 
         return ObservationTableReader(checksum).read(filename, **kwargs)
+
+    @classmethod
+    def from_gadf02_table(cls, table_disk):
+        """Convert gadf 0.2 observation table into internal table model.
+
+        Parameters
+        ----------
+        table_disk : `~astropy.Table.table`
+            Table on disk, in gadf 0.2 format.
+
+        Returns
+        -------
+        ObservationTable : `~gammapy.data.ObservationTable`
+            ObservationTable in internal data format.
+        """
+
+        names_disk = table_disk.colnames
+        meta = table_disk.meta
+
+        # Mandatory names to fill internal table format from GADF v.0.2.
+        # Subset of: https://gamma-astro-data-formats.readthedocs.io/en/v0.2/data_storage/obs_index/index.html#required-columns
+        required_names_on_disk = [
+            "OBS_ID",
+        ]
+        # Used: aeb1ea01e60e1f02c5fb59f50141c81e0b2fb8f6:
+        missing_names = set(required_names_on_disk).difference(
+            names_disk + list(meta.keys())
+        )
+        if len(missing_names) != 0:
+            raise RuntimeError(
+                f"Not all columns required to read from GADF v.0.2 were found in file. Missing: {missing_names}"
+            )  # looked into gammapy/workflow/core.py
+        # Names to be removed, to handle optional columns.
+        removed_names = []
+
+        # Create new table with mandatory column OBS_ID.
+        obs_id = table_disk["OBS_ID"]
+        new_table = Table({"OBS_ID": obs_id}, meta=meta)
+        removed_names.append("OBS_ID")
+
+        # If observatory location is given, try to find instrument name and add to meta.
+        # https://stackoverflow.com/questions/74412503/cannot-access-local-variable-a-where-it-is-not-associated-with-a-value-but used for debugging
+        # location = earth_location_from_dict(
+        #     {
+        #         "GEOLON": float(meta["GEOLON"]),
+        #         "GEOLAT": float(meta["GEOLAT"]),
+        #         "ALTITUDE": float(meta["ALTITUDE"]),
+        #     }
+        # )
+
+        # Try to add Instrument to Meta if deducible from observatory_location.
+        meta["INSTRUME"] = "UNKNOWN"  # if not found, UNKNOWN.
+        if "GEOLON" in meta.keys():
+            for instrument in observatory_locations.keys():
+                # Ideally compare if observatory_locations[instrument] == location.
+                loc = earth_location_to_dict(observatory_locations[instrument])
+                tol = 1e-5
+                if float(meta["GEOLON"]) < loc["GEOLON"] * 1 + tol:
+                    if float(meta["GEOLON"]) > loc["GEOLON"] * 1 - tol:
+                        meta["INSTRUME"] = instrument
+                        break
+
+        # Used commit 16ce9840f38bea55982d2cd986daa08a3088b434 by @registerrier
+
+        # Assume observation is pointed.
+        pointing = True  # Assumption
+        # Check if DRIFT Mode.
+        if "OBS_MODE" in names_disk:
+            # like in data_store.py:
+            if table_disk["OBS_MODE"] in ["DRIFT", "WOBBLE", "RASTER", "SLEW", "SCAN"]:
+                pointing = False
+        # For presumably pointed observations construct POINTING if possible:
+        if pointing:
+            if "RA_PNT" in names_disk and "DEC_PNT" in names_disk:
+                pointing = skycoord_from_dict(
+                    {
+                        "RA_PNT": table_disk["RA_PNT"],
+                        "DEC_PNT": table_disk["DEC_PNT"],
+                    },
+                    frame="icrs",
+                    ext="PNT",
+                )
+                removed_names.append("RA_PNT")
+                removed_names.append("DEC_PNT")
+                new_table["POINTING"] = pointing
+
+        # elif "ALT_PNT" in required_names_on_disk:
+        #     pointing = skycoord_from_dict(
+        #         {
+        #             "ALT_PNT": table_disk["ALT_PNT"],
+        #             "AZ_PNT": table_disk["AZ_PNT"],
+        #         },
+        #         frame="altaz",
+        #         ext="PNT",
+        #     )
+        #     removed_names.append("ALT_PNT")
+        #     removed_names.append("AZ_PNT")
+        #     new_table["POINTING"] = pointing
+
+        # from @properties "time_ref", "time_start", "time_stop"
+        if "TSTART" in names_disk or "TSTOP" in names_disk:
+            if "MJDREFI" in meta:  # mandatory!!!
+                if "TIMEUNIT" in meta.keys():
+                    time_unit = meta["TIMEUNIT"]
+                else:
+                    time_unit = "s"
+                time_ref = time_ref_from_dict(meta)
+                if "TSTART" in names_disk:
+                    tstart = time_ref + Quantity(
+                        table_disk["TSTART"].astype("float64"), time_unit
+                    )
+                    new_table["TSTART"] = tstart
+                    removed_names.append("TSTART")
+                if "TSTOP" in names_disk:
+                    tstop = time_ref + Quantity(
+                        table_disk["TSTOP"].astype("float64"), time_unit
+                    )
+                new_table["TSTOP"] = tstop
+                removed_names.append("TSTOP")
+            else:
+                raise RuntimeError(
+                    "Found column TSTART or TSTOP in table on disk, but metadata does not contain mandatory keywords to calculate reference time for conversion to internal model."
+                )
+
+        # like in event_list.py, l.201, commit: 08c6f6a
+
+        for name in names_disk:
+            if name not in removed_names:
+                new_table.add_column(table_disk[name])
+
+        return cls(table=new_table, meta=meta)
 
     @property
     def pointing(self):
