@@ -29,7 +29,7 @@ class ObservationTable(Table):
     # data release 1 (HESS DL3 DR1, H.E.S.S. collaboration, 2018).
     """
 
-    def __init__(self, table=None, have_pointing=False, **kwargs):
+    def __init__(self, table=None, **kwargs):
         """Constructor for internal observation table.
 
          Parameters
@@ -45,18 +45,13 @@ class ObservationTable(Table):
 
         # Init with basic reference table, like suggested by @registerrier.
         if table is None:
-            table = self._reference_table(have_pointing)
-        table = self._validate_table(table, have_pointing)
+            table = self._reference_table()
+        table = self._validate_table(table)
         super().__init__(data=table, **kwargs)
 
     @staticmethod
-    def _reference_table(have_pointing=False):
-        """Definition of internal observation table model in form of reference table object.
-
-        Parameters
-        ----------
-        have_pointing: 'bool'
-            Flag indicating, if pointing is mandatory or removed."""
+    def _reference_table():
+        """Definition of internal observation table model in form of reference table object."""
 
         table = Table(
             [
@@ -78,13 +73,10 @@ class ObservationTable(Table):
         table["TSTOP"] = Time([], scale="tt", format="mjd")
         table["TSTOP"].info.description = "Observation end time"
 
-        if have_pointing == False:
-            table.remove_column("POINTING")
-
         return table
 
     @staticmethod
-    def _validate_table(table, have_pointing):
+    def _validate_table(table):
         """taken from event_list.py and adapted, code by @registerrier."""
         """Checks that the input table follows the gammapy internal model.
         
@@ -98,24 +90,28 @@ class ObservationTable(Table):
                 f"ObservationTable expects astropy Table, got {type(table)} instead."
             )
 
-        reference_table = ObservationTable._reference_table(have_pointing)
-        missing_columns = set(reference_table.colnames).difference(table.colnames)
+        reference_table = ObservationTable._reference_table()
+
+        # Only OBS_ID required.
+        missing_columns = set(["OBS_ID"]).difference(table.colnames)
         if len(missing_columns) > 0:
             raise KeyError(
                 f"ObservationTable table invalid: columns {missing_columns} are missing."
             )
 
+        # If more columns available from ref_table, check that valid according to internal model.
         for name in reference_table.colnames:
             check = reference_table[name]
-            if not isinstance(check, Column):
-                if not isinstance(table[name], type(check)):
-                    raise TypeError(f"Column {name} is not a {check} object.")
-            else:
-                if check.dtype != "<U1":  # no unit check if object is a string
-                    if not check.unit.is_equivalent(table[name].unit):
-                        raise u.UnitConversionError(
-                            f"Column {name} is not in {check} unit."
-                        )
+            if name in table.colnames:
+                if not isinstance(check, Column):
+                    if not isinstance(table[name], type(check)):
+                        raise TypeError(f"Column {name} is not a {check} object.")
+                else:
+                    if check.dtype != "<U1":  # no unit check if object is a string
+                        if not check.unit.is_equivalent(table[name].unit):
+                            raise u.UnitConversionError(
+                                f"Column {name} is not in {check} unit."
+                            )
 
         return table
 

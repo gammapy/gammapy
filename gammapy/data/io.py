@@ -95,10 +95,8 @@ class ObservationTableReader:
         # Subset of: https://gamma-astro-data-formats.readthedocs.io/en/v0.2/data_storage/obs_index/index.html#required-columns
         required_names_on_disk = [
             "OBS_ID",
-            "TSTART",
-            "TSTOP",
         ]
-
+        removed_names = []
         # https://stackoverflow.com/questions/74412503/cannot-access-local-variable-a-where-it-is-not-associated-with-a-value-but used for debugging
         # location = earth_location_from_dict(
         #     {
@@ -158,7 +156,10 @@ class ObservationTableReader:
             )
         # looked into gammapy/workflow/core.py
 
+        # Create new table with mandatory column OBS_ID.
         obs_id = table_disk["OBS_ID"]
+        new_table = Table({"OBS_ID": obs_id}, meta=meta)
+        removed_names.append("OBS_ID")
 
         if "RA_PNT" in required_names_on_disk:
             pointing = skycoord_from_dict(
@@ -169,6 +170,9 @@ class ObservationTableReader:
                 frame="icrs",
                 ext="PNT",
             )
+            removed_names.append("RA_PNT")
+            removed_names.append("DEC_PNT")
+            new_table["POINTING"] = pointing
         elif "ALT_PNT" in required_names_on_disk:
             pointing = skycoord_from_dict(
                 {
@@ -178,42 +182,40 @@ class ObservationTableReader:
                 frame="altaz",
                 ext="PNT",
             )
+            removed_names.append("ALT_PNT")
+            removed_names.append("AZ_PNT")
+            new_table["POINTING"] = pointing
 
         # from @properties "time_ref", "time_start", "time_stop"
-        time_ref = time_ref_from_dict(meta)
-        if "TIMEUNIT" in meta.keys():
-            time_unit = meta["TIMEUNIT"]
+        if "MJDREFI" in meta:  # mandatory!!!
+            if "TIMEUNIT" in meta.keys():
+                time_unit = meta["TIMEUNIT"]
+            else:
+                time_unit = "s"
+            time_ref = time_ref_from_dict(meta)
+            if "TSTART" in names_disk:
+                tstart = time_ref + Quantity(
+                    table_disk["TSTART"].astype("float64"), time_unit
+                )
+                tstop = time_ref + Quantity(
+                    table_disk["TSTOP"].astype("float64"), time_unit
+                )
+                new_table["TSTART"] = tstart
+                new_table["TSTOP"] = tstop
+                removed_names.append("TSTART")
+                removed_names.append("TSTOP")
         else:
-            time_unit = "s"
-        tstart = time_ref + Quantity(table_disk["TSTART"].astype("float64"), time_unit)
-        tstop = time_ref + Quantity(table_disk["TSTOP"].astype("float64"), time_unit)
+            raise RuntimeError(
+                "Could not found metainformation to calculate reference time."
+            )
         # like in event_list.py, l.201, commit: 08c6f6a
+        print(removed_names)
+        # opt_names = set(names_disk).difference(required_names_on_disk)
+        for name in names_disk:
+            if name not in removed_names:
+                new_table.add_column(table_disk[name])
 
-        if have_pointing:
-            new_table = Table(
-                {
-                    "OBS_ID": obs_id,
-                    "POINTING": pointing,
-                    "TSTART": tstart,
-                    "TSTOP": tstop,
-                },
-                meta=meta,
-            )
-        else:
-            new_table = Table(
-                {
-                    "OBS_ID": obs_id,
-                    "TSTART": tstart,
-                    "TSTOP": tstop,
-                },
-                meta=meta,
-            )
-
-        opt_names = set(names_disk).difference(required_names_on_disk)
-        for name in opt_names:
-            new_table.add_column(table_disk[name])
-
-        return ObservationTable(table=new_table, meta=meta, have_pointing=have_pointing)
+        return ObservationTable(table=new_table, meta=meta)
 
 
 class EventListReader:
