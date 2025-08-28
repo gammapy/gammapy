@@ -91,12 +91,20 @@ class ObservationTableReader:
 
         names_disk = table_disk.colnames
 
-        # Mandatory names to fill internal table format from GADF v.0.2, will be extended after checking POINTING.
+        # Mandatory names to fill internal table format from GADF v.0.2.
         # Subset of: https://gamma-astro-data-formats.readthedocs.io/en/v0.2/data_storage/obs_index/index.html#required-columns
         required_names_on_disk = [
             "OBS_ID",
         ]
+        # Names to be removed, to handle optional columns.
         removed_names = []
+
+        # Create new table with mandatory column OBS_ID.
+        obs_id = table_disk["OBS_ID"]
+        new_table = Table({"OBS_ID": obs_id}, meta=meta)
+        removed_names.append("OBS_ID")
+
+        # If observatory location is given, try to find instrument name and add to meta.
         # https://stackoverflow.com/questions/74412503/cannot-access-local-variable-a-where-it-is-not-associated-with-a-value-but used for debugging
         # location = earth_location_from_dict(
         #     {
@@ -106,12 +114,7 @@ class ObservationTableReader:
         #     }
         # )
 
-        # Create new table with mandatory column OBS_ID.
-        obs_id = table_disk["OBS_ID"]
-        new_table = Table({"OBS_ID": obs_id}, meta=meta)
-        removed_names.append("OBS_ID")
-
-        # If observatory location is given, try to find instrument name and add to meta.
+        # Try to add Instrument to Meta if deducible from observatory_location.
         meta["INSTRUME"] = "UNKNOWN"  # if not found, UNKNOWN.
         if "GEOLON" in meta.keys():
             for instrument in observatory_locations.keys():
@@ -123,20 +126,17 @@ class ObservationTableReader:
                         meta["INSTRUME"] = instrument
                         break
 
-        # Check which info is given for POINTING
         # Used commit 16ce9840f38bea55982d2cd986daa08a3088b434 by @registerrier
 
         # Assume observation is pointed.
         pointing = True  # Assumption
-
         # Check if DRIFT Mode.
         if "OBS_MODE" in names_disk:
             # like in data_store.py:
             if table_disk["OBS_MODE"] in ["DRIFT", "WOBBLE", "RASTER", "SLEW", "SCAN"]:
                 pointing = False
-
-        # For pointed observations construct POINTING:
-        if pointing is True:
+        # For presumably pointed observations construct POINTING if possible:
+        if pointing:
             if "RA_PNT" in names_disk and "DEC_PNT" in names_disk:
                 pointing = skycoord_from_dict(
                     {
@@ -149,10 +149,6 @@ class ObservationTableReader:
                 removed_names.append("RA_PNT")
                 removed_names.append("DEC_PNT")
                 new_table["POINTING"] = pointing
-            else:
-                raise RuntimeError(
-                    "RA_PNT and DEC_PNT not found in gadf file, but needed for POINTING."
-                )
 
         # Used: aeb1ea01e60e1f02c5fb59f50141c81e0b2fb8f6:
         missing_names = set(required_names_on_disk).difference(
@@ -199,7 +195,7 @@ class ObservationTableReader:
                 removed_names.append("TSTOP")
             else:
                 raise RuntimeError(
-                    "Metadata of table on disk does not contain mandatory keywords to calculate reference time."
+                    "Found column TSTART or TSTOP in table on disk, but metadata does not contain mandatory keywords to calculate reference time for conversion to internal model."
                 )
 
         # like in event_list.py, l.201, commit: 08c6f6a
