@@ -9,11 +9,6 @@ from gammapy.utils.testing import Checker
 from astropy.time import Time
 from astropy import units as u
 from gammapy.utils.deprecation import deprecated
-from gammapy.data import observatory_locations
-from gammapy.utils.fits import (
-    skycoord_from_dict,
-    earth_location_to_dict,
-)
 from gammapy.utils.time import time_ref_from_dict
 
 __all__ = ["ObservationTable"]
@@ -67,11 +62,23 @@ class ObservationTable(Table):
                     unit=None,
                     description="Observation ID",
                     dtype=str,
-                )
+                ),
+                Column(
+                    [],
+                    name="RA_PNT",
+                    unit=u.deg,
+                    description="Observation pointing right ascension",
+                    dtype=float,
+                ),
+                Column(
+                    [],
+                    name="DEC_PNT",
+                    unit=u.deg,
+                    description="Observation pointing declination",
+                    dtype=float,
+                ),
             ]
         )
-        table["POINTING"] = SkyCoord([], [], unit=u.deg, frame="icrs")
-        table["POINTING"].info.description = "Observation pointing"
 
         table["TSTART"] = Time([], scale="tt", format="mjd")
         table["TSTART"].info.description = "Observation start time"
@@ -177,64 +184,7 @@ class ObservationTable(Table):
         new_table = Table({"OBS_ID": obs_id}, meta=meta)
         removed_names.append("OBS_ID")
 
-        # If observatory location is given, try to find instrument name and add to meta.
-        # https://stackoverflow.com/questions/74412503/cannot-access-local-variable-a-where-it-is-not-associated-with-a-value-but used for debugging
-        # location = earth_location_from_dict(
-        #     {
-        #         "GEOLON": float(meta["GEOLON"]),
-        #         "GEOLAT": float(meta["GEOLAT"]),
-        #         "ALTITUDE": float(meta["ALTITUDE"]),
-        #     }
-        # )
-
-        # Try to add Instrument to Meta if deducible from observatory_location.
-        meta["INSTRUME"] = "UNKNOWN"  # if not found, UNKNOWN.
-        if "GEOLON" in meta.keys():
-            for instrument in observatory_locations.keys():
-                # Ideally compare if observatory_locations[instrument] == location.
-                loc = earth_location_to_dict(observatory_locations[instrument])
-                tol = 1e-5
-                if float(meta["GEOLON"]) < loc["GEOLON"] * 1 + tol:
-                    if float(meta["GEOLON"]) > loc["GEOLON"] * 1 - tol:
-                        meta["INSTRUME"] = instrument
-                        break
-
         # Used commit 16ce9840f38bea55982d2cd986daa08a3088b434 by @registerrier
-
-        # Assume observation is pointed.
-        pointing = True  # Assumption
-        # Check if DRIFT Mode.
-        if "OBS_MODE" in names_disk:
-            # like in data_store.py:
-            if table_disk["OBS_MODE"] in ["DRIFT", "WOBBLE", "RASTER", "SLEW", "SCAN"]:
-                pointing = False
-        # For presumably pointed observations construct POINTING if possible:
-        if pointing:
-            if "RA_PNT" in names_disk and "DEC_PNT" in names_disk:
-                pointing = skycoord_from_dict(
-                    {
-                        "RA_PNT": table_disk["RA_PNT"],
-                        "DEC_PNT": table_disk["DEC_PNT"],
-                    },
-                    frame="icrs",
-                    ext="PNT",
-                )
-                removed_names.append("RA_PNT")
-                removed_names.append("DEC_PNT")
-                new_table["POINTING"] = pointing
-
-        # elif "ALT_PNT" in required_names_on_disk:
-        #     pointing = skycoord_from_dict(
-        #         {
-        #             "ALT_PNT": table_disk["ALT_PNT"],
-        #             "AZ_PNT": table_disk["AZ_PNT"],
-        #         },
-        #         frame="altaz",
-        #         ext="PNT",
-        #     )
-        #     removed_names.append("ALT_PNT")
-        #     removed_names.append("AZ_PNT")
-        #     new_table["POINTING"] = pointing
 
         # from @properties "time_ref", "time_start", "time_stop"
         if "TSTART" in names_disk or "TSTOP" in names_disk:
@@ -270,18 +220,11 @@ class ObservationTable(Table):
         return cls(table=new_table, meta=meta)
 
     @property
-    def pointing(self):
-        """Pointing positions in ICRS as a `~astropy.coordinates.SkyCoord` object."""
-        return self["POINTING"]
-
-    @property
-    @deprecated("2.1")
     def pointing_radec(self):
         """Pointing positions in ICRS as a `~astropy.coordinates.SkyCoord` object."""
         return SkyCoord(self["RA_PNT"], self["DEC_PNT"], unit="deg", frame="icrs")
 
     @property
-    @deprecated("2.1")
     def pointing_galactic(self):
         """Pointing positions in Galactic coordinates as a `~astropy.coordinates.SkyCoord` object."""
         return SkyCoord(
@@ -451,7 +394,7 @@ class ObservationTable(Table):
             Observation table after selection.
         """
         region = SphericalCircleSkyRegion(center=center, radius=radius)
-        mask = region.contains(self.pointing)
+        mask = region.contains(self.pointing_radec)
         if inverted:
             mask = np.invert(mask)
         return self[mask]
