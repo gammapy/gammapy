@@ -788,7 +788,9 @@ class DataStoreMaker:
             time_rows.append(time_row)
 
         names = list(rows[0].keys())
-        table = ObservationTable(Table(rows=rows, names=names))
+        table = ObservationTable.from_gadf02_table(
+            Table(rows=rows, names=names)
+        )  # ObservationTable(Table(rows=rows, names=names))
 
         m = table.meta
         if not tu.unique_time_info(time_rows):
