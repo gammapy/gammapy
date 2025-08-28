@@ -106,9 +106,12 @@ class ObservationTableReader:
         #     }
         # )
 
+        # Create new table with mandatory column OBS_ID.
+        obs_id = table_disk["OBS_ID"]
+        new_table = Table({"OBS_ID": obs_id}, meta=meta)
+        removed_names.append("OBS_ID")
+
         # If observatory location is given, try to find instrument name and add to meta.
-        # If instrument pointing instrument, POINTING is mandatory.
-        have_pointing = False
         meta["INSTRUME"] = "UNKNOWN"  # if not found, UNKNOWN.
         if "GEOLON" in meta.keys():
             for instrument in observatory_locations.keys():
@@ -119,32 +122,37 @@ class ObservationTableReader:
                     if float(meta["GEOLON"]) > loc["GEOLON"] * 1 - tol:
                         meta["INSTRUME"] = instrument
                         break
-            if meta["INSTRUME"] not in ["hawc", "swgo", "fermi", "km3net"]:
-                have_pointing = True
 
-        if have_pointing:
-            # Check which info is given for POINTING
-            # Used commit 16ce9840f38bea55982d2cd986daa08a3088b434 by @registerrier
-            if "OBS_MODE" in names_disk:
-                # like in data_store.py:
-                if table_disk["OBS_MODE"] == "DRIFT":
-                    required_names_on_disk.append("ALT_PNT")
-                    required_names_on_disk.append("AZ_PNT")
-                else:
-                    required_names_on_disk.append("RA_PNT")
-                    required_names_on_disk.append("DEC_PNT")
+        # Check which info is given for POINTING
+        # Used commit 16ce9840f38bea55982d2cd986daa08a3088b434 by @registerrier
+
+        # Assume observation is pointed.
+        pointing = True  # Assumption
+
+        # Check if DRIFT Mode.
+        if "OBS_MODE" in names_disk:
+            # like in data_store.py:
+            if table_disk["OBS_MODE"] in ["DRIFT", "WOBBLE", "RASTER", "SLEW", "SCAN"]:
+                pointing = False
+
+        # For pointed observations construct POINTING:
+        if pointing is True:
+            if "RA_PNT" in names_disk and "DEC_PNT" in names_disk:
+                pointing = skycoord_from_dict(
+                    {
+                        "RA_PNT": table_disk["RA_PNT"],
+                        "DEC_PNT": table_disk["DEC_PNT"],
+                    },
+                    frame="icrs",
+                    ext="PNT",
+                )
+                removed_names.append("RA_PNT")
+                removed_names.append("DEC_PNT")
+                new_table["POINTING"] = pointing
             else:
-                # if "OBS_MODE" not given, decide based on what is given, RADEC or ALTAZ
-                if "RA_PNT" in names_disk:
-                    required_names_on_disk.append("RA_PNT")
-                    required_names_on_disk.append("DEC_PNT")
-                elif "ALT_PNT" in names_disk:
-                    required_names_on_disk.append("ALT_PNT")
-                    required_names_on_disk.append("AZ_PNT")
-                else:
-                    raise RuntimeError(
-                        "Neither RADEC nor ALTAZ is given in table on disk!"
-                    )
+                raise RuntimeError(
+                    "RA_PNT and DEC_PNT not found in gadf file, but needed for POINTING."
+                )
 
         # Used: aeb1ea01e60e1f02c5fb59f50141c81e0b2fb8f6:
         missing_names = set(required_names_on_disk).difference(
@@ -156,35 +164,18 @@ class ObservationTableReader:
             )
         # looked into gammapy/workflow/core.py
 
-        # Create new table with mandatory column OBS_ID.
-        obs_id = table_disk["OBS_ID"]
-        new_table = Table({"OBS_ID": obs_id}, meta=meta)
-        removed_names.append("OBS_ID")
-
-        if "RA_PNT" in required_names_on_disk:
-            pointing = skycoord_from_dict(
-                {
-                    "RA_PNT": table_disk["RA_PNT"],
-                    "DEC_PNT": table_disk["DEC_PNT"],
-                },
-                frame="icrs",
-                ext="PNT",
-            )
-            removed_names.append("RA_PNT")
-            removed_names.append("DEC_PNT")
-            new_table["POINTING"] = pointing
-        elif "ALT_PNT" in required_names_on_disk:
-            pointing = skycoord_from_dict(
-                {
-                    "ALT_PNT": table_disk["ALT_PNT"],
-                    "AZ_PNT": table_disk["AZ_PNT"],
-                },
-                frame="altaz",
-                ext="PNT",
-            )
-            removed_names.append("ALT_PNT")
-            removed_names.append("AZ_PNT")
-            new_table["POINTING"] = pointing
+        # elif "ALT_PNT" in required_names_on_disk:
+        #     pointing = skycoord_from_dict(
+        #         {
+        #             "ALT_PNT": table_disk["ALT_PNT"],
+        #             "AZ_PNT": table_disk["AZ_PNT"],
+        #         },
+        #         frame="altaz",
+        #         ext="PNT",
+        #     )
+        #     removed_names.append("ALT_PNT")
+        #     removed_names.append("AZ_PNT")
+        #     new_table["POINTING"] = pointing
 
         # from @properties "time_ref", "time_start", "time_stop"
         if "TSTART" in names_disk:
