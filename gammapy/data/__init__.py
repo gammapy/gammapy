@@ -9,6 +9,7 @@ from .gti import GTI
 from .hdu_index_table import HDUIndexTable
 from .metadata import EventListMetaData, ObservationMetaData, GTIMetaData
 from .obs_table import ObservationTable, ObservationTableChecker
+from .io import ObservationTableReader
 from .observations import Observation, Observations
 from .pointing import FixedPointingInfo, PointingInfo, PointingMode
 from .simulate import ObservationsEventsSampler
@@ -29,6 +30,7 @@ __all__ = [
     "ObservationsEventsSampler",
     "ObservationTable",
     "ObservationTableChecker",
+    "ObservationTableReader",
     "observatory_locations",
     "PointingInfo",
     "PointingMode",
