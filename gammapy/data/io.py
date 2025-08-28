@@ -87,15 +87,23 @@ class ObservationTableReader:
     def from_gadf02_hdu(obs_hdu):
         """Create ObservationTable from gadf0.2 HDU."""
         table_disk = Table.read(obs_hdu)
-        meta = table_disk.meta
-
         names_disk = table_disk.colnames
+
+        meta = table_disk.meta
 
         # Mandatory names to fill internal table format from GADF v.0.2.
         # Subset of: https://gamma-astro-data-formats.readthedocs.io/en/v0.2/data_storage/obs_index/index.html#required-columns
         required_names_on_disk = [
             "OBS_ID",
         ]
+        # Used: aeb1ea01e60e1f02c5fb59f50141c81e0b2fb8f6:
+        missing_names = set(required_names_on_disk).difference(
+            names_disk + list(meta.keys())
+        )
+        if len(missing_names) != 0:
+            raise RuntimeError(
+                f"Not all columns required to read from GADF v.0.2 were found in file. Missing: {missing_names}"
+            )  # looked into gammapy/workflow/core.py
         # Names to be removed, to handle optional columns.
         removed_names = []
 
@@ -149,16 +157,6 @@ class ObservationTableReader:
                 removed_names.append("RA_PNT")
                 removed_names.append("DEC_PNT")
                 new_table["POINTING"] = pointing
-
-        # Used: aeb1ea01e60e1f02c5fb59f50141c81e0b2fb8f6:
-        missing_names = set(required_names_on_disk).difference(
-            names_disk + list(meta.keys())
-        )
-        if len(missing_names) != 0:
-            raise RuntimeError(
-                f"Not all columns required to read from GADF v.0.2 were found in file. Missing: {missing_names}"
-            )
-        # looked into gammapy/workflow/core.py
 
         # elif "ALT_PNT" in required_names_on_disk:
         #     pointing = skycoord_from_dict(
