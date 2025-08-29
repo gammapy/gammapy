@@ -63,7 +63,7 @@ class ObservationTable(Table):
                     name="OBS_ID",
                     unit=None,
                     description="Observation ID",
-                    dtype=str,
+                    dtype=int,
                 ),
                 Column(
                     [],
@@ -135,15 +135,17 @@ class ObservationTable(Table):
                     if isinstance(
                         table[name], Column
                     ):  # For Column a check of dtype and unit possible.
-                        if check.dtype != "<U1":  # No unit check if object is a string.
+                        if (
+                            check.unit is not None
+                        ):  # No unit check if reference object has no unit.
                             if not check.unit.is_equivalent(table[name].unit):
                                 raise u.UnitConversionError(
                                     f"Column {name} is not in {check} unit."
                                 )
-                        if not table[name].dtype == (check.dtype):
-                            raise TypeError(
-                                f"Column {name} does not have dtype of {check.dtype}"
-                            )
+                        # if not isinstance(table[name],str):
+                        #     raise TypeError(
+                        #         f"Column {name} does not have dtype of {check.dtype}"
+                        #     )
 
         return table
 
@@ -208,7 +210,7 @@ class ObservationTable(Table):
         # for internal model representation, in case data corresponding to it is given.
 
         # Create new table with mandatory column OBS_ID.
-        obs_id = cast_func(table_gadf["OBS_ID"], np.dtype("<U1"))
+        obs_id = cast_func(table_gadf["OBS_ID"], np.dtype(int))
         new_table = Table({"OBS_ID": obs_id}, meta=meta)
         removed_names.append("OBS_ID")
 
