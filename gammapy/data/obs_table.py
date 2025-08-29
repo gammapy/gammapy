@@ -134,7 +134,7 @@ class ObservationTable(Table):
                 else:
                     if isinstance(
                         table[name], Column
-                    ):  # For Column a check of dtype and unit possible.
+                    ):  # Excludes MixinColumns from check of dtype and unit.
                         if (
                             check.unit is not None
                         ):  # No unit check if reference object has no unit.
@@ -225,7 +225,8 @@ class ObservationTable(Table):
 
         # Used commit 16ce9840f38bea55982d2cd986daa08a3088b434 by @registerrier
 
-        # Used code for @properties: "time_ref", "time_start", "time_stop".
+        # Used here code from the @properties: "time_ref", "time_start", "time_stop"
+        # and code for ref-time calculation from commit: 08c6f6a for event_list.py.
         if "TSTART" in names_gadf or "TSTOP" in names_gadf:
             if (
                 "MJDREFI" in meta
@@ -252,8 +253,6 @@ class ObservationTable(Table):
                     "Found column TSTART or TSTOP in gadf 0.2 table, but metadata does not contain mandatory keywords to calculate reference time for conversion to internal model."
                 )
 
-        # like in event_list.py, l.201, commit: 08c6f6a
-
         for name in names_gadf:
             if name not in removed_names:
                 new_table.add_column(table_gadf[name])
@@ -275,7 +274,12 @@ class ObservationTable(Table):
     @property
     @deprecated("2.1")
     def time_ref(self):
-        """Deprecated: Time reference as a `~astropy.time.Time` object."""
+        """Deprecated: Time reference as a `~astropy.time.Time` object.
+
+        As TSTART and TSTOP in ObservationTable are now Time objects,
+        the reference time is not needed anymore externally and defaulted
+        to None."""
+
         return None
 
     @property
