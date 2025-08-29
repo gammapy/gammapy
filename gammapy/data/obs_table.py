@@ -186,7 +186,7 @@ class ObservationTable(Table):
         """
 
         names_gadf = table_gadf.colnames
-        meta = table_gadf.meta
+        meta_gadf = table_gadf.meta
 
         # Required names in gadf 0.2 table, in order to fill internal table format.
         # Requirement is weak for conversion from gadf to internal.
@@ -196,7 +196,7 @@ class ObservationTable(Table):
         ]
         # Used: aeb1ea01e60e1f02c5fb59f50141c81e0b2fb8f6:
         missing_names = set(required_names_gadf).difference(
-            names_gadf + list(meta.keys())
+            names_gadf + list(meta_gadf.keys())
         )
         if len(missing_names) != 0:
             raise RuntimeError(
@@ -211,7 +211,7 @@ class ObservationTable(Table):
 
         # Create new table with mandatory column OBS_ID.
         obs_id = cast_func(table_gadf["OBS_ID"], np.dtype(int))
-        new_table = Table({"OBS_ID": obs_id}, meta=meta)
+        new_table = Table({"OBS_ID": obs_id}, meta=meta_gadf)
         removed_names.append("OBS_ID")
 
         if "RA_PNT" in names_gadf:
@@ -229,13 +229,13 @@ class ObservationTable(Table):
         # and code for ref-time calculation from commit: 08c6f6a for event_list.py.
         if "TSTART" in names_gadf or "TSTOP" in names_gadf:
             if (
-                "MJDREFI" in meta
+                "MJDREFI" in meta_gadf.keys()
             ):  # Choice to be mandatory to construct meaningful time object!
-                if "TIMEUNIT" in meta.keys():
-                    time_unit = meta["TIMEUNIT"]
+                if "TIMEUNIT" in meta_gadf.keys():
+                    time_unit = meta_gadf["TIMEUNIT"]
                 else:
                     time_unit = "s"
-                time_ref = time_ref_from_dict(meta)
+                time_ref = time_ref_from_dict(meta_gadf)
                 if "TSTART" in names_gadf:
                     tstart = time_ref + Quantity(
                         table_gadf["TSTART"].astype("float64"), time_unit
@@ -250,14 +250,14 @@ class ObservationTable(Table):
                 removed_names.append("TSTOP")
             else:
                 raise RuntimeError(
-                    "Found column TSTART or TSTOP in gadf 0.2 table, but metadata does not contain mandatory keywords to calculate reference time for conversion to internal model."
+                    "Found column TSTART or TSTOP in gadf 0.2 table, but its metadata does not contain mandatory keywords to calculate reference time for conversion to internal model."
                 )
 
         for name in names_gadf:
             if name not in removed_names:
                 new_table.add_column(table_gadf[name])
 
-        return cls(table=new_table, meta=meta)
+        return cls(table=new_table, meta=meta_gadf)
 
     @property
     def pointing_radec(self):
