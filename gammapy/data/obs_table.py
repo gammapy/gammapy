@@ -230,6 +230,8 @@ class ObservationTable(Table):
         if "TSTART" in names_gadf or "TSTOP" in names_gadf:
             if (
                 "MJDREFI" in meta_gadf.keys()
+                and "MJDREFF" in meta_gadf.keys()
+                and "TIMESYS" in meta_gadf.keys()
             ):  # Choice to be mandatory to construct meaningful time object!
                 if "TIMEUNIT" in meta_gadf.keys():
                     time_unit = meta_gadf["TIMEUNIT"]
@@ -250,7 +252,7 @@ class ObservationTable(Table):
                 removed_names.append("TSTOP")
             else:
                 raise RuntimeError(
-                    "Found column TSTART or TSTOP in gadf 0.2 table, but its metadata does not contain mandatory keywords to calculate reference time for conversion to internal model."
+                    "Found column TSTART or TSTOP in gadf 0.2 table, but its metadata does not contain mandatory keyword(s) to calculate reference time for conversion to internal model."
                 )
 
         for name in names_gadf:

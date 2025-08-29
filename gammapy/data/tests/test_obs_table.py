@@ -338,6 +338,10 @@ def test_gadf_converter():
     t = Table({"OBS_ID": ["1"], "TSTART": [Time("2012-01-01T00:30:00")]}, meta={})
     with pytest.raises(RuntimeError):
         ObservationTable.from_gadf02_table(t)
+    t = Table({"OBS_ID": ["1"], "TSTOP": [Time("2012-01-01T00:30:00")]}, meta={})
+    with pytest.raises(RuntimeError):
+        ObservationTable.from_gadf02_table(t)
+
     # OBS_ID has to be of type int64 for internal model but converter ensures this.
     t_gadf = Table({"OBS_ID": ["1"], "RA_PNT": [1.0], "DEC_PNT": [1.0]})
     obs_table = ObservationTable.from_gadf02_table(t_gadf)
