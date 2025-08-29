@@ -36,9 +36,10 @@ class ObservationTable(Table):
          Parameters
         ----------
         table : `astropy.table.Table'
-            Table to init ObservationTable from.
+            Table to init observation table from.
 
-        Creates instance of ObservationTable either from reference table.
+        Creates instance of ObservationTable either from given table or from reference table.
+        It is validated, that the observation table follows the internal format.
         """
         # Used for constructor: https://stackoverflow.com/questions/6535832/python-inherit-the-superclass-init
         # https://stackoverflow.com/questions/2399307/how-to-invoke-the-super-constructor-in-python
@@ -90,13 +91,24 @@ class ObservationTable(Table):
 
     @staticmethod
     def _validate_table(table):
-        """taken from event_list.py and adapted, code by @registerrier."""
         """Checks that the input table follows the gammapy internal model.
-        
+
+        The check is weak, e.g. only the column "OBS_ID" of the internal model
+        is tested as a mandatory column, as it is the only required column in the GADF converter.
+        However, if more columns are present and they are a subset of the internal model, it is
+        verififed that they comply with the internal data model regarding units and types.
+
+        The code is adapted from from event_list.py by @registerrier!!!
+
         Parameters
         ----------
-        table : `ObservationTable'
-            Table to validate."""
+        table : `gammapy.data.ObservationTable'
+            Table to validate.
+
+        Returns
+        ----------
+        table : `gammapy.data.ObservationTable'
+            Table to validate, if suceeded."""
 
         if not isinstance(table, Table):
             raise TypeError(
@@ -112,7 +124,7 @@ class ObservationTable(Table):
                 f"ObservationTable table invalid: columns {missing_columns} are missing."
             )
 
-        # If more columns available from ref_table, check that valid according to internal model.
+        # If more columns available from reference_table, check that they comply with internal model.
         for name in reference_table.colnames:
             check = reference_table[name]
             if name in table.colnames:
@@ -148,6 +160,10 @@ class ObservationTable(Table):
     @classmethod
     def from_gadf02_table(cls, table_disk):
         """Convert gadf 0.2 observation table into internal table model.
+
+        This function is called by the read-method if the format is gadf 0.2,
+        but also used for converting constructed observation-tables, like in
+        'gammapy/data/data_store.py' or 'gammapy/data/tests/test_obs_table.py'.
 
         Parameters
         ----------
@@ -208,7 +224,7 @@ class ObservationTable(Table):
                 removed_names.append("TSTOP")
             else:
                 raise RuntimeError(
-                    "Found column TSTART or TSTOP in table on disk, but metadata does not contain mandatory keywords to calculate reference time for conversion to internal model."
+                    "Found column TSTART or TSTOP in gadf 0.2 table, but metadata does not contain mandatory keywords to calculate reference time for conversion to internal model."
                 )
 
         # like in event_list.py, l.201, commit: 08c6f6a
