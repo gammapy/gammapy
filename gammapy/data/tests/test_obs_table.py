@@ -10,6 +10,7 @@ from gammapy.utils.random import get_random_state, sample_sphere
 from gammapy.utils.testing import requires_data
 from gammapy.utils.time import time_ref_from_dict, time_relative_to_ref
 from astropy.table import Table
+from astropy import units as u
 
 
 def make_test_observation_table(
@@ -331,10 +332,16 @@ def test_internal_data_model():
         ObservationTable(t)
     t = Table({"OBS_ID": [1], "TSTART": [Time("2012-01-01T00:30:00")]})
     ObservationTable(t)
+    t = Table(
+        {"OBS_ID": [1], "RA_PNT": [1.0], "DEC_PNT": [1.0]},
+        units={"OBS_ID": None, "RA_PNT": u.m, "DEC_PNT": u.deg},
+    )
+    with pytest.raises(u.UnitConversionError):
+        ObservationTable(t)
 
 
 def test_gadf_converter():
-    # If TSTART or TSTOP in table, MJDREFI keyword mandatory in gadf-meta data.
+    # If TSTART or TSTOP in table, TIME-keywords mandatory in gadf-meta data.
     t = Table({"OBS_ID": ["1"], "TSTART": [Time("2012-01-01T00:30:00")]}, meta={})
     with pytest.raises(RuntimeError):
         ObservationTable.from_gadf02_table(t)
