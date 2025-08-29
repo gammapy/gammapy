@@ -158,7 +158,7 @@ class ObservationTable(Table):
         return ObservationTableReader(checksum).read(filename, **kwargs)
 
     @classmethod
-    def from_gadf02_table(cls, table_disk):
+    def from_gadf02_table(cls, table_gadf):
         """Convert gadf 0.2 observation table into internal table model.
 
         This function is called by the read-method if the format is gadf 0.2,
@@ -167,8 +167,8 @@ class ObservationTable(Table):
 
         Parameters
         ----------
-        table_disk : `~astropy.Table.table`
-            Table on disk, in gadf 0.2 format.
+        table_gadf : `~astropy.Table.table`
+            Table in gadf 0.2 format.
 
         Returns
         -------
@@ -176,49 +176,53 @@ class ObservationTable(Table):
             ObservationTable in internal data format.
         """
 
-        names_disk = table_disk.colnames
-        meta = table_disk.meta
+        names_gadf = table_gadf.colnames
+        meta = table_gadf.meta
 
-        # Mandatory names to fill internal table format from GADF v.0.2.
-        # Subset of: https://gamma-astro-data-formats.readthedocs.io/en/v0.2/data_storage/obs_index/index.html#required-columns
-        required_names_on_disk = [
+        # Required names in gadf 0.2 table, in order to fill internal table format.
+        # Requirement is weak for conversion from gadf to internal.
+        # See: https://gamma-astro-data-formats.readthedocs.io/en/v0.2/data_storage/obs_index/index.html#required-columns
+        required_names_gadf = [
             "OBS_ID",
         ]
         # Used: aeb1ea01e60e1f02c5fb59f50141c81e0b2fb8f6:
-        missing_names = set(required_names_on_disk).difference(
-            names_disk + list(meta.keys())
+        missing_names = set(required_names_gadf).difference(
+            names_gadf + list(meta.keys())
         )
         if len(missing_names) != 0:
             raise RuntimeError(
                 f"Not all columns required to read from GADF v.0.2 were found in file. Missing: {missing_names}"
             )  # looked into gammapy/workflow/core.py
+
         # Names to be removed, to handle optional columns.
         removed_names = []
 
         # Create new table with mandatory column OBS_ID.
-        obs_id = table_disk["OBS_ID"]
+        obs_id = table_gadf["OBS_ID"]
         new_table = Table({"OBS_ID": obs_id}, meta=meta)
         removed_names.append("OBS_ID")
 
         # Used commit 16ce9840f38bea55982d2cd986daa08a3088b434 by @registerrier
 
-        # from @properties "time_ref", "time_start", "time_stop"
-        if "TSTART" in names_disk or "TSTOP" in names_disk:
-            if "MJDREFI" in meta:  # mandatory!!!
+        # Used code for @properties: "time_ref", "time_start", "time_stop".
+        if "TSTART" in names_gadf or "TSTOP" in names_gadf:
+            if (
+                "MJDREFI" in meta
+            ):  # Choice to be mandatory to construct meaningful time object!
                 if "TIMEUNIT" in meta.keys():
                     time_unit = meta["TIMEUNIT"]
                 else:
                     time_unit = "s"
                 time_ref = time_ref_from_dict(meta)
-                if "TSTART" in names_disk:
+                if "TSTART" in names_gadf:
                     tstart = time_ref + Quantity(
-                        table_disk["TSTART"].astype("float64"), time_unit
+                        table_gadf["TSTART"].astype("float64"), time_unit
                     )
                     new_table["TSTART"] = tstart
                     removed_names.append("TSTART")
-                if "TSTOP" in names_disk:
+                if "TSTOP" in names_gadf:
                     tstop = time_ref + Quantity(
-                        table_disk["TSTOP"].astype("float64"), time_unit
+                        table_gadf["TSTOP"].astype("float64"), time_unit
                     )
                 new_table["TSTOP"] = tstop
                 removed_names.append("TSTOP")
@@ -229,9 +233,9 @@ class ObservationTable(Table):
 
         # like in event_list.py, l.201, commit: 08c6f6a
 
-        for name in names_disk:
+        for name in names_gadf:
             if name not in removed_names:
-                new_table.add_column(table_disk[name])
+                new_table.add_column(table_gadf[name])
 
         return cls(table=new_table, meta=meta)
 
