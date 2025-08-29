@@ -316,6 +316,34 @@ def test_select_sky_regions():
     assert len(obs_table) == 30
 
 
+def test_internal_data_model():
+    # OBS_ID is mandatory for internal model.
+    t = Table({"RA_PNT": [1.0], "DEC_PNT": [1.0]})
+    with pytest.raises(KeyError):
+        ObservationTable(t)
+    # OBS_ID has to be of type int64 for internal model.
+    t = Table({"OBS_ID": ["1"], "RA_PNT": [1.0], "DEC_PNT": [1.0]})
+    with pytest.raises(TypeError):
+        ObservationTable(t)
+    # TSTART has to be a astropy.time.Time object, not a float.
+    t = Table({"OBS_ID": [1], "TSTART": [1.0]})
+    with pytest.raises(TypeError):
+        ObservationTable(t)
+    t = Table({"OBS_ID": [1], "TSTART": [Time("2012-01-01T00:30:00")]})
+    ObservationTable(t)
+
+
+def test_gadf_converter():
+    # If TSTART or TSTOP in table, MJDREFI keyword mandatory in gadf-meta data.
+    t = Table({"OBS_ID": ["1"], "TSTART": [Time("2012-01-01T00:30:00")]}, meta={})
+    with pytest.raises(RuntimeError):
+        ObservationTable.from_gadf02_table(t)
+    # OBS_ID has to be of type int64 for internal model but converter ensures this.
+    t_gadf = Table({"OBS_ID": ["1"], "RA_PNT": [1.0], "DEC_PNT": [1.0]})
+    obs_table = ObservationTable.from_gadf02_table(t_gadf)
+    assert obs_table["OBS_ID"].dtype == np.dtype(int)
+
+
 @requires_data()
 def test_observation_table_checker():
     path = "$GAMMAPY_DATA/cta-1dc/index/gps/obs-index.fits.gz"
