@@ -10,6 +10,7 @@ from astropy.time import Time
 from astropy import units as u
 from gammapy.utils.deprecation import deprecated
 from gammapy.utils.time import time_ref_from_dict
+from gammapy.utils.types import cast_func
 
 __all__ = ["ObservationTable"]
 
@@ -128,14 +129,20 @@ class ObservationTable(Table):
         for name in reference_table.colnames:
             check = reference_table[name]
             if name in table.colnames:
-                if not isinstance(check, Column):
-                    if not isinstance(table[name], type(check)):
-                        raise TypeError(f"Column {name} is not a {check} object.")
+                if not isinstance(table[name], type(check)):
+                    raise TypeError(f"Column {name} is not a {check} object.")
                 else:
-                    if check.dtype != "<U1":  # no unit check if object is a string
-                        if not check.unit.is_equivalent(table[name].unit):
-                            raise u.UnitConversionError(
-                                f"Column {name} is not in {check} unit."
+                    if isinstance(
+                        table[name], Column
+                    ):  # For Column a check of dtype and unit possible.
+                        if check.dtype != "<U1":  # No unit check if object is a string.
+                            if not check.unit.is_equivalent(table[name].unit):
+                                raise u.UnitConversionError(
+                                    f"Column {name} is not in {check} unit."
+                                )
+                        if not table[name].dtype == (check.dtype):
+                            raise TypeError(
+                                f"Column {name} does not have dtype of {check.dtype}"
                             )
 
         return table
@@ -197,10 +204,22 @@ class ObservationTable(Table):
         # Names to be removed, to handle optional columns.
         removed_names = []
 
+        # Convert gadf data by ensuring correct types and units, as well as Time-Object for times
+        # for internal model representation, in case data corresponding to it is given.
+
         # Create new table with mandatory column OBS_ID.
-        obs_id = table_gadf["OBS_ID"]
+        obs_id = cast_func(table_gadf["OBS_ID"], np.dtype("<U1"))
         new_table = Table({"OBS_ID": obs_id}, meta=meta)
         removed_names.append("OBS_ID")
+
+        if "RA_PNT" in names_gadf:
+            ra_pnt = cast_func(table_gadf["RA_PNT"], np.dtype(float))
+            new_table["RA_PNT"] = ra_pnt * u.deg
+            removed_names.append("RA_PNT")
+        if "DEC_PNT" in names_gadf:
+            dec_pnt = cast_func(table_gadf["DEC_PNT"], np.dtype(float))
+            new_table["DEC_PNT"] = dec_pnt * u.deg
+            removed_names.append("DEC_PNT")
 
         # Used commit 16ce9840f38bea55982d2cd986daa08a3088b434 by @registerrier
 
