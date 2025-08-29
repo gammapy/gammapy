@@ -142,10 +142,10 @@ class ObservationTable(Table):
                                 raise u.UnitConversionError(
                                     f"Column {name} is not in {check} unit."
                                 )
-                        # if not isinstance(table[name],str):
-                        #     raise TypeError(
-                        #         f"Column {name} does not have dtype of {check.dtype}"
-                        #     )
+                        if not table[name].dtype == check.dtype:
+                            raise TypeError(
+                                f"Column {name} does not have dtype of {check.dtype}"
+                            )
 
         return table
 
