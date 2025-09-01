@@ -322,7 +322,7 @@ def test_internal_data_model():
     t = Table({"RA_PNT": [1.0], "DEC_PNT": [1.0]})
     with pytest.raises(KeyError):
         ObservationTable(t)
-    # OBS_ID has to be of type int64 for internal model.
+    # OBS_ID has to be of type int64, not str, for internal model.
     t = Table({"OBS_ID": ["1"], "RA_PNT": [1.0], "DEC_PNT": [1.0]})
     with pytest.raises(TypeError):
         ObservationTable(t)
@@ -332,6 +332,11 @@ def test_internal_data_model():
         ObservationTable(t)
     t = Table({"OBS_ID": [1], "TSTART": [Time("2012-01-01T00:30:00")]})
     ObservationTable(t)
+    # Unit for Column objects like RA_PNT have to be specified.
+    t = Table({"OBS_ID": [1], "TSTART": [Time("2012-01-01T00:30:00")], "RA_PNT": [1.0]})
+    with pytest.raises(TypeError):
+        ObservationTable(t)
+    # RA_PNT, DEC_PNT have to be in units of deg, not m.
     t = Table(
         {"OBS_ID": [1], "RA_PNT": [1.0], "DEC_PNT": [1.0]},
         units={"OBS_ID": None, "RA_PNT": u.m, "DEC_PNT": u.deg},
@@ -341,7 +346,7 @@ def test_internal_data_model():
 
 
 def test_gadf_converter():
-    # If TSTART or TSTOP in table, TIME-keywords mandatory in gadf-meta data.
+    # If TSTART or TSTOP in table, TIME-keywords are mandatory in gadf-meta data.
     t = Table({"OBS_ID": ["1"], "TSTART": [Time("2012-01-01T00:30:00")]}, meta={})
     with pytest.raises(RuntimeError):
         ObservationTable.from_gadf02_table(t)
@@ -353,6 +358,14 @@ def test_gadf_converter():
     t_gadf = Table({"OBS_ID": ["1"], "RA_PNT": [1.0], "DEC_PNT": [1.0]})
     obs_table = ObservationTable.from_gadf02_table(t_gadf)
     assert obs_table["OBS_ID"].dtype == np.dtype(int)
+    # Unit for Column objects like RA_PNT have to be specified for internal model but converter ensures this.
+    t = Table({"OBS_ID": [1], "RA_PNT": [1.0]})
+    obs_table = ObservationTable.from_gadf02_table(t)
+    assert obs_table["RA_PNT"].unit == u.deg
+    # Unit of RA_PNT has to be deg for internal model but converter ensures this.
+    t = Table({"OBS_ID": [1], "RA_PNT": [1.0]}, units={"OBS_ID": None, "RA_PNT": u.m})
+    obs_table = ObservationTable.from_gadf02_table(t)
+    assert obs_table["RA_PNT"].unit == u.deg
 
 
 @requires_data()
