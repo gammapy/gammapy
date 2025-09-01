@@ -248,8 +248,8 @@ class ObservationTable(Table):
                     tstop = time_ref + Quantity(
                         table_gadf["TSTOP"].astype("float64"), time_unit
                     )
-                new_table["TSTOP"] = tstop
-                removed_names.append("TSTOP")
+                    new_table["TSTOP"] = tstop
+                    removed_names.append("TSTOP")
             else:
                 raise RuntimeError(
                     "Found column TSTART or TSTOP in gadf 0.2 table, but its metadata does not contain mandatory keyword(s) to calculate reference time for conversion to internal model."
