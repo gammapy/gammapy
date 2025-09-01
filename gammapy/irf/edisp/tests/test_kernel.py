@@ -126,5 +126,5 @@ def test_io_ogip_checksum(tmp_path):
     path = tmp_path / "test.fits"
     edisp.write(path, checksum=True)
 
-    edisp_2 = fits.open("test1.fits", checksum=True)
+    edisp_2 = fits.open(path, checksum=True)
     assert edisp_2[1].header["HDUCLASS"], "OGIP"
