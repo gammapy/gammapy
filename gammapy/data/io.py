@@ -1,10 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import warnings
+import numpy as np
 from astropy.io import fits
 from astropy.table import Table
+from astropy import units as u
+from astropy.units import Quantity
 from gammapy.data import EventListMetaData, EventList, ObservationTable
 from gammapy.utils.scripts import make_path
 from gammapy.utils.metadata import CreatorMetaData
+from gammapy.utils.types import cast_func
+from gammapy.utils.time import time_ref_from_dict
 
 
 class ObservationTableReader:
@@ -71,13 +76,108 @@ class ObservationTableReader:
 
             if formatname == "gadf" or formatname == "ogip":
                 if version == "0.2":
-                    return ObservationTable.from_gadf02_table(table_disk)
+                    return self.from_gadf02_table(table_disk)
                 elif version == "0.3":
-                    return ObservationTable.from_gadf02_table(table_disk)
+                    return self.from_gadf02_table(table_disk)
                 else:
                     raise ValueError(f"Unknown version :{version}")
             else:
                 raise ValueError(f"Unknown format :{format}")
+
+    @staticmethod
+    def from_gadf02_table(table_gadf):
+        """Convert gadf 0.2 observation table into internal table model.
+
+        This function is called by the read-method if the format is gadf 0.2,
+        but also used for converting constructed observation-tables, like in
+        'gammapy/data/data_store.py' or 'gammapy/data/tests/test_obs_table.py'.
+
+        Parameters
+        ----------
+        table_gadf : `~astropy.Table.table`
+            Table in gadf 0.2 format.
+
+        Returns
+        -------
+        ObservationTable : `~gammapy.data.ObservationTable`
+            ObservationTable in internal data format.
+        """
+
+        names_gadf = table_gadf.colnames
+        meta_gadf = table_gadf.meta
+
+        # Required names in gadf 0.2 table, in order to fill internal table format.
+        # Requirement is weak for conversion from gadf to internal.
+        # See: https://gamma-astro-data-formats.readthedocs.io/en/v0.2/data_storage/obs_index/index.html#required-columns
+        required_names_gadf = [
+            "OBS_ID",
+        ]
+        # Used: aeb1ea01e60e1f02c5fb59f50141c81e0b2fb8f6:
+        missing_names = set(required_names_gadf).difference(
+            names_gadf + list(meta_gadf.keys())
+        )
+        if len(missing_names) != 0:
+            raise RuntimeError(
+                f"Not all columns required to read from GADF v.0.2 were found in file. Missing: {missing_names}"
+            )  # looked into gammapy/workflow/core.py
+
+        # Names to be removed, to handle optional columns.
+        removed_names = []
+
+        # Convert gadf data by ensuring correct types and units, as well as Time-Object for times
+        # for internal model representation, in case data corresponding to it is given.
+
+        # Create new table with mandatory column OBS_ID.
+        obs_id = cast_func(table_gadf["OBS_ID"], np.dtype(int))
+        new_table = Table({"OBS_ID": obs_id}, meta=meta_gadf)
+        removed_names.append("OBS_ID")
+
+        if "RA_PNT" in names_gadf:
+            ra_pnt = cast_func(table_gadf["RA_PNT"], np.dtype(float))
+            new_table["RA_PNT"] = ra_pnt * u.deg
+            removed_names.append("RA_PNT")
+        if "DEC_PNT" in names_gadf:
+            dec_pnt = cast_func(table_gadf["DEC_PNT"], np.dtype(float))
+            new_table["DEC_PNT"] = dec_pnt * u.deg
+            removed_names.append("DEC_PNT")
+
+        # Used commit 16ce9840f38bea55982d2cd986daa08a3088b434 by @registerrier
+
+        # Used here code from the @properties: "time_ref", "time_start", "time_stop"
+        # and code for ref-time calculation from commit: 08c6f6a for event_list.py.
+        if "TSTART" in names_gadf or "TSTOP" in names_gadf:
+            if (
+                "MJDREFI" in meta_gadf.keys()
+                and "MJDREFF" in meta_gadf.keys()
+                and "TIMESYS" in meta_gadf.keys()
+            ):  # Choice to be mandatory to construct meaningful time object!
+                if "TIMEUNIT" in meta_gadf.keys():
+                    time_unit = meta_gadf["TIMEUNIT"]
+                else:
+                    time_unit = "s"
+                time_ref = time_ref_from_dict(meta_gadf)
+                if "TSTART" in names_gadf:
+                    tstart = time_ref + Quantity(
+                        table_gadf["TSTART"].astype("float64"), time_unit
+                    )
+                    new_table["TSTART"] = tstart
+                    removed_names.append("TSTART")
+                if "TSTOP" in names_gadf:
+                    tstop = time_ref + Quantity(
+                        table_gadf["TSTOP"].astype("float64"), time_unit
+                    )
+                    new_table["TSTOP"] = tstop
+                    removed_names.append("TSTOP")
+            else:
+                raise RuntimeError(
+                    "Found column TSTART or TSTOP in gadf 0.2 table, but its metadata does not contain mandatory keyword(s) to calculate reference time for conversion to internal model."
+                )
+
+        for name in names_gadf:
+            if name not in removed_names:
+                new_table.add_column(table_gadf[name])
+
+        return ObservationTable(table=new_table, meta=meta_gadf)
 
 
 class EventListReader:

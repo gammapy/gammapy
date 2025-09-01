@@ -9,6 +9,7 @@ from gammapy.data.obs_table import ObservationTable, ObservationTableChecker
 from gammapy.utils.random import get_random_state, sample_sphere
 from gammapy.utils.testing import requires_data
 from gammapy.utils.time import time_ref_from_dict, time_relative_to_ref
+from gammapy.data.io import ObservationTableReader
 from astropy.table import Table
 from astropy import units as u
 
@@ -210,7 +211,7 @@ def make_test_observation_table(
 def test_basics():
     random_state = np.random.RandomState(seed=0)
     obs_table = make_test_observation_table(n_obs=10, random_state=random_state)
-    obs_table = ObservationTable.from_gadf02_table(obs_table)
+    obs_table = ObservationTableReader.from_gadf02_table(obs_table)
     assert obs_table.summary().startswith("Observation table")
 
     filtered = obs_table.select_obs_id(1)
@@ -224,7 +225,7 @@ def test_select_parameter_box():
     # create random observation table
     random_state = np.random.RandomState(seed=0)
     obs_table = make_test_observation_table(n_obs=10, random_state=random_state)
-    obs_table = ObservationTable.from_gadf02_table(obs_table)
+    obs_table = ObservationTableReader.from_gadf02_table(obs_table)
     # select some pars and check the corresponding values in the columns
 
     # test box selection in obs_id
@@ -273,7 +274,7 @@ def test_select_time_box():
         use_abs_time=False,
         random_state=random_state,
     )
-    obs_table_time = ObservationTable.from_gadf02_table(obs_table_time)
+    obs_table_time = ObservationTableReader.from_gadf02_table(obs_table_time)
     # test box selection in time: (time_start, time_stop) within value_range
     value_range = Time(["2012-01-01T01:00:00", "2012-01-01T02:00:00"])
     selection = dict(type="time_box", time_range=value_range)
@@ -297,7 +298,7 @@ def test_select_time_box():
 def test_select_sky_regions():
     random_state = np.random.RandomState(seed=0)
     obs_table = make_test_observation_table(n_obs=100, random_state=random_state)
-    obs_table = ObservationTable.from_gadf02_table(obs_table)
+    obs_table = ObservationTableReader.from_gadf02_table(obs_table)
 
     selection = dict(
         type="sky_circle",
@@ -349,22 +350,22 @@ def test_gadf_converter():
     # If TSTART or TSTOP in table, TIME-keywords are mandatory in gadf-meta data.
     t = Table({"OBS_ID": ["1"], "TSTART": [Time("2012-01-01T00:30:00")]}, meta={})
     with pytest.raises(RuntimeError):
-        ObservationTable.from_gadf02_table(t)
+        ObservationTableReader.from_gadf02_table(t)
     t = Table({"OBS_ID": ["1"], "TSTOP": [Time("2012-01-01T00:30:00")]}, meta={})
     with pytest.raises(RuntimeError):
-        ObservationTable.from_gadf02_table(t)
+        ObservationTableReader.from_gadf02_table(t)
 
     # OBS_ID has to be of type int64 for internal model but converter ensures this.
     t_gadf = Table({"OBS_ID": ["1"], "RA_PNT": [1.0], "DEC_PNT": [1.0]})
-    obs_table = ObservationTable.from_gadf02_table(t_gadf)
+    obs_table = ObservationTableReader.from_gadf02_table(t_gadf)
     assert obs_table["OBS_ID"].dtype == np.dtype(int)
     # Unit for Column objects like RA_PNT have to be specified for internal model but converter ensures this.
     t = Table({"OBS_ID": [1], "RA_PNT": [1.0]})
-    obs_table = ObservationTable.from_gadf02_table(t)
+    obs_table = ObservationTableReader.from_gadf02_table(t)
     assert obs_table["RA_PNT"].unit == u.deg
     # Unit of RA_PNT has to be deg for internal model but converter ensures this.
     t = Table({"OBS_ID": [1], "RA_PNT": [1.0]}, units={"OBS_ID": None, "RA_PNT": u.m})
-    obs_table = ObservationTable.from_gadf02_table(t)
+    obs_table = ObservationTableReader.from_gadf02_table(t)
     assert obs_table["RA_PNT"].unit == u.deg
 
 

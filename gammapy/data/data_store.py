@@ -777,7 +777,7 @@ class DataStoreMaker:
 
         return info
 
-    def make_obs_table(self):
+    def make_obs_table(self, format="gadf02"):
         """Make observation index table."""
         rows = []
         time_rows = []
@@ -796,15 +796,20 @@ class DataStoreMaker:
         for name in tu.TIME_KEYWORDS:
             m[name] = time_rows[0][name]
 
-        m["HDUCLASS"] = "GADF"
-        m["HDUDOC"] = "https://github.com/open-gamma-ray-astro/gamma-astro-data-formats"
-        m["HDUVERS"] = "0.2"
-        m["HDUCLAS1"] = "INDEX"
-        m["HDUCLAS2"] = "OBS"
+        from gammapy.data.io import ObservationTableReader
 
-        table = ObservationTable.from_gadf02_table(
-            Table(rows=rows, names=names, meta=m)
-        )
+        if (format == "gadf02") or (format == "gadf03"):
+            m["HDUCLASS"] = "GADF"
+            m["HDUDOC"] = (
+                "https://github.com/open-gamma-ray-astro/gamma-astro-data-formats"
+            )
+            m["HDUVERS"] = "0.2"
+            m["HDUCLAS1"] = "INDEX"
+            m["HDUCLAS2"] = "OBS"
+
+            table = ObservationTableReader.from_gadf02_table(
+                Table(rows=rows, names=names, meta=m)
+            )
 
         return table
 
