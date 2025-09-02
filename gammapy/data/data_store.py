@@ -803,7 +803,10 @@ class DataStoreMaker:
             m["HDUDOC"] = (
                 "https://github.com/open-gamma-ray-astro/gamma-astro-data-formats"
             )
-            m["HDUVERS"] = "0.2"
+            if format == "gadf02":
+                m["HDUVERS"] = "0.2"
+            else:
+                m["HDUVERS"] = "0.3"
             m["HDUCLAS1"] = "INDEX"
             m["HDUCLAS2"] = "OBS"
 
