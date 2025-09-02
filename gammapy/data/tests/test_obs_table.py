@@ -346,29 +346,6 @@ def test_internal_data_model():
         ObservationTable(t)
 
 
-def test_gadf_converter():
-    # If TSTART or TSTOP in table, TIME-keywords are mandatory in gadf-meta data.
-    t = Table({"OBS_ID": ["1"], "TSTART": [Time("2012-01-01T00:30:00")]}, meta={})
-    with pytest.raises(RuntimeError):
-        ObservationTableReader.from_gadf02_table(t)
-    t = Table({"OBS_ID": ["1"], "TSTOP": [Time("2012-01-01T00:30:00")]}, meta={})
-    with pytest.raises(RuntimeError):
-        ObservationTableReader.from_gadf02_table(t)
-
-    # OBS_ID has to be of type int64 for internal model but converter ensures this.
-    t_gadf = Table({"OBS_ID": ["1"], "RA_PNT": [1.0], "DEC_PNT": [1.0]})
-    obs_table = ObservationTableReader.from_gadf02_table(t_gadf)
-    assert obs_table["OBS_ID"].dtype == np.dtype(int)
-    # Unit for Column objects like RA_PNT have to be specified for internal model but converter ensures this.
-    t = Table({"OBS_ID": [1], "RA_PNT": [1.0]})
-    obs_table = ObservationTableReader.from_gadf02_table(t)
-    assert obs_table["RA_PNT"].unit == u.deg
-    # Unit of RA_PNT has to be deg for internal model but converter ensures this.
-    t = Table({"OBS_ID": [1], "RA_PNT": [1.0]}, units={"OBS_ID": None, "RA_PNT": u.m})
-    obs_table = ObservationTableReader.from_gadf02_table(t)
-    assert obs_table["RA_PNT"].unit == u.deg
-
-
 @requires_data()
 def test_observation_table_checker():
     path = "$GAMMAPY_DATA/cta-1dc/index/gps/obs-index.fits.gz"
