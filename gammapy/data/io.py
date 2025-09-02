@@ -13,15 +13,12 @@ from gammapy.utils.time import time_ref_from_dict
 
 
 class ObservationTableReader:
-    """Reader class for ObservationTable"""
+    """Reader class for ObservationTable
+    Based on class EventListReader.
 
-    """Based on class EventListReader!!!
-    
-    
+
     Parameters
     ----------
-    hdu : str
-        Name of observation table HDU. Default is "OBS_INDEX".
     checksum : bool
         If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
     """
@@ -44,9 +41,11 @@ class ObservationTableReader:
         ----------
         filename : `pathlib.Path`, str
             Filename
-        format : {"gadf0.2/0.3"}, optional
+        format : {"gadf0.2 / gadf0.3"}, optional
             format and its version, of the ObservationTable. Default is 'gadf0.3'.
             If None, will try to guess from header.
+        hdu : {"OBS_INDEX"}, str, optional.
+            Name of observation table HDU. Default is "OBS_INDEX".
         """
         filename = make_path(filename)
 
@@ -70,10 +69,9 @@ class ObservationTableReader:
                         f"Checksum verification failed for HDU {self.hdu} of {filename}.",
                         UserWarning,
                     )
-            # Read Table as is on disk.
+
             table_disk = Table.read(obs_hdu)
 
-            # Convert table on disk, by calling converter for specific format.
             if format is None:
                 formatname = self.identify_format_from_hdu(obs_hdu)[0]
                 version = self.identify_format_from_hdu(obs_hdu)[1]
@@ -94,10 +92,7 @@ class ObservationTableReader:
     @staticmethod
     def from_gadf02_table(table_gadf):
         """Convert gadf 0.2 observation table into internal table model.
-
-        This function is called by the read-method if the format is gadf 0.2,
-        but also used for converting constructed observation-tables, like in
-        'gammapy/data/data_store.py' or 'gammapy/data/tests/test_obs_table.py'.
+        https://gamma-astro-data-formats.readthedocs.io/en/v0.2/data_storage/obs_index/index.html
 
         Parameters
         ----------
@@ -115,26 +110,24 @@ class ObservationTableReader:
 
         # Required names in gadf 0.2 table, in order to fill internal table format.
         # Requirement is weak for conversion from gadf to internal.
-        # See: https://gamma-astro-data-formats.readthedocs.io/en/v0.2/data_storage/obs_index/index.html#required-columns
         required_names_gadf = [
             "OBS_ID",
         ]
-        # Used: aeb1ea01e60e1f02c5fb59f50141c81e0b2fb8f6:
+
         missing_names = set(required_names_gadf).difference(
             names_gadf + list(meta_gadf.keys())
         )
         if len(missing_names) != 0:
             raise RuntimeError(
                 f"Not all columns required to read from GADF v.0.2 were found in file. Missing: {missing_names}"
-            )  # looked into gammapy/workflow/core.py
+            )
 
-        # Names to be removed, to handle optional columns.
         removed_names = []
 
-        # Convert gadf data by ensuring correct types and units, as well as Time-Object for times
-        # for internal model representation, in case data corresponding to it is given.
+        # Convert gadf data for internal model representation by ensuring
+        # correct types and units, as well as astropy.time.Time-objects for TSTART, TSTOP,
+        # in case data corresponding to it is given.
 
-        # Create new table with mandatory column OBS_ID.
         obs_id = cast_func(table_gadf["OBS_ID"], np.dtype(int))
         new_table = Table({"OBS_ID": obs_id}, meta=meta_gadf)
         removed_names.append("OBS_ID")
@@ -148,16 +141,13 @@ class ObservationTableReader:
             new_table["DEC_PNT"] = dec_pnt * u.deg
             removed_names.append("DEC_PNT")
 
-        # Used commit 16ce9840f38bea55982d2cd986daa08a3088b434 by @registerrier
-
-        # Used here code from the @properties: "time_ref", "time_start", "time_stop"
-        # and code for ref-time calculation from commit: 08c6f6a for event_list.py.
+        # Used here code from the @properties: "time_ref", "time_start", "time_stop".
         if "TSTART" in names_gadf or "TSTOP" in names_gadf:
             if (
                 "MJDREFI" in meta_gadf.keys()
                 and "MJDREFF" in meta_gadf.keys()
                 and "TIMESYS" in meta_gadf.keys()
-            ):  # Choice to be mandatory to construct meaningful time object!
+            ):  # Choice to be mandatory to construct meaningful time object.
                 if "TIMEUNIT" in meta_gadf.keys():
                     time_unit = meta_gadf["TIMEUNIT"]
                 else:

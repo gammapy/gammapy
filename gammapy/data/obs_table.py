@@ -84,9 +84,7 @@ class ObservationTable(Table):
         The check is weak, e.g. only the column "OBS_ID" of the internal model
         is tested as a mandatory column, as it is the only required column in the GADF converter.
         However, if more columns are present and they are a subset of the internal model, it is
-        verififed that they comply with the internal data model regarding units and types.
-
-        The code is adapted from from event_list.py by @registerrier.
+        verified that they comply with the internal data model regarding units and types.
 
         Parameters
         ----------
