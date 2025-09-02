@@ -11,6 +11,14 @@ from gammapy.utils.testing import requires_data
 from ..io import EventListReader, EventListWriter, ObservationTableReader
 
 
+@requires_data()
+def test_observationtable_reader_no_format():
+    hess_obs_table = "$GAMMAPY_DATA/hess-dl3-dr1/obs-index.fits.gz"
+
+    obs_table = ObservationTableReader().read(hess_obs_table, format=None)
+    assert len(obs_table) == 105
+
+
 def test_observationtable_reader_gadf_converter():
     # If TSTART or TSTOP in table, TIME-keywords are mandatory in gadf-meta data.
     t = Table({"OBS_ID": ["1"], "TSTART": [Time("2012-01-01T00:30:00")]}, meta={})

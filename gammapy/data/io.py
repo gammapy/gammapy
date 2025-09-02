@@ -36,7 +36,7 @@ class ObservationTableReader:
         hduvers = obs_hdu.header.get("HDUVERS", "unknown")
         return [hduclass.lower(), hduvers.lower()]
 
-    def read(self, filename, format="gadf0.3", hdu=None):
+    def read(self, filename, format="gadf0.3", hdu="OBS_INDEX"):
         """Read ObservationTable from file.
         For now, only gadf 0.2 reader implemented and called for both gadf 0.2 and gadf 0.3.
 
@@ -51,11 +51,18 @@ class ObservationTableReader:
         filename = make_path(filename)
 
         with fits.open(filename) as hdulist:
-            # In case of hdu specification in kwarg, use it, otherwise assume, HDU has only obs-index-table.
-            if hdu is not None:
+            # If hdu extension not found, assume obs-index hdu at 1 and raise warning.
+            hdu_names = []
+            for hduobject in hdulist:
+                hdu_names.append(hduobject.name)
+            if hdu in hdu_names:
                 obs_hdu = hdulist[hdu]
             else:
-                obs_hdu = hdulist
+                obs_hdu = hdulist[1]
+                warnings.warn(
+                    f"Extension {hdu} was not found in file, assuming obs-index HDU at index 1.",
+                    UserWarning,
+                )
 
             if self.checksum:
                 if obs_hdu.verify_checksum() != 1:
