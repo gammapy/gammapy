@@ -537,7 +537,7 @@
         "active"
     ],
     "email": "GAMMAPY-COORDINATION-L@IN2P3.FR",
-    "dateModified": "2025-08-18",
+    "dateModified": "2025-09-02",
     "softwareRequirements": [
         "numpy>=1.26,<2.2",
         "scipy>=1.13",
