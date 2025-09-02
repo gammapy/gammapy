@@ -14,25 +14,18 @@ __all__ = ["ObservationTable"]
 
 
 class ObservationTable(Table):
-    """Modified ObservationTable class, based on existing ObservationTable class.
-
+    """Prototype for new ObservationTable class.
     See discussion and development: https://github.com/gammapy/gammapy/issues/3767, https://github.com/gammapy/gammapy/issues/4238
-    Co-authors: @maxnoe, @registerrier, @bkhelifi, @cdeil, @Astro-Kirsty
-    Used as reference: gammapy, gammapy/data/obs_table.py, https://docs.python.org/3, https://docs.astropy.org/en/latest/table/construct_table.html#construct-table, https://numpy.org/doc/stable/reference/generated/numpy.dtype.html
-                       https://docs.astropy.org/en/latest/table/index.html, https://gamma-astro-data-formats.readthedocs.io/en/v0.3/, esp. data_storage/obs_index/index.html, https://www.programiz.com/python-programming/methods/built-in/classmethod,
-                       https://docs.gammapy.org/dev/development/dev_howto.html
-    Looked into: https://github.com/gammasky/cta-dc/blob/master/data/cta_1dc_make_data_index_files.py, maybe used l. 233. Copyright (c) 2016 gammasky,
-    Oriented also at PR by @registerrier: https://github.com/gammapy/gammapy/pull/5954/files
 
-    # ATTRIBUTION copied from hess-dl3-dr1 README.txt (gammapy-data/hess-dl3-dr1/README.txt) for testing and learning from this dataset:
-    # This work made use of data from the H.E.S.S. DL3 public test
-    # data release 1 (HESS DL3 DR1, H.E.S.S. collaboration, 2018).
+    References: https://docs.python.org/3, https://docs.astropy.org/en/latest, https://numpy.org/doc/stable/reference
+                https://gamma-astro-data-formats.readthedocs.io/en/v0.3/, https://www.programiz.com/python-programming/methods/built-in/classmethod
+                The code follows the code for the EventList class in event_list.py.
     """
 
     def __init__(self, table=None, **kwargs):
         """Constructor for internal observation table.
 
-         Parameters
+        Parameters
         ----------
         table : `astropy.table.Table'
             Table to init observation table from.
@@ -40,11 +33,7 @@ class ObservationTable(Table):
         Creates instance of ObservationTable either from given table or from reference table.
         It is validated, that the observation table follows the internal format.
         """
-        # Used for constructor: https://stackoverflow.com/questions/6535832/python-inherit-the-superclass-init
-        # https://stackoverflow.com/questions/2399307/how-to-invoke-the-super-constructor-in-python
-        # Google KI, query: "python konstruktor geerbte klasse"
 
-        # Init with basic reference table, like suggested by @registerrier.
         if table is None:
             table = self._reference_table()
         table = self._validate_table(table)
@@ -97,7 +86,7 @@ class ObservationTable(Table):
         However, if more columns are present and they are a subset of the internal model, it is
         verififed that they comply with the internal data model regarding units and types.
 
-        The code is adapted from from event_list.py by @registerrier!!!
+        The code is adapted from from event_list.py by @registerrier.
 
         Parameters
         ----------
