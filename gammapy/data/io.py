@@ -14,7 +14,7 @@ from gammapy.utils.time import time_ref_from_dict
 
 class ObservationTableReader:
     """Reader class for ObservationTable
-    Based on class EventListReader.
+    The code is based on the code for the EventListReader class.
 
 
     Parameters

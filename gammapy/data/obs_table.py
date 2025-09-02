@@ -15,11 +15,9 @@ __all__ = ["ObservationTable"]
 
 class ObservationTable(Table):
     """Prototype for new ObservationTable class.
-    See discussion and development: https://github.com/gammapy/gammapy/issues/3767, https://github.com/gammapy/gammapy/issues/4238
 
-    References: https://docs.python.org/3, https://docs.astropy.org/en/latest, https://numpy.org/doc/stable/reference
-                https://gamma-astro-data-formats.readthedocs.io/en/v0.3/, https://www.programiz.com/python-programming/methods/built-in/classmethod
-                The code follows the code for the EventList class in event_list.py.
+    See discussion and development: https://github.com/gammapy/gammapy/issues/3767, https://github.com/gammapy/gammapy/issues/4238
+    The code is based on the code for the EventList class in event_list.py.
     """
 
     def __init__(self, table=None, **kwargs):
