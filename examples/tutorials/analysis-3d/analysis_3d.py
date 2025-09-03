@@ -135,8 +135,9 @@ dataset_stacked = analysis_stacked.datasets["stacked"]
 print(dataset_stacked)
 
 ######################################################################
-# To visualise a smooth counts map, you can use the `~gammapy.maps.WcsNDMap.plot_interactive`
-# functionality, or create a plot of the counts summed over the energy axis:
+# To visualise a counts map in different energy slices, you can use the
+# `~gammapy.maps.WcsNDMap.plot_grid` or `~gammapy.maps.WcsNDMap.plot_interactive`
+# functionalities, or create a plot of the counts summed over the energy axis:
 #
 
 dataset_stacked.counts.sum_over_axes().smooth(0.02 * u.deg).plot(add_cbar=True)
