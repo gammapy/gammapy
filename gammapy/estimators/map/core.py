@@ -26,6 +26,7 @@ DEFAULT_UNIT = {
     "flux": u.Unit("cm-2 s-1"),
     "eflux": u.Unit("erg cm-2 s-1"),
     "norm": u.Unit(""),
+    "likelihood": None,
 }
 
 REQUIRED_MAPS = {
