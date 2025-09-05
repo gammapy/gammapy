@@ -417,9 +417,8 @@ def test_interpolate_map_dataset():
 
 
 @requires_data()
-@pytest.mark.xfail
 def test_minimal_datastore():
-    """ "Check that a standard analysis runs on a minimal datastore"""
+    """Check that a standard analysis runs on a minimal datastore."""
 
     energy_axis = MapAxis.from_energy_bounds(
         1, 10, nbin=3, per_decade=False, unit="TeV", name="energy"
