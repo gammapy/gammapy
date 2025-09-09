@@ -690,14 +690,14 @@ class GaussianSpatialModel(SpatialModel):
         return self.to_region(size_factor=5)
 
     @deprecated_renamed_argument("x_sigma", "size_factor", "2.0")
-    def _to_region_error(self, size_factor=1.5):
+    def _to_region_error(self, size_factor=1.0):
         r"""Plot model error at a given number of :math:`\sigma`.
 
         Parameters
         ----------
         size_factor : float
             Number of :math:`\sigma`
-            Default is :math:`1.5\sigma` which corresponds to about 68%
+            Default is :math:`1.0\sigma` which corresponds to about 39%
             containment for a 2D symmetric Gaussian.
 
         Returns
