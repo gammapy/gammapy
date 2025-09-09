@@ -23,7 +23,8 @@ energy-dependent gamma-ray morphology (see `Aharonian et al., 2006 <https://ui.a
 
 Many different techniques of measuring this energy-dependence have been utilised over the years.
 The method shown here is to perform a morphological fit of extension and position in various energy slices and
-compare this with a global morphology fit.
+compare this with a global morphology fit. Further information about this estimation tool can be found in
+`Feijen et al., 2025 <https://ui.adsabs.harvard.edu/abs/2025A%26A...701A...4F/abstract>`__.
 
 
 **Objective: Perform an energy-dependent morphology study of a mock source.**
