@@ -401,7 +401,12 @@ class SpatialModel(ModelBase):
         pass
 
     def plot_error(
-        self, ax=None, which="position", kwargs_position=None, kwargs_extension=None
+        self,
+        ax=None,
+        which="position",
+        size_factor=1.0,
+        kwargs_position=None,
+        kwargs_extension=None,
     ):
         """Plot the errors of the spatial model.
 
@@ -417,11 +422,15 @@ class SpatialModel(ModelBase):
                 * "position": plot the position error of the spatial model
                 * "extension": plot the extension error of the spatial model
 
+        size_factor : float
+            Number of :math:`\sigma`.
+            Default is :math:`1.0\sigma` which corresponds to about 39%
+            containment for a 2D symmetric Gaussian.
         kwargs_position : dict, optional
             Keyword arguments passed to `~SpatialModel.plot_position_error`.
             Default is None.
         kwargs_extension : dict, optional
-            Keyword arguments passed to `~SpatialModel.plot_extension_error`.
+            Keyword arguments passed to `~regions.PixelRegion.as_artist`.
             Default is None.
 
         Returns
@@ -442,7 +451,7 @@ class SpatialModel(ModelBase):
         if "all" in which:
             self.plot_position_error(ax, **kwargs_position)
 
-            region = self._to_region_error()
+            region = self._to_region_error(size_factor=size_factor)
             if region is not None:
                 artist = region.to_pixel(ax.wcs).as_artist(**kwargs_extension)
                 ax.add_artist(artist)
@@ -451,7 +460,7 @@ class SpatialModel(ModelBase):
             self.plot_position_error(ax, **kwargs_position)
 
         if "extension" in which:
-            region = self._to_region_error()
+            region = self._to_region_error(size_factor=size_factor)
             if region is not None:
                 artist = region.to_pixel(ax.wcs).as_artist(**kwargs_extension)
                 ax.add_artist(artist)
