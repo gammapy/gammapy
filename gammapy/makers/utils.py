@@ -333,7 +333,7 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None, use_region_center=T
     edisp_map = project_irf_on_geom(geom, edisp, fov_frame).to_unit("")
     if isinstance(geom, UnbinnedRegionGeom):
         # edisp_map.normalize(axis_name="events")
-        edisp_map.normalize(axis_name="migra")
+        edisp_map.normalize(axis_name="migra")#WE NEVER GO HERE
         return UnbinnedEDispMap(edisp_map, exposure_map)
     else:
         edisp_map.normalize(axis_name="migra")
@@ -716,15 +716,27 @@ def project_irf_on_geom(geom, irf, fov_frame, use_region_center=True):
         Map containing the projected IRF.
     """
     if isinstance(geom, UnbinnedRegionGeom):
-        skycoord = SkyCoord(
-            ra=geom.axes["events"]["ra"].center,
-            dec=geom.axes["events"]["dec"].center,
-        )
+        
+        #IF WE WANT TO CONCIDER THE RECO EVENTS OFFSET
+        #skycoord = SkyCoord(
+        #    ra=geom.axes["events"]["ra"].center,
+        #    dec=geom.axes["events"]["dec"].center,
+        #)
+        #coords = _get_fov_coord(skycoord, fov_frame, irf.has_offset_axis)
+        #coords["offset"] = (
+        #    np.ones((len(irf.axes["energy_true"].center), 1))
+        #    @ np.array([coords["offset"]])
+        #).T.tolist() * coords["offset"].unit
+        
+        if not use_region_center:
+            image_geom = geom.to_wcs_geom().to_image()
+            region_coord, weights = geom.get_wcs_coord_and_weights()
+            skycoord = region_coord.skycoord
+        else:
+            image_geom = geom.to_image()
+            skycoord = image_geom.get_coord().skycoord
+    
         coords = _get_fov_coord(skycoord, fov_frame, irf.has_offset_axis)
-        coords["offset"] = (
-            np.ones((len(irf.axes["energy_true"].center), 1))
-            @ np.array([coords["offset"]])
-        ).T.tolist() * coords["offset"].unit
         non_spatial_axes = set(irf.required_arguments) - set(
             ["offset", "fov_lon", "fov_lat"]
         )
