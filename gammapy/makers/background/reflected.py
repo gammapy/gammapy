@@ -7,7 +7,7 @@ import numpy as np
 from astropy import units as u
 from astropy.coordinates import Angle
 from regions import CircleSkyRegion, PixCoord, PointSkyRegion
-from gammapy.datasets import SpectrumDatasetOnOff
+from gammapy.datasets import SpectrumDatasetOnOff, SpectrumDataset, EventDataset
 from gammapy.maps import RegionGeom, RegionNDMap, WcsGeom, WcsNDMap
 from ..core import Maker
 from ..utils import make_counts_off_rad_max
@@ -569,20 +569,18 @@ class ReflectedRegionsBackgroundMaker(Maker):
 
         return counts_off, acceptance_off
 
-    def run(self, dataset, observation):
-        """Run reflected regions background maker.
+    def __run_spectrum_dataset(self, dataset, observation):
+        """Run reflected regions background maker for SpectrumDataset.
 
         Parameters
         ----------
         dataset : `~gammapy.datasets.SpectrumDataset`
-            Spectrum dataset.
         observation : `~gammapy.data.Observation`
             Data store observation.
 
         Returns
         -------
         dataset_on_off : `~gammapy.datasets.SpectrumDatasetOnOff`
-            On-Off dataset.
         """
         counts_off, acceptance_off = self.make_counts_off(dataset, observation)
         acceptance = RegionNDMap.from_geom(geom=dataset.counts.geom, data=1)
@@ -602,3 +600,29 @@ class ReflectedRegionsBackgroundMaker(Maker):
                 "mask to False."
             )
         return dataset_onoff
+
+    def run(self, dataset, observation):
+        """Run reflected regions background maker.
+
+        Parameters
+        ----------
+        dataset : `~gammapy.datasets.SpectrumDataset`
+            Spectrum dataset.
+        observation : `~gammapy.data.Observation`
+            Data store observation.
+
+        Returns
+        -------
+        dataset_on_off : `~gammapy.datasets.SpectrumDatasetOnOff`
+            On-Off dataset.
+        """
+        if isinstance(dataset, SpectrumDataset):
+            return self.__run_spectrum_dataset(dataset, observation)
+        elif isinstance(dataset, EventDataset):
+            raise NotImplementedError(
+                "ReflectedRegionsBackgroundMaker is not yet implemented for EventDataset."
+            )
+        else:
+            raise TypeError(
+                "ReflectedRegionsBackgroundMaker only works for SpectrumDataset or EventDataset"
+            )
