@@ -408,7 +408,7 @@ class SpatialModel(ModelBase):
         kwargs_position=None,
         kwargs_extension=None,
     ):
-        """Plot the errors of the spatial model.
+        r"""Plot the errors of the spatial model.
 
         Parameters
         ----------
@@ -675,9 +675,11 @@ class GaussianSpatialModel(SpatialModel):
         Parameters
         ----------
         size_factor : float
-            Number of :math:`\sigma
+            Number of :math:`\sigma`.
             Default is :math:`1.0\sigma` which corresponds to about 39%
             containment for a 2D symmetric Gaussian.
+        kwargs : dict
+            Keyword arguments passed to `~regions.EllipseSkyRegion`.
 
         Returns
         -------
@@ -705,7 +707,7 @@ class GaussianSpatialModel(SpatialModel):
         Parameters
         ----------
         size_factor : float
-            Number of :math:`\sigma`
+            Number of :math:`\sigma`.
             Default is :math:`1.0\sigma` which corresponds to about 39%
             containment for a 2D symmetric Gaussian.
 
@@ -801,13 +803,15 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
         return self.r_0.quantity * (1 + 8 * self.eta.value)
 
     @deprecated_renamed_argument("x_r_0", "size_factor", "2.0")
-    def to_region(self, size_factor=1, **kwargs):
+    def to_region(self, size_factor=1.0, **kwargs):
         r"""Model outline at a given number of :math:`r_0`.
 
         Parameters
         ----------
         size_factor : float, optional
             Number of :math:`r_0`. Default is 1.0
+        kwargs : dict
+            Keyword arguments passed to `~regions.EllipseSkyRegion`.
 
         Returns
         -------
