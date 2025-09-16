@@ -606,14 +606,14 @@ class ReflectedRegionsBackgroundMaker(Maker):
 
         Parameters
         ----------
-        dataset : `~gammapy.datasets.SpectrumDataset`
+        dataset : `~gammapy.datasets.SpectrumDataset` or `~gammapy.datasets.EventDataset`
             Spectrum dataset.
         observation : `~gammapy.data.Observation`
             Data store observation.
 
         Returns
         -------
-        dataset_on_off : `~gammapy.datasets.SpectrumDatasetOnOff`
+        dataset_on_off : `~gammapy.datasets.SpectrumDatasetOnOff or `~gammapy.datasets.EventDataset`
             On-Off dataset.
         """
         if isinstance(dataset, SpectrumDataset):
