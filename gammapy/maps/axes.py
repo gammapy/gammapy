@@ -3600,6 +3600,22 @@ class ParallelLabelMapAxis(LabelMapAxis):
         str_ += fmt.format("parallel labels", str(self.parallel_names))
         return str_.expandtabs(tabsize=2)
 
+    def squash(self):
+        """Create a new axis object by squashing the axis into one bin.
+
+        The label of the new axis is given as "first-label...last-label".
+
+        Returns
+        -------
+        axis : `ParallelLabelMapAxis`
+            Squashed parallel label map axis.
+        """
+        return ParallelLabelMapAxis(
+            parallel_labels=[self._name],
+            parallel_names=[self._name],
+            parallel_units=[u.dimensionless_unscaled],
+            name=self._name
+        )
     @property
     def parallel_names(self):
         return self._label_mapaxis.keys()
@@ -3607,7 +3623,7 @@ class ParallelLabelMapAxis(LabelMapAxis):
     @property
     def center(self):
         """Center of the label axis."""
-        return np.array([label_mapaxis.center for label_mapaxis in self._label_mapaxis.values()])
+        return np.array([label_mapaxis.center for label_mapaxis in self._label_mapaxis.values()]).T
 
     def __getitem__(self, item):
         if isinstance(item, str):
