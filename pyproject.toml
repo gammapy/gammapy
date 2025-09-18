@@ -73,12 +73,12 @@ name = "Infrastructure"
 showcontent = true
 
 [[tool.towncrier.type]]
-directory = "doc"
+directory = "docs"
 name = "Documentation improvements"
 showcontent = true
 
 [[tool.towncrier.type]]
-directory = "new"
+directory = "feature"
 name = "New features"
 showcontent = true
 
