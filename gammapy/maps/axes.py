@@ -1544,21 +1544,21 @@ class MapAxes(Sequence):
         # TODO: The name is misleading. Maybe iter_axis_and_shape?
         """Generator that iterates over axes and their shape."""
         size = 0
-        for axis in self : 
-            if isinstance(axis, ParallelLabelMapAxis) :
+        for axis in self:
+            if isinstance(axis, ParallelLabelMapAxis):
                 size += 2
-            else : 
+            else:
                 size += 1
         idx = 0
         for axis in self:
-            # Extract values for each axis, default: nodes 
+            # Extract values for each axis, default: nodes
             shape = [1] * size
-            if isinstance(axis, ParallelLabelMapAxis) : 
-                #shape[idx:idx +2] = (len(axis.parallel_names),axis.nbin)
-                #idx += 2
+            if isinstance(axis, ParallelLabelMapAxis):
+                # shape[idx:idx +2] = (len(axis.parallel_names),axis.nbin)
+                # idx += 2
                 shape[idx] = axis.nbin
                 idx += 1
-            else :
+            else:
                 shape[idx] = -1
                 idx += 1
             if self._n_spatial_axes:
@@ -1593,9 +1593,9 @@ class MapAxes(Sequence):
                 coord = axis.edges
             else:
                 coord = axis.center
-            if isinstance(axis,ParallelLabelMapAxis) : 
-                coords[axis.name] = coord[0].reshape(shape)#TO BE CHANGED
-            else : 
+            if isinstance(axis, ParallelLabelMapAxis):
+                coords[axis.name] = coord[0].reshape(shape)  # TO BE CHANGED
+            else:
                 coords[axis.name] = coord.reshape(shape)
 
         return coords
@@ -3577,8 +3577,12 @@ class LabelMapAxis:
         axis : `LabelMapAxis`
             Squashed label map axis.
         """
+        sorted_label = np.sort(self.center)
         return LabelMapAxis(
-            labels=[self.center[0] + "..." + self.center[-1]], name=self._name
+            labels=[
+                [sorted_label[0].to_string() + "..." + sorted_label[-1].to_string()]
+            ],
+            name=self._name,
         )
 
 
@@ -3614,16 +3618,19 @@ class ParallelLabelMapAxis(LabelMapAxis):
             parallel_labels=[self._name],
             parallel_names=[self._name],
             parallel_units=[u.dimensionless_unscaled],
-            name=self._name
+            name=self._name,
         )
+
     @property
     def parallel_names(self):
         return self._label_mapaxis.keys()
-    
+
     @property
     def center(self):
         """Center of the label axis."""
-        return np.array([label_mapaxis.center for label_mapaxis in self._label_mapaxis.values()]).T
+        return np.array(
+            [label_mapaxis.center for label_mapaxis in self._label_mapaxis.values()]
+        ).T
 
     def __getitem__(self, item):
         if isinstance(item, str):

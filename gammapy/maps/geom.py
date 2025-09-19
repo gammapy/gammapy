@@ -676,3 +676,16 @@ class Geom(abc.ABC):
         )
         data = np.broadcast_to(mask, shape=self.data_shape)
         return Map.from_geom(geom=self, data=data, dtype=data.dtype)
+
+    @property
+    def is_unbinned(self):
+        """Whether the geom is unbinned (i.e. contains a `ParallelLabelMapAxis` or a `ParallelLabelMapAxis`)."""
+        if self.axes is None:
+            return False
+        for axis in self.axes:
+            if axis.__class__.__name__ in [
+                "ParallelLabelMapAxis",
+                "ParallelLabelMapAxis",
+            ]:
+                return True
+        return False

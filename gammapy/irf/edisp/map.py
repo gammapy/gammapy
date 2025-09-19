@@ -145,42 +145,48 @@ class EDispMap(IRFMap):
             "energy_true": coords["energy_true"],
             "migra": migra,
         }
-        
+
         if not (isinstance(energy_axis, LabelMapAxis)):
             values = self.edisp_map.integral(axis_name="migra", coords=coords)
             axis = self.edisp_map.geom.axes.index_data("migra")
-            #HERE the interpolation of M(m,Et)Delta_m gives M(Er,Et)Delta_Er
-            values = np.diff(values, axis=axis) #/ energy_axis.bin_width.reshape((1, -1, 1, 1))
-            unit = ""#values.unit
-        else : 
-            #axis = self.edisp_map.geom.axes.index_data("migra")
-            #axis_e_true = self.edisp_map.geom.axes.index_data("energy_true")
-            #tmp = np.moveaxis(self.edisp_map.quantity, axis, -1)
-            #tmp = np.matmul(tmp,  np.diag(self.edisp_map.geom.axes["migra"].bin_width ** -1))
-            #tmp = np.matmul(np.moveaxis(tmp, axis_e_true, -1), np.diag(coords["energy_true"].flatten() ** -1))
-            #tmp = np.moveaxis(tmp, -1, axis_e_true)
-            #tmp = np.moveaxis(tmp, -1, axis)
-            #self.edisp_map.quantity = tmp
-            #unit  = self.edisp_map.unit
+            # HERE the interpolation of M(m,Et)Delta_m gives M(Er,Et)Delta_Er
+            values = np.diff(
+                values, axis=axis
+            )  # / energy_axis.bin_width.reshape((1, -1, 1, 1))
+            unit = ""  # values.unit
+        else:
+            # axis = self.edisp_map.geom.axes.index_data("migra")
+            # axis_e_true = self.edisp_map.geom.axes.index_data("energy_true")
+            # tmp = np.moveaxis(self.edisp_map.quantity, axis, -1)
+            # tmp = np.matmul(tmp,  np.diag(self.edisp_map.geom.axes["migra"].bin_width ** -1))
+            # tmp = np.matmul(np.moveaxis(tmp, axis_e_true, -1), np.diag(coords["energy_true"].flatten() ** -1))
+            # tmp = np.moveaxis(tmp, -1, axis_e_true)
+            # tmp = np.moveaxis(tmp, -1, axis)
+            # self.edisp_map.quantity = tmp
+            # unit  = self.edisp_map.unit
             axis_migra = self.edisp_map.geom.axes["migra"]
             axis_etrue = self.edisp_map.geom.axes["energy_true"]
             shape = [1] * len(self.edisp_map.geom.data_shape)
             shape[self.edisp_map.geom.axes.index_data("migra")] = -1
-            jacobian_migra = (axis_migra.bin_width ** -1).reshape(shape)
-            
+            jacobian_migra = (axis_migra.bin_width**-1).reshape(shape)
+
             shape = [1] * len(self.edisp_map.geom.data_shape)
             shape[self.edisp_map.geom.axes.index_data("energy_true")] = -1
-            jacobian_etrue = (axis_etrue.bin_width ** -1).reshape(shape)
-            jacobian = np.matmul(jacobian_migra,jacobian_etrue)
-            values = self.edisp_map.evaluate(axis_name="migra", coords=coords, jacobian= jacobian)
+            jacobian_etrue = (axis_etrue.bin_width**-1).reshape(shape)
+            jacobian = np.matmul(jacobian_migra, jacobian_etrue)
+            values = self.edisp_map.evaluate(
+                axis_name="migra", coords=coords, jacobian=jacobian
+            )
             unit = values.unit
             import warnings
-            warnings.warn("Using Unbinned analysis for the reconstructed energy axis. Make sure the EDisp will be normalized.")
+
+            warnings.warn(
+                "Using Unbinned analysis for the reconstructed energy axis. Make sure the EDisp will be normalized."
+            )
         data = np.clip(values, 0, np.inf)
         edisp_kernel_map = Map.from_geom(geom=geom, data=data.to_value(), unit=unit)
         if self.exposure_map:
-            if not (isinstance(energy_axis, LabelMapAxis)):
-                geom = geom.squash(axis_name=energy_axis.name)
+            geom = geom.squash(axis_name=energy_axis.name)
             exposure_map = self.exposure_map.copy(geom=geom)
         else:
             exposure_map = None
@@ -432,7 +438,7 @@ class EDispKernelMap(IRFMap):
         return EDispKernel(
             axes=kernel_map.geom.axes[["energy_true", "energy"]],
             data=kernel_map.data[..., 0, 0],
-            unit=kernel_map.unit
+            unit=kernel_map.unit,
         )
 
     @classmethod
