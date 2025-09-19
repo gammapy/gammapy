@@ -34,34 +34,34 @@
 Summary
 -------
 
-
 {% for category, val in definitions.items() %}
-  {% set category_name = definitions[category]['name'] %}
-  {% set show_content = definitions[category]['showcontent'] %}
-  {% set underline = underlines[0] %}
+{% set category_name = definitions[category]['name'] %}
+{% set show_content = definitions[category]['showcontent'] %}
+{% set underline = underlines[0] %}
 
 {{ category_name }}
 {{ underline * category_name|length }}
 
-  {% set underline = underlines[1] %}
-  {% for section, section_categories in sections.items() %}
-    {% if section and category in section_categories %}
+{% set underline = underlines[1] %}
+{% for section, section_categories in sections.items() %}
+{% if section and category in section_categories %}
 {{ section }}
 {{ underline * section|length }}
-    {% endif %}
+{% endif %}
 
-    {% if section_categories and category in section_categories %}
-      {% if show_content %}
-        {% for text, values in section_categories[category].items() %}
+{% if section_categories and category in section_categories %}
+{% if show_content %}
+{% for text, values in section_categories[category].items() %}
 - {{ text }} [{{ values|join(', ') }}]
-        {% endfor %}
-      {% else %}
-- {{ section_categories[category]['']|join(', ') }}
-      {% endif %}
-
-      {% if section_categories[category]|length == 0 %}
-No significant changes.
-      {% endif %}
-    {% endif %}
-  {% endfor %}
 {% endfor %}
+{% else %}
+- {{ section_categories[category]['']|join(', ') }}
+{% endif %}
+
+{% if section_categories[category]|length == 0 %}
+No significant changes.
+{% endif %}
+{% endif %}
+{% endfor %}
+{% endfor %}
+
