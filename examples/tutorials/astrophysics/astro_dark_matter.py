@@ -147,13 +147,14 @@ jfactory = JFactory(
 jfact_decay = jfactory.compute_jfactor()
 
 jfact_map = WcsNDMap(geom=geom, data=jfact_decay.value, unit=jfact_decay.unit)
+
+######################################################################
+# Plot the J-factor map
 plt.figure()
 ax = jfact_map.plot(cmap="viridis", norm=LogNorm(), add_cbar=True)
 plt.title(f"J-Factor [{jfact_map.unit}]")
 
-######################################################################
 # 1 deg circle usually used in H.E.S.S. analyses without the +/- 0.3 deg band around the plane
-
 sky_reg = CircleSkyRegion(center=position, radius=1 * u.deg)
 pix_reg = sky_reg.to_pixel(wcs=geom.wcs)
 pix_reg.plot(ax=ax, facecolor="none", edgecolor="red", label="1 deg circle")
@@ -165,6 +166,7 @@ pix_reg_rec.plot(ax=ax, facecolor="none", edgecolor="orange", label="+/- 0.3 deg
 plt.legend()
 plt.show()
 
+######################################################################
 total_jfact_decay = (
     pix_reg.to_mask().multiply(jfact_decay).sum()
     - pix_reg_rec.to_mask().multiply(jfact_decay).sum()
