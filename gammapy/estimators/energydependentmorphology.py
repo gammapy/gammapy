@@ -87,6 +87,11 @@ class EnergyDependentMorphologyEstimator(Estimator):
     Examples
     --------
     For a usage example see :doc:`/tutorials/astrophysics/energy_dependent_estimation` tutorial.
+
+    References
+    ----------
+    * `Feijen et al. (2025), "Energy-dependent gamma-ray morphology estimation tool in Gammapy"
+      <https://ui.adsabs.harvard.edu/abs/2025A%26A...701A...4F/abstract>`_
     """
 
     tag = "EnergyDependentMorphologyEstimator"
