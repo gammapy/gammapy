@@ -1952,6 +1952,76 @@ class LogParabolaSpectralModel(SpectralModel):
         return reference * np.exp((2 - alpha) / (2 * beta))
 
 
+class LogParabola2SpectralModel(SpectralModel):
+    r"""Spectral log parabola model defined such as the energy scale of the exponent
+    and the reference energy can be different.
+
+    For more information see :ref:`logparabola2-spectral-model`.
+
+    Parameters
+    ----------
+    amplitude : `~astropy.units.Quantity`
+        :math:`\phi_0`. Default is 1e-12 cm-2 s-1 TeV-1.
+    reference : `~astropy.units.Quantity`
+        :math:`E_0`. Default is 10 TeV.
+    alpha : `~astropy.units.Quantity`
+        :math:`\alpha`. Default is 2.
+    beta : `~astropy.units.Quantity`
+        :math:`\beta`. Default is 1.
+    escale : `~astropy.units.Quantity`
+        :math:`E_s`. Default is 1 TeV.
+
+    See Also
+    --------
+    LogParabolaSpectralModel
+    """
+
+    tag = ["LogParabola2SpectralModel", "lp2"]
+    amplitude = Parameter(
+        "amplitude",
+        "1e-12 cm-2 s-1 TeV-1",
+        scale_method="scale10",
+        interp="log",
+    )
+    reference = Parameter("reference", "10 TeV", frozen=True)
+    alpha = Parameter("alpha", 2)
+    beta = Parameter("beta", 1)
+    escale = Parameter("escale", "1 TeV", frozen=True)
+
+    @classmethod
+    def from_log10(cls, amplitude, reference, alpha, beta, escale):
+        """Construct from :math:`log_{10}` parametrization."""
+        beta_ = beta / np.log(10)
+        return cls(
+            amplitude=amplitude,
+            reference=reference,
+            alpha=alpha,
+            beta=beta_,
+            escale=escale,
+        )
+
+    @staticmethod
+    def evaluate(energy, amplitude, reference, alpha, beta, escale):
+        """Evaluate the model (static function)."""
+        xx = energy / reference
+        exponent = -alpha - beta * np.log(energy / escale)
+        return amplitude * np.power(xx, exponent)
+
+    @property
+    def e_peak(self):
+        r"""Spectral energy distribution peak energy (`~astropy.units.Quantity`).
+
+        This is the peak in E^2 x dN/dE and is given by:
+
+        .. math::
+            E_{Peak} = E_{0} \exp{ (2 - \alpha) / (2 * \beta)}
+        """
+        escale = self.escale.quantity
+        alpha = self.alpha.quantity
+        beta = self.beta.quantity
+        return escale * np.exp((2 - alpha) / (2 * beta))
+
+
 class LogParabolaNormSpectralModel(SpectralModel):
     r"""Norm spectral log parabola model.
 
