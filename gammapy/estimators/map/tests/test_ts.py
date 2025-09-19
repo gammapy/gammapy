@@ -722,6 +722,13 @@ def test_joint_ts_map_hawc():
     result = estimator.run(datasets)
     assert_allclose(result["norm_sensitivity"].data[0, 59, 59], 0.04897, rtol=1e-3)
     assert_allclose(result["flux_sensitivity"].data[0, 59, 59], 4.881527e-14, rtol=1e-3)
+    assert_allclose(
+        result["eflux_sensitivity"].data[0, 59, 59], 2.820531e-13, rtol=1e-3
+    )
+    assert_allclose(result["dnde_sensitivity"].data[0, 59, 59], 1.550752e-16, rtol=1e-3)
+    assert_allclose(
+        result["e2dnde_sensitivity"].data[0, 59, 59], 4.900377e-14, rtol=1e-3
+    )
 
 
 def test_tsmap_extended_source():
