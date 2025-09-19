@@ -1968,7 +1968,7 @@ class LogParabola2SpectralModel(SpectralModel):
         :math:`\alpha`. Default is 2.
     beta : `~astropy.units.Quantity`
         :math:`\beta`. Default is 1.
-    reference : `~astropy.units.Quantity`
+    escale : `~astropy.units.Quantity`
         :math:`E_s`. Default is 1 TeV.
 
     See Also
