@@ -169,6 +169,12 @@ def test_significance_map_estimator_map_dataset(simple_dataset):
         result["e2dnde_sensitivity"].data[0, 10, 10], 4.89977e-11, atol=1e-3
     )
 
+    assert result["norm_sensitivity"].unit == ""
+    assert result["flux_sensitivity"].unit == "cm-2 s-1"
+    assert result["eflux_sensitivity"].unit == "TeV cm-2 s-1"
+    assert result["dnde_sensitivity"].unit == "TeV-1 cm-2 s-1"
+    assert result["e2dnde_sensitivity"].unit == "TeV cm-2 s-1"
+
     estimator = ExcessMapEstimator(
         0.1 * u.deg,
         selection_optional=["sensitivity"],

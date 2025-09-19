@@ -684,7 +684,7 @@ class FluxMaps:
 
     @property
     def dnde_sensitivity(self):
-        """Sensitivity given as dnde for which the significance is ``self.meta["n_sigma_sensitivity]``."""
+        """Sensitivity given as dnde for which the significance is ``self.meta["n_sigma_sensitivity"]``."""
         return self.norm_sensitivity * self.dnde_ref
 
     @property
@@ -714,7 +714,7 @@ class FluxMaps:
 
     @property
     def e2dnde_sensitivity(self):
-        """Sensitivity given as e2dnde for which the significance is ``self.meta["n_sigma_sensitivity]``."""
+        """Sensitivity given as e2dnde for which the significance is ``self.meta["n_sigma_sensitivity"]``."""
         return self.norm_sensitivity * self.e2dnde_ref
 
     @property
@@ -744,7 +744,7 @@ class FluxMaps:
 
     @property
     def flux_sensitivity(self):
-        """Sensitivity given as the flux for which the significance is ``self.meta["n_sigma_sensitivity]``."""
+        """Sensitivity given as the flux for which the significance is ``self.meta["n_sigma_sensitivity"]``."""
         return self.norm_sensitivity * self.flux_ref
 
     @property
@@ -774,7 +774,7 @@ class FluxMaps:
 
     @property
     def eflux_sensitivity(self):
-        """Sensitivity given as the eflux for which the significance is ``self.meta["n_sigma_sensitivity]``."""
+        """Sensitivity given as the eflux for which the significance is ``self.meta["n_sigma_sensitivity"]``."""
         return self.norm_sensitivity * self.eflux_ref
 
     def _filter_convergence_failure(self, some_map):
