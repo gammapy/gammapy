@@ -253,9 +253,9 @@ print(
 
 crab_model = create_crab_spectral_model()
 
-fp1.flux_sensitivity.plot(label="sensitivity")
+fp1.dnde_sensitivity.plot(label="sensitivity")
 crab_model.plot(
-    energy_bounds=fp1.geom.axes["energy"], sed_type="flux", label="Crab spectrum"
+    energy_bounds=fp1.geom.axes["energy"], sed_type="dnde", label="Crab spectrum"
 )
 plt.grid(which="minor", alpha=0.3)
 
