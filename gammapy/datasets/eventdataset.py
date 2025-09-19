@@ -1,11 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
+from astropy import units as u
 from gammapy.modeling.models import DatasetModels, FoVBackgroundModel
 from gammapy.utils.scripts import make_name
 from gammapy.utils.fits import LazyFitsData, HDULocation
-from gammapy.irf import PSFMap, EDispMap, EDispKernelMap
+from gammapy.irf import EDispMap, EDispKernelMap, PSFMap, RecoPSFMap
+from gammapy.maps import Map, MapAxes
+from gammapy.data import GTI
 from .unbinned_evaluator import UnbinnedEvaluator
 from .core import Dataset
+from .map import BINSZ_IRF_DEFAULT, RAD_AXIS_DEFAULT, MIGRA_AXIS_DEFAULT
 
 EVALUATION_MODE = "local"
 USE_NPRED_CACHE = True
@@ -18,7 +22,6 @@ class EventDataset(Dataset):
     tag = "EventDataset"
     exposure = LazyFitsData(cache=True)
     edisp = LazyFitsData(cache=True)
-    background = LazyFitsData(cache=True)
     psf = LazyFitsData(cache=True)
     mask_fit = LazyFitsData(cache=True)
     mask_safe = LazyFitsData(cache=True)
@@ -38,38 +41,38 @@ class EventDataset(Dataset):
     def __init__(
         self,
         events=None,
-        position=None,
         geom=None,
         geom_normalization=None,
         models=None,
         exposure=None,
         psf=None,
         edisp=None,
-        background=None,
         mask_safe=None,
         mask_fit=None,
         meta_table=None,
         name=None,
+        reference_time="2000-01-01",
         gti=None,
         meta=None,
-        edisp_original_irf=None,
-        exposure_original_irf=None,
+        edisp_e_reco_binned=None,
+        # exposure_original_irf=None,
     ):
         self._name = make_name(name)
         self._evaluators = {}
-        self.position = position
+        # self.position = position
         self.geom = geom
         self.geom_normalization = geom_normalization
 
         self.events = events
         self.exposure = exposure
-        self.background = background
-        self._background_cached = None
-        self._background_parameters_cached = None
+        # self.background = background
+        # self._background_cached = None
+        # self._background_parameters_cached = None
 
         self.mask_fit = mask_fit
         self.mask_safe = mask_safe
 
+        self.reference_time = reference_time
         self.gti = gti
         self.models = models
         self.meta_table = meta_table
@@ -87,18 +90,18 @@ class EventDataset(Dataset):
                 "'edisp' must be a 'EDispMap', `EDispKernelMap` or 'HDULocation' "
                 f"object, got `{type(edisp)}` instead."
             )
-        if edisp_original_irf is not None and not isinstance(
-            edisp_original_irf, (EDispMap, EDispKernelMap, HDULocation)
+        if edisp_e_reco_binned is not None and not isinstance(
+            edisp_e_reco_binned, (EDispMap, EDispKernelMap, HDULocation)
         ):
             raise ValueError(
-                "'edisp_original_irf' must be a 'EDispMap', `EDispKernelMap` or 'HDULocation' "
-                f"object, got `{type(edisp_original_irf)}` instead."
+                "'edisp_e_reco_binned' must be a 'EDispMap', `EDispKernelMap` or 'HDULocation' "
+                f"object, got `{type(edisp_e_reco_binned)}` instead."
             )
 
         self.edisp = edisp
         self.meta = meta
-        self.edisp_original_irf = edisp_original_irf
-        self.exposure_original_irf = exposure_original_irf
+        self.edisp_e_reco_binned = edisp_e_reco_binned
+        # self.exposure_original_irf = exposure_original_irf
 
     @property
     def _geom(self):
@@ -133,7 +136,7 @@ class EventDataset(Dataset):
                         geom_normalization=self.geom_normalization,
                         psf=self.psf,
                         edisp=self.edisp,
-                        edisp_original_irf=self.edisp_original_irf,
+                        edisp_e_reco_binned=self.edisp_e_reco_binned,
                         exposure=self.exposure,
                         exposure_original_irf=self.exposure_original_irf,
                         evaluation_mode=EVALUATION_MODE,
@@ -170,9 +173,122 @@ class EventDataset(Dataset):
         pass
 
     @classmethod
-    def create(cls, position=None, name=None):
+    def create(
+        cls,
+        geom,
+        energy_axis_true=None,
+        migra_axis=None,
+        rad_axis=None,
+        binsz_irf=BINSZ_IRF_DEFAULT,
+        reco_psf=False,
+        reference_time="2000-01-01",
+        name=None,
+        meta_table=None,
+        **kwargs,
+    ):
         """Create an empty event dataset."""
-        return cls(
-            name=name,
-            position=position,
+        geoms = create_event_dataset_geoms(
+            geom=geom,
+            energy_axis_true=energy_axis_true,
+            migra_axis=migra_axis,
+            rad_axis=rad_axis,
+            binsz_irf=binsz_irf,
+            reco_psf=reco_psf,
         )
+        kwargs.update(geoms)
+        return cls.from_geoms(
+            name=name, reference_time=reference_time, meta_table=meta_table, **kwargs
+        )
+
+    @classmethod
+    def from_geoms(
+        cls,
+        geom,
+        geom_exposure=None,
+        geom_psf=None,
+        geom_edisp=None,
+        reference_time="2000-01-01",
+        name=None,
+        **kwargs,
+    ):
+        name = make_name(name)
+        kwargs = kwargs.copy()
+        kwargs["name"] = name
+
+        if geom_exposure:
+            kwargs["exposure"] = Map.from_geom(geom_exposure, unit="m2 s")
+
+        if geom_edisp:
+            if "energy" in geom_edisp.axes.names:
+                kwargs["edisp"] = EDispKernelMap.from_geom(geom_edisp)
+            else:
+                kwargs["edisp"] = EDispMap.from_geom(geom_edisp)
+
+        if geom_psf:
+            if "energy_true" in geom_psf.axes.names:
+                kwargs["psf"] = PSFMap.from_geom(geom_psf)
+            elif "energy" in geom_psf.axes.names:
+                kwargs["psf"] = RecoPSFMap.from_geom(geom_psf)
+
+        kwargs.setdefault(
+            "gti", GTI.create([] * u.s, [] * u.s, reference_time=reference_time)
+        )
+        kwargs["mask_safe"] = Map.from_geom(geom, unit="", dtype=bool)
+        return cls(geom=geom, **kwargs)
+
+
+def create_event_dataset_geoms(
+    geom,
+    energy_axis_true=None,
+    migra_axis=None,
+    rad_axis=None,
+    binsz_irf=BINSZ_IRF_DEFAULT,
+    reco_psf=False,
+):
+    """Create geometries needed for event dataset.
+    Parameters
+    ----------
+    geom : `~gammapy.maps.WcsGeom` or `~gammapy.maps.RegionGeom`
+        Reference geometry.
+    energy_axis_true : `~gammapy.maps.MapAxis`
+        True energy axis.
+    migra_axis : `~gammapy.maps.MapAxis`
+        Migration axis.
+    rad_axis : `~gammapy.maps.MapAxis`
+        Offset axis.
+    binsz_irf : float
+        Bin size for IRF maps in deg.
+    reco_psf : bool
+        Use reconstructed energy axis for PSF map.
+    Returns
+    -------
+    dict
+        Dictionary of geometries.
+    """
+    rad_axis = rad_axis or RAD_AXIS_DEFAULT
+    migra_axis = migra_axis or MIGRA_AXIS_DEFAULT
+
+    if energy_axis_true is not None:
+        energy_axis_true.assert_name("energy_true")
+    else:
+        energy_axis_true = geom.axes["energy_true"].copy(name="energy_true")
+
+    external_axes = geom.axes.drop("energy_true")
+    geom_image = geom.to_image()
+    geom_exposure = geom_image.to_cube(MapAxes([energy_axis_true]) + external_axes)
+    geom_irf = geom_image.to_binsz(binsz=binsz_irf)
+
+    if reco_psf:
+        raise NotImplementedError(
+            "PSF map with reco energy axis not implemented yet for event dataset."
+        )
+    geom_psf = geom_irf.to_cube(MapAxes([rad_axis, energy_axis_true]) + external_axes)
+    geom_edisp = geom_irf.to_cube(
+        MapAxes([migra_axis, energy_axis_true]) + external_axes
+    )
+    return {
+        "geom": geom,
+        "geom_exposure": geom_exposure,
+        "geom_psf": geom_psf,
+        "geom_edisp": geom_edisp,
+    }
