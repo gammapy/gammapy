@@ -97,13 +97,16 @@ jfactory = JFactory(geom=geom, profile=profile, distance=profiles.DMProfile.DIST
 jfact = jfactory.compute_jfactor()
 
 jfact_map = WcsNDMap(geom=geom, data=jfact.value, unit=jfact.unit)
+
+
+######################################################################
+# Plot the J-factor map
+
 plt.figure()
 ax = jfact_map.plot(cmap="viridis", norm=LogNorm(), add_cbar=True)
 plt.title(f"J-Factor [{jfact_map.unit}]")
 
-######################################################################
 # 1 deg circle usually used in H.E.S.S. analyses without the +/- 0.3 deg band around the plane
-
 sky_reg = CircleSkyRegion(center=position, radius=1 * u.deg)
 pix_reg = sky_reg.to_pixel(wcs=geom.wcs)
 pix_reg.plot(ax=ax, facecolor="none", edgecolor="red", label="1 deg circle")
