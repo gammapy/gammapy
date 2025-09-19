@@ -159,7 +159,7 @@ spatial_model.lat_0.frozen = True
 spatial_model.lon_0.frozen = True
 
 sky_model = SkyModel(
-    spatial_model=spatial_model, spectral_model=spectral_model, name="test"
+    spatial_model=spatial_model, spectral_model=spectral_model, name="source"
 )
 dataset.models = sky_model
 LLR = select_nested_models(
@@ -199,18 +199,18 @@ print(LLR["fit_results"].parameters.to_table())
 # from wandering off to different regions in the FoV.
 #
 
-
-model1 = sky_model.copy(name="model1")
-model1.parameters["amplitude"].value = 1e-14
-model1.parameters["index"].value = 2.0
-model1.freeze(model_type="spatial")
+sky_model.parameters["amplitude"].value = 1e-14
+sky_model.parameters["index"].value = 2.0
+sky_model.freeze(model_type="spatial")
 
 energy_edges = dataset.geoms["geom"].axes["energy"].edges
 fpe = FluxPointsEstimator(
-    selection_optional="all", energy_edges=energy_edges, n_sigma_ul=3
+    selection_optional="all",
+    energy_edges=energy_edges,
+    n_sigma_ul=3,
+    source="source",
 )
 
-dataset.models = model1
 fp1 = fpe.run(dataset)
 
 
@@ -228,7 +228,9 @@ plt.show()
 
 emin = energy_edges[0]
 emax = energy_edges[-1]
-fpe2 = FluxPointsEstimator(selection_optional=["ul"], energy_edges=[emin, emax])
+fpe2 = FluxPointsEstimator(
+    selection_optional=["ul"], energy_edges=[emin, emax], source="source"
+)
 fp2 = fpe2.run(dataset)
 print(
     f"Integral upper limit between {emin:.1f} and {emax:.1f} is {fp2.flux_ul.quantity.ravel()[0]:.2e}"
