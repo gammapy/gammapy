@@ -1017,7 +1017,7 @@ class WcsNDMap(WcsMap):
             Force width to odd number of pixels.
             Default is False.
         min_npix : bool, optional
-            Force width to a minimmum number of pixels.
+            Force width to a minimum number of pixels.
             Default is 1.
 
         Returns
