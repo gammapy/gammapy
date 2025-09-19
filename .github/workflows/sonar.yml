@@ -1,0 +1,100 @@
+# This workflow is triggered by the completion of our CI workflow
+# It then checks out the pull request repository / branch, runs the
+# sonar scanner, downloads the coverage report and uploads the report
+# to the sonarqube server. This is necessary as forks don't have access
+# to secrets and SONAR_TOKEN is required to upload reports.
+#
+# Adapted from https://github.com/medplum/medplum/
+
+name: Sonar
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+
+jobs:
+  sonar:
+    name: Sonar
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
+    steps:
+      - name: 'Download code coverage'
+        uses: actions/github-script@v8
+        with:
+          script: |
+            let allArtifacts = await github.rest.actions.listWorkflowRunArtifacts({
+               owner: context.repo.owner,
+               repo: context.repo.repo,
+               run_id: context.payload.workflow_run.id,
+            });
+            let matchArtifact = allArtifacts.data.artifacts.filter((artifact) => {
+              return artifact.name == "gammapy-coverage-report"
+            })[0];
+            let download = await github.rest.actions.downloadArtifact({
+               owner: context.repo.owner,
+               repo: context.repo.repo,
+               artifact_id: matchArtifact.id,
+               archive_format: 'zip',
+            });
+            let fs = require('fs');
+            fs.writeFileSync(`${process.env.GITHUB_WORKSPACE}/gammapy-coverage-report.zip`, Buffer.from(download.data));
+
+      - name: 'Unzip code coverage'
+        run: unzip gammapy-coverage-report.zip -d $HOME/coverage
+
+      - name: Set environment
+        run: |
+          cat $HOME/coverage/sonar_env >> "$GITHUB_ENV"
+          cat $HOME/coverage/sonar_env
+
+      - name: Checkout branch or tag
+        uses: actions/checkout@v5
+        if: github.event.workflow_run.event != 'pull_request'
+        with:
+          repository: ${{ github.event.workflow_run.head_repository.full_name }}
+          ref: ${{ github.event.workflow_run.head_branch }}
+          fetch-depth: 0
+          clean: false
+
+      - name: Checkout Pull Request merge result
+        uses: actions/checkout@v5
+        if: github.event.workflow_run.event == 'pull_request'
+        with:
+          ref: refs/pull/${{ env.PR_NUMBER }}/merge
+          fetch-depth: 0
+          clean: false
+
+      - name: Check artifact
+        run: |
+          cp -r $HOME/coverage .
+          ls -l coverage
+          cat coverage/coverage.xml
+
+      - name: Git info
+        run: |
+          git status
+          git log -n 5 --oneline
+          ls -l coverage
+
+      - name: Sonarqube Scan Branch
+        if: github.event.workflow_run.event != 'pull_request'
+        uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonar-ctao.zeuthen.desy.de
+
+      - name: Sonarqube Scan PR
+        if: github.event.workflow_run.event == 'pull_request'
+        uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonar-ctao.zeuthen.desy.de
+        with:
+          args: >
+            -Dsonar.scm.revision=${{ github.event.workflow_run.head_sha }}
+            -Dsonar.pullrequest.key=${{ env.PR_NUMBER }}
+            -Dsonar.pullrequest.branch=${{ env.SOURCE_BRANCH }}
+            -Dsonar.pullrequest.base=${{ env.TARGET_BRANCH }}
