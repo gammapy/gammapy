@@ -57,7 +57,7 @@ line-ending = "auto"
 [tool.towncrier]
 package = "gammapy"
 directory = "docs/release-notes"
-filename = "CHANGELOG.rst"
+filename = "docs/release-notes/CHANGELOG.rst"
 template = "docs/release-notes/template.rst"
 
 issue_format = "`#{issue} <https://github.com/gammapy/gammapy/issues/{issue}>`_"
