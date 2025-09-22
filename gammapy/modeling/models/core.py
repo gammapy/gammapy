@@ -248,8 +248,10 @@ class ModelBase:
 
         Parameters
         ----------
-        parameters : `Parameters`
+        parameters : `~gammapy.modeling.Parameters`
             Parameters for init.
+        **kwargs : dict
+            Keyword arguments to overwrite the model class constructor.
 
         Returns
         -------
