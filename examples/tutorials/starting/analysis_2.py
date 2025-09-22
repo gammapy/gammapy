@@ -297,7 +297,7 @@ stacked.models = [sky_model, bkg_model]
 # the ``stats`` method of the dataset to the minimizer. By default, it
 # uses ``iminuit``.
 #
-# It is possible that the fit will try to converge on an unrelated position
+# It is possible that the fit will try to test positions far from your source of interest and fail to converge
 # therefore you may choose to constrain the model parameter ranges
 # to stay within your expected region (see :ref:`here <dropdown-improve-fit>`).
 # For further information on fitting you can see the :doc:`/tutorials/details/fitting`
