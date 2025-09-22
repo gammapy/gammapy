@@ -10,10 +10,6 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v5
 
-      - name: Get PR labels
-        id: labels
-        uses: actions-ecosystem/action-get-labeled@v1
-
       - name: Verify changelog fragment if required
         run: |
           set -euo pipefail
