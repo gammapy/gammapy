@@ -423,8 +423,8 @@ class SpatialModel(ModelBase):
                 * "extension": plot the extension error of the spatial model
 
         size_factor : float, optional
-            Multiplicative factor for the 1:math:`\sigma` error band.
-            Default is :math:`1.0\sigma`
+            Extension around which the 1:math:`\sigma` error band is plotted.
+            Default is 1.0.
         kwargs_position : dict, optional
             Keyword arguments passed to `~SpatialModel.plot_position_error`.
             Default is None.
@@ -707,7 +707,7 @@ class GaussianSpatialModel(SpatialModel):
         ----------
         size_factor : float, optional
             Number of :math:`\sigma`.
-            Default is :math:`1.0\sigma` which corresponds to about 39%
+            Default is 1.0 which corresponds to about 39%
             containment for a 2D symmetric Gaussian.
 
         Returns
