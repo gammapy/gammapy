@@ -6,7 +6,7 @@
 #
 # Adapted from https://github.com/medplum/medplum/
 
-name: Sonar
+name: SonarQube quality gate
 
 on:
   workflow_run:
@@ -15,7 +15,7 @@ on:
 
 jobs:
   sonar:
-    name: Sonar
+    name: SonarQube
     runs-on: ubuntu-latest
     if: github.event.workflow_run.conclusion == 'success'
     steps:
