@@ -578,7 +578,9 @@ We recently chose to utilise `towncrier <https://towncrier.readthedocs.io/en/sta
 - For each PR, a related 'fragment' file should be created in the ``docs/release-notes`` folder.
 - The naming convention of the file should be ``<PULL REQUEST NUMBER>.<TYPE>.rst``, where the available
   types are ``infrastructure``, ``docs``, ``feature`` or ``bugfix``.
-- The file should contain a suitable message for the PR, for example "Add a new feature for the estimators.".
+- The file should contain a suitable message for the PR, for example "A new function `select_nested_models`
+  has been introduced to perform nested model fits and compute the resulting test statistic (TS) between
+  two nested hypotheses.".
 
 To build the release notes you can simply utilise the following line:
 
