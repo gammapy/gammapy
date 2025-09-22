@@ -140,9 +140,9 @@ jobs:
           echo "PROJECT_VERSION=$(python -m setuptools_scm)" >> sonar_env
           cat sonar_env
 
-      # upload coverage report for sonar workflow
+      # upload coverage report for SonarQube workflow
       - uses: actions/upload-artifact@v4
-        if: contains(matrix.extra-args, 'codecov') && contains(github.event.pull_request.labels.*.name, 'documentation-only') == false
+        if: "contains(matrix.tox_env, '-cov')"
         with:
           name: gammapy-coverage-report
           path: |
