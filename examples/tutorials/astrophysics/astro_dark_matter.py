@@ -192,7 +192,8 @@ print(
 fluxes = PrimaryFlux(mDM="1 TeV", channel="eL")
 print(fluxes.allowed_channels)
 
-fig, axes = plt.subplots(4, 1, figsize=(4, 16))
+fig, axes = plt.subplots(2, 2, figsize=(10, 9))
+axes = axes.flatten()
 mDMs = [0.01, 0.1, 1, 10] * u.TeV
 
 for mDM, ax in zip(mDMs, axes):
@@ -212,7 +213,7 @@ for mDM, ax in zip(mDMs, axes):
         )
 
 axes[0].legend()
-plt.subplots_adjust(hspace=0.9)
+fig.tight_layout()
 plt.show()
 
 
