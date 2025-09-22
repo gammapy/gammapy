@@ -1,4 +1,4 @@
-# This workflow is triggered by the completion of our CI workflow
+# This workflow is triggered by the completion of the CI workflow
 # It then checks out the pull request repository / branch, runs the
 # sonar scanner, downloads the coverage report and uploads the report
 # to the sonarqube server. This is necessary as forks don't have access
@@ -84,6 +84,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonar-ctao.zeuthen.desy.de
+        with:
+          args: >
+            -Dsonar.projectVersion=${{ env.PROJECT_VERSION }}
 
       - name: Sonarqube Scan PR
         if: github.event.workflow_run.event == 'pull_request'
@@ -94,6 +97,7 @@ jobs:
           SONAR_HOST_URL: https://sonar-ctao.zeuthen.desy.de
         with:
           args: >
+            -Dsonar.projectVersion=${{ env.PROJECT_VERSION }}
             -Dsonar.scm.revision=${{ github.event.workflow_run.head_sha }}
             -Dsonar.pullrequest.key=${{ env.PR_NUMBER }}
             -Dsonar.pullrequest.branch=${{ env.SOURCE_BRANCH }}
