@@ -422,10 +422,9 @@ class SpatialModel(ModelBase):
                 * "position": plot the position error of the spatial model
                 * "extension": plot the extension error of the spatial model
 
-        size_factor : float
-            Number of :math:`\sigma`.
-            Default is :math:`1.0\sigma` which corresponds to about 39%
-            containment for a 2D symmetric Gaussian.
+        size_factor : float, optional
+            Multiplicative factor for the 1:math:`\sigma` error band.
+            Default is :math:`1.0\sigma`
         kwargs_position : dict, optional
             Keyword arguments passed to `~SpatialModel.plot_position_error`.
             Default is None.
@@ -674,7 +673,7 @@ class GaussianSpatialModel(SpatialModel):
 
         Parameters
         ----------
-        size_factor : float
+        size_factor : float, optional
             Number of :math:`\sigma`.
             Default is :math:`1.0\sigma` which corresponds to about 39%
             containment for a 2D symmetric Gaussian.
@@ -706,7 +705,7 @@ class GaussianSpatialModel(SpatialModel):
 
         Parameters
         ----------
-        size_factor : float
+        size_factor : float, optional
             Number of :math:`\sigma`.
             Default is :math:`1.0\sigma` which corresponds to about 39%
             containment for a 2D symmetric Gaussian.
@@ -809,7 +808,7 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
         Parameters
         ----------
         size_factor : float, optional
-            Number of :math:`r_0`. Default is 1.0
+            Number of :math:`r_0`. Default is 1.0.
         kwargs : dict
             Keyword arguments passed to `~regions.EllipseSkyRegion`.
 
@@ -833,13 +832,13 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
         scale = self.evaluation_radius / self.r_0.quantity
         return self.to_region(size_factor=scale)
 
-    def _to_region_error(self, size_factor=1):
+    def _to_region_error(self, size_factor=1.0):
         r"""Model error at a given number of :math:`r_0`.
 
         Parameters
         ----------
         size_factor : float, optional
-            Number of :math:`r_0`. Default is 1.
+            Number of :math:`r_0`. Default is 1.0.
 
         Returns
         -------
