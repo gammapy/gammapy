@@ -3,31 +3,35 @@
 
 .. _gammapy_2p0_release:
 
-2.0 (August XX, 2025)
-----------------
+2.0 (August 26, 2025)
+---------------------
 
 
-- Released August XX, 2025
-- 25 contributors
-- 235 (XX)  pull requests since v1.3, 400 (XX) pull requests since 1.0
-- 100 (XX) closed issues
+- Released August 26, 2025
+- 26 contributors (10 new contributors)
+- 312 pull requests since v1.3, 497 pull requests since 1.0
+- 118 closed issues
 
 Summary
 ~~~~~~~
 
 
-Gammapy v2.0 is a new Long Term Stable (LTS) release. It will be maintained for the for the next development cycle
+Gammapy v2.0 is a new Long Term Stable (LTS) release. It will be maintained for the next development cycle
 (approximately two years), while support for Gammapy 1.x versions is now dropped.
-With Gammapy 2.0, we provide analysis support for major Imaging Atmospheric Cherenkov Telescopes including H.E.S.S.,
+With Gammapy 2.0, we provide analysis support for most major Imaging Atmospheric Cherenkov Telescopes including H.E.S.S.,
 VERITAS, MAGIC, LST1, Water Cherenkov Telescopes like HAWC and SWGO, as well as Fermi-LAT.
 
 Since Gammapy 1.3, improved support is provided for Fermi-LAT analysis, and analysis
 of VERITAS telescope data has been validated.
 
 Bayesian inference with nested sampling is now supported.
-A Sampler class that wraps around sampler libraries is introduced. It provides
-an interface similar to the Fit class. For now, Sampler relies on the ultranest library.
+A ``Sampler`` class that wraps around sampler libraries is introduced. It provides
+an interface similar to the Fit class. For now, the ``Sampler`` relies on the ``ultranest`` library.
 A detailed tutorial is provided.
+
+Flux sensitivity can now be computed by the various flux estimator classes such as `~gammapy.estimators.FluxPointsEstimator`,
+with the ``"sensitivity"`` option. The calculation is based on the Asimov dataset following the method described in `~gammapy.estimators.ParameterSensitivityEstimator`.
+
 
 There has been significant code cleanup and restructuring. They should not break user codes
 but might marginally change analysis results. We mention here a number of changes and
@@ -39,10 +43,12 @@ undergoing re-structuring efforts:
   incorrect far from the decorrelation energy. To overcome this, error bands are now computed using
   multi-normal sampling of spectral parameters taking into account all correlations. The `plot_error`
   method now builds an envelope of the sampled spectra using vectorized evaluation of the model.
-- The separation of the internal DL3 data model from GADF specification is close to be over. In particular,
+- The separation of the internal DL3 data model from GADF specification is close to being over. In particular,
   the `~gammapy.data.EventList` internal table does no longer follow the GADF structure now.
+- The restructuring of statistics and `Dataset` has started with the addition of ``FitStatistic`` classes 
+  and a registry to allow configuration of the statistic on a dataset.
 
-Significant effort has been put in cleaning up the documentation and re-organizing the tutorial structure.
+Significant effort has been put in cleaning up the documentation and re-organising the tutorial structure.
 
 
 API changes
@@ -54,6 +60,7 @@ Two API-breaking changes have been introduced in this version:
   instead of ``band`` to allow exact matches
 - ``cta_south`` and ``cta_north`` have been renamed as ``ctao_south`` and ``ctao_north``, respectively,
   in `~gammapy.data.observatory_locations`
+
 Features deprecated since Gammapy v1.3 have been removed.
 
 
@@ -65,10 +72,10 @@ Documentation improvements
 - The ordering of tutorials has been restructured for clarity.
 - Four new tutorials have been added:
 
-   - one exposing VERITAS analysis along with addition of VERITAS data in `$GAMMAPY_DATA` (:doc:`/tutorials/data/veritas`)
-   - one exposing computation of upper limits for non-detected sources (:doc:`/tutorials/analysis-3d/non_detected_source`)
-   - one explaining computation of upper limits on parameters (:doc:`/tutorials/details/parameter_ul`)
-   - one introducing Bayesian inference with nested sampling (:doc:`/tutorials/details/nested_sampling_Crab`)
+  - one exposing VERITAS analysis along with addition of VERITAS data in `$GAMMAPY_DATA` (:doc:`/tutorials/data/veritas`)
+  - one exposing computation of upper limits for non-detected sources (:doc:`/tutorials/analysis-3d/non_detected_source`)
+  - one explaining computation of upper limits on parameters (:doc:`/tutorials/details/parameter_ul`)
+  - one introducing Bayesian inference with nested sampling (:doc:`/tutorials/details/nested_sampling_Crab`)
 
 - The tutorial showing how to handle Fermi-LAT data (:doc:`/tutorials/data/fermi_lat`) has been rewritten to expose a full Fermi-LAT analysis.
 - Code examples have been added in docstrings.
@@ -84,7 +91,7 @@ New features
 
 *gammapy.data*
 
-- Helper method for observation selection at Datastore level, specially for WCD
+- Helper method for observation selection at ``Datastore`` level, specially useful for WCD
 
 *gammapy.datasets*
 
@@ -98,15 +105,16 @@ New features
 *gammapy.makers*
 
 - Added spatial model to `gammapy.makers.FoVBackgroundMaker` init
+- Add time integration of 3D background model aligned on Alt-Az during an observation in `~gammapy.maps.MapDatasetMaker` 
 - Add a `~gammapy.datasets.FermipyDatasetsReader` to convert Fermi-LAT maps from Fermipy
   into a gammapy `~gammapy.datasets.Datasets`.
 
 *gammapy.modeling*
 
 - Support for pixel-wise weighted likelihood as implemented in Fermi-LAT science tools
-- Support for nested sampling
+- Add `~gammapy.modeling.Sampler` class to support nested sampling for bayesian analysis
 - Addition of a `~gammapy.modeling.models.LogUniformPrior`
-- Implement a more robust error propagation method using sampling
+- Implement a more robust error propagation method using parameter sampling
 - Add ``datasets_names`` argument to `~gammapy.modeling.models.create_fermi_isotropic_diffuse_model`
 - Add interp_scale to parameter scaling
 - Make a distinction between `~gammapy.modeling.Parameters.free_parameters` and
@@ -114,12 +122,11 @@ New features
 
 *gammapy.stats*
 
-- Addition of a ``FIT_STATISTIC_REGISTRY`` to allow configuration of the statistic on a dataset.
+- Introduce optional numba optimized fit statistic functions. By default, Gammapy v2.0 still relies on Cython optimized code.
 
 *gammapy.utils*
 
 - Introduce a FoVFrame in `gammapy.utils.coordinates`
-- Get regions of bright stars in FoV
 - Allow energy selection in `~gammapy.makers.utils.make_theta_squared_table`
 
 Bug fixes and improvements
@@ -131,7 +138,7 @@ Bug fixes and improvements
 - Fix mask handling in `~gammapy.estimators.TSMapEstimator`
 - Preserve parameters links in `gammapy.modeling.models.Models.copy()`
 - Fix link label display in parameters.to_table
-- Fix ``e_peak`` implementation of `~gammapy.modeling.models.SuperExpCutoffPowerLaw4FGLDR3SpectralModel` to give results compatible with Eq 21 of  https://iopscience.iop.org/article/10.3847/1538-4357/acee67
+- Fix ``e_peak`` implementation of `~gammapy.modeling.models.SuperExpCutoffPowerLaw4FGLDR3SpectralModel` to give results compatible with Eq 21 of https://iopscience.iop.org/article/10.3847/1538-4357/acee67
 - Fix of a `~gammapy.maps.HpxGeom` simulation error
 
 
@@ -139,15 +146,12 @@ Infrastructure
 ~~~~~~~~~~~~~~
 
 - Remove dependency on ``sphinx-astropy``
-- Utilise OpenAstronomy in our release workflow to build wheels
-- Added extra workflows for:
-
-   - Scheduling run for doctests in rst and examples
-   - Scheduling link check (separated from CI)
-
-- Add the docs build to PRs
 - Support of astropy v7.1
-- Allow skipping of ci actions through labels: ``skip-docs``, ``skip-tests``
+- Utilise OpenAstronomy in our release workflow to build wheels
+- Added extra workflows for
+
+  - Scheduling run for doctests in rst and examples
+  - Scheduling link check (separated from CI)
 
 
 Contributors
@@ -160,10 +164,9 @@ Contributors
 - Tomas Bylund
 - Katharina Egg
 - Kirsty Feijen
-- Bruno Khélifi
 - Lucas Gréaux
+- Bruno Khélifi
 - Maximilian Linhoff
-- Mitsunari Takahashi
 - Edgar Molina
 - Daniel Morcuende
 - Mireia Nievas-Rosillo
@@ -176,6 +179,7 @@ Contributors
 - Leander Schlegel
 - Atreyee Sinha
 - Hanna Stapel
+- Mitsunari Takahashi
 - Régis Terrier
 - Samantha Wong
 

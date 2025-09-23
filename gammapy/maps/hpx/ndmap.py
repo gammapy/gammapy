@@ -416,7 +416,7 @@ class HpxNDMap(HpxMap):
         """Create a cutout around a given position.
 
         For HpxMap the indexes used to select the cutout pixels are not always contiguous
-        we cannot write them in term of slices that give a view as for the WcsMap.
+        we cannot write them in terms of slices that give a view as for the WcsMap.
         As the fancy indexing used instead of slicing return a copy and not a view,
         _cutout_view cannot be implemented so we return cutout.
         """

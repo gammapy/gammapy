@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Tools to create profiles (i.e. 1D "slices" from 2D images)."""
+
 import numpy as np
 import scipy.ndimage
 from astropy import units as u
@@ -225,7 +226,7 @@ class ImageProfile:
             Smoothing width given as quantity or float. If a float is given it
             is interpreted as smoothing width in pixels. If an (angular) quantity
             is given it is converted to pixels using `xref[1] - x_ref[0]`. Default is "0.1 deg".
-        kwargs : dict, optional
+        **kwargs : dict, optional
             Keyword arguments passed to `~scipy.ndimage.uniform_filter`
             ('box') and `~scipy.ndimage.gaussian_filter` ('gauss').
 

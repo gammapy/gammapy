@@ -378,7 +378,7 @@ class SpectralModel(ModelBase):
         energy_min, energy_max : `~astropy.units.Quantity`
             Lower and upper bound of integration range.
         **kwargs : dict
-            Keyword arguments passed to :func:`~gammapy.modeling.models.spectral.integrate_spectrum`.
+            Keyword arguments passed to :func:`~gammapy.modeling.models.integrate_spectrum`.
         """
         if hasattr(self, "evaluate_integral"):
             kwargs = {par.name: par.quantity for par in self.parameters}
@@ -460,7 +460,7 @@ class SpectralModel(ModelBase):
         energy_min, energy_max : `~astropy.units.Quantity`
             Lower and upper bound of integration range.
         **kwargs : dict
-            Keyword arguments passed to :func:`~gammapy.modeling.models.spectral.integrate_spectrum`.
+            Keyword arguments passed to `~gammapy.modeling.models.integrate_spectrum`.
         """
 
         def f(x):
@@ -540,7 +540,7 @@ class SpectralModel(ModelBase):
 
         Parameters
         ----------
-        energy_axis : `MapAxis`
+        energy_axis : `~gammapy.maps.MapAxis`
             Energy axis.
 
         Returns
@@ -1472,7 +1472,7 @@ class PiecewiseNormSpectralModel(SpectralModel):
     ----------
     energy : `~astropy.units.Quantity`
         Array of energies at which the model values are given (nodes).
-    norms : `~numpy.ndarray` or list of `Parameter`
+    norms : `~numpy.ndarray` or list of `gammapy.modeling.Parameter`
         Array with the initial norms of the model at energies ``energy``.
         Normalisation parameters are created for each value.
         Default is one at each node.
