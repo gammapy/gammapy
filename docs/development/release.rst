@@ -185,7 +185,7 @@ Steps for the day to announce the release:
    * Tag the new version and push to the upstream repository::
 
        git tag -s v1.3 -m "Tagging v1.3"
-       git push origin v1.3
+       git push --tags
 #. Open a milestone and issue for the next release (and possibly also a milestone for the
    release after, so that low-priority issues can already be moved there). Find a
    release manager for the next release, assign the release issue to them,
