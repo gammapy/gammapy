@@ -13,7 +13,7 @@ used by datasets to perform model fitting and parameter estimation.
 
 Fit statistics in Gammapy are all log-likelihood functions normalized like chi-squares,
 i.e. if :math:`L` is the likelihood function used, they follow the expression
-:math:`2 \times log L`.
+:math:`2 \times \log L`.
 
 All functions compute per-bin statistics. If you want the summed statistics for
 all bins, call sum on the output array yourself.
