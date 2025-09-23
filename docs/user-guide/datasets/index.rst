@@ -100,19 +100,19 @@ The total number of predicted counts from a `~gammapy.datasets.MapDataset` are c
 
 .. math::
 
-	N_{Pred} = N_{Bkg} + \sum_{Src} N_{Src}
+	N_{\mathrm{Pred}} = N_{\mathrm{Bkg}} + \sum_{\mathrm{Src}} N_{\mathrm{Src}}
 
-Where :math:`N_{Bkg}` is the expected counts from the residual hadronic background
-model and :math:`N_{Src}` the predicted counts from a given source model component.
+Where :math:`N_{\mathrm{Bkg}}` is the expected counts from the residual hadronic background
+model and :math:`N_{\mathrm{Src}}` the predicted counts from a given source model component.
 The predicted counts from the hadronic background are computed directly from
 the model in reconstructed energy and spatial coordinates, while the predicted counts
 from a source are obtained by forward folding with the instrument response:
 
 .. math::
 
-	N_{Src} = \mathrm{PSF_{Src}} \circledast \mathrm{EDISP_{Src}}(\mathcal{E} \cdot F_{Src}(l, b, E_{True}))
+	N_{\mathrm{Src}} = \mathrm{PSF_{Src}} \circledast \mathrm{EDISP_{Src}}(\mathcal{E} \cdot F_{\mathrm{Src}}(l, b, E_{\mathrm{True}}))
 
-Where :math:`F_{Src}` is the integrated flux of the source model,
+Where :math:`F_{\mathrm{Src}}` is the integrated flux of the source model,
 :math:`\mathcal{E}` the exposure,
 :math:`\mathrm{EDISP}` the energy dispersion matrix and
 :math:`\mathrm{PSF}` the PSF convolution kernel. The corresponding IRFs are extracted
