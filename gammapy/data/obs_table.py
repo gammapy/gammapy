@@ -14,7 +14,7 @@ __all__ = ["ObservationTable"]
 
 
 class ObservationTable(Table):
-    """Prototype for new ObservationTable class.
+    """ObservationTable class.
 
     See discussion and development: https://github.com/gammapy/gammapy/issues/3767, https://github.com/gammapy/gammapy/issues/4238
     The code is based on the code for the EventList class in event_list.py.
@@ -28,13 +28,12 @@ class ObservationTable(Table):
         table : `astropy.table.Table'
             Table to init observation table from.
 
-        Creates instance of ObservationTable either from given table or from reference table.
-        It is validated, that the observation table follows the internal format.
+        Creates instance of ObservationTable either from given table, or empty.
+        If not empty, it is validated, that the observation table follows the internal format.
         """
 
-        if table is None:
-            table = self._reference_table()
-        table = self._validate_table(table)
+        if table is not None:
+            table = self._validate_table(table)
         super().__init__(data=table, **kwargs)
 
     @staticmethod
