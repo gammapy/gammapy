@@ -38,7 +38,7 @@ the likelihood :math:`L` and applying the expression above, we obtain
 the following formula for the Cash fit statistic:
 
 .. math::
-    C = 2 \times \left(\mu_{\mathrm{sig}} + \mu_{\mathrm{bkg}} - n \times log (\mu_{\mathrm{sig}}
+    C = 2 \times \left(\mu_{\mathrm{sig}} + \mu_{\mathrm{bkg}} - n \times \log (\mu_{\mathrm{sig}}
     + \mu_{\mathrm{bkg}}) \right)
 
 The Cash statistic is implemented in `~gammapy.stats.cash` and is used as a `stat`
