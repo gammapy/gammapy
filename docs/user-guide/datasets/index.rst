@@ -110,7 +110,7 @@ from a source are obtained by forward folding with the instrument response:
 
 .. math::
 
-	N_{\mathrm{src}} = \mathrm{PSF_{src}} \circledast \mathrm{EDISP_{src}}(\mathcal{E} \cdot F_{\mathrm{src}}(l, b, E_{\mathrm{True}}))
+	N_{\mathrm{src}} = \mathrm{PSF_{src}} \circledast \mathrm{EDISP_{src}}(\mathcal{E} \cdot F_{\mathrm{src}}(l, b, E_{\mathrm{true}}))
 
 Where :math:`F_{\mathrm{src}}` is the integrated flux of the source model,
 :math:`\mathcal{E}` the exposure,
