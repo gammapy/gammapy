@@ -10,13 +10,23 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v5
 
-      - name: Verify changelog fragment if required
+      - name: Verify changelog label and fragment
         run: |
           set -euo pipefail
 
-          echo "Looking for 'changelog-required' label..."
+          # Obtain all labels set to the PR
+          labels = "${{ toJson(github.event.pull_request.labels.*.name) }}"
 
-          if echo "${{ toJson(github.event.pull_request.labels.*.name) }}" | grep -q "changelog-required"; then
+          # If the labels contains feature, bug or api-change then automatically require the 'changelog-required' label
+          if echo "$labels" | grep -Eq '"(feature|bug|api-change)"'; then
+            if ! echo "$labels" | grep -q '"changelog-required"'; then
+              echo "PR has 'feature', 'bug', or 'api-change' label but is missing 'changelog-required'."
+              exit 1
+            fi
+          fi
+
+          # Now we look for 'changelog-required' label
+          if echo "$labels" | grep -q "changelog-required"; then
             echo "Label 'changelog-required' is set. Checking for fragments in docs/release-notes/*.rst..."
 
             if ! git diff --name-only origin/${{ github.base_ref }}... | grep -q '^docs/release-notes/.*\.rst$'; then
@@ -26,5 +36,5 @@ jobs:
 
             echo "Changelog fragment found."
           else
-            echo "No changelog-required label, skipping this check."
+            echo "No 'changelog-required' label, skipping this check."
           fi
