@@ -26,7 +26,7 @@ class ObservationTableReader:
     def __init__(self, checksum=False):
         self.checksum = checksum
 
-    def read(self, filename):
+    def read(self, filename, hdu=None):
         """Read ObservationTable from file.
         For now, only gadf 0.2 reader implemented and called for both gadf 0.2 and gadf 0.3.
 
@@ -34,10 +34,12 @@ class ObservationTableReader:
         ----------
         filename : `pathlib.Path`, str
             Filename
+        hdu : str, optional
+            Name of observation table HDU. Default is None.
         """
         filename = make_path(filename)
 
-        table_disk = Table.read(filename)
+        table_disk = Table.read(filename, format="fits", hdu=hdu)
         table_disk_meta = table_disk.meta
 
         format = table_disk_meta.get("HDUCLASS", "unknown")
@@ -52,7 +54,7 @@ class ObservationTableReader:
         if (format == "GADF") and ((version == "unknown") or (version is None)):
             version = "0.3"
             warnings.warn(
-                f"Could not infer gadf-version from metadata in {filename}, assuming v.0.3.",
+                f"Could not infer GADF-version from metadata in {filename}, assuming v.0.3.",
                 UserWarning,
             )
 
