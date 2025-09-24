@@ -56,10 +56,16 @@ REQUIRED_COLUMNS = {
 REQUIRED_QUANTITIES_SCAN = ["stat_scan", "stat"]
 
 OPTIONAL_QUANTITIES = {
-    "dnde": ["dnde_err", "dnde_errp", "dnde_errn", "dnde_ul"],
-    "e2dnde": ["e2dnde_err", "e2dnde_errp", "e2dnde_errn", "e2dnde_ul"],
+    "dnde": ["dnde_err", "dnde_errp", "dnde_errn", "dnde_ul", "dnde_sensitivity"],
+    "e2dnde": [
+        "e2dnde_err",
+        "e2dnde_errp",
+        "e2dnde_errn",
+        "e2dnde_ul",
+        "e2dnde_sensitivity",
+    ],
     "flux": ["flux_err", "flux_errp", "flux_errn", "flux_ul", "flux_sensitivity"],
-    "eflux": ["eflux_err", "eflux_errp", "eflux_errn", "eflux_ul"],
+    "eflux": ["eflux_err", "eflux_errp", "eflux_errn", "eflux_ul", "eflux_sensitivity"],
     "likelihood": ["norm_err", "norm_errn", "norm_errp", "norm_ul", "norm_sensitivity"],
 }
 
@@ -677,6 +683,11 @@ class FluxMaps:
         return self._use_center_as_labels(self.norm_ul * self.dnde_ref)
 
     @property
+    def dnde_sensitivity(self):
+        """Sensitivity given as dnde for which the significance is ``self.meta["n_sigma_sensitivity"]``."""
+        return self.norm_sensitivity * self.dnde_ref
+
+    @property
     def e2dnde(self):
         """Return differential energy flux (e2dnde) SED values."""
         return self._use_center_as_labels(self.norm * self.e2dnde_ref)
@@ -700,6 +711,11 @@ class FluxMaps:
     def e2dnde_ul(self):
         """Return differential energy flux (e2dnde) SED upper limit."""
         return self._use_center_as_labels(self.norm_ul * self.e2dnde_ref)
+
+    @property
+    def e2dnde_sensitivity(self):
+        """Sensitivity given as e2dnde for which the significance is ``self.meta["n_sigma_sensitivity"]``."""
+        return self.norm_sensitivity * self.e2dnde_ref
 
     @property
     def flux(self):
@@ -728,7 +744,7 @@ class FluxMaps:
 
     @property
     def flux_sensitivity(self):
-        """Sensitivity given as the flux for which the significance is ``self.meta["n_sigma_sensitivity]``."""
+        """Sensitivity given as the flux for which the significance is ``self.meta["n_sigma_sensitivity"]``."""
         return self.norm_sensitivity * self.flux_ref
 
     @property
@@ -755,6 +771,11 @@ class FluxMaps:
     def eflux_ul(self):
         """Return energy flux (eflux) SED upper limits."""
         return self.norm_ul * self.eflux_ref
+
+    @property
+    def eflux_sensitivity(self):
+        """Sensitivity given as the eflux for which the significance is ``self.meta["n_sigma_sensitivity"]``."""
+        return self.norm_sensitivity * self.eflux_ref
 
     def _filter_convergence_failure(self, some_map):
         """Put NaN where pixels did not converge."""

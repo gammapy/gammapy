@@ -827,7 +827,7 @@ class RegionGeom(Geom):
 
         Parameters
         ----------
-        ax : `~astropy.visualization.WCSAxes`, optional
+        ax : `~astropy.visualization.wcsaxes.WCSAxes`, optional
             Axes to plot on. If no axes are given,
             the region is shown using the minimal
             equivalent WCS geometry.
@@ -835,7 +835,7 @@ class RegionGeom(Geom):
         kwargs_point : dict, optional
             Keyword arguments passed to `~matplotlib.lines.Line2D` for plotting
             of point sources. Default is None.
-        path_effect : `~matplotlib.patheffects.PathEffect`, optional
+        path_effect : `~matplotlib.patheffects`, optional
             Path effect applied to artists and lines.
             Default is None.
         **kwargs : dict
@@ -843,7 +843,7 @@ class RegionGeom(Geom):
 
         Returns
         -------
-        ax : `~astropy.visualization.WCSAxes`
+        ax : `~astropy.visualization.wcsaxes.WCSAxes`
             Axes to plot on.
         """
         if self.region:
