@@ -26,14 +26,7 @@ class ObservationTableReader:
     def __init__(self, checksum=False):
         self.checksum = checksum
 
-    @staticmethod
-    def identify_format_from_hdu(obs_hdu):
-        """Identify format for HDU header keywords."""
-        hduclass = obs_hdu.header.get("HDUCLASS", "unknown")
-        hduvers = obs_hdu.header.get("HDUVERS", "unknown")
-        return [hduclass.lower(), hduvers.lower()]
-
-    def read(self, filename, format="gadf0.3", hdu="OBS_INDEX"):
+    def read(self, filename):
         """Read ObservationTable from file.
         For now, only gadf 0.2 reader implemented and called for both gadf 0.2 and gadf 0.3.
 
@@ -41,53 +34,37 @@ class ObservationTableReader:
         ----------
         filename : `pathlib.Path`, str
             Filename
-        format : {"gadf0.2 / gadf0.3"}, optional
-            format and its version, of the ObservationTable. Default is 'gadf0.3'.
-            If None, will try to guess from header.
-        hdu : {"OBS_INDEX"}, str, optional.
-            Name of observation table HDU. Default is "OBS_INDEX".
         """
         filename = make_path(filename)
 
-        with fits.open(filename) as hdulist:
-            # If hdu extension not found, assume obs-index hdu at 1 and raise warning.
-            hdu_names = []
-            for hduobject in hdulist:
-                hdu_names.append(hduobject.name)
-            if hdu in hdu_names:
-                obs_hdu = hdulist[hdu]
+        table_disk = Table.read(filename)
+        table_disk_meta = table_disk.meta
+
+        format = table_disk_meta.get("HDUCLASS", "unknown")
+        version = table_disk_meta.get("HDUVERS", "unknown")
+
+        if (format == "unknown") or (format is None):
+            format = "GADF"
+            warnings.warn(
+                f"Could not infer fileformat from metadata in {filename}, assuming GADF.",
+                UserWarning,
+            )
+        if (format == "GADF") and ((version == "unknown") or (version is None)):
+            version = "0.3"
+            warnings.warn(
+                f"Could not infer gadf-version from metadata in {filename}, assuming v.0.3.",
+                UserWarning,
+            )
+
+        if format == "GADF" or format == "OGIP":
+            if version == "0.2":
+                return self.from_gadf02_table(table_disk)
+            elif version == "0.3":
+                return self.from_gadf02_table(table_disk)
             else:
-                obs_hdu = hdulist[1]
-                warnings.warn(
-                    f"Extension {hdu} was not found in file, assuming obs-index HDU at index 1.",
-                    UserWarning,
-                )
-
-            if self.checksum:
-                if obs_hdu.verify_checksum() != 1:
-                    warnings.warn(
-                        f"Checksum verification failed for HDU {self.hdu} of {filename}.",
-                        UserWarning,
-                    )
-
-            table_disk = Table.read(obs_hdu)
-
-            if format is None:
-                formatname = self.identify_format_from_hdu(obs_hdu)[0]
-                version = self.identify_format_from_hdu(obs_hdu)[1]
-            else:
-                formatname = format[0:4]
-                version = format[4:]
-
-            if formatname == "gadf" or formatname == "ogip":
-                if version == "0.2":
-                    return self.from_gadf02_table(table_disk)
-                elif version == "0.3":
-                    return self.from_gadf02_table(table_disk)
-                else:
-                    raise ValueError(f"Unknown version :{version}")
-            else:
-                raise ValueError(f"Unknown format :{format}")
+                raise ValueError(f"Unknown fileformat-version :{version}")
+        else:
+            raise ValueError(f"Unknown fileformat :{format}")
 
     @staticmethod
     def from_gadf02_table(table_gadf):
