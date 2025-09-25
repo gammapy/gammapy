@@ -449,8 +449,13 @@ class SpatialModel(ModelBase):
 
         if "all" in which:
             self.plot_position_error(ax, **kwargs_position)
-
-            region = self._to_region_error(size_factor=size_factor)
+            try:
+                region = self._to_region_error(size_factor=size_factor)
+            except TypeError as e:
+                if "unexpected keyword argument 'size_factor'" in str(e):
+                    region = self._to_region_error()
+                else:
+                    raise
             if region is not None:
                 artist = region.to_pixel(ax.wcs).as_artist(**kwargs_extension)
                 ax.add_artist(artist)
@@ -459,7 +464,13 @@ class SpatialModel(ModelBase):
             self.plot_position_error(ax, **kwargs_position)
 
         if "extension" in which:
-            region = self._to_region_error(size_factor=size_factor)
+            try:
+                region = self._to_region_error(size_factor=size_factor)
+            except TypeError as e:
+                if "unexpected keyword argument 'size_factor'" in str(e):
+                    region = self._to_region_error()
+                else:
+                    raise
             if region is not None:
                 artist = region.to_pixel(ax.wcs).as_artist(**kwargs_extension)
                 ax.add_artist(artist)
@@ -962,13 +973,13 @@ class DiskSpatialModel(SpatialModel):
         )
         return u.Quantity(norm * in_ellipse, "sr-1", copy=COPY_IF_NEEDED)
 
-    def to_region(self, size_factor=1.0, **kwargs):
+    def to_region(self, **kwargs):
         """Model outline as a `~regions.EllipseSkyRegion`."""
         minor_axis = Angle(self.r_0.quantity * np.sqrt(1 - self.e.quantity**2))
         return EllipseSkyRegion(
             center=self.position,
-            height=2 * size_factor * self.r_0.quantity,
-            width=2 * size_factor * minor_axis,
+            height=2 * self.r_0.quantity,
+            width=2 * minor_axis,
             angle=self.phi.quantity,
             **kwargs,
         )
