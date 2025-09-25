@@ -69,25 +69,17 @@ class ObservationTableReader:
         names_gadf = table_gadf.colnames
         meta_gadf = table_gadf.meta
 
-        # Required names in gadf 0.2 table, in order to fill internal table format.
-        # Requirement is weak for conversion from gadf to internal.
         required_names_gadf = [
             "OBS_ID",
         ]
 
-        missing_names = set(required_names_gadf).difference(
-            names_gadf + list(meta_gadf.keys())
-        )
+        missing_names = set(required_names_gadf).difference(names_gadf)
         if len(missing_names) != 0:
             raise RuntimeError(
-                f"Not all columns required to read from GADF v.0.2 were found in file. Missing: {missing_names}"
+                f"Not all columns required to read from GADF were found in file. Missing: {missing_names}"
             )
 
         removed_names = []
-
-        # Convert gadf data for internal model representation by ensuring
-        # correct types and units, as well as astropy.time.Time-objects for TSTART, TSTOP,
-        # in case data corresponding to it is given.
 
         obs_id = cast_func(table_gadf["OBS_ID"], np.dtype(int))
         new_table = Table({"OBS_ID": obs_id}, meta=meta_gadf)
@@ -98,23 +90,27 @@ class ObservationTableReader:
             ra_pnt = cast_func(table_gadf["RA_PNT"], np.dtype(float))
             new_table["RA_PNT"] = ra_pnt * u.deg
             removed_names.append("RA_PNT")
+
         if "DEC_PNT" in names_gadf:
             dec_pnt = cast_func(table_gadf["DEC_PNT"], np.dtype(float))
             new_table["DEC_PNT"] = dec_pnt * u.deg
             removed_names.append("DEC_PNT")
 
-        # Used here code from the @properties: "time_ref", "time_start", "time_stop".
+        time_ref = None
         if "TSTART" in names_gadf or "TSTOP" in names_gadf:
-            if (
-                "MJDREFI" in meta_gadf.keys()
-                and "MJDREFF" in meta_gadf.keys()
-                and "TIMESYS" in meta_gadf.keys()
-            ):  # Choice to be mandatory to construct meaningful time object.
+            try:
+                time_ref = time_ref_from_dict(meta_gadf)
+            except KeyError:
+                warnings.warn(
+                    "Found column TSTART or TSTOP in gadf table, but can not create columns in internal format (MixinColumn Time) due to missing header keywords in file."
+                )
+                removed_names.append("TSTART")
+                removed_names.append("TSTOP")
+            if time_ref is not None:
                 if "TIMEUNIT" in meta_gadf.keys():
                     time_unit = meta_gadf["TIMEUNIT"]
                 else:
-                    time_unit = "s"
-                time_ref = time_ref_from_dict(meta_gadf)
+                    time_unit = "second"
                 if "TSTART" in names_gadf:
                     tstart = time_ref + Quantity(
                         table_gadf["TSTART"].astype("float64"), time_unit
@@ -127,11 +123,6 @@ class ObservationTableReader:
                     )
                     new_table["TSTOP"] = tstop
                     removed_names.append("TSTOP")
-            else:
-                warnings.warn(
-                    "Found column TSTART or TSTOP in gadf 0.2 table, but its metadata does not contain mandatory keyword(s) to calculate reference time for conversion to internal model.",
-                    UserWarning,
-                )
 
         for name in names_gadf:
             if name not in removed_names:
