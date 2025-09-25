@@ -91,8 +91,8 @@ class ObservationTableReader:
             if colname in names_gadf:
                 col_typecasted = cast_func(table_gadf[colname], np.dtype(float))
                 try:
-                    new_table[colname] = (
-                        col_typecasted * u.Unit(table_gadf[colname].unit)
+                    new_table[colname] = Quantity(
+                        col_typecasted, u.Unit(table_gadf[colname].unit)
                     ).to(u.deg)
                 except TypeError:
                     warnings.warn(f"Could not convert unit for column {colname}.")
