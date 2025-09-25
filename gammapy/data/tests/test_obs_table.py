@@ -274,7 +274,7 @@ def test_select_time_box():
         use_abs_time=False,
         random_state=random_state,
     )
-    obs_table_time = ObservationTableReader.from_gadf02_table(obs_table_time)
+    obs_table_time = ObservationTableReader.from_gadf_table(obs_table_time)
     # test box selection in time: (time_start, time_stop) within value_range
     value_range = Time(["2012-01-01T01:00:00", "2012-01-01T02:00:00"])
     selection = dict(type="time_box", time_range=value_range)

@@ -810,7 +810,7 @@ class DataStoreMaker:
             m["HDUCLAS1"] = "INDEX"
             m["HDUCLAS2"] = "OBS"
 
-            table = ObservationTableReader.from_gadf02_table(
+            table = ObservationTableReader.from_gadf_table(
                 Table(rows=rows, names=names, meta=m)
             )
 

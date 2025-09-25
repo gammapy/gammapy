@@ -132,7 +132,7 @@ class ObservationTable(Table):
         return table
 
     @classmethod
-    def read(cls, filename, checksum=False, **kwargs):
+    def read(cls, filename, **kwargs):
         """Read from FITS file.
 
         Format specification: :ref:`gadf0.2/0.3:obs-index`
@@ -146,7 +146,7 @@ class ObservationTable(Table):
         """
         from gammapy.data.io import ObservationTableReader
 
-        return ObservationTableReader(checksum).read(filename, **kwargs)
+        return ObservationTableReader().read(filename, **kwargs)
 
     @property
     def pointing_radec(self):
