@@ -3,6 +3,7 @@ import warnings
 import numpy as np
 from astropy.io import fits
 from astropy.table import Table
+from astropy import table
 from astropy import units as u
 from astropy.units import Quantity
 from gammapy.data import EventListMetaData, EventList, ObservationTable
@@ -109,6 +110,7 @@ class ObservationTableReader:
 
         obs_id = cast_func(table_gadf["OBS_ID"], np.dtype(int))
         new_table = Table({"OBS_ID": obs_id}, meta=meta_gadf)
+        new_table = table.unique(new_table, keys="OBS_ID")
         removed_names.append("OBS_ID")
 
         if "RA_PNT" in names_gadf:
