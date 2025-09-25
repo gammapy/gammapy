@@ -23,7 +23,7 @@ def test_observationtable_reader_unknown_hdu_extension():
 
 
 def test_observationtable_reader_gadf_converter():
-    # If TSTART or TSTOP in table, TIME-keywords are mandatory in gadf-meta data.
+    # If TSTART or TSTOP in table but header keywords not present, warning is raised.
     t = Table({"OBS_ID": ["1"], "TSTART": [Time("2012-01-01T00:30:00")]}, meta={})
     with pytest.warns(UserWarning):
         ObservationTableReader.from_gadf_table(t)
