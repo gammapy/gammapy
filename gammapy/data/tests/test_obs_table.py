@@ -211,7 +211,7 @@ def make_test_observation_table(
 def test_basics():
     random_state = np.random.RandomState(seed=0)
     obs_table = make_test_observation_table(n_obs=10, random_state=random_state)
-    obs_table = ObservationTableReader.from_gadf02_table(obs_table)
+    obs_table = ObservationTableReader.from_gadf_table(obs_table)
     assert obs_table.summary().startswith("Observation table")
 
     filtered = obs_table.select_obs_id(1)
@@ -225,7 +225,7 @@ def test_select_parameter_box():
     # create random observation table
     random_state = np.random.RandomState(seed=0)
     obs_table = make_test_observation_table(n_obs=10, random_state=random_state)
-    obs_table = ObservationTableReader.from_gadf02_table(obs_table)
+    obs_table = ObservationTableReader.from_gadf_table(obs_table)
     # select some pars and check the corresponding values in the columns
 
     # test box selection in obs_id
@@ -298,7 +298,7 @@ def test_select_time_box():
 def test_select_sky_regions():
     random_state = np.random.RandomState(seed=0)
     obs_table = make_test_observation_table(n_obs=100, random_state=random_state)
-    obs_table = ObservationTableReader.from_gadf02_table(obs_table)
+    obs_table = ObservationTableReader.from_gadf_table(obs_table)
 
     selection = dict(
         type="sky_circle",

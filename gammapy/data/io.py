@@ -14,18 +14,7 @@ from gammapy.utils.time import time_ref_from_dict
 
 
 class ObservationTableReader:
-    """Reader class for ObservationTable
-    The code is based on the code for the EventListReader class.
-
-
-    Parameters
-    ----------
-    checksum : bool
-        If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
-    """
-
-    def __init__(self, checksum=False):
-        self.checksum = checksum
+    """Reader class for ObservationTable"""
 
     def read(self, filename, hdu=None):
         """Read ObservationTable from file.
@@ -52,32 +41,24 @@ class ObservationTableReader:
                 f"Could not infer fileformat from metadata in {filename}, assuming GADF.",
                 UserWarning,
             )
-        if (format == "GADF") and ((version == "unknown") or (version is None)):
-            version = "0.3"
-            warnings.warn(
-                f"Could not infer GADF-version from metadata in {filename}, assuming v.0.3.",
-                UserWarning,
-            )
 
         if format == "GADF" or format == "OGIP":
-            if version == "0.2":
-                return self.from_gadf02_table(table_disk)
-            elif version == "0.3":
-                return self.from_gadf02_table(table_disk)
+            if version == "0.2" or version == "0.3":
+                return self.from_gadf_table(table_disk)
             else:
-                raise ValueError(f"Unknown fileformat-version :{version}")
+                raise ValueError(f"Unknown {format} version :{version}")
         else:
             raise ValueError(f"Unknown fileformat :{format}")
 
     @staticmethod
-    def from_gadf02_table(table_gadf):
-        """Convert gadf 0.2 observation table into internal table model.
-        https://gamma-astro-data-formats.readthedocs.io/en/v0.2/data_storage/obs_index/index.html
+    def from_gadf_table(table_gadf):
+        """Convert gadf observation table into internal table model.
+        https://gamma-astro-data-formats.readthedocs.io/en/v0.3/data_storage/obs_index/index.html
 
         Parameters
         ----------
         table_gadf : `~astropy.Table.table`
-            Table in gadf 0.2 format.
+            Table in gadf 0.2/0.3 format.
 
         Returns
         -------
