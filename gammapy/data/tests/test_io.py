@@ -4,6 +4,7 @@ from astropy.table import Table
 from astropy.time import Time
 from astropy import units as u
 import pytest
+from astropy.utils.exceptions import AstropyDeprecationWarning
 import numpy as np
 
 from gammapy.utils.scripts import make_path
@@ -15,7 +16,7 @@ from ..io import EventListReader, EventListWriter, ObservationTableReader
 def test_observationtable_reader_unknown_hdu_extension():
     hess_obs_table = "$GAMMAPY_DATA/hess-dl3-dr1/obs-index.fits.gz"
 
-    with pytest.raises(BaseException):
+    with pytest.raises(AstropyDeprecationWarning):
         obs_table = ObservationTableReader().read(
             hess_obs_table, hdu="unknown_extension"
         )
