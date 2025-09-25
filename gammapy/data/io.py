@@ -119,34 +119,6 @@ class ObservationTableReader:
                         warnings.warn(f"Could not convert unit for column {colname}.")
                     removed_names.append(colname)
 
-        # time_ref = None
-        # if "TSTART" in names_gadf or "TSTOP" in names_gadf:
-        #     try:
-        #         time_ref = time_ref_from_dict(meta_gadf)
-        #     except KeyError:
-        #         warnings.warn(
-        #             "Found column TSTART or TSTOP in gadf table, but can not create columns in internal format (MixinColumn Time) due to missing header keywords in file."
-        #         )
-        #         removed_names.append("TSTART")
-        #         removed_names.append("TSTOP")
-        #     if time_ref is not None:
-        #         if "TIMEUNIT" in meta_gadf.keys():
-        #             time_unit = meta_gadf["TIMEUNIT"]
-        #         else:
-        #             time_unit = "second"
-        #         if "TSTART" in names_gadf:
-        #             tstart = time_ref + Quantity(
-        #                 table_gadf["TSTART"].astype("float64"), time_unit
-        #             )
-        #             new_table["TSTART"] = tstart
-        #             removed_names.append("TSTART")
-        #         if "TSTOP" in names_gadf:
-        #             tstop = time_ref + Quantity(
-        #                 table_gadf["TSTOP"].astype("float64"), time_unit
-        #             )
-        #             new_table["TSTOP"] = tstop
-        #             removed_names.append("TSTOP")
-
         for name in names_gadf:
             if name not in removed_names:
                 new_table.add_column(table_gadf[name])
