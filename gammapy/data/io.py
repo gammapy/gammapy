@@ -38,8 +38,9 @@ class ObservationTableReader:
             format = "GADF"
             version = "0.3"
             warnings.warn(
-                f"Could not infer fileformat from metadata in {filename}, assuming GADF.",
-                UserWarning,
+                UserWarning(
+                    f"Could not infer fileformat from metadata in {filename}, assuming GADF."
+                )
             )
 
         if format == "GADF" or format == "OGIP":
