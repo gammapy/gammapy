@@ -5,6 +5,7 @@ from astropy.time import Time
 from astropy import units as u
 import pytest
 from astropy.utils.exceptions import AstropyDeprecationWarning
+from astropy.units import UnitConversionError
 import numpy as np
 
 from gammapy.utils.scripts import make_path
@@ -34,19 +35,23 @@ def test_observationtable_reader_gadf_converter():
         ObservationTableReader.from_gadf_table(t)
 
     # OBS_ID has to be of type int64 for internal model but converter ensures this.
-    t_gadf = Table({"OBS_ID": ["1"], "RA_PNT": [1.0], "DEC_PNT": [1.0]})
+    t_gadf = Table(
+        {"OBS_ID": ["1"], "RA_PNT": [1.0], "DEC_PNT": [1.0]},
+        units={"OBS_ID": None, "RA_PNT": u.deg, "DEC_PNT": u.deg},
+    )
     obs_table = ObservationTableReader.from_gadf_table(t_gadf)
     assert obs_table["OBS_ID"].dtype == np.dtype(int)
 
     # Unit for Column objects like RA_PNT have to be specified for internal model but converter ensures this.
-    t = Table({"OBS_ID": [1], "RA_PNT": [1.0]})
+    t = Table({"OBS_ID": [1], "RA_PNT": [1.0]}, units={"OBS_ID": None, "RA_PNT": u.deg})
     obs_table = ObservationTableReader.from_gadf_table(t)
     assert obs_table["RA_PNT"].unit == u.deg
 
-    # Unit of RA_PNT has to be deg for internal model but converter ensures this.
+    # Unit of RA_PNT has to be deg for internal model.
     t = Table({"OBS_ID": [1], "RA_PNT": [1.0]}, units={"OBS_ID": None, "RA_PNT": u.m})
-    obs_table = ObservationTableReader.from_gadf_table(t)
-    assert obs_table["RA_PNT"].unit == u.deg
+    with pytest.raises(UnitConversionError):
+        obs_table = ObservationTableReader.from_gadf_table(t)
+        assert obs_table["RA_PNT"].unit == u.deg
 
 
 @requires_data()

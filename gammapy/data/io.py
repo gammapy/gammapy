@@ -89,12 +89,22 @@ class ObservationTableReader:
 
         if "RA_PNT" in names_gadf:
             ra_pnt = cast_func(table_gadf["RA_PNT"], np.dtype(float))
-            new_table["RA_PNT"] = ra_pnt * u.deg
+            try:
+                new_table["RA_PNT"] = (ra_pnt * u.Unit(table_gadf["RA_PNT"].unit)).to(
+                    u.deg
+                )
+            except TypeError:
+                warnings.warn("Could not convert unit for column RA_PNT.")
             removed_names.append("RA_PNT")
 
         if "DEC_PNT" in names_gadf:
             dec_pnt = cast_func(table_gadf["DEC_PNT"], np.dtype(float))
-            new_table["DEC_PNT"] = dec_pnt * u.deg
+            try:
+                new_table["DEC_PNT"] = (
+                    dec_pnt * u.Unit(table_gadf["DEC_PNT"].unit)
+                ).to(u.deg)
+            except TypeError:
+                warnings.warn("Could not convert unit for column DEC_PNT.")
             removed_names.append("DEC_PNT")
 
         time_ref = None
