@@ -87,25 +87,16 @@ class ObservationTableReader:
         new_table = table.unique(new_table, keys="OBS_ID")
         removed_names.append("OBS_ID")
 
-        if "RA_PNT" in names_gadf:
-            ra_pnt = cast_func(table_gadf["RA_PNT"], np.dtype(float))
-            try:
-                new_table["RA_PNT"] = (ra_pnt * u.Unit(table_gadf["RA_PNT"].unit)).to(
-                    u.deg
-                )
-            except TypeError:
-                warnings.warn("Could not convert unit for column RA_PNT.")
-            removed_names.append("RA_PNT")
-
-        if "DEC_PNT" in names_gadf:
-            dec_pnt = cast_func(table_gadf["DEC_PNT"], np.dtype(float))
-            try:
-                new_table["DEC_PNT"] = (
-                    dec_pnt * u.Unit(table_gadf["DEC_PNT"].unit)
-                ).to(u.deg)
-            except TypeError:
-                warnings.warn("Could not convert unit for column DEC_PNT.")
-            removed_names.append("DEC_PNT")
+        for colname in ["RA_PNT", "DEC_PNT"]:
+            if colname in names_gadf:
+                col_typecasted = cast_func(table_gadf[colname], np.dtype(float))
+                try:
+                    new_table[colname] = (
+                        col_typecasted * u.Unit(table_gadf[colname].unit)
+                    ).to(u.deg)
+                except TypeError:
+                    warnings.warn(f"Could not convert unit for column {colname}.")
+                removed_names.append(colname)
 
         time_ref = None
         if "TSTART" in names_gadf or "TSTOP" in names_gadf:
