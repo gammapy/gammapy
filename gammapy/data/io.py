@@ -18,7 +18,6 @@ class ObservationTableReader:
 
     def read(self, filename, hdu=None):
         """Read ObservationTable from file.
-        For now, only gadf 0.2 reader implemented and called for both gadf 0.2 and gadf 0.3.
 
         Parameters
         ----------
@@ -37,6 +36,7 @@ class ObservationTableReader:
 
         if (format == "unknown") or (format is None):
             format = "GADF"
+            version = "0.3"
             warnings.warn(
                 f"Could not infer fileformat from metadata in {filename}, assuming GADF.",
                 UserWarning,
