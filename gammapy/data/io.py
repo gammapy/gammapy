@@ -23,6 +23,11 @@ class ObservationTableReader:
             Filename
         hdu : str, optional
             Name of observation table HDU. Default is None.
+
+        Returns
+        -------
+        ObservationTable : `~gammapy.data.ObservationTable`
+            ObservationTable from disk converted into internal data format.
         """
         filename = make_path(filename)
 
@@ -51,7 +56,7 @@ class ObservationTableReader:
 
     @staticmethod
     def from_gadf_table(table_gadf):
-        """Convert gadf observation table into internal table model.
+        """Convert gadf observation table into internal data format.
 
         Parameters
         ----------
