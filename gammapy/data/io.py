@@ -149,7 +149,7 @@ class ObservationTableReader:
     """Reader class for ObservationTable"""
 
     def read(self, filename, hdu=None):
-        """Read ObservationTable from file.
+        """Read `~gammapy.data.ObservationTable` from file.
 
         Parameters
         ----------
