@@ -69,6 +69,7 @@ def test_observationtable_reader_unknown_hdu_extension():
         assert len(obs_table) == 105
 
 
+@requires_data()
 def test_observationtable_reader_unknown_format(tmpdir):
     hess_events = make_path(
         "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz"
