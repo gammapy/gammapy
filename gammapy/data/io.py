@@ -190,7 +190,7 @@ class ObservationTableReader:
 
     @staticmethod
     def from_gadf_table(table_gadf):
-        """Convert gadf observation table into internal data format.
+        """Convert gadf observation table into`~gammapy.data.ObservationTable`.
 
         Parameters
         ----------
