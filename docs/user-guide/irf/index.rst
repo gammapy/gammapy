@@ -25,7 +25,7 @@ We can write the expected number of detected events in a bin [:math:`{\rm d}p,\,
 
 .. math::
 
-   N(p, E) \, {\rm d}p {\rm d}E = {N(p, E)_{\rm bkg}} \, {\rm d}p {\rm d}E + {N(p, E)_{\rm sce}} \, {\rm d}p {\rm d}E
+   N(p, E) \, {\rm d}p {\rm d}E = {N(p, E)_{\rm bkg}} \, {\rm d}p {\rm d}E + {N(p, E)_{\rm src}} \, {\rm d}p {\rm d}E
 
 with:
 
@@ -39,7 +39,7 @@ and with:
 
 .. math::
 
-   {N(p, E)_{\rm sce}} \, {\rm d}p {\rm d}E =
+   {N(p, E)_{\rm src}} \, {\rm d}p {\rm d}E =
    t_{\rm obs} \int_{E_{\rm true}} {\rm d}E_{\rm true} \, \int_{p_{\rm true}} {\rm d}p_{\rm true} \, R(p, E|p_{\rm true}, E_{\rm true}) \times \Phi(p_{\rm true}, E_{\rm true})
 
 where:
