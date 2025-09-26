@@ -171,7 +171,7 @@ class ObservationTableReader:
         format = table_disk_meta.get("HDUCLASS")
         version = table_disk_meta.get("HDUVERS")
 
-        if (format == "unknown") or (format is None):
+        if format is None:
             format = "GADF"
             version = "0.3"
             warnings.warn(
