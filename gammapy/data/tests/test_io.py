@@ -65,6 +65,52 @@ def test_observationtable_reader_gadf_converter():
         obs_table = ObservationTableReader.from_gadf_table(t)
         assert obs_table.keys() == ["OBS_ID"]
 
+    # If TSTART or TSTOP in table and header keywords present and correct,
+    # Time is converted into TIME object.
+    t = Table(
+        {"OBS_ID": ["1"], "TSTART": [100]},
+        meta={
+            "MJDREFI": 50000,
+            "MJDREFF": 100.0,
+            "TIMESYS": "TT",
+            "TIMEREF": "TOPOCENTER",
+            "TIMEUNIT": "s",
+        },
+    )
+    obs_table = ObservationTableReader.from_gadf_table(t)
+    assert obs_table.keys() == ["OBS_ID", "TSTART"]
+    assert isinstance(obs_table["TSTART"], Time) == True
+
+    # If TSTART or TSTOP in table and header keywords present
+    # but conversion fails for any reason (wrong time unit, wrong types)
+    # warning is raised and time-columns are dropped.
+    t = Table(
+        {"OBS_ID": ["1"], "TSTART": [100]},
+        meta={
+            "MJDREFI": 50000,
+            "MJDREFF": 100.0,
+            "TIMESYS": "TT",
+            "TIMEREF": "TOPOCENTER",
+            "TIMEUNIT": "-",
+        },
+    )
+    with pytest.warns(UserWarning):
+        obs_table = ObservationTableReader.from_gadf_table(t)
+    assert obs_table.keys() == ["OBS_ID"]
+    t = Table(
+        {"OBS_ID": ["1"], "TSTART": ["-"]},
+        meta={
+            "MJDREFI": 50000,
+            "MJDREFF": 100.0,
+            "TIMESYS": "TT",
+            "TIMEREF": "TOPOCENTER",
+            "TIMEUNIT": "s",
+        },
+    )
+    with pytest.warns(UserWarning):
+        obs_table = ObservationTableReader.from_gadf_table(t)
+    assert obs_table.keys() == ["OBS_ID"]
+
 
 @requires_data()
 def test_eventlist_reader_no_format():

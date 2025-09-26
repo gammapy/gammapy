@@ -118,10 +118,10 @@ class ObservationTableReader:
                             table_gadf[colname].astype("float64"), time_unit
                         )
                         new_table[colname] = time_object
+                    except ValueError:
+                        warnings.warn(f"Invalid unit for column {colname}.")
                     except TypeError:
-                        warnings.warn(
-                            f"Could not build time object for column {colname}."
-                        )
+                        warnings.warn(f"Could not convert type for column {colname}.")
                     removed_names.append(colname)
 
         for name in names_gadf:
