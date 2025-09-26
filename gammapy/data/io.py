@@ -119,7 +119,9 @@ class ObservationTableReader:
                         )
                         new_table[colname] = time_object
                     except TypeError:
-                        warnings.warn(f"Could not cast type for column {colname}.")
+                        warnings.warn(
+                            f"Could not build time object for column {colname}."
+                        )
                     removed_names.append(colname)
 
         for name in names_gadf:
