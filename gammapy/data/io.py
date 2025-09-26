@@ -80,9 +80,13 @@ class ObservationTableReader:
 
         removed_names = []
 
-        new_table = Table(
-            {"OBS_ID": table_gadf["OBS_ID"].astype("int")}, meta=meta_gadf
-        )
+        try:
+            obs_id = table_gadf["OBS_ID"].astype("int")
+        except ValueError:
+            raise RuntimeError(
+                "Could not convert OBS_ID to int. Can not create table without OBS_ID."
+            )
+        new_table = Table({"OBS_ID": obs_id}, meta=meta_gadf)
         new_table = table.unique(new_table, keys="OBS_ID")
         removed_names.append("OBS_ID")
 
