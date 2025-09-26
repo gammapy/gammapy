@@ -180,7 +180,7 @@ class ObservationTableReader:
                 )
             )
 
-        if format == "GADF" or format == "OGIP":
+        if format.upper() in ["GADF", "OGIP"]:
             if version == "0.2" or version == "0.3":
                 return self.from_gadf_table(table_disk)
             else:
