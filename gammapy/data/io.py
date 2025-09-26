@@ -52,17 +52,26 @@ class ObservationTableReader:
     @staticmethod
     def from_gadf_table(table_gadf):
         """Convert gadf observation table into internal table model.
-        https://gamma-astro-data-formats.readthedocs.io/en/v0.3/data_storage/obs_index/index.html
 
         Parameters
         ----------
         table_gadf : `~astropy.Table.table`
             Table in gadf 0.2/0.3 format.
+            https://gamma-astro-data-formats.readthedocs.io/en/v0.2/data_storage/obs_index/index.html
+            https://gamma-astro-data-formats.readthedocs.io/en/v0.3/data_storage/obs_index/index.html
 
         Returns
         -------
         ObservationTable : `~gammapy.data.ObservationTable`
             ObservationTable in internal data format.
+
+            Mandatory Columns: OBS_ID
+
+            Defined Units and Types for Columns as follows:
+
+            OBS_ID	RA_PNT	DEC_PNT	ALT_PNT	AZ_PNT	TSTART	TSTOP
+                        deg	    deg	    deg	   deg
+            int64   float64	float64	float64 float64	 Time	 Time
         """
 
         names_gadf = table_gadf.colnames
