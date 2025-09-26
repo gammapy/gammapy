@@ -168,8 +168,8 @@ class ObservationTableReader:
         table_disk = Table.read(filename, format="fits", hdu=hdu)
         table_disk_meta = table_disk.meta
 
-        format = table_disk_meta.get("HDUCLASS", "unknown")
-        version = table_disk_meta.get("HDUVERS", "unknown")
+        format = table_disk_meta.get("HDUCLASS")
+        version = table_disk_meta.get("HDUVERS")
 
         if (format == "unknown") or (format is None):
             format = "GADF"
