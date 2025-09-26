@@ -241,10 +241,7 @@ class ObservationTableReader:
         for colname in ["RA_PNT", "DEC_PNT", "ALT_PNT", "AZ_PNT"]:
             if colname in names_gadf:
                 try:
-                    new_table[colname] = Quantity(
-                        table_gadf[colname].astype("float64"),
-                        u.Unit(table_gadf[colname].unit),
-                    ).to(u.deg)
+                    new_table[colname] = table_gadf[colname].quantity.to("deg")
                 except TypeError:
                     warnings.warn(f"Could not convert unit for column {colname}.")
                 removed_names.append(colname)
