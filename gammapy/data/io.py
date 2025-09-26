@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import warnings
-import numpy as np
 from astropy.io import fits
 from astropy.table import Table
 from astropy import table
@@ -9,7 +8,6 @@ from astropy.units import Quantity
 from gammapy.data import EventListMetaData, EventList, ObservationTable
 from gammapy.utils.scripts import make_path
 from gammapy.utils.metadata import CreatorMetaData
-from gammapy.utils.types import cast_func
 from gammapy.utils.time import time_ref_from_dict
 
 
@@ -82,17 +80,18 @@ class ObservationTableReader:
 
         removed_names = []
 
-        obs_id = cast_func(table_gadf["OBS_ID"], np.dtype(int))
-        new_table = Table({"OBS_ID": obs_id}, meta=meta_gadf)
+        new_table = Table(
+            {"OBS_ID": table_gadf["OBS_ID"].astype("int")}, meta=meta_gadf
+        )
         new_table = table.unique(new_table, keys="OBS_ID")
         removed_names.append("OBS_ID")
 
         for colname in ["RA_PNT", "DEC_PNT"]:
             if colname in names_gadf:
-                col_typecasted = cast_func(table_gadf[colname], np.dtype(float))
                 try:
                     new_table[colname] = Quantity(
-                        col_typecasted, u.Unit(table_gadf[colname].unit)
+                        table_gadf[colname].astype("float64"),
+                        u.Unit(table_gadf[colname].unit),
                     ).to(u.deg)
                 except TypeError:
                     warnings.warn(f"Could not convert unit for column {colname}.")
@@ -102,6 +101,7 @@ class ObservationTableReader:
             if colname in names_gadf:
                 try:
                     time_ref = time_ref_from_dict(meta_gadf)
+                    time_unit = meta_gadf["TIMEUNIT"]
                 except KeyError:
                     warnings.warn(
                         "Found column TSTART or TSTOP in gadf table, but can not create columns in internal format (MixinColumn Time) due to missing header keywords in file."
@@ -109,10 +109,9 @@ class ObservationTableReader:
                     removed_names.append(colname)
 
                 if colname not in removed_names:
-                    col_typecasted = cast_func(table_gadf[colname], np.dtype(float))
                     try:
                         time_object = time_ref + Quantity(
-                            table_gadf[colname].astype("float64"), meta_gadf["TIMEUNIT"]
+                            table_gadf[colname].astype("float64"), time_unit
                         )
                         new_table[colname] = time_object
                     except TypeError:
