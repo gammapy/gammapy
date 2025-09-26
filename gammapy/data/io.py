@@ -86,7 +86,7 @@ class ObservationTableReader:
         new_table = table.unique(new_table, keys="OBS_ID")
         removed_names.append("OBS_ID")
 
-        for colname in ["RA_PNT", "DEC_PNT"]:
+        for colname in ["RA_PNT", "DEC_PNT", "ALT_PNT", "AZ_PNT"]:
             if colname in names_gadf:
                 try:
                     new_table[colname] = Quantity(
@@ -115,7 +115,7 @@ class ObservationTableReader:
                         )
                         new_table[colname] = time_object
                     except TypeError:
-                        warnings.warn(f"Could not convert unit for column {colname}.")
+                        warnings.warn(f"Could not cast type for column {colname}.")
                     removed_names.append(colname)
 
         for name in names_gadf:
