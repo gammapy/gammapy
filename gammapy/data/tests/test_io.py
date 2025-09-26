@@ -38,6 +38,14 @@ def test_observationtable_reader_gadf_converter():
     obs_table = ObservationTableReader.from_gadf_table(t)
     assert obs_table["OBS_ID"].dtype == np.dtype(int)
 
+    # If OBS_ID can not be converted to int, fail.
+    t = Table(
+        {"OBS_ID": ["-"]},
+        units={"OBS_ID": None},
+    )
+    with pytest.raises(RuntimeError):
+        obs_table = ObservationTableReader.from_gadf_table(t)
+
     # If TSTART or TSTOP in table but header keywords not present
     # warning is raised and time-columns are dropped.
     t = Table({"OBS_ID": ["1"], "TSTART": [Time("2012-01-01T00:30:00")]}, meta={})
