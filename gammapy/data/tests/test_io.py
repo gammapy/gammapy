@@ -24,6 +24,21 @@ def test_observationtable_reader_unknown_hdu_extension():
         assert len(obs_table) == 105
 
 
+def test_observationtable_reader_unkwnown_format(tmpdir):
+    hess_events = make_path(
+        "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz"
+    )
+
+    with fits.open(hess_events) as hdulist:
+        hdu_events = hdulist["EVENTS"]
+        hdu_events.header["HDUCLASS"] = "bad"
+
+        hdulist.writeto(tmpdir / "tmp.fits")
+
+    with pytest.raises(ValueError):
+        ObservationTableReader().read(tmpdir / "tmp.fits")
+
+
 def test_observationtable_reader_gadf_converter():
     # OBS_ID is mandatory for internal data model.
     t = Table({"RA_PNT": [1.0]}, units={"RA_PNT": u.deg})
