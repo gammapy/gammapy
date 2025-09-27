@@ -97,13 +97,16 @@ jfactory = JFactory(geom=geom, profile=profile, distance=profiles.DMProfile.DIST
 jfact = jfactory.compute_jfactor()
 
 jfact_map = WcsNDMap(geom=geom, data=jfact.value, unit=jfact.unit)
+
+
+######################################################################
+# Plot the J-factor map
+
 plt.figure()
 ax = jfact_map.plot(cmap="viridis", norm=LogNorm(), add_cbar=True)
 plt.title(f"J-Factor [{jfact_map.unit}]")
 
-######################################################################
 # 1 deg circle usually used in H.E.S.S. analyses without the +/- 0.3 deg band around the plane
-
 sky_reg = CircleSkyRegion(center=position, radius=1 * u.deg)
 pix_reg = sky_reg.to_pixel(wcs=geom.wcs)
 pix_reg.plot(ax=ax, facecolor="none", edgecolor="red", label="1 deg circle")
@@ -144,13 +147,14 @@ jfactory = JFactory(
 jfact_decay = jfactory.compute_jfactor()
 
 jfact_map = WcsNDMap(geom=geom, data=jfact_decay.value, unit=jfact_decay.unit)
+
+######################################################################
+# Plot the J-factor map
 plt.figure()
 ax = jfact_map.plot(cmap="viridis", norm=LogNorm(), add_cbar=True)
 plt.title(f"J-Factor [{jfact_map.unit}]")
 
-######################################################################
 # 1 deg circle usually used in H.E.S.S. analyses without the +/- 0.3 deg band around the plane
-
 sky_reg = CircleSkyRegion(center=position, radius=1 * u.deg)
 pix_reg = sky_reg.to_pixel(wcs=geom.wcs)
 pix_reg.plot(ax=ax, facecolor="none", edgecolor="red", label="1 deg circle")
@@ -162,6 +166,7 @@ pix_reg_rec.plot(ax=ax, facecolor="none", edgecolor="orange", label="+/- 0.3 deg
 plt.legend()
 plt.show()
 
+######################################################################
 total_jfact_decay = (
     pix_reg.to_mask().multiply(jfact_decay).sum()
     - pix_reg_rec.to_mask().multiply(jfact_decay).sum()
@@ -187,7 +192,8 @@ print(
 fluxes = PrimaryFlux(mDM="1 TeV", channel="eL")
 print(fluxes.allowed_channels)
 
-fig, axes = plt.subplots(4, 1, figsize=(4, 16))
+fig, axes = plt.subplots(2, 2, figsize=(10, 9))
+axes = axes.flatten()
 mDMs = [0.01, 0.1, 1, 10] * u.TeV
 
 for mDM, ax in zip(mDMs, axes):
@@ -207,7 +213,7 @@ for mDM, ax in zip(mDMs, axes):
         )
 
 axes[0].legend()
-plt.subplots_adjust(hspace=0.9)
+fig.tight_layout()
 plt.show()
 
 

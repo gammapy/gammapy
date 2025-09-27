@@ -175,6 +175,13 @@ def test_significance_map_estimator_map_dataset(simple_dataset):
     assert result["dnde_sensitivity"].unit == "TeV-1 cm-2 s-1"
     assert result["e2dnde_sensitivity"].unit == "TeV cm-2 s-1"
 
+    estimator2 = ExcessMapEstimator(n_sigma_sensitivity=2, selection_optional=["all"])
+    result2 = estimator2.run(simple_dataset)
+    assert result.meta["n_sigma_sensitivity"] == 5
+    assert result2.meta["n_sigma_sensitivity"] == 2
+    assert_allclose(result.norm_sensitivity.data[0, 10, 10], 48.9977, atol=1e-3)
+    assert_allclose(result2.norm_sensitivity.data[0, 10, 10], 18.6549, atol=1e-3)
+
     estimator = ExcessMapEstimator(
         0.1 * u.deg,
         selection_optional=["sensitivity"],
