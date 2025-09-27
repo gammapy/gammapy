@@ -5,7 +5,7 @@ Estimators (DL4 to DL5, and DL6)
 
 The `gammapy.estimators` submodule contains algorithms and classes
 for high level flux and significance estimation. This includes
-estimation flux points, flux maps, flux points, flux profiles and
+estimation of flux points, flux maps, flux profiles and
 flux light curves. All estimators feature a common API and allow
 estimating fluxes in bands of reconstructed energy.
 

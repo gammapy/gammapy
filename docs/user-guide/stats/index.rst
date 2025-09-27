@@ -49,17 +49,17 @@ Variable          Dataset attribute name Definition
 ================= ====================== ====================================================
 
 
-The on measurement, assumed to contain signal and background counts, :math:`n_{on}` follows
+The on measurement, assumed to contain signal and background counts, :math:`n_{\mathrm{on}}` follows
 a Poisson random variable with expected value
-:math:`\mu_{on} = \mu_{sig} + \mu_{bkg}`.
+:math:`\mu_{\mathrm{on}} = \mu_{\mathrm{sig}} + \mu_{\mathrm{bkg}}`.
 
 The off measurement is assumed to contain only background counts, with an acceptance to background
-:math:`a_{off}`. This off measurement can be used to estimate the number of background counts in the
-on region: :math:`n_{bkg} = \alpha\ n_{off}` with :math:`\alpha = a_{on}/a_{off}` the ratio of
+:math:`a_{\mathrm{off}}`. This off measurement can be used to estimate the number of background counts in the
+on region: :math:`n_{\mathrm{bkg}} = \alpha\ n_{\mathrm{off}}` with :math:`\alpha = a_{\mathrm{on}}/a_{\mathrm{off}}` the ratio of
 on and off acceptances.
 
-Therefore, :math:`n_{off}` follows a Poisson distribution with expected
-value :math:`\mu_{off} = \mu_{bkg} / \alpha`.
+Therefore, :math:`n_{\mathrm{off}}` follows a Poisson distribution with expected
+value :math:`\mu_{\mathrm{off}} = \mu_{\mathrm{bkg}} / \alpha`.
 
 The expectation or predicted values :math:`\mu_X` are in general derived using maximum
 likelihood estimation.
@@ -68,23 +68,23 @@ likelihood estimation.
 Counts and fit statistics
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Gamma-ray measurements are counts, :math:`n_{on}`, containing both signal and background events.
+Gamma-ray measurements are counts, :math:`n_{\mathrm{on}}`, containing both signal and background events.
 
 Estimation of number of signal events or of quantities in physical models is done through
 Poisson likelihood functions, the fit statistics. In Gammapy, they are all log-likelihood
 functions normalized like chi-squares, i.e. if :math:`L` is the likelihood function used,
-they follow the expression :math:`2 \times log L`.
+they follow the expression :math:`2 \times \log L`.
 
-When the expected number of background events, :math:`\mu_{bkg}` is known, the statistic function
+When the expected number of background events, :math:`\mu_{\mathrm{bkg}}` is known, the statistic function
 is ``Cash`` (see :ref:`cash`). When the number of background events is unknown, one has to
-use a background estimate :math:`n_{bkg}` taken from an off measurement where only background events
+use a background estimate :math:`n_{\mathrm{bkg}}` taken from an off measurement where only background events
 are expected. In this case, the statistic function is ``WStat`` (see :ref:`wstat`).
 
 These statistic functions are at the heart of the model fitting approach in Gammapy. They are
 used to estimate the best fit values of model parameters and their associated confidence intervals.
 
 They are used also to estimate the excess counts significance, i.e. the probability that
-a given number of measured events :math:`n_{on}` actually contains some signal events :math:`n_{sig}`,
+a given number of measured events :math:`n_{\mathrm{on}}` actually contains some signal events :math:`n_{\mathrm{sig}}`,
 as well as the errors associated to this estimated number of signal counts.
 
 .. _ts:
@@ -97,15 +97,15 @@ an hypothesis :math:`H_1` is statistically preferred over the reference, or null
 
 The maximum log-likelihood ratio test provides a way to estimate the p-value of the data following :math:`H_1`
 rather than :math:`H_0`, when the two hypotheses are nested.
-We note this ratio :math:`\lambda = \frac{max L(X|{H_1})}{max L(X|H_0)}`
+We note this ratio :math:`\lambda = \frac{\max L(X|{H_1})}{\max L(X|H_0)}`
 
 The Wilks theorem shows that under some hypothesis, :math:`2 \log \lambda` asymptotically follows a :math:`\chi^2`
-distribution with :math:`n_{dof}` degrees of freedom, where :math:`n_{dof}` is the difference of free parameters
+distribution with :math:`n_{\mathrm{dof}}` degrees of freedom, where :math:`n_{\mathrm{dof}}` is the difference of free parameters
 between :math:`H_1` and :math:`H_0`.
 
 With the definition the fit statistics :math:`-2 \log \lambda` is simply the difference of the fit statistic values for
 the two hypotheses, the delta TS (short for test statistic). Hence, :math:`\Delta TS` follows :math:`\chi^2`
-distribution with :math:`n_{dof}` degrees of freedom. This can be used to convert :math:`\Delta TS` into a "classical
+distribution with :math:`n_{\mathrm{dof}}` degrees of freedom. This can be used to convert :math:`\Delta TS` into a "classical
 significance" using the following recipe:
 
 .. code::
@@ -134,7 +134,7 @@ the following convention is used:
 
     \sqrt{\Delta TS} = \left \{
     \begin{array}{ll}
-      -\sqrt{\Delta TS} & : \text{if} \text{Excess} < 0 \\
+      -\sqrt{\Delta TS} & : \text{if}\, \text{Excess} < 0 \\
       \sqrt{\Delta TS} & : \text{else}
     \end{array}
     \right.
@@ -155,8 +155,8 @@ Cash counts statistic
 Excess and Significance
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Assume one measured :math:`n_{on} = 13` counts in a region where one suspects a source might be present.
-if the expected number of background events is known (here e.g. :math:`\mu_{bkg}=5.5`), one can use
+Assume one measured :math:`n_{\mathrm{on}} = 13` counts in a region where one suspects a source might be present.
+if the expected number of background events is known (here e.g. :math:`\mu_{\mathrm{bkg}}=5.5`), one can use
 the Cash statistic to estimate the signal or excess number, its statistical significance
 as well as the confidence interval on the true signal counts number value.
 
@@ -178,7 +178,7 @@ as well as the confidence interval on the true signal counts number value.
     sqrt(TS): 2.71
     p-value : 0.0033
 
-The error is the symmetric error obtained from the covariance of the statistic function, here :math:`\sqrt{n_{on}}`.
+The error is the symmetric error obtained from the covariance of the statistic function, here :math:`\sqrt{n_{\mathrm{on}}}`.
 The `sqrt_ts` is the square root of the :math:`TS`, multiplied by the sign of the excess,
 which is equivalent to the Li & Ma significance for known background. The p-value is now computed taking into
 account only positive fluctuations.
@@ -236,10 +236,10 @@ To measure the significance of an excess, one can directly use the TS of the mea
 without the excess. Taking the square root of the result yields the so-called Li & Ma significance
 [LiMa1983]_ (see equation 17).
 
-As an example, assume you measured :math:`n_{on} = 13` counts in a region where
-you suspect a source might be present and :math:`n_{off} = 11` counts in a
+As an example, assume you measured :math:`n_{\mathrm{on}} = 13` counts in a region where
+you suspect a source might be present and :math:`n_{\mathrm{off}} = 11` counts in a
 background control region where you assume no source is present and that is
-:math:`a_{off}/a_{on}=2` times larger than the on-region.
+:math:`a_{\mathrm{off}}/a_{\mathrm{on}}=2` times larger than the on-region.
 
 Here's how you compute the statistical significance of your detection:
 
