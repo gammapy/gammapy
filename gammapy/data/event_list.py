@@ -223,6 +223,9 @@ class EventList:
             info += f"\tMax. offset      : {offset_max:.1f}\n"
         return info.expandtabs(tabsize=2)
 
+    def __len__(self):
+        return self.table.__len__()
+
     @property
     def time_ref(self):
         """Time reference as a `~astropy.time.Time` object."""
