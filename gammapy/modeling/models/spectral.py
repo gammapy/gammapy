@@ -378,7 +378,7 @@ class SpectralModel(ModelBase):
         energy_min, energy_max : `~astropy.units.Quantity`
             Lower and upper bound of integration range.
         **kwargs : dict
-            Keyword arguments passed to :func:`~gammapy.modeling.models.spectral.integrate_spectrum`.
+            Keyword arguments passed to :func:`~gammapy.modeling.models.integrate_spectrum`.
         """
         if hasattr(self, "evaluate_integral"):
             kwargs = {par.name: par.quantity for par in self.parameters}
@@ -460,7 +460,7 @@ class SpectralModel(ModelBase):
         energy_min, energy_max : `~astropy.units.Quantity`
             Lower and upper bound of integration range.
         **kwargs : dict
-            Keyword arguments passed to :func:`~gammapy.modeling.models.spectral.integrate_spectrum`.
+            Keyword arguments passed to `~gammapy.modeling.models.integrate_spectrum`.
         """
 
         def f(x):
@@ -540,7 +540,7 @@ class SpectralModel(ModelBase):
 
         Parameters
         ----------
-        energy_axis : `MapAxis`
+        energy_axis : `~gammapy.maps.MapAxis`
             Energy axis.
 
         Returns
