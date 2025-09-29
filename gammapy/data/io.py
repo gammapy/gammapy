@@ -190,15 +190,17 @@ class ObservationTableReader:
         Parameters
         ----------
         table_gadf : `~astropy.Table.table`
-            Table in gadf 0.2/0.3 format.
-            https://gamma-astro-data-formats.readthedocs.io/en/v0.2/data_storage/obs_index/index.html
-            https://gamma-astro-data-formats.readthedocs.io/en/v0.3/data_storage/obs_index/index.html
+            Table in gadf 0.2/0.3 format, see [1], [2].
 
         Returns
         -------
         ObservationTable : `~gammapy.data.ObservationTable`
             ObservationTable in internal data format.
 
+        References
+        ----------
+        [1] Gamma-ray astronomy community, 2018, 'Data formats for gamma-ray astronomy v0.2 <https://gamma-astro-data-formats.readthedocs.io/en/v0.2/data_storage/obs_index/index.html>'_
+        [2] Gamma-ray astronomy community, 2018, 'Data formats for gamma-ray astronomy v0.3 <https://gamma-astro-data-formats.readthedocs.io/en/v0.3/data_storage/obs_index/index.html>'_
         """
 
         names_gadf = table_gadf.colnames
