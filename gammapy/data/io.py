@@ -240,4 +240,6 @@ class ObservationTableReader:
                 )
                 table_gadf.remove_columns(time_columns)
 
-        return ObservationTable(table=table_gadf, meta=meta_gadf)
+        return ObservationTable(
+            data=table_gadf, meta=meta_gadf
+        )  # TODO: Replace "data" by "table" once new constructor is added in class ObservationTable.
