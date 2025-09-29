@@ -169,11 +169,9 @@ class ObservationTableReader:
         table_disk_meta = table_disk.meta
 
         format = table_disk_meta.get("HDUCLASS")
-        version = table_disk_meta.get("HDUVERS")
 
         if format is None:
             format = "GADF"
-            version = "0.3"
             warnings.warn(
                 UserWarning(
                     f"Could not infer fileformat from metadata in {filename}, assuming GADF."
@@ -181,10 +179,7 @@ class ObservationTableReader:
             )
 
         if format.upper() in ["GADF", "OGIP"]:
-            if version == "0.2" or version == "0.3":
-                return self.from_gadf_table(table_disk)
-            else:
-                raise ValueError(f"Unknown {format} version :{version}")
+            return self.from_gadf_table(table_disk)
         else:
             raise ValueError(f"Unknown fileformat :{format}")
 
