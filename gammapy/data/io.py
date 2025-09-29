@@ -180,12 +180,12 @@ class ObservationTableReader:
             )
 
         if format.upper() in ["GADF", "OGIP"]:
-            return self.from_gadf_table(table_disk)
+            return self._from_gadf_table(table_disk)
         else:
             raise ValueError(f"Unknown fileformat :{format}")
 
     @staticmethod
-    def from_gadf_table(table_gadf):
+    def _from_gadf_table(table_gadf):
         """Convert gadf observation table into`~gammapy.data.ObservationTable`.
 
         Parameters

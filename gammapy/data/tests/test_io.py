@@ -89,14 +89,14 @@ def test_observationtable_reader_gadf_converter():
     # OBS_ID is mandatory for internal data model.
     t = Table({"RA_PNT": [1.0]}, units={"RA_PNT": u.deg})
     with pytest.raises(RuntimeError):
-        ObservationTableReader.from_gadf_table(t)
+        ObservationTableReader._from_gadf_table(t)
 
     # OBS_ID is converted to int for internal model, if given as string.
     t = Table(
         {"OBS_ID": ["1"]},
         units={"OBS_ID": None},
     )
-    obs_table = ObservationTableReader.from_gadf_table(t)
+    obs_table = ObservationTableReader._from_gadf_table(t)
     assert obs_table["OBS_ID"].dtype == np.dtype(int)
 
     # If OBS_ID can not be converted to int, fail.
@@ -105,25 +105,25 @@ def test_observationtable_reader_gadf_converter():
         units={"OBS_ID": None},
     )
     with pytest.raises(RuntimeError):
-        obs_table = ObservationTableReader.from_gadf_table(t)
+        obs_table = ObservationTableReader._from_gadf_table(t)
 
     # Unit of RA_PNT, DEC_PNT, ALT_PNT, AZ_PNT has to be deg for internal model.
     # In case of wrong dimension, warning is raised and column is dropped.
     t = Table({"OBS_ID": [1], "RA_PNT": [1.0]}, units={"OBS_ID": None, "RA_PNT": u.m})
     with pytest.raises(UnitConversionError):
-        obs_table = ObservationTableReader.from_gadf_table(t)
+        obs_table = ObservationTableReader._from_gadf_table(t)
     assert obs_table.keys() == ["OBS_ID"]
 
     # If TSTART or TSTOP in table but header keywords not present
     # warning is raised and time-columns are dropped.
     t = Table({"OBS_ID": ["1"], "TSTART": [Time("2012-01-01T00:30:00")]}, meta={})
     with pytest.warns(UserWarning):
-        obs_table = ObservationTableReader.from_gadf_table(t)
+        obs_table = ObservationTableReader._from_gadf_table(t)
         assert obs_table.keys() == ["OBS_ID"]
     t = Table({"OBS_ID": ["1"], "TSTOP": [Time("2012-01-01T00:30:00")]}, meta={})
     with pytest.warns(UserWarning):
-        ObservationTableReader.from_gadf_table(t)
-        obs_table = ObservationTableReader.from_gadf_table(t)
+        ObservationTableReader._from_gadf_table(t)
+        obs_table = ObservationTableReader._from_gadf_table(t)
         assert obs_table.keys() == ["OBS_ID"]
 
     # If TSTART or TSTOP in table and header keywords present and correct,
@@ -138,7 +138,7 @@ def test_observationtable_reader_gadf_converter():
             "TIMEUNIT": "s",
         },
     )
-    obs_table = ObservationTableReader.from_gadf_table(t)
+    obs_table = ObservationTableReader._from_gadf_table(t)
     assert obs_table.keys() == ["OBS_ID", "TSTART"]
     assert isinstance(obs_table["TSTART"], Time) == True
 
@@ -156,7 +156,7 @@ def test_observationtable_reader_gadf_converter():
         },
     )
     with pytest.warns(UserWarning):
-        obs_table = ObservationTableReader.from_gadf_table(t)
+        obs_table = ObservationTableReader._from_gadf_table(t)
     assert obs_table.keys() == ["OBS_ID"]
     t = Table(
         {"OBS_ID": ["1"], "TSTART": ["-"]},
@@ -169,5 +169,5 @@ def test_observationtable_reader_gadf_converter():
         },
     )
     with pytest.warns(UserWarning):
-        obs_table = ObservationTableReader.from_gadf_table(t)
+        obs_table = ObservationTableReader._from_gadf_table(t)
     assert obs_table.keys() == ["OBS_ID"]
