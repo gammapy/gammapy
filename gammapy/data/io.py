@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import warnings
+import logging
 from astropy.io import fits
 from astropy import table
 from astropy.table import Table
@@ -9,6 +10,8 @@ from gammapy.data import EventListMetaData, EventList, ObservationTable
 from gammapy.utils.scripts import make_path
 from gammapy.utils.metadata import CreatorMetaData
 from gammapy.utils.time import time_ref_from_dict
+
+log = logging.getLogger(__name__)
 
 
 class EventListReader:
@@ -172,10 +175,8 @@ class ObservationTableReader:
 
         if format is None:
             format = "GADF"
-            warnings.warn(
-                UserWarning(
-                    f"Could not infer fileformat from metadata in {filename}, assuming GADF."
-                )
+            log.warning(
+                f"Could not infer fileformat from metadata in {filename}, assuming GADF."
             )
 
         if format.upper() in ["GADF", "OGIP"]:
