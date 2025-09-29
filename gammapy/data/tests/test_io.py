@@ -58,7 +58,7 @@ def test_eventlist_reader_empty_gadf_table():
 
 @requires_data()
 def test_observationtable_reader_unknown_hdu_extension():
-    hess_obs_table = "$GAMMAPY_DATA/hess-dl3-dr1/obs-index.fits.gz"
+    hess_obs_table = make_path("$GAMMAPY_DATA/hess-dl3-dr1/obs-index.fits.gz")
 
     with pytest.raises(AstropyDeprecationWarning):
         obs_table = ObservationTableReader().read(
@@ -68,19 +68,35 @@ def test_observationtable_reader_unknown_hdu_extension():
 
 
 @requires_data()
-def test_observationtable_reader_unknown_format(tmpdir):
-    hess_events = make_path(
-        "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz"
-    )
+def test_observationtable_reader_unknown_specified_format(tmpdir):
+    hess_obs_table = make_path("$GAMMAPY_DATA/hess-dl3-dr1/obs-index.fits.gz")
 
-    with fits.open(hess_events) as hdulist:
-        hdu_events = hdulist["EVENTS"]
-        hdu_events.header["HDUCLASS"] = "bad"
+    with fits.open(hess_obs_table) as hdulist:
+        hdu_obs_table = hdulist["OBS_INDEX"]
+        hdu_obs_table.header["HDUCLASS"] = "unknown-format"
 
         hdulist.writeto(tmpdir / "tmp.fits")
 
     with pytest.raises(ValueError):
         ObservationTableReader().read(tmpdir / "tmp.fits")
+
+
+@requires_data()
+def test_observationtable_reader_unspecified_format(tmpdir, caplog):
+    hess_obs_table = make_path("$GAMMAPY_DATA/hess-dl3-dr1/obs-index.fits.gz")
+
+    with fits.open(hess_obs_table) as hdulist:
+        hdu_obs_table = hdulist["OBS_INDEX"]
+        hdu_obs_table.header.remove("HDUCLASS")
+
+        filename = "tmp.fits"
+        hdulist.writeto(tmpdir / filename)
+
+        ObservationTableReader().read(tmpdir / "tmp.fits")
+        assert (
+            f"Could not infer fileformat from metadata in {tmpdir / filename}, assuming GADF."
+            in [_.message for _ in caplog.records]
+        )
 
 
 def test_observationtable_reader_gadf_converter():
