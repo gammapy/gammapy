@@ -246,28 +246,28 @@ class ObservationTableReader:
                     warnings.warn(f"Could not convert unit for column {colname}.")
                 removed_names.append(colname)
 
-        for colname in ["TSTART", "TSTOP"]:
-            if colname in names_gadf:
-                try:
-                    time_ref = time_ref_from_dict(meta_gadf)
-                    time_unit = meta_gadf["TIMEUNIT"]
-                except KeyError:
-                    warnings.warn(
-                        "Found column TSTART or TSTOP in gadf table, but can not create columns in internal format (MixinColumn Time) due to missing header keywords in file."
-                    )
-                    removed_names.append(colname)
+        time_columns = set(["TSTART", "TSTOP"]).intersection(set(names_gadf))
+        for colname in time_columns:
+            try:
+                time_ref = time_ref_from_dict(meta_gadf)
+                time_unit = meta_gadf["TIMEUNIT"]
+            except KeyError:
+                warnings.warn(
+                    "Found column TSTART or TSTOP in gadf table, but can not create columns in internal format (MixinColumn Time) due to missing header keywords in file."
+                )
+                removed_names.append(colname)
 
-                if colname not in removed_names:
-                    try:
-                        time_object = time_ref + Quantity(
-                            table_gadf[colname].astype("float64"), time_unit
-                        )
-                        new_table[colname] = time_object
-                    except ValueError:
-                        warnings.warn(f"Invalid unit for column {colname}.")
-                    except TypeError:
-                        warnings.warn(f"Could not convert type for column {colname}.")
-                    removed_names.append(colname)
+            if colname not in removed_names:
+                try:
+                    time_object = time_ref + Quantity(
+                        table_gadf[colname].astype("float64"), time_unit
+                    )
+                    new_table[colname] = time_object
+                except ValueError:
+                    warnings.warn(f"Invalid unit for column {colname}.")
+                except TypeError:
+                    warnings.warn(f"Could not convert type for column {colname}.")
+                removed_names.append(colname)
 
         for name in names_gadf:
             if name not in removed_names:
