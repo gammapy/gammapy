@@ -304,7 +304,7 @@ stacked.models = [sky_model, bkg_model]
 # overview tutorial or :ref:`this section <modifying-model-parameters>`
 # about modifying your parameters.
 #
-# The fit constructor takes a list of datasets as argument.
+# The fit constructor takes dictionaries that define global options for the optimizer.
 #
 
 fit = Fit(optimize_opts={"print_level": 1})
