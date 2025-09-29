@@ -144,9 +144,9 @@ def test_flux_doubling():
         dtime,
         [2271.34711286, 21743.98603654] * u.s,
     )
-    assert_allclose(dtime_err, [ 292.384304, 97929.94414922] * u.s)
-    assert_allclose(dtime_coord,[6.31157019e+08, 6.31171419e+08]* u.s)
-    
+    assert_allclose(dtime_err, [292.384304, 97929.94414922] * u.s)
+    assert_allclose(dtime_coord, [6.31157019e08, 6.31171419e08] * u.s)
+
     htime = dtime_dict["halving"]
     htime_err = dtime_dict["halving_err"]
     htime_coord = dtime_dict["halving_coord"]
@@ -154,8 +154,9 @@ def test_flux_doubling():
         htime,
         [2271.34711286, 22365.24278044] * u.s,
     )
-    assert_allclose(htime_err, [ 292.384304, 100727.94255348] * u.s)
-    assert_allclose(htime_coord,[6.31160619e+08, 6.31164219e+08]* u.s)
+    assert_allclose(htime_err, [292.384304, 100727.94255348] * u.s)
+    assert_allclose(htime_coord, [6.31160619e08, 6.31164219e08] * u.s)
+
 
 def test_tk_function():
     time_series, time_axis = TimmerKonig_lightcurve_simulator(
