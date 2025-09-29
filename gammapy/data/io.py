@@ -2,7 +2,6 @@
 import warnings
 import logging
 from astropy.io import fits
-from astropy import table
 from astropy.table import Table
 import astropy.units as u
 from astropy.units import Quantity
@@ -215,51 +214,28 @@ class ObservationTableReader:
                 f"Not all columns required to read from GADF were found in file. Missing: {missing_names}"
             )
 
-        removed_names = []
-
-        try:
-            obs_id = table_gadf["OBS_ID"].astype("int")
-        except ValueError:
-            raise RuntimeError(
-                "Could not convert OBS_ID to int. Can not create table without OBS_ID."
-            )
-        new_table = Table({"OBS_ID": obs_id}, meta=meta_gadf)
-        new_table = table.unique(new_table, keys="OBS_ID")
-        removed_names.append("OBS_ID")
-
-        for colname in ["RA_PNT", "DEC_PNT", "ALT_PNT", "AZ_PNT"]:
-            if colname in names_gadf:
-                try:
-                    new_table[colname] = table_gadf[colname].quantity.to("deg")
-                except TypeError:
-                    warnings.warn(f"Could not convert unit for column {colname}.")
-                removed_names.append(colname)
-
         time_columns = set(["TSTART", "TSTOP"]).intersection(set(names_gadf))
-        for colname in time_columns:
+
+        if len(time_columns) != 0:
             try:
                 time_ref = time_ref_from_dict(meta_gadf)
                 time_unit = meta_gadf["TIMEUNIT"]
+                for colname in time_columns:
+                    try:
+                        time_object = time_ref + Quantity(
+                            table_gadf[colname].astype("float64"), time_unit
+                        )
+                        table_gadf[colname] = time_object
+                    except ValueError:
+                        warnings.warn(f"Invalid unit for column {colname}.")
+                        table_gadf.remove_column(colname)
+                    except TypeError:
+                        warnings.warn(f"Could not convert type for column {colname}.")
+                        table_gadf.remove_column(colname)
             except KeyError:
                 warnings.warn(
                     "Found column TSTART or TSTOP in gadf table, but can not create columns in internal format (MixinColumn Time) due to missing header keywords in file."
                 )
-                removed_names.append(colname)
+                table_gadf.remove_columns(time_columns)
 
-            if colname not in removed_names:
-                try:
-                    time_object = time_ref + Quantity(
-                        table_gadf[colname].astype("float64"), time_unit
-                    )
-                    new_table[colname] = time_object
-                except ValueError:
-                    warnings.warn(f"Invalid unit for column {colname}.")
-                except TypeError:
-                    warnings.warn(f"Could not convert type for column {colname}.")
-                removed_names.append(colname)
-
-        for name in names_gadf:
-            if name not in removed_names:
-                new_table.add_column(table_gadf[name])
-
-        return ObservationTable(table=new_table, meta=meta_gadf)
+        return ObservationTable(table=table_gadf, meta=meta_gadf)
