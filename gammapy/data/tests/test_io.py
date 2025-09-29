@@ -132,7 +132,7 @@ def test_observationtable_reader_gadf_converter_time_conversion_ok():
     )
     obs_table = ObservationTableReader._from_gadf_table(t)
     assert obs_table.keys() == ["OBS_ID", "TSTART"]
-    assert isinstance(obs_table["TSTART"], Time) is True
+    assert isinstance(obs_table["TSTART"], Time)
 
 
 def test_observationtable_reader_gadf_converter_invalid_time_unit(caplog):
