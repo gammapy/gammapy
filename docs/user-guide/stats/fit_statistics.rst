@@ -13,7 +13,7 @@ used by datasets to perform model fitting and parameter estimation.
 
 Fit statistics in Gammapy are all log-likelihood functions normalized like chi-squares,
 i.e. if :math:`L` is the likelihood function used, they follow the expression
-:math:`2 \times log L`.
+:math:`2 \times \log L`.
 
 All functions compute per-bin statistics. If you want the summed statistics for
 all bins, call sum on the output array yourself.
@@ -38,7 +38,7 @@ the likelihood :math:`L` and applying the expression above, we obtain
 the following formula for the Cash fit statistic:
 
 .. math::
-    C = 2 \times \left(\mu_{\mathrm{sig}} + \mu_{\mathrm{bkg}} - n \times log (\mu_{\mathrm{sig}}
+    C = 2 \times \left(\mu_{\mathrm{sig}} + \mu_{\mathrm{bkg}} - n \times \log (\mu_{\mathrm{sig}}
     + \mu_{\mathrm{bkg}}) \right)
 
 The Cash statistic is implemented in `~gammapy.stats.cash` and is used as a `stat`
