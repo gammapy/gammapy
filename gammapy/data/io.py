@@ -200,13 +200,6 @@ class ObservationTableReader:
         ObservationTable : `~gammapy.data.ObservationTable`
             ObservationTable in internal data format.
 
-            Mandatory Columns: OBS_ID
-
-            Defined Units and Types for Columns as follows:
-
-            OBS_ID	RA_PNT	DEC_PNT	ALT_PNT	AZ_PNT	TSTART	TSTOP
-                        deg	    deg	    deg	   deg
-            int64   float64	float64	float64 float64	 Time	 Time
         """
 
         names_gadf = table_gadf.colnames
