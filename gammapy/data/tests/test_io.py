@@ -129,7 +129,7 @@ def test_observationtable_reader_gadf_converter():
     )
     obs_table = ObservationTableReader._from_gadf_table(t)
     assert obs_table.keys() == ["OBS_ID", "TSTART"]
-    assert isinstance(obs_table["TSTART"], Time) == True
+    assert isinstance(obs_table["TSTART"], Time) is True
 
     # If TSTART or TSTOP in table and header keywords present
     # but conversion fails for any reason (wrong time unit, wrong types)
