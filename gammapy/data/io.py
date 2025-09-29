@@ -221,23 +221,29 @@ class ObservationTableReader:
             try:
                 time_ref = time_ref_from_dict(meta_gadf)
                 time_unit = meta_gadf["TIMEUNIT"]
-                for colname in time_columns:
-                    try:
-                        time_object = time_ref + Quantity(
-                            table_gadf[colname].astype("float64"), time_unit
-                        )
-                        table_gadf[colname] = time_object
-                    except ValueError:
-                        warnings.warn(f"Invalid unit for column {colname}.")
-                        table_gadf.remove_column(colname)
-                    except TypeError:
-                        warnings.warn(f"Could not convert type for column {colname}.")
-                        table_gadf.remove_column(colname)
             except KeyError:
-                warnings.warn(
+                log.warning(
                     "Found column TSTART or TSTOP in gadf table, but can not create columns in internal format (MixinColumn Time) due to missing header keywords in file."
                 )
                 table_gadf.remove_columns(time_columns)
+                return ObservationTable(
+                    data=table_gadf, meta=meta_gadf
+                )  # TODO: Replace "data" by "table" once new constructor is added in class ObservationTable.
+
+            for colname in time_columns:
+                try:
+                    col_type_converted = table_gadf[colname].astype("float64")
+                except ValueError:
+                    log.warning(f"Could not convert type for column {colname}.")
+                    table_gadf.remove_column(colname)
+                    break
+                try:
+                    q = Quantity(col_type_converted, time_unit)
+                except ValueError:
+                    log.warning(f"Invalid unit for column {colname}.")
+                    table_gadf.remove_column(colname)
+                    break
+                table_gadf[colname] = time_ref + q
 
         return ObservationTable(
             data=table_gadf, meta=meta_gadf

@@ -99,24 +99,27 @@ def test_observationtable_reader_unspecified_format(tmpdir, caplog):
         )
 
 
-def test_observationtable_reader_gadf_converter():
+def test_observationtable_reader_gadf_converter_mandatory_keywords():
     # OBS_ID is mandatory for internal data model.
     t = Table({"RA_PNT": [1.0]}, units={"RA_PNT": u.deg})
     with pytest.raises(RuntimeError):
         ObservationTableReader._from_gadf_table(t)
 
+
+def test_observationtable_reader_gadf_converter_time_keywords_missing(caplog):
     # If TSTART or TSTOP in table but header keywords not present
     # warning is raised and time-columns are dropped.
     t = Table({"OBS_ID": ["1"], "TSTART": [Time("2012-01-01T00:30:00")]}, meta={})
-    with pytest.warns(UserWarning):
-        obs_table = ObservationTableReader._from_gadf_table(t)
-        assert obs_table.keys() == ["OBS_ID"]
-    t = Table({"OBS_ID": ["1"], "TSTOP": [Time("2012-01-01T00:30:00")]}, meta={})
-    with pytest.warns(UserWarning):
-        ObservationTableReader._from_gadf_table(t)
-        obs_table = ObservationTableReader._from_gadf_table(t)
-        assert obs_table.keys() == ["OBS_ID"]
 
+    obs_table = ObservationTableReader._from_gadf_table(t)
+    assert (
+        "Found column TSTART or TSTOP in gadf table, but can not create columns in internal format (MixinColumn Time) due to missing header keywords in file."
+        in [_.message for _ in caplog.records]
+    )
+    assert obs_table.keys() == ["OBS_ID"]
+
+
+def test_observationtable_reader_gadf_converter_time_conversion_ok():
     # If TSTART or TSTOP in table and header keywords present and correct,
     # Time is converted into TIME object.
     t = Table(
@@ -131,6 +134,8 @@ def test_observationtable_reader_gadf_converter():
     assert obs_table.keys() == ["OBS_ID", "TSTART"]
     assert isinstance(obs_table["TSTART"], Time) is True
 
+
+def test_observationtable_reader_gadf_converter_invalid_time_unit(caplog):
     # If TSTART or TSTOP in table and header keywords present
     # but conversion fails for any reason (wrong time unit, wrong types)
     # warning is raised and time-columns are dropped.
@@ -142,17 +147,22 @@ def test_observationtable_reader_gadf_converter():
             "TIMEUNIT": "-",
         },
     )
-    with pytest.warns(UserWarning):
-        obs_table = ObservationTableReader._from_gadf_table(t)
+    obs_table = ObservationTableReader._from_gadf_table(t)
+    assert "Invalid unit for column TSTART." in [_.message for _ in caplog.records]
     assert obs_table.keys() == ["OBS_ID"]
+
+
+def test_observationtable_reader_gadf_converter_invalid_time_datatype(caplog):
     t = Table(
-        {"OBS_ID": ["1"], "TSTART": ["-"]},
+        {"OBS_ID": ["1"], "TSTOP": ["-"]},
         meta={
             "MJDREFI": 50000,
             "MJDREFF": 100.0,
             "TIMEUNIT": "s",
         },
     )
-    with pytest.warns(UserWarning):
-        obs_table = ObservationTableReader._from_gadf_table(t)
+    obs_table = ObservationTableReader._from_gadf_table(t)
+    assert "Could not convert type for column TSTOP." in [
+        _.message for _ in caplog.records
+    ]
     assert obs_table.keys() == ["OBS_ID"]
