@@ -168,9 +168,8 @@ class ObservationTableReader:
         filename = make_path(filename)
 
         table_disk = Table.read(filename, format="fits", hdu=hdu)
-        table_disk_meta = table_disk.meta
 
-        format = table_disk_meta.get("HDUCLASS")
+        format = table_disk.meta.get("HDUCLASS")
 
         if format is None:
             format = "GADF"
