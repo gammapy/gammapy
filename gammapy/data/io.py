@@ -222,7 +222,7 @@ class ObservationTableReader:
                 time_unit = meta_gadf["TIMEUNIT"]
             except KeyError:
                 log.warning(
-                    "Found column TSTART or TSTOP in GADF table, but can not create columns in internal format (MixinColumn Time) due to missing header keywords in file."
+                    "Found column TSTART or TSTOP in GADF table, but can not create columns in internal format due to missing header keywords in file."
                 )
                 table_gadf.remove_columns(time_columns)
                 return ObservationTable(

@@ -110,7 +110,7 @@ def test_observationtable_reader_gadf_converter_missing_time_keywords(caplog):
 
     obs_table = ObservationTableReader._from_gadf_table(t)
     assert (
-        "Found column TSTART or TSTOP in gadf table, but can not create columns in internal format (MixinColumn Time) due to missing header keywords in file."
+        "Found column TSTART or TSTOP in GADF table, but can not create columns in internal format due to missing header keywords in file."
         in [_.message for _ in caplog.records]
     )
     assert obs_table.keys() == ["OBS_ID"]
