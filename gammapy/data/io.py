@@ -209,7 +209,7 @@ class ObservationTableReader:
         ]
 
         missing_names = set(required_names).difference(names_gadf)
-        if len(missing_names) != 0:
+        if missing_names:
             raise RuntimeError(
                 f"Not all columns required to read from GADF were found in file. Missing: {missing_names}"
             )
