@@ -180,7 +180,7 @@ class ObservationTableReader:
         if format.upper() in ["GADF", "OGIP"]:
             return self._from_gadf_table(table_disk)
         else:
-            raise ValueError(f"Unknown fileformat :{format}")
+            raise ValueError(f"Unknown file format :{format}")
 
     @staticmethod
     def _from_gadf_table(table_gadf):
