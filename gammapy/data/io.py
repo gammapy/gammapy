@@ -174,7 +174,7 @@ class ObservationTableReader:
         if format is None:
             format = "GADF"
             log.warning(
-                f"Could not infer fileformat from metadata in {filename}, assuming GADF."
+                f"Could not infer the file format from metadata in {filename}, assuming GADF."
             )
 
         if format.upper() in ["GADF", "OGIP"]:
