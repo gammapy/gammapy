@@ -211,7 +211,7 @@ class ObservationTableReader:
         missing_names = set(required_names).difference(names_gadf)
         if missing_names:
             raise RuntimeError(
-                f"Not all columns required to read from GADF were found in file. Missing: {missing_names}"
+                f"The input table is missing required GADF columns. The missing columns are: {missing_names}."
             )
 
         time_columns = set(["TSTART", "TSTOP"]).intersection(set(names_gadf))

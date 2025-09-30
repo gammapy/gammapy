@@ -94,7 +94,7 @@ def test_observationtable_reader_unspecified_format(tmpdir, caplog):
 
         ObservationTableReader().read(tmpdir / "tmp.fits")
         assert (
-            f"Could not infer fileformat from metadata in {tmpdir / filename}, assuming GADF."
+            f"Could not infer the file format from metadata in {tmpdir / filename}, assuming GADF."
             in [_.message for _ in caplog.records]
         )
 
