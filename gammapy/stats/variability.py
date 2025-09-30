@@ -180,14 +180,12 @@ def compute_flux_doubling(flux, flux_err, coords, axis=0):
     axes_err_1 = (
         np.diff(coords)
         * np.log(2)
-        / flux[..., 1:]
-        * np.log(flux[..., 1:] / flux[..., :-1]) ** 2
+        / (flux[..., 1:] * np.log(flux[..., 1:] / flux[..., :-1]) ** 2)
     )
     axes_err_2 = (
         np.diff(coords)
         * np.log(2)
-        / flux[..., :-1]
-        * np.log(flux[..., 1:] / flux[..., :-1]) ** 2
+        / (flux[..., :-1] * np.log(flux[..., 1:] / flux[..., :-1]) ** 2)
     )
     axes_err = np.sqrt(
         (flux_err[..., 1:] * axes_err_1) ** 2 + (flux_err[..., :-1] * axes_err_2) ** 2
