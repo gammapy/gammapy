@@ -151,7 +151,7 @@ class ObservationTableReader:
     """Reader class for ObservationTable"""
 
     def read(self, filename, hdu=None):
-        """Read `~gammapy.data.ObservationTable` from file.
+        """Reads an Observation index table in GADF format and converts to internal `~gammapy.data.ObservationTable`.
 
         Parameters
         ----------
@@ -184,12 +184,12 @@ class ObservationTableReader:
 
     @staticmethod
     def _from_gadf_table(table_gadf):
-        """Convert gadf observation table into`~gammapy.data.ObservationTable`.
+        """Convert GADF observation table into`~gammapy.data.ObservationTable`.
 
         Parameters
         ----------
         table_gadf : `~astropy.Table.table`
-            Table in gadf 0.2/0.3 format, see [1], [2].
+            Table in GADF 0.2/0.3 format, see [1].
 
         Returns
         -------
@@ -198,18 +198,17 @@ class ObservationTableReader:
 
         References
         ----------
-        [1] Gamma-ray astronomy community, 2018, 'Data formats for gamma-ray astronomy v0.2 <https://gamma-astro-data-formats.readthedocs.io/en/v0.2/data_storage/obs_index/index.html>'_
-        [2] Gamma-ray astronomy community, 2018, 'Data formats for gamma-ray astronomy v0.3 <https://gamma-astro-data-formats.readthedocs.io/en/v0.3/data_storage/obs_index/index.html>'_
+        [1] Gamma-ray astronomy community, 2018, 'Data formats for gamma-ray astronomy v0.3 <https://gamma-astro-data-formats.readthedocs.io/en/v0.3/data_storage/obs_index/index.html>'_
         """
 
         names_gadf = table_gadf.colnames
         meta_gadf = table_gadf.meta
 
-        required_names_gadf = [
+        required_names = [
             "OBS_ID",
         ]
 
-        missing_names = set(required_names_gadf).difference(names_gadf)
+        missing_names = set(required_names).difference(names_gadf)
         if len(missing_names) != 0:
             raise RuntimeError(
                 f"Not all columns required to read from GADF were found in file. Missing: {missing_names}"
@@ -223,7 +222,7 @@ class ObservationTableReader:
                 time_unit = meta_gadf["TIMEUNIT"]
             except KeyError:
                 log.warning(
-                    "Found column TSTART or TSTOP in gadf table, but can not create columns in internal format (MixinColumn Time) due to missing header keywords in file."
+                    "Found column TSTART or TSTOP in GADF table, but can not create columns in internal format (MixinColumn Time) due to missing header keywords in file."
                 )
                 table_gadf.remove_columns(time_columns)
                 return ObservationTable(
