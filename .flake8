@@ -1,0 +1,11 @@
+[codespell]
+skip = [".git"]
+ignore-words = "dev/codespell/ignore-words.txt"
+exclude-file = "dev/codespell/exclude-file.txt"
+
+[flake8]
+# https://flake8.pycqa.org/en/latest/user/error-codes.html
+# W503: line break before binary operator
+ignore = W503,E501
+exclude = extern,conftest.py,__init__.py
+extend-ignore = E203
