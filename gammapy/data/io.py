@@ -148,12 +148,12 @@ class EventListWriter:
 
 
 class ObservationTableReader:
-    """Reader class for ObservationTable"""
+    """Reader class for ObservationTable."""
 
     valid_formats = ["GADF", "OGIP"]
 
     def read(self, filename, hdu=None):
-        """Reads an Observation index table in GADF format and converts to internal `~gammapy.data.ObservationTable`.
+        """Read an Observation index table in GADF format and convert to internal `~gammapy.data.ObservationTable`.
 
         Parameters
         ----------
@@ -206,7 +206,6 @@ class ObservationTableReader:
         .. [1] Gamma-ray astronomy community. (2018), "Data formats for gamma-ray astronomy v0.2" '<https://gamma-astro-data-formats.readthedocs.io/en/v0.2/data_storage/obs_index/index.html>'_
         .. [2] Gamma-ray astronomy community. (2018), "Data formats for gamma-ray astronomy v0.3" '<https://gamma-astro-data-formats.readthedocs.io/en/v0.3/data_storage/obs_index/index.html>'_
         """
-
         names_gadf = table_gadf.colnames
         meta_gadf = table_gadf.meta
 
