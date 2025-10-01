@@ -130,7 +130,7 @@ def test_observationtable_reader_gadf_converter_time_conversion():
     assert isinstance(obs_table["TSTART"], Time)
 
 
-def test_observationtable_reader_gadf_converter_invalid_time_unit(caplog):
+def test_observationtable_reader_gadf_converter_time_unit_not_understood(caplog):
     t = Table(
         {"OBS_ID": ["1"], "TSTART": [100]},
         meta={
@@ -140,15 +140,33 @@ def test_observationtable_reader_gadf_converter_invalid_time_unit(caplog):
         },
     )
     obs_table = ObservationTableReader._from_gadf_table(t)
-    assert "Invalid unit for column TSTART with dimension of time." in [
-        _.message for _ in caplog.records
-    ]
+    assert (
+        "Unit for column TSTART not understood. Unit with dimension of time expected."
+        in [_.message for _ in caplog.records]
+    )
+    assert obs_table.keys() == ["OBS_ID"]
+
+
+def test_observationtable_reader_gadf_converter_time_unit_wrong_dimension(caplog):
+    t = Table(
+        {"OBS_ID": ["1"], "TSTART": [100]},
+        meta={
+            "MJDREFI": 50000,
+            "MJDREFF": 100.0,
+            "TIMEUNIT": "m",
+        },
+    )
+    obs_table = ObservationTableReader._from_gadf_table(t)
+    assert (
+        "Unit for column TSTART is in wrong dimension. Unit with dimension of time expected."
+        in [_.message for _ in caplog.records]
+    )
     assert obs_table.keys() == ["OBS_ID"]
 
 
 def test_observationtable_reader_gadf_converter_invalid_time_datatype(caplog):
     t = Table(
-        {"OBS_ID": ["1"], "TSTOP": ["-"]},
+        {"OBS_ID": ["1"], "TSTOP": ["not_a_number"]},
         meta={
             "MJDREFI": 50000,
             "MJDREFF": 100.0,

@@ -222,7 +222,7 @@ class ObservationTableReader:
 
         time_columns = set(["TSTART", "TSTOP"]).intersection(set(names_gadf))
 
-        if len(time_columns) != 0:
+        if time_columns:
             try:
                 time_ref = time_ref_from_dict(meta_gadf)
                 time_unit = meta_gadf["TIMEUNIT"]
@@ -248,11 +248,17 @@ class ObservationTableReader:
                     q = Quantity(col_type_converted, time_unit)
                 except ValueError:
                     log.warning(
-                        f"Invalid unit for column {colname} with dimension of time."
+                        f"Unit for column {colname} not understood. Unit with dimension of time expected."
                     )
                     table_gadf.remove_column(colname)
                     break
-                table_gadf[colname] = time_ref + q
+                try:
+                    table_gadf[colname] = time_ref + q
+                except TypeError:
+                    log.warning(
+                        f"Unit for column {colname} is in wrong dimension. Unit with dimension of time expected."
+                    )
+                    table_gadf.remove_column(colname)
 
         return ObservationTable(
             data=table_gadf, meta=meta_gadf
