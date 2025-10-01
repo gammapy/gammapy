@@ -953,3 +953,15 @@ If not explicitly needed, it can be convenient to skip the GitHub Actions for pu
 This way computation power is saved and automatic commits by the Actions are avoided in the forks commit-history. An easy way to achieve this, is to deactivate the
 GitHub Actions completely for the fork, following the GitHub documentation, `see here. <https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository#managing-github-actions-permissions-for-your-repository>`__
 See also section: Making a pull request which skips GitHub Actions, above.
+
+Checklist for Code reviews
+++++++++++++++++++++++++++
+
+1. Check that the code does what it is supposed to do.
+2. Confirm all docstrings are correct and formatted correctly, 'see here. <https://docs.gammapy.org/dev/development/doc_howto.html#docstring-formatting>`__
+3. Check that the general conventions are fulfilled, 'see here. <https://docs.gammapy.org/dev/development/dev_howto.html#general-conventions>'__
+4. Ensure that a milestone and labels are correctly set for the PR.
+5. Check that all commits are signed.
+6. Add a fragment, if necessary, for towncrier (link to info in docs).
+7. Check that examples for the users are added, if possible, 'see here. <https://docs.gammapy.org/dev/development/doc_howto.html#code-in-docstrings-in-python-files>'__
+8. If needed, check that the docs build in the PR are correctly changed, either by testing it locally, or by checking the artifacts of the CI.
