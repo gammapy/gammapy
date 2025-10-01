@@ -1,0 +1,35 @@
+[run]
+# Files and directories to omit from coverage measurement
+omit =
+    *tests*
+    gammapy/extern/*
+    gammapy/conftest.py
+    gammapy/scripts/jupyter.py
+    gammapy/utils/notebooks_links.py
+    gammapy/utils/notebooks_process.py
+    gammapy/utils/notebooks_test.py
+    gammapy/utils/docs.py
+    gammapy/_astropy_init*
+    gammapy/*setup_package*
+    gammapy/tests/*
+    gammapy/*/tests/*
+    gammapy/extern/*
+    gammapy/version*
+    */gammapy/_astropy_init*
+    */gammapy/conftest.py
+    */gammapy/*setup_package*
+    */gammapy/tests/*
+    */gammapy/*/tests/*
+    */gammapy/extern/*
+    */gammapy/version*
+
+[report]
+# Lines to ignore in coverage reports
+exclude_lines =
+    pragma: no cover
+    except ImportError
+    raise AssertionError
+    raise NotImplementedError
+    def main\(.*\):
+    pragma: py{ignore_python_version}
+    def _ipython_key_completions_
