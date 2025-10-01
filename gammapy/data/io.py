@@ -150,6 +150,8 @@ class EventListWriter:
 class ObservationTableReader:
     """Reader class for ObservationTable"""
 
+    valid_formats = ["GADF", "OGIP"]
+
     def read(self, filename, hdu=None):
         """Reads an Observation index table in GADF format and converts to internal `~gammapy.data.ObservationTable`.
 
@@ -162,14 +164,14 @@ class ObservationTableReader:
 
         Returns
         -------
-        ObservationTable : `~gammapy.data.ObservationTable`
-            ObservationTable from disk converted into internal data format.
+        observation_table : `~gammapy.data.ObservationTable`
+            Observation table.
         """
         filename = make_path(filename)
 
-        table_disk = Table.read(filename, format="fits", hdu=hdu)
+        table = Table.read(filename, format="fits", hdu=hdu)
 
-        format = table_disk.meta.get("HDUCLASS")
+        format = table.meta.get("HDUCLASS")
 
         if format is None:
             format = "GADF"
@@ -178,9 +180,11 @@ class ObservationTableReader:
             )
 
         if format.upper() in ["GADF", "OGIP"]:
-            return self._from_gadf_table(table_disk)
+            return self._from_gadf_table(table)
         else:
-            raise ValueError(f"Unknown file format :{format}")
+            raise ValueError(
+                f"Unknown file format :{format}. Expected one of {self.valid_formats}."
+            )
 
     @staticmethod
     def _from_gadf_table(table_gadf):
@@ -189,16 +193,18 @@ class ObservationTableReader:
         Parameters
         ----------
         table_gadf : `~astropy.Table.table`
-            Table in GADF 0.2/0.3 format, see [1].
+            Table in GADF format (version 0.2 or 0.3).
+            See [1]_, [2]_ for further information.
 
         Returns
         -------
-        ObservationTable : `~gammapy.data.ObservationTable`
-            ObservationTable in internal data format.
+        observation_table : `~gammapy.data.ObservationTable`
+            Observation table.
 
         References
         ----------
-        [1] Gamma-ray astronomy community, 2018, 'Data formats for gamma-ray astronomy v0.3 <https://gamma-astro-data-formats.readthedocs.io/en/v0.3/data_storage/obs_index/index.html>'_
+        .. [1] Gamma-ray astronomy community. (2018), "Data formats for gamma-ray astronomy v0.2" '<https://gamma-astro-data-formats.readthedocs.io/en/v0.2/data_storage/obs_index/index.html>'_
+        .. [2] Gamma-ray astronomy community. (2018), "Data formats for gamma-ray astronomy v0.3" '<https://gamma-astro-data-formats.readthedocs.io/en/v0.3/data_storage/obs_index/index.html>'_
         """
 
         names_gadf = table_gadf.colnames
@@ -233,13 +239,17 @@ class ObservationTableReader:
                 try:
                     col_type_converted = table_gadf[colname].astype("float64")
                 except ValueError:
-                    log.warning(f"Could not convert type for column {colname}.")
+                    log.warning(
+                        f"Could not convert type for column {colname} to float64."
+                    )
                     table_gadf.remove_column(colname)
                     break
                 try:
                     q = Quantity(col_type_converted, time_unit)
                 except ValueError:
-                    log.warning(f"Invalid unit for column {colname}.")
+                    log.warning(
+                        f"Invalid unit for column {colname} with dimension of time."
+                    )
                     table_gadf.remove_column(colname)
                     break
                 table_gadf[colname] = time_ref + q

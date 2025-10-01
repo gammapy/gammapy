@@ -140,7 +140,9 @@ def test_observationtable_reader_gadf_converter_invalid_time_unit(caplog):
         },
     )
     obs_table = ObservationTableReader._from_gadf_table(t)
-    assert "Invalid unit for column TSTART." in [_.message for _ in caplog.records]
+    assert "Invalid unit for column TSTART with dimension of time." in [
+        _.message for _ in caplog.records
+    ]
     assert obs_table.keys() == ["OBS_ID"]
 
 
@@ -154,7 +156,7 @@ def test_observationtable_reader_gadf_converter_invalid_time_datatype(caplog):
         },
     )
     obs_table = ObservationTableReader._from_gadf_table(t)
-    assert "Could not convert type for column TSTOP." in [
+    assert "Could not convert type for column TSTOP to float64." in [
         _.message for _ in caplog.records
     ]
     assert obs_table.keys() == ["OBS_ID"]
