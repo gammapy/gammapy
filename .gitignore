@@ -100,7 +100,7 @@ dev/crab
 
 # Linting
 .trunk
-.flake8
+.flake8/*
 .isort.cfg
 .shellcheckrc
 .hadolint.yaml
