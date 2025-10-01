@@ -231,9 +231,7 @@ class ObservationTableReader:
                     "Found column TSTART or TSTOP in GADF table, but can not create columns in internal format due to missing header keywords in file."
                 )
                 table_gadf.remove_columns(time_columns)
-                return ObservationTable(
-                    data=table_gadf, meta=meta_gadf
-                )  # TODO: Replace "data" by "table" once new constructor is added in class ObservationTable.
+                return ObservationTable(data=table_gadf, meta=meta_gadf)
 
             for colname in time_columns:
                 try:
@@ -260,6 +258,4 @@ class ObservationTableReader:
                     )
                     table_gadf.remove_column(colname)
 
-        return ObservationTable(
-            data=table_gadf, meta=meta_gadf
-        )  # TODO: Replace "data" by "table" once new constructor is added in class ObservationTable.
+        return ObservationTable(data=table_gadf, meta=meta_gadf)
