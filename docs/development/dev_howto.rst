@@ -958,10 +958,10 @@ Checklist for Code reviews
 ++++++++++++++++++++++++++
 
 1. Check that the code does what it is supposed to do.
-2. Confirm all docstrings are correct and formatted correctly, 'see here. <https://docs.gammapy.org/dev/development/doc_howto.html#docstring-formatting>`__
-3. Check that the general conventions are fulfilled, 'see here. <https://docs.gammapy.org/dev/development/dev_howto.html#general-conventions>'__
+2. Confirm all docstrings are correct and formatted correctly, `see here. <https://docs.gammapy.org/dev/development/doc_howto.html#docstring-formatting>`__
+3. Check that the general conventions are fulfilled, `see here. <https://docs.gammapy.org/dev/development/dev_howto.html#general-conventions>`__
 4. Ensure that a milestone and labels are correctly set for the PR.
 5. Check that all commits are signed.
 6. Add a fragment, if necessary, for towncrier (link to info in docs).
-7. Check that examples for the users are added, if possible, 'see here. <https://docs.gammapy.org/dev/development/doc_howto.html#code-in-docstrings-in-python-files>'__
+7. Check that examples for the users are added, if possible, `see here. <https://docs.gammapy.org/dev/development/doc_howto.html#code-in-docstrings-in-python-files>`__
 8. If needed, check that the docs build in the PR are correctly changed, either by testing it locally, or by checking the artifacts of the CI.
