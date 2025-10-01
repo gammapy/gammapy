@@ -1571,11 +1571,43 @@ class TemplateSpatialModel(SpatialModel):
         )
 
     def plot(self, ax=None, geom=None, **kwargs):
+        """Plot spatial model.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes`, optional
+            Matplotlib axes. Default is None.
+        geom : `~gammapy.maps.WcsGeom`, optional
+            Geometry to use for plotting. Default is None.
+        **kwargs : dict
+            Keyword arguments passed to `~gammapy.maps.WcsMap.plot()`.
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`, optional
+            Matplotlib axes.
+        """
         if geom is None:
             geom = self.map.geom
         super().plot(ax=ax, geom=geom, **kwargs)
 
     def plot_interactive(self, ax=None, geom=None, **kwargs):
+        """Plot spatial model.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes`, optional
+            Matplotlib axes. Default is None.
+        geom : `~gammapy.maps.WcsGeom`, optional
+            Geom to use for plotting. Default is None.
+        **kwargs : dict
+            Keyword arguments passed to `~gammapy.maps.WcsMap.plot()`.
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`, optional
+            Matplotlib axes.
+        """
         if geom is None:
             geom = self.map.geom
         super().plot_interactive(ax=ax, geom=geom, **kwargs)
