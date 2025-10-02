@@ -476,6 +476,29 @@ def test_phase_curve_model_sample_time():
     assert np.all(phases <= 0.5)
 
 
+def test_phase_curve_model_long_period():
+    phase = np.linspace(0.0, 1, 51)
+    norm = np.ones_like(phase)
+    table = Table(data={"PHASE": phase, "NORM": norm})
+
+    t_ref = Time("2020-06-01", scale="utc")
+    phase_model = TemplatePhaseCurveTemporalModel(
+        table=table,
+        f0="7e-6 Hz",
+        phi_ref=0.0,
+        f1="0 s-2",
+        f2="0 s-3",
+        t_ref=t_ref.mjd * u.d,
+        scale="utc",
+    )
+
+    tmin = Time("2025-06-01", scale="tt")
+    tmax = tmin + 0.5 * u.h
+
+    integral = phase_model.integral(tmin, tmax)
+    assert_allclose(integral, 1.0, rtol=1e-5)
+
+
 @requires_data()
 def test_phasecurve_DC1():
     filename = "$GAMMAPY_DATA/tests/phasecurve_LSI_DC.fits"
