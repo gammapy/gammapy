@@ -79,10 +79,6 @@ jobs:
             allowed_fail: false
           - os: ubuntu-latest
             python: '3.10'
-            tox_env: 'codestyle'
-            allowed_fail: false
-          - os: ubuntu-latest
-            python: '3.10'
             tox_env: 'py310-test-alldeps_noray-astropy60-numpy126'
             allowed_fail: false
           - os: ubuntu-latest

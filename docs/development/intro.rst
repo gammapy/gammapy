@@ -316,15 +316,6 @@ To build the documentation locally you can use:
 
 And use `make docs-show` to open a browser and preview the result.
 
-The codestyle can be checked using the command:
-
-.. code-block:: bash
-
-    tox -e codestyle
-
-Which will run the tool `flake8` to check for code style issues.
-
-
 ..
     * run tests
     * build docs
