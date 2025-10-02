@@ -33,13 +33,6 @@ def light_curve():
     return LightCurveTemplateTemporalModel.read(path)
 
 
-@pytest.fixture()
-def phase_curve_table():
-    phase = np.linspace(0.0, 1, 101)
-    norm = phase * (phase < 0.5) + (1 - phase) * (phase >= 0.5)
-    return Table(data={"PHASE": phase, "NORM": norm})
-
-
 @requires_data()
 def test_light_curve_str(light_curve):
     ss = str(light_curve)
