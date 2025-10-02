@@ -105,11 +105,13 @@ docs = [
 include = ["gammapy*"]
 
 [tool.setuptools.package-data]
+"gammapy" = ["../CITATION", "../CITATION.cff"]
 "gammapy.analysis" = ["config/*"]
 "gammapy.workflow" = ["config/*"]
 "gammapy.irf.psf.tests" = ["data/*"]
 "gammapy.modeling.models.tests" = ["data/*"]
 "gammapy.catalog.tests" = ["data/*"]
+
 
 [tool.pytest.ini_options]
 filterwarnings = [
