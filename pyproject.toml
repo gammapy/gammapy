@@ -2,7 +2,7 @@
 name = "gammapy"
 description = "A Python package for gamma-ray astronomy"
 readme = "LONG_DESCRIPTION.rst"
-license = { text = "BSD-3-Clause" }
+license = "BSD-3-Clause"
 authors = [
     { name = "The Gammapy developers", email = "gammapy-coordination-l@in2p3.fr" }
 ]
