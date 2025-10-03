@@ -6,6 +6,8 @@
 Developer How To
 ****************
 
+.. _general-conventions:
+
 General conventions
 -------------------
 
@@ -575,6 +577,23 @@ until the contributor rebases (and having to explain git rebase to new contribut
 So our recommendation is that releases entries are not added in pull requests,
 but that the core developer adds a releases notes entry after right after having
 merged a pull request (you can add ``[skip ci]`` on this commit).
+
+How to review a pull request?
+-----------------------------
+
+The checklist below outlines key steps to follow when reviewing a PR.
+
+1. Ensure that a milestone and labels are correctly set for the PR.
+2. Check that the code does what it is supposed to do.
+3. Check that the CI workflow passes without failures.
+4. Check that the general conventions are fulfilled, :ref:`see here <general-conventions>`.
+5. Check that the code can be understood by reading it.
+6. Confirm all docstrings are correct and formatted correctly, :ref:`see here <docstring-formatting>`.
+7. Check that the PR links to associated issue(s), if any.
+8. Check that all commits are signed.
+9. Add a fragment, if necessary, for towncrier.
+10. Check that examples for the users are added, if possible, :ref:`see here <code-in-docstrings-in-python-files>`.
+11. When needed, check that the documentation build looks correct by checking the artifacts of the CI, :ref:`see here <accessing-documentation-build-on-a-pull-request>`.
 
 How to handle API breaking changes?
 -----------------------------------
