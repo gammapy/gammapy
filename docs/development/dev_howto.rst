@@ -584,14 +584,14 @@ How to review a pull request?
 The checklist below outlines key steps to follow when reviewing a PR.
 
 1. Check that the code does what it is supposed to do.
-2. Confirm all docstrings are correct and formatted correctly, (:doc:`see here </development/doc_howto.html#docstring-formatting>`).
-3. Check that the general conventions are fulfilled, (:doc:`see here </development/dev_howto.html#general-conventions>`).
+2. Confirm all docstrings are correct and formatted correctly, :ref:`see here <docstring-formatting>`.
+3. Check that the general conventions are fulfilled, :ref:`see here <general-conventions>`.
 4. Ensure that a milestone and labels are correctly set for the PR.
 5. Check that the PR links to associated issue(s), if any.
 6. Check that all commits are signed.
 7. Add a fragment, if necessary, for towncrier.
-8. Check that examples for the users are added, if possible, (:doc:`see here </development/doc_howto.html#code-in-docstrings-in-python-files>`).
-9. When needed, check that the documentation build looks correct by checking the artifacts of the CI (:doc:`see here </development/doc_howto.html#accessing-documentation-build-on-a-pull-request>`).
+8. Check that examples for the users are added, if possible, :ref:`see here <code-in-docstrings-in-python-files>`.
+9. When needed, check that the documentation build looks correct by checking the artifacts of the CI, :ref:`see here <accessing-documentation-build-on-a-pull-request>`.
 
 How to handle API breaking changes?
 -----------------------------------
