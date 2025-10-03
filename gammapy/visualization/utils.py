@@ -8,6 +8,7 @@ from astropy.visualization import make_lupton_rgb
 import matplotlib.axes as maxes
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+from gammapy.modeling import Fit
 
 __all__ = [
     "add_colorbar",
@@ -15,6 +16,7 @@ __all__ = [
     "plot_map_rgb",
     "plot_theta_squared_table",
     "plot_distribution",
+    "plot_stat_profile",
 ]
 
 
@@ -423,3 +425,70 @@ def plot_distribution(
         axe.legend()
 
     return axes, result_list
+
+
+def plot_stat_profile(result, datasets, model_name, ncols=3, fit=None, **kwargs):
+    """
+    Plot the fit statistic profile for each free parameter of the model.
+
+    Parameters
+    ----------
+    result: `~gammapy.modelling.FitResult`
+        Result of the fit.
+    datasets: `~gammapy.datasets.Dataset` or `~gammapy.datasets.Datasets`
+        Datasets.
+    model_name: str
+        Name of the model.
+    ncols: int, optional
+        Number of columns to plot. Default is 3.
+    fit: `~gammapy.modelling.Fit`, optional
+        Fit object to compute the profile. If None, use the default version of
+        `~gammapy.modelling.Fit`. Default is None.
+    **kwargs: dict, optional
+        Dictionnary of attributes values to pass to `~gammapy.modelling.parameter`.
+        If None is passed, it will set `~gammapy.modelling.parameter.scan_n_values` to 20.
+    """
+    total_stat = result.total_stat
+
+    if model_name not in datasets.models.names:
+        raise ValueError(
+            f"`model_name` {model_name} not in `datasets.models`. List of valid model name can be access via `datasets.models.names`."
+        )
+
+    fit = fit or Fit()
+
+    model = datasets.models[model_name]
+    free_parameters = model.parameters.free_parameters
+
+    n_plot = len(free_parameters)
+
+    if n_plot == 0:
+        log.warning(f"No free parameters in model {model_name}.")
+        return None
+
+    cols = min(ncols, n_plot)
+    rows = 1 + (n_plot - 1) // cols
+
+    width = 12
+    figsize = (width, width * rows / cols)
+
+    fig, axes = plt.subplots(
+        nrows=rows,
+        ncols=cols,
+        figsize=figsize,
+    )
+
+    for ax, par in zip(axes.flatten(), free_parameters):
+        par.scan_n_values = 20
+        if kwargs is not None:
+            for k, v in kwargs.items():
+                setattr(par, k, v)
+        idx = model.parameters.index(par)
+        name = model.parameters_unique_names[idx]
+        profile = fit.stat_profile(datasets=datasets, parameter=par)
+        ax.plot(profile[f"{model.name}.{name}_scan"], profile["stat_scan"] - total_stat)
+        ax.set_xlabel(f"{par.name} [{par.unit}]")
+        ax.set_ylabel("Delta TS")
+        ax.set_title(f"{name}:\n {par.value:.1e} +- {par.error:.1e}")
+
+    plt.show()
