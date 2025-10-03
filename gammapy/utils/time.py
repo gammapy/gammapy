@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Time related utility functions."""
+
 import numpy as np
 import astropy.units as u
 from astropy.time import Time, TimeDelta

@@ -124,7 +124,6 @@ values = [
 
 @pytest.mark.parametrize(("n_on", "n_off", "alpha", "mu_sig", "result"), values)
 def test_wstat_with_musig(n_on, n_off, alpha, mu_sig, result):
-
     stat = WStatCountsStatistic(n_on, n_off, alpha, mu_sig)
     excess = stat.n_sig
     sqrt_ts = stat.sqrt_ts

@@ -13,7 +13,6 @@ def test_cli_workflow_config(tmp_path):
 
 @requires_data()
 def test_cli_workflow_run(tmp_path):
-
     path_config = tmp_path / "config.yaml"
     path_datasets = tmp_path / "datasets.yaml"
     config = get_example_config("1d")
