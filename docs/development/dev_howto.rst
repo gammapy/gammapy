@@ -6,6 +6,8 @@
 Developer How To
 ****************
 
+.. _general-conventions:
+
 General conventions
 -------------------
 

@@ -36,6 +36,7 @@ This should work::
 
 You need a bunch or LaTeX stuff, specifically ``texlive-fonts-extra`` is needed.
 
+.. _accessing-documentation-build-on-a-pull-request:
 
 Accessing documentation build on a Pull Request
 +++++++++++++++++++++++++++++++++++++++++++++++
@@ -94,6 +95,8 @@ In order to perform tests of these snippets of code present in RST files, you ma
 .. code-block:: bash
 
     pytest --doctest-glob="*.rst" docs/
+
+.. _code-in-docstrings-in-python-files:
 
 Code in docstrings in Python files
 ++++++++++++++++++++++++++++++++++
@@ -186,6 +189,7 @@ Another option is to create a general list of references, as follows:
         * `Author et al. (2023), "Title" <link_to_nasaads>`_
         * `Author2 et al. (2022), "Title2" <link_to_nasaads>`_
 
+.. _docstring-formatting:
 
 Docstring formatting
 ^^^^^^^^^^^^^^^^^^^^
