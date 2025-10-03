@@ -576,6 +576,21 @@ So our recommendation is that releases entries are not added in pull requests,
 but that the core developer adds a releases notes entry after right after having
 merged a pull request (you can add ``[skip ci]`` on this commit).
 
+How to review a pull request?
+-----------------------------
+
+The checklist below outlines key steps to follow when reviewing a PR.
+
+1. Check that the code does what it is supposed to do.
+2. Confirm all docstrings are correct and formatted correctly, (:doc:`see here </development/doc_howto.html#docstring-formatting>`).
+3. Check that the general conventions are fulfilled, (:doc:`see here </development/dev_howto.html#general-conventions>`).
+4. Ensure that a milestone and labels are correctly set for the PR.
+5. Check that the PR links to associated issue(s), if any.
+6. Check that all commits are signed.
+7. Add a fragment, if necessary, for towncrier.
+8. Check that examples for the users are added, if possible, (:doc:`see here </development/doc_howto.html#code-in-docstrings-in-python-files>`).
+9. When needed, check that the documentation build looks correct by checking the artifacts of the CI (:doc:`see here </development/doc_howto.html#accessing-documentation-build-on-a-pull-request>`).
+
 How to handle API breaking changes?
 -----------------------------------
 
@@ -953,16 +968,3 @@ If not explicitly needed, it can be convenient to skip the GitHub Actions for pu
 This way computation power is saved and automatic commits by the Actions are avoided in the forks commit-history. An easy way to achieve this, is to deactivate the
 GitHub Actions completely for the fork, following the GitHub documentation, `see here. <https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository#managing-github-actions-permissions-for-your-repository>`__
 See also section: Making a pull request which skips GitHub Actions, above.
-
-Checklist for Code reviews
-++++++++++++++++++++++++++
-
-1. Check that the code does what it is supposed to do.
-2. Confirm all docstrings are correct and formatted correctly, `see here. <https://docs.gammapy.org/dev/development/doc_howto.html#docstring-formatting>`__
-3. Check that the general conventions are fulfilled, `see here. <https://docs.gammapy.org/dev/development/dev_howto.html#general-conventions>`__
-4. Ensure that a milestone and labels are correctly set for the PR.
-5. Check that the PR links to associated issue(s), if any.
-6. Check that all commits are signed.
-7. Add a fragment, if necessary, for towncrier.
-8. Check that examples for the users are added, if possible, `see here. <https://docs.gammapy.org/dev/development/doc_howto.html#code-in-docstrings-in-python-files>`__
-9. If needed, check that the docs build in the PR are correctly changed, either by testing it locally, or by checking the artifacts of the CI.
