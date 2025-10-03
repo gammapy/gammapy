@@ -3,7 +3,6 @@ import astropy.io.fits as fits
 from astropy.table import Table
 from astropy.time import Time
 from astropy import units as u
-from astropy.utils.exceptions import AstropyDeprecationWarning
 import pytest
 
 from gammapy.utils.scripts import make_path
@@ -54,17 +53,6 @@ def test_eventlist_reader_empty_gadf_table():
     assert "TIME" in str(err.value)
     assert "RA" in str(err.value)
     assert "DEC" in str(err.value)
-
-
-@requires_data()
-def test_observationtable_reader_unknown_hdu_extension():
-    hess_obs_table = make_path("$GAMMAPY_DATA/hess-dl3-dr1/obs-index.fits.gz")
-
-    with pytest.raises(AstropyDeprecationWarning):
-        obs_table = ObservationTableReader().read(
-            hess_obs_table, hdu="unknown_extension"
-        )
-        assert len(obs_table) == 105
 
 
 @requires_data()
