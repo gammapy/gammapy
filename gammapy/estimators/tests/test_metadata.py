@@ -30,7 +30,6 @@ def default():
 
 @requires_data()
 def test_creator(default):
-
     assert default.creation.creator == "gammapy test"
     assert default.sed_type == "likelihood"
     assert default.sed_type_init is None

@@ -242,7 +242,6 @@ def test_restore_status(models):
 
 
 def test_bounds(models):
-
     models.set_parameters_bounds(
         tag="pl",
         model_type="spectral",

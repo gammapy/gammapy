@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities for hierarchical/agglomerative clustering."""
+
 import numpy as np
 import scipy.cluster.hierarchy as sch
 

@@ -4,6 +4,7 @@
 For measurements, the "Database of Charged Cosmic Rays (CRDB)" is a great resource:
 https://lpsc.in2p3.fr/crdb/
 """
+
 import numpy as np
 from astropy import units as u
 from gammapy.modeling import Parameter

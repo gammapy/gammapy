@@ -459,7 +459,6 @@ def test_reflected_bkg_maker_fixed_rad_max_bad(
 
 
 def test_reflected_bkg_exclsion_error(exclusion_mask):
-
     energy = MapAxis.from_energy_bounds(1 * u.TeV, 2 * u.TeV, nbin=1, name="energy")
 
     exclusion_cube = exclusion_mask.to_cube([energy])

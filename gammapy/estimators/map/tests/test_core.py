@@ -583,7 +583,6 @@ def test_slice_by_coord():
 
 
 def test_copy(map_flux_estimate):
-
     model = SkyModel(PowerLawSpectralModel(amplitude="1e-10 cm-2s-1TeV-1", index=3))
 
     fe = FluxMaps(data=map_flux_estimate, reference_model=model)
