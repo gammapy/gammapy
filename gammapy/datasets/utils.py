@@ -66,12 +66,13 @@ def apply_edisp(input_map, edisp):
     """
     # TODO: either use sparse matrix multiplication or something like edisp.is_diagonal
     if edisp is not None:
-        if edisp.is_reco_unbinned or input_map.data.shape[:2] == edisp.pdf_matrix.shape[:2]: 
-            #to deal with unbinned implementation
-            data = np.einsum("pn...,pn...->n...", input_map.data, edisp.pdf_matrix)
+        data = np.einsum("p...,pn...->n...", input_map.data, edisp.pdf_matrix)
+        if (
+            edisp.is_reco_unbinned
+            or input_map.data.shape[:2] == edisp.pdf_matrix.shape[:2]
+        ):
             energy_axis = edisp.axes["energy"].copy()
         else:
-            data = np.einsum("p...,pn...->n...", input_map.data, edisp.pdf_matrix)
             energy_axis = edisp.axes["energy"].copy(name="energy")
     else:
         data = input_map.data

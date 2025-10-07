@@ -181,6 +181,9 @@ class EDispMap(IRFMap):
             import warnings
 
             warnings.warn(
+                " Computing unbinned EDispKernelMap from unbinned transformation of the Edisp migration to energy_reco is not accurate."
+            )
+            warnings.warn(
                 "Using Unbinned analysis for the reconstructed energy axis. Make sure the EDisp will be normalized."
             )
         data = np.clip(values, 0, np.inf)
@@ -335,20 +338,6 @@ class EDispMap(IRFMap):
         self.get_edisp_kernel(energy_axis=e_reco).peek(figsize)
 
 
-class UnbinnedEDispMap(EDispMap):
-    tag = "unbinned_edisp_map"
-    required_axes = ["events", "energy_true"]
-
-    @property
-    def pdf_matrix(self):
-        """Energy dispersion PDF matrix as a `~numpy.ndarray`.
-
-        Rows (first index): True Energy
-        Columns (second index): events
-        """
-        return self.edisp_map.data
-
-
 class EDispKernelMap(IRFMap):
     """Energy dispersion kernel map.
 
@@ -375,6 +364,24 @@ class EDispKernelMap(IRFMap):
     @edisp_map.setter
     def edisp_map(self, value):
         self._irf_map = value
+
+    def divide_bin_width(self, axis_name):
+        """Divide the edisp map per bin width of a given axis.
+
+        Parameters
+        ----------
+        axis_name : str
+            Name of the axis to use for the division.
+
+        Returns
+        -------
+        edisp : `EDispKernelMap`
+            Energy dispersion kernel map.
+        """
+        edisp_map_divided = self.edisp_map.divide_bin_width(axis_name)
+        return self.__class__(
+            edisp_kernel_map=edisp_map_divided, exposure_map=self.exposure_map
+        )
 
     @classmethod
     def from_geom(cls, geom):

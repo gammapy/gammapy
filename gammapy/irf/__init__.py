@@ -9,7 +9,6 @@ from .edisp import (
     EDispKernelMap,
     EDispMap,
     EnergyDispersion2D,
-    UnbinnedEDispMap,
 )
 from .effective_area import EffectiveAreaTable2D
 from .io import load_irf_dict_from_file
@@ -31,7 +30,6 @@ __all__ = [
     "EDispKernel",
     "EDispKernelMap",
     "EDispMap",
-    "UnbinnedEDispMap",
     "EffectiveAreaTable2D",
     "EnergyDependentMultiGaussPSF",
     "EnergyDispersion2D",
@@ -64,6 +62,5 @@ IRF_REGISTRY = Registry(
         EDispKernelMap,
         RadMax2D,
         EDispMap,
-        UnbinnedEDispMap,
     ]
 )
