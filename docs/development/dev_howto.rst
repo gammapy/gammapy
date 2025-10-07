@@ -586,12 +586,12 @@ How to review a pull request?
 The checklist below outlines key steps to follow when reviewing a PR.
 
 1. Ensure that a milestone and labels are correctly set for the PR.
-2. Check that the code does what it is supposed to do.
-3. Check that the CI workflow passes without failures.
-4. Check that the general conventions are fulfilled, :ref:`see here <general-conventions>`.
-5. Check that the code can be understood by reading it.
-6. Confirm all docstrings are correct and formatted correctly, :ref:`see here <docstring-formatting>`.
-7. Check that the PR links to associated issue(s), if any.
+2. Check that the PR links to associated issue(s), if any.
+3. Check that the code does what it is supposed to do.
+4. Check that the CI workflow passes without failures.
+5. Check that the general conventions are fulfilled, :ref:`see here <general-conventions>`.
+6. Check that the code can be understood by reading it.
+7. Confirm all docstrings are correct and formatted correctly, :ref:`see here <docstring-formatting>`.
 8. Check that all commits are signed.
 9. Add a fragment, if necessary, for towncrier.
 10. Check that examples for the users are added, if possible, :ref:`see here <docstring-code-py-file>`.
