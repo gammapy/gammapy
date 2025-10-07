@@ -8,6 +8,7 @@ from regions import CircleSkyRegion
 from gammapy.irf import EDispKernel, PSFKernel
 from gammapy.maps import Map
 from gammapy.modeling.models import PointSpatialModel, TemplateNPredModel
+from gammapy.utils.integrate import integrate_histogram
 from .utils import apply_edisp
 
 PSF_MAX_RADIUS = None
@@ -52,10 +53,10 @@ class UnbinnedEvaluator:
         geom,
         geom_normalization,
         exposure=None,
-        exposure_original_irf=None,
+        # exposure_original_irf=None,
         psf=None,
         edisp=None,
-        edisp_original_irf=None,
+        edisp_e_reco_binned=None,
         gti=None,
         mask=None,
         evaluation_mode="local",
@@ -99,8 +100,8 @@ class UnbinnedEvaluator:
             edisp,
             geom,
             mask,
-            edisp_original_irf=edisp_original_irf,
-            exposure_original_irf=exposure_original_irf,
+            edisp_e_reco_binned=edisp_e_reco_binned,
+            # exposure_original_irf=exposure_original_irf,
         )
 
     def _repr_html_(self):
@@ -111,7 +112,6 @@ class UnbinnedEvaluator:
 
     def reset_cache_properties(self):
         """Reset cached properties."""
-        del self._compute_npred
         del self._compute_flux_spatial
         self._computation_cache = None
         self._cached_parameter_previous = None
@@ -119,17 +119,20 @@ class UnbinnedEvaluator:
     @property
     def geom(self):
         """True energy map geometry (`~gammapy.maps.Geom`)."""
-        return self._geom
+        if self.exposure is not None:
+            return self.exposure.geom
+        else:
+            return None
 
     @property
-    def _geom_reco(self):  # TO BE CHANGED
+    def _geom_reco(self):
         if self.edisp is not None:
-            energy_axis = self.edisp.axes["energy"]
+            energy_axis = self.edisp.axes["energy"].copy()
         elif self._geom_reco_axis is not None:
             energy_axis = self._geom_reco_axis
         else:
-            energy_axis = self.geom.axes["energy_true"]
-        geom = self.geom.to_image().to_cube(axes=[energy_axis.copy(name="energy")])
+            energy_axis = self.geom.axes["energy_true"].copy(name="energy")
+        geom = self.geom.to_image().to_cube(axes=[energy_axis])
         return geom
 
     @property
@@ -183,8 +186,8 @@ class UnbinnedEvaluator:
         edisp,
         geom,
         mask,
-        edisp_original_irf=None,
-        exposure_original_irf=None,
+        edisp_e_reco_binned=None,
+        # exposure_original_irf=None,
     ):
         """Update MapEvaluator, based on the current position of the model component.
 
@@ -207,12 +210,12 @@ class UnbinnedEvaluator:
         del self.position
         del self.cutout_width
 
-        self._geom_reco_axis = geom.axes["events"]
+        self._geom_reco_axis = geom.axes["energy"]
 
         # lookup edisp
         del self._edisp_diagonal
         if edisp:
-            energy_axis = geom.axes["events"]["energy"]
+            energy_axis = geom.axes["energy"]
             self.edisp = edisp.get_edisp_kernel(
                 position=self.position, energy_axis=energy_axis
             )
@@ -220,18 +223,13 @@ class UnbinnedEvaluator:
 
         else:
             self.edisp = None
-        if edisp_original_irf is not None:
-            energy_axis = edisp_original_irf.axes["energy"]
-            self.edisp_original_irf = edisp_original_irf.get_edisp_kernel(
+        if edisp_e_reco_binned is not None:
+            energy_axis = edisp_e_reco_binned.axes["energy"]
+            self.edisp_e_reco_binned = edisp_e_reco_binned.get_edisp_kernel(
                 position=self.position, energy_axis=energy_axis
             )
         else:
-            self.edisp_original_irf = None
-
-        if exposure_original_irf is not None:
-            self.exposure_original_irf = exposure_original_irf
-        else:
-            self.exposure_original_irf = None
+            self.edisp_e_reco_binned = None
 
         # lookup psf
         if (
@@ -296,9 +294,6 @@ class UnbinnedEvaluator:
         """Compute flux."""
         if geom is None:
             geom = self.geom
-        # if isinstance(geom, UnbinnedRegionGeom):
-        #    axes = [geom.axes[ax] for ax in geom.axes.names if ax != 'events']
-        #    geom = geom.to_image().to_cube(axes)
         return self.model.integrate_geom(geom, self.gti)
 
     def compute_flux_psf_convolved(self, *arg):
@@ -384,7 +379,7 @@ class UnbinnedEvaluator:
         """Convolve npred cube with PSF."""
         return npred.convolve(self.psf)
 
-    def apply_edisp(self, npred, original_irf=False):
+    def apply_edisp(self, npred, edisp=None):
         """Convolve map data with energy dispersion.
 
         Parameters
@@ -397,9 +392,7 @@ class UnbinnedEvaluator:
         npred_reco : `~gammapy.maps.Map`
             Predicted counts in reconstructed energy bins.
         """
-        if original_irf:
-            edisp = self.edisp_original_irf
-        else:
+        if edisp is None:
             edisp = self.edisp
 
         if self.model.apply_irf["edisp"] and edisp:
@@ -409,44 +402,6 @@ class UnbinnedEvaluator:
                 return apply_edisp(npred, self._edisp_diagonal)
             else:
                 return npred
-
-    def compute_normalization_factor(self, energy_range=None):
-        """Normalization factor of the PDF, which is the total number of events predicted by the model."""
-        flux = self.compute_flux(geom=self._geom_normalization)
-        flux = self.apply_exposure(flux, original_irf=True)
-        flux = self.apply_edisp(flux, original_irf=True)
-        if energy_range is not None:
-            mask_energy_range = (
-                flux.geom.axes["energy"].edges[:-1] >= energy_range[0]
-            ) & (flux.geom.axes["energy"].edges[1:] <= energy_range[1])
-        else:
-            mask_energy_range = np.ones(flux.geom.axes["energy"].nbin, dtype=bool)
-        return (
-            flux.data.flatten()[mask_energy_range].sum(
-                axis=self._geom_normalization.axes.index("energy")
-            )
-            * flux.unit
-        )
-
-    @lazyproperty
-    def _compute_npred(self):
-        """Compute npred."""
-        if isinstance(self.model, TemplateNPredModel):
-            npred = self.model.evaluate()
-        else:
-            if (
-                self._norm_idx is not None
-                and self.model.parameters.value[self._norm_idx] == 0
-            ):
-                npred = Map.from_geom(self._geom_reco, data=0)
-            elif not self.parameter_norm_only_changed or not self.use_cache:
-                for method in self.methods_sequence:
-                    values = method(self._computation_cache)
-                    self._computation_cache = values
-                npred = self._computation_cache
-            else:
-                npred = self._computation_cache * self.renorm()
-        return npred
 
     @property
     def apply_psf_after_edisp(self):
@@ -459,14 +414,14 @@ class UnbinnedEvaluator:
 
         For now just divide flux cube by exposure.
         """
-        if original_irf:
-            geom = self._geom_normalization
-            exposure = self.exposure_original_irf
-        else:
-            geom = self.geom
-            exposure = self.exposure
-        npred = (flux.quantity * exposure.quantity).to_value("")
-        return Map.from_geom(geom, data=npred, unit="")
+        # if original_irf:
+        #    geom = self._geom_normalization
+        #    exposure = self.exposure_original_irf
+        # else:
+        #    geom = self.geom
+        #    exposure = self.exposure
+        npred = (flux.quantity * self.exposure.quantity).to_value("")
+        return Map.from_geom(self.geom, data=npred, unit="")
 
     def compute_npred(self):
         """Evaluate model predicted counts.
@@ -476,13 +431,42 @@ class UnbinnedEvaluator:
         npred : `~gammapy.maps.Map`
             Predicted counts on the map (in reconstructed energy bins).
         """
-        if self.parameters_changed or not self.use_cache:
-            del self._compute_npred
+        flux_from_binned = self.compute_flux()
+        flux_from_binned = self.apply_exposure(flux_from_binned)
+        flux_from_binned = self.apply_edisp(
+            flux_from_binned, edisp=self.edisp_e_reco_binned
+        )
+        return flux_from_binned
 
-        return self._compute_npred
+    def _get_factor_to_normalize_edisp(self, energy_min, energy_max):
+        """Normalize the energy dispersion matrix to 1 in each true energy bin."""
+        # mask = self.edisp.axes['energy'].center >= energy_min
+        # mask &= self.edisp.axes['energy'].center <= energy_max
+        # args = np.argsort(self.edisp.axes['energy'].center[mask])
+        # energy_reco_sorted = self.edisp.axes['energy'].center[mask][args]
+        # factor = simpson(self.edisp.data.T[mask][args].T, energy_reco_sorted, axis=1)
+        differencial_edisp_map_e_reco_binned = (
+            self.edisp_e_reco_binned.divide_bin_width("energy")
+        )
 
-    def compute_probability_density_function(self):
-        """Compute probability density function (PDF) of the model over the map energy range.
+        factor = (
+            integrate_histogram(
+                differencial_edisp_map_e_reco_binned.data,
+                differencial_edisp_map_e_reco_binned.axes["energy"].edges,
+                energy_min,
+                energy_max,
+                axis=differencial_edisp_map_e_reco_binned.axes.index("energy"),
+            )[0]
+            * differencial_edisp_map_e_reco_binned.unit
+        )
+        with np.errstate(divide="ignore", invalid="ignore"):
+            factor = np.nan_to_num(factor**-1, posinf=0, neginf=0, nan=0)
+        return factor
+
+    def compute_signal_pdf(
+        self, energy_min=None, energy_max=None, return_normalization_factor=False
+    ):
+        """Compute signal probability density function (PDF) of the model over the map energy range.
         This implementation is based on the independance of exposure and model to E_reco.
 
         Returns
@@ -490,21 +474,48 @@ class UnbinnedEvaluator:
         pdf : `~numpy.ndarray`
             Probability density function (PDF) of the model.
         """
-        flux = self.compute_flux(self.geom.squash("events"))
-        axis_idx = self.geom.axes.index_data("events")
-        slc = tuple(
-            0 if i == axis_idx else slice(None) for i in range(self.exposure.data.ndim)
-        )
-        exposure = (
-            self.exposure.data[slc].reshape(flux.geom.data_shape) * self.exposure.unit
-        )
-        exposure = exposure.to(flux.unit**-1)
-        flux = flux * exposure
-        npred = self.apply_edisp(flux)
-        # events_positive_proba = npred.data.flatten() > 0
-        normalization_factor = flux.quantity.sum(axis=0).flatten()[0]
+
+        flux = self.compute_flux()
+        flux = flux * self.exposure
+        if energy_min is not None or energy_max is not None:
+            if energy_min is None:
+                energy_min = self.edisp.axes["energy"].center.min()
+            if energy_max is None:
+                energy_max = self.edisp.axes["energy"].center.max()
+            # mask = np.logical_and(
+            #    self.edisp.axes['energy'].center >= energy_min,
+            #    self.edisp.axes['energy'].center <= energy_max
+            # )
+            # args = np.argsort(self.edisp.axes['energy'].center[mask])
+            # energy_reco_sorted = self.edisp.axes['energy'].center[mask][args]
+
+            npred_binned = self.apply_edisp(
+                flux, edisp=self.edisp_e_reco_binned.divide_bin_width("energy")
+            )
+            normalization_factor = (
+                integrate_histogram(
+                    npred_binned.data,
+                    npred_binned.geom.axes["energy"].edges,
+                    energy_min,
+                    energy_max,
+                    axis=npred_binned.geom.axes.index_data("energy"),
+                )[0]
+                * npred_binned.unit
+            )
+
+            # factor = self._get_factor_to_normalize_edisp(energy_min, energy_max)
+            # flux *= factor.reshape(flux.data.shape)
+            npred = self.apply_edisp(flux)
+
+        else:
+            npred = self.apply_edisp(flux)
+            normalization_factor = flux.quantity.sum(axis=0)
         pdf = npred / normalization_factor
-        return pdf
+        # pdf.data = np.clip(pdf.data, 0, None)#to avoid negative pdf values
+        if return_normalization_factor:
+            return pdf, normalization_factor
+        else:
+            return pdf
 
     @property
     def parameters_changed(self):
