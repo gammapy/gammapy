@@ -142,7 +142,8 @@ __all__ = [
     "TemplateNDSpatialModel",
     "TemplateNDSpectralModel",
     "TemplateNPredModel",
-    "NormBackgroundSpectralModel" "TEMPORAL_MODEL_REGISTRY",
+    "NormBackgroundSpectralModel",
+    "TEMPORAL_MODEL_REGISTRY",
     "TemporalModel",
     "EBL_DATA_BUILTIN",
 ]
