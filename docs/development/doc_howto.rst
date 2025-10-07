@@ -36,7 +36,7 @@ This should work::
 
 You need a bunch or LaTeX stuff, specifically ``texlive-fonts-extra`` is needed.
 
-.. _accessing-documentation-build-on-a-pull-request:
+.. _access-doc-on-PR:
 
 Accessing documentation build on a Pull Request
 +++++++++++++++++++++++++++++++++++++++++++++++
@@ -96,7 +96,7 @@ In order to perform tests of these snippets of code present in RST files, you ma
 
     pytest --doctest-glob="*.rst" docs/
 
-.. _code-in-docstrings-in-python-files:
+.. _docstring-code-py-file:
 
 Code in docstrings in Python files
 ++++++++++++++++++++++++++++++++++
