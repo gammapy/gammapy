@@ -23,16 +23,10 @@ Feature Freeze and Branching
 
 **A few days before the feature freeze:**
 
-#. Fill the changelog ``docs/release-notes/<version>.rst`` for the version you are about to release.
-
-   * To generate the list of pull requests and issues, and list of authors run
-     ``python dev/github_summary.py create_pull_request_table``. Note that you will
-     need to use your github token here.
-
 #. Update the author list manually in the  ``CITATION.cff``.
 
-   * You can use the helper script ``dev/authors.py`` for this.
-#. Open a PR including both changes and mark it with the ``backport-v<version>.x`` label.
+    * You can use the helper script ``dev/authors.py`` for this.
+#. Open a PR including this change and mark it with the ``backport-v<version>.x`` label.
    Gather feedback from the Gammapy user and dev community and finally merge and backport to the
    ``v<version>.x`` branch.
 
@@ -48,6 +42,12 @@ Feature Freeze and Branching
     git checkout -B main upstream/main
 
 #. From the github online interface, create a new branch v<version>.x
+
+#. Stay on the ``main`` branch to build the changelog for the version you are about to release.
+   This is done through the use of towncrier with the following line::
+
+    towncrier build --version=<version>
+
 #. Update the entry for the feature freeze in the
    `Gammapy release calendar <https://github.com/gammapy/gammapy/wiki/Release-Calendar>`__.
 
@@ -205,6 +205,14 @@ Make a Bugfix release
    last stable version, like ``v1.0`` or ``v1.1``. We do not provide bug-fix release for data.
 
 #. Follow the `Astropy bug fix release instructions <https://docs.astropy.org/en/latest/development/maintainers/releasing.html#maintaining-bug-fix-releases>`__.
+
+#. To create the changelog, towncrier is utilised::
+
+    towncrier build --version=<version> --keep
+
+   * As we will create the changelog again for the major release, we should utilise the ``keep`` keyword,
+     as to not delete the fragments.
+
 
 #. Follow the instructions for a major release for the updates of ``CITATION.cff``, the modifications in the
    ``gammapy-docs`` and ``gammapy-webpage`` repos as well as the conda builds.

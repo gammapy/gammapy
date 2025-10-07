@@ -582,12 +582,6 @@ We recently chose to utilise `towncrier <https://towncrier.readthedocs.io/en/sta
   has been introduced to perform nested model fits and compute the resulting test statistic (TS) between
   two nested hypotheses.".
 
-To build the release notes you can simply utilise the following line:
-
-.. code-block:: bash
-
-    towncrier build --version=<VERSION NUMBER>
-
 
 
 
