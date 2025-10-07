@@ -55,6 +55,7 @@ from .spectral import (
     SuperExpCutoffPowerLaw4FGLSpectralModel,
     TemplateNDSpectralModel,
     TemplateSpectralModel,
+    NormBackgroundSpectralModel,
     integrate_spectrum,
     scale_plot_flux,
 )
@@ -141,7 +142,7 @@ __all__ = [
     "TemplateNDSpatialModel",
     "TemplateNDSpectralModel",
     "TemplateNPredModel",
-    "TEMPORAL_MODEL_REGISTRY",
+    "NormBackgroundSpectralModel" "TEMPORAL_MODEL_REGISTRY",
     "TemporalModel",
     "EBL_DATA_BUILTIN",
 ]
@@ -187,6 +188,7 @@ SPECTRAL_MODEL_REGISTRY = Registry(
         PowerLawNormSpectralModel,
         LogParabolaNormSpectralModel,
         ExpCutoffPowerLawNormSpectralModel,
+        NormBackgroundSpectralModel,
     ]
 )
 """Registry of spectral model classes."""
