@@ -2,18 +2,21 @@
 import logging
 import astropy.units as u
 from astropy.table import Table
-from scipy import integrate, interpolate
 import numpy as np
-from gammapy.maps import MapAxis, ParallelLabelMapAxis, Map
+from regions import PointSkyRegion
+from gammapy.maps import MapAxis, Map, LabelMapAxis
+from gammapy.irf import EDispKernelMap
 from gammapy.data import Observation
 from gammapy.maps import RegionGeom
 from gammapy.makers import Maker, MapDatasetMaker
+from gammapy.utils.integrate import integrate_histogram
 from gammapy.makers.utils import (
     make_edisp_kernel_map,
+    make_mask_events,
 )
 
 ENERGY_AXIS_DEFAULT = MapAxis.from_energy_bounds(
-    0.01, 50, nbin=20, per_decade=True, unit="TeV", name="energy"
+    0.005, 300, nbin=10, per_decade=True, unit="TeV", name="energy"
 )
 
 
@@ -26,7 +29,7 @@ class EventDatasetMaker(Maker):
     """Make event dataset for a single IACT observation."""
 
     tag = "EventDatasetMaker"
-    available_selection = ["exposure", "background", "psf", "edisp"]
+    available_selection = ["events", "exposure", "background", "psf", "edisp"]
 
     def __init__(
         self,
@@ -90,28 +93,15 @@ class EventDatasetMaker(Maker):
         if getattr(observation, "meta"):
             kwargs["meta"] = observation.meta
 
+        events = self.make_events(dataset._geom, observation)
         if self.__debug:
-            events = observation.events.select_time(
+            events = events.select_time(
                 [observation.gti.time_start, observation.gti.time_start + 0.3 * u.h]
             )
-        else:
-            events = observation.events
         kwargs["events"] = events
 
-        parallel_labels = np.array(
-            [
-                events.table["EVENT_ID"].value,
-                events.table["RA"].value,
-                events.table["DEC"].value,
-                events.table["ENERGY"].value,
-            ]
-        ).T.tolist()
-
-        axes_events = ParallelLabelMapAxis(
-            parallel_labels=parallel_labels,
-            parallel_names=["event_id", "ra", "dec", "energy"],
-            parallel_units=["", "deg", "deg", "TeV"],
-            name="events",
+        axes_events = LabelMapAxis(
+            labels=events.table["ENERGY"].value, name="energy", unit="TeV"
         )
         axes = (dataset.geom.axes + [axes_events]).reverse
 
@@ -133,7 +123,7 @@ class EventDatasetMaker(Maker):
             region=dataset.geom.region,
             axes=[
                 ENERGY_AXIS_DEFAULT,
-                unbinned_geom.axes["energy_true"],
+                # unbinned_geom.axes["energy_true"],
             ],
         )
         kwargs["geom_normalization"] = geom_irf_for_normalization
@@ -146,44 +136,69 @@ class EventDatasetMaker(Maker):
             # )
 
         if "edisp" in self.selection:
-            edisp = self.make_edisp_kernel(
-                observation, geom=unbinned_geom, geom_edisp=dataset.edisp.edisp_map.geom
-            )
             edisp_e_reco_binned = self.make_edisp_kernel(
                 observation,
                 geom=geom_irf_for_normalization,
                 geom_edisp=dataset.edisp.edisp_map.geom,
             )
 
+            axes = unbinned_geom.axes + [
+                edisp_e_reco_binned.edisp_map.geom.axes["energy_true"]
+            ]
+            new_geom = unbinned_geom.to_image().to_cube(axes=axes)
+
+            differencial_edisp_map_e_reco_binned = (
+                edisp_e_reco_binned.edisp_map.divide_bin_width("energy")
+            )
+
+            edisp_map_iterpolated = differencial_edisp_map_e_reco_binned.interp_to_geom(
+                geom=new_geom
+            )
+
+            edisp = EDispKernelMap(
+                edisp_kernel_map=edisp_map_iterpolated,
+                exposure_map=edisp_e_reco_binned.exposure_map,
+            )
+
             # THIS SECOND PART IS BETTER AT LOW ENERGY AND IS USED IN THE NOTEBOOK
-            axis = edisp.edisp_map.geom.axes.index_data("energy")
-            if self._normalize_edisp_from_data_energy_space:
-                args_sorted = np.argsort(unbinned_geom.axes["events"]["energy"].center)
-                energy_reco_sorted = unbinned_geom.axes["events"]["energy"].center[
-                    args_sorted
-                ]
-                edisp_sorted = np.take(edisp.edisp_map.data, args_sorted, axis=axis)
-                normalization = integrate.simpson(
-                    edisp_sorted, energy_reco_sorted, axis=axis
-                )
-            else:
-                interpolation = interpolate.interp1d(
-                    unbinned_geom.axes["events"]["energy"].center,
-                    edisp.edisp_map.quantity,
-                    axis=axis,
-                    kind="linear",
-                    fill_value="extrapolate",
-                )
-                normalization = integrate.simpson(
-                    interpolation(geom_irf_for_normalization.axes["energy"].center),
-                    geom_irf_for_normalization.axes["energy"].center,
-                    axis=axis,
-                )
+            # axis = edisp.edisp_map.geom.axes.index_data("energy")
+            # if self._normalize_edisp_from_data_energy_space:
+            #    args_sorted = np.argsort(unbinned_geom.axes["energy"].center)
+            #    energy_reco_sorted = unbinned_geom.axes["energy"].center[
+            #        args_sorted
+            #    ]
+            #    edisp_sorted = np.take(edisp.edisp_map.data, args_sorted, axis=axis)
+            #    normalization = integrate.simpson(
+            #        edisp_sorted, energy_reco_sorted, axis=axis
+            #    )
+            # else:
+            #    interpolation = interpolate.interp1d(
+            #        unbinned_geom.axes["energy"].center,
+            #        edisp.edisp_map.quantity,
+            #        axis=axis,
+            #        kind="linear",
+            #        fill_value="extrapolate",
+            #    )
+            #    normalization = integrate.simpson(
+            #        interpolation(geom_irf_for_normalization.axes["energy"].center),
+            #        geom_irf_for_normalization.axes["energy"].center,
+            #        axis=axis,
+            #    )
+
+            normalization = integrate_histogram(
+                differencial_edisp_map_e_reco_binned.quantity,
+                edisp_e_reco_binned.edisp_map.geom.axes["energy"].edges,
+                unbinned_geom.axes["energy"].center.min(),
+                unbinned_geom.axes["energy"].center.max(),
+                axis=differencial_edisp_map_e_reco_binned.geom.axes.index_data(
+                    "energy"
+                ),
+            )[0]
+            normalization_inv = np.nan_to_num(normalization**-1, posinf=1)
             edisp.edisp_map.quantity = (
-                np.nan_to_num(
-                    np.einsum("trxy,txy->trxy", edisp.edisp_map.data, normalization**-1)
-                )
+                np.einsum("trxy,txy->trxy", edisp.edisp_map.data, normalization_inv)
                 * edisp.edisp_map.unit
+                * normalization_inv.unit
             )
             kwargs["edisp"] = edisp
             kwargs["edisp_e_reco_binned"] = edisp_e_reco_binned
@@ -257,6 +272,27 @@ class EventDatasetMaker(Maker):
     #        use_region_center=True,
     #    )
     #
+    def make_events(self, geom, observation):
+        """Make counts map.
+
+        Parameters
+        ----------
+        geom : `~gammapy.maps.RegionGeom`
+            Reference map geometry.
+        observation : `~gammapy.data.Observation`
+            Observation to compute effective area for.
+
+        Returns
+        -------
+        counts : `~gammapy.maps.RegionNDMap`
+            Counts map.
+        """
+        if geom.is_region and isinstance(geom.region, PointSkyRegion):
+            mask = make_mask_events(geom, observation.rad_max, observation.events)
+        else:
+            mask = geom.contains(observation.events.radec)
+        events = observation.events.select_row_subset(mask)
+        return events
 
     def make_edisp_kernel(
         self, observation, geom, geom_edisp
@@ -270,10 +306,13 @@ class EventDatasetMaker(Maker):
             geom_edisp.squash(axis_name="migra"), observation
         )  # Squash over events?
         use_region_center = getattr(self, "use_region_center", True)
+        _geom = geom.to_image().to_cube(
+            axes=geom.axes + [geom_edisp.axes["energy_true"]]
+        )
         return make_edisp_kernel_map(
             edisp=observation.edisp,
             pointing=observation.get_pointing_icrs(observation.tmid),
-            geom=geom,
+            geom=_geom,
             exposure_map=exposure,
             use_region_center=use_region_center,
         )
