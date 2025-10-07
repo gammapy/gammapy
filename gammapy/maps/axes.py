@@ -18,7 +18,7 @@ from gammapy.utils.interpolation import interpolation_scale
 from gammapy.utils.time import time_ref_from_dict, time_ref_to_dict
 from .utils import INVALID_INDEX, INVALID_VALUE, edges_from_lo_hi
 
-__all__ = ["MapAxes", "MapAxis", "TimeMapAxis", "LabelMapAxis", "ParallelLabelMapAxis"]
+__all__ = ["MapAxes", "MapAxis", "TimeMapAxis", "LabelMapAxis"]
 
 log = logging.getLogger(__name__)
 
@@ -401,53 +401,73 @@ class MapAxis:
         """
         return self.copy(name=new_name)
 
-    def format_plot_xaxis(self, ax):
-        """Format the x-axis.
-
+    def _format_plot_axis(self, ax, axis="x"):
+        """Format the plot axis (x or y).
         Parameters
         ----------
         ax : `~matplotlib.pyplot.Axis`
             Plot axis to format.
-
+        axis : {"x", "y"}
+            Axis to format.
         Returns
         -------
         ax : `~matplotlib.pyplot.Axis`
             Formatted plot axis.
         """
-        ax.set_xscale(self.as_plot_scale)
-
-        xlabel = DEFAULT_LABEL_TEMPLATE.format(
+        if axis == "x":
+            ax.set_xscale(self.as_plot_scale)
+            axis_obj = ax.xaxis
+        elif axis == "y":
+            ax.set_yscale(self.as_plot_scale)
+            axis_obj = ax.yaxis
+        else:
+            raise ValueError(f"Invalid axis: {axis}")
+        unit = getattr(axis_obj, "units", None)
+        if unit is not None:
+            unit = unit.to_string(UNIT_STRING_FORMAT)
+        else:
+            unit = self.unit.to_string(UNIT_STRING_FORMAT)
+        label = DEFAULT_LABEL_TEMPLATE.format(
             quantity=PLOT_AXIS_LABEL.get(self.name, self.name.capitalize()),
-            unit=ax.xaxis.units.to_string(UNIT_STRING_FORMAT),
+            unit=unit,
         )
-        ax.set_xlabel(xlabel)
-        xmin, xmax = self.bounds
-        if not xmin == xmax:
-            ax.set_xlim(self.bounds)
+        if axis == "x":
+            ax.set_xlabel(label)
+            xmin, xmax = self.bounds
+            if not xmin == xmax:
+                ax.set_xlim(self.bounds)
+        else:
+            ax.set_ylabel(label)
+            ymin, ymax = self.bounds
+            if not ymin == ymax:
+                ax.set_ylim(self.bounds)
         return ax
+
+    def format_plot_xaxis(self, ax):
+        """Format the x-axis.
+        Parameters
+        ----------
+        ax : `~matplotlib.pyplot.Axis`
+            Plot axis to format.
+        Returns
+        -------
+        ax : `~matplotlib.pyplot.Axis`
+            Formatted plot axis.
+        """
+        return self._format_plot_axis(ax, axis="x")
 
     def format_plot_yaxis(self, ax):
         """Format plot y-axis.
-
         Parameters
         ----------
         ax : `~matplotlib.pyplot.Axis`
             Plot axis to format.
-
         Returns
         -------
         ax : `~matplotlib.pyplot.Axis`
             Formatted plot axis.
         """
-        ax.set_yscale(self.as_plot_scale)
-
-        ylabel = DEFAULT_LABEL_TEMPLATE.format(
-            quantity=PLOT_AXIS_LABEL.get(self.name, self.name.capitalize()),
-            unit=ax.yaxis.units.to_string(UNIT_STRING_FORMAT),
-        )
-        ax.set_ylabel(ylabel)
-        ax.set_ylim(self.bounds)
-        return ax
+        return self._format_plot_axis(ax, axis="y")
 
     @property
     def iter_by_edges(self):
@@ -1545,22 +1565,13 @@ class MapAxes(Sequence):
         """Generator that iterates over axes and their shape."""
         size = 0
         for axis in self:
-            if isinstance(axis, ParallelLabelMapAxis):
-                size += 2
-            else:
-                size += 1
+            size += 1
         idx = 0
         for axis in self:
             # Extract values for each axis, default: nodes
             shape = [1] * size
-            if isinstance(axis, ParallelLabelMapAxis):
-                # shape[idx:idx +2] = (len(axis.parallel_names),axis.nbin)
-                # idx += 2
-                shape[idx] = axis.nbin
-                idx += 1
-            else:
-                shape[idx] = -1
-                idx += 1
+            shape[idx] = -1
+            idx += 1
             if self._n_spatial_axes:
                 shape = (
                     shape[::-1]
@@ -1593,10 +1604,7 @@ class MapAxes(Sequence):
                 coord = axis.edges
             else:
                 coord = axis.center
-            if isinstance(axis, ParallelLabelMapAxis):
-                coords[axis.name] = coord[0].reshape(shape)  # TO BE CHANGED
-            else:
-                coords[axis.name] = coord.reshape(shape)
+            coords[axis.name] = coord.reshape(shape)
 
         return coords
 
@@ -1965,7 +1973,7 @@ class MapAxes(Sequence):
             ax_slice = slices.get(ax.name, slice(None))
 
             # in the case where isinstance(ax_slice, int) the axes is dropped
-            if isinstance(ax_slice, slice):
+            if isinstance(ax_slice, slice) or isinstance(ax, LabelMapAxis):
                 ax_sliced = ax.slice(ax_slice)
                 axes.append(ax_sliced.copy())
 
@@ -3364,6 +3372,33 @@ class LabelMapAxis:
         )
         return ax
 
+    def format_plot_yaxis(self, ax):
+        """Format plot axis.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.pyplot.Axis`
+            Plot axis to format.
+
+        Returns
+        -------
+        ax : `~matplotlib.pyplot.Axis`
+            Formatted plot axis.
+        """
+        ax.set_yticks(self.plot_center)
+        ax.set_yticklabels(
+            self.plot_labels,
+            rotation=30,
+            ha="right",
+            rotation_mode="anchor",
+        )
+        return ax
+
+    @property
+    def bounds(self):
+        """Return the bounds of the axis."""
+        return self.center.min(), self.center.max()
+
     def to_header(self, format="gadf", idx=0):
         """Create FITS header.
 
@@ -3584,58 +3619,3 @@ class LabelMapAxis:
             ],
             name=self._name,
         )
-
-
-class ParallelLabelMapAxis(LabelMapAxis):
-    def __init__(self, parallel_labels, parallel_names, parallel_units, name=""):
-        self._label_mapaxis = {}
-
-        self._name = name
-        self._labels = np.array(parallel_labels)
-        for label, name, unit in zip(self._labels.T, parallel_names, parallel_units):
-            self._label_mapaxis[name] = LabelMapAxis(label, name=name, unit=unit)
-
-    def __repr__(self):
-        str_ = self.__class__.__name__ + "\n"
-        str_ += "-" * len(self.__class__.__name__) + "\n\n"
-        fmt = "\t{:<10s} : {:<10s}\n"
-        str_ += fmt.format("name", self.name)
-        str_ += fmt.format("nbins", str(len(self._labels)))
-        str_ += fmt.format("parallel labels", str(self.parallel_names))
-        return str_.expandtabs(tabsize=2)
-
-    def squash(self):
-        """Create a new axis object by squashing the axis into one bin.
-
-        The label of the new axis is given as "first-label...last-label".
-
-        Returns
-        -------
-        axis : `ParallelLabelMapAxis`
-            Squashed parallel label map axis.
-        """
-        return ParallelLabelMapAxis(
-            parallel_labels=[self._name],
-            parallel_names=[self._name],
-            parallel_units=[u.dimensionless_unscaled],
-            name=self._name,
-        )
-
-    @property
-    def parallel_names(self):
-        return self._label_mapaxis.keys()
-
-    @property
-    def center(self):
-        """Center of the label axis."""
-        return np.array(
-            [label_mapaxis.center for label_mapaxis in self._label_mapaxis.values()]
-        ).T
-
-    def __getitem__(self, item):
-        if isinstance(item, str):
-            return self._label_mapaxis[item]
-        else:
-            raise TypeError(
-                f"Unsupported type {type(item)} for ParallelLabelMapAxis.__getitem__"
-            )

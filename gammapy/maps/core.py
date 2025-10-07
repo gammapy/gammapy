@@ -16,7 +16,7 @@ from gammapy.utils.random import InverseCDFSampler, get_random_state
 from gammapy.utils.scripts import make_path
 from gammapy.utils.types import JsonQuantityDecoder
 from gammapy.utils.units import energy_unit_format
-from .axes import MapAxis, ParallelLabelMapAxis
+from .axes import MapAxis
 from .coord import MapCoord
 from .geom import pix_tuple_to_idx
 
@@ -1650,17 +1650,12 @@ class Map(abc.ABC):
         if axis_name == "rad":
             # take Jacobian into account
             values = 2 * np.pi * axis.center.reshape(shape) * values
-
-        if isinstance(axis, ParallelLabelMapAxis):
-            data = values.cumsum(axis=axis_idx)  # SHOULD BE IMPROVED
-            geom = self.geom
-        else:
-            data = np.insert(values.cumsum(axis=axis_idx), 0, 0, axis=axis_idx)
-            axis_shifted = MapAxis.from_nodes(
-                axis.edges, name=axis.name, interp=axis.interp
-            )
-            axes = self.geom.axes.replace(axis_shifted)
-            geom = self.geom.to_image().to_cube(axes)
+        data = np.insert(values.cumsum(axis=axis_idx), 0, 0, axis=axis_idx)
+        axis_shifted = MapAxis.from_nodes(
+            axis.edges, name=axis.name, interp=axis.interp
+        )
+        axes = self.geom.axes.replace(axis_shifted)
+        geom = self.geom.to_image().to_cube(axes)
         return self.__class__(geom=geom, data=data.value, unit=data.unit)
 
     def integral(self, axis_name, coords, **kwargs):
@@ -1687,7 +1682,6 @@ class Map(abc.ABC):
         return u.Quantity(
             cumsum.interp_by_coord(coords, **kwargs), cumsum.unit, copy=COPY_IF_NEEDED
         )
-
 
     def divide_bin_width(self, axis_name=None):
         """Return map divided by bin width along a given axis. This can be usefull to transform a map into a differential map.
@@ -1730,16 +1724,18 @@ class Map(abc.ABC):
         if jacobian is not None:
             map_copy.quantity *= jacobian
         cumsum = map_copy.cumsum(axis_name=axis_name)
-        
+
         cumsum = cumsum.pad(pad_width=1, axis_name=axis_name, mode="edge")
-        axis_upsample = cumsum.geom.axes[axis_name].upsample(100)
+        axis_upsample = cumsum.geom.axes[axis_name].upsample(1)
         upsample_geom = cumsum.geom.to_image().to_cube(
             cumsum.geom.axes.replace(axis=axis_upsample)
         )
-        upsample_coords = upsample_geom.get_coord(sparse=True, mode="center", axis_name=axis_name)
+        upsample_coords = upsample_geom.get_coord(
+            sparse=True, mode="center", axis_name=axis_name
+        )
         gradient_data = np.gradient(
             cumsum.interp_by_coord(upsample_coords, **kwargs),
-            axis = cumsum.geom.axes.index_data(axis_name),
+            axis=cumsum.geom.axes.index_data(axis_name),
         )
         gradient = cumsum.__class__(
             geom=upsample_geom,
@@ -1747,9 +1743,10 @@ class Map(abc.ABC):
             unit=cumsum.unit,
         )
         return u.Quantity(
-            gradient.interp_by_coord(coords, **kwargs), gradient.unit, copy=COPY_IF_NEEDED
+            gradient.interp_by_coord(coords, **kwargs),
+            gradient.unit,
+            copy=COPY_IF_NEEDED,
         )
-    
 
     def normalize(self, axis_name=None):
         """Normalise data in place along a given axis.
@@ -1763,7 +1760,7 @@ class Map(abc.ABC):
 
         with np.errstate(invalid="ignore", divide="ignore"):
             normed = self.quantity / norm
-            
+
         self.quantity = np.nan_to_num(normed)
 
     def norm(self, axis_name=None):
