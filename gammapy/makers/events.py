@@ -34,14 +34,10 @@ class EventDatasetMaker(Maker):
     def __init__(
         self,
         selection=None,
-        normalize_edisp_from_data_energy_space=True,  # THIS METHOD SEEMS MORE ACCURATE
         debug=False,
         **maker_kwargs,
     ):
         self.__debug = debug
-        self._normalize_edisp_from_data_energy_space = (
-            normalize_edisp_from_data_energy_space
-        )
         if selection is None:
             selection = self.available_selection
 
@@ -159,31 +155,6 @@ class EventDatasetMaker(Maker):
                 edisp_kernel_map=edisp_map_iterpolated,
                 exposure_map=edisp_e_reco_binned.exposure_map,
             )
-
-            # THIS SECOND PART IS BETTER AT LOW ENERGY AND IS USED IN THE NOTEBOOK
-            # axis = edisp.edisp_map.geom.axes.index_data("energy")
-            # if self._normalize_edisp_from_data_energy_space:
-            #    args_sorted = np.argsort(unbinned_geom.axes["energy"].center)
-            #    energy_reco_sorted = unbinned_geom.axes["energy"].center[
-            #        args_sorted
-            #    ]
-            #    edisp_sorted = np.take(edisp.edisp_map.data, args_sorted, axis=axis)
-            #    normalization = integrate.simpson(
-            #        edisp_sorted, energy_reco_sorted, axis=axis
-            #    )
-            # else:
-            #    interpolation = interpolate.interp1d(
-            #        unbinned_geom.axes["energy"].center,
-            #        edisp.edisp_map.quantity,
-            #        axis=axis,
-            #        kind="linear",
-            #        fill_value="extrapolate",
-            #    )
-            #    normalization = integrate.simpson(
-            #        interpolation(geom_irf_for_normalization.axes["energy"].center),
-            #        geom_irf_for_normalization.axes["energy"].center,
-            #        axis=axis,
-            #    )
 
             normalization = integrate_histogram(
                 differencial_edisp_map_e_reco_binned.quantity,
