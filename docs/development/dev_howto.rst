@@ -593,7 +593,7 @@ The checklist below outlines key steps to follow when reviewing a PR.
 6. Check that the code can be understood by reading it.
 7. Confirm all docstrings are correct and formatted correctly, :ref:`see here <docstring-formatting>`.
 8. Check that all commits are signed.
-9. Check that a fragment was added, if necessary, for towncrier.
+9. Check that a fragment was added, if necessary, for :ref:`towncrier <release-notes>`.
 10. Where relevant, add examples for the users, :ref:`see here <docstring-code-py-file>`.
 11. When needed, check that the documentation build looks correct by checking the artifacts of the CI, :ref:`see here <access-doc-on-PR>`.
 
