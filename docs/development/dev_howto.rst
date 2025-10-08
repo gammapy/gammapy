@@ -557,6 +557,7 @@ one of which involves the `meeseeksmachine <https://github.com/meeseeksmachine>`
 
 
 
+.. _release-notes:
 
 Release notes
 +++++++++++++
