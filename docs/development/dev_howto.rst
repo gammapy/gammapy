@@ -518,7 +518,7 @@ repository. It is recommended that developers have `$GAMMAPY_DATA` environment v
 where they have fetched the `gammapy-data <https://github.com/gammapy/gammapy-data>`__ GitHub repository,
 so they can push and pull eventual modification of its content.
 
-.. _skip_actions_pr:
+.. _skip-actions-pr:
 
 Making a pull request which skips GitHub Actions
 ++++++++++++++++++++++++++++++++++++++++++++++++
@@ -526,7 +526,7 @@ Making a pull request which skips GitHub Actions
 For minor PRs (eg: correcting typos in doc-strings) we can skip GitHub Actions.
 Adding ``[ci skip]`` in a specific commit message will skip CI for that specific commit which can be useful for draft or incomplete PR.
 For details, `see here. <https://github.blog/changelog/2021-02-08-github-actions-skip-pull-request-and-push-workflows-with-skip-ci/>`__
-See also the section on skipping GitHub Actions on a local fork, :ref:`here <skip_actions_local_fork>`.
+See also the section on skipping GitHub Actions on a local fork, :ref:`here <skip-actions-local-fork>`.
 
 Fix non-Unix line endings
 +++++++++++++++++++++++++
@@ -581,20 +581,21 @@ but that the core developer adds a releases notes entry after right after having
 merged a pull request (you can add ``[skip ci]`` on this commit).
 
 How to review a pull request?
------------------------------
+How to review a pull request
+----------------------------
 
 The checklist below outlines key steps to follow when reviewing a PR.
 
 1. Ensure that a milestone and labels are correctly set for the PR.
 2. Check that the PR links to associated issue(s), if any.
 3. Check that the code does what it is supposed to do.
-4. Check that the CI workflow passes without failures.
+4. Check that the CI workflow passes without failure.
 5. Check that the general conventions are fulfilled, :ref:`see here <general-conventions>`.
 6. Check that the code can be understood by reading it.
 7. Confirm all docstrings are correct and formatted correctly, :ref:`see here <docstring-formatting>`.
 8. Check that all commits are signed.
-9. Add a fragment, if necessary, for towncrier.
-10. Check that examples for the users are added, if possible, :ref:`see here <docstring-code-py-file>`.
+9. Check that a fragment was added, if necessary, for towncrier.
+10. Where relevant, add examples for the users, :ref:`see here <docstring-code-py-file>`.
 11. When needed, check that the documentation build looks correct by checking the artifacts of the CI, :ref:`see here <access-doc-on-PR>`.
 
 How to handle API breaking changes?
@@ -968,11 +969,11 @@ script can be used as follows::
 If the path of the output file is not provided, the script will be written in the same folder as the notebook and with
 the same name.
 
-.. _skip_actions_local_fork:
+.. _skip-actions-local-fork:
 
 Skip GitHub Actions on local fork
 +++++++++++++++++++++++++++++++++
 If not explicitly needed, it can be convenient to skip the GitHub Actions for pushes onto local forks and only perform them on the upstream, once a pull request is opened.
 This way computation power is saved and automatic commits by the Actions are avoided in the forks commit-history. An easy way to achieve this, is to deactivate the
 GitHub Actions completely for the fork, following the GitHub documentation, `see here. <https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository#managing-github-actions-permissions-for-your-repository>`__
-See also the section on making a pull request which skips GitHub Actions, :ref:`here <skip_actions_pr>`.
+See also the section on making a pull request which skips GitHub Actions, :ref:`here <skip-actions-pr>`.
