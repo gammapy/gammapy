@@ -580,7 +580,6 @@ So our recommendation is that releases entries are not added in pull requests,
 but that the core developer adds a releases notes entry after right after having
 merged a pull request (you can add ``[skip ci]`` on this commit).
 
-How to review a pull request?
 How to review a pull request
 ----------------------------
 
