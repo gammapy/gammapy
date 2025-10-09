@@ -989,7 +989,7 @@ class EventListChecker(Checker):
         # They are currently listed as required in the spec,
         # but I think we should just require ICRS and those
         # are irrelevant, should not be used.
-        # 'RADECSYS',
+        # 'RADESYSa',
         # 'EQUINOX',
         "ORIGIN",
         "TELESCOP",
