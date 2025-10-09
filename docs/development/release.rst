@@ -26,9 +26,16 @@ Feature Freeze and Branching
 #. Update the author list manually in the  ``CITATION.cff``.
 
     * You can use the helper script ``dev/authors.py`` for this.
-#. Open a PR including this change and mark it with the ``backport-v<version>.x`` label.
-   Gather feedback from the Gammapy user and dev community and finally merge and backport to the
-   ``v<version>.x`` branch.
+
+
+#. On the ``main`` branch, build the changelog for the version you are about to release.
+   This is done through the use of towncrier with the following line::
+
+    towncrier build --version=<version>
+
+#. Open two separate PRs for each of these changes and mark each with the ``backport-v<version>.x`` label.
+   Gather feedback from the Gammapy user and dev community. These PRs will be merged and backport to the
+   ``v<version>.x`` branch at the release candidate stage.
 
 **On the day of the feature freeze:**
 
@@ -42,11 +49,6 @@ Feature Freeze and Branching
     git checkout -B main upstream/main
 
 #. From the github online interface, create a new branch v<version>.x
-
-#. Stay on the ``main`` branch to build the changelog for the version you are about to release.
-   This is done through the use of towncrier with the following line::
-
-    towncrier build --version=<version>
 
 #. Update the entry for the feature freeze in the
    `Gammapy release calendar <https://github.com/gammapy/gammapy/wiki/Release-Calendar>`__.
@@ -76,6 +78,8 @@ Releasing the first major release candidate
 #. Commit and push the branch back to GitHub::
 
     git push upstream v1.0.x
+
+#. Now merge the PR for the changelog, if this has not already been done. 
 
 #. Locally create a new release candidate tag on the ``v1.0.x``, like ``v1.0rc1`` for Gammapy and push::
 
