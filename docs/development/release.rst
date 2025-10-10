@@ -31,7 +31,14 @@ Feature Freeze and Branching
 #. On the ``main`` branch, build the changelog for the version you are about to release.
    This is done through the use of towncrier with the following line::
 
-    towncrier build --version=<version>
+    towncrier build --version <version>
+
+   * The changelog will be saved as ``docs/release-notes/CHANGELOG.rst``, you should update the name
+     to be the correct one for your version, in addition to adapting the required lines in the
+     ``docs/release-notes/index.rst`` to ensure it is included in the docs.
+   * To generate the list of pull requests and issues, and list of authors run
+     ``python dev/github_summary.py create_pull_request_table``. Note that you will
+     need to use your github token here.
 
 #. Open two separate PRs for each of these changes and mark each with the ``backport-v<version>.x`` label.
    Gather feedback from the Gammapy user and dev community. These PRs will be merged and backport to the
@@ -79,7 +86,7 @@ Releasing the first major release candidate
 
     git push upstream v1.0.x
 
-#. Now merge the PR for the changelog, if this has not already been done. 
+#. Now merge the PR for the changelog, if this has not already been done.
 
 #. Locally create a new release candidate tag on the ``v1.0.x``, like ``v1.0rc1`` for Gammapy and push::
 

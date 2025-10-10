@@ -96,8 +96,3 @@ showcontent = true
 directory = "contributors"
 name = "Contributors"
 showcontent = true
-
-[[tool.towncrier.type]]
-directory = "pull_requests"
-name = "Pull Requests"
-showcontent = true
