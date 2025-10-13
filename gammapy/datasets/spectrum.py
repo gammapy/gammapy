@@ -1,5 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
+import astropy.units as u
+import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 from gammapy.utils.scripts import make_path
@@ -7,7 +9,7 @@ from gammapy.utils.metadata import CreatorMetaData
 from .map import MapDataset, MapDatasetOnOff
 from .utils import get_axes
 
-__all__ = ["SpectrumDatasetOnOff", "SpectrumDataset"]
+__all__ = ["SpectrumDatasetOnOff", "SpectrumDataset", "UnbinnedSpectrumDataset"]
 
 log = logging.getLogger(__name__)
 
@@ -443,3 +445,193 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
             SpectrumDataset with Cash statistic.
         """
         return self.to_map_dataset(name=name).to_spectrum_dataset(on_region=None)
+
+
+class UnbinnedSpectrumDataset(SpectrumDatasetOnOff):
+    """Perform unbinned model likelihood fit on maps.
+    Parameters
+    ----------
+    events : `~gammapy.data.EventList`
+        Event list
+    models : `~gammapy.modeling.models.Models`
+        Source sky models.
+    counts : `~gammapy.maps.WcsNDMap` or `~gammapy.utils.fits.HDULocation`
+        Counts cube
+    exposure : `~gammapy.maps.WcsNDMap` or `~gammapy.utils.fits.HDULocation`
+        Exposure cube
+    background : `~gammapy.maps.WcsNDMap` or `~gammapy.utils.fits.HDULocation`
+        Background cube
+    mask_fit : `~gammapy.maps.WcsNDMap` or `~gammapy.utils.fits.HDULocation`
+        Mask to apply to the likelihood for fitting.
+    psf : `~gammapy.irf.PSFMap` or `~gammapy.utils.fits.HDULocation`
+        PSF kernel
+    edisp : `~gammapy.irf.EDispKernel` or `~gammapy.irf.EDispMap` or `~gammapy.utils.fits.HDULocation`
+        Energy dispersion kernel
+    mask_safe : `~gammapy.maps.WcsNDMap` or `~gammapy.utils.fits.HDULocation`
+        Mask defining the safe data range.
+    gti : `~gammapy.data.GTI`
+        GTI of the observation or union of GTI if it is a stacked observation
+    meta_table : `~astropy.table.Table`
+        Table listing information on observations used to create the dataset.
+        One line per observation for stacked datasets.
+    See Also
+    --------
+    MapDataset, SpectrumDataset, FluxPointsDataset
+    """
+
+    stat_type = "unbinned"
+    tag = "UnbinnedDataset"
+
+    def __init__(
+        self,
+        events=None,
+        models=None,
+        counts=None,
+        counts_off=None,
+        acceptance=None,
+        acceptance_off=None,
+        exposure=None,
+        mask_fit=None,
+        psf=None,
+        edisp=None,
+        name=None,
+        mask_safe=None,
+        gti=None,
+        meta_table=None,
+        meta=None,
+        stat_type="wstat",
+    ):
+        super().__init__(
+            models=models,
+            counts=counts,
+            counts_off=counts_off,
+            acceptance=acceptance,
+            acceptance_off=acceptance_off,
+            exposure=exposure,
+            psf=psf,
+            edisp=edisp,
+            mask_safe=mask_safe,
+            mask_fit=mask_fit,
+            gti=gti,
+            meta_table=meta_table,
+            name=name,
+        )
+
+        self.events = events
+
+    def predicted_dnde(self, energy, signal=True, bkg=True):
+        """Return the predicted differential counts [1/TeV]
+           for the energy given in input
+        Parameters
+        ----------
+        energy       : Quantity
+                must have energy dimension
+        signal        : Bool
+                True if you want to include in the
+                simulation the signal of gamma
+                By default is True
+        bkg          : Bool
+                True if you want to include in the
+                simulation the background
+                By default is True
+        """
+        if not signal and not bkg:
+            raise ValueError("Error, neither the bkg nor the signal is True!")
+
+        energy = u.Quantity([energy]).flatten()
+        energy = energy.to(u.TeV)
+
+        # Geom is computed property inherited from MapDataset
+        npred_tot = np.zeros(self._geom.data_shape)
+        if signal:
+            npred_tot += self.npred_signal().data
+        if bkg:
+            npred_tot += self.npred_background().data
+
+        # marginalization over spatial coordinates
+        while len(npred_tot.shape) > 1:
+            npred_tot = npred_tot.sum(axis=1)
+
+        energy_axe = self.background.geom.axes["energy"]
+
+        xp = energy_axe.center.value
+        fp = npred_tot / energy_axe.bin_width.value
+
+        # Linear interpolation when between bin centers
+        # else just return the closest edge value.
+        dnde = np.interp(energy.value, xp, fp, left=fp[0], right=fp[-1])
+        return dnde / u.TeV
+
+    def stat_sum(self, **kwargs):
+        """Unbinned likelihood given the current model parameters."""
+
+        if self.events is None:
+            raise ValueError("This unbinned dataset does not contain any events")
+        else:
+            energies = self.events.energy
+
+            s = self.npred_signal().data.sum()
+            b = self.npred_background().data.sum()
+            marks = self.predicted_dnde(energies).value
+            # CHECK IF ALL MARKS ARE BIGGER THAN ZERO
+            if all(marks > 0):
+                logmarks = np.sum(np.log(marks))
+            else:
+                logmarks = -np.inf
+            logL = -s - b + logmarks
+            stat = -2 * logL
+
+        return stat
+
+    def __str__(self):
+        str_ = f"{self.__class__.__name__}\n"
+        str_ += "-" * len(self.__class__.__name__) + "\n"
+        str_ += "\n"
+        str_ += "\t{:32}: {{name}} \n\n".format("Name")
+        str_ += "\t{:32}: {{events}} \n".format("Event list")
+        str_ += "\t{:32}: {{counts:.0f}} \n".format("Total counts")
+        str_ += "\t{:32}: {{background:.2f}}\n".format("Total background counts")
+        str_ += "\t{:32}: {{excess:.2f}}\n\n".format("Total excess counts")
+
+        str_ += "\t{:32}: {{npred:.2f}}\n".format("Predicted counts")
+        str_ += "\t{:32}: {{npred_background:.2f}}\n".format(
+            "Predicted background counts"
+        )
+        str_ += "\t{:32}: {{npred_signal:.2f}}\n\n".format("Predicted excess counts")
+
+        str_ += "\t{:32}: {{exposure_min:.2e}}\n".format("Exposure min")
+        str_ += "\t{:32}: {{exposure_max:.2e}}\n\n".format("Exposure max")
+
+        str_ += "\t{:32}: {{n_bins}} \n".format("Number of total bins")
+        str_ += "\t{:32}: {{n_fit_bins}} \n\n".format("Number of fit bins")
+
+        # likelihood section
+        str_ += "\t{:32}: {{stat_type}}\n".format("Fit statistic type")
+        str_ += "\t{:32}: {{stat_sum:.2f}}\n\n".format(
+            "Fit statistic value (-2 log(L))"
+        )
+
+        info = self.info_dict()
+        if self.events is None:
+            info["events"] = self.events
+        else:
+            energies = self.events.energy
+            info["events"] = f"{len(energies)} events"
+
+        str_ = str_.format(**info)
+
+        # model section
+        n_models, n_pars, n_free_pars = 0, 0, 0
+        if self.models is not None:
+            n_models = len(self.models)
+            n_pars = len(self.models.parameters)
+            n_free_pars = len(self.models.parameters.free_parameters)
+
+        str_ += "\t{:32}: {} \n".format("Number of models", n_models)
+        str_ += "\t{:32}: {}\n".format("Number of parameters", n_pars)
+        str_ += "\t{:32}: {}\n\n".format("Number of free parameters", n_free_pars)
+
+        if self.models is not None:
+            str_ += "\t" + "\n\t".join(str(self.models).split("\n")[2:])
+
+        return str_.expandtabs(tabsize=2)

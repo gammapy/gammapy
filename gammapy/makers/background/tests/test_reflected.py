@@ -17,6 +17,7 @@ from gammapy.datasets import SpectrumDataset
 from gammapy.makers import (
     ReflectedRegionsBackgroundMaker,
     ReflectedRegionsFinder,
+    UnbinnedSpectrumDatasetMaker,
     SafeMaskMaker,
     SpectrumDatasetMaker,
     WobbleRegionsFinder,
@@ -64,6 +65,15 @@ def observations_fixed_rad_max():
 def reflected_bkg_maker(exclusion_mask):
     finder = ReflectedRegionsFinder()
     return ReflectedRegionsBackgroundMaker(
+        region_finder=finder,
+        exclusion_mask=exclusion_mask,
+    )
+
+
+@pytest.fixture()
+def unbinned_bkg_maker(exclusion_mask):
+    finder = ReflectedRegionsFinder()
+    return UnbinnedSpectrumDatasetMaker(
         region_finder=finder,
         exclusion_mask=exclusion_mask,
     )
@@ -165,6 +175,32 @@ def test_bad_on_region(exclusion_mask, on_region):
         exclusion_mask=exclusion_mask,
     )
     assert len(regions) == 0
+
+
+@requires_data()
+def test_unbinned_bkg_maker(on_region, unbinned_bkg_maker, observations):
+    datasets = []
+
+    e_reco = MapAxis.from_edges(np.logspace(0, 2, 5) * u.TeV, name="energy")
+    e_true = MapAxis.from_edges(np.logspace(-0.5, 2, 11) * u.TeV, name="energy_true")
+
+    geom = RegionGeom(region=on_region, axes=[e_reco])
+    dataset_empty = SpectrumDataset.create(geom=geom, energy_axis_true=e_true)
+
+    maker = SpectrumDatasetMaker(selection=["counts"])
+
+    for obs in observations:
+        dataset = maker.run(dataset_empty, obs)
+        dataset_on_off = unbinned_bkg_maker.run(dataset, obs)
+        datasets.append(dataset_on_off)
+    breakpoint()
+    assert_allclose(datasets[0].counts_off.data.sum(), 76)
+    assert_allclose(datasets[1].counts_off.data.sum(), 60)
+
+    regions_0 = compound_region_to_regions(datasets[0].counts_off.geom.region)
+    regions_1 = compound_region_to_regions(datasets[1].counts_off.geom.region)
+    assert_allclose(len(regions_0), 11)
+    assert_allclose(len(regions_1), 11)
 
 
 @requires_data()
@@ -459,7 +495,6 @@ def test_reflected_bkg_maker_fixed_rad_max_bad(
 
 
 def test_reflected_bkg_exclsion_error(exclusion_mask):
-
     energy = MapAxis.from_energy_bounds(1 * u.TeV, 2 * u.TeV, nbin=1, name="energy")
 
     exclusion_cube = exclusion_mask.to_cube([energy])

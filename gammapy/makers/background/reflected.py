@@ -7,13 +7,14 @@ import numpy as np
 from astropy import units as u
 from astropy.coordinates import Angle
 from regions import CircleSkyRegion, PixCoord, PointSkyRegion
-from gammapy.datasets import SpectrumDatasetOnOff
+from gammapy.datasets import SpectrumDatasetOnOff, UnbinnedSpectrumDataset
 from gammapy.maps import RegionGeom, RegionNDMap, WcsGeom, WcsNDMap
 from ..core import Maker
 from ..utils import make_counts_off_rad_max
 
 __all__ = [
     "ReflectedRegionsBackgroundMaker",
+    "UnbinnedSpectrumDatasetMaker",
     "ReflectedRegionsFinder",
     "RegionsFinder",
     "WobbleRegionsFinder",
@@ -601,4 +602,39 @@ class ReflectedRegionsBackgroundMaker(Maker):
                 f"ReflectedRegionsBackgroundMaker failed. Setting {dataset_onoff.name} "
                 "mask to False."
             )
+        return dataset_onoff
+
+
+class UnbinnedSpectrumDatasetMaker(ReflectedRegionsBackgroundMaker):
+    def run(self, dataset, observation):
+        """Make unbinned spectrum dataset.
+        Parameters
+        ----------
+        dataset : `~gammapy.spectrum.SpectrumDataset`
+            Reference dataset.
+        observation : `~gammapy.data.Observation`
+            Observation.
+        Returns
+        -------
+        dataset : `~gammapy.spectrum.SpectrumDataset`
+            Spectrum dataset.
+        """
+        counts_off, acceptance_off = self.make_counts_off(dataset, observation)
+        acceptance = RegionNDMap.from_geom(geom=dataset.counts.geom, data=1)
+
+        dataset_onoff = UnbinnedSpectrumDataset.from_spectrum_dataset(
+            dataset=dataset,
+            acceptance=acceptance,
+            acceptance_off=acceptance_off,
+            counts_off=counts_off,
+            name=dataset.name,
+        )
+
+        if dataset_onoff.counts_off is None:
+            dataset_onoff.mask_safe.data[...] = False
+            log.warning(
+                f"UnbinnedSpectrumDatasetMaker failed. Setting {dataset_onoff.name} "
+                "mask to False."
+            )
+        dataset_onoff.events = observation.events.select_mask(~self.exclusion_mask)
         return dataset_onoff
