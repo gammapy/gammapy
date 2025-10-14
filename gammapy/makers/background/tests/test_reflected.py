@@ -193,7 +193,6 @@ def test_unbinned_bkg_maker(on_region, unbinned_bkg_maker, observations):
         dataset = maker.run(dataset_empty, obs)
         dataset_on_off = unbinned_bkg_maker.run(dataset, obs)
         datasets.append(dataset_on_off)
-    breakpoint()
     assert_allclose(datasets[0].counts_off.data.sum(), 76)
     assert_allclose(datasets[1].counts_off.data.sum(), 60)
 
