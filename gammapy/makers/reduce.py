@@ -98,9 +98,22 @@ class DatasetsMaker(Maker, parallel.ParallelMixin):
         observation : `Observation`
             Observation.
         """
-        if self._apply_cutout:
+        obs_point = observation.get_pointing_icrs(observation.tmid)
+        geom_dir = dataset.counts.geom.center_skydir
+
+        # Check that obs frame and dataset frame are likely to overlap
+        cut_obs = True
+        if not geom_dir.separation(obs_point.frame).is_within_bounds(
+            "0d", 2.1 * self.cutout_width
+        ):
+            log.warning(
+                f"No cutout for {observation.obs_id} because"
+                " it is outside the FOV of the reference geom."
+            )
+            cut_obs = False
+        if self._apply_cutout and cut_obs:
             cutouts_kwargs = {
-                "position": observation.get_pointing_icrs(observation.tmid).galactic,
+                "position": obs_point.galactic,
                 "width": self.cutout_width,
                 "mode": self.cutout_mode,
             }
