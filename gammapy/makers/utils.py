@@ -761,6 +761,7 @@ def integrate_project_irf_on_geom(geom, irf, fov_frame, use_region_center=True):
         image_geom = geom.to_image()
         skycoord = image_geom.get_coord().skycoord
 
+    time = None
     new_geom = geom
     # In case we need to integrate over time
     if len(fov_frame.shape) == 1:
@@ -778,7 +779,7 @@ def integrate_project_irf_on_geom(geom, irf, fov_frame, use_region_center=True):
 
     reverse_lon = irf.fov_alignment == "REVERSE_LON_RADEC"
     coords = _get_fov_coord(skycoord, fov_frame, irf.has_offset_axis, reverse_lon)
-    if irf.has_offset_axis:
+    if irf.has_offset_axis and time:
         # _get_fov_coord puts the time axis last for offsets
         # and first for non-offsets
         coords["offset"] = np.moveaxis(coords["offset"], -1, 0)
