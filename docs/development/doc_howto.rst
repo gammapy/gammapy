@@ -36,7 +36,7 @@ This should work::
 
 You need a bunch or LaTeX stuff, specifically ``texlive-fonts-extra`` is needed.
 
-.. _access-doc-on-PR:
+.. _access-doc-on-pr:
 
 Accessing documentation build on a Pull Request
 +++++++++++++++++++++++++++++++++++++++++++++++
