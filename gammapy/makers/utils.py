@@ -659,7 +659,6 @@ def _get_fov_coord(
 ):
     """Return coord dict in fov_coord."""
     coords = {}
-
     if use_offset:
         coords["offset"] = skycoord.separation(fov_frame.origin)
     else:
@@ -779,6 +778,10 @@ def integrate_project_irf_on_geom(geom, irf, fov_frame, use_region_center=True):
 
     reverse_lon = irf.fov_alignment == "REVERSE_LON_RADEC"
     coords = _get_fov_coord(skycoord, fov_frame, irf.has_offset_axis, reverse_lon)
+    if irf.has_offset_axis:
+        # _get_fov_coord puts the time axis last for offsets
+        # and first for non-offsets
+        coords["offset"] = np.moveaxis(coords["offset"], -1, 0)
 
     non_spatial_axes = set(irf.required_arguments) - set(
         ["offset", "fov_lon", "fov_lat"]
@@ -786,8 +789,8 @@ def integrate_project_irf_on_geom(geom, irf, fov_frame, use_region_center=True):
 
     for axis_name in non_spatial_axes:
         coords[axis_name] = broadcast_axis_values_to_geom(new_geom, axis_name, False)
-
-    data = irf.integrate_log_log(**coords, axis_name="energy")
+    energy_axes = "energy" if "energy" in new_geom.axes.names else "energy_true"
+    data = irf.integrate_log_log(**coords, axis_name=energy_axes)
 
     if len(fov_frame.shape) == 1:
         time = new_geom.axes["time"]
