@@ -199,6 +199,34 @@ class TestFluxPoints:
         desired = 399430.975 * u.MeV
         assert_quantity_allclose(actual.sum(), desired)
 
+    def test_table_functions(self):
+        input_tab = Table(
+            {
+                "e_ref": np.array([1.4, 2.8]) * u.GeV,
+                "e2dnde": np.array([4.3e-11, 2.9e-11])
+                * u.Unit("GeV**2 / (TeV s cm**2)"),
+                "e2dnde_errp": np.array([4.3e-12, 2.9e-12])
+                * u.Unit("GeV**2 / (TeV s cm**2)"),
+                "e2dnde_errn": np.array([4.3e-12, 2.9e-12])
+                * u.Unit("GeV**2 / (TeV s cm**2)"),
+                "e2dnde_ul": np.array([0, 0]) * u.Unit("GeV**2 / (TeV s cm**2)"),
+                "is_ul": np.array([False, False]),
+            }
+        )
+        model = PowerLawSpectralModel()
+        e2dnde = FluxPoints.from_table(
+            input_tab, sed_type="e2dnde", reference_model=model
+        )
+        assert e2dnde["is_ul"].unit.is_unity()
+        tab = e2dnde.to_table()
+        assert tab["e2dnde"].unit == u.Unit("erg / (s cm**2)")
+
+        dnde = e2dnde.to_table(sed_type="dnde")
+        assert dnde["dnde"].unit == u.Unit("1 / (TeV s cm**2)")
+
+        with pytest.raises(ValueError):
+            FluxPoints.from_table(tab, sed_type="dnde")
+
     def test_write_fits(self, tmp_path, flux_points):
         start = u.Quantity([1, 2], "min")
         stop = u.Quantity([1.5, 2.5], "min")
