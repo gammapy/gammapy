@@ -15,6 +15,7 @@ from gammapy.estimators.points.tests.test_sed import (
     simulate_map_dataset,
     simulate_spectrum_dataset,
 )
+from gammapy.estimators.map.core import DEFAULT_UNIT
 from gammapy.modeling import Fit
 from gammapy.modeling.models import FoVBackgroundModel, PowerLawSpectralModel, SkyModel
 from gammapy.utils.testing import (
@@ -505,6 +506,9 @@ def test_lightcurve_estimator_spectrum_datasets_largerbin():
     assert_allclose(table["ref_dnde"][0], [3.162278e-14], rtol=1e-5)
     assert_allclose(table["ref_flux"][0], [9.683772e-13], rtol=1e-5)
     assert_allclose(table["ref_eflux"][0], [5.533722e-12], rtol=1e-5)
+    assert DEFAULT_UNIT["dnde"] == table["ref_dnde"].unit
+    assert DEFAULT_UNIT["flux"] == table["ref_flux"].unit
+    assert DEFAULT_UNIT["eflux"] == table["ref_eflux"].unit
     assert_allclose(table["stat"][0], [34.219808], rtol=1e-5)
     assert_allclose(table["norm"][0], [0.909646], rtol=1e-5)
     assert_allclose(table["norm_err"][0], [0.040874], rtol=1e-3)
@@ -612,6 +616,9 @@ def test_lightcurve_estimator_map_datasets():
     assert_allclose(table["ref_dnde"], [[8.483429e-14], [8.483429e-14]], rtol=1e-5)
     assert_allclose(table["ref_flux"], [[8.383429e-12], [8.383429e-12]], rtol=1e-5)
     assert_allclose(table["ref_eflux"], [[7.114785e-11], [7.114785e-11]], rtol=1e-5)
+    assert DEFAULT_UNIT["dnde"] == table["ref_dnde"].unit
+    assert DEFAULT_UNIT["flux"] == table["ref_flux"].unit
+    assert DEFAULT_UNIT["eflux"] == table["ref_eflux"].unit
     assert_allclose(table["stat"], [[9402.778975], [9517.750207]], rtol=1e-2)
     assert_allclose(table["norm"], [[0.971592], [0.963286]], rtol=1e-2)
     assert_allclose(table["norm_err"], [[0.044643], [0.044475]], rtol=1e-2)
@@ -637,6 +644,9 @@ def test_lightcurve_estimator_map_datasets():
     assert_allclose(table["ref_dnde"][0], [8.483429e-14], rtol=1e-5)
     assert_allclose(table["ref_flux"][0], [8.383429e-12], rtol=1e-5)
     assert_allclose(table["ref_eflux"][0], [7.114785e-11], rtol=1e-5)
+    assert DEFAULT_UNIT["dnde"] == table["ref_dnde"].unit
+    assert DEFAULT_UNIT["flux"] == table["ref_flux"].unit
+    assert DEFAULT_UNIT["eflux"] == table["ref_eflux"].unit
     assert_allclose(table["stat"][0], [18920.54651], rtol=1e-2)
     assert_allclose(table["norm"][0], [0.967438], rtol=1e-2)
     assert_allclose(table["norm_err"][0], [0.031508], rtol=1e-2)
@@ -671,6 +681,9 @@ def test_lightcurve_estimator_map_datasets_ray_actors():
     assert_allclose(table["ref_dnde"], [[8.483429e-14], [8.483429e-14]], rtol=1e-5)
     assert_allclose(table["ref_flux"], [[8.383429e-12], [8.383429e-12]], rtol=1e-5)
     assert_allclose(table["ref_eflux"], [[7.114785e-11], [7.114785e-11]], rtol=1e-5)
+    assert DEFAULT_UNIT["dnde"] == table["ref_dnde"].unit
+    assert DEFAULT_UNIT["flux"] == table["ref_flux"].unit
+    assert DEFAULT_UNIT["eflux"] == table["ref_eflux"].unit
     assert_allclose(table["stat"], [[9402.778975], [9517.750207]], rtol=1e-2)
     assert_allclose(table["norm"], [[0.971592], [0.963286]], rtol=1e-2)
     assert_allclose(table["norm_err"], [[0.044643], [0.044475]], rtol=1e-2)
@@ -696,6 +709,9 @@ def test_lightcurve_estimator_map_datasets_ray_actors():
     assert_allclose(table["ref_dnde"][0], [8.483429e-14], rtol=1e-5)
     assert_allclose(table["ref_flux"][0], [8.383429e-12], rtol=1e-5)
     assert_allclose(table["ref_eflux"][0], [7.114785e-11], rtol=1e-5)
+    assert DEFAULT_UNIT["dnde"] == table["ref_dnde"].unit
+    assert DEFAULT_UNIT["flux"] == table["ref_flux"].unit
+    assert DEFAULT_UNIT["eflux"] == table["ref_eflux"].unit
     assert_allclose(table["stat"][0], [18920.54651], rtol=1e-2)
     assert_allclose(table["norm"][0], [0.967438], rtol=1e-2)
     assert_allclose(table["norm_err"][0], [0.031508], rtol=1e-2)
