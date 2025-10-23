@@ -14,6 +14,8 @@ from .fit_statistics import (
     ProfileFitStatistic,
     WStatFitStatistic,
     WeightedCashFitStatistic,
+    unbinned_likelihood,
+    UnbinnedOnOffFitStatistic,
 )
 
 from .variability import (
@@ -34,6 +36,7 @@ FIT_STATISTICS_REGISTRY = {
     "distrib": Chi2AsymmetricErrorFitStatistic,
     "profile": ProfileFitStatistic,
     "cash_weighted": WeightedCashFitStatistic,
+    "unbinned_onoff": UnbinnedOnOffFitStatistic,
 }
 
 __all__ = [
@@ -45,6 +48,8 @@ __all__ = [
     "get_wstat_gof_terms",
     "get_wstat_mu_bkg",
     "wstat",
+    "unbinned_likelihood",
+    "UnbinnedOnOffFitStatistic",
     "WStatCountsStatistic",
     "compute_fvar",
     "compute_fpp",

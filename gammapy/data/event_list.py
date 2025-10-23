@@ -810,6 +810,32 @@ class EventList:
         mask &= offset < offset_band[1]
         return self.select_row_subset(mask)
 
+    def _mask_rad_max(self, rad_max, position=None):
+        """Mask for energy dependent offset.
+        Parameters
+        ----------
+        rad_max : `~gamapy.irf.RadMax2D`
+            Rad max definition.
+        position : `~astropy.coordinates.SkyCoord`, optional
+            Center position. Default is the pointing position.
+
+        Returns
+        -------
+        mask : `numpy.ndarray`
+            Mask array.
+        """
+        if position is None:
+            position = self.pointing_radec
+
+        offset = position.separation(self.pointing_radec)
+        separation = position.separation(self.radec)
+
+        rad_max_for_events = rad_max.evaluate(
+            method="nearest", energy=self.energy, offset=offset
+        )
+
+        return separation <= rad_max_for_events
+
     def select_rad_max(self, rad_max, position=None):
         """Select energy dependent offset.
 
@@ -825,17 +851,8 @@ class EventList:
         event_list : `EventList`
             Copy of event list with selection applied.
         """
-        if position is None:
-            position = self.pointing_radec
 
-        offset = position.separation(self.pointing_radec)
-        separation = position.separation(self.radec)
-
-        rad_max_for_events = rad_max.evaluate(
-            method="nearest", energy=self.energy, offset=offset
-        )
-
-        selected = separation <= rad_max_for_events
+        selected = self._mask_rad_max(rad_max, position=position)
         return self.select_row_subset(selected)
 
     @property
