@@ -120,9 +120,6 @@ filterwarnings = [
     "error::matplotlib.MatplotlibDeprecationWarning",
 ]
 
-[tool.setuptools]
-zip-safe = false
-
 [tool.setuptools_scm]
 version_file = "gammapy/version.py"
 version_file_template = """
