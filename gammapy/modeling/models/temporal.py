@@ -1146,18 +1146,14 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         end_integral = self._interpolator.antiderivative()(
             ph_max
         ) - self._interpolator.antiderivative()(0)
-        start_integral = self._interpolator.antiderivative()(
-            1
-        ) - self._interpolator.antiderivative()(ph_min)
+        start_integral = self._interpolator.antiderivative()(1)
+        start_integral -= self._interpolator.antiderivative()(ph_min)
 
         # Divide by Jacobian (here we neglect variations of frequency during the integration period)
-        total = phase_integral + start_integral + end_integral
-        # Normalize by total integration time
-        n_period = (self.time_sum(t_min, t_max) * frequency).to("")
-        if int(n_period) == 0:
-            n_period = 1
+        total = (phase_integral + start_integral + end_integral) / frequency
 
-        integral_norm = total / n_period
+        # Normalize by total integration time
+        integral_norm = (total / self.time_sum(t_min, t_max)).to("")
 
         return integral_norm
 
