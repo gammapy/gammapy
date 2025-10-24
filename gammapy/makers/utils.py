@@ -664,7 +664,7 @@ def _get_fov_coord(
         if len(fov_frame.shape) == 1:
             coords["offset"] = np.moveaxis(offsets, -1, 0)
         else:
-            coords["offsets"] = offsets
+            coords["offset"] = offsets
     else:
         sign = -1.0 if reverse_lon else 1.0
 
