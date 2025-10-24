@@ -996,7 +996,7 @@ class CompoundSpectralModel(CovarianceMixin, SpectralModel):
         names = []
         for idx, model in enumerate(self._models):
             for par_name in model.parameters_unique_names:
-                components = [f"model{idx+1}", par_name]
+                components = [f"model{idx + 1}", par_name]
                 name = ".".join(components)
                 names.append(name)
         return names
@@ -2349,7 +2349,7 @@ class EBLAbsorptionNormSpectralModel(SpectralModel):
                         return cls.read_builtin(
                             reference, redshift=redshift, alpha_norm=alpha_norm
                         )
-                raise IOError(f'File {data["filename"]} not found')
+                raise IOError(f"File {data['filename']} not found")
         else:
             energy = u.Quantity(data["energy"]["data"], data["energy"]["unit"])
             param = u.Quantity(data["param"]["data"], data["param"]["unit"])

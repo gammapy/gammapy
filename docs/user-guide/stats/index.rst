@@ -305,4 +305,3 @@ These are references describing the available methods:
 * [LiMa1983]_,
 * [Cash1979]_,
 * [Stewart2009]_,
-

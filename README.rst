@@ -94,4 +94,3 @@ Status shields
 
 * .. image:: https://codecov.io/gh/gammapy/gammapy/branch/main/graph/badge.svg?style=flat
     :target: https://codecov.io/gh/gammapy/gammapy
-

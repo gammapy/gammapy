@@ -47,7 +47,7 @@ following definitions to go forward in Gammapy:
    - a GTI table is more convenient than a ``START`` and ``STOP`` time, it is more flexible and allows to cut out time intervals in between
    - has 1 dead-time fraction (``DEADC``), the live time of the observation is obtained as ``ONTIME * (1 - DEADC)``
    - however, in the future ``DEADC`` is probably going to be `absorbed into the IRFS`_, then we should switch from *live time* to *on time* when calculating the exposure
- 
+
 
 * **Observation library**:
    - the repository where the observations and IRFs are stored
@@ -196,7 +196,7 @@ We split the implementation in two big steps:
     | **Then** return a new ``Observation`` with the according phase filter
 
     | **PRs**: Add ``select_phase`` method to the Observation class
-    
+
 5. Scenario: filter ``Observations`` by time
     | **Given** a user specified time interval
     | **When** we give the time interval to the ``Observations``

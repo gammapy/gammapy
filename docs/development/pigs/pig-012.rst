@@ -152,11 +152,11 @@ Prototype configuration file.
         time: min, max
         # PSF RAD and EDISP MIGRA not exposed for now
         # Per-obs energy_safe and roi_max ?
-    
+
     observations:
         data_store: $GAMMAPY_DATA/cta-1dc/index/gps/
         ids: 110380, 111140, 111159
-        conesearch: 
+        conesearch:
             ra:
             dec:
             radius:
@@ -208,7 +208,7 @@ products delivered by the tools instead of in memory. The state serialisation
 will be a mix of YAML (i.e. models, state) and FITS files (i.e. maps), where the
 delegated tools should know how to serialise and read themselves. The solution
 to address serialization of different datasets by the different tools is not in
-the scope of this PIG. 
+the scope of this PIG.
 
 **Session workflow**
 
@@ -217,7 +217,7 @@ the scope of this PIG.
         $ mkdir analysis
         $ cd analysis
         $ edit gammapy_analysis_config.yaml
-        
+
 Then the user would type ``ipython``, ``juypter notebook`` or write a script
 with the code below.
 
@@ -318,13 +318,13 @@ defaults. This is done in `Enrico`_ with  ``enrico_config`` and ``enrico_xml``,
 where each workflow is set-up and then run with its own command line tool. In
 our case, we define the workflow steps in a simple Python script and declare
 parameter-value pairs in a configuration file. The Python script is then
-executed to run the workflow. 
+executed to run the workflow.
 
 Also Python scripts and/or notebook files could be generated with an assistant
 command line tool. Then, the user could edit and tweak the config files, scripts
 or notebooks. There isn't much precedence for this workflow in science, but a
 lot of dev-ops and programming tools work like that, it is a standard technique.
-One random example of such a tool is the `Angular CLI`_, or `cookiecutter`_. 
+One random example of such a tool is the `Angular CLI`_, or `cookiecutter`_.
 
 Task list
 =========

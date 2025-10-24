@@ -40,7 +40,7 @@ Energy flux (50 GeV - 2 TeV)     : 8.09e-12 +- 2.27e-12 erg cm-2 s-1
 
 *** Spectral points ***
 
- e_min   e_max       flux     flux_errn   flux_errp  is_ul   flux_ul  
+ e_min   e_max       flux     flux_errn   flux_errp  is_ul   flux_ul
   GeV     GeV    1 / (s cm2) 1 / (s cm2) 1 / (s cm2)       1 / (s cm2)
 ------- -------- ----------- ----------- ----------- ----- -----------
  50.000  171.000   4.233e-11   9.625e-12   1.104e-11 False         nan

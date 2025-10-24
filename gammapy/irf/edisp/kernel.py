@@ -283,7 +283,7 @@ class EDispKernel(IRF):
                     and hdu.verify_datasum() != 1
                 ):
                     warnings.warn(
-                        f"Checksum verification failed for HDU { hdulist[0]} of {filename}.",
+                        f"Checksum verification failed for HDU {hdulist[0]} of {filename}.",
                         UserWarning,
                     )
             table_drm = Table.read(filename, hdu="DRM")

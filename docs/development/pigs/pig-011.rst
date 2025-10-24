@@ -86,7 +86,7 @@ Proposal
 General organization of the new approach
 ----------------------------------------
 
-The approach will be split into 3 main phases: 
+The approach will be split into 3 main phases:
 * Time bin preparation
 * Data reduction in time bins to produce a list of ``Dataset``
 * Light curve estimation to fit a model on the resulting ``Datasets``

@@ -870,7 +870,7 @@ class HpxGeom(Geom):
             raise ValueError(f"Invalid type for skydir: {type(skydir)!r}")
 
         if region is None and width is not None:
-            region = f"DISK({lon},{lat},{width/2})"
+            region = f"DISK({lon},{lat},{width / 2})"
 
         return cls(nside, nest=nest, frame=frame, region=region, axes=axes)
 

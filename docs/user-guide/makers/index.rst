@@ -48,4 +48,3 @@ Using gammapy.makers
 
     ../examples/tutorials/starting/analysis_1.py
     ../examples/tutorials/data/hawc.py
-

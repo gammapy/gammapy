@@ -88,9 +88,7 @@ def get_random_state(init):
         return init
     else:
         raise ValueError(
-            "{} cannot be used to seed a numpy.random.RandomState" " instance".format(
-                init
-            )
+            "{} cannot be used to seed a numpy.random.RandomState instance".format(init)
         )
 
 

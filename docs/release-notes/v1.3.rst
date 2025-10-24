@@ -44,7 +44,7 @@ Documentation improvements
 
 - The pydata-sphinx-theme version used to build the documentation has been updated. The overall appearance has therefore changed a bit.
 - Tutorials are now ordered in a logical workflow in each category.
-- Three new tutorials have been added: 
+- Three new tutorials have been added:
    - one on modeling the EBL absorption
    - one exposing the general API of `gammapy.estimators` and `~gammapy.estimators.FluxMaps`
    - one performing time-dependent spectroscopy
@@ -232,5 +232,3 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 - [#4996] MAINT: use new location for dev wheels (Brigitta Sipőcz)
 - [#4983] Adjust getting-started page (Kirsty Feijen)
 - [#4433] Add a function to combine excess maps (Quentin Remy)
-
-

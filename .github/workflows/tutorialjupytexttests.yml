@@ -21,12 +21,12 @@ jobs:
 
       - uses: actions/setup-python@v6
         with:
-          python-version: '3.13' 
+          python-version: '3.13'
 
       - name: Install Gammapy and needed dependencies
         run: |
           pip install --upgrade pip
-          pip install jupyter jupytext jupyter_client ipykernel 
+          pip install jupyter jupytext jupyter_client ipykernel
           pip install .[all]
 
       - name: Download datasets

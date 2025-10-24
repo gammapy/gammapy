@@ -188,8 +188,7 @@ class MapAxis:
         """
         if self.name != required_name:
             raise ValueError(
-                "Unexpected axis name,"
-                f' expected "{required_name}", got: "{self.name}"'
+                f'Unexpected axis name, expected "{required_name}", got: "{self.name}"'
             )
 
     def is_aligned(self, other, atol=2e-2):
@@ -1153,7 +1152,7 @@ class MapAxis:
             if centers[-1] != self.center[-1]:
                 if strict is True:
                     raise ValueError(
-                        f"Number of {self.name} bins - 1 ({self.nbin-1}) is not divisible by {factor}"
+                        f"Number of {self.name} bins - 1 ({self.nbin - 1}) is not divisible by {factor}"
                     )
                 else:
                     centers = np.append(centers, self.center[-1])
@@ -1432,7 +1431,7 @@ class MapAxis:
                 axis = MapAxis.from_nodes(e_ref, name="energy", interp="log")
             else:
                 raise ValueError(
-                    "Either 'e_ref', 'e_min' or 'e_max' column " "names are required"
+                    "Either 'e_ref', 'e_min' or 'e_max' column names are required"
                 )
         elif format == "gadf-sed-norm":
             # TODO: guess interp here
@@ -2561,8 +2560,7 @@ class TimeMapAxis:
         """
         if self.name != required_name:
             raise ValueError(
-                "Unexpected axis name,"
-                f' expected "{required_name}", got: "{self.name}"'
+                f'Unexpected axis name, expected "{required_name}", got: "{self.name}"'
             )
 
     def is_allclose(self, other, **kwargs):
@@ -3189,8 +3187,7 @@ class LabelMapAxis:
         """
         if self.name != required_name:
             raise ValueError(
-                "Unexpected axis name,"
-                f' expected "{required_name}", got: "{self.name}"'
+                f'Unexpected axis name, expected "{required_name}", got: "{self.name}"'
             )
 
     @property

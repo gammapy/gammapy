@@ -152,5 +152,3 @@ Tutorials Overview
 
     :bdg-link-primary:`Combined 1D / 3D analysis tutorial <../tutorials/analysis-3d/analysis_mwl.html>`
     :bdg-link-primary:`SED fitting tutorial <../tutorials/analysis-1d/sed_fitting.html>`
-
-

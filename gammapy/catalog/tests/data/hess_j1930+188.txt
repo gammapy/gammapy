@@ -68,10 +68,10 @@ ECPL E_cut           : inf +/- nan TeV
 *** Flux points info ***
 
 Number of flux points: 6
-Flux points table: 
+Flux points table:
 
 e_ref  e_min  e_max        dnde         dnde_errn       dnde_errp        dnde_ul     is_ul
- TeV    TeV    TeV   1 / (TeV s cm2) 1 / (TeV s cm2) 1 / (TeV s cm2) 1 / (TeV s cm2)      
+ TeV    TeV    TeV   1 / (TeV s cm2) 1 / (TeV s cm2) 1 / (TeV s cm2) 1 / (TeV s cm2)
 ------ ------ ------ --------------- --------------- --------------- --------------- -----
  0.681  0.464  1.000       1.302e-12       5.114e-13       5.323e-13       2.379e-12 False
  1.468  1.000  2.154       2.069e-13       6.154e-14       6.449e-14       3.373e-13 False
@@ -95,7 +95,7 @@ Flux (>1 TeV)        : (0.29 +/- 0.09) x 10^-12 cm^-2 s^-1 = (1.3 +/- 0.4) % Cra
 *** Source associations info ***
 
   Source_Name    Association_Catalog    Association_Name   Separation
-                                                              deg    
+                                                              deg
 ---------------- ------------------- --------------------- ----------
   HESS J1930+188                COMP             G54.1+0.3   0.037915
   HESS J1930+188                 PSR            J1930+1852   0.039313

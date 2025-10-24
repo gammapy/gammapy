@@ -45,7 +45,7 @@ undergoing re-structuring efforts:
   method now builds an envelope of the sampled spectra using vectorized evaluation of the model.
 - The separation of the internal DL3 data model from GADF specification is close to being over. In particular,
   the `~gammapy.data.EventList` internal table does no longer follow the GADF structure now.
-- The restructuring of statistics and `Dataset` has started with the addition of ``FitStatistic`` classes 
+- The restructuring of statistics and `Dataset` has started with the addition of ``FitStatistic`` classes
   and a registry to allow configuration of the statistic on a dataset.
 
 Significant effort has been put in cleaning up the documentation and re-organising the tutorial structure.
@@ -105,7 +105,7 @@ New features
 *gammapy.makers*
 
 - Added spatial model to `gammapy.makers.FoVBackgroundMaker` init
-- Add time integration of 3D background model aligned on Alt-Az during an observation in `~gammapy.maps.MapDatasetMaker` 
+- Add time integration of 3D background model aligned on Alt-Az during an observation in `~gammapy.maps.MapDatasetMaker`
 - Add a `~gammapy.datasets.FermipyDatasetsReader` to convert Fermi-LAT maps from Fermipy
   into a gammapy `~gammapy.datasets.Datasets`.
 
@@ -182,4 +182,3 @@ Contributors
 - Mitsunari Takahashi
 - Régis Terrier
 - Samantha Wong
-

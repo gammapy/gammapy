@@ -272,7 +272,7 @@ and common to do this. In Gammapy we currently have  `select_sky_box`_,
 `select_sky_circle`_ and `skycoord_from_table`_ which do this in an ad-hoc way.
 They are called from `gammapy.data.EventList`_, `gammapy.data.ObservationTable`_
 and `gammapy.catalog.SourceCatalog`_ which each are a wrapper or subclass of an
-`astropy.table.Table`. 
+`astropy.table.Table`.
 
 We propose to replace those functions and methods with a ``select_region``
 method, which for now requires a WCS to be passed on call.
@@ -425,7 +425,7 @@ As mentioned in `Sky and pixel regions`_ and `Rotated regions`_, we could use
 sky regions more instead of pixel regions, and restrict analysis to sky regions
 where contains or rotate is well defined, namely circles and polygons, and to
 polygonise other sky regions using some approximation, before passing them to
-Gammapy. 
+Gammapy.
 
 In the future we might want a more general solution, and there's the question
 whether a mask-backed region should be added (see `Outlook`_)
