@@ -442,6 +442,56 @@ class GTI:
         merged = Table(rows=merged, names=["START", "STOP"], meta=self.table.meta)
         return self.__class__(merged, reference_time=self.time_ref)
 
+    def intersect(self, other, padding=0.0):
+        """Intersection of overlapping time intervals between two GTIs.
+
+        Returns a new `~gammapy.data.GTI` object.
+
+        Parameters
+        ----------
+        other : `~gammapy.data.GTI`
+            Another GTI object to intersect with.
+        padding : float, optional
+            Padding in seconds to expand the intersection intervals. Default is 0.0.
+
+        Returns
+        -------
+        intersected_gti : `~gammapy.data.GTI`
+            A GTI object whose intervals are the intersections of the two GTIs.
+        """
+        from astropy.time import TimeDelta
+
+        intervals = []
+        padding_delta = TimeDelta(padding, format="sec")
+
+        # Loop over all intervals in both GTIs
+        for start1, stop1 in zip(self.time_start, self.time_stop):
+            for start2, stop2 in zip(other.time_start, other.time_stop):
+                # Compute the overlap
+                start = max(start1, start2)
+                stop = min(stop1, stop2)
+                # If there is a positive-duration overlap, keep it
+                if stop > start:
+                    padded_start = start - padding_delta
+                    padded_stop = stop + padding_delta
+                    intervals.append({"START": padded_start, "STOP": padded_stop})
+
+        if not intervals:
+            # No overlapping GTIs
+            empty_table = Table(names=["START", "STOP"], dtype=["f8", "f8"])
+            return self.__class__(empty_table, reference_time=self.time_ref)
+
+        # Build an Astropy Table with START/STOP columns
+        intersected_table = Table(rows=intervals, names=["START", "STOP"], meta=self.table.meta)
+
+        # Create a GTI from that table (using the same reference time as self)
+        intersected_gti = self.__class__(intersected_table, reference_time=self.time_ref)
+
+        # Optionally, merge any touching intervals
+        intersected_gti = intersected_gti.union(overlap_ok=True, merge_equal=True)
+
+        return intersected_gti
+
     def group_table(self, time_intervals, atol="1e-6 s"):
         """Compute the table with the info on the group to which belong each time interval.
 
