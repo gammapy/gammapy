@@ -146,7 +146,7 @@ Dependency       Gammapy 0.13      Gammapy 0.14
 ===============  ================  ================
 ipython          7.3   (Feb 2019)  7.6   (Jun 2019)
 jupyter          1.0   (n/a)       1.0   (n/a)
-jupyterlab       0.35  (Oct 2018)  1.0   (Jun 2019)             
+jupyterlab       0.35  (Oct 2018)  1.0   (Jun 2019)
 matplotlib       2.1   (Oct 2017)  3.0   (Sep 2018)
 pandas           0.24  (Jan 2019)  0.25  (Jul 2019)
 healpy           1.11  (Aug 2017)  1.12  (Jun 2018)

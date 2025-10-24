@@ -1397,7 +1397,7 @@ class TemplateSpatialModel(SpatialModel):
         if self.is_energy_dependent:
             energy_min = self.map.geom.axes["energy_true"].center[0]
             energy_max = self.map.geom.axes["energy_true"].center[-1]
-            prnt1 = f"Energy min: {energy_min} \n" f"Energy max: {energy_max} \n"
+            prnt1 = f"Energy min: {energy_min} \nEnergy max: {energy_max} \n"
             prnt = prnt + prnt1
 
         return prnt

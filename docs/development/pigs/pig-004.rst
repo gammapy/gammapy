@@ -25,7 +25,7 @@ being linked.
 We propose to move the notebooks to the ``gammapy`` repository so that code and
 tutorials can be version-coupled, and to only use stable datasets in tutorials
 to mostly save the versioning issues. The datasets will remain in
-``gammapy-extra`` repository. 
+``gammapy-extra`` repository.
 
 To ship tutorials and datasets to users, we propose to add a ``gammapy
 download`` command. The ``gammapy-extra`` repository will remain as a repository
@@ -93,7 +93,7 @@ example datasets. Examples are `gammapy-fermi-lat-data`_ or
 URL, but even if they are in ``gammapy-extra``, they should not be ''live''
 datasets. If an issue is found or something is improved, a separate new dataset
 should be added, instead of changing the existing one. So versioning of example
-datasets is not needed. 
+datasets is not needed.
 
 To ship notebooks and example data to users, we propose to introduce a ``gammapy
 download`` command. This work and discussion how it should work in detail has
@@ -106,7 +106,7 @@ copied into a ``$CWD/gammapy-tutorials`` folder, the datasets placed in a
 ``datasets`` subfolder and the notebooks into a ``notebooks-x.x`` subfolder
 accounting for the version downloaded. The management of  updating the
 ``gammapy-tutorials`` folder after a local update of ``gammapy`` is left up to
-the user. 
+the user.
 
 The URLs of the input files used by the notebooks should be noted in the
 ``tutorials/notebooks.yaml`` file in the Gammapy repository, also accounting for

@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Session class driving the high level interface API."""
+
 import html
 import logging
 from gammapy.datasets import Datasets

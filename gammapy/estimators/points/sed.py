@@ -174,8 +174,7 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
                 telescopes.extend(list(d.meta_table["TELESCOP"].flatten()))
         if len(np.unique(telescopes)) > 1:
             raise ValueError(
-                "All datasets must use the same value of the"
-                " 'TELESCOP' meta keyword."
+                "All datasets must use the same value of the 'TELESCOP' meta keyword."
             )
 
         meta = {

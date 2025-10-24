@@ -1912,7 +1912,7 @@ class MapDataset(Dataset):
         if containment_correction:
             if not isinstance(on_region, CircleSkyRegion):
                 raise TypeError(
-                    "Containment correction is only supported for" " `CircleSkyRegion`."
+                    "Containment correction is only supported for `CircleSkyRegion`."
                 )
             elif self.psf is None or isinstance(self.psf, PSFKernel):
                 raise ValueError("No PSFMap set. Containment correction impossible")

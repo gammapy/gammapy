@@ -35,7 +35,6 @@ The model is defined on the celestial sphere, with a normalization defined by:
 # ------------
 # Here is an example plot of the model:
 
-
 import numpy as np
 from astropy.coordinates import Angle
 from gammapy.modeling.models import (

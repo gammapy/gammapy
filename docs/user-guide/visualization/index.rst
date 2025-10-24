@@ -49,4 +49,3 @@ a large aspect ratio into multiple panels. Here is a short example:
 
     axes = plotter.plot(smoothed, vmax=10)
     plt.show()
-

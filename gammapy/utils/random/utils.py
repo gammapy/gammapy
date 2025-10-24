@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Helper functions to work with distributions."""
+
 import numbers
 import numpy as np
 import scipy.integrate
@@ -87,8 +88,7 @@ def get_random_state(init):
         return init
     else:
         raise ValueError(
-            "{} cannot be used to seed a numpy.random.RandomState"
-            " instance".format(init)
+            "{} cannot be used to seed a numpy.random.RandomState instance".format(init)
         )
 
 

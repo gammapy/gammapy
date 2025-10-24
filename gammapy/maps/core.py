@@ -1386,7 +1386,7 @@ class Map(abc.ABC):
                 if axis.name == "energy" or axis.name == "energy_true":
                     info = (
                         f"{energy_unit_format(axis.edges[idx])} - "
-                        f"{energy_unit_format(axis.edges[idx+1])}"
+                        f"{energy_unit_format(axis.edges[idx + 1])}"
                     )
                 else:
                     info = f"{axis.edges_min[idx]:.1f} - {axis.edges_max[idx]:.1f} "
@@ -1456,7 +1456,7 @@ class Map(abc.ABC):
                     options = axis.as_plot_labels
             elif axis.name == "energy" or axis.name == "energy_true":
                 E = energy_unit_format(axis.edges)
-                options = [f"{E[i]} - {E[i+1]}" for i in range(len(E) - 1)]
+                options = [f"{E[i]} - {E[i + 1]}" for i in range(len(E) - 1)]
             else:
                 options = axis.as_plot_labels
             interact_kwargs[axis.name] = SelectionSlider(

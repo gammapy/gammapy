@@ -23,4 +23,3 @@ The following source models are available:
     snr
     pwn
     pulsar
-

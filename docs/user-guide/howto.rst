@@ -403,5 +403,3 @@ Please give feedback and suggest additions to this page!
         # The new observation and the new events table can be serialised independently
         obs2.write("new_obs.fits.gz", overwrite=True)
         obs2.write("events.fits.gz", include_irfs=False, overwrite=True)
-
-

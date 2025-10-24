@@ -307,4 +307,3 @@ Using gammapy.maps
 
    ../examples/tutorials/details/maps.py
    ../examples/tutorials/details/mask_maps.py
-

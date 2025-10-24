@@ -74,7 +74,7 @@ SED reference ID: 2006ApJ...636..777A
 Number of spectral points: 13
 Number of upper limits: 0
 
-e_ref        dnde         dnde_errn       dnde_errp   
+e_ref        dnde         dnde_errn       dnde_errp
  TeV   1 / (TeV s cm2) 1 / (TeV s cm2) 1 / (TeV s cm2)
 ------ --------------- --------------- ---------------
  0.323       2.736e-11       5.690e-12       5.971e-12

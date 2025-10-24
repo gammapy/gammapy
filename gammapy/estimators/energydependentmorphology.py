@@ -246,7 +246,7 @@ class EnergyDependentMorphologyEstimator(Estimator):
         for i, slice_j in enumerate(slices_src[1:]):
             for param in parameters:
                 setattr(
-                    slice_j.models[f"{self.source}_{i+1}-model"].spatial_model,
+                    slice_j.models[f"{self.source}_{i + 1}-model"].spatial_model,
                     param,
                     slice0.models[f"{self.source}_0-model"].spatial_model.parameters[
                         param

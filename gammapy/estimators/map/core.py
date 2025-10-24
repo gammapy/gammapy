@@ -233,9 +233,7 @@ class FluxMaps:
         if not required.issubset(keys):
             missing = required.difference(keys)
             raise ValueError(
-                "Missing data / column for SED type '{}':" " {}".format(
-                    sed_type, missing
-                )
+                "Missing data / column for SED type '{}': {}".format(sed_type, missing)
             )
 
     # TODO: add support for scan

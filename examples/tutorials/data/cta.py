@@ -323,8 +323,8 @@ plt.show()
 #
 # With the following command we can see what the XML file looks like
 # (uncomment it if you have installed `xmltodict`).
- 
- 
+
+
 # !tail -n 20 $CTADATA/models/models_gps.xml
 
 ######################################################################

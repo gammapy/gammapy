@@ -138,4 +138,3 @@ Using gammapy.modeling
     ../examples/tutorials/details/nested_sampling_Crab.py
 
 .. include:: ../references.txt
-

@@ -63,4 +63,3 @@ This list is incomplete. Small improvements and bug fixes are not listed here.
 - [#3966] Adapt Observation.peek according to available hdus (Atreyee Sinha)
 - [#3959] Correct make_map_background_irf bug with Background2D (Régis Terrier)
 - [#3948] Load all available HDUs in DataStore.obs, not only the required_hdus (Maximilian Nöthe)
-

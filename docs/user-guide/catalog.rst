@@ -36,4 +36,3 @@ Using gammapy.catalog
     ../examples/tutorials/starting/overview.py
     ../examples/tutorials/analysis-1d/sed_fitting
     ../examples/tutorials/details/model_management.py
-

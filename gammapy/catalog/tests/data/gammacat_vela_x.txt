@@ -74,7 +74,7 @@ SED reference ID: 2012A&A...548A..38A
 Number of spectral points: 24
 Number of upper limits: 0
 
-e_ref        dnde         dnde_errn       dnde_errp   
+e_ref        dnde         dnde_errn       dnde_errp
  TeV   1 / (TeV s cm2) 1 / (TeV s cm2) 1 / (TeV s cm2)
 ------ --------------- --------------- ---------------
  0.719       1.055e-11       3.284e-12       3.280e-12

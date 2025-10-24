@@ -7,7 +7,7 @@ Extended name        : --
 Associations     : PSR J0534+2200, Crab IC field, Crab pulsar, 3FGL J0534.5+2201, 3FHL J0534.5+2201, 2AGL J0534+2205, EGR J0534+2159
 ASSOC_PROB_BAY   : 1.000
 ASSOC_PROB_LR    : 1.000
-Class1           : PSR  
+Class1           : PSR
 Class2           : --
 TeVCat flag      : P
 
@@ -35,7 +35,7 @@ ROI number           : 270
 
 *** Spectral info ***
 
-Spectrum type                                 : PLSuperExpCutoff 
+Spectrum type                                 : PLSuperExpCutoff
 Detection significance (100 MeV - 1 TeV)      : 25.186
 Exponential factor                            : 0.2337 +- 0.0188
 Super-exponential cutoff index                : 0.5219 +- 0.0946
@@ -49,7 +49,7 @@ Energy flux (100 MeV - 100 GeV)               : 1.46e-09 +- 2.16e-11 erg cm-2 s-
 *** Spectral points ***
 
   e_min       e_max        flux     flux_errn   flux_errp      e2dnde     e2dnde_errn   e2dnde_errp  is_ul   flux_ul     e2dnde_ul   sqrt_ts
-   MeV         MeV     1 / (s cm2) 1 / (s cm2) 1 / (s cm2) erg / (s cm2) erg / (s cm2) erg / (s cm2)       1 / (s cm2) erg / (s cm2)        
+   MeV         MeV     1 / (s cm2) 1 / (s cm2) 1 / (s cm2) erg / (s cm2) erg / (s cm2) erg / (s cm2)       1 / (s cm2) erg / (s cm2)
 ---------- ----------- ----------- ----------- ----------- ------------- ------------- ------------- ----- ----------- ------------- -------
     50.000     100.000   2.365e-06   2.901e-07   2.916e-07     3.800e-10     4.662e-11     4.686e-11 False         nan           nan   8.309
    100.000     300.000   1.595e-06   3.088e-08   3.088e-08     3.840e-10     7.436e-12     7.436e-12 False         nan           nan  60.667
