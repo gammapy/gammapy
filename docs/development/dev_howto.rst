@@ -561,6 +561,7 @@ one of which involves the `meeseeksmachine <https://github.com/meeseeksmachine>`
 
 
 
+.. _release-notes:
 
 Release notes
 +++++++++++++
@@ -573,12 +574,17 @@ As explained in the
 of the Astropy docs, there are (at least) two approaches for adding to the releases,
 each with pros and cons.
 
-We've had some pain due to merge conflicts in the releases notes and having to wait
-until the contributor rebases (and having to explain git rebase to new contributors).
+We recently chose to utilise `towncrier <https://towncrier.readthedocs.io/en/stable/>`__ for our release notes.
 
-So our recommendation is that releases entries are not added in pull requests,
-but that the core developer adds a releases notes entry after right after having
-merged a pull request (you can add ``[skip ci]`` on this commit).
+- For each PR, a related 'fragment' file should be created in the ``docs/release-notes`` folder.
+- The naming convention of the file should be ``<PULL REQUEST NUMBER>.<TYPE>.rst``, where the available
+  types are ``infrastructure``, ``docs``, ``feature`` or ``bugfix``.
+- The file should contain a suitable message for the PR, for example "A new function `select_nested_models`
+  has been introduced to perform nested model fits and compute the resulting test statistic (TS) between
+  two nested hypotheses.".
+
+
+
 
 How to review a pull request
 ----------------------------
