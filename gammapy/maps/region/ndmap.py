@@ -729,7 +729,7 @@ class RegionNDMap(Map):
             Non-finite values are replaced by zero if True.
             Default is True.
         """
-        data = other.quantity.to_value(self.unit).astype(self.data.dtype)
+        data = (other.data * other.unit.to(self.unit)).astype(self.data.dtype)
 
         # TODO: re-think stacking of regions. Is making the union reasonable?
         # self.geom.union(other.geom)
