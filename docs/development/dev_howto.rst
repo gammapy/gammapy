@@ -574,7 +574,7 @@ As explained in the
 of the Astropy docs, there are (at least) two approaches for adding to the releases,
 each with pros and cons.
 
-We recently chose to utilise `towncrier <https://towncrier.readthedocs.io/en/stable/>`__ for our release notes.
+We utilise `towncrier <https://towncrier.readthedocs.io/en/stable/>`__ for our release notes.
 
 - For each PR, a related 'fragment' file should be created in the ``docs/release-notes`` folder.
 - The naming convention of the file should be ``<PULL REQUEST NUMBER>.<TYPE>.rst``, where the available
@@ -582,6 +582,9 @@ We recently chose to utilise `towncrier <https://towncrier.readthedocs.io/en/sta
 - The file should contain a suitable message for the PR, for example "A new function `select_nested_models`
   has been introduced to perform nested model fits and compute the resulting test statistic (TS) between
   two nested hypotheses.".
+- Note: not all PRs need to be included in the changelog. For example, fixing a typo in the documentation
+  does not need a changelog fragment entry. If you are unsure if you need a fragment, the lead developers can
+  help you decide.
 
 
 
