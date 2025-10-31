@@ -51,7 +51,7 @@ Proposed Changes
     argument of the plot methods it provides. Configuration validation could be performed on init.
   - The `Plotter` should be an attribute of the parent object.
   - It could be lazily instantiated to import matplotlib only when needed.
-  - Existing plot methods will silently call the `self.plotter` to ensure backward compatibility
+  - Existing plot methods will silently call the `plotter` object stored on the instance to ensure backward compatibility
 - Move existing plotting methods from core objects to these new `Plotter` classes. Move corresponding tests as well.
   - Existing plotting functionalities will remain accessible but may be deprecated in future releases.
 
@@ -230,5 +230,3 @@ The PIG is open for discussion
 .. _#5725: https://github.com/gammapy/gammapy/issues/5725
 .. _#5726: https://github.com/gammapy/gammapy/issues/5726
 .. _(see e.g. MatplotlibPlotter): https://docs.sunpy.org/projects/ndcube/en/stable/api/ndcube.visualization.mpl_plotter.MatplotlibPlotter.html
-
-
