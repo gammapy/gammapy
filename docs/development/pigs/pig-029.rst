@@ -167,7 +167,7 @@ The `MapDatasetPlotter` could look like this:
             axes[2].set_title("Exposure")
             dataset.exposure.sum_over_axes().plot(ax=axes[2], add_cbar=True)
             plot_mask(ax=axes[2], mask=dataset.mask_safe_image, hatches=["///"], colors="w")
-    
+
             axes[3].set_title("Background")
             dataset.background.sum_over_axes().plot(ax=axes[3], add_cbar=True)
             plot_mask(ax=axes[3], mask=dataset.mask_fit_image, alpha=0.2)
