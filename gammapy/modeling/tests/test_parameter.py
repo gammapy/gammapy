@@ -318,7 +318,7 @@ def test_parameters_s():
     assert_allclose(pars[1].factor, 20)
     assert_allclose(pars[1].scale, 1)
 
-    # test for backward compatibilty
+    # test for backward compatibility
     pars_dict[0]["is_norm"] = True
     pars = Parameters.from_dict(pars_dict)
     assert not hasattr(pars[0], "is_norm")
@@ -427,7 +427,7 @@ def test_priorparameters_basics(priorpars):
 
 
 def test_priorparameters_to_table(priorpars):
-    priorpars["ham"].vallue = 1e-10
+    priorpars["ham"].value = 1e-10
     priorpars["spam"]._link_label_io = "test"
     table = priorpars.to_table()
     assert len(table) == 2
