@@ -140,7 +140,7 @@ An example for `gammapy.data` objects is proposed in the PR `#5725`_.
 The property getter/setter mechanism could use a `PlotMixin` approach to avoid repeating the boilerplate code.
 
 If a user wants to modify `MapDataset.peek()` to provide more suited visualization of e.g. Fermi data (`#5570`_), they could
-create a class inheriting from `MapDatasetPlotter` anv overload its `peek` method. Similarly, different plotting
+create a class inheriting from `MapDatasetPlotter` and overload its `peek` method. Similarly, different plotting
 backends could be supported.
 
 Alternatives
