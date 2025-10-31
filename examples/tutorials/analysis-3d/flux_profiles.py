@@ -265,7 +265,7 @@ flux_profile_estimator = FluxProfileEstimator(
     selection_optional=["ul", "scan"],
 )
 ######################################################################
-# The configuration of the fit statistic profile is done throught the norm parameter:
+# The configuration of the fit statistic profile is done through the norm parameter:
 flux_profile_estimator.norm.scan_values = np.linspace(-1, 5, 11)
 
 ######################################################################
