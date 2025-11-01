@@ -157,7 +157,7 @@ jobs:
         run: |
           tox -e build_docs
       - name: Upload HTML output
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: gammapy-doc-html
           path: docs/_build/html/
