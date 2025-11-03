@@ -16,7 +16,9 @@ jobs:
       - name: Install pre-commit
         run: pip install pre-commit
       - name: Run pre-commit
-        run: pre-commit run
+        run: |
+          git fetch origin $GITHUB_BASE_REF
+          pre-commit run --files $(git diff --name-only origin/$GITHUB_BASE_REF)
 
   ci-runs:
     name: ${{ matrix.os }}, ${{ matrix.tox_env }}
@@ -25,7 +27,7 @@ jobs:
     if: contains(github.event.pull_request.labels.*.name, 'skip-tests') == false
     env:
       PYTEST_ADDOPTS: --color=yes -n auto --dist=loadscope
-      
+
     strategy:
       fail-fast: true
       matrix:
