@@ -1,8 +1,15 @@
 dne
+egal
 esy
 hist
+indx
 livetime
+livetimes
 nd
+ned
 merrors
+NotIn
+OptIn
+slac
 unparseable
 compiletime

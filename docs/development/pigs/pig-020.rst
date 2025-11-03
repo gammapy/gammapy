@@ -36,7 +36,7 @@ works as long as all objects reside in the same memory space.
 
 If datasets are distributed to different processes in future, it is technically
 complex and probably in-efficient to share model states between all sub-processes.
-It is conceptionally simpler if processes communicate with a single server process
+It is conceptually simpler if processes communicate with a single server process
 that contains the single global model object.
 
 The fundamental important difference to the current design is, that the model objects
