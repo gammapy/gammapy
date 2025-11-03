@@ -37,7 +37,7 @@ Event type handling
 +++++++++++++++++++
 
 Starting from a datastore containing events lists and IRFs with types and classes of events,
-the user produces of a list of datasets per event type or class. Meta informations of
+the user produces of a list of datasets per event type or class. Meta information of
 the datasets allow for complex types handling at modeling/fitting step (e.g. joint fit
 of A & B type, stack all type together etc).
 
@@ -154,7 +154,7 @@ We discuss here some aspects that should be explored.
   ``MapAxes`` and an interpolator. In addition, ``Maps`` use the ``Geom`` object to
   represent the spherical coordinates.
 
-  - Having a common data structure could help make maps fully re-usable for IRFs.
+  - Having a common data structure could help make maps fully reusable for IRFs.
     This might be a common use case with pyirf.
   - One could allow ``Maps`` and ``MapCoord`` objects without spatial axes.
     Introducing specialized spatial axes such as `WcsMapAxis`, `RegionMapAxis` or
@@ -180,7 +180,7 @@ This is problematic for the following reasons:
 - This prevents the support of multiple formats, since the internal data structure
 is tied to one specific format.
 - Data is not in the optimal in-memory representation. For instance, times should be
-stored as astropy.time.Time instances, and coodinates as `SkyCoord`.
+stored as astropy.time.Time instances, and coordinates as `SkyCoord`.
 - Data is not validated on input. Errors can happen deep into the code for something
 that could have been caught on input file reading or object creation.
 - Writing data out is harder
@@ -245,8 +245,8 @@ Main documentation
 - More detailed
 - Use type hints in Gammapy everywhere?
 
-Gammapy-recipes and additional ressources
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Gammapy-recipes and additional resources
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The Gammapy-recipes gallery offers a nice additional source of tutorials for advanced or non
 standard use cases.
@@ -265,8 +265,8 @@ Infrastructure
 
 - Improve test coverage and quality.
 - Improve our tools helping to the creation of releases
-- Creation of Docker images with an automatized tool
-- Re-use docker image for Binder, this config here: https://github.com/gammapy/gammapy-webpage/tree/v1.0rc1 already creates docker image in Binder.
+- Creation of Docker images with an automated tool
+- Reuse docker image for Binder, this config here: https://github.com/gammapy/gammapy-webpage/tree/v1.0rc1 already creates docker image in Binder.
 
 Distributed Computing and Performance
 +++++++++++++++++++++++++++++++++++++

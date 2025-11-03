@@ -515,7 +515,7 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
 
     @property
     def background_models(self):
-        """Dictionnary mapping of dataset names with their associated `~gammapy.modeling.models.FoVBackgroundModel` names."""
+        """Dictionary mapping of dataset names with their associated `~gammapy.modeling.models.FoVBackgroundModel` names."""
         return self._background_models
 
     @classmethod
