@@ -974,7 +974,7 @@ def combine_flux_maps(
         List of maps with the same geometry.
     method : str
         * gaussian_errors :
-            Under the gaussian error approximation the likelihood is given by the gaussian distibution.
+            Under the gaussian error approximation the likelihood is given by the gaussian distribution.
             The product of gaussians is also a gaussian so can derive dnde, dnde_err, and ts.
         * distrib :
             Likelihood profile approximation assuming that probabilities distributions for
@@ -1015,7 +1015,7 @@ def combine_flux_maps(
             gti.stack(gtis[k])
     else:
         gti = None
-    # TODO : change this once we have stackable metadata objets
+    # TODO : change this once we have stackable metadata objects
     metas = [map_.meta for map_ in maps if map_.meta is not None]
     meta = {}
     if np.any(metas):
@@ -1114,7 +1114,7 @@ def get_combined_flux_maps(
         Datasets containing only `~gammapy.datasets.MapDataset`.
     method : str
         * gaussian_errors :
-            Under the gaussian error approximation the likelihood is given by the gaussian distibution.
+            Under the gaussian error approximation the likelihood is given by the gaussian distribution.
             The product of gaussians is also a gaussian so can derive dnde, dnde_err, and ts.
         * distrib :
             Likelihood profile approximation assuming that probabilities distributions for
@@ -1322,7 +1322,7 @@ def approximate_profile_map(
 def get_flux_map_from_profile(
     flux_map, n_sigma=1, n_sigma_ul=2, reference_model=None, meta=None, gti=None
 ):
-    """Create a new flux map using the likehood profile (stat_scan)
+    """Create a new flux map using the likelihood profile (stat_scan)
     to get ts, dnde, dnde_err, dnde_errp, dnde_errn, and dnde_ul.
 
     Parameters
