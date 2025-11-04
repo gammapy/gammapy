@@ -973,13 +973,13 @@ class DiskSpatialModel(SpatialModel):
         )
         return u.Quantity(norm * in_ellipse, "sr-1", copy=COPY_IF_NEEDED)
 
-    def to_region(self, **kwargs):
+    def to_region(self, size_factor=1.0, **kwargs):
         """Model outline as a `~regions.EllipseSkyRegion`."""
         minor_axis = Angle(self.r_0.quantity * np.sqrt(1 - self.e.quantity**2))
         return EllipseSkyRegion(
             center=self.position,
-            height=2 * self.r_0.quantity,
-            width=2 * minor_axis,
+            height=2 * size_factor * self.r_0.quantity,
+            width=2 * size_factor * minor_axis,
             angle=self.phi.quantity,
             **kwargs,
         )
@@ -1023,7 +1023,7 @@ class DiskSpatialModel(SpatialModel):
 
         return cls.from_position(region.center, **kwargs)
 
-    def _to_region_error(self):
+    def _to_region_error(self, size_factor=1.0):
         """Model error.
 
         Returns
@@ -1043,10 +1043,10 @@ class DiskSpatialModel(SpatialModel):
 
         return EllipseAnnulusSkyRegion(
             center=self.position,
-            inner_height=2 * r_0_lo,
-            outer_height=2 * r_0_hi,
-            inner_width=2 * minor_axis_lo,
-            outer_width=2 * minor_axis_hi,
+            inner_height=2 * size_factor * r_0_lo,
+            outer_height=2 * size_factor * r_0_hi,
+            inner_width=2 * size_factor * minor_axis_lo,
+            outer_width=2 * size_factor * minor_axis_hi,
             angle=self.phi.quantity,
         )
 
@@ -1420,7 +1420,7 @@ class TemplateSpatialModel(SpatialModel):
         if self.is_energy_dependent:
             energy_min = self.map.geom.axes["energy_true"].center[0]
             energy_max = self.map.geom.axes["energy_true"].center[-1]
-            prnt1 = f"Energy min: {energy_min} \n" f"Energy max: {energy_max} \n"
+            prnt1 = f"Energy min: {energy_min} \nEnergy max: {energy_max} \n"
             prnt = prnt + prnt1
 
         return prnt
