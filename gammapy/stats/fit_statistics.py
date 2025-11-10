@@ -366,13 +366,43 @@ class Chi2FitStatistic(FitStatistic):
     @classmethod
     def stat_array_dataset(cls, dataset):
         """Statistic function value per bin given the current model."""
-        model = dataset.flux_pred()
-        data = dataset.data.dnde.quantity
-        try:
-            sigma = dataset.data.dnde_err.quantity
-        except AttributeError:
-            sigma = (dataset.data.dnde_errn + dataset.data.dnde_errp).quantity / 2
-        return ((data - model) / sigma).to_value("") ** 2
+        from gammapy.datasets import SpectrumDataset
+
+        if isinstance(dataset, SpectrumDataset) and hasattr(dataset, "sigma"):
+            # Forward folding: compare predicted and observed counts
+            counts = dataset.counts.data
+            npred = dataset.npred().data
+            sigma = dataset.sigma.data
+            return ((counts - npred) / sigma) ** 2
+
+        elif hasattr(dataset, "data") and hasattr(dataset.data, "dnde"):
+            # Assume FluxPointsDataset-like
+            model = dataset.flux_pred()
+            data = dataset.data.dnde.quantity
+            try:
+                sigma = dataset.data.dnde_err.quantity
+            except AttributeError:
+                sigma = (dataset.data.dnde_errn + dataset.data.dnde_errp).quantity / 2
+            return ((data - model) / sigma).to_value("") ** 2
+
+        else:
+            raise TypeError(f"Unsupported dataset type: {type(dataset)}")
+
+    @classmethod
+    def stat_sum_dataset(cls, dataset):
+        """Statistic function value per bin given the current model parameters."""
+        from gammapy.datasets import SpectrumDataset
+
+        if isinstance(dataset, SpectrumDataset) and hasattr(dataset, "sigma"):
+            mask = dataset.mask
+            stat_array = cls.stat_array_dataset(dataset)
+            if mask is not None:
+                mask = mask.data.astype("bool")
+                stat_array = stat_array[mask]
+            return np.sum(stat_array)
+        else:
+            # Fallback to default implementation for other dataset types
+            return super().stat_sum_dataset(dataset)
 
 
 class Chi2AsymmetricErrorFitStatistic(FitStatistic):
