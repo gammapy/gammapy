@@ -136,7 +136,6 @@ def get_energy_dependent_temporal_model():
 
 
 @pytest.fixture()
-@requires_data()
 def energy_dependent_temporal_sky_model(models):
     models[0].spatial_model = PointSpatialModel(
         lon_0="0 deg", lat_0="0 deg", frame="galactic"
@@ -614,7 +613,7 @@ def test_mde_run(dataset, models, caplog, tmp_path):
     assert_allclose(meta["RA_PNT"], 266.4049882865447)
     assert_allclose(meta["DEC_PNT"], -28.936177761791473)
     assert meta["EQUINOX"] == "J2000"
-    assert meta["RADECSYS"] == "icrs"
+    assert meta["RADESYSa"] == "icrs"
     assert "Gammapy" in meta["CREATOR"]
     assert meta["EUNIT"] == "TeV"
     assert meta["EVTVER"] == ""
@@ -724,7 +723,7 @@ def test_mde_run_switchoff(dataset, models):
     assert meta["RA_PNT"] == 266.4049882865447
     assert_allclose(meta["ONTIME"], 3600.0)
     assert meta["OBS_ID"] == 1001
-    assert meta["RADECSYS"] == "icrs"
+    assert meta["RADESYSa"] == "icrs"
 
 
 @requires_data()

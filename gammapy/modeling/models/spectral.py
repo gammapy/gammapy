@@ -853,7 +853,7 @@ class SpectralModel(ModelBase):
             Energy at which to estimate the index.
         epsilon : float, optional
             Fractional energy increment to use for determining the spectral index.
-            Default is 1e-5. Deprecated in v2.0 and unsued.
+            Default is 1e-5. Deprecated in v2.0 and unused.
         n_samples : int, optional
             Number of samples to generate per parameter. Default is 3500.
         random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
@@ -996,7 +996,7 @@ class CompoundSpectralModel(CovarianceMixin, SpectralModel):
         names = []
         for idx, model in enumerate(self._models):
             for par_name in model.parameters_unique_names:
-                components = [f"model{idx+1}", par_name]
+                components = [f"model{idx + 1}", par_name]
                 name = ".".join(components)
                 names.append(name)
         return names
@@ -2349,7 +2349,7 @@ class EBLAbsorptionNormSpectralModel(SpectralModel):
                         return cls.read_builtin(
                             reference, redshift=redshift, alpha_norm=alpha_norm
                         )
-                raise IOError(f'File {data["filename"]} not found')
+                raise IOError(f"File {data['filename']} not found")
         else:
             energy = u.Quantity(data["energy"]["data"], data["energy"]["unit"])
             param = u.Quantity(data["param"]["data"], data["param"]["unit"])
