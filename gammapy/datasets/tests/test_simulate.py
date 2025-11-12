@@ -136,7 +136,6 @@ def get_energy_dependent_temporal_model():
 
 
 @pytest.fixture()
-@requires_data()
 def energy_dependent_temporal_sky_model(models):
     models[0].spatial_model = PointSpatialModel(
         lon_0="0 deg", lat_0="0 deg", frame="galactic"
