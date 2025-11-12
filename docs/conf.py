@@ -103,6 +103,7 @@ extensions = [
     'sphinx_copybutton',
     "sphinx_design",
     "sphinx_gallery.gen_gallery",
+    "sphinx_changelog",
     "sphinx.ext.doctest",
     "sphinx.ext.intersphinx",
     "sphinx.ext.mathjax",
