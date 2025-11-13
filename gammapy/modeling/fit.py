@@ -144,6 +144,16 @@ class Fit:
         except AttributeError:
             return f"<pre>{html.escape(str(self))}</pre>"
 
+    @staticmethod
+    def _parse_datasets(datasets):
+        from gammapy.datasets import Dataset, Datasets, LazyDatasets
+
+        if isinstance(datasets, (list, Dataset)):
+            datasets = Datasets(datasets)
+        elif isinstance(datasets, LazyDatasets):
+            datasets = Datasets(datasets)
+        return datasets, datasets.parameters
+
     def run(self, datasets):
         """Run all fitting steps.
 
