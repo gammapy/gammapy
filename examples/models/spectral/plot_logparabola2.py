@@ -1,11 +1,11 @@
 r"""
 .. _logparabola2-spectral-model:
 
-Log parabola spectral model
+Log parabola 2 spectral model
 ===========================
 
-This model parametrises a log parabola spectrum.
-
+This model parametrises a log parabola spectrum,
+where the energy scale of the exponente, :math:`E_s`, and the reference energy, :math:`E_0`, can be different.
 It is defined by the following equation:
 
 .. math::
