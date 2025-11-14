@@ -1,0 +1,80 @@
+name: Monthly pre-commit
+
+on:
+  schedule:
+    - cron: "0 2 15 * *"  # 02:00 UTC on the 15th of each month
+  workflow_dispatch:  # also allow manual trigger
+
+jobs:
+  precommit:
+    name: Run pre-commit on all files and create PR with fixes
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write  # to push changes
+      pull-requests: write  # to open PRs
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Install pre-commit
+        run: pip install pre-commit
+
+      - name: Run pre-commit applying fixes
+        run: pre-commit run --all-files || true
+        # Use '|| true' so the workflow continues because
+        # pre-commit exits with non-zero when it applies fixes
+
+      - name: Check if there are changes
+        id: changes
+        run: |
+          if git status --porcelain | grep .; then
+            echo "changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "changes=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create branch for fixes
+        if: steps.changes.outputs.changes == 'true'
+        run: |
+          FIX_BRANCH="precommit-fixes-$(date +'%Y-%m-%d')"
+          echo "branch=$FIX_BRANCH" >> $GITHUB_OUTPUT
+          git switch -c "$FIX_BRANCH"
+
+      - name: Commit changes
+        if: steps.changes.outputs.changes == 'true'
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add .
+          git commit -m "pre-commit: automated monthly cleanup"
+
+      - name: Push branch
+        if: steps.changes.outputs.changes == 'true'
+        run: |
+          git push origin "$FIX_BRANCH"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create pull request with fixes
+        if: steps.changes.outputs.changes == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ steps.create_branch.outputs.branch || steps.changes.outputs.branch }}
+          base: main
+          title: "Automated monthly pre-commit fixes"
+          body: |
+            This PR contains automated fixes from monthly `pre-commit run --all-files`.
+
+            Review the changes before merging.
+          commit-message: "pre-commit monthly cleanup"
+          labels: auto-precommit, maintenance
