@@ -17,7 +17,7 @@ jobs:
           set -euo pipefail
 
           # Obtain all labels set to the PR
-          labels="${{ toJson(github.event.pull_request.labels.*.name) }}"
+          labels='${{ toJson(github.event.pull_request.labels.*.name) }}'
 
           # If the labels contains feature, bug or api-change then automatically require the 'changelog-required' label
           if echo "$labels" | grep -Eq '"(feature|bug|api-change)"'; then
