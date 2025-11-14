@@ -96,6 +96,7 @@ docs = [
     "sphinx-copybutton",
     "sphinx-design",
     "sphinx-gallery",
+    "sphinx-changelog",
     "pydata-sphinx-theme",
     "nbformat",
     "docutils",
