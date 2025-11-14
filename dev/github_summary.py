@@ -10,7 +10,7 @@ from github import Github, GithubException
 log = logging.getLogger(__name__)
 
 
-class GitHubInfoExtractor:
+class GitHubContributorsExtractor:
     """Class to interact with GitHub and extract PR and issues info tables.
 
     Parameters
@@ -65,7 +65,7 @@ class GitHubInfoExtractor:
 
         self.check_requests_number()
 
-        unique_user = set()
+        unique_users = set()
         for pr in pull_requests:
             if pr.number <= number_min:
                 log.info(f"Reached minimum PR number {number_min}.")
@@ -75,9 +75,11 @@ class GitHubInfoExtractor:
                 log.info(f"Pull Request {pr.number} is backport. Skipping")
                 continue
 
+            log.info(f"Extracting Pull Request {pr.number}.")
+
             # Start to add authors
             if pr.user:
-                unique_user.add(pr.user.login or pr.user.name)
+                unique_users.add(pr.user.login or pr.user.name)
 
             # For committers
             for commit in pr.get_commits():
@@ -91,17 +93,63 @@ class GitHubInfoExtractor:
 
         return sorted(list(unique_users))
 
-        #     log.info(f"Extracting Pull Request {number}.")
-        #     try:
-        #         result = self._extract_pull_request_info(pr)
-        #     except AttributeError:
-        #         log.warning(f"Issue with Pull Request {number}. Skipping")
-        #         continue
-        #     results.append(result)
-        #
-        # table = Table(results)
-        # return table
-        # self.check_requests_number()
+    def extract_contributors_by_milestone(
+        self, milestone_name, state="closed", include_backports=False
+    ):
+        """Extract list of unique contributors from PRs as per the milestone.
+
+         Parameters
+         ----------
+         milestone_name :  str
+            Milestone name i.e. 'v1.0'
+         state : str ("closed", "open", "all")
+            State of PRs to extract.
+         include_backports : bool
+            Include backport PRs in the table. Default is True.
+        """
+        milestones = self.repo.get_milestones(state="all")
+        milestone_obj = None
+        for m in milestones:
+            if m.title == milestone_name:
+                milestone_obj = m
+                break
+        if milestone_obj is None:
+            log.error(f"Milestone '{milestone_name}' not found in repository '{self.repo_name}'.")
+            return []
+
+        # Get PRs filtered by milestone using issues API (GitHub returns PRs as issues)
+        issues = self.repo.get_issues(state=state, milestone=milestone_obj)
+
+        self.check_requests_number()
+
+        unique_users = set()
+        for issue in issues:
+            if issue.pull_request is None:
+                continue  # skip issues, only process PRs
+
+            pr = self.repo.get_pull(issue.number)
+
+            if not include_backports and "Backport" in pr.title:
+                log.info(f"Pull Request {pr.number} is backport. Skipping")
+                continue
+
+            log.info(f"Extracting Pull Request {pr.number}.")
+
+            # Start to add authors
+            if pr.user:
+                unique_users.add(pr.user.login or pr.user.name)
+
+            # For committers
+            for commit in pr.get_commits():
+                if commit.committer:
+                    unique_users.add(commit.committer.login)
+
+            # For reviewers
+            for review in pr.get_reviews():
+                if review.user:
+                    unique_users.add(review.user.login)
+
+        return sorted(list(unique_users))
 
 
 @click.group()
@@ -115,15 +163,13 @@ def cli(log_level):
     log.setLevel(level=log_level)
 
 
-@cli.command("append_contributors", help="Make a list of the contributors of PRs")
+@cli.command("contributors", help="Make a list of the contributors of PRs")
 @click.option("--token", default=None, type=str)
 @click.option("--repo", default="gammapy/gammapy", type=str)
 @click.option("--state", default="closed", type=str)
 @click.option("--number_min", default=4000, type=int)
 @click.option("--include_backports", default=False, type=bool)
-def append_contributors(
-    repo, token, state, number_min, include_backports
-):
+def contributors(repo, token, state, number_min, include_backports):
     """Make list of contributors to PRs."""
     log.info(
         f"Make list of contributors to PRs."
@@ -136,6 +182,29 @@ def append_contributors(
 
     log.info(f"Found {len(users)} unique contributors.")
     print("\nContributors\n~~~~~~~~~~~~")
+    for user in users:
+        print(f"- {user}")
+
+@cli.command(
+    "contributors_by_milestone",
+    help="Make a list of contributors for a specific milestone"
+)
+@click.option("--token", default=None, type=str)
+@click.option("--repo", default="gammapy/gammapy", type=str)
+@click.option("--milestone", required=True, type=str)
+@click.option("--state", default="closed", type=str)
+@click.option("--include_backports", default=False, type=bool)
+def contributors_by_milestone(repo, token, milestone, state, include_backports):
+    """List contributors attached to a specific milestone."""
+    log.info(f"Making list of contributors for milestone '{milestone}'.")
+    extractor = GitHubContributorsExtractor(repo=repo, token=token)
+    users = extractor.extract_contributors_by_milestone(
+        milestone_name=milestone,
+        state=state,
+        include_backports=include_backports
+    )
+    log.info(f"Found {len(users)} unique contributors for milestone '{milestone}'.")
+    print(f"\nContributors for milestone '{milestone}'\n{'~'*20}")
     for user in users:
         print(f"- {user}")
 
