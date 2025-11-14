@@ -599,6 +599,40 @@ class TestTheta2Table:
                 energy_edges=[1.2, 11, 20] * u.TeV,
             )
 
+        # Test for multiple OFF regions
+        theta2_table = make_theta_squared_table(
+            observations=[self.observations[0]],
+            position=position,
+            theta_squared_axis=axis,
+            energy_edges=[1.2, 11] * u.TeV,
+            off_regions_number=2,
+        )
+        on_counts = [0, 0, 0, 1]
+        off_counts = [2, 0, 0, 0]
+        acceptance = [1, 1, 1, 1]
+        acceptance_off = [2, 2, 2, 2]
+        alpha = [0.5, 0.5, 0.5, 0.5]
+        excess = [-1, 0, 0, 1]
+        sqrt_ts = [-1.2735228433101065, 0.0, 0.0, 1.4823038073675112]
+        assert_allclose(theta2_table["counts"], on_counts)
+        assert_allclose(theta2_table["counts_off"], off_counts)
+        assert_allclose(theta2_table["acceptance"], acceptance)
+        assert_allclose(theta2_table["acceptance_off"], acceptance_off)
+        assert_allclose(theta2_table["alpha"], alpha)
+        assert_allclose(theta2_table["excess"], excess)
+        assert_allclose(theta2_table["sqrt_ts"], sqrt_ts)
+        assert_allclose(theta2_table.meta["Energy_filter"], [1.2, 11] * u.TeV)
+
+        with pytest.raises(ValueError):
+            make_theta_squared_table(
+                observations=[self.observations[0]],
+                position=position,
+                position_off=position,
+                theta_squared_axis=axis,
+                energy_edges=[1.2, 11, 20] * u.TeV,
+                off_regions_number=2,
+            )
+
 
 @requires_data()
 def test_guess_instrument_fov(observations):
