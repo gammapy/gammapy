@@ -23,18 +23,26 @@ Feature Freeze and Branching
 
 **A few days before the feature freeze:**
 
-#. Fill the changelog ``docs/release-notes/<version>.rst`` for the version you are about to release.
+#. Update the author list manually in the  ``CITATION.cff``.
 
+    * You can use the helper script ``dev/authors.py`` for this.
+
+
+#. On the ``main`` branch, build the changelog for the version you are about to release.
+   This is done through the use of towncrier with the following line::
+
+    towncrier build --version <version>
+
+   * The changelog will be saved as ``docs/release-notes/CHANGELOG.rst``, you should update the name
+     to be the correct one for your version, in addition to adapting the required lines in the
+     ``docs/release-notes/index.rst`` to ensure it is included in the docs.
    * To generate the list of pull requests and issues, and list of authors run
      ``python dev/github_summary.py create_pull_request_table``. Note that you will
      need to use your github token here.
 
-#. Update the author list manually in the  ``CITATION.cff``.
-
-   * You can use the helper script ``dev/authors.py`` for this.
-#. Open a PR including both changes and mark it with the ``backport-v<version>.x`` label.
-   Gather feedback from the Gammapy user and dev community and finally merge and backport to the
-   ``v<version>.x`` branch.
+#. Open two separate PRs for each of these changes and mark each with the ``backport-v<version>.x`` label.
+   Gather feedback from the Gammapy user and dev community. These PRs will be merged and backport to the
+   ``v<version>.x`` branch at the release candidate stage.
 
 **On the day of the feature freeze:**
 
@@ -48,6 +56,7 @@ Feature Freeze and Branching
     git checkout -B main upstream/main
 
 #. From the github online interface, create a new branch v<version>.x
+
 #. Update the entry for the feature freeze in the
    `Gammapy release calendar <https://github.com/gammapy/gammapy/wiki/Release-Calendar>`__.
 
@@ -76,6 +85,8 @@ Releasing the first major release candidate
 #. Commit and push the branch back to GitHub::
 
     git push upstream v1.0.x
+
+#. Now merge the PR for the changelog, if this has not already been done.
 
 #. Locally create a new release candidate tag on the ``v1.0.x``, like ``v1.0rc1`` for Gammapy and push::
 
@@ -205,6 +216,14 @@ Make a Bugfix release
    last stable version, like ``v1.0`` or ``v1.1``. We do not provide bug-fix release for data.
 
 #. Follow the `Astropy bug fix release instructions <https://docs.astropy.org/en/latest/development/maintainers/releasing.html#maintaining-bug-fix-releases>`__.
+
+#. To create the changelog, towncrier is utilised::
+
+    towncrier build --version=<version> --keep
+
+   * As we will create the changelog again for the major release, we should utilise the ``keep`` keyword,
+     as to not delete the fragments.
+
 
 #. Follow the instructions for a major release for the updates of ``CITATION.cff``, the modifications in the
    ``gammapy-docs`` and ``gammapy-webpage`` repos as well as the conda builds.
