@@ -7,6 +7,7 @@ see :ref:`fit-statistics`
 from abc import ABC
 import numpy as np
 from scipy.special import erfc
+from scipy.stats import poisson
 from gammapy.maps import Map
 
 from gammapy.utils.compilation import get_fit_statistics_compiled
@@ -22,6 +23,8 @@ __all__ = [
     "WStatFitStatistic",
     "Chi2FitStatistic",
     "Chi2AsymmetricErrorFitStatistic",
+    "unbinned_likelihood",
+    "UnbinnedOnOffFitStatistic",
 ]
 
 
@@ -438,3 +441,77 @@ class ProfileFitStatistic(FitStatistic):
         for idx in np.ndindex(dataset._profile_interpolators.shape):
             stat[idx] = dataset._profile_interpolators[idx](model[idx])
         return stat
+
+
+def unbinned_likelihood(signal_pdf, bkg_pdf, mu_sig, mu_bkg, n_on, n_off):
+    """
+    Unbinned likelihood for Poisson data with Poisson background.
+    """
+    logp_n_on = poisson.logpmf(n_on, mu_sig + mu_bkg)
+    logp_n_on = np.nan_to_num(logp_n_on, nan=-1e100, posinf=-1e100, neginf=-1e100)
+    logp_n_off = poisson.logpmf(n_off, mu_bkg)
+    logp_n_off = np.nan_to_num(logp_n_off, nan=-1e100, posinf=-1e100, neginf=-1e100)
+    if mu_sig < 0:
+        return np.array([1e100])
+    ws = mu_sig / (mu_sig + mu_bkg)
+    sum_term = np.sum(np.log((ws * signal_pdf + (1 - ws) * bkg_pdf)))
+    sum_term = np.nan_to_num(sum_term, nan=-1e100, posinf=-1e100, neginf=-1e100)
+
+    logL = sum_term + logp_n_on + logp_n_off
+
+    return -2 * logL
+
+
+class UnbinnedOnOffFitStatistic(FitStatistic):
+    """Unbinned On-Off fit statistic class for ON-OFF Poisson measurements.
+
+    This is a placeholder for the unbinned on-off fit statistic.
+    """
+
+    @classmethod
+    def stat_array_dataset(cls, dataset):
+        """Statistic function value per event given the current model parameters."""
+        if dataset.mask is None:
+            signal_pdf = dataset.signal_pdf().data.flatten()
+            bkg_pdf = dataset.background_pdf().data.flatten()
+            mu_sig = dataset.npred_signal().data.flatten()
+            mu_bkg = dataset.npred_background().data.flatten()
+        else:
+            energy_min = dataset.events_safe.energy.min()
+            energy_max = dataset.events_safe.energy.max()
+            signal_pdf = dataset.signal_pdf(
+                energy_min=energy_min, energy_max=energy_max
+            ).data[dataset.mask]
+            bkg_pdf = dataset.background_pdf(
+                energy_min=energy_min, energy_max=energy_max
+            ).data[dataset.mask]
+            mu_sig = dataset.npred_signal().data.flatten()
+            mu_bkg = dataset.npred_background().data.flatten()
+
+        n_off = len(dataset.events_off_safe.energy) * (
+            np.mean(dataset.alpha.data.flatten()) if dataset.alpha is not None else 1
+        )
+        n_off = round(n_off)
+
+        stat = unbinned_likelihood(
+            signal_pdf=signal_pdf,
+            bkg_pdf=bkg_pdf,
+            mu_sig=mu_sig,
+            mu_bkg=mu_bkg,
+            n_on=len(dataset.events_safe.energy),
+            n_off=n_off,
+        )
+        print(f"-2 * logL = {stat}")
+        print(
+            f"mu_sig = {mu_sig}, mu_bkg = {mu_bkg}, n_on = {len(dataset.events_safe.energy)}, n_off = {n_off}"
+        )
+        return stat
+
+    @classmethod
+    def stat_sum_dataset(cls, dataset):
+        """Statistic function value per event given the current model parameters."""
+        if dataset.events_off is None and not np.any(dataset.mask_safe.data):
+            return 0
+        else:
+            stat_array = cls.stat_array_dataset(dataset)
+            return stat_array.sum()
