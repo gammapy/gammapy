@@ -1,0 +1,1 @@
+Replaced the deprecated keyword `RADECSYS` for the coordinate system in the GADF event list fits table with `RADESYSa`.
