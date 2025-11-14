@@ -94,6 +94,7 @@ Estimation of the predicted number of counts
 
 The formula are be found in this section: :ref:`npred`.
 
+.. _ts:
 Estimating TS
 ^^^^^^^^^^^^^
 
