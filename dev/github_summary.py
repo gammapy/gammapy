@@ -45,54 +45,6 @@ class GitHubContributorsExtractor:
         remaining, total = self.github.rate_limiting
         log.info(f"Remaining {remaining} requests over {total} requests.")
 
-    def extract_contributors(
-        self, state="closed", number_min=1, include_backports=False
-    ):
-        """Extract list of unique contributors from PRs.
-
-         Parameters
-         ----------
-        state : str ("closed", "open", "all")
-             state of PRs to extract.
-         number_min : int
-             minimum PR number to include. Default is 0.
-         include_backports : bool
-             Include backport PRs in the table. Default is True.
-        """
-        pull_requests = self.repo.get_pulls(
-            state=state, sort="created", direction="desc"
-        )
-
-        self.check_requests_number()
-
-        unique_users = set()
-        for pr in pull_requests:
-            if pr.number <= number_min:
-                log.info(f"Reached minimum PR number {number_min}.")
-                break
-
-            if not include_backports and "Backport" in pr.title:
-                log.info(f"Pull Request {pr.number} is backport. Skipping")
-                continue
-
-            log.info(f"Extracting Pull Request {pr.number}.")
-
-            # Start to add authors
-            if pr.user:
-                unique_users.add(pr.user.login or pr.user.name)
-
-            # For committers
-            for commit in pr.get_commits():
-                if commit.committer:
-                    unique_users.add(commit.committer.login)
-
-            # For reviewers
-            for review in pr.get_reviews():
-                if review.user:
-                    unique_users.add(review.user.login)
-
-        return sorted(list(unique_users))
-
     def extract_contributors_by_milestone(
         self, milestone_name, state="closed", include_backports=False
     ):
@@ -161,29 +113,6 @@ class GitHubContributorsExtractor:
 def cli(log_level):
     logging.basicConfig(level=log_level)
     log.setLevel(level=log_level)
-
-
-@cli.command("contributors", help="Make a list of the contributors of PRs")
-@click.option("--token", default=None, type=str)
-@click.option("--repo", default="gammapy/gammapy", type=str)
-@click.option("--state", default="closed", type=str)
-@click.option("--number_min", default=4000, type=int)
-@click.option("--include_backports", default=False, type=bool)
-def contributors(repo, token, state, number_min, include_backports):
-    """Make list of contributors to PRs."""
-    log.info(
-        f"Make list of contributors to PRs."
-    )
-
-    extractor = GitHubContributorsExtractor(repo=repo, token=token)
-    users = extractor.extract_contributors(
-        state=state, number_min=number_min, include_backports=include_backports
-    )
-
-    log.info(f"Found {len(users)} unique contributors.")
-    print("\nContributors\n~~~~~~~~~~~~")
-    for user in users:
-        print(f"- {user}")
 
 @cli.command(
     "contributors_by_milestone",
