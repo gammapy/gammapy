@@ -8,12 +8,14 @@ from astropy.table import Table
 from astropy.time import Time
 from gammapy.data import FixedPointingInfo, PointingMode
 from gammapy.irf import EDispMap, FoVAlignment, PSFMap
+from gammapy.makers import background
 from gammapy.maps import Map, RegionNDMap, MapAxis
 from gammapy.maps.utils import broadcast_axis_values_to_geom
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.stats import WStatCountsStatistic
 from gammapy.utils.coordinates import FoVICRSFrame, FoVAltAzFrame
 from gammapy.utils.regions import compound_region_to_regions
+from regions import CircleSkyRegion
 
 __all__ = [
     "make_counts_off_rad_max",
@@ -412,7 +414,8 @@ def make_theta_squared_table(
         Default is None.
     off_regions_number : `~int`
         Number of OFF regions; by default is 1. Warning: the user should
-        be aware that regions could overlap.
+        be aware that, if regions overlap, in such a case only the mirror OFF
+        region will be considered.
 
     Returns
     -------
@@ -422,6 +425,10 @@ def make_theta_squared_table(
     """
     if not theta_squared_axis.edges.unit.is_equivalent("deg2"):
         raise ValueError("The theta2 axis should be equivalent to deg2")
+
+    on_region = CircleSkyRegion(
+        center=position, radius=np.sqrt(theta_squared_axis.edges[-1])
+    )
 
     table = Table()
 
@@ -465,18 +472,21 @@ def make_theta_squared_table(
                 "If `off_regions_number` is larger than 1, `position_off` has to be set to None."
             )
 
+        wobble = background.WobbleRegionsFinder(off_regions_number)
+        off_regions = wobble.run(
+            region=on_region, center=observation.pointing.fixed_icrs
+        )[0]
+
+        if not off_regions:
+            off_regions_number = 1
+            log.warning("Only the mirror OFF region will be considered.")
+
         if off_regions_number > 1:
             # determine the position of the evenly-spaced angular position
-            off_region_angles = Angle(360 * u.deg) / (off_regions_number + 1)
-            off_region_angle = pos_angle + off_region_angles * np.arange(
-                1, off_regions_number + 1
-            )
-            off_regions = pointing.directional_offset_by(off_region_angle, sep_angle)
-
             counts_off = np.zeros_like(counts)
             for off_region in off_regions:
                 # Angular distance of the events from the mirror position
-                separation_off = off_region.separation(event_position)
+                separation_off = off_region.center.separation(event_position)
 
                 # Extract the ON and OFF theta2 distribution from the two positions.
                 counts_off_regions, _ = np.histogram(
