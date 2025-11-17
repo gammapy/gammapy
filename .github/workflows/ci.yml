@@ -46,8 +46,8 @@ jobs:
             gammapy_data: true
             allowed_fail: false
           - os: ubuntu-latest
-            python: '3.10'
-            tox_env: 'py310-test-alldeps-cov'
+            python: '3.12'
+            tox_env: 'py312-test-alldeps-cov'
             gammapy_data: true
             allowed_fail: false
           - os: macos-latest
@@ -70,19 +70,23 @@ jobs:
             gammapy_data: true
             allowed_fail: false
           - os: ubuntu-latest
-            python: '3.10'
-            tox_env: 'py310-test'
-            allowed_fail: false
-          - os: ubuntu-latest
             python: '3.13'
             tox_env: 'py313-test'
             allowed_fail: false
           - os: ubuntu-latest
-            python: '3.10'
-            tox_env: 'py310-test-alldeps_noray-astropy60-numpy126'
+            python: '3.14'
+            tox_env: 'py314-test'
             allowed_fail: false
           - os: ubuntu-latest
-            python: '3.10'
+            python: '3.13'
+            tox_env: 'codestyle'
+            allowed_fail: false
+          - os: ubuntu-latest
+            python: '3.13'
+            tox_env: 'py313-test-alldeps_noray-astropy60-numpy126'
+            allowed_fail: false
+          - os: ubuntu-latest
+            python: '3.11'
             tox_env: 'oldestdeps'
             allowed_fail: false
           - os: ubuntu-latest
