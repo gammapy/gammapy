@@ -174,7 +174,7 @@ Contributors
 - Robert Daniel Parsons
 - Natthan Pigoux
 - Fabio Pintore
-- Tobi Preis
+- Tobias Preis
 - Maxime Regeard
 - Quentin Remy
 - Leander Schlegel
@@ -183,4 +183,3 @@ Contributors
 - Mitsunari Takahashi
 - Régis Terrier
 - Samantha Wong
-
