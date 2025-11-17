@@ -120,21 +120,27 @@ def cli(log_level):
 )
 @click.option("--token", default=None, type=str)
 @click.option("--repo", default="gammapy/gammapy", type=str)
-@click.option("--milestone", required=True, type=str)
+@click.option("--milestone", required=True, type=str, help="Comma-separated list of milestones, e.g., '2.0.1,2.1'")
 @click.option("--state", default="closed", type=str)
 @click.option("--include_backports", default=False, type=bool)
 def contributors_by_milestone(repo, token, milestone, state, include_backports):
     """List contributors attached to a specific milestone."""
-    log.info(f"Making list of contributors for milestone '{milestone}'.")
     extractor = GitHubContributorsExtractor(repo=repo, token=token)
-    users = extractor.extract_contributors_by_milestone(
-        milestone_name=milestone,
-        state=state,
-        include_backports=include_backports
-    )
-    log.info(f"Found {len(users)} unique contributors for milestone '{milestone}'.")
-    print(f"\nContributors for milestone '{milestone}'\n{'~'*20}")
-    for user in users:
+    milestone_list = [m.strip() for m in milestone.split(",") if m.strip()]
+
+    all_users = set()
+    for m in milestone_list:
+        log.info(f"Making list of contributors for milestone '{m}'.")
+        users = extractor.extract_contributors_by_milestone(
+            milestone_name=m,
+            state=state,
+            include_backports=include_backports
+        )
+        log.info(f"Found {len(users)} unique contributors for milestone '{m}'.")
+        all_users.update(users)
+
+    print(f"\nContributors for milestone '{milestone}'\n{'~' * 20}")
+    for user in sorted(all_users):
         print(f"- {user}")
 
 
