@@ -1,6 +1,8 @@
 name: Check changelog fragments
 
-on: [pull_request]
+on: 
+  pull_request:
+    types: [opened, reopened, labeled, unlabeled, synchronize]
 
 jobs:
   check-changelog:
