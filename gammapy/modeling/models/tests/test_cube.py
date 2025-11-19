@@ -31,6 +31,7 @@ from gammapy.modeling.models import (
     SpatialModel,
     TemplateNPredModel,
     TemplateSpatialModel,
+    TemplateSpectralModel,
     create_fermi_isotropic_diffuse_model,
 )
 from gammapy.utils.scripts import make_path
@@ -162,6 +163,29 @@ def test_sky_model_init():
 
     with pytest.raises(TypeError):
         SkyModel(spectral_model=PowerLawSpectralModel(), spatial_model=1234)
+
+    # test unit checks with exposure applied
+    with pytest.raises(ValueError):
+        template = TemplateSpectralModel(energy=[0.5, 1, 2] * u.TeV, values=[1, 2, 3])
+        SkyModel(spectral_model=template * PowerLawNormSpectralModel())
+
+    template = TemplateSpectralModel(
+        energy=[0.5, 1, 2] * u.TeV, values=[1, 2, 3] * (1 / (u.TeV * u.s * u.cm**2))
+    )
+    SkyModel(spectral_model=template * PowerLawNormSpectralModel())
+
+    # test unit checks without exposure applied
+    with pytest.raises(ValueError):
+        template = TemplateSpectralModel(energy=[0.5, 1, 2] * u.TeV, values=[1, 2, 3])
+        model = SkyModel(spectral_model=template * PowerLawNormSpectralModel())
+
+    template = TemplateSpectralModel(
+        energy=[0.5, 1, 2] * u.TeV, values=[1, 2, 3] * (1 / u.TeV)
+    )
+    model = SkyModel(
+        spectral_model=template * PowerLawNormSpectralModel(),
+        apply_irf={"exposure": False},
+    )
 
     # test init of energy dependent temporal models
     filename = make_path(
