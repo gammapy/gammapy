@@ -8,6 +8,7 @@ from gammapy.maps import Map, MapAxis, RegionGeom
 from gammapy.modeling import Parameter
 from gammapy.modeling.models import SpectralModel, TemplateNDSpectralModel
 from gammapy.utils.scripts import make_path
+from gammapy.utils.table import table_map_columns
 
 __all__ = ["PrimaryFlux", "DarkMatterAnnihilationSpectralModel"]
 
@@ -15,7 +16,7 @@ __all__ = ["PrimaryFlux", "DarkMatterAnnihilationSpectralModel"]
 class PrimaryFlux(TemplateNDSpectralModel):
     """DM-annihilation gamma-ray spectra.
 
-    Based on the precomputed models by Cirelli et al. (2016). All available
+    Based on the precomputed models of PPPC4 DM ID by Cirelli et al. (2016), CosmiXs by Arina et. al (2023). All available
     annihilation channels can be found there. The dark matter mass will be set
     to the nearest available value. The spectra will be available as
     `~gammapy.modeling.models.TemplateNDSpectralModel` for a chosen dark matter mass and
@@ -23,18 +24,24 @@ class PrimaryFlux(TemplateNDSpectralModel):
     allows the interpolation between different dark matter masses.
 
     Parameters
-    ----------
+   --------
     mDM : `~astropy.units.Quantity`
         Dark matter particle mass as rest mass energy.
     channel: str
         Annihilation channel. List available channels with `~gammapy.spectrum.PrimaryFlux.allowed_channels`.
+    source: str
+        Data source for the spectra. Choose between 'PPPC4' and 'cosmixs'.
 
     References
-    ----------
+   --------
     * `Marco et al. (2011), "PPPC 4 DM ID: a poor particle physicist cookbook for dark matter indirect detection"
       <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
     * `Cirelli et al. (2016), "PPPC 4 DM ID: A Poor Particle Physicist Cookbook for Dark Matter Indirect Detection"
       <http://www.marcocirelli.net/PPPC4DMID.html>`_
+      *`Arina et al. (2024), "CosmiXs: Cosmic messenger spectra for indirect dark matter searches"
+      <https://arxiv.org/abs/2312.01153>`
+
+"
     """
 
     channel_registry = {
@@ -66,29 +73,96 @@ class PrimaryFlux(TemplateNDSpectralModel):
         "V->e": "V->e",
         "V->mu": r"V->\[Mu]",
         "V->tau": r"V->\[Tau]",
+        "aZ": "aZ",
+        "HZ": "HZ",
+        "d": "d",
+        "u": "u",
+        "s": "s"
     }
-
-    table_filename = (
-        "$GAMMAPY_DATA/dark_matter_spectra/PPPC4DMID/AtProduction_gammas.dat"
-    )
 
     tag = ["PrimaryFlux", "dm-pf"]
 
-    def __init__(self, mDM, channel):
-        self.table_path = make_path(self.table_filename)
+    def __init__(self, mDM, channel, source='PPPC4'):
+
+        if source == 'PPPC4':
+            table_filename = "$GAMMAPY_DATA/dark_matter_spectra/AtProduction_gammas.dat"
+        elif source == 'cosmixs':
+            table_filename = 'gammapy/external/CosmiXs/Data/AtProduction-Gamma.dat' #ask how to include it on gammapy datasets
+        else:
+            raise FileNotFoundError(
+                f"\n\nData source is not valid, please choose between PPC¡PC4 or cosmixs\n"
+            )
+        if source == 'PPPC4':
+            if channel in ('aZ','HZ'):
+                raise ValueError(
+                    f"\n\nThe channel "+channel+" is not available in PPPC4, please choose another channel or use CosmiXs (cosmixs) as source\n"
+                )
+            elif channel in ('d','u', 's'):
+                raise ValueError(
+                    f"\n\nThe channel "+channel+" is not available in PPPC4, please choose the equivalent channel q or use CosmiXs (cosmixs) as source\n"
+                )
+
+        elif source == 'cosmixs':
+            if channel in ("V->e", "V->mu", "V->tau"):
+                raise ValueError(
+                    f"\n\nThe channel "+channel+" is not available in CosmiXs, please choose another channel or use PPPC4 as source\n"
+                )
+            elif channel =='q':
+                raise ValueError(
+                    f"\n\nThe channel q is not available in cosmixs, please choose an equivalent channel such as d, u or s or use PPPC4 as source\n"
+                )
+    
+        self.table_path = make_path(table_filename)
         if not self.table_path.exists():
             raise FileNotFoundError(
-                f"\n\nFile not found: {self.table_filename}\n"
+                f"\n\nFile not found: {table_filename}\n"
                 "You may download the dataset needed with the following command:\n"
-                "gammapy download datasets --src dark_matter_spectra"
+                "gammapy download datasetssrc dark_matter_spectra"
             )
         else:
+            ascii_format ="ascii.commented_header" if source == 'cosmixs' else "ascii.fast_basic"
             self.table = Table.read(
                 str(self.table_path),
-                format="ascii.fast_basic",
+                format=ascii_format,
                 guess=False,
                 delimiter=" ",
             )
+            if source == 'cosmixs':
+
+                mapping_dict = {
+                    "DM": "mDM",
+                    "Log10[x]": "Log[10,x]", 
+                    "dNdLog10x[eL]": "eL",
+                    "dNdLog10x[eR]": "eR",
+                    "dNdLog10x[e]": "e",
+                    "dNdLog10x[muL]": "\\[Mu]L",
+                    "dNdLog10x[muR]": "\\[Mu]R",
+                    "dNdLog10x[mu]": "\\[Mu]",
+                    "dNdLog10x[tauL]": "\\[Tau]L",
+                    "dNdLog10x[tauR]": "\\[Tau]R",
+                    "dNdLog10x[tau]": "\\[Tau]",
+                    "dNdLog10x[nue]": "\\[Nu]e",
+                    "dNdLog10x[numu]": "\\[Nu]\\[Mu]",
+                    "dNdLog10x[nutau]": "\\[Nu]\\[Tau]",
+                    "dNdLog10x[u]": "u", # Does not exist explicitly on PPPC4, but it is equivalent to q
+                    "dNdLog10x[d]": "d", # Does not exist explicitly on PPPC4, but it is equivalent to q
+                    "dNdLog10x[s]": "s", # Does not exist explicitly on PPPC4, but it is equivalent to q
+                    "dNdLog10x[c]": "c", 
+                    "dNdLog10x[b]": "b",
+                    "dNdLog10x[t]": "t",
+                    "dNdLog10x[a]": "\\[Gamma]",
+                    "dNdLog10x[g]": "g", 
+                    "dNdLog10x[W]": "W",
+                    "dNdLog10x[WL]": "WL",
+                    "dNdLog10x[WT]": "WT",
+                    "dNdLog10x[Z]": "Z",
+                    "dNdLog10x[ZL]": "ZL",
+                    "dNdLog10x[ZT]": "ZT",
+                    "dNdLog10x[H]": "h",
+                    "dNdLog10x[aZ]": None,  # Does not exist  on PPPC4
+                    "dNdLog10x[HZ]": None # Does not exist  on PPPC4
+                }
+                self.table = table_map_columns(self.table, mapping_dict)
 
         self.channel = channel
 
@@ -101,14 +175,14 @@ class PrimaryFlux(TemplateNDSpectralModel):
         log10x_axis = MapAxis.from_nodes(log10x, name="energy_true")
 
         channel_name = self.channel_registry[self.channel]
-
+        
         geom = RegionGeom(region=None, axes=[log10x_axis, mass_axis])
         region_map = Map.from_geom(
             geom=geom, data=self.table[channel_name].reshape(geom.data_shape)
         )
 
         interp_kwargs = {"extrapolate": True, "fill_value": 0, "values_scale": "lin"}
-        super().__init__(region_map, interp_kwargs=interp_kwargs)
+        super().__init__(region_map, interp_kwargs=interp_kwargs,)
         self.mDM = mDM
         self.mass.frozen = True
 
@@ -163,7 +237,6 @@ class PrimaryFlux(TemplateNDSpectralModel):
         dN_dE = dN_dlogx / (energy * np.log(10))
         return dN_dE
 
-
 class DarkMatterAnnihilationSpectralModel(SpectralModel):
     r"""Dark matter annihilation spectral model.
 
@@ -175,7 +248,7 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
         \frac{\mathrm d N}{\mathrm dE} \times J(\Delta\Omega)
 
     Parameters
-    ----------
+   --------
     mass : `~astropy.units.Quantity`
         Dark matter mass.
     channel : str
@@ -192,7 +265,7 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
         Type of dark matter particle (k:2 Majorana, k:4 Dirac).
 
     Examples
-    --------
+   ------
     This is how to instantiate a `DarkMatterAnnihilationSpectralModel` model::
 
         >>> import astropy.units as u
@@ -204,7 +277,7 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
         >>> modelDM = DarkMatterAnnihilationSpectralModel(mass=massDM, channel=channel, jfactor=jfactor)  # noqa: E501
 
     References
-    ----------
+   --------
     `Marco et al. (2011), "PPPC 4 DM ID: a poor particle physicist cookbook for dark matter indirect detection"
     <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
     """
@@ -258,12 +331,12 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
         """Create spectral model from a dictionary.
 
         Parameters
-        ----------
+       --------
         data : dict
             Dictionary with model data.
 
         Returns
-        -------
+       -----
         model : `DarkMatterAnnihilationSpectralModel`
             Dark matter annihilation spectral model.
         """
@@ -285,7 +358,7 @@ class DarkMatterDecaySpectralModel(SpectralModel):
         \frac{\mathrm d N}{\mathrm dE} \times J(\Delta\Omega)
 
     Parameters
-    ----------
+   --------
     mass : `~astropy.units.Quantity`
         Dark matter mass.
     channel : str
@@ -312,7 +385,7 @@ class DarkMatterDecaySpectralModel(SpectralModel):
         >>> modelDM = DarkMatterDecaySpectralModel(mass=massDM, channel=channel, jfactor=jfactor)  # noqa: E501
 
     References
-    ----------
+   --------
     `Marco et al. (2011), "PPPC 4 DM ID: a poor particle physicist cookbook for dark matter indirect detection"
     <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
     """
@@ -362,12 +435,12 @@ class DarkMatterDecaySpectralModel(SpectralModel):
         """Create spectral model from dictionary.
 
         Parameters
-        ----------
+       --------
         data : dict
             Dictionary with model data.
 
         Returns
-        -------
+       -----
         model : `DarkMatterDecaySpectralModel`
             Dark matter decay spectral model.
         """
