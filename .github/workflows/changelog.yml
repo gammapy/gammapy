@@ -17,18 +17,19 @@ jobs:
           set -euo pipefail
 
           # Obtain all labels set to the PR
-          labels="${{ join(github.event.pull_request.labels.*.name, '\n') }}"
+          labels="${{ join(github.event.pull_request.labels.*.name, ',') }}"
+          clabels=",$labels,"  # wrap with commas for exact matching with grep
 
           # If the labels contains feature, bug or api-change then automatically require the 'changelog-required' label
-          if echo "$labels" | grep -Eq '^(feature|bug|api-change)$'; then
-            if ! echo "$labels" | grep -q '^changelog-required$'; then
+          if echo "$clabels" | grep -Eq ',(feature|bug|api-change),'; then
+            if ! echo "$clabels" | grep -q ',changelog-required,'; then
               echo "PR has 'feature', 'bug', or 'api-change' label but is missing 'changelog-required'."
               exit 1
             fi
           fi
 
           # Now we look for 'changelog-required' label
-          if echo "$labels" | grep -q "^changelog-required$"; then
+          if echo "$clabels" | grep -q ",changelog-required,"; then
             echo "Label 'changelog-required' is set. Checking for fragments in docs/release-notes/*.rst..."
 
             if ! git diff --name-only origin/${{ github.base_ref }}... | grep -q '^docs/release-notes/.*\.rst$'; then
