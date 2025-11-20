@@ -82,17 +82,10 @@ class PrimaryFlux(TemplateNDSpectralModel):
 
     tag = ["PrimaryFlux", "dm-pf"]
 
-    def __init__(self, mDM, channel, source='PPPC4'):
+    def __init__(self, mDM, channel, source='pppc4'):
 
-        if source == 'PPPC4':
+        if source.lower() == "pppc4":
             table_filename = "$GAMMAPY_DATA/dark_matter_spectra/AtProduction_gammas.dat"
-        elif source == 'cosmixs':
-            table_filename = 'gammapy/external/CosmiXs/Data/AtProduction-Gamma.dat' #ask how to include it on gammapy datasets
-        else:
-            raise FileNotFoundError(
-                f"\n\nData source is not valid, please choose between PPC¡PC4 or cosmixs\n"
-            )
-        if source == 'PPPC4':
             if channel in ('aZ','HZ'):
                 raise ValueError(
                     f"\n\nThe channel "+channel+" is not available in PPPC4, please choose another channel or use CosmiXs (cosmixs) as source\n"
@@ -103,6 +96,8 @@ class PrimaryFlux(TemplateNDSpectralModel):
                 )
 
         elif source == 'cosmixs':
+            table_filename = 'gammapy/external/CosmiXs/Data/AtProduction-Gamma.dat'
+
             if channel in ("V->e", "V->mu", "V->tau"):
                 raise ValueError(
                     f"\n\nThe channel "+channel+" is not available in CosmiXs, please choose another channel or use PPPC4 as source\n"
@@ -111,6 +106,10 @@ class PrimaryFlux(TemplateNDSpectralModel):
                 raise ValueError(
                     f"\n\nThe channel q is not available in cosmixs, please choose an equivalent channel such as d, u or s or use PPPC4 as source\n"
                 )
+        else:
+            raise ValueError(
+                f"\n\nData source is not valid, please choose between PPPC4 or cosmixs\n"
+            )
     
         self.table_path = make_path(table_filename)
         if not self.table_path.exists():
