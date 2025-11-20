@@ -166,24 +166,28 @@ def test_sky_model_init():
 
     # test unit checks with exposure applied
     with pytest.raises(ValueError):
-        template = TemplateSpectralModel(energy=[0.5, 1, 2] * u.TeV, values=[1, 2, 3])
-        SkyModel(spectral_model=template * PowerLawNormSpectralModel())
+        template = TemplateSpectralModel(
+            energy=[0.5, 1, 2] * u.TeV, values=[1, 2, 3] * u.dimensionless_unscaled
+        )
+        SkyModel(spectral_model=template)
 
     template = TemplateSpectralModel(
         energy=[0.5, 1, 2] * u.TeV, values=[1, 2, 3] * (1 / (u.TeV * u.s * u.cm**2))
     )
-    SkyModel(spectral_model=template * PowerLawNormSpectralModel())
+    SkyModel(spectral_model=template)
 
     # test unit checks without exposure applied
     with pytest.raises(ValueError):
-        template = TemplateSpectralModel(energy=[0.5, 1, 2] * u.TeV, values=[1, 2, 3])
-        model = SkyModel(spectral_model=template * PowerLawNormSpectralModel())
+        template = TemplateSpectralModel(
+            energy=[0.5, 1, 2] * u.TeV, values=[1, 2, 3] * u.dimensionless_unscaled
+        )
+        model = SkyModel(spectral_model=template)
 
     template = TemplateSpectralModel(
         energy=[0.5, 1, 2] * u.TeV, values=[1, 2, 3] * (1 / u.TeV)
     )
     model = SkyModel(
-        spectral_model=template * PowerLawNormSpectralModel(),
+        spectral_model=template,
         apply_irf={"exposure": False},
     )
 
