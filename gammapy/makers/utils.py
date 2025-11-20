@@ -174,7 +174,7 @@ def make_map_background_irf(
     use_region_center=True,
     location=None,
 ):
-    """Compute background map from background IRFs.
+    """Compute a on-sky background map from background IRFs.
 
     Parameters
     ----------
@@ -809,6 +809,7 @@ def integrate_project_irf_on_geom(geom, irf, fov_frame, use_region_center=True):
     )
     for axis_name in non_spatial_axes:
         coords[axis_name] = broadcast_axis_values_to_geom(new_geom, axis_name, False)
+    breakpoint()
     data = irf.integrate_log_log(**coords, axis_name="energy")
 
     if len(fov_frame.shape) == 1:
