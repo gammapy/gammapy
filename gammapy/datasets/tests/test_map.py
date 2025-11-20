@@ -18,6 +18,7 @@ from gammapy.datasets import (
     Datasets,
     MapDataset,
     MapDatasetOnOff,
+    SpectrumDataset,
     create_empty_map_dataset_from_irfs,
     create_map_dataset_from_observation,
     create_map_dataset_geoms,
@@ -1116,6 +1117,20 @@ def test_create_high_dimension():
 
     assert empty_dataset2.edisp.edisp_map.data.shape == (2, 3, 50, 10, 10)
     assert empty_dataset2.edisp.exposure_map.data.shape == (2, 3, 1, 10, 10)
+
+
+def test_create_spectrum():
+    # tests creation of SpectrumDataset
+    e_reco = MapAxis.from_edges(
+        np.logspace(-1.0, 1.0, 3), name="energy", unit=u.TeV, interp="log"
+    )
+    e_true = MapAxis.from_edges(
+        np.logspace(-1.0, 1.0, 4), name="energy_true", unit=u.TeV, interp="log"
+    )
+    geom = RegionGeom.create(region=None, axes=[e_reco])
+    empty_dataset = SpectrumDataset.create(geom=geom, energy_axis_true=e_true)
+
+    assert empty_dataset.psf is None
 
 
 def test_stack(sky_model):
