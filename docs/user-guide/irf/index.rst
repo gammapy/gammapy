@@ -7,6 +7,8 @@ Typically the IRFs are stored in the form of multidimensional tables giving
 the response functions such as the distribution of gamma-like events or the
 probability density functions of the reconstructed energy and position.
 
+.. _npred:
+
 Expected number of detected events
 ----------------------------------
 
@@ -154,5 +156,3 @@ Using gammapy.irf
 
     ../examples/tutorials/details/irfs.py
     ../examples/tutorials/analysis-1d/cta_sensitivity.py
-
-
