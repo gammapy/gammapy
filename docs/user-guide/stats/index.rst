@@ -87,6 +87,11 @@ They are used also to estimate the excess counts significance, i.e. the probabil
 a given number of measured events :math:`n_{\mathrm{on}}` actually contains some signal events :math:`n_{\mathrm{sig}}`,
 as well as the errors associated to this estimated number of signal counts.
 
+Estimation of the predicted number of counts
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The formula are be found in this section: :ref:`npred`.
+
 .. _ts:
 
 Estimating TS
@@ -305,4 +310,3 @@ These are references describing the available methods:
 * [LiMa1983]_,
 * [Cash1979]_,
 * [Stewart2009]_,
-
