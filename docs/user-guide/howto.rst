@@ -25,6 +25,7 @@ Please give feedback and suggest additions to this page!
 
 
 .. dropdown:: Select observations
+    :name: dropdown-select-obs
 
     The `~gammapy.data.DataStore` provides access to a summary table of all observations available.
     It can be used to select observations with various criterion. You can for instance apply a cone search
@@ -39,12 +40,13 @@ Please give feedback and suggest additions to this page!
 
 
 .. dropdown:: Make observation duration maps
+    :name: dropdown-obs-map
 
     Gammapy offers a number of methods to explore the content of the various IRFs
     contained in an observation. This is usually done thanks to their ``peek()``
     methods.
 
-    .. button-link:: ../tutorials/api/makers.html#observation-duration-and-effective-livetime
+    .. button-link:: ../tutorials/details/makers.html#observation-duration-and-effective-livetime
        :color: primary
        :shadow:
 
@@ -52,12 +54,13 @@ Please give feedback and suggest additions to this page!
 
 
 .. dropdown:: Group observations
+    :name: dropdown-group-obs
 
     `~gammapy.data.Observations` can be grouped depending on a number of various quantities.
     The two methods to do so are manual grouping and hierarchical clustering. The quantity
     you group by can be adjusted according to each science case.
 
-    .. button-link:: ../tutorials/api/observation_clustering.html
+    .. button-link:: ../tutorials/details/observation_clustering.html
        :color: primary
        :shadow:
 
@@ -65,12 +68,13 @@ Please give feedback and suggest additions to this page!
 
 
 .. dropdown:: Make an on-axis equivalent livetime map
+    :name: dropdown-livetime-map
 
     The `~gammapy.data.DataStore` provides access to a summary table of all observations available.
     It can be used to obtain various quantities from your `~gammapy.data.Observations` list, such as livetime.
     The on-axis equivalent number of observation hours on the source can be calculated.
 
-    .. button-link:: ../tutorials/api/makers.html#observation-duration-and-effective-livetime
+    .. button-link:: ../tutorials/details/makers.html#observation-duration-and-effective-livetime
        :color: primary
        :shadow:
 
@@ -78,6 +82,7 @@ Please give feedback and suggest additions to this page!
 
 
 .. dropdown:: Compute minimum number of counts of significance per bin
+    :name: dropdown-resample
 
     The `~gammapy.estimators.utils.resample_energy_edges` provides a way to resample the energy bins
     to satisfy a minimum number of counts of significance per bin.
@@ -91,6 +96,7 @@ Please give feedback and suggest additions to this page!
 
 
 .. dropdown:: Choose units for plotting
+    :name: dropdown-plotting-units
 
     Units for plotting are handled with a combination of `matplotlib` and `astropy.units`.
     The methods `ax.xaxis.set_units()` and `ax.yaxis.set_units()` allow
@@ -111,12 +117,13 @@ Please give feedback and suggest additions to this page!
         fp.plot(ax=ax, sed_type="e2dnde")
 
 
-.. dropdown:: Compute source significance
+.. dropdown:: Compute the significance of a source
+    :name: dropdown-src-sig
 
-    Estimate the significance of a source, or more generally of an additional model
+    Estimating the significance of a source, or more generally of an additional model
     component (such as e.g. a spectral line on top of a power-law spectrum), is done
-    via a hypothesis test. You fit two models, with and without the extra source or
-    component, then use the test statistic values from both fits to compute the
+    via a hypothesis test. You fit two models: one including the source or component and one without it. Then,
+    compute the difference in the test statistic (TS) between the two fits to determine the
     significance or p-value. To obtain the test statistic, call
     `~gammapy.modeling.Dataset.stat_sum` for the model corresponding to your two
     hypotheses (or take this value from the print output when running the fit), and
@@ -127,19 +134,21 @@ Please give feedback and suggest additions to this page!
 
 
 .. dropdown:: Perform data reduction loop with multi-processing
+    :name: dropdown-reduction-loop
 
     There are two ways for the data reduction steps to be implemented. Either a loop is used to
     run the full reduction chain, or the reduction is performed with multi-processing tools by
     utilising the `~gammapy.makers.DatasetsMaker` to perform the loop internally.
 
-    .. button-link:: ../tutorials/api/makers.html#data-reduction-loop
+    .. button-link:: ../tutorials/details/makers.html#data-reduction-loop
        :color: primary
        :shadow:
 
        To the tutorial...
 
 
-.. dropdown:: Compute cumulative significance
+.. dropdown:: Compute cumulative significance over time
+    :name: dropdown-cumulative-sig
 
     A classical plot in gamma-ray astronomy is the cumulative significance of a
     source as a function of observing time. In Gammapy, you can produce it with 1D
@@ -155,10 +164,11 @@ Please give feedback and suggest additions to this page!
 
 
 .. dropdown:: Implement a custom model
+    :name: dropdown-custom-model
 
     Gammapy allows the flexibility of using user-defined models for analysis.
 
-    .. button-link:: ../tutorials/api/models.html#implementing-a-custom-model
+    .. button-link:: ../tutorials/details/models.html#implementing-a-custom-model
        :color: primary
        :shadow:
 
@@ -166,11 +176,12 @@ Please give feedback and suggest additions to this page!
 
 
 .. dropdown:: Implement energy dependent spatial models
+    :name: dropdown-edep-spatial
 
     While Gammapy does not ship energy dependent spatial models, it is possible to define
     such models within the modeling framework.
 
-    .. button-link:: ../tutorials/api/models.html#models-with-energy-dependent-morphology
+    .. button-link:: ../tutorials/details/models.html#models-with-energy-dependent-morphology
        :color: primary
        :shadow:
 
@@ -178,6 +189,7 @@ Please give feedback and suggest additions to this page!
 
 
 .. dropdown:: Model astrophysical source spectra
+    :name: dropdown-astro-src-spec
 
     It is possible to combine Gammapy with astrophysical modeling codes, if they
     provide a Python interface. Usually this requires some glue code to be written,
@@ -188,6 +200,7 @@ Please give feedback and suggest additions to this page!
 
 
 .. dropdown:: Model temporal profiles
+    :name: dropdown-temp-model
 
     Temporal models can be directly fit on available lightcurves,
     or on the reduced datasets. This is done through a joint fitting of the datasets,
@@ -201,6 +214,7 @@ Please give feedback and suggest additions to this page!
 
 
 .. dropdown:: Improve fit convergence with constraints on the source position
+    :name: dropdown-improve-fit
 
     It happens that a 3D fit does not converge with warning messages indicating that the
     scanned positions of the model are outside the valid IRF map range. The type of warning message is:
@@ -214,12 +228,12 @@ Please give feedback and suggest additions to this page!
 
     The simple solution is to add a physically-motivated range on the model's position, e.g. within
     the field of view or around an excess position. Most of the time, this tip solves the issue.
-    The documentation of the
-    `models sub-package <https://docs.gammapy.org/1.0/tutorials/api/models.html#modifying-model-parameters>`_
+    The documentation of the :ref:`models sub-package <modifying-model-parameters>`
     explains how to add a validity range of a model parameter.
 
 
 .. dropdown:: Reduce memory budget for large datasets
+    :name: dropdown-reduce-mem
 
     When dealing with surveys and large sky regions, the amount of memory required might become
     problematic, in particular because of the default settings of the IRF maps stored in the
@@ -236,6 +250,7 @@ Please give feedback and suggest additions to this page!
 
 
 .. dropdown:: Copy part of a data store
+    :name: dropdown-copy-datastore
 
     To share specific data from a database, it might be necessary to create a new data storage with
     a limited set of observations and summary files following the scheme described in gadf_.
@@ -245,16 +260,18 @@ Please give feedback and suggest additions to this page!
 
 
 .. dropdown:: Interpolate onto a different geometry
+    :name: dropdown-interp-geom
 
     To interpolate maps onto a different geometry use `~gammapy.maps.Map.interp_to_geom`.
 
-    .. button-link:: ../tutorials/api/maps.html#filling-maps-from-interpolation
+    .. button-link:: ../tutorials/details/maps.html#filling-maps-from-interpolation
        :color: primary
        :shadow:
 
        To the tutorial...
 
 .. dropdown:: Suppress warnings
+    :name: dropdown-suppress-warn
 
     In general it is not recommended to suppress warnings from code because they
     might point to potential issues or help debugging a non-working script. However
@@ -273,19 +290,23 @@ Please give feedback and suggest additions to this page!
 
 
 .. dropdown:: Avoid NaN results in Flux Point estimation
+    :name: dropdown-UL
 
     Sometimes, upper limit values may show as ``nan`` while running a `~gammapy.estimators.FluxPointsEstimator`
-    or a `~gammapy.estimators.LightCurveEstimator`. This often arises because the range of the norm parameter
-    being scanned over is not sufficient. Increasing this range usually solves the problem. In some cases,
-    you can also consider configuring the estimator with a different `~gammapy.modeling.Fit` backend.
+    or a `~gammapy.estimators.LightCurveEstimator`. This likely arises because the min/max range of the `norm` parameter
+    attribute attached to the estimator is not well-chosen (the automatic default may not be valid for all use cases).
+    Setting these min/max to large values usually solves the problem (see the attributes of `norm`
+    `~gammapy.modeling.Parameter`). In some cases, you can also consider configuring the estimator with a different
+    `~gammapy.modeling.Fit` backend.
 
-    .. button-link:: ../tutorials/api/estimators.html#a-fully-configured-flux-points-estimatio
+    .. button-link:: ../tutorials/details/estimators.html#a-fully-configured-flux-points-estimatio
        :color: primary
        :shadow:
 
        To the tutorial...
 
 .. dropdown:: Display a progress bar
+    :name: dropdown-progress-bar
 
     Gammapy provides the possibility of displaying a
     progress bar to monitor the advancement of time-consuming processes. To activate this
@@ -311,6 +332,7 @@ Please give feedback and suggest additions to this page!
 
 
 .. dropdown:: Change plotting style and color-blind friendly visualizations
+    :name: dropdown-colorblind-friendly
 
     As the Gammapy visualisations are using the library `matplotlib` that provides color styles,
     it is possible to change the default colors map of the Gammapy plots. Using using the
@@ -346,6 +368,7 @@ Please give feedback and suggest additions to this page!
 
 
 .. dropdown:: Add PHASE information to your data
+    :name: dropdown-phase-info
 
     To do a pulsar analysis, one must compute the pulsar phase of
     each event and put this new information in a new `~gammapy.data.Observation`.
@@ -378,7 +401,7 @@ Please give feedback and suggest additions to this page!
         obs2 = obs.copy(events=new_events, in_memory=True)
 
         # The new observation and the new events table can be serialised independently
-        obs2.write("new_obs.fits.gz")
-        obs2.write("events.fits.gz", include_irfs=False)
+        obs2.write("new_obs.fits.gz", overwrite=True)
+        obs2.write("events.fits.gz", include_irfs=False, overwrite=True)
 
 

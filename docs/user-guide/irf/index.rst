@@ -7,6 +7,8 @@ Typically the IRFs are stored in the form of multidimensional tables giving
 the response functions such as the distribution of gamma-like events or the
 probability density functions of the reconstructed energy and position.
 
+.. _npred:
+
 Expected number of detected events
 ----------------------------------
 
@@ -25,7 +27,7 @@ We can write the expected number of detected events in a bin [:math:`{\rm d}p,\,
 
 .. math::
 
-   N(p, E) \, {\rm d}p {\rm d}E = {N(p, E)_{\rm bkg}} \, {\rm d}p {\rm d}E + {N(p, E)_{\rm sce}} \, {\rm d}p {\rm d}E
+   N(p, E) \, {\rm d}p {\rm d}E = {N(p, E)_{\rm bkg}} \, {\rm d}p {\rm d}E + {N(p, E)_{\rm src}} \, {\rm d}p {\rm d}E
 
 with:
 
@@ -39,7 +41,7 @@ and with:
 
 .. math::
 
-   {N(p, E)_{\rm sce}} \, {\rm d}p {\rm d}E =
+   {N(p, E)_{\rm src}} \, {\rm d}p {\rm d}E =
    t_{\rm obs} \int_{E_{\rm true}} {\rm d}E_{\rm true} \, \int_{p_{\rm true}} {\rm d}p_{\rm true} \, R(p, E|p_{\rm true}, E_{\rm true}) \times \Phi(p_{\rm true}, E_{\rm true})
 
 where:
@@ -122,11 +124,11 @@ Further details on individuals responses and how they are implemented in Gammapy
 
 
 Most of the formats defined at :ref:`gadf:iact-irf` are supported. Currently, there is some support for
-:term:`Fermi-LAT` and other instruments, with ongoing efforts to improve this.
+Fermi-LAT and other instruments, with ongoing efforts to improve this.
 
 Most users will not use `gammapy.irf` directly, but will instead use IRFs as part of their spectrum,
 image or cube analysis (via e.g. the `~gammapy.makers.MapDatasetMaker` during the data reduction,
-see :doc:`user-guide/makers/index`).
+see :doc:`/user-guide/makers/index`).
 
 
 
@@ -152,7 +154,5 @@ Using gammapy.irf
 
 .. minigallery::
 
-    ../examples/tutorials/api/irfs.py
+    ../examples/tutorials/details/irfs.py
     ../examples/tutorials/analysis-1d/cta_sensitivity.py
-
-

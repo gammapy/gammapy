@@ -32,8 +32,8 @@ Using gammapy.catalog
 .. minigallery::
     :add-heading: Examples using `~gammapy.catalog`
 
-    ../examples/tutorials/tutorials/api/catalog.py
+    ../examples/tutorials/tutorials/details/catalog.py
     ../examples/tutorials/starting/overview.py
     ../examples/tutorials/analysis-1d/sed_fitting
-    ../examples/tutorials/api/model_management.py
+    ../examples/tutorials/details/model_management.py
 

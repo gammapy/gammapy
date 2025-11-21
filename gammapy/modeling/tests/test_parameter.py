@@ -194,6 +194,29 @@ def test_unique_parameters():
     assert parameters_unique.names == ["a", "b", "c"]
 
 
+def test_free_parameters():
+    a = Parameter("a", 1, frozen=False)
+    b = Parameter("b", 2, frozen=True)
+    c = Parameter("c", 2, frozen=False)
+
+    parameters = Parameters([a, b, c])
+    free = parameters.free_parameters
+    assert free.names == ["a", "c"]
+    assert all(not par.frozen for par in free)
+
+
+def test_free_unique_parameters():
+    a = Parameter("a", 1, frozen=False)
+    b = Parameter("b", 2, frozen=True)
+    c = Parameter("c", 4, frozen=False)
+    d = Parameter("d", 4, frozen=False)
+    d = a
+    parameters = Parameters([a, b, c, d])
+    free_unique = parameters.free_unique_parameters
+    assert free_unique.names == ["a", "c"]
+    assert all(not par.frozen for par in free_unique)
+
+
 def test_parameters_getitem(pars):
     assert pars[1].name == "ham"
     assert pars["ham"].name == "ham"
@@ -295,7 +318,7 @@ def test_parameters_s():
     assert_allclose(pars[1].factor, 20)
     assert_allclose(pars[1].scale, 1)
 
-    # test for backward compatibilty
+    # test for backward compatibility
     pars_dict[0]["is_norm"] = True
     pars = Parameters.from_dict(pars_dict)
     assert not hasattr(pars[0], "is_norm")
@@ -404,13 +427,13 @@ def test_priorparameters_basics(priorpars):
 
 
 def test_priorparameters_to_table(priorpars):
-    priorpars["ham"].vallue = 1e-10
+    priorpars["ham"].value = 1e-10
     priorpars["spam"]._link_label_io = "test"
     table = priorpars.to_table()
     assert len(table) == 2
     assert len(table.columns) == 7
     assert table["name"][0] == "spam"
-    assert table["value"][1] == 99
+    assert table["value"][1] == 1e-10
 
 
 def test_parameter_set_min_max_error(default_parameter):

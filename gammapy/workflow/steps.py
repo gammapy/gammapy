@@ -61,7 +61,7 @@ class WorkflowStepBase(abc.ABC):
 
 
 class WorkflowStep:
-    "Create one of the workflow step class listed in the registry"
+    """Create one of the workflow step class listed in the registry."""
 
     @staticmethod
     def create(tag, config, **kwargs):
@@ -454,7 +454,6 @@ class FluxPointsWorkflowStep(WorkflowStepBase):
 
     def _run(self):
         """Calculate flux points for a specific model component."""
-
         if not self.data.datasets:
             raise RuntimeError(
                 "No datasets defined. Impossible to compute flux points."

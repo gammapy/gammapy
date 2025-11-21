@@ -1,3 +1,5 @@
+.. include:: ../../references.txt
+
 .. _hpxmap:
 
 HEALPix-based maps
@@ -10,8 +12,8 @@ without reference to its pixelization scheme.
 
 .. warning::
 
-    Gammapy uses `NEST` as default pixel order scheme, while `~healpy`
-    functions have `RING` as the default (see https://healpy.readthedocs.io/en/1.11.0/index.html).
+    Gammapy uses ``NEST`` as default pixel order scheme, while `healpy`
+    functions have ``RING`` as the default (see `here <https://healpy.readthedocs.io/en/stable/index.html>`__).
     If you are interfacing Gammapy HEALPix maps with `~healpy` functions, you need to specify the pixelization scheme
     either while creating the Gammapy object or when using the `~healpy` functions.
 
@@ -19,7 +21,7 @@ HEALPix geometry
 ----------------
 
 The `~gammapy.maps.HpxGeom` class encapsulates the geometry of a HEALPix map:
-the pixel size (NSIDE), coordinate system, and definition of non-spatial axes
+the pixel size (``NSIDE``), coordinate system, and definition of non-spatial axes
 (e.g. energy).  By default a HEALPix geometry will encompass the full sky.  The
 following example shows how to create an all-sky 2D HEALPix image:
 

@@ -119,12 +119,18 @@ Glossary
     MET
       Short for "mission elapsed time". See also :ref:`MET_definition` in :ref:`time_handling`.
 
+    Migration
+        This is a quantity described by the true and reconstructed energy: :math:`\mu = E_{\rm{reco}} / E_{\rm{true}}`
+
+    Offset
+        The angular separation from the field of view (FoV) center.
+
     PSF
       Short for "point spread function": it is the IRF representing the probability density of the angular separation
       between true and reconstructed directions. See :ref:`irf` and :ref:`irf-psf`.
 
     Reco Energy
-      The reconstructed (or measured) energy (often written `e_reco`) is the energy of
+      The reconstructed (or measured) energy (often written ``e_reco``) is the energy of
       the measured photon by contrast with its actual true energy. Measured quantities
       such as counts are represented along a reco energy axis.
 
@@ -142,7 +148,7 @@ Glossary
     SED
       Short for "spectral energy distribution". For a spectral model or flux points
       object, the type of plot (e.g. :math:`dN/dE`, :math:`E^2\ dN/dE`) is typically adjusted
-      through the `sed_type` quantity. See :ref:`sedtypes` for a list of options.
+      through the ``sed_type`` quantity. See :ref:`sedtypes` for a list of options.
 
 
     Stacked Analysis
@@ -154,7 +160,7 @@ Glossary
       but this can reduce very significantly the computing and memory cost. For details, see :ref:`stack`
 
     True Energy
-      The true energy (often written `e_true`) is the energy of the incident photon
+      The true energy (often written ``e_true``) is the energy of the incident photon
       by contrast with the energy reconstructed by the instrument. Instrument response
       functions are represented along a true energy axis.
 

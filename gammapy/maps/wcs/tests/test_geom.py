@@ -1,16 +1,18 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
+import logging
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from astropy.io import fits
 from astropy.time import Time
-from regions import CircleSkyRegion
+from regions import CircleSkyRegion, PointSkyRegion
 from gammapy.maps import Map, MapAxis, TimeMapAxis, WcsGeom
 from gammapy.maps.utils import _check_binsz, _check_width
 from gammapy.utils.scripts import make_path
-from gammapy.utils.testing import requires_data
+from gammapy.utils.testing import requires_data, requires_dependency
+import gammapy.utils.cache as cache
 
 axes1 = [MapAxis(np.logspace(0.0, 3.0, 3), interp="log", name="energy")]
 axes2 = [
@@ -344,16 +346,7 @@ def test_wcs_geom_instance_cache():
 
     coord_1, coord_2 = geom_1.get_coord(), geom_2.get_coord()
 
-    assert geom_1.get_coord.cache_info().misses == 1
-    assert geom_2.get_coord.cache_info().misses == 1
-
     coord_1_cached, coord_2_cached = geom_1.get_coord(), geom_2.get_coord()
-
-    assert geom_1.get_coord.cache_info().hits == 1
-    assert geom_2.get_coord.cache_info().hits == 1
-
-    assert geom_1.get_coord.cache_info().currsize == 1
-    assert geom_2.get_coord.cache_info().currsize == 1
 
     assert id(coord_1) == id(coord_1_cached)
     assert id(coord_2) == id(coord_2_cached)
@@ -432,6 +425,7 @@ def test_region_mask():
 
     r1 = CircleSkyRegion(SkyCoord(0, 0, unit="deg"), 1 * u.deg)
     r2 = CircleSkyRegion(SkyCoord(20, 20, unit="deg"), 1 * u.deg)
+    r3 = PointSkyRegion(SkyCoord(0.5, 0.5, unit="deg"))
     regions = [r1, r2]
 
     mask = geom.region_mask(regions)
@@ -440,6 +434,10 @@ def test_region_mask():
 
     mask = geom.region_mask(regions, inside=False)
     assert np.sum(mask.data) == 8
+
+    mask = geom.region_mask([r3])
+    assert np.sum(mask.data) == 4
+    assert mask.data.dtype == bool
 
 
 def test_energy_mask():
@@ -687,3 +685,54 @@ def test_wcs_geom_with_timeaxis():
         [[4.000e-01, 2.000e-01, 0.000e00, 3.598e02, 3.596e02]],
         rtol=1e-5,
     )
+
+
+@requires_dependency("ray")
+def test_instance_cache():
+    cache.USE_INSTANCE_CACHE = True
+
+    kwargs = dict(skydir=(83.63, 22.01), width=5, binsz=0.02)
+
+    geom1 = WcsGeom.create(**kwargs)
+    geom2 = WcsGeom.create(**kwargs)
+    geom3 = WcsGeom.create(width=5, binsz=0.02, skydir=(83.63, 22.01))  # reordered
+
+    assert geom1 is geom2
+    assert geom1 is geom3
+    assert len(list(WcsGeom._instances._dict[id(WcsGeom)][0].keys())) == 1
+
+    geom4 = WcsGeom.create(width=5, binsz=0.05, skydir=(83.63, 22.01))  # different
+    assert geom4 is not geom1
+    assert len(list(WcsGeom._instances._dict[id(WcsGeom)][0].keys())) == 2
+
+    cache.USE_INSTANCE_CACHE = False
+
+    kwargs = dict(skydir=(83.63, 22.01), width=5, binsz=0.02)
+
+    geom1 = WcsGeom.create(**kwargs)
+    geom2 = WcsGeom.create(**kwargs)
+
+    assert geom1 is not geom2
+
+
+def test_caplog(caplog):
+    geom1 = WcsGeom.create(width=5, binsz=0.05, skydir=(83.63, 22.01))
+    geom2 = WcsGeom.create(width=1, binsz=0.05, skydir=(83.63, 22.01))
+
+    caplog.set_level(logging.DEBUG)
+    assert geom1 != geom2
+    assert "WcsGeom data shape is not equal" in [_.message for _ in caplog.records]
+    assert "DEBUG" in [_.levelname for _ in caplog.records]
+
+    geom2 = WcsGeom.create(width=5, binsz=0.05, skydir=(8.63, 22.01))
+    assert geom1 != geom2
+    assert "WcsGeom wcs is not equal" in [_.message for _ in caplog.records]
+    assert "DEBUG" in [_.levelname for _ in caplog.records]
+
+    axis1 = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3, name="energy_true")
+    axis2 = MapAxis.from_energy_bounds("2 TeV", "10 TeV", nbin=3, name="energy")
+    geom1 = WcsGeom.create(width=5, binsz=0.05, skydir=(83.63, 22.01), axes=[axis1])
+    geom2 = WcsGeom.create(width=5, binsz=0.05, skydir=(83.63, 22.01), axes=[axis2])
+    assert geom1 != geom2
+    assert "WcsGeom axes are not equal" in [_.message for _ in caplog.records]
+    assert "DEBUG" in [_.levelname for _ in caplog.records]

@@ -71,7 +71,7 @@ Number of flux points: 30
 Flux points table: 
 
 e_ref  e_min  e_max        dnde         dnde_errn       dnde_errp        dnde_ul     is_ul
- TeV    TeV    TeV   1 / (cm2 s TeV) 1 / (cm2 s TeV) 1 / (cm2 s TeV) 1 / (cm2 s TeV)      
+ TeV    TeV    TeV   1 / (TeV s cm2) 1 / (TeV s cm2) 1 / (TeV s cm2) 1 / (TeV s cm2)      
 ------ ------ ------ --------------- --------------- --------------- --------------- -----
  0.230  0.210  0.250       5.239e-10       9.852e-11       9.852e-11             nan False
  0.270  0.250  0.290       3.416e-10       4.426e-11       4.426e-11             nan False

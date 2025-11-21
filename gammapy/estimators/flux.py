@@ -27,12 +27,15 @@ class FluxEstimator(ParameterEstimator):
     ----------
     source : str or int
         For which source in the model to compute the flux.
-    n_sigma : int, optional
-        Sigma to use for asymmetric error computation. Default is 1.
-    n_sigma_ul : int, optional
-        Sigma to use for upper limit computation. Default is 2.
-    n_sigma_sensitivity : int, optional
-        Sigma to use for sensitivity computation. Default is 5.
+    n_sigma : float, optional
+        Sigma to use for asymmetric error computation. Must be a positive value.
+        Default is 1.
+    n_sigma_ul : float, optional
+        Sigma to use for upper limit computation. Must be a positive value.
+        Default is 2.
+    n_sigma_sensitivity : float, optional
+        Sigma to use for sensitivity computation. Must be a positive value.
+        Default is 5.
     selection_optional : list of str, optional
         Which additional quantities to estimate. Available options are:
 
@@ -42,9 +45,9 @@ class FluxEstimator(ParameterEstimator):
             * "scan": estimate fit statistic profiles.
 
         Default is None so the optional steps are not executed.
-    fit : `Fit`, optional
+    fit : `~gammapy.modeling.Fit`, optional
         Fit instance specifying the backend and fit options.
-        Fit instance specifying the backend and fit options. If None, the `~gammapy.modeling.Fit` instance is created internally. Default is None.
+        If None, the `~gammapy.modeling.Fit` instance is created internally. Default is None.
     reoptimize : bool, optional
         If True, the free parameters of the other models are fitted in each bin independently,
         together with the norm of the source of interest
@@ -95,12 +98,12 @@ class FluxEstimator(ParameterEstimator):
 
         Parameters
         ----------
-        models : `Models`
+        models : `~gammapy.modeling.Models`
             Models.
 
         Returns
         -------
-        model : `ScaleSpectralModel`
+        model : `~gammapy.modeling.ScaleSpectralModel`
             Scale spectral model.
         """
         ref_model = models[self.source].spectral_model
@@ -113,7 +116,7 @@ class FluxEstimator(ParameterEstimator):
 
         Parameters
         ----------
-        datasets : Datasets
+        datasets : `~gammapy.datasets.Datasets`
             Datasets.
 
         Returns
@@ -154,6 +157,10 @@ class FluxEstimator(ParameterEstimator):
 
         energy_min, energy_max = datasets.energy_ranges
         energy_axis = MapAxis.from_energy_edges([energy_min.min(), energy_max.max()])
+        if np.any(model(energy_axis.edges).value < 0.0):
+            log.warning(
+                "Reference source model predicts negative flux. Results of estimator should be interpreted with caution"
+            )
 
         with np.errstate(invalid="ignore", divide="ignore"):
             result = model.reference_fluxes(energy_axis=energy_axis)

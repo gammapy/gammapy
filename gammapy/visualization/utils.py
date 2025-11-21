@@ -287,9 +287,9 @@ def plot_distribution(
     axes : `~numpy.ndarray` of `~matplotlib.pyplot.Axes`
         Array of Axes.
     result_list : list of dict
-        List of dictionnary that contains the results of `scipy.optimize.curve_fit`. The number of elements in the list
+        List of dictionary that contains the results of `scipy.optimize.curve_fit`. The number of elements in the list
         correspond to the dimension of the non-spatial axis of the map.
-        The dictionnary contains:
+        The dictionary contains:
 
             * `axis_edges` : the edges of the non-spatial axis bin used
             * `param` : the best-fit parameters of the input function `func`
@@ -309,7 +309,6 @@ def plot_distribution(
     >>> func = lambda x, mu, sig : norm.pdf(x, loc=mu, scale=sig)
     >>> axs, res = plot_distribution(tsmap_est.sqrt_ts, func=func, kwargs_hist={'bins': 75, 'range': (-10, 10), 'density': True})
     """
-
     from gammapy.maps import WcsNDMap  # import here to avoid circular import
 
     if not isinstance(wcs_map, WcsNDMap):
@@ -331,7 +330,9 @@ def plot_distribution(
             raise ValueError("Map and mask spatial geometry must agree!")
 
         if not mask.is_mask:
-            raise ValueError(f"Mask map must be of boolean type, got {mask.data.dtype} instead.")
+            raise ValueError(
+                f"Mask map must be of boolean type, got {mask.data.dtype} instead."
+            )
 
         cutout_mask.data = np.logical_and(cutout_mask.data, mask.data)
 

@@ -20,6 +20,7 @@ __all__ = ["Dataset", "Datasets"]
 
 class Dataset(abc.ABC):
     """Dataset abstract base class.
+
     For now, see existing examples of type of datasets:
 
     - `gammapy.datasets.MapDataset`
@@ -27,10 +28,9 @@ class Dataset(abc.ABC):
     - `gammapy.datasets.FluxPointsDataset`
 
     For more information see :ref:`datasets`.
-
-    TODO: add tutorial how to create your own dataset types.
     """
 
+    # TODO: add tutorial how to create your own dataset types.
     _residuals_labels = {
         "diff": "data - model",
         "diff/model": "(data - model) / model",
@@ -92,7 +92,7 @@ class Dataset(abc.ABC):
         return self._fit_statistic.stat_array_dataset(self)
 
     def copy(self, name=None):
-        """A deep copy.
+        """Deep copy.
 
         Parameters
         ----------
@@ -368,7 +368,6 @@ class Datasets(collections.abc.MutableSequence):
         energy_min, energy_max : `~astropy.units.Quantity`
             Energy range.
         """
-
         energy_mins, energy_maxs = [], []
 
         for dataset in self:
@@ -406,7 +405,7 @@ class Datasets(collections.abc.MutableSequence):
             return f"<pre>{html.escape(str(self))}</pre>"
 
     def copy(self):
-        """A deep copy."""
+        """Deep copy."""
         return copy.deepcopy(self)
 
     @classmethod
@@ -460,7 +459,7 @@ class Datasets(collections.abc.MutableSequence):
         filename_models=None,
         overwrite=False,
         write_covariance=True,
-        checksum=False,
+        checksum=True,
     ):
         """Serialize datasets to YAML and FITS files.
 
@@ -476,7 +475,7 @@ class Datasets(collections.abc.MutableSequence):
             save covariance or not. Default is True.
         checksum : bool
             When True adds both DATASUM and CHECKSUM cards to the headers written to the FITS files.
-            Default is False.
+            Default is True.
         """
         path = make_path(filename)
 

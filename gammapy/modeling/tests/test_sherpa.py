@@ -64,7 +64,6 @@ def test_sherpa_frozen(pars):
     assert_allclose(ds.fcn(), 0.11111111, rtol=1e-6)
 
 
-@pytest.mark.xfail
 def test_sherpa_limits(pars):
     ds = MyDataset(pars)
     pars["y"].min = 301000
@@ -73,6 +72,12 @@ def test_sherpa_limits(pars):
 
     assert info["success"]
 
+    # Check that optimiser respects bound
+    assert pars["y"].value >= pars["y"].min
+
     # Check the result in parameters is OK
-    assert_allclose(pars["x"].value, 2, rtol=1e-2)
-    assert_allclose(pars["y"].value, 301000, rtol=1e-3)
+    assert_allclose(pars["x"].value, 2.0, rtol=1e-2)
+    assert_allclose(pars["z"].value, 4e-5, rtol=1e-2)
+
+    # Check function value is minimised given the bound
+    assert_allclose(ds.fcn(), ((pars["y"].value - 3e5) / 3e4) ** 2, rtol=1e-6)

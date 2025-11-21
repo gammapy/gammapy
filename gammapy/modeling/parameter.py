@@ -10,6 +10,8 @@ import numpy as np
 from astropy import units as u
 from astropy.table import Table
 from gammapy.utils.interpolation import interpolation_scale
+from gammapy.utils.scripts import make_name
+
 
 __all__ = ["Parameter", "Parameters", "PriorParameter", "PriorParameters"]
 
@@ -318,7 +320,7 @@ class Parameter:
 
     @property
     def scale_transform(self):
-        """scale interp : {"lin", "sqrt", "log"}"""
+        """Scale interp : {"lin", "sqrt", "log"}."""
         return self._scale_transform
 
     @scale_transform.setter
@@ -376,6 +378,7 @@ class Parameter:
     @property
     def conf_min(self):
         """Confidence minimum value as a `float`.
+
         Return parameter minimum if defined, otherwise  a default is estimated from value and error.
         """
         if not np.isnan(self.min):
@@ -390,9 +393,9 @@ class Parameter:
     @property
     def conf_max(self):
         """Confidence maximum value as a `float`.
+
         Return parameter maximum if defined, otherwise a default is estimated from value and error.
         """
-
         if not np.isnan(self.max):
             return self.max
         else:
@@ -456,8 +459,8 @@ class Parameter:
     def check_limits(self):
         """Emit a warning or error if value is outside the minimum/maximum range."""
         if not self.frozen:
-            if (~np.isnan(self.min) and (self.value <= self.min)) or (
-                ~np.isnan(self.max) and (self.value >= self.max)
+            if (~np.isnan(self.min) and (self.value < self.min)) or (
+                ~np.isnan(self.max) and (self.value > self.max)
             ):
                 log.warning(
                     f"Value {self.value} is outside bounds [{self.min}, {self.max}]"
@@ -574,11 +577,11 @@ class Parameter:
         return interp_scale._inverse_deriv(self.scale * factor) * self.scale
 
     def autoscale(self):
-        "Apply `~gammapy.utils.interpolation.interpolation_scale` and `scale_method` to the parameter."
+        """Apply `~gammapy.utils.interpolation.interpolation_scale` and `scale_method` to the parameter."""
         self.factor = self.transform(self.value, update_scale=True)
 
     def reset_autoscale(self):
-        "Reset scaling such as factor=value, scale=1."
+        """Reset scaling such as factor=value, scale=1."""
         self._factor = self._value
         self._scale = 1.0
 
@@ -699,6 +702,11 @@ class Parameters(collections.abc.Sequence):
         return self.__class__(dict.fromkeys(self._parameters))
 
     @property
+    def free_unique_parameters(self):
+        """List of free and unique parameters."""
+        return self.__class__([par for par in self.unique_parameters if not par.frozen])
+
+    @property
     def names(self):
         """List of parameter names."""
         return [par.name for par in self._parameters]
@@ -762,8 +770,22 @@ class Parameters(collections.abc.Sequence):
         }
         return Table(names=name_to_type.keys(), dtype=name_to_type.values())
 
+    def update_link_label(self):
+        """Update linked parameters labels used for serialisation and print."""
+        params_list = []
+        params_shared = []
+        for param in self:
+            if param not in params_list:
+                params_list.append(param)
+                params_list.append(param)
+            elif param not in params_shared:
+                params_shared.append(param)
+        for param in params_shared:
+            param._link_label_io = param.name + "@" + make_name()
+
     def to_table(self):
         """Convert parameter attributes to `~astropy.table.Table`."""
+        self.update_link_label()
         table = self._create_default_table()
 
         for p in self._parameters:
@@ -924,7 +946,7 @@ class PriorParameter(Parameter):
 
     Examples
     --------
-    For a usage example see :doc:`/tutorials/api/priors` tutorial.
+    For a usage example see :doc:`/tutorials/details/priors` tutorial.
     """
 
     def __init__(
@@ -980,7 +1002,7 @@ class PriorParameter(Parameter):
 
 
 class PriorParameters(Parameters):
-    """Container of parameter priors :
+    """Container of parameter priors.
 
     - List of `PriorParameter` objects.
 

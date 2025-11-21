@@ -318,5 +318,5 @@ weeks, but also in 2020 and after.
 .. _ADASS XVIII proceedings: http://www.aspbooks.org/publications/523/357.pdf
 .. _Glossary: https://docs.gammapy.org/0.14/references.html#glossary
 .. _Jupytext: https://jupytext.readthedocs.io
-.. _Documentation GitHub project: https://github.com/gammapy/gammapy/projects/1
+.. _Documentation GitHub project: https://github.com/gammapy/gammapy/projects
 .. _HowTo documentation page: https://docs.gammapy.org/dev/development/dev_howto.html

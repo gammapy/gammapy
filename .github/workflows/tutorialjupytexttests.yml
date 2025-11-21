@@ -1,0 +1,39 @@
+name: Run tutorials with Jupytext
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 2 * * 5'  # Every Friday at 02:00 UTC
+
+jobs:
+  execute-tutorials:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+
+    env:
+      GAMMAPY_DATA: /home/runner/work/gammapy/gammapy/gammapy-datasets/dev
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13' 
+
+      - name: Install Gammapy and needed dependencies
+        run: |
+          pip install --upgrade pip
+          pip install jupyter jupytext jupyter_client ipykernel 
+          pip install .[all]
+
+      - name: Download datasets
+        run: |
+          gammapy download datasets
+
+      - name: Execute tutorials with Jupytext
+        run: |
+          python -m ipykernel install --name gammapy-dev --user
+          jupytext --execute examples/tutorials/*/*.py

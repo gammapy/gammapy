@@ -8,6 +8,7 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.table import Table
+from astropy.time import Time
 from astropy.utils.exceptions import AstropyUserWarning
 from regions import CircleSkyRegion
 import gammapy.irf.psf.map as psf_map_module
@@ -747,6 +748,33 @@ def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
 
 
 @requires_data()
+def test_map_dataset_fits_creation_metadata(tmp_path, sky_model, geom, geom_etrue):
+    dataset = get_map_dataset(geom, geom_etrue)
+
+    bkg_model = FoVBackgroundModel(dataset_name=dataset.name)
+    dataset.models = [sky_model, bkg_model]
+
+    dataset.meta.creation.creator = "MySoftware"
+    dataset.meta.creation.origin = "MyOrganization"
+
+    dataset.counts = dataset.npred()
+    dataset.mask_safe = dataset.mask_fit
+    gti = GTI.create([0 * u.s], [1 * u.h], reference_time="2010-01-01T00:00:00")
+    dataset.gti = gti
+
+    dataset.write(tmp_path / "test.fits")
+
+    hdul = fits.open(tmp_path / "test.fits")
+    for hdu in hdul:
+        assert "CREATOR" in hdu.header
+        assert "CREATED" in hdu.header
+        assert hdu.header["CREATOR"] == "MySoftware"
+        assert hdu.header["ORIGIN"] == "MyOrganization"
+        # Check that day is OK
+        assert hdu.header["CREATED"][:10] == Time.now().iso[:10]
+
+
+@requires_data()
 def test_map_auto_psf_upsampling(sky_model, geom, geom_etrue):
     dataset_2 = get_map_dataset(geom, geom_etrue, name="test-2")
     datasets = Datasets([dataset_2])
@@ -841,17 +869,15 @@ def test_prior_stat_sum(sky_model, geom, geom_etrue):
     datasets.models = models
     dataset.counts = dataset.npred()
 
-    uniformprior = UniformPrior(min=0, max=np.inf, weight=1)
+    uniformprior = UniformPrior(min=0, max=1, weight=1)
+
     datasets.models.parameters["amplitude"].prior = uniformprior
     assert_allclose(datasets._stat_sum_likelihood(), 12825.9370, rtol=1e-3)
     assert_allclose(datasets.stat_sum(), 12825.9370, rtol=1e-3)
 
     datasets.models.parameters["amplitude"].value = -1e-12
     stat_sum_neg = datasets.stat_sum()
-    assert_allclose(stat_sum_neg, 470298.864993, rtol=1e-3)
-
-    datasets.models.parameters["amplitude"].prior.weight = 100
-    assert_allclose(datasets.stat_sum() - stat_sum_neg, 99, rtol=1e-3)
+    assert_allclose(stat_sum_neg, np.inf, rtol=1e-3)
 
 
 @requires_data()

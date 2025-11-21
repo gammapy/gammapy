@@ -3,7 +3,7 @@
 
 Catalog row index (zero-based) : 134
 Source name          : 2FHL J0822.6-4250e
-Associations     : Puppis A, 3FGL J0822.6-4250e, 1FHL J0822.6-4250e, --
+Associations     : Puppis A, 3FGL J0822.6-4250e, 1FHL J0822.6-4250e
 ASSOC_PROB_BAY   : --
 ASSOC_PROB_LR    : --
 Class            : snr
@@ -41,7 +41,7 @@ Energy flux (50 GeV - 2 TeV)     : 8.09e-12 +- 2.27e-12 erg cm-2 s-1
 *** Spectral points ***
 
  e_min   e_max       flux     flux_errn   flux_errp  is_ul   flux_ul  
-  GeV     GeV    1 / (cm2 s) 1 / (cm2 s) 1 / (cm2 s)       1 / (cm2 s)
+  GeV     GeV    1 / (s cm2) 1 / (s cm2) 1 / (s cm2)       1 / (s cm2)
 ------- -------- ----------- ----------- ----------- ----- -----------
  50.000  171.000   4.233e-11   9.625e-12   1.104e-11 False         nan
 171.000  585.000   1.330e-16         nan   5.867e-12  True   1.173e-11

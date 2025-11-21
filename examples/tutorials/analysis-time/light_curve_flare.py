@@ -88,13 +88,6 @@ from gammapy.maps import MapAxis, RegionGeom
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from gammapy.modeling import Fit
 
-######################################################################
-# Check setup
-# -----------
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
-
 
 ######################################################################
 # Select the data
@@ -222,7 +215,6 @@ safe_mask_masker = SafeMaskMaker(methods=["aeff-max"], aeff_percent=10)
 # Now we perform the actual data reduction in the ``time_intervals``.
 #
 
-# %%time
 datasets = Datasets()
 
 dataset_empty = SpectrumDataset.create(geom=geom, energy_axis_true=energy_axis_true)
@@ -261,7 +253,6 @@ sky_model = SkyModel(spatial_model=None, spectral_model=spectral_model, name="pk
 datasets.models = sky_model
 
 
-# %%time
 fit = Fit()
 result = fit.run(datasets)
 print(result.models.to_parameters_table())
@@ -273,9 +264,9 @@ print(result.models.to_parameters_table())
 # We first create the `~gammapy.estimators.LightCurveEstimator` for the
 # list of datasets we just produced. We give the estimator the name of the
 # source component to be fitted. We can directly compute the light curve in multiple energy
-# bins by supplying a list of `energy_edges`.
+# bins by supplying a list of ``energy_edges``.
 #
-# By default the likelihood scan is computed from 0.2 to 5.0.
+# By default, the likelihood scan is computed from 0.2 to 5.0.
 # Here, we increase the max value to 10.0, because we are
 # dealing with a large flare.
 
@@ -296,7 +287,6 @@ lc_maker_1d.norm.scan_max = 10
 # we select the 0.7-20 TeV range.
 #
 
-# %%time
 lc_1d = lc_maker_1d.run(datasets)
 
 
@@ -314,7 +304,7 @@ plt.show()
 # Light curves once obtained can be rebinned using the likelihood profiles.
 # Here, we rebin 3 adjacent bins together, to get 30 minute bins.
 #
-# We will first slice `lc_1d` to obtain the lightcurve in the first energy bin
+# We will first slice ``lc_1d`` to obtain the lightcurve in the first energy bin
 #
 
 slices = {"energy": slice(0, 1)}

@@ -277,6 +277,11 @@ class EDispMap(IRFMap):
 
         Plots corresponding to the center of the map.
 
+        This method creates a figure with two subplots:
+
+        * Bias plot : reconstruction bias as a function of true energy
+        * Energy dispersion matrix plot : probability density function matrix
+
         Parameters
         ----------
         figsize : tuple
@@ -531,6 +536,11 @@ class EDispKernelMap(IRFMap):
 
         Plots corresponding to the center of the map.
 
+        This method creates a figure with two subplots:
+
+        * Bias plot : reconstruction bias as a function of true energy
+        * Energy dispersion matrix plot : probability density function matrix
+
         Parameters
         ----------
         figsize : tuple, optional
@@ -561,7 +571,6 @@ class EDispKernelMap(IRFMap):
             Energy dispersion kernel map.
 
         """
-
         if format == "gadf":
             return super().read(filename, format, hdu, checksum)
         elif format == "gtdrm":

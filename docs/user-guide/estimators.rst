@@ -5,7 +5,7 @@ Estimators (DL4 to DL5, and DL6)
 
 The `gammapy.estimators` submodule contains algorithms and classes
 for high level flux and significance estimation. This includes
-estimation flux points, flux maps, flux points, flux profiles and
+estimation of flux points, flux maps, flux profiles and
 flux light curves. All estimators feature a common API and allow
 estimating fluxes in bands of reconstructed energy.
 
@@ -165,7 +165,7 @@ This how to compute flux maps with the `~gammapy.estimators.ExcessMapEstimator`:
     <BLANKLINE>
         geom  : WcsGeom
         axes  : ['lon', 'lat', 'energy']
-        shape : (np.int64(320), np.int64(240), 2)
+        shape : (320, 240, 2)
         ndim  : 3
         unit  : 1 / (s cm2)
         dtype : float64
@@ -213,7 +213,7 @@ Using gammapy.estimators
 
 .. minigallery::
 
-    ../examples/tutorials/api/estimators.py
+    ../examples/tutorials/details/estimators.py
 
 .. minigallery::
     :add-heading: Examples using `~gammapy.estimators.FluxPointsEstimator`

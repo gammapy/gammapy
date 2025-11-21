@@ -25,13 +25,25 @@ class BackgroundIRF(IRF):
     ----------
     axes : list of `~gammapy.maps.MapAxis` or `~gammapy.maps.MapAxes`
         Axes.
-    data : `~np.ndarray`
+    data : `~numpy.ndarray`
         Data array.
     unit : str or `~astropy.units.Unit`
         Data unit usually ``s^-1 MeV^-1 sr^-1``.
+    is_pointlike : bool, optional
+        Whether the IRF is point-like.
+        True for point-like IRFs, False for full-containment.
+        Default is False.
+    fov_alignment : `~gammapy.irf.FoVAlignment`, optional
+        The orientation of the field of view coordinate system.
+        Default is FoVAlignment.RADEC.
     meta : dict
         Metadata dictionary.
-
+    interp_kwargs : dict, optional
+        Keyword arguments passed to
+        `~gammapy.utils.interpolation.ScaledRegularGridInterpolator`.
+        If None, the following inputs are used ``bounds_error=False``, ``fill_value=0.0``
+        and ``values_scale="log"``.
+        Default is None.
     """
 
     default_interp_kwargs = dict(bounds_error=False, fill_value=0.0, values_scale="log")
@@ -53,9 +65,6 @@ class BackgroundIRF(IRF):
         bkg : `Background2D` or `Background2D`
             Background IRF class.
         """
-        # TODO: some of the existing background files have missing HDUCLAS keywords
-        #  which are required to define the correct Gammapy axis names
-
         if "HDUCLAS2" not in table.meta:
             log.warning("Missing 'HDUCLAS2' keyword assuming 'BKG'")
             table = table.copy()
@@ -113,14 +122,25 @@ class Background3D(BackgroundIRF):
             * energy (reconstructed energy axis)
             * fov_lon (field of view longitude)
             * fov_lon (field of view latitude)
-    data : `~np.ndarray`
+    data : `~numpy.ndarray`
         Data array.
     unit : str or `~astropy.units.Unit`
         Data unit usually ``s^-1 MeV^-1 sr^-1``.
-    fov_alignment : `~gammapy.irf.FoVAlignment`
+    is_pointlike : bool, optional
+        Whether the IRF is point-like.
+        True for point-like IRFs, False for full-containment.
+        Default is False.
+    fov_alignment : `~gammapy.irf.FoVAlignment`, optional
         The orientation of the field of view coordinate system.
+        Default is FoVAlignment.RADEC.
     meta : dict
         Metadata dictionary.
+    interp_kwargs : dict, optional
+        Keyword arguments passed to
+        `~gammapy.utils.interpolation.ScaledRegularGridInterpolator`.
+        If None, the following inputs are used ``bounds_error=False``, ``fill_value=0.0``
+        and ``values_scale="log"``.
+        Default is None.
 
     Examples
     --------
@@ -166,6 +186,13 @@ class Background3D(BackgroundIRF):
 
     def peek(self, figsize=(10, 8)):
         """Quick-look summary plots.
+
+        This method creates a figure with four subplots:
+
+        * Offset dependence plot : background rate versus offset for a given energy axis
+        * Integrated spectrum plot : background rate integrated over the full field of view versus energy
+        * Energy dependence plot : background rate versus energy for a given offset
+        * Energy offset dependence of the background model map
 
         Parameters
         ----------
@@ -267,12 +294,25 @@ class Background2D(BackgroundIRF):
         Required axes (in the given order) are:
             * energy (reconstructed energy axis)
             * offset (field of view offset axis)
-    data : `~np.ndarray`
+    data : `~numpy.ndarray`
         Data array.
     unit : str or `~astropy.units.Unit`
         Data unit usually ``s^-1 MeV^-1 sr^-1``.
+    is_pointlike : bool, optional
+        Whether the IRF is point-like.
+        True for point-like IRFs, False for full-containment.
+        Default is False.
+    fov_alignment : `~gammapy.irf.FoVAlignment`, optional
+        The orientation of the field of view coordinate system.
+        Default is FoVAlignment.RADEC.
     meta : dict
         Metadata dictionary.
+    interp_kwargs : dict, optional
+        Keyword arguments passed to
+        `~gammapy.utils.interpolation.ScaledRegularGridInterpolator`.
+        If None, the following inputs are used ``bounds_error=False``, ``fill_value=0.0``
+        and ``values_scale="log"``.
+        Default is None.
     """
 
     tag = "bkg_2d"
@@ -487,7 +527,21 @@ class Background2D(BackgroundIRF):
         return ax
 
     def peek(self, figsize=(10, 8)):
-        """Quick-look summary plots."""
+        """Quick-look summary plots.
+
+        This method creates a figure with four subplots:
+
+        * Offset dependence plot : background rate versus offset for the given energy axis
+        * Integrated spectrum plot : background rate integrated over the full field of view versus energy
+        * Energy dependence plot : background rate versus energy for a given offset
+        * Energy offset dependence of the background model map
+
+        Parameters
+        ----------
+        figsize : tuple, optional
+            Size of the figure. Default is (10, 8).
+
+        """
         fig, axes = plt.subplots(nrows=2, ncols=2, figsize=figsize)
         self.plot(ax=axes[1][1])
         self.plot_offset_dependence(ax=axes[0][0])

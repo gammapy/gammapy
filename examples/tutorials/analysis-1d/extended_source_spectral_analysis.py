@@ -102,13 +102,6 @@ from gammapy.maps import MapAxis, RegionGeom
 from gammapy.modeling import Fit
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 
-######################################################################
-# Check setup
-# -----------
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
-
 
 ######################################################################
 # Select the data
@@ -221,7 +214,6 @@ safe_mask_maker = SafeMaskMaker(methods=["aeff-max"], aeff_percent=10)
 # -  Add the `~gammapy.datasets.SpectrumDatasetOnOff` to the list.
 #
 
-# %%time
 datasets = Datasets()
 
 for obs in observations:

@@ -42,6 +42,18 @@ __all__ = [
 log = logging.getLogger(__name__)
 
 
+def get_nonentry_keys(d, keys):
+    vals = [str(d[_]).strip() for _ in keys]
+    return ", ".join([_ for _ in vals if _ not in ["", "--"]])
+
+
+def get_nonentry_key(key):
+    if key.strip() == "":
+        return "--"
+    else:
+        return key
+
+
 def compute_flux_points_ul(quantity, quantity_errp):
     """Compute UL value for fermi flux points.
 
@@ -205,14 +217,13 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject, abc.ABC):
         ss = "\n*** Basic info ***\n\n"
         ss += "Catalog row index (zero-based) : {}\n".format(self.row_index)
         ss += "{:<20s} : {}\n".format("Source name", self.name)
+
         if "Extended_Source_Name" in d:
-            ss += "{:<20s} : {}\n".format("Extended name", d["Extended_Source_Name"])
+            ss += "{:<20s} : {}\n".format(
+                "Extended name", get_nonentry_key(d["Extended_Source_Name"])
+            )
 
-        def get_nonentry_keys(keys):
-            vals = [str(d[_]).strip() for _ in keys]
-            return ", ".join([_ for _ in vals if _ != ""])
-
-        associations = get_nonentry_keys(keys)
+        associations = get_nonentry_keys(d, keys)
         ss += "{:<16s} : {}\n".format("Associations", associations)
         try:
             ss += "{:<16s} : {:.3f}\n".format("ASSOC_PROB_BAY", d["ASSOC_PROB_BAY"])
@@ -220,11 +231,11 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject, abc.ABC):
         except KeyError:
             pass
         try:
-            ss += "{:<16s} : {}\n".format("Class1", d["CLASS1"])
+            ss += "{:<16s} : {}\n".format("Class1", get_nonentry_key(d["CLASS1"]))
         except KeyError:
-            ss += "{:<16s} : {}\n".format("Class", d["CLASS"])
+            ss += "{:<16s} : {}\n".format("Class", get_nonentry_key(d["CLASS"]))
         try:
-            ss += "{:<16s} : {}\n".format("Class2", d["CLASS2"])
+            ss += "{:<16s} : {}\n".format("Class2", get_nonentry_key(d["CLASS2"]))
         except KeyError:
             pass
         ss += "{:<16s} : {}\n".format("TeVCat flag", d.get("TEVCAT_FLAG", "N/A"))
@@ -263,7 +274,9 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject, abc.ABC):
             ss += "{:<16s} : {}\n".format("Spatial function", e["Spatial_Function"])
         except KeyError:
             pass
-        ss += "{:<16s} : {}\n\n".format("Spatial filename", e["Spatial_Filename"])
+        ss += "{:<16s} : {}\n\n".format(
+            "Spatial filename", get_nonentry_key(e["Spatial_Filename"])
+        )
         return ss
 
     def _info_spectral_fit(self):
@@ -282,7 +295,8 @@ class SourceCatalogObjectFermiBase(SourceCatalogObject, abc.ABC):
 
     @property
     def is_pointlike(self):
-        return self.data["Extended_Source_Name"].strip() == ""
+        name = self.data["Extended_Source_Name"].strip()
+        return name == "" or name.strip() == "--"
 
     # FIXME: this should be renamed `set_position_error`,
     # and `phi_0` isn't filled correctly, other parameters missing
@@ -1444,6 +1458,7 @@ class SourceCatalogObject2PC(SourceCatalogObjectFermiPCBase):
         return ss
 
     def spectral_model(self):
+        """Best fit spectral model."""
         d = self.data_spectral
         if d is None:
             log.warning(f"No spectral model available for source {self.name}")
@@ -1502,7 +1517,6 @@ class SourceCatalogObject2PC(SourceCatalogObjectFermiPCBase):
     @property
     def flux_points_table(self):
         """Flux points (`~astropy.table.Table`)."""
-
         try:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", u.UnitsWarning)
@@ -1679,12 +1693,10 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
 
     @property
     def pulse_profile_radio(self):
-        """
-        Radio pulse profile provided in the auxiliary file of 3PC.
+        """Radio pulse profile provided in the auxiliary file of 3PC.
 
         Returns
         -------
-
         radio_profile: `~gammapy.maps.RegionNDMap`
             Map containing the radio profile.
         """
@@ -1703,6 +1715,7 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
     def pulse_profiles(self):
         """
         The 3PC pulse profiles are provided in different energy ranges, each represented in weighted counts.
+
         These profiles are stored in a `~gammapy.maps.Maps` of `~gammapy.maps.RegionNDMap`, one per energy bin.
 
         The `~gammapy.maps.Maps` keys correspond to specific energy ranges as follows:
@@ -1723,7 +1736,6 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
         maps: `~gammapy.maps.Maps`
             Maps containing the pulse profile in the different energy bin.
         """
-
         table = Table.read(self._auxiliary_filename, hdu="GAMMA_LC")
         phases = MapAxis.from_edges(
             np.unique(np.concatenate([table["Ph_Min"], table["Ph_Max"]])),
@@ -1745,7 +1757,8 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
         return maps
 
     def spectral_model(self, fit="auto"):
-        """
+        """Best fit spectral model.
+
         In the 3PC, Fermi-LAT collaboration tried to fit a
         `~gammapy.modelling.models.SuperExpCutoffPowerLaw4FGLDR3SpectralModel` with the
         exponential index `index_2` free, or fixed to 2/3. These two models are referred
@@ -1754,7 +1767,6 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
 
         Parameters
         ----------
-
         fit : str, optional
             Which fitted model to return. The user can choose between "auto", "b free"
             and "b 23". "auto" will always try to return the "b free" first and fall
@@ -1805,8 +1817,7 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
 
     @property
     def flux_points_table(self):
-        """Flux points (`~astropy.table.Table`). Flux point is an upper limit if
-        its significance is less than 2."""
+        """Flux points (`~astropy.table.Table`). Flux point is an upper limit if its significance is less than 2."""
         fp_data = self.data_spectral
         if fp_data is None:
             log.warning(f"No flux points available for source {self.name}")

@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
     "--overwrite", default=False, is_flag=True, help="Overwrite existing file."
 )
 def cli_make_config(filename, overwrite):
-    """Writes default configuration file."""
+    """Write default configuration file."""
     config = WorkflowConfig()
     config.write(filename, overwrite=overwrite)
     log.info(f"Configuration file produced: {filename}")
@@ -31,7 +31,7 @@ def cli_make_config(filename, overwrite):
     show_default=True,
 )
 def cli_run_workflow(filename):
-    """Performs automated data reduction process."""
+    """Perform automated data reduction process."""
     config = WorkflowConfig.read(filename)
     workflow = Workflow(config)
     workflow.run()

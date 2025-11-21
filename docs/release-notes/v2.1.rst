@@ -1,0 +1,7 @@
+.. _gammapy_2p1_release:
+
+2.1 (unreleased)
+----------------
+
+
+- No changes yet

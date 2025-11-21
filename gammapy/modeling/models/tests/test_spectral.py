@@ -9,6 +9,7 @@ from astropy.table import Table
 import matplotlib.pyplot as plt
 from gammapy.maps import MapAxis, RegionNDMap
 from gammapy.modeling.models import (
+    integrate_spectrum,
     SPECTRAL_MODEL_REGISTRY,
     BrokenPowerLawSpectralModel,
     CompoundSpectralModel,
@@ -430,11 +431,7 @@ def test_evaluate():
         energies = [1e-12, 1e-6, 1e-2, 1, 1e2, 1e4] * u.TeV
         parameters = model.parameters
         par_list = [p.quantity for p in parameters]
-        if isinstance(model, PiecewiseNormSpectralModel):
-            # TODO : check if PiecewiseNormSpectralModel evaluate can work like the others
-            result_eval = model.evaluate(energies)
-        else:
-            result_eval = model.evaluate(energies, *par_list)
+        result_eval = model.evaluate(energies, *par_list)
 
         result_call = model(energies)
         assert_quantity_allclose(result_eval, result_call)
@@ -1133,6 +1130,17 @@ class TestSpectralModelErrorPropagation:
             self.model.energy_flux_error(1 * u.TeV, 10 * u.TeV, epsilon=10)
 
 
+def test_piecesenorm_model_error():
+    model = PiecewiseNormSpectralModel(
+        energy=[1, 3, 7, 10] * u.TeV,
+        norms=[1, 5, 3, 0.5] * u.Unit(""),
+    )
+    for p in model.parameters:
+        p.error = 1.0
+    assert_allclose(model.evaluate_error(5 * u.GeV), 1.0, rtol=5e-2)
+    assert_allclose(model.integral_error(5 * u.GeV, 10 * u.GeV).value, 5.0, rtol=5e-2)
+
+
 def test_logpar_index_error():
     model = LogParabolaSpectralModel(
         amplitude=3.81e-11 / u.cm**2 / u.s / u.TeV,
@@ -1379,3 +1387,31 @@ def test_e_peak_super_4FGLDR3():
 
     model.index_2.value = -1
     assert_quantity_allclose(model.e_peak, np.nan * u.TeV)
+
+
+def test_vectorized_integrate_spectrum():
+    model = PowerLawSpectralModel()
+
+    parameter_samples = [np.ones(10) * par.quantity for par in model.parameters]
+
+    energy = [100, 1000, 10000] * u.GeV
+
+    integral = integrate_spectrum(model, energy[:-1], energy[1:], ndecade=20)
+    vector_integral = integrate_spectrum(
+        model, energy[:-1], energy[1:], ndecade=20, parameter_samples=parameter_samples
+    )
+
+    assert integral.shape == (2,)
+    assert_allclose(integral.to_value("cm-2s-1"), [9e-12, 9e-13])
+    assert vector_integral.shape == (2, 10)
+    assert_allclose(vector_integral[:, 0].to_value("cm-2s-1"), [9e-12, 9e-13])
+
+    # check fail if model is not passed
+    with pytest.raises(TypeError):
+        integrate_spectrum(
+            model.evaluate,
+            energy[:-1],
+            energy[1:],
+            ndecade=20,
+            parameter_samples=parameter_samples,
+        )

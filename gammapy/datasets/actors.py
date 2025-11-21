@@ -15,6 +15,7 @@ __all__ = ["DatasetsActor"]
 
 class DatasetsActor(Datasets):
     """A modified Dataset collection for parallel evaluation using ray actors.
+
     Support only datasets composed of MapDataset.
 
     Parameters
@@ -140,7 +141,7 @@ class MapDatasetActor(RayFrontendMixin):
     """
 
     _mutable_attr = ["models", "mask_fit"]
-    _local_attr = ["name"]  # immutable small enough to keep and acces locally
+    _local_attr = ["name"]  # immutable small enough to keep and access locally
     _public_attr = [key for key in dir(MapDataset) if not key.startswith("__")]
 
     def __init__(self, dataset):

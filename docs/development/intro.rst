@@ -23,7 +23,9 @@ Before attempting to make a contribution, you should *use* Gammapy a bit at leas
 
 * Install Gammapy.
 * Execute one or two of the tutorial notebooks for Gammapy and do the exercises there.
-* Ask questions or complain about issues on the Gammapy `slack channel <https://gammapy.slack.com/>`__, `GitHub discussions <https://github.com/gammapy/gammapy/discussions>`__ or `GitHub issues tracker <https://github.com/gammapy/gammapy/issues>`__.
+* Ask questions or complain about issues on the Gammapy `slack channel <https://gammapy.slack.com/>`__,
+  `GitHub discussions <https://github.com/gammapy/gammapy/discussions>`__ or
+  `GitHub issues tracker <https://github.com/gammapy/gammapy/issues>`__.
 
 We'd like to note that there are many ways to contribute to the Gammapy project.
 For example if you mention it to a colleague or suggest it to a student, or if
@@ -119,7 +121,7 @@ using git branches.
 
 So how large should one pull request be?
 
-Our experience in Gammapy (and others confirm, see e.g. `here
+Our experience in Gammapy (and others confirm, see e.g. `this link
 <https://alexgaynor.net/2015/dec/29/shrinking-code-review/>`__) is that smaller
 is better. Working on a pull request for an hour or maximum a day, and having a
 diff of a few to maximum a few 100 lines to review and discuss is pleasant.
@@ -154,8 +156,8 @@ Firstly, fork the `gammapy repository <https://github.com/gammapy/gammapy>`_ to 
 personal GitHub. If you have not already done so, copy your public SSH key (normally under
 ``$HOME/.ssh/*.pub``) to your GitHub profile. This is done by going into your GitHub settings,
 selecting **SSH and GPG keys** then **New SSH key** and then choosing **Authentication Key**
-as the key type. If you do not have a SSH key, you may create it following the instructions on
-`this page <https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent>`_.
+as the key type. If you do not have a SSH key, you may create it following
+`these instructions <https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent>`_.
 
 Go to the location on your machine where you want to clone the gammapy
 repository from your GitHub:

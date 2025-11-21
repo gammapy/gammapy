@@ -7,8 +7,8 @@ Extended name        : FGES J1409.1-6121
 Associations     : 3FGL J1405.4-6119, 3FHL J1409.1-6121e, J1407-6136c
 ASSOC_PROB_BAY   : --
 ASSOC_PROB_LR    : --
-Class1           :      
-Class2           :      
+Class1           : --
+Class2           : --
 TeVCat flag      : N
 
 *** Other info ***
@@ -40,7 +40,7 @@ Model semimajor  : 0.7331 deg
 Model semiminor  : 0.7331 deg
 Position angle   : 0.0000 deg
 Spatial function : RadialDisk 
-Spatial filename :                         
+Spatial filename : --
 
 
 *** Spectral info ***
@@ -58,7 +58,7 @@ Energy flux (100 MeV - 100 GeV)               : 2.38e-10 +- 1.28e-11 erg cm-2 s-
 *** Spectral points ***
 
   e_min     e_max        flux     flux_errn   flux_errp      e2dnde     e2dnde_errn   e2dnde_errp  is_ul   flux_ul     e2dnde_ul   sqrt_ts
-   MeV       MeV     1 / (cm2 s) 1 / (cm2 s) 1 / (cm2 s) erg / (cm2 s) erg / (cm2 s) erg / (cm2 s)       1 / (cm2 s) erg / (cm2 s)        
+   MeV       MeV     1 / (s cm2) 1 / (s cm2) 1 / (s cm2) erg / (s cm2) erg / (s cm2) erg / (s cm2)       1 / (s cm2) erg / (s cm2)        
 --------- ---------- ----------- ----------- ----------- ------------- ------------- ------------- ----- ----------- ------------- -------
    50.000    100.000   3.052e-09         nan   3.022e-07     4.973e-13           nan     4.925e-11  True   6.075e-07     9.900e-11   0.000
   100.000    300.000   3.659e-10         nan   1.792e-07     9.065e-14           nan     4.440e-11  True   3.588e-07     8.889e-11   0.000

@@ -37,12 +37,15 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
     ----------
     source : str or int
         For which source in the model to compute the flux points.
-    n_sigma : int, optional
-        Number of sigma to use for asymmetric error computation. Default is 1.
-    n_sigma_ul : int, optional
-        Number of sigma to use for upper limit computation. Default is 2.
-    n_sigma_sensitivity : int, optional
-        Sigma to use for sensitivity computation. Default is 5.
+    n_sigma : float, optional
+        Number of sigma to use for asymmetric error computation. Must be a positive value.
+        Default is 1.
+    n_sigma_ul : float, optional
+        Number of sigma to use for upper limit computation. Must be a positive value.
+        Default is 2.
+    n_sigma_sensitivity : float, optional
+        Sigma to use for sensitivity computation. Must be a positive value.
+        Default is 5.
     selection_optional : list of str, optional
         Which additional quantities to estimate. Available options are:
 
@@ -57,7 +60,7 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
         Edges of the flux points energy bins. The resulting bin edges won't be exactly equal to the input ones,
         but rather the closest values to the energy axis edges of the parent dataset.
         Default is [1, 10] TeV.
-    fit : `Fit`, optional
+    fit : `~gammapy.modeling.Fit`, optional
         Fit instance specifying the backend and fit options. If None, the `~gammapy.modeling.Fit` instance is created
         internally. Default is None.
     reoptimize : bool, optional
@@ -84,7 +87,47 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
 
     Notes
     -----
-    For further explanation, see :ref:`estimators`.
+    - For further explanation, see :ref:`estimators`.
+    - In case of failure of upper limits computation (e.g. nan), see the User Guide: :ref:`dropdown-UL`.
+
+    Examples
+    --------
+    .. testcode::
+
+        from astropy import units as u
+        from gammapy.datasets import SpectrumDatasetOnOff
+        from gammapy.estimators import FluxPointsEstimator
+        from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
+
+        path = "$GAMMAPY_DATA/joint-crab/spectra/hess/"
+        dataset = SpectrumDatasetOnOff.read(path + "pha_obs23523.fits")
+
+        pwl = PowerLawSpectralModel(index=2.7, amplitude='3e-11  cm-2 s-1 TeV-1')
+
+        dataset.models = SkyModel(spectral_model=pwl, name="crab")
+
+        estimator = FluxPointsEstimator(
+            source="crab",
+            energy_edges=[0.1, 0.3, 1, 3, 10, 30, 100] * u.TeV,
+        )
+
+        fp = estimator.run(dataset)
+        print(fp)
+
+    .. testoutput::
+
+        FluxPoints
+        ----------
+
+          geom                   : RegionGeom
+          axes                   : ['lon', 'lat', 'energy']
+          shape                  : (1, 1, 6)
+          quantities             : ['norm', 'norm_err', 'ts', 'npred', 'npred_excess', 'stat', 'stat_null', 'counts', 'success']
+          ref. model             : pl
+          n_sigma                : 1
+          n_sigma_ul             : 2
+          sqrt_ts_threshold_ul   : 2
+          sed type init          : likelihood
     """
 
     tag = "FluxPointsEstimator"

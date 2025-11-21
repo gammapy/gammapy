@@ -44,19 +44,20 @@ The following PIG focuses on the implementation of the NS with the UltraNest pac
 However, UltraNest is claimed to be more robust, provide safer uncertainties, and better parallelization (see `UltraNest doc <https://johannesbuchner.github.io/UltraNest/issues.html#what-is-the-difference-between-ultranest-and-multinest-dynesty>`_)
 
 Reference :
+
 - Ultranest : https://johannesbuchner.github.io/UltraNest
 - Literature : `Buchner 2023, <http://arxiv.org/abs/2101.09675>`_ , `Ashton 2022, <https://ui.adsabs.harvard.edu/abs/2022NRvMP...2...39A>`_
 
 
-**Potential limitations of MCMC in a BayesianInference class ?**
+**Potential limitations of MCMC in a BayesianInference class?**
 
 Besides the many advantages of the NS described above, one technical specificity of the MCMC method is that the user needs to specify a warmup/burn period *that can only be estimated once the chain has run*.
 From an implementation point of view of the class this means that the user would need to run the sampler, then look at the chain, specify the burn period and then estimate the best model parameters.
 This implies that the class will not be able to update the model parameters in a single round like the Fit class does.
-In addition, there is no convergence criteria in the MCMC so the MCMC can not return a `convergence successful : True ` status.
+In addition, there is no convergence criteria in the MCMC so the MCMC can not return a `convergence successful : True` status.
 NS has no warmup period, a well defined convergence criteria, and can estimate convergence success.
 
-However we might want to keep the class general enough so that MCMC can be plugged easily in the future ?
+However we might want to keep the class general enough so that MCMC can be plugged easily in the future?
 
 **A visual comparison of the approaches of MCMC vs NS**
 
@@ -91,7 +92,7 @@ Case 2: Minuit convergence issues
 
 One of the comment I hear frequently at tutorials, schools or colleagues is not knowing what to do in front of a `Fit failed`` iMinuit message.
 This can be due to multiple good reasons (e.g. hitting a boundary) but most commonly it can be related to a starting point far from the solution (in particular the amplitude parameter).
-Nested sampling can adress this issue by providing a sparse sampling of a large prior space for the amplitude for example via a `LogUniform` prior.
+Nested sampling can address this issue by providing a sparse sampling of a large prior space for the amplitude for example via a `LogUniform` prior.
 In addition by providing a full landscape of the likelihood and with no notion of initialization, the model exploration is more robust and with less human intervention.
 
 
@@ -122,13 +123,13 @@ Namely:
 
 1. Likelihood: The `stat_sum` value needs to be separated into a likelihood term and a prior penalty term.
    While prior will be attached to the model, we want the stat_sum to return only the likelihood and not the penalty term as it is not needed
-   for the NS technique. In addition, the NS alogrithm aims to maximize the likelihood (not minimize) and the factor of 2 for the Cstat needs to be removed.
+   for the NS technique. In addition, the NS algorithm aims to maximize the likelihood (not minimize) and the factor of 2 for the Cstat needs to be removed.
    So likelihood should be : `-0.5*Stat`
 
 2. Priors: The sampling in the NS algorithm is drawn from a "unity cube". This means that all sample are drawn from a [0,1] random uniform distribution that
    are latter transformed to the parameter space via their inverse cumulative distribution (cdf). An `inverse_cdf` attribute needs to be implemented for all Priors.
 
-3. Sampler: The UltraNest sampler object needs to be initiliazed with the correct parameters and (modified) likelihood
+3. Sampler: The UltraNest sampler object needs to be initialized with the correct parameters and (modified) likelihood
 
 
 
@@ -139,12 +140,13 @@ Similarly to the MCMC method, the NS sampler will return samples of the posterio
 
 1. There is no concept of chains in NS, each sample (live or dead points) serve to explore the entire likelihood landscape.
    To estimate the posterior distributions, the samples need to be weighted in NS (See review paper listed in the intro).
-2. The NS computes the full integral of the likelihood over the entire prior space. The integral result is the Bayesian evidence Z wich can be used to compare different models in apparently a better way that the BIC/AIC.
+2. The NS computes the full integral of the likelihood over the entire prior space. The integral result is the Bayesian
+   evidence Z which can be used to compare different models in apparently a better way that the BIC/AIC.
    In addition an error on Z is estimated via bootstrap of the samples.
 3. A `converged : True/False` status can be returned
 
-The UltraNest sampler returns a dictionnary that is very complete and that contains all (and even more) information that is needed.
-Here are the keys of that dictionnary :
+The UltraNest sampler returns a dictionary that is very complete and that contains all (and even more) information that is needed.
+Here are the keys of that dictionary :
 
 .. code:: python
 
@@ -246,7 +248,8 @@ Proposal
 
 Serialisation of the samples
 ----------------------------
-In UltraNest, a serialisation is proposed to save to disk the samples and results dictionnary. So this can be used directly to `save` and there is also a `read_file` function.
+In UltraNest, a serialisation is proposed to save to disk the samples and results dictionary. So this can be
+used directly to `save` and there is also a `read_file` function.
 
 
 Task list
@@ -264,22 +267,22 @@ The task will be split between different subcategories
 *Design & decisions of a new Bayesian class*
 
 1. Should the class be called NestedSampler (only NS) or BayesianFit (would host MCMC and NS)
-2. Should we return the sampler in the BayesianInference(models=updated_models, results=results) ?
-3. Should we create a `.posterior` attribute for each model parameter ? To contain what exactly ?
+2. Should we return the sampler in the BayesianInference(models=updated_models, results=results)?
+3. Should we create a `.posterior` attribute for each model parameter? To contain what exactly?
 4. UltraNest provides different samplers options. How do we implement them (e.g. self._sampler.stepsampler = ultranest.stepsampler.SliceSampler)
 
 *Update the docs*
 
 1. Prepare a tutorial to show case this new class
-2. Add section presenting the different approaches of Minuit, MCMC, and NS ?
+2. Add section presenting the different approaches of Minuit, MCMC, and NS?
 3. Update the 'stats' documentation page for the new prior and new inverse_cdf
-4.
 
 
 
 User testing of the API
 -----------------------
-Once a dev version is working, we could run a small user testing on experiencied gammapy users to have their feedback and then on less experiencied users.
+Once a dev version is working, we could run a small user testing on experienced gammapy users to have their
+feedback and then on less experienced users.
 
 
 Decision

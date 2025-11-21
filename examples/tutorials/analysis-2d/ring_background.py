@@ -58,17 +58,8 @@ from gammapy.datasets import MapDatasetOnOff
 from gammapy.estimators import ExcessMapEstimator
 from gammapy.makers import RingBackgroundMaker
 from gammapy.visualization import plot_distribution
-from gammapy.utils.check import check_tutorials_setup
 
 log = logging.getLogger(__name__)
-
-
-######################################################################
-# Check setup
-# -----------
-
-
-check_tutorials_setup()
 
 
 ######################################################################
@@ -139,7 +130,6 @@ analysis.get_observations()
 
 print(analysis.config)
 
-# %%time
 # Data extraction:
 analysis.get_datasets()
 
@@ -198,7 +188,6 @@ stacked_on_off = MapDatasetOnOff.create(
     geom=geom_image, energy_axis_true=energy_axis_true, name="stacked"
 )
 
-# %%time
 for dataset in analysis.datasets:
     # Ring extracting makes sense only for 2D analysis
     dataset_on_off = ring_maker.run(dataset.to_image())

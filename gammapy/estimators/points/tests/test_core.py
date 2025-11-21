@@ -11,7 +11,7 @@ from gammapy.data import GTI
 from gammapy.estimators import FluxPoints
 from gammapy.estimators.map.core import DEFAULT_UNIT
 from gammapy.estimators.utils import get_rebinned_axis
-from gammapy.maps import MapAxis
+from gammapy.maps import MapAxis, RegionNDMap
 from gammapy.modeling.models import PowerLawSpectralModel, SpectralModel
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import (
@@ -19,6 +19,8 @@ from gammapy.utils.testing import (
     mpl_plot_check,
     requires_data,
 )
+from gammapy.modeling.scipy import stat_profile_ul_scipy
+from ..core import squash_fluxpoints
 
 FLUX_POINTS_FILES = [
     "diff_flux_points.ecsv",
@@ -169,7 +171,7 @@ def flux_points(request):
 
 @pytest.fixture(scope="session")
 def flux_points_likelihood():
-    path = "$GAMMAPY_DATA/tests/spectrum/flux_points/binlike.fits"
+    path = "$GAMMAPY_DATA/estimators/crab_hess_fp/crab_hess_fp.fits"
     return FluxPoints.read(path)
 
 
@@ -227,7 +229,7 @@ class TestFluxPoints:
         assert flux_points_likelihood.sqrt_ts
         assert flux_points_likelihood.ts
         assert flux_points_likelihood.stat
-        assert_allclose(flux_points_likelihood.n_sigma_ul, 2)
+        assert_allclose(flux_points_likelihood.n_sigma_ul, 3)
         assert flux_points_likelihood.sed_type_init == "likelihood"
 
     def test_plot(self, flux_points):
@@ -245,6 +247,20 @@ class TestFluxPoints:
         plt.figure()
         with mpl_plot_check():
             flux_points_likelihood.plot_ts_profiles()
+
+    def test_plot_likelihood_single_interval(self, flux_points_likelihood):
+        lc_1d = FluxPoints.read(
+            "$GAMMAPY_DATA/estimators/pks2155_hess_lc/pks2155_hess_lc.fits",
+            format="lightcurve",
+        )
+        axis_new = get_rebinned_axis(
+            lc_1d, method="fixed-bins", group_size=34, axis_name="time"
+        )
+        l1 = lc_1d.resample_axis(axis_new=axis_new)
+        plt.figure()
+        with mpl_plot_check():
+            ax = l1.plot_ts_profiles(axis_name="time")
+            assert "Time" in str(ax.xaxis.get_label())
 
     def test_plot_likelihood_error(self, flux_points_likelihood):
         del flux_points_likelihood._data["stat_scan"]
@@ -445,3 +461,62 @@ def test_resample_axis():
     fp = FluxPoints.from_table(table)
     with pytest.raises(ValueError):
         fp.resample_axis(axis_new=MapAxis.from_nodes([0, 1, 2]))
+
+
+def test_flux_point_init():
+    table = Table()
+    table["norm"] = np.array([10, 20, 30, 40])
+    table["e_min"] = np.array([10, 20, 30, 40]) * u.TeV
+    table["e_max"] = np.array([20, 30, 40, 50]) * u.TeV
+    norm_map = RegionNDMap.from_table(table=table, colname="norm", format="gadf-sed")
+
+    maps = dict(norm=norm_map)
+    # Get values
+    model = PowerLawSpectralModel()
+    table["e_ref"] = FluxPoints._energy_ref_lafferty(
+        model, table["e_min"], table["e_max"]
+    )
+    fp = FluxPoints(maps, reference_model=model)
+
+    assert fp.available_quantities == ["norm"]
+    assert_allclose(fp.norm.data.ravel(), [10, 20, 30, 40])
+
+
+@requires_data()
+def test_recompute_ul():
+    flux_points = FluxPoints.read(
+        "$GAMMAPY_DATA/estimators/crab_hess_fp/crab_hess_fp.fits"
+    )
+    value_scan = flux_points.stat_scan.geom.axes["norm"].center
+    idx = 0
+    stat_scan = flux_points.stat_scan.data[idx].squeeze()
+
+    with pytest.raises(
+        ValueError,
+        match="Statistic profile has no finite value therefore no best-fit value can be determined.",
+    ):
+        stat_profile_ul_scipy(value_scan, stat_scan, delta_ts=4)
+
+    # As we have the above error, the recompute_ul should set this first value to NaN
+    recomputed = flux_points.recompute_ul()
+    assert_allclose(recomputed.norm_ul.data[0][0], np.nan)
+
+
+@requires_data()
+def test_squash_fluxpoints():
+    fp1 = FluxPoints.read("$GAMMAPY_DATA/estimators/crab_hess_fp/crab_hess_fp.fits")
+    energy_axis = fp1.geom.axes["energy"]
+    squash_fp1 = squash_fluxpoints(flux_point=fp1, axis=energy_axis)
+    assert squash_fp1.geom.axes.names == []
+    assert len(fp1.stat.data) == 5
+    assert len(squash_fp1.stat.data) == 1
+
+    fp2 = FluxPoints.read(
+        "$GAMMAPY_DATA/estimators/pks2155_hess_lc/pks2155_hess_lc.fits",
+        format="lightcurve",
+    )
+    time_axis = fp2.geom.axes["time"]
+    squash_fp2 = squash_fluxpoints(fp2, axis=time_axis)
+    assert squash_fp2.geom.axes["energy"].nbin == 1
+    assert len(fp2.stat.data) == 34
+    assert len(squash_fp2.stat.data) == 1

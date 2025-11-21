@@ -20,6 +20,7 @@ __all__ = ["FluxProfileEstimator"]
 
 class FluxProfileEstimator(FluxPointsEstimator):
     """Estimate flux profiles.
+
     The class is backward folding of FluxPointsEstimator. However, the re-optimization
     is not available, as only one spectral model can be fitted.
 

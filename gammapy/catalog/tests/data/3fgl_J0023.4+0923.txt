@@ -3,7 +3,7 @@
 
 Catalog row index (zero-based) : 55
 Source name          : 3FGL J0023.4+0923
-Extended name        :                   
+Extended name        : --
 Associations     : PSR J0023+0923
 Class1           : PSR  
 TeVCat flag      : N
@@ -43,7 +43,7 @@ Energy flux (100 MeV - 100 GeV)               : 7.28e-12 +- 8.09e-13 erg cm-2 s-
 *** Spectral points ***
 
   e_min     e_max        flux     flux_errn   flux_errp      e2dnde     e2dnde_errn   e2dnde_errp  is_ul   flux_ul     e2dnde_ul   sqrt_ts
-   MeV       MeV     1 / (cm2 s) 1 / (cm2 s) 1 / (cm2 s) erg / (cm2 s) erg / (cm2 s) erg / (cm2 s)       1 / (cm2 s) erg / (cm2 s)        
+   MeV       MeV     1 / (s cm2) 1 / (s cm2) 1 / (s cm2) erg / (s cm2) erg / (s cm2) erg / (s cm2)       1 / (s cm2) erg / (s cm2)        
 --------- ---------- ----------- ----------- ----------- ------------- ------------- ------------- ----- ----------- ------------- -------
   100.000    300.000   3.158e-09   2.421e-09   2.484e-09     8.263e-13     6.335e-13     6.500e-13 False         nan           nan   1.316
   300.000   1000.000   3.743e-09   4.966e-10   5.139e-10     2.719e-12     3.607e-13     3.733e-13 False         nan           nan   8.734

@@ -75,8 +75,8 @@ In practice, we have to:
 
 - Create the necessary makers :
 
-  - the spectrum dataset maker : `~gammapy.makers.SpectrumDatasetMaker` -
-    the OFF background maker, here a `~gammapy.makers.ReflectedRegionsBackgroundMaker`
+  - the spectrum dataset maker : `~gammapy.makers.SpectrumDatasetMaker`
+  - the OFF background maker, here a `~gammapy.makers.ReflectedRegionsBackgroundMaker`
   - and the safe range maker : `~gammapy.makers.SafeMaskMaker`
 
 - Perform the data reduction loop. And for every observation:
@@ -126,14 +126,7 @@ from gammapy.modeling.models import (
     SkyModel,
     create_crab_spectral_model,
 )
-
-######################################################################
-# Check setup
-# -----------
-from gammapy.utils.check import check_tutorials_setup
 from gammapy.visualization import plot_spectrum_datasets_off_regions
-
-check_tutorials_setup()
 
 
 ######################################################################
@@ -157,7 +150,7 @@ observations = datastore.get_observations(obs_ids)
 #
 # The next step is to define a signal extraction region, also known as on
 # region. In the simplest case this is just a
-# `CircleSkyRegion <http://astropy-regions.readthedocs.io/en/latest/api/regions.CircleSkyRegion.html>`__.
+# `~regions.CircleSkyRegion`.
 #
 
 target_position = SkyCoord(ra=83.63, dec=22.01, unit="deg", frame="icrs")
@@ -217,7 +210,6 @@ dataset_maker = SpectrumDatasetMaker(
 bkg_maker = ReflectedRegionsBackgroundMaker(exclusion_mask=exclusion_mask)
 safe_mask_maker = SafeMaskMaker(methods=["aeff-max"], aeff_percent=10)
 
-# %%time
 datasets = Datasets()
 
 for obs_id, observation in zip(obs_ids, observations):
@@ -231,7 +223,7 @@ print(datasets)
 ######################################################################
 # The data reduction loop can also be performed through the
 # `~gammapy.makers.DatasetsMaker` class that take a list of makers as input,
-# as described :doc:`here </tutorials/api/makers>`
+# as described :doc:`here </tutorials/details/makers>`
 
 
 ######################################################################
@@ -368,7 +360,7 @@ plt.show()
 
 ######################################################################
 # For more ways of assessing fit quality, please refer to the dedicated
-# :doc:`/tutorials/api/fitting` tutorial.
+# :doc:`/tutorials/details/fitting` tutorial.
 #
 
 
@@ -475,10 +467,9 @@ fig, ax = plt.subplots()
 plot_kwargs = {
     "energy_bounds": [0.1, 30] * u.TeV,
     "sed_type": "e2dnde",
-    "yunits": u.Unit("erg cm-2 s-1"),
     "ax": ax,
 }
-
+ax.yaxis.set_units(u.Unit("erg cm-2 s-1"))
 # plot stacked model
 model_best_stacked.spectral_model.plot(**plot_kwargs, label="Stacked analysis result")
 model_best_stacked.spectral_model.plot_error(facecolor="blue", alpha=0.3, **plot_kwargs)
@@ -573,24 +564,6 @@ flux_points_dataset_no_ul = FluxPointsDataset(
 )
 
 plot_stat(flux_points_dataset_no_ul)
-
-######################################################################
-# Exercises
-# ---------
-#
-# Now you have learned the basics of a spectral analysis with Gammapy. To
-# practice you can continue with the following exercises:
-#
-# -  Fit a different spectral model to the data. You could try
-#    `~gammapy.modeling.models.ExpCutoffPowerLawSpectralModel` or
-#    `~gammapy.modeling.models.LogParabolaSpectralModel`.
-# -  Compute flux points for the stacked dataset.
-# -  Create a `~gammapy.datasets.FluxPointsDataset` with the flux points
-#    you have computed for the stacked dataset and fit the flux points
-#    again with obe of the spectral models. How does the result compare to
-#    the best fit model, that was directly fitted to the counts data?
-#
-
 
 ######################################################################
 # What next?

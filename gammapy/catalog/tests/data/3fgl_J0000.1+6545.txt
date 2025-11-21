@@ -3,9 +3,9 @@
 
 Catalog row index (zero-based) : 0
 Source name          : 3FGL J0000.1+6545
-Extended name        :                   
+Extended name        : --
 Associations     : 
-Class1           :      
+Class1           : --
 TeVCat flag      : N
 
 *** Other info ***
@@ -42,7 +42,7 @@ Energy flux (100 MeV - 100 GeV)               : 1.36e-11 +- 2.07e-12 erg cm-2 s-
 *** Spectral points ***
 
   e_min     e_max        flux     flux_errn   flux_errp      e2dnde     e2dnde_errn   e2dnde_errp  is_ul   flux_ul     e2dnde_ul   sqrt_ts
-   MeV       MeV     1 / (cm2 s) 1 / (cm2 s) 1 / (cm2 s) erg / (cm2 s) erg / (cm2 s) erg / (cm2 s)       1 / (cm2 s) erg / (cm2 s)        
+   MeV       MeV     1 / (s cm2) 1 / (s cm2) 1 / (s cm2) erg / (s cm2) erg / (s cm2) erg / (s cm2)       1 / (s cm2) erg / (s cm2)        
 --------- ---------- ----------- ----------- ----------- ------------- ------------- ------------- ----- ----------- ------------- -------
   100.000    300.000   1.808e-08   8.395e-09   8.236e-09     4.175e-12     1.938e-12     1.902e-12 False         nan           nan   2.169
   300.000   1000.000   6.941e-09   1.353e-09   1.367e-09     4.544e-12     8.856e-13     8.948e-13 False         nan           nan   5.270

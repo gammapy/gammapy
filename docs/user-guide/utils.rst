@@ -100,9 +100,9 @@ For now, we use the `gammapy.utils.time.time_ref_from_dict`,
 to convert MET floats to `~astropy.time.Time` objects via the reference times
 stored in FITS headers.
 
-Time differences
-++++++++++++++++
+.. Time differences
+.. ++++++++++++++++
 
-TODO: discuss when to use `~astropy.time.TimeDelta` or `~astropy.units.Quantity`
-or :term:`MET` floats and where one needs to convert between those and what to watch
-out for.
+.. TODO: discuss when to use `~astropy.time.TimeDelta` or `~astropy.units.Quantity`
+.. or :term:`MET` floats and where one needs to convert between those and what to watch
+.. out for.

@@ -60,15 +60,8 @@ class Geom(abc.ABC):
     See also: `~gammapy.maps.WcsGeom` and `~gammapy.maps.HpxGeom`.
     """
 
-    # workaround for the lru_cache pickle issue
-    # see e.g. https://github.com/cloudpipe/cloudpickle/issues/178
-    def __getstate__(self):
-        state = self.__dict__.copy()
-        for key, value in state.items():
-            func = getattr(value, "__wrapped__", None)
-            if func is not None:
-                state[key] = func
-        return state
+    def __repr__(self):
+        return self.__str__()
 
     def _repr_html_(self):
         try:
@@ -450,7 +443,7 @@ class Geom(abc.ABC):
             Name of the axis to remove.
 
         Returns
-            -------
+        -------
         geom : `Geom`
             New geom with the axis removed.
         """

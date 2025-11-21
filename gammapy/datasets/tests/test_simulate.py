@@ -8,7 +8,7 @@ from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.io import fits
 from astropy.table import Table
 from astropy.time import Time
-from gammapy.data import GTI, DataStore, Observation, ObservationsEventsSampler
+from gammapy.data import GTI, DataStore, Observation
 from gammapy.data.pointing import FixedPointingInfo
 from gammapy.datasets import MapDataset, MapDatasetEventSampler
 from gammapy.datasets.tests.test_map import get_map_dataset
@@ -136,7 +136,6 @@ def get_energy_dependent_temporal_model():
 
 
 @pytest.fixture()
-@requires_data()
 def energy_dependent_temporal_sky_model(models):
     models[0].spatial_model = PointSpatialModel(
         lon_0="0 deg", lat_0="0 deg", frame="galactic"
@@ -246,16 +245,15 @@ def test_sample_coord_time_energy(dataset, energy_dependent_temporal_sky_model):
     dataset.models = energy_dependent_temporal_sky_model
     evaluator = dataset.evaluators["test-source"]
 
-    expected = np.array([854.26361, 7.840697, 266.404988, -28.936178])
+    time_ref = dataset.gti.time_ref
+
+    expected = np.array([7.840697, 266.404988, -28.936178])
     events = sampler._sample_coord_time_energy(dataset, evaluator.model)
+    met = (events["TIME"] - time_ref).to_value("s")
 
     assert len(events) == 2514
-
-    assert_allclose(
-        [events[0][0], events[0][1], events[0][2], events[0][3]],
-        expected,
-        rtol=1e-6,
-    )
+    assert_allclose(met[0], 854.26361, rtol=1e-6)
+    assert_allclose((events[0][1], events[0][2], events[0][3]), expected, rtol=1e-6)
 
     irfs = load_irf_dict_from_file(
         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
@@ -338,11 +336,8 @@ def test_sample_coord_time_energy_random_seed(
     )
 
     # Important: do not increase the tolerance!
-    assert_allclose(
-        events[0][0],
-        0.29982,
-        rtol=1.5e-6,
-    )
+    met = events["TIME"] - dataset.gti.time_ref
+    assert_allclose(met[0].to_value("s"), 0.29982, rtol=1.5e-6)
 
 
 @requires_data()
@@ -364,41 +359,37 @@ def test_sample_coord_time_energy_unit(dataset, energy_dependent_temporal_sky_mo
     )
 
     # Important: do not increase the tolerance!
-    assert_allclose(
-        events[0][0],
-        854.10859,
-        rtol=1.5e-6,
-    )
+    met = events["TIME"] - dataset.gti.time_ref
+    assert_allclose(met[0].to_value("s"), 854.10859, rtol=1.5e-6)
 
 
 @requires_data()
 def test_mde_sample_sources(dataset, models):
     dataset.models = models
     sampler = MapDatasetEventSampler(random_state=0)
-    events = sampler.sample_sources(dataset=dataset)
+    events_table = sampler.sample_sources(dataset=dataset)
 
-    assert len(events.table["ENERGY_TRUE"]) == 90
-    assert_allclose(events.table["ENERGY_TRUE"][0], 2.383778805, rtol=1e-5)
-    assert events.table["ENERGY_TRUE"].unit == "TeV"
+    assert len(events_table["ENERGY_TRUE"]) == 90
+    assert_allclose(events_table["ENERGY_TRUE"][0], 2.383778805, rtol=1e-5)
+    assert events_table["ENERGY_TRUE"].unit == "TeV"
 
-    assert_allclose(events.table["RA_TRUE"][0], 266.56408893, rtol=1e-5)
-    assert events.table["RA_TRUE"].unit == "deg"
+    assert_allclose(events_table["RA_TRUE"][0], 266.56408893, rtol=1e-5)
+    assert events_table["RA_TRUE"].unit == "deg"
 
-    assert_allclose(events.table["DEC_TRUE"][0], -28.748145, rtol=1e-5)
-    assert events.table["DEC_TRUE"].unit == "deg"
+    assert_allclose(events_table["DEC_TRUE"][0], -28.748145, rtol=1e-5)
+    assert events_table["DEC_TRUE"].unit == "deg"
 
-    assert_allclose(events.table["TIME"][0], 120.62471, rtol=1e-5)
-    assert events.table["TIME"].unit == "s"
+    assert_allclose(events_table["TIME"][0].mjd, 51544.0013961193, rtol=1e-9)
 
-    assert_allclose(events.table["MC_ID"][0], 1, rtol=1e-5)
+    assert_allclose(events_table["MC_ID"][0], 1, rtol=1e-5)
 
 
 @requires_data()
 def test_mde_sample_sources_psf_update(dataset, models):
     dataset.models = models
     sampler = MapDatasetEventSampler(random_state=0)
-    events = sampler.sample_sources(dataset=dataset, psf_update=False)
-    assert len(events.table["ENERGY_TRUE"]) == 90
+    events_table = sampler.sample_sources(dataset=dataset, psf_update=False)
+    assert len(events_table["ENERGY_TRUE"]) == 90
 
 
 @requires_data()
@@ -406,19 +397,22 @@ def test_sample_sources_energy_dependent(dataset, energy_dependent_temporal_sky_
     dataset.models = energy_dependent_temporal_sky_model
 
     sampler = MapDatasetEventSampler(random_state=0)
-    events = sampler.sample_sources(dataset=dataset)
+    events_table = sampler.sample_sources(dataset=dataset)
 
-    assert len(events.table["ENERGY_TRUE"]) == 1268
-    assert_allclose(events.table["ENERGY_TRUE"][0], 6.456526, rtol=1e-5)
+    assert len(events_table["ENERGY_TRUE"]) == 1268
+    assert_allclose(events_table["ENERGY_TRUE"][0], 6.456526, rtol=1e-5)
 
-    assert_allclose(events.table["RA_TRUE"][0], 266.404988, rtol=1e-5)
+    assert_allclose(events_table["RA_TRUE"][0], 266.404988, rtol=1e-5)
 
-    assert_allclose(events.table["DEC_TRUE"][0], -28.936178, rtol=1e-5)
+    assert_allclose(events_table["DEC_TRUE"][0], -28.936178, rtol=1e-5)
 
-    assert_allclose(events.table["TIME"][0], 95.464699, rtol=1e-5)
+    assert_allclose(events_table["TIME"][0].mjd, 51544.001847785, rtol=1e-9)
 
-    dt = np.max(events.table["TIME"]) - np.min(events.table["TIME"])
-    assert dt <= dataset.gti.time_sum.to("s").value + sampler.t_delta.to("s").value
+    dt = np.max(events_table["TIME"]) - np.min(events_table["TIME"])
+    assert (
+        dt.to_value("s")
+        <= dataset.gti.time_sum.to("s").value + sampler.t_delta.to("s").value
+    )
 
 
 @requires_data()
@@ -455,24 +449,24 @@ def test_mde_sample_weak_src(dataset, models):
 def test_mde_sample_background(dataset, models):
     dataset.models = models
     sampler = MapDatasetEventSampler(random_state=0)
-    events = sampler.sample_background(dataset=dataset)
+    events_table = sampler.sample_background(dataset=dataset)
 
-    assert len(events.table) == 15
+    assert len(events_table) == 15
 
-    assert_allclose(np.mean(events.table["ENERGY"]), 4.1, rtol=0.1)
-    assert events.table["ENERGY"].unit == "TeV"
+    assert_allclose(np.mean(events_table["ENERGY"]), 4.1, rtol=0.1)
+    assert events_table["ENERGY"].unit == "TeV"
 
-    assert np.all(events.table["RA"] < 269.95)
-    assert np.all(events.table["RA"] > 262.90)
-    assert events.table["RA"].unit == "deg"
+    assert np.all(events_table["RA"] < 269.95)
+    assert np.all(events_table["RA"] > 262.90)
+    assert events_table["RA"].unit == "deg"
 
-    assert np.all(events.table["DEC"] < -25.43)
-    assert np.all(events.table["DEC"] > -32.43)
-    assert events.table["DEC"].unit == "deg"
+    assert np.all(events_table["DEC"] < -25.43)
+    assert np.all(events_table["DEC"] > -32.43)
+    assert events_table["DEC"].unit == "deg"
 
-    assert events.table["DEC_TRUE"][0] == events.table["DEC"][0]
+    assert events_table["DEC_TRUE"][0] == events_table["DEC"][0]
 
-    assert_allclose(events.table["MC_ID"][0], 0, rtol=1e-5)
+    assert_allclose(events_table["MC_ID"][0], 0, rtol=1e-5)
 
 
 @requires_data()
@@ -480,17 +474,17 @@ def test_mde_sample_psf(dataset, models):
     dataset.models = models
     sampler = MapDatasetEventSampler(random_state=0)
     events = sampler.sample_sources(dataset=dataset)
-    events = sampler.sample_psf(dataset.psf, events)
+    events_table = sampler.sample_psf(dataset.psf, events)
 
-    assert len(events.table) == 90
-    assert_allclose(events.table["ENERGY_TRUE"][0], 2.38377880, rtol=1e-5)
-    assert events.table["ENERGY_TRUE"].unit == "TeV"
+    assert len(events_table) == 90
+    assert_allclose(events_table["ENERGY_TRUE"][0], 2.38377880, rtol=1e-5)
+    assert events_table["ENERGY_TRUE"].unit == "TeV"
 
-    assert_allclose(events.table["RA"][0], 266.542912, rtol=1e-5)
-    assert events.table["RA"].unit == "deg"
+    assert_allclose(events_table["RA"][0], 266.542912, rtol=1e-5)
+    assert events_table["RA"].unit == "deg"
 
-    assert_allclose(events.table["DEC"][0], -28.78829, rtol=1e-5)
-    assert events.table["DEC"].unit == "deg"
+    assert_allclose(events_table["DEC"][0], -28.78829, rtol=1e-5)
+    assert events_table["DEC"].unit == "deg"
 
 
 @requires_data()
@@ -498,19 +492,19 @@ def test_mde_sample_edisp(dataset, models):
     dataset.models = models
     sampler = MapDatasetEventSampler(random_state=0)
     events = sampler.sample_sources(dataset=dataset)
-    events = sampler.sample_edisp(dataset.edisp, events)
+    events_table = sampler.sample_edisp(dataset.edisp, events)
 
-    assert len(events.table) == 90
-    assert_allclose(events.table["ENERGY"][0], 2.383778805, rtol=1e-5)
-    assert events.table["ENERGY"].unit == "TeV"
+    assert len(events_table) == 90
+    assert_allclose(events_table["ENERGY"][0], 2.383778805, rtol=1e-5)
+    assert events_table["ENERGY"].unit == "TeV"
 
-    assert_allclose(events.table["RA_TRUE"][0], 266.564088, rtol=1e-5)
-    assert events.table["RA_TRUE"].unit == "deg"
+    assert_allclose(events_table["RA_TRUE"][0], 266.564088, rtol=1e-5)
+    assert events_table["RA_TRUE"].unit == "deg"
 
-    assert_allclose(events.table["DEC_TRUE"][0], -28.7481450, rtol=1e-5)
-    assert events.table["DEC_TRUE"].unit == "deg"
+    assert_allclose(events_table["DEC_TRUE"][0], -28.7481450, rtol=1e-5)
+    assert events_table["DEC_TRUE"].unit == "deg"
 
-    assert_allclose(events.table["MC_ID"][0], 1, rtol=1e-5)
+    assert_allclose(events_table["MC_ID"][0], 1, rtol=1e-5)
 
 
 @requires_data()
@@ -580,7 +574,7 @@ def test_mde_run(dataset, models, caplog, tmp_path):
 
     assert captured[1].message == str[0]
     assert captured[2].message == str[1]
-    assert captured[4].message == str[2]
+    assert captured[3].message == str[2]
 
     dataset_bkg = dataset.copy(name="new-dataset")
     dataset_bkg.models = [FoVBackgroundModel(dataset_name=dataset_bkg.name)]
@@ -619,7 +613,7 @@ def test_mde_run(dataset, models, caplog, tmp_path):
     assert_allclose(meta["RA_PNT"], 266.4049882865447)
     assert_allclose(meta["DEC_PNT"], -28.936177761791473)
     assert meta["EQUINOX"] == "J2000"
-    assert meta["RADECSYS"] == "icrs"
+    assert meta["RADESYSa"] == "icrs"
     assert "Gammapy" in meta["CREATOR"]
     assert meta["EUNIT"] == "TeV"
     assert meta["EVTVER"] == ""
@@ -729,7 +723,7 @@ def test_mde_run_switchoff(dataset, models):
     assert meta["RA_PNT"] == 266.4049882865447
     assert_allclose(meta["ONTIME"], 3600.0)
     assert meta["OBS_ID"] == 1001
-    assert meta["RADECSYS"] == "icrs"
+    assert meta["RADESYSa"] == "icrs"
 
 
 @requires_data()
@@ -967,19 +961,18 @@ def test_sort_evt_by_time(dataset):
     sampler = MapDatasetEventSampler(random_state=0, n_event_bunch=1000)
     events = sampler.run(dataset=dataset)
 
-    dt = np.diff(events.table["TIME"])
-    assert np.all(dt >= 0)
+    dt = events.table["TIME"][1:] - events.table["TIME"][:-1]
+    assert np.all(dt.to("s") >= 0.0)
 
 
 @requires_data()
-def test_observation_event_sampler(signal_model, tmp_path):
+def test_observation_event_sampler(signal_model):
     from gammapy.datasets.simulate import ObservationEventSampler
 
     datastore = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
     obs = datastore.get_observations()[0]
 
-    # first test defaults with HESS
-    # otherwise with CTA the EdispMap computation takes too much time and memory
+    # Use H.E.S.S. for testing otherwise the EdispMap computation takes too much time and memory with CTAO
     maker = ObservationEventSampler()
 
     sim_obs = maker.run(obs, None)
@@ -1020,94 +1013,3 @@ def test_observation_event_sampler(signal_model, tmp_path):
     sim_obs = maker.run(obs, [signal_model])
     assert sim_obs.events is not None
     assert len(sim_obs.events.table) > 0
-
-
-@pytest.fixture(scope="session")
-def observations():
-    pointing = FixedPointingInfo(fixed_icrs=SkyCoord(0 * u.deg, 0 * u.deg))
-    livetime = 0.5 * u.hr
-    irfs = load_irf_dict_from_file(
-        "$GAMMAPY_DATA/cta-caldb/Prod5-South-20deg-AverageAz-14MSTs37SSTs.180000s-v0.1.fits.gz"
-    )
-    observations = [
-        Observation.create(
-            obs_id=100 + k, pointing=pointing, livetime=livetime, irfs=irfs
-        )
-        for k in range(2)
-    ]
-    return observations
-
-
-@pytest.fixture(scope="session")
-def models_list():
-    spectral_model_pwl = PowerLawSpectralModel(
-        index=2, amplitude="1e-12 TeV-1 cm-2 s-1", reference="1 TeV"
-    )
-    spatial_model_point = PointSpatialModel(
-        lon_0="0 deg", lat_0="0.0 deg", frame="galactic"
-    )
-
-    sky_model_pntpwl = SkyModel(
-        spectral_model=spectral_model_pwl,
-        spatial_model=spatial_model_point,
-        name="point-pwl",
-    )
-    models = Models(sky_model_pntpwl)
-    return models
-
-
-@requires_data()
-def test_observations_events_sampler(tmpdir, observations):
-    sampler_kwargs = dict(random_state=0)
-    dataset_kwargs = dict(
-        spatial_bin_size_min=0.1 * u.deg,
-        spatial_width_max=0.2 * u.deg,
-        energy_bin_per_decade_max=2,
-    )
-    sampler = ObservationsEventsSampler(
-        sampler_kwargs=sampler_kwargs,
-        dataset_kwargs=dataset_kwargs,
-        n_jobs=1,
-        outdir=tmpdir,
-        overwrite=True,
-    )
-    sampler.run(observations, models=None)
-
-
-@requires_data()
-def test_observations_events_sampler_time(
-    tmpdir, observations, energy_dependent_temporal_sky_model
-):
-    models = Models(energy_dependent_temporal_sky_model)
-    sampler_kwargs = dict(random_state=0)
-    dataset_kwargs = dict(
-        spatial_bin_size_min=0.1 * u.deg,
-        spatial_width_max=0.2 * u.deg,
-        energy_bin_per_decade_max=2,
-    )
-    sampler = ObservationsEventsSampler(
-        sampler_kwargs=sampler_kwargs,
-        dataset_kwargs=dataset_kwargs,
-        n_jobs=1,
-        outdir=tmpdir,
-        overwrite=True,
-    )
-    sampler.run(observations, models=models)
-
-
-@requires_data()
-def test_observations_events_sampler_parallel(tmpdir, observations, models_list):
-    sampler_kwargs = dict(random_state=0)
-    dataset_kwargs = dict(
-        spatial_bin_size_min=0.1 * u.deg,
-        spatial_width_max=0.2 * u.deg,
-        energy_bin_per_decade_max=2,
-    )
-    sampler = ObservationsEventsSampler(
-        sampler_kwargs=sampler_kwargs,
-        dataset_kwargs=dataset_kwargs,
-        n_jobs=2,
-        outdir=tmpdir,
-        overwrite=True,
-    )
-    sampler.run(observations, models=models_list)

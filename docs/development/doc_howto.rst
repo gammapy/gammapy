@@ -36,19 +36,35 @@ This should work::
 
 You need a bunch or LaTeX stuff, specifically ``texlive-fonts-extra`` is needed.
 
+.. _access-doc-on-pr:
+
+Accessing documentation build on a Pull Request
++++++++++++++++++++++++++++++++++++++++++++++++
+
+When working with pull requests (PRs), you can preview the generated documentation through the CI.
+This preview is produced automatically during the CI workflow and uploaded as an artifact.
+To access it:
+
+* Open the Pull Request (PR) you are interested in
+* Navigate to the "Checks" tab at the top of the PR page
+* Click on the CI workflow on the left hand side
+* Scroll down to the "Artifacts" section at the bottom
+* Download the documentation preview artifact named `gammapy-doc-html`
+
+
 Check Python code
 -----------------
 
 Code in RST files
 +++++++++++++++++
 
-Most of the documentation of Gammapy is present in RST files that are converted into HTML pages using
-Sphinx during the build documentation process. You may include snippets of Python code in these RST files
-within blocks labelled with ``.. code-block:: python`` Sphinx directive. However, this code could not be
-tested, and it will not be possible to know if it fails in following versions of Gammapy. That's why we
-recommend using the ``.. testcode::`` directive to enclose code that will be tested against the results
-present in a block labelled with ``.. testoutput::`` directive. If not ``.. testoutput::`` directive is provided,
-only execution tests will be performed.
+Most of the documentation of Gammapy is present in `restructured text (RST)`_ files that are converted
+into HTML pages using Sphinx during the build documentation process. You may include snippets of Python
+code in these RST files within blocks labelled with ``.. code-block:: python`` Sphinx directive. However,
+this code could not be tested, and it will not be possible to know if it fails in following versions of
+Gammapy. That's why we recommend using the ``.. testcode::`` directive to enclose code that will be tested
+against the results present in a block labelled with ``.. testoutput::`` directive. If not ``.. testoutput::``
+directive is provided, only execution tests will be performed.
 
 For example, we could check that the code below does not fail, since it does not provide any output.
 
@@ -80,6 +96,8 @@ In order to perform tests of these snippets of code present in RST files, you ma
 
     pytest --doctest-glob="*.rst" docs/
 
+.. _docstring-code-py-file:
+
 Code in docstrings in Python files
 ++++++++++++++++++++++++++++++++++
 
@@ -95,8 +113,9 @@ following syntax.
         >>> from gammapy.data import EventList
         >>> event_list = EventList.read('events.fits') # doctest: +SKIP
 
-In the case above, we could check the execution of the first two lines importing the ``Quantity`` and ``EventList``
-modules, whilst the third line will be skipped. On the contrary, in the example below we could check the execution of
+In the case above, we could check the execution of the first two lines importing the
+`~astropy.units.Quantity` and `~gammapy.data.EventList` modules, whilst the third line will be skipped.
+On the contrary, in the example below we could check the execution of
 the code as well as the output value produced.
 
 .. code-block:: text
@@ -170,6 +189,7 @@ Another option is to create a general list of references, as follows:
         * `Author et al. (2023), "Title" <link_to_nasaads>`_
         * `Author2 et al. (2022), "Title2" <link_to_nasaads>`_
 
+.. _docstring-formatting:
 
 Docstring formatting
 ^^^^^^^^^^^^^^^^^^^^
@@ -269,12 +289,32 @@ Links to Gammapy API are handled via normal Sphinx syntax in comments:
 
 .. code-block:: python
 
-   # Create an `~gammapy.analysis.AnalysisConfig` object and edit it to
-   # define the analysis configuration:
+   # Create a `~gammapy.modeling.models.PowerLawSpectralModel` object:
 
-   config = AnalysisConfig()
+   pwl = PowerLawSpectralModel()
 
-This will resolve to a link to the ``AnalysisConfig`` class in the API documentation.
+The ``~`` prefix hides the full module path in the rendered documentation, so that link will appear
+as ``PowerLawSpectralModel`` which points to the API documentation.
+
+General guidelines
+^^^^^^^^^^^^^^^^^^
+
+- Use the ``~`` prefix to hide long paths unless showing the full path provide clarity
+- Use the full path when the shortened name is unclear or ambiguous
+- For example, ``~gammapy.datasets.FluxPointsDataset.residuals`` will render as ``residuals``, which may
+  not be informative. Instead use the full path ``gammapy.datasets.FluxPointsDataset.residuals``, so that
+  one knows the explicit class name where this belongs.
+
+
+Referencing APIs in the same module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+When referencing classes or functions defined in the same module, you can omit full path. For example,
+as ``PowerLawNormSpectralModel`` is in the same file as ``PowerLawSpectralModel``, you can simply write
+``PowerLawSpectralModel``, instead of the full path and without the ``~``.
+
+
+
 
 .. _dev-check_html_links:
 
@@ -293,24 +333,33 @@ Include png files as images
 In the RST files
 ++++++++++++++++
 
-Gammapy has a ``gp-image`` directive to include an image from ``$GAMMAPY_DATA/figures/``,
-use the ``gp-image`` directive instead of the usual Sphinx ``image`` directive like this:
+To include an image in your rst file, first add it to the `docs/_static` folder.
+Then you can use the usual Sphinx ``image`` directive like this:
 
 .. code-block:: rst
 
-    .. gp-image:: detect/fermi_ts_image.png
+    .. image:: _static/gammapy_banner.png
         :scale: 100%
 
-More info on the `image directive <http://www.sphinx-doc.org/en/stable/rest.html#images>`__.
+If you wish to add an image to a tutorial you can utilise the following:
+
+.. code-block:: rst
+
+    #.. figure:: ../../_static/gammapy_maps.png
+    #   :alt: Gammapy Maps Illustration
+    #
+    #   Gammapy Maps Illustration
+
+Where `:alt` is used to create a caption for the image.
+More information on the image directive can be found `here <http://www.sphinx-doc.org/en/stable/rest.html#images>`__.
 
 Documentation guidelines
 ------------------------
 
 Like almost all Python projects, the Gammapy documentation is written in a format called
-`restructured text (RST)`_ and built using `Sphinx`_.
-We mostly follow the `Astropy documentation guidelines <https://docs.astropy.org/en/latest/development/docguide.html>`,
-which are based on the `Numpy docstring standard`_,
-which is what most scientific Python packages use.
+`restructured text (RST)`_ and built using `Sphinx`_. We mostly follow the
+`Astropy documentation guidelines <https://docs.astropy.org/en/latest/development/docguide.html>`__,
+which are based on the `Numpy docstring standard`_, which is what most scientific Python packages use.
 
 .. _restructured text (RST): http://sphinx-doc.org/rest.html
 .. _Sphinx: http://sphinx-doc.org/
@@ -417,4 +466,4 @@ sections, which is confusing to users ("what's the difference between attributes
 One solution is to always use properties, but that can get very verbose if we have to write
 so many getters and setters. We could start using descriptors.
 
-TODO: make a decision on this and describe the issue / solution here.
+.. TODO: make a decision on this and describe the issue / solution here.

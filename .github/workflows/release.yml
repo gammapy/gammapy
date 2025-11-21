@@ -8,7 +8,7 @@ on:
 jobs:
   release-pypi:
     if: github.repository_owner == 'gammapy'
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/publish.yml@v1
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/publish.yml@v2
     with:
       targets: |
         - cp3*-manylinux_x86_64*
@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
@@ -36,7 +36,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Dispatch Gammapy Docs
-        uses: peter-evans/repository-dispatch@v3
+        uses: peter-evans/repository-dispatch@v4
         with:
           token: ${{ secrets.REMOTE_DISPATCH }}
           repository: gammapy/gammapy-docs
@@ -49,7 +49,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Dispatch Gammapy Webpage
-        uses: peter-evans/repository-dispatch@v3
+        uses: peter-evans/repository-dispatch@v4
         with:
           token: ${{ secrets.REMOTE_DISPATCH }}
           repository: gammapy/gammapy-webpage
