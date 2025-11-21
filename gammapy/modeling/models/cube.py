@@ -2,7 +2,6 @@
 """Cube models (axes: lon, lat, energy)."""
 
 import logging
-import warnings
 import os
 import numpy as np
 import astropy.units as u
@@ -15,7 +14,6 @@ from gammapy.modeling.parameter import _get_parameters_str
 from gammapy.utils.compat import COPY_IF_NEEDED
 from gammapy.utils.fits import LazyFitsData
 from gammapy.utils.scripts import make_name, make_path
-from gammapy.utils.deprecation import GammapyDeprecationWarning
 from .core import Model, ModelBase, Models
 from .spatial import ConstantSpatialModel, SpatialModel
 from .spectral import PowerLawNormSpectralModel, SpectralModel, TemplateSpectralModel
@@ -656,17 +654,6 @@ class FoVBackgroundModel(ModelBase):
         covariance_data=None,
         name=None,
     ):
-        # TODO: remove this in v2.0
-        if isinstance(dataset_name, SpectralModel):
-            warnings.warn(
-                "dataset_name has been made first argument since v1.3.",
-                GammapyDeprecationWarning,
-                stacklevel=2,
-            )
-            buf = dataset_name
-            dataset_name = spectral_model
-            spectral_model = buf
-
         self.datasets_names = [dataset_name]
 
         if spectral_model is None:
@@ -1135,7 +1122,7 @@ class TemplateNPredModel(ModelBase):
         self.spectral_model.tilt.value = 0
 
     def slice_by_energy(self, energy_min=None, energy_max=None, name=None):
-        """Select and slice model template in energy range
+        """Select and slice model template in energy range.
 
         Parameters
         ----------
@@ -1221,6 +1208,8 @@ def create_fermi_isotropic_diffuse_model(filename, datasets_names=None, **kwargs
     ----------
     filename : str
         Filename.
+    datasets_names : str or list of str, optional
+        Dataset names. Default is None.
     kwargs : dict
         Keyword arguments forwarded to `TemplateSpectralModel`.
 

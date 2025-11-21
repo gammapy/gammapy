@@ -44,15 +44,14 @@ def cli(log_level, ignore_warnings):  # noqa: D301
 
     For further information, see https://gammapy.org/ and https://docs.gammapy.org/
 
-    \b
     Examples
     --------
+    .. code-block:: console
 
-    \b
-    $ gammapy --help
-    $ gammapy --version
-    $ gammapy info --help
-    $ gammapy info
+       $ gammapy --help
+       $ gammapy --version
+       $ gammapy info --help
+       $ gammapy info
     """
     logging.basicConfig(level=log_level.upper())
 
@@ -64,16 +63,15 @@ def cli(log_level, ignore_warnings):  # noqa: D301
 def cli_analysis():
     """Automation of configuration driven data reduction process.
 
-    \b
     Examples
     --------
+    .. code-block:: console
 
-    \b
-    $ gammapy analysis config
-    $ gammapy analysis run
-    $ gammapy analysis config --overwrite
-    $ gammapy analysis config --filename myconfig.yaml
-    $ gammapy analysis run --filename myconfig.yaml
+       $ gammapy analysis config
+       $ gammapy analysis run
+       $ gammapy analysis config --overwrite
+       $ gammapy analysis config --filename myconfig.yaml
+       $ gammapy analysis run --filename myconfig.yaml
     """
 
 
@@ -81,16 +79,15 @@ def cli_analysis():
 def cli_workflow():
     """Automation of configuration driven data reduction process.
 
-    \b
     Examples
     --------
+    .. code-block:: console
 
-    \b
-    $ gammapy workflow config
-    $ gammapy workflow run
-    $ gammapy workflow config --overwrite
-    $ gammapy workflow config --filename myconfig.yaml
-    $ gammapy workflow run --filename myconfig.yaml
+       $ gammapy workflow config
+       $ gammapy workflow run
+       $ gammapy workflow config --overwrite
+       $ gammapy workflow config --filename myconfig.yaml
+       $ gammapy workflow run --filename myconfig.yaml
     """
 
 
@@ -99,23 +96,23 @@ def cli_workflow():
 def cli_download(ctx):  # noqa: D301
     """Download notebooks and datasets.
 
-    \b
     Download notebooks published in the Gammapy documentation as well as the
     related datasets needed to execute them.
-    \b
-    - The option `notebooks` will download the notebook files into a `gammapy-notebooks`
-    folder created at the current working directory.
-    \b
-    - The option `datasets` will download the datasets used in the documentation into a
-    `gammapy-datasets` folder created at the current working directory.
 
-    \b
+    - The option "notebooks" will download the notebook files into a
+      ``gammapy-notebooks`` folder created at the current working directory.
+
+    - The option "datasets" will download the datasets used in the
+      documentation into a ``gammapy-datasets`` folder created at the current
+      working directory.
+
+
     Examples
     --------
+    .. code-block:: console
 
-    \b
-    $ gammapy download datasets  --out localfolder
-    $ gammapy download notebooks --release 0.18 --out localfolder
+       $ gammapy download datasets  --out localfolder
+       $ gammapy download notebooks --release 2.0 --out localfolder
     """
 
 
@@ -151,6 +148,10 @@ def add_subcommands():
     from .workflow import cli_run_workflow
 
     cli_workflow.add_command(cli_run_workflow)
+
+    from .tutorial_info import cli_tutorial
+
+    cli.add_command(cli_tutorial)
 
 
 add_subcommands()

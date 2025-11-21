@@ -16,7 +16,7 @@ For convenience we provide, for each stable release of Gammapy,
 a pre-defined conda environment file, so you can
 get additional useful packages together with Gammapy in a virtual isolated
 environment. First install `Miniconda <https://docs.conda.io/en/latest/miniconda.html>`__
-and then just execute the following commands in the terminal:
+(or Mamba, Miniforge), and then just execute the following commands in the terminal:
 
 .. code-block:: bash
 
@@ -26,8 +26,12 @@ and then just execute the following commands in the terminal:
 .. note::
 
     On Windows, you have to open up the conda environment file and delete the
-    lines with ``sherpa`` and ``healpy``. Those are optional dependencies that
-    currently aren't available on Windows.
+    line with ``healpy``. This is an optional dependency that
+    currently isn't available on Windows.
+
+.. note::
+
+   To avoid some installation issues, ``sherpa`` is not part of the environment file provided. You can nevertheless install ``sherpa`` in your environment using ``python -m pip install sherpa``.
 
 Once the environment has been created you can activate it using:
 

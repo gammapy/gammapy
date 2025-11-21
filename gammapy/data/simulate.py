@@ -1,13 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Simulate observations"""
-
 from itertools import repeat
 from gammapy.utils import parallel as parallel
 from gammapy.utils.scripts import make_path
 
 
 class ObservationsEventsSampler(parallel.ParallelMixin):
-    """Run event sampling for an emsemble of observations
+    """Run event sampling for an ensemble of observations.
 
     Parameters
     ----------
@@ -15,14 +13,14 @@ class ObservationsEventsSampler(parallel.ParallelMixin):
         Arguments passed to `~gammapy.datasets.MapDatasetEventSampler`.
     dataset_kwargs : dict, optional
         Arguments passed to `~gammapy.datasets.create_map_dataset_from_observation()`.
-    outdir : str, Path
-        path of the output files created. Default is "./simulated_data/".
-        If None a list of `~gammapy.data.Observation` is returned.
-    overwrite : bool
-        Overwrite the output files or not
+    outdir : str, optional
+        Path of the output files created. Default is "./simulated_data/".
+        If None, a list of `~gammapy.data.Observation` is returned.
+    overwrite : bool, optional
+        Overwrite existing file. Default is True.
     n_jobs : int, optional
         Number of processes to run in parallel.
-        Default is one, unless `~gammapy.utils.parallel.N_JOBS_DEFAULT` was modified.
+        By default, the value is 1, unless `~gammapy.utils.parallel.N_JOBS_DEFAULT` has been modified.
     parallel_backend : {'multiprocessing', 'ray'}, optional
         Which backend to use for multiprocessing.
         Default is None.
@@ -51,13 +49,13 @@ class ObservationsEventsSampler(parallel.ParallelMixin):
         self.dataset_kwargs = dataset_kwargs
 
     def simulate_observation(self, observation, models=None):
-        """Simulate a  single observation.
+        """Simulate a single observation.
 
         Parameters
         ----------
         observation : `~gammapy.data.Observation`
             Observation to be simulated.
-        models : `~gammapy.modeling.Models`, optional
+        models : `~gammapy.modeling.models.Models`, optional
             Models to simulate.
             Can be None to only sample background events. Default is None.
         """
@@ -77,17 +75,16 @@ class ObservationsEventsSampler(parallel.ParallelMixin):
             return observation
 
     def run(self, observations, models=None):
-        """Run event sampling for an ensemble of onservations
+        """Run event sampling for an ensemble of observations.
 
         Parameters
         ----------
-        observation : `~gammapy.data.Observation`
-            Observation to be simulated.
-        models : `~gammapy.modeling.Models`, optional
+        observations : `~gammapy.data.Observations`
+            Observations to be simulated.
+        models : `~gammapy.modeling.models.Models`, optional
             Models to simulate.
             Can be None to only sample background events. Default is None.
         """
-
         n_jobs = min(self.n_jobs, len(observations))
 
         observations = parallel.run_multiprocessing(

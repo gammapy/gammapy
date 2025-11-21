@@ -5,7 +5,6 @@ import astropy.units as u
 import matplotlib.pyplot as plt
 from gammapy.maps import Map
 from gammapy.modeling.models import PowerLawSpectralModel
-from gammapy.utils.deprecation import deprecated_renamed_argument
 
 __all__ = ["PSFKernel"]
 
@@ -21,6 +20,8 @@ class PSFKernel:
     ----------
     psf_kernel_map : `~gammapy.maps.Map`
         PSF kernel stored in a Map.
+    normalize : bool, optional
+        Normalize the kernel. Default is True.
 
     Examples
     --------
@@ -132,8 +133,6 @@ class PSFKernel:
         The map geometry parameters (pixel size, energy bins) are taken from ``geom``.
         The Gaussian width ``sigma`` is a scalar.
 
-        TODO : support array input if it should vary along the energy axis.
-
         Parameters
         ----------
         geom : `~gammapy.maps.WcsGeom`
@@ -150,6 +149,7 @@ class PSFKernel:
         kernel : `~gammapy.irf.PSFKernel`
             The kernel Map with reduced geometry according to the max_radius.
         """
+        # TODO : support array input if it should vary along the energy axis.
         from gammapy.modeling.models import GaussianSpatialModel
 
         gauss = GaussianSpatialModel(sigma=sigma)
@@ -162,7 +162,6 @@ class PSFKernel:
         """Write the Map object which contains the PSF kernel to file."""
         self.psf_kernel_map.write(*args, **kwargs)
 
-    @deprecated_renamed_argument("spectrum", "spectral_model", "v1.3")
     def to_image(self, spectral_model=None, exposure=None, keepdims=True):
         """Transform 3D PSFKernel into a 2D PSFKernel.
 
@@ -252,6 +251,11 @@ class PSFKernel:
 
     def peek(self, figsize=(15, 5)):
         """Quick-look summary plots.
+
+        This method creates a figure with two subplots:
+
+        * PSF kernel plot : PSF kernel summed over the energy axis
+        * PSF kernel plot : PSF kernel at 1 TeV
 
         Parameters
         ----------

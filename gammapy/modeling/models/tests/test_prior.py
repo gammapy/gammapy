@@ -6,7 +6,10 @@ import astropy.units as u
 from gammapy.modeling.models import (
     PRIOR_REGISTRY,
     GaussianPrior,
+    GeneralizedGaussianPrior,
     Model,
+    Models,
+    SkyModel,
     UniformPrior,
     LogUniformPrior,
 )
@@ -18,8 +21,8 @@ TEST_PRIORS = [
         model=GaussianPrior(mu=4.0, sigma=1.0),
         prior_0=0.0 * u.Unit(""),
         prior_1=1.0 * u.Unit(""),
-        val_at_0=16.0,
-        val_at_1=9.0,
+        val_at_0=17.837877,
+        val_at_1=10.837877,
         inverse_cdf_at_0=-np.inf,
         inverse_cdf_at_1=np.inf,
     ),
@@ -27,10 +30,10 @@ TEST_PRIORS = [
         name="uniform",
         model=UniformPrior(min=0.0, max=10),
         prior_0=0.0 * u.Unit(""),
-        prior_1=1.0 * u.Unit(""),
-        val_at_0=1.0,
-        val_at_1=0.0,
-        val_with_weight_2=2.0,
+        prior_1=11.0 * u.Unit(""),
+        val_at_0=4.60517,
+        val_at_1=np.inf,
+        val_with_weight_2=9.21034,
         inverse_cdf_at_0=0.0,
         inverse_cdf_at_1=10.0,
     ),
@@ -43,6 +46,16 @@ TEST_PRIORS = [
         val_at_1=-60.03172899109759,
         inverse_cdf_at_0=1e-14,
         inverse_cdf_at_1=1e-10,
+    ),
+    dict(
+        name="gennorm",
+        model=GeneralizedGaussianPrior(mu=4, sigma=1.0, eta=0.5),
+        prior_0=0.0 * u.Unit(""),
+        prior_1=1.0 * u.Unit(""),
+        val_at_0=17.837877,
+        val_at_1=10.837877,
+        inverse_cdf_at_0=-np.inf,
+        inverse_cdf_at_1=np.inf,
     ),
 ]
 
@@ -105,3 +118,19 @@ def test_to_from_dict():
     desired = [par.value for par in model.parameters]
     assert_quantity_allclose(actual, desired)
     assert_allclose(model.weight, new_model.weight, rtol=1e-7)
+
+
+@pytest.mark.parametrize("prior", TEST_PRIORS)
+def test_serialisation(prior, tmpdir):
+    prior = TEST_PRIORS[1]
+    model = SkyModel.create(spectral_model="pl", name="crab")
+    model.spectral_model.amplitude.prior = prior["model"]
+    models = Models([model])
+    filename = str(tmpdir / "model_prior.yaml")
+    models.write(filename)
+
+    loaded_models = Models.read(filename)
+    loaded_model = loaded_models[0]
+    loaded_prior = loaded_model.spectral_model.amplitude.prior
+
+    assert isinstance(loaded_prior, type(prior["model"]))

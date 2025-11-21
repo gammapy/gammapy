@@ -17,7 +17,7 @@ use it you have to write a Python script or Jupyter notebook, where you import
 the functions and classes needed for a given analysis, and then call them,
 passing parameters to configure the analysis.
 
-We have also have a :ref:`analysis` that provides high level Python functions for
+We also have a :ref:`analysis` that provides high level Python functions for
 the most common needs present in the analysis process.
 
 That said, for some very commonly used and easy to configure analysis tasks we
@@ -157,7 +157,7 @@ just import the functionality you need and call it, like this:
 
    >>> from gammapy.stats import CashCountsStatistic
    >>> CashCountsStatistic(n_on=10, mu_bkg=4.2).sqrt_ts
-   np.float64(2.397918129147546)
+   2.397918129147546
 
 If you imagine that the actual computation involves many lines of code (and not
 just a one-line function call), and that you need to do this computation

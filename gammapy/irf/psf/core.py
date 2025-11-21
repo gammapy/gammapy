@@ -26,6 +26,7 @@ class PSF(IRF):
             Rad value.
         **kwargs : dict
             Other coordinates.
+            You can view the available options through "psf.axes.names".
 
         Returns
         -------
@@ -48,11 +49,20 @@ class PSF(IRF):
             Default is 20.
         **kwargs : dict
             Other coordinates.
+            You can view the available options through "psf.axes.names".
 
         Returns
         -------
         radius : `~astropy.coordinates.Angle`
             Containment radius.
+
+        Examples
+        --------
+        >>> from gammapy.data import DataStore
+        >>> import astropy.units as u
+        >>> data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
+        >>> obs = data_store.obs(23523)
+        >>> containment_radius = obs.psf.containment_radius(energy_true=0.1*u.TeV ,offset=0.3*u.deg, fraction=0.68)
         """
         # TODO: this uses a lot of numpy broadcasting tricks, maybe simplify...
         from gammapy.datasets.map import RAD_AXIS_DEFAULT
@@ -91,10 +101,10 @@ class PSF(IRF):
         fraction : list, optional
             Containment fraction to compute containment radius for, between 0 and 1.
             Default is (0.68, 0.95).
-        energy_true : `~astropy.units.u.Quantity`, optional
+        energy_true : `~astropy.units.Quantity`, optional
             Energies to compute containment radius for.
             Default is ([1.0], [10.0]) TeV.
-        offset : `~astropy.units.u.Quantity`, optional
+        offset : `~astropy.units.Quantity`, optional
             Offset to compute containment radius for.
             Default is 0 deg.
 
@@ -132,7 +142,7 @@ class PSF(IRF):
 
         Parameters
         ----------
-        ax : `~matplotlib.pyplot.Axes`, optional
+        ax : `~matplotlib.axes.Axes`, optional
             Matplotlib axes. Default is None.
         fraction : list of float or `~numpy.ndarray`, optional
             Containment fraction between 0 and 1.
@@ -145,7 +155,7 @@ class PSF(IRF):
 
         Returns
         -------
-        ax : `~matplotlib.pyplot.Axes`
+        ax : `~matplotlib.axes.Axes`
              Matplotlib axes.
 
         """
@@ -184,7 +194,7 @@ class PSF(IRF):
 
         Parameters
         ----------
-        ax : `~matplotlib.pyplot.Axes`, optional
+        ax : `~matplotlib.axes.Axes`, optional
             Matplotlib axes. Default is None.
         fraction : float, optional
             Containment fraction between 0 and 1.
@@ -200,7 +210,7 @@ class PSF(IRF):
 
         Returns
         -------
-        ax : `~matplotlib.pyplot.Axes`
+        ax : `~matplotlib.axes.Axes`
              Matplotlib axes.
         """
         ax = plt.gca() if ax is None else ax
@@ -245,7 +255,7 @@ class PSF(IRF):
 
         Parameters
         ----------
-        ax : `~matplotlib.pyplot.Axes`, optional
+        ax : `~matplotlib.axes.Axes`, optional
             Matplotlib axes. Default is None.
         offset : `~astropy.coordinates.Angle`, optional
             Offset in the field of view.

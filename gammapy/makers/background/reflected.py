@@ -285,14 +285,20 @@ class ReflectedRegionsFinder(RegionsFinder):
     ----------
     angle_increment : `~astropy.coordinates.Angle`, optional
         Rotation angle applied when a region falls in an excluded region.
+        Default is '0.1 rad'.
     min_distance : `~astropy.coordinates.Angle`, optional
-        Minimum rotation angle between two consecutive reflected regions.
+        Minimum rotation angle between two consecutive reflected regions, with respect to the
+        rotation center (typically the pointing position).
+        Default is '0 rad'.
     min_distance_input : `~astropy.coordinates.Angle`, optional
         Minimum rotation angle between the input region and the first reflected region.
+        Default is '0.1 rad'.
     max_region_number : int, optional
         Maximum number of regions to use.
+        Default is 10000.
     binsz : `~astropy.coordinates.Angle`
         Bin size of the reference map used for region finding.
+        Default is '0.01 deg'.
 
     Examples
     --------
@@ -432,7 +438,7 @@ class ReflectedRegionsBackgroundMaker(Maker):
 
     Attributes
     ----------
-    region_finder: RegionsFinder
+    region_finder: `RegionsFinder`
         If not given, a `ReflectedRegionsFinder` will be created and
         any of the ``**kwargs`` will be forwarded to the `ReflectedRegionsFinder`.
     exclusion_mask : `~gammapy.maps.WcsNDMap`, optional
@@ -448,7 +454,6 @@ class ReflectedRegionsBackgroundMaker(Maker):
         exclusion_mask=None,
         **kwargs,
     ):
-
         if exclusion_mask and not exclusion_mask.is_mask:
             raise ValueError("Exclusion mask must contain boolean values")
 

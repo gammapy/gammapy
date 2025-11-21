@@ -74,12 +74,16 @@ class Covariance:
         """
         npars = len(parameters)
 
-        if not matrix.shape == (npars, npars):
-            matrix = cls._expand_factor_matrix(matrix, parameters)
+        if npars > 0:
+            if not matrix.shape == (npars, npars):
+                matrix = cls._expand_factor_matrix(matrix, parameters)
 
-        scales = [par.scale for par in parameters]
-        scale_matrix = np.outer(scales, scales)
-        data = scale_matrix * matrix
+            df = np.diag(
+                [p._inverse_transform_derivative(p.factor) for p in parameters]
+            )
+            data = df.T @ matrix @ df
+        else:
+            data = None
 
         return cls(parameters, data=data)
 
@@ -213,7 +217,7 @@ class Covariance:
 
 
 class CovarianceMixin:
-    """Mixin class for covariance property on multi-components models"""
+    """Mixin class for covariance property on multi-components models."""
 
     def _check_covariance(self):
         if not self.parameters == self._covariance.parameters:

@@ -3,6 +3,7 @@ import logging
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 from gammapy.utils.scripts import make_path
+from gammapy.utils.metadata import CreatorMetaData
 from .map import MapDataset, MapDatasetOnOff
 from .utils import get_axes
 
@@ -80,7 +81,6 @@ class PlotMixin:
         ax_residuals.set_ylabel(f"Residuals\n{label}")
         plt.setp(ax_spectrum.get_xticklabels(), visible=bool_visible_xticklabel)
         self.plot_masks(ax=ax_spectrum)
-        self.plot_masks(ax=ax_residuals)
 
         return ax_spectrum, ax_residuals
 
@@ -153,7 +153,6 @@ class PlotMixin:
         >>> ax=dataset.plot_counts()  # doctest: +SKIP
         >>> dataset.plot_masks(ax=ax, kwargs_fit=kwargs_fit, kwargs_safe=kwargs_safe)  # doctest: +SKIP
         """
-
         kwargs_fit = kwargs_fit or {}
         kwargs_safe = kwargs_safe or {}
 
@@ -232,6 +231,13 @@ class PlotMixin:
     def peek(self, figsize=(16, 4)):
         """Quick-look summary plots.
 
+        This method creates a figure displaying the elements of your `SpectrumDataset`.
+        For example:
+
+        * Counts map
+        * Exposure map
+        * Energy dispersion matrix at the geometry center
+
         Parameters
         ----------
         figsize : tuple
@@ -257,6 +263,7 @@ class PlotMixin:
 
 class SpectrumDataset(PlotMixin, MapDataset):
     """Main dataset for spectrum fitting (1D analysis).
+
     It bundles together binned counts, background, IRFs into `~gammapy.maps.RegionNDMap` (a Map with only one spatial bin).
     A safe mask and a fit mask can be added to exclude bins during the analysis.
     If models are assigned to it, it can compute the predicted number of counts and the statistic function,
@@ -268,20 +275,21 @@ class SpectrumDataset(PlotMixin, MapDataset):
     tag = "SpectrumDataset"
 
     def cutout(self, *args, **kwargs):
-        """Not supported for `SpectrumDataset`"""
+        """Not supported for `SpectrumDataset`."""
         raise NotImplementedError("Method not supported on a spectrum dataset")
 
     def plot_residuals_spatial(self, *args, **kwargs):
-        """Not supported for `SpectrumDataset`"""
+        """Not supported for `SpectrumDataset`."""
         raise NotImplementedError("Method not supported on a spectrum dataset")
 
     def to_spectrum_dataset(self, *args, **kwargs):
-        """Not supported for `SpectrumDataset`"""
+        """Not supported for `SpectrumDataset`."""
         raise NotImplementedError("Already a Spectrum Dataset. Method not supported")
 
 
 class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
     """Spectrum dataset for 1D on-off likelihood fitting.
+
     It bundles together the binned on and off counts, the binned IRFs as well as the on and off acceptances.
 
     A fit mask can be added to exclude bins during the analysis.
@@ -357,8 +365,13 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         if format == "gadf":
             super().write(filename=filename, overwrite=overwrite, checksum=checksum)
         elif format in ["ogip", "ogip-sherpa"]:
+            creation = self.meta.creation or CreatorMetaData()
             writer = OGIPDatasetWriter(
-                filename=filename, format=format, overwrite=overwrite, checksum=checksum
+                filename=filename,
+                format=format,
+                overwrite=overwrite,
+                checksum=checksum,
+                creation=creation,
             )
             writer.write(self)
         else:
@@ -366,7 +379,8 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
 
     @classmethod
     def from_dict(cls, data, **kwargs):
-        """Create spectrum dataset from dict.
+        """Create spectrum dataset from dictionary.
+
         Reads file from the disk as specified in the dict.
 
         Parameters
@@ -379,7 +393,6 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         dataset : `SpectrumDatasetOnOff`
             Spectrum dataset on off.
         """
-
         filename = make_path(data["filename"])
         dataset = cls.read(filename=filename)
         dataset.mask_fit = None
@@ -416,6 +429,7 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
 
     def to_spectrum_dataset(self, name=None):
         """Convert a SpectrumDatasetOnOff to a SpectrumDataset.
+
         The background model template is taken as alpha*counts_off.
 
         Parameters

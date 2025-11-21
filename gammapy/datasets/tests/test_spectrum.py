@@ -722,6 +722,16 @@ class TestSpectrumOnOff:
         assert_allclose(np.squeeze(grouped.acceptance), 4)
         assert_allclose(np.squeeze(grouped.acceptance_off), 40)
 
+    def test_spectrum_dataset_ogip_creation_metadata(self, tmp_path):
+        dataset = self.dataset.copy(name="test")
+        dataset.write(tmp_path / "test.fits", format="ogip")
+
+        for name in ["test.fits", "test_arf.fits", "test_bkg.fits", "test_rmf.fits"]:
+            with fits.open(tmp_path / name) as hdul:
+                for hdu in hdul[1:]:
+                    assert "CREATOR" in hdu.header
+                    assert "CREATED" in hdu.header
+
 
 @requires_data()
 class TestSpectralFit:
@@ -1250,8 +1260,10 @@ def test_priors():
         mu=spectral_model.index.value + 0.1, sigma=0.1
     )
 
+    prior_stat_sum = spectral_model.index.prior_stat_sum()
+
     stat_sum_with_priors = datasets.stat_sum()
 
     assert_allclose(stat_sum, 87.928542, atol=1e-1)
     # Here we check that the prior is applied only once
-    assert_allclose(stat_sum_with_priors, stat_sum + 1)
+    assert_allclose(stat_sum_with_priors, stat_sum + prior_stat_sum)

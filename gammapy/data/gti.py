@@ -8,8 +8,9 @@ import astropy.units as u
 from astropy.io import fits
 from astropy.table import Table, vstack
 from astropy.time import Time
+from gammapy.utils.metadata import CreatorMetaData
 from gammapy.utils.scripts import make_path
-from gammapy.utils.time import TIME_REF_DEFAULT, time_ref_from_dict, time_ref_to_dict
+from gammapy.utils.time import TIME_REF_DEFAULT, time_ref_from_dict
 from .metadata import GTIMetaData
 
 __all__ = ["GTI"]
@@ -201,10 +202,13 @@ class GTI:
             raise ValueError(f'Only the "gadf" format supported, got {format}')
 
         # Don't impose the scale. GADF does not require it to be TT
-        meta = time_ref_to_dict(self.time_ref, scale=self.time_ref.scale)
+        if self._meta.creation is None:
+            self._meta.creation = CreatorMetaData()
+        hdr = self._meta.to_header(format)
+
         start = self.time_start - self.time_ref
         stop = self.time_stop - self.time_ref
-        table = Table({"START": start.to("s"), "STOP": stop.to("s")}, meta=meta)
+        table = Table({"START": start.to("s"), "STOP": stop.to("s")}, meta=hdr)
 
         return fits.BinTableHDU(table, name="GTI")
 

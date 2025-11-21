@@ -10,8 +10,6 @@ from gammapy.irf import PSF3D, EffectiveAreaTable2D, PSFMap, RecoPSFMap
 from gammapy.makers.utils import make_map_exposure_true_energy, make_psf_map
 from gammapy.maps import Map, MapAxis, MapCoord, RegionGeom, WcsGeom
 from gammapy.utils.testing import mpl_plot_check, requires_data
-from gammapy.modeling.models import PowerLawSpectralModel
-from gammapy.utils.deprecation import GammapyDeprecationWarning
 
 
 @pytest.fixture(scope="session")
@@ -218,9 +216,6 @@ def test_psfmap_stacking():
     assert_allclose(psfmap_stack.psf_map.data[0, 20, 20, 20], 1.768388, rtol=1e-6)
     assert_allclose(psfmap_stack.psf_map.data[0, 0, 20, 20], 17.683883, rtol=1e-6)
 
-    # TODO: add a test comparing make_mean_psf and PSFMap.stack for a set of
-    #  observations in an Observations
-
 
 def test_sample_coord():
     psf_map = make_test_psfmap(0.1 * u.deg, shape="gauss")
@@ -424,9 +419,6 @@ def test_psf_map_write_gtpsf(tmpdir):
 
 def test_to_image():
     psfmap = make_test_psfmap(0.15 * u.deg)
-
-    with pytest.warns(GammapyDeprecationWarning):
-        psfmap.to_image(spectrum=PowerLawSpectralModel())
 
     psf2D = psfmap.to_image()
     assert_allclose(psf2D.psf_map.geom.data_shape, (1, 100, 25, 25))

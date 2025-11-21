@@ -58,6 +58,16 @@ class IRF(metaclass=abc.ABCMeta):
     meta : dict, optional
         Metadata dictionary.
         Default is None.
+    interp_kwargs : dict, optional
+        Keyword arguments passed to
+        `~gammapy.utils.interpolation.ScaledRegularGridInterpolator`.
+        If None, the following inputs are used ``bounds_error=False`` and ``fill_value=0.0``.
+        Default is None.
+
+    Examples
+    --------
+    For a usage example, see :doc:`/tutorials/data/cta` tutorial and :doc:`/tutorials/details/irfs`.
+
     """
 
     default_interp_kwargs = dict(
@@ -107,6 +117,10 @@ class IRF(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def required_axes(self):
         pass
+
+    @property
+    def required_arguments(self):
+        return self.required_axes
 
     @property
     def is_pointlike(self):
@@ -228,7 +242,7 @@ class IRF(metaclass=abc.ABCMeta):
 
         Parameters
         ----------
-        unit : `~astropy.unit.Unit` or str
+        unit : `~astropy.units.Unit` or str
             New unit.
 
         Returns
@@ -243,7 +257,7 @@ class IRF(metaclass=abc.ABCMeta):
 
     @property
     def axes(self):
-        """`MapAxes`."""
+        """`~gammapy.maps.MapAxes`."""
         return self._axes
 
     def __str__(self):
@@ -309,7 +323,7 @@ class IRF(metaclass=abc.ABCMeta):
     def _mask_out_bounds(invalid):
         return np.any(invalid, axis=0)
 
-    def integrate_log_log(self, axis_name, **kwargs):
+    def integrate_log_log(self, axis_name, method="linear", **kwargs):
         """Integrate along a given axis.
 
         This method uses log-log trapezoidal integration.
@@ -318,6 +332,8 @@ class IRF(metaclass=abc.ABCMeta):
         ----------
         axis_name : str
             Along which axis to integrate.
+        method : {"linear", "nearest"}, optional
+            Interpolation method to use. Default is "linear".
         **kwargs : dict
             Coordinates at which to evaluate the IRF.
 
@@ -327,7 +343,7 @@ class IRF(metaclass=abc.ABCMeta):
             Returns 2D array with axes offset.
         """
         axis = self.axes.index(axis_name)
-        data = self.evaluate(**kwargs, method="linear")
+        data = self.evaluate(**kwargs, method=method)
         values = kwargs[axis_name]
         return trapz_loglog(data, values, axis=axis)
 
@@ -409,7 +425,7 @@ class IRF(metaclass=abc.ABCMeta):
 
         Parameters
         ----------
-        hdulist : `~astropy.io.HDUList`
+        hdulist : `~astropy.io.fits.HDUList`
             HDU list.
         hdu : str
             HDU name.
@@ -612,7 +628,7 @@ class IRF(metaclass=abc.ABCMeta):
 
         Parameters
         ----------
-        other : `~gammapy.irfs.IRF`
+        other : `~gammapy.irf.IRF`
             The IRF to compare against.
         rtol_axes : float, optional
             Relative tolerance for the axis comparison.
@@ -970,7 +986,6 @@ class IRFMap:
         cutout : `IRFMap`
             Cutout IRF map.
         """
-
         irf_map = self._irf_map.cutout(position, width, mode, min_npix=min_npix)
         if self.exposure_map:
             exposure_map = self.exposure_map.cutout(
@@ -982,6 +997,7 @@ class IRFMap:
 
     def downsample(self, factor, axis_name=None, weights=None):
         """Downsample the dimension of the spatial axes or a non-spatial axis by a given factor.
+
         It is not recommended to use this function on a `~gammapy.irf.PSFMap` rad axis.
 
         Parameters
@@ -999,7 +1015,6 @@ class IRFMap:
         map : `IRFMap`
             Downsampled IRF map.
         """
-
         if not axis_name:
             preserve_counts = False
         else:

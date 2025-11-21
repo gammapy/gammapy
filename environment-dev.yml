@@ -47,6 +47,7 @@ dependencies:
   - pandas
   - reproject
   - ultranest
+  - numba
   # dev dependencies
   - black=22.6.0
   - codespell
@@ -74,6 +75,7 @@ dependencies:
   - nbformat
   - h5py
   - ruamel.yaml
+  - towncrier
   # incompatible with current jupyter, results in broken env when present
   # use e.g. pipx if you need cffconvert
   # - cffconvert

@@ -8,10 +8,15 @@ utils - Utilities
 
 .. currentmodule:: gammapy.utils
 
+.. automodapi:: gammapy.utils.cache
+    :no-inheritance-diagram:
+    :include-all-objects:
+    :skip: is_ray_available
+
 .. automodapi:: gammapy.utils.cluster
     :no-inheritance-diagram:
     :include-all-objects:
-    
+
 .. automodapi:: gammapy.utils.coordinates
     :no-inheritance-diagram:
     :include-all-objects:
@@ -39,7 +44,7 @@ utils - Utilities
 .. automodapi:: gammapy.utils.parallel
     :no-inheritance-diagram:
     :include-all-objects:
-    
+
 .. automodapi:: gammapy.utils.scripts
     :no-inheritance-diagram:
     :include-all-objects:

@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 from gammapy.maps import Map, RegionGeom
 from gammapy.modeling import Covariance, Parameter, Parameters
 from gammapy.modeling.covariance import CovarianceMixin
-from gammapy.utils.scripts import from_yaml, make_name, make_path, to_yaml, write_yaml
+from gammapy.utils.scripts import from_yaml, make_path, to_yaml, write_yaml
 
 __all__ = ["Model", "Models", "DatasetModels", "ModelBase"]
 
@@ -21,7 +21,7 @@ log = logging.getLogger(__name__)
 
 
 def _recursive_dict_filename_update(dict_, path):
-    """update model filename to full path if exits"""
+    """Update model filename to full path if exits."""
     for key, value in dict_.items():
         if isinstance(value, dict):
             _recursive_dict_filename_update(value, path)
@@ -32,7 +32,7 @@ def _recursive_dict_filename_update(dict_, path):
 
 
 def _recursive_model_filename_update(model, path):
-    """update model filename to relative path if child of path"""
+    """Update model filename to relative path if child of path."""
     if hasattr(model, "filename") and path == make_path(model.filename).parent:
         _, filename = split(model.filename)
         model.filename = filename
@@ -42,7 +42,7 @@ def _recursive_model_filename_update(model, path):
             _recursive_model_filename_update(m, path)
 
 
-def _set_link(shared_register, model):
+def _set_model_link(shared_register, model):
     for param in model.parameters:
         name = param.name
         link_label = param._link_label_io
@@ -53,6 +53,23 @@ def _set_link(shared_register, model):
             else:
                 shared_register[link_label] = param
     return shared_register
+
+
+def _flatten_models(models):
+    flat_models = []
+    for model in models:
+        if hasattr(model, "_models"):
+            flat_models.extend(_flatten_models(model._models))
+        else:
+            flat_models.append(model)
+    return flat_models
+
+
+def _set_models_link(models):
+    shared_register = {}
+    flat_models = _flatten_models(models)
+    for model in flat_models:
+        shared_register = _set_model_link(shared_register, model)
 
 
 def _get_model_class_from_dict(data):
@@ -100,7 +117,7 @@ def _build_parameters_from_dict(data, default_parameters):
 
 
 def _check_name_unique(model, names):
-    """Check if a model is not duplicated"""
+    """Check if a model is not duplicated."""
     if model.name in names:
         raise (
             ValueError(
@@ -112,16 +129,16 @@ def _check_name_unique(model, names):
 
 def _check_fov_background_models(models):
     """
-    Checks if a maximum of one `~gammapy.modeling.models.FoVBackgroundModel` is assigned to dataset
-    and returns a dictionnary mapping `dataset_name` to the background model name.
+    Check if a maximum of one `~gammapy.modeling.models.FoVBackgroundModel` is assigned to dataset
+    and returns a dictionary mapping `dataset_name` to the background model name.
 
     Parameters
     ----------
     models : `~gammapy.modeling.models.Models`
         List of Models
 
-    Returns:
-    --------
+    Returns
+    -------
     bkg_model_mapping : dict
         Dictionary mapping dataset name to `~gammapy.modeling.models.FoVBackgroundModel` name.
     """
@@ -150,7 +167,7 @@ def _write_models(
     checksum=False,
     extra_dict=None,
 ):
-    """Write models to YAML file with additionnal informations using an `extra_dict`"""
+    """Write models to YAML file with additional information using an `extra_dict`."""
 
     base_path, _ = split(path)
     path = make_path(path)
@@ -231,8 +248,10 @@ class ModelBase:
 
         Parameters
         ----------
-        parameters : `Parameters`
+        parameters : `~gammapy.modeling.Parameters`
             Parameters for init.
+        **kwargs : dict
+            Keyword arguments to overwrite the model class constructor.
 
         Returns
         -------
@@ -297,6 +316,7 @@ class ModelBase:
                     "error",
                     "interp",
                     "scale_method",
+                    "scale_transform",
                 ]:
                     default = init[item]
 
@@ -495,7 +515,7 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
 
     @property
     def background_models(self):
-        """Dictionnary mapping of dataset names with their associated `~gammapy.modeling.models.FoVBackgroundModel` names."""
+        """Dictionary mapping of dataset names with their associated `~gammapy.modeling.models.FoVBackgroundModel` names."""
         return self._background_models
 
     @classmethod
@@ -536,7 +556,7 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
     @classmethod
     def from_dict(cls, data, path=""):
         """Create from dictionary."""
-        from . import MODEL_REGISTRY, SkyModel
+        from . import MODEL_REGISTRY
 
         path = make_path(path)
 
@@ -553,21 +573,17 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
             filename = data["covariance"]
             if not (path / filename).exists():
                 path, filename = split(filename)
-            models.read_covariance(path, filename, format="ascii.fixed_width")
+            try:
+                models.read_covariance(path, filename, format="ascii.fixed_width")
+            except ValueError as exception:
+                log.warning(
+                    "Impossible to read the covariance correctly: \n"
+                    f"{exception} \n "
+                    "Covariance will be created from errors and non-diagonal terms ignored."
+                )
 
-        shared_register = {}
-        for model in models:
-            if isinstance(model, SkyModel):
-                submodels = [
-                    model.spectral_model,
-                    model.spatial_model,
-                    model.temporal_model,
-                ]
-                for submodel in submodels:
-                    if submodel is not None:
-                        shared_register = _set_link(shared_register, submodel)
-            else:
-                shared_register = _set_link(shared_register, model)
+        _set_models_link(models)
+
         return models
 
     def write(
@@ -625,16 +641,7 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
 
     def update_link_label(self):
         """Update linked parameters labels used for serialisation and print."""
-        params_list = []
-        params_shared = []
-        for param in self.parameters:
-            if param not in params_list:
-                params_list.append(param)
-                params_list.append(param)
-            elif param not in params_shared:
-                params_shared.append(param)
-        for param in params_shared:
-            param._link_label_io = param.name + "@" + make_name()
+        self.parameters.update_link_label()
 
     def to_dict(self, full_output=False, overwrite_templates=False):
         """Convert to dictionary."""
@@ -779,11 +786,12 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
         models: `Models`
             Copied models.
         """
+        self.update_link_label()
         models = []
-
         for model in self:
             model_copy = model.copy(name=model.name, copy_data=copy_data)
             models.append(model_copy)
+        _set_models_link(models)
 
         return self.__class__(
             models=models, covariance_data=self.covariance.data.copy()
@@ -1131,7 +1139,6 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
         model : `~gammapy.modeling.models.TemplateSpectralModel`
             Template spectral model.
         """
-
         from . import TemplateSpectralModel
 
         energy = geom.axes[0].center
@@ -1164,19 +1171,28 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
 
         return SkyCoord(positions)
 
-    def to_regions(self):
+    def to_regions(self, size_factor=None, **kwargs):
         """Return a list of the regions for the spatial models.
+
+        Parameters
+        ----------
+        size_factor : float, optional
+            Factor applied to the size of the models.
+            If not specified, the defaults for the models will be used.
+        kwargs : dict, optional
+            Keyword arguments passed to ``model.spatial_model.to_region``.
 
         Returns
         -------
-        regions: list of `~regions.SkyRegion`
+        regions : list of `~regions.SkyRegion`
             Regions.
         """
         regions = []
-
+        if size_factor:
+            kwargs["size_factor"] = size_factor
         for model in self.select(tag="sky-model"):
             try:
-                region = model.spatial_model.to_region()
+                region = model.spatial_model.to_region(**kwargs)
                 regions.append(region)
             except AttributeError:
                 log.warning(
@@ -1193,12 +1209,14 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
         except IndexError:
             log.error("No spatial component in any model. Geom not defined")
 
-    def plot_regions(self, ax=None, kwargs_point=None, path_effect=None, **kwargs):
+    def plot_regions(
+        self, ax=None, kwargs_point=None, path_effect=None, size_factor=None, **kwargs
+    ):
         """Plot extent of the spatial models on a given WCS axis.
 
         Parameters
         ----------
-        ax : `~astropy.visualization.WCSAxes`, optional
+        ax : `~astropy.visualization.wcsaxes.WCSAxes`, optional
             Axes to plot on. If no axes are given, an all-sky WCS
             is chosen using a CAR projection. Default is None.
         kwargs_point : dict, optional
@@ -1206,13 +1224,15 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
             of point sources. Default is None.
         path_effect : `~matplotlib.patheffects.PathEffect`, optional
             Path effect applied to artists and lines. Default is None.
+        size_factor : float, optional
+            Factor applied to the size of the model
+            If not specified, the defaults for the models will be used.
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.artists.Artist`.
 
-
         Returns
         -------
-        ax : `~astropy.visualization.WcsAxes`
+        ax : `~astropy.visualization.wcsaxes.WCSAxes`
             WCS axes.
 
         Examples
@@ -1228,7 +1248,7 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
         ...    kwargs_point={"marker":"o", "markersize":5, "color":"red"}
         ...            )
         """
-        regions = self.to_regions()
+        regions = self.to_regions(size_factor=size_factor)
 
         geom = RegionGeom.from_regions(regions=regions)
         return geom.plot_region(

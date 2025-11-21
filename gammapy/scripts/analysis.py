@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
     "--overwrite", default=False, is_flag=True, help="Overwrite existing file."
 )
 def cli_make_config(filename, overwrite):
-    """Writes default configuration file."""
+    """Write default configuration file."""
     config = AnalysisConfig()
     config.write(filename, overwrite=overwrite)
     log.info(f"Configuration file produced: {filename}")
@@ -40,7 +40,7 @@ def cli_make_config(filename, overwrite):
     "--overwrite", default=False, is_flag=True, help="Overwrite existing datasets."
 )
 def cli_run_analysis(filename, out, overwrite):
-    """Performs automated data reduction process."""
+    """Perform automated data reduction process."""
     config = AnalysisConfig.read(filename)
     config.datasets.background.method = "reflected"
     analysis = Analysis(config)

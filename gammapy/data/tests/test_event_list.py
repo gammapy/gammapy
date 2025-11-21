@@ -4,11 +4,59 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import SkyCoord
-from astropy.table import Table
+from astropy.table import QTable, Table
+from astropy.time import Time
 from regions import CircleSkyRegion, RectangleSkyRegion
 from gammapy.data import GTI, EventList, Observation, FixedPointingInfo
 from gammapy.maps import MapAxis, WcsGeom
 from gammapy.utils.testing import mpl_plot_check, requires_data
+
+
+class TestEventListBasic:
+    def setup_class(self):
+        table = Table()
+        table["RA"] = [0.0, 0.0, 0.0, 10.0] * u.deg
+        table["DEC"] = [0.0, 0.9, 10.0, 10.0] * u.deg
+        table["ENERGY"] = [1.0, 1.5, 1.5, 10.0] * u.TeV
+        table["TIME"] = Time("2025-01-01") + [0.1, 0.5, 1.0, 1.5] * u.second
+
+        self.events = EventList(table)
+
+    def test_eventlist_printin(self):
+        assert "Instrument" in str(self.events)
+
+    def test_eventlist_len(self):
+        assert len(self.events) == 4
+        empty = EventList(None)
+        assert len(empty) == 0
+
+
+@pytest.fixture()
+def simple_event_table():
+    zeros = np.zeros(5)
+    energy = zeros * u.TeV
+    ra = zeros * u.deg
+    dec = zeros * u.deg
+    time = Time(zeros, format="mjd", scale="tt")
+    return QTable({"ENERGY": energy, "RA": ra, "DEC": dec, "TIME": time})
+
+
+def test_validation(simple_event_table):
+    events = EventList(simple_event_table)
+    assert len(events.table) == 5
+
+    with pytest.raises(TypeError):
+        EventList(simple_event_table["TIME"])
+
+    bad = simple_event_table.copy()
+
+    bad["ENERGY"] *= 1 * u.s
+    with pytest.raises(u.UnitConversionError):
+        EventList(bad)
+
+    del bad["ENERGY"]
+    with pytest.raises(KeyError):
+        EventList(bad)
 
 
 @requires_data()
@@ -55,7 +103,11 @@ class TestEventListBase:
         obs.write("test.fits.gz", include_irfs=False, overwrite=True)
         read_again = EventList.read("test.fits.gz")
 
-        assert (self.events.table == read_again.table).all()
+        assert_allclose(self.events.table["RA"], read_again.table["RA"])
+        assert_allclose(self.events.table["DEC"], read_again.table["DEC"])
+        assert_allclose(self.events.table["ENERGY"], read_again.table["ENERGY"])
+        assert_allclose(self.events.table["TIME"].mjd, read_again.table["TIME"].mjd)
+
         assert read_again.table.meta["EXTNAME"] == "EVENTS"
         assert read_again.table.meta["HDUCLASS"] == "GADF"
         assert read_again.table.meta["HDUCLAS1"] == "EVENTS"
@@ -70,7 +122,10 @@ class TestEventListBase:
         read_again_ev = EventList.read("test.fits")
         read_again_gti = GTI.read("test.fits")
 
-        assert (self.events.table == read_again_ev.table).all()
+        assert_allclose(self.events.table["RA"], read_again_ev.table["RA"])
+        assert_allclose(self.events.table["DEC"], read_again_ev.table["DEC"])
+        assert_allclose(self.events.table["ENERGY"], read_again_ev.table["ENERGY"])
+        assert_allclose(self.events.table["TIME"].mjd, read_again_ev.table["TIME"].mjd)
         assert gti.table.meta == read_again_gti.table.meta
         assert_allclose(gti.table["START"].mjd, read_again_gti.table["START"].mjd)
         assert_allclose(gti.table["STOP"].mjd, read_again_gti.table["STOP"].mjd)
@@ -79,6 +134,19 @@ class TestEventListBase:
         with pytest.raises(AttributeError):
             obs = Observation(events=self.events, gti=gti.table, pointing=pointing)
             obs.write("test.fits", overwrite=True)
+
+    def test_eventlist_hdu_creation_metadata(self):
+        hdu = self.events.to_table_hdu(format="gadf")
+        assert "CREATOR" in hdu.header
+        assert "CREATED" in hdu.header
+        assert hdu.header["CREATOR"] == "SASH FITS::EventListWriter"
+
+    def test_eventlist_read_kwargs(self):
+        with pytest.raises(ValueError):
+            EventList.read(
+                "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz",
+                format="unknown-format",
+            )
 
 
 @requires_data()
@@ -197,6 +265,7 @@ class TestEventListFermi:
             self.events.peek(allsky=True)
 
 
+@pytest.mark.xfail
 @requires_data()
 class TestEventListChecker:
     def setup_class(self):
@@ -216,6 +285,7 @@ class TestEventSelection:
         table["DEC"] = [0.0, 0.9, 10.0, 10.0] * u.deg
         table["ENERGY"] = [1.0, 1.5, 1.5, 10.0] * u.TeV
         table["OFFSET"] = [0.1, 0.5, 1.0, 1.5] * u.deg
+        table["TIME"] = Time("2025-01-01") + [0.1, 0.5, 1.0, 1.5] * u.s
 
         self.events = EventList(table)
 

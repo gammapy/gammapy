@@ -13,7 +13,6 @@ from gammapy.utils.units import energy_unit_format
 from ..core import IRFMap
 from .core import PSF
 from .kernel import PSFKernel
-from gammapy.utils.deprecation import deprecated_renamed_argument
 
 __all__ = ["PSFMap", "RecoPSFMap"]
 
@@ -121,7 +120,7 @@ class PSFMap(IRFMap):
 
         Parameters
         ----------
-        geom : `Geom`
+        geom : `~gammapy.maps.Geom`
             PSF map geometry.
 
         Returns
@@ -282,7 +281,6 @@ class PSFMap(IRFMap):
         kernel : `~gammapy.irf.PSFKernel` or list of `PSFKernel`
             The resulting kernel.
         """
-
         if geom.is_region or geom.is_hpx:
             geom = geom.to_wcs_geom()
 
@@ -413,7 +411,7 @@ class PSFMap(IRFMap):
             Offset angle wrt source position axis.
         sigma : `~astropy.coordinates.Angle`
             Gaussian width.
-        geom : `Geom`
+        geom : `~gammapy.maps.Geom`
             Image geometry. By default, an all-sky geometry is created.
 
         Returns
@@ -449,7 +447,6 @@ class PSFMap(IRFMap):
         )
         return cls(psf_map=psf_map, exposure_map=exposure_map)
 
-    @deprecated_renamed_argument("spectrum", "spectral_model", "v1.3")
     def to_image(self, spectral_model=None, keepdims=True):
         """Reduce to a 2D map after weighing with the associated exposure and a spectrum.
 
@@ -535,8 +532,9 @@ class PSFMap(IRFMap):
         ----------
         ax : `~matplotlib.pyplot.Axes`, optional
             Matplotlib axes. Default is None.
-        energy : `~astropy.units.Quantity`
+        energy_true : `~astropy.units.Quantity`, optional
             Energies where to plot the PSF.
+            Default is [0.1, 1, 10] TeV.
         **kwargs : dict
             Keyword arguments pass to `~matplotlib.pyplot.plot`.
 
@@ -576,10 +574,18 @@ class PSFMap(IRFMap):
     def peek(self, figsize=(12, 10)):
         """Quick-look summary plots.
 
+        This method creates a figure with four subplots:
+
+        * Containment radius at center of map plot : Containment radius as a function of energy for
+          containment fractions of 65% and 95%.
+        * PSF at center of map plot : PSF vs radius.
+        * Exposure 2D map : exposure summed over true energy
+        * Containment radius map : 2D sky map of the 68% containment radius at 1 TeV
+
         Parameters
         ----------
-        figsize : tuple
-            Size of figure.
+        figsize : tuple, optional
+            Size of figure. Default is (12, 10).
         """
         fig, axes = plt.subplots(
             ncols=2,
@@ -647,7 +653,7 @@ class RecoPSFMap(PSFMap):
             Offset angle wrt source position axis.
         sigma : `~astropy.coordinates.Angle`
             Gaussian width.
-        geom : `Geom`
+        geom : `~gammapy.maps.Geom`
             Image geometry. By default, an all-sky geometry is created.
 
         Returns
@@ -722,8 +728,9 @@ class RecoPSFMap(PSFMap):
         ----------
         ax : `~matplotlib.pyplot.Axes`, optional
             Matplotlib axes. Default is None.
-        energy : `~astropy.units.Quantity`
+        energy : `~astropy.units.Quantity`, optional
             Energies where to plot the PSF.
+            Default is [0.1, 1, 10] TeV.
         **kwargs : dict
             Keyword arguments pass to `~matplotlib.pyplot.plot`.
 

@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import copy
 import logging
-from functools import lru_cache
+from gammapy.utils.cache import cachemethod
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord
@@ -36,7 +36,22 @@ from ..geom import Geom, pix_tuple_to_idx
 from ..utils import _check_width
 from ..wcs import WcsGeom
 
+log = logging.getLogger(__name__)
+
+
 __all__ = ["RegionGeom"]
+
+
+def _parse_regions(regions):
+    if isinstance(regions, str):
+        regions = Regions.parse(data=regions, format="ds9")
+    elif isinstance(regions, SkyRegion):
+        regions = [regions]
+    elif isinstance(regions, SkyCoord):
+        regions = [PointSkyRegion(center=regions)]
+    elif isinstance(regions, list) and len(regions) == 0:
+        regions = None
+    return regions
 
 
 class RegionGeom(Geom):
@@ -60,6 +75,11 @@ class RegionGeom(Geom):
         quantities in the region. Default is "0.1 deg". This default
         value is adequate for the majority of use cases. If a WCS object
         is provided, the input of ``binsz_wcs`` is overridden.
+
+    Notes
+    -----
+    - For further explanation and examples, see :doc:`/user-guide/maps/regionmap`
+
     """
 
     is_regular = True
@@ -100,15 +120,6 @@ class RegionGeom(Geom):
 
         self._wcs = wcs
         self.ndim = len(self.data_shape)
-
-        # define cached methods
-        self.get_wcs_coord_and_weights = lru_cache()(self.get_wcs_coord_and_weights)
-
-    def __setstate__(self, state):
-        for key, value in state.items():
-            if key in ["get_wcs_coord_and_weights"]:
-                state[key] = lru_cache()(value)
-        self.__dict__ = state
 
     @property
     def frame(self):
@@ -430,6 +441,7 @@ class RegionGeom(Geom):
         new_geom = RegionGeom(self.region, axes=self.axes, binsz_wcs=binsz)
         return new_geom
 
+    @cachemethod
     def get_wcs_coord_and_weights(self, factor=10):
         """Get the array of spatial coordinates and corresponding weights.
 
@@ -642,9 +654,12 @@ class RegionGeom(Geom):
             return TypeError(f"Cannot compare {type(self)} and {type(other)}")
 
         if self.data_shape != other.data_shape:
+            log.debug("RegionGeom data shape is not equal")
             return False
 
         axes_eq = self.axes.is_allclose(other.axes, rtol=rtol_axes, atol=atol_axes)
+        if not axes_eq:
+            log.debug("RegionGeom axes are not equal")
         # TODO: compare regions based on masks...
         regions_eq = True
         return axes_eq and regions_eq
@@ -732,14 +747,7 @@ class RegionGeom(Geom):
         geom : `RegionGeom`
             Region map geometry.
         """
-        if isinstance(regions, str):
-            regions = Regions.parse(data=regions, format="ds9")
-        elif isinstance(regions, SkyRegion):
-            regions = [regions]
-        elif isinstance(regions, SkyCoord):
-            regions = [PointSkyRegion(center=regions)]
-        elif isinstance(regions, list) and len(regions) == 0:
-            regions = None
+        regions = _parse_regions(regions)
 
         if regions:
             regions = regions_to_compound_region(regions)
@@ -819,7 +827,7 @@ class RegionGeom(Geom):
 
         Parameters
         ----------
-        ax : `~astropy.visualization.WCSAxes`, optional
+        ax : `~astropy.visualization.wcsaxes.WCSAxes`, optional
             Axes to plot on. If no axes are given,
             the region is shown using the minimal
             equivalent WCS geometry.
@@ -827,7 +835,7 @@ class RegionGeom(Geom):
         kwargs_point : dict, optional
             Keyword arguments passed to `~matplotlib.lines.Line2D` for plotting
             of point sources. Default is None.
-        path_effect : `~matplotlib.patheffects.PathEffect`, optional
+        path_effect : `~matplotlib.patheffects`, optional
             Path effect applied to artists and lines.
             Default is None.
         **kwargs : dict
@@ -835,7 +843,7 @@ class RegionGeom(Geom):
 
         Returns
         -------
-        ax : `~astropy.visualization.WCSAxes`
+        ax : `~astropy.visualization.wcsaxes.WCSAxes`
             Axes to plot on.
         """
         if self.region:

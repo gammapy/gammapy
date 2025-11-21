@@ -4,6 +4,7 @@ import json
 import numpy as np
 import astropy.units as u
 from astropy.io import fits
+from gammapy.utils.types import JsonQuantityEncoder
 from ..core import Map
 from ..io import find_bands_hdu, find_bintable_hdu
 from .geom import HpxGeom
@@ -21,10 +22,15 @@ class HpxMap(Map):
         HEALPix geometry object.
     data : `~numpy.ndarray`
         Data array.
-    meta : dict
+    meta : dict, optional
         Dictionary to store metadata.
+        Default is None.
     unit : `~astropy.units.Unit`
         The map unit.
+
+    Notes
+    -----
+    - For examples, see :doc:`/user-guide/maps/hpxmap`
     """
 
     @classmethod
@@ -222,7 +228,8 @@ class HpxMap(Map):
         hdu_out = self.to_hdu(
             hdu=hdu, hdu_bands=hdu_bands, sparse=sparse, format=format
         )
-        hdu_out.header["META"] = json.dumps(self.meta)
+        hdu_out.header["META"] = json.dumps(self.meta, cls=JsonQuantityEncoder)
+
         hdu_out.header["BUNIT"] = self.unit.to_string("fits")
 
         hdu_list = fits.HDUList([fits.PrimaryHDU(), hdu_out])

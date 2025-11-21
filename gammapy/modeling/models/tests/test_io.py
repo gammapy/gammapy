@@ -19,20 +19,21 @@ from gammapy.modeling.models import (
     Model,
     Models,
     PiecewiseNormSpectralModel,
+    PointSpatialModel,
+    PowerLawNormSpectralModel,
     PowerLawSpectralModel,
     PowerLawTemporalModel,
     SineTemporalModel,
     SkyModel,
     TemplateNPredModel,
 )
-from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.utils.scripts import make_path, read_yaml, to_yaml, write_yaml
-from gammapy.utils.testing import requires_data, requires_dependency
+from gammapy.utils.testing import requires_data
 import os
+import importlib
 
 
 @pytest.fixture(scope="session")
-@requires_data()
 def models():
     filename = get_pkg_data_filename("./data/examples.yaml")
     models_data = read_yaml(filename)
@@ -313,19 +314,6 @@ def test_absorption_io(tmp_path):
     read_yaml(tmp_path / "tmp.yaml")
 
 
-@requires_dependency("naima")
-def test_naima_model():
-    import naima
-
-    particle_distribution = naima.models.PowerLaw(
-        amplitude=2e33 / u.eV, e_0=10 * u.TeV, alpha=2.5
-    )
-    radiative_model = naima.radiative.PionDecay(particle_distribution, nh=1 * u.cm**-3)
-    yield Model.create(
-        "NaimaSpectralModel", "spectral", radiative_model=radiative_model
-    )
-
-
 def make_all_models():
     """Make an instance of each model, for testing."""
     yield Model.create("ConstantSpatialModel", "spatial")
@@ -356,8 +344,7 @@ def make_all_models():
     yield Model.create("PowerLawNormSpectralModel", "spectral")
     yield Model.create("PowerLaw2SpectralModel", "spectral")
     yield Model.create("ExpCutoffPowerLawSpectralModel", "spectral")
-    with pytest.warns(GammapyDeprecationWarning):
-        yield Model.create("ExpCutoffPowerLawNormSpectralModel", "spectral")
+    yield Model.create("ExpCutoffPowerLawNormSpectralModel", "spectral")
     yield Model.create("ExpCutoffPowerLaw3FGLSpectralModel", "spectral")
     yield Model.create("SuperExpCutoffPowerLaw3FGLSpectralModel", "spectral")
     yield Model.create("SuperExpCutoffPowerLaw4FGLDR3SpectralModel", "spectral")
@@ -402,6 +389,19 @@ def make_all_models():
         npix=(10, 20, 30), axes=[MapAxis.from_edges([1, 2] * u.TeV, name="energy")]
     )
     yield Model.create("TemplateNPredModel", map=m2)
+
+    if importlib.util.find_spec("naima"):
+        import naima
+
+        particle_distribution = naima.models.PowerLaw(
+            amplitude=2e33 / u.eV, e_0=10 * u.TeV, alpha=2.5
+        )
+        radiative_model = naima.radiative.PionDecay(
+            particle_distribution, nh=1 * u.cm**-3
+        )
+        yield Model.create(
+            "NaimaSpectralModel", "spectral", radiative_model=radiative_model
+        )
 
 
 @pytest.mark.parametrize("model_class", MODEL_REGISTRY)
@@ -473,6 +473,60 @@ def test_link_label(models):
             assert "reference" in line
             n_link += 1
     assert n_link == 2
+
+    table = skymodels.parameters.to_table()
+    skymodels_copy = skymodels.copy()
+    assert (
+        skymodels_copy[0].spectral_model.reference
+        == skymodels_copy[1].spectral_model.reference
+    )
+    dict_ = skymodels_copy.to_dict()
+    label0 = dict_["components"][0]["spectral"]["parameters"][2]["link"]
+    label1 = dict_["components"][1]["spectral"]["parameters"][2]["link"]
+    assert label0 == label1
+
+    assert table["link"][2] == table["link"][9] and table["link"][2] != table["link"][1]
+
+    txt = skymodels.__str__()
+    lines = txt.splitlines()  # noqa: E303
+    n_link = 0
+    for line in lines:
+        if "@" in line:
+            assert "reference" in line
+            n_link += 1
+    assert n_link == 2
+
+
+def test_link_label_compound():
+    shared_pl = PowerLawSpectralModel(
+        index=2.2, amplitude="1e-12 cm-2 s-1 TeV-1", reference="1 TeV"
+    )
+    shared_point = PointSpatialModel()
+    norm1 = PowerLawNormSpectralModel(norm=1.0, tilt=0.0)
+    norm2 = PowerLawNormSpectralModel(norm=0.5, tilt=0.0)
+    model1 = SkyModel(
+        name="model-1", spatial_model=shared_point, spectral_model=shared_pl * norm1
+    )
+    model2 = SkyModel(
+        name="model-2",
+        spatial_model=shared_point,
+        spectral_model=shared_pl * norm2 * norm1,
+    )
+    models = Models([model1, model2])
+
+    assert len(models.parameters.free_unique_parameters.to_table()) == 6
+    assert len(models.parameters.free_unique_parameters) == 6
+
+    models_copy = models.copy()
+    assert len(models_copy.parameters.free_unique_parameters.to_table()) == 6
+    assert (
+        models_copy[0].spectral_model.model1.index
+        == models_copy[1].spectral_model.model1.model1.index
+    )
+    assert (
+        models_copy[0].spectral_model.model1.amplitude
+        == models_copy[1].spectral_model.model1.model1.amplitude
+    )
 
 
 def test_to_dict_not_default():

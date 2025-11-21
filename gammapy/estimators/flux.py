@@ -27,12 +27,15 @@ class FluxEstimator(ParameterEstimator):
     ----------
     source : str or int
         For which source in the model to compute the flux.
-    n_sigma : int
-        Sigma to use for asymmetric error computation.
-    n_sigma_ul : int
-        Sigma to use for upper limit computation.
-    n_sigma_sensitivity : int
-        Sigma to use for sensitivity computation.
+    n_sigma : float, optional
+        Sigma to use for asymmetric error computation. Must be a positive value.
+        Default is 1.
+    n_sigma_ul : float, optional
+        Sigma to use for upper limit computation. Must be a positive value.
+        Default is 2.
+    n_sigma_sensitivity : float, optional
+        Sigma to use for sensitivity computation. Must be a positive value.
+        Default is 5.
     selection_optional : list of str, optional
         Which additional quantities to estimate. Available options are:
 
@@ -42,16 +45,17 @@ class FluxEstimator(ParameterEstimator):
             * "scan": estimate fit statistic profiles.
 
         Default is None so the optional steps are not executed.
-    fit : `Fit`
+    fit : `~gammapy.modeling.Fit`, optional
         Fit instance specifying the backend and fit options.
-    reoptimize : bool
-        If True the free parameters of the other models are fitted in each bin independently,
+        If None, the `~gammapy.modeling.Fit` instance is created internally. Default is None.
+    reoptimize : bool, optional
+        If True, the free parameters of the other models are fitted in each bin independently,
         together with the norm of the source of interest
         (but the other parameters of the source of interest are kept frozen).
-        If False only the norm of the source of interest if fitted,
+        If False, only the norm of the source of interest is fitted,
         and all other parameters are frozen at their current values.
         Default is False.
-    norm : `~gammapy.modeling.Parameter` or dict
+    norm : `~gammapy.modeling.Parameter` or dict, optional
         Norm parameter used for the fit.
         Default is None and a new parameter is created automatically,
         with value=1, name="norm", scan_min=0.2, scan_max=5, and scan_n_values = 11.
@@ -94,12 +98,12 @@ class FluxEstimator(ParameterEstimator):
 
         Parameters
         ----------
-        models : `Models`
+        models : `~gammapy.modeling.Models`
             Models.
 
         Returns
         -------
-        model : `ScaleSpectralModel`
+        model : `~gammapy.modeling.ScaleSpectralModel`
             Scale spectral model.
         """
         ref_model = models[self.source].spectral_model
@@ -112,7 +116,7 @@ class FluxEstimator(ParameterEstimator):
 
         Parameters
         ----------
-        datasets : Datasets
+        datasets : `~gammapy.datasets.Datasets`
             Datasets.
 
         Returns
@@ -153,6 +157,10 @@ class FluxEstimator(ParameterEstimator):
 
         energy_min, energy_max = datasets.energy_ranges
         energy_axis = MapAxis.from_energy_edges([energy_min.min(), energy_max.max()])
+        if np.any(model(energy_axis.edges).value < 0.0):
+            log.warning(
+                "Reference source model predicts negative flux. Results of estimator should be interpreted with caution"
+            )
 
         with np.errstate(invalid="ignore", divide="ignore"):
             result = model.reference_fluxes(energy_axis=energy_axis)

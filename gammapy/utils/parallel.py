@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Multiprocessing and multithreading setup."""
+
 import importlib
 import logging
 from enum import Enum
@@ -27,7 +28,6 @@ class ParallelBackendEnum(Enum):
     @classmethod
     def from_str(cls, value):
         """Get enum from string."""
-
         if value == "ray" and not is_ray_available():
             log.warning("Ray is not installed, falling back to multiprocessing backend")
             value = "multiprocessing"
@@ -121,7 +121,12 @@ class multiprocessing_manager:
     """
 
     def __init__(self, backend=None, pool_kwargs=None, method=None, method_kwargs=None):
-        global BACKEND_DEFAULT, POOL_KWARGS_DEFAULT, METHOD_DEFAULT, METHOD_KWARGS_DEFAULT, N_JOBS_DEFAULT
+        global \
+            BACKEND_DEFAULT, \
+            POOL_KWARGS_DEFAULT, \
+            METHOD_DEFAULT, \
+            METHOD_KWARGS_DEFAULT, \
+            N_JOBS_DEFAULT
         self._backend = BACKEND_DEFAULT
         self._pool_kwargs = POOL_KWARGS_DEFAULT
         self._method = METHOD_DEFAULT
@@ -141,7 +146,12 @@ class multiprocessing_manager:
         pass
 
     def __exit__(self, type, value, traceback):
-        global BACKEND_DEFAULT, POOL_KWARGS_DEFAULT, METHOD_DEFAULT, METHOD_KWARGS_DEFAULT, N_JOBS_DEFAULT
+        global \
+            BACKEND_DEFAULT, \
+            POOL_KWARGS_DEFAULT, \
+            METHOD_DEFAULT, \
+            METHOD_KWARGS_DEFAULT, \
+            N_JOBS_DEFAULT
         BACKEND_DEFAULT = self._backend
         POOL_KWARGS_DEFAULT = self._pool_kwargs
         METHOD_DEFAULT = self._method
@@ -238,7 +248,6 @@ def run_multiprocessing(
     task_name : str, optional
         Name of the task to display in the progress bar. Default is "".
     """
-
     if backend is None:
         backend = BACKEND_DEFAULT
 
@@ -269,7 +278,7 @@ def run_multiprocessing(
             processes = cpu_count
 
         if multiprocessing.current_process().name != "MainProcess":
-            # with multiprocessing subprocesses cannot have childs (but possible with ray)
+            # with multiprocessing subprocesses cannot have children (but possible with ray)
             processes = 1
 
     if processes == 1:

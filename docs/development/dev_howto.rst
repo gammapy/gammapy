@@ -6,13 +6,18 @@
 Developer How To
 ****************
 
+.. _general-conventions:
+
 General conventions
 -------------------
 
-Python version support
-++++++++++++++++++++++
+Python and NumPy version support
+++++++++++++++++++++++++++++++++
 
-In Gammapy we currently support Python 3.8 or later.
+Gammapy follows the `NEP 29 guidelines <https://numpy.org/neps/nep-0029-deprecation_policy.html>`__
+for version support, which implements a time-based deprecation policy for
+Python and NumPy versions. This ensures compatibility with actively supported
+versions while maintaining stability.
 
 Coordinate and axis names
 +++++++++++++++++++++++++
@@ -513,12 +518,15 @@ repository. It is recommended that developers have `$GAMMAPY_DATA` environment v
 where they have fetched the `gammapy-data <https://github.com/gammapy/gammapy-data>`__ GitHub repository,
 so they can push and pull eventual modification of its content.
 
+.. _skip-actions-pr:
+
 Making a pull request which skips GitHub Actions
 ++++++++++++++++++++++++++++++++++++++++++++++++
 
 For minor PRs (eg: correcting typos in doc-strings) we can skip GitHub Actions.
 Adding ``[ci skip]`` in a specific commit message will skip CI for that specific commit which can be useful for draft or incomplete PR.
 For details, `see here. <https://github.blog/changelog/2021-02-08-github-actions-skip-pull-request-and-push-workflows-with-skip-ci/>`__
+See also the section on skipping GitHub Actions on a local fork, :ref:`here <skip-actions-local-fork>`.
 
 Fix non-Unix line endings
 +++++++++++++++++++++++++
@@ -553,6 +561,7 @@ one of which involves the `meeseeksmachine <https://github.com/meeseeksmachine>`
 
 
 
+.. _release-notes:
 
 Release notes
 +++++++++++++
@@ -565,12 +574,37 @@ As explained in the
 of the Astropy docs, there are (at least) two approaches for adding to the releases,
 each with pros and cons.
 
-We've had some pain due to merge conflicts in the releases notes and having to wait
-until the contributor rebases (and having to explain git rebase to new contributors).
+We utilise `towncrier <https://towncrier.readthedocs.io/en/stable/>`__ for our release notes.
 
-So our recommendation is that releases entries are not added in pull requests,
-but that the core developer adds a releases notes entry after right after having
-merged a pull request (you can add ``[skip ci]`` on this commit).
+- For each PR, a related 'fragment' file should be created in the ``docs/release-notes`` folder.
+- The naming convention of the file should be ``<PULL REQUEST NUMBER>.<TYPE>.rst``, where the available
+  types are ``infrastructure``, ``docs``, ``feature`` or ``bugfix``.
+- The file should contain a suitable message for the PR, for example "A new function `select_nested_models`
+  has been introduced to perform nested model fits and compute the resulting test statistic (TS) between
+  two nested hypotheses.".
+- Note: not all PRs need to be included in the changelog. For example, fixing a typo in the documentation
+  does not need a changelog fragment entry. If you are unsure if you need a fragment, the lead developers can
+  help you decide.
+
+
+
+
+How to review a pull request
+----------------------------
+
+The checklist below outlines key steps to follow when reviewing a PR.
+
+1. Ensure that a milestone and labels are correctly set for the PR.
+2. Check that the PR links to associated issue(s), if any.
+3. Check that the code does what it is supposed to do.
+4. Check that the CI workflow passes without failure.
+5. Check that the general conventions are fulfilled, :ref:`see here <general-conventions>`.
+6. Check that the code can be understood by reading it.
+7. Confirm all docstrings are correct and formatted correctly, :ref:`see here <docstring-formatting>`.
+8. Check that all commits are signed.
+9. Check that a fragment was added, if necessary, for :ref:`towncrier <release-notes>`.
+10. Where relevant, add examples for the users, :ref:`see here <docstring-code-py-file>`.
+11. When needed, check that the documentation build looks correct by checking the artifacts of the CI, :ref:`see here <access-doc-on-pr>`.
 
 How to handle API breaking changes?
 -----------------------------------
@@ -620,7 +654,7 @@ If you change the name of an argument, you can use the ``deprecated_renamed_argu
 It will replace the old argument with the new one in a call to the function and will raise the
 ``GammapyDeprecationWarning``. You can change several arguments at once.
 
-.. testcode::
+.. code-block:: python
 
     from gammapy.utils.deprecation import deprecated_renamed_argument
 
@@ -632,7 +666,7 @@ It will replace the old argument with the new one in a call to the function and 
 
 If you rename a `kwarg` you simply need to set the `arg_in_kwargs` argument to `True`:
 
-.. testcode::
+.. code-block:: python
 
     from gammapy.utils.deprecation import deprecated_renamed_argument
 
@@ -648,7 +682,7 @@ Removing an attribute
 You can also remove an attribute from a class using the ``deprecated_attribute`` decorator.
 If you have a alternative attribute to use instead, pass its name in the `alternative` argument.
 
-.. testcode::
+.. code-block:: python
 
     from gammapy.utils.deprecation import deprecated_attribute
 
@@ -668,25 +702,25 @@ If you have a alternative attribute to use instead, pass its name in the `altern
     print(some_class(10).old_attribute)
 
 
+How to capture a deprecation
+++++++++++++++++++++++++++++
+
+A deprecation warning raised during CI will be considered an error by `pytest`.
+Nevertheless, it is important to also check that deprecation warnings are correctly
+emitted in the test files. This can be done in the following way:
+
+.. code::
+
+    # Runs with the renamed argument
+    asmooth = ASmoothMapEstimator(scales=scales, spectral_model=PowerLawSpectralModel())
+
+    # Raises deprecation warning
+    with pytest.warns(GammapyDeprecationWarning):
+        ASmoothMapEstimator(scales=scales, spectrum=PowerLawSpectralModel())
+
+
 Others
 ------
-
-Bundled gammapy.extern code
-+++++++++++++++++++++++++++
-
-We bundle some code in ``gammapy.extern``.
-This is external code that we don't maintain or modify in Gammapy.
-We only bundle small pure-Python files (currently all single-file modules) purely for convenience,
-because having to explain about these modules as Gammapy dependencies to end-users would be annoying.
-And in some cases the file was extracted from some other project, i.e. can't be installed
-separately as a dependency.
-
-For ``gammapy.extern`` we don't generate Sphinx API docs.
-To see what is there, check out the ``gammapy/extern`` directory locally or on
-`GitHub <https://github.com/gammapy/gammapy/tree/master/gammapy/extern>`__.
-Notes on the bundled files are kept in the docstring of
-`gammapy/extern/__init__.py <https://github.com/gammapy/gammapy/blob/master/gammapy/extern/__init__.py>`__.
-
 
 
 Locate origin of warnings
@@ -942,3 +976,12 @@ script can be used as follows::
 
 If the path of the output file is not provided, the script will be written in the same folder as the notebook and with
 the same name.
+
+.. _skip-actions-local-fork:
+
+Skip GitHub Actions on local fork
++++++++++++++++++++++++++++++++++
+If not explicitly needed, it can be convenient to skip the GitHub Actions for pushes onto local forks and only perform them on the upstream, once a pull request is opened.
+This way computation power is saved and automatic commits by the Actions are avoided in the forks commit-history. An easy way to achieve this, is to deactivate the
+GitHub Actions completely for the fork, following the GitHub documentation, `see here. <https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository#managing-github-actions-permissions-for-your-repository>`__
+See also the section on making a pull request which skips GitHub Actions, :ref:`here <skip-actions-pr>`.

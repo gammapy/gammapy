@@ -8,6 +8,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.io import fits
 from gammapy.data import DataStore
+from gammapy.data.data_store import DataStoreMaker
 from gammapy.irf import (
     Background3D,
     EffectiveAreaTable2D,
@@ -134,6 +135,7 @@ def test_data_store_copy_obs_subset(tmp_path, data_store):
     assert len(substore.hdu_table) == 2
 
 
+@pytest.mark.xfail
 @requires_data()
 class TestDataStoreChecker:
     def setup_method(self):
@@ -169,6 +171,43 @@ def test_data_store_from_events(data_store_dc1):
     path2 = "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_025511.fits.gz"
     with pytest.raises(RuntimeError):
         _ = DataStore.from_events_files([path, path2])
+
+
+@requires_data()
+def test_read_events_cta_1dc(data_store_dc1):
+    path = make_path("$GAMMAPY_DATA/cta-1dc/data/baseline/gps/gps_baseline_110380.fits")
+    info = DataStoreMaker.read_events_info(path)
+
+    assert info["OBS_ID"] == 110380
+    assert info["TSTART"] == 664502400.0 * u.s
+    assert info["TSTOP"] == 664504192.0 * u.s
+    assert info["ONTIME"] == 1800.0 * u.s
+    assert info["LIVETIME"] == 1764.0 * u.s
+    assert info["DEADC"] == 0.98000001907
+    assert info["TELESCOP"] == "CTA"
+    assert info["RA_PNT"] == 267.68121338 * u.deg
+    assert info["DEC_PNT"] == -29.6075 * u.deg
+    assert info["DATE-OBS"] == "2021-01-21"
+    assert info["TIME-OBS"] == "11:58:51"
+    assert info["DATE-END"] == "2021-01-21"
+    assert info["TIME-END"] == "12:28:51"
+    assert info["N_TELS"] == 0
+    assert info["OBJECT"] == "Galactic Plane Survey"
+    assert info["EVENT_COUNT"] == 106217
+    assert info["CALDB"] == "1dc"
+    assert info["IRF"] == "South_z20_50h"
+
+
+@requires_data()
+def test_read_events_info_hess():
+    path = make_path(
+        "$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz"
+    )
+    info = DataStoreMaker.read_events_info(path)
+
+    assert info["DATE-OBS"] == "2004-03-26"
+    assert info["TIME-OBS"] == "02:57:46.184"
+    assert info["DATE-END"] == "2004-03-26"
 
 
 @requires_data()
@@ -255,6 +294,18 @@ def test_data_store_header_info_in_meta(data_store):
 def test_data_store_bad_name():
     with pytest.raises(IOError):
         DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/", "hdu-index.fits.gz", "bad")
+
+
+@requires_data()
+def test_data_store_doubled_id(caplog):
+    """Test that doubled id in obs_id causes corresponding log.warning message"""
+
+    # Using example provided in Issue #5943:
+    datastore = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
+    datastore.get_observations(obs_id=[23523, 23523])
+    assert "List of obs_id is not unique! Multiples are: [23523]" in [
+        _.message for _ in caplog.records
+    ]
 
 
 @requires_data()

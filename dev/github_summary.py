@@ -70,7 +70,7 @@ class GitHubInfoExtractor:
         return result
 
     def _extract_pull_request_info(self, pull_request):
-        """Builds a dictionary containing a list of summary informations.
+        """Builds a dictionary containing a list of summary information.
 
         Parameters
         ----------

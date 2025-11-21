@@ -227,7 +227,9 @@ def create_empty_map_dataset_from_irfs(
     position=None,
     frame="icrs",
 ):
-    """Create a MapDataset, if energy axes, spatial width or bin size are not given
+    """Create an empty `MapDataset` from IRFs.
+
+    If energy axes, spatial width or bin size are not given
     they are determined automatically from the IRFs,
     but the estimated value cannot exceed the given limits.
 
@@ -248,24 +250,23 @@ def create_empty_map_dataset_from_irfs(
     spatial_width : `~astropy.units.Quantity`, optional
         Spatial window size. Default is None.
         If None it is determined from the observation offset max or rad max.
-    spatial_width_max : `~astropy.quantity.Quantity`, optional
+    spatial_width_max : `~astropy.units.Quantity`, optional
         Maximal spatial width. Default is 12 degree.
     spatial_bin_size : `~astropy.units.Quantity`, optional
         Pixel size. Default is None.
         If None it is determined from the observation PSF R68.
-    spatial_bin_size_min : `~astropy.quantity.Quantity`, optional
+    spatial_bin_size_min : `~astropy.units.Quantity`, optional
         Minimal spatial bin size. Default is 0.01 degree.
     position : `~astropy.coordinates.SkyCoord`, optional
         Center of the geometry. Default is the observation pointing at mid-observation time.
     frame: str, optional
         frame of the coordinate system. Default is "icrs".
     """
-
     if position is None:
         if hasattr(observation, "pointing"):
             if observation.pointing.mode is not PointingMode.POINTING:
                 raise NotImplementedError(
-                    "Only datas with fixed pointing in ICRS are supported"
+                    "Only data with fixed pointing in ICRS are supported"
                 )
             position = observation.pointing.fixed_icrs
 
@@ -327,7 +328,9 @@ def create_map_dataset_from_observation(
     position=None,
     frame="icrs",
 ):
-    """Create a MapDataset, if energy axes, spatial width or bin size are not given
+    """Create a `MapDataset` from an observation.
+
+    If energy axes, spatial width or bin size are not given
     they are determined automatically from the observation IRFs,
     but the estimated value cannot exceed the given limits.
 
@@ -335,12 +338,12 @@ def create_map_dataset_from_observation(
     ----------
     observation : `~gammapy.data.Observation`
         Observation to be simulated.
-    models : `~gammapy.modeling.Models`, optional
+    models : `~gammapy.modeling.models.Models`, optional
         Models. Default is None.
     dataset_name : str, optional
-        If `models` contains one or multiple `FoVBackgroundModel`
-        it should match the `dataset_name` of the background model to use.
-        Default is None. If None it is determined from the observation ID.
+        If ``models`` contains one or multiple `~gammapy.modeling.models.FoVBackgroundModel`
+        it should match the ``dataset_name`` of the background model to use.
+        Default is None. If None, it is determined from the observation ID.
     energy_axis_true : `~gammapy.maps.MapAxis`, optional
         True energy axis. Default is None.
         If None it is determined from the observation IRFs.
@@ -352,15 +355,15 @@ def create_map_dataset_from_observation(
     spatial_width : `~astropy.units.Quantity`, optional
         Spatial window size. Default is None.
          If None it is determined from the observation offset max or rad max.
-    spatial_width_max : `~astropy.quantity.Quantity`, optional
+    spatial_width_max : `~astropy.units.Quantity`, optional
         Maximal spatial width. Default is 12 degree.
     spatial_bin_size : `~astropy.units.Quantity`, optional
         Pixel size. Default is None.
         If None it is determined from the observation PSF R68.
-    spatial_bin_size_min : `~astropy.quantity.Quantity`, optional
+    spatial_bin_size_min : `~astropy.units.Quantity`, optional
         Minimal spatial bin size. Default is 0.01 degree.
     position : `~astropy.coordinates.SkyCoord`, optional
-        Center of the geometry. Defalut is the observation pointing.
+        Center of the geometry. Default is the observation pointing.
     frame: str, optional
         frame of the coordinate system. Default is "icrs".
     """
@@ -440,10 +443,8 @@ class MapDataset(Dataset):
     meta : `~gammapy.datasets.MapDatasetMetaData`
         Associated meta data container
 
-
     Notes
     -----
-
     If an `HDULocation` is passed the map is loaded lazily. This means the
     map data is only loaded in memory as the corresponding data attribute
     on the MapDataset is accessed. If it was accessed once it is cached for
@@ -505,7 +506,7 @@ class MapDataset(Dataset):
         "mask_safe",
         "background",
     ]
-    # TODO: shoule be part of the LazyFitsData no ?
+    # TODO: should be part of the LazyFitsData no ?
     gti = None
     meta_table = None
 
@@ -559,7 +560,7 @@ class MapDataset(Dataset):
 
     @property
     def _psf_kernel(self):
-        """Precompute PSFkernel if there is only one spatial bin in the PSFmap"""
+        """Precompute PSFkernel if there is only one spatial bin in the PSFmap."""
         if self.psf and self.psf.has_single_spatial_bin:
             if self.psf.energy_name == "energy_true":
                 map_ref = self.exposure
@@ -892,7 +893,7 @@ class MapDataset(Dataset):
         **kwargs,
     ):
         """
-        Create a MapDataset object with zero filled maps according to the specified geometries.
+        Create a `MapDataset` object with zero filled maps according to the specified geometries.
 
         Parameters
         ----------
@@ -959,7 +960,7 @@ class MapDataset(Dataset):
         reco_psf=False,
         **kwargs,
     ):
-        """Create a MapDataset object with zero filled maps.
+        """Create a `MapDataset` object with zero filled maps.
 
         Parameters
         ----------
@@ -1007,7 +1008,6 @@ class MapDataset(Dataset):
         ...        )
         >>> empty = MapDataset.create(geom=geom, energy_axis_true=energy_axis_true, name="empty")
         """
-
         geoms = create_map_dataset_geoms(
             geom=geom,
             energy_axis_true=energy_axis_true,
@@ -1305,8 +1305,8 @@ class MapDataset(Dataset):
         )
         residuals = self._compute_residuals(counts_spatial, npred_spatial, method)
 
-        if self.mask_safe is not None:
-            mask = self.mask_safe.reduce_over_axes(func=np.logical_or, keepdims=True)
+        if self.mask is not None:
+            mask = self.mask.reduce_over_axes(func=np.logical_or, keepdims=True)
             residuals.data[~mask.data] = np.nan
 
         kwargs.setdefault("add_cbar", True)
@@ -1316,11 +1316,21 @@ class MapDataset(Dataset):
         ax = residuals.plot(ax, **kwargs)
         return ax
 
-    def plot_residuals_spectral(self, ax=None, method="diff", region=None, **kwargs):
+    def plot_residuals_spectral(
+        self,
+        ax=None,
+        method="diff",
+        region=None,
+        kwargs_fit=None,
+        kwargs_safe=None,
+        **kwargs,
+    ):
         """Plot spectral residuals.
 
         The residuals are extracted from the provided region, and the normalization
         used for its computation can be controlled using the method parameter.
+
+        Both the mask fit and mask safe are taken into account.
 
         The error bars are computed using the uncertainty on the excess with a symmetric assumption.
 
@@ -1328,10 +1338,19 @@ class MapDataset(Dataset):
         ----------
         ax : `~matplotlib.axes.Axes`, optional
             Axes to plot on. Default is None.
-        method : {"diff", "diff/sqrt(model)"}
-            Normalization used to compute the residuals, see `SpectrumDataset.residuals`. Default is "diff".
-        region : `~regions.SkyRegion` (required)
-            Target sky region. Default is None.
+        method : {"diff", "diff/sqrt(model)"}, optional
+            Normalization used to compute the residuals, see `SpectrumDataset.residuals`.
+            Default is "diff".
+        region : `~regions.SkyRegion`, optional
+            Target sky region. If None, the full dataset region
+            (i.e., `~gammapy.maps.WcsGeom.footprint_rectangle_sky_region`) is used as the default.
+            Default is None.
+        kwargs_fit : dict, optional
+            Keyword arguments passed to `~RegionNDMap.plot_mask()` for mask fit.
+            Default is None.
+        kwargs_safe : dict, optional
+            Keyword arguments passed to `~RegionNDMap.plot_mask()` for mask safe.
+            Default is None.
         **kwargs : dict, optional
             Keyword arguments passed to `~matplotlib.axes.Axes.errorbar`.
 
@@ -1392,6 +1411,21 @@ class MapDataset(Dataset):
         ymin = 1.05 * np.nanmin(residuals.data - yerr)
         ymax = 1.05 * np.nanmax(residuals.data + yerr)
         ax.set_ylim(ymin, ymax)
+
+        kwargs_fit = kwargs_fit or {}
+        kwargs_safe = kwargs_safe or {}
+
+        kwargs_fit.setdefault("label", "Mask fit")
+        kwargs_fit.setdefault("color", "tab:green")
+        kwargs_safe.setdefault("label", "Mask safe")
+        kwargs_safe.setdefault("color", "black")
+
+        if self.mask_fit:
+            self.mask_fit.to_region_nd_map().plot_mask(ax=ax, **kwargs_fit)
+
+        if self.mask_safe:
+            self.mask_safe.to_region_nd_map().plot_mask(ax=ax, **kwargs_safe)
+        ax.legend()
         return ax
 
     def plot_residuals(
@@ -1463,7 +1497,6 @@ class MapDataset(Dataset):
 
     def _to_asimov_dataset(self):
         """Create Asimov dataset from the current models."""
-
         npred = self.npred()
         data = np.nan_to_num(npred.data, copy=True, nan=0.0, posinf=0.0, neginf=0.0)
         npred.data = data.astype("float")
@@ -1518,6 +1551,8 @@ class MapDataset(Dataset):
         header = hdu_primary.header
         header["NAME"] = self.name
         header.update(self.meta.to_header())
+        creation = self.meta.creation
+        creation.update_time()
 
         hdulist = fits.HDUList([hdu_primary])
         if self.counts is not None:
@@ -1546,6 +1581,9 @@ class MapDataset(Dataset):
 
         if self.meta_table is not None:
             hdulist.append(fits.BinTableHDU(self.meta_table, name="META_TABLE"))
+
+        for hdu in hdulist:
+            hdu.header.update(creation.to_header())
 
         return hdulist
 
@@ -1703,7 +1741,6 @@ class MapDataset(Dataset):
         dataset : `MapDataset`
             Map dataset.
         """
-
         if name is None:
             header = fits.getheader(str(make_path(filename)))
             name = header.get("NAME", name)
@@ -1875,7 +1912,7 @@ class MapDataset(Dataset):
         if containment_correction:
             if not isinstance(on_region, CircleSkyRegion):
                 raise TypeError(
-                    "Containment correction is only supported for" " `CircleSkyRegion`."
+                    "Containment correction is only supported for `CircleSkyRegion`."
                 )
             elif self.psf is None or isinstance(self.psf, PSFKernel):
                 raise ValueError("No PSFMap set. Containment correction impossible")
@@ -2182,7 +2219,7 @@ class MapDataset(Dataset):
         WcsGeom
         <BLANKLINE>
             axes       : ['lon', 'lat', 'energy']
-            shape      : (np.int64(320), np.int64(240), 3)
+            shape      : (320, 240, 3)
             ndim       : 3
             frame      : galactic
             projection : CAR
@@ -2238,7 +2275,7 @@ class MapDataset(Dataset):
         >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
         >>> sliced = dataset.slice_by_energy(energy_min="1 TeV", energy_max="5 TeV")
         >>> sliced.data_shape
-        (3, np.int64(240), np.int64(320))
+        (3, 240, 320)
         """
         name = make_name(name)
 
@@ -2341,20 +2378,23 @@ class MapDataset(Dataset):
         energy_axis = self._geom.axes["energy"].squash()
         return self.resample_energy_axis(energy_axis=energy_axis, name=name)
 
-    def peek(self, figsize=(13.0, 7)):
-        """Quick-look summary plots for a given MapDataset:
-        - Exposure map
-        - Counts map
-        - Predicted counts map (Npred)
-        - Exposure profile at geom center
-        - PSF containment radius at geom center
-        - Energy dispersion matrix at geom center
+    def peek(self, figsize=(13, 7)):
+        """Quick-look summary plots.
+
+        This method creates a figure displaying the elements of your `MapDataset`.
+        For example:
+
+        * Exposure map
+        * Counts map
+        * Predicted counts map (Npred)
+        * Exposure profile at the geometry center
+        * PSF containment radius at the geometry center
+        * Energy dispersion matrix at the geometry center
 
         Parameters
         ----------
         figsize : tuple
-            Size of the figure. Default is (13.5, 7).
-
+            Size of the figure. Default is (13, 7).
         """
 
         def plot_counts(ax, counts_data, cmap, vmin, vmax, title="Counts map"):
@@ -2983,6 +3023,8 @@ class MapDatasetOnOff(MapDataset):
         hdulist = super().to_hdulist()
         exclude_primary = slice(1, None)
 
+        creation = self.meta.creation
+
         del hdulist["BACKGROUND"]
         del hdulist["BACKGROUND_BANDS"]
 
@@ -2996,6 +3038,9 @@ class MapDatasetOnOff(MapDataset):
             hdulist += self.acceptance_off.to_hdulist(hdu="acceptance_off")[
                 exclude_primary
             ]
+
+        for hdu in hdulist:
+            hdu.header.update(creation.to_header())
 
         return hdulist
 
@@ -3262,7 +3307,6 @@ class MapDatasetOnOff(MapDataset):
         dataset : `MapDatasetOnOff`
             Downsampled map dataset.
         """
-
         dataset = super().downsample(factor, axis_name, name)
 
         counts_off = None

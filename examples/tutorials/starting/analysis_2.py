@@ -58,7 +58,7 @@ In practice, we have to:
   - Apply the makers sequentially to produce the current `~gammapy.datasets.MapDataset`
   - Stack it on the target one.
 
-- Define the`~gammapy.modeling.models.SkyModel` to apply to the dataset.
+- Define the `~gammapy.modeling.models.SkyModel` to apply to the dataset.
 - Create a `~gammapy.modeling.Fit` object and run it to fit the model
   parameters
 - Apply a `~gammapy.estimators.FluxPointsEstimator` to compute flux points for
@@ -116,7 +116,7 @@ data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1")
 # observations. Here we use a cone search which we define with a python
 # dict.
 #
-# We then filter the `ObservationTable` with
+# We then filter the `~gammapy.data.ObservationTable` with
 # `~gammapy.data.ObservationTable.select_observations`.
 #
 
@@ -204,7 +204,6 @@ maker_fov = FoVBackgroundMaker(method="fit", exclusion_mask=exclusion_mask)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 
-# %%time
 
 for obs in observations:
     # First a cutout of the target map is produced
@@ -298,10 +297,16 @@ stacked.models = [sky_model, bkg_model]
 # the ``stats`` method of the dataset to the minimizer. By default, it
 # uses ``iminuit``.
 #
-# Its constructor takes a list of dataset as argument.
+# It is possible that the fit will try to converge on an unrelated position
+# therefore you may choose to constrain the model parameter ranges
+# to stay within your expected region (see :ref:`here <dropdown-improve-fit>`).
+# For further information on fitting you can see the :doc:`/tutorials/details/fitting`
+# overview tutorial or :ref:`this section <modifying-model-parameters>`
+# about modifying your parameters.
+#
+# The fit constructor takes dictionaries that define global options for the optimizer.
 #
 
-# %%time
 fit = Fit(optimize_opts={"print_level": 1})
 result = fit.run([stacked])
 
@@ -316,7 +321,7 @@ print(result)
 
 ######################################################################
 # The fitted parameters are visible from the
-# `~astropy.modeling.models.Models` object.
+# `~gammapy.modeling.models.Models` object.
 #
 
 print(stacked.models.to_parameters_table())
@@ -416,7 +421,6 @@ plt.show()
 energy_edges = [1, 2, 4, 10] * u.TeV
 fpe = FluxPointsEstimator(energy_edges=energy_edges, source="crab")
 
-# %%time
 flux_points = fpe.run(datasets=[stacked])
 
 fig, ax = plt.subplots(figsize=(8, 6))

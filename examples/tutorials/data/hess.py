@@ -49,13 +49,6 @@ import matplotlib.pyplot as plt
 from IPython.display import display
 from gammapy.data import DataStore
 
-######################################################################
-# Check setup
-# -----------
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
-
 
 ######################################################################
 # A useful way to organize the relevant files are the index tables. The
@@ -88,20 +81,24 @@ obs = data_store.obs(23523)
 # Select and peek events
 
 obs.events.select_offset([0, 2.5] * u.deg).peek()
+plt.show()
 
 ######################################################################
 # Peek the effective area
 
 obs.aeff.peek()
+plt.show()
 
 ######################################################################
 # Peek the energy dispersion
 
 obs.edisp.peek()
+plt.show()
 
 ######################################################################
 # Peek the psf
 obs.psf.peek()
+plt.show()
 
 ######################################################################
 # Peek the background rate
@@ -127,4 +124,12 @@ plt.show()
 # Now you know how to access and work with H.E.S.S. data. All other
 # tutorials and documentation apply to H.E.S.S. and CTAO or any other IACT
 # that provides DL3 data and IRFs in the standard format.
+#
+# You can see the following tutorials for more detailed analysis using H.E.S.S. data
+#
+# -  :doc:`/tutorials/starting/analysis_1`
+# -  :doc:`/tutorials/starting/analysis_2`
+# -  :doc:`/tutorials/analysis-1d/spectral_analysis`
+# -  :doc:`/tutorials/analysis-1d/extended_source_spectral_analysis`
+# -  :doc:`/tutorials/analysis-2d/ring_background`
 #

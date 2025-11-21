@@ -15,6 +15,8 @@ from astropy.time import Time
 from astropy.units import Quantity
 from astropy.utils import lazyproperty
 import matplotlib.pyplot as plt
+from gammapy.irf import FoVAlignment
+from gammapy.utils.coordinates import FoVAltAzFrame, FoVICRSFrame
 from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.utils.fits import LazyFitsData, earth_location_to_dict
 from gammapy.utils.metadata import CreatorMetaData, TargetMetaData, TimeInfoMetaData
@@ -384,6 +386,39 @@ class Observation:
         """Get the pointing in ICRS for given time."""
         return self.pointing.get_icrs(time, self.observatory_earth_location)
 
+    def _get_fov_altaz_frame(self, time):
+        """Get the `~gammapy.utils.coordinates.FoVAltAzFrame` (FoV Frame aligned on AltAz) for given time."""
+        origin = self.get_pointing_altaz(time)
+        location = self.observatory_earth_location
+        return FoVAltAzFrame(origin=origin, location=location, obstime=time)
+
+    def _get_fov_icrs_frame(self, time):
+        """Get the `~gammapy.utils.coordinates.FoVICRSFrame` (FoV Frame aligned on ICRS) for given time."""
+        origin = self.get_pointing_icrs(time)
+        return FoVICRSFrame(origin=origin)
+
+    def get_fov_frame(self, time, alignment):
+        """Get the `~gammapy.utils.coordinates.FoVICRSFrame` or `~gammapy.utils.coordinates.FoVAltAzFrame` for given time.
+
+        Parameters
+        ----------
+        time : `~astropy.time.Time`
+            Times at which to extract the frame.
+        alignment : `~gammapy.irf.FoVAlignment`
+            Alignment of the field-of-view frame.
+
+        Returns
+        -------
+        fov_frame : `~gammapy.utils.coordinates.FoVICRSFrame` or `~gammapy.utils.coordinates.FoVAltAzFrame`
+            The field-of-view frame with the required alignment (on ICRS or AltAz).
+        """
+        if alignment in [FoVAlignment.RADEC, FoVAlignment.REVERSE_LON_RADEC]:
+            return self._get_fov_icrs_frame(time)
+        elif alignment == FoVAlignment.ALTAZ:
+            return self._get_fov_altaz_frame(time)
+        else:
+            raise ValueError(f"Unknown FoVAlignment {alignment}")
+
     @property
     def observatory_earth_location(self):
         """Observatory location as an `~astropy.coordinates.EarthLocation` object."""
@@ -424,6 +459,18 @@ class Observation:
 
     def peek(self, figsize=(15, 10)):
         """Quick-look plots in a few panels.
+
+        This method creates a figure displaying the available events and IRFs.
+        For example:
+
+        * Events 2D map : events sky map
+        * Effective area 2D map : effective area as a function of FoV offset and true energy
+        * Background rate 2D map : background rate as a function of FoV offset and energy
+        * Energy dispersion 2D map : migration as a function of true energy for a given offset
+        * Point spread function plot : containment radius as a function of energy for various
+          containment fractions
+        * Rad max plot : radius of the directional cut (rad max) as a function of energy
+
 
         Parameters
         ----------
@@ -787,7 +834,7 @@ class Observations(collections.abc.MutableSequence):
         return cls(list(obs))
 
     def in_memory_generator(self):
-        """A generator that iterates over observation. Yield an in memory copy of the observation."""
+        """Iterate over the observation and yield an in memory copy of the observation."""
         for obs in self:
             obs_copy = obs.copy(in_memory=True)
             yield obs_copy
@@ -860,7 +907,7 @@ class ObservationChecker(Checker):
         contain various observation and event time information.
         """
         # http://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Cicerone/Cicerone_Data/Time_in_ScienceTools.html
-        # https://hess-confluence.desy.de/confluence/display/HESS/HESS+FITS+data+-+References+and+checks#HESSFITSdata-Referencesandchecks-Time
+        # https://cchesswiki.in2p3.fr/hess/working_groups/analysis_and_reconstruction_working_group/ar_active_tasks/hess_fits_data/hess_fits_data__references_and_checks
         telescope_met_refs = {
             "FERMI": Time("2001-01-01T00:00:00"),
             "HESS": Time("2001-01-01T00:00:00"),

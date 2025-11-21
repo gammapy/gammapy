@@ -276,3 +276,11 @@ def test_gti_from_time():
 
     assert_time_allclose(gti.table["START"], start)
     assert_time_allclose(gti.table["STOP"], stop)
+
+
+def test_gti_creation_metadata():
+    time_ref = Time("2010-01-01")
+    gti = make_gti({"START": [0, 2] * u.s, "STOP": [1, 3] * u.s}, time_ref=time_ref)
+
+    hdu = gti.to_table_hdu(format="gadf")
+    assert "MJDREFI" in hdu.header
