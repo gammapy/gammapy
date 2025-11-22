@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 from astropy.coordinates import Angle
+from astropy.nddata import NoOverlapError
 import gammapy.utils.parallel as parallel
 from gammapy.datasets import Datasets, MapDataset, MapDatasetOnOff, SpectrumDataset
 from .core import Maker
@@ -98,15 +99,24 @@ class DatasetsMaker(Maker, parallel.ParallelMixin):
         observation : `Observation`
             Observation.
         """
+        obs_point = observation.get_pointing_icrs(observation.tmid)
         if self._apply_cutout:
             cutouts_kwargs = {
-                "position": observation.get_pointing_icrs(observation.tmid).galactic,
+                "position": obs_point.galactic,
                 "width": self.cutout_width,
                 "mode": self.cutout_mode,
             }
-            dataset_obs = dataset.cutout(
-                **cutouts_kwargs,
-            )
+            try:
+                dataset_obs = dataset.cutout(
+                    **cutouts_kwargs,
+                )
+            except NoOverlapError:
+                log.warning(
+                    f"No cutout for {observation.obs_id} because"
+                    " it is outside the FOV of the reference geom."
+                )
+                dataset_obs = dataset.copy()
+
         else:
             dataset_obs = dataset.copy()
 
