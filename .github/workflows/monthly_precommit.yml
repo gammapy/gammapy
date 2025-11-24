@@ -61,7 +61,8 @@ jobs:
       - name: Push branch
         if: steps.changes.outputs.changes == 'true'
         run: |
-          git push origin "$FIX_BRANCH"
+          echo "Pushing branch: ${{ steps.create_branch.outputs.branch }}"
+          git push origin "${{ steps.create_branch.outputs.branch }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
