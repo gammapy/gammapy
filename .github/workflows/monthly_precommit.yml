@@ -43,6 +43,7 @@ jobs:
           fi
 
       - name: Create branch for fixes
+        id: create_branch
         if: steps.changes.outputs.changes == 'true'
         run: |
           FIX_BRANCH="precommit-fixes-$(date +'%Y-%m-%d')"
