@@ -23,11 +23,11 @@ def test_primary_flux():
 
 
 @pytest.mark.parametrize(
-    "mass, expected_flux", [(1.6, 0.00025037), (11, 0.00502079), (75, 0.02028309)]
+    "mass, expected_flux, source", [(1.6, 0.00025037,'pppc4'), (11, 0.00549445,'cosmixs'), (75, 0.02028309,None)]
 )
 @requires_data()
-def test_primary_flux_interpolation(mass, expected_flux):
-    primflux = PrimaryFlux(channel="W", mDM=mass * u.TeV)
+def test_primary_flux_interpolation(mass, expected_flux, source):
+    primflux = PrimaryFlux(channel="W", mDM=mass * u.TeV, source=source)
     actual = primflux(500 * u.GeV)
     assert_quantity_allclose(actual, expected_flux / u.GeV, rtol=1e-5)
 
@@ -92,6 +92,86 @@ def test_dm_decay_spectral_model(tmpdir):
 
     assert_quantity_allclose(integral_flux.value, 3.209234e-2, rtol=1e-3)
     assert_quantity_allclose(differential_flux.value, 2.33485775e-05, rtol=1e-3)
+
+    assert new_models[0].spectral_model.channel == model.channel
+    assert new_models[0].spectral_model.z == model.z
+    assert_allclose(new_models[0].spectral_model.jfactor.value, model.jfactor.value)
+    assert new_models[0].spectral_model.mass.value == 5
+    assert new_models[0].spectral_model.mass.unit == u.TeV
+
+
+#Test using CosmiXs as a spectra source
+@requires_data()
+def test_primary_flux_cosmixs():
+    with pytest.raises(ValueError):
+        PrimaryFlux(channel="Spam", mDM=1 * u.TeV)
+
+    primflux = PrimaryFlux(channel="W", mDM=1 * u.TeV, source="cosmixs")
+    actual = primflux(500 * u.GeV)
+    desired = 0.00013085 / u.GeV
+    assert_quantity_allclose(actual, desired, rtol=1e-4)
+
+
+@requires_data()
+def test_dm_annihilation_spectral_model_cosmixs(tmpdir):
+    channel = "b"
+    massDM = 5 * u.TeV
+    jfactor = 3.41e19 * u.Unit("GeV2 cm-5")
+    energy_min = 0.01 * u.TeV
+    energy_max = 10 * u.TeV
+
+    model = DarkMatterAnnihilationSpectralModel(
+        mass=massDM, channel=channel, jfactor=jfactor, source="cosmixs"
+    )
+    integral_flux = model.integral(energy_min=energy_min, energy_max=energy_max).to(
+        "cm-2 s-1"
+    )
+    differential_flux = model.evaluate(energy=1 * u.TeV, scale=1).to("cm-2 s-1 TeV-1")
+
+    sky_model = SkyModel(
+        spectral_model=model,
+        name="skymodel",
+    )
+    models = Models([sky_model])
+    filename = tmpdir / "model.yaml"
+    models.write(filename, overwrite=True)
+    new_models = Models.read(filename)
+
+    assert_quantity_allclose(integral_flux.value, 6.03197683e-14, rtol=1e-3)
+    assert_quantity_allclose(differential_flux.value, 3.52065879e-16, rtol=1e-3)
+
+    assert new_models[0].spectral_model.channel == model.channel
+    assert new_models[0].spectral_model.z == model.z
+    assert_allclose(new_models[0].spectral_model.jfactor.value, model.jfactor.value)
+    assert new_models[0].spectral_model.mass.value == 5
+    assert new_models[0].spectral_model.mass.unit == u.TeV
+
+
+@requires_data()
+def test_dm_decay_spectral_model_cosmixs(tmpdir):
+    channel = "b"
+    massDM = 5 * u.TeV
+    jfactor = 3.41e19 * u.Unit("GeV cm-2")
+    energy_min = 0.01 * u.TeV
+    energy_max = 10 * u.TeV
+
+    model = DarkMatterDecaySpectralModel(mass=massDM, channel=channel, jfactor=jfactor, source="cosmixs")
+    integral_flux = model.integral(energy_min=energy_min, energy_max=energy_max).to(
+        "cm-2 s-1"
+    )
+    differential_flux = model.evaluate(energy=1 * u.TeV, scale=1).to("cm-2 s-1 TeV-1")
+
+    sky_model = SkyModel(
+        spectral_model=model,
+        name="skymodel",
+    )
+    models = Models([sky_model])
+    filename = tmpdir / "model.yaml"
+    models.write(filename, overwrite=True)
+    new_models = Models.read(filename)
+
+    assert_quantity_allclose(integral_flux.value, 4.675951e-2, rtol=1e-3)
+    assert_quantity_allclose(differential_flux.value, 2.7292e-4, rtol=1e-3)
 
     assert new_models[0].spectral_model.channel == model.channel
     assert new_models[0].spectral_model.z == model.z

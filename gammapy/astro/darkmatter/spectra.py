@@ -84,7 +84,10 @@ class PrimaryFlux(TemplateNDSpectralModel):
 
     def __init__(self, mDM, channel, source='pppc4'):
 
-        if source.lower() == "pppc4":
+        if source is None:
+            source='pppc4'
+
+        if source.lower() == "pppc4" or not source:
             table_filename = "$GAMMAPY_DATA/dark_matter_spectra/AtProduction_gammas.dat"
             if channel in ('aZ','HZ'):
                 raise ValueError(
@@ -292,13 +295,13 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
     )
     tag = ["DarkMatterAnnihilationSpectralModel", "dm-annihilation"]
 
-    def __init__(self, mass, channel, scale=scale.quantity, jfactor=1, z=0, k=2):
+    def __init__(self, mass, channel, scale=scale.quantity, jfactor=1, z=0, k=2, source='pppc4'):
         self.k = k
         self.z = z
         self.mass = u.Quantity(mass)
         self.channel = channel
         self.jfactor = u.Quantity(jfactor)
-        self.primary_flux = PrimaryFlux(mass, channel=self.channel)
+        self.primary_flux = PrimaryFlux(mass, channel=self.channel, source=source)
         super().__init__(scale=scale)
 
     def evaluate(self, energy, scale):
@@ -401,7 +404,7 @@ class DarkMatterDecaySpectralModel(SpectralModel):
 
     tag = ["DarkMatterDecaySpectralModel", "dm-decay"]
 
-    def __init__(self, mass, channel, scale=scale.quantity, jfactor=1, z=0):
+    def __init__(self, mass, channel, scale=scale.quantity, jfactor=1, z=0, source='pppc4'):
         self.z = z
         self.mass = u.Quantity(mass)
         self.channel = channel
