@@ -24,7 +24,7 @@ class PrimaryFlux(TemplateNDSpectralModel):
     allows the interpolation between different dark matter masses.
 
     Parameters
-   --------
+    ----------
     mDM : `~astropy.units.Quantity`
         Dark matter particle mass as rest mass energy.
     channel: str
@@ -33,7 +33,7 @@ class PrimaryFlux(TemplateNDSpectralModel):
         Data source for the spectra. Choose between 'PPPC4' and 'cosmixs'.
 
     References
-   --------
+    ----------
     * `Marco et al. (2011), "PPPC 4 DM ID: a poor particle physicist cookbook for dark matter indirect detection"
       <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
     * `Cirelli et al. (2016), "PPPC 4 DM ID: A Poor Particle Physicist Cookbook for Dark Matter Indirect Detection"
@@ -116,7 +116,7 @@ class PrimaryFlux(TemplateNDSpectralModel):
             raise FileNotFoundError(
                 f"\n\nFile not found: {table_filename}\n"
                 "You may download the dataset needed with the following command:\n"
-                "gammapy download datasetssrc dark_matter_spectra"
+                "gammapy download datasets --src dark_matter_spectra"
             )
         else:
             ascii_format ="ascii.commented_header" if source == 'cosmixs' else "ascii.fast_basic"
@@ -181,7 +181,7 @@ class PrimaryFlux(TemplateNDSpectralModel):
         )
 
         interp_kwargs = {"extrapolate": True, "fill_value": 0, "values_scale": "lin"}
-        super().__init__(region_map, interp_kwargs=interp_kwargs,)
+        super().__init__(region_map, interp_kwargs=interp_kwargs)
         self.mDM = mDM
         self.mass.frozen = True
 
@@ -247,7 +247,7 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
         \frac{\mathrm d N}{\mathrm dE} \times J(\Delta\Omega)
 
     Parameters
-   --------
+    ----------
     mass : `~astropy.units.Quantity`
         Dark matter mass.
     channel : str
@@ -276,7 +276,7 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
         >>> modelDM = DarkMatterAnnihilationSpectralModel(mass=massDM, channel=channel, jfactor=jfactor)  # noqa: E501
 
     References
-   --------
+    ----------
     `Marco et al. (2011), "PPPC 4 DM ID: a poor particle physicist cookbook for dark matter indirect detection"
     <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
     """
@@ -330,7 +330,7 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
         """Create spectral model from a dictionary.
 
         Parameters
-       --------
+        ----------
         data : dict
             Dictionary with model data.
 
@@ -357,7 +357,7 @@ class DarkMatterDecaySpectralModel(SpectralModel):
         \frac{\mathrm d N}{\mathrm dE} \times J(\Delta\Omega)
 
     Parameters
-   --------
+    ----------
     mass : `~astropy.units.Quantity`
         Dark matter mass.
     channel : str
@@ -384,7 +384,7 @@ class DarkMatterDecaySpectralModel(SpectralModel):
         >>> modelDM = DarkMatterDecaySpectralModel(mass=massDM, channel=channel, jfactor=jfactor)  # noqa: E501
 
     References
-   --------
+    ----------
     `Marco et al. (2011), "PPPC 4 DM ID: a poor particle physicist cookbook for dark matter indirect detection"
     <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
     """
@@ -434,7 +434,7 @@ class DarkMatterDecaySpectralModel(SpectralModel):
         """Create spectral model from dictionary.
 
         Parameters
-       --------
+        ----------
         data : dict
             Dictionary with model data.
 
