@@ -264,7 +264,7 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
         Type of dark matter particle (k:2 Majorana, k:4 Dirac).
 
     Examples
-    ----------
+    --------
     This is how to instantiate a `DarkMatterAnnihilationSpectralModel` model::
 
         >>> import astropy.units as u
