@@ -72,7 +72,7 @@ class ObservationTable(Table):
             self.indices["OBS_ID"]
         except IndexError:
             self.add_index("OBS_ID")
-        return self.__class__(self.loc["OBS_ID", obs_id])
+        return self.__class__(self.loc.with_index("OBS_ID")[obs_id])
 
     def summary(self):
         """Summary information string."""
