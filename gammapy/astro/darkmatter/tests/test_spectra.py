@@ -111,7 +111,7 @@ def test_dm_decay_spectral_model(tmpdir):
     assert new_models[0].spectral_model.mass.unit == u.TeV
 
 
-#Test using CosmiXs as a spectra source
+# Test using CosmiXs as a spectra source
 @requires_data()
 def test_primary_flux_cosmixs():
     with pytest.raises(ValueError):
