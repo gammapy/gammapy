@@ -332,6 +332,7 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
         data["spectral"]["jfactor"] = self.jfactor.to_string()
         data["spectral"]["z"] = self.z
         data["spectral"]["k"] = self.k
+        data["spectral"]["source"] = self.source
         return data
 
     @classmethod
@@ -436,6 +437,7 @@ class DarkMatterDecaySpectralModel(SpectralModel):
         data["spectral"]["mass"] = self.mass.to_string()
         data["spectral"]["jfactor"] = self.jfactor.to_string()
         data["spectral"]["z"] = self.z
+        data["spectral"]["source"] = self.source
         return data
 
     @classmethod
