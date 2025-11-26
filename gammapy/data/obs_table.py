@@ -4,6 +4,7 @@ import numpy as np
 from astropy.coordinates import Angle, SkyCoord
 from astropy.table import Table
 from astropy.units import Quantity, Unit
+from astropy.utils.introspection import minversion
 from gammapy.utils.regions import SphericalCircleSkyRegion
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
@@ -72,7 +73,11 @@ class ObservationTable(Table):
             self.indices["OBS_ID"]
         except IndexError:
             self.add_index("OBS_ID")
-        return self.__class__(self.loc.with_index("OBS_ID")[obs_id])
+
+        if minversion("astropy", "7.0"):
+            return self.__class__(self.loc.with_index("OBS_ID")[obs_id])
+        else:
+            return self.__class__(self.loc["OBS_ID", obs_id])
 
     def summary(self):
         """Summary information string."""
