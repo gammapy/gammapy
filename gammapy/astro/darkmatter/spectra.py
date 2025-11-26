@@ -9,6 +9,7 @@ from gammapy.modeling import Parameter
 from gammapy.modeling.models import SpectralModel, TemplateNDSpectralModel
 from gammapy.utils.scripts import make_path
 from gammapy.utils.table import table_map_columns
+import warnings
 
 __all__ = ["PrimaryFlux", "DarkMatterAnnihilationSpectralModel"]
 
@@ -80,22 +81,60 @@ class PrimaryFlux(TemplateNDSpectralModel):
         "s": "s"
     }
 
+    mapping_dict_PPPC4_to_CosmiXs = {
+        "DM": "mDM",
+        "Log10[x]": "Log[10,x]", 
+        "dNdLog10x[eL]": "eL",
+        "dNdLog10x[eR]": "eR",
+        "dNdLog10x[e]": "e",
+        "dNdLog10x[muL]": "\\[Mu]L",
+        "dNdLog10x[muR]": "\\[Mu]R",
+        "dNdLog10x[mu]": "\\[Mu]",
+        "dNdLog10x[tauL]": "\\[Tau]L",
+        "dNdLog10x[tauR]": "\\[Tau]R",
+        "dNdLog10x[tau]": "\\[Tau]",
+        "dNdLog10x[nue]": "\\[Nu]e",
+        "dNdLog10x[numu]": "\\[Nu]\\[Mu]",
+        "dNdLog10x[nutau]": "\\[Nu]\\[Tau]",
+        "dNdLog10x[u]": "u", # Does not exist explicitly on PPPC4, but it is equivalent to q
+        "dNdLog10x[d]": "d", # Does not exist explicitly on PPPC4, but it is equivalent to q
+        "dNdLog10x[s]": "s", # Does not exist explicitly on PPPC4, but it is equivalent to q
+        "dNdLog10x[c]": "c", 
+        "dNdLog10x[b]": "b",
+        "dNdLog10x[t]": "t",
+        "dNdLog10x[a]": "\\[Gamma]",
+        "dNdLog10x[g]": "g", 
+        "dNdLog10x[W]": "W",
+        "dNdLog10x[WL]": "WL",
+        "dNdLog10x[WT]": "WT",
+        "dNdLog10x[Z]": "Z",
+        "dNdLog10x[ZL]": "ZL",
+        "dNdLog10x[ZT]": "ZT",
+        "dNdLog10x[H]": "h",
+        "dNdLog10x[aZ]": None,  # Does not exist  on PPPC4
+        "dNdLog10x[HZ]": None # Does not exist  on PPPC4
+    }
+
     tag = ["PrimaryFlux", "dm-pf"]
 
     def __init__(self, mDM, channel, source='pppc4'):
 
         if source is None:
             source='pppc4'
+            warnings.warn(
+                f"\nSince no spectra source has been chosen, PPPC4 will be used by default.\n",
+                UserWarning
+            )
 
-        if source.lower() == "pppc4" or not source:
+        if source.lower() == "pppc4":
             table_filename = "$GAMMAPY_DATA/dark_matter_spectra/AtProduction_gammas.dat"
             if channel in ('aZ','HZ'):
                 raise ValueError(
-                    f"\n\nThe channel "+channel+" is not available in PPPC4, please choose another channel or use CosmiXs (cosmixs) as source\n"
+                    f"\n\nThe channel {channel} is not available in PPPC4, please choose another channel or use CosmiXs (cosmixs) as source\n"
                 )
             elif channel in ('d','u', 's'):
                 raise ValueError(
-                    f"\n\nThe channel "+channel+" is not available in PPPC4, please choose the equivalent channel q or use CosmiXs (cosmixs) as source\n"
+                    f"\n\nThe channel {channel} is not available in PPPC4, please choose the equivalent channel q or use CosmiXs (cosmixs) as source\n"
                 )
 
         elif source == 'cosmixs':
@@ -103,7 +142,7 @@ class PrimaryFlux(TemplateNDSpectralModel):
 
             if channel in ("V->e", "V->mu", "V->tau"):
                 raise ValueError(
-                    f"\n\nThe channel "+channel+" is not available in CosmiXs, please choose another channel or use PPPC4 as source\n"
+                    f"\n\nThe channel {channel} is not available in CosmiXs, please choose another channel or use PPPC4 as source\n"
                 )
             elif channel =='q':
                 raise ValueError(
@@ -130,41 +169,7 @@ class PrimaryFlux(TemplateNDSpectralModel):
                 delimiter=" ",
             )
             if source == 'cosmixs':
-
-                mapping_dict = {
-                    "DM": "mDM",
-                    "Log10[x]": "Log[10,x]", 
-                    "dNdLog10x[eL]": "eL",
-                    "dNdLog10x[eR]": "eR",
-                    "dNdLog10x[e]": "e",
-                    "dNdLog10x[muL]": "\\[Mu]L",
-                    "dNdLog10x[muR]": "\\[Mu]R",
-                    "dNdLog10x[mu]": "\\[Mu]",
-                    "dNdLog10x[tauL]": "\\[Tau]L",
-                    "dNdLog10x[tauR]": "\\[Tau]R",
-                    "dNdLog10x[tau]": "\\[Tau]",
-                    "dNdLog10x[nue]": "\\[Nu]e",
-                    "dNdLog10x[numu]": "\\[Nu]\\[Mu]",
-                    "dNdLog10x[nutau]": "\\[Nu]\\[Tau]",
-                    "dNdLog10x[u]": "u", # Does not exist explicitly on PPPC4, but it is equivalent to q
-                    "dNdLog10x[d]": "d", # Does not exist explicitly on PPPC4, but it is equivalent to q
-                    "dNdLog10x[s]": "s", # Does not exist explicitly on PPPC4, but it is equivalent to q
-                    "dNdLog10x[c]": "c", 
-                    "dNdLog10x[b]": "b",
-                    "dNdLog10x[t]": "t",
-                    "dNdLog10x[a]": "\\[Gamma]",
-                    "dNdLog10x[g]": "g", 
-                    "dNdLog10x[W]": "W",
-                    "dNdLog10x[WL]": "WL",
-                    "dNdLog10x[WT]": "WT",
-                    "dNdLog10x[Z]": "Z",
-                    "dNdLog10x[ZL]": "ZL",
-                    "dNdLog10x[ZT]": "ZT",
-                    "dNdLog10x[H]": "h",
-                    "dNdLog10x[aZ]": None,  # Does not exist  on PPPC4
-                    "dNdLog10x[HZ]": None # Does not exist  on PPPC4
-                }
-                self.table = table_map_columns(self.table, mapping_dict)
+                self.table = table_map_columns(self.table, self.mapping_dict_PPPC4_to_CosmiXs)
 
         self.channel = channel
 

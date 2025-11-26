@@ -23,10 +23,21 @@ def test_primary_flux():
 
 
 @pytest.mark.parametrize(
-    "mass, expected_flux, source", [(1.6, 0.00025037,'pppc4'), (11, 0.00549445,'cosmixs'), (75, 0.02028309,None)]
+    "mass, expected_flux, source, expected_exception",
+    [
+        (1.6, 0.00025037, 'pppc4', None),
+        (11, 0.00549445, 'cosmixs', None),
+        (75, None, 'nonexistend', ValueError),
+    ]
 )
 @requires_data()
-def test_primary_flux_interpolation(mass, expected_flux, source):
+def test_primary_flux_interpolation(mass, expected_flux, source, expected_exception):
+    if expected_exception:
+        with pytest.raises(expected_exception):
+            primflux = PrimaryFlux(channel="W", mDM=mass * u.TeV, source=source)
+        return
+
+    # casos normales
     primflux = PrimaryFlux(channel="W", mDM=mass * u.TeV, source=source)
     actual = primflux(500 * u.GeV)
     assert_quantity_allclose(actual, expected_flux / u.GeV, rtol=1e-5)
