@@ -83,7 +83,7 @@ class PrimaryFlux(TemplateNDSpectralModel):
 
     mapping_dict_PPPC4_to_CosmiXs = {
         "DM": "mDM",
-        "Log10[x]": "Log[10,x]", 
+        "Log10[x]": "Log[10,x]",
         "dNdLog10x[eL]": "eL",
         "dNdLog10x[eR]": "eR",
         "dNdLog10x[e]": "e",
@@ -96,14 +96,14 @@ class PrimaryFlux(TemplateNDSpectralModel):
         "dNdLog10x[nue]": "\\[Nu]e",
         "dNdLog10x[numu]": "\\[Nu]\\[Mu]",
         "dNdLog10x[nutau]": "\\[Nu]\\[Tau]",
-        "dNdLog10x[u]": "u", # Does not exist explicitly on PPPC4, but it is equivalent to q
-        "dNdLog10x[d]": "d", # Does not exist explicitly on PPPC4, but it is equivalent to q
-        "dNdLog10x[s]": "s", # Does not exist explicitly on PPPC4, but it is equivalent to q
-        "dNdLog10x[c]": "c", 
+        "dNdLog10x[u]": "u",  # Does not exist explicitly on PPPC4, but it is equivalent to q
+        "dNdLog10x[d]": "d",  # Does not exist explicitly on PPPC4, but it is equivalent to q
+        "dNdLog10x[s]": "s",  # Does not exist explicitly on PPPC4, but it is equivalent to q
+        "dNdLog10x[c]": "c",
         "dNdLog10x[b]": "b",
         "dNdLog10x[t]": "t",
         "dNdLog10x[a]": "\\[Gamma]",
-        "dNdLog10x[g]": "g", 
+        "dNdLog10x[g]": "g",
         "dNdLog10x[W]": "W",
         "dNdLog10x[WL]": "WL",
         "dNdLog10x[WT]": "WT",
@@ -112,7 +112,7 @@ class PrimaryFlux(TemplateNDSpectralModel):
         "dNdLog10x[ZT]": "ZT",
         "dNdLog10x[H]": "h",
         "dNdLog10x[aZ]": None,  # Does not exist  on PPPC4
-        "dNdLog10x[HZ]": None # Does not exist  on PPPC4
+        "dNdLog10x[HZ]": None  # Does not exist  on PPPC4
     }
 
     tag = ["PrimaryFlux", "dm-pf"]
@@ -120,19 +120,19 @@ class PrimaryFlux(TemplateNDSpectralModel):
     def __init__(self, mDM, channel, source='pppc4'):
 
         if source is None:
-            source='pppc4'
+            source = 'pppc4'
             warnings.warn(
-                f"\nSince no spectra source has been chosen, PPPC4 will be used by default.\n",
+                "\nSince no spectra source has been chosen, PPPC4 will be used by default.\n",
                 UserWarning
             )
 
         if source.lower() == "pppc4":
             table_filename = "$GAMMAPY_DATA/dark_matter_spectra/AtProduction_gammas.dat"
-            if channel in ('aZ','HZ'):
+            if channel in ('aZ', 'HZ'):
                 raise ValueError(
                     f"\n\nThe channel {channel} is not available in PPPC4, please choose another channel or use CosmiXs (cosmixs) as source\n"
                 )
-            elif channel in ('d','u', 's'):
+            elif channel in ('d', 'u', 's'):
                 raise ValueError(
                     f"\n\nThe channel {channel} is not available in PPPC4, please choose the equivalent channel q or use CosmiXs (cosmixs) as source\n"
                 )
@@ -144,15 +144,15 @@ class PrimaryFlux(TemplateNDSpectralModel):
                 raise ValueError(
                     f"\n\nThe channel {channel} is not available in CosmiXs, please choose another channel or use PPPC4 as source\n"
                 )
-            elif channel =='q':
+            elif channel == 'q':
                 raise ValueError(
-                    f"\n\nThe channel q is not available in cosmixs, please choose an equivalent channel such as d, u or s or use PPPC4 as source\n"
+                    "\n\nThe channel q is not available in cosmixs, please choose an equivalent channel such as d, u or s or use PPPC4 as source\n"
                 )
         else:
             raise ValueError(
-                f"\n\nData source is not valid, please choose between PPPC4 or cosmixs\n"
+                "\n\nData source is not valid, please choose between PPPC4 or cosmixs\n"
             )
-    
+
         self.table_path = make_path(table_filename)
         if not self.table_path.exists():
             raise FileNotFoundError(
@@ -161,7 +161,7 @@ class PrimaryFlux(TemplateNDSpectralModel):
                 "gammapy download datasets --src dark_matter_spectra"
             )
         else:
-            ascii_format ="ascii.commented_header" if source == 'cosmixs' else "ascii.fast_basic"
+            ascii_format = "ascii.commented_header" if source == 'cosmixs' else "ascii.fast_basic"
             self.table = Table.read(
                 str(self.table_path),
                 format=ascii_format,
@@ -182,7 +182,7 @@ class PrimaryFlux(TemplateNDSpectralModel):
         log10x_axis = MapAxis.from_nodes(log10x, name="energy_true")
 
         channel_name = self.channel_registry[self.channel]
-        
+
         geom = RegionGeom(region=None, axes=[log10x_axis, mass_axis])
         region_map = Map.from_geom(
             geom=geom, data=self.table[channel_name].reshape(geom.data_shape)
@@ -243,6 +243,7 @@ class PrimaryFlux(TemplateNDSpectralModel):
         dN_dlogx = super().evaluate(log10x, *args)
         dN_dE = dN_dlogx / (energy * np.log(10))
         return dN_dE
+
 
 class DarkMatterAnnihilationSpectralModel(SpectralModel):
     r"""Dark matter annihilation spectral model.

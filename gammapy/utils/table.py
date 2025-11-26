@@ -96,6 +96,7 @@ def table_row_to_dict(row, make_quantity=True):
         data[name] = val
     return data
 
+
 def table_map_columns(table, mapping_dict):
     """Change column names according to a mapping dictionary.
 
