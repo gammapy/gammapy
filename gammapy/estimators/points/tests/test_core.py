@@ -276,6 +276,20 @@ class TestFluxPoints:
         with mpl_plot_check():
             flux_points_likelihood.plot_ts_profiles()
 
+    def test_plot_likelihood_single_interval(self, flux_points_likelihood):
+        lc_1d = FluxPoints.read(
+            "$GAMMAPY_DATA/estimators/pks2155_hess_lc/pks2155_hess_lc.fits",
+            format="lightcurve",
+        )
+        axis_new = get_rebinned_axis(
+            lc_1d, method="fixed-bins", group_size=34, axis_name="time"
+        )
+        l1 = lc_1d.resample_axis(axis_new=axis_new)
+        plt.figure()
+        with mpl_plot_check():
+            ax = l1.plot_ts_profiles(axis_name="time")
+            assert "Time" in str(ax.xaxis.get_label())
+
     def test_plot_likelihood_error(self, flux_points_likelihood):
         del flux_points_likelihood._data["stat_scan"]
 

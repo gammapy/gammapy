@@ -25,6 +25,11 @@ class TestEventListBasic:
     def test_eventlist_printin(self):
         assert "Instrument" in str(self.events)
 
+    def test_eventlist_len(self):
+        assert len(self.events) == 4
+        empty = EventList(None)
+        assert len(empty) == 0
+
 
 @pytest.fixture()
 def simple_event_table():

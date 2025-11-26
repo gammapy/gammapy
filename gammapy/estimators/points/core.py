@@ -742,6 +742,7 @@ class FluxPoints(FluxMaps):
         ax=None,
         sed_type=None,
         add_cbar=True,
+        axis_name=None,
         **kwargs,
     ):
         """Plot fit statistic SED profiles as a density plot.
@@ -776,7 +777,10 @@ class FluxPoints(FluxMaps):
                 "Profile plotting is only supported for unidimensional maps"
             )
 
-        axis = self.geom.axes.primary_axis
+        if axis_name is None:
+            axis = self.geom.axes.primary_axis
+        else:
+            axis = self.geom.axes[axis_name]
 
         if isinstance(axis, TimeMapAxis) and not axis.is_contiguous:
             axis = axis.to_contiguous()
