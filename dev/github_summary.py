@@ -121,11 +121,11 @@ def cli(log_level):
     "contributors_by_milestone",
     help="Make a list of contributors for a specific milestone"
 )
-@click.option("--token", default=None, type=str)
-@click.option("--repo", default="gammapy/gammapy", type=str)
+@click.option("--token", default=None, type=str, help="Your GitHub token.")
+@click.option("--repo", default="gammapy/gammapy", type=str, help="The relative repo.")
 @click.option("--milestone", required=True, type=str, help="Comma-separated list of milestones, e.g., '2.0.1,2.1'")
-@click.option("--state", default="closed", type=str)
-@click.option("--include_backports", default=False, type=bool)
+@click.option("--state", default="closed", type=str, help="Is the issues closed or not.")
+@click.option("--include_backports", default=False, type=bool, help="Whether to include backports or not.")
 def contributors_by_milestone(repo, token, milestone, state, include_backports):
     """List contributors attached to a specific milestone."""
     extractor = GitHubContributorsExtractor(repo=repo, token=token)
