@@ -89,17 +89,17 @@ class GitHubContributorsExtractor:
 
             # Start to add authors
             if pr.user:
-                unique_users.add(pr.user.login or pr.user.name)
+                unique_users.add(pr.user.name or pr.user.login)
 
             # For committers
             for commit in pr.get_commits():
                 if commit.committer:
-                    unique_users.add(commit.committer.login)
+                    unique_users.add(commit.committer.name or commit.committer.login)
 
             # For reviewers
             for review in pr.get_reviews():
                 if review.user:
-                    unique_users.add(review.user.login)
+                    unique_users.add(review.user.name or review.user.login)
 
         return sorted(list(unique_users))
 
