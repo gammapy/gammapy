@@ -21,6 +21,7 @@ from gammapy.modeling.models import (
     GaussianSpectralModel,
     LogParabolaNormSpectralModel,
     LogParabolaSpectralModel,
+    LogParabola2SpectralModel,
     Model,
     NaimaSpectralModel,
     PiecewiseNormSpectralModel,
@@ -321,6 +322,20 @@ TEST_MODELS = [
         integral_1_10TeV=u.Quantity(27.24066846, "TeV"),
         eflux_1_10TeV=u.Quantity(133.34487, "TeV2"),
     ),
+    dict(
+        name="logpar2",
+        model=LogParabola2SpectralModel.from_log10(
+            alpha=2.3 * u.Unit(""),
+            amplitude=4 / u.cm**2 / u.s / u.TeV,
+            reference=1 * u.TeV,
+            beta=1.151292546497023 * u.Unit(""),
+            escale=10 * u.TeV,
+        ),
+        val_at_2TeV=u.Quantity(1.418847, "cm-2 s-1 TeV-1"),
+        integral_1_10TeV=u.Quantity(4.397409, "cm-2 s-1"),
+        eflux_1_10TeV=u.Quantity(10.505849, "TeV cm-2 s-1"),
+        e_peak=7.408182 * u.TeV,
+    ),
 ]
 
 # Add compound models
@@ -592,7 +607,7 @@ def test_to_from_dict_compound():
 
 
 def test_to_from_dict_piecewise_lin():
-    spectrum = TEST_MODELS[-4]
+    spectrum = TEST_MODELS[-5]
     model = spectrum["model"]
     assert spectrum["name"] == "pbpllin"
     model_dict = model.to_dict()
@@ -612,7 +627,7 @@ def test_to_from_dict_piecewise_lin():
 
 
 def test_to_from_dict_piecewise():
-    spectrum = TEST_MODELS[-5]
+    spectrum = TEST_MODELS[-6]
     model = spectrum["model"]
     assert spectrum["name"] == "pbpl"
     model_dict = model.to_dict()
