@@ -87,18 +87,21 @@ class GitHubContributorsExtractor:
 
             log.info(f"Extracting Pull Request {pr.number}.")
 
+            # It is possible that there will be 'authors' such as 'web-flow' which is just a merging action
+            # The extra lines here ignore those users that are not real
             # Start to add authors
-            if pr.user:
+            if pr.user and pr.user.login not in {"web-flow", "dependabot[bot]", "github-actions[bot]"}:
                 unique_users.add(pr.user.name or pr.user.login)
 
             # For committers
             for commit in pr.get_commits():
-                if commit.committer:
+                if commit.committer and commit.committer.login not in {"web-flow", "dependabot[bot]",
+                                                                       "github-actions[bot]"}:
                     unique_users.add(commit.committer.name or commit.committer.login)
 
             # For reviewers
             for review in pr.get_reviews():
-                if review.user:
+                if review.user and review.user.login not in {"web-flow", "dependabot[bot]", "github-actions[bot]"}:
                     unique_users.add(review.user.name or review.user.login)
 
         return sorted(list(unique_users))
