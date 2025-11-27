@@ -146,6 +146,13 @@ def contributors_by_milestone(repo, token, milestone, state, include_backports):
     for user in sorted(all_users):
         print(f"- {user}")
 
+    # Add the names directly to the changelog
+    changelog_file = "docs/release-notes/CHANGELOG.rst"
+    contributors_sorted = sorted(all_users)
+    with open(changelog_file, "a", encoding="utf-8") as f:
+        for name in contributors_sorted:
+            f.write(f"- {name}\n")
+
 
 if __name__ == "__main__":
     cli()
