@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from gammapy.utils.registry import Registry
-from .core import Dataset, Datasets
+from .core import Dataset, Datasets, LazyDatasets
 from .flux_points import FluxPointsDataset
 from .io import OGIPDatasetReader, OGIPDatasetWriter, FermipyDatasetsReader
 from .map import (
@@ -36,6 +36,7 @@ __all__ = [
     "Datasets",
     "FermipyDatasetsReader",
     "FluxPointsDataset",
+    "LazyDatasets",
     "MapDataset",
     "MapDatasetEventSampler",
     "MapDatasetOnOff",
