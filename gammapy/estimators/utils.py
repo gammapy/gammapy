@@ -874,6 +874,9 @@ def combine_significance_maps(maps):
     get_combined_significance_maps : same method but computing the significance maps from estimators and datasets.
 
     """
+    if len(maps) < 2:
+        raise ValueError("List of flux maps has less than two elements")
+
     geom = maps[0].ts.geom.to_image()
     ts_sum = Map.from_geom(geom)
     ts_sum_sign = Map.from_geom(geom)
