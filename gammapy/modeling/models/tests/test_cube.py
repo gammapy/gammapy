@@ -169,20 +169,15 @@ def test_sky_model_init():
         energy=[0.5, 1, 2] * u.TeV, values=[1, 2, 3] * u.dimensionless_unscaled
     )
 
-    template_exp = TemplateSpectralModel(
-        energy=[0.5, 1, 2] * u.TeV, values=[1, 2, 3] * (1 / (u.TeV * u.s * u.cm**2))
-    )
-
     template_noexp = TemplateSpectralModel(
         energy=[0.5, 1, 2] * u.TeV, values=[1, 2, 3] * (1 / u.TeV)
     )
 
-    SkyModel(spectral_model=template_exp)
-
-    SkyModel(
+    model_noexp = SkyModel(
         spectral_model=template_noexp,
         apply_irf={"exposure": False},
     )
+    assert model_noexp(None, None, 1 * u.TeV).unit == (1 / u.TeV)
 
     with pytest.raises(ValueError):
         SkyModel(spectral_model=template_dimensionless)
