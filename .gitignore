@@ -109,3 +109,6 @@ dev/crab
 
 # sphinx gallery
 docs/tutorials/*/*.md5
+# pixi environments
+.pixi/*
+!.pixi/config.toml
