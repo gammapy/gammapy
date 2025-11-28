@@ -17,9 +17,15 @@ jobs:
         run: pip install pre-commit
       - name: Run pre-commit
         run: |
-          git fetch origin $GITHUB_BASE_REF
-          pre-commit run --files $(git diff --name-only origin/$GITHUB_BASE_REF)
-
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            pre-commit run \
+            --from-ref "${{ github.event.pull_request.base.sha }}" \
+            --to-ref   "${{ github.event.pull_request.head.sha }}"
+          else  # push event
+            pre-commit run \
+            --from-ref "${{ github.event.before }}" \
+            --to-ref   "${{ github.event.after }}"
+          fi
   ci-runs:
     name: ${{ matrix.os }}, ${{ matrix.tox_env }}
     runs-on: ${{ matrix.os }}
