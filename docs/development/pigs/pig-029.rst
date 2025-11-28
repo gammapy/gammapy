@@ -1,0 +1,234 @@
+.. include:: ../../references.txt
+
+.. _pig-029:
+
+*************************************************************
+PIG 29 - Separation of Plotting Methods using Plotter classes
+*************************************************************
+
+* Author: Régis Terrier and Atreyee Sinha
+* Created: ``2025-03-14``
+* Accepted:
+* Status:
+* Discussion: `#5726`_
+
+Abstract
+========
+
+This PIG proposes to separate plotting methods from Gammapy objects by introducing
+dedicated `Plotter` classes (e.g., `MapDatasetPlotter`). This would improve code maintainability,
+enhance flexibility for users, and optimize efficiency by avoiding unnecessary imports of `matplotlib`.
+This could also facilitate testing beyond the simple execution of the plotting methods.
+
+Motivation
+==========
+
+Currently, plotting methods are tightly integrated with Gammapy objects. This presents several issues:
+
+- **Code Complexity**: Plotting code can be a large fraction of the code of a given class (see e.g. `Background2D`) .
+  Plot functions are often large and complex, making files harder to read and maintain. In particular, they need to forward
+  numerous arguments to lower level plot functions or to matplotlib functions. This results in complex kwargs dictionary
+  arguments which is difficult to document and error prone.
+- **Lack of Extensibility**: Users cannot easily extend plotting functionalities without modifying core Gammapy objects.
+  For instance, Datasets built from different experiment might require different `peek()` methods. See for instance `#5570`_.
+  It should not be necessary to create a new `Dataset` object to support this. Configuration or subclassing should be
+  possible.
+- **Performance Overhead**: We initially always used delayed imports for matplotlib but removed this at some point.
+  Yet always importing `matplotlib` is inefficient for workflows that do not need plotting functionalities.
+
+A more modular approach, using dedicated `Plotter` classes, would resolve these issues while preserving all current plotting functionalities.
+We already have an example of such a class in `gammapy.visualization`, the `MapPanelPlotter`. It is a `WcsNDMap` plotter
+that plots galactic survey maps in a multi-panel figure. It can be configured on init and it will call the `WcsNDMap.plot`
+function. This class is not directly connected to an object but rather to a type of plot.
+
+Note that SunPy `ndcube` implements as a similar approach `MatplotlibPlotter`_
+
+Proposed Changes
+================
+
+- Introduce separate `Plotter` classes for different Gammapy objects (e.g., `MapDatasetPlotter`, `SpectrumDatasetPlotter`).
+  - A `Plotter` should be stateless. It would define, global plot configuration on init and take the object to plot as
+    argument of the plot methods it provides. Configuration validation could be performed on init.
+  - The `Plotter` should be an attribute of the parent object.
+  - It could be lazily instantiated to import matplotlib only when needed.
+  - Existing plot methods will silently call the `self.plotter` to ensure backward compatibility
+- Move existing plotting methods from core objects to these new `Plotter` classes. Move corresponding tests as well.
+  - Existing plotting functionalities will remain accessible but may be deprecated in future releases.
+
+
+Implementation
+==============
+
+- Utilize the existing `gammapy.visualization` module to host `Plotter` classes.
+- Define `Plotter` classes for key Gammapy objects and move plotting-related code there.
+- Each `Plotter` class should take a minimal configuration on init, possibly the matplotlib rcParams.
+- At a minimum, a `Plotter` class should implement all plotting-related methods currently existing for its associated object.
+
+The base `Plotter` class could be structured this way:
+
+.. code:: python
+
+  import matplotlib.pyplot as plt
+  from matplotlib import RcParams, rcParams
+
+  class BasePlotter:
+      def __init__(self, rc_params=None):
+        """Init plotter object with dict of matplotlib rcParam keys.
+            Validation is performed using matplotlib internal mechanism.
+        """
+        # Store a `~matplotlib.RcParams` object to ensure validation of each key.
+        # Make a local copy to avoid changing global parameters
+        self._rcParams = RcParams(rcParams.copy())
+
+        if rc_params:
+            self.rcParams = rc_params
+
+    @property
+    def rcParams(self):
+        """Return local `~matplotlib.RcParams` configuration."""
+        return self._rcParams
+
+    @rcParams.setter
+    def rcParams(self, rc_params):
+        """Set and validate local `~matplotlib.RcParams` configuration."""
+        if not isinstance(rc_params, dict):
+            raise ValueError("rc_params must be a dictionary.")
+
+        for k, v in rc_params.items():
+            self._rcParams[k] = v
+
+The parameters used are then copied and local to the `Plotter` object and we can rely on matplotlib's validation scheme
+to make sure they are correct. The `plot` functions would then call into matplotlib functions using the context manager
+`with plt.rc_context(self.rcParams)`.
+
+This approach would allow to configure the plot aspect early.
+
+The `WcsNDMapPlotter` could then be defined this way:
+
+.. code:: python
+
+  class WcsMapPlotter(BasePlotter):
+      def __init__(self, rc_params=None):
+          super().__init__()
+          self.rcParams["image.interpolation"]="nearest"
+          self.rcParams["image.origin"]="lower"
+          self.rcParams["image.cmap"]="afmhot"
+          self.rcParams = rc_params
+
+Configuration of the `WCSAxes` could also be added on init.
+
+The `MapDatasetPlotter` could look like this:
+
+.. code:: python
+
+  import matplotlib.pyplot as plt
+
+  class MapDatasetPlotter:
+    """"""
+    def __init__(self, rc_params=None):
+        super().__init__(rc_params)
+
+    def peek(self, dataset, figsize=(12, 8)):
+        """Quick-look summary plots.
+
+        Parameters
+        ----------
+        dataset : `~gammapy.datasets.MapDataset`
+            The MapDataset to peek in.
+        figsize : tuple
+            Size of the figure. Default is (12, 10).
+
+        """
+
+        def plot_mask(ax, mask, **kwargs):
+            if mask is not None:
+                mask.plot_mask(ax=ax, **kwargs)
+
+        with plt.rc_context(self.rcParams):
+            fig, axes = plt.subplots(
+                ncols=2,
+                nrows=2,
+                subplot_kw={"projection": self._geom.wcs},
+                figsize=figsize,
+                gridspec_kw={"hspace": 0.25, "wspace": 0.1},
+            )
+
+            axes = axes.flat
+            axes[0].set_title("Counts")
+            dataset.counts.sum_over_axes().plot(ax=axes[0], add_cbar=True)
+            plot_mask(ax=axes[0], mask=dataset.mask_fit_image, alpha=0.2)
+            plot_mask(ax=axes[0], mask=dataset.mask_safe_image, hatches=["///"], colors="w")
+
+            axes[1].set_title("Excess counts")
+            dataset.excess.sum_over_axes().plot(ax=axes[1], add_cbar=True)
+            plot_mask(ax=axes[1], mask=dataset.mask_fit_image, alpha=0.2)
+            plot_mask(ax=axes[1], mask=dataset.mask_safe_image, hatches=["///"], colors="w")
+
+            axes[2].set_title("Exposure")
+            dataset.exposure.sum_over_axes().plot(ax=axes[2], add_cbar=True)
+            plot_mask(ax=axes[2], mask=dataset.mask_safe_image, hatches=["///"], colors="w")
+
+            axes[3].set_title("Background")
+            dataset.background.sum_over_axes().plot(ax=axes[3], add_cbar=True)
+            plot_mask(ax=axes[3], mask=dataset.mask_fit_image, alpha=0.2)
+            plot_mask(ax=axes[3], mask=dataset.mask_safe_image, hatches=["///"], colors="w")
+
+    def plot_mask(self,):
+        pass
+
+In the `MapDataset` code one would have:
+
+.. code:: python
+
+        def __init__(self, **lots_of_arguments):
+            self._plotter = None  # Lazy instantiation
+
+        @property
+        def plotter(self):
+            """Access the plotter for this MapDataset.
+
+            See `MapDatasetPlotter` for available plotting methods.
+            """
+            if self._plotter is None:
+                from .plotters import MapDatasetPlotter   # delayed import
+
+                self._plotter = MapDatasetPlotter(self)
+            return self._plotter
+
+        def peek(self, figsize=(12, 8)):
+            self.plotter.peek(figsize)
+
+An example for `gammapy.data` objects is proposed in the PR `#5725`_.
+
+The property getter/setter mechanism could use a `PlotMixin` approach to avoid repeating the boilerplate code.
+
+If a user wants to modify `MapDataset.peek()` to provide more suited visualization of e.g. Fermi data (`#5570`_), they could
+create a class inheriting from `MapDatasetPlotter` and overload its `peek` method. Similarly, different plotting
+backends could be supported.
+
+Alternatives
+============
+
+A general drawback of this approach is the large number of plotter classes necessary. Yet given the specialization of plot functions this seems
+unavoidable.
+
+Other strategies can be envisioned:
+- Keep the current approach: This would maintain the status quo but does not address the issues outlined.
+- Use mixin classes: This could modularize the code but still tightly couples plotting with core objects.
+  We have this already with `PlotMixin` that is used by `SpectrumDataset`. But this does not allow to have you own plotters
+  nor to have delayed imports.
+- Define standalone plotting functions instead of classes: This would reduce complexity but may lead to less structured and reusable code
+  and probably less maintainable.
+
+
+Decision
+========
+
+The PIG is open for discussion
+
+.. _#5570: https://github.com/gammapy/gammapy/issues/5570
+.. _#5725: https://github.com/gammapy/gammapy/issues/5725
+.. _#5726: https://github.com/gammapy/gammapy/issues/5726
+.. _(see e.g. MatplotlibPlotter): https://docs.sunpy.org/projects/ndcube/en/stable/api/ndcube.visualization.mpl_plotter.MatplotlibPlotter.html
+
+
