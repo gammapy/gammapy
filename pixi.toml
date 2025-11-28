@@ -1,0 +1,145 @@
+[workspace]
+channels = ["conda-forge"]
+platforms = ["linux-64", "osx-64", "win-64"] # ["osx-arm64"] causes issue
+
+[dependencies]
+python = ">=3.10"
+pip = ">=25.1.1"
+ipython = ">=9.2.0"
+numpy = ">=1.26"
+scipy = ">=1.13"
+astropy = ">=6.0"
+regions = ">=0.9.0"
+pyyaml = ">=5.3"
+click = ">=8.0"
+pydantic = ">=2.8.0"
+iminuit = ">=2.26.0"
+matplotlib = ">=3.8, <3.10"
+
+[feature.gammapy.pypi-dependencies]
+gammapy = { path = ".", editable = true }
+
+# -------------------
+# Features: dependencies
+# -------------------
+
+# TODO: are these Pypi or Conda dependencies??
+
+# [feature.py311.dependencies]
+# python = "~=3.11.0"
+# [feature.py312.dependencies]
+# python = "~=3.12.0"
+# [feature.py313.dependencies]
+# python = "~=3.13.0"
+
+# [feature.numpy121.dependencies]
+# numpy = "1.21.*"
+# [feature.numpy122.dependencies]
+# numpy = "1.22.*"
+# [feature.numpy123.dependencies]
+# numpy = "1.23.*"
+# [feature.numpy124.dependencies]
+# numpy = "1.24.*"
+
+# Test extras (from setup.cfg extras_require[test])
+[feature.test.dependencies]
+pytest = "*"
+pytest-astropy = "*"
+pytest-xdist = "*"
+docutils = "*"
+sphinx = "*"
+[feature.test.tasks.tests]
+cmd = "pytest --pyargs gammapy"
+[feature.test.tasks.test-cov]
+cmd = "pytest --cov gammapy --cov-config=setup.cfg"
+
+# Docs extras (from setup.cfg extras_require[docs])
+[feature.docs.pypi-dependencies]
+astropy = "*"
+numpydoc = "*"
+sphinx = "*"
+sphinx-automodapi = "*"
+sphinx-click = "*"
+sphinx-copybutton = "*"
+sphinx-design = "*"
+sphinx-gallery = "*"
+pydata-sphinx-theme = "*"
+nbformat = "*"
+docutils = "*"
+[feature.docs.tasks.build-docs]
+cmd = "sphinx-build -b html docs docs/_build/html"
+[feature.docs.tasks.linkcheck]
+cmd = "sphinx-build -b linkcheck docs docs/_build/html"
+
+# Coverage extras (from setup.cfg extras_require[cov])
+[feature.cov.pypi-dependencies]
+coverage = "*"
+naima = "*"
+requests = "*"
+tqdm = "*"
+ipywidgets = "*"
+ultranest = "*"
+numba = "*"
+sherpa = "*" # { version="*", markers="platform_system != 'Windows'" } => see platforms
+healpy = "*" # { version="*", markers="platform_system != 'Windows'" }
+
+# "all" extras
+[feature.all.pypi-dependencies]
+naima = "*"
+requests = "*"
+tqdm = "*"
+ipywidgets = "*"
+ultranest = "*"
+numba = "*"
+ray = ">=2.9"
+sherpa = "*" # { version="*", markers="platform_system != 'Windows'" }
+healpy = "*" # { version="*", markers="platform_system != 'Windows'" }
+
+# "all_no_ray" extras
+[feature.all_no_ray.pypi-dependencies]
+naima = "*"
+requests = "*"
+tqdm = "*"
+ipywidgets = "*"
+ultranest = "*"
+numba = "*"
+sherpa = "*" # { version="*", markers="platform_system != 'Windows'" }
+healpy = "*" # { version="*", markers="platform_system != 'Windows'" }
+
+# Pre-commit hooks
+[feature.pre-commit.dependencies]
+pre-commit = "*"
+[feature.pre-commit.tasks]
+pre-commit = "pre-commit"
+description = "Run pre-commit hooks"
+
+# -------------------
+# Environments (matrix like tox)
+# -------------------
+[environments]
+default = { features = ["gammapy", "test"], solve-group = "gammapy" }
+
+# Python matrix
+py310 = { features = ["gammapy", "test"], solve-group = "gammapy" }
+# py311 = { features = ["gammapy", "test", "py311"], solve-group = "gammapy" }
+# py312 = { features = ["gammapy", "test", "py312"], solve-group = "gammapy" }
+# py313 = { features = ["gammapy", "test", "py313"], solve-group = "gammapy" }
+
+# Numpy pins
+# numpy121 = { features = ["gammapy", "test", "numpy121"], solve-group = "gammapy" }
+# numpy122 = { features = ["gammapy", "test", "numpy122"], solve-group = "gammapy" }
+# numpy123 = { features = ["gammapy", "test", "numpy123"], solve-group = "gammapy" }
+# numpy124 = { features = ["gammapy", "test", "numpy124"], solve-group = "gammapy" }
+
+# Extras
+all = { features = ["gammapy", "test", "all"] }
+allnoray = { features = ["gammapy", "test", "all_no_ray"] }
+
+# Docs
+docs = { features = ["gammapy", "docs"], solve-group = "gammapy" }
+
+# Coverage
+cov = { features = ["gammapy", "test", "cov"], solve-group = "gammapy" }
+
+# Pre-commit
+pre-commit = { features = ["pre-commit"], solve-group = "gammapy" }
