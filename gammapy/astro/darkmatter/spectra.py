@@ -17,7 +17,7 @@ __all__ = ["PrimaryFlux", "DarkMatterAnnihilationSpectralModel"]
 class PrimaryFlux(TemplateNDSpectralModel):
     """DM-annihilation gamma-ray spectra.
 
-    Based on the precomputed models of PPPC4 DM ID by Cirelli et al. (2016), CosmiXs by Arina et. al (2023). All available
+    Based on the precomputed models of PPPC4 DM ID by Cirelli et al. (2016), CosmiXs by Arina et. al (2024); Di Mauro et al. (2025). All available
     annihilation channels can be found there. The dark matter mass will be set
     to the nearest available value. The spectra will be available as
     `~gammapy.modeling.models.TemplateNDSpectralModel` for a chosen dark matter mass and
