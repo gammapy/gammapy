@@ -52,7 +52,7 @@ def test_dm_annihilation_spectral_model(tmpdir):
     energy_max = 10 * u.TeV
 
     model = DarkMatterAnnihilationSpectralModel(
-        mass=massDM, channel=channel, jfactor=jfactor
+        mass=massDM, channel=channel, jfactor=jfactor, source='pppc4'
     )
     integral_flux = model.integral(energy_min=energy_min, energy_max=energy_max).to(
         "cm-2 s-1"
@@ -86,7 +86,7 @@ def test_dm_decay_spectral_model(tmpdir):
     energy_min = 0.01 * u.TeV
     energy_max = 10 * u.TeV
 
-    model = DarkMatterDecaySpectralModel(mass=massDM, channel=channel, jfactor=jfactor)
+    model = DarkMatterDecaySpectralModel(mass=massDM, channel=channel, jfactor=jfactor, source='pppc4')
     integral_flux = model.integral(energy_min=energy_min, energy_max=energy_max).to(
         "cm-2 s-1"
     )

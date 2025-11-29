@@ -127,7 +127,7 @@ class PrimaryFlux(TemplateNDSpectralModel):
             )
 
         if source.lower() == "pppc4":
-            table_filename = "$GAMMAPY_DATA/dark_matter_spectra/AtProduction_gammas.dat"
+            table_filename = "$GAMMAPY_DATA/dark_matter_spectra/PPPC4DMID/AtProduction_gammas.dat"
             if channel in ('aZ', 'HZ'):
                 raise ValueError(
                     f"\n\nThe channel {channel} is not available in PPPC4, please choose another channel or use CosmiXs (cosmixs) as source\n"
@@ -138,7 +138,7 @@ class PrimaryFlux(TemplateNDSpectralModel):
                 )
 
         elif source == 'cosmixs':
-            table_filename = 'gammapy/external/CosmiXs/Data/AtProduction-Gamma.dat'
+            table_filename = "$GAMMAPY_DATA/dark_matter_spectra/cosmixs/AtProduction-Gamma.dat"
 
             if channel in ("V->e", "V->mu", "V->tau"):
                 raise ValueError(
@@ -308,6 +308,7 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
         self.channel = channel
         self.jfactor = u.Quantity(jfactor)
         self.primary_flux = PrimaryFlux(mass, channel=self.channel, source=source)
+        self.source = source
         super().__init__(scale=scale)
 
     def evaluate(self, energy, scale):
@@ -416,7 +417,8 @@ class DarkMatterDecaySpectralModel(SpectralModel):
         self.mass = u.Quantity(mass)
         self.channel = channel
         self.jfactor = u.Quantity(jfactor)
-        self.primary_flux = PrimaryFlux(self.mass / 2, channel=self.channel)
+        self.primary_flux = PrimaryFlux(self.mass / 2, channel=self.channel, source=source)
+        self.source = source
         super().__init__(scale=scale)
 
     def evaluate(self, energy, scale):
