@@ -444,7 +444,11 @@ def test_models(spectrum):
 @pytest.mark.parametrize("spectrum", TEST_MODELS, ids=lambda _: _["name"])
 def test_plot_error(spectrum):
     with mpl_plot_check():
-        spectrum["model"].plot_error((1 * u.TeV, 10 * u.TeV))
+        if len(spectrum["model"].parameters) == 0:
+            with pytest.raises(NotImplementedError):
+                spectrum["model"].plot_error((1 * u.TeV, 10 * u.TeV))
+        else:
+            spectrum["model"].plot_error((1 * u.TeV, 10 * u.TeV))
 
 
 def test_evaluate():
