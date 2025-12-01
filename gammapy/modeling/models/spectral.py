@@ -1424,7 +1424,10 @@ class BrokenPowerLawSpectralModel(SpectralModel):
         eratio = energy / ebreak
         bpwl[cond] *= (eratio ** (-index1))[cond]
         bpwl[~cond] *= (eratio ** (-index2))[~cond]
-        return bpwl
+        if bpwl.shape[1] == 1:
+            return bpwl.squeeze(axis=1)
+        else:
+            return bpwl
 
 
 class SmoothBrokenPowerLawSpectralModel(SpectralModel):
