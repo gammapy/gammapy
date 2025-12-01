@@ -2248,12 +2248,17 @@ class TemplateNDSpectralModel(SpectralModel):
         self._interp_kwargs = interp_kwargs
         super().__init__()
 
+    def is_norm_spectral_model(self):
+        return self._map.unit == u.Unit("")
+
     @property
     def map(self):
         """Template map as a `~gammapy.maps.RegionNDMap`."""
         return self._map
 
-    def evaluate(self, energy, **kwargs):
+    def evaluate(self, energy, *args):
+        kwargs = {name: q for name, q in zip(self.default_parameters.names, args)}
+
         coord = {"energy_true": energy}
         coord.update(kwargs)
 
@@ -2263,6 +2268,12 @@ class TemplateNDSpectralModel(SpectralModel):
 
         val = self.map.interp_by_pix(pixels, **self._interp_kwargs)
         return u.Quantity(val, self.map.unit, copy=COPY_IF_NEEDED)
+
+    def __call__(self, energy):
+        kwargs = {par.name: par.quantity for par in self.parameters}
+        kwargs = self._convert_evaluate_unit(kwargs, energy)
+        args = list(kwargs.values())
+        return self.evaluate(energy, *args)
 
     def write(self, overwrite=False, filename=None):
         """
