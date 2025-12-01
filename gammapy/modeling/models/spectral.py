@@ -1414,11 +1414,16 @@ class BrokenPowerLawSpectralModel(SpectralModel):
     def evaluate(energy, index1, index2, amplitude, ebreak):
         """Evaluate the model (static function)."""
         energy = np.atleast_1d(energy)[:, None]
-        cond = energy < ebreak[None, :]
+        index1 = np.atleast_1d(index1)[None, :]
+        index2 = np.atleast_1d(index2)[None, :]
+        amplitude = np.atleast_1d(amplitude)[None, :]
+        ebreak = np.atleast_1d(ebreak)[None, :]
+
+        cond = energy < ebreak
         bpwl = amplitude * np.ones(energy.shape)
-        eratio = energy / ebreak[None, :]
-        bpwl[cond] *= (eratio ** (-index1[None, :]))[cond]
-        bpwl[~cond] *= (eratio ** (-index2[None, :]))[~cond]
+        eratio = energy / ebreak
+        bpwl[cond] *= (eratio ** (-index1))[cond]
+        bpwl[~cond] *= (eratio ** (-index2))[~cond]
         return bpwl
 
 
