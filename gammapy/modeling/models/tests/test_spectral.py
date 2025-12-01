@@ -1319,6 +1319,9 @@ def test_template_ND(tmpdir, caplog):
     assert template_new.parameters["norm"].value == 1
     assert template_new.parameters["tilt"].value == 0
 
+    with mpl_plot_check():
+        template.plot_error([1, 1000] * u.GeV)
+
 
 def test_template_ND_no_energy(tmpdir):
     norm = MapAxis.from_bounds(0, 10, 10, interp="lin", name="norm", unit="")
