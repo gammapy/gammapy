@@ -756,6 +756,11 @@ class SpectralModel(ModelBase):
         """
         from gammapy.estimators.map.core import DEFAULT_UNIT
 
+        if len(self.parameters) == 0:
+            raise NotImplementedError(
+                "plot_error is not defined for models without paraemters."
+            )
+
         if self.is_norm_spectral_model:
             sed_type = "norm"
 
