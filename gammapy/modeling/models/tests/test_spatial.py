@@ -432,6 +432,7 @@ def test_sky_diffuse_map_3d():
         model.plot_interactive()
 
 
+@requires_dependency("healpy")
 def test_hpx_template():
     geom = HpxGeom.create(nside=16)
     template_map = Map.from_geom(geom=geom, data=1, unit="")
