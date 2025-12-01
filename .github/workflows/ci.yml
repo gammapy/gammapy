@@ -9,6 +9,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
@@ -16,8 +18,16 @@ jobs:
       - name: Install pre-commit
         run: pip install pre-commit
       - name: Run pre-commit
-        run: pre-commit run
-
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            pre-commit run \
+            --from-ref "${{ github.event.pull_request.base.sha }}" \
+            --to-ref   "${{ github.event.pull_request.head.sha }}"
+          else  # push event
+            pre-commit run \
+            --from-ref "${{ github.event.before }}" \
+            --to-ref   "${{ github.event.after }}"
+          fi
   ci-runs:
     name: ${{ matrix.os }}, ${{ matrix.tox_env }}
     runs-on: ${{ matrix.os }}
@@ -25,7 +35,7 @@ jobs:
     if: contains(github.event.pull_request.labels.*.name, 'skip-tests') == false
     env:
       PYTEST_ADDOPTS: --color=yes -n auto --dist=loadscope
-      
+
     strategy:
       fail-fast: true
       matrix:
