@@ -1388,7 +1388,9 @@ class TemplateSpatialModel(SpatialModel):
         interp_kwargs = {} if interp_kwargs is None else interp_kwargs
         interp_kwargs.setdefault("method", "linear")
         interp_kwargs.setdefault("fill_value", 0)
-        interp_kwargs.setdefault("values_scale", "log")
+
+        if isinstance(self.map, WcsNDMap):
+            interp_kwargs.setdefault("values_scale", "log")
 
         self._interp_kwargs = interp_kwargs
         kwargs["frame"] = self.map.geom.frame

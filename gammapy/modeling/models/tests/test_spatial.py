@@ -14,7 +14,7 @@ from regions import (
     PointSkyRegion,
     RectangleSkyRegion,
 )
-from gammapy.maps import Map, MapAxis, MapCoord, RegionGeom, WcsGeom, WcsNDMap
+from gammapy.maps import Map, MapAxis, MapCoord, RegionGeom, WcsGeom, WcsNDMap, HpxGeom
 from gammapy.modeling.models import (
     SPATIAL_MODEL_REGISTRY,
     ConstantSpatialModel,
@@ -430,6 +430,16 @@ def test_sky_diffuse_map_3d():
 
     with mpl_plot_check():
         model.plot_interactive()
+
+
+def test_hpx_template():
+    geom = HpxGeom.create(nside=16)
+    template_map = Map.from_geom(geom=geom, data=1, unit="")
+
+    model = TemplateSpatialModel(template_map)
+    val = model.evaluate(lon=0, lat=0)
+
+    assert_allclose(val.to_value("sr-1"), 1.0 / (4 * np.pi))
 
 
 def test_sky_diffuse_map_normalize():
