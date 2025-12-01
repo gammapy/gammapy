@@ -440,6 +440,13 @@ def test_models(spectrum):
     assert_quantity_allclose(val[0], spectrum["val_at_2TeV"])
 
 
+@requires_dependency("scipy")
+@pytest.mark.parametrize("spectrum", TEST_MODELS, ids=lambda _: _["name"])
+def test_plot_error(spectrum):
+    with mpl_plot_check():
+        spectrum["model"].plot_error((1 * u.TeV, 10 * u.TeV))
+
+
 def test_evaluate():
     for m in TEST_MODELS:
         model = m["model"]
