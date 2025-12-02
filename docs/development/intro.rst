@@ -264,7 +264,7 @@ We adhere to the PEP8 coding style. To enforce this, setup the
 
     pre-commit install
 
-``pre-commit`` will run before every commit and ensure code linting and formating. But one can run it manually using:
+``pre-commit`` will run before every commit and ensure code linting and formatting. But one can run it manually using:
 
 .. code-block:: bash
 
