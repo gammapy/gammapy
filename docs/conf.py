@@ -340,4 +340,3 @@ sphinx_gallery_conf = {
 html_context = {
     "default_mode": "light",
 }
-
