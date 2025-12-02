@@ -758,7 +758,7 @@ class SpectralModel(ModelBase):
 
         if len(self.parameters) == 0:
             raise NotImplementedError(
-                "plot_error is not defined for models without paraemters."
+                "plot_error is not defined for models without paraemter."
             )
 
         if self.is_norm_spectral_model:
