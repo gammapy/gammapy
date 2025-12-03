@@ -225,3 +225,7 @@ def test_add_datasets(datasets):
     assert isinstance(datasets[0] + [], Datasets)
 
     assert len(datasets[0] + datasets[1]) == 2
+
+    new_datasets = datasets[0] + datasets[1]
+    assert len(new_datasets) == len(datasets.models)
+    assert len(new_datasets) == 2
