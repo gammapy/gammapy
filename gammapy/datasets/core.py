@@ -126,6 +126,14 @@ class Dataset(abc.ABC):
                 )
         return residuals
 
+    def __add__(self, other):
+        if isinstance(other, (Datasets, list)):
+            return Datasets([self, *other])
+        elif isinstance(other, Dataset):
+            return Datasets([self, other])
+        else:
+            raise TypeError(f"Invalid type: {other!r}")
+
 
 class Datasets(collections.abc.MutableSequence):
     """Container class that holds a list of datasets.
@@ -630,3 +638,11 @@ class Datasets(collections.abc.MutableSequence):
 
     def __len__(self):
         return len(self._datasets)
+
+    def __add__(self, other):
+        if isinstance(other, (Datasets, list)):
+            return Datasets([*self, *other])
+        elif isinstance(other, Dataset):
+            return Datasets([*self, other])
+        else:
+            raise TypeError(f"Invalid type: {other!r}")
