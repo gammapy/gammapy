@@ -232,7 +232,7 @@ class SpectralModel(ModelBase):
 
         """
         if samples is None:
-            self.sample_parameters_from_covariance(
+            samples = self.sample_parameters_from_covariance(
                 n_samples=n_samples, random_state=random_state, free_only=False
             )
 
