@@ -6,6 +6,7 @@ import codecs
 import operator
 import os.path
 import functools
+
 import types
 import warnings
 import numpy as np
@@ -365,3 +366,11 @@ def logic_parser(table, expression):
     expr_ast = ast.parse(expression, mode="eval")
     mask = eval_node(expr_ast.body)
     return table[mask]
+
+
+def method_wrapper(func):
+    def wrapper(self, *args, **kwargs):
+        return func(self, *args, **kwargs)
+
+    functools.update_wrapper(wrapper, func)
+    return wrapper
