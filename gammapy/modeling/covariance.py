@@ -5,6 +5,7 @@ import numpy as np
 import scipy
 import matplotlib.pyplot as plt
 from gammapy.utils.parallel import is_ray_initialized
+from gammapy.utils.random import get_random_state
 from .parameter import Parameters
 
 __all__ = ["Covariance"]
@@ -243,3 +244,35 @@ class CovarianceMixin:
         for model in self._models:
             subcovar = self._covariance.get_subcovariance(model.covariance.parameters)
             model.covariance = subcovar
+
+    def sample_parameters_from_covariance(
+        self, n_samples=1000, random_state=42, free_only=True
+    ):
+        """Create parameters samples from covariance using multivariate normal distribution.
+
+        Parameters
+        ----------
+        n_samples : int, optional
+            Number of samples to generate. Default is 1000.
+        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
+            Defines random number generator initialisation.
+            Passed to `~gammapy.utils.random.get_random_state`. Default is 42.
+        free_only : bool, optional
+            If True sample only free parameters (default).
+
+        Returns
+        -------
+        sed_samples : np.array
+            Array of parameters samples
+        """
+        n_samples = int(n_samples)
+        rng = get_random_state(random_state)
+
+        if free_only:
+            parameters = self.parameters.free_parameters
+            covariance = self.covariance.get_subcovariance(parameters).data
+        else:
+            parameters = self.parameters
+            covariance = self.covariance.data
+
+        return rng.multivariate_normal(parameters.value, covariance, n_samples)
