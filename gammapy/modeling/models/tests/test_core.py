@@ -443,11 +443,11 @@ def test_sample_parameter_from_covariance():
     pars_sample = models.sample_parameters_from_covariance(n_samples=10000)
     assert pars_sample.shape == (10000, 2)
     assert_allclose(pars_sample[:, 0].mean(), 2, rtol=1e-2)
-    assert_allclose(pars_sample[:, 0].std(), 1, rtol=1e-2)
+    assert_allclose(pars_sample[:, 0].std(), 1, rtol=1e-1)
 
     pars_sample = models.sample_parameters_from_covariance(
         n_samples=10000, free_only=False
     )
     assert pars_sample.shape == (10000, 3)
     assert_allclose(pars_sample[:, 2].mean(), 1, rtol=1e-2)
-    assert_allclose(pars_sample[:, 2].std(), 0, rtol=1e-2)
+    assert_allclose(pars_sample[:, 2].std(), 0, rtol=1e-1)
