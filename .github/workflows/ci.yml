@@ -8,7 +8,7 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - name: Set up Python
@@ -27,7 +27,7 @@ jobs:
     if: contains(github.event.pull_request.labels.*.name, 'skip-tests') == false
     env:
       PYTEST_ADDOPTS: --color=yes -n auto --dist=loadscope
-      
+
     strategy:
       fail-fast: true
       matrix:
@@ -88,7 +88,7 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - name: Set up Python ${{ matrix.python }}
@@ -125,6 +125,32 @@ jobs:
           file: ./coverage.xml
           verbose: true
 
+      - name: Store info for sonar
+        env:
+          REF_NAME: ${{ github.ref_name }}
+          REF_TYPE: ${{ github.ref_type }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          SOURCE_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
+          SOURCE_BRANCH: ${{ github.event.pull_request.head.ref }}
+          TARGET_BRANCH: ${{ github.event.pull_request.base.ref }}
+        run: |
+          pip install setuptools_scm
+          echo "PR_NUMBER=${PR_NUMBER}" >> sonar_env
+          echo "SOURCE_REPOSITORY=${SOURCE_REPOSITORY}" >> sonar_env
+          echo "SOURCE_BRANCH=${SOURCE_BRANCH}" >> sonar_env
+          echo "TARGET_BRANCH=${TARGET_BRANCH}" >> sonar_env
+          echo "PROJECT_VERSION=$(python -m setuptools_scm)" >> sonar_env
+          cat sonar_env
+
+      # upload coverage report for SonarQube workflow
+      - uses: actions/upload-artifact@v5
+        if: "contains(matrix.tox_env, '-cov')"
+        with:
+          name: gammapy-coverage-report
+          path: |
+            coverage.xml
+            sonar_env
+
   sphinx:
     name: Linux python 3.11 sphinx all-deps
     runs-on: ubuntu-latest
@@ -139,7 +165,7 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - name: Set up Python 3.11

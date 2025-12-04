@@ -10,12 +10,12 @@ jobs:
     name: "cffconvert"
     runs-on: ubuntu-latest
     steps:
-      - name: Install eossr        
+      - name: Install eossr
         run: |
           pip install eossr
 
       - name: Check out a copy of the repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Check whether the citation metadata from CITATION.cff is valid
         uses: citation-file-format/cffconvert-github-action@2.0.0
@@ -36,13 +36,11 @@ jobs:
       - name: Validate codemeta.json
         if: success()
         run: |
-          eossr-metadata-validator codemeta.json 
-      
+          eossr-metadata-validator codemeta.json
+
       - name: commit changes
         uses: stefanzweifel/git-auto-commit-action@v7.0.0
         if: success()
         with:
           commit_author: GitHub Actions <actions@github.com>
-          commit_message: commit metadata files 
-
-        
+          commit_message: commit metadata files
