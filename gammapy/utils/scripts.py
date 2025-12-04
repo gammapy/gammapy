@@ -369,7 +369,8 @@ def logic_parser(table, expression):
 
 
 def method_wrapper(func):
-    """Wrap a function for use as a method while preserving its metadata.
+    """
+    Wrap a function for use as a method while preserving its metadata.
 
     This utility wraps a function so it can be assigned as a method on other
     classes (or instances) and still calls the original function with the
@@ -378,6 +379,7 @@ def method_wrapper(func):
     which makes the wrapped method appear
     in introspection and documentation like the original.
     """
+
     def wrapper(self, *args, **kwargs):
         return func(self, *args, **kwargs)
 
