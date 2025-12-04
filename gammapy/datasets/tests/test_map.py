@@ -1120,13 +1120,14 @@ def test_create_high_dimension():
 
 
 def test_create_spectrum():
-    # tests creation of SpectrumDataset
+    # tests creation of SpectrumDataset without defined region attribute in the RegionGeom
     e_reco = MapAxis.from_edges(
         np.logspace(-1.0, 1.0, 3), name="energy", unit=u.TeV, interp="log"
     )
     e_true = MapAxis.from_edges(
         np.logspace(-1.0, 1.0, 4), name="energy_true", unit=u.TeV, interp="log"
     )
+
     geom = RegionGeom.create(region=None, axes=[e_reco])
     empty_dataset = SpectrumDataset.create(geom=geom, energy_axis_true=e_true)
 
