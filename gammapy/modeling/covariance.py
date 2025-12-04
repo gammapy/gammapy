@@ -262,7 +262,7 @@ class CovarianceMixin:
 
         Returns
         -------
-        sed_samples : np.array
+        param_samples : np.array
             Array of parameters samples
         """
         n_samples = int(n_samples)
