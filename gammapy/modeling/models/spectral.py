@@ -2261,6 +2261,7 @@ class TemplateNDSpectralModel(SpectralModel):
         self._interp_kwargs = interp_kwargs
         super().__init__()
 
+    @property
     def is_norm_spectral_model(self):
         return self._map.unit == u.Unit("")
 

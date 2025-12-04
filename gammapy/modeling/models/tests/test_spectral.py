@@ -1311,6 +1311,8 @@ def test_template_ND(tmpdir, caplog):
     assert template.parameters["tilt"].value == 0
     assert_allclose(template([1, 100, 1000] * u.GeV), [1.0, 2.0, 2.0])
 
+    assert template.is_norm_spectral_model == True
+
     template.parameters["norm"].value = 1
     template.filename = str(tmpdir / "template_ND.fits")
     template.write()
@@ -1444,3 +1446,20 @@ def test_vectorized_integrate_spectrum():
             ndecade=20,
             parameter_samples=parameter_samples,
         )
+
+
+def test_bpl_evalaute_array():
+    model = BrokenPowerLawSpectralModel(
+        index1=1.5 * u.Unit(""),
+        index2=2.5 * u.Unit(""),
+        amplitude=4 / u.cm**2 / u.s / u.TeV,
+        ebreak=0.5 * u.TeV,
+    )
+    values = model.evaluate(
+        [0.1, 1] * u.GeV,
+        np.ones(3) * 1.5 * u.Unit(""),
+        np.ones(3) * 2.5 * u.Unit(""),
+        np.ones(3) * 4 / u.cm**2 / u.s / u.TeV,
+        np.ones(3) * 0.5 * u.TeV,
+    )
+    assert values.shape == (2, 3)
