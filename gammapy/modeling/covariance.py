@@ -258,7 +258,7 @@ class CovarianceMixin:
             Defines random number generator initialisation.
             Passed to `~gammapy.utils.random.get_random_state`. Default is 42.
         free_only : bool, optional
-            If True sample only free parameters (default).
+            If True, sample only free parameters (default).
 
         Returns
         -------
