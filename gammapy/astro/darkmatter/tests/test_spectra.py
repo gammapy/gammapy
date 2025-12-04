@@ -28,13 +28,15 @@ def test_primary_flux():
         (1.6, 0.00025037, 'pppc4', None),
         (11, 0.00549445, 'cosmixs', None),
         (75, None, 'nonexistend', ValueError),
+        (75, None, 'pppc4', ValueError),
+
     ]
 )
 @requires_data()
 def test_primary_flux_interpolation(mass, expected_flux, source, expected_exception):
     if expected_exception:
         with pytest.raises(expected_exception):
-            primflux = PrimaryFlux(channel="W", mDM=mass * u.TeV, source=source)
+            primflux = PrimaryFlux(channel="aZ", mDM=mass * u.TeV, source=source)
         return
 
     # casos normales
