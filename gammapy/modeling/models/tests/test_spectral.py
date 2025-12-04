@@ -1311,7 +1311,7 @@ def test_template_ND(tmpdir, caplog):
     assert template.parameters["tilt"].value == 0
     assert_allclose(template([1, 100, 1000] * u.GeV), [1.0, 2.0, 2.0])
 
-    assert template.is_norm_spectral_model == True
+    assert template.is_norm_spectral_model
 
     template.parameters["norm"].value = 1
     template.filename = str(tmpdir / "template_ND.fits")
