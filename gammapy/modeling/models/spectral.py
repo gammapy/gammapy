@@ -268,11 +268,12 @@ class SpectralModel(ModelBase):
             Median, negative, and positive errors
 
         """
-        cdf = stats.norm.cdf
 
-        median = np.percentile(samples, 50, axis=-1)
-        errn = median - np.percentile(samples, 100 * cdf(-n_sigma), axis=-1)
-        errp = np.percentile(samples, 100 * cdf(n_sigma), axis=-1) - median
+        samples[~np.isfinite(samples)] = np.nan
+        cdf = stats.norm.cdf
+        median = np.nanpercentile(samples, 50, axis=-1)
+        errn = median - np.nanpercentile(samples, 100 * cdf(-n_sigma), axis=-1)
+        errp = np.nanpercentile(samples, 100 * cdf(n_sigma), axis=-1) - median
         return u.Quantity(
             [np.atleast_1d(median), np.atleast_1d(errn), np.atleast_1d(errp)],
             unit=samples.unit,
