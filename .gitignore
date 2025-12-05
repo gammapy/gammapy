@@ -13,7 +13,7 @@ __pycache__
 */version.py
 */cython_version.py
 htmlcov
-.coverage*
+.coverage
 .coverage.subprocess
 .hypothesis
 
@@ -100,7 +100,7 @@ dev/crab
 
 # Linting
 .trunk
-.flake8
+.flake8/*
 .isort.cfg
 .shellcheckrc
 .hadolint.yaml
