@@ -46,7 +46,7 @@ class GitHubContributorsExtractor:
         log.info(f"Remaining {remaining} requests over {total} requests.")
 
     def extract_contributors_by_milestone(
-        self, milestone_name, state="closed", include_backports=False
+        self, milestone_name, state="closed",
     ):
         """Extract list of unique contributors from PRs as per the milestone.
 
@@ -56,8 +56,6 @@ class GitHubContributorsExtractor:
             Milestone name i.e. 'v1.0'
          state : str ("closed", "open", "all")
             State of PRs to extract.
-         include_backports : bool
-            Include backport PRs in the table. Default is True.
         """
         milestones = self.repo.get_milestones(state="all")
         milestone_obj = None
@@ -66,7 +64,7 @@ class GitHubContributorsExtractor:
                 milestone_obj = m
                 break
         if milestone_obj is None:
-            log.error(f"Milestone '{milestone_name}' not found in repository '{self.repo_name}'.")
+            log.error(f"Milestone '{milestone_name}' not found in repository '{self.repo.full_name}'.")
             return []
 
         # Get PRs filtered by milestone using issues API (GitHub returns PRs as issues)
@@ -81,8 +79,11 @@ class GitHubContributorsExtractor:
 
             pr = self.repo.get_pull(issue.number)
 
-            if not include_backports and "Backport" in pr.title:
-                log.info(f"Pull Request {pr.number} is backport. Skipping")
+            # Skip PRs that are closed and not merged
+            if not pr.merged:
+                continue
+
+            if "Backport" in pr.title:
                 continue
 
             log.info(f"Extracting Pull Request {pr.number}.")
@@ -125,8 +126,7 @@ def cli(log_level):
 @click.option("--repo", default="gammapy/gammapy", type=str, help="The relative repo.")
 @click.option("--milestone", required=True, type=str, help="Comma-separated list of milestones, e.g., '2.0.1,2.1'")
 @click.option("--state", default="closed", type=str, help="Is the issues closed or not.")
-@click.option("--include_backports", default=False, type=bool, help="Whether to include backports or not.")
-def contributors_by_milestone(repo, token, milestone, state, include_backports):
+def contributors_by_milestone(repo, token, milestone, state):
     """List contributors attached to a specific milestone."""
     extractor = GitHubContributorsExtractor(repo=repo, token=token)
     milestone_list = [m.strip() for m in milestone.split(",") if m.strip()]
@@ -137,7 +137,6 @@ def contributors_by_milestone(repo, token, milestone, state, include_backports):
         users = extractor.extract_contributors_by_milestone(
             milestone_name=m,
             state=state,
-            include_backports=include_backports
         )
         log.info(f"Found {len(users)} unique contributors for milestone '{m}'.")
         all_users.update(users)
