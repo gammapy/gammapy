@@ -1120,3 +1120,15 @@ def test_histogram_center_value():
     )
     map1.fill_by_pix([[0.0, 0.5, 1.0, 1.5], [0.0, 0.5, 1.0, 1.5]])
     assert_allclose(map1.data, [[1.0, 0.0, 0.0], [0.0, 2.0, 0.0], [0.0, 0.0, 1.0]])
+
+
+def test_stack_int():
+    geom = WcsGeom.create(
+        binsz=0.02,
+        width=(2, 2),
+        frame="icrs",
+    )
+    map1 = Map.from_geom(geom=geom, dtype=int)
+    map2 = map1.copy()
+
+    map1.stack(map2)
