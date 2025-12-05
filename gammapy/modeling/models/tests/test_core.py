@@ -17,6 +17,7 @@ from gammapy.modeling.models import (
     Model,
     ModelBase,
     Models,
+    DatasetModels,
     PointSpatialModel,
     PowerLawSpectralModel,
     SkyModel,
@@ -421,3 +422,10 @@ def test_bad_covariance(caplog, tmp_path):
         assert (
             "Impossible to read the covariance correctly" in caplog.records[0].message
         )
+
+
+def test_add_datasets_models():
+    assert isinstance(DatasetModels() + Models(), Models)
+    assert isinstance(Models() + DatasetModels(), Models)
+    assert isinstance(DatasetModels() + DatasetModels(), Models)
+    assert isinstance(Models() + Models(), Models)
