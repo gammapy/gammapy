@@ -7,7 +7,7 @@ from astropy.coordinates.erfa_astrom import erfa_astrom, ErfaAstromInterpolator
 from astropy.table import Table
 from astropy.time import Time
 from gammapy.data import FixedPointingInfo, PointingMode
-from gammapy.irf import EDispMap, FoVAlignment, PSFMap
+from gammapy.irf import BackgroundIRF, EDispMap, FoVAlignment, PSFMap
 from gammapy.maps import Map, RegionNDMap, MapAxis
 from gammapy.maps.utils import broadcast_axis_values_to_geom
 from gammapy.modeling.models import PowerLawSpectralModel
@@ -659,9 +659,12 @@ def _get_fov_coord(
 ):
     """Return coord dict in fov_coord."""
     coords = {}
-
     if use_offset:
-        coords["offset"] = skycoord.separation(fov_frame.origin)
+        offsets = skycoord.separation(fov_frame.origin)
+        if len(fov_frame.shape) == 1:
+            coords["offset"] = np.moveaxis(offsets, -1, 0)
+        else:
+            coords["offset"] = offsets
     else:
         sign = -1.0 if reverse_lon else 1.0
 
@@ -676,6 +679,20 @@ def _get_fov_coord(
             coords["fov_lat"] = fov_coords.fov_lat
 
     return coords
+
+
+def _get_time_axes_and_times(fov_frame, image_geom, axes):
+    # Assume ordered times
+    time = MapAxis.from_edges(
+        (fov_frame.obstime - fov_frame.obstime[0]).to_value("s"),
+        unit="s",
+        name="time",
+    )
+    ontime = time.bin_width.sum().to_value("s")
+    delta = np.reshape(time.edges.to_value("s"), (1, time.nbin + 1, 1, 1))
+
+    new_geom = image_geom.to_cube([time, *axes])
+    return ontime, delta, new_geom
 
 
 def project_irf_on_geom(geom, irf, fov_frame, use_region_center=True):
@@ -702,6 +719,7 @@ def project_irf_on_geom(geom, irf, fov_frame, use_region_center=True):
     map : `~gammapy.maps.Map`
         Map containing the projected IRF.
     """
+
     if not use_region_center:
         image_geom = geom.to_wcs_geom().to_image()
         region_coord, weights = geom.get_wcs_coord_and_weights()
@@ -710,16 +728,25 @@ def project_irf_on_geom(geom, irf, fov_frame, use_region_center=True):
         image_geom = geom.to_image()
         skycoord = image_geom.get_coord().skycoord
 
+    # In case we need to average over time
+    if len(fov_frame.shape) == 1:
+        skycoord = skycoord[..., np.newaxis]
+        _, _, new_geom = _get_time_axes_and_times(fov_frame, image_geom, geom.axes)
+    else:
+        new_geom = geom
+
     coords = _get_fov_coord(skycoord, fov_frame, irf.has_offset_axis)
 
     non_spatial_axes = set(irf.required_arguments) - set(
         ["offset", "fov_lon", "fov_lat"]
     )
-
     for axis_name in non_spatial_axes:
-        coords[axis_name] = broadcast_axis_values_to_geom(geom, axis_name)
+        coords[axis_name] = broadcast_axis_values_to_geom(new_geom, axis_name)
 
     data = irf.evaluate(**coords)
+    if len(fov_frame.shape) == 1:
+        data = np.average(data, axis=1)
+
     if not use_region_center:
         data = np.average(data, axis=-1, weights=weights, keepdims=True)
 
@@ -727,7 +754,7 @@ def project_irf_on_geom(geom, irf, fov_frame, use_region_center=True):
 
 
 def integrate_project_irf_on_geom(geom, irf, fov_frame, use_region_center=True):
-    """Integrate and project an IRF on a given `~gammapy.maps.Geom` object according to a given FoV Frame.
+    """Integrate and project a BackgroundIRF on a given `~gammapy.maps.Geom` object according to a given FoV Frame.
 
     The IRF is integrated in energy and multiplied by the solid angle.
 
@@ -754,6 +781,9 @@ def integrate_project_irf_on_geom(geom, irf, fov_frame, use_region_center=True):
     """
     from scipy.integrate import trapezoid
 
+    if not issubclass(type(irf), BackgroundIRF):
+        raise ValueError(f"Only BackgroundIRF subtypes supported, got {type(irf)}")
+
     if not use_region_center:
         image_geom = geom.to_wcs_geom().to_image()
         region_coord, weights = geom.get_wcs_coord_and_weights()
@@ -762,20 +792,14 @@ def integrate_project_irf_on_geom(geom, irf, fov_frame, use_region_center=True):
         image_geom = geom.to_image()
         skycoord = image_geom.get_coord().skycoord
 
-    new_geom = geom
     # In case we need to integrate over time
     if len(fov_frame.shape) == 1:
         skycoord = skycoord[..., np.newaxis]
-
-        # Assume ordered times
-        time = MapAxis.from_edges(
-            (fov_frame.obstime - fov_frame.obstime[0]).to_value("s"),
-            unit="s",
-            name="time",
+        ontime, delta, new_geom = _get_time_axes_and_times(
+            fov_frame, image_geom, geom.axes
         )
-        axes = geom.axes
-
-        new_geom = image_geom.to_cube([time, *axes])
+    else:
+        new_geom = geom
 
     reverse_lon = irf.fov_alignment == "REVERSE_LON_RADEC"
     coords = _get_fov_coord(skycoord, fov_frame, irf.has_offset_axis, reverse_lon)
@@ -783,16 +807,11 @@ def integrate_project_irf_on_geom(geom, irf, fov_frame, use_region_center=True):
     non_spatial_axes = set(irf.required_arguments) - set(
         ["offset", "fov_lon", "fov_lat"]
     )
-
     for axis_name in non_spatial_axes:
         coords[axis_name] = broadcast_axis_values_to_geom(new_geom, axis_name, False)
-
     data = irf.integrate_log_log(**coords, axis_name="energy")
 
     if len(fov_frame.shape) == 1:
-        time = new_geom.axes["time"]
-        ontime = time.bin_width.sum().to_value("s")
-        delta = np.reshape(time.edges.to_value("s"), (1, time.nbin + 1, 1, 1))
         data = trapezoid(data, delta, axis=1) / ontime
 
     if use_region_center:
