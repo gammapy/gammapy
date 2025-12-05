@@ -84,7 +84,10 @@ def create_map_dataset_geoms(
     geoms : dict
         Dictionary with map geometries.
     """
-    rad_axis = rad_axis or RAD_AXIS_DEFAULT
+    if (not geom.is_region) or getattr(geom, "region", None):
+        rad_axis = rad_axis or RAD_AXIS_DEFAULT
+    else:
+        rad_axis = None
 
     if energy_axis_true is not None:
         energy_axis_true.assert_name("energy_true")
@@ -96,7 +99,10 @@ def create_map_dataset_geoms(
     geom_exposure = geom_image.to_cube(MapAxes([energy_axis_true]) + external_axes)
     geom_irf = geom_image.to_binsz(binsz=binsz_irf)
 
-    if reco_psf:
+    if not rad_axis:
+        geom_psf = None
+
+    elif reco_psf:
         geom_psf = geom_irf.to_cube(
             MapAxes([rad_axis, geom.axes["energy"]]) + external_axes
         )

@@ -1,0 +1,1 @@
+Changed `create_map_dataset_geoms()` to only create a PSFMap Geom for a SpectrumDataset if the `region` attribute of the RegionGeom is defined.
