@@ -81,6 +81,12 @@ class FluxEstimator(ParameterEstimator):
         self.source = source
 
         scan_n_sigma = np.maximum(n_sigma_ul, n_sigma_sensitivity) + 1
+
+        if norm is not None and norm.interp == "lin":
+            log.warning(
+                "Linear interpolation should be used with care on the 'norm' parameter. "
+                "We recommend using 'log' interpretation instead."
+            )
         self.norm = _get_default_norm(norm, scan_n_sigma=scan_n_sigma, interp="log")
 
         super().__init__(
