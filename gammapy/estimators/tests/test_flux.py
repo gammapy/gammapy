@@ -149,7 +149,7 @@ def test_flux_estimator_norm_range():
     assert scale_model.norm.interp == "log"
 
 
-def test_flux_estimator_norm_dict():
+def test_flux_estimator_norm_dict(caplog):
     norm = dict(value=1, name="norm", min=1e-3, max=1e2, interp="log")
     estimator = FluxEstimator(
         source="test", norm=norm, selection_optional=[], reoptimize=True
@@ -158,6 +158,15 @@ def test_flux_estimator_norm_dict():
     assert_allclose(estimator.norm.min, 1e-3)
     assert_allclose(estimator.norm.max, 1e2)
     assert estimator.norm.interp == "log"
+
+    norm = dict(value=1, name="norm", min=1e-3, max=1e2, interp="lin")
+    estimator = FluxEstimator(source="test", norm=norm)
+    assert "WARNING" in [_.levelname for _ in caplog.records]
+    assert (
+        "Linear interpolation should be used with care on the 'norm' parameter. "
+        "We recommend using 'log' interpretation instead."
+        in [_.message for _ in caplog.records]
+    )
 
 
 def test_flux_estimator_compound_model():
