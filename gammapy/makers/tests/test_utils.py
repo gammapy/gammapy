@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import SkyCoord, AltAz
 from astropy.table import Table
 from astropy.time import Time
 from regions import PointSkyRegion
@@ -33,11 +33,13 @@ from gammapy.makers.utils import (
     make_map_exposure_true_energy,
     make_observation_time_map,
     make_theta_squared_table,
+    integrate_project_irf_on_geom,
 )
 from gammapy.maps import HpxGeom, MapAxis, RegionGeom, WcsGeom, WcsNDMap
 from gammapy.modeling.models import ConstantSpectralModel
 from gammapy.utils.testing import requires_data
 from gammapy.utils.time import time_ref_to_dict
+from gammapy.utils.coordinates import FoVAltAzFrame
 
 
 @pytest.fixture(scope="session")
@@ -151,18 +153,26 @@ def bkg_2d():
 def bkg_3d_custom(symmetry="constant", fov_align="RADEC"):
     if symmetry == "constant":
         data = np.ones((2, 3, 3))
+        sky_edges = [-3, -1, 1, 3] * u.deg
     elif symmetry == "symmetric":
         data = np.ones((2, 3, 3))
         data[:, 1, 1] *= 2
+        sky_edges = [-3, -1, 1, 3] * u.deg
     elif symmetry == "asymmetric":
         data = np.indices((3, 3))[1] + 1
         data = np.stack(2 * [data])
+        sky_edges = [-3, -1, 1, 3] * u.deg
+    elif symmetry == "hirez_assymetric":
+        column = np.repeat([1, 2, 3], 3)[..., np.newaxis]
+        plane = np.repeat(column, 9, axis=1)[np.newaxis, ...]
+        data = np.repeat(plane, 2, axis=0)
+        sky_edges = np.linspace(-3, 3, 10) * u.deg
     else:
         raise ValueError(f"Unknown value for symmetry: {symmetry}")
 
     energy_axis = MapAxis.from_energy_edges([0.1, 10, 1000] * u.TeV)
-    fov_lon_axis = MapAxis.from_edges([-3, -1, 1, 3] * u.deg, name="fov_lon")
-    fov_lat_axis = MapAxis.from_edges([-3, -1, 1, 3] * u.deg, name="fov_lat")
+    fov_lon_axis = MapAxis.from_edges(sky_edges, name="fov_lon")
+    fov_lat_axis = MapAxis.from_edges(sky_edges, name="fov_lat")
     return Background3D(
         axes=[energy_axis, fov_lon_axis, fov_lat_axis],
         data=data,
@@ -661,3 +671,39 @@ def test_make_effective_livetime_map():
     assert_allclose(obs_time_offset, [0, 0.242814], rtol=1e-3)
 
     assert obs_time.unit == u.hr
+
+
+def test_integrate_project_irf_on_geom():
+    bkg_irf = bkg_3d_custom(symmetry="asymmetric")
+
+    location = observatory_locations.get("ctao_north")
+    crab = SkyCoord(83.63333333, 22.01444444, unit="deg", frame="icrs")
+
+    # Test projection to geom aligned with the FOV binning and orientation
+    obstime = Time("2025-01-01T00:04:00")
+    origin = crab.transform_to(AltAz(location=location, obstime=obstime))
+    fov_frame = FoVAltAzFrame(origin=origin, location=location, obstime=obstime)
+
+    axis = MapAxis.from_edges([0.1, 1.1, 11.1], name="energy", unit="TeV", interp="log")
+    sky_geom = WcsGeom.create(
+        npix=(3, 3), binsz=2, axes=[axis], skydir=crab, proj="TAN"
+    )
+    bkg_sky = integrate_project_irf_on_geom(sky_geom, bkg_irf, fov_frame)
+
+    ref1 = (
+        1
+        * u.TeV
+        * bkg_irf.evaluate(fov_lon=0 * u.deg, fov_lat=0 * u.deg, energy=1 * u.TeV)
+        * sky_geom.solid_angle()[0, 1, 1]
+    )
+    ref2 = (
+        10
+        * u.TeV
+        * bkg_irf.evaluate(fov_lon=0 * u.deg, fov_lat=2 * u.deg, energy=1 * u.TeV)
+        * sky_geom.solid_angle()[0, 1, 2]
+    )
+
+    assert_allclose(bkg_sky.data[0, 1, 1], ref1.value, rtol=1e-9)
+    assert_allclose(bkg_sky.data[1, 2, 1], ref2.value, rtol=1e-3)
+
+    assert bkg_sky.unit.is_equivalent(1 / u.s)
