@@ -160,7 +160,7 @@ def test_flux_estimator_norm_dict(caplog):
     assert estimator.norm.interp == "log"
 
     norm = dict(value=1, name="norm", min=1e-3, max=1e2, interp="lin")
-    estimator = FluxEstimator(source="test", norm=norm)
+    FluxEstimator(source="test", norm=norm)
     assert "WARNING" in [_.levelname for _ in caplog.records]
     assert (
         "Linear interpolation should be used with care on the 'norm' parameter. "
