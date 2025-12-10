@@ -743,7 +743,7 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
             return f"<pre>{html.escape(str(self))}</pre>"
 
     def __add__(self, other):
-        if isinstance(other, (Models, list)):
+        if isinstance(other, (DatasetModels, list)):
             return Models([*self, *other])
         elif isinstance(other, ModelBase):
             _check_name_unique(other, self.names)
