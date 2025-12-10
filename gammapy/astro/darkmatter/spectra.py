@@ -68,7 +68,9 @@ class PrimaryFlux(TemplateNDSpectralModel):
         "V->tau": r"V->\[Tau]",
     }
 
-    table_filename = "$GAMMAPY_DATA/dark_matter_spectra/AtProduction_gammas.dat"
+    table_filename = (
+        "$GAMMAPY_DATA/dark_matter_spectra/PPPC4DMID/AtProduction_gammas.dat"
+    )
 
     tag = ["PrimaryFlux", "dm-pf"]
 
