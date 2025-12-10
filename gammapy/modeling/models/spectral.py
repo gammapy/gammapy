@@ -756,6 +756,11 @@ class SpectralModel(ModelBase):
         """
         from gammapy.estimators.map.core import DEFAULT_UNIT
 
+        if len(self.parameters) == 0:
+            raise NotImplementedError(
+                "plot_error is not defined for models without parameter."
+            )
+
         if self.is_norm_spectral_model:
             sed_type = "norm"
 
@@ -1408,12 +1413,21 @@ class BrokenPowerLawSpectralModel(SpectralModel):
     @staticmethod
     def evaluate(energy, index1, index2, amplitude, ebreak):
         """Evaluate the model (static function)."""
-        energy = np.atleast_1d(energy)
+        energy = np.atleast_1d(energy)[:, None]
+        index1 = np.atleast_1d(index1)[None, :]
+        index2 = np.atleast_1d(index2)[None, :]
+        amplitude = np.atleast_1d(amplitude)[None, :]
+        ebreak = np.atleast_1d(ebreak)[None, :]
+
         cond = energy < ebreak
         bpwl = amplitude * np.ones(energy.shape)
-        bpwl[cond] *= (energy[cond] / ebreak) ** (-index1)
-        bpwl[~cond] *= (energy[~cond] / ebreak) ** (-index2)
-        return bpwl
+        eratio = energy / ebreak
+        bpwl[cond] *= (eratio ** (-index1))[cond]
+        bpwl[~cond] *= (eratio ** (-index2))[~cond]
+        if bpwl.shape[1] == 1:
+            return bpwl.squeeze(axis=1)
+        else:
+            return bpwl
 
 
 class SmoothBrokenPowerLawSpectralModel(SpectralModel):
@@ -2178,11 +2192,17 @@ class TemplateNDSpectralModel(SpectralModel):
         super().__init__()
 
     @property
+    def is_norm_spectral_model(self):
+        return self._map.unit == u.Unit("")
+
+    @property
     def map(self):
         """Template map as a `~gammapy.maps.RegionNDMap`."""
         return self._map
 
-    def evaluate(self, energy, **kwargs):
+    def evaluate(self, energy, *args):
+        kwargs = {name: q for name, q in zip(self.default_parameters.names, args)}
+
         coord = {"energy_true": energy}
         coord.update(kwargs)
 
@@ -2192,6 +2212,12 @@ class TemplateNDSpectralModel(SpectralModel):
 
         val = self.map.interp_by_pix(pixels, **self._interp_kwargs)
         return u.Quantity(val, self.map.unit, copy=COPY_IF_NEEDED)
+
+    def __call__(self, energy):
+        kwargs = {par.name: par.quantity for par in self.parameters}
+        kwargs = self._convert_evaluate_unit(kwargs, energy)
+        args = list(kwargs.values())
+        return self.evaluate(energy, *args)
 
     def write(self, overwrite=False, filename=None):
         """
