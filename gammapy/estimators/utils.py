@@ -23,6 +23,9 @@ from gammapy.stats import (
 )
 from gammapy.stats.utils import ts_to_sigma
 from .map.core import FluxMaps
+import logging
+
+log = logging.getLogger(__name__)
 
 __all__ = [
     "combine_flux_maps",
@@ -1456,6 +1459,11 @@ def _get_default_norm(
             norm = Parameter(**norm_kwargs)
         except TypeError as error:
             raise TypeError(f"Invalid dict key for norm init : {error}")
+    if norm is not None and norm.interp == "lin":
+        log.warning(
+            "Linear interpolation should be used with care on the 'norm' parameter. "
+            "We recommend using 'log' interpretation instead."
+        )
     if norm.name != "norm":
         raise ValueError("norm.name is not 'norm'")
     return norm
