@@ -1467,8 +1467,8 @@ def test_plot_error_invalid():
         ecpl.plot_error([1, 100] * u.TeV, energy_power=2)
         plt.ylim(1e-15, 1e-11)
         plt.show()
-        
-        
+
+
 def test_bpl_evalaute_array():
     model = BrokenPowerLawSpectralModel(
         index1=1.5 * u.Unit(""),
