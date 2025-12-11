@@ -1448,6 +1448,27 @@ def test_vectorized_integrate_spectrum():
         )
 
 
+def test_plot_error_invalid():
+    ecpl = ExpCutoffPowerLawSpectralModel(
+        index=2.0,
+        reference=1 * u.TeV,
+        amplitude="2.2e-13 TeV-1 s-1 cm-2",
+        lambda_=0.09 / u.TeV,
+        alpha=5.1,
+    )
+    ecpl.index.error = 0.35
+    ecpl.amplitude.error = 0.7e-13
+    ecpl.alpha.error = 3
+    ecpl.lambda_.error = 0.045
+
+    with mpl_plot_check():
+        plt.figure()
+        ecpl.plot([1, 100] * u.TeV, energy_power=2)
+        ecpl.plot_error([1, 100] * u.TeV, energy_power=2)
+        plt.ylim(1e-15, 1e-11)
+        plt.show()
+
+
 def test_bpl_evalaute_array():
     model = BrokenPowerLawSpectralModel(
         index1=1.5 * u.Unit(""),
