@@ -999,8 +999,8 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
 
     def __init__(self, table, filename=None, normalise=True, **kwargs):
         self.normalise = normalise
-        if self.normalise:
-            self.table = self._normalise_table(table)
+        self.table = self._set_table(table, self.normalise)
+
         if filename is not None:
             filename = str(make_path(filename))
         if filename is None:
@@ -1012,17 +1012,18 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         super().__init__(**kwargs)
 
     @staticmethod
-    def _normalise_table(table):
+    def _set_table(table, normalise):
         x = table["PHASE"].data
         y = table["NORM"].data
 
-        interpolator = scipy.interpolate.InterpolatedUnivariateSpline(
-            x, y, k=1, ext=2, bbox=[0.0, 1.0]
-        )
+        if normalise:
+            interpolator = scipy.interpolate.InterpolatedUnivariateSpline(
+                x, y, k=1, ext=2, bbox=[0.0, 1.0]
+            )
 
-        integral = interpolator.integral(0, 1)
+            integral = interpolator.integral(0, 1)
+            table["NORM"] *= 1 / integral
 
-        table["NORM"] *= 1 / integral
         return table
 
     @classmethod

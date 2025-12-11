@@ -437,6 +437,30 @@ def test_phase_curve_model(tmp_path, caplog):
     assert_allclose(integral, 0.9, rtol=1e-5)
 
 
+def test_phase_curve_model_normalise_serialisation(tmp_path):
+    phase = np.linspace(0.0, 1, 101)
+    norm = 2 * np.ones_like(phase)
+    table = Table(data={"PHASE": phase, "NORM": norm})
+
+    phase_model = TemplatePhaseCurveTemporalModel(
+        table=table,
+        filename=tmp_path / "test.fits",
+        normalise=False,
+    )
+    phase_model.write()
+
+    model_dict = phase_model.to_dict()
+    new_model = Model.from_dict(model_dict)
+
+    assert model_dict["temporal"]["normalise"] == False
+    assert_allclose(new_model.table["NORM"], 2)
+
+    # Check compatibility with older version behavior
+    model_dict["temporal"].pop("normalise")
+    new_model = Model.from_dict(model_dict)
+    assert_allclose(new_model.table["NORM"], 1)
+
+
 def test_phase_curve_model_sample_time():
     phase = np.linspace(0.0, 1, 51)
     norm = 1.0 * (phase < 0.5)
@@ -499,15 +523,23 @@ def test_phasecurve_DC1():
     P0 = 26.7 * u.d
     f0 = 1 / P0
 
-    model = TemplatePhaseCurveTemporalModel.read(filename, t_ref, 0.0, f0)
+    # Verify curve normalisation
+    normalised_model = TemplatePhaseCurveTemporalModel.read(
+        filename, True, t_ref, 0.0, f0
+    )
+    non_normalised_model = TemplatePhaseCurveTemporalModel.read(
+        filename, False, t_ref, 0.0, f0
+    )
 
     times = Time(t_ref, format="mjd") + [0.0, 0.5, 0.65, 1.0] * P0
-    norm = model(times)
+    norm = normalised_model(times)
+    non_norm = non_normalised_model(times)
 
     assert_allclose(norm, [0.294118, 0.882353, 5.882353, 0.294118], atol=1e-5)
+    assert_allclose(non_norm, [0.05, 0.15, 1.0, 0.05], atol=1e-5)
 
     with mpl_plot_check():
-        model.plot_phasogram(n_points=200)
+        normalised_model.plot_phasogram(n_points=200)
 
 
 def test_model_scale():
