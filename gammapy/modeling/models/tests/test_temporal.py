@@ -452,7 +452,7 @@ def test_phase_curve_model_normalize_serialisation(tmp_path):
     model_dict = phase_model.to_dict()
     new_model = Model.from_dict(model_dict)
 
-    assert model_dict["temporal"]["normalize"] == False
+    assert model_dict["temporal"]["normalize"] is False
     assert_allclose(new_model.table["NORM"], 2)
 
     # Check compatibility with older version behavior
