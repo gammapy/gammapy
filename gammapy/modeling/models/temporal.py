@@ -579,7 +579,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         if self.is_energy_dependent:
             energy_min = self.map.geom.axes["energy"].center[0]
             energy_max = self.map.geom.axes["energy"].center[-1]
-            prnt1 = f"Energy min: {energy_min} \n" f"Energy max: {energy_max} \n"
+            prnt1 = f"Energy min: {energy_min} \nEnergy max: {energy_max} \n"
             prnt = prnt + prnt1
 
         return prnt
@@ -965,6 +965,8 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         A table with 'PHASE' vs 'NORM'.
     filename : str
         The name of the file containing the phase curve.
+    normalise : bool
+        Flag to normalise phase curve integral over phase to 1. Default is True.
     t_ref : `~astropy.units.Quantity`
         The reference time in mjd.
         Default is 48442.5 mjd.
@@ -995,8 +997,10 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
     f1 = Parameter("f1", _f1_default, frozen=True)
     f2 = Parameter("f2", _f2_default, frozen=True)
 
-    def __init__(self, table, filename=None, **kwargs):
-        self.table = self._normalise_table(table)
+    def __init__(self, table, filename=None, normalise=True, **kwargs):
+        self.normalise = normalise
+        if self.normalise:
+            self.table = self._normalise_table(table)
         if filename is not None:
             filename = str(make_path(filename))
         if filename is None:
@@ -1025,6 +1029,7 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
     def read(
         cls,
         path,
+        normalise=True,
         t_ref=_t_ref_default.mjd * u.d,
         phi_ref=_phi_ref_default,
         f0=_f0_default,
@@ -1040,12 +1045,15 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         ----------
         path : str or `~pathlib.Path`
             Filename with path.
+        normalise : bool
+            Flag to normalise phase curve integral over phase to 1. Default is True.
         """
         filename = str(make_path(path))
 
         return cls(
             Table.read(filename),
             filename=filename,
+            normalise=normalise,
             t_ref=t_ref,
             phi_ref=phi_ref,
             f0=f0,
@@ -1163,13 +1171,15 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
             data["temporal"]["parameters"], cls.default_parameters
         )
         filename = data["temporal"]["filename"]
+        normalise = data["temporal"].get("normalise", True)
         kwargs = {par.name: par for par in params}
-        return cls.read(filename, **kwargs)
+        return cls.read(filename, normalise, **kwargs)
 
     def to_dict(self, full_output=False):
         """Create dictionary for YAML serialisation."""
         model_dict = super().to_dict()
         model_dict["temporal"]["filename"] = self.filename
+        model_dict["temporal"]["normalise"] = self.normalise
         return model_dict
 
     def plot_phasogram(self, ax=None, n_points=100, **kwargs):
