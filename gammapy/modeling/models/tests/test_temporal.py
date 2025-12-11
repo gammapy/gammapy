@@ -437,7 +437,7 @@ def test_phase_curve_model(tmp_path, caplog):
     assert_allclose(integral, 0.9, rtol=1e-5)
 
 
-def test_phase_curve_model_normalise_serialisation(tmp_path):
+def test_phase_curve_model_normalize_serialisation(tmp_path):
     phase = np.linspace(0.0, 1, 101)
     norm = 2 * np.ones_like(phase)
     table = Table(data={"PHASE": phase, "NORM": norm})
@@ -445,18 +445,18 @@ def test_phase_curve_model_normalise_serialisation(tmp_path):
     phase_model = TemplatePhaseCurveTemporalModel(
         table=table,
         filename=tmp_path / "test.fits",
-        normalise=False,
+        normalize=False,
     )
     phase_model.write()
 
     model_dict = phase_model.to_dict()
     new_model = Model.from_dict(model_dict)
 
-    assert model_dict["temporal"]["normalise"] == False
+    assert model_dict["temporal"]["normalize"] == False
     assert_allclose(new_model.table["NORM"], 2)
 
     # Check compatibility with older version behavior
-    model_dict["temporal"].pop("normalise")
+    model_dict["temporal"].pop("normalize")
     new_model = Model.from_dict(model_dict)
     assert_allclose(new_model.table["NORM"], 1)
 

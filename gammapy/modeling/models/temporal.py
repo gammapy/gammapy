@@ -965,8 +965,8 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         A table with 'PHASE' vs 'NORM'.
     filename : str
         The name of the file containing the phase curve.
-    normalise : bool
-        Flag to normalise phase curve integral over phase to 1. Default is True.
+    normalize : bool
+        Flag to normalize phase curve integral over phase to 1. Default is True.
     t_ref : `~astropy.units.Quantity`
         The reference time in mjd.
         Default is 48442.5 mjd.
@@ -997,9 +997,9 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
     f1 = Parameter("f1", _f1_default, frozen=True)
     f2 = Parameter("f2", _f2_default, frozen=True)
 
-    def __init__(self, table, filename=None, normalise=True, **kwargs):
-        self.normalise = normalise
-        self.table = self._set_table(table, self.normalise)
+    def __init__(self, table, filename=None, normalize=True, **kwargs):
+        self.normalize = normalize
+        self.table = self._set_table(table, self.normalize)
 
         if filename is not None:
             filename = str(make_path(filename))
@@ -1012,11 +1012,11 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         super().__init__(**kwargs)
 
     @staticmethod
-    def _set_table(table, normalise):
+    def _set_table(table, normalize):
         x = table["PHASE"].data
         y = table["NORM"].data
 
-        if normalise:
+        if normalize:
             interpolator = scipy.interpolate.InterpolatedUnivariateSpline(
                 x, y, k=1, ext=2, bbox=[0.0, 1.0]
             )
@@ -1030,7 +1030,7 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
     def read(
         cls,
         path,
-        normalise=True,
+        normalize=True,
         t_ref=_t_ref_default.mjd * u.d,
         phi_ref=_phi_ref_default,
         f0=_f0_default,
@@ -1046,15 +1046,15 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         ----------
         path : str or `~pathlib.Path`
             Filename with path.
-        normalise : bool
-            Flag to normalise phase curve integral over phase to 1. Default is True.
+        normalize : bool
+            Flag to normalize phase curve integral over phase to 1. Default is True.
         """
         filename = str(make_path(path))
 
         return cls(
             Table.read(filename),
             filename=filename,
-            normalise=normalise,
+            normalize=normalize,
             t_ref=t_ref,
             phi_ref=phi_ref,
             f0=f0,
@@ -1172,15 +1172,15 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
             data["temporal"]["parameters"], cls.default_parameters
         )
         filename = data["temporal"]["filename"]
-        normalise = data["temporal"].get("normalise", True)
+        normalize = data["temporal"].get("normalize", True)
         kwargs = {par.name: par for par in params}
-        return cls.read(filename, normalise, **kwargs)
+        return cls.read(filename, normalize, **kwargs)
 
     def to_dict(self, full_output=False):
         """Create dictionary for YAML serialisation."""
         model_dict = super().to_dict()
         model_dict["temporal"]["filename"] = self.filename
-        model_dict["temporal"]["normalise"] = self.normalise
+        model_dict["temporal"]["normalize"] = self.normalize
         return model_dict
 
     def plot_phasogram(self, ax=None, n_points=100, **kwargs):
