@@ -81,7 +81,11 @@ class GitHubContributorsExtractor:
                     num_closed_issues += 1
                 continue  # skip issues, only process PRs
 
-            pr = self.repo.get_pull(issue.number)
+            try:
+                pr = self.repo.get_pull(issue.number)
+            # Sometimes PRs are marked that way but cannot be found, because they no longer exist.
+            except GithubException:
+                continue
 
             # Skip PRs that are closed and not merged
             if not pr.merged:
@@ -102,7 +106,13 @@ class GitHubContributorsExtractor:
             for commit in pr.get_commits():
                 if commit.committer and commit.committer.login not in {"web-flow", "dependabot[bot]",
                                                                        "github-actions[bot]"}:
-                    unique_users.add(commit.committer.name or commit.committer.login)
+                    # This is required for if a user deletes their account
+                    try:
+                        name = commit.committer.name
+                        login = commit.committer.login
+                    except GithubException:
+                        continue
+                    unique_users.add(name or login)
 
             # For reviewers
             for review in pr.get_reviews():
