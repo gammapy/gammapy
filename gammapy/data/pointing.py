@@ -512,7 +512,7 @@ class PointingInfo:
 
     @lazyproperty
     def altaz(self):
-        """ALT / AZ position computed from RA / DEC as a`~astropy.coordinates.SkyCoord`."""
+        """ALT / AZ position computed from RA / DEC as a `~astropy.coordinates.SkyCoord`."""
         return self.radec.transform_to(self.altaz_frame)
 
     @lazyproperty
