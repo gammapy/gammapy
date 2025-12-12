@@ -735,6 +735,12 @@ class RegionGeom(Geom):
 
         The regions are combined with union to a compound region.
 
+        Note that this function is intended to be used combining close by
+        regions into one RegionGeom. Since it uses an underlying tangential
+        projection undefined behaviour can happen when list of regions
+        contain regions far from each other. If required, one can explicitly
+        pass an appropriate wcs through kwargs.
+
         Parameters
         ----------
         regions : list of `~regions.SkyRegion` or str
@@ -746,6 +752,19 @@ class RegionGeom(Geom):
         -------
         geom : `RegionGeom`
             Region map geometry.
+
+        Examples
+        --------
+        from gammapy.maps import RegionGeom, WcsGeom
+        from regions import CircleSkyRegion
+        from astropy.coordinates import SkyCoord
+        import astropy.units as u
+
+        list_region = [CircleSkyRegion(SkyCoord(326*u.deg, -13*u.deg), radius=0.4*u.deg),
+        CircleSkyRegion(SkyCoord(325*u.deg, -14*u.deg), radius=0.3*u.deg)]
+        wcs = WcsGeom.create().wcs
+        RegionGeom.from_regions(list_region, wcs=wcs)
+
         """
         regions = _parse_regions(regions)
 
