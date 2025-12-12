@@ -73,8 +73,12 @@ class GitHubContributorsExtractor:
         self.check_requests_number()
 
         unique_users = set()
+        num_prs = 0
+        num_closed_issues = 0
         for issue in issues:
             if issue.pull_request is None:
+                if issue.state == 'closed':
+                    num_closed_issues += 1
                 continue  # skip issues, only process PRs
 
             pr = self.repo.get_pull(issue.number)
@@ -85,7 +89,7 @@ class GitHubContributorsExtractor:
 
             if "Backport" in pr.title:
                 continue
-
+            num_prs += 1
             log.info(f"Extracting Pull Request {pr.number}.")
 
             # It is possible that there will be 'authors' such as 'web-flow' which is just a merging action
@@ -105,7 +109,11 @@ class GitHubContributorsExtractor:
                 if review.user and review.user.login not in {"web-flow", "dependabot[bot]", "github-actions[bot]"}:
                     unique_users.add(review.user.name or review.user.login)
 
-        return sorted(list(unique_users))
+        return {
+            "contributors": sorted(list(unique_users)),
+            "num_prs": num_prs,
+            "num_closed_issues": num_closed_issues,
+        }
 
 
 @click.group()
@@ -134,11 +142,19 @@ def contributors_by_milestone(repo, token, milestone, state):
     all_users = set()
     for m in milestone_list:
         log.info(f"Making list of contributors for milestone '{m}'.")
-        users = extractor.extract_contributors_by_milestone(
+        info = extractor.extract_contributors_by_milestone(
             milestone_name=m,
             state=state,
         )
-        log.info(f"Found {len(users)} unique contributors for milestone '{m}'.")
+        users = info['contributors']
+        num_prs = info['num_prs']
+        num_closed_issues = info['num_closed_issues']
+        log.info(f"""
+        For milestone '{m}':
+          - {num_prs} pull requests
+          - {num_closed_issues} closed issues
+          - {len(users)} unique contributors
+        """)
         all_users.update(users)
 
     print(f"\nContributors for milestone '{milestone}'\n{'~' * 20}")

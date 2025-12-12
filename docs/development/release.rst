@@ -37,6 +37,7 @@ Feature Freeze and Branching
    * To generate the list of contributors for the release run
      ``python dev/github_summary.py contributors_by_milestone --milestone '<version>.x'``.
      Note that you will need to use your github token here.
+   * Make sure to adjust the lines at the start of the changelog for the correct values printed by the above command.
    * You should now update the filename from `CHANGELOG.rst` to the correct one for your version,
      in addition to adapting the required lines in the
      ``docs/release-notes/index.rst`` to ensure it is included in the docs.
