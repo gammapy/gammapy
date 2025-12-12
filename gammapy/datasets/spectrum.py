@@ -274,6 +274,32 @@ class SpectrumDataset(PlotMixin, MapDataset):
 
     tag = "SpectrumDataset"
 
+    @classmethod
+    def create(
+        cls,
+        geom,
+        energy_axis_true=None,
+        migra_axis=None,
+        reference_time="2000-01-01",
+        name=None,
+        meta_table=None,
+        **kwargs,
+    ):
+        dataset = super().create(
+            geom,
+            energy_axis_true=energy_axis_true,
+            migra_axis=migra_axis,
+            reference_time=reference_time,
+            name=name,
+            meta_table=meta_table,
+            **kwargs,
+        )
+
+        # remove PSF
+        dataset.psf = None
+
+        return dataset
+
     def cutout(self, *args, **kwargs):
         """Not supported for `SpectrumDataset`."""
         raise NotImplementedError("Method not supported on a spectrum dataset")

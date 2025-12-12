@@ -199,6 +199,11 @@ def test_spectrum_dataset_create():
         geom, energy_axis_true=e_true, name="test"
     )
 
+    # test that model evaluation works:
+    model = SkyModel.create("pl", "gauss", name="test")
+    empty_spectrum_dataset.models = [model]
+    empty_spectrum_dataset.npred()
+
     assert empty_spectrum_dataset.name == "test"
     assert empty_spectrum_dataset.counts.data.sum() == 0
     assert empty_spectrum_dataset.data_shape[0] == 2
@@ -210,6 +215,7 @@ def test_spectrum_dataset_create():
     assert len(empty_spectrum_dataset.gti.table) == 0
     assert np.isnan(empty_spectrum_dataset.energy_range[0])
     assert_allclose(empty_spectrum_dataset.mask_safe, 0)
+    assert empty_spectrum_dataset.psf is None
 
 
 def test_spectrum_dataset_stack_diagonal_safe_mask(spectrum_dataset):
