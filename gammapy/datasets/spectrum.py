@@ -285,6 +285,48 @@ class SpectrumDataset(PlotMixin, MapDataset):
         meta_table=None,
         **kwargs,
     ):
+        """Create a `SpectrumDataset` object with zero filled maps.
+
+        Parameters
+        ----------
+        geom : `~gammapy.maps.RegionGeom`
+            Reference target geometry in reco energy, used for counts and background maps.
+        energy_axis_true : `~gammapy.maps.MapAxis`, optional
+            True energy axis used for IRF maps. Default is None.
+        migra_axis : `~gammapy.maps.MapAxis`, optional
+            If set, this provides the migration axis for the energy dispersion map.
+            If not set, an EDispKernelMap is produced instead. Default is None.
+        reference_time : `~astropy.time.Time`
+            The reference time to use in GTI definition. Default is "2000-01-01".
+        name : str, optional
+            Name of the returned dataset. Default is None.
+        meta_table : `~astropy.table.Table`, optional
+            Table listing information on observations used to create the dataset.
+            One line per observation for stacked datasets. Default is None.
+
+        Returns
+        -------
+        empty_maps : `SpectrumDataset`
+            A SpectrumDataset containing zero filled maps.
+
+        Examples
+        --------
+        >>> from gammapy.datasets import SpectrumDataset
+        >>> from gammapy.maps import RegionGeom, MapAxis
+
+        >>> energy_axis = MapAxis.from_energy_bounds(1.0, 10.0, 4, unit="TeV")
+        >>> energy_axis_true = MapAxis.from_energy_bounds(
+        ...            0.5, 20, 10, unit="TeV", name="energy_true"
+        ...        )
+        >>> geom = RegionGeom.create(
+        ...            region=None,
+        ...            axes=[energy_axis],
+        ...        )
+        >>> empty = SpectrumDataset.create(geom=geom, energy_axis_true=energy_axis_true, name="empty")
+        """
+        if not geom.is_region:
+            raise TypeError("`SpectrumDataset` is only supported for `RegionGeom`.")
+
         dataset = super().create(
             geom,
             energy_axis_true=energy_axis_true,

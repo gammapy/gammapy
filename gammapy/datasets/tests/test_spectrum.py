@@ -199,6 +199,10 @@ def test_spectrum_dataset_create():
         geom, energy_axis_true=e_true, name="test"
     )
 
+    with pytest.raises(TypeError):
+        geom2 = WcsGeom.create()
+        SpectrumDataset.create(geom2, energy_axis_true=e_true)
+
     # test that model evaluation works:
     model = SkyModel.create("pl", "gauss", name="test")
     empty_spectrum_dataset.models = [model]
