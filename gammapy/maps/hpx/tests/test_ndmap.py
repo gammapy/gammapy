@@ -634,3 +634,4 @@ def test_stack_int():
     map2 = map1.copy()
 
     map1.stack(map2)
+    assert map1.data.dtype == int
