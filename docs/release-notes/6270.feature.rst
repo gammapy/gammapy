@@ -1,0 +1,2 @@
+Add an optional normalize argument on TemplatePhaseCurveTemporalModel. It is set by default to True,
+for backward compatibility with 2.0.
