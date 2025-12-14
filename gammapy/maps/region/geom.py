@@ -735,11 +735,12 @@ class RegionGeom(Geom):
 
         The regions are combined with union to a compound region.
 
-        Note that this function is intended to be used combining close by
-        regions into one RegionGeom. Since it uses an underlying tangential
-        projection undefined behaviour can happen when list of regions
-        contain regions far from each other. If required, one can explicitly
-        pass an appropriate wcs through kwargs.
+        Note that this function is intended for combining close by
+        regions into one `~gammapy.maps.RegionGeom`. Since it uses an
+        underlying tangential projection, undefined behaviour may occur
+        if the list of input regions contains regions far from each other.
+        If required, one can explicitly pass an appropriate WCS, eg with a cartesian
+        projection, through ``kwargs``.
 
         Parameters
         ----------
