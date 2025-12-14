@@ -1,1 +1,0 @@
-Clarify usage of RegionGeom.from_regions.
