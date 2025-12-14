@@ -8,12 +8,14 @@ from astropy.table import Table
 from astropy.time import Time
 from gammapy.data import FixedPointingInfo, PointingMode
 from gammapy.irf import EDispMap, FoVAlignment, PSFMap
+from gammapy.makers import background
 from gammapy.maps import Map, RegionNDMap, MapAxis
 from gammapy.maps.utils import broadcast_axis_values_to_geom
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.stats import WStatCountsStatistic
 from gammapy.utils.coordinates import FoVICRSFrame, FoVAltAzFrame
 from gammapy.utils.regions import compound_region_to_regions
+from regions import CircleSkyRegion
 
 __all__ = [
     "make_counts_off_rad_max",
@@ -379,7 +381,12 @@ def make_edisp_kernel_map(
 
 
 def make_theta_squared_table(
-    observations, theta_squared_axis, position, position_off=None, energy_edges=None
+    observations,
+    theta_squared_axis,
+    position,
+    position_off=None,
+    energy_edges=None,
+    off_regions_number=1,
 ):
     """Make theta squared distribution in the same FoV for a list of `~gammapy.data.Observation` objects.
 
@@ -405,6 +412,10 @@ def make_theta_squared_table(
         Edges of the energy bin where the theta squared distribution
         is evaluated. For now, only one interval is accepted.
         Default is None.
+    off_regions_number : `~int`
+        Number of OFF regions; by default is 1. Warning: the user should
+        be aware that, if regions overlap, in such a case only the mirror OFF
+        region will be considered.
 
     Returns
     -------
@@ -415,12 +426,16 @@ def make_theta_squared_table(
     if not theta_squared_axis.edges.unit.is_equivalent("deg2"):
         raise ValueError("The theta2 axis should be equivalent to deg2")
 
+    on_region = CircleSkyRegion(
+        center=position, radius=np.sqrt(theta_squared_axis.edges[-1])
+    )
+
     table = Table()
 
     table["theta2_min"] = theta_squared_axis.edges[:-1]
     table["theta2_max"] = theta_squared_axis.edges[1:]
     table["counts"] = 0
-    table["counts_off"] = 0
+    table["counts_off"] = 0.0
     table["acceptance"] = 0.0
     table["acceptance_off"] = 0.0
 
@@ -449,24 +464,51 @@ def make_theta_squared_table(
         counts, _ = np.histogram(separation**2, theta_squared_axis.edges)
         table["counts"] += counts
 
-        if create_off:
-            # Estimate the position of the mirror position
-            pos_angle = pointing.position_angle(position)
-            sep_angle = pointing.separation(position)
-            position_off = pointing.directional_offset_by(
-                pos_angle + Angle(np.pi, "rad"), sep_angle
+        pos_angle = pointing.position_angle(position)
+        sep_angle = pointing.separation(position)
+
+        if off_regions_number > 1 and create_off is False:
+            raise ValueError(
+                "If `off_regions_number` is larger than 1, `position_off` has to be set to None."
             )
 
-        # Angular distance of the events from the mirror position
-        separation_off = position_off.separation(event_position)
+        wobble = background.WobbleRegionsFinder(off_regions_number)
+        off_regions = wobble.run(
+            region=on_region, center=observation.pointing.fixed_icrs
+        )[0]
 
-        # Extract the ON and OFF theta2 distribution from the two positions.
-        counts_off, _ = np.histogram(separation_off**2, theta_squared_axis.edges)
+        if not off_regions:
+            off_regions_number = 1
+            log.warning("Only the mirror OFF region will be considered.")
+
+        if off_regions_number > 1:
+            # determine the position of the evenly-spaced angular position
+            counts_off = np.zeros_like(counts)
+            for off_region in off_regions:
+                # Angular distance of the events from the mirror position
+                separation_off = off_region.center.separation(event_position)
+
+                # Extract the ON and OFF theta2 distribution from the two positions.
+                counts_off_regions, _ = np.histogram(
+                    separation_off**2, theta_squared_axis.edges
+                )
+                counts_off += counts_off_regions
+
+        if off_regions_number == 1:
+            if create_off:
+                # Estimate the position of the mirror position
+                position_off = pointing.directional_offset_by(
+                    pos_angle + Angle(np.pi, "rad"), sep_angle
+                )
+
+            separation_off = position_off.separation(event_position)
+            counts_off, _ = np.histogram(separation_off**2, theta_squared_axis.edges)
+
         table["counts_off"] += counts_off
 
         # Normalisation between ON and OFF is one
         acceptance = np.ones(theta_squared_axis.nbin)
-        acceptance_off = np.ones(theta_squared_axis.nbin)
+        acceptance_off = np.ones(theta_squared_axis.nbin) * off_regions_number
 
         table["acceptance"] += acceptance
         table["acceptance_off"] += acceptance_off
