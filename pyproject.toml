@@ -190,7 +190,7 @@ name = "New features"
 showcontent = true
 
 [[tool.towncrier.type]]
-directory = "bugfix"
+directory = "bug"
 name = "Bug Fixes"
 showcontent = true
 
