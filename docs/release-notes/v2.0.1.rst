@@ -1,0 +1,68 @@
+.. include:: ../references.txt
+
+.. _gammapy_2p0p1_release:
+
+
+2.0.1 (15th December, 2025)
+============================================
+
+- Released 15th December, 2025
+- 14 contributors
+- 46 pull requests since v2.0 (not all listed below)
+- 18 closed issues
+
+Summary
+-------
+
+This is the first bug-fix after v2.0. Several minor bugs and typos in the documentation are corrected.
+Some PRs related to infrastructure are also included for maintainability.
+
+
+Bug Fixes
+---------
+
+- Fix issue #5783, the to_table method now always outputs standard flux units. [`#6108 <https://github.com/gammapy/gammapy/issues/6108>`_]
+- Adapted the `size_factor` default value to be consistent for all spatial models. [`#6137 <https://github.com/gammapy/gammapy/issues/6137>`_]
+- Extra sensitivity options were added to `~gammapy.estimators.map.FluxMaps`. The additional options we now support are: "dnde_sensitivity", "e2dnde_sensitivity", "eflux_sensitivity". [`#6141 <https://github.com/gammapy/gammapy/issues/6141>`_]
+- Fixed `gammapy.irf.EDispKernel.plot_bias` so the correct axis is now being called for the ``xaxis.units``. [`#6159 <https://github.com/gammapy/gammapy/issues/6159>`_]
+- Fixed the incorrect brackets in the error calculation for `~gammapy.stats.compute_flux_doubling`. [`#6164 <https://github.com/gammapy/gammapy/issues/6164>`_]
+- Corrected `~gammapy.modeling.models.TemplatePhaseCurveTemporalModel` integration by performing global normalisation by the duration of the integration window as done in the other temporal models. [`#6182 <https://github.com/gammapy/gammapy/issues/6182>`_]
+- Replaced the deprecated keyword `RADECSYS` for the coordinate system in the GADF event list fits table with `RADESYSa`. [`#6189 <https://github.com/gammapy/gammapy/issues/6189>`_]
+- Corrected SkyModel `_check_unit` unit requirement for models where exposure is not applied. [`#6227 <https://github.com/gammapy/gammapy/issues/6227>`_]
+- Modify default interpolation conditions in TemplateSpatialModel to allow using Hpx geometry maps. [`#6248 <https://github.com/gammapy/gammapy/issues/6248>`_]
+- Fixed plot_error for BrokenPowerLawSpectralModel and TemplateNDSpectralModel [`#6251 <https://github.com/gammapy/gammapy/issues/6251>`_]
+- Fix plot_error for models evaluated with not finite values [`#6252 <https://github.com/gammapy/gammapy/issues/6252>`_]
+- Fix the addition logic so that `gammapy.modeling.models.Models` and `gammapy.modeling.models.DatasetModels`  can be added together regardless of the order they are given. [`#6253 <https://github.com/gammapy/gammapy/issues/6253>`_]
+- Fix map stacking if data type is not float. [`#6254 <https://github.com/gammapy/gammapy/issues/6254>`_]
+- Add an optional normalize argument on `~gammapy.modeling.models.TemplatePhaseCurveTemporalModel`. It is set by default to True, for backward compatibility with 2.0. [`#6270 <https://github.com/gammapy/gammapy/issues/6270>`_]
+
+
+Documentation improvements
+--------------------------
+
+- Clarify usage of `~gammapy.maps.RegionGeom.from_regions` regarding underlying projection effects. [`#6272 <https://github.com/gammapy/gammapy/issues/6272>`_]
+
+
+Infrastructure
+--------------
+
+- Move the package configuration from `setup.cfg` to `pyproject.toml` as recommended by PEP621. [`#6176 <https://github.com/gammapy/gammapy/issues/6176>`_]
+
+
+Contributors
+------------
+
+- Atreyee Sinha
+- Bruno Khélifi
+- Claudio Galelli
+- Daniel Morcuende
+- Katharina Egg
+- Kirsty Feijen
+- Leander Schlegel
+- Maxime Regeard
+- Maximilian Linhoff
+- Natthan Pigoux
+- Pierre Pichard
+- Quentin Remy
+- Régis Terrier
+- Tomas Bylund
