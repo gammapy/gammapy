@@ -1313,6 +1313,7 @@ class TemplateSpatialModel(SpatialModel):
     interp_kwargs : dict
         Interpolation keyword arguments passed to `gammapy.maps.Map.interp_by_coord`.
         Default arguments are {'method': 'linear', 'fill_value': 0, "values_scale": "log"}.
+        For a `~gammapy.maps.HpxNDMap`, default arguments are {'method': 'linear'}.
     filename : str
         Name of the map file.
     copy_data : bool
@@ -1388,7 +1389,9 @@ class TemplateSpatialModel(SpatialModel):
         interp_kwargs = {} if interp_kwargs is None else interp_kwargs
         interp_kwargs.setdefault("method", "linear")
         interp_kwargs.setdefault("fill_value", 0)
-        interp_kwargs.setdefault("values_scale", "log")
+
+        if isinstance(self.map, WcsNDMap):
+            interp_kwargs.setdefault("values_scale", "log")
 
         self._interp_kwargs = interp_kwargs
         kwargs["frame"] = self.map.geom.frame

@@ -812,7 +812,7 @@ class Map(abc.ABC):
 
         See Also
         --------
-        get_image_by_idx, get_image_by_pix.
+        get_image_by_idx, get_image_by_pix
 
         Examples
         --------
@@ -871,7 +871,7 @@ class Map(abc.ABC):
 
         See Also
         --------
-        get_image_by_coord, get_image_by_idx.
+        get_image_by_coord, get_image_by_idx
 
         Returns
         -------
@@ -892,7 +892,7 @@ class Map(abc.ABC):
 
         See Also
         --------
-        get_image_by_coord, get_image_by_pix.
+        get_image_by_coord, get_image_by_pix
 
         Returns
         -------
@@ -1386,7 +1386,7 @@ class Map(abc.ABC):
                 if axis.name == "energy" or axis.name == "energy_true":
                     info = (
                         f"{energy_unit_format(axis.edges[idx])} - "
-                        f"{energy_unit_format(axis.edges[idx+1])}"
+                        f"{energy_unit_format(axis.edges[idx + 1])}"
                     )
                 else:
                     info = f"{axis.edges_min[idx]:.1f} - {axis.edges_max[idx]:.1f} "
@@ -1456,7 +1456,7 @@ class Map(abc.ABC):
                     options = axis.as_plot_labels
             elif axis.name == "energy" or axis.name == "energy_true":
                 E = energy_unit_format(axis.edges)
-                options = [f"{E[i]} - {E[i+1]}" for i in range(len(E) - 1)]
+                options = [f"{E[i]} - {E[i + 1]}" for i in range(len(E) - 1)]
             else:
                 options = axis.as_plot_labels
             interact_kwargs[axis.name] = SelectionSlider(
@@ -1540,7 +1540,7 @@ class Map(abc.ABC):
 
         Parameters
         ----------
-         axes_names: list of str
+         axes_names: list of str, optional
             Names of the axis to reduce over. If None, all non-spatial axis will be summed over. Default is None.
         keepdims : bool, optional
             If this is set to true, the axes which are summed over are left in
@@ -1828,7 +1828,7 @@ class Map(abc.ABC):
 
         Parameters
         ----------
-        unit : str or `~astropy.unit.Unit`
+        unit : str or `~astropy.units.Unit`
             New unit.
 
         Returns
