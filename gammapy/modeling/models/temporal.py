@@ -997,9 +997,15 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
     f1 = Parameter("f1", _f1_default, frozen=True)
     f2 = Parameter("f2", _f2_default, frozen=True)
 
-    def __init__(self, table, filename=None, normalize=True, **kwargs):
-        self.normalize = normalize
-        self.table = self._set_table(table, self.normalize)
+    def __init__(self, table, filename=None, **kwargs):
+        self.normalize = kwargs.pop("normalize", True)
+
+        if type(self.normalize) is not bool:
+            raise ValueError(
+                f"TemplatePhaseCurveTemporalModel expects boolean normalize parameter. Got {type(self.normalize)} instead."
+            )
+        else:
+            self.table = self._set_table(table, self.normalize)
 
         if filename is not None:
             filename = str(make_path(filename))

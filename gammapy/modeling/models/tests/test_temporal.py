@@ -459,6 +459,8 @@ def test_phase_curve_model_normalize_serialisation(tmp_path):
     model_dict["temporal"].pop("normalize")
     new_model = Model.from_dict(model_dict)
     assert_allclose(new_model.table["NORM"], 1)
+    with pytest.raises(ValueError, match=r"Got <class 'str'> instead."):
+        TemplatePhaseCurveTemporalModel.read(tmp_path / "test.fits", "20 Hz", 0.0)
 
 
 def test_phase_curve_model_sample_time():
