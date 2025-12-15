@@ -3,10 +3,6 @@
     "@type": "SoftwareSourceCode",
     "author": [
         {
-            "@type": "Person",
-            "name": "The Gammapy team"
-        },
-        {
             "@id": "https://orcid.org/0000-0002-6606-2816",
             "@type": "Person",
             "affiliation": {
@@ -317,16 +313,6 @@
             "givenName": "Robert Daniel"
         },
         {
-            "@id": "https://orcid.org/0009-0001-0100-9846",
-            "@type": "Person",
-            "affiliation": {
-                "@type": "Organization",
-                "name": "Laboratoire Univers et Particules de Montpellier, CNRS, Universit\u00e9 de Montpellier, Montpellier, France"
-            },
-            "familyName": "Pigoux",
-            "givenName": "Natthan"
-        },
-        {
             "@id": "https://orcid.org/0000-0002-7537-7334",
             "@type": "Person",
             "affiliation": {
@@ -335,6 +321,26 @@
             },
             "familyName": "Peresano",
             "givenName": "Michele"
+        },
+        {
+            "@id": "https://orcid.org/0009-0005-9803-0762",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Universit\u00e9 Paris Cit\u00e9, CNRS, Astroparticule et Cosmologie, F-75013 Paris, France"
+            },
+            "familyName": "Pichard",
+            "givenName": "Pierre"
+        },
+        {
+            "@id": "https://orcid.org/0009-0001-0100-9846",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Laboratoire Univers et Particules de Montpellier, CNRS, Universit\u00e9 de Montpellier, Montpellier, France"
+            },
+            "familyName": "Pigoux",
+            "givenName": "Natthan"
         },
         {
             "@id": "https://orcid.org/0000-0002-3869-2925",
@@ -509,7 +515,7 @@
         }
     ],
     "codeRepository": "https://github.com/gammapy/gammapy",
-    "datePublished": "2025-08-18",
+    "datePublished": "2025-12-15",
     "description": "Gammapy analyzes gamma-ray data and creates sky images, spectra and lightcurves, from event lists and instrument response information; it can also determine the position, morphology and spectra of gamma-ray sources. It is used to analyze data from H.E.S.S., Fermi-LAT, HAWC, and the Cherenkov Telescope Array (CTA).",
     "identifier": "https://doi.org/10.5281/zenodo.4701488",
     "keywords": [
@@ -520,7 +526,7 @@
     "license": "https://spdx.org/licenses/BSD-3-Clause",
     "name": "Gammapy: Python toolbox for gamma-ray astronomy",
     "url": "https://gammapy.org/",
-    "softwareVersion": "v2.0rc1",
+    "softwareVersion": "v2.0.1rc1",
     "maintainer": {
         "@id": "https://orcid.org/0000-0003-4568-7005",
         "@type": "Person",
@@ -537,9 +543,9 @@
         "active"
     ],
     "email": "GAMMAPY-COORDINATION-L@IN2P3.FR",
-    "dateModified": "2025-08-18",
+    "dateModified": "2025-12-15",
     "softwareRequirements": [
-        "numpy>=1.26,<2.2",
+        "numpy>=1.26",
         "scipy>=1.13",
         "astropy>=6.0",
         "regions>=0.9.0",
@@ -547,6 +553,6 @@
         "click>=8.0",
         "pydantic>=2.8.0",
         "iminuit>=2.26.0",
-        "matplotlib>=3.8, <3.10"
+        "matplotlib>=3.8,<3.10"
     ]
 }
