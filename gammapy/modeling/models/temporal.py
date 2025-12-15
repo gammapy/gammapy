@@ -1052,7 +1052,7 @@ class TemplatePhaseCurveTemporalModel(TemporalModel):
         ----------
         path : str or `~pathlib.Path`
             Filename with path.
-        normalize : bool
+        normalize : bool, optional
             Flag to normalize phase curve integral over phase to 1. Default is True.
         """
         filename = str(make_path(path))
