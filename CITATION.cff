@@ -8,12 +8,12 @@ abstract: 'Gammapy analyzes gamma-ray data and creates sky images, spectra and l
 type: software
 message: "If you use this software, please cite it using the metadata from this file."
 url: "https://gammapy.org/"
-date-released: 2025-08-18
+date-released: 2025-12-15
 keywords:
 - Astronomy
 - "Gamma-rays"
 - "Data analysis"
-version: v2.0rc1
+version: v2.0.1rc1
 repository-code: "https://github.com/gammapy/gammapy"
 license: BSD-3-Clause
 contact:
@@ -170,16 +170,21 @@ authors:
   affiliation: "Institut für Physik, Humboldt-Universität zu Berlin, D 12489 Berlin,
     Germany"
   orcid: "https://orcid.org/0000-0003-3457-9308"
-- given-names: Natthan
-  family-names: Pigoux
-  affiliation: "Laboratoire Univers et Particules de Montpellier, CNRS, Université
-    de Montpellier, Montpellier, France"
-  orcid: "https://orcid.org/0009-0001-0100-9846"
 - given-names: Michele
   family-names: Peresano
   affiliation: "Max-Planck-Institut für Physik, Boltzmannstraße 8, 85748 Garching
     bei München, Germany"
   orcid: "https://orcid.org/0000-0002-7537-7334"
+- given-names: Pierre
+  family-names: Pichard
+  affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
+    Paris, France"
+  orcid: "https://orcid.org/0009-0005-9803-0762"
+- given-names: Natthan
+  family-names: Pigoux
+  affiliation: "Laboratoire Univers et Particules de Montpellier, CNRS, Université
+    de Montpellier, Montpellier, France"
+  orcid: "https://orcid.org/0009-0001-0100-9846"
 - given-names: Fabio
   family-names: Pintore
   affiliation: "INAF/IASF PALERMO, Italy"
