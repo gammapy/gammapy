@@ -34,7 +34,7 @@ def update_codemeta(maintainer, filename, setup_file=None):
         # complete with software requirements from pyproject.toml
         with open(setup_file, "rb") as fp:
             conf = tomllib.load(fp)
-            requirements = conf["project"]["dependencies"]#.split("\n")
+            requirements = conf["project"]["dependencies"]
 
             if "" in requirements:
                 requirements.remove("")
