@@ -3,10 +3,10 @@
 .. _gammapy_2p0p1_release:
 
 
-2.0.1 (15th December, 2025)
-============================================
+2.0.1 (16th December, 2025)
+===========================
 
-- Released 15th December, 2025
+- Released 16th December, 2025
 - 14 contributors
 - 46 pull requests since v2.0 (not all listed below)
 - 18 closed issues
