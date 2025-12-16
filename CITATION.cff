@@ -8,12 +8,12 @@ abstract: 'Gammapy analyzes gamma-ray data and creates sky images, spectra and l
 type: software
 message: "If you use this software, please cite it using the metadata from this file."
 url: "https://gammapy.org/"
-date-released: 2025-12-15
+date-released: 2025-12-16
 keywords:
 - Astronomy
 - "Gamma-rays"
 - "Data analysis"
-version: v2.0.1rc1
+version: v2.0.1
 repository-code: "https://github.com/gammapy/gammapy"
 license: BSD-3-Clause
 contact:
