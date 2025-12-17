@@ -3,10 +3,6 @@
     "@type": "SoftwareSourceCode",
     "author": [
         {
-            "@type": "Person",
-            "name": "The Gammapy team"
-        },
-        {
             "@id": "https://orcid.org/0000-0002-6606-2816",
             "@type": "Person",
             "affiliation": {
@@ -25,36 +21,6 @@
             },
             "familyName": "Aguasca-Cabot",
             "givenName": "Arnau"
-        },
-        {
-            "@id": "https://orcid.org/0009-0004-0816-0700",
-            "@type": "Person",
-            "affiliation": {
-                "@type": "Organization",
-                "name": "Instituto de Astrof\u00edsica de Canarias and Dpto. de Astrof\u00edsica, Universidad de La Laguna, C/ V\u00eda L\u00e1ctea s/n, E-38205 La Laguna, Tenerife, Spain"
-            },
-            "familyName": "Arnesen",
-            "givenName": "Tora T.H."
-        },
-        {
-            "@id": "https://orcid.org/0009-0008-6006-175X",
-            "@type": "Person",
-            "affiliation": {
-                "@type": "Organization",
-                "name": "Instituto de Astrof\u00edsica de Canarias and Dpto. de Astrof\u00edsica, Universidad de La Laguna, C/ V\u00eda L\u00e1ctea s/n, E-38205 La Laguna, Tenerife, Spain"
-            },
-            "familyName": "Barrios-Jimenez",
-            "givenName": "Luis"
-        },
-        {
-            "@id": "https://orcid.org/0009-0004-4179-3163",
-            "@type": "Person",
-            "affiliation": {
-                "@type": "Organization",
-                "name": "Department of Instrumentation and Control Engineering, Vishwakarma Institute of Technology, Pune, Maharashtra India"
-            },
-            "familyName": "Batt",
-            "givenName": "Anushka"
         },
         {
             "@id": "https://orcid.org/0000-0002-8108-7552",
@@ -77,26 +43,6 @@
             "givenName": "Noah"
         },
         {
-            "@id": "https://orcid.org/0000-0003-0426-6634",
-            "@type": "Person",
-            "affiliation": {
-                "@type": "Organization",
-                "name": "Max Planck Institute for Extraterrestrial Physics, Giessenbachstrasse 1, 85748 Garching, Germany"
-            },
-            "familyName": "Buchner",
-            "givenName": "Johannes"
-        },
-        {
-            "@id": "https://orcid.org/0000-0003-2946-1313",
-            "@type": "Person",
-            "affiliation": {
-                "@type": "Organization",
-                "name": "LUX, Observatoire de Paris, Universit\u00e9 PSL, Sorbonne Universit\u00e9, CNRS, 92190 Meudon, France"
-            },
-            "familyName": "Bylund",
-            "givenName": "Tomas"
-        },
-        {
             "@id": "https://orcid.org/0000-0002-6488-8219",
             "@type": "Person",
             "affiliation": {
@@ -115,26 +61,6 @@
             },
             "familyName": "Donath",
             "givenName": "Axel"
-        },
-        {
-            "@id": "https://orcid.org/0009-0002-4238-034X",
-            "@type": "Person",
-            "affiliation": {
-                "@type": "Organization",
-                "name": "Friedrich-Alexander-Universit\u00e4t Erlangen-N\u00fcrnberg, ECAP, Nikolaus-Fiebiger-Str. 2, 91058 Erlangen, Germany"
-            },
-            "familyName": "Egg",
-            "givenName": "Katharina"
-        },
-        {
-            "@id": "https://orcid.org/0000-0001-6155-4742",
-            "@type": "Person",
-            "affiliation": {
-                "@type": "Organization",
-                "name": "Instituto de Astrof\u00edsica de Andaluc\u00eda-CSIC, Glorieta de la Astronom\u00eda s/n, 18008, Granada, Spain"
-            },
-            "familyName": "Emery",
-            "givenName": "Gabriel"
         },
         {
             "@id": "https://orcid.org/0000-0003-1476-3714",
@@ -167,16 +93,6 @@
             "givenName": "Claudio"
         },
         {
-            "@id": "https://orcid.org/0000-0003-0627-8436",
-            "@type": "Person",
-            "affiliation": {
-                "@type": "Organization",
-                "name": "Fakult\u00e4t f\u00fcr Physik & Astronomie, Ruhr-Universit\u00e4t Bochum, D-44780 Bochum, Germany"
-            },
-            "familyName": "Gr\u00e9aux",
-            "givenName": "Lucas"
-        },
-        {
             "@id": "https://orcid.org/0000-0001-6876-5577",
             "@type": "Person",
             "affiliation": {
@@ -201,7 +117,7 @@
             "@type": "Person",
             "affiliation": {
                 "@type": "Organization",
-                "name": "Instituto de Astrof\u00edsica de Andaluc\u00eda (IAA-CSIC), Glorieta de la Astronom\u00eda s/n, 18008, Granada, Spain"
+                "name": "Laboratoire Univers et Th\u00e9ories, Observatoire de Paris, Universit\u00e9 PSL,\\ \\ Universit\u00e9 Paris Cit\u00e9, CNRS, F-92190 Meudon, France"
             },
             "familyName": "Kornecki",
             "givenName": "Paula"
@@ -215,16 +131,6 @@
             },
             "familyName": "Linhoff",
             "givenName": "Maximilian"
-        },
-        {
-            "@id": "https://orcid.org/0000-0003-3802-1619",
-            "@type": "Person",
-            "affiliation": {
-                "@type": "Organization",
-                "name": "Physics Department, McGill University, Montreal, QC H3A 2T8, Canada"
-            },
-            "familyName": "Lundy",
-            "givenName": "Matthew"
         },
         {
             "@id": "https://orcid.org/0000-0002-8547-8489",
@@ -247,16 +153,6 @@
             "givenName": "Simone"
         },
         {
-            "@id": "https://orcid.org/0000-0003-1204-5516",
-            "@type": "Person",
-            "affiliation": {
-                "@type": "Organization",
-                "name": "Instituto de Astrof\u00edsica de Canarias and Dpto. de Astrof\u00edsica, Universidad de La Laguna, C/ V\u00eda L\u00e1ctea s/n, E-38205 La Laguna, Tenerife, Spain"
-            },
-            "familyName": "Molina",
-            "givenName": "Edgar"
-        },
-        {
             "@id": "https://orcid.org/0000-0002-9667-8654",
             "@type": "Person",
             "affiliation": {
@@ -271,7 +167,7 @@
             "@type": "Person",
             "affiliation": {
                 "@type": "Organization",
-                "name": "CTAO Central Organisation, Science Data Management Centre, Platanenallee 6, 15738 Zeuthen, Germany"
+                "name": "Instituto de Astrof\u00edsica de Andaluc\u00eda-CSIC, Granada, Spain"
             },
             "familyName": "Morcuende",
             "givenName": "Daniel"
@@ -297,36 +193,6 @@
             "givenName": "Laura"
         },
         {
-            "@id": "https://orcid.org/0000-0001-5770-3805",
-            "@type": "Person",
-            "affiliation": {
-                "@type": "Organization",
-                "name": "Universit\u00e4t Innsbruck, Institut f\u00fcr Astro- und Teilchenphysik, Technikerstra\u00dfe 25, 6020 Innsbruck, Austria"
-            },
-            "familyName": "Panny",
-            "givenName": "Sebastian"
-        },
-        {
-            "@id": "https://orcid.org/0000-0003-3457-9308",
-            "@type": "Person",
-            "affiliation": {
-                "@type": "Organization",
-                "name": "Institut f\u00fcr Physik, Humboldt-Universit\u00e4t zu Berlin, D 12489 Berlin, Germany"
-            },
-            "familyName": "Parsons",
-            "givenName": "Robert Daniel"
-        },
-        {
-            "@id": "https://orcid.org/0009-0001-0100-9846",
-            "@type": "Person",
-            "affiliation": {
-                "@type": "Organization",
-                "name": "Laboratoire Univers et Particules de Montpellier, CNRS, Universit\u00e9 de Montpellier, Montpellier, France"
-            },
-            "familyName": "Pigoux",
-            "givenName": "Natthan"
-        },
-        {
             "@id": "https://orcid.org/0000-0002-7537-7334",
             "@type": "Person",
             "affiliation": {
@@ -337,16 +203,6 @@
             "givenName": "Michele"
         },
         {
-            "@id": "https://orcid.org/0009-0005-9803-0762",
-            "@type": "Person",
-            "affiliation": {
-                "@type": "Organization",
-                "name": "Universit\u00e9 Paris Cit\u00e9, CNRS, Astroparticule et Cosmologie, F-75013 Paris, France"
-            },
-            "familyName": "Pichard",
-            "givenName": "Pierre"
-        },
-        {
             "@id": "https://orcid.org/0000-0002-3869-2925",
             "@type": "Person",
             "affiliation": {
@@ -355,16 +211,6 @@
             },
             "familyName": "Pintore",
             "givenName": "Fabio"
-        },
-        {
-            "@id": "https://orcid.org/0009-0001-7110-6764",
-            "@type": "Person",
-            "affiliation": {
-                "@type": "Organization",
-                "name": "Universit\u00e4t Innsbruck, Institut f\u00fcr Astro- und Teilchenphysik, Technikerstra\u00dfe 25, 6020 Innsbruck, Austria"
-            },
-            "familyName": "Preis",
-            "givenName": "Tobi"
         },
         {
             "@id": "https://orcid.org/0000-0002-4710-2165",
@@ -406,26 +252,11 @@
             "givenName": "Gerrit"
         },
         {
-            "@type": "Person",
-            "familyName": "Schiavo",
-            "givenName": "Vasco"
-        },
-        {
-            "@id": "https://orcid.org/0009-0002-3619-951X",
-            "@type": "Person",
-            "affiliation": {
-                "@type": "Organization",
-                "name": "Universit\u00e9 Paris Cit\u00e9, CNRS, Astroparticule et Cosmologie, F-75013 Paris, France"
-            },
-            "familyName": "Schlegel",
-            "givenName": "Leander"
-        },
-        {
             "@id": "https://orcid.org/0000-0002-9238-7163",
             "@type": "Person",
             "affiliation": {
                 "@type": "Organization",
-                "name": "Dept. of High Energy Physics, Tata Institute of Fundamental Research, 400055 Mumbai, India"
+                "name": "EMFTEL department and IPARCOS, Universidad Complutense de Madrid, 28040 Madrid, Spain"
             },
             "familyName": "Sinha",
             "givenName": "Atreyee"
@@ -458,25 +289,6 @@
             },
             "familyName": "Streil",
             "givenName": "Katrin"
-        },
-        {
-            "@type": "Person",
-            "affiliation": {
-                "@type": "Organization",
-                "name": "GSI Helmholtzzentrum f\u00fcr Schwerionenforschung, Planckstra\u00dfe 1 64291 Darmstadt, Germany"
-            },
-            "familyName": "Subramanya",
-            "givenName": "Gnana Sindhu"
-        },
-        {
-            "@id": "https://orcid.org/0000-0002-0574-6018",
-            "@type": "Person",
-            "affiliation": {
-                "@type": "Organization",
-                "name": "Institute for Space--Earth Environmental Research, Nagoya University, Furo-cho, Chikusa-ku, Nagoya 464-8601, Japan"
-            },
-            "familyName": "Takahashi",
-            "givenName": "Mitsunari"
         },
         {
             "@id": "https://orcid.org/0000-0002-8219-4667",
@@ -519,7 +331,7 @@
         }
     ],
     "codeRepository": "https://github.com/gammapy/gammapy",
-    "datePublished": "2025-07-26",
+    "datePublished": "2024-11-26",
     "description": "Gammapy analyzes gamma-ray data and creates sky images, spectra and lightcurves, from event lists and instrument response information; it can also determine the position, morphology and spectra of gamma-ray sources. It is used to analyze data from H.E.S.S., Fermi-LAT, HAWC, and the Cherenkov Telescope Array (CTA).",
     "identifier": "https://doi.org/10.5281/zenodo.4701488",
     "keywords": [
@@ -530,7 +342,7 @@
     "license": "https://spdx.org/licenses/BSD-3-Clause",
     "name": "Gammapy: Python toolbox for gamma-ray astronomy",
     "url": "https://gammapy.org/",
-    "softwareVersion": "v2.0",
+    "softwareVersion": "v1.3",
     "maintainer": {
         "@id": "https://orcid.org/0000-0003-4568-7005",
         "@type": "Person",
@@ -547,16 +359,18 @@
         "active"
     ],
     "email": "GAMMAPY-COORDINATION-L@IN2P3.FR",
-    "dateModified": "2025-12-17",
-    "softwareRequirements": [
-        "numpy>=1.26",
-        "scipy>=1.13",
-        "astropy>=6.0",
-        "regions>=0.9.0",
+
+    "dateModified": "2024-11-29",
+
+  "softwareRequirements": [
+        "numpy>=1.21",
+        "scipy>=1.5,!=1.10",
+        "astropy>=5.0",
+        "regions>=0.5.0",
         "pyyaml>=5.3",
-        "click>=8.0",
-        "pydantic>=2.8.0",
-        "iminuit>=2.26.0",
-        "matplotlib>=3.8,<3.10"
+        "click>=7.0",
+        "pydantic>=2.5.0",
+        "iminuit>=2.8.0",
+        "matplotlib>=3.4, <3.10"
     ]
 }
