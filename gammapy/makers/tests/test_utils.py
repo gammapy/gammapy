@@ -158,13 +158,20 @@ def bkg_3d_custom(symmetry="constant", fov_align="RADEC"):
         data = np.ones((2, 3, 3))
         data[:, 1, 1] *= 2
         sky_edges = [-3, -1, 1, 3] * u.deg
+    elif symmetry == "hirez_symmetric":
+        data = np.ones((3, 3))
+        data[1, 1] *= 2
+        data = (  # Upscale 3x3 to 9x9 by simply repeating
+            data.repeat(3, axis=0).repeat(3, axis=1)[np.newaxis, ...].repeat(2, axis=0)
+        )
+        sky_edges = np.linspace(-3, 3, 10) * u.deg
     elif symmetry == "asymmetric":
         data = np.indices((3, 3))[1] + 1
         data = np.stack(2 * [data])
         sky_edges = [-3, -1, 1, 3] * u.deg
-    elif symmetry == "hirez_assymetric":
-        column = np.repeat([1, 2, 3], 3)[..., np.newaxis]
-        plane = np.repeat(column, 9, axis=1)[np.newaxis, ...]
+    elif symmetry == "hirez_asymmetric":
+        row = np.repeat([1, 2, 3], 3)[np.newaxis, ...]
+        plane = np.repeat(row, 9, axis=0)[np.newaxis, ...]
         data = np.repeat(plane, 2, axis=0)
         sky_edges = np.linspace(-3, 3, 10) * u.deg
     else:
@@ -674,20 +681,19 @@ def test_make_effective_livetime_map():
 
 
 def test_integrate_project_irf_on_geom():
-    bkg_irf = bkg_3d_custom(symmetry="asymmetric")
-
     location = observatory_locations.get("ctao_north")
     crab = SkyCoord(83.63333333, 22.01444444, unit="deg", frame="icrs")
 
     # Test projection to geom aligned with the FOV binning and orientation
     obstime = Time("2025-01-01T00:04:00")
     origin = crab.transform_to(AltAz(location=location, obstime=obstime))
-    fov_frame = FoVAltAzFrame(origin=origin, location=location, obstime=obstime)
-
     axis = MapAxis.from_edges([0.1, 1.1, 11.1], name="energy", unit="TeV", interp="log")
     sky_geom = WcsGeom.create(
         npix=(3, 3), binsz=2, axes=[axis], skydir=crab, proj="TAN"
     )
+
+    fov_frame = FoVAltAzFrame(origin=origin, location=location, obstime=obstime)
+    bkg_irf = bkg_3d_custom(symmetry="asymmetric")
     bkg_sky = integrate_project_irf_on_geom(sky_geom, bkg_irf, fov_frame)
 
     ref1 = (
@@ -707,3 +713,44 @@ def test_integrate_project_irf_on_geom():
     assert_allclose(bkg_sky.data[1, 2, 1], ref2.value, rtol=1e-3)
 
     assert bkg_sky.unit.is_equivalent(1 / u.s)
+
+    bkg_irf = bkg_3d_custom(symmetry="hirez_symmetric")
+    bkg_sky = integrate_project_irf_on_geom(sky_geom, bkg_irf, fov_frame)
+    ref3 = (  # center center pixel, value = 2
+        1
+        * u.TeV
+        * bkg_irf.evaluate(fov_lon=0 * u.deg, fov_lat=0 * u.deg, energy=1 * u.TeV)
+    ).value
+    ref4 = (  # right edge center pixel, value = 1
+        1
+        * u.TeV
+        * bkg_irf.evaluate(fov_lon=0 * u.deg, fov_lat=2 * u.deg, energy=1 * u.TeV)
+    ).value
+    omega11 = sky_geom.solid_angle()[0, 1, 1].value  # center center pixel
+    omega12 = sky_geom.solid_angle()[0, 1, 2].value  # right edge center pixel
+    omega21 = sky_geom.solid_angle()[0, 2, 1].value  # bottom edge center pixel
+    assert_allclose(bkg_sky.data[0, 1, 1], ref3 * omega11, rtol=1e-9)
+    assert_allclose(bkg_sky.data[0, 1, 2], ref4 * omega12, rtol=1e-9)
+    # Times chosen such that at second step the IRF FoV has moved
+    # over one full geom pixel
+    obs_times = obstime - np.linspace(0, 8.6, 2) * u.minute
+    fov_timedep = FoVAltAzFrame(origin=origin, location=location, obstime=obs_times)
+    bkg_sky = integrate_project_irf_on_geom(sky_geom, bkg_irf, fov_timedep)
+
+    assert_allclose(
+        (ref3 + ref4) / 2 * omega11,
+        bkg_sky.data[0, 1, 1],
+    )
+    assert_allclose(
+        (ref3 + ref4) / 2 * omega12,
+        bkg_sky.data[0, 1, 2],
+    )
+    with pytest.raises(AssertionError):
+        assert_allclose(
+            (ref3 + ref4) / 2 * omega21,
+            bkg_sky.data[0, 2, 1],
+        )
+    assert_allclose(
+        (ref4 + ref4) / 2 * omega21,
+        bkg_sky.data[0, 2, 1],
+    )
