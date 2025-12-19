@@ -586,7 +586,7 @@ class GaussianPriorPenalty(FitStatisticPenalty):
         return cls.from_diagonal(parameters, sigma=1, mean=mean, lambda_=lambda_)
 
     @classmethod
-    def SmoothnessPenalty(cls, parameters, lambda_=1.0):
+    def SmoothnessPenalty(cls, parameters, mean=None, lambda_=1.0):
         """Create a smoothness penalty using finite differences.
 
         Parameters
@@ -605,4 +605,4 @@ class GaussianPriorPenalty(FitStatisticPenalty):
             -1 * np.ones(n_params - 1),  # lower diagonal
         ]
         Q = diags(diagonals, [0, -1, 1]).toarray()
-        return cls.from_precision(parameters, Q, mean=0, lambda_=lambda_)
+        return cls.from_precision(parameters, Q, mean=mean, lambda_=lambda_)

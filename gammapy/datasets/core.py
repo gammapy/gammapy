@@ -179,7 +179,7 @@ class Datasets(collections.abc.MutableSequence):
             if dataset.models is not None:
                 for model in dataset.models:
                     models[model] = model
-        models = DatasetModels(list(models.keys()))
+        models = DatasetModels(list(models.keys()), penalties=self._penalties)
 
         if self._covariance and self._covariance.parameters == models.parameters:
             return DatasetModels(
