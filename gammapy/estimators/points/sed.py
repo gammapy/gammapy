@@ -10,7 +10,9 @@ from gammapy.datasets.actors import DatasetsActor
 from gammapy.datasets.flux_points import _get_reference_model
 from gammapy.maps import MapAxis, Map, RegionGeom
 from gammapy.modeling import Fit
-from gammapy.modeling.models import GaussianPrior, PiecewiseNormSpectralModel, SkyModel
+from gammapy.modeling.utils import _parse_datasets
+from gammapy.modeling.models import PiecewiseNormSpectralModel, Models
+from gammapy.stats.fit_statistics import GaussianPriorPenalty
 from ..core import Estimator
 from ..flux import FluxEstimator
 from .core import FluxPoints
@@ -287,108 +289,172 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
 
 
 class RegularizedFluxPointsEstimator(Estimator):
+    tag = "RegularizedFluxPointsEstimator"
+
     def __init__(
         self,
         energy_nodes,
-        source=0,
-        prior=None,
+        models,
+        penalty_name="L2",
+        lambda_=1,
         selection_optional=None,
         fit=None,
-        reoptimize=True,
+        reoptimize=False,
     ):
         self.energy_nodes = energy_nodes
-        self.source = source
-
-        if prior is None:
-            self.prior = GaussianPrior(mu=1, sigma=0.7)
-        self.prior = prior
+        self.models = models
+        self.penalty_name = penalty_name
+        self.lambda_ = lambda_
+        if self.penalty_name is None:
+            self.penalty_name = "unpenalized"
 
         if fit is None:
             fit = Fit()
-        self.fit = fit
+            self.fit = fit
 
-        self.selection_optional = selection_optional
         self.reoptimize = reoptimize
+        self.selection_optional = selection_optional
 
-    def define_norm_model(self):
-        norm_model = PiecewiseNormSpectralModel(energy=self.energy_nodes)
+    def _create_regularized_models(self, datasets):
+        norm_models = Models()
+        penalties = []
+        for m in self.models:
+            norm_model = m.copy(f"{m.name}_flux_points_{self.penalty_name}")
+            norm_model.freeze()
+            norm_model.spectral_model *= PiecewiseNormSpectralModel(
+                energy=self.energy_nodes
+            )
 
-        for par in norm_model.parameters:
-            par.prior = self.prior.copy()
-        return norm_model
+            if self.penalty_name == "unpenalized":
+                penalty = None
+            elif self.penalty_name == "L2":
+                penalty = GaussianPriorPenalty.L2_penalty(
+                    norm_model.parameters.free_parameters, mean=1, lambda_=self.lambda_
+                )
+            elif self.penalty_name == "smoothness":
+                penalty = GaussianPriorPenalty.SmoothnessPenalty(
+                    norm_model.parameters.free_parameters, mean=1, lambda_=self.lambda_
+                )
+            else:
+                raise NotImplementedError
 
-    @staticmethod
-    def create_region(norm_model):
-        e_axis = MapAxis.from_nodes(norm_model.energy, name="energy", interp="log")
+            if not self.penalty_name == "unpenalized":
+                penalties.append(penalty)
+            norm_models.append(norm_model)
+
+        norm_models.set_penalties(penalties)
+        self.norm_models_names = norm_models.names
+        return norm_models
+
+    def _create_region(self):
+        e_axis = MapAxis.from_nodes(self.energy_nodes, name="energy", interp="log")
         return RegionGeom(region=None, axes=[e_axis])
 
-    def compute_flux(self, datasets, norm_model):
+    def compute_flux(self, datasets):
         res = Fit().run(datasets)
         if not res.success:
-            raise RuntimeError(
-                f"Regularized spectral fitting failed with {res.message}."
+            raise RuntimeError(f"Flux points fitting failed with {res.message}.")
+
+        map_dict = dict()
+        for km, m in enumerate(self.models):
+            name = self.norm_models_names[km]
+            parameters = datasets.models[name].parameters.free_parameters
+
+            geom = self._create_region()
+            norm_map = Map.from_geom(geom, data=parameters.value, unit="")
+            norm_err_map = Map.from_geom(
+                geom, data=np.array([_.error for _ in parameters]), unit=""
             )
-        geom = self.create_region(norm_model)
-        norm_map = Map.from_geom(geom, data=norm_model.parameters.value, unit="")
-        norm_err_map = Map.from_geom(
-            geom, data=np.array([_.error for _ in norm_model.parameters]), unit=""
-        )
+            map_dict[m.name] = {"norm": norm_map, "norm_err": norm_err_map}
 
-        return {"norm": norm_map, "norm_err": norm_err_map}
+        return map_dict
 
-    def compute_errn_errp(self, datasets, norm_model):
-        results = []
-        for par in norm_model.parameters.free_parameters:
-            results.append(self.fit.confidence(datasets, par))
-        geom = self.create_region(norm_model)
+    def compute_errn_errp(self, datasets):
+        map_dict = dict()
+        for km, m in enumerate(self.models):
+            name = self.norm_models_names[km]
+            parameters = datasets.models[name].parameters.free_parameters
 
-        errn, errp = [], []
-        for result in results:
-            errn.append(result["errn"])
-            errp.append(result["errp"])
+            results = []
+            for par in parameters:
+                results.append(self.fit.confidence(datasets, par))
+            errn, errp = [], []
+            for result in results:
+                errn.append(result["errn"])
+                errp.append(result["errp"])
 
-        norm_errn_map = Map.from_geom(geom, data=np.array(errn), unit="")
-        norm_errp_map = Map.from_geom(geom, data=np.array(errp), unit="")
+            geom = self._create_region()
+            norm_errn_map = Map.from_geom(geom, data=np.array(errn), unit="")
+            norm_errp_map = Map.from_geom(geom, data=np.array(errp), unit="")
+            map_dict[m.name] = {"norm_errn": norm_errn_map, "norm_errp": norm_errp_map}
+        return map_dict
 
-        return {"norm_errn": norm_errn_map, "norm_errp": norm_errp_map}
+    def compute_ul(self, datasets):
+        map_dict = dict()
+        for km, m in enumerate(self.models):
+            name = self.norm_models_names[km]
+            parameters = datasets.models[name].parameters.free_parameters
 
-    def compute_ul(self, datasets, norm_model):
-        results = []
-        bests = []
-        for par in norm_model.parameters.free_parameters:
-            bests.append(par.value)
-            results.append(self.fit.confidence(datasets, par, sigma=3))
-        geom = self.create_region(norm_model)
+            results = []
+            bests = []
+            for par in parameters:
+                bests.append(par.value)
+                results.append(self.fit.confidence(datasets, par, sigma=3))
+            errp = []
+            for result, best in zip(results, bests):
+                errp.append(result["errp"] + best)
 
-        errp = []
-        for result, best in zip(results, bests):
-            errp.append(result["errp"] + best)
-
-        norm_ul_map = Map.from_geom(geom, data=np.array(errp), unit="")
-
-        return {"norm_ul": norm_ul_map}
+            geom = self._create_region()
+            norm_ul_map = Map.from_geom(geom, data=np.array(errp), unit="")
+            map_dict[m.name] = {"norm_ul": norm_ul_map}
+        return map_dict
 
     def run(self, datasets):
+        datasets, _ = _parse_datasets(datasets=datasets)
+
         datasets = datasets.copy()
-        model = datasets.models[self.source]
-        spectral_model = model.spectral_model.copy()
-        spectral_model.freeze()
-
-        norm_model = self.define_norm_model()
-
-        regul_model = SkyModel(
-            spectral_model=spectral_model * norm_model, name=model.name + "_regul"
+        other_models = Models(
+            [m for m in datasets.models if m.name not in self.models.names]
         )
+        if not self.reoptimize:
+            other_models.freeze()
+        norm_models = self._create_regularized_models(datasets)
+        models = other_models + norm_models
+        models._penalties = (
+            norm_models._penalties
+        )  # TODO: should be supported by __add__
+        print(models._penalties)
 
-        regul_model.spectral_model.model1.freeze()
-        datasets.models = [regul_model]
+        datasets.models = models
 
-        maps_dict = self.compute_flux(datasets, norm_model)
+        print(len(datasets.models.parameters.free_unique_parameters))
+        print(datasets.models._penalties)
+
+        maps_dict = self.compute_flux(datasets)
+        print("stat_sum", datasets.stat_sum())
+        print("stat_likelihood", datasets._stat_sum_likelihood())
+        print("stat_prior", datasets.stat_sum() - datasets._stat_sum_likelihood())
+        print(
+            "stat_prior/stat_likelihood",
+            (datasets.stat_sum() - datasets._stat_sum_likelihood())
+            / datasets._stat_sum_likelihood(),
+        )
 
         # maps_dict.update(self.compute_errn_errp(datasets, norm_model))
 
         # maps_dict.update(self.compute_ul(datasets, norm_model))
 
-        return FluxPoints.from_maps(
-            maps=maps_dict, reference_model=spectral_model, sed_type="likelihood"
+        fp_dict = dict()
+        for m in self.models:
+            fp_dict[m.name] = FluxPoints.from_maps(
+                maps=maps_dict[m.name],
+                reference_model=m.spectral_model,
+                sed_type="likelihood",
+            )
+
+        return dict(
+            flux_points=fp_dict,
+            models=models,
+            stat_sum_likelihood=datasets._stat_sum_likelihood(),
+            stat_sum_penalty=datasets.stat_sum() - datasets._stat_sum_likelihood(),
         )
