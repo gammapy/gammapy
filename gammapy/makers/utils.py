@@ -4,6 +4,7 @@ import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.coordinates.erfa_astrom import erfa_astrom, ErfaAstromInterpolator
+from astropy.coordinates.representation import UnitSphericalRepresentation
 from astropy.table import Table
 from astropy.time import Time
 from gammapy.data import FixedPointingInfo, PointingMode
@@ -848,12 +849,30 @@ def _get_fov_coord(
 ):
     """Return coord dict in fov_coord."""
     coords = {}
+<<<<<<< HEAD
     if use_offset:
         fov_frame_origin = SkyCoord(0 * u.deg, 0 * u.deg, frame=fov_frame)
         if isinstance(fov_frame, FoVICRSFrame) or (len(fov_frame.obstime.shape) == 0):
             coords["offset"] = skycoord.separation(fov_frame_origin)
         else:
             coords["offset"] = np.moveaxis(skycoord.separation(fov_frame_origin), -1, 0)
+=======
+    if fov_frame.obstime is fov_frame.origin.obstime:
+        fov_frame_origin = fov_frame.origin
+    else:
+        center = UnitSphericalRepresentation(0.0 * u.deg, 0.0 * u.deg)
+        fov_frame_origin = fov_frame.realize_frame(center).transform_to(skycoord)
+    if use_offset:
+        if len(fov_frame.obstime.shape) == 0:
+            coords["offset"] = skycoord.separation(fov_frame_origin)
+        else:
+            offs = list()
+            for origin in fov_frame_origin:
+                offs.append(skycoord.separation(origin))
+            coords["offset"] = np.stack(
+                offs,
+            )
+>>>>>>> 4bb0a480a (Make _get_fov_coord support frame observation time, add unit test)
     else:
         sign = -1.0 if reverse_lon else 1.0
 

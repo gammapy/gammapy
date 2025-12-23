@@ -38,6 +38,7 @@ from gammapy.makers.utils import (
     _get_fov_coord,
     project_irf_on_geom,
     integrate_project_irf_on_geom,
+    _get_fov_coord,
 )
 from gammapy.maps import HpxGeom, MapAxis, RegionGeom, WcsGeom, WcsNDMap
 from gammapy.modeling.models import ConstantSpectralModel
@@ -1001,3 +1002,4 @@ def test_integrate_project_irf_on_geom():
         (ref4 + ref4) / 2 * omega21,
         bkg_sky.data[0, 2, 1],
     )
+
