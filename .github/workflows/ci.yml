@@ -8,7 +8,9 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
@@ -16,8 +18,16 @@ jobs:
       - name: Install pre-commit
         run: pip install pre-commit
       - name: Run pre-commit
-        run: pre-commit run
-
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            pre-commit run \
+            --from-ref "${{ github.event.pull_request.base.sha }}" \
+            --to-ref   "${{ github.event.pull_request.head.sha }}"
+          else  # push event
+            pre-commit run \
+            --from-ref "${{ github.event.before }}" \
+            --to-ref   "${{ github.event.after }}"
+          fi
   ci-runs:
     name: ${{ matrix.os }}, ${{ matrix.tox_env }}
     runs-on: ${{ matrix.os }}
@@ -25,7 +35,7 @@ jobs:
     if: contains(github.event.pull_request.labels.*.name, 'skip-tests') == false
     env:
       PYTEST_ADDOPTS: --color=yes -n auto --dist=loadscope
-      
+
     strategy:
       fail-fast: true
       matrix:
@@ -69,10 +79,6 @@ jobs:
             allowed_fail: false
           - os: ubuntu-latest
             python: '3.10'
-            tox_env: 'codestyle'
-            allowed_fail: false
-          - os: ubuntu-latest
-            python: '3.10'
             tox_env: 'py310-test-alldeps_noray-astropy60-numpy126'
             allowed_fail: false
           - os: ubuntu-latest
@@ -86,7 +92,7 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - name: Set up Python ${{ matrix.python }}
@@ -123,6 +129,32 @@ jobs:
           file: ./coverage.xml
           verbose: true
 
+      - name: Store info for sonar
+        env:
+          REF_NAME: ${{ github.ref_name }}
+          REF_TYPE: ${{ github.ref_type }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          SOURCE_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
+          SOURCE_BRANCH: ${{ github.event.pull_request.head.ref }}
+          TARGET_BRANCH: ${{ github.event.pull_request.base.ref }}
+        run: |
+          pip install setuptools_scm
+          echo "PR_NUMBER=${PR_NUMBER}" >> sonar_env
+          echo "SOURCE_REPOSITORY=${SOURCE_REPOSITORY}" >> sonar_env
+          echo "SOURCE_BRANCH=${SOURCE_BRANCH}" >> sonar_env
+          echo "TARGET_BRANCH=${TARGET_BRANCH}" >> sonar_env
+          echo "PROJECT_VERSION=$(python -m setuptools_scm)" >> sonar_env
+          cat sonar_env
+
+      # upload coverage report for SonarQube workflow
+      - uses: actions/upload-artifact@v5
+        if: "contains(matrix.tox_env, '-cov')"
+        with:
+          name: gammapy-coverage-report
+          path: |
+            coverage.xml
+            sonar_env
+
   sphinx:
     name: Linux python 3.11 sphinx all-deps
     runs-on: ubuntu-latest
@@ -137,7 +169,7 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - name: Set up Python 3.11
@@ -157,7 +189,7 @@ jobs:
         run: |
           tox -e build_docs
       - name: Upload HTML output
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: gammapy-doc-html
           path: docs/_build/html/
