@@ -33,6 +33,7 @@ from gammapy.makers.utils import (
     make_map_exposure_true_energy,
     make_observation_time_map,
     make_theta_squared_table,
+    project_irf_on_geom,
     integrate_project_irf_on_geom,
 )
 from gammapy.maps import HpxGeom, MapAxis, RegionGeom, WcsGeom, WcsNDMap
@@ -188,6 +189,25 @@ def bkg_3d_custom(symmetry="constant", fov_align="RADEC"):
         fov_alignment=fov_align,
         # allow extrapolation for symmetry tests
     )
+
+
+def aeff_custom(energy_axis):
+    offset = MapAxis.from_edges(
+        [-0.25, 0.25, 0.75, 1.25, 1.75, 2.25, 2.75], unit="deg", name="offset"
+    )
+    aeff_vals = np.zeros((energy_axis.nbin, offset.nbin))
+    Es = energy_axis.center.value
+
+    # Chosen to roughly match HESS areas
+    scales = np.array([62, 62, 59, 51, 42, 34]) * 1e4
+    cores = np.array([0.48, 0.49, 0.52, 0.65, 1.01, 1.61])
+    ids = list(range(0, offset.nbin))
+    for idx, scale, core in zip(ids, scales, cores):
+        aeff_vals[:, idx] = (
+            scale * core**2 * (1 / (np.sqrt(Es**2 + core**2)) - 1 / core) ** 2
+        )
+
+    return EffectiveAreaTable2D([energy_axis, offset], data=aeff_vals, unit="m2")
 
 
 @requires_data()
@@ -678,6 +698,32 @@ def test_make_effective_livetime_map():
     assert_allclose(obs_time_offset, [0, 0.242814], rtol=1e-3)
 
     assert obs_time.unit == u.hr
+
+
+def test_project_irf_on_geom():
+    location = observatory_locations.get("ctao_north")
+    crab = SkyCoord(83.63333333, 22.01444444, unit="deg", frame="icrs")
+
+    # Test projection to geom aligned with the FOV binning and orientation
+    obstime = Time("2025-01-01T00:04:00")
+    origin = crab.transform_to(AltAz(location=location, obstime=obstime))
+    fov_frame = FoVAltAzFrame(origin=origin, location=location, obstime=obstime)
+
+    axis = MapAxis.from_edges(
+        [0.1, 1.1, 11.1], name="energy_true", unit="TeV", interp="log"
+    )
+    sky_geom = WcsGeom.create(
+        npix=(3, 3), binsz=0.5, axes=[axis], skydir=crab, proj="TAN"
+    )
+    aeff = aeff_custom(axis)
+    sky_irf = project_irf_on_geom(sky_geom, aeff, fov_frame)
+
+    ref0 = aeff.evaluate(offset=0 * u.deg).flatten().value
+    ref1 = aeff.evaluate(offset=sky_geom.separation(crab)[0, 1]).flatten().value
+
+    assert_allclose(ref0, sky_irf.data[:, 1, 1])
+    assert_allclose(ref1, sky_irf.data[:, 0, 1])
+    assert_allclose(ref1, sky_irf.data[:, 1, 0])
 
 
 def test_integrate_project_irf_on_geom():
