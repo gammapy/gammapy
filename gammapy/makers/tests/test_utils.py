@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import SkyCoord, AltAz
 from astropy.table import Table
 from astropy.time import Time
 from regions import PointSkyRegion
@@ -33,9 +33,11 @@ from gammapy.makers.utils import (
     make_map_exposure_true_energy,
     make_observation_time_map,
     make_theta_squared_table,
+    _get_fov_coord,
 )
 from gammapy.maps import HpxGeom, MapAxis, RegionGeom, WcsGeom, WcsNDMap
 from gammapy.modeling.models import ConstantSpectralModel
+from gammapy.utils.coordinates import FoVAltAzFrame
 from gammapy.utils.testing import requires_data
 from gammapy.utils.time import time_ref_to_dict
 
@@ -661,3 +663,59 @@ def test_make_effective_livetime_map():
     assert_allclose(obs_time_offset, [0, 0.242814], rtol=1e-3)
 
     assert obs_time.unit == u.hr
+
+
+@pytest.mark.filterwarnings("ignore:.*Angular separation .*direction")
+def test_get_fov_coords():
+    crab = SkyCoord(83.63333333, 22.01444444, unit="deg", frame="icrs")
+    location = observatory_locations.get("ctao_north")
+    time_start = Time("2025-01-01T00:00:00")
+
+    fov_origin = crab.transform_to(AltAz(location=location, obstime=time_start))
+    fov_frame = FoVAltAzFrame(origin=fov_origin, location=location, obstime=time_start)
+
+    # Check that pixel centers end up at correct offsets
+    # (Uses FOV frame centered on the Crab)
+    center_sep = 0.5  # separation between square pixel centers
+    # is the pixel size
+    sky_geom = WcsGeom.create(npix=(3, 3), binsz=center_sep, skydir=crab, proj="TAN")
+    sky_coord = sky_geom.to_image().get_coord().skycoord
+    coords = _get_fov_coord(sky_coord, fov_frame, use_offset=True)["offset"]
+    assert_allclose(0, coords[1, 1].value, atol=1e-11)
+    assert_allclose(center_sep, coords[0, 1].value, rtol=3e-5)
+    assert_allclose(center_sep, coords[1, 0].value, rtol=3e-5)
+
+    center_sep = 0.01
+    sky_geom = WcsGeom.create(npix=(3, 3), binsz=center_sep, skydir=crab, proj="TAN")
+    sky_coord = sky_geom.to_image().get_coord().skycoord
+    coords = _get_fov_coord(sky_coord, fov_frame, use_offset=True)["offset"]
+    assert_allclose(center_sep, coords[0, 1].value, rtol=3e-5)
+    assert_allclose(center_sep, coords[1, 0].value, rtol=3e-5)
+
+    # Check that pixel centers end up at correct offsets
+    # after letting the sky drift away from the starting position
+    fov_frame = FoVAltAzFrame(
+        origin=fov_origin, location=location, obstime=time_start + 4.303333 * u.minute
+    )
+    center_sep = 0.5
+    sky_geom = WcsGeom.create(npix=(3, 3), binsz=center_sep, skydir=crab, proj="TAN")
+    sky_coord = sky_geom.to_image().get_coord().skycoord
+    coords = _get_fov_coord(sky_coord, fov_frame, use_offset=True)["offset"]
+    assert_allclose(center_sep, coords[1, 0].value, rtol=3e-5)
+    assert_allclose(2 * center_sep, coords[1, 1].value, rtol=3e-5)
+    assert_allclose(3 * center_sep, coords[1, 2].value, rtol=5e-5)
+
+    # Check that pixel centers end up at correct offsets
+    # after letting the sky drift away from the starting position
+    obs_times = time_start + np.linspace(0, 4.303333, 2) * u.minute
+    fov_frame = FoVAltAzFrame(origin=fov_origin, location=location, obstime=obs_times)
+    center_sep = 0.5
+    sky_geom = WcsGeom.create(npix=(3, 3), binsz=center_sep, skydir=crab, proj="TAN")
+    sky_coord = sky_geom.to_image().get_coord().skycoord
+    coords = _get_fov_coord(sky_coord, fov_frame, use_offset=True)["offset"]
+    assert_allclose(0, coords[0, 1, 1].value, atol=1e-11)
+    assert_allclose(center_sep, coords[0, 0, 1].value, rtol=3e-5)
+    assert_allclose(center_sep, coords[0, 1, 0].value, rtol=3e-5)
+    assert_allclose(center_sep, coords[1, 1, 0].value, rtol=3e-5)
+    assert_allclose(2 * center_sep, coords[1, 1, 1].value, rtol=3e-5)
+    assert_allclose(3 * center_sep, coords[1, 1, 2].value, rtol=5e-5)
