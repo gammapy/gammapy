@@ -666,21 +666,18 @@ def _get_fov_coord(
     #            coords["offset"] = np.moveaxis(offsets, -1, 0)
     #        else:
     #            coords["offset"] = offsets
-    if fov_frame.obstime is fov_frame.origin.obstime:
+    if isinstance(fov_frame, FoVICRSFrame) or (
+        fov_frame.obstime is fov_frame.origin.obstime
+    ):
         fov_frame_origin = fov_frame.origin
     else:
         center = UnitSphericalRepresentation(0.0 * u.deg, 0.0 * u.deg)
         fov_frame_origin = fov_frame.realize_frame(center).transform_to(skycoord)
     if use_offset:
-        if len(fov_frame.obstime.shape) == 0:
+        if isinstance(fov_frame, FoVICRSFrame) or (len(fov_frame.obstime.shape) == 0):
             coords["offset"] = skycoord.separation(fov_frame_origin)
         else:
-            offs = list()
-            for origin in fov_frame_origin:
-                offs.append(skycoord.separation(origin))
-            coords["offset"] = np.stack(
-                offs,
-            )
+            coords["offset"] = np.moveaxis(skycoord.separation(fov_frame_origin), -1, 0)
     else:
         sign = -1.0 if reverse_lon else 1.0
 
@@ -752,7 +749,6 @@ def project_irf_on_geom(geom, irf, fov_frame, use_region_center=True):
         new_geom = geom
 
     coords = _get_fov_coord(skycoord, fov_frame, irf.has_offset_axis)
-
     non_spatial_axes = set(irf.required_arguments) - set(
         ["offset", "fov_lon", "fov_lat"]
     )
