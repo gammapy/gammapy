@@ -196,16 +196,15 @@ def bkg_3d_custom(symmetry="constant", fov_align="RADEC"):
     )
 
 
-def aeff_custom(energy_axis):
-    offset = MapAxis.from_edges(
-        [-0.25, 0.25, 0.75, 1.25, 1.75, 2.25, 2.75], unit="deg", name="offset"
+def aeff_custom(energy_axis, upscale=3):
+    offset = MapAxis.from_bounds(
+        -0.25, 2.75, nbin=6 * upscale, unit="deg", name="offset"
     )
     aeff_vals = np.zeros((energy_axis.nbin, offset.nbin))
     Es = energy_axis.center.value
-
     # Chosen to roughly match HESS areas
-    scales = np.array([62, 62, 59, 51, 42, 34]) * 1e4
-    cores = np.array([0.48, 0.49, 0.52, 0.65, 1.01, 1.61])
+    scales = np.repeat(np.array([62, 62, 59, 51, 42, 34]) * 1e4, upscale)
+    cores = np.repeat(np.array([0.48, 0.49, 0.52, 0.65, 1.01, 1.61]), upscale)
     ids = list(range(0, offset.nbin))
     for idx, scale, core in zip(ids, scales, cores):
         aeff_vals[:, idx] = (
@@ -907,12 +906,12 @@ def test_project_irf_on_geom():
     crab = SkyCoord(83.63333333, 22.01444444, unit="deg", frame="icrs")
 
     # Test projection to geom aligned with the FOV binning and orientation
-    obstime = Time("2025-01-01T00:04:00")
+    obstime = Time("2025-01-01T00:00:00")
     origin = crab.transform_to(AltAz(location=location, obstime=obstime))
     fov_frame = FoVAltAzFrame(origin=origin, location=location, obstime=obstime)
 
-    axis = MapAxis.from_edges(
-        [0.1, 1.1, 11.1], name="energy_true", unit="TeV", interp="log"
+    axis = MapAxis.from_energy_bounds(
+        energy_min=0.1, energy_max=10, nbin=2, name="energy_true", unit="TeV"
     )
     sky_geom = WcsGeom.create(
         npix=(3, 3), binsz=0.5, axes=[axis], skydir=crab, proj="TAN"
@@ -926,6 +925,15 @@ def test_project_irf_on_geom():
     assert_allclose(ref0, sky_irf.data[:, 1, 1])
     assert_allclose(ref1, sky_irf.data[:, 0, 1])
     assert_allclose(ref1, sky_irf.data[:, 1, 0])
+
+    obs_times = obstime - np.linspace(0, 2.15, 2) * u.minute
+
+    fov_frame = FoVAltAzFrame(origin=origin, location=location, obstime=obs_times)
+    aeff = aeff_custom(axis, upscale=5)
+    sky_irf = project_irf_on_geom(sky_geom, aeff, fov_frame)
+
+    ref3 = (ref0 + ref1) / 2
+    assert_allclose(ref3, sky_irf.data[:, 1, 1])
 
 
 def test_integrate_project_irf_on_geom():
@@ -1002,4 +1010,3 @@ def test_integrate_project_irf_on_geom():
         (ref4 + ref4) / 2 * omega21,
         bkg_sky.data[0, 2, 1],
     )
-
