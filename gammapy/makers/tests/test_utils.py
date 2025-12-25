@@ -171,11 +171,6 @@ def bkg_3d_custom(symmetry="constant", fov_align="RADEC"):
         data = np.indices((3, 3))[1] + 1
         data = np.stack(2 * [data])
         sky_edges = [-3, -1, 1, 3] * u.deg
-    elif symmetry == "hirez_asymmetric":
-        row = np.repeat([1, 2, 3], 3)[np.newaxis, ...]
-        plane = np.repeat(row, 9, axis=0)[np.newaxis, ...]
-        data = np.repeat(plane, 2, axis=0)
-        sky_edges = np.linspace(-3, 3, 10) * u.deg
     else:
         raise ValueError(f"Unknown value for symmetry: {symmetry}")
 

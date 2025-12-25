@@ -660,12 +660,6 @@ def _get_fov_coord(
 ):
     """Return coord dict in fov_coord."""
     coords = {}
-    #    if use_offset:
-    #        offsets = skycoord.separation(fov_frame.origin)
-    #        if len(fov_frame.shape) == 1:
-    #            coords["offset"] = np.moveaxis(offsets, -1, 0)
-    #        else:
-    #            coords["offset"] = offsets
     if isinstance(fov_frame, FoVICRSFrame) or (
         fov_frame.obstime is fov_frame.origin.obstime
     ):
