@@ -9,13 +9,24 @@ from gammapy.datasets import Datasets
 from gammapy.datasets.actors import DatasetsActor
 from gammapy.datasets.flux_points import _get_reference_model
 from gammapy.maps import MapAxis, Map, RegionGeom
-from gammapy.modeling import Fit
+from gammapy.modeling import Fit, Parameters
 from gammapy.modeling.utils import _parse_datasets
-from gammapy.modeling.models import PiecewiseNormSpectralModel, Models
+from gammapy.modeling.models import (
+    PiecewiseNormSpectralModel,
+    Models,
+    PowerLawNormSpectralModel,
+    TemplateNPredModel,
+    TemplateSpatialModel,
+)
 from gammapy.stats.fit_statistics import GaussianPriorPenalty
+from multiprocessing import Pool
+
 from ..core import Estimator
 from ..flux import FluxEstimator
 from .core import FluxPoints
+
+from scipy.interpolate import interp1d
+
 
 log = logging.getLogger(__name__)
 
@@ -351,9 +362,7 @@ class RegularizedFluxPointsEstimator(Estimator):
         return RegionGeom(region=None, axes=[e_axis])
 
     def compute_flux(self, datasets):
-        res = Fit().run(datasets)
-        if not res.success:
-            raise RuntimeError(f"Flux points fitting failed with {res.message}.")
+        Fit().run(datasets)
 
         map_dict = dict()
         for km, m in enumerate(self.models):
@@ -365,9 +374,29 @@ class RegularizedFluxPointsEstimator(Estimator):
             norm_err_map = Map.from_geom(
                 geom, data=np.array([_.error for _ in parameters]), unit=""
             )
-            map_dict[m.name] = {"norm": norm_map, "norm_err": norm_err_map}
+            stat_ref = datasets.stat_sum()
+            ts_map = Map.from_geom(
+                geom,
+                data=np.array(
+                    [self._compute_ts_param(datasets, stat_ref, p) for p in parameters]
+                ),
+                unit="",
+            )
+
+            map_dict[m.name] = {
+                "norm": norm_map,
+                "norm_err": norm_err_map,
+                "ts": ts_map,
+            }
 
         return map_dict
+
+    @staticmethod
+    def _compute_ts_param(datasets, stat_ref, parameter):
+        with Parameters([parameter]).restore_status():
+            parameter.value = 0
+            stat_null = datasets.stat_sum()
+        return stat_null - stat_ref
 
     def compute_errn_errp(self, datasets):
         map_dict = dict()
@@ -439,10 +468,12 @@ class RegularizedFluxPointsEstimator(Estimator):
             (datasets.stat_sum() - datasets._stat_sum_likelihood())
             / datasets._stat_sum_likelihood(),
         )
+        # print(maps_dict)
+        # maps_dict = deep_update(maps_dict, self.compute_errn_errp(datasets))
+        # print(maps_dict)
 
-        # maps_dict.update(self.compute_errn_errp(datasets, norm_model))
-
-        # maps_dict.update(self.compute_ul(datasets, norm_model))
+        # maps_dict = deep_update(maps_dict, self.compute_ul(datasets))
+        # print(maps_dict)
 
         fp_dict = dict()
         for m in self.models:
@@ -458,3 +489,270 @@ class RegularizedFluxPointsEstimator(Estimator):
             stat_sum_likelihood=datasets._stat_sum_likelihood(),
             stat_sum_penalty=datasets.stat_sum() - datasets._stat_sum_likelihood(),
         )
+
+
+class FluxPointsCollection:
+    """Estimate the flux points from a collection of sources simultaneously.
+
+    Parameters
+    ----------
+    energy_edges : `~astropy.units.Quantity`
+        Energy edges of the flux point bins.
+    models : str or int
+        Source models for which the flux points are computed (others are frozen).
+    dataset : str or int
+        Datasets used to compute the flus points.
+        Datasets must share the same geometry.
+    n_sigma_ul : int
+        Number of sigma to use for upper limit computation. Default is 2.
+    zero_min : int
+        Forbid negative flux points or not (default id True).
+    fit : `Fit`
+        Fit instance specifying the backend and fit options.
+    """
+
+    def __init__(
+        self, energy_edges, models, datasets, n_sigma_ul=2, zero_min=True, fit=None
+    ):
+        for kd, d in enumerate(datasets):
+            if kd == 0:
+                self.geom = d.counts.geom
+            elif d.counts.geom != self.geom:
+                raise ValueError("Inconstistant geometries between datasets")
+        self.n_sigma_ul = n_sigma_ul
+        self.zero_min = zero_min
+
+        if fit is None:
+            fit = Fit()
+            minuit_opts = {"tol": 0.1, "strategy": 1}
+            fit.backend = "minuit"
+            fit.optimize_opts = minuit_opts
+        self.fit = fit
+
+        self.models = models
+        self.ns = len(models)
+
+        # define energy edges
+        self.energy_edges = energy_edges
+        self.ne = len(self.energy_edges)
+        self.e_centers = (energy_edges[:-1] * energy_edges[1:]) ** 0.5
+        self.e_coords = self.geom.get_coord()["energy"]
+
+        for d in datasets:
+            d.npred()  # precompute npred
+        self.datasets = datasets
+        self.fp_datasets = self.prepare_datasets()
+
+        print(
+            "nfree :",
+            len(self.fp_datasets.models.parameters.unique_parameters.free_parameters),
+        )
+
+        udnde = u.Unit("cm-2 s-1 TeV-1")
+        self.fp_results = dict(
+            npred=np.zeros((self.ne - 1, self.ns)),
+            npred_err=np.zeros((self.ne - 1, self.ns)),
+            dnde=np.zeros((self.ne - 1, self.ns)) * udnde,
+            dnde_err=np.zeros((self.ne - 1, self.ns)) * udnde,
+            dnde_ul=np.zeros((self.ne - 1, self.ns)) * udnde,
+            ts=np.zeros((self.ne - 1, self.ns)),
+        )
+
+    def prepare_datasets(self):
+        """define datasets with cached npred models to be renormalized"""
+
+        self.spectral_models = {}
+        for m in self.models:
+            self.spectral_models[m.name] = PowerLawNormSpectralModel()
+            if self.zero_min:
+                self.spectral_models[m.name].norm.min = 0
+            self.spectral_models[m.name].tilt.frozen = True
+
+        fp_datasets = []
+        for d in self.datasets:
+            fp_dataset = d.copy(name=d.name)
+            bkg_model = [d.background_model] if d.background_model else []
+            fp_dataset.models = bkg_model
+            fp_models = []
+            npred_frozen = Map.from_geom(self.geom, dtype=float)
+            for name, ev in d.evaluators.items():
+                if ev.contributes:
+                    npred = Map.from_geom(self.geom, dtype=float)
+                    npred.stack(ev.compute_npred())
+                    if name in Models(self.models).names:
+                        fp_models.append(
+                            TemplateNPredModel(
+                                npred,
+                                name=name + "_" + fp_dataset.name,
+                                spectral_model=self.spectral_models[name],
+                                datasets_names=[fp_dataset.name],
+                            )
+                        )
+                    else:
+                        npred_frozen.stack(npred)
+                bkg_frozen = TemplateNPredModel(
+                    npred_frozen,
+                    name="frozen_" + fp_dataset.name,
+                    datasets_names=[fp_dataset.name],
+                )
+            bkg_frozen.spectral_model.norm.frozen = True
+            fp_dataset.models = Models(fp_models + [bkg_frozen] + bkg_model)
+            fp_datasets.append(fp_dataset)
+        return Datasets(fp_datasets)
+
+    def get_mask(self, ke):
+        mask_fit = Map.from_geom(self.geom, data=True)
+        mask_fit.data &= (self.e_coords >= self.energy_edges[ke]) & (
+            self.e_coords <= self.energy_edges[ke + 1 - self.ne]
+        )
+        return mask_fit
+
+    def set_mask_fit(self, mask_fit):
+        # redefine mask_fit
+        for d in self.fp_datasets:
+            d.mask_fit = mask_fit
+
+    @staticmethod
+    def compute_npred(datasets, param, model):
+        "compute npred within the datasets masks"
+        npred = 0
+        for kd, d in enumerate(datasets):
+            name = model.name + "_" + d.name
+            if d.evaluators[name].contributes:
+                npred_map = Map.from_geom(d.counts.geom)
+                npred_map.stack(d.evaluators[name].compute_npred())
+                npred += np.nansum(npred_map.data * d.mask.data) * param.value
+            # apply mask for npred but only the slice mask_fit for dnde
+        return npred
+
+    @staticmethod
+    def compute_dnde(energy, param, model, mask_fit):
+        "compute differential flux"
+        if isinstance(model.spatial_model, TemplateSpatialModel):
+            spatial_integ = model.spatial_model.integrate_geom(mask_fit.geom)
+            uspatial = spatial_integ.unit
+            spatial_integ.data[~np.isfinite(spatial_integ.data)] = np.nan
+            Ec = mask_fit.geom.axes[0].center
+            spatial_integ = np.nansum(spatial_integ.data * mask_fit.data, axis=(1, 2))
+            interp = interp1d(np.log10(Ec.value), spatial_integ, kind="linear")
+            spatial_integ = interp(np.log10(energy.to(Ec.unit).value)) * uspatial
+
+            spectral_values = model.spectral_model(energy)
+            dnde = spectral_values * spatial_integ * param.value
+        else:
+            dnde = model.spectral_model(energy).squeeze() * param.value
+        return dnde
+
+    @staticmethod
+    def compute_TS(datasets, param):
+        """Test statistic against no source as null hypothesis"""
+        cash = datasets.stat_sum()
+        with Parameters([param]).restore_status():
+            param.value = 0
+            cash0 = datasets.stat_sum()
+        return cash0 - cash
+
+    def compute_flux_point(self, ke):
+        """compute npred, dnde, TS, and ul (if necessasy)"""
+
+        # redefine mask_fit
+        mask_fit = self.get_mask(ke)
+        self.set_mask_fit(mask_fit)
+
+        # fit flux points
+        self.fit.run(self.fp_datasets)
+
+        udnde = u.Unit("cm-2 s-1 TeV-1")
+        fp_results = dict(
+            npred=np.zeros(self.ns),
+            npred_err=np.zeros(self.ns),
+            dnde=np.zeros(self.ns) * udnde,
+            dnde_err=np.zeros(self.ns) * udnde,
+            dnde_ul=np.zeros(self.ns) * udnde,
+            ts=np.zeros(self.ns),
+        )
+        # compute quantities for each sources
+        ks = 0
+        for m, spec_corr in zip(self.models, self.spectral_models.values()):
+            norm_param = spec_corr.norm
+            norm = norm_param.value
+            rel_err = norm_param.error / norm
+
+            # compute npred
+            npred = self.compute_npred(self.fp_datasets, norm_param, m)
+            fp_results["npred"][ks] = npred
+            fp_results["npred_err"][ks] = rel_err * npred
+
+            # compute dnde
+            dnde = self.compute_dnde(self.e_centers[ke], norm_param, m, mask_fit)
+            fp_results["dnde"][ks] = dnde
+            fp_results["dnde_err"][ks] = rel_err * dnde
+
+            # compute TS
+            TSnull = self.compute_TS(self.fp_datasets, norm_param)
+            fp_results["ts"][ks] = TSnull
+
+            # compute ul:
+            if np.sign(TSnull) * np.sqrt(np.abs(TSnull)) < self.n_sigma_ul:
+                res = self.fit.confidence(
+                    datasets=self.fp_datasets,
+                    parameter=norm_param,
+                    sigma=self.n_sigma_ul,
+                )
+                fp_results["dnde_ul"][ks] = (1 + res["errp"] / norm_param.value) * dnde
+            else:
+                fp_results["dnde_ul"][ks] = np.nan * dnde
+            ks += 1
+        return fp_results
+
+    def run(self, processes=1):
+        """Compute flux point in each energy band in parallel over the given number of processes
+
+        Parameters
+        ----------
+        processes : float
+            Number of cores to use.
+            Default is 1 so the evaluation is not done in parallel.
+
+        Returns
+        -------
+        result : dict
+            Dict with results for the flux point
+        """
+        if processes > 1:
+            with Pool(processes=processes) as pool:
+                res = pool.map(self.compute_flux_point, range(self.ne - 1))
+        else:
+            res = [self.compute_flux_point(ke) for ke in range(self.ne - 1)]
+        for ke in range(self.ne - 1):
+            fp_results = res[ke]
+            self.fp_results["npred"][ke, :] = fp_results["npred"]
+            self.fp_results["npred_err"][ke, :] = fp_results["npred_err"]
+            self.fp_results["dnde"][ke, :] = fp_results["dnde"]
+            self.fp_results["dnde_err"][ke, :] = fp_results["dnde_err"]
+            self.fp_results["dnde_ul"][ke, :] = fp_results["dnde_ul"]
+            self.fp_results["ts"][ke, :] = fp_results["ts"]
+        return self.get_flux_points_dict()
+
+    def get_flux_points_dict(self):
+        """get flux points for each source
+
+        Returns
+        -------
+        result : dict
+            Dict of FluxPoints objects.
+        """
+        fp_dict = {}
+        for km, m in enumerate(self.models):
+            table = Table()
+            table["e_min"] = self.energy_edges[:-1].to("TeV")
+            table["e_max"] = self.energy_edges[1:].to("TeV")
+            table["e_ref"] = self.e_centers.to("TeV")
+            table["dnde"] = self.fp_results["dnde"][:, km]
+            table["dnde_err"] = self.fp_results["dnde_err"][:, km]
+            table["dnde_ul"] = self.fp_results["dnde_ul"][:, km]
+            table["ts"] = self.fp_results["ts"][:, km]
+            table.meta["SED_TYPE"] = "dnde"
+            flux_points = FluxPoints.from_table(table, reference_model=m)
+            fp_dict[m.name] = flux_points
+        return fp_dict
