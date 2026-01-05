@@ -921,9 +921,9 @@ class SpectralModel(ModelBase):
 
         def f(x):
             # scale by 1e12 to achieve better precision
-            energy = u.Quantity(x, eunit, copy=COPY_IF_NEEDED)
-            y = self(energy).to_value(value.unit)
-            return 1e12 * (y - value.value)
+            energy = u.Quantity(x, unit=eunit)
+            y = self(energy).to(value.unit)
+            return 1e12 * (y.value - value.value)
 
         roots, res = find_roots(f, energy_min, energy_max, points_scale="log")
         return roots
@@ -1425,7 +1425,9 @@ class BrokenPowerLawSpectralModel(SpectralModel):
         eratio = energy / ebreak
         bpwl[cond] *= (eratio ** (-index1))[cond]
         bpwl[~cond] *= (eratio ** (-index2))[~cond]
-        if bpwl.shape[1] == 1:
+        if len(bpwl) == 1:
+            return bpwl.squeeze()
+        elif bpwl.shape[1] == 1:
             return bpwl.squeeze(axis=1)
         else:
             return bpwl
