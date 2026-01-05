@@ -1,0 +1,35 @@
+If you use Gammapy for work/research presented in a publication (whether
+directly, or as a dependency to another package), we recommend and encourage
+the following citation scheme (see also https://gammapy.org/acknowledging.html):
+- refer to the Gammapy paper as general citation: A&A, 678, A157 (2023) - the bibtex is given below,
+- AND cite the version of Gammapy used (e.g. see https://zenodo.org/records/17814297 for v2.0),
+
+If possible, we propose to add the following acknowledgment in LaTeX:
+
+  This work made use of Gammapy \citep{gammapy:2023}, a community-developed Python package. The Gammapy team
+  acknowledges all Gammapy past and current contributors, as well as all contributors of the main Gammapy dependency
+  libraries: NumPy, SciPy, Astropy, Astropy Regions, iminuit, Matplotlib.
+
+Recommended BibTeX entry for the above citation:
+
+@article{gammapy:2023,
+    author = {{Donath}, Axel and {Terrier}, R\'egis and {Remy}, Quentin and {Sinha}, Atreyee and {Nigro}, Cosimo and
+        {Pintore}, Fabio and {Kh\'elifi}, Bruno and {Olivera-Nieto}, Laura and {Ruiz}, Jose Enrique and
+        {Br\"ugge}, Kai and {Linhoff}, Maximilian and {Contreras}, Jose Luis and {Acero}, Fabio and
+        {Aguasca-Cabot}, Arnau and {Berge}, David and {Bhattacharjee}, Pooja and {Buchner}, Johannes and
+        {Boisson}, Catherine and {Carreto Fidalgo}, David and {Chen}, Andrew and {de Bony de Lavergne}, Mathieu and
+        {de Miranda Cardoso}, Jos\'e Vinicius and {Deil}, Christoph and {F\"u\ss{}ling}, Matthias and
+        {Funk}, Stefan and {Giunti}, Luca and {Hinton}, Jim and {Jouvin}, L\'ea and {King}, Johannes and
+        {Lefaucheur}, Julien and {Lemoine-Goumard}, Marianne and {Lenain}, Jean-Philippe and {L\'opez-Coto}, Rub\'en
+        and {Mohrmann}, Lars and {Morcuende}, Daniel and {Panny}, Sebastian and {Regeard}, Maxime and {Saha}, Lab
+        and {Siejkowski}, Hubert and {Siemiginowska}, Aneta and {Sip"ocz}, Brigitta M. and {Unbehaun}, Tim
+        and {van Eldik}, Christopher and {Vuillaume}, Thomas and {Zanin}, Roberta},
+    title = {Gammapy: A Python package for gamma-ray astronomy},
+    DOI= "10.1051/0004-6361/202346488",
+    url= "https://doi.org/10.1051/0004-6361/202346488",
+    journal = {A\&A},
+    year = 2023,
+    month = 10,
+    volume = 678,
+    pages = "A157",
+}
