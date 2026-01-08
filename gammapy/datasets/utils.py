@@ -66,17 +66,20 @@ def apply_edisp(input_map, edisp):
     """
     # TODO: either use sparse matrix multiplication or something like edisp.is_diagonal
     if edisp is not None:
-        loc = input_map.geom.axes.index("energy_true")
-        data = np.rollaxis(input_map.data, loc, len(input_map.data.shape))
-        data = np.matmul(data, edisp.pdf_matrix)
-        data = np.rollaxis(data, -1, loc)
-        energy_axis = edisp.axes["energy"].copy(name="energy")
+        data = np.einsum("p...,pn...->n...", input_map.data, edisp.pdf_matrix)
+        if (
+            edisp.is_reco_unbinned
+            or input_map.data.shape[:2] == edisp.pdf_matrix.shape[:2]
+        ):
+            energy_axis = edisp.axes["energy"].copy()
+        else:
+            energy_axis = edisp.axes["energy"].copy(name="energy")
     else:
         data = input_map.data
         energy_axis = input_map.geom.axes["energy_true"].copy(name="energy")
 
     geom = input_map.geom.to_image().to_cube(axes=[energy_axis])
-    return Map.from_geom(geom=geom, data=data, unit=input_map.unit)
+    return Map.from_geom(geom=geom, data=data, unit=input_map.unit * u.Unit(edisp.unit))
 
 
 def get_figure(fig, width, height):
