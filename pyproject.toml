@@ -21,7 +21,7 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Astronomy",
 ]
 dependencies = [
-    "numpy>=1.26",
+    "numpy>=1.26,<2.4",
     "scipy>=1.13",
     "astropy>=6.0",
     "regions>=0.9.0",
@@ -106,7 +106,7 @@ docs = [
 include = ["gammapy*"]
 
 [tool.setuptools.package-data]
-"gammapy" = ["../CITATION", "../CITATION.cff"]
+"gammapy" = ["CITATION"]
 "gammapy.analysis" = ["config/*"]
 "gammapy.workflow" = ["config/*"]
 "gammapy.irf.psf.tests" = ["data/*"]
