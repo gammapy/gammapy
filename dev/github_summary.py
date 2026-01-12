@@ -10,7 +10,7 @@ from github import Github, GithubException
 log = logging.getLogger(__name__)
 
 
-class GitHubInfoExtractor:
+class GitHubContributorsExtractor:
     """Class to interact with GitHub and extract PR and issues info tables.
 
     Parameters
@@ -45,115 +45,85 @@ class GitHubInfoExtractor:
         remaining, total = self.github.rate_limiting
         log.info(f"Remaining {remaining} requests over {total} requests.")
 
-    @staticmethod
-    def _get_commits_info(commits):
-        """Builds a dictionary containing the number of commits and the list of unique committers."""
-        result = dict()
-        result["commits_number"] = commits.totalCount
-        committers = set()
-        for commit in commits:
-            if commit.committer:
-                committers.add(commit.committer.login)
-        result["unique_committers"] = list(committers)
-        return result
-
-    @staticmethod
-    def _get_reviews_info(reviews):
-        """Builds a dictionary containing the number of reviews and the list of unique reviewers."""
-        result = dict()
-        result["review_number"] = reviews.totalCount
-        reviewers = set()
-        for review in reviews:
-            if review.user:
-                reviewers.add(review.user.login)
-        result["unique_reviewers"] = list(reviewers)
-        return result
-
-    def _extract_pull_request_info(self, pull_request):
-        """Builds a dictionary containing a list of summary information.
-
-        Parameters
-        ----------
-        pull_request :
-            input pull request object
-
-        Returns
-        -------
-        info : dict
-            the result dictionary
-        """
-        result = dict()
-
-        result["number"] = pull_request.number
-        result["title"] = pull_request.title
-        result["milestone"] = (
-            "" if not pull_request.milestone else pull_request.milestone.title
-        )
-        result["is_merged"] = pull_request.is_merged()
-        creation = pull_request.created_at
-        result["date_creation"] = Time(creation) if creation else None
-        closing = pull_request.closed_at
-        result["date_closed"] = Time(closing) if closing else None
-        result["user_name"] = pull_request.user.name
-        result["user_login"] = pull_request.user.login
-        result["user_email"] = pull_request.user.email
-        result["labels"] = [label.name for label in pull_request.labels]
-        result["changed_files"] = pull_request.changed_files
-        result["base"] = pull_request.base.ref
-
-        # extract commits
-        commits = pull_request.get_commits()
-        result.update(self._get_commits_info(commits))
-        # extract reviews
-        reviews = pull_request.get_reviews()
-        result.update(self._get_reviews_info(reviews))
-
-        return result
-
-    def extract_pull_requests_table(
-        self, state="closed", number_min=1, include_backports=False
+    def extract_contributors_by_milestone(
+        self, milestone_name, state="closed",
     ):
-        """Extract list of Pull Requests and build info table.
+        """Extract list of unique contributors from PRs as per the milestone.
 
          Parameters
          ----------
-        state : str ("closed", "open", "all")
-             state of PRs to extract.
-         number_min : int
-             minimum PR number to include. Default is 0.
-         include_backports : bool
-             Include backport PRs in the table. Default is True.
+         milestone_name :  str
+            Milestone name i.e. 'v1.0'
+         state : str ("closed", "open", "all")
+            State of PRs to extract.
         """
-        pull_requests = self.repo.get_pulls(
-            state=state, sort="created", direction="desc"
-        )
-
-        self.check_requests_number()
-
-        results = []
-
-        for pr in pull_requests:
-            number = pr.number
-            if number <= number_min:
-                log.info(f"Reached minimum PR number {number_min}.")
+        milestones = self.repo.get_milestones(state="all")
+        milestone_obj = None
+        for m in milestones:
+            if m.title == milestone_name:
+                milestone_obj = m
                 break
+        if milestone_obj is None:
+            log.error(f"Milestone '{milestone_name}' not found in repository '{self.repo.full_name}'.")
+            return []
 
-            title = pr.title
-            if not include_backports and "Backport" in title:
-                log.info(f"Pull Request {number} is backport. Skipping")
-                continue
+        # Get PRs filtered by milestone using issues API (GitHub returns PRs as issues)
+        issues = self.repo.get_issues(state=state, milestone=milestone_obj)
 
-            log.info(f"Extracting Pull Request {number}.")
-            try:
-                result = self._extract_pull_request_info(pr)
-            except AttributeError:
-                log.warning(f"Issue with Pull Request {number}. Skipping")
-                continue
-            results.append(result)
-
-        table = Table(results)
-        return table
         self.check_requests_number()
+
+        unique_users = set()
+        num_prs = 0
+        num_closed_issues = 0
+        for issue in issues:
+            if issue.pull_request is None:
+                if issue.state == 'closed':
+                    num_closed_issues += 1
+                continue  # skip issues, only process PRs
+
+            try:
+                pr = self.repo.get_pull(issue.number)
+            # Sometimes PRs are marked that way but cannot be found, because they no longer exist.
+            except GithubException:
+                continue
+
+            # Skip PRs that are closed and not merged
+            if not pr.merged:
+                continue
+
+            if "Backport" in pr.title:
+                continue
+            num_prs += 1
+            log.info(f"Extracting Pull Request {pr.number}.")
+
+            # It is possible that there will be 'authors' such as 'web-flow' which is just a merging action
+            # The extra lines here ignore those users that are not real
+            # Start to add authors
+            if pr.user and pr.user.login not in {"web-flow", "dependabot[bot]", "github-actions[bot]"}:
+                unique_users.add(pr.user.name or pr.user.login)
+
+            # For committers
+            for commit in pr.get_commits():
+                if commit.committer and commit.committer.login not in {"web-flow", "dependabot[bot]",
+                                                                       "github-actions[bot]"}:
+                    # This is required for if a user deletes their account
+                    try:
+                        name = commit.committer.name
+                        login = commit.committer.login
+                    except GithubException:
+                        continue
+                    unique_users.add(name or login)
+
+            # For reviewers
+            for review in pr.get_reviews():
+                if review.user and review.user.login not in {"web-flow", "dependabot[bot]", "github-actions[bot]"}:
+                    unique_users.add(review.user.name or review.user.login)
+
+        return {
+            "contributors": sorted(list(unique_users)),
+            "num_prs": num_prs,
+            "num_closed_issues": num_closed_issues,
+        }
 
 
 @click.group()
@@ -166,96 +136,47 @@ def cli(log_level):
     logging.basicConfig(level=log_level)
     log.setLevel(level=log_level)
 
+@cli.command(
+    "contributors_by_milestone",
+    help="Make a list of contributors for a specific milestone"
+)
+@click.option("--token", default=None, type=str, help="Your GitHub token.")
+@click.option("--repo", default="gammapy/gammapy", type=str, help="The relative repo.")
+@click.option("--milestone", required=True, type=str, help="Comma-separated list of milestones, e.g., '2.0.1,2.1'")
+@click.option("--state", default="closed", type=str, help="Is the issues closed or not.")
+def contributors_by_milestone(repo, token, milestone, state):
+    """List contributors attached to a specific milestone."""
+    extractor = GitHubContributorsExtractor(repo=repo, token=token)
+    milestone_list = [m.strip() for m in milestone.split(",") if m.strip()]
 
-@cli.command("create_pull_request_table", help="Dump a table of all PRs.")
-@click.option("--token", default=None, type=str)
-@click.option("--repo", default="gammapy/gammapy", type=str)
-@click.option("--state", default="closed", type=str)
-@click.option("--number_min", default=4000, type=int)
-@click.option("--filename", default="table_pr.ecsv", type=str)
-@click.option("--overwrite", default=False, type=bool)
-@click.option("--include_backports", default=False, type=bool)
-def create_pull_request_table(
-    repo, token, state, number_min, filename, overwrite, include_backports
-):
-    """Extract PR table and write it to dosk."""
-    extractor = GitHubInfoExtractor(repo=repo, token=token)
-    table = extractor.extract_pull_requests_table(
-        state=state, number_min=number_min, include_backports=include_backports
-    )
-    table.write(filename, overwrite=overwrite)
+    all_users = set()
+    for m in milestone_list:
+        log.info(f"Making list of contributors for milestone '{m}'.")
+        info = extractor.extract_contributors_by_milestone(
+            milestone_name=m,
+            state=state,
+        )
+        users = info['contributors']
+        num_prs = info['num_prs']
+        num_closed_issues = info['num_closed_issues']
+        log.info(f"""
+        For milestone '{m}':
+          - {num_prs} pull requests
+          - {num_closed_issues} closed issues
+          - {len(users)} unique contributors
+        """)
+        all_users.update(users)
 
+    print(f"\nContributors for milestone '{milestone}'\n{'~' * 20}")
+    for user in sorted(all_users):
+        print(f"- {user}")
 
-@cli.command("merged_PR", help="Make a summary of PRs merged with a given milestone")
-@click.argument("filename", type=str, default="table_pr.ecsv")
-@click.argument("milestones", type=str, nargs=-1)
-@click.option("--from_backports", default=False, type=bool)
-def list_merged_PRs(filename, milestones, from_backports):
-    """Make a list of merged PRs."""
-    log.info(
-        f"Make list of merged PRs from milestones {milestones} from file {filename}."
-    )
-    table = Table.read(filename)
-
-    # Keep only merged PRs
-    table = table[table["is_merged"] == True]
-
-    # Keep the requested milestones
-    valid = np.zeros((len(table)), dtype="bool")
-
-    for i, pr in enumerate(table):
-        milestone = milestones[0]
-        if from_backports and "Backport" in pr["title"]:
-            # check that the branch and milestone match
-            if np.all(pr["base"].split(".")[:-1] == milestone.split(".")[:-1]):
-                pattern = r"#(\d+)"
-                parent_pr_number = int(re.search(pattern, pr["title"]).group(1))
-                idx = np.where(table["number"] == parent_pr_number)[0]
-                valid[idx] = True
-        elif pr["milestone"] == milestone:
-            valid[i] = True
-
-    # filter the table and print info
-    table = table[valid]
-    log.info(f"Found {len(table)} merged PRs in the table.")
-
-    unique_names = set()
-    names = table["user_name"]
-    logins = table["user_login"]
-    for name, login in zip(names, logins):
-        unique_names.add(name if name else login)
-
-    unique_committers = set()
-    unique_reviewers = set()
-    for pr in table:
-        for committer in pr["unique_committers"]:
-            unique_committers.add(committer)
-        for reviewer in pr["unique_reviewers"]:
-            unique_reviewers.add(reviewer)
-
-    contributor_names = list(unique_names)
-    log.info(f"Found {len(contributor_names)} contributors in the table.")
-    log.info(f"Found {len(unique_committers)} committers in the table.")
-    log.info(f"namely: {unique_committers}")
-    log.info(f"Found {len(unique_reviewers)} reviewers in the table.")
-    log.info(f"namely: {unique_reviewers}")
-
-    result = "Contributors\n"
-    result += "~~~~~~~~~~~~\n"
-    for name in contributor_names:
-        result += f"- {name}\n"
-
-    result += "\n\nPull Requests\n"
-    result += "~~~~~~~~~~~~~\n\n"
-    result += "This list is incomplete. Small improvements and bug fixes are not listed here.\n"
-
-    for pr in table:
-        number = pr["number"]
-        title = pr["title"]
-        user = pr["user_name"] if pr["user_name"] is not None else pr["user_login"]
-        result += f"- [#{number}] {title} ({user})\n"
-
-    print(result)
+    # Add the names directly to the changelog
+    changelog_file = "docs/release-notes/CHANGELOG.rst"
+    contributors_sorted = sorted(all_users)
+    with open(changelog_file, "a", encoding="utf-8") as f:
+        for name in contributors_sorted:
+            f.write(f"- {name}\n")
 
 
 if __name__ == "__main__":

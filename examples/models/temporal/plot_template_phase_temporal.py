@@ -21,7 +21,9 @@ path = "$GAMMAPY_DATA/tests/phasecurve_LSI_DC.fits"
 t_ref = 43366.275 * u.d
 f0 = 1.0 / (26.7 * u.d)
 
-phase_model = TemplatePhaseCurveTemporalModel.read(path, t_ref, 0.0, f0)
+phase_model = TemplatePhaseCurveTemporalModel.read(
+    path, normalize=False, t_ref=t_ref, phi_ref=0.0, f0=f0
+)
 time_range = [Time("59100", format="mjd"), Time("59200", format="mjd")]
 
 phase_model.plot(time_range, n_points=400)

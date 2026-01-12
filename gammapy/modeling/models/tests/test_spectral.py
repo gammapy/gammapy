@@ -21,6 +21,7 @@ from gammapy.modeling.models import (
     GaussianSpectralModel,
     LogParabolaNormSpectralModel,
     LogParabolaSpectralModel,
+    LogParabola2SpectralModel,
     Model,
     NaimaSpectralModel,
     PiecewiseNormSpectralModel,
@@ -321,6 +322,20 @@ TEST_MODELS = [
         integral_1_10TeV=u.Quantity(27.24066846, "TeV"),
         eflux_1_10TeV=u.Quantity(133.34487, "TeV2"),
     ),
+    dict(
+        name="logpar2",
+        model=LogParabola2SpectralModel.from_log10(
+            alpha=2.3 * u.Unit(""),
+            amplitude=4 / u.cm**2 / u.s / u.TeV,
+            reference=1 * u.TeV,
+            beta=1.151292546497023 * u.Unit(""),
+            escale=10 * u.TeV,
+        ),
+        val_at_2TeV=u.Quantity(1.418847, "cm-2 s-1 TeV-1"),
+        integral_1_10TeV=u.Quantity(4.397409, "cm-2 s-1"),
+        eflux_1_10TeV=u.Quantity(10.505849, "TeV cm-2 s-1"),
+        e_peak=7.408182 * u.TeV,
+    ),
 ]
 
 # Add compound models
@@ -423,6 +438,17 @@ def test_models(spectrum):
     val = model(e_array)
     assert val.shape == e_array.shape
     assert_quantity_allclose(val[0], spectrum["val_at_2TeV"])
+
+
+@requires_dependency("scipy")
+@pytest.mark.parametrize("spectrum", TEST_MODELS, ids=lambda _: _["name"])
+def test_plot_error(spectrum):
+    with mpl_plot_check():
+        if len(spectrum["model"].parameters) == 0:
+            with pytest.raises(NotImplementedError):
+                spectrum["model"].plot_error((1 * u.TeV, 10 * u.TeV))
+        else:
+            spectrum["model"].plot_error((1 * u.TeV, 10 * u.TeV))
 
 
 def test_evaluate():
@@ -592,7 +618,7 @@ def test_to_from_dict_compound():
 
 
 def test_to_from_dict_piecewise_lin():
-    spectrum = TEST_MODELS[-4]
+    spectrum = TEST_MODELS[-5]
     model = spectrum["model"]
     assert spectrum["name"] == "pbpllin"
     model_dict = model.to_dict()
@@ -612,7 +638,7 @@ def test_to_from_dict_piecewise_lin():
 
 
 def test_to_from_dict_piecewise():
-    spectrum = TEST_MODELS[-5]
+    spectrum = TEST_MODELS[-6]
     model = spectrum["model"]
     assert spectrum["name"] == "pbpl"
     model_dict = model.to_dict()
@@ -1285,6 +1311,8 @@ def test_template_ND(tmpdir, caplog):
     assert template.parameters["tilt"].value == 0
     assert_allclose(template([1, 100, 1000] * u.GeV), [1.0, 2.0, 2.0])
 
+    assert template.is_norm_spectral_model
+
     template.parameters["norm"].value = 1
     template.filename = str(tmpdir / "template_ND.fits")
     template.write()
@@ -1296,6 +1324,9 @@ def test_template_ND(tmpdir, caplog):
     assert len(template_new.parameters) == 2
     assert template_new.parameters["norm"].value == 1
     assert template_new.parameters["tilt"].value == 0
+
+    with mpl_plot_check():
+        template.plot_error([1, 1000] * u.GeV)
 
 
 def test_template_ND_no_energy(tmpdir):
@@ -1415,3 +1446,41 @@ def test_vectorized_integrate_spectrum():
             ndecade=20,
             parameter_samples=parameter_samples,
         )
+
+
+def test_plot_error_invalid():
+    ecpl = ExpCutoffPowerLawSpectralModel(
+        index=2.0,
+        reference=1 * u.TeV,
+        amplitude="2.2e-13 TeV-1 s-1 cm-2",
+        lambda_=0.09 / u.TeV,
+        alpha=5.1,
+    )
+    ecpl.index.error = 0.35
+    ecpl.amplitude.error = 0.7e-13
+    ecpl.alpha.error = 3
+    ecpl.lambda_.error = 0.045
+
+    with mpl_plot_check():
+        plt.figure()
+        ecpl.plot([1, 100] * u.TeV, energy_power=2)
+        ecpl.plot_error([1, 100] * u.TeV, energy_power=2)
+        plt.ylim(1e-15, 1e-11)
+        plt.show()
+
+
+def test_bpl_evalaute_array():
+    model = BrokenPowerLawSpectralModel(
+        index1=1.5 * u.Unit(""),
+        index2=2.5 * u.Unit(""),
+        amplitude=4 / u.cm**2 / u.s / u.TeV,
+        ebreak=0.5 * u.TeV,
+    )
+    values = model.evaluate(
+        [0.1, 1] * u.GeV,
+        np.ones(3) * 1.5 * u.Unit(""),
+        np.ones(3) * 2.5 * u.Unit(""),
+        np.ones(3) * 4 / u.cm**2 / u.s / u.TeV,
+        np.ones(3) * 0.5 * u.TeV,
+    )
+    assert values.shape == (2, 3)

@@ -49,7 +49,7 @@ jobs:
           cat $HOME/coverage/sonar_env
 
       - name: Checkout branch or tag
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         if: github.event.workflow_run.event != 'pull_request'
         with:
           repository: ${{ github.event.workflow_run.head_repository.full_name }}
@@ -58,7 +58,7 @@ jobs:
           clean: false
 
       - name: Checkout Pull Request merge result
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         if: github.event.workflow_run.event == 'pull_request'
         with:
           ref: refs/pull/${{ env.PR_NUMBER }}/merge
@@ -79,7 +79,7 @@ jobs:
 
       - name: Sonarqube Scan Branch
         if: github.event.workflow_run.event != 'pull_request'
-        uses: SonarSource/sonarqube-scan-action@v6
+        uses: SonarSource/sonarqube-scan-action@v7
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -90,7 +90,7 @@ jobs:
 
       - name: Sonarqube Scan PR
         if: github.event.workflow_run.event == 'pull_request'
-        uses: SonarSource/sonarqube-scan-action@v6
+        uses: SonarSource/sonarqube-scan-action@v7
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

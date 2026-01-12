@@ -23,6 +23,9 @@ from gammapy.stats import (
 )
 from gammapy.stats.utils import ts_to_sigma
 from .map.core import FluxMaps
+import logging
+
+log = logging.getLogger(__name__)
 
 __all__ = [
     "combine_flux_maps",
@@ -874,6 +877,9 @@ def combine_significance_maps(maps):
     get_combined_significance_maps : same method but computing the significance maps from estimators and datasets.
 
     """
+    if len(maps) < 2:
+        raise ValueError("List of flux maps has less than two elements")
+
     geom = maps[0].ts.geom.to_image()
     ts_sum = Map.from_geom(geom)
     ts_sum_sign = Map.from_geom(geom)
@@ -1453,6 +1459,11 @@ def _get_default_norm(
             norm = Parameter(**norm_kwargs)
         except TypeError as error:
             raise TypeError(f"Invalid dict key for norm init : {error}")
+    if norm is not None and norm.interp == "lin":
+        log.warning(
+            "Linear interpolation should be used with care on the 'norm' parameter. "
+            "We recommend using 'log' interpretation instead."
+        )
     if norm.name != "norm":
         raise ValueError("norm.name is not 'norm'")
     return norm

@@ -268,11 +268,12 @@ class SpectralModel(ModelBase):
             Median, negative, and positive errors
 
         """
-        cdf = stats.norm.cdf
 
-        median = np.percentile(samples, 50, axis=-1)
-        errn = median - np.percentile(samples, 100 * cdf(-n_sigma), axis=-1)
-        errp = np.percentile(samples, 100 * cdf(n_sigma), axis=-1) - median
+        samples[~np.isfinite(samples)] = np.nan
+        cdf = stats.norm.cdf
+        median = np.nanpercentile(samples, 50, axis=-1)
+        errn = median - np.nanpercentile(samples, 100 * cdf(-n_sigma), axis=-1)
+        errp = np.nanpercentile(samples, 100 * cdf(n_sigma), axis=-1) - median
         return u.Quantity(
             [np.atleast_1d(median), np.atleast_1d(errn), np.atleast_1d(errp)],
             unit=samples.unit,
@@ -755,6 +756,11 @@ class SpectralModel(ModelBase):
         ``n_points`` bins between the given bounds.
         """
         from gammapy.estimators.map.core import DEFAULT_UNIT
+
+        if len(self.parameters) == 0:
+            raise NotImplementedError(
+                "plot_error is not defined for models without parameter."
+            )
 
         if self.is_norm_spectral_model:
             sed_type = "norm"
@@ -1408,12 +1414,21 @@ class BrokenPowerLawSpectralModel(SpectralModel):
     @staticmethod
     def evaluate(energy, index1, index2, amplitude, ebreak):
         """Evaluate the model (static function)."""
-        energy = np.atleast_1d(energy)
+        energy = np.atleast_1d(energy)[:, None]
+        index1 = np.atleast_1d(index1)[None, :]
+        index2 = np.atleast_1d(index2)[None, :]
+        amplitude = np.atleast_1d(amplitude)[None, :]
+        ebreak = np.atleast_1d(ebreak)[None, :]
+
         cond = energy < ebreak
         bpwl = amplitude * np.ones(energy.shape)
-        bpwl[cond] *= (energy[cond] / ebreak) ** (-index1)
-        bpwl[~cond] *= (energy[~cond] / ebreak) ** (-index2)
-        return bpwl
+        eratio = energy / ebreak
+        bpwl[cond] *= (eratio ** (-index1))[cond]
+        bpwl[~cond] *= (eratio ** (-index2))[~cond]
+        if bpwl.shape[1] == 1:
+            return bpwl.squeeze(axis=1)
+        else:
+            return bpwl
 
 
 class SmoothBrokenPowerLawSpectralModel(SpectralModel):
@@ -1952,6 +1967,76 @@ class LogParabolaSpectralModel(SpectralModel):
         return reference * np.exp((2 - alpha) / (2 * beta))
 
 
+class LogParabola2SpectralModel(SpectralModel):
+    r"""Spectral log parabola model defined such as the energy scale of the exponent
+    and the reference energy can be different.
+
+    For more information see :ref:`logparabola2-spectral-model`.
+
+    Parameters
+    ----------
+    amplitude : `~astropy.units.Quantity`
+        :math:`\phi_0`. Default is 1e-12 cm-2 s-1 TeV-1.
+    reference : `~astropy.units.Quantity`
+        :math:`E_0`. Default is 10 TeV.
+    alpha : `~astropy.units.Quantity`
+        :math:`\alpha`. Default is 2.
+    beta : `~astropy.units.Quantity`
+        :math:`\beta`. Default is 1.
+    escale : `~astropy.units.Quantity`
+        :math:`E_s`. Default is 1 TeV.
+
+    See Also
+    --------
+    LogParabolaSpectralModel
+    """
+
+    tag = ["LogParabola2SpectralModel", "lp2"]
+    amplitude = Parameter(
+        "amplitude",
+        "1e-12 cm-2 s-1 TeV-1",
+        scale_method="scale10",
+        interp="log",
+    )
+    reference = Parameter("reference", "10 TeV", frozen=True)
+    alpha = Parameter("alpha", 2)
+    beta = Parameter("beta", 1)
+    escale = Parameter("escale", "1 TeV", frozen=True)
+
+    @classmethod
+    def from_log10(cls, amplitude, reference, alpha, beta, escale):
+        """Construct from :math:`log_{10}` parametrization."""
+        beta_ = beta / np.log(10)
+        return cls(
+            amplitude=amplitude,
+            reference=reference,
+            alpha=alpha,
+            beta=beta_,
+            escale=escale,
+        )
+
+    @staticmethod
+    def evaluate(energy, amplitude, reference, alpha, beta, escale):
+        """Evaluate the model (static function)."""
+        xx = energy / reference
+        exponent = -alpha - beta * np.log(energy / escale)
+        return amplitude * np.power(xx, exponent)
+
+    @property
+    def e_peak(self):
+        r"""Spectral energy distribution peak energy (`~astropy.units.Quantity`).
+
+        This is the peak in E^2 x dN/dE and is given by:
+
+        .. math::
+            E_{Peak} = E_{0} \exp{ (2 - \alpha) / (2 * \beta)}
+        """
+        escale = self.escale.quantity
+        alpha = self.alpha.quantity
+        beta = self.beta.quantity
+        return escale * np.exp((2 - alpha) / (2 * beta))
+
+
 class LogParabolaNormSpectralModel(SpectralModel):
     r"""Norm spectral log parabola model.
 
@@ -2178,11 +2263,17 @@ class TemplateNDSpectralModel(SpectralModel):
         super().__init__()
 
     @property
+    def is_norm_spectral_model(self):
+        return self._map.unit == u.Unit("")
+
+    @property
     def map(self):
         """Template map as a `~gammapy.maps.RegionNDMap`."""
         return self._map
 
-    def evaluate(self, energy, **kwargs):
+    def evaluate(self, energy, *args):
+        kwargs = {name: q for name, q in zip(self.default_parameters.names, args)}
+
         coord = {"energy_true": energy}
         coord.update(kwargs)
 
@@ -2192,6 +2283,12 @@ class TemplateNDSpectralModel(SpectralModel):
 
         val = self.map.interp_by_pix(pixels, **self._interp_kwargs)
         return u.Quantity(val, self.map.unit, copy=COPY_IF_NEEDED)
+
+    def __call__(self, energy):
+        kwargs = {par.name: par.quantity for par in self.parameters}
+        kwargs = self._convert_evaluate_unit(kwargs, energy)
+        args = list(kwargs.values())
+        return self.evaluate(energy, *args)
 
     def write(self, overwrite=False, filename=None):
         """

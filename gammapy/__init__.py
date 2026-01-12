@@ -34,8 +34,8 @@ the following sub-packages (e.g. `gammapy.makers`):
 
 __all__ = ["__version__", "song", "__maincitation__", "__acknowledgment__"]
 
+from importlib.resources import files
 from importlib.metadata import PackageNotFoundError, version
-from pathlib import Path
 
 try:
     __version__ = version(__name__)
@@ -82,11 +82,8 @@ def song(karaoke=False):
 # Set the bibtex entry to the article referenced in CITATION.
 def _get_bibtex():
     try:
-        refs = (
-            (Path(__file__).parent.parent / "CITATION")
-            .read_text()
-            .split("@article")[1:]
-        )
+        citation = files("gammapy").joinpath("CITATION").read_text()
+        refs = citation.split("@article")[1:]
         return f"@article{refs[0]}" if refs else ""
     except FileNotFoundError:
         return ""
@@ -97,12 +94,9 @@ __maincitation__ = __bibtex__ = _get_bibtex()
 
 def _get_acknowledgment():
     try:
-        text = (
-            (Path(__file__).parent.parent / "CITATION")
-            .read_text()
-            .split(
-                "If possible, we propose to add the following acknowledgment in LaTeX"
-            )
+        citation = files("gammapy").joinpath("CITATION").read_text()
+        text = citation.split(
+            "If possible, we propose to add the following acknowledgment in LaTeX"
         )
         ackno = text[1].split("\n\n")[1]
         return ackno
