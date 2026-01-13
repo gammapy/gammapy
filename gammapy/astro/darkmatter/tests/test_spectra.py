@@ -38,8 +38,6 @@ def test_primary_flux_interpolation(mass, expected_flux, source, expected_except
         with pytest.raises(expected_exception):
             primflux = PrimaryFlux(channel="aZ", mDM=mass * u.TeV, source=source)
         return
-
-    # casos normales
     primflux = PrimaryFlux(channel="W", mDM=mass * u.TeV, source=source)
     actual = primflux(500 * u.GeV)
     assert_quantity_allclose(actual, expected_flux / u.GeV, rtol=1e-5)
