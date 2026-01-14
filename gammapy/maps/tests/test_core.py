@@ -74,6 +74,10 @@ def test_map_copy(binsz, width, map_type, skydir, axes, unit):
     assert m_copy.data[(0,) * m_copy.data.ndim] == 42
     assert m_copy.data is not m.data
 
+    geom = WcsGeom.create(binsz=1.0, width=10.0)
+    with pytest.raises(ValueError):
+        _ = m.copy(geom=geom)
+
 
 def test_map_from_geom():
     geom = WcsGeom.create(binsz=1.0, width=10.0)
@@ -1108,3 +1112,10 @@ def test_stack():
     m4 = Map.from_geom(geom4)
     with pytest.raises(ValueError):
         _ = Map.from_stack(maps=[m3, m4])
+
+
+def test_quantity():
+    geom = WcsGeom.create(binsz=1.0, width=10.0)
+    m = Map.from_geom(geom)
+    with pytest.raises(TypeError):
+        m.data = 0 * u.deg
