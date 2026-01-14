@@ -1726,7 +1726,10 @@ class Map(abc.ABC):
         geom = maps[0].geom
 
         if axis_name is None and axis is None:
-            axis_name = geom.axes.names[-1]
+            try:
+                axis_name = geom.axes.names[-1]
+            except Exception:
+                raise ValueError("The first map should habe a non-spatial axis")
 
         if axis_name:
             axis = MapAxis.from_stack(axes=[m.geom.axes[axis_name] for m in maps])

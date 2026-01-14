@@ -1089,3 +1089,22 @@ def test_make_mask_geom():
         mask_energy.sum_over_axes(["phase", "freq"]).data.sum(),
         48,
     )
+
+
+def test_stack():
+    geom1 = WcsGeom.create(binsz=1.0, width=10.0)
+    m1 = Map.from_geom(geom1)
+    geom2 = HpxGeom.create(binsz=1.0, width=10.0)
+    m2 = Map.from_geom(geom2)
+
+    with pytest.raises(ValueError):
+        _ = Map.from_stack(maps=[m1, m2])
+
+    energy3 = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=1)
+    geom3 = WcsGeom.create(binsz=1.0, width=10.0, axes=[energy3])
+    m3 = Map.from_geom(geom3)
+    energy4 = MapAxis.from_energy_bounds("10 TeV", "20 TeV", nbin=1)
+    geom4 = WcsGeom.create(binsz=2.0, width=11.0, axes=[energy4])
+    m4 = Map.from_geom(geom4)
+    with pytest.raises(ValueError):
+        _ = Map.from_stack(maps=[m3, m4])
