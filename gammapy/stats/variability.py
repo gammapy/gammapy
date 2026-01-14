@@ -410,7 +410,7 @@ def TimmerKonig_lightcurve_simulator(
 
     Examples
     --------
-    To pass the function to be used in the simlation one can use either the 'lambda' keyword or an extended definition.
+    To pass the function to be used in the simulation one can use either the 'lambda' keyword or an extended definition.
     Parameters of the function can be passed using the 'power_spectrum_params' keyword.
     For example, these are three ways to pass a power law (red noise) with index 2:
 

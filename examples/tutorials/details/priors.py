@@ -358,7 +358,7 @@ model_read.parameters.prior
 # ------------------------------------------------
 #
 # This second example is a form of penalized likelihood.
-# Let's asssume we want to encourage the amplitude to have
+# Let's assume we want to encourage the amplitude to have
 # positive, i.e. physical, values. Instead of setting hard bounds, we can
 # also set a uniform penalisation, which prefers positive values to negatives.
 # For this use case we are going to define a `UniformPenalty`.
@@ -424,7 +424,7 @@ model_weak_prior.parameters["amplitude"].prior = uniform_penalty
 ######################################################################
 # We set the minimum value to zero and the maximum value
 # to infinity. Outside of ]min, max[ the prior statistic will be penalized by
-# a contant value of 2 as given by the penalty parameter.
+# a constant value of 2 as given by the penalty parameter.
 #
 
 uni_prior_stat_sums = []

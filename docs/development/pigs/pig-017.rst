@@ -82,7 +82,7 @@ for the standard logging, but with a different severity level. The choice of the
 Data Model allows for interoperability with provenance information captured from *ctapipe* as well
 as with other astronomical archive services or software providing provenance information in the Virtual
 Observatory framework and with the W3C provenance models. In this optic, the development will be done on
-top of `ctapipe.core.provenance`_, re-using its present capabilities when possible and extending it. The
+top of `ctapipe.core.provenance`_, reusing its present capabilities when possible and extending it. The
 information captured will relate to the execution environment, the overall high-level interface configuration,
 the workflow execution process (i.e the relationships among datasets and processes and the parameter values
 used in each process step), and the serialisations of the intermediate and final datasets or objects produced.

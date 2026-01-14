@@ -794,7 +794,7 @@ def test_reproject_not_aligned():
 
     bkg = Map.read("$GAMMAPY_DATA/tests/irf/bkg_3d_to_reproject.fits.gz")
 
-    # test preserve_counts case for unaligned geom with diffrent bin size
+    # test preserve_counts case for unaligned geom with different bin size
     # and data including nan and zeros
     bkg.data[0, 10:16, 10:16] = np.nan
     bkg.data[0, 4:8, 4:8] = 0

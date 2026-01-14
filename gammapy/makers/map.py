@@ -43,7 +43,7 @@ class MapDatasetMaker(Maker):
         Default is True.
     fov_rotation_step : `~astropy.units.Quantity`, optional
         Maximum error on the rotation angle between AltAz and RaDec frames during background evaluation.
-        Used only when the Background IRF has an AltAz alignement.
+        Used only when the Background IRF has an AltAz alignment.
         Default is 1.0 deg.
 
     Examples
@@ -258,7 +258,7 @@ class MapDatasetMaker(Maker):
                 ) or bkg.unit.is_equivalent(u.Unit("TeV-1 sr-1 transit-1")):
                     bkg = bkg.interp_to_geom(geom, preserve_counts=False)
                     bkg.quantity *= bkg.geom.to_image().solid_angle()[None, :, :]
-                    # multipling by energy bins after take less memory than using bin_volume
+                    # multiplying by energy bins after take less memory than using bin_volume
                     bkg.quantity *= np.diff(bkg.geom.axes["energy"].edges)[
                         :, None, None
                     ]

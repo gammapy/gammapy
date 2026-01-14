@@ -20,8 +20,8 @@ import sys
 import os
 import gammapy
 
-# Get configuration information from setup.cfg
-from configparser import ConfigParser
+# Get project metadata
+from importlib.metadata import metadata
 
 # Sphinx-gallery config
 from sphinx_gallery.sorting import ExplicitOrder
@@ -41,9 +41,8 @@ def setup(app):
     app.add_post_transform(DynamicPRLinkTransform)
 
 
-conf = ConfigParser()
-conf.read([os.path.join(os.path.dirname(__file__), "..", "setup.cfg")])
-setup_cfg = dict(conf.items("metadata"))
+distribution_name= "gammapy"
+gammapy_metadata = metadata(distribution_name)
 
 sys.path.insert(0, os.path.dirname(__file__))
 
@@ -102,6 +101,7 @@ extensions = [
     'sphinx_copybutton',
     "sphinx_design",
     "sphinx_gallery.gen_gallery",
+    "sphinx_changelog",
     "sphinx.ext.doctest",
     "sphinx.ext.mathjax",
     'sphinx.ext.viewcode',
@@ -173,9 +173,9 @@ changelog_links_docpattern = [".*changelog.*", "whatsnew/.*", "release-notes/.*"
 # -- Project information -------------------------------------------------------
 
 # This does not *have* to match the package name, but typically does
-project = setup_cfg["name"]
-author = setup_cfg["author"]
-copyright = "{}, {}".format(datetime.datetime.now().year, setup_cfg["author"])
+project = gammapy_metadata.get('Name')
+author = gammapy_metadata.get('Author-email').split('<')[0].strip()
+copyright = "{}, {}".format(datetime.datetime.now().year, author)
 
 
 version = str(gammapy.__version__)
@@ -340,4 +340,3 @@ sphinx_gallery_conf = {
 html_context = {
     "default_mode": "light",
 }
-

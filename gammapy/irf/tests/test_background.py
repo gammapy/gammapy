@@ -267,11 +267,10 @@ def test_bkg_3d_wrong_units():
 
     wrong_unit = u.cm**2 * u.s
     data = np.ones((2, 3, 3)) * wrong_unit
-    with pytest.raises(ValueError) as error:
+    expected = "Error: (.*) is not an allowed unit. (.*) requires (.*) data quantities."
+
+    with pytest.raises(ValueError, match=expected):
         Background3D(axes=[energy_axis, fov_lon_axis, fov_lat_axis], data=data)
-    assert error.match(
-        "Error: (.*) is not an allowed unit. (.*) requires (.*) data quantities."
-    )
 
 
 def test_bkg_2d_wrong_units():

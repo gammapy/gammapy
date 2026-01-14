@@ -266,7 +266,7 @@ def create_empty_map_dataset_from_irfs(
         if hasattr(observation, "pointing"):
             if observation.pointing.mode is not PointingMode.POINTING:
                 raise NotImplementedError(
-                    "Only datas with fixed pointing in ICRS are supported"
+                    "Only data with fixed pointing in ICRS are supported"
                 )
             position = observation.pointing.fixed_icrs
 
@@ -506,7 +506,7 @@ class MapDataset(Dataset):
         "mask_safe",
         "background",
     ]
-    # TODO: shoule be part of the LazyFitsData no ?
+    # TODO: should be part of the LazyFitsData no ?
     gti = None
     meta_table = None
 
@@ -1912,7 +1912,7 @@ class MapDataset(Dataset):
         if containment_correction:
             if not isinstance(on_region, CircleSkyRegion):
                 raise TypeError(
-                    "Containment correction is only supported for" " `CircleSkyRegion`."
+                    "Containment correction is only supported for `CircleSkyRegion`."
                 )
             elif self.psf is None or isinstance(self.psf, PSFKernel):
                 raise ValueError("No PSFMap set. Containment correction impossible")

@@ -287,9 +287,9 @@ def plot_distribution(
     axes : `~numpy.ndarray` of `~matplotlib.pyplot.Axes`
         Array of Axes.
     result_list : list of dict
-        List of dictionnary that contains the results of `scipy.optimize.curve_fit`. The number of elements in the list
+        List of dictionary that contains the results of `scipy.optimize.curve_fit`. The number of elements in the list
         correspond to the dimension of the non-spatial axis of the map.
-        The dictionnary contains:
+        The dictionary contains:
 
             * `axis_edges` : the edges of the non-spatial axis bin used
             * `param` : the best-fit parameters of the input function `func`
