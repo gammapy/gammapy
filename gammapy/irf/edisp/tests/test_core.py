@@ -120,7 +120,7 @@ class TestEnergyDispersion2D:
             self.edisp.peek()
 
     def test_eq(self):
-        assert not self.edisp2 == self.edisp
+        assert self.edisp2 != self.edisp
         edisp1 = deepcopy(self.edisp)
         assert self.edisp == edisp1
 
