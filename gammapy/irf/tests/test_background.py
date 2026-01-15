@@ -432,7 +432,7 @@ def test_eq(bkg_2d):
     assert bkg1 == bkg_2d
 
     bkg1.data[0][0] = 10
-    assert not bkg1 == bkg_2d
+    assert bkg1 != bkg_2d
 
 
 def test_write_bkg_3d():
