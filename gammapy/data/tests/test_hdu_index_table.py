@@ -62,7 +62,7 @@ def test_hdu_index_table_hd_hap(capfd):
 
     # We test here the std out
     location.info()
-    out, err = capfd.readouterr()
+    out, _ = capfd.readouterr()
     lines = out.split("\n")
     assert len(lines) == 6
 

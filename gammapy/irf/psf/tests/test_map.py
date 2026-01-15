@@ -27,7 +27,7 @@ def fake_psf3d(sigma=0.15 * u.deg, shape="gauss"):
     rad = np.linspace(0, 1.0, 101) * u.deg
     rad_axis = MapAxis.from_edges(rad, name="rad")
 
-    O, R, E = np.meshgrid(offset_axis.center, rad_axis.edges, energy_axis_true.center)
+    _, R, _ = np.meshgrid(offset_axis.center, rad_axis.edges, energy_axis_true.center)
 
     Rmid = 0.5 * (R[:-1] + R[1:])
     if shape == "gauss":

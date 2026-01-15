@@ -305,7 +305,7 @@ class EnergyDispersion2D(IRF):
         figsize : tuple, optional
             Size of the resulting plot. Default is (15, 5).
         """
-        fig, axes = plt.subplots(nrows=1, ncols=3, figsize=figsize)
+        _, axes = plt.subplots(nrows=1, ncols=3, figsize=figsize)
         self.plot_bias(ax=axes[0])
         self.plot_migration(ax=axes[1])
         edisp = self.to_edisp_kernel(offset=self._default_offset[0])

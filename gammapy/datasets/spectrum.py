@@ -244,7 +244,7 @@ class PlotMixin:
             Size of the figure. Default is (16, 4).
 
         """
-        fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=figsize)
+        _, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=figsize)
 
         ax1.set_title("Counts")
         self.plot_counts(ax1)

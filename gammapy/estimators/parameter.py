@@ -462,7 +462,7 @@ class ParameterSensitivityEstimator:
         """Parameter value  matching the target significance."""
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            roots, res = find_roots(
+            roots, _ = find_roots(
                 self._fcn,
                 self.parameter.conf_min,
                 self.parameter.conf_max,
