@@ -1,0 +1,1 @@
+Apply cleaning suggestions from SonarCube (use of !=)

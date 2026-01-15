@@ -1307,7 +1307,7 @@ def approximate_profile_map(
     except NameError:
         pass
 
-    if not sqrt_ts_threshold_ul == "ignore" and sqrt_ts_threshold_ul is not None:
+    if sqrt_ts_threshold_ul != "ignore" and sqrt_ts_threshold_ul is not None:
         mask_ul = (flux_map.sqrt_ts.data < sqrt_ts_threshold_ul) & ~np.isnan(
             flux_map.dnde_ul.data
         )

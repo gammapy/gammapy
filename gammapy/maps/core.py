@@ -109,7 +109,7 @@ class Map(abc.ABC):
         if isinstance(value, u.Quantity):
             raise TypeError("Map data must be a Numpy array. Set unit separately")
 
-        if not value.shape == self.geom.data_shape:
+        if value.shape != self.geom.data_shape:
             try:
                 value = np.broadcast_to(value, self.geom.data_shape, subok=True)
             except ValueError as exc:
@@ -1142,7 +1142,7 @@ class Map(abc.ABC):
         if not geom.is_image and geom.axes != geom3d.axes:
             for base_ax, target_ax in zip(geom3d.axes, geom.axes):
                 base_factor = base_ax.bin_width.min() / target_ax.bin_width.min()
-                if not base_factor >= precision_factor:
+                if base_factor < precision_factor:
                     factor = precision_factor / base_factor
                     factor = int(np.ceil(factor))
                     output_map = output_map.upsample(
@@ -1502,7 +1502,7 @@ class Map(abc.ABC):
         """
         if "geom" in kwargs:
             geom = kwargs["geom"]
-            if not geom.data_shape == self.geom.data_shape:
+            if geom.data_shape != self.geom.data_shape:
                 raise ValueError(
                     "Can't copy and change data size of the map. "
                     f" Current shape {self.geom.data_shape},"
@@ -1726,7 +1726,10 @@ class Map(abc.ABC):
         geom = maps[0].geom
 
         if axis_name is None and axis is None:
-            axis_name = geom.axes.names[-1]
+            try:
+                axis_name = geom.axes.names[-1]
+            except Exception:
+                raise ValueError("The first map should habe a non-spatial axis")
 
         if axis_name:
             axis = MapAxis.from_stack(axes=[m.geom.axes[axis_name] for m in maps])
@@ -1740,7 +1743,7 @@ class Map(abc.ABC):
             else:
                 m_geom = m.geom
 
-            if not m_geom == geom:
+            if m_geom != geom:
                 raise ValueError(f"Image geometries not aligned: {m.geom} and {geom}")
 
             data.append(m.quantity.to_value(maps[0].unit))
@@ -2023,7 +2026,7 @@ class Map(abc.ABC):
             The map with axes re-ordered.
         """
         old_axes = self.geom.axes
-        if not set(old_axes.names) == set(axes_names):
+        if set(old_axes.names) != set(axes_names):
             raise ValueError(f"{old_axes.names} is not compatible with {axes_names}")
 
         new_axes = [old_axes[_] for _ in axes_names]

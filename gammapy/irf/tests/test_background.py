@@ -432,7 +432,7 @@ def test_eq(bkg_2d):
     assert bkg1 == bkg_2d
 
     bkg1.data[0][0] = 10
-    assert not bkg1 == bkg_2d
+    assert bkg1 != bkg_2d
 
 
 def test_write_bkg_3d():
@@ -449,8 +449,8 @@ def test_write_bkg_3d():
         unit=u.Unit("s-1 MeV-1 sr-1"),
         fov_alignment=FoVAlignment.ALTAZ,
     )
-    hduBackground = bg_3d.to_table_hdu()
-    hduBackground.writeto("background.fits", overwrite=True)
+    hdu_background = bg_3d.to_table_hdu()
+    hdu_background.writeto("background.fits", overwrite=True)
     bg = Background3D.read("background.fits", hdu="BACKGROUND")
 
     assert bg.fov_alignment.value == "ALTAZ"
