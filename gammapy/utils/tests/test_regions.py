@@ -32,6 +32,7 @@ from gammapy.utils.regions import (
     PolygonPointsSkyRegion,
     PolygonPointsPixelRegion,
     extract_bright_star_regions,
+    make_grid_rectangle_sky_regions,
 )
 
 from gammapy.maps import WcsGeom
@@ -228,3 +229,13 @@ def test_star_exclusion_known_field():
     )
     regions = extract_bright_star_regions(geom)
     assert len(regions) == 2
+
+
+def test_make_grid_rectangle_sky_regions():
+    geom = WcsGeom.create(skydir=(0, 0), width=(20, 10), binsz=0.05, frame="galactic")
+    regions = make_grid_rectangle_sky_regions(geom, 5, 6)
+    assert len(regions) == 30
+    assert_allclose(regions[0].center.l, 8.0 * u.deg, rtol=1e-3)
+    assert_allclose(regions[0].center.b, -4.16667 * u.deg, rtol=1e-3)
+    assert_allclose(regions[0].width, 4.0 * u.deg, rtol=1e-3)
+    assert_allclose(regions[0].height, 1.66667 * u.deg, rtol=1e-3)
