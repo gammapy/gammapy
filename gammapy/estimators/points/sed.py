@@ -571,7 +571,11 @@ class FluxPointsCollection:
         fp_datasets = []
         for d in self.datasets:
             fp_dataset = d.copy(name=d.name)
-            bkg_model = [d.background_model] if d.background_model else []
+            if d.background_model:
+                bkg_model = [d.background_model.copy(name=d.background_model.name)]
+                bkg_model[0].freeze()
+            else:
+                bkg_model = []
             fp_dataset.models = bkg_model
             fp_models = []
             npred_frozen = Map.from_geom(self.geom, dtype=float)
