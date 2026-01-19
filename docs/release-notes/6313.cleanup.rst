@@ -1,1 +1,0 @@
-Apply cleaning suggestions from SonarCube (use of _ for unused variables)
