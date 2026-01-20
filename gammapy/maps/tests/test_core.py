@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
@@ -1101,7 +1102,7 @@ def test_stack():
     geom2 = HpxGeom.create(binsz=1.0, width=10.0)
     m2 = Map.from_geom(geom2)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="have at least one non-spatial axis"):
         _ = Map.from_stack(maps=[m1, m2])
 
     energy3 = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=1)
@@ -1110,8 +1111,12 @@ def test_stack():
     energy4 = MapAxis.from_energy_bounds("10 TeV", "20 TeV", nbin=1)
     geom4 = WcsGeom.create(binsz=2.0, width=11.0, axes=[energy4])
     m4 = Map.from_geom(geom4)
-    with pytest.raises(ValueError):
+
+    with pytest.raises(ValueError, match="Image geometries not aligned"):
         _ = Map.from_stack(maps=[m3, m4])
+
+    with pytest.raises(KeyError, match="not in list of axis names"):
+        _ = Map.from_stack(maps=[m3, m4], axis_name="reco_energy")
 
 
 def test_quantity():

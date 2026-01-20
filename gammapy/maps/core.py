@@ -1725,15 +1725,16 @@ class Map(abc.ABC):
         """
         geom = maps[0].geom
 
-        if axis_name is None and axis is None:
-            try:
-                axis_name = geom.axes.names[-1]
-            except Exception:
-                raise ValueError("The first map should habe a non-spatial axis")
+        if geom.is_image:
+            raise ValueError(
+                "Map.from_stack requires that maps have at least one non-spatial axis"
+            )
 
-        if axis_name:
-            axis = MapAxis.from_stack(axes=[m.geom.axes[axis_name] for m in maps])
-            geom = geom.drop(axis_name=axis_name)
+        if axis_name is None and axis is None:
+            axis_name = geom.axes.names[-1]
+
+        axis = MapAxis.from_stack(axes=[m.geom.axes[axis_name] for m in maps])
+        geom = geom.drop(axis_name=axis_name)
 
         data = []
 
