@@ -1733,8 +1733,9 @@ class Map(abc.ABC):
         if axis_name is None and axis is None:
             axis_name = geom.axes.names[-1]
 
-        axis = MapAxis.from_stack(axes=[m.geom.axes[axis_name] for m in maps])
-        geom = geom.drop(axis_name=axis_name)
+        if axis_name:
+            axis = MapAxis.from_stack(axes=[m.geom.axes[axis_name] for m in maps])
+            geom = geom.drop(axis_name=axis_name)
 
         data = []
 
