@@ -119,7 +119,15 @@ def test_region_circle_to_ellipse():
 
 
 def test_get_centroid():
-    vertices = SkyCoord([0, 0, 1, 1], [0, 1, 1, 0], unit="deg", frame="icrs")
+    vertices = SkyCoord(
+        [
+            (0, 0),
+            (0, 1),
+            (1, 1),
+            (1, 0),
+        ],
+        unit="deg",
+    )
 
     expected_centroid = SkyCoord(0.5 * u.deg, 0.5 * u.deg)
 
@@ -130,7 +138,7 @@ def test_get_centroid():
 
 
 def test_polygon_points_sky_region_init():
-    vertices = SkyCoord([0, 0, 1, 1], [0, 1, 1, 0], unit="deg", frame="icrs")
+    vertices = SkyCoord([(0, 0), (0, 1), (1, 1), (1, 0)], unit="deg")
     region = PolygonPointsSkyRegion(vertices)
     assert np.all(region.vertices == vertices)
     assert isinstance(region.meta, RegionMeta)
@@ -141,7 +149,7 @@ def test_polygon_points_sky_region_init():
 
 
 def test_polygon_points_sky_region_to_pixel_to_sky():
-    vertices = SkyCoord([0, 0, 1, 1], [0, 1, 1, 0], unit="deg", frame="icrs")
+    vertices = SkyCoord([(0, 0), (0, 1), (1, 1), (1, 0)], unit="deg")
     region = PolygonPointsSkyRegion(vertices)
     wcs = WCS(naxis=2)
     wcs.wcs.crpix = [0, 0]
