@@ -123,7 +123,7 @@ class TestSourceCatalogObjectGammaCat:
         source = gammacat[ref["name"]]
         spectral_model = source.spectral_model()
 
-        e_min, e_max, e_inf = [1, 10, 1e10] * u.TeV
+        e_min, _, _ = [1, 10, 1e10] * u.TeV
 
         dnde, dnde_errn, dnde_errp = spectral_model.evaluate_error(e_min)
 
