@@ -1712,11 +1712,11 @@ class Map(abc.ABC):
         maps : list of `Map` objects
             List of maps.
         axis : `MapAxis`, optional
-            If a `MapAxis` is provided the maps are stacked along the last data
+            If a `MapAxis` is provided, the maps are stacked along the last data
             axis and the new axis is introduced. Default is None.
         axis_name : str, optional
-            If an axis name is as string the given the maps are stacked along
-            the given axis name.
+            If an axis name is given, the maps are stacked along
+            the given axis name. Default is None.
 
         Returns
         -------
@@ -1725,12 +1725,11 @@ class Map(abc.ABC):
         """
         geom = maps[0].geom
 
-        if geom.is_image:
-            raise ValueError(
-                "Map.from_stack requires that maps have at least one non-spatial axis"
-            )
-
         if axis_name is None and axis is None:
+            if geom.is_image:
+                raise ValueError(
+                    "Map.from_stack requires that maps have at least one non-spatial axis"
+                )
             axis_name = geom.axes.names[-1]
 
         if axis_name:
