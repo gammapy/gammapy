@@ -1232,13 +1232,13 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
         kwargs_point : dict, optional
             Keyword arguments passed to `~matplotlib.lines.Line2D` for plotting
             of point sources. Default is None.
-        path_effect : `~matplotlib.patheffects.PathEffect`, optional
+        path_effect : `~matplotlib.patheffects`, optional
             Path effect applied to artists and lines. Default is None.
         size_factor : float, optional
             Factor applied to the size of the model
             If not specified, the defaults for the models will be used.
         **kwargs : dict
-            Keyword arguments passed to `~matplotlib.artists.Artist`.
+            Keyword arguments passed to `~regions.PixelRegion.as_artist`.
 
         Returns
         -------
@@ -1270,21 +1270,19 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
 
         Parameters
         ----------
-        ax : `~astropy.visualization.WCSAxes`, optional
+        ax : `~astropy.visualization.wcsaxes.WCSAxes`, optional
             Axes to plot on. If no axes are given, an all-sky WCS
             is chosen using a CAR projection. Default is None.
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.pyplot.scatter`.
 
-
         Returns
         -------
-        ax : `~astropy.visualization.WcsAxes`
+        ax : `~astropy.visualization.wcsaxes.WCSAxes`
             WCS axes.
 
         Examples
         --------
-
         >>> from gammapy.datasets import MapDataset
         >>> from gammapy.catalog import SourceCatalog3FHL
         >>> fermi_dataset = MapDataset.read(
