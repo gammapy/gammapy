@@ -3,10 +3,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
-from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.table import Table
-from gammapy.data import Observation
-from gammapy.data.pointing import FixedPointingInfo
 from gammapy.datasets import (
     Datasets,
     FluxPointsDataset,
@@ -16,14 +13,9 @@ from gammapy.datasets import (
 from gammapy.datasets.spectrum import SpectrumDataset
 from gammapy.estimators import FluxPoints, FluxPointsEstimator
 from gammapy.estimators.utils import get_rebinned_axis
-from gammapy.irf import EDispKernelMap, EffectiveAreaTable2D, load_irf_dict_from_file
-from gammapy.makers import MapDatasetMaker
-from gammapy.makers.utils import make_map_exposure_true_energy
 from gammapy.maps import MapAxis, RegionGeom, RegionNDMap, WcsGeom
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
-    ExpCutoffPowerLawSpectralModel,
-    FoVBackgroundModel,
     GaussianSpatialModel,
     Models,
     PiecewiseNormSpectralModel,
@@ -43,64 +35,21 @@ def fermi_datasets():
     return Datasets.read(filename=filename, filename_models=filename_models)
 
 
-# TODO: use pre-generated data instead
-def simulate_spectrum_dataset(model, random_state=0):
-    energy_edges = np.logspace(-0.5, 1.5, 21) * u.TeV
-    energy_axis = MapAxis.from_edges(energy_edges, interp="log", name="energy")
-    energy_axis_true = energy_axis.copy(name="energy_true")
-
-    aeff = EffectiveAreaTable2D.from_parametrization(energy_axis_true=energy_axis_true)
-
-    bkg_model = SkyModel(
-        spectral_model=PowerLawSpectralModel(
-            index=2.5, amplitude="1e-12 cm-2 s-1 TeV-1"
-        ),
-        name="background",
-    )
-    bkg_model.spectral_model.amplitude.frozen = True
-    bkg_model.spectral_model.index.frozen = True
-
-    geom = RegionGeom.create(region="icrs;circle(0, 0, 0.1)", axes=[energy_axis])
-    acceptance = RegionNDMap.from_geom(geom=geom, data=1)
-    edisp = EDispKernelMap.from_diagonal_response(
-        energy_axis=energy_axis,
-        energy_axis_true=energy_axis_true,
-        geom=geom,
-    )
-
-    geom_true = RegionGeom.create(
-        region="icrs;circle(0, 0, 0.1)", axes=[energy_axis_true]
-    )
-    exposure = make_map_exposure_true_energy(
-        pointing=SkyCoord("0d", "0d"), aeff=aeff, livetime=100 * u.h, geom=geom_true
-    )
-
-    mask_safe = RegionNDMap.from_geom(geom=geom, dtype=bool)
-    mask_safe.data += True
-
-    acceptance_off = RegionNDMap.from_geom(geom=geom, data=5)
-    dataset = SpectrumDatasetOnOff(
-        name="test_onoff",
-        exposure=exposure,
-        acceptance=acceptance,
-        acceptance_off=acceptance_off,
-        edisp=edisp,
-        mask_safe=mask_safe,
-    )
-    dataset.models = bkg_model
-    bkg_npred = dataset.npred_signal()
-
-    dataset.models = model
-    dataset.fake(
-        random_state=random_state,
-        npred_background=bkg_npred,
-    )
-    return dataset
-
-
-def create_fpe(model):
-    model = SkyModel(spectral_model=model, name="source")
-    dataset = simulate_spectrum_dataset(model)
+def create_fpe(spectral_type):
+    if spectral_type == "pl":
+        dataset = SpectrumDatasetOnOff.read(
+            "$GAMMAPY_DATA/datasets/simulations/simulated_spectrum_dataset_PL.fits"
+        )
+        model = Models.read(
+            "$GAMMAPY_DATA/datasets/simulations/simulated_spectrum_dataset_PL_model.yaml"
+        )
+    elif spectral_type == "ecpl":
+        dataset = SpectrumDatasetOnOff.read(
+            "$GAMMAPY_DATA/datasets/simulations/simulated_spectrum_dataset_ECPL.fits"
+        )
+        model = Models.read(
+            "$GAMMAPY_DATA/datasets/simulations/simulated_spectrum_dataset_ECPL_model.yaml"
+        )
     energy_edges = [0.1, 1, 10, 100] * u.TeV
     dataset.models = model
     fpe = FluxPointsEstimator(
@@ -114,46 +63,16 @@ def create_fpe(model):
     return datasets, fpe
 
 
-def simulate_map_dataset(random_state=0, name=None):
-    irfs = load_irf_dict_from_file(
-        "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
-    )
-
-    skydir = SkyCoord("0 deg", "0 deg", frame="galactic")
-    pointing = FixedPointingInfo(fixed_icrs=skydir.icrs)
-    energy_edges = np.logspace(-1, 2, 15) * u.TeV
-    energy_axis = MapAxis.from_edges(edges=energy_edges, name="energy", interp="log")
-
-    geom = WcsGeom.create(
-        skydir=skydir, width=(4, 4), binsz=0.1, axes=[energy_axis], frame="galactic"
-    )
-
-    gauss = GaussianSpatialModel(
-        lon_0="0 deg", lat_0="0 deg", sigma="0.4 deg", frame="galactic"
-    )
-    pwl = PowerLawSpectralModel(amplitude="1e-11 cm-2 s-1 TeV-1")
-    skymodel = SkyModel(spatial_model=gauss, spectral_model=pwl, name="source")
-
-    obs = Observation.create(
-        pointing=pointing,
-        livetime=1 * u.h,
-        irfs=irfs,
-        location=EarthLocation(lon="-70d18m58.84s", lat="-24d41m0.34s", height="2000m"),
-    )
-    empty = MapDataset.create(geom, name=name)
-    maker = MapDatasetMaker(selection=["exposure", "background", "psf", "edisp"])
-    dataset = maker.run(empty, obs)
-
-    bkg_model = FoVBackgroundModel(dataset_name=dataset.name)
-
-    dataset.models = [bkg_model, skymodel]
-    dataset.fake(random_state=random_state)
-    return dataset
-
-
 @pytest.fixture(scope="session")
 def fpe_map_pwl():
-    dataset_1 = simulate_map_dataset(name="test-map-pwl")
+    dataset_1 = MapDataset.read(
+        "$GAMMAPY_DATA/datasets/simulations/simulated_map_dataset.fits",
+        name="test-map-pwl",
+    )
+    models = Models.read(
+        "$GAMMAPY_DATA/datasets/simulations/simulated_map_dataset_model.yaml"
+    )
+    dataset_1.models = models
     dataset_2 = dataset_1.copy(name="test-map-pwl-2")
     dataset_2.models = dataset_1.models
 
@@ -174,7 +93,14 @@ def fpe_map_pwl():
 @pytest.fixture(scope="session")
 def fpe_map_pwl_ray():
     """duplicate of fpe_map_pwl to avoid fails due to execution order"""
-    dataset_1 = simulate_map_dataset(name="test-map-pwl")
+    dataset_1 = MapDataset.read(
+        "$GAMMAPY_DATA/datasets/simulations/simulated_map_dataset.fits",
+        name="test-map-pwl",
+    )
+    models = Models.read(
+        "$GAMMAPY_DATA/datasets/simulations/simulated_map_dataset_model.yaml"
+    )
+    dataset_1.models = models
     dataset_2 = dataset_1.copy(name="test-map-pwl-2")
     dataset_2.models = dataset_1.models
 
@@ -194,7 +120,13 @@ def fpe_map_pwl_ray():
 
 @pytest.fixture(scope="session")
 def fpe_map_pwl_reoptimize():
-    dataset = simulate_map_dataset()
+    dataset = MapDataset.read(
+        "$GAMMAPY_DATA/datasets/simulations/simulated_map_dataset.fits"
+    )
+    models = Models.read(
+        "$GAMMAPY_DATA/datasets/simulations/simulated_map_dataset_model.yaml"
+    )
+    dataset.models = models
     energy_edges = [1, 10] * u.TeV
     dataset.models.parameters["lon_0"].frozen = True
     dataset.models.parameters["lat_0"].frozen = True
@@ -211,12 +143,12 @@ def fpe_map_pwl_reoptimize():
 
 @pytest.fixture(scope="session")
 def fpe_pwl():
-    return create_fpe(PowerLawSpectralModel())
+    return create_fpe("pl")
 
 
 @pytest.fixture(scope="session")
 def fpe_ecpl():
-    return create_fpe(ExpCutoffPowerLawSpectralModel(lambda_="1 TeV-1"))
+    return create_fpe("ecpl")
 
 
 def test_str(fpe_pwl):
@@ -515,10 +447,13 @@ def test_flux_points_estimator_no_norm_scan(fpe_pwl, tmpdir):
 
 
 def test_no_likelihood_contribution():
-    dataset = simulate_spectrum_dataset(
-        SkyModel(spectral_model=PowerLawSpectralModel(), name="source")
+    dataset = SpectrumDatasetOnOff.read(
+        "$GAMMAPY_DATA/datasets/simulations/simulated_spectrum_dataset_PL.fits"
     )
-
+    models = Models.read(
+        "$GAMMAPY_DATA/datasets/simulations/simulated_spectrum_dataset_PL_model.yaml"
+    )
+    dataset.models = models
     dataset_2 = dataset.slice_by_idx(slices={"energy": slice(0, 5)})
 
     dataset.mask_safe = RegionNDMap.from_geom(dataset.counts.geom, dtype=bool)
@@ -565,9 +500,7 @@ def test_mask_shape():
 
 
 def test_run_pwl_parameter_range(fpe_pwl):
-    pl = PowerLawSpectralModel(amplitude="1e-16 cm-2s-1TeV-1")
-
-    datasets, fpe = create_fpe(pl)
+    datasets, fpe = create_fpe("pl")
 
     fp = fpe.run(datasets)
 
@@ -604,16 +537,14 @@ def test_run_pwl_parameter_range(fpe_pwl):
 
 
 def test_flux_points_estimator_small_edges():
-    pl = PowerLawSpectralModel(amplitude="1e-11 cm-2s-1TeV-1")
-
-    datasets, fpe = create_fpe(pl)
+    datasets, fpe = create_fpe("pl")
 
     fpe.energy_edges = datasets[0].counts.geom.axes["energy"].upsample(3).edges[1:4]
     fpe.selection_optional = []
 
     fp = fpe.run(datasets)
 
-    assert_allclose(fp.ts.data[0, 0, 0], 2156.96959291)
+    assert_allclose(fp.ts.data[0, 0, 0], 40.09894589584292)
     assert np.isnan(fp.ts.data[1, 0, 0])
     assert np.isnan(fp.npred.data[1, 0, 0])
 
@@ -860,7 +791,7 @@ def test_fpe_diff_lengths():
 
 
 def test_resample_axis():
-    ds, fpe = create_fpe(PowerLawSpectralModel())
+    ds, fpe = create_fpe("pl")
     flux_points = fpe.run(ds)
     axis_new = get_rebinned_axis(flux_points, method="fixed-bins", group_size=3)
     flux_new = flux_points.resample_axis(axis_new)
@@ -868,7 +799,7 @@ def test_resample_axis():
 
 
 def test_warning_for_bad_model(caplog):
-    ds, fpe = create_fpe(PowerLawSpectralModel())
+    ds, fpe = create_fpe("pl")
     spectral_model = PowerLawSpectralModel()
     spectral_model.amplitude.value = -3e-14
     ds[0].models = SkyModel(spectral_model, name="source")
