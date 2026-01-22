@@ -606,3 +606,28 @@ class GaussianPriorPenalty(FitStatisticPenalty):
         ]
         Q = diags(diagonals, [0, -1, 1]).toarray()
         return cls.from_precision(parameters, Q, mean=mean, lambda_=lambda_)
+
+    @classmethod
+    def from_method(cls, parameters, method, **method_kwargs):
+        """Create from a specific method
+
+        Parameters
+        ----------
+        parameters: list of `~gammapy.modeling.Parameter`
+            Parameters to which the penalty is applied.
+        method: str
+            Option are precision, diagonal, smoothness, L2
+            which call `from_precision`, `from_diagonal`, `SmoothnessPenalty`, `L2_penalty` methods respectively
+        method_kwargs: dict
+            method specific arguments.
+        """
+        if method == "precision":
+            return cls.from_precision(parameters, **method_kwargs)
+        elif method == "diagonal":
+            return cls.from_diagonal(parameters, **method_kwargs)
+        elif method == "smoothness":
+            return cls.SmoothnessPenalty(parameters, **method_kwargs)
+        elif method == "L2":
+            return cls.L2_penalty(parameters, **method_kwargs)
+        else:
+            raise NotImplementedError

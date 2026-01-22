@@ -418,16 +418,31 @@ def test_gaussian_prior_penalty():
 
     norm_model = PiecewiseNormSpectralModel(energy=np.geomspace(0.1, 10, 5) * u.TeV)
 
-    penalty = GaussianPriorPenalty.L2_penalty(
-        norm_model.parameters, mean=0.0, lambda_=2
+    penalty = GaussianPriorPenalty.from_method(
+        norm_model.parameters, "L2", mean=0.0, lambda_=2
     )
     stat_sum = penalty.stat_sum()
     assert_allclose(stat_sum, 10)
 
     norm_model.parameters.value = [0.0, 1.0, 0.0, 1.0, 0]
-    penalty = GaussianPriorPenalty.SmoothnessPenalty(norm_model.parameters, lambda_=0.5)
+    penalty = GaussianPriorPenalty.from_method(
+        norm_model.parameters, "smoothness", lambda_=0.5
+    )
     stat_sum = penalty.stat_sum()
     assert_allclose(stat_sum, 2)
     assert_allclose(penalty._inverse_covariance[1], [-1, 2, -1, 0, 0], atol=1e-7)
     assert_allclose(penalty._inverse_covariance[3], [0, 0, -1, 2, -1], atol=1e-7)
     assert_allclose(penalty._inverse_covariance[4], [0, 0, 0, -1, 2], atol=1e-7)
+
+    penalty = GaussianPriorPenalty.from_method(
+        norm_model.parameters, "diagonal", sigma=2, lambda_=0.5
+    )
+    stat_sum = penalty.stat_sum()
+    assert_allclose(stat_sum, 0.25)
+
+    penalty = GaussianPriorPenalty.from_method(
+        norm_model.parameters, "precision", precision=2 * np.eye(5), lambda_=0.5
+    )
+    stat_sum = penalty.stat_sum()
+    assert_allclose(stat_sum, 2)
+    assert_allclose(penalty._inverse_covariance, 2 * np.eye(5))
