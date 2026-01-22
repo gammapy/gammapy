@@ -22,6 +22,7 @@ __all__ = [
     "WStatFitStatistic",
     "Chi2FitStatistic",
     "Chi2AsymmetricErrorFitStatistic",
+    "GaussianPriorPenalty",
 ]
 
 
