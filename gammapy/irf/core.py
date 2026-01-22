@@ -9,7 +9,7 @@ from astropy import units as u
 from astropy.io import fits
 from astropy.table import Table
 from astropy.utils import lazyproperty
-from gammapy.maps import Map, MapAxes, MapAxis, RegionGeom
+from gammapy.maps import Map, MapAxes, MapAxis, RegionGeom, LabelMapAxis
 from gammapy.utils.compat import COPY_IF_NEEDED
 from gammapy.utils.integrate import trapz_loglog
 from gammapy.utils.interpolation import (
@@ -109,6 +109,11 @@ class IRF(metaclass=abc.ABCMeta):
         self.interp_kwargs = interp_kwargs
 
     @property
+    def is_reco_unbinned(self):
+        """Whether the IRF is reco binned."""
+        return isinstance(self.axes["energy"], LabelMapAxis)
+
+    @property
     @abc.abstractmethod
     def tag(self):
         pass
@@ -160,8 +165,7 @@ class IRF(metaclass=abc.ABCMeta):
 
         if np.shape(value) != required_shape:
             raise ValueError(
-                f"data shape {value.shape} does not match"
-                f"axes shape {required_shape}"
+                f"data shape {value.shape} does not matchaxes shape {required_shape}"
             )
 
         self._data = value
@@ -669,6 +673,16 @@ class IRFMap:
         self.exposure_map = exposure_map
         # TODO: only allow for limited set of additional axes?
         irf_map.geom.axes.assert_names(self.required_axes, allow_extra=True)
+
+    @property
+    def axes(self):
+        """`MapAxes`."""
+        return self._irf_map.geom.axes
+
+    @property
+    def is_reco_unbinned(self):
+        """Whether the IRF is reco binned."""
+        return isinstance(self.axes["energy"], LabelMapAxis)
 
     @property
     @abc.abstractmethod
