@@ -14,8 +14,11 @@ from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.stats import WStatCountsStatistic
 from gammapy.utils.coordinates import FoVICRSFrame, FoVAltAzFrame
 from gammapy.utils.regions import compound_region_to_regions
+from gammapy.maps import RegionGeom
 
 __all__ = [
+    "make_mask_events",
+    "make_events_off_mask",
     "make_counts_off_rad_max",
     "make_counts_rad_max",
     "make_edisp_kernel_map",
@@ -370,12 +373,19 @@ def make_edisp_kernel_map(
 
     # Create temporary EDispMap Geom
     new_geom = geom.to_image().to_cube([migra_axis, geom.axes["energy_true"]])
-
+    new_geom = RegionGeom.create(
+        region=geom.region,
+        axes=new_geom.axes,
+    )
+    # CREATE REGIONGEOM WITH NEW AXIS
     edisp_map = make_edisp_map(
         edisp, pointing, new_geom, exposure_map, use_region_center
     )
-
-    return edisp_map.to_edisp_kernel_map(geom.axes["energy"])
+    if geom.is_unbinned:
+        energy_axes = geom.axes["energy"]
+    else:
+        energy_axes = geom.axes["energy"]
+    return edisp_map.to_edisp_kernel_map(energy_axes)
 
 
 def make_theta_squared_table(
@@ -512,6 +522,49 @@ def make_counts_rad_max(geom, rad_max, events):
     counts = Map.from_geom(geom=geom)
     counts.fill_events(selected_events)
     return counts
+
+
+def make_mask_events(geom, rad_max, events):
+    """Extract the mask of events using for the ON region size the values in the `RAD_MAX_2D` table.
+    Parameters
+    ----------
+    geom : `~gammapy.maps.RegionGeom`
+        Reference map geometry.
+    rad_max : `~gammapy.irf.RadMax2D`
+        The RAD_MAX_2D table IRF.
+    events : `~gammapy.data.EventList`
+        Event list.
+    Returns
+    -------
+    events_on_mask : `~numpy.ndarray`
+        Mask of events in the ON region.
+    """
+    events_on_mask = events._mask_rad_max(rad_max=rad_max, position=geom.region.center)
+    return events_on_mask
+
+
+def make_events_off_mask(geom_off, rad_max, events):
+    """Extract the mask of events in a list of point regions and given rad max.
+    This method does **not** check for overlap of the regions defined by rad_max.
+    Parameters
+    ----------
+    geom_off : `~gammapy.maps.RegionGeom`
+        Reference map geometry for the on region.
+    rad_max : `~gammapy.irf.RadMax2D`
+        The RAD_MAX_2D table IRF.
+    events : `~gammapy.data.EventList`
+        Event list.
+    Returns
+    -------
+    events_off_mask :`~numpy.ndarray`
+        Mask of events in the different OFF regions.
+    """
+    events_off_mask = []
+    for off_region in compound_region_to_regions(geom_off.region):
+        events_off_mask.append(
+            events._mask_rad_max(rad_max=rad_max, position=off_region.center)
+        )
+    return np.logical_or.reduce(events_off_mask)
 
 
 def make_counts_off_rad_max(geom_off, rad_max, events):
@@ -702,6 +755,47 @@ def project_irf_on_geom(geom, irf, fov_frame, use_region_center=True):
     map : `~gammapy.maps.Map`
         Map containing the projected IRF.
     """
+    if geom.is_unbinned:
+        # IF WE WANT TO CONSIDER THE RECO EVENTS OFFSET
+        # skycoord = SkyCoord(
+        #    ra=geom.axes["events"]["ra"].center,
+        #    dec=geom.axes["events"]["dec"].center,
+        # )
+        # coords = _get_fov_coord(skycoord, fov_frame, irf.has_offset_axis)
+        # coords["offset"] = (
+        #    np.ones((len(irf.axes["energy_true"].center), 1))
+        #    @ np.array([coords["offset"]])
+        # ).T.tolist() * coords["offset"].unit
+
+        if not use_region_center:
+            image_geom = geom.to_wcs_geom().to_image()
+            region_coord, weights = geom.get_wcs_coord_and_weights()
+            skycoord = region_coord.skycoord
+        else:
+            image_geom = geom.to_image()
+            skycoord = image_geom.get_coord().skycoord
+
+        coords = _get_fov_coord(skycoord, fov_frame, irf.has_offset_axis)
+        non_spatial_axes = set(irf.required_arguments) - set(
+            ["offset", "fov_lon", "fov_lat"]
+        )
+
+        for axis_name in non_spatial_axes:
+            if axis_name == "migra":
+                coords[axis_name] = (
+                    np.array([geom.axes["energy"].center]).T
+                    @ np.array([1 / irf.axes["energy_true"].center])
+                ).tolist()
+            elif axis_name == "energy_true":
+                coords[axis_name] = (
+                    np.ones((len(geom.axes["energy"].center), 1))
+                    @ np.array([irf.axes["energy_true"].center])
+                ).tolist() * irf.axes["energy_true"].unit
+
+        data = irf.evaluate(**coords)
+
+        return Map.from_geom(geom=geom, data=data.value.T, unit=data.unit)
+
     if not use_region_center:
         image_geom = geom.to_wcs_geom().to_image()
         region_coord, weights = geom.get_wcs_coord_and_weights()

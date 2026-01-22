@@ -5,7 +5,8 @@ from astropy import units as u
 from astropy.coordinates import Angle
 from gammapy.irf import EDispKernelMap
 from gammapy.maps import Map
-from gammapy.modeling.models import TemplateSpectralModel
+from gammapy.datasets import EventDatasetOnOff
+from gammapy.modeling.models import TemplateSpectralModel, GaussianPrior
 from .core import Maker
 
 __all__ = ["SafeMaskMaker"]
@@ -388,4 +389,17 @@ class SafeMaskMaker(Maker):
             mask_safe &= self.make_mask_energy_bkg_peak(dataset, observation)
 
         dataset.mask_safe = Map.from_geom(dataset._geom, data=mask_safe, dtype=bool)
+        if isinstance(dataset, EventDatasetOnOff) and dataset.mask_safe.data.sum() != 0:
+            log.debug("applying prior on the background model based on safe mask")
+            mu = (
+                len(dataset.events_off_safe.energy)
+                * np.mean(dataset.alpha.data)
+                / dataset.background_model.integral(
+                    energy_min=dataset.events_off_safe.energy.min(),
+                    energy_max=dataset.events_off_safe.energy.max(),
+                )
+            )
+            dataset.background_model.norm.prior = GaussianPrior(
+                mu=mu, sigma=np.abs(1 - mu)
+            )
         return dataset
