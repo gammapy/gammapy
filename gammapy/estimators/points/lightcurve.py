@@ -10,7 +10,7 @@ from gammapy.datasets.actors import DatasetsActor
 from gammapy.maps import LabelMapAxis, Map, TimeMapAxis
 from gammapy.modeling.models import Models
 from gammapy.utils.pbar import progress_bar
-from .core import FluxPoints
+from .core import LightCurve
 from .sed import FluxPointsEstimator
 
 __all__ = ["LightCurveEstimator"]
@@ -205,7 +205,7 @@ class LightCurveEstimator(FluxPointsEstimator):
             raise ValueError("LightCurveEstimator: No datasets in time intervals")
         gti = GTI.from_time_intervals(valid_intervals)
         axis = TimeMapAxis.from_gti(gti=gti)
-        return FluxPoints.from_stack(
+        return LightCurve.from_stack(
             maps=rows,
             axis=axis,
         )
