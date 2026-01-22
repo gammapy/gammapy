@@ -39,7 +39,7 @@ from ..wcs import WcsGeom
 log = logging.getLogger(__name__)
 
 
-__all__ = ["RegionGeom"]
+__all__ = ["RegionGeom", "UnbinnedRegionGeom"]
 
 
 def _parse_regions(regions):
@@ -916,3 +916,8 @@ class RegionGeom(Geom):
             return ax
         else:
             logging.info("Region definition required.")
+
+
+class UnbinnedRegionGeom(RegionGeom):
+    def __init__(self, region, axes=None, wcs=None, binsz_wcs="0.1 deg"):
+        super().__init__(region=region, axes=axes, wcs=wcs, binsz_wcs=binsz_wcs)
