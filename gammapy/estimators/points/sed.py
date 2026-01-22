@@ -10,8 +10,10 @@ from gammapy.datasets.actors import DatasetsActor
 from gammapy.datasets.flux_points import _get_reference_model
 from gammapy.maps import MapAxis
 from gammapy.modeling import Fit
+
 from ..flux import FluxEstimator
 from .core import FluxPoints
+
 
 log = logging.getLogger(__name__)
 
@@ -174,8 +176,7 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
                 telescopes.extend(list(d.meta_table["TELESCOP"].flatten()))
         if len(np.unique(telescopes)) > 1:
             raise ValueError(
-                "All datasets must use the same value of the"
-                " 'TELESCOP' meta keyword."
+                "All datasets must use the same value of the 'TELESCOP' meta keyword."
             )
 
         meta = {
