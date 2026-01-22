@@ -1650,9 +1650,7 @@ class Map(abc.ABC):
         if axis_name == "rad":
             # take Jacobian into account
             values = 2 * np.pi * axis.center.reshape(shape) * values
-
         data = np.insert(values.cumsum(axis=axis_idx), 0, 0, axis=axis_idx)
-
         axis_shifted = MapAxis.from_nodes(
             axis.edges, name=axis.name, interp=axis.interp
         )
@@ -1685,6 +1683,71 @@ class Map(abc.ABC):
             cumsum.interp_by_coord(coords, **kwargs), cumsum.unit, copy=COPY_IF_NEEDED
         )
 
+    def divide_bin_width(self, axis_name=None):
+        """Return map divided by bin width along a given axis. This can be useful to transform a map into a differential map.
+
+        Parameters
+        ----------
+        axis_name : str, optional
+            Along which axis to divide. If None, all non-spatial axes will be divided. Default is None.
+        """
+        map_copy = self.copy()
+
+        if axis_name is None:
+            axes_names = map_copy.geom.axes.names
+        else:
+            axes_names = [axis_name]
+
+        for axis_name in axes_names:
+            axis = map_copy.geom.axes[axis_name]
+            shape = [1] * len(map_copy.geom.data_shape)
+            shape[map_copy.geom.axes.index_data(axis_name)] = -1
+            map_copy.quantity /= axis.bin_width.reshape(shape)
+
+            if axis.name == "rad":
+                # take Jacobian into account
+                shape[map_copy.geom.axes.index_data(axis_name)] = -1
+                map_copy.data /= 2 * np.pi * axis.center.reshape(shape)
+        return map_copy
+
+    def evaluate(self, axis_name, coords, jacobian=None, **kwargs):
+        """Evaluate Map along a given axis. This method computes interpolation of the gradient of the cumulative sum.
+        The jacobian term can be provided if needed. It takes into account the Jacobian of the coordinate transformation, and the possible binning effects.
+        Args:
+            axis_name (_type_): _description_
+            coords (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
+        map_copy = self.copy()
+        if jacobian is not None:
+            map_copy.quantity *= jacobian
+        cumsum = map_copy.cumsum(axis_name=axis_name)
+
+        cumsum = cumsum.pad(pad_width=1, axis_name=axis_name, mode="edge")
+        axis_upsample = cumsum.geom.axes[axis_name].upsample(1)
+        upsample_geom = cumsum.geom.to_image().to_cube(
+            cumsum.geom.axes.replace(axis=axis_upsample)
+        )
+        upsample_coords = upsample_geom.get_coord(
+            sparse=True, mode="center", axis_name=axis_name
+        )
+        gradient_data = np.gradient(
+            cumsum.interp_by_coord(upsample_coords, **kwargs),
+            axis=cumsum.geom.axes.index_data(axis_name),
+        )
+        gradient = cumsum.__class__(
+            geom=upsample_geom,
+            data=gradient_data,
+            unit=cumsum.unit,
+        )
+        return u.Quantity(
+            gradient.interp_by_coord(coords, **kwargs),
+            gradient.unit,
+            copy=COPY_IF_NEEDED,
+        )
+
     def normalize(self, axis_name=None):
         """Normalise data in place along a given axis.
 
@@ -1693,13 +1756,29 @@ class Map(abc.ABC):
         axis_name : str, optional
             Along which axis to normalise.
         """
-        cumsum = self.cumsum(axis_name=axis_name).quantity
+        norm = self.norm(axis_name=axis_name)
 
         with np.errstate(invalid="ignore", divide="ignore"):
-            axis = self.geom.axes.index_data(axis_name=axis_name)
-            normed = self.quantity / cumsum.max(axis=axis, keepdims=True)
+            normed = self.quantity / norm
 
         self.quantity = np.nan_to_num(normed)
+
+    def norm(self, axis_name=None):
+        """Compute norm along a given axis.
+
+        Parameters
+        ----------
+        axis_name : str, optional
+            Along which axis to compute the norm.
+
+        Returns
+        -------
+        norm : `~astropy.units.Quantity`
+            Norm array.
+        """
+        cumsum = self.cumsum(axis_name=axis_name).quantity
+        axis = self.geom.axes.index_data(axis_name=axis_name)
+        return cumsum.max(axis=axis, keepdims=True)
 
     @classmethod
     def from_stack(cls, maps, axis=None, axis_name=None):
