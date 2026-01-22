@@ -25,6 +25,7 @@ from gammapy.utils.integrate import trapz_loglog
 from gammapy.utils.interpolation import (
     ScaledRegularGridInterpolator,
     interpolation_scale,
+    BackgroundUnivariateSplineInterpolator,
 )
 from gammapy.utils.roots import find_roots
 from gammapy.utils.scripts import make_path
@@ -63,6 +64,7 @@ __all__ = [
     "TemplateSpectralModel",
     "TemplateNDSpectralModel",
     "EBL_DATA_BUILTIN",
+    "NormBackgroundSpectralModel",
 ]
 
 
@@ -2074,6 +2076,54 @@ class LogParabolaNormSpectralModel(SpectralModel):
         xx = energy / reference
         exponent = -alpha - beta * np.log(xx)
         return norm * np.power(xx, exponent)
+
+
+class NormBackgroundSpectralModel(SpectralModel):
+    """A model generated from a table of energy and value arrays using linear interpolation.
+
+    For more information see :ref:`interpolated-spectral-model`.
+
+    Parameters
+    ----------
+    energy_events : `~astropy.units.Quantity`
+        Array of energies at which the model values are given
+    meta : dict, optional
+        Meta information, meta['filename'] will be used for serialisation.
+    """
+
+    tag = ["InterpolatedSpectralModel", "interpolated"]
+
+    norm = Parameter("norm", 1, unit="", interp="log")
+
+    def __init__(self, energy_events, alpha, meta=None, **kwargs):
+        self.energy_events = energy_events
+        self.meta = {} if meta is None else meta
+
+        self._evaluate = BackgroundUnivariateSplineInterpolator(
+            energy_events=energy_events, alpha=alpha, **kwargs
+        )
+
+        super().__init__()
+
+    def evaluate(self, energy, norm):
+        """Evaluate the model (static function)."""
+        return self._evaluate(energy) * norm
+
+    def to_dict(self, full_output=False):
+        data = super().to_dict(full_output)
+        data["spectral"]["energy"] = {
+            "data": self.energy_events.value.tolist(),
+            "unit": str(self.energy_events.unit),
+        }
+        data["spectral"]["norm"] = {
+            "data": self.norm.value,
+            "unit": str(self.norm.unit),
+        }
+        return data
+
+    @classmethod
+    def from_dict(cls, data, **kwargs):
+        raise NotImplementedError("Not implemented yet")
 
 
 class TemplateSpectralModel(SpectralModel):
