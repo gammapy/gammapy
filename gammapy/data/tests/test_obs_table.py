@@ -116,7 +116,7 @@ def make_test_observation_table(
     # check if time interval selected is more than 1 day
     if (dateend - datestart).jd > 1.0:
         # keep only the integer part (i.e. the day, not the fraction of the day)
-        time_start_f, time_start_i = np.modf(time_start.mjd)
+        _, time_start_i = np.modf(time_start.mjd)
         time_start = Time(time_start_i, format="mjd", scale="utc")
 
         # random generation of night hours: 6 h (from 22 h to 4 h), leaving 1/2 h

@@ -582,7 +582,7 @@ def test_compute_ts_map_with_mask_fit(fake_dataset):
 def test_compute_ts_map_with_hole(fake_dataset):
     """Test of compute_ts_image with a null exposure at the center of the map"""
     holes_dataset = fake_dataset.copy("holes_dataset")
-    i, j, ie = holes_dataset.exposure.geom.center_pix
+    i, j, _ = holes_dataset.exposure.geom.center_pix
     holes_dataset.exposure.data[:, np.int_(i), np.int_(j)] = 0.0
 
     spatial_model = GaussianSpatialModel(sigma="0.1 deg")

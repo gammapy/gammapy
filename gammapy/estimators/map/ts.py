@@ -849,7 +849,7 @@ class BrentqFluxEstimator(Estimator):
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            roots, res = find_roots(
+            roots, _ = find_roots(
                 ts_diff,
                 [min_norm],
                 [max_norm],
@@ -914,7 +914,7 @@ class BrentqFluxEstimator(Estimator):
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            roots, res = find_roots(
+            roots, _ = find_roots(
                 sigma_diff,
                 [min_norm],
                 [max_norm],
