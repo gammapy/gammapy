@@ -4,7 +4,7 @@
 see :ref:`fit-statistics`
 """
 
-from abc import ABC
+from abc import ABC, abstractmethod
 import numpy as np
 from scipy.special import erfc
 from gammapy.maps import Map
@@ -440,8 +440,8 @@ class ProfileFitStatistic(FitStatistic):
         return stat
 
 
-class FitStatisticPenalty:
-    """Base class for fit statistic penalties.
+class FitStatisticPenalty(ABC):
+    """Abstract base class for fit statistic penalties
 
     Parameters
     ----------
@@ -455,9 +455,10 @@ class FitStatisticPenalty:
         self.parameters = parameters  # can we keep it here? Is it safe?
         self.lambda_ = lambda_
 
+    @abstractmethod
     def stat_sum(self):
         """Compute the penalty term."""
-        raise NotImplementedError
+        pass
 
 
 class GaussianPriorPenalty(FitStatisticPenalty):
