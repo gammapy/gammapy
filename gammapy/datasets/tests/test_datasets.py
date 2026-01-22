@@ -229,3 +229,10 @@ def test_add_datasets(datasets):
     new_datasets = datasets[0] + datasets[1]
     assert len(new_datasets) == len(datasets.models)
     assert len(new_datasets) == 2
+
+    tmp = np.ones(3)
+    with pytest.raises(TypeError):
+        datasets[0] + tmp
+
+    with pytest.raises(TypeError):
+        datasets + tmp
