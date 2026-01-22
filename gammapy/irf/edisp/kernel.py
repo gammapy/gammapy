@@ -1,18 +1,21 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 import warnings
+import logging
 from astropy.io import fits
 from astropy.table import Table
 from astropy.units import Quantity
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from matplotlib.colors import PowerNorm
-from gammapy.maps import MapAxis
+from gammapy.maps import MapAxis, LabelMapAxis
 from gammapy.maps.axes import UNIT_STRING_FORMAT
 from gammapy.utils.scripts import make_path
 from gammapy.utils.metadata import CreatorMetaData
 from gammapy.visualization.utils import add_colorbar
 from ..core import IRF
+
+log = logging.getLogger(__name__)
 
 __all__ = ["EDispKernel"]
 
@@ -71,6 +74,24 @@ class EDispKernel(IRF):
         Columns (second index): Reco Energy
         """
         return self.data
+
+    def divide_bin_width(self, axis_name):
+        """Divide the edisp matrix per bin size of a given axis.
+
+        This is useful to convert the edisp matrix from a probability matrix
+        (sum over reco energy = 1) to a density matrix (integral over reco energy = 1).
+
+        Parameters
+        ----------
+        axis_name : str
+            Name of the axis to use for division.
+        """
+        axis = self.axes[axis_name]
+        shape = [1] * self.data.ndim
+        shape[self.axes.index(axis_name)] = -1
+        bin_size = axis.bin_width.reshape(shape)  # make it broadcastable
+        data = self.data / bin_size
+        return self.__class__(axes=self.axes, data=data.value, unit=data.unit)
 
     def pdf_in_safe_range(self, lo_threshold, hi_threshold):
         """PDF matrix with bins outside threshold set to 0.
@@ -542,7 +563,13 @@ class EDispKernel(IRF):
         pdf = self.data[idx]
 
         # compute sum along reconstructed energy
-        norm = np.sum(pdf, axis=-1)
+        if isinstance(self.axes["energy"], LabelMapAxis):
+            log.warning(
+                "energy reco axis is un-binned, computation of mean energy reco from Edisp at energy true far for energies cover by events is not correct"
+            )
+        norm = np.sum(
+            pdf, axis=-1
+        )  # DOES IT WORK FOR UNBINNED ?-> NO ! for energy true with edisp partially covered by energy rec of events, the pdf cannot be evaluated this way
         temp = np.sum(pdf * self.axes["energy"].center, axis=-1)
 
         with np.errstate(invalid="ignore"):
@@ -603,29 +630,64 @@ class EDispKernel(IRF):
         ax : `~matplotlib.axes.Axes`
             Matplotlib axes.
         """
+        energy_axis_true = self.axes["energy_true"]
+        energy_axis = self.axes["energy"]
+
         kwargs.setdefault("cmap", "GnBu")
-        norm = PowerNorm(gamma=0.5, vmin=0, vmax=1)
+        if isinstance(energy_axis, LabelMapAxis):
+            norm = PowerNorm(gamma=0.5, vmin=0, vmax=100)
+        else:
+            norm = PowerNorm(gamma=0.5, vmin=0, vmax=1)
         kwargs.setdefault("norm", norm)
 
         kwargs_colorbar = kwargs_colorbar or {}
 
         ax = plt.gca() if ax is None else ax
 
-        energy_axis_true = self.axes["energy_true"]
-        energy_axis = self.axes["energy"]
-
         with quantity_support():
-            caxes = ax.pcolormesh(
-                energy_axis_true.edges, energy_axis.edges, self.data.T, **kwargs
-            )
-
+            if not isinstance(energy_axis, LabelMapAxis):
+                y = energy_axis.edges
+                caxes = ax.pcolormesh(energy_axis_true.edges, y, self.data.T, **kwargs)
+            else:
+                # If edges are not defined, use centers directly and plot with imshow
+                centers = energy_axis.center
+                args = np.argsort(centers)
+                centers = centers[args]
+                data = np.take(self.data, args, axis=self.axes.index("energy"))
+                caxes = ax.pcolormesh(
+                    energy_axis_true.edges, centers, data[:, :-1].T, **kwargs
+                )
         if add_cbar:
             label = "Probability density (A.U.)"
             kwargs_colorbar.setdefault("label", label)
             add_colorbar(caxes, ax=ax, axes_loc=axes_loc, **kwargs_colorbar)
 
         energy_axis_true.format_plot_xaxis(ax=ax)
-        energy_axis.format_plot_yaxis(ax=ax)
+        if not isinstance(energy_axis, LabelMapAxis):
+            energy_axis.format_plot_yaxis(ax=ax)
+        else:
+            energy_axis_plot = MapAxis.from_energy_bounds(
+                centers[0], centers[-1], nbin=5, per_decade=True, unit=energy_axis.unit
+            )
+            energy_axis_plot.format_plot_yaxis(ax=ax)
+        return ax
+
+    def plot_mean(self, ax=None, **kwargs):
+        ax = plt.gca() if ax is None else ax
+
+        energy_true = self.axes["energy_true"].center
+        energy = self.get_mean(energy_true)
+        with quantity_support():
+            ax.plot(energy_true, energy, **kwargs)
+
+        ax.set_xlabel(
+            f"$E_\\mathrm{{True}}$ [{ax.xaxis.units.to_string(UNIT_STRING_FORMAT)}]"
+        )
+        ax.set_ylabel(
+            f"$E_\\mathrm{{Reco}}$ [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]"
+        )
+        ax.set_xscale("log")
+        ax.set_yscale("log")
         return ax
 
     def plot_bias(self, ax=None, **kwargs):
@@ -677,7 +739,8 @@ class EDispKernel(IRF):
             Size of the figure. Default is (15, 5).
 
         """
-        _, axes = plt.subplots(nrows=1, ncols=2, figsize=figsize)
+        _, axes = plt.subplots(nrows=1, ncols=3, figsize=figsize)
         self.plot_bias(ax=axes[0])
-        self.plot_matrix(ax=axes[1])
+        self.plot_mean(ax=axes[1])
+        self.plot_matrix(ax=axes[2])
         plt.tight_layout()
