@@ -5,6 +5,7 @@ import abc
 import html
 import numpy as np
 import astropy.units as u
+from astropy.utils import lazyproperty
 from gammapy.modeling import Parameter, Parameters
 from gammapy.utils.integrate import trapz_loglog
 
@@ -27,9 +28,12 @@ class DMProfile(abc.ABC):
     DISTANCE_GC = 8.33 * u.kpc
     """Distance to the Galactic Center as given in reference 2"""
 
-    def __call__(self, radius):
+    def __call__(self, radius, **kwargs):
         """Call evaluate method of derived classes."""
-        kwargs = {par.name: par.quantity for par in self.parameters}
+        if kwargs == {}:
+            kwargs = {par.name: par.quantity for par in self.parameters}
+            kwargs["r_s"] = kwargs["r_s"].to_value("cm")
+            kwargs["rho_s"] = kwargs["rho_s"].to_value("GeV/cm3")
         return self.evaluate(radius, **kwargs)
 
     def _repr_html_(self):
@@ -40,19 +44,23 @@ class DMProfile(abc.ABC):
 
     def scale_to_local_density(self):
         """Scale to local density."""
-        scale = (self.LOCAL_DENSITY / self(self.DISTANCE_GC)).to_value("")
+        scale = self.LOCAL_DENSITY.to_value("GeV/cm3") / self(
+            self.DISTANCE_GC.to_value("cm")
+        )
         self.parameters["rho_s"].value *= scale
 
-    def _eval_substitution(self, radius, separation, squared):
+    @lazyproperty
+    def DISTANCE_GC_CM(self):
+        return self.DISTANCE_GC.to_value("cm")
+
+    def _eval_substitution(self, radius, separation, squared, **kwargs):
         """Density at given radius together with the substitution part."""
         exponent = 2 if squared else 1
-        return (
-            self(radius) ** exponent
-            * radius
-            / np.sqrt(radius**2 - (self.DISTANCE_GC * np.sin(separation)) ** 2)
+        return self(radius, **kwargs) ** exponent / np.sqrt(
+            1 - (self.DISTANCE_GC_CM * np.sin(separation) / radius) ** 2
         )
 
-    def integral(self, rmin, rmax, separation, ndecade, squared=True):
+    def integral(self, rmin, rmax, separation, ndecade, squared=True, **kwargs):
         r"""Integrate dark matter profile numerically.
 
         .. math::
@@ -74,13 +82,12 @@ class DMProfile(abc.ABC):
             Default is True.
         """
         integral = self.integrate_spectrum_separation(
-            self._eval_substitution, rmin, rmax, separation, ndecade, squared
+            self._eval_substitution, rmin, rmax, separation, ndecade, squared, **kwargs
         )
-        inegral_unit = u.Unit("GeV2 cm-5") if squared else u.Unit("GeV cm-2")
-        return integral.to(inegral_unit)
+        return integral
 
     def integrate_spectrum_separation(
-        self, func, xmin, xmax, separation, ndecade, squared=True
+        self, func, xmin, xmax, separation, ndecade, squared=True, **kwargs
     ):
         """Squared dark matter profile integral.
 
@@ -96,14 +103,11 @@ class DMProfile(abc.ABC):
             Square the profile before integration.
             Default is True.
         """
-        unit = xmin.unit
-        xmin = xmin.value
-        xmax = xmax.to_value(unit)
         logmin = np.log10(xmin)
         logmax = np.log10(xmax)
         n = np.int32((logmax - logmin) * ndecade)
-        x = np.logspace(logmin, logmax, n) * unit
-        y = func(x, separation, squared)
+        x = np.logspace(logmin, logmax, n)
+        y = func(x, separation, squared, **kwargs)
         val = trapz_loglog(y, x)
         return val.sum()
 
