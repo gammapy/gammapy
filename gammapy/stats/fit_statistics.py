@@ -453,13 +453,17 @@ class FitStatisticPenalty(ABC):
     """
 
     def __init__(self, parameters, lambda_=1.0):
-        self.parameters = parameters  # can we keep it here? Is it safe?
+        self._parameters = parameters
         self.lambda_ = lambda_
 
     @abstractmethod
     def stat_sum(self):
         """Compute the penalty term."""
         pass
+
+    @property
+    def parameters(self):
+        return self._parameters
 
 
 class GaussianPriorPenalty(FitStatisticPenalty):
