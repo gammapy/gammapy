@@ -3,6 +3,7 @@
 import json
 import logging
 from configparser import ConfigParser
+import tomllib
 import click
 from datetime import date
 
@@ -30,13 +31,14 @@ def update_codemeta(maintainer, filename, setup_file=None):
 
 
     if setup_file:
-        # complete with software requirements from setup.cfg
-        cf = ConfigParser()
-        cf.read(setup_file)
-        requirements = cf["options"]["install_requires"].split("\n")
-        if "" in requirements:
-            requirements.remove("")
-        data["softwareRequirements"] = requirements
+        # complete with software requirements from pyproject.toml
+        with open(setup_file, "rb") as fp:
+            conf = tomllib.load(fp)
+            requirements = conf["project"]["dependencies"]
+
+            if "" in requirements:
+                requirements.remove("")
+            data["softwareRequirements"] = requirements
 
     with open(filename, "w") as f:
         json.dump(data, f, indent=4)
@@ -57,7 +59,7 @@ def update_codemeta(maintainer, filename, setup_file=None):
 @click.option(
     "--filename", default="../codemeta.json", type=str, help="codemeta filename"
 )
-@click.option("--setup_file", default="../setup.cfg", type=str, help="setup filename")
+@click.option("--setup_file", default="../pyproject.toml", type=str, help="setup filename")
 @click.option(
     "--log_level",
     default="INFO",

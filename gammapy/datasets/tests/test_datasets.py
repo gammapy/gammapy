@@ -215,3 +215,24 @@ def test_datasets_fit():
     results = fit.run(datasets)
 
     assert_allclose(results.models.covariance.data, datasets.models.covariance.data)
+
+
+def test_add_datasets(datasets):
+    assert isinstance(datasets + Datasets(), Datasets)
+    assert isinstance(Datasets() + datasets[0], Datasets)
+    assert isinstance(datasets[0] + Datasets(), Datasets)
+    assert isinstance(datasets[0] + datasets[1], Datasets)
+    assert isinstance(datasets[0] + [], Datasets)
+
+    assert len(datasets[0] + datasets[1]) == 2
+
+    new_datasets = datasets[0] + datasets[1]
+    assert len(new_datasets) == len(datasets.models)
+    assert len(new_datasets) == 2
+
+    tmp = np.ones(3)
+    with pytest.raises(TypeError):
+        datasets[0] + tmp
+
+    with pytest.raises(TypeError):
+        datasets + tmp

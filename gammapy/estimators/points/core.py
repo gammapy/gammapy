@@ -160,7 +160,7 @@ class FluxPoints(FluxMaps):
     flux points given in one of the formats documented above::
 
     >>> from gammapy.estimators import FluxPoints
-    >>> filename = '$GAMMAPY_DATA/hawc_crab/HAWC19_flux_points.fits'
+    >>> filename = '$GAMMAPY_DATA/hawc/crab_flux/HAWC19_flux_points.fits'
     >>> flux_points = FluxPoints.read(filename)
     >>> flux_points.plot() #doctest: +SKIP
 
@@ -492,7 +492,7 @@ class FluxPoints(FluxMaps):
         This is how to read and plot example flux points:
 
         >>> from gammapy.estimators import FluxPoints
-        >>> fp = FluxPoints.read("$GAMMAPY_DATA/hawc_crab/HAWC19_flux_points.fits")
+        >>> fp = FluxPoints.read("$GAMMAPY_DATA/hawc/crab_flux/HAWC19_flux_points.fits")
         >>> table = fp.to_table(sed_type="flux", formatted=True)
         >>> print(table[:2])
         e_ref e_min e_max     flux      flux_err    flux_ul      ts    sqrt_ts is_ul

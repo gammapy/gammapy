@@ -28,7 +28,6 @@ from gammapy.utils.interpolation import (
 )
 from gammapy.utils.roots import find_roots
 from gammapy.utils.scripts import make_path
-from gammapy.utils.random import get_random_state
 import gammapy.utils.parallel as parallel
 from gammapy.utils.deprecation import GammapyDeprecationWarning
 from ..covariance import CovarianceMixin
@@ -233,12 +232,10 @@ class SpectralModel(ModelBase):
 
         """
         if samples is None:
-            rng = get_random_state(random_state)
-            samples = rng.multivariate_normal(
-                self.parameters.value,
-                self.covariance.data,
-                n_samples,
+            samples = self.sample_parameters_from_covariance(
+                n_samples=n_samples, random_state=random_state, free_only=False
             )
+
             samples = [samples[:, k] * p.unit for k, p in enumerate(self.parameters)]
 
         try:
@@ -921,9 +918,9 @@ class SpectralModel(ModelBase):
 
         def f(x):
             # scale by 1e12 to achieve better precision
-            energy = u.Quantity(x, eunit, copy=COPY_IF_NEEDED)
-            y = self(energy).to_value(value.unit)
-            return 1e12 * (y - value.value)
+            energy = u.Quantity(x, unit=eunit)
+            y = self(energy).to(value.unit)
+            return 1e12 * (y.value - value.value)
 
         roots, res = find_roots(f, energy_min, energy_max, points_scale="log")
         return roots
@@ -1425,7 +1422,9 @@ class BrokenPowerLawSpectralModel(SpectralModel):
         eratio = energy / ebreak
         bpwl[cond] *= (eratio ** (-index1))[cond]
         bpwl[~cond] *= (eratio ** (-index2))[~cond]
-        if bpwl.shape[1] == 1:
+        if len(bpwl) == 1:
+            return bpwl.squeeze()
+        elif bpwl.shape[1] == 1:
             return bpwl.squeeze(axis=1)
         else:
             return bpwl
