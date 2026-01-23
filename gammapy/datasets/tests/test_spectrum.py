@@ -199,7 +199,9 @@ def test_spectrum_dataset_create():
         geom, energy_axis_true=e_true, name="test"
     )
 
-    with pytest.raises(TypeError, match="`SpectrumDataset` is only supported for `RegionGeom`"):
+    with pytest.raises(
+        TypeError, match="`SpectrumDataset` is only supported for `RegionGeom`"
+    ):
         geom2 = WcsGeom.create()
         SpectrumDataset.create(geom2, energy_axis_true=e_true)
 
@@ -207,6 +209,7 @@ def test_spectrum_dataset_create():
     model = SkyModel.create("pl", "gauss", name="test")
     empty_spectrum_dataset.models = [model]
     empty_spectrum_dataset.npred()
+    assert empty_spectrum_dataset.npred().data.sum() == 0
 
     assert empty_spectrum_dataset.name == "test"
     assert empty_spectrum_dataset.counts.data.sum() == 0
