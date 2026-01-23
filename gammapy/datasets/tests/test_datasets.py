@@ -102,7 +102,9 @@ def test_datasets_likelihood_with_penalty(map_datasets):
 
     map_datasets.models["src"].spectral_model *= norm_model
 
-    models = Models(map_datasets.models, penalties=[penalty])
+    models = Models(map_datasets.models, penalties=penalty)
+    assert len(models._penalties) == 1
+    models.set_penalties(penalty)
     assert len(models._penalties) == 1
 
     assert_allclose(penalty.stat_sum(), 10)
