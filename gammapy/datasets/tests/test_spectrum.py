@@ -199,7 +199,7 @@ def test_spectrum_dataset_create():
         geom, energy_axis_true=e_true, name="test"
     )
 
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError, match="`SpectrumDataset` is only supported for `RegionGeom`"):
         geom2 = WcsGeom.create()
         SpectrumDataset.create(geom2, energy_axis_true=e_true)
 
