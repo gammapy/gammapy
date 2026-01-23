@@ -1,0 +1,1 @@
+Adapted `SpectrumDataset.create()` to avoid creating PSFMap during dataset creation. Moved creation of `SpectrumDataset.create()` into the `SpectrumDataset` class. Added check for `RegionGeom` of given geometry.
