@@ -1,0 +1,1 @@
+Enable the addition of `~gammapy.datasets.Datasets` and individual `~gammapy.datasets.Dataset` objects to create a new `~gammapy.datasets.Datasets` instance.

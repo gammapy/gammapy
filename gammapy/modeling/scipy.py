@@ -188,7 +188,8 @@ def stat_profile_ul_scipy(
     stat_best_fit = result.fun
 
     def f(x):
-        return interp((x,)) - stat_best_fit - delta_ts
+        y = interp(np.asarray([x]))
+        return float(y.item()) - stat_best_fit - delta_ts
 
     roots, res = find_roots(
         f, lower_bound=norm_best_fit, upper_bound=value_scan[-1], nbin=1, **kwargs

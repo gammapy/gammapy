@@ -625,3 +625,13 @@ def test_hpx_map_sampling():
     hpxmap = HpxNDMap.create(nside=16)
     with pytest.raises(NotImplementedError):
         hpxmap.sample_coord(2)
+
+
+def test_stack_int():
+    geom = HpxGeom.create(nside=16)
+
+    map1 = Map.from_geom(geom=geom, dtype=int)
+    map2 = map1.copy()
+
+    map1.stack(map2)
+    assert map1.data.dtype == int

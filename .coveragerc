@@ -1,0 +1,53 @@
+[run]
+branch = True
+
+# Files and directories to omit from coverage measurement
+omit =
+    *tests*
+    gammapy/extern/*
+    gammapy/conftest.py
+    gammapy/scripts/jupyter.py
+    gammapy/utils/notebooks_links.py
+    gammapy/utils/notebooks_process.py
+    gammapy/utils/notebooks_test.py
+    gammapy/utils/docs.py
+    gammapy/_astropy_init*
+    gammapy/*setup_package*
+    gammapy/tests/*
+    gammapy/*/tests/*
+    gammapy/extern/*
+    gammapy/version*
+    */gammapy/_astropy_init*
+    */gammapy/conftest.py
+    */gammapy/*setup_package*
+    */gammapy/tests/*
+    */gammapy/*/tests/*
+    */gammapy/extern/*
+    */gammapy/version*
+
+# Make filenames relative to the repository root
+# for the coverage report to match source paths in sonarqube
+relative_files = True
+source = gammapy
+
+[report]
+# Lines to ignore in coverage reports
+exclude_lines =
+    pragma: no cover
+    except ImportError
+    raise AssertionError
+    raise NotImplementedError
+    def main\(.*\):
+    pragma: py{ignore_python_version}
+    def _ipython_key_completions_
+
+# Re-mapping paths: map equivalent locations of the code to the
+# first entry path so they match source paths in sonarqube analysis
+[paths]
+gammapy =
+    gammapy/
+    .tox/*/site-packages/gammapy
+    **/site-packages/gammapy
+    .tox/*/lib/python*/site-packages/gammapy
+    **/lib/python*/site-packages/gammapy
+    /home/runner/work/gammapy/gammapy/.tox/*/lib/python*/site-packages/gammapy

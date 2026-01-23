@@ -1,11 +1,118 @@
+[project]
+name = "gammapy"
+description = "A Python package for gamma-ray astronomy"
+readme = "LONG_DESCRIPTION.rst"
+license = "BSD-3-Clause"
+authors = [
+    { name = "The Gammapy developers", email = "gammapy-coordination-l@in2p3.fr" }
+]
+requires-python = ">=3.10"
+classifiers = [
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: C",
+    "Programming Language :: Cython",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Topic :: Scientific/Engineering :: Astronomy",
+]
+dependencies = [
+    "numpy>=1.26",
+    "scipy>=1.13",
+    "astropy>=6.0",
+    "regions>=0.9.0",
+    "pyyaml>=5.3",
+    "click>=8.0",
+    "pydantic>=2.8.0",
+    "iminuit>=2.26.0",
+    "matplotlib>=3.8,<3.10",
+]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://gammapy.org"
+Documentation = "https://docs.gammapy.org/dev/"
+Source = "https://github.com/gammapy/gammapy"
+
 [build-system]
 requires = [
     "setuptools >= 65",
+    "wheel",
     "Cython",
     "numpy >= 2.0.0rc1",
     "setuptools_scm[toml] >= 8",
 ]
 build-backend = "setuptools.build_meta"
+
+[project.optional-dependencies]
+all = [
+    "naima",
+    "sherpa; platform_system != 'Windows'",
+    "healpy; platform_system != 'Windows'",
+    "requests",
+    "tqdm",
+    "ipywidgets",
+    "ray[default]>=2.9",
+    "ultranest",
+    "numba",
+]
+all_no_ray = [
+    "naima",
+    "sherpa; platform_system != 'Windows'",
+    "healpy; platform_system != 'Windows'",
+    "requests",
+    "tqdm",
+    "ipywidgets",
+    "ultranest",
+    "numba",
+]
+cov = [
+    "naima",
+    "sherpa; platform_system != 'Windows'",
+    "healpy; platform_system != 'Windows'",
+    "requests",
+    "tqdm",
+    "ipywidgets",
+    "ultranest",
+    "numba",
+]
+test = [
+    "pytest-astropy",
+    "pytest-xdist",
+    "pytest",
+    "docutils",
+    "sphinx",
+]
+docs = [
+    "astropy",
+    "numpydoc",
+    "sphinx",
+    "sphinx_automodapi",
+    "sphinx-click",
+    "sphinx-copybutton",
+    "sphinx-design",
+    "sphinx-gallery",
+    "sphinx-changelog",
+    "pydata-sphinx-theme",
+    "nbformat",
+    "docutils",
+]
+
+[tool.setuptools.packages.find]
+include = ["gammapy*"]
+
+[tool.setuptools.package-data]
+"gammapy" = ["CITATION"]
+"gammapy.analysis" = ["config/*"]
+"gammapy.workflow" = ["config/*"]
+"gammapy.irf.psf.tests" = ["data/*"]
+"gammapy.modeling.models.tests" = ["data/*"]
+"gammapy.catalog.tests" = ["data/*"]
+
 
 [tool.pytest.ini_options]
 filterwarnings = [
@@ -52,3 +159,50 @@ skip-magic-trailing-comma = false
 
 # Like Black, automatically detect the appropriate line ending.
 line-ending = "auto"
+
+# Including towncrier to create the changelog
+[tool.towncrier]
+package = "gammapy"
+directory = "docs/release-notes"
+filename = "docs/release-notes/CHANGELOG.rst"
+template = "docs/release-notes/template.rst"
+
+issue_format = "`#{issue} <https://github.com/gammapy/gammapy/issues/{issue}>`_"
+
+[[tool.towncrier.type]]
+directory = "api"
+name = "API changes"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "infrastructure"
+name = "Infrastructure"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "docs"
+name = "Documentation improvements"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "feature"
+name = "New features"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "bug"
+name = "Bug Fixes"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "issues"
+name = "Known issues"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "contributors"
+name = "Contributors"
+showcontent = true
+
+[project.scripts]
+gammapy = "gammapy.scripts.main:cli"

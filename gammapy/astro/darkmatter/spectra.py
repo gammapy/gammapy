@@ -68,7 +68,9 @@ class PrimaryFlux(TemplateNDSpectralModel):
         "V->tau": r"V->\[Tau]",
     }
 
-    table_filename = "$GAMMAPY_DATA/dark_matter_spectra/AtProduction_gammas.dat"
+    table_filename = (
+        "$GAMMAPY_DATA/dark_matter_spectra/PPPC4DMID/AtProduction_gammas.dat"
+    )
 
     tag = ["PrimaryFlux", "dm-pf"]
 
@@ -150,14 +152,15 @@ class PrimaryFlux(TemplateNDSpectralModel):
         else:
             self._channel = channel
 
-    def evaluate(self, energy, **kwargs):
+    def evaluate(self, energy, *args):
         """Evaluate the primary flux."""
-        mass = {"mass": self.mDM}
-        kwargs.update(mass)
+
+        args = list(args)
+        args.append(self.mDM)
 
         log10x = np.log10(energy / self.mDM)
 
-        dN_dlogx = super().evaluate(log10x, **kwargs)
+        dN_dlogx = super().evaluate(log10x, *args)
         dN_dE = dN_dlogx / (energy * np.log(10))
         return dN_dE
 

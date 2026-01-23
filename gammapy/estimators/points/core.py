@@ -160,7 +160,7 @@ class FluxPoints(FluxMaps):
     flux points given in one of the formats documented above::
 
     >>> from gammapy.estimators import FluxPoints
-    >>> filename = '$GAMMAPY_DATA/hawc_crab/HAWC19_flux_points.fits'
+    >>> filename = '$GAMMAPY_DATA/hawc/crab_flux/HAWC19_flux_points.fits'
     >>> flux_points = FluxPoints.read(filename)
     >>> flux_points.plot() #doctest: +SKIP
 
@@ -492,7 +492,7 @@ class FluxPoints(FluxMaps):
         This is how to read and plot example flux points:
 
         >>> from gammapy.estimators import FluxPoints
-        >>> fp = FluxPoints.read("$GAMMAPY_DATA/hawc_crab/HAWC19_flux_points.fits")
+        >>> fp = FluxPoints.read("$GAMMAPY_DATA/hawc/crab_flux/HAWC19_flux_points.fits")
         >>> table = fp.to_table(sed_type="flux", formatted=True)
         >>> print(table[:2])
         e_ref e_min e_max     flux      flux_err    flux_ul      ts    sqrt_ts is_ul
@@ -503,6 +503,8 @@ class FluxPoints(FluxMaps):
         """
         if sed_type is None:
             sed_type = self.sed_type_init
+
+        sed_unit = DEFAULT_UNIT[sed_type]
 
         if format is None:
             format = self._guess_format()
@@ -529,14 +531,16 @@ class FluxPoints(FluxMaps):
                 )
 
             if sed_type == "likelihood":
-                table["ref_dnde"] = self.dnde_ref[idx]
-                table["ref_flux"] = self.flux_ref[idx]
-                table["ref_eflux"] = self.eflux_ref[idx]
+                table["ref_dnde"] = self.dnde_ref[idx].to(DEFAULT_UNIT["dnde"])
+                table["ref_flux"] = self.flux_ref[idx].to(DEFAULT_UNIT["flux"])
+                table["ref_eflux"] = self.eflux_ref[idx].to(DEFAULT_UNIT["e2dnde"])
 
             for quantity in self.all_quantities(sed_type=sed_type):
                 data = getattr(self, quantity, None)
-                if data:
+                if data and (data.unit.is_unity() or sed_type == "likelihood"):
                     table[quantity] = data.quantity[idx]
+                elif data:
+                    table[quantity] = data.quantity[idx].to(sed_unit)
 
             if self.has_stat_profiles:
                 norm_axis = self.stat_scan.geom.axes["norm"]
