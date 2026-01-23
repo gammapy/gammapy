@@ -208,7 +208,6 @@ def test_spectrum_dataset_create():
     # test that model evaluation works:
     model = SkyModel.create("pl", "gauss", name="test")
     empty_spectrum_dataset.models = [model]
-    empty_spectrum_dataset.npred()
     assert empty_spectrum_dataset.npred().data.sum() == 0
 
     assert empty_spectrum_dataset.name == "test"
