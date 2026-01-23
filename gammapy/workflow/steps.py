@@ -342,7 +342,7 @@ class WorkflowStepBase(abc.ABC):
             Whether to extend or replace the current data. Default is True.
         parallel : bool, optional
             Whether to run the step in parallel using Ray.
-            Defalut is None and the class default is used.
+            Default is None and the class default is used.
 
         Returns
         -------
