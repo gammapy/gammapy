@@ -90,6 +90,7 @@ def test_datasets_likelihood(datasets):
     assert_allclose(likelihood, 14472200.0002)
 
 
+@requires_data()
 def test_datasets_likelihood_with_penalty(map_datasets):
     assert_allclose(map_datasets.stat_sum(), 4132.493313)
 
