@@ -138,8 +138,8 @@ class WorkflowStepBase(abc.ABC):
             self._run()
 
         if self._products_as_workfllow_attributes:
-            for product_tag in self.products_names:
-                setattr(self.data, product_tag, self.products[product_tag].data)
+            for product_name in self.products_names:
+                setattr(self.data, product_name, self.products[product_name].data)
         return self.products
 
     @abc.abstractmethod

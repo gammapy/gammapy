@@ -124,7 +124,7 @@ class Products(collections.abc.MutableSequence):
         if isinstance(key, (int, slice)):
             return key
         elif isinstance(key, str):
-            return self.pids.index(key)
+            return self.names.index(key)
 
     def copy(self):
         """Create a deep copy of the products container."""
