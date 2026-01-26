@@ -12,7 +12,13 @@ import matplotlib.pyplot as plt
 from gammapy.maps import Map, RegionGeom
 from gammapy.modeling import Covariance, Parameter, Parameters
 from gammapy.modeling.covariance import CovarianceMixin
-from gammapy.utils.scripts import from_yaml, make_path, to_yaml, write_yaml
+from gammapy.utils.scripts import (
+    from_yaml,
+    make_path,
+    to_yaml,
+    write_yaml,
+    method_wrapper,
+)
 
 __all__ = ["Model", "Models", "DatasetModels", "ModelBase"]
 
@@ -286,6 +292,10 @@ class ModelBase:
             pars = Parameters([par])
             variance = self._covariance.get_subcovariance(pars).data
             par.error = np.sqrt(variance[0][0])
+
+    sample_parameters_from_covariance = method_wrapper(
+        CovarianceMixin.sample_parameters_from_covariance
+    )
 
     @property
     def parameters(self):
