@@ -20,7 +20,6 @@ from gammapy.modeling.models import (
 )
 
 
-@requires_data()
 @pytest.fixture
 def datasets():
     datasets = Datasets()
@@ -31,8 +30,6 @@ def datasets():
     return datasets
 
 
-@requires_dependency("ultranest")
-@requires_data()
 @pytest.fixture
 def ultranest_result(datasets):
     pwl1 = PowerLawSpectralModel(index=2.3)

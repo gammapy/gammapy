@@ -80,7 +80,7 @@ def inference_data_from_sampler(
     backend : {"ultranest"}
 
     results : gammapy.modeling.SamplerResult
-        The sampler results and model informations.
+        The sampler results and model information.
     n_prosterior_samples : int, optional
         Number of samples to generate after resampling the posterior to take into account weights.
         Default is None, which use the unweighted samples from ultranest.
@@ -90,7 +90,7 @@ def inference_data_from_sampler(
     random_seed : int, optional
         Seed for reproducibility when resampling posterior or generating prior samples.
     predictives : bool, optional
-        If True computes predicted counts and pointwise likelihood matrix. Defalut is True.
+        If True computes predicted counts and pointwise likelihood matrix. Default is True.
 
     Returns
     -------
