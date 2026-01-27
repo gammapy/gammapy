@@ -201,6 +201,17 @@ def _write_models(
     write_yaml(yaml_str, path, overwrite=overwrite, checksum=checksum)
 
 
+def _set_models_penalties(models, penalties):
+    """Set penalties on models"""
+    if penalties is not None:
+        if not isinstance(penalties, (list, tuple)):
+            penalties = [penalties]
+        if not all([isinstance(_, FitStatisticPenalty) for _ in penalties]):
+            raise ValueError("Penalties must be FitStatisticPenalty instances.")
+
+    models._penalties = penalties
+
+
 class ModelBase:
     """Model base class."""
 
@@ -507,13 +518,7 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
         if covariance_data is not None:
             self.covariance = covariance_data
 
-        if penalties is not None:
-            if not isinstance(penalties, (list, tuple)):
-                penalties = [penalties]
-            if not all([isinstance(_, FitStatisticPenalty) for _ in penalties]):
-                raise ValueError("Penalties must be FitStatisticPenalty instances.")
-
-        self._penalties = penalties
+        _set_models_penalties(self, penalties)
 
     @property
     def parameters(self):
@@ -1366,13 +1371,7 @@ class Models(DatasetModels, collections.abc.MutableSequence):
     def set_penalties(self, penalties):
         """Set the list of FitStatisticPenalty to be applied on the Models."""
         # TODO: check that penalties parameters apply to models parameters...
-        if penalties is not None:
-            if not isinstance(penalties, (list, tuple)):
-                penalties = [penalties]
-            if not all([isinstance(_, FitStatisticPenalty) for _ in penalties]):
-                raise ValueError("Penalties must be FitStatisticPenalty instances.")
-
-        self._penalties = penalties
+        _set_models_penalties(self, penalties)
 
 
 class restore_models_status:

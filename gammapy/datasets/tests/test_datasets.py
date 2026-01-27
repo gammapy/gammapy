@@ -126,6 +126,9 @@ def test_datasets_likelihood_with_penalty(map_datasets):
 
     assert_allclose(map_datasets.stat_sum(), 4132.493313)
 
+    with pytest.raises(ValueError):
+        models.set_penalties([[1, 2]])
+
 
 def test_datasets_str(datasets):
     assert "Datasets" in str(datasets)
