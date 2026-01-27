@@ -471,7 +471,7 @@ class GaussianPriorPenalty(FitStatisticPenalty):
 
     This implements a quadratic penalty of the form:
     .. math::
-        \lambda \times (x - x_{\mathrm{mean}})^T C^{-1} (x - x_{\mathrm{mean}})
+        \lambda \times (x - \mu)^T C^{-1} (x - \mu)
 
     where x are the parameter values, μ is the prior mean vector,
     and C is the prior covariance matrix.
