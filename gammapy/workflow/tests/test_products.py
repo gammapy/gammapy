@@ -31,7 +31,7 @@ class SumStep(WorkflowStepBase):
 
 def f_expected(n):
     values = []
-    for k in range(0, n - 1):
+    for _ in range(0, n - 1):
         s = np.sum([1, 2] + values)
         values.append(s)
     return s

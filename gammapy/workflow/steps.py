@@ -86,13 +86,11 @@ class WorkflowStepBase(abc.ABC):
             Default is True.
         """
 
-        if isinstance(data, Products):
-            pass
-        elif isinstance(data, Product):
+        if isinstance(data, Product):
             data = Products([data])
         elif isinstance(data, list):
             data = Products(data)
-        else:
+        elif not isinstance(data, Products):
             self._data = data
             return None
 

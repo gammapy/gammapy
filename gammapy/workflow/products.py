@@ -150,7 +150,7 @@ class Products(collections.abc.MutableSequence):
     def __setitem__(self, key, product):
         if isinstance(product, Product):
             if isinstance(key, np.ndarray) and key.dtype == bool:
-                ind = np.where(key)[0]
+                ind = np.nonzero(key)[0]
                 for idx in ind:
                     self._products[int(idx)] = product
             else:
@@ -238,7 +238,7 @@ class Products(collections.abc.MutableSequence):
         the corresponding products in-place.
 
         """
-        ind = np.where([p.needs_update for p in self._products])[0]
+        ind = np.nonzero([p.needs_update for p in self._products])[0]
         refs_to_run = {data for data in np.array(self.data)[ind]}  # unique objects
         if refs_to_run:
             results = ray.get(list(refs_to_run))
