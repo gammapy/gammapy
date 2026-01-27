@@ -116,7 +116,8 @@ def test_datasets_likelihood_with_penalty(map_datasets):
     map_datasets.models["src"].spectral_model = map_datasets.models[
         "src"
     ].spectral_model.model1
-    models = Models(map_datasets.models)
+    models = Models(map_datasets.models, penalties=None)
+    assert models.penalties == map_datasets.models.penalties
     models.set_penalties(None)
     assert models._penalties is None
     map_datasets.models = (
