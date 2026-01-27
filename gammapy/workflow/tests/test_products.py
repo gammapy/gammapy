@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import time
 import numpy as np
+import pytest
 from numpy.testing import assert_allclose
 from gammapy.utils.testing import requires_dependency
 from gammapy.workflow.steps import WorkflowStepBase
@@ -37,12 +38,13 @@ def f_expected(n):
 
 
 @requires_dependency("ray")
-def test_product():
+def test_products():
     import ray
 
-    sum1 = SumStep()
+    sum1 = SumStep(name="sum1")
     assert sum1.products.data[0] is None
     assert sum1.products.data[1] is None
+    assert sum1.products[0].step_name == "sum1"
 
     sum1.run(data=[Product(name="value", data=1), Product(name="value", data=2)])
     assert isinstance(sum1.products.data[0], ray.ObjectRef)
@@ -64,6 +66,7 @@ def test_product():
     assert isinstance(sum1.data.data[4], ray.ObjectRef)
 
     sum2 = SumStep()
+    assert sum2.products[0].step_name == sum2.name
     sum2.run(data=Product(name="value", data=1))
     sum2.run(data=Product(name="value", data=2))
 
@@ -73,3 +76,24 @@ def test_product():
 
     assert_allclose(results[0], f_expected(len(sum1.data)))
     assert_allclose(results[1], f_expected(len(sum2.data)))
+
+    unique_names = analysis_products.unique_names
+    assert len(unique_names) == 4
+    assert unique_names[0] == f"sum1.value.{sum1.products[0].pid}"
+
+    unique_names = analysis_products.select(step_name="sum1").unique_names
+    for name in unique_names:
+        assert "sum1" in name
+
+    assert analysis_products.pids[0] == sum1.products[0].pid
+
+
+def test_products_modification():
+    products = Products([Product(name="value", data=1), Product(name="value", data=2)])
+    products[0] = products[1]
+    assert_allclose(products.data, 2)
+    del products[0]
+    assert len(products) == 1
+
+    with pytest.raises(TypeError):
+        products[0] = np.ones(1)

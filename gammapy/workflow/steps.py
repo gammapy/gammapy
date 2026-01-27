@@ -61,7 +61,7 @@ class WorkflowStepBase(abc.ABC):
         self.name = make_name(name)
         self._data = Products()
         self.products = Products(
-            [Product(name=_, step_name=name) for _ in self.products_names]
+            [Product(name=_, step_name=self.name) for _ in self.products_names]
         )
         if log is None:
             log = logging.getLogger(__name__)

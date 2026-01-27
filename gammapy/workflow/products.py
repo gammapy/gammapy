@@ -28,6 +28,8 @@ class Product:
             The data associated with the product. Can be any object, including a Ray ObjectRef.
         """
 
+        if step_name is None:
+            step_name = ""
         self.step_name = step_name
         self.data = data
         if name is None:
@@ -93,11 +95,11 @@ class Products(collections.abc.MutableSequence):
         return [p.pid for p in self._products]
 
     @property
-    def products_unique_names(self):
+    def unique_names(self):
         """List of unique product names. Return formatted as step_name.product_name.product_id."""
         names = []
         for p in self._products:
-            components = [p.step_name, p.name, p.id]
+            components = [p.step_name, p.name, p.pid]
             name = ".".join(components)
             names.append(name)
         return names
