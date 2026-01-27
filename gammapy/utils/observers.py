@@ -28,7 +28,7 @@ Available observatories (alphabetical order):
   `Wikipedia <https://en.wikipedia.org/wiki/High_Altitude_Water_Cherenkov_Experiment>`__
 - ``hegra`` for HEGRA, see `Wikipedia <https://en.wikipedia.org/wiki/HEGRA>`__
 - ``hess`` for HESS, see
-  `Website <https://www.mpi-hd.mpg.de/hfm/HESS/>`__ and
+  `Website <https://hess-experiment.eu/>`__ and
   `Wikipedia <https://en.wikipedia.org/wiki/HESS>`__
 - ``magic`` for MAGIC, see
   `Website <https://wwwmagic.mpp.mpg.de/>`__ and
