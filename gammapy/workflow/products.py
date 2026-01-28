@@ -22,10 +22,13 @@ class Product:
         ----------
         name : str, optional
             A label or identifier for the product.
+            Default is None, and the name is randomly generated.
         step_name : str, optional
             The name of the processing step that produced this product.
+            Default is None.
         data : object, optional
             The data associated with the product. Can be any object, including a Ray ObjectRef.
+            Default is None.
         """
 
         if step_name is None:
@@ -185,10 +188,13 @@ class Products(collections.abc.MutableSequence):
         ----------
         name : str, optional
             Name to match. Default is None.
+            Default is None, and name filter is not applied.
         step_name : str, optional
             Step name to match.
+            Default is None, and `step_name` filter is not applied.
         pid : str, optional
             Product pid to match.
+            Default is None, and `pid` filter is not applied.
 
         Returns
         -------
@@ -207,10 +213,13 @@ class Products(collections.abc.MutableSequence):
         ----------
         name : str, optional
             Names to match.
+            Default is None, and name filter is not applied.
         step_name : str, optional
             Step names to match.
+            Default is None, and `step_name` filter is not applied.
         pid : str, optional
             Product pid to match.
+            Default is None, and `pid` filter is not applied.
 
         Returns
         -------
