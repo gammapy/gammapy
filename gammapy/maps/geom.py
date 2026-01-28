@@ -663,19 +663,44 @@ class Geom(abc.ABC):
 
         axes_names = self.axes_names
 
-        axis = self.axes[axis_name]
+        if axis_name == "energy" and self.is_unbinned:
+            axis = self.axes["energy"]
+            axis_center = axis.center
+            _min = edge_min if edge_min is not None else axis_center.min()
+            _max = edge_max if edge_max is not None else axis_center.max()
 
-        axis_edges = axis.edges
-        edge_min = edge_min if edge_min is not None else axis_edges[0]
-        edge_max = edge_max if edge_max is not None else axis_edges[-1]
+            axes_names.reverse()
+            mask = (axis_center >= _min) & (axis_center <= _max)
+            mask = np.expand_dims(
+                mask, axis=tuple(np.where(np.array(axes_names) != "energy")[0])
+            )
+            data = np.broadcast_to(mask, shape=self.data_shape)
+        else:
+            axis = self.axes[axis_name]
 
-        if round_to_edge:
-            edge_min, edge_max = axis.round([edge_min, edge_max])
+            axis_edges = axis.edges
+            edge_min = edge_min if edge_min is not None else axis_edges[0]
+            edge_max = edge_max if edge_max is not None else axis_edges[-1]
 
-        axes_names.reverse()
-        mask = (axis_edges[:-1] >= edge_min) & (axis_edges[1:] <= edge_max)
-        mask = np.expand_dims(
-            mask, axis=tuple(np.where(np.array(axes_names) != axis_name)[0])
-        )
-        data = np.broadcast_to(mask, shape=self.data_shape)
+            if round_to_edge:
+                edge_min, edge_max = axis.round([edge_min, edge_max])
+
+            axes_names.reverse()
+            mask = (axis_edges[:-1] >= edge_min) & (axis_edges[1:] <= edge_max)
+            mask = np.expand_dims(
+                mask, axis=tuple(np.where(np.array(axes_names) != axis_name)[0])
+            )
+            data = np.broadcast_to(mask, shape=self.data_shape)
         return Map.from_geom(geom=self, data=data, dtype=data.dtype)
+
+    @property
+    def is_unbinned(self):
+        """Whether the geom is unbinned (i.e. contains a `LabelMapAxis`)."""
+        if self.axes is None:
+            return False
+        for axis in self.axes:
+            if axis.__class__.__name__ in [
+                "LabelMapAxis",
+            ]:
+                return True
+        return False
