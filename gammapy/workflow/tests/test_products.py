@@ -12,7 +12,7 @@ class SumStep(WorkflowStepBase):
     tag = "sum"
     parallel = True
     required_data = [{"name": "value"}]
-    products_names = ["value", "log"]  # could be update by the config in init
+    products_names = ["value", "log"]  # could be updated by the config in init
 
     def __init__(self, config=None, overwrite=False, **kwargs):
         super().__init__(config=None, overwrite=overwrite, **kwargs)

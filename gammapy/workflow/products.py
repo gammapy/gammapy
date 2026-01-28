@@ -75,7 +75,7 @@ class Products(collections.abc.MutableSequence):
 
     Parameters
     ----------
-    products : list of Product, optional
+    products : list of `Product`, optional
         Initial list of products. Defaults to an empty list.
     """
 
@@ -106,7 +106,7 @@ class Products(collections.abc.MutableSequence):
 
     @property
     def data(self):
-        """List of product data."""
+        """List of `Product` data."""
         return [p.data for p in self._products]
 
     def index(self, key):
@@ -183,8 +183,8 @@ class Products(collections.abc.MutableSequence):
 
         Parameters
         ----------
-        tag : str, optional
-            Name to match.
+        name : str, optional
+            Name to match. Default is None.
         step_name : str, optional
             Step name to match.
         pid : str, optional
@@ -201,7 +201,7 @@ class Products(collections.abc.MutableSequence):
 
     def selection_mask(self, name=None, step_name=None, pid=None):
         """
-        Create a boolean mask for selecting products.
+        Create a boolean mask for selected products.
 
         Parameters
         ----------
