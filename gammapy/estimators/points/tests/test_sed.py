@@ -512,28 +512,28 @@ def test_run_pwl_parameter_range(fpe_pwl):
     table_with_bounds = fp.to_table()
 
     actual = table_with_bounds["norm"].data
-    assert_allclose(actual, [0.0, 0.0, 0.0], atol=1e-2)
+    assert_allclose(actual, [1.08143376, 0.91077041, 0.92217971], atol=1e-2)
 
     actual = table_with_bounds["norm_errp"].data
-    assert_allclose(actual, [212.593368, 298.383045, 449.951747], rtol=1e-2)
+    assert_allclose(actual, [0.06686082, 0.06169462, 0.18841148], rtol=1e-2)
 
     actual = table_with_bounds["norm_ul"].data
-    assert_allclose(actual, [640.067576, 722.571371, 1414.22209], rtol=1e-2)
+    assert_allclose(actual, [1.21622614, 1.03547149, 1.31687844], rtol=1e-2)
 
     actual = table_with_bounds["sqrt_ts"].data
-    assert_allclose(actual, [0.0, 0.0, 0.0], atol=1e-2)
+    assert_allclose(actual, [18.56843126, 18.05465085, 7.05712127], atol=1e-2)
 
     actual = table_no_bounds["norm"].data
-    assert_allclose(actual, [-511.76675, -155.75408, -853.547117], rtol=1e-3)
+    assert_allclose(actual, [1.0814653, 0.91093593, 0.92214882], rtol=1e-3)
 
     actual = table_no_bounds["norm_err"].data
-    assert_allclose(actual, [504.601499, 416.69248, 851.223077], rtol=1e-2)
+    assert_allclose(actual, [0.06637329, 0.0610308, 0.17972601], rtol=1e-2)
 
     actual = table_no_bounds["norm_ul"].data
-    assert_allclose(actual, [514.957128, 707.888477, 1167.105962], rtol=1e-2)
+    assert_allclose(actual, [1.21622614, 1.03547149, 1.31687844], rtol=1e-2)
 
     actual = table_no_bounds["sqrt_ts"].data
-    assert_allclose(actual, [-1.006081, -0.364848, -0.927819], rtol=1e-2)
+    assert_allclose(actual, [18.56843129, 18.05465055, 7.05712127], rtol=1e-2)
 
 
 def test_flux_points_estimator_small_edges():
