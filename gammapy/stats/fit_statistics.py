@@ -467,7 +467,7 @@ class FitStatisticPenalty(ABC):
 
 
 class GaussianPriorPenalty(FitStatisticPenalty):
-    """Penalty based on a multivariate Gaussian prior.
+    r"""Penalty based on a multivariate Gaussian prior.
 
     This implements a quadratic penalty of the form:
     .. math::
