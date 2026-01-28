@@ -1,0 +1,1 @@
+Add `axis_name` argument to `~gammapy.estimators.FluxPoints.plot_ts_profiles` to allow the user to select the axis to plot.
