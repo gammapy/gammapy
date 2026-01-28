@@ -154,7 +154,6 @@ class PrimaryFlux(TemplateNDSpectralModel):
 
     def evaluate(self, energy, *args):
         """Evaluate the primary flux."""
-
         args = list(args)
         args.append(self.mDM)
 

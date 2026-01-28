@@ -531,7 +531,7 @@ class Map(abc.ABC):
         ----------
         map_in : `Map`
             Map to add.
-        weights: `Map` or `~numpy.ndarray`
+        weights : `Map` or `~numpy.ndarray`
             The weight factors while adding. Default is None.
         """
         if not self.unit.is_equivalent(map_in.unit):
@@ -555,7 +555,7 @@ class Map(abc.ABC):
             Number of pixels padded to the edges of each axis.
         axis_name : str, optional
             Which axis to downsample. By default, spatial axes are padded. Default is None.
-        mode : {'constant', 'edge', 'interp'}
+        mode : {'constant', 'edge', 'interp'}, optional
             Padding mode.  'edge' pads with the closest edge value.
             'constant' pads with a constant value. 'interp' pads with
             an extrapolated value. Default is 'constant'.
@@ -942,7 +942,7 @@ class Map(abc.ABC):
             Tuple should be ordered as (I_lon, I_lat, I_0, ..., I_n)
             for WCS maps and (I_hpx, I_0, ..., I_n) for HEALPix maps.
             Pixel indices can be either float or integer type.
-        fill_value : float
+        fill_value : float, optional
             Value which is returned if the position is outside the projection
             footprint. Default is `numpy.nan`.
 
@@ -993,7 +993,7 @@ class Map(abc.ABC):
             Coordinate arrays for each dimension of the map. Tuple
             should be ordered as (lon, lat, x_0, ..., x_n) where x_i
             are coordinates for non-spatial dimensions of the map.
-        method : {"linear", "nearest"}
+        method : {"linear", "nearest"}, optional
             Method to interpolate data values. Default is "linear".
         fill_value : float, optional
             The value to use for points outside the interpolation domain.
@@ -1017,7 +1017,7 @@ class Map(abc.ABC):
             map. Tuple should be ordered as (p_lon, p_lat, p_0, ...,
             p_n) where p_i are pixel coordinates for non-spatial
             dimensions of the map.
-        method : {"linear", "nearest"}
+        method : {"linear", "nearest"}, optional
             Method to interpolate data values. Default is "linear".
         fill_value : float, optional
             The value to use for points outside the interpolation domain.
@@ -1327,7 +1327,7 @@ class Map(abc.ABC):
 
         Returns
         -------
-        axes : `~numpy.ndarray` of `~matplotlib.pyplot.Axes`
+        axes : `~numpy.ndarray` of `~matplotlib.axes.Axes`
             Axes grid.
         """
         if len(self.geom.axes) > 1:
@@ -1540,7 +1540,7 @@ class Map(abc.ABC):
 
         Parameters
         ----------
-         axes_names: list of str, optional
+         axes_names : list of str, optional
             Names of the axis to reduce over. If None, all non-spatial axis will be summed over. Default is None.
         keepdims : bool, optional
             If this is set to true, the axes which are summed over are left in
@@ -1805,7 +1805,7 @@ class Map(abc.ABC):
 
         Parameters
         ----------
-        region: `~regions.Region`, optional
+        region : `~regions.Region`, optional
              Region to extract the spectrum from. Pixel or sky regions are accepted. Default is None.
         func : `numpy.func`, optional
             Function to reduce the data. Default is `~numpy.nansum`.

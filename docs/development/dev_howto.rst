@@ -576,15 +576,15 @@ each with pros and cons.
 
 We utilise `towncrier <https://towncrier.readthedocs.io/en/stable/>`__ for our release notes.
 
-- For each PR, a related 'fragment' file should be created in the ``docs/release-notes`` folder.
+- For some PRs, a related 'fragment' file should be created in the ``docs/release-notes`` folder.
+  Note: not all PRs need to be included in the changelog. For example, fixing a typo in the documentation
+  does not need a changelog fragment entry. If you are unsure if you need a fragment, the lead developers can
+  help you decide.
 - The naming convention of the file should be ``<PULL REQUEST NUMBER>.<TYPE>.rst``, where the available
   types are ``infrastructure``, ``docs``, ``feature`` or ``bugfix``.
 - The file should contain a suitable message for the PR, for example "A new function `select_nested_models`
   has been introduced to perform nested model fits and compute the resulting test statistic (TS) between
   two nested hypotheses.".
-- Note: not all PRs need to be included in the changelog. For example, fixing a typo in the documentation
-  does not need a changelog fragment entry. If you are unsure if you need a fragment, the lead developers can
-  help you decide.
 
 
 
@@ -868,7 +868,7 @@ nice printed version of the string instead of ``\n``::
     Hi, my name is Anna, and I'm 8 years old.
     I live in Heidelberg
 
-To make ``info`` print by default, and be re-usable from ``__str__`` and make it
+To make ``info`` print by default, and be reusable from ``__str__`` and make it
 possible to get a string (without having to monkey-patch ``sys.stdout``), would
 require adding this ``show`` option and if-else at the end of every ``info``
 method::
@@ -961,7 +961,7 @@ Nearly all base classes in Gammapy implement this default
 `_repr_html_`. If a new class derives from an existing Gammapy class,
 a default implementation is not needed, since it will rely on its
 (grand)parent. As a result, for specific HTML output, only the
-`to_html` method needs to be implented for the relevant class.
+`to_html` method needs to be implemented for the relevant class.
 
 Convert a jupyter notebook to python script in the sphinx-gallery format
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
