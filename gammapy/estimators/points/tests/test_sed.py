@@ -821,7 +821,7 @@ def test_flux_points_estimator_norm_spectral_model(fermi_datasets):
 
 
 @requires_data()
-def test_fpe_diff_lengths():
+def test_fpe_diff_lengths(caplog):
     dataset = SpectrumDatasetOnOff.read(
         "$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits"
     )
@@ -855,8 +855,11 @@ def test_fpe_diff_lengths():
     dataset4 = dataset1.copy()
     dataset4.meta_table = Table(names=["NAME", "TELESCOP"], data=[["23523"], ["not"]])
     datasets = Datasets([dataset1, dataset2, dataset3, dataset4])
-    with pytest.raises(ValueError):
-        fp = fpe.run(datasets)
+    fpe.run(datasets)
+    assert "WARNING" in [_.levelname for _ in caplog.records]
+    assert "All datasets must use the same value of the 'TELESCOP' meta keyword." in [
+        _.message for _ in caplog.records
+    ]
 
 
 def test_resample_axis():
