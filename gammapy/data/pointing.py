@@ -95,10 +95,6 @@ class FixedPointingInfo:
 
     Parameters
     ----------
-    meta : `~astropy.table.Table.meta`
-        Meta header info from Table on pointing.
-        Passing this is deprecated, provide ``mode`` and ``fixed_icrs`` or ``fixed_altaz``
-        instead or use `FixedPointingInfo.from_fits_header` instead.
     mode : `PointingMode`
         How the telescope was pointing during the observation.
     fixed_icrs : `~astropy.coordinates.SkyCoord`, optional
