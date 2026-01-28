@@ -250,12 +250,12 @@ class TestFermi4FGLObject:
 
         e_ref = model.reference.quantity
         dnde, dnde_errn, dnde_errp = model.evaluate_error(e_ref)
-        dnde_10gev = model(10 * u.GeV)
+        dnde_10GeV = model(10 * u.GeV)
         assert isinstance(model, ref["spec_type"])
         assert_quantity_allclose(dnde, ref["dnde"], rtol=1e-2)
         assert_quantity_allclose(dnde_errn, ref["dnde_err"], rtol=5e-2)
         assert_quantity_allclose(dnde_errp, ref["dnde_err"], rtol=5e-2)
-        assert_quantity_allclose(dnde_10gev, ref["dnde_10GeV"], rtol=1e-4)
+        assert_quantity_allclose(dnde_10GeV, ref["dnde_10GeV"], rtol=1e-4)
 
     def test_spatial_model(self):
         model = self.cat["4FGL J0000.3-7355"].spatial_model()

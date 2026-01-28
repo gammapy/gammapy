@@ -612,10 +612,10 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         table["flux_errn"] = np.abs(flux_err[:, 0])
         table["flux_errp"] = flux_err[:, 1]
 
-        nu_fnu = self._get_flux_values("nuFnu_Band", "erg cm-2 s-1")
-        table["e2dnde"] = nu_fnu
-        table["e2dnde_errn"] = np.abs(nu_fnu * flux_err[:, 0] / flux)
-        table["e2dnde_errp"] = nu_fnu * flux_err[:, 1] / flux
+        nuFnu = self._get_flux_values("nuFnu_Band", "erg cm-2 s-1")
+        table["e2dnde"] = nuFnu
+        table["e2dnde_errn"] = np.abs(nuFnu * flux_err[:, 0] / flux)
+        table["e2dnde_errp"] = nuFnu * flux_err[:, 1] / flux
 
         is_ul = np.isnan(table["flux_errn"])
         table["is_ul"] = is_ul
@@ -626,7 +626,7 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
         table["flux_ul"][is_ul] = flux_ul[is_ul]
 
         # handle upper limits
-        table["e2dnde_ul"] = np.nan * nu_fnu.unit
+        table["e2dnde_ul"] = np.nan * nuFnu.unit
         e2dnde_ul = compute_flux_points_ul(table["e2dnde"], table["e2dnde_errp"])
         table["e2dnde_ul"][is_ul] = e2dnde_ul[is_ul]
 
@@ -935,10 +935,10 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
         table["flux_errn"] = np.abs(flux_err[:, 0])
         table["flux_errp"] = flux_err[:, 1]
 
-        nu_fnu = self._get_flux_values("nuFnu", "erg cm-2 s-1")
-        table["e2dnde"] = nu_fnu
-        table["e2dnde_errn"] = np.abs(nu_fnu * flux_err[:, 0] / flux)
-        table["e2dnde_errp"] = nu_fnu * flux_err[:, 1] / flux
+        nuFnu = self._get_flux_values("nuFnu", "erg cm-2 s-1")
+        table["e2dnde"] = nuFnu
+        table["e2dnde_errn"] = np.abs(nuFnu * flux_err[:, 0] / flux)
+        table["e2dnde_errp"] = nuFnu * flux_err[:, 1] / flux
 
         is_ul = np.isnan(table["flux_errn"])
         table["is_ul"] = is_ul
@@ -949,7 +949,7 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
         table["flux_ul"][is_ul] = flux_ul[is_ul]
 
         # handle upper limits
-        table["e2dnde_ul"] = np.nan * nu_fnu.unit
+        table["e2dnde_ul"] = np.nan * nuFnu.unit
         e2dnde_ul = compute_flux_points_ul(table["e2dnde"], table["e2dnde_errp"])
         table["e2dnde_ul"][is_ul] = e2dnde_ul[is_ul]
 
@@ -1829,15 +1829,15 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
         table["e_ref"] = np.sqrt(table["e_min"] * table["e_max"])
 
         fgl_cols = ["Flux_Band", "Unc_Flux_Band", "Sqrt_TS_Band", "nuFnu_Band"]
-        flux, flux_err, sig, nu_fnu = [fp_data[col] for col in fgl_cols]
+        flux, flux_err, sig, nuFnu = [fp_data[col] for col in fgl_cols]
 
         table["flux"] = flux
         table["flux_errn"] = np.abs(flux_err[:, 0])
         table["flux_errp"] = flux_err[:, 1]
 
-        table["e2dnde"] = nu_fnu
-        table["e2dnde_errn"] = np.abs(nu_fnu * flux_err[:, 0] / flux)
-        table["e2dnde_errp"] = nu_fnu * flux_err[:, 1] / flux
+        table["e2dnde"] = nuFnu
+        table["e2dnde_errn"] = np.abs(nuFnu * flux_err[:, 0] / flux)
+        table["e2dnde_errp"] = nuFnu * flux_err[:, 1] / flux
 
         is_ul = np.isnan(flux_err[:, 0]) | (sig < 2)
         table["is_ul"] = is_ul
