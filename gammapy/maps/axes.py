@@ -188,8 +188,7 @@ class MapAxis:
         """
         if self.name != required_name:
             raise ValueError(
-                "Unexpected axis name,"
-                f' expected "{required_name}", got: "{self.name}"'
+                f'Unexpected axis name, expected "{required_name}", got: "{self.name}"'
             )
 
     def is_aligned(self, other, atol=2e-2):
@@ -401,53 +400,73 @@ class MapAxis:
         """
         return self.copy(name=new_name)
 
-    def format_plot_xaxis(self, ax):
-        """Format the x-axis.
-
+    def _format_plot_axis(self, ax, axis="x"):
+        """Format the plot axis (x or y).
         Parameters
         ----------
         ax : `~matplotlib.pyplot.Axis`
             Plot axis to format.
-
+        axis : {"x", "y"}
+            Axis to format.
         Returns
         -------
         ax : `~matplotlib.pyplot.Axis`
             Formatted plot axis.
         """
-        ax.set_xscale(self.as_plot_scale)
-
-        xlabel = DEFAULT_LABEL_TEMPLATE.format(
+        if axis == "x":
+            ax.set_xscale(self.as_plot_scale)
+            axis_obj = ax.xaxis
+        elif axis == "y":
+            ax.set_yscale(self.as_plot_scale)
+            axis_obj = ax.yaxis
+        else:
+            raise ValueError(f"Invalid axis: {axis}")
+        unit = getattr(axis_obj, "units", None)
+        if unit is not None:
+            unit = unit.to_string(UNIT_STRING_FORMAT)
+        else:
+            unit = self.unit.to_string(UNIT_STRING_FORMAT)
+        label = DEFAULT_LABEL_TEMPLATE.format(
             quantity=PLOT_AXIS_LABEL.get(self.name, self.name.capitalize()),
-            unit=ax.xaxis.units.to_string(UNIT_STRING_FORMAT),
+            unit=unit,
         )
-        ax.set_xlabel(xlabel)
-        xmin, xmax = self.bounds
-        if not xmin == xmax:
-            ax.set_xlim(self.bounds)
+        if axis == "x":
+            ax.set_xlabel(label)
+            xmin, xmax = self.bounds
+            if not xmin == xmax:
+                ax.set_xlim(self.bounds)
+        else:
+            ax.set_ylabel(label)
+            ymin, ymax = self.bounds
+            if not ymin == ymax:
+                ax.set_ylim(self.bounds)
         return ax
+
+    def format_plot_xaxis(self, ax):
+        """Format the x-axis.
+        Parameters
+        ----------
+        ax : `~matplotlib.pyplot.Axis`
+            Plot axis to format.
+        Returns
+        -------
+        ax : `~matplotlib.pyplot.Axis`
+            Formatted plot axis.
+        """
+        return self._format_plot_axis(ax, axis="x")
 
     def format_plot_yaxis(self, ax):
         """Format plot y-axis.
-
         Parameters
         ----------
         ax : `~matplotlib.pyplot.Axis`
             Plot axis to format.
-
         Returns
         -------
         ax : `~matplotlib.pyplot.Axis`
             Formatted plot axis.
         """
-        ax.set_yscale(self.as_plot_scale)
-
-        ylabel = DEFAULT_LABEL_TEMPLATE.format(
-            quantity=PLOT_AXIS_LABEL.get(self.name, self.name.capitalize()),
-            unit=ax.yaxis.units.to_string(UNIT_STRING_FORMAT),
-        )
-        ax.set_ylabel(ylabel)
-        ax.set_ylim(self.bounds)
-        return ax
+        return self._format_plot_axis(ax, axis="y")
 
     @property
     def iter_by_edges(self):
@@ -1153,7 +1172,7 @@ class MapAxis:
             if centers[-1] != self.center[-1]:
                 if strict is True:
                     raise ValueError(
-                        f"Number of {self.name} bins - 1 ({self.nbin-1}) is not divisible by {factor}"
+                        f"Number of {self.name} bins - 1 ({self.nbin - 1}) is not divisible by {factor}"
                     )
                 else:
                     centers = np.append(centers, self.center[-1])
@@ -1432,7 +1451,7 @@ class MapAxis:
                 axis = MapAxis.from_nodes(e_ref, name="energy", interp="log")
             else:
                 raise ValueError(
-                    "Either 'e_ref', 'e_min' or 'e_max' column " "names are required"
+                    "Either 'e_ref', 'e_min' or 'e_max' column names are required"
                 )
         elif format == "gadf-sed-norm":
             # TODO: guess interp here
@@ -1543,10 +1562,15 @@ class MapAxes(Sequence):
     def iter_with_reshape(self):
         # TODO: The name is misleading. Maybe iter_axis_and_shape?
         """Generator that iterates over axes and their shape."""
-        for idx, axis in enumerate(self):
+        size = 0
+        for axis in self:
+            size += 1
+        idx = 0
+        for axis in self:
             # Extract values for each axis, default: nodes
-            shape = [1] * len(self)
+            shape = [1] * size
             shape[idx] = -1
+            idx += 1
             if self._n_spatial_axes:
                 shape = (
                     shape[::-1]
@@ -1948,7 +1972,7 @@ class MapAxes(Sequence):
             ax_slice = slices.get(ax.name, slice(None))
 
             # in the case where isinstance(ax_slice, int) the axes is dropped
-            if isinstance(ax_slice, slice):
+            if isinstance(ax_slice, slice) or isinstance(ax, LabelMapAxis):
                 ax_sliced = ax.slice(ax_slice)
                 axes.append(ax_sliced.copy())
 
@@ -2561,8 +2585,7 @@ class TimeMapAxis:
         """
         if self.name != required_name:
             raise ValueError(
-                "Unexpected axis name,"
-                f' expected "{required_name}", got: "{self.name}"'
+                f'Unexpected axis name, expected "{required_name}", got: "{self.name}"'
             )
 
     def is_allclose(self, other, **kwargs):
@@ -3154,25 +3177,26 @@ class LabelMapAxis:
         Labels to be used for the axis nodes.
     name : str, optional
         Name of the axis. Default is "".
-
+    unit : str or `~astropy.units.Unit`, optional
+        Unit of the axis. Default is "".
     """
 
     node_type = "label"
 
-    def __init__(self, labels, name=""):
-        unique_labels = np.unique(labels)
-
-        if not len(unique_labels) == len(labels):
-            raise ValueError("Node labels must be unique")
+    def __init__(self, labels, unit="", name=""):
+        # unique_labels = np.unique(labels)
+        # if not len(unique_labels) == len(labels):
+        #    raise ValueError("Node labels must be unique")
 
         self._labels = np.array(labels)
         self._name = name
+        self._unit = u.Unit(unit)
 
     @property
     def unit(self):
         # TODO: should we allow units for label axis?
         """Unit of the axis."""
-        return u.Unit("")
+        return self._unit
 
     @property
     def name(self):
@@ -3189,8 +3213,7 @@ class LabelMapAxis:
         """
         if self.name != required_name:
             raise ValueError(
-                "Unexpected axis name,"
-                f' expected "{required_name}", got: "{self.name}"'
+                f'Unexpected axis name, expected "{required_name}", got: "{self.name}"'
             )
 
     @property
@@ -3281,7 +3304,7 @@ class LabelMapAxis:
     @property
     def center(self):
         """Center of the label axis."""
-        return self._labels
+        return self._labels * self.unit
 
     @property
     def edges(self):
@@ -3292,12 +3315,12 @@ class LabelMapAxis:
     @property
     def edges_min(self):
         """Edges of the label axis."""
-        return self._labels
+        return self._labels * self.unit
 
     @property
     def edges_max(self):
         """Edges of the label axis."""
-        return self._labels
+        return self._labels * self.unit
 
     @property
     def bin_width(self):
@@ -3345,6 +3368,33 @@ class LabelMapAxis:
             rotation_mode="anchor",
         )
         return ax
+
+    def format_plot_yaxis(self, ax):
+        """Format plot axis.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.pyplot.Axis`
+            Plot axis to format.
+
+        Returns
+        -------
+        ax : `~matplotlib.pyplot.Axis`
+            Formatted plot axis.
+        """
+        ax.set_yticks(self.plot_center)
+        ax.set_yticklabels(
+            self.plot_labels,
+            rotation=30,
+            ha="right",
+            rotation_mode="anchor",
+        )
+        return ax
+
+    @property
+    def bounds(self):
+        """Return the bounds of the axis."""
+        return self.center.min(), self.center.max()
 
     def to_header(self, format="gadf", idx=0):
         """Create FITS header.
@@ -3559,6 +3609,10 @@ class LabelMapAxis:
         axis : `LabelMapAxis`
             Squashed label map axis.
         """
+        sorted_label = np.sort(self.center)
         return LabelMapAxis(
-            labels=[self.center[0] + "..." + self.center[-1]], name=self._name
+            labels=[
+                [sorted_label[0].to_string() + "..." + sorted_label[-1].to_string()]
+            ],
+            name=self._name,
         )
