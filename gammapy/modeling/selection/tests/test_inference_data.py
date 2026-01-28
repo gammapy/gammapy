@@ -68,7 +68,7 @@ def test_inference_data_from_sampler_basic(ultranest_result, datasets):
     assert inference_data.posterior.sizes["draw"] == n_samples
 
     with pytest.raises(ValueError):
-        inference_data = inference_data_from_sampler(
+        inference_data_from_sampler(
             results=ultranest_result,
             datasets=datasets,
             backend="notimplemented",
