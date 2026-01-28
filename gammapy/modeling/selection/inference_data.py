@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 
 import numpy as np
+from gammapy.modeling.parameter import Parameters
 
 
 def inference_data_from_ultranest(sampler_results, weighted=False):
@@ -199,7 +200,7 @@ def generate_prior_samples(parameters, n_prior_samples=1000, random_seed=42):
 
     def _prior_inverse_cdf(values):
         """Returns a list of model parameters for a given list of values (that are bound in [0,1])."""
-        if None in parameters:
+        if None in Parameters(parameters).prior:
             raise ValueError(
                 "Some parameters have no prior set. You need priors on all parameters."
             )

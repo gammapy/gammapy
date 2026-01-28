@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import pytest
 from gammapy.utils.testing import requires_data, requires_dependency
 from numpy.testing import assert_allclose
 from gammapy.modeling.models import SkyModel
@@ -10,6 +11,28 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     Models,
 )
+
+
+@requires_dependency("ultranest")
+@requires_data()
+def test_run_missing_prior(backend="ultranest"):
+    datasets = Datasets()
+    for obs_id in [23523, 23526]:
+        dataset = SpectrumDatasetOnOff.read(
+            f"$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs{obs_id}.fits"
+        )
+        datasets.append(dataset)
+
+    pwl1 = PowerLawSpectralModel(index=2.3)
+    pwl1.amplitude.prior = LogUniformPrior(min=1e-12, max=1e-10)
+
+    models = Models([SkyModel(pwl1, name="source1")])
+    datasets.models = models
+
+    sampler_opts = {"live_points": 300}
+    sampler = Sampler(backend=backend, sampler_opts=sampler_opts)
+    with pytest.raises(ValueError):
+        sampler.run(datasets)
 
 
 @requires_dependency("ultranest")
