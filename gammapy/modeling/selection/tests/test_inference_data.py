@@ -1,11 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from gammapy.utils.testing import requires_data, requires_dependency
 import pytest
+from gammapy.utils.testing import requires_data, requires_dependency
 import numpy as np
 from gammapy.modeling.selection.inference_data import (
     inference_data_from_ultranest,
     generate_prior_samples,
     inference_data_from_sampler,
+    resample_posterior,
 )
 
 from numpy.testing import assert_allclose
@@ -66,6 +67,13 @@ def test_inference_data_from_sampler_basic(ultranest_result, datasets):
     n_samples = len(ultranest_result.sampler_results["samples"][:, 0])
     assert inference_data.posterior.sizes["draw"] == n_samples
 
+    with pytest.raises(ValueError):
+        inference_data = inference_data_from_sampler(
+            results=ultranest_result,
+            datasets=datasets,
+            backend="notimplemented",
+        )
+
 
 @requires_dependency("ultranest")
 @requires_dependency("arviz")
@@ -101,6 +109,23 @@ def test_inference_data_from_sampler_with_options(ultranest_result, datasets):
     assert inference_data.log_likelihood.sizes["pixel"] == n_pixel
     assert inference_data.posterior_predictive.sizes["pixel"] == n_pixel
     assert inference_data.prior_predictive.sizes["pixel"] == n_pixel
+
+
+@requires_dependency("ultranest")
+@requires_dependency("arviz")
+@requires_data()
+def test_resample_posterior(ultranest_result, datasets):
+    inference_data = inference_data_from_sampler(
+        results=ultranest_result,
+        datasets=datasets,
+        backend="ultranest",
+        n_prosterior_samples=20,
+        n_prior_samples=5,
+        predictives=False,
+    )
+    idata_resampled = resample_posterior(inference_data, n_samples=10)
+    assert idata_resampled.posterior.sizes["draw"] == 10
+    assert idata_resampled.prior.sizes["draw"] == 5
 
 
 @requires_dependency("arviz")
@@ -159,3 +184,7 @@ def test_generate_prior_samples():
     samples = generate_prior_samples(parameters, n_prior_samples=3, random_seed=0)
     assert samples.shape == (3, 2)
     assert np.all(samples >= 0) and np.all(samples <= 10)
+
+    parameters[0].prior = None
+    with pytest.raises(ValueError):
+        generate_prior_samples(parameters, n_prior_samples=3, random_seed=0)
