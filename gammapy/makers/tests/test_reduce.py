@@ -356,6 +356,18 @@ def test_datasets_maker_map_far_apart(
     assert exposure.unit == "m2 s"
     assert_allclose(exposure.data.sum(), 22.969412e09, rtol=3e-3)
 
+    makers = DatasetsMaker(
+        makers_map,
+        stack_datasets=False,
+        cutout_mode="partial",
+        cutout_width="5 deg",
+        n_jobs=1,
+    )
+    datasets = makers.run(crab_map_dataset, observations_hess_far_apart)
+
+    assert len(datasets) != len(observations_hess_far_apart)
+    assert len(datasets) == 1
+
 
 @requires_data()
 def test_datasets_maker_spectrum(observations_hess, makers_spectrum, spectrum_dataset):

@@ -112,10 +112,10 @@ class DatasetsMaker(Maker, parallel.ParallelMixin):
                 )
             except NoOverlapError:
                 log.warning(
-                    f"No cutout for {observation.obs_id} because"
+                    f"{observation.obs_id} discarded because"
                     " it is outside the FOV of the reference geom."
                 )
-                dataset_obs = dataset.copy()
+                return None
 
         else:
             dataset_obs = dataset.copy()
@@ -134,7 +134,7 @@ class DatasetsMaker(Maker, parallel.ParallelMixin):
         return dataset_obs
 
     def callback(self, dataset):
-        if self.stack_datasets:
+        if self.stack_datasets and dataset is not None:
             if type(self._dataset) is MapDataset and type(dataset) is MapDatasetOnOff:
                 dataset = dataset.to_map_dataset(name=dataset.name)
             self._dataset.stack(dataset)
@@ -198,7 +198,14 @@ class DatasetsMaker(Maker, parallel.ParallelMixin):
         if self.stack_datasets:
             return Datasets([self._dataset])
 
+        valid_datasets = [d for d in self._datasets if d is not None]
         lookup = {
-            d.meta_table["OBS_ID"][0]: idx for idx, d in enumerate(self._datasets)
+            d.meta_table["OBS_ID"][0]: idx for idx, d in enumerate(valid_datasets)
         }
-        return Datasets([self._datasets[lookup[obs.obs_id]] for obs in observations])
+        return Datasets(
+            [
+                valid_datasets[lookup[obs.obs_id]]
+                for obs in observations
+                if obs.obs_id in lookup
+            ]
+        )
