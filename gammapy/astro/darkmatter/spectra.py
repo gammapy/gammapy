@@ -445,7 +445,9 @@ class DarkMatterDecaySpectralModel(SpectralModel):
         self.mass = u.Quantity(mass)
         self.channel = channel
         self.jfactor = u.Quantity(jfactor)
-        self.primary_flux = PrimaryFlux(self.mass / 2, channel=self.channel, source=source)
+        self.primary_flux = PrimaryFlux(
+            self.mass / 2, channel=self.channel, source=source
+        )
         self.source = source
         super().__init__(scale=scale)
 
