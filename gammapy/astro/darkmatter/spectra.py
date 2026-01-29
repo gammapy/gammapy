@@ -289,9 +289,9 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
         Redshift value.
     k: int
         Type of dark matter particle (k:2 Majorana, k:4 Dirac).
-    source: str
+    source: str, optional
         Data source for the spectra. Choose between 'pppc4' and 'cosmixs'.
-        Delfault is 'pppc4'.
+        Default is 'pppc4'.
 
     Examples
     --------
@@ -404,9 +404,9 @@ class DarkMatterDecaySpectralModel(SpectralModel):
         is used.
     z: float
         Redshift value.
-    source: str
+    source: str, optional
         Data source for the spectra. Choose between 'pppc4' and 'cosmixs'.
-        Delfault is 'pppc4'.
+        Default is 'pppc4'.
 
     Examples
     --------
