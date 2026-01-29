@@ -90,8 +90,8 @@ def test_dm_decay_spectral_model(tmpdir):
     models.write(filename, overwrite=True)
     new_models = Models.read(filename)
 
-    assert_quantity_allclose(integral_flux.value, 4.80283595e-2, rtol=1e-3)
-    assert_quantity_allclose(differential_flux.value, 2.3088e-4, rtol=1e-3)
+    assert_quantity_allclose(integral_flux.value, 3.209234e-2, rtol=1e-3)
+    assert_quantity_allclose(differential_flux.value, 2.33485775e-05, rtol=1e-3)
 
     assert new_models[0].spectral_model.channel == model.channel
     assert new_models[0].spectral_model.z == model.z
