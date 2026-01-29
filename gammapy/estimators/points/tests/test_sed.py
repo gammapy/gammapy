@@ -754,7 +754,7 @@ def test_fpe_non_aligned_energy_axes():
         fpe.run(datasets=[dataset_1, dataset_2])
 
 
-def test_fpe_non_uniform_datasets():
+def test_fpe_non_uniform_datasets(caplog):
     energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=10)
     geom_1 = RegionGeom.create("icrs;circle(0, 0, 0.1)", axes=[energy_axis])
     dataset_1 = SpectrumDataset.create(
@@ -769,8 +769,11 @@ def test_fpe_non_uniform_datasets():
 
     fpe = FluxPointsEstimator(energy_edges=[1, 3, 10] * u.TeV)
 
-    with pytest.raises(ValueError, match="same value of the 'TELESCOP' meta keyword"):
-        fpe.run(datasets=[dataset_1, dataset_2])
+    fpe.run(datasets=[dataset_1, dataset_2])
+    assert "WARNING" in [_.levelname for _ in caplog.records]
+    assert "All datasets must use the same value of the 'TELESCOP' meta keyword." in [
+        _.message for _ in caplog.records
+    ]
 
 
 @requires_data()
