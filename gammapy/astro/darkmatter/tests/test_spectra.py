@@ -25,12 +25,11 @@ def test_primary_flux():
 @pytest.mark.parametrize(
     "mass, expected_flux, source, expected_exception",
     [
-        (1.6, 0.00025037, 'pppc4', None),
-        (11, 0.00549445, 'cosmixs', None),
-        (75, None, 'nonexistend', ValueError),
-        (75, None, 'pppc4', ValueError),
-
-    ]
+        (1.6, 0.00025037, "pppc4", None),
+        (11, 0.00549445, "cosmixs", None),
+        (75, None, "nonexistend", ValueError),
+        (75, None, "pppc4", ValueError),
+    ],
 )
 @requires_data()
 def test_primary_flux_interpolation(mass, expected_flux, source, expected_exception):
@@ -52,7 +51,7 @@ def test_dm_annihilation_spectral_model(tmpdir):
     energy_max = 10 * u.TeV
 
     model = DarkMatterAnnihilationSpectralModel(
-        mass=massDM, channel=channel, jfactor=jfactor, source='pppc4'
+        mass=massDM, channel=channel, jfactor=jfactor, source="pppc4"
     )
     integral_flux = model.integral(energy_min=energy_min, energy_max=energy_max).to(
         "cm-2 s-1"
@@ -86,7 +85,9 @@ def test_dm_decay_spectral_model(tmpdir):
     energy_min = 0.01 * u.TeV
     energy_max = 10 * u.TeV
 
-    model = DarkMatterDecaySpectralModel(mass=massDM, channel=channel, jfactor=jfactor, source='pppc4')
+    model = DarkMatterDecaySpectralModel(
+        mass=massDM, channel=channel, jfactor=jfactor, source="pppc4"
+    )
     integral_flux = model.integral(energy_min=energy_min, energy_max=energy_max).to(
         "cm-2 s-1"
     )
@@ -166,7 +167,9 @@ def test_dm_decay_spectral_model_cosmixs(tmpdir):
     energy_min = 0.01 * u.TeV
     energy_max = 10 * u.TeV
 
-    model = DarkMatterDecaySpectralModel(mass=massDM, channel=channel, jfactor=jfactor, source="cosmixs")
+    model = DarkMatterDecaySpectralModel(
+        mass=massDM, channel=channel, jfactor=jfactor, source="cosmixs"
+    )
     integral_flux = model.integral(energy_min=energy_min, energy_max=energy_max).to(
         "cm-2 s-1"
     )
