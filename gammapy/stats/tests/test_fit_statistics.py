@@ -6,6 +6,7 @@ from numpy.testing import assert_allclose
 from gammapy.utils.compilation import get_fit_statistics_compiled
 from gammapy.utils.testing import requires_dependency
 
+import astropy.units as u
 from gammapy import stats
 from gammapy.stats.fit_statistics_cython import cash_sum_cython
 from gammapy.stats.fit_statistics import (
@@ -14,6 +15,7 @@ from gammapy.stats.fit_statistics import (
     WStatFitStatistic,
     Chi2FitStatistic,
     Chi2AsymmetricErrorFitStatistic,
+    GaussianPriorPenalty,
 )
 
 
@@ -409,3 +411,38 @@ def test_chi2_asym_fit_statistic_stat_sum_nomask(mock_fp_dataset):
 def test_chi2_asym_fit_statistic_with_mask(mock_fp_dataset):
     stat_sum = Chi2AsymmetricErrorFitStatistic.stat_sum_dataset(mock_fp_dataset)
     assert_allclose(stat_sum, 4.798344)
+
+
+def test_gaussian_prior_penalty():
+    from gammapy.modeling.models import PiecewiseNormSpectralModel
+
+    norm_model = PiecewiseNormSpectralModel(energy=np.geomspace(0.1, 10, 5) * u.TeV)
+
+    penalty = GaussianPriorPenalty.from_method(
+        norm_model.parameters, "L2", mean=0.0, lambda_=2
+    )
+    stat_sum = penalty.stat_sum()
+    assert_allclose(stat_sum, 10)
+
+    norm_model.parameters.value = [0.0, 1.0, 0.0, 1.0, 0]
+    penalty = GaussianPriorPenalty.from_method(
+        norm_model.parameters, "smoothness", lambda_=0.5
+    )
+    stat_sum = penalty.stat_sum()
+    assert_allclose(stat_sum, 2)
+    assert_allclose(penalty._inverse_covariance[1], [-1, 2, -1, 0, 0], atol=1e-7)
+    assert_allclose(penalty._inverse_covariance[3], [0, 0, -1, 2, -1], atol=1e-7)
+    assert_allclose(penalty._inverse_covariance[4], [0, 0, 0, -1, 2], atol=1e-7)
+
+    penalty = GaussianPriorPenalty.from_method(
+        norm_model.parameters, "diagonal", sigma=2, lambda_=0.5
+    )
+    stat_sum = penalty.stat_sum()
+    assert_allclose(stat_sum, 0.25)
+
+    penalty = GaussianPriorPenalty.from_method(
+        norm_model.parameters, "precision", precision=2 * np.eye(5), lambda_=0.5
+    )
+    stat_sum = penalty.stat_sum()
+    assert_allclose(stat_sum, 2)
+    assert_allclose(penalty._inverse_covariance, 2 * np.eye(5))

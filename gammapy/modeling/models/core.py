@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 from gammapy.maps import Map, RegionGeom
 from gammapy.modeling import Covariance, Parameter, Parameters
 from gammapy.modeling.covariance import CovarianceMixin
+from gammapy.stats.fit_statistics import FitStatisticPenalty
 from gammapy.utils.scripts import (
     from_yaml,
     make_path,
@@ -198,6 +199,17 @@ def _write_models(
     yaml_str += models.to_yaml(full_output, overwrite_templates)
 
     write_yaml(yaml_str, path, overwrite=overwrite, checksum=checksum)
+
+
+def _set_models_penalties(models, penalties):
+    """Set penalties on models"""
+    if penalties is not None:
+        if not isinstance(penalties, (list, tuple)):
+            penalties = [penalties]
+        if not all([isinstance(_, FitStatisticPenalty) for _ in penalties]):
+            raise ValueError("Penalties must be FitStatisticPenalty instances.")
+
+    models._penalties = penalties
 
 
 class ModelBase:
@@ -467,17 +479,21 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
     ----------
     models : `SkyModel`, list of `SkyModel` or `Models`
         Sky models.
-    covariance_data : `~numpy.ndarray`
-        Covariance data.
+    covariance_data : `~numpy.ndarray`, optional
+        Covariance data. Default is None.
+    penalties : list of `~gammapy.stats.FitStatisticPenalty`, optional
+        Penalties to be applied to the Models parameters when computing a FitStatistic. Default is None.
     """
 
-    def __init__(self, models=None, covariance_data=None):
+    def __init__(self, models=None, covariance_data=None, penalties=None):
         if models is None:
             models = []
 
         if isinstance(models, (Models, DatasetModels)):
             if covariance_data is None and models.covariance is not None:
                 covariance_data = models.covariance.data
+            if penalties is None and models._penalties is not None:
+                penalties = models._penalties
             models = models._models
         elif isinstance(models, ModelBase):
             models = [models]
@@ -501,6 +517,8 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
         # Set separately because this triggers the update mechanism on the sub-models
         if covariance_data is not None:
             self.covariance = covariance_data
+
+        _set_models_penalties(self, penalties)
 
     @property
     def parameters(self):
@@ -1347,6 +1365,11 @@ class Models(DatasetModels, collections.abc.MutableSequence):
     def set_prior(self, parameters, priors):
         for parameter, prior in zip(parameters, priors):
             parameter.prior = prior
+
+    def set_penalties(self, penalties):
+        """Set the list of FitStatisticPenalty to be applied on the Models."""
+        # TODO: check that penalties parameters apply to models parameters...
+        _set_models_penalties(self, penalties)
 
 
 class restore_models_status:
