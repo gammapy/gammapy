@@ -35,7 +35,8 @@ class PrimaryFlux(TemplateNDSpectralModel):
         channel: str
             Annihilation channel. List available channels with `~gammapy.spectrum.PrimaryFlux.allowed_channels`.
         source: str
-            Data source for the spectra. Choose between 'PPPC4' and 'cosmixs'.
+            Data source for the spectra. Choose between 'pppc4' and 'cosmixs'.
+            Delfault is 'pppc4'.
 
         References
         ----------
@@ -288,6 +289,9 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
         Redshift value.
     k: int
         Type of dark matter particle (k:2 Majorana, k:4 Dirac).
+    source: str
+        Data source for the spectra. Choose between 'pppc4' and 'cosmixs'.
+        Delfault is 'pppc4'.
 
     Examples
     --------
@@ -400,6 +404,9 @@ class DarkMatterDecaySpectralModel(SpectralModel):
         is used.
     z: float
         Redshift value.
+    source: str
+        Data source for the spectra. Choose between 'pppc4' and 'cosmixs'.
+        Delfault is 'pppc4'.
 
     Examples
     --------
