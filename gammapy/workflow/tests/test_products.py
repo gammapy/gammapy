@@ -88,6 +88,47 @@ def test_products():
     assert analysis_products.pids[0] == sum1.products[0].pid
 
 
+def test_products_no_ray():
+    sum1 = SumStep(name="sum1")
+    sum1.parallel = False
+    assert sum1.products.data[0] is None
+    assert sum1.products.data[1] is None
+    assert sum1.products[0].step_name == "sum1"
+
+    sum1.run(data=[Product(name="value", data=1), Product(name="value", data=2)])
+    assert_allclose(sum1.products.data[0], 3)
+    assert sum1.products.data[1] == "done"
+    assert_allclose(sum1.data.data, [1, 2])
+
+    sum1.run(data=sum1.products)
+    assert_allclose(sum1.data.data[0], 1)
+    assert_allclose(sum1.data.data[1], 2)
+    assert_allclose(sum1.data.data[2], 3)
+
+    sum1.products.get()
+    assert_allclose(sum1.products.data[0], 6)
+    assert sum1.products.data[1] == "done"
+
+    sum1.run(data=sum1.products)
+    assert_allclose(sum1.data.data[3], 6)
+    sum1.run(data=sum1.products)
+    assert_allclose(sum1.data.data[4], 12)
+
+    sum2 = SumStep()
+    sum2.parallel = False
+
+    assert sum2.products[0].step_name == sum2.name
+    sum2.run(data=Product(name="value", data=1))
+    sum2.run(data=Product(name="value", data=2))
+
+    analysis_products = Products([*sum1.products, *sum2.products])
+    analysis_products.get()
+    results = analysis_products.select(name="value").data
+
+    assert_allclose(results[0], f_expected(len(sum1.data)))
+    assert_allclose(results[1], f_expected(len(sum2.data)))
+
+
 def test_products_modification():
     products = Products([Product(name="value", data=1), Product(name="value", data=2)])
     products[0] = products[1]
