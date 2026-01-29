@@ -2,7 +2,6 @@
 import logging
 import numpy as np
 import astropy.units as u
-from astropy.coordinates import Angle
 from astropy.coordinates.erfa_astrom import erfa_astrom, ErfaAstromInterpolator
 from astropy.table import Table
 from astropy.time import Time
@@ -408,13 +407,14 @@ def make_theta_squared_table(
     position_off : `astropy.coordinates.SkyCoord`
         Position from which the OFF theta^2 distribution is computed.
         Default is reflected position w.r.t. to the pointing position.
+        It is available only if `off_regions_number` is equal to 1.
     energy_edges : list of `~astropy.units.Quantity`, optional
         Edges of the energy bin where the theta squared distribution
         is evaluated. For now, only one interval is accepted.
         Default is None.
     off_regions_number : `~int`
         Number of OFF regions; by default is 1. Warning: the user should
-        be aware that, if regions overlap, in such a case only the mirror OFF
+        be aware that, if regions overlap, in such a case only the reflected OFF
         region will be considered.
 
     Returns
@@ -426,9 +426,8 @@ def make_theta_squared_table(
     if not theta_squared_axis.edges.unit.is_equivalent("deg2"):
         raise ValueError("The theta2 axis should be equivalent to deg2")
 
-    on_region = CircleSkyRegion(
-        center=position, radius=np.sqrt(theta_squared_axis.edges[-1])
-    )
+    radius = np.sqrt(np.max(theta_squared_axis.edges))
+    on_region = CircleSkyRegion(center=position, radius=radius)
 
     table = Table()
 
@@ -444,12 +443,19 @@ def make_theta_squared_table(
 
     create_off = position_off is None
 
+    if create_off is False:
+        on_off_sep = on_region.center.separation(position_off)
+        if on_off_sep < on_region.radius * 2:
+            raise ValueError(
+                "The OFF region overlaps the ON region. This is currently forbidden. Use another OFF position or reduce the region radius."
+            )
+
     if energy_edges is not None:
         if len(energy_edges) == 2:
             table.meta["Energy_filter"] = energy_edges
         else:
             raise ValueError(
-                f"Only  supports one energy interval but {len(energy_edges) - 1} passed."
+                f"Only supports one energy interval but {len(energy_edges) - 1} passed."
             )
 
     for observation in observations:
@@ -464,45 +470,42 @@ def make_theta_squared_table(
         counts, _ = np.histogram(separation**2, theta_squared_axis.edges)
         table["counts"] += counts
 
-        pos_angle = pointing.position_angle(position)
-        sep_angle = pointing.separation(position)
-
         if off_regions_number > 1 and create_off is False:
             raise ValueError(
                 "If `off_regions_number` is larger than 1, `position_off` has to be set to None."
             )
 
-        wobble = background.WobbleRegionsFinder(off_regions_number)
-        off_regions = wobble.run(
-            region=on_region, center=observation.pointing.fixed_icrs
-        )[0]
+        separation_on_region = pointing.separation(on_region.center)
+        if radius > separation_on_region:
+            raise ValueError(
+                f"ON region radius larger than its offset. ON and OFF regions would overlap and this is not permitted. Reduce the radius size to at least {separation_on_region} ."
+            )
 
-        if not off_regions:
-            off_regions_number = 1
-            log.warning("Only the mirror OFF region will be considered.")
+        if create_off:
+            wobble = background.WobbleRegionsFinder(off_regions_number)
+            off_regions = wobble.run(
+                region=on_region, center=observation.pointing.fixed_icrs
+            )[0]
 
-        if off_regions_number > 1:
-            # determine the position of the evenly-spaced angular position
-            counts_off = np.zeros_like(counts)
-            for off_region in off_regions:
-                # Angular distance of the events from the mirror position
-                separation_off = off_region.center.separation(event_position)
+            if len(off_regions) == 0:
+                log.warning("Using only one reflected OFF position.")
+                off_regions_number = 1
+                wobble = background.WobbleRegionsFinder(off_regions_number)
+                off_regions = wobble.run(
+                    region=on_region, center=observation.pointing.fixed_icrs
+                )[0]
+        else:
+            off_regions = [CircleSkyRegion(center=position_off, radius=radius)]
 
-                # Extract the ON and OFF theta2 distribution from the two positions.
-                counts_off_regions, _ = np.histogram(
-                    separation_off**2, theta_squared_axis.edges
-                )
-                counts_off += counts_off_regions
-
-        if off_regions_number == 1:
-            if create_off:
-                # Estimate the position of the mirror position
-                position_off = pointing.directional_offset_by(
-                    pos_angle + Angle(np.pi, "rad"), sep_angle
-                )
-
-            separation_off = position_off.separation(event_position)
-            counts_off, _ = np.histogram(separation_off**2, theta_squared_axis.edges)
+        counts_off = np.zeros_like(counts)
+        for off_region in off_regions:
+            # Angular distance of the events from the OFF position
+            separation_off = off_region.center.separation(event_position)
+            # Extract the OFF theta2 distribution from the two positions.
+            counts_off_regions, _ = np.histogram(
+                separation_off**2, theta_squared_axis.edges
+            )
+            counts_off += counts_off_regions
 
         table["counts_off"] += counts_off
 
