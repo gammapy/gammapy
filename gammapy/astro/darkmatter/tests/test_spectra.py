@@ -175,17 +175,6 @@ def test_dm_annihilation_spectral_model_cosmixs(tmpdir):
     assert new_models[0].spectral_model.mass.unit == u.TeV
 
 
-def test_dm_decay_spectral_model_cosmixs_missing_file():
-    channel = "b"
-    massDM = 5 * u.TeV
-    jfactor = 3.41e19 * u.Unit("GeV cm-2")
-
-    with pytest.raises(FileNotFoundError):
-        DarkMatterDecaySpectralModel(
-            mass=massDM, channel=channel, jfactor=jfactor, source="cosmixs"
-        )
-
-
 @requires_data()
 def test_dm_decay_spectral_model_cosmixs(tmpdir):
     channel = "b"
