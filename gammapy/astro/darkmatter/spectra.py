@@ -32,18 +32,17 @@ class PrimaryFlux(TemplateNDSpectralModel):
     ----------
     mDM : `~astropy.units.Quantity`
         Dark matter particle mass as rest mass energy.
-    channel: str
-        Annihilation channel. List available channels with `~gammapy.spectrum.PrimaryFlux.allowed_channels`.
-    source: str
-        Data source for the spectra. Choose between 'pppc4' and 'cosmixs'.
-        Delfault is 'pppc4'.
+    channel : str
+        Annihilation channel. List available channels with `~gammapy.astro.darkmatter.PrimaryFlux.allowed_channels`.
+    source : {"cosmixs", "pppc4"}, optional
+        Data source for the spectra. Default is 'pppc4'.
 
     References
     ----------
     .. [1] `Marco et al. (2011), "PPPC 4 DM ID: a poor particle physicist cookbook for dark matter indirect detection" <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
     .. [2] `Cirelli et al. (2016), "PPPC 4 DM ID: A Poor Particle Physicist Cookbook for Dark Matter Indirect Detection" <http://www.marcocirelli.net/PPPC4DMID.html>`_
     .. [3] `Arina et al. (2024), "CosmiXs: Cosmic messenger spectra for indirect dark matter searches" <https://arxiv.org/abs/2312.01153>`_
-    .. [4] `Di Mauro et al. (2025)`_
+    .. [4] Di Mauro et al. (2025)
 
     """
 
@@ -282,13 +281,12 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
     jfactor : `~astropy.units.Quantity`
         Integrated J-Factor needed when `~gammapy.modeling.models.PointSpatialModel`
         is used.
-    z: float
-        Redshift value.
-    k: int
-        Type of dark matter particle (k:2 Majorana, k:4 Dirac).
-    source: str, optional
-        Data source for the spectra. Choose between 'pppc4' and 'cosmixs'.
-        Default is 'pppc4'.
+    z : float, optional
+        Redshift value. Default is 0.
+    k : int, optional
+        Type of dark matter particle (k:2 Majorana, k:4 Dirac). Default is 2.
+    source : {"cosmixs", "pppc4"}, optional
+        Data source for the spectra. Default is 'pppc4'.
 
     Examples
     --------
@@ -398,11 +396,10 @@ class DarkMatterDecaySpectralModel(SpectralModel):
     jfactor : `~astropy.units.Quantity`
         Integrated J-Factor needed when `~gammapy.modeling.models.PointSpatialModel`
         is used.
-    z: float
-        Redshift value.
-    source: str, optional
-        Data source for the spectra. Choose between 'pppc4' and 'cosmixs'.
-        Default is 'pppc4'.
+    z : float, optional
+        Redshift value. Default is 0.
+    source : {"cosmixs", "pppc4"}, optional
+        Data source for the spectra. =Default is 'pppc4'.
 
     Examples
     --------
