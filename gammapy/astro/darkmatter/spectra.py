@@ -8,33 +8,46 @@ from gammapy.maps import Map, MapAxis, RegionGeom
 from gammapy.modeling import Parameter
 from gammapy.modeling.models import SpectralModel, TemplateNDSpectralModel
 from gammapy.utils.scripts import make_path
+from gammapy.utils.table import table_map_columns
+import warnings
 
-__all__ = ["PrimaryFlux", "DarkMatterAnnihilationSpectralModel"]
+__all__ = [
+    "PrimaryFlux",
+    "DarkMatterAnnihilationSpectralModel",
+    "DarkMatterDecaySpectralModel",
+]
 
 
 class PrimaryFlux(TemplateNDSpectralModel):
     """DM-annihilation gamma-ray spectra.
 
-    Based on the precomputed models by Cirelli et al. (2016). All available
-    annihilation channels can be found there. The dark matter mass will be set
-    to the nearest available value. The spectra will be available as
-    `~gammapy.modeling.models.TemplateNDSpectralModel` for a chosen dark matter mass and
-    annihilation channel. Using a `~gammapy.modeling.models.TemplateNDSpectralModel`
-    allows the interpolation between different dark matter masses.
+        Based on the precomputed models of PPPC4 DM ID by Cirelli et al. (2016), CosmiXs by Arina et al. (2024); Di Mauro et al. (2025). All available
+        annihilation channels can be found there. The dark matter mass will be set
+        to the nearest available value. The spectra will be available as
+        `~gammapy.modeling.models.TemplateNDSpectralModel` for a chosen dark matter mass and
+        annihilation channel. Using a `~gammapy.modeling.models.TemplateNDSpectralModel`
+        allows the interpolation between different dark matter masses.
 
-    Parameters
-    ----------
-    mDM : `~astropy.units.Quantity`
-        Dark matter particle mass as rest mass energy.
-    channel: str
-        Annihilation channel. List available channels with `~gammapy.spectrum.PrimaryFlux.allowed_channels`.
+        Parameters
+        ----------
+        mDM : `~astropy.units.Quantity`
+            Dark matter particle mass as rest mass energy.
+        channel: str
+            Annihilation channel. List available channels with `~gammapy.spectrum.PrimaryFlux.allowed_channels`.
+        source: str
+            Data source for the spectra. Choose between 'pppc4' and 'cosmixs'.
+            Delfault is 'pppc4'.
 
-    References
-    ----------
-    * `Marco et al. (2011), "PPPC 4 DM ID: a poor particle physicist cookbook for dark matter indirect detection"
-      <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
-    * `Cirelli et al. (2016), "PPPC 4 DM ID: A Poor Particle Physicist Cookbook for Dark Matter Indirect Detection"
-      <http://www.marcocirelli.net/PPPC4DMID.html>`_
+        References
+        ----------
+        * `Marco et al. (2011), "PPPC 4 DM ID: a poor particle physicist cookbook for dark matter indirect detection"
+          <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
+        * `Cirelli et al. (2016), "PPPC 4 DM ID: A Poor Particle Physicist Cookbook for Dark Matter Indirect Detection"
+          <http://www.marcocirelli.net/PPPC4DMID.html>`_
+          *`Arina et al. (2024), "CosmiXs: Cosmic messenger spectra for indirect dark matter searches"
+          <https://arxiv.org/abs/2312.01153>`
+
+    "
     """
 
     channel_registry = {
@@ -66,29 +79,93 @@ class PrimaryFlux(TemplateNDSpectralModel):
         "V->e": "V->e",
         "V->mu": r"V->\[Mu]",
         "V->tau": r"V->\[Tau]",
+        "aZ": "aZ",
+        "HZ": "HZ",
+        "d": "d",
+        "u": "u",
+        "s": "s",
     }
 
-    table_filename = (
-        "$GAMMAPY_DATA/dark_matter_spectra/PPPC4DMID/AtProduction_gammas.dat"
-    )
+    mapping_dict_PPPC4_to_CosmiXs = {
+        "DM": "mDM",
+        "Log10[x]": "Log[10,x]",
+        "dNdLog10x[eL]": "eL",
+        "dNdLog10x[eR]": "eR",
+        "dNdLog10x[e]": "e",
+        "dNdLog10x[muL]": "\\[Mu]L",
+        "dNdLog10x[muR]": "\\[Mu]R",
+        "dNdLog10x[mu]": "\\[Mu]",
+        "dNdLog10x[tauL]": "\\[Tau]L",
+        "dNdLog10x[tauR]": "\\[Tau]R",
+        "dNdLog10x[tau]": "\\[Tau]",
+        "dNdLog10x[nue]": "\\[Nu]e",
+        "dNdLog10x[numu]": "\\[Nu]\\[Mu]",
+        "dNdLog10x[nutau]": "\\[Nu]\\[Tau]",
+        "dNdLog10x[u]": "u",  # Does not exist explicitly on PPPC4, but it is equivalent to q
+        "dNdLog10x[d]": "d",  # Does not exist explicitly on PPPC4, but it is equivalent to q
+        "dNdLog10x[s]": "s",  # Does not exist explicitly on PPPC4, but it is equivalent to q
+        "dNdLog10x[c]": "c",
+        "dNdLog10x[b]": "b",
+        "dNdLog10x[t]": "t",
+        "dNdLog10x[a]": "\\[Gamma]",
+        "dNdLog10x[g]": "g",
+        "dNdLog10x[W]": "W",
+        "dNdLog10x[WL]": "WL",
+        "dNdLog10x[WT]": "WT",
+        "dNdLog10x[Z]": "Z",
+        "dNdLog10x[ZL]": "ZL",
+        "dNdLog10x[ZT]": "ZT",
+        "dNdLog10x[H]": "h",
+        "dNdLog10x[aZ]": None,  # Does not exist  on PPPC4
+        "dNdLog10x[HZ]": None,  # Does not exist  on PPPC4
+    }
 
     tag = ["PrimaryFlux", "dm-pf"]
 
-    def __init__(self, mDM, channel):
-        self.table_path = make_path(self.table_filename)
+    def __init__(self, mDM, channel, source="pppc4"):
+        if source is None:
+            source = "pppc4"
+            warnings.warn(
+                "\nSince no spectra source has been chosen, PPPC4 will be used by default.\n",
+                UserWarning,
+            )
+        self.source = source.lower()
+        if self.source == "pppc4":
+            table_filename = (
+                "$GAMMAPY_DATA/dark_matter_spectra/PPPC4DMID/AtProduction_gammas.dat"
+            )
+        elif self.source == "cosmixs":
+            table_filename = (
+                "$GAMMAPY_DATA/dark_matter_spectra/cosmixs/AtProduction-Gamma.dat"
+            )
+        else:
+            raise ValueError(
+                "\n\nData source is not valid, please choose between PPPC4 or cosmixs\n"
+            )
+
+        self.table_path = make_path(table_filename)
         if not self.table_path.exists():
             raise FileNotFoundError(
-                f"\n\nFile not found: {self.table_filename}\n"
+                f"\n\nFile not found: {table_filename}\n"
                 "You may download the dataset needed with the following command:\n"
                 "gammapy download datasets --src dark_matter_spectra"
             )
         else:
+            ascii_format = (
+                "ascii.commented_header"
+                if self.source == "cosmixs"
+                else "ascii.fast_basic"
+            )
             self.table = Table.read(
                 str(self.table_path),
-                format="ascii.fast_basic",
+                format=ascii_format,
                 guess=False,
                 delimiter=" ",
             )
+            if self.source == "cosmixs":
+                self.table = table_map_columns(
+                    self.table, self.mapping_dict_PPPC4_to_CosmiXs
+                )
 
         self.channel = channel
 
@@ -150,7 +227,29 @@ class PrimaryFlux(TemplateNDSpectralModel):
                 f"Invalid channel: {channel}\nAvailable: {self.allowed_channels}\n"
             )
         else:
-            self._channel = channel
+            if self.source == "pppc4":
+                if channel in ("aZ", "HZ"):
+                    raise ValueError(
+                        f"\n\nThe channel {channel} is not available in PPPC4, please choose another channel or use CosmiXs (cosmixs) as source\n"
+                    )
+                elif channel in ("d", "u", "s"):
+                    raise ValueError(
+                        f"\n\nThe channel {channel} is not available in PPPC4, please choose the equivalent channel q or use CosmiXs (cosmixs) as source\n"
+                    )
+                else:
+                    self._channel = channel
+
+            elif self.source == "cosmixs":
+                if channel in ("V->e", "V->mu", "V->tau"):
+                    raise ValueError(
+                        f"\n\nThe channel {channel} is not available in CosmiXs, please choose another channel or use PPPC4 as source\n"
+                    )
+                elif channel == "q":
+                    raise ValueError(
+                        "\n\nThe channel q is not available in cosmixs, please choose an equivalent channel such as d, u or s or use PPPC4 as source\n"
+                    )
+                else:
+                    self._channel = channel
 
     def evaluate(self, energy, *args):
         """Evaluate the primary flux."""
@@ -190,6 +289,9 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
         Redshift value.
     k: int
         Type of dark matter particle (k:2 Majorana, k:4 Dirac).
+    source: str
+        Data source for the spectra. Choose between 'pppc4' and 'cosmixs'.
+        Delfault is 'pppc4'.
 
     Examples
     --------
@@ -220,13 +322,16 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
     )
     tag = ["DarkMatterAnnihilationSpectralModel", "dm-annihilation"]
 
-    def __init__(self, mass, channel, scale=scale.quantity, jfactor=1, z=0, k=2):
+    def __init__(
+        self, mass, channel, scale=scale.quantity, jfactor=1, z=0, k=2, source="pppc4"
+    ):
         self.k = k
         self.z = z
         self.mass = u.Quantity(mass)
         self.channel = channel
         self.jfactor = u.Quantity(jfactor)
-        self.primary_flux = PrimaryFlux(mass, channel=self.channel)
+        self.primary_flux = PrimaryFlux(mass, channel=self.channel, source=source)
+        self.source = source
         super().__init__(scale=scale)
 
     def evaluate(self, energy, scale):
@@ -251,6 +356,7 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
         data["spectral"]["jfactor"] = self.jfactor.to_string()
         data["spectral"]["z"] = self.z
         data["spectral"]["k"] = self.k
+        data["spectral"]["source"] = self.source
         return data
 
     @classmethod
@@ -298,6 +404,9 @@ class DarkMatterDecaySpectralModel(SpectralModel):
         is used.
     z: float
         Redshift value.
+    source: str
+        Data source for the spectra. Choose between 'pppc4' and 'cosmixs'.
+        Delfault is 'pppc4'.
 
     Examples
     --------
@@ -329,12 +438,15 @@ class DarkMatterDecaySpectralModel(SpectralModel):
 
     tag = ["DarkMatterDecaySpectralModel", "dm-decay"]
 
-    def __init__(self, mass, channel, scale=scale.quantity, jfactor=1, z=0):
+    def __init__(
+        self, mass, channel, scale=scale.quantity, jfactor=1, z=0, source="pppc4"
+    ):
         self.z = z
         self.mass = u.Quantity(mass)
         self.channel = channel
         self.jfactor = u.Quantity(jfactor)
-        self.primary_flux = PrimaryFlux(mass, channel=self.channel)
+        self.primary_flux = PrimaryFlux(mass, channel=self.channel, source=source)
+        self.source = source
         super().__init__(scale=scale)
 
     def evaluate(self, energy, scale):
@@ -355,6 +467,7 @@ class DarkMatterDecaySpectralModel(SpectralModel):
         data["spectral"]["mass"] = self.mass.to_string()
         data["spectral"]["jfactor"] = self.jfactor.to_string()
         data["spectral"]["z"] = self.z
+        data["spectral"]["source"] = self.source
         return data
 
     @classmethod
