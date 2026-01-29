@@ -1,0 +1,2 @@
+Add support for Python 3.14 and drop support for Python 3.10 following the NEP 29 deprecation schedule.
+Update tox and CI configurations accordingly.
