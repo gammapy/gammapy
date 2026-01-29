@@ -21,33 +21,30 @@ __all__ = [
 class PrimaryFlux(TemplateNDSpectralModel):
     """DM-annihilation gamma-ray spectra.
 
-        Based on the precomputed models of PPPC4 DM ID by Cirelli et al. (2016), CosmiXs by Arina et al. (2024); Di Mauro et al. (2025). All available
-        annihilation channels can be found there. The dark matter mass will be set
-        to the nearest available value. The spectra will be available as
-        `~gammapy.modeling.models.TemplateNDSpectralModel` for a chosen dark matter mass and
-        annihilation channel. Using a `~gammapy.modeling.models.TemplateNDSpectralModel`
-        allows the interpolation between different dark matter masses.
+    Based on the precomputed models of PPPC4 DM ID by [1]_, [2]_ and CosmiXs by [3]_, [4]_.
+    All available annihilation channels can be found there. The dark matter mass will be set
+    to the nearest available value. The spectra will be available as
+    `~gammapy.modeling.models.TemplateNDSpectralModel` for a chosen dark matter mass and
+    annihilation channel. Using a `~gammapy.modeling.models.TemplateNDSpectralModel`
+    allows the interpolation between different dark matter masses.
 
-        Parameters
-        ----------
-        mDM : `~astropy.units.Quantity`
-            Dark matter particle mass as rest mass energy.
-        channel: str
-            Annihilation channel. List available channels with `~gammapy.spectrum.PrimaryFlux.allowed_channels`.
-        source: str
-            Data source for the spectra. Choose between 'pppc4' and 'cosmixs'.
-            Delfault is 'pppc4'.
+    Parameters
+    ----------
+    mDM : `~astropy.units.Quantity`
+        Dark matter particle mass as rest mass energy.
+    channel: str
+        Annihilation channel. List available channels with `~gammapy.spectrum.PrimaryFlux.allowed_channels`.
+    source: str
+        Data source for the spectra. Choose between 'pppc4' and 'cosmixs'.
+        Delfault is 'pppc4'.
 
-        References
-        ----------
-        * `Marco et al. (2011), "PPPC 4 DM ID: a poor particle physicist cookbook for dark matter indirect detection"
-          <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
-        * `Cirelli et al. (2016), "PPPC 4 DM ID: A Poor Particle Physicist Cookbook for Dark Matter Indirect Detection"
-          <http://www.marcocirelli.net/PPPC4DMID.html>`_
-          *`Arina et al. (2024), "CosmiXs: Cosmic messenger spectra for indirect dark matter searches"
-          <https://arxiv.org/abs/2312.01153>`
+    References
+    ----------
+    .. [1] `Marco et al. (2011), "PPPC 4 DM ID: a poor particle physicist cookbook for dark matter indirect detection", <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
+    .. [2] `Cirelli et al. (2016), "PPPC 4 DM ID: A Poor Particle Physicist Cookbook for Dark Matter Indirect Detection", <http://www.marcocirelli.net/PPPC4DMID.html>`_
+    .. [3] `Arina et al. (2024), "CosmiXs: Cosmic messenger spectra for indirect dark matter searches", <https://arxiv.org/abs/2312.01153>`
+    .. [4] `Di Mauro et al. (2025)`
 
-    "
     """
 
     channel_registry = {
