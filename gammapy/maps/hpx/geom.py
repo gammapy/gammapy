@@ -566,11 +566,11 @@ class HpxGeom(Geom):
             if axis != otheraxis:
                 return False
 
-        if not self.nside == other.nside:
+        if self.nside != other.nside:
             return False
-        elif not self.frame == other.frame:
+        elif self.frame != other.frame:
             return False
-        elif not self.nest == other.nest:
+        elif self.nest != other.nest:
             return False
         else:
             return True
@@ -870,7 +870,7 @@ class HpxGeom(Geom):
             raise ValueError(f"Invalid type for skydir: {type(skydir)!r}")
 
         if region is None and width is not None:
-            region = f"DISK({lon},{lat},{width/2})"
+            region = f"DISK({lon},{lat},{width / 2})"
 
         return cls(nside, nest=nest, frame=frame, region=region, axes=axes)
 

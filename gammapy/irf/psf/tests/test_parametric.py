@@ -74,7 +74,7 @@ class TestEnergyDependentMultiGaussPSF:
         assert psf1 == psf
 
         psf1.data[0][0] = 10
-        assert not psf1 == psf
+        assert psf1 != psf
 
     def test_peek(self, psf):
         with mpl_plot_check():
