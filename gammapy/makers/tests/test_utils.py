@@ -572,14 +572,14 @@ class TestTheta2Table:
         assert_allclose(theta2_table["alpha"], alpha_two_obs)
 
         # Test for energy selection
-        axis = MapAxis.from_bounds(0, 1, nbin=4, interp="lin", unit="deg2")
+        axis = MapAxis.from_bounds(0, 0.2, nbin=4, interp="lin", unit="deg2")
         theta2_table = make_theta_squared_table(
             observations=[self.observations[0]],
             position=position,
             theta_squared_axis=axis,
-            energy_edges=[1.2, 11] * u.TeV,
+            energy_edges=[1.0, 11] * u.TeV,
         )
-        on_counts = [0, 0, 0, 1]
+        on_counts = [2, 0, 0, 0]
         off_counts = [1, 0, 0, 0]
         acceptance = [1, 1, 1, 1]
         acceptance_off = [1, 1, 1, 1]
@@ -589,7 +589,7 @@ class TestTheta2Table:
         assert_allclose(theta2_table["acceptance"], acceptance)
         assert_allclose(theta2_table["acceptance_off"], acceptance_off)
         assert_allclose(theta2_table["alpha"], alpha)
-        assert_allclose(theta2_table.meta["Energy_filter"], [1.2, 11] * u.TeV)
+        assert_allclose(theta2_table.meta["Energy_filter"], [1.0, 11] * u.TeV)
 
         with pytest.raises(ValueError):
             make_theta_squared_table(
@@ -598,6 +598,65 @@ class TestTheta2Table:
                 theta_squared_axis=axis,
                 energy_edges=[1.2, 11, 20] * u.TeV,
             )
+
+        # Test for multiple OFF regions
+        axis = MapAxis.from_bounds(0, 0.19, nbin=4, interp="lin", unit="deg2")
+        theta2_table = make_theta_squared_table(
+            observations=[self.observations[0]],
+            position=position,
+            theta_squared_axis=axis,
+            energy_edges=[1.0, 11] * u.TeV,
+            off_regions_number=2,
+        )
+        on_counts = [2, 0, 0, 0]
+        off_counts = [0, 0, 0, 0]
+        acceptance = [1, 1, 1, 1]
+        acceptance_off = [2, 2, 2, 2]
+        alpha = [0.5, 0.5, 0.5, 0.5]
+        excess = [2, 0, 0, 0]
+        sqrt_ts = [2.0962941479364097, 0.0, 0.0, 0.0]
+        assert_allclose(theta2_table["counts"], on_counts)
+        assert_allclose(theta2_table["counts_off"], off_counts)
+        assert_allclose(theta2_table["acceptance"], acceptance)
+        assert_allclose(theta2_table["acceptance_off"], acceptance_off)
+        assert_allclose(theta2_table["alpha"], alpha)
+        assert_allclose(theta2_table["excess"], excess)
+        assert_allclose(theta2_table["sqrt_ts"], sqrt_ts)
+        assert_allclose(theta2_table.meta["Energy_filter"], [1.0, 11] * u.TeV)
+
+        with pytest.raises(ValueError):
+            make_theta_squared_table(
+                observations=[self.observations[0]],
+                position=position,
+                position_off=position,
+                theta_squared_axis=axis,
+                energy_edges=[1.2, 11, 20] * u.TeV,
+                off_regions_number=2,
+            )
+
+        axis = MapAxis.from_bounds(0, 0.2, nbin=4, interp="lin", unit="deg2")
+        theta2_table = make_theta_squared_table(
+            observations=[self.observations[0]],
+            position=position,
+            theta_squared_axis=axis,
+            energy_edges=[1.0, 11] * u.TeV,
+            off_regions_number=2,
+        )
+        on_counts = [2, 0, 0, 0]
+        off_counts = [1, 0, 0, 0]
+        acceptance = [1, 1, 1, 1]
+        acceptance_off = [1, 1, 1, 1]
+        alpha = [1, 1, 1, 1]
+        excess = [1, 0, 0, 0]
+        sqrt_ts = [0.5829220133009173, 0.0, 0.0, 0.0]
+        assert_allclose(theta2_table["counts"], on_counts)
+        assert_allclose(theta2_table["counts_off"], off_counts)
+        assert_allclose(theta2_table["acceptance"], acceptance)
+        assert_allclose(theta2_table["acceptance_off"], acceptance_off)
+        assert_allclose(theta2_table["alpha"], alpha)
+        assert_allclose(theta2_table["excess"], excess)
+        assert_allclose(theta2_table["sqrt_ts"], sqrt_ts)
+        assert_allclose(theta2_table.meta["Energy_filter"], [1.0, 11] * u.TeV)
 
 
 @requires_data()
