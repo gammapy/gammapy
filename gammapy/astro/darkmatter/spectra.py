@@ -42,7 +42,7 @@ class PrimaryFlux(TemplateNDSpectralModel):
     .. [1] `Marco et al. (2011), "PPPC 4 DM ID: a poor particle physicist cookbook for dark matter indirect detection" <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
     .. [2] `Cirelli et al. (2016), "PPPC 4 DM ID: A Poor Particle Physicist Cookbook for Dark Matter Indirect Detection" <http://www.marcocirelli.net/PPPC4DMID.html>`_
     .. [3] `Arina et al. (2024), "CosmiXs: Cosmic messenger spectra for indirect dark matter searches" <https://arxiv.org/abs/2312.01153>`_
-    .. [4] Di Mauro et al. (2025)
+    .. [4] `Di Mauro et al. (2025), "Nailing down the theoretical uncertainties of Dbar spectrum produced from dark matter" <https://arxiv.org/abs/2411.04815>`_
 
     """
 
@@ -399,7 +399,7 @@ class DarkMatterDecaySpectralModel(SpectralModel):
     z : float, optional
         Redshift value. Default is 0.
     source : {"cosmixs", "pppc4"}, optional
-        Data source for the spectra. =Default is 'pppc4'.
+        Data source for the spectra. Default is 'pppc4'.
 
     Examples
     --------
