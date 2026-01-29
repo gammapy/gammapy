@@ -128,7 +128,7 @@ class WorkflowStepBase(abc.ABC):
         if parallel is None:
             parallel = self.parallel
         if parallel and ray is not None:
-            run_parrallel = ray.remote(self.__class__._run)
+            run_parrallel = ray.remote(self.__class__._get_and_run)
             ref = run_parrallel.remote(self)
             for p in self.outputs:
                 p.data = ref
@@ -140,9 +140,12 @@ class WorkflowStepBase(abc.ABC):
                 setattr(self.inputs, product_name, self.outputs[product_name].data)
         return self.outputs
 
+    def _get_and_run(self):
+        self.inputs.get()  # wait other remote and set results on self.inputs
+        return self._run()
+
     @abc.abstractmethod
     def _run(self):
-        self.inputs.get()  # wait other remote and set results on self.inputs
         pass
 
 

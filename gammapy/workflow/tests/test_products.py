@@ -21,8 +21,6 @@ class SumStep(WorkflowStepBase):
         return np.sum(self.inputs.data)
 
     def _run(self):
-        self.inputs.get()  # wait other remote and set results on self.data
-
         time.sleep(1)
         self.outputs[0].data = self._sum()
         self.outputs[1].data = "done"
