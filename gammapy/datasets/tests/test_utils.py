@@ -252,8 +252,8 @@ def test_create_map_dataset_from_dl4_hawc():
     obs_filename = f"obs-index-table-{energy_estimator}-Crab.fits.gz"
     obs_table = ObservationTable.read(data_path + obs_filename)
 
-    fHit = 6
-    hdu_table = HDUIndexTable.read(data_path + hdu_filename, hdu=fHit)
+    fhit = 6
+    hdu_table = HDUIndexTable.read(data_path + hdu_filename, hdu=fhit)
     data_store = DataStore(hdu_table=hdu_table, obs_table=obs_table)
     obs = data_store.get_observations()[0]
 
@@ -275,7 +275,7 @@ def test_create_map_dataset_from_dl4_hawc():
     )
 
     dataset = create_map_dataset_from_dl4(
-        obs, geom=geom, energy_axis_true=energy_axis_true, name=f"fHit {fHit}"
+        obs, geom=geom, energy_axis_true=energy_axis_true, name=f"fHit {fhit}"
     )
 
     assert dataset.psf.energy_name == "energy"
