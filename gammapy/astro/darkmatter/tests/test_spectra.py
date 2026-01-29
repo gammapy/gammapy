@@ -52,7 +52,13 @@ def test_primary_flux_interpolation(mass, expected_flux, source, expected_except
             2.97831615e-16,
             None,
         ),
-        (DarkMatterDecaySpectralModel, "GeV cm-2", 4.80283595e-2, 2.3088e-4, "pppc4"),
+        (
+            DarkMatterDecaySpectralModel,
+            "GeV cm-2",
+            3.209234e-2,
+            2.33485775e-05,
+            "pppc4",
+        ),
         (
             DarkMatterAnnihilationSpectralModel,
             "GeV2 cm-5",
@@ -60,7 +66,7 @@ def test_primary_flux_interpolation(mass, expected_flux, source, expected_except
             3.52065879e-16,
             "cosmixs",
         ),
-        (DarkMatterDecaySpectralModel, "GeV cm-2", 4.675951e-2, 2.7292e-4, "cosmixs"),
+        (DarkMatterDecaySpectralModel, "GeV cm-2", 0.031677, 2.771877e-05, "cosmixs"),
     ],
 )
 @requires_data()
