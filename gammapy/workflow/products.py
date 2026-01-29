@@ -27,8 +27,7 @@ class Product:
             The name of the processing step that produced this product.
             Default is None.
         data : object, optional
-            The data associated with the product. Can be any object, including a Ray ObjectRef.
-            Default is None.
+            The data associated with the product, it can be any object.
         """
 
         if step_name is None:
@@ -240,7 +239,7 @@ class Products(collections.abc.MutableSequence):
     @requires_module("ray")
     def get(self):
         """
-        Resolve and update products whose data is a Ray ObjectRef.
+        Resolve and update products whose data is only a reference (`ray.ObjectRef`).
         Only available if `ray` is available.
 
         This method fetches remote data using `ray.get()` and updates
