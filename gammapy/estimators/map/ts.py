@@ -792,7 +792,7 @@ class BrentqFluxEstimator(Estimator):
         # Compute norm bounds and assert counts > 0
         norm_min, norm_max, norm_min_total = dataset.norm_bounds
 
-        if not dataset.counts.sum() > 0:
+        if dataset.counts.sum() <= 0:
             norm, niter, success = norm_min_total, 0, True
 
         else:

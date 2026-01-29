@@ -339,7 +339,7 @@ class SafeMaskMaker(Maker):
         bkg = dataset.background.data
         mask = np.isfinite(bkg)
 
-        if not dataset.stat_type == "wstat":
+        if dataset.stat_type != "wstat":
             mask &= bkg > 0.0
 
         return mask
