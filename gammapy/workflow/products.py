@@ -160,13 +160,13 @@ class Products(collections.abc.MutableSequence):
         else:
             raise TypeError(f"Invalid type: {product!r}")
 
-    def select_from_list(self, required_products):
+    def select_from_list(self, requirements):
         """
         Select products based on a list of criteria.
 
         Parameters
         ----------
-        required_products : list of dict
+        requirements : list of dict
             List of selection criteria dictionaries passed to select method.
 
         Returns
@@ -175,7 +175,7 @@ class Products(collections.abc.MutableSequence):
             A new `Products` instance with selected products.
         """
         selection = Products([])
-        for req in required_products:
+        for req in requirements:
             selection.extend(self.select(**req))
         return selection
 
