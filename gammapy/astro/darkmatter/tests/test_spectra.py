@@ -51,7 +51,7 @@ def test_dm_annihilation_spectral_model(tmpdir):
     energy_max = 10 * u.TeV
 
     model = DarkMatterAnnihilationSpectralModel(
-        mass=massDM, channel=channel, jfactor=jfactor, source="pppc4"
+        mass=massDM, channel=channel, jfactor=jfactor
     )
     integral_flux = model.integral(energy_min=energy_min, energy_max=energy_max).to(
         "cm-2 s-1"
@@ -123,6 +123,22 @@ def test_primary_flux_cosmixs():
     desired = 0.00013085 / u.GeV
     assert_quantity_allclose(actual, desired, rtol=1e-4)
 
+    with pytest.raises(ValueError):
+        PrimaryFlux(channel="q", mDM=1 * u.TeV, source="cosmixs")
+    with pytest.raises(ValueError):
+        PrimaryFlux(channel="V->e", mDM=1 * u.TeV, source="cosmixs")
+    with pytest.raises(ValueError):
+        PrimaryFlux(channel="V->mu", mDM=1 * u.TeV, source="cosmixs")
+    with pytest.raises(ValueError):
+        PrimaryFlux(channel="V->tau", mDM=1 * u.TeV, source="cosmixs")
+
+    with pytest.raises(ValueError):
+        PrimaryFlux(channel="d", mDM=1 * u.TeV, source="pppc4")
+    with pytest.raises(ValueError):
+        PrimaryFlux(channel="u", mDM=1 * u.TeV, source="pppc4")
+    with pytest.raises(ValueError):
+        PrimaryFlux(channel="s", mDM=1 * u.TeV, source="pppc4")
+
 
 @requires_data()
 def test_dm_annihilation_spectral_model_cosmixs(tmpdir):
@@ -157,6 +173,17 @@ def test_dm_annihilation_spectral_model_cosmixs(tmpdir):
     assert_allclose(new_models[0].spectral_model.jfactor.value, model.jfactor.value)
     assert new_models[0].spectral_model.mass.value == 5
     assert new_models[0].spectral_model.mass.unit == u.TeV
+
+
+def test_dm_decay_spectral_model_cosmixs_missing_file():
+    channel = "b"
+    massDM = 5 * u.TeV
+    jfactor = 3.41e19 * u.Unit("GeV cm-2")
+
+    with pytest.raises(FileNotFoundError):
+        DarkMatterDecaySpectralModel(
+            mass=massDM, channel=channel, jfactor=jfactor, source="cosmixs"
+        )
 
 
 @requires_data()
