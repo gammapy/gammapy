@@ -288,7 +288,7 @@ class DarkMatterDecaySpectralModel(SpectralModel):
     mass : `~astropy.units.Quantity`
         Dark matter mass.
     channel : str
-        Annihilation channel for `~gammapy.astro.darkmatter.PrimaryFlux`, e.g. "b" for "bbar".
+        Decay channel for `~gammapy.astro.darkmatter.PrimaryFlux`, e.g. "b" for "bbar".
         See `PrimaryFlux.channel_registry` for more.
     scale : float
         Scale parameter for model fitting
@@ -300,7 +300,7 @@ class DarkMatterDecaySpectralModel(SpectralModel):
 
     Examples
     --------
-    This is how to instantiate a `DarkMatterAnnihilationSpectralModel` model::
+    This is how to instantiate a `DarkMatterDecaySpectralModel` model::
 
         >>> import astropy.units as u
         >>> from gammapy.astro.darkmatter import DarkMatterDecaySpectralModel
@@ -333,7 +333,7 @@ class DarkMatterDecaySpectralModel(SpectralModel):
         self.mass = u.Quantity(mass)
         self.channel = channel
         self.jfactor = u.Quantity(jfactor)
-        self.primary_flux = PrimaryFlux(mass, channel=self.channel)
+        self.primary_flux = PrimaryFlux(self.mass / 2, channel=self.channel)
         super().__init__(scale=scale)
 
     def evaluate(self, energy, scale):
