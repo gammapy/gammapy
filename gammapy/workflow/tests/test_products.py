@@ -105,7 +105,6 @@ def test_products_no_ray():
     assert_allclose(sum1.inputs.data[1], 2)
     assert_allclose(sum1.inputs.data[2], 3)
 
-    sum1.outputs.get()
     assert_allclose(sum1.outputs.data[0], 6)
     assert sum1.outputs.data[1] == "done"
 
@@ -122,7 +121,6 @@ def test_products_no_ray():
     sum2.run(inputs=Product(name="value", data=2))
 
     analysis_products = Products([*sum1.outputs, *sum2.outputs])
-    analysis_products.get()
     results = analysis_products.select(name="value").data
 
     assert_allclose(results[0], f_expected(len(sum1.inputs)))
