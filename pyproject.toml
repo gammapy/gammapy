@@ -60,6 +60,8 @@ all = [
     "ray[default]>=2.9",
     "ultranest",
     "numba",
+    "arviz",
+    "arviz[preview]",
 ]
 all_no_ray = [
     "naima",
@@ -70,6 +72,8 @@ all_no_ray = [
     "ipywidgets",
     "ultranest",
     "numba",
+    "arviz",
+    "arviz[preview]",
 ]
 cov = [
     "naima",
@@ -80,6 +84,8 @@ cov = [
     "ipywidgets",
     "ultranest",
     "numba",
+    "arviz",
+    "arviz[preview]",
 ]
 test = [
     "pytest-astropy",
