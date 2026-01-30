@@ -160,8 +160,7 @@ class IRF(metaclass=abc.ABCMeta):
 
         if np.shape(value) != required_shape:
             raise ValueError(
-                f"data shape {value.shape} does not match"
-                f"axes shape {required_shape}"
+                f"data shape {value.shape} does not matchaxes shape {required_shape}"
             )
 
         self._data = value
@@ -177,7 +176,7 @@ class IRF(metaclass=abc.ABCMeta):
         scale = interpolation_scale(values_scale)
 
         axis = self.axes.index(axis_name)
-        mask = ~np.isfinite(data) | (data == 0.0)
+        mask = ~np.isfinite(data) | np.isclose(data, 0.0)
 
         coords = np.where(mask)
         xp = np.arange(data.shape[axis])
