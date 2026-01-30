@@ -88,7 +88,7 @@ def test_dict_to_skymodels(models):
     assert_allclose(pars1["index"].value, 2.2)
     assert pars1["index"].unit == ""
     assert_allclose(pars1["lat_0"].scale, 1.0)
-    assert assert_allclose(pars1["lat_0"].factor, pars1["lat_0"].value)
+    assert_allclose(pars1["lat_0"].factor, pars1["lat_0"].value)
 
     assert np.isnan(pars1["index"].max)
     assert np.isnan(pars1["index"].min)
