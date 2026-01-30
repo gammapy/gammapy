@@ -420,7 +420,7 @@ class HpxToWcsMapping:
         if self.valid.ndim != 1:
             shape = hpx_data.shape[:-1] + shape
 
-        valid = np.where(self.valid.reshape(shape))
+        valid = np.nonzero(self.valid.reshape(shape))
         lmap = self.lmap[self.valid]
         mult_val = self._mult_val[self.valid]
 
@@ -464,7 +464,7 @@ class HpxToWcsMapping:
         if self.valid.ndim != 1:
             shape = hpx_data.shape[:-1] + shape
 
-        valid = np.where(self.valid.reshape(shape))
+        valid = np.nonzero(self.valid.reshape(shape))
         lmap = self.lmap[self.valid]
         mult_val = self._mult_val[self.valid]
 

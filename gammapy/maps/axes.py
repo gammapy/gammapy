@@ -2673,8 +2673,8 @@ class TimeMapAxis:
         frac, idx = np.modf(pix)
         idx1 = idx.astype(int)
         valid = np.logical_and(idx >= 0, idx < self.nbin, np.isfinite(idx))
-        idx_valid = np.where(valid)
-        idx_invalid = np.where(~valid)
+        idx_valid = np.nonzero(valid)
+        idx_invalid = np.nonzero(~valid)
 
         coords[idx_valid] = (
             frac[idx_valid] * self.time_delta[idx1[valid]] + self.edges_min[idx1[valid]]
@@ -3123,8 +3123,8 @@ class TimeMapAxis:
             mask2 = self.time_max <= time_interval[1]
             mask = mask1 & mask2
             if np.any(mask):
-                idx_min = np.where(mask)[0][0]
-                idx_max = np.where(mask)[0][-1]
+                idx_min = np.nonzero(mask)[0][0]
+                idx_max = np.nonzero(mask)[0][-1]
                 bin_type = "normal   "
             else:
                 idx_min = idx_max = -1
