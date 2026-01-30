@@ -294,9 +294,9 @@ to test with a different environment you can use:
 
 .. code-block:: bash
 
-    tox -e py310-test-numpy121
+    tox -e py311-test-numpy126
 
-Which will test the code with Python 3.10 and numpy 1.21. All available pre-defined
+Which will test the code with Python 3.11 and numpy 1.26. All available pre-defined
 environments can be listed using:
 
 .. code-block:: bash
