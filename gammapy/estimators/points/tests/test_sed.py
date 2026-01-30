@@ -754,7 +754,7 @@ def test_fpe_non_aligned_energy_axes():
         fpe.run(datasets=[dataset_1, dataset_2])
 
 
-def test_fpe_non_uniform_datasets(caplog):
+def test_fpe_non_uniform_datasets():
     energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=10)
     geom_1 = RegionGeom.create("icrs;circle(0, 0, 0.1)", axes=[energy_axis])
     dataset_1 = SpectrumDataset.create(
@@ -769,11 +769,8 @@ def test_fpe_non_uniform_datasets(caplog):
 
     fpe = FluxPointsEstimator(energy_edges=[1, 3, 10] * u.TeV)
 
-    fpe.run(datasets=[dataset_1, dataset_2])
-    assert "WARNING" in [_.levelname for _ in caplog.records]
-    assert "All datasets must use the same value of the 'TELESCOP' meta keyword." in [
-        _.message for _ in caplog.records
-    ]
+    with pytest.raises(ValueError, match="same value of the 'TELESCOP' meta keyword"):
+        fpe.run(datasets=[dataset_1, dataset_2])
 
 
 @requires_data()
@@ -824,7 +821,7 @@ def test_flux_points_estimator_norm_spectral_model(fermi_datasets):
 
 
 @requires_data()
-def test_fpe_diff_lengths(caplog):
+def test_fpe_diff_lengths():
     dataset = SpectrumDatasetOnOff.read(
         "$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits"
     )
@@ -858,11 +855,8 @@ def test_fpe_diff_lengths(caplog):
     dataset4 = dataset1.copy()
     dataset4.meta_table = Table(names=["NAME", "TELESCOP"], data=[["23523"], ["not"]])
     datasets = Datasets([dataset1, dataset2, dataset3, dataset4])
-    fpe.run(datasets)
-    assert "WARNING" in [_.levelname for _ in caplog.records]
-    assert "All datasets must use the same value of the 'TELESCOP' meta keyword." in [
-        _.message for _ in caplog.records
-    ]
+    with pytest.raises(ValueError):
+        fp = fpe.run(datasets)
 
 
 def test_resample_axis():
