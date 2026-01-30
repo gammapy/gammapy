@@ -129,13 +129,9 @@ def test_wrong_units():
     data = np.ones((energy_axis_true.nbin, offset_axis.nbin)) * wrong_unit
     area_test = EffectiveAreaTable2D(axes=[energy_axis_true, offset_axis])
 
-    with pytest.raises(ValueError) as error:
+    expected = f"Error: {wrong_unit} is not an allowed unit. {area_test.tag} requires {area_test.default_unit} data quantities."
+    with pytest.raises(ValueError, match=expected):
         EffectiveAreaTable2D(data=data, axes=[energy_axis_true, offset_axis])
-
-        assert error.match(
-            f"Error: {wrong_unit} is not an allowed unit. {area_test.tag} "
-            f"requires {area_test.default_unit} data quantities."
-        )
 
 
 @requires_data("gammapy-data")
@@ -162,4 +158,4 @@ def test_eq():
     aeff1 = EffectiveAreaTable2D(data=data1, axes=[energy1, offset_axis])
     aeff2 = EffectiveAreaTable2D(data=data2, axes=[energy2, offset_axis])
 
-    assert not aeff1 == aeff2
+    assert aeff1 != aeff2

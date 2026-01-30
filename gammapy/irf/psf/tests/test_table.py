@@ -24,12 +24,10 @@ def test_psf_3d_wrong_units():
     wrong_unit = u.cm**2 * u.s
     data = np.ones((energy_axis.nbin, offset_axis.nbin, rad_axis.nbin)) * wrong_unit
     psf3d_test = PSF3D(axes=[energy_axis, offset_axis, rad_axis])
-    with pytest.raises(ValueError) as error:
+
+    expected = f"Error: {wrong_unit} is not an allowed unit. {psf3d_test.tag} requires {psf3d_test.default_unit} data quantities."
+    with pytest.raises(ValueError, match=expected):
         PSF3D(axes=[energy_axis, offset_axis, rad_axis], data=data)
-        assert error.match(
-            f"Error: {wrong_unit} is not an allowed unit. {psf3d_test.tag} requires "
-            f"{psf3d_test.default_unit} data quantities."
-        )
 
 
 @requires_data()

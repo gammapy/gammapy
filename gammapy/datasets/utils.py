@@ -345,7 +345,7 @@ def create_global_dataset(
     Returns
     -------
     datasets : `~gammapy.datasets.MapDatset`
-        Empy global dataset.
+        Empty global dataset.
     """
     from gammapy.datasets import MapDataset
 

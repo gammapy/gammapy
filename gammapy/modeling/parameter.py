@@ -875,7 +875,7 @@ class Parameters(collections.abc.Sequence):
                 if frozen:
                     selection[idx] &= par.frozen
                 else:
-                    selection[idx] &= ~par.frozen
+                    selection[idx] &= not par.frozen
 
         return self[selection]
 

@@ -125,7 +125,7 @@ plt.show()
 # The Test Statistic, :math:`TS = 2 \Delta log L` (`Mattox et
 # al. 1996 <https://ui.adsabs.harvard.edu/abs/1996ApJ...461..396M/abstract>`__),
 # compares the likelihood function L optimized with and without a given
-# source. The TS map is computed by fitting by a single amplitude
+# source. The TS map is computed by fitting a single amplitude
 # parameter on each pixel as described in Appendix A of `Stewart
 # (2009) <https://ui.adsabs.harvard.edu/abs/2009A%26A...495..989S/abstract>`__.
 # The fit is simplified by finding roots of the derivative of the fit
@@ -260,7 +260,7 @@ display(sources_flux_map)
 # test for extended sources we would have to use as kernel an extended
 # template convolved by the PSF. Alternatively, we can compute the
 # significance of an extended excess using the Li & Ma formalism, which is
-# faster as no fitting is involve.
+# faster as no fitting is involved.
 #
 
 

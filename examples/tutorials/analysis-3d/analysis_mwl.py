@@ -153,7 +153,7 @@ print(datasets)
 #
 
 # read flux points from https://arxiv.org/pdf/1905.12518.pdf
-filename = "$GAMMAPY_DATA/hawc_crab/HAWC19_flux_points.fits"
+filename = "$GAMMAPY_DATA/hawc/crab_flux/HAWC19_flux_points.fits"
 flux_points_hawc = FluxPoints.read(
     filename, reference_model=create_crab_spectral_model("meyer")
 )

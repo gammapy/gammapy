@@ -252,7 +252,7 @@ def test_safe_mask_maker_bkg_peak(dataset, observation_cta_1dc):
 
 
 @requires_data()
-def test_safe_mask_maker_bkg_peak_first_bin(dataset, observation_cta_1dc):
+def test_safe_mask_maker_bkg_peak_first_bin(observation_cta_1dc):
     pointing = observation_cta_1dc.get_pointing_icrs(observation_cta_1dc.tmid)
     safe_mask_maker = SafeMaskMaker(position=pointing)
 

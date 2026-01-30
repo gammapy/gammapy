@@ -470,7 +470,7 @@ class MapDatasetEventSampler:
         meta["DEC_PNT"] = fixed_icrs.dec.deg
 
         meta["EQUINOX"] = "J2000"
-        meta["RADECSYS"] = "icrs"
+        meta["RADESYSa"] = "icrs"
 
         meta["CREATOR"] = "Gammapy {}".format(__version__)
         meta["EUNIT"] = "TeV"

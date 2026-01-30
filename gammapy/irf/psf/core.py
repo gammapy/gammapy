@@ -301,7 +301,7 @@ class PSF(IRF):
             Size of the figure. Default is (15, 5).
 
         """
-        fig, axes = plt.subplots(nrows=1, ncols=3, figsize=figsize)
+        _, axes = plt.subplots(nrows=1, ncols=3, figsize=figsize)
 
         self.plot_containment_radius(fraction=0.68, ax=axes[0])
         self.plot_containment_radius(fraction=0.95, ax=axes[1])

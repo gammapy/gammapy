@@ -98,7 +98,7 @@ fit = Fit(
 #
 
 energy_edges = np.geomspace(0.7, 100, 9) * u.TeV
-norm = Parameter(name="norm", value=1.0)
+norm = Parameter(name="norm", value=1.0, interp="log")
 
 fp_estimator = FluxPointsEstimator(
     source="crab",
@@ -165,7 +165,7 @@ ax = plt.subplot()
 ax.xaxis.set_units(u.eV)
 ax.yaxis.set_units(u.Unit("TeV cm-2 s-1"))
 fp_result.plot(ax=ax, sed_type="e2dnde", color="tab:orange")
-fp_result.plot_ts_profiles(sed_type="e2dnde")
+fp_result.plot_ts_profiles(ax=ax, sed_type="e2dnde")
 plt.show()
 
 ######################################################################

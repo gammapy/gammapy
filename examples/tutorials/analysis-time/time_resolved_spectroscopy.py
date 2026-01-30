@@ -33,7 +33,7 @@ The main idea behind doing a time resolved spectroscopy is to
 -  Extract relevant information in a table
 
 Here, we will use the PKS 2155-304 observations from the
-`H.E.S.S. first public test data release <https://www.mpi-hd.mpg.de/hfm/HESS/pages/dl3-dr1/>`__.
+`H.E.S.S. first public test data release <https://hess-experiment.eu/releases/>`__.
 
 We use time intervals of 15 minutes duration to explore spectral
 variability.

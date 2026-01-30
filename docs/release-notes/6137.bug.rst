@@ -1,0 +1,1 @@
+Adapted the `size_factor` default value to be consistent for all spatial models.

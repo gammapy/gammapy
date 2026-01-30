@@ -308,7 +308,7 @@ print(result_joint.sampler_results["posterior"])
 ######################################################################
 # Besides mean, errors, etc, an interesting value is the
 # ``information gain`` which estimates how much the posterior
-# distribution has shrinked with respect to the prior (i.e. how much
+# distribution has shrunk with respect to the prior (i.e. how much
 # we’ve learned). A value < 1 means that the parameter is poorly
 # constrained within the prior range (we haven't learned much with respect to our prior assumption).
 # For a physical example see this

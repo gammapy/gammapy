@@ -393,7 +393,7 @@ plt.show()
 
 ######################################################################
 # We assign the return axes object to variable called ``ax_crab_3fhl``,
-# because we will re-use it later to plot the flux points on top.
+# because we will reuse it later to plot the flux points on top.
 #
 # To compute the differential flux at 100 GeV we can simply call the model
 # like normal Python function and convert to the desired units:

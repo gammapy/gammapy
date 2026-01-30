@@ -1,0 +1,1 @@
+Add an optional normalize argument on `~gammapy.modeling.models.TemplatePhaseCurveTemporalModel`. It is set by default to True, for backward compatibility with 2.0.

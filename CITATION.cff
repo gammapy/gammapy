@@ -169,6 +169,11 @@ authors:
   family-names: Peresano
   affiliation: "Max-Planck-Institut für Physik, Boltzmannstraße 8, 85748 Garching bei München, Germany"
   orcid: "https://orcid.org/0000-0002-7537-7334"
+- given-names: Pierre
+  family-names: Pichard
+  affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
+    Paris, France"
+  orcid: "https://orcid.org/0009-0005-9803-0762"
 - given-names: Fabio
   family-names: Pintore
   affiliation: "INAF/IASF PALERMO, Italy"

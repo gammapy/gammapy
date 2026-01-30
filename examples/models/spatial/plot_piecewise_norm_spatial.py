@@ -6,7 +6,7 @@ Piecewise norm spatial model
 
 This model parametrises a piecewise spatial correction
 with a free norm parameter at each fixed node in longitude, latitude
-and optionaly energy.
+and optionally energy.
 """
 
 # %%

@@ -201,7 +201,7 @@ So far Gammapy only supports binned likelihood analysis and technically most
 use- cases for the event sampling could be solved with binned simulations. A
 binned simulation can be basically achieved by a call to
 ``numpy.random.poisson()`` based on the predicted number of counts map. This is
-conceptionally simpler as well as computationally more efficient than a sampling
+conceptually simpler as well as computationally more efficient than a sampling
 of event lists. In ``Gammapy`` a similar dataset simulation is already
 implemented in ``Dataset.fake()``, although this has a limited number of use
 cases than an event sampler. However, to support the full data access and data

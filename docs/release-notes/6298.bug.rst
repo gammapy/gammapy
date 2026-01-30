@@ -1,0 +1,1 @@
+Fixed incorrect kinematics in DarkMatterDecaySpectralModel. The model now correctly uses mass/2 for the primary flux lookup.

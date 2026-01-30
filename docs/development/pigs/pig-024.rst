@@ -100,7 +100,7 @@ Releases
 
 Each Gammapy release should be associated with an updated list of authors that will be public on repository (Zenodo and
 HAL/SWH). This section is about feature releases. Bug releases will have as list of authors the one of its associated
-feature release whose rules are described here, plus the potentiel additional contributors.
+feature release whose rules are described here, plus the potential additional contributors.
 
 The list of authors is composed of people who contributed to the current release code
 by accepting the DCO. The history of merged pull requests will be used as starting point.

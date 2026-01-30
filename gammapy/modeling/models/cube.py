@@ -95,7 +95,7 @@ class SkyModel(CovarianceMixin, ModelBase):
         if self.apply_irf["exposure"]:
             ref_unit = u.Unit("cm-2 s-1 MeV-1")
         else:
-            ref_unit = u.Unit("")
+            ref_unit = u.Unit("MeV-1")
         obt_unit = self.spectral_model(axis.center).unit
 
         if self.spatial_model:

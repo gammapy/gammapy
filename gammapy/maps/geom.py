@@ -60,6 +60,9 @@ class Geom(abc.ABC):
     See also: `~gammapy.maps.WcsGeom` and `~gammapy.maps.HpxGeom`.
     """
 
+    def __repr__(self):
+        return self.__str__()
+
     def _repr_html_(self):
         try:
             return self.to_html()
