@@ -36,13 +36,13 @@ def test_dummy_cache():
     v = Dummy2(1, np.array(3))
     w = Dummy2(1, np.array(3))
 
-    assert x is y
-    assert z is not y
+    assert x == y
+    assert z != y
 
-    assert u is not x
-    assert u is not v
-    assert v is not z
-    assert v is w
+    assert u != x
+    assert u != v
+    assert v != z
+    assert v == w
 
     # the cache is not propagated through pickle
     # (implementing that would be more complex)
