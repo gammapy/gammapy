@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
+import math
 import numpy as np
 from scipy.stats import median_abs_deviation as mad
 import astropy.units as u
@@ -2480,9 +2481,9 @@ class MapDataset(Dataset):
         vmin = npredmapdata.data.min()
         vmax = npredmapdata.data.max()
         # Fallback if the map is entirely zero
-        if vmin == 0.0:
+        if math.isclose(vmin, 0.0):
             vmin = np.max([countsmapdata.data.max() * 0.02, countsmapdata.data.min()])
-        if vmax == 0.0:
+        if math.isclose(vmax, 0.0):
             vmax = countsmapdata.data.max()
 
         # Create custom colormaps
@@ -2972,7 +2973,12 @@ class MapDatasetOnOff(MapDataset):
         # For the bins where the stacked OFF counts equal 0, the alpha value is
         # performed by weighting on the total OFF counts of each run
         is_zero = total_off.data == 0
-        acceptance_off.data[is_zero] = total_acceptance.data[is_zero] / average_alpha
+        if average_alpha > 0.0:
+            acceptance_off.data[is_zero] = (
+                total_acceptance.data[is_zero] / average_alpha
+            )
+        else:
+            acceptance_off.data[is_zero] = 0.0
 
         self.acceptance.data[...] = total_acceptance.data
         self.acceptance_off = acceptance_off

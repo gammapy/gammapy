@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
-from numpy.testing import assert_allclose
+from numpy.testing import assert_allclose, assert_array_almost_equal
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
@@ -368,8 +368,10 @@ def test_interpolate_map_dataset():
         geom=geom_target, energy_axis_true=energy_true, rad_axis=rad_axis, name="test"
     )
     dataset = maker.run(dataset, obs)
-    assert dataset.psf.exposure_map and np.all(dataset.psf.exposure_map.data == 1.0)
-    assert dataset.edisp.exposure_map and np.all(dataset.edisp.exposure_map.data == 0.0)
+    assert dataset.psf.exposure_map
+    assert_array_almost_equal(dataset.psf.exposure_map.data, 1.0)
+    assert dataset.edisp.exposure_map
+    assert_array_almost_equal(dataset.edisp.exposure_map.data, 0.0)
 
     # test counts
     assert dataset.counts.data.sum() == nr_ev

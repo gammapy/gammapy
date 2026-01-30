@@ -1,4 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import math
+
 import numpy as np
 from numba import jit
 
@@ -92,7 +94,7 @@ def f_cash_root_jit(x, counts, background, model):
         if model[i] > 0.0:
             if counts[i] > 0.0:
                 denom = x * model[i] + background[i]
-                if denom != 0.0:
+                if not math.isclose(denom, 0.0):
                     stat_sum += model[i] * (1.0 - counts[i] / denom)
             else:
                 stat_sum += model[i]
@@ -135,7 +137,7 @@ def norm_bounds_jit(counts, background, model):
             sn = background[i] / model[i]
             if sn < sn_min_total:
                 sn_min_total = sn
-    if s_model == 0.0:
+    if math.isclose(s_model, 0.0):
         b_min = np.nan
         b_max = np.nan
     else:
