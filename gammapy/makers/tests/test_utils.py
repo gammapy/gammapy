@@ -515,200 +515,184 @@ class TestTheta2Table:
                 )
             )
 
-    def test_make_theta_squared_table(self):
-        # pointing position: (0,0.5) degree in ra/dec
-        # On theta2 distribution compute from (0,0) in ra/dec.
-        # OFF theta2 distribution from the mirror position at (0,1) in ra/dec.
+    @pytest.mark.parametrize(
+        "case_config",
+        [
+            # CASE 1: Standard (single observation)
+            {
+                "obs_idx": [0],
+                "axis_bounds": (0, 0.2),
+                "kwargs": {},
+                "expected": {
+                    "counts": [2, 0, 0, 0],
+                    "counts_off": [1, 0, 0, 0],
+                    "acceptance": [1, 1, 1, 1],
+                    "alpha": [1, 1, 1, 1],
+                },
+            },
+            # CASE 2: Two observations (identical in this setup)
+            {
+                "obs_idx": [0, 1],  # Assuming self.observations has at least 2 items
+                "axis_bounds": (0, 0.2),
+                "kwargs": {},
+                "expected": {
+                    "counts": [4, 0, 0, 0],
+                    "counts_off": [2, 0, 0, 0],
+                    "acceptance": [2, 2, 2, 2],
+                    "alpha": [1, 1, 1, 1],
+                },
+            },
+            # CASE 3: Energy selection
+            {
+                "obs_idx": [0],
+                "axis_bounds": (0, 0.2),
+                "kwargs": {"energy_edges": [1.0, 11] * u.TeV},
+                "expected": {
+                    "counts": [2, 0, 0, 0],
+                    "counts_off": [1, 0, 0, 0],
+                    "acceptance": [1, 1, 1, 1],
+                    "alpha": [1, 1, 1, 1],
+                    "energy_meta": [1.0, 11] * u.TeV,
+                },
+            },
+            # CASE 4: Multiple OFF regions
+            {
+                "obs_idx": [0],
+                "axis_bounds": (0, 0.19),
+                "kwargs": {"energy_edges": [1.0, 11] * u.TeV, "off_regions_number": 2},
+                "expected": {
+                    "counts": [2, 0, 0, 0],
+                    "counts_off": [0, 0, 0, 0],
+                    "alpha": [0.5, 0.5, 0.5, 0.5],
+                    "excess": [2, 0, 0, 0],
+                    "sqrt_ts": [2.0962941, 0.0, 0.0, 0.0],
+                    "energy_meta": [1.0, 11] * u.TeV,
+                },
+            },
+            # CASE 5: Overlapping multiple OFF regions
+            {
+                "obs_idx": [0],
+                "axis_bounds": (0, 0.22),
+                "kwargs": {"energy_edges": [1.0, 11] * u.TeV, "off_regions_number": 2},
+                "expected": {
+                    "counts": [2, 0, 0, 0],
+                    "counts_off": [1, 0, 0, 0],
+                    "alpha": [1, 1, 1, 1],
+                    "excess": [1, 0, 0, 0],
+                    "sqrt_ts": [0.582922, 0.0, 0.0, 0.0],
+                    "energy_meta": [1.0, 11] * u.TeV,
+                },
+            },
+            # CASE 6: User-defined OFF region
+            {
+                "obs_idx": [0],
+                "axis_bounds": (0, 0.1),
+                "kwargs": {
+                    "position_off": SkyCoord(0, -1.0, frame="icrs", unit="deg"),
+                    "energy_edges": [1.2, 11] * u.TeV,
+                    "off_regions_number": 1,
+                },
+                "expected": {
+                    "counts": [0, 0, 0, 0],
+                    "counts_off": [1, 0, 0, 0],
+                    "alpha": [1, 1, 1, 1],
+                    "excess": [-1, 0, 0, 0],
+                    "sqrt_ts": [-1.17741, 0.0, 0.0, 0.0],
+                    "energy_meta": [1.2, 11] * u.TeV,
+                },
+            },
+        ],
+    )
+    def test_make_theta_squared_table_values(self, case_config):
         position = SkyCoord(ra=0, dec=0, unit="deg", frame="icrs")
-        axis_wrong_units = MapAxis.from_bounds(0, 0.2, nbin=4, interp="lin", unit="deg")
-        with pytest.raises(ValueError):
-            make_theta_squared_table(
-                observations=[self.observations[0]],
-                position=position,
-                theta_squared_axis=axis_wrong_units,
-            )
+        b_min, b_max = case_config["axis_bounds"]
+        axis = MapAxis.from_bounds(b_min, b_max, nbin=4, interp="lin", unit="deg2")
 
-        axis = MapAxis.from_bounds(0, 0.2, nbin=4, interp="lin", unit="deg2")
-        theta2_table = make_theta_squared_table(
-            observations=[self.observations[0]],
+        observations = [self.observations[i] for i in case_config["obs_idx"]]
+
+        table = make_theta_squared_table(
+            observations=observations,
             position=position,
             theta_squared_axis=axis,
+            **case_config["kwargs"],
         )
-        theta2_lo = [0, 0.05, 0.1, 0.15]
-        theta2_hi = [0.05, 0.1, 0.15, 0.2]
-        on_counts = [2, 0, 0, 0]
-        off_counts = [1, 0, 0, 0]
-        acceptance = [1, 1, 1, 1]
-        acceptance_off = [1, 1, 1, 1]
-        alpha = [1, 1, 1, 1]
-        assert len(theta2_table) == 4
-        assert theta2_table["theta2_min"].unit == "deg2"
-        assert_allclose(theta2_table["theta2_min"], theta2_lo)
-        assert_allclose(theta2_table["theta2_max"], theta2_hi)
-        assert_allclose(theta2_table["counts"], on_counts)
-        assert_allclose(theta2_table["counts_off"], off_counts)
-        assert_allclose(theta2_table["acceptance"], acceptance)
-        assert_allclose(theta2_table["acceptance_off"], acceptance_off)
-        assert_allclose(theta2_table["alpha"], alpha)
-        assert_allclose(theta2_table.meta["ON_RA"], 0 * u.deg)
-        assert_allclose(theta2_table.meta["ON_DEC"], 0 * u.deg)
 
-        # Taking the OFF position as the ON one
+        assert len(table) == 4
+        assert table["theta2_min"].unit == "deg2"
+        assert_allclose(table.meta["ON_RA"], 0 * u.deg)
+        assert_allclose(table.meta["ON_DEC"], 0 * u.deg)
+
+        exp = case_config["expected"]
+        if "counts" in exp:
+            assert_allclose(table["counts"], exp["counts"])
+        if "counts_off" in exp:
+            assert_allclose(table["counts_off"], exp["counts_off"])
+        if "alpha" in exp:
+            assert_allclose(table["alpha"], exp["alpha"])
+        if "acceptance" in exp:
+            assert_allclose(table["acceptance"], exp["acceptance"])
+
+        if "excess" in exp:
+            assert_allclose(table["excess"], exp["excess"])
+        if "sqrt_ts" in exp:
+            assert_allclose(table["sqrt_ts"], exp["sqrt_ts"])
+
+        if "energy_meta" in exp:
+            assert_allclose(table.meta["Energy_filter"], exp["energy_meta"])
+
+    @pytest.mark.parametrize(
+        "case_params",
+        [
+            # ERROR 1: Wrong axis unit (deg instead of deg2)
+            {"axis_unit": "deg", "axis_bounds": (0, 0.2), "kwargs": {}},
+            # ERROR 2: OFF position is same as ON position
+            {
+                "axis_unit": "deg2",
+                "axis_bounds": (0, 0.2),
+                "kwargs": {"position_off_is_on": True},
+            },
+            # ERROR 3: Incorrect energy edges (3 values instead of 2)
+            {
+                "axis_unit": "deg2",
+                "axis_bounds": (0, 0.2),
+                "kwargs": {"energy_edges": [1.2, 11, 20] * u.TeV},
+            },
+            # ERROR 4: Region radius larger than offset (axis bounds too large)
+            {
+                "axis_unit": "deg2",
+                "axis_bounds": (0, 0.3),
+                "kwargs": {"energy_edges": [1.0, 11] * u.TeV, "off_regions_number": 1},
+            },
+            # ERROR 5: User-defined OFF position AND multiple OFF regions requested (inconsistent)
+            {
+                "axis_unit": "deg2",
+                "axis_bounds": (0, 0.05),
+                "kwargs": {
+                    "position_off": SkyCoord(0, -1.0, frame="icrs", unit="deg"),
+                    "energy_edges": [1.2, 11] * u.TeV,
+                    "off_regions_number": 2,
+                },
+            },
+        ],
+    )
+    def test_make_theta_squared_table_errors(self, case_params):
+        position = SkyCoord(ra=0, dec=0, unit="deg", frame="icrs")
+
+        b_min, b_max = case_params["axis_bounds"]
+        unit = case_params["axis_unit"]
+        axis = MapAxis.from_bounds(b_min, b_max, nbin=4, interp="lin", unit=unit)
+
+        kwargs = case_params["kwargs"].copy()
+
+        if kwargs.pop("position_off_is_on", False):
+            kwargs["position_off"] = position
+
         with pytest.raises(ValueError):
-            off_position = position
             make_theta_squared_table(
                 observations=[self.observations[0]],
                 position=position,
                 theta_squared_axis=axis,
-                position_off=off_position,
-            )
-
-        # Test for two observations, here identical
-        theta2_table_two_obs = make_theta_squared_table(
-            observations=self.observations,
-            position=position,
-            theta_squared_axis=axis,
-        )
-        on_counts_two_obs = [4, 0, 0, 0]
-        off_counts_two_obs = [2, 0, 0, 0]
-        acceptance_two_obs = [2, 2, 2, 2]
-        acceptance_off_two_obs = [2, 2, 2, 2]
-        alpha_two_obs = [1, 1, 1, 1]
-        assert_allclose(theta2_table_two_obs["counts"], on_counts_two_obs)
-        assert_allclose(theta2_table_two_obs["counts_off"], off_counts_two_obs)
-        assert_allclose(theta2_table_two_obs["acceptance"], acceptance_two_obs)
-        assert_allclose(theta2_table_two_obs["acceptance_off"], acceptance_off_two_obs)
-        assert_allclose(theta2_table["alpha"], alpha_two_obs)
-
-        # Test for energy selection
-        theta2_table_ene = make_theta_squared_table(
-            observations=[self.observations[0]],
-            position=position,
-            theta_squared_axis=axis,
-            energy_edges=[1.0, 11] * u.TeV,
-        )
-        on_counts_ene = [2, 0, 0, 0]
-        off_counts_ene = [1, 0, 0, 0]
-        acceptance_ene = [1, 1, 1, 1]
-        acceptance_off_ene = [1, 1, 1, 1]
-        alpha_ene = [1, 1, 1, 1]
-        assert_allclose(theta2_table_ene["counts"], on_counts_ene)
-        assert_allclose(theta2_table_ene["counts_off"], off_counts_ene)
-        assert_allclose(theta2_table_ene["acceptance"], acceptance_ene)
-        assert_allclose(theta2_table_ene["acceptance_off"], acceptance_off_ene)
-        assert_allclose(theta2_table_ene["alpha"], alpha_ene)
-        assert_allclose(theta2_table_ene.meta["Energy_filter"], [1.0, 11] * u.TeV)
-
-        with pytest.raises(ValueError):
-            make_theta_squared_table(
-                observations=[self.observations[0]],
-                position=position,
-                theta_squared_axis=axis,
-                energy_edges=[1.2, 11, 20] * u.TeV,
-            )
-
-        # Test for multiple OFF regions
-        axis_multi = MapAxis.from_bounds(0, 0.19, nbin=4, interp="lin", unit="deg2")
-        theta2_table_multi = make_theta_squared_table(
-            observations=[self.observations[0]],
-            position=position,
-            theta_squared_axis=axis_multi,
-            energy_edges=[1.0, 11] * u.TeV,
-            off_regions_number=2,
-        )
-        on_counts_multi = [2, 0, 0, 0]
-        off_counts_multi = [0, 0, 0, 0]
-        acceptance_multi = [1, 1, 1, 1]
-        acceptance_off_multi = [2, 2, 2, 2]
-        alpha_multi = [0.5, 0.5, 0.5, 0.5]
-        excess_multi = [2, 0, 0, 0]
-        sqrt_ts_multi = [2.0962941479364097, 0.0, 0.0, 0.0]
-        assert_allclose(theta2_table_multi["counts"], on_counts_multi)
-        assert_allclose(theta2_table_multi["counts_off"], off_counts_multi)
-        assert_allclose(theta2_table_multi["acceptance"], acceptance_multi)
-        assert_allclose(theta2_table_multi["acceptance_off"], acceptance_off_multi)
-        assert_allclose(theta2_table_multi["alpha"], alpha_multi)
-        assert_allclose(theta2_table_multi["excess"], excess_multi)
-        assert_allclose(theta2_table_multi["sqrt_ts"], sqrt_ts_multi)
-        assert_allclose(theta2_table_multi.meta["Energy_filter"], [1.0, 11] * u.TeV)
-
-        # Test for region radius larger than the offset
-        with pytest.raises(ValueError):
-            axis_huge = MapAxis.from_bounds(0, 0.3, nbin=4, interp="lin", unit="deg2")
-            make_theta_squared_table(
-                observations=[self.observations[0]],
-                position=position,
-                theta_squared_axis=axis_huge,
-                energy_edges=[1.0, 11] * u.TeV,
-                off_regions_number=1,
-            )
-
-        # Test for overlapping multiple OFF regions
-        axis_overlap = MapAxis.from_bounds(0, 0.22, nbin=4, interp="lin", unit="deg2")
-        theta2_table_overlap = make_theta_squared_table(
-            observations=[self.observations[0]],
-            position=position,
-            theta_squared_axis=axis_overlap,
-            energy_edges=[1.0, 11] * u.TeV,
-            off_regions_number=2,
-        )
-        on_counts_overlap = [2, 0, 0, 0]
-        off_counts_overlap = [1, 0, 0, 0]
-        acceptance_overlap = [1, 1, 1, 1]
-        acceptance_off_overlap = [1, 1, 1, 1]
-        alpha_overlap = [1, 1, 1, 1]
-        excess_overlap = [1, 0, 0, 0]
-        sqrt_ts_overlap = [0.5829220133009173, 0.0, 0.0, 0.0]
-        assert_allclose(theta2_table_overlap["counts"], on_counts_overlap)
-        assert_allclose(theta2_table_overlap["counts_off"], off_counts_overlap)
-        assert_allclose(theta2_table_overlap["acceptance"], acceptance_overlap)
-        assert_allclose(theta2_table_overlap["acceptance_off"], acceptance_off_overlap)
-        assert_allclose(theta2_table_overlap["alpha"], alpha_overlap)
-        assert_allclose(theta2_table_overlap["excess"], excess_overlap)
-        assert_allclose(theta2_table_overlap["sqrt_ts"], sqrt_ts_overlap)
-        assert_allclose(theta2_table_overlap.meta["Energy_filter"], [1.0, 11] * u.TeV)
-
-        # Test for a user-defined OFF region
-        axis_usr_def = MapAxis.from_bounds(0, 0.1, nbin=4, interp="lin", unit="deg2")
-        position_off_test = SkyCoord(0, -1.0, frame="icrs", unit="deg")
-        theta2_table_usr_def = make_theta_squared_table(
-            observations=[self.observations[0]],
-            position=position,
-            position_off=position_off_test,
-            theta_squared_axis=axis_usr_def,
-            energy_edges=[1.2, 11] * u.TeV,
-            off_regions_number=1,
-        )
-
-        on_counts_usr_def = [0, 0, 0, 0]
-        off_counts_usr_def = [1, 0, 0, 0]
-        acceptance_usr_def = [1, 1, 1, 1]
-        acceptance_off_usr_def = [1, 1, 1, 1]
-        alpha_usr_def = [1, 1, 1, 1]
-        excess_usr_def = [-1, 0, 0, 0]
-        sqrt_ts_usr_def = [-1.1774100225154747, 0.0, 0.0, 0.0]
-        assert_allclose(theta2_table_usr_def["counts"], on_counts_usr_def)
-        assert_allclose(theta2_table_usr_def["counts_off"], off_counts_usr_def)
-        assert_allclose(theta2_table_usr_def["acceptance"], acceptance_usr_def)
-        assert_allclose(theta2_table_usr_def["acceptance_off"], acceptance_off_usr_def)
-        assert_allclose(theta2_table_usr_def["alpha"], alpha_usr_def)
-        assert_allclose(theta2_table_usr_def["excess"], excess_usr_def)
-        assert_allclose(theta2_table_usr_def["sqrt_ts"], sqrt_ts_usr_def)
-        assert_allclose(theta2_table_usr_def.meta["Energy_filter"], [1.2, 11] * u.TeV)
-
-        # Test for a user-defined OFF region and request of multiple OFF regions
-        with pytest.raises(ValueError):
-            axis_incosistency = MapAxis.from_bounds(
-                0, 0.05, nbin=4, interp="lin", unit="deg2"
-            )
-            position_off_test = SkyCoord(0, -1.0, frame="icrs", unit="deg")
-            make_theta_squared_table(
-                observations=[self.observations[0]],
-                position=position,
-                position_off=position_off_test,
-                theta_squared_axis=axis_incosistency,
-                energy_edges=[1.2, 11] * u.TeV,
-                off_regions_number=2,
+                **kwargs,
             )
 
 
