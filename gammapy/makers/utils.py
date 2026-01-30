@@ -379,6 +379,175 @@ def make_edisp_kernel_map(
     return edisp_map.to_edisp_kernel_map(geom.axes["energy"])
 
 
+def _check_theta2_inputs(
+    table, create_off, off_regions_number, on_region, position_off, energy_edges
+):
+    """Check inputs of make_theta_squared_table. It raises errors if inputs are not coherent.
+
+    Parameters
+    ----------
+    table : `~astropy.table.Table`
+        Default theta2 table;
+    create_off: bool;
+        Flag to indicate if the off position is passed.
+    off_regions_number : `int`
+        Number of OFF regions.
+    on_region : `~Region`
+        On-region.
+    position_off : `astropy.coordinates.SkyCoord`
+        Off-position coordinates.
+    energy_edges : list of `~astropy.units.Quantity`,
+        Edges of the energy bin where the theta squared distribution
+        is evaluated.
+    """
+    if create_off is False:
+        on_off_sep = on_region.center.separation(position_off)
+        if on_off_sep < on_region.radius * 2:
+            raise ValueError(
+                "The OFF region overlaps the ON region. This is currently forbidden. Use another OFF position or reduce the region radius."
+            )
+
+    if energy_edges is not None:
+        if len(energy_edges) == 2:
+            table.meta["Energy_filter"] = energy_edges
+        else:
+            raise ValueError(
+                f"Only supports one energy interval but {len(energy_edges) - 1} passed."
+            )
+
+    if off_regions_number > 1 and create_off is False:
+        raise ValueError(
+            "If `off_regions_number` is larger than 1, `position_off` has to be set to None."
+        )
+
+    return
+
+
+def _check_onregion_size(observation, on_region):
+    """Check the radius of the ON-region is smaller than its angular separation from
+    the pointing position.
+
+    Parameters
+    ----------
+    observation: `~gammapy.data.Observation`
+        Observation of interest.
+    on_region : `~Region`
+        On-region.
+
+    Returns
+    -------
+    pointing : `astropy.coordinates.SkyCoord`
+        Pointing coordinates of the observation of interest.
+    """
+    pointing = observation.get_pointing_icrs(observation.tmid)
+    separation_on_region = pointing.separation(on_region.center)
+    if on_region.radius > separation_on_region:
+        raise ValueError(
+            f"ON region radius larger than its offset. ON and OFF regions would overlap and this is not permitted. Reduce the radius size to at least {separation_on_region} ."
+        )
+    return pointing
+
+
+def _theta2_offregions_finder(
+    observation, create_off, off_regions_number, on_region, position_off
+):
+    """Calculate off regions for the theta2 distribution.
+
+    Parameters
+    ----------
+    observation: `~gammapy.data.Observation`
+        Observation of interest.
+    create_off: bool;
+        Flag to indicate if the off position is passed.
+    off_regions_number : `int`
+        Number of OFF regions.
+    on_region : `~Region`
+        On-region.
+    position_off : `astropy.coordinates.SkyCoord`
+        Off-position coordinates.
+
+    Returns
+    -------
+    off_regions : `astropy.coordinates.SkyCoord`
+        Pointing coordinates of the observation of interest.
+    off_regions_number : `int`
+        Number of OFF regions.
+    """
+    if create_off:
+        wobble = background.WobbleRegionsFinder(off_regions_number)
+        off_regions = wobble.run(
+            region=on_region, center=observation.pointing.fixed_icrs
+        )[0]
+
+        if len(off_regions) == 0:
+            log.warning("Using only one reflected OFF position.")
+            off_regions_number = 1
+            wobble = background.WobbleRegionsFinder(off_regions_number)
+            off_regions = wobble.run(
+                region=on_region, center=observation.pointing.fixed_icrs
+            )[0]
+    else:
+        off_regions = [CircleSkyRegion(center=position_off, radius=on_region.radius)]
+
+    return off_regions, off_regions_number
+
+
+def _calc_theta2(observation, position, theta_squared_axis, energy_edges, **kwargs):
+    """Calculate off regions for the theta2 distribution.
+
+    Parameters
+    ----------
+    observation: `~gammapy.data.Observation`
+        Observation of interest.
+    position : `~astropy.coordinates.SkyCoord`
+        Position from which the on theta^2 distribution is computed.
+    theta_squared_axis : `~gammapy.maps.MapAxis`
+        Axis of edges of the theta2 bin used to compute the distribution.
+    energy_edges : list of `~astropy.units.Quantity`, optional
+        Edges of the energy bin where the theta squared distribution
+        is evaluated. For now, only one interval is accepted.
+        Default is None.
+
+    Returns
+    -------
+    counts, counts_off: `np.array`
+        theta2 distribution of ON and OFF counts.
+    off_regions_number : `int`
+        Number of OFF regions.
+    """
+    on_region = kwargs.get("on_region")
+    create_off = kwargs.get("create_off")
+    off_regions_number = kwargs.get("off_regions_number")  # Esempio default
+    position_off = kwargs.get("position_off")
+
+    events = observation.events
+    if energy_edges is not None:
+        events = events.select_energy(energy_range=energy_edges)
+
+    event_position = events.radec
+
+    _check_onregion_size(observation, on_region)
+
+    separation = position.separation(event_position)
+    counts, _ = np.histogram(separation**2, theta_squared_axis.edges)
+
+    off_regions, off_regions_number = _theta2_offregions_finder(
+        observation, create_off, off_regions_number, on_region, position_off
+    )
+
+    counts_off = np.zeros_like(counts)
+    for off_region in off_regions:
+        # Angular distance of the events from the OFF position
+        separation_off = off_region.center.separation(event_position)
+        # Extract the OFF theta2 distribution from the two positions.
+        counts_off_regions, _ = np.histogram(
+            separation_off**2, theta_squared_axis.edges
+        )
+        counts_off += counts_off_regions
+
+    return counts, counts_off, off_regions_number
+
+
 def make_theta_squared_table(
     observations,
     theta_squared_axis,
@@ -412,7 +581,7 @@ def make_theta_squared_table(
         Edges of the energy bin where the theta squared distribution
         is evaluated. For now, only one interval is accepted.
         Default is None.
-    off_regions_number : `~int`
+    off_regions_number : `int`
         Number of OFF regions; by default is 1. Warning: the user should
         be aware that, if regions overlap, in such a case only the reflected OFF
         region will be considered.
@@ -442,71 +611,23 @@ def make_theta_squared_table(
     livetime_tot = 0
 
     create_off = position_off is None
-
-    if create_off is False:
-        on_off_sep = on_region.center.separation(position_off)
-        if on_off_sep < on_region.radius * 2:
-            raise ValueError(
-                "The OFF region overlaps the ON region. This is currently forbidden. Use another OFF position or reduce the region radius."
-            )
-
-    if energy_edges is not None:
-        if len(energy_edges) == 2:
-            table.meta["Energy_filter"] = energy_edges
-        else:
-            raise ValueError(
-                f"Only supports one energy interval but {len(energy_edges) - 1} passed."
-            )
+    _check_theta2_inputs(
+        table, create_off, off_regions_number, on_region, position_off, energy_edges
+    )
 
     for observation in observations:
-        events = observation.events
-        if energy_edges is not None:
-            events = events.select_energy(energy_range=energy_edges)
+        counts, counts_off, off_regions_number = _calc_theta2(
+            observation,
+            position,
+            theta_squared_axis,
+            energy_edges,
+            on_region=on_region,
+            create_off=create_off,
+            off_regions_number=off_regions_number,
+            position_off=position_off,
+        )
 
-        event_position = events.radec
-        pointing = observation.get_pointing_icrs(observation.tmid)
-
-        separation = position.separation(event_position)
-        counts, _ = np.histogram(separation**2, theta_squared_axis.edges)
         table["counts"] += counts
-
-        if off_regions_number > 1 and create_off is False:
-            raise ValueError(
-                "If `off_regions_number` is larger than 1, `position_off` has to be set to None."
-            )
-
-        separation_on_region = pointing.separation(on_region.center)
-        if radius > separation_on_region:
-            raise ValueError(
-                f"ON region radius larger than its offset. ON and OFF regions would overlap and this is not permitted. Reduce the radius size to at least {separation_on_region} ."
-            )
-
-        if create_off:
-            wobble = background.WobbleRegionsFinder(off_regions_number)
-            off_regions = wobble.run(
-                region=on_region, center=observation.pointing.fixed_icrs
-            )[0]
-
-            if len(off_regions) == 0:
-                log.warning("Using only one reflected OFF position.")
-                off_regions_number = 1
-                wobble = background.WobbleRegionsFinder(off_regions_number)
-                off_regions = wobble.run(
-                    region=on_region, center=observation.pointing.fixed_icrs
-                )[0]
-        else:
-            off_regions = [CircleSkyRegion(center=position_off, radius=radius)]
-
-        counts_off = np.zeros_like(counts)
-        for off_region in off_regions:
-            # Angular distance of the events from the OFF position
-            separation_off = off_region.center.separation(event_position)
-            # Extract the OFF theta2 distribution from the two positions.
-            counts_off_regions, _ = np.histogram(
-                separation_off**2, theta_squared_axis.edges
-            )
-            counts_off += counts_off_regions
-
         table["counts_off"] += counts_off
 
         # Normalisation between ON and OFF is one
