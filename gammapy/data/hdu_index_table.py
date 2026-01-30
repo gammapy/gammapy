@@ -161,7 +161,7 @@ class HDUIndexTable(Table):
             is_hdu_type = self._hdu_type_stripped == hdu_type
             selection &= is_hdu_type
 
-        idx = np.where(selection)[0]
+        idx = np.nonzero(selection)[0]
         return list(idx)
 
     def location_info(self, idx):
