@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 import scipy.optimize
+import math
 from gammapy.utils.interpolation import interpolate_profile
 from gammapy.utils.roots import find_roots
 from .likelihood import Likelihood
@@ -168,7 +169,7 @@ def stat_profile_ul_scipy(
         )
 
     mask_valid = np.isfinite(stat_scan) & np.isfinite(value_scan)
-    if mask_valid.sum() == 0.0:
+    if math.isclose(mask_valid.sum(), 0.0):
         raise ValueError(
             "Statistic profile has no finite value therefore no best-fit value can be determined."
         )
