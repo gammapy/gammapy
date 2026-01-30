@@ -420,8 +420,6 @@ def _check_theta2_inputs(
             "If `off_regions_number` is larger than 1, `position_off` has to be set to None."
         )
 
-    return
-
 
 def _check_onregion_size(observation, on_region):
     """Check the radius of the ON-region is smaller than its angular separation from
