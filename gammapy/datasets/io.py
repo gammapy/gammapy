@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import abc
 import numpy as np
-import math
 from pathlib import Path
 from astropy import units as u
 from astropy.io import fits
@@ -578,7 +577,7 @@ class FermipyDatasetsReader(DatasetReader):
             position=counts.geom.center_skydir,
         )
         # check that pdf is well defined (fails if edisp_bins>0 in fermipy)
-        if math.isclose(np.any(psf_r68s.value), 0.0):
+        if np.isclose(np.any(psf_r68s.value), 0.0):
             raise ValueError(
                 "PSF is not defined for all true energies. Check fermipy configuration."
             )

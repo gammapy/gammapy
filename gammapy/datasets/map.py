@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-import math
 import numpy as np
 from scipy.stats import median_abs_deviation as mad
 import astropy.units as u
@@ -2481,9 +2480,9 @@ class MapDataset(Dataset):
         vmin = npredmapdata.data.min()
         vmax = npredmapdata.data.max()
         # Fallback if the map is entirely zero
-        if math.isclose(vmin, 0.0):
+        if np.isclose(vmin, 0.0):
             vmin = np.max([countsmapdata.data.max() * 0.02, countsmapdata.data.min()])
-        if math.isclose(vmax, 0.0):
+        if np.isclose(vmax, 0.0):
             vmax = countsmapdata.data.max()
 
         # Create custom colormaps

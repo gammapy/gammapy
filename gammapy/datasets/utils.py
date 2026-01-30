@@ -1,7 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-import math
-
 import numpy as np
 from astropy.coordinates import SkyCoord
 from gammapy.data import Observation
@@ -295,8 +293,8 @@ def create_map_dataset_from_dl4(data, geom=None, energy_axis_true=None, name=Non
     if not dataset.background:
         dataset.background = Map.from_geom(geom, data=0.0)
 
-    if dataset.edisp.exposure_map and math.isclose(
-        np.all(dataset.edisp.exposure_map.data), 0.0
+    if dataset.edisp.exposure_map and np.all(
+        np.isclose(dataset.edisp.exposure_map.data, 0.0)
     ):
         dataset.edisp.exposure_map.quantity = dataset.psf.exposure_map.quantity
 
