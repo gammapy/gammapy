@@ -252,7 +252,7 @@ class SourceCatalogObject3HWC(SourceCatalogObjectHWCBase):
 
     @property
     def is_pointlike(self):
-        return self.data["spec0_radius"] == 0.0
+        return np.isclose(self.data["spec0_radius"], 0.0)
 
     def spectral_model(self):
         """Spectral model as a `~gammapy.modeling.models.PowerLawSpectralModel` object."""

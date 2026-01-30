@@ -176,7 +176,7 @@ class IRF(metaclass=abc.ABCMeta):
         scale = interpolation_scale(values_scale)
 
         axis = self.axes.index(axis_name)
-        mask = ~np.isfinite(data) | (data == 0.0)
+        mask = ~np.isfinite(data) | np.isclose(data, 0.0)
 
         coords = np.nonzero(mask)
         xp = np.arange(data.shape[axis])

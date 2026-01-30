@@ -349,9 +349,9 @@ def test_flux_map_read_write(tmp_path, wcs_flux_map, logpar_reference_model, sed
     assert (
         new_fluxmap.reference_model.spectral_model.tag[0] == "LogParabolaSpectralModel"
     )
-    assert new_fluxmap.reference_model.spectral_model.alpha.value == 1.5
-    assert new_fluxmap.reference_model.spectral_model.beta.value == 0.5
-    assert new_fluxmap.reference_model.spectral_model.amplitude.value == 2e-12
+    assert_allclose(new_fluxmap.reference_model.spectral_model.alpha.value, 1.5)
+    assert_allclose(new_fluxmap.reference_model.spectral_model.beta.value, 0.5)
+    assert_allclose(new_fluxmap.reference_model.spectral_model.amplitude.value, 2e-12)
 
     # check existence and content of additional map
     assert_allclose(new_fluxmap.sqrt_ts.data, 1.0)
@@ -583,7 +583,6 @@ def test_slice_by_coord():
 
 
 def test_copy(map_flux_estimate):
-
     model = SkyModel(PowerLawSpectralModel(amplitude="1e-10 cm-2s-1TeV-1", index=3))
 
     fe = FluxMaps(data=map_flux_estimate, reference_model=model)
