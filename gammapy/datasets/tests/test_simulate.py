@@ -441,7 +441,7 @@ def test_mde_sample_weak_src(dataset, models):
 
     assert len(events.table) == 18
     assert_allclose(
-        len(np.where(events.table["MC_ID"] == 0)[0]), len(events.table), rtol=1e-5
+        len(np.nonzero(events.table["MC_ID"] == 0)[0]), len(events.table), rtol=1e-5
     )
 
 
@@ -802,7 +802,7 @@ def test_MC_ID(model_alternative):
     events = sampler.run(dataset=dataset, observation=obs)
 
     assert len(events.table) == 215
-    assert len(np.where(events.table["MC_ID"] == 0)[0]) == 40
+    assert len(np.nonzero(events.table["MC_ID"] == 0)[0]) == 40
 
     meta = events.table.meta
     assert meta["MID00000"] == 0
@@ -860,7 +860,7 @@ def test_MC_ID_NMCID(model_alternative):
     events = sampler.run(dataset=dataset, observation=obs)
 
     assert len(events.table) == 47
-    assert len(np.where(events.table["MC_ID"] == 0)[0]) == 47
+    assert len(np.nonzero(events.table["MC_ID"] == 0)[0]) == 47
 
     meta = events.table.meta
     assert meta["MID00000"] == 0

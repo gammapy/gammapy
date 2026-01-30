@@ -477,7 +477,7 @@ class GTI:
             mask2 = t_stop <= time_intervals_upedges + atol
             mask = mask1 & mask2
             if np.any(mask):
-                group_index = np.where(mask)[0]
+                group_index = np.nonzero(mask)[0]
                 bin_type = ""
             else:
                 group_index = -1
