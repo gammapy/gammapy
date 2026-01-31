@@ -397,7 +397,8 @@ class SpatialModel(ModelBase):
 
         return ax
 
-    def _to_region_error(self):
+    def _to_region_error(self, size_factor=1.0):
+        """The function of each spatial model will be called instead"""
         pass
 
     def plot_error(

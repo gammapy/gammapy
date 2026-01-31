@@ -1630,7 +1630,7 @@ class ExpCutoffPowerLawSpectralModel(SpectralModel):
         lambda_ = self.lambda_.quantity
         alpha = self.alpha.quantity
 
-        if index >= 2 or lambda_ == 0.0 or alpha == 0.0:
+        if index >= 2 or np.isclose(lambda_, 0.0) or np.isclose(alpha, 0.0):
             return np.nan * reference.unit
         else:
             return np.power((2 - index) / alpha, 1 / alpha) / lambda_

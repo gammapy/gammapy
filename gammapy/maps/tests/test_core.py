@@ -601,7 +601,7 @@ def test_resample_weights():
     )
 
     map2 = map1.resample(geom2, weights=np.zeros(npix1), preserve_counts=False)
-    assert np.sum(map2.data) == 0.0
+    assert_allclose(np.sum(map2.data), 0.0)
 
 
 def test_resample_downsample_wcs():
