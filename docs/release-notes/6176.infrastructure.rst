@@ -1,1 +1,1 @@
-Move the package configuration from `setup.cfg` to `pyproject.toml` as recommended by PEP621.
+Move the package configuration from ``setup.cfg`` to ``pyproject.toml`` as recommended by PEP621.
