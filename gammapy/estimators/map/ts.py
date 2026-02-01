@@ -499,7 +499,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
             """
             )
 
-        x, y = np.where(np.squeeze(mask_2d))
+        x, y = np.nonzero(np.squeeze(mask_2d))
         positions = list(zip(x, y))
 
         inputs = zip(
