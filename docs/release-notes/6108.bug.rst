@@ -1,1 +1,1 @@
-Fix issue #5783, the to_table method now always outputs standard flux units.
+Fix issue #5783, the `~gammapy.estimators.FluxPoints.to_table` method now always outputs standard flux units.

@@ -1,1 +1,1 @@
-Fixed incorrect kinematics in DarkMatterDecaySpectralModel. The model now correctly uses mass/2 for the primary flux lookup.
+Fixed kinematics in `gammapy.astro.darkmatter.DarkMatterDecaySpectralModel`. The model now correctly uses mass/2 for the primary flux lookup.
