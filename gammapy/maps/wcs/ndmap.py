@@ -1113,7 +1113,7 @@ class WcsNDMap(WcsMap):
                 f"Cannot stack maps: {self.unit} and {other.unit} are not equivalent."
             )
 
-        data = other.data[cutout_slices].astype(self.data.dtype)
+        data = other.data[cutout_slices]
 
         data = (data * other.unit.to(self.unit)).astype(self.data.dtype)
 
