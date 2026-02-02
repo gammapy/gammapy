@@ -160,8 +160,7 @@ class IRF(metaclass=abc.ABCMeta):
 
         if np.shape(value) != required_shape:
             raise ValueError(
-                f"data shape {value.shape} does not match"
-                f"axes shape {required_shape}"
+                f"data shape {value.shape} does not matchaxes shape {required_shape}"
             )
 
         self._data = value
@@ -729,7 +728,7 @@ class IRFMap:
         """Get nearest valid position."""
         is_valid = np.nan_to_num(self.mask_safe_image.get_by_coord(position))[0]
 
-        if not is_valid and np.any(self.mask_safe_image > 0):
+        if not is_valid and np.any(self.mask_safe_image.data > 0):
             log.warning(
                 f"Position {position} is outside "
                 "valid IRF map range, using nearest IRF defined within"
