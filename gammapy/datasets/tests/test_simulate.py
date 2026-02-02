@@ -321,6 +321,7 @@ def test_sample_coord_time_energy_random_seed(
 ):
     sampler = MapDatasetEventSampler(random_state=2)
 
+    energy_dependent_temporal_sky_model.temporal_model.map._unit = ""
     dataset.models = energy_dependent_temporal_sky_model
     evaluator = dataset.evaluators["test-source"]
 
