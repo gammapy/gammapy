@@ -470,7 +470,6 @@ class GaussianPriorPenalty(FitStatisticPenalty):
     r"""Penalty based on a multivariate Gaussian prior.
 
     This implements a quadratic penalty of the form:
-
     .. math::
         \lambda \times (x - \mu)^T C^{-1} (x - \mu)
 
