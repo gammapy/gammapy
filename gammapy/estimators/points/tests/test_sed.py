@@ -35,6 +35,7 @@ def fermi_datasets():
     return Datasets.read(filename=filename, filename_models=filename_models)
 
 
+@requires_data()
 def create_fpe(spectral_type):
     if spectral_type == "pl":
         dataset = SpectrumDatasetOnOff.read(
