@@ -2,10 +2,10 @@ r"""
 .. _logparabola2-spectral-model:
 
 Log parabola 2 spectral model
-===========================
+=============================
 
 This model parametrises a log parabola spectrum,
-where the energy scale of the exponente, :math:`E_s`, and the reference energy, :math:`E_0`, can be different.
+where the energy scale of the exponent, :math:`E_s`, and the reference energy, :math:`E_0`, can be different.
 It is defined by the following equation:
 
 .. math::
@@ -13,7 +13,7 @@ It is defined by the following equation:
           - \alpha - \beta \log{ \left( \frac{E}{E_s} \right) }
         }
 
-Note that :math:`log` refers to the natural logarithm. 
+Note that :math:`log` refers to the natural logarithm.
 If you have parametrization based on :math:`log_{10}` you can use the
 :func:`~gammapy.modeling.models.LogParabola2SpectralModel.from_log10` method.
 
