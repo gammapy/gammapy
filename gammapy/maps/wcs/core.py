@@ -270,7 +270,7 @@ class WcsMap(Map):
 
         if len(shape) == 2:
             data_flat = np.ravel(data)
-            non_zero = np.where(~(data_flat == 0))
+            non_zero = np.nonzero(data_flat)
             value = data_flat[non_zero].astype(float)
             cols = [
                 fits.Column("PIX", "J", array=non_zero[0]),
@@ -279,7 +279,7 @@ class WcsMap(Map):
         elif npix[0].size == 1:
             shape_flat = shape[:-2] + (shape[-1] * shape[-2],)
             data_flat = np.ravel(data).reshape(shape_flat)
-            nonzero = np.where(~(data_flat == 0))
+            nonzero = np.nonzero(data_flat)
             channel = np.ravel_multi_index(nonzero[:-1], shape[:-2])
             value = data_flat[nonzero].astype(float)
             cols = [
@@ -293,7 +293,7 @@ class WcsMap(Map):
             pix = []
             for i, _ in np.ndenumerate(npix[0]):
                 data_i = np.ravel(data[i[::-1]])
-                pix_i = np.where(~(data_i == 0))
+                pix_i = np.nonzero(data_i)
                 data_i = data_i[pix_i]
                 data_flat += [data_i]
                 pix += pix_i
