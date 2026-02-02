@@ -812,8 +812,6 @@ class MapDataset(Dataset):
         else:
             return background
 
-        return background
-
     @property
     def _background_parameters_changed(self):
         values = self.background_model.parameters.value
