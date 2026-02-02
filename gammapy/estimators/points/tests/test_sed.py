@@ -35,6 +35,7 @@ def fermi_datasets():
     return Datasets.read(filename=filename, filename_models=filename_models)
 
 
+@requires_data()
 def create_fpe(spectral_type):
     if spectral_type == "pl":
         dataset = SpectrumDatasetOnOff.read(
@@ -540,6 +541,7 @@ def test_run_pwl_parameter_range(fpe_pwl):
     assert_allclose(actual, [18.56843129, 18.05465055, 7.05712127], rtol=1e-2)
 
 
+@requires_data()
 def test_flux_points_estimator_small_edges():
     datasets, fpe = create_fpe("pl")
 
@@ -798,6 +800,7 @@ def test_fpe_diff_lengths():
         fp = fpe.run(datasets)
 
 
+@requires_data()
 def test_resample_axis():
     ds, fpe = create_fpe("pl")
     flux_points = fpe.run(ds)
@@ -806,6 +809,7 @@ def test_resample_axis():
     assert_allclose(flux_new.flux.data, [[[3.1050191 * 1e-12]]], rtol=1e-5)
 
 
+@requires_data()
 def test_warning_for_bad_model(caplog):
     ds, fpe = create_fpe("pl")
     spectral_model = PowerLawSpectralModel()
