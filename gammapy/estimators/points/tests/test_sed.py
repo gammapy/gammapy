@@ -64,6 +64,7 @@ def create_fpe(spectral_type):
     return datasets, fpe
 
 
+@requires_data()
 @pytest.fixture(scope="session")
 def fpe_map_pwl():
     dataset_1 = MapDataset.read(
@@ -91,6 +92,7 @@ def fpe_map_pwl():
     return datasets, fpe
 
 
+@requires_data()
 @pytest.fixture(scope="session")
 def fpe_map_pwl_ray():
     """duplicate of fpe_map_pwl to avoid fails due to execution order"""
@@ -119,6 +121,7 @@ def fpe_map_pwl_ray():
     return datasets, fpe
 
 
+@requires_data()
 @pytest.fixture(scope="session")
 def fpe_map_pwl_reoptimize():
     dataset = MapDataset.read(
