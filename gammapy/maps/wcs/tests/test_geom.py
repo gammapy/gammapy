@@ -579,7 +579,7 @@ def test_irregular_geom_equality():
     geom1 = WcsGeom.create(skydir=(0, 0), npix=10, binsz=binsizes, axes=[axis])
 
     with pytest.raises(NotImplementedError):
-        geom0 == geom1
+        geom0.__eq__(geom1)
 
 
 def test_wcs_geom_pad():
