@@ -35,7 +35,6 @@ def fermi_datasets():
     return Datasets.read(filename=filename, filename_models=filename_models)
 
 
-@requires_data()
 def create_fpe(spectral_type):
     if spectral_type == "pl":
         dataset = SpectrumDatasetOnOff.read(
@@ -64,7 +63,6 @@ def create_fpe(spectral_type):
     return datasets, fpe
 
 
-@requires_data()
 @pytest.fixture(scope="session")
 def fpe_map_pwl():
     dataset_1 = MapDataset.read(
@@ -92,7 +90,6 @@ def fpe_map_pwl():
     return datasets, fpe
 
 
-@requires_data()
 @pytest.fixture(scope="session")
 def fpe_map_pwl_ray():
     """duplicate of fpe_map_pwl to avoid fails due to execution order"""
@@ -121,7 +118,6 @@ def fpe_map_pwl_ray():
     return datasets, fpe
 
 
-@requires_data()
 @pytest.fixture(scope="session")
 def fpe_map_pwl_reoptimize():
     dataset = MapDataset.read(
@@ -160,6 +156,7 @@ def test_str(fpe_pwl):
     assert "FluxPointsEstimator" in str(fpe)
 
 
+@requires_data()
 def test_run_pwl(fpe_pwl, tmpdir):
     datasets, fpe = fpe_pwl
 
@@ -262,6 +259,7 @@ def test_run_pwl(fpe_pwl, tmpdir):
     assert_allclose(fp_dataset.stat_sum(), 3.783325, rtol=1e-4)
 
 
+@requires_data()
 def test_run_ecpl(fpe_ecpl, tmpdir):
     datasets, fpe = fpe_ecpl
 
@@ -373,6 +371,7 @@ def test_run_map_pwl_reoptimize(fpe_map_pwl_reoptimize):
     assert_allclose(actual, [9.788123, 0.486066, 17.603708], rtol=1e-2)
 
 
+@requires_data()
 def test_run_no_edip(fpe_pwl, tmpdir):
     datasets, fpe = fpe_pwl
 
@@ -503,6 +502,7 @@ def test_mask_shape():
     assert_allclose(table["npred"], 0)
 
 
+@requires_data()
 def test_run_pwl_parameter_range(fpe_pwl):
     datasets, fpe = create_fpe("pl")
 
@@ -553,6 +553,7 @@ def test_flux_points_estimator_small_edges():
     assert np.isnan(fp.npred.data[1, 0, 0])
 
 
+@requires_data()
 def test_flux_points_recompute_ul(fpe_pwl):
     datasets, fpe = fpe_pwl
     fpe.selection_optional = ["all"]
@@ -575,6 +576,7 @@ def test_flux_points_recompute_ul(fpe_pwl):
     assert_allclose(fp2.flux_ul.data, fp.flux_ul.data, rtol=1e-2)
 
 
+@requires_data()
 def test_flux_points_parallel_multiprocessing(fpe_pwl):
     datasets, fpe = fpe_pwl
     fpe.selection_optional = ["all"]
@@ -608,6 +610,7 @@ def test_global_n_jobs_default_handling():
     assert fpe.n_jobs == 1
 
 
+@requires_data()
 @requires_dependency("ray")
 def test_flux_points_parallel_ray(fpe_pwl):
     datasets, fpe = fpe_pwl
@@ -622,6 +625,7 @@ def test_flux_points_parallel_ray(fpe_pwl):
     )
 
 
+@requires_data()
 @requires_dependency("ray")
 def test_flux_points_parallel_ray_actor_spectrum(fpe_pwl):
     from gammapy.datasets.actors import DatasetsActor
