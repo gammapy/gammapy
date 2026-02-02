@@ -831,7 +831,7 @@ class HpxNDMap(HpxMap):
         if header["INDXSCHM"] == "SPARSE":
             data = self.data.copy()
             data[~np.isfinite(data)] = 0
-            nonzero = np.where(data > 0)
+            nonzero = np.nonzero(data > 0)
             value = data[nonzero].astype(float)
             pix = self.geom.local_to_global(nonzero[::-1])[0]
             if len(shape) == 1:
