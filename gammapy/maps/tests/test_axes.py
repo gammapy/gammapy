@@ -832,8 +832,8 @@ def test_axes_basics(caplog):
     assert axes.primary_axis.name == "time"
 
     new_axes = axes.copy()
-    assert new_axes[0] == new_axes[0]
-    assert new_axes[1] == new_axes[1]
+    assert new_axes[0] == axes[0]
+    assert new_axes[1] == axes[1]
     assert new_axes == axes
 
     energy_axis = MapAxis.from_energy_edges([1, 4] * u.TeV)

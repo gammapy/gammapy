@@ -535,7 +535,7 @@ def test_model_from_dict(tmpdir, model_cls):
 
     data = model.to_dict()
     model_from_dict = model_cls.from_dict(data)
-    assert model_from_dict.tag == model_from_dict.tag
+    assert model_from_dict.tag == model.tag
 
     bkg_model = FoVBackgroundModel(spatial_model=model, dataset_name="test")
     bkg_model_dict = bkg_model.to_dict()
