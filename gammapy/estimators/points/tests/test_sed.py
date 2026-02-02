@@ -152,6 +152,7 @@ def fpe_ecpl():
     return create_fpe("ecpl")
 
 
+@requires_data()
 def test_str(fpe_pwl):
     _, fpe = fpe_pwl
     assert "FluxPointsEstimator" in str(fpe)
@@ -450,6 +451,7 @@ def test_flux_points_estimator_no_norm_scan(fpe_pwl, tmpdir):
     assert fp_new.meta["sed_type_init"] == "likelihood"
 
 
+@requires_data()
 def test_no_likelihood_contribution():
     dataset = SpectrumDatasetOnOff.read(
         "$GAMMAPY_DATA/datasets/simulations/simulated_spectrum_dataset_PL.fits"
