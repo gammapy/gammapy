@@ -397,7 +397,8 @@ class SpatialModel(ModelBase):
 
         return ax
 
-    def _to_region_error(self):
+    def _to_region_error(self, size_factor=1.0):
+        """The function of each spatial model will be called instead"""
         pass
 
     def plot_error(
@@ -449,13 +450,7 @@ class SpatialModel(ModelBase):
 
         if "all" in which:
             self.plot_position_error(ax, **kwargs_position)
-            try:
-                region = self._to_region_error(size_factor=size_factor)
-            except TypeError as e:
-                if "unexpected keyword argument 'size_factor'" in str(e):
-                    region = self._to_region_error()
-                else:
-                    raise
+            region = self._to_region_error(size_factor=size_factor)
             if region is not None:
                 artist = region.to_pixel(ax.wcs).as_artist(**kwargs_extension)
                 ax.add_artist(artist)
@@ -464,13 +459,7 @@ class SpatialModel(ModelBase):
             self.plot_position_error(ax, **kwargs_position)
 
         if "extension" in which:
-            try:
-                region = self._to_region_error(size_factor=size_factor)
-            except TypeError as e:
-                if "unexpected keyword argument 'size_factor'" in str(e):
-                    region = self._to_region_error()
-                else:
-                    raise
+            region = self._to_region_error(size_factor=size_factor)
             if region is not None:
                 artist = region.to_pixel(ax.wcs).as_artist(**kwargs_extension)
                 ax.add_artist(artist)
