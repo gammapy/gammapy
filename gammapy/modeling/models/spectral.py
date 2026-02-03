@@ -1584,8 +1584,11 @@ class ExpCutoffPowerLawSpectralModel(SpectralModel):
         try:
             with warnings.catch_warnings():
                 warnings.simplefilter("error", RuntimeWarning)
-                en = np.power((2 - index) / alpha, 1 / alpha) / lambda_
-                return en if en > 0.0 else np.nan * reference.unit
+                e_peak = np.power((2 - index) / alpha, 1 / alpha) / lambda_
+                if e_peak.value > 0:
+                    return e_peak
+                else:
+                    return np.nan * reference.unit
         except (ZeroDivisionError, RuntimeWarning, OverflowError, ValueError):
             return np.nan * reference.unit
 
