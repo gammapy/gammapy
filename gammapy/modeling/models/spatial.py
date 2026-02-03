@@ -450,23 +450,19 @@ class SpatialModel(ModelBase):
 
         if "all" in which:
             self.plot_position_error(ax, **kwargs_position)
-            try:
-                region = self._to_region_error(size_factor=size_factor)
+            region = self._to_region_error(size_factor=size_factor)
+            if region is not None:
                 artist = region.to_pixel(ax.wcs).as_artist(**kwargs_extension)
                 ax.add_artist(artist)
-            except Exception:
-                pass
 
         if "position" in which:
             self.plot_position_error(ax, **kwargs_position)
 
         if "extension" in which:
-            try:
-                region = self._to_region_error(size_factor=size_factor)
+            region = self._to_region_error(size_factor=size_factor)
+            if region is not None:
                 artist = region.to_pixel(ax.wcs).as_artist(**kwargs_extension)
                 ax.add_artist(artist)
-            except Exception:
-                pass
 
     def plot_grid(self, geom=None, **kwargs):
         """Plot spatial model energy slices in a grid.
