@@ -610,6 +610,20 @@ def test_spatial_model_plot_error(model_class, extension_param):
         model.plot_error(ax=ax, which="extension")
 
 
+def test_pointspatialmodel_plot_error():
+    model = PointSpatialModel(lon_0="0 deg", lat_0="0 deg", frame="galactic")
+    model.lat_0.error = 0.04
+    model.lon_0.error = 0.02
+
+    empty_map = Map.create(
+        skydir=model.position, frame=model.frame, width=1, binsz=0.02
+    )
+    with mpl_plot_check():
+        ax = empty_map.plot()
+        model.plot_error(ax=ax, which="all")
+        model.plot_error(ax=ax, which="extension")
+
+
 def test_integrate_region_geom():
     center = SkyCoord("0d", "0d", frame="icrs")
     model = GaussianSpatialModel(
