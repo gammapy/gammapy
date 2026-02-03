@@ -1589,12 +1589,6 @@ class ExpCutoffPowerLawSpectralModel(SpectralModel):
         except (ZeroDivisionError, RuntimeWarning, OverflowError, ValueError):
             return np.nan * reference.unit
 
-        try:
-            en = np.power((2 - index) / alpha, 1 / alpha) / lambda_
-        except ZeroDivisionError:
-            en = np.nan * reference.unit
-        return en
-
 
 class ExpCutoffPowerLawNormSpectralModel(SpectralModel):
     r"""Norm spectral exponential cutoff power-law model.
