@@ -169,7 +169,6 @@ class SubstitutionCodeBlock(CodeBlock):
         """Replace placeholders with given variables."""
         app = self.state.document.settings.env.app
         new_content = []
-        self.content = self.content
         existing_content = self.content
         for item in existing_content:
             for pair in app.config.substitutions:
