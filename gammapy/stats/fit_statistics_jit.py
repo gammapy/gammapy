@@ -135,10 +135,10 @@ def norm_bounds_jit(counts, background, model):
             sn = background[i] / model[i]
             if sn < sn_min_total:
                 sn_min_total = sn
-    if not (abs(s_model) > 0):
-        b_min = np.nan
-        b_max = np.nan
-    else:
+    if abs(s_model) > 0:
         b_min = c_min / s_model - sn_min
         b_max = s_counts / s_model - sn_min
+    else:
+        b_min = np.nan
+        b_max = np.nan
     return b_min, b_max, -sn_min_total
