@@ -2972,12 +2972,7 @@ class MapDatasetOnOff(MapDataset):
         # For the bins where the stacked OFF counts equal 0, the alpha value is
         # performed by weighting on the total OFF counts of each run
         is_zero = total_off.data == 0
-        if average_alpha > 0.0:
-            acceptance_off.data[is_zero] = (
-                total_acceptance.data[is_zero] / average_alpha
-            )
-        else:
-            acceptance_off.data[is_zero] = 0.0
+        acceptance_off.data[is_zero] = total_acceptance.data[is_zero] / average_alpha
 
         self.acceptance.data[...] = total_acceptance.data
         self.acceptance_off = acceptance_off

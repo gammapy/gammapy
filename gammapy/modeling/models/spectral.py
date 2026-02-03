@@ -1581,10 +1581,19 @@ class ExpCutoffPowerLawSpectralModel(SpectralModel):
         lambda_ = self.lambda_.quantity
         alpha = self.alpha.quantity
 
-        if index >= 2 or np.isclose(lambda_, 0.0) or np.isclose(alpha, 0.0):
+        try:
+            with warnings.catch_warnings():
+                warnings.simplefilter("error", RuntimeWarning)
+                en = np.power((2 - index) / alpha, 1 / alpha) / lambda_
+                return en
+        except (ZeroDivisionError, RuntimeWarning, OverflowError, ValueError):
             return np.nan * reference.unit
-        else:
-            return np.power((2 - index) / alpha, 1 / alpha) / lambda_
+
+        try:
+            en = np.power((2 - index) / alpha, 1 / alpha) / lambda_
+        except ZeroDivisionError:
+            en = np.nan * reference.unit
+        return en
 
 
 class ExpCutoffPowerLawNormSpectralModel(SpectralModel):
