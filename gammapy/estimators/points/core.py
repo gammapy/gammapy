@@ -512,7 +512,7 @@ class FluxPoints(FluxMaps):
 
         if format == "gadf-sed":
             # TODO: what to do with GTI info?
-            if not self.geom.axes.names == ["energy"]:
+            if self.geom.axes.names != ["energy"]:
                 raise ValueError(
                     "Only flux points with a single energy axis "
                     "can be converted to 'gadf-sed'"

@@ -1,1 +1,1 @@
-Fix plot_error for models evaluated with not finite values
+Fix ``plot_error`` for models evaluated with non-finite values.

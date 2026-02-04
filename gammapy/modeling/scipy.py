@@ -160,7 +160,6 @@ def stat_profile_ul_scipy(
     ul : float
         Upper limit value.
     """
-
     stat_scan = np.array(stat_scan)
     value_scan = np.array(value_scan)
     if np.allclose(stat_scan, stat_scan[0]):

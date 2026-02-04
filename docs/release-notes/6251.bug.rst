@@ -1,1 +1,1 @@
-Fixed plot_error for BrokenPowerLawSpectralModel and TemplateNDSpectralModel
+Fixed ``plot_error`` for `~gammapy.modeling.models.BrokenPowerLawSpectralModel` and `~gammapy.modeling.models.TemplateNDSpectralModel`

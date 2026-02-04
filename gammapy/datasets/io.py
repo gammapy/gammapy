@@ -570,7 +570,6 @@ class FermipyDatasetsReader(DatasetReader):
             raise ValueError(
                 "Energy true axes of exposure and DRM do not match. Check fermipy configuration."
             )
-            edisp_axes = edisp.edisp_map.geom.axes
 
         psf_r68s = psf.containment_radius(
             0.68,

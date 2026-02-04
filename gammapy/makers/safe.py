@@ -239,7 +239,7 @@ class SafeMaskMaker(Maker):
             model = TemplateSpectralModel.from_region_map(aeff)
 
             energy_true = model.energy
-            energy_min = energy_true[np.where(model.values > 0)[0][0]]
+            energy_min = energy_true[np.nonzero(model.values > 0)[0][0]]
             energy_max = energy_true[-1]
 
             aeff_thres = (self.aeff_percent / 100) * aeff.quantity.max()
@@ -339,7 +339,7 @@ class SafeMaskMaker(Maker):
         bkg = dataset.background.data
         mask = np.isfinite(bkg)
 
-        if not dataset.stat_type == "wstat":
+        if dataset.stat_type != "wstat":
             mask &= bkg > 0.0
 
         return mask

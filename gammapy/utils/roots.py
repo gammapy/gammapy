@@ -115,7 +115,7 @@ def find_roots(
     x = scale.inverse(np.linspace(a, b, nbin + 1))
     if len(x) > 2:
         signs = np.sign([f(xk, *args) for xk in x])
-        ind = np.where(signs[:-1] != signs[1:])[0]
+        ind = np.nonzero(signs[:-1] != signs[1:])[0]
     else:
         ind = [0]
     nroots = max(1, len(ind))

@@ -158,4 +158,4 @@ def test_eq():
     aeff1 = EffectiveAreaTable2D(data=data1, axes=[energy1, offset_axis])
     aeff2 = EffectiveAreaTable2D(data=data2, axes=[energy2, offset_axis])
 
-    assert not aeff1 == aeff2
+    assert aeff1 != aeff2

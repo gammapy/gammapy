@@ -319,7 +319,7 @@ def test_interpolate_map_dataset():
     # psf map
     width = 0.2 * u.deg
     rad_axis = MapAxis.from_nodes(np.linspace(0, 2, 50), name="rad", unit="deg")
-    psfMap = PSFMap.from_gauss(energy_true, rad_axis, width)
+    psf_map = PSFMap.from_gauss(energy_true, rad_axis, width)
 
     # edispmap
     edispmap = EDispKernelMap.from_gauss(
@@ -349,7 +349,7 @@ def test_interpolate_map_dataset():
         gti=gti,
         aeff=aeff_map,
         edisp=edispmap,
-        psf=psfMap,
+        psf=psf_map,
         bkg=bkg_map,
         events=events,
         obs_filter=None,
@@ -403,7 +403,7 @@ def test_interpolate_map_dataset():
 
     # test psfmap
     geom_psf = geom_target.drop("energy").to_cube([energy_true])
-    psfkernel_preinterp = psfMap.get_psf_kernel(
+    psfkernel_preinterp = psf_map.get_psf_kernel(
         position=SkyCoord("0 deg", "0 deg"), geom=geom_psf, max_radius=2 * u.deg
     ).data
     psfkernel_postinterp = dataset.psf.get_psf_kernel(

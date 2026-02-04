@@ -3,6 +3,7 @@ name = "gammapy"
 description = "A Python package for gamma-ray astronomy"
 readme = "LONG_DESCRIPTION.rst"
 license = "BSD-3-Clause"
+license-files = ["LICENSE.rst"]
 authors = [
     { name = "The Gammapy developers", email = "gammapy-coordination-l@in2p3.fr" }
 ]
@@ -40,7 +41,7 @@ Source = "https://github.com/gammapy/gammapy"
 
 [build-system]
 requires = [
-    "setuptools >= 65",
+    "setuptools >= 77.0.3",
     "wheel",
     "Cython",
     "numpy >= 2.0.0rc1",
