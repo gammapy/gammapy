@@ -522,8 +522,8 @@ class FermipyDatasetsReader(DatasetReader):
         edisp_file,
         isotropic_file=None,
         edisp_bins=0,
-        gti_file=None,
         name=None,
+        gti_file=None,
     ):
         """Create a map dataset from Fermi-LAT files.
 
@@ -604,8 +604,8 @@ class FermipyDatasetsReader(DatasetReader):
             exposure=exposure,
             psf=psf,
             edisp=edisp,
-            gti=gtis,
             name=name,
+            gti=gtis,
         )
         dataset = create_map_dataset_from_dl4(
             dataset, geom=counts.geom, name=dataset.name
@@ -671,8 +671,8 @@ class FermipyDatasetsReader(DatasetReader):
                     edisp_file=path / f"drm_0{str(file_id)}.fits",
                     isotropic_file=isotropic_file,
                     edisp_bins=self.edisp_bins,
-                    gti_file=path / f"ft1_0{str(file_id)}.fits",
                     name=name,
+                    gti_file=path / f"ft1_0{str(file_id)}.fits",
                 )
             )
         return datasets
