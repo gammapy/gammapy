@@ -23,7 +23,7 @@ class JFactory:
         Dark matter profile.
     distance : `~astropy.units.Quantity`
         Distance to convert angular scale of the map.
-    annihilation: bool, optional
+    annihilation : bool, optional
         Decay or annihilation. Default is True.
     """
 
