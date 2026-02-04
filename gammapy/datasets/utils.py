@@ -294,7 +294,7 @@ def create_map_dataset_from_dl4(data, geom=None, energy_axis_true=None, name=Non
         dataset.background = Map.from_geom(geom, data=0.0)
 
     if dataset.edisp.exposure_map and np.all(
-        np.isclose(dataset.edisp.exposure_map.data, 0.0)
+        np.isclose(dataset.edisp.exposure_map.data, 0.0, atol=1e-40)
     ):
         dataset.edisp.exposure_map.quantity = dataset.psf.exposure_map.quantity
 

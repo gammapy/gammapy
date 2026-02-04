@@ -795,7 +795,7 @@ def test_template_spectral_model_evaluate_tiny():
         values[mask] / values.max(), result[mask].value / values.max()
     )
     mask = abs(result.value) - tiny <= tiny
-    assert np.allclose(result[mask], 0.0)
+    assert np.allclose(result[mask], 0.0, atol=1e-40)
 
 
 def test_template_spectral_model_single_value():
