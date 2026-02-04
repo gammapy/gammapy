@@ -522,6 +522,7 @@ class FermipyDatasetsReader(DatasetReader):
         edisp_file,
         isotropic_file=None,
         edisp_bins=0,
+        gti_file=None,
         name=None,
     ):
         """Create a map dataset from Fermi-LAT files.
@@ -545,6 +546,8 @@ class FermipyDatasetsReader(DatasetReader):
             and  a value edisp_bins>0 should be set here in order to apply the energy dispersion correctly.
             With a binning of 8 to 10 bins per decade, it is recommended to use edisp_bins ≥ 2
             (See https://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Pass8_edisp_usage.html)
+        gti_file : str
+            GTI file path. Default is None
         name : str, optional
             Dataset name. The default is None, and the name is randomly generated.
 
@@ -589,12 +592,19 @@ class FermipyDatasetsReader(DatasetReader):
         geom = counts.geom.to_image().to_cube([energy_axis])
         counts = Map.from_geom(geom, data=counts.data)
 
+        # get gtis from gtmktime evtfile if given
+        if gti_file:
+            gtis = GTI.read(gti_file)
+        else:
+            gtis = None
+
         # standardize dataset interpolating to same geom and axes
         dataset = MapDataset(
             counts=counts,
             exposure=exposure,
             psf=psf,
             edisp=edisp,
+            gti=gtis,
             name=name,
         )
         dataset = create_map_dataset_from_dl4(
@@ -661,6 +671,7 @@ class FermipyDatasetsReader(DatasetReader):
                     edisp_file=path / f"drm_0{str(file_id)}.fits",
                     isotropic_file=isotropic_file,
                     edisp_bins=self.edisp_bins,
+                    gti_file=path / f"ft1_0{str(file_id)}.fits",
                     name=name,
                 )
             )
