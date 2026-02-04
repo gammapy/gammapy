@@ -219,7 +219,7 @@ class EffectiveAreaTable2D(IRF):
 
         """
         ncols = 2 if self.is_pointlike else 3
-        fig, axes = plt.subplots(nrows=1, ncols=ncols, figsize=figsize)
+        _, axes = plt.subplots(nrows=1, ncols=ncols, figsize=figsize)
         self.plot(ax=axes[ncols - 1])
         self.plot_energy_dependence(ax=axes[0])
         if self.is_pointlike is False:

@@ -6,6 +6,7 @@ import codecs
 import operator
 import os.path
 import functools
+
 import types
 import warnings
 import numpy as np
@@ -365,3 +366,22 @@ def logic_parser(table, expression):
     expr_ast = ast.parse(expression, mode="eval")
     mask = eval_node(expr_ast.body)
     return table[mask]
+
+
+def method_wrapper(func):
+    """
+    Wrap a function for use as a method while preserving its metadata.
+
+    This utility wraps a function so it can be assigned as a method on other
+    classes (or instances) and still calls the original function with the
+    receiving object as the first argument. The wrapper copies the original
+    function's metadata (e.g. docstring, name, module, annotations),
+    which makes the wrapped method appear
+    in introspection and documentation like the original.
+    """
+
+    def wrapper(self, *args, **kwargs):
+        return func(self, *args, **kwargs)
+
+    functools.update_wrapper(wrapper, func)
+    return wrapper

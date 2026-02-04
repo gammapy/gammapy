@@ -1,13 +1,11 @@
 .. include:: ../references.txt
 
 .. _gammapy_{{ versiondata.version | replace('.', 'p') }}_release:
-
 {% set parts = versiondata.date.split('-') %}
 {% set year = parts[0] %}
 {% set month = parts[1]|int %}
 {% set day = parts[2]|int %}
 {% set month_name = ["January","February","March","April","May","June","July","August","September","October","November","December"][month-1] %}
-
 {% set suffix = "th" %}
 {% if day in [1,21,31] %}
   {% set suffix = "st" %}
@@ -16,7 +14,6 @@
 {% elif day in [3,23] %}
   {% set suffix = "rd" %}
 {% endif %}
-
 
 {% if render_title %}
 {% if versiondata.name %}
@@ -41,7 +38,6 @@ Summary
 
 {{ category_name }}
 {{ underline * category_name|length }}
-
 {% set underline = underlines[1] %}
 {% for section, section_categories in sections.items() %}
 {% if section and category in section_categories %}
@@ -64,4 +60,3 @@ No significant changes.
 {% endif %}
 {% endfor %}
 {% endfor %}
-

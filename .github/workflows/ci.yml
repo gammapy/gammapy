@@ -147,7 +147,7 @@ jobs:
           cat sonar_env
 
       # upload coverage report for SonarQube workflow
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         if: "contains(matrix.tox_env, '-cov')"
         with:
           name: gammapy-coverage-report
@@ -189,7 +189,7 @@ jobs:
         run: |
           tox -e build_docs
       - name: Upload HTML output
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: gammapy-doc-html
           path: docs/_build/html/

@@ -499,7 +499,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
             """
             )
 
-        x, y = np.where(np.squeeze(mask_2d))
+        x, y = np.nonzero(np.squeeze(mask_2d))
         positions = list(zip(x, y))
 
         inputs = zip(
@@ -792,7 +792,7 @@ class BrentqFluxEstimator(Estimator):
         # Compute norm bounds and assert counts > 0
         norm_min, norm_max, norm_min_total = dataset.norm_bounds
 
-        if not dataset.counts.sum() > 0:
+        if dataset.counts.sum() <= 0:
             norm, niter, success = norm_min_total, 0, True
 
         else:
@@ -849,7 +849,7 @@ class BrentqFluxEstimator(Estimator):
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            roots, res = find_roots(
+            roots, _ = find_roots(
                 ts_diff,
                 [min_norm],
                 [max_norm],
@@ -914,7 +914,7 @@ class BrentqFluxEstimator(Estimator):
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            roots, res = find_roots(
+            roots, _ = find_roots(
                 sigma_diff,
                 [min_norm],
                 [max_norm],

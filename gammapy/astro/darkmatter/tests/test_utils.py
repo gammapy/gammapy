@@ -66,5 +66,5 @@ def test_dmfluxmap_decay(jfact_decay):
         jfact_decay * diff_flux.integral(energy_min=energy_min, energy_max=energy_max)
     ).to("cm-2 s-1")
     actual = int_flux[5, 5]
-    desired = 7.01927e-3 / u.cm**2 / u.s
+    desired = 1.6796e-3 / u.cm**2 / u.s
     assert_quantity_allclose(actual, desired, rtol=1e-3)

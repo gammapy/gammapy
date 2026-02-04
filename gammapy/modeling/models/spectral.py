@@ -2,7 +2,6 @@
 """Spectral models for Gammapy."""
 
 import logging
-import warnings
 import operator
 import os
 from pathlib import Path
@@ -28,9 +27,7 @@ from gammapy.utils.interpolation import (
 )
 from gammapy.utils.roots import find_roots
 from gammapy.utils.scripts import make_path
-from gammapy.utils.random import get_random_state
 import gammapy.utils.parallel as parallel
-from gammapy.utils.deprecation import GammapyDeprecationWarning
 from ..covariance import CovarianceMixin
 from .core import ModelBase
 
@@ -233,12 +230,10 @@ class SpectralModel(ModelBase):
 
         """
         if samples is None:
-            rng = get_random_state(random_state)
-            samples = rng.multivariate_normal(
-                self.parameters.value,
-                self.covariance.data,
-                n_samples,
+            samples = self.sample_parameters_from_covariance(
+                n_samples=n_samples, random_state=random_state, free_only=False
             )
+
             samples = [samples[:, k] * p.unit for k, p in enumerate(self.parameters)]
 
         try:
@@ -279,19 +274,13 @@ class SpectralModel(ModelBase):
             unit=samples.unit,
         ).squeeze()
 
-    def evaluate_error(
-        self, energy, epsilon=1e-4, n_samples=3500, random_state=42, samples=None
-    ):
+    def evaluate_error(self, energy, n_samples=3500, random_state=42, samples=None):
         """Evaluate spectral model error from parameter distribution sampling.
 
         Parameters
         ----------
         energy : `~astropy.units.Quantity`
             Energy at which to evaluate.
-        epsilon : float, optional
-            Step size of the gradient evaluation. Given as a
-            fraction of the parameter error. Default is 1e-4.
-            Deprecated in v2.0 and unused.
         n_samples : int, optional
             Number of samples to generate per parameter. Default is 3500.
         random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
@@ -307,13 +296,6 @@ class SpectralModel(ModelBase):
             on the differential flux at the given energy.
 
         """
-        if epsilon != 1e-4:  # TODO: remove in v2.1
-            warnings.warn(
-                "epsilon is unused and deprecated in v2.0",
-                GammapyDeprecationWarning,
-                stacklevel=2,
-            )
-
         m = self.copy()
         n_pars = len(m.parameters)
 
@@ -392,7 +374,6 @@ class SpectralModel(ModelBase):
         self,
         energy_min,
         energy_max,
-        epsilon=1e-4,
         n_samples=3500,
         random_state=42,
         samples=None,
@@ -404,10 +385,6 @@ class SpectralModel(ModelBase):
         ----------
         energy_min, energy_max :  `~astropy.units.Quantity`
             Lower and upper bound of integration range.
-        epsilon : float, optional
-            Step size of the gradient evaluation. Given as a
-            fraction of the parameter error. Default is 1e-4.
-            Deprecated in v2.0 and unused.
         n_samples : int, optional
             Number of samples to generate per parameter. Default is 3500.
         random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
@@ -422,13 +399,6 @@ class SpectralModel(ModelBase):
             Median, negative, and positive errors
             on the integral flux between energy_min and energy_max.
         """
-        if epsilon != 1e-4:  # TODO: remove in v2.1
-            warnings.warn(
-                "epsilon is unused and deprecated in v2.0",
-                GammapyDeprecationWarning,
-                stacklevel=2,
-            )
-
         m = self.copy()
         n_pars = len(m.parameters)
 
@@ -478,7 +448,6 @@ class SpectralModel(ModelBase):
         self,
         energy_min,
         energy_max,
-        epsilon=1e-4,
         n_samples=3500,
         random_state=42,
         samples=None,
@@ -490,10 +459,6 @@ class SpectralModel(ModelBase):
         ----------
         energy_min, energy_max :  `~astropy.units.Quantity`
             Lower and upper bound of integration range.
-        epsilon : float, optional
-            Step size of the gradient evaluation. Given as a
-            fraction of the parameter error. Default is 1e-4.
-            Deprecated in v2.0 and unused.
         n_samples : int, optional
             Number of samples to generate per parameter. Default is 3500.
         random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
@@ -508,13 +473,6 @@ class SpectralModel(ModelBase):
             Median, negative, and positive errors on the
             energy flux between energy_min and energy_max.
         """
-        if epsilon != 1e-4:  # TODO: remove in v2.1
-            warnings.warn(
-                "epsilon is unused and deprecated in v2.0",
-                GammapyDeprecationWarning,
-                stacklevel=2,
-            )
-
         m = self.copy()
         n_pars = len(m.parameters)
 
@@ -849,7 +807,7 @@ class SpectralModel(ModelBase):
         return np.log(f1 / f2) / np.log(1 + epsilon)
 
     def spectral_index_error(
-        self, energy, epsilon=1e-5, n_samples=3500, random_state=42, samples=None
+        self, energy, n_samples=3500, random_state=42, samples=None
     ):
         """Evaluate the error on spectral index at the given energy.
 
@@ -857,9 +815,6 @@ class SpectralModel(ModelBase):
         ----------
         energy : `~astropy.units.Quantity`
             Energy at which to estimate the index.
-        epsilon : float, optional
-            Fractional energy increment to use for determining the spectral index.
-            Default is 1e-5. Deprecated in v2.0 and unused.
         n_samples : int, optional
             Number of samples to generate per parameter. Default is 3500.
         random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
@@ -873,13 +828,6 @@ class SpectralModel(ModelBase):
         index, index_errn, index_errp : tuple of float
             Median, negative, and positive error on the spectral index.
         """
-        if epsilon != 1e-5:  # TODO: remove in v2.1
-            warnings.warn(
-                "epsilon is unused and deprecated in v2.0",
-                GammapyDeprecationWarning,
-                stacklevel=2,
-            )
-
         m = self.copy()
         n_pars = len(m.parameters)
 
@@ -921,9 +869,9 @@ class SpectralModel(ModelBase):
 
         def f(x):
             # scale by 1e12 to achieve better precision
-            energy = u.Quantity(x, eunit, copy=COPY_IF_NEEDED)
-            y = self(energy).to_value(value.unit)
-            return 1e12 * (y - value.value)
+            energy = u.Quantity(x, unit=eunit)
+            y = self(energy).to(value.unit)
+            return 1e12 * (y.value - value.value)
 
         roots, res = find_roots(f, energy_min, energy_max, points_scale="log")
         return roots
@@ -1425,7 +1373,9 @@ class BrokenPowerLawSpectralModel(SpectralModel):
         eratio = energy / ebreak
         bpwl[cond] *= (eratio ** (-index1))[cond]
         bpwl[~cond] *= (eratio ** (-index2))[~cond]
-        if bpwl.shape[1] == 1:
+        if len(bpwl) == 1:
+            return bpwl.squeeze()
+        elif bpwl.shape[1] == 1:
             return bpwl.squeeze(axis=1)
         else:
             return bpwl

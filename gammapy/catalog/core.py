@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Source catalog and object base classes."""
+
 import abc
 import html
 import numbers
@@ -149,7 +150,7 @@ class SourceCatalog(abc.ABC):
             names[name.strip()] = idx
             for alias_column in self._source_name_alias:
                 for alias in str(row[alias_column]).split(","):
-                    if not alias == "":
+                    if alias != "":
                         names[alias.strip()] = idx
         return names
 

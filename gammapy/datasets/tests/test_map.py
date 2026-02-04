@@ -1219,7 +1219,7 @@ def test_stack(sky_model):
     # stacking when no safe masks are defined
     dataset1 = MapDataset(counts=cnt1, background=bkg1)
     stacked = MapDataset.from_geoms(**dataset1.geoms)
-    for i in range(3):
+    for _ in range(3):
         stacked.stack(dataset1)
     assert_allclose(stacked.background.data.sum(), 2880.0, 1e-5)
     assert_allclose(stacked.counts.data.sum(), 14400.0, 1e-5)

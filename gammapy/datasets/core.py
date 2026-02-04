@@ -126,6 +126,14 @@ class Dataset(abc.ABC):
                 )
         return residuals
 
+    def __add__(self, other):
+        if isinstance(other, (Datasets, list)):
+            return Datasets([self, *other])
+        elif isinstance(other, Dataset):
+            return Datasets([self, other])
+        else:
+            raise TypeError(f"Invalid type: {other!r}")
+
 
 class Datasets(collections.abc.MutableSequence):
     """Container class that holds a list of datasets.
@@ -155,6 +163,7 @@ class Datasets(collections.abc.MutableSequence):
 
         self._datasets = datasets
         self._covariance = None
+        self._penalties = None
 
     @property
     def parameters(self):
@@ -178,10 +187,12 @@ class Datasets(collections.abc.MutableSequence):
             if dataset.models is not None:
                 for model in dataset.models:
                     models[model] = model
-        models = DatasetModels(list(models.keys()))
+        models = DatasetModels(list(models.keys()), penalties=self._penalties)
 
         if self._covariance and self._covariance.parameters == models.parameters:
-            return DatasetModels(models, covariance_data=self._covariance.data)
+            return DatasetModels(
+                models, covariance_data=self._covariance.data, penalties=self._penalties
+            )
         else:
             return models
 
@@ -193,7 +204,9 @@ class Datasets(collections.abc.MutableSequence):
         The order of the unique models remains.
         """
         if models:
-            self._covariance = DatasetModels(models).covariance
+            datasetmodels = DatasetModels(models)
+            self._covariance = datasetmodels.covariance
+            self._penalties = datasetmodels._penalties
         for dataset in self:
             dataset.models = models
 
@@ -246,6 +259,9 @@ class Datasets(collections.abc.MutableSequence):
         prior_stat_sum = 0.0
         if self.models is not None:
             prior_stat_sum = self.models.parameters.prior_stat_sum()
+            if self.models._penalties is not None:
+                for penalty in self.models._penalties:
+                    prior_stat_sum += penalty.stat_sum()
 
         stat_sum = 0.0
         for dataset in self:
@@ -630,3 +646,11 @@ class Datasets(collections.abc.MutableSequence):
 
     def __len__(self):
         return len(self._datasets)
+
+    def __add__(self, other):
+        if isinstance(other, (Datasets, list)):
+            return Datasets([*self, *other])
+        elif isinstance(other, Dataset):
+            return Datasets([*self, other])
+        else:
+            raise TypeError(f"Invalid type: {other!r}")

@@ -262,7 +262,7 @@ class PSFKernel:
         figsize : tuple, optional
             Size of the figure. Default is (15, 5).
         """
-        fig, axes = plt.subplots(nrows=1, ncols=2, figsize=figsize)
+        _, axes = plt.subplots(nrows=1, ncols=2, figsize=figsize)
 
         axes[0].set_title("Energy-integrated PSF kernel")
         self.plot_kernel(ax=axes[0], add_cbar=True)

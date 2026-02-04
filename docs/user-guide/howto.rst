@@ -108,7 +108,7 @@ Please give feedback and suggest additions to this page!
         from gammapy.estimators import FluxPoints
         from astropy import units as u
 
-        filename = "$GAMMAPY_DATA/hawc_crab/HAWC19_flux_points.fits"
+        filename = "$GAMMAPY_DATA/hawc/crab_flux/HAWC19_flux_points.fits"
         fp = FluxPoints.read(filename)
 
         ax = plt.subplot()
@@ -403,5 +403,3 @@ Please give feedback and suggest additions to this page!
         # The new observation and the new events table can be serialised independently
         obs2.write("new_obs.fits.gz", overwrite=True)
         obs2.write("events.fits.gz", include_irfs=False, overwrite=True)
-
-

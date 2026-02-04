@@ -42,6 +42,7 @@ from gammapy.modeling.models import ConstantSpectralModel
 from gammapy.utils.coordinates import FoVAltAzFrame
 from gammapy.utils.testing import requires_data
 from gammapy.utils.time import time_ref_to_dict
+from gammapy.utils.coordinates import FoVICRSFrame
 
 
 @pytest.fixture(scope="session")
@@ -433,7 +434,6 @@ def test_make_map_background_irf_altaz_align(fixed_pointing_info):
     assert_allclose(
         map_long_altaz.data[0, 0, :4], [252123, 250654, 249086, 247564.0], rtol=1e-2
     )
-    #    [252123, 250654, 249086, 247564.]
     assert_allclose(
         map_short_altaz.data[0, 0, :4],
         [260.9476, 258.2620, 255.6040, 252.973375],
@@ -481,8 +481,8 @@ def test_make_counts_rad_max(observations):
     energy_axis = MapAxis.from_energy_bounds(
         0.05, 100, nbin=6, unit="TeV", name="energy"
     )
-    geome = RegionGeom.create(region=on_region, axes=[energy_axis])
-    counts = make_counts_rad_max(geome, observations.rad_max, observations.events)
+    geom = RegionGeom.create(region=on_region, axes=[energy_axis])
+    counts = make_counts_rad_max(geom, observations.rad_max, observations.events)
 
     assert_allclose(np.squeeze(counts.data), np.array([547, 188, 52, 8, 0, 0]))
 
@@ -806,60 +806,33 @@ def test_integrate_project_irf_on_geom():
     )
 
 
-@pytest.mark.filterwarnings("ignore:.*Angular separation .*direction")
-def test_get_fov_coords():
-    crab = SkyCoord(83.63333333, 22.01444444, unit="deg", frame="icrs")
-    location = observatory_locations.get("ctao_north")
-    time_start = Time("2025-01-01T00:00:00")
+@requires_data()
+def test_project_irf(aeff):
+    ebounds = [0.1, 1, 10]
+    axis = MapAxis.from_edges(ebounds, name="energy_true", unit="TeV", interp="log")
+    geom = WcsGeom.create(npix=(4, 3), binsz=2, axes=[axis])
+    pointing = SkyCoord(2, 1, unit="deg")
+    fov_frame = FoVICRSFrame(origin=pointing)
+    proj_irf_geom = project_irf_on_geom(geom, aeff, fov_frame)
 
-    fov_origin = crab.transform_to(AltAz(location=location, obstime=time_start))
-    fov_frame = FoVAltAzFrame(origin=fov_origin, location=location, obstime=time_start)
-
-    # Check that pixel centers end up at correct offsets
-    # (Uses FOV frame centered on the Crab)
-    center_sep = 0.5  # separation between square pixel centers
-    # is the pixel size
-    sky_geom = WcsGeom.create(npix=(3, 3), binsz=center_sep, skydir=crab, proj="TAN")
-    sky_coord = sky_geom.to_image().get_coord().skycoord
-    coords = _get_fov_coord(sky_coord, fov_frame, use_offset=True)["offset"]
-    assert_allclose(0, coords[1, 1].value, atol=1e-11)
-    assert_allclose(center_sep, coords[0, 1].value, rtol=3e-5)
-    assert_allclose(center_sep, coords[1, 0].value, rtol=3e-5)
-
-    center_sep = 0.01
-    sky_geom = WcsGeom.create(npix=(3, 3), binsz=center_sep, skydir=crab, proj="TAN")
-    sky_coord = sky_geom.to_image().get_coord().skycoord
-    coords = _get_fov_coord(sky_coord, fov_frame, use_offset=True)["offset"]
-    assert_allclose(center_sep, coords[0, 1].value, rtol=3e-5)
-    assert_allclose(center_sep, coords[1, 0].value, rtol=3e-5)
-
-    # Check that pixel centers end up at correct offsets
-    # after letting the sky drift away from the starting position
-    fov_frame = FoVAltAzFrame(
-        origin=fov_origin, location=location, obstime=time_start + 4.303333 * u.minute
+    assert geom.data_shape == proj_irf_geom.data.shape
+    assert_allclose(
+        proj_irf_geom.data[:, 1, 1], [373700.92608812, 2477509.59635073], rtol=1e-5
     )
-    center_sep = 0.5
-    sky_geom = WcsGeom.create(npix=(3, 3), binsz=center_sep, skydir=crab, proj="TAN")
-    sky_coord = sky_geom.to_image().get_coord().skycoord
-    coords = _get_fov_coord(sky_coord, fov_frame, use_offset=True)["offset"]
-    assert_allclose(center_sep, coords[1, 0].value, rtol=3e-5)
-    assert_allclose(2 * center_sep, coords[1, 1].value, rtol=3e-5)
-    assert_allclose(3 * center_sep, coords[1, 2].value, rtol=5e-5)
+    assert proj_irf_geom.geom.center_skydir == geom.center_skydir
 
-    # Check that pixel centers end up at correct offsets
-    # after letting the sky drift away from the starting position
-    obs_times = time_start + np.linspace(0, 4.303333, 2) * u.minute
-    fov_frame = FoVAltAzFrame(origin=fov_origin, location=location, obstime=obs_times)
-    center_sep = 0.5
-    sky_geom = WcsGeom.create(npix=(3, 3), binsz=center_sep, skydir=crab, proj="TAN")
-    sky_coord = sky_geom.to_image().get_coord().skycoord
-    coords = _get_fov_coord(sky_coord[..., np.newaxis], fov_frame, use_offset=True)[
-        "offset"
-    ]
-    assert coords.unit == u.deg
-    assert list(coords.shape) == [2, 3, 3]
-    assert_allclose(0, coords[0, 1, 1].value, atol=1e-11)
-    assert_allclose(center_sep, coords[0, 1, 0].value, rtol=3e-5)
-    assert_allclose(center_sep, coords[0, 0, 1].value, rtol=3e-5)
-    assert_allclose(2 * center_sep, coords[1, 1, 1].value, rtol=3e-5)
-    assert_allclose(3 * center_sep, coords[1, 1, 2].value, rtol=5e-5)
+
+@requires_data()
+def test_integrate_project_irf(bkg_2d, fixed_pointing_info):
+    axis = MapAxis.from_edges([0.1, 1, 10], name="energy", unit="TeV", interp="log")
+    obstime = Time("2020-01-01T20:00:00")
+    skydir = fixed_pointing_info.get_icrs(obstime).galactic
+    geom = WcsGeom.create(
+        npix=(3, 3), binsz=4, axes=[axis], skydir=skydir, frame="galactic"
+    )
+    fov_frame = FoVICRSFrame(origin=skydir)
+    int_proj_irf_geom = integrate_project_irf_on_geom(geom, bkg_2d, fov_frame)
+
+    assert geom.data_shape == int_proj_irf_geom.data.shape
+    assert_allclose(int_proj_irf_geom.data[:, 1, 1], [0.0445006, 0.00445006], rtol=1e-5)
+    assert int_proj_irf_geom.geom.center_skydir == geom.center_skydir

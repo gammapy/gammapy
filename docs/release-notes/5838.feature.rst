@@ -1,0 +1,1 @@
+Add a FitStatisticPenalty class to support constraints on multiple parameters e.g. regularity constraints, multiparametric priors
