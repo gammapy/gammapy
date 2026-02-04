@@ -725,7 +725,7 @@ def test_get_fov_coords():
     assert_allclose(2 * center_sep, coords[1, 1, 1].value, rtol=3e-5)
     assert_allclose(3 * center_sep, coords[1, 1, 2].value, rtol=5e-5)
 
-    
+
 @requires_data()
 def test_project_irf(aeff):
     ebounds = [0.1, 1, 10]
