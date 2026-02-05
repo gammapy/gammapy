@@ -7,10 +7,15 @@ import numpy as np
 from astropy import units as u
 from astropy.coordinates import Angle
 from regions import CircleSkyRegion, PixCoord, PointSkyRegion
-from gammapy.datasets import SpectrumDatasetOnOff
-from gammapy.maps import RegionGeom, RegionNDMap, WcsGeom, WcsNDMap
+from gammapy.datasets import (
+    SpectrumDatasetOnOff,
+    SpectrumDataset,
+    EventDataset,
+    EventDatasetOnOff,
+)
+from gammapy.maps import RegionGeom, RegionNDMap, WcsGeom, WcsNDMap, LabelMapAxis
 from ..core import Maker
-from ..utils import make_counts_off_rad_max
+from ..utils import make_counts_off_rad_max, make_events_off_mask
 
 __all__ = [
     "ReflectedRegionsBackgroundMaker",
@@ -491,37 +496,7 @@ class ReflectedRegionsBackgroundMaker(Maker):
 
         return regions_off
 
-    def make_counts_off(self, dataset, observation):
-        """Make off counts.
-
-        **NOTE for 1D analysis:** as for
-        `~gammapy.makers.map.MapDatasetMaker.make_counts`,
-        if the geometry of the dataset is a `~regions.CircleSkyRegion` then only
-        a single instance of the `ReflectedRegionsFinder` will be called.
-        If, on the other hand, the geometry of the dataset is a
-        `~regions.PointSkyRegion`, then we have to call the
-        `ReflectedRegionsFinder` several time, each time with a different size
-        of the on region that we will read from the `RAD_MAX_2D` table.
-
-        Parameters
-        ----------
-        dataset : `~gammapy.datasets.SpectrumDataset`
-            Spectrum dataset.
-        observation : `~gammapy.data.Observation`
-            Observation container.
-
-        Returns
-        -------
-        counts_off : `~gammapy.maps.RegionNDMap`
-            Counts vs estimated energy extracted from the OFF regions.
-        """
-        geom = dataset.counts.geom
-        energy_axis = geom.axes["energy"]
-        events = observation.events
-        rad_max = observation.rad_max
-
-        is_point_sky_region = geom.is_all_point_sky_regions
-
+    def _get_off_geom(self, geom, dataset, observation, energy_axis, events, rad_max):
         if rad_max and not is_rad_max_compatible_region_geom(
             rad_max=rad_max, geom=geom
         ):
@@ -554,7 +529,42 @@ class ReflectedRegionsBackgroundMaker(Maker):
             axes=[energy_axis],
             wcs=wcs,
         )
+        return geom_off, regions_off
 
+    def make_counts_off(self, dataset, observation):
+        """Make off counts.
+
+        **NOTE for 1D analysis:** as for
+        `~gammapy.makers.map.MapDatasetMaker.make_counts`,
+        if the geometry of the dataset is a `~regions.CircleSkyRegion` then only
+        a single instance of the `ReflectedRegionsFinder` will be called.
+        If, on the other hand, the geometry of the dataset is a
+        `~regions.PointSkyRegion`, then we have to call the
+        `ReflectedRegionsFinder` several time, each time with a different size
+        of the on region that we will read from the `RAD_MAX_2D` table.
+
+        Parameters
+        ----------
+        dataset : `~gammapy.datasets.SpectrumDataset`
+            Spectrum dataset.
+        observation : `~gammapy.data.Observation`
+            Observation container.
+
+        Returns
+        -------
+        counts_off : `~gammapy.maps.RegionNDMap`
+            Counts vs estimated energy extracted from the OFF regions.
+        """
+        geom = dataset.counts.geom
+        energy_axis = geom.axes["energy"]
+        events = observation.events
+        rad_max = observation.rad_max
+
+        is_point_sky_region = geom.is_all_point_sky_regions
+
+        geom_off, regions_off = self._get_off_geom(
+            geom, dataset, observation, energy_axis, events, rad_max
+        )
         if is_point_sky_region:
             counts_off = make_counts_off_rad_max(
                 geom_off=geom_off,
@@ -569,20 +579,100 @@ class ReflectedRegionsBackgroundMaker(Maker):
 
         return counts_off, acceptance_off
 
-    def run(self, dataset, observation):
-        """Run reflected regions background maker.
+    def select_events_off(self, dataset, observation):
+        """Select events in the off regions.
+        Parameters
+        ----------
+        dataset : `~gammapy.datasets.EventDataset`
+            Event dataset.
+        observation : `~gammapy.data.Observation`
+            Observation container.
+        Returns
+        -------
+        events_off_mask : `~numpy.ndarray`
+            Boolean array to select events in the off regions.
+        """
+        geom = dataset.geom
+        energy_axis = LabelMapAxis(
+            name="energy",
+            labels=observation.events.energy,
+            unit=observation.events.energy.unit,
+        )
+        events = observation.events
+        rad_max = observation.rad_max
+
+        is_point_sky_region = geom.is_all_point_sky_regions
+
+        geom_off, regions_off = self._get_off_geom(
+            geom, dataset, observation, energy_axis, events, rad_max
+        )
+        if is_point_sky_region:
+            events_off_mask = make_events_off_mask(
+                geom_off=geom_off,
+                rad_max=rad_max,
+                events=events,
+            )
+        else:
+            events_off_mask = geom_off.contains(events.radec)
+
+        acceptance_off = RegionNDMap.from_geom(geom=geom_off, data=len(regions_off))
+
+        return events_off_mask, acceptance_off
+
+    def __run_event_dataset(self, dataset, observation):
+        """Run reflected regions background maker for EventDataset.
+
+        Parameters
+        ----------
+        dataset : `~gammapy.datasets.EventDataset`
+        observation : `~gammapy.data.Observation`
+            Data store observation.
+        Returns
+        -------
+        dataset_on_off : `~gammapy.datasets.EventDataset`
+        """
+
+        events_off_mask, acceptance_off = self.select_events_off(dataset, observation)
+        geom_new = acceptance_off.geom.slice_by_idx(
+            {"energy": np.where(events_off_mask)[0]}
+        )
+        data_new = np.compress(
+            events_off_mask,
+            acceptance_off.data,
+            axis=acceptance_off.geom.axes.index_data("energy"),
+        )
+        acceptance_off = RegionNDMap.from_geom(geom_new, data=data_new)
+
+        acceptance = RegionNDMap.from_geom(geom=acceptance_off.geom, data=1)
+
+        dataset_onoff = EventDatasetOnOff.from_eventdataset(
+            dataset=dataset,
+            acceptance=acceptance,
+            acceptance_off=acceptance_off,
+            events_off=observation.events.select_row_subset(events_off_mask),
+            name=dataset.name,
+        )
+
+        if not (events_off_mask.any()):
+            dataset_onoff.mask_safe.data[...] = False
+            log.warning(
+                f"ReflectedRegionsBackgroundMaker failed. Setting {dataset_onoff.name} "
+                "mask to False."
+            )
+        return dataset_onoff
+
+    def __run_spectrum_dataset(self, dataset, observation):
+        """Run reflected regions background maker for SpectrumDataset.
 
         Parameters
         ----------
         dataset : `~gammapy.datasets.SpectrumDataset`
-            Spectrum dataset.
         observation : `~gammapy.data.Observation`
             Data store observation.
 
         Returns
         -------
         dataset_on_off : `~gammapy.datasets.SpectrumDatasetOnOff`
-            On-Off dataset.
         """
         counts_off, acceptance_off = self.make_counts_off(dataset, observation)
         acceptance = RegionNDMap.from_geom(geom=dataset.counts.geom, data=1)
@@ -602,3 +692,27 @@ class ReflectedRegionsBackgroundMaker(Maker):
                 "mask to False."
             )
         return dataset_onoff
+
+    def run(self, dataset, observation):
+        """Run reflected regions background maker.
+
+        Parameters
+        ----------
+        dataset : `~gammapy.datasets.SpectrumDataset` or `~gammapy.datasets.EventDataset`
+            Spectrum dataset.
+        observation : `~gammapy.data.Observation`
+            Data store observation.
+
+        Returns
+        -------
+        dataset_on_off : `~gammapy.datasets.SpectrumDatasetOnOff or `~gammapy.datasets.EventDataset`
+            On-Off dataset.
+        """
+        if isinstance(dataset, SpectrumDataset):
+            return self.__run_spectrum_dataset(dataset, observation)
+        elif isinstance(dataset, EventDataset):
+            return self.__run_event_dataset(dataset, observation)
+        else:
+            raise TypeError(
+                "ReflectedRegionsBackgroundMaker only works for SpectrumDataset or EventDataset"
+            )

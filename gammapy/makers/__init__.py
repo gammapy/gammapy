@@ -15,6 +15,7 @@ from .map import MapDatasetMaker
 from .reduce import DatasetsMaker
 from .safe import SafeMaskMaker
 from .spectrum import SpectrumDatasetMaker
+from .events import EventDatasetMaker
 
 MAKER_REGISTRY = Registry(
     [
@@ -27,6 +28,7 @@ MAKER_REGISTRY = Registry(
         MapDatasetMaker,
         SafeMaskMaker,
         DatasetsMaker,
+        EventDatasetMaker,
     ]
 )
 """Registry of maker classes in Gammapy."""
@@ -46,4 +48,5 @@ __all__ = [
     "SafeMaskMaker",
     "SpectrumDatasetMaker",
     "WobbleRegionsFinder",
+    "EventDatasetMaker",
 ]
