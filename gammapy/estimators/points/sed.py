@@ -84,6 +84,10 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
         scan_min=0.2, scan_max=5, and scan_n_values = 11. By default, the min and max are not set
         (consider setting them if errors or upper limits computation fails). If a dict is given,
         the entries should be a subset of `~gammapy.modeling.Parameter` arguments.
+    allow_multiple_telescopes : bool, optional
+        Whether to allow the computation for different telescopes.
+        **WARNING**: This is currently an experimental feature.
+        Default is False.
 
     Notes
     -----
@@ -138,12 +142,14 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
         sum_over_energy_groups=False,
         n_jobs=None,
         parallel_backend=None,
+        allow_multiple_telescopes=False,
         **kwargs,
     ):
         self.energy_edges = energy_edges
         self.sum_over_energy_groups = sum_over_energy_groups
         self.n_jobs = n_jobs
         self.parallel_backend = parallel_backend
+        self.allow_multiple_telescopes = allow_multiple_telescopes
 
         fit = Fit(confidence_opts={"backend": "scipy"})
         kwargs.setdefault("fit", fit)
@@ -172,10 +178,9 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
         for d in datasets:
             if d.meta_table is not None and "TELESCOP" in d.meta_table.colnames:
                 telescopes.extend(list(d.meta_table["TELESCOP"].flatten()))
-        if len(np.unique(telescopes)) > 1:
+        if len(np.unique(telescopes)) > 1 and not self.allow_multiple_telescopes:
             raise ValueError(
-                "All datasets must use the same value of the"
-                " 'TELESCOP' meta keyword."
+                "All datasets must use the same value of the 'TELESCOP' meta keyword."
             )
 
         meta = {
