@@ -668,7 +668,7 @@ class TestSpectrumOnOff:
     def test_invalid_format_exception(self, tmp_path):
         with pytest.raises(ValueError, match="Invalid format option"):
             self.dataset.write(tmp_path / "test.fits", format="invalid_format")
-        
+
         # Attempt to read using an invalid format and check for the exception
         self.dataset.write(tmp_path / "test.fits", format="ogip")
         with pytest.raises(ValueError, match="Invalid format option"):
