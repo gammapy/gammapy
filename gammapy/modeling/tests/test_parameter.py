@@ -433,7 +433,7 @@ def test_priorparameters_to_table(priorpars):
     assert len(table) == 2
     assert len(table.columns) == 7
     assert table["name"][0] == "spam"
-    assert table["value"][1] == 1e-10
+    assert_allclose(table["value"][1], 1e-10)
 
 
 def test_parameter_set_min_max_error(default_parameter):

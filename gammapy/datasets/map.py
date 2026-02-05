@@ -2480,9 +2480,9 @@ class MapDataset(Dataset):
         vmin = npredmapdata.data.min()
         vmax = npredmapdata.data.max()
         # Fallback if the map is entirely zero
-        if vmin == 0.0:
+        if np.isclose(vmin, 0.0):
             vmin = np.max([countsmapdata.data.max() * 0.02, countsmapdata.data.min()])
-        if vmax == 0.0:
+        if np.isclose(vmax, 0.0):
             vmax = countsmapdata.data.max()
 
         # Create custom colormaps

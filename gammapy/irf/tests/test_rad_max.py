@@ -6,7 +6,7 @@ import astropy.units as u
 from gammapy.irf import EffectiveAreaTable2D, RadMax2D
 from gammapy.maps import MapAxis
 from gammapy.utils.compat import COPY_IF_NEEDED
-from gammapy.utils.testing import mpl_plot_check
+from gammapy.utils.testing import mpl_plot_check, assert_quantity_allclose
 
 
 @pytest.fixture()
@@ -76,12 +76,20 @@ def test_rad_max_from_irf():
 
     assert rad_max.axes["energy"].nbin == 1
     assert rad_max.axes["offset"].nbin == 1
-    assert rad_max.axes["energy"].edges[0] == aeff.axes["energy_true"].edges[0]
-    assert rad_max.axes["energy"].edges[1] == aeff.axes["energy_true"].edges[-1]
-    assert rad_max.axes["offset"].edges[0] == aeff.axes["offset"].edges[0]
-    assert rad_max.axes["offset"].edges[1] == aeff.axes["offset"].edges[-1]
+    assert_quantity_allclose(
+        rad_max.axes["energy"].edges[0], aeff.axes["energy_true"].edges[0]
+    )
+    assert_quantity_allclose(
+        rad_max.axes["energy"].edges[1], aeff.axes["energy_true"].edges[-1]
+    )
+    assert_quantity_allclose(
+        rad_max.axes["offset"].edges[0], aeff.axes["offset"].edges[0]
+    )
+    assert_quantity_allclose(
+        rad_max.axes["offset"].edges[1], aeff.axes["offset"].edges[-1]
+    )
     assert rad_max.quantity.shape == (1, 1)
-    assert rad_max.quantity[0, 0] == 0.2 * u.deg
+    assert_quantity_allclose(rad_max.quantity[0, 0], 0.2 * u.deg)
 
 
 def test_rad_max_single_bin():

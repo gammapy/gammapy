@@ -109,7 +109,7 @@ def test_opts():
         function=ds.fcn, parameters=pars, migrad_opts={"ncall": 20}, tol=1.0, strategy=2
     )
     assert info["nfev"] == 29
-    assert minuit.tol == 1.0
+    assert_allclose(minuit.tol, 1.0)
     assert minuit.strategy == 2
 
 

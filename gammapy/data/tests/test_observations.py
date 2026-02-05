@@ -278,7 +278,7 @@ def test_observation_cta_1dc():
     assert obs.target_radec is None
 
     assert isinstance(obs.meta, ObservationMetaData)
-    assert obs.meta.deadtime_fraction == 0.1
+    assert_allclose(obs.meta.deadtime_fraction, 0.1)
     assert_allclose(obs.meta.location.height.to_value("m"), 2000)
     assert "Gammapy" in obs.meta.creation.creator
 
