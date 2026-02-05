@@ -402,24 +402,30 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
             Keyword arguments passed to `MapDataset.read`.
         """
         from .io import OGIPDatasetReader
+
         filename = make_path(filename)
         if format is None:
             with fits.open(filename) as hdulist:
                 # Check for extensions in OGIP format
-                if "SPECTRUM" in hdulist and "OGIP" in hdulist["SPECTRUM"].header["HDUCLASS"]:
+                if (
+                    "SPECTRUM" in hdulist
+                    and "OGIP" in hdulist["SPECTRUM"].header["HDUCLASS"]
+                ):
                     format = "ogip"
                 # Check for extensions in GADF format
-                elif ("COUNTS_BANDS" in hdulist):
+                elif "COUNTS_BANDS" in hdulist:
                     format = "gadf"
-                    if 'REGION' not in hdulist:
-                        raise ValueError(f"File {filename} is not a GADF spectrum, but a GADF map")
                 else:
                     raise ValueError(f"Cannot determine format of {filename}")
 
         if format == "gadf":
-            return super().read(filename, format="gadf", checksum=checksum, name=name, **kwargs)
+            return super().read(
+                filename, format="gadf", checksum=checksum, name=name, **kwargs
+            )
         elif format == "ogip":
-            return OGIPDatasetReader(filename=filename, checksum=checksum, name=name).read()
+            return OGIPDatasetReader(
+                filename=filename, checksum=checksum, name=name
+            ).read()
         else:
             raise ValueError(f"Invalid {format} serialisation format in {filename}.")
 
