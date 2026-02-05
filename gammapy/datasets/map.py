@@ -19,6 +19,7 @@ from gammapy.stats import (
     get_wstat_mu_bkg,
 )
 from gammapy.utils.fits import HDULocation, LazyFitsData
+from gammapy.utils.metadata import CreatorMetaData
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
 from gammapy.utils.table import hstack_columns
@@ -2045,8 +2046,16 @@ class MapDataset(Dataset):
             Cutout map dataset.
         """
         name = make_name(name)
-        kwargs = {"gti": self.gti, "name": name, "meta_table": self.meta_table}
+        kwargs = {
+            "gti": self.gti,
+            "name": name,
+            "meta_table": self.meta_table,
+            "meta": self.meta,
+        }
+
         cutout_kwargs = {"position": position, "width": width, "mode": mode}
+        kwargs["meta"].creation = CreatorMetaData()
+        kwargs["meta"].optional = cutout_kwargs
 
         if self.counts is not None:
             kwargs["counts"] = self.counts.cutout(**cutout_kwargs)
@@ -3263,6 +3272,7 @@ class MapDatasetOnOff(MapDataset):
         cutout : `MapDatasetOnOff`
             Cutout map dataset.
         """
+
         cutout_kwargs = {
             "position": position,
             "width": width,
