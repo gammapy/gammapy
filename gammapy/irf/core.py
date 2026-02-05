@@ -176,7 +176,8 @@ class IRF(metaclass=abc.ABCMeta):
         scale = interpolation_scale(values_scale)
 
         axis = self.axes.index(axis_name)
-        mask = ~np.isfinite(data) | np.isclose(data, 0.0, atol=1e-40)
+        mask = ~np.isfinite(data) | (data == 0.0)  # NOSONAR
+        # (S1244): explicit check for exactly representable zeros
 
         coords = np.nonzero(mask)
         xp = np.arange(data.shape[axis])
