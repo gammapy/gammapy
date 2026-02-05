@@ -7,30 +7,30 @@ license-files = ["LICENSE.rst"]
 authors = [
     { name = "The Gammapy developers", email = "gammapy-coordination-l@in2p3.fr" }
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 classifiers = [
     "Intended Audience :: Science/Research",
     "Operating System :: OS Independent",
     "Programming Language :: C",
     "Programming Language :: Cython",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Programming Language :: Python :: Implementation :: CPython",
     "Topic :: Scientific/Engineering :: Astronomy",
 ]
 dependencies = [
     "numpy>=1.26",
     "scipy>=1.13",
-    "astropy>=6.0",
+    "astropy>=7.2",
     "regions>=0.9.0",
     "pyyaml>=5.3",
     "click>=8.0",
     "pydantic>=2.8.0",
     "iminuit>=2.26.0",
-    "matplotlib>=3.8,<3.10",
+    "matplotlib>=3.8",
 ]
 dynamic = ["version"]
 
