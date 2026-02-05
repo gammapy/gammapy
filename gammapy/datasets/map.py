@@ -19,6 +19,7 @@ from gammapy.stats import (
     get_wstat_mu_bkg,
 )
 from gammapy.utils.fits import HDULocation, LazyFitsData
+from gammapy.utils.freeze_attr import freeze
 from gammapy.utils.random import get_random_state
 from gammapy.utils.scripts import make_name, make_path
 from gammapy.utils.table import hstack_columns
@@ -407,6 +408,7 @@ def create_map_dataset_from_observation(
     return dataset
 
 
+@freeze
 class MapDataset(Dataset):
     """Main map dataset for likelihood fitting.
 
@@ -2529,6 +2531,7 @@ class MapDataset(Dataset):
         plt.tight_layout(w_pad=0)
 
 
+@freeze
 class MapDatasetOnOff(MapDataset):
     """Map dataset for on-off likelihood fitting.
 
