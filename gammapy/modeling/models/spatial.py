@@ -29,7 +29,6 @@ from gammapy.utils.regions import region_circle_to_ellipse, region_to_frame
 from gammapy.utils.scripts import make_path
 from .core import ModelBase, _build_parameters_from_dict
 from gammapy.utils.units import wrap_at
-from gammapy.utils.deprecation import deprecated_renamed_argument
 
 __all__ = [
     "ConstantFluxSpatialModel",
@@ -667,7 +666,6 @@ class GaussianSpatialModel(SpatialModel):
         exponent = -0.5 * ((1 - np.cos(sep)) / a)
         return u.Quantity(norm * np.exp(exponent).value, "sr-1", copy=COPY_IF_NEEDED)
 
-    @deprecated_renamed_argument("x_sigma", "size_factor", "2.0")
     def to_region(self, size_factor=1.0, **kwargs):
         r"""Model outline at a given number of :math:`\sigma`.
 
@@ -699,7 +697,6 @@ class GaussianSpatialModel(SpatialModel):
         """Evaluation region consistent with evaluation radius."""
         return self.to_region(size_factor=5)
 
-    @deprecated_renamed_argument("x_sigma", "size_factor", "2.0")
     def _to_region_error(self, size_factor=1.0):
         r"""Plot model error at a given number of :math:`\sigma`.
 
@@ -801,7 +798,6 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
         """
         return self.r_0.quantity * (1 + 8 * self.eta.value)
 
-    @deprecated_renamed_argument("x_r_0", "size_factor", "2.0")
     def to_region(self, size_factor=1.0, **kwargs):
         r"""Model outline at a given number of :math:`r_0`.
 
