@@ -2,6 +2,7 @@
 """Spectral models for Gammapy."""
 
 import logging
+import warnings
 import operator
 import os
 from pathlib import Path
