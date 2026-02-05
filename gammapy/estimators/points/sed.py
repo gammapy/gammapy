@@ -86,8 +86,9 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
         the entries should be a subset of `~gammapy.modeling.Parameter` arguments.
     allow_multiple_telescopes : bool, optional
         Whether to allow the computation for different telescopes.
-        This is currently an experimental feature.
+        **WARNING**: This is currently an experimental feature.
         Default is False.
+
     Notes
     -----
     - For further explanation, see :ref:`estimators`.
