@@ -387,8 +387,8 @@ def _check_theta2_inputs(
     Parameters
     ----------
     table : `~astropy.table.Table`
-        Default theta2 table;
-    create_off: bool;
+        Default theta2 table.
+    create_off : bool
         Flag to indicate if the off position is passed.
     off_regions_number : `int`
         Number of OFF regions.
@@ -404,7 +404,7 @@ def _check_theta2_inputs(
         on_off_sep = on_region.center.separation(position_off)
         if on_off_sep < on_region.radius * 2:
             raise ValueError(
-                "The OFF region overlaps the ON region. This is currently forbidden. Use another OFF position or reduce the region radius."
+                "The specified OFF region overlaps with the ON region. This is currently forbidden. To fix this, either choose another OFF position or reduce the region radius."
             )
 
     if energy_edges is not None:
@@ -417,7 +417,7 @@ def _check_theta2_inputs(
 
     if off_regions_number > 1 and create_off is False:
         raise ValueError(
-            "If `off_regions_number` is larger than 1, `position_off` has to be set to None."
+            "If ``off_regions_number`` is larger than 1, you cannot provide a fixed OFF position. Instead set ``position_off`` to be None."
         )
 
 
@@ -427,7 +427,7 @@ def _check_onregion_size(observation, on_region):
 
     Parameters
     ----------
-    observation: `~gammapy.data.Observation`
+    observation : `~gammapy.data.Observation`
         Observation of interest.
     on_region : `~Region`
         On-region.
@@ -441,7 +441,7 @@ def _check_onregion_size(observation, on_region):
     separation_on_region = pointing.separation(on_region.center)
     if on_region.radius > separation_on_region:
         raise ValueError(
-            f"ON region radius larger than its offset. ON and OFF regions would overlap and this is not permitted. Reduce the radius size to at least {separation_on_region} ."
+            f"The ON region radius is larger than its separation from observation pointing position. This will cause the ON and OFF regions to overlap, which is not permitted. Reduce the ON region radius to at least {separation_on_region}."
         )
     return pointing
 
@@ -453,9 +453,9 @@ def _theta2_offregions_finder(
 
     Parameters
     ----------
-    observation: `~gammapy.data.Observation`
+    observation : `~gammapy.data.Observation`
         Observation of interest.
-    create_off: bool;
+    create_off : bool
         Flag to indicate if the off position is passed.
     off_regions_number : `int`
         Number of OFF regions.
@@ -478,7 +478,9 @@ def _theta2_offregions_finder(
         )[0]
 
         if len(off_regions) == 0:
-            log.warning("Using only one reflected OFF position.")
+            log.warning(
+                "No OFF regions were found, so only one reflected OFF region will be used."
+            )
             off_regions_number = 1
             wobble = background.WobbleRegionsFinder(off_regions_number)
             off_regions = wobble.run(
@@ -495,10 +497,10 @@ def _calc_theta2(observation, position, theta_squared_axis, energy_edges, **kwar
 
     Parameters
     ----------
-    observation: `~gammapy.data.Observation`
+    observation : `~gammapy.data.Observation`
         Observation of interest.
     position : `~astropy.coordinates.SkyCoord`
-        Position from which the on theta^2 distribution is computed.
+        Position from which the ON theta2 distribution is computed.
     theta_squared_axis : `~gammapy.maps.MapAxis`
         Axis of edges of the theta2 bin used to compute the distribution.
     energy_edges : list of `~astropy.units.Quantity`, optional
@@ -508,7 +510,7 @@ def _calc_theta2(observation, position, theta_squared_axis, energy_edges, **kwar
 
     Returns
     -------
-    counts, counts_off: `np.array`
+    counts, counts_off : `np.array`
         theta2 distribution of ON and OFF counts.
     off_regions_number : `int`
         Number of OFF regions.
@@ -574,14 +576,14 @@ def make_theta_squared_table(
     position_off : `astropy.coordinates.SkyCoord`
         Position from which the OFF theta^2 distribution is computed.
         Default is reflected position w.r.t. to the pointing position.
-        It is available only if `off_regions_number` is equal to 1.
+        It is available only if ``off_regions_number`` is equal to 1.
     energy_edges : list of `~astropy.units.Quantity`, optional
         Edges of the energy bin where the theta squared distribution
         is evaluated. For now, only one interval is accepted.
         Default is None.
     off_regions_number : `int`
         Number of OFF regions; by default is 1. Warning: the user should
-        be aware that, if regions overlap, in such a case only the reflected OFF
+        be aware that, if regions overlap, only the reflected OFF
         region will be considered.
 
     Returns
