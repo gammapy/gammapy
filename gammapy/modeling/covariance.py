@@ -60,7 +60,7 @@ class Covariance:
         npars = len(parameters)
         matrix_expanded = np.zeros((npars, npars))
         mask_frozen = [par.frozen for par in parameters]
-        pars_index = [np.where(np.array(parameters) == p)[0][0] for p in parameters]
+        pars_index = [np.nonzero(np.array(parameters) == p)[0][0] for p in parameters]
         mask_duplicate = [pars_idx != idx for idx, pars_idx in enumerate(pars_index)]
         mask = np.array(mask_frozen) | np.array(mask_duplicate)
         free_parameters = ~(mask | mask[:, np.newaxis])

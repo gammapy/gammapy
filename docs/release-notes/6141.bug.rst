@@ -1,1 +1,1 @@
-Extra sensitivity options were added to `~gammapy.estimators.map.FluxMaps`. The additional options we now support are: "dnde_sensitivity", "e2dnde_sensitivity", "eflux_sensitivity".
+Extra sensitivity options were added to `~gammapy.estimators.FluxMaps`. The additional options we now support are: "dnde_sensitivity", "e2dnde_sensitivity", "eflux_sensitivity".

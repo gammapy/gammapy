@@ -1,1 +1,1 @@
-Modify default interpolation conditions in TemplateSpatialModel to allow using Hpx geometry maps.
+Modify default interpolation conditions in `~gammapy.modeling.models.TemplateSpatialModel` to allow using Hpx geometry maps.

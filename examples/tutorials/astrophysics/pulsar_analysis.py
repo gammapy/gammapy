@@ -214,8 +214,8 @@ alpha = (on_phase_range[1] - on_phase_range[0]) / (
 region_events = obs_list_vela[0].events.select_region(on_region)
 
 # Select events in phase space
-on_events = region_events.select_parameter("PHASE", band=on_phase_range)
-off_events = region_events.select_parameter("PHASE", band=off_phase_range)
+on_events = region_events.select_parameter("PHASE", values=on_phase_range)
+off_events = region_events.select_parameter("PHASE", values=off_phase_range)
 
 # Apply the WStat (Li&Ma statistic)
 pulse_stat = WStatCountsStatistic(

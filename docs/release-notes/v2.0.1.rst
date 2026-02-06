@@ -21,13 +21,13 @@ Some PRs related to infrastructure are also included for maintainability.
 Bug Fixes
 ---------
 
-- Fix issue #5783, the to_table method now always outputs standard flux units. [`#6108 <https://github.com/gammapy/gammapy/issues/6108>`_]
-- Adapted the `size_factor` default value to be consistent for all spatial models. [`#6137 <https://github.com/gammapy/gammapy/issues/6137>`_]
-- Extra sensitivity options were added to `~gammapy.estimators.map.FluxMaps`. The additional options we now support are: "dnde_sensitivity", "e2dnde_sensitivity", "eflux_sensitivity". [`#6141 <https://github.com/gammapy/gammapy/issues/6141>`_]
+- Fix issue #5783, the `~gammapy.estimators.FluxPoints.to_table` method now always outputs standard flux units. [`#6108 <https://github.com/gammapy/gammapy/issues/6108>`_]
+- Adapted the ``size_factor`` default value to be consistent for all spatial models. [`#6137 <https://github.com/gammapy/gammapy/issues/6137>`_]
+- Extra sensitivity options were added to `~gammapy.estimators.FluxMaps`. The additional options we now support are: "dnde_sensitivity", "e2dnde_sensitivity", "eflux_sensitivity". [`#6141 <https://github.com/gammapy/gammapy/issues/6141>`_]
 - Fixed `gammapy.irf.EDispKernel.plot_bias` so the correct axis is now being called for the ``xaxis.units``. [`#6159 <https://github.com/gammapy/gammapy/issues/6159>`_]
 - Fixed the incorrect brackets in the error calculation for `~gammapy.stats.compute_flux_doubling`. [`#6164 <https://github.com/gammapy/gammapy/issues/6164>`_]
 - Corrected `~gammapy.modeling.models.TemplatePhaseCurveTemporalModel` integration by performing global normalisation by the duration of the integration window as done in the other temporal models. [`#6182 <https://github.com/gammapy/gammapy/issues/6182>`_]
-- Replaced the deprecated keyword `RADECSYS` for the coordinate system in the GADF event list fits table with `RADESYSa`. [`#6189 <https://github.com/gammapy/gammapy/issues/6189>`_]
+- Replaced the deprecated keyword ``RADECSYS`` for the coordinate system in the GADF event list fits table with ``RADESYSa``. [`#6189 <https://github.com/gammapy/gammapy/issues/6189>`_]
 - Corrected SkyModel `_check_unit` unit requirement for models where exposure is not applied. [`#6227 <https://github.com/gammapy/gammapy/issues/6227>`_]
 - Modify default interpolation conditions in TemplateSpatialModel to allow using Hpx geometry maps. [`#6248 <https://github.com/gammapy/gammapy/issues/6248>`_]
 - Fixed plot_error for BrokenPowerLawSpectralModel and TemplateNDSpectralModel [`#6251 <https://github.com/gammapy/gammapy/issues/6251>`_]
@@ -46,7 +46,7 @@ Documentation improvements
 Infrastructure
 --------------
 
-- Move the package configuration from `setup.cfg` to `pyproject.toml` as recommended by PEP621. [`#6176 <https://github.com/gammapy/gammapy/issues/6176>`_]
+- Move the package configuration from ``setup.cfg`` to ``pyproject.toml`` as recommended by PEP621. [`#6176 <https://github.com/gammapy/gammapy/issues/6176>`_]
 
 
 Contributors

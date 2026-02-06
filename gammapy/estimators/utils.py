@@ -1225,7 +1225,7 @@ def interpolate_profile_map(flux_map, dnde_scan_axis=None):
     mask_valid = ~np.isnan(flux_map.dnde.data)
     dnde_scan_values = flux_map.dnde_scan_values.quantity.to_value(dnde_scan_axis.unit)
 
-    for ij, il, ik in zip(*np.where(mask_valid)):
+    for ij, il, ik in zip(*np.nonzero(mask_valid)):
         spline = InterpolatedUnivariateSpline(
             dnde_scan_values[ij, :, il, ik],
             flux_map.stat_scan.data[ij, :, il, ik],
@@ -1268,7 +1268,7 @@ def approximate_profile_map(
         sqrt_ts_threshold_ul = flux_map.sqrt_ts_threshold_ul
 
     mask_valid = ~np.isnan(flux_map.dnde.data)
-    ij, il, ik = np.where(mask_valid)
+    ij, il, ik = np.nonzero(mask_valid)
     loc = flux_map.dnde.data[mask_valid][:, None]
     value = dnde_coord[ij, :, il, ik]
     try:
@@ -1311,7 +1311,7 @@ def approximate_profile_map(
         mask_ul = (flux_map.sqrt_ts.data < sqrt_ts_threshold_ul) & ~np.isnan(
             flux_map.dnde_ul.data
         )
-        ij, il, ik = np.where(mask_ul)
+        ij, il, ik = np.nonzero(mask_ul)
         value = dnde_coord[ij, :, il, ik]
         loc_ul = flux_map.dnde_ul.data[mask_ul][:, None]
         scale_ul = flux_map.dnde_ul.data[mask_ul][:, None]
