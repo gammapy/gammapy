@@ -527,35 +527,35 @@ class FermipyDatasetsReader(DatasetReader):
     ):
         """Create a map dataset from Fermi-LAT files.
 
-        Parameters
-        ----------
-        counts_file : str
-            Counts file path.
-        exposure_file : str
-            Exposure file path.
-        psf_file : str
-            Point spread function file path.
-        edisp_file : str
-            Energy dispersion file path.
-        isotropic_file : str, optional
-            Isotropic file path. Default is None
-        edisp_bins : int
-            Number of margin bins to slice in energy. Default is 0.
-            For now only maps created with edisp_bins=0 in fermipy configuration are supported,
-            in that case the emin/emax in the fermipy configuration will correspond to the true energy range for gammapy,
-            and  a value edisp_bins>0 should be set here in order to apply the energy dispersion correctly.
-            With a binning of 8 to 10 bins per decade, it is recommended to use edisp_bins ≥ 2
-            (See https://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Pass8_edisp_usage.html)
-       name : str, optional
-           Dataset name. The default is None, and the name is randomly generated.
-       gti_file : str, optional
-            GTI file path. Default is None
+         Parameters
+         ----------
+         counts_file : str
+             Counts file path.
+         exposure_file : str
+             Exposure file path.
+         psf_file : str
+             Point spread function file path.
+         edisp_file : str
+             Energy dispersion file path.
+         isotropic_file : str, optional
+             Isotropic file path. Default is None
+         edisp_bins : int
+             Number of margin bins to slice in energy. Default is 0.
+             For now only maps created with edisp_bins=0 in fermipy configuration are supported,
+             in that case the emin/emax in the fermipy configuration will correspond to the true energy range for gammapy,
+             and  a value edisp_bins>0 should be set here in order to apply the energy dispersion correctly.
+             With a binning of 8 to 10 bins per decade, it is recommended to use edisp_bins ≥ 2
+             (See https://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Pass8_edisp_usage.html)
+        name : str, optional
+            Dataset name. The default is None, and the name is randomly generated.
+        gti_file : str, optional
+             GTI file path. Default is None
 
 
-        Returns
-        -------
-        dataset : `~gammapy.datasets.MapDataset`
-            Map dataset.
+         Returns
+         -------
+         dataset : `~gammapy.datasets.MapDataset`
+             Map dataset.
 
         """
         from gammapy.datasets import MapDataset
