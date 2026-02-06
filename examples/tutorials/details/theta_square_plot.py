@@ -52,6 +52,7 @@ print(position)
 #
 # By default, the distribution of the OFF counts in squared angular distance is calculated from the mirror reflected coordinates of the test position, assuming therefore a single OFF position.
 # However, one can set manually both the coordinates of the ``off_position``.
+# It is worth to note that overlapping regions are always forbidden to avoid correlated OFF counts, therefore the user should be take care in the choice of the `off_position`.
 #
 
 separation = position.separation(observations[0].pointing.fixed_icrs)
@@ -75,7 +76,7 @@ plot_theta_squared_table(theta2_table)
 plt.show()
 
 ######################################################################
-# Alternatively, it can be chosen a number of reflected OFF positions that will be calculated through the `~gammapy.makers.background.WobbleRegionsFinder`. The user should be cautios that the regions (ON and OFF) do not overlaps, otherwise only the mirror reflected region will be adopted as OFF.
+# Alternatively, it can be requested a number of reflected OFF positions that will be calculated through the `~gammapy.makers.background.WobbleRegionsFinder`. As mentioned before, the user should be cautios that the regions (ON and OFF) do not overlaps, otherwise only the mirror reflected region will be adopted as OFF.
 #
 
 off_regions_number = 3
