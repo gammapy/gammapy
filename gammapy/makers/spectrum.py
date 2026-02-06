@@ -1,11 +1,32 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 from regions import CircleSkyRegion
-from .map import MapDatasetMaker
+from .map import MapDatasetMaker, SelectionMapDatasetMaker
+from enum import StrEnum
 
 __all__ = ["SpectrumDatasetMaker"]
 
 log = logging.getLogger(__name__)
+
+
+class SelectionSpectrumDatasetMaker(StrEnum):
+    COUNTS = "counts"
+    EXPOSURE = "exposure"
+    BACKGROUND = "background"
+    EDISP = "edisp"
+
+    def convert_to_selection_map_dataset_maker(self):
+        match self:
+            case SelectionSpectrumDatasetMaker.COUNTS:
+                return SelectionMapDatasetMaker.COUNTS
+            case SelectionSpectrumDatasetMaker.EXPOSURE:
+                return SelectionMapDatasetMaker.EXPOSURE
+            case SelectionSpectrumDatasetMaker.BACKGROUND:
+                return SelectionMapDatasetMaker.BACKGROUND
+            case SelectionSpectrumDatasetMaker.EDISP:
+                return SelectionMapDatasetMaker.EDISP
+            case _:
+                raise ValueError()
 
 
 class SpectrumDatasetMaker(MapDatasetMaker):
@@ -30,7 +51,7 @@ class SpectrumDatasetMaker(MapDatasetMaker):
     """
 
     tag = "SpectrumDatasetMaker"
-    available_selection = ["counts", "background", "exposure", "edisp"]
+    selection_enum = SelectionSpectrumDatasetMaker
 
     def __init__(
         self,
@@ -41,8 +62,15 @@ class SpectrumDatasetMaker(MapDatasetMaker):
     ):
         self.containment_correction = containment_correction
         self.use_region_center = use_region_center
+        if selection is None:
+            selection = list(self.selection_enum)
+        if not isinstance(selection[0], self.selection_enum):
+            raise TypeError(
+                f"`selection` elements must be an instance of `SelectionSpectrumDatasetMaker`, got {type(selection[0])}"
+            )
         super().__init__(
-            selection=selection, background_oversampling=background_oversampling
+            selection=[s.convert_to_selection_map_dataset_maker() for s in selection],
+            background_oversampling=background_oversampling,
         )
 
     def make_exposure(self, geom, observation):

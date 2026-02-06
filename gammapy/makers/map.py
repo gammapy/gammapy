@@ -9,6 +9,7 @@ from gammapy.irf import EDispKernelMap, PSFMap
 from gammapy.data import Observation
 from gammapy.maps import Map
 from .core import Maker
+from enum import StrEnum
 from .utils import (
     make_counts_rad_max,
     make_edisp_kernel_map,
@@ -21,6 +22,14 @@ from .utils import (
 __all__ = ["MapDatasetMaker"]
 
 log = logging.getLogger(__name__)
+
+
+class SelectionMapDatasetMaker(StrEnum):
+    COUNTS = "counts"
+    EXPOSURE = "exposure"
+    BACKGROUND = "background"
+    PSF = "psf"
+    EDISP = "edisp"
 
 
 class MapDatasetMaker(Maker):
@@ -105,7 +114,7 @@ class MapDatasetMaker(Maker):
     """
 
     tag = "MapDatasetMaker"
-    available_selection = ["counts", "exposure", "background", "psf", "edisp"]
+    selection_enum = SelectionMapDatasetMaker
 
     def __init__(
         self,
@@ -115,19 +124,19 @@ class MapDatasetMaker(Maker):
         background_pad_offset=True,
         fov_rotation_step=1.0 * u.deg,
     ):
+        print(selection)
+        print(self.selection_enum)
         self.background_oversampling = background_oversampling
         self.background_interp_missing_data = background_interp_missing_data
         self.background_pad_offset = background_pad_offset
         self.fov_rotation_step = fov_rotation_step
         if selection is None:
-            selection = self.available_selection
+            selection = list(self.selection_enum)
 
-        selection = set(selection)
-
-        if not selection.issubset(self.available_selection):
-            difference = selection.difference(self.available_selection)
-            raise ValueError(f"{difference} is not a valid method.")
-
+        if not isinstance(selection[0], SelectionMapDatasetMaker):
+            raise TypeError(
+                f"`selection` elements must be instances of `{SelectionMapDatasetMaker}`, got {type(selection[0])}"
+            )
         self.selection = selection
 
     @staticmethod
@@ -455,33 +464,34 @@ class MapDatasetMaker(Maker):
 
         kwargs["mask_safe"] = mask_safe
 
-        if "counts" in self.selection:
-            counts = self.make_counts(dataset.counts.geom, observation)
-        else:
-            counts = Map.from_geom(dataset.counts.geom, data=0)
-        kwargs["counts"] = counts
+        for select in self.selection:
+            match select:
+                case SelectionMapDatasetMaker.COUNTS:
+                    kwargs["counts"] = self.make_counts(
+                        dataset.counts.geom, observation
+                    )
+                case SelectionMapDatasetMaker.EXPOSURE:
+                    kwargs["exposure"] = self.make_exposure(
+                        dataset.exposure.geom, observation
+                    )
+                case SelectionMapDatasetMaker.BACKGROUND:
+                    kwargs["background"] = self.make_background(
+                        dataset.counts.geom, observation
+                    )
+                case SelectionMapDatasetMaker.PSF:
+                    kwargs["psf"] = self.make_psf(dataset.psf.psf_map.geom, observation)
+                case SelectionMapDatasetMaker.EDISP:
+                    if dataset.edisp.edisp_map.geom.axes[0].name.upper() == "MIGRA":
+                        edisp = self.make_edisp(
+                            dataset.edisp.edisp_map.geom, observation
+                        )
+                    else:
+                        edisp = self.make_edisp_kernel(
+                            dataset.edisp.edisp_map.geom, observation
+                        )
 
-        if "exposure" in self.selection:
-            exposure = self.make_exposure(dataset.exposure.geom, observation)
-            kwargs["exposure"] = exposure
-
-        if "background" in self.selection:
-            kwargs["background"] = self.make_background(
-                dataset.counts.geom, observation
-            )
-
-        if "psf" in self.selection:
-            psf = self.make_psf(dataset.psf.psf_map.geom, observation)
-            kwargs["psf"] = psf
-
-        if "edisp" in self.selection:
-            if dataset.edisp.edisp_map.geom.axes[0].name.upper() == "MIGRA":
-                edisp = self.make_edisp(dataset.edisp.edisp_map.geom, observation)
-            else:
-                edisp = self.make_edisp_kernel(
-                    dataset.edisp.edisp_map.geom, observation
-                )
-
-            kwargs["edisp"] = edisp
+                    kwargs["edisp"] = edisp
+        if "counts" not in kwargs:
+            kwargs["counts"] = Map.from_geom(dataset.coutns.geom, data=0)
 
         return dataset.__class__(name=dataset.name, **kwargs)
