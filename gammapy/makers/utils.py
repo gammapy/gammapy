@@ -688,7 +688,7 @@ def project_irf_on_geom(geom, irf, fov_frame, use_region_center=True):
     ----------
     geom : `~gammapy.maps.Geom`
         Geometry to project on. It must follow the required axes of the input IRF.
-    irf : `~gammapy.itf.IRF`
+    irf : `~gammapy.irf.IRF`
         IRF to reproject.
     fov_frame : `~gammapy.utils.coordinate.FoVICRSFrame` or `~gammapy.utils.coordinate.FoVAltAzFrame`
         FoV frame to convert geometry to FoV coordinates.

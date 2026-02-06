@@ -336,7 +336,7 @@ def plot_distribution(
 
         cutout_mask.data = np.logical_and(cutout_mask.data, mask.data)
 
-    idx_x, idx_y = np.where(cutout_mask)
+    idx_x, idx_y = np.nonzero(cutout_mask)
 
     data = cutout.data[..., idx_x, idx_y]
 

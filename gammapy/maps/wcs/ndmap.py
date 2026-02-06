@@ -727,7 +727,7 @@ class WcsNDMap(WcsMap):
             raise ValueError("Histogram method not supported for point regions")
 
         cutout, mask = self.cutout_and_mask_region(region=region)
-        idx_y, idx_x = np.where(mask)
+        idx_y, idx_x = np.nonzero(mask)
         quantity = cutout.quantity[..., idx_y, idx_x]
 
         value = np.abs(quantity).max()
