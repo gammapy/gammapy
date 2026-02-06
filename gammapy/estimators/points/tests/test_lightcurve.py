@@ -7,17 +7,18 @@ from astropy.table import Column, Table
 from astropy.time import Time
 from astropy.timeseries import BinnedTimeSeries, BoxLeastSquares
 from gammapy.data import GTI
-from gammapy.datasets import Datasets, FluxPointsDataset
+from gammapy.datasets import (
+    MapDataset,
+    SpectrumDatasetOnOff,
+    Datasets,
+    FluxPointsDataset,
+)
 from gammapy.datasets.actors import DatasetsActor
 from gammapy.estimators import FluxPoints, LightCurveEstimator
 from gammapy.estimators.points.lightcurve import parallel as parallel
-from gammapy.estimators.points.tests.test_sed import (
-    simulate_map_dataset,
-    simulate_spectrum_dataset,
-)
 from gammapy.estimators.map.core import DEFAULT_UNIT
 from gammapy.modeling import Fit
-from gammapy.modeling.models import FoVBackgroundModel, PowerLawSpectralModel, SkyModel
+from gammapy.modeling.models import FoVBackgroundModel, PowerLawSpectralModel, Models
 from gammapy.utils.testing import (
     assert_time_allclose,
     mpl_plot_check,
@@ -161,14 +162,22 @@ def test_lightcurve_to_time_series():
     assert_allclose(result.duration, 182.625 * u.d)
 
 
+@requires_data()
 def get_spectrum_datasets():
-    model = SkyModel(spectral_model=PowerLawSpectralModel())
-    dataset_1 = simulate_spectrum_dataset(model=model, random_state=0)
+    dataset_1 = SpectrumDatasetOnOff.read(
+        "$GAMMAPY_DATA/datasets/simulations/simulated_spectrum_dataset_PL.fits",
+        name="dataset_1",
+    )
+    model = Models.read(
+        "$GAMMAPY_DATA/datasets/simulations/simulated_spectrum_dataset_PL_model.yaml"
+    )
     dataset_1._name = "dataset_1"
+    dataset_1.models = model
     gti1 = GTI.create("0h", "1h", Time("2010-01-01T00:00:00").tt)
     dataset_1.gti = gti1
 
-    dataset_2 = simulate_spectrum_dataset(model=model, random_state=1)
+    # dataset_2 = simulate_spectrum_dataset(model=model, random_state=1)
+    dataset_2 = dataset_1.copy()
     dataset_2._name = "dataset_2"
     gti2 = GTI.create("1h", "2h", Time("2010-01-01T00:00:00").tt)
     dataset_2.gti = gti2
@@ -573,12 +582,21 @@ def test_lightcurve_estimator_spectrum_datasets_gti_not_include_in_time_interval
     assert str(excinfo.value) == msg
 
 
+@requires_data()
 def get_map_datasets():
-    dataset_1 = simulate_map_dataset(random_state=0, name="dataset_1")
+    dataset_1 = MapDataset.read(
+        "$GAMMAPY_DATA/datasets/simulations/simulated_map_dataset.fits",
+        name="dataset_1",
+    )
+    models = Models.read(
+        "$GAMMAPY_DATA/datasets/simulations/simulated_map_dataset_model.yaml"
+    )
+    dataset_1.models = models
     gti1 = GTI.create("0 h", "1 h", "2010-01-01T00:00:00")
     dataset_1.gti = gti1
 
-    dataset_2 = simulate_map_dataset(random_state=1, name="dataset_2")
+    # dataset_2 = simulate_map_dataset(random_state=1, name="dataset_2")
+    dataset_2 = dataset_1.copy()
     gti2 = GTI.create("1 h", "2 h", "2010-01-01T00:00:00")
     dataset_2.gti = gti2
 
