@@ -644,24 +644,32 @@ class TestTheta2Table:
         "case_params",
         [
             # ERROR 1: Wrong axis unit (deg instead of deg2)
-            {"axis_unit": "deg", "axis_bounds": (0, 0.2), "kwargs": {}},
+            {
+                "axis_unit": "deg",
+                "axis_bounds": (0, 0.2),
+                "kwargs": {},
+                "error_msg": "The theta2 axis should be equivalent to deg2",
+            },
             # ERROR 2: OFF position is same as ON position
             {
                 "axis_unit": "deg2",
                 "axis_bounds": (0, 0.2),
                 "kwargs": {"position_off_is_on": True},
+                "error_msg": "The specified OFF region overlaps with the ON region. This is currently forbidden. To fix this, either choose another OFF position or reduce the region radius.",
             },
             # ERROR 3: Incorrect energy edges (3 values instead of 2)
             {
                 "axis_unit": "deg2",
                 "axis_bounds": (0, 0.2),
                 "kwargs": {"energy_edges": [1.2, 11, 20] * u.TeV},
+                "error_msg": "Only supports one energy interval but 2 passed.",
             },
             # ERROR 4: Region radius larger than offset (axis bounds too large)
             {
                 "axis_unit": "deg2",
                 "axis_bounds": (0, 0.3),
                 "kwargs": {"energy_edges": [1.0, 11] * u.TeV, "off_regions_number": 1},
+                "error_msg": "The ON region radius is larger than its separation from observation pointing position. This will cause the ON and OFF regions to overlap, which is not permitted. Reduce the ON region radius to at least 0.5 deg.",
             },
             # ERROR 5: User-defined OFF position AND multiple OFF regions requested (inconsistent)
             {
@@ -672,6 +680,7 @@ class TestTheta2Table:
                     "energy_edges": [1.2, 11] * u.TeV,
                     "off_regions_number": 2,
                 },
+                "error_msg": "If ``off_regions_number`` is larger than 1, you cannot provide a fixed OFF position. Instead set ``position_off`` to be None.",
             },
         ],
     )
@@ -687,7 +696,8 @@ class TestTheta2Table:
         if kwargs.pop("position_off_is_on", False):
             kwargs["position_off"] = position
 
-        with pytest.raises(ValueError):
+        error_message = case_params["error_msg"]
+        with pytest.raises(ValueError, match=error_message):
             make_theta_squared_table(
                 observations=[self.observations[0]],
                 position=position,
