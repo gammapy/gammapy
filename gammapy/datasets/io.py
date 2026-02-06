@@ -546,10 +546,11 @@ class FermipyDatasetsReader(DatasetReader):
             and  a value edisp_bins>0 should be set here in order to apply the energy dispersion correctly.
             With a binning of 8 to 10 bins per decade, it is recommended to use edisp_bins ≥ 2
             (See https://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Pass8_edisp_usage.html)
-        gti_file : str
+       name : str, optional
+           Dataset name. The default is None, and the name is randomly generated.
+       gti_file : str, optional
             GTI file path. Default is None
-        name : str, optional
-            Dataset name. The default is None, and the name is randomly generated.
+
 
         Returns
         -------
