@@ -665,6 +665,13 @@ class TestSpectrumOnOff:
         assert d1.exposure == self.dataset.exposure
         assert_allclose(d1.counts_off.data, self.dataset.counts_off.data)
 
+    @requires_data()
+    def test_spectrum_dataset_onoff_discover_bad_formats(self):
+        with pytest.raises(ValueError) as exc_info:
+            filename = "$GAMMAPY_DATA/tests/hermes/hermes-VariableMin-pi0-Htot_CMZ_nside256.fits.gz"
+            SpectrumDatasetOnOff.read(filename)
+        assert "Cannot determine format" in str(exc_info.value)
+
     def test_invalid_format_exception(self, tmp_path):
         expected = "serialisation format"
 
