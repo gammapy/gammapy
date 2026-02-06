@@ -1,0 +1,1 @@
+Forbid overlapping regions in `~makers.util.make_theta_squared_table`. Allow the user to choose for multiple, non overlapping, OFF regions.
