@@ -416,7 +416,7 @@ class HpxNDMap(HpxMap):
         """Create a cutout around a given position.
 
         For HpxMap the indexes used to select the cutout pixels are not always contiguous
-        we cannot write them in term of slices that give a view as for the WcsMap.
+        we cannot write them in terms of slices that give a view as for the WcsMap.
         As the fancy indexing used instead of slicing return a copy and not a view,
         _cutout_view cannot be implemented so we return cutout.
         """
@@ -449,7 +449,7 @@ class HpxNDMap(HpxMap):
                 "Can only stack equivalent maps or cutout of the same map."
             )
 
-        data = other.quantity.to_value(self.unit)
+        data = other.quantity.to_value(self.unit).astype(self.data.dtype)
 
         if nan_to_num:
             not_finite = ~np.isfinite(data)
@@ -831,7 +831,7 @@ class HpxNDMap(HpxMap):
         if header["INDXSCHM"] == "SPARSE":
             data = self.data.copy()
             data[~np.isfinite(data)] = 0
-            nonzero = np.where(data > 0)
+            nonzero = np.nonzero(data > 0)
             value = data[nonzero].astype(float)
             pix = self.geom.local_to_global(nonzero[::-1])[0]
             if len(shape) == 1:

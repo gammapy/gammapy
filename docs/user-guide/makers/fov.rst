@@ -96,5 +96,5 @@ This ensures there are enough statistics per bin, enabling the fit to converge.
 .. minigallery::
     :add-heading: Examples using `~gammapy.makers.FoVBackgroundMaker`
 
-    ../examples/tutorials/api/makers.py
+    ../examples/tutorials/details/makers.py
     ../examples/tutorials/starting/analysis_2.py

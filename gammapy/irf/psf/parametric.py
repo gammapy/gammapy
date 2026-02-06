@@ -228,6 +228,7 @@ class ParametricPSF(PSF):
             Rad value.
         **kwargs : dict
             Other coordinates.
+            You can view the available options through "psf.axes.names".
 
         Returns
         -------

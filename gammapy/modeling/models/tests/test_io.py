@@ -34,7 +34,6 @@ import importlib
 
 
 @pytest.fixture(scope="session")
-@requires_data()
 def models():
     filename = get_pkg_data_filename("./data/examples.yaml")
     models_data = read_yaml(filename)

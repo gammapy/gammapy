@@ -56,19 +56,19 @@ def input_dataset():
     energy = MapAxis.from_energy_bounds("0.1 TeV", "1 TeV", 1)
     energy_true = MapAxis.from_energy_bounds("0.1 TeV", "1 TeV", 1, name="energy_true")
 
-    counts2D = Map.read(filename, hdu="counts")
-    counts = counts2D.to_cube([energy])
-    exposure2D = Map.read(filename, hdu="exposure")
-    exposure2D = Map.from_geom(exposure2D.geom, data=exposure2D.data, unit="cm2s")
-    exposure = exposure2D.to_cube([energy_true])
-    background2D = Map.read(filename, hdu="background")
-    background = background2D.to_cube([energy])
+    counts2d = Map.read(filename, hdu="counts")
+    counts = counts2d.to_cube([energy])
+    exposure2d = Map.read(filename, hdu="exposure")
+    exposure2d = Map.from_geom(exposure2d.geom, data=exposure2d.data, unit="cm2s")
+    exposure = exposure2d.to_cube([energy_true])
+    background2d = Map.read(filename, hdu="background")
+    background = background2d.to_cube([energy])
 
     # add mask
-    mask2D_data = np.ones_like(background2D.data).astype("bool")
-    mask2D_data[0:40, :] = False
-    mask2D = Map.from_geom(geom=counts2D.geom, data=mask2D_data)
-    mask = mask2D.to_cube([energy])
+    mask2d_data = np.ones_like(background2d.data).astype("bool")
+    mask2d_data[0:40, :] = False
+    mask2d = Map.from_geom(geom=counts2d.geom, data=mask2d_data)
+    mask = mask2d.to_cube([energy])
 
     name = "test-dataset"
     return MapDataset(
@@ -582,7 +582,7 @@ def test_compute_ts_map_with_mask_fit(fake_dataset):
 def test_compute_ts_map_with_hole(fake_dataset):
     """Test of compute_ts_image with a null exposure at the center of the map"""
     holes_dataset = fake_dataset.copy("holes_dataset")
-    i, j, ie = holes_dataset.exposure.geom.center_pix
+    i, j, _ = holes_dataset.exposure.geom.center_pix
     holes_dataset.exposure.data[:, np.int_(i), np.int_(j)] = 0.0
 
     spatial_model = GaussianSpatialModel(sigma="0.1 deg")
@@ -722,6 +722,13 @@ def test_joint_ts_map_hawc():
     result = estimator.run(datasets)
     assert_allclose(result["norm_sensitivity"].data[0, 59, 59], 0.04897, rtol=1e-3)
     assert_allclose(result["flux_sensitivity"].data[0, 59, 59], 4.881527e-14, rtol=1e-3)
+    assert_allclose(
+        result["eflux_sensitivity"].data[0, 59, 59], 2.820531e-13, rtol=1e-3
+    )
+    assert_allclose(result["dnde_sensitivity"].data[0, 59, 59], 1.550752e-16, rtol=1e-3)
+    assert_allclose(
+        result["e2dnde_sensitivity"].data[0, 59, 59], 4.900377e-14, rtol=1e-3
+    )
 
 
 def test_tsmap_extended_source():

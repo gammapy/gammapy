@@ -15,7 +15,6 @@ from gammapy.visualization import (
     plot_map_rgb,
     plot_theta_squared_table,
 )
-from gammapy.visualization.utils import parse_percentage
 
 
 @requires_data()
@@ -163,14 +162,3 @@ def test_plot_distribution():
             axes, res = plot_distribution(
                 wcs_map=map_, mask=mask_3, func="norm", kwargs_hist={"bins": 40}
             )
-
-
-def test_parse_percentage():
-    rr = parse_percentage("5%")
-    assert rr == 0.05
-
-    rr = parse_percentage(0.1)
-    assert rr == 0.1
-
-    with pytest.raises(ValueError):
-        parse_percentage("crazy")

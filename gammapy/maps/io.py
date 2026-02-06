@@ -11,6 +11,7 @@ def find_bands_hdu(hdu_list, hdu):
         The FITS HDU list.
     hdu : `~astropy.io.fits.BinTableHDU` or `~astropy.io.fits.ImageHDU`
         The HDU to check.
+
     Returns
     -------
     hduname : str

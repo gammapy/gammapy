@@ -60,7 +60,7 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
         Edges of the flux points energy bins. The resulting bin edges won't be exactly equal to the input ones,
         but rather the closest values to the energy axis edges of the parent dataset.
         Default is [1, 10] TeV.
-    fit : `Fit`, optional
+    fit : `~gammapy.modeling.Fit`, optional
         Fit instance specifying the backend and fit options. If None, the `~gammapy.modeling.Fit` instance is created
         internally. Default is None.
     reoptimize : bool, optional
@@ -88,7 +88,7 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
     Notes
     -----
     - For further explanation, see :ref:`estimators`.
-    - In case of failure of upper limits computation (e.g. nan), see the User Guide :ref:`how_to`.
+    - In case of failure of upper limits computation (e.g. nan), see the User Guide: :ref:`dropdown-UL`.
 
     Examples
     --------

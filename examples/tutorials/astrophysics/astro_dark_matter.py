@@ -15,7 +15,7 @@ channels. They are presented in this notebook.
 The basic concepts of indirect dark matter searches, however, are not
 explained. So this is aimed at people who already know what the want to
 do. A good introduction to indirect dark matter searches is given for
-example in https://arxiv.org/pdf/1012.4515.pdf (Chapter 1 and 5)
+example `here <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C/abstract>`__ (Chapter 1 and 5).
 
 """
 
@@ -42,13 +42,6 @@ from gammapy.astro.darkmatter import (
     profiles,
 )
 from gammapy.maps import WcsGeom, WcsNDMap
-
-######################################################################
-# Check setup
-# -----------
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
 
 
 ######################################################################
@@ -89,7 +82,9 @@ print("DISTANCE_GC:", profiles.DMProfile.DISTANCE_GC)
 
 profile = profiles.NFWProfile(r_s=20 * u.kpc)
 
+######################################################################
 # Adopt standard values used in H.E.S.S.
+
 profiles.DMProfile.DISTANCE_GC = 8.5 * u.kpc
 profiles.DMProfile.LOCAL_DENSITY = 0.39 * u.Unit("GeV / cm3")
 
@@ -102,6 +97,11 @@ jfactory = JFactory(geom=geom, profile=profile, distance=profiles.DMProfile.DIST
 jfact = jfactory.compute_jfactor()
 
 jfact_map = WcsNDMap(geom=geom, data=jfact.value, unit=jfact.unit)
+
+
+######################################################################
+# Plot the J-factor map
+
 plt.figure()
 ax = jfact_map.plot(cmap="viridis", norm=LogNorm(), add_cbar=True)
 plt.title(f"J-Factor [{jfact_map.unit}]")
@@ -118,7 +118,10 @@ pix_reg_rec.plot(ax=ax, facecolor="none", edgecolor="orange", label="+/- 0.3 deg
 plt.legend()
 plt.show()
 
-# NOTE: https://arxiv.org/abs/1607.08142 quote 2.67e21
+######################################################################
+# Note the value quoted by H.E.S.S. in `this paper <https://arxiv.org/abs/1607.08142>`__
+# is :math:`2.67\times10^{21}`
+
 total_jfact = (
     pix_reg.to_mask().multiply(jfact).sum()
     - pix_reg_rec.to_mask().multiply(jfact).sum()
@@ -134,6 +137,7 @@ print(
 
 ######################################################################
 # The J-Factor can also be computed for dark matter decay
+
 jfactory = JFactory(
     geom=geom,
     profile=profile,
@@ -143,6 +147,9 @@ jfactory = JFactory(
 jfact_decay = jfactory.compute_jfactor()
 
 jfact_map = WcsNDMap(geom=geom, data=jfact_decay.value, unit=jfact_decay.unit)
+
+######################################################################
+# Plot the J-factor map
 plt.figure()
 ax = jfact_map.plot(cmap="viridis", norm=LogNorm(), add_cbar=True)
 plt.title(f"J-Factor [{jfact_map.unit}]")
@@ -159,6 +166,7 @@ pix_reg_rec.plot(ax=ax, facecolor="none", edgecolor="orange", label="+/- 0.3 deg
 plt.legend()
 plt.show()
 
+######################################################################
 total_jfact_decay = (
     pix_reg.to_mask().multiply(jfact_decay).sum()
     - pix_reg_rec.to_mask().multiply(jfact_decay).sum()
@@ -184,7 +192,8 @@ print(
 fluxes = PrimaryFlux(mDM="1 TeV", channel="eL")
 print(fluxes.allowed_channels)
 
-fig, axes = plt.subplots(4, 1, figsize=(4, 16))
+fig, axes = plt.subplots(2, 2, figsize=(10, 9))
+axes = axes.flatten()
 mDMs = [0.01, 0.1, 1, 10] * u.TeV
 
 for mDM, ax in zip(mDMs, axes):
@@ -204,7 +213,7 @@ for mDM, ax in zip(mDMs, axes):
         )
 
 axes[0].legend()
-plt.subplots_adjust(hspace=0.9)
+fig.tight_layout()
 plt.show()
 
 

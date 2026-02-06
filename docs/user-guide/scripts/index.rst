@@ -17,7 +17,7 @@ use it you have to write a Python script or Jupyter notebook, where you import
 the functions and classes needed for a given analysis, and then call them,
 passing parameters to configure the analysis.
 
-We have also have a :ref:`analysis` that provides high level Python functions for
+We also have a :ref:`analysis` that provides high level Python functions for
 the most common needs present in the analysis process.
 
 That said, for some very commonly used and easy to configure analysis tasks we

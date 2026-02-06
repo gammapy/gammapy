@@ -2,7 +2,6 @@
 """Spectral models for Gammapy."""
 
 import logging
-import warnings
 import operator
 import os
 from pathlib import Path
@@ -28,8 +27,7 @@ from gammapy.utils.interpolation import (
 )
 from gammapy.utils.roots import find_roots
 from gammapy.utils.scripts import make_path
-from gammapy.utils.random import get_random_state
-from gammapy.utils.deprecation import GammapyDeprecationWarning
+import gammapy.utils.parallel as parallel
 from ..covariance import CovarianceMixin
 from .core import ModelBase
 
@@ -82,14 +80,14 @@ def scale_plot_flux(flux, energy_power=0):
 
     Parameters
     ----------
-    flux : `Map`
+    flux : `~gammapy.maps.Map`
         Flux map.
     energy_power : int, optional
         Power of energy to multiply flux axis with. Default is 0.
 
     Returns
     -------
-    flux : `Map`
+    flux : `~gammapy.maps.Map`
         Scaled flux map.
     """
     energy = flux.geom.get_coord(sparse=True)["energy"]
@@ -101,15 +99,19 @@ def scale_plot_flux(flux, energy_power=0):
     return y.to_unit(flux.unit * eunit**energy_power)
 
 
-def integrate_spectrum(func, energy_min, energy_max, ndecade=100):
+def integrate_spectrum(
+    func, energy_min, energy_max, ndecade=100, energy_flux=False, parameter_samples=None
+):
     """Integrate one-dimensional function using the log-log trapezoidal rule.
 
     Internally an oversampling of the energy bins to "ndecade" is used.
 
+    To compute the integral func(E)*E (e.g. to get an energy flux) one can set `energy_flux` to True.
+
     Parameters
     ----------
     func : callable
-        Function to integrate.
+        Function to integrate. Usually this is a `~gammapy.modeling.models.SpectralModel`
     energy_min : `~astropy.units.Quantity`
         Integration range minimum.
     energy_max : `~astropy.units.Quantity`
@@ -117,11 +119,46 @@ def integrate_spectrum(func, energy_min, energy_max, ndecade=100):
     ndecade : int, optional
         Number of grid points per decade used for the integration.
         Default is 100.
+    parameter_samples : list, optional
+        List of parameter quantities to pass to `func.evaluate` if it exists.
+        This provides vectorized integral evaluation for parameter samples.
+        If None, evaluation is performed with a simple call to `func`. Default is None.
+    energy_flux : bool, optional
+        If True, the function will integrate func(E)*E, to compute the energy flux.
+        Default is False.
     """
     # Here we impose to duplicate the number
     num = np.maximum(np.max(ndecade * np.log10(energy_max / energy_min)), 2)
+    # the shape of energy is (n_energy, num)
     energy = np.geomspace(energy_min, energy_max, num=int(num), axis=-1)
-    integral = trapz_loglog(func(energy), energy, axis=-1)
+
+    if parameter_samples is not None:
+        if not isinstance(func, SpectralModel):
+            raise TypeError(
+                "Integration with parameter samples requires SpectralModel. Got type(func) instead."
+            )
+
+        # need to convert
+        args = [
+            q.to(energy.unit) if q.unit.physical_type == "energy" else q
+            for q in parameter_samples
+        ]
+        # this will create an array of shape (n_energy, num, n_samples)
+        values = func.evaluate(energy[..., np.newaxis], *args)
+        # We repeat energy n_sample times and reshape to (n_energy, num, n_samples)
+        energy = np.repeat(energy, values.shape[-1]).reshape(values.shape)
+        # We swap axes to have arrays of shape (n_energy, n_samples, num)
+        values = np.swapaxes(values, -1, -2)
+        energy = np.swapaxes(energy, -1, -2)
+    else:
+        values = func(energy)
+
+    if energy_flux:
+        values *= energy
+
+    # we can call trapz_loglog assuming the last axis is the one to perform integration on.
+    integral = trapz_loglog(values, energy, axis=-1)
+    # integral.shape = (num, n_energy, n_samples) so we sum on axis 0
     return integral.sum(axis=0)
 
 
@@ -171,19 +208,20 @@ class SpectralModel(ModelBase):
     def __rsub__(self, model):
         return self.__sub__(model)
 
-    def _samples(self, fct, n_samples=10000, random_state=42):
-        """Create SED samples from parameters and covariance
-        using multivariate normal distribution.
+    def _samples(self, fct, n_samples=10000, random_state=42, samples=None):
+        """Create SED samples from parameters and covariance using multivariate normal distribution.
 
         Parameters
         ----------
-        fct : `~astropy.units.Quantity`
+        fct : callable
             Function to estimate the SED.
         n_samples : int, optional
             Number of samples to generate. Default is 10000.
         random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
                 Defines random number generator initialisation.
                 Passed to `~gammapy.utils.random.get_random_state`. Default is 42.
+        samples : list of `~astropy.units.Quantity`, optional
+            List of parameter samples in the same order as model.parameters
 
         Returns
         -------
@@ -191,14 +229,23 @@ class SpectralModel(ModelBase):
             Array of SED samples
 
         """
-        rng = get_random_state(random_state)
+        if samples is None:
+            samples = self.sample_parameters_from_covariance(
+                n_samples=n_samples, random_state=random_state, free_only=False
+            )
 
-        samples = rng.multivariate_normal(
-            self.parameters.value,
-            self.covariance.data,
-            n_samples,
-        )
-        return u.Quantity([fct(samples[k, :]) for k in range(n_samples)])
+            samples = [samples[:, k] * p.unit for k, p in enumerate(self.parameters)]
+
+        try:
+            return u.Quantity(fct(*samples))
+        except ValueError:
+            # fallback if function is not vectorized
+            output = parallel.run_multiprocessing(
+                fct,
+                zip(*samples),
+                pool_kwargs=dict(processes=1),
+            )
+            return u.Quantity(output).T
 
     def _get_errors(self, samples, n_sigma=1):
         """Compute median, negative, and positive errors from samples of SED.
@@ -216,32 +263,31 @@ class SpectralModel(ModelBase):
             Median, negative, and positive errors
 
         """
-        cdf = stats.norm.cdf
 
-        median = np.percentile(samples, 50, axis=0)
-        errn = median - np.percentile(samples, 100 * cdf(-n_sigma), axis=0)
-        errp = np.percentile(samples, 100 * cdf(n_sigma), axis=0) - median
+        samples[~np.isfinite(samples)] = np.nan
+        cdf = stats.norm.cdf
+        median = np.nanpercentile(samples, 50, axis=-1)
+        errn = median - np.nanpercentile(samples, 100 * cdf(-n_sigma), axis=-1)
+        errp = np.nanpercentile(samples, 100 * cdf(n_sigma), axis=-1) - median
         return u.Quantity(
             [np.atleast_1d(median), np.atleast_1d(errn), np.atleast_1d(errp)],
             unit=samples.unit,
         ).squeeze()
 
-    def evaluate_error(self, energy, epsilon=1e-4, n_samples=3500, random_state=42):
+    def evaluate_error(self, energy, n_samples=3500, random_state=42, samples=None):
         """Evaluate spectral model error from parameter distribution sampling.
 
         Parameters
         ----------
         energy : `~astropy.units.Quantity`
             Energy at which to evaluate.
-        epsilon : float, optional
-            Step size of the gradient evaluation. Given as a
-            fraction of the parameter error. Default is 1e-4.
-            Deprecated in v2.0 and unused.
         n_samples : int, optional
             Number of samples to generate per parameter. Default is 3500.
         random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
             Defines random number generator initialisation.
             Passed to `~gammapy.utils.random.get_random_state`. Default is 42.
+        samples : list of `~astropy.units.Quantity`, optional
+            List of parameter samples in the same order as model.parameters
 
         Returns
         -------
@@ -250,24 +296,20 @@ class SpectralModel(ModelBase):
             on the differential flux at the given energy.
 
         """
-        if epsilon != 1e-4:  # TODO: remove in v2.1
-            warnings.warn(
-                "epsilon is unused and deprecated in v2.0",
-                GammapyDeprecationWarning,
-                stacklevel=2,
-            )
-
         m = self.copy()
         n_pars = len(m.parameters)
 
-        def fct(values):
-            m.parameters.value = values
-            return m(energy)
+        def fct(*args):
+            return m.evaluate(energy[..., np.newaxis], *args)
 
-        samples = self._samples(
-            fct, n_samples=n_pars * n_samples, random_state=random_state
+        propagated_samples = self._samples(
+            fct,
+            n_samples=n_pars * n_samples,
+            random_state=random_state,
+            samples=samples,
         )
-        return self._get_errors(samples)
+
+        return self._get_errors(propagated_samples)
 
     @property
     def pivot_energy(self):
@@ -286,7 +328,7 @@ class SpectralModel(ModelBase):
         def min_func(x):
             """Function to minimise."""
             x = np.exp(x)
-            dnde, dnde_errn, dnde_errp = self.evaluate_error(x * x_unit, n_samples=400)
+            dnde, dnde_errn, dnde_errp = self.evaluate_error(x * x_unit, n_samples=500)
             return np.sqrt(dnde_errn**2 + dnde_errp**2) / dnde
 
         bounds = [np.log(self.reference.value) - 3, np.log(self.reference.value) + 3]
@@ -319,7 +361,7 @@ class SpectralModel(ModelBase):
         energy_min, energy_max : `~astropy.units.Quantity`
             Lower and upper bound of integration range.
         **kwargs : dict
-            Keyword arguments passed to :func:`~gammapy.modeling.models.spectral.integrate_spectrum`.
+            Keyword arguments passed to :func:`~gammapy.modeling.models.integrate_spectrum`.
         """
         if hasattr(self, "evaluate_integral"):
             kwargs = {par.name: par.quantity for par in self.parameters}
@@ -329,7 +371,13 @@ class SpectralModel(ModelBase):
             return integrate_spectrum(self, energy_min, energy_max, **kwargs)
 
     def integral_error(
-        self, energy_min, energy_max, epsilon=1e-4, n_samples=3500, **kwargs
+        self,
+        energy_min,
+        energy_max,
+        n_samples=3500,
+        random_state=42,
+        samples=None,
+        **kwargs,
     ):
         """Evaluate the error of the integral flux of a given spectrum in a given energy range.
 
@@ -337,13 +385,13 @@ class SpectralModel(ModelBase):
         ----------
         energy_min, energy_max :  `~astropy.units.Quantity`
             Lower and upper bound of integration range.
-        epsilon : float, optional
-            Step size of the gradient evaluation. Given as a
-            fraction of the parameter error. Default is 1e-4.
-            Deprecated in v2.0 and unused.
         n_samples : int, optional
             Number of samples to generate per parameter. Default is 3500.
-
+        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
+            Defines random number generator initialisation.
+            Passed to `~gammapy.utils.random.get_random_state`. Default is 42.
+        samples : list of `~astropy.units.Quantity`, optional
+            List of parameter samples in the same order as model.parameters
 
         Returns
         -------
@@ -351,23 +399,26 @@ class SpectralModel(ModelBase):
             Median, negative, and positive errors
             on the integral flux between energy_min and energy_max.
         """
-
-        if epsilon != 1e-4:  # TODO: remove in v2.1
-            warnings.warn(
-                "epsilon is unused and deprecated in v2.0",
-                GammapyDeprecationWarning,
-                stacklevel=2,
-            )
-
         m = self.copy()
         n_pars = len(m.parameters)
 
-        def fct(values):
-            m.parameters.value = values
-            return m.integral(energy_min, energy_max, **kwargs)
+        def fct(*args):
+            return integrate_spectrum(
+                self,
+                energy_min,
+                energy_max,
+                parameter_samples=args,
+                energy_flux=False,
+                **kwargs,
+            )
 
-        samples = self._samples(fct, n_samples=n_pars * n_samples)
-        return self._get_errors(samples)
+        propagated_samples = self._samples(
+            fct,
+            n_samples=n_pars * n_samples,
+            random_state=random_state,
+            samples=samples,
+        )
+        return self._get_errors(propagated_samples)
 
     def energy_flux(self, energy_min, energy_max, **kwargs):
         r"""Compute energy flux in given energy range.
@@ -380,7 +431,7 @@ class SpectralModel(ModelBase):
         energy_min, energy_max : `~astropy.units.Quantity`
             Lower and upper bound of integration range.
         **kwargs : dict
-            Keyword arguments passed to :func:`~gammapy.modeling.models.spectral.integrate_spectrum`.
+            Keyword arguments passed to `~gammapy.modeling.models.integrate_spectrum`.
         """
 
         def f(x):
@@ -394,7 +445,13 @@ class SpectralModel(ModelBase):
             return integrate_spectrum(f, energy_min, energy_max, **kwargs)
 
     def energy_flux_error(
-        self, energy_min, energy_max, epsilon=1e-4, n_samples=3500, **kwargs
+        self,
+        energy_min,
+        energy_max,
+        n_samples=3500,
+        random_state=42,
+        samples=None,
+        **kwargs,
     ):
         """Evaluate the error of the energy flux of a given spectrum in a given energy range.
 
@@ -402,12 +459,13 @@ class SpectralModel(ModelBase):
         ----------
         energy_min, energy_max :  `~astropy.units.Quantity`
             Lower and upper bound of integration range.
-        epsilon : float, optional
-            Step size of the gradient evaluation. Given as a
-            fraction of the parameter error. Default is 1e-4.
-            Deprecated in v2.0 and unused.
         n_samples : int, optional
             Number of samples to generate per parameter. Default is 3500.
+        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
+            Defines random number generator initialisation.
+            Passed to `~gammapy.utils.random.get_random_state`. Default is 42.
+        samples : list of `~astropy.units.Quantity`, optional
+            List of parameter samples in the same order as model.parameters
 
         Returns
         -------
@@ -415,30 +473,33 @@ class SpectralModel(ModelBase):
             Median, negative, and positive errors on the
             energy flux between energy_min and energy_max.
         """
-
-        if epsilon != 1e-4:  # TODO: remove in v2.1
-            warnings.warn(
-                "epsilon is unused and deprecated in v2.0",
-                GammapyDeprecationWarning,
-                stacklevel=2,
-            )
-
         m = self.copy()
         n_pars = len(m.parameters)
 
-        def fct(values):
-            m.parameters.value = values
-            return m.energy_flux(energy_min, energy_max, **kwargs)
+        def fct(*args):
+            return integrate_spectrum(
+                self,
+                energy_min,
+                energy_max,
+                parameter_samples=args,
+                energy_flux=True,
+                **kwargs,
+            )
 
-        samples = self._samples(fct, n_samples=n_pars * n_samples)
-        return self._get_errors(samples)
+        propagated_samples = self._samples(
+            fct,
+            n_samples=n_pars * n_samples,
+            random_state=random_state,
+            samples=samples,
+        )
+        return self._get_errors(propagated_samples)
 
     def reference_fluxes(self, energy_axis):
         """Get reference fluxes for a given energy axis.
 
         Parameters
         ----------
-        energy_axis : `MapAxis`
+        energy_axis : `~gammapy.maps.MapAxis`
             Energy axis.
 
         Returns
@@ -474,24 +535,40 @@ class SpectralModel(ModelBase):
         flux.quantity = output
         return flux
 
-    def _get_plot_flux_error(self, energy, sed_type, n_samples):
+    def _get_plot_flux_error(self, energy, sed_type, n_samples, random_state, samples):
         flux = RegionNDMap.create(region=None, axes=[energy])
         flux_errn = RegionNDMap.create(region=None, axes=[energy])
         flux_errp = RegionNDMap.create(region=None, axes=[energy])
 
         if sed_type in ["dnde", "norm"]:
-            output = self.evaluate_error(energy.center, n_samples=n_samples)
+            output = self.evaluate_error(
+                energy.center,
+                n_samples=n_samples,
+                random_state=random_state,
+                samples=samples,
+            )
         elif sed_type == "e2dnde":
             output = energy.center**2 * self.evaluate_error(
-                energy.center, n_samples=n_samples
+                energy.center,
+                n_samples=n_samples,
+                random_state=random_state,
+                samples=samples,
             )
         elif sed_type == "flux":
             output = self.integral_error(
-                energy.edges_min, energy.edges_max, n_samples=n_samples
+                energy.edges_min,
+                energy.edges_max,
+                n_samples=n_samples,
+                random_state=random_state,
+                samples=samples,
             )
         elif sed_type == "eflux":
             output = self.energy_flux_error(
-                energy.edges_min, energy.edges_max, n_samples=n_samples
+                energy.edges_min,
+                energy.edges_max,
+                n_samples=n_samples,
+                random_state=random_state,
+                samples=samples,
             )
         else:
             raise ValueError(f"Not a valid SED type: '{sed_type}'")
@@ -583,6 +660,8 @@ class SpectralModel(ModelBase):
         energy_power=0,
         n_points=100,
         n_samples=3500,
+        random_state=42,
+        samples=None,
         **kwargs,
     ):
         """Plot spectral model error band.
@@ -616,6 +695,11 @@ class SpectralModel(ModelBase):
             Number of evaluation nodes. Default is 100.
         n_samples : int, optional
             Number of samples generated per parameter to estimate the error band. Default is 3500.
+        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
+            Defines random number generator initialisation.
+            Passed to `~gammapy.utils.random.get_random_state`. Default is 42.
+        samples : list of `~astropy.units.Quantity`, optional
+            List of parameter samples in the same order as model.parameters
         **kwargs : dict
             Keyword arguments forwarded to `matplotlib.pyplot.fill_between`.
 
@@ -630,6 +714,11 @@ class SpectralModel(ModelBase):
         ``n_points`` bins between the given bounds.
         """
         from gammapy.estimators.map.core import DEFAULT_UNIT
+
+        if len(self.parameters) == 0:
+            raise NotImplementedError(
+                "plot_error is not defined for models without parameter."
+            )
 
         if self.is_norm_spectral_model:
             sed_type = "norm"
@@ -654,7 +743,11 @@ class SpectralModel(ModelBase):
             ax.yaxis.set_units(DEFAULT_UNIT[sed_type] * energy.unit**energy_power)
 
         flux, flux_errn, flux_errp = self._get_plot_flux_error(
-            sed_type=sed_type, energy=energy, n_samples=n_samples
+            sed_type=sed_type,
+            energy=energy,
+            n_samples=n_samples,
+            random_state=random_state,
+            samples=samples,
         )
         y_lo = scale_plot_flux(flux - flux_errn, energy_power).quantity[:, 0, 0]
         y_hi = scale_plot_flux(flux + flux_errp, energy_power).quantity[:, 0, 0]
@@ -707,41 +800,49 @@ class SpectralModel(ModelBase):
         f2 = self(energy * (1 + epsilon))
         return np.log(f1 / f2) / np.log(1 + epsilon)
 
-    def spectral_index_error(self, energy, epsilon=1e-5, n_samples=3500):
+    def _evaluate_spectral_index(self, energy, *args, epsilon=1e-5):
+        """Same as spectral_index but with parameters samples quantities as *args."""
+        f1 = self.evaluate(energy, *args)
+        f2 = self.evaluate(energy * (1 + epsilon), *args)
+        return np.log(f1 / f2) / np.log(1 + epsilon)
+
+    def spectral_index_error(
+        self, energy, n_samples=3500, random_state=42, samples=None
+    ):
         """Evaluate the error on spectral index at the given energy.
 
         Parameters
         ----------
         energy : `~astropy.units.Quantity`
             Energy at which to estimate the index.
-        epsilon : float, optional
-            Fractional energy increment to use for determining the spectral index.
-            Default is 1e-5. Deprecated in v2.0 and unsued.
         n_samples : int, optional
             Number of samples to generate per parameter. Default is 3500.
+        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
+            Defines random number generator initialisation.
+            Passed to `~gammapy.utils.random.get_random_state`. Default is 42.
+        samples : list of `~astropy.units.Quantity`, optional
+            List of parameter samples in the same order as model.parameters
 
         Returns
         -------
         index, index_errn, index_errp : tuple of float
             Median, negative, and positive error on the spectral index.
         """
-
-        if epsilon != 1e-5:  # TODO: remove in v2.1
-            warnings.warn(
-                "epsilon is unused and deprecated in v2.0",
-                GammapyDeprecationWarning,
-                stacklevel=2,
-            )
-
         m = self.copy()
         n_pars = len(m.parameters)
 
-        def fct(values):
-            m.parameters.value = values
-            return m.spectral_index(energy, epsilon=1e-5)
+        def fct(*args):
+            return m._evaluate_spectral_index(
+                energy[..., np.newaxis], *args, epsilon=1e-5
+            )
 
-        samples = self._samples(fct, n_samples=n_pars * n_samples)
-        return self._get_errors(samples)
+        propagated_samples = self._samples(
+            fct,
+            n_samples=n_pars * n_samples,
+            random_state=random_state,
+            samples=samples,
+        )
+        return self._get_errors(propagated_samples)
 
     def inverse(self, value, energy_min=0.1 * u.TeV, energy_max=100 * u.TeV):
         """Return energy for a given function value of the spectral model.
@@ -768,9 +869,9 @@ class SpectralModel(ModelBase):
 
         def f(x):
             # scale by 1e12 to achieve better precision
-            energy = u.Quantity(x, eunit, copy=COPY_IF_NEEDED)
-            y = self(energy).to_value(value.unit)
-            return 1e12 * (y - value.value)
+            energy = u.Quantity(x, unit=eunit)
+            y = self(energy).to(value.unit)
+            return 1e12 * (y.value - value.value)
 
         roots, res = find_roots(f, energy_min, energy_max, points_scale="log")
         return roots
@@ -849,7 +950,7 @@ class CompoundSpectralModel(CovarianceMixin, SpectralModel):
         names = []
         for idx, model in enumerate(self._models):
             for par_name in model.parameters_unique_names:
-                components = [f"model{idx+1}", par_name]
+                components = [f"model{idx + 1}", par_name]
                 name = ".".join(components)
                 names.append(name)
         return names
@@ -1261,12 +1362,23 @@ class BrokenPowerLawSpectralModel(SpectralModel):
     @staticmethod
     def evaluate(energy, index1, index2, amplitude, ebreak):
         """Evaluate the model (static function)."""
-        energy = np.atleast_1d(energy)
+        energy = np.atleast_1d(energy)[:, None]
+        index1 = np.atleast_1d(index1)[None, :]
+        index2 = np.atleast_1d(index2)[None, :]
+        amplitude = np.atleast_1d(amplitude)[None, :]
+        ebreak = np.atleast_1d(ebreak)[None, :]
+
         cond = energy < ebreak
         bpwl = amplitude * np.ones(energy.shape)
-        bpwl[cond] *= (energy[cond] / ebreak) ** (-index1)
-        bpwl[~cond] *= (energy[~cond] / ebreak) ** (-index2)
-        return bpwl
+        eratio = energy / ebreak
+        bpwl[cond] *= (eratio ** (-index1))[cond]
+        bpwl[~cond] *= (eratio ** (-index2))[~cond]
+        if len(bpwl) == 1:
+            return bpwl.squeeze()
+        elif bpwl.shape[1] == 1:
+            return bpwl.squeeze(axis=1)
+        else:
+            return bpwl
 
 
 class SmoothBrokenPowerLawSpectralModel(SpectralModel):
@@ -1325,7 +1437,7 @@ class PiecewiseNormSpectralModel(SpectralModel):
     ----------
     energy : `~astropy.units.Quantity`
         Array of energies at which the model values are given (nodes).
-    norms : `~numpy.ndarray` or list of `Parameter`
+    norms : `~numpy.ndarray` or list of `gammapy.modeling.Parameter`
         Array with the initial norms of the model at energies ``energy``.
         Normalisation parameters are created for each value.
         Default is one at each node.
@@ -1366,16 +1478,19 @@ class PiecewiseNormSpectralModel(SpectralModel):
 
     @property
     def norms(self):
-        """Norm values"""
+        """Norm values."""
         return u.Quantity([p.value for p in self.parameters])
 
-    def evaluate(self, energy, **norms):
+    def evaluate(self, energy, *norms):
         scale = interpolation_scale(scale=self._interp)
         e_eval = scale(np.atleast_1d(energy.value))
         e_nodes = scale(self.energy.to(energy.unit).value)
-        v_nodes = scale(self.norms)
+        v_nodes = scale(norms)
         log_interp = scale.inverse(np.interp(e_eval, e_nodes, v_nodes))
-        return log_interp
+        return u.Quantity(log_interp)
+
+    def __call__(self, energy):
+        return self.evaluate(energy, *self.norms)
 
     def to_dict(self, full_output=False):
         data = super().to_dict(full_output=full_output)
@@ -1712,11 +1827,11 @@ class SuperExpCutoffPowerLaw4FGLDR3SpectralModel(SpectralModel):
         )
 
         mask = np.abs(index_2 * np.log(energy / reference)) < 1e-2
-        ln_ = np.log(energy[mask] / reference)
+        ln_ = np.log(energy / reference)
         power = -expfactor * (
             ln_ / 2.0 + index_2 / 6.0 * ln_**2.0 + index_2**2.0 / 24.0 * ln_**3
         )
-        cutoff[mask] = (energy[mask] / reference) ** power
+        cutoff[mask] = ((energy / reference) ** power)[mask]
         return pwl * cutoff
 
     @property
@@ -1800,6 +1915,76 @@ class LogParabolaSpectralModel(SpectralModel):
         alpha = self.alpha.quantity
         beta = self.beta.quantity
         return reference * np.exp((2 - alpha) / (2 * beta))
+
+
+class LogParabola2SpectralModel(SpectralModel):
+    r"""Spectral log parabola model defined such as the energy scale of the exponent
+    and the reference energy can be different.
+
+    For more information see :ref:`logparabola2-spectral-model`.
+
+    Parameters
+    ----------
+    amplitude : `~astropy.units.Quantity`
+        :math:`\phi_0`. Default is 1e-12 cm-2 s-1 TeV-1.
+    reference : `~astropy.units.Quantity`
+        :math:`E_0`. Default is 10 TeV.
+    alpha : `~astropy.units.Quantity`
+        :math:`\alpha`. Default is 2.
+    beta : `~astropy.units.Quantity`
+        :math:`\beta`. Default is 1.
+    escale : `~astropy.units.Quantity`
+        :math:`E_s`. Default is 1 TeV.
+
+    See Also
+    --------
+    LogParabolaSpectralModel
+    """
+
+    tag = ["LogParabola2SpectralModel", "lp2"]
+    amplitude = Parameter(
+        "amplitude",
+        "1e-12 cm-2 s-1 TeV-1",
+        scale_method="scale10",
+        interp="log",
+    )
+    reference = Parameter("reference", "10 TeV", frozen=True)
+    alpha = Parameter("alpha", 2)
+    beta = Parameter("beta", 1)
+    escale = Parameter("escale", "1 TeV", frozen=True)
+
+    @classmethod
+    def from_log10(cls, amplitude, reference, alpha, beta, escale):
+        """Construct from :math:`log_{10}` parametrization."""
+        beta_ = beta / np.log(10)
+        return cls(
+            amplitude=amplitude,
+            reference=reference,
+            alpha=alpha,
+            beta=beta_,
+            escale=escale,
+        )
+
+    @staticmethod
+    def evaluate(energy, amplitude, reference, alpha, beta, escale):
+        """Evaluate the model (static function)."""
+        xx = energy / reference
+        exponent = -alpha - beta * np.log(energy / escale)
+        return amplitude * np.power(xx, exponent)
+
+    @property
+    def e_peak(self):
+        r"""Spectral energy distribution peak energy (`~astropy.units.Quantity`).
+
+        This is the peak in E^2 x dN/dE and is given by:
+
+        .. math::
+            E_{Peak} = E_{0} \exp{ (2 - \alpha) / (2 * \beta)}
+        """
+        escale = self.escale.quantity
+        alpha = self.alpha.quantity
+        beta = self.beta.quantity
+        return escale * np.exp((2 - alpha) / (2 * beta))
 
 
 class LogParabolaNormSpectralModel(SpectralModel):
@@ -1895,9 +2080,6 @@ class TemplateSpectralModel(SpectralModel):
         The input is a table containing absorbed values from a XSPEC model as a
         function of energy.
 
-        TODO: Format of the file should be described and discussed in
-        https://gamma-astro-data-formats.readthedocs.io/en/latest/index.html
-
         Parameters
         ----------
         filename : str
@@ -1913,6 +2095,8 @@ class TemplateSpectralModel(SpectralModel):
         >>> filename = '$GAMMAPY_DATA/ebl/ebl_franceschini.fits.gz'
         >>> table_model = TemplateSpectralModel.read_xspec_model(filename=filename, param=0.3)
         """
+        # TODO: Format of the file should be described and discussed in
+        # https://gamma-astro-data-formats.readthedocs.io/en/latest/index.html
         filename = make_path(filename)
 
         # Check if parameter value is in range
@@ -2029,11 +2213,17 @@ class TemplateNDSpectralModel(SpectralModel):
         super().__init__()
 
     @property
+    def is_norm_spectral_model(self):
+        return self._map.unit == u.Unit("")
+
+    @property
     def map(self):
         """Template map as a `~gammapy.maps.RegionNDMap`."""
         return self._map
 
-    def evaluate(self, energy, **kwargs):
+    def evaluate(self, energy, *args):
+        kwargs = {name: q for name, q in zip(self.default_parameters.names, args)}
+
         coord = {"energy_true": energy}
         coord.update(kwargs)
 
@@ -2043,6 +2233,12 @@ class TemplateNDSpectralModel(SpectralModel):
 
         val = self.map.interp_by_pix(pixels, **self._interp_kwargs)
         return u.Quantity(val, self.map.unit, copy=COPY_IF_NEEDED)
+
+    def __call__(self, energy):
+        kwargs = {par.name: par.quantity for par in self.parameters}
+        kwargs = self._convert_evaluate_unit(kwargs, energy)
+        args = list(kwargs.values())
+        return self.evaluate(energy, *args)
 
     def write(self, overwrite=False, filename=None):
         """
@@ -2200,7 +2396,7 @@ class EBLAbsorptionNormSpectralModel(SpectralModel):
                         return cls.read_builtin(
                             reference, redshift=redshift, alpha_norm=alpha_norm
                         )
-                raise IOError(f'File {data["filename"]} not found')
+                raise IOError(f"File {data['filename']} not found")
         else:
             energy = u.Quantity(data["energy"]["data"], data["energy"]["unit"])
             param = u.Quantity(data["param"]["data"], data["param"]["unit"])
@@ -2449,7 +2645,7 @@ class NaimaSpectralModel(SpectralModel):
         if "B" in self.radiative_model.param_names:
             self.radiative_model.B = self.B.quantity
 
-    def evaluate(self, energy, **kwargs):
+    def evaluate(self, energy, *args):
         """Evaluate the model.
 
         Parameters
@@ -2462,8 +2658,8 @@ class NaimaSpectralModel(SpectralModel):
         dnde : `~astropy.units.Quantity`
             Differential flux at given energy.
         """
+        kwargs = {name: q for name, q in zip(self.default_parameters.names, args)}
         self._update_naima_parameters(**kwargs)
-
         if self.include_ssc:
             dnde = self._evaluate_ssc(energy.flatten())
         elif self.seed is not None:
@@ -2472,10 +2668,15 @@ class NaimaSpectralModel(SpectralModel):
             )
         else:
             dnde = self.radiative_model.flux(energy.flatten(), distance=self.distance)
-
         dnde = dnde.reshape(energy.shape)
         unit = 1 / (energy.unit * u.cm**2 * u.s)
         return dnde.to(unit)
+
+    def __call__(self, energy):
+        kwargs = {par.name: par.quantity for par in self.parameters}
+        kwargs = self._convert_evaluate_unit(kwargs, energy)
+        args = list(kwargs.values())
+        return self.evaluate(energy, *args)
 
     def to_dict(self, full_output=True):
         # for full_output to True otherwise broken

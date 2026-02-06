@@ -9,7 +9,13 @@ from .cube import (
     TemplateNPredModel,
     create_fermi_isotropic_diffuse_model,
 )
-from .prior import GaussianPrior, Prior, UniformPrior, LogUniformPrior
+from .prior import (
+    GaussianPrior,
+    GeneralizedGaussianPrior,
+    Prior,
+    UniformPrior,
+    LogUniformPrior,
+)
 from .spatial import (
     ConstantFluxSpatialModel,
     ConstantSpatialModel,
@@ -36,6 +42,7 @@ from .spectral import (
     GaussianSpectralModel,
     LogParabolaNormSpectralModel,
     LogParabolaSpectralModel,
+    LogParabola2SpectralModel,
     NaimaSpectralModel,
     PiecewiseNormSpectralModel,
     PowerLaw2SpectralModel,
@@ -96,6 +103,7 @@ __all__ = [
     "LinearTemporalModel",
     "LogParabolaNormSpectralModel",
     "LogParabolaSpectralModel",
+    "LogParabola2SpectralModel",
     "MeyerCrabSpectralModel",
     "Model",
     "Models",
@@ -111,8 +119,10 @@ __all__ = [
     "PowerLawTemporalModel",
     "Prior",
     "GaussianPrior",
+    "GeneralizedGaussianPrior",
     "UniformPrior",
     "LogUniformPrior",
+    "read_hermes_cube",
     "scale_plot_flux",
     "ScaleSpectralModel",
     "Shell2SpatialModel",
@@ -136,7 +146,6 @@ __all__ = [
     "TEMPORAL_MODEL_REGISTRY",
     "TemporalModel",
     "EBL_DATA_BUILTIN",
-    "read_hermes_cube",
 ]
 
 
@@ -171,6 +180,7 @@ SPECTRAL_MODEL_REGISTRY = Registry(
         SuperExpCutoffPowerLaw4FGLDR3SpectralModel,
         SuperExpCutoffPowerLaw4FGLSpectralModel,
         LogParabolaSpectralModel,
+        LogParabola2SpectralModel,
         TemplateSpectralModel,
         TemplateNDSpectralModel,
         GaussianSpectralModel,

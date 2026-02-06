@@ -55,12 +55,11 @@ class MapDatasetMetaData(MetaData):
 
     @classmethod
     def _from_meta_table(cls, table):
-        """Create MapDatasetMetaData from MapDataset.meta_table
+        """Create MapDatasetMetaData from MapDataset.meta_table.
 
         Parameters
         ----------
-            table: `~astropy.table.Table`
-
+        table: `~astropy.table.Table`
         """
         kwargs = {}
         kwargs["creation"] = CreatorMetaData()

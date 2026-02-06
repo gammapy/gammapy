@@ -58,14 +58,6 @@ from gammapy.catalog import SourceCatalog4FGL
 from gammapy.catalog import CATALOG_REGISTRY
 
 ######################################################################
-# Check setup
-# -----------
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
-
-
-######################################################################
 # List available catalogs
 # -----------------------
 #

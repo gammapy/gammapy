@@ -95,7 +95,7 @@ class SkyModel(CovarianceMixin, ModelBase):
         if self.apply_irf["exposure"]:
             ref_unit = u.Unit("cm-2 s-1 MeV-1")
         else:
-            ref_unit = u.Unit("")
+            ref_unit = u.Unit("MeV-1")
         obt_unit = self.spectral_model(axis.center).unit
 
         if self.spatial_model:
@@ -1122,7 +1122,7 @@ class TemplateNPredModel(ModelBase):
         self.spectral_model.tilt.value = 0
 
     def slice_by_energy(self, energy_min=None, energy_max=None, name=None):
-        """Select and slice model template in energy range
+        """Select and slice model template in energy range.
 
         Parameters
         ----------
@@ -1208,6 +1208,8 @@ def create_fermi_isotropic_diffuse_model(filename, datasets_names=None, **kwargs
     ----------
     filename : str
         Filename.
+    datasets_names : str or list of str, optional
+        Dataset names. Default is None.
     kwargs : dict
         Keyword arguments forwarded to `TemplateSpectralModel`.
 

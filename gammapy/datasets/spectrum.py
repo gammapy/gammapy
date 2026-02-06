@@ -81,7 +81,6 @@ class PlotMixin:
         ax_residuals.set_ylabel(f"Residuals\n{label}")
         plt.setp(ax_spectrum.get_xticklabels(), visible=bool_visible_xticklabel)
         self.plot_masks(ax=ax_spectrum)
-        self.plot_masks(ax=ax_residuals)
 
         return ax_spectrum, ax_residuals
 
@@ -154,7 +153,6 @@ class PlotMixin:
         >>> ax=dataset.plot_counts()  # doctest: +SKIP
         >>> dataset.plot_masks(ax=ax, kwargs_fit=kwargs_fit, kwargs_safe=kwargs_safe)  # doctest: +SKIP
         """
-
         kwargs_fit = kwargs_fit or {}
         kwargs_safe = kwargs_safe or {}
 
@@ -233,13 +231,20 @@ class PlotMixin:
     def peek(self, figsize=(16, 4)):
         """Quick-look summary plots.
 
+        This method creates a figure displaying the elements of your `SpectrumDataset`.
+        For example:
+
+        * Counts map
+        * Exposure map
+        * Energy dispersion matrix at the geometry center
+
         Parameters
         ----------
         figsize : tuple
             Size of the figure. Default is (16, 4).
 
         """
-        fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=figsize)
+        _, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=figsize)
 
         ax1.set_title("Counts")
         self.plot_counts(ax1)
@@ -258,6 +263,7 @@ class PlotMixin:
 
 class SpectrumDataset(PlotMixin, MapDataset):
     """Main dataset for spectrum fitting (1D analysis).
+
     It bundles together binned counts, background, IRFs into `~gammapy.maps.RegionNDMap` (a Map with only one spatial bin).
     A safe mask and a fit mask can be added to exclude bins during the analysis.
     If models are assigned to it, it can compute the predicted number of counts and the statistic function,
@@ -268,21 +274,90 @@ class SpectrumDataset(PlotMixin, MapDataset):
 
     tag = "SpectrumDataset"
 
+    @classmethod
+    def create(
+        cls,
+        geom,
+        energy_axis_true=None,
+        migra_axis=None,
+        reference_time="2000-01-01",
+        name=None,
+        meta_table=None,
+        **kwargs,
+    ):
+        """Create a `SpectrumDataset` object with zero filled maps.
+
+        Parameters
+        ----------
+        geom : `~gammapy.maps.RegionGeom`
+            Reference target geometry in reco energy, used for counts and background maps.
+        energy_axis_true : `~gammapy.maps.MapAxis`, optional
+            True energy axis used for IRF maps. Default is None.
+        migra_axis : `~gammapy.maps.MapAxis`, optional
+            If set, this provides the migration axis for the energy dispersion map.
+            If not set, an EDispKernelMap is produced instead. Default is None.
+        reference_time : `~astropy.time.Time`
+            The reference time to use in GTI definition. Default is "2000-01-01".
+        name : str, optional
+            Name of the returned dataset. Default is None.
+        meta_table : `~astropy.table.Table`, optional
+            Table listing information on observations used to create the dataset.
+            One line per observation for stacked datasets. Default is None.
+
+        Returns
+        -------
+        empty_maps : `SpectrumDataset`
+            A SpectrumDataset containing zero filled maps.
+
+        Examples
+        --------
+        >>> from gammapy.datasets import SpectrumDataset
+        >>> from gammapy.maps import RegionGeom, MapAxis
+
+        >>> energy_axis = MapAxis.from_energy_bounds(1.0, 10.0, 4, unit="TeV")
+        >>> energy_axis_true = MapAxis.from_energy_bounds(
+        ...            0.5, 20, 10, unit="TeV", name="energy_true"
+        ...        )
+        >>> geom = RegionGeom.create(
+        ...            region=None,
+        ...            axes=[energy_axis],
+        ...        )
+        >>> empty = SpectrumDataset.create(geom=geom, energy_axis_true=energy_axis_true, name="empty")
+        """
+        if not geom.is_region:
+            raise TypeError("`SpectrumDataset` is only supported for `RegionGeom`.")
+
+        dataset = super().create(
+            geom,
+            energy_axis_true=energy_axis_true,
+            migra_axis=migra_axis,
+            reference_time=reference_time,
+            name=name,
+            meta_table=meta_table,
+            **kwargs,
+        )
+
+        # remove PSF
+        dataset.psf = None
+
+        return dataset
+
     def cutout(self, *args, **kwargs):
-        """Not supported for `SpectrumDataset`"""
+        """Not supported for `SpectrumDataset`."""
         raise NotImplementedError("Method not supported on a spectrum dataset")
 
     def plot_residuals_spatial(self, *args, **kwargs):
-        """Not supported for `SpectrumDataset`"""
+        """Not supported for `SpectrumDataset`."""
         raise NotImplementedError("Method not supported on a spectrum dataset")
 
     def to_spectrum_dataset(self, *args, **kwargs):
-        """Not supported for `SpectrumDataset`"""
+        """Not supported for `SpectrumDataset`."""
         raise NotImplementedError("Already a Spectrum Dataset. Method not supported")
 
 
 class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
     """Spectrum dataset for 1D on-off likelihood fitting.
+
     It bundles together the binned on and off counts, the binned IRFs as well as the on and off acceptances.
 
     A fit mask can be added to exclude bins during the analysis.
@@ -372,7 +447,8 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
 
     @classmethod
     def from_dict(cls, data, **kwargs):
-        """Create spectrum dataset from dict.
+        """Create spectrum dataset from dictionary.
+
         Reads file from the disk as specified in the dict.
 
         Parameters
@@ -385,7 +461,6 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         dataset : `SpectrumDatasetOnOff`
             Spectrum dataset on off.
         """
-
         filename = make_path(data["filename"])
         dataset = cls.read(filename=filename)
         dataset.mask_fit = None
@@ -422,6 +497,7 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
 
     def to_spectrum_dataset(self, name=None):
         """Convert a SpectrumDatasetOnOff to a SpectrumDataset.
+
         The background model template is taken as alpha*counts_off.
 
         Parameters

@@ -114,7 +114,6 @@ class FoVBackgroundMaker(Maker):
             Map dataset including background model.
 
         """
-
         if self.default_spatial_model:
             spatial_model = self.default_spatial_model.copy()
         else:

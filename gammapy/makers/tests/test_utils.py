@@ -3,11 +3,18 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
-from astropy.coordinates import EarthLocation, SkyCoord
+from astropy.coordinates import SkyCoord
 from astropy.table import Table
 from astropy.time import Time
 from regions import PointSkyRegion
-from gammapy.data import GTI, DataStore, EventList, FixedPointingInfo, Observation
+from gammapy.data import (
+    GTI,
+    DataStore,
+    EventList,
+    FixedPointingInfo,
+    Observation,
+    observatory_locations,
+)
 from gammapy.irf import (
     Background2D,
     Background3D,
@@ -26,11 +33,14 @@ from gammapy.makers.utils import (
     make_map_exposure_true_energy,
     make_observation_time_map,
     make_theta_squared_table,
+    project_irf_on_geom,
+    integrate_project_irf_on_geom,
 )
 from gammapy.maps import HpxGeom, MapAxis, RegionGeom, WcsGeom, WcsNDMap
 from gammapy.modeling.models import ConstantSpectralModel
 from gammapy.utils.testing import requires_data
 from gammapy.utils.time import time_ref_to_dict
+from gammapy.utils.coordinates import FoVICRSFrame
 
 
 @pytest.fixture(scope="session")
@@ -117,17 +127,9 @@ def fixed_pointing_info():
 def fixed_pointing_info_aligned():
     # Create Fixed Pointing Info aligned between sky and horizon coordinates
     # (removes rotation in FoV and results in predictable solid angles)
-    time_start = Time("2000-09-21 11:55:00")
-    time_stop = Time("2000-09-12 12:05:00")
-    location = EarthLocation(lat=90 * u.deg, lon=0 * u.deg)
     fixed_icrs = SkyCoord(0 * u.deg, 0 * u.deg, frame="icrs")
 
-    return FixedPointingInfo(
-        fixed_icrs=fixed_icrs,
-        location=location,
-        time_start=time_start,
-        time_stop=time_stop,
-    )
+    return FixedPointingInfo(fixed_icrs=fixed_icrs)
 
 
 @pytest.fixture(scope="session")
@@ -344,6 +346,7 @@ def test_make_map_background_irf_altaz_align(fixed_pointing_info):
         )
 
     obstime = Time("2020-01-01T20:00:00")
+    location = observatory_locations["ctao_south"]
 
     map_long_altaz = make_map_background_irf(
         pointing=fixed_pointing_info,
@@ -352,6 +355,7 @@ def test_make_map_background_irf_altaz_align(fixed_pointing_info):
         geom=_get_geom(fixed_pointing_info, obstime),
         time_start=obstime,
         fov_rotation_step=20.0 * u.deg,
+        location=location,
     )
 
     map_short_altaz = make_map_background_irf(
@@ -361,6 +365,7 @@ def test_make_map_background_irf_altaz_align(fixed_pointing_info):
         geom=_get_geom(fixed_pointing_info, obstime),
         time_start=obstime + "20979 s",
         fov_rotation_step=20.0 * u.deg,
+        location=location,
     )
     map_long_radec = make_map_background_irf(
         pointing=fixed_pointing_info,
@@ -369,6 +374,7 @@ def test_make_map_background_irf_altaz_align(fixed_pointing_info):
         geom=_get_geom(fixed_pointing_info, obstime),
         time_start=obstime,
         fov_rotation_step=20.0 * u.deg,
+        location=location,
     )
     map_short_altaz_norotation = make_map_background_irf(
         pointing=fixed_pointing_info,
@@ -377,6 +383,7 @@ def test_make_map_background_irf_altaz_align(fixed_pointing_info):
         geom=_get_geom(fixed_pointing_info, obstime),
         time_start=obstime - 21 * u.s,
         fov_rotation_step=360.0 * u.deg,
+        location=location,
     )
     map_altaz_long_norotation = make_map_background_irf(
         pointing=fixed_pointing_info,
@@ -385,6 +392,7 @@ def test_make_map_background_irf_altaz_align(fixed_pointing_info):
         geom=_get_geom(fixed_pointing_info, obstime),
         time_start=obstime - 2100 * u.s,
         fov_rotation_step=360.0 * u.deg,
+        location=location,
     )
     # Check that background normalisations are consistent
     assert_allclose(np.sum(map_long_altaz.data), np.sum(map_long_radec.data), rtol=1e-2)
@@ -394,11 +402,12 @@ def test_make_map_background_irf_altaz_align(fixed_pointing_info):
     # Check that results differ when considering short and long observations with
     # AltAz aligned IRFs
     assert_allclose(
-        map_long_altaz.data[0, 0, :4], [215862, 219369, 222672, 225783], rtol=1e-2
+        map_long_altaz.data[0, 0, :4], [252123, 250654, 249086, 247564.0], rtol=1e-2
     )
-    #    [212869, 217493, 222208, 226608]
     assert_allclose(
-        map_short_altaz.data[0, 0, :4], [202.769, 209.814, 217.103, 224.646], rtol=1e-5
+        map_short_altaz.data[0, 0, :4],
+        [260.9476, 258.2620, 255.6040, 252.973375],
+        rtol=1e-5,
     )
 
     # Check that results differ when considering RaDec or AltAz aligned IRFs
@@ -442,8 +451,8 @@ def test_make_counts_rad_max(observations):
     energy_axis = MapAxis.from_energy_bounds(
         0.05, 100, nbin=6, unit="TeV", name="energy"
     )
-    geome = RegionGeom.create(region=on_region, axes=[energy_axis])
-    counts = make_counts_rad_max(geome, observations.rad_max, observations.events)
+    geom = RegionGeom.create(region=on_region, axes=[energy_axis])
+    counts = make_counts_rad_max(geom, observations.rad_max, observations.events)
 
     assert_allclose(np.squeeze(counts.data), np.array([547, 188, 52, 8, 0, 0]))
 
@@ -476,7 +485,7 @@ class TestTheta2Table:
             events["DEC"] = sign * ([0.0, 0.05, 0.9, 10.0, 10.0] * u.deg)
             events["ENERGY"] = [1.0, 1.0, 1.5, 1.5, 10.0] * u.TeV
             events["OFFSET"] = [0.1, 0.1, 0.5, 1.0, 1.5] * u.deg
-            events["TIME"] = [0.1, 0.2, 0.3, 0.4, 0.5] * u.s
+            events["TIME"] = Time("2025-01-01") + [0.1, 0.2, 0.3, 0.4, 0.5] * u.s
 
             obs_info = dict(
                 OBS_ID=0,
@@ -654,3 +663,35 @@ def test_make_effective_livetime_map():
     assert_allclose(obs_time_offset, [0, 0.242814], rtol=1e-3)
 
     assert obs_time.unit == u.hr
+
+
+@requires_data()
+def test_project_irf(aeff):
+    ebounds = [0.1, 1, 10]
+    axis = MapAxis.from_edges(ebounds, name="energy_true", unit="TeV", interp="log")
+    geom = WcsGeom.create(npix=(4, 3), binsz=2, axes=[axis])
+    pointing = SkyCoord(2, 1, unit="deg")
+    fov_frame = FoVICRSFrame(origin=pointing)
+    proj_irf_geom = project_irf_on_geom(geom, aeff, fov_frame)
+
+    assert geom.data_shape == proj_irf_geom.data.shape
+    assert_allclose(
+        proj_irf_geom.data[:, 1, 1], [373700.92608812, 2477509.59635073], rtol=1e-5
+    )
+    assert proj_irf_geom.geom.center_skydir == geom.center_skydir
+
+
+@requires_data()
+def test_integrate_project_irf(bkg_2d, fixed_pointing_info):
+    axis = MapAxis.from_edges([0.1, 1, 10], name="energy", unit="TeV", interp="log")
+    obstime = Time("2020-01-01T20:00:00")
+    skydir = fixed_pointing_info.get_icrs(obstime).galactic
+    geom = WcsGeom.create(
+        npix=(3, 3), binsz=4, axes=[axis], skydir=skydir, frame="galactic"
+    )
+    fov_frame = FoVICRSFrame(origin=skydir)
+    int_proj_irf_geom = integrate_project_irf_on_geom(geom, bkg_2d, fov_frame)
+
+    assert geom.data_shape == int_proj_irf_geom.data.shape
+    assert_allclose(int_proj_irf_geom.data[:, 1, 1], [0.0445006, 0.00445006], rtol=1e-5)
+    assert int_proj_irf_geom.geom.center_skydir == geom.center_skydir

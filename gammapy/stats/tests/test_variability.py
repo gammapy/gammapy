@@ -108,7 +108,7 @@ def test_lightcurve_chisq(lc_table):
     assert_quantity_allclose(pval, 0.999997476867478)
 
 
-def test_lightcurve_flux_doubling():
+def test_flux_doubling():
     flux = np.array(
         [
             [1e-11, 4e-12],
@@ -139,11 +139,23 @@ def test_lightcurve_flux_doubling():
 
     dtime = dtime_dict["doubling"]
     dtime_err = dtime_dict["doubling_err"]
+    dtime_coord = dtime_dict["doubling_coord"]
     assert_allclose(
         dtime,
         [2271.34711286, 21743.98603654] * u.s,
     )
-    assert_allclose(dtime_err, [425.92375713, 242.80234065] * u.s)
+    assert_allclose(dtime_err, [292.384304, 97929.94414922] * u.s)
+    assert_allclose(dtime_coord, [6.31157019e08, 6.31171419e08] * u.s)
+
+    htime = dtime_dict["halving"]
+    htime_err = dtime_dict["halving_err"]
+    htime_coord = dtime_dict["halving_coord"]
+    assert_allclose(
+        htime,
+        [2271.34711286, 22365.24278044] * u.s,
+    )
+    assert_allclose(htime_err, [292.384304, 100727.94255348] * u.s)
+    assert_allclose(htime_coord, [6.31160619e08, 6.31164219e08] * u.s)
 
 
 def test_tk_function():

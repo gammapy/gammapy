@@ -22,7 +22,7 @@ __all__ = [
 
 # TODO: replace by QuantityType and pydantic TypeAdapter
 class JsonQuantityEncoder(json.JSONEncoder):
-    """Support for quantities that JSON default encoder"""
+    """Support for quantities that JSON default encoder."""
 
     def default(self, obj):
         if isinstance(obj, u.Quantity):
@@ -33,7 +33,7 @@ class JsonQuantityEncoder(json.JSONEncoder):
 
 # TODO: replace by QuantityType and pydantic TypeAdapter
 class JsonQuantityDecoder(json.JSONDecoder):
-    """Support for quantities that JSON default encoder"""
+    """Support for quantities that JSON default encoder."""
 
     def __init__(self, *args, **kwargs):
         super().__init__(object_hook=self.object_hook, *args, **kwargs)

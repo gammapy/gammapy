@@ -42,7 +42,7 @@ def weighted_cash_sum_jit(counts, npred, weight):
 
 @jit("f8(f8[:],f8[:])", nopython=True, nogil=True, cache=True)
 def cash_sum_jit(counts, npred):
-    """Summed cash fit statistics.
+    """Sum cash fit statistics.
 
     Parameters
     ----------

@@ -188,8 +188,7 @@ class MapAxis:
         """
         if self.name != required_name:
             raise ValueError(
-                "Unexpected axis name,"
-                f' expected "{required_name}", got: "{self.name}"'
+                f'Unexpected axis name, expected "{required_name}", got: "{self.name}"'
             )
 
     def is_aligned(self, other, atol=2e-2):
@@ -233,18 +232,23 @@ class MapAxis:
         """
         if not isinstance(other, self.__class__):
             return TypeError(f"Cannot compare {type(self)} and {type(other)}")
-
+        state = True
         if self.edges.shape != other.edges.shape:
-            return False
-        if not self.unit.is_equivalent(other.unit):
-            return False
-        return (
-            np.allclose(self.edges, other.edges, **kwargs)
-            and self._node_type == other._node_type
-            and self._interp == other._interp
-            and self.name.upper() == other.name.upper()
-            and self._boundary_type == other._boundary_type
-        )
+            state = False
+        if state and not self.unit.is_equivalent(other.unit):
+            state = False
+        if state:
+            state = (
+                state
+                and np.allclose(self.edges, other.edges, **kwargs)
+                and self._node_type == other._node_type
+                and self._interp == other._interp
+                and self.name.upper() == other.name.upper()
+                and self._boundary_type == other._boundary_type
+            )
+        if state is False:
+            log.debug(f"MapAxis {self.name} is not equal")
+        return state
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
@@ -417,7 +421,7 @@ class MapAxis:
         )
         ax.set_xlabel(xlabel)
         xmin, xmax = self.bounds
-        if not xmin == xmax:
+        if xmin != xmax:
             ax.set_xlim(self.bounds)
         return ax
 
@@ -806,7 +810,7 @@ class MapAxis:
         return u.Quantity(values, unit=self.unit, copy=COPY_IF_NEEDED)
 
     def wrap_coord(self, coord):
-        """Wrap coords between axis edges for a periodic boundary condition
+        """Wrap coords between axis edges for a periodic boundary condition.
 
         Parameters
         ----------
@@ -818,7 +822,6 @@ class MapAxis:
         coord : `~numpy.ndarray`
             Wrapped array of axis coordinate values.
         """
-
         m1, m2 = self.edges_min[0], self.edges_max[-1]
         out_of_range = (coord >= m2) | (coord < m1)
         return np.where(out_of_range, (coord - m1) % (m2 - m1) + m1, coord)
@@ -1149,7 +1152,7 @@ class MapAxis:
             if centers[-1] != self.center[-1]:
                 if strict is True:
                     raise ValueError(
-                        f"Number of {self.name} bins - 1 ({self.nbin-1}) is not divisible by {factor}"
+                        f"Number of {self.name} bins - 1 ({self.nbin - 1}) is not divisible by {factor}"
                     )
                 else:
                     centers = np.append(centers, self.center[-1])
@@ -1428,7 +1431,7 @@ class MapAxis:
                 axis = MapAxis.from_nodes(e_ref, name="energy", interp="log")
             else:
                 raise ValueError(
-                    "Either 'e_ref', 'e_min' or 'e_max' column " "names are required"
+                    "Either 'e_ref', 'e_min' or 'e_max' column names are required"
                 )
         elif format == "gadf-sed-norm":
             # TODO: guess interp here
@@ -1656,8 +1659,9 @@ class MapAxes(Sequence):
         return self.__class__(axes=axes)
 
     def replace(self, axis):
-        """Replace a given axis. In order to be replaced,
-        the name of the new axis must match the name of the old axis.
+        """Replace a given axis.
+
+        In order to be replaced, the name of the new axis must match the name of the old axis.
 
         Parameters
         ----------
@@ -2200,7 +2204,7 @@ class MapAxes(Sequence):
             f"order: {required_names}, got: {self.names}."
         )
 
-        if not allow_extra and not len(self) == len(required_names):
+        if not allow_extra and len(self) != len(required_names):
             raise ValueError(message)
 
         try:
@@ -2257,7 +2261,12 @@ class MapAxes(Sequence):
         if not isinstance(other, self.__class__):
             return TypeError(f"Cannot compare {type(self)} and {type(other)}")
 
-        return np.all([ax0.is_allclose(ax1, **kwargs) for ax0, ax1 in zip(other, self)])
+        state = np.all(
+            [ax0.is_allclose(ax1, **kwargs) for ax0, ax1 in zip(other, self)]
+        )
+        if state is False:
+            log.debug("MapAxes are not equal")
+        return state
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
@@ -2315,7 +2324,7 @@ class TimeMapAxis:
                 f"Time edges max must have a valid time unit, got {edges_max.unit}"
             )
 
-        if not edges_min.shape == edges_max.shape:
+        if edges_min.shape != edges_max.shape:
             raise ValueError(
                 "Edges min and edges max must have the same shape,"
                 f" got {edges_min.shape} and {edges_max.shape}."
@@ -2551,8 +2560,7 @@ class TimeMapAxis:
         """
         if self.name != required_name:
             raise ValueError(
-                "Unexpected axis name,"
-                f' expected "{required_name}", got: "{self.name}"'
+                f'Unexpected axis name, expected "{required_name}", got: "{self.name}"'
             )
 
     def is_allclose(self, other, **kwargs):
@@ -2572,20 +2580,26 @@ class TimeMapAxis:
         """
         if not isinstance(other, self.__class__):
             return TypeError(f"Cannot compare {type(self)} and {type(other)}")
-
+        state = True
         if self._edges_min.shape != other._edges_min.shape:
-            return False
+            state = False
 
         # This will test equality at microsec level.
         delta_min = self.time_min - other.time_min
         delta_max = self.time_max - other.time_max
 
-        return (
-            np.allclose(delta_min.to_value("s"), 0.0, **kwargs)
-            and np.allclose(delta_max.to_value("s"), 0.0, **kwargs)
-            and self._interp == other._interp
-            and self.name.upper() == other.name.upper()
-        )
+        if state:
+            state = (
+                state
+                and np.allclose(delta_min.to_value("s"), 0.0, **kwargs)
+                and np.allclose(delta_max.to_value("s"), 0.0, **kwargs)
+                and self._interp == other._interp
+                and self.name.upper() == other.name.upper()
+            )
+
+        if state is False:
+            log.debug(f"TimeMapAxis {self.name} is not equal")
+        return state
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
@@ -2640,6 +2654,7 @@ class TimeMapAxis:
 
     def pix_to_coord(self, pix):
         """Transform from pixel position to time coordinate.
+
         Currently, works only for linear interpolation scheme.
 
         Parameters
@@ -2658,8 +2673,8 @@ class TimeMapAxis:
         frac, idx = np.modf(pix)
         idx1 = idx.astype(int)
         valid = np.logical_and(idx >= 0, idx < self.nbin, np.isfinite(idx))
-        idx_valid = np.where(valid)
-        idx_invalid = np.where(~valid)
+        idx_valid = np.nonzero(valid)
+        idx_invalid = np.nonzero(~valid)
 
         coords[idx_valid] = (
             frac[idx_valid] * self.time_delta[idx1[valid]] + self.edges_min[idx1[valid]]
@@ -2865,7 +2880,7 @@ class TimeMapAxis:
     # TODO: how configurable should that be? column names?
     @classmethod
     def from_table(cls, table, format="gadf", idx=0):
-        """Create time map axis from table
+        """Create time map axis from table.
 
         Parameters
         ----------
@@ -3093,7 +3108,6 @@ class TimeMapAxis:
             * "overflow" for the bins falling above  the maximum axis threshold
             * "outflow" for other states
         """
-
         for _, edge in enumerate(interval_edges):
             if not isinstance(edge, Time):
                 interval_edges[_] = self.reference_time + interval_edges[_]
@@ -3109,8 +3123,8 @@ class TimeMapAxis:
             mask2 = self.time_max <= time_interval[1]
             mask = mask1 & mask2
             if np.any(mask):
-                idx_min = np.where(mask)[0][0]
-                idx_max = np.where(mask)[0][-1]
+                idx_min = np.nonzero(mask)[0][0]
+                idx_max = np.nonzero(mask)[0][-1]
                 bin_type = "normal   "
             else:
                 idx_min = idx_max = -1
@@ -3146,7 +3160,7 @@ class LabelMapAxis:
     def __init__(self, labels, name=""):
         unique_labels = np.unique(labels)
 
-        if not len(unique_labels) == len(labels):
+        if len(unique_labels) != len(labels):
             raise ValueError("Node labels must be unique")
 
         self._labels = np.array(labels)
@@ -3173,8 +3187,7 @@ class LabelMapAxis:
         """
         if self.name != required_name:
             raise ValueError(
-                "Unexpected axis name,"
-                f' expected "{required_name}", got: "{self.name}"'
+                f'Unexpected axis name, expected "{required_name}", got: "{self.name}"'
             )
 
     @property
@@ -3238,7 +3251,7 @@ class LabelMapAxis:
         return self.coord_to_idx(coord).astype("float")
 
     def pix_to_idx(self, pix, clip=False):
-        """Convert pixel to idx
+        """Convert pixel to idx.
 
         Parameters
         ----------
@@ -3419,7 +3432,11 @@ class LabelMapAxis:
 
         name_equal = self.name.upper() == other.name.upper()
         labels_equal = np.all(self.center == other.center)
-        return name_equal & labels_equal
+        state = name_equal & labels_equal
+
+        if not state:
+            log.debug(f"TimeMapAxis {self.name} is not equal")
+        return state
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
@@ -3495,7 +3512,6 @@ class LabelMapAxis:
         axis : `LabelMapAxis`
             Stacked axis.
         """
-
         axis_stacked = axes[0]
 
         for ax in axes[1:]:

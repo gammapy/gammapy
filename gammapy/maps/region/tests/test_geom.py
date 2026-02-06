@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
+import logging
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
@@ -418,3 +419,19 @@ def test_contains_point_sky_region():
         region="galactic;point(0, 0)", axes=[axis], binsz_wcs=0.01 * u.deg
     )
     assert all(geom.contains(geom.center_skydir))
+
+
+def test_caplog(caplog):
+    axis1 = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=3, name="energy_true")
+    axis2 = MapAxis.from_energy_bounds("2 TeV", "10 TeV", nbin=3, name="energy")
+    geom1 = RegionGeom.create(
+        region="galactic;point(0, 0)", axes=[axis1], binsz_wcs=0.01 * u.deg
+    )
+    geom2 = RegionGeom.create(
+        region="galactic;point(0, 0)", axes=[axis2], binsz_wcs=0.01 * u.deg
+    )
+
+    caplog.set_level(logging.DEBUG)
+    assert geom1 != geom2
+    assert "RegionGeom axes are not equal" in [_.message for _ in caplog.records]
+    assert "DEBUG" in [_.levelname for _ in caplog.records]

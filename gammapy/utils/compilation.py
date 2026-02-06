@@ -25,7 +25,6 @@ class CompilationBackendEnum(Enum):
     @classmethod
     def from_str(cls, value):
         """Get enum from string."""
-
         if value == "jit" and not is_numba_available():
             log.warning("numba is not installed, falling back to cython backend")
             value = "cython"

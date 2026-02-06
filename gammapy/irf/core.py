@@ -160,8 +160,7 @@ class IRF(metaclass=abc.ABCMeta):
 
         if np.shape(value) != required_shape:
             raise ValueError(
-                f"data shape {value.shape} does not match"
-                f"axes shape {required_shape}"
+                f"data shape {value.shape} does not match the axes shape {required_shape}"
             )
 
         self._data = value
@@ -179,7 +178,7 @@ class IRF(metaclass=abc.ABCMeta):
         axis = self.axes.index(axis_name)
         mask = ~np.isfinite(data) | (data == 0.0)
 
-        coords = np.where(mask)
+        coords = np.nonzero(mask)
         xp = np.arange(data.shape[axis])
 
         for coord in zip(*coords):
@@ -986,7 +985,6 @@ class IRFMap:
         cutout : `IRFMap`
             Cutout IRF map.
         """
-
         irf_map = self._irf_map.cutout(position, width, mode, min_npix=min_npix)
         if self.exposure_map:
             exposure_map = self.exposure_map.cutout(
@@ -998,6 +996,7 @@ class IRFMap:
 
     def downsample(self, factor, axis_name=None, weights=None):
         """Downsample the dimension of the spatial axes or a non-spatial axis by a given factor.
+
         It is not recommended to use this function on a `~gammapy.irf.PSFMap` rad axis.
 
         Parameters
@@ -1015,7 +1014,6 @@ class IRFMap:
         map : `IRFMap`
             Downsampled IRF map.
         """
-
         if not axis_name:
             preserve_counts = False
         else:

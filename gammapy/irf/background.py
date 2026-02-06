@@ -65,9 +65,6 @@ class BackgroundIRF(IRF):
         bkg : `Background2D` or `Background2D`
             Background IRF class.
         """
-        # TODO: some of the existing background files have missing HDUCLAS keywords
-        #  which are required to define the correct Gammapy axis names
-
         if "HDUCLAS2" not in table.meta:
             log.warning("Missing 'HDUCLAS2' keyword assuming 'BKG'")
             table = table.copy()
@@ -246,7 +243,7 @@ class Background3D(BackgroundIRF):
         if figsize is None:
             figsize = (width, rows * width // (cols * (1 + cfraction)))
 
-        fig, axes = plt.subplots(
+        _, axes = plt.subplots(
             ncols=cols,
             nrows=rows,
             figsize=figsize,
@@ -545,7 +542,7 @@ class Background2D(BackgroundIRF):
             Size of the figure. Default is (10, 8).
 
         """
-        fig, axes = plt.subplots(nrows=2, ncols=2, figsize=figsize)
+        _, axes = plt.subplots(nrows=2, ncols=2, figsize=figsize)
         self.plot(ax=axes[1][1])
         self.plot_offset_dependence(ax=axes[0][0])
         self.plot_energy_dependence(ax=axes[1][0])

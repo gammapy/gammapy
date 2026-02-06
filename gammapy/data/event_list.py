@@ -7,7 +7,9 @@ import warnings
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import AltAz, Angle, SkyCoord, angular_separation
+from astropy.table import Table, Column
 from astropy.table import vstack as vstack_tables
+from astropy.time import Time
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from gammapy.maps import MapAxis, MapCoord, RegionGeom, WcsNDMap
@@ -16,7 +18,6 @@ from gammapy.utils.fits import earth_location_from_dict
 from gammapy.utils.testing import Checker
 from gammapy.utils.time import time_ref_from_dict
 from .metadata import EventListMetaData
-from gammapy.utils.deprecation import deprecated_renamed_argument
 
 __all__ = ["EventList"]
 
@@ -28,30 +29,13 @@ class EventList:
 
     Event list data is stored as ``table`` (`~astropy.table.Table`) data member.
 
-    The most important reconstructed event parameters
-    are available as the following columns:
+    The required columns are:
 
-    - ``TIME`` - Mission elapsed time (sec)
-    - ``RA``, ``DEC`` - ICRS system position (deg)
-    - ``ENERGY`` - Energy (usually MeV for Fermi and TeV for IACTs)
+    - ``RA`` - ICRS system reconstructed right ascension (deg)
+    - ``DEC`` - ICRS system reconstructed declination (deg)
+    - ``TIME`` - event time as an `~astropy.time.Time` object
+    - ``ENERGY`` - Reconstructed energy (usually MeV for Fermi and TeV for IACTs or WCDs)
 
-    Note that ``TIME`` is usually sorted, but sometimes it is not.
-    E.g. when simulating data, or processing it in certain ways.
-    So generally any analysis code should assume ``TIME`` is not sorted.
-
-    Other optional (columns) that are sometimes useful for high level analysis:
-
-    - ``GLON``, ``GLAT`` - Galactic coordinates (deg)
-    - ``DETX``, ``DETY`` - Field of view coordinates (deg)
-
-    Note that when reading data for analysis you shouldn't use those
-    values directly, but access them via properties which create objects
-    of the appropriate class:
-
-    - `time` for ``TIME``
-    - `radec` for ``RA``, ``DEC``
-    - `energy` for ``ENERGY``
-    - `galactic` for ``GLON``, ``GLAT``
 
     Parameters
     ----------
@@ -88,8 +72,51 @@ class EventList:
     """
 
     def __init__(self, table, meta=None):
-        self.table = table
+        if table is None:
+            table = self._create_empty_list()
+        self.table = self._validate_table(table)
         self.meta = meta or EventListMetaData()
+
+    @staticmethod
+    def _create_empty_list():
+        """Create empty event list table."""
+        reference_table = Table(
+            [
+                Column(name="RA", unit=u.deg, description="Event right ascension"),
+                Column(name="DEC", unit=u.deg, description="Event declination"),
+                Column(name="ENERGY", unit=u.TeV, description="Event energy"),
+            ]
+        )
+        reference_table["TIME"] = Time([], format="mjd", scale="tt")
+        return reference_table
+
+    @staticmethod
+    def _validate_table(table):
+        """Checks that the input table follows the gammapy internal model."""
+        if not isinstance(table, Table):
+            raise TypeError(
+                f"EventList expects astropy Table, got {type(table)} instead."
+            )
+
+        reference_table = EventList._create_empty_list()
+        missing_columns = set(reference_table.colnames).difference(table.colnames)
+        if len(missing_columns) > 0:
+            raise KeyError(
+                f"EventList table invalid: columns {missing_columns} are missing."
+            )
+
+        for name in reference_table.colnames:
+            check = reference_table[name]
+            if not isinstance(check, Column):
+                if not isinstance(table[name], type(check)):
+                    raise TypeError(f"Column {name} is not a {check} object.")
+            else:
+                if not check.unit.is_equivalent(table[name].unit):
+                    raise u.UnitConversionError(
+                        f"Column {name} is not in {check} unit."
+                    )
+
+        return table
 
     def _repr_html_(self):
         try:
@@ -114,7 +141,7 @@ class EventList:
         """
         from gammapy.data.io import EventListReader
 
-        return EventListReader(hdu, checksum).read(filename)
+        return EventListReader(hdu, checksum).read(filename, **kwargs)
 
     def to_table_hdu(self, format="gadf"):
         """
@@ -195,6 +222,9 @@ class EventList:
             info += f"\tMax. offset      : {offset_max:.1f}\n"
         return info.expandtabs(tabsize=2)
 
+    def __len__(self):
+        return self.table.__len__()
+
     @property
     def time_ref(self):
         """Time reference as a `~astropy.time.Time` object."""
@@ -210,8 +240,7 @@ class EventList:
         With 32-bit floats times will be incorrect by a few seconds
         when e.g. adding them to the reference time.
         """
-        met = u.Quantity(self.table["TIME"].astype("float64"), "second")
-        return self.time_ref + met
+        return self.table["TIME"]
 
     @property
     def observation_time_start(self):
@@ -226,8 +255,7 @@ class EventList:
     @property
     def radec(self):
         """Event RA / DEC sky coordinates as a `~astropy.coordinates.SkyCoord` object."""
-        lon, lat = self.table["RA"], self.table["DEC"]
-        return SkyCoord(lon, lat, unit="deg", frame="icrs")
+        return SkyCoord(self.table["RA"], self.table["DEC"], unit="deg", frame="icrs")
 
     @property
     def galactic(self):
@@ -350,7 +378,6 @@ class EventList:
         mask = geom.contains(self.radec)
         return self.select_row_subset(mask)
 
-    @deprecated_renamed_argument("band", "values", "2.0")
     def select_parameter(self, parameter, values, is_range=True):
         """
         Event selection according to parameter values, either in a range or exact matches.
@@ -462,12 +489,11 @@ class EventList:
         ax = plt.gca() if ax is None else ax
 
         # Note the events are not necessarily in time order
-        time = self.table["TIME"]
-        time = time - np.min(time)
+        delta_time = self.time - np.min(self.time)
 
         ax.set_xlabel(f"Time [{u.s.to_string(UNIT_STRING_FORMAT)}]")
         ax.set_ylabel("Counts")
-        y, x_edges = np.histogram(time, bins=20)
+        y, x_edges = np.histogram(delta_time.to("s"), bins=20)
 
         xerr = np.diff(x_edges) / 2
         x = x_edges[:-1] + xerr
@@ -864,7 +890,7 @@ class EventList:
             ax_image = fig.add_subplot(gs[0, :], projection=m.geom.wcs)
         else:
             ax_image = fig.add_subplot(gs[0, 0], projection=m.geom.wcs)
-        m.plot(ax=ax_image, stretch="sqrt", vmin=0, add_cbar=True)
+        m.plot(ax=ax_image, stretch="sqrt", vmin=0)
         plt.subplots_adjust(wspace=0.3)
 
     @property
@@ -964,7 +990,7 @@ class EventListChecker(Checker):
         # They are currently listed as required in the spec,
         # but I think we should just require ICRS and those
         # are irrelevant, should not be used.
-        # 'RADECSYS',
+        # 'RADESYSa',
         # 'EQUINOX',
         "ORIGIN",
         "TELESCOP",

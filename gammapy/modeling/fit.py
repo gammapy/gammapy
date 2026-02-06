@@ -571,7 +571,6 @@ class Fit:
         ...     y=model.spectral_model.amplitude,
         ... )
         """
-
         datasets, parameters = _parse_datasets(datasets=datasets)
 
         x = parameters[x]

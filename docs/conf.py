@@ -18,10 +18,10 @@
 import datetime
 import sys
 import os
+import gammapy
 
-# Get configuration information from setup.cfg
-from configparser import ConfigParser
-from pkg_resources import get_distribution
+# Get project metadata
+from importlib.metadata import metadata
 
 # Sphinx-gallery config
 from sphinx_gallery.sorting import ExplicitOrder
@@ -41,9 +41,8 @@ def setup(app):
     app.add_post_transform(DynamicPRLinkTransform)
 
 
-conf = ConfigParser()
-conf.read([os.path.join(os.path.dirname(__file__), "..", "setup.cfg")])
-setup_cfg = dict(conf.items("metadata"))
+distribution_name= "gammapy"
+gammapy_metadata = metadata(distribution_name)
 
 sys.path.insert(0, os.path.dirname(__file__))
 
@@ -86,7 +85,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # Allow to add the canonical html flag on all the pages
-# This permits to precise to web search engine that the pages for the stable version are privileged
+# This allows you to indicate to the web search engine that the pages for the stable version are privileged
 html_baseurl = 'https://docs.gammapy.org/stable/'
 
 # The reST default role (used for this markup: `text`) to use for all
@@ -96,15 +95,14 @@ default_role = 'obj'
 # Add any Sphinx extension module names here, as strings.
 extensions = [
     # Order for sphinx_automodapi is important
-    "sphinx.ext.autosummary",
-    "sphinx_automodapi.automodapi", # This should come after autosummary
+    "sphinx_automodapi.automodapi",
     "sphinx_automodapi.smart_resolver",
     "sphinx_click.ext",
     'sphinx_copybutton',
     "sphinx_design",
     "sphinx_gallery.gen_gallery",
+    "sphinx_changelog",
     "sphinx.ext.doctest",
-    "sphinx.ext.intersphinx",
     "sphinx.ext.mathjax",
     'sphinx.ext.viewcode',
     # Allows for mapping to other documentation projects
@@ -140,13 +138,7 @@ intersphinx_mapping = {
 	"pandas": ("https://pandas.pydata.org/pandas-docs/stable/", None),
 	}
 
-# -- Options for autosummary/autodoc output ------------------------------------
-# Enable generation of stub files
-autosummary_generate = True
-
-# Document inherited members
-automodsumm_inherited_members = True
-
+# -- Options for autodoc output ------------------------------------
 # Include class and __init__ docstrings
 autoclass_content = "both"
 
@@ -155,6 +147,10 @@ automodapi_toctreedirnm = 'api'
 
 # Suppress member summaries
 numpydoc_show_class_members = False
+
+# autodoc options to make the AnalysisConfig look nice
+autodoc_class_signature = "separated"
+autodoc_typehints = "description"
 
 # Ensures that when users click the "Copy" button, only the actual code is copied,
 # excluding interactive prompts and indentation markers
@@ -177,11 +173,12 @@ changelog_links_docpattern = [".*changelog.*", "whatsnew/.*", "release-notes/.*"
 # -- Project information -------------------------------------------------------
 
 # This does not *have* to match the package name, but typically does
-project = setup_cfg["name"]
-author = setup_cfg["author"]
-copyright = "{}, {}".format(datetime.datetime.now().year, setup_cfg["author"])
+project = gammapy_metadata.get('Name')
+author = gammapy_metadata.get('Author-email').split('<')[0].strip()
+copyright = "{}, {}".format(datetime.datetime.now().year, author)
 
-version = get_distribution(project).version
+
+version = str(gammapy.__version__)
 release = "X.Y.Z" if "dev" in version else version
 switch_version = "dev" if "dev" in version else release
 
@@ -275,12 +272,8 @@ man_pages = [("index", project.lower(), f"{project} Documentation", [author], 1)
 
 github_issues_url = "https://github.com/gammapy/gammapy/issues/"
 
-# In `about.rst` and `references.rst` we are giving lists of citations
-# (e.g. papers using Gammapy) that partly aren't referenced from anywhere
-# in the Gammapy docs. This is normal, but Sphinx emits a warning.
-# The following config option suppresses the warning.
-# http://www.sphinx-doc.org/en/stable/rest.html#citations
-# http://www.sphinx-doc.org/en/stable/config.html#confval-suppress_warnings
+# In `references.rst` we provide a list of citations which might not
+# be referenced elsewhere in the docs. Sphinx emits a warning that we can suppress.
 suppress_warnings = ["ref.citation"]
 
 branch = "main" if switch_version == "dev" else f"v{switch_version}"
@@ -289,7 +282,7 @@ binder_config = {
     # Required keys
     "org": "gammapy",
     "repo": "gammapy-webpage",
-    "branch": branch,  # Can be any branch, tag, or commit hash. Use a branch that hosts your docs.
+    "branch": branch,
     "binderhub_url": "https://mybinder.org",  # Any URL of a binderhub deployment. Must be full URL (e.g. https://mybinder.org).
     "dependencies": "./binder/requirements.txt",
     "notebooks_dir": f"notebooks/{switch_version}",
@@ -347,4 +340,3 @@ sphinx_gallery_conf = {
 html_context = {
     "default_mode": "light",
 }
-

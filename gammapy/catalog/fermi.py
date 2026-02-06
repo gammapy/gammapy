@@ -1458,6 +1458,7 @@ class SourceCatalogObject2PC(SourceCatalogObjectFermiPCBase):
         return ss
 
     def spectral_model(self):
+        """Best fit spectral model."""
         d = self.data_spectral
         if d is None:
             log.warning(f"No spectral model available for source {self.name}")
@@ -1516,7 +1517,6 @@ class SourceCatalogObject2PC(SourceCatalogObjectFermiPCBase):
     @property
     def flux_points_table(self):
         """Flux points (`~astropy.table.Table`)."""
-
         try:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", u.UnitsWarning)
@@ -1693,12 +1693,10 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
 
     @property
     def pulse_profile_radio(self):
-        """
-        Radio pulse profile provided in the auxiliary file of 3PC.
+        """Radio pulse profile provided in the auxiliary file of 3PC.
 
         Returns
         -------
-
         radio_profile: `~gammapy.maps.RegionNDMap`
             Map containing the radio profile.
         """
@@ -1717,6 +1715,7 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
     def pulse_profiles(self):
         """
         The 3PC pulse profiles are provided in different energy ranges, each represented in weighted counts.
+
         These profiles are stored in a `~gammapy.maps.Maps` of `~gammapy.maps.RegionNDMap`, one per energy bin.
 
         The `~gammapy.maps.Maps` keys correspond to specific energy ranges as follows:
@@ -1737,7 +1736,6 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
         maps: `~gammapy.maps.Maps`
             Maps containing the pulse profile in the different energy bin.
         """
-
         table = Table.read(self._auxiliary_filename, hdu="GAMMA_LC")
         phases = MapAxis.from_edges(
             np.unique(np.concatenate([table["Ph_Min"], table["Ph_Max"]])),
@@ -1759,7 +1757,8 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
         return maps
 
     def spectral_model(self, fit="auto"):
-        """
+        """Best fit spectral model.
+
         In the 3PC, Fermi-LAT collaboration tried to fit a
         `~gammapy.modelling.models.SuperExpCutoffPowerLaw4FGLDR3SpectralModel` with the
         exponential index `index_2` free, or fixed to 2/3. These two models are referred
@@ -1768,7 +1767,6 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
 
         Parameters
         ----------
-
         fit : str, optional
             Which fitted model to return. The user can choose between "auto", "b free"
             and "b 23". "auto" will always try to return the "b free" first and fall
@@ -1819,8 +1817,7 @@ class SourceCatalogObject3PC(SourceCatalogObjectFermiPCBase):
 
     @property
     def flux_points_table(self):
-        """Flux points (`~astropy.table.Table`). Flux point is an upper limit if
-        its significance is less than 2."""
+        """Flux points (`~astropy.table.Table`). Flux point is an upper limit if its significance is less than 2."""
         fp_data = self.data_spectral
         if fp_data is None:
             log.warning(f"No flux points available for source {self.name}")

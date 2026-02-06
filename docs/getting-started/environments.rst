@@ -26,8 +26,12 @@ environment. First install `Miniconda <https://docs.conda.io/en/latest/miniconda
 .. note::
 
     On Windows, you have to open up the conda environment file and delete the
-    lines with ``sherpa`` and ``healpy``. Those are optional dependencies that
-    currently aren't available on Windows.
+    line with ``healpy``. This is an optional dependency that
+    currently isn't available on Windows.
+
+.. note::
+
+   To avoid some installation issues, ``sherpa`` is not part of the environment file provided. You can nevertheless install ``sherpa`` in your environment using ``python -m pip install sherpa``.
 
 Once the environment has been created you can activate it using:
 

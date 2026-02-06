@@ -25,16 +25,6 @@ from gammapy.visualization import plot_theta_squared_table
 
 
 ######################################################################
-# Check setup
-# -----------
-#
-
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
-
-
-######################################################################
 # Get some data
 # -------------
 #

@@ -89,7 +89,7 @@ class SensitivityEstimator(Estimator):
         return excess
 
     def estimate_min_e2dnde(self, excess, dataset):
-        """Estimate dnde from a given minimum excess.
+        """Estimate e2dnde from a given minimum excess.
 
         Parameters
         ----------
@@ -111,13 +111,13 @@ class SensitivityEstimator(Estimator):
         phi_0 = excess / npred
 
         dnde_model = self.spectral_model(energy=energy)
-        dnde = phi_0.data[:, 0, 0] * dnde_model * energy**2
-        return dnde.to("erg / (cm2 s)")
+        e2dnde = phi_0.data[:, 0, 0] * dnde_model * energy**2
+        return e2dnde.to("erg / (cm2 s)")
 
     def _get_criterion(self, excess, bkg):
         is_gamma_limited = excess == self.gamma_min
         is_bkg_syst_limited = excess == bkg * self.bkg_syst_fraction
-        criterion = np.chararray(excess.shape, itemsize=12)
+        criterion = np.char.chararray(excess.shape, itemsize=12)
         criterion[is_gamma_limited] = "gamma"
         criterion[is_bkg_syst_limited] = "bkg"
         criterion[~np.logical_or(is_gamma_limited, is_bkg_syst_limited)] = (

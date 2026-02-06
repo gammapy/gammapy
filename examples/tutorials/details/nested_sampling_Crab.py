@@ -102,6 +102,7 @@ A demonstration of a Bayesian analysis using the nested sampling technique.
 
 import matplotlib.pyplot as plt
 import numpy as np
+import astropy.units as u
 from gammapy.datasets import Datasets
 from gammapy.datasets import SpectrumDatasetOnOff
 
@@ -307,7 +308,7 @@ print(result_joint.sampler_results["posterior"])
 ######################################################################
 # Besides mean, errors, etc, an interesting value is the
 # ``information gain`` which estimates how much the posterior
-# distribution has shrinked with respect to the prior (i.e. how much
+# distribution has shrunk with respect to the prior (i.e. how much
 # we’ve learned). A value < 1 means that the parameter is poorly
 # constrained within the prior range (we haven't learned much with respect to our prior assumption).
 # For a physical example see this
@@ -358,6 +359,46 @@ plt.show()
 
 # sphinx_gallery_thumbnail_number = 3
 
+######################################################################
+# Spectral model error band from samples
+# --------------------------------------
+#
+# To compute the spectral error band ("butterfly plots"), we will directly
+# use the samples of the posterior distribution. This is more robust as
+# compared to the traditional method of using the covariance matrix of
+# the parameters which implicitly assumes Gaussian errors while for the posterior
+# distribution there is no shape assumed.
+# This difference can become significant when the parameter errors are non-Gaussian.
+# For this we will need to convert the list of samples back to the spectral
+# model parameters with the relevant units (e.g. normalisation units).
+
+
+def get_samples_from_posterior(spectral_model, results):
+    """
+    Create a list of spectral parameters with correct units
+    from the unitless parameters returned by the sampler.
+    """
+    n_samples = results.samples.shape[0]
+    samples = []
+    for p in spectral_model.parameters:
+        try:
+            idx = spectral_model.parameters.free_unique_parameters.index(p)
+            samples.append(results.samples[:, idx] * p.unit)
+        except ValueError:
+            samples.append(np.ones(n_samples) * p.quantity)
+    return samples
+
+
+samples = get_samples_from_posterior(datasets.models[0].spectral_model, result_joint)
+
+######################################################################
+# Next we can provide these samples to the `~gammapy.modeling.models.SpectralModel.plot_error`
+# method.
+
+datasets.models[0].spectral_model.plot_error(
+    energy_bounds=[0.5 * u.TeV, 50 * u.TeV], sed_type="e2dnde", samples=samples
+)
+plt.show()
 
 ######################################################################
 # Individual run analysis

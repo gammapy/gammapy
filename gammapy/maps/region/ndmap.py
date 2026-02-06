@@ -68,6 +68,7 @@ class RegionNDMap(Map):
     @data.setter
     def data(self, value):
         """Set data.
+
         Parameters
         ----------
         value : array-like

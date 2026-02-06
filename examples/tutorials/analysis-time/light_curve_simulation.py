@@ -302,6 +302,7 @@ display(result.parameters.to_table())
 plt.figure(figsize=(8, 7))
 plt.subplots_adjust(bottom=0.3)
 dataset_fp.plot_spectrum(axis_name="time")
+plt.show()
 
 ######################################################################
 # Fit the datasets

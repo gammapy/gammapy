@@ -179,4 +179,4 @@ Using gammapy.data
 
    ../examples/tutorials/starting/overview.py
    ../examples/tutorials/starting/analysis_1.py
-   ../examples/tutorials/api/observation_clustering.py
+   ../examples/tutorials/details/observation_clustering.py

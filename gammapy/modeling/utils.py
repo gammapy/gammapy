@@ -2,7 +2,7 @@
 
 
 def _parse_datasets(datasets):
-    """Parser used by Fit and Sampler classes"""
+    """Parser used by Fit and Sampler classes."""
     from gammapy.datasets import Dataset, Datasets
 
     if isinstance(datasets, (list, Dataset)):

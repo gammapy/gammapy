@@ -57,14 +57,6 @@ from gammapy.modeling.models import LogParabolaSpectralModel, SkyModel
 from gammapy.visualization.utils import plot_contour_line
 
 ######################################################################
-# Check setup
-# -----------
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
-
-
-######################################################################
 # Model and dataset
 # -----------------
 #

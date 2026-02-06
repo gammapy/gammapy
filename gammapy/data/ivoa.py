@@ -275,7 +275,7 @@ def empty_obscore_table():
 
 
 def observation_obscore_dict(observation):
-    """Generates an obscore dict from an observation.
+    """Generate an obscore dictionary from an observation.
 
     Parameters
     ----------
@@ -308,7 +308,7 @@ def to_obscore_table(
     access_url=None,
     obscore_template=None,
 ):
-    """Generate the complete obscore Table by adding one row per observation using _obscore_row()
+    """Generate the complete obscore Table by adding one row per observation using _obscore_row().
 
     Parameters
     ----------
@@ -335,12 +335,11 @@ def to_obscore_table(
         Obscore table with number of rows = len(selected_obs)
 
     References
-    -----------
+    ----------
         * `IVOA ObsCore recommendations <https://www.ivoa.net/documents/ObsCore>`_
         * `https://www.ivoa.net/documents/ObsCore and https://www.ivoa.net/documents/TAP/`_
         * `IVOA identifiers <https://www.ivoa.net/documents/IVOAIdentifiers/20160523/REC-Identifiers-2.0.html>`_
     """
-
     if obs_publisher_did is None:
         log.warning(
             "Insufficient publisher information: 'obs_publisher_did'. Giving this value is highly recommended."

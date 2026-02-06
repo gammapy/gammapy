@@ -1,0 +1,1 @@
+Add sample_parameters_from_covariance method on models allowing to create parameters samples from covariance using multivariate normal distribution.

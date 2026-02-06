@@ -36,8 +36,8 @@ class FaucherKaspi2006VelocityMaxwellian(Fittable1DModel):
        <https://ui.adsabs.harvard.edu/abs/2006ApJ...643..332F>`_
     """
 
-    amplitude = Parameter()
-    sigma = Parameter()
+    amplitude = Parameter(default=1.0)
+    sigma = Parameter(default=265)
 
     def __init__(self, amplitude=1, sigma=265, **kwargs):
         super().__init__(amplitude=amplitude, sigma=sigma, **kwargs)
@@ -77,10 +77,10 @@ class FaucherKaspi2006VelocityBimodal(Fittable1DModel):
        <https://ui.adsabs.harvard.edu/abs/2006ApJ...643..332F>`_
     """
 
-    amplitude = Parameter()
-    sigma_1 = Parameter()
-    sigma_2 = Parameter()
-    w = Parameter()
+    amplitude = Parameter(default=1.0)
+    sigma_1 = Parameter(default=160)
+    sigma_2 = Parameter(default=780)
+    w = Parameter(default=0.9)
 
     def __init__(self, amplitude=1, sigma_1=160, sigma_2=780, w=0.9, **kwargs):
         super().__init__(
@@ -117,8 +117,8 @@ class Paczynski1990Velocity(Fittable1DModel):
        <https://ui.adsabs.harvard.edu/abs/1990ApJ...348..485P>`_
     """
 
-    amplitude = Parameter()
-    v_0 = Parameter()
+    amplitude = Parameter(default=1.0)
+    v_0 = Parameter(default=560)
 
     def __init__(self, amplitude=1, v_0=560, **kwargs):
         super().__init__(amplitude=amplitude, v_0=v_0, **kwargs)

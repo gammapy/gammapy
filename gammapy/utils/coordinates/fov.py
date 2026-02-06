@@ -103,7 +103,7 @@ def altaz_to_fov_altaz(altaz_coord, fov_altaz_frame):
 
 @frame_transform_graph.transform(DynamicMatrixTransform, FoVAltAzFrame, AltAz)
 def fov_to_altaz(fov_altaz_coord, altaz_frame):
-    """Convert an sky offset frame coordinate to the reference frame"""
+    """Convert an sky offset frame coordinate to the reference frame."""
     # use the forward transform, but just invert it
     mat = altaz_to_fov_altaz(altaz_frame, fov_altaz_coord)
     return matrix_transpose(mat)
@@ -180,7 +180,7 @@ def icrs_to_fov_icrs(icrs_coord, fov_icrs_frame):
 
 @frame_transform_graph.transform(DynamicMatrixTransform, FoVICRSFrame, ICRS)
 def fov_icrs_to_icrs(fov_icrs_coord, icrs_frame):
-    """Convert an sky offset frame coordinate to the reference frame"""
+    """Convert an sky offset frame coordinate to the reference frame."""
     # use the forward transform, but just invert it
     mat = icrs_to_fov_icrs(icrs_frame, fov_icrs_coord)
     return matrix_transpose(mat)

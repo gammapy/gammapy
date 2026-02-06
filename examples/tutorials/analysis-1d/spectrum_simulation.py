@@ -163,8 +163,7 @@ print(dataset)
 #
 # To do an on off spectral analysis, which is the usual science case, the
 # standard would be to use `~gammapy.datasets.SpectrumDatasetOnOff`, which uses the
-# acceptance to fake off-counts. Please also refer to the ``Dataset simulations``
-# section in the :doc:`/tutorials/analysis-1d/spectral_analysis_rad_max` tutorial,
+# acceptance to fake off-counts. Please also refer to :ref:`magic-dataset_sims` for
 # dealing with simulations based on observations of real off counts.
 #
 
@@ -248,7 +247,7 @@ plt.show()
 #
 # -  Change the observation time to something longer or shorter. Does the
 #    observation and spectrum results change as you expected?
-# -  Change the spectral model, e.g. add a cutoff at 5 TeV, or put a
+# -  Change the spectral model, e.g. add a cutoff at 5 TeV, or put a
 #    steep-spectrum source with spectral index of 4.0
 # -  Simulate spectra with the spectral model we just defined. How much
 #    observation duration do you need to get back the injected parameters?

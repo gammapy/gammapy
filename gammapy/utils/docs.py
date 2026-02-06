@@ -169,7 +169,6 @@ class SubstitutionCodeBlock(CodeBlock):
         """Replace placeholders with given variables."""
         app = self.state.document.settings.env.app
         new_content = []
-        self.content = self.content
         existing_content = self.content
         for item in existing_content:
             for pair in app.config.substitutions:
@@ -182,9 +181,7 @@ class SubstitutionCodeBlock(CodeBlock):
 
 
 class DynamicPRLinkTransform(SphinxPostTransform):
-    """
-    A Sphinx post-transform that converts [#XXXX] into clickable links to GitHub PR pages.
-    """
+    """A Sphinx post-transform that converts [#XXXX] into clickable links to GitHub PR pages."""
 
     default_priority = 800
     PR_PATTERN = re.compile(r"\[#(\d+)\]")  # Matches [#XXXX]

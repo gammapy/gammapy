@@ -58,7 +58,7 @@ from gammapy.utils.regions import extract_bright_star_regions
 
 ######################################################################
 # Data exploration
-# ------------------------
+# ----------------
 #
 
 
@@ -99,6 +99,7 @@ observations = data_store.get_observations(obs_id=obs_ids, required_irf="point-l
 #
 
 observations[0].events.peek()
+plt.show()
 
 ######################################################################
 # Peek at the IRFs included. You should verify that
@@ -108,11 +109,12 @@ observations[0].events.peek()
 # method.
 #
 
-observations[0].peek()
+observations[0].peek(figsize=(25, 5))
+plt.show()
 
 ######################################################################
 # Estimate counts and significance
-# -----------------------------------------
+# --------------------------------
 #
 
 
@@ -309,7 +311,7 @@ plt.show()
 
 ######################################################################
 # Make a spectrum
-# -------------------------
+# ---------------
 #
 
 ######################################################################
@@ -359,13 +361,13 @@ plt.show()
 # We can now calculate flux points to get a spectrum by fitting the
 # ``result_joint`` model’s amplitude in selected energy bands (defined by
 # ``energy_edges``). We set ``selection_optional = "all"`` in
-# `~gammapy.estimators.FluxPointsEstimator`, which will include a calcuation for the upper
+# `~gammapy.estimators.FluxPointsEstimator`, which will include a calculation for the upper
 # limits in bins with a significance :math:`< 2\sigma`.
 #
 # In the case of a non-detection or to obtain better upper limits,
 # consider expanding the scan range for the norm parameter in
 # `~gammapy.estimators.FluxPointsEstimator`. See
-# :doc:`../api/estimators` for more details on how to do this.
+# :doc:`/tutorials/details/estimators` for more details on how to do this.
 #
 
 fpe = FluxPointsEstimator(
@@ -388,8 +390,8 @@ plt.show()
 
 
 ######################################################################
-# Make a lightcurve and caluclate integral flux
-# ------------------------------------------------------
+# Make a lightcurve and calculate integral flux
+# ---------------------------------------------
 #
 
 

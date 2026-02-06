@@ -199,6 +199,17 @@ def test_spectrum_dataset_create():
         geom, energy_axis_true=e_true, name="test"
     )
 
+    with pytest.raises(
+        TypeError, match="`SpectrumDataset` is only supported for `RegionGeom`"
+    ):
+        geom2 = WcsGeom.create()
+        SpectrumDataset.create(geom2, energy_axis_true=e_true)
+
+    # test that model evaluation works:
+    model = SkyModel.create("pl", "gauss", name="test")
+    empty_spectrum_dataset.models = [model]
+    assert empty_spectrum_dataset.npred().data.sum() == 0
+
     assert empty_spectrum_dataset.name == "test"
     assert empty_spectrum_dataset.counts.data.sum() == 0
     assert empty_spectrum_dataset.data_shape[0] == 2
@@ -210,6 +221,7 @@ def test_spectrum_dataset_create():
     assert len(empty_spectrum_dataset.gti.table) == 0
     assert np.isnan(empty_spectrum_dataset.energy_range[0])
     assert_allclose(empty_spectrum_dataset.mask_safe, 0)
+    assert empty_spectrum_dataset.psf is None
 
 
 def test_spectrum_dataset_stack_diagonal_safe_mask(spectrum_dataset):
@@ -1260,8 +1272,10 @@ def test_priors():
         mu=spectral_model.index.value + 0.1, sigma=0.1
     )
 
+    prior_stat_sum = spectral_model.index.prior_stat_sum()
+
     stat_sum_with_priors = datasets.stat_sum()
 
     assert_allclose(stat_sum, 87.928542, atol=1e-1)
     # Here we check that the prior is applied only once
-    assert_allclose(stat_sum_with_priors, stat_sum + 1)
+    assert_allclose(stat_sum_with_priors, stat_sum + prior_stat_sum)

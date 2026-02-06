@@ -42,6 +42,12 @@ def observations_hess():
     return datastore.get_observations(obs_ids)
 
 
+@pytest.fixture()
+def observations_hess_far_apart():
+    data_store = DataStore.from_dir("$GAMMAPY_DATA/hess-dl3-dr1/")
+    return data_store.get_observations([23592, 33789])
+
+
 @pytest.fixture(scope="session")
 def observations_magic_rad_max():
     observations = [
@@ -58,6 +64,18 @@ def observations_magic_rad_max():
 @pytest.fixture()
 def map_dataset():
     skydir = SkyCoord(0, -1, unit="deg", frame="galactic")
+    energy_axis = MapAxis.from_edges(
+        [0.1, 1, 10], name="energy", unit="TeV", interp="log"
+    )
+    geom = WcsGeom.create(
+        skydir=skydir, binsz=0.5, width=(10, 5), frame="galactic", axes=[energy_axis]
+    )
+    return MapDataset.create(geom=geom)
+
+
+@pytest.fixture()
+def crab_map_dataset():
+    skydir = SkyCoord(83.633, 22.014, unit="deg", frame="icrs")
     energy_axis = MapAxis.from_edges(
         [0.1, 1, 10], name="energy", unit="TeV", interp="log"
     )
@@ -314,6 +332,41 @@ def test_datasets_maker_map_2_steps(observations_cta, map_dataset):
     exposure = datasets[0].exposure
     assert exposure.unit == "m2 s"
     assert_allclose(exposure.data.mean(), 1.350841e09, rtol=3e-3)
+
+
+@requires_data()
+def test_datasets_maker_map_far_apart(
+    observations_hess_far_apart, makers_map, crab_map_dataset
+):
+    makers = DatasetsMaker(
+        makers_map,
+        stack_datasets=True,
+        cutout_mode="partial",
+        cutout_width="5 deg",
+        n_jobs=1,
+    )
+    datasets = makers.run(crab_map_dataset, observations_hess_far_apart)
+
+    counts = datasets[0].counts
+
+    assert counts.unit == ""
+    assert_allclose(counts.data.sum(), 1493, rtol=1e-5)
+
+    exposure = datasets[0].exposure
+    assert exposure.unit == "m2 s"
+    assert_allclose(exposure.data.sum(), 22.969412e09, rtol=3e-3)
+
+    makers = DatasetsMaker(
+        makers_map,
+        stack_datasets=False,
+        cutout_mode="partial",
+        cutout_width="5 deg",
+        n_jobs=1,
+    )
+    datasets = makers.run(crab_map_dataset, observations_hess_far_apart)
+
+    assert len(datasets) != len(observations_hess_far_apart)
+    assert len(datasets) == 1
 
 
 @requires_data()

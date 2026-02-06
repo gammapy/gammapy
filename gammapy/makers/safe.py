@@ -206,7 +206,6 @@ class SafeMaskMaker(Maker):
         mask_safe : `~numpy.ndarray`
             Safe data range mask.
         """
-
         if self.fixed_offset is not None and observation is None:
             raise ValueError(
                 f"{observation} argument is mandatory with {self.fixed_offset}"
@@ -240,7 +239,7 @@ class SafeMaskMaker(Maker):
             model = TemplateSpectralModel.from_region_map(aeff)
 
             energy_true = model.energy
-            energy_min = energy_true[np.where(model.values > 0)[0][0]]
+            energy_min = energy_true[np.nonzero(model.values > 0)[0][0]]
             energy_max = energy_true[-1]
 
             aeff_thres = (self.aeff_percent / 100) * aeff.quantity.max()
@@ -268,7 +267,6 @@ class SafeMaskMaker(Maker):
         mask_safe : `~numpy.ndarray`
             Safe data range mask.
         """
-
         if self.fixed_offset is not None and observation is None:
             raise ValueError(
                 f"{observation} argument is mandatory with {self.fixed_offset}"
@@ -341,7 +339,7 @@ class SafeMaskMaker(Maker):
         bkg = dataset.background.data
         mask = np.isfinite(bkg)
 
-        if not dataset.stat_type == "wstat":
+        if dataset.stat_type != "wstat":
             mask &= bkg > 0.0
 
         return mask
@@ -361,7 +359,6 @@ class SafeMaskMaker(Maker):
         dataset : `Dataset`
             Dataset with defined safe range mask.
         """
-
         if self.irfs == "DL3":
             if observation is None:
                 raise ValueError("observation argument is mandatory with DL3 irfs")

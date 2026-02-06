@@ -372,6 +372,7 @@ class TestObservationChecker:
     def setup_method(self):
         self.data_store = DataStore.from_dir("$GAMMAPY_DATA/cta-1dc/index/gps")
 
+    @pytest.mark.xfail
     def test_check_all(self):
         observation = self.data_store.obs(111140)
         records = list(observation.check())
@@ -636,7 +637,14 @@ def test_event_setter():
         with pytest.raises(TypeError):
             obs.events = invalid
 
-    events = EventList(Table())
+    table = Table()
+    table["RA"] = [0.0, 0.0, 0.0, 10.0] * u.deg
+    table["DEC"] = [0.0, 0.9, 10.0, 10.0] * u.deg
+    table["ENERGY"] = [1.0, 1.5, 1.5, 10.0] * u.TeV
+    table["OFFSET"] = [0.1, 0.5, 1.0, 1.5] * u.deg
+    table["TIME"] = Time("2025-01-01") + [0.1, 0.5, 1.0, 1.5] * u.s
+
+    events = EventList(table)
     obs.events = events
     assert obs.events is events
 

@@ -114,4 +114,4 @@ shows how to run it on a few observations with a rectangular region.
 
     ../examples/tutorials/analysis-1d/spectral_analysis.py
     ../examples/tutorials/analysis-1d/extended_source_spectral_analysis.py
-    ../examples/tutorials/analysis-1d/spectral_analysis_rad_max.py
+    ../examples/tutorials/data/magic.py

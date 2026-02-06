@@ -109,7 +109,7 @@ class Map(abc.ABC):
         if isinstance(value, u.Quantity):
             raise TypeError("Map data must be a Numpy array. Set unit separately")
 
-        if not value.shape == self.geom.data_shape:
+        if value.shape != self.geom.data_shape:
             try:
                 value = np.broadcast_to(value, self.geom.data_shape, subok=True)
             except ValueError as exc:
@@ -449,7 +449,7 @@ class Map(abc.ABC):
         map : `Map`
             Map iteration.
 
-        See also
+        See Also
         --------
         iter_by_image : iterate by image returning a map.
         """
@@ -472,7 +472,7 @@ class Map(abc.ABC):
         map : `Map`
             Map iteration.
 
-        See also
+        See Also
         --------
         iter_by_image_data : iterate by image returning data and index.
         """
@@ -496,7 +496,7 @@ class Map(abc.ABC):
             Where ``data`` is a `numpy.ndarray` view of the image plane data,
             and ``idx`` is a tuple of int, the index of the image plane.
 
-        See also
+        See Also
         --------
         iter_by_image : iterate by image returning a map.
         """
@@ -514,7 +514,7 @@ class Map(abc.ABC):
         idx : tuple
             ``idx`` is a tuple of int, the index of the image plane.
 
-        See also
+        See Also
         --------
         iter_by_image : iterate by image returning a map.
         """
@@ -531,7 +531,7 @@ class Map(abc.ABC):
         ----------
         map_in : `Map`
             Map to add.
-        weights: `Map` or `~numpy.ndarray`
+        weights : `Map` or `~numpy.ndarray`
             The weight factors while adding. Default is None.
         """
         if not self.unit.is_equivalent(map_in.unit):
@@ -555,7 +555,7 @@ class Map(abc.ABC):
             Number of pixels padded to the edges of each axis.
         axis_name : str, optional
             Which axis to downsample. By default, spatial axes are padded. Default is None.
-        mode : {'constant', 'edge', 'interp'}
+        mode : {'constant', 'edge', 'interp'}, optional
             Padding mode.  'edge' pads with the closest edge value.
             'constant' pads with a constant value. 'interp' pads with
             an extrapolated value. Default is 'constant'.
@@ -812,7 +812,7 @@ class Map(abc.ABC):
 
         See Also
         --------
-        get_image_by_idx, get_image_by_pix.
+        get_image_by_idx, get_image_by_pix
 
         Examples
         --------
@@ -860,7 +860,7 @@ class Map(abc.ABC):
         return self.get_image_by_idx(idx)
 
     def get_image_by_pix(self, pix):
-        """Return spatial map at the given axis pixel coordinates
+        """Return spatial map at the given axis pixel coordinates.
 
         Parameters
         ----------
@@ -871,7 +871,7 @@ class Map(abc.ABC):
 
         See Also
         --------
-        get_image_by_coord, get_image_by_idx.
+        get_image_by_coord, get_image_by_idx
 
         Returns
         -------
@@ -892,7 +892,7 @@ class Map(abc.ABC):
 
         See Also
         --------
-        get_image_by_coord, get_image_by_pix.
+        get_image_by_coord, get_image_by_pix
 
         Returns
         -------
@@ -942,7 +942,7 @@ class Map(abc.ABC):
             Tuple should be ordered as (I_lon, I_lat, I_0, ..., I_n)
             for WCS maps and (I_hpx, I_0, ..., I_n) for HEALPix maps.
             Pixel indices can be either float or integer type.
-        fill_value : float
+        fill_value : float, optional
             Value which is returned if the position is outside the projection
             footprint. Default is `numpy.nan`.
 
@@ -993,7 +993,7 @@ class Map(abc.ABC):
             Coordinate arrays for each dimension of the map. Tuple
             should be ordered as (lon, lat, x_0, ..., x_n) where x_i
             are coordinates for non-spatial dimensions of the map.
-        method : {"linear", "nearest"}
+        method : {"linear", "nearest"}, optional
             Method to interpolate data values. Default is "linear".
         fill_value : float, optional
             The value to use for points outside the interpolation domain.
@@ -1017,7 +1017,7 @@ class Map(abc.ABC):
             map. Tuple should be ordered as (p_lon, p_lat, p_0, ...,
             p_n) where p_i are pixel coordinates for non-spatial
             dimensions of the map.
-        method : {"linear", "nearest"}
+        method : {"linear", "nearest"}, optional
             Method to interpolate data values. Default is "linear".
         fill_value : float, optional
             The value to use for points outside the interpolation domain.
@@ -1142,7 +1142,7 @@ class Map(abc.ABC):
         if not geom.is_image and geom.axes != geom3d.axes:
             for base_ax, target_ax in zip(geom3d.axes, geom.axes):
                 base_factor = base_ax.bin_width.min() / target_ax.bin_width.min()
-                if not base_factor >= precision_factor:
+                if base_factor < precision_factor:
                     factor = precision_factor / base_factor
                     factor = int(np.ceil(factor))
                     output_map = output_map.upsample(
@@ -1327,7 +1327,7 @@ class Map(abc.ABC):
 
         Returns
         -------
-        axes : `~numpy.ndarray` of `~matplotlib.pyplot.Axes`
+        axes : `~numpy.ndarray` of `~matplotlib.axes.Axes`
             Axes grid.
         """
         if len(self.geom.axes) > 1:
@@ -1386,7 +1386,7 @@ class Map(abc.ABC):
                 if axis.name == "energy" or axis.name == "energy_true":
                     info = (
                         f"{energy_unit_format(axis.edges[idx])} - "
-                        f"{energy_unit_format(axis.edges[idx+1])}"
+                        f"{energy_unit_format(axis.edges[idx + 1])}"
                     )
                 else:
                     info = f"{axis.edges_min[idx]:.1f} - {axis.edges_max[idx]:.1f} "
@@ -1456,7 +1456,7 @@ class Map(abc.ABC):
                     options = axis.as_plot_labels
             elif axis.name == "energy" or axis.name == "energy_true":
                 E = energy_unit_format(axis.edges)
-                options = [f"{E[i]} - {E[i+1]}" for i in range(len(E) - 1)]
+                options = [f"{E[i]} - {E[i + 1]}" for i in range(len(E) - 1)]
             else:
                 options = axis.as_plot_labels
             interact_kwargs[axis.name] = SelectionSlider(
@@ -1502,7 +1502,7 @@ class Map(abc.ABC):
         """
         if "geom" in kwargs:
             geom = kwargs["geom"]
-            if not geom.data_shape == self.geom.data_shape:
+            if geom.data_shape != self.geom.data_shape:
                 raise ValueError(
                     "Can't copy and change data size of the map. "
                     f" Current shape {self.geom.data_shape},"
@@ -1540,7 +1540,7 @@ class Map(abc.ABC):
 
         Parameters
         ----------
-         axes_names: list of str
+         axes_names : list of str, optional
             Names of the axis to reduce over. If None, all non-spatial axis will be summed over. Default is None.
         keepdims : bool, optional
             If this is set to true, the axes which are summed over are left in
@@ -1712,11 +1712,11 @@ class Map(abc.ABC):
         maps : list of `Map` objects
             List of maps.
         axis : `MapAxis`, optional
-            If a `MapAxis` is provided the maps are stacked along the last data
+            If a `MapAxis` is provided, the maps are stacked along the last data
             axis and the new axis is introduced. Default is None.
         axis_name : str, optional
-            If an axis name is as string the given the maps are stacked along
-            the given axis name.
+            If an axis name is given, the maps are stacked along
+            the given axis name. Default is None.
 
         Returns
         -------
@@ -1726,6 +1726,10 @@ class Map(abc.ABC):
         geom = maps[0].geom
 
         if axis_name is None and axis is None:
+            if geom.is_image:
+                raise ValueError(
+                    "Map.from_stack requires that maps have at least one non-spatial axis"
+                )
             axis_name = geom.axes.names[-1]
 
         if axis_name:
@@ -1740,7 +1744,7 @@ class Map(abc.ABC):
             else:
                 m_geom = m.geom
 
-            if not m_geom == geom:
+            if m_geom != geom:
                 raise ValueError(f"Image geometries not aligned: {m.geom} and {geom}")
 
             data.append(m.quantity.to_value(maps[0].unit))
@@ -1805,7 +1809,7 @@ class Map(abc.ABC):
 
         Parameters
         ----------
-        region: `~regions.Region`, optional
+        region : `~regions.Region`, optional
              Region to extract the spectrum from. Pixel or sky regions are accepted. Default is None.
         func : `numpy.func`, optional
             Function to reduce the data. Default is `~numpy.nansum`.
@@ -1828,7 +1832,7 @@ class Map(abc.ABC):
 
         Parameters
         ----------
-        unit : str or `~astropy.unit.Unit`
+        unit : str or `~astropy.units.Unit`
             New unit.
 
         Returns
@@ -1998,7 +2002,6 @@ class Map(abc.ABC):
         coords : `~gammapy.maps.MapCoord` object.
             Sequence of coordinates and energies of the sampled events.
         """
-
         random_state = get_random_state(random_state)
         sampler = InverseCDFSampler(pdf=self.data, random_state=random_state)
 
@@ -2024,7 +2027,7 @@ class Map(abc.ABC):
             The map with axes re-ordered.
         """
         old_axes = self.geom.axes
-        if not set(old_axes.names) == set(axes_names):
+        if set(old_axes.names) != set(axes_names):
             raise ValueError(f"{old_axes.names} is not compatible with {axes_names}")
 
         new_axes = [old_axes[_] for _ in axes_names]

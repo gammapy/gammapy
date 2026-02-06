@@ -403,7 +403,6 @@ class DataStore:
         observations : `~gammapy.data.Observations`
             Container holding a list of `~gammapy.data.Observation`.
         """
-
         if selection is None:
             obs_id_selection = self.obs_ids
         else:
@@ -506,7 +505,6 @@ class DataStore:
         >>> datastore = DataStore.from_dir(path, "hdu-index.fits.gz", "obs-index.fits.gz")
         >>> observation_groups = datastore.get_observation_groups("EVENT_TYPE")
         """
-
         if self.obs_table is None:
             raise ValueError(
                 "obs_table attribute must not be None to select groups of observations"
@@ -650,7 +648,7 @@ class DataStoreChecker(Checker):
         # obs and HDU index should have the same OBS_ID
         obs_table_obs_id = set(self.data_store.obs_table["OBS_ID"])
         hdu_table_obs_id = set(self.data_store.hdu_table["OBS_ID"])
-        if not obs_table_obs_id == hdu_table_obs_id:
+        if obs_table_obs_id != hdu_table_obs_id:
             yield {
                 "level": "error",
                 "msg": "Inconsistent OBS_ID in obs and HDU index tables",

@@ -220,7 +220,7 @@ def fpe_ecpl():
 
 
 def test_str(fpe_pwl):
-    datasets, fpe = fpe_pwl
+    _, fpe = fpe_pwl
     assert "FluxPointsEstimator" in str(fpe)
 
 
@@ -691,7 +691,7 @@ def test_flux_points_parallel_ray(fpe_pwl):
 def test_flux_points_parallel_ray_actor_spectrum(fpe_pwl):
     from gammapy.datasets.actors import DatasetsActor
 
-    datasets, fpe = fpe_pwl
+    datasets, _ = fpe_pwl
     with pytest.raises(TypeError):
         DatasetsActor(datasets)
 

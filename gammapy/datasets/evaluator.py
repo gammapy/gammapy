@@ -290,8 +290,8 @@ class MapEvaluator:
         """Compute spatial flux.
 
         Returns
-        ----------
-        value: `~astropy.units.Quantity`
+        -------
+        value : `~astropy.units.Quantity`
             PSF-corrected, integrated flux over a given region.
         """
         if self.geom.is_region:
@@ -464,7 +464,6 @@ class MapEvaluator:
     @property
     def irf_position_changed(self):
         """Position for IRF changed."""
-
         # Here we do not use SkyCoord.separation to improve performance
         # (it avoids equivalence comparisons for frame and units)
         lon_cached, lat_cached = self._cached_position
@@ -498,7 +497,6 @@ class MapEvaluator:
     @lazyproperty
     def methods_sequence(self):
         """Order to apply the IRFs."""
-
         if self.apply_psf_after_edisp:
             methods = [
                 self.compute_flux,
@@ -520,6 +518,10 @@ class MapEvaluator:
 
     def peek(self, figsize=(12, 15)):
         """Quick-look summary plots.
+
+        This method creates a figure displaying the elements of your `Dataset`.
+        The subplots depend on whether you have a `MapDataset` or `SpectrumDataset`
+        and which IRFs are available.
 
         Parameters
         ----------

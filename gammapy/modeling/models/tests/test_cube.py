@@ -31,6 +31,7 @@ from gammapy.modeling.models import (
     SpatialModel,
     TemplateNPredModel,
     TemplateSpatialModel,
+    TemplateSpectralModel,
     create_fermi_isotropic_diffuse_model,
 )
 from gammapy.utils.scripts import make_path
@@ -162,6 +163,27 @@ def test_sky_model_init():
 
     with pytest.raises(TypeError):
         SkyModel(spectral_model=PowerLawSpectralModel(), spatial_model=1234)
+
+    # test unit checks
+    template_dimensionless = TemplateSpectralModel(
+        energy=[0.5, 1, 2] * u.TeV, values=[1, 2, 3] * u.dimensionless_unscaled
+    )
+
+    template_noexp = TemplateSpectralModel(
+        energy=[0.5, 1, 2] * u.TeV, values=[1, 2, 3] * (1 / u.TeV)
+    )
+
+    model_noexp = SkyModel(
+        spectral_model=template_noexp,
+        apply_irf={"exposure": False},
+    )
+    assert model_noexp(None, None, 1 * u.TeV).unit == (1 / u.TeV)
+
+    with pytest.raises(ValueError):
+        SkyModel(spectral_model=template_dimensionless)
+
+    with pytest.raises(ValueError):
+        SkyModel(spectral_model=template_dimensionless, apply_irf={"exposure": False})
 
     # test init of energy dependent temporal models
     filename = make_path(
@@ -359,7 +381,6 @@ def test_models_mutation(sky_model, sky_models, sky_models_2):
     with pytest.raises(ValueError, match="Model names must be unique"):
         mods[1] = mods[0]
 
-    mods[1] = mods[1]
     assert mods.names == ["source-1", "source-2", "source-3", "source-4"]
     mods[1] = mods[1].copy(name="copy")
     assert mods.names == ["source-1", "copy", "source-3", "source-4"]

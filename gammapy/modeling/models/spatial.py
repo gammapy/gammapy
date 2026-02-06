@@ -29,7 +29,6 @@ from gammapy.utils.regions import region_circle_to_ellipse, region_to_frame
 from gammapy.utils.scripts import make_path
 from .core import ModelBase, _build_parameters_from_dict
 from gammapy.utils.units import wrap_at
-from gammapy.utils.deprecation import deprecated_renamed_argument
 
 __all__ = [
     "ConstantFluxSpatialModel",
@@ -397,13 +396,19 @@ class SpatialModel(ModelBase):
 
         return ax
 
-    def _to_region_error(self):
+    def _to_region_error(self, size_factor=1.0):
+        """The function of each spatial model will be called instead"""
         pass
 
     def plot_error(
-        self, ax=None, which="position", kwargs_position=None, kwargs_extension=None
+        self,
+        ax=None,
+        which="position",
+        size_factor=1.0,
+        kwargs_position=None,
+        kwargs_extension=None,
     ):
-        """Plot the errors of the spatial model.
+        r"""Plot the errors of the spatial model.
 
         Parameters
         ----------
@@ -417,11 +422,14 @@ class SpatialModel(ModelBase):
                 * "position": plot the position error of the spatial model
                 * "extension": plot the extension error of the spatial model
 
+        size_factor : float, optional
+            Extension around which the 1:math:`\sigma` error band is plotted.
+            Default is 1.0.
         kwargs_position : dict, optional
             Keyword arguments passed to `~SpatialModel.plot_position_error`.
             Default is None.
         kwargs_extension : dict, optional
-            Keyword arguments passed to `~SpatialModel.plot_extension_error`.
+            Keyword arguments passed to `~regions.PixelRegion.as_artist`.
             Default is None.
 
         Returns
@@ -441,8 +449,7 @@ class SpatialModel(ModelBase):
 
         if "all" in which:
             self.plot_position_error(ax, **kwargs_position)
-
-            region = self._to_region_error()
+            region = self._to_region_error(size_factor=size_factor)
             if region is not None:
                 artist = region.to_pixel(ax.wcs).as_artist(**kwargs_extension)
                 ax.add_artist(artist)
@@ -451,7 +458,7 @@ class SpatialModel(ModelBase):
             self.plot_position_error(ax, **kwargs_position)
 
         if "extension" in which:
-            region = self._to_region_error()
+            region = self._to_region_error(size_factor=size_factor)
             if region is not None:
                 artist = region.to_pixel(ax.wcs).as_artist(**kwargs_extension)
                 ax.add_artist(artist)
@@ -659,23 +666,23 @@ class GaussianSpatialModel(SpatialModel):
         exponent = -0.5 * ((1 - np.cos(sep)) / a)
         return u.Quantity(norm * np.exp(exponent).value, "sr-1", copy=COPY_IF_NEEDED)
 
-    @deprecated_renamed_argument("x_sigma", "size_factor", "2.0")
     def to_region(self, size_factor=1.0, **kwargs):
         r"""Model outline at a given number of :math:`\sigma`.
 
         Parameters
         ----------
-        size_factor : float
-            Number of :math:`\sigma
+        size_factor : float, optional
+            Number of :math:`\sigma`.
             Default is :math:`1.0\sigma` which corresponds to about 39%
             containment for a 2D symmetric Gaussian.
+        kwargs : dict
+            Keyword arguments passed to `~regions.EllipseSkyRegion`.
 
         Returns
         -------
         region : `~regions.EllipseSkyRegion`
             Model outline.
         """
-
         minor_axis = Angle(self.sigma.quantity * np.sqrt(1 - self.e.quantity**2))
         return EllipseSkyRegion(
             center=self.position,
@@ -690,15 +697,14 @@ class GaussianSpatialModel(SpatialModel):
         """Evaluation region consistent with evaluation radius."""
         return self.to_region(size_factor=5)
 
-    @deprecated_renamed_argument("x_sigma", "size_factor", "2.0")
-    def _to_region_error(self, size_factor=1.5):
+    def _to_region_error(self, size_factor=1.0):
         r"""Plot model error at a given number of :math:`\sigma`.
 
         Parameters
         ----------
-        size_factor : float
-            Number of :math:`\sigma`
-            Default is :math:`1.5\sigma` which corresponds to about 68%
+        size_factor : float, optional
+            Number of :math:`\sigma`.
+            Default is 1.0 which corresponds to about 39%
             containment for a 2D symmetric Gaussian.
 
         Returns
@@ -706,7 +712,6 @@ class GaussianSpatialModel(SpatialModel):
         region : `~regions.EllipseSkyRegion`
             Model error region.
         """
-
         sigma_hi = self.sigma.quantity + (self.sigma.error * self.sigma.unit)
         sigma_lo = self.sigma.quantity - (self.sigma.error * self.sigma.unit)
 
@@ -793,14 +798,15 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
         """
         return self.r_0.quantity * (1 + 8 * self.eta.value)
 
-    @deprecated_renamed_argument("x_r_0", "size_factor", "2.0")
-    def to_region(self, size_factor=1, **kwargs):
+    def to_region(self, size_factor=1.0, **kwargs):
         r"""Model outline at a given number of :math:`r_0`.
 
         Parameters
         ----------
         size_factor : float, optional
-            Number of :math:`r_0`. Default is 1.0
+            Number of :math:`r_0`. Default is 1.0.
+        kwargs : dict
+            Keyword arguments passed to `~regions.EllipseSkyRegion`.
 
         Returns
         -------
@@ -822,13 +828,13 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
         scale = self.evaluation_radius / self.r_0.quantity
         return self.to_region(size_factor=scale)
 
-    def _to_region_error(self, size_factor=1):
+    def _to_region_error(self, size_factor=1.0):
         r"""Model error at a given number of :math:`r_0`.
 
         Parameters
         ----------
         size_factor : float, optional
-            Number of :math:`r_0`. Default is 1.
+            Number of :math:`r_0`. Default is 1.0.
 
         Returns
         -------
@@ -1002,7 +1008,7 @@ class DiskSpatialModel(SpatialModel):
 
         return cls.from_position(region.center, **kwargs)
 
-    def _to_region_error(self):
+    def _to_region_error(self, size_factor=1.0):
         """Model error.
 
         Returns
@@ -1022,10 +1028,10 @@ class DiskSpatialModel(SpatialModel):
 
         return EllipseAnnulusSkyRegion(
             center=self.position,
-            inner_height=2 * r_0_lo,
-            outer_height=2 * r_0_hi,
-            inner_width=2 * minor_axis_lo,
-            outer_width=2 * minor_axis_hi,
+            inner_height=2 * size_factor * r_0_lo,
+            outer_height=2 * size_factor * r_0_hi,
+            inner_width=2 * size_factor * minor_axis_lo,
+            outer_width=2 * size_factor * minor_axis_hi,
             angle=self.phi.quantity,
         )
 
@@ -1292,6 +1298,7 @@ class TemplateSpatialModel(SpatialModel):
     interp_kwargs : dict
         Interpolation keyword arguments passed to `gammapy.maps.Map.interp_by_coord`.
         Default arguments are {'method': 'linear', 'fill_value': 0, "values_scale": "log"}.
+        For a `~gammapy.maps.HpxNDMap`, default arguments are {'method': 'linear'}.
     filename : str
         Name of the map file.
     copy_data : bool
@@ -1367,7 +1374,9 @@ class TemplateSpatialModel(SpatialModel):
         interp_kwargs = {} if interp_kwargs is None else interp_kwargs
         interp_kwargs.setdefault("method", "linear")
         interp_kwargs.setdefault("fill_value", 0)
-        interp_kwargs.setdefault("values_scale", "log")
+
+        if isinstance(self.map, WcsNDMap):
+            interp_kwargs.setdefault("values_scale", "log")
 
         self._interp_kwargs = interp_kwargs
         kwargs["frame"] = self.map.geom.frame
@@ -1399,7 +1408,7 @@ class TemplateSpatialModel(SpatialModel):
         if self.is_energy_dependent:
             energy_min = self.map.geom.axes["energy_true"].center[0]
             energy_max = self.map.geom.axes["energy_true"].center[-1]
-            prnt1 = f"Energy min: {energy_min} \n" f"Energy max: {energy_max} \n"
+            prnt1 = f"Energy min: {energy_min} \nEnergy max: {energy_max} \n"
             prnt = prnt + prnt1
 
         return prnt
@@ -1473,7 +1482,6 @@ class TemplateSpatialModel(SpatialModel):
         Note that, if the map data assume negative values, these are
         clipped to zero.
         """
-
         offset_lon = 0.0 * u.deg if lon_0 is None else lon_0 - self.map_center.data.lon
         offset_lat = 0.0 * u.deg if lat_0 is None else lat_0 - self.map_center.data.lat
 
@@ -1551,11 +1559,43 @@ class TemplateSpatialModel(SpatialModel):
         )
 
     def plot(self, ax=None, geom=None, **kwargs):
+        """Plot spatial model.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes`, optional
+            Matplotlib axes. Default is None.
+        geom : `~gammapy.maps.WcsGeom`, optional
+            Geometry to use for plotting. Default is None.
+        **kwargs : dict
+            Keyword arguments passed to `~gammapy.maps.WcsMap.plot()`.
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`, optional
+            Matplotlib axes.
+        """
         if geom is None:
             geom = self.map.geom
         super().plot(ax=ax, geom=geom, **kwargs)
 
     def plot_interactive(self, ax=None, geom=None, **kwargs):
+        """Plot spatial model.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes`, optional
+            Matplotlib axes. Default is None.
+        geom : `~gammapy.maps.WcsGeom`, optional
+            Geom to use for plotting. Default is None.
+        **kwargs : dict
+            Keyword arguments passed to `~gammapy.maps.WcsMap.plot()`.
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`, optional
+            Matplotlib axes.
+        """
         if geom is None:
             geom = self.map.geom
         super().plot_interactive(ax=ax, geom=geom, **kwargs)
@@ -1704,7 +1744,7 @@ class PiecewiseNormSpatialModel(SpatialModel):
     ----------
     coord : `gammapy.maps.MapCoord`
         Flat coordinates list at which the model values are given (nodes).
-    norms : `~numpy.ndarray` or list of `Parameter`
+    norms : `~numpy.ndarray` or list of `gammapy.modeling.Parameter`
         Array with the initial norms of the model at energies ``energy``.
         Normalisation parameters are created for each value.
         Default is one at each node.

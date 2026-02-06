@@ -38,7 +38,7 @@ a map without reference to the underlying data representation (e.g. whether a
 map uses WCS or HEALPix pixelisation). For applications which do depend on the
 specific representation one can also work directly with the classes derived from
 `~gammapy.maps.Map`. In the following we review some of the basic methods for working with
-map objects, more details are given in the :doc:`/tutorials/api/maps`
+map objects, more details are given in the :doc:`/tutorials/details/maps`
 tutorial.
 
 
@@ -305,6 +305,6 @@ Using gammapy.maps
 
 .. minigallery::
 
-   ../examples/tutorials/api/maps.py
-   ../examples/tutorials/api/mask_maps.py
+   ../examples/tutorials/details/maps.py
+   ../examples/tutorials/details/mask_maps.py
 

@@ -133,8 +133,6 @@ class PSFKernel:
         The map geometry parameters (pixel size, energy bins) are taken from ``geom``.
         The Gaussian width ``sigma`` is a scalar.
 
-        TODO : support array input if it should vary along the energy axis.
-
         Parameters
         ----------
         geom : `~gammapy.maps.WcsGeom`
@@ -151,6 +149,7 @@ class PSFKernel:
         kernel : `~gammapy.irf.PSFKernel`
             The kernel Map with reduced geometry according to the max_radius.
         """
+        # TODO : support array input if it should vary along the energy axis.
         from gammapy.modeling.models import GaussianSpatialModel
 
         gauss = GaussianSpatialModel(sigma=sigma)
@@ -263,7 +262,7 @@ class PSFKernel:
         figsize : tuple, optional
             Size of the figure. Default is (15, 5).
         """
-        fig, axes = plt.subplots(nrows=1, ncols=2, figsize=figsize)
+        _, axes = plt.subplots(nrows=1, ncols=2, figsize=figsize)
 
         axes[0].set_title("Energy-integrated PSF kernel")
         self.plot_kernel(ax=axes[0], add_cbar=True)

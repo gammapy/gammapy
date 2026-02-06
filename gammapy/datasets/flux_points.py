@@ -258,6 +258,7 @@ class FluxPointsDataset(Dataset):
             Filename to read from.
         name : str, optional
             Name of the new dataset. Default is None.
+
         Returns
         -------
         dataset : `FluxPointsDataset`
@@ -285,12 +286,13 @@ class FluxPointsDataset(Dataset):
 
     @classmethod
     def from_dict(cls, data, **kwargs):
-        """Create flux point dataset from dict.
+        """Create flux point dataset from dictionary.
 
         Parameters
         ----------
         data : dict
             Dictionary containing data to create dataset from.
+
         Returns
         -------
         dataset : `FluxPointsDataset`
@@ -459,7 +461,6 @@ class FluxPointsDataset(Dataset):
         >>> kwargs_residuals = {"color": "blue", "markersize":4, "marker":'s', }
         >>> dataset.plot_fit(kwargs_residuals=kwargs_residuals, kwargs_spectrum=kwargs_spectrum) # doctest: +SKIP
         """
-
         if self.data.geom.ndim > 3:
             raise ValueError("Plot fit works with only one energy axis")
         fig = plt.figure(figsize=(9, 7))

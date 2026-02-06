@@ -14,7 +14,7 @@ from regions import (
     PointSkyRegion,
     RectangleSkyRegion,
 )
-from gammapy.maps import Map, MapAxis, MapCoord, RegionGeom, WcsGeom, WcsNDMap
+from gammapy.maps import Map, MapAxis, MapCoord, RegionGeom, WcsGeom, WcsNDMap, HpxGeom
 from gammapy.modeling.models import (
     SPATIAL_MODEL_REGISTRY,
     ConstantSpatialModel,
@@ -432,6 +432,17 @@ def test_sky_diffuse_map_3d():
         model.plot_interactive()
 
 
+@requires_dependency("healpy")
+def test_hpx_template():
+    geom = HpxGeom.create(nside=16)
+    template_map = Map.from_geom(geom=geom, data=1, unit="")
+
+    model = TemplateSpatialModel(template_map)
+    val = model.evaluate(lon=0, lat=0)
+
+    assert_allclose(val.to_value("sr-1"), 1.0 / (4 * np.pi))
+
+
 def test_sky_diffuse_map_normalize():
     # define model map with a constant value of 1
     model_map = Map.create(map_type="wcs", width=(10, 5), binsz=0.5, unit="sr-1")
@@ -596,6 +607,20 @@ def test_spatial_model_plot_error(model_class, extension_param):
         ax = empty_map.plot()
         model.plot_error(ax=ax, which="all")
         model.plot_error(ax=ax, which="position")
+        model.plot_error(ax=ax, which="extension")
+
+
+def test_pointspatialmodel_plot_error():
+    model = PointSpatialModel(lon_0="0 deg", lat_0="0 deg", frame="galactic")
+    model.lat_0.error = 0.04
+    model.lon_0.error = 0.02
+
+    empty_map = Map.create(
+        skydir=model.position, frame=model.frame, width=1, binsz=0.02
+    )
+    with mpl_plot_check():
+        ax = empty_map.plot()
+        model.plot_error(ax=ax, which="all")
         model.plot_error(ax=ax, which="extension")
 
 

@@ -36,13 +36,6 @@ from gammapy.makers import (
 from gammapy.makers.utils import make_effective_livetime_map, make_observation_time_map
 from gammapy.maps import MapAxis, RegionGeom, WcsGeom
 
-######################################################################
-# Check setup
-# -----------
-from gammapy.utils.check import check_tutorials_setup
-
-check_tutorials_setup()
-
 
 ######################################################################
 # Dataset
@@ -118,6 +111,7 @@ plt.show()
 # factor in energy used to compute the background (default is None).
 #
 # .. _safe-data-range:
+#
 # Safe data range handling
 # ------------------------
 #
@@ -342,8 +336,6 @@ for observation in observations:
     dataset_on_off = safe_mask_masker.run(dataset_on_off, observation)
     datasets.append(dataset_on_off)
 print(datasets)
-
-plt.show()
 
 ######################################################################
 # Observation duration and effective livetime

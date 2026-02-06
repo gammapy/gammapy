@@ -36,7 +36,22 @@ from ..geom import Geom, pix_tuple_to_idx
 from ..utils import _check_width
 from ..wcs import WcsGeom
 
+log = logging.getLogger(__name__)
+
+
 __all__ = ["RegionGeom"]
+
+
+def _parse_regions(regions):
+    if isinstance(regions, str):
+        regions = Regions.parse(data=regions, format="ds9")
+    elif isinstance(regions, SkyRegion):
+        regions = [regions]
+    elif isinstance(regions, SkyCoord):
+        regions = [PointSkyRegion(center=regions)]
+    elif isinstance(regions, list) and len(regions) == 0:
+        regions = None
+    return regions
 
 
 class RegionGeom(Geom):
@@ -639,9 +654,12 @@ class RegionGeom(Geom):
             return TypeError(f"Cannot compare {type(self)} and {type(other)}")
 
         if self.data_shape != other.data_shape:
+            log.debug("RegionGeom data shape is not equal")
             return False
 
         axes_eq = self.axes.is_allclose(other.axes, rtol=rtol_axes, atol=atol_axes)
+        if not axes_eq:
+            log.debug("RegionGeom axes are not equal")
         # TODO: compare regions based on masks...
         regions_eq = True
         return axes_eq and regions_eq
@@ -717,6 +735,13 @@ class RegionGeom(Geom):
 
         The regions are combined with union to a compound region.
 
+        Note that this function is intended for combining close by
+        regions into one `~gammapy.maps.RegionGeom`. Since it uses an
+        underlying tangential projection, undefined behaviour may occur
+        if the list of input regions contains regions far from each other.
+        If required, one can explicitly pass an appropriate WCS, eg with a cartesian
+        projection, through ``kwargs``.
+
         Parameters
         ----------
         regions : list of `~regions.SkyRegion` or str
@@ -728,15 +753,29 @@ class RegionGeom(Geom):
         -------
         geom : `RegionGeom`
             Region map geometry.
+
+        Examples
+        --------
+        >>> from gammapy.maps import RegionGeom, WcsGeom
+        >>> from regions import CircleSkyRegion
+        >>> from astropy.coordinates import SkyCoord
+        >>> import astropy.units as u
+
+        >>> list_region = [CircleSkyRegion(SkyCoord(326*u.deg, -13*u.deg), radius=0.4*u.deg),
+        ... CircleSkyRegion(SkyCoord(325*u.deg, -14*u.deg), radius=0.3*u.deg)]
+        >>> wcs = WcsGeom.create().wcs
+        >>> region = RegionGeom.from_regions(list_region, wcs=wcs)
+        >>> print(region)
+        RegionGeom
+        region     : CompoundSkyRegion
+        axes       : ['lon', 'lat']
+        shape      : (1, 1)
+        ndim       : 2
+        frame      : icrs
+        center     : 325.5 deg, -13.5 deg
+
         """
-        if isinstance(regions, str):
-            regions = Regions.parse(data=regions, format="ds9")
-        elif isinstance(regions, SkyRegion):
-            regions = [regions]
-        elif isinstance(regions, SkyCoord):
-            regions = [PointSkyRegion(center=regions)]
-        elif isinstance(regions, list) and len(regions) == 0:
-            regions = None
+        regions = _parse_regions(regions)
 
         if regions:
             regions = regions_to_compound_region(regions)
@@ -816,7 +855,7 @@ class RegionGeom(Geom):
 
         Parameters
         ----------
-        ax : `~astropy.visualization.WCSAxes`, optional
+        ax : `~astropy.visualization.wcsaxes.WCSAxes`, optional
             Axes to plot on. If no axes are given,
             the region is shown using the minimal
             equivalent WCS geometry.
@@ -824,7 +863,7 @@ class RegionGeom(Geom):
         kwargs_point : dict, optional
             Keyword arguments passed to `~matplotlib.lines.Line2D` for plotting
             of point sources. Default is None.
-        path_effect : `~matplotlib.patheffects.PathEffect`, optional
+        path_effect : `~matplotlib.patheffects`, optional
             Path effect applied to artists and lines.
             Default is None.
         **kwargs : dict
@@ -832,7 +871,7 @@ class RegionGeom(Geom):
 
         Returns
         -------
-        ax : `~astropy.visualization.WCSAxes`
+        ax : `~astropy.visualization.wcsaxes.WCSAxes`
             Axes to plot on.
         """
         if self.region:

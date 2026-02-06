@@ -264,13 +264,22 @@ We adhere to the PEP8 coding style. To enforce this, setup the
 
     pre-commit install
 
+``pre-commit`` will run before every commit and ensure code linting and formatting. But one can run it manually using:
+
+.. code-block:: bash
+
+    # on all files
+    pre-commit run --all-files
+    # or on specific files:
+    pre-commit run --files <file1> <file2> ...
+
 
 Running tests & building Documentation
 ======================================
 To run tests and build documentation we use tool `tox <https://tox.wiki/en/latest/>`__.
 It is a virtual environment management tool which allows you to test Gammapy locally
 in mutltiple test environments with different versions of Python and our dependencies.
-It is also used to build the documentation and check the codestyle in a specific environment.
+It is also used to build the documentation.
 The same setup based on `tox` is used in our CI build.
 
 Once you have created and activated the `gammapy-dev` environment, made some modification
@@ -315,15 +324,6 @@ To build the documentation locally you can use:
     tox -e build_docs
 
 And use `make docs-show` to open a browser and preview the result.
-
-The codestyle can be checked using the command:
-
-.. code-block:: bash
-
-    tox -e codestyle
-
-Which will run the tool `flake8` to check for code style issues.
-
 
 ..
     * run tests

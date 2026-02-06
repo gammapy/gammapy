@@ -6,13 +6,18 @@
 Developer How To
 ****************
 
+.. _general-conventions:
+
 General conventions
 -------------------
 
-Python version support
-++++++++++++++++++++++
+Python and NumPy version support
+++++++++++++++++++++++++++++++++
 
-In Gammapy we currently support Python 3.9 or later.
+Gammapy follows the `NEP 29 guidelines <https://numpy.org/neps/nep-0029-deprecation_policy.html>`__
+for version support, which implements a time-based deprecation policy for
+Python and NumPy versions. This ensures compatibility with actively supported
+versions while maintaining stability.
 
 Coordinate and axis names
 +++++++++++++++++++++++++
@@ -513,13 +518,15 @@ repository. It is recommended that developers have `$GAMMAPY_DATA` environment v
 where they have fetched the `gammapy-data <https://github.com/gammapy/gammapy-data>`__ GitHub repository,
 so they can push and pull eventual modification of its content.
 
+.. _skip-actions-pr:
+
 Making a pull request which skips GitHub Actions
 ++++++++++++++++++++++++++++++++++++++++++++++++
 
 For minor PRs (eg: correcting typos in doc-strings) we can skip GitHub Actions.
 Adding ``[ci skip]`` in a specific commit message will skip CI for that specific commit which can be useful for draft or incomplete PR.
 For details, `see here. <https://github.blog/changelog/2021-02-08-github-actions-skip-pull-request-and-push-workflows-with-skip-ci/>`__
-See also section: Skip GitHub Actions on local fork, below.
+See also the section on skipping GitHub Actions on a local fork, :ref:`here <skip-actions-local-fork>`.
 
 Fix non-Unix line endings
 +++++++++++++++++++++++++
@@ -554,6 +561,7 @@ one of which involves the `meeseeksmachine <https://github.com/meeseeksmachine>`
 
 
 
+.. _release-notes:
 
 Release notes
 +++++++++++++
@@ -566,12 +574,37 @@ As explained in the
 of the Astropy docs, there are (at least) two approaches for adding to the releases,
 each with pros and cons.
 
-We've had some pain due to merge conflicts in the releases notes and having to wait
-until the contributor rebases (and having to explain git rebase to new contributors).
+We utilise `towncrier <https://towncrier.readthedocs.io/en/stable/>`__ for our release notes.
 
-So our recommendation is that releases entries are not added in pull requests,
-but that the core developer adds a releases notes entry after right after having
-merged a pull request (you can add ``[skip ci]`` on this commit).
+- For some PRs, a related 'fragment' file should be created in the ``docs/release-notes`` folder.
+  Note: not all PRs need to be included in the changelog. For example, fixing a typo in the documentation
+  does not need a changelog fragment entry. If you are unsure if you need a fragment, the lead developers can
+  help you decide.
+- The naming convention of the file should be ``<PULL REQUEST NUMBER>.<TYPE>.rst``, where the available
+  types are ``infrastructure``, ``docs``, ``feature`` or ``bugfix``.
+- The file should contain a suitable message for the PR, for example "A new function `select_nested_models`
+  has been introduced to perform nested model fits and compute the resulting test statistic (TS) between
+  two nested hypotheses.".
+
+
+
+
+How to review a pull request
+----------------------------
+
+The checklist below outlines key steps to follow when reviewing a PR.
+
+1. Ensure that a milestone and labels are correctly set for the PR.
+2. Check that the PR links to associated issue(s), if any.
+3. Check that the code does what it is supposed to do.
+4. Check that the CI workflow passes without failure.
+5. Check that the general conventions are fulfilled, :ref:`see here <general-conventions>`.
+6. Check that the code can be understood by reading it.
+7. Confirm all docstrings are correct and formatted correctly, :ref:`see here <docstring-formatting>`.
+8. Check that all commits are signed.
+9. Check that a fragment was added, if necessary, for :ref:`towncrier <release-notes>`.
+10. Where relevant, add examples for the users, :ref:`see here <docstring-code-py-file>`.
+11. When needed, check that the documentation build looks correct by checking the artifacts of the CI, :ref:`see here <access-doc-on-pr>`.
 
 How to handle API breaking changes?
 -----------------------------------
@@ -621,7 +654,7 @@ If you change the name of an argument, you can use the ``deprecated_renamed_argu
 It will replace the old argument with the new one in a call to the function and will raise the
 ``GammapyDeprecationWarning``. You can change several arguments at once.
 
-.. testcode::
+.. code-block:: python
 
     from gammapy.utils.deprecation import deprecated_renamed_argument
 
@@ -633,7 +666,7 @@ It will replace the old argument with the new one in a call to the function and 
 
 If you rename a `kwarg` you simply need to set the `arg_in_kwargs` argument to `True`:
 
-.. testcode::
+.. code-block:: python
 
     from gammapy.utils.deprecation import deprecated_renamed_argument
 
@@ -649,7 +682,7 @@ Removing an attribute
 You can also remove an attribute from a class using the ``deprecated_attribute`` decorator.
 If you have a alternative attribute to use instead, pass its name in the `alternative` argument.
 
-.. testcode::
+.. code-block:: python
 
     from gammapy.utils.deprecation import deprecated_attribute
 
@@ -835,7 +868,7 @@ nice printed version of the string instead of ``\n``::
     Hi, my name is Anna, and I'm 8 years old.
     I live in Heidelberg
 
-To make ``info`` print by default, and be re-usable from ``__str__`` and make it
+To make ``info`` print by default, and be reusable from ``__str__`` and make it
 possible to get a string (without having to monkey-patch ``sys.stdout``), would
 require adding this ``show`` option and if-else at the end of every ``info``
 method::
@@ -928,7 +961,7 @@ Nearly all base classes in Gammapy implement this default
 `_repr_html_`. If a new class derives from an existing Gammapy class,
 a default implementation is not needed, since it will rely on its
 (grand)parent. As a result, for specific HTML output, only the
-`to_html` method needs to be implented for the relevant class.
+`to_html` method needs to be implemented for the relevant class.
 
 Convert a jupyter notebook to python script in the sphinx-gallery format
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -944,9 +977,11 @@ script can be used as follows::
 If the path of the output file is not provided, the script will be written in the same folder as the notebook and with
 the same name.
 
+.. _skip-actions-local-fork:
+
 Skip GitHub Actions on local fork
 +++++++++++++++++++++++++++++++++
 If not explicitly needed, it can be convenient to skip the GitHub Actions for pushes onto local forks and only perform them on the upstream, once a pull request is opened.
 This way computation power is saved and automatic commits by the Actions are avoided in the forks commit-history. An easy way to achieve this, is to deactivate the
 GitHub Actions completely for the fork, following the GitHub documentation, `see here. <https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository#managing-github-actions-permissions-for-your-repository>`__
-See also section: Making a pull request which skips GitHub Actions, above.
+See also the section on making a pull request which skips GitHub Actions, :ref:`here <skip-actions-pr>`.

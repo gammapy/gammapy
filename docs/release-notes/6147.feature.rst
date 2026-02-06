@@ -1,0 +1,1 @@
+Add a log parabola model defined such as the energy scale of the exponent and the reference energy can be different.

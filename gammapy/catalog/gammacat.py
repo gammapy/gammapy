@@ -3,6 +3,7 @@
 
 https://github.com/gammapy/gamma-cat
 """
+
 import logging
 import numpy as np
 from astropy import units as u
@@ -236,10 +237,8 @@ class SourceCatalogObjectGammaCat(SourceCatalogObject):
         return model
 
     def spatial_model(self):
-        """Source spatial model (`~gammapy.modeling.models.SpatialModel`).
-
-        TODO: add parameter errors!
-        """
+        """Source spatial model (`~gammapy.modeling.models.SpatialModel`)."""
+        # TODO : support array input if it should vary along the energy axis.
         d = self.data
         morph_type = d["morph_type"]
 

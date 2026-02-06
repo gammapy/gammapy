@@ -9,6 +9,7 @@ from astropy.time import Time
 from gammapy.datasets import MapDataset
 from gammapy.estimators import ExcessMapEstimator, FluxPoints
 from gammapy.estimators.utils import (
+    combine_significance_maps,
     compute_lightcurve_doublingtime,
     compute_lightcurve_fpp,
     compute_lightcurve_fvar,
@@ -222,9 +223,20 @@ def test_compute_lightcurve_doublingtime(lc):
     dcoord = dtime["doubling_coord"]
 
     assert_allclose(ddtime, [[[245305.49]], [[481572.59]]] * u.s)
-    assert_allclose(ddtime_err, [[[45999.766]], [[11935.665]]] * u.s)
+    assert_allclose(ddtime_err, [[[31577.504812]], [[121698.940811]]] * u.s)
     assert_time_allclose(
         dcoord,
+        Time([[[55197.99960648]], [[55197.99960648]]], format="mjd", scale="utc"),
+    )
+
+    htime = dtime["halvingtime"].quantity
+    htime_err = dtime["halving_err"].quantity
+    hcoord = dtime["halving_coord"]
+
+    assert_allclose(htime, [[[245305.488189]], [[481572.588929]]] * u.s)
+    assert_allclose(htime_err, [[[31577.504812]], [[121698.940811]]] * u.s)
+    assert_time_allclose(
+        hcoord,
         Time([[[55197.99960648]], [[55197.99960648]]], format="mjd", scale="utc"),
     )
 
@@ -289,3 +301,8 @@ def test_get_rebinned_axis():
 
     with pytest.raises(ValueError):
         get_rebinned_axis(lc_1d, method="error", value=2, axis_name="time")
+
+
+def test_combine_significance_map_size():
+    with pytest.raises(ValueError):
+        combine_significance_maps([1])

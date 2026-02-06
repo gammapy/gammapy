@@ -306,47 +306,76 @@ plt.show()
 # Source models
 # -------------
 #
-# The 1DC sky model is distributed as a set of XML files, which in turn
-# link to a ton of other FITS and text files. Gammapy doesn’t support this
-# XML model file format. We are currently developing a YAML based format
-# that improves upon the XML format, to be easier to write and read, add
+# The 1DC sky model is distributed as a set of XML files, which link
+# to numerous other FITS and text files. Gammapy does not natively support this
+# XML format. Instead, we use YAML-based model format that improves on the XML format
+# by being easier to write and read, add
 # relevant information (units for physical quantities), and omit useless
 # information (e.g. parameter scales in addition to values).
 #
-# If you must or want to read the XML model files, you can use
-# e.g. `ElementTree <https://docs.python.org/3/library/xml.etree.elementtree.html>`__
+# If you need or prefer to work with the original XML model files, you can use tools like
+# `ElementTree <https://docs.python.org/3/library/xml.etree.elementtree.html>`__
 # from the Python standard library, or
-# `xmltodict <https://github.com/martinblech/xmltodict>`__ if you
+# `xmltodict <https://github.com/martinblech/xmltodict>`__ installed through
 # `pip install xmltodict`. Here’s an example how to load the information
-# for a given source, and to convert it into the sky model format Gammapy
+# for a given source, and convert it into the sky model format Gammapy
 # understands.
 #
-
-# This is what the XML file looks like
+# With the following command we can see what the XML file looks like
+# (uncomment it if you have installed `xmltodict`).
+ 
+ 
 # !tail -n 20 $CTADATA/models/models_gps.xml
 
-# TODO: write this example!
+######################################################################
+# Here is an example on how to create a gammapy source model from this
 
-# Read XML file and access spectrum parameters
-# from gammapy.extern import xmltodict
-
-# filename = os.path.join(os.environ["CTADATA"], "models/models_gps.xml")
-# data = xmltodict.parse(open(filename).read())
-# data = data["source_library"]["source"][-1]
-# data = data["spectrum"]["parameter"]
-# data
-
-# Create a spectral model the the right units
+# import xmltodict
 # from astropy import units as u
-# from gammapy.modeling.models import PowerLawSpectralModel
+# from gammapy.modeling.models import PowerLawSpectralModel, PointSpatialModel, SkyModel
 
+# # Read XML file
+# filename = "$CTADATA/models/models_gps.xml"
+
+# # Access spectrum parameters
+# data = xmltodict.parse(open(filename).read())
+# source0 = data["source_library"]["source"][0]
+# spectrum0 = source0["spectrum"]["parameter"]
+# spatial0 = source0["spatialModel"]
+
+# # Printing the type shows we have a point-like model
+# print(spatial0['@type'])
+
+# # Helper function to get parameter by name
+# def get_param(params, name):
+#     for p in params:
+#         if p["@name"] == name:
+#             return float(p["@value"]) * float(p["@scale"])
+#     raise KeyError(f"Parameter '{name}' not found.")
+
+# # Helper to convert parameter value * scale
 # par_to_val = lambda par: float(par["@value"]) * float(par["@scale"])
-# spec = PowerLawSpectralModel(
-#     amplitude=par_to_val(data[0]) * u.Unit("cm-2 s-1 MeV-1"),
-#     index=par_to_val(data[1]),
-#     reference=par_to_val(data[2]) * u.Unit("MeV"),
+
+# # Create a spectral model
+# spectral_model = PowerLawSpectralModel(
+#     amplitude=par_to_val(spectrum0[0]) * u.Unit("cm-2 s-1 MeV-1"),
+#     index=par_to_val(spectrum0[1]),
+#     reference=par_to_val(spectrum0[2]) * u.Unit("MeV"),
 # )
-# print(spec)
+# print(spectral_model)
+
+# # Create the spatial model
+# spatial_params = spatial0["parameter"]
+# spatial_model = PointSpatialModel(
+#     lon_0=get_param(spatial_params, "RA") * u.deg,
+#     lat_0=get_param(spatial_params, "DEC") * u.deg,
+#     frame="icrs"
+# )
+# print(spatial_model)
+
+# # Create the SkyModel
+# sky_model = SkyModel(spectral_model=spectral_model, spatial_model=spatial_model, name=source0['@name'])
+# print(sky_model)
 
 
 ######################################################################

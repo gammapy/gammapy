@@ -91,10 +91,10 @@ print(config)
 # future reference.
 #
 
-config_stack = config.copy(deep=True)
+config_stack = config.model_copy(deep=True)
 config_stack.datasets.stack = True
 
-config_joint = config.copy(deep=True)
+config_joint = config.model_copy(deep=True)
 config_joint.datasets.stack = False
 
 # To prevent unnecessary cluttering, we write it in a separate folder.
@@ -135,17 +135,19 @@ dataset_stacked = analysis_stacked.datasets["stacked"]
 print(dataset_stacked)
 
 ######################################################################
-# To plot a smooth counts map
+# To visualise a counts map in different energy slices, you can use the
+# `~gammapy.maps.WcsNDMap.plot_grid` or `~gammapy.maps.WcsNDMap.plot_interactive`
+# functionalities, or create a plot of the counts summed over the energy axis:
 #
 
-dataset_stacked.counts.smooth(0.02 * u.deg).plot_interactive(add_cbar=True)
+dataset_stacked.counts.sum_over_axes().smooth(0.02 * u.deg).plot(add_cbar=True)
 plt.show()
 
 ######################################################################
-# And the background map
+# Similarly with the background map:
 #
 
-dataset_stacked.background.plot_interactive(add_cbar=True)
+dataset_stacked.background.sum_over_axes().plot(add_cbar=True)
 plt.show()
 
 ######################################################################
@@ -227,6 +229,7 @@ result = fit.run(datasets=[dataset_stacked])
 
 ######################################################################
 # .. _mapdataset_fit_quality:
+#
 # Fit quality assessment and model residuals for a `~gammapy.datasets.MapDataset`
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
@@ -385,6 +388,7 @@ result_joint = fit_joint.run(datasets=analysis_joint.datasets)
 
 ######################################################################
 # .. _dataset_fit_quality:
+#
 # Fit quality assessment and model residuals for a joint `~gammapy.datasets.Datasets`
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
@@ -415,8 +419,8 @@ print(models_joint)
 stacked = analysis_joint.datasets.stack_reduce()
 stacked.models = [model_joint]
 
-plt.figure()
 stacked.plot_residuals_spatial(vmin=-1, vmax=1)
+plt.show()
 
 
 ######################################################################
@@ -461,6 +465,7 @@ plt.show()
 
 ######################################################################
 # .. image:: ../../_static/DC1_3d.png
+#
 #
 
 

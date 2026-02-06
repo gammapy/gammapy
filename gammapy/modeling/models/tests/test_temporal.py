@@ -33,13 +33,6 @@ def light_curve():
     return LightCurveTemplateTemporalModel.read(path)
 
 
-@pytest.fixture()
-def phase_curve_table():
-    phase = np.linspace(0.0, 1, 101)
-    norm = phase * (phase < 0.5) + (1 - phase) * (phase >= 0.5)
-    return Table(data={"PHASE": phase, "NORM": norm})
-
-
 @requires_data()
 def test_light_curve_str(light_curve):
     ss = str(light_curve)
@@ -444,6 +437,32 @@ def test_phase_curve_model(tmp_path, caplog):
     assert_allclose(integral, 0.9, rtol=1e-5)
 
 
+def test_phase_curve_model_normalize_serialisation(tmp_path):
+    phase = np.linspace(0.0, 1, 101)
+    norm = 2 * np.ones_like(phase)
+    table = Table(data={"PHASE": phase, "NORM": norm})
+
+    phase_model = TemplatePhaseCurveTemporalModel(
+        table=table,
+        filename=tmp_path / "test.fits",
+        normalize=False,
+    )
+    phase_model.write()
+
+    model_dict = phase_model.to_dict()
+    new_model = Model.from_dict(model_dict)
+
+    assert model_dict["temporal"]["normalize"] is False
+    assert_allclose(new_model.table["NORM"], 2)
+
+    # Check compatibility with older version behavior
+    model_dict["temporal"].pop("normalize")
+    new_model = Model.from_dict(model_dict)
+    assert_allclose(new_model.table["NORM"], 1)
+    with pytest.raises(ValueError, match=r"Got <class 'str'> instead."):
+        TemplatePhaseCurveTemporalModel.read(tmp_path / "test.fits", "20 Hz", 0.0)
+
+
 def test_phase_curve_model_sample_time():
     phase = np.linspace(0.0, 1, 51)
     norm = 1.0 * (phase < 0.5)
@@ -476,6 +495,29 @@ def test_phase_curve_model_sample_time():
     assert np.all(phases <= 0.5)
 
 
+def test_phase_curve_model_long_period():
+    phase = np.linspace(0.0, 1, 51)
+    norm = np.ones_like(phase)
+    table = Table(data={"PHASE": phase, "NORM": norm})
+
+    t_ref = Time("2020-06-01", scale="utc")
+    phase_model = TemplatePhaseCurveTemporalModel(
+        table=table,
+        f0="7e-6 Hz",
+        phi_ref=0.0,
+        f1="0 s-2",
+        f2="0 s-3",
+        t_ref=t_ref.mjd * u.d,
+        scale="utc",
+    )
+
+    tmin = Time("2025-06-01", scale="tt")
+    tmax = tmin + 0.5 * u.h
+
+    integral = phase_model.integral(tmin, tmax)
+    assert_allclose(integral, 1.0, rtol=1e-5)
+
+
 @requires_data()
 def test_phasecurve_DC1():
     filename = "$GAMMAPY_DATA/tests/phasecurve_LSI_DC.fits"
@@ -483,15 +525,23 @@ def test_phasecurve_DC1():
     P0 = 26.7 * u.d
     f0 = 1 / P0
 
-    model = TemplatePhaseCurveTemporalModel.read(filename, t_ref, 0.0, f0)
+    # Verify curve normalisation
+    normalised_model = TemplatePhaseCurveTemporalModel.read(
+        filename, True, t_ref, 0.0, f0
+    )
+    non_normalised_model = TemplatePhaseCurveTemporalModel.read(
+        filename, False, t_ref, 0.0, f0
+    )
 
     times = Time(t_ref, format="mjd") + [0.0, 0.5, 0.65, 1.0] * P0
-    norm = model(times)
+    norm = normalised_model(times)
+    non_norm = non_normalised_model(times)
 
     assert_allclose(norm, [0.294118, 0.882353, 5.882353, 0.294118], atol=1e-5)
+    assert_allclose(non_norm, [0.05, 0.15, 1.0, 0.05], atol=1e-5)
 
     with mpl_plot_check():
-        model.plot_phasogram(n_points=200)
+        normalised_model.plot_phasogram(n_points=200)
 
 
 def test_model_scale():

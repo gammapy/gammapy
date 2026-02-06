@@ -727,7 +727,7 @@ class WcsNDMap(WcsMap):
             raise ValueError("Histogram method not supported for point regions")
 
         cutout, mask = self.cutout_and_mask_region(region=region)
-        idx_y, idx_x = np.where(mask)
+        idx_y, idx_x = np.nonzero(mask)
         quantity = cutout.quantity[..., idx_y, idx_x]
 
         value = np.abs(quantity).max()
@@ -1017,7 +1017,7 @@ class WcsNDMap(WcsMap):
             Force width to odd number of pixels.
             Default is False.
         min_npix : bool, optional
-            Force width to a minimmum number of pixels.
+            Force width to a minimum number of pixels.
             Default is 1.
 
         Returns
@@ -1108,7 +1108,7 @@ class WcsNDMap(WcsMap):
                 "Can only stack equivalent maps or cutout of the same map."
             )
 
-        data = other.quantity[cutout_slices].to_value(self.unit)
+        data = other.quantity[cutout_slices].to_value(self.unit).astype(self.data.dtype)
         if nan_to_num:
             not_finite = ~np.isfinite(data)
             if np.any(not_finite):

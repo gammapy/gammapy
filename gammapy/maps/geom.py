@@ -60,6 +60,9 @@ class Geom(abc.ABC):
     See also: `~gammapy.maps.WcsGeom` and `~gammapy.maps.HpxGeom`.
     """
 
+    def __repr__(self):
+        return self.__str__()
+
     def _repr_html_(self):
         try:
             return self.to_html()
@@ -440,7 +443,7 @@ class Geom(abc.ABC):
             Name of the axis to remove.
 
         Returns
-            -------
+        -------
         geom : `Geom`
             New geom with the axis removed.
         """
@@ -672,7 +675,7 @@ class Geom(abc.ABC):
         axes_names.reverse()
         mask = (axis_edges[:-1] >= edge_min) & (axis_edges[1:] <= edge_max)
         mask = np.expand_dims(
-            mask, axis=tuple(np.where(np.array(axes_names) != axis_name)[0])
+            mask, axis=tuple(np.nonzero(np.array(axes_names) != axis_name)[0])
         )
         data = np.broadcast_to(mask, shape=self.data_shape)
         return Map.from_geom(geom=self, data=data, dtype=data.dtype)
