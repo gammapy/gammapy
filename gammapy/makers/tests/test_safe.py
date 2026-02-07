@@ -203,6 +203,7 @@ def test_safe_mask_maker_edisp_bias(dataset, observation_cta_1dc):
     assert_allclose(mask_edisp_bias.data.sum(), 1815)
 
 
+@requires_data()
 def test_safe_mask_maker_errors(observation_cta_1dc):
     with pytest.raises(
         ValueError,
