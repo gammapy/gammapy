@@ -321,7 +321,6 @@ def test_sample_coord_time_energy_random_seed(
 ):
     sampler = MapDatasetEventSampler(random_state=2)
 
-    energy_dependent_temporal_sky_model.temporal_model.map._unit == ""
     dataset.models = energy_dependent_temporal_sky_model
     evaluator = dataset.evaluators["test-source"]
 
@@ -344,7 +343,7 @@ def test_sample_coord_time_energy_random_seed(
 def test_sample_coord_time_energy_unit(dataset, energy_dependent_temporal_sky_model):
     sampler = MapDatasetEventSampler(random_state=1)
 
-    energy_dependent_temporal_sky_model.temporal_model.map._unit == "cm-2 s-1 TeV-1"
+    energy_dependent_temporal_sky_model.temporal_model.map._unit = "cm-2 s-1 TeV-1"
     energy_dependent_temporal_sky_model.spectral_model.parameters[0].unit = ""
     dataset.models = energy_dependent_temporal_sky_model
     evaluator = dataset.evaluators["test-source"]

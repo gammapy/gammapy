@@ -272,7 +272,6 @@ def test_background_slice(background):
     bkg1 = TemplateNPredModel(background)
     e_edges = background.geom.axes[0].edges
     bkg1_slice = bkg1.slice_by_energy(e_edges[0], e_edges[1])  # 1 bin slice
-    assert bkg1_slice.name == bkg1_slice.name
     assert bkg1_slice.map.data.shape == bkg1.map.sum_over_axes().data.shape
     assert_allclose(bkg1_slice.map.data[0, :, :], bkg1.map.data[0, :, :], rtol=1e-5)
 

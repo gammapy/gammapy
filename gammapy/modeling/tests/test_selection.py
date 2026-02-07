@@ -57,7 +57,7 @@ def test_test_statistic_detection_other_frozen(fermi_datasets):
         results = select_nested_models(
             fermi_datasets, [model.spectral_model.amplitude], [0]
         )
-        results["fit_results_null"].nfev == 0
+        assert results["fit_results_null"].nfev == 0
         assert fermi_datasets.models.parameters["amplitude"].error != 0.0
 
         model.spectral_model.amplitude.value = 0
