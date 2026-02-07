@@ -204,6 +204,21 @@ def test_safe_mask_maker_edisp_bias(dataset, observation_cta_1dc):
 
 
 @requires_data()
+def test_safe_mask_maker_errors(observation_cta_1dc):
+    with pytest.raises(
+        ValueError,
+        match="Invalid option for irfs: expected 'DL3' or 'DL4', got 'DL6' instead.",
+    ):
+        SafeMaskMaker(irfs="DL6")
+    pointing = observation_cta_1dc.get_pointing_icrs(observation_cta_1dc.tmid)
+    with pytest.raises(
+        ValueError,
+        match="`position` and `fixed_offset` attributes are mutually exclusive",
+    ):
+        SafeMaskMaker(position=pointing, fixed_offset="1.5deg")
+
+
+@requires_data()
 def test_safe_mask_maker_spectrum_dataset_edisp_bias_no_position(
     spectrum_dataset_on_off,
 ):
