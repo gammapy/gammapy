@@ -196,16 +196,29 @@ class InterpolationScale:
 class LogScale(InterpolationScale):
     """Logarithmic scaling."""
 
+    # Keep this attribute for backward compatibility / default behavior,
+    # but do not use it as the sole clipping threshold.
     tiny = np.finfo(np.float32).tiny
 
+    @staticmethod
+    def _tiny_for(arr):
+        arr = np.asanyarray(arr)
+        # If the input is not a floating type (e.g. int), log/exp semantics
+        # still require floating point; use float64 tiny as a fallback.
+        if not np.issubdtype(arr.dtype, np.floating):
+            return np.finfo(np.float64).tiny
+        return np.finfo(arr.dtype).tiny
+
     def _scale(self, values):
-        values = np.clip(values, self.tiny, np.inf)
+        tiny = self._tiny_for(values)
+        values = np.clip(values, tiny, np.inf)
         return np.log(values)
 
     @classmethod
     def _inverse(cls, values):
         output = np.exp(values)
-        return np.where(abs(output) - cls.tiny <= cls.tiny, 0, output)
+        tiny = cls._tiny_for(output)
+        return np.where(abs(output) - tiny <= tiny, 0, output)
 
     @classmethod
     def _inverse_derivative(cls, values):
