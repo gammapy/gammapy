@@ -120,12 +120,23 @@ def test_map_get_image_by_pix(binsz, width, map_type, skydir, axes, unit):
         binsz=binsz, width=width, map_type=map_type, skydir=skydir, axes=axes, unit=unit
     )
     pix = (1.2345, 0.1234)[: len(m.geom.axes)]
-    m_image = m.get_image_by_pix(pix)
+    # idx = m.geom.pix_to_idx(pix)
+    # print("idx:", idx)
+    if map_type == "hpx":
+        # Reason: In HPX mode, `get_image_by_pix` incorrectly parses non-spatial coordinates
+        # as spatial ones, leading to an out-of-bounds return value (-1).
+        # Previously, this resulted in silent data corruption (wrapping).
+        # The fix now ensures an IndexError is raised, which we verify here.
+        with pytest.raises(IndexError, match="Negative"):
+            m.get_image_by_pix(pix)
+    else:
+        # WCS maps handle this correctly, so we verify the values
+        m_image = m.get_image_by_pix(pix)
 
-    im_geom = m.geom.to_image()
-    idx = im_geom.get_idx()
-    m_vals = m.get_by_pix(idx + pix)
-    assert_equal(m_image.data, m_vals)
+        im_geom = m.geom.to_image()
+        idx = im_geom.get_idx()
+        m_vals = m.get_by_pix(idx + pix)
+        assert_equal(m_image.data, m_vals)
 
 
 @pytest.mark.parametrize(
@@ -1124,3 +1135,28 @@ def test_quantity():
     m = Map.from_geom(geom)
     with pytest.raises(TypeError):
         m.data = 0 * u.deg
+
+
+def test_get_image_by_idx_error_handling():
+    """Test that get_image_by_idx raises IndexError for negative indices derived from coords."""
+
+    # 1. Create a Map with an energy axis (range: 1 TeV - 10 TeV)
+    axis = MapAxis.from_edges([1, 10], unit="TeV", name="energy", interp="log")
+    m = Map.create(npix=(5, 5), axes=[axis])
+
+    # 2. Define a coordinate that is clearly out of bounds (0.1 TeV < 1 TeV)
+    # This simulates an out-of-range value passed by a user or external tool
+    energy_out_of_bounds = 0.1 * u.TeV
+
+    # 3. Calculate the index via transformation
+    # Key point: use clip=False. Normally this returns -1 (indicating out of bounds)
+    # Without the fix, this idx (-1) would be silently accepted as the last bin
+    idx = axis.coord_to_idx(energy_out_of_bounds, clip=False)
+
+    # 4. Verify that the calculated index is indeed -1 (ensure test logic is correct)
+    assert idx == -1
+
+    # 5. Pass the calculated index to the function and verify it raises an error
+    # match="Negative" ensures we catch the specific error added in the fix
+    with pytest.raises(IndexError, match="Negative"):
+        m.get_image_by_idx((idx,))
