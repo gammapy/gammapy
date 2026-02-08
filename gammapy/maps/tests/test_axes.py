@@ -1127,3 +1127,27 @@ def test_periodic_map_axis():
         axis1 = MapAxis.from_bounds(
             -0.5, 0.5, 5, boundary_type="periodic", interp="log"
         )
+
+
+def test_time_map_axis_pix_to_coord_third_arg_out_bug(monkeypatch):
+    """Regression test: np.logical_and(a, b, c) uses c as 'out' (buggy) not 3rd condition."""
+    axis = TimeMapAxis(
+        edges_min=[0, 1] * u.d,
+        edges_max=[1, 2] * u.d,
+        reference_time=Time("2026-01-01"),
+    )
+
+    # make np.isfinite(idx) return a read-only array:
+    # - buggy code treats it as 'out' and will try to write -> ValueError
+    # - fixed code uses it as a condition -> no write -> ok
+    orig = np.isfinite
+
+    def isfinite_ro(x):
+        out = orig(x)
+        out.setflags(write=False)
+        return out
+
+    monkeypatch.setattr(np, "isfinite", isfinite_ro)
+
+    coords = axis.pix_to_coord([0.2, 1.2])
+    assert_allclose(coords.mjd, (axis.reference_time + [0.2, 1.2] * u.d).mjd)
