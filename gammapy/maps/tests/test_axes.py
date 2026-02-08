@@ -1127,3 +1127,54 @@ def test_periodic_map_axis():
         axis1 = MapAxis.from_bounds(
             -0.5, 0.5, 5, boundary_type="periodic", interp="log"
         )
+
+
+def test_time_map_axis_pix_coord_roundtrip():
+    """
+    Test the round-trip conversion consistency: pix -> coord -> pix.
+
+    In the original (buggy) implementation:
+    - coord_to_pix assumed pix=0 is CENTER.
+    - pix_to_coord assumed pix=0 is EDGE.
+    This mismatch caused a systematic shift of -0.5 pixels after a round trip.
+
+    The fixed implementation ensures both methods agree that pix=0 is CENTER.
+    """
+    # Setup: Create a simple time axis.
+    # Reference: 2024-01-01
+    ref_time = Time("2024-01-01T00:00:00")
+
+    # [Correction] edges must be Quantities (relative time), not absolute Time objects
+    # Bin 1: 0s to 10s
+    # Bin 2: 10s to 20s
+    edges_min = np.array([0, 10]) * u.s
+    edges_max = np.array([10, 20]) * u.s
+
+    axis = TimeMapAxis(edges_min, edges_max, reference_time=ref_time)
+
+    # Define test pixels:
+    # 0.0  -> Center of Bin 0
+    # 0.5  -> Upper Edge of Bin 0 (Center of edge)
+    # 1.0  -> Center of Bin 1
+    input_pix = np.array([0.0, 0.5, 1.0])
+
+    # Step 1: Convert pix to coord
+    # This returns absolute Time objects
+    coords = axis.pix_to_coord(input_pix)
+
+    # Step 2: Convert coord back to pix
+    output_pix = axis.coord_to_pix(coords)
+
+    # Verification
+    # The output pixels should match the input pixels within floating-point tolerance.
+    # If the bug exists, output_pix will be shifted by -0.5 (e.g., 0.0 becomes -0.5)
+    np.testing.assert_allclose(
+        output_pix,
+        input_pix,
+        atol=1e-5,
+        err_msg=(
+            "Round-trip failed! The pixel values shifted. "
+            "This likely indicates a mismatch between pix_to_coord and coord_to_pix conventions "
+            "(e.g., center vs. edge definition)."
+        ),
+    )

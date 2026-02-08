@@ -2669,17 +2669,29 @@ class TimeMapAxis:
         """
         shape = np.shape(pix)
         pix = np.atleast_1d(pix)
+        # [Correct] Gammapy convention: pixel 0 is the center of the first bin.
+        # Shift by +0.5 so that integer values correspond to bin lower edges.
+        # e.g., pix=0 (center) -> 0.5; pix=-0.5 (edge) -> 0.0
+        pix = pix + 0.5
         coords = np.zeros_like(pix)
-        frac, idx = np.modf(pix)
+        # [Correct] Use floor instead of modf to handle the shifted index correctly.
+        # This ensures consistent edge handling (floor(0.5) -> idx 0).
+        idx = np.floor(pix)
+        frac = pix - idx
         idx1 = idx.astype(int)
         valid = np.logical_and(idx >= 0, idx < self.nbin, np.isfinite(idx))
         idx_valid = np.nonzero(valid)
         idx_invalid = np.nonzero(~valid)
 
-        coords[idx_valid] = (
-            frac[idx_valid] * self.time_delta[idx1[valid]] + self.edges_min[idx1[valid]]
-        ).value
+        # Convert TimeDelta explicitly to a Quantity in self.unit before taking values
+        dt = self.time_delta[idx1[valid]].to(self.unit)  # Quantity with unit self.unit
+        tmp = (
+            frac[idx_valid] * dt + self.edges_min[idx1[valid]]
+        )  # Quantity in self.unit
+        coords[idx_valid] = tmp.to_value(self.unit)  # float values in self.unit
+
         coords = coords * self.unit + self.reference_time
+
         coords[idx_invalid] = Time(INVALID_VALUE.time, scale=self.reference_time.scale)
         return coords.reshape(shape)
 
@@ -2723,10 +2735,23 @@ class TimeMapAxis:
         pix[~valid_pix] = INVALID_INDEX.float
         return pix - 0.5
 
-    @staticmethod
-    def pix_to_idx(pix, clip=False):
-        # TODO: Is this useful at all?
-        return pix
+    def pix_to_idx(self, pix, clip=False):
+        """Convert pixel coordinate(s) to integer bin index/indices.
+
+        For TimeMapAxis we follow the same rule as MapAxis:
+        - if clip=True: clip to [0, nbin-1]
+        - else: out of range -> -1
+        """
+        pix = np.asanyarray(pix)
+
+        # Define index rule consistent with "integer pix = bin center"
+        idx = np.floor(pix + 0.5).astype(int)
+
+        if clip:
+            return np.clip(idx, 0, self.nbin - 1)
+
+        invalid = (idx < 0) | (idx >= self.nbin) | ~np.isfinite(pix)
+        return np.where(invalid, INVALID_INDEX.int, idx)
 
     @property
     def center(self):
