@@ -11,6 +11,7 @@ from gammapy.irf import EDispKernel, PSFKernel
 from gammapy.maps import HpxNDMap, Map, RegionNDMap, WcsNDMap
 from gammapy.modeling.models import PointSpatialModel, TemplateNPredModel
 from .utils import apply_edisp
+from gammapy.utils.parallel import get_gpu_device, convolve_psf_gpu
 
 PSF_MAX_RADIUS = None
 PSF_CONTAINMENT = 0.999
@@ -92,6 +93,8 @@ class MapEvaluator:
         self._cached_parameter_values_spatial = None
         self._cached_position = (0, 0)
         self._computation_cache = None
+
+        self.gpu_device = get_gpu_device()
 
     def _repr_html_(self):
         try:
@@ -351,9 +354,12 @@ class MapEvaluator:
         npred = (flux.quantity * self.exposure.quantity).to_value("")
         return Map.from_geom(self.geom, data=npred, unit="")
 
-    def apply_psf(self, npred):
-        """Convolve npred cube with PSF."""
-        return npred.convolve(self.psf)
+    def apply_psf(self, npred, force_cpu=False):
+        """Convolve npred cube with PSF (GPU optimized with grouped conv2d)."""
+        if self.gpu_device is None or force_cpu:
+            return npred.convolve(self.psf)
+
+        return convolve_psf_gpu(npred, self.psf, device=self.gpu_device)
 
     def apply_edisp(self, npred):
         """Convolve map data with energy dispersion.
