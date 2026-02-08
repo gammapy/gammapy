@@ -689,7 +689,8 @@ class WcsGeom(Geom, CacheInstanceMixin):
 
         for idx, npix_ in zip(pix[self._slice_spatial_axes], npix):
             if clip:
-                idx = np.clip(idx, 0, npix_)
+                # Ensure index is clipped to max valid index (npix_ - 1) to avoid out-of-bounds access
+                idx = np.clip(idx, 0, npix_ - 1)
             else:
                 idx = np.where((idx < 0) | (idx >= npix_), -1, idx)
 
