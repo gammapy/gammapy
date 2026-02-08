@@ -102,8 +102,8 @@ class SafeMaskMaker(Maker):
             )
 
         if irfs not in ["DL3", "DL4"]:
-            ValueError(
-                "Invalid option for irfs: expected 'DL3' or 'DL4', got {irfs} instead."
+            raise ValueError(
+                f"Invalid option for irfs: expected 'DL3' or 'DL4', got '{irfs}' instead."
             )
         self.irfs = irfs
 
