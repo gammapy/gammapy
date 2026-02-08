@@ -11,6 +11,7 @@ from gammapy.irf import EDispKernel, PSFKernel
 from gammapy.maps import HpxNDMap, Map, RegionNDMap, WcsNDMap
 from gammapy.modeling.models import PointSpatialModel, TemplateNPredModel
 from .utils import apply_edisp
+from gammapy.utils.parallel import get_gpu_device, convolve_psf_gpu
 
 PSF_MAX_RADIUS = None
 PSF_CONTAINMENT = 0.999
@@ -93,16 +94,7 @@ class MapEvaluator:
         self._cached_position = (0, 0)
         self._computation_cache = None
 
-        self.gpu_device = None
-
-        try:
-            import torch
-
-            if torch.cuda.is_available():
-                self.gpu_device = torch.device("cuda")
-
-        except ImportError:
-            pass
+        self.gpu_device = get_gpu_device()
 
     def _repr_html_(self):
         try:
@@ -362,104 +354,12 @@ class MapEvaluator:
         npred = (flux.quantity * self.exposure.quantity).to_value("")
         return Map.from_geom(self.geom, data=npred, unit="")
 
-    def apply_psf(self, npred):
-        # return npred.convolve(self.psf)
+    def apply_psf(self, npred, force_cpu=False):
         """Convolve npred cube with PSF (GPU optimized with grouped conv2d)."""
-        if self.gpu_device is None:
+        if self.gpu_device is None or force_cpu:
             return npred.convolve(self.psf)
 
-        import torch
-        import torch.nn.functional as F
-
-        # ----------------------------
-        # 1) Prepare numpy arrays
-        # ----------------------------
-        x_np = npred.data  # (Y,X) or (E,Y,X)
-        k_np = self.psf.psf_kernel_map.data  # (Ky,Kx) or (Ek,Ky,Kx)
-
-        # Output geom + broadcast logic (align with old behavior)
-        if x_np.ndim == 2 and k_np.ndim == 3:
-            # input image, kernel has energy axis -> output is cube with Ek planes
-            geom_out = npred.geom.to_image().to_cube(
-                axes=self.psf.psf_kernel_map.geom.axes
-            )
-            Ek = k_np.shape[0]
-            x_np = np.broadcast_to(x_np, (Ek,) + x_np.shape).copy()  # (E=Ek,Y,X)
-            x_was_2d = False
-        else:
-            geom_out = npred.geom
-            x_was_2d = x_np.ndim == 2
-            if x_np.ndim == 2:
-                x_np = x_np[None, ...]  # (E=1,Y,X)
-            if k_np.ndim == 2:
-                k_np = k_np[None, ...]  # (Ek=1,Ky,Kx)
-
-        if x_np.ndim != 3 or k_np.ndim != 3:
-            raise ValueError(
-                f"Expected x_np and k_np to be 3D, got {x_np.ndim=} {k_np.ndim=}"
-            )
-
-        E, Y, X = x_np.shape
-        Ek, Ky, Kx = k_np.shape
-
-        # ----------------------------
-        # 2) Torch tensors (single transfer)
-        # ----------------------------
-        x = torch.as_tensor(x_np, device=self.gpu_device)
-        if not x.is_floating_point():
-            x = x.float()
-
-        k = torch.as_tensor(k_np, device=self.gpu_device, dtype=x.dtype)
-
-        # ----------------------------
-        # 3) Build per-plane kernels for grouped conv
-        #    Want weight shape: (E, 1, Ky, Kx)
-        # ----------------------------
-        if Ek == 1:
-            # same kernel for all planes
-            k_full = k.expand(E, -1, -1)  # (E,Ky,Kx)
-        elif Ek == E:
-            k_full = k  # (E,Ky,Kx)
-        else:
-            # match your old behavior: ke = min(e, Ek-1)
-            ke = torch.clamp(torch.arange(E, device=self.gpu_device), max=Ek - 1)
-            k_full = k.index_select(0, ke)  # (E,Ky,Kx)
-
-        # conv2d is correlation -> flip once
-        k_full = torch.flip(k_full, dims=(-2, -1))
-
-        weight = k_full[:, None, :, :]  # (E,1,Ky,Kx)
-
-        # ----------------------------
-        # 4) Grouped conv in one shot (match SciPy "same" => zero-extension)
-        # ----------------------------
-        x4 = x[None, :, :, :]  # (1,E,Y,X)
-
-        pad_y = Ky // 2
-        pad_x = Kx // 2
-
-        with torch.inference_mode():
-            # padding here is ZERO padding (matches SciPy signal.convolve "same" boundary behavior)
-            y4 = F.conv2d(
-                x4,
-                weight,
-                bias=None,
-                stride=1,
-                padding=(pad_y, pad_x),  # <-- : zero padding
-                groups=E,
-            )  # (1,E,Y,X)
-
-        y = y4[0]  # (E,Y,X)
-
-        # ----------------------------
-        # 5) Back to numpy + Map
-        # ----------------------------
-        y_np = y.detach().cpu().numpy()
-
-        if x_was_2d:
-            y_np = y_np[0]  # (Y,X)
-
-        return Map.from_geom(geom_out, data=y_np, unit=npred.unit)
+        return convolve_psf_gpu(npred, self.psf, device=self.gpu_device)
 
     def apply_edisp(self, npred):
         """Convolve map data with energy dispersion.

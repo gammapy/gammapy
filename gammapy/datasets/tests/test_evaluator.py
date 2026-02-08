@@ -277,3 +277,87 @@ def test_norm_only_changed():
     spectral_model.amplitude.value *= 2
     spectral_model.index.value *= 2
     assert not evaluator.parameter_norm_only_changed
+
+
+def test_apply_psf_cpu_gpu_equivalent_mode_b():
+    """Check GPU path gives equivalent results to CPU path for Mode B (image_broadcast).
+
+    - npred is (Y, X)
+    - PSF kernel is (Ek, Ky, Kx)
+    - Skip automatically if torch/CUDA not available.
+    """
+    torch = pytest.importorskip("torch")
+    if not torch.cuda.is_available():
+        pytest.skip("CUDA not available -> skip CPU/GPU equivalence test")
+
+    # --- benchmark parameters (Mode B) ---
+    WIDTH_DEG = 10.0
+    BINSZ_DEG = 0.01
+    E_K = 32
+    PSF_SIGMA_DEG = 0.05
+
+    RTOL = 1e-5
+    ATOL = 1e-6
+
+    center = SkyCoord("0 deg", "0 deg", frame="galactic")
+
+    # Build a reference geom (similar to your benchmark's common objects)
+    energy_axis = MapAxis.from_energy_bounds(
+        "0.3 TeV", "30 TeV", nbin=32, name="energy"
+    )
+    geom = WcsGeom.create(
+        skydir=center,
+        width=WIDTH_DEG * u.deg,
+        axes=[energy_axis],
+        frame="galactic",
+        binsz=BINSZ_DEG * u.deg,
+    )
+
+    spectral_model = PowerLawSpectralModel(index=2, amplitude="1e-11 TeV-1 s-1 m-2")
+    spatial_model = PointSpatialModel(
+        lon_0=0 * u.deg, lat_0=0 * u.deg, frame="galactic"
+    )
+    model = SkyModel(spectral_model=spectral_model, spatial_model=spatial_model)
+
+    exposure = Map.from_geom(geom.as_energy_true, unit="m2 s")
+    exposure.data += 1.0
+
+    # Initial psf placeholder (will be overwritten by Mode B kernel geom below)
+    psf0 = PSFKernel.from_gauss(geom, sigma=PSF_SIGMA_DEG * u.deg)
+    evaluator = MapEvaluator(model=model, exposure=exposure, psf=psf0)
+
+    # --- Mode B: npred image (Y,X) ---
+    geom_img = geom.to_image()
+    npred_img = Map.from_geom(geom_img, unit="")
+
+    y, x = np.indices(npred_img.data.shape)
+    cy, cx = (npred_img.data.shape[0] - 1) / 2.0, (npred_img.data.shape[1] - 1) / 2.0
+    r2 = (x - cx) ** 2 + (y - cy) ** 2
+    npred_img.data = np.exp(
+        -r2 / (2.0 * (0.12 * min(npred_img.data.shape)) ** 2)
+    ).astype(np.float32)
+
+    # --- Mode B: PSF kernel geom is (Ek, Ky, Kx) ---
+    energy_axis_k = MapAxis.from_energy_bounds(
+        "0.3 TeV", "30 TeV", nbin=E_K, name="energy"
+    )
+    geom_k = WcsGeom.create(
+        skydir=center,
+        width=WIDTH_DEG * u.deg,
+        axes=[energy_axis_k],
+        frame="galactic",
+        binsz=BINSZ_DEG * u.deg,
+    )
+    evaluator.psf = PSFKernel.from_gauss(geom_k, sigma=PSF_SIGMA_DEG * u.deg)
+
+    # --- run both paths ---
+    result_cpu = evaluator.apply_psf(npred_img, force_cpu=True)
+    result_gpu = evaluator.apply_psf(npred_img)
+
+    # --- invariants ---
+    assert result_cpu.data.shape == result_gpu.data.shape
+    assert result_cpu.geom == result_gpu.geom
+    assert result_cpu.unit == result_gpu.unit
+
+    # --- numerical equivalence ---
+    assert_allclose(result_gpu.data, result_cpu.data, rtol=RTOL, atol=ATOL)
