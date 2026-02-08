@@ -905,6 +905,9 @@ class Map(abc.ABC):
         # Only support scalar indices per axis
         idx = tuple([int(_.item()) for _ in np.array(idx)])
 
+        if any(_ < 0 for _ in idx):
+            raise IndexError(f"Negative index {idx} is not allowed.")
+
         geom = self.geom.to_image()
         data = self.data[idx[::-1]]
         return self.__class__(geom=geom, data=data, unit=self.unit, meta=self.meta)
