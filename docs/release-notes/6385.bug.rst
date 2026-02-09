@@ -1,0 +1,1 @@
+Raise IndexError for negative indices in ``map.core.get_image_by_idx``.
