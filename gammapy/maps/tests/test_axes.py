@@ -1133,7 +1133,6 @@ def test_time_map_axis_pix_coord_roundtrip():
     # Test the round-trip conversion consistency: pix -> coord -> pix.
 
     ref_time = Time("2024-01-01T00:00:00")
-
     edges_min = np.array([0, 10]) * u.s
     edges_max = np.array([10, 20]) * u.s
     axis = TimeMapAxis(edges_min, edges_max, reference_time=ref_time)
@@ -1147,3 +1146,18 @@ def test_time_map_axis_pix_coord_roundtrip():
         input_pix,
         atol=1e-5,
     )
+
+
+def test_time_map_axis_pix_to_idx():
+    ref_time = Time("2024-01-01T00:00:00")
+    edges_min = np.array([0, 10, 20]) * u.s
+    edges_max = np.array([10, 20, 30]) * u.s
+    axis = TimeMapAxis(edges_min, edges_max, reference_time=ref_time)
+
+    pix = np.array([-0.6, -0.5, 0.5, 1.5, 2.5, np.nan])
+    idx = axis.pix_to_idx(pix, clip=False)
+
+    assert_equal(idx, [-1, 0, 1, 2, -1, -1])
+
+    idx_clip = axis.pix_to_idx(pix, clip=True)
+    assert_equal(idx_clip, [0, 0, 1, 2, axis.nbin - 1, 0])
