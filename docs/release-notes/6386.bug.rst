@@ -1,0 +1,1 @@
+Align TimeMapAxis pixel convention. Update pix_to_coord to apply the same pixel-offset convention as MapAxis.
