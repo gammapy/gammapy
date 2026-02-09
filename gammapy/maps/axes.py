@@ -2669,13 +2669,9 @@ class TimeMapAxis:
         """
         shape = np.shape(pix)
         pix = np.atleast_1d(pix)
-        # [Correct] Gammapy convention: pixel 0 is the center of the first bin.
-        # Shift by +0.5 so that integer values correspond to bin lower edges.
-        # e.g., pix=0 (center) -> 0.5; pix=-0.5 (edge) -> 0.0
         pix = pix + 0.5
         coords = np.zeros_like(pix)
-        # [Correct] Use floor instead of modf to handle the shifted index correctly.
-        # This ensures consistent edge handling (floor(0.5) -> idx 0).
+
         idx = np.floor(pix)
         frac = pix - idx
         idx1 = idx.astype(int)
@@ -2683,12 +2679,9 @@ class TimeMapAxis:
         idx_valid = np.nonzero(valid)
         idx_invalid = np.nonzero(~valid)
 
-        # Convert TimeDelta explicitly to a Quantity in self.unit before taking values
-        dt = self.time_delta[idx1[valid]].to(self.unit)  # Quantity with unit self.unit
-        tmp = (
-            frac[idx_valid] * dt + self.edges_min[idx1[valid]]
-        )  # Quantity in self.unit
-        coords[idx_valid] = tmp.to_value(self.unit)  # float values in self.unit
+        dt = self.time_delta[idx1[valid]].to(self.unit)
+        tmp = frac[idx_valid] * dt + self.edges_min[idx1[valid]]
+        coords[idx_valid] = tmp.to_value(self.unit)
 
         coords = coords * self.unit + self.reference_time
 
@@ -2744,7 +2737,6 @@ class TimeMapAxis:
         """
         pix = np.asanyarray(pix)
 
-        # Define index rule consistent with "integer pix = bin center"
         idx = np.floor(pix + 0.5).astype(int)
 
         if clip:
