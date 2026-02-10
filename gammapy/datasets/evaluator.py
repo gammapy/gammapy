@@ -96,7 +96,7 @@ class MapEvaluator:
 
         self.gpu_device = get_gpu_device()
 
-    def _repr_html_(self):
+    def _repr_html_(self):  # pragma: no cover
         try:
             return self.to_html()
         except AttributeError:
@@ -359,7 +359,9 @@ class MapEvaluator:
         if self.gpu_device is None or force_cpu:
             return npred.convolve(self.psf)
 
-        return convolve_psf_gpu(npred, self.psf, device=self.gpu_device)
+        return convolve_psf_gpu(
+            npred, self.psf, device=self.gpu_device
+        )  # pragma: no cover
 
     def apply_edisp(self, npred):
         """Convolve map data with energy dispersion.

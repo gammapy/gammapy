@@ -341,7 +341,7 @@ def run_pool_async(pool, func, inputs, method_kwargs=None, task_name=""):
     return results
 
 
-def is_cuda_available():
+def is_cuda_available():  # pragma: no cover
     """Check whether CUDA is available via torch."""
     try:
         import torch
@@ -351,7 +351,7 @@ def is_cuda_available():
         return False
 
 
-def get_gpu_device():
+def get_gpu_device():  # pragma: no cover
     """Get default GPU device.
 
     Returns
@@ -372,7 +372,7 @@ def get_gpu_device():
 # ============================
 
 
-def _convolve2d_grouped_gpu(x_np, k_np, device):
+def _convolve2d_grouped_gpu(x_np, k_np, device):  # pragma: no cover
     """Low-level grouped 2D convolution on GPU (torch).
 
     Parameters
@@ -380,7 +380,7 @@ def _convolve2d_grouped_gpu(x_np, k_np, device):
     x_np : numpy.ndarray
         Input array with shape (Y, X) or (E, Y, X).
     k_np : numpy.ndarray
-        Kernel array with shape (Ky, Kx) or (Ek, Ky, Kx).
+        Kernel array with shape (k_y, k_x) or (e_k, k_y, k_x).
     device : torch.device
         Torch device (e.g. torch.device("cuda")).
 
@@ -392,21 +392,21 @@ def _convolve2d_grouped_gpu(x_np, k_np, device):
     import torch
     import torch.nn.functional as F
 
-    # normalize shapes to (E,Y,X) and (Ek,Ky,Kx)
+    # normalize shapes to (E,Y,X) and (e_k,k_y,k_x)
     x_was_2d = x_np.ndim == 2
     if x_was_2d:
         x_np = x_np[None, ...]  # (1, Y, X)
 
     if k_np.ndim == 2:
-        k_np = k_np[None, ...]  # (1, Ky, Kx)
+        k_np = k_np[None, ...]  # (1, k_y, k_x)
 
     if x_np.ndim != 3 or k_np.ndim != 3:
         raise ValueError(
             f"Expected x_np and k_np to be 3D, got {x_np.ndim=} {k_np.ndim=}"
         )
 
-    E, Y, X = x_np.shape
-    Ek, Ky, Kx = k_np.shape
+    E, _, _ = x_np.shape
+    e_k, k_y, k_x = k_np.shape
 
     # single transfer
     x = torch.as_tensor(x_np, device=device)
@@ -415,25 +415,25 @@ def _convolve2d_grouped_gpu(x_np, k_np, device):
 
     k = torch.as_tensor(k_np, device=device, dtype=x.dtype)
 
-    # Build per-plane kernels: (E, Ky, Kx)
-    if Ek == 1:
+    # Build per-plane kernels: (E, k_y, k_x)
+    if e_k == 1:
         k_full = k.expand(E, -1, -1)  # same kernel for all planes
-    elif Ek == E:
+    elif e_k == E:
         k_full = k
     else:
-        # match old behavior: ke = min(e, Ek-1)
-        ke = torch.clamp(torch.arange(E, device=device), max=Ek - 1)
+        # match old behavior: ke = min(e, e_k-1)
+        ke = torch.clamp(torch.arange(E, device=device), max=e_k - 1)
         k_full = k.index_select(0, ke)
 
     # conv2d does correlation -> flip once to get convolution
     k_full = torch.flip(k_full, dims=(-2, -1))
-    weight = k_full[:, None, :, :]  # (E,1,Ky,Kx)
+    weight = k_full[:, None, :, :]  # (E,1,k_y,k_x)
 
     # Grouped conv: input (N=1, C=E, H=Y, W=X), groups=E
     x4 = x[None, :, :, :]  # (1,E,Y,X)
 
-    pad_y = Ky // 2
-    pad_x = Kx // 2
+    pad_y = k_y // 2
+    pad_x = k_x // 2
 
     with torch.inference_mode():
         y4 = F.conv2d(
@@ -450,39 +450,39 @@ def _convolve2d_grouped_gpu(x_np, k_np, device):
     return y_np
 
 
-def _convolve_spatial_gpu(x_tensor, k_tensor):
+def _convolve_spatial_gpu(x_tensor, k_tensor):  # pragma: no cover
     """Spatial domain convolution using PyTorch (nn.functional.conv2d)"""
     import torch.nn.functional as F
 
-    # x: (E, Y, X), k: (E, Ky, Kx)
+    # x: (E, Y, X), k: (E, k_y, k_x)
     # conv2d requires input: (Batch, C, H, W) and weight: (Out_C, In_C, H, W)
     E, H, W = x_tensor.shape
-    Ek, Ky, Kx = k_tensor.shape
+    e_k, k_y, k_x = k_tensor.shape
 
     # Pad to maintain 'same' size
-    pad_y, pad_x = Ky // 2, Kx // 2
+    pad_y, pad_x = k_y // 2, k_x // 2
     x_padded = F.pad(
         x_tensor.unsqueeze(0), (pad_x, pad_x, pad_y, pad_y), mode="constant", value=0
     )
 
     # Grouped Convolution: each energy bin uses its own PSF kernel
     # groups = E allows each channel to be convolved independently
-    weight = k_tensor.unsqueeze(1)  # (E, 1, Ky, Kx)
+    weight = k_tensor.unsqueeze(1)  # (E, 1, k_y, k_x)
 
     output = F.conv2d(x_padded, weight, groups=E)
     return output.squeeze(0)
 
 
-def _convolve_fft_gpu(x_tensor, k_tensor):
+def _convolve_fft_gpu(x_tensor, k_tensor):  # pragma: no cover
     """Frequency domain convolution using PyTorch FFT"""
     import torch
 
     E, H, W = x_tensor.shape
-    Ek, Ky, Kx = k_tensor.shape
+    e_k, k_y, k_x = k_tensor.shape
 
-    # Pad to H+Ky-1 to avoid circular convolution artifacts
-    n_y = H + Ky - 1
-    n_x = W + Kx - 1
+    # Pad to H+k_y-1 to avoid circular convolution artifacts
+    n_y = H + k_y - 1
+    n_x = W + k_x - 1
 
     # 1. Transform to frequency domain
     X_f = torch.fft.rfftn(x_tensor, s=(n_y, n_x))
@@ -492,12 +492,12 @@ def _convolve_fft_gpu(x_tensor, k_tensor):
     conv_full = torch.fft.irfftn(X_f * K_f, s=(n_y, n_x))
 
     # 3. Crop to 'same' size (centered alignment)
-    start_y = Ky // 2
-    start_x = Kx // 2
+    start_y = k_y // 2
+    start_x = k_x // 2
     return conv_full[:, start_y : start_y + H, start_x : start_x + W]
 
 
-def convolve_psf_gpu(npred, psf, device):
+def convolve_psf_gpu(npred, psf, device):  # pragma: no cover
     """
     GPU-optimized PSF convolution with automatic switching between FFT and Spatial methods.
     """
@@ -511,8 +511,8 @@ def convolve_psf_gpu(npred, psf, device):
     # Handle broadcasting (e.g., 2D image with a 3D PSF cube)
     if x_np.ndim == 2 and k_np.ndim == 3:
         geom_out = npred.geom.to_image().to_cube(axes=psf.psf_kernel_map.geom.axes)
-        Ek = k_np.shape[0]
-        x_np = np.broadcast_to(x_np, (Ek,) + x_np.shape).copy()
+        e_k = k_np.shape[0]
+        x_np = np.broadcast_to(x_np, (e_k,) + x_np.shape).copy()
         x_was_2d = False
     else:
         geom_out = npred.geom
