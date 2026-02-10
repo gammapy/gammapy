@@ -285,11 +285,7 @@ def test_apply_psf_cpu_gpu_equivalent_mode_b():
 
     - npred is (Y, X)
     - PSF kernel is (Ek, Ky, Kx)
-    - Skip automatically if torch/CUDA not available.
     """
-    torch = pytest.importorskip("torch")
-    if not torch.cuda.is_available():
-        pytest.skip("CUDA not available -> skip CPU/GPU equivalence test")
 
     # --- benchmark parameters (Mode B) ---
     WIDTH_DEG = 10.0
