@@ -18,7 +18,7 @@ from gammapy.modeling.models import (
     SkyModel,
 )
 from gammapy.utils.gauss import Gauss2DPDF
-from gammapy.utils.testing import mpl_plot_check
+from gammapy.utils.testing import mpl_plot_check, requires_dependency
 
 
 @pytest.fixture
@@ -279,6 +279,7 @@ def test_norm_only_changed():
     assert not evaluator.parameter_norm_only_changed
 
 
+@requires_dependency("torch")
 def test_apply_psf_cpu_gpu_equivalent_mode_b():
     """Check GPU path gives equivalent results to CPU path for Mode B (image_broadcast).
 
