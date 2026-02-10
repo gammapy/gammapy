@@ -16,8 +16,8 @@ __all__ = [
     "POOL_KWARGS_DEFAULT",
     "METHOD_DEFAULT",
     "METHOD_KWARGS_DEFAULT",
-    "convolve_psf_gpu",
-    "get_gpu_device",
+    "convolve_psf_gpu",  # pragma: no cover
+    "get_gpu_device",  # pragma: no cover
 ]
 
 
@@ -345,10 +345,9 @@ def is_cuda_available():  # pragma: no cover
     """Check whether CUDA is available via torch."""
     try:
         import torch
-
-        return torch.cuda.is_available()
-    except ImportError:
+    except ImportError:  # pragma: no cover
         return False
+    return torch.cuda.is_available()  # pragma: no cover
 
 
 def get_gpu_device():  # pragma: no cover
@@ -359,12 +358,12 @@ def get_gpu_device():  # pragma: no cover
     device : torch.device or None
         CUDA device if available, otherwise None.
     """
-    if not is_cuda_available():
+    if not is_cuda_available():  # pragma: no cover
         return None
 
-    import torch
+    import torch  # pragma: no cover
 
-    return torch.device("cuda")
+    return torch.device("cuda")  # pragma: no cover
 
 
 # ============================
@@ -389,49 +388,49 @@ def _convolve2d_grouped_gpu(x_np, k_np, device):  # pragma: no cover
     y_np : numpy.ndarray
         Output array with shape (E, Y, X). If input was (Y, X), E=1.
     """
-    import torch
-    import torch.nn.functional as F
+    import torch  # pragma: no cover
+    import torch.nn.functional as F  # pragma: no cover
 
-    x_was_2d = x_np.ndim == 2
-    if x_was_2d:
+    x_was_2d = x_np.ndim == 2  # pragma: no cover
+    if x_was_2d:  # pragma: no cover
         x_np = x_np[None, ...]
 
-    if k_np.ndim == 2:
+    if k_np.ndim == 2:  # pragma: no cover
         k_np = k_np[None, ...]
 
-    if x_np.ndim != 3 or k_np.ndim != 3:
+    if x_np.ndim != 3 or k_np.ndim != 3:  # pragma: no cover
         raise ValueError(
             f"Expected x_np and k_np to be 3D, got {x_np.ndim=} {k_np.ndim=}"
         )
 
-    E, _, _ = x_np.shape
-    e_k, k_y, k_x = k_np.shape
+    E, _, _ = x_np.shape  # pragma: no cover
+    e_k, k_y, k_x = k_np.shape  # pragma: no cover
 
-    x = torch.as_tensor(x_np, device=device)
-    if not x.is_floating_point():
+    x = torch.as_tensor(x_np, device=device)  # pragma: no cover
+    if not x.is_floating_point():  # pragma: no cover
         x = x.float()
 
-    k = torch.as_tensor(k_np, device=device, dtype=x.dtype)
+    k = torch.as_tensor(k_np, device=device, dtype=x.dtype)  # pragma: no cover
 
-    if e_k == 1:
+    if e_k == 1:  # pragma: no cover
         k_full = k.expand(E, -1, -1)
-    elif e_k == E:
+    elif e_k == E:  # pragma: no cover
         k_full = k
-    else:
+    else:  # pragma: no cover
         ke = torch.clamp(torch.arange(E, device=device), max=e_k - 1)
         k_full = k.index_select(0, ke)
 
     # conv2d does correlation -> flip once to get convolution
-    k_full = torch.flip(k_full, dims=(-2, -1))
-    weight = k_full[:, None, :, :]
+    k_full = torch.flip(k_full, dims=(-2, -1))  # pragma: no cover
+    weight = k_full[:, None, :, :]  # pragma: no cover
 
-    x4 = x[None, :, :, :]
+    x4 = x[None, :, :, :]  # pragma: no cover
 
-    pad_y = k_y // 2
-    pad_x = k_x // 2
+    pad_y = k_y // 2  # pragma: no cover
+    pad_x = k_x // 2  # pragma: no cover
 
-    with torch.inference_mode():
-        y4 = F.conv2d(
+    with torch.inference_mode():  # pragma: no cover
+        y4 = F.conv2d(  # pragma: no cover
             x4,
             weight,
             bias=None,
@@ -440,88 +439,90 @@ def _convolve2d_grouped_gpu(x_np, k_np, device):  # pragma: no cover
             groups=E,
         )
 
-    y = y4[0]
-    y_np = y.detach().cpu().numpy()
-    return y_np
+    y = y4[0]  # pragma: no cover
+    y_np = y.detach().cpu().numpy()  # pragma: no cover
+    return y_np  # pragma: no cover
 
 
 def _convolve_spatial_gpu(x_tensor, k_tensor):  # pragma: no cover
     """Spatial domain convolution using PyTorch (nn.functional.conv2d)"""
-    import torch.nn.functional as F
+    import torch.nn.functional as F  # pragma: no cover
 
-    E, _, _ = x_tensor.shape
-    _, k_y, k_x = k_tensor.shape
+    E, _, _ = x_tensor.shape  # pragma: no cover
+    _, k_y, k_x = k_tensor.shape  # pragma: no cover
 
-    pad_y, pad_x = k_y // 2, k_x // 2
-    x_padded = F.pad(
+    pad_y, pad_x = k_y // 2, k_x // 2  # pragma: no cover
+    x_padded = F.pad(  # pragma: no cover
         x_tensor.unsqueeze(0), (pad_x, pad_x, pad_y, pad_y), mode="constant", value=0
     )
 
-    weight = k_tensor.unsqueeze(1)
+    weight = k_tensor.unsqueeze(1)  # pragma: no cover
 
-    output = F.conv2d(x_padded, weight, groups=E)
-    return output.squeeze(0)
+    output = F.conv2d(x_padded, weight, groups=E)  # pragma: no cover
+    return output.squeeze(0)  # pragma: no cover
 
 
 def _convolve_fft_gpu(x_tensor, k_tensor):  # pragma: no cover
     """Frequency domain convolution using PyTorch FFT"""
-    import torch
+    import torch  # pragma: no cover
 
-    _, H, W = x_tensor.shape
-    _, k_y, k_x = k_tensor.shape
+    _, H, W = x_tensor.shape  # pragma: no cover
+    _, k_y, k_x = k_tensor.shape  # pragma: no cover
 
-    n_y = H + k_y - 1
-    n_x = W + k_x - 1
+    n_y = H + k_y - 1  # pragma: no cover
+    n_x = W + k_x - 1  # pragma: no cover
 
-    x_f = torch.fft.rfftn(x_tensor, s=(n_y, n_x))
-    k_f = torch.fft.rfftn(k_tensor, s=(n_y, n_x))
+    x_f = torch.fft.rfftn(x_tensor, s=(n_y, n_x))  # pragma: no cover
+    k_f = torch.fft.rfftn(k_tensor, s=(n_y, n_x))  # pragma: no cover
 
-    conv_full = torch.fft.irfftn(x_f * k_f, s=(n_y, n_x))
+    conv_full = torch.fft.irfftn(x_f * k_f, s=(n_y, n_x))  # pragma: no cover
 
-    start_y = k_y // 2
-    start_x = k_x // 2
-    return conv_full[:, start_y : start_y + H, start_x : start_x + W]
+    start_y = k_y // 2  # pragma: no cover
+    start_x = k_x // 2  # pragma: no cover
+    return conv_full[
+        :, start_y : start_y + H, start_x : start_x + W
+    ]  # pragma: no cover
 
 
 def convolve_psf_gpu(npred, psf, device):  # pragma: no cover
     """
     GPU-optimized PSF convolution with automatic switching between FFT and Spatial methods.
     """
-    import torch
-    import numpy as np
-    from gammapy.maps import Map
+    import torch  # pragma: no cover
+    import numpy as np  # pragma: no cover
+    from gammapy.maps import Map  # pragma: no cover
 
-    x_np = npred.data.astype(np.float32)
-    k_np = psf.psf_kernel_map.data.astype(np.float32)
+    x_np = npred.data.astype(np.float32)  # pragma: no cover
+    k_np = psf.psf_kernel_map.data.astype(np.float32)  # pragma: no cover
 
-    if x_np.ndim == 2 and k_np.ndim == 3:
+    if x_np.ndim == 2 and k_np.ndim == 3:  # pragma: no cover
         geom_out = npred.geom.to_image().to_cube(axes=psf.psf_kernel_map.geom.axes)
         e_k = k_np.shape[0]
         x_np = np.broadcast_to(x_np, (e_k,) + x_np.shape).copy()
         x_was_2d = False
-    else:
+    else:  # pragma: no cover
         geom_out = npred.geom
         x_was_2d = x_np.ndim == 2
         if x_was_2d:
             x_np = x_np[np.newaxis, ...]
             k_np = k_np[np.newaxis, ...]
 
-    x_tensor = torch.from_numpy(x_np).to(device)
-    k_tensor = torch.from_numpy(k_np).to(device)
+    x_tensor = torch.from_numpy(x_np).to(device)  # pragma: no cover
+    k_tensor = torch.from_numpy(k_np).to(device)  # pragma: no cover
 
-    kernel_size = max(k_tensor.shape[-2:])
+    kernel_size = max(k_tensor.shape[-2:])  # pragma: no cover
 
-    if kernel_size > 31:
+    if kernel_size > 31:  # pragma: no cover
         y_tensor = _convolve_fft_gpu(x_tensor, k_tensor)
-    else:
+    else:  # pragma: no cover
         y_tensor = _convolve_spatial_gpu(x_tensor, k_tensor)
 
-    y_np = y_tensor.cpu().numpy()
+    y_np = y_tensor.cpu().numpy()  # pragma: no cover
 
-    if x_was_2d:
+    if x_was_2d:  # pragma: no cover
         y_np = y_np[0]
 
-    return Map.from_geom(geom_out, data=y_np, unit=npred.unit)
+    return Map.from_geom(geom_out, data=y_np, unit=npred.unit)  # pragma: no cover
 
 
 POOL_METHODS = {

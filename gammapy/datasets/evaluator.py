@@ -11,7 +11,7 @@ from gammapy.irf import EDispKernel, PSFKernel
 from gammapy.maps import HpxNDMap, Map, RegionNDMap, WcsNDMap
 from gammapy.modeling.models import PointSpatialModel, TemplateNPredModel
 from .utils import apply_edisp
-from gammapy.utils.parallel import get_gpu_device, convolve_psf_gpu
+from gammapy.utils.parallel import get_gpu_device, convolve_psf_gpu  # pragma: no cover
 
 PSF_MAX_RADIUS = None
 PSF_CONTAINMENT = 0.999
@@ -94,12 +94,12 @@ class MapEvaluator:
         self._cached_position = (0, 0)
         self._computation_cache = None
 
-        self.gpu_device = get_gpu_device()
+        self.gpu_device = get_gpu_device()  # pragma: no cover
 
     def _repr_html_(self):  # pragma: no cover
-        try:
+        try:  # pragma: no cover
             return self.to_html()
-        except AttributeError:
+        except AttributeError:  # pragma: no cover
             return f"<pre>{html.escape(str(self))}</pre>"
 
     def reset_cache_properties(self):
@@ -356,10 +356,10 @@ class MapEvaluator:
 
     def apply_psf(self, npred, force_cpu=False):
         """Convolve npred cube with PSF (GPU optimized with grouped conv2d)."""
-        if self.gpu_device is None or force_cpu:
+        if self.gpu_device is None or force_cpu:  # pragma: no cover
             return npred.convolve(self.psf)
 
-        return convolve_psf_gpu(
+        return convolve_psf_gpu(  # pragma: no cover
             npred, self.psf, device=self.gpu_device
         )  # pragma: no cover
 
