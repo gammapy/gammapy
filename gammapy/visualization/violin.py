@@ -10,7 +10,7 @@ def plot_flux_violin(
     energy_edges,
     samples_per_band,
     weights_per_band=None,
-    energy_power=0.0,
+    energy_power=None,
     color="C0",
     bw_method="scott",
     grid_size=200,
@@ -45,7 +45,7 @@ def plot_flux_violin(
         percentile computation with weights.
     energy_power : float, optional
         Power-law scaling applied as ``E_center**energy_power * flux``.
-        Useful for plotting SED-like quantities.
+        Default is None.
     bw_method : str or float, optional
         Bandwidth selection passed to ``scipy.stats.gaussian_kde``.
     grid_size : int, optional
