@@ -18,6 +18,7 @@ def plot_flux_violin(
     bw_method="scott",
     grid_size=200,
     errorbar_kwargs=None,
+    errorbar_ul_kwargs=None,
     violin_clip=None,
     y_label="dN/dE",
 ):
@@ -61,6 +62,8 @@ def plot_flux_violin(
         Number of evaluation points in log-flux space for the KDE grid.
     errorbar_kwargs : dict, optional
         Keyword arguments forwarded to ``ax.errorbar`` for the quantile bars.
+    errorbar_ul_kwargs : dict, optional
+        Keyword arguments forwarded to ``ax.errorbar`` for the ul bars.
     violin_clip : (float, float), optional
         Lower and upper containment fractions (in [0, 1]) used to clip
         the violin tails in log-space. If omitted, defaults to
@@ -90,210 +93,249 @@ def plot_flux_violin(
       (corresponding to the 2σ one-sided percentile).
     """
 
-    quantile_levels = (100 * norm.cdf(-1), 50, 100 * norm.cdf(1))
-    ul_level = 100 * norm.cdf(2)
-    widths_scale = 0.99  # shrink half log-width so adjacent violins don’t touch
-    if violin_clip is None:
-        violin_clip = [norm.cdf(-4), norm.cdf(4)]
+    # Axis scaling
     ax.set_xscale("log")
     ax.set_yscale("log")
 
+    # Energy edges
     energy_edges = u.Quantity(energy_edges)
-    x_unit_symbol = f"{energy_edges.unit}"
+    unit_x = f"{energy_edges.unit}"
     edges = np.asarray(energy_edges.to_value())
+    _validate_energy_edges(edges)
 
-    y_unit = f"{samples_per_band[0].unit}"
+    unit_y = f"{samples_per_band[0].unit}"
+    nbins = len(edges) - 1
 
+    samples_per_band, weights_per_band = _validate_inputs(
+        samples_per_band, weights_per_band, nbins
+    )
+
+    # clip defaults
+    if violin_clip is None:
+        violin_clip = (norm.cdf(-4), norm.cdf(4))
+    lc, uc = violin_clip
+    if not (0 <= lc < uc <= 1):
+        raise ValueError("violin_clip must satisfy 0 <= low < high <= 1.")
+
+    # Errorbar styles
+    if errorbar_kwargs is None:
+        errorbar_kwargs = dict(
+            marker="o",
+            ms=4.5,
+            mec=edgecolor,
+            mfc="white",
+            color=edgecolor,
+            capsize=2.5,
+            elinewidth=1.2,
+            lw=1.2,
+        )
+    if errorbar_ul_kwargs is None:
+        errorbar_ul_kwargs = dict(
+            marker="v",
+            ms=7,
+            mec=edgecolor,
+            mfc="white",
+            color=edgecolor,
+            capsize=2.5,
+            elinewidth=1.2,
+            lw=1.2,
+        )
+
+    quantiles = [100 * norm.cdf(-1), 50, 100 * norm.cdf(1)]
+    ul_level = 100 * norm.cdf(2)
+
+    # Precompute bin geometry
+    emins = edges[:-1]
+    emaxs = edges[1:]
+    xlog_min = np.log10(emins)
+    xlog_max = np.log10(emaxs)
+
+    centers = 0.5 * (xlog_min + xlog_max)
+    halfwidths = 0.5 * (xlog_max - xlog_min) * 0.99
+
+    artists = []
+
+    for samples, weights, xc, hwlog, emin, emax in zip(
+        samples_per_band, weights_per_band, centers, halfwidths, emins, emaxs
+    ):
+        s = _sanitize_samples(samples, unit_y)
+        w = _sanitize_weights(weights, len(s))
+        if w is None or s.size == 0:
+            continue
+
+        # transform
+        ylog, scale = _compute_log_transformed(s, w, xc, energy_power)
+
+        # KDE
+        grid_full, dens_full = _kde_evaluate(ylog, w, grid_size, bw_method)
+
+        # clipping interval
+        y_low = np.percentile(s, lc * 100, weights=w, method="inverted_cdf") * scale
+        y_high = np.percentile(s, uc * 100, weights=w, method="inverted_cdf") * scale
+
+        if y_high > y_low > 0:
+            ymin = max(grid_full.min(), np.log10(y_low))
+            ymax = min(grid_full.max(), np.log10(y_high))
+            ygrid_log, dens = _clip_violin(grid_full, dens_full, ymin, ymax)
+        else:
+            ygrid_log, dens = grid_full, dens_full
+
+        # violin polygon
+        artists.extend(
+            _draw_violin(ax, xc, hwlog, ygrid_log, dens, color, edgecolor, alpha, lw)
+        )
+
+        # quantile bars
+        y_lo, y_med, y_hi = _quantiles(s, w, quantiles, scale)
+        if y_med <= 0:
+            y_med = np.percentile(s, ul_level, weights=w, method="inverted_cdf") * scale
+
+        x_center_lin = 10**xc
+
+        artists.append(
+            _draw_errorbar(
+                ax,
+                x_center_lin,
+                emin,
+                emax,
+                y_med,
+                y_lo,
+                y_hi,
+                errorbar_kwargs,
+                errorbar_ul_kwargs,
+            )
+        )
+
+    # Labels
+    ax.set_xlabel(f"Energy [{unit_x}]")
+
+    if energy_power:
+        p = f"{energy_power:g}"
+        unit_str = rf"[{unit_x}$^{p}$ × {unit_y}]"
+        ax.set_ylabel(rf"$E^{p}\,\times$ {y_label} {unit_str}")
+    else:
+        ax.set_ylabel(f"{y_label} [{unit_y}]")
+
+    return artists
+
+
+def _validate_inputs(samples_per_band, weights_per_band, nbins):
+    """Validate that samples and weightes."""
+    if len(samples_per_band) != nbins:
+        raise ValueError("samples_per_band must match number of bins.")
+
+    if weights_per_band is None:
+        weights_per_band = [None] * nbins
+    elif len(weights_per_band) != nbins:
+        raise ValueError("weights_per_band must match number of bins.")
+    return samples_per_band, weights_per_band
+
+
+def _validate_energy_edges(edges):
+    """Validate that energy_edges is 1D, positive, finite, and strictly increasing."""
     if edges.ndim != 1 or edges.size < 2:
-        raise ValueError("energy_edges must be a 1D array with length >= 2 (nbins+1).")
+        raise ValueError("energy_edges must be 1D and contain at least two values.")
     if (
         not np.all(np.isfinite(edges))
         or np.any(edges <= 0)
         or not np.all(np.diff(edges) > 0)
     ):
-        raise ValueError(
-            "Edges must be strictly increasing, finite, and > 0 for log axes."
-        )
+        raise ValueError("energy_edges must be strictly increasing, finite, and > 0.")
 
-    Emins = edges[:-1]
-    Emaxs = edges[1:]
-    nbins = Emins.size
 
-    if len(samples_per_band) != nbins:
-        raise ValueError(
-            f"len(samples_per_band)={len(samples_per_band)} "
-            f"must equal len(energy_edges)-1={nbins}."
-        )
-    if weights_per_band is None:
-        weights_per_band = [None] * nbins
-    elif len(weights_per_band) != nbins:
-        raise ValueError(
-            f"len(weights_per_band)={len(weights_per_band)} "
-            f"must equal len(energy_edges)-1={nbins}."
-        )
+def _sanitize_samples(samples, unit_y):
+    """Return finite samples with negative values adjusted for log-scale use."""
+    s = samples.copy().to_value(unit_y)
+    mask = np.isfinite(s)
+    s = s[mask]
 
-    # centers and half widths in log(E)
-    xlog_min = np.log10(Emins)
-    xlog_max = np.log10(Emaxs)
-    xlog_centers = 0.5 * (xlog_min + xlog_max)
-    half_widths_log = 0.5 * (xlog_max - xlog_min) * float(widths_scale)
+    if np.any(s < 0):
+        s_pos = s[s > 0]
+        if s_pos.size > 0:
+            s[s < 0] = 0.1 * s_pos.min()
 
-    # weighted KDE in log-space
-    def kde_on_grid_weighted(ylog, w, grid_size, bw_method):
-        ygrid = np.linspace(ylog.min(), ylog.max(), int(grid_size))
-        kde = gaussian_kde(ylog, bw_method=bw_method, weights=w)
-        dens = kde(ygrid)
-        m = dens.max()
-        dens = dens / m if m > 0 else dens
-        return ygrid, dens
+    return s
 
-    # default errorbar style
-    errorbar_kwargs = dict(
-        marker="o",
-        ms=4.5,
-        mec=edgecolor,
-        mfc="white",
-        color=edgecolor,
-        capsize=2.5,
-        elinewidth=1.2,
-        lw=1.2,
-    )
-    errorbar_kwargs_ul = dict(
-        marker="v",
-        ms=7,
-        mec=edgecolor,
-        mfc="white",
-        color=edgecolor,
-        capsize=2.5,
-        elinewidth=1.2,
-        lw=1.2,
-    )
 
-    # validate clip bounds
-    if violin_clip is not None:
-        lc, uc = float(violin_clip[0]), float(violin_clip[1])
-        if not (0.0 <= lc < uc <= 1.0):
-            raise ValueError(
-                "violin_clip must be a (low, high) tuple with 0 <= low < high <= 1"
-            )
-    artists = []
-
-    # --- iterate bins ---
-    for samples, weights, xlog_c, hwlog, Emin, Emax in zip(
-        samples_per_band, weights_per_band, xlog_centers, half_widths_log, Emins, Emaxs
-    ):
-        s = samples.copy().to_value(y_unit)
-        n_neg = sum(s < 0)
-        smin_pos = s[s > 0].min()
-        if n_neg > 0:
-            s[s < 0] = smin_pos * 0.1
-
-        if weights is None:
-            w = np.ones_like(s, float)
-        else:
-            w = np.asarray(weights.copy(), float)
-        mask = np.isfinite(s) & np.isfinite(w) & (w >= 0)
-        s = s[mask]
-        w = w[mask]
-        if s.size == 0 or w.sum() == 0:
-            continue
-        w = w / w.sum()
-
-        # transformed log variable: log(E^p * F) = log(F) + p * log(E_center)
-        shift = energy_power * xlog_c if energy_power else 0.0
-        scale = (10**xlog_c) ** energy_power
-        ylog_all = np.log10(s) + shift
-
-        # Tail clipping bounds
-        lc, uc = violin_clip
-        y_low = np.percentile(s, 100 * lc, weights=w, method="inverted_cdf") * scale
-        y_high = np.percentile(s, 100 * uc, weights=w, method="inverted_cdf") * scale
-        if n_neg > 0:
-            y_low = max(smin_pos * scale, y_low)
-        # If degenerate or invalid, skip clipping
-        if y_high <= y_low:
-            y_low, y_high = None, None
-
-        # KDE grid limits
-        if (y_low is not None) and (y_high is not None):
-            ygrid_log_min = max(np.min(ylog_all), np.log10(y_low))
-            ygrid_log_max = min(np.max(ylog_all), np.log10(y_high))
-            # Build KDE within the clipped interval by trimming the grid after KDE eval
-            ygrid_log_full, dens_full = kde_on_grid_weighted(
-                ylog_all, w, grid_size, bw_method
-            )
-            mask_clip = (ygrid_log_full >= ygrid_log_min) & (
-                ygrid_log_full <= ygrid_log_max
-            )
-            ygrid_log = ygrid_log_full[mask_clip]
-            dens = dens_full[mask_clip]
-        else:
-            ygrid_log, dens = kde_on_grid_weighted(ylog_all, w, grid_size, bw_method)
-
-        # Symmetric left/right edges in log(E)
-        xlog_left = xlog_c - hwlog * dens
-        xlog_right = xlog_c + hwlog * dens
-        x_left, x_right = 10 ** (xlog_left), 10 ** (xlog_right)
-        ygrid = 10 ** (ygrid_log)
-        x_poly = np.concatenate([x_left, x_right[::-1]])
-        y_poly = np.concatenate([ygrid, ygrid[::-1]])
-        poly = ax.fill(
-            x_poly,
-            y_poly,
-            facecolor=color,
-            edgecolor=edgecolor,
-            alpha=alpha,
-            lw=lw,
-            zorder=2,
-        )
-        artists.extend(poly)
-
-        # error bars
-        if quantile_levels:
-            y_qs = [
-                np.percentile(samples.value, q, weights=weights, method="inverted_cdf")
-                * scale
-                for q in quantile_levels
-            ]
-
-            y_lo, y_med, y_hi = y_qs[0], y_qs[1], y_qs[2]
-            if y_med > 0:
-                yerr = np.array([[max(0.0, y_med - y_lo)], [max(0.0, y_hi - y_med)]])
-                fp_kwargs = errorbar_kwargs
-            else:
-                yerr = None
-                y_med = (
-                    np.percentile(
-                        samples.value, ul_level, weights=weights, method="inverted_cdf"
-                    )
-                    * scale
-                )
-                fp_kwargs = errorbar_kwargs_ul
-            x_cen = 10 ** (xlog_c)
-            xerr = np.array([[x_cen - Emin], [Emax - x_cen]])
-            eb = ax.errorbar(
-                x_cen, y_med, xerr=xerr, yerr=yerr, **(fp_kwargs or {}), zorder=5
-            )
-            artists.append(eb)
-
-    # axes labels
-    # X
-    ax.set_xlabel(f"Energy [{x_unit_symbol}]")
-
-    # Y with E^p × prefix and proper unit string
-    if energy_power and abs(energy_power) > 0:
-        p_str = f"{energy_power:g}"
-        prefix = rf"$E^{p_str}\,\times$ "
-        if x_unit_symbol is not None:
-            if y_unit:
-                unit_str = rf"[{x_unit_symbol}$^{p_str}$ × {y_unit}]"
-            else:
-                unit_str = rf"[{x_unit_symbol}$^{p_str}$]"
-        else:
-            unit_str = f"[{y_unit}]" if y_unit else ""
-        ax.set_ylabel(prefix + y_label + (" " + unit_str if unit_str else ""))
+def _sanitize_weights(weights, size):
+    """Return normalised finite non-negative weights or None if empty."""
+    if weights is None:
+        w = np.ones(size, float)
     else:
-        ylab = y_label + (f" [{y_unit}]" if y_unit else "")
-        ax.set_ylabel(ylab)
+        w = np.asarray(weights, float)
+        w = w[np.isfinite(w) & (w >= 0)]
 
-    return artists
+    total = w.sum()
+    return w / total if total > 0 else None
+
+
+def _compute_log_transformed(s, w, xlog_center, energy_power):
+    """Transform samples to log10(E^p × F) and return log-values and linear scale."""
+    if energy_power:
+        shift = energy_power * xlog_center
+        scale = (10**xlog_center) ** energy_power
+    else:
+        shift = 0.0
+        scale = 1.0
+
+    return np.log10(s) + shift, scale
+
+
+def _kde_evaluate(ylog, w, grid_size, bw_method):
+    """Evaluate weighted KDE on a fixed log-grid and normalise density."""
+    grid = np.linspace(ylog.min(), ylog.max(), int(grid_size))
+    kde = gaussian_kde(ylog, weights=w, bw_method=bw_method)
+    dens = kde(grid)
+    peak = dens.max()
+    return grid, dens / peak if peak > 0 else dens
+
+
+def _clip_violin(grid, dens, ymin, ymax):
+    """Clip KDE grid and density to a specified log-range."""
+    mask = (grid >= ymin) & (grid <= ymax)
+    return grid[mask], dens[mask]
+
+
+def _quantiles(samples, weights, qlist, scale):
+    """Compute weighted percentiles scaled by E^p if needed."""
+    return [
+        np.percentile(samples, q, weights=weights, method="inverted_cdf") * scale
+        for q in qlist
+    ]
+
+
+def _draw_violin(ax, x_center, hwlog, ygrid_log, dens, color, edgecolor, alpha, lw):
+    """Draw a symmetric violin polygon in log-space."""
+    xlog_left = x_center - hwlog * dens
+    xlog_right = x_center + hwlog * dens
+
+    x_left = 10**xlog_left
+    x_right = 10**xlog_right
+    y_lin = 10**ygrid_log
+
+    x_poly = np.concatenate([x_left, x_right[::-1]])
+    y_poly = np.concatenate([y_lin, y_lin[::-1]])
+
+    return ax.fill(
+        x_poly,
+        y_poly,
+        facecolor=color,
+        edgecolor=edgecolor,
+        alpha=alpha,
+        lw=lw,
+        zorder=2,
+    )
+
+
+def _draw_errorbar(ax, x_center_lin, emin, emax, y_med, y_lo, y_hi, err_kw, err_ul_kw):
+    """Draw Gammapy-style flux-point error bars or upper limits."""
+    if y_med > 0:
+        yerr = np.array([[max(0, y_med - y_lo)], [max(0, y_hi - y_med)]])
+        style = err_kw
+    else:
+        yerr = None
+        style = err_ul_kw
+
+    xerr = np.array([[x_center_lin - emin], [emax - x_center_lin]])
+
+    return ax.errorbar(x_center_lin, y_med, xerr=xerr, yerr=yerr, **style, zorder=5)
