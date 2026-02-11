@@ -382,13 +382,7 @@ class FluxCollectionEstimator:
         fp_datasets = []
         for d in self.datasets:
             fp_dataset = d.copy(name=d.name)
-            if d.background_model:
-                bkg_model = [d.background_model.copy(name=d.background_model.name)]
-                if not self.reoptimize:
-                    bkg_model[0].freeze()
-            else:
-                bkg_model = []
-            fp_dataset.models = bkg_model
+            bkg_model = self._get_bkg(d)
             fp_models = []
             npred_frozen = Map.from_geom(self.geom, dtype=float)
             for name, ev in d.evaluators.items():
@@ -406,16 +400,25 @@ class FluxCollectionEstimator:
                         )
                     else:
                         npred_frozen.stack(npred)
-                bkg_frozen = TemplateNPredModel(
-                    npred_frozen,
-                    name="frozen_" + fp_dataset.name,
-                    datasets_names=[fp_dataset.name],
-                )
+            bkg_frozen = TemplateNPredModel(
+                npred_frozen,
+                name="frozen_" + fp_dataset.name,
+                datasets_names=[fp_dataset.name],
+            )
             bkg_frozen.spectral_model.norm.frozen = True
             fp_dataset.models = Models(fp_models + [bkg_frozen] + bkg_model)
-            # keep this order such as fp_models parameters appears first in the samples indexing
+            # keep this order such as fp_models parameters appear first in the samples indexing
             fp_datasets.append(fp_dataset)
         return Datasets(fp_datasets), spectral_models
+
+    def _get_bkg(self, d):
+        if d.background_model:
+            bkg_model = [d.background_model.copy(name=d.background_model.name)]
+            if not self.reoptimize:
+                bkg_model[0].freeze()
+        else:
+            bkg_model = []
+        return bkg_model
 
     @staticmethod
     def _compute_npred(datasets, param, model):
@@ -435,7 +438,7 @@ class FluxCollectionEstimator:
         return (ref_model(energy).squeeze() * param.value).to(self.dnde_unit)
 
     @staticmethod
-    def _compute_TS(datasets, param):
+    def _compute_ts(datasets, param):
         """Test statistic against no source as null hypothesis"""
         cash = datasets._stat_sum_likelihood()
         with Parameters([param]).restore_status():
@@ -480,10 +483,10 @@ class FluxCollectionEstimator:
                 fp_result["dnde_errn"][km] = res["errn"] / norm * dnde
                 fp_result["dnde_errp"][km] = res["errp"] / norm * dnde
 
-            TSnull = self._compute_TS(fp_datasets, norm_param)
-            fp_result["ts"][km] = TSnull
+            ts_null = self._compute_ts(fp_datasets, norm_param)
+            fp_result["ts"][km] = ts_null
 
-            if np.sign(TSnull) * np.sqrt(np.abs(TSnull)) < self.n_sigma_ul:
+            if np.sign(ts_null) * np.sqrt(np.abs(ts_null)) < self.n_sigma_ul:
                 res = self.solver.confidence(
                     datasets=fp_datasets,
                     parameter=norm_param,
@@ -539,8 +542,8 @@ class FluxCollectionEstimator:
         # compute TS after norm value is set to median for all models
         for km, spec in enumerate(spectral_models.values()):
             norm_param = spec.norm
-            TSnull = self._compute_TS(fp_datasets, norm_param)
-            fp_result["ts"][km] = TSnull
+            ts_null = self._compute_ts(fp_datasets, norm_param)
+            fp_result["ts"][km] = ts_null
 
         return fp_result
 
