@@ -372,7 +372,6 @@ class FluxCollectionEstimator:
         self.energy_edges = energy_edges
         self.ne = len(self.energy_edges)
         self.energy_centers = (energy_edges[:-1] * energy_edges[1:]) ** 0.5
-        self.energy_bounds = [energy_edges[0], energy_edges[-1]]
         self.energy_unit = "TeV"
 
         self.dnde_unit = u.Unit("cm-2 s-1 TeV-1")
@@ -438,11 +437,6 @@ class FluxCollectionEstimator:
                 npred += np.nansum(npred_map.data * d.mask.data) * param.value
         return npred
 
-    def _compute_dnde(self, energy, param, model):
-        "compute differential flux"
-        ref_model = _get_reference_model(model, self.energy_bounds)
-        return (ref_model(energy).squeeze() * param.value).to(self.dnde_unit)
-
     @staticmethod
     def _compute_ts(datasets, param):
         """Test statistic against no source as null hypothesis"""
@@ -459,11 +453,11 @@ class FluxCollectionEstimator:
 
         fp_result = dict(
             npred=np.zeros(self.ns),
-            dnde=np.zeros(self.ns) * self.dnde_unit,
-            dnde_err=np.zeros(self.ns) * self.dnde_unit,
-            dnde_errn=np.zeros(self.ns) * self.dnde_unit,
-            dnde_errp=np.zeros(self.ns) * self.dnde_unit,
-            dnde_ul=np.zeros(self.ns) * self.dnde_unit,
+            norm=np.zeros(self.ns),
+            norm_err=np.zeros(self.ns),
+            norm_errn=np.zeros(self.ns),
+            norm_errp=np.zeros(self.ns),
+            norm_ul=np.zeros(self.ns),
             ts=np.zeros(self.ns),
             solver_results=fit_results,
         )
@@ -476,18 +470,17 @@ class FluxCollectionEstimator:
             npred = self._compute_npred(fp_datasets, norm_param, m)
             fp_result["npred"][km] = npred
 
-            dnde = self._compute_dnde(energy, norm_param, m)
-            fp_result["dnde"][km] = dnde
+            fp_result["norm"][km] = norm
 
-            fp_result["dnde_err"][km] = error / norm * dnde
+            fp_result["norm_err"][km] = error
             if "errn-errp" in self.selection_optional:
                 res = self.solver.confidence(
                     datasets=fp_datasets,
                     parameter=norm_param,
                     sigma=self.self.n_sigma,
                 )
-                fp_result["dnde_errn"][km] = res["errn"] / norm * dnde
-                fp_result["dnde_errp"][km] = res["errp"] / norm * dnde
+                fp_result["norm_errn"][km] = res["errn"]
+                fp_result["norm_errp"][km] = res["errp"]
 
             ts_null = self._compute_ts(fp_datasets, norm_param)
             fp_result["ts"][km] = ts_null
@@ -498,9 +491,9 @@ class FluxCollectionEstimator:
                     parameter=norm_param,
                     sigma=self.n_sigma_ul,
                 )
-                fp_result["dnde_ul"][km] = (1 + res["errp"] / norm) * dnde
+                fp_result["norm_ul"][km] = norm + res["errp"]
             else:
-                fp_result["dnde_ul"][km] = np.nan * dnde
+                fp_result["norm_ul"][km] = np.nan
         return fp_result
 
     def _run_sampler(self, energy, fp_datasets, spectral_models):
@@ -510,11 +503,11 @@ class FluxCollectionEstimator:
 
         fp_result = dict(
             npred=np.zeros(self.ns),
-            dnde=np.zeros(self.ns) * self.dnde_unit,
-            dnde_err=np.zeros(self.ns) * self.dnde_unit,
-            dnde_errn=np.zeros(self.ns) * self.dnde_unit,
-            dnde_errp=np.zeros(self.ns) * self.dnde_unit,
-            dnde_ul=np.zeros(self.ns) * self.dnde_unit,
+            norm=np.zeros(self.ns) * self.norm_unit,
+            norm_err=np.zeros(self.ns) * self.norm_unit,
+            norm_errn=np.zeros(self.ns) * self.norm_unit,
+            norm_errp=np.zeros(self.ns) * self.norm_unit,
+            norm_ul=np.zeros(self.ns) * self.norm_unit,
             ts=np.zeros(self.ns),
             solver_results=sampler_results,
         )
@@ -541,9 +534,9 @@ class FluxCollectionEstimator:
             norm_errp = np.percentile(s, q_n, weights=w, method=method)
             norm_errn = np.percentile(s, q_p, weights=w, method=method)
             norm_ul = np.percentile(s, q_ul, weights=w, method=method)
-            fp_result["dnde_errn"][km] = (norm - norm_errn) / norm * dnde
-            fp_result["dnde_errp"][km] = (norm_errp - norm) / norm * dnde
-            fp_result["dnde_ul"][km] = norm_ul / norm * dnde
+            fp_result["norm_errn"][km] = norm - norm_errn
+            fp_result["norm_errp"][km] = norm_errp - norm
+            fp_result["norm_ul"][km] = norm_ul
 
         # compute TS after norm value is set to median for all models
         for km, spec in enumerate(spectral_models.values()):
@@ -582,11 +575,11 @@ class FluxCollectionEstimator:
         fp_results = dict(
             npred=np.zeros((self.ne - 1, self.ns)),
             npred_err=np.zeros((self.ne - 1, self.ns)),
-            dnde=np.zeros((self.ne - 1, self.ns)) * self.dnde_unit,
-            dnde_err=np.zeros((self.ne - 1, self.ns)) * self.dnde_unit,
-            dnde_errn=np.zeros((self.ne - 1, self.ns)) * self.dnde_unit,
-            dnde_errp=np.zeros((self.ne - 1, self.ns)) * self.dnde_unit,
-            dnde_ul=np.zeros((self.ne - 1, self.ns)) * self.dnde_unit,
+            norm=np.zeros((self.ne - 1, self.ns)),
+            norm_err=np.zeros((self.ne - 1, self.ns)),
+            norm_errn=np.zeros((self.ne - 1, self.ns)),
+            norm_errp=np.zeros((self.ne - 1, self.ns)),
+            norm_ul=np.zeros((self.ne - 1, self.ns)),
             ts=np.zeros((self.ne - 1, self.ns)),
             solver_results=np.empty(self.ne - 1, dtype=object),
         )
@@ -604,11 +597,11 @@ class FluxCollectionEstimator:
                     fp_result = self._run_fit(*args)
 
             fp_results["npred"][ke, :] = fp_result["npred"]
-            fp_results["dnde"][ke, :] = fp_result["dnde"]
-            fp_results["dnde_err"][ke, :] = fp_result["dnde_err"]
-            fp_results["dnde_errn"][ke, :] = fp_result["dnde_errn"]
-            fp_results["dnde_errp"][ke, :] = fp_result["dnde_errp"]
-            fp_results["dnde_ul"][ke, :] = fp_result["dnde_ul"]
+            fp_results["norm"][ke, :] = fp_result["norm"]
+            fp_results["norm_err"][ke, :] = fp_result["norm_err"]
+            fp_results["norm_errn"][ke, :] = fp_result["norm_errn"]
+            fp_results["norm_errp"][ke, :] = fp_result["norm_errp"]
+            fp_results["norm_ul"][ke, :] = fp_result["norm_ul"]
             fp_results["ts"][ke, :] = fp_result["ts"]
             fp_results["solver_results"][ke] = fp_result["solver_results"]
 
@@ -636,24 +629,27 @@ class FluxCollectionEstimator:
             fp_dict["samples"] = {"dnde": {}}
 
         for km, m in enumerate(self.models):
-            model = _get_reference_model(m, self.energy_bounds)
+            model = _get_reference_model(m, self.energy_edges)
             table = Table()
             table["e_min"] = self.energy_edges[:-1].to(self.energy_unit)
             table["e_max"] = self.energy_edges[1:].to(self.energy_unit)
             table["e_ref"] = self.energy_centers.to(self.energy_unit)
-            table["dnde"] = fp_results["dnde"][:, km]
+            table["norm"] = fp_results["norm"][:, km]
+            table["ref_dnde"] = model(table["e_ref"]).to(self.dnde_unit)
             if isinstance(self.solver, Fit):
-                table["dnde_err"] = fp_results["dnde_err"][:, km]
+                table["norm_err"] = fp_results["norm_err"][:, km]
             if (
                 isinstance(self.solver, Sampler)
                 or "errn-errp" in self.selection_optional
             ):
-                table["dnde_errn"] = fp_results["dnde_errn"][:, km]
-                table["dnde_errp"] = fp_results["dnde_errp"][:, km]
-            table["dnde_ul"] = fp_results["dnde_ul"][:, km]
+                table["norm_errn"] = fp_results["norm_errn"][:, km]
+                table["norm_errp"] = fp_results["norm_errp"][:, km]
+            table["norm_ul"] = fp_results["norm_ul"][:, km]
             table["ts"] = fp_results["ts"][:, km]
-            table.meta["SED_TYPE"] = "dnde"
-            flux_points = FluxPoints.from_table(table, reference_model=model)
+            table.meta["SED_TYPE"] = "likelihood"
+            flux_points = FluxPoints.from_table(
+                table, reference_model=model.copy(), format="gadf-sed"
+            )
             fp_dict["flux_points"][m.name] = flux_points
 
             if isinstance(self.solver, Sampler):
