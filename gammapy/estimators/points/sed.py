@@ -301,8 +301,12 @@ class FluxCollectionEstimator:
         Energy edges of the flux point bins.
     models : str or int
         Source models for which the flux points are computed (others are frozen).
-    n_sigma_ul : int
-        Number of sigma to use for upper limit computation. Default is 2.
+    n_sigma : float, optional
+        Number of sigma to use for asymmetric error computation. Must be a positive value.
+        Default is 1.
+    n_sigma_ul : float, optional
+        Number of sigma to use for upper limit computation. Must be a positive value.
+        Default is 2.
     norm : `~gammapy.modeling.Parameter` or dict, optional
         Norm parameter used for the fit.
         Default is None and a new parameter is created with value=1, name="norm".
@@ -325,12 +329,14 @@ class FluxCollectionEstimator:
         self,
         energy_edges,
         models,
+        n_sigma=1,
         n_sigma_ul=2,
         norm=None,
         solver=None,
         reoptimize=False,
         selection_optional=None,
     ):
+        self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
 
         self.models = models
@@ -469,7 +475,7 @@ class FluxCollectionEstimator:
                 res = self.solver.confidence(
                     datasets=fp_datasets,
                     parameter=norm_param,
-                    sigma=1,
+                    sigma=self.self.n_sigma,
                 )
                 fp_result["dnde_errn"][km] = res["errn"] / norm * dnde
                 fp_result["dnde_errp"][km] = res["errp"] / norm * dnde
@@ -520,9 +526,11 @@ class FluxCollectionEstimator:
             dnde = self._compute_dnde(energy, norm_param, m)
             fp_result["dnde"][km] = dnde
 
-            norm_errp = np.percentile(s, 100 * cdf(1), weights=w, method=method)
-            norm_errn = np.percentile(s, 100 * cdf(-1), weights=w, method=method)
+            q_n = 100 * cdf(self.n_sigma)
+            q_p = 100 * cdf(-self.n_sigma)
             q_ul = 100 * cdf(self.n_sigma_ul)
+            norm_errp = np.percentile(s, q_n, weights=w, method=method)
+            norm_errn = np.percentile(s, q_p, weights=w, method=method)
             norm_ul = np.percentile(s, q_ul, weights=w, method=method)
             fp_result["dnde_errn"][km] = (norm - norm_errn) / norm * dnde
             fp_result["dnde_errp"][km] = (norm_errp - norm) / norm * dnde
