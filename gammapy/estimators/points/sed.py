@@ -623,6 +623,8 @@ class FluxCollectionEstimator:
             solver_results=fp_results["solver_results"],
             flux_points={},
         )
+        if isinstance(self.solver, Sampler):
+            fp_dict["samples"] = {"dnde": {}}
 
         for km, m in enumerate(self.models):
             model = _get_reference_model(m, self.energy_bounds)
@@ -646,7 +648,6 @@ class FluxCollectionEstimator:
             fp_dict["flux_points"][m.name] = flux_points
 
             if isinstance(self.solver, Sampler):
-                fp_dict["samples"] = {}
                 weights = []
                 samples = []
                 for ke in range(self.ne - 1):
@@ -655,6 +656,5 @@ class FluxCollectionEstimator:
                     weights.append(res["weights"])
                     samples.append(dnde_ref * res["points"][:, km])
                 fp_dict["samples"]["weights"] = weights
-                fp_dict["samples"]["dnde"] = {}
                 fp_dict["samples"]["dnde"][m.name] = samples
         return fp_dict
