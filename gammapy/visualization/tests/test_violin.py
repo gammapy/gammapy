@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 
+import pytest
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.artist import Artist
@@ -9,6 +10,71 @@ import astropy.units as u
 from gammapy.visualization.violin import plot_flux_violin
 
 
+def test_plot_flux_violin_invalid():
+    with pytest.raises(ValueError):
+        energy_edges = np.array([1, 2, 4]) * u.TeV  # two bins
+
+        samples_per_band = [
+            np.array([1.0, 1.2, 0.8]) * u.Unit("cm-2 s-1 TeV-1"),
+        ]
+
+        _, ax = plt.subplots()
+        plot_flux_violin(
+            ax=ax,
+            energy_edges=energy_edges,
+            samples_per_band=samples_per_band,
+        )
+
+        with pytest.raises(ValueError):
+            energy_edges = np.array([1, 2, 4]) * u.TeV  # two bins
+
+            samples_per_band = [
+                np.array([1.0, 1.2, 0.8]) * u.Unit("cm-2 s-1 TeV-1"),
+                np.array([0.4, 0.6, 0.5]) * u.Unit("cm-2 s-1 TeV-1"),
+            ]
+            weights_per_band = [
+                np.array([1.0, 2.0, 1.0]),
+            ]
+
+            _, ax = plt.subplots()
+            plot_flux_violin(
+                ax=ax,
+                energy_edges=energy_edges,
+                samples_per_band=samples_per_band,
+                weights_per_band=weights_per_band,
+            )
+
+        with pytest.raises(ValueError):
+            energy_edges = np.array([1, 2]) * u.TeV  # two bins
+
+            samples_per_band = [
+                np.array([1.0, 1.2, 0.8]) * u.Unit("cm-2 s-1 TeV-1"),
+                np.array([0.4, 0.6, 0.5]) * u.Unit("cm-2 s-1 TeV-1"),
+            ]
+
+            _, ax = plt.subplots()
+            plot_flux_violin(
+                ax=ax,
+                energy_edges=energy_edges,
+                samples_per_band=samples_per_band,
+            )
+
+        with pytest.raises(ValueError):
+            energy_edges = np.array([-np.inf, 2, 3]) * u.TeV  # two bins
+
+            samples_per_band = [
+                np.array([1.0, 1.2, 0.8]) * u.Unit("cm-2 s-1 TeV-1"),
+                np.array([0.4, 0.6, 0.5]) * u.Unit("cm-2 s-1 TeV-1"),
+            ]
+
+            _, ax = plt.subplots()
+            plot_flux_violin(
+                ax=ax,
+                energy_edges=energy_edges,
+                samples_per_band=samples_per_band,
+            )
+
+
 def test_plot_flux_violin_minimal():
     """Test that plot_flux_violin runs and returns artists for a simple case."""
 
@@ -16,7 +82,7 @@ def test_plot_flux_violin_minimal():
 
     samples_per_band = [
         np.array([1.0, 1.2, 0.8]) * u.Unit("cm-2 s-1 TeV-1"),
-        np.array([0.4, 0.6, 0.5]) * u.Unit("cm-2 s-1 TeV-1"),
+        np.array([-0.4, -0.6, 0.5]) * u.Unit("cm-2 s-1 TeV-1"),
     ]
 
     weights_per_band = [
@@ -31,8 +97,8 @@ def test_plot_flux_violin_minimal():
         energy_edges=energy_edges,
         samples_per_band=samples_per_band,
         weights_per_band=weights_per_band,
-        energy_power=0.0,
         bw_method="scott",
+        energy_power=0.0,
         grid_size=50,
         violin_clip=(0.05, 0.95),
         y_label="dN/dE",
@@ -87,7 +153,7 @@ def test_plot_flux_violin_no_weights():
         energy_edges=energy_edges,
         samples_per_band=samples_per_band,
         weights_per_band=None,
-        energy_power=0.0,
+        energy_power=2,
         bw_method="scott",
         grid_size=64,
         violin_kwargs=violin_kwargs,
