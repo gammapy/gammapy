@@ -477,7 +477,7 @@ class FluxCollectionEstimator:
                 res = self.solver.confidence(
                     datasets=fp_datasets,
                     parameter=norm_param,
-                    sigma=self.self.n_sigma,
+                    sigma=self.n_sigma,
                 )
                 fp_result["norm_errn"][km] = res["errn"]
                 fp_result["norm_errp"][km] = res["errp"]
@@ -503,11 +503,11 @@ class FluxCollectionEstimator:
 
         fp_result = dict(
             npred=np.zeros(self.ns),
-            norm=np.zeros(self.ns) * self.norm_unit,
-            norm_err=np.zeros(self.ns) * self.norm_unit,
-            norm_errn=np.zeros(self.ns) * self.norm_unit,
-            norm_errp=np.zeros(self.ns) * self.norm_unit,
-            norm_ul=np.zeros(self.ns) * self.norm_unit,
+            norm=np.zeros(self.ns),
+            norm_err=np.zeros(self.ns),
+            norm_errn=np.zeros(self.ns),
+            norm_errp=np.zeros(self.ns),
+            norm_ul=np.zeros(self.ns),
             ts=np.zeros(self.ns),
             solver_results=sampler_results,
         )
@@ -525,8 +525,7 @@ class FluxCollectionEstimator:
 
             norm = np.percentile(s, 50, weights=w, method=method)
             norm_param.value = norm
-            dnde = self._compute_dnde(energy, norm_param, m)
-            fp_result["dnde"][km] = dnde
+            fp_result["norm"][km] = norm
 
             q_n = 100 * cdf(self.n_sigma)
             q_p = 100 * cdf(-self.n_sigma)
