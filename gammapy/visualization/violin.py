@@ -12,13 +12,11 @@ def plot_flux_violin(
     weights_per_band=None,
     energy_power=0.0,
     color="C0",
-    alpha=0.45,
-    edgecolor="black",
-    lw=0.8,
     bw_method="scott",
     grid_size=200,
     errorbar_kwargs=None,
     errorbar_ul_kwargs=None,
+    violin_kwargs=None,
     violin_clip=None,
     y_label="dN/dE",
 ):
@@ -48,14 +46,6 @@ def plot_flux_violin(
     energy_power : float, optional
         Power-law scaling applied as ``E_center**energy_power * flux``.
         Useful for plotting SED-like quantities.
-    color : str, optional
-        Fill color of the violin polygons.
-    alpha : float, optional
-        Fill transparency of the violins.
-    edgecolor : str, optional
-        Color of the violin edges.
-    lw : float, optional
-        Line width of the violin polygon edges.
     bw_method : str or float, optional
         Bandwidth selection passed to ``scipy.stats.gaussian_kde``.
     grid_size : int, optional
@@ -64,6 +54,8 @@ def plot_flux_violin(
         Keyword arguments forwarded to ``ax.errorbar`` for the quantile bars.
     errorbar_ul_kwargs : dict, optional
         Keyword arguments forwarded to ``ax.errorbar`` for the ul bars.
+    violin_kwargs : dict, optional
+        Keyword arguments forwarded to ``ax.fill`` for violin plot.
     violin_clip : (float, float), optional
         Lower and upper containment fractions (in [0, 1]) used to clip
         the violin tails in log-space. If omitted, defaults to
@@ -122,9 +114,9 @@ def plot_flux_violin(
         errorbar_kwargs = dict(
             marker="o",
             ms=4.5,
-            mec=edgecolor,
+            mec="black",
             mfc="white",
-            color=edgecolor,
+            color="black",
             capsize=2.5,
             elinewidth=1.2,
             lw=1.2,
@@ -133,12 +125,19 @@ def plot_flux_violin(
         errorbar_ul_kwargs = dict(
             marker="v",
             ms=7,
-            mec=edgecolor,
+            mec="black",
             mfc="white",
-            color=edgecolor,
+            color="black",
             capsize=2.5,
             elinewidth=1.2,
             lw=1.2,
+        )
+    if violin_kwargs is None:
+        violin_kwargs = dict(
+            alpha=0.45,
+            color="C0",
+            edgecolor="black",
+            lw=0.8,
         )
 
     quantiles = [100 * norm.cdf(-1), 50, 100 * norm.cdf(1)]
@@ -164,7 +163,7 @@ def plot_flux_violin(
             continue
 
         # transform
-        ylog, scale = _compute_log_transformed(s, w, xc, energy_power)
+        ylog, scale = _compute_log_transformed(s, xc, energy_power)
 
         # KDE
         grid_full, dens_full = _kde_evaluate(ylog, w, grid_size, bw_method)
@@ -181,9 +180,7 @@ def plot_flux_violin(
             ygrid_log, dens = grid_full, dens_full
 
         # violin polygon
-        artists.extend(
-            _draw_violin(ax, xc, hwlog, ygrid_log, dens, color, edgecolor, alpha, lw)
-        )
+        artists.extend(_draw_violin(ax, xc, hwlog, ygrid_log, dens, violin_kwargs))
 
         # quantile bars
         y_lo, y_med, y_hi = _quantiles(s, w, quantiles, scale)
@@ -269,7 +266,7 @@ def _sanitize_weights(weights, size):
     return w / total if total > 0 else None
 
 
-def _compute_log_transformed(s, w, xlog_center, energy_power):
+def _compute_log_transformed(s, xlog_center, energy_power):
     """Transform samples to log10(E^p × F) and return log-values and linear scale."""
     if energy_power:
         shift = energy_power * xlog_center
@@ -304,7 +301,7 @@ def _quantiles(samples, weights, qlist, scale):
     ]
 
 
-def _draw_violin(ax, x_center, hwlog, ygrid_log, dens, color, edgecolor, alpha, lw):
+def _draw_violin(ax, x_center, hwlog, ygrid_log, dens, violin_kwargs):
     """Draw a symmetric violin polygon in log-space."""
     xlog_left = x_center - hwlog * dens
     xlog_right = x_center + hwlog * dens
@@ -316,15 +313,7 @@ def _draw_violin(ax, x_center, hwlog, ygrid_log, dens, color, edgecolor, alpha, 
     x_poly = np.concatenate([x_left, x_right[::-1]])
     y_poly = np.concatenate([y_lin, y_lin[::-1]])
 
-    return ax.fill(
-        x_poly,
-        y_poly,
-        facecolor=color,
-        edgecolor=edgecolor,
-        alpha=alpha,
-        lw=lw,
-        zorder=2,
-    )
+    return ax.fill(x_poly, y_poly, zorder=2, **violin_kwargs)
 
 
 def _draw_errorbar(ax, x_center_lin, emin, emax, y_med, y_lo, y_hi, err_kw, err_ul_kw):

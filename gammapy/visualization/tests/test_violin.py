@@ -32,10 +32,6 @@ def test_plot_flux_violin_minimal():
         samples_per_band=samples_per_band,
         weights_per_band=weights_per_band,
         energy_power=0.0,
-        color="C0",
-        alpha=0.5,
-        edgecolor="black",
-        lw=1.0,
         bw_method="scott",
         grid_size=50,
         violin_clip=(0.05, 0.95),
@@ -80,19 +76,21 @@ def test_plot_flux_violin_no_weights():
     ]
 
     fig, ax = plt.subplots()
-
+    violin_kwargs = dict(
+        color="C0",
+        alpha=0.4,
+        edgecolor="black",
+        lw=1.0,
+    )
     artists = plot_flux_violin(
         ax=ax,
         energy_edges=energy_edges,
         samples_per_band=samples_per_band,
         weights_per_band=None,
         energy_power=0.0,
-        color="C0",
-        alpha=0.4,
-        edgecolor="black",
-        lw=1.0,
         bw_method="scott",
         grid_size=64,
+        violin_kwargs=violin_kwargs,
         y_label="dN/dE",
     )
 
