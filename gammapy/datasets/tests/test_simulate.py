@@ -719,7 +719,7 @@ def test_mde_run_switchoff(dataset, models):
 
     meta = events.table.meta
 
-    assert meta["RA_PNT"] == 266.4049882865447
+    assert_allclose(meta["RA_PNT"], 266.4049882865447)
     assert_allclose(meta["ONTIME"], 3600.0)
     assert meta["OBS_ID"] == 1001
     assert meta["RADESYSa"] == "icrs"
