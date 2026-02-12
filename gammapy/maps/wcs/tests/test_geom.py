@@ -736,3 +736,24 @@ def test_caplog(caplog):
     assert geom1 != geom2
     assert "WcsGeom axes are not equal" in [_.message for _ in caplog.records]
     assert "DEBUG" in [_.levelname for _ in caplog.records]
+
+
+def test_wcsgeom_pix_to_idx_clip_edge_from_wcs_edges():
+    geom = WcsGeom.create(
+        npix=(10, 10),
+        binsz=1.0,
+        proj="TAN",
+        frame="icrs",
+        skydir=(0, 0),
+    )
+
+    sky_edges = geom.to_image().get_coord(mode="edges").skycoord
+    ny, _ = sky_edges.shape
+    sky_on_right_edge = sky_edges[ny // 2, -1]
+
+    pix = geom.coord_to_pix(sky_on_right_edge)
+    idx = geom.pix_to_idx(pix, clip=True)
+
+    # After clipping, the index should be on the edge of the map
+    assert idx[0] == geom.npix[0] - 1
+    assert 0 <= idx[1] <= geom.npix[1] - 1
