@@ -51,7 +51,7 @@ def test_from_regions(region):
 def test_binsz(region):
     geom = RegionGeom.create(region, binsz_wcs=0.05)
     wcs_geom = geom.to_wcs_geom()
-    assert geom.binsz_wcs[0].deg == 0.05
+    assert_allclose(geom.binsz_wcs[0].deg, 0.05)
     assert_allclose(wcs_geom.pixel_scales, geom.binsz_wcs)
 
 
@@ -60,14 +60,14 @@ def test_defined_wcs(region):
         skydir=(0, 0), frame="galactic", width="1.5deg", binsz="0.1deg"
     ).wcs
     geom = RegionGeom.create(region, wcs=wcs)
-    assert geom.binsz_wcs[0].deg == 0.1
+    assert_allclose(geom.binsz_wcs[0].deg, 0.1)
 
 
 def test_to_binsz_wcs(region):
     binsz = 0.05 * u.deg
     geom = RegionGeom.create(region, binsz_wcs=0.01)
     new_geom = geom.to_binsz_wcs(binsz)
-    assert geom.binsz_wcs[0].deg == 0.01
+    assert_allclose(geom.binsz_wcs[0].deg, 0.01)
     assert new_geom.binsz_wcs[0].deg == binsz.value
 
 

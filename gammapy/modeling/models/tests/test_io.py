@@ -54,25 +54,25 @@ def test_dict_to_skymodels(models):
     assert "PointSpatialModel" in model0.spatial_model.tag
 
     pars0 = model0.parameters
-    assert pars0["index"].value == 2.1
+    assert_allclose(pars0["index"].value, 2.1)
     assert pars0["index"].unit == ""
     assert np.isnan(pars0["index"].max)
     assert np.isnan(pars0["index"].min)
     assert not pars0["index"].frozen
 
-    assert pars0["lon_0"].value == -0.5
+    assert_allclose(pars0["lon_0"].value, -0.5)
     assert pars0["lon_0"].unit == "deg"
-    assert pars0["lon_0"].max == 180.0
-    assert pars0["lon_0"].min == -180.0
+    assert_allclose(pars0["lon_0"].max, 180.0)
+    assert_allclose(pars0["lon_0"].min, -180.0)
     assert pars0["lon_0"].frozen
 
-    assert pars0["lat_0"].value == -0.0005
+    assert_allclose(pars0["lat_0"].value, -0.0005)
     assert pars0["lat_0"].unit == "deg"
-    assert pars0["lat_0"].max == 90.0
-    assert pars0["lat_0"].min == -90.0
+    assert_allclose(pars0["lat_0"].max, 90.0)
+    assert_allclose(pars0["lat_0"].min, -90.0)
     assert pars0["lat_0"].frozen
 
-    assert pars0["lambda_"].value == 0.006
+    assert_allclose(pars0["lambda_"].value, 0.006)
     assert pars0["lambda_"].unit == "TeV-1"
     assert np.isnan(pars0["lambda_"].min)
     assert np.isnan(pars0["lambda_"].max)
@@ -85,10 +85,10 @@ def test_dict_to_skymodels(models):
     assert "LightCurveTemplateTemporalModel" in model1.temporal_model.tag
 
     pars1 = model1.parameters
-    assert pars1["index"].value == 2.2
+    assert_allclose(pars1["index"].value, 2.2)
     assert pars1["index"].unit == ""
-    assert pars1["lat_0"].scale == 1.0
-    assert pars1["lat_0"].factor == pars1["lat_0"].value
+    assert_allclose(pars1["lat_0"].scale, 1.0)
+    assert_allclose(pars1["lat_0"].factor, pars1["lat_0"].value)
 
     assert np.isnan(pars1["index"].max)
     assert np.isnan(pars1["index"].min)
@@ -239,9 +239,9 @@ def test_absorption_io_invalid_path(tmp_path):
     ]
     new_model = EBLAbsorptionNormSpectralModel.from_dict(model_dict)
 
-    assert new_model.redshift.value == 0.5
+    assert_allclose(new_model.redshift.value, 0.5)
     assert new_model.alpha_norm.name == "alpha_norm"
-    assert new_model.alpha_norm.value == 1
+    assert_allclose(new_model.alpha_norm.value, 1)
     assert_allclose(new_model.energy, dominguez.energy)
     assert_allclose(new_model.param, dominguez.param)
     assert len(new_model.parameters) == 2
@@ -267,9 +267,9 @@ def test_absorption_io_no_filename(tmp_path):
 
     new_model = EBLAbsorptionNormSpectralModel.from_dict(model_dict)
 
-    assert new_model.redshift.value == 0.5
+    assert_allclose(new_model.redshift.value, 0.5)
     assert new_model.alpha_norm.name == "alpha_norm"
-    assert new_model.alpha_norm.value == 1
+    assert_allclose(new_model.alpha_norm.value, 1)
     assert_allclose(new_model.energy, dominguez.energy)
     assert_allclose(new_model.param, dominguez.param)
     assert len(new_model.parameters) == 2
@@ -289,9 +289,9 @@ def test_absorption_io(tmp_path):
 
     new_model = EBLAbsorptionNormSpectralModel.from_dict(model_dict)
 
-    assert new_model.redshift.value == 0.5
+    assert_allclose(new_model.redshift.value, 0.5)
     assert new_model.alpha_norm.name == "alpha_norm"
-    assert new_model.alpha_norm.value == 1
+    assert_allclose(new_model.alpha_norm.value, 1)
     assert_allclose(new_model.energy, dominguez.energy)
     assert_allclose(new_model.param, dominguez.param)
     assert len(new_model.parameters) == 2

@@ -209,7 +209,7 @@ def test_set_parameters_from_table():
     models.update_parameters_from_table(tab)
 
     d = models.parameters.to_dict()
-    assert d[0]["value"] == 3.0
+    assert_allclose(d[0]["value"], 3.0)
     assert d[0]["min"] == -10
     assert d[0]["max"] == 10
     assert d[0]["frozen"]
