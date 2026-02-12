@@ -314,6 +314,13 @@ class HpxGeom(Geom):
 
     def pix_to_idx(self, pix, clip=False):
         # FIXME: Look for better method to clip HPX indices
+
+        # If pix only contains non-spatial coordinates (e.g. Map.get_image_by_pix),
+        # do NOT interpret pix[0] as HEALPix ipix.
+        if len(pix) == len(self.axes):
+            pix = pix_tuple_to_idx(pix)
+            return self.axes.pix_to_idx(pix, clip=clip)
+
         idx = pix_tuple_to_idx(pix)
         idx_local = self.global_to_local(idx)
         for i, _ in enumerate(idx):

@@ -119,6 +119,7 @@ def test_map_get_image_by_pix(binsz, width, map_type, skydir, axes, unit):
     m = Map.create(
         binsz=binsz, width=width, map_type=map_type, skydir=skydir, axes=axes, unit=unit
     )
+    m.data = np.arange(m.data.size, dtype=float).reshape(m.data.shape)
     pix = (1.2345, 0.1234)[: len(m.geom.axes)]
     m_image = m.get_image_by_pix(pix)
 
