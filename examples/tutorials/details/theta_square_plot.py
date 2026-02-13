@@ -64,12 +64,13 @@ print(off_position)
 
 # %%
 theta2_axis = MapAxis.from_bounds(0, 0.2, nbin=20, interp="lin", unit="deg2")
-theta2_table = make_theta_squared_table(
+theta2_table_maker = make_theta_squared_table(
     observations=observations,
     position=position,
     theta_squared_axis=theta2_axis,
     position_off=off_position,
 )
+theta2_table = theta2_table_maker.run()
 
 plt.figure(figsize=(10, 5))
 plot_theta_squared_table(theta2_table)
@@ -81,15 +82,16 @@ plt.show()
 
 off_regions_number = 3
 theta2_axis = MapAxis.from_bounds(0, 0.1, nbin=20, interp="lin", unit="deg2")
-theta2_table = make_theta_squared_table(
+theta2_table_maker_offreg = make_theta_squared_table(
     observations=observations,
     position=position,
     theta_squared_axis=theta2_axis,
     off_regions_number=off_regions_number,
 )
+theta2_table_offreg = theta2_table_maker_offreg.run()
 
 plt.figure(figsize=(10, 5))
-plot_theta_squared_table(theta2_table)
+plot_theta_squared_table(theta2_table_offreg)
 plt.show()
 
 
@@ -101,12 +103,14 @@ plt.show()
 # also select a fixed energy range.
 #
 
-theta2_table_en = make_theta_squared_table(
+theta2_table_maker_en = make_theta_squared_table(
     observations=observations,
     position=position,
     theta_squared_axis=theta2_axis,
     energy_edges=[1.2, 11] * u.TeV,
 )
+theta2_table_en = theta2_table_maker_en.run()
+
 plt.figure(figsize=(10, 5))
 plot_theta_squared_table(theta2_table_en)
 plt.show()

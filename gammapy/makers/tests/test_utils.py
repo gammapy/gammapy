@@ -610,12 +610,14 @@ class TestTheta2Table:
 
         observations = [self.observations[i] for i in case_config["obs_idx"]]
 
-        table = make_theta_squared_table(
+        theta2_maker = make_theta_squared_table(
             observations=observations,
             position=position,
             theta_squared_axis=axis,
             **case_config["kwargs"],
         )
+
+        table = theta2_maker.run()
 
         assert len(table) == 4
         assert table["theta2_min"].unit == "deg2"
@@ -698,12 +700,13 @@ class TestTheta2Table:
 
         error_message = case_params["error_msg"]
         with pytest.raises(ValueError, match=error_message):
-            make_theta_squared_table(
+            table_maker = make_theta_squared_table(
                 observations=[self.observations[0]],
                 position=position,
                 theta_squared_axis=axis,
                 **kwargs,
             )
+            table_maker.run()
 
 
 @requires_data()
