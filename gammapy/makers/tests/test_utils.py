@@ -38,7 +38,6 @@ from gammapy.makers.utils import (
     _get_fov_coord,
     project_irf_on_geom,
     integrate_project_irf_on_geom,
-    _get_fov_coord,
 )
 from gammapy.maps import HpxGeom, MapAxis, RegionGeom, WcsGeom, WcsNDMap
 from gammapy.modeling.models import ConstantSpectralModel
