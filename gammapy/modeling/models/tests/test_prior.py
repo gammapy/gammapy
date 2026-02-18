@@ -82,8 +82,7 @@ def test_prior_parameters(prior):
         assert p.type == "prior"
 
 
-@pytest.mark.parametrize("prior", TEST_PRIORS)
-def test_uniform_prior_weight(prior):
+def test_uniform_prior_weight():
     prior = TEST_PRIORS[1]
     model = prior["model"]
     # Test the uniform prior with a specific weight
@@ -122,7 +121,6 @@ def test_to_from_dict():
 
 @pytest.mark.parametrize("prior", TEST_PRIORS)
 def test_serialisation(prior, tmpdir):
-    prior = TEST_PRIORS[1]
     model = SkyModel.create(spectral_model="pl", name="crab")
     model.spectral_model.amplitude.prior = prior["model"]
     models = Models([model])
