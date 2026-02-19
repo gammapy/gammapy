@@ -136,13 +136,13 @@ except Exception:
 """
 
 [tool.ruff]
-exclude = ["docs", "dev"]
+exclude = ["docs", "dev", "extern*", "*test_*.py"]
 # Like black
 line-length = 88
 indent-width = 4
 
 [tool.ruff.lint]
-ignore = ["E741"]
+ignore = ["E741", "D100", "D102", "D103", "D104", "D105", "D200", "D202", "D205", "D400", "D401", "D403", "D410"]
 extend-ignore = ["E203","E712"]
 
 [tool.ruff.lint.per-file-ignores]
