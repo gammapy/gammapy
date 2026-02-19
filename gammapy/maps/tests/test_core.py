@@ -356,7 +356,8 @@ def test_map_arithmetics(map_type):
     gt_m2 = m2 > 15000 * u.cm**2
     assert_allclose(gt_m2, False)
 
-    ge_m2 = m2 >= m2
+    m2_copy = m2.copy()
+    ge_m2 = m2 >= m2_copy
     assert_allclose(ge_m2, True)
 
     eq_m2 = m2 == 500 * u.cm**2
@@ -382,7 +383,8 @@ def test_boolean_arithmetics():
     m_not = ~m_2
     assert np.all(m_not.data)
 
-    m_xor = m_1 ^ m_1
+    m_1_copy = m_1.copy()
+    m_xor = m_1 ^ m_1_copy
     assert not np.any(m_xor.data)
 
 
