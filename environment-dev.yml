@@ -49,16 +49,12 @@ dependencies:
   - ultranest
   - numba
   # dev dependencies
-  - black=22.6.0
   - codespell
-  - flake8
-  - isort
   - jinja2
   - jupytext
   - nbsphinx
   - numdifftools
   - pandoc
-  - pydocstyle
   - pylint
   - setuptools_scm
   - sherpa>=4.17
