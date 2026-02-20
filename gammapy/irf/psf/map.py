@@ -508,10 +508,10 @@ class PSFMap(IRFMap):
         energy_axis = self.psf_map.geom.axes[self.energy_name]
         energy_true = energy_axis.center
 
-        for frac in fraction:
-            radius = self.containment_radius(frac, energy_true, position)
-            label = f"Containment: {100 * frac:.1f}%"
-            with quantity_support():
+        with quantity_support():
+            for frac in fraction:
+                radius = self.containment_radius(frac, energy_true, position)
+                label = f"Containment: {100 * frac:.1f}%"
                 ax.plot(energy_true, radius, label=label, **kwargs)
 
         ax.semilogx()
@@ -548,17 +548,17 @@ class PSFMap(IRFMap):
 
         rad = self.psf_map.geom.axes["rad"].center
 
-        for value in energy_true:
-            psf_value = self.psf_map.interp_by_coord(
-                {
-                    "skycoord": self.psf_map.geom.center_skydir,
-                    self.energy_name: value,
-                    "rad": rad,
-                }
-            )
-            label = f"{energy_unit_format(value)}"
-            psf_value *= self.psf_map.unit
-            with quantity_support():
+        with quantity_support():
+            for value in energy_true:
+                psf_value = self.psf_map.interp_by_coord(
+                    {
+                        "skycoord": self.psf_map.geom.center_skydir,
+                        self.energy_name: value,
+                        "rad": rad,
+                    }
+                )
+                label = f"{energy_unit_format(value)}"
+                psf_value *= self.psf_map.unit
                 ax.plot(rad, psf_value, label=label, **kwargs)
 
         ax.set_yscale("log")
