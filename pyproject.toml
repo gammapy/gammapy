@@ -122,6 +122,7 @@ filterwarnings = [
     "error::astropy.utils.exceptions.AstropyDeprecationWarning",
     "error::gammapy.utils.deprecation.GammapyDeprecationWarning",
     "error::matplotlib.MatplotlibDeprecationWarning",
+    "error:This axis already has a converter set:UserWarning",
 ]
 
 [tool.setuptools_scm]
