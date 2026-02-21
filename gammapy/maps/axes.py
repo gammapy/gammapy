@@ -2423,7 +2423,7 @@ class TimeMapAxis:
         if not self.is_contiguous:
             raise ValueError("Time axis is not contiguous")
 
-        return edges_from_lo_hi(self.edges_min, self.edges_max)
+        return edges_from_lo_hi(self.edges_min, self.edges_max) + self.reference_time
 
     @property
     def bounds(self):
@@ -2459,7 +2459,7 @@ class TimeMapAxis:
     @property
     def time_edges(self):
         """Time edges as a `~astropy.time.Time` object."""
-        return self.reference_time + self.edges
+        return self.edges
 
     @property
     def time_format(self):
