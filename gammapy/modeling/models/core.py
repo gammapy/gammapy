@@ -1383,7 +1383,7 @@ class restore_models_status:
     def __enter__(self):
         pass
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, exception_type, exception_value, exception_traceback):
         for value, par, frozen in zip(self.values, self.models.parameters, self.frozen):
             if self.restore_values:
                 par.value = value

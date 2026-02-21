@@ -2672,7 +2672,8 @@ class TimeMapAxis:
         coords = np.zeros_like(pix)
         frac, idx = np.modf(pix)
         idx1 = idx.astype(int)
-        valid = np.logical_and(idx >= 0, idx < self.nbin, np.isfinite(idx))
+
+        valid = (idx >= 0) & (idx < self.nbin)
         idx_valid = np.nonzero(valid)
         idx_invalid = np.nonzero(~valid)
 

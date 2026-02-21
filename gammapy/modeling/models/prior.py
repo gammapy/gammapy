@@ -132,8 +132,6 @@ class Prior(ModelBase):
     @classmethod
     def from_dict(cls, data, **kwargs):
         """Get prior parameters from dictionary."""
-        kwargs = {}
-
         key0 = next(iter(data))
         if key0 in ["prior"]:
             data = data[key0]
@@ -145,8 +143,9 @@ class Prior(ModelBase):
         priorparameters = _build_priorparameters_from_dict(
             data["parameters"], cls.default_parameters
         )
-        kwargs["weight"] = data["weight"]
-        return cls.from_parameters(priorparameters, **kwargs)
+        init_kwargs = dict(kwargs)
+        init_kwargs["weight"] = data["weight"]
+        return cls.from_parameters(priorparameters, **init_kwargs)
 
 
 class GaussianPrior(Prior):

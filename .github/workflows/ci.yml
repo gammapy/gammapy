@@ -79,7 +79,7 @@ jobs:
             allowed_fail: false
           - os: ubuntu-latest
             python: '3.10'
-            tox_env: 'py310-test-alldeps_noray-astropy60-numpy126'
+            tox_env: 'py310-test-alldeps_noray-astropy61-numpy20'
             allowed_fail: false
           - os: ubuntu-latest
             python: '3.10'

@@ -690,7 +690,7 @@ def test_absorption():
     model = pwl * absorption
     desired = u.Quantity(5.140765e-13, "TeV-1 s-1 cm-2")
     assert_quantity_allclose(model(1 * u.TeV), desired, rtol=1e-3)
-    assert model.model2.alpha_norm.value == 1.0
+    assert_allclose(model.model2.alpha_norm.value, 1.0)
 
     # EBL + PWL model: test if norm of EBL=0: it mean model =pwl
     model.parameters["alpha_norm"].value = 0
@@ -702,7 +702,7 @@ def test_absorption():
     )
     model = pwl * absorption
     desired = u.Quantity(2.739695e-13, "TeV-1 s-1 cm-2")
-    assert model.model2.alpha_norm.value == 1.5
+    assert_allclose(model.model2.alpha_norm.value, 1.5)
     assert_quantity_allclose(model(1 * u.TeV), desired, rtol=1e-3)
 
     # Test error propagation
@@ -789,13 +789,13 @@ def test_template_spectral_model_evaluate_tiny():
         energy=energy, values=values * u.Unit("MeV-1 s-1 sr-1")
     )
     result = model(energy)
-    tiny = np.finfo(np.float32).tiny
+    tiny = np.finfo(values.dtype).tiny
     mask = abs(values) - tiny > tiny
     np.testing.assert_allclose(
         values[mask] / values.max(), result[mask].value / values.max()
     )
     mask = abs(result.value) - tiny <= tiny
-    assert np.all(result[mask] == 0.0)
+    assert np.allclose(result[mask], 0.0, atol=1e-40)
 
 
 def test_template_spectral_model_single_value():

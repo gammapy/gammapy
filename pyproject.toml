@@ -22,9 +22,9 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Astronomy",
 ]
 dependencies = [
-    "numpy>=1.26",
+    "numpy>=2.0",
     "scipy>=1.13",
-    "astropy>=6.0",
+    "astropy>=6.1",
     "regions>=0.9.0",
     "pyyaml>=5.3",
     "click>=8.0",

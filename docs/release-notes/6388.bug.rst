@@ -1,0 +1,1 @@
+Fix ``hpx.geom.pix_to_idx`` to correctly handle non-spatial pixel coordinates, ensuring consistency with WCS.

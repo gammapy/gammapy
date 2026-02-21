@@ -111,7 +111,7 @@ class WcsMap(Map):
             raise ValueError(f"Invalid map type: {map_type!r}")
 
     @classmethod
-    def from_hdulist(cls, hdu_list, hdu=None, hdu_bands=None, format="gadf"):
+    def from_hdulist(cls, hdu_list, hdu=None, hdu_bands=None, format=None):
         """Make a WcsMap object from a FITS HDUList.
 
         Parameters
@@ -125,7 +125,9 @@ class WcsMap(Map):
             Name or index of the HDU with the BANDS table.
             Default is None.
         format : {'gadf', 'fgst-ccube', 'fgst-template'}, optional
-            FITS format convention. Default is "gadf".
+            FITS format convention.
+            If None, the format is identified from the header and will default to 'gadf' if no header is found.
+            Default is None.
 
         Returns
         -------
@@ -143,7 +145,8 @@ class WcsMap(Map):
         if hdu_bands is not None:
             hdu_bands = hdu_list[hdu_bands]
 
-        format = identify_wcs_format(hdu_bands)
+        if format is None:
+            format = identify_wcs_format(hdu_bands)
 
         wcs_map = cls.from_hdu(hdu, hdu_bands, format=format)
 

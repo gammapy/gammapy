@@ -2,6 +2,7 @@
 """Spectral models for Gammapy."""
 
 import logging
+import warnings
 import operator
 import os
 from pathlib import Path
@@ -1581,10 +1582,16 @@ class ExpCutoffPowerLawSpectralModel(SpectralModel):
         lambda_ = self.lambda_.quantity
         alpha = self.alpha.quantity
 
-        if index >= 2 or lambda_ == 0.0 or alpha == 0.0:
+        try:
+            with warnings.catch_warnings():
+                warnings.simplefilter("error", RuntimeWarning)
+                e_peak = np.power((2 - index) / alpha, 1 / alpha) / lambda_
+                if e_peak.value > 0:
+                    return e_peak
+                else:
+                    return np.nan * reference.unit
+        except (ZeroDivisionError, RuntimeWarning, OverflowError, ValueError):
             return np.nan * reference.unit
-        else:
-            return np.power((2 - index) / alpha, 1 / alpha) / lambda_
 
 
 class ExpCutoffPowerLawNormSpectralModel(SpectralModel):

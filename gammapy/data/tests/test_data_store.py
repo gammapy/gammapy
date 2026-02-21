@@ -16,7 +16,7 @@ from gammapy.irf import (
     EnergyDispersion2D,
 )
 from gammapy.utils.scripts import make_path
-from gammapy.utils.testing import requires_data
+from gammapy.utils.testing import requires_data, assert_quantity_allclose
 
 
 @pytest.fixture()
@@ -179,14 +179,14 @@ def test_read_events_cta_1dc(data_store_dc1):
     info = DataStoreMaker.read_events_info(path)
 
     assert info["OBS_ID"] == 110380
-    assert info["TSTART"] == 664502400.0 * u.s
-    assert info["TSTOP"] == 664504192.0 * u.s
-    assert info["ONTIME"] == 1800.0 * u.s
-    assert info["LIVETIME"] == 1764.0 * u.s
-    assert info["DEADC"] == 0.98000001907
+    assert_quantity_allclose(info["TSTART"], 664502400.0 * u.s)
+    assert_quantity_allclose(info["TSTOP"], 664504192.0 * u.s)
+    assert_quantity_allclose(info["ONTIME"], 1800.0 * u.s)
+    assert_quantity_allclose(info["LIVETIME"], 1764.0 * u.s)
+    assert_allclose(info["DEADC"], 0.98000001907)
     assert info["TELESCOP"] == "CTA"
-    assert info["RA_PNT"] == 267.68121338 * u.deg
-    assert info["DEC_PNT"] == -29.6075 * u.deg
+    assert_quantity_allclose(info["RA_PNT"], 267.68121338 * u.deg)
+    assert_quantity_allclose(info["DEC_PNT"], -29.6075 * u.deg)
     assert info["DATE-OBS"] == "2021-01-21"
     assert info["TIME-OBS"] == "11:58:51"
     assert info["DATE-END"] == "2021-01-21"

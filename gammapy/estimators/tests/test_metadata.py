@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
+from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from pydantic import ValidationError
@@ -30,7 +31,6 @@ def default():
 
 @requires_data()
 def test_creator(default):
-
     assert default.creation.creator == "gammapy test"
     assert default.sed_type == "likelihood"
     assert default.sed_type_init is None
@@ -64,7 +64,7 @@ def test_from_header():
     }
 
     meta = FluxMetaData.from_header(tdict)
-    assert meta.n_sigma == 4.3
+    assert_allclose(meta.n_sigma, 4.3)
     assert meta.creation.origin == "Gammapy v2.3"
     assert meta.target.position == SkyCoord(123.5 * u.deg, -4.8 * u.deg, frame="icrs")
     assert meta.optional is None
@@ -76,6 +76,6 @@ def test_to_header(default):
     hdr = default.to_header()
     assert hdr["OBJECT"] == "PKS2155-304"
     assert hdr["ORIGIN"] == "CTA"
-    assert hdr["RA_OBJ"] == 329.7169166666666
-    assert hdr["N_SIGMA"] == 2.0
+    assert_allclose(hdr["RA_OBJ"], 329.7169166666666)
+    assert_allclose(hdr["N_SIGMA"], 2.0)
     assert hdr["CREATOR"] == "gammapy test"

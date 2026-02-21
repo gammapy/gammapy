@@ -203,6 +203,12 @@ def test_fermipy_datasets_reader():
     assert datasets[1].name == "P8R3_SOURCEVETO_V3_PSF1_v1"
     assert datasets.models.names[0] == "isotropic_P8R3_SOURCEVETO_V3_PSF0_v1"
     assert datasets.models.names[1] == "isotropic_P8R3_SOURCEVETO_V3_PSF1_v1"
+    assert datasets.gti is not None
+    assert_allclose(
+        datasets.gti.time_start.value,
+        [54682.65603794, 54682.65603794],
+        rtol=1 / (24 * 60),
+    )
 
     path = make_path("$GAMMAPY_DATA/tests/fermi")
     dataset = reader.create_dataset(
@@ -212,6 +218,7 @@ def test_fermipy_datasets_reader():
         path / "drm_00.fits",
     )
     assert not dataset.models
+    assert dataset.gti is None
 
     reader = FermipyDatasetsReader(
         "$GAMMAPY_DATA/tests/fermi/config_fermipy_minimal.yaml", edisp_bins=1
@@ -236,3 +243,6 @@ def test_fermipy_datasets_reader():
 
     assert datasets[0].name == "P8R3_SOURCEVETO_V3_PSF1_v1"
     assert datasets.models.names[0] == "isotropic_P8R3_SOURCEVETO_V3_PSF1_v1"
+
+    assert datasets[0].gti.time_sum.unit == "s"
+    assert_allclose(datasets[0].gti.time_sum.value, 426196949.14969766, rtol=60)

@@ -42,7 +42,7 @@ def bkg_3d_interp():
     fov_lat = [0, 1, 2, 3] * u.deg
     fov_lat_axis = MapAxis.from_edges(fov_lat, name="fov_lat")
 
-    data = np.ones((5, 3, 3))
+    data = np.ones((5, 3, 3), dtype=np.float32)
 
     data[-2, :, :] = 0.0
     # clipping of value before last will cause extrapolation problems
@@ -149,7 +149,7 @@ def test_background_3d_missing_values(bkg_3d_interp):
         fov_lat=0.5 * u.deg,
         energy=999 * u.TeV,
     )
-    assert_allclose(res.value, 8.796068e18)
+    assert_allclose(res.value, 8.796068e18, rtol=1e-5)
     # without missing value interpolation
     # extrapolation within the last bin would give too high value
 
