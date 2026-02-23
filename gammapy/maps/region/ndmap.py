@@ -8,6 +8,7 @@ from astropy.nddata import block_reduce
 from astropy.table import Table
 from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
+import warnings
 from gammapy.maps.axes import UNIT_STRING_FORMAT
 from gammapy.utils.interpolation import ScaledRegularGridInterpolator, StatProfileScale
 from gammapy.utils.scripts import make_path
@@ -111,60 +112,74 @@ class RegionNDMap(Map):
         ax : `~matplotlib.pyplot.Axis`
             Axis used for plotting.
         """
-        with quantity_support():
-            ax = ax or plt.gca()
+        # FIXME: Get rid of this warning properly. One option is
+        # to explicitly pass values instead of quantities.
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore",
+                message="This axis already has a converter set",
+                category=UserWarning,
+            )
+            with quantity_support():
+                ax = ax or plt.gca()
 
-            if axis_name is None:
-                if self.geom.axes.is_unidimensional:
-                    axis_name = self.geom.axes.primary_axis.name
-                else:
-                    raise ValueError(
-                        "Plotting a region map with multiple extra axes requires "
-                        "specifying the 'axis_name' keyword."
+                if axis_name is None:
+                    if self.geom.axes.is_unidimensional:
+                        axis_name = self.geom.axes.primary_axis.name
+                    else:
+                        raise ValueError(
+                            "Plotting a region map with multiple extra axes requires "
+                            "specifying the 'axis_name' keyword."
+                        )
+
+                axis = self.geom.axes[axis_name]
+
+                kwargs.setdefault("marker", "o")
+                kwargs.setdefault("markersize", 4)
+                kwargs.setdefault("ls", "None")
+                kwargs.setdefault("xerr", axis.as_plot_xerr)
+
+                yerr_nd, yerr = kwargs.pop("yerr", None), None
+                uplims_nd, uplims = kwargs.pop("uplims", None), None
+                label_default = kwargs.pop("label", None)
+
+                labels = product(
+                    *[
+                        ax.as_plot_labels
+                        for ax in self.geom.axes
+                        if ax.name != axis.name
+                    ]
+                )
+
+                for label_axis, (idx, quantity) in zip(
+                    labels, self.iter_by_axis_data(axis_name=axis.name)
+                ):
+                    if isinstance(yerr_nd, tuple):
+                        yerr = yerr_nd[0][idx], yerr_nd[1][idx]
+                    elif isinstance(yerr_nd, np.ndarray):
+                        yerr = yerr_nd[idx]
+
+                    if uplims_nd is not None:
+                        uplims = uplims_nd[idx]
+
+                    label = (
+                        " ".join(label_axis) if label_default is None else label_default
                     )
 
-            axis = self.geom.axes[axis_name]
+                    ax.errorbar(
+                        x=axis.as_plot_center,
+                        y=quantity,
+                        yerr=yerr,
+                        uplims=uplims,
+                        label=label,
+                        **kwargs,
+                    )
+                axis.format_plot_xaxis(ax=ax)
 
-            kwargs.setdefault("marker", "o")
-            kwargs.setdefault("markersize", 4)
-            kwargs.setdefault("ls", "None")
-            kwargs.setdefault("xerr", axis.as_plot_xerr)
+                if "energy" in axis_name:
+                    ax.set_yscale("log", nonpositive="clip")
 
-            yerr_nd, yerr = kwargs.pop("yerr", None), None
-            uplims_nd, uplims = kwargs.pop("uplims", None), None
-            label_default = kwargs.pop("label", None)
-
-            labels = product(
-                *[ax.as_plot_labels for ax in self.geom.axes if ax.name != axis.name]
-            )
-
-            for label_axis, (idx, quantity) in zip(
-                labels, self.iter_by_axis_data(axis_name=axis.name)
-            ):
-                if isinstance(yerr_nd, tuple):
-                    yerr = yerr_nd[0][idx], yerr_nd[1][idx]
-                elif isinstance(yerr_nd, np.ndarray):
-                    yerr = yerr_nd[idx]
-
-                if uplims_nd is not None:
-                    uplims = uplims_nd[idx]
-
-                label = " ".join(label_axis) if label_default is None else label_default
-
-                ax.errorbar(
-                    x=axis.as_plot_center,
-                    y=quantity,
-                    yerr=yerr,
-                    uplims=uplims,
-                    label=label,
-                    **kwargs,
-                )
-            axis.format_plot_xaxis(ax=ax)
-
-            if "energy" in axis_name:
-                ax.set_yscale("log", nonpositive="clip")
-
-            return ax
+                return ax
 
     def plot_hist(self, ax=None, **kwargs):
         """Plot as histogram.
