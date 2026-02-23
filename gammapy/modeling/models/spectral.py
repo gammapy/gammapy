@@ -32,13 +32,6 @@ import gammapy.utils.parallel as parallel
 from ..covariance import CovarianceMixin
 from .core import ModelBase
 
-# Suppress matplotlib converter warnings caused by astropy quantity_support
-warnings.filterwarnings(
-    "ignore",
-    message="This axis already has a converter set",
-    category=UserWarning,
-)
-
 log = logging.getLogger(__name__)
 
 
