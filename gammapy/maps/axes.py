@@ -20,6 +20,8 @@ from .utils import INVALID_INDEX, INVALID_VALUE, edges_from_lo_hi
 
 __all__ = ["MapAxes", "MapAxis", "TimeMapAxis", "LabelMapAxis"]
 
+from ..utils.deprecation import deprecated
+
 log = logging.getLogger(__name__)
 
 
@@ -2418,12 +2420,13 @@ class TimeMapAxis:
         return self._edges_max
 
     @property
+    @deprecated("2.1", alternative="time_edges")
     def edges(self):
         """Return the array of bin edges values."""
         if not self.is_contiguous:
             raise ValueError("Time axis is not contiguous")
 
-        return edges_from_lo_hi(self.edges_min, self.edges_max) + self.reference_time
+        return edges_from_lo_hi(self.edges_min, self.edges_max)
 
     @property
     def bounds(self):
@@ -2459,7 +2462,10 @@ class TimeMapAxis:
     @property
     def time_edges(self):
         """Time edges as a `~astropy.time.Time` object."""
-        return self.edges
+        if not self.is_contiguous:
+            raise ValueError("Time axis is not contiguous")
+
+        return edges_from_lo_hi(self.edges_min, self.edges_max) + self.reference_time
 
     @property
     def time_format(self):

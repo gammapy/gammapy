@@ -13,6 +13,7 @@ from gammapy.maps import LabelMapAxis, MapAxes, MapAxis, RegionNDMap, TimeMapAxi
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import assert_time_allclose, mpl_plot_check, requires_data
 from gammapy.utils.time import time_ref_to_dict
+from gammapy.utils.deprecation import GammapyDeprecationWarning
 
 MAP_AXIS_INTERP = [
     (np.array([0.25, 0.75, 1.0, 2.0]), "lin"),
@@ -1127,3 +1128,25 @@ def test_periodic_map_axis():
         axis1 = MapAxis.from_bounds(
             -0.5, 0.5, 5, boundary_type="periodic", interp="log"
         )
+
+
+def test_time_map_axis_deprecation():
+    time_ref = Time("2020-01-01 00:00:00")
+    edges_rel = np.array([0, 1, 2])
+    axis = TimeMapAxis(
+        edges_min=edges_rel[:-1] * u.d,
+        edges_max=edges_rel[1:] * u.d,
+        reference_time=time_ref,
+    )
+
+    assert isinstance(axis.time_edges, Time)
+    assert len(axis.time_edges) == len(edges_rel)
+
+    expected_time = time_ref + (edges_rel * u.d)
+    assert np.all(axis.time_edges == expected_time)
+
+    with pytest.warns(
+        GammapyDeprecationWarning, match="The edges function is deprecated"
+    ):
+        old_edges = axis.edges
+        assert isinstance(old_edges, u.Quantity)
