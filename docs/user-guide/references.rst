@@ -81,7 +81,7 @@ Glossary
 
     HDI
       Short for "highest density interval": it is a region of the posterior distribution that contains a specified probability mass.
-      It is used to compute credible intervals based on samples.
+      It is used to compute credible intervals based on samples as shown in the :ref:`tutorial on Nested Sampling <../tutorials/details/nested_sampling_Crab.html>`.
 
     HLI
       Short for "high level interface: this API aims to realize most of the analysis
