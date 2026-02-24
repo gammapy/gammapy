@@ -311,7 +311,7 @@ print(result_joint.sampler_results["posterior"])
 # distribution has shrunk with respect to the prior (i.e. how much
 # we’ve learned). A value < 1 means that the parameter is poorly
 # constrained within the prior range (we haven't learned much with respect to our prior assumption).
-# For a physical example see this
+# For a physical interpretation of the information gain see this
 # `example <https://arxiv.org/abs/2205.00009>`__.
 #
 # The `~gammapy.modeling.SamplerResult` dictionary contains also other interesting
@@ -465,3 +465,36 @@ result_2 = sampler.run(datasets[2])
 # One can note as well that one of the run has a notably different
 # amplitude (possibly due to calibrations or/and atmospheric issues).
 #
+
+######################################################################
+# High density intervals
+# ----------------------
+#
+# Given the samples, one can also compute the high density interval (HDI)
+# which is also known as the smallest credible interval (SCI).
+# See more details here : https://en.wikipedia.org/wiki/Credible_interval
+# This is the interval in which a given probability (e.g. 68%) is contained.
+#
+# For unimodal distributions, the HDI is a single continuous interval containing
+# the mode whereas for multimodal distributions, the HDI can be a set of disconnected intervals.
+# The HDI can be particularly helpful with multimodal distributions as opposed
+# to the mean and quantiles approaches which will not report the important information.
+# Here we showcase the HDI using the Arviz package.
+# Check out the many possibilities offered by `Arviz <https://python.arviz.org/>`__, a package to analyze the samples posterior distributions.
+
+
+from arviz import hdi
+
+amplitude_hdi = []
+for s in [result_0.samples, result_1.samples, result_2.samples]:
+    amplitude_hdi.append(hdi(s[:, 1], hdi_prob=0.95, multimodal=False))
+
+fix, ax = plt.subplots(1, 1, figsize=(7, 5))
+for i, amp in enumerate(amplitude_hdi):
+    ax.errorbar(amp.mean(), i, xerr=(amp[1] - amp[0]) / 2, lw=15, label=f"run {i}")
+
+plt.legend(loc="lower right")
+ax.set_xlabel("Amplitude")
+ax.set_ylabel("Run #")
+
+plt.show()
