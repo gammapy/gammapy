@@ -4,6 +4,7 @@ from .phase import PhaseBackgroundMaker
 from .reflected import (
     ReflectedRegionsBackgroundMaker,
     ReflectedRegionsFinder,
+    UnbinnedSpectrumDatasetMaker,
     RegionsFinder,
     WobbleRegionsFinder,
 )
@@ -15,6 +16,7 @@ __all__ = [
     "PhaseBackgroundMaker",
     "ReflectedRegionsBackgroundMaker",
     "ReflectedRegionsFinder",
+    "UnbinnedSpectrumDatasetMaker",
     "RegionsFinder",
     "RingBackgroundMaker",
     "WobbleRegionsFinder",

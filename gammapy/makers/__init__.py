@@ -6,6 +6,7 @@ from .background import (
     PhaseBackgroundMaker,
     ReflectedRegionsBackgroundMaker,
     ReflectedRegionsFinder,
+    UnbinnedSpectrumDatasetMaker,
     RegionsFinder,
     RingBackgroundMaker,
     WobbleRegionsFinder,
@@ -19,6 +20,7 @@ from .spectrum import SpectrumDatasetMaker
 MAKER_REGISTRY = Registry(
     [
         ReflectedRegionsBackgroundMaker,
+        UnbinnedSpectrumDatasetMaker,
         AdaptiveRingBackgroundMaker,
         FoVBackgroundMaker,
         PhaseBackgroundMaker,
