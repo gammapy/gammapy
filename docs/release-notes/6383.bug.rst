@@ -1,1 +1,1 @@
-Fix an off-by-one error in WcsGeom.pix_to_idx by clipping indices to npix - 1.
+Fix an off-by-one error in `~gammapy.maps.WcsGeom.pix_to_idx` by clipping indices to npix - 1.

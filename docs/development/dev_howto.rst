@@ -574,7 +574,7 @@ We utilise `towncrier <https://towncrier.readthedocs.io/en/stable/>`__ for our r
 
 - For each PR, a related 'fragment' file should be created in the ``docs/release-notes`` folder.
 - The naming convention of the file should be ``<PULL REQUEST NUMBER>.<TYPE>.rst``, where the available
-  types are ``infrastructure``, ``docs``, ``feature`` or ``bugfix``.
+  types are ``infrastructure``, ``docs``, ``feature`` or ``bug``.
 - The file should contain a suitable message for the PR, for example "A new function `select_nested_models`
   has been introduced to perform nested model fits and compute the resulting test statistic (TS) between
   two nested hypotheses.".
