@@ -79,6 +79,10 @@ Glossary
     FoV Background
       Background estimation method typically used for the 3D analysis. See :ref:`makers`.
 
+    HDI
+      Short for "highest density interval": it is a region of the posterior distribution that contains a specified probability mass.
+      It is used to compute credible intervals based on samples.
+
     HLI
       Short for "high level interface: this API aims to realize most of the analysis
       types using YAML configuration files. See :ref:`analysis`
@@ -145,11 +149,14 @@ Glossary
       data are analyzed. In practice, at each energy it corresponds with the sky region
       in which the dataset mask is True.
 
+    Samples
+      Samples are the points in the parameter space that have been visited by the Monte Carlo Markov chain or Nested Sampling algorithms.
+      They are used to estimate the posterior distribution of the parameters.
+
     SED
       Short for "spectral energy distribution". For a spectral model or flux points
       object, the type of plot (e.g. :math:`dN/dE`, :math:`E^2\ dN/dE`) is typically adjusted
       through the ``sed_type`` quantity. See :ref:`sedtypes` for a list of options.
-
 
     Stacked Analysis
       In a stacked analysis individual observations are reduced to datasets which
