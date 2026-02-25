@@ -144,13 +144,23 @@ line-length = 88
 indent-width = 4
 
 [tool.ruff.lint]
-select = ["D", "E"]
+select = [
+  "E",   # pycodestyle errors
+  "F",   # pyflakes
+  "B",   # flake8-bugbear
+  "I",   # isort
+  "PLE", # pylint errors
+  "D",   # pydocstyle
+  # "UP",   # pyUpgrade
+  "FLY", # flynt
+  "DTZ", # flake8-datetimez
+  "S",   # flake8-bandit
+  "N",   # pep8-naming
+]
 ignore = [
-    "D100", "D102", "D103",
-    "D104", "D105", "D200",
-    "D202", "D205", "D400",
-    "D401", "D403", "D410",
-    "E203","E712", "E741",
+    "D100", "D102", "D104", "D105",
+    "D400", "D401", "D403",
+    "S101",
 ]
 
 [tool.ruff.lint.pydocstyle]
