@@ -31,6 +31,8 @@ dependencies = [
     "pydantic>=2.8.0",
     "iminuit>=2.26.0",
     "matplotlib>=3.8,<3.10",
+    "requests",
+    "tqdm",
 ]
 dynamic = ["version"]
 
@@ -54,8 +56,6 @@ all = [
     "naima",
     "sherpa; platform_system != 'Windows'",
     "healpy; platform_system != 'Windows'",
-    "requests",
-    "tqdm",
     "ipywidgets",
     "ray[default]>=2.9",
     "ultranest",
@@ -65,8 +65,6 @@ all_no_ray = [
     "naima",
     "sherpa; platform_system != 'Windows'",
     "healpy; platform_system != 'Windows'",
-    "requests",
-    "tqdm",
     "ipywidgets",
     "ultranest",
     "numba",
@@ -75,8 +73,6 @@ cov = [
     "naima",
     "sherpa; platform_system != 'Windows'",
     "healpy; platform_system != 'Windows'",
-    "requests",
-    "tqdm",
     "ipywidgets",
     "ultranest",
     "numba",

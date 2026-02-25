@@ -29,6 +29,8 @@ dependencies:
   - scipy!=1.10
   - iminuit>=2.8.0
   - extension-helpers
+  - tqdm
+  - requests
   # test dependencies
   - codecov
   - pytest
@@ -36,8 +38,6 @@ dependencies:
   - pytest-cov
   - pytest-xdist
   - coverage
-  - requests
-  - tqdm
   # extra dependencies
   - healpy
   - ipython
