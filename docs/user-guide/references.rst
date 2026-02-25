@@ -81,7 +81,7 @@ Glossary
 
     HDI
       Short for "highest density interval": it is a region of the posterior distribution that contains a specified probability mass.
-      It is used to compute credible intervals based on samples as shown in the :doc:`tutorial on Nested  </tutorials/details/nested_sampling_Crab>`.
+      It is used to compute credible intervals based on samples as shown in the :doc:`tutorial on sampling  </tutorials/details/nested_sampling_Crab#high-density-intervals>`.
 
     HLI
       Short for "high level interface: this API aims to realize most of the analysis
@@ -151,7 +151,7 @@ Glossary
 
     Samples
       Samples are the points in the parameter space that have been visited by the Monte Carlo Markov chain or Nested Sampling algorithms.
-      They are used to estimate the posterior distribution of the parameters.
+      They are used to estimate the posterior distribution of the parameters as shown in the :doc:`tutorial </tutorials/details/nested_sampling_Crab#results>`.
 
     SED
       Short for "spectral energy distribution". For a spectral model or flux points
