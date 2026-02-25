@@ -80,7 +80,7 @@ Branching
 
 
 Releasing the first release candidate
--------------------------------------------
+-------------------------------------
 
 #. First, make sure you have a
    `gpg key <https://docs.github.com/en/authentication/managing-commit-signature-verification/generating-a-new-gpg-key>`__
