@@ -73,7 +73,51 @@ class FoVAltAzFrame(BaseCoordinateFrame):
     obstime = TimeAttribute(default=None)
     location = EarthLocationAttribute(default=None)
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, origin=None, obstime=None, location=None, **kwargs):
+        if not isinstance(origin, (AltAz, SkyCoord)):
+            raise TypeError(
+                f"origin must be AltAz SkyCoord , got {type(origin).__name__} instead."
+            )
+        if isinstance(origin, SkyCoord) and not isinstance(origin.frame, AltAz):
+            raise TypeError("origin must be AltAz.")
+
+        if obstime is None and origin.obstime is not None:
+            obstime = origin.obstime
+        if location is None and origin.location is not None:
+            location = origin.location
+
+        kwargs["origin"] = origin
+        kwargs["location"] = location
+        kwargs["obstime"] = obstime
+
+        # Validate obstime consistency
+        if obstime is not None and origin.obstime is not None:
+            if obstime.shape != origin.obstime.shape:
+                raise ValueError(
+                    f"obstime shape mismatch: frame obstime has shape "
+                    f"{obstime.shape} but origin.obstime has shape "
+                    f"{origin.obstime.shape}."
+                )
+            if not np.all(obstime == origin.obstime):
+                raise ValueError(
+                    "obstime mismatch: frame obstime and origin.obstime must be equal."
+                )
+
+        # Validate location consistency
+        if location is not None and origin.location is not None:
+            if not np.all(location == origin.location):
+                raise ValueError(
+                    "location mismatch: frame location and origin.location must be equal."
+                )
+
+        # Validate shape consistency between origin and obstime
+        if obstime is not None and origin.shape != obstime.shape:
+            raise ValueError(
+                f"origin shape {origin.shape} is inconsistent with "
+                f"obstime shape {obstime.shape}. For a time-varying frame, "
+                f"origin must be an array of AltAz coordinates, one per obstime."
+            )
+
         super().__init__(*args, **kwargs)
 
         # make sure telescope coordinate is in range [-180°, 180°]
