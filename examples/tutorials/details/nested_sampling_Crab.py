@@ -472,14 +472,14 @@ result_2 = sampler.run(datasets[2])
 #
 # Given the samples, one can also compute the high density interval (HDI)
 # which is also known as the smallest credible interval (SCI).
-# See more details here : https://en.wikipedia.org/wiki/Credible_interval
+# See more details `here <https://en.wikipedia.org/wiki/Credible_interval>`__.
 # This is the interval in which a given probability (e.g. 68%) is contained.
 #
 # For unimodal distributions, the HDI is a single continuous interval containing
 # the mode whereas for multimodal distributions, the HDI can be a set of disconnected intervals.
 # The HDI can be particularly helpful with multimodal distributions as opposed
 # to the mean and quantiles approaches which will not report the important information.
-# Here we showcase the HDI using the Arviz package.
+# Here, we showcase the HDI using the Arviz package.
 # Check out the many possibilities offered by `Arviz <https://python.arviz.org/>`__, a package to analyze the samples posterior distributions.
 
 
