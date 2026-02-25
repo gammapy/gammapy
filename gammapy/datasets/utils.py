@@ -13,6 +13,7 @@ __all__ = [
     "apply_edisp",
     "split_dataset",
     "create_map_dataset_from_dl4",
+    "set_and_restore_mask_fit",
 ]
 
 log = logging.getLogger(__name__)
@@ -437,6 +438,9 @@ class set_and_restore_mask_fit:
     ----------
     datasets : `~gammapy.datasets.datasets`
         the Datasets to apply the energy mask to.
+    mask_fit : `~gammapy.maps.Map`, optional
+        New mask to apply.
+        Default if  None.
     energy_min : `~astropy.units.Quantity`, optional
         minimum energy.
     energy_min : `~astropy.units.Quantity`, optional
@@ -444,6 +448,9 @@ class set_and_restore_mask_fit:
     round_to_edge: bool, optional
         Whether to round `energy_min` and `energy_max` to the closest axis bin value.
         See `~gammapy.maps.MapAxis.round`. Default is False.
+    operator : {`np.logical_and`, `np.logical_or`, None}, optional
+        Operator to apply between to existing dataset.mask_fit and the new one.
+        Default is `np.logical_and`. If None the existing mask_fit is ignored.
     """
 
     def __init__(
@@ -453,10 +460,13 @@ class set_and_restore_mask_fit:
         energy_min=None,
         energy_max=None,
         round_to_edge=False,
+        operator=np.logical_and,
     ):
         self.energy_min = energy_min
         self.energy_max = energy_max
         self.round_to_edge = round_to_edge
+
+        self.operator = operator
         self.mask_fit = mask_fit
         self.datasets = datasets
         self.mask_fits = [dataset.mask_fit for dataset in datasets]
@@ -468,10 +478,16 @@ class set_and_restore_mask_fit:
                 self.energy_min, self.energy_max, self.round_to_edge
             )
             if self.mask_fit is not None:
-                mask_fit *= self.mask_fit.interp_to_geom(
+                mask_fit &= self.mask_fit.interp_to_geom(
                     mask_fit.geom, method="nearest"
                 )
+
+            if not (self.operator is None or dataset.mask_fit is None):
+                mask_fit = Map.from_geom(
+                    mask_fit.geom, data=self.operator(dataset.mask_fit, mask_fit)
+                )
             dataset.mask_fit = mask_fit
+
             if np.any(mask_fit.data):
                 datasets.append(dataset)
             else:
