@@ -3,6 +3,7 @@ import copy
 import html
 import inspect
 import logging
+import warnings
 from collections.abc import Sequence
 from enum import Enum
 import numpy as np
@@ -17,10 +18,10 @@ from gammapy.utils.compat import COPY_IF_NEEDED
 from gammapy.utils.interpolation import interpolation_scale
 from gammapy.utils.time import time_ref_from_dict, time_ref_to_dict
 from .utils import INVALID_INDEX, INVALID_VALUE, edges_from_lo_hi
+from gammapy.utils.deprecation import GammapyDeprecationWarning
 
 __all__ = ["MapAxes", "MapAxis", "TimeMapAxis", "LabelMapAxis"]
 
-from ..utils.deprecation import deprecated
 
 log = logging.getLogger(__name__)
 
@@ -2420,11 +2421,19 @@ class TimeMapAxis:
         return self._edges_max
 
     @property
-    @deprecated("2.1", alternative="time_edges")
     def edges(self):
         """Return the array of bin edges values."""
+        warnings.warn(
+            "`TimeMapAxis.edges` is deprecated and currently returns a Quantity. "
+            "In a future release it will return Time objects. "
+            "Use `time_edges` instead.",
+            GammapyDeprecationWarning,
+            stacklevel=2,
+        )
         if not self.is_contiguous:
-            raise ValueError("Time axis is not contiguous")
+            raise ValueError(
+                "Time axis is not contiguous, therefore cannot compute bin edges."
+            )
 
         return edges_from_lo_hi(self.edges_min, self.edges_max)
 
@@ -2463,7 +2472,9 @@ class TimeMapAxis:
     def time_edges(self):
         """Time edges as a `~astropy.time.Time` object."""
         if not self.is_contiguous:
-            raise ValueError("Time axis is not contiguous")
+            raise ValueError(
+                "Time axis is not contiguous, therefore cannot compute bin edges."
+            )
 
         return edges_from_lo_hi(self.edges_min, self.edges_max) + self.reference_time
 
