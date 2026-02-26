@@ -4,7 +4,7 @@ FROM python:3.12 AS builder
 # Add necessary sources, including .git for version info
 COPY gammapy/ /repo/gammapy/
 COPY .git/ /repo/.git/
-COPY pyproject.toml setup.py codemeta.json CITATION.cff MANIFEST.in README.rst LICENSE.rst CHANGES.rst /repo/
+COPY pyproject.toml setup.py codemeta.json CITATION.cff MANIFEST.in README.rst LICENSE.rst /repo/
 
 WORKDIR /repo
 
