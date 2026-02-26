@@ -137,7 +137,10 @@ class EffectiveAreaTable2D(IRF):
 
         for ee in energy:
             area = self.evaluate(offset=offset_axis.center, energy_true=ee)
-            area /= np.nanmax(area)
+            max_area = np.max(area)
+            if max_area == 0:
+                continue
+            area /= max_area
             if np.isnan(area).all():
                 continue
             label = f"energy = {ee:.1f}"
