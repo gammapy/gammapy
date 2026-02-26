@@ -12,6 +12,7 @@ Getting started
     install
     environments
     usage
+    docker
     troubleshooting
 
 Installation
