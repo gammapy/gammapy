@@ -9,7 +9,7 @@ How to make a Gammapy release
 This page contains step-by-step instructions for how to make a Gammapy release. The procedure shown here is inspired by
 the `astropy release scheme <https://docs.astropy.org/en/latest/development/maintainers/releasing.html#release-procedure-for-the-astropy-core-package>`__.
 Before starting, ensure you have access to your GitHub token and `gpg key <https://docs.github.com/en/authentication/managing-commit-signature-verification/generating-a-new-gpg-key>`__
-   generated for your GitHub account.
+generated for your GitHub account.
 The general procedure can be broken down into three major steps:
 
 
@@ -37,7 +37,7 @@ Feature Freeze
 
    For a bugfix release:
 
-    towncrier build --version=<version> --keep
+    towncrier build --version=<version>
 
    * The changelog will be saved as ``docs/release-notes/CHANGELOG.rst``.
    * To generate the list of contributors for the release run
@@ -71,7 +71,7 @@ Branching
 
 *For a bugfix release*
 
-#. Only add a new milestone to the `GitHub issue tracker <https://github.com/gammapy/gammapy/milestones>` for further
+#. Only add a new milestone to the `GitHub issue tracker <https://github.com/gammapy/gammapy/milestones>`__ for further
    bugfixes on the same version. Addition to labels is not required.
 #. Update your local ``main`` branch to the latest from remote::
 
