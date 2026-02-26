@@ -16,6 +16,33 @@ from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import requires_data
 
 
+@pytest.mark.xfail(reason="ASDF dataset I/O API is not implemented yet", strict=True)
+@requires_data()
+def test_datasets_asdf_roundtrip(tmp_path):
+    filedata = "$GAMMAPY_DATA/tests/models/gc_example_datasets.yaml"
+    filemodel = "$GAMMAPY_DATA/tests/models/gc_example_models.yaml"
+
+    datasets = Datasets.read(
+        filename=filedata,
+        filename_models=filemodel,
+    )
+
+    datasets.write(
+        filename=tmp_path / "written_datasets.asdf",
+        filename_models=tmp_path / "written_models.yaml",
+        io_format="asdf",
+    )
+
+    datasets_read = Datasets.read(
+        filename=tmp_path / "written_datasets.asdf",
+        filename_models=tmp_path / "written_models.yaml",
+        io_format="asdf",
+    )
+
+    assert len(datasets_read) == len(datasets)
+    assert datasets_read.names == datasets.names
+
+
 @requires_data()
 def test_datasets_to_io(tmp_path):
     filedata = "$GAMMAPY_DATA/tests/models/gc_example_datasets.yaml"

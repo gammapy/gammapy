@@ -159,7 +159,7 @@ def test_map_slice_by_idx(binsz, width, map_type, skydir, axes, unit):
 
 
 @pytest.mark.parametrize("map_type", ["wcs", "hpx"])
-def test_map_meta_read_write(map_type):
+def test_map_meta_fits_read_write(map_type):
     meta = {"user": "test"}
 
     m = Map.create(
@@ -176,6 +176,25 @@ def test_map_meta_read_write(map_type):
     assert header["META"] == '{"user": "test"}'
 
     m2 = Map.from_hdulist(hdulist)
+    assert m2.meta == meta
+
+
+@pytest.mark.xfail(reason="ASDF map I/O API not implemented yet", strict=True)
+@pytest.mark.parametrize("map_type", ["wcs", "hpx"])
+def test_map_meta_asdf_roundtrip(map_type, tmp_path):
+    meta = {"user": "test"}
+
+    m = Map.create(
+        binsz=0.1,
+        width=10.0,
+        map_type=map_type,
+        skydir=SkyCoord(0.0, 30.0, unit="deg"),
+        meta=meta,
+    )
+
+    filename = tmp_path / "meta_map.asdf"
+    m.write(filename, io_format="asdf", overwrite=True)
+    m2 = Map.read(filename, io_format="asdf")
     assert m2.meta == meta
 
 
