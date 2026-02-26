@@ -304,10 +304,24 @@ class WcsNDMap(WcsMap):
         return map_out
 
     def crop(self, crop_width):
-        if np.isscalar(crop_width):
-            crop_width = (crop_width, crop_width)
+        if isinstance(crop_width, (u.Quantity, str)):
+            crop_width = u.Quantity(crop_width)
+            scales = self.geom.pixel_scales
+            if crop_width.size == 1:
+                crop_width = (crop_width / scales).to_value("")
+            else:
+                crop_width = (
+                    (crop_width[0] / scales[0]).to_value(""),
+                    (crop_width[1] / scales[1]).to_value(""),
+                )
+            crop_width = tuple(np.round(crop_width).astype(int))
+        elif np.isscalar(crop_width):
+            crop_width = (int(crop_width), int(crop_width))
+        else:
+            crop_width = (int(crop_width[0]), int(crop_width[1]))
 
         geom = self.geom.crop(crop_width)
+
         if self.geom.is_regular:
             slices = [slice(None)] * len(self.geom.axes)
             slices += [
@@ -317,10 +331,27 @@ class WcsNDMap(WcsMap):
             data = self.data[tuple(slices)]
             map_out = self._init_copy(geom=geom, data=data)
         else:
-            # FIXME: This could be done more efficiently by
-            # constructing the appropriate slices for each image plane
             map_out = self._init_copy(geom=geom, data=None)
-            map_out.coadd(self)
+            non_spatial_shape = self.geom.data_shape[:-2]
+
+            for idx in np.ndindex(non_spatial_shape):
+                idx_geom = idx[::-1]
+
+                nx = int(self.geom.npix[0][idx_geom])
+                ny = int(self.geom.npix[1][idx_geom])
+
+                x_start = crop_width[0]
+                x_end = nx - crop_width[0]
+                y_start = crop_width[1]
+                y_end = ny - crop_width[1]
+
+                if x_end <= x_start or y_end <= y_start:
+                    continue
+
+                slice_in = idx + (slice(y_start, y_end), slice(x_start, x_end))
+                slice_out = idx + (slice(0, y_end - y_start), slice(0, x_end - x_start))
+
+                map_out.data[slice_out] = self.data[slice_in]
 
         return map_out
 
