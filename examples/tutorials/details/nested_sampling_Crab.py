@@ -485,16 +485,19 @@ result_2 = sampler.run(datasets[2])
 
 from arviz import hdi
 
-amplitude_hdi = []
-for s in [result_0.samples, result_1.samples, result_2.samples]:
-    amplitude_hdi.append(hdi(s[:, 1], hdi_prob=0.95, multimodal=False))
+fig, (ax1, ax2) = plt.subplots(
+    2, 1, figsize=(7, 7), gridspec_kw={"height_ratios": [5, 1]}
+)
+colors = ["blue", "green", "orange"]
 
-fix, ax = plt.subplots(1, 1, figsize=(7, 5))
-for i, amp in enumerate(amplitude_hdi):
-    ax.errorbar(amp.mean(), i, xerr=(amp[1] - amp[0]) / 2, lw=15, label=f"run {i}")
+for i, s in enumerate([result_0.samples, result_1.samples, result_2.samples]):
+    amp = hdi(s[:, 1], hdi_prob=0.95, multimodal=False)
+    ax1.hist(s[:, 1], bins=50, color=colors[i], alpha=0.5, label=f"Run {i}")
+    ax2.hlines(1 + i * 0.02, amp[0], amp[1], lw=15, color=colors[i], alpha=0.5)
 
-plt.legend(loc="lower right")
-ax.set_xlabel("Amplitude")
-ax.set_ylabel("Run #")
-
+ax1.legend(loc="upper left")
+ax1.set_xlim(1e-11, 8e-11)
+ax2.set_xlim(1e-11, 8e-11)
+ax2.set_ylim(0.98, 1.06)
+ax2.set_xlabel("Amplitude")
 plt.show()
