@@ -467,13 +467,13 @@ result_2 = sampler.run(datasets[2])
 #
 
 ######################################################################
-# High density intervals
+# Highest density intervals
 # ----------------------
 #
-# Given the samples, one can also compute the high density interval (HDI)
+# Given the samples, one can also compute the highest density interval (HDI)
 # which is also known as the smallest credible interval (SCI).
 # See more details `here <https://en.wikipedia.org/wiki/Credible_interval>`__.
-# This is the interval in which a given probability (e.g. 68%) is contained.
+# This is the smallest interval in which a given probability (e.g. 68%) is contained.
 #
 # For unimodal distributions, the HDI is a single continuous interval containing
 # the mode whereas for multimodal distributions, the HDI can be a set of disconnected intervals.
