@@ -48,6 +48,7 @@ automatically counted in the next feature release.
     >>> git commit -m -s 'Add changelog'
     >>> git push origin add-file-to-main
 
+
 #. Open two separate PRs for each of these changes and mark each with the ``backport-v<version>.x`` label.
     These PRs will be merged and backport to the ``v<version>.x`` branch.
 
@@ -87,8 +88,8 @@ Feature releases
      ``python dev/github_summary.py contributors_by_milestone --milestone '<version>.x'``.
      Note that you will need to use your github token here.
    * Make sure to adjust the lines at the start of the changelog for the correct values printed by the above command.
-   * Rename the filename from `CHANGELOG.rst` to `v.x.y.rst` and add
-     corresponding entry in ``docs/release-notes/index.rst``. Add an `rst` file for the next release (`v.x+1.rst`)
+   * Rename the filename from `CHANGELOG.rst` to `vx.y.rst` and add
+     corresponding entry in ``docs/release-notes/index.rst``. Add an `rst` file for the next release.
 
 #. Open two separate PRs for each of these changes and mark each with the ``backport-v<version>.x`` label.
    Gather feedback from the Gammapy user and dev community. These PRs will be merged and backport to the
@@ -176,8 +177,8 @@ Release candidates
 Releasing the final version
 ---------------------------
 
-#. Create a new tag in the `gammapy-benchmarks repo <https://github.com/gammapy/gammapy-benchmarks>`__, like ``v1.0.1``
-   or ``v1.1``.
+#. Create a new tag in the `gammapy-benchmarks repo <https://github.com/gammapy/gammapy-benchmarks>`__, like ``v2.0.1``
+   or ``v2.1``.
 
 #. In the `gammapy-webpage repo <https://github.com/gammapy/gammapy-webpage>`__:
 
