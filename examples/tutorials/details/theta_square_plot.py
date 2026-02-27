@@ -20,7 +20,7 @@ from astropy.coordinates import SkyCoord
 from astropy import units as u
 from gammapy.data import DataStore
 from gammapy.maps import MapAxis
-from gammapy.makers.utils import make_theta_squared_table
+from gammapy.makers.utils import MakeThetaSquaredTable
 from gammapy.visualization import plot_theta_squared_table
 
 
@@ -52,7 +52,7 @@ print(position)
 #
 # By default, the distribution of the OFF counts in squared angular distance is calculated from the mirror reflected coordinates of the test position, assuming therefore a single OFF position.
 # However, one can set manually both the coordinates of the ``off_position``.
-# It is worth to note that overlapping regions are always forbidden to avoid correlated OFF counts, therefore the user should be take care in the choice of the ``off_position``.
+# It is worth to note that overlapping regions are always forbidden to avoid correlated OFF counts, therefore the user should take care in the choice of the ``off_position``.
 #
 
 separation = position.separation(observations[0].pointing.fixed_icrs)
@@ -64,7 +64,7 @@ print(off_position)
 
 # %%
 theta2_axis = MapAxis.from_bounds(0, 0.2, nbin=20, interp="lin", unit="deg2")
-theta2_table_maker = make_theta_squared_table(
+theta2_table_maker = MakeThetaSquaredTable(
     observations=observations,
     position=position,
     theta_squared_axis=theta2_axis,
@@ -82,7 +82,7 @@ plt.show()
 
 off_regions_number = 3
 theta2_axis = MapAxis.from_bounds(0, 0.1, nbin=20, interp="lin", unit="deg2")
-theta2_table_maker_offreg = make_theta_squared_table(
+theta2_table_maker_offreg = MakeThetaSquaredTable(
     observations=observations,
     position=position,
     theta_squared_axis=theta2_axis,
@@ -99,11 +99,11 @@ plt.show()
 # Making a theta2 plot for a given energy range
 # ---------------------------------------------
 #
-# with the function `~gammapy.makers.utils.make_theta_squared_table`, one can
+# with the function `~gammapy.makers.utils.MakeThetaSquaredTable`, one can
 # also select a fixed energy range.
 #
 
-theta2_table_maker_en = make_theta_squared_table(
+theta2_table_maker_en = MakeThetaSquaredTable(
     observations=observations,
     position=position,
     theta_squared_axis=theta2_axis,
