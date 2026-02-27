@@ -13,52 +13,94 @@ generated for your GitHub account.
 The general procedure can be broken down into three major steps:
 
 
-* Feature freeze: freeze the core package features and create a new branch for the release. This is typically done two
-  weeks before the release.
+* Feature freeze: freeze the core package features and create a new branch for the release.
+  This is typically done few days before the release candidate.
 * Release candidate: proposed feature release which should be tested. This is typically done one week before the
   final release.
 * Final release.
 
-Some steps are not required for bugfix releases, and are mentioned accordingly.
+Some steps differ between the bug fix and feature releases, and the two are detailed accordingly.
 
 
-Feature Freeze
---------------
+Bug fix releases
+----------------
+
+This is meant for small updates to the documentation and bug fixes. PRs and authors on bug fix releases are
+automatically counted in the next feature release.
+
+** Feature freeze **
+
+#. Update the author list manually in the  ``CITATION.cff``.
+
+    * You can use the helper script ``dev/authors.py`` for this.
+
+#. Run towncrier on the relevant branch (eg: for a bugfix on the 2.0 release):
+
+    >>> git checkout v2.0.x
+    >>> towncrier build --keep
+    >>> mv ``CHANGELOG.rst`` ``v2.0.x.rst``
+
+    The file will still be there if you just checkout to main
+
+    >>> git checkout main
+    >>> git checkout -b add-file-to-main
+    >>> git add docs/release-notes/2.0.x.rst
+    >>> git commit -m -s 'Add changelog'
+    >>> git push origin add-file-to-main
+
+#. Open two separate PRs for each of these changes and mark each with the ``backport-v<version>.x`` label.
+    These PRs will be merged and backport to the ``v<version>.x`` branch.
+
+** Branching **
+
+#. Add a new milestone to the `GitHub issue tracker <https://github.com/gammapy/gammapy/milestones>`__ for further
+   bugfixes on the same version. Addition to labels is not required.
+#. Update your local ``main`` branch to the latest from remote::
+
+    git fetch upstream --tags --prune
+    git checkout -B main upstream/main
+
+
+** Release candidate **
+
+#. This step is common between feature and bug fix releases. Please follow the instructions at the end of this section.
+
+** Final release **
+
+#. Follow the rest of instructions as mentioned below in the section.
+
+Feature releases
+----------------
+
+** Feature freeze **
 
 #. Update the author list manually in the  ``CITATION.cff``.
 
     * You can use the helper script ``dev/authors.py`` for this.
 
 #. On the ``main`` branch, build the changelog using `towncrier` for the version you are about to release.
-   For a bugfix release, one should not delete the fragment files.
-   For a major release::
 
     towncrier build --version <version>
-
-   For a bugfix release:
-
-    towncrier build --version=<version>
 
    * The changelog will be saved as ``docs/release-notes/CHANGELOG.rst``.
    * To generate the list of contributors for the release run
      ``python dev/github_summary.py contributors_by_milestone --milestone '<version>.x'``.
      Note that you will need to use your github token here.
    * Make sure to adjust the lines at the start of the changelog for the correct values printed by the above command.
-   * Rename the filename from `CHANGELOG.rst` to `version.x.rst` and add
-     corresponding entry in ``docs/release-notes/index.rst``.
+   * Rename the filename from `CHANGELOG.rst` to `v.x.y.rst` and add
+     corresponding entry in ``docs/release-notes/index.rst``. Add an `rst` file for the next release (`v.x+1.rst`)
 
 #. Open two separate PRs for each of these changes and mark each with the ``backport-v<version>.x`` label.
    Gather feedback from the Gammapy user and dev community. These PRs will be merged and backport to the
    ``v<version>.x`` branch at the release candidate stage.
 
-Branching
----------
-*For a feature release*:
+** Branching **
 
 #. Add a new milestone to the `GitHub issue tracker <https://github.com/gammapy/gammapy/milestones>`__ for the version
    ``v<version>.x`` (this will also be used for the next bugfix release). Also create a ``backport-v<version>.x``
    `label <https://github.com/gammapy/gammapy/labels>`__, which has the description ``on merge: backport to
    v<version.x`` to allow for automatic backport triggering.
+
 #. Update your local ``main`` branch to the latest from remote::
 
     git fetch upstream --tags --prune
@@ -69,18 +111,19 @@ Branching
 #. Update the entry for the feature freeze in the
    `Gammapy release calendar <https://github.com/gammapy/gammapy/wiki/Release-Calendar>`__.
 
-*For a bugfix release*
+** Release candidate **
 
-#. Only add a new milestone to the `GitHub issue tracker <https://github.com/gammapy/gammapy/milestones>`__ for further
-   bugfixes on the same version. Addition to labels is not required.
-#. Update your local ``main`` branch to the latest from remote::
+#. This step is common between feature and bug fix releases. Please follow the instructions at the end of this section.
 
-    git fetch upstream --tags --prune
-    git checkout -B main upstream/main
+** Final release **
+
+#. Create a new tag in the `gammapy-data repo <https://github.com/gammapy/gammapy-data>`__, like ``v2.0``
+   or ``v2.1``
+#. Follow the rest of instructions as mentioned below.
 
 
-Releasing the first release candidate
--------------------------------------
+Release candidates
+------------------
 
 #. First, make sure you have a
    `gpg key <https://docs.github.com/en/authentication/managing-commit-signature-verification/generating-a-new-gpg-key>`__
@@ -130,11 +173,8 @@ Releasing the first release candidate
    on the page created before.
 
 
-Releasing the final version of the major release
-------------------------------------------------
-
-#. *For a feature release*: Create a new tag in the `gammapy-data repo <https://github.com/gammapy/gammapy-data>`__, like ``v1.0``
-   or ``v1.1``. This is not required for bug fix releases.
+Releasing the final version
+---------------------------
 
 #. Create a new tag in the `gammapy-benchmarks repo <https://github.com/gammapy/gammapy-benchmarks>`__, like ``v1.0.1``
    or ``v1.1``.
@@ -142,26 +182,25 @@ Releasing the final version of the major release
 #. In the `gammapy-webpage repo <https://github.com/gammapy/gammapy-webpage>`__:
 
    * In the ``download/install`` folder, copy a previous environment file as ``gammapy-1.0-environment.yml``.
-   * Adapt the dependency conda env name and versions as required in this file. Make sure to move ``gammapy=1.0``
+   * Adapt the dependency conda env name and versions as required in this file. Make sure to move ``gammapy=2.0``
      into the dependencies list.
    * Update the datasets entry in the ``download/index.json`` to point to this new release tag. Also update the
      notebook entry, typically the link extensions are the same between versions.
 
-#. In the `gammapy` repo, switch to the correct branch and update the ``CITATION.cff`` date and version by running the
+#. In the `gammapy repo https://github.com/gammapy/gammapy>__`, switch to the correct branch and update the ``CITATION.cff`` date and version by running the
    ``dev/prepare-release.py`` script::
 
-    git checkout v1.0.x
-    python ./dev/prepare-release.py --release v1.0
+    git checkout v2.0.x
+    python ./dev/prepare-release.py --release v2.0
     git push
 
-#. Locally create a new release tag like ``v1.0`` for Gammapy and push the tag to upstream::
+#. Locally create a new release tag like ``v2.0`` for Gammapy and push the tag to upstream::
 
-    git tag -s v1.0 -m "Tagging v1.0"
-    git push upstream v1.0.x
+    git tag -s v2.0 -m "Tagging v2.0"
+    git push upstream v2.0.x
 
 #. In the `gammapy-docs repo <https://github.com/gammapy/gammapy-docs>`__:
 
-   * Ensure that there are no running ``dev-docs`` build actions.
    * Wait for the triggered ``release`` docs build to finish. Do **not** proceed to next step before the build finishes.
    * Edit ``docs/stable/switcher.json`` to add the new version.
    * Edit ``docs/stable/index.html`` so that the url points to the new version.
