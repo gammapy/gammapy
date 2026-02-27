@@ -1140,6 +1140,7 @@ def test_stack_int():
     map1.stack(map2)
     assert map1.data.dtype == int
 
+
 def test_wcsndmap_crop_irregular():
     # Test crop for irregular geometry (different npix per plane)
     energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=2)
@@ -1154,7 +1155,7 @@ def test_wcsndmap_crop_irregular():
     assert_allclose(m_crop.geom.npix[0][0], 8)
     assert_allclose(m_crop.geom.npix[0][1], 6)
     assert m_crop.data.shape == m_crop.geom.data_shape
-    
+
     assert_allclose(m_crop.data[0, 0:8, 0:8], 1.0)
     assert_allclose(m_crop.data[1, 0:6, 0:6], 1.0)
 
@@ -1162,3 +1163,7 @@ def test_wcsndmap_crop_irregular():
     assert_allclose(m_crop_qty.geom.npix[0], m_crop.geom.npix[0])
     assert_allclose(m_crop_qty.data[0, 0:8, 0:8], 1.0)
     assert_allclose(m_crop_qty.data[1, 0:6, 0:6], 1.0)
+    m_crop_tuple = m.crop(crop_width=(1, 2))
+    assert m_crop_tuple.data.shape == (2, 6, 8)
+    assert_allclose(m_crop_tuple.data[0, 0:6, 0:8], 1.0)
+    assert_allclose(m_crop_tuple.data[1, 0:4, 0:6], 1.0)
