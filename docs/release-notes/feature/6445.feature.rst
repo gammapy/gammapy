@@ -1,0 +1,1 @@
+Remove ``GammapyDeprecationWarning`` from ``FixedPointingInfo`` and ``Observation.create``, enforcing ``FixedPointingInfo`` as the required type for the ``pointing`` parameter.

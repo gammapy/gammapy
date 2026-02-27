@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import html
 import logging
-import warnings
 from enum import Enum, auto
 import numpy as np
 import scipy.interpolate
@@ -18,7 +17,6 @@ from astropy.io import fits
 from astropy.table import Table
 from astropy.units import Quantity
 from astropy.utils import lazyproperty
-from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.utils.fits import earth_location_from_dict
 from gammapy.utils.scripts import make_path
 from gammapy.utils.time import time_ref_from_dict
@@ -125,12 +123,6 @@ class FixedPointingInfo:
 
         if fixed_icrs is not None:
             _check_coord_frame(fixed_icrs, ICRS, "fixed_icrs")
-
-            if np.isnan(fixed_icrs.ra.value) or np.isnan(fixed_icrs.dec.value):
-                warnings.warn(
-                    "In future, fixed_icrs must have non-nan values",
-                    GammapyDeprecationWarning,
-                )
 
             self._mode = PointingMode.POINTING
             self._fixed_icrs = fixed_icrs
