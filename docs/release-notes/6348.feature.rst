@@ -1,2 +1,2 @@
 Forbid overlapping regions in `~gammapy.makers.utils.make_theta_squared_table`. Allow the user to choose for multiple, non overlapping, OFF regions.
-`~gammapy.makers.utils.make_theta_squared_table` is now a class. The tutorial has been updated accordingly to the changes.
+`~gammapy.makers.utils.make_theta_squared_table` has been converted to the `~gammapy.makers.utils.MakeThetaSquaredTable` class. The tutorial has been updated accordingly to the changes.
