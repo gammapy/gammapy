@@ -28,31 +28,36 @@ Bug fix releases
 This is meant for small updates to the documentation and bug fixes. PRs and authors on bug fix releases are
 automatically counted in the next feature release.
 
-** Feature freeze **
+**Feature freeze**
 
 #. Update the author list manually in the  ``CITATION.cff``.
 
     * You can use the helper script ``dev/authors.py`` for this.
 
-#. Run towncrier on the relevant branch (eg: for a bugfix on the 2.0 release):
+#. To create the changelog, towncrier is utilised on the relevant branch (eg: for a 
+   bugfix on the 2.0 release). The following workflow should be followed::
 
-    >>> git checkout v2.0.x
-    >>> towncrier build --keep
-    >>> mv ``CHANGELOG.rst`` ``v2.0.x.rst``
+    git checkout v2.0.x
+    towncrier build --version=<version> --keep
+    mv ``CHANGELOG.rst`` ``v2.0.x.rst``
 
-    The file will still be there if you just checkout to main
+   * As we will create the changelog again for the major release, we should utilise the ``keep`` keyword,
+     as to not delete the fragments.
+   * The file will still be there if you just checkout to main
 
-    >>> git checkout main
-    >>> git checkout -b add-file-to-main
-    >>> git add docs/release-notes/2.0.x.rst
-    >>> git commit -m -s 'Add changelog'
-    >>> git push origin add-file-to-main
+   ::
+
+     git checkout main
+     git checkout -b add-file-to-main
+     git add docs/release-notes/2.0.x.rst
+     git commit -m -s 'Add changelog'
+     git push origin add-file-to-main
 
 
 #. Open two separate PRs for each of these changes and mark each with the ``backport-v<version>.x`` label.
-    These PRs will be merged and backport to the ``v<version>.x`` branch.
+   These PRs will be merged and backport to the ``v<version>.x`` branch.
 
-** Branching **
+**Branching**
 
 #. Add a new milestone to the `GitHub issue tracker <https://github.com/gammapy/gammapy/milestones>`__ for further
    bugfixes on the same version. Addition to labels is not required.
@@ -62,24 +67,24 @@ automatically counted in the next feature release.
     git checkout -B main upstream/main
 
 
-** Release candidate **
+**Release candidate**
 
 #. This step is common between feature and bug fix releases. Please follow the instructions at the end of this section.
 
-** Final release **
+**Final release**
 
 #. Follow the rest of instructions as mentioned below in the section.
 
 Feature releases
 ----------------
 
-** Feature freeze **
+**Feature freeze**
 
 #. Update the author list manually in the  ``CITATION.cff``.
 
     * You can use the helper script ``dev/authors.py`` for this.
 
-#. On the ``main`` branch, build the changelog using `towncrier` for the version you are about to release.
+#. On the ``main`` branch, build the changelog using `towncrier` for the version you are about to release::
 
     towncrier build --version <version>
 
@@ -95,7 +100,7 @@ Feature releases
    Gather feedback from the Gammapy user and dev community. These PRs will be merged and backport to the
    ``v<version>.x`` branch at the release candidate stage.
 
-** Branching **
+**Branching**
 
 #. Add a new milestone to the `GitHub issue tracker <https://github.com/gammapy/gammapy/milestones>`__ for the version
    ``v<version>.x`` (this will also be used for the next bugfix release). Also create a ``backport-v<version>.x``
@@ -112,11 +117,11 @@ Feature releases
 #. Update the entry for the feature freeze in the
    `Gammapy release calendar <https://github.com/gammapy/gammapy/wiki/Release-Calendar>`__.
 
-** Release candidate **
+**Release candidate**
 
 #. This step is common between feature and bug fix releases. Please follow the instructions at the end of this section.
 
-** Final release **
+**Final release**
 
 #. Create a new tag in the `gammapy-data repo <https://github.com/gammapy/gammapy-data>`__, like ``v2.0``
    or ``v2.1``
@@ -138,13 +143,13 @@ Release candidates
    * Adapt the dependency conda env name and versions as required in this file. Normally, it should be the latest versions of the packages.
      Note that for the release candidates, ``gammapy`` must be included under pip.
 
-#. In the `gammapy` repo, switch to the correct branch and update the ``CITATION.cff`` date and version by running the
+#. In the ``gammapy repo <https://github.com/gammapy/gammapy>`__, switch to the correct branch and update the ``CITATION.cff`` date and version by running the
    ``dev/prepare-release.py`` script::
 
     git checkout v1.0.x
     python ./dev/prepare-release.py --release v1.0rc1
 
-    * This should update the date and the version of the `CITATION.cff` file.
+   * This should update the date and the version of the `CITATION.cff` file.
 
 #. Commit and push the branch back to GitHub::
 
