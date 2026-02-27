@@ -103,7 +103,6 @@ docs = [
     "pydata-sphinx-theme",
     "nbformat",
     "docutils",
-    "arviz",
 ]
 
 [tool.setuptools.packages.find]

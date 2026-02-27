@@ -486,7 +486,7 @@ result_2 = sampler.run(datasets[2])
 from arviz import hdi
 
 fig, (ax1, ax2) = plt.subplots(
-    2, 1, figsize=(7, 7), gridspec_kw={"height_ratios": [5, 1]}
+    2, 1, sharex=True, figsize=(7, 7), gridspec_kw={"height_ratios": [5, 1]}
 )
 colors = ["blue", "green", "orange"]
 
@@ -497,7 +497,8 @@ for i, s in enumerate([result_0.samples, result_1.samples, result_2.samples]):
 
 ax1.legend(loc="upper left")
 ax1.set_xlim(1e-11, 8e-11)
-ax2.set_xlim(1e-11, 8e-11)
 ax2.set_ylim(0.98, 1.06)
 ax2.set_xlabel("Amplitude")
+ax2.tick_params(left=False, labelleft=False)
+
 plt.show()
