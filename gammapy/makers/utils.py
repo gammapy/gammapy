@@ -391,7 +391,7 @@ class make_theta_squared_table:
 
     Parameters
     ----------
-    observations: `~gammapy.data.Observations`
+    observations : `~gammapy.data.Observations`
         List of observations.
     theta_squared_axis : `~gammapy.maps.MapAxis`
         Axis of edges of the theta2 bin used to compute the distribution.
