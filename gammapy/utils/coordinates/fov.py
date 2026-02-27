@@ -24,6 +24,32 @@ __all__ = ["FoVAltAzFrame", "FoVICRSFrame", "fov_to_sky", "sky_to_fov"]
 reflect_lon_matrix = np.array([[1, 0, 0], [0, -1, 0], [0, 0, 1]])
 
 
+def _validate_obstime_consistency(obstime, origin):
+    """Check that obstime is consistent with origin.obstime."""
+    if obstime is None:
+        return origin.obstime
+    if obstime.shape != origin.obstime.shape:
+        raise ValueError(
+            f"origin and obstime have inconsistent shapes: "
+            f"{origin.obstime.shape} vs {obstime.shape}."
+        )
+    if not np.all(obstime == origin.obstime):
+        raise ValueError(
+            "obstime mismatch: frame obstime and origin.obstime must be equal."
+        )
+
+
+def _validate_location_consistency(location, origin):
+    """Check that location is consistent with origin.location."""
+    if location is None:
+        return origin.location
+
+    if not np.all(location == origin.location):
+        raise ValueError(
+            "location mismatch: frame location and origin.location must be equal."
+        )
+
+
 class FoVAltAzFrame(BaseCoordinateFrame):
     """
     FoV coordinate frame. Centered on `origin` and aligned on AltAz frame at `location` and `obstime`.
