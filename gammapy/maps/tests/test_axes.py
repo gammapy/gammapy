@@ -1138,13 +1138,15 @@ def test_time_map_axis_deprecation():
         edges_max=edges_rel[1:] * u.d,
         reference_time=time_ref,
     )
-    time_edges = axis.time_edges
-    assert isinstance(time_edges, Time)
-    assert len(time_edges) == len(edges_rel)
+
+    assert isinstance(axis.time_edges, Time)
+    assert len(axis.time_edges) == len(edges_rel)
 
     expected_time = time_ref + (edges_rel * u.d)
     assert np.all(axis.time_edges == expected_time)
 
-    with pytest.warns(GammapyDeprecationWarning):
+    with pytest.warns(
+        GammapyDeprecationWarning, match="The edges function is deprecated"
+    ):
         old_edges = axis.edges
         assert isinstance(old_edges, u.Quantity)
