@@ -93,11 +93,7 @@ class FoVAltAzFrame(BaseCoordinateFrame):
         # Validate obstime consistency
         if obstime is not None and origin.obstime is not None:
             if obstime.shape != origin.obstime.shape:
-                raise ValueError(
-                    f"obstime shape mismatch: frame obstime has shape "
-                    f"{obstime.shape} but origin.obstime has shape "
-                    f"{origin.obstime.shape}."
-                )
+                raise ValueError("origin and obstime have inconsistent shapes")
             if not np.all(obstime == origin.obstime):
                 raise ValueError(
                     "obstime mismatch: frame obstime and origin.obstime must be equal."
