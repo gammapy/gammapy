@@ -37,10 +37,10 @@ def test_dummy_cache():
     w = Dummy2(1, np.array(3))
 
     assert x is y
-    assert z is not y
+    assert z is not y  # NOSONAR(S3403) check caching is not shared across subclasses
 
     assert u is not x
-    assert u is not v
+    assert u is not v  # NOSONAR(S3403) check caching is not shared across subclasses
     assert v is not z
     assert v is w
 
@@ -57,4 +57,4 @@ def test_dummy_cache():
     z = Dummy2(1, np.array(2))
 
     assert x is not y
-    assert z is not y
+    assert z is not y  # NOSONAR(S3403) check caching is not shared across subclasses

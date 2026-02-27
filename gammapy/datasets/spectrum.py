@@ -6,6 +6,8 @@ from gammapy.utils.scripts import make_path
 from gammapy.utils.metadata import CreatorMetaData
 from .map import MapDataset, MapDatasetOnOff
 from .utils import get_axes
+from astropy.io import fits
+
 
 __all__ = ["SpectrumDatasetOnOff", "SpectrumDataset"]
 
@@ -274,6 +276,74 @@ class SpectrumDataset(PlotMixin, MapDataset):
 
     tag = "SpectrumDataset"
 
+    @classmethod
+    def create(
+        cls,
+        geom,
+        energy_axis_true=None,
+        migra_axis=None,
+        reference_time="2000-01-01",
+        name=None,
+        meta_table=None,
+        **kwargs,
+    ):
+        """Create a `SpectrumDataset` object with zero filled maps.
+
+        Parameters
+        ----------
+        geom : `~gammapy.maps.RegionGeom`
+            Reference target geometry in reco energy, used for counts and background maps.
+        energy_axis_true : `~gammapy.maps.MapAxis`, optional
+            True energy axis used for IRF maps. Default is None.
+        migra_axis : `~gammapy.maps.MapAxis`, optional
+            If set, this provides the migration axis for the energy dispersion map.
+            If not set, an EDispKernelMap is produced instead. Default is None.
+        reference_time : `~astropy.time.Time`
+            The reference time to use in GTI definition. Default is "2000-01-01".
+        name : str, optional
+            Name of the returned dataset. Default is None.
+        meta_table : `~astropy.table.Table`, optional
+            Table listing information on observations used to create the dataset.
+            One line per observation for stacked datasets. Default is None.
+
+        Returns
+        -------
+        empty_maps : `SpectrumDataset`
+            A SpectrumDataset containing zero filled maps.
+
+        Examples
+        --------
+        >>> from gammapy.datasets import SpectrumDataset
+        >>> from gammapy.maps import RegionGeom, MapAxis
+
+        >>> energy_axis = MapAxis.from_energy_bounds(1.0, 10.0, 4, unit="TeV")
+        >>> energy_axis_true = MapAxis.from_energy_bounds(
+        ...            0.5, 20, 10, unit="TeV", name="energy_true"
+        ...        )
+        >>> geom = RegionGeom.create(
+        ...            region=None,
+        ...            axes=[energy_axis],
+        ...        )
+        >>> empty = SpectrumDataset.create(geom=geom, energy_axis_true=energy_axis_true, name="empty")
+        """
+        if not geom.is_region:
+            raise TypeError("`SpectrumDataset` is only supported for `RegionGeom`.")
+
+        dataset = super().create(
+            geom,
+            energy_axis_true=energy_axis_true,
+            migra_axis=migra_axis,
+            reference_time=reference_time,
+            name=name,
+            meta_table=meta_table,
+            **kwargs,
+        )
+
+        # remove PSF
+        dataset.psf = None
+
+        return dataset
+
     def cutout(self, *args, **kwargs):
         """Not supported for `SpectrumDataset`."""
         raise NotImplementedError("Method not supported on a spectrum dataset")
@@ -310,7 +380,7 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         raise NotImplementedError("Method not supported on a spectrum dataset")
 
     @classmethod
-    def read(cls, filename, format="ogip", checksum=False, name=None, **kwargs):
+    def read(cls, filename, format=None, checksum=False, name=None, **kwargs):
         """Read from file.
 
         For OGIP formats, filename is the name of a PHA file. The BKG, ARF, and RMF file names must be
@@ -321,9 +391,9 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         Parameters
         ----------
         filename : `~pathlib.Path` or str
-            OGIP PHA file to read.
-        format : {"ogip", "ogip-sherpa", "gadf"}
-            Format to use. Default is "ogip".
+            Name of the file to read.
+        format : {"ogip", "gadf"}, optional
+            Format to use. If None, try to guess the format. Default is None
         checksum : bool, optional
             If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
         name: str, optional
@@ -333,15 +403,33 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         """
         from .io import OGIPDatasetReader
 
+        filename = make_path(filename)
+        if format is None:
+            with fits.open(filename) as hdulist:
+                # Check for extensions in OGIP format
+                if (
+                    "SPECTRUM" in hdulist
+                    and "OGIP" in hdulist["SPECTRUM"].header["HDUCLASS"]
+                ):
+                    format = "ogip"
+                # Check for extensions in GADF format
+                elif "COUNTS_BANDS" in hdulist:
+                    format = "gadf"
+                else:
+                    raise ValueError(f"Cannot determine format of {filename}")
+
         if format == "gadf":
             return super().read(
                 filename, format="gadf", checksum=checksum, name=name, **kwargs
             )
+        elif format == "ogip":
+            return OGIPDatasetReader(
+                filename=filename, checksum=checksum, name=name
+            ).read()
+        else:
+            raise ValueError(f"Invalid {format} serialisation format in {filename}.")
 
-        reader = OGIPDatasetReader(filename=filename, checksum=checksum, name=name)
-        return reader.read()
-
-    def write(self, filename, overwrite=False, format="ogip", checksum=False):
+    def write(self, filename, overwrite=False, format="gadf", checksum=False):
         """Write spectrum dataset on off to file.
 
         Can be serialised either as a `MapDataset` with a `RegionGeom`
@@ -355,7 +443,7 @@ class SpectrumDatasetOnOff(PlotMixin, MapDatasetOnOff):
         overwrite : bool, optional
             Overwrite existing file. Default is False.
         format : {"ogip", "ogip-sherpa", "gadf"}
-            Format to use. Default is "ogip".
+            Format to use. Default is "gadf".
         checksum : bool
             When True adds both DATASUM and CHECKSUM cards to the headers written to the file.
             Default is False.

@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import warnings
 import pytest
+import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from regions import CircleSkyRegion
@@ -124,16 +125,16 @@ def test_spectrum_datasets_to_io(tmp_path):
 @requires_data()
 def test_ogip_writer(tmp_path):
     dataset = SpectrumDatasetOnOff.read(
-        "$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits"
+        "$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits",
+        format="ogip",
     )
-    dataset.counts_off = None
+    dataset.counts_off.data = np.zeros(dataset.counts_off.data.shape)
     datasets = Datasets(dataset)
-
     datasets.write(tmp_path / "written_datasets.yaml")
-
     new_datasets = datasets.read(tmp_path / "written_datasets.yaml")
-
-    assert new_datasets[0].counts_off is None
+    assert_allclose(
+        new_datasets[0].counts_off.data, np.zeros(new_datasets[0].counts_off.data.shape)
+    )
 
 
 @requires_data()
@@ -203,6 +204,12 @@ def test_fermipy_datasets_reader():
     assert datasets[1].name == "P8R3_SOURCEVETO_V3_PSF1_v1"
     assert datasets.models.names[0] == "isotropic_P8R3_SOURCEVETO_V3_PSF0_v1"
     assert datasets.models.names[1] == "isotropic_P8R3_SOURCEVETO_V3_PSF1_v1"
+    assert datasets.gti is not None
+    assert_allclose(
+        datasets.gti.time_start.value,
+        [54682.65603794, 54682.65603794],
+        rtol=1 / (24 * 60),
+    )
 
     path = make_path("$GAMMAPY_DATA/tests/fermi")
     dataset = reader.create_dataset(
@@ -212,27 +219,55 @@ def test_fermipy_datasets_reader():
         path / "drm_00.fits",
     )
     assert not dataset.models
+    assert dataset.gti is None
 
-    reader = FermipyDatasetsReader(
-        "$GAMMAPY_DATA/tests/fermi/config_fermipy_minimal.yaml", edisp_bins=1
-    )
 
-    datasets = reader.read()
+@requires_data()
+def test_fermipy_datasets_reader_no_components():
+    files = [
+        "$GAMMAPY_DATA/tests/fermi/config_fermipy_minimal.yaml",
+        "$GAMMAPY_DATA/tests/fermi/config_fermipy_empty_component.yaml",
+        "$GAMMAPY_DATA/tests/fermi/config_fermipy_null_component.yaml",
+    ]
+    for file in files:
+        reader = FermipyDatasetsReader(file, edisp_bins=1)
 
-    assert len(datasets) == 1
-    assert datasets[0].counts.geom.axes[0].unit == "MeV"
-    assert_allclose(datasets[0].background, 0)
-    assert datasets[0].counts.geom.to_image() == datasets[0].exposure.geom.to_image()
-    assert_allclose(datasets[0].exposure.data[0, 0, 0], 1.54938e11)
-    assert_allclose(datasets[0].edisp.edisp_map.data[0, 0, 0, 0], 0.020409, rtol=1e-4)
-    assert_allclose(
-        datasets[0]._psf_kernel.psf_kernel_map.data.sum(axis=(1, 2)), 1, rtol=1e-5
-    )
-    assert_allclose(
-        datasets[0].edisp.exposure_map.quantity, datasets[0].psf.exposure_map.quantity
-    )
-    assert datasets[0].edisp.exposure_map.unit == datasets[0].psf.exposure_map.unit
-    assert datasets[0].edisp.exposure_map.unit == datasets[0].exposure.unit
+        datasets = reader.read()
 
-    assert datasets[0].name == "P8R3_SOURCEVETO_V3_PSF1_v1"
-    assert datasets.models.names[0] == "isotropic_P8R3_SOURCEVETO_V3_PSF1_v1"
+        assert len(datasets) == 1
+        assert datasets[0].counts.geom.axes[0].unit == "MeV"
+        assert_allclose(datasets[0].background, 0)
+        assert (
+            datasets[0].counts.geom.to_image() == datasets[0].exposure.geom.to_image()
+        )
+        assert_allclose(datasets[0].exposure.data[0, 0, 0], 1.54938e11)
+        assert_allclose(
+            datasets[0].edisp.edisp_map.data[0, 0, 0, 0], 0.020409, rtol=1e-4
+        )
+        assert_allclose(
+            datasets[0]._psf_kernel.psf_kernel_map.data.sum(axis=(1, 2)), 1, rtol=1e-5
+        )
+        assert_allclose(
+            datasets[0].edisp.exposure_map.quantity,
+            datasets[0].psf.exposure_map.quantity,
+        )
+        assert datasets[0].edisp.exposure_map.unit == datasets[0].psf.exposure_map.unit
+        assert datasets[0].edisp.exposure_map.unit == datasets[0].exposure.unit
+
+        assert datasets[0].name == "P8R3_SOURCEVETO_V3_PSF1_v1"
+        assert datasets.models.names[0] == "isotropic_P8R3_SOURCEVETO_V3_PSF1_v1"
+
+        assert datasets[0].gti.time_sum.unit == "s"
+        assert_allclose(datasets[0].gti.time_sum.value, 426196949.14969766, rtol=60)
+
+
+@requires_data()
+def test_fermipy_datasets_reader_invalid_iso():
+    files = [
+        "$GAMMAPY_DATA/tests/fermi/config_fermipy_invalid_iso_list_missing.yaml",
+        "$GAMMAPY_DATA/tests/fermi/config_fermipy_invalid_iso_list.yaml",
+        "$GAMMAPY_DATA/tests/fermi/config_fermipy_invalid_iso_missing.yaml",
+    ]
+    for file in files:
+        with pytest.raises(ValueError):
+            FermipyDatasetsReader(file, edisp_bins=1).read()

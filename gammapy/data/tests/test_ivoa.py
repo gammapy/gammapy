@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-
+from numpy.testing import assert_allclose
 from gammapy.data.ivoa import empty_obscore_table, to_obscore_table
 from gammapy.utils.testing import requires_data
 
@@ -34,7 +34,7 @@ def test_to_obscore_table():
     assert obscore_tab["calib_level"][0] == 2
     assert obscore_tab["target_name"][0] == "MSH15-52"
     assert obscore_tab["obs_publisher_did"][1] == "ivo://padc.obspm/hess#47828"
-    assert obscore_tab["t_resolution"][1] == 0.0
+    assert_allclose(obscore_tab["t_resolution"][1], 0.0)
 
     obscore_tab = to_obscore_table(
         path,

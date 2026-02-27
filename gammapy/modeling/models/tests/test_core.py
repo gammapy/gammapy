@@ -209,7 +209,7 @@ def test_set_parameters_from_table():
     models.update_parameters_from_table(tab)
 
     d = models.parameters.to_dict()
-    assert d[0]["value"] == 3.0
+    assert_allclose(d[0]["value"], 3.0)
     assert d[0]["min"] == -10
     assert d[0]["max"] == 10
     assert d[0]["frozen"]
@@ -429,3 +429,25 @@ def test_add_datasets_models():
     assert isinstance(Models() + DatasetModels(), Models)
     assert isinstance(DatasetModels() + DatasetModels(), Models)
     assert isinstance(Models() + Models(), Models)
+
+
+def test_sample_parameter_from_covariance():
+    spectral_model = PowerLawSpectralModel()
+    model = SkyModel(spectral_model=spectral_model, name="test-model")
+    models = Models([model])
+
+    data = np.identity(3)
+    data[2, 2] = 0
+    models.covariance = data
+
+    pars_sample = models.sample_parameters_from_covariance(n_samples=10000)
+    assert pars_sample.shape == (10000, 2)
+    assert_allclose(pars_sample[:, 0].mean(), 2, rtol=1e-2)
+    assert_allclose(pars_sample[:, 0].std(), 1, rtol=1e-1)
+
+    pars_sample = models.sample_parameters_from_covariance(
+        n_samples=10000, free_only=False
+    )
+    assert pars_sample.shape == (10000, 3)
+    assert_allclose(pars_sample[:, 2].mean(), 1, rtol=1e-2)
+    assert_allclose(pars_sample[:, 2].std(), 0, rtol=1e-1)

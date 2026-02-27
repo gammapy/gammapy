@@ -242,6 +242,10 @@ class Parameter:
     @property
     def min(self):
         """Minimum as a float."""
+        from .models import UniformPrior, LogUniformPrior
+
+        if isinstance(self.prior, (UniformPrior, LogUniformPrior)):
+            return self.prior.min.value
         return self._min
 
     @min.setter
@@ -264,6 +268,10 @@ class Parameter:
     @property
     def max(self):
         """Maximum as a float."""
+        from .models import UniformPrior, LogUniformPrior
+
+        if isinstance(self.prior, (UniformPrior, LogUniformPrior)):
+            return self.prior.max.value
         return self._max
 
     @max.setter
@@ -875,7 +883,7 @@ class Parameters(collections.abc.Sequence):
                 if frozen:
                     selection[idx] &= par.frozen
                 else:
-                    selection[idx] &= ~par.frozen
+                    selection[idx] &= not par.frozen
 
         return self[selection]
 
@@ -921,7 +929,7 @@ class restore_parameters_status:
     def __enter__(self):
         pass
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, exception_type, exception_value, exception_traceback):
         for value, par, frozen in zip(self.values, self._parameters, self.frozen):
             if self.restore_values:
                 par.value = value
@@ -971,6 +979,7 @@ class PriorParameter(Parameter):
         self.min = min
         self.max = max
         self._error = error
+        self._prior = None
         if isinstance(value, u.Quantity) or isinstance(value, str):
             val = u.Quantity(value)
             self.value = val.value

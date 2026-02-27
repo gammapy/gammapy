@@ -52,8 +52,8 @@ class Paczynski1990(Fittable1DModel):
        <https://ui.adsabs.harvard.edu/abs/1990ApJ...348..485P>`_
     """
 
-    amplitude = Parameter()
-    r_exp = Parameter()
+    amplitude = Parameter(default=1.0)
+    r_exp = Parameter(default=4.5)
     evolved = False
 
     def __init__(self, amplitude=1, r_exp=4.5, **kwargs):
@@ -94,9 +94,9 @@ class CaseBattacharya1998(Fittable1DModel):
        <https://ui.adsabs.harvard.edu/abs/1998ApJ...504..761C>`_
     """
 
-    amplitude = Parameter()
-    alpha = Parameter()
-    beta = Parameter()
+    amplitude = Parameter(default=1.0)
+    alpha = Parameter(default=2)
+    beta = Parameter(default=3.53)
     evolved = True
 
     def __init__(self, amplitude=1.0, alpha=2, beta=3.53, **kwargs):
@@ -144,10 +144,10 @@ class YusifovKucuk2004(Fittable1DModel):
        <https://ui.adsabs.harvard.edu/abs/2004A%26A...422..545Y>`_
     """
 
-    amplitude = Parameter()
-    a = Parameter()
-    b = Parameter()
-    r_1 = Parameter()
+    amplitude = Parameter(default=1.0)
+    a = Parameter(default=1.64)
+    b = Parameter(default=4.01)
+    r_1 = Parameter(default=0.55)
     evolved = True
 
     def __init__(self, amplitude=1, a=1.64, b=4.01, r_1=0.55, **kwargs):
@@ -193,9 +193,9 @@ class YusifovKucuk2004B(Fittable1DModel):
        <https://ui.adsabs.harvard.edu/abs/2004A%26A...422..545Y>`_
     """
 
-    amplitude = Parameter()
-    a = Parameter()
-    b = Parameter()
+    amplitude = Parameter(default=1.0)
+    a = Parameter(default=4.0)
+    b = Parameter(default=6.8)
     evolved = False
 
     def __init__(self, amplitude=1, a=4, b=6.8, **kwargs):
@@ -238,9 +238,9 @@ class FaucherKaspi2006(Fittable1DModel):
        <https://ui.adsabs.harvard.edu/abs/2006ApJ...643..332F>`_
     """
 
-    amplitude = Parameter()
-    r_0 = Parameter()
-    sigma = Parameter()
+    amplitude = Parameter(default=1)
+    r_0 = Parameter(default=7.04)
+    sigma = Parameter(default=1.83)
     evolved = False
 
     def __init__(self, amplitude=1, r_0=7.04, sigma=1.83, **kwargs):
@@ -283,9 +283,9 @@ class Lorimer2006(Fittable1DModel):
        Galactic population analysis" <https://ui.adsabs.harvard.edu/abs/2006MNRAS.372..777L>`_
     """
 
-    amplitude = Parameter()
-    B = Parameter()
-    C = Parameter()
+    amplitude = Parameter(default=1.0)
+    B = Parameter(default=1.9)
+    C = Parameter(default=5.0)
     evolved = True
 
     def __init__(self, amplitude=1, B=1.9, C=5.0, **kwargs):
@@ -322,8 +322,8 @@ class Exponential(Fittable1DModel):
     YusifovKucuk2004B, FaucherKaspi2006, Exponential
     """
 
-    amplitude = Parameter()
-    z_0 = Parameter()
+    amplitude = Parameter(default=1.0)
+    z_0 = Parameter(default=0.05)
     evolved = False
 
     def __init__(self, amplitude=1, z_0=0.05, **kwargs):

@@ -7,6 +7,7 @@ import json
 from collections import OrderedDict
 from itertools import repeat
 import numpy as np
+from numpy import isscalar, ndindex
 from astropy import units as u
 from astropy.io import fits
 import matplotlib.pyplot as plt
@@ -103,13 +104,13 @@ class Map(abc.ABC):
         value : array-like
             Data array.
         """
-        if np.isscalar(value):
+        if isscalar(value):
             value = value * np.ones(self.geom.data_shape, dtype=type(value))
 
         if isinstance(value, u.Quantity):
             raise TypeError("Map data must be a Numpy array. Set unit separately")
 
-        if not value.shape == self.geom.data_shape:
+        if value.shape != self.geom.data_shape:
             try:
                 value = np.broadcast_to(value, self.geom.data_shape, subok=True)
             except ValueError as exc:
@@ -476,7 +477,7 @@ class Map(abc.ABC):
         --------
         iter_by_image_data : iterate by image returning data and index.
         """
-        for idx in np.ndindex(self.geom.shape_axes):
+        for idx in ndindex(self.geom.shape_axes):
             if keepdims:
                 names = self.geom.axes.names
                 slices = {name: slice(_, _ + 1) for name, _ in zip(names, idx)}
@@ -500,7 +501,7 @@ class Map(abc.ABC):
         --------
         iter_by_image : iterate by image returning a map.
         """
-        for idx in np.ndindex(self.geom.shape_axes):
+        for idx in ndindex(self.geom.shape_axes):
             yield self.data[idx[::-1]], idx[::-1]
 
     def iter_by_image_index(self):
@@ -518,7 +519,7 @@ class Map(abc.ABC):
         --------
         iter_by_image : iterate by image returning a map.
         """
-        for idx in np.ndindex(self.geom.shape_axes):
+        for idx in ndindex(self.geom.shape_axes):
             yield idx[::-1]
 
     def coadd(self, map_in, weights=None):
@@ -531,7 +532,7 @@ class Map(abc.ABC):
         ----------
         map_in : `Map`
             Map to add.
-        weights: `Map` or `~numpy.ndarray`
+        weights : `Map` or `~numpy.ndarray`
             The weight factors while adding. Default is None.
         """
         if not self.unit.is_equivalent(map_in.unit):
@@ -555,7 +556,7 @@ class Map(abc.ABC):
             Number of pixels padded to the edges of each axis.
         axis_name : str, optional
             Which axis to downsample. By default, spatial axes are padded. Default is None.
-        mode : {'constant', 'edge', 'interp'}
+        mode : {'constant', 'edge', 'interp'}, optional
             Padding mode.  'edge' pads with the closest edge value.
             'constant' pads with a constant value. 'interp' pads with
             an extrapolated value. Default is 'constant'.
@@ -569,7 +570,7 @@ class Map(abc.ABC):
 
         """
         if axis_name:
-            if np.isscalar(pad_width):
+            if isscalar(pad_width):
                 pad_width = (pad_width, pad_width)
 
             geom = self.geom.pad(pad_width=pad_width, axis_name=axis_name)
@@ -942,7 +943,7 @@ class Map(abc.ABC):
             Tuple should be ordered as (I_lon, I_lat, I_0, ..., I_n)
             for WCS maps and (I_hpx, I_0, ..., I_n) for HEALPix maps.
             Pixel indices can be either float or integer type.
-        fill_value : float
+        fill_value : float, optional
             Value which is returned if the position is outside the projection
             footprint. Default is `numpy.nan`.
 
@@ -993,7 +994,7 @@ class Map(abc.ABC):
             Coordinate arrays for each dimension of the map. Tuple
             should be ordered as (lon, lat, x_0, ..., x_n) where x_i
             are coordinates for non-spatial dimensions of the map.
-        method : {"linear", "nearest"}
+        method : {"linear", "nearest"}, optional
             Method to interpolate data values. Default is "linear".
         fill_value : float, optional
             The value to use for points outside the interpolation domain.
@@ -1017,7 +1018,7 @@ class Map(abc.ABC):
             map. Tuple should be ordered as (p_lon, p_lat, p_0, ...,
             p_n) where p_i are pixel coordinates for non-spatial
             dimensions of the map.
-        method : {"linear", "nearest"}
+        method : {"linear", "nearest"}, optional
             Method to interpolate data values. Default is "linear".
         fill_value : float, optional
             The value to use for points outside the interpolation domain.
@@ -1142,7 +1143,7 @@ class Map(abc.ABC):
         if not geom.is_image and geom.axes != geom3d.axes:
             for base_ax, target_ax in zip(geom3d.axes, geom.axes):
                 base_factor = base_ax.bin_width.min() / target_ax.bin_width.min()
-                if not base_factor >= precision_factor:
+                if base_factor < precision_factor:
                     factor = precision_factor / base_factor
                     factor = int(np.ceil(factor))
                     output_map = output_map.upsample(
@@ -1196,7 +1197,7 @@ class Map(abc.ABC):
             ),
             task_name="Reprojection",
         )
-        for idx in np.ndindex(self.geom.shape_axes):
+        for idx in ndindex(self.geom.shape_axes):
             output_map.data[idx[0]] = maps[idx[0]].data
         return output_map
 
@@ -1327,7 +1328,7 @@ class Map(abc.ABC):
 
         Returns
         -------
-        axes : `~numpy.ndarray` of `~matplotlib.pyplot.Axes`
+        axes : `~numpy.ndarray` of `~matplotlib.axes.Axes`
             Axes grid.
         """
         if len(self.geom.axes) > 1:
@@ -1502,7 +1503,7 @@ class Map(abc.ABC):
         """
         if "geom" in kwargs:
             geom = kwargs["geom"]
-            if not geom.data_shape == self.geom.data_shape:
+            if geom.data_shape != self.geom.data_shape:
                 raise ValueError(
                     "Can't copy and change data size of the map. "
                     f" Current shape {self.geom.data_shape},"
@@ -1540,7 +1541,7 @@ class Map(abc.ABC):
 
         Parameters
         ----------
-         axes_names: list of str, optional
+         axes_names : list of str, optional
             Names of the axis to reduce over. If None, all non-spatial axis will be summed over. Default is None.
         keepdims : bool, optional
             If this is set to true, the axes which are summed over are left in
@@ -1645,11 +1646,12 @@ class Map(abc.ABC):
         shape = [1] * len(self.geom.data_shape)
         shape[axis_idx] = -1
 
-        values = self.quantity * axis.bin_width.reshape(shape)
-
+        values = self.data * axis.bin_width.value.reshape(shape)
+        unit = self.unit * axis.unit
         if axis_name == "rad":
             # take Jacobian into account
-            values = 2 * np.pi * axis.center.reshape(shape) * values
+            values = 2 * np.pi * axis.center.value.reshape(shape) * values
+            unit *= axis.unit
 
         data = np.insert(values.cumsum(axis=axis_idx), 0, 0, axis=axis_idx)
 
@@ -1658,7 +1660,7 @@ class Map(abc.ABC):
         )
         axes = self.geom.axes.replace(axis_shifted)
         geom = self.geom.to_image().to_cube(axes)
-        return self.__class__(geom=geom, data=data.value, unit=data.unit)
+        return self.__class__(geom=geom, data=data, unit=unit)
 
     def integral(self, axis_name, coords, **kwargs):
         """Compute integral along a given axis.
@@ -1693,13 +1695,15 @@ class Map(abc.ABC):
         axis_name : str, optional
             Along which axis to normalise.
         """
-        cumsum = self.cumsum(axis_name=axis_name).quantity
+        cumsum = self.cumsum(axis_name=axis_name)
 
         with np.errstate(invalid="ignore", divide="ignore"):
             axis = self.geom.axes.index_data(axis_name=axis_name)
-            normed = self.quantity / cumsum.max(axis=axis, keepdims=True)
+            normed = self.data / cumsum.data.max(axis=axis, keepdims=True)
+            unit = self.unit / cumsum.unit
 
-        self.quantity = np.nan_to_num(normed)
+        self.data = np.nan_to_num(normed)
+        self._unit = unit
 
     @classmethod
     def from_stack(cls, maps, axis=None, axis_name=None):
@@ -1712,11 +1716,11 @@ class Map(abc.ABC):
         maps : list of `Map` objects
             List of maps.
         axis : `MapAxis`, optional
-            If a `MapAxis` is provided the maps are stacked along the last data
+            If a `MapAxis` is provided, the maps are stacked along the last data
             axis and the new axis is introduced. Default is None.
         axis_name : str, optional
-            If an axis name is as string the given the maps are stacked along
-            the given axis name.
+            If an axis name is given, the maps are stacked along
+            the given axis name. Default is None.
 
         Returns
         -------
@@ -1726,6 +1730,10 @@ class Map(abc.ABC):
         geom = maps[0].geom
 
         if axis_name is None and axis is None:
+            if geom.is_image:
+                raise ValueError(
+                    "Map.from_stack requires that maps have at least one non-spatial axis"
+                )
             axis_name = geom.axes.names[-1]
 
         if axis_name:
@@ -1740,7 +1748,7 @@ class Map(abc.ABC):
             else:
                 m_geom = m.geom
 
-            if not m_geom == geom:
+            if m_geom != geom:
                 raise ValueError(f"Image geometries not aligned: {m.geom} and {geom}")
 
             data.append(m.quantity.to_value(maps[0].unit))
@@ -1805,7 +1813,7 @@ class Map(abc.ABC):
 
         Parameters
         ----------
-        region: `~regions.Region`, optional
+        region : `~regions.Region`, optional
              Region to extract the spectrum from. Pixel or sky regions are accepted. Default is None.
         func : `numpy.func`, optional
             Function to reduce the data. Default is `~numpy.nansum`.
@@ -1836,8 +1844,10 @@ class Map(abc.ABC):
         map : `Map`
             Map with new unit and converted data.
         """
-        data = self.quantity.to_value(unit)
-        return self.from_geom(self.geom, data=data, unit=unit)
+        unit = u.Unit(unit)
+        # This will raise a UnitConversionError
+        converter = self.unit.get_converter(unit)
+        return self.from_geom(self.geom, data=converter(self.data), unit=unit)
 
     def is_allclose(self, other, rtol_axes=1e-3, atol_axes=1e-6, **kwargs):
         """Compare two Maps for close equivalency.
@@ -1886,17 +1896,24 @@ class Map(abc.ABC):
         )
 
     def _arithmetics(self, operator, other, copy):
-        """Perform arithmetic on maps after checking geometry consistency."""
+        """Perform arithmetic operation on the array objects and replace unit if needed."""
         if isinstance(other, Map):
-            if self.geom == other.geom:
-                q = other.quantity
-            else:
+            if self.geom != other.geom:
                 raise ValueError("Map Arithmetic: Inconsistent geometries.")
         else:
-            q = u.Quantity(other, copy=COPY_IF_NEEDED)
+            other = u.Quantity(other, copy=COPY_IF_NEEDED)
+
+        unit = None
+        other_data = other.data if isinstance(other, Map) else other.value
+        if operator in [np.multiply, np.true_divide]:
+            unit = operator(self.unit, other.unit)
+        else:
+            other_data = other.unit.get_converter(self.unit)(other_data)
 
         out = self.copy() if copy else self
-        out.quantity = operator(out.quantity, q)
+        out.data = operator(out.data, other_data)
+        if unit:
+            out._unit = unit
         return out
 
     def _boolean_arithmetics(self, operator, other, copy):
@@ -1920,25 +1937,25 @@ class Map(abc.ABC):
         return self._arithmetics(np.add, other, copy=True)
 
     def __iadd__(self, other):
-        return self._arithmetics(np.add, other, copy=COPY_IF_NEEDED)
+        return self._arithmetics(np.add, other, copy=False)
 
     def __sub__(self, other):
         return self._arithmetics(np.subtract, other, copy=True)
 
     def __isub__(self, other):
-        return self._arithmetics(np.subtract, other, copy=COPY_IF_NEEDED)
+        return self._arithmetics(np.subtract, other, copy=False)
 
     def __mul__(self, other):
         return self._arithmetics(np.multiply, other, copy=True)
 
     def __imul__(self, other):
-        return self._arithmetics(np.multiply, other, copy=COPY_IF_NEEDED)
+        return self._arithmetics(np.multiply, other, copy=False)
 
     def __truediv__(self, other):
         return self._arithmetics(np.true_divide, other, copy=True)
 
     def __itruediv__(self, other):
-        return self._arithmetics(np.true_divide, other, copy=COPY_IF_NEEDED)
+        return self._arithmetics(np.true_divide, other, copy=False)
 
     def __le__(self, other):
         return self._arithmetics(np.less_equal, other, copy=True)
@@ -2023,7 +2040,7 @@ class Map(abc.ABC):
             The map with axes re-ordered.
         """
         old_axes = self.geom.axes
-        if not set(old_axes.names) == set(axes_names):
+        if set(old_axes.names) != set(axes_names):
             raise ValueError(f"{old_axes.names} is not compatible with {axes_names}")
 
         new_axes = [old_axes[_] for _ in axes_names]

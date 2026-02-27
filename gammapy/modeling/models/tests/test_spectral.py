@@ -43,7 +43,6 @@ from gammapy.utils.testing import (
     requires_data,
     requires_dependency,
 )
-from gammapy.utils.deprecation import GammapyDeprecationWarning
 
 
 def table_model():
@@ -691,7 +690,7 @@ def test_absorption():
     model = pwl * absorption
     desired = u.Quantity(5.140765e-13, "TeV-1 s-1 cm-2")
     assert_quantity_allclose(model(1 * u.TeV), desired, rtol=1e-3)
-    assert model.model2.alpha_norm.value == 1.0
+    assert_allclose(model.model2.alpha_norm.value, 1.0)
 
     # EBL + PWL model: test if norm of EBL=0: it mean model =pwl
     model.parameters["alpha_norm"].value = 0
@@ -703,7 +702,7 @@ def test_absorption():
     )
     model = pwl * absorption
     desired = u.Quantity(2.739695e-13, "TeV-1 s-1 cm-2")
-    assert model.model2.alpha_norm.value == 1.5
+    assert_allclose(model.model2.alpha_norm.value, 1.5)
     assert_quantity_allclose(model(1 * u.TeV), desired, rtol=1e-3)
 
     # Test error propagation
@@ -790,13 +789,13 @@ def test_template_spectral_model_evaluate_tiny():
         energy=energy, values=values * u.Unit("MeV-1 s-1 sr-1")
     )
     result = model(energy)
-    tiny = np.finfo(np.float32).tiny
+    tiny = np.finfo(values.dtype).tiny
     mask = abs(values) - tiny > tiny
     np.testing.assert_allclose(
         values[mask] / values.max(), result[mask].value / values.max()
     )
     mask = abs(result.value) - tiny <= tiny
-    assert np.all(result[mask] == 0.0)
+    assert np.allclose(result[mask], 0.0, atol=1e-40)
 
 
 def test_template_spectral_model_single_value():
@@ -1134,26 +1133,17 @@ class TestSpectralModelErrorPropagation:
         assert out.unit == "cm-2 s-1 TeV-1"
         assert_allclose(out.data, [3.757824e-11, 3.142095e-12, 3.155082e-12], rtol=7e-2)
 
-        with pytest.warns(GammapyDeprecationWarning):
-            self.model.evaluate_error(1e6 * u.MeV, epsilon=10)
-
     def test_integral_error(self):
         out = self.model.integral_error(1 * u.TeV, 10 * u.TeV)
         assert out.unit == "cm-2 s-1"
         assert out.shape == (3,)
         assert_allclose(out.data, [2.205520e-11, 2.395797e-12, 2.905355e-12], rtol=7e-2)
 
-        with pytest.warns(GammapyDeprecationWarning):
-            self.model.integral_error(1 * u.TeV, 10 * u.TeV, epsilon=10)
-
     def test_energy_flux_error(self):
         out = self.model.energy_flux_error(1 * u.TeV, 10 * u.TeV)
         assert out.unit == "TeV cm-2 s-1"
         assert out.shape == (3,)
         assert_allclose(out.data, [4.133955e-11, 6.634629e-12, 9.896814e-12], rtol=7e-2)
-
-        with pytest.warns(GammapyDeprecationWarning):
-            self.model.energy_flux_error(1 * u.TeV, 10 * u.TeV, epsilon=10)
 
 
 def test_piecesenorm_model_error():
@@ -1201,9 +1191,6 @@ def test_dnde_error_ecpl_model():
 
     out = model.evaluate_error(0.1 * u.TeV)
     assert_allclose(out.data, [1.538462e-10, 2.071542e-11, 1.837818e-11], rtol=7e-1)
-
-    with pytest.warns(GammapyDeprecationWarning):
-        out = model.evaluate_error(0.1 * u.TeV, epsilon=10)
 
 
 def test_integral_error_power_law():

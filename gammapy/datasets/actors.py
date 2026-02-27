@@ -47,6 +47,7 @@ class DatasetsActor(Datasets):
             self._datasets = datasets_list
             self._ray_get = get
             self._covariance = None
+            self._penalties = None
 
         # trigger actors auto_init_wrapper (so overhead so appears on init)
         self.name

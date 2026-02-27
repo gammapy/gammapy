@@ -252,7 +252,8 @@ class SourceCatalogObject3HWC(SourceCatalogObjectHWCBase):
 
     @property
     def is_pointlike(self):
-        return self.data["spec0_radius"] == 0.0
+        return self.data["spec0_radius"] == 0.0  # NOSONAR
+        # (S1244): explicit check for exactly representable zeros
 
     def spectral_model(self):
         """Spectral model as a `~gammapy.modeling.models.PowerLawSpectralModel` object."""

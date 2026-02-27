@@ -1,12 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import importlib
 import logging
 import os
 import platform
 import sys
-import warnings
 import click
-from gammapy import __version__
+from importlib.metadata import version, PackageNotFoundError
 
 log = logging.getLogger(__name__)
 
@@ -18,11 +16,11 @@ GAMMAPY_DEPENDENCIES = [
     "astropy",
     "regions",
     "click",
-    "yaml",
-    # "pydantic",  # has no __version__
+    "PyYAML",
+    "pydantic",
     # optional
     "IPython",
-    # "jupyter",   # has no __version__
+    "jupyter",
     "jupyterlab",
     "matplotlib",
     "pandas",
@@ -86,10 +84,11 @@ def get_info_system():
 
 def get_info_version():
     """Get detailed info about Gammapy version."""
-    info = {"version": __version__}
     try:
+        info = {"version": version("gammapy")}
         path = sys.modules["gammapy"].__path__[0]
     except Exception:
+        info = {"version": "unknown"}
         path = "unknown"
     info["path"] = path
 
@@ -101,12 +100,8 @@ def get_info_dependencies():
     info = {}
     for name in GAMMAPY_DEPENDENCIES:
         try:
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                module = importlib.import_module(name)
-
-            module_version = getattr(module, "__version__", "no version info found")
-        except ImportError:
+            module_version = version(name)
+        except PackageNotFoundError:
             module_version = "not installed"
         info[name] = module_version
     return info

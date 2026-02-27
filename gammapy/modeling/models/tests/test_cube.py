@@ -272,7 +272,6 @@ def test_background_slice(background):
     bkg1 = TemplateNPredModel(background)
     e_edges = background.geom.axes[0].edges
     bkg1_slice = bkg1.slice_by_energy(e_edges[0], e_edges[1])  # 1 bin slice
-    assert bkg1_slice.name == bkg1_slice.name
     assert bkg1_slice.map.data.shape == bkg1.map.sum_over_axes().data.shape
     assert_allclose(bkg1_slice.map.data[0, :, :], bkg1.map.data[0, :, :], rtol=1e-5)
 
@@ -381,7 +380,6 @@ def test_models_mutation(sky_model, sky_models, sky_models_2):
     with pytest.raises(ValueError, match="Model names must be unique"):
         mods[1] = mods[0]
 
-    mods[1] = mods[1]
     assert mods.names == ["source-1", "source-2", "source-3", "source-4"]
     mods[1] = mods[1].copy(name="copy")
     assert mods.names == ["source-1", "copy", "source-3", "source-4"]

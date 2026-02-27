@@ -3,6 +3,7 @@ name = "gammapy"
 description = "A Python package for gamma-ray astronomy"
 readme = "LONG_DESCRIPTION.rst"
 license = "BSD-3-Clause"
+license-files = ["LICENSE.rst"]
 authors = [
     { name = "The Gammapy developers", email = "gammapy-coordination-l@in2p3.fr" }
 ]
@@ -21,15 +22,17 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Astronomy",
 ]
 dependencies = [
-    "numpy>=1.26",
+    "numpy>=2.0",
     "scipy>=1.13",
-    "astropy>=6.0",
+    "astropy>=6.1",
     "regions>=0.9.0",
     "pyyaml>=5.3",
     "click>=8.0",
     "pydantic>=2.8.0",
     "iminuit>=2.26.0",
     "matplotlib>=3.8,<3.10",
+    "requests",
+    "tqdm",
 ]
 dynamic = ["version"]
 
@@ -40,7 +43,7 @@ Source = "https://github.com/gammapy/gammapy"
 
 [build-system]
 requires = [
-    "setuptools >= 65",
+    "setuptools >= 77.0.3",
     "wheel",
     "Cython",
     "numpy >= 2.0.0rc1",
@@ -53,8 +56,6 @@ all = [
     "naima",
     "sherpa; platform_system != 'Windows'",
     "healpy; platform_system != 'Windows'",
-    "requests",
-    "tqdm",
     "ipywidgets",
     "ray[default]>=2.9",
     "ultranest",
@@ -64,8 +65,6 @@ all_no_ray = [
     "naima",
     "sherpa; platform_system != 'Windows'",
     "healpy; platform_system != 'Windows'",
-    "requests",
-    "tqdm",
     "ipywidgets",
     "ultranest",
     "numba",
@@ -74,8 +73,6 @@ cov = [
     "naima",
     "sherpa; platform_system != 'Windows'",
     "healpy; platform_system != 'Windows'",
-    "requests",
-    "tqdm",
     "ipywidgets",
     "ultranest",
     "numba",
