@@ -1,0 +1,1 @@
+Fixed a ``RuntimeWarning`` due to division by zero in ``EffectiveAreaTable2D.plot_offset_dependence`` when the maximum effective area is zero.
