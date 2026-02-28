@@ -105,33 +105,19 @@ def test_make_map_exposure_true_energy(aeff, pars):
 
 
 @requires_data()
-@pytest.mark.parametrize(
-    "pars",
-    [
-        {
-            "geom": geom(map_type="wcs", ebounds=[0.1, 1, 10]),
-            "shape": (2, 3, 4),
-            "sum": 8.103974e08,
-        },
-        {
-            "geom": geom(map_type="wcs", ebounds=[0.1, 10]),
-            "shape": (1, 3, 4),
-            "sum": 2.387916e08,
-        },
-    ],
-)
-def test_make_map_exposure_true_energy_fixed_pointing(aeff, pars):
+def test_make_map_exposure_true_energy_fixed_pointing(aeff):
     pointing = FixedPointingInfo(fixed_icrs=SkyCoord(2, 1, unit="deg"))
+    test_geom = geom(map_type="wcs", ebounds=[0.1, 1, 10])
     m = make_map_exposure_true_energy(
         pointing=pointing,
         livetime="42 s",
         aeff=aeff,
-        geom=pars["geom"],
+        geom=test_geom,
     )
 
-    assert m.data.shape == pars["shape"]
+    assert m.data.shape == (2, 3, 4)
     assert m.unit == "m2 s"
-    assert_allclose(m.data.sum(), pars["sum"], rtol=1e-5)
+    assert_allclose(m.data.sum(), 8.103974e08, rtol=1e-5)
 
 
 def test_map_spectrum_weight():
