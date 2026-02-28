@@ -32,7 +32,7 @@ from gammapy.makers.utils import (
     make_map_background_irf,
     make_map_exposure_true_energy,
     make_observation_time_map,
-    MakeThetaSquaredTable,
+    ThetaSquaredTable,
     project_irf_on_geom,
     integrate_project_irf_on_geom,
 )
@@ -603,14 +603,14 @@ class TestTheta2Table:
             },
         ],
     )
-    def test_MakeThetaSquaredTable_values(self, case_config):
+    def test_ThetaSquaredTable_values(self, case_config):
         position = SkyCoord(ra=0, dec=0, unit="deg", frame="icrs")
         b_min, b_max = case_config["axis_bounds"]
         axis = MapAxis.from_bounds(b_min, b_max, nbin=4, interp="lin", unit="deg2")
 
         observations = [self.observations[i] for i in case_config["obs_idx"]]
 
-        theta2_maker = MakeThetaSquaredTable(
+        theta2_maker = ThetaSquaredTable(
             observations=observations,
             position=position,
             theta_squared_axis=axis,
@@ -686,7 +686,7 @@ class TestTheta2Table:
             },
         ],
     )
-    def test_MakeThetaSquaredTable_errors(self, case_params):
+    def test_ThetaSquaredTable_errors(self, case_params):
         position = SkyCoord(ra=0, dec=0, unit="deg", frame="icrs")
 
         b_min, b_max = case_params["axis_bounds"]
@@ -700,7 +700,7 @@ class TestTheta2Table:
 
         error_message = case_params["error_msg"]
         with pytest.raises(ValueError, match=error_message):
-            table_maker = MakeThetaSquaredTable(
+            table_maker = ThetaSquaredTable(
                 observations=[self.observations[0]],
                 position=position,
                 theta_squared_axis=axis,

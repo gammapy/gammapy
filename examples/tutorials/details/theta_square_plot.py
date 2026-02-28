@@ -20,7 +20,7 @@ from astropy.coordinates import SkyCoord
 from astropy import units as u
 from gammapy.data import DataStore
 from gammapy.maps import MapAxis
-from gammapy.makers.utils import MakeThetaSquaredTable
+from gammapy.makers.utils import ThetaSquaredTable
 from gammapy.visualization import plot_theta_squared_table
 
 
@@ -64,7 +64,7 @@ print(off_position)
 
 # %%
 theta2_axis = MapAxis.from_bounds(0, 0.2, nbin=20, interp="lin", unit="deg2")
-theta2_table_maker = MakeThetaSquaredTable(
+theta2_table_maker = ThetaSquaredTable(
     observations=observations,
     position=position,
     theta_squared_axis=theta2_axis,
@@ -82,7 +82,7 @@ plt.show()
 
 off_regions_number = 3
 theta2_axis = MapAxis.from_bounds(0, 0.1, nbin=20, interp="lin", unit="deg2")
-theta2_table_maker_offreg = MakeThetaSquaredTable(
+theta2_table_maker_offreg = ThetaSquaredTable(
     observations=observations,
     position=position,
     theta_squared_axis=theta2_axis,
@@ -99,11 +99,11 @@ plt.show()
 # Making a theta2 plot for a given energy range
 # ---------------------------------------------
 #
-# with the function `~gammapy.makers.utils.MakeThetaSquaredTable`, one can
+# with the function `~gammapy.makers.utils.ThetaSquaredTable`, one can
 # also select a fixed energy range.
 #
 
-theta2_table_maker_en = MakeThetaSquaredTable(
+theta2_table_maker_en = ThetaSquaredTable(
     observations=observations,
     position=position,
     theta_squared_axis=theta2_axis,

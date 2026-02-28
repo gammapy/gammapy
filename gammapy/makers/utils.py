@@ -24,7 +24,7 @@ __all__ = [
     "make_map_background_irf",
     "make_map_exposure_true_energy",
     "make_psf_map",
-    "MakeThetaSquaredTable",
+    "ThetaSquaredTable",
     "make_effective_livetime_map",
     "make_observation_time_map",
 ]
@@ -379,7 +379,7 @@ def make_edisp_kernel_map(
     return edisp_map.to_edisp_kernel_map(geom.axes["energy"])
 
 
-class MakeThetaSquaredTable:
+class ThetaSquaredTable:
     """Make theta squared distribution in the same FoV for a list of `~gammapy.data.Observation` objects.
 
     The ON theta2 profile is computed from a given distribution, on_position.
