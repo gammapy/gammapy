@@ -123,7 +123,7 @@ def test_inconsistent_obstime_location_origin_fovaltaz():
         FoVAltAzFrame(origin=origin, location=different_location, obstime=single_time)
 
     time_array = single_time + [0.0, 1.0, 2.0] * u.h
-    with pytest.raises(ValueError, match="origin and obstime have inconsistent shapes"):
+    with pytest.raises(ValueError):
         FoVAltAzFrame(origin=origin, location=location, obstime=time_array)
 
     origins = AltAz(

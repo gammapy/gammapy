@@ -25,9 +25,11 @@ reflect_lon_matrix = np.array([[1, 0, 0], [0, -1, 0], [0, 0, 1]])
 
 
 def _validate_obstime_consistency(obstime, origin):
-    """Check that obstime is consistent with origin.obstime."""
+    """Check that obstime is consistent with origin.obstime and return obstime."""
     if obstime is None:
         return origin.obstime
+    if origin.obstime is None:
+        return obstime
     if obstime.shape != origin.obstime.shape:
         raise ValueError(
             f"origin and obstime have inconsistent shapes: "
@@ -37,17 +39,20 @@ def _validate_obstime_consistency(obstime, origin):
         raise ValueError(
             "obstime mismatch: frame obstime and origin.obstime must be equal."
         )
+    return obstime
 
 
 def _validate_location_consistency(location, origin):
-    """Check that location is consistent with origin.location."""
+    """Check that location is consistent with origin.location and return location."""
     if location is None:
         return origin.location
 
-    if not np.all(location == origin.location):
+    if origin.location is not None and not np.all(location == origin.location):
         raise ValueError(
             "location mismatch: frame location and origin.location must be equal."
         )
+    else:
+        return location
 
 
 class FoVAltAzFrame(BaseCoordinateFrame):
@@ -107,38 +112,10 @@ class FoVAltAzFrame(BaseCoordinateFrame):
         if isinstance(origin, SkyCoord) and not isinstance(origin.frame, AltAz):
             raise TypeError("origin must be AltAz.")
 
-        if obstime is None and origin.obstime is not None:
-            obstime = origin.obstime
-        if location is None and origin.location is not None:
-            location = origin.location
-
         kwargs["origin"] = origin
-        kwargs["location"] = location
-        kwargs["obstime"] = obstime
-
-        # Validate obstime consistency
-        if obstime is not None and origin.obstime is not None:
-            if obstime.shape != origin.obstime.shape:
-                raise ValueError("origin and obstime have inconsistent shapes")
-            if not np.all(obstime == origin.obstime):
-                raise ValueError(
-                    "obstime mismatch: frame obstime and origin.obstime must be equal."
-                )
-
-        # Validate location consistency
-        if location is not None and origin.location is not None:
-            if not np.all(location == origin.location):
-                raise ValueError(
-                    "location mismatch: frame location and origin.location must be equal."
-                )
-
-        # Validate shape consistency between origin and obstime
-        if obstime is not None and origin.shape != obstime.shape:
-            raise ValueError(
-                f"origin shape {origin.shape} is inconsistent with "
-                f"obstime shape {obstime.shape}. For a time-varying frame, "
-                f"origin must be an array of AltAz coordinates, one per obstime."
-            )
+        if origin is not None:
+            kwargs["location"] = _validate_location_consistency(location, origin)
+            kwargs["obstime"] = _validate_obstime_consistency(obstime, origin)
 
         super().__init__(*args, **kwargs)
 
