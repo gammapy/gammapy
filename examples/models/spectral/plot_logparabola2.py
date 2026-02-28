@@ -13,8 +13,8 @@ It is defined by the following equation:
           - \alpha - \beta \log{ \left( \frac{E}{E_s} \right) }
         }
 
-Note that :math:`log` refers to the natural logarithm.
-If you have parametrization based on :math:`log_{10}` you can use the
+Note that :math:`\log` refers to the natural logarithm.
+If you have parametrization based on :math:`\log_{10}` you can use the
 :func:`~gammapy.modeling.models.LogParabola2SpectralModel.from_log10` method.
 
 """
