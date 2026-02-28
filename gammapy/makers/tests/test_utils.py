@@ -20,6 +20,7 @@ from gammapy.irf import (
     Background3D,
     EffectiveAreaTable2D,
     EnergyDispersion2D,
+    PSF3D,
 )
 from gammapy.makers import WobbleRegionsFinder
 from gammapy.makers.utils import (
@@ -28,10 +29,12 @@ from gammapy.makers.utils import (
     make_counts_off_rad_max,
     make_counts_rad_max,
     make_edisp_kernel_map,
+    make_edisp_map,
     make_effective_livetime_map,
     make_map_background_irf,
     make_map_exposure_true_energy,
     make_observation_time_map,
+    make_psf_map,
     make_theta_squared_table,
     project_irf_on_geom,
     integrate_project_irf_on_geom,
@@ -118,6 +121,83 @@ def test_make_map_exposure_true_energy_fixed_pointing(aeff):
     assert m.data.shape == (2, 3, 4)
     assert m.unit == "m2 s"
     assert_allclose(m.data.sum(), 8.103974e08, rtol=1e-5)
+
+
+def test_make_psf_map_fixed_pointing():
+    offset_axis = MapAxis.from_nodes([0, 1, 2, 3] * u.deg, name="offset")
+    energy_axis_true = MapAxis.from_energy_bounds(
+        "0.1 TeV", "10 TeV", nbin=4, name="energy_true"
+    )
+    rad = np.linspace(0, 1.0, 101) * u.deg
+    rad_axis = MapAxis.from_edges(rad, name="rad")
+    sigma = 0.3 * u.deg
+
+    _, R, _ = np.meshgrid(offset_axis.center, rad_axis.edges, energy_axis_true.center)
+    rmid = 0.5 * (R[:-1] + R[1:])
+    val = np.exp(-0.5 * rmid**2 / sigma**2)
+    drad = 2 * np.pi * (np.cos(R[:-1]) - np.cos(R[1:])) * u.Unit("sr")
+    psf_value = val / ((val * drad).sum(0)[0])
+    psf = PSF3D(
+        axes=[energy_axis_true, offset_axis, rad_axis],
+        data=psf_value.T.value,
+        unit=psf_value.unit,
+    )
+
+    pointing_coord = SkyCoord(0, 0, unit="deg")
+    pointing = FixedPointingInfo(fixed_icrs=pointing_coord)
+    energy_axis = MapAxis(
+        nodes=[0.2, 0.7, 1.5, 2.0, 10.0], unit="TeV", name="energy_true"
+    )
+    geom_rad_axis = MapAxis(nodes=np.linspace(0.0, 1.0, 51), unit="deg", name="rad")
+    test_geom = WcsGeom.create(
+        skydir=pointing_coord, binsz=0.2, width=5, axes=[geom_rad_axis, energy_axis]
+    )
+
+    psfmap = make_psf_map(psf, pointing, test_geom)
+
+    assert psfmap.psf_map.geom.axes[0] == geom_rad_axis
+    assert psfmap.psf_map.geom.axes[1] == energy_axis
+    assert psfmap.psf_map.unit == "deg-2"
+    assert psfmap.psf_map.data.shape == (4, 50, 25, 25)
+
+
+def test_make_edisp_map_fixed_pointing():
+    migra = MapAxis.from_edges(np.linspace(0.5, 1.5, 50), unit="", name="migra")
+    etrue = MapAxis.from_energy_bounds(0.5, 2, 6, unit="TeV", name="energy_true")
+    offset = MapAxis.from_edges(np.linspace(0.0, 2.0, 3), unit="deg", name="offset")
+
+    edisp = EnergyDispersion2D.from_gauss(
+        energy_axis_true=etrue, migra_axis=migra, bias=0, sigma=0.01, offset_axis=offset
+    )
+
+    pointing_coord = SkyCoord(0, 0, frame="icrs", unit="deg")
+    pointing = FixedPointingInfo(fixed_icrs=pointing_coord)
+    test_geom = WcsGeom.create(10, binsz=0.5, axes=[migra, etrue])
+    edispmap = make_edisp_map(edisp, pointing, test_geom)
+
+    assert edispmap.edisp_map.data.shape == (6, 49, 10, 10)
+    assert edispmap.edisp_map.unit == ""
+
+
+def test_make_edisp_kernel_map_fixed_pointing():
+    migra = MapAxis.from_edges(np.linspace(0.5, 1.5, 50), unit="", name="migra")
+    etrue = MapAxis.from_energy_bounds(0.5, 2, 6, unit="TeV", name="energy_true")
+    offset = MapAxis.from_edges(np.linspace(0.0, 2.0, 3), unit="deg", name="offset")
+    ereco = MapAxis.from_energy_bounds(0.5, 2, 3, unit="TeV", name="energy")
+
+    edisp = EnergyDispersion2D.from_gauss(
+        energy_axis_true=etrue, migra_axis=migra, bias=0, sigma=0.01, offset_axis=offset
+    )
+
+    pointing_coord = SkyCoord(0, 0, frame="icrs", unit="deg")
+    pointing = FixedPointingInfo(fixed_icrs=pointing_coord)
+    test_geom = WcsGeom.create(10, binsz=0.5, axes=[ereco, etrue])
+    edispmap = make_edisp_kernel_map(edisp, pointing, test_geom)
+
+    kernel = edispmap.get_edisp_kernel(position=pointing_coord)
+    assert_allclose(kernel.pdf_matrix[:, 0], (1.0, 1.0, 0.0, 0.0, 0.0, 0.0), atol=1e-14)
+    assert_allclose(kernel.pdf_matrix[:, 1], (0.0, 0.0, 1.0, 1.0, 0.0, 0.0), atol=1e-14)
+    assert_allclose(kernel.pdf_matrix[:, 2], (0.0, 0.0, 0.0, 0.0, 1.0, 1.0), atol=1e-14)
 
 
 def test_map_spectrum_weight():
