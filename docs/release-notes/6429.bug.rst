@@ -1,0 +1,1 @@
+Fixed inconsistent return type of ``TimeMapAxis.iter_by_edges`` to consistently return ``Quantity`` objects, and added a new ``iter_by_time_edges`` method that returns ``Time`` objects.
