@@ -20,7 +20,6 @@ from .utils import INVALID_INDEX, INVALID_VALUE, edges_from_lo_hi
 
 __all__ = ["MapAxes", "MapAxis", "TimeMapAxis", "LabelMapAxis"]
 
-
 log = logging.getLogger(__name__)
 
 
