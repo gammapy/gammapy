@@ -1,0 +1,1 @@
+Fix `gammapy.datasets.utils.set_and_restore_mask_fit` such as it does not ignore the existing dataset.mask_fit by default.

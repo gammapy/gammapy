@@ -186,6 +186,8 @@ def test_set_and_restore_mask():
     ) as masked_datasets:
         range1 = masked_datasets[0].energy_range_fit
         range2 = masked_datasets[1].energy_range_fit
+        assert not np.all(masked_datasets[0].mask_fit)
+        assert not np.all(masked_datasets[1].mask_fit)
 
     assert_allclose(range1[0].quantity.to_value("TeV"), 0.7943282)
     assert_allclose(range1[1].quantity.to_value("TeV"), 5.011872)
@@ -202,21 +204,24 @@ def test_set_and_restore_mask():
     ) as masked_datasets:
         assert len(masked_datasets) == 0
 
+    with set_and_restore_mask_fit(datasets, None) as masked_datasets:
+        assert np.all(masked_datasets[0].mask_fit)
+        assert np.all(masked_datasets[1].mask_fit)
+
     mask = ds1.counts.geom.energy_mask(800 * u.GeV, 5 * u.TeV, round_to_edge=True)
     datasets = Datasets([ds1, ds2])
-    with set_and_restore_mask_fit(datasets, mask) as masked_datasets:
-        range1 = masked_datasets[0].energy_range_fit
-        range2 = masked_datasets[1].energy_range_fit
+    for d in datasets:
+        d.mask_fit = mask
 
-    assert_allclose(range1[0].quantity.to_value("TeV"), 0.7943282)
-    assert_allclose(range1[1].quantity.to_value("TeV"), 5.011872)
-    assert_allclose(range2[0].quantity.to_value("TeV"), 0.7943282)
+    with set_and_restore_mask_fit(datasets) as masked_datasets:
+        assert_allclose(masked_datasets[0].mask_fit, mask)
+        assert not np.all(masked_datasets[0].mask_fit)
+        assert not np.all(masked_datasets[1].mask_fit)
 
-    range1 = datasets[0].energy_range_fit
-    range2 = datasets[1].energy_range_fit
-    assert_allclose(range1[0].quantity.to_value("TeV"), 0.01)
-    assert_allclose(range1[1].quantity.to_value("TeV"), 100.0)
-    assert_allclose(range2[0].quantity.to_value("TeV"), 0.01)
+    with set_and_restore_mask_fit(datasets, operator=None) as masked_datasets:
+        assert masked_datasets[0].mask_fit == mask
+        assert np.all(masked_datasets[0].mask_fit)
+        assert np.all(masked_datasets[1].mask_fit)
 
 
 @requires_data()
@@ -242,6 +247,21 @@ def test_set_and_restore_mask_3d():
     assert_allclose(range1[1].quantity[100, 220].to_value("GeV"), 500.0)
     assert_allclose(range1[0].quantity[0, 0].to_value("GeV"), 10.0)
     assert_allclose(range1[1].quantity[0, 0].to_value("GeV"), 500.0)
+
+    for d in datasets:
+        d.mask_fit = mask_fit
+
+    mask_fit_all_true = Map.from_geom(dataset.counts.geom, data=True)
+
+    with set_and_restore_mask_fit(
+        datasets, mask_fit=mask_fit_all_true
+    ) as masked_datasets:
+        assert not np.all(masked_datasets[0].mask_fit)
+
+    with set_and_restore_mask_fit(
+        datasets, mask_fit=mask_fit_all_true, operator=None
+    ) as masked_datasets:
+        assert np.all(masked_datasets[0].mask_fit)
 
 
 @requires_data()

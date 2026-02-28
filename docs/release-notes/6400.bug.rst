@@ -1,0 +1,1 @@
+``requests`` and ``tqdm`` are now included as core dependencies so that ``gammapy download datasets`` works out of the box without requiring users to install extra packages manually.

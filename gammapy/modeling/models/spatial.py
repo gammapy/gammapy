@@ -141,7 +141,7 @@ class SpatialModel(ModelBase):
         sub_covar[0, 0] *= cos_lat**2.0
         sub_covar[0, 1] *= cos_lat
         sub_covar[1, 0] *= cos_lat
-        eig_vals, eig_vecs = np.linalg.eig(sub_covar)
+        eig_vals, eig_vecs = np.linalg.eigh(sub_covar)
         lon_err, lat_err = np.sqrt(eig_vals)
         y_vec = eig_vecs[:, 0]
         phi = (np.arctan2(y_vec[1], y_vec[0]) * u.rad).to("deg") + self.phi_0
