@@ -20,7 +20,6 @@ from .utils import INVALID_INDEX, INVALID_VALUE, edges_from_lo_hi
 
 __all__ = ["MapAxes", "MapAxis", "TimeMapAxis", "LabelMapAxis"]
 
-from ..utils.deprecation import deprecated
 
 log = logging.getLogger(__name__)
 
@@ -2420,11 +2419,12 @@ class TimeMapAxis:
         return self._edges_max
 
     @property
-    @deprecated("2.1", alternative="time_edges")
     def edges(self):
         """Return the array of bin edges values."""
         if not self.is_contiguous:
-            raise ValueError("Time axis is not contiguous")
+            raise ValueError(
+                "Time axis is not contiguous, therefore cannot compute bin edges."
+            )
 
         return edges_from_lo_hi(self.edges_min, self.edges_max)
 
@@ -2462,10 +2462,7 @@ class TimeMapAxis:
     @property
     def time_edges(self):
         """Time edges as a `~astropy.time.Time` object."""
-        if not self.is_contiguous:
-            raise ValueError("Time axis is not contiguous")
-
-        return edges_from_lo_hi(self.edges_min, self.edges_max) + self.reference_time
+        return self.reference_time + self.edges
 
     @property
     def time_format(self):
@@ -2498,7 +2495,7 @@ class TimeMapAxis:
         """Return labels for plotting."""
         labels = []
 
-        for t_min, t_max in self.iter_by_edges:
+        for t_min, t_max in self.iter_by_time_edges:
             label = f"{getattr(t_min, self.time_format)} - {getattr(t_max, self.time_format)}"
             labels.append(label)
 
@@ -2625,9 +2622,15 @@ class TimeMapAxis:
 
     @property
     def iter_by_edges(self):
-        """Iterate by intervals defined by the edges."""
-        for time_min, time_max in zip(self.time_min, self.time_max):
-            yield (time_min, time_max)
+        """Iterate by intervals defined by the edges , returning Quantity objects."""
+        for t_min, t_max in zip(self._edges_min, self._edges_max):
+            yield (t_min, t_max)
+
+    @property
+    def iter_by_time_edges(self):
+        """Iterate by intervals defined by the edges , returning Time objects."""
+        for t_min, t_max in zip(self.time_min, self.time_max):
+            yield (t_min, t_max)
 
     def coord_to_idx(self, coord, **kwargs):
         """Transform time axis coordinate to bin index.
