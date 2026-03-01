@@ -8,6 +8,7 @@ Statistics in Gammapy
 
     fit_statistics
     wstat_derivation
+    lstat_derivation
 
 This page describes the main functions to handle statistics and probability computation within Gammapy. The detailed
 description of the used Likelihood functions is given in :ref:`fit-statistics`.

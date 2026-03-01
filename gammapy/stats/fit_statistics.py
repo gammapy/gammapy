@@ -16,10 +16,13 @@ __all__ = [
     "cash",
     "cstat",
     "wstat",
+    "lstat",
     "get_wstat_mu_bkg",
     "get_wstat_gof_terms",
+    "get_lstat_gof_terms",
     "CashFitStatistic",
     "WStatFitStatistic",
+    "LStatFitStatistic",
     "Chi2FitStatistic",
     "Chi2AsymmetricErrorFitStatistic",
     "GaussianPriorPenalty",
@@ -252,6 +255,74 @@ def get_wstat_gof_terms(n_on, n_off):
     return 2 * term
 
 
+def lstat(n_on, n_off, alpha, mu_sig, extra_terms=True):
+    r"""L statistic, for Poisson data with Bayesian marginalized background.
+
+    The L statistic uses Bayesian marginalization over the background parameter
+    instead of profile likelihood. For a definition see references below.
+
+    Parameters
+    ----------
+    n_on : `~numpy.ndarray` or array_like
+        Total observed counts.
+    n_off : `~numpy.ndarray` or array_like
+        Total observed background counts.
+    alpha : `~numpy.ndarray` or array_like
+        Exposure ratio between on and off region.
+    mu_sig : `~numpy.ndarray` or array_like
+        Signal expected counts.
+    extra_terms : bool, optional
+        Add model independent terms to convert stat into goodness-of-fit
+        parameter. Default is True.
+
+    Returns
+    -------
+    stat : ndarray
+        Statistic per bin.
+
+    References
+    ----------
+    * `Loredo (1992) <https://ui.adsabs.harvard.edu/abs/1992scma.conf..275L/abstract>`_
+    * `Knoetig (2014) <https://iopscience.iop.org/article/10.1088/0004-637X/790/2/106#apj497435s5>`_
+    * `XSpec manual <https://heasarc.gsfc.nasa.gov/docs/software/xspec/manual/XSappendixStatistics.html>`_
+    """
+    # NOTE: This follows the XSpec implementation of pgstat/lstat
+    # but adapted for the ON-OFF case following Loredo 1992
+    
+    n_on = np.asanyarray(n_on, dtype=np.float64)
+    n_off = np.asanyarray(n_off, dtype=np.float64)
+    alpha = np.asanyarray(alpha, dtype=np.float64)
+    mu_sig = np.asanyarray(mu_sig, dtype=np.float64)
+
+    n_total = n_on + n_off
+
+    term1 = -mu_sig
+    
+    # suppress warnings for zero division, they are corrected below
+    with np.errstate(divide="ignore", invalid="ignore"):
+        term2_ = (n_total + 1) * np.log(1.0 + alpha * mu_sig / n_total)
+        term3_ = -n_on * np.log(alpha)
+    
+    # Handle n_on == 0 and n_total == 0
+    term2 = np.where(n_total == 0, 0, term2_)
+    term3 = np.where(n_on == 0, 0, term3_)
+    
+    stat = 2 * (term1 + term2 + term3)
+
+    if extra_terms:
+        stat += get_lstat_gof_terms(n_on, n_off)
+
+    return stat
+
+
+def get_lstat_gof_terms(n_on, n_off):
+    """Goodness of fit terms for LSTAT.
+
+    See :ref:`lstat`.
+    """
+    return get_wstat_gof_terms(n_on, n_off)
+
+
 class FitStatistic(ABC):
     """Abstract base class for FitStatistic objects."""
 
@@ -342,6 +413,38 @@ class WStatFitStatistic(FitStatistic):
         )
         npred_signal = dataset.npred_signal().data
         on_stat_ = wstat(
+            n_on=counts,
+            n_off=counts_off,
+            alpha=alpha,
+            mu_sig=npred_signal,
+        )
+        return np.nan_to_num(on_stat_)
+
+    @classmethod
+    def stat_sum_dataset(cls, dataset):
+        """Statistic function value per bin given the current model parameters."""
+        if dataset.counts_off is None and not np.any(dataset.mask_safe.data):
+            return 0
+        else:
+            stat_array = cls.stat_array_dataset(dataset)
+            if dataset.mask is not None:
+                stat_array = stat_array[dataset.mask.data]
+            return np.sum(stat_array)
+
+
+class LStatFitStatistic(FitStatistic):
+    """LStat fit statistic class for ON-OFF Poisson measurements with Bayesian background marginalization."""
+
+    @classmethod
+    def stat_array_dataset(cls, dataset):
+        """Statistic function value per bin given the current model parameters."""
+        counts, counts_off, alpha = (
+            dataset.counts.data,
+            dataset.counts_off.data,
+            dataset.alpha.data,
+        )
+        npred_signal = dataset.npred_signal().data
+        on_stat_ = lstat(
             n_on=counts,
             n_off=counts_off,
             alpha=alpha,

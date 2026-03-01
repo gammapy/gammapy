@@ -1,17 +1,20 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Statistics."""
 
-from .counts_statistic import CashCountsStatistic, WStatCountsStatistic
+from .counts_statistic import CashCountsStatistic, WStatCountsStatistic, LStatCountsStatistic
 from .fit_statistics import (
     cash,
     cstat,
+    lstat,
     get_wstat_gof_terms,
     get_wstat_mu_bkg,
+    get_lstat_gof_terms,
     wstat,
     Chi2FitStatistic,
     CashFitStatistic,
     Chi2AsymmetricErrorFitStatistic,
     GaussianPriorPenalty,
+    LStatFitStatistic,
     ProfileFitStatistic,
     WStatFitStatistic,
     WeightedCashFitStatistic,
@@ -31,6 +34,7 @@ from .utils import sigma_to_ts, ts_to_sigma
 FIT_STATISTICS_REGISTRY = {
     "cash": CashFitStatistic,
     "wstat": WStatFitStatistic,
+    "lstat": LStatFitStatistic,
     "chi2": Chi2FitStatistic,
     "distrib": Chi2AsymmetricErrorFitStatistic,
     "profile": ProfileFitStatistic,
@@ -44,8 +48,11 @@ __all__ = [
     "Chi2AsymmetricErrorFitStatistic",
     "cstat",
     "GaussianPriorPenalty",
+    "get_lstat_gof_terms",
     "get_wstat_gof_terms",
     "get_wstat_mu_bkg",
+    "lstat",
+    "LStatCountsStatistic",
     "wstat",
     "WStatCountsStatistic",
     "compute_fvar",
