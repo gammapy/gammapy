@@ -5,8 +5,9 @@ import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
+from scipy.stats import pearsonr
 from gammapy.datasets import Datasets, MapDataset, MapDatasetOnOff
-from gammapy.estimators import TSMapEstimator
+from gammapy.estimators import TSMapEstimator, ExcessMapEstimator
 from gammapy.estimators.utils import (
     approximate_profile_map,
     combine_flux_maps,
@@ -18,6 +19,7 @@ from gammapy.irf import EDispKernelMap, PSFMap
 from gammapy.maps import Map, MapAxis, WcsGeom
 from gammapy.modeling.models import (
     ConstantSpatialModel,
+    DiskSpatialModel,
     GaussianSpatialModel,
     PointSpatialModel,
     PowerLawSpectralModel,
@@ -819,3 +821,46 @@ def test_tsmap_extended_source():
             result["sqrt_ts"].data[0, 12, 16],
             rtol=5e-2,
         )
+
+
+@requires_data()
+def test_excess_map_compatibility():
+    dataset = MapDataset.read(
+        "$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz", name="cta_dataset"
+    )
+
+    dataset = dataset.downsample(factor=2)
+    dataset.psf = None
+
+    ndeg = "0.1 deg"
+
+    est = ExcessMapEstimator(correlation_radius=ndeg)
+
+    model = SkyModel(
+        spectral_model=PowerLawSpectralModel(),
+        spatial_model=DiskSpatialModel(r_0=ndeg),
+    )
+
+    ts_est_sum = TSMapEstimator(model=model, sum_over_energy_groups=True)
+
+    ts_est = TSMapEstimator(model=model, sum_over_energy_groups=False)
+
+    result = est.run(dataset=dataset)
+
+    result_ts = ts_est.run(dataset)
+
+    result_ts_sum = ts_est_sum.run(dataset)
+
+    mask = np.isfinite(result["flux"].data) & np.isfinite(result_ts_sum["flux"].data)
+    assert_allclose(
+        pearsonr(result["flux"].data[mask], result_ts_sum["flux"].data[mask]).statistic,
+        0.96,
+        rtol=1e-2,
+    )
+
+    mask = np.isfinite(result["flux"].data) & np.isfinite(result_ts["flux"].data)
+    assert_allclose(
+        pearsonr(result["flux"].data[mask], result_ts["flux"].data[mask]).statistic,
+        0.85,
+        rtol=1e-2,
+    )
