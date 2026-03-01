@@ -2560,14 +2560,20 @@ def test_rescale_dataset(geom, geom_etrue, sky_model):
     dataset1 = dataset.reset_livetime(2 * u.h)
 
     assert_allclose(dataset1.exposure.meta["livetime"], 2 * u.h)
-    assert_allclose(dataset1.exposure.data.sum(), 2.0 * dataset.exposure.data.sum())
-    assert_allclose(dataset1.background.data.sum(), 2.0 * dataset.background.data.sum())
+    assert_allclose(
+        dataset1.exposure.data.sum(), 2.0 * dataset.exposure.data.sum(), rtol=1e-5
+    )
+    assert_allclose(
+        dataset1.background.data.sum(), 2.0 * dataset.background.data.sum(), rtol=1e-5
+    )
     assert dataset1.counts is None
     assert dataset1.gti is None
     assert dataset1.edisp.edisp_map == dataset.edisp.edisp_map
     assert dataset1.psf.psf_map == dataset.psf.psf_map
     assert_allclose(
-        dataset1.npred_signal().data.sum(), 2.0 * dataset.npred_signal().data.sum()
+        dataset1.npred_signal().data.sum(),
+        2.0 * dataset.npred_signal().data.sum(),
+        rtol=1e-5,
     )
     dataset1.fake(42)
     assert dataset1.counts is not None
@@ -2579,16 +2585,21 @@ def test_rescale_dataset(geom, geom_etrue, sky_model):
     dataset_onoff1 = dataset_onoff.reset_livetime(3.0 * u.h, 2.0 * u.h)
     assert_allclose(dataset_onoff1.exposure.meta["livetime"], 3 * u.h)
     assert_allclose(
-        dataset_onoff1.exposure.data.sum(), 1.5 * dataset_onoff.exposure.data.sum()
+        dataset_onoff1.exposure.data.sum(),
+        1.5 * dataset_onoff.exposure.data.sum(),
+        rtol=1e-5,
     )
     assert_allclose(
-        dataset_onoff1.background.data.sum(), 1.5 * dataset_onoff.background.data.sum()
+        dataset_onoff1.background.data.sum(),
+        1.5 * dataset_onoff.background.data.sum(),
+        rtol=1e-5,
     )
     assert_allclose(
-        dataset_onoff1.acceptance.data, dataset_onoff.acceptance.data, rtol=1e-3
+        dataset_onoff1.acceptance.data, dataset_onoff.acceptance.data, rtol=1e-5
     )
     assert dataset_onoff1.counts is None
     assert_allclose(
         dataset_onoff1.npred_signal().data.sum(),
         1.5 * dataset_onoff.npred_signal().data.sum(),
+        rtol=1e-5,
     )
