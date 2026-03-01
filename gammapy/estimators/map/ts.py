@@ -440,8 +440,9 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         """
         # First create 2D map arrays
 
-        exposure = estimate_exposure_reco_energy(
-            dataset, self.kernel_model.spectral_model
+        exposure = estimate_exposure_reco_energy(dataset, self.kernel_model.spectral_model)
+        exposure_npred = estimate_exposure_reco_energy(
+            dataset, self.kernel_model.spectral_model, normalize=False
         )
 
         kernel = self.estimate_kernel(dataset)
@@ -454,7 +455,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
         counts = dataset.counts * mask
         background = dataset.npred() * mask
-        exposure *= mask
+        exposure_npred *= mask
 
         energy_axis = counts.geom.axes["energy"]
 
@@ -462,7 +463,6 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
             energy_axis.edges[0], energy_axis.edges[-1]
         )
 
-        exposure_npred = (exposure * flux_ref).to_unit("")
         norm = (flux / flux_ref).to_unit("")
 
         if self.sum_over_energy_groups:
@@ -745,7 +745,7 @@ class SimpleMapDataset:
             weights = _extract_array(weights.data, kernel.shape, position)
             kernel = (kernel * weights).sum(axis=0, keepdims=True)
             with np.errstate(invalid="ignore", divide="ignore"):
-                kernel /= weights.sum(axis=0, keepdims=True)
+                # kernel /= weights.sum(axis=0, keepdims=True)
                 kernel[~np.isfinite(kernel)] = 0
 
         counts_cutout = _extract_array(counts, kernel.shape, position)
