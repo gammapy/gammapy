@@ -2621,13 +2621,13 @@ class TimeMapAxis:
 
     @property
     def iter_by_edges(self):
-        """Iterate by intervals defined by the edges , returning Quantity objects."""
+        """Iterate by time intervals defined by the edges as an `~astropy.units.Quantity`."""
         for t_min, t_max in zip(self._edges_min, self._edges_max):
             yield (t_min, t_max)
 
     @property
     def iter_by_time_edges(self):
-        """Iterate by intervals defined by the edges , returning Time objects."""
+        """Iterate by time intervals defined by the edges as a `~astropy.time.Time` object."""
         for t_min, t_max in zip(self.time_min, self.time_max):
             yield (t_min, t_max)
 
