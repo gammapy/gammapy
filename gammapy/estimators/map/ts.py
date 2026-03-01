@@ -333,7 +333,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         )
 
         kernel = evaluator.compute_npred()
-        kernel.data /= kernel.data.sum()
+        kernel.data /= kernel.data.sum(axis=(1, 2))[:, None, None]
         return kernel
 
     def estimate_flux_default(self, dataset, kernel=None, exposure=None):
@@ -745,7 +745,7 @@ class SimpleMapDataset:
             weights = _extract_array(weights.data, kernel.shape, position)
             kernel = (kernel * weights).sum(axis=0, keepdims=True)
             with np.errstate(invalid="ignore", divide="ignore"):
-                # kernel /= weights.sum(axis=0, keepdims=True)
+                kernel /= weights.sum(axis=0, keepdims=True)
                 kernel[~np.isfinite(kernel)] = 0
 
         counts_cutout = _extract_array(counts, kernel.shape, position)
