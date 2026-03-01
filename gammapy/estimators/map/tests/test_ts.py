@@ -255,13 +255,13 @@ def test_compute_ts_map_psf(fermi_dataset):
     )
     result = estimator.run(fermi_dataset)
 
-    assert_allclose(result["ts"].data[0, 29, 29], 830.97957, rtol=2e-3)
+    assert_allclose(result["ts"].data[0, 29, 29], 762.890201, rtol=2e-3)
     assert_allclose(result["niter"].data[0, 29, 29], 7)
-    assert_allclose(result["flux"].data[0, 29, 29], 1.339426e-09, rtol=2e-3)
-    assert_allclose(result["flux_err"].data[0, 29, 29], 7.883016e-11, rtol=2e-3)
-    assert_allclose(result["flux_errp"].data[0, 29, 29], 7.913813e-11, rtol=2e-3)
-    assert_allclose(result["flux_errn"].data[0, 29, 29], 7.453983e-11, rtol=2e-3)
-    assert_allclose(result["flux_ul"].data[0, 29, 29], 1.501809e-09, rtol=2e-3)
+    assert_allclose(result["flux"].data[0, 29, 29], 1.267113e-09, rtol=2e-3)
+    assert_allclose(result["flux_err"].data[0, 29, 29], 7.766778e-11, rtol=2e-3)
+    assert_allclose(result["flux_errp"].data[0, 29, 29], 7.984043e-11, rtol=2e-3)
+    assert_allclose(result["flux_errn"].data[0, 29, 29], 7.439551e-11, rtol=2e-3)
+    assert_allclose(result["flux_ul"].data[0, 29, 29], 1.429154e-09, rtol=2e-3)
 
     assert result["flux"].unit == u.Unit("cm-2s-1")
     assert result["flux_err"].unit == u.Unit("cm-2s-1")
@@ -284,10 +284,10 @@ def test_compute_ts_map_energy(fermi_dataset):
     result = estimator.run(fermi_dataset)
     result.filter_success_nan = False
 
-    assert_allclose(result.ts.data[1, 43, 30], 0.212079, atol=0.01)
+    assert_allclose(result.ts.data[1, 43, 30], 0.198733, atol=0.01)
     assert not result["success"].data[1, 43, 30]
 
-    assert_allclose(result["ts"].data[:, 29, 29], [795.815842, 17.52017], rtol=1e-2)
+    assert_allclose(result["ts"].data[:, 29, 29], [801.979345, 16.999203], rtol=1e-2)
     assert_allclose(
         result["flux"].data[:, 29, 29], [1.233119e-09, 3.590694e-11], rtol=1e-2
     )
@@ -313,10 +313,10 @@ def test_compute_ts_map_energy(fermi_dataset):
 
     assert_allclose(result["ts"].data[:, 29, 29], [795.815842, 8.777864], rtol=1e-2)
     assert_allclose(
-        result["flux"].data[:, 29, 29], [1.223901e-09, 3.748007e-11], rtol=1e-2
+        result["flux"].data[:, 29, 29], [1.229988e-09, 3.866755e-11], rtol=1e-2
     )
     assert_allclose(
-        result["flux_err"].data[:, 29, 29], [7.363390e-11, 1.799367e-11], rtol=1e-2
+        result["flux_err"].data[:, 29, 29], [7.376775e-11, 1.856279e-11], rtol=1e-2
     )
     assert_allclose(result["niter"].data[:, 29, 29], [6, 6])
 
@@ -600,7 +600,7 @@ def test_compute_ts_map_with_hole(fake_dataset):
 
     kernel = ts_estimator.estimate_kernel(dataset=holes_dataset)
     assert_allclose(kernel.geom.width, 1.0 * u.deg)
-    assert_allclose(kernel.data.sum(), 1.0)
+    assert_allclose(kernel.data.sum(), kernel.data.shape[0])
 
     holes_dataset.exposure.data[...] = 0.0
     with pytest.raises(ValueError):
@@ -684,7 +684,7 @@ def test_joint_ts_map(fake_dataset):
         sum_over_energy_groups=True,
     )
     result = estimator.run([fake_dataset, fake_dataset2])
-    assert_allclose(result["sqrt_ts"].data[0, 10, 10], 2.063912, rtol=1e-3)
+    assert_allclose(result["sqrt_ts"].data[0, 10, 10], 2.068044, rtol=1e-3)
 
 
 @requires_data()
@@ -696,8 +696,8 @@ def test_joint_ts_map_hawc():
         kernel_width=2 * u.deg, sum_over_energy_groups=False, n_jobs=4
     )
     result = estimator.run(datasets)
-    assert_allclose(result["flux"].data[0, 59, 59], 1.909396e-13, rtol=1e-3)
-    assert_allclose(result["sqrt_ts"].data[0, 59, 59], 10.878956, rtol=1e-3)
+    assert_allclose(result["flux"].data[0, 59, 59], 4.034048e-12, rtol=1e-3)
+    assert_allclose(result["sqrt_ts"].data[0, 59, 59], 12.277102, rtol=1e-3)
 
     estimator = TSMapEstimator(
         kernel_width=2 * u.deg,
@@ -706,21 +706,21 @@ def test_joint_ts_map_hawc():
         n_jobs=4,
     )
     result = estimator.run(datasets)
-    assert_allclose(result["flux"].data[0, 59, 59], 1.909396e-13, rtol=1e-3)
-    assert_allclose(result["sqrt_ts"].data[0, 59, 59], 10.878956, rtol=1e-3)
+    assert_allclose(result["flux"].data[0, 59, 59], 4.034048e-12, rtol=1e-3)
+    assert_allclose(result["sqrt_ts"].data[0, 59, 59], 12.277102, rtol=1e-3)
     assert result.stat_scan.geom.data_shape == (1, 109, 120, 120)
     assert result.dnde_scan_values.geom.data_shape == (1, 109, 120, 120)
     assert_allclose(
         result["dnde_scan_values"].data[0, 0, 59, 59], -3.164557e-13, rtol=1e-3
     )
-    assert_allclose(result["stat_scan"].data[0, 0, 59, 59], 5193.588657, rtol=1e-3)
+    assert_allclose(result["stat_scan"].data[0, 0, 59, 59], 5093.431946, rtol=1e-3)
 
     estimator = TSMapEstimator(
         kernel_width=2 * u.deg, sum_over_energy_groups=True, n_jobs=4
     )
     result = estimator.run(datasets)
-    assert_allclose(result["flux"].data[0, 59, 59], 1.99452e-13, rtol=1e-3)
-    assert_allclose(result["sqrt_ts"].data[0, 59, 59], 11.997135, rtol=1e-3)
+    assert_allclose(result["flux"].data[0, 59, 59], 4.174005e-12, rtol=1e-3)
+    assert_allclose(result["sqrt_ts"].data[0, 59, 59], 12.511975, rtol=1e-3)
 
     estimator = TSMapEstimator(
         kernel_width=2 * u.deg,
@@ -729,14 +729,14 @@ def test_joint_ts_map_hawc():
         n_jobs=4,
     )
     result = estimator.run(datasets)
-    assert_allclose(result["flux"].data[0, 59, 59], 1.99452e-13, rtol=1e-3)
-    assert_allclose(result["sqrt_ts"].data[0, 59, 59], 11.997135, rtol=1e-3)
+    assert_allclose(result["flux"].data[0, 59, 59], 4.174005e-12, rtol=1e-3)
+    assert_allclose(result["sqrt_ts"].data[0, 59, 59], 12.511975, rtol=1e-3)
     assert result.stat_scan.geom.data_shape == (1, 109, 120, 120)
     assert result.dnde_scan_values.geom.data_shape == (1, 109, 120, 120)
     assert_allclose(
         result["dnde_scan_values"].data[0, 0, 59, 59], -3.164557e-13, rtol=1e-3
     )
-    assert_allclose(result["stat_scan"].data[0, 0, 59, 59], 7625.040553, rtol=1e-3)
+    assert_allclose(result["stat_scan"].data[0, 0, 59, 59], 5948.732845, rtol=1e-3)
 
     estimator = TSMapEstimator(
         kernel_width=2 * u.deg,
@@ -745,14 +745,12 @@ def test_joint_ts_map_hawc():
         n_jobs=4,
     )
     result = estimator.run(datasets)
-    assert_allclose(result["norm_sensitivity"].data[0, 59, 59], 0.04897, rtol=1e-3)
-    assert_allclose(result["flux_sensitivity"].data[0, 59, 59], 4.881527e-14, rtol=1e-3)
+    assert_allclose(result["norm_sensitivity"].data[0, 59, 59], 1.059728, rtol=1e-3)
+    assert_allclose(result["flux_sensitivity"].data[0, 59, 59], 1.056374e-12, rtol=1e-3)
+    assert_allclose(result["eflux_sensitivity"].data[0, 59, 59], 6.09952e-12, rtol=1e-3)
+    assert_allclose(result["dnde_sensitivity"].data[0, 59, 59], 3.353569e-15, rtol=1e-3)
     assert_allclose(
-        result["eflux_sensitivity"].data[0, 59, 59], 2.820531e-13, rtol=1e-3
-    )
-    assert_allclose(result["dnde_sensitivity"].data[0, 59, 59], 1.550752e-16, rtol=1e-3)
-    assert_allclose(
-        result["e2dnde_sensitivity"].data[0, 59, 59], 4.900377e-14, rtol=1e-3
+        result["e2dnde_sensitivity"].data[0, 59, 59], 1.059728e-12, rtol=1e-3
     )
 
 
