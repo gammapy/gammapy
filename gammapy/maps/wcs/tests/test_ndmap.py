@@ -940,9 +940,15 @@ def test_stack_unit_handling():
     m_other = WcsNDMap.create(npix=(3, 3), unit="cm2 s")
     m_other.data += 1
 
+    m_bad = WcsNDMap.create(npix=(3, 3), unit="s")
+    m_bad.data += 1
+
     m.stack(m_other)
 
     assert_allclose(m.data, 1.0001)
+
+    with pytest.raises(ValueError):
+        m.stack(m_bad)
 
 
 def test_binary_erode():

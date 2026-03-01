@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Session class driving the high level interface API."""
+
 import html
 import logging
 from gammapy.datasets import Datasets
@@ -38,6 +39,7 @@ class Workflow:
         self.fit = Fit()
         self.fit_result = None
         self.flux_points = None
+        self.steps = []
 
     def _repr_html_(self):
         try:
@@ -76,6 +78,8 @@ class Workflow:
         else:
             if overwrite is None:
                 overwrite = [True] * len(steps)
+
+        workflow_steps = []
         for k, step in enumerate(steps):
             if isinstance(overwrite, list):
                 overwrite_step = overwrite[k]
@@ -85,6 +89,9 @@ class Workflow:
                 step, self.config, log=self.log, overwrite=overwrite_step, **kwargs
             )
             workflow_step.run(self)
+            workflow_steps.append(workflow_step)
+
+        self.steps = workflow_steps
 
     # keep these methods to be backward compatible
     def get_observations(self):

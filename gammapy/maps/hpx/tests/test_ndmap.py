@@ -483,6 +483,16 @@ def test_partial_hpx_map_stack():
     assert_allclose(m_2.data.sum(), 4968)
 
 
+def test_hpx_map_stack_inconsistent_units():
+    m = HpxNDMap.create(
+        nside=32, frame="galactic", region="DISK(110.,75.,10.)", unit="cm2s"
+    )
+    m_allsky = HpxNDMap.create(nside=32, frame="galactic", unit="")
+
+    with pytest.raises(ValueError):
+        m_allsky.stack(m)
+
+
 def test_hpx_map_to_region_nd_map():
     axis = MapAxis.from_energy_bounds("10 GeV", "2 TeV", nbin=10)
     m = HpxNDMap.create(nside=128, axes=[axis])

@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Sky maps."""
+
 from .axes import LabelMapAxis, MapAxes, MapAxis, TimeMapAxis
 from .coord import MapCoord
 from .core import Map

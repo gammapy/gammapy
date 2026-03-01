@@ -542,8 +542,8 @@ class TestSpectrumOnOff:
 
     def test_to_from_ogip_files(self, tmp_path):
         dataset = self.dataset.copy(name="test")
-        dataset.write(tmp_path / "test.fits")
-        newdataset = SpectrumDatasetOnOff.read(tmp_path / "test.fits")
+        dataset.write(tmp_path / "test.fits", format="ogip")
+        newdataset = SpectrumDatasetOnOff.read(tmp_path / "test.fits", format="ogip")
 
         expected_regions = compound_region_to_regions(self.off_counts.geom.region)
         regions = compound_region_to_regions(newdataset.counts_off.geom.region)
@@ -563,25 +563,27 @@ class TestSpectrumOnOff:
 
     def test_from_ogip_files_overwrite_name(self, tmp_path):
         dataset = self.dataset.copy(name="test")
-        dataset.write(tmp_path / "test.fits")
-        new_dataset = SpectrumDatasetOnOff.read(tmp_path / "test.fits")
+        dataset.write(tmp_path / "test.fits", format="ogip")
+        new_dataset = SpectrumDatasetOnOff.read(tmp_path / "test.fits", format="ogip")
         assert new_dataset.name == dataset.name
 
-        new_dataset = SpectrumDatasetOnOff.read(tmp_path / "test.fits", name="new_name")
+        new_dataset = SpectrumDatasetOnOff.read(
+            tmp_path / "test.fits", name="new_name", format="ogip"
+        )
         assert new_dataset.name == "new_name"
 
     def test_to_from_ogip_files_no_mask(self, tmp_path):
         dataset = self.dataset.copy(name="test")
         dataset.mask_safe = None
-        dataset.write(tmp_path / "test.fits")
-        newdataset = SpectrumDatasetOnOff.read(tmp_path / "test.fits")
+        dataset.write(tmp_path / "test.fits", format="ogip")
+        newdataset = SpectrumDatasetOnOff.read(tmp_path / "test.fits", format="ogip")
 
         assert_allclose(newdataset.mask_safe.data, True)
 
     def test_to_from_ogip_files_zip(self, tmp_path):
         dataset = self.dataset.copy(name="test")
-        dataset.write(tmp_path / "test.fits.gz")
-        newdataset = SpectrumDatasetOnOff.read(tmp_path / "test.fits.gz")
+        dataset.write(tmp_path / "test.fits.gz", format="ogip")
+        newdataset = SpectrumDatasetOnOff.read(tmp_path / "test.fits.gz", format="ogip")
 
         assert newdataset.counts.meta["RESPFILE"] == "test_rmf.fits.gz"
         assert newdataset.counts.meta["BACKFILE"] == "test_bkg.fits.gz"
@@ -603,8 +605,10 @@ class TestSpectrumOnOff:
             acceptance=acceptance,
             name="test",
         )
-        dataset.write(tmp_path / "pha_obstest.fits")
-        newdataset = SpectrumDatasetOnOff.read(tmp_path / "pha_obstest.fits")
+        dataset.write(tmp_path / "pha_obstest.fits", format="ogip")
+        newdataset = SpectrumDatasetOnOff.read(
+            tmp_path / "pha_obstest.fits", format="ogip"
+        )
 
         assert_allclose(self.on_counts.data, newdataset.counts.data)
         assert newdataset.counts_off is None
@@ -632,7 +636,7 @@ class TestSpectrumOnOff:
         path = tmp_path / "test.fits"
         replace_in_fits_header(path, "unknown")
         with pytest.warns(AstropyUserWarning):
-            SpectrumDatasetOnOff.read(path, checksum=True)
+            SpectrumDatasetOnOff.read(path, checksum=True, format="ogip")
 
     def test_spectrum_dataset_onoff_fits_io(self, tmp_path):
         self.dataset.write(tmp_path / "test.fits", format="gadf")
@@ -640,6 +644,48 @@ class TestSpectrumOnOff:
         assert isinstance(d1.counts.geom, RegionGeom)
         assert d1.exposure == self.dataset.exposure
         assert_allclose(d1.counts_off.data, self.dataset.counts_off.data)
+
+    def test_spectrum_dataset_onoff_default_format(self, tmp_path):
+        self.dataset.write(tmp_path / "test.fits")
+        d1 = SpectrumDatasetOnOff.read(tmp_path / "test.fits")
+        assert isinstance(d1.counts.geom, RegionGeom)
+        assert d1.exposure == self.dataset.exposure
+        assert_allclose(d1.counts_off.data, self.dataset.counts_off.data)
+
+    def test_spectrum_dataset_onoff_discover_formats(self, tmp_path):
+        self.dataset.write(tmp_path / "test_ogip.fits", format="ogip")
+        d1 = SpectrumDatasetOnOff.read(tmp_path / "test_ogip.fits")
+        assert isinstance(d1.counts.geom, RegionGeom)
+        assert d1.exposure == self.dataset.exposure
+        assert_allclose(d1.counts_off.data, self.dataset.counts_off.data)
+
+        self.dataset.write(tmp_path / "test_gadf.fits", format="gadf")
+        d1 = SpectrumDatasetOnOff.read(tmp_path / "test_gadf.fits")
+        assert isinstance(d1.counts.geom, RegionGeom)
+        assert d1.exposure == self.dataset.exposure
+        assert_allclose(d1.counts_off.data, self.dataset.counts_off.data)
+
+    @requires_data()
+    def test_spectrum_dataset_onoff_discover_bad_formats(self):
+        with pytest.raises(ValueError) as exc_info:
+            filename = "$GAMMAPY_DATA/tests/hermes/hermes-VariableMin-pi0-Htot_CMZ_nside256.fits.gz"
+            SpectrumDatasetOnOff.read(filename)
+        assert "Cannot determine format" in str(exc_info.value)
+
+    def test_invalid_format_exception(self, tmp_path):
+        expected = "serialisation format"
+
+        with pytest.raises(ValueError) as exc_info:
+            self.dataset.write(tmp_path / "test.fits", format="invalid_format")
+
+        print(str(exc_info.value))
+        assert expected in str(exc_info.value)
+
+        # Attempt to read using an invalid format and check for the exception
+        self.dataset.write(tmp_path / "test.fits", format="ogip")
+        with pytest.raises(ValueError) as exc_info:
+            SpectrumDatasetOnOff.read(tmp_path / "test.fits", format="invalid_format")
+        assert expected in str(exc_info.value)
 
     def test_energy_mask(self):
         mask = self.dataset.counts.geom.energy_mask(

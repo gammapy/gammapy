@@ -7,6 +7,7 @@ import json
 from collections import OrderedDict
 from itertools import repeat
 import numpy as np
+from numpy import isscalar, ndindex
 from astropy import units as u
 from astropy.io import fits
 import matplotlib.pyplot as plt
@@ -103,7 +104,7 @@ class Map(abc.ABC):
         value : array-like
             Data array.
         """
-        if np.isscalar(value):
+        if isscalar(value):
             value = value * np.ones(self.geom.data_shape, dtype=type(value))
 
         if isinstance(value, u.Quantity):
@@ -476,7 +477,7 @@ class Map(abc.ABC):
         --------
         iter_by_image_data : iterate by image returning data and index.
         """
-        for idx in np.ndindex(self.geom.shape_axes):
+        for idx in ndindex(self.geom.shape_axes):
             if keepdims:
                 names = self.geom.axes.names
                 slices = {name: slice(_, _ + 1) for name, _ in zip(names, idx)}
@@ -500,7 +501,7 @@ class Map(abc.ABC):
         --------
         iter_by_image : iterate by image returning a map.
         """
-        for idx in np.ndindex(self.geom.shape_axes):
+        for idx in ndindex(self.geom.shape_axes):
             yield self.data[idx[::-1]], idx[::-1]
 
     def iter_by_image_index(self):
@@ -518,7 +519,7 @@ class Map(abc.ABC):
         --------
         iter_by_image : iterate by image returning a map.
         """
-        for idx in np.ndindex(self.geom.shape_axes):
+        for idx in ndindex(self.geom.shape_axes):
             yield idx[::-1]
 
     def coadd(self, map_in, weights=None):
@@ -569,7 +570,7 @@ class Map(abc.ABC):
 
         """
         if axis_name:
-            if np.isscalar(pad_width):
+            if isscalar(pad_width):
                 pad_width = (pad_width, pad_width)
 
             geom = self.geom.pad(pad_width=pad_width, axis_name=axis_name)
@@ -1196,7 +1197,7 @@ class Map(abc.ABC):
             ),
             task_name="Reprojection",
         )
-        for idx in np.ndindex(self.geom.shape_axes):
+        for idx in ndindex(self.geom.shape_axes):
             output_map.data[idx[0]] = maps[idx[0]].data
         return output_map
 
@@ -1645,11 +1646,12 @@ class Map(abc.ABC):
         shape = [1] * len(self.geom.data_shape)
         shape[axis_idx] = -1
 
-        values = self.quantity * axis.bin_width.reshape(shape)
-
+        values = self.data * axis.bin_width.value.reshape(shape)
+        unit = self.unit * axis.unit
         if axis_name == "rad":
             # take Jacobian into account
-            values = 2 * np.pi * axis.center.reshape(shape) * values
+            values = 2 * np.pi * axis.center.value.reshape(shape) * values
+            unit *= axis.unit
 
         data = np.insert(values.cumsum(axis=axis_idx), 0, 0, axis=axis_idx)
 
@@ -1658,7 +1660,7 @@ class Map(abc.ABC):
         )
         axes = self.geom.axes.replace(axis_shifted)
         geom = self.geom.to_image().to_cube(axes)
-        return self.__class__(geom=geom, data=data.value, unit=data.unit)
+        return self.__class__(geom=geom, data=data, unit=unit)
 
     def integral(self, axis_name, coords, **kwargs):
         """Compute integral along a given axis.
@@ -1693,13 +1695,15 @@ class Map(abc.ABC):
         axis_name : str, optional
             Along which axis to normalise.
         """
-        cumsum = self.cumsum(axis_name=axis_name).quantity
+        cumsum = self.cumsum(axis_name=axis_name)
 
         with np.errstate(invalid="ignore", divide="ignore"):
             axis = self.geom.axes.index_data(axis_name=axis_name)
-            normed = self.quantity / cumsum.max(axis=axis, keepdims=True)
+            normed = self.data / cumsum.data.max(axis=axis, keepdims=True)
+            unit = self.unit / cumsum.unit
 
-        self.quantity = np.nan_to_num(normed)
+        self.data = np.nan_to_num(normed)
+        self._unit = unit
 
     @classmethod
     def from_stack(cls, maps, axis=None, axis_name=None):
@@ -1840,8 +1844,10 @@ class Map(abc.ABC):
         map : `Map`
             Map with new unit and converted data.
         """
-        data = self.quantity.to_value(unit)
-        return self.from_geom(self.geom, data=data, unit=unit)
+        unit = u.Unit(unit)
+        # This will raise a UnitConversionError
+        converter = self.unit.get_converter(unit)
+        return self.from_geom(self.geom, data=converter(self.data), unit=unit)
 
     def is_allclose(self, other, rtol_axes=1e-3, atol_axes=1e-6, **kwargs):
         """Compare two Maps for close equivalency.
@@ -1890,17 +1896,24 @@ class Map(abc.ABC):
         )
 
     def _arithmetics(self, operator, other, copy):
-        """Perform arithmetic on maps after checking geometry consistency."""
+        """Perform arithmetic operation on the array objects and replace unit if needed."""
         if isinstance(other, Map):
-            if self.geom == other.geom:
-                q = other.quantity
-            else:
+            if self.geom != other.geom:
                 raise ValueError("Map Arithmetic: Inconsistent geometries.")
         else:
-            q = u.Quantity(other, copy=COPY_IF_NEEDED)
+            other = u.Quantity(other, copy=COPY_IF_NEEDED)
+
+        unit = None
+        other_data = other.data if isinstance(other, Map) else other.value
+        if operator in [np.multiply, np.true_divide]:
+            unit = operator(self.unit, other.unit)
+        else:
+            other_data = other.unit.get_converter(self.unit)(other_data)
 
         out = self.copy() if copy else self
-        out.quantity = operator(out.quantity, q)
+        out.data = operator(out.data, other_data)
+        if unit:
+            out._unit = unit
         return out
 
     def _boolean_arithmetics(self, operator, other, copy):
@@ -1924,25 +1937,25 @@ class Map(abc.ABC):
         return self._arithmetics(np.add, other, copy=True)
 
     def __iadd__(self, other):
-        return self._arithmetics(np.add, other, copy=COPY_IF_NEEDED)
+        return self._arithmetics(np.add, other, copy=False)
 
     def __sub__(self, other):
         return self._arithmetics(np.subtract, other, copy=True)
 
     def __isub__(self, other):
-        return self._arithmetics(np.subtract, other, copy=COPY_IF_NEEDED)
+        return self._arithmetics(np.subtract, other, copy=False)
 
     def __mul__(self, other):
         return self._arithmetics(np.multiply, other, copy=True)
 
     def __imul__(self, other):
-        return self._arithmetics(np.multiply, other, copy=COPY_IF_NEEDED)
+        return self._arithmetics(np.multiply, other, copy=False)
 
     def __truediv__(self, other):
         return self._arithmetics(np.true_divide, other, copy=True)
 
     def __itruediv__(self, other):
-        return self._arithmetics(np.true_divide, other, copy=COPY_IF_NEEDED)
+        return self._arithmetics(np.true_divide, other, copy=False)
 
     def __le__(self, other):
         return self._arithmetics(np.less_equal, other, copy=True)
