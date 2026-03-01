@@ -1,1 +1,0 @@
-Replace deprecated ``np.char.chararray`` with ``np.empty`` using ``dtype="U12"`` in ``SensitivityEstimator._get_criterion`` to fix ``DeprecationWarning``.
