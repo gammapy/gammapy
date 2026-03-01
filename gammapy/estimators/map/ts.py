@@ -333,7 +333,10 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         )
 
         kernel = evaluator.compute_npred()
-        kernel.data /= kernel.data.sum(axis=(1, 2))[:, None, None]
+
+        with np.errstate(invalid="ignore", divide="ignore"):
+            kernel.data /= kernel.data.sum(axis=(1, 2))[:, None, None]
+            kernel.data[~np.isfinite(kernel.data)] = 0
         return kernel
 
     def estimate_flux_default(self, dataset, kernel=None, exposure=None):
