@@ -1,0 +1,1 @@
+Fix flux estimates in `gammapy.estimators.TSMapEstimator`
