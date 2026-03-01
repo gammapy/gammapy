@@ -857,6 +857,9 @@ def test_excess_map_compatibility():
         0.96,
         rtol=1e-2,
     )
+    assert_allclose(
+        np.median(result["flux"].data[mask] / result_ts_sum["flux"].data[mask]), 0.97
+    )
 
     mask = np.isfinite(result["flux"].data) & np.isfinite(result_ts["flux"].data)
     assert_allclose(
