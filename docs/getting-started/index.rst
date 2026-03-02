@@ -133,7 +133,7 @@ Tutorials Overview
     Gammapy allows you to compute light curves in various ways. Light curves
     can be computed for a **1D or 3D analysis scenario** (see above) by either
     grouping or splitting the DL3 data into multiple time intervals. Grouping
-    mutiple observations allows for computing e.g. a **monthly or nightly light curves**,
+    multiple observations allows for computing e.g. **monthly or nightly binned light curves**,
     while splitting of a single observation allows to compute **light curves for flares**.
     You can also compute light curves in multiple energy bands. In all cases the light
     curve is computed using the `~gammapy.estimators.LightCurveEstimator`.
@@ -152,5 +152,3 @@ Tutorials Overview
 
     :bdg-link-primary:`Combined 1D / 3D analysis tutorial <../tutorials/analysis-3d/analysis_mwl.html>`
     :bdg-link-primary:`SED fitting tutorial <../tutorials/analysis-1d/sed_fitting.html>`
-
-
