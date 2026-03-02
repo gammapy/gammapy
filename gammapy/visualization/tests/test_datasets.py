@@ -3,6 +3,7 @@ import pytest
 from numpy.testing import assert_allclose
 import matplotlib
 import matplotlib.pyplot as plt
+from matplotlib.colors import same_color
 from packaging import version
 from gammapy.datasets.tests.test_map import MapDataset
 from gammapy.modeling.models import (
@@ -61,7 +62,7 @@ def test_plot_spectrum_datasets_off_regions():
 
     actual = ax.patches[2].get_edgecolor()
     assert_allclose(actual, (1.0, 0.498039, 0.054902, 1.0), rtol=1e-2)
-    assert ax.lines[0].get_color() == "#2ca02c"
+    assert same_color(ax.lines[0].get_color(), "#2ca02c")
 
 
 @requires_data()
