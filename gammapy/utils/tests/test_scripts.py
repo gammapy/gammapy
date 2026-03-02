@@ -199,21 +199,30 @@ def test_logic_parser_error():
 
 
 def test_logic_parser_chained_comparisons():
-    data = {"OBS_ID": [0, 1, 2, 3, 4, 5]}
+    data = {
+        "OBS_ID": [0, 1, 2, 3, 4, 5],
+        "FLAG": [0, 1, 1, 0, 1, 0],
+    }
     table = Table(data)
 
+    # Pure chained comparisons
     result = logic_parser(table, "1 < OBS_ID < 4")
     assert len(result) == 2
-    assert result["OBS_ID"][0] == 2
-    assert result["OBS_ID"][1] == 3
+    assert list(result["OBS_ID"]) == [2, 3]
 
     result = logic_parser(table, "2 <= OBS_ID <= 4")
     assert len(result) == 3
-    assert result["OBS_ID"][0] == 2
-    assert result["OBS_ID"][1] == 3
-    assert result["OBS_ID"][2] == 4
+    assert list(result["OBS_ID"]) == [2, 3, 4]
 
     result = logic_parser(table, "0 <= OBS_ID < 2")
     assert len(result) == 2
-    assert result["OBS_ID"][0] == 0
-    assert result["OBS_ID"][1] == 1
+    assert list(result["OBS_ID"]) == [0, 1]
+
+    # Chained comparisons combined with other conditions
+    result = logic_parser(table, "(1 < OBS_ID < 5) and (FLAG == 1)")
+    assert len(result) == 2
+    assert list(result["OBS_ID"]) == [2, 4]
+
+    result = logic_parser(table, "(1 < OBS_ID < 3) or (FLAG == 0)")
+    assert len(result) == 4
+    assert list(result["OBS_ID"]) == [0, 2, 3, 5]
