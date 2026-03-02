@@ -349,39 +349,58 @@ def logic_parser(table, expression):
     >>> logic_parser(table, expression)
     """
 
-    def eval_node(node):
-        if isinstance(node, ast.BoolOp):
-            op_func = _OPERATORS[type(node.op)]
-            values = [eval_node(v) for v in node.values]
-            result = values[0]
-            for v in values[1:]:
-                result = op_func(result, v)
-            return result
-        elif isinstance(node, ast.Compare):
-            current_left = eval_node(node.left)
-            parts = []
-            for op, comparator in zip(node.ops, node.comparators):
-                right = eval_node(comparator)
-                op_func = _OPERATORS[type(op)]
-                parts.append(op_func(current_left, right))
-                current_left = right
+    def handle_boolop(node):
+        op_func = _OPERATORS[type(node.op)]
+        values = [eval_node(v) for v in node.values]
+        result = values[0]
+        for value in values[1:]:
+            result = op_func(result, value)
+        return result
 
-            result = parts[0]
-            for part in parts[1:]:
-                result = np.logical_and(result, part)
-            return result
-        elif isinstance(node, ast.Name):
-            if node.id not in table.colnames:
-                raise KeyError(
-                    f"Column '{node.id}' not found in the table. Available columns: {table.colnames}"
-                )
-            return table[node.id]
-        elif isinstance(node, ast.Constant):
-            return node.value
-        elif isinstance(node, ast.List):
-            return [eval_node(elt) for elt in node.elts]
-        else:
+    def handle_compare(node):
+        # 支持链式比较: a < b < c  ->  (a < b) & (b < c)
+        left = eval_node(node.left)
+        parts = []
+
+        for op, comparator in zip(node.ops, node.comparators):
+            right = eval_node(comparator)
+            op_func = _OPERATORS[type(op)]
+            parts.append(op_func(left, right))
+            left = right
+
+        result = parts[0]
+        for part in parts[1:]:
+            result = np.logical_and(result, part)
+
+        return result
+
+    def handle_name(node):
+        if node.id not in table.colnames:
+            raise KeyError(
+                f"Column '{node.id}' not found in the table. "
+                f"Available columns: {table.colnames}"
+            )
+        return table[node.id]
+
+    def handle_constant(node):
+        return node.value
+
+    def handle_list(node):
+        return [eval_node(elt) for elt in node.elts]
+
+    handlers = {
+        ast.BoolOp: handle_boolop,
+        ast.Compare: handle_compare,
+        ast.Name: handle_name,
+        ast.Constant: handle_constant,
+        ast.List: handle_list,
+    }
+
+    def eval_node(node):
+        handler = handlers.get(type(node))
+        if handler is None:
             raise ValueError(f"Unsupported expression type: {type(node)}")
+        return handler(node)
 
     expr_ast = ast.parse(expression, mode="eval")
     mask = eval_node(expr_ast.body)
