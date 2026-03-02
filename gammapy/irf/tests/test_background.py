@@ -282,12 +282,10 @@ def test_bkg_2d_wrong_units():
     wrong_unit = u.cm**2 * u.s
     data = np.ones((energy_axis.nbin, offset_axis.nbin)) * wrong_unit
     bkg2d_test = Background2D(axes=[energy_axis, offset_axis])
+    expected = f"Error: {wrong_unit} is not an allowed unit. {bkg2d_test.tag} requires {bkg2d_test.default_unit} data quantities."
     with pytest.raises(ValueError) as error:
         Background2D(axes=[energy_axis, offset_axis], data=data)
-        assert error.match(
-            f"Error: {wrong_unit} is not an allowed unit. {bkg2d_test.tag}"
-            f" requires {bkg2d_test.default_unit} data quantities."
-        )
+    assert str(error.value) == expected
 
 
 def test_background_2d_read_missing_hducls():
