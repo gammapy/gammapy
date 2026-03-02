@@ -12,10 +12,13 @@ def inference_data_from_ultranest(sampler_results, weighted=False):
     ----------
     sampler_results : dict
         The result dictionary returned by `ReactiveNestedSampler.run()`.
+    weighted : bool
+        If True, uses the weighted samples (more accurate) otherwise use directly the unweighted samples.
 
     Returns
     -------
-    arviz.InferenceData
+   inferencedata : `arviz.InferenceData`
+       Returns an arviz.InferenceData instance
     """
 
     import arviz as az
@@ -78,10 +81,14 @@ def inference_data_from_sampler(
 
     Parameters
     ----------
-    backend : {"ultranest"}
-
     results : `~gammapy.modeling.SamplerResult`
         The sampler results and model information.
+    datasets: `gammapy.datasets.Datasets`
+        Datasets that were used to obtain the results.
+    backend : {"ultranest"}
+        Global backend used for sampler. Default is "ultranest".
+        UltraNest: Most options can be found in the
+        `UltraNest doc <https://johannesbuchner.github.io/UltraNest/>`__.
     n_prosterior_samples : int, optional
         Number of samples to generate after resampling the posterior to take into account weights.
         Default is None, which use the unweighted samples from ultranest.
@@ -95,7 +102,7 @@ def inference_data_from_sampler(
 
     Returns
     -------
-    arviz.InferenceData
+    inference_data : `arviz.InferenceData`
         An InferenceData object containing posterior samples, optionally resampled,
         prior samples (if requested), and log-evidence attributes ('logz' and 'logzerr').
     """
@@ -185,7 +192,7 @@ def generate_prior_samples(parameters, n_prior_samples=1000, random_seed=42):
 
     Parameters
     ----------
-    parameters : list
+    parameters : `~gammapy.modeling.Parameters` or list of `~gammapy.modeling.Parameter`
         The list of model parameters with priors to sample.
     n_prior_samples : int, optional
         Number of prior samples to generate. If None, no samples are added.
@@ -194,7 +201,7 @@ def generate_prior_samples(parameters, n_prior_samples=1000, random_seed=42):
 
     Returns
     -------
-    `numpy.array`
+    prior_samples : `numpy.array`
         An array with dimension `n_prior_samples` times len(parameters).
     """
 
