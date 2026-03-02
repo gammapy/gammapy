@@ -93,8 +93,8 @@ Feature releases
      ``python dev/github_summary.py contributors_by_milestone --milestone '<version>.x'``.
      Note that you will need to use your github token here.
    * Make sure to adjust the lines at the start of the changelog for the correct values printed by the above command.
-   * Rename the filename from `CHANGELOG.rst` to `vx.y.rst` and add
-     corresponding entry in ``docs/release-notes/index.rst``. Add an `rst` file for the next release.
+   * Rename the filename from ``CHANGELOG.rst`` to ``vx.y.rst`` and add
+     corresponding entry in ``docs/release-notes/index.rst``. Add an ``rst`` file for the next release.
 
 #. Open two separate PRs for each of these changes and mark each with the ``backport-v<version>.x`` label.
    Gather feedback from the Gammapy user and dev community. These PRs will be merged and backport to the
@@ -112,7 +112,7 @@ Feature releases
     git fetch upstream --tags --prune
     git checkout -B main upstream/main
 
-#. From the github online interface, create a new branch v<version>.x
+#. From the github online interface, create a new branch ``v<version>.x``
 
 #. Update the entry for the feature freeze in the
    `Gammapy release calendar <https://github.com/gammapy/gammapy/wiki/Release-Calendar>`__.
@@ -143,7 +143,7 @@ Release candidates
    * Adapt the dependency conda env name and versions as required in this file. Normally, it should be the latest versions of the packages.
      Note that for the release candidates, ``gammapy`` must be included under pip.
 
-#. In the ``gammapy repo <https://github.com/gammapy/gammapy>`__, switch to the correct branch and update the ``CITATION.cff`` date and version by running the
+#. In the `gammapy repo <https://github.com/gammapy/gammapy>`__, switch to the correct branch and update the ``CITATION.cff`` date and version by running the
    ``dev/prepare-release.py`` script::
 
     git checkout v1.0.x
@@ -193,7 +193,7 @@ Releasing the final version
    * Update the datasets entry in the ``download/index.json`` to point to this new release tag. Also update the
      notebook entry, typically the link extensions are the same between versions.
 
-#. In the `gammapy repo https://github.com/gammapy/gammapy>__`, switch to the correct branch and update the ``CITATION.cff`` date and version by running the
+#. In the `gammapy repo https://github.com/gammapy/gammapy>`__, switch to the correct branch and update the ``CITATION.cff`` date and version by running the
    ``dev/prepare-release.py`` script::
 
     git checkout v2.0.x
