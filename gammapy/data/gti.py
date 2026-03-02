@@ -317,6 +317,9 @@ class GTI:
         ----------
         time_interval : `astropy.time.Time`
             Start time (inclusive) and stop time (exclusive) for the selection.
+        inverted : bool, optional
+            Whether to invert selection i.e. to keep all entries outside the time range.
+            Default is False.
 
         Returns
         -------
