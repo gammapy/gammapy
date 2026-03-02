@@ -1328,7 +1328,8 @@ class TemplateSpatialModel(SpatialModel):
     ):
         if (map.data < 0).any():
             log.warning("Map has negative values. Check and fix this!")
-        if (map.data == 0.0).all():
+        if (map.data == 0.0).all():  # NOSONAR
+            # (S1244): explicit check for exactly representable zeros
             log.warning("Map values are all zeros. Check and fix this!")
         if np.isnan(map.data).any():
             log.warning("Map has NaN values. Check and fix this!")
