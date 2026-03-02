@@ -514,7 +514,6 @@ ax1.hist(
     histtype="step",
     color="k",
     alpha=0.5,
-    label=f"Runs {1, 2, 3}",
 )
 yl = ax1.get_ylim()
 
