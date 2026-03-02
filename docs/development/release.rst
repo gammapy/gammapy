@@ -34,7 +34,7 @@ automatically counted in the next feature release.
 
     * You can use the helper script ``dev/authors.py`` for this.
 
-#. To create the changelog, towncrier is utilised on the relevant branch (eg: for a 
+#. To create the changelog, towncrier is utilised on the relevant branch (eg: for a
    bugfix on the 2.0 release). The following workflow should be followed::
 
     git checkout v2.0.x
