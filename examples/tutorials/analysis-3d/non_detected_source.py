@@ -199,8 +199,8 @@ print(LLR["fit_results"].parameters.to_table())
 # from wandering off to different regions in the FoV.
 #
 
-sky_model.parameters["amplitude"].value = 1e-13
-sky_model.parameters["index"].value = 3.0
+sky_model.parameters["amplitude"].value = 1e-14
+sky_model.parameters["index"].value = 2.0
 sky_model.freeze(model_type="spatial")
 
 energy_edges = dataset.geoms["geom"].axes["energy"].edges
