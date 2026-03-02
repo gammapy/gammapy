@@ -124,6 +124,9 @@ class FixedPointingInfo:
         if fixed_icrs is not None:
             _check_coord_frame(fixed_icrs, ICRS, "fixed_icrs")
 
+            if np.isnan(fixed_icrs.ra.value) or np.isnan(fixed_icrs.dec.value):
+                raise ValueError("fixed_icrs must have non-nan values")
+
             self._mode = PointingMode.POINTING
             self._fixed_icrs = fixed_icrs
             self._fixed_altaz = None
