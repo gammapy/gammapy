@@ -27,6 +27,10 @@ class ObservationFilter:
         The filtered event list will be an intersection of all filters. A union
         of filters is not supported yet. Default is None.
 
+    inverted_time : bool, optional
+        Whether to invert selection i.e. to keep all entries outside the time range.
+        Default is False.
+
     Examples
     --------
     >>> from gammapy.data import ObservationFilter, DataStore, Observation
@@ -68,9 +72,6 @@ class ObservationFilter:
         ----------
         events : `~gammapy.data.EventListBase`
             Event list to which the filters will be applied.
-        inverted_time : bool, optional
-            Invert time selection: keep all entries outside the time range. Default is False.
-
 
         Returns
         -------
