@@ -483,21 +483,33 @@ result_2 = sampler.run(datasets[2])
 # Check out the many possibilities offered by `Arviz <https://python.arviz.org/>`__, a package to analyze the samples posterior distributions.
 
 
-combined_samples = np.concatenate(
-    (result_0.samples, result_1.samples, result_2.samples), axis=0
-)
-
 from arviz import hdi
 import scipy.stats as stats
+
+
+# Multi-modal samples example
+weight = 0.3
+n_samples = 10000
+mu1 = 5.5e-11
+sigma1 = 0.7e-11
+mu2 = 3.5e-11
+sigma2 = 0.3e-11
+weight = 0.7
+rng = np.random.default_rng(42)
+component_mask = rng.uniform(size=n_samples) < weight
+samples = np.empty(n_samples)
+samples[component_mask] = rng.normal(mu1, sigma1, component_mask.sum())
+samples[~component_mask] = rng.normal(mu2, sigma2, (~component_mask).sum())
+
 
 fig, (ax1, ax2) = plt.subplots(
     2, 1, sharex=True, figsize=(9, 7), gridspec_kw={"height_ratios": [5, 2]}
 )
 
 # Highest density intervals
-hdis = hdi(combined_samples[:, 1], hdi_prob=0.68, multimodal=True)
+hdis = hdi(samples, hdi_prob=0.68, multimodal=True)
 ax1.hist(
-    combined_samples[:, 1],
+    samples,
     bins=50,
     histtype="step",
     color="k",
@@ -513,7 +525,7 @@ for k in range(hdis.shape[0]):
     )
 
 # Percentile
-percentile = np.percentile(combined_samples[:, 1], q=[16, 84])
+percentile = np.percentile(samples, q=[16, 84])
 ax2.hlines(
     1 + 2 * 0.015,
     percentile[0],
@@ -525,8 +537,8 @@ ax2.hlines(
 )
 
 # Mean and standard deviation
-mean = np.mean(combined_samples[:, 1])
-std = np.std(combined_samples[:, 1])
+mean = np.mean(samples)
+std = np.std(samples)
 ax1.plot([mean, mean], yl, label="mean", color="r", ls="--")
 ax2.hlines(
     1 + 1 * 0.015,
@@ -539,8 +551,8 @@ ax2.hlines(
 )
 
 # Median and median absolute deviation
-median = np.median(combined_samples[:, 1])
-mad = stats.median_abs_deviation(combined_samples[:, 1])
+median = np.median(samples)
+mad = stats.median_abs_deviation(samples)
 ax1.plot([median, median], yl, label="median", color="b", ls="--")
 ax2.hlines(
     1,
