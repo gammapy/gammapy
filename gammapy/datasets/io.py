@@ -523,35 +523,39 @@ class FermipyDatasetsReader(DatasetReader):
         isotropic_file=None,
         edisp_bins=0,
         name=None,
+        gti_file=None,
     ):
         """Create a map dataset from Fermi-LAT files.
 
-        Parameters
-        ----------
-        counts_file : str
-            Counts file path.
-        exposure_file : str
-            Exposure file path.
-        psf_file : str
-            Point spread function file path.
-        edisp_file : str
-            Energy dispersion file path.
-        isotropic_file : str, optional
-            Isotropic file path. Default is None
-        edisp_bins : int
-            Number of margin bins to slice in energy. Default is 0.
-            For now only maps created with edisp_bins=0 in fermipy configuration are supported,
-            in that case the emin/emax in the fermipy configuration will correspond to the true energy range for gammapy,
-            and  a value edisp_bins>0 should be set here in order to apply the energy dispersion correctly.
-            With a binning of 8 to 10 bins per decade, it is recommended to use edisp_bins ≥ 2
-            (See https://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Pass8_edisp_usage.html)
+         Parameters
+         ----------
+         counts_file : str
+             Counts file path.
+         exposure_file : str
+             Exposure file path.
+         psf_file : str
+             Point spread function file path.
+         edisp_file : str
+             Energy dispersion file path.
+         isotropic_file : str, optional
+             Isotropic file path. Default is None
+         edisp_bins : int
+             Number of margin bins to slice in energy. Default is 0.
+             For now only maps created with edisp_bins=0 in fermipy configuration are supported,
+             in that case the emin/emax in the fermipy configuration will correspond to the true energy range for gammapy,
+             and  a value edisp_bins>0 should be set here in order to apply the energy dispersion correctly.
+             With a binning of 8 to 10 bins per decade, it is recommended to use edisp_bins ≥ 2
+             (See https://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Pass8_edisp_usage.html)
         name : str, optional
             Dataset name. The default is None, and the name is randomly generated.
+        gti_file : str, optional
+             GTI file path. Default is None
 
-        Returns
-        -------
-        dataset : `~gammapy.datasets.MapDataset`
-            Map dataset.
+
+         Returns
+         -------
+         dataset : `~gammapy.datasets.MapDataset`
+             Map dataset.
 
         """
         from gammapy.datasets import MapDataset
@@ -570,7 +574,6 @@ class FermipyDatasetsReader(DatasetReader):
             raise ValueError(
                 "Energy true axes of exposure and DRM do not match. Check fermipy configuration."
             )
-            edisp_axes = edisp.edisp_map.geom.axes
 
         psf_r68s = psf.containment_radius(
             0.68,
@@ -578,7 +581,7 @@ class FermipyDatasetsReader(DatasetReader):
             position=counts.geom.center_skydir,
         )
         # check that pdf is well defined (fails if edisp_bins>0 in fermipy)
-        if np.any(psf_r68s.value) == 0.0:
+        if np.any(np.isclose(psf_r68s.value, 0.0)):
             raise ValueError(
                 "PSF is not defined for all true energies. Check fermipy configuration."
             )
@@ -590,6 +593,12 @@ class FermipyDatasetsReader(DatasetReader):
         geom = counts.geom.to_image().to_cube([energy_axis])
         counts = Map.from_geom(geom, data=counts.data)
 
+        # get gtis from gtmktime evtfile if given
+        if gti_file:
+            gtis = GTI.read(gti_file)
+        else:
+            gtis = None
+
         # standardize dataset interpolating to same geom and axes
         dataset = MapDataset(
             counts=counts,
@@ -597,6 +606,7 @@ class FermipyDatasetsReader(DatasetReader):
             psf=psf,
             edisp=edisp,
             name=name,
+            gti=gtis,
         )
         dataset = create_map_dataset_from_dl4(
             dataset, geom=counts.geom, name=dataset.name
@@ -628,10 +638,7 @@ class FermipyDatasetsReader(DatasetReader):
         filename = self.filename.resolve()
         data = read_yaml(filename)
 
-        if "components" in data:
-            components = data["components"]
-        else:
-            components = [data]
+        components = self._get_components(data)
 
         datasets = Datasets()
         for file_id, component in enumerate(components):
@@ -645,10 +652,10 @@ class FermipyDatasetsReader(DatasetReader):
                 path = Path(filename.parent) / path
 
             if "model" in component and "isodiff" in component["model"]:
-                isotropic_file = Path(component["model"]["isodiff"])
+                isotropic_file = self._get_isodiff(component["model"]["isodiff"])
                 name = isotropic_file.stem[4:]
             elif "model" in data and "isodiff" in data["model"]:
-                isotropic_file = Path(data["model"]["isodiff"])
+                isotropic_file = self._get_isodiff(data["model"]["isodiff"])
                 name = isotropic_file.stem[4:]
             else:
                 isotropic_file = None
@@ -663,6 +670,28 @@ class FermipyDatasetsReader(DatasetReader):
                     isotropic_file=isotropic_file,
                     edisp_bins=self.edisp_bins,
                     name=name,
+                    gti_file=path / f"ft1_0{str(file_id)}.fits",
                 )
             )
         return datasets
+
+    @staticmethod
+    def _get_components(data):
+        components = data.get("components")
+        if isinstance(components, list) and len(components) > 0:
+            return components
+        return [data]
+
+    @staticmethod
+    def _get_isodiff(data):
+        if isinstance(data, str):
+            return Path(data)
+
+        if not isinstance(data, list):
+            raise ValueError("Invalid isodiff filename.")
+
+        if len(data) != 1:
+            raise ValueError("Only one isodiff filename per component should be given.")
+        if not isinstance(data[0], str):
+            raise ValueError("Invalid isodiff filename.")
+        return Path(data[0])

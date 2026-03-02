@@ -5,7 +5,7 @@ Survey Map Script
 Make a survey counts map using a script.
 
 We create an all-sky map in AIT projection for the
-`H.E.S.S. DL3 DR1 <https://www.mpi-hd.mpg.de/hfm/HESS/pages/dl3-dr1/>`__
+`H.E.S.S. DL3 DR1 <https://hess-experiment.eu/releases/>`__
 dataset.
 """
 

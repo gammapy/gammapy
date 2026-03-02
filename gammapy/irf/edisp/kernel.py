@@ -396,7 +396,7 @@ class EDispKernel(IRF):
         # Make RMF type matrix
         for idx, row in enumerate(self.data):
             pos = np.nonzero(row)[0]
-            borders = np.where(np.diff(pos) != 1)[0]
+            borders = np.nonzero(np.diff(pos) != 1)[0]
             # add 1 to borders for correct behaviour of np.split
             groups = np.split(pos, borders + 1)
             n_grp_temp = len(groups) if len(groups) > 0 else 1

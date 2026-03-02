@@ -8,7 +8,7 @@ Explore H.E.S.S. event lists and IRFs.
 Introduction
 ------------
 
-`H.E.S.S. <https://www.mpi-hd.mpg.de/hfm/HESS/>`__ is an array of
+`H.E.S.S. <https://hess-experiment.eu/>`__ is an array of
 gamma-ray telescopes located in Namibia. Gammapy is regularly used and
 fully supports H.E.S.S. high level data analysis, after export to the
 current `open data level 3
@@ -18,19 +18,17 @@ The H.E.S.S. data is private, and H.E.S.S. analysis is mostly documented
 and discussed in the internal Wiki pages and in
 H.E.S.S.-internal communication channels. However, in 2018, a small
 sub-set of archival H.E.S.S. data was publicly released, called the
-`H.E.S.S. DL3
-DR1 <https://www.mpi-hd.mpg.de/hfm/HESS/pages/dl3-dr1/>`__, the data
+`H.E.S.S. DL3 DR1 <https://hess-experiment.eu/releases/>`__, the data
 level 3, data release number 1. This dataset is 50 MB in size and is
-used in many Gammapy analysis tutorials, and can be downloaded via
-`gammapy
-download <https://docs.gammapy.org/dev/getting-started/index.html#quickstart-setup>`__.
+used in many Gammapy analysis tutorials, and can be downloaded via the instructions
+:ref:`here <quickstart-setup>`.
 
 This notebook is a quick introduction to this specific DR1 release. It
 briefly describes H.E.S.S. data and instrument responses and show a
 simple exploration of the data with the creation of theta-squared plot.
 
 H.E.S.S. members can find details on the DL3 FITS production on this
-`Confluence
+`Wiki
 page <https://cchesswiki.in2p3.fr/en/hess/working_groups/analysis_and_reconstruction_working_group/ar_active_tasks/hess_fits_data>`__
 and access more detailed tutorials in the BitBucket `hess-open-tools` repository.
 

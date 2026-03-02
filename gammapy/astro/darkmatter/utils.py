@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities to compute J-factor maps."""
+
 import html
 import numpy as np
 import astropy.units as u
@@ -22,7 +23,7 @@ class JFactory:
         Dark matter profile.
     distance : `~astropy.units.Quantity`
         Distance to convert angular scale of the map.
-    annihilation: bool, optional
+    annihilation : bool, optional
         Decay or annihilation. Default is True.
     """
 
@@ -48,6 +49,52 @@ class JFactory:
         .. math::
             \frac{\mathrm d J_\text{decay}}{\mathrm d \Omega} =
             \int_{\mathrm{LoS}} \mathrm d l \rho(l)
+
+        Parameters
+        ----------
+        ndecade : float, optional
+            Number of sampling points per decade in radius used for the numerical
+            integration. Default is 1e4.
+
+        Returns
+        -------
+        jfactor : `~astropy.units.Quantity`
+            Differential j-factor.
+
+        Notes
+        -----
+        The line-of-sight (LoS) integral should include both the near and far
+        sides of the halo. To account for this, the integration is split into
+        two regions:
+
+        1. :math:`[r_{\min}, r_{\max}]` - from the observer to the source,
+           counted twice to include contributions from both near and far sides.
+        2. :math:`[r_{\max}, 4 r_{\max}]` - from the source to infinity.
+           The upper limit is truncated at :math:`4 r_{\max}` because
+           contributions beyond this are negligible.
+
+        Hence, the effective integration domain is:
+
+        .. math::
+            2 \times [r_{\min}, r_{\max}] \;+\; [r_{\max}, 4 r_{\max}].
+
+        The LoS integral is converted into a radial integral over the profile through:
+
+        .. math::
+            r^2 = l^2 + r_{\max}^2 - 2 dl \cos \theta
+
+        Rearranging for the differential gives:
+
+        .. math::
+            \mathrm dl = \frac{2 r}{\sqrt{r^2 - r_{\min}^2}} \, \mathrm dr.
+
+        This substitution allows the integral to be evaluated directly as
+        radial integrals using ``profile.integral``, giving
+
+        .. math::
+            \int_0^{l_\mathrm{max}} \rho^2(r(l, \theta)) \, \mathrm dl
+            = 2 \int_{r_{\min}}^{r_{\max}} \frac{r \, \rho^2(r)}{\sqrt{r^2 - r_{\min}^2}} \, \mathrm dr
+              + \int_{r_{\max}}^{4 r_{\max}} \frac{r \, \rho^2(r)}{\sqrt{r^2 - r_{\min}^2}} \, \mathrm dr.
         """
         separation = self.geom.separation(self.geom.center_skydir).rad
         rmin = u.Quantity(
@@ -85,6 +132,17 @@ class JFactory:
             J(\Delta\Omega) =
            \int_{\Delta\Omega} \mathrm d \Omega^{\prime}
            \frac{\mathrm d J}{\mathrm d \Omega^{\prime}}
+
+        Parameters
+        ----------
+        ndecade : float, optional
+            Number of sampling points per decade in radius used for the numerical
+            integration. Default is 1e4.
+
+        Returns
+        -------
+        jfactor : `~astropy.units.Quantity`
+            The j-factor.
         """
         diff_jfact = self.compute_differential_jfactor(ndecade)
         return diff_jfact * self.geom.to_image().solid_angle()

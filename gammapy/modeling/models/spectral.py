@@ -29,7 +29,6 @@ from gammapy.utils.interpolation import (
 from gammapy.utils.roots import find_roots
 from gammapy.utils.scripts import make_path
 import gammapy.utils.parallel as parallel
-from gammapy.utils.deprecation import GammapyDeprecationWarning
 from ..covariance import CovarianceMixin
 from .core import ModelBase
 
@@ -276,19 +275,13 @@ class SpectralModel(ModelBase):
             unit=samples.unit,
         ).squeeze()
 
-    def evaluate_error(
-        self, energy, epsilon=1e-4, n_samples=3500, random_state=42, samples=None
-    ):
+    def evaluate_error(self, energy, n_samples=3500, random_state=42, samples=None):
         """Evaluate spectral model error from parameter distribution sampling.
 
         Parameters
         ----------
         energy : `~astropy.units.Quantity`
             Energy at which to evaluate.
-        epsilon : float, optional
-            Step size of the gradient evaluation. Given as a
-            fraction of the parameter error. Default is 1e-4.
-            Deprecated in v2.0 and unused.
         n_samples : int, optional
             Number of samples to generate per parameter. Default is 3500.
         random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
@@ -304,13 +297,6 @@ class SpectralModel(ModelBase):
             on the differential flux at the given energy.
 
         """
-        if epsilon != 1e-4:  # TODO: remove in v2.1
-            warnings.warn(
-                "epsilon is unused and deprecated in v2.0",
-                GammapyDeprecationWarning,
-                stacklevel=2,
-            )
-
         m = self.copy()
         n_pars = len(m.parameters)
 
@@ -389,7 +375,6 @@ class SpectralModel(ModelBase):
         self,
         energy_min,
         energy_max,
-        epsilon=1e-4,
         n_samples=3500,
         random_state=42,
         samples=None,
@@ -401,10 +386,6 @@ class SpectralModel(ModelBase):
         ----------
         energy_min, energy_max :  `~astropy.units.Quantity`
             Lower and upper bound of integration range.
-        epsilon : float, optional
-            Step size of the gradient evaluation. Given as a
-            fraction of the parameter error. Default is 1e-4.
-            Deprecated in v2.0 and unused.
         n_samples : int, optional
             Number of samples to generate per parameter. Default is 3500.
         random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
@@ -419,13 +400,6 @@ class SpectralModel(ModelBase):
             Median, negative, and positive errors
             on the integral flux between energy_min and energy_max.
         """
-        if epsilon != 1e-4:  # TODO: remove in v2.1
-            warnings.warn(
-                "epsilon is unused and deprecated in v2.0",
-                GammapyDeprecationWarning,
-                stacklevel=2,
-            )
-
         m = self.copy()
         n_pars = len(m.parameters)
 
@@ -475,7 +449,6 @@ class SpectralModel(ModelBase):
         self,
         energy_min,
         energy_max,
-        epsilon=1e-4,
         n_samples=3500,
         random_state=42,
         samples=None,
@@ -487,10 +460,6 @@ class SpectralModel(ModelBase):
         ----------
         energy_min, energy_max :  `~astropy.units.Quantity`
             Lower and upper bound of integration range.
-        epsilon : float, optional
-            Step size of the gradient evaluation. Given as a
-            fraction of the parameter error. Default is 1e-4.
-            Deprecated in v2.0 and unused.
         n_samples : int, optional
             Number of samples to generate per parameter. Default is 3500.
         random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
@@ -505,13 +474,6 @@ class SpectralModel(ModelBase):
             Median, negative, and positive errors on the
             energy flux between energy_min and energy_max.
         """
-        if epsilon != 1e-4:  # TODO: remove in v2.1
-            warnings.warn(
-                "epsilon is unused and deprecated in v2.0",
-                GammapyDeprecationWarning,
-                stacklevel=2,
-            )
-
         m = self.copy()
         n_pars = len(m.parameters)
 
@@ -846,7 +808,7 @@ class SpectralModel(ModelBase):
         return np.log(f1 / f2) / np.log(1 + epsilon)
 
     def spectral_index_error(
-        self, energy, epsilon=1e-5, n_samples=3500, random_state=42, samples=None
+        self, energy, n_samples=3500, random_state=42, samples=None
     ):
         """Evaluate the error on spectral index at the given energy.
 
@@ -854,9 +816,6 @@ class SpectralModel(ModelBase):
         ----------
         energy : `~astropy.units.Quantity`
             Energy at which to estimate the index.
-        epsilon : float, optional
-            Fractional energy increment to use for determining the spectral index.
-            Default is 1e-5. Deprecated in v2.0 and unused.
         n_samples : int, optional
             Number of samples to generate per parameter. Default is 3500.
         random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
@@ -870,13 +829,6 @@ class SpectralModel(ModelBase):
         index, index_errn, index_errp : tuple of float
             Median, negative, and positive error on the spectral index.
         """
-        if epsilon != 1e-5:  # TODO: remove in v2.1
-            warnings.warn(
-                "epsilon is unused and deprecated in v2.0",
-                GammapyDeprecationWarning,
-                stacklevel=2,
-            )
-
         m = self.copy()
         n_pars = len(m.parameters)
 
@@ -1630,10 +1582,16 @@ class ExpCutoffPowerLawSpectralModel(SpectralModel):
         lambda_ = self.lambda_.quantity
         alpha = self.alpha.quantity
 
-        if index >= 2 or lambda_ == 0.0 or alpha == 0.0:
+        try:
+            with warnings.catch_warnings():
+                warnings.simplefilter("error", RuntimeWarning)
+                e_peak = np.power((2 - index) / alpha, 1 / alpha) / lambda_
+                if e_peak.value > 0:
+                    return e_peak
+                else:
+                    return np.nan * reference.unit
+        except (ZeroDivisionError, RuntimeWarning, OverflowError, ValueError):
             return np.nan * reference.unit
-        else:
-            return np.power((2 - index) / alpha, 1 / alpha) / lambda_
 
 
 class ExpCutoffPowerLawNormSpectralModel(SpectralModel):
@@ -1940,7 +1898,7 @@ class LogParabolaSpectralModel(SpectralModel):
 
     @classmethod
     def from_log10(cls, amplitude, reference, alpha, beta):
-        """Construct from :math:`log_{10}` parametrization."""
+        """Construct from :math:`\log_{10}` parametrization."""
         beta_ = beta / np.log(10)
         return cls(amplitude=amplitude, reference=reference, alpha=alpha, beta=beta_)
 
@@ -2004,7 +1962,7 @@ class LogParabola2SpectralModel(SpectralModel):
 
     @classmethod
     def from_log10(cls, amplitude, reference, alpha, beta, escale):
-        """Construct from :math:`log_{10}` parametrization."""
+        """Construct from :math:`\log_{10}` parametrization."""
         beta_ = beta / np.log(10)
         return cls(
             amplitude=amplitude,
@@ -2064,7 +2022,7 @@ class LogParabolaNormSpectralModel(SpectralModel):
 
     @classmethod
     def from_log10(cls, norm, reference, alpha, beta):
-        """Construct from :math:`log_{10}` parametrization."""
+        """Construct from :math:`\log_{10}` parametrization."""
         beta_ = beta / np.log(10)
         return cls(norm=norm, reference=reference, alpha=alpha, beta=beta_)
 

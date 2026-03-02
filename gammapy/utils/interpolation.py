@@ -198,14 +198,23 @@ class LogScale(InterpolationScale):
 
     tiny = np.finfo(np.float32).tiny
 
+    @classmethod
+    def _tiny_for(cls, arr):
+        arr = np.asanyarray(arr)
+        if not np.issubdtype(arr.dtype, np.floating):
+            return cls.tiny
+        return np.finfo(arr.dtype).tiny
+
     def _scale(self, values):
-        values = np.clip(values, self.tiny, np.inf)
+        tiny = self._tiny_for(values)
+        values = np.clip(values, tiny, np.inf)
         return np.log(values)
 
     @classmethod
     def _inverse(cls, values):
         output = np.exp(values)
-        return np.where(abs(output) - cls.tiny <= cls.tiny, 0, output)
+        tiny = cls._tiny_for(output)
+        return np.where(abs(output) - tiny <= tiny, 0, output)
 
     @classmethod
     def _inverse_derivative(cls, values):

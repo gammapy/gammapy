@@ -2,20 +2,75 @@
 import os
 import pytest
 import numpy as np
+import astropy.units as u
 from numpy.testing import assert_allclose, assert_equal
-from astropy.coordinates import SkyCoord
 from gammapy.datasets import Datasets, SpectrumDatasetOnOff
 from gammapy.datasets.tests.test_map import get_map_dataset
 from gammapy.maps import MapAxis, WcsGeom
 from gammapy.modeling import Fit
-from gammapy.modeling.models import FoVBackgroundModel, Models, SkyModel
+from gammapy.modeling.models import (
+    FoVBackgroundModel,
+    Models,
+    SkyModel,
+    PiecewiseNormSpectralModel,
+)
 from gammapy.modeling.tests.test_fit import MyDataset
+from gammapy.stats import GaussianPriorPenalty
 from gammapy.utils.testing import requires_data
 
 
 @pytest.fixture(scope="session")
 def datasets():
     return Datasets([MyDataset(name="test-1"), MyDataset(name="test-2")])
+
+
+@pytest.fixture(scope="session")
+def map_datasets():
+    axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=2)
+    geom = WcsGeom.create(
+        skydir=(266.40498829, -28.93617776),
+        binsz=0.05,
+        width=(20, 20),
+        frame="icrs",
+        axes=[axis],
+    )
+
+    axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=3, name="energy_true")
+    geom_etrue = WcsGeom.create(
+        skydir=(266.40498829, -28.93617776),
+        binsz=0.05,
+        width=(20, 20),
+        frame="icrs",
+        axes=[axis],
+    )
+
+    dataset_1 = get_map_dataset(geom, geom_etrue, name="test-1")
+    dataset_1.mask_fit = None
+    dataset_1.background /= 400
+    dataset_2 = get_map_dataset(geom, geom_etrue, name="test-2")
+    datasets = Datasets([dataset_1, dataset_2])
+
+    model = SkyModel.create("pl", "point", name="src")
+    model.spatial_model.position = dataset_1.exposure.geom.center_skydir
+
+    model2 = model.copy()
+    model2.spatial_model.lon_0.value += 0.1
+    model2.spatial_model.lat_0.value += 0.1
+
+    models = Models(
+        [
+            model,
+            model2,
+            FoVBackgroundModel(dataset_name=dataset_1.name),
+            FoVBackgroundModel(dataset_name=dataset_2.name),
+        ]
+    )
+
+    datasets.models = models
+    dataset_1.fake(random_state=42)
+    dataset_2.fake(random_state=42)
+    map_datasets = Datasets([dataset_1, dataset_2])
+    return map_datasets
 
 
 def test_datasets_init(datasets):
@@ -33,6 +88,46 @@ def test_datasets_types(datasets):
 def test_datasets_likelihood(datasets):
     likelihood = datasets.stat_sum()
     assert_allclose(likelihood, 14472200.0002)
+
+
+@requires_data()
+def test_datasets_likelihood_with_penalty(map_datasets):
+    assert_allclose(map_datasets.stat_sum(), 4132.493313)
+
+    norm_model = PiecewiseNormSpectralModel(energy=np.geomspace(0.1, 10, 5) * u.TeV)
+
+    penalty = GaussianPriorPenalty.from_method(
+        norm_model.parameters, "L2", mean=0.0, lambda_=2
+    )
+
+    map_datasets.models["src"].spectral_model *= norm_model
+
+    models = Models(map_datasets.models, penalties=penalty)
+    assert len(models._penalties) == 1
+    models.set_penalties(penalty)
+    assert len(models._penalties) == 1
+
+    assert_allclose(penalty.stat_sum(), 10)
+
+    map_datasets.models = models
+
+    assert_allclose(map_datasets.stat_sum(), 4132.493313 + 10)
+
+    map_datasets.models["src"].spectral_model = map_datasets.models[
+        "src"
+    ].spectral_model.model1
+    models = Models(map_datasets.models, penalties=None)
+    assert models._penalties == map_datasets.models._penalties
+    models.set_penalties(None)
+    assert models._penalties is None
+    map_datasets.models = (
+        models  # TODO: removing the penalty is quite complex should be simpler
+    )
+
+    assert_allclose(map_datasets.stat_sum(), 4132.493313)
+
+    with pytest.raises(ValueError):
+        models.set_penalties([[1, 2]])
 
 
 def test_datasets_str(datasets):
@@ -120,32 +215,8 @@ def test_datasets_info_table():
 
 
 @requires_data()
-def test_datasets_write(tmp_path):
-    axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=2)
-    geom = WcsGeom.create(
-        skydir=(266.40498829, -28.93617776),
-        binsz=0.02,
-        width=(2, 2),
-        frame="icrs",
-        axes=[axis],
-    )
-
-    axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=3, name="energy_true")
-    geom_etrue = WcsGeom.create(
-        skydir=(266.40498829, -28.93617776),
-        binsz=0.02,
-        width=(2, 2),
-        frame="icrs",
-        axes=[axis],
-    )
-
-    dataset_1 = get_map_dataset(geom, geom_etrue, name="test-1")
-    datasets = Datasets([dataset_1])
-
-    model = SkyModel.create("pl", "point", name="src")
-    model.spatial_model.position = SkyCoord("266d", "-28.93d", frame="icrs")
-
-    dataset_1.models = [model]
+def test_datasets_write(map_datasets, tmp_path):
+    datasets = Datasets(map_datasets[0])
 
     datasets.write(
         filename=tmp_path / "test",
@@ -163,53 +234,8 @@ def test_datasets_write(tmp_path):
 
 
 @requires_data()
-def test_datasets_fit():
-    axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=2)
-    geom = WcsGeom.create(
-        skydir=(266.40498829, -28.93617776),
-        binsz=0.05,
-        width=(20, 20),
-        frame="icrs",
-        axes=[axis],
-    )
-
-    axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=3, name="energy_true")
-    geom_etrue = WcsGeom.create(
-        skydir=(266.40498829, -28.93617776),
-        binsz=0.05,
-        width=(20, 20),
-        frame="icrs",
-        axes=[axis],
-    )
-
-    dataset_1 = get_map_dataset(geom, geom_etrue, name="test-1")
-    dataset_1.mask_fit = None
-    dataset_1.background /= 400
-    dataset_2 = get_map_dataset(geom, geom_etrue, name="test-2")
-    dataset_2.mask_fit = None
-    dataset_2.background /= 400
-
-    datasets = Datasets([dataset_1, dataset_2])
-
-    model = SkyModel.create("pl", "point", name="src")
-    model.spatial_model.position = dataset_1.exposure.geom.center_skydir
-
-    model2 = model.copy()
-    model2.spatial_model.lon_0.value += 0.1
-    model2.spatial_model.lat_0.value += 0.1
-
-    models = Models(
-        [
-            model,
-            model2,
-            FoVBackgroundModel(dataset_name=dataset_1.name),
-            FoVBackgroundModel(dataset_name=dataset_2.name),
-        ]
-    )
-
-    datasets.models = models
-    dataset_1.fake()
-    dataset_2.fake()
+def test_datasets_fit(map_datasets):
+    datasets = map_datasets
 
     fit = Fit()
     results = fit.run(datasets)

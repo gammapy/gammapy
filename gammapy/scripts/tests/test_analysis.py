@@ -26,3 +26,20 @@ def test_cli_analysis_run(tmp_path):
     ]
     run_cli(cli, args)
     assert path_datasets.exists()
+
+
+@requires_data()
+def test_cli_analysis_run_3d(tmp_path):
+    path_config = tmp_path / "config.yaml"
+    config = get_example_config("3d")
+    config.write(path_config)
+    path_datasets = tmp_path / "datasets"
+    args = [
+        "analysis",
+        "run",
+        f"--filename={path_config}",
+        f"--out={path_datasets}",
+        "--overwrite",
+    ]
+    run_cli(cli, args)
+    assert path_datasets.exists()

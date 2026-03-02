@@ -65,7 +65,7 @@
 .. _FermiPy: https://github.com/fermiPy/fermipy
 .. _gadf: https://gamma-astro-data-formats.readthedocs.io/
 .. _Gamma Astro Data Formats: https://gamma-astro-data-formats.readthedocs.io/
-.. _H.E.S.S.: https://www.mpi-hd.mpg.de/hfm/HESS/
+.. _H.E.S.S.: https://hess-experiment.eu/
 .. _HAWC: https://www.hawc-observatory.org/
 .. _MAGIC: https://magic.mpp.mpg.de/
 .. _SWGO: https://www.swgo.org/

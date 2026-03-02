@@ -214,6 +214,7 @@ PRIOR_REGISTRY = Registry(
         UniformPrior,
         GaussianPrior,
         LogUniformPrior,
+        GeneralizedGaussianPrior,
     ]
 )
 """Registry of prior classes."""

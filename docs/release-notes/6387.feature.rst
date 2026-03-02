@@ -1,0 +1,1 @@
+Make LogScale clipping threshold adaptive to input dtype. This allows interpolation on float64 arrays without hard clipping at the float32 threshold (~1e-38).

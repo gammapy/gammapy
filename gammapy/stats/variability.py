@@ -262,7 +262,7 @@ def structure_function(flux, flux_err, time, tdelta_precision=5):
     norm = np.zeros(shape)
 
     for i, distance in enumerate(distances):
-        indexes = np.array(np.where(dist_matrix == distance))
+        indexes = np.array(np.nonzero(dist_matrix == distance))
         for index in indexes.T:
             f = (flux[index[1], ...] - flux[index[0], ...]) ** 2
             w = (flux[index[1], ...] / flux_err[index[1], ...]) * (

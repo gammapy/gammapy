@@ -95,3 +95,25 @@ def table_row_to_dict(row, make_quantity=True):
             val = Quantity(val, unit=col.unit)
         data[name] = val
     return data
+
+
+def table_map_columns(table, mapping_dict):
+    """Change column names according to a mapping dictionary.
+
+    Parameters
+    ----------
+    table : `~astropy.table.Table`
+        Table.
+    mapping_dict : dict
+        Mapping dictionary.
+
+    Returns
+    -------
+    table : `~astropy.table.Table`
+        Table with renamed columns.
+    """
+    for col in table.colnames:
+        if col in mapping_dict and mapping_dict[col] is not None:
+            table.rename_column(col, mapping_dict[col])
+
+    return table
