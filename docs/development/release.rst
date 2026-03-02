@@ -193,7 +193,7 @@ Releasing the final version
    * Update the datasets entry in the ``download/index.json`` to point to this new release tag. Also update the
      notebook entry, typically the link extensions are the same between versions.
 
-#. In the `gammapy repo https://github.com/gammapy/gammapy>`__, switch to the correct branch and update the ``CITATION.cff`` date and version by running the
+#. In the `gammapy repo <https://github.com/gammapy/gammapy>`__, switch to the correct branch and update the ``CITATION.cff`` date and version by running the
    ``dev/prepare-release.py`` script::
 
     git checkout v2.0.x
