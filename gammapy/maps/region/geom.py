@@ -885,9 +885,17 @@ class RegionGeom(Geom):
                     wcs_geom = self.to_wcs_geom()
                     m = Map.from_geom(geom=wcs_geom.to_image())
                     ax = m.plot(add_cbar=False, vmin=-1, vmax=0)
-
+                    
             kwargs.setdefault("facecolor", "None")
-            kwargs.setdefault("edgecolor", "tab:blue")
+            
+            if "color" in kwargs:
+                kwargs["edgecolor"] = kwargs.pop("color")
+            elif "c" in kwargs:
+                kwargs["edgecolor"] = kwargs.pop("c")
+            # If NO color was provided at all, set the default    
+            elif "edgecolor" not in kwargs and "ec" not in kwargs:
+                kwargs.setdefault("edgecolor", "tab:blue")
+                 
             kwargs_point.setdefault("marker", "*")
 
             for key, value in kwargs.items():
