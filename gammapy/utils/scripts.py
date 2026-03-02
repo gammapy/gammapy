@@ -358,7 +358,6 @@ def logic_parser(table, expression):
         return result
 
     def handle_compare(node):
-        # 支持链式比较: a < b < c  ->  (a < b) & (b < c)
         left = eval_node(node.left)
         parts = []
 
