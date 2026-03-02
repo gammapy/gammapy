@@ -308,7 +308,7 @@ print(result_joint.sampler_results["posterior"])
 ######################################################################
 # Besides mean, errors, etc, an interesting value is the
 # ``information gain`` which estimates how much the posterior
-# distribution has shrunk with respect to the prior (i.e. how much
+# distribution has shrunk with respect to the prior (i.e. how much
 # we’ve learned). A value < 1 means that the parameter is poorly
 # constrained within the prior range (we haven't learned much with respect to our prior assumption).
 # For a physical interpretation of the information gain see this
@@ -483,22 +483,81 @@ result_2 = sampler.run(datasets[2])
 # Check out the many possibilities offered by `Arviz <https://python.arviz.org/>`__, a package to analyze the samples posterior distributions.
 
 
+combined_samples = np.concatenate(
+    (result_0.samples, result_1.samples, result_2.samples), axis=0
+)
+
 from arviz import hdi
+import scipy.stats as stats
 
 fig, (ax1, ax2) = plt.subplots(
-    2, 1, sharex=True, figsize=(7, 7), gridspec_kw={"height_ratios": [5, 1]}
+    2, 1, sharex=True, figsize=(9, 7), gridspec_kw={"height_ratios": [5, 2]}
 )
-colors = ["blue", "green", "orange"]
 
-for i, s in enumerate([result_0.samples, result_1.samples, result_2.samples]):
-    amp = hdi(s[:, 1], hdi_prob=0.95, multimodal=False)
-    ax1.hist(s[:, 1], bins=50, color=colors[i], alpha=0.5, label=f"Run {i}")
-    ax2.hlines(1 + i * 0.02, amp[0], amp[1], lw=15, color=colors[i], alpha=0.5)
+# Highest density intervals
+hdis = hdi(combined_samples[:, 1], hdi_prob=0.68, multimodal=True)
+ax1.hist(
+    combined_samples[:, 1],
+    bins=50,
+    histtype="step",
+    color="k",
+    alpha=0.5,
+    label=f"Runs {1, 2, 3}",
+)
+yl = ax1.get_ylim()
 
+for k in range(hdis.shape[0]):
+    label = "68% HDI" if k == 0 else None
+    ax2.hlines(
+        1 + 3 * 0.015, hdis[k, 0], hdis[k, 1], lw=15, color="k", alpha=0.5, label=label
+    )
+
+# Percentile
+percentile = np.percentile(combined_samples[:, 1], q=[16, 84])
+ax2.hlines(
+    1 + 2 * 0.015,
+    percentile[0],
+    percentile[1],
+    lw=15,
+    color="y",
+    alpha=0.5,
+    label="16-84% percentile",
+)
+
+# Mean and standard deviation
+mean = np.mean(combined_samples[:, 1])
+std = np.std(combined_samples[:, 1])
+ax1.plot([mean, mean], yl, label="mean", color="r", ls="--")
+ax2.hlines(
+    1 + 1 * 0.015,
+    mean - std,
+    mean + std,
+    lw=15,
+    color="r",
+    alpha=0.5,
+    label=r"mean $\pm$ std",
+)
+
+# Median and median absolute deviation
+median = np.median(combined_samples[:, 1])
+mad = stats.median_abs_deviation(combined_samples[:, 1])
+ax1.plot([median, median], yl, label="median", color="b", ls="--")
+ax2.hlines(
+    1,
+    median - mad,
+    median + mad,
+    lw=15,
+    color="b",
+    alpha=0.5,
+    label=r"median $\pm$ mad",
+)
+
+ax2.legend(loc=6)
 ax1.legend(loc="upper left")
 ax1.set_xlim(1e-11, 8e-11)
 ax2.set_ylim(0.98, 1.06)
 ax2.set_xlabel("Amplitude")
+
 ax2.tick_params(left=False, labelleft=False)
 
 plt.show()
