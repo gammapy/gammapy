@@ -10,7 +10,7 @@ def inference_data_from_ultranest(sampler_results, weighted=False):
 
     Parameters
     ----------
-    result : dict
+    sampler_results : dict
         The result dictionary returned by `ReactiveNestedSampler.run()`.
 
     Returns
@@ -80,18 +80,18 @@ def inference_data_from_sampler(
     ----------
     backend : {"ultranest"}
 
-    results : gammapy.modeling.SamplerResult
+    results : `~gammapy.modeling.SamplerResult`
         The sampler results and model information.
     n_prosterior_samples : int, optional
         Number of samples to generate after resampling the posterior to take into account weights.
         Default is None, which use the unweighted samples from ultranest.
      n_prior_samples : int, optional
-        If provided, generate this number of samples from the prior distribution using the model's
+        If provided, generates this number of samples from the prior distribution using the model's
         prior transform and include them in the 'prior' group of the InferenceData.
     random_seed : int, optional
-        Seed for reproducibility when resampling posterior or generating prior samples.
+        Seed for reproducibility when resampling posterior or generating prior samples. Default is 42.
     predictives : bool, optional
-        If True computes predicted counts and pointwise likelihood matrix. Default is True.
+        If True, computes predicted counts and pointwise likelihood matrix. Default is True.
 
     Returns
     -------
@@ -131,16 +131,16 @@ def resample_posterior(inference_data, n_samples=None, random_seed=42):
 
     Parameters
     ----------
-    inference_data : arviz.InferenceData
+    inference_data : `arviz.InferenceData`
         The input InferenceData object with posterior and sample_stats["weights"].
     n_samples : int, optional
-        Number of resampled draws. If None, use the number of original draws.
+        Number of resampled draws. If None, uses the number of original draws.
     random_seed : int, optional
-        Random seed for reproducibility.
+        Random seed for reproducibility. Default is 42.
 
     Returns
     -------
-    arviz.InferenceData
+    inferencedata : `arviz.InferenceData`
         A new InferenceData object with resampled posterior and sample_stats.
     """
 
@@ -190,7 +190,7 @@ def generate_prior_samples(parameters, n_prior_samples=1000, random_seed=42):
     n_prior_samples : int, optional
         Number of prior samples to generate. If None, no samples are added.
     random_seed : int, optional
-        Seed for the random number generator to ensure reproducibility.
+        Seed for the random number generator to ensure reproducibility. Default is 42.
 
     Returns
     -------
@@ -232,11 +232,11 @@ def add_prior_samples(inference_data, results, n_prior_samples=None, random_seed
     n_prior_samples : int, optional
         Number of prior samples to generate. If None, no samples are added.
     random_seed : int, optional
-        Seed for the random number generator to ensure reproducibility.
+        Seed for the random number generator to ensure reproducibility. Default is 42.
 
     Raises
     ------
-    ValueError
+    `ValueError`
         If any model parameter does not have a prior defined.
     """
     import xarray as xr
