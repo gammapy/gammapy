@@ -199,15 +199,15 @@ print(LLR["fit_results"].parameters.to_table())
 # from wandering off to different regions in the FoV.
 #
 
-sky_model.parameters["amplitude"].value = 1e-14
-sky_model.parameters["index"].value = 2.0
+sky_model.parameters["amplitude"].value = 1e-13
+sky_model.parameters["index"].value = 3.0
 sky_model.freeze(model_type="spatial")
 
 energy_edges = dataset.geoms["geom"].axes["energy"].edges
 fpe = FluxPointsEstimator(
     selection_optional="all",
     energy_edges=energy_edges,
-    n_sigma_ul=3,
+    n_sigma_ul=5,
     source="source",
 )
 
@@ -246,7 +246,10 @@ print(
 # The `~gammapy.estimators.FluxPointsEstimator` can be used to obtain the sensitivity,
 # which can be compared to the flux prediction for a given (hypothetical) source. We have the 5-sigma
 # sensitivity here, which can be configured using ``n_sigma_sensitivity``
-# parameter of this estimator. Let us see what we would have seen if a Crab-like source was
+# parameter of this estimator. It is good to compare the computed upper limits with the sensitivity.
+# The upper limits should not be lower than the sensitivity limit.
+#
+# Let us also see what we would have seen if a Crab-like source was
 # present in the center.
 # Note that this computed sensitivity does not take into account the factors
 # such as the minimum number of gamma-rays (see :doc:`/tutorials/analysis-1d/cta_sensitivity`)
@@ -255,6 +258,7 @@ print(
 
 crab_model = create_crab_spectral_model()
 
+fp1.plot(sed_type="dnde", label="source")
 fp1.dnde_sensitivity.plot(label="sensitivity")
 crab_model.plot(
     energy_bounds=fp1.geom.axes["energy"], sed_type="dnde", label="Crab spectrum"
