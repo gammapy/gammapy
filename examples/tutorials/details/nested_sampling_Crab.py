@@ -468,7 +468,7 @@ result_2 = sampler.run(datasets[2])
 
 ######################################################################
 # Highest density intervals
-# ----------------------
+# -------------------------
 #
 # Given the samples, one can also compute the highest density interval (HDI)
 # which is also known as the smallest credible interval (SCI).
