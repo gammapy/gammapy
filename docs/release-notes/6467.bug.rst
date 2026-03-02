@@ -1,1 +1,1 @@
-Fixed a bug in ``gammapy.utils.scripts.logic_parser`` where chained comparisons (e.g., ``1 < x < 3``) were evaluated incorrectly.
+Support chained comparisons in ``gammapy.utils.scripts.logic_parser`` (e.g., ``1 < x < 3``).
