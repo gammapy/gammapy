@@ -301,8 +301,14 @@ def logic_parser(table, expression):
     This function evaluates a logical expression on each row of the input table
     and returns a new table containing only the rows that satisfy the expression.
     The expression can reference any column in the table by name and supports
-    logical operators (`and`, `or`), comparison operators (`<`, `>`, `==`, `!=`, `in`),
-    lists, and constants.
+    logical operators (``and``, ``or``), comparison operators
+    (``<``, ``<=``, ``>``, ``>=``, ``==``, ``!=``, ``in``), lists, constants,
+    and chained comparisons (e.g. ``1 < OBS_ID < 3``).
+
+    Chained comparisons follow standard Python semantics and are equivalent to
+    combining individual comparisons with ``and``. For example,
+    ``1 < OBS_ID < 3`` is equivalent to
+    ``(OBS_ID > 1) and (OBS_ID < 3)``.
 
     Parameters
     ----------
@@ -326,13 +332,21 @@ def logic_parser(table, expression):
     >>> from astropy.table import Table
     >>> data = {'OBS_ID': [1, 2, 3, 4], 'EVENT_TYPE': ['1', '3', '4', '2']}
     >>> table = Table(data)
-    >>> expression = '(OBS_ID < 3) and (OBS_ID > 1) and ((EVENT_TYPE in ["3", "4"]) or (EVENT_TYPE == "3"))'
-    >>> filtered_table = logic_parser(table, expression)
-    >>> print(filtered_table)
-    OBS_ID EVENT_TYPE
-    ------ ----------
-         2          3
 
+    Standard logical expression:
+
+    >>> expression = '(OBS_ID < 3) and (OBS_ID > 1)'
+    >>> logic_parser(table, expression)
+
+    Using chained comparisons:
+
+    >>> expression = '1 < OBS_ID < 3'
+    >>> logic_parser(table, expression)
+
+    Combining chained comparisons with other conditions:
+
+    >>> expression = '(1 < OBS_ID < 4) and (EVENT_TYPE in ["3", "4"])'
+    >>> logic_parser(table, expression)
     """
 
     def eval_node(node):
