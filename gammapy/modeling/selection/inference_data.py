@@ -6,19 +6,19 @@ from gammapy.modeling.parameter import Parameters
 
 def inference_data_from_ultranest(sampler_results, weighted=False):
     """
-    Convert UltraNest result dictionary to ArviZ InferenceData.
+     Convert UltraNest result dictionary to ArviZ InferenceData.
 
-    Parameters
-    ----------
-    sampler_results : dict
-        The result dictionary returned by `ReactiveNestedSampler.run()`.
-    weighted : bool
-        If True, uses the weighted samples (more accurate) otherwise use directly the unweighted samples.
+     Parameters
+     ----------
+     sampler_results : dict
+         The result dictionary returned by `ReactiveNestedSampler.run()`.
+     weighted : bool
+         If True, uses the weighted samples (more accurate) otherwise use directly the unweighted samples.
 
-    Returns
-    -------
-   inferencedata : `arviz.InferenceData`
-       Returns an arviz.InferenceData instance
+     Returns
+     -------
+    inferencedata : `arviz.InferenceData`
+        Returns an arviz.InferenceData instance
     """
 
     import arviz as az
