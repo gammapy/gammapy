@@ -290,6 +290,10 @@ def test_map_properties():
     with pytest.raises(ValueError):
         m.data = np.ones((1, 3))
 
+    # Converting to an inconsistent unit
+    with pytest.raises(u.UnitConversionError):
+        m.to_unit("cm2")
+
 
 map_arithmetics_args = [("wcs"), ("hpx")]
 

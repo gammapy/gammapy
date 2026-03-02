@@ -638,10 +638,7 @@ class FermipyDatasetsReader(DatasetReader):
         filename = self.filename.resolve()
         data = read_yaml(filename)
 
-        if "components" in data:
-            components = data["components"]
-        else:
-            components = [data]
+        components = self._get_components(data)
 
         datasets = Datasets()
         for file_id, component in enumerate(components):
@@ -655,10 +652,10 @@ class FermipyDatasetsReader(DatasetReader):
                 path = Path(filename.parent) / path
 
             if "model" in component and "isodiff" in component["model"]:
-                isotropic_file = Path(component["model"]["isodiff"])
+                isotropic_file = self._get_isodiff(component["model"]["isodiff"])
                 name = isotropic_file.stem[4:]
             elif "model" in data and "isodiff" in data["model"]:
-                isotropic_file = Path(data["model"]["isodiff"])
+                isotropic_file = self._get_isodiff(data["model"]["isodiff"])
                 name = isotropic_file.stem[4:]
             else:
                 isotropic_file = None
@@ -677,3 +674,24 @@ class FermipyDatasetsReader(DatasetReader):
                 )
             )
         return datasets
+
+    @staticmethod
+    def _get_components(data):
+        components = data.get("components")
+        if isinstance(components, list) and len(components) > 0:
+            return components
+        return [data]
+
+    @staticmethod
+    def _get_isodiff(data):
+        if isinstance(data, str):
+            return Path(data)
+
+        if not isinstance(data, list):
+            raise ValueError("Invalid isodiff filename.")
+
+        if len(data) != 1:
+            raise ValueError("Only one isodiff filename per component should be given.")
+        if not isinstance(data[0], str):
+            raise ValueError("Invalid isodiff filename.")
+        return Path(data[0])

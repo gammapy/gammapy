@@ -1074,7 +1074,7 @@ class WcsNDMap(WcsMap):
         parent_slices = Ellipsis, slices[0], slices[1]
 
         return self.__class__.from_geom(
-            geom=geom_cutout, data=self.quantity[parent_slices]
+            geom=geom_cutout, data=self.data[parent_slices], unit=self.unit
         )
 
     def stack(self, other, weights=None, nan_to_num=True):
@@ -1108,7 +1108,9 @@ class WcsNDMap(WcsMap):
                 "Can only stack equivalent maps or cutout of the same map."
             )
 
-        data = other.quantity[cutout_slices].to_value(self.unit).astype(self.data.dtype)
+        converter = other.unit.get_converter(self.unit)
+        data = converter(other.data[cutout_slices]).astype(self.data.dtype)
+
         if nan_to_num:
             not_finite = ~np.isfinite(data)
             if np.any(not_finite):
