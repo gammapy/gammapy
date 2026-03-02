@@ -344,12 +344,18 @@ def logic_parser(table, expression):
                 result = op_func(result, v)
             return result
         elif isinstance(node, ast.Compare):
-            left = eval_node(node.left)
+            current_left = eval_node(node.left)
+            parts = []
             for op, comparator in zip(node.ops, node.comparators):
                 right = eval_node(comparator)
                 op_func = _OPERATORS[type(op)]
-                left = op_func(left, right)
-            return left
+                parts.append(op_func(current_left, right))
+                current_left = right
+
+            result = parts[0]
+            for part in parts[1:]:
+                result = np.logical_and(result, part)
+            return result
         elif isinstance(node, ast.Name):
             if node.id not in table.colnames:
                 raise KeyError(

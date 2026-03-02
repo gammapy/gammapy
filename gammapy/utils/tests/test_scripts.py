@@ -196,3 +196,24 @@ def test_logic_parser_error():
         expression = "unsupported_expression()"
         logic_parser(table, expression)
     assert "Unsupported expression type" in str(excinfo.value)
+
+
+def test_logic_parser_chained_comparisons():
+    data = {"OBS_ID": [0, 1, 2, 3, 4, 5]}
+    table = Table(data)
+
+    result = logic_parser(table, "1 < OBS_ID < 4")
+    assert len(result) == 2
+    assert result["OBS_ID"][0] == 2
+    assert result["OBS_ID"][1] == 3
+
+    result = logic_parser(table, "2 <= OBS_ID <= 4")
+    assert len(result) == 3
+    assert result["OBS_ID"][0] == 2
+    assert result["OBS_ID"][1] == 3
+    assert result["OBS_ID"][2] == 4
+
+    result = logic_parser(table, "0 <= OBS_ID < 2")
+    assert len(result) == 2
+    assert result["OBS_ID"][0] == 0
+    assert result["OBS_ID"][1] == 1
