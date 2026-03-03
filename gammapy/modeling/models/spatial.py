@@ -1628,8 +1628,8 @@ class TemplateSpatialModel(SpatialModel):
         return kwargs
 
     @staticmethod
-    def _needs_default(value):
-        return isinstance(value, Parameter) and np.isnan(value.value)
+    def _needs_default(parameter):
+        return isinstance(parameter, Parameter) and np.isnan(parameter.value)
 
     def _set_default_spatial_parameters(self, kwargs):
         kwargs["frame"] = self.map.geom.frame
