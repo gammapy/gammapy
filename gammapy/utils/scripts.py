@@ -24,6 +24,7 @@ __all__ = [
     "recursive_merge_dicts",
     "to_yaml",
     "write_yaml",
+    "logic_parser",
 ]
 
 PATH_DOCS = Path(__file__).resolve().parent / ".." / ".." / "docs"
