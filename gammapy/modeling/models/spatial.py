@@ -1327,10 +1327,10 @@ class TemplateSpatialModel(SpatialModel):
         self.filename = self._handle_filename(filename)
         self.normalize = normalize
 
-        map = self._handle_normalization(map, normalize)
-        map = self._ensure_unit(map)
+        processed_map = self._handle_normalization(map, normalize)
+        processed_map = self._ensure_unit(processed_map)
 
-        self._map = self._store_map(map, copy_data)
+        self._map = self._store_map(processed_map, copy_data)
 
         self.meta = {} if meta is None else meta
         self._interp_kwargs = self._prepare_interp_kwargs(interp_kwargs)
