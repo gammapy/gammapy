@@ -83,7 +83,7 @@ jobs:
             allowed_fail: false
           - os: ubuntu-latest
             python: '3.13'
-            tox_env: 'py313-test-alldeps_noray-numpy126'
+            tox_env: 'py313-test-alldeps_noray-numpy20'
             allowed_fail: false
           - os: ubuntu-latest
             python: '3.11'
