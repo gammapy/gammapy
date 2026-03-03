@@ -1328,9 +1328,17 @@ class TemplateSpatialModel(SpatialModel):
         self.normalize = normalize
 
         processed_map = self._handle_normalization(map, normalize)
-        processed_map = self._ensure_unit(processed_map)
 
-        self._map = self._store_map(processed_map, copy_data)
+        if processed_map.unit.is_equivalent(""):
+            log.warning("Missing spatial template unit, assuming sr^-1")
+            processed_map = processed_map.copy(data=processed_map.data, unit="sr-1")
+
+        # inline: store/copy map (can be a one-liner)
+        self._map = (
+            processed_map.copy()
+            if copy_data
+            else processed_map.copy(data=processed_map.data)
+        )
 
         self.meta = {} if meta is None else meta
         self._interp_kwargs = self._prepare_interp_kwargs(interp_kwargs)
@@ -1600,21 +1608,6 @@ class TemplateSpatialModel(SpatialModel):
         data /= map.geom.solid_angle().to_value("sr")
 
         return map.copy(data=data, unit="sr-1")
-
-    @staticmethod
-    def _ensure_unit(map):
-        if map.unit.is_equivalent(""):
-            log.warning("Missing spatial template unit, assuming sr^-1")
-            return map.copy(data=map.data, unit="sr-1")
-
-        return map
-
-    @staticmethod
-    def _store_map(map, copy_data):
-        if copy_data:
-            return map.copy()
-
-        return map.copy(data=map.data)
 
     def _prepare_interp_kwargs(self, interp_kwargs):
         kwargs = {} if interp_kwargs is None else dict(interp_kwargs)
