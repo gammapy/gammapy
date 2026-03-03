@@ -888,19 +888,17 @@ class RegionGeom(Geom):
 
             kwargs.setdefault("facecolor", "None")
             user_color = kwargs.pop("color", kwargs.pop("c", None))
-            kwargs.setdefault("edgecolor", kwargs.pop("ec", "C0"))
-            if user_color is not None:
-                kwargs["edgecolor"] = user_color  # in regions color overrides edgecolor
+            current_ec = kwargs.get("edgecolor", kwargs.get("ec", "C0"))
+            kwargs["edgecolor"] = user_color if user_color is not None else current_ec
+            kwargs.pop("ec", None)
 
             kwargs_point.setdefault("marker", "*")
+            kwargs_point.setdefault("color", kwargs["edgecolor"])
 
             for key, value in kwargs.items():
                 key_point = ARTIST_TO_LINE_PROPERTIES.get(key, None)
                 if key_point and key_point not in kwargs_point:
                     kwargs_point[key_point] = value
-
-            if user_color is not None:
-                kwargs_point.setdefault("color", user_color)
             if "color" in kwargs_point:
                 kwargs_point["markeredgecolor"] = kwargs_point["color"]
 
