@@ -2480,9 +2480,9 @@ class MapDataset(Dataset):
         vmin = npredmapdata.data.min()
         vmax = npredmapdata.data.max()
         # Fallback if the map is entirely zero
-        if vmin == 0.0:
+        if np.isclose(vmin, 0.0):
             vmin = np.max([countsmapdata.data.max() * 0.02, countsmapdata.data.min()])
-        if vmax == 0.0:
+        if np.isclose(vmax, 0.0):
             vmax = countsmapdata.data.max()
 
         # Create custom colormaps
@@ -2997,9 +2997,9 @@ class MapDatasetOnOff(MapDataset):
         random_state = get_random_state(random_state)
         npred = self.npred_signal()
         data = np.nan_to_num(npred.data, copy=True, nan=0.0, posinf=0.0, neginf=0.0)
-        npred.data = random_state.poisson(data)
+        npred.data = random_state.poisson(data).astype("float")
 
-        npred_bkg = random_state.poisson(npred_background.data)
+        npred_bkg = random_state.poisson(npred_background.data).astype("float")
 
         self.counts = npred + npred_bkg
 
@@ -3223,7 +3223,7 @@ class MapDatasetOnOff(MapDataset):
             name=name,
         )
 
-        kwargs = {"name": name}
+        kwargs = {"name": name, "counts_off": None, "acceptance_off": None}
 
         if self.counts_off is not None:
             kwargs["counts_off"] = self.counts_off.get_spectrum(
@@ -3234,12 +3234,13 @@ class MapDatasetOnOff(MapDataset):
             kwargs["acceptance"] = self.acceptance.get_spectrum(
                 on_region, np.mean, weights=self.mask_safe
             )
-            norm = self.background.get_spectrum(
-                on_region, np.sum, weights=self.mask_safe
-            )
-            acceptance_off = kwargs["acceptance"] * kwargs["counts_off"] / norm
-            np.nan_to_num(acceptance_off.data, copy=False)
-            kwargs["acceptance_off"] = acceptance_off
+            if self.counts_off is not None:
+                norm = self.background.get_spectrum(
+                    on_region, np.sum, weights=self.mask_safe
+                )
+                acceptance_off = kwargs["acceptance"] * kwargs["counts_off"] / norm
+                np.nan_to_num(acceptance_off.data, copy=False)
+                kwargs["acceptance_off"] = acceptance_off
 
         return SpectrumDatasetOnOff.from_spectrum_dataset(dataset=dataset, **kwargs)
 

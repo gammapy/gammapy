@@ -242,7 +242,6 @@ def test_restore_status(models):
 
 
 def test_bounds(models):
-
     models.set_parameters_bounds(
         tag="pl",
         model_type="spectral",
@@ -253,9 +252,11 @@ def test_bounds(models):
     )
 
     pl_mask = models.selection_mask(tag="pl", model_type="spectral")
-    assert np.all([m.spectral_model.index.value == 2.4 for m in models[pl_mask]])
-    assert np.all([m.spectral_model.index.min == 0 for m in models[pl_mask]])
-    assert np.all([m.spectral_model.index.max == 5 for m in models[pl_mask]])
+    assert np.all(
+        [np.isclose(m.spectral_model.index.value, 2.4) for m in models[pl_mask]]
+    )
+    assert np.all([np.isclose(m.spectral_model.index.min, 0) for m in models[pl_mask]])
+    assert np.all([np.isclose(m.spectral_model.index.max, 5) for m in models[pl_mask]])
 
     models.set_parameters_bounds(
         tag=["pl", "pl-norm"],

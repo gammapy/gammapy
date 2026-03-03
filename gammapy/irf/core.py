@@ -176,7 +176,8 @@ class IRF(metaclass=abc.ABCMeta):
         scale = interpolation_scale(values_scale)
 
         axis = self.axes.index(axis_name)
-        mask = ~np.isfinite(data) | (data == 0.0)
+        mask = ~np.isfinite(data) | (data == 0.0)  # NOSONAR
+        # (S1244): explicit check for exactly representable zeros
 
         coords = np.nonzero(mask)
         xp = np.arange(data.shape[axis])
@@ -728,7 +729,7 @@ class IRFMap:
         """Get nearest valid position."""
         is_valid = np.nan_to_num(self.mask_safe_image.get_by_coord(position))[0]
 
-        if not is_valid and np.any(self.mask_safe_image > 0):
+        if not is_valid and np.any(self.mask_safe_image.data > 0):
             log.warning(
                 f"Position {position} is outside "
                 "valid IRF map range, using nearest IRF defined within"

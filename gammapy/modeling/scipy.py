@@ -168,7 +168,7 @@ def stat_profile_ul_scipy(
         )
 
     mask_valid = np.isfinite(stat_scan) & np.isfinite(value_scan)
-    if mask_valid.sum() == 0.0:
+    if not np.any(mask_valid):
         raise ValueError(
             "Statistic profile has no finite value therefore no best-fit value can be determined."
         )

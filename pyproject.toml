@@ -22,15 +22,17 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Astronomy",
 ]
 dependencies = [
-    "numpy>=1.26",
+    "numpy>=2.0",
     "scipy>=1.13",
-    "astropy>=6.0",
+    "astropy>=6.1.5",  # AnchoredEllipse fix
     "regions>=0.9.0",
     "pyyaml>=5.3",
     "click>=8.0",
     "pydantic>=2.8.0",
     "iminuit>=2.26.0",
-    "matplotlib>=3.8,<3.10",
+    "matplotlib>=3.8",
+    "requests",
+    "tqdm",
 ]
 dynamic = ["version"]
 
@@ -54,32 +56,32 @@ all = [
     "naima",
     "sherpa; platform_system != 'Windows'",
     "healpy; platform_system != 'Windows'",
-    "requests",
-    "tqdm",
     "ipywidgets",
     "ray[default]>=2.9",
     "ultranest",
     "numba",
+    "arviz",
+    "arviz[preview]",
 ]
 all_no_ray = [
     "naima",
     "sherpa; platform_system != 'Windows'",
     "healpy; platform_system != 'Windows'",
-    "requests",
-    "tqdm",
     "ipywidgets",
     "ultranest",
     "numba",
+    "arviz",
+    "arviz[preview]",
 ]
 cov = [
     "naima",
     "sherpa; platform_system != 'Windows'",
     "healpy; platform_system != 'Windows'",
-    "requests",
-    "tqdm",
     "ipywidgets",
     "ultranest",
     "numba",
+    "arviz",
+    "arviz[preview]",
 ]
 test = [
     "pytest-astropy",

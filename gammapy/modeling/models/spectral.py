@@ -2,6 +2,7 @@
 """Spectral models for Gammapy."""
 
 import logging
+import warnings
 import operator
 import os
 from pathlib import Path
@@ -1581,10 +1582,16 @@ class ExpCutoffPowerLawSpectralModel(SpectralModel):
         lambda_ = self.lambda_.quantity
         alpha = self.alpha.quantity
 
-        if index >= 2 or lambda_ == 0.0 or alpha == 0.0:
+        try:
+            with warnings.catch_warnings():
+                warnings.simplefilter("error", RuntimeWarning)
+                e_peak = np.power((2 - index) / alpha, 1 / alpha) / lambda_
+                if e_peak.value > 0:
+                    return e_peak
+                else:
+                    return np.nan * reference.unit
+        except (ZeroDivisionError, RuntimeWarning, OverflowError, ValueError):
             return np.nan * reference.unit
-        else:
-            return np.power((2 - index) / alpha, 1 / alpha) / lambda_
 
 
 class ExpCutoffPowerLawNormSpectralModel(SpectralModel):
@@ -1891,7 +1898,7 @@ class LogParabolaSpectralModel(SpectralModel):
 
     @classmethod
     def from_log10(cls, amplitude, reference, alpha, beta):
-        """Construct from :math:`log_{10}` parametrization."""
+        """Construct from :math:`\log_{10}` parametrization."""
         beta_ = beta / np.log(10)
         return cls(amplitude=amplitude, reference=reference, alpha=alpha, beta=beta_)
 
@@ -1955,7 +1962,7 @@ class LogParabola2SpectralModel(SpectralModel):
 
     @classmethod
     def from_log10(cls, amplitude, reference, alpha, beta, escale):
-        """Construct from :math:`log_{10}` parametrization."""
+        """Construct from :math:`\log_{10}` parametrization."""
         beta_ = beta / np.log(10)
         return cls(
             amplitude=amplitude,
@@ -2015,7 +2022,7 @@ class LogParabolaNormSpectralModel(SpectralModel):
 
     @classmethod
     def from_log10(cls, norm, reference, alpha, beta):
-        """Construct from :math:`log_{10}` parametrization."""
+        """Construct from :math:`\log_{10}` parametrization."""
         beta_ = beta / np.log(10)
         return cls(norm=norm, reference=reference, alpha=alpha, beta=beta_)
 
