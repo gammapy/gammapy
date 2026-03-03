@@ -1333,12 +1333,10 @@ class TemplateSpatialModel(SpatialModel):
             log.warning("Missing spatial template unit, assuming sr^-1")
             processed_map = processed_map.copy(data=processed_map.data, unit="sr-1")
 
-        # inline: store/copy map (can be a one-liner)
-        self._map = (
-            processed_map.copy()
-            if copy_data
-            else processed_map.copy(data=processed_map.data)
-        )
+        if copy_data:
+            self._map = processed_map.copy()
+        else:
+            self._map = processed_map.copy(data=processed_map.data)
 
         self.meta = {} if meta is None else meta
         self._interp_kwargs = self._prepare_interp_kwargs(interp_kwargs)
