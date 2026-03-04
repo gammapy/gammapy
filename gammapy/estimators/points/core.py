@@ -556,7 +556,7 @@ class FluxPoints(FluxMaps):
             time_axis = self.geom.axes["time"]
 
             tables = []
-            for idx, (time_min, time_max) in enumerate(time_axis.iter_by_edges):
+            for idx, (time_min, time_max) in enumerate(time_axis.iter_by_time_edges):
                 table_flat = Table()
                 table_flat["time_min"] = [time_min.mjd]
                 table_flat["time_max"] = [time_max.mjd]
