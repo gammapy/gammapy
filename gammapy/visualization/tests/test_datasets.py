@@ -92,6 +92,27 @@ def test_plot_regions_color_point():
     # red because color set for both lines and points
 
     plt.figure()
+    ax = models.plot_regions(linewidth=1, c="red", edgecolor="green")
+    for patch in ax.patches:
+        assert_allclose(patch.get_edgecolor(), (1.0, 0.0, 0.0, 1.0), rtol=1e-2)
+    for patch in ax.lines:
+        assert patch.get_color() == "red"
+
+    plt.figure()
+    ax = models.plot_regions(linewidth=1, c="red", ec="green")
+    for patch in ax.patches:
+        assert_allclose(patch.get_edgecolor(), (1.0, 0.0, 0.0, 1.0), rtol=1e-2)
+    for patch in ax.lines:
+        assert patch.get_color() == "red"
+
+    plt.figure()
+    ax = models.plot_regions(linewidth=1, ec="green")
+    for patch in ax.patches:
+        assert_allclose(patch.get_edgecolor(), (0.0, 0.501961, 0.0, 1.0), rtol=1e-2)
+    for patch in ax.lines:
+        assert patch.get_markeredgecolor() == "green"
+
+    plt.figure()
     ax = models.plot_regions(
         linewidth=1, kwargs_point={"marker": "d", "markersize": 5, "color": "green"}
     )
