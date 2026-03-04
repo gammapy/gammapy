@@ -355,10 +355,10 @@ class WcsNDMap(WcsMap):
             else:
                 crop_x = (crop_width[0] / scales[0]).to_value("")
                 crop_y = (crop_width[1] / scales[1]).to_value("")
-            
+
             # Explicitly cast to native Python int for SonarQube
             crop_width = (int(np.round(crop_x)), int(np.round(crop_y)))
-            
+
         elif np.isscalar(crop_width):
             crop_width = (int(crop_width), int(crop_width))
         else:
