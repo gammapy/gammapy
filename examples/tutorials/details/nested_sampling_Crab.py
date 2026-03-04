@@ -308,10 +308,10 @@ print(result_joint.sampler_results["posterior"])
 ######################################################################
 # Besides mean, errors, etc, an interesting value is the
 # ``information gain`` which estimates how much the posterior
-# distribution has shrunk with respect to the prior (i.e. how much
+# distribution has shrunk with respect to the prior (i.e. how much
 # we’ve learned). A value < 1 means that the parameter is poorly
 # constrained within the prior range (we haven't learned much with respect to our prior assumption).
-# For a physical example see this
+# For a physical interpretation of the information gain see this
 # `example <https://arxiv.org/abs/2205.00009>`__.
 #
 # The `~gammapy.modeling.SamplerResult` dictionary contains also other interesting
@@ -465,3 +465,110 @@ result_2 = sampler.run(datasets[2])
 # One can note as well that one of the run has a notably different
 # amplitude (possibly due to calibrations or/and atmospheric issues).
 #
+
+######################################################################
+# Highest density intervals
+# -------------------------
+#
+# Given the samples, one can also compute the highest density interval (HDI)
+# which is also known as the smallest credible interval (SCI).
+# See more details `here <https://en.wikipedia.org/wiki/Credible_interval>`__.
+# This is the smallest interval in which a given probability (e.g. 68%) is contained.
+#
+# For unimodal distributions, the HDI is a single continuous interval containing
+# the mode whereas for multimodal distributions, the HDI can be a set of disconnected intervals.
+# The HDI can be particularly helpful with multimodal distributions as opposed
+# to the mean and quantiles approaches which will not report the important information.
+# Here, we showcase the HDI using the Arviz package.
+# Check out the many possibilities offered by `Arviz <https://python.arviz.org/>`__, a package to analyze the samples posterior distributions.
+
+
+from arviz import hdi
+import scipy.stats as stats
+
+
+# Multi-modal samples example
+weight = 0.3
+n_samples = 10000
+mu1 = 5.5e-11
+sigma1 = 0.7e-11
+mu2 = 3.5e-11
+sigma2 = 0.3e-11
+weight = 0.7
+rng = np.random.default_rng(42)
+component_mask = rng.uniform(size=n_samples) < weight
+samples = np.empty(n_samples)
+samples[component_mask] = rng.normal(mu1, sigma1, component_mask.sum())
+samples[~component_mask] = rng.normal(mu2, sigma2, (~component_mask).sum())
+
+
+fig, (ax1, ax2) = plt.subplots(
+    2, 1, sharex=True, figsize=(9, 7), gridspec_kw={"height_ratios": [5, 2]}
+)
+
+# Highest density intervals
+hdis = hdi(samples, hdi_prob=0.68, multimodal=True)
+ax1.hist(
+    samples,
+    bins=50,
+    histtype="step",
+    color="k",
+    alpha=0.5,
+)
+yl = ax1.get_ylim()
+
+for k in range(hdis.shape[0]):
+    label = "68% HDI" if k == 0 else None
+    ax2.hlines(
+        1 + 3 * 0.015, hdis[k, 0], hdis[k, 1], lw=15, color="k", alpha=0.5, label=label
+    )
+
+# Percentile
+percentile = np.percentile(samples, q=[16, 84])
+ax2.hlines(
+    1 + 2 * 0.015,
+    percentile[0],
+    percentile[1],
+    lw=15,
+    color="y",
+    alpha=0.5,
+    label="16-84% percentile",
+)
+
+# Mean and standard deviation
+mean = np.mean(samples)
+std = np.std(samples)
+ax1.plot([mean, mean], yl, label="mean", color="r", ls="--")
+ax2.hlines(
+    1 + 1 * 0.015,
+    mean - std,
+    mean + std,
+    lw=15,
+    color="r",
+    alpha=0.5,
+    label=r"mean $\pm$ std",
+)
+
+# Median and median absolute deviation
+median = np.median(samples)
+mad = stats.median_abs_deviation(samples)
+ax1.plot([median, median], yl, label="median", color="b", ls="--")
+ax2.hlines(
+    1,
+    median - mad,
+    median + mad,
+    lw=15,
+    color="b",
+    alpha=0.5,
+    label=r"median $\pm$ mad",
+)
+
+ax2.legend(loc=6)
+ax1.legend(loc="upper left")
+ax1.set_xlim(1e-11, 8e-11)
+ax2.set_ylim(0.98, 1.06)
+ax2.set_xlabel("Amplitude")
+
+ax2.tick_params(left=False, labelleft=False)
+
+plt.show()

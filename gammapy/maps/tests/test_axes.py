@@ -1127,3 +1127,16 @@ def test_periodic_map_axis():
         axis1 = MapAxis.from_bounds(
             -0.5, 0.5, 5, boundary_type="periodic", interp="log"
         )
+
+
+def test_iter_by_time_edges(time_intervals):
+    time_axis = TimeMapAxis(
+        time_intervals["t_min"], time_intervals["t_max"], time_intervals["t_ref"]
+    )
+    for t_min, t_max in time_axis.iter_by_time_edges:
+        assert isinstance(t_min, Time)
+        assert isinstance(t_max, Time)
+
+    for t_min, t_max in time_axis.iter_by_edges:
+        assert isinstance(t_min, u.Quantity)
+        assert isinstance(t_max, u.Quantity)

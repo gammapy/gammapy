@@ -1,0 +1,1 @@
+Add an boolean argument `allow_multiple_telescopes` which allows the user to compute `~gammapy.estimators.FluxPointsEstimator` for multiple telescopes.
