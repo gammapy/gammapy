@@ -5,7 +5,6 @@ from numpy.testing import assert_allclose
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import QTable, Table
-from astropy.io import fits
 from astropy.time import Time
 from regions import CircleSkyRegion, RectangleSkyRegion
 from gammapy.data import GTI, EventList, Observation, FixedPointingInfo
@@ -250,7 +249,19 @@ class TestEventListHESS:
 
     def test_select_time(self):
         interval = Time([53090.12346118, 53090.12431144], scale="tt", format="mjd")
-        assert len(self.events.select_time(interval).time) == 499
+        selected_time = self.events.select_time(interval)
+        assert len(selected_time.time) == 499
+        assert_allclose(selected_time.time.value[0], 53090.12346118442, rtol=1e-3)
+        assert_allclose(selected_time.time_ref.value, 51910.00074287037, rtol=1e-3)
+        selected_time_inverted = self.events.select_time(interval, inverted=True)
+
+        assert len(selected_time_inverted.time) == 10744
+        assert_allclose(
+            selected_time_inverted.time.value[0], 53090.12346118442, rtol=1e-3
+        )
+        assert_allclose(
+            selected_time_inverted.time_ref.value, 51910.00074287037, rtol=1e-3
+        )
 
 
 @requires_data()
