@@ -2421,7 +2421,9 @@ class TimeMapAxis:
     def edges(self):
         """Return the array of bin edges values."""
         if not self.is_contiguous:
-            raise ValueError("Time axis is not contiguous")
+            raise ValueError(
+                "Time axis is not contiguous, therefore cannot compute bin edges."
+            )
 
         return edges_from_lo_hi(self.edges_min, self.edges_max)
 
@@ -2492,7 +2494,7 @@ class TimeMapAxis:
         """Return labels for plotting."""
         labels = []
 
-        for t_min, t_max in self.iter_by_edges:
+        for t_min, t_max in self.iter_by_time_edges:
             label = f"{getattr(t_min, self.time_format)} - {getattr(t_max, self.time_format)}"
             labels.append(label)
 
@@ -2619,9 +2621,15 @@ class TimeMapAxis:
 
     @property
     def iter_by_edges(self):
-        """Iterate by intervals defined by the edges."""
-        for time_min, time_max in zip(self.time_min, self.time_max):
-            yield (time_min, time_max)
+        """Iterate by time intervals defined by the edges as an `~astropy.units.Quantity`."""
+        for t_min, t_max in zip(self._edges_min, self._edges_max):
+            yield (t_min, t_max)
+
+    @property
+    def iter_by_time_edges(self):
+        """Iterate by time intervals defined by the edges as a `~astropy.time.Time` object."""
+        for t_min, t_max in zip(self.time_min, self.time_max):
+            yield (t_min, t_max)
 
     def coord_to_idx(self, coord, **kwargs):
         """Transform time axis coordinate to bin index.
