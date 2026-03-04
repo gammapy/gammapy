@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from IPython.display import display
 import numpy as np
 from astropy.table import Table, vstack, Column
 from scipy.stats import gaussian_kde
@@ -57,7 +56,7 @@ class BayesianModelSelection:
                 self.posterior_downsample_factor,
                 self.n_prior_samples,
             )
-            display(results[models_name].parameters_table())
+            results[models_name].parameters_table().pprint(max_lines=-1, max_width=-1)
             print(results[models_name])
         return BayesianModelSelectionResult(results)
 
@@ -189,7 +188,7 @@ class BayesianModelSelectionResult:
         "Display prior and likelihood sentivity table computed from power scaling for each model"
         for name in self.models_names:
             print(name)
-            display(self[name].prior_sensitivity_table())
+            print(self[name].prior_sensitivity_table())
 
 
 class InferenceResult:
