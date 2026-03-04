@@ -247,7 +247,8 @@ print(
 # which can be compared to the flux prediction for a given (hypothetical) source. We have the 5-sigma
 # sensitivity here, which can be configured using ``n_sigma_sensitivity``
 # parameter of this estimator. It is good to compare the computed upper limits with the sensitivity.
-# The upper limits should not be lower than the sensitivity limit.
+# An upper limit below the sensitivity level of the measurement is likely to be incorrect. 
+# Ensure that you are comparing **UL and sensitivity computed for the same significance level.** 
 #
 # Let us also see what we would have seen if a Crab-like source was
 # present in the center.
