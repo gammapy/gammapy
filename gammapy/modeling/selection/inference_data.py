@@ -71,7 +71,7 @@ def inference_data_from_sampler(
     results,
     datasets,
     backend="ultranest",
-    n_prosterior_samples=None,
+    n_posterior_samples=None,
     n_prior_samples=None,
     random_seed=42,
     predictives=True,
@@ -89,7 +89,7 @@ def inference_data_from_sampler(
         Global backend used for sampler. Default is "ultranest".
         UltraNest: Most options can be found in the
         `UltraNest doc <https://johannesbuchner.github.io/UltraNest/>`__.
-    n_prosterior_samples : int, optional
+    n_posterior_samples : int, optional
         Number of samples to generate after resampling the posterior to take into account weights.
         Default is None, which use the unweighted samples from ultranest.
      n_prior_samples : int, optional
@@ -112,12 +112,12 @@ def inference_data_from_sampler(
         raise ValueError(f"Only ultranest backend is supported, got {backend}")
 
     sampler_results = results.sampler_results
-    if n_prosterior_samples is None:
+    if n_posterior_samples is None:
         inference_data = inference_data_constructor(sampler_results)
     else:
         inference_data = inference_data_constructor(sampler_results, weighted=True)
         inference_data = resample_posterior(
-            inference_data, n_samples=n_prosterior_samples, random_seed=random_seed
+            inference_data, n_samples=n_posterior_samples, random_seed=random_seed
         )  # unweighting
 
     # Add prior  group
