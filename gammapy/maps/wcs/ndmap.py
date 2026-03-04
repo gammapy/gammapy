@@ -346,7 +346,6 @@ class WcsNDMap(WcsMap):
         map : `~gammapy.maps.WcsNDMap`
             Cropped map.
         """
-
         if isinstance(crop_width, (u.Quantity, str)):
             crop_width = u.Quantity(crop_width)
             scales = self.geom.pixel_scales
@@ -357,7 +356,7 @@ class WcsNDMap(WcsMap):
                 crop_x = (crop_width[0] / scales[0]).to_value("")
                 crop_y = (crop_width[1] / scales[1]).to_value("")
             
-            # Explicitly cast to native Python int
+            # Explicitly cast to native Python int for SonarQube
             crop_width = (int(np.round(crop_x)), int(np.round(crop_y)))
             
         elif np.isscalar(crop_width):
@@ -368,14 +367,10 @@ class WcsNDMap(WcsMap):
         geom = self.geom.crop(crop_width)
 
         if self.geom.is_regular:
-            cw_x, cw_y = crop_width
-            nx = int(self.geom.npix[0][0])
-            ny = int(self.geom.npix[1][0])
-
             slices = [slice(None)] * len(self.geom.axes)
             slices += [
-                slice(cw_y, ny - cw_y),
-                slice(cw_x, nx - cw_x),
+                slice(crop_width[1], int(self.geom.npix[1][0] - crop_width[1])),
+                slice(crop_width[0], int(self.geom.npix[0][0] - crop_width[0])),
             ]
             data = self.data[tuple(slices)]
             map_out = self._init_copy(geom=geom, data=data)
@@ -384,7 +379,7 @@ class WcsNDMap(WcsMap):
             self._copy_data_irregular(map_out, crop_width, is_crop=True)
 
         return map_out
-
+        
     def upsample(self, factor, order=0, preserve_counts=True, axis_name=None):
         if factor == 1 or factor is None:
             return self
