@@ -894,7 +894,6 @@ class RegionGeom(Geom):
 
 
             kwargs_point.setdefault("marker", "*")
-            kwargs_point.setdefault("color", kwargs["edgecolor"])
 
             for key, value in kwargs.items():
                 key_point = ARTIST_TO_LINE_PROPERTIES.get(key, None)
