@@ -7,11 +7,10 @@ from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
 import gammapy.utils.parallel as parallel
 from gammapy.data import GTI
-from gammapy.datasets import MapDatasetOnOff
+from gammapy.datasets import MapDatasetOnOff, MapDataset
 from gammapy.estimators import FluxPoints, FluxProfileEstimator
-from gammapy.estimators.points.tests.test_sed import simulate_map_dataset
 from gammapy.maps import MapAxis, WcsGeom
-from gammapy.modeling.models import PowerLawSpectralModel
+from gammapy.modeling.models import PowerLawSpectralModel, Models
 from gammapy.utils.regions import (
     make_concentric_annulus_sky_regions,
     make_orthogonal_rectangle_sky_regions,
@@ -208,7 +207,14 @@ def test_regions_init():
 
 @requires_data()
 def test_profile_with_model_or_mask():
-    dataset = simulate_map_dataset(name="test-map-pwl")
+    dataset = MapDataset.read(
+        "$GAMMAPY_DATA/datasets/simulations/simulated_map_dataset.fits",
+        name="test-map-pwl",
+    )
+    models = Models.read(
+        "$GAMMAPY_DATA/datasets/simulations/simulated_map_dataset_model.yaml"
+    )
+    dataset.models = models
 
     geom = dataset.counts.geom
     regions = make_concentric_annulus_sky_regions(
@@ -240,7 +246,14 @@ def test_profile_with_model_or_mask():
 
 @requires_data()
 def test_profile_multiprocessing():
-    dataset = simulate_map_dataset(name="test-map-pwl")
+    dataset = MapDataset.read(
+        "$GAMMAPY_DATA/datasets/simulations/simulated_map_dataset.fits",
+        name="test-map-pwl",
+    )
+    models = Models.read(
+        "$GAMMAPY_DATA/datasets/simulations/simulated_map_dataset_model.yaml"
+    )
+    dataset.models = models
 
     geom = dataset.counts.geom
     regions = make_concentric_annulus_sky_regions(
@@ -265,7 +278,14 @@ def test_profile_multiprocessing():
 @requires_data()
 @requires_dependency("ray")
 def test_profile_multiprocessing_ray_with_manager():
-    dataset = simulate_map_dataset(name="test-map-pwl")
+    dataset = MapDataset.read(
+        "$GAMMAPY_DATA/datasets/simulations/simulated_map_dataset.fits",
+        name="test-map-pwl",
+    )
+    models = Models.read(
+        "$GAMMAPY_DATA/datasets/simulations/simulated_map_dataset_model.yaml"
+    )
+    dataset.models = models
 
     geom = dataset.counts.geom
     regions = make_concentric_annulus_sky_regions(
@@ -291,7 +311,14 @@ def test_profile_multiprocessing_ray_with_manager():
 @requires_data()
 @requires_dependency("ray")
 def test_profile_multiprocessing_ray():
-    dataset = simulate_map_dataset(name="test-map-pwl")
+    dataset = MapDataset.read(
+        "$GAMMAPY_DATA/datasets/simulations/simulated_map_dataset.fits",
+        name="test-map-pwl",
+    )
+    models = Models.read(
+        "$GAMMAPY_DATA/datasets/simulations/simulated_map_dataset_model.yaml"
+    )
+    dataset.models = models
 
     geom = dataset.counts.geom
     regions = make_concentric_annulus_sky_regions(
