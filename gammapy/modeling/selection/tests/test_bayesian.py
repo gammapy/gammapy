@@ -74,6 +74,7 @@ def test_bayesian_model_selection(alternative_models):
     aic = -2 * inference_result.logl + 2 * inference_result.dof
     assert_allclose(inference_result.aic, aic)
 
+    bms_results.prior_sensitivity_table()
     psense = inference_result.prior_sensitivity_table()
     assert_allclose(psense.prior.amplitude, 0.01, rtol=1e-1)
     assert_allclose(psense.likelihood.amplitude, 0.097, rtol=5e-1)
