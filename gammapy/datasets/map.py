@@ -3514,9 +3514,10 @@ class MapDatasetOnOff(MapDataset):
         dataset : `MapDataset` or `SpectrumDataset`
             Dataset assuming a new livetime
         """
-        dataset = super().reset_livetime(new_livetime, old_livetime)
-
+        if old_livetime is None:
+            old_livetime = self.exposure.meta.get("livetime")
         ratio = (new_livetime / old_livetime).to("")
+        dataset = super().reset_livetime(new_livetime, old_livetime)
 
         counts_off = None
         if self.counts_off is not None:
