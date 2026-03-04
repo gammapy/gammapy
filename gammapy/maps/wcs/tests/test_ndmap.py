@@ -1142,23 +1142,17 @@ def test_stack_int():
 
 
 def test_wcsndmap_crop_irregular():
-    # Test crop for irregular geometry (different npix per plane)
     energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=2)
     npix = (np.array([10, 8]), np.array([10, 8]))
     geom = WcsGeom.create(npix=npix, binsz=1.0, axes=[energy_axis])
-
     assert not geom.is_regular
-
     m = WcsNDMap(geom, data=np.ones(geom.data_shape))
-
     m_crop = m.crop(crop_width=1)
     assert_allclose(m_crop.geom.npix[0][0], 8)
     assert_allclose(m_crop.geom.npix[0][1], 6)
     assert m_crop.data.shape == m_crop.geom.data_shape
-
     assert_allclose(m_crop.data[0, 0:8, 0:8], 1.0)
     assert_allclose(m_crop.data[1, 0:6, 0:6], 1.0)
-
     m_crop_qty = m.crop(crop_width=1.0 * u.deg)
     assert_allclose(m_crop_qty.geom.npix[0], m_crop.geom.npix[0])
     assert_allclose(m_crop_qty.data[0, 0:8, 0:8], 1.0)
@@ -1167,3 +1161,7 @@ def test_wcsndmap_crop_irregular():
     assert m_crop_tuple.data.shape == (2, 6, 8)
     assert_allclose(m_crop_tuple.data[0, 0:6, 0:8], 1.0)
     assert_allclose(m_crop_tuple.data[1, 0:4, 0:6], 1.0)
+    m_crop_qty_arr = m.crop(crop_width=[1.0, 2.0] * u.deg)
+    assert m_crop_qty_arr.data.shape == (2, 6, 8)
+    m_crop_str = m.crop(crop_width="1 deg")
+    assert m_crop_str.data.shape == m_crop_qty.data.shape

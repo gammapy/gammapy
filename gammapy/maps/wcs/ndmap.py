@@ -333,28 +333,33 @@ class WcsNDMap(WcsMap):
     def crop(self, crop_width):
         """Crop the spatial dimensions of the map.
 
-        Parameters:
+        Parameters
+        ----------
         crop_width : int, tuple or `~astropy.units.Quantity`
             Number of pixels cropped from the edges of each spatial axis.
             If a single integer is passed, the same value is used for both
             spatial axes. If a tuple is passed, it should contain the values
             for the (lon, lat) axes.
 
-        Returns:
+        Returns
+        -------
         map : `~gammapy.maps.WcsNDMap`
             Cropped map.
         """
+
         if isinstance(crop_width, (u.Quantity, str)):
             crop_width = u.Quantity(crop_width)
             scales = self.geom.pixel_scales
             if crop_width.size == 1:
-                crop_width = (crop_width / scales).to_value("")
+                crop_x = (crop_width / scales[0]).to_value("")
+                crop_y = (crop_width / scales[1]).to_value("")
             else:
-                crop_width = (
-                    (crop_width[0] / scales[0]).to_value(""),
-                    (crop_width[1] / scales[1]).to_value(""),
-                )
-            crop_width = tuple(np.round(crop_width).astype(int))
+                crop_x = (crop_width[0] / scales[0]).to_value("")
+                crop_y = (crop_width[1] / scales[1]).to_value("")
+            
+            # Explicitly cast to native Python int
+            crop_width = (int(np.round(crop_x)), int(np.round(crop_y)))
+            
         elif np.isscalar(crop_width):
             crop_width = (int(crop_width), int(crop_width))
         else:
@@ -363,10 +368,14 @@ class WcsNDMap(WcsMap):
         geom = self.geom.crop(crop_width)
 
         if self.geom.is_regular:
+            cw_x, cw_y = crop_width
+            nx = int(self.geom.npix[0][0])
+            ny = int(self.geom.npix[1][0])
+
             slices = [slice(None)] * len(self.geom.axes)
             slices += [
-                slice(crop_width[1], int(self.geom.npix[1][0] - crop_width[1])),
-                slice(crop_width[0], int(self.geom.npix[0][0] - crop_width[0])),
+                slice(cw_y, ny - cw_y),
+                slice(cw_x, nx - cw_x),
             ]
             data = self.data[tuple(slices)]
             map_out = self._init_copy(geom=geom, data=data)
