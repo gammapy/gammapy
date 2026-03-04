@@ -379,7 +379,7 @@ class WcsNDMap(WcsMap):
             self._copy_data_irregular(map_out, crop_width, is_crop=True)
 
         return map_out
-        
+
     def upsample(self, factor, order=0, preserve_counts=True, axis_name=None):
         if factor == 1 or factor is None:
             return self
