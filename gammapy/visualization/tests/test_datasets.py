@@ -147,6 +147,18 @@ def test_plot_regions_color_point():
         assert patch.get_color() == "red"
     # red because color has priority over edgecolor as for the lines
 
+    plt.figure()
+    ax = models.plot_regions(
+        linewidth=1,
+        kwargs_point={"marker": "d", "markersize": 5, "color": "red"},
+    )
+    for patch in ax.patches:
+        assert_allclose(
+            patch.get_edgecolor(), (0.121569, 0.466667, 0.705882, 1), rtol=1e-2
+        )
+    for patch in ax.lines:
+        assert patch.get_color() == "red"
+
 
 @requires_data()
 def test_plot_npred_signal(sky_model):
