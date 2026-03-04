@@ -8,27 +8,43 @@ from .inference_data import inference_data_from_sampler
 
 class BayesianModelSelection:
     """
-    Run Bayesian inference for a set of alternative models.
+    Bayesian inference for a set of alternative models.
 
     Parameters
     ----------
-    datasets : `Datasets`
-        The datasets on which to perform the model fitting.
-    alternative_models : dict
-        Dictionary of model names and corresponding `Models` objects.
+    sampler : `gammapy.modeling.Sampler`
+        Sampler instance specifying the backend and options.
+    posterior_downsample_factor : int, optional
+        Factor to downsample posterior samples for efficiency.
+        Default is 4.
+    n_prior_samples : int, optional
+        Number of prior samples to generate. If None, no samples are added.
+        Default is 1000.
 
-    Returns
-    -------
-    result : `BayesianModelSelectionResult`
-        Object containing the results of the model comparisons.
     """
 
-    def __init__(self, sampler, posterior_reduction_factor=4, n_prior_samples=1000):
+    def __init__(self, sampler, posterior_downsample_factor=4, n_prior_samples=1000):
         self.sampler = sampler
-        self.posterior_reduction_factor = posterior_reduction_factor
+        self.posterior_downsample_factor = posterior_downsample_factor
         self.n_prior_samples = n_prior_samples
 
     def run(self, datasets, alternative_models):
+        """
+        Run Bayesian inference for a set of alternative models.
+
+        Parameters
+        ----------
+        datasets : `Datasets`
+            The datasets on which to perform the model fitting.
+        alternative_models : dict
+            Dictionary of model names and corresponding `Models` objects.
+
+        Returns
+        -------
+        result : `BayesianModelSelectionResult`
+            Object containing the results of the model comparisons.
+        """
+
         results = {}
         for models_name, models in alternative_models.items():
             print(f"Evaluating {models_name}")
@@ -38,7 +54,7 @@ class BayesianModelSelection:
                 models_name,
                 sampler_results,
                 datasets,
-                self.posterior_reduction_factor,
+                self.posterior_downsample_factor,
                 self.n_prior_samples,
             )
             display(results[models_name].parameters_table())
@@ -48,7 +64,7 @@ class BayesianModelSelection:
 
 class BayesianModelSelectionResult:
     """
-    Container for results of multiple Bayesian model fits.
+    Container for results of multiple Bayesian model sampling.
 
     Provides utilities to compare models and compute differences
     in statistical metrics.
@@ -178,7 +194,7 @@ class BayesianModelSelectionResult:
 
 class InferenceResult:
     """
-    Container for the results of a Bayesian model fit.
+    Container for the results of a Bayesian model sampling.
 
     Stores the sampler output, inference data, and computed statistics
     for a given model.
@@ -190,11 +206,12 @@ class InferenceResult:
     sampler_results : `SamplerResult`
         Output from the sampler run.
     datasets : `Datasets`
-        The datasets used for the fit.
-    posterior_reduction_factor : int, optional
-        Factor to reduce posterior samples for efficiency.
+        The datasets used for the sampling.
+    posterior_downsample_factor : int, optional
+        Factor to reduce posterior samples for efficiency. Default is 4.
     n_prior_samples : int, optional
-        Number of prior samples to generate.
+        Number of prior samples to generate. If None, no samples are added.
+        Default is 1000.
     """
 
     def __init__(
@@ -202,7 +219,7 @@ class InferenceResult:
         models_name,
         sampler_results,
         datasets,
-        posterior_reduction_factor=4,
+        posterior_downsample_factor=4,
         n_prior_samples=1000,
     ):
         import arviz as az
@@ -211,10 +228,10 @@ class InferenceResult:
         self._models = sampler_results.models
         self._sampler_results = sampler_results.sampler_results
 
-        if posterior_reduction_factor > 1:
+        if posterior_downsample_factor > 1:
             n_samples_redu = int(
                 np.sum(self.sampler_results["weighted_samples"]["weights"] > 0)
-                / posterior_reduction_factor
+                / posterior_downsample_factor
             )
         else:
             n_samples_redu = None
