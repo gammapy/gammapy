@@ -1,0 +1,1 @@
+Avoid multiple use of ``quantity_support`` in one functionality.
