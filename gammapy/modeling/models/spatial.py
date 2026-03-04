@@ -76,10 +76,17 @@ def _validate_template_map(map_):
     if np.isnan(map_.data).any():
         log.warning("Map has NaN values. Check and fix this!")
 
-    if not map_.geom.is_image and (map_.data.sum(axis=(1, 2)) == 0).any():
-        log.warning(
-            "Map values are all zeros in at least one energy bin. Check and fix this!"
-        )
+    if not map_.geom.is_image:
+        # sum over spatial dimensions for each non-spatial slice
+        if map_.geom.is_hpx:
+            spatial_sum = map_.data.sum(axis=-1)
+        else:
+            spatial_sum = map_.data.sum(axis=(-2, -1))
+
+        if (spatial_sum == 0).any():
+            log.warning(
+                "Map values are all zeros in at least one energy bin. Check and fix this!"
+            )
 
 
 def _get_template_filename(filename):
@@ -1383,11 +1390,11 @@ class TemplateSpatialModel(SpatialModel):
         """Handle normalization, units, and data copying logic."""
         if normalize:
             # Normalize the diffuse map model so that it integrates to unity
-            if map_.geom.is_image:
-                data_sum = map_.data.sum()
+            # Do the sum over spatial axes for each non-spatial slice.
+            if map_.geom.is_hpx:
+                data_sum = map_.data.sum(axis=-1, keepdims=True)
             else:
-                # Normalize in each energy bin
-                data_sum = map_.data.sum(axis=(1, 2)).reshape((-1, 1, 1))
+                data_sum = map_.data.sum(axis=(-2, -1), keepdims=True)
 
             data = np.divide(
                 map_.data.astype(float),
