@@ -23,9 +23,9 @@ class BayesianModelSelection:
         Object containing the results of the model comparisons.
     """
 
-    def __init__(self, sampler, prosterior_reduction_factor=4, n_prior_samples=1000):
+    def __init__(self, sampler, posterior_reduction_factor=4, n_prior_samples=1000):
         self.sampler = sampler
-        self.prosterior_reduction_factor = prosterior_reduction_factor
+        self.posterior_reduction_factor = posterior_reduction_factor
         self.n_prior_samples = n_prior_samples
 
     def run(self, datasets, alternative_models):
@@ -38,7 +38,7 @@ class BayesianModelSelection:
                 models_name,
                 sampler_results,
                 datasets,
-                self.prosterior_reduction_factor,
+                self.posterior_reduction_factor,
                 self.n_prior_samples,
             )
             display(results[models_name].parameters_table())
@@ -191,7 +191,7 @@ class InferenceResult:
         Output from the sampler run.
     datasets : `Datasets`
         The datasets used for the fit.
-    prosterior_reduction_factor : int, optional
+    posterior_reduction_factor : int, optional
         Factor to reduce posterior samples for efficiency.
     n_prior_samples : int, optional
         Number of prior samples to generate.
@@ -202,7 +202,7 @@ class InferenceResult:
         models_name,
         sampler_results,
         datasets,
-        prosterior_reduction_factor=4,
+        posterior_reduction_factor=4,
         n_prior_samples=1000,
     ):
         import arviz as az
@@ -211,17 +211,17 @@ class InferenceResult:
         self._models = sampler_results.models
         self._sampler_results = sampler_results.sampler_results
 
-        if prosterior_reduction_factor > 1:
+        if posterior_reduction_factor > 1:
             n_samples_redu = int(
                 np.sum(self.sampler_results["weighted_samples"]["weights"] > 0)
-                / prosterior_reduction_factor
+                / posterior_reduction_factor
             )
         else:
             n_samples_redu = None
         self._idata = inference_data_from_sampler(
             sampler_results,
             datasets,
-            n_prosterior_samples=n_samples_redu,
+            n_posterior_samples=n_samples_redu,
             n_prior_samples=n_prior_samples,
         )
         self._parameters_table = compute_parameters_values(
@@ -389,8 +389,8 @@ class InferenceResult:
     def __str__(self):
         s = "Statistics summary in deviance scale : -2log(score)\n"
         s += "A lower deviance corresponds to a model with better predictive accuracy. \n"
-        s += f"-2log(Z)  : {-2*self.logz}" + " +/- " + f"{2*self.logz_err}" + "\n"
-        s += f"-2log(L)  : {-2*self.logl}" + "\n"
+        s += f"-2log(Z)  : {-2 * self.logz}" + " +/- " + f"{2 * self.logz_err}" + "\n"
+        s += f"-2log(L)  : {-2 * self.logl}" + "\n"
         s += f"AIC       : {self.aic}, dof {self.dof}" + "\n"
         s += (
             f"elpd_waic : {self.elpd_waic.elpd_waic}"
