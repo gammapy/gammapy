@@ -1,1 +1,1 @@
-Avoid multiple use of ``quantity_support`` in one functionality.
+Avoid multiple use of ``quantity_support`` within one loop.

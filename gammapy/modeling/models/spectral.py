@@ -646,16 +646,8 @@ class SpectralModel(ModelBase):
 
         flux = self._get_plot_flux(sed_type=sed_type, energy=energy)
         flux = scale_plot_flux(flux, energy_power=energy_power)
-        # FIXME: Get rid of this warning properly. One option is
-        # to explicitly pass values instead of quantities.
-        with warnings.catch_warnings():
-            warnings.filterwarnings(
-                "ignore",
-                message="This axis already has a converter set",
-                category=UserWarning,
-            )
-            with quantity_support():
-                ax.plot(energy.center, flux.quantity[:, 0, 0], **kwargs)
+        with quantity_support():
+            ax.plot(energy.center, flux.quantity[:, 0, 0], **kwargs)
 
         self._plot_format_ax(ax, energy_power, sed_type)
         return ax
