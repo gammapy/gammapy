@@ -72,7 +72,7 @@ class BayesianModelSelectionResult:
     Parameters
     ----------
     results_dict : dict
-        Dictionary of model names and `ExtendedSamplerResult` objects.
+        Dictionary of InferenceResult objects with key matching model name.
     """
 
     def __init__(self, results_dict):
@@ -399,7 +399,7 @@ class InferenceResult:
     def priors(self):
         "Dict of random variable objects used to generate the prior"
         return {
-            p.name: p.prior.random_variable
+            p.name: p.prior._random_variable
             for p in self.models.parameters.free_unique_parameters
         }
 
