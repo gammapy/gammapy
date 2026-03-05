@@ -133,7 +133,7 @@ obs = Observation.create(
 print(obs)
 
 ######################################################################
-# Simulate a spectra:
+# Simulate a spectrum
 # Note that here we are using full containment IRFs and thus set
 # `containment_correction=True` in the `SpectrumDatasetMaker` and use
 # a circular on region. If you have pointlike IRFs, please set
