@@ -513,47 +513,50 @@ class FluxPointsDataset(Dataset):
         """
         if self.data.geom.ndim > 3:
             raise ValueError("Plot residuals works with only one energy axis")
-        ax = ax or plt.gca()
-
-        fp = self.data
-        residuals = self.residuals(method)
-
-        xerr = self.data.energy_axis.as_plot_xerr
-
-        yerr = fp._plot_get_flux_err(sed_type="dnde")
-
-        if method == "diff/model":
-            model = self.flux_pred()
-            yerr = (
-                (yerr[0].quantity / model).squeeze(),
-                (yerr[1].quantity / model).squeeze(),
-            )
-        elif method == "diff":
-            yerr = yerr[0].quantity.squeeze(), yerr[1].quantity.squeeze()
-        else:
-            raise ValueError('Invalid method, choose between "diff" and "diff/model"')
-
-        kwargs.setdefault("color", kwargs.pop("c", "black"))
-        kwargs.setdefault("marker", "+")
-        kwargs.setdefault("linestyle", kwargs.pop("ls", "none"))
 
         with quantity_support():
+            ax = ax or plt.gca()
+
+            fp = self.data
+            residuals = self.residuals(method)
+
+            xerr = self.data.energy_axis.as_plot_xerr
+
+            yerr = fp._plot_get_flux_err(sed_type="dnde")
+
+            if method == "diff/model":
+                model = self.flux_pred()
+                yerr = (
+                    (yerr[0].quantity / model).squeeze(),
+                    (yerr[1].quantity / model).squeeze(),
+                )
+            elif method == "diff":
+                yerr = yerr[0].quantity.squeeze(), yerr[1].quantity.squeeze()
+            else:
+                raise ValueError(
+                    'Invalid method, choose between "diff" and "diff/model"'
+                )
+
+            kwargs.setdefault("color", kwargs.pop("c", "black"))
+            kwargs.setdefault("marker", "+")
+            kwargs.setdefault("linestyle", kwargs.pop("ls", "none"))
+
             ax.errorbar(
                 fp.energy_ref, residuals.squeeze(), xerr=xerr, yerr=yerr, **kwargs
             )
 
-        ax.axhline(0, color=kwargs["color"], lw=0.5)
+            ax.axhline(0, color=kwargs["color"], lw=0.5)
 
-        # format axes
-        ax.set_xlabel(f"Energy [{self._energy_unit.to_string(UNIT_STRING_FORMAT)}]")
-        ax.set_xscale("log")
-        label = self._residuals_labels[method]
-        ax.set_ylabel(f"Residuals\n {label}")
-        ymin = np.nanmin(residuals - yerr[0])
-        ymax = np.nanmax(residuals + yerr[1])
-        ymax = max(abs(ymin), ymax)
-        ax.set_ylim(-1.05 * ymax, 1.05 * ymax)
-        return ax
+            # format axes
+            ax.set_xlabel(f"Energy [{self._energy_unit.to_string(UNIT_STRING_FORMAT)}]")
+            ax.set_xscale("log")
+            label = self._residuals_labels[method]
+            ax.set_ylabel(f"Residuals\n {label}")
+            ymin = np.nanmin(residuals - yerr[0])
+            ymax = np.nanmax(residuals + yerr[1])
+            ymax = max(abs(ymin), ymax)
+            ax.set_ylim(-1.05 * ymax, 1.05 * ymax)
+            return ax
 
     def plot_spectrum(
         self, ax=None, kwargs_fp=None, kwargs_model=None, axis_name="energy"

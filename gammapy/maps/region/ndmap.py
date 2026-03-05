@@ -111,46 +111,46 @@ class RegionNDMap(Map):
         ax : `~matplotlib.pyplot.Axis`
             Axis used for plotting.
         """
-        ax = ax or plt.gca()
+        with quantity_support():
+            ax = ax or plt.gca()
 
-        if axis_name is None:
-            if self.geom.axes.is_unidimensional:
-                axis_name = self.geom.axes.primary_axis.name
-            else:
-                raise ValueError(
-                    "Plotting a region map with multiple extra axes requires "
-                    "specifying the 'axis_name' keyword."
-                )
+            if axis_name is None:
+                if self.geom.axes.is_unidimensional:
+                    axis_name = self.geom.axes.primary_axis.name
+                else:
+                    raise ValueError(
+                        "Plotting a region map with multiple extra axes requires "
+                        "specifying the 'axis_name' keyword."
+                    )
 
-        axis = self.geom.axes[axis_name]
+            axis = self.geom.axes[axis_name]
 
-        kwargs.setdefault("marker", "o")
-        kwargs.setdefault("markersize", 4)
-        kwargs.setdefault("ls", "None")
-        kwargs.setdefault("xerr", axis.as_plot_xerr)
+            kwargs.setdefault("marker", "o")
+            kwargs.setdefault("markersize", 4)
+            kwargs.setdefault("ls", "None")
+            kwargs.setdefault("xerr", axis.as_plot_xerr)
 
-        yerr_nd, yerr = kwargs.pop("yerr", None), None
-        uplims_nd, uplims = kwargs.pop("uplims", None), None
-        label_default = kwargs.pop("label", None)
+            yerr_nd, yerr = kwargs.pop("yerr", None), None
+            uplims_nd, uplims = kwargs.pop("uplims", None), None
+            label_default = kwargs.pop("label", None)
 
-        labels = product(
-            *[ax.as_plot_labels for ax in self.geom.axes if ax.name != axis.name]
-        )
+            labels = product(
+                *[ax.as_plot_labels for ax in self.geom.axes if ax.name != axis.name]
+            )
 
-        for label_axis, (idx, quantity) in zip(
-            labels, self.iter_by_axis_data(axis_name=axis.name)
-        ):
-            if isinstance(yerr_nd, tuple):
-                yerr = yerr_nd[0][idx], yerr_nd[1][idx]
-            elif isinstance(yerr_nd, np.ndarray):
-                yerr = yerr_nd[idx]
+            for label_axis, (idx, quantity) in zip(
+                labels, self.iter_by_axis_data(axis_name=axis.name)
+            ):
+                if isinstance(yerr_nd, tuple):
+                    yerr = yerr_nd[0][idx], yerr_nd[1][idx]
+                elif isinstance(yerr_nd, np.ndarray):
+                    yerr = yerr_nd[idx]
 
-            if uplims_nd is not None:
-                uplims = uplims_nd[idx]
+                if uplims_nd is not None:
+                    uplims = uplims_nd[idx]
 
-            label = " ".join(label_axis) if label_default is None else label_default
+                label = " ".join(label_axis) if label_default is None else label_default
 
-            with quantity_support():
                 ax.errorbar(
                     x=axis.as_plot_center,
                     y=quantity,
@@ -159,12 +159,12 @@ class RegionNDMap(Map):
                     label=label,
                     **kwargs,
                 )
-        axis.format_plot_xaxis(ax=ax)
+            axis.format_plot_xaxis(ax=ax)
 
-        if "energy" in axis_name:
-            ax.set_yscale("log", nonpositive="clip")
+            if "energy" in axis_name:
+                ax.set_yscale("log", nonpositive="clip")
 
-        return ax
+            return ax
 
     def plot_hist(self, ax=None, **kwargs):
         """Plot as histogram.
@@ -182,17 +182,17 @@ class RegionNDMap(Map):
         ax : `~matplotlib.pyplot.Axis`
             Axis used for plotting.
         """
-        ax = plt.gca() if ax is None else ax
-
-        kwargs.setdefault("histtype", "step")
-        kwargs.setdefault("lw", 1)
-
-        if not self.geom.axes.is_unidimensional:
-            raise ValueError("Plotting is only supported for unidimensional maps")
-
-        axis = self.geom.axes[0]
-
         with quantity_support():
+            ax = plt.gca() if ax is None else ax
+
+            kwargs.setdefault("histtype", "step")
+            kwargs.setdefault("lw", 1)
+
+            if not self.geom.axes.is_unidimensional:
+                raise ValueError("Plotting is only supported for unidimensional maps")
+
+            axis = self.geom.axes[0]
+
             weights = self.data[:, 0, 0]
             ax.hist(
                 axis.as_plot_center, bins=axis.as_plot_edges, weights=weights, **kwargs
