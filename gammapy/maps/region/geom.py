@@ -887,7 +887,11 @@ class RegionGeom(Geom):
                     ax = m.plot(add_cbar=False, vmin=-1, vmax=0)
 
             kwargs.setdefault("facecolor", "None")
-            kwargs.setdefault("edgecolor", "tab:blue")
+            user_color = kwargs.pop("color", kwargs.pop("c", None))
+            kwargs.setdefault("edgecolor", kwargs.pop("ec", "C0"))
+            if user_color is not None:
+                kwargs["edgecolor"] = user_color
+
             kwargs_point.setdefault("marker", "*")
 
             for key, value in kwargs.items():
@@ -895,8 +899,8 @@ class RegionGeom(Geom):
                 if key_point and key_point not in kwargs_point:
                     kwargs_point[key_point] = value
 
-            if "color" in kwargs:
-                kwargs_point.setdefault("color", kwargs["color"])
+            if user_color is not None:
+                kwargs_point.setdefault("color", user_color)
             if "color" in kwargs_point:
                 kwargs_point["markeredgecolor"] = kwargs_point["color"]
 

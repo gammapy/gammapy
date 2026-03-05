@@ -55,7 +55,7 @@ def test_inference_data_from_sampler_basic(ultranest_result, datasets):
         results=ultranest_result,
         datasets=datasets,
         backend="ultranest",
-        n_prosterior_samples=None,
+        n_posterior_samples=None,
         n_prior_samples=None,
         predictives=False,
     )
@@ -83,7 +83,7 @@ def test_inference_data_from_sampler_with_options(ultranest_result, datasets):
         results=ultranest_result,
         datasets=datasets,
         backend="ultranest",
-        n_prosterior_samples=10,
+        n_posterior_samples=10,
         n_prior_samples=5,
         predictives=True,
     )
@@ -119,7 +119,7 @@ def test_resample_posterior(ultranest_result, datasets):
         results=ultranest_result,
         datasets=datasets,
         backend="ultranest",
-        n_prosterior_samples=20,
+        n_posterior_samples=20,
         n_prior_samples=5,
         predictives=False,
     )
