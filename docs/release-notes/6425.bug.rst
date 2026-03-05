@@ -1,1 +1,0 @@
-Avoid multiple use of ``quantity_support`` within one loop.
