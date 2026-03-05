@@ -783,7 +783,7 @@ def get_rebinned_axis(fluxpoint, axis_name="energy", method=None, **kwargs):
         The axis name to combine along. Default is 'energy'.
     method : str
         The method to resample the axis. Supported options are
-        'fixed_bins' and 'min-ts'.
+        'fixed-bins' and 'min-ts'.
     kwargs : dict
         Keywords passed to `get_edges_fixed_bins` or `get_edges_min_ts`.
         If method is 'fixed-bins', keyword should be `group_size`.
