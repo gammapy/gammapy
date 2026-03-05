@@ -902,7 +902,7 @@ class RegionGeom(Geom):
             if user_color is not None:
                 kwargs_point.setdefault("color", user_color)
             if "color" in kwargs_point:
-                kwargs_point.setdefault("markeredgecolor", kwargs_point["color"])
+                kwargs_point["markeredgecolor"] = kwargs_point["color"]
 
             for region in compound_region_to_regions(self.region):
                 region_pix = region.to_pixel(wcs=ax.wcs)
