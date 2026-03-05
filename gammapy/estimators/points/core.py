@@ -346,15 +346,29 @@ class FluxPoints(FluxMaps):
         return table
 
     @staticmethod
+    def _infer_format(*, axis_names=(), colnames=()):
+        axis_names = set(axis_names)
+        colnames = set(colnames)
+
+        if "time" in axis_names or "time_min" in colnames:
+            return "lightcurve"
+
+        if "projected-distance" in axis_names or "x_min" in colnames:
+            return "profile"
+
+        return "gadf-sed"
+
+    @staticmethod
     def _table_guess_format(table):
         """Format of the table to be transformed to FluxPoints."""
-        names = table.colnames
-        if "time_min" in names:
-            return "lightcurve"
-        elif "x_min" in names:
-            return "profile"
-        else:
-            return "gadf-sed"
+        return FluxPoints._infer_format(colnames=table.colnames)
+
+    @classmethod
+    def _iter_present_quantities(cls, *, table, sed_type):
+        """Yield quantity names that are both expected for sed_type and present in table."""
+        for name in cls.all_quantities(sed_type=sed_type):
+            if name in table.colnames:
+                yield name
 
     @classmethod
     def from_table(
@@ -406,11 +420,10 @@ class FluxPoints(FluxMaps):
         maps = Maps()
         table.meta.setdefault("SED_TYPE", sed_type)
 
-        for name in cls.all_quantities(sed_type=sed_type):
-            if name in table.colnames:
-                maps[name] = RegionNDMap.from_table(
-                    table=table, colname=name, format=format
-                )
+        for name in cls._iter_present_quantities(table=table, sed_type=sed_type):
+            maps[name] = RegionNDMap.from_table(
+                table=table, colname=name, format=format
+            )
 
         meta = cls._get_meta_gadf(table)
         return cls.from_maps(
@@ -422,12 +435,20 @@ class FluxPoints(FluxMaps):
         )
 
     @staticmethod
+    def _ul_conf_from_n_sigma(n_sigma_ul):
+        return np.round(1 - 2 * stats.norm.sf(n_sigma_ul), 7)
+
+    @staticmethod
+    def _n_sigma_from_ul_conf(conf_ul):
+        return np.round(stats.norm.isf(0.5 * (1 - conf_ul)), 1)
+
+    @staticmethod
     def _get_meta_gadf(table):
         meta = {}
         meta.update(table.meta)
         conf_ul = table.meta.get("UL_CONF")
         if conf_ul:
-            n_sigma_ul = np.round(stats.norm.isf(0.5 * (1 - conf_ul)), 1)
+            n_sigma_ul = FluxPoints._n_sigma_from_ul_conf(conf_ul)
             meta["n_sigma_ul"] = n_sigma_ul
         meta["sed_type_init"] = table.meta.get("SED_TYPE")
         return meta
@@ -447,13 +468,7 @@ class FluxPoints(FluxMaps):
 
     def _guess_format(self):
         """Format of the FluxPoints object."""
-        names = self.geom.axes.names
-        if "time" in names:
-            return "lightcurve"
-        elif "projected-distance" in names:
-            return "profile"
-        else:
-            return "gadf-sed"
+        return self._infer_format(axis_names=self.geom.axes.names)
 
     def _validate_gadf_sed_axes(self):
         if self.geom.axes.names != ["energy"]:
@@ -507,7 +522,7 @@ class FluxPoints(FluxMaps):
             table.remove_columns(["e_min", "e_max"])
 
         if self.n_sigma_ul:
-            table.meta["UL_CONF"] = np.round(1 - 2 * stats.norm.sf(self.n_sigma_ul), 7)
+            table.meta["UL_CONF"] = self._ul_conf_from_n_sigma(self.n_sigma_ul)
 
         if sed_type == "likelihood":
             table["ref_dnde"] = self.dnde_ref[idx].to(DEFAULT_UNIT["dnde"])
