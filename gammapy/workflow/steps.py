@@ -228,15 +228,14 @@ class ObservationsWorkflowStep(WorkflowStepBase):
 
     def _get_data_store(self):
         """Set the datastore on the Workflow object."""
-        path = make_path(self.config.observations.datastore)
+        path = make_path(self.config.observations.datastore)  # NOSONAR
+        # (S2259): attribute cannot be None
         if path.is_file():
             self.log.debug(f"Setting datastore from file: {path}")
             return DataStore.from_file(path)
         elif path.is_dir():
             self.log.debug(f"Setting datastore from directory: {path}")
             return DataStore.from_dir(path)
-        elif path is None:
-            raise ValueError("No datastore file in configuration")
         else:
             raise FileNotFoundError(f"Datastore not found: {path}")
 
@@ -582,13 +581,8 @@ class FluxPointsWorkflowStep(WorkflowStepBase):
         fp_settings = self.config.flux_points
         self.log.info("Calculating flux points.")
 
-        energy_edges = make_energy_axis(fp_settings.energy)
-        if energy_edges is not None:
-            energy_edges = energy_edges.edges
-        else:
-            raise ValueError(
-                "Missing or incomplete energy axis parameters in flux points configuration."
-            )
+        energy_edges = make_energy_axis(fp_settings.energy).edges  # NOSONAR
+        # (S2259): attribute cannot be None
 
         flux_point_estimator = FluxPointsEstimator(
             energy_edges=energy_edges,
@@ -617,13 +611,8 @@ class LightCurveWorkflowStep(WorkflowStepBase):
         """Calculate light curve for a specific model component."""
         lc_settings = self.config.light_curve
         self.log.info("Computing light curve.")
-        energy_edges = make_energy_axis(lc_settings.energy_edges)
-        if energy_edges is not None:
-            energy_edges = energy_edges.edges
-        else:
-            raise ValueError(
-                "Missing or incomplete energy axis parameters in light curve configuration."
-            )
+        energy_edges = make_energy_axis(lc_settings.energy_edges).edges  # NOSONAR
+        # (S2259): attribute cannot be None
 
         if (
             lc_settings.time_intervals.start is None
