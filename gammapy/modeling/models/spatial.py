@@ -65,6 +65,42 @@ def compute_sigma_eff(lon_0, lat_0, lon, lat, phi, major_axis, e):
     return minor_axis, sigma_eff
 
 
+def _validate_template_map(map_):
+    """Validate template map data for NaN, negative, or zero values."""
+    if (map_.data < 0).any():
+        log.warning("Map has negative values. Check and fix this!")
+
+    if (map_.data == 0.0).all():  # NOSONAR
+        # (S1244): explicit check for exactly representable zeros
+        log.warning("Map values are all zeros. Check and fix this!")
+
+    if np.isnan(map_.data).any():
+        log.warning("Map has NaN values. Check and fix this!")
+
+    if not map_.geom.is_image:
+        # sum over spatial dimensions for each non-spatial slice
+        if map_.geom.is_hpx:
+            spatial_sum = map_.data.sum(axis=-1)
+        else:
+            spatial_sum = map_.data.sum(axis=(-2, -1))
+
+        if (spatial_sum == 0).any():
+            log.warning(
+                "Map values are all zeros in at least one energy bin. Check and fix this!"
+            )
+
+
+def _get_template_filename(filename):
+    """Handle and validate template filename."""
+    if filename is not None:
+        return str(make_path(filename))
+    log.warning(
+        "The filename is not defined. Therefore, the model will not be serialised correctly. "
+        'To set the filename, the "template_model.filename" attribute can be used.'
+    )
+    return None
+
+
 class SpatialModel(ModelBase):
     """Spatial model base class."""
 
@@ -1326,55 +1362,13 @@ class TemplateSpatialModel(SpatialModel):
         copy_data=True,
         **kwargs,
     ):
-        if (map.data < 0).any():
-            log.warning("Map has negative values. Check and fix this!")
-        if (map.data == 0.0).all():  # NOSONAR
-            # (S1244): explicit check for exactly representable zeros
-            log.warning("Map values are all zeros. Check and fix this!")
-        if np.isnan(map.data).any():
-            log.warning("Map has NaN values. Check and fix this!")
-        if not map.geom.is_image and (map.data.sum(axis=(1, 2)) == 0).any():
-            log.warning(
-                "Map values are all zeros in at least one energy bin. Check and fix this!"
-            )
-
-        if filename is not None:
-            filename = str(make_path(filename))
-        if filename is None:
-            log.warning(
-                "The filename is not defined. Therefore, the model will not be serialised correctly. "
-                'To set the filename, the "template_model.filename" attribute can be used.'
-            )
-        self.filename = filename
+        _validate_template_map(map)
+        self.filename = _get_template_filename(filename)
 
         self.normalize = normalize
-        if normalize:
-            # Normalize the diffuse map model so that it integrates to unity
-            if map.geom.is_image:
-                data_sum = map.data.sum()
-            else:
-                # Normalize in each energy bin
-                data_sum = map.data.sum(axis=(1, 2)).reshape((-1, 1, 1))
-
-            data = np.divide(
-                map.data.astype(float),
-                data_sum,
-                out=np.zeros_like(map.data, dtype=float),
-                where=data_sum != 0,
-            )
-            data /= map.geom.solid_angle().to_value("sr")
-            map = map.copy(data=data, unit="sr-1")
-
-        if map.unit.is_equivalent(""):
-            map = map.copy(data=map.data, unit="sr-1")
-            log.warning("Missing spatial template unit, assuming sr^-1")
-
-        if copy_data:
-            self._map = map.copy()
-        else:
-            self._map = map.copy(data=map.data)
-
         self.meta = {} if meta is None else meta
+
+        self._map = self._process_template_map(map, normalize, copy_data)
 
         interp_kwargs = {} if interp_kwargs is None else interp_kwargs
         interp_kwargs.setdefault("method", "linear")
@@ -1394,6 +1388,38 @@ class TemplateSpatialModel(SpatialModel):
         ):
             kwargs["lat_0"] = self.map_center.data.lat
         super().__init__(**kwargs)
+
+    @staticmethod
+    def _process_template_map(map_, normalize, copy_data):
+        """Handle normalization, units, and data copying logic."""
+        if normalize:
+            # Normalize the diffuse map model so that it integrates to unity
+            # Do the sum over spatial axes for each non-spatial slice.
+            if map_.geom.is_hpx:
+                data_sum = map_.data.sum(axis=-1, keepdims=True)
+            else:
+                data_sum = map_.data.sum(axis=(-2, -1), keepdims=True)
+
+            data = np.divide(
+                map_.data.astype(float),
+                data_sum,
+                out=np.zeros_like(map_.data, dtype=float),
+                where=data_sum != 0,
+            )
+            data /= map_.geom.solid_angle().to_value("sr")
+
+            processed_map = map_.copy(data=data, unit="sr-1")
+        else:
+            if copy_data:
+                processed_map = map_.copy()
+            else:
+                processed_map = map_.copy(data=map_.data)
+
+        if processed_map.unit.is_equivalent(""):
+            log.warning("Missing spatial template unit, assuming sr^-1")
+            processed_map = processed_map.copy(data=processed_map.data, unit="sr-1")
+
+        return processed_map
 
     def __str__(self):
         width = self.map.geom.width
@@ -1636,19 +1662,16 @@ class TemplateNDSpatialModel(SpatialModel):
     ):
         if not isinstance(map, (HpxNDMap, WcsNDMap)):
             raise TypeError("Map should be a HpxNDMap or WcsNDMap")
+
+        _validate_template_map(map)
+        self.filename = _get_template_filename(filename)
+
         if copy_data:
             self._map = map.copy()
         else:
             self._map = map.copy(data=map.data)
+
         self.meta = dict() if meta is None else meta
-        if filename is not None:
-            filename = str(make_path(filename))
-        if filename is None:
-            log.warning(
-                "The filename is not defined. Therefore, the model will not be serialised correctly. "
-                'To set the filename, the "template_model.filename" attribute can be used.'
-            )
-        self.filename = filename
 
         parameters = []
         for axis in map.geom.axes:
