@@ -24,6 +24,7 @@ __all__ = [
     "recursive_merge_dicts",
     "to_yaml",
     "write_yaml",
+    "logic_parser",
 ]
 
 PATH_DOCS = Path(__file__).resolve().parent / ".." / ".." / "docs"
@@ -301,8 +302,14 @@ def logic_parser(table, expression):
     This function evaluates a logical expression on each row of the input table
     and returns a new table containing only the rows that satisfy the expression.
     The expression can reference any column in the table by name and supports
-    logical operators (`and`, `or`), comparison operators (`<`, `>`, `==`, `!=`, `in`),
-    lists, and constants.
+    logical operators (``and``, ``or``), comparison operators
+    (``<``, ``<=``, ``>``, ``>=``, ``==``, ``!=``, ``in``), lists, constants,
+    and chained comparisons (e.g. ``1 < OBS_ID < 3``).
+
+    Chained comparisons follow standard Python semantics and are equivalent to
+    combining individual comparisons with ``and``. For example,
+    ``1 < OBS_ID < 3`` is equivalent to
+    ``(OBS_ID > 1) and (OBS_ID < 3)``.
 
     Parameters
     ----------
@@ -326,42 +333,74 @@ def logic_parser(table, expression):
     >>> from astropy.table import Table
     >>> data = {'OBS_ID': [1, 2, 3, 4], 'EVENT_TYPE': ['1', '3', '4', '2']}
     >>> table = Table(data)
-    >>> expression = '(OBS_ID < 3) and (OBS_ID > 1) and ((EVENT_TYPE in ["3", "4"]) or (EVENT_TYPE == "3"))'
-    >>> filtered_table = logic_parser(table, expression)
-    >>> print(filtered_table)
-    OBS_ID EVENT_TYPE
-    ------ ----------
-         2          3
 
+    Standard logical expression:
+
+    >>> expression = '(OBS_ID < 3) and (OBS_ID > 1)'
+    >>> logic_parser(table, expression)
+
+    Using chained comparisons:
+
+    >>> expression = '1 < OBS_ID < 3'
+    >>> logic_parser(table, expression)
+
+    Combining chained comparisons with other conditions:
+
+    >>> expression = '(1 < OBS_ID < 4) and (EVENT_TYPE in ["3", "4"])'
+    >>> logic_parser(table, expression)
     """
 
+    def handle_boolop(node):
+        op_func = _OPERATORS[type(node.op)]
+        values = [eval_node(v) for v in node.values]
+        result = values[0]
+        for value in values[1:]:
+            result = op_func(result, value)
+        return result
+
+    def handle_compare(node):
+        left = eval_node(node.left)
+        parts = []
+
+        for op, comparator in zip(node.ops, node.comparators):
+            right = eval_node(comparator)
+            op_func = _OPERATORS[type(op)]
+            parts.append(op_func(left, right))
+            left = right
+
+        result = parts[0]
+        for part in parts[1:]:
+            result = np.logical_and(result, part)
+
+        return result
+
+    def handle_name(node):
+        if node.id not in table.colnames:
+            raise KeyError(
+                f"Column '{node.id}' not found in the table. "
+                f"Available columns: {table.colnames}"
+            )
+        return table[node.id]
+
+    def handle_constant(node):
+        return node.value
+
+    def handle_list(node):
+        return [eval_node(elt) for elt in node.elts]
+
+    handlers = {
+        ast.BoolOp: handle_boolop,
+        ast.Compare: handle_compare,
+        ast.Name: handle_name,
+        ast.Constant: handle_constant,
+        ast.List: handle_list,
+    }
+
     def eval_node(node):
-        if isinstance(node, ast.BoolOp):
-            op_func = _OPERATORS[type(node.op)]
-            values = [eval_node(v) for v in node.values]
-            result = values[0]
-            for v in values[1:]:
-                result = op_func(result, v)
-            return result
-        elif isinstance(node, ast.Compare):
-            left = eval_node(node.left)
-            for op, comparator in zip(node.ops, node.comparators):
-                right = eval_node(comparator)
-                op_func = _OPERATORS[type(op)]
-                left = op_func(left, right)
-            return left
-        elif isinstance(node, ast.Name):
-            if node.id not in table.colnames:
-                raise KeyError(
-                    f"Column '{node.id}' not found in the table. Available columns: {table.colnames}"
-                )
-            return table[node.id]
-        elif isinstance(node, ast.Constant):
-            return node.value
-        elif isinstance(node, ast.List):
-            return [eval_node(elt) for elt in node.elts]
-        else:
+        handler = handlers.get(type(node))
+        if handler is None:
             raise ValueError(f"Unsupported expression type: {type(node)}")
+        return handler(node)
 
     expr_ast = ast.parse(expression, mode="eval")
     mask = eval_node(expr_ast.body)

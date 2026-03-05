@@ -773,6 +773,27 @@ def test_fpe_non_uniform_datasets():
         fpe.run(datasets=[dataset_1, dataset_2])
 
 
+def test_fpe_multiple_telescopes():
+    energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=10)
+    geom = RegionGeom.create("icrs;circle(0, 0, 0.1)", axes=[energy_axis])
+    dataset_1 = SpectrumDataset.create(
+        geom=geom, meta_table=Table({"TELESCOP": ["CTA"]})
+    )
+    dataset_2 = SpectrumDataset.create(
+        geom=geom, meta_table=Table({"TELESCOP": ["CTB"]})
+    )
+    assert dataset_1.meta_table["TELESCOP"] is not dataset_2.meta_table["TELESCOP"]
+    datasets = Datasets([dataset_1, dataset_2])
+    datasets.models = SkyModel(spectral_model=PowerLawSpectralModel(), name="test")
+    fpe = FluxPointsEstimator(
+        energy_edges=[1, 2, 4, 10] * u.TeV,
+        source="test",
+        allow_multiple_telescopes=True,
+    )
+    fp = fpe.run(datasets)
+    assert_allclose(fp.counts.data[0], ([[[0]], [[0]]]), rtol=1e-3)
+
+
 @requires_data()
 def test_flux_points_estimator_norm_spectral_model(fermi_datasets):
     energy_edges = [10, 30, 100, 300, 1000] * u.GeV
@@ -856,7 +877,7 @@ def test_fpe_diff_lengths():
     dataset4.meta_table = Table(names=["NAME", "TELESCOP"], data=[["23523"], ["not"]])
     datasets = Datasets([dataset1, dataset2, dataset3, dataset4])
     with pytest.raises(ValueError):
-        fp = fpe.run(datasets)
+        fpe.run(datasets)
 
 
 def test_resample_axis():
