@@ -459,7 +459,7 @@ def test_write_models_no_path(tmp_path):
     model = SkyModel(spectral_model=spectral_model, name="test-model")
     models = Models([model])
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="The path is not defined."):
         _write_models(models, path=None)
 
     spectral_model.filename = None

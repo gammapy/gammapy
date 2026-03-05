@@ -232,7 +232,7 @@ def test_datasets_write(map_datasets, tmp_path):
             overwrite=False,
         )
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="The filename is not defined."):
         datasets.write(filename=None)
 
 

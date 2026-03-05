@@ -61,7 +61,7 @@ def test_flux_point_dataset_serialization(tmp_path):
     )
     model = SkyModel(spectral_model=spectral_model, name="test_model")
     dataset = FluxPointsDataset(model, data, name="test_dataset")
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="The filename is not defined."):
         dataset.write(None)
 
     dataset2 = FluxPointsDataset.read(path, name="test_dataset2")
