@@ -423,3 +423,12 @@ def plot_distribution(
         axe.legend()
 
     return axes, result_list
+
+
+def get_last_user_line_or_patch(ax):
+    """Return the last-added user Line2D or Patch on a `~matplotlib.pyplot.Axes`."""
+
+    allowed_ids = {id(a) for a in ax.lines} | {id(a) for a in ax.patches}
+    for a in reversed(ax.get_children()):
+        if id(a) in allowed_ids:
+            return a
