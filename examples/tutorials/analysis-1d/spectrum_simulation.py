@@ -135,10 +135,10 @@ print(obs)
 ######################################################################
 # Simulate a spectrum
 # Note that here we are using full containment IRFs and thus set
-# `containment_correction=True` in the `SpectrumDatasetMaker` and use
+# ``containment_correction=True`` in the `~gammapy.makers.SpectrumDatasetMaker` and use
 # a circular on region. If you have pointlike IRFs, please set
-# `containment_correction=False` and use a `~regions.PointSkyRegion`.
-# See :doc:`/tutorials/data/magic` tutorial for details
+# ``containment_correction=False`` and use a `~regions.PointSkyRegion`.
+# See :doc:`/tutorials/data/magic` tutorial for details.
 #
 
 # Make the SpectrumDataset
