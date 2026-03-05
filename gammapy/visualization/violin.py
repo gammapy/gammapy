@@ -22,6 +22,7 @@ def plot_flux_violin(
 ):
     """
     Plot flux-sample violin distributions per energy bin on log–log axes.
+    Unlike standard error bars which only shows summary statistics, a violin plot shows the full probability density for each energy bin.
 
     This function draws one violin per energy interval, using weighted
     kernel-density estimation (KDE) in log-space. The median and
@@ -82,7 +83,8 @@ def plot_flux_violin(
     - The plotted error bars correspond to the 16%, 50%, and 84%
       weighted percentiles of the *unclipped* samples, unless the median
       is non-positive, in which case an upper limit marker is drawn
-      (corresponding to the 2σ one-sided percentile).
+      at the 98% percentile. For a gaussian distribution these values corresponds to 
+      1σ errors and 2σ upper limit plotted by default by the `FluxPoints.plot` method.
     """
 
     # Axis scaling
