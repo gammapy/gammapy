@@ -83,7 +83,7 @@ def plot_flux_violin(
     - The plotted error bars correspond to the 16%, 50%, and 84%
       weighted percentiles of the *unclipped* samples, unless the median
       is non-positive, in which case an upper limit marker is drawn
-      at the 98% percentile. For a gaussian distribution these values corresponds to 
+      at the 98% percentile. For a gaussian distribution these values corresponds to
       1σ errors and 2σ upper limit plotted by default by the `FluxPoints.plot` method.
     """
 
