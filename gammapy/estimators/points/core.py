@@ -455,6 +455,165 @@ class FluxPoints(FluxMaps):
         else:
             return "gadf-sed"
 
+    def _validate_gadf_sed_axes(self):
+        if self.geom.axes.names != ["energy"]:
+            raise ValueError(
+                "Only flux points with a single energy axis "
+                "can be converted to 'gadf-sed'"
+            )
+
+    def _get_single_time_axis_or_raise(self, format_name="binned-time-series"):
+        message = (
+            f"Format '{format_name}' support a single time axis "
+            f"only. Got {self.geom.axes.names}"
+        )
+
+        if not self.geom.axes.is_unidimensional:
+            raise ValueError(message)
+
+        axis = self.geom.axes.primary_axis
+
+        if not isinstance(axis, TimeMapAxis):
+            raise ValueError(message)
+
+        return axis
+
+    def _add_quantities_columns(self, table, *, sed_type, sed_unit, idx, squeeze=False):
+        for quantity in self.all_quantities(sed_type=sed_type):
+            data = getattr(self, quantity, None)
+            if not data:
+                continue
+
+            q = data.quantity[idx]
+            if squeeze:
+                q = q.squeeze()
+
+            # NOTE: keep original behavior:
+            # - unity unit OR sed_type == "likelihood" => no unit conversion
+            if data.unit.is_unity() or sed_type == "likelihood":
+                table[quantity] = q
+            else:
+                table[quantity] = q.to(sed_unit)
+
+    def _to_table_gadf_sed(self, *, sed_type, sed_unit):
+        # TODO: what to do with GTI info?
+        self._validate_gadf_sed_axes()
+
+        idx = (Ellipsis, 0, 0)
+        table = self.energy_axis.to_table(format="gadf-sed")
+        table.meta["SED_TYPE"] = sed_type
+
+        if not self.is_convertible_to_flux_sed_type:
+            table.remove_columns(["e_min", "e_max"])
+
+        if self.n_sigma_ul:
+            table.meta["UL_CONF"] = np.round(1 - 2 * stats.norm.sf(self.n_sigma_ul), 7)
+
+        if sed_type == "likelihood":
+            table["ref_dnde"] = self.dnde_ref[idx].to(DEFAULT_UNIT["dnde"])
+            table["ref_flux"] = self.flux_ref[idx].to(DEFAULT_UNIT["flux"])
+            table["ref_eflux"] = self.eflux_ref[idx].to(DEFAULT_UNIT["e2dnde"])
+
+        self._add_quantities_columns(
+            table, sed_type=sed_type, sed_unit=sed_unit, idx=idx
+        )
+
+        if self.has_stat_profiles:
+            norm_axis = self.stat_scan.geom.axes["norm"]
+            table["norm_scan"] = norm_axis.center.reshape((1, -1))
+            table["stat"] = self.stat.data[idx]
+            table["stat_scan"] = self.stat_scan.data[idx]
+
+        table["is_ul"] = self.is_ul.data[idx]
+        if not self.has_ul:
+            table.remove_columns("is_ul")
+
+        return table
+
+    def _stack_slices_to_table(
+        self,
+        *,
+        axis_name,
+        iter_edges,
+        make_prefix_cols,
+        sed_type,
+        sed_unit,
+    ):
+        tables = []
+
+        for idx, edges in enumerate(iter_edges):
+            table_flat = Table()
+            make_prefix_cols(table_flat, edges)
+
+            fp = self.slice_by_idx(slices={axis_name: idx})
+            # IMPORTANT: call internal gadf-sed directly to avoid re-dispatch complexity
+            inner = fp._to_table_gadf_sed(sed_type=sed_type, sed_unit=sed_unit)
+
+            for column in inner.columns:
+                table_flat[column] = inner[column][np.newaxis]
+
+            tables.append(table_flat)
+
+        return vstack(tables)
+
+    def _to_table_lightcurve(self, *, sed_type, sed_unit):
+        time_axis = self.geom.axes["time"]
+
+        def make_prefix_cols(table_flat, edges):
+            time_min, time_max = edges
+            table_flat["time_min"] = [time_min.mjd]
+            table_flat["time_max"] = [time_max.mjd]
+
+        table = self._stack_slices_to_table(
+            axis_name="time",
+            iter_edges=time_axis.iter_by_time_edges,
+            make_prefix_cols=make_prefix_cols,
+            sed_type=sed_type,
+            sed_unit=sed_unit,
+        )
+
+        # serialize with reference time set to mjd=0.0 (keep original behavior)
+        ref_time = Time(0.0, format="mjd", scale=time_axis.reference_time.scale)
+        table.meta.update(time_ref_to_dict(ref_time, scale=ref_time.scale))
+        table.meta["TIMEUNIT"] = "d"
+
+        return table
+
+    def _to_table_profile(self, *, sed_type, sed_unit):
+        x_axis = self.geom.axes["projected-distance"]
+
+        def make_prefix_cols(table_flat, edges):
+            x_min, x_max = edges
+            table_flat["x_min"] = [x_min]
+            table_flat["x_max"] = [x_max]
+            table_flat["x_ref"] = [(x_max + x_min) / 2]
+
+        return self._stack_slices_to_table(
+            axis_name="projected-distance",
+            iter_edges=x_axis.iter_by_edges,
+            make_prefix_cols=make_prefix_cols,
+            sed_type=sed_type,
+            sed_unit=sed_unit,
+        )
+
+    def _to_table_binned_time_series(self, *, sed_type, sed_unit):
+        axis = self._get_single_time_axis_or_raise(format_name="binned-time-series")
+
+        table = Table()
+        table["time_bin_start"] = axis.time_min
+        table["time_bin_size"] = axis.time_delta
+
+        # idx is unused for squeeze=True; keep interface consistent
+        self._add_quantities_columns(
+            table,
+            sed_type=sed_type,
+            sed_unit=sed_unit,
+            idx=Ellipsis,
+            squeeze=True,
+        )
+
+        return table
+
     def to_table(self, sed_type=None, format=None, formatted=False):
         """Create table for a given SED type.
 
@@ -501,6 +660,7 @@ class FluxPoints(FluxMaps):
         1.334 1.000 1.780   1.423e-11   3.135e-13         nan 2734.000  52.288 False
         2.372 1.780 3.160   5.780e-12   1.082e-13         nan 4112.000  64.125 False
         """
+
         if sed_type is None:
             sed_type = self.sed_type_init
 
@@ -510,115 +670,16 @@ class FluxPoints(FluxMaps):
             format = self._guess_format()
             log.info("Inferred format: " + format)
 
-        if format == "gadf-sed":
-            # TODO: what to do with GTI info?
-            if self.geom.axes.names != ["energy"]:
-                raise ValueError(
-                    "Only flux points with a single energy axis "
-                    "can be converted to 'gadf-sed'"
-                )
+        dispatch = {
+            "gadf-sed": self._to_table_gadf_sed,
+            "lightcurve": self._to_table_lightcurve,
+            "binned-time-series": self._to_table_binned_time_series,
+            "profile": self._to_table_profile,
+        }
 
-            idx = (Ellipsis, 0, 0)
-            table = self.energy_axis.to_table(format="gadf-sed")
-            table.meta["SED_TYPE"] = sed_type
-
-            if not self.is_convertible_to_flux_sed_type:
-                table.remove_columns(["e_min", "e_max"])
-
-            if self.n_sigma_ul:
-                table.meta["UL_CONF"] = np.round(
-                    1 - 2 * stats.norm.sf(self.n_sigma_ul), 7
-                )
-
-            if sed_type == "likelihood":
-                table["ref_dnde"] = self.dnde_ref[idx].to(DEFAULT_UNIT["dnde"])
-                table["ref_flux"] = self.flux_ref[idx].to(DEFAULT_UNIT["flux"])
-                table["ref_eflux"] = self.eflux_ref[idx].to(DEFAULT_UNIT["e2dnde"])
-
-            for quantity in self.all_quantities(sed_type=sed_type):
-                data = getattr(self, quantity, None)
-                if data and (data.unit.is_unity() or sed_type == "likelihood"):
-                    table[quantity] = data.quantity[idx]
-                elif data:
-                    table[quantity] = data.quantity[idx].to(sed_unit)
-
-            if self.has_stat_profiles:
-                norm_axis = self.stat_scan.geom.axes["norm"]
-                table["norm_scan"] = norm_axis.center.reshape((1, -1))
-                table["stat"] = self.stat.data[idx]
-                table["stat_scan"] = self.stat_scan.data[idx]
-
-            table["is_ul"] = self.is_ul.data[idx]
-            if not self.has_ul:
-                table.remove_columns("is_ul")
-
-        elif format == "lightcurve":
-            time_axis = self.geom.axes["time"]
-
-            tables = []
-            for idx, (time_min, time_max) in enumerate(time_axis.iter_by_time_edges):
-                table_flat = Table()
-                table_flat["time_min"] = [time_min.mjd]
-                table_flat["time_max"] = [time_max.mjd]
-
-                fp = self.slice_by_idx(slices={"time": idx})
-                table = fp.to_table(sed_type=sed_type, format="gadf-sed")
-
-                for column in table.columns:
-                    table_flat[column] = table[column][np.newaxis]
-
-                tables.append(table_flat)
-
-            table = vstack(tables)
-
-            # serialize with reference time set to mjd=0.0
-            ref_time = Time(0.0, format="mjd", scale=time_axis.reference_time.scale)
-            table.meta.update(time_ref_to_dict(ref_time, scale=ref_time.scale))
-            table.meta["TIMEUNIT"] = "d"
-
-        elif format == "binned-time-series":
-            message = (
-                "Format 'binned-time-series' support a single time axis "
-                f"only. Got {self.geom.axes.names}"
-            )
-
-            if not self.geom.axes.is_unidimensional:
-                raise ValueError(message)
-
-            axis = self.geom.axes.primary_axis
-
-            if not isinstance(axis, TimeMapAxis):
-                raise ValueError(message)
-
-            table = Table()
-            table["time_bin_start"] = axis.time_min
-            table["time_bin_size"] = axis.time_delta
-
-            for quantity in self.all_quantities(sed_type=sed_type):
-                data = getattr(self, quantity, None)
-                if data:
-                    table[quantity] = data.quantity.squeeze()
-        elif format == "profile":
-            x_axis = self.geom.axes["projected-distance"]
-
-            tables = []
-            for idx, (x_min, x_max) in enumerate(x_axis.iter_by_edges):
-                table_flat = Table()
-                table_flat["x_min"] = [x_min]
-                table_flat["x_max"] = [x_max]
-                table_flat["x_ref"] = [(x_max + x_min) / 2]
-
-                fp = self.slice_by_idx(slices={"projected-distance": idx})
-                table = fp.to_table(sed_type=sed_type, format="gadf-sed")
-
-                for column in table.columns:
-                    table_flat[column] = table[column][np.newaxis]
-
-                tables.append(table_flat)
-
-            table = vstack(tables)
-
-        else:
+        try:
+            table = dispatch[format](sed_type=sed_type, sed_unit=sed_unit)
+        except KeyError:
             raise ValueError(f"Not a supported format {format}")
 
         if formatted:
