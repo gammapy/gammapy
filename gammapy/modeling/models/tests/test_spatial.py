@@ -876,3 +876,26 @@ def test_template_spatial_parameters_copy():
     model.position = SkyCoord(0, 0, unit="deg", frame="galactic")
     model_copy = model.copy()
     assert_allclose(model.parameters.value, model_copy.parameters.value)
+
+
+@requires_dependency("healpy")
+def test_hpx_template_normalize():
+    """
+    Test the normalization (scaling) of a multidimensional HPX map.
+    This ensures that the `axis=-1` and `keepdims=True` logic works correctly
+    for scaling each spatial slice independently.
+    """
+    energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=2)
+    geom = HpxGeom.create(nside=4, axes=[energy_axis])
+
+    template_map = Map.from_geom(geom=geom, unit="")
+    template_map.data[0, :] = 2.0
+    template_map.data[1, :] = 5.0
+
+    model = TemplateSpatialModel(template_map, normalize=True)
+
+    solid_angle = geom.solid_angle().to_value("sr")
+
+    integral = np.sum(model.map.data * solid_angle, axis=-1)
+
+    assert_allclose(integral, [1.0, 1.0])
