@@ -1,1 +1,1 @@
-Add an ``inverted`` option for time selection in ``select_time`` for `~gammapy.data.EventList`, `~gammapy.data.GTI` and `@gammapy.data.Observation`.
+Add an ``inverted`` option for time selection in ``select_time`` for `~gammapy.data.EventList`, `~gammapy.data.GTI` and `~gammapy.data.Observation`.
