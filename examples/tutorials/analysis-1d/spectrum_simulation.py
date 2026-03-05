@@ -134,6 +134,7 @@ print(obs)
 
 ######################################################################
 # Simulate a spectrum
+#
 # Note that here we are using full containment IRFs and thus set
 # ``containment_correction=True`` in the `~gammapy.makers.SpectrumDatasetMaker` and use
 # a circular on region. If you have pointlike IRFs, please set
