@@ -533,7 +533,7 @@ class Observation:
         Parameters
         ----------
         time_interval : `astropy.time.Time`
-            Start and stop time of the selected time interval.
+            Start time (exclusive) and stop time (exclusive) of the selected time interval.
             For now, we only support a single time interval.
         inverted : bool, optional
             Whether to invert selection i.e. to keep all entries outside the time range.
@@ -776,7 +776,8 @@ class Observations(collections.abc.MutableSequence):
         Parameters
         ----------
         time_intervals : `astropy.time.Time` or list of `astropy.time.Time`
-            List of start and stop time of the time intervals or one time interval.
+            List of start time (exclusive) and stop time (exclusive) for the time intervals
+            or one time interval.
         inverted : bool, optional
             Whether to invert selection i.e. to keep all entries outside the time range.
             Default is False.
