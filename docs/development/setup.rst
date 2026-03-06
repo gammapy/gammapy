@@ -205,7 +205,7 @@ to get started, and for tutorials.
 You can launch the latest development version of the tutorials directly:
 
 .. image:: https://img.shields.io/badge/launch-binder-579aca.svg
-   :target: https://mybinder.org/v2/gh/gammapy/gammapy-webpage/main?urlpath=lab/tree/notebooks/dev
+   :target: https://mybinder.org/v2/gh/gammapy/gammapy-webpage/main?urlpath=lab
    :alt: Launch Binder
 
 Every HTML-fixed version of the notebooks
