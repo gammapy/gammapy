@@ -760,7 +760,7 @@ def project_irf_on_geom(geom, irf, fov_frame, use_region_center=True):
 
 
 def integrate_project_irf_on_geom(geom, irf, fov_frame, use_region_center=True):
-    """Integrate and project a BackgroundIRF on a given `~gammapy.maps.Geom` object according to a given FoV Frame.
+    """Integrate and project a `~gammapy.irf.BackgroundIRF` on a given `~gammapy.maps.Geom` object according to a given FoV Frame.
 
     The IRF is integrated in energy and multiplied by the solid angle.
 
