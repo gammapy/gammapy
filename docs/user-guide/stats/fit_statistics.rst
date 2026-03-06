@@ -94,12 +94,48 @@ The WStat statistic is implemented in `~gammapy.stats.wstat` and is used as a `s
 function by the `~gammapy.datasets.MapDatasetOnOff` and the `~gammapy.datasets.SpectrumDatasetOnOff`.
 
 
+LStat: Bayesian ON-OFF statistic
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+LStat is an alternative to WStat that uses Bayesian marginalization instead of
+profile likelihood to handle the unknown background parameter.
+
+The main difference: while WStat finds the maximum likelihood estimate of
+:math:`\mu_{\mathrm{bkg}}`, LStat integrates it out using a uniform 
+(non-informative) prior. This Bayesian approach was introduced by [Loredo1992]_
+and tends to give more conservative uncertainty estimates.
+
+The LStat fit statistic is given by:
+
+.. math::
+    L = 2 \big[-\mu_{\mathrm{sig}} + (n_{\mathrm{on}} + n_{\mathrm{off}} + 1) \log(1 + \frac{\alpha \mu_{\mathrm{sig}}}{n_{\mathrm{on}} + n_{\mathrm{off}}}) - n_{\mathrm{on}} \log(\alpha)\big]
+
+See the :ref:`LStat derivation <lstat_derivation>` page for the full mathematical derivation.
+
+The LStat statistic is implemented in `~gammapy.stats.lstat` and can be used as an
+alternative to WStat for ON-OFF measurements when you prefer a Bayesian treatment of
+the background uncertainties.
+
+WStat vs LStat
+^^^^^^^^^^^^^^
+
+Key differences:
+
+- **WStat**: Profile likelihood approach - finds best-fit background. Simpler and widely used.
+- **LStat**: Bayesian marginalization - integrates over background. More conservative, theoretically cleaner.
+
+For high statistics both give similar results, but they can differ quite a bit
+in the low-count regime.
+
+
 Caveat
 ^^^^^^
 
 - Since WStat takes into account background estimation uncertainties and makes no assumption such as a background model, it usually gives larger statistical uncertainties on the fitted parameters. If a background model exists, to properly compare with parameters estimated using the Cash statistics, one should include some systematic uncertainty on the background model.
 
 - Note also that at very low counts, WStat is known to result in biased estimates. This can be an issue when studying the high energy behaviour of faint sources. When performing spectral fits with WStat, it is recommended to randomize observations and check whether the resulting fitted parameters distributions are consistent with the input values.
+
+- LStat generally provides more conservative (wider) confidence intervals than WStat, which can be good in low-count scenarios but might be overly cautious.
 
 
 Example

@@ -5,9 +5,9 @@ import numpy as np
 from scipy.special import lambertw
 from scipy.stats import chi2
 from gammapy.utils.roots import find_roots
-from .fit_statistics import cash, wstat
+from .fit_statistics import cash, wstat, lstat
 
-__all__ = ["WStatCountsStatistic", "CashCountsStatistic"]
+__all__ = ["WStatCountsStatistic", "LStatCountsStatistic", "CashCountsStatistic"]
 
 
 class CountsStatistic(abc.ABC):
@@ -477,5 +477,121 @@ class WStatCountsStatistic(CountsStatistic):
 
     def __getitem__(self, key):
         return WStatCountsStatistic(
+            n_on=self.n_on[key], n_off=self.n_off[key], alpha=self.alpha[key]
+        )
+
+
+class LStatCountsStatistic(CountsStatistic):
+    """Class to compute statistics for Poisson data with Bayesian marginalized background.
+
+    This uses Bayesian marginalization over the background parameter
+    instead of the profile likelihood approach used in WStatCountsStatistic.
+
+    Parameters
+    ----------
+    n_on : int
+        Measured counts in on region.
+    n_off : int
+        Measured counts in off region.
+    alpha : float
+        Acceptance ratio of on and off measurements.
+    mu_sig : float
+        Expected signal counts in on region.
+    """
+
+    def __init__(self, n_on, n_off, alpha, mu_sig=None):
+        self.n_on = np.asanyarray(n_on)
+        self.n_off = np.asanyarray(n_off)
+        self.alpha = np.asanyarray(alpha)
+
+        if mu_sig is None:
+            self.mu_sig = np.zeros_like(self.n_on)
+        else:
+            self.mu_sig = np.asanyarray(mu_sig)
+
+    @property
+    def n_bkg(self):
+        """Background estimate alpha * n_off."""
+        return self.alpha * self.n_off
+
+    @property
+    def n_sig(self):
+        """Excess."""
+        return self.n_on - self.n_bkg - self.mu_sig
+
+    @property
+    def error(self):
+        """Approximate error from the covariance matrix."""
+        return np.sqrt(self.n_on + self.alpha**2 * self.n_off)
+
+    @property
+    def stat_null(self):
+        """Stat value for null hypothesis, i.e. mu_sig expected signal counts."""
+        return lstat(self.n_on, self.n_off, self.alpha, self.mu_sig)
+
+    @property
+    def stat_max(self):
+        """Stat value for best fit hypothesis.
+
+        i.e. expected signal mu = n_on - alpha * n_off - mu_sig.
+        """
+        return lstat(self.n_on, self.n_off, self.alpha, self.n_sig + self.mu_sig)
+
+    def info_dict(self):
+        """A dictionary of the relevant quantities.
+
+        Returns
+        -------
+        info_dict : dict
+            Dictionary with summary info.
+        """
+        info_dict = super().info_dict()
+        info_dict["n_off"] = self.n_off
+        info_dict["alpha"] = self.alpha
+        info_dict["mu_sig"] = self.mu_sig
+        return info_dict
+
+    def __str__(self):
+        str_ = f"{self.__class__.__name__}\n"
+        str_ += super().__str__()
+        info_dict = self.info_dict()
+        str_ += "\t{:32}: {:.2f} \n".format("Off counts", info_dict["n_off"])
+        str_ += "\t{:32}: {:.2f} \n".format("alpha ", info_dict["alpha"])
+        str_ += "\t{:32}: {:.2f} \n".format(
+            "Predicted signal counts", info_dict["mu_sig"]
+        )
+        return str_.expandtabs(tabsize=2)
+
+    def _stat_fcn(self, mu, delta=0, index=None):
+        return (
+            lstat(
+                self.n_on[index],
+                self.n_off[index],
+                self.alpha[index],
+                (mu + self.mu_sig[index]),
+            )
+            - delta
+        )
+
+    def _n_sig_matching_significance_fcn(self, n_sig, significance, index):
+        stat0 = lstat(
+            n_sig + self.n_bkg[index], self.n_off[index], self.alpha[index], 0
+        )
+        stat1 = lstat(
+            n_sig + self.n_bkg[index],
+            self.n_off[index],
+            self.alpha[index],
+            n_sig,
+        )
+        return np.sign(n_sig) * np.sqrt(np.clip(stat0 - stat1, 0, None)) - significance
+
+    def sum(self, axis=None):
+        n_on = self.n_on.sum(axis=axis)
+        n_off = self.n_off.sum(axis=axis)
+        alpha = self.n_bkg.sum(axis=axis) / n_off
+        return LStatCountsStatistic(n_on=n_on, n_off=n_off, alpha=alpha)
+
+    def __getitem__(self, key):
+        return LStatCountsStatistic(
             n_on=self.n_on[key], n_off=self.n_off[key], alpha=self.alpha[key]
         )
