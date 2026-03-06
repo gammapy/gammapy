@@ -254,33 +254,35 @@ class Background3D(BackgroundIRF):
         y = self.axes["fov_lon"].edges
         X, Y = np.meshgrid(x, y)
 
-        for i, ee in enumerate(energy):
-            if len(energy) == 1:
-                ax = axes
-            else:
-                ax = axes.flat[i]
-            bkg = self.evaluate(energy=ee)
-            bkg_unit = bkg.unit
-            bkg = bkg.value
-            with quantity_support():
+        with quantity_support():
+            for i, ee in enumerate(energy):
+                if len(energy) == 1:
+                    ax = axes
+                else:
+                    ax = axes.flat[i]
+                bkg = self.evaluate(energy=ee)
+                bkg_unit = bkg.unit
+                bkg = bkg.value
                 caxes = ax.pcolormesh(X, Y, bkg.squeeze(), **kwargs)
 
-            self.axes["fov_lat"].format_plot_xaxis(ax)
-            self.axes["fov_lon"].format_plot_yaxis(ax)
-            ax.set_title(str(ee))
+                self.axes["fov_lat"].format_plot_xaxis(ax)
+                self.axes["fov_lon"].format_plot_yaxis(ax)
+                ax.set_title(str(ee))
 
-            if add_cbar:
-                label = f"Background [{bkg_unit.to_string(UNIT_STRING_FORMAT)}]"
-                kwargs_colorbar.setdefault("label", label)
-                cbar = add_colorbar(caxes, ax=ax, axes_loc=axes_loc, **kwargs_colorbar)
-                cbar.formatter.set_powerlimits((0, 0))
+                if add_cbar:
+                    label = f"Background [{bkg_unit.to_string(UNIT_STRING_FORMAT)}]"
+                    kwargs_colorbar.setdefault("label", label)
+                    cbar = add_colorbar(
+                        caxes, ax=ax, axes_loc=axes_loc, **kwargs_colorbar
+                    )
+                    cbar.formatter.set_powerlimits((0, 0))
 
-            row, col = np.unravel_index(i, shape=(rows, cols))
-            if col > 0:
-                ax.set_ylabel("")
-            if row < rows - 1:
-                ax.set_xlabel("")
-            ax.set_aspect("equal", "box")
+                row, col = np.unravel_index(i, shape=(rows, cols))
+                if col > 0:
+                    ax.set_ylabel("")
+                if row < rows - 1:
+                    ax.set_xlabel("")
+                ax.set_aspect("equal", "box")
 
 
 class Background2D(BackgroundIRF):
@@ -436,12 +438,12 @@ class Background2D(BackgroundIRF):
 
         offset_axis = self.axes["offset"]
 
-        for ee in energy:
-            bkg = self.evaluate(offset=offset_axis.center, energy=ee)
-            if np.isnan(bkg).all():
-                continue
-            label = f"energy = {ee:.1f}"
-            with quantity_support():
+        with quantity_support():
+            for ee in energy:
+                bkg = self.evaluate(offset=offset_axis.center, energy=ee)
+                if np.isnan(bkg).all():
+                    continue
+                label = f"energy = {ee:.1f}"
                 ax.plot(offset_axis.center, bkg, label=label, **kwargs)
 
         offset_axis.format_plot_xaxis(ax=ax)
@@ -478,10 +480,10 @@ class Background2D(BackgroundIRF):
 
         energy_axis = self.axes["energy"]
 
-        for off in offset:
-            bkg = self.evaluate(offset=off, energy=energy_axis.center)
-            label = f"offset = {off:.2f}"
-            with quantity_support():
+        with quantity_support():
+            for off in offset:
+                bkg = self.evaluate(offset=off, energy=energy_axis.center)
+                label = f"offset = {off:.2f}"
                 ax.plot(energy_axis.center, bkg, label=label, **kwargs)
 
         energy_axis.format_plot_xaxis(ax=ax)
