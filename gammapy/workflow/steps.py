@@ -228,12 +228,13 @@ class ObservationsWorkflowStep(WorkflowStepBase):
 
     def _get_data_store(self):
         """Set the datastore on the Workflow object."""
-        path = make_path(self.config.observations.datastore)  # NOSONAR
-        # (S2259): attribute cannot be None
-        if path.is_file():
+        path = make_path(self.config.observations.datastore)
+        if path.is_file():  # NOSONAR
+            # (S2259): attribute cannot be None
             self.log.debug(f"Setting datastore from file: {path}")
             return DataStore.from_file(path)
-        elif path.is_dir():
+        elif path.is_dir():  # NOSONAR
+            # (S2259): attribute cannot be None
             self.log.debug(f"Setting datastore from directory: {path}")
             return DataStore.from_dir(path)
         else:
