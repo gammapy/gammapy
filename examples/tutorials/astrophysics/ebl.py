@@ -199,7 +199,7 @@ plt.show()
 #
 # To use a custom EBL model, you need to save the optical depth as a function
 # of energy and redshift in the format proposed by the XSPEC table models
-# (see https://heasarc.gsfc.nasa.gov/docs/heasarc/ofwg/docs/summary/ogip_92_009_summary.html).
+# (see `here <https://heasarc.gsfc.nasa.gov/docs/heasarc/ofwg/docs/summary/ogip_92_009_summary.html>`_).
 # You can also check the model fits file in `$GAMMAPY_DATA/ebl/` for examples.
 #
 # To read in the custom EBL model, use the `EBLAbsorptionNormSpectralModel.read()` method.
