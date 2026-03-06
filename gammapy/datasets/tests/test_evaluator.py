@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import pytest
 import numpy as np
+from gammapy.datasets import MapDataset
 from copy import deepcopy
 from numpy.testing import assert_allclose
 import astropy.units as u
@@ -277,3 +278,45 @@ def test_norm_only_changed():
     spectral_model.amplitude.value *= 2
     spectral_model.index.value *= 2
     assert not evaluator.parameter_norm_only_changed
+
+
+def test_evaluator_position_cache_recovery():
+    """Test if the Evaluator position cache is properly synced when the model is moved out of and back into the FoV."""
+    energy_axis = MapAxis.from_energy_bounds(".1 TeV", "10 TeV", nbin=2, name="energy")
+    geom = WcsGeom.create(
+        skydir=(0, 0), width=1 * u.deg, axes=[energy_axis], frame="galactic"
+    )
+
+    dataset = MapDataset.create(geom=geom, name="test_dataset")
+    dataset.exposure = Map.from_geom(geom.as_energy_true, unit="m2 s")
+    dataset.exposure.data += 1.0
+
+    # Critical: A mask is required so that `contributes` can become False when the model is moved outside
+    dataset.mask_safe = Map.from_geom(geom, data=True)
+
+    spatial_model = PointSpatialModel(
+        lon_0=0 * u.deg, lat_0=0 * u.deg, frame="galactic"
+    )
+    model = SkyModel(
+        name="source",
+        spectral_model=PowerLawSpectralModel(),
+        spatial_model=spatial_model,
+    )
+    dataset.models = [model]
+
+    # 1. Initial npred
+    dataset.npred()
+
+    # 2. Move out of FoV
+    spatial_model.lon_0.value = 10.0
+    dataset.npred()
+
+    # 3. Move back to original position
+    spatial_model.lon_0.value = 0.0
+    dataset.npred()
+
+    # The fix ensures that the cache is recovered correctly
+    evaluator = dataset._evaluators["source"]
+    assert_allclose(
+        evaluator.position.separation(spatial_model.position).deg, 0.0, atol=1e-6
+    )
