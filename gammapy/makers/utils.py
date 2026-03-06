@@ -405,8 +405,8 @@ class ThetaSquaredTable:
         Edges of the energy bin where the theta squared distribution
         is evaluated. For now, only one interval is accepted.
         Default is None.
-    off_regions_number : `int`
-        Number of OFF regions; by default is 1. Warning: the user should
+    off_regions_number : `int`, optional
+        Number of OFF regions. Default is 1. **WARNING**: the user should
         be aware that, if regions overlap, only the reflected OFF
         region will be considered.
 
@@ -434,6 +434,7 @@ class ThetaSquaredTable:
         self.off_regions_number = off_regions_number
 
     def run(self):
+        """Run theta square distribution."""
         if not self.theta_squared_axis.edges.unit.is_equivalent("deg2"):
             raise ValueError("The theta2 axis should be equivalent to deg2")
 
@@ -497,7 +498,9 @@ class ThetaSquaredTable:
             on_off_sep = self.on_region.center.separation(self.position_off)
             if on_off_sep < self.on_region.radius * 2:
                 raise ValueError(
-                    "The specified OFF region overlaps with the ON region. This is currently forbidden. To fix this, either choose another OFF position or reduce the region radius."
+                    "The specified OFF region overlaps with the ON region. "
+                    "This is currently forbidden. To fix this, either choose "
+                    "another OFF position or reduce the region radius."
                 )
 
         if self.energy_edges is not None:
@@ -510,12 +513,12 @@ class ThetaSquaredTable:
 
         if self.off_regions_number > 1 and self.create_off is False:
             raise ValueError(
-                "If ``off_regions_number`` is larger than 1, you cannot provide a fixed OFF position. Instead set ``position_off`` to be None."
+                "If ``off_regions_number`` is larger than 1, you cannot provide a fixed OFF position. "
+                "Instead set ``position_off`` to be None."
             )
 
     def _check_onregion_size(self, observation):
-        """Check the radius of the ON-region is smaller than its angular separation from
-        the pointing position.
+        """Check the radius of the ON-region is smaller than its angular separation from the pointing position.
 
         Parameters
         ----------
@@ -524,14 +527,16 @@ class ThetaSquaredTable:
 
         Returns
         -------
-        pointing : `astropy.coordinates.SkyCoord`
+        pointing : `~astropy.coordinates.SkyCoord`
             Pointing coordinates of the observation of interest.
         """
         pointing = observation.get_pointing_icrs(observation.tmid)
         separation_on_region = pointing.separation(self.on_region.center)
         if self.on_region.radius > separation_on_region:
             raise ValueError(
-                f"The ON region radius is larger than its separation from observation pointing position. This will cause the ON and OFF regions to overlap, which is not permitted. Reduce the ON region radius to at least {separation_on_region}."
+                "The ON region radius is larger than its separation from observation pointing position. "
+                "This will cause the ON and OFF regions to overlap, which is not permitted. "
+                f"Reduce the ON region radius to at least {separation_on_region}."
             )
         return pointing
 
@@ -545,7 +550,7 @@ class ThetaSquaredTable:
 
         Returns
         -------
-        off_regions : `astropy.coordinates.SkyCoord`
+        off_regions : `~astropy.coordinates.SkyCoord`
             Pointing coordinates of the observation of interest.
         """
         if self.create_off:
@@ -580,8 +585,8 @@ class ThetaSquaredTable:
 
         Returns
         -------
-        counts, counts_off : `np.array`
-            theta2 distribution of ON and OFF counts.
+        counts, counts_off : `~numpy.ndarray`
+            Theta square distribution of ON and OFF counts.
         off_regions_number : `int`
             Number of OFF regions.
         """
