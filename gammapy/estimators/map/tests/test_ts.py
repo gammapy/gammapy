@@ -529,7 +529,11 @@ def test_ts_map_asimov(fake_dataset):
     )
     maps = estimator.run(asimov_dataset)
 
-    assert_allclose(maps["dnde"].data[:, 25, 25], 1e-10, rtol=5e-2)
+    expected_dnde = model.spectral_model.amplitude.value
+    expected_flux = model.spectral_model.integral(0.1 * u.TeV, 10 * u.TeV).value
+
+    assert_allclose(maps["dnde"].data[:, 25, 25], expected_dnde, rtol=5e-2)
+    assert_allclose(maps["flux"].data[:, 25, 25], expected_flux, rtol=5e-2)
 
     estimator = TSMapEstimator(
         model,
@@ -539,7 +543,8 @@ def test_ts_map_asimov(fake_dataset):
     )
     maps = estimator.run(asimov_dataset)
 
-    assert_allclose(maps["dnde"].data[:, 25, 25], 1e-10, rtol=5e-2)
+    assert_allclose(maps["dnde"].data[:, 25, 25], expected_dnde, rtol=5e-2)
+    assert_allclose(maps["flux"].data[:, 25, 25], expected_flux, rtol=5e-2)
 
 
 def test_ts_map_with_model(fake_dataset):
