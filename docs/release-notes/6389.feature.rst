@@ -1,0 +1,1 @@
+Add `~gammapy.visualizzation.plot_flux_violin.Datasets` to create a violin plot from flux samples given by the `FluxCollectionEstimator`
