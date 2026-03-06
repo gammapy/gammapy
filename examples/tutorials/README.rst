@@ -21,6 +21,10 @@ Tutorials
 This page lists the Gammapy tutorials that are available as `Jupyter`_ notebooks.
 You can read them here, or execute them using a temporary cloud server in Binder.
 
+.. image:: https://img.shields.io/badge/launch-binder-579aca.svg
+   :target: https://mybinder.org/v2/gh/gammapy/gammapy-webpage/main?urlpath=lab/tree/notebooks/dev
+   :alt: Launch Binder
+
 To execute them locally, you have to first install Gammapy locally (see
 :ref:`installation`) and download the tutorial notebooks and example datasets (see
 :ref:`getting-started`). Once Gammapy is installed, remember that you can always

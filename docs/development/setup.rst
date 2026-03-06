@@ -200,7 +200,15 @@ Gammapy Binder
 We have set up https://mybinder.org/ for each released version of Gammapy, which allows users
 to execute the notebooks present in the versioned docs within the web browser, without having to install
 software or download data to their local machine. This can be useful for people
-to get started, and for tutorials. Every HTML-fixed version of the notebooks
+to get started, and for tutorials.
+
+You can launch the latest development version of the tutorials directly:
+
+.. image:: https://img.shields.io/badge/launch-binder-579aca.svg
+   :target: https://mybinder.org/v2/gh/gammapy/gammapy-webpage/main?urlpath=lab/tree/notebooks/dev
+   :alt: Launch Binder
+
+Every HTML-fixed version of the notebooks
 that you can find in the :ref:`tutorials` section has a link to Binder that allows
 you to execute the tutorial in the myBinder cloud infrastructure.
 
