@@ -8,28 +8,83 @@ How to make a Gammapy release
 
 This page contains step-by-step instructions for how to make a Gammapy release. The procedure shown here is inspired by
 the `astropy release scheme <https://docs.astropy.org/en/latest/development/maintainers/releasing.html#release-procedure-for-the-astropy-core-package>`__.
+Before starting, ensure you have access to your GitHub token and `gpg key <https://docs.github.com/en/authentication/managing-commit-signature-verification/generating-a-new-gpg-key>`__
+generated for your GitHub account.
 The general procedure can be broken down into three major steps:
 
 
-* Feature freeze: freeze the core package features and create a new branch for the release. This is typically done two
-  weeks before the release.
+* Feature freeze: freeze the core package features and create a new branch for the release.
+  This is typically done few days before the release candidate.
 * Release candidate: proposed feature release which should be tested. This is typically done one week before the
   final release.
 * Final release.
 
+Some steps differ between the bug fix and feature releases, and the two are detailed accordingly.
 
-Feature Freeze and Branching
-----------------------------
 
-**A few days before the feature freeze:**
+Bug fix releases
+----------------
+
+This is meant for small updates to the documentation and bug fixes. PRs and authors on bug fix releases are
+automatically counted in the next feature release.
+
+**Feature freeze**
 
 #. Update the author list manually in the  ``CITATION.cff``.
 
     * You can use the helper script ``dev/authors.py`` for this.
 
+#. To create the changelog, towncrier is utilised on the relevant branch (eg: for a
+   bugfix on the 2.0 release). The following workflow should be followed::
 
-#. On the ``main`` branch, build the changelog for the version you are about to release.
-   This is done through the use of towncrier with the following line::
+    git checkout v2.0.x
+    towncrier build --version=<version> --keep
+    mv ``CHANGELOG.rst`` ``v2.0.x.rst``
+
+   * As we will create the changelog again for the major release, we should utilise the ``keep`` keyword,
+     as to not delete the fragments.
+   * The file will still be there if you just checkout to main
+
+   ::
+
+     git checkout main
+     git checkout -b add-file-to-main
+     git add docs/release-notes/2.0.x.rst
+     git commit -m -s 'Add changelog'
+     git push origin add-file-to-main
+
+
+#. Open two separate PRs for each of these changes and mark each with the ``backport-v<version>.x`` label.
+   These PRs will be merged and backport to the ``v<version>.x`` branch.
+
+**Branching**
+
+#. Add a new milestone to the `GitHub issue tracker <https://github.com/gammapy/gammapy/milestones>`__ for further
+   bugfixes on the same version. Addition to labels is not required.
+#. Update your local ``main`` branch to the latest from remote::
+
+    git fetch upstream --tags --prune
+    git checkout -B main upstream/main
+
+
+**Release candidate**
+
+#. This step is common between feature and bug fix releases. Please follow the instructions at the end of this section.
+
+**Final release**
+
+#. Follow the rest of instructions as mentioned below in the section.
+
+Feature releases
+----------------
+
+**Feature freeze**
+
+#. Update the author list manually in the  ``CITATION.cff``.
+
+    * You can use the helper script ``dev/authors.py`` for this.
+
+#. On the ``main`` branch, build the changelog using `towncrier` for the version you are about to release::
 
     towncrier build --version <version>
 
@@ -38,33 +93,43 @@ Feature Freeze and Branching
      ``python dev/github_summary.py contributors_by_milestone --milestone '<version>.x'``.
      Note that you will need to use your github token here.
    * Make sure to adjust the lines at the start of the changelog for the correct values printed by the above command.
-   * You should now update the filename from `CHANGELOG.rst` to the correct one for your version,
-     in addition to adapting the required lines in the
-     ``docs/release-notes/index.rst`` to ensure it is included in the docs.
+   * Rename the filename from ``CHANGELOG.rst`` to ``vx.y.rst`` and add
+     corresponding entry in ``docs/release-notes/index.rst``. Add an ``rst`` file for the next release.
 
 #. Open two separate PRs for each of these changes and mark each with the ``backport-v<version>.x`` label.
    Gather feedback from the Gammapy user and dev community. These PRs will be merged and backport to the
    ``v<version>.x`` branch at the release candidate stage.
 
-**On the day of the feature freeze:**
+**Branching**
 
 #. Add a new milestone to the `GitHub issue tracker <https://github.com/gammapy/gammapy/milestones>`__ for the version
    ``v<version>.x`` (this will also be used for the next bugfix release). Also create a ``backport-v<version>.x``
    `label <https://github.com/gammapy/gammapy/labels>`__, which has the description ``on merge: backport to
    v<version.x`` to allow for automatic backport triggering.
+
 #. Update your local ``main`` branch to the latest from remote::
 
     git fetch upstream --tags --prune
     git checkout -B main upstream/main
 
-#. From the github online interface, create a new branch v<version>.x
+#. From the github online interface, create a new branch ``v<version>.x``
 
 #. Update the entry for the feature freeze in the
    `Gammapy release calendar <https://github.com/gammapy/gammapy/wiki/Release-Calendar>`__.
 
+**Release candidate**
 
-Releasing the first major release candidate
--------------------------------------------
+#. This step is common between feature and bug fix releases. Please follow the instructions at the end of this section.
+
+**Final release**
+
+#. Create a new tag in the `gammapy-data repo <https://github.com/gammapy/gammapy-data>`__, like ``v2.0``
+   or ``v2.1``
+#. Follow the rest of instructions as mentioned below.
+
+
+Release candidates
+------------------
 
 #. First, make sure you have a
    `gpg key <https://docs.github.com/en/authentication/managing-commit-signature-verification/generating-a-new-gpg-key>`__
@@ -78,11 +143,13 @@ Releasing the first major release candidate
    * Adapt the dependency conda env name and versions as required in this file. Normally, it should be the latest versions of the packages.
      Note that for the release candidates, ``gammapy`` must be included under pip.
 
-#. Switch to the correct branch and update the ``CITATION.cff`` date and version by running the
+#. In the `gammapy repo <https://github.com/gammapy/gammapy>`__, switch to the correct branch and update the ``CITATION.cff`` date and version by running the
    ``dev/prepare-release.py`` script::
 
     git checkout v1.0.x
     python ./dev/prepare-release.py --release v1.0rc1
+
+   * This should update the date and the version of the `CITATION.cff` file.
 
 #. Commit and push the branch back to GitHub::
 
@@ -112,39 +179,35 @@ Releasing the first major release candidate
    on the page created before.
 
 
-Releasing the final version of the major release
-------------------------------------------------
+Releasing the final version
+---------------------------
 
-#. Create a new tag in the `gammapy-data repo <https://github.com/gammapy/gammapy-data>`__, like ``v1.0``
-   or ``v1.1``.
-
-#. Create a new tag in the `gammapy-benchmarks repo <https://github.com/gammapy/gammapy-benchmarks>`__, like ``v1.0``
-   or ``v1.1``.
+#. Create a new tag in the `gammapy-benchmarks repo <https://github.com/gammapy/gammapy-benchmarks>`__, like ``v2.0.1``
+   or ``v2.1``.
 
 #. In the `gammapy-webpage repo <https://github.com/gammapy/gammapy-webpage>`__:
 
    * In the ``download/install`` folder, copy a previous environment file as ``gammapy-1.0-environment.yml``.
-   * Adapt the dependency conda env name and versions as required in this file. Make sure to move ``gammapy=1.0``
+   * Adapt the dependency conda env name and versions as required in this file. Make sure to move ``gammapy=2.0``
      into the dependencies list.
    * Update the datasets entry in the ``download/index.json`` to point to this new release tag. Also update the
      notebook entry, typically the link extensions are the same between versions.
 
-#. In the gammapy repo, switch to the correct branch and update the ``CITATION.cff`` date and version by running the
+#. In the `gammapy repo <https://github.com/gammapy/gammapy>`__, switch to the correct branch and update the ``CITATION.cff`` date and version by running the
    ``dev/prepare-release.py`` script::
 
-    git checkout v1.0.x
-    python ./dev/prepare-release.py --release v1.0rc1
+    git checkout v2.0.x
+    python ./dev/prepare-release.py --release v2.0
     git push
 
-#. Locally create a new release tag like ``v1.0`` for Gammapy and push the tag to upstream::
+#. Locally create a new release tag like ``v2.0`` for Gammapy and push the tag to upstream::
 
-    git tag -s v1.0 -m "Tagging v1.0"
-    git push upstream v1.0.x
+    git tag -s v2.0 -m "Tagging v2.0"
+    git push upstream v2.0.x
 
 #. In the `gammapy-docs repo <https://github.com/gammapy/gammapy-docs>`__:
 
-   * Kill the possible ``dev-docs`` build actions as they might interfere with the ``release`` docs build.
-   * Wait for the triggered ``release`` docs build to finish.
+   * Wait for the triggered ``release`` docs build to finish. Do **not** proceed to next step before the build finishes.
    * Edit ``docs/stable/switcher.json`` to add the new version.
    * Edit ``docs/stable/index.html`` so that the url points to the new version.
 
@@ -153,15 +216,18 @@ Releasing the final version of the major release
    * Find the ``tutorials_jupyter.zip`` file for the new release in the
      `gammapy-docs repo <https://github.com/gammapy/gammapy-docs>`__ and confirm the link in
      ``download/index.json`` is correct.
-   * Mention the release on the front page and on the news page. Both the ``news.html`` and ``index.html`` should be
-     edited at this step to include the correct version numbers.
+   * Mention the release on the front page and on the news page. Edit the ``news.html`` and ``index.html`` to
+     include the correct version numbers.
 
 #. Update the entry for the actual release in the
    `Gammapy release calendar <https://github.com/gammapy/gammapy/wiki/Release-Calendar>`__.
 
 #. Finally:
 
-   * The Gammapy conda-forge package at https://github.com/conda-forge/gammapy-feedstock should be automatically updated within hours and a PR opened. Check that this is the case and if not, perform the manual update of the recipe meta.yaml on your gammapy-feedstock fork and open the PR. Finally, when all tests for all distributions successfully ran, merge the PR.
+   * The Gammapy conda-forge package at https://github.com/conda-forge/gammapy-feedstock should be automatically
+     updated within hours and a PR opened. Check that this is the case and if not, perform the manual update of the
+     recipe meta.yaml on your gammapy-feedstock fork and open the PR.
+     Finally, when all tests for all distributions run successfully, merge the PR.
    * Encourage the Gammapy developers to try out the new stable version (update and run tests) via the GitHub
      issue for the release and wait a day or two for feedback.
 
@@ -172,7 +238,7 @@ Post release
 Steps for the day to announce the release:
 
 #. Send release announcement to the Gammapy mailing list and on Gammapy Slack.
-#. If it's a big release with important new features or fixes,
+#. If it's a big release with important new features,
    also send the release announcement to the following mailing lists
    (decide on a case by case basis, if it's relevant to the group of people):
 
@@ -202,30 +268,7 @@ Steps for the day to announce the release:
 
        git tag -s v1.3 -m "Tagging v1.3"
        git push --tags
-#. Open a milestone and issue for the next release (and possibly also a milestone for the
-   release after, so that low-priority issues can already be moved there). Find a
-   release manager for the next release, assign the release issue to them,
+#. Find a release manager for the next release, assign the release issue to them,
    and ideally put a tentative date (to help developers plan their time for the
    coming weeks and months).
 #. Start working on the next release.
-
-
-Make a Bugfix release
----------------------
-
-#. Add an entry for the bug-fix release like ``v1.0.1`` or ``v1.1.2`` in the ``download/index.json`` file in the
-   `gammapy-webpage repo <https://github.com/gammapy/gammapy-webpage>`__. The ``datasets`` entry should point to the
-   last stable version, like ``v1.0`` or ``v1.1``. We do not provide bug-fix release for data.
-
-#. Follow the `Astropy bug fix release instructions <https://docs.astropy.org/en/latest/development/maintainers/releasing.html#maintaining-bug-fix-releases>`__.
-
-#. To create the changelog, towncrier is utilised::
-
-    towncrier build --version=<version> --keep
-
-   * As we will create the changelog again for the major release, we should utilise the ``keep`` keyword,
-     as to not delete the fragments.
-
-
-#. Follow the instructions for a major release for the updates of ``CITATION.cff``, the modifications in the
-   ``gammapy-docs`` and ``gammapy-webpage`` repos as well as the conda builds.

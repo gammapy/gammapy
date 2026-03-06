@@ -24,13 +24,13 @@ classifiers = [
 dependencies = [
     "numpy>=2.0",
     "scipy>=1.13",
-    "astropy>=6.1",
+    "astropy>=6.1.5",  # AnchoredEllipse fix
     "regions>=0.9.0",
     "pyyaml>=5.3",
     "click>=8.0",
     "pydantic>=2.8.0",
     "iminuit>=2.26.0",
-    "matplotlib>=3.8,<3.10",
+    "matplotlib>=3.8",
     "requests",
     "tqdm",
 ]
@@ -60,6 +60,8 @@ all = [
     "ray[default]>=2.9",
     "ultranest",
     "numba",
+    "arviz",
+    "arviz[preview]",
 ]
 all_no_ray = [
     "naima",
@@ -68,6 +70,8 @@ all_no_ray = [
     "ipywidgets",
     "ultranest",
     "numba",
+    "arviz",
+    "arviz[preview]",
 ]
 cov = [
     "naima",
@@ -76,6 +80,8 @@ cov = [
     "ipywidgets",
     "ultranest",
     "numba",
+    "arviz",
+    "arviz[preview]",
 ]
 test = [
     "pytest-astropy",

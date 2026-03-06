@@ -79,7 +79,7 @@ jobs:
             allowed_fail: false
           - os: ubuntu-latest
             python: '3.10'
-            tox_env: 'py310-test-alldeps_noray-astropy61-numpy20'
+            tox_env: 'py310-test-alldeps_noray-astropy615-numpy20'
             allowed_fail: false
           - os: ubuntu-latest
             python: '3.10'
@@ -145,7 +145,7 @@ jobs:
           cat sonar_env
 
       # upload coverage report for SonarQube workflow
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         if: "contains(matrix.tox_env, '-cov')"
         with:
           name: gammapy-coverage-report
@@ -186,7 +186,7 @@ jobs:
         run: |
           tox -e build_docs
       - name: Upload HTML output
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: gammapy-doc-html
           path: docs/_build/html/
