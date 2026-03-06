@@ -195,7 +195,7 @@ plt.show()
 
 ######################################################################
 # Use a custom EBL model
-# ------------------
+# ----------------------
 #
 # To use a custom EBL model, you need to save the optical depth as a function
 # of energy and redshift in the format proposed by the XSPEC table models
