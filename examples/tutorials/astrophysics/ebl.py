@@ -1,3 +1,15 @@
+# ---
+# jupyter:
+#   jupytext:
+#     cell_metadata_filter: -all
+#     formats: ipynb,py:sphinx
+#     text_representation:
+#       extension: .py
+#       format_name: sphinx
+#       format_version: '1.1'
+#       jupytext_version: 1.19.1
+# ---
+
 """
 Account for spectral absorption due to the EBL
 ==============================================
@@ -146,12 +158,10 @@ flux_points_intrinsic = flux_points_obs.copy(
     reference_model=SkyModel(spectral_model=pwl)
 )
 
-######################################################################
-#
+""
 print(flux_points_obs.reference_model)
 
-######################################################################
-#
+""
 print(flux_points_intrinsic.reference_model)
 
 
@@ -182,6 +192,21 @@ plt.legend()
 plt.show()
 # sphinx_gallery_thumbnail_number = 2
 
+
+######################################################################
+# Use a custom EBL model
+# ----------------------
+#
+# To use a custom EBL model, you need to save the optical depth as a function
+# of energy and redshift in the format proposed by the XSPEC table models
+# (see `here <https://heasarc.gsfc.nasa.gov/docs/heasarc/ofwg/docs/summary/ogip_92_009_summary.html>`_).
+# You can also check the model fits file in `$GAMMAPY_DATA/ebl/ <https://github.com/gammapy/gammapy-data/tree/main/ebl>`_ for examples.
+#
+# To read in the custom EBL model, use the `~gammapy.modeling.models.EBLAbsorptionNormSpectralModel.read()` method.
+
+filename = "$GAMMAPY_DATA/ebl/ebl_dominguez11.fits.gz"
+absorption_custom = EBLAbsorptionNormSpectralModel.read(filename, redshift=redshift)
+print(absorption_custom)
 
 ######################################################################
 # Further extensions
