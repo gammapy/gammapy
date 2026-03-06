@@ -515,6 +515,33 @@ def test_ts_map_stat_scan_different_energy(fake_dataset):
     assert combined_map.ts.data.shape == (1, 2, 2)
 
 
+def test_ts_map_asimov(fake_dataset):
+    model = fake_dataset.models["source"]
+    asimov_dataset = fake_dataset._to_asimov_dataset()
+
+    asimov_dataset.models = []
+
+    estimator = TSMapEstimator(
+        model,
+        kernel_width=None,
+        energy_edges=[0.1, 10] * u.TeV,
+        sum_over_energy_groups=False,
+    )
+    maps = estimator.run(asimov_dataset)
+
+    assert_allclose(maps["dnde"].data[:, 25, 25], 1e-10, rtol=5e-2)
+
+    estimator = TSMapEstimator(
+        model,
+        kernel_width=None,
+        energy_edges=[0.1, 10] * u.TeV,
+        sum_over_energy_groups=True,
+    )
+    maps = estimator.run(asimov_dataset)
+
+    assert_allclose(maps["dnde"].data[:, 25, 25], 1e-10, rtol=5e-2)
+
+
 def test_ts_map_with_model(fake_dataset):
     model = fake_dataset.models["source"]
     fake_dataset = fake_dataset.copy()

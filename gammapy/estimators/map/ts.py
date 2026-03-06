@@ -209,7 +209,9 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
         self.kernel_width = kernel_width
 
-        self.norm = _get_default_norm(norm, scan_values=_generate_scan_values())
+        self.norm = _get_default_norm(
+            norm, scan_values=_generate_scan_values(), interp="log"
+        )
 
         if model is None:
             model = SkyModel(
