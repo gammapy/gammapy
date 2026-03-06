@@ -81,7 +81,6 @@ def test_set_datastore_from_file(tmpdir):
     analysis.config.observations.datastore = filename
     analysis.get_observations()
     assert analysis.observations[0].obs_id == 20136
-    # assert len(analysis.observations) == 4
 
 
 @requires_data()
