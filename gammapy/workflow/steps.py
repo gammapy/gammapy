@@ -229,10 +229,12 @@ class ObservationsWorkflowStep(WorkflowStepBase):
     def _get_data_store(self):
         """Set the datastore on the Workflow object."""
         path = make_path(self.config.observations.datastore)
-        if path.is_file():
+        if path.is_file():  # NOSONAR
+            # (S2259): attribute cannot be None
             self.log.debug(f"Setting datastore from file: {path}")
             return DataStore.from_file(path)
-        elif path.is_dir():
+        elif path.is_dir():  # NOSONAR
+            # (S2259): attribute cannot be None
             self.log.debug(f"Setting datastore from directory: {path}")
             return DataStore.from_dir(path)
         else:
@@ -580,7 +582,9 @@ class FluxPointsWorkflowStep(WorkflowStepBase):
         fp_settings = self.config.flux_points
         self.log.info("Calculating flux points.")
 
-        energy_edges = make_energy_axis(fp_settings.energy).edges
+        energy_edges = make_energy_axis(fp_settings.energy).edges  # NOSONAR
+        # (S2259): attribute cannot be None
+
         flux_point_estimator = FluxPointsEstimator(
             energy_edges=energy_edges,
             source=fp_settings.source,
@@ -608,7 +612,8 @@ class LightCurveWorkflowStep(WorkflowStepBase):
         """Calculate light curve for a specific model component."""
         lc_settings = self.config.light_curve
         self.log.info("Computing light curve.")
-        energy_edges = make_energy_axis(lc_settings.energy_edges).edges
+        energy_edges = make_energy_axis(lc_settings.energy_edges).edges  # NOSONAR
+        # (S2259): attribute cannot be None
 
         if (
             lc_settings.time_intervals.start is None
