@@ -31,6 +31,13 @@ def test_maps(map_dictionary):
     maps = Maps(**map_dictionary)
     assert maps["map4"] is None
 
+    map_dictionary["map4"] = 1
+    with pytest.raises(
+        ValueError,
+        match=f"MapDict can only contain Map objects, got {type(map_dictionary['map4'])} instead.",
+    ):
+        maps = Maps(**map_dictionary)
+
 
 @pytest.mark.xfail
 def test_maps_wrong_addition(map_dictionary):
