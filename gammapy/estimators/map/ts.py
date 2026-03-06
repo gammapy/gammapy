@@ -61,6 +61,7 @@ def _extract_array(array, shape, position):
 
 class TSMapEstimator(Estimator, parallel.ParallelMixin):
     r"""Compute test statistic map from a MapDataset using different optimization methods.
+    The test statistic map is computed above the sky model defined in the dataset.
 
     The map is computed fitting by a single parameter norm fit. The fit is
     simplified by finding roots of the derivative of the fit statistics using
@@ -74,7 +75,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
     ----------
     model : `~gammapy.modeling.models.SkyModel`, optional
         Source model kernel. If set to None,
-        the assumes spatial model is `~gammapy.modeling.models.PointSpatialModel` and the
+        the assumed spatial model is `~gammapy.modeling.models.PointSpatialModel` and the
         spectral model is `~gammapy.modeling.models.PowerLawSpectralModel` with an index of 2.
         Default is None.
     kernel_width : `~astropy.coordinates.Angle`, optional
