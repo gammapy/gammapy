@@ -27,6 +27,10 @@ def test_maps(map_dictionary):
     assert_allclose(maps["map3"].data, 1)
     assert "map3" in maps.__str__()
 
+    map_dictionary["map4"] = None
+    maps = Maps(**map_dictionary)
+    assert maps["map4"] is None
+
 
 @pytest.mark.xfail
 def test_maps_wrong_addition(map_dictionary):

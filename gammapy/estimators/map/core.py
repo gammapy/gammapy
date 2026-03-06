@@ -234,9 +234,7 @@ class FluxMaps:
         if not required.issubset(keys):
             missing = required.difference(keys)
             raise ValueError(
-                "Missing data / column for SED type '{}':" " {}".format(
-                    sed_type, missing
-                )
+                "Missing data / column for SED type '{}': {}".format(sed_type, missing)
             )
 
     # TODO: add support for scan
@@ -1109,6 +1107,8 @@ class FluxMaps:
         if sed_type is None:
             sed_type = self.sed_type_init
 
+        if filename is None:
+            raise ValueError("The filename is not defined.")
         filename = make_path(filename)
 
         if filename_model is None:
