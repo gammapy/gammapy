@@ -36,7 +36,7 @@ def test_maps(map_dictionary):
         ValueError,
         match=f"MapDict can only contain Map objects, got {type(map_dictionary['map4'])} instead.",
     ):
-        maps = Maps(**map_dictionary)
+        Maps(**map_dictionary)
 
 
 @pytest.mark.xfail
