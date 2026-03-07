@@ -826,6 +826,8 @@ class DataStoreMaker:
 
     def get_hdu_table_rows(self, events_path, irf_path=None):
         """Make HDU index table rows for one observation."""
+        from gammapy.irf.io import _get_hdu_type_and_class
+
         events_info = self.get_obs_info(events_path, irf_path)
 
         info = dict(
@@ -842,6 +844,19 @@ class DataStoreMaker:
             FILE_DIR=irf_path.parent.as_posix(),
             FILE_NAME=irf_path.name,
         )
+
+        # Read PSF and background classes from file headers
+        with fits.open(irf_path, memmap=False) as hdu_list:
+            if "POINT SPREAD FUNCTION" in hdu_list:
+                _, psf_class = _get_hdu_type_and_class(hdu_list["POINT SPREAD FUNCTION"].header)
+            else:
+                psf_class = "psf_3gauss"
+
+            if "BACKGROUND" in hdu_list:
+                _, bkg_class = _get_hdu_type_and_class(hdu_list["BACKGROUND"].header)
+            else:
+                bkg_class = "bkg_3d"
+
         yield dict(
             HDU_TYPE="aeff", HDU_CLASS="aeff_2d", HDU_NAME="EFFECTIVE AREA", **info
         )
@@ -849,12 +864,9 @@ class DataStoreMaker:
             HDU_TYPE="edisp", HDU_CLASS="edisp_2d", HDU_NAME="ENERGY DISPERSION", **info
         )
         yield dict(
-            HDU_TYPE="psf",
-            HDU_CLASS="psf_3gauss",
-            HDU_NAME="POINT SPREAD FUNCTION",
-            **info,
+            HDU_TYPE="psf", HDU_CLASS=psf_class, HDU_NAME="POINT SPREAD FUNCTION", **info
         )
-        yield dict(HDU_TYPE="bkg", HDU_CLASS="bkg_3d", HDU_NAME="BACKGROUND", **info)
+        yield dict(HDU_TYPE="bkg", HDU_CLASS=bkg_class, HDU_NAME="BACKGROUND", **info)
 
 
 class CalDBIRF:
