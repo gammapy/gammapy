@@ -235,6 +235,29 @@ def test_analysis_1d():
 
 
 @requires_data()
+def test_analysis_1d_None_values_for_energy_axes():
+    config = get_example_config("1d")
+    analysis = Analysis(config)
+
+    analysis.config.flux_points = {}
+    analysis.get_observations()
+    analysis.get_datasets()
+    analysis.read_models(MODEL_FILE_1D)
+    analysis.run_fit()
+    with pytest.raises(
+        ValueError,
+        match="Missing or incomplete energy axis parameters in flux points configuration.",
+    ):
+        analysis.get_flux_points()
+
+    with pytest.raises(
+        ValueError,
+        match="Missing or incomplete energy axis parameters in light curve configuration.",
+    ):
+        analysis.get_light_curve()
+
+
+@requires_data()
 def test_geom_analysis_1d():
     cfg = """
     observations:
