@@ -582,8 +582,13 @@ class FluxPointsWorkflowStep(WorkflowStepBase):
         fp_settings = self.config.flux_points
         self.log.info("Calculating flux points.")
 
-        energy_edges = make_energy_axis(fp_settings.energy).edges  # NOSONAR
-        # (S2259): attribute cannot be None
+        energy_edges = make_energy_axis(fp_settings.energy)
+        if energy_edges is not None:
+            energy_edges = energy_edges.edges
+        else:
+            raise ValueError(
+                "Missing or incomplete energy axis parameters in flux points configuration."
+            )
 
         flux_point_estimator = FluxPointsEstimator(
             energy_edges=energy_edges,
@@ -612,8 +617,14 @@ class LightCurveWorkflowStep(WorkflowStepBase):
         """Calculate light curve for a specific model component."""
         lc_settings = self.config.light_curve
         self.log.info("Computing light curve.")
-        energy_edges = make_energy_axis(lc_settings.energy_edges).edges  # NOSONAR
-        # (S2259): attribute cannot be None
+
+        energy_edges = make_energy_axis(lc_settings.energy_edges)
+        if energy_edges is not None:
+            energy_edges = energy_edges.edges
+        else:
+            raise ValueError(
+                "Missing or incomplete energy axis parameters in light curve configuration."
+            )
 
         if (
             lc_settings.time_intervals.start is None
