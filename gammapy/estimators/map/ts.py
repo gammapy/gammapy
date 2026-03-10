@@ -348,7 +348,9 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
             Approximate flux map.
         """
         if exposure is None:
-            exposure = estimate_exposure_reco_energy(dataset, self.model.spectral_model)
+            exposure = estimate_exposure_reco_energy(
+                dataset, self.kernel_model.spectral_model
+            )
 
         if kernel is None:
             kernel = self.estimate_kernel(dataset=dataset)
@@ -432,7 +434,9 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         """
         # First create 2D map arrays
 
-        exposure = estimate_exposure_reco_energy(dataset, self.model.spectral_model)
+        exposure = estimate_exposure_reco_energy(
+            dataset, self.kernel_model.spectral_model
+        )
 
         kernel = self.estimate_kernel(dataset)
 
@@ -448,7 +452,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
         energy_axis = counts.geom.axes["energy"]
 
-        flux_ref = self.model.spectral_model.integral(
+        flux_ref = self.kernel_model.spectral_model.integral(
             energy_axis.edges[0], energy_axis.edges[-1]
         )
 
@@ -530,7 +534,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
         geom = maps[0]["counts"].geom.squash(axis_name="energy")
         energy_axis = geom.axes["energy"]
-        dnde_ref = self.model.spectral_model(energy_axis.center)
+        dnde_ref = self.kernel_model.spectral_model(energy_axis.center)
 
         for name in self.selection_all:
             if name in ["dnde_scan_values", "stat_scan"]:
@@ -661,7 +665,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         meta = {"n_sigma": self.n_sigma, "n_sigma_ul": self.n_sigma_ul}
         return FluxMaps(
             data=maps,
-            reference_model=self.model,
+            reference_model=self.kernel_model,
             gti=dataset.gti,
             meta=meta,
         )
