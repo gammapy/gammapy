@@ -603,7 +603,7 @@ class TestTheta2Table:
             },
         ],
     )
-    def test_ThetaSquaredTable_values(self, case_config):
+    def test_theta_squared_table_values(self, case_config):
         position = SkyCoord(ra=0, dec=0, unit="deg", frame="icrs")
         b_min, b_max = case_config["axis_bounds"]
         axis = MapAxis.from_bounds(b_min, b_max, nbin=4, interp="lin", unit="deg2")
@@ -686,7 +686,7 @@ class TestTheta2Table:
             },
         ],
     )
-    def test_ThetaSquaredTable_errors(self, case_params):
+    def test_theta_squared_table_errors(self, case_params):
         position = SkyCoord(ra=0, dec=0, unit="deg", frame="icrs")
 
         b_min, b_max = case_params["axis_bounds"]
