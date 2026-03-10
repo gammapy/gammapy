@@ -21,6 +21,7 @@ from gammapy.utils.array import shape_2N, symmetric_crop_pad_width
 from gammapy.utils.compilation import get_fit_statistics_compiled
 from gammapy.utils.pbar import progress_bar
 from gammapy.utils.roots import find_roots
+from gammapy.utils.deprecation import deprecated_renamed_argument
 
 from ..core import Estimator
 from ..utils import (
@@ -59,6 +60,7 @@ def _extract_array(array, shape, position):
     return array[:, y_lo:y_hi, x_lo:x_hi]
 
 
+@deprecated_renamed_argument("model", "kernel_model", "2.1")
 class TSMapEstimator(Estimator, parallel.ParallelMixin):
     r"""Compute test statistic map from a MapDataset using different optimization methods.
     The test statistic map is computed over and above the sky model defined in the dataset.
@@ -73,8 +75,8 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
     Parameters
     ----------
-    model : `~gammapy.modeling.models.SkyModel`, optional
-        Source model kernel. If set to None,
+    kernel_model : `~gammapy.modeling.models.SkyModel`, optional
+        Source kernel model. If set to None,
         the assumed spatial model is `~gammapy.modeling.models.PointSpatialModel` and the
         spectral model is `~gammapy.modeling.models.PowerLawSpectralModel` with an index of 2.
         Default is None.
@@ -161,10 +163,10 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
     >>> from gammapy.modeling.models import (SkyModel, PowerLawSpectralModel,PointSpatialModel)
     >>> spatial_model = PointSpatialModel()
     >>> spectral_model = PowerLawSpectralModel(amplitude="1e-22 cm-2 s-1 keV-1", index=2)
-    >>> model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
+    >>> kernel_model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
     >>> dataset = MapDataset.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc.fits.gz")
     >>> estimator = TSMapEstimator(
-    ...            model, kernel_width="1 deg", energy_edges=[10, 100] * u.GeV, downsampling_factor=4
+    ...            kernel_model, kernel_width="1 deg", energy_edges=[10, 100] * u.GeV, downsampling_factor=4
     ...        )
     >>> maps = estimator.run(dataset)
     >>> print(maps)
@@ -189,7 +191,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
     def __init__(
         self,
-        model=None,
+        kernel_model=None,
         kernel_width=None,
         downsampling_factor=None,
         n_sigma=1,
@@ -212,14 +214,14 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
         self.norm = _get_default_norm(norm, scan_values=_generate_scan_values())
 
-        if model is None:
-            model = SkyModel(
+        if kernel_model is None:
+            kernel_model = SkyModel(
                 spectral_model=PowerLawSpectralModel(),
                 spatial_model=PointSpatialModel(),
                 name="ts-kernel",
             )
 
-        self.model = model
+        self.kernel_model = kernel_model
         self.downsampling_factor = downsampling_factor
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
@@ -298,8 +300,8 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         if self.kernel_width is not None:
             geom = geom.to_odd_npix(max_radius=self.kernel_width / 2)
 
-        model = self.model.copy()
-        model.spatial_model.position = geom.center_skydir
+        kernel_model = self.kernel_model.copy()
+        kernel_model.spatial_model.position = geom.center_skydir
 
         # Creating exposure map with the mean non-null exposure
         exposure = Map.from_geom(geom, unit=dataset.exposure.unit)
@@ -314,7 +316,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         exposure.data[...] = exposure_position.data
 
         # We use global evaluation mode to not modify the geometry
-        evaluator = MapEvaluator(model=model)
+        evaluator = MapEvaluator(model=kernel_model)
 
         evaluator.update(
             exposure=exposure,
