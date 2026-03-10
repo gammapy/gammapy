@@ -124,10 +124,6 @@ def test_observation_select_time(data_store, time_interval, expected_times):
 
     if expected_times:
         expected_times.format = "mjd"
-        # assert np.all(
-        #     (new_obs.events.time >= expected_times[0])
-        #     & (new_obs.events.time < expected_times[1])
-        # )
         assert_time_allclose(new_obs.gti.time_start[0], expected_times[0], atol=1e-3)
         assert_time_allclose(new_obs.gti.time_stop[-1], expected_times[1], atol=1e-3)
     else:
