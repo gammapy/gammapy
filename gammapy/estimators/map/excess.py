@@ -121,8 +121,9 @@ def convolved_map_dataset_counts_statistics(convolved_maps, stat_type):
 class ExcessMapEstimator(Estimator):
     """Computes correlated excess, significance, flux and error maps,  and optionally upper limits or sensitivity from a map dataset.
 
-    The excess map estimator will compute the excess taking into account the predicted counts of the associated
-    model (the default one, the user one or the model set on the dataset).
+    The estimator will compute the excess taking into account all the models set on the dataset. So,
+    if you want to compute the TS of a source_x, all sky models must be set on the dataset,
+    except the one corresponding to source_x.
 
     The main output of this estimator is a `~gammapy.estimators.FluxMaps` object, from which one
     can access to all computed quantities (see the example below and the `ExcessMapEstimator.run` function).
