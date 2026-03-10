@@ -10,6 +10,7 @@ from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
 from gammapy.data import GTI
 from gammapy.maps import LabelMapAxis, MapAxes, MapAxis, RegionNDMap, TimeMapAxis
+from gammapy.maps.axes import AxisCoordInterpolator
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import assert_time_allclose, mpl_plot_check, requires_data
 from gammapy.utils.time import time_ref_to_dict
@@ -455,6 +456,27 @@ def test_mapaxis_pix_to_coord(nodes, interp, node_type):
 def test_mapaxis_coord_to_idx(nodes, interp, node_type):
     axis = MapAxis(nodes, interp=interp, node_type=node_type)
     assert_allclose(np.arange(axis.nbin, dtype=int), axis.coord_to_idx(axis.center))
+
+
+@pytest.mark.parametrize(("nodes", "interp"), MAP_AXIS_INTERP)
+def test_axis_coord_interpolator_caching(nodes, interp):
+    """Test that interpolation objects are cached."""
+    interpolator = AxisCoordInterpolator(nodes, interp=interp)
+    
+    # Check that the same interpolation object is returned
+    obj1 = interpolator._interp_coord_to_pix
+    obj2 = interpolator._interp_coord_to_pix
+    assert obj1 is obj2
+    
+    obj1 = interpolator._interp_pix_to_coord
+    obj2 = interpolator._interp_pix_to_coord
+    assert obj1 is obj2
+    
+    # Verify cached objects still produce correct results
+    test_coords = nodes[1:3]
+    pix = interpolator.coord_to_pix(test_coords)
+    coords_back = interpolator.pix_to_coord(pix)
+    assert_allclose(test_coords, coords_back)
 
 
 @pytest.mark.parametrize(("nodes", "interp", "node_type"), MAP_AXIS_NODE_TYPES)

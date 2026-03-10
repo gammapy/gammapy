@@ -49,19 +49,27 @@ class AxisCoordInterpolator:
         else:
             self.kind = 1
 
-    def coord_to_pix(self, coord):
-        """Transform coordinate to pixel."""
-        interp_fn = scipy.interpolate.interp1d(
+    @lazyproperty
+    def _interp_coord_to_pix(self):
+        """Cached interpolation object for coord_to_pix."""
+        return scipy.interpolate.interp1d(
             x=self.x, y=self.y, kind=self.kind, fill_value=self.fill_value
         )
-        return interp_fn(self.scale(coord))
+
+    @lazyproperty
+    def _interp_pix_to_coord(self):
+        """Cached interpolation object for pix_to_coord."""
+        return scipy.interpolate.interp1d(
+            x=self.y, y=self.x, kind=self.kind, fill_value=self.fill_value
+        )
+
+    def coord_to_pix(self, coord):
+        """Transform coordinate to pixel."""
+        return self._interp_coord_to_pix(self.scale(coord))
 
     def pix_to_coord(self, pix):
         """Transform pixel to coordinate."""
-        interp_fn = scipy.interpolate.interp1d(
-            x=self.y, y=self.x, kind=self.kind, fill_value=self.fill_value
-        )
-        return self.scale.inverse(interp_fn(pix))
+        return self.scale.inverse(self._interp_pix_to_coord(pix))
 
 
 PLOT_AXIS_LABEL = {
@@ -117,7 +125,6 @@ class MapAxis:
         Default is "monotonic".
     """
 
-    # TODO: Cache an interpolation object?
     def __init__(
         self,
         nodes,
