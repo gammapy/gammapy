@@ -1,4 +1,3 @@
-
 """
 Account for spectral absorption due to the EBL
 ==============================================
