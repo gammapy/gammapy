@@ -233,16 +233,7 @@ def test_analysis_1d():
     flux = analysis.light_curve.flux.data[:, :, 0, 0]
     assert_allclose(flux, [[1.688954e-11], [2.347870e-11], [1.604152e-11]], rtol=1e-4)
 
-
-@requires_data()
-def test_analysis_1d_None_values_for_energy_axes():
-    config = get_example_config("1d")
-    analysis = Analysis(config)
-
     analysis.config.flux_points = {}
-    analysis.get_observations()
-    analysis.get_datasets()
-    analysis.read_models(MODEL_FILE_1D)
     analysis.run_fit()
     with pytest.raises(
         ValueError,
@@ -250,6 +241,7 @@ def test_analysis_1d_None_values_for_energy_axes():
     ):
         analysis.get_flux_points()
 
+    analysis.config.light_curve = {}
     with pytest.raises(
         ValueError,
         match="Missing or incomplete energy axis parameters in light curve configuration.",
