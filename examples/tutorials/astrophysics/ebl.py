@@ -158,10 +158,12 @@ flux_points_intrinsic = flux_points_obs.copy(
     reference_model=SkyModel(spectral_model=pwl)
 )
 
-""
+######################################################################
+#
 print(flux_points_obs.reference_model)
 
-""
+######################################################################
+#
 print(flux_points_intrinsic.reference_model)
 
 
