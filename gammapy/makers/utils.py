@@ -397,7 +397,7 @@ class ThetaSquaredTable:
         Axis of edges of the theta2 bin used to compute the distribution.
     position : `~astropy.coordinates.SkyCoord`
         Position from which the on theta^2 distribution is computed.
-    position_off : `astropy.coordinates.SkyCoord`
+    position_off : `~astropy.coordinates.SkyCoord`
         Position from which the OFF theta^2 distribution is computed.
         Default is reflected position w.r.t. to the pointing position.
         It is available only if ``off_regions_number`` is equal to 1.
