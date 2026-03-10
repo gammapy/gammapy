@@ -1,14 +1,3 @@
-# ---
-# jupyter:
-#   jupytext:
-#     cell_metadata_filter: -all
-#     formats: ipynb,py:sphinx
-#     text_representation:
-#       extension: .py
-#       format_name: sphinx
-#       format_version: '1.1'
-#       jupytext_version: 1.19.1
-# ---
 
 """
 Account for spectral absorption due to the EBL
