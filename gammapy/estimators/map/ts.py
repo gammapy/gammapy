@@ -61,7 +61,7 @@ def _extract_array(array, shape, position):
 
 class TSMapEstimator(Estimator, parallel.ParallelMixin):
     r"""Compute test statistic map from a MapDataset using different optimization methods.
-    The test statistic map is computed above the sky model defined in the dataset.
+    The test statistic map is computed over and above the sky model defined in the dataset.
 
     The map is computed fitting by a single parameter norm fit. The fit is
     simplified by finding roots of the derivative of the fit statistics using
