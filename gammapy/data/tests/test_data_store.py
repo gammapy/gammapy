@@ -238,6 +238,20 @@ def test_data_store_maker_hdu_table(data_store_dc1):
 
 
 @requires_data()
+def test_data_store_maker_hdu_class_from_header():
+    """Test that HDU classes are read from file headers, not hardcoded."""
+    path = make_path("$GAMMAPY_DATA/hess-dl3-dr1/data/hess_dl3_dr1_obs_id_020136.fits.gz")
+    data_store = DataStore.from_events_files([path])
+    
+    hdu_classes = list(data_store.hdu_table["HDU_CLASS"])
+    expected = ["events", "gti", "aeff_2d", "edisp_2d", "psf_table", "bkg_3d"]
+    
+    assert hdu_classes == expected
+    # HESS data uses psf_table, not psf_3gauss (which CTA uses)
+    assert "psf_3gauss" not in hdu_classes
+
+
+@requires_data()
 def test_data_store_maker_observation(data_store_dc1):
     """Check that one observation can be accessed OK"""
 

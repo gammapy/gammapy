@@ -845,28 +845,16 @@ class DataStoreMaker:
             FILE_NAME=irf_path.name,
         )
 
-        # Read PSF and background classes from file headers
         with fits.open(irf_path, memmap=False) as hdu_list:
-            if "POINT SPREAD FUNCTION" in hdu_list:
-                _, psf_class = _get_hdu_type_and_class(hdu_list["POINT SPREAD FUNCTION"].header)
-            else:
-                psf_class = "psf_3gauss"
-
-            if "BACKGROUND" in hdu_list:
-                _, bkg_class = _get_hdu_type_and_class(hdu_list["BACKGROUND"].header)
-            else:
-                bkg_class = "bkg_3d"
-
-        yield dict(
-            HDU_TYPE="aeff", HDU_CLASS="aeff_2d", HDU_NAME="EFFECTIVE AREA", **info
-        )
-        yield dict(
-            HDU_TYPE="edisp", HDU_CLASS="edisp_2d", HDU_NAME="ENERGY DISPERSION", **info
-        )
-        yield dict(
-            HDU_TYPE="psf", HDU_CLASS=psf_class, HDU_NAME="POINT SPREAD FUNCTION", **info
-        )
-        yield dict(HDU_TYPE="bkg", HDU_CLASS=bkg_class, HDU_NAME="BACKGROUND", **info)
+            for hdu in hdu_list:
+                if hdu.header.get("HDUCLAS1") == "RESPONSE":
+                    hdu_type, hdu_class = _get_hdu_type_and_class(hdu.header)
+                    yield dict(
+                        HDU_TYPE=hdu_type,
+                        HDU_CLASS=hdu_class,
+                        HDU_NAME=hdu.name,
+                        **info
+                    )
 
 
 class CalDBIRF:
