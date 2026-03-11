@@ -61,7 +61,6 @@ def _extract_array(array, shape, position):
 
 class TSMapEstimator(Estimator, parallel.ParallelMixin):
     r"""Compute test statistic map from a MapDataset using different optimization methods.
-    The test statistic map is computed over and above the sky model defined in the dataset.
 
     The map is computed fitting by a single parameter norm fit. The fit is
     simplified by finding roots of the derivative of the fit statistics using
@@ -70,6 +69,13 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
     The main output of this estimator is a `~gammapy.estimators.FluxMaps` object, which provides
     access to all computed quantities (see the example below and the `TSMapEstimator.run` function).
+
+    .. note::
+
+       The TS is computed after accounting for all models set on the datasets. Therefore,
+       to compute the TS of a source_x, all sky models must be set,
+       except the one corresponding to source_x.
+
 
     Parameters
     ----------
