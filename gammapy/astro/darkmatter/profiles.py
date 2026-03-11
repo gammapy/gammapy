@@ -57,8 +57,8 @@ class DMProfile(abc.ABC):
 
         .. math::
             F(r_{\min}, r_{\max}) = \int_{r_{\min}}^{r_{\max}}\rho(r)^\gamma dr \\
-            \gamma = 2 \text{for annihilation} \\
-            \gamma = 1 \text{for decay}
+            \gamma = 2 \text{ for annihilation} \\
+            \gamma = 1 \text{ for decay}
 
         Parameters
         ----------
