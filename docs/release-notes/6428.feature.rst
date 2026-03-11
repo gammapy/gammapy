@@ -1,0 +1,1 @@
+Replaced the slow `.coadd()` fallback in `WcsNDMap.crop` and `WcsNDMap.pad` with direct dynamic tensor slicing, drastically improving performance for irregular non-spatial geometries.

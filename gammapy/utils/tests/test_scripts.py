@@ -38,6 +38,9 @@ def test_read_write_yaml_checksum(tmp_path):
     path = make_path(tmp_path / "test.yaml")
     write_yaml(data, path, sort_keys=False, checksum=True)
 
+    with pytest.raises(ValueError, match="The filename is not defined."):
+        write_yaml(data, None)
+
     yaml_content = path.read_text()
     assert "checksum: " in yaml_content
 
@@ -58,6 +61,9 @@ def test_read_write_yaml_checksum(tmp_path):
 
     with pytest.warns(UserWarning):
         read_yaml(bad, checksum=True)
+
+    with pytest.raises(ValueError, match="The filename is not defined."):
+        read_yaml(None)
 
 
 def test_requires_module():
@@ -196,3 +202,33 @@ def test_logic_parser_error():
         expression = "unsupported_expression()"
         logic_parser(table, expression)
     assert "Unsupported expression type" in str(excinfo.value)
+
+
+def test_logic_parser_chained_comparisons():
+    data = {
+        "OBS_ID": [0, 1, 2, 3, 4, 5],
+        "FLAG": [0, 1, 1, 0, 1, 0],
+    }
+    table = Table(data)
+
+    # Pure chained comparisons
+    result = logic_parser(table, "1 < OBS_ID < 4")
+    assert len(result) == 2
+    assert list(result["OBS_ID"]) == [2, 3]
+
+    result = logic_parser(table, "2 <= OBS_ID <= 4")
+    assert len(result) == 3
+    assert list(result["OBS_ID"]) == [2, 3, 4]
+
+    result = logic_parser(table, "0 <= OBS_ID < 2")
+    assert len(result) == 2
+    assert list(result["OBS_ID"]) == [0, 1]
+
+    # Chained comparisons combined with other conditions
+    result = logic_parser(table, "(1 < OBS_ID < 5) and (FLAG == 1)")
+    assert len(result) == 2
+    assert list(result["OBS_ID"]) == [2, 4]
+
+    result = logic_parser(table, "(1 < OBS_ID < 3) or (FLAG == 0)")
+    assert len(result) == 4
+    assert list(result["OBS_ID"]) == [0, 2, 3, 5]

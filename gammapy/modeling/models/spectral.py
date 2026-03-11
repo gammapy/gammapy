@@ -646,7 +646,6 @@ class SpectralModel(ModelBase):
 
         flux = self._get_plot_flux(sed_type=sed_type, energy=energy)
         flux = scale_plot_flux(flux, energy_power=energy_power)
-
         with quantity_support():
             ax.plot(energy.center, flux.quantity[:, 0, 0], **kwargs)
 
