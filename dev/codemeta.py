@@ -22,7 +22,7 @@ def update_codemeta(maintainer, filename, setup_file=None):
             data["maintainer"] = author
     data["author"].append(
         {
-            "@type": "Organisation",
+            "@type": "Organization",
             "name": "The Gammapy team"
         }
     )
