@@ -232,6 +232,9 @@ def test_datasets_write(map_datasets, tmp_path):
             overwrite=False,
         )
 
+    with pytest.raises(ValueError, match="The filename is not defined."):
+        datasets.write(filename=None)
+
 
 @requires_data()
 def test_datasets_fit(map_datasets):

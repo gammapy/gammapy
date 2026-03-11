@@ -40,9 +40,11 @@ def _recursive_dict_filename_update(dict_, path):
 
 def _recursive_model_filename_update(model, path):
     """Update model filename to relative path if child of path."""
-    if hasattr(model, "filename") and path == make_path(model.filename).parent:
-        _, filename = split(model.filename)
-        model.filename = filename
+    if hasattr(model, "filename"):
+        filename_path = make_path(model.filename)
+        if filename_path is not None and path == filename_path.parent:
+            _, filename = split(model.filename)
+            model.filename = filename
 
     if hasattr(model, "_models"):
         for m in model._models:
@@ -176,6 +178,8 @@ def _write_models(
 ):
     """Write models to YAML file with additional information using an `extra_dict`."""
 
+    if path is None:
+        raise ValueError("The path is not defined.")
     base_path, _ = split(path)
     path = make_path(path)
     base_path = make_path(base_path)
