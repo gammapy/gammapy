@@ -1340,7 +1340,7 @@ class BrokenPowerLawSpectralModel(SpectralModel):
         :math:`\phi_0`.
         Default is 1e-12 cm-2 s-1 TeV-1.
     ebreak : `~astropy.units.Quantity`
-        :math:`E_{break}`.
+        :math:`E_{\mathrm{break}}`.
         Default is 1 TeV.
 
     See Also
@@ -1395,7 +1395,7 @@ class SmoothBrokenPowerLawSpectralModel(SpectralModel):
     amplitude : `~astropy.units.Quantity`
         :math:`\phi_0`. Default is 1e-12 cm-2 s-1 TeV-1.
     ebreak : `~astropy.units.Quantity`
-        :math:`E_{break}`. Default is 1 TeV.
+        :math:`E_{\mathrm{break}}`. Default is 1 TeV.
     reference : `~astropy.units.Quantity`
         :math:`E_0`. Default is 1 TeV.
     beta : `~astropy.units.Quantity`
