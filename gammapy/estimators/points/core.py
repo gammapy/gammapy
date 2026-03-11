@@ -233,16 +233,16 @@ class FluxPoints(FluxMaps):
         ----------
         filename : str
             Filename.
-        sed_type : {"dnde", "flux", "eflux", "e2dnde", "likelihood"}
-            SED type.
+        sed_type : {"dnde", "flux", "eflux", "e2dnde", "likelihood"}, optional
+            SED type. Default is None.
         format : {"gadf-sed", "lightcurve", "profile"}, optional
             Format string. If None, the format is extracted from the input.
             Default is None.
-        reference_model : `SpectralModel`
-            Reference spectral model.
-        checksum : bool
+        reference_model : `~gammapy.modeling.models.SpectralModel`, optional
+            Reference spectral model. Default is None.
+        checksum : bool, optional
             If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
-        table_format :  str
+        table_format : str, optional
             Format string for the ~astropy.Table object. Default is "ascii.ecsv"
         **kwargs : dict, optional
             Keyword arguments passed to `astropy.table.Table.read`.
@@ -370,7 +370,7 @@ class FluxPoints(FluxMaps):
             SED type. Default is None.
         format : {"gadf-sed", "lightcurve", "profile"}, optional
             Table format. If None, it is extracted from the table column content. Default is None.
-        reference_model : `SpectralModel`, optional
+        reference_model : `~gammapy.modeling.models.SpectralModel`, optional
             Reference spectral model. Default is None.
         gti : `GTI`, optional
             Good time intervals. Default is None.
@@ -461,7 +461,7 @@ class FluxPoints(FluxMaps):
         Parameters
         ----------
         sed_type : {"likelihood", "dnde", "e2dnde", "flux", "eflux"}
-            SED type to convert to. Default is `likelihood`.
+            SED type to convert to. Default is "likelihood".
         format : {"gadf-sed", "lightcurve", "binned-time-series", "profile"}, optional
             Format specification. The following formats are supported:
 
@@ -898,7 +898,7 @@ class FluxPoints(FluxMaps):
 
         Parameters
         ----------
-        axis_new : `MapAxis` or `TimeMapAxis`
+        axis_new : `~gammapy.maps.MapAxis` or `~gammapy.maps.TimeMapAxis`
             The new axis to resample along
 
         Returns
