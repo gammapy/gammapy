@@ -1669,7 +1669,7 @@ class ExpCutoffPowerLaw3FGLSpectralModel(SpectralModel):
         :math:`E_0`.
         Default is 1 TeV.
     ecut : `~astropy.units.Quantity`
-        :math:`E_{C}`.
+        :math:`E_{\mathrm{C}}`.
         Default is 10 TeV.
     """
 
@@ -1699,8 +1699,8 @@ class SuperExpCutoffPowerLaw3FGLSpectralModel(SpectralModel):
 
     .. math::
         \phi(E) = \phi_0 \cdot \left(\frac{E}{E_0}\right)^{-\Gamma_1}
-                  \exp \left( \left(\frac{E_0}{E_{C}} \right)^{\Gamma_2} -
-                              \left(\frac{E}{E_{C}} \right)^{\Gamma_2}
+                  \exp \left( \left(\frac{E_0}{E_{\mathrm{C}}} \right)^{\Gamma_2} -
+                              \left(\frac{E}{E_{\mathrm{C}}} \right)^{\Gamma_2}
                               \right)
 
     Parameters
@@ -1712,7 +1712,7 @@ class SuperExpCutoffPowerLaw3FGLSpectralModel(SpectralModel):
         :math:`E_0`.
         Default is 1 TeV.
     ecut : `~astropy.units.Quantity`
-        :math:`E_{C}`.
+        :math:`E_{\mathrm{C}}`.
         Default is 10 TeV.
     index_1 : `~astropy.units.Quantity`
         :math:`\Gamma_1`.
