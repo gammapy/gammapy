@@ -140,13 +140,13 @@ def test_make_psf_map():
 
     # Test with SkyCoord
     psfmap = make_psf_map(psf, pointing_coord, test_geom)
-    assert psfmap.psf_map.unit == "sr-1"
+    assert psfmap.psf_map.unit == "1 / deg2"
     assert psfmap.psf_map.data.shape[-2:] == (1, 1)
 
     # Test with FixedPointingInfo
     pointing2 = FixedPointingInfo(fixed_icrs=pointing_coord.icrs)
     psfmap2 = make_psf_map(psf, pointing2, test_geom)
-    assert psfmap2.psf_map.unit == "sr-1"
+    assert psfmap2.psf_map.unit == "1 / deg2"
     assert psfmap2.psf_map.data.shape == psfmap.psf_map.data.shape
 
 
