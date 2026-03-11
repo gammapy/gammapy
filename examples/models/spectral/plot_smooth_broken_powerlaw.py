@@ -9,7 +9,7 @@ This model parametrises a smooth broken power law spectrum.
 It is defined by the following equation:
 
 .. math::
-    \phi(E) = \phi_0 \cdot \left( \frac{E}{E_0} \right)^{-\Gamma1}\left(1 + \frac{E}{E_{\mathrm{break}}}^{\frac{\Gamma2-\Gamma1}{\beta}} \right)^{-\beta}
+    \phi(E) = \phi_0 \cdot \left( \frac{E}{E_0} \right)^{-\Gamma1}\left(1 + \left(\frac{E}{E_{\mathrm{break}}}\right)^{\frac{\Gamma2-\Gamma1}{\beta}} \right)^{-\beta}
 """
 
 # %%
