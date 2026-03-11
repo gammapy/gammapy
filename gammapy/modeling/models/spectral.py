@@ -355,7 +355,7 @@ class SpectralModel(ModelBase):
         r"""Integrate spectral model numerically if no analytical solution defined.
 
         .. math::
-            F(E_{min}, E_{max}) = \int_{E_{min}}^{E_{max}} \phi(E) dE
+            F(E_{\min}, E_{\max}) = \int_{E_{\min}}^{E_{\max}} \phi(E) dE
 
         Parameters
         ----------
@@ -425,7 +425,7 @@ class SpectralModel(ModelBase):
         r"""Compute energy flux in given energy range.
 
         .. math::
-            G(E_{min}, E_{max}) = \int_{E_{min}}^{E_{max}} E \phi(E) dE
+            G(E_{\min}, E_{\max}) = \int_{E_{\min}}^{E_{\max}} E \phi(E) dE
 
         Parameters
         ----------
@@ -1042,9 +1042,9 @@ class PowerLawSpectralModel(SpectralModel):
         r"""Integrate power law analytically (static function).
 
         .. math::
-            F(E_{min}, E_{max}) = \int_{E_{min}}^{E_{max}}\phi(E)dE = \left.
+            F(E_{\min}, E_{\max}) = \int_{E_{\min}}^{E_{\max}}\phi(E)dE = \left.
             \phi_0 \frac{E_0}{-\Gamma + 1} \left( \frac{E}{E_0} \right)^{-\Gamma + 1}
-            \right \vert _{E_{min}}^{E_{max}}
+            \right \vert _{E_{\min}}^{E_{\max}}
 
         Parameters
         ----------
@@ -1072,9 +1072,9 @@ class PowerLawSpectralModel(SpectralModel):
         r"""Compute energy flux in given energy range analytically (static function).
 
         .. math::
-            G(E_{min}, E_{max}) = \int_{E_{min}}^{E_{max}}E \phi(E)dE = \left.
+            G(E_{\min}, E_{\max}) = \int_{E_{\min}}^{E_{\max}}E \phi(E)dE = \left.
             \phi_0 \frac{E_0^2}{-\Gamma + 2} \left( \frac{E}{E_0} \right)^{-\Gamma + 2}
-            \right \vert _{E_{min}}^{E_{max}}
+            \right \vert _{E_{\min}}^{E_{\max}}
 
         Parameters
         ----------
@@ -1247,10 +1247,10 @@ class PowerLaw2SpectralModel(SpectralModel):
         Integral flux :math:`F_0`.
         Default is 1e-12 cm-2 s-1.
     emin : `~astropy.units.Quantity`
-        Lower energy limit :math:`E_{0, min}`.
+        Lower energy limit :math:`E_{0, \min}`.
         Default is 0.1 TeV.
     emax : `~astropy.units.Quantity`
-        Upper energy limit :math:`E_{0, max}`.
+        Upper energy limit :math:`E_{0, \max}`.
         Default is 100 TeV.
 
     See Also
@@ -1284,9 +1284,9 @@ class PowerLaw2SpectralModel(SpectralModel):
         r"""Integrate power law analytically.
 
         .. math::
-            F(E_{min}, E_{max}) = F_0 \cdot \frac{E_{max}^{\Gamma + 1} \
-                                - E_{min}^{\Gamma + 1}}{E_{0, max}^{\Gamma + 1} \
-                                - E_{0, min}^{\Gamma + 1}}
+            F(E_{\min}, E_{\max}) = F_0 \cdot \frac{E_{\max}^{\Gamma + 1} \
+                                - E_{\min}^{\Gamma + 1}}{E_{0, \max}^{\Gamma + 1} \
+                                - E_{0, \min}^{\Gamma + 1}}
 
         Parameters
         ----------
@@ -2734,7 +2734,7 @@ class GaussianSpectralModel(SpectralModel):
         r"""Integrate Gaussian analytically.
 
         .. math::
-            F(E_{min}, E_{max}) = \frac{N_0}{2} \left[ erf(\frac{E - \bar{E}}{\sqrt{2} \sigma})\right]_{E_{min}}^{E_{max}}
+            F(E_{\min}, E_{\max}) = \frac{N_0}{2} \left[ erf(\frac{E - \bar{E}}{\sqrt{2} \sigma})\right]_{E_{\min}}^{E_{\max}}
 
         Parameters
         ----------
@@ -2760,9 +2760,9 @@ class GaussianSpectralModel(SpectralModel):
         r"""Compute energy flux in given energy range analytically.
 
         .. math::
-            G(E_{min}, E_{max}) =  \frac{N_0 \sigma}{\sqrt{2*\pi}}* \left[ - \exp(\frac{E_{min}-\bar{E}}{\sqrt{2} \sigma})
-            \right]_{E_{min}}^{E_{max}} + \frac{N_0 * \bar{E}}{2} \left[ erf(\frac{E - \bar{E}}{\sqrt{2} \sigma})
-             \right]_{E_{min}}^{E_{max}}
+            G(E_{\min}, E_{\max}) =  \frac{N_0 \sigma}{\sqrt{2*\pi}}* \left[ - \exp(\frac{E_{\min}-\bar{E}}{\sqrt{2} \sigma})
+            \right]_{E_{\min}}^{E_{\max}} + \frac{N_0 * \bar{E}}{2} \left[ erf(\frac{E - \bar{E}}{\sqrt{2} \sigma})
+             \right]_{E_{\min}}^{E_{\max}}
 
 
         Parameters

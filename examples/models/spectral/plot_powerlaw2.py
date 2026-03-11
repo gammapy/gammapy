@@ -9,8 +9,8 @@ This model parametrises a power law spectrum with integral as amplitude paramete
 It is defined by the following equation:
 
 .. math::
-    \phi(E) = F_0 \cdot \frac{\Gamma + 1}{E_{0, max}^{-\Gamma + 1}
-     - E_{0, min}^{-\Gamma + 1}} \cdot E^{-\Gamma}
+    \phi(E) = F_0 \cdot \frac{\Gamma + 1}{E_{0, \max}^{-\Gamma + 1}
+     - E_{0, \min}^{-\Gamma + 1}} \cdot E^{-\Gamma}
 
 See also: https://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/source_models.html
 """

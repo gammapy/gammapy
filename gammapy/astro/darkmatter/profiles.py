@@ -56,7 +56,7 @@ class DMProfile(abc.ABC):
         r"""Integrate dark matter profile numerically.
 
         .. math::
-            F(r_{min}, r_{max}) = \int_{r_{min}}^{r_{max}}\rho(r)^\gamma dr \\
+            F(r_{\min}, r_{\max}) = \int_{r_{\min}}^{r_{\max}}\rho(r)^\gamma dr \\
             \gamma = 2 \text{for annihilation} \\
             \gamma = 1 \text{for decay}
 
