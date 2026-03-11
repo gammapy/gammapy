@@ -518,9 +518,15 @@ def test_make_edisp_kernel_map():
     edispmap2 = make_edisp_kernel_map(edisp, pointing2, geom)
 
     kernel2 = edispmap2.get_edisp_kernel(position=pointing)
-    assert_allclose(kernel2.pdf_matrix[:, 0], (1.0, 1.0, 0.0, 0.0, 0.0, 0.0), atol=1e-14)
-    assert_allclose(kernel2.pdf_matrix[:, 1], (0.0, 0.0, 1.0, 1.0, 0.0, 0.0), atol=1e-14)
-    assert_allclose(kernel2.pdf_matrix[:, 2], (0.0, 0.0, 0.0, 0.0, 1.0, 1.0), atol=1e-14)
+    assert_allclose(
+        kernel2.pdf_matrix[:, 0], (1.0, 1.0, 0.0, 0.0, 0.0, 0.0), atol=1e-14
+    )
+    assert_allclose(
+        kernel2.pdf_matrix[:, 1], (0.0, 0.0, 1.0, 1.0, 0.0, 0.0), atol=1e-14
+    )
+    assert_allclose(
+        kernel2.pdf_matrix[:, 2], (0.0, 0.0, 0.0, 0.0, 1.0, 1.0), atol=1e-14
+    )
 
 
 @requires_data()
