@@ -70,9 +70,12 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
     The main output of this estimator is a `~gammapy.estimators.FluxMaps` object, which provides
     access to all computed quantities (see the example below and the `TSMapEstimator.run` function).
 
-    Note that the TS is computed after account for all the models set on the datasets. So,
-    if you want to see the TS of a source_x, all sky models must be set on the datasets,
-    except the one corresponding to source_x.
+    .. note::
+
+       The TS is computed after account for all the models set on the datasets. So,
+       if you want to see the TS of a source_x, all sky models must be set on the datasets,
+       except the one corresponding to source_x.
+
 
     Parameters
     ----------
