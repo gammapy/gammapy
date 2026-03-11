@@ -138,9 +138,9 @@ class ExcessMapEstimator(Estimator):
 
     .. note::
 
-       The estimator will compute the excess taking into account all the models set on the dataset. So,
-       if you want to compute the TS of a source_x, all sky models must be set on the dataset,
-       except the one corresponding to source_x.
+       The estimator will compute the excess taking into account all the models set on the dataset. Therefore
+       to compute the TS of a source_x, all sky models must be set, except the one corresponding to
+       source_x.
 
     Parameters
     ----------

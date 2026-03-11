@@ -72,8 +72,8 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
     .. note::
 
-       The TS is computed after account for all the models set on the datasets. So,
-       if you want to see the TS of a source_x, all sky models must be set on the datasets,
+       The TS is computed after accounting for all models set on the datasets. Therefore,
+       to compute the TS of a source_x, all sky models must be set,
        except the one corresponding to source_x.
 
 
