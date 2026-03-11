@@ -140,7 +140,7 @@ except Exception:
 [tool.ruff]
 exclude = ["docs", "dev", "extern*", "*test_*.py"]
 # Like black
-line-length = 88
+line-length = 79
 indent-width = 4
 
 [tool.ruff.lint]
