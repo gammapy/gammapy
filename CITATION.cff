@@ -24,7 +24,7 @@ identifiers:
   type: doi
   value: 10.5281/zenodo.4701488
 authors:
-- family-names: "The Gammapy team"
+- name: "The Gammapy team"
 - given-names: Fabio
   family-names: Acero
   affiliation: "Université Paris-Saclay, Université Paris Cité, CEA, CNRS, AIM, F-91191
