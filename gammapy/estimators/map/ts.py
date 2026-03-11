@@ -70,11 +70,18 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
     The main output of this estimator is a `~gammapy.estimators.FluxMaps` object, which provides
     access to all computed quantities (see the example below and the `TSMapEstimator.run` function).
 
+    .. note::
+
+       The TS is computed after accounting for all models set on the datasets. Therefore,
+       to compute the TS of a source_x, all sky models must be set,
+       except the one corresponding to source_x.
+
+
     Parameters
     ----------
     model : `~gammapy.modeling.models.SkyModel`, optional
         Source model kernel. If set to None,
-        the assumes spatial model is `~gammapy.modeling.models.PointSpatialModel` and the
+        the assumed spatial model is `~gammapy.modeling.models.PointSpatialModel` and the
         spectral model is `~gammapy.modeling.models.PowerLawSpectralModel` with an index of 2.
         Default is None.
     kernel_width : `~astropy.coordinates.Angle`, optional
