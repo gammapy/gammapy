@@ -20,7 +20,7 @@ def update_codemeta(maintainer, filename, setup_file=None):
         if "familyName" in author.keys() and author["familyName"] == maintainer:
             log.info(f"Setting maintainer to {maintainer}")
             data["maintainer"] = author
-    data["author"].append(
+    data["author"].insert(0,
         {
             "@type": "Organization",
             "name": "The Gammapy team"
