@@ -39,7 +39,7 @@ jobs:
           eossr-metadata-validator codemeta.json
 
       - name: Convert CodeMeta to Zenodo
-        uses: escape2020/codemeta2zenodo@v1.1.0
+        uses: escape2020/codemeta2zenodo@v1.2.0
         if: success()
         with:
           overwrite: true
