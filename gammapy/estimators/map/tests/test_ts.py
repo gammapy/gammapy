@@ -629,7 +629,7 @@ def test_with_TemplateSpatialModel():
     sky_model = SkyModel(spatial_model=model, spectral_model=PowerLawSpectralModel())
     dataset.models = sky_model
     estimator = TSMapEstimator(
-        model=sky_model,
+        kernel_model=sky_model,
         energy_edges=[1.0, 5.0] * u.TeV,
         n_jobs=4,
     )

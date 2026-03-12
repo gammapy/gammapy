@@ -60,7 +60,6 @@ def _extract_array(array, shape, position):
     return array[:, y_lo:y_hi, x_lo:x_hi]
 
 
-@deprecated_renamed_argument("model", "kernel_model", "2.1")
 class TSMapEstimator(Estimator, parallel.ParallelMixin):
     r"""Compute test statistic map from a MapDataset using different optimization methods.
     The test statistic map is computed over and above the sky model defined in the dataset.
@@ -189,6 +188,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
     tag = "TSMapEstimator"
     _available_selection_optional = ["errn-errp", "ul", "stat_scan", "sensitivity"]
 
+    @deprecated_renamed_argument("model", "kernel_model", "2.1")
     def __init__(
         self,
         kernel_model=None,
