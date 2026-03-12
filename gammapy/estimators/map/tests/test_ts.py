@@ -607,6 +607,20 @@ def test_compute_ts_map_with_hole(fake_dataset):
         kernel = ts_estimator.estimate_kernel(dataset=holes_dataset)
 
 
+def test_ts_map_deprecated_model_argument():
+    """Test that the deprecated model argument is mapped to kernel_model."""
+    spatial_model = PointSpatialModel()
+    spectral_model = PowerLawSpectralModel(index=2)
+    model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
+
+    from gammapy.utils.deprecation import GammapyDeprecationWarning
+
+    with pytest.warns(GammapyDeprecationWarning):
+        estimator = TSMapEstimator(model=model)
+
+    assert estimator.kernel_model is model
+
+
 def test_MapDatasetOnOff_error():
     """Test raise error when applying TSMapEStimator to MapDatasetOnOff"""
     axis = MapAxis.from_edges([1, 10] * u.TeV, name="energy")
