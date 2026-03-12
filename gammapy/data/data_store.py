@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import html
+import subprocess
 import logging
 from copy import copy
 from pathlib import Path
@@ -570,15 +571,13 @@ class DataStore:
             loc = subhdutable.location_info(idx)
             targetdir = outdir / loc.file_dir
             targetdir.mkdir(exist_ok=True, parents=True)
-            import shutil
-
-            source_path = Path(loc.path())
-            dest_path = targetdir / source_path.name
-
-            if overwrite or not dest_path.exists():
-                shutil.copy2(source_path, targetdir)
-                if verbose:
-                    log.info(f"Copied {source_path} to {targetdir}")
+            cmd = ["cp"]
+            if verbose:
+                cmd += ["-v"]
+            if not overwrite:
+                cmd += ["-n"]
+            cmd += [str(loc.path()), str(targetdir)]
+            subprocess.run(cmd)
 
         filename = outdir / self.DEFAULT_HDU_TABLE
         subhdutable.write(filename, format="fits", overwrite=overwrite)

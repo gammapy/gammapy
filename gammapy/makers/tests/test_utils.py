@@ -20,6 +20,7 @@ from gammapy.irf import (
     Background3D,
     EffectiveAreaTable2D,
     EnergyDispersion2D,
+    EnergyDependentMultiGaussPSF,
 )
 from gammapy.makers import WobbleRegionsFinder
 from gammapy.makers.utils import (
@@ -58,6 +59,14 @@ def aeff():
         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     )
     return EffectiveAreaTable2D.read(filename, hdu="EFFECTIVE AREA")
+
+
+@pytest.fixture(scope="session")
+def psf():
+    filename = (
+        "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
+    )
+    return EnergyDependentMultiGaussPSF.read(filename, hdu="POINT SPREAD FUNCTION")
 
 
 def geom(map_type, ebounds):
@@ -120,22 +129,18 @@ def test_make_map_exposure_true_energy(aeff, pars):
 
 
 @requires_data()
-def test_make_psf_map():
-    from gammapy.irf import EnergyDependentMultiGaussPSF
-    from gammapy.datasets.map import RAD_AXIS_DEFAULT
-
-    filename = (
-        "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
-    )
-    psf = EnergyDependentMultiGaussPSF.read(filename, hdu="POINT SPREAD FUNCTION")
-
+def test_make_psf_map(psf):
     pointing_coord = SkyCoord(0, 0.5, unit="deg", frame="galactic")
+
+    rad_axis = MapAxis.from_bounds(0, 0.5, nbin=2, unit="deg", name="rad")
+    energy_axis = MapAxis.from_energy_bounds(0.1, 10, 2, unit="TeV", name="energy_true")
+
     test_geom = WcsGeom.create(
         skydir=(0, 0),
         frame="galactic",
         binsz=2,
         width=(2, 2),
-        axes=[RAD_AXIS_DEFAULT, psf.axes["energy_true"]],
+        axes=[rad_axis, energy_axis],
     )
 
     # Test with SkyCoord
