@@ -18,10 +18,10 @@ class BayesianModelSelection:
     statistical models on the same datasets, extracting posterior and prior
     information, and computing predictive accuracy metrics such as WAIC and
     PSIS‑LOO. The results for each model are stored in
-    :class:`~gammapy.modeling.selection.bayesian.InferenceResult` objects and
-    collected into a :class:`BayesianModelSelectionResult`.
+    `~gammapy.modeling.selection.InferenceResult` objects and
+    collected into a `~gammapy.modeling.selection.BayesianModelSelectionResult`.
 
-    The class loops over a dictionary of candidate models, runs the sampler
+    The run method loops over a dictionary of candidate models, runs the sampler
     for each one, and computes summaries of parameter estimates and
     model‑comparison statistics. These summaries include log‑evidence, AIC,
     WAIC, LOO, effective degrees of freedom, and Pareto‑k diagnostics.
