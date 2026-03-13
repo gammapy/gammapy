@@ -11,8 +11,7 @@ log = logging.getLogger(__name__)
 
 
 class BayesianModelSelection:
-    """
-    Bayesian inference for a set of alternative models.
+    """Bayesian inference for a set of alternative models.
 
     This class automates the workflow of evaluating several alternative
     statistical models on the same datasets, extracting posterior and prior
@@ -215,8 +214,7 @@ class BayesianModelSelectionResult:
 
 
 class InferenceResult:
-    """
-    Container for the results of a Bayesian model sampling.
+    """Container for the results of a Bayesian model sampling.
 
     Stores the sampler output, inference data, and computed statistics
     for a given model.
@@ -257,21 +255,21 @@ class InferenceResult:
             )
         else:
             n_samples_redu = None
-        self._idata = inference_data_from_sampler(
+        self._inference_data = inference_data_from_sampler(
             sampler_results,
             datasets,
             n_posterior_samples=n_samples_redu,
             n_prior_samples=n_prior_samples,
         )
         self._parameters_table = compute_parameters_values(
-            self._idata, sampler_results, group_name="posterior"
+            self._inference_data, sampler_results, group_name="posterior"
         )
         if n_prior_samples is not None:
             self._parameters_table_prior = compute_parameters_values(
-                self._idata, sampler_results, group_name="prior"
+                self._inference_data, sampler_results, group_name="prior"
             )
-        self._elpd_waic = az.waic(self._idata, scale="deviance")
-        self._elpd_loo = az.loo(self._idata, scale="deviance")
+        self._elpd_waic = az.waic(self._inference_data, scale="deviance")
+        self._elpd_loo = az.loo(self._inference_data, scale="deviance")
 
     @property
     def models(self):
@@ -287,9 +285,9 @@ class InferenceResult:
         return self._sampler_results
 
     @property
-    def idata(self):
+    def inference_data(self):
         """`arviz.InferenceData` object with unweighted posterior samples."""
-        return self._idata
+        return self._inference_data
 
     @property
     def dof(self):
@@ -328,8 +326,7 @@ class InferenceResult:
 
     @property
     def loo_good_pareto_k_fraction(self):
-        """
-        Fraction of PSIS-LOO-CV points with good Pareto k diagnostics.
+        """Fraction of PSIS-LOO-CV points with good Pareto k diagnostics.
 
         Returns
         -------
@@ -342,8 +339,7 @@ class InferenceResult:
         )
 
     def parameters_table(self, group="posterior"):
-        """
-        Summary table of parameter estimates.
+        """Summary table of parameter estimates.
 
         Parameters
         ----------
@@ -361,8 +357,7 @@ class InferenceResult:
             return self._parameters_table_prior
 
     def stats_table(self, format=".3f"):
-        """
-        Statistics summary table for all models.
+        """Statistics summary table for all models.
 
 
         Parameters
@@ -412,19 +407,19 @@ class InferenceResult:
         return table
 
     def prior_sensitivity_table(self):
-        "Prior and likelihood sentivity table computed from power scaling."
+        """Prior and likelihood sentivity table computed from power scaling."""
         try:
             from arviz_stats import psense_summary
 
-            return psense_summary(self.idata)
+            return psense_summary(self.inference_data)
         except (ImportError, AttributeError):
             import arviz.preview as azp  # contains methods from future version
 
-            return azp.psense_summary(self.idata)
+            return azp.psense_summary(self.inference_data)
 
     @property
     def priors(self):
-        "Dict of random variable objects used to generate the prior"
+        """Dict of random variable objects used to generate the prior"""
         return {
             p.name: p.prior._random_variable
             for p in self.models.parameters.free_unique_parameters
@@ -452,8 +447,7 @@ class InferenceResult:
 
 
 def compute_parameters_values(inference_data, results, group_name="posterior"):
-    """
-    Compute summary statistics for model parameters from an InferenceData object.
+    """Compute summary statistics for model parameters from an InferenceData object.
 
     This function calculates the mean, median, mode, and (if available) the
     value at the maximum likelihood for each parameter in the specified group
@@ -477,11 +471,6 @@ def compute_parameters_values(inference_data, results, group_name="posterior"):
 
     group = getattr(inference_data, group_name)
     maximum_likelihood = results.sampler_results["maximum_likelihood"]
-    # could use inference_data and apply weight in calculations
-    # for mean = np.sum(weights*samples)/np.sum(weights)
-    # for median it's more compliated https://gist.github.com/robbibt/c7ec5f0cb3e4e0cee5ed3156bcb666de)
-    # for mode use : kde = gaussian_kde(samples, weights=weights)
-    # Prepare lists to store results
     param_names = []
     means = []
     medians = []
