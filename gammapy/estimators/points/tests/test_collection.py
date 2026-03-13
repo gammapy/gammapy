@@ -45,24 +45,6 @@ def energy_edges():
 
 
 class MockFit(Fit):
-    """Mock Fit returning fixed parameter results."""
-
-    def run(self, datasets):
-        # Set norm = 2, error = 0.2 for all spectral models with a 'norm'
-        for ds in datasets:
-            for ev in ds.evaluators.values():
-                m = ev.model
-                if hasattr(m.spectral_model, "norm"):
-                    m.spectral_model.norm.value = 2.0
-                    m.spectral_model.norm.error = 0.2
-
-        return {"success": True}
-
-    def confidence(self, datasets, parameter, sigma):
-        return {"errn": 0.1, "errp": 0.3}
-
-
-class MockFitMulti(Fit):
     """Mock Fit for multiple models with distinct values."""
 
     def run(self, datasets):
@@ -84,44 +66,7 @@ def mock_fit():
     return MockFit()
 
 
-@pytest.fixture
-def mock_fit_multi():
-    return MockFitMulti()
-
-
 class MockSamplerResult:
-    """Container for sampler_results for ns parameters."""
-
-    def __init__(self, ns):
-        n_samples = 100
-        points = 2.0 + 0.1 * np.random.randn(n_samples, ns)
-        weights = np.ones(n_samples) / n_samples
-
-        self.sampler_results = {
-            "weighted_samples": {
-                "points": points,
-                "weights": weights,
-            }
-        }
-
-
-class MockSampler(Sampler):
-    """Mock sampler for single-source."""
-
-    def __init__(self, ns=1):
-        super().__init__(backend="mock", sampler_opts={})
-        self.ns = ns
-
-    def run(self, datasets):
-        return MockSamplerResult(self.ns)
-
-
-@pytest.fixture
-def mock_sampler():
-    return MockSampler(ns=1)
-
-
-class MockSamplerResultMulti:
     def __init__(self, ns):
         n_samples = 200
         # points: shape (n_samples, ns)
@@ -144,12 +89,17 @@ class MockSamplerMulti(Sampler):
         self.ns = ns
 
     def run(self, datasets):
-        return MockSamplerResultMulti(self.ns)
+        return MockSamplerResult(self.ns)
 
 
 @pytest.fixture
 def mock_sampler_multi():
     return MockSamplerMulti(ns=2)
+
+
+@pytest.fixture
+def mock_sampler():
+    return MockSamplerMulti(ns=1)
 
 
 def test_init(simple_dataset, energy_edges):
@@ -194,7 +144,7 @@ def test_asymmetric_errors_present(simple_dataset, energy_edges, mock_fit):
     assert np.all(np.isfinite(fp["dnde_errp"]))
 
 
-def test_inconsistent_geometry_raises(simple_dataset):
+def test_inconsistent_geometry_raises(simple_dataset, mock_fit):
     # dataset with different geom
     geom2 = WcsGeom.create(npix=(3, 3), binsz=0.1)
     ds2 = simple_dataset.copy(name="bad-ds")
@@ -204,7 +154,7 @@ def test_inconsistent_geometry_raises(simple_dataset):
     est = FluxCollectionEstimator(
         energy_edges=[1, 3, 10] * u.TeV,
         models=[model],
-        solver=MockFit(),
+        solver=mock_fit,
     )
 
     with pytest.raises(ValueError):
@@ -270,7 +220,7 @@ def test_run_sampler_multi_source(simple_dataset, energy_edges, mock_sampler_mul
     assert samples["test-source"][0].shape[0] == 200
 
 
-def test_run_fit_multi_source(simple_dataset, energy_edges, mock_fit_multi):
+def test_run_fit_multi_source(simple_dataset, energy_edges, mock_fit):
     m1 = simple_dataset.models["test-source"]
     m2 = m1.copy(name="test-source-2")
     simple_dataset.models = Models([m1, m2])
@@ -278,7 +228,7 @@ def test_run_fit_multi_source(simple_dataset, energy_edges, mock_fit_multi):
     est = FluxCollectionEstimator(
         energy_edges=energy_edges,
         models=[m1, m2],
-        solver=mock_fit_multi,
+        solver=mock_fit,
         selection_optional=["errn-errp"],
     )
 
@@ -300,7 +250,7 @@ def test_run_fit_multi_source(simple_dataset, energy_edges, mock_fit_multi):
     assert result["solver_results"].shape == (nbin,)
 
 
-def test_run_multi_dataset(simple_dataset, energy_edges, mock_fit_multi):
+def test_run_multi_dataset(simple_dataset, energy_edges, mock_fit):
     ds2 = simple_dataset.copy(name="dataset-2")
     ds2.counts = ds2.counts.copy(data=12 * np.ones(ds2.counts.data.shape))
     ds2.background = ds2.background.copy(data=9 * np.ones(ds2.background.data.shape))
@@ -317,7 +267,7 @@ def test_run_multi_dataset(simple_dataset, energy_edges, mock_fit_multi):
     est = FluxCollectionEstimator(
         energy_edges=energy_edges,
         models=[m1, m2],
-        solver=mock_fit_multi,
+        solver=mock_fit,
         selection_optional=["errn-errp"],
         reoptimize=True,
     )
