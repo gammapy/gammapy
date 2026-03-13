@@ -15,6 +15,7 @@ from gammapy.stats import WStatCountsStatistic
 from gammapy.utils.coordinates import FoVICRSFrame, FoVAltAzFrame
 from gammapy.utils.regions import compound_region_to_regions
 from regions import CircleSkyRegion
+from gammapy.utils.deprecation import deprecated
 
 __all__ = [
     "make_counts_off_rad_max",
@@ -377,6 +378,62 @@ def make_edisp_kernel_map(
     )
 
     return edisp_map.to_edisp_kernel_map(geom.axes["energy"])
+
+
+@deprecated("2.1", alternative="ThetaSquaredTable")
+def make_theta_squared_table(
+    observations,
+    theta_squared_axis,
+    position,
+    position_off=None,
+    energy_edges=None,
+    off_regions_number=1,
+):
+    """Make theta squared distribution in the same FoV for a list of `~gammapy.data.Observation` objects.
+
+    The ON theta2 profile is computed from a given distribution, on_position.
+    By default, the OFF theta2 profile is extracted from a mirror position
+    radially symmetric in the FOV to pos_on.
+
+    The ON and OFF regions are assumed to be of the same size, so the normalisation
+    factor between both region alpha = 1.
+
+    Parameters
+    ----------
+    observations : `~gammapy.data.Observations`
+        List of observations.
+    theta_squared_axis : `~gammapy.maps.MapAxis`
+        Axis of edges of the theta2 bin used to compute the distribution.
+    position : `~astropy.coordinates.SkyCoord`
+        Position from which the on theta^2 distribution is computed.
+    position_off : `~astropy.coordinates.SkyCoord`
+        Position from which the OFF theta^2 distribution is computed.
+        Default is reflected position w.r.t. to the pointing position.
+    energy_edges : list of `~astropy.units.Quantity`, optional
+        Edges of the energy bin where the theta squared distribution
+        is evaluated. For now, only one interval is accepted.
+        Default is None.
+    off_regions_number : `int`, optional
+        Number of OFF regions. Default is 1. **WARNING**: the user should
+        be aware that, if regions overlap, only the reflected OFF
+        region will be considered.
+
+    Returns
+    -------
+    table : `~astropy.table.Table`
+        Table containing the on counts, the off counts, acceptance, off acceptance and alpha
+        for each theta squared bin.
+    """
+    theta_squared_table = ThetaSquaredTable(
+        observations=observations,
+        theta_squared_axis=theta_squared_axis,
+        position=position,
+        position_off=position_off,
+        energy_edges=energy_edges,
+        off_regions_number=off_regions_number,
+    )
+
+    return theta_squared_table.run()
 
 
 class ThetaSquaredTable:
