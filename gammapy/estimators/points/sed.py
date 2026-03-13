@@ -301,6 +301,18 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
 class FluxCollectionEstimator:
     """Estimate the flux points from a collection of sources simultaneously.
 
+    This estimator computes spectral flux points for a *collection of sources*
+    over a set of predefined energy bins. The normalizations of all
+    ``SkyModel`` objects listed in ``models`` are fitted jointly in each energy bin,
+    while all other ``SkyModel`` components in the datasets remain frozen.
+    Re-optimization of each dataset’s background model is optional.
+
+    The operation can be performed either with the standard likelihood optimizer
+    (``~gammapy.modeling.Fit``) or with a sampler
+    (``~gammapy.modeling.Sampler``), which can be used to derive asymmetric
+    errors and upper limits.
+
+
     Parameters
     ----------
     energy_edges : `~astropy.units.Quantity`
