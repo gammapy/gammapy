@@ -122,7 +122,7 @@ class BayesianModelSelectionResult:
         """
 
         table = self.stats_table()
-        idx = np.where(table["Model (prior)"] == reference_models_name)[0][0]
+        idx = np.nonnzero(table["Model (prior)"] == reference_models_name)[0][0]
         diff = Table()
         for col in table.colnames:
             if table[col].dtype.kind in "iuf":  # numeric types only
