@@ -1,1 +1,1 @@
-For clarity: change the argument name from `model` to `kernel_model` in `TSMapEstimator` and update the corresponding examples and tests.
+Change the argument name from ``model`` to ``kernel_model`` in `~gammapy.estimators.TSMapEstimator` for clarity.
