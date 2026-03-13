@@ -186,68 +186,49 @@ def test_run_sampler_case(simple_dataset, energy_edges, mock_sampler):
     assert len(samples["test-source"]) == 2
 
 
-def test_run_sampler_multi_source(simple_dataset, energy_edges, mock_sampler_multi):
+def test_run_multi_source(simple_dataset, energy_edges, mock_fit, mock_sampler_multi):
     # Add two sources
     m1 = simple_dataset.models["test-source"]
     m2 = m1.copy(name="test-source-2")
     simple_dataset.models = Models([m1, m2])
 
-    est = FluxCollectionEstimator(
-        energy_edges=energy_edges,
-        models=[m1, m2],
-        solver=mock_sampler_multi,
-    )
-
-    result = est.run(Datasets([simple_dataset]))
-    flux_points = result["flux_points"]
-    nbin = len(energy_edges) - 1
-
-    assert set(flux_points.keys()) == {"test-source", "test-source-2"}
-
-    for name in ["test-source", "test-source-2"]:
-        fp = flux_points[name]
-        assert len(fp["dnde"].data) == nbin
-        assert np.all(np.isfinite(fp["dnde"]))
-        assert np.all(np.isfinite(fp["dnde_errn"]))
-        assert np.all(np.isfinite(fp["dnde_errp"]))
-        assert np.all(np.isfinite(fp["dnde_ul"]))
-        assert np.all(np.isfinite(fp["ts"]))
-
-    samples = result["samples"]["dnde"]
-    assert "test-source" in samples
-    assert "test-source-2" in samples
-    assert len(samples["test-source"]) == nbin
-    assert samples["test-source"][0].shape[0] == 200
-
-
-def test_run_fit_multi_source(simple_dataset, energy_edges, mock_fit):
-    m1 = simple_dataset.models["test-source"]
-    m2 = m1.copy(name="test-source-2")
-    simple_dataset.models = Models([m1, m2])
-
-    est = FluxCollectionEstimator(
+    fit_est = FluxCollectionEstimator(
         energy_edges=energy_edges,
         models=[m1, m2],
         solver=mock_fit,
         selection_optional=["errn-errp"],
     )
 
-    result = est.run(Datasets([simple_dataset]))
-    flux_points = result["flux_points"]
-    nbin = len(energy_edges) - 1
+    sampler_est = FluxCollectionEstimator(
+        energy_edges=energy_edges,
+        models=[m1, m2],
+        solver=mock_sampler_multi,
+    )
 
-    assert set(flux_points.keys()) == {"test-source", "test-source-2"}
+    for est in [fit_est, sampler_est]:
+        result = est.run(Datasets([simple_dataset]))
+        flux_points = result["flux_points"]
+        nbin = len(energy_edges) - 1
 
-    for name in ["test-source", "test-source-2"]:
-        fp = flux_points[name]
-        assert len(fp["dnde"].data) == nbin
-        assert np.all(np.isfinite(fp["dnde"]))
-        assert np.all(np.isfinite(fp["dnde_errn"]))
-        assert np.all(np.isfinite(fp["dnde_errp"]))
-        assert np.all(np.isfinite(fp["dnde_ul"]))
-        assert np.all(fp["ts"] >= 0)
+        assert set(flux_points.keys()) == {"test-source", "test-source-2"}
+
+        for name in ["test-source", "test-source-2"]:
+            fp = flux_points[name]
+            assert len(fp["dnde"].data) == nbin
+            assert np.all(np.isfinite(fp["dnde"]))
+            assert np.all(np.isfinite(fp["dnde_errn"]))
+            assert np.all(np.isfinite(fp["dnde_errp"]))
+            assert np.all(np.isfinite(fp["dnde_ul"]))
+            assert np.all(np.isfinite(fp["ts"]))
+            assert np.all(fp["ts"] >= 0)
 
     assert result["solver_results"].shape == (nbin,)
+
+    samples = result["samples"]["dnde"]
+    assert "test-source" in samples
+    assert "test-source-2" in samples
+    assert len(samples["test-source"]) == nbin
+    assert samples["test-source"][0].shape[0] == 200
 
 
 def test_run_multi_dataset(simple_dataset, energy_edges, mock_fit):
