@@ -11,7 +11,7 @@ class BayesianModelSelection:
 
     Parameters
     ----------
-    sampler : `gammapy.modeling.Sampler`
+    sampler : `~gammapy.modeling.Sampler`
         Sampler instance specifying the backend and options.
     posterior_downsample_factor : int, optional
         Factor to downsample posterior samples for efficiency.
@@ -33,7 +33,7 @@ class BayesianModelSelection:
 
         Parameters
         ----------
-        datasets : `Datasets`
+        datasets : `~gammapy.datasets.Datasets`
             The datasets on which to perform the model fitting.
         alternative_models : dict
             Dictionary of model names and corresponding `Models` objects.
