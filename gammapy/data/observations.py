@@ -794,7 +794,9 @@ class Observations(collections.abc.MutableSequence):
         for time_interval in time_intervals:
             for obs in self:
                 if not inverted:
-                    if (obs.tstart <= time_interval[1]) & (obs.tstop > time_interval[0]):
+                    if (obs.tstart <= time_interval[1]) & (
+                        obs.tstop > time_interval[0]
+                    ):
                         new_obs = obs.select_time(time_interval)
                         new_obs_list.append(new_obs)
                 else:
