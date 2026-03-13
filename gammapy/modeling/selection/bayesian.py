@@ -17,7 +17,7 @@ class BayesianModelSelection:
         Factor to downsample posterior samples for efficiency.
         Default is 4.
     n_prior_samples : int, optional
-        Number of prior samples to generate. If None, no samples are added.
+        Number of prior samples to display on the results. If None, no prior samples are added.
         Default is 1000.
 
     """
@@ -28,8 +28,7 @@ class BayesianModelSelection:
         self.n_prior_samples = n_prior_samples
 
     def run(self, datasets, alternative_models):
-        """
-        Run Bayesian inference for a set of alternative models.
+        """Run Bayesian inference for a set of alternative models.
 
         Parameters
         ----------
@@ -62,8 +61,7 @@ class BayesianModelSelection:
 
 
 class BayesianModelSelectionResult:
-    """
-    Container for results of multiple Bayesian model sampling.
+    """Container for results of multiple Bayesian model sampling.
 
     Provides utilities to compare models and compute differences
     in statistical metrics.
@@ -85,9 +83,7 @@ class BayesianModelSelectionResult:
         return self._results_dict[key]
 
     def stats_table(self, format=".3f"):
-        """
-        Statistics summary table for all models.
-
+        """Statistics summary table for all models.
 
         Parameters
         ----------
@@ -107,8 +103,7 @@ class BayesianModelSelectionResult:
         return vstack(tables)
 
     def stats_difference_table(self, reference_models_name):
-        """
-        Compute difference in statistics relative to a reference model.
+        """Compute difference in statistics relative to a reference model.
 
         Parameters
         ----------
@@ -120,9 +115,8 @@ class BayesianModelSelectionResult:
         table : `~astropy.table.Table`
             Table with differences in statistics (H0 - H1).
         """
-
         table = self.stats_table()
-        idx = np.nonnzero(table["Model (prior)"] == reference_models_name)[0][0]
+        idx = np.nonzero(table["Model (prior)"] == reference_models_name)[0][0]
         diff = Table()
         for col in table.colnames:
             if table[col].dtype.kind in "iuf":  # numeric types only
@@ -160,8 +154,7 @@ class BayesianModelSelectionResult:
         }
 
     def compare(self, **kwargs):
-        """
-        Compare models using ArviZ's model comparison utilities.
+        """Compare models using ArviZ's model comparison utilities.
 
         This method extracts the LOO-CV expected log predictive densities (ELPDs)
         from each model result and passes them to `arviz.compare` for statistical
@@ -176,7 +169,7 @@ class BayesianModelSelectionResult:
         Returns
         -------
         comparison : `~pandas.DataFrame`
-            A DataFrame with model comparison metrics such as ELPD differences,
+            A data frame with model comparison metrics such as ELPD differences,
             standard errors, and weights.
         """
         import arviz as az
@@ -209,7 +202,7 @@ class InferenceResult:
     posterior_downsample_factor : int, optional
         Factor to reduce posterior samples for efficiency. Default is 4.
     n_prior_samples : int, optional
-        Number of prior samples to generate. If None, no samples are added.
+        Number of prior samples to display on the results. If None, no prior samples are added.
         Default is 1000.
     """
 
@@ -265,7 +258,7 @@ class InferenceResult:
 
     @property
     def idata(self):
-        """ArviZ `InferenceData` object with unweighted posterior samples."""
+        """ `arviz.InferenceData` object with unweighted posterior samples."""
         return self._idata
 
     @property
