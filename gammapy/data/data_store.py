@@ -826,6 +826,8 @@ class DataStoreMaker:
 
     def get_hdu_table_rows(self, events_path, irf_path=None):
         """Make HDU index table rows for one observation."""
+        from gammapy.irf.io import _get_hdu_type_and_class
+
         events_info = self.get_obs_info(events_path, irf_path)
 
         info = dict(
@@ -842,19 +844,17 @@ class DataStoreMaker:
             FILE_DIR=irf_path.parent.as_posix(),
             FILE_NAME=irf_path.name,
         )
-        yield dict(
-            HDU_TYPE="aeff", HDU_CLASS="aeff_2d", HDU_NAME="EFFECTIVE AREA", **info
-        )
-        yield dict(
-            HDU_TYPE="edisp", HDU_CLASS="edisp_2d", HDU_NAME="ENERGY DISPERSION", **info
-        )
-        yield dict(
-            HDU_TYPE="psf",
-            HDU_CLASS="psf_3gauss",
-            HDU_NAME="POINT SPREAD FUNCTION",
-            **info,
-        )
-        yield dict(HDU_TYPE="bkg", HDU_CLASS="bkg_3d", HDU_NAME="BACKGROUND", **info)
+
+        with fits.open(irf_path, memmap=False) as hdu_list:
+            for hdu in hdu_list:
+                if hdu.header.get("HDUCLAS1") == "RESPONSE":
+                    hdu_type, hdu_class = _get_hdu_type_and_class(hdu.header)
+                    yield dict(
+                        HDU_TYPE=hdu_type,
+                        HDU_CLASS=hdu_class,
+                        HDU_NAME=hdu.name,
+                        **info
+                    )
 
 
 class CalDBIRF:
