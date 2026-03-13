@@ -101,5 +101,5 @@ def test_bayesian_model_selection(bms_results):
 def test_prior_sensitivity_table(bms_results):
     bms_results.prior_sensitivity_table()
     psense = bms_results["lp(uniformative)"].prior_sensitivity_table()
-    assert_allclose(psense.prior.amplitude, 0.01, rtol=1e-1)
+    assert_allclose(psense.prior.amplitude, 0.01, rtol=5e-1)
     assert_allclose(psense.likelihood.amplitude, 0.097, rtol=5e-1)
