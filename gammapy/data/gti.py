@@ -316,7 +316,7 @@ class GTI:
         Parameters
         ----------
         time_interval : `astropy.time.Time`
-            Start and stop time for the selection.
+            Start time (inclusive) and stop time (exclusive) for the selection.
 
         Returns
         -------
@@ -328,7 +328,7 @@ class GTI:
         interval_stop.format = self.time_stop.format
 
         # get GTIs that fall within the time_interval
-        mask = self.time_start < interval_stop
+        mask = self.time_start <= interval_stop
         mask &= self.time_stop > interval_start
         gti_within = self.table[mask]
 
