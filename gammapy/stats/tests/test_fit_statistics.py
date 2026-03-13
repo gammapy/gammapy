@@ -13,6 +13,7 @@ from gammapy.stats.fit_statistics import (
     CashFitStatistic,
     WeightedCashFitStatistic,
     WStatFitStatistic,
+    LStatFitStatistic,
     Chi2FitStatistic,
     Chi2AsymmetricErrorFitStatistic,
     GaussianPriorPenalty,
@@ -201,6 +202,68 @@ def test_wstat_corner_cases():
 
     actual = stats.get_wstat_mu_bkg(n_on=n_on, mu_sig=mu_sig, n_off=n_off, alpha=alpha)
     assert_allclose(actual, 0)
+
+
+def test_lstat(test_data):
+    """Test LSTAT calculation"""
+    statsvec = stats.lstat(
+        n_on=test_data["n_on"],
+        mu_sig=test_data["mu_sig"],
+        n_off=test_data["n_off"],
+        alpha=test_data["alpha"],
+        extra_terms=True,
+    )
+    
+    assert statsvec.shape == (10,)
+    assert np.all(np.isfinite(statsvec))
+
+
+def test_lstat_corner_cases():
+    """Test LSTAT formulae for corner cases"""
+    n_on = 10
+    n_off = 8
+    mu_sig = 2.0
+    alpha = 0.5
+    
+    stat = stats.lstat(n_on=n_on, mu_sig=mu_sig, n_off=n_off, alpha=alpha)
+    assert np.isfinite(stat)
+    assert stat >= 0
+    
+    # n_on = 0
+    n_on = 0
+    n_off = 5
+    mu_sig = 0.5
+    alpha = 0.5
+    
+    stat = stats.lstat(n_on=n_on, mu_sig=mu_sig, n_off=n_off, alpha=alpha)
+    assert np.isfinite(stat)
+    
+    # n_off = 0
+    n_on = 7
+    n_off = 0
+    mu_sig = 1.0
+    alpha = 0.5
+    
+    stat = stats.lstat(n_on=n_on, mu_sig=mu_sig, n_off=n_off, alpha=alpha)
+    assert np.isfinite(stat)
+
+
+def test_lstat_vs_wstat():
+    """Compare LSTAT and WSTAT - they should give similar but not identical results"""
+    n_on = 15
+    n_off = 10
+    mu_sig = 3.0
+    alpha = 0.3
+    
+    lstat_val = stats.lstat(n_on=n_on, mu_sig=mu_sig, n_off=n_off, alpha=alpha)
+    wstat_val = stats.wstat(n_on=n_on, mu_sig=mu_sig, n_off=n_off, alpha=alpha)
+    
+    # Both should be finite and positive
+    assert np.isfinite(lstat_val) and np.isfinite(wstat_val)
+    assert lstat_val >= 0 and wstat_val >= 0
+    
+    # They should be different (different statistical approaches)
+    assert lstat_val != wstat_val
 
 
 class MockDataset:

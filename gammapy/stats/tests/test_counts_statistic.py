@@ -2,7 +2,7 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from gammapy.stats import CashCountsStatistic, WStatCountsStatistic
+from gammapy.stats import CashCountsStatistic, WStatCountsStatistic, LStatCountsStatistic
 
 ref_array = np.ones((3, 2, 4))
 
@@ -283,3 +283,80 @@ def test_counts_statistic_infodict():
     info_dict = w1.sum().info_dict()
     assert_allclose(info_dict["excess"], 5.0)
     assert_allclose(info_dict["significance"], 1.288731, rtol=1e-3)
+
+
+# LStat tests
+lstat_values = [
+    (10, 8, 0.3, [7.6, 3.26619]),
+    (5, 10, 0.5, [0.0, 0.0]),
+    (15, 5, 0.2, [14.0, 4.74308]),
+    (20, 15, 0.4, [14.0, 4.16098]),
+]
+
+
+@pytest.mark.parametrize(("n_on", "n_off", "alpha", "result"), lstat_values)
+def test_lstat_basic(n_on, n_off, alpha, result):
+    """Test basic LStatCountsStatistic calculations"""
+    stat = LStatCountsStatistic(n_on, n_off, alpha)
+    excess = stat.n_sig
+    sqrt_ts = stat.sqrt_ts
+    
+    assert_allclose(excess, result[0])
+    assert_allclose(sqrt_ts, result[1], rtol=0.1)
+
+
+def test_lstat_with_musig():
+    """Test LStatCountsStatistic with mu_sig parameter"""
+    n_on = 10
+    n_off = 5
+    alpha = 0.5
+    mu_sig = 2.0
+    
+    stat = LStatCountsStatistic(n_on, n_off, alpha, mu_sig)
+    
+    assert stat.mu_sig == mu_sig
+    assert_allclose(stat.n_bkg, alpha * n_off)
+    # make sure we get finite statistics
+    assert np.isfinite(stat.stat_null)
+    assert np.isfinite(stat.stat_max)
+    assert stat.ts >= 0
+
+
+def test_lstat_sum():
+    """Test summing multiple bins"""
+    n_on = np.array([10, 20])
+    n_off = np.array([8, 15])
+    alpha = np.array([0.3, 0.4])
+    
+    stat = LStatCountsStatistic(n_on, n_off, alpha)
+    summed = stat.sum()
+    
+    assert isinstance(summed, LStatCountsStatistic)
+    assert_allclose(summed.n_on, 30)
+    assert_allclose(summed.n_off, 23)
+
+
+def test_lstat_getitem():
+    """Test array indexing"""
+    n_on = np.array([10, 20, 15])
+    n_off = np.array([8, 15, 10])
+    alpha = np.array([0.3, 0.4, 0.5])
+    
+    stat = LStatCountsStatistic(n_on, n_off, alpha)
+    stat_0 = stat[0]
+    
+    assert isinstance(stat_0, LStatCountsStatistic)
+    assert stat_0.n_on == 10
+    assert stat_0.n_off == 8
+    assert stat_0.alpha == 0.3
+
+
+def test_lstat_str():
+    """Test string representation"""
+    stat = LStatCountsStatistic(n_on=10, n_off=5, alpha=0.3, mu_sig=1.0)
+    
+    # check the important info is in the string
+    assert "Off counts" in str(stat)
+    assert "alpha " in str(stat)
+    assert "LStatCountsStatistic" in str(stat)
+    assert "Predicted signal counts" in str(stat)
