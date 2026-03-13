@@ -317,11 +317,11 @@ class FluxCollectionEstimator:
         Norm parameter used for the fit.
         Default is None and a new parameter is created with value=1, name="norm".
         If the `solver` is a sampler the default prior is uniform between [-10, 10].
-    solver : `Fit` or `Sampler`
+    solver : `~gammapy.modeling.Fit` or `~gammapy.modeling.Sampler`
         Fit or Sampler instance specifying the backend and options.
         Default is a Sampler with options live_points=300, frac_remain=0.3.
     reoptimize : bool
-        Whether to reoptimize the background models. Default is False.
+        Whether to reoptimize each dataset.background_model. Default is False.
         Only SkyModel given in `models` will be fitted the others remain frozen,
         regardless of this option.
     selection_optional : list of str, optional
