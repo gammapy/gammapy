@@ -5,13 +5,12 @@ import astropy.units as u
 from scipy.stats import gaussian_kde, norm
 
 
-def plot_flux_violin(
+def plot_samples_violin_vs_energy(
     ax,
     energy_edges,
     samples_per_band,
     weights_per_band=None,
     energy_power=None,
-    color="C0",
     bw_method="scott",
     grid_size=200,
     errorbar_kwargs=None,
@@ -22,13 +21,16 @@ def plot_flux_violin(
 ):
     """
     Plot flux-sample violin distributions per energy bin on log–log axes.
-    Unlike standard error bars which only shows summary statistics, a violin plot shows the full probability density for each energy bin.
+    Unlike standard error bars which only shows summary statistics,
+    a violin plot shows the full probability density for each energy bin.
 
     This function draws one violin per energy interval, using weighted
     kernel-density estimation (KDE) in log-space. The median and
     1σ-equivalent quantiles are overlaid using Gammapy-style flux-point
     error bars. Users can optionally apply an ``E_center**p`` scaling to the
     flux values and clip violin tails to a specified containment interval.
+    Samples of other energy-dependent parameters can also be plotted,
+    in that case the `y_label` should be changed accordingly.
 
     Parameters
     ----------
@@ -113,34 +115,45 @@ def plot_flux_violin(
 
     # Errorbar styles
     if errorbar_kwargs is None:
-        errorbar_kwargs = dict(
-            marker="o",
-            ms=4.5,
-            mec="black",
-            mfc="white",
-            color="black",
-            capsize=2.5,
-            elinewidth=1.2,
-            lw=1.2,
-        )
+        errorbar_kwargs = dict()
+    errorbar_kwargs_defaults = dict(
+        marker="o",
+        ms=4.5,
+        mec="black",
+        mfc="white",
+        color="black",
+        capsize=2.5,
+        elinewidth=1.2,
+        lw=1.2,
+    )
+    for key in errorbar_kwargs_defaults.keys():
+        errorbar_kwargs.setdefault(key, errorbar_kwargs_defaults[key])
+
     if errorbar_ul_kwargs is None:
-        errorbar_ul_kwargs = dict(
-            marker="v",
-            ms=7,
-            mec="black",
-            mfc="white",
-            color="black",
-            capsize=2.5,
-            elinewidth=1.2,
-            lw=1.2,
-        )
+        errorbar_ul_kwargs = dict()
+    errorbar_ul_kwargs_defaults = dict(
+        marker="v",
+        ms=7,
+        mec="black",
+        mfc="white",
+        color="black",
+        capsize=2.5,
+        elinewidth=1.2,
+        lw=1.2,
+    )
+    for key in errorbar_ul_kwargs_defaults.keys():
+        errorbar_ul_kwargs.setdefault(key, errorbar_ul_kwargs_defaults[key])
+
     if violin_kwargs is None:
-        violin_kwargs = dict(
-            alpha=0.45,
-            color="C0",
-            edgecolor="black",
-            lw=0.8,
-        )
+        violin_kwargs = dict()
+    violin_kwargs_defaults = dict(
+        alpha=0.45,
+        color="C0",
+        edgecolor="black",
+        lw=0.8,
+    )
+    for key in violin_kwargs_defaults.keys():
+        violin_kwargs.setdefault(key, violin_kwargs_defaults[key])
 
     quantiles = [100 * norm.cdf(-1), 50, 100 * norm.cdf(1), 100 * norm.cdf(2)]
 
