@@ -1,1 +1,1 @@
-Add a new `FluxCollectionEstimator` that allow to compute flux points or flux samples for a set of sources conjointly.
+Add a new `FluxCollectionEstimator` that enables the computation of flux points or flux samples jointly for a group of sources.
