@@ -216,7 +216,9 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
         self.kernel_width = kernel_width
 
-        self.norm = _get_default_norm(norm, scan_values=_generate_scan_values())
+        self.norm = _get_default_norm(
+            norm, scan_values=_generate_scan_values(), interp="log"
+        )
 
         if model is None:
             model = SkyModel(
@@ -331,7 +333,10 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         )
 
         kernel = evaluator.compute_npred()
-        kernel.data /= kernel.data.sum()
+
+        with np.errstate(invalid="ignore", divide="ignore"):
+            kernel.data /= kernel.data.sum(axis=(1, 2))[:, None, None]
+            kernel.data[~np.isfinite(kernel.data)] = 0
         return kernel
 
     def estimate_flux_default(self, dataset, kernel=None, exposure=None):
@@ -437,6 +442,9 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         # First create 2D map arrays
 
         exposure = estimate_exposure_reco_energy(dataset, self.model.spectral_model)
+        exposure_npred = estimate_exposure_reco_energy(
+            dataset, self.model.spectral_model, normalize=False
+        )
 
         kernel = self.estimate_kernel(dataset)
 
@@ -448,7 +456,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
         counts = dataset.counts * mask
         background = dataset.npred() * mask
-        exposure *= mask
+        exposure_npred *= mask
 
         energy_axis = counts.geom.axes["energy"]
 
@@ -456,7 +464,6 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
             energy_axis.edges[0], energy_axis.edges[-1]
         )
 
-        exposure_npred = (exposure * flux_ref).to_unit("")
         norm = (flux / flux_ref).to_unit("")
 
         if self.sum_over_energy_groups:
@@ -799,7 +806,7 @@ class BrentqFluxEstimator(Estimator):
         # Compute norm bounds and assert counts > 0
         norm_min, norm_max, norm_min_total = dataset.norm_bounds
 
-        if dataset.counts.sum() <= 0:
+        if dataset.counts.sum() <= 0 or dataset.model.sum() <= 0:
             norm, niter, success = norm_min_total, 0, True
 
         else:
