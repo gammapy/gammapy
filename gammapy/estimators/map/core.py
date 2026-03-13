@@ -234,9 +234,7 @@ class FluxMaps:
         if not required.issubset(keys):
             missing = required.difference(keys)
             raise ValueError(
-                "Missing data / column for SED type '{}':" " {}".format(
-                    sed_type, missing
-                )
+                "Missing data / column for SED type '{}': {}".format(sed_type, missing)
             )
 
     # TODO: add support for scan
@@ -349,7 +347,7 @@ class FluxMaps:
 
     @property
     def reference_spectral_model(self):
-        """Reference spectral model as a `SpectralModel`."""
+        """Reference spectral model as a `~gammapy.modeling.models.SpectralModel`."""
         return self.reference_model.spectral_model
 
     @property
@@ -549,7 +547,7 @@ class FluxMaps:
 
         Returns
         -------
-        sqrt_ts : `Map`
+        sqrt_ts : `~gammapy.maps.Map`
             sqrt(TS) map.
         """
         if "sqrt_ts" in self._data:
@@ -842,7 +840,7 @@ class FluxMaps:
 
         Returns
         -------
-        maps : `Maps`
+        maps : `~gammapy.maps.Maps`
             Maps object containing the requested maps.
         """
         maps = Maps()
@@ -868,7 +866,7 @@ class FluxMaps:
         ----------
         maps : list of `FluxMaps`
             List of maps to stack.
-        axis : `MapAxis`
+        axis : `~gammapy.maps.MapAxis`
             New axis to create.
         meta : dict, optional
             Metadata of the resulting flux points. Default is None.
@@ -942,7 +940,7 @@ class FluxMaps:
 
         Parameters
         ----------
-        maps : `Maps`
+        maps : `~gammapy.maps.Maps`
             Maps object containing the input maps.
         sed_type : str, optional
             SED type of the input maps. If None, set to "likelihood". Default is None.
@@ -1109,6 +1107,8 @@ class FluxMaps:
         if sed_type is None:
             sed_type = self.sed_type_init
 
+        if filename is None:
+            raise ValueError("The filename is not defined.")
         filename = make_path(filename)
 
         if filename_model is None:
@@ -1214,7 +1214,7 @@ class FluxMaps:
         Parameters
         ----------
         slices : dict
-            Dictionary of axes names and `astropy.Quantity` or `astropy.Time` or `slice` object pairs.
+            Dictionary of axes names and `~astropy.units.Quantity` or `~astropy.units.Time` or ``slice`` object pairs.
             Contains one element for each non-spatial dimension. For integer indexing the
             corresponding axes is dropped from the map. Axes not specified in the
             dict are kept unchanged.

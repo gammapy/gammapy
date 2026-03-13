@@ -527,10 +527,10 @@ print(result)
 
 spatial_model = PointSpatialModel()
 spectral_model = PowerLawSpectralModel(index=2)
-model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
+kernel_model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
 
 ts_estimator = TSMapEstimator(
-    model,
+    kernel_model=kernel_model,
     kernel_width="1 deg",  # this set close to the 95-99% containment radius of the PSF
     selection_optional=[],
     sum_over_energy_groups=True,

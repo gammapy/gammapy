@@ -140,7 +140,7 @@ spatial_model = PointSpatialModel()
 
 # We choose units consistent with the map units here...
 spectral_model = PowerLawSpectralModel(amplitude="1e-22 cm-2 s-1 keV-1", index=2)
-model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
+kernel_model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
 
 
 ######################################################################
@@ -157,7 +157,7 @@ model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
 
 
 estimator = TSMapEstimator(
-    model=model,
+    kernel_model=kernel_model,
     kernel_width="1 deg",
     energy_edges=[10, 500] * u.GeV,
     n_sigma=1,
