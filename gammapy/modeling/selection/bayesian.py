@@ -5,9 +5,29 @@ from scipy.stats import gaussian_kde
 from .inference_data import inference_data_from_sampler
 
 
+import logging
+
+log = logging.getLogger(__name__)
+
+
 class BayesianModelSelection:
     """
     Bayesian inference for a set of alternative models.
+
+    This class automates the workflow of evaluating several alternative
+    statistical models on the same datasets, extracting posterior and prior
+    information, and computing predictive accuracy metrics such as WAIC and
+    PSIS‑LOO. The results for each model are stored in
+    :class:`~gammapy.modeling.selection.bayesian.InferenceResult` objects and
+    collected into a :class:`BayesianModelSelectionResult`.
+
+    The class loops over a dictionary of candidate models, runs the sampler
+    for each one, and computes summaries of parameter estimates and
+    model‑comparison statistics. These summaries include log‑evidence, AIC,
+    WAIC, LOO, effective degrees of freedom, and Pareto‑k diagnostics.
+    Progress, parameter tables, and statistical summaries are emitted using
+    the Python logging system at the ``INFO`` level.
+
 
     Parameters
     ----------
@@ -45,7 +65,7 @@ class BayesianModelSelection:
 
         results = {}
         for models_name, models in alternative_models.items():
-            print(f"Evaluating {models_name}")
+            log.info(f"Evaluating {models_name}")
             datasets.models = models
             sampler_results = self.sampler.run(datasets)
             results[models_name] = InferenceResult(
@@ -55,8 +75,11 @@ class BayesianModelSelection:
                 self.posterior_downsample_factor,
                 self.n_prior_samples,
             )
-            results[models_name].parameters_table().pprint(max_lines=-1, max_width=-1)
-            print(results[models_name])
+
+            table = results[models_name].parameters_table()
+            table_str = "\n".join(table.pformat(max_lines=-1, max_width=-1))
+            log.info("Parameter table for %s:\n%s", models_name, table_str)
+            log.info(results[models_name])
         return BayesianModelSelectionResult(results)
 
 
@@ -179,9 +202,16 @@ class BayesianModelSelectionResult:
 
     def prior_sensitivity_table(self):
         "Display prior and likelihood sentivity table computed from power scaling for each model"
+
+        blocks = []
+
         for name in self.models_names:
-            print(name)
-            print(self[name].prior_sensitivity_table())
+            df = self[name].prior_sensitivity_table()
+            header = f"Prior sensitivity for model: {name}"
+            blocks.append(header)
+            blocks.append(df.to_string())
+
+        return "\n\n".join(blocks)
 
 
 class InferenceResult:
@@ -258,7 +288,7 @@ class InferenceResult:
 
     @property
     def idata(self):
-        """ `arviz.InferenceData` object with unweighted posterior samples."""
+        """`arviz.InferenceData` object with unweighted posterior samples."""
         return self._idata
 
     @property
