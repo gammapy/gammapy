@@ -7,11 +7,11 @@ from matplotlib.artist import Artist
 from matplotlib.container import ErrorbarContainer
 import astropy.units as u
 
-from gammapy.visualization.violin import plot_flux_violin
+from gammapy.visualization.violin import plot_samples_violin_vs_energy
 
 
-def test_plot_flux_violin_invalid():
-    with pytest.raises(ValueError):
+def test_plot_samples_violin_vs_energy_invalid():
+    with pytest.raises(ValueError, match="samples_per_band must match number of bins"):
         energy_edges = np.array([1, 2, 4]) * u.TeV
 
         samples_per_band = [
@@ -19,13 +19,13 @@ def test_plot_flux_violin_invalid():
         ]
 
         _, ax = plt.subplots()
-        plot_flux_violin(
+        plot_samples_violin_vs_energy(
             ax=ax,
             energy_edges=energy_edges,
             samples_per_band=samples_per_band,
         )
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="weights_per_band must match number of bins."):
         energy_edges = np.array([1, 2, 4]) * u.TeV
 
         samples_per_band = [
@@ -37,14 +37,16 @@ def test_plot_flux_violin_invalid():
         ]
 
         _, ax = plt.subplots()
-        plot_flux_violin(
+        plot_samples_violin_vs_energy(
             ax=ax,
             energy_edges=energy_edges,
             samples_per_band=samples_per_band,
             weights_per_band=weights_per_band,
         )
 
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError, match="energy_edges must be 1D and contain at least two values."
+    ):
         energy_edges = np.array([1]) * u.TeV
 
         samples_per_band = [
@@ -53,13 +55,15 @@ def test_plot_flux_violin_invalid():
         ]
 
         _, ax = plt.subplots()
-        plot_flux_violin(
+        plot_samples_violin_vs_energy(
             ax=ax,
             energy_edges=energy_edges,
             samples_per_band=samples_per_band,
         )
 
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError, match="energy_edges must be strictly increasing, finite, and > 0."
+    ):
         energy_edges = np.array([-np.inf, 2, 3]) * u.TeV
 
         samples_per_band = [
@@ -68,13 +72,15 @@ def test_plot_flux_violin_invalid():
         ]
 
         _, ax = plt.subplots()
-        plot_flux_violin(
+        plot_samples_violin_vs_energy(
             ax=ax,
             energy_edges=energy_edges,
             samples_per_band=samples_per_band,
         )
 
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError, match="violin_clip must satisfy 0 <= low < high <= 1."
+    ):
         energy_edges = np.array([1, 2, 3]) * u.TeV
 
         samples_per_band = [
@@ -83,7 +89,7 @@ def test_plot_flux_violin_invalid():
         ]
 
         _, ax = plt.subplots()
-        plot_flux_violin(
+        plot_samples_violin_vs_energy(
             ax=ax,
             energy_edges=energy_edges,
             samples_per_band=samples_per_band,
@@ -91,8 +97,8 @@ def test_plot_flux_violin_invalid():
         )
 
 
-def test_plot_flux_violin_minimal():
-    """Test that plot_flux_violin runs and returns artists for a simple case."""
+def test_plot_samples_violin_vs_energy_minimal():
+    """Test that plot_samples_violin_vs_energy runs and returns artists for a simple case."""
 
     energy_edges = np.array([1, 2, 4]) * u.TeV
 
@@ -108,7 +114,7 @@ def test_plot_flux_violin_minimal():
 
     fig, ax = plt.subplots()
 
-    artists = plot_flux_violin(
+    artists = plot_samples_violin_vs_energy(
         ax=ax,
         energy_edges=energy_edges,
         samples_per_band=samples_per_band,
@@ -131,7 +137,7 @@ def test_plot_flux_violin_minimal():
     plt.close(fig)
 
 
-def test_plot_flux_violin_empty_weights_ok():
+def test_plot_samples_violin_vs_energy_empty_weights_ok():
     """Test that bins with empty or zero-sum weights are skipped safely."""
 
     energy_edges = np.array([1, 3]) * u.TeV
@@ -140,14 +146,17 @@ def test_plot_flux_violin_empty_weights_ok():
 
     fig, ax = plt.subplots()
 
-    artists = plot_flux_violin(ax, energy_edges, samples_per_band, weights_per_band)
+    artists = plot_samples_violin_vs_energy(
+        ax, energy_edges, samples_per_band, weights_per_band
+    )
 
     assert isinstance(artists, list)
+    assert len(artists) == 0
     plt.close(fig)
 
 
-def test_plot_flux_violin_no_weights():
-    """Test that plot_flux_violin works when no weights are provided (uniform implied)."""
+def test_plot_samples_violin_vs_energy_no_weights():
+    """Test that plot_samples_violin_vs_energy works when no weights are provided (uniform implied)."""
 
     energy_edges = np.array([1.0, 2.0, 4.0]) * u.TeV
 
@@ -164,7 +173,7 @@ def test_plot_flux_violin_no_weights():
         edgecolor="black",
         lw=1.0,
     )
-    artists = plot_flux_violin(
+    artists = plot_samples_violin_vs_energy(
         ax=ax,
         energy_edges=energy_edges,
         samples_per_band=samples_per_band,
