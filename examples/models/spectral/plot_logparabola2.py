@@ -5,12 +5,12 @@ Log parabola 2 spectral model
 =============================
 
 This model parametrises a log parabola spectrum,
-where the energy scale of the exponent, :math:`E_{\mathrm{s}}`, and the reference energy, :math:`E_0`, can be different.
+where the energy scale of the exponent, :math:`E_s`, and the reference energy, :math:`E_0`, can be different.
 It is defined by the following equation:
 
 .. math::
         \phi(E) = \phi_0 \left( \frac{E}{E_0} \right) ^ {
-          - \alpha - \beta \log{ \left( \frac{E}{E_{\mathrm{s}}} \right) }
+          - \alpha - \beta \log{ \left( \frac{E}{E_s} \right) }
         }
 
 Note that :math:`\log` refers to the natural logarithm.
