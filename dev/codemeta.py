@@ -23,7 +23,7 @@ def update_codemeta(maintainer, filename, setup_file=None):
     data["author"].insert(0,
         {
             "@type": "Organization",
-            "name": "The Gammapy team"
+            "name": "Gammapy team"
         }
     )
     data["funding"] = ["10.13039/501100000780::101129751", "10.13039/501100000780::824064"]
