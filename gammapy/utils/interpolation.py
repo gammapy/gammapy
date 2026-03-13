@@ -12,9 +12,83 @@ __all__ = [
     "interpolate_profile",
     "interpolation_scale",
     "ScaledRegularGridInterpolator",
+    "BackgroundUnivariateSplineInterpolator",
 ]
 
 INTERPOLATION_ORDER = {None: 0, "nearest": 0, "linear": 1, "quadratic": 2, "cubic": 3}
+
+
+class BackgroundUnivariateSplineInterpolator:
+    """Wrapper around `scipy.interpolate.UnivariateSpline` for 1D interpolation of background based on OFF events"""
+
+    def __init__(
+        self,
+        energy_events,
+        alpha,
+        bin_threshold=0,
+        k=3,
+        s=1,
+        s_linear=7,
+        ext=0,
+        E_cut=None,
+    ):
+        """
+        Build a hybrid background model:
+        - Below E_cut: cubic spline (log-log)
+        - Above E_cut: linear interpolation (log-log)
+        """
+        density = False
+        energy_off = energy_events.to(u.TeV).value
+        # define histogram bins on log scale
+        bins = np.exp(np.histogram_bin_edges(np.log(energy_off), bins="fd"))
+        if s is None:
+            s = len(bins)
+        # histogram of OFF events
+        off_hist, bins = np.histogram(
+            energy_off, bins=bins, density=density, weights=alpha
+        )
+        # bin centers in log-space
+        bin_centers = 0.5 * (bins[:-1] + bins[1:])
+        mask = np.logical_and(
+            np.isfinite(np.log(bin_centers)), off_hist > bin_threshold
+        )
+        if E_cut is None:
+            E_cut = bin_centers[mask][
+                (bin_centers[mask] > 0.100) & (off_hist[mask] <= 5)
+            ]
+            if len(E_cut) == 0:
+                E_cut = bin_centers[mask].max() * u.TeV + 100000 * u.TeV
+            else:
+                E_cut = E_cut.min() * u.TeV
+            # print(f"E_cut not provided, set to {E_cut:.2f}")
+        x = np.log(bin_centers[mask])  # log(E)
+        y = np.log((off_hist / np.diff(bins))[mask])  # log(dN/dE)
+        # Split domain at E_cut
+        cut_val = np.log(E_cut.to_value("TeV"))
+        mask_low = x <= cut_val
+        mask_high = x >= cut_val
+        # --- Low energy cubic spline ---
+        spline = scipy.interpolate.UnivariateSpline(
+            x[mask_low], y[mask_low], k=k, s=s, ext=ext, check_finite=True
+        )
+        if mask_high.any():
+            # --- High energy linear interp ---
+            linear = scipy.interpolate.UnivariateSpline(
+                x[mask_high], y[mask_high], k=1, s=s_linear, ext=ext, check_finite=True
+            )
+        else:
+            linear = spline
+
+        # Hybrid interpolator in log-log space
+        def interpolation_off_hybrid(e):
+            xx = np.log(e.to_value("TeV"))
+            yy = np.where(xx <= cut_val, spline(xx), linear(xx))
+            return np.exp(yy) * u.TeV**-1
+
+        self.spline = interpolation_off_hybrid
+
+    def __call__(self, x):
+        return self.spline(x)
 
 
 class ScaledRegularGridInterpolator:
