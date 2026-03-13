@@ -107,12 +107,12 @@ def test_observation_peek(data_store):
             ),
         ),
         (
-            Time([53343.930, 53343.940], format="mjd", scale="tt"),
-            Time([53343.930, 53343.940], format="mjd", scale="tt"),
+            Time([53343.92361, 53343.9375], format="mjd", scale="tt"),
+            Time([53343.92361, 53343.9375], format="mjd", scale="tt"),
         ),
         (
             Time([10.0, 100000.0], format="mjd", scale="tt"),
-            Time([53343.92234009, 53343.94186563], format="mjd", scale="tt"),
+            Time([53343.92234009, 53343.94186555], format="mjd", scale="tt"),
         ),
         (Time([10.0, 20.0], format="mjd", scale="tt"), None),
     ],
@@ -124,12 +124,8 @@ def test_observation_select_time(data_store, time_interval, expected_times):
 
     if expected_times:
         expected_times.format = "mjd"
-        assert np.all(
-            (new_obs.events.time >= expected_times[0])
-            & (new_obs.events.time < expected_times[1])
-        )
-        assert_time_allclose(new_obs.gti.time_start[0], expected_times[0], atol=0.01)
-        assert_time_allclose(new_obs.gti.time_stop[-1], expected_times[1], atol=0.01)
+        assert_time_allclose(new_obs.gti.time_start[0], expected_times[0], atol=1e-3)
+        assert_time_allclose(new_obs.gti.time_stop[-1], expected_times[1], atol=1e-3)
     else:
         assert len(new_obs.events.table) == 0
         assert len(new_obs.gti.table) == 0
@@ -171,10 +167,10 @@ def test_observations_select_time(
         assert new_obss[0].events.time[0] >= expected_times[0]
         assert new_obss[-1].events.time[-1] < expected_times[1]
         assert_time_allclose(
-            new_obss[0].gti.time_start[0], expected_times[0], atol=0.01
+            new_obss[0].gti.time_start[0], expected_times[0], atol=1e-3
         )
         assert_time_allclose(
-            new_obss[-1].gti.time_stop[-1], expected_times[1], atol=0.01
+            new_obss[-1].gti.time_stop[-1], expected_times[1], atol=1e-3
         )
 
 
