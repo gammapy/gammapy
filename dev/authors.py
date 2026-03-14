@@ -35,7 +35,7 @@ ADDITIONAL_AUTHORS = [
 
 PATH = Path(__file__).parent.parent
 
-LAST_LTS = "v1.0"
+LAST_LTS = "v2.0"
 NOW = "HEAD"
 
 
