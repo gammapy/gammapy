@@ -10,7 +10,7 @@ It is defined by the following equation:
 
 .. math::
     \phi(E) = \phi_0 \cdot \left(\frac{E}{E_0}\right)^{-\Gamma}
-              \exp \left( \frac{E_0 - E}{E_{C}} \right)
+              \exp \left( \frac{E_0 - E}{E_{\mathrm{C}}} \right)
 """
 
 # %%
