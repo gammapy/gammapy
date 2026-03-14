@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import html
-import logging
 import subprocess
+import logging
 from copy import copy
 from pathlib import Path
 import numpy as np

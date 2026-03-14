@@ -20,6 +20,7 @@ from gammapy.irf import (
     Background3D,
     EffectiveAreaTable2D,
     EnergyDispersion2D,
+    EnergyDependentMultiGaussPSF,
 )
 from gammapy.makers import WobbleRegionsFinder
 from gammapy.makers.utils import (
@@ -28,10 +29,12 @@ from gammapy.makers.utils import (
     make_counts_off_rad_max,
     make_counts_rad_max,
     make_edisp_kernel_map,
+    make_edisp_map,
     make_effective_livetime_map,
     make_map_background_irf,
     make_map_exposure_true_energy,
     make_observation_time_map,
+    make_psf_map,
     make_theta_squared_table,
     project_irf_on_geom,
     integrate_project_irf_on_geom,
@@ -56,6 +59,14 @@ def aeff():
         "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
     )
     return EffectiveAreaTable2D.read(filename, hdu="EFFECTIVE AREA")
+
+
+@pytest.fixture(scope="session")
+def psf():
+    filename = (
+        "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
+    )
+    return EnergyDependentMultiGaussPSF.read(filename, hdu="POINT SPREAD FUNCTION")
 
 
 def geom(map_type, ebounds):
@@ -102,6 +113,70 @@ def test_make_map_exposure_true_energy(aeff, pars):
     assert m.data.shape == pars["shape"]
     assert m.unit == "m2 s"
     assert_allclose(m.data.sum(), pars["sum"], rtol=1e-5)
+
+    # Test with FixedPointingInfo
+    pointing = FixedPointingInfo(fixed_icrs=SkyCoord(2, 1, unit="deg"))
+    m2 = make_map_exposure_true_energy(
+        pointing=pointing,
+        livetime="42 s",
+        aeff=aeff,
+        geom=pars["geom"],
+    )
+
+    assert m2.data.shape == pars["shape"]
+    assert m2.unit == "m2 s"
+    assert_allclose(m2.data.sum(), pars["sum"], rtol=1e-5)
+
+
+@requires_data()
+def test_make_psf_map(psf):
+    pointing_coord = SkyCoord(0, 0.5, unit="deg", frame="galactic")
+
+    rad_axis = MapAxis.from_bounds(0, 0.5, nbin=2, unit="deg", name="rad")
+    energy_axis = MapAxis.from_energy_bounds(0.1, 10, 2, unit="TeV", name="energy_true")
+
+    test_geom = WcsGeom.create(
+        skydir=(0, 0),
+        frame="galactic",
+        binsz=2,
+        width=(2, 2),
+        axes=[rad_axis, energy_axis],
+    )
+
+    # Test with SkyCoord
+    psfmap = make_psf_map(psf, pointing_coord, test_geom)
+    assert psfmap.psf_map.unit == "1 / deg2"
+    assert psfmap.psf_map.data.shape[-2:] == (1, 1)
+
+    # Test with FixedPointingInfo
+    pointing2 = FixedPointingInfo(fixed_icrs=pointing_coord.icrs)
+    psfmap2 = make_psf_map(psf, pointing2, test_geom)
+    assert psfmap2.psf_map.unit == "1 / deg2"
+    assert psfmap2.psf_map.data.shape == psfmap.psf_map.data.shape
+
+
+def test_make_edisp_map():
+    migra = MapAxis.from_edges(np.linspace(0.5, 1.5, 50), unit="", name="migra")
+    etrue = MapAxis.from_energy_bounds(0.5, 2, 6, unit="TeV", name="energy_true")
+    offset = MapAxis.from_edges(np.linspace(0.0, 2.0, 3), unit="deg", name="offset")
+
+    edisp = EnergyDispersion2D.from_gauss(
+        energy_axis_true=etrue, migra_axis=migra, bias=0, sigma=0.01, offset_axis=offset
+    )
+
+    pointing_coord = SkyCoord(0, 0, frame="icrs", unit="deg")
+    test_geom = WcsGeom.create(10, binsz=0.5, axes=[migra, etrue])
+
+    # Test with SkyCoord
+    edispmap = make_edisp_map(edisp, pointing_coord, test_geom)
+    assert edispmap.edisp_map.data.shape == (6, 49, 10, 10)
+    assert edispmap.edisp_map.unit == ""
+
+    # Test with FixedPointingInfo
+    pointing2 = FixedPointingInfo(fixed_icrs=pointing_coord)
+    edispmap2 = make_edisp_map(edisp, pointing2, test_geom)
+    assert edispmap2.edisp_map.data.shape == (6, 49, 10, 10)
+    assert edispmap2.edisp_map.unit == ""
 
 
 def test_map_spectrum_weight():
@@ -442,6 +517,21 @@ def test_make_edisp_kernel_map():
     assert_allclose(kernel.pdf_matrix[:, 0], (1.0, 1.0, 0.0, 0.0, 0.0, 0.0), atol=1e-14)
     assert_allclose(kernel.pdf_matrix[:, 1], (0.0, 0.0, 1.0, 1.0, 0.0, 0.0), atol=1e-14)
     assert_allclose(kernel.pdf_matrix[:, 2], (0.0, 0.0, 0.0, 0.0, 1.0, 1.0), atol=1e-14)
+
+    # Test with FixedPointingInfo
+    pointing2 = FixedPointingInfo(fixed_icrs=pointing)
+    edispmap2 = make_edisp_kernel_map(edisp, pointing2, geom)
+
+    kernel2 = edispmap2.get_edisp_kernel(position=pointing)
+    assert_allclose(
+        kernel2.pdf_matrix[:, 0], (1.0, 1.0, 0.0, 0.0, 0.0, 0.0), atol=1e-14
+    )
+    assert_allclose(
+        kernel2.pdf_matrix[:, 1], (0.0, 0.0, 1.0, 1.0, 0.0, 0.0), atol=1e-14
+    )
+    assert_allclose(
+        kernel2.pdf_matrix[:, 2], (0.0, 0.0, 0.0, 0.0, 1.0, 1.0), atol=1e-14
+    )
 
 
 @requires_data()

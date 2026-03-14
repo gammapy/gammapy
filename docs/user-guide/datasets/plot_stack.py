@@ -3,7 +3,7 @@
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 import matplotlib.pyplot as plt
-from gammapy.data import Observation, observatory_locations
+from gammapy.data import Observation, observatory_locations, FixedPointingInfo
 from gammapy.datasets import SpectrumDataset
 from gammapy.datasets.map import MIGRA_AXIS_DEFAULT
 from gammapy.irf import EffectiveAreaTable2D, EnergyDispersion2D
@@ -31,7 +31,7 @@ edisp = EnergyDispersion2D.from_gauss(
 
 observation = Observation.create(
     obs_id=0,
-    pointing=SkyCoord("0d", "0d", frame="icrs"),
+    pointing=FixedPointingInfo(fixed_icrs=SkyCoord("0d", "0d", frame="icrs")),
     irfs={"aeff": aeff, "edisp": edisp},
     tstart=0 * u.h,
     tstop=0.5 * u.h,
