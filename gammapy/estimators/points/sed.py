@@ -458,7 +458,7 @@ class FluxCollectionEstimator:
             cash0 = datasets._stat_sum_likelihood()
         return cash0 - cash
 
-    def _run_fit(self, energy, fp_datasets, spectral_models):
+    def _run_fit(self, fp_datasets, spectral_models):
         """compute npred, dnde, TS, errn, errp, and ul (if necessasy)"""
 
         fit_results = self.solver.run(fp_datasets)
@@ -508,7 +508,7 @@ class FluxCollectionEstimator:
                 fp_result["norm_ul"][km] = np.nan
         return fp_result
 
-    def _run_sampler(self, energy, fp_datasets, spectral_models):
+    def _run_sampler(self, fp_datasets, spectral_models):
         """compute npred, dnde, TS, errn, errp, and ul"""
 
         sampler_results = self.solver.run(fp_datasets).sampler_results
@@ -601,7 +601,7 @@ class FluxCollectionEstimator:
                 energy_min=self.energy_edges[ke],
                 energy_max=self.energy_edges[ke + 1 - self.ne],
             ):
-                args = (self.energy_centers[ke], fp_datasets, spectral_models)
+                args = (fp_datasets, spectral_models)
                 if isinstance(self.solver, Sampler):
                     fp_result = self._run_sampler(*args)
                 else:

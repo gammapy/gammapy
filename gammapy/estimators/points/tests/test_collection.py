@@ -70,7 +70,8 @@ class MockSamplerResult:
     def __init__(self, ns):
         n_samples = 200
         # points: shape (n_samples, ns)
-        points = 1.0 + np.arange(ns) * 0.5 + 0.1 * np.random.randn(n_samples, ns)
+        rng = np.random.default_rng(42)
+        points = 1.0 + np.arange(ns) * 0.5 + 0.1 * rng.standard_normal((n_samples, ns))
         weights = np.ones(n_samples) / n_samples
 
         self.sampler_results = {
