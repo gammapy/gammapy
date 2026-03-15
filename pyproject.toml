@@ -138,14 +138,33 @@ except Exception:
 """
 
 [tool.ruff]
-exclude = ["docs", "dev"]
+exclude = ["docs", "dev", "extern*", "*test_*.py"]
 # Like black
-line-length = 88
+line-length = 79
 indent-width = 4
 
 [tool.ruff.lint]
-ignore = ["E741"]
-extend-ignore = ["E203","E712"]
+select = [
+  "E",   # pycodestyle errors
+  "F",   # pyflakes
+  "B",   # flake8-bugbear
+  "I",   # isort
+  "PLE", # pylint errors
+  "D",   # pydocstyle
+  # "UP",   # pyUpgrade
+  "FLY", # flynt
+  "DTZ", # flake8-datetimez
+  "S",   # flake8-bandit
+  "N",   # pep8-naming
+]
+ignore = [
+    "D100", "D102", "D104", "D105",
+    "D400", "D401", "D403",
+    "S101",
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
 
 [tool.ruff.lint.per-file-ignores]
 "examples/*" = ["E402"]
