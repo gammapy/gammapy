@@ -1,2 +1,1 @@
-Fix incorrect mask placement in ``RegionNDMap.plot_mask`` when plotting
-with energy axes in units different from the dataset energy unit.
+Fix unit handling in RegionNDMap.plot_mask
