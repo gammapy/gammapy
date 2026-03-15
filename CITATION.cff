@@ -24,12 +24,15 @@ identifiers:
   type: doi
   value: 10.5281/zenodo.4701488
 authors:
-- name: "The Gammapy team"
 - given-names: Fabio
   family-names: Acero
   affiliation: "Université Paris-Saclay, Université Paris Cité, CEA, CNRS, AIM, F-91191
     Gif-sur-Yvette, France"
   orcid: "https://orcid.org/0000-0002-6606-2816"
+- given-names: Kush
+  family-names: Agarwal
+  affiliation: ""
+  orcid: "https://orcid.org/0009-0004-3008-3035"
 - given-names: Arnau
   family-names: Aguasca-Cabot
   affiliation: "Departament de Física Quàntica i Astrofísica, Institut de Ciències
@@ -40,6 +43,10 @@ authors:
   affiliation: "Instituto de Astrofísica de Canarias and Dpto. de Astrofísica, Universidad de La Laguna,
     C/ Vía Láctea s/n, E-38205 La Laguna, Tenerife, Spain"
   orcid: "https://orcid.org/0009-0004-0816-0700"
+- given-names: Ebraam
+  family-names: Ashraf
+  affiliation: "Cairo University, Faculty of Engineering, Computer Engineering Department"
+  orcid: "https://orcid.org/0009-0005-2096-3466"
 - given-names: Luis
   family-names: Barrios-Jimenez
   affiliation: "Instituto de Astrofísica de Canarias and Dpto. de Astrofísica, Universidad de La Laguna,
@@ -49,6 +56,10 @@ authors:
   family-names: Batt
   affiliation: "Department of Instrumentation and Control Engineering, Vishwakarma Institute of Technology, Pune, Maharashtra India"
   orcid: "https://orcid.org/0009-0004-4179-3163"
+- given-names: Y. Emre
+  family-names: Bahar
+  affiliation: "INAF, Osservatorio di Astrofisica e Scienza dello Spazio, via Piero Gobetti 93/3, 40129 Bologna, Italy"
+  orcid: "https://orcid.org/0000-0002-4893-7615"
 - given-names: Juan
   family-names: Bernete
   affiliation: "Centro de Investigaciones Energéticas Medioambientales y Tecnológicas
@@ -66,6 +77,19 @@ authors:
   family-names: Bylund
   affiliation: "LUX, Observatoire de Paris, Université PSL, Sorbonne Université, CNRS, 92190 Meudon, France"
   orcid: "https://orcid.org/0000-0003-2946-1313"
+- given-names: Marie-Sophie
+  family-names: Carrasco
+  affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
+    Paris, France"
+  orcid: "https://orcid.org/0000-0001-6484-485X"
+- given-names: Alexander
+  family-names: Cerviño Cortínez
+  affiliation: "IPARCOS-UCM, Instituto de Física de Partículas y del Cosmos, and EMFTEL Department, Universidad Complutense de Madrid"
+  orcid: "https://orcid.org/0009-0007-1566-9507"
+- given-names: Yaocheng
+  family-names: Chen
+  affiliation: "Institute of Astronomy, Geophysics and Atmospheric Sciences (IAG), University of São Paulo (USP), Rua do Matão 1226, 05508-090 São Paulo, SP, Brazil"
+  orcid: "https://orcid.org/0000-0002-8967-4911"
 - given-names: Julia
   family-names: Djuvsland
   affiliation: "University of Bergen, Norway and Max Planck Institute for Nuclear
@@ -75,6 +99,10 @@ authors:
   family-names: Donath
   affiliation: "Center for Astrophysics | Harvard & Smithsonian, USA"
   orcid: "https://orcid.org/0000-0003-4568-7005"
+- given-names: Anshita
+  family-names: Dubey
+  affiliation: "Department of Computer Science and Engineering, JSS University, India"
+  orcid: "https://orcid.org/0009-0002-0120-8586"
 - given-names: Katharina
   family-names: Egg
   affiliation: "Friedrich-Alexander-Universität Erlangen-Nürnberg, ECAP, Nikolaus-Fiebiger-Str.
@@ -102,6 +130,10 @@ authors:
   family-names: Gréaux
   affiliation: "Fakultät für Physik & Astronomie, Ruhr-Universität Bochum, D-44780 Bochum, Germany"
   orcid: "https://orcid.org/0000-0003-0627-8436"
+- given-names: Basmala
+  family-names: Hekal
+  affiliation: "Faculty of Computer and Information, Computer Science Department, Tanta University, Egypt."
+  orcid: "https://orcid.org/0009-0001-6071-9522"
 - given-names: Bruno
   family-names: Khélifi
   affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
