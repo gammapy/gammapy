@@ -32,7 +32,7 @@ authors:
 - given-names: Kush
   family-names: Agarwal
   affiliation: ""
-  orcid: ""
+  orcid: "https://orcid.org/0009-0004-3008-3035"
 - given-names: Arnau
   family-names: Aguasca-Cabot
   affiliation: "Departament de Física Quàntica i Astrofísica, Institut de Ciències
@@ -45,8 +45,8 @@ authors:
   orcid: "https://orcid.org/0009-0004-0816-0700"
 - given-names: Ebraam
   family-names: Ashraf
-  affiliation: ""
-  orcid: ""
+  affiliation: "Cairo University, Faculty of Engineering, Computer Engineering Department"
+  orcid: "https://orcid.org/0009-0005-2096-3466"
 - given-names: Luis
   family-names: Barrios-Jimenez
   affiliation: "Instituto de Astrofísica de Canarias and Dpto. de Astrofísica, Universidad de La Laguna,
@@ -56,9 +56,9 @@ authors:
   family-names: Batt
   affiliation: "Department of Instrumentation and Control Engineering, Vishwakarma Institute of Technology, Pune, Maharashtra India"
   orcid: "https://orcid.org/0009-0004-4179-3163"
-- given-names: Emre
+- given-names: Y. Emre
   family-names: Bahar
-  affiliation: "Max Planck Institute for Extraterrestrial Physics, Giessenbachstrasse 1, 85748 Garching, Germany"
+  affiliation: "INAF, Osservatorio di Astrofisica e Scienza dello Spazio, via Piero Gobetti 93/3, 40129 Bologna, Italy"
   orcid: "https://orcid.org/0000-0002-4893-7615"
 - given-names: Juan
   family-names: Bernete
@@ -83,14 +83,13 @@ authors:
     Paris, France"
   orcid: "https://orcid.org/0000-0001-6484-485X"
 - given-names: Alexander
-  family-names: Cerviño
-  affiliation: "PARCOS-UCM, Instituto de Física de Partículas y del Cosmos, and EMFTEL Department, Universidad
-Complutense de Madrid, Plaza de Ciencias, 1. Ciudad Universitaria, 28040 Madrid, Spain"
+  family-names: Cerviño Cortínez
+  affiliation: "IPARCOS-UCM, Instituto de Física de Partículas y del Cosmos, and EMFTEL Department, Universidad Complutense de Madrid"
   orcid: "https://orcid.org/0009-0007-1566-9507"
 - given-names: Yaocheng
   family-names: Chen
-  affiliation: ""
-  orcid: ""
+  affiliation: "Institute of Astronomy, Geophysics and Atmospheric Sciences (IAG), University of São Paulo (USP), Rua do Matão 1226, 05508-090 São Paulo, SP, Brazil"
+  orcid: "https://orcid.org/0000-0002-8967-4911"
 - given-names: Julia
   family-names: Djuvsland
   affiliation: "University of Bergen, Norway and Max Planck Institute for Nuclear
@@ -102,8 +101,8 @@ Complutense de Madrid, Plaza de Ciencias, 1. Ciudad Universitaria, 28040 Madrid,
   orcid: "https://orcid.org/0000-0003-4568-7005"
 - given-names: Anshita
   family-names: Dubey
-  affiliation: ""
-  orcid: ""
+  affiliation: "Department of Computer Science and Engineering, JSS University, India"
+  orcid: "https://orcid.org/0009-0002-0120-8586"
 - given-names: Katharina
   family-names: Egg
   affiliation: "Friedrich-Alexander-Universität Erlangen-Nürnberg, ECAP, Nikolaus-Fiebiger-Str.
@@ -133,8 +132,8 @@ Complutense de Madrid, Plaza de Ciencias, 1. Ciudad Universitaria, 28040 Madrid,
   orcid: "https://orcid.org/0000-0003-0627-8436"
 - given-names: Basmala
   family-names: Hekal
-  affiliation: ""
-  orcid: ""
+  affiliation: "Faculty of Computer and Information, Computer Science Department, Tanta University, Egypt."
+  orcid: "https://orcid.org/0009-0001-6071-9522"
 - given-names: Bruno
   family-names: Khélifi
   affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
