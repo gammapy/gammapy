@@ -24,7 +24,7 @@ from .core import FluxPoints
 
 log = logging.getLogger(__name__)
 
-__all__ = ["FluxPointsEstimator"]
+__all__ = ["FluxPointsEstimator", "FluxCollectionEstimator"]
 
 
 class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
