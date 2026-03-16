@@ -273,7 +273,7 @@ ndmap_toymodel = RegionNDMap(geom=geom_toymodel, data=data_reshaped_toymodel, un
 absorption_toymodel = TemplateNDSpectralModel(
     map=ndmap_toymodel,
     filename="$GAMMAPY_DATA/ebl/ebl_toymodel.fits.gz",
-    interp_kwargs={"extrapolate": True},
+    interp_kwargs={"extrapolate": False},
 )
 
 
