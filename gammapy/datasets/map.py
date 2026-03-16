@@ -1669,9 +1669,9 @@ class MapDataset(Dataset):
             When True adds both DATASUM and CHECKSUM cards to the headers written to the file.
             Default is False.
         """
-        self.to_hdulist().writeto(
-            str(make_path(filename)), overwrite=overwrite, checksum=checksum
-        )
+        filename = make_path(filename)
+        filename.parent.mkdir(exist_ok=True, parents=True)
+        self.to_hdulist().writeto(filename, overwrite=overwrite, checksum=checksum)
 
     @classmethod
     def _read_lazy(cls, name, filename, cache, format=format):
