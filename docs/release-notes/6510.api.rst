@@ -1,0 +1,1 @@
+Change the argument name from ``model`` to ``kernel_model`` in `~gammapy.estimators.TSMapEstimator` for clarity.
