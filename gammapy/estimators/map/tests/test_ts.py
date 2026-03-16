@@ -873,9 +873,9 @@ def test_excess_map_compatibility():
         spatial_model=DiskSpatialModel(r_0=ndeg),
     )
 
-    ts_est_sum = TSMapEstimator(model=model, sum_over_energy_groups=True)
+    ts_est_sum = TSMapEstimator(kernel_model=model, sum_over_energy_groups=True)
 
-    ts_est = TSMapEstimator(model=model, sum_over_energy_groups=False)
+    ts_est = TSMapEstimator(kernel_model=model, sum_over_energy_groups=False)
 
     result = est.run(dataset=dataset)
 
