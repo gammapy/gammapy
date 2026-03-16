@@ -203,8 +203,8 @@ print(absorption_custom)
 
 ######################################################################
 # Or you can create `~gammapy.modeling.models.TemplateNDSpectralModel` from your data:
-# Assuming you have your optical depth in the following format,
-# given for the redshift values in `redshifts_toymodel` and the energy values in `energies_toymodel`
+# To create your own models, you must have the optical depth tabulated as a function of gammapy-ray energy and redshift.
+# In this example, we create a toy models with 10 bins in energy (`energies_toymodel`) and 3 bins in redshift (`redshifts_toymodel`).
 
 ebl_abs_dict_toymodel = {
     0.1: [
@@ -268,8 +268,13 @@ geom_toymodel = RegionGeom(
 data_reshaped_toymodel = np.array(
     [ebl_abs_dict_toymodel[key] for key in ebl_abs_dict_toymodel]
 )
+print(np.shape(data_reshaped_toymodel))
 ndmap_toymodel = RegionNDMap(geom=geom_toymodel, data=data_reshaped_toymodel, unit="")
-absorption_toymodel = TemplateNDSpectralModel(map=ndmap_toymodel)
+absorption_toymodel = TemplateNDSpectralModel(
+    map=ndmap_toymodel,
+    filename="$GAMMAPY_DATA/ebl/ebl_toymodel.fits.gz",
+    interp_kwargs={"extrapolate": True},
+)
 
 
 ######################################################################
@@ -277,6 +282,17 @@ absorption_toymodel = TemplateNDSpectralModel(map=ndmap_toymodel)
 absorption_toymodel.parameters["redshift"].value = redshift
 absorption_toymodel.parameters["redshift"].frozen = True
 print(absorption_toymodel)
+
+
+######################################################################
+# This `absorption_toymodel` can now be used in the same way as the `absorption_toymodel` model defined above.
+
+######################################################################
+# To write and read your toymodel, you can use the `~gammapy.modeling.models.TemplateNDSpectralModel.write()`
+# and read it again with `~gammapy.maps.RegionNDMap.read()` as a  `~gammapy.maps.RegionNDMap`, which can
+# then again be assigned to a `~gammapy.modeling.models.TemplateNDSpectralModel` as shown above.
+absorption_toymodel.write(overwrite=True)
+ndmap_toymodel_read = RegionNDMap.read("$GAMMAPY_DATA/ebl/ebl_toymodel.fits.gz")
 
 
 ######################################################################
