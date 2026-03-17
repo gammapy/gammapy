@@ -1669,6 +1669,8 @@ class MapDataset(Dataset):
             When True adds both DATASUM and CHECKSUM cards to the headers written to the file.
             Default is False.
         """
+        if filename is None:
+            raise ValueError("The filename is not defined.")
         filename = make_path(filename)
         filename.parent.mkdir(exist_ok=True, parents=True)
         self.to_hdulist().writeto(filename, overwrite=overwrite, checksum=checksum)
