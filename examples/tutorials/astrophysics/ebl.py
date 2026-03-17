@@ -269,6 +269,8 @@ data_reshaped_toymodel = np.array(
     [ebl_abs_dict_toymodel[key] for key in ebl_abs_dict_toymodel]
 )
 print(np.shape(data_reshaped_toymodel))
+
+######################################################################
 ndmap_toymodel = RegionNDMap(geom=geom_toymodel, data=data_reshaped_toymodel, unit="")
 absorption_toymodel = TemplateNDSpectralModel(
     map=ndmap_toymodel,
