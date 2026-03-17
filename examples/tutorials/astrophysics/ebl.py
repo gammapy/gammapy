@@ -275,7 +275,7 @@ print(np.shape(data_reshaped_toymodel))
 ndmap_toymodel = RegionNDMap(geom=geom_toymodel, data=data_reshaped_toymodel, unit="")
 absorption_toymodel = TemplateNDSpectralModel(
     map=ndmap_toymodel,
-    filename="./ebl_toymodel.fits.gz",
+    filename="ebl_toymodel.fits.gz",
     interp_kwargs={"extrapolate": False},
 )
 
@@ -297,7 +297,7 @@ print(absorption_toymodel)
 # and read it again with `~gammapy.maps.RegionNDMap.read()` as a  `~gammapy.maps.RegionNDMap`, which can
 # then again be assigned to a `~gammapy.modeling.models.TemplateNDSpectralModel` as shown above.
 absorption_toymodel.write(overwrite=True)
-ndmap_toymodel_read = RegionNDMap.read("./ebl_toymodel.fits.gz")
+ndmap_toymodel_read = RegionNDMap.read("ebl_toymodel.fits.gz")
 
 
 ######################################################################
