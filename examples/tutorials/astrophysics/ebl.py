@@ -272,13 +272,15 @@ print(np.shape(data_reshaped_toymodel))
 ndmap_toymodel = RegionNDMap(geom=geom_toymodel, data=data_reshaped_toymodel, unit="")
 absorption_toymodel = TemplateNDSpectralModel(
     map=ndmap_toymodel,
-    filename="$GAMMAPY_DATA/ebl/ebl_toymodel.fits.gz",
+    filename="./ebl_toymodel.fits.gz",
     interp_kwargs={"extrapolate": False},
 )
 
 
 ######################################################################
-# Set your redshift value and freeze it before using the model
+# Redshift is used as a free parameter in our model here. If you want to use the model
+# to account/correct for EBL absorption, make sure to set it correctly and freeze it
+# before applying the model to your data.
 absorption_toymodel.parameters["redshift"].value = redshift
 absorption_toymodel.parameters["redshift"].frozen = True
 print(absorption_toymodel)
@@ -292,7 +294,7 @@ print(absorption_toymodel)
 # and read it again with `~gammapy.maps.RegionNDMap.read()` as a  `~gammapy.maps.RegionNDMap`, which can
 # then again be assigned to a `~gammapy.modeling.models.TemplateNDSpectralModel` as shown above.
 absorption_toymodel.write(overwrite=True)
-ndmap_toymodel_read = RegionNDMap.read("$GAMMAPY_DATA/ebl/ebl_toymodel.fits.gz")
+ndmap_toymodel_read = RegionNDMap.read("./ebl_toymodel.fits.gz")
 
 
 ######################################################################
