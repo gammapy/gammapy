@@ -288,8 +288,8 @@ print(absorption_toymodel)
 
 ######################################################################
 # This `absorption_toymodel` can now be used in the same way as the `absorption` model defined above.
-
-######################################################################
+#
+#
 # To write and read your toymodel, you can use the `~gammapy.modeling.models.TemplateNDSpectralModel.write()`
 # and read it again with `~gammapy.maps.RegionNDMap.read()` as a  `~gammapy.maps.RegionNDMap`, which can
 # then again be assigned to a `~gammapy.modeling.models.TemplateNDSpectralModel` as shown above.
