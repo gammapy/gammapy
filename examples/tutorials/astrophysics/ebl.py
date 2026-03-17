@@ -193,18 +193,19 @@ plt.show()
 #
 # You can save the optical depth as a function of energy and redshift
 # in the format proposed by the XSPEC table models (see `here <https://heasarc.gsfc.nasa.gov/docs/heasarc/ofwg/docs/summary/ogip_92_009_summary.html>`_).
-# You can also check the model fits file in `$GAMMAPY_DATA/ebl/ <https://github.com/gammapy/gammapy-data/tree/main/ebl>`_ for examples.
+# You can also check the model fits files in `$GAMMAPY_DATA/ebl/ <https://github.com/gammapy/gammapy-data/tree/main/ebl>`_ for examples.
 #
-# To read in the custom EBL model, use the `~gammapy.modeling.models.EBLAbsorptionNormSpectralModel.read()` method.
+# To read in a custom EBL model, use the `~gammapy.modeling.models.EBLAbsorptionNormSpectralModel.read()` method.
 
 filename = "$GAMMAPY_DATA/ebl/ebl_dominguez11.fits.gz"
 absorption_custom = EBLAbsorptionNormSpectralModel.read(filename, redshift=redshift)
 print(absorption_custom)
 
 ######################################################################
-# Or you can create `~gammapy.modeling.models.TemplateNDSpectralModel` from your data:
+# Or you can create `~gammapy.modeling.models.TemplateNDSpectralModel` from your data.
+#
 # To create your own models, you must have the optical depth tabulated as a function of gamma-ray energy and redshift.
-# In this example, we create a toy models with 10 bins in energy (`energies_toymodel`) and 3 bins in redshift (`redshifts_toymodel`).
+# In this example, we create a toy model with 10 bins in energy (`energies_toymodel`) and 3 bins in redshift (`redshifts_toymodel`).
 
 ebl_abs_dict_toymodel = {
     0.1: [
@@ -269,6 +270,8 @@ data_reshaped_toymodel = np.array(
     [ebl_abs_dict_toymodel[key] for key in ebl_abs_dict_toymodel]
 )
 print(np.shape(data_reshaped_toymodel))
+
+######################################################################
 ndmap_toymodel = RegionNDMap(geom=geom_toymodel, data=data_reshaped_toymodel, unit="")
 absorption_toymodel = TemplateNDSpectralModel(
     map=ndmap_toymodel,
@@ -288,8 +291,8 @@ print(absorption_toymodel)
 
 ######################################################################
 # This `absorption_toymodel` can now be used in the same way as the `absorption` model defined above.
-
-######################################################################
+#
+#
 # To write and read your toymodel, you can use the `~gammapy.modeling.models.TemplateNDSpectralModel.write()`
 # and read it again with `~gammapy.maps.RegionNDMap.read()` as a  `~gammapy.maps.RegionNDMap`, which can
 # then again be assigned to a `~gammapy.modeling.models.TemplateNDSpectralModel` as shown above.
