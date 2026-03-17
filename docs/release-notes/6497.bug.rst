@@ -1,0 +1,1 @@
+Fix ``select_time`` in `~gammapy.data.EventList`, `~gammapy.data.GTI` and `~gammapy.data.Observation` to always utilise start time (inclusive) and stop time (exclusive).
