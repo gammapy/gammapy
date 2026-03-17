@@ -204,7 +204,7 @@ print(absorption_custom)
 ######################################################################
 # Or you can create `~gammapy.modeling.models.TemplateNDSpectralModel` from your data:
 # To create your own models, you must have the optical depth tabulated as a function of gamma-ray energy and redshift.
-# In this example, we create a toy models with 10 bins in energy (`energies_toymodel`) and 3 bins in redshift (`redshifts_toymodel`).
+# In this example, we create a toy model with 10 bins in energy (`energies_toymodel`) and 3 bins in redshift (`redshifts_toymodel`).
 
 ebl_abs_dict_toymodel = {
     0.1: [
