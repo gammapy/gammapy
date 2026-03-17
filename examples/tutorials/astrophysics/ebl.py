@@ -193,7 +193,7 @@ plt.show()
 #
 # You can save the optical depth as a function of energy and redshift
 # in the format proposed by the XSPEC table models (see `here <https://heasarc.gsfc.nasa.gov/docs/heasarc/ofwg/docs/summary/ogip_92_009_summary.html>`_).
-# You can also check the model fits file in `$GAMMAPY_DATA/ebl/ <https://github.com/gammapy/gammapy-data/tree/main/ebl>`_ for examples.
+# You can also check the model fits files in `$GAMMAPY_DATA/ebl/ <https://github.com/gammapy/gammapy-data/tree/main/ebl>`_ for examples.
 #
 # To read in the custom EBL model, use the `~gammapy.modeling.models.EBLAbsorptionNormSpectralModel.read()` method.
 
