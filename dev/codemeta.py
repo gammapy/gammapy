@@ -20,7 +20,13 @@ def update_codemeta(maintainer, filename, setup_file=None):
         if "familyName" in author.keys() and author["familyName"] == maintainer:
             log.info(f"Setting maintainer to {maintainer}")
             data["maintainer"] = author
-
+    data["author"].insert(0,
+        {
+            "@type": "Organization",
+            "name": "Gammapy team"
+        }
+    )
+    data["funding"] = ["10.13039/501100000780::101129751", "10.13039/501100000780::824064", "10.3030/101131928::101131928"]
     data["readme"] = "https://gammapy.org"
     data["issueTracker"] = "https://github.com/gammapy/gammapy/issues"
     data["developmentStatus"] = ("active",)
