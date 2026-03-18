@@ -2734,7 +2734,7 @@ class GaussianSpectralModel(SpectralModel):
         r"""Integrate Gaussian analytically.
 
         .. math::
-            F(E_{\min}, E_{\max}) = \frac{N_0}{2} \left[ erf(\frac{E - \bar{E}}{\sqrt{2} \sigma})\right]_{E_{\min}}^{E_{\max}}
+            F(E_{\min}, E_{\max}) = \frac{N_0}{2} \left[ \mathrm{erf}\left(\frac{E - \bar{E}}{\sqrt{2} \sigma}\right)\right]_{E_{\min}}^{E_{\max}}
 
         Parameters
         ----------
@@ -2760,8 +2760,8 @@ class GaussianSpectralModel(SpectralModel):
         r"""Compute energy flux in given energy range analytically.
 
         .. math::
-            G(E_{\min}, E_{\max}) =  \frac{N_0 \sigma}{\sqrt{2*\pi}}* \left[ - \exp(\frac{E_{\min}-\bar{E}}{\sqrt{2} \sigma})
-            \right]_{E_{\min}}^{E_{\max}} + \frac{N_0 * \bar{E}}{2} \left[ erf(\frac{E - \bar{E}}{\sqrt{2} \sigma})
+            G(E_{\min}, E_{\max}) =  \frac{N_0 \sigma}{\sqrt{2 \pi}} \left[ - \exp{\left(\frac{E_{\min}-\bar{E}}{\sqrt{2} \sigma}\right)}
+            \right]_{E_{\min}}^{E_{\max}} + \frac{N_0 \bar{E}}{2} \left[ \mathrm{erf}\left(\frac{E - \bar{E}}{\sqrt{2} \sigma}\right)
              \right]_{E_{\min}}^{E_{\max}}
 
 
