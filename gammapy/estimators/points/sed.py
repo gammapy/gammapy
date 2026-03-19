@@ -389,6 +389,15 @@ class FluxCollectionEstimator:
 
         self.dnde_unit = u.Unit("cm-2 s-1 TeV-1")
 
+    @property
+    def _available_keys(self):
+        keys = ["norm", "norm_ul", "ts"]
+        if isinstance(self.solver, Fit):
+            keys.append("norm_err")
+        if isinstance(self.solver, Sampler) or "errn-errp" in self.selection_optional:
+            keys.extend(["norm_errn", "norm_errp"])
+        return keys
+
     def _prepare_datasets(self, datasets):
         """define datasets with cached npred models to be renormalized"""
 
@@ -564,12 +573,7 @@ class FluxCollectionEstimator:
         Parameters
         ----------
         datasets : `~gammapy.datasets.Datasets`
-<<<<<<< HEAD
-            Datasets used to compute the flux points.
-            Datasets must share the same geometry.
-=======
             Datasets used to compute the flux points. They must share the same geometry.
->>>>>>> cd6367559 (Some cleanup)
 
         Returns
         -------
@@ -587,25 +591,22 @@ class FluxCollectionEstimator:
             d.npred()  # precompute npred
 
         self.geom = datasets[0]._geom
-        self.datasets = datasets
         fp_datasets, spectral_models = self._prepare_datasets(datasets)
 
-        fp_results = dict(
-            npred=np.zeros((self.ne - 1, self.ns)),
-            npred_err=np.zeros((self.ne - 1, self.ns)),
-            norm=np.zeros((self.ne - 1, self.ns)),
-            norm_err=np.zeros((self.ne - 1, self.ns)),
-            norm_errn=np.zeros((self.ne - 1, self.ns)),
-            norm_errp=np.zeros((self.ne - 1, self.ns)),
-            norm_ul=np.zeros((self.ne - 1, self.ns)),
-            ts=np.zeros((self.ne - 1, self.ns)),
-            solver_results=np.empty(self.ne - 1, dtype=object),
-        )
+        # fp_results = dict(
+        #     npred=np.zeros((self.ne - 1, self.ns)),
+        #     npred_err=np.zeros((self.ne - 1, self.ns)),
+        #     norm=np.zeros((self.ne - 1, self.ns)),
+        #     norm_err=np.zeros((self.ne - 1, self.ns)),
+        #     norm_errn=np.zeros((self.ne - 1, self.ns)),
+        #     norm_errp=np.zeros((self.ne - 1, self.ns)),
+        #     norm_ul=np.zeros((self.ne - 1, self.ns)),
+        #     ts=np.zeros((self.ne - 1, self.ns)),
+        #     solver_results=np.empty(self.ne - 1, dtype=object),
+        # )
+        fp_results = []
 
-        for ke, (emin, emax) in enumerate(
-            zip(self.energy_edges[:-1], self.energy_edges[1:])
-        ):
-#        for ke, (emin, emax) in enumerate(self.energy_edges_axis.iter_by_edges):
+        for ke, (emin, emax) in enumerate(self.energy_edges_axis.iter_by_edges):
             with set_and_restore_mask_fit(
                 fp_datasets, energy_min=emin, energy_max=emax
             ):
@@ -615,17 +616,15 @@ class FluxCollectionEstimator:
                 else:
                     fp_result = self._run_fit(*args)
 
-            fp_result["emin"] = emin
-            fp_result["emax"] = emax
-
-            fp_results["npred"][ke, :] = fp_result["npred"]
-            fp_results["norm"][ke, :] = fp_result["norm"]
-            fp_results["norm_err"][ke, :] = fp_result["norm_err"]
-            fp_results["norm_errn"][ke, :] = fp_result["norm_errn"]
-            fp_results["norm_errp"][ke, :] = fp_result["norm_errp"]
-            fp_results["norm_ul"][ke, :] = fp_result["norm_ul"]
-            fp_results["ts"][ke, :] = fp_result["ts"]
-            fp_results["solver_results"][ke] = fp_result["solver_results"]
+            fp_results.append(fp_result)
+            # fp_results["npred"][ke, :] = fp_result["npred"]
+            # fp_results["norm"][ke, :] = fp_result["norm"]
+            # fp_results["norm_err"][ke, :] = fp_result["norm_err"]
+            # fp_results["norm_errn"][ke, :] = fp_result["norm_errn"]
+            # fp_results["norm_errp"][ke, :] = fp_result["norm_errp"]
+            # fp_results["norm_ul"][ke, :] = fp_result["norm_ul"]
+            # fp_results["ts"][ke, :] = fp_result["ts"]
+            # fp_results["solver_results"][ke] = fp_result["solver_results"]
 
         return self._get_flux_points_dict(fp_results)
 
@@ -642,46 +641,50 @@ class FluxCollectionEstimator:
         result : dict
             Dict with results
         """
-        fp_dict = dict(
-            energy_edges=self.energy_edges,
-            solver_results=fp_results["solver_results"],
-            flux_points={},
-        )
-        if isinstance(self.solver, Sampler):
-            fp_dict["samples"] = {"dnde": {}}
 
-        for km, m in enumerate(self.models):
-            model = _get_reference_model(m, self.energy_edges)
+        def build_fp_from_idx(idx, model):
             table = Table()
             table["e_min"] = self.energy_edges[:-1].to(self.energy_unit)
             table["e_max"] = self.energy_edges[1:].to(self.energy_unit)
             table["e_ref"] = self.energy_centers.to(self.energy_unit)
-            table["norm"] = fp_results["norm"][:, km]
             table["ref_dnde"] = model(table["e_ref"]).to(self.dnde_unit)
-            if isinstance(self.solver, Fit):
-                table["norm_err"] = fp_results["norm_err"][:, km]
-            if (
-                isinstance(self.solver, Sampler)
-                or "errn-errp" in self.selection_optional
-            ):
-                table["norm_errn"] = fp_results["norm_errn"][:, km]
-                table["norm_errp"] = fp_results["norm_errp"][:, km]
-            table["norm_ul"] = fp_results["norm_ul"][:, km]
-            table["ts"] = fp_results["ts"][:, km]
+
+            for key in self._available_keys:
+                table[key] = np.array([fp[key][idx] for fp in fp_results])
+
             table.meta["SED_TYPE"] = "likelihood"
-            flux_points = FluxPoints.from_table(
+
+            return FluxPoints.from_table(
                 table, reference_model=model.copy(), format="gadf-sed"
             )
-            fp_dict["flux_points"][m.name] = flux_points
 
-            if isinstance(self.solver, Sampler):
-                weights = []
-                samples = []
-                for ke in range(self.ne - 1):
-                    res = fp_results["solver_results"][ke]["weighted_samples"]
-                    dnde_ref = flux_points["dnde_ref"][ke].squeeze()
-                    weights.append(res["weights"])
-                    samples.append(dnde_ref * res["points"][:, km])
-                fp_dict["samples"]["weights"] = weights
-                fp_dict["samples"]["dnde"][m.name] = samples
+        fp_dict = dict(
+            energy_edges=self.energy_edges,
+            solver_results=np.array(
+                [fp["solver_results"] for fp in fp_results], dtype=object
+            ),
+            flux_points={},
+        )
+
+        for idx, m in enumerate(self.models):
+            model = _get_reference_model(m, self.energy_edges)
+            fp_dict["flux_points"][m.name] = build_fp_from_idx(idx, model)
+
+        if isinstance(self.solver, Sampler):
+            weights = [
+                fp["solver_results"]["weighted_samples"]["weights"] for fp in fp_results
+            ]
+            dnde_dict = {}
+            for model_idx, m in enumerate(self.models):
+                dnde_dict[m.name] = []
+                for energy_idx in range(self.energy_edges_axis.nbin):
+                    dnde_ref = fp_dict["flux_points"][m.name]["dnde_ref"][
+                        energy_idx
+                    ].squeeze()
+                    points = fp_results[energy_idx]["solver_results"][
+                        "weighted_samples"
+                    ]["points"]
+                    dnde_dict[m.name].append(dnde_ref * points[:, model_idx])
+            fp_dict["samples"] = dict(dnde=dnde_dict, weights=weights)
+
         return fp_dict
