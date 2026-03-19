@@ -376,10 +376,6 @@ class FluxCollectionEstimator:
             norm = self._build_default_norm()
         self.norm = norm
 
-        # define energy edges
-        self.energy_edges_axis = MapAxis.from_energy_edges(
-            energy_edges, name="energy", interp="log"
-        )
         self.energy_edges = energy_edges
 
         self.energy_unit = "TeV"
@@ -400,6 +396,11 @@ class FluxCollectionEstimator:
         if isinstance(self.solver, Sampler) or "errn-errp" in self.selection_optional:
             keys.extend(["norm_errn", "norm_errp"])
         return keys
+
+    @property
+    def _energy_axis(self):
+        """Energy axis for the input edges."""
+        return MapAxis.from_energy_edges(self.energy_edges, name="energy", interp="log")
 
     def _prepare_datasets(self, datasets):
         """define datasets with cached npred models to be renormalized"""
@@ -591,7 +592,7 @@ class FluxCollectionEstimator:
 
         fp_results = []
 
-        for ke, (emin, emax) in enumerate(self.energy_edges_axis.iter_by_edges):
+        for ke, (emin, emax) in enumerate(self._energy_axis.iter_by_edges):
             with set_and_restore_mask_fit(
                 fp_datasets, energy_min=emin, energy_max=emax
             ):
@@ -620,9 +621,9 @@ class FluxCollectionEstimator:
 
         def build_fp_from_idx(idx, model):
             table = Table()
-            table["e_min"] = self.energy_edges_axis.edges_min.to(self.energy_unit)
-            table["e_max"] = self.energy_edges_axis.edges_max.to(self.energy_unit)
-            table["e_ref"] = self.energy_edges_axis.center.to(self.energy_unit)
+            table["e_min"] = self._energy_axis.edges_min.to(self.energy_unit)
+            table["e_max"] = self._energy_axis.edges_max.to(self.energy_unit)
+            table["e_ref"] = self._energy_axis.center.to(self.energy_unit)
             table["ref_dnde"] = model(table["e_ref"]).to(self.dnde_unit)
 
             for key in self._available_keys:
