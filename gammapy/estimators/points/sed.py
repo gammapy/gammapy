@@ -368,26 +368,28 @@ class FluxCollectionEstimator:
         self.solver = solver
         self.reoptimize = reoptimize
 
-        self.selection_optional = (
-            selection_optional if selection_optional is not None else []
-        )
+        if selection_optional is None:
+            selection_optional = []
+        self.selection_optional = selection_optional
 
         if norm is None:
-            norm_max = 1e1
-            if isinstance(self.solver, Sampler):
-                prior = UniformPrior(min=-norm_max, max=norm_max)
-            else:
-                prior = None
-            self.norm = Parameter(name="norm", value=1, unit="", prior=prior)
+            norm = self._build_default_norm()
+        self.norm = norm
 
         # define energy edges
-        self.energy_edges_axis = MapAxis.from_energy_edges(energy_edges, name="energy")
+        self.energy_edges_axis = MapAxis.from_energy_edges(
+            energy_edges, name="energy", interp="log"
+        )
         self.energy_edges = energy_edges
-        self.ne = len(self.energy_edges)
-        self.energy_centers = (energy_edges[:-1] * energy_edges[1:]) ** 0.5
-        self.energy_unit = "TeV"
 
+        self.energy_unit = "TeV"
         self.dnde_unit = u.Unit("cm-2 s-1 TeV-1")
+
+    def _build_default_norm(self):
+        prior = (
+            UniformPrior(min=-10, max=10) if isinstance(self.solver, Sampler) else None
+        )
+        return Parameter(name="norm", value=1, unit="", prior=prior)
 
     @property
     def _available_keys(self):
@@ -618,9 +620,9 @@ class FluxCollectionEstimator:
 
         def build_fp_from_idx(idx, model):
             table = Table()
-            table["e_min"] = self.energy_edges[:-1].to(self.energy_unit)
-            table["e_max"] = self.energy_edges[1:].to(self.energy_unit)
-            table["e_ref"] = self.energy_centers.to(self.energy_unit)
+            table["e_min"] = self.energy_edges_axis.edges_min.to(self.energy_unit)
+            table["e_max"] = self.energy_edges_axis.edges_max.to(self.energy_unit)
+            table["e_ref"] = self.energy_edges_axis.center.to(self.energy_unit)
             table["ref_dnde"] = model(table["e_ref"]).to(self.dnde_unit)
 
             for key in self._available_keys:
