@@ -391,6 +391,7 @@ class FluxCollectionEstimator:
 
     @property
     def _available_keys(self):
+        # TODO: what about 'npred' key
         keys = ["norm", "norm_ul", "ts"]
         if isinstance(self.solver, Fit):
             keys.append("norm_err")
@@ -470,19 +471,11 @@ class FluxCollectionEstimator:
 
     def _run_fit(self, fp_datasets, spectral_models):
         """Compute flux estimates, uncertainties and UL using log-likelihood profile (i.e. using `~gammapy.modeling.Fit`)."""
-
         fit_results = self.solver.run(fp_datasets)
-
-        fp_result = dict(
-            npred=np.zeros(self.ns),
-            norm=np.zeros(self.ns),
-            norm_err=np.zeros(self.ns),
-            norm_errn=np.zeros(self.ns),
-            norm_errp=np.zeros(self.ns),
-            norm_ul=np.zeros(self.ns),
-            ts=np.zeros(self.ns),
-            solver_results=fit_results,
-        )
+        # TODO: rename self.ns
+        fp_result = {key: np.zeros(self.ns) for key in self._available_keys}
+        fp_result["npred"] = np.zeros(self.ns)  # TODO: remove
+        fp_result["solver_results"] = fit_results
 
         for km, (m, spec) in enumerate(zip(self.models, spectral_models.values())):
             norm_param = spec.norm
@@ -523,41 +516,42 @@ class FluxCollectionEstimator:
 
         sampler_results = self.solver.run(fp_datasets).sampler_results
 
-        fp_result = dict(
-            npred=np.zeros(self.ns),
-            norm=np.zeros(self.ns),
-            norm_err=np.zeros(self.ns),
-            norm_errn=np.zeros(self.ns),
-            norm_errp=np.zeros(self.ns),
-            norm_ul=np.zeros(self.ns),
-            ts=np.zeros(self.ns),
-            solver_results=sampler_results,
-        )
+        points = sampler_results["weighted_samples"][
+            "points"
+        ]  # shape [n_samples, n_sources]
+        weights = sampler_results["weighted_samples"]["weights"]
+
+        cdf = stats.norm.cdf
+
+        quantiles = {
+            "norm": 50,
+            "norm_errn": 100 * cdf(-self.n_sigma),
+            "norm_errp": 100 * cdf(self.n_sigma),
+            "norm_ul": 100 * cdf(self.n_sigma_ul),
+        }
+
+        # TODO: rename self.ns
+        fp_result = {key: np.zeros(self.ns) for key in self._available_keys}
+        fp_result["npred"] = np.zeros(self.ns)  # TODO: remove
+        fp_result["solver_results"] = sampler_results
 
         for km, (m, spec) in enumerate(zip(self.models, spectral_models.values())):
-            s = sampler_results["weighted_samples"]["points"][:, km]
-            w = sampler_results["weighted_samples"]["weights"]
+            samples = points[:, km]
             norm_param = spec.norm
 
-            cdf = stats.norm.cdf
-            method = "inverted_cdf"
+            percentiles = {
+                k: np.percentile(samples, q, weights=weights, method="inverted_cdf")
+                for k, q in quantiles.items()
+            }
 
-            npred = self._compute_npred(fp_datasets, norm_param, m)
-            fp_result["npred"][km] = npred
+            norm = percentiles["norm"]
+            norm_param.value = norm  # set before TS computation below
 
-            norm = np.percentile(s, 50, weights=w, method=method)
-            norm_param.value = norm
             fp_result["norm"][km] = norm
-
-            q_n = 100 * cdf(self.n_sigma)
-            q_p = 100 * cdf(-self.n_sigma)
-            q_ul = 100 * cdf(self.n_sigma_ul)
-            norm_errp = np.percentile(s, q_n, weights=w, method=method)
-            norm_errn = np.percentile(s, q_p, weights=w, method=method)
-            norm_ul = np.percentile(s, q_ul, weights=w, method=method)
-            fp_result["norm_errn"][km] = norm - norm_errn
-            fp_result["norm_errp"][km] = norm_errp - norm
-            fp_result["norm_ul"][km] = norm_ul
+            fp_result["norm_errn"][km] = norm - percentiles["norm_errn"]
+            fp_result["norm_errp"][km] = percentiles["norm_errp"] - norm
+            fp_result["norm_ul"][km] = percentiles["norm_ul"]
+            fp_result["npred"][km] = self._compute_npred(fp_datasets, norm_param, m)
 
         # compute TS after norm value is set to median for all models
         for km, spec in enumerate(spectral_models.values()):
@@ -599,11 +593,10 @@ class FluxCollectionEstimator:
             with set_and_restore_mask_fit(
                 fp_datasets, energy_min=emin, energy_max=emax
             ):
-                args = (fp_datasets, spectral_models)
                 if isinstance(self.solver, Sampler):
-                    fp_result = self._run_sampler(*args)
+                    fp_result = self._run_sampler(fp_datasets, spectral_models)
                 else:
-                    fp_result = self._run_fit(*args)
+                    fp_result = self._run_fit(fp_datasets, spectral_models)
 
             fp_results.append(fp_result)
 
