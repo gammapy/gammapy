@@ -368,9 +368,9 @@ class FluxCollectionEstimator:
         self.solver = solver
         self.reoptimize = reoptimize
 
-        if selection_optional is None:
-            selection_optional = []
-        self.selection_optional = selection_optional
+        self.selection_optional = (
+            selection_optional if selection_optional is not None else []
+        )
 
         if norm is None:
             norm_max = 1e1
