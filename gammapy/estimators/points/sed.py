@@ -679,10 +679,10 @@ class FluxCollectionEstimator:
                 dnde_dict[m.name] = []
                 for energy_idx, fp in enumerate(fp_results):
                     dnde_ref = fp_dict["flux_points"][m.name]["dnde_ref"].squeeze()
-                    points = fp["solver_results"]["weighted_samples"]["points"]
-                    dnde_dict[m.name].append(
-                        dnde_ref[energy_idx] * points[:, model_idx]
-                    )
+                    points = fp["solver_results"]["weighted_samples"]["points"][
+                        :, model_idx
+                    ]
+                    dnde_dict[m.name].append(dnde_ref[energy_idx] * points)
             fp_dict["samples"] = dict(dnde=dnde_dict, weights=weights)
 
         return fp_dict
