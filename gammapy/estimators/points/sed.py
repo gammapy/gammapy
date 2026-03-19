@@ -459,7 +459,7 @@ class FluxCollectionEstimator:
         return cash0 - cash
 
     def _run_fit(self, fp_datasets, spectral_models):
-        """compute npred, dnde, TS, errn, errp, and ul (if necessasy)"""
+        """Compute flux estimates, uncertainties and UL using log-likelihood profile (i.e. using `~gammapy.modeling.Fit`)."""
 
         fit_results = self.solver.run(fp_datasets)
 
@@ -562,8 +562,8 @@ class FluxCollectionEstimator:
 
         Parameters
         ----------
-        datasets : `Datatets`
-            Datasets used to compute the flus points.
+        datasets : `~gammapy.datasets.Datasets`
+            Datasets used to compute the flux points.
             Datasets must share the same geometry.
 
         Returns
@@ -595,12 +595,8 @@ class FluxCollectionEstimator:
             solver_results=np.empty(self.ne - 1, dtype=object),
         )
 
-        for ke in range(self.ne - 1):
-            with set_and_restore_mask_fit(
-                fp_datasets,
-                energy_min=self.energy_edges[ke],
-                energy_max=self.energy_edges[ke + 1 - self.ne],
-            ):
+        for ke, emin, emax in enumerate(zip(self.energy_edges[:-1], self.energy_edges[1:])):
+            with set_and_restore_mask_fit(fp_datasets, energy_min=emin, energy_max=emax):
                 args = (fp_datasets, spectral_models)
                 if isinstance(self.solver, Sampler):
                     fp_result = self._run_sampler(*args)
@@ -619,12 +615,12 @@ class FluxCollectionEstimator:
         return self._get_flux_points_dict(fp_results)
 
     def _get_flux_points_dict(self, fp_results):
-        """get flux points for each mddel
+        """Extract flux points for each model from list of results. 
 
         Parameters
         ----------
         fp_results : dict
-            dict used to generate the flus points table.
+            dict used to generate the flux points table.
 
         Returns
         -------
