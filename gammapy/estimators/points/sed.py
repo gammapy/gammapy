@@ -381,6 +381,7 @@ class FluxCollectionEstimator:
             self.norm = Parameter(name="norm", value=1, unit="", prior=prior)
 
         # define energy edges
+        self.energy_edges_axis = MapAxis.from_energy_edges(energy_edges, name="energy")
         self.energy_edges = energy_edges
         self.ne = len(self.energy_edges)
         self.energy_centers = (energy_edges[:-1] * energy_edges[1:]) ** 0.5
@@ -563,23 +564,30 @@ class FluxCollectionEstimator:
         Parameters
         ----------
         datasets : `~gammapy.datasets.Datasets`
+<<<<<<< HEAD
             Datasets used to compute the flux points.
             Datasets must share the same geometry.
+=======
+            Datasets used to compute the flux points. They must share the same geometry.
+>>>>>>> cd6367559 (Some cleanup)
 
         Returns
         -------
         result : dict
             Dict with results
         """
+        datasets = Datasets(datasets)
+        if len(datasets) == 0:
+            raise ValueError("datasets cannot be empty")
 
-        for kd, d in enumerate(datasets):
-            if kd == 0:
-                self.geom = d.counts.geom
-            elif d.counts.geom != self.geom:
-                raise ValueError("Inconstistant geometries between datasets")
+        if not datasets.is_all_same_geom:
+            raise ValueError("Inconsistent geometries between datasets")
 
         for d in datasets:
             d.npred()  # precompute npred
+
+        self.geom = datasets[0]._geom
+        self.datasets = datasets
         fp_datasets, spectral_models = self._prepare_datasets(datasets)
 
         fp_results = dict(
@@ -597,6 +605,7 @@ class FluxCollectionEstimator:
         for ke, (emin, emax) in enumerate(
             zip(self.energy_edges[:-1], self.energy_edges[1:])
         ):
+#        for ke, (emin, emax) in enumerate(self.energy_edges_axis.iter_by_edges):
             with set_and_restore_mask_fit(
                 fp_datasets, energy_min=emin, energy_max=emax
             ):
@@ -605,6 +614,9 @@ class FluxCollectionEstimator:
                     fp_result = self._run_sampler(*args)
                 else:
                     fp_result = self._run_fit(*args)
+
+            fp_result["emin"] = emin
+            fp_result["emax"] = emax
 
             fp_results["npred"][ke, :] = fp_result["npred"]
             fp_results["norm"][ke, :] = fp_result["norm"]
