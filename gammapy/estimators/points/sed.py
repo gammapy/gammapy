@@ -677,14 +677,12 @@ class FluxCollectionEstimator:
             dnde_dict = {}
             for model_idx, m in enumerate(self.models):
                 dnde_dict[m.name] = []
-                for energy_idx in range(self.energy_edges_axis.nbin):
-                    dnde_ref = fp_dict["flux_points"][m.name]["dnde_ref"][
-                        energy_idx
-                    ].squeeze()
-                    points = fp_results[energy_idx]["solver_results"][
-                        "weighted_samples"
-                    ]["points"]
-                    dnde_dict[m.name].append(dnde_ref * points[:, model_idx])
+                for energy_idx, fp in enumerate(fp_results):
+                    dnde_ref = fp_dict["flux_points"][m.name]["dnde_ref"].squeeze()
+                    points = fp["solver_results"]["weighted_samples"]["points"]
+                    dnde_dict[m.name].append(
+                        dnde_ref[energy_idx] * points[:, model_idx]
+                    )
             fp_dict["samples"] = dict(dnde=dnde_dict, weights=weights)
 
         return fp_dict
