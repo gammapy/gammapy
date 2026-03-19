@@ -593,17 +593,6 @@ class FluxCollectionEstimator:
         self.geom = datasets[0]._geom
         fp_datasets, spectral_models = self._prepare_datasets(datasets)
 
-        # fp_results = dict(
-        #     npred=np.zeros((self.ne - 1, self.ns)),
-        #     npred_err=np.zeros((self.ne - 1, self.ns)),
-        #     norm=np.zeros((self.ne - 1, self.ns)),
-        #     norm_err=np.zeros((self.ne - 1, self.ns)),
-        #     norm_errn=np.zeros((self.ne - 1, self.ns)),
-        #     norm_errp=np.zeros((self.ne - 1, self.ns)),
-        #     norm_ul=np.zeros((self.ne - 1, self.ns)),
-        #     ts=np.zeros((self.ne - 1, self.ns)),
-        #     solver_results=np.empty(self.ne - 1, dtype=object),
-        # )
         fp_results = []
 
         for ke, (emin, emax) in enumerate(self.energy_edges_axis.iter_by_edges):
@@ -617,14 +606,6 @@ class FluxCollectionEstimator:
                     fp_result = self._run_fit(*args)
 
             fp_results.append(fp_result)
-            # fp_results["npred"][ke, :] = fp_result["npred"]
-            # fp_results["norm"][ke, :] = fp_result["norm"]
-            # fp_results["norm_err"][ke, :] = fp_result["norm_err"]
-            # fp_results["norm_errn"][ke, :] = fp_result["norm_errn"]
-            # fp_results["norm_errp"][ke, :] = fp_result["norm_errp"]
-            # fp_results["norm_ul"][ke, :] = fp_result["norm_ul"]
-            # fp_results["ts"][ke, :] = fp_result["ts"]
-            # fp_results["solver_results"][ke] = fp_result["solver_results"]
 
         return self._get_flux_points_dict(fp_results)
 
