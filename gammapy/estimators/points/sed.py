@@ -519,18 +519,14 @@ class FluxCollectionEstimator:
 
         sampler_results = self.solver.run(fp_datasets).sampler_results
 
-        points = sampler_results["weighted_samples"][
-            "points"
-        ]  # shape [n_samples, n_sources]
+        points = sampler_results["weighted_samples"]["points"]
         weights = sampler_results["weighted_samples"]["weights"]
-
-        cdf = stats.norm.cdf
 
         quantiles = {
             "norm": 50,
-            "norm_errn": 100 * cdf(-self.n_sigma),
-            "norm_errp": 100 * cdf(self.n_sigma),
-            "norm_ul": 100 * cdf(self.n_sigma_ul),
+            "norm_errn": 100 * stats.norm.cdf(-self.n_sigma),
+            "norm_errp": 100 * stats.norm.cdf(self.n_sigma),
+            "norm_ul": 100 * stats.norm.cdf(self.n_sigma_ul),
         }
 
         # TODO: rename self.ns
