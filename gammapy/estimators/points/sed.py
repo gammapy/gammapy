@@ -317,7 +317,7 @@ class FluxCollectionEstimator:
     ----------
     energy_edges : `~astropy.units.Quantity`
         Energy edges of the flux point bins.
-    models : str or int
+    models : ~gammapy.modeling.Models` or list
         Source models for which the flux points are computed (others are frozen).
     n_sigma : float, optional
         Number of sigma to use for asymmetric error computation. Must be a positive value.
@@ -388,7 +388,7 @@ class FluxCollectionEstimator:
 
         self.dnde_unit = u.Unit("cm-2 s-1 TeV-1")
 
-    def _prepare_datasets(self):
+    def _prepare_datasets(self, datasets):
         """define datasets with cached npred models to be renormalized"""
 
         spectral_models = {}
@@ -397,7 +397,7 @@ class FluxCollectionEstimator:
             spectral_models[m.name].tilt.frozen = True
 
         fp_datasets = []
-        for d in self.datasets:
+        for d in datasets:
             fp_dataset = d.copy(name=d.name)
             bkg_model = self._get_bkg(d)
             fp_models = []
@@ -580,8 +580,7 @@ class FluxCollectionEstimator:
 
         for d in datasets:
             d.npred()  # precompute npred
-        self.datasets = datasets
-        fp_datasets, spectral_models = self._prepare_datasets()
+        fp_datasets, spectral_models = self._prepare_datasets(datasets)
 
         fp_results = dict(
             npred=np.zeros((self.ne - 1, self.ns)),
@@ -595,8 +594,12 @@ class FluxCollectionEstimator:
             solver_results=np.empty(self.ne - 1, dtype=object),
         )
 
-        for ke, emin, emax in enumerate(zip(self.energy_edges[:-1], self.energy_edges[1:])):
-            with set_and_restore_mask_fit(fp_datasets, energy_min=emin, energy_max=emax):
+        for ke, (emin, emax) in enumerate(
+            zip(self.energy_edges[:-1], self.energy_edges[1:])
+        ):
+            with set_and_restore_mask_fit(
+                fp_datasets, energy_min=emin, energy_max=emax
+            ):
                 args = (fp_datasets, spectral_models)
                 if isinstance(self.solver, Sampler):
                     fp_result = self._run_sampler(*args)
@@ -615,7 +618,7 @@ class FluxCollectionEstimator:
         return self._get_flux_points_dict(fp_results)
 
     def _get_flux_points_dict(self, fp_results):
-        """Extract flux points for each model from list of results. 
+        """Extract flux points for each model from list of results.
 
         Parameters
         ----------
