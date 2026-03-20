@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from gammapy.irf import EDispKernel, PSFKernel
 from gammapy.maps import HpxNDMap, Map, RegionNDMap, WcsNDMap
 from gammapy.modeling.models import PointSpatialModel, TemplateNPredModel
-from .utils import apply_edisp, _apply_edisp_diagonal
+from .utils import apply_edisp, _apply_edisp_diagonal, _edisp_diagonal_mapping
 
 PSF_MAX_RADIUS = None
 PSF_CONTAINMENT = 0.999
@@ -197,12 +197,14 @@ class MapEvaluator:
 
         # lookup edisp
         del self._edisp_diagonal
+        del self._edisp_diagonal_mapping
         if edisp:
             energy_axis = geom.axes["energy"]
             self.edisp = edisp.get_edisp_kernel(
                 position=self.position, energy_axis=energy_axis
             )
             del self._edisp_diagonal
+            del self._edisp_diagonal_mapping
 
         # lookup psf
         if (
@@ -248,6 +250,10 @@ class MapEvaluator:
             energy_axis_true=self.geom.axes["energy_true"],
             energy_axis=self._geom_reco.axes["energy"],
         )
+
+    @lazyproperty
+    def _edisp_diagonal_mapping(self):
+        return _edisp_diagonal_mapping(self._edisp_diagonal.pdf_matrix)
 
     def compute_dnde(self):
         """Compute model differential flux at map pixel centers.
@@ -372,7 +378,9 @@ class MapEvaluator:
             return apply_edisp(npred, self.edisp)
         else:
             if "energy_true" in npred.geom.axes.names:
-                return _apply_edisp_diagonal(npred, self._edisp_diagonal)
+                return _apply_edisp_diagonal(
+                    npred, self._edisp_diagonal, self._edisp_diagonal_mapping
+                )
             else:
                 return npred
 
