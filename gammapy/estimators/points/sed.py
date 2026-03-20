@@ -326,7 +326,7 @@ class FluxCollectionEstimator:
     n_sigma_ul : float, optional
         Number of sigma to use for upper limit computation. Must be a positive value.
         Default is 2.
-    norm : `~gammapy.modeling.Parameter` or dict, optional
+    norm : `~gammapy.modeling.Parameter`, optional
         Norm parameter used for the fit.
         Default is None and a new parameter is created with value=1, name="norm".
         If the `solver` is a sampler the default prior is uniform between [-10, 10].
