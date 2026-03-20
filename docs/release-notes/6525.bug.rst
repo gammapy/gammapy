@@ -1,1 +1,1 @@
-Fix the propagation of the `overwrite` argmuent in `gammapy.modeling.models.TemplateNDSpectralModel` when writing to the write function of its underlying `gammapy.maps.RegionNDMap`
+Propagated the ``overwrite`` argument in the ``write`` method of `~gammapy.modeling.models.TemplateNDSpectralModel`.
