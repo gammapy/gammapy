@@ -1304,7 +1304,7 @@ def test_template_ND(tmpdir, caplog):
     template.filename = str(tmpdir / "template_ND.fits")
     template.write()
     template.write(filename=str(tmpdir / "template_ND_2.fits"))
-    template.write(filename=str(tmpdir / "template_ND_2.fits", overwrite=True))
+    template.write(filename=str(tmpdir / "template_ND_2.fits"), overwrite=True)
 
     dict_ = template.to_dict()
     template_new = TemplateNDSpectralModel.from_dict(dict_)
