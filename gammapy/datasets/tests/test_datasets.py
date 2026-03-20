@@ -285,10 +285,12 @@ def test_add_datasets(datasets):
         datasets + tmp
 
 
+@requires_data()
 def test_is_all_same_geom(map_datasets):
     assert map_datasets.is_all_same_geom
 
 
+@requires_data()
 def test_is_all_same_geom_false(heterogenous_map_datasets):
     assert not heterogenous_map_datasets.is_all_same_geom
     # Different counts geometries
