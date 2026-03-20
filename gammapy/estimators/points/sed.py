@@ -368,16 +368,15 @@ class FluxCollectionEstimator:
             selection_optional = []
         self.selection_optional = selection_optional
 
-        if norm is None:
-            norm = self._build_default_norm()
-        self.norm = norm
+        self.norm = norm if norm is not None else self._default_norm
 
         self.energy_edges = energy_edges
 
         self.energy_unit = "TeV"
         self.dnde_unit = u.Unit("cm-2 s-1 TeV-1")
 
-    def _build_default_norm(self):
+    @property
+    def _default_norm(self):
         prior = None
         if isinstance(self.solver, Sampler):
             prior = UniformPrior(min=-10, max=10)
