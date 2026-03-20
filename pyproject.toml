@@ -143,7 +143,6 @@ except Exception:
 """
 
 [tool.ruff]
-exclude = ["docs", "dev", "extern*", "*test_*.py"]
 # Like black
 line-length = 79
 indent-width = 4
