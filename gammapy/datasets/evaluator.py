@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from gammapy.irf import EDispKernel, PSFKernel
 from gammapy.maps import HpxNDMap, Map, RegionNDMap, WcsNDMap
 from gammapy.modeling.models import PointSpatialModel, TemplateNPredModel
-from .utils import apply_edisp
+from .utils import apply_edisp, _apply_edisp_diagonal
 
 PSF_MAX_RADIUS = None
 PSF_CONTAINMENT = 0.999
@@ -372,7 +372,7 @@ class MapEvaluator:
             return apply_edisp(npred, self.edisp)
         else:
             if "energy_true" in npred.geom.axes.names:
-                return apply_edisp(npred, self._edisp_diagonal)
+                return _apply_edisp_diagonal(npred, self._edisp_diagonal)
             else:
                 return npred
 
