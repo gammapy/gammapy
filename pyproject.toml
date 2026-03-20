@@ -164,7 +164,6 @@ select = [
 ignore = [
     "D100", "D102", "D104", "D105",
     "D400", "D401", "D403",
-    "S101",
 ]
 
 [tool.ruff.lint.pydocstyle]
