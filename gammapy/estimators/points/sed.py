@@ -312,6 +312,7 @@ class FluxCollectionEstimator:
     (``~gammapy.modeling.Sampler``), which can be used to derive asymmetric
     errors and upper limits.
 
+    By default, this requires the ultranest package to be installed.
 
     Parameters
     ----------
@@ -360,12 +361,7 @@ class FluxCollectionEstimator:
         self.models = models
         self.ns = len(models)
 
-        if solver is None:
-            solver = Sampler(
-                backend="ultranest",
-                sampler_opts={"live_points": 300, "frac_remain": 0.3},
-            )
-        self.solver = solver
+        self.solver = solver if solver is not None else self._default_solver
         self.reoptimize = reoptimize
 
         if selection_optional is None:
@@ -382,10 +378,18 @@ class FluxCollectionEstimator:
         self.dnde_unit = u.Unit("cm-2 s-1 TeV-1")
 
     def _build_default_norm(self):
-        prior = (
-            UniformPrior(min=-10, max=10) if isinstance(self.solver, Sampler) else None
-        )
+        prior = None
+        if isinstance(self.solver, Sampler):
+            prior = UniformPrior(min=-10, max=10)
         return Parameter(name="norm", value=1, unit="", prior=prior)
+
+    @property
+    def _default_solver(self):
+        """Return an ultranest Sampler with options live_points=300, frac_remain=0.3."""
+        return Sampler(
+            backend="ultranest",
+            sampler_opts={"live_points": 300, "frac_remain": 0.3},
+        )
 
     @property
     def _available_keys(self):
