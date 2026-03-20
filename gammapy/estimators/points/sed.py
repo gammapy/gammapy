@@ -312,6 +312,7 @@ class FluxCollectionEstimator:
     (``~gammapy.modeling.Sampler``), which can be used to derive asymmetric
     errors and upper limits.
 
+    By default, this requires the ultranest package to be installed.
 
     Parameters
     ----------
@@ -360,73 +361,102 @@ class FluxCollectionEstimator:
         self.models = models
         self.ns = len(models)
 
-        if solver is None:
-            solver = Sampler(
-                backend="ultranest",
-                sampler_opts={"live_points": 300, "frac_remain": 0.3},
-            )
-        self.solver = solver
+        self.solver = solver if solver is not None else self._default_solver
         self.reoptimize = reoptimize
 
         if selection_optional is None:
             selection_optional = []
         self.selection_optional = selection_optional
 
-        if norm is None:
-            norm_max = 1e1
-            if isinstance(self.solver, Sampler):
-                prior = UniformPrior(min=-norm_max, max=norm_max)
-            else:
-                prior = None
-            self.norm = Parameter(name="norm", value=1, unit="", prior=prior)
+        self.norm = norm if norm is not None else self._default_norm
 
-        # define energy edges
         self.energy_edges = energy_edges
-        self.ne = len(self.energy_edges)
-        self.energy_centers = (energy_edges[:-1] * energy_edges[1:]) ** 0.5
-        self.energy_unit = "TeV"
 
+        self.energy_unit = "TeV"
         self.dnde_unit = u.Unit("cm-2 s-1 TeV-1")
+
+    @property
+    def _default_norm(self):
+        prior = None
+        if isinstance(self.solver, Sampler):
+            prior = UniformPrior(min=-10, max=10)
+        return Parameter(name="norm", value=1, unit="", prior=prior)
+
+    @property
+    def _default_solver(self):
+        """Return an ultranest Sampler with options live_points=300, frac_remain=0.3."""
+        return Sampler(
+            backend="ultranest",
+            sampler_opts={"live_points": 300, "frac_remain": 0.3},
+        )
+
+    @property
+    def _available_keys(self):
+        # TODO: what about 'npred' key
+        keys = ["norm", "norm_ul", "ts"]
+        if isinstance(self.solver, Fit):
+            keys.append("norm_err")
+        if isinstance(self.solver, Sampler) or "errn-errp" in self.selection_optional:
+            keys.extend(["norm_errn", "norm_errp"])
+        return keys
+
+    def _empty_result_dict(self):
+        """Builds empty dictionary to store results."""
+        n_sources = len(self.models)
+        empty_fp_result = {key: np.zeros(n_sources) for key in self._available_keys}
+        empty_fp_result["npred"] = np.zeros(n_sources)
+        return empty_fp_result
+
+    @property
+    def _energy_axis(self):
+        """Energy axis for the input edges."""
+        return MapAxis.from_energy_edges(self.energy_edges, name="energy", interp="log")
+
+    def _prepare_dataset(self, dataset, spectral_norm_models):
+        """Build NPredTemplateModel for a given dataset.
+
+        Create one single template summing all frozen sources and create one template per free source with free norm.
+        """
+        # TODO: can we avoid the deep copy? Does is remove the cached evaluators?
+        fp_dataset = dataset.copy(name=dataset.name)
+
+        source_names = set(Models(self.models).names)
+        frozen_names = set(dataset._evaluators.keys()) - source_names
+
+        fp_models = []
+        npred_free = dataset.npred_signal(source_names, stack=False)
+        for idx, npred in enumerate(npred_free.split_by_axis("models")):
+            name = npred_free.geom.axes["models"].center[idx]
+            template_model = TemplateNPredModel(
+                npred,
+                name=name + "_" + fp_dataset.name,
+                spectral_model=spectral_norm_models[name],
+                datasets_names=[fp_dataset.name],
+            )
+            fp_models.append(template_model)
+
+        npred_frozen = fp_dataset.npred_signal(frozen_names, stack=True)
+        bkg_frozen = TemplateNPredModel(
+            npred_frozen,
+            name="frozen_" + fp_dataset.name,
+            datasets_names=[fp_dataset.name],
+        )
+        bkg_frozen.spectral_model.norm.frozen = True
+
+        bkg_model = self._get_bkg(fp_dataset)
+        fp_dataset.models = Models(fp_models + [bkg_frozen] + bkg_model)
+
+        return fp_dataset
 
     def _prepare_datasets(self, datasets):
         """define datasets with cached npred models to be renormalized"""
-
-        spectral_models = {}
+        norm_models = {}
         for m in self.models:
-            spectral_models[m.name] = PowerLawNormSpectralModel(norm=self.norm.copy())
-            spectral_models[m.name].tilt.frozen = True
+            norm_models[m.name] = PowerLawNormSpectralModel(norm=self.norm.copy())
+            norm_models[m.name].tilt.frozen = True
 
-        fp_datasets = []
-        for d in datasets:
-            fp_dataset = d.copy(name=d.name)
-            bkg_model = self._get_bkg(d)
-            fp_models = []
-            npred_frozen = Map.from_geom(self.geom, dtype=float)
-            for name, ev in d.evaluators.items():
-                if ev.contributes:
-                    npred = Map.from_geom(self.geom, dtype=float)
-                    npred.stack(ev.compute_npred())
-                    if name in Models(self.models).names:
-                        fp_models.append(
-                            TemplateNPredModel(
-                                npred,
-                                name=name + "_" + fp_dataset.name,
-                                spectral_model=spectral_models[name],
-                                datasets_names=[fp_dataset.name],
-                            )
-                        )
-                    else:
-                        npred_frozen.stack(npred)
-            bkg_frozen = TemplateNPredModel(
-                npred_frozen,
-                name="frozen_" + fp_dataset.name,
-                datasets_names=[fp_dataset.name],
-            )
-            bkg_frozen.spectral_model.norm.frozen = True
-            fp_dataset.models = Models(fp_models + [bkg_frozen] + bkg_model)
-            # keep this order such as fp_models parameters appear first in the samples indexing
-            fp_datasets.append(fp_dataset)
-        return Datasets(fp_datasets), spectral_models
+        fp_datasets = [self._prepare_dataset(d, norm_models) for d in datasets]
+        return Datasets(fp_datasets), norm_models
 
     def _get_bkg(self, d):
         if d.background_model:
@@ -460,19 +490,10 @@ class FluxCollectionEstimator:
 
     def _run_fit(self, fp_datasets, spectral_models):
         """Compute flux estimates, uncertainties and UL using log-likelihood profile (i.e. using `~gammapy.modeling.Fit`)."""
-
         fit_results = self.solver.run(fp_datasets)
 
-        fp_result = dict(
-            npred=np.zeros(self.ns),
-            norm=np.zeros(self.ns),
-            norm_err=np.zeros(self.ns),
-            norm_errn=np.zeros(self.ns),
-            norm_errp=np.zeros(self.ns),
-            norm_ul=np.zeros(self.ns),
-            ts=np.zeros(self.ns),
-            solver_results=fit_results,
-        )
+        fp_result = self._empty_result_dict()
+        fp_result["solver_results"] = fit_results
 
         for km, (m, spec) in enumerate(zip(self.models, spectral_models.values())):
             norm_param = spec.norm
@@ -513,41 +534,36 @@ class FluxCollectionEstimator:
 
         sampler_results = self.solver.run(fp_datasets).sampler_results
 
-        fp_result = dict(
-            npred=np.zeros(self.ns),
-            norm=np.zeros(self.ns),
-            norm_err=np.zeros(self.ns),
-            norm_errn=np.zeros(self.ns),
-            norm_errp=np.zeros(self.ns),
-            norm_ul=np.zeros(self.ns),
-            ts=np.zeros(self.ns),
-            solver_results=sampler_results,
-        )
+        fp_result = self._empty_result_dict()
+        fp_result["solver_results"] = sampler_results
+
+        points = sampler_results["weighted_samples"]["points"]
+        weights = sampler_results["weighted_samples"]["weights"]
+
+        quantiles = {
+            "norm": 50,
+            "norm_errn": 100 * stats.norm.cdf(-self.n_sigma),
+            "norm_errp": 100 * stats.norm.cdf(self.n_sigma),
+            "norm_ul": 100 * stats.norm.cdf(self.n_sigma_ul),
+        }
 
         for km, (m, spec) in enumerate(zip(self.models, spectral_models.values())):
-            s = sampler_results["weighted_samples"]["points"][:, km]
-            w = sampler_results["weighted_samples"]["weights"]
+            samples = points[:, km]
             norm_param = spec.norm
 
-            cdf = stats.norm.cdf
-            method = "inverted_cdf"
+            percentiles = {
+                k: np.percentile(samples, q, weights=weights, method="inverted_cdf")
+                for k, q in quantiles.items()
+            }
 
-            npred = self._compute_npred(fp_datasets, norm_param, m)
-            fp_result["npred"][km] = npred
+            norm = percentiles["norm"]
+            norm_param.value = norm  # set before TS computation below
 
-            norm = np.percentile(s, 50, weights=w, method=method)
-            norm_param.value = norm
             fp_result["norm"][km] = norm
-
-            q_n = 100 * cdf(self.n_sigma)
-            q_p = 100 * cdf(-self.n_sigma)
-            q_ul = 100 * cdf(self.n_sigma_ul)
-            norm_errp = np.percentile(s, q_n, weights=w, method=method)
-            norm_errn = np.percentile(s, q_p, weights=w, method=method)
-            norm_ul = np.percentile(s, q_ul, weights=w, method=method)
-            fp_result["norm_errn"][km] = norm - norm_errn
-            fp_result["norm_errp"][km] = norm_errp - norm
-            fp_result["norm_ul"][km] = norm_ul
+            fp_result["norm_errn"][km] = norm - percentiles["norm_errn"]
+            fp_result["norm_errp"][km] = percentiles["norm_errp"] - norm
+            fp_result["norm_ul"][km] = percentiles["norm_ul"]
+            fp_result["npred"][km] = self._compute_npred(fp_datasets, norm_param, m)
 
         # compute TS after norm value is set to median for all models
         for km, spec in enumerate(spectral_models.values()):
@@ -563,57 +579,37 @@ class FluxCollectionEstimator:
         Parameters
         ----------
         datasets : `~gammapy.datasets.Datasets`
-            Datasets used to compute the flux points.
-            Datasets must share the same geometry.
+            Datasets used to compute the flux points. They must share the same geometry.
 
         Returns
         -------
         result : dict
             Dict with results
         """
+        datasets = Datasets(datasets)
+        if len(datasets) == 0:
+            raise ValueError("datasets cannot be empty")
 
-        for kd, d in enumerate(datasets):
-            if kd == 0:
-                self.geom = d.counts.geom
-            elif d.counts.geom != self.geom:
-                raise ValueError("Inconstistant geometries between datasets")
+        if not datasets.is_all_same_geom:
+            raise ValueError("Inconsistent geometries between datasets")
 
         for d in datasets:
             d.npred()  # precompute npred
+
         fp_datasets, spectral_models = self._prepare_datasets(datasets)
 
-        fp_results = dict(
-            npred=np.zeros((self.ne - 1, self.ns)),
-            npred_err=np.zeros((self.ne - 1, self.ns)),
-            norm=np.zeros((self.ne - 1, self.ns)),
-            norm_err=np.zeros((self.ne - 1, self.ns)),
-            norm_errn=np.zeros((self.ne - 1, self.ns)),
-            norm_errp=np.zeros((self.ne - 1, self.ns)),
-            norm_ul=np.zeros((self.ne - 1, self.ns)),
-            ts=np.zeros((self.ne - 1, self.ns)),
-            solver_results=np.empty(self.ne - 1, dtype=object),
-        )
+        fp_results = []
 
-        for ke, (emin, emax) in enumerate(
-            zip(self.energy_edges[:-1], self.energy_edges[1:])
-        ):
+        for ke, (emin, emax) in enumerate(self._energy_axis.iter_by_edges):
             with set_and_restore_mask_fit(
                 fp_datasets, energy_min=emin, energy_max=emax
             ):
-                args = (fp_datasets, spectral_models)
                 if isinstance(self.solver, Sampler):
-                    fp_result = self._run_sampler(*args)
+                    fp_result = self._run_sampler(fp_datasets, spectral_models)
                 else:
-                    fp_result = self._run_fit(*args)
+                    fp_result = self._run_fit(fp_datasets, spectral_models)
 
-            fp_results["npred"][ke, :] = fp_result["npred"]
-            fp_results["norm"][ke, :] = fp_result["norm"]
-            fp_results["norm_err"][ke, :] = fp_result["norm_err"]
-            fp_results["norm_errn"][ke, :] = fp_result["norm_errn"]
-            fp_results["norm_errp"][ke, :] = fp_result["norm_errp"]
-            fp_results["norm_ul"][ke, :] = fp_result["norm_ul"]
-            fp_results["ts"][ke, :] = fp_result["ts"]
-            fp_results["solver_results"][ke] = fp_result["solver_results"]
+            fp_results.append(fp_result)
 
         return self._get_flux_points_dict(fp_results)
 
@@ -630,46 +626,46 @@ class FluxCollectionEstimator:
         result : dict
             Dict with results
         """
-        fp_dict = dict(
-            energy_edges=self.energy_edges,
-            solver_results=fp_results["solver_results"],
-            flux_points={},
-        )
-        if isinstance(self.solver, Sampler):
-            fp_dict["samples"] = {"dnde": {}}
 
-        for km, m in enumerate(self.models):
-            model = _get_reference_model(m, self.energy_edges)
+        def build_fp_from_idx(idx, model):
             table = Table()
-            table["e_min"] = self.energy_edges[:-1].to(self.energy_unit)
-            table["e_max"] = self.energy_edges[1:].to(self.energy_unit)
-            table["e_ref"] = self.energy_centers.to(self.energy_unit)
-            table["norm"] = fp_results["norm"][:, km]
+            table["e_min"] = self._energy_axis.edges_min.to(self.energy_unit)
+            table["e_max"] = self._energy_axis.edges_max.to(self.energy_unit)
+            table["e_ref"] = self._energy_axis.center.to(self.energy_unit)
             table["ref_dnde"] = model(table["e_ref"]).to(self.dnde_unit)
-            if isinstance(self.solver, Fit):
-                table["norm_err"] = fp_results["norm_err"][:, km]
-            if (
-                isinstance(self.solver, Sampler)
-                or "errn-errp" in self.selection_optional
-            ):
-                table["norm_errn"] = fp_results["norm_errn"][:, km]
-                table["norm_errp"] = fp_results["norm_errp"][:, km]
-            table["norm_ul"] = fp_results["norm_ul"][:, km]
-            table["ts"] = fp_results["ts"][:, km]
+
+            for key in self._available_keys:
+                table[key] = np.array([fp[key][idx] for fp in fp_results])
+
             table.meta["SED_TYPE"] = "likelihood"
-            flux_points = FluxPoints.from_table(
+
+            return FluxPoints.from_table(
                 table, reference_model=model.copy(), format="gadf-sed"
             )
-            fp_dict["flux_points"][m.name] = flux_points
 
-            if isinstance(self.solver, Sampler):
-                weights = []
-                samples = []
-                for ke in range(self.ne - 1):
-                    res = fp_results["solver_results"][ke]["weighted_samples"]
-                    dnde_ref = flux_points["dnde_ref"][ke].squeeze()
-                    weights.append(res["weights"])
-                    samples.append(dnde_ref * res["points"][:, km])
-                fp_dict["samples"]["weights"] = weights
-                fp_dict["samples"]["dnde"][m.name] = samples
+        fp_dict = dict(
+            energy_edges=self.energy_edges,
+            solver_results=np.array(
+                [fp["solver_results"] for fp in fp_results], dtype=object
+            ),
+            flux_points={},
+        )
+
+        for idx, m in enumerate(self.models):
+            model = _get_reference_model(m, self.energy_edges)
+            fp_dict["flux_points"][m.name] = build_fp_from_idx(idx, model)
+
+        if isinstance(self.solver, Sampler):
+            weights = [
+                fp["solver_results"]["weighted_samples"]["weights"] for fp in fp_results
+            ]
+            dnde_dict = {}
+            for model_idx, m in enumerate(self.models):
+                dnde_dict[m.name] = []
+                dnde_ref = fp_dict["flux_points"][m.name]["dnde_ref"].squeeze()
+                for dnde, fp in zip(dnde_ref, fp_results):
+                    points = fp["solver_results"]["weighted_samples"]["points"]
+                    dnde_dict[m.name].append(dnde * points[:, model_idx])
+            fp_dict["samples"] = dict(dnde=dnde_dict, weights=weights)
+
         return fp_dict
