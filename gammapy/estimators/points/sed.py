@@ -400,6 +400,13 @@ class FluxCollectionEstimator:
             keys.extend(["norm_errn", "norm_errp"])
         return keys
 
+    def _empty_result_dict(self):
+        """Builds empty dictionary to store results."""
+        n_sources = len(self.models)
+        empty_fp_result = {key: np.zeros(n_sources) for key in self._available_keys}
+        empty_fp_result["npred"] = np.zeros(n_sources)
+        return empty_fp_result
+
     @property
     def _energy_axis(self):
         """Energy axis for the input edges."""
@@ -484,9 +491,8 @@ class FluxCollectionEstimator:
     def _run_fit(self, fp_datasets, spectral_models):
         """Compute flux estimates, uncertainties and UL using log-likelihood profile (i.e. using `~gammapy.modeling.Fit`)."""
         fit_results = self.solver.run(fp_datasets)
-        # TODO: rename self.ns
-        fp_result = {key: np.zeros(self.ns) for key in self._available_keys}
-        fp_result["npred"] = np.zeros(self.ns)  # TODO: remove
+
+        fp_result = self._empty_result_dict()
         fp_result["solver_results"] = fit_results
 
         for km, (m, spec) in enumerate(zip(self.models, spectral_models.values())):
@@ -528,6 +534,9 @@ class FluxCollectionEstimator:
 
         sampler_results = self.solver.run(fp_datasets).sampler_results
 
+        fp_result = self._empty_result_dict()
+        fp_result["solver_results"] = sampler_results
+
         points = sampler_results["weighted_samples"]["points"]
         weights = sampler_results["weighted_samples"]["weights"]
 
@@ -537,11 +546,6 @@ class FluxCollectionEstimator:
             "norm_errp": 100 * stats.norm.cdf(self.n_sigma),
             "norm_ul": 100 * stats.norm.cdf(self.n_sigma_ul),
         }
-
-        # TODO: rename self.ns
-        fp_result = {key: np.zeros(self.ns) for key in self._available_keys}
-        fp_result["npred"] = np.zeros(self.ns)  # TODO: remove
-        fp_result["solver_results"] = sampler_results
 
         for km, (m, spec) in enumerate(zip(self.models, spectral_models.values())):
             samples = points[:, km]
@@ -592,7 +596,6 @@ class FluxCollectionEstimator:
         for d in datasets:
             d.npred()  # precompute npred
 
-        self.geom = datasets[0]._geom
         fp_datasets, spectral_models = self._prepare_datasets(datasets)
 
         fp_results = []
