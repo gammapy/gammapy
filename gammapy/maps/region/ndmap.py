@@ -249,17 +249,14 @@ class RegionNDMap(Map):
         kwargs.setdefault("label", "mask")
 
         ax = plt.gca() if ax is None else ax
-
         edges = self.geom.axes["energy"].edges.reshape((-1, 1, 1))
-
         labels, nlabels = ndi_label(self.data)
-
         for idx in range(1, nlabels + 1):
             mask = labels == idx
-            xmin = edges[:-1][mask].min().value
-            xmax = edges[1:][mask].max().value
-            ax.axvspan(xmin, xmax, **kwargs)
-
+            xmin = edges[:-1][mask].min()
+            xmax = edges[1:][mask].max()
+            with quantity_support():
+                ax.axvspan(xmin, xmax, **kwargs)
         return ax
 
     @classmethod
