@@ -172,6 +172,7 @@ convention = "numpy"
 
 [tool.ruff.lint.per-file-ignores]
 "examples/*" = ["E402"]
+"test_*.py" = ["D"]
 
 [tool.ruff.format]
 # Like Black, use double quotes for strings.
