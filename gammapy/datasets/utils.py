@@ -67,12 +67,6 @@ def apply_edisp(input_map, edisp):
     """
     if edisp is not None:
         loc = input_map.geom.axes.index("energy_true")
-        data = np.rollaxis(input_map.data, loc, len(input_map.data.shape))
-        data = np.matmul(data, edisp.pdf_matrix)
-        data = np.rollaxis(data, -1, loc)
-        energy_axis = edisp.axes["energy"].copy(name="energy")
-
-        loc = input_map.geom.axes.index("energy_true")
         data = np.moveaxis(input_map.data, loc, -1)
         shape_space = data.shape[:-1]
         n_pix = int(np.prod(shape_space))
