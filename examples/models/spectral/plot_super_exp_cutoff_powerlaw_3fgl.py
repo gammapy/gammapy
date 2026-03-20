@@ -10,8 +10,8 @@ It is defined by the following equation:
 
 .. math::
     \phi(E) = \phi_0 \cdot \left(\frac{E}{E_0}\right)^{-\Gamma_1}
-              \exp \left( \left(\frac{E_0}{E_{C}} \right)^{\Gamma_2} -
-                          \left(\frac{E}{E_{C}} \right)^{\Gamma_2}
+              \exp \left( \left(\frac{E_0}{E_{\mathrm{C}}} \right)^{\Gamma_2} -
+                          \left(\frac{E}{E_{\mathrm{C}}} \right)^{\Gamma_2}
                           \right)
 """
 
