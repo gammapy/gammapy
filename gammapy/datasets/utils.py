@@ -92,56 +92,6 @@ def apply_edisp(input_map, edisp):
     return Map.from_geom(geom=geom, data=out, unit=input_map.unit)
 
 
-def _edisp_diagonal_mapping(pdf, atol=0.0):
-    """Return diagonal-like mapping for pdf matrix or None.
-
-    For each reco bin j, find the unique true bin i with |pdf[i, j]| > atol,
-    and require that row i has no other non-zero entries. If this holds
-    for all columns, return an array mapping[j] = i (or -1 if column j is zero).
-    Otherwise return None.
-    """
-    n_true, n_reco = pdf.shape
-    nonzero = np.abs(pdf) > atol
-
-    mapping = -np.ones(n_reco, dtype=int)
-
-    for j in range(n_reco):
-        rows = np.nonzero(nonzero[:, j])[0]
-        if rows.size == 0:
-            continue
-        if rows.size > 1:
-            return None
-        i = rows[0]
-        cols_i = np.nonzero(nonzero[i, :])[0]
-        if cols_i.size > 1:
-            return None
-        mapping[j] = i
-
-    return mapping
-
-
-def _apply_edisp_diagonal(input_map, edisp, mapping):
-    """Diagonal-like fast path using a precomputed mapping."""
-    loc = input_map.geom.axes.index("energy_true")
-    data = np.moveaxis(input_map.data, loc, -1)
-
-    pdf = edisp.pdf_matrix
-    n_true = data.shape[-1]
-    n_reco = pdf.shape[1]
-
-    out = np.zeros(data.shape[:-1] + (n_reco,), dtype=data.dtype)
-
-    for j, i in enumerate(mapping):
-        if i < 0 or i >= n_true:
-            continue
-        out[..., j] = data[..., i] * pdf[i, j]
-
-    out = np.moveaxis(out, -1, loc)
-    energy_axis = edisp.axes["energy"].copy(name="energy")
-    geom = input_map.geom.to_image().to_cube([energy_axis])
-    return input_map.__class__(geom=geom, data=out, unit=input_map.unit)
-
-
 def get_figure(fig, width, height):
     import matplotlib.pyplot as plt
 
