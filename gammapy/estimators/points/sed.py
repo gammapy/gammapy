@@ -405,45 +405,54 @@ class FluxCollectionEstimator:
         """Energy axis for the input edges."""
         return MapAxis.from_energy_edges(self.energy_edges, name="energy", interp="log")
 
-    def _prepare_datasets(self, datasets):
-        """define datasets with cached npred models to be renormalized"""
+    def _prepare_dataset(self, dataset, spectral_norm_models):
+        """Build NPredTemplateModel for a given dataset.
 
-        spectral_models = {}
-        for m in self.models:
-            spectral_models[m.name] = PowerLawNormSpectralModel(norm=self.norm.copy())
-            spectral_models[m.name].tilt.frozen = True
+        Create one single template summing all frozen sources and create one template per free source with free norm.
+        """
+        # TODO: can we avoid the deep copy? Does is remove the cached evaluators?
+        fp_dataset = dataset.copy(name=dataset.name)
 
-        fp_datasets = []
-        for d in datasets:
-            fp_dataset = d.copy(name=d.name)
-            bkg_model = self._get_bkg(d)
-            fp_models = []
-            npred_frozen = Map.from_geom(self.geom, dtype=float)
-            for name, ev in d.evaluators.items():
-                if ev.contributes:
-                    npred = Map.from_geom(self.geom, dtype=float)
-                    npred.stack(ev.compute_npred())
-                    if name in Models(self.models).names:
-                        fp_models.append(
-                            TemplateNPredModel(
-                                npred,
-                                name=name + "_" + fp_dataset.name,
-                                spectral_model=spectral_models[name],
-                                datasets_names=[fp_dataset.name],
-                            )
-                        )
-                    else:
-                        npred_frozen.stack(npred)
-            bkg_frozen = TemplateNPredModel(
-                npred_frozen,
-                name="frozen_" + fp_dataset.name,
+        source_names = set(Models(self.models).names)
+        frozen_names = set(dataset._evaluators.keys()) - source_names
+
+        fp_models = []
+        npred_free = dataset.npred_signal(source_names, stack=False)
+        for idx, npred in enumerate(npred_free.split_by_axis("models")):
+            name = npred_free.geom.axes["models"].center[idx]
+            print(name)
+            template_model = TemplateNPredModel(
+                npred,
+                name=name + "_" + fp_dataset.name,
+                spectral_model=spectral_norm_models[name],
                 datasets_names=[fp_dataset.name],
             )
-            bkg_frozen.spectral_model.norm.frozen = True
-            fp_dataset.models = Models(fp_models + [bkg_frozen] + bkg_model)
-            # keep this order such as fp_models parameters appear first in the samples indexing
-            fp_datasets.append(fp_dataset)
-        return Datasets(fp_datasets), spectral_models
+            fp_models.append(template_model)
+
+        npred_frozen = fp_dataset.npred_signal(frozen_names, stack=True)
+        bkg_frozen = TemplateNPredModel(
+            npred_frozen,
+            name="frozen_" + fp_dataset.name,
+            datasets_names=[fp_dataset.name],
+        )
+        bkg_frozen.spectral_model.norm.frozen = True
+
+        bkg_model = self._get_bkg(fp_dataset)
+        fp_dataset.models = Models(fp_models + [bkg_frozen] + bkg_model)
+
+        return fp_dataset
+
+    def _prepare_datasets(self, datasets):
+        """define datasets with cached npred models to be renormalized"""
+        spectral_norm_models = {}
+        for m in self.models:
+            spectral_norm_models[m.name] = PowerLawNormSpectralModel(
+                norm=self.norm.copy()
+            )
+            spectral_norm_models[m.name].tilt.frozen = True
+
+        fp_datasets = [self._prepare_dataset(d, spectral_norm_models) for d in datasets]
+        return Datasets(fp_datasets), spectral_norm_models
 
     def _get_bkg(self, d):
         if d.background_model:
