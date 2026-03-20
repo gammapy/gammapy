@@ -12,9 +12,10 @@ The EBL absorption factor given by
     \exp{ \left ( -\alpha \times \tau(E, z) \right )}
 
 where :math:`\tau(E, z)` is the optical depth predicted by the model
-(`~gammapy.modeling.models.EBLAbsorptionNormSpectralModel`), which depends on the energy of the gamma-rays and the
-redshift z of the source, and :math:`\alpha` is a scale factor
-(default: 1) for the optical depth.
+(`~gammapy.modeling.models.EBLAbsorptionNormSpectralModel`), which depends
+on the energy of the gamma-rays and the
+redshift :math:`z` of the source, and :math:`\alpha` is a scale factor
+(default is 1) for the optical depth.
 
 The available EBL models are defined in `~gammapy.modeling.models.EBL_DATA_BUILTIN`.
 """
