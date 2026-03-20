@@ -420,7 +420,6 @@ class FluxCollectionEstimator:
         npred_free = dataset.npred_signal(source_names, stack=False)
         for idx, npred in enumerate(npred_free.split_by_axis("models")):
             name = npred_free.geom.axes["models"].center[idx]
-            print(name)
             template_model = TemplateNPredModel(
                 npred,
                 name=name + "_" + fp_dataset.name,
@@ -444,15 +443,13 @@ class FluxCollectionEstimator:
 
     def _prepare_datasets(self, datasets):
         """define datasets with cached npred models to be renormalized"""
-        spectral_norm_models = {}
+        norm_models = {}
         for m in self.models:
-            spectral_norm_models[m.name] = PowerLawNormSpectralModel(
-                norm=self.norm.copy()
-            )
-            spectral_norm_models[m.name].tilt.frozen = True
+            norm_models[m.name] = PowerLawNormSpectralModel(norm=self.norm.copy())
+            norm_models[m.name].tilt.frozen = True
 
-        fp_datasets = [self._prepare_dataset(d, spectral_norm_models) for d in datasets]
-        return Datasets(fp_datasets), spectral_norm_models
+        fp_datasets = [self._prepare_dataset(d, norm_models) for d in datasets]
+        return Datasets(fp_datasets), norm_models
 
     def _get_bkg(self, d):
         if d.background_model:
