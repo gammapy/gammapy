@@ -186,6 +186,9 @@ skip-magic-trailing-comma = false
 # Like Black, automatically detect the appropriate line ending.
 line-ending = "auto"
 
+[tool.ruff.lint.isort]
+skip = ["docs/conf.py"]
+
 # Including towncrier to create the changelog
 [tool.towncrier]
 package = "gammapy"
