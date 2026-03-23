@@ -1,18 +1,19 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 
+import matplotlib.pyplot as plt
 import numpy as np
 import astropy.units as u
 from scipy.stats import gaussian_kde, norm
 
 
 def plot_samples_violin_vs_energy(
-    ax,
     energy_edges,
     samples_per_band,
     weights_per_band=None,
-    energy_power=None,
+    energy_power=0,
     bw_method="scott",
     grid_size=200,
+    ax=None,
     errorbar_kwargs=None,
     errorbar_ul_kwargs=None,
     violin_kwargs=None,
@@ -33,8 +34,6 @@ def plot_samples_violin_vs_energy(
 
     Parameters
     ----------
-        ax : `~matplotlib.axes.Axes`, optional
-            Matplotlib axes to draw the violins and error bars. Default is None.
     energy_edges : `~numpy.ndarray` or `~astropy.units.Quantity`
         Monotonically increasing energy bin edges of length ``nbins + 1``.
         Must be positive and finite for log scaling.
@@ -45,12 +44,13 @@ def plot_samples_violin_vs_energy(
         Per-sample weights for each bin, same length as ``samples_per_band``.
         If omitted, uniform weights are assumed.
     energy_power : float, optional
-        Power-law scaling applied as ``E_center**energy_power * flux``.
-        Default is None.
+        Power of energy to multiply y-axis with. Default is 0.
     bw_method : str or float, optional
         Bandwidth selection passed to `~scipy.stats.gaussian_kde`.
     grid_size : int, optional
         Number of evaluation points in log-flux space for the KDE grid.
+    ax : `~matplotlib.axes.Axes`, optional
+        Matplotlib axes to draw the violins and error bars. Default is None.
     errorbar_kwargs : dict, optional
         Keyword arguments forwarded to `~matplotlib.pyplot.errorbar` for the quantile bars.
     errorbar_ul_kwargs : dict, optional
@@ -66,9 +66,8 @@ def plot_samples_violin_vs_energy(
 
     Returns
     -------
-    artists : list
-        A list of Matplotlib artists corresponding to the violin polygons
-        and error-bar elements added to the axes.
+    ax : `~matplotlib.axes.Axes`
+        Matplotlib axes.
 
     Notes
     -----
@@ -84,8 +83,10 @@ def plot_samples_violin_vs_energy(
       weighted percentiles of the *unclipped* samples, unless the median
       is non-positive, in which case an upper limit marker is drawn
       at the 98% percentile. For a gaussian distribution these values corresponds to
-      1σ errors and 2σ upper limit plotted by default by the `FluxPoints.plot` method.
+      1σ errors and 2σ upper limit plotted by default by the `~gammapy.estimators.FluxPoints.plot` method.
     """
+
+    ax = ax or plt.gca()
 
     # Axis scaling
     ax.set_xscale("log")
@@ -221,7 +222,7 @@ def plot_samples_violin_vs_energy(
     else:
         ax.set_ylabel(f"{y_label} [{unit_y}]")
 
-    return artists
+    return ax
 
 
 def _validate_inputs(samples_per_band, weights_per_band, nbins):
