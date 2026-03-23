@@ -1,0 +1,1 @@
+Add `~gammapy.visualization.plot_samples_violin_vs_energy` to create a violin plot from samples of a given quantity as a function of energy.`
