@@ -2,5 +2,7 @@
 
 .. _gammapy_2p2_release:
 
-2.2 (September, 2026)
-======================
+2.2 (Unreleased)
+================
+
+No changes yet
