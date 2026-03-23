@@ -3,7 +3,7 @@ import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
 from astropy.io import fits
-from gammapy.irf import EDispKernel
+from gammapy.irf import EDispKernel, load_irf_dict_from_file
 from gammapy.maps import MapAxis
 from gammapy.utils.testing import mpl_plot_check, requires_data
 
@@ -128,3 +128,18 @@ def test_io_ogip_checksum(tmp_path):
 
     edisp_2 = fits.open(path, checksum=True)
     assert edisp_2[1].header["HDUCLASS"], "OGIP"
+
+
+@requires_data()
+def test_edisp_extrapolation():
+    irfs = load_irf_dict_from_file(
+        "$GAMMAPY_DATA/cta-caldb/Prod5-North-20deg-AverageAz-4LSTs09MSTs.180000s-v0.1.fits.gz"
+    )
+    edisp = irfs["edisp"]
+    edisp_kernel = edisp.to_edisp_kernel(1 * u.deg)
+
+    # check for artefacts outside the migra range
+    i, j = np.indices((300, 300))
+    diag_mask = np.abs(i - j) <= 30
+
+    assert_allclose(edisp_kernel.pdf_matrix[~diag_mask], 0, atol=1e-20)
