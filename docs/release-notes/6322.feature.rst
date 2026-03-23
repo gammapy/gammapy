@@ -1,0 +1,1 @@
+Add a new `~gammapy.estimators.FluxCollectionEstimator` that enables the computation of flux points or flux samples jointly for a group of sources.

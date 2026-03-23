@@ -73,6 +73,24 @@ def map_datasets():
     return map_datasets
 
 
+@pytest.fixture(scope="session")
+def heterogenous_map_datasets():
+    axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=2)
+    geom = WcsGeom.create(skydir=(266.0, -28.0), binsz=0.05, width=(2, 2), axes=[axis])
+    geom2 = WcsGeom.create(skydir=(266.0, -28.1), binsz=0.05, width=(2, 2), axes=[axis])
+
+    axis = MapAxis.from_energy_bounds("0.1 TeV", "10 TeV", nbin=3, name="energy_true")
+    geom_etrue = geom.to_image().to_cube([axis])
+
+    dataset_1 = get_map_dataset(geom, geom_etrue, name="test-1")
+    dataset_2 = get_map_dataset(geom2, geom_etrue, name="test-2")
+    dataset_3 = dataset_1.copy()
+    dataset_4 = dataset_2.copy()
+    dataset_3.counts = None
+    dataset_4.counts = None
+    return Datasets([dataset_1, dataset_2, dataset_3, dataset_4])
+
+
 def test_datasets_init(datasets):
     # Passing a Python list of `Dataset` objects should work
     Datasets(list(datasets))
@@ -232,6 +250,9 @@ def test_datasets_write(map_datasets, tmp_path):
             overwrite=False,
         )
 
+    with pytest.raises(ValueError, match="The filename is not defined."):
+        datasets.write(filename=None)
+
 
 @requires_data()
 def test_datasets_fit(map_datasets):
@@ -262,3 +283,17 @@ def test_add_datasets(datasets):
 
     with pytest.raises(TypeError):
         datasets + tmp
+
+
+@requires_data()
+def test_is_all_same_geom(map_datasets):
+    assert map_datasets.is_all_same_geom
+
+
+@requires_data()
+def test_is_all_same_geom_false(heterogenous_map_datasets):
+    assert not heterogenous_map_datasets.is_all_same_geom
+    # Different counts geometries
+    assert not Datasets(heterogenous_map_datasets[:2]).is_all_same_geom
+    # No counts maps but different background map geometries
+    assert not Datasets(heterogenous_map_datasets[2:]).is_all_same_geom

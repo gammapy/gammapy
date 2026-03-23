@@ -38,6 +38,9 @@ def test_read_write_yaml_checksum(tmp_path):
     path = make_path(tmp_path / "test.yaml")
     write_yaml(data, path, sort_keys=False, checksum=True)
 
+    with pytest.raises(ValueError, match="The filename is not defined."):
+        write_yaml(data, None)
+
     yaml_content = path.read_text()
     assert "checksum: " in yaml_content
 
@@ -58,6 +61,9 @@ def test_read_write_yaml_checksum(tmp_path):
 
     with pytest.warns(UserWarning):
         read_yaml(bad, checksum=True)
+
+    with pytest.raises(ValueError, match="The filename is not defined."):
+        read_yaml(None)
 
 
 def test_requires_module():

@@ -21,6 +21,7 @@ from gammapy.utils.array import shape_2N, symmetric_crop_pad_width
 from gammapy.utils.compilation import get_fit_statistics_compiled
 from gammapy.utils.pbar import progress_bar
 from gammapy.utils.roots import find_roots
+from gammapy.utils.deprecation import deprecated_renamed_argument
 
 from ..core import Estimator
 from ..utils import (
@@ -70,11 +71,18 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
     The main output of this estimator is a `~gammapy.estimators.FluxMaps` object, which provides
     access to all computed quantities (see the example below and the `TSMapEstimator.run` function).
 
+    .. note::
+
+       The TS is computed after accounting for all models set on the datasets. Therefore,
+       to compute the TS of a source_x, all sky models must be set,
+       except the one corresponding to source_x.
+
+
     Parameters
     ----------
-    model : `~gammapy.modeling.models.SkyModel`, optional
-        Source model kernel. If set to None,
-        the assumes spatial model is `~gammapy.modeling.models.PointSpatialModel` and the
+    kernel_model : `~gammapy.modeling.models.SkyModel`, optional
+        Source kernel model. If set to None,
+        the assumed spatial model is `~gammapy.modeling.models.PointSpatialModel` and the
         spectral model is `~gammapy.modeling.models.PowerLawSpectralModel` with an index of 2.
         Default is None.
     kernel_width : `~astropy.coordinates.Angle`, optional
@@ -160,10 +168,10 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
     >>> from gammapy.modeling.models import (SkyModel, PowerLawSpectralModel,PointSpatialModel)
     >>> spatial_model = PointSpatialModel()
     >>> spectral_model = PowerLawSpectralModel(amplitude="1e-22 cm-2 s-1 keV-1", index=2)
-    >>> model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
+    >>> kernel_model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
     >>> dataset = MapDataset.read("$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc.fits.gz")
     >>> estimator = TSMapEstimator(
-    ...            model, kernel_width="1 deg", energy_edges=[10, 100] * u.GeV, downsampling_factor=4
+    ...            kernel_model, kernel_width="1 deg", energy_edges=[10, 100] * u.GeV, downsampling_factor=4
     ...        )
     >>> maps = estimator.run(dataset)
     >>> print(maps)
@@ -186,9 +194,10 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
     tag = "TSMapEstimator"
     _available_selection_optional = ["errn-errp", "ul", "stat_scan", "sensitivity"]
 
+    @deprecated_renamed_argument("model", "kernel_model", "2.1")
     def __init__(
         self,
-        model=None,
+        kernel_model=None,
         kernel_width=None,
         downsampling_factor=None,
         n_sigma=1,
@@ -209,16 +218,18 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
         self.kernel_width = kernel_width
 
-        self.norm = _get_default_norm(norm, scan_values=_generate_scan_values())
+        self.norm = _get_default_norm(
+            norm, scan_values=_generate_scan_values(), interp="log"
+        )
 
-        if model is None:
-            model = SkyModel(
+        if kernel_model is None:
+            kernel_model = SkyModel(
                 spectral_model=PowerLawSpectralModel(),
                 spatial_model=PointSpatialModel(),
                 name="ts-kernel",
             )
 
-        self.model = model
+        self.kernel_model = kernel_model
         self.downsampling_factor = downsampling_factor
         self.n_sigma = n_sigma
         self.n_sigma_ul = n_sigma_ul
@@ -297,8 +308,8 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         if self.kernel_width is not None:
             geom = geom.to_odd_npix(max_radius=self.kernel_width / 2)
 
-        model = self.model.copy()
-        model.spatial_model.position = geom.center_skydir
+        kernel_model = self.kernel_model.copy()
+        kernel_model.spatial_model.position = geom.center_skydir
 
         # Creating exposure map with the mean non-null exposure
         exposure = Map.from_geom(geom, unit=dataset.exposure.unit)
@@ -313,7 +324,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         exposure.data[...] = exposure_position.data
 
         # We use global evaluation mode to not modify the geometry
-        evaluator = MapEvaluator(model=model)
+        evaluator = MapEvaluator(model=kernel_model)
 
         evaluator.update(
             exposure=exposure,
@@ -324,7 +335,10 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         )
 
         kernel = evaluator.compute_npred()
-        kernel.data /= kernel.data.sum()
+
+        with np.errstate(invalid="ignore", divide="ignore"):
+            kernel.data /= kernel.data.sum(axis=(1, 2))[:, None, None]
+            kernel.data[~np.isfinite(kernel.data)] = 0
         return kernel
 
     def estimate_flux_default(self, dataset, kernel=None, exposure=None):
@@ -345,7 +359,9 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
             Approximate flux map.
         """
         if exposure is None:
-            exposure = estimate_exposure_reco_energy(dataset, self.model.spectral_model)
+            exposure = estimate_exposure_reco_energy(
+                dataset, self.kernel_model.spectral_model
+            )
 
         if kernel is None:
             kernel = self.estimate_kernel(dataset=dataset)
@@ -429,7 +445,12 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         """
         # First create 2D map arrays
 
-        exposure = estimate_exposure_reco_energy(dataset, self.model.spectral_model)
+        exposure = estimate_exposure_reco_energy(
+            dataset, self.kernel_model.spectral_model, normalize=True
+        )
+        exposure_npred = estimate_exposure_reco_energy(
+            dataset, self.kernel_model.spectral_model, normalize=False
+        )
 
         kernel = self.estimate_kernel(dataset)
 
@@ -441,15 +462,14 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
         counts = dataset.counts * mask
         background = dataset.npred() * mask
-        exposure *= mask
+        exposure_npred *= mask
 
         energy_axis = counts.geom.axes["energy"]
 
-        flux_ref = self.model.spectral_model.integral(
+        flux_ref = self.kernel_model.spectral_model.integral(
             energy_axis.edges[0], energy_axis.edges[-1]
         )
 
-        exposure_npred = (exposure * flux_ref).to_unit("")
         norm = (flux / flux_ref).to_unit("")
 
         if self.sum_over_energy_groups:
@@ -527,7 +547,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
         geom = maps[0]["counts"].geom.squash(axis_name="energy")
         energy_axis = geom.axes["energy"]
-        dnde_ref = self.model.spectral_model(energy_axis.center)
+        dnde_ref = self.kernel_model.spectral_model(energy_axis.center)
 
         for name in self.selection_all:
             if name in ["dnde_scan_values", "stat_scan"]:
@@ -658,7 +678,7 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         meta = {"n_sigma": self.n_sigma, "n_sigma_ul": self.n_sigma_ul}
         return FluxMaps(
             data=maps,
-            reference_model=self.model,
+            reference_model=self.kernel_model,
             gti=dataset.gti,
             meta=meta,
         )
@@ -792,7 +812,7 @@ class BrentqFluxEstimator(Estimator):
         # Compute norm bounds and assert counts > 0
         norm_min, norm_max, norm_min_total = dataset.norm_bounds
 
-        if dataset.counts.sum() <= 0:
+        if dataset.counts.sum() <= 0 or dataset.model.sum() <= 0:
             norm, niter, success = norm_min_total, 0, True
 
         else:

@@ -236,6 +236,11 @@ class Datasets(collections.abc.MutableSequence):
         return np.all([axes[0].is_aligned(ax) for ax in axes])
 
     @property
+    def is_all_same_geom(self):
+        """Whether all contained datasets share the same geometry."""
+        return all(_._geom == self[0]._geom for _ in self[1:])
+
+    @property
     def contributes_to_stat(self):
         """Stat contributions.
 
@@ -493,6 +498,8 @@ class Datasets(collections.abc.MutableSequence):
             When True adds both DATASUM and CHECKSUM cards to the headers written to the FITS files.
             Default is True.
         """
+        if filename is None:
+            raise ValueError("The filename is not defined.")
         path = make_path(filename)
 
         data = {"datasets": []}
