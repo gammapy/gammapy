@@ -1,7 +1,48 @@
+.. include:: ../references.txt
+
 .. _gammapy_2p1_release:
 
-2.1 (unreleased)
-----------------
+2.1 (23rd March, 2026)
+======================
+- Released xxrd March, 2026
+- 63 pull requests
+- 16 closed issues
+- 22 unique contributors
 
 
-- No changes yet
+Summary
+-------
+
+Gammapy v2.1 is the first feature release since LTS v2.0.
+This release includes a number of new features, bug fixes, infrastructural changes and documentation improvements.
+Notable new features include support of multiparametric priors and improved support for Bayesian inferecing.
+Please see below for full feature list.
+
+
+
+
+Contributors
+------------
+- Anshita Dubey
+- Arnau Aguasca-Cabot
+- Atreyee Sinha
+- Axel Donath
+- Bruno Khélifi
+- Daniel Morcuende
+- Ebraam Ashraf
+- Fabio Acero
+- Fabio PINTORE
+- Gabriel Emery
+- Kirsty Feijen
+- Leander Schlegel
+- Marie-Sophie Carrasco
+- Mireia Nievas-Rosillo
+- Natthan Pigoux
+- Quentin Remy
+- Régis Terrier
+- Stefan Fröse
+- Thomas Vuillaume
+- Tomas Bylund
+- Tora T. H. Arnesen
+- Alexander Cerviño Cortínez
+- Yaocheng Chen
