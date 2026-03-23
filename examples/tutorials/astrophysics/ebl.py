@@ -58,6 +58,9 @@ print(dataset)
 
 
 ######################################################################
+#
+# .. _model-absorption:
+#
 # Model the observed spectrum
 # ---------------------------
 #
@@ -84,7 +87,6 @@ print(EBL_DATA_BUILTIN.keys())
 
 ######################################################################
 # Define the power law
-#
 index = 2.3
 amplitude = 1.81 * 1e-12 * u.Unit("cm-2 s-1 TeV-1")
 reference = 1 * u.TeV
@@ -191,11 +193,13 @@ plt.show()
 #
 # To use a custom EBL model, you have different options:
 #
-# You can save the optical depth as a function of energy and redshift
-# in the format proposed by the XSPEC table models (see `here <https://heasarc.gsfc.nasa.gov/docs/heasarc/ofwg/docs/summary/ogip_92_009_summary.html>`_).
-# You can also check the model fits files in `$GAMMAPY_DATA/ebl/ <https://github.com/gammapy/gammapy-data/tree/main/ebl>`_ for examples.
+# * Use the XSPEC table model format and read in the EBL model
+# * Use the `~gammapy.modeling.models.TemplateNDSpectralModel` to define your EBL model
 #
-# To read in a custom EBL model, use the `~gammapy.modeling.models.EBLAbsorptionNormSpectralModel.read()` method.
+# If you save the optical depth as a function of energy and redshift
+# in the format proposed by the XSPEC table models (see `here <https://heasarc.gsfc.nasa.gov/docs/heasarc/ofwg/docs/summary/ogip_92_009_summary.html>`_,
+# or check the model fits files in `$GAMMAPY_DATA/ebl/ <https://github.com/gammapy/gammapy-data/tree/main/ebl>`_ for examples),
+# you can read in your custom EBL model using the `~gammapy.modeling.models.EBLAbsorptionNormSpectralModel.read()` method.
 
 filename = "$GAMMAPY_DATA/ebl/ebl_dominguez11.fits.gz"
 absorption_custom = EBLAbsorptionNormSpectralModel.read(filename, redshift=redshift)
@@ -205,48 +209,33 @@ print(absorption_custom)
 # Or you can create `~gammapy.modeling.models.TemplateNDSpectralModel` from your data.
 #
 # To create your own models, you must have the optical depth tabulated as a function of gamma-ray energy and redshift.
-# In this example, we create a toy model with 10 bins in energy (`energies_toymodel`) and 3 bins in redshift (`redshifts_toymodel`).
+# In this example, we create a toy model with 5 bins in energy (`energies_toymodel`) and 3 bins in redshift (`redshifts_toymodel=[0.1,0.3,0.5]`).
 
 ebl_abs_dict_toymodel = {
     0.1: [
         0.98033076,
-        0.89441662,
         0.63278539,
-        0.34641156,
         0.22098954,
-        0.12568629,
         0.024528508,
-        3.6312218e-8,
         1.175492e-38,
-        1.1754907e-38,
     ],
     0.3: [
         0.91439042,
-        0.62265147,
         0.17481028,
-        0.025712425,
         0.0064894828,
-        0.00065273359,
         1.0083145e-7,
-        1.1754939e-38,
-        1.1754907e-38,
         1.1754907e-38,
     ],
     0.5: [
         0.81180396,
-        0.35624504,
         0.032063942,
-        0.0013128846,
         0.00010244388,
-        6.1055654e-7,
         5.5373134e-19,
-        1.1754907e-38,
-        1.1754907e-38,
         1.1754907e-38,
     ],
 }
 redshifts_toymodel = [key for key in ebl_abs_dict_toymodel]
-energies_toymodel = np.logspace(-1, 2, 10) * u.TeV
+energies_toymodel = np.logspace(-1, 2, 5) * u.TeV
 
 
 ######################################################################
@@ -290,7 +279,7 @@ print(absorption_toymodel)
 
 
 ######################################################################
-# This `absorption_toymodel` can now be used in the same way as the `absorption` model defined above.
+# This `absorption_toymodel` can now be used in the same way as the `absorption` model defined :ref:`here <model-absorption>`
 #
 #
 # To write and read your toymodel, you can use the `~gammapy.modeling.models.TemplateNDSpectralModel.write()`
