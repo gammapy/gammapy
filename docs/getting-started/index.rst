@@ -17,49 +17,38 @@ Getting started
 Installation
 ------------
 
-There are various ways for users to install Gammapy. **We recommend setting up a virtual
-environment using either conda**
-(with `Miniconda, Anaconda or Miniforge <https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html>`__)
-**or mamba** (see `this link <https://mamba.readthedocs.io/en/latest/installation/mamba-installation.html>`__).
-For certain working environments (e.g. ESO, DESY, CEA, MPIK),
-`miniforge <https://github.com/conda-forge/miniforge>`__ is recommended to use conda/mamba without trouble.
-Then, there are two methods to quickly install Gammapy.
+There are various ways for users to install Gammapy.
 
-.. grid:: 1 2 2 2
-    :gutter: 2
+.. tab-set::
 
-    .. grid-item-card:: Working with conda/mamba?
-
-        Gammapy can be installed via conda from the `Gammapy conda-forge <https://anaconda.org/conda-forge/gammapy>`__
-        repository:
-
-        .. code-block:: bash
-
-            conda install -c conda-forge gammapy
-
-    .. grid-item-card:: Prefer pip?
-
-        Gammapy can be installed via pip from `PyPI <https://pypi.org/project/gammapy/>`__.
+    .. tab-item:: pip
 
         .. code-block:: bash
 
             pip install gammapy
 
-    .. grid-item-card:: In-depth instructions?
-        :columns: 12
+    .. tab-item:: conda
 
-        Update existing version? Working with virtual environments? Installing a specific version? Check the advanced
-        installation page.
+        .. code-block:: bash
 
-        +++
+            conda install -c conda-forge gammapy  # or mamba install -c conda-forge gammapy
 
-        .. button-ref:: installation
-            :ref-type: ref
-            :click-parent:
-            :color: secondary
-            :expand:
+    .. tab-item:: uv
 
-            Learn more
+        .. code-block:: bash
+
+            uv add gammapy
+
+    .. tab-item:: pixi
+
+        .. code-block:: bash
+
+            pixi add gammapy
+
+    .. tab-item:: In-depth instructions
+
+        Starting a fresh installation? Updating an existing version? Working with project-based environments?
+        Check the :ref:`installation` page for in-depth instructions.
 
 
 .. include:: quickstart.rst
