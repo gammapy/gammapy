@@ -19,7 +19,7 @@ from gammapy.modeling.selection import BayesianModelSelection
 def alternative_models():
     alternative_models = {}
     model_type = "lp"
-    prior_types = ["uniformative", "strong"]
+    prior_types = ["uninformative", "strong"]
 
     for prior_type in prior_types:
         model_name = f"{model_type}({prior_type})"
@@ -28,7 +28,7 @@ def alternative_models():
         model.spectral_model.alpha.frozen = True
         model.spectral_model.beta.frozen = True
 
-        if "uniformative" in prior_type:
+        if "uninformative" in prior_type:
             model.spectral_model.amplitude.prior = LogUniformPrior(min=1e-14, max=1e-8)
 
         elif "strong" in prior_type:
@@ -67,7 +67,7 @@ def bms_results(alternative_models):
 @requires_data()
 @requires_dependency("arviz")
 def test_bayesian_model_selection(bms_results):
-    inference_result = bms_results["lp(uniformative)"]
+    inference_result = bms_results["lp(uninformative)"]
     assert "Statistics summary in deviance scale" in str(inference_result)
 
     assert_allclose(inference_result.elpd_loo.elpd_loo, 218.91, rtol=1e-1)
@@ -87,10 +87,10 @@ def test_bayesian_model_selection(bms_results):
 
     stats_table = bms_results.stats_table()
     assert_allclose(stats_table["-2logl"], 216.356, rtol=1e-1)
-    assert bms_results["lp(uniformative)"].logz < bms_results["lp(strong)"].logz
+    assert bms_results["lp(uninformative)"].logz < bms_results["lp(strong)"].logz
 
-    table = bms_results.stats_difference_table("lp(uniformative)")
-    test_str = "H0: lp(uniformative) - H1: lp(strong)"
+    table = bms_results.stats_difference_table("lp(uninformative)")
+    test_str = "H0: lp(uninformative) - H1: lp(strong)"
     assert table["Model (prior)"][0] == test_str
     assert_allclose(table["-2logl"], 0, atol=1e-5)
 
@@ -100,6 +100,6 @@ def test_bayesian_model_selection(bms_results):
 @requires_dependency("arviz")
 def test_prior_sensitivity_table(bms_results):
     bms_results.prior_sensitivity_table()
-    psense = bms_results["lp(uniformative)"].prior_sensitivity_table()
+    psense = bms_results["lp(uninformative)"].prior_sensitivity_table()
     assert_allclose(psense.prior.amplitude, 0.01, rtol=5e-1)
     assert_allclose(psense.likelihood.amplitude, 0.097, rtol=5e-1)
