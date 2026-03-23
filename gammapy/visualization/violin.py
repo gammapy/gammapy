@@ -19,8 +19,7 @@ def plot_samples_violin_vs_energy(
     violin_clip=None,
     y_label="dN/dE",
 ):
-    """
-    Plot flux-sample violin distributions per energy bin on log–log axes.
+    """Plot sample violin distributions per energy bin on log–log axes.
     Unlike standard error bars which only shows summary statistics,
     a violin plot shows the full probability density for each energy bin.
 
@@ -34,31 +33,30 @@ def plot_samples_violin_vs_energy(
 
     Parameters
     ----------
-    ax : `matplotlib.axes.Axes`
-        Axes object on which to draw the violins and error bars.
-    energy_edges : array-like or `~astropy.units.Quantity`
+        ax : `~matplotlib.axes.Axes`, optional
+            Matplotlib axes to draw the violins and error bars. Default is None.
+    energy_edges : `~numpy.ndarray` or `~astropy.units.Quantity`
         Monotonically increasing energy bin edges of length ``nbins + 1``.
         Must be positive and finite for log scaling.
     samples_per_band : list of `~astropy.units.Quantity`
         List of sample arrays, one per energy bin. Each array contains
         draws from the flux posterior (or other distribution) in that bin.
-    weights_per_band : list of array-like, optional
+    weights_per_band : list of `~numpy.ndarray`, optional
         Per-sample weights for each bin, same length as ``samples_per_band``.
-        If omitted, uniform weights are assumed. Requires NumPy ≥ 2.0 for
-        percentile computation with weights.
+        If omitted, uniform weights are assumed.
     energy_power : float, optional
         Power-law scaling applied as ``E_center**energy_power * flux``.
         Default is None.
     bw_method : str or float, optional
-        Bandwidth selection passed to ``scipy.stats.gaussian_kde``.
+        Bandwidth selection passed to `~scipy.stats.gaussian_kde`.
     grid_size : int, optional
         Number of evaluation points in log-flux space for the KDE grid.
     errorbar_kwargs : dict, optional
-        Keyword arguments forwarded to ``ax.errorbar`` for the quantile bars.
+        Keyword arguments forwarded to `~matplotlib.pyplot.errorbar` for the quantile bars.
     errorbar_ul_kwargs : dict, optional
-        Keyword arguments forwarded to ``ax.errorbar`` for the ul bars.
+        Keyword arguments forwarded to `~matplotlib.pyplot.errorbar` for the upper limit bars.
     violin_kwargs : dict, optional
-        Keyword arguments forwarded to ``ax.fill`` for violin plot.
+        Keyword arguments forwarded to `~matplotlib.axes.Axes.fill` for violin plot.
     violin_clip : (float, float), optional
         Lower and upper containment fractions (in [0, 1]) used to clip
         the violin tails in log-space. If omitted, defaults to
@@ -114,8 +112,7 @@ def plot_samples_violin_vs_energy(
         raise ValueError("violin_clip must satisfy 0 <= low < high <= 1.")
 
     # Errorbar styles
-    if errorbar_kwargs is None:
-        errorbar_kwargs = dict()
+    errorbar_kwargs = errorbar_kwargs or {}
     errorbar_kwargs_defaults = dict(
         marker="o",
         ms=4.5,
@@ -129,8 +126,7 @@ def plot_samples_violin_vs_energy(
     for key in errorbar_kwargs_defaults.keys():
         errorbar_kwargs.setdefault(key, errorbar_kwargs_defaults[key])
 
-    if errorbar_ul_kwargs is None:
-        errorbar_ul_kwargs = dict()
+    errorbar_ul_kwargs = errorbar_ul_kwargs or {}
     errorbar_ul_kwargs_defaults = dict(
         marker="v",
         ms=7,
