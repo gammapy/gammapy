@@ -109,21 +109,22 @@ class BayesianModelSelectionResult:
 
         This table contains a set of information criteria and diagnostics used to
         evaluate and compare statistical models. The columns are defined as follows:
-        
-            * Model (prior) : the model identifier, including its prior specification.
-            * -2logz : negative twice the log Bayesian evidence.
-            * -2logl : negative twice the maximum log-likelihood.
-            * AIC : Akaike Information Criterion.
-            * elpd (waic) : expected log predictive density estimated via WAIC.
-            * elpd (loo) : expected log predictive density estimated via LOO-CV.
-            * dof : estimated number of effective degrees of freedom.
-            * waic eff. dof : effective number of parameters computed from WAIC.
-            * loo eff. dof : effective number of parameters computed from LOO.
-            * logz error : uncertainty on the log Bayesian evidence.
-            * elpd error (waic) : standard error of the WAIC-based ELPD estimate.
-            * elpd error (loo) : standard error of the LOO-based ELPD estimate.
-            * good Pareto k fraction : fraction of pixels with Pareto k ≤ 0.7,
-              indicating reliable LOO estimates.
+
+        * Model (prior) : the model identifier, including its prior specification.
+        * -2logz : negative twice the log Bayesian evidence.
+        * -2logl : negative twice the maximum log-likelihood.
+        * AIC : Akaike Information Criterion.
+        * elpd (waic) : expected log predictive density estimated via WAIC.
+        * elpd (loo) : expected log predictive density estimated via LOO-CV.
+        * dof : estimated number of effective degrees of freedom.
+        * waic eff. dof : effective number of parameters computed from WAIC.
+        * loo eff. dof : effective number of parameters computed from LOO.
+        * logz error : uncertainty on the log Bayesian evidence.
+        * elpd error (waic) : standard error of the WAIC-based ELPD estimate.
+        * elpd error (loo) : standard error of the LOO-based ELPD estimate.
+        * good Pareto k fraction : fraction of pixels with Pareto k ≤ 0.7,
+          indicating reliable LOO estimates.
+
         Parameters
         ----------
         format : str, optional
@@ -146,16 +147,17 @@ class BayesianModelSelectionResult:
 
         This table contains a set of information criteria and diagnostics used to
         evaluate and compare statistical models. The columns are defined as follows:
-        
-            * Model (prior) : the model identifier, including its prior specification.
-            * -2logz : negative twice the log Bayesian evidence.
-            * -2logl : negative twice the maximum log-likelihood.
-            * AIC : Akaike Information Criterion.
-            * elpd (waic) : expected log predictive density estimated via WAIC.
-            * elpd (loo) : expected log predictive density estimated via LOO-CV.
-            * dof : estimated number of effective degrees of freedom.
-            * waic eff. dof : effective number of parameters computed from WAIC.
-            * loo eff. dof : effective number of parameters computed from LOO.
+
+        * Model (prior) : the model identifier, including its prior specification.
+        * -2logz : negative twice the log Bayesian evidence.
+        * -2logl : negative twice the maximum log-likelihood.
+        * AIC : Akaike Information Criterion.
+        * elpd (waic) : expected log predictive density estimated via WAIC.
+        * elpd (loo) : expected log predictive density estimated via LOO-CV.
+        * dof : estimated number of effective degrees of freedom.
+        * waic eff. dof : effective number of parameters computed from WAIC.
+        * loo eff. dof : effective number of parameters computed from LOO.
+
         Parameters
         ----------
         reference_models_name : str
@@ -390,21 +392,21 @@ class InferenceResult:
 
         This table contains a set of information criteria and diagnostics used to
         evaluate and compare statistical models. The columns are defined as follows:
-        
-            * Model (prior) : the model identifier, including its prior specification.
-            * -2logz : negative twice the log Bayesian evidence.
-            * -2logl : negative twice the maximum log-likelihood.
-            * AIC : Akaike Information Criterion.
-            * elpd (waic) : expected log predictive density estimated via WAIC.
-            * elpd (loo) : expected log predictive density estimated via LOO-CV.
-            * dof : estimated number of effective degrees of freedom.
-            * waic eff. dof : effective number of parameters computed from WAIC.
-            * loo eff. dof : effective number of parameters computed from LOO.
-            * logz error : uncertainty on the log Bayesian evidence.
-            * elpd error (waic) : standard error of the WAIC-based ELPD estimate.
-            * elpd error (loo) : standard error of the LOO-based ELPD estimate.
-            * good Pareto k fraction : fraction of pixels with Pareto k ≤ 0.7,
-              indicating reliable LOO estimates.
+
+        * Model (prior) : the model identifier, including its prior specification.
+        * -2logz : negative twice the log Bayesian evidence.
+        * -2logl : negative twice the maximum log-likelihood.
+        * AIC : Akaike Information Criterion.
+        * elpd (waic) : expected log predictive density estimated via WAIC.
+        * elpd (loo) : expected log predictive density estimated via LOO-CV.
+        * dof : estimated number of effective degrees of freedom.
+        * waic eff. dof : effective number of parameters computed from WAIC.
+        * loo eff. dof : effective number of parameters computed from LOO.
+        * logz error : uncertainty on the log Bayesian evidence.
+        * elpd error (waic) : standard error of the WAIC-based ELPD estimate.
+        * elpd error (loo) : standard error of the LOO-based ELPD estimate.
+        * good Pareto k fraction : fraction of pixels with Pareto k ≤ 0.7,
+          indicating reliable LOO estimates.
 
 
         Parameters
