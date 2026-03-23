@@ -1,0 +1,1 @@
+Add GTI to datasets created by `~gammapy.datasets.FermipyDatasetsReader`.

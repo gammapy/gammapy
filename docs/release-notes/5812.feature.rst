@@ -1,0 +1,1 @@
+Switch default SpectrumDataset write/read format to gadf instead of ogip (for better preservation of masks)
