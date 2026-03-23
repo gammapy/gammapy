@@ -1,1 +1,0 @@
-Fixed the incorrect brackets in the error calculation for `~gammapy.stats.compute_flux_doubling`.
