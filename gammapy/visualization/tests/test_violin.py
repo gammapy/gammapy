@@ -3,8 +3,6 @@
 import pytest
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.artist import Artist
-from matplotlib.container import ErrorbarContainer
 import astropy.units as u
 
 from gammapy.visualization.violin import plot_samples_violin_vs_energy
@@ -114,7 +112,7 @@ def test_plot_samples_violin_vs_energy_minimal():
 
     fig, ax = plt.subplots()
 
-    artists = plot_samples_violin_vs_energy(
+    ax = plot_samples_violin_vs_energy(
         ax=ax,
         energy_edges=energy_edges,
         samples_per_band=samples_per_band,
@@ -126,10 +124,7 @@ def test_plot_samples_violin_vs_energy_minimal():
         y_label="dN/dE",
     )
 
-    assert isinstance(artists, list)
-    assert len(artists) > 0
-
-    assert all(isinstance(a, (Artist, ErrorbarContainer)) for a in artists)
+    assert len(ax.lines) > 0
 
     assert ax.get_xscale() == "log"
     assert ax.get_yscale() == "log"
@@ -146,12 +141,14 @@ def test_plot_samples_violin_vs_energy_empty_weights_ok():
 
     fig, ax = plt.subplots()
 
-    artists = plot_samples_violin_vs_energy(
-        ax, energy_edges, samples_per_band, weights_per_band
+    ax = plot_samples_violin_vs_energy(
+        ax=ax,
+        energy_edges=energy_edges,
+        samples_per_band=samples_per_band,
+        weights_per_band=weights_per_band,
     )
 
-    assert isinstance(artists, list)
-    assert len(artists) == 0
+    assert len(ax.lines) == 0
     plt.close(fig)
 
 
@@ -173,7 +170,7 @@ def test_plot_samples_violin_vs_energy_no_weights():
         edgecolor="black",
         lw=1.0,
     )
-    artists = plot_samples_violin_vs_energy(
+    ax = plot_samples_violin_vs_energy(
         ax=ax,
         energy_edges=energy_edges,
         samples_per_band=samples_per_band,
@@ -185,10 +182,7 @@ def test_plot_samples_violin_vs_energy_no_weights():
         y_label="dN/dE",
     )
 
-    assert isinstance(artists, list)
-    assert len(artists) > 0
-
-    assert all(isinstance(a, (Artist, ErrorbarContainer)) for a in artists)
+    assert len(ax.lines) > 0
 
     assert ax.get_xscale() == "log"
     assert ax.get_yscale() == "log"

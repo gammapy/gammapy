@@ -63,6 +63,7 @@ def plot_samples_violin_vs_energy(
         ``(norm.cdf(-4), norm.cdf(4))``.
     y_label : str, optional
         Base label for the y-axis, before unit and scaling prefixes.
+        Default is "dN/dE".
 
     Returns
     -------
@@ -163,8 +164,6 @@ def plot_samples_violin_vs_energy(
     centers = 0.5 * (xlog_min + xlog_max)
     halfwidths = 0.5 * (xlog_max - xlog_min) * 0.99
 
-    artists = []
-
     for samples, weights, xlog_c, hwlog, emin, emax in zip(
         samples_per_band, weights_per_band, centers, halfwidths, emins, emaxs
     ):
@@ -194,22 +193,20 @@ def plot_samples_violin_vs_energy(
             ygrid_log, dens = grid_full, dens_full
 
         # violin polygon
-        artists.extend(_draw_violin(ax, xlog_c, hwlog, ygrid_log, dens, violin_kwargs))
+        _draw_violin(ax, xlog_c, hwlog, ygrid_log, dens, violin_kwargs)
 
         # quantile bars
-        artists.append(
-            _draw_errorbar(
-                ax,
-                xlog_c,
-                emin,
-                emax,
-                samples,
-                weights,
-                quantiles,
-                scale,
-                errorbar_kwargs,
-                errorbar_ul_kwargs,
-            )
+        _draw_errorbar(
+            ax,
+            xlog_c,
+            emin,
+            emax,
+            samples,
+            weights,
+            quantiles,
+            scale,
+            errorbar_kwargs,
+            errorbar_ul_kwargs,
         )
 
     # Labels
