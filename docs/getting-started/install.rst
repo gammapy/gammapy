@@ -14,13 +14,13 @@ scientific analysis results**. You can also :ref:`install Gammapy for developmen
 
 .. _anaconda:
 
-Using Anaconda / Miniconda
---------------------------
-The easiest way to install Gammapy is to use one of the Python distribution software:
-Miniconda, Anaconda or Miniforge (see this
+Using Conda / Mamba
+-------------------
+The easiest way to install Gammapy is to use one of the conda Python distribution software
+(see this
 `link <https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html>`__).
-For certain working environments (e.g. ESO, DESY, CEA, MPIK),
-`Miniforge <https://github.com/conda-forge/miniforge>`__ is recommended to use conda/mamba without trouble.
+`Miniforge <https://github.com/conda-forge/miniforge>`__
+is the recommended way to use conda/mamba with the ``conda-forge`` channel.
 
 To install the latest stable version of Gammapy and its dependencies using conda,
 execute this command in a terminal:
@@ -39,28 +39,14 @@ To install a specific version of Gammapy just execute:
 
 .. code-block:: bash
 
-    conda install -c conda-forge gammapy=1.0
+    conda install -c conda-forge gammapy=2.0
 
 If you encounter any issues you can check the :ref:`troubleshoot` guide.
 
-Using Mamba
------------
-Alternatively, you can use `Mamba <https://mamba.readthedocs.io/>`__ for the installation.
-Mamba is an alternative package manager that supports most of conda’s commands but offers higher installation
-speed and more reliable environment solutions. To install ``mamba`` in the Conda base environment:
-
-.. code-block:: bash
-
-    conda install mamba -n base -c conda-forge
-
-Then install Gammapy through:
-
-.. code-block:: bash
-
-    mamba install gammapy
-
-Mamba supports the same commands available in conda. Therefore, updating and installing specific versions
-follows the same process as above, just simply replace the ``conda`` command with the ``mamba`` command.
+Alternatively, you can use `Mamba <https://mamba.readthedocs.io/>`__, an alternative package
+manager that supports most of conda’s commands but offers higher installation speed and more
+reliable environment solutions. Just simply replace the ``conda`` with the ``mamba`` in the
+commands above. Miniforge also comes with mamba pre-installed, so you can use it right away.
 
 .. _install-pip:
 
@@ -93,7 +79,7 @@ To install a specific version of Gammapy use:
 
 .. code-block:: bash
 
-    python -m pip install gammapy==1.0
+    python -m pip install gammapy==2.0
 
 To install the current Gammapy **development** version with `pip`_ use:
 
@@ -110,6 +96,67 @@ If you want to study or edit the code locally, use the following:
    python -m pip install .
 
 If you encounter any issues you can check the :ref:`troubleshoot` guide.
+
+This will install Gammapy in the current Python environment. If you want to install it in
+a specific environment, make sure to activate it first and then execute the above command.
+
+
+.. _install-uv:
+Using uv
+--------
+Project-based environments are a great way to manage dependencies for your projects.
+`uv <https://docs.astral.sh/uv/>`__ is a modern Python package manager that provides a
+simple and efficient way to create and manage project-based environments (only with Python
+dependencies). It allows you to create isolated environments for a given project, ensuring
+that you have fully reproducible environments. It is also way faster than pip and conda.
+
+1. First, install `uv` following the `instructions in the uv documentation <https://docs.astral.sh/uv/#installation>`__.
+
+2. Create a new project in a new subdirectory, by executing the following in a terminal:
+
+   .. code-block:: bash
+
+      uv init my-science-project
+      cd my-science-project
+
+3. Then, to install Gammapy, execute this command in a terminal:
+
+   .. code-block:: bash
+
+      uv add gammapy
+
+
+This will create a set of files in the new directory under version control, including a ``pyproject.toml``
+file and a ``uv.lock`` file that contains the exact versions of all used dependencies. Further dependencies
+can added be via ``uv add`` command again and they will be added to the lock file. To update Gammapy, execute
+``uv add gammapy`` again and it will update to the latest version. You can also install a specific version
+like, for example, ``uv add gammapy==2.0.1``.
+
+
+.. _install-pixi:
+Using pixi
+----------
+`pixi <https://pixi.prefix.dev>`__ is a similar package manager that also provides project-based
+environments in a fast and reproducible way. The main difference is that pixi also supports non-Python
+dependencies, which can be useful for some users. With `pixi`, you can also define tasks that can be executed
+in the environment. It is also faster than pip and conda.
+
+1. First, install `pixi` following the `instructions in the pixi documentation <https://pixi.prefix.dev/latest/installation/>`__.
+
+2. Create a new project in a new subdirectory, by executing the following in a terminal:
+
+   .. code-block:: bash
+
+      pixi init my-second-science-project
+      cd my-second-science-project
+
+3. Then, to install Gammapy, execute this command in a terminal:
+
+   .. code-block:: bash
+
+      pixi add gammapy
+
+Find more details on setting up a workspace in the `pixi documentation <https://pixi.prefix.dev/latest/first_workspace/>`__.
 
 .. _install-other:
 
