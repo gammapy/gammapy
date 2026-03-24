@@ -28,10 +28,7 @@ GAMMAPY_CC = [
 ]
 
 # Approved authors that requested to be added to CITATION.cff
-ADDITIONAL_AUTHORS = [
-    "Amanda Weinstein",
-    "Tim Unbehaun",
-]
+ADDITIONAL_AUTHORS = []
 
 PATH = Path(__file__).parent.parent
 
