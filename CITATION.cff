@@ -86,10 +86,6 @@ authors:
   affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
     Paris, France"
   orcid: "https://orcid.org/0000-0003-1476-3714"
-- given-names: Stefan
-  family-names: Fröse
-  affiliation: "Astroparticle Physics Group, TU Dortmund University, Germany"
-  orcid: "https://orcid.org/0000-0003-1832-4129"
 - given-names: Claudio
   family-names: Galelli
   affiliation: Laboratoire Univers et Théories, Observatoire de Paris, Université
@@ -108,14 +104,6 @@ authors:
   family-names: Linhoff
   affiliation: "Astroparticle Physics Group, TU Dortmund University, Germany"
   orcid: "https://orcid.org/0000-0001-7993-8189"
-- given-names: Matthew
-  family-names: Lundy
-  affiliation: "Physics Department, McGill University, Montreal, QC H3A 2T8, Canada"
-  orcid: "https://orcid.org/0000-0003-3802-1619"
-- given-names: Lars
-  family-names: Mohrmann
-  affiliation: "Max Planck Institute for Nuclear Physics, Heidelberg, Germany"
-  orcid: "https://orcid.org/0000-0002-9667-8654"
 - given-names: Daniel
   family-names: Morcuende
   affiliation: "CTAO Central Organisation, Science Data Management Centre, Platanenallee 6, 15738 Zeuthen, Germany"
@@ -137,11 +125,6 @@ authors:
   family-names: Pintore
   affiliation: "INAF/IASF PALERMO, Italy"
   orcid: "https://orcid.org/0000-0002-3869-2925"
-- given-names: Michael
-  family-names: Punch
-  affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
-    Paris, France"
-  orcid: "https://orcid.org/0000-0002-4710-2165"
 - given-names: Maxime
   family-names: Regeard
   affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
@@ -166,10 +149,6 @@ authors:
   affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
     Paris, France"
   orcid: "https://orcid.org/0000-0002-8219-4667"
-- given-names: Pei
-  family-names: Yu
-  affiliation: "Université Paris Cité, CNRS, Astroparticule et Cosmologie, F-75013
-    Paris, France"
 preferred-citation:
   authors:
   - family-names: "The Gammapy team"
