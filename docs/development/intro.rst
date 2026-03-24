@@ -39,6 +39,8 @@ So let's assume you've used Gammapy for a while, and now you'd like to fix or
 add something to the Gammapy code, tests or docs. Here are the steps and commands
 to do it ...
 
+.. _authorship-policy:
+
 Acceptation of the Developer Certificate of Origin (DCO)
 ========================================================
 As described in the :ref:`PIG 24 <pig-024>` and
@@ -77,6 +79,7 @@ You have to use **your real name** (i.e., pseudonyms or anonymous contributions
 cannot be made) when using git. This is because the DCO is a binding document,
 granting the Gammapy project to be an open source project.
 
+.. _contact-early:
 
 Get in touch early
 ==================
@@ -339,7 +342,7 @@ Finally to make a completely clean folder for build the documentation you can ru
 New contributors
 ================
 This is a general overview for new contributors to Gammapy.
-It is important that you first read our community guidelines.
+It is important that you first read our :ref:`community guidelines <dev_guidelines>`.
 
 * We have marked some issues
   `good-first-issue <https://github.com/gammapy/gammapy/issues?q=state%3Aopen%20label%3Agood-first-issue>`__
