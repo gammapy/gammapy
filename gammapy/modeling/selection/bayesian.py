@@ -3,8 +3,6 @@ import numpy as np
 from astropy.table import Table, vstack, Column
 from scipy.stats import gaussian_kde
 from .inference_data import inference_data_from_sampler
-
-
 import logging
 
 log = logging.getLogger(__name__)
@@ -61,7 +59,6 @@ class BayesianModelSelection:
         result : `BayesianModelSelectionResult`
             Object containing the results of the model comparisons.
         """
-
         results = {}
         for models_name, models in alternative_models.items():
             log.info(f"Evaluating {models_name}")
@@ -136,7 +133,6 @@ class BayesianModelSelectionResult:
         table : `~astropy.table.Table`
             Table with statistics for each model.
         """
-
         tables = []
         for results in self._results_dict.values():
             tables.append(results.stats_table(format=format))
@@ -211,7 +207,7 @@ class BayesianModelSelectionResult:
 
         This method extracts the LOO-CV expected log predictive densities (ELPDs)
         from each model result and passes them to `arviz.compare` for statistical
-        comparison. By default the method is set to 'BB-pseudo-BMA' which performs
+        comparison. By default, the method is set to 'BB-pseudo-BMA' which performs
         a Bayesian bootstrap to compute standard errors, and weights.
 
         Parameters
@@ -231,8 +227,7 @@ class BayesianModelSelectionResult:
         return az.compare(self.elpds_loo, **kwargs)
 
     def prior_sensitivity_table(self):
-        "Display prior and likelihood sentivity table computed from power scaling for each model"
-
+        """Display prior and likelihood sensitivity table computed from power scaling for each model."""
         blocks = []
 
         for name in self.models_names:
@@ -364,7 +359,6 @@ class InferenceResult:
         fraction : float
             Fraction of points with Pareto k < threshold.
         """
-
         return np.sum(self.elpd_loo.pareto_k < self.elpd_loo.good_k) / len(
             self.elpd_loo.pareto_k
         )
@@ -456,7 +450,7 @@ class InferenceResult:
         return table
 
     def prior_sensitivity_table(self):
-        """Prior and likelihood sentivity table computed from power scaling."""
+        """Prior and likelihood sensitivity table computed from power scaling."""
         try:
             from arviz_stats import psense_summary
 
@@ -468,7 +462,7 @@ class InferenceResult:
 
     @property
     def priors(self):
-        """Dict of random variable objects used to generate the prior"""
+        """Dictionary of random variable objects used to generate the prior."""
         return {
             p.name: p.prior._random_variable
             for p in self.models.parameters.free_unique_parameters
@@ -517,7 +511,6 @@ def compute_parameters_values(inference_data, results, group_name="posterior"):
         Table summarizing the mean, median, mode, and value at maximum likelihood
         (if available) for each parameter.
     """
-
     group = getattr(inference_data, group_name)
     maximum_likelihood = results.sampler_results["maximum_likelihood"]
     param_names = []
