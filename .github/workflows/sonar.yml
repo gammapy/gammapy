@@ -70,7 +70,7 @@ jobs:
         if: github.event.workflow_run.event == 'pull_request'
         run: |
           git remote add upstream https://github.com/${{ github.repository }}.git
-          git fetch upstream ${{ env.TARGET_BRANCH }} --depth=1
+          git fetch upstream ${{ env.TARGET_BRANCH }} --depth=0
 
       - name: Check artifact
         run: |
