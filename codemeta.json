@@ -3,10 +3,6 @@
     "@type": "SoftwareSourceCode",
     "author": [
         {
-            "@type": "Organization",
-            "name": "Gammapy team"
-        },
-        {
             "@id": "https://orcid.org/0000-0002-6606-2816",
             "@type": "Person",
             "affiliation": {
@@ -104,7 +100,7 @@
                 "name": "Universit\u00e9 Paris Cit\u00e9, CNRS, Astroparticule et Cosmologie, F-75013 Paris, France"
             },
             "familyName": "Carrasco",
-            "givenName": "Marie-Sophie"
+            "givenName": "Marie-Sophie_test"
         },
         {
             "@id": "https://orcid.org/0000-0002-6488-8219",
@@ -526,6 +522,10 @@
             },
             "familyName": "Yu",
             "givenName": "Pei"
+        },
+        {
+            "@type": "Organization",
+            "name": "The Gammapy team"
         }
     ],
     "codeRepository": "https://github.com/gammapy/gammapy",
@@ -553,8 +553,7 @@
     },
     "funding": [
         "10.13039/501100000780::101129751",
-        "10.13039/501100000780::824064",
-        "10.3030/101131928::101131928"
+        "10.13039/501100000780::824064"
     ],
     "readme": "https://gammapy.org",
     "issueTracker": "https://github.com/gammapy/gammapy/issues",
@@ -562,7 +561,7 @@
         "active"
     ],
     "email": "GAMMAPY-COORDINATION-L@IN2P3.FR",
-    "dateModified": "2026-03-24",
+    "dateModified": "2026-03-11",
     "softwareRequirements": [
         "numpy>=2.0",
         "scipy>=1.13",
