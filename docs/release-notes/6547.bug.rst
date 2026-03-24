@@ -1,0 +1,1 @@
+Introduce default threshold value to remove numerical artifacts created when applying `~gammapy.irf.EnergyDispersion2D.to_edisp_kernel()``
