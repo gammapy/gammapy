@@ -209,7 +209,7 @@ print(absorption_custom)
 # Or you can create `~gammapy.modeling.models.TemplateNDSpectralModel` from your data.
 #
 # To create your own models, you must have the optical depth tabulated as a function of gamma-ray energy and redshift.
-# In this example, we create a toy model with 5 bins in energy (`energies_toymodel`) and 3 bins in redshift (`redshifts_toymodel=[0.1,0.3,0.5]`).
+# In this example, we create a toy model with 5 bins in energy (``energies_toymodel``) and 3 bins in redshift (``redshifts_toymodel=[0.1,0.3,0.5]``).
 
 ebl_abs_dict_toymodel = {
     0.1: [
@@ -279,7 +279,7 @@ print(absorption_toymodel)
 
 
 ######################################################################
-# This `absorption_toymodel` can now be used in the same way as the `absorption` model defined :ref:`here <model-absorption>`
+# This ``absorption_toymodel`` can now be used in the same way as the ``absorption`` model defined :ref:`here <model-absorption>`
 #
 #
 # To write and read your toymodel, you can use the `~gammapy.modeling.models.TemplateNDSpectralModel.write()`
@@ -294,7 +294,7 @@ ndmap_toymodel_read = RegionNDMap.read("ebl_toymodel.fits.gz")
 # ------------------
 #
 # In this notebook, we have kept the parameters of the EBL model, the
-# `alpha_norm` and the `redshift` frozen. Under reasonable assumptions
+# ``alpha_norm`` and the ``redshift`` frozen. Under reasonable assumptions
 # on the intrinsic spectrum, it can be possible to constrain these
 # parameters.
 #
@@ -317,7 +317,7 @@ print(intrinsic_model)
 
 
 ######################################################################
-# We add Gaussian priors on the `alpha` and `beta` parameters based on the 4FGL
+# We add Gaussian priors on the ``alpha`` and ``beta`` parameters based on the 4FGL
 # measurements and the associated errors. For more details on using priors, see
 # :doc:`/tutorials/details/priors`
 #
