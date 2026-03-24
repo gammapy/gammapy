@@ -303,13 +303,14 @@ class FluxCollectionEstimator:
 
     This estimator computes spectral flux points for a *collection of sources*
     over a set of predefined energy bins. The normalizations of all
-    ``SkyModel`` objects listed in ``models`` are fitted jointly in each energy bin,
-    while all other ``SkyModel`` components in the datasets remain frozen.
-    Re-optimization of each dataset’s background model is optional.
+    `~gammapy.modeling.models.SkyModel` objects listed in ``models`` are fitted
+    jointly in each energy bin, while all other `~gammapy.modeling.models.SkyModel`
+    components in the datasets remain frozen. Re-optimization of each dataset’s
+    background model is optional.
 
     The operation can be performed either with the standard likelihood optimizer
-    (``~gammapy.modeling.Fit``) or with a sampler
-    (``~gammapy.modeling.Sampler``), which can be used to derive asymmetric
+    (`~gammapy.modeling.Fit`) or with a sampler
+    (`~gammapy.modeling.Sampler`), which can be used to derive asymmetric
     errors and upper limits.
 
     By default, this requires the ultranest package to be installed.
@@ -318,7 +319,7 @@ class FluxCollectionEstimator:
     ----------
     energy_edges : `~astropy.units.Quantity`
         Energy edges of the flux point bins.
-    models : ~gammapy.modeling.Models` or list
+    models : `~gammapy.modeling.Models` or list
         Source models for which the flux points are computed (others are frozen).
     n_sigma : float, optional
         Number of sigma to use for asymmetric error computation. Must be a positive value.
@@ -401,7 +402,7 @@ class FluxCollectionEstimator:
         return keys
 
     def _empty_result_dict(self):
-        """Builds empty dictionary to store results."""
+        """Build an empty dictionary to store results."""
         n_sources = len(self.models)
         empty_fp_result = {key: np.zeros(n_sources) for key in self._available_keys}
         empty_fp_result["npred"] = np.zeros(n_sources)
@@ -449,7 +450,7 @@ class FluxCollectionEstimator:
         return fp_dataset
 
     def _prepare_datasets(self, datasets):
-        """define datasets with cached npred models to be renormalized"""
+        """Define datasets with cached npred models to be renormalized."""
         norm_models = {}
         for m in self.models:
             norm_models[m.name] = PowerLawNormSpectralModel(norm=self.norm.copy())
@@ -469,7 +470,7 @@ class FluxCollectionEstimator:
 
     @staticmethod
     def _compute_npred(datasets, param, model):
-        "compute npred within the datasets masks"
+        """Compute npred within the datasets masks."""
         npred = 0
         for kd, d in enumerate(datasets):
             name = model.name + "_" + d.name
@@ -481,7 +482,7 @@ class FluxCollectionEstimator:
 
     @staticmethod
     def _compute_ts(datasets, param):
-        """Test statistic against no source as null hypothesis"""
+        """Test statistic against no source as null hypothesis."""
         cash = datasets._stat_sum_likelihood()
         with Parameters([param]).restore_status():
             param.value = 0
@@ -530,8 +531,7 @@ class FluxCollectionEstimator:
         return fp_result
 
     def _run_sampler(self, fp_datasets, spectral_models):
-        """compute npred, dnde, TS, errn, errp, and ul"""
-
+        """Compute npred, dnde, TS, errn, errp, and ul."""
         sampler_results = self.solver.run(fp_datasets).sampler_results
 
         fp_result = self._empty_result_dict()
@@ -574,7 +574,7 @@ class FluxCollectionEstimator:
         return fp_result
 
     def run(self, datasets):
-        """Compute flux point in each energy band
+        """Compute flux point in each energy band.
 
         Parameters
         ----------
@@ -624,7 +624,7 @@ class FluxCollectionEstimator:
         Returns
         -------
         result : dict
-            Dict with results
+            Dictionary with results.
         """
 
         def build_fp_from_idx(idx, model):
