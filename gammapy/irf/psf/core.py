@@ -163,14 +163,14 @@ class PSF(IRF):
 
         energy_true = self.axes["energy_true"]
 
-        for theta in offset:
-            for frac in fraction:
-                plot_kwargs = kwargs.copy()
-                radius = self.containment_radius(
-                    energy_true=energy_true.center, offset=theta, fraction=frac
-                )
-                plot_kwargs.setdefault("label", f"{theta}, {100 * frac:.1f}%")
-                with quantity_support():
+        with quantity_support():
+            for theta in offset:
+                for frac in fraction:
+                    plot_kwargs = kwargs.copy()
+                    radius = self.containment_radius(
+                        energy_true=energy_true.center, offset=theta, fraction=frac
+                    )
+                    plot_kwargs.setdefault("label", f"{theta}, {100 * frac:.1f}%")
                     ax.plot(energy_true.center, radius, **plot_kwargs)
 
         energy_true.format_plot_xaxis(ax=ax)
@@ -276,13 +276,13 @@ class PSF(IRF):
         except KeyError:
             rad = RAD_AXIS_DEFAULT
 
-        for theta in offset:
-            for energy in energy_true:
-                psf_value = self.evaluate(
-                    rad=rad.center, energy_true=energy, offset=theta
-                )
-                label = f"Offset: {theta:.1f}, Energy: {energy:.1f}"
-                with quantity_support():
+        with quantity_support():
+            for theta in offset:
+                for energy in energy_true:
+                    psf_value = self.evaluate(
+                        rad=rad.center, energy_true=energy, offset=theta
+                    )
+                    label = f"Offset: {theta:.1f}, Energy: {energy:.1f}"
                     ax.plot(rad.center, psf_value, label=label, **kwargs)
 
         rad.format_plot_xaxis(ax=ax)

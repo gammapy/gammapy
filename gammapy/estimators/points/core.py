@@ -233,16 +233,16 @@ class FluxPoints(FluxMaps):
         ----------
         filename : str
             Filename.
-        sed_type : {"dnde", "flux", "eflux", "e2dnde", "likelihood"}
-            SED type.
+        sed_type : {"dnde", "flux", "eflux", "e2dnde", "likelihood"}, optional
+            SED type. Default is None.
         format : {"gadf-sed", "lightcurve", "profile"}, optional
             Format string. If None, the format is extracted from the input.
             Default is None.
-        reference_model : `SpectralModel`
-            Reference spectral model.
-        checksum : bool
+        reference_model : `~gammapy.modeling.models.SpectralModel`, optional
+            Reference spectral model. Default is None.
+        checksum : bool, optional
             If True checks both DATASUM and CHECKSUM cards in the file headers. Default is False.
-        table_format :  str
+        table_format : str, optional
             Format string for the ~astropy.Table object. Default is "ascii.ecsv"
         **kwargs : dict, optional
             Keyword arguments passed to `astropy.table.Table.read`.
@@ -252,6 +252,8 @@ class FluxPoints(FluxMaps):
         flux_points : `FluxPoints`
             Flux points.
         """
+        if filename is None:
+            raise ValueError("The filename is not defined.")
         filename = make_path(filename)
         gti = None
         try:
@@ -308,6 +310,8 @@ class FluxPoints(FluxMaps):
             When True adds both DATASUM and CHECKSUM cards to the headers written to the file.
             Default is False.
         """
+        if filename is None:
+            raise ValueError("The filename is not defined.")
         filename = make_path(filename)
 
         if sed_type is None:
@@ -370,7 +374,7 @@ class FluxPoints(FluxMaps):
             SED type. Default is None.
         format : {"gadf-sed", "lightcurve", "profile"}, optional
             Table format. If None, it is extracted from the table column content. Default is None.
-        reference_model : `SpectralModel`, optional
+        reference_model : `~gammapy.modeling.models.SpectralModel`, optional
             Reference spectral model. Default is None.
         gti : `GTI`, optional
             Good time intervals. Default is None.
@@ -461,7 +465,7 @@ class FluxPoints(FluxMaps):
         Parameters
         ----------
         sed_type : {"likelihood", "dnde", "e2dnde", "flux", "eflux"}
-            SED type to convert to. Default is `likelihood`.
+            SED type to convert to. Default is "likelihood".
         format : {"gadf-sed", "lightcurve", "binned-time-series", "profile"}, optional
             Format specification. The following formats are supported:
 
@@ -556,7 +560,7 @@ class FluxPoints(FluxMaps):
             time_axis = self.geom.axes["time"]
 
             tables = []
-            for idx, (time_min, time_max) in enumerate(time_axis.iter_by_edges):
+            for idx, (time_min, time_max) in enumerate(time_axis.iter_by_time_edges):
                 table_flat = Table()
                 table_flat["time_min"] = [time_min.mjd]
                 table_flat["time_max"] = [time_max.mjd]
@@ -763,80 +767,82 @@ class FluxPoints(FluxMaps):
         ax : `~matplotlib.axes.Axes`
             Axis object.
         """
-        if ax is None:
-            ax = plt.gca()
+        with quantity_support():
+            if ax is None:
+                ax = plt.gca()
 
-        if sed_type is None:
-            sed_type = self.sed_type_plot_default
+            if sed_type is None:
+                sed_type = self.sed_type_plot_default
 
-        if not self.norm.geom.is_region:
-            raise ValueError("Plotting only supported for region based flux points")
+            if not self.norm.geom.is_region:
+                raise ValueError("Plotting only supported for region based flux points")
 
-        if not self.geom.axes.is_unidimensional:
-            raise ValueError(
-                "Profile plotting is only supported for unidimensional maps"
+            if not self.geom.axes.is_unidimensional:
+                raise ValueError(
+                    "Profile plotting is only supported for unidimensional maps"
+                )
+
+            if axis_name is None:
+                axis = self.geom.axes.primary_axis
+            else:
+                axis = self.geom.axes[axis_name]
+
+            if isinstance(axis, TimeMapAxis) and not axis.is_contiguous:
+                axis = axis.to_contiguous()
+
+            if ax.yaxis.units is None:
+                yunits = DEFAULT_UNIT[sed_type]
+            else:
+                yunits = ax.yaxis.units
+
+            ax.yaxis.set_units(yunits)
+
+            flux_ref = getattr(self, sed_type + "_ref").to(yunits)
+
+            ts = self.ts_scan
+
+            norm_min, norm_max = ts.geom.axes["norm"].bounds.to_value("")
+
+            flux = MapAxis.from_bounds(
+                norm_min * flux_ref.value.min(),
+                norm_max * flux_ref.value.max(),
+                nbin=500,
+                interp=axis.interp,
+                unit=flux_ref.unit,
             )
 
-        if axis_name is None:
-            axis = self.geom.axes.primary_axis
-        else:
-            axis = self.geom.axes[axis_name]
+            norm = flux.center / flux_ref.reshape((-1, 1))
 
-        if isinstance(axis, TimeMapAxis) and not axis.is_contiguous:
-            axis = axis.to_contiguous()
+            coords = ts.geom.get_coord()
+            coords["norm"] = norm
+            coords[axis.name] = axis.center.reshape((-1, 1))
 
-        if ax.yaxis.units is None:
-            yunits = DEFAULT_UNIT[sed_type]
-        else:
-            yunits = ax.yaxis.units
+            z = ts.interp_by_coord(coords, values_scale="stat-profile")
 
-        ax.yaxis.set_units(yunits)
+            kwargs.setdefault("vmax", 0)
+            kwargs.setdefault("vmin", -4)
+            kwargs.setdefault("zorder", 0)
+            kwargs.setdefault("cmap", "Blues")
+            kwargs.setdefault("linewidths", 0)
+            kwargs.setdefault("shading", "auto")
 
-        flux_ref = getattr(self, sed_type + "_ref").to(yunits)
+            # clipped values are set to NaN so that they appear white on the plot
+            z[-z < kwargs["vmin"]] = np.nan
 
-        ts = self.ts_scan
-
-        norm_min, norm_max = ts.geom.axes["norm"].bounds.to_value("")
-
-        flux = MapAxis.from_bounds(
-            norm_min * flux_ref.value.min(),
-            norm_max * flux_ref.value.max(),
-            nbin=500,
-            interp=axis.interp,
-            unit=flux_ref.unit,
-        )
-
-        norm = flux.center / flux_ref.reshape((-1, 1))
-
-        coords = ts.geom.get_coord()
-        coords["norm"] = norm
-        coords[axis.name] = axis.center.reshape((-1, 1))
-
-        z = ts.interp_by_coord(coords, values_scale="stat-profile")
-
-        kwargs.setdefault("vmax", 0)
-        kwargs.setdefault("vmin", -4)
-        kwargs.setdefault("zorder", 0)
-        kwargs.setdefault("cmap", "Blues")
-        kwargs.setdefault("linewidths", 0)
-        kwargs.setdefault("shading", "auto")
-
-        # clipped values are set to NaN so that they appear white on the plot
-        z[-z < kwargs["vmin"]] = np.nan
-
-        with quantity_support():
             caxes = ax.pcolormesh(axis.as_plot_edges, flux.edges, -z.T, **kwargs)
 
-        axis.format_plot_xaxis(ax=ax)
+            axis.format_plot_xaxis(ax=ax)
 
-        ax.set_ylabel(f"{sed_type} [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]")
-        ax.set_yscale("log")
+            ax.set_ylabel(
+                f"{sed_type} [{ax.yaxis.units.to_string(UNIT_STRING_FORMAT)}]"
+            )
+            ax.set_yscale("log")
 
-        if add_cbar:
-            label = "Fit statistic difference"
-            ax.figure.colorbar(caxes, ax=ax, label=label)
+            if add_cbar:
+                label = "Fit statistic difference"
+                ax.figure.colorbar(caxes, ax=ax, label=label)
 
-        return ax
+            return ax
 
     def recompute_ul(self, n_sigma_ul=2, **kwargs):
         """Recompute upper limits corresponding to the given value.
@@ -902,7 +908,7 @@ class FluxPoints(FluxMaps):
 
         Parameters
         ----------
-        axis_new : `MapAxis` or `TimeMapAxis`
+        axis_new : `~gammapy.maps.MapAxis` or `~gammapy.maps.TimeMapAxis`
             The new axis to resample along
 
         Returns

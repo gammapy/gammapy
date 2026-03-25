@@ -533,7 +533,7 @@ class Observation:
         Parameters
         ----------
         time_interval : `astropy.time.Time`
-            Start and stop time of the selected time interval.
+            Start time (inclusive) and stop time (exclusive) of the selected time interval.
             For now, we only support a single time interval.
 
         Returns
@@ -772,7 +772,8 @@ class Observations(collections.abc.MutableSequence):
         Parameters
         ----------
         time_intervals : `astropy.time.Time` or list of `astropy.time.Time`
-            List of start and stop time of the time intervals or one time interval.
+            List of start time (inclusive) and stop time (exclusive) of the time intervals
+            or one time interval.
 
         Returns
         -------
@@ -785,7 +786,7 @@ class Observations(collections.abc.MutableSequence):
 
         for time_interval in time_intervals:
             for obs in self:
-                if (obs.tstart < time_interval[1]) & (obs.tstop > time_interval[0]):
+                if (obs.tstart <= time_interval[1]) & (obs.tstop > time_interval[0]):
                     new_obs = obs.select_time(time_interval)
                     new_obs_list.append(new_obs)
 

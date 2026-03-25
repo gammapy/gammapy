@@ -343,7 +343,9 @@ def test_group_table_above_range(energy_axis_ref):
 def test_group_table_outside_range(energy_axis_ref):
     energy_edges = [20, 30, 40] * u.TeV
 
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError, match="No overlap between reference and target edges."
+    ):
         energy_axis_ref.group_table(energy_edges)
 
 
@@ -395,9 +397,13 @@ def test_mapaxis_init_from_edges(edges, interp):
     axis = MapAxis(edges, interp=interp)
     assert_allclose(axis.edges, edges)
     assert_allclose(axis.nbin, len(edges) - 1)
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError, match="Edges array must have at least two elements."
+    ):
         MapAxis.from_edges([1])
+    with pytest.raises(ValueError, match="MapAxis: node values must be unique"):
         MapAxis.from_edges([0, 1, 1, 2])
+    with pytest.raises(ValueError, match="MapAxis: node values must be sorted"):
         MapAxis.from_edges([0, 1, 3, 2])
 
 
@@ -406,9 +412,11 @@ def test_mapaxis_from_nodes(nodes, interp):
     axis = MapAxis.from_nodes(nodes, interp=interp)
     assert_allclose(axis.center, nodes)
     assert_allclose(axis.nbin, len(nodes))
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Nodes array must have at least one element."):
         MapAxis.from_nodes([])
+    with pytest.raises(ValueError, match="MapAxis: node values must be unique"):
         MapAxis.from_nodes([0, 1, 1, 2])
+    with pytest.raises(ValueError, match="MapAxis: node values must be sorted"):
         MapAxis.from_nodes([0, 1, 3, 2])
 
 
@@ -418,16 +426,20 @@ def test_mapaxis_from_bounds(nodes, interp):
     assert_allclose(axis.edges[0], nodes[0])
     assert_allclose(axis.edges[-1], nodes[-1])
     assert_allclose(axis.nbin, 3)
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="MapAxis: node values must be unique"):
         MapAxis.from_bounds(1, 1, 1)
 
 
 def test_map_axis_from_energy_units():
-    with pytest.raises(ValueError):
-        _ = MapAxis.from_energy_bounds(0.1, 10, 2, unit="deg")
+    with pytest.raises(
+        ValueError, match="Please provide a valid energy unit, got deg instead."
+    ):
+        MapAxis.from_energy_bounds(0.1, 10, 2, unit="deg")
 
-    with pytest.raises(ValueError):
-        _ = MapAxis.from_energy_edges([0.1, 1, 10] * u.deg)
+    with pytest.raises(
+        ValueError, match="Please provide a valid energy unit, got deg instead."
+    ):
+        MapAxis.from_energy_edges([0.1, 1, 10] * u.deg)
 
 
 @pytest.mark.parametrize(("nodes", "interp", "node_type"), MAP_AXIS_NODE_TYPES)
@@ -486,8 +498,7 @@ def test_map_axis_concatenate():
     axis_12 = axis_1.concatenate(axis_2)
 
     assert_equal(axis_12.edges, np.linspace(0, 20, 21))
-
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Names must agree, got axis and other_axis"):
         axis_1.concatenate(axis_2_other_name)
 
 
@@ -508,12 +519,26 @@ def test_time_axis(time_intervals):
     assert "time" in axis.__str__()
     assert "20" in axis.__str__()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError, match='Unexpected axis name, expected "bad", got: "time"'
+    ):
         axis.assert_name("bad")
 
     assert axis_copy == axis
 
     assert not axis.is_contiguous
+
+    with pytest.raises(
+        ValueError,
+        match="Time axis is not contiguous, therefore cannot compute bin edges.",
+    ):
+        axis.edges
+
+    with pytest.raises(
+        ValueError,
+        match="Time axis is not contiguous, therefore cannot compute bin edges.",
+    ):
+        axis.time_edges
 
     ax_cont = axis.to_contiguous()
     assert_allclose(ax_cont.nbin, 39)
@@ -588,7 +613,7 @@ def test_incorrect_time_axis():
         TimeMapAxis(tmin, tmax, reference_time=51000 * u.d, name="time")
 
     # overlapping time intervals
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Time intervals must not overlap."):
         TimeMapAxis(tmin, tmax, reference_time=Time.now(), name="time")
 
 
@@ -598,7 +623,7 @@ def test_bad_length_sort_time_axis(time_intervals):
     tmax_reverse = time_intervals["t_max"][::-1]
     tmax_short = time_intervals["t_max"][:-1]
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Edges max must all be larger than edge min"):
         TimeMapAxis(tmin, tmax_reverse, tref, name="time")
 
     with pytest.raises(ValueError):
@@ -888,7 +913,9 @@ def test_label_map_axis_basics():
     assert "labels" in axis_str
     assert "label-2" in axis_str
 
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError, match='Unexpected axis name, expected "time", got: "label-axis"'
+    ):
         axis.assert_name("time")
 
     assert axis.nbin == 2
@@ -898,7 +925,7 @@ def test_label_map_axis_basics():
 
     assert axis.name == "label-axis"
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="A LabelMapAxis does not define edges"):
         axis.edges
 
     axis_copy = axis.copy()
@@ -937,7 +964,7 @@ def test_label_map_axis_coord_to_idx():
 
     with pytest.raises(ValueError):
         labels = [["bad-label"], ["label-2"]]
-        _ = axis.coord_to_idx(coord=labels)
+        axis.coord_to_idx(coord=labels)
 
 
 def test_mixed_axes():
@@ -995,7 +1022,7 @@ def test_time_format(time_intervals):
         time_intervals["t_ref"],
         name="time",
     )
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Invalid time_format: iso"):
         axis.time_format = "null"
 
 
@@ -1056,6 +1083,19 @@ def test_time_group_table(time_intervals):
     assert_allclose(groups_exactedges["idx_max"], [13])
 
 
+def test_iter_by_time_edges(time_intervals):
+    time_axis = TimeMapAxis(
+        time_intervals["t_min"], time_intervals["t_max"], time_intervals["t_ref"]
+    )
+    for t_min, t_max in time_axis.iter_by_time_edges:
+        assert isinstance(t_min, Time)
+        assert isinstance(t_max, Time)
+
+    for t_min, t_max in time_axis.iter_by_edges:
+        assert isinstance(t_min, u.Quantity)
+        assert isinstance(t_max, u.Quantity)
+
+
 def test_single_valued_axis():
     # this will be interpreted as a scalar value
     # that is against the specifications, but we allow it nevertheless
@@ -1078,7 +1118,10 @@ def test_label_map_axis_concatenate():
 
     assert_equal(label_append12.center, np.array(["aa", "bb", "cc", "dd"], dtype="<U2"))
     assert label_append12.name == "letters"
-    with pytest.raises(ValueError):
+
+    with pytest.raises(
+        ValueError, match="Names must agree, got letters and other_letters"
+    ):
         label2.concatenate(label3)
 
 
@@ -1121,9 +1164,7 @@ def test_periodic_map_axis():
     pix = axis1.coord_to_pix(coord=coords)
     assert_allclose(pix, [2.0, 3.5, 2.5, 3.0], rtol=1e-5)
 
-    with pytest.raises(ValueError):
-        axis1 = MapAxis.from_bounds(-0.5, 0.5, 5, boundary_type="other")
-    with pytest.raises(ValueError):
-        axis1 = MapAxis.from_bounds(
-            -0.5, 0.5, 5, boundary_type="periodic", interp="log"
-        )
+    with pytest.raises(ValueError, match="Invalid boundary_type: other"):
+        MapAxis.from_bounds(-0.5, 0.5, 5, boundary_type="other")
+    with pytest.raises(ValueError, match="MapAxis: node values must be unique"):
+        MapAxis.from_bounds(-0.5, 0.5, 5, boundary_type="periodic", interp="log")

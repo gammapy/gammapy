@@ -96,10 +96,10 @@ class EffectiveAreaTable2D(IRF):
 
         energy_axis = self.axes["energy_true"]
 
-        for off in offset:
-            area = self.evaluate(offset=off, energy_true=energy_axis.center)
-            label = kwargs.pop("label", f"offset = {off:.1f}")
-            with quantity_support():
+        with quantity_support():
+            for off in offset:
+                area = self.evaluate(offset=off, energy_true=energy_axis.center)
+                label = kwargs.pop("label", f"offset = {off:.1f}")
                 ax.plot(energy_axis.center, area, label=label, **kwargs)
 
         energy_axis.format_plot_xaxis(ax=ax)
@@ -135,13 +135,17 @@ class EffectiveAreaTable2D(IRF):
 
         offset_axis = self.axes["offset"]
 
-        for ee in energy:
-            area = self.evaluate(offset=offset_axis.center, energy_true=ee)
-            area /= np.nanmax(area)
-            if np.isnan(area).all():
-                continue
-            label = f"energy = {ee:.1f}"
-            with quantity_support():
+        with quantity_support():
+            for ee in energy:
+                area = self.evaluate(offset=offset_axis.center, energy_true=ee)
+                max_area = np.nanmax(area)
+                area /= np.nanmax(area)
+                if max_area == 0:
+                    continue
+                area /= max_area
+                if np.isnan(area).all():
+                    continue
+                label = f"energy = {ee:.1f}"
                 ax.plot(offset_axis.center, area, label=label, **kwargs)
 
         offset_axis.format_plot_xaxis(ax=ax)

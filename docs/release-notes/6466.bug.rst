@@ -1,0 +1,1 @@
+Fix flux estimates in `gammapy.estimators.TSMapEstimator` (now the kernel is properly normalized in each energy bin rather than over the total energy range).

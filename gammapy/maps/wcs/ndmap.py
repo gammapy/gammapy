@@ -249,6 +249,33 @@ class WcsNDMap(WcsMap):
         idx = pix_tuple_to_idx(idx)
         self.data.T[idx] = vals
 
+    def _copy_data_irregular(self, map_out, width, is_crop=True):
+        """Copy data between irregular maps for cropping or padding."""
+        non_spatial_shape = self.geom.data_shape[:-2]
+
+        for idx in np.ndindex(non_spatial_shape):
+            idx_geom = idx[::-1]
+
+            nx = int(self.geom.npix[0][idx_geom])
+            ny = int(self.geom.npix[1][idx_geom])
+
+            if is_crop:
+                x_start, x_end = int(width[0]), nx - int(width[0])
+                y_start, y_end = int(width[1]), ny - int(width[1])
+
+                if x_end <= x_start or y_end <= y_start:
+                    continue
+
+                slice_in = idx + (slice(y_start, y_end), slice(x_start, x_end))
+                slice_out = idx + (slice(0, y_end - y_start), slice(0, x_end - x_start))
+            else:
+                pad_x, pad_y = int(width[0]), int(width[1])
+
+                slice_in = idx + (slice(0, ny), slice(0, nx))
+                slice_out = idx + (slice(pad_y, pad_y + ny), slice(pad_x, pad_x + nx))
+
+            map_out.data[slice_out] = self.data[slice_in]
+
     def _pad_spatial(
         self, pad_width, axis_name=None, mode="constant", cval=0, method="linear"
     ):
@@ -285,7 +312,7 @@ class WcsNDMap(WcsMap):
         idx_in = tuple([t + w for t, w in zip(idx_in, pad_width)])[::-1]
         idx_out = geom.get_idx(flat=True)[::-1]
         map_out = self._init_copy(geom=geom, data=None)
-        map_out.coadd(self)
+        self._copy_data_irregular(map_out, pad_width[:2], is_crop=False)
 
         if mode == "constant":
             pad_msk = np.zeros_like(map_out.data, dtype=bool)
@@ -304,10 +331,41 @@ class WcsNDMap(WcsMap):
         return map_out
 
     def crop(self, crop_width):
-        if np.isscalar(crop_width):
-            crop_width = (crop_width, crop_width)
+        """Crop the spatial dimensions of the map.
+
+        Parameters
+        ----------
+        crop_width : int, tuple or `~astropy.units.Quantity`
+            Number of pixels cropped from the edges of each spatial axis.
+            If a single integer is passed, the same value is used for both
+            spatial axes. If a tuple is passed, it should contain the values
+            for the (lon, lat) axes.
+
+        Returns
+        -------
+        map : `~gammapy.maps.WcsNDMap`
+            Cropped map.
+        """
+        if isinstance(crop_width, (u.Quantity, str)):
+            crop_width = u.Quantity(crop_width)
+            scales = self.geom.pixel_scales
+            if crop_width.size == 1:
+                crop_x = (crop_width / scales[0]).to_value("")
+                crop_y = (crop_width / scales[1]).to_value("")
+            else:
+                crop_x = (crop_width[0] / scales[0]).to_value("")
+                crop_y = (crop_width[1] / scales[1]).to_value("")
+
+            # Explicitly cast to native Python int for SonarQube
+            crop_width = (int(np.round(crop_x)), int(np.round(crop_y)))
+
+        elif np.isscalar(crop_width):
+            crop_width = (int(crop_width), int(crop_width))
+        else:
+            crop_width = (int(crop_width[0]), int(crop_width[1]))
 
         geom = self.geom.crop(crop_width)
+
         if self.geom.is_regular:
             slices = [slice(None)] * len(self.geom.axes)
             slices += [
@@ -317,10 +375,8 @@ class WcsNDMap(WcsMap):
             data = self.data[tuple(slices)]
             map_out = self._init_copy(geom=geom, data=data)
         else:
-            # FIXME: This could be done more efficiently by
-            # constructing the appropriate slices for each image plane
             map_out = self._init_copy(geom=geom, data=None)
-            map_out.coadd(self)
+            self._copy_data_irregular(map_out, crop_width, is_crop=True)
 
         return map_out
 

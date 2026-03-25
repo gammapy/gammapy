@@ -83,6 +83,8 @@ class OGIPDatasetWriter(DatasetWriter):
     def __init__(
         self, filename, format="ogip", overwrite=False, checksum=False, creation=None
     ):
+        if filename is None:
+            raise ValueError("The filename is not defined.")
         filename = make_path(filename)
         filename.parent.mkdir(exist_ok=True, parents=True)
 
@@ -322,6 +324,8 @@ class OGIPDatasetReader(DatasetReader):
         filename : `~pathlib.Path`
             Valid path.
         """
+        if filename is None:
+            raise ValueError("The filename is not defined.")
         filename = make_path(filename)
 
         if not filename.exists():

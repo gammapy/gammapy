@@ -710,6 +710,9 @@ def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
 
     dataset.write(tmp_path / "test.fits")
 
+    nested_path = tmp_path / "new_directory" / "new_directory" / "test.fits"
+    dataset.write(nested_path)
+
     dataset_new = MapDataset.read(tmp_path / "test.fits")
 
     assert dataset_new.name == "test"
