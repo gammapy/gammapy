@@ -333,6 +333,10 @@ class GTI:
         # get GTIs that fall within the time_interval
         mask = self.time_start <= interval_stop
         mask &= self.time_stop > interval_start
+
+        if inverted:
+            return self.table[~mask]
+
         gti_within = self.table[mask]
 
         # crop the GTIs
@@ -341,11 +345,8 @@ class GTI:
         )
 
         gti_within["STOP"] = np.clip(gti_within["STOP"], interval_start, interval_stop)
-        gti_selected = gti_within
-        if inverted:
-            gti_selected = self.table[~mask]
 
-        return self.__class__(gti_selected)
+        return self.__class__(gti_within)
 
     def delete_interval(self, time_interval):
         """Select and crop GTIs in time interval.

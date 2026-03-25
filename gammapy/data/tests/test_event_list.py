@@ -260,7 +260,7 @@ class TestEventListHESS:
         assert_allclose(selected_time.time_ref.value, 51910.00074287037, atol=1e-6)
 
         selected_time_inverted = self.events.select_time(interval, inverted=True)
-        # # One less because the interval is defined as start time (inclusive) and stop time (exclusive)
+        # One less because the interval is defined as start time (inclusive) and stop time (exclusive)
         expected = np.concatenate([events_time[:100].value, events_time[200:].value])
         assert len(selected_time_inverted.time) == len(expected)
         assert_allclose(selected_time_inverted.time.value, expected)
