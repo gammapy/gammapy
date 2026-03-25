@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-
 import matplotlib.pyplot as plt
 import numpy as np
 import astropy.units as u
@@ -21,6 +20,7 @@ def plot_samples_violin_vs_energy(
     y_label="dN/dE",
 ):
     """Plot sample violin distributions per energy bin on log–log axes.
+
     Unlike standard error bars which only shows summary statistics,
     a violin plot shows the full probability density for each energy bin.
 
@@ -30,7 +30,7 @@ def plot_samples_violin_vs_energy(
     error bars. Users can optionally apply an ``E_center**p`` scaling to the
     flux values and clip violin tails to a specified containment interval.
     Samples of other energy-dependent parameters can also be plotted,
-    in that case the `y_label` should be changed accordingly.
+    in that case the ``y_label`` should be changed accordingly.
 
     Parameters
     ----------
@@ -47,8 +47,10 @@ def plot_samples_violin_vs_energy(
         Power of energy to multiply y-axis with. Default is 0.
     bw_method : str or float, optional
         Bandwidth selection passed to `~scipy.stats.gaussian_kde`.
+        Default is "scott".
     grid_size : int, optional
         Number of evaluation points in log-flux space for the KDE grid.
+        Default is 200.
     ax : `~matplotlib.axes.Axes`, optional
         Matplotlib axes to draw the violins and error bars. Default is None.
     errorbar_kwargs : dict, optional
@@ -86,10 +88,9 @@ def plot_samples_violin_vs_energy(
       at the 98% percentile. For a gaussian distribution these values corresponds to
       1σ errors and 2σ upper limit plotted by default by the `~gammapy.estimators.FluxPoints.plot` method.
     """
+    if ax is None:
+        ax = plt.gca()
 
-    ax = ax or plt.gca()
-
-    # Axis scaling
     ax.set_xscale("log")
     ax.set_yscale("log")
 
@@ -223,7 +224,7 @@ def plot_samples_violin_vs_energy(
 
 
 def _validate_inputs(samples_per_band, weights_per_band, nbins):
-    """Validate that samples and weightes."""
+    """Validate that samples and weights."""
     if len(samples_per_band) != nbins:
         raise ValueError("samples_per_band must match number of bins.")
 
