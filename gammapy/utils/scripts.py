@@ -341,16 +341,33 @@ def logic_parser(table, expression):
 
     >>> expression = '(OBS_ID < 3) and (OBS_ID > 1)'
     >>> logic_parser(table, expression)
+    <Table length=1>
+    OBS_ID EVENT_TYPE
+    int64     str1
+    ------ ----------
+         2          3
+
 
     Using chained comparisons:
 
     >>> expression = '1 < OBS_ID < 3'
     >>> logic_parser(table, expression)
+    <Table length=1>
+    OBS_ID EVENT_TYPE
+    int64     str1
+    ------ ----------
+         2          3
 
     Combining chained comparisons with other conditions:
 
     >>> expression = '(1 < OBS_ID < 4) and (EVENT_TYPE in ["3", "4"])'
     >>> logic_parser(table, expression)
+    <Table length=2>
+    OBS_ID EVENT_TYPE
+    int64     str1
+    ------ ----------
+         2          3
+         3          4
     """
 
     def handle_boolop(node):
