@@ -114,13 +114,15 @@ class EDispMap(IRFMap):
         edisp_kernel_map = edisp_map.to_edisp_kernel_map(energy_axis=energy_axis)
         return edisp_kernel_map.get_edisp_kernel()
 
-    def to_edisp_kernel_map(self, energy_axis):
+    def to_edisp_kernel_map(self, energy_axis, threshold=1e-8):
         """Convert to map with energy dispersion kernels.
 
         Parameters
         ----------
         energy_axis : `~gammapy.maps.MapAxis`
             Reconstructed energy axis.
+        threshold : float, optional
+            Threshold value to remove numerical artifacts. Default is 1e-8.
 
         Returns
         -------
@@ -146,6 +148,8 @@ class EDispMap(IRFMap):
 
         axis = self.edisp_map.geom.axes.index_data("migra")
         data = np.clip(np.diff(values, axis=axis), 0, np.inf)
+
+        data[data < threshold] = 0
 
         edisp_kernel_map = Map.from_geom(geom=geom, data=data.to_value(""), unit="")
 
