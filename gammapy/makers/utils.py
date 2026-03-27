@@ -4,13 +4,12 @@ import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.coordinates.erfa_astrom import erfa_astrom, ErfaAstromInterpolator
-from astropy.coordinates.representation import UnitSphericalRepresentation
 from astropy.table import Table
 from astropy.time import Time
 from gammapy.data import FixedPointingInfo, PointingMode
 from gammapy.irf import EDispMap, FoVAlignment, PSFMap
 from gammapy.makers import background
-from gammapy.irf import BackgroundIRF, EDispMap, FoVAlignment, PSFMap
+from gammapy.irf import BackgroundIRF
 from gammapy.maps import Map, RegionNDMap, MapAxis
 from gammapy.maps.utils import broadcast_axis_values_to_geom
 from gammapy.modeling.models import PowerLawSpectralModel

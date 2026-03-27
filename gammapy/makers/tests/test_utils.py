@@ -33,8 +33,6 @@ from gammapy.makers.utils import (
     make_map_exposure_true_energy,
     make_observation_time_map,
     ThetaSquaredTable,
-    project_irf_on_geom,
-    integrate_project_irf_on_geom,
     _get_fov_coord,
     project_irf_on_geom,
     integrate_project_irf_on_geom,
@@ -44,7 +42,7 @@ from gammapy.modeling.models import ConstantSpectralModel
 from gammapy.utils.coordinates import FoVAltAzFrame
 from gammapy.utils.testing import requires_data
 from gammapy.utils.time import time_ref_to_dict
-from gammapy.utils.coordinates import FoVICRSFrame, FoVAltAzFrame
+from gammapy.utils.coordinates import FoVICRSFrame
 
 
 @pytest.fixture(scope="session")
