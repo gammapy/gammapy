@@ -7,14 +7,13 @@ license-files = ["LICENSE.rst"]
 authors = [
     { name = "The Gammapy developers", email = "gammapy-coordination-l@in2p3.fr" }
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 classifiers = [
     "Intended Audience :: Science/Research",
     "Operating System :: OS Independent",
     "Programming Language :: C",
     "Programming Language :: Cython",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
