@@ -442,10 +442,10 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
         # First create 2D map arrays
 
         exposure = estimate_exposure_reco_energy(
-            dataset, self.kernel_model.spectral_model, normalize=True
+            dataset, self.model.spectral_model, normalize=True
         )
         exposure_npred = estimate_exposure_reco_energy(
-            dataset, self.kernel_model.spectral_model, normalize=False
+            dataset, self.model.spectral_model, normalize=False
         )
 
         kernel = self.estimate_kernel(dataset)
