@@ -2,6 +2,7 @@
 import logging
 import numpy as np
 import astropy.units as u
+from astropy.coordinates import SkyCoord
 from astropy.coordinates.erfa_astrom import erfa_astrom, ErfaAstromInterpolator
 from astropy.table import Table
 from astropy.time import Time
@@ -844,9 +845,12 @@ def _get_fov_coord(
 ):
     """Return coord dict in fov_coord."""
     coords = {}
-
     if use_offset:
-        coords["offset"] = skycoord.separation(fov_frame.origin)
+        fov_frame_origin = SkyCoord(0 * u.deg, 0 * u.deg, frame=fov_frame)
+        if isinstance(fov_frame, FoVICRSFrame) or (len(fov_frame.obstime.shape) == 0):
+            coords["offset"] = skycoord.separation(fov_frame_origin)
+        else:
+            coords["offset"] = np.moveaxis(skycoord.separation(fov_frame_origin), -1, 0)
     else:
         sign = -1.0 if reverse_lon else 1.0
 
