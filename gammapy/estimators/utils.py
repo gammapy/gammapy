@@ -286,7 +286,7 @@ def estimate_exposure_reco_energy(dataset, spectral_model=None, normalize=True):
 
         geom  : WcsGeom
         axes  : ['lon', 'lat', 'energy']
-        shape : (320, 240, 10)
+        shape : (np.int64(320), np.int64(240), 10)
         ndim  : 3
         unit  : cm2 s
         dtype : float64
