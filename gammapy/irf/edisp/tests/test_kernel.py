@@ -5,7 +5,7 @@ import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 import astropy.units as u
 from astropy.io import fits
-from gammapy.irf import EDispKernel
+from gammapy.irf import EDispKernel, EnergyDispersion2D
 from gammapy.maps import MapAxis
 from gammapy.utils.testing import mpl_plot_check, requires_data
 
@@ -134,3 +134,29 @@ def test_io_ogip_checksum(tmp_path):
     with warnings.catch_warnings():
         warnings.simplefilter("error")
         fits.open(path, checksum=True)
+    edisp_2 = fits.open(path, checksum=True)
+    assert edisp_2[1].header["HDUCLASS"], "OGIP"
+
+
+def test_edisp_to_edisp_kernel_extrapolation_errors():
+    energy_axis_true = MapAxis.from_energy_bounds(
+        0.01, 100, 100, unit="TeV", name="energy_true"
+    )
+    migra_axis = MapAxis.from_bounds(0.0, 3.0, 100, name="migra", unit="")
+    offset_axis = MapAxis.from_bounds(0.0, 3.0, 7, name="offset", unit="deg")
+
+    edisp = EnergyDispersion2D.from_gauss(
+        energy_axis_true,
+        migra_axis=migra_axis,
+        offset_axis=offset_axis,
+        bias=0,
+        sigma=0.1,
+    )
+
+    edisp_kernel = edisp.to_edisp_kernel(1 * u.deg)
+
+    # check for artefacts outside the migra range
+    i, j = np.indices((100, 100))
+    diag_mask = np.abs(i - j) <= 20
+
+    assert_allclose(edisp_kernel.pdf_matrix[~diag_mask], 0, atol=1e-20)

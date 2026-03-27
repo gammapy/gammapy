@@ -335,7 +335,7 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None, use_region_center=T
 
 
 def make_edisp_kernel_map(
-    edisp, pointing, geom, exposure_map=None, use_region_center=True
+    edisp, pointing, geom, exposure_map=None, use_region_center=True, threshold=1e-8
 ):
     """Make an edisp kernel map for a single observation.
 
@@ -359,6 +359,8 @@ def make_edisp_kernel_map(
         For geom as a `~gammapy.maps.RegionGeom`. If True, consider the values at the region center.
         If False, average over the whole region.
         Default is True.
+    threshold : float, optional
+        Threshold value to remove numerical artifacts. Default is 1e-8.
 
     Returns
     -------
@@ -375,7 +377,7 @@ def make_edisp_kernel_map(
         edisp, pointing, new_geom, exposure_map, use_region_center
     )
 
-    return edisp_map.to_edisp_kernel_map(geom.axes["energy"])
+    return edisp_map.to_edisp_kernel_map(geom.axes["energy"], threshold=threshold)
 
 
 def make_theta_squared_table(
