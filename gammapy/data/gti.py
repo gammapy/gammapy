@@ -336,11 +336,15 @@ class GTI:
 
         if inverted:
             gti_selected = self.table[~mask]
-            mask =  (gti_selected["START"] >= interval_start) & (gti_selected["STOP"] >= interval_stop])
+            mask = (gti_selected["START"] >= interval_start) & (
+                gti_selected["STOP"] >= interval_stop
+            )
             gti_selected["START"][mask] = interval_stop
-            mask =  (gti_selected["START"] <= interval_start) & (gti_selected["STOP"] <= interval_stop])
+            mask = (gti_selected["START"] <= interval_start) & (
+                gti_selected["STOP"] <= interval_stop
+            )
             gti_selected["STOP"][mask] = interval_start
-            return  self.__class__(gti_selected)
+            return self.__class__(gti_selected)
 
         gti_within = self.table[mask]
 
