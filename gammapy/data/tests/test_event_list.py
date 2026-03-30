@@ -2,6 +2,7 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
+from gammapy.utils.testing import assert_time_allclose
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import QTable, Table
@@ -246,6 +247,30 @@ class TestEventListHESS:
     def test_peek(self):
         with mpl_plot_check():
             self.events.peek()
+
+    def test_select_time(self):
+        events_time = self.events.time
+        interval = Time(
+            [events_time[100].value, events_time[201].value], scale="tt", format="mjd"
+        )
+        selected_time = self.events.select_time(interval)
+        assert len(selected_time.time) == 100
+        assert_time_allclose(selected_time.time[0], events_time[101], atol=1e-6)
+        assert_time_allclose(selected_time.time[99], events_time[200], atol=1e-6)
+        assert_allclose(selected_time.time_ref.value, 51910.00074287037, atol=1e-6)
+
+        selected_time_inverted = self.events.select_time(interval, inverted=True)
+        # One less because the interval is defined as start time (inclusive) and stop time (exclusive)
+        expected = np.concatenate([events_time[:100].value, events_time[200:].value])
+        assert len(selected_time_inverted.time) == len(expected)
+        assert_allclose(selected_time_inverted.time.value, expected)
+        assert_time_allclose(selected_time_inverted.time[0], events_time[0], atol=1e-6)
+        assert_time_allclose(
+            selected_time_inverted.time[101], events_time[201], atol=1e-6
+        )
+        assert_allclose(
+            selected_time_inverted.time_ref.value, 51910.00074287037, rtol=1e-6
+        )
 
 
 @requires_data()
