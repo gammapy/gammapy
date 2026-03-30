@@ -1,1 +1,0 @@
-Improve parsing of config file in FermipyDatasetsReader.read() and raise more explicit errors for invalid cases.

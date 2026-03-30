@@ -1,1 +1,0 @@
-Corrected `~gammapy.modeling.models.TemplatePhaseCurveTemporalModel` integration by performing global normalisation by the duration of the integration window as done in the other temporal models.
