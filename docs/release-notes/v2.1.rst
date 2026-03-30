@@ -7,7 +7,7 @@
 
 - Released 30th March, 2026
 - contributors: 22
-- pull requests since v2.0: 70
+- pull requests since v2.0: 133
 - closed issues: 20
 
 
@@ -16,7 +16,11 @@ Summary
 
 Gammapy v2.1 is the first feature release since LTS v2.0.
 This release includes a number of new features, bug fixes, infrastructural changes and documentation improvements.
-Notable new features include support of multiparametric priors and improved support for Bayesian inferecing.
+Notable new features include support for CosmiXs dark matter spectral models, for multiple OFF regions in the theta square plots, for simultaneous flux point extraction for a collection of sources. Extracting flux points from datasets generated from different telescope data is now allowed, but should be used with care as responses and the associated systematics might be strongly different. 
+
+A bug affecting flux maps calculations in `TSMapEstimator` has been corrected. It is advised to upgrade to get correct flux maps. 
+
+Prototype support for multi-parametric priors and for Bayesian model selection as been introduced.
 This is the first feature release where we are using ``town_crier`` for the changelog.
 Please see below for a list of PRs. Minor fixes are not listed.
 
@@ -119,9 +123,10 @@ Contributors
 - Kirsty Feijen
 - Leander Schlegel
 - Marie-Sophie Carrasco
+- Maxime Regeard
 - Mireia Nievas-Rosillo
 - Natthan Pigoux
-- Pratham Jha
+- Pratham Chaudary
 - Quentin Remy
 - Régis Terrier
 - Stefan Fröse
@@ -129,4 +134,6 @@ Contributors
 - Tomas Bylund
 - Tora T. H. Arnesen
 - Alexander Cerviño Cortínez
+- Y. Emre Bahar
+
 - Yaocheng Chen
