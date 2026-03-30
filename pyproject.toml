@@ -58,30 +58,30 @@ all = [
     "healpy; platform_system != 'Windows'",
     "ipywidgets",
     "ray[default]>=2.9",
+    "arviz<1.0",
+    "arviz[preview]",
     "ultranest",
     "numba",
-    "arviz",
-    "arviz[preview]",
 ]
 all_no_ray = [
     "naima",
     "sherpa; platform_system != 'Windows'",
     "healpy; platform_system != 'Windows'",
     "ipywidgets",
+    "arviz<1.0",
+    "arviz[preview]",
     "ultranest",
     "numba",
-    "arviz",
-    "arviz[preview]",
 ]
 cov = [
     "naima",
     "sherpa; platform_system != 'Windows'",
     "healpy; platform_system != 'Windows'",
     "ipywidgets",
+    "arviz<1.0",
+    "arviz[preview]",
     "ultranest",
     "numba",
-    "arviz",
-    "arviz[preview]",
 ]
 test = [
     "pytest-astropy",

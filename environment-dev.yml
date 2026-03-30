@@ -46,9 +46,10 @@ dependencies:
   - naima
   - pandas
   - reproject
+  - arviz<1.0
+  - arviz[preview]
   - ultranest
   - numba
-  - arviz
   # dev dependencies
   - black=22.6.0
   - codespell
