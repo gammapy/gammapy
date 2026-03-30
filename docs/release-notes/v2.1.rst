@@ -2,8 +2,8 @@
 
 .. _gammapy_2p1_release:
 
-2.1 (30th March, 2026)
-======================
+2.1 (3rd April, 2026)
+=====================
 
 - Released: 3rd April, 2026
 - contributors: 24
