@@ -1,1 +1,0 @@
-Corrected SkyModel `_check_unit` unit requirement for models where exposure is not applied.

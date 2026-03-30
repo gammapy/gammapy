@@ -1,1 +1,0 @@
-Correct bug with command-line-interface (``gammapy analysis run``) that forces background maker method to be reflected regions.
