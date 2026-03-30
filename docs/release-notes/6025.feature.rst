@@ -1,1 +1,0 @@
-Add `~gammapy.modeling.BayesianModelSelection` class to perform model performance comparison from a Bayesian perspective.
