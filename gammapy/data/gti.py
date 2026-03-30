@@ -310,13 +310,16 @@ class GTI:
 
         return cls.create(start, stop, reference_time)
 
-    def select_time(self, time_interval):
+    def select_time(self, time_interval, inverted=False):
         """Select and crop GTIs in time interval.
 
         Parameters
         ----------
         time_interval : `astropy.time.Time`
             Start time (inclusive) and stop time (exclusive) for the selection.
+        inverted : bool, optional
+            Whether to invert selection i.e. to keep all entries outside the time range.
+            Default is False.
 
         Returns
         -------
@@ -330,6 +333,19 @@ class GTI:
         # get GTIs that fall within the time_interval
         mask = self.time_start <= interval_stop
         mask &= self.time_stop > interval_start
+
+        if inverted:
+            gti_selected = self.table[~mask]
+            mask = (gti_selected["START"] >= interval_start) & (
+                gti_selected["STOP"] >= interval_stop
+            )
+            gti_selected["START"][mask] = interval_stop
+            mask = (gti_selected["START"] <= interval_start) & (
+                gti_selected["STOP"] <= interval_stop
+            )
+            gti_selected["STOP"][mask] = interval_start
+            return self.__class__(gti_selected)
+
         gti_within = self.table[mask]
 
         # crop the GTIs
