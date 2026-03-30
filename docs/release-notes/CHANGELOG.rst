@@ -6,19 +6,12 @@
 ======================
 
 - Released 30th March, 2026
-- contributors: 22
-- pull requests since v2.0: 70
-- closed issues: 20
-
+- contributors
+- pull requests since v (not all listed below)
+- closed issues
 
 Summary
 -------
-
-Gammapy v2.1 is the first feature release since LTS v2.0.
-This release includes a number of new features, bug fixes, infrastructural changes and documentation improvements.
-Notable new features include support of multiparametric priors and improved support for Bayesian inferecing.
-This is the first feature release where we are using ``town_crier`` for the changelog.
-Please see below for a list of PRs. Minor fixes are not listed.
 
 
 API changes
@@ -101,32 +94,9 @@ Bug Fixes
 - Introduce default threshold value to remove numerical artifacts created when applying `~gammapy.irf.EnergyDispersion2D.to_edisp_kernel()`. [`#6547 <https://github.com/gammapy/gammapy/issues/6547>`_]
 
 
-
+Known issues
+------------
 
 
 Contributors
 ------------
-- Anshita Dubey
-- Arnau Aguasca-Cabot
-- Atreyee Sinha
-- Axel Donath
-- Bruno Khélifi
-- Daniel Morcuende
-- Ebraam Ashraf
-- Fabio Acero
-- Fabio PINTORE
-- Gabriel Emery
-- Kirsty Feijen
-- Leander Schlegel
-- Marie-Sophie Carrasco
-- Mireia Nievas-Rosillo
-- Natthan Pigoux
-- Pratham Jha
-- Quentin Remy
-- Régis Terrier
-- Stefan Fröse
-- Thomas Vuillaume
-- Tomas Bylund
-- Tora T. H. Arnesen
-- Alexander Cerviño Cortínez
-- Yaocheng Chen
