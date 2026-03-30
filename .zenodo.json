@@ -2,6 +2,9 @@
     "upload_type": "software",
     "creators": [
         {
+            "name": "Gammapy team"
+        },
+        {
             "name": "Fabio Acero",
             "affiliation": "Universit\u00e9 Paris-Saclay, Universit\u00e9 Paris Cit\u00e9, CEA, CNRS, AIM, F-91191 Gif-sur-Yvette, France"
         },
@@ -38,7 +41,7 @@
             "affiliation": "LUX, Observatoire de Paris, Universit\u00e9 PSL, Sorbonne Universit\u00e9, CNRS, 92190 Meudon, France"
         },
         {
-            "name": "Marie-Sophie_test Carrasco",
+            "name": "Marie-Sophie Carrasco",
             "affiliation": "Universit\u00e9 Paris Cit\u00e9, CNRS, Astroparticule et Cosmologie, F-75013 Paris, France"
         },
         {
@@ -211,9 +214,6 @@
         {
             "name": "Pei Yu",
             "affiliation": "Universit\u00e9 Paris Cit\u00e9, CNRS, Astroparticule et Cosmologie, F-75013 Paris, France"
-        },
-        {
-            "name": "The Gammapy team"
         }
     ],
     "related_identifiers": [
@@ -246,6 +246,9 @@
         },
         {
             "id": "10.13039/501100000780::824064"
+        },
+        {
+            "id": "10.3030/101131928::101131928"
         }
     ],
     "access_right": "open"
