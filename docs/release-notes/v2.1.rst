@@ -113,6 +113,7 @@ Bug Fixes
 
 Contributors
 ------------
+- Alexander Cerviño Cortínez
 - Anshita Dubey
 - Arnau Aguasca-Cabot
 - Atreyee Sinha
@@ -136,6 +137,5 @@ Contributors
 - Régis Terrier
 - Tomas Bylund
 - Tora T. H. Arnesen
-- Alexander Cerviño Cortínez
 - Y.Emre Bahar
 - Yaocheng Chen
