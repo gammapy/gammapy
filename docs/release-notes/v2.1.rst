@@ -6,7 +6,7 @@
 =====================
 
 - Released: 3rd April, 2026
-- contributors: 24
+- contributors: 26
 - pull requests since v2.0: 133
 - closed issues: 20
 
