@@ -8,7 +8,7 @@ on:
 jobs:
   execute-tutorials:
     runs-on: ubuntu-latest
-    timeout-minutes: 45  # Usual run-time is about 30 min
+    timeout-minutes: 45  # Usual run-time is less than 30 min
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
 
     env:
@@ -20,21 +20,25 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-python@v6
+      - name: Install uv + Python
+        uses: astral-sh/setup-uv@v8
         with:
-          python-version: '3.13' 
+          python-version: '3.13'
+          enable-cache: true
+
+      - name: Create virtual environment
+        run: uv venv
 
       - name: Install Gammapy and needed dependencies
         run: |
-          pip install --upgrade pip
-          pip install jupyter jupytext jupyter_client ipykernel 
-          pip install .[all]
+          uv pip install jupyter jupytext jupyter_client ipykernel
+          uv pip install -e ".[all]"
 
       - name: Download datasets
-        run: |
-          gammapy download datasets
+        run: uv run gammapy download dataset
+
+      - name: Register Jupyter kernel
+        run: uv run python -m ipykernel install --name gammapy-dev --user
 
       - name: Execute tutorials with Jupytext
-        run: |
-          python -m ipykernel install --name gammapy-dev --user
-          jupytext --execute examples/tutorials/*/*.py
+        run: uv run jupytext --execute examples/tutorials/*/*.py
