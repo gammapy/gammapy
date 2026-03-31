@@ -51,7 +51,7 @@ jobs:
         run: |
           if [ "${{ steps.cache-gammapy-datasets.outputs.cache-hit }}" != "true" ]; then
             echo "Cache miss - downloading gammapy-datasets"
-            uv run gammapy download dataset
+            uv run gammapy download datasets
           else
             echo "Using cached gammapy-datasets"
           fi
