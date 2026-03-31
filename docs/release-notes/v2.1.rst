@@ -6,7 +6,7 @@
 =====================
 
 - Released: 3rd April, 2026
-- contributors: 24
+- contributors: 26
 - pull requests since v2.0: 133
 - closed issues: 20
 
@@ -113,17 +113,20 @@ Bug Fixes
 
 Contributors
 ------------
+- Alexander Cerviño Cortínez
 - Anshita Dubey
 - Arnau Aguasca-Cabot
 - Atreyee Sinha
 - Axel Donath
+- Basmala Hekal
 - Bruno Khélifi
 - Daniel Morcuende
 - Ebraam Ashraf
 - Fabio Acero
-- Fabio PINTORE
-- Gabriel Emery
+- Fabio Pintore
 - Kirsty Feijen
+- Kush Agarwal
+- Lea Heckmann
 - Leander Schlegel
 - Marie-Sophie Carrasco
 - Maxime Regeard
@@ -132,10 +135,7 @@ Contributors
 - Pratham Chaudary
 - Quentin Remy
 - Régis Terrier
-- Stefan Fröse
-- Thomas Vuillaume
 - Tomas Bylund
 - Tora T. H. Arnesen
-- Alexander Cerviño Cortínez
 - Y.Emre Bahar
 - Yaocheng Chen
