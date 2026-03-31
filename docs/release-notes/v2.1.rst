@@ -117,13 +117,15 @@ Contributors
 - Arnau Aguasca-Cabot
 - Atreyee Sinha
 - Axel Donath
+- Basmala Hekal
 - Bruno Khélifi
 - Daniel Morcuende
 - Ebraam Ashraf
 - Fabio Acero
-- Fabio PINTORE
-- Gabriel Emery
+- Fabio Pintore
 - Kirsty Feijen
+- Kush Agarwal
+- Lea Heckmann
 - Leander Schlegel
 - Marie-Sophie Carrasco
 - Maxime Regeard
@@ -132,8 +134,6 @@ Contributors
 - Pratham Chaudary
 - Quentin Remy
 - Régis Terrier
-- Stefan Fröse
-- Thomas Vuillaume
 - Tomas Bylund
 - Tora T. H. Arnesen
 - Alexander Cerviño Cortínez
