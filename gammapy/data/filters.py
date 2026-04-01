@@ -27,6 +27,10 @@ class ObservationFilter:
         The filtered event list will be an intersection of all filters. A union
         of filters is not supported yet. Default is None.
 
+    inverted_time : bool, optional
+        Whether to invert selection i.e. to keep all entries outside the time range.
+        Default is False.
+
     Examples
     --------
     >>> from gammapy.data import ObservationFilter, DataStore, Observation
@@ -45,9 +49,10 @@ class ObservationFilter:
 
     EVENT_FILTER_TYPES = dict(sky_region="select_region", custom="select_parameter")
 
-    def __init__(self, time_filter=None, event_filters=None):
+    def __init__(self, time_filter=None, event_filters=None, inverted_time=False):
         self.time_filter = time_filter
         self.event_filters = event_filters or []
+        self.inverted_time = inverted_time
 
     def _repr_html_(self):
         try:
@@ -102,7 +107,7 @@ class ObservationFilter:
         Calls the `select_time` method of the data object.
         """
         if self.time_filter:
-            return data.select_time(self.time_filter)
+            return data.select_time(self.time_filter, self.inverted_time)
         else:
             return data
 

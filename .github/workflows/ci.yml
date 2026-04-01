@@ -41,13 +41,13 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            python: '3.11'
-            tox_env: 'py311-test-alldeps_noray'
+            python: '3.13'
+            tox_env: 'py313-test-alldeps-cov'
             gammapy_data: true
             allowed_fail: false
           - os: ubuntu-latest
-            python: '3.12'
-            tox_env: 'py312-test-alldeps-cov'
+            python: '3.14'
+            tox_env: 'py314-test-alldeps_noray'
             gammapy_data: true
             allowed_fail: false
           - os: macos-latest
@@ -55,42 +55,21 @@ jobs:
             tox_env: 'py313-test'
             gammapy_data: true
             allowed_fail: false
-          - os: macos-14
-            python: '3.11'
-            tox_env: 'py311-test'
-            allowed_fail: false
           - os: windows-latest
             python: '3.12'
             tox_env: 'py312-test-alldeps_noray'
             gammapy_data: true
             allowed_fail: false
-          - os: ubuntu-latest
-            python: '3.12'
-            tox_env: 'py312-test-alldeps_noray'
-            gammapy_data: true
-            allowed_fail: false
-          - os: ubuntu-latest
-            python: '3.13'
-            tox_env: 'py313-test'
-            allowed_fail: false
-          - os: ubuntu-latest
-            python: '3.14'
-            tox_env: 'py314-test'
-            allowed_fail: false
-          - os: ubuntu-latest
-            python: '3.14'
-            tox_env: 'py314-test-alldeps_noray-astropy615-numpy20'
-            allowed_fail: false
-          - os: ubuntu-latest
-            python: '3.13'
-            tox_env: 'py313-test-alldeps_noray-numpy20'
+          - os: macos-14
+            python: '3.11'
+            tox_env: 'py311-test'
             allowed_fail: false
           - os: ubuntu-latest
             python: '3.11'
             tox_env: 'oldestdeps'
             allowed_fail: false
           - os: ubuntu-latest
-            python: '3.12'
+            python: '3.13'
             tox_env: 'devdeps'
             allowed_fail: true
 

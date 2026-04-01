@@ -1,1 +1,0 @@
-Replace `~gammapy.makers.utils.make_theta_squared_table` with `~gammapy.makers.utils.ThetaSquaredTable` class. Overlapping regions are now forbidden. User can define multiple non-overlapping OFF regions.

@@ -60,7 +60,7 @@ all = [
     "ray[default]>=2.9",
     "ultranest",
     "numba",
-    "arviz",
+    "arviz<1",
     "arviz[preview]",
 ]
 all_no_ray = [
@@ -70,7 +70,7 @@ all_no_ray = [
     "ipywidgets",
     "ultranest",
     "numba",
-    "arviz",
+    "arviz<1",
     "arviz[preview]",
 ]
 cov = [
@@ -80,7 +80,7 @@ cov = [
     "ipywidgets",
     "ultranest",
     "numba",
-    "arviz",
+    "arviz<1",
     "arviz[preview]",
 ]
 test = [
