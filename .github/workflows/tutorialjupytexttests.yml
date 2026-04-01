@@ -8,7 +8,7 @@ on:
 jobs:
   execute-tutorials:
     runs-on: ubuntu-latest
-    timeout-minutes: 45  # Usual run-time is less than 30 min
+    timeout-minutes: 60  # Usual run-time is less than 30 min
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
 
     env:
