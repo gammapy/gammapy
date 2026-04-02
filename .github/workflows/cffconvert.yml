@@ -44,6 +44,11 @@ jobs:
         with:
           overwrite: true
 
+      - name: Validate Zenodo Metadata
+        uses: vsoch/zenodo-validator@main
+        with:
+          path: '.zenodo.json'
+
       - name: commit changes
         uses: stefanzweifel/git-auto-commit-action@v7.1.0
         if: success()
