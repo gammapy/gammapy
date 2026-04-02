@@ -1,4 +1,4 @@
-# Metadata for citation of this software according to the CFF format (https://citation-file-format.github.io/)
+# Metadata for citation of this software according to the CFF format  (https://citation-file-format.github.io/)
 cff-version: 1.2.0
 title: 'Gammapy: Python toolbox for gamma-ray astronomy'
 abstract: 'Gammapy analyzes gamma-ray data and creates sky images, spectra and lightcurves,
