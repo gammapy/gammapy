@@ -2,11 +2,11 @@
 
 .. _gammapy_2p1_release:
 
-2.1 (3rd April, 2026)
+2.1 (2nd April, 2026)
 =====================
 
-- Released: 3rd April, 2026
-- contributors: 26
+- Released: 2nd April, 2026
+- contributors: 27
 - pull requests since v2.0: 133
 - closed issues: 20
 
@@ -113,29 +113,30 @@ Bug Fixes
 
 Contributors
 ------------
-- Alexander Cerviño Cortínez
-- Anshita Dubey
+- Fabio Acero
+- Kush Agarwal
 - Arnau Aguasca-Cabot
-- Atreyee Sinha
-- Axel Donath
+- Tora T. H. Arnesen
+- Ebraam Ashraf
+- Y.Emre Bahar
+- Tomas Bylund
+- Marie-Sophie Carrasco
+- Alexander Cerviño Cortínez
+- Pratham Chaudary
+- Yaocheng Chen
+- Anshita Dubey
+- Katharina Egg
+- Kirsty Feijen
+- Lea Heckmann
 - Basmala Hekal
 - Bruno Khélifi
 - Daniel Morcuende
-- Ebraam Ashraf
-- Fabio Acero
-- Fabio Pintore
-- Kirsty Feijen
-- Kush Agarwal
-- Lea Heckmann
-- Leander Schlegel
-- Marie-Sophie Carrasco
-- Maxime Regeard
 - Mireia Nievas-Rosillo
+- Pierre Pichard
 - Natthan Pigoux
-- Pratham Chaudary
+- Fabio Pintore
+- Maxime Regeard
 - Quentin Remy
+- Leander Schlegel
+- Atreyee Sinha
 - Régis Terrier
-- Tomas Bylund
-- Tora T. H. Arnesen
-- Y.Emre Bahar
-- Yaocheng Chen

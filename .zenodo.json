@@ -2,8 +2,15 @@
     "upload_type": "software",
     "creators": [
         {
+            "name": "Gammapy team"
+        },
+        {
             "name": "Fabio Acero",
             "affiliation": "Universit\u00e9 Paris-Saclay, Universit\u00e9 Paris Cit\u00e9, CEA, CNRS, AIM, F-91191 Gif-sur-Yvette, France"
+        },
+        {
+            "name": "Kush Agarwal",
+            "affiliation": " Gandhi Institute of Technology and Management (GITAM) University, Visakhapatnam, India"
         },
         {
             "name": "Arnau Aguasca-Cabot",
@@ -14,100 +21,68 @@
             "affiliation": "Instituto de Astrof\u00edsica de Canarias and Dpto. de Astrof\u00edsica, Universidad de La Laguna, C/ V\u00eda L\u00e1ctea s/n, E-38205 La Laguna, Tenerife, Spain"
         },
         {
-            "name": "Luis Barrios-Jimenez",
-            "affiliation": "Instituto de Astrof\u00edsica de Canarias and Dpto. de Astrof\u00edsica, Universidad de La Laguna, C/ V\u00eda L\u00e1ctea s/n, E-38205 La Laguna, Tenerife, Spain"
+            "name": "Ebraam Ashraf",
+            "affiliation": "Cairo University, Faculty of Engineering, Computer Engineering Department"
         },
         {
-            "name": "Anushka Batt",
-            "affiliation": "Department of Instrumentation and Control Engineering, Vishwakarma Institute of Technology, Pune, Maharashtra India"
-        },
-        {
-            "name": "Juan Bernete",
-            "affiliation": "Centro de Investigaciones Energ\u00e9ticas Medioambientales y Tecnol\u00f3gicas (CIEMAT), Madrid, Spain"
-        },
-        {
-            "name": "Noah Biederbeck",
-            "affiliation": "Astroparticle Physics Group, TU Dortmund University, Germany"
-        },
-        {
-            "name": "Johannes Buchner",
-            "affiliation": "Max Planck Institute for Extraterrestrial Physics, Giessenbachstrasse 1, 85748 Garching, Germany"
+            "name": "Y. Emre Bahar",
+            "affiliation": "INAF, Osservatorio di Astrofisica e Scienza dello Spazio, via Piero Gobetti 93/3, 40129 Bologna, Italy"
         },
         {
             "name": "Tomas Bylund",
             "affiliation": "LUX, Observatoire de Paris, Universit\u00e9 PSL, Sorbonne Universit\u00e9, CNRS, 92190 Meudon, France"
         },
         {
-            "name": "Marie-Sophie_test Carrasco",
+            "name": "Marie-Sophie Carrasco",
             "affiliation": "Universit\u00e9 Paris Cit\u00e9, CNRS, Astroparticule et Cosmologie, F-75013 Paris, France"
         },
         {
-            "name": "Julia Djuvsland",
-            "affiliation": "University of Bergen, Norway and Max Planck Institute for Nuclear Physics, Heidelberg, Germany"
+            "name": "Alexander Cervi\u00f1o Cort\u00ednez",
+            "affiliation": "IPARCOS-UCM, Instituto de F\u00edsica de Part\u00edculas y del Cosmos, and EMFTEL Department, Universidad Complutense de Madrid"
+        },
+        {
+            "name": "Pratham Chaudhary",
+            "affiliation": "Indian Institute of Technology (BHU) Varanasi, India"
+        },
+        {
+            "name": "Yaocheng Chen",
+            "affiliation": "Institute of Astronomy, Geophysics and Atmospheric Sciences (IAG), University of S\u00e3o Paulo (USP), Rua do Mat\u00e3o 1226, 05508-090 S\u00e3o Paulo, SP, Brazil"
         },
         {
             "name": "Axel Donath",
             "affiliation": "Center for Astrophysics | Harvard & Smithsonian, USA"
         },
         {
-            "name": "Katharina Egg",
-            "affiliation": "Friedrich-Alexander-Universit\u00e4t Erlangen-N\u00fcrnberg, ECAP, Nikolaus-Fiebiger-Str. 2, 91058 Erlangen, Germany"
+            "name": "Anshita Dubey",
+            "affiliation": "Department of Computer Science and Engineering, JSS University, India"
         },
         {
-            "name": "Gabriel Emery",
-            "affiliation": "Instituto de Astrof\u00edsica de Andaluc\u00eda-CSIC, Glorieta de la Astronom\u00eda s/n, 18008, Granada, Spain"
+            "name": "Katharina Egg",
+            "affiliation": "Friedrich-Alexander-Universit\u00e4t Erlangen-N\u00fcrnberg, ECAP, Nikolaus-Fiebiger-Str. 2, 91058 Erlangen, Germany"
         },
         {
             "name": "Kirsty Feijen",
             "affiliation": "Universit\u00e9 Paris Cit\u00e9, CNRS, Astroparticule et Cosmologie, F-75013 Paris, France"
         },
         {
-            "name": "Stefan Fr\u00f6se",
-            "affiliation": "Astroparticle Physics Group, TU Dortmund University, Germany"
-        },
-        {
             "name": "Claudio Galelli",
             "affiliation": "Laboratoire Univers et Th\u00e9ories, Observatoire de Paris, Universit\u00e9 PSL,\\ \\ Universit\u00e9 Paris Cit\u00e9, CNRS, F-92190 Meudon, France"
         },
         {
-            "name": "Lucas Gr\u00e9aux",
-            "affiliation": "Fakult\u00e4t f\u00fcr Physik & Astronomie, Ruhr-Universit\u00e4t Bochum, D-44780 Bochum, Germany"
+            "name": "Lea Heckmann",
+            "affiliation": "Universit\u00e9 Paris Cit\u00e9, CNRS, Astroparticule et Cosmologie, F-75013 Paris, France"
+        },
+        {
+            "name": "Basmala Hekal",
+            "affiliation": "Faculty of Computer and Information, Computer Science Department, Tanta University, Egypt."
         },
         {
             "name": "Bruno Kh\u00e9lifi",
             "affiliation": "Universit\u00e9 Paris Cit\u00e9, CNRS, Astroparticule et Cosmologie, F-75013 Paris, France"
         },
         {
-            "name": "Jana Konrad",
-            "affiliation": "Astroparticle Physics Group, TU Dortmund University, Germany"
-        },
-        {
-            "name": "Paula Kornecki",
-            "affiliation": "Instituto de Astrof\u00edsica de Andaluc\u00eda (IAA-CSIC), Glorieta de la Astronom\u00eda s/n, 18008, Granada, Spain"
-        },
-        {
             "name": "Maximilian Linhoff",
             "affiliation": "Astroparticle Physics Group, TU Dortmund University, Germany"
-        },
-        {
-            "name": "Matthew Lundy",
-            "affiliation": "Physics Department, McGill University, Montreal, QC H3A 2T8, Canada"
-        },
-        {
-            "name": "Kurt McKee",
-            "affiliation": "University of Chicago, USA"
-        },
-        {
-            "name": "Simone Mender",
-            "affiliation": "Astroparticle Physics Group, TU Dortmund University, Germany"
-        },
-        {
-            "name": "Edgar Molina",
-            "affiliation": "Instituto de Astrof\u00edsica de Canarias and Dpto. de Astrof\u00edsica, Universidad de La Laguna, C/ V\u00eda L\u00e1ctea s/n, E-38205 La Laguna, Tenerife, Spain"
-        },
-        {
-            "name": "Lars Mohrmann",
-            "affiliation": "Max Planck Institute for Nuclear Physics, Heidelberg, Germany"
         },
         {
             "name": "Daniel Morcuende",
@@ -118,24 +93,8 @@
             "affiliation": "Instituto de Astrof\u00edsica de Canarias (IAC), C/ V\u00eda L\u00e1ctea s/n, 38205 La Laguna, Tenerife, Spain"
         },
         {
-            "name": "Laura Olivera-Nieto",
-            "affiliation": "Max Planck Institute for Nuclear Physics, Heidelberg, Germany"
-        },
-        {
-            "name": "Sebastian Panny",
-            "affiliation": "Universit\u00e4t Innsbruck, Institut f\u00fcr Astro- und Teilchenphysik, Technikerstra\u00dfe 25, 6020 Innsbruck, Austria"
-        },
-        {
-            "name": "Robert Daniel Parsons",
-            "affiliation": "Institut f\u00fcr Physik, Humboldt-Universit\u00e4t zu Berlin, D 12489 Berlin, Germany"
-        },
-        {
             "name": "Natthan Pigoux",
             "affiliation": "Laboratoire Univers et Particules de Montpellier, CNRS, Universit\u00e9 de Montpellier, Montpellier, France"
-        },
-        {
-            "name": "Michele Peresano",
-            "affiliation": "Max-Planck-Institut f\u00fcr Physik, Boltzmannstra\u00dfe 8, 85748 Garching bei M\u00fcnchen, Germany"
         },
         {
             "name": "Pierre Pichard",
@@ -146,27 +105,12 @@
             "affiliation": "INAF/IASF PALERMO, Italy"
         },
         {
-            "name": "Tobi Preis",
-            "affiliation": "Universit\u00e4t Innsbruck, Institut f\u00fcr Astro- und Teilchenphysik, Technikerstra\u00dfe 25, 6020 Innsbruck, Austria"
-        },
-        {
-            "name": "Michael Punch",
-            "affiliation": "Universit\u00e9 Paris Cit\u00e9, CNRS, Astroparticule et Cosmologie, F-75013 Paris, France"
-        },
-        {
             "name": "Maxime Regeard",
             "affiliation": "Universit\u00e9 Paris Cit\u00e9, CNRS, Astroparticule et Cosmologie, F-75013 Paris, France"
         },
         {
             "name": "Quentin Remy",
             "affiliation": "Max Planck Institute for Nuclear Physics, Heidelberg, Germany"
-        },
-        {
-            "name": "Gerrit Roellinghoff",
-            "affiliation": "Friedrich-Alexander-Universit\u00e4t Erlangen-N\u00fcrnberg, ECAP, Nikolaus-Fiebiger-Str. 2, 91058 Erlangen, Germany"
-        },
-        {
-            "name": "Vasco Schiavo"
         },
         {
             "name": "Leander Schlegel",
@@ -177,43 +121,8 @@
             "affiliation": "Dept. of High Energy Physics, Tata Institute of Fundamental Research, 400055 Mumbai, India"
         },
         {
-            "name": "Brigitta M Sip\u0151cz",
-            "affiliation": "Caltech/IPAC, USA"
-        },
-        {
-            "name": "Hanna Stapel",
-            "affiliation": "Universit\u00e9 Paris Cit\u00e9, CNRS, Astroparticule et Cosmologie, F-75013 Paris, France"
-        },
-        {
-            "name": "Katrin Streil",
-            "affiliation": "Friedrich-Alexander-Universit\u00e4t Erlangen-N\u00fcrnberg, ECAP, Nikolaus-Fiebiger-Str. 2, 91058 Erlangen, Germany"
-        },
-        {
-            "name": "Gnana Sindhu Subramanya",
-            "affiliation": "GSI Helmholtzzentrum f\u00fcr Schwerionenforschung, Planckstra\u00dfe 1 64291 Darmstadt, Germany"
-        },
-        {
-            "name": "Mitsunari Takahashi",
-            "affiliation": "Institute for Space--Earth Environmental Research, Nagoya University, Furo-cho, Chikusa-ku, Nagoya 464-8601, Japan"
-        },
-        {
             "name": "R\u00e9gis Terrier",
             "affiliation": "Universit\u00e9 Paris Cit\u00e9, CNRS, Astroparticule et Cosmologie, F-75013 Paris, France"
-        },
-        {
-            "name": "Tim Unbehaun",
-            "affiliation": "Friedrich-Alexander-Universit\u00e4t Erlangen-N\u00fcrnberg, ECAP, Nikolaus-Fiebiger-Str. 2, 91058 Erlangen, Germany"
-        },
-        {
-            "name": "Samantha Wong",
-            "affiliation": "Physics Department, McGill University, Montreal, QC H3A 2T8, Canada"
-        },
-        {
-            "name": "Pei Yu",
-            "affiliation": "Universit\u00e9 Paris Cit\u00e9, CNRS, Astroparticule et Cosmologie, F-75013 Paris, France"
-        },
-        {
-            "name": "The Gammapy team"
         }
     ],
     "related_identifiers": [
@@ -246,6 +155,9 @@
         },
         {
             "id": "10.13039/501100000780::824064"
+        },
+        {
+            "id": "10.3030/101131928::101131928"
         }
     ],
     "access_right": "open"
