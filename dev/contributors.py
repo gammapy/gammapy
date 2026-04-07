@@ -37,7 +37,12 @@ def main():
 
     contributors = sorted(set(email_to_name.values()))
 
-    # --- Commit messages (for PR extraction) ---
+    print("## Contributors\n")
+
+    for name in contributors:
+        print(f"- {name}")
+
+    # For number of PRs
     messages = run(
         f'git log --since="{since}" --until="{until}" --format="%s"'
     ).splitlines()
@@ -47,12 +52,6 @@ def main():
     for msg in messages:
         matches = re.findall(r"#(\d+)", msg)
         pr_numbers.update(matches)
-
-    # --- Output ---
-    print("## Contributors\n")
-
-    for name in contributors:
-        print(f"- {name}")
 
     print("")
     print(f"**Total merged PRs:** {len(pr_numbers)}")
