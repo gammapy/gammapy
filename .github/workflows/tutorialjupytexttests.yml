@@ -24,11 +24,12 @@ jobs:
         with:
           python-version: '3.13'
           enable-cache: true
+          cache-dependency-glob: |
+            **/pyproject.toml
 
       - name: Install Gammapy and needed dependencies
         run: |
-          uv add jupyter jupytext jupyter_client ipykernel
-          uv sync --locked --extra all --dev
+          uv sync --extra all_no_ray --extra test_notebooks
 
       # Get latest commit SHA from gammapy-data main branch
       - name: Get gammapy-data version
