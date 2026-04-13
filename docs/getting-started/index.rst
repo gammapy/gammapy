@@ -17,29 +17,43 @@ Getting started
 Installation
 ------------
 
-There are various ways for users to install Gammapy.
+Two main installation methods are available:
+
+* Environment-based installation using **pip** or **conda**. See :ref:`quickstart-setup`.
+* Project-based installation using **uv** or **pixi**.
 
 .. tab-set::
 
-    .. tab-item:: pip
+    .. tab-item:: Environment Based
+
+        Traditional installation into an existing environment. We recommend
+        doing it in a dedicated Python environment.
+
+        Using **pip** from PyPI:
 
         .. code-block:: bash
 
             pip install gammapy
 
-    .. tab-item:: conda
+        Using **conda/mamba** from conda-forge:
 
         .. code-block:: bash
 
             conda install -c conda-forge gammapy  # or mamba install -c conda-forge gammapy
 
-    .. tab-item:: uv
+    .. tab-item:: Project Based
+
+        Fastest installation method, ensuring reproducibility of your analysis project.
+        Creates an isolated environment tied to your project, and easy to share.
+        More information in :ref:`project-based installation <install-project-based>`.
+
+        Using the Python package manager **uv**:
 
         .. code-block:: bash
 
             uv add gammapy
 
-    .. tab-item:: pixi
+        Or the package management tool **pixi**:
 
         .. code-block:: bash
 
