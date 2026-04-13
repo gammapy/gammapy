@@ -6,21 +6,23 @@ Installation
 ============
 
 There are numerous ways to install Python and Gammapy as a user. On this page, we list the most common ones.
-In general, **we recommend using** :ref:`virtual environments <virtual-envs>` when using Gammapy. This
-way you have complete control over the additional packages that you may use in your analysis and you work with
+In general, **we recommend using** :ref:`virtual environments <virtual-envs>` or
+:ref:`project-based installation <install-project-based>` when using Gammapy.
+Specially with the latter, you have complete control over the additional packages that you may use in your analysis and you work with
 well defined computing environments. This enables you to easily share your work and ensure **reproducibility of your
 scientific analysis results**. You can also :ref:`install Gammapy for development <dev_setup>`.
 
 
-.. _anaconda:
+.. _environment-based-installation:
+
+Environment-based
+-----------------
 
 Using Conda / Mamba
--------------------
+^^^^^^^^^^^^^^^^^^^
 The easiest way to install Gammapy is to use one of the conda Python distribution software
-(see this
-`link <https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html>`__).
-`Miniforge <https://github.com/conda-forge/miniforge>`__
-is the recommended way to use conda/mamba with the ``conda-forge`` channel.
+(see the `conda installation guide`_). `Miniforge`_ is the recommended way to use conda/mamba
+with the ``conda-forge`` channel.
 
 To install the latest stable version of Gammapy and its dependencies using conda,
 execute this command in a terminal:
@@ -39,19 +41,17 @@ To install a specific version of Gammapy just execute:
 
 .. code-block:: bash
 
-    conda install -c conda-forge gammapy=2.0
+    conda install -c conda-forge gammapy=2.1
 
 If you encounter any issues you can check the :ref:`troubleshoot` guide.
 
-Alternatively, you can use `Mamba <https://mamba.readthedocs.io/>`__, an alternative package
+Alternatively, you can use `Mamba`_, an alternative package
 manager that supports most of conda’s commands but offers higher installation speed and more
 reliable environment solutions. Just simply replace the ``conda`` with the ``mamba`` in the
 commands above. Miniforge also comes with mamba pre-installed, so you can use it right away.
 
-.. _install-pip:
-
 Using pip
----------
+^^^^^^^^^
 
 To install the latest Gammapy **stable** version (see `Gammapy page on PyPI`_)
 using `pip`_:
@@ -79,7 +79,7 @@ To install a specific version of Gammapy use:
 
 .. code-block:: bash
 
-    python -m pip install gammapy==2.0
+    python -m pip install gammapy==2.1
 
 To install the current Gammapy **development** version with `pip`_ use:
 
@@ -97,22 +97,39 @@ If you want to study or edit the code locally, use the following:
 
 If you encounter any issues you can check the :ref:`troubleshoot` guide.
 
-This will install Gammapy in the current Python environment. If you want to install it in
-a specific environment, make sure to activate it first and then execute the above command.
+.. note::
+   This will install Gammapy in the current Python environment. If you want to install it in
+   a specific environment, make sure to activate it first and then execute the above command.
+
+.. warning::
+   Note that environment-based installs do not automatically document your full dependency state,
+   which can make analyses harder to reproduce later. For full reproducibility, we recommend
+   :ref:`install-project-based` installations.
 
 
-.. _install-uv:
+.. _install-project-based:
+
+Project-based
+-------------
+
+Project-based environments are the best way to manage your analysis projects.
+
+* Faster installation method than pip and conda/mamba.
+* They create an isolated environment that is tightly coupled to a single analysis project.
+* Fully reproducible environments and analysis thanks to a lock file that pins every dependency
+  to exact versions, so anyone cloning the project gets an identical environment.
+* Makes projects easy to share and set up consistently across systems.
+* Follows best practices for reproducible science.
+
 Using uv
---------
-Project-based environments are a great way to manage dependencies for your projects.
-`uv <https://docs.astral.sh/uv/>`__ is a modern Python package manager that provides a
+^^^^^^^^
+`uv`_ is a modern Python package manager that provides a
 simple and efficient way to create and manage project-based environments (only with Python
-dependencies). It allows you to create isolated environments for a given project, ensuring
-that you have fully reproducible environments. It is also way faster than pip and conda.
+dependencies).
 
-1. First, install `uv` following the `instructions in the uv documentation <https://docs.astral.sh/uv/#installation>`__.
+1. Install **uv** following the `uv installation instructions`_.
 
-2. Create a new project in a new subdirectory, by executing the following in a terminal:
+2. Create a new project in a new directory, by executing the following in a terminal:
 
    .. code-block:: bash
 
@@ -125,25 +142,22 @@ that you have fully reproducible environments. It is also way faster than pip an
 
       uv add gammapy
 
-
-This will create a set of files in the new directory under version control, including a ``pyproject.toml``
+This will create a set of files in the new directory *under version control*, including a ``pyproject.toml``
 file and a ``uv.lock`` file that contains the exact versions of all used dependencies. Further dependencies
 can added be via ``uv add`` command again and they will be added to the lock file. To update Gammapy, execute
 ``uv add gammapy`` again and it will update to the latest version. You can also install a specific version
-like, for example, ``uv add gammapy==2.0.1``.
+like, for example, ``uv add gammapy==2.1``.
 
-
-.. _install-pixi:
 Using pixi
-----------
-`pixi <https://pixi.prefix.dev>`__ is a similar package manager that also provides project-based
+^^^^^^^^^^
+`pixi`_ is a similar package manager that also provides project-based
 environments in a fast and reproducible way. The main difference is that pixi also supports non-Python
-dependencies, which can be useful for some users. With `pixi`, you can also define tasks that can be executed
-in the environment. It is also faster than pip and conda.
+dependencies, which can be useful for some users. With **pixi**, you can also define tasks that can be executed
+in the environment.
 
-1. First, install `pixi` following the `instructions in the pixi documentation <https://pixi.prefix.dev/latest/installation/>`__.
+1. Install **pixi** following the `pixi installation instructions`_.
 
-2. Create a new project in a new subdirectory, by executing the following in a terminal:
+2. Create a new project in a new directory, by executing the following in a terminal:
 
    .. code-block:: bash
 
@@ -156,9 +170,35 @@ in the environment. It is also faster than pip and conda.
 
       pixi add gammapy
 
-Find more details on setting up a workspace in the `pixi documentation <https://pixi.prefix.dev/latest/first_workspace/>`__.
+Find more details on setting up a workspace in the `pixi documentation`_.
 
 .. _install-other:
+
+Run your analysis in the project-based environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. note::
+   All the following commands are similar if you use **pixi** instead of **uv**.
+
+Inside the analysis directory created before you can run your analysis scripts as:
+
+.. code-block:: bash
+
+   uv run python my-analysis-script.py
+
+Working with jupyter notebooks
+""""""""""""""""""""""""""""""
+First install jupyterlab:
+
+.. code-block:: bash
+
+     uv add jupyterlab
+
+Then, start jupyterlab with:
+
+.. code-block:: bash
+
+   uv run jupyter lab
 
 Using other package managers
 ----------------------------
