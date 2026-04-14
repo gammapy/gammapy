@@ -117,11 +117,12 @@ Please give feedback and suggest additions to this page!
         fp.plot(ax=ax, sed_type="e2dnde")
 
     By default Gammapy uses bracket notation for axis labels (e.g. ``Energy [TeV] ``).
-    According to International System of Units the formally correct notation is ``quantity / unit``
+    According to International System of Units the recommended notation is ``quantity / unit``
     (e.g. ``Energy / TeV`` ).
-    To apply this , override the axis labels manually after plotting :
+    To apply this,override the axis labels manually after plotting:
 
     .. code::
+
         ax.set_xlabel(r"$E$ / eV")
         ax.set_ylabel(r"$E^2 \, \mathrm{d}N/\mathrm{d}E$ / (erg cm$^{-2}$ s$^{-1}$)")
 
