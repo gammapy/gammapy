@@ -13,10 +13,12 @@ class Sampler:
 
     Parameters
     ----------
-    backend : {"ultranest"}
+    backend : {"ultranest", "nautilus"}
         Global backend used for sampler. Default is "ultranest".
         UltraNest: Most options can be found in the
         `UltraNest doc <https://johannesbuchner.github.io/UltraNest/>`__.
+        Nautilus uses neural-network-guided nested sampling. See the
+    `   `Nautilus documentation <https://nautilus-sampler.readthedocs.io/>`__.
     sampler_opts : dict, optional
         Sampler options passed to the sampler. See the full list of options on the
         `UltraNest documentation <https://johannesbuchner.github.io/UltraNest/ultranest.html#ultranest.integrator.ReactiveNestedSampler>`__.
@@ -79,6 +81,12 @@ class Sampler:
             self.sampler_opts.setdefault("resume", "subfolder")
             self.sampler_opts.setdefault("step_sampler", False)
             self.sampler_opts.setdefault("nsteps", 10)
+        elif self.backend == "nautilus":
+            self.sampler_opts.setdefault("n_live", 2000)
+            self.sampler_opts.setdefault("filepath", None)
+            self.sampler_opts.setdefault("resume", True)
+            self.run_opts.setdefault("f_live", 0.01)
+            self.run_opts.setdefault("n_eff", 10000)
 
     @staticmethod
     def _update_models_from_posterior(models, result):
@@ -157,6 +165,47 @@ class Sampler:
             **self.run_opts,
         )
 
+        return result
+
+    def sampler_nautilus(self, parameters, like):
+        import nautilus
+        import numpy as np
+
+        def _prior_inverse_cdf(values):
+            if None in parameters:
+                raise ValueError(
+                    "Some parameters have no prior set. You need priors on all parameters."
+                )
+            return [par.prior._inverse_cdf(val) for par, val in zip(parameters, values)]
+
+        self._sampler = nautilus.Sampler(
+            prior=_prior_inverse_cdf,
+            likelihood=like.fcn,
+            n_dim=len(parameters),
+            n_live=self.sampler_opts["n_live"],
+            filepath=self.sampler_opts["filepath"],
+            resume=self.sampler_opts["resume"],
+        )
+
+        success = self._sampler.run(**self.run_opts)
+
+        # Build a result dict compatible with the rest of the pipeline
+        points, log_w, log_l = self._sampler.posterior()
+        weights = np.exp(log_w - log_w.max())
+        weights /= weights.sum()
+        mean = np.average(points, weights=weights, axis=0)
+        stdev = np.sqrt(np.average((points - mean) ** 2, weights=weights, axis=0))
+
+        result = {
+            "ncall": self._sampler.n_like,
+            "success": success,
+            "logz": self._sampler.log_z,
+            "posterior": {"mean": mean, "stdev": stdev},
+            "samples": self._sampler.posterior(equal_weight=True)[0],
+            "points": points,
+            "log_w": log_w,
+            "log_l": log_l,
+        }
         return result
 
     def run(self, datasets):
