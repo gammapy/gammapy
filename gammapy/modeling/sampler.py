@@ -87,6 +87,8 @@ class Sampler:
             self.sampler_opts.setdefault("resume", True)
             self.run_opts.setdefault("f_live", 0.01)
             self.run_opts.setdefault("n_eff", 10000)
+        else:
+            raise ValueError(f"Sampler {self.backend} is not supported.")
 
     @staticmethod
     def _update_models_from_posterior(models, result):
@@ -225,10 +227,10 @@ class Sampler:
         datasets, parameters = _parse_datasets(datasets=datasets)
         parameters = parameters.free_unique_parameters
 
+        like = SamplerLikelihood(
+            function=datasets._stat_sum_likelihood, parameters=parameters
+        )
         if self.backend == "ultranest":
-            like = SamplerLikelihood(
-                function=datasets._stat_sum_likelihood, parameters=parameters
-            )
             result_dict = self.sampler_ultranest(parameters, like)
             self._sampler.print_results()
 
@@ -239,8 +241,17 @@ class Sampler:
             result.models = models_copy
 
             return result
-        else:
-            raise ValueError(f"Sampler {self.backend} is not supported.")
+        elif self.backend == "nautilus":
+            result_dict = self.sampler_nautilus(parameters, like)
+            self._sampler.print_status()
+
+            models_copy = datasets.models.copy()
+            self._update_models_from_posterior(models_copy, result_dict)
+
+            result = SamplerResult.from_nautilus(result_dict)
+            result.models = models_copy
+
+            return result
 
 
 class SamplerResult:
