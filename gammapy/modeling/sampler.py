@@ -5,6 +5,8 @@ from .utils import _parse_datasets
 
 __all__ = ["Sampler", "SamplerLikelihood", "SamplerResult"]
 
+SAMPLER_BACKENDS = {"ultranest", "nautilus"}
+
 
 class Sampler:
     """Sampler class.
@@ -82,11 +84,12 @@ class Sampler:
             self.sampler_opts.setdefault("step_sampler", False)
             self.sampler_opts.setdefault("nsteps", 10)
         elif self.backend == "nautilus":
-            self.sampler_opts.setdefault("n_live", 2000)
+            self.sampler_opts.setdefault("n_live", 400)
             self.sampler_opts.setdefault("filepath", None)
             self.sampler_opts.setdefault("resume", True)
             self.run_opts.setdefault("f_live", 0.01)
-            self.run_opts.setdefault("n_eff", 10000)
+            self.run_opts.setdefault("n_eff", 2000)
+            self.run_opts.setdefault("verbose", True)
         else:
             raise ValueError(f"Sampler {self.backend} is not supported.")
 
@@ -295,6 +298,15 @@ class SamplerResult:
         kwargs["success"] = ultranest_result["insertion_order_MWW_test"]["converged"]
         kwargs["samples"] = ultranest_result["samples"]
         kwargs["sampler_results"] = ultranest_result
+        return cls(**kwargs)
+
+    @classmethod
+    def from_nautilus(cls, nautilus_result):
+        kwargs = {}
+        kwargs["nfev"] = nautilus_result["ncall"]
+        kwargs["success"] = nautilus_result["success"]
+        kwargs["samples"] = nautilus_result["samples"]
+        kwargs["sampler_results"] = nautilus_result
         return cls(**kwargs)
 
 
