@@ -47,16 +47,15 @@ def test_sampler_nautilus_defaults():
 
 
 def test_sampler_nautilus_defaults_can_be_overridden():
-    """User-supplied sampler_opts and run_opts take precedence over defaults."""
     sampler = Sampler(
         backend="nautilus",
-        sampler_opts={"n_live": 500, "filepath": "/tmp/ns_run"},
+        sampler_opts={"n_live": 500, "filepath": "test"},
         run_opts={"f_live": 0.001, "n_eff": 500},
     )
 
     assert sampler.sampler_opts["n_live"] == 500
-    assert sampler.sampler_opts["filepath"] == "/tmp/ns_run"
-    assert sampler.run_opts["f_live"] == pytest.approx(0.001)
+    assert sampler.sampler_opts["filepath"] == "test"
+    assert_allclose(sampler.run_opts["f_live"], 0.001)
     assert sampler.run_opts["n_eff"] == 500
 
 
