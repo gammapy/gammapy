@@ -5,7 +5,24 @@ from .utils import _parse_datasets
 
 __all__ = ["Sampler", "SamplerLikelihood", "SamplerResult"]
 
-SAMPLER_BACKENDS = {"ultranest", "nautilus"}
+SAMPLER_BACKENDS = ["ultranest", "nautilus"]
+
+DEFAULT_SAMPLER_OPTS = {
+    "ultranest": {
+        "live_points": 400,
+        "frac_remain": 0.5,
+        "log_dir": None,
+        "resume": "subfolder",
+        "step_sampler": False,
+        "nsteps": 10,
+    },
+    "nautilus": {"n_live": 2000, "filepath": None, "resume": True},
+}
+
+DEFAULT_RUN_OPTS = {
+    "ultranest": {},
+    "nautilus": {"f_live": 0.01, "n_eff": 2000, "verbose": True},
+}
 
 
 class Sampler:
@@ -71,27 +88,18 @@ class Sampler:
     # TODO: add "zeusmc", "emcee"
 
     def __init__(self, backend="ultranest", sampler_opts=None, run_opts=None):
+        if backend not in SAMPLER_BACKENDS:
+            raise ValueError(f"Sampler {backend} is not supported.")
+
         self._sampler = None
         self.backend = backend
         self.sampler_opts = {} if sampler_opts is None else sampler_opts
         self.run_opts = {} if run_opts is None else run_opts
 
-        if self.backend == "ultranest":
-            self.sampler_opts.setdefault("live_points", 400)
-            self.sampler_opts.setdefault("frac_remain", 0.5)
-            self.sampler_opts.setdefault("log_dir", None)
-            self.sampler_opts.setdefault("resume", "subfolder")
-            self.sampler_opts.setdefault("step_sampler", False)
-            self.sampler_opts.setdefault("nsteps", 10)
-        elif self.backend == "nautilus":
-            self.sampler_opts.setdefault("n_live", 400)
-            self.sampler_opts.setdefault("filepath", None)
-            self.sampler_opts.setdefault("resume", True)
-            self.run_opts.setdefault("f_live", 0.01)
-            self.run_opts.setdefault("n_eff", 2000)
-            self.run_opts.setdefault("verbose", True)
-        else:
-            raise ValueError(f"Sampler {self.backend} is not supported.")
+        for key, value in DEFAULT_SAMPLER_OPTS[backend].items():
+            self.sampler_opts.setdefault(key, value)
+        for key, value in DEFAULT_RUN_OPTS[backend].items():
+            self.run_opts.setdefault(key, value)
 
     @staticmethod
     def _update_models_from_posterior(models, result):
@@ -177,7 +185,7 @@ class Sampler:
         import numpy as np
 
         def _prior_inverse_cdf(values):
-            if None in parameters:
+            if None in parameters.prior:
                 raise ValueError(
                     "Some parameters have no prior set. You need priors on all parameters."
                 )
@@ -194,7 +202,6 @@ class Sampler:
 
         success = self._sampler.run(**self.run_opts)
 
-        # Build a result dict compatible with the rest of the pipeline
         points, log_w, log_l = self._sampler.posterior()
         weights = np.exp(log_w - log_w.max())
         weights /= weights.sum()
@@ -236,25 +243,16 @@ class Sampler:
         if self.backend == "ultranest":
             result_dict = self.sampler_ultranest(parameters, like)
             self._sampler.print_results()
-
-            models_copy = datasets.models.copy()
-            self._update_models_from_posterior(models_copy, result_dict)
-
             result = SamplerResult.from_ultranest(result_dict)
-            result.models = models_copy
-
-            return result
         elif self.backend == "nautilus":
             result_dict = self.sampler_nautilus(parameters, like)
             self._sampler.print_status()
-
-            models_copy = datasets.models.copy()
-            self._update_models_from_posterior(models_copy, result_dict)
-
             result = SamplerResult.from_nautilus(result_dict)
-            result.models = models_copy
 
-            return result
+        models_copy = datasets.models.copy()
+        self._update_models_from_posterior(models_copy, result_dict)
+        result.models = models_copy
+        return result
 
 
 class SamplerResult:

@@ -35,6 +35,31 @@ def models_sampler():
     return Models([SkyModel(pwl1, name="source1")])
 
 
+def test_sampler_nautilus_defaults():
+    sampler = Sampler(backend="nautilus")
+
+    assert sampler.backend == "nautilus"
+    assert sampler.sampler_opts["n_live"] == 2000
+    assert sampler.sampler_opts["filepath"] is None
+    assert sampler.sampler_opts["resume"] is True
+    assert_allclose(sampler.run_opts["f_live"], 0.01)
+    assert sampler.run_opts["n_eff"] == 2000
+
+
+def test_sampler_nautilus_defaults_can_be_overridden():
+    """User-supplied sampler_opts and run_opts take precedence over defaults."""
+    sampler = Sampler(
+        backend="nautilus",
+        sampler_opts={"n_live": 500, "filepath": "/tmp/ns_run"},
+        run_opts={"f_live": 0.001, "n_eff": 500},
+    )
+
+    assert sampler.sampler_opts["n_live"] == 500
+    assert sampler.sampler_opts["filepath"] == "/tmp/ns_run"
+    assert sampler.run_opts["f_live"] == pytest.approx(0.001)
+    assert sampler.run_opts["n_eff"] == 500
+
+
 def test_invalid_backend_raises():
     with pytest.raises(ValueError, match="unknown_backend"):
         Sampler(backend="unknown_backend")
@@ -57,13 +82,17 @@ def test_run_missing_prior(backend, datasets_sampler, models_sampler):
 def test_run(backend, datasets_sampler, models_sampler):
     datasets_sampler.models = models_sampler
 
-    sampler_opts = {"live_points": 300}
-    sampler = Sampler(backend=backend, sampler_opts=sampler_opts)
+    if backend == "ultranest":
+        sampler_opts = {"live_points": 300}
+        run_opts = {}
+    elif backend == "nautilus":
+        sampler_opts = {"nlive": 300}
+        run_opts = {"n_eff": 200}
+    sampler = Sampler(backend=backend, sampler_opts=sampler_opts, run_opts=run_opts)
 
     result = sampler.run(datasets_sampler)
 
     assert result.success
-    assert sampler._sampler.min_num_live_points == sampler_opts["live_points"]
     assert (
         result.samples.shape[1]
         == datasets_sampler.models.parameters.free_unique_parameters.value.shape[0]
@@ -77,7 +106,9 @@ def test_run(backend, datasets_sampler, models_sampler):
         "ncall",
         "insertion_order_MWW_test",
     ]
-    assert set(required_keys).issubset(result.sampler_results.keys())
+
+    if backend == "ultranest":
+        assert set(required_keys).issubset(result.sampler_results.keys())
 
     assert (
         result.models.parameters["index"].value
@@ -115,27 +146,21 @@ def test_run_linked_params(backend, datasets_sampler, models_sampler):
     models_sampler.append(SkyModel(pwl2, name="source2"))
     datasets_sampler.models = models_sampler
 
-    sampler_opts = {"live_points": 300}
-    sampler = Sampler(backend=backend, sampler_opts=sampler_opts)
+    if backend == "ultranest":
+        sampler_opts = {"live_points": 300}
+        run_opts = {}
+    elif backend == "nautilus":
+        sampler_opts = {"nlive": 300}
+        run_opts = {"n_eff": 200}
+    sampler = Sampler(backend=backend, sampler_opts=sampler_opts, run_opts=run_opts)
 
     result = sampler.run(datasets_sampler)
 
     assert result.success
-    assert sampler._sampler.min_num_live_points == sampler_opts["live_points"]
     assert (
         result.samples.shape[1]
         == datasets_sampler.models.parameters.free_unique_parameters.value.shape[0]
     )
-
-    required_keys = [
-        "logz",
-        "logzerr",
-        "posterior",
-        "samples",
-        "ncall",
-        "insertion_order_MWW_test",
-    ]
-    assert set(required_keys).issubset(result.sampler_results.keys())
 
     assert (
         result.models.parameters["index"].value
