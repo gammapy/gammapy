@@ -145,18 +145,10 @@ class Sampler:
         """
         import ultranest
 
-        def _prior_inverse_cdf(values):
-            """Returns a list of model parameters for a given list of values (that are bound in [0,1])."""
-            if None in parameters.prior:
-                raise ValueError(
-                    "Some parameters have no prior set. You need priors on all parameters."
-                )
-            return [par.prior._inverse_cdf(val) for par, val in zip(parameters, values)]
-
         self._sampler = ultranest.ReactiveNestedSampler(
             parameters.names,
             like.fcn,
-            transform=_prior_inverse_cdf,
+            transform=parameters._prior_inverse_cdf,
             log_dir=self.sampler_opts["log_dir"],
             resume=self.sampler_opts["resume"],
         )
@@ -184,15 +176,8 @@ class Sampler:
         import nautilus
         import numpy as np
 
-        def _prior_inverse_cdf(values):
-            if None in parameters.prior:
-                raise ValueError(
-                    "Some parameters have no prior set. You need priors on all parameters."
-                )
-            return [par.prior._inverse_cdf(val) for par, val in zip(parameters, values)]
-
         self._sampler = nautilus.Sampler(
-            prior=_prior_inverse_cdf,
+            prior=parameters._prior_inverse_cdf,
             likelihood=like.fcn,
             n_dim=len(parameters),
             n_live=self.sampler_opts["n_live"],

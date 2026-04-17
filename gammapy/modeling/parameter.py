@@ -754,6 +754,28 @@ class Parameters(collections.abc.Sequence):
         else:
             raise TypeError(f"Invalid type: {other!r}")
 
+    def _prior_inverse_cdf(self, values):
+        """Returns a list of parameters for a given list of values (that are bound in [0,1]).
+
+        This is obtained by inverting the parameter prior cdf. This requires that priors are
+        set on every parameter. This is used by nested sampling algorithms.
+
+        Parameters
+        ----------
+        values : numpy.array or list of float
+            Input prior values. Expected to be within [0,1].
+
+        Returns
+        -------
+        param_values : list of float
+            List of parameter values corresponding to input priors.
+        """
+        if None in self.prior:
+            raise ValueError(
+                "Some parameters have no prior set. You need priors on all parameters."
+            )
+        return [par.prior._inverse_cdf(val) for par, val in zip(self, values)]
+
     def to_dict(self):
         data = []
 
