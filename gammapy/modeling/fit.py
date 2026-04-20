@@ -2,8 +2,11 @@
 import html
 import itertools
 import logging
+import collections.abc
+from abc import ABC
+
 import numpy as np
-from astropy.table import Table
+from astropy.table import Table, QTable
 from gammapy.utils.pbar import progress_bar
 from gammapy.modeling.utils import _parse_datasets
 from .covariance import Covariance
@@ -15,8 +18,9 @@ from .iminuit import (
 )
 from .scipy import confidence_scipy, optimize_scipy
 from .sherpa import optimize_sherpa
+from .models import Models
 
-__all__ = ["Fit", "FitResult", "OptimizeResult", "CovarianceResult"]
+__all__ = ["Fit", "FitResult", "OptimizeResult", "CovarianceResult", "FitResults"]
 
 log = logging.getLogger(__name__)
 
@@ -887,3 +891,79 @@ class FitResult:
             return self.to_html()
         except AttributeError:
             return f"<pre>{html.escape(str(self))}</pre>"
+
+
+class FitResults(collections.abc.MutableSequence, ABC):
+    def __init__(self, results, axis_name=None):
+        if np.array([not isinstance(result, FitResult) for result in results]).any():
+            raise TypeError(f"Elements in {results!r} are not FitResult objects")
+        self.results = results
+        self._axis_name = axis_name
+
+    def __add__(self, other):
+        if isinstance(other, FitResult):
+            return FitResults([*self, other])
+        else:
+            raise TypeError(f"Invalid type: {other!r}")
+
+    def __getitem__(self, key):
+        if isinstance(key, np.ndarray) and key.dtype == bool:
+            return self.__class__(list(np.array(self.results)[key]))
+        else:
+            return self.__class__(self.results[key])
+
+    def __len__(self):
+        return len(self.results)
+
+    def success(self):
+        return [f.success for f in self.results]
+
+    def models(self, squeeze=False):
+        if squeeze:
+            return Models(
+                [
+                    model.copy(name="FitResult" + str(i) + "_Model" + str(j))
+                    for i, f in enumerate(self.results)
+                    for j, model in enumerate(f.models)
+                ]
+            )
+        else:
+            return [f.models for f in self.results]
+
+    def covariance_results(self):
+        return [f.covariance_result for f in self.results]
+
+    def optimize_results(self):
+        return [f.optimize_result for f in self.results]
+
+    def select_by_interval(self, axis, coord_min, coord_max):
+        if axis.nbin != len(self.results) and axis.name != self._axis_name:
+            raise ValueError("Axis length does not correspond to number of results")
+
+        keymin = axis.coord_to_idx(coord_min)
+        keymax = axis.coord_to_idx(coord_max)
+
+        return self[keymin:keymax]
+
+    def write_models(self, path, **kwargs):
+        self.models(squeeze=True).write(path, **kwargs)
+
+    def create_model_table(self, axis=None):
+        if axis and axis.nbin != len(self.results):
+            raise ValueError("Axis length does not correspond to number of results")
+        t = QTable()
+
+        t["convergence"] = [result.success for result in self.results]
+        for par in self.results[0].models.parameters.free_parameters:
+            t[par.name] = [
+                result.models.parameters[par.name].value * par.unit
+                for result in self.results
+            ]
+            t[par.name + "_err"] = [
+                result.models.parameters[par.name].error * par.unit
+                for result in self.results
+            ]
+
+            t.add_columns(axis.to_table().columns, indexes=[0, 0])
+
+        return t
