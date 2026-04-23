@@ -26,8 +26,8 @@ Two main installation methods are available:
 
     .. tab-item:: Environment Based
 
-        Traditional installation into an existing environment. We recommend
-        doing it in a dedicated Python environment.
+        For a traditional installation into an existing environment, we recommend
+        utilising a dedicated Python environment.
 
         Using **pip** from PyPI:
 
@@ -43,9 +43,9 @@ Two main installation methods are available:
 
     .. tab-item:: Project Based
 
-        Fastest installation method, ensuring reproducibility of your analysis project.
-        Creates an isolated environment tied to your project, and easy to share.
-        More information in :ref:`project-based installation <install-project-based>`.
+        This is the fastest installation method, ensuring reproducibility of your analysis project.
+        It creates an isolated environment tied to your project, and easy to share.
+        More information can be found in the :ref:`project-based installation <install-project-based>`.
 
         Using the Python package manager **uv**:
 
