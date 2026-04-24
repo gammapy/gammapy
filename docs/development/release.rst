@@ -45,7 +45,7 @@ automatically counted in the next feature release.
      as to not delete the fragments.
    * To generate the list of contributors for the release run (on same branch)
       ``python dev/contributors.py date_of_last_release date_today``
-   * Manually verify the generated list.
+   * Manually verify the generated list. You may use ``--debug`` to see the email id and the full PR list.
    * Make sure to adjust the changelog for the correct values printed by the above command.
    * The file will still be there if you just checkout to main
 
@@ -94,7 +94,7 @@ Feature releases
    * The changelog will be saved as ``docs/release-notes/CHANGELOG.rst``.
    * To generate the list of contributors for the release run (on ``main`` branch)
      ``python dev/contributors.py date_of_last_release date_today``
-   * Manually verify the generated list.
+   * Manually verify the generated list. You may use ``--debug`` to see the email id and the full PR list.
    * Make sure to adjust the changelog for the correct values printed by the above command.
    * Rename the filename from ``CHANGELOG.rst`` to ``vx.y.rst`` and add
      corresponding entry in ``docs/release-notes/index.rst``. Add an ``rst`` file for the next release.
