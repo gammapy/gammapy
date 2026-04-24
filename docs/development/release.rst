@@ -43,6 +43,10 @@ automatically counted in the next feature release.
 
    * As we will create the changelog again for the major release, we should utilise the ``keep`` keyword,
      as to not delete the fragments.
+   * To generate the list of contributors for the release run (on same branch)
+      ``python dev/contributors.py date_of_last_release date_today``
+   * Manually verify the generated list.
+   * Make sure to adjust the changelog for the correct values printed by the above command.
    * The file will still be there if you just checkout to main
 
    ::
@@ -52,7 +56,6 @@ automatically counted in the next feature release.
      git add docs/release-notes/2.0.x.rst
      git commit -m -s 'Add changelog'
      git push origin add-file-to-main
-
 
 #. Open two separate PRs for each of these changes and mark each with the ``backport-v<version>.x`` label.
    These PRs will be merged and backport to the ``v<version>.x`` branch.
@@ -89,10 +92,10 @@ Feature releases
     towncrier build --version <version>
 
    * The changelog will be saved as ``docs/release-notes/CHANGELOG.rst``.
-   * To generate the list of contributors for the release run
-     ``python dev/github_summary.py contributors_by_milestone --milestone '<version>.x'``.
-     Note that you will need to use your github token here.
-   * Make sure to adjust the lines at the start of the changelog for the correct values printed by the above command.
+   * To generate the list of contributors for the release run (on ``main`` branch)
+     ``python dev/contributors.py date_of_last_release date_today``
+   * Manually verify the generated list.
+   * Make sure to adjust the changelog for the correct values printed by the above command.
    * Rename the filename from ``CHANGELOG.rst`` to ``vx.y.rst`` and add
      corresponding entry in ``docs/release-notes/index.rst``. Add an ``rst`` file for the next release.
 
