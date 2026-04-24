@@ -54,7 +54,8 @@
 .. _corner: https://corner.readthedocs.io
 .. _Mamba: https://mamba.readthedocs.io/
 .. _conda installation guide: https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html
-.. _Miniforge: https://github.com/conda-forge/miniforge
+.. _conda documentation for managing environments: https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html
+.. _Miniforge: https://conda-forge.org/download/
 .. _uv: https://docs.astral.sh/uv/
 .. _uv installation instructions: https://docs.astral.sh/uv/#installation
 .. _pixi: https://pixi.prefix.dev

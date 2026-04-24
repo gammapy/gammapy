@@ -1,11 +1,13 @@
+.. include:: ../references.txt
 
 .. _virtual-envs:
 
 Virtual Environments
 ====================
 
-We recommend to create an isolated virtual environment for each version of Gammapy, so that you have full
-control over additional packages that you may use in your analysis. This will also help you on improving
+We recommend to create an isolated virtual environment for each version
+of Gammapy, so that you have full control over additional packages that
+you may use in your analysis. This will also help you on improving
 reproducibility within the user community.
 
 
@@ -15,8 +17,8 @@ Conda Environments
 For convenience we provide, for each stable release of Gammapy,
 a pre-defined conda environment file, so you can
 get additional useful packages together with Gammapy in a virtual isolated
-environment. First install `Miniforge <https://conda-forge.org/download/>`__,
-and then just execute the following commands in the terminal:
+environment. First install `Miniforge`_, and then just execute the following
+commands in the terminal:
 
 .. code-block:: bash
 
@@ -31,7 +33,9 @@ and then just execute the following commands in the terminal:
 
 .. note::
 
-   To avoid some installation issues, ``sherpa`` is not part of the environment file provided. You can nevertheless install ``sherpa`` in your environment using ``python -m pip install sherpa``.
+   To avoid some installation issues, ``sherpa`` is not part of the environment
+   file provided. You can nevertheless install ``sherpa`` in your environment using
+   ``python -m pip install sherpa``.
 
 Once the environment has been created you can activate it using:
 
@@ -53,7 +57,8 @@ And activate it:
 
     conda activate my-gammapy-analysis
 
-After that you can install Gammapy using `conda` / `mamba` as well as other packages you may need.
+After that you can install Gammapy using `conda` / `mamba` as well as
+other packages you may need.
 
 .. code-block:: bash
 
@@ -71,16 +76,18 @@ If you want to remove an virtual environment again you can use the command below
 
     conda env remove -n my-gammapy-analysis
 
-It also recommended to create a custom `environment.yaml` file, which lists all the dependencies and
-additional packages you like to use explicitly. More detailed instructions on how to work with
-conda environments you can find in the `conda documentation <https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html>`__.
+It also recommended to create a custom `environment.yaml` file, which
+lists all the dependencies and additional packages you like to use
+explicitly. More detailed instructions on how to work with conda
+environments can be found in the `conda documentation for managing environments`_.
 
 
 Venv Environments
 -----------------
 
-You may prefer to create your virtual environments with Python `venv` command instead of using Anaconda.
-To create a virtual environment with `venv` (Python 3.5+ required) run the command:
+You may prefer to create your virtual environments with Python `venv`
+command instead of using Anaconda. To create a virtual environment with
+`venv` (Python 3.5+ required) run the command:
 
 .. code-block:: bash
 
@@ -104,4 +111,5 @@ To leave the environment, you may activate another one or just type:
 
     deactivate
 
-More detailed instructions on how to work with virtual environments you can find in the `Python documentation <https://docs.python.org/3/library/venv.html>`__.
+More detailed instructions on how to work with virtual environments you can find in the
+`Python documentation <https://docs.python.org/3/library/venv.html>`__.
