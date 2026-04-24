@@ -8,7 +8,7 @@ Installation
 There are numerous ways to install Python and Gammapy as a user. On this page, we list the most common ones.
 In general, **we recommend using** :ref:`virtual environments <virtual-envs>` or
 :ref:`project-based installation <install-project-based>` when using Gammapy.
-Specially with the latter, you have complete control over the additional packages that you may use in your analysis and you work with
+Specifically with the latter, you have complete control over the additional packages that you may use in your analysis and you work with
 well defined computing environments. This enables you to easily share your work and ensure **reproducibility of your
 scientific analysis results**. You can also :ref:`install Gammapy for development <dev_setup>`.
 
@@ -41,7 +41,7 @@ To install a specific version of Gammapy just execute:
 
 .. code-block:: bash
 
-    conda install -c conda-forge gammapy=2.1
+    conda install -c conda-forge gammapy=2.0
 
 If you encounter any issues you can check the :ref:`troubleshoot` guide.
 
@@ -79,7 +79,7 @@ To install a specific version of Gammapy use:
 
 .. code-block:: bash
 
-    python -m pip install gammapy==2.1
+    python -m pip install gammapy==2.0
 
 To install the current Gammapy **development** version with `pip`_ use:
 
@@ -180,15 +180,15 @@ Run your analysis in the project-based environment
 .. note::
    All the following commands are similar if you use **pixi** instead of **uv**.
 
-Inside the analysis directory created before you can run your analysis scripts as:
+Inside the `uv` directory created previously, you can run a Python analysis script through:
 
 .. code-block:: bash
 
    uv run python my-analysis-script.py
 
-Working with jupyter notebooks
+Working with Jupyter notebook
 """"""""""""""""""""""""""""""
-First install jupyterlab:
+First install jupyterlab inside your `uv` project:
 
 .. code-block:: bash
 
@@ -214,7 +214,8 @@ To get a more fully featured scientific Python environment, you can install
 other Python packages using the system package manager (``apt-get`` in this
 example), and then on top of this install more Python packages using ``pip``.
 
-Example:
+
+For example:
 
 .. code-block:: bash
 
