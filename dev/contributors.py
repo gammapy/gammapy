@@ -84,7 +84,5 @@ def main():
     print(f"New contributors: {len(new_emails)}")
     print(f"Total merged PRs: {len(pr_numbers)}")
 
-
-
 if __name__ == "__main__":
     main()
