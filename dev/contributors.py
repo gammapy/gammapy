@@ -80,8 +80,8 @@ def main():
 
 
     print("")
-    print(f"Total contributors: {len(contributors)}")
-    print(f"New contributors: {len(new_emails)}")
+    print(f"Total contributors: {len(contributors)} (See below for full list)")
+    print(f"New contributors: {len(new_emails)}  (Marked with * in the list)")
     print(f"Total merged PRs: {len(pr_numbers)}")
 
 if __name__ == "__main__":
