@@ -4,32 +4,26 @@ import subprocess
 import sys
 import re
 
-
 def run(cmd):
     return subprocess.check_output(cmd, shell=True, text=True).strip()
 
 
-
-
 def main():
     if len(sys.argv) < 3:
-        print('Example Usage: contributors.py "2026-01-01" "2026-03-03"  [--debug]')
+        print('Example Usage: contributors.py "2026-01-01" "2026-03-03"  [--email]')
         sys.exit(1)
 
     since, until = sys.argv[1], sys.argv[2]
-    debug = "--debug" in sys.argv
+    print_email = "--email" in sys.argv
     # --- Contributors in range ---
     authors = run(
         f'git log --since="{since}" --until="{until}" --format="%aN <%aE>"'
     ).splitlines()
 
-    # --- Keep longest name for each email?
+    # Keep the longest name for each email?
     email_to_name = {}
 
     for entry in authors:
-        if "[bot]" in entry:
-            continue
-
         if "<" in entry and ">" in entry:
             name, email = entry.rsplit("<", 1)
             name = name.strip()
@@ -37,10 +31,13 @@ def main():
         else:
             continue
 
+        if "[bot]" in entry or email.endswith("@users.noreply.github.com") or email.endswith("@github.com"):
+            continue
+
         if email not in email_to_name or len(name) > len(email_to_name[email]):
             email_to_name[email] = name
 
-    # --- Identify NEW contributors ---
+    # --- Identify new contributors by email id---
     new_emails = set()
 
     for email in email_to_name:
@@ -70,10 +67,13 @@ def main():
         pr_numbers.update(re.findall(r"#(\d+)", msg))
 
     print("## Contributors\n")
-
+    unique_names = set()
     for email, name in contributors:
+        if name in unique_names:
+            continue
+        unique_names.add(name)
         prefix = "-* " if email in new_emails else "- "
-        if debug:
+        if print_email:
             print(f"{prefix}{name} <{email}>")
         else:
             print(f"{prefix}{name}")
