@@ -1332,11 +1332,12 @@ def get_flux_map_from_profile(
 ):
     """Create a new flux map using the likelihood profile (stat_scan).
 
-    This provides a ts, dnde, dnde_err, dnde_errp, dnde_errn, and dnde_ul.
+    This provides the computation of the quantities:
+    ts, dnde, dnde_err, dnde_errp, dnde_errn, and dnde_ul.
 
     Parameters
     ----------
-    flux_maps : `~gammapy.estimators.FluxMaps` or dict of `~gammapy.maps.WcsNDMap`
+    flux_map : `~gammapy.estimators.FluxMaps` or dict of `~gammapy.maps.WcsNDMap`
         Flux map or dict containing  a `stat_scan` entry
     n_sigma : float, optional
         Number of sigma for flux error. Must be a positive value. Default is 1.
@@ -1347,7 +1348,7 @@ def get_flux_map_from_profile(
         of a point source with a power law spectrum of index 2 is assumed.
         Default is None and the one of `flux_map` will be used if available
     meta : dict, optional
-        Dict of metadata.
+        Dictionary of metadata.
         Default is None and the one of `flux_map` will be used if available
     gti : `~gammapy.data.GTI`, optional
         Maps GTI information.
