@@ -177,7 +177,6 @@ def _write_models(
     extra_dict=None,
 ):
     """Write models to YAML file with additional information using an `extra_dict`."""
-
     if path is None:
         raise ValueError("The path is not defined.")
     base_path, _ = split(path)
