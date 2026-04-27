@@ -111,14 +111,11 @@ class BayesianModelSelectionResult:
         * -2logz : negative twice the log Bayesian evidence.
         * -2logl : negative twice the maximum log-likelihood.
         * AIC : Akaike Information Criterion.
-        * elpd (waic) : expected log predictive density estimated via WAIC.
-        * elpd (loo) : expected log predictive density estimated via LOO-CV.
+        * elpd : expected log predictive density estimated via LOO-CV.
         * dof : estimated number of effective degrees of freedom.
-        * waic eff. dof : effective number of parameters computed from WAIC.
-        * loo eff. dof : effective number of parameters computed from LOO.
+        * eff. dof : effective number of parameters computed from LOO.
         * logz error : uncertainty on the log Bayesian evidence.
-        * elpd error (waic) : standard error of the WAIC-based ELPD estimate.
-        * elpd error (loo) : standard error of the LOO-based ELPD estimate.
+        * elpd error : standard error of the LOO-based ELPD estimate.
         * good Pareto k fraction : fraction of pixels with Pareto k ≤ 0.7,
           indicating reliable LOO estimates.
 
@@ -148,11 +145,9 @@ class BayesianModelSelectionResult:
         * -2logz : negative twice the log Bayesian evidence.
         * -2logl : negative twice the maximum log-likelihood.
         * AIC : Akaike Information Criterion.
-        * elpd (waic) : expected log predictive density estimated via WAIC.
-        * elpd (loo) : expected log predictive density estimated via LOO-CV.
+        * elpd : expected log predictive density estimated via LOO-CV.
         * dof : estimated number of effective degrees of freedom.
-        * waic eff. dof : effective number of parameters computed from WAIC.
-        * loo eff. dof : effective number of parameters computed from LOO.
+        * eff. dof : effective number of parameters computed from LOO.
 
         Parameters
         ----------
@@ -178,8 +173,7 @@ class BayesianModelSelectionResult:
                 diff[col] = Column(label)
         for col in [
             "logz error",
-            "elpd error (waic)",
-            "elpd error (loo)",
+            "elpd error",
             "good Pareto k fraction",
         ]:
             diff.remove_column(col)
@@ -187,18 +181,10 @@ class BayesianModelSelectionResult:
         return diff
 
     @property
-    def elpds_waic(self):
-        """Expected log predictive density using WAIC."""
-        return {
-            model_name: results.elpd_waic
-            for model_name, results in self._results_dict.items()
-        }
-
-    @property
-    def elpds_loo(self):
+    def elpds(self):
         """Expected log predictive density using PSIS-LOO-CV."""
         return {
-            model_name: results.elpd_loo
+            model_name: results.elpd
             for model_name, results in self._results_dict.items()
         }
 
@@ -224,7 +210,7 @@ class BayesianModelSelectionResult:
         import arviz as az
 
         kwargs.setdefault("method", "BB-pseudo-BMA")
-        return az.compare(self.elpds_loo, **kwargs)
+        return az.compare(self.elpds, **kwargs)
 
     def prior_sensitivity_table(self):
         """Display prior and likelihood sensitivity table computed from power scaling for each model."""
@@ -294,8 +280,7 @@ class InferenceResult:
             self._parameters_table_prior = compute_parameters_values(
                 self._inference_data, sampler_results, group_name="prior"
             )
-        self._elpd_waic = az.waic(self._inference_data, scale="deviance")
-        self._elpd_loo = az.loo(self._inference_data, scale="deviance")
+        self._elpd = az.loo(self._inference_data)
 
     @property
     def models(self):
@@ -312,7 +297,7 @@ class InferenceResult:
 
     @property
     def inference_data(self):
-        """`arviz.InferenceData` object with unweighted posterior samples."""
+        """`xarray.DataTree` object with unweighted posterior samples."""
         return self._inference_data
 
     @property
@@ -341,14 +326,9 @@ class InferenceResult:
         return -2 * self.sampler_results["maximum_likelihood"]["logl"] + 2 * self.dof
 
     @property
-    def elpd_waic(self):
-        """Expected log predictive density using WAIC."""
-        return self._elpd_waic
-
-    @property
-    def elpd_loo(self):
+    def elpd(self):
         """Expected log predictive density using PSIS-LOO-CV."""
-        return self._elpd_loo
+        return self._elpd
 
     @property
     def loo_good_pareto_k_fraction(self):
@@ -359,9 +339,7 @@ class InferenceResult:
         fraction : float
             Fraction of points with Pareto k < threshold.
         """
-        return np.sum(self.elpd_loo.pareto_k < self.elpd_loo.good_k) / len(
-            self.elpd_loo.pareto_k
-        )
+        return np.sum(self.elpd.pareto_k < self.elpd.good_k) / len(self.elpd.pareto_k)
 
     def parameters_table(self, group="posterior"):
         """Summary table of parameter estimates.
@@ -391,14 +369,11 @@ class InferenceResult:
         * -2logz : negative twice the log Bayesian evidence.
         * -2logl : negative twice the maximum log-likelihood.
         * AIC : Akaike Information Criterion.
-        * elpd (waic) : expected log predictive density estimated via WAIC.
-        * elpd (loo) : expected log predictive density estimated via LOO-CV.
+        * elpd : expected log predictive density estimated via LOO-CV.
         * dof : estimated number of effective degrees of freedom.
-        * waic eff. dof : effective number of parameters computed from WAIC.
-        * loo eff. dof : effective number of parameters computed from LOO.
+        * eff. dof : effective number of parameters computed from LOO-CV.
         * logz error : uncertainty on the log Bayesian evidence.
-        * elpd error (waic) : standard error of the WAIC-based ELPD estimate.
-        * elpd error (loo) : standard error of the LOO-based ELPD estimate.
+        * elpd error : standard error of the LOO-based ELPD estimate.
         * good Pareto k fraction : fraction of pixels with Pareto k ≤ 0.7,
           indicating reliable LOO estimates.
 
@@ -419,14 +394,11 @@ class InferenceResult:
             [-2 * self.logz],
             [-2 * self.logl],
             [self.aic],
-            [self.elpd_waic.elpd_waic],
-            [self.elpd_loo.elpd_loo],
+            [-2 * self.elpd.elpd],
             [self.dof],
-            [self.elpd_waic.p_waic],
-            [self.elpd_loo.p_loo],
+            [self.elpd.p],
             [2 * self.logz_err],
-            [self.elpd_waic.se],
-            [self.elpd_loo.se],
+            [2 * self.elpd.se],
             [self.loo_good_pareto_k_fraction],
         ]
         names = (
@@ -434,14 +406,11 @@ class InferenceResult:
             "-2logz",
             "-2logl",
             "AIC",
-            "elpd (waic)",
-            "elpd (loo)",
+            "elpd",
             "dof",
-            "waic eff. dof",
-            "loo eff. dof",
+            "eff. dof",
             "logz error",
-            "elpd error (waic)",
-            "elpd error (loo)",
+            "elpd error",
             "good Pareto k fraction",
         )
         table = Table(values, names=names)
@@ -475,15 +444,9 @@ class InferenceResult:
         s += f"-2log(L)  : {-2 * self.logl}" + "\n"
         s += f"AIC       : {self.aic}, dof {self.dof}" + "\n"
         s += (
-            f"elpd_waic : {self.elpd_waic.elpd_waic}"
+            f"elpd  : {-2 * self.elpd.elpd},"
             + "+/-"
-            + f"{self.elpd_waic.se}, effective dof {self.elpd_waic.p_waic}"
-            + "\n"
-        )
-        s += (
-            f"elpd_loo  : {self.elpd_loo.elpd_loo},"
-            + "+/-"
-            + f"{self.elpd_loo.se}, effective dof {self.elpd_loo.p_loo}"
+            + f"{2 * self.elpd.se}, effective dof {self.elpd.p}"
             + "\n"
         )
         return s
@@ -498,7 +461,7 @@ def compute_parameters_values(inference_data, results, group_name="posterior"):
 
     Parameters
     ----------
-    inference_data : `arviz.InferenceData`
+    inference_data : `xarray.DataTree`
         The inference data object containing posterior or prior samples.
     results : `SamplerResult`
         The sampler result object containing maximum likelihood estimates.
