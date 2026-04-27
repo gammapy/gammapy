@@ -1,1 +1,0 @@
-Clarify usage of `~gammapy.maps.RegionGeom.from_regions` regarding underlying projection effects.

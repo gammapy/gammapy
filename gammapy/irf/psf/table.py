@@ -18,7 +18,7 @@ class PSF3D(PSF):
     axes : list of `~gammapy.maps.MapAxis` or `~gammapy.maps.MapAxes`
         Required axes (in the given order) are:
             * energy_true (true energy axis)
-            * migra (energy migration axis)
+            * offset (field of view offset axis)
             * rad (rad axis)
     data : `~astropy.units.Quantity`
         PSF (3-dim with axes: psf[rad_index, offset_index, energy_index].

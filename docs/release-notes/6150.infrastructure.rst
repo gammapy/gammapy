@@ -1,1 +1,0 @@
-Integrate SonarQube checks for quality assurance as required by CTAO standards.

@@ -52,6 +52,15 @@
 .. _NaN: https://en.wikipedia.org/wiki/NaN
 .. _Python: https://www.python.org
 .. _corner: https://corner.readthedocs.io
+.. _Mamba: https://mamba.readthedocs.io/
+.. _conda installation guide: https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html
+.. _conda documentation for managing environments: https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html
+.. _Miniforge: https://conda-forge.org/download/
+.. _uv: https://docs.astral.sh/uv/
+.. _uv installation instructions: https://docs.astral.sh/uv/#installation
+.. _pixi: https://pixi.prefix.dev
+.. _pixi installation instructions: https://pixi.prefix.dev/latest/installation/
+.. _pixi documentation: https://pixi.prefix.dev/latest/first_workspace/
 
 .. _APC Paris: http://www.apc.univ-paris7.fr/
 .. _MPIK Heidelberg: https://www.mpi-hd.mpg.de/mpi/en/start/

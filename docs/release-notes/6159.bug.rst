@@ -1,1 +1,0 @@
-Fixed `gammapy.irf.EDispKernel.plot_bias` so the correct axis is now being called for the ``xaxis.units``.

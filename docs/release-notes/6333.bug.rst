@@ -1,1 +1,0 @@
-Add default `~astropy.modeling.Parameter` values on init in gammapy.astro models. This solves docs build issues which appeared recently.

@@ -103,6 +103,12 @@ docs = [
     "nbformat",
     "docutils",
 ]
+test_notebooks = [
+    "jupyter",
+    "jupytext",
+    "jupyter_client",
+    "ipykernel"
+]
 
 [tool.setuptools.packages.find]
 include = ["gammapy*"]

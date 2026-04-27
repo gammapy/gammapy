@@ -1,1 +1,0 @@
-Correct issue #6304. Include CITATION file in the gammapy directory. Modify the `_get_bibtex` and `_get_acknowledgement` functions accordingly.
