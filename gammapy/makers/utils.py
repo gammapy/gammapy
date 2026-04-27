@@ -41,11 +41,12 @@ EARTH_ANGULAR_VELOCITY = 360 * u.deg / u.day
 def _compute_rotation_time_steps(
     time_start, time_stop, fov_rotation, pointing_altaz, location
 ):
-    """
-    Compute the time intervals between start and stop times, such that the FoV associated to a fixed RaDec position rotates
-    by 'fov_rotation' in AltAz frame during each time step.
-    It assumes that the rotation rate at the provided pointing is a good estimate of the rotation rate over the full
-    output duration (first order approximation).
+    """Compute the time intervals between start and stop times.
+
+    This will be such that the FoV associated to a fixed RaDec position rotates
+    by 'fov_rotation' in AltAz frame during each time step. It assumes that the
+    rotation rate at the provided pointing is a good estimate of the rotation
+    rate over the full output duration (first order approximation).
 
 
     Parameters
@@ -816,10 +817,9 @@ def make_effective_livetime_map(observations, geom, offset_max=None):
 
 
 def guess_instrument_fov(obs):
-    """
-    Guess the camera field of view for the given observation
-    from the IRFs. This simply takes the maximum offset of the
-    effective area IRF.
+    """Guess the camera field of view for the given observation from the IRFs.
+
+    This simply takes the maximum offset of the effective area IRF.
     TODO: This logic will break for more complex IRF models.
     A better option would be to compute the offset at which
     the effective area is above 10% of the maximum.
@@ -908,7 +908,6 @@ def project_irf_on_geom(geom, irf, fov_frame, use_region_center=True):
     map : `~gammapy.maps.Map`
         Map containing the projected IRF.
     """
-
     if not use_region_center:
         image_geom = geom.to_wcs_geom().to_image()
         region_coord, weights = geom.get_wcs_coord_and_weights()

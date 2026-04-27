@@ -1240,8 +1240,10 @@ def interpolate_profile_map(flux_map, dnde_scan_axis=None):
 def approximate_profile_map(
     flux_map, dnde_scan_axis=None, sqrt_ts_threshold_ul="ignore"
 ):
-    """Likelihood profile approximation assuming that probabilities distributions for
-    flux points correspond to asymmetric gaussians and for upper limits to complementary error functions.
+    """Likelihood profile approximation.
+
+    This assumes that probabilities distributions for flux points correspond to
+    asymmetric gaussians and for upper limits to complementary error functions.
     Use available quantities among dnde, dnde_err, dnde_errp, dnde_errn, dnde_ul and ts.
 
     Parameters
@@ -1328,8 +1330,9 @@ def approximate_profile_map(
 def get_flux_map_from_profile(
     flux_map, n_sigma=1, n_sigma_ul=2, reference_model=None, meta=None, gti=None
 ):
-    """Create a new flux map using the likelihood profile (stat_scan)
-    to get ts, dnde, dnde_err, dnde_errp, dnde_errn, and dnde_ul.
+    """Create a new flux map using the likelihood profile (stat_scan).
+
+    This provides a ts, dnde, dnde_err, dnde_errp, dnde_errn, and dnde_ul.
 
     Parameters
     ----------
@@ -1416,9 +1419,10 @@ def get_flux_map_from_profile(
 
 
 def _generate_scan_values(power_min=-6, power_max=2, relative_error=1e-2):
-    """Values sampled such as we can probe a given `relative_error` on the norm
-    between 10**`power_min` and 10**`power_max`.
+    """Generate the scan values sampled.
 
+    This is such as we can probe a given ``relative_error`` on the norm
+    between 10**``power_min`` and 10**``power_max``.
     """
     arrays = []
     for power in range(power_min, power_max):
