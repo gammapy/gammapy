@@ -7,7 +7,7 @@ license-files = ["LICENSE.rst"]
 authors = [
     { name = "The Gammapy developers", email = "gammapy-coordination-l@in2p3.fr" }
 ]
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 classifiers = [
     "Intended Audience :: Science/Research",
     "Operating System :: OS Independent",
@@ -61,8 +61,7 @@ all = [
     "ray[default]>=2.55; python_version >= '3.14'",
     "ultranest",
     "numba",
-    "arviz<1",
-    "arviz[preview]",
+    "arviz>=1",
 ]
 all_no_ray = [
     "naima",
@@ -71,8 +70,7 @@ all_no_ray = [
     "ipywidgets",
     "ultranest",
     "numba",
-    "arviz<1",
-    "arviz[preview]",
+    "arviz>=1",
 ]
 cov = [
     "naima",
@@ -81,8 +79,7 @@ cov = [
     "ipywidgets",
     "ultranest",
     "numba",
-    "arviz<1",
-    "arviz[preview]",
+    "arviz>=1",
 ]
 test = [
     "pytest-astropy",
