@@ -17,49 +17,56 @@ Getting started
 Installation
 ------------
 
-There are various ways for users to install Gammapy. **We recommend setting up a virtual
-environment using either conda**
-(with `Miniconda, Anaconda or Miniforge <https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html>`__)
-**or mamba** (see `this link <https://mamba.readthedocs.io/en/latest/installation/mamba-installation.html>`__).
-For certain working environments (e.g. ESO, DESY, CEA, MPIK),
-`miniforge <https://github.com/conda-forge/miniforge>`__ is recommended to use conda/mamba without trouble.
-Then, there are two methods to quickly install Gammapy.
+Two main installation methods are available:
 
-.. grid:: 1 2 2 2
-    :gutter: 2
+* Environment-based installation using **pip** or **conda**.
+  See :ref:`quickstart-setup`.
+* Project-based installation using **uv** or **pixi**.
 
-    .. grid-item-card:: Working with conda/mamba?
+.. tab-set::
 
-        Gammapy can be installed via conda from the `Gammapy conda-forge <https://anaconda.org/conda-forge/gammapy>`__
-        repository:
+    .. tab-item:: Environment Based
 
-        .. code-block:: bash
+        For a traditional installation into an existing environment, we recommend
+        utilising a dedicated Python environment.
 
-            conda install -c conda-forge gammapy
-
-    .. grid-item-card:: Prefer pip?
-
-        Gammapy can be installed via pip from `PyPI <https://pypi.org/project/gammapy/>`__.
+        Using **pip** from PyPI:
 
         .. code-block:: bash
 
             pip install gammapy
 
-    .. grid-item-card:: In-depth instructions?
-        :columns: 12
+        Using **conda/mamba** from conda-forge:
 
-        Update existing version? Working with virtual environments? Installing a specific version? Check the advanced
-        installation page.
+        .. code-block:: bash
 
-        +++
+            conda install -c conda-forge gammapy
+            # or mamba install -c conda-forge gammapy
 
-        .. button-ref:: installation
-            :ref-type: ref
-            :click-parent:
-            :color: secondary
-            :expand:
+    .. tab-item:: Project Based
 
-            Learn more
+        This is the fastest installation method, ensuring reproducibility
+        of your analysis project. It creates an isolated environment tied
+        to your project, and easy to share. More information can be found
+        in the :ref:`project-based installation <install-project-based>`.
+
+        Using the Python package manager **uv**:
+
+        .. code-block:: bash
+
+            uv add gammapy
+
+        Or the package management tool **pixi**:
+
+        .. code-block:: bash
+
+            pixi add gammapy
+
+    .. tab-item:: In-depth instructions
+
+        Starting a fresh installation? Updating an existing version?
+        Working with project-based environments? Check the
+        :ref:`installation` page for in-depth instructions.
 
 
 .. include:: quickstart.rst
@@ -72,12 +79,13 @@ Tutorials Overview
 
     Gammapy can read and access data from multiple gamma-ray instruments. Data from
     Imaging Atmospheric Cherenkov Telescopes, such as `CTAO`_, `H.E.S.S.`_, `MAGIC`_
-    and `VERITAS`_, is typically accessed from the **event list data level**, called "DL3".
-    This is most easily done using the `~gammapy.data.DataStore` class. In addition data
-    can also be accessed from the **level of binned events and pre-reduced instrument response functions**,
-    so called "DL4". This is typically the case for `Fermi-LAT`_ data or data from
-    Water Cherenkov Observatories. This data can be read directly using the
-    `~gammapy.maps.Map` and `~gammapy.irf.core.IRFMap` classes.
+    and `VERITAS`_, is typically accessed from the **event list data level**, called
+    "DL3". This is most easily done using the `~gammapy.data.DataStore` class. In
+    addition, data can also be accessed from the **level of binned events and
+    pre-reduced instrument response functions**, so called "DL4". This is typically
+    the case for `Fermi-LAT`_ data or data from Water Cherenkov Observatories. This
+    data can be read directly using the `~gammapy.maps.Map` and
+    `~gammapy.irf.core.IRFMap` classes.
 
     :bdg-link-primary:`CTAO data tutorial <../tutorials/data/cta.html>`
     :bdg-link-primary:`HESS data tutorial <../tutorials/data/hess.html>`
@@ -133,10 +141,11 @@ Tutorials Overview
     Gammapy allows you to compute light curves in various ways. Light curves
     can be computed for a **1D or 3D analysis scenario** (see above) by either
     grouping or splitting the DL3 data into multiple time intervals. Grouping
-    multiple observations allows for computing e.g. **monthly or nightly binned light curves**,
-    while splitting of a single observation allows to compute **light curves for flares**.
-    You can also compute light curves in multiple energy bands. In all cases the light
-    curve is computed using the `~gammapy.estimators.LightCurveEstimator`.
+    multiple observations allows for computing e.g. **monthly or nightly binned
+    light curves**, while splitting of a single observation allows to compute
+    **light curves for flares**. You can also compute light curves in multiple
+    energy bands. In all cases the light curve is computed using the
+    `~gammapy.estimators.LightCurveEstimator`.
 
 
     :bdg-link-primary:`Light curve tutorial <../tutorials/analysis-time/light_curve.html>`
