@@ -38,35 +38,35 @@ analyse the following datasets:
      -  **Additional Quantities**
      -  **Fit Statistic**
    * - `~gammapy.datasets.MapDataset`
-     - `counts`
-     - `background`, `psf`, `edisp`, `exposure`,
-     -  `WcsGeom` or `RegionGeom`
+     - ``counts``
+     - ``background``, ``psf``, ``edisp``, ``exposure``,
+     -  `~gammapy.maps.WcsGeom` or `~gammapy.maps.RegionGeom`
      -
-     -   `cash`
+     -   ``cash``
    * - `~gammapy.datasets.MapDatasetOnOff`
-     - `counts`
-     - `psf`, `edisp`, `exposure`
-     -  `WcsGeom`
-     - `acceptance`, `acceptance_off`, `counts_off`
-     - `wstat`
+     - ``counts``
+     - ``psf``, ``edisp``, ``exposure``
+     -  `~gammapy.maps.WcsGeom`
+     - ``acceptance``, ``acceptance_off``, ``counts_off``
+     - ``wstat``
    * - `~gammapy.datasets.SpectrumDataset`
-     - `counts`
-     - `background`, `edisp`, `exposure`
-     - `RegionGeom`
+     - ``counts``
+     - ``background``, ``edisp``, ``exposure``
+     - `~gammapy.maps.RegionGeom`
      -
-     - `cash`
+     - ``cash``
    * - `~gammapy.datasets.SpectrumDatasetOnOff`
-     - `counts`
-     - `edisp`, `exposure`
-     - `RegionGeom`
-     - `acceptance`, `acceptance_off`, `counts_off`
-     -  `wstat`
+     - ``counts``
+     - ``edisp``, ``exposure``
+     - `~gammapy.maps.RegionGeom`
+     - ``acceptance``, ``acceptance_off``, ``counts_off``
+     -  ``wstat``
    * - `~gammapy.datasets.FluxPointsDataset`
-     -  `flux`
+     -  ``flux``
      - None
      - None
      -
-     - `chi2`, `profile`, `distrib`
+     - ``chi2``, ``profile``, ``distrib`` (:ref:`further information <fpd_methods_stats>`.)
 
 In addition to the above quantities, a dataset can optionally have a
 `meta_table` serialised, which can contain relevant information about the observations
