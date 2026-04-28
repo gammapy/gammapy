@@ -54,7 +54,7 @@ def test_apply_edisp(region_map_true):
     assert_allclose(e_reco[[0, -1]].value, [1, 10])
 
     m = apply_edisp(region_map_true, None)
-    assert m.geom.data_shape == (3, 1, 1)
+    assert m.geom.data_shape == (6, 1, 1)
 
     e_reco = m.geom.axes[0].edges
     assert e_reco.unit == "TeV"
