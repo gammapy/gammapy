@@ -39,10 +39,15 @@ jobs:
           eossr-metadata-validator codemeta.json
 
       - name: Convert CodeMeta to Zenodo
-        uses: escape2020/codemeta2zenodo@v1.2.0
+        uses: escape2020/codemeta2zenodo@v1.3.0
         if: success()
         with:
           overwrite: true
+
+      - name: Validate Zenodo Metadata
+        uses: vsoch/zenodo-validator@main
+        with:
+          path: '.zenodo.json'
 
       - name: commit changes
         uses: stefanzweifel/git-auto-commit-action@v7.1.0

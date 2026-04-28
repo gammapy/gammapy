@@ -59,7 +59,7 @@ def apply_edisp(input_map, edisp):
     <BLANKLINE>
         geom  : WcsGeom
         axes  : ['lon', 'lat', 'energy']
-        shape : (50, 50, 3)
+        shape : (np.int64(50), np.int64(50), 3)
         ndim  : 3
         unit  :
         dtype : float64

@@ -1,1 +1,0 @@
-Fix ``plot_error`` for models evaluated with non-finite values.

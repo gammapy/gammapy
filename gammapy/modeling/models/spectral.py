@@ -1897,7 +1897,7 @@ class LogParabolaSpectralModel(SpectralModel):
 
     @classmethod
     def from_log10(cls, amplitude, reference, alpha, beta):
-        """Construct from :math:`\log_{10}` parametrization."""
+        r"""Construct from :math:`\log_{10}` parametrization."""
         beta_ = beta / np.log(10)
         return cls(amplitude=amplitude, reference=reference, alpha=alpha, beta=beta_)
 
@@ -1961,7 +1961,7 @@ class LogParabola2SpectralModel(SpectralModel):
 
     @classmethod
     def from_log10(cls, amplitude, reference, alpha, beta, escale):
-        """Construct from :math:`\log_{10}` parametrization."""
+        r"""Construct from :math:`\log_{10}` parametrization."""
         beta_ = beta / np.log(10)
         return cls(
             amplitude=amplitude,
@@ -2021,7 +2021,7 @@ class LogParabolaNormSpectralModel(SpectralModel):
 
     @classmethod
     def from_log10(cls, norm, reference, alpha, beta):
-        """Construct from :math:`\log_{10}` parametrization."""
+        r"""Construct from :math:`\log_{10}` parametrization."""
         beta_ = beta / np.log(10)
         return cls(norm=norm, reference=reference, alpha=alpha, beta=beta_)
 
@@ -2267,7 +2267,7 @@ class TemplateNDSpectralModel(SpectralModel):
         elif os.path.isfile(self.filename) and not overwrite:
             log.warning("Template file already exits, and overwrite is False")
         else:
-            self.map.write(self.filename)
+            self.map.write(self.filename, overwrite=overwrite)
 
     @classmethod
     def from_dict(cls, data, **kwargs):

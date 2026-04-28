@@ -1,1 +1,0 @@
-Remove unused ``obstime`` and ``location`` variables from `~gammapy.utils.coordinates.FoVICRSFrame` docstring example.
