@@ -369,7 +369,19 @@ class SpectralModel(ModelBase):
             kwargs = self._convert_evaluate_unit(kwargs, energy_min)
             return self.evaluate_integral(energy_min, energy_max, **kwargs)
         else:
-            return integrate_spectrum(self, energy_min, energy_max, **kwargs)
+            # guard against the case in which energy_min and energy_max are arrays of length 1,
+            # in which case we want to return an array of length 1 instead of a scalar
+            if (
+                not hasattr(self, "evaluate_integral")
+                and hasattr(energy_min, "ndim")
+                and energy_min.ndim > 0
+                and energy_min.size == 1
+            ):
+                return integrate_spectrum(
+                    self, energy_min.squeeze(), energy_max.squeeze(), **kwargs
+                )[np.newaxis]
+            else:
+                return integrate_spectrum(self, energy_min, energy_max, **kwargs)
 
     def integral_error(
         self,
