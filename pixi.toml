@@ -21,7 +21,7 @@ matplotlib = ">=3.8, <3.10"
 # Dependencies
 # ------------
 [feature.gammapy.pypi-dependencies]
-gammapy = { path = ".", editable = true, extras = ["test"]}
+gammapy = { path = ".", editable = true }
 
 # Pre-commit feature
 # ------------
@@ -62,35 +62,19 @@ numpy = "2.1.*"
 # Dependencies
 # ------------
 [feature.test.dependencies]
-pytest = "*"
-pytest-astropy = "*"
-pytest-xdist = "*"
-docutils = "*"
-sphinx = "*"
+gammapy = { path = ".", editable = true, extras = ["test"] }
 # -----
 # Tasks
 # -----
 [feature.test.tasks.tests]
 cmd = "pytest --pyargs gammapy"
-[feature.test.tasks.test-cov]
-cmd = "pytest --doctest-rst --pyargs gammapy ./docs --cov gammapy --cov-config=.coveragerc --cov-report=xml:coverage.xml"
 
 # Docs features
 # ------------
 # Dependencies
 # ------------
 [feature.docs.pypi-dependencies]
-astropy = "*"
-numpydoc = "*"
-sphinx = "*"
-sphinx-automodapi = "*"
-sphinx-click = "*"
-sphinx-copybutton = "*"
-sphinx-design = "*"
-sphinx-gallery = "*"
-pydata-sphinx-theme = "*"
-nbformat = "*"
-docutils = "*"
+gammapy = { path = ".", editable = true, extras = ["docs"] }
 # -----
 # Tasks
 # -----
@@ -105,15 +89,9 @@ cmd = "sphinx-build -b linkcheck docs docs/_build/html"
 # Dependencies
 # ------------
 [feature.cov.pypi-dependencies]
-coverage = "*"
-naima = "*"
-requests = "*"
-tqdm = "*"
-ipywidgets = "*"
-ultranest = "*"
-numba = "*"
-sherpa = "*"
-healpy = "*"
+gammapy = { path = ".", editable = true, extras = ["cov"] }
+[feature.cov.tasks.test-cov]
+cmd = "pytest --doctest-rst --pyargs gammapy ./docs --cov gammapy --cov-config=.coveragerc --cov-report=xml:coverage.xml"
 
 
 # All dependencies features
@@ -123,29 +101,14 @@ platforms = ["linux-64", "osx-64"]
 # Dependencies
 # ------------
 [feature.all.pypi-dependencies]
-naima = "*"
-requests = "*"
-tqdm = "*"
-ipywidgets = "*"
-ultranest = "*"
-numba = "*"
-ray = ">=2.9"
-sherpa = "*"
-healpy = "*"
+gammapy = { path = ".", editable = true, extras = ["all"] }
 
 # All dependencies without 'ray'
 # ------------
 # Dependencies
 # ------------
 [feature.all_no_ray.pypi-dependencies]
-naima = "*"
-requests = "*"
-tqdm = "*"
-ipywidgets = "*"
-ultranest = "*"
-numba = "*"
-sherpa = "*"
-healpy = "*"
+gammapy = { path = ".", editable = true, extras = ["all_no_ray"] }
 
 [environments]
 # Gammapy environments
