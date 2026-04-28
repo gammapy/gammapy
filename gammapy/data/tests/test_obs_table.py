@@ -2,7 +2,9 @@
 import pytest
 import numpy as np
 from astropy.coordinates import AltAz, Angle, SkyCoord
+from astropy.table import Table
 from astropy.time import Time, TimeDelta
+from astropy import units as u
 from astropy.units import Quantity
 from gammapy.data import observatory_locations
 from gammapy.data.obs_table import ObservationTable, ObservationTableChecker
@@ -321,3 +323,27 @@ def test_observation_table_checker():
 
     records = list(checker.run())
     assert len(records) == 1
+
+
+def test_observationtable_init_with_table():
+    table = Table({"OBS_ID": ["0001", "0002"], "TSTART": [0.0, 1000.0] * u.s})
+    table.meta["TELESCOP"] = "CTAO"
+
+    obs_table = ObservationTable(table=table)
+
+    assert len(obs_table) == 2
+    assert "OBS_ID" in obs_table.colnames
+    assert obs_table.meta["TELESCOP"] == "CTAO"
+    assert isinstance(obs_table, ObservationTable)
+
+    wrong_meta_table = Table({"RA_PNT": [83.63], "DEC_PNT": [22.01]})
+
+    with pytest.raises(ValueError) as exc_info:
+        ObservationTable(table=wrong_meta_table)
+        assert "Missing mandatory column: OBS_ID" in str(exc_info.value)
+
+    wrong_table = {"OBS_ID": [1, 2, 3]}
+
+    with pytest.raises(TypeError) as exc_info:
+        ObservationTable(table=wrong_table)
+        assert "The input table is not an `astropy.table.Table`." in str(exc_info.value)
