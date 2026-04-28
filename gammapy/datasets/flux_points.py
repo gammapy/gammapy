@@ -39,7 +39,8 @@ def _get_reference_model(model, energy_bounds, margin_percent=70):
 
 
 class FluxPointsDataset(Dataset):
-    """Bundle a set of flux points with a parametric model, to compute fit statistic function using different statistics (see ``stat_type``).
+    """Bundle a set of flux points with a parametric model, to compute fit
+    statistic function using different statistics (see ``stat_type``).
 
     For more information see :ref:`datasets`.
 
@@ -61,14 +62,17 @@ class FluxPointsDataset(Dataset):
 
                 * chi2 : estimate from chi2 statistics.
                 * profile : estimate from interpolation of the likelihood profile.
-                * distrib : Assuming gaussian errors the likelihood is given by the probability density function
-                  of the normal distribution. For the upper limit case it is necessary to marginalize over the unknown
-                  measurement, so we integrate the normal distribution up to the upper limit value which gives the
-                  complementary error function. See eq. C7 of `Mohanty et al (2013) <https://iopscience.iop.org/article/10.1088/0004-637X/773/2/168/pdf>`__
+                * distrib : Assuming gaussian errors the likelihood is given by the
+                  probability density function of the normal distribution. For the
+                  upper limit case it is necessary to marginalize over the unknown
+                  measurement, so we integrate the normal distribution up to the upper
+                  limit value which gives the complementary error function. See eq. C7 of
+                  `Mohanty et al (2013) <https://iopscience.iop.org/article/10.1088/0004-637X/773/2/168/pdf>`__
 
-        Default is `chi2`, in that case upper limits are ignored and the mean of asymetrics error is used.
-        However, it is recommended to use `profile` if `stat_scan` is available on flux points.
-        The `distrib` case provides an approximation if the profile is not available.
+        Default is `chi2`, in that case upper limits are ignored and the mean of
+        asymetrics error is used. However, it is recommended to use `profile`
+        if `stat_scan` is available on flux points. The `distrib` case provides an
+        approximation if the profile is not available.
     stat_kwargs : dict
         Extra arguments specifying the interpolation scheme of the likelihood profile.
         Used only if `stat_type=="profile"`. In that case the default is :
@@ -222,10 +226,11 @@ class FluxPointsDataset(Dataset):
         overwrite : bool, optional
             Overwrite existing file. Default is False.
         checksum : bool
-            When True adds both DATASUM and CHECKSUM cards to the headers written to the FITS file.
+            When True adds both DATASUM and CHECKSUM cards to the headers
+            written to the FITS file.
             Applies only if filename has .fits suffix. Default is False.
         **kwargs : dict, optional
-             Keyword arguments passed to `~astropy.table.Table.write`.
+            Keyword arguments passed to `~astropy.table.Table.write`.
         """
         table = self.data.to_table()
 
@@ -400,7 +405,7 @@ class FluxPointsDataset(Dataset):
 
         Parameters
         ----------
-        method: {"diff", "diff/model"}
+        method : {"diff", "diff/model"}
             Method used to compute the residuals. Available options are:
 
             - ``"diff"`` (default): data - model.
@@ -438,9 +443,11 @@ class FluxPointsDataset(Dataset):
         ax_residuals : `~matplotlib.axes.Axes`, optional
             Axes to plot residuals on. Default is None.
         kwargs_spectrum : dict, optional
-            Keyword arguments passed to `~FluxPointsDataset.plot_spectrum`. Default is None.
+            Keyword arguments passed to `~FluxPointsDataset.plot_spectrum`.
+            Default is None.
         kwargs_residuals : dict, optional
-            Keyword arguments passed to `~FluxPointsDataset.plot_residuals`. Default is None.
+            Keyword arguments passed to `~FluxPointsDataset.plot_residuals`.
+            Default is None.
 
         Returns
         -------
@@ -503,7 +510,8 @@ class FluxPointsDataset(Dataset):
         ax : `~matplotlib.axes.Axes`, optional
             Axes to plot on. Default is None.
         method : {"diff", "diff/model"}
-            Normalization used to compute the residuals, see `FluxPointsDataset.residuals`. Default is "diff".
+            Normalization used to compute the residuals, see `FluxPointsDataset.residuals`.
+            Default is "diff".
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.axes.Axes.errorbar`.
 
@@ -511,7 +519,6 @@ class FluxPointsDataset(Dataset):
         -------
         ax : `~matplotlib.axes.Axes`
             Axes object.
-
         """
         if self.data.geom.ndim > 3:
             raise ValueError("Plot residuals works with only one energy axis")
@@ -570,13 +577,15 @@ class FluxPointsDataset(Dataset):
         ax : `~matplotlib.axes.Axes`, optional
             Axes to plot on. Default is None.
         kwargs_fp : dict, optional
-            Keyword arguments passed to `gammapy.estimators.FluxPoints.plot` to configure the plot style.
-            Default is None.
+            Keyword arguments passed to `gammapy.estimators.FluxPoints.plot` to
+            configure the plot style. Default is None.
         kwargs_model : dict, optional
-            Keyword arguments passed to `gammapy.modeling.models.SpectralModel.plot` and
-            `gammapy.modeling.models.SpectralModel.plot_error` to configure the plot style. Default is None.
+            Keyword arguments passed to `gammapy.modeling.models.SpectralModel.plot`
+            and `gammapy.modeling.models.SpectralModel.plot_error` to configure the
+            plot style. Default is None.
         axis_name : str
-            Axis along which to plot the flux points for multiple axes. Default is energy.
+            Axis along which to plot the flux points for multiple axes.
+            Default is energy.
 
         Returns
         -------
