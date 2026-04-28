@@ -340,10 +340,10 @@ def test_observationtable_init_with_table():
 
     with pytest.raises(ValueError) as exc_info:
         ObservationTable(table=wrong_meta_table)
-        assert "Missing mandatory column: OBS_ID" in str(exc_info.value)
+    assert "Missing mandatory column: OBS_ID" in str(exc_info.value)
 
     wrong_table = {"OBS_ID": [1, 2, 3]}
 
     with pytest.raises(TypeError) as exc_info:
         ObservationTable(table=wrong_table)
-        assert "The input table is not an `astropy.table.Table`." in str(exc_info.value)
+    assert "The input `table` is not an `astropy.table.Table`." in str(exc_info.value)
