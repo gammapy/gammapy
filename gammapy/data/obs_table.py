@@ -4,7 +4,6 @@ import numpy as np
 from astropy.coordinates import Angle, SkyCoord
 from astropy.table import Table
 from astropy.units import Quantity, Unit
-from astropy.utils.introspection import minversion
 from gammapy.utils.regions import SphericalCircleSkyRegion
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
@@ -18,6 +17,27 @@ class ObservationTable(Table):
 
     Data format specification: :ref:`gadf:obs-index`.
     """
+
+    def __init__(self, data=None, table=None, copy=False, meta=None, **kwargs):
+        self._data = table if table is not None else data
+        if table is not None:
+            if not isinstance(table, Table):
+                raise TypeError("The input `table` is not an `astropy.table.Table`.")
+
+        if meta is None and hasattr(self._data, "meta"):
+            meta = self._data.meta.copy()
+
+        super().__init__(data=self._data, copy=copy, meta=meta, **kwargs)
+
+        if table is not None:
+            self._validate_columns()
+
+    def _validate_columns(self):
+        """Check that the table contains the OBS_ID column."""
+        required_columns = ["OBS_ID"]
+        for column in required_columns:
+            if column not in self._data.colnames:
+                raise ValueError(f"Missing mandatory column: {column}.")
 
     @classmethod
     def read(cls, filename, **kwargs):
@@ -74,9 +94,9 @@ class ObservationTable(Table):
         except IndexError:
             self.add_index("OBS_ID")
 
-        if minversion("astropy", "7.0"):
+        try:
             return self.__class__(self.loc.with_index("OBS_ID")[obs_id])
-        else:
+        except AttributeError:
             return self.__class__(self.loc["OBS_ID", obs_id])
 
     def summary(self):
