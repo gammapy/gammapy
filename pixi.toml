@@ -77,8 +77,12 @@ tqdm = "*"
 ipywidgets = "*"
 ultranest = "*"
 numba = "*"
-sherpa = "*" # { version="*", markers="platform_system != 'Windows'" } => see platforms
-healpy = "*" # { version="*", markers="platform_system != 'Windows'" }
+sherpa = "*"
+healpy = "*"
+
+
+[feature.all]
+platforms = ["linux-64", "osx-64"]
 
 # "all" extras
 [feature.all.pypi-dependencies]
@@ -89,8 +93,8 @@ ipywidgets = "*"
 ultranest = "*"
 numba = "*"
 ray = ">=2.9"
-sherpa = "*" # { version="*", markers="platform_system != 'Windows'" }
-healpy = "*" # { version="*", markers="platform_system != 'Windows'" }
+sherpa = "*"
+healpy = "*"
 
 # "all_no_ray" extras
 [feature.all_no_ray.pypi-dependencies]
@@ -100,8 +104,8 @@ tqdm = "*"
 ipywidgets = "*"
 ultranest = "*"
 numba = "*"
-sherpa = "*" # { version="*", markers="platform_system != 'Windows'" }
-healpy = "*" # { version="*", markers="platform_system != 'Windows'" }
+sherpa = "*"
+healpy = "*"
 
 # Pre-commit hooks
 [feature.pre-commit.dependencies]
