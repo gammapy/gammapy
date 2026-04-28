@@ -203,7 +203,7 @@ SOURCES_3FHL = [
 @requires_data()
 @pytest.mark.parametrize("ref", SOURCES_4FGL_DR4, ids=lambda _: _["name"])
 def test_4FGL_DR4(ref):
-    cat = SourceCatalog4FGL("$GAMMAPY_DATA/catalogs/fermi/gll_psc_v32.fit.gz")
+    cat = SourceCatalog4FGL("$GAMMAPY_DATA/catalogs/fermi/gll_psc_v35.fit.gz")
     source = cat[ref["name"]]
     model = source.spectral_model()
     fp = source.flux_points
@@ -387,7 +387,7 @@ class TestFermi4FGLObject:
         assert_allclose(table["flux_errn"][0], 4.437058e-8, rtol=1e-3)
 
     def test_lightcurve_dr4(self):
-        dr4 = SourceCatalog4FGL("$GAMMAPY_DATA/catalogs/fermi/gll_psc_v32.fit.gz")
+        dr4 = SourceCatalog4FGL("$GAMMAPY_DATA/catalogs/fermi/gll_psc_v35.fit.gz")
         source_dr4 = dr4[self.source_name]
         table = source_dr4.lightcurve(interval="1-year").to_table(
             format="lightcurve", sed_type="flux"

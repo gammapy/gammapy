@@ -1906,7 +1906,7 @@ class SourceCatalog4FGL(SourceCatalog):
     - https://arxiv.org/abs/2201.11184 (DR3)
     - https://arxiv.org/abs/2307.12546 (DR4)
 
-    By default we use the file of the DR4 initial release
+    By default we use the file of the DR4 final release (gll_psc_v35.fit.gz)
     from https://fermi.gsfc.nasa.gov/ssc/data/access/lat/14yr_catalog/
 
     One source is represented by `~gammapy.catalog.SourceCatalogObject4FGL`.
@@ -1916,7 +1916,7 @@ class SourceCatalog4FGL(SourceCatalog):
     description = "LAT 14-year point source catalog"
     source_object_class = SourceCatalogObject4FGL
 
-    def __init__(self, filename="$GAMMAPY_DATA/catalogs/fermi/gll_psc_v32.fit.gz"):
+    def __init__(self, filename="$GAMMAPY_DATA/catalogs/fermi/gll_psc_v35.fit.gz"):
         filename = make_path(filename)
         table = Table.read(filename, hdu="LAT_Point_Source_Catalog")
         table_standardise_units_inplace(table)
