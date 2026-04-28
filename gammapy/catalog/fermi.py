@@ -515,10 +515,12 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
                     path_extended = (
                         "$GAMMAPY_DATA/catalogs/fermi/Extended_12years/Templates/"
                     )
-                else:
+                elif de["version"] < 39:
                     path_extended = (
                         "$GAMMAPY_DATA/catalogs/fermi/Extended_14years/Templates/"
                     )
+                else:
+                    path_extended = "$GAMMAPY_DATA/catalogs/fermi/LAT_extended_sources_16years/Templates/"
                 path = make_path(path_extended)
                 with warnings.catch_warnings():  # ignore FITS units warnings
                     warnings.simplefilter("ignore", FITSFixedWarning)
@@ -1905,9 +1907,13 @@ class SourceCatalog4FGL(SourceCatalog):
     - https://arxiv.org/abs/2005.11208 (DR2)
     - https://arxiv.org/abs/2201.11184 (DR3)
     - https://arxiv.org/abs/2307.12546 (DR4)
+    - https://arxiv.org/abs/2602.22148 (FL16Y)
 
     By default we use the file of the DR4 final release (gll_psc_v35.fit.gz)
     from https://fermi.gsfc.nasa.gov/ssc/data/access/lat/14yr_catalog/
+
+    FL16Y break the 4FGL incremental catalog continuity but can be still open with this class
+    (this feature will be deprecated once 5FGL is available).
 
     One source is represented by `~gammapy.catalog.SourceCatalogObject4FGL`.
     """

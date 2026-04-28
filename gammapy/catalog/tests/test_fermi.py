@@ -222,6 +222,14 @@ def test_4FGL_DR4(ref):
 
 
 @requires_data()
+def test_FL16Y(ref):
+    cat = SourceCatalog4FGL("$GAMMAPY_DATA/catalogs/fermi/gll_psc_v40.fit.gz")
+
+    models = cat.to_models()
+    assert len(models) == len(cat.table)
+
+
+@requires_data()
 class TestFermi4FGLObject:
     @classmethod
     def setup_class(cls):
