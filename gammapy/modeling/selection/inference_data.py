@@ -68,7 +68,7 @@ def inference_data_from_ultranest(sampler_results, weighted=False):
         }
     )
 
-    return az.from_dict(dict(posterior=posterior))
+    return az.from_dict(data=dict(posterior=posterior))
 
 
 def inference_data_from_sampler(
@@ -193,7 +193,7 @@ def resample_posterior(inference_data, n_samples=None, random_seed=42):
             resampled_groups[group] = xr.Dataset(resampled_data)
 
     # Create new DataTree with resampled groups
-    return az.from_dict(resampled_groups)
+    return az.from_dict(data=resampled_groups)
 
 
 def generate_prior_samples(parameters, n_prior_samples=1000, random_seed=42):
@@ -272,7 +272,7 @@ def add_prior_samples(inference_data, results, n_prior_samples=None, random_seed
         }
     )
     data["prior"] = prior
-    return az.from_dict(data)
+    return az.from_dict(data=data)
 
 
 def add_sample_wise_quantities(inference_data, datasets, group_name):
@@ -358,4 +358,4 @@ def add_sample_wise_quantities(inference_data, datasets, group_name):
             {"counts": (["chain", "draw", "pixel"], npred_matrix)}
         )
         data["prior_predictive"] = prior_predictive
-    return az.from_dict(data)
+    return az.from_dict(data=data)
