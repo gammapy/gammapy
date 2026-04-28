@@ -338,12 +338,12 @@ def test_observationtable_init_with_table():
 
     wrong_meta_table = Table({"RA_PNT": [83.63], "DEC_PNT": [22.01]})
 
-    with pytest.raises(ValueError) as exc_info:
+    with pytest.raises(ValueError, match="Missing mandatory column: OBS_ID"):
         ObservationTable(table=wrong_meta_table)
-    assert "Missing mandatory column: OBS_ID" in str(exc_info.value)
 
     wrong_table = {"OBS_ID": [1, 2, 3]}
 
-    with pytest.raises(TypeError) as exc_info:
+    with pytest.raises(
+        TypeError, match="The input `table` is not an `astropy.table.Table`."
+    ):
         ObservationTable(table=wrong_table)
-    assert "The input `table` is not an `astropy.table.Table`." in str(exc_info.value)
