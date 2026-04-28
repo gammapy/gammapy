@@ -3,7 +3,7 @@ channels = ["conda-forge"]
 platforms = ["linux-64", "osx-64", "win-64"] # ["osx-arm64"] causes issue
 
 [dependencies]
-python = ">=3.10"
+python = ">=3.11"
 pip = ">=25.1.1"
 ipython = ">=9.2.0"
 numpy = ">=1.26"
@@ -16,15 +16,30 @@ pydantic = ">=2.8.0"
 iminuit = ">=2.26.0"
 matplotlib = ">=3.8, <3.10"
 
+# Gammapy feature
+# ------------
+# Dependencies
+# ------------
 [feature.gammapy.pypi-dependencies]
-gammapy = { path = ".", editable = true }
+gammapy = { path = ".", editable = true, extras = ["test"]}
 
-# -------------------
-# Features: dependencies
-# -------------------
+# Pre-commit feature
+# ------------
+# Dependencies
+# ------------
+[feature.pre-commit.dependencies]
+pre-commit = "*"
+# -----
+# Tasks
+# -----
+[feature.pre-commit.tasks]
+pre-commit = "pre-commit"
+description = "Run pre-commit hooks"
 
-# TODO: are these Pypi or Conda dependencies??
-
+# Python features
+# ------------
+# Dependencies
+# ------------
 [feature.py311.dependencies]
 python = "3.11.*"
 [feature.py312.dependencies]
@@ -32,25 +47,38 @@ python = "3.12.*"
 [feature.py313.dependencies]
 python = "3.13.*"
 
+# Numpy features
+# ------------
+# Dependencies
+# ------------
 [feature.numpy20.dependencies]
 numpy = "2.0.*"
 [feature.numpy21.dependencies]
 numpy = "2.1.*"
 
 
-# Test extras (from setup.cfg extras_require[test])
+# Test features
+# ------------
+# Dependencies
+# ------------
 [feature.test.dependencies]
 pytest = "*"
 pytest-astropy = "*"
 pytest-xdist = "*"
 docutils = "*"
 sphinx = "*"
+# -----
+# Tasks
+# -----
 [feature.test.tasks.tests]
 cmd = "pytest --pyargs gammapy"
 [feature.test.tasks.test-cov]
 cmd = "pytest --doctest-rst --pyargs gammapy ./docs --cov gammapy --cov-config=.coveragerc --cov-report=xml:coverage.xml"
 
-# Docs extras (from setup.cfg extras_require[docs])
+# Docs features
+# ------------
+# Dependencies
+# ------------
 [feature.docs.pypi-dependencies]
 astropy = "*"
 numpydoc = "*"
@@ -63,12 +91,19 @@ sphinx-gallery = "*"
 pydata-sphinx-theme = "*"
 nbformat = "*"
 docutils = "*"
+# -----
+# Tasks
+# -----
+# Docs features for providing tasks
 [feature.docs.tasks.build-docs]
 cmd = "sphinx-build -b html docs docs/_build/html"
 [feature.docs.tasks.linkcheck]
 cmd = "sphinx-build -b linkcheck docs docs/_build/html"
 
-# Coverage extras (from setup.cfg extras_require[cov])
+# Coverage features
+# ------------
+# Dependencies
+# ------------
 [feature.cov.pypi-dependencies]
 coverage = "*"
 naima = "*"
@@ -81,10 +116,12 @@ sherpa = "*"
 healpy = "*"
 
 
+# All dependencies features
 [feature.all]
 platforms = ["linux-64", "osx-64"]
-
-# "all" extras
+# ------------
+# Dependencies
+# ------------
 [feature.all.pypi-dependencies]
 naima = "*"
 requests = "*"
@@ -96,7 +133,10 @@ ray = ">=2.9"
 sherpa = "*"
 healpy = "*"
 
-# "all_no_ray" extras
+# All dependencies without 'ray'
+# ------------
+# Dependencies
+# ------------
 [feature.all_no_ray.pypi-dependencies]
 naima = "*"
 requests = "*"
@@ -107,38 +147,24 @@ numba = "*"
 sherpa = "*"
 healpy = "*"
 
-# Pre-commit hooks
-[feature.pre-commit.dependencies]
-pre-commit = "*"
-[feature.pre-commit.tasks]
-pre-commit = "pre-commit"
-description = "Run pre-commit hooks"
-
-# -------------------
-# Environments (matrix like tox)
-# -------------------
 [environments]
+# Gammapy environments
 default = { features = ["gammapy", "test"], solve-group = "gammapy" }
 
-# Python matrix
-py310 = { features = ["gammapy", "test"], solve-group = "py310" }
+# Python matrix environments
 py311 = { features = ["gammapy", "test", "py311"], solve-group = "py311" }
 py312 = { features = ["gammapy", "test", "py312"], solve-group = "py312" }
 py313 = { features = ["gammapy", "test", "py313"], solve-group = "py313" }
 
-# Numpy pins
+# Numpy pins environments
 numpy20 = { features = ["gammapy", "test", "numpy20"], solve-group = "numpy20" }
 numpy21 = { features = ["gammapy", "test", "numpy21"], solve-group = "numpy21" }
 
-# Extras
+# All dependencies environments
 all = { features = ["gammapy", "test", "all"] }
 allnoray = { features = ["gammapy", "test", "all_no_ray"] }
 
-# Docs
+# Tooling environments
 docs = { features = ["gammapy", "docs"], solve-group = "gammapy" }
-
-# Coverage
 cov = { features = ["gammapy", "test", "cov"], solve-group = "gammapy" }
-
-# Pre-commit
 pre-commit = { features = ["pre-commit"], solve-group = "gammapy" }
