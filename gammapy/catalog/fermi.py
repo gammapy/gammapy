@@ -908,7 +908,7 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
                     lon_0=ra, lat_0=dec, r_0=r_0, e=e, phi=phi, frame="icrs"
                 )
             elif morph_type in ["Map", "Ring", "2D Gaussian x2"]:
-                filename = de["Spatial_Filename"].strip()
+                filename = de["Spatial_Filename"].strip() + ".gz"
                 path = make_path(
                     "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v15/Templates/"
                 )
@@ -1077,7 +1077,7 @@ class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
                     lon_0=ra, lat_0=dec, r_0=r_0, e=e, phi=phi, frame="icrs"
                 )
             elif morph_type in ["Map", "Ring", "2D Gaussian x2"]:
-                filename = de["Spatial_Filename"].strip()
+                filename = de["Spatial_Filename"].strip() + ".gz"
                 path = make_path(
                     "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v15/Templates/"
                 )
@@ -1342,7 +1342,7 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
                     lon_0=ra, lat_0=dec, r_0=r_0, e=e, phi=phi, frame="icrs"
                 )
             elif morph_type in ["SpatialMap"]:
-                filename = de["Spatial_Filename"].strip()
+                filename = de["Spatial_Filename"].strip() + ".gz"
                 path = make_path(
                     "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/"
                 )
