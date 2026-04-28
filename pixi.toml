@@ -1,20 +1,9 @@
 [workspace]
 channels = ["conda-forge"]
-platforms = ["linux-64", "osx-64", "win-64"] # ["osx-arm64"] causes issue
+platforms = ["linux-64", "linux-aarch64", "osx-arm64", "win-64"]
 
 [dependencies]
 python = ">=3.11"
-pip = ">=25.1.1"
-ipython = ">=9.2.0"
-numpy = ">=1.26"
-scipy = ">=1.13"
-astropy = ">=6.0"
-regions = ">=0.9.0"
-pyyaml = ">=5.3"
-click = ">=8.0"
-pydantic = ">=2.8.0"
-iminuit = ">=2.26.0"
-matplotlib = ">=3.8, <3.10"
 
 # Gammapy feature
 # ------------
@@ -61,12 +50,12 @@ numpy = "2.1.*"
 # ------------
 # Dependencies
 # ------------
-[feature.test.dependencies]
+[feature.test.pypi-dependencies]
 gammapy = { path = ".", editable = true, extras = ["test"] }
 # -----
 # Tasks
 # -----
-[feature.test.tasks.tests]
+[feature.test.tasks.pytest]
 cmd = "pytest --pyargs gammapy"
 
 # Docs features
@@ -88,9 +77,9 @@ cmd = "sphinx-build -b linkcheck docs docs/_build/html"
 # ------------
 # Dependencies
 # ------------
-[feature.cov.pypi-dependencies]
+[feature.coverage.pypi-dependencies]
 gammapy = { path = ".", editable = true, extras = ["cov"] }
-[feature.cov.tasks.test-cov]
+[feature.coverage.tasks.pytest-cov]
 cmd = "pytest --doctest-rst --pyargs gammapy ./docs --cov gammapy --cov-config=.coveragerc --cov-report=xml:coverage.xml"
 
 
@@ -112,22 +101,22 @@ gammapy = { path = ".", editable = true, extras = ["all_no_ray"] }
 
 [environments]
 # Gammapy environments
-default = { features = ["gammapy", "test"], solve-group = "gammapy" }
+default = { features = ["gammapy"], solve-group = "gammapy" }
 
 # Python matrix environments
-py311 = { features = ["gammapy", "test", "py311"], solve-group = "py311" }
-py312 = { features = ["gammapy", "test", "py312"], solve-group = "py312" }
-py313 = { features = ["gammapy", "test", "py313"], solve-group = "py313" }
+py311 = { features = ["test", "py311"], solve-group = "py311" }
+py312 = { features = ["test", "py312"], solve-group = "py312" }
+py313 = { features = ["test", "py313"], solve-group = "py313" }
 
 # Numpy pins environments
-numpy20 = { features = ["gammapy", "test", "numpy20"], solve-group = "numpy20" }
-numpy21 = { features = ["gammapy", "test", "numpy21"], solve-group = "numpy21" }
+numpy20 = { features = ["test", "numpy20"], solve-group = "numpy20" }
+numpy21 = { features = ["test", "numpy21"], solve-group = "numpy21" }
 
 # All dependencies environments
-all = { features = ["gammapy", "test", "all"] }
-allnoray = { features = ["gammapy", "test", "all_no_ray"] }
+all = { features = ["test", "all"] }
+allnoray = { features = ["test", "all_no_ray"] }
 
 # Tooling environments
-docs = { features = ["gammapy", "docs"], solve-group = "gammapy" }
-cov = { features = ["gammapy", "test", "cov"], solve-group = "gammapy" }
-pre-commit = { features = ["pre-commit"], solve-group = "gammapy" }
+docs = { features = ["docs"], solve-group = "docs" }
+coverage = { features = ["test", "coverage"], solve-group = "coverage" }
+pre-commit = { features = ["gammapy", "pre-commit"], solve-group = "gammapy" }
