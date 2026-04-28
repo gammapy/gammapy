@@ -420,14 +420,9 @@ class InferenceResult:
 
     def prior_sensitivity_table(self):
         """Prior and likelihood sensitivity table computed from power scaling."""
-        try:
-            from arviz_stats import psense_summary
+        from arviz_stats import psense_summary
 
-            return psense_summary(self.inference_data)
-        except (ImportError, AttributeError):
-            import arviz.preview as azp  # contains methods from future version
-
-            return azp.psense_summary(self.inference_data)
+        return psense_summary(self.inference_data)
 
     @property
     def priors(self):
