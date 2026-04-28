@@ -66,7 +66,7 @@ analyse the following datasets:
      - None
      - None
      -
-     - `chi2`
+     - `chi2`, `profile`, `distrib`
 
 In addition to the above quantities, a dataset can optionally have a
 `meta_table` serialised, which can contain relevant information about the observations
