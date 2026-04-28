@@ -1145,6 +1145,10 @@ class MapDataset(Dataset):
             Non-finite values are replaced by zero if True. Default is True.
 
         """
+
+        if other.mask_safe and not np.any(other.mask_safe):
+            return
+
         if self.counts and other.counts:
             self.counts.stack(
                 other.counts, weights=other.mask_safe, nan_to_num=nan_to_num
