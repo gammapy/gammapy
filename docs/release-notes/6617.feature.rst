@@ -1,0 +1,1 @@
+Update Fermi-LAT 4FGL catalog and add support for FL16Y list in `gammapy.catalog.SourceCatalog4FGL`.
