@@ -1,0 +1,2 @@
+Add `gammapy.modeling.models.SamplesKDEPrior` class to create a prior from samples using `scipy.stats.
+gaussian_kde`.
