@@ -194,8 +194,11 @@ Another option is to create a general list of references, as follows:
 Docstring formatting
 ^^^^^^^^^^^^^^^^^^^^
 
-The docstring formatting is done via `ruff <https://docs.astral.sh/ruff/>`__ tool, which runs as a ``pre-commit`` hook and follow the `numpy docstring style convention <https://numpydoc.readthedocs.io/en/latest/format.html>`__.
-``ruff`` include most of `pydocstyle rules <https://docs.astral.sh/ruff/rules/#pydocstyle-d>`__ except those explicitly excluded in ``pyproject.toml``.
+The docstring formatting is handled via the `ruff <https://docs.astral.sh/ruff/>`__
+tool, which runs as a ``pre-commit`` hook and follows the
+`numpy docstring style convention <https://numpydoc.readthedocs.io/en/latest/format.html>`__.
+``ruff`` includes most of the `pydocstyle rules <https://docs.astral.sh/ruff/rules/#pydocstyle-d>`__
+except those explicitly excluded in ``pyproject.toml``.
 
 Sphinx gallery extension
 ------------------------
