@@ -20,9 +20,8 @@ class ObservationTable(Table):
 
     def __init__(self, data=None, table=None, copy=False, meta=None, **kwargs):
         self._data = table if table is not None else data
-        if table is not None:
-            if not isinstance(table, Table):
-                raise TypeError("The input `table` is not an `astropy.table.Table`.")
+        if table is not None and not isinstance(table, Table):
+            raise TypeError("The input `table` is not an `astropy.table.Table`.")
 
         if meta is None and hasattr(self._data, "meta"):
             meta = self._data.meta.copy()
