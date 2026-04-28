@@ -59,6 +59,7 @@ The setup
 
 """
 
+import warnings
 import numpy as np
 from astropy import units as u
 import matplotlib.pyplot as plt
@@ -69,6 +70,8 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
 )
+
+warnings.simplefilter("ignore", RuntimeWarning)
 
 
 ######################################################################
@@ -452,7 +455,7 @@ plt.show()
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # To showcase how the uniform prior affects the fit results, :math:`100`
-# datasets are created and fitted without and with the prior
+# datasets are created and fitted without and with the prior:
 #
 
 results, results_prior = [], []
@@ -484,6 +487,8 @@ for n in range(N):
         }
     )
 
+######################################################################
+# We can plot these results in a histogram:
 
 fig, axs = plt.subplots(1, 2, figsize=(7, 4))
 for i, parname in enumerate(["index", "amplitude"]):
