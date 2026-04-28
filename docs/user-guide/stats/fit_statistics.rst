@@ -27,8 +27,8 @@ The likelihood functions used currently in Gammapy are:
 
 .. _cash:
 
-Cash : Poisson data with background model
------------------------------------------
+Cash: Poisson data with background model
+----------------------------------------
 
 The number of counts, :math:`n`, is a Poisson random variable of mean value
 :math:`\mu_{\mathrm{sig}} + \mu_{\mathrm{bkg}}`. The former is the expected
@@ -61,8 +61,8 @@ Here's an example for the `~gammapy.stats.cash` statistic::
 
 .. _wstat:
 
-WStat : Poisson data with background measurement
-------------------------------------------------
+WStat: Poisson data with background measurement
+-----------------------------------------------
 
 In the absence of a reliable background model, it is possible to use a second
 measurement containing only background to estimate it.
@@ -149,6 +149,35 @@ statistics page`_ with the substitutions:
     \mu_{\mathrm{sig}} = t_s \cdot m_i \\
     \mu_{\mathrm{bkg}} = t_b \cdot m_b \\
     \alpha = t_s / t_b  \\
+
+
+.. _fpd_methods_stats:
+
+`~gammapy.datasets.FluxPointsDataset`: Available statistical methods
+--------------------------------------------------------------------
+
+There are a number of different statistical methods available for calculating
+the statistics on the `~gammapy.datasets.FluxPointsDataset`:
+
+- chi2
+- profile
+- distrib
+
+These three methods are described below.
+
+Chi squared
+===========
+
+
+Likelihood profile
+==================
+
+
+Probability density function of the normal distribution
+=======================================================
+
+
+
 
 Further references
 ------------------
