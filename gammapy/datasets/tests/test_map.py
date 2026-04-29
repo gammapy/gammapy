@@ -1378,6 +1378,18 @@ def test_stack_npred():
     npred_stacked = stacked.npred()
 
     assert_allclose(npred_stacked.data, stacked_npred.data)
+    assert_allclose(stacked.gti.time_sum, 3600 * u.s)
+
+    dataset_3 = MapDataset.create(
+        geom,
+        energy_axis_true=axis_etrue,
+        name="dataset-2",
+        gti=GTI.create("60 min", "90 min"),
+    )
+    dataset_3.mask_safe = dataset_2.mask_safe.copy()
+    dataset_3.mask_safe.data = False
+    stacked.stack(dataset_3)
+    assert_allclose(stacked.gti.time_sum, 3600 * u.s)
 
 
 def to_cube(image):

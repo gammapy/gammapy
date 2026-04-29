@@ -1,0 +1,1 @@
+Skips stacking if no valid mask_safe, fix gti preventing stacking of invalid dataset
