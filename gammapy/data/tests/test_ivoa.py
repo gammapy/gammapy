@@ -1,7 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from numpy.testing import assert_allclose
-from gammapy.data.ivoa import empty_obscore_table, to_obscore_table
+from gammapy.data.ivoa import empty_obscore_table, to_obscore_table, make_obs_table
 from gammapy.utils.testing import requires_data
+
+from astropy.table import Table
+from astropy.io.votable import from_table
+from pyvo.dal.tap import TAPResults
+from pytest import raises
 
 
 def test_obscore_structure():
@@ -16,6 +21,21 @@ def test_obscore_structure():
         obscore_default_tab.columns[28].meta["Utype"]
         == "Provenance.ObsConfig.Instrument.name"
     )
+
+
+@requires_data()
+def test_make_obs_table():
+    root_path = "$GAMMAPY_DATA/tests/"
+    tap_res = TAPResults(from_table(Table.read(root_path / "obscore_table.fits.gz")))
+    obs_table = make_obs_table(TAPResults(tap_res))
+
+    assert len(obs_table["OBS_MODE"]) == 4
+    assert obs_table["OBS_ID"][0] == 23523
+    assert obs_table["DATE-OBS"][3] == "2004-12-08"
+
+    ivoa_tab = from_table(Table.read(root_path / "minimal_datastore/obs-index.fits.gz"))
+    with raises(KeyError):
+        obs_table = make_obs_table(TAPResults(ivoa_tab))
 
 
 @requires_data()
