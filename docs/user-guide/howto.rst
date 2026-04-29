@@ -116,33 +116,25 @@ Please give feedback and suggest additions to this page!
         ax.yaxis.set_units(u.Unit("erg cm-2 s-1"))
         fp.plot(ax=ax, sed_type="e2dnde")
 
-    By default Gammapy uses bracket notation for axis labels (e.g. ``Energy [TeV]``).
-    According to International System of Units the recommended notation is ``quantity / unit``
-    (e.g. ``Energy / TeV`` ).
-    To apply this,override the axis labels manually after plotting:
+    By default, Gammapy uses bracket notation for its axis labels (e.g. ``Energy [TeV]``).
+    According to the International System of Units (`ISU <https://www.bipm.org/documents/20126/41483022/SI-Brochure-9-EN.pdf>`_) the recommended notation is ``quantity / unit``
+    (e.g. ``Energy / TeV``).
+    To adopt these standards one can override the axis labels manually after creating the plot:
 
     .. code::
 
         ax.set_xlabel(r"$E$ / eV")
         ax.set_ylabel(r"$E^2 \, \mathrm{d}N/\mathrm{d}E$ / (erg cm$^{-2}$ s$^{-1}$)")
 
-    Alternatively you can change this behaviour globally for all plots by updating
-    the default label template.
-
-    For modeling plots:
-
-    .. code::
-
-        from gammapy.modeling.models import spectral
-        spectral.DEFAULT_LABEL_TEMPLATE = "{quantity} / {unit}"
-
-    For estimator plots:
+    Alternatively, you can change this behaviour globally for all plots by updating
+    the default label template. An example of this for an estimator plot is:
 
     .. code::
 
         from gammapy.estimators import points
         points.core.DEFAULT_LABEL_TEMPLATE = "{quantity} / {unit}"
 
+    Similarly adapt `gammapy.modeling.models.spectral.DEFAULT_LABEL_TEMPLATE` for spectral models.
 
 .. dropdown:: Compute the significance of a source
     :name: dropdown-src-sig
