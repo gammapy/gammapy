@@ -194,17 +194,11 @@ Another option is to create a general list of references, as follows:
 Docstring formatting
 ^^^^^^^^^^^^^^^^^^^^
 
-It is also important to check that you have correctly formatted your docstring.
-An easy way to check this is by utilising `pydocstyle`. `pydocstyle` utilises the
-PEP257 convention by default, which means a number of errors are automatically ignored.
-In gammapy we chose to opt for the `numpy` convention therefore the flag must be added
-to correctly check the docstrings. To check the docstring for your specific file, i.e.:
-
-.. code-block:: bash
-
-    pydocstyle --convention=numpy gammapy/data/event_list.py
-
-
+The docstring formatting is handled via the `ruff <https://docs.astral.sh/ruff/>`__
+tool, which runs as a ``pre-commit`` hook and follows the
+`numpy docstring style convention <https://numpydoc.readthedocs.io/en/latest/format.html>`__.
+``ruff`` includes most of the `pydocstyle rules <https://docs.astral.sh/ruff/rules/#pydocstyle-d>`__
+except those explicitly excluded in ``pyproject.toml``.
 
 Sphinx gallery extension
 ------------------------
