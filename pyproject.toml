@@ -159,7 +159,7 @@ select = [
   "FLY", # flynt
   "DTZ", # flake8-datetimez
   "S",   # flake8-bandit
-  "N",   # pep8-naming -> ignored due to 'physics' kind of  variables.
+  "N",   # pep8-naming
 ]
 ignore = [
     # rules we want to always ignore
@@ -172,7 +172,6 @@ ignore = [
     "DTZ011",
     "E501", "E741",
     "F401",
-    "I001",
     "N801", "N802", "N803", "N805", "N813", "N806", "N815", "N816", "N818",
     "S113", "S202", "S301", "S307", "S324",  "S603",
 ]
