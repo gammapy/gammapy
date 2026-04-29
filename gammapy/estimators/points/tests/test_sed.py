@@ -1,10 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import pytest
 import numpy as np
-from numpy.testing import assert_allclose
+import pytest
 from astropy import units as u
 from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.table import Table
+from numpy.testing import assert_allclose
+
 from gammapy.data import Observation
 from gammapy.data.pointing import FixedPointingInfo
 from gammapy.datasets import (
