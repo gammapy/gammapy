@@ -144,7 +144,7 @@ except Exception:
 
 [tool.ruff]
 # Like black
-line-length = 200 # TODO: restore to 88 when apply pre-comm on all files
+line-length = 88
 indent-width = 4
 
 [tool.ruff.lint]
