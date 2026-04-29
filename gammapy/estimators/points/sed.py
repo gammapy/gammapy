@@ -1,32 +1,41 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 from itertools import repeat
+
 import numpy as np
 import scipy.stats as stats
 from astropy import units as u
 from astropy.table import Table
+
 import gammapy.utils.parallel as parallel
 from gammapy.datasets import Datasets
-from gammapy.datasets.utils import set_and_restore_mask_fit
 from gammapy.datasets.actors import DatasetsActor
 from gammapy.datasets.flux_points import _get_reference_model
-from gammapy.maps import MapAxis, Map, RegionGeom
-from gammapy.modeling import Fit, Sampler, Parameters, Parameter
+from gammapy.datasets.utils import set_and_restore_mask_fit
+from gammapy.maps import Map, MapAxis, RegionGeom
+from gammapy.modeling import Fit, Parameter, Parameters, Sampler
 from gammapy.modeling.models import (
     Models,
+    PiecewiseNormSpectralModel,
     PowerLawNormSpectralModel,
     TemplateNPredModel,
     UniformPrior,
-    PiecewiseNormSpectralModel,
 )
-from gammapy.stats.fit_statistics import GaussianPriorPenalty
 from gammapy.modeling.utils import _parse_datasets
+from gammapy.stats.fit_statistics import GaussianPriorPenalty
+from gammapy.utils.scripts import recursive_merge_dicts
+
+from ..core import Estimator
 from ..flux import FluxEstimator
-from .core import FluxPoints, Estimator
+from .core import FluxPoints
 
 log = logging.getLogger(__name__)
 
-__all__ = ["FluxPointsEstimator", "FluxCollectionEstimator"]
+__all__ = [
+    "FluxPointsEstimator",
+    "FluxCollectionEstimator",
+    "RegularizedFluxPointsEstimator",
+]
 
 
 class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
@@ -674,7 +683,75 @@ class FluxCollectionEstimator:
 
 
 class RegularizedFluxPointsEstimator(Estimator):
+    """
+    Estimate flux points using a regularized likelihood approach.
+
+    This estimator computes flux points by fitting piecewise-normalized
+    spectral models to datasets, optionally including Gaussian prior
+    penalties on the normalization parameters. Regularization can be
+    used to stabilize the fit or enforce smoothness across energy bins.
+
+    The estimator works by multiplying each input spectral model with a
+    `~gammapy.modeling.models.PiecewiseNormSpectralModel` defined on a
+    set of energy nodes, and fitting the resulting normalization
+    parameters simultaneously.
+
+    Parameters
+    ----------
+    energy_nodes : `~astropy.units.Quantity`
+        Energy nodes defining the piecewise normalization bins.
+    models : `~gammapy.modeling.models.Models`
+        Spectral models for which flux points are estimated.
+    penalty_name : {"L2", "smoothness", "unpenalized", None}, optional
+        Name of the regularization penalty to apply. If None or
+        "unpenalized", no penalty is used. Default is "L2".
+    lambda_ : float, optional
+        Regularization strength. Larger values increase the impact of
+        the penalty term. Default is 1.
+    selection_optional : list of str, optional
+        Which additional quantities to estimate. Available options are:
+
+            * "all": all the optional steps are executed.
+            * "errn-errp": estimate asymmetric errors on flux.
+            * "ul": estimate upper limits.
+
+        Default is None so the optional steps are not executed.
+    fit : `~gammapy.modeling.Fit`, optional
+        Fit instance used for likelihood minimization and confidence
+        interval estimation. If None, a default `Fit` is created.
+    reoptimize : bool, optional
+        Whether to reoptimize non-flux-point model parameters during the
+        fit. If False, all other model parameters are frozen.
+        Default is False.
+
+    Notes
+    -----
+    The regularization is implemented via Gaussian prior penalties added
+    to the likelihood:
+
+    * ``"L2"`` applies a quadratic penalty around a mean normalization of 1.
+    * ``"smoothness"`` enforces smooth variations between adjacent energy bins.
+
+    The estimator returns flux points in ``sed_type="likelihood"`` format,
+    making them suitable for further statistical analyses.
+
+    Returns
+    -------
+    result : dict
+        Dictionary with the following keys:
+
+        * ``"flux_points"`` : dict of `~gammapy.estimators.FluxPoints`
+            Flux points for each input model, keyed by model name.
+        * ``"models"`` : `~gammapy.modeling.models.Models`
+            Models used in the fit, including the regularized components.
+        * ``"stat_sum_likelihood"`` : float
+            Sum of the likelihood terms.
+        * ``"stat_sum_penalty"`` : float
+            Sum of the penalty contributions.
+    """
+
     tag = "RegularizedFluxPointsEstimator"
+    _available_selection_optional = ["errn-errp", "ul"]
 
     def __init__(
         self,
@@ -735,7 +812,8 @@ class RegularizedFluxPointsEstimator(Estimator):
         e_axis = MapAxis.from_nodes(self.energy_nodes, name="energy", interp="log")
         return RegionGeom(region=None, axes=[e_axis])
 
-    def compute_flux(self, datasets):
+    def _compute_flux(self, datasets):
+        """Compute flux"""
         res = Fit().run(datasets)
         if not res.success:
             raise RuntimeError(f"Flux points fitting failed with {res.message}.")
@@ -754,7 +832,8 @@ class RegularizedFluxPointsEstimator(Estimator):
 
         return map_dict
 
-    def compute_errn_errp(self, datasets):
+    def _compute_errn_errp(self, datasets):
+        """Compute asymmetric errors"""
         map_dict = dict()
         for km, m in enumerate(self.models):
             name = self.norm_models_names[km]
@@ -774,7 +853,8 @@ class RegularizedFluxPointsEstimator(Estimator):
             map_dict[m.name] = {"norm_errn": norm_errn_map, "norm_errp": norm_errp_map}
         return map_dict
 
-    def compute_ul(self, datasets):
+    def _compute_ul(self, datasets):
+        """Compute upper limits"""
         map_dict = dict()
         for km, m in enumerate(self.models):
             name = self.norm_models_names[km]
@@ -795,6 +875,28 @@ class RegularizedFluxPointsEstimator(Estimator):
         return map_dict
 
     def run(self, datasets):
+        """
+        Run the regularized flux points estimation.
+
+        Parameters
+        ----------
+        datasets : `~gammapy.datasets.Datasets` or list of `~gammapy.datasets.Dataset`
+            Datasets to fit.
+
+        Returns
+        -------
+        result : dict
+            Dictionary with the following keys:
+
+            * ``flux_points`` : dict of `~gammapy.estimators.FluxPoints`
+                Estimated flux points for each input model.
+            * ``models`` : `~gammapy.modeling.models.Models`
+                Models used in the fit.
+            * ``stat_sum_likelihood`` : float
+                Sum of likelihood contributions.
+            * ``stat_sum_penalty`` : float
+                Sum of penalty contributions.
+        """
         datasets, _ = _parse_datasets(datasets=datasets)
 
         datasets = datasets.copy()
@@ -808,26 +910,18 @@ class RegularizedFluxPointsEstimator(Estimator):
         models._penalties = (
             norm_models._penalties
         )  # TODO: should be supported by __add__
-        print(models._penalties)
 
         datasets.models = models
 
-        print(len(datasets.models.parameters.free_unique_parameters))
-        print(datasets.models._penalties)
+        maps_dict = self._compute_flux(datasets)
 
-        maps_dict = self.compute_flux(datasets)
-        print("stat_sum", datasets.stat_sum())
-        print("stat_likelihood", datasets._stat_sum_likelihood())
-        print("stat_prior", datasets.stat_sum() - datasets._stat_sum_likelihood())
-        print(
-            "stat_prior/stat_likelihood",
-            (datasets.stat_sum() - datasets._stat_sum_likelihood())
-            / datasets._stat_sum_likelihood(),
-        )
+        if "errn-errp" in self.selection_optional:
+            maps_dict = recursive_merge_dicts(
+                maps_dict, self._compute_errn_errp(datasets)
+            )
 
-        # maps_dict.update(self.compute_errn_errp(datasets, norm_model))
-
-        # maps_dict.update(self.compute_ul(datasets, norm_model))
+        if "ul" in self.selection_optional:
+            maps_dict = recursive_merge_dicts(maps_dict, self._compute_ul(datasets))
 
         fp_dict = dict()
         for m in self.models:
