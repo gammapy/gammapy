@@ -172,6 +172,7 @@ convention = "numpy"
 [tool.ruff.lint.per-file-ignores]
 "examples/*" = ["E402"]
 "test_*.py" = ["D"]
+"docs/conf.py" = ["I"]
 
 [tool.ruff.format]
 # Like Black, use double quotes for strings.
@@ -185,9 +186,6 @@ skip-magic-trailing-comma = false
 
 # Like Black, automatically detect the appropriate line ending.
 line-ending = "auto"
-
-[tool.ruff.lint.isort]
-skip = ["docs/conf.py"]
 
 # Including towncrier to create the changelog
 [tool.towncrier]
