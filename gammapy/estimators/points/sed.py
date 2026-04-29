@@ -17,9 +17,7 @@ from gammapy.modeling.models import (
     PowerLawNormSpectralModel,
     TemplateNPredModel,
     UniformPrior,
-    GaussianPrior,
     PiecewiseNormSpectralModel,
-    SkyModel,
 )
 from gammapy.stats.fit_statistics import GaussianPriorPenalty
 from gammapy.modeling.utils import _parse_datasets
