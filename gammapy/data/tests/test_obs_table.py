@@ -4,7 +4,6 @@ import numpy as np
 from astropy.coordinates import AltAz, Angle, SkyCoord
 from astropy.table import Table
 from astropy.time import Time, TimeDelta
-from astropy import units as u
 from astropy.units import Quantity
 from gammapy.data import observatory_locations
 from gammapy.data.obs_table import ObservationTable, ObservationTableChecker
@@ -326,13 +325,16 @@ def test_observation_table_checker():
 
 
 def test_observationtable_init_with_table():
-    table = Table({"OBS_ID": ["0001", "0002"], "TSTART": [0.0, 1000.0] * u.s})
+    time1 = Time(58000.0, format="mjd", scale="utc")
+    time2 = Time(58000.1, format="mjd", scale="utc")
+    table = Table({"OBS_ID": ["0001", "0002"], "TSTART": [time1, time2]})
     table.meta["TELESCOP"] = "CTAO"
 
     obs_table = ObservationTable(table=table)
 
     assert len(obs_table) == 2
     assert "OBS_ID" in obs_table.colnames
+    assert isinstance(obs_table["TSTART"], Time)
     assert obs_table.meta["TELESCOP"] == "CTAO"
     assert isinstance(obs_table, ObservationTable)
 
