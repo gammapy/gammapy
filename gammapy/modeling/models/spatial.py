@@ -3,11 +3,12 @@
 
 import logging
 import os
+
+import astropy.units as u
+import matplotlib.pyplot as plt
 import numpy as np
 import scipy.integrate
 import scipy.special
-from scipy.interpolate import griddata
-import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord, angular_separation, position_angle
 from astropy.nddata import NoOverlapError
 from astropy.utils import lazyproperty
@@ -19,7 +20,8 @@ from regions import (
     PointSkyRegion,
     RectangleSkyRegion,
 )
-import matplotlib.pyplot as plt
+from scipy.interpolate import griddata
+
 from gammapy.maps import HpxNDMap, Map, MapCoord, WcsGeom, WcsNDMap
 from gammapy.modeling import Parameter, Parameters
 from gammapy.utils.compat import COPY_IF_NEEDED
@@ -27,8 +29,9 @@ from gammapy.utils.gauss import Gauss2DPDF
 from gammapy.utils.interpolation import interpolation_scale
 from gammapy.utils.regions import region_circle_to_ellipse, region_to_frame
 from gammapy.utils.scripts import make_path
-from .core import ModelBase, _build_parameters_from_dict
 from gammapy.utils.units import wrap_at
+
+from .core import ModelBase, _build_parameters_from_dict
 
 __all__ = [
     "ConstantFluxSpatialModel",
@@ -1604,7 +1607,7 @@ class TemplateSpatialModel(SpatialModel):
         """
         if geom is None:
             geom = self.map.geom
-        super().plot(ax=ax, geom=geom, **kwargs)
+        return super().plot(ax=ax, geom=geom, **kwargs)
 
     def plot_interactive(self, ax=None, geom=None, **kwargs):
         """Plot spatial model.
@@ -1625,7 +1628,7 @@ class TemplateSpatialModel(SpatialModel):
         """
         if geom is None:
             geom = self.map.geom
-        super().plot_interactive(ax=ax, geom=geom, **kwargs)
+        return super().plot_interactive(ax=ax, geom=geom, **kwargs)
 
 
 class TemplateNDSpatialModel(SpatialModel):
