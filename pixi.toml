@@ -1,0 +1,122 @@
+[workspace]
+channels = ["conda-forge"]
+platforms = ["linux-64", "linux-aarch64", "osx-arm64", "win-64"]
+
+[dependencies]
+python = ">=3.11"
+
+# Gammapy feature
+# ------------
+# Dependencies
+# ------------
+[feature.gammapy.pypi-dependencies]
+gammapy = { path = ".", editable = true }
+
+# Pre-commit feature
+# ------------
+# Dependencies
+# ------------
+[feature.pre-commit.dependencies]
+pre-commit = "*"
+# -----
+# Tasks
+# -----
+[feature.pre-commit.tasks]
+pre-commit = "pre-commit"
+description = "Run pre-commit hooks"
+
+# Python features
+# ------------
+# Dependencies
+# ------------
+[feature.py311.dependencies]
+python = "3.11.*"
+[feature.py312.dependencies]
+python = "3.12.*"
+[feature.py313.dependencies]
+python = "3.13.*"
+
+# Numpy features
+# ------------
+# Dependencies
+# ------------
+[feature.numpy20.dependencies]
+numpy = "2.0.*"
+[feature.numpy21.dependencies]
+numpy = "2.1.*"
+
+
+# Test features
+# ------------
+# Dependencies
+# ------------
+[feature.test.pypi-dependencies]
+gammapy = { path = ".", editable = true, extras = ["test"] }
+# -----
+# Tasks
+# -----
+[feature.test.tasks.pytest]
+cmd = "pytest --pyargs gammapy"
+
+# Docs features
+# ------------
+# Dependencies
+# ------------
+[feature.docs.pypi-dependencies]
+gammapy = { path = ".", editable = true, extras = ["docs"] }
+# -----
+# Tasks
+# -----
+# Docs features for providing tasks
+[feature.docs.tasks.build-docs]
+cmd = "sphinx-build -b html docs docs/_build/html"
+[feature.docs.tasks.linkcheck]
+cmd = "sphinx-build -b linkcheck docs docs/_build/html"
+
+# Coverage features
+# ------------
+# Dependencies
+# ------------
+[feature.coverage.pypi-dependencies]
+gammapy = { path = ".", editable = true, extras = ["cov"] }
+[feature.coverage.tasks.pytest-cov]
+cmd = "pytest --doctest-rst --pyargs gammapy ./docs --cov gammapy --cov-config=.coveragerc --cov-report=xml:coverage.xml"
+
+
+# All dependencies features
+[feature.all]
+platforms = ["linux-64", "osx-64"]
+# ------------
+# Dependencies
+# ------------
+[feature.all.pypi-dependencies]
+gammapy = { path = ".", editable = true, extras = ["all"] }
+
+# All dependencies without 'ray'
+# ------------
+# Dependencies
+# ------------
+[feature.all_no_ray.pypi-dependencies]
+gammapy = { path = ".", editable = true, extras = ["all_no_ray"] }
+
+[environments]
+# Gammapy environments
+default = { features = ["gammapy"], solve-group = "gammapy" }
+
+# Python matrix environments
+py311 = { features = ["test", "py311"], solve-group = "py311" }
+py312 = { features = ["test", "py312"], solve-group = "py312" }
+py313 = { features = ["test", "py313"], solve-group = "py313" }
+
+# Numpy pins environments
+numpy20 = { features = ["test", "numpy20"], solve-group = "numpy20" }
+numpy21 = { features = ["test", "numpy21"], solve-group = "numpy21" }
+
+# All dependencies environments
+all = { features = ["test", "all"] }
+allnoray = { features = ["test", "all_no_ray"] }
+
+# Tooling environments
+docs = { features = ["docs"], solve-group = "docs" }
+coverage = { features = ["test", "coverage"], solve-group = "coverage" }
+pre-commit = { features = ["gammapy", "pre-commit"], solve-group = "gammapy" }
