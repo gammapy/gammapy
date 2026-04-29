@@ -35,6 +35,7 @@ __all__ = [
     "create_map_dataset_from_observation",
 ]
 
+
 log = logging.getLogger(__name__)
 
 
@@ -2378,6 +2379,72 @@ class MapDataset(Dataset):
         energy_axis = self._geom.axes["energy"].squash()
         return self.resample_energy_axis(energy_axis=energy_axis, name=name)
 
+    def reset_livetime(self, new_livetime, old_livetime=None):
+        """Create a new `Dataset` in which the IRFs and background model
+        are scaled to the specified `new_livetime`.
+        The counts and GTI information are discarded in the process.
+        Masks and models from the original dataset are reassigned
+        to the new dataset.
+
+        This function can useful for simulations where an additional
+        livetime is to be assumed for an already observed region.
+
+        Parameters
+        ----------
+        new_livetime : `~astropy.units.Quantity`
+            The new livetime to use
+        old_livetime : `~astropy.units.Quantity`, optional
+            The livetime on the current dataset.
+            If None, the livetime information on the `exposure.meta`
+            is used.
+
+        Returns
+        -------
+        dataset : `MapDataset` or `SpectrumDataset`
+            Dataset assuming a new livetime
+        """
+
+        if old_livetime is None:
+            old_livetime = self.exposure.meta.get("livetime")
+        ratio = (new_livetime / old_livetime).to("")
+
+        def _reset_exposure(exposure, new_livetime):
+            exposure1 = exposure * ratio
+            exposure1.meta["livetime"] = new_livetime
+            return exposure1
+
+        kwargs = {
+            "gti": None,
+            "name": self.name,
+            "meta_table": None,
+            "mask_safe": self.mask_safe,
+            "mask_fit": self.mask_fit,
+            "counts": None,
+            "models": self.models,
+        }
+
+        if self.exposure:
+            kwargs["exposure"] = _reset_exposure(self.exposure, new_livetime)
+
+        if self.psf:
+            if self.psf.exposure_map:
+                exp_psf = _reset_exposure(self.psf.exposure_map, new_livetime)
+            else:
+                exp_psf = None
+            kwargs["psf"] = PSFMap(psf_map=self.psf.psf_map, exposure_map=exp_psf)
+
+        if self.edisp:
+            if self.edisp.exposure_map:
+                exp_edisp = _reset_exposure(self.edisp.exposure_map, new_livetime)
+            else:
+                exp_edisp = None
+            kwargs["edisp"] = self.edisp.__class__(self.edisp.edisp_map, exp_edisp)
+
+        if self.background is not None and self.stat_type == "cash":
+            kwargs["background"] = self.background * ratio
+
+        return self.__class__(**kwargs)
+
     def peek(self, figsize=(13, 7)):
         """Quick-look summary plots.
 
@@ -3423,4 +3490,45 @@ class MapDatasetOnOff(MapDataset):
             acceptance_off=acceptance_off,
             counts_off=counts_off,
             name=name,
+        )
+
+    def reset_livetime(self, new_livetime, old_livetime=None):
+        """Create a new `Dataset` in which the IRFs and background model
+        are scaled to the specified `new_livetime`.
+        The counts and GTI information are discarded in the process.
+        Masks and models from the original dataset are reassigned
+        to the new dataset.
+
+        This function can useful for simulations where an additional
+        livetime is to be assumed for an already observed region.
+
+        Parameters
+        ----------
+        new_livetime : `~astropy.units.Quantity`
+            The new livetime to use
+        old_livetime : `~astropy.units.Quantity`, optional
+            The livetime on the current dataset.
+            If None, the livetime information on the `exposure.meta`
+            is used.
+
+        Returns
+        -------
+        dataset : `MapDataset` or `SpectrumDataset`
+            Dataset assuming a new livetime
+        """
+        if old_livetime is None:
+            old_livetime = self.exposure.meta.get("livetime")
+        ratio = (new_livetime / old_livetime).to("")
+        dataset = super().reset_livetime(new_livetime, old_livetime)
+
+        counts_off = None
+        if self.counts_off is not None:
+            counts_off = self.counts_off * ratio
+
+        return self.__class__.from_map_dataset(
+            dataset,
+            acceptance=self.acceptance,
+            acceptance_off=self.acceptance_off,
+            counts_off=counts_off,
+            name=self.name,
         )
