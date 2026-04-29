@@ -19,6 +19,18 @@ class ObservationTable(Table):
     """
 
     def __init__(self, data=None, table=None, copy=False, meta=None, **kwargs):
+        """Constructor for internal observation table.
+
+        Parameters
+        ----------
+        table : `astropy.table.Table'
+            Astropy table to initialize observation table.
+        data : `astropy.io.fits`
+            Fits file to load for the observation table.
+        meta : ~dict
+            Dictionary of metadata to update the `data` or
+            `table` ones.
+        """
         self._data = table if table is not None else data
         if table is not None and not isinstance(table, Table):
             raise TypeError("The input `table` is not an `astropy.table.Table`.")
