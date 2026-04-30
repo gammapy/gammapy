@@ -70,7 +70,7 @@ def test_bayesian_model_selection(bms_results):
     inference_result = bms_results["lp(uninformative)"]
     assert "Statistics summary in deviance scale" in str(inference_result)
 
-    assert_allclose(inference_result.elpd_loo.elpd_loo, 218.91, rtol=1e-1)
+    assert_allclose(-2 * inference_result.elpd.elpd, 218.91, rtol=1e-1)
 
     assert_allclose(inference_result.priors["amplitude"].entropy(), -22.7, rtol=1e-1)
     bms_results["lp(strong)"].priors["amplitude"].entropy()

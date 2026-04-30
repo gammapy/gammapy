@@ -507,7 +507,7 @@ fig, (ax1, ax2) = plt.subplots(
 )
 
 # Highest density intervals
-hdis = hdi(samples, hdi_prob=0.68, multimodal=True)
+hdis = hdi(samples, prob=0.68, method="multimodal")
 ax1.hist(
     samples,
     bins=50,

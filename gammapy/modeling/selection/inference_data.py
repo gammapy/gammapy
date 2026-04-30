@@ -6,7 +6,7 @@ from gammapy.modeling.parameter import Parameters
 
 def inference_data_from_ultranest(sampler_results, weighted=False):
     """
-     Convert UltraNest result dictionary to ArviZ InferenceData.
+     Convert UltraNest result dictionary to Xarray DataTree.
 
      Parameters
      ----------
@@ -17,10 +17,11 @@ def inference_data_from_ultranest(sampler_results, weighted=False):
 
      Returns
      -------
-    inferencedata : `arviz.InferenceData`
-        Returns an arviz.InferenceData instance
+    inferencedata : `xarray.DataTree`
+        Returns an xarray.DataTree instance
     """
 
+    import numpy as np
     import arviz as az
     import xarray as xr
 
@@ -29,20 +30,20 @@ def inference_data_from_ultranest(sampler_results, weighted=False):
     if weighted:
         ws = sampler_results["weighted_samples"]
 
-        # Posterior samples (1 chain)
-        posterior_data = {
-            var: (["chain", "draw"], ws["points"][:, i][np.newaxis, :])
-            for i, var in enumerate(var_names)
-        }
-        posterior = xr.Dataset(posterior_data)
+        posterior = xr.Dataset(
+            {
+                var: (["chain", "draw"], ws["points"][:, i][np.newaxis, :])
+                for i, var in enumerate(var_names)
+            }
+        )
 
-        unconstrained_posterior_data = {
-            var: (["chain", "draw"], ws["upoints"][:, i][np.newaxis, :])
-            for i, var in enumerate(var_names)
-        }
-        unconstrained_posterior = xr.Dataset(unconstrained_posterior_data)
+        unconstrained_posterior = xr.Dataset(
+            {
+                var: (["chain", "draw"], ws["upoints"][:, i][np.newaxis, :])
+                for i, var in enumerate(var_names)
+            }
+        )
 
-        # Sample stats
         sample_stats = xr.Dataset(
             {
                 "weights": (["chain", "draw"], ws["weights"][np.newaxis, :]),
@@ -50,21 +51,24 @@ def inference_data_from_ultranest(sampler_results, weighted=False):
             }
         )
 
-        return az.InferenceData(
-            posterior=posterior,
-            unconstrained_posterior=unconstrained_posterior,
-            sample_stats=sample_stats,
+        return az.from_dict(
+            dict(
+                posterior=posterior,
+                unconstrained_posterior=unconstrained_posterior,
+                sample_stats=sample_stats,
+            )
         )
-    else:
-        ws = sampler_results["samples"]
 
-        posterior_data = {
+    ws = sampler_results["samples"]
+
+    posterior = xr.Dataset(
+        {
             var: (["chain", "draw"], ws[:, i][np.newaxis, :])
             for i, var in enumerate(var_names)
         }
-        posterior = xr.Dataset(posterior_data)
+    )
 
-        return az.InferenceData(posterior=posterior)
+    return az.from_dict(data=dict(posterior=posterior))
 
 
 def inference_data_from_sampler(
@@ -77,7 +81,7 @@ def inference_data_from_sampler(
     predictives=True,
 ):
     """
-    Convert Sampler results to an ArviZ InferenceData object with optional resampling and prior inclusion.
+    Convert Sampler results to an xarray DataTree object with optional resampling and prior inclusion.
 
     Parameters
     ----------
@@ -94,7 +98,7 @@ def inference_data_from_sampler(
         Default is None, which use the unweighted samples from ultranest.
      n_prior_samples : int, optional
         If provided, generates this number of samples from the prior distribution using the model's
-        prior transform and include them in the 'prior' group of the InferenceData.
+        prior transform and include them in the 'prior' group of the DataTree.
     random_seed : int, optional
         Seed for reproducibility when resampling posterior or generating prior samples. Default is 42.
     predictives : bool, optional
@@ -102,8 +106,8 @@ def inference_data_from_sampler(
 
     Returns
     -------
-    inference_data : `arviz.InferenceData`
-        An InferenceData object containing posterior samples, optionally resampled,
+    inference_data : `~xarray.DataTree`
+        A DataTree object containing posterior samples, optionally resampled,
         prior samples (if requested), and log-evidence attributes ('logz' and 'logzerr').
     """
     if backend == "ultranest":
@@ -122,24 +126,30 @@ def inference_data_from_sampler(
 
     # Add prior  group
     if n_prior_samples is not None:
-        add_prior_samples(inference_data, results, n_prior_samples, random_seed)
+        inference_data = add_prior_samples(
+            inference_data, results, n_prior_samples, random_seed
+        )
         if predictives:
-            add_sample_wise_quantities(inference_data, datasets, "prior")
+            inference_data = add_sample_wise_quantities(
+                inference_data, datasets, "prior"
+            )
 
     # Add posterior and log likelihood groups
     if predictives:
-        add_sample_wise_quantities(inference_data, datasets, "posterior")
+        inference_data = add_sample_wise_quantities(
+            inference_data, datasets, "posterior"
+        )
     return inference_data
 
 
 def resample_posterior(inference_data, n_samples=None, random_seed=42):
     """
-    Resample posterior samples from an InferenceData object using importance weights.
+    Resample posterior samples from a DataTree object using importance weights.
 
     Parameters
     ----------
-    inference_data : `arviz.InferenceData`
-        The input InferenceData object with posterior and sample_stats["weights"].
+    inference_data : `~xarray.DataTree`
+        The input DataTree object with posterior and sample_stats["weights"].
     n_samples : int, optional
         Number of resampled draws. If None, uses the number of original draws.
     random_seed : int, optional
@@ -147,8 +157,8 @@ def resample_posterior(inference_data, n_samples=None, random_seed=42):
 
     Returns
     -------
-    inferencedata : `arviz.InferenceData`
-        A new InferenceData object with resampled posterior and sample_stats.
+    inferencedata : `~xarray.DataTree`
+        A new DataTree object with resampled posterior and sample_stats.
     """
 
     import arviz as az
@@ -169,7 +179,7 @@ def resample_posterior(inference_data, n_samples=None, random_seed=42):
 
     # Resample each group
     resampled_groups = {}
-    for group in inference_data.groups():
+    for group in list(inference_data.children):
         dataset = getattr(inference_data, group)
         if group in ["prior", "prior_predictive", "observed_data"]:
             resampled_groups[group] = dataset
@@ -182,8 +192,8 @@ def resample_posterior(inference_data, n_samples=None, random_seed=42):
                 resampled_data[var] = (["chain", "draw"], resampled_values)
             resampled_groups[group] = xr.Dataset(resampled_data)
 
-    # Create new InferenceData with resampled groups
-    return az.InferenceData(**resampled_groups)
+    # Create new DataTree with resampled groups
+    return az.from_dict(data=resampled_groups)
 
 
 def generate_prior_samples(parameters, n_prior_samples=1000, random_seed=42):
@@ -224,15 +234,15 @@ def generate_prior_samples(parameters, n_prior_samples=1000, random_seed=42):
 
 def add_prior_samples(inference_data, results, n_prior_samples=None, random_seed=42):
     """
-    Generate and add prior samples to an ArviZ InferenceData object.
+    Generate and add prior samples to an Xarray DataTree object.
 
     This function draws samples from the prior distributions of the model
     parameters using inverse transform sampling. The samples are added to
-    the `prior` group of the provided `InferenceData` object.
+    the `prior` group of the provided `DataTree` object.
 
     Parameters
     ----------
-    inference_data : `arviz.InferenceData`
+    inference_data : `~xarray.DataTree`
         The inference data object to which the prior samples will be added.
     results : `SamplerResult`
         The sampler result object containing the model and its priors.
@@ -246,10 +256,13 @@ def add_prior_samples(inference_data, results, n_prior_samples=None, random_seed
     `ValueError`
         If any model parameter does not have a prior defined.
     """
+    import arviz as az
     import xarray as xr
 
     parameters = results.models.parameters.free_unique_parameters
     prior_samples = generate_prior_samples(parameters, n_prior_samples, random_seed)
+
+    data = {child: getattr(inference_data, child) for child in inference_data.children}
 
     # Create prior group
     prior = xr.Dataset(
@@ -258,7 +271,8 @@ def add_prior_samples(inference_data, results, n_prior_samples=None, random_seed
             for i, name in enumerate(parameters.names)
         }
     )
-    inference_data.add_groups(prior=prior)
+    data["prior"] = prior
+    return az.from_dict(data=data)
 
 
 def add_sample_wise_quantities(inference_data, datasets, group_name):
@@ -267,12 +281,12 @@ def add_sample_wise_quantities(inference_data, datasets, group_name):
 
     This function evaluates the model for each sample in the specified group
     (posterior or prior) and computes the corresponding log-likelihood,
-    log-prior, and predicted counts. These are added to the `InferenceData`
+    log-prior, and predicted counts. These are added to the `DataTree`
     object under appropriate groups.
 
     Parameters
     ----------
-    inference_data : `arviz.InferenceData`
+    inference_data : `xarray.DataTree`
         The inference data object containing posterior or prior samples.
     datasets : `Datasets`
         The datasets used for computing likelihood and predictions.
@@ -282,8 +296,9 @@ def add_sample_wise_quantities(inference_data, datasets, group_name):
     Notes
     -----
     - Assumes that the `stat_array()` method returns `-2 * log-likelihood`.
-    - The function modifies the `InferenceData` object in-place.
+    - The function modifies the `DataTree` object in-place.
     """
+    import arviz as az
     import xarray as xr
 
     group = getattr(inference_data, group_name)
@@ -319,24 +334,28 @@ def add_sample_wise_quantities(inference_data, datasets, group_name):
             counts = np.hstack([d.counts.data[d.mask] for d in datasets])
         npred_matrix = np.array(npred_matrix)[np.newaxis, :, :]
 
+    data = {child: getattr(inference_data, child) for child in inference_data.children}
+
     if group_name == "posterior":
-        log_ligkelihood = xr.Dataset(
-            {"log_ligkelihood": (["chain", "draw", "pixel"], log_likelihood_matrix)}
+        log_likelihood = xr.Dataset(
+            {"log_likelihood": (["chain", "draw", "pixel"], log_likelihood_matrix)}
         )
-        inference_data.add_groups(log_likelihood=log_ligkelihood)
+        data["log_likelihood"] = log_likelihood
 
         log_prior = xr.Dataset({"log_prior": (["chain", "draw"], log_prior_matrix)})
-        inference_data.add_groups(log_prior=log_prior)
+        data["log_prior"] = log_prior
 
         posterior_predictive = xr.Dataset(
             {"counts": (["chain", "draw", "pixel"], npred_matrix)}
         )
-        inference_data.add_groups(posterior_predictive=posterior_predictive)
+        data["posterior_predictive"] = posterior_predictive
 
         observed_data = xr.Dataset({"counts": (["pixel"], counts)})
-        inference_data.add_groups(observed_data=observed_data)
+        data["observed_data"] = observed_data
+
     elif group_name == "prior":
         prior_predictive = xr.Dataset(
             {"counts": (["chain", "draw", "pixel"], npred_matrix)}
         )
-        inference_data.add_groups(prior_predictive=prior_predictive)
+        data["prior_predictive"] = prior_predictive
+    return az.from_dict(data=data)
