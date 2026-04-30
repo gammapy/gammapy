@@ -153,7 +153,7 @@ def integrate_spectrum(
         energy = np.swapaxes(energy, -1, -2)
     else:
         values = func(energy)
-            
+
     if energy_flux:
         values *= energy
 
