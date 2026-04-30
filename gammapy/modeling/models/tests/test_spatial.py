@@ -1,12 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 from pathlib import Path
-import pytest
-import numpy as np
-from numpy.testing import assert_allclose
+
 import astropy.units as u
+import matplotlib as mpl
+import numpy as np
+import pytest
 from astropy.coordinates import SkyCoord
 from astropy.wcs import WCS
+from numpy.testing import assert_allclose
 from regions import (
     CircleAnnulusSkyRegion,
     CircleSkyRegion,
@@ -14,7 +16,8 @@ from regions import (
     PointSkyRegion,
     RectangleSkyRegion,
 )
-from gammapy.maps import Map, MapAxis, MapCoord, RegionGeom, WcsGeom, WcsNDMap, HpxGeom
+
+from gammapy.maps import HpxGeom, Map, MapAxis, MapCoord, RegionGeom, WcsGeom, WcsNDMap
 from gammapy.modeling.models import (
     SPATIAL_MODEL_REGISTRY,
     ConstantSpatialModel,
@@ -876,6 +879,13 @@ def test_template_spatial_parameters_copy():
     model.position = SkyCoord(0, 0, unit="deg", frame="galactic")
     model_copy = model.copy()
     assert_allclose(model.parameters.value, model_copy.parameters.value)
+
+
+@requires_data()
+def test_template_spatial_plot():
+    filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits"
+    model = TemplateSpatialModel.read(filename, normalize=False)
+    assert isinstance(model.plot(), mpl.axes.Axes)
 
 
 @requires_dependency("healpy")
