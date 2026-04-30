@@ -1440,6 +1440,34 @@ def test_vectorized_integrate_spectrum():
     assert_allclose(integral.to_value("cm-2s-1"), [9e-12, 9e-13])
     assert vector_integral.shape == (2, 10)
     assert_allclose(vector_integral[:, 0].to_value("cm-2s-1"), [9e-12, 9e-13])
+    
+    energy = [100, 1000] * u.GeV
+
+    integral = integrate_spectrum(model, energy[:-1], energy[1:], ndecade=20)
+    vector_integral = integrate_spectrum(
+        model, energy[:-1], energy[1:], ndecade=20, parameter_samples=parameter_samples
+    )
+
+    assert integral.shape == (1,)
+    assert_allclose(integral.to_value("cm-2s-1"), [9e-12,])
+    assert vector_integral.shape == (1, 10)
+    assert_allclose(vector_integral[:, 0].to_value("cm-2s-1"), [9e-12,])
+
+
+    energy_min, energy_max = [100, 1000] * u.GeV
+    model = BrokenPowerLawSpectralModel()
+    parameter_samples = [np.ones(10) * par.quantity for par in model.parameters]
+
+    integral = integrate_spectrum(model, energy_min, energy_max, ndecade=20)
+    vector_integral = integrate_spectrum(
+        model, energy_min, energy_max, ndecade=20, parameter_samples=parameter_samples
+    )
+
+    assert integral.isscalar
+    assert_allclose(integral.to_value("cm-2s-1"), 9e-12)
+    assert vector_integral.shape == (10,)
+    assert_allclose(vector_integral[0].to_value("cm-2s-1"), 9e-12)
+
 
     # check fail if model is not passed
     with pytest.raises(TypeError):
