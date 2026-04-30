@@ -173,7 +173,7 @@ ignore = [
     "B006","B007", "B008", "B009", "B017", "B018", "B024", "B028",
     "D101", "D103", "D200", "D202", "D208", "D209", "D214", "D215", "D301", "D404", "D409", "D410", "D411", "D419",
     "DTZ011",
-    "E501", "E741",
+    "E741",
     "F401",
     "N801", "N805", "N815", "N816", "N818",
     "S113", "S202", "S301", "S307", "S324",  "S603",
@@ -181,6 +181,7 @@ ignore = [
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
+max-doc-length = 100
 
 [tool.ruff.lint.per-file-ignores]
 "examples/*" = ["E402"]
