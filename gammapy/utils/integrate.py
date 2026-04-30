@@ -28,7 +28,6 @@ def trapz_loglog(y, x, axis=-1):
 
     # see https://stackoverflow.com/a/56840428
     x, y = np.moveaxis(x, axis, 0), np.moveaxis(y, axis, 0)
-    y = y.reshape(x.shape)
 
     energy_min, energy_max = x[:-1], x[1:]
     vals_energy_min, vals_energy_max = y[:-1], y[1:]
