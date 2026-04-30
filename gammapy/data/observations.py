@@ -5,7 +5,6 @@ import html
 import inspect
 import itertools
 import logging
-import warnings
 from itertools import zip_longest
 import numpy as np
 import astropy.units as u
@@ -17,7 +16,6 @@ from astropy.utils import lazyproperty
 import matplotlib.pyplot as plt
 from gammapy.irf import FoVAlignment
 from gammapy.utils.coordinates import FoVAltAzFrame, FoVICRSFrame
-from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.utils.fits import LazyFitsData, earth_location_to_dict
 from gammapy.utils.metadata import CreatorMetaData, TargetMetaData, TimeInfoMetaData
 from gammapy.utils.scripts import make_path
@@ -243,7 +241,7 @@ class Observation:
 
         Parameters
         ----------
-        pointing : `~gammapy.data.FixedPointingInfo` or `~astropy.coordinates.SkyCoord`
+        pointing : `~gammapy.data.FixedPointingInfo`
             Pointing information.
         location : `~astropy.coordinates.EarthLocation`, optional
             Earth location of the observatory. Default is None.
@@ -276,15 +274,6 @@ class Observation:
             tstop = tstart + Quantity(livetime)
 
         gti = GTI.create(tstart, tstop, reference_time=reference_time)
-        obs_info = cls._get_obs_info(
-            pointing=pointing,
-            deadtime_fraction=deadtime_fraction,
-            time_start=gti.time_start[0],
-            time_stop=gti.time_stop[0],
-            reference_time=reference_time,
-            location=location,
-        )
-
         time_info = TimeInfoMetaData(
             time_start=gti.time_start[0],
             time_stop=gti.time_stop[-1],
@@ -298,13 +287,6 @@ class Observation:
             creation=CreatorMetaData(),
             target=TargetMetaData(),
         )
-
-        if not isinstance(pointing, FixedPointingInfo):
-            warnings.warn(
-                "Pointing will be required to be provided as FixedPointingInfo",
-                GammapyDeprecationWarning,
-            )
-            pointing = FixedPointingInfo.from_fits_header(obs_info)
 
         return cls(
             obs_id=obs_id,

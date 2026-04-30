@@ -94,7 +94,7 @@ def make_map_exposure_true_energy(
 
     Parameters
     ----------
-    pointing : `~astropy.coordinates.SkyCoord`
+    pointing : `~astropy.coordinates.SkyCoord` or `~gammapy.data.FixedPointingInfo`
         Pointing direction.
     livetime : `~astropy.units.Quantity`
         Livetime.
@@ -113,7 +113,7 @@ def make_map_exposure_true_energy(
         Exposure map.
     """
     if isinstance(pointing, FixedPointingInfo):
-        origin = pointing.get_icrs(pointing.obstime)
+        origin = pointing.get_icrs()
     else:
         origin = pointing
 
@@ -272,7 +272,7 @@ def make_psf_map(psf, pointing, geom, exposure_map=None):
     ----------
     psf : `~gammapy.irf.PSF3D`
         The PSF IRF.
-    pointing : `~astropy.coordinates.SkyCoord`
+    pointing : `~astropy.coordinates.SkyCoord` or `~gammapy.data.FixedPointingInfo`
         The pointing direction.
     geom : `~gammapy.maps.Geom`
         The map geometry to be used. It provides the target geometry.
@@ -287,7 +287,7 @@ def make_psf_map(psf, pointing, geom, exposure_map=None):
         The resulting PSF map.
     """
     if isinstance(pointing, FixedPointingInfo):
-        origin = pointing.get_icrs(pointing.obstime)
+        origin = pointing.get_icrs()
     else:
         origin = pointing
 
@@ -308,7 +308,7 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None, use_region_center=T
     ----------
     edisp : `~gammapy.irf.EnergyDispersion2D`
         The 2D energy dispersion IRF.
-    pointing : `~astropy.coordinates.SkyCoord`
+    pointing : `~astropy.coordinates.SkyCoord` or `~gammapy.data.FixedPointingInfo`
         The pointing direction.
     geom : `~gammapy.maps.Geom`
         The map geometry to be used. It provides the target geometry.
@@ -327,7 +327,7 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None, use_region_center=T
         The resulting energy dispersion map.
     """
     if isinstance(pointing, FixedPointingInfo):
-        origin = pointing.get_icrs(pointing.obstime)
+        origin = pointing.get_icrs()
     else:
         origin = pointing
 
@@ -351,7 +351,7 @@ def make_edisp_kernel_map(
     ----------
     edisp : `~gammapy.irf.EnergyDispersion2D`
         The 2D energy dispersion IRF.
-    pointing : `~astropy.coordinates.SkyCoord`
+    pointing : `~astropy.coordinates.SkyCoord` or `~gammapy.data.FixedPointingInfo`
         The pointing direction.
     geom : `~gammapy.maps.Geom`
         The map geometry to be used. It provides the target geometry.
