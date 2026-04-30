@@ -1258,6 +1258,22 @@ def test_energy_flux_error_exp_cutoff_power_law():
     assert_allclose(eflux_errp.value / 1e-12, 2.052225, rtol=7e-1)
 
 
+def test_integral_bpl():
+    bpl = BrokenPowerLawSpectralModel(
+        index1=2.3,
+        index2=1.7,
+        amplitude=2.0e-12 * u.Unit("cm-2 s-1 TeV-1"),
+        ebreak=10 * u.GeV,
+    )
+
+    e_min = np.array([0.1]) * u.GeV
+    e_max = np.array([11.0]) * u.GeV
+    result_array = bpl.integral(e_min, e_max)
+
+    assert result_array.shape == (1,)
+    assert_allclose(result_array.value, [6.1e-09], rtol=0.01)
+
+
 def test_integral_exp_cut_off_power_law_large_number_of_bins():
     energy = np.geomspace(1, 10, 100) * u.TeV
     energy_min = energy[:-1]
