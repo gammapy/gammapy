@@ -7,17 +7,17 @@ license-files = ["LICENSE.rst"]
 authors = [
     { name = "The Gammapy developers", email = "gammapy-coordination-l@in2p3.fr" }
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 classifiers = [
     "Intended Audience :: Science/Research",
     "Operating System :: OS Independent",
     "Programming Language :: C",
     "Programming Language :: Cython",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Programming Language :: Python :: Implementation :: CPython",
     "Topic :: Scientific/Engineering :: Astronomy",
 ]
@@ -57,10 +57,11 @@ all = [
     "sherpa; platform_system != 'Windows'",
     "healpy; platform_system != 'Windows'",
     "ipywidgets",
-    "ray[default]>=2.9",
+    "ray[default]>=2.9,<2.55; python_version < '3.14'",
+    "ray[default]>=2.55; python_version >= '3.14'",
     "ultranest",
     "numba",
-    "arviz",
+    "arviz<1",
     "arviz[preview]",
 ]
 all_no_ray = [
@@ -70,7 +71,7 @@ all_no_ray = [
     "ipywidgets",
     "ultranest",
     "numba",
-    "arviz",
+    "arviz<1",
     "arviz[preview]",
 ]
 cov = [
@@ -80,7 +81,7 @@ cov = [
     "ipywidgets",
     "ultranest",
     "numba",
-    "arviz",
+    "arviz<1",
     "arviz[preview]",
 ]
 test = [
@@ -103,6 +104,12 @@ docs = [
     "pydata-sphinx-theme",
     "nbformat",
     "docutils",
+]
+test_notebooks = [
+    "jupyter",
+    "jupytext",
+    "jupyter_client",
+    "ipykernel"
 ]
 
 [tool.setuptools.packages.find]
@@ -138,17 +145,36 @@ except Exception:
 """
 
 [tool.ruff]
-exclude = ["docs", "dev"]
 # Like black
 line-length = 88
 indent-width = 4
 
 [tool.ruff.lint]
-ignore = ["E741"]
-extend-ignore = ["E203","E712"]
+select = [
+  "E",   # pycodestyle errors
+  "F",   # pyflakes
+  "B",   # flake8-bugbear
+  "I",   # isort
+  "PLE", # pylint errors
+  "D",   # pydocstyle
+  # "UP",   # pyUpgrade
+  "FLY", # flynt
+  "DTZ", # flake8-datetimez
+  "S",   # flake8-bandit
+  "N",   # pep8-naming
+]
+ignore = [
+    "D100", "D102", "D104", "D105",
+    "D205", "D400", "D401", "D403",
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
 
 [tool.ruff.lint.per-file-ignores]
 "examples/*" = ["E402"]
+"test_*.py" = ["D"]
+"docs/conf.py" = ["I"]
 
 [tool.ruff.format]
 # Like Black, use double quotes for strings.

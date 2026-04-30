@@ -2,20 +2,29 @@
 import logging
 from itertools import repeat
 import numpy as np
+import scipy.stats as stats
 from astropy import units as u
 from astropy.table import Table
 import gammapy.utils.parallel as parallel
 from gammapy.datasets import Datasets
+from gammapy.datasets.utils import set_and_restore_mask_fit
 from gammapy.datasets.actors import DatasetsActor
 from gammapy.datasets.flux_points import _get_reference_model
-from gammapy.maps import MapAxis
-from gammapy.modeling import Fit
+from gammapy.maps import MapAxis, Map
+from gammapy.modeling import Fit, Sampler, Parameters, Parameter
+from gammapy.modeling.models import (
+    Models,
+    PowerLawNormSpectralModel,
+    TemplateNPredModel,
+    UniformPrior,
+)
+
 from ..flux import FluxEstimator
 from .core import FluxPoints
 
 log = logging.getLogger(__name__)
 
-__all__ = ["FluxPointsEstimator"]
+__all__ = ["FluxPointsEstimator", "FluxCollectionEstimator"]
 
 
 class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
@@ -287,3 +296,376 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
             result.update({"norm_sensitivity": np.nan})
 
         return result
+
+
+class FluxCollectionEstimator:
+    """Estimate the flux points from a collection of sources simultaneously.
+
+    This estimator computes spectral flux points for a *collection of sources*
+    over a set of predefined energy bins. The normalizations of all
+    `~gammapy.modeling.models.SkyModel` objects listed in ``models`` are fitted
+    jointly in each energy bin, while all other `~gammapy.modeling.models.SkyModel`
+    components in the datasets remain frozen. Re-optimization of each dataset’s
+    background model is optional.
+
+    The operation can be performed either with the standard likelihood optimizer
+    (`~gammapy.modeling.Fit`) or with a sampler
+    (`~gammapy.modeling.Sampler`), which can be used to derive asymmetric
+    errors and upper limits.
+
+    By default, this requires the ultranest package to be installed.
+
+    Parameters
+    ----------
+    energy_edges : `~astropy.units.Quantity`
+        Energy edges of the flux point bins.
+    models : `~gammapy.modeling.Models` or list
+        Source models for which the flux points are computed (others are frozen).
+    n_sigma : float, optional
+        Number of sigma to use for asymmetric error computation. Must be a positive value.
+        Default is 1.
+    n_sigma_ul : float, optional
+        Number of sigma to use for upper limit computation. Must be a positive value.
+        Default is 2.
+    norm : `~gammapy.modeling.Parameter`, optional
+        Norm parameter used for the fit.
+        Default is None and a new parameter is created with value=1, name="norm".
+        If the `solver` is a sampler the default prior is uniform between [-10, 10].
+    solver : `~gammapy.modeling.Fit` or `~gammapy.modeling.Sampler`
+        Fit or Sampler instance specifying the backend and options.
+        Default is a Sampler with options live_points=300, frac_remain=0.3.
+    reoptimize : bool
+        Whether to reoptimize each dataset.background_model. Default is False.
+        Only SkyModel given in `models` will be fitted the others remain frozen,
+        regardless of this option.
+    selection_optional : list of str, optional
+        Which additional quantities to estimate. Available options are:
+            * "errn-errp": estimate asymmetric errors on flux.
+        Fit solver computes upper limits if sqrt(TS) < n_sigma_ul.
+        Sampler solver always compute errn-errp and ul.
+    """
+
+    def __init__(
+        self,
+        energy_edges,
+        models,
+        n_sigma=1,
+        n_sigma_ul=2,
+        norm=None,
+        solver=None,
+        reoptimize=False,
+        selection_optional=None,
+    ):
+        self.n_sigma = n_sigma
+        self.n_sigma_ul = n_sigma_ul
+
+        self.models = models
+        self.ns = len(models)
+
+        self.solver = solver if solver is not None else self._default_solver
+        self.reoptimize = reoptimize
+
+        if selection_optional is None:
+            selection_optional = []
+        self.selection_optional = selection_optional
+
+        self.norm = norm if norm is not None else self._default_norm
+
+        self.energy_edges = energy_edges
+
+        self.energy_unit = "TeV"
+        self.dnde_unit = u.Unit("cm-2 s-1 TeV-1")
+
+    @property
+    def _default_norm(self):
+        prior = None
+        if isinstance(self.solver, Sampler):
+            prior = UniformPrior(min=-10, max=10)
+        return Parameter(name="norm", value=1, unit="", prior=prior)
+
+    @property
+    def _default_solver(self):
+        """Return an ultranest Sampler with options live_points=300, frac_remain=0.3."""
+        return Sampler(
+            backend="ultranest",
+            sampler_opts={"live_points": 300, "frac_remain": 0.3},
+        )
+
+    @property
+    def _available_keys(self):
+        # TODO: what about 'npred' key
+        keys = ["norm", "norm_ul", "ts"]
+        if isinstance(self.solver, Fit):
+            keys.append("norm_err")
+        if isinstance(self.solver, Sampler) or "errn-errp" in self.selection_optional:
+            keys.extend(["norm_errn", "norm_errp"])
+        return keys
+
+    def _empty_result_dict(self):
+        """Build an empty dictionary to store results."""
+        n_sources = len(self.models)
+        empty_fp_result = {key: np.zeros(n_sources) for key in self._available_keys}
+        empty_fp_result["npred"] = np.zeros(n_sources)
+        return empty_fp_result
+
+    @property
+    def _energy_axis(self):
+        """Energy axis for the input edges."""
+        return MapAxis.from_energy_edges(self.energy_edges, name="energy", interp="log")
+
+    def _prepare_dataset(self, dataset, spectral_norm_models):
+        """Build NPredTemplateModel for a given dataset.
+
+        Create one single template summing all frozen sources and create one template per free source with free norm.
+        """
+        # TODO: can we avoid the deep copy? Does is remove the cached evaluators?
+        fp_dataset = dataset.copy(name=dataset.name)
+
+        source_names = set(Models(self.models).names)
+        frozen_names = set(dataset._evaluators.keys()) - source_names
+
+        fp_models = []
+        npred_free = dataset.npred_signal(source_names, stack=False)
+        for idx, npred in enumerate(npred_free.split_by_axis("models")):
+            name = npred_free.geom.axes["models"].center[idx]
+            template_model = TemplateNPredModel(
+                npred,
+                name=name + "_" + fp_dataset.name,
+                spectral_model=spectral_norm_models[name],
+                datasets_names=[fp_dataset.name],
+            )
+            fp_models.append(template_model)
+
+        npred_frozen = fp_dataset.npred_signal(frozen_names, stack=True)
+        bkg_frozen = TemplateNPredModel(
+            npred_frozen,
+            name="frozen_" + fp_dataset.name,
+            datasets_names=[fp_dataset.name],
+        )
+        bkg_frozen.spectral_model.norm.frozen = True
+
+        bkg_model = self._get_bkg(fp_dataset)
+        fp_dataset.models = Models(fp_models + [bkg_frozen] + bkg_model)
+
+        return fp_dataset
+
+    def _prepare_datasets(self, datasets):
+        """Define datasets with cached npred models to be renormalized."""
+        norm_models = {}
+        for m in self.models:
+            norm_models[m.name] = PowerLawNormSpectralModel(norm=self.norm.copy())
+            norm_models[m.name].tilt.frozen = True
+
+        fp_datasets = [self._prepare_dataset(d, norm_models) for d in datasets]
+        return Datasets(fp_datasets), norm_models
+
+    def _get_bkg(self, d):
+        if d.background_model:
+            bkg_model = [d.background_model.copy(name=d.background_model.name)]
+            if not self.reoptimize:
+                bkg_model[0].freeze()
+        else:
+            bkg_model = []
+        return bkg_model
+
+    @staticmethod
+    def _compute_npred(datasets, param, model):
+        """Compute npred within the datasets masks."""
+        npred = 0
+        for kd, d in enumerate(datasets):
+            name = model.name + "_" + d.name
+            if d.evaluators[name].contributes:
+                npred_map = Map.from_geom(d.counts.geom)
+                npred_map.stack(d.evaluators[name].compute_npred())
+                npred += np.nansum(npred_map.data * d.mask.data) * param.value
+        return npred
+
+    @staticmethod
+    def _compute_ts(datasets, param):
+        """Test statistic against no source as null hypothesis."""
+        cash = datasets._stat_sum_likelihood()
+        with Parameters([param]).restore_status():
+            param.value = 0
+            cash0 = datasets._stat_sum_likelihood()
+        return cash0 - cash
+
+    def _run_fit(self, fp_datasets, spectral_models):
+        """Compute flux estimates, uncertainties and UL using log-likelihood profile (i.e. using `~gammapy.modeling.Fit`)."""
+        fit_results = self.solver.run(fp_datasets)
+
+        fp_result = self._empty_result_dict()
+        fp_result["solver_results"] = fit_results
+
+        for km, (m, spec) in enumerate(zip(self.models, spectral_models.values())):
+            norm_param = spec.norm
+            norm = norm_param.value
+            error = norm_param.error
+
+            npred = self._compute_npred(fp_datasets, norm_param, m)
+            fp_result["npred"][km] = npred
+
+            fp_result["norm"][km] = norm
+
+            fp_result["norm_err"][km] = error
+            if "errn-errp" in self.selection_optional:
+                res = self.solver.confidence(
+                    datasets=fp_datasets,
+                    parameter=norm_param,
+                    sigma=self.n_sigma,
+                )
+                fp_result["norm_errn"][km] = res["errn"]
+                fp_result["norm_errp"][km] = res["errp"]
+
+            ts_null = self._compute_ts(fp_datasets, norm_param)
+            fp_result["ts"][km] = ts_null
+
+            if np.sign(ts_null) * np.sqrt(np.abs(ts_null)) < self.n_sigma_ul:
+                res = self.solver.confidence(
+                    datasets=fp_datasets,
+                    parameter=norm_param,
+                    sigma=self.n_sigma_ul,
+                )
+                fp_result["norm_ul"][km] = norm + res["errp"]
+            else:
+                fp_result["norm_ul"][km] = np.nan
+        return fp_result
+
+    def _run_sampler(self, fp_datasets, spectral_models):
+        """Compute npred, dnde, TS, errn, errp, and ul."""
+        sampler_results = self.solver.run(fp_datasets).sampler_results
+
+        fp_result = self._empty_result_dict()
+        fp_result["solver_results"] = sampler_results
+
+        points = sampler_results["weighted_samples"]["points"]
+        weights = sampler_results["weighted_samples"]["weights"]
+
+        quantiles = {
+            "norm": 50,
+            "norm_errn": 100 * stats.norm.cdf(-self.n_sigma),
+            "norm_errp": 100 * stats.norm.cdf(self.n_sigma),
+            "norm_ul": 100 * stats.norm.cdf(self.n_sigma_ul),
+        }
+
+        for km, (m, spec) in enumerate(zip(self.models, spectral_models.values())):
+            samples = points[:, km]
+            norm_param = spec.norm
+
+            percentiles = {
+                k: np.percentile(samples, q, weights=weights, method="inverted_cdf")
+                for k, q in quantiles.items()
+            }
+
+            norm = percentiles["norm"]
+            norm_param.value = norm  # set before TS computation below
+
+            fp_result["norm"][km] = norm
+            fp_result["norm_errn"][km] = norm - percentiles["norm_errn"]
+            fp_result["norm_errp"][km] = percentiles["norm_errp"] - norm
+            fp_result["norm_ul"][km] = percentiles["norm_ul"]
+            fp_result["npred"][km] = self._compute_npred(fp_datasets, norm_param, m)
+
+        # compute TS after norm value is set to median for all models
+        for km, spec in enumerate(spectral_models.values()):
+            norm_param = spec.norm
+            ts_null = self._compute_ts(fp_datasets, norm_param)
+            fp_result["ts"][km] = ts_null
+
+        return fp_result
+
+    def run(self, datasets):
+        """Compute flux point in each energy band.
+
+        Parameters
+        ----------
+        datasets : `~gammapy.datasets.Datasets`
+            Datasets used to compute the flux points. They must share the same geometry.
+
+        Returns
+        -------
+        result : dict
+            Dict with results
+        """
+        datasets = Datasets(datasets)
+        if len(datasets) == 0:
+            raise ValueError("datasets cannot be empty")
+
+        if not datasets.is_all_same_geom:
+            raise ValueError("Inconsistent geometries between datasets")
+
+        for d in datasets:
+            d.npred()  # precompute npred
+
+        fp_datasets, spectral_models = self._prepare_datasets(datasets)
+
+        fp_results = []
+
+        for ke, (emin, emax) in enumerate(self._energy_axis.iter_by_edges):
+            with set_and_restore_mask_fit(
+                fp_datasets, energy_min=emin, energy_max=emax
+            ):
+                if isinstance(self.solver, Sampler):
+                    fp_result = self._run_sampler(fp_datasets, spectral_models)
+                else:
+                    fp_result = self._run_fit(fp_datasets, spectral_models)
+
+            fp_results.append(fp_result)
+
+        return self._get_flux_points_dict(fp_results)
+
+    def _get_flux_points_dict(self, fp_results):
+        """Extract flux points for each model from list of results.
+
+        Parameters
+        ----------
+        fp_results : dict
+            dict used to generate the flux points table.
+
+        Returns
+        -------
+        result : dict
+            Dictionary with results.
+        """
+
+        def build_fp_from_idx(idx, model):
+            table = Table()
+            table["e_min"] = self._energy_axis.edges_min.to(self.energy_unit)
+            table["e_max"] = self._energy_axis.edges_max.to(self.energy_unit)
+            table["e_ref"] = self._energy_axis.center.to(self.energy_unit)
+            table["ref_dnde"] = model(table["e_ref"]).to(self.dnde_unit)
+
+            for key in self._available_keys:
+                table[key] = np.array([fp[key][idx] for fp in fp_results])
+
+            table.meta["SED_TYPE"] = "likelihood"
+
+            return FluxPoints.from_table(
+                table, reference_model=model.copy(), format="gadf-sed"
+            )
+
+        fp_dict = dict(
+            energy_edges=self.energy_edges,
+            solver_results=np.array(
+                [fp["solver_results"] for fp in fp_results], dtype=object
+            ),
+            flux_points={},
+        )
+
+        for idx, m in enumerate(self.models):
+            model = _get_reference_model(m, self.energy_edges)
+            fp_dict["flux_points"][m.name] = build_fp_from_idx(idx, model)
+
+        if isinstance(self.solver, Sampler):
+            weights = [
+                fp["solver_results"]["weighted_samples"]["weights"] for fp in fp_results
+            ]
+            dnde_dict = {}
+            for model_idx, m in enumerate(self.models):
+                dnde_dict[m.name] = []
+                dnde_ref = fp_dict["flux_points"][m.name]["dnde_ref"].squeeze()
+                for dnde, fp in zip(dnde_ref, fp_results):
+                    points = fp["solver_results"]["weighted_samples"]["points"]
+                    dnde_dict[m.name].append(dnde * points[:, model_idx])
+            fp_dict["samples"] = dict(dnde=dnde_dict, weights=weights)
+
+        return fp_dict

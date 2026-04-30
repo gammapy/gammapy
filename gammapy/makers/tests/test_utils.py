@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy import units as u
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import SkyCoord, AltAz
 from astropy.table import Table
 from astropy.time import Time
 from regions import PointSkyRegion
@@ -35,12 +35,13 @@ from gammapy.makers.utils import (
     make_map_exposure_true_energy,
     make_observation_time_map,
     make_psf_map,
-    make_theta_squared_table,
+    _get_fov_coord,
     project_irf_on_geom,
     integrate_project_irf_on_geom,
 )
 from gammapy.maps import HpxGeom, MapAxis, RegionGeom, WcsGeom, WcsNDMap
 from gammapy.modeling.models import ConstantSpectralModel
+from gammapy.utils.coordinates import FoVAltAzFrame
 from gammapy.utils.testing import requires_data
 from gammapy.utils.time import time_ref_to_dict
 from gammapy.utils.coordinates import FoVICRSFrame
@@ -229,18 +230,28 @@ def bkg_2d():
 def bkg_3d_custom(symmetry="constant", fov_align="RADEC"):
     if symmetry == "constant":
         data = np.ones((2, 3, 3))
+        sky_edges = [-3, -1, 1, 3] * u.deg
     elif symmetry == "symmetric":
         data = np.ones((2, 3, 3))
         data[:, 1, 1] *= 2
+        sky_edges = [-3, -1, 1, 3] * u.deg
+    elif symmetry == "hirez_symmetric":
+        data = np.ones((3, 3))
+        data[1, 1] *= 2
+        data = (  # Upscale 3x3 to 9x9 by simply repeating
+            data.repeat(3, axis=0).repeat(3, axis=1)[np.newaxis, ...].repeat(2, axis=0)
+        )
+        sky_edges = np.linspace(-3, 3, 10) * u.deg
     elif symmetry == "asymmetric":
         data = np.indices((3, 3))[1] + 1
         data = np.stack(2 * [data])
+        sky_edges = [-3, -1, 1, 3] * u.deg
     else:
         raise ValueError(f"Unknown value for symmetry: {symmetry}")
 
     energy_axis = MapAxis.from_energy_edges([0.1, 10, 1000] * u.TeV)
-    fov_lon_axis = MapAxis.from_edges([-3, -1, 1, 3] * u.deg, name="fov_lon")
-    fov_lat_axis = MapAxis.from_edges([-3, -1, 1, 3] * u.deg, name="fov_lat")
+    fov_lon_axis = MapAxis.from_edges(sky_edges, name="fov_lon")
+    fov_lat_axis = MapAxis.from_edges(sky_edges, name="fov_lat")
     return Background3D(
         axes=[energy_axis, fov_lon_axis, fov_lat_axis],
         data=data,
@@ -249,6 +260,24 @@ def bkg_3d_custom(symmetry="constant", fov_align="RADEC"):
         fov_alignment=fov_align,
         # allow extrapolation for symmetry tests
     )
+
+
+def aeff_custom(energy_axis, upscale=3):
+    offset = MapAxis.from_bounds(
+        -0.25, 2.75, nbin=6 * upscale, unit="deg", name="offset"
+    )
+    aeff_vals = np.zeros((energy_axis.nbin, offset.nbin))
+    Es = energy_axis.center.value
+    # Chosen to roughly match HESS areas
+    scales = np.repeat(np.array([62, 62, 59, 51, 42, 34]) * 1e4, upscale)
+    cores = np.repeat(np.array([0.48, 0.49, 0.52, 0.65, 1.01, 1.61]), upscale)
+    ids = list(range(0, offset.nbin))
+    for idx, scale, core in zip(ids, scales, cores):
+        aeff_vals[:, idx] = (
+            scale * core**2 * (1 / (np.sqrt(Es**2 + core**2)) - 1 / core) ** 2
+        )
+
+    return EffectiveAreaTable2D([energy_axis, offset], data=aeff_vals, unit="m2")
 
 
 @requires_data()
@@ -605,91 +634,198 @@ class TestTheta2Table:
                 )
             )
 
-    def test_make_theta_squared_table(self):
-        # pointing position: (0,0.5) degree in ra/dec
-        # On theta2 distribution compute from (0,0) in ra/dec.
-        # OFF theta2 distribution from the mirror position at (0,1) in ra/dec.
+    @pytest.mark.parametrize(
+        "case_config",
+        [
+            # CASE 1: Standard (single observation)
+            {
+                "obs_idx": [0],
+                "axis_bounds": (0, 0.2),
+                "kwargs": {},
+                "expected": {
+                    "counts": [2, 0, 0, 0],
+                    "counts_off": [1, 0, 0, 0],
+                    "acceptance": [1, 1, 1, 1],
+                    "alpha": [1, 1, 1, 1],
+                },
+            },
+            # CASE 2: Two observations (identical in this setup)
+            {
+                "obs_idx": [0, 1],  # Assuming self.observations has at least 2 items
+                "axis_bounds": (0, 0.2),
+                "kwargs": {},
+                "expected": {
+                    "counts": [4, 0, 0, 0],
+                    "counts_off": [2, 0, 0, 0],
+                    "acceptance": [2, 2, 2, 2],
+                    "alpha": [1, 1, 1, 1],
+                },
+            },
+            # CASE 3: Energy selection
+            {
+                "obs_idx": [0],
+                "axis_bounds": (0, 0.2),
+                "kwargs": {"energy_edges": [1.0, 11] * u.TeV},
+                "expected": {
+                    "counts": [2, 0, 0, 0],
+                    "counts_off": [1, 0, 0, 0],
+                    "acceptance": [1, 1, 1, 1],
+                    "alpha": [1, 1, 1, 1],
+                    "energy_meta": [1.0, 11] * u.TeV,
+                },
+            },
+            # CASE 4: Multiple OFF regions
+            {
+                "obs_idx": [0],
+                "axis_bounds": (0, 0.19),
+                "kwargs": {"energy_edges": [1.0, 11] * u.TeV, "off_regions_number": 2},
+                "expected": {
+                    "counts": [2, 0, 0, 0],
+                    "counts_off": [0, 0, 0, 0],
+                    "alpha": [0.5, 0.5, 0.5, 0.5],
+                    "excess": [2, 0, 0, 0],
+                    "sqrt_ts": [2.0962941, 0.0, 0.0, 0.0],
+                    "energy_meta": [1.0, 11] * u.TeV,
+                },
+            },
+            # CASE 5: Overlapping multiple OFF regions
+            {
+                "obs_idx": [0],
+                "axis_bounds": (0, 0.22),
+                "kwargs": {"energy_edges": [1.0, 11] * u.TeV, "off_regions_number": 2},
+                "expected": {
+                    "counts": [2, 0, 0, 0],
+                    "counts_off": [1, 0, 0, 0],
+                    "alpha": [1, 1, 1, 1],
+                    "excess": [1, 0, 0, 0],
+                    "sqrt_ts": [0.582922, 0.0, 0.0, 0.0],
+                    "energy_meta": [1.0, 11] * u.TeV,
+                },
+            },
+            # CASE 6: User-defined OFF region
+            {
+                "obs_idx": [0],
+                "axis_bounds": (0, 0.1),
+                "kwargs": {
+                    "position_off": SkyCoord(0, -1.0, frame="icrs", unit="deg"),
+                    "energy_edges": [1.2, 11] * u.TeV,
+                    "off_regions_number": 1,
+                },
+                "expected": {
+                    "counts": [0, 0, 0, 0],
+                    "counts_off": [1, 0, 0, 0],
+                    "alpha": [1, 1, 1, 1],
+                    "excess": [-1, 0, 0, 0],
+                    "sqrt_ts": [-1.17741, 0.0, 0.0, 0.0],
+                    "energy_meta": [1.2, 11] * u.TeV,
+                },
+            },
+        ],
+    )
+    def test_theta_squared_table_values(self, case_config):
         position = SkyCoord(ra=0, dec=0, unit="deg", frame="icrs")
-        axis = MapAxis.from_bounds(0, 0.2, nbin=4, interp="lin", unit="deg2")
-        theta2_table = make_theta_squared_table(
-            observations=[self.observations[0]],
+        b_min, b_max = case_config["axis_bounds"]
+        axis = MapAxis.from_bounds(b_min, b_max, nbin=4, interp="lin", unit="deg2")
+
+        observations = [self.observations[i] for i in case_config["obs_idx"]]
+
+        theta2_maker = ThetaSquaredTable(
+            observations=observations,
             position=position,
             theta_squared_axis=axis,
-        )
-        theta2_lo = [0, 0.05, 0.1, 0.15]
-        theta2_hi = [0.05, 0.1, 0.15, 0.2]
-        on_counts = [2, 0, 0, 0]
-        off_counts = [1, 0, 0, 0]
-        acceptance = [1, 1, 1, 1]
-        acceptance_off = [1, 1, 1, 1]
-        alpha = [1, 1, 1, 1]
-        assert len(theta2_table) == 4
-        assert theta2_table["theta2_min"].unit == "deg2"
-        assert_allclose(theta2_table["theta2_min"], theta2_lo)
-        assert_allclose(theta2_table["theta2_max"], theta2_hi)
-        assert_allclose(theta2_table["counts"], on_counts)
-        assert_allclose(theta2_table["counts_off"], off_counts)
-        assert_allclose(theta2_table["acceptance"], acceptance)
-        assert_allclose(theta2_table["acceptance_off"], acceptance_off)
-        assert_allclose(theta2_table["alpha"], alpha)
-        assert_allclose(theta2_table.meta["ON_RA"], 0 * u.deg)
-        assert_allclose(theta2_table.meta["ON_DEC"], 0 * u.deg)
-
-        # Taking the off position as the on one
-        off_position = position
-        theta2_table2 = make_theta_squared_table(
-            observations=[self.observations[0]],
-            position=position,
-            theta_squared_axis=axis,
-            position_off=off_position,
+            **case_config["kwargs"],
         )
 
-        assert_allclose(theta2_table2["counts_off"], theta2_table["counts"])
+        table = theta2_maker.run()
 
-        # Test for two observations, here identical
-        theta2_table_two_obs = make_theta_squared_table(
-            observations=self.observations,
-            position=position,
-            theta_squared_axis=axis,
-        )
-        on_counts_two_obs = [4, 0, 0, 0]
-        off_counts_two_obs = [2, 0, 0, 0]
-        acceptance_two_obs = [2, 2, 2, 2]
-        acceptance_off_two_obs = [2, 2, 2, 2]
-        alpha_two_obs = [1, 1, 1, 1]
-        assert_allclose(theta2_table_two_obs["counts"], on_counts_two_obs)
-        assert_allclose(theta2_table_two_obs["counts_off"], off_counts_two_obs)
-        assert_allclose(theta2_table_two_obs["acceptance"], acceptance_two_obs)
-        assert_allclose(theta2_table_two_obs["acceptance_off"], acceptance_off_two_obs)
-        assert_allclose(theta2_table["alpha"], alpha_two_obs)
+        assert len(table) == 4
+        assert table["theta2_min"].unit == "deg2"
+        assert_allclose(table.meta["ON_RA"], 0 * u.deg)
+        assert_allclose(table.meta["ON_DEC"], 0 * u.deg)
 
-        # Test for energy selection
-        axis = MapAxis.from_bounds(0, 1, nbin=4, interp="lin", unit="deg2")
-        theta2_table = make_theta_squared_table(
-            observations=[self.observations[0]],
-            position=position,
-            theta_squared_axis=axis,
-            energy_edges=[1.2, 11] * u.TeV,
-        )
-        on_counts = [0, 0, 0, 1]
-        off_counts = [1, 0, 0, 0]
-        acceptance = [1, 1, 1, 1]
-        acceptance_off = [1, 1, 1, 1]
-        alpha = [1, 1, 1, 1]
-        assert_allclose(theta2_table["counts"], on_counts)
-        assert_allclose(theta2_table["counts_off"], off_counts)
-        assert_allclose(theta2_table["acceptance"], acceptance)
-        assert_allclose(theta2_table["acceptance_off"], acceptance_off)
-        assert_allclose(theta2_table["alpha"], alpha)
-        assert_allclose(theta2_table.meta["Energy_filter"], [1.2, 11] * u.TeV)
+        exp = case_config["expected"]
+        if "counts" in exp:
+            assert_allclose(table["counts"], exp["counts"])
+        if "counts_off" in exp:
+            assert_allclose(table["counts_off"], exp["counts_off"])
+        if "alpha" in exp:
+            assert_allclose(table["alpha"], exp["alpha"])
+        if "acceptance" in exp:
+            assert_allclose(table["acceptance"], exp["acceptance"])
 
-        with pytest.raises(ValueError):
-            make_theta_squared_table(
+        if "excess" in exp:
+            assert_allclose(table["excess"], exp["excess"])
+        if "sqrt_ts" in exp:
+            assert_allclose(table["sqrt_ts"], exp["sqrt_ts"])
+
+        if "energy_meta" in exp:
+            assert_allclose(table.meta["Energy_filter"], exp["energy_meta"])
+
+    @pytest.mark.parametrize(
+        "case_params",
+        [
+            # ERROR 1: Wrong axis unit (deg instead of deg2)
+            {
+                "axis_unit": "deg",
+                "axis_bounds": (0, 0.2),
+                "kwargs": {},
+                "error_msg": "The theta2 axis should be equivalent to deg2",
+            },
+            # ERROR 2: OFF position is same as ON position
+            {
+                "axis_unit": "deg2",
+                "axis_bounds": (0, 0.2),
+                "kwargs": {"position_off_is_on": True},
+                "error_msg": "The specified OFF region overlaps with the ON region. This is currently forbidden. To fix this, either choose another OFF position or reduce the region radius.",
+            },
+            # ERROR 3: Incorrect energy edges (3 values instead of 2)
+            {
+                "axis_unit": "deg2",
+                "axis_bounds": (0, 0.2),
+                "kwargs": {"energy_edges": [1.2, 11, 20] * u.TeV},
+                "error_msg": "Only supports one energy interval but 2 passed.",
+            },
+            # ERROR 4: Region radius larger than offset (axis bounds too large)
+            {
+                "axis_unit": "deg2",
+                "axis_bounds": (0, 0.3),
+                "kwargs": {"energy_edges": [1.0, 11] * u.TeV, "off_regions_number": 1},
+                "error_msg": "The ON region radius is larger than its separation from observation pointing position. This will cause the ON and OFF regions to overlap, which is not permitted. Reduce the ON region radius to at least 0.5 deg.",
+            },
+            # ERROR 5: User-defined OFF position AND multiple OFF regions requested (inconsistent)
+            {
+                "axis_unit": "deg2",
+                "axis_bounds": (0, 0.05),
+                "kwargs": {
+                    "position_off": SkyCoord(0, -1.0, frame="icrs", unit="deg"),
+                    "energy_edges": [1.2, 11] * u.TeV,
+                    "off_regions_number": 2,
+                },
+                "error_msg": "If ``off_regions_number`` is larger than 1, you cannot provide a fixed OFF position. Instead set ``position_off`` to be None.",
+            },
+        ],
+    )
+    def test_theta_squared_table_errors(self, case_params):
+        position = SkyCoord(ra=0, dec=0, unit="deg", frame="icrs")
+
+        b_min, b_max = case_params["axis_bounds"]
+        unit = case_params["axis_unit"]
+        axis = MapAxis.from_bounds(b_min, b_max, nbin=4, interp="lin", unit=unit)
+
+        kwargs = case_params["kwargs"].copy()
+
+        if kwargs.pop("position_off_is_on", False):
+            kwargs["position_off"] = position
+
+        error_message = case_params["error_msg"]
+        with pytest.raises(ValueError, match=error_message):
+            table_maker = ThetaSquaredTable(
                 observations=[self.observations[0]],
                 position=position,
                 theta_squared_axis=axis,
-                energy_edges=[1.2, 11, 20] * u.TeV,
+                **kwargs,
             )
+            table_maker.run()
 
 
 @requires_data()
@@ -785,3 +921,173 @@ def test_integrate_project_irf(bkg_2d, fixed_pointing_info):
     assert geom.data_shape == int_proj_irf_geom.data.shape
     assert_allclose(int_proj_irf_geom.data[:, 1, 1], [0.0445006, 0.00445006], rtol=1e-5)
     assert int_proj_irf_geom.geom.center_skydir == geom.center_skydir
+
+
+@pytest.mark.filterwarnings("ignore:.*Angular separation .*direction")
+def test_get_fov_coords():
+    crab = SkyCoord(83.63333333, 22.01444444, unit="deg", frame="icrs")
+    location = observatory_locations.get("ctao_north")
+    time_start = Time("2025-01-01T00:00:00")
+
+    fov_origin = crab.transform_to(AltAz(location=location, obstime=time_start))
+    fov_frame = FoVAltAzFrame(origin=fov_origin, location=location, obstime=time_start)
+
+    # Check that pixel centers end up at correct offsets
+    # (Uses FOV frame centered on the Crab)
+    center_sep = 0.5  # separation between square pixel centers
+    # is the pixel size
+    sky_geom = WcsGeom.create(npix=(3, 3), binsz=center_sep, skydir=crab, proj="TAN")
+    sky_coord = sky_geom.to_image().get_coord().skycoord
+    coords = _get_fov_coord(sky_coord, fov_frame, use_offset=True)["offset"]
+    assert_allclose(0, coords[1, 1].value, atol=1e-11)
+    assert_allclose(center_sep, coords[0, 1].value, rtol=3e-5)
+    assert_allclose(center_sep, coords[1, 0].value, rtol=3e-5)
+
+    center_sep = 0.01
+    sky_geom = WcsGeom.create(npix=(3, 3), binsz=center_sep, skydir=crab, proj="TAN")
+    sky_coord = sky_geom.to_image().get_coord().skycoord
+    coords = _get_fov_coord(sky_coord, fov_frame, use_offset=True)["offset"]
+    assert_allclose(center_sep, coords[0, 1].value, rtol=3e-5)
+    assert_allclose(center_sep, coords[1, 0].value, rtol=3e-5)
+
+    # Check that pixel centers end up at correct offsets
+    # after letting the sky drift away from the starting position
+    fov_frame = FoVAltAzFrame(
+        origin=fov_origin, location=location, obstime=time_start + 4.303333 * u.minute
+    )
+    center_sep = 0.5
+    sky_geom = WcsGeom.create(npix=(3, 3), binsz=center_sep, skydir=crab, proj="TAN")
+    sky_coord = sky_geom.to_image().get_coord().skycoord
+    coords = _get_fov_coord(sky_coord, fov_frame, use_offset=True)["offset"]
+    assert_allclose(center_sep, coords[1, 0].value, rtol=3e-5)
+    assert_allclose(2 * center_sep, coords[1, 1].value, rtol=3e-5)
+    assert_allclose(3 * center_sep, coords[1, 2].value, rtol=5e-5)
+
+    # Check that pixel centers end up at correct offsets
+    # after letting the sky drift away from the starting position
+    obs_times = time_start + np.linspace(0, 4.303333, 2) * u.minute
+    fov_frame = FoVAltAzFrame(origin=fov_origin, location=location, obstime=obs_times)
+    center_sep = 0.5
+    sky_geom = WcsGeom.create(npix=(3, 3), binsz=center_sep, skydir=crab, proj="TAN")
+    sky_coord = sky_geom.to_image().get_coord().skycoord
+    coords = _get_fov_coord(sky_coord[..., np.newaxis], fov_frame, use_offset=True)[
+        "offset"
+    ]
+    assert coords.unit == u.deg
+    assert list(coords.shape) == [2, 3, 3]
+    assert_allclose(0, coords[0, 1, 1].value, atol=1e-11)
+    assert_allclose(center_sep, coords[0, 1, 0].value, rtol=3e-5)
+    assert_allclose(center_sep, coords[0, 0, 1].value, rtol=3e-5)
+    assert_allclose(2 * center_sep, coords[1, 1, 1].value, rtol=3e-5)
+    assert_allclose(3 * center_sep, coords[1, 1, 2].value, rtol=5e-5)
+
+
+def test_project_irf_on_geom():
+    location = observatory_locations.get("ctao_north")
+    crab = SkyCoord(83.63333333, 22.01444444, unit="deg", frame="icrs")
+
+    # Test projection to geom aligned with the FOV binning and orientation
+    obstime = Time("2025-01-01T00:00:00")
+    origin = crab.transform_to(AltAz(location=location, obstime=obstime))
+    fov_frame = FoVAltAzFrame(origin=origin, location=location, obstime=obstime)
+
+    axis = MapAxis.from_energy_bounds(
+        energy_min=0.1, energy_max=10, nbin=2, name="energy_true", unit="TeV"
+    )
+    sky_geom = WcsGeom.create(
+        npix=(3, 3), binsz=0.5, axes=[axis], skydir=crab, proj="TAN"
+    )
+    aeff = aeff_custom(axis)
+    sky_irf = project_irf_on_geom(sky_geom, aeff, fov_frame)
+
+    ref0 = aeff.evaluate(offset=0 * u.deg).flatten().value
+    ref1 = aeff.evaluate(offset=sky_geom.separation(crab)[0, 1]).flatten().value
+
+    assert_allclose(ref0, sky_irf.data[:, 1, 1])
+    assert_allclose(ref1, sky_irf.data[:, 0, 1])
+    assert_allclose(ref1, sky_irf.data[:, 1, 0])
+
+    obs_times = obstime - np.linspace(0, 2.15, 2) * u.minute
+
+    fov_frame = FoVAltAzFrame(origin=origin, location=location, obstime=obs_times)
+    aeff = aeff_custom(axis, upscale=5)
+    sky_irf = project_irf_on_geom(sky_geom, aeff, fov_frame)
+
+    ref3 = (ref0 + ref1) / 2
+    assert_allclose(ref3, sky_irf.data[:, 1, 1])
+
+
+def test_integrate_project_irf_on_geom():
+    location = observatory_locations.get("ctao_north")
+    crab = SkyCoord(83.63333333, 22.01444444, unit="deg", frame="icrs")
+
+    # Test projection to geom aligned with the FOV binning and orientation
+    obstime = Time("2025-01-01T00:04:00")
+    origin = crab.transform_to(AltAz(location=location, obstime=obstime))
+    axis = MapAxis.from_edges([0.1, 1.1, 11.1], name="energy", unit="TeV", interp="log")
+    sky_geom = WcsGeom.create(
+        npix=(3, 3), binsz=2, axes=[axis], skydir=crab, proj="TAN"
+    )
+
+    fov_frame = FoVAltAzFrame(origin=origin, location=location, obstime=obstime)
+    bkg_irf = bkg_3d_custom(symmetry="asymmetric")
+    bkg_sky = integrate_project_irf_on_geom(sky_geom, bkg_irf, fov_frame)
+
+    ref1 = (
+        1
+        * u.TeV
+        * bkg_irf.evaluate(fov_lon=0 * u.deg, fov_lat=0 * u.deg, energy=1 * u.TeV)
+        * sky_geom.solid_angle()[0, 1, 1]
+    )
+    ref2 = (
+        10
+        * u.TeV
+        * bkg_irf.evaluate(fov_lon=0 * u.deg, fov_lat=2 * u.deg, energy=1 * u.TeV)
+        * sky_geom.solid_angle()[0, 1, 2]
+    )
+
+    assert_allclose(bkg_sky.data[0, 1, 1], ref1.value, rtol=1e-9)
+    assert_allclose(bkg_sky.data[1, 2, 1], ref2.value, rtol=1e-3)
+
+    assert bkg_sky.unit.is_equivalent(1 / u.s)
+
+    bkg_irf = bkg_3d_custom(symmetry="hirez_symmetric")
+    bkg_sky = integrate_project_irf_on_geom(sky_geom, bkg_irf, fov_frame)
+    ref3 = (  # center center pixel, value = 2
+        1
+        * u.TeV
+        * bkg_irf.evaluate(fov_lon=0 * u.deg, fov_lat=0 * u.deg, energy=1 * u.TeV)
+    ).value
+    ref4 = (  # right edge center pixel, value = 1
+        1
+        * u.TeV
+        * bkg_irf.evaluate(fov_lon=0 * u.deg, fov_lat=2 * u.deg, energy=1 * u.TeV)
+    ).value
+    omega11 = sky_geom.solid_angle()[0, 1, 1].value  # center center pixel
+    omega12 = sky_geom.solid_angle()[0, 1, 2].value  # right edge center pixel
+    omega21 = sky_geom.solid_angle()[0, 2, 1].value  # bottom edge center pixel
+    assert_allclose(bkg_sky.data[0, 1, 1], ref3 * omega11, rtol=1e-9)
+    assert_allclose(bkg_sky.data[0, 1, 2], ref4 * omega12, rtol=1e-9)
+    # Times chosen such that at second step the IRF FoV has moved
+    # over one full geom pixel
+    obs_times = obstime - np.linspace(0, 8.6, 2) * u.minute
+    fov_timedep = FoVAltAzFrame(origin=origin, location=location, obstime=obs_times)
+    bkg_sky = integrate_project_irf_on_geom(sky_geom, bkg_irf, fov_timedep)
+
+    assert_allclose(
+        (ref3 + ref4) / 2 * omega11,
+        bkg_sky.data[0, 1, 1],
+    )
+    assert_allclose(
+        (ref3 + ref4) / 2 * omega12,
+        bkg_sky.data[0, 1, 2],
+    )
+    with pytest.raises(AssertionError):
+        assert_allclose(
+            (ref3 + ref4) / 2 * omega21,
+            bkg_sky.data[0, 2, 1],
+        )
+    assert_allclose(
+        (ref4 + ref4) / 2 * omega21,
+        bkg_sky.data[0, 2, 1],
+    )

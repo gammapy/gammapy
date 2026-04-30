@@ -1107,6 +1107,8 @@ class FluxMaps:
         if sed_type is None:
             sed_type = self.sed_type_init
 
+        if filename is None:
+            raise ValueError("The filename is not defined.")
         filename = make_path(filename)
 
         if filename_model is None:

@@ -2,18 +2,22 @@
 import logging
 import numpy as np
 import astropy.units as u
-from astropy.coordinates import Angle
+from astropy.coordinates import SkyCoord
 from astropy.coordinates.erfa_astrom import erfa_astrom, ErfaAstromInterpolator
 from astropy.table import Table
 from astropy.time import Time
 from gammapy.data import FixedPointingInfo, PointingMode
 from gammapy.irf import EDispMap, FoVAlignment, PSFMap
+from gammapy.makers import background
+from gammapy.irf import BackgroundIRF
 from gammapy.maps import Map, RegionNDMap, MapAxis
 from gammapy.maps.utils import broadcast_axis_values_to_geom
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.stats import WStatCountsStatistic
 from gammapy.utils.coordinates import FoVICRSFrame, FoVAltAzFrame
 from gammapy.utils.regions import compound_region_to_regions
+from regions import CircleSkyRegion
+from gammapy.utils.deprecation import deprecated
 
 __all__ = [
     "make_counts_off_rad_max",
@@ -23,7 +27,7 @@ __all__ = [
     "make_map_background_irf",
     "make_map_exposure_true_energy",
     "make_psf_map",
-    "make_theta_squared_table",
+    "ThetaSquaredTable",
     "make_effective_livetime_map",
     "make_observation_time_map",
 ]
@@ -174,7 +178,7 @@ def make_map_background_irf(
     use_region_center=True,
     location=None,
 ):
-    """Compute background map from background IRFs.
+    """Compute a on-sky background map from background IRFs.
 
     Parameters
     ----------
@@ -335,7 +339,7 @@ def make_edisp_map(edisp, pointing, geom, exposure_map=None, use_region_center=T
 
 
 def make_edisp_kernel_map(
-    edisp, pointing, geom, exposure_map=None, use_region_center=True
+    edisp, pointing, geom, exposure_map=None, use_region_center=True, threshold=1e-8
 ):
     """Make an edisp kernel map for a single observation.
 
@@ -359,6 +363,8 @@ def make_edisp_kernel_map(
         For geom as a `~gammapy.maps.RegionGeom`. If True, consider the values at the region center.
         If False, average over the whole region.
         Default is True.
+    threshold : float, optional
+        Threshold value to remove numerical artifacts. Default is 1e-8.
 
     Returns
     -------
@@ -375,11 +381,17 @@ def make_edisp_kernel_map(
         edisp, pointing, new_geom, exposure_map, use_region_center
     )
 
-    return edisp_map.to_edisp_kernel_map(geom.axes["energy"])
+    return edisp_map.to_edisp_kernel_map(geom.axes["energy"], threshold=threshold)
 
 
+@deprecated("2.1", alternative="ThetaSquaredTable")
 def make_theta_squared_table(
-    observations, theta_squared_axis, position, position_off=None, energy_edges=None
+    observations,
+    theta_squared_axis,
+    position,
+    position_off=None,
+    energy_edges=None,
+    off_regions_number=1,
 ):
     """Make theta squared distribution in the same FoV for a list of `~gammapy.data.Observation` objects.
 
@@ -392,19 +404,23 @@ def make_theta_squared_table(
 
     Parameters
     ----------
-    observations: `~gammapy.data.Observations`
+    observations : `~gammapy.data.Observations`
         List of observations.
     theta_squared_axis : `~gammapy.maps.MapAxis`
         Axis of edges of the theta2 bin used to compute the distribution.
     position : `~astropy.coordinates.SkyCoord`
         Position from which the on theta^2 distribution is computed.
-    position_off : `astropy.coordinates.SkyCoord`
+    position_off : `~astropy.coordinates.SkyCoord`
         Position from which the OFF theta^2 distribution is computed.
         Default is reflected position w.r.t. to the pointing position.
     energy_edges : list of `~astropy.units.Quantity`, optional
         Edges of the energy bin where the theta squared distribution
         is evaluated. For now, only one interval is accepted.
         Default is None.
+    off_regions_number : `int`, optional
+        Number of OFF regions. Default is 1. **WARNING**: the user should
+        be aware that, if regions overlap, only the reflected OFF
+        region will be considered.
 
     Returns
     -------
@@ -412,80 +428,253 @@ def make_theta_squared_table(
         Table containing the on counts, the off counts, acceptance, off acceptance and alpha
         for each theta squared bin.
     """
-    if not theta_squared_axis.edges.unit.is_equivalent("deg2"):
-        raise ValueError("The theta2 axis should be equivalent to deg2")
+    theta_squared_table = ThetaSquaredTable(
+        observations=observations,
+        theta_squared_axis=theta_squared_axis,
+        position=position,
+        position_off=position_off,
+        energy_edges=energy_edges,
+        off_regions_number=off_regions_number,
+    )
 
-    table = Table()
+    return theta_squared_table.run()
 
-    table["theta2_min"] = theta_squared_axis.edges[:-1]
-    table["theta2_max"] = theta_squared_axis.edges[1:]
-    table["counts"] = 0
-    table["counts_off"] = 0
-    table["acceptance"] = 0.0
-    table["acceptance_off"] = 0.0
 
-    alpha_tot = np.zeros(len(table))
-    livetime_tot = 0
+class ThetaSquaredTable:
+    """Make theta squared distribution in the same FoV for a list of `~gammapy.data.Observation` objects.
 
-    create_off = position_off is None
+    The ON theta2 profile is computed from a given distribution, on_position.
+    By default, the OFF theta2 profile is extracted from a mirror position
+    radially symmetric in the FOV to pos_on.
 
-    if energy_edges is not None:
-        if len(energy_edges) == 2:
-            table.meta["Energy_filter"] = energy_edges
-        else:
-            raise ValueError(
-                f"Only  supports one energy interval but {len(energy_edges) - 1} passed."
+    The ON and OFF regions are assumed to be of the same size, so the normalisation
+    factor between both region alpha = 1.
+
+    Parameters
+    ----------
+    observations : `~gammapy.data.Observations`
+        List of observations.
+    theta_squared_axis : `~gammapy.maps.MapAxis`
+        Axis of edges of the theta2 bin used to compute the distribution.
+    position : `~astropy.coordinates.SkyCoord`
+        Position from which the on theta^2 distribution is computed.
+    position_off : `~astropy.coordinates.SkyCoord`
+        Position from which the OFF theta^2 distribution is computed.
+        Default is reflected position w.r.t. to the pointing position.
+        It is available only if ``off_regions_number`` is equal to 1.
+    energy_edges : list of `~astropy.units.Quantity`, optional
+        Edges of the energy bin where the theta squared distribution
+        is evaluated. For now, only one interval is accepted.
+        Default is None.
+    off_regions_number : `int`, optional
+        Number of OFF regions. Default is 1. **WARNING**: the user should
+        be aware that, if regions overlap, only the reflected OFF
+        region will be considered.
+
+    Returns
+    -------
+    table : `~astropy.table.Table`
+        Table containing the on counts, the off counts, acceptance, off acceptance and alpha
+        for each theta squared bin.
+    """
+
+    def __init__(
+        self,
+        observations,
+        theta_squared_axis,
+        position,
+        position_off=None,
+        energy_edges=None,
+        off_regions_number=1,
+    ):
+        self.observations = observations
+        self.theta_squared_axis = theta_squared_axis
+        self.position = position
+        self.position_off = position_off
+        self.energy_edges = energy_edges
+        self.off_regions_number = off_regions_number
+
+    def run(self):
+        """Run theta square distribution."""
+        if not self.theta_squared_axis.edges.unit.is_equivalent("deg2"):
+            raise ValueError("The theta2 axis should be equivalent to deg2")
+
+        radius = np.sqrt(np.max(self.theta_squared_axis.edges))
+        self.on_region = CircleSkyRegion(center=self.position, radius=radius)
+
+        self.table = Table()
+
+        self.table["theta2_min"] = self.theta_squared_axis.edges[:-1]
+        self.table["theta2_max"] = self.theta_squared_axis.edges[1:]
+        self.table["counts"] = 0
+        self.table["counts_off"] = 0.0
+        self.table["acceptance"] = 0.0
+        self.table["acceptance_off"] = 0.0
+
+        alpha_tot = np.zeros(len(self.table))
+        livetime_tot = 0
+
+        self.create_off = self.position_off is None
+        self._check_theta2_inputs()
+
+        for observation in self.observations:
+            counts, counts_off = self._calc_theta2(observation)
+
+            self.table["counts"] += counts
+            self.table["counts_off"] += counts_off
+
+            # Normalisation between ON and OFF is one
+            acceptance = np.ones(self.theta_squared_axis.nbin)
+            acceptance_off = (
+                np.ones(self.theta_squared_axis.nbin) * self.off_regions_number
             )
 
-    for observation in observations:
+            self.table["acceptance"] += acceptance
+            self.table["acceptance_off"] += acceptance_off
+            alpha = acceptance / acceptance_off
+            alpha_tot += alpha * observation.observation_live_time_duration.to_value(
+                "s"
+            )
+            livetime_tot += observation.observation_live_time_duration.to_value("s")
+
+        alpha_tot /= livetime_tot
+        self.table["alpha"] = alpha_tot
+
+        stat = WStatCountsStatistic(
+            self.table["counts"], self.table["counts_off"], self.table["alpha"]
+        )
+        self.table["excess"] = stat.n_sig
+        self.table["sqrt_ts"] = stat.sqrt_ts
+        self.table["excess_errn"] = stat.compute_errn()
+        self.table["excess_errp"] = stat.compute_errp()
+
+        self.table.meta["ON_RA"] = self.position.icrs.ra
+        self.table.meta["ON_DEC"] = self.position.icrs.dec
+
+        return self.table
+
+    def _check_theta2_inputs(self):
+        """Check inputs of make_theta_squared_table. It raises errors if inputs are not coherent."""
+        if self.create_off is False:
+            on_off_sep = self.on_region.center.separation(self.position_off)
+            if on_off_sep < self.on_region.radius * 2:
+                raise ValueError(
+                    "The specified OFF region overlaps with the ON region. "
+                    "This is currently forbidden. To fix this, either choose "
+                    "another OFF position or reduce the region radius."
+                )
+
+        if self.energy_edges is not None:
+            if len(self.energy_edges) == 2:
+                self.table.meta["Energy_filter"] = self.energy_edges
+            else:
+                raise ValueError(
+                    f"Only supports one energy interval but {len(self.energy_edges) - 1} passed."
+                )
+
+        if self.off_regions_number > 1 and self.create_off is False:
+            raise ValueError(
+                "If ``off_regions_number`` is larger than 1, you cannot provide a fixed OFF position. "
+                "Instead set ``position_off`` to be None."
+            )
+
+    def _check_onregion_size(self, observation):
+        """Check the radius of the ON-region is smaller than its angular separation from the pointing position.
+
+        Parameters
+        ----------
+        observation : `~gammapy.data.Observation`
+            Observation of interest.
+
+        Returns
+        -------
+        pointing : `~astropy.coordinates.SkyCoord`
+            Pointing coordinates of the observation of interest.
+        """
+        pointing = observation.get_pointing_icrs(observation.tmid)
+        separation_on_region = pointing.separation(self.on_region.center)
+        if self.on_region.radius > separation_on_region:
+            raise ValueError(
+                "The ON region radius is larger than its separation from observation pointing position. "
+                "This will cause the ON and OFF regions to overlap, which is not permitted. "
+                f"Reduce the ON region radius to at least {separation_on_region}."
+            )
+        return pointing
+
+    def _theta2_offregions_finder(self, observation):
+        """Calculate off regions for the theta2 distribution.
+
+        Parameters
+        ----------
+        observation : `~gammapy.data.Observation`
+            Observation of interest.
+
+        Returns
+        -------
+        off_regions : `~astropy.coordinates.SkyCoord`
+            Pointing coordinates of the observation of interest.
+        """
+        if self.create_off:
+            wobble = background.WobbleRegionsFinder(self.off_regions_number)
+            off_regions = wobble.run(
+                region=self.on_region, center=observation.pointing.fixed_icrs
+            )[0]
+
+            if len(off_regions) == 0:
+                log.warning(
+                    "No OFF regions were found, so only one reflected OFF region will be used."
+                )
+                self.off_regions_number = 1
+                wobble = background.WobbleRegionsFinder(self.off_regions_number)
+                off_regions = wobble.run(
+                    region=self.on_region, center=observation.pointing.fixed_icrs
+                )[0]
+        else:
+            off_regions = [
+                CircleSkyRegion(center=self.position_off, radius=self.on_region.radius)
+            ]
+
+        return off_regions
+
+    def _calc_theta2(self, observation):
+        """Calculate off regions for the theta2 distribution.
+
+        Parameters
+        ----------
+        observation : `~gammapy.data.Observation`
+            Observation of interest.
+
+        Returns
+        -------
+        counts, counts_off : `~numpy.ndarray`
+            Theta square distribution of ON and OFF counts.
+        off_regions_number : `int`
+            Number of OFF regions.
+        """
         events = observation.events
-        if energy_edges is not None:
-            events = events.select_energy(energy_range=energy_edges)
+        if self.energy_edges is not None:
+            events = events.select_energy(energy_range=self.energy_edges)
 
         event_position = events.radec
-        pointing = observation.get_pointing_icrs(observation.tmid)
 
-        separation = position.separation(event_position)
-        counts, _ = np.histogram(separation**2, theta_squared_axis.edges)
-        table["counts"] += counts
+        self._check_onregion_size(observation)
 
-        if create_off:
-            # Estimate the position of the mirror position
-            pos_angle = pointing.position_angle(position)
-            sep_angle = pointing.separation(position)
-            position_off = pointing.directional_offset_by(
-                pos_angle + Angle(np.pi, "rad"), sep_angle
+        separation = self.position.separation(event_position)
+        counts, _ = np.histogram(separation**2, self.theta_squared_axis.edges)
+
+        off_regions = self._theta2_offregions_finder(observation)
+
+        counts_off = np.zeros_like(counts)
+        for off_region in off_regions:
+            # Angular distance of the events from the OFF position
+            separation_off = off_region.center.separation(event_position)
+            # Extract the OFF theta2 distribution from the two positions.
+            counts_off_regions, _ = np.histogram(
+                separation_off**2, self.theta_squared_axis.edges
             )
+            counts_off += counts_off_regions
 
-        # Angular distance of the events from the mirror position
-        separation_off = position_off.separation(event_position)
-
-        # Extract the ON and OFF theta2 distribution from the two positions.
-        counts_off, _ = np.histogram(separation_off**2, theta_squared_axis.edges)
-        table["counts_off"] += counts_off
-
-        # Normalisation between ON and OFF is one
-        acceptance = np.ones(theta_squared_axis.nbin)
-        acceptance_off = np.ones(theta_squared_axis.nbin)
-
-        table["acceptance"] += acceptance
-        table["acceptance_off"] += acceptance_off
-        alpha = acceptance / acceptance_off
-        alpha_tot += alpha * observation.observation_live_time_duration.to_value("s")
-        livetime_tot += observation.observation_live_time_duration.to_value("s")
-
-    alpha_tot /= livetime_tot
-    table["alpha"] = alpha_tot
-
-    stat = WStatCountsStatistic(table["counts"], table["counts_off"], table["alpha"])
-    table["excess"] = stat.n_sig
-    table["sqrt_ts"] = stat.sqrt_ts
-    table["excess_errn"] = stat.compute_errn()
-    table["excess_errp"] = stat.compute_errp()
-
-    table.meta["ON_RA"] = position.icrs.ra
-    table.meta["ON_DEC"] = position.icrs.dec
-    return table
+        return counts, counts_off
 
 
 def make_counts_rad_max(geom, rad_max, events):
@@ -659,9 +848,12 @@ def _get_fov_coord(
 ):
     """Return coord dict in fov_coord."""
     coords = {}
-
     if use_offset:
-        coords["offset"] = skycoord.separation(fov_frame.origin)
+        fov_frame_origin = SkyCoord(0 * u.deg, 0 * u.deg, frame=fov_frame)
+        if isinstance(fov_frame, FoVICRSFrame) or (len(fov_frame.obstime.shape) == 0):
+            coords["offset"] = skycoord.separation(fov_frame_origin)
+        else:
+            coords["offset"] = np.moveaxis(skycoord.separation(fov_frame_origin), -1, 0)
     else:
         sign = -1.0 if reverse_lon else 1.0
 
@@ -676,6 +868,20 @@ def _get_fov_coord(
             coords["fov_lat"] = fov_coords.fov_lat
 
     return coords
+
+
+def _get_time_axes_and_times(fov_frame, image_geom, axes):
+    # Assume ordered times
+    time = MapAxis.from_edges(
+        (fov_frame.obstime - fov_frame.obstime[0]).to_value("s"),
+        unit="s",
+        name="time",
+    )
+    ontime = time.bin_width.sum().to_value("s")
+    delta = np.reshape(time.edges.to_value("s"), (1, time.nbin + 1, 1, 1))
+
+    new_geom = image_geom.to_cube([time, *axes])
+    return ontime, delta, new_geom
 
 
 def project_irf_on_geom(geom, irf, fov_frame, use_region_center=True):
@@ -702,6 +908,7 @@ def project_irf_on_geom(geom, irf, fov_frame, use_region_center=True):
     map : `~gammapy.maps.Map`
         Map containing the projected IRF.
     """
+
     if not use_region_center:
         image_geom = geom.to_wcs_geom().to_image()
         region_coord, weights = geom.get_wcs_coord_and_weights()
@@ -710,16 +917,25 @@ def project_irf_on_geom(geom, irf, fov_frame, use_region_center=True):
         image_geom = geom.to_image()
         skycoord = image_geom.get_coord().skycoord
 
+    # In case we need to average over time
+    if len(fov_frame.shape) == 1:
+        skycoord = skycoord[..., np.newaxis]
+        _, _, new_geom = _get_time_axes_and_times(fov_frame, image_geom, geom.axes)
+    else:
+        new_geom = geom
+
     coords = _get_fov_coord(skycoord, fov_frame, irf.has_offset_axis)
 
     non_spatial_axes = set(irf.required_arguments) - set(
         ["offset", "fov_lon", "fov_lat"]
     )
-
     for axis_name in non_spatial_axes:
-        coords[axis_name] = broadcast_axis_values_to_geom(geom, axis_name)
+        coords[axis_name] = broadcast_axis_values_to_geom(new_geom, axis_name)
 
     data = irf.evaluate(**coords)
+    if len(fov_frame.shape) == 1:
+        data = np.average(data, axis=1)
+
     if not use_region_center:
         data = np.average(data, axis=-1, weights=weights, keepdims=True)
 
@@ -727,7 +943,7 @@ def project_irf_on_geom(geom, irf, fov_frame, use_region_center=True):
 
 
 def integrate_project_irf_on_geom(geom, irf, fov_frame, use_region_center=True):
-    """Integrate and project an IRF on a given `~gammapy.maps.Geom` object according to a given FoV Frame.
+    """Integrate and project a `~gammapy.irf.BackgroundIRF` on a given `~gammapy.maps.Geom` object according to a given FoV Frame.
 
     The IRF is integrated in energy and multiplied by the solid angle.
 
@@ -754,6 +970,9 @@ def integrate_project_irf_on_geom(geom, irf, fov_frame, use_region_center=True):
     """
     from scipy.integrate import trapezoid
 
+    if not issubclass(type(irf), BackgroundIRF):
+        raise ValueError(f"Only BackgroundIRF subtypes supported, got {type(irf)}")
+
     if not use_region_center:
         image_geom = geom.to_wcs_geom().to_image()
         region_coord, weights = geom.get_wcs_coord_and_weights()
@@ -762,20 +981,14 @@ def integrate_project_irf_on_geom(geom, irf, fov_frame, use_region_center=True):
         image_geom = geom.to_image()
         skycoord = image_geom.get_coord().skycoord
 
-    new_geom = geom
     # In case we need to integrate over time
     if len(fov_frame.shape) == 1:
         skycoord = skycoord[..., np.newaxis]
-
-        # Assume ordered times
-        time = MapAxis.from_edges(
-            (fov_frame.obstime - fov_frame.obstime[0]).to_value("s"),
-            unit="s",
-            name="time",
+        ontime, delta, new_geom = _get_time_axes_and_times(
+            fov_frame, image_geom, geom.axes
         )
-        axes = geom.axes
-
-        new_geom = image_geom.to_cube([time, *axes])
+    else:
+        new_geom = geom
 
     reverse_lon = irf.fov_alignment == "REVERSE_LON_RADEC"
     coords = _get_fov_coord(skycoord, fov_frame, irf.has_offset_axis, reverse_lon)
@@ -783,16 +996,11 @@ def integrate_project_irf_on_geom(geom, irf, fov_frame, use_region_center=True):
     non_spatial_axes = set(irf.required_arguments) - set(
         ["offset", "fov_lon", "fov_lat"]
     )
-
     for axis_name in non_spatial_axes:
         coords[axis_name] = broadcast_axis_values_to_geom(new_geom, axis_name, False)
-
     data = irf.integrate_log_log(**coords, axis_name="energy")
 
     if len(fov_frame.shape) == 1:
-        time = new_geom.axes["time"]
-        ontime = time.bin_width.sum().to_value("s")
-        delta = np.reshape(time.edges.to_value("s"), (1, time.nbin + 1, 1, 1))
         data = trapezoid(data, delta, axis=1) / ontime
 
     if use_region_center:

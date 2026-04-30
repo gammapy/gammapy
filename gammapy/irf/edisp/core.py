@@ -129,7 +129,9 @@ class EnergyDispersion2D(IRF):
             data=data.value,
         )
 
-    def to_edisp_kernel(self, offset, energy_axis_true=None, energy_axis=None):
+    def to_edisp_kernel(
+        self, offset, energy_axis_true=None, energy_axis=None, threshold=1e-8
+    ):
         """Detector response R(Delta E_reco, Delta E_true).
 
         Probability to reconstruct an energy in a given true energy band
@@ -143,6 +145,8 @@ class EnergyDispersion2D(IRF):
             True energy axis. Default is None.
         energy_axis : `~gammapy.maps.MapAxis`, optional
             Reconstructed energy axis. Default is None.
+        threshold : float, optional
+            Threshold value to remove numerical artifacts. Default is 1e-8.
 
         Returns
         -------
@@ -173,7 +177,9 @@ class EnergyDispersion2D(IRF):
         )
         geom = RegionGeom.create(region=center, axes=[energy_axis, energy_axis_true])
 
-        edisp = make_edisp_kernel_map(geom=geom, edisp=self, pointing=pointing)
+        edisp = make_edisp_kernel_map(
+            geom=geom, edisp=self, pointing=pointing, threshold=threshold
+        )
         return edisp.get_edisp_kernel()
 
     def normalize(self):

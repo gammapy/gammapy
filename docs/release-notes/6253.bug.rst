@@ -1,1 +1,0 @@
-Fix the addition logic so that `gammapy.modeling.models.Models` and `gammapy.modeling.models.DatasetModels`  can be added together regardless of the order they are given.
