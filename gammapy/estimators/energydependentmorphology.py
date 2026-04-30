@@ -130,6 +130,7 @@ class EnergyDependentMorphologyEstimator(Estimator):
             other_models.append(datasets.models[name])
 
         slice_datasets = []
+        all_datasets = Datasets()
         for i, (emin, emax) in enumerate(
             zip(self.energy_edges[:-1], self.energy_edges[1:])
         ):
@@ -146,9 +147,10 @@ class EnergyDependentMorphologyEstimator(Estimator):
                     *other_models,
                     bkg_sliced_model,
                 ]
+                all_datasets.append(sliced_src)
                 slices_src.append(sliced_src)
             slice_datasets.append(slices_src)
-        return slice_datasets
+        return all_datasets, slice_datasets
 
     def _estimate_source_significance(self, datasets):
         """Estimate the significance of the source above the background.
@@ -170,7 +172,7 @@ class EnergyDependentMorphologyEstimator(Estimator):
                 * "df" : the degrees of freedom between null and alternative hypothesis
                 * "significance" : significance of the result
         """
-        slices_src = self._slice_datasets(datasets)
+        _, slices_src = self._slice_datasets(datasets)
         # Norm is free and fit
         test_results = []
         for sliced in slices_src:
@@ -236,7 +238,7 @@ class EnergyDependentMorphologyEstimator(Estimator):
         model = datasets.models[self.source]
 
         # Calculate the individually sliced components
-        slices_src = self._slice_datasets(datasets)
+        slices_joint, slices_src = self._slice_datasets(datasets)
         results_src = []
         for sliced in slices_src:
             results_src.append(self.fit.run(sliced))
@@ -259,11 +261,11 @@ class EnergyDependentMorphologyEstimator(Estimator):
                         param
                     ],
                 )
-        result_joint = self.fit.run(slices_src)
+        result_joint = self.fit.run(slices_joint)
 
         # Compare fit of individual energy slices to the results with joint fit
         delta_ts_joint = result_joint.total_stat - np.sum(results_src_total_stat)
-        df_joint = len(slices_src.parameters.free_parameters.names)
+        df_joint = len(slices_joint.parameters.free_parameters.names)
         df = df_src - df_joint
 
         # Prepare results dictionary
