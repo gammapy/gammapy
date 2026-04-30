@@ -46,8 +46,8 @@ jobs:
             gammapy_data: true
             allowed_fail: false
           - os: ubuntu-latest
-            python: '3.13'
-            tox_env: 'py313-test-alldeps_noray'
+            python: '3.14'
+            tox_env: 'py314-test-alldeps'
             gammapy_data: true
             allowed_fail: false
           - os: macos-latest
