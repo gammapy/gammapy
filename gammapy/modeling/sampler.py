@@ -5,6 +5,25 @@ from .utils import _parse_datasets
 
 __all__ = ["Sampler", "SamplerLikelihood", "SamplerResult"]
 
+SAMPLER_BACKENDS = ["ultranest", "nautilus"]
+
+DEFAULT_SAMPLER_OPTS = {
+    "ultranest": {
+        "live_points": 400,
+        "frac_remain": 0.5,
+        "log_dir": None,
+        "resume": "subfolder",
+        "step_sampler": False,
+        "nsteps": 10,
+    },
+    "nautilus": {"n_live": 2000, "filepath": None, "resume": True},
+}
+
+DEFAULT_RUN_OPTS = {
+    "ultranest": {},
+    "nautilus": {"f_live": 0.01, "n_eff": 2000, "verbose": True},
+}
+
 
 class Sampler:
     """Sampler class.
@@ -13,10 +32,12 @@ class Sampler:
 
     Parameters
     ----------
-    backend : {"ultranest"}
+    backend : {"ultranest", "nautilus"}
         Global backend used for sampler. Default is "ultranest".
         UltraNest: Most options can be found in the
         `UltraNest doc <https://johannesbuchner.github.io/UltraNest/>`__.
+        Nautilus uses neural-network-guided nested sampling. See the
+    `   `Nautilus documentation <https://nautilus-sampler.readthedocs.io/>`__.
     sampler_opts : dict, optional
         Sampler options passed to the sampler. See the full list of options on the
         `UltraNest documentation <https://johannesbuchner.github.io/UltraNest/ultranest.html#ultranest.integrator.ReactiveNestedSampler>`__.
@@ -67,18 +88,18 @@ class Sampler:
     # TODO: add "zeusmc", "emcee"
 
     def __init__(self, backend="ultranest", sampler_opts=None, run_opts=None):
+        if backend not in SAMPLER_BACKENDS:
+            raise ValueError(f"Sampler {backend} is not supported.")
+
         self._sampler = None
         self.backend = backend
         self.sampler_opts = {} if sampler_opts is None else sampler_opts
         self.run_opts = {} if run_opts is None else run_opts
 
-        if self.backend == "ultranest":
-            self.sampler_opts.setdefault("live_points", 400)
-            self.sampler_opts.setdefault("frac_remain", 0.5)
-            self.sampler_opts.setdefault("log_dir", None)
-            self.sampler_opts.setdefault("resume", "subfolder")
-            self.sampler_opts.setdefault("step_sampler", False)
-            self.sampler_opts.setdefault("nsteps", 10)
+        for key, value in DEFAULT_SAMPLER_OPTS[backend].items():
+            self.sampler_opts.setdefault(key, value)
+        for key, value in DEFAULT_RUN_OPTS[backend].items():
+            self.run_opts.setdefault(key, value)
 
     @staticmethod
     def _update_models_from_posterior(models, result):
@@ -124,18 +145,10 @@ class Sampler:
         """
         import ultranest
 
-        def _prior_inverse_cdf(values):
-            """Returns a list of model parameters for a given list of values (that are bound in [0,1])."""
-            if None in parameters.prior:
-                raise ValueError(
-                    "Some parameters have no prior set. You need priors on all parameters."
-                )
-            return [par.prior._inverse_cdf(val) for par, val in zip(parameters, values)]
-
         self._sampler = ultranest.ReactiveNestedSampler(
             parameters.names,
             like.fcn,
-            transform=_prior_inverse_cdf,
+            transform=parameters._prior_inverse_cdf,
             log_dir=self.sampler_opts["log_dir"],
             resume=self.sampler_opts["resume"],
         )
@@ -159,6 +172,39 @@ class Sampler:
 
         return result
 
+    def sampler_nautilus(self, parameters, like):
+        import nautilus
+        import numpy as np
+
+        self._sampler = nautilus.Sampler(
+            prior=parameters._prior_inverse_cdf,
+            likelihood=like.fcn,
+            n_dim=len(parameters),
+            n_live=self.sampler_opts["n_live"],
+            filepath=self.sampler_opts["filepath"],
+            resume=self.sampler_opts["resume"],
+        )
+
+        success = self._sampler.run(**self.run_opts)
+
+        points, log_w, log_l = self._sampler.posterior()
+        weights = np.exp(log_w - log_w.max())
+        weights /= weights.sum()
+        mean = np.average(points, weights=weights, axis=0)
+        stdev = np.sqrt(np.average((points - mean) ** 2, weights=weights, axis=0))
+
+        result = {
+            "ncall": self._sampler.n_like,
+            "success": success,
+            "logz": self._sampler.log_z,
+            "posterior": {"mean": mean, "stdev": stdev},
+            "samples": self._sampler.posterior(equal_weight=True)[0],
+            "points": points,
+            "log_w": log_w,
+            "log_l": log_l,
+        }
+        return result
+
     def run(self, datasets):
         """
         Run the sampler on the provided datasets.
@@ -176,22 +222,22 @@ class Sampler:
         datasets, parameters = _parse_datasets(datasets=datasets)
         parameters = parameters.free_unique_parameters
 
+        like = SamplerLikelihood(
+            function=datasets._stat_sum_likelihood, parameters=parameters
+        )
         if self.backend == "ultranest":
-            like = SamplerLikelihood(
-                function=datasets._stat_sum_likelihood, parameters=parameters
-            )
             result_dict = self.sampler_ultranest(parameters, like)
             self._sampler.print_results()
-
-            models_copy = datasets.models.copy()
-            self._update_models_from_posterior(models_copy, result_dict)
-
             result = SamplerResult.from_ultranest(result_dict)
-            result.models = models_copy
+        elif self.backend == "nautilus":
+            result_dict = self.sampler_nautilus(parameters, like)
+            self._sampler.print_status()
+            result = SamplerResult.from_nautilus(result_dict)
 
-            return result
-        else:
-            raise ValueError(f"Sampler {self.backend} is not supported.")
+        models_copy = datasets.models.copy()
+        self._update_models_from_posterior(models_copy, result_dict)
+        result.models = models_copy
+        return result
 
 
 class SamplerResult:
@@ -235,6 +281,15 @@ class SamplerResult:
         kwargs["success"] = ultranest_result["insertion_order_MWW_test"]["converged"]
         kwargs["samples"] = ultranest_result["samples"]
         kwargs["sampler_results"] = ultranest_result
+        return cls(**kwargs)
+
+    @classmethod
+    def from_nautilus(cls, nautilus_result):
+        kwargs = {}
+        kwargs["nfev"] = nautilus_result["ncall"]
+        kwargs["success"] = nautilus_result["success"]
+        kwargs["samples"] = nautilus_result["samples"]
+        kwargs["sampler_results"] = nautilus_result
         return cls(**kwargs)
 
 
