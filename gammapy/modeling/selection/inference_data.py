@@ -106,8 +106,8 @@ def inference_data_from_sampler(
 
     Returns
     -------
-    inference_data : `xarray.DataTree`
-        An DataTree object containing posterior samples, optionally resampled,
+    inference_data : `~xarray.DataTree`
+        A DataTree object containing posterior samples, optionally resampled,
         prior samples (if requested), and log-evidence attributes ('logz' and 'logzerr').
     """
     if backend == "ultranest":
@@ -144,11 +144,11 @@ def inference_data_from_sampler(
 
 def resample_posterior(inference_data, n_samples=None, random_seed=42):
     """
-    Resample posterior samples from an DataTree object using importance weights.
+    Resample posterior samples from a DataTree object using importance weights.
 
     Parameters
     ----------
-    inference_data : `xarray.DataTree`
+    inference_data : `~xarray.DataTree`
         The input DataTree object with posterior and sample_stats["weights"].
     n_samples : int, optional
         Number of resampled draws. If None, uses the number of original draws.
@@ -157,7 +157,7 @@ def resample_posterior(inference_data, n_samples=None, random_seed=42):
 
     Returns
     -------
-    inferencedata : `xarray.DataTree`
+    inferencedata : `~xarray.DataTree`
         A new DataTree object with resampled posterior and sample_stats.
     """
 
@@ -242,7 +242,7 @@ def add_prior_samples(inference_data, results, n_prior_samples=None, random_seed
 
     Parameters
     ----------
-    inference_data : `xarray.DataTree`
+    inference_data : `~xarray.DataTree`
         The inference data object to which the prior samples will be added.
     results : `SamplerResult`
         The sampler result object containing the model and its priors.
