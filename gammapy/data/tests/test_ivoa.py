@@ -1,6 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from numpy.testing import assert_allclose
-from gammapy.data.ivoa import empty_obscore_table, to_obscore_table, make_obs_table
+from gammapy.data.ivoa import (
+    empty_obscore_table,
+    to_obscore_table,
+    make_obs_table,
+    ObsTableRow,
+)
 from gammapy.utils.testing import requires_data
 from gammapy.utils.scripts import make_path
 
@@ -41,6 +46,53 @@ def test_make_obs_table():
     )
     with raises(KeyError):
         obs_table = make_obs_table(TAPResults(ivoa_tab))
+
+
+@requires_data()
+def test_ObsTableRow():
+    mandatory_cols = [
+        "obs_id",
+        "obs_mode",
+        "ra_pnt",
+        "dec_pnt",
+        "alt_pnt",
+        "az_pnt",
+        "tstart",
+        "tstop",
+    ]
+    root_path = make_path("$GAMMAPY_DATA/")
+    obscore_tab = Table.read(root_path / "tests" / "obscore_table.fits.gz")
+
+    testrow = obscore_tab[0]
+
+    # Test from_row
+    otr = ObsTableRow.from_row(testrow[mandatory_cols])
+    assert otr.obs_id == 23523
+    assert otr.obs_mode == "wobble"
+    assert otr.tstart == 123890826.0
+
+    # Test from_table
+    obs_tab = otr.to_obs_table()
+    assert len(mandatory_cols) == len(obs_tab.columns)
+
+    # Test from_row
+    otr = ObsTableRow.from_row(testrow)
+    assert otr.obs_id == 23523
+    assert otr.date_obs == "2004-12-04"
+    assert otr.ontime is None
+
+    # Test from_table
+    obs_tab = otr.to_obs_table()
+    assert obs_tab["OBS_ID"] == 23523
+    assert obs_tab["DATE-OBS"] == "2004-12-04"
+    assert len(obs_tab.columns) < len(testrow.columns)
+
+    testrow = obscore_tab[1]
+    otr = ObsTableRow.from_row(testrow)
+    assert otr.obs_id == 23526
+
+    with raises(KeyError):
+        otr = ObsTableRow.from_row(testrow[mandatory_cols[1:]])
 
 
 @requires_data()
