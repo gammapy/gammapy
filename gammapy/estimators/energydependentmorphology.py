@@ -44,8 +44,8 @@ def weighted_chi2_parameter(results_edep, parameters=["sigma"]):
     Notes
     -----
     This chi-square should be utilised with caution as it does not take into
-    account any correlation between the parameters.
-    To properly utilise the chi-squared parameter one must ensure each of the parameters
+    account any correlation between the parameters. To properly utilise the
+    chi-squared parameter one must ensure each of the parameters
     are independent, which cannot be guaranteed in this use case.
 
     """
@@ -71,7 +71,8 @@ def weighted_chi2_parameter(results_edep, parameters=["sigma"]):
 
 
 class EnergyDependentMorphologyEstimator(Estimator):
-    """Test if there is any energy-dependent morphology in a map dataset for a given set of energy bins.
+    """Test if there is any energy-dependent morphology in a map dataset for
+    a given set of energy bins.
 
     Parameters
     ----------
@@ -86,11 +87,13 @@ class EnergyDependentMorphologyEstimator(Estimator):
 
     Examples
     --------
-    For a usage example see :doc:`/tutorials/astrophysics/energy_dependent_estimation` tutorial.
+    For a usage example see :doc:`/tutorials/astrophysics/energy_dependent_estimation`
+    tutorial.
 
     References
     ----------
-    * `Feijen et al. (2025), "Energy-dependent gamma-ray morphology estimation tool in Gammapy"
+    * `Feijen et al. (2025),
+      "Energy-dependent gamma-ray morphology estimation tool in Gammapy"
       <https://ui.adsabs.harvard.edu/abs/2025A%26A...701A...4F/abstract>`_
     """
 
@@ -126,22 +129,26 @@ class EnergyDependentMorphologyEstimator(Estimator):
         for name in filtered_names:
             other_models.append(datasets.models[name])
 
-        slices_src = Datasets()
+        slice_datasets = []
         for i, (emin, emax) in enumerate(
             zip(self.energy_edges[:-1], self.energy_edges[1:])
         ):
+            slices_src = Datasets()
+            initial_model = model.copy(name=f"{self.source}_{i}-model")
+
             for dataset in datasets:
                 sliced_src = dataset.slice_by_energy(
-                    emin, emax, name=f"{self.source}_{i}"
+                    emin, emax, name=f"{dataset.name}_{self.source}_{i}"
                 )
                 bkg_sliced_model = FoVBackgroundModel(dataset_name=sliced_src.name)
                 sliced_src.models = [
-                    model.copy(name=f"{sliced_src.name}-model"),
+                    initial_model,
                     *other_models,
                     bkg_sliced_model,
                 ]
                 slices_src.append(sliced_src)
-        return slices_src
+            slice_datasets.append(slices_src)
+        return slice_datasets
 
     def _estimate_source_significance(self, datasets):
         """Estimate the significance of the source above the background.
@@ -154,34 +161,31 @@ class EnergyDependentMorphologyEstimator(Estimator):
         Returns
         -------
         result_bkg_src : `dict`
-            Dictionary with the results of the null hypothesis with no source, and alternative
-            hypothesis with the source added in. Entries are:
+            Dictionary with the results of the null hypothesis with no source,
+            and alternative hypothesis with the source added in. Entries are:
 
                 * "Emin" : the minimum energy of the energy band
                 * "Emax" : the maximum energy of the energy band
                 * "delta_ts" : difference in ts
                 * "df" : the degrees of freedom between null and alternative hypothesis
                 * "significance" : significance of the result
-
         """
         slices_src = self._slice_datasets(datasets)
-
         # Norm is free and fit
         test_results = []
         for sliced in slices_src:
             parameters = [
                 param
                 for param in sliced.models[
-                    f"{sliced.name}-model"
+                    f"{sliced[0].models.names[0]}" # is this really the best way?
                 ].parameters.free_parameters
             ]
             null_values = [0] + [
                 param.value
                 for param in sliced.models[
-                    f"{sliced.name}-model"
+                    f"{sliced[0].models.names[0]}"
                 ].spatial_model.parameters.free_parameters
             ]
-
             test = NestedModelSelection(
                 parameters=parameters,
                 null_values=null_values,
@@ -222,9 +226,12 @@ class EnergyDependentMorphologyEstimator(Estimator):
         results : `dict`
             Dictionary with results of the energy-dependence test. Entries are:
 
-                * "delta_ts" : difference in ts between fitting each energy band individually (sliced fit) and the joint fit
-                * "df" : the degrees of freedom between fitting each energy band individually (sliced fit) and the joint fit
-                * "result" : the results for the fitting each energy band individually (sliced fit) and the joint fit
+                * "delta_ts" : difference in ts between fitting each energy band
+                  individually (sliced fit) and the joint fit
+                * "df" : the degrees of freedom between fitting each energy band
+                  individually (sliced fit) and the joint fit
+                * "result" : the results for the fitting each energy band
+                  individually (sliced fit) and the joint fit
         """
         model = datasets.models[self.source]
 
@@ -305,22 +312,25 @@ class EnergyDependentMorphologyEstimator(Estimator):
         -------
         results : `dict`
             Dictionary with the various energy-dependence estimation values.
-            There are two top level keys ``energy_dependence`` (detailing the morphology energy dependence
-            and its significance) and ``src_above_bkg`` (giving significance of the source per energy bin).
+            There are two top level keys ``energy_dependence`` (detailing the
+            morphology energy dependence and its significance) and ``src_above_bkg``
+            (giving significance of the source per energy bin).
 
             ``energy_dependence`` (dict):
 
                 * "delta_ts" : delta(TS) between the different hypotheses
                 * "df" : the number of degrees of freedom
-                * "result" (dict) : contains the results of the two hypotheses with columns
-                  'Hypothesis', 'Emin', 'Emax' and each free parameter with its error
+                * "result" (dict) : contains the results of the two hypotheses
+                  with columns 'Hypothesis', 'Emin', 'Emax' and each free parameter
+                  with its error
 
             ``src_above_bkg`` (dict):
 
                 * "Emin" : the minimum energy of the energy band
                 * "Emax" : the maximum energy of the energy band
                 * "delta_ts" : difference in ts
-                * "df" : the number of degrees of freedom between null and alternative hypothesis
+                * "df" : the number of degrees of freedom between null and
+                  alternative hypothesis
                 * "significance" : significance of the result
         """
         if not isinstance(datasets, DatasetsActor):
