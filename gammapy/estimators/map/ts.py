@@ -746,7 +746,6 @@ class SimpleMapDataset:
 
     @classmethod
     def from_arrays(cls, counts, background, exposure, norm, position, kernel, weights):
-        """"""
         if weights:
             # compute mask weighted kernel for the sum_over_axes case
             weights = _extract_array(weights.data, kernel.shape, position)

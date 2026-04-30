@@ -5,22 +5,20 @@ from gammapy.modeling.parameter import Parameters
 
 
 def inference_data_from_ultranest(sampler_results, weighted=False):
-    """
-     Convert UltraNest result dictionary to ArviZ InferenceData.
+    """Convert UltraNest result dictionary to ArviZ InferenceData.
 
-     Parameters
-     ----------
-     sampler_results : dict
-         The result dictionary returned by `ReactiveNestedSampler.run()`.
-     weighted : bool
-         If True, uses the weighted samples (more accurate) otherwise use directly the unweighted samples.
+    Parameters
+    ----------
+    sampler_results : dict
+        The result dictionary returned by `ReactiveNestedSampler.run()`.
+    weighted : bool
+        If True, uses the weighted samples (more accurate) otherwise use directly the unweighted samples.
 
-     Returns
-     -------
+    Returns
+    -------
     inferencedata : `arviz.InferenceData`
         Returns an arviz.InferenceData instance
     """
-
     import arviz as az
     import xarray as xr
 
@@ -76,8 +74,7 @@ def inference_data_from_sampler(
     random_seed=42,
     predictives=True,
 ):
-    """
-    Convert Sampler results to an ArviZ InferenceData object with optional resampling and prior inclusion.
+    """Convert Sampler results to an ArviZ InferenceData object with optional resampling and prior inclusion.
 
     Parameters
     ----------
@@ -133,8 +130,7 @@ def inference_data_from_sampler(
 
 
 def resample_posterior(inference_data, n_samples=None, random_seed=42):
-    """
-    Resample posterior samples from an InferenceData object using importance weights.
+    """Resample posterior samples from an InferenceData object using importance weights.
 
     Parameters
     ----------
@@ -150,7 +146,6 @@ def resample_posterior(inference_data, n_samples=None, random_seed=42):
     inferencedata : `arviz.InferenceData`
         A new InferenceData object with resampled posterior and sample_stats.
     """
-
     import arviz as az
     import xarray as xr
 
@@ -187,7 +182,9 @@ def resample_posterior(inference_data, n_samples=None, random_seed=42):
 
 
 def generate_prior_samples(parameters, n_prior_samples=1000, random_seed=42):
-    """Generate prior samples. This function draws samples from the prior distributions of the model
+    """Generate prior samples.
+
+    This function draws samples from the prior distributions of the model
     parameters using inverse transform sampling.
 
     Parameters

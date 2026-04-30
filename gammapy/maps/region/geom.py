@@ -382,6 +382,7 @@ class RegionGeom(Geom):
 
     def bin_volume(self):
         """If the `RegionGeom` has a non-spatial axis, it returns the volume of the region.
+
         If not, it returns the solid angle size.
 
         Returns

@@ -138,8 +138,7 @@ class TemporalModel(ModelBase):
         return np.sum(diff).to(u.day)
 
     def plot(self, time_range, ax=None, n_points=100, **kwargs):
-        """
-        Plot the temporal model.
+        """Plot the temporal model.
 
         Parameters
         ----------
@@ -780,8 +779,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         return data
 
     def plot(self, time_range, ax=None, n_points=100, energy=None, **kwargs):
-        """
-        Plot the temporal model.
+        """Plot the temporal model.
 
         Parameters
         ----------
@@ -795,6 +793,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
             Energies to compute the model at for energy dependent models. Default is None.
         **kwargs : dict
             Keywords forwarded to `~matplotlib.pyplot.errorbar`.
+
         Returns
         -------
         ax : `~matplotlib.axes.Axes`, optional

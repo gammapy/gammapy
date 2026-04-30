@@ -253,7 +253,6 @@ class PolygonPointsPixelRegion(PolygonPixelRegion):
         origin : `~regions.PixCoord`, optional
             Origin of the region. Default is `PixCoord(0, 0)`
         """
-
         if origin is None:
             origin = PixCoord(0, 0)
 

@@ -260,11 +260,9 @@ class SpectralModel(ModelBase):
 
         Returns
         -------
-        median, errn , errp: tuple of `~astropy.units.Quantity`
+        median, errn , errp : tuple of `~astropy.units.Quantity`
             Median, negative, and positive errors
-
         """
-
         samples[~np.isfinite(samples)] = np.nan
         cdf = stats.norm.cdf
         median = np.nanpercentile(samples, 50, axis=-1)

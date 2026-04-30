@@ -121,8 +121,6 @@ def convolved_map_dataset_counts_statistics(convolved_maps, stat_type):
 class ExcessMapEstimator(Estimator):
     """Computes correlated excess, significance, flux and error maps,  and optionally upper limits or sensitivity from a map dataset.
 
-
-
     The main output of this estimator is a `~gammapy.estimators.FluxMaps` object, from which one
     can access to all computed quantities (see the example below and the `ExcessMapEstimator.run` function).
 
