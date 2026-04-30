@@ -124,10 +124,10 @@ class ObsTableRow(BaseModel):
         dct = {key.upper(): val for key, val in self.model_dump().items()}
         tab = Table([dct])
         clean_missing = []
+        tab.rename_columns(self.REPLACE_KEYS[0], self.REPLACE_KEYS[1])
         for col in tab.columns:
             if all(tab[col] == None):  # noqa
                 clean_missing.append(col)
-        tab.rename_columns(self.REPLACE_KEYS[0], self.REPLACE_KEYS[1])
         tab.remove_columns(clean_missing)
         return tab
 
