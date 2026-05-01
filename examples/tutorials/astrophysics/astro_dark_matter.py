@@ -105,6 +105,8 @@ jfact_map = WcsNDMap(geom=geom, data=jfact.value, unit=jfact.unit)
 plt.figure()
 ax = jfact_map.plot(cmap="viridis", norm=LogNorm(), add_cbar=True)
 plt.title(f"J-Factor [{jfact_map.unit}]")
+ax.set_xlabel("Galactic Longitude")
+ax.set_ylabel("Galactic Latitude")
 
 # 1 deg circle usually used in H.E.S.S. analyses without the +/- 0.3 deg band around the plane
 sky_reg = CircleSkyRegion(center=position, radius=1 * u.deg)
@@ -153,6 +155,8 @@ jfact_map = WcsNDMap(geom=geom, data=jfact_decay.value, unit=jfact_decay.unit)
 plt.figure()
 ax = jfact_map.plot(cmap="viridis", norm=LogNorm(), add_cbar=True)
 plt.title(f"J-Factor [{jfact_map.unit}]")
+ax.set_xlabel("Galactic Longitude")
+ax.set_ylabel("Galactic Latitude")
 
 # 1 deg circle usually used in H.E.S.S. analyses without the +/- 0.3 deg band around the plane
 sky_reg = CircleSkyRegion(center=position, radius=1 * u.deg)
