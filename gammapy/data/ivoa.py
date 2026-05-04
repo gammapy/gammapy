@@ -185,12 +185,12 @@ def make_fetch_list(result):
         fetch_info = {}
         for dl in row.getdatalink():
             if dl["semantics"] == "#this":
-                fetch_info["events"] = dl["access_url"]
+                fetch_info[dl["content_qualifier"]] = dl["access_url"]
             if dl["semantics"] == "#calibration":
                 fetch_info[dl["content_qualifier"]] = dl["access_url"]
 
         if len(set(fetch_info.values())) == 1:
-            dwn_urls = [fetch_info["events"]]
+            dwn_urls = [fetch_info["event-list"]]
             names = ["event-bundle"]
         else:
             dwn_urls = list(fetch_info.values())
