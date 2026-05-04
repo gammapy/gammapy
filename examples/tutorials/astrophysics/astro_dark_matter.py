@@ -55,14 +55,20 @@ from gammapy.maps import WcsGeom, WcsNDMap
 #
 
 profiles.DMProfile.__subclasses__()
+radii = np.logspace(-3, 2, 100) * u.kpc
 
 for profile in profiles.DMProfile.__subclasses__():
     p = profile()
     p.scale_to_local_density()
-    radii = np.logspace(-3, 2, 100) * u.kpc
-    plt.plot(radii, p(radii), label=p.__class__.__name__)
+    plt.plot(
+        radii.to("kpc"),
+        p(radii).to("GeV cm-3"),
+        label=p.__class__.__name__,
+    )
 
 plt.loglog()
+plt.xlabel("Radius [kpc]")
+plt.ylabel(r"Density [GeV cm$^{-3}$]")
 plt.axvline(8.5, linestyle="dashed", color="black", label="local density")
 plt.legend()
 plt.show()

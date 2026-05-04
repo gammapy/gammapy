@@ -1,0 +1,1 @@
+Explicitly convert radii and density to fixed units (``kpc`` and ``GeV cm-3``) in the ``astro_dark_matter`` tutorial plot, and simplify axis labels to avoid exposing internal units of ``DMProfile``.
