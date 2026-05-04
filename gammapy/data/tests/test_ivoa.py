@@ -5,14 +5,46 @@ from gammapy.data.ivoa import (
     to_obscore_table,
     make_obs_table,
     ObsTableRow,
+    make_fetch_list,
 )
 from gammapy.utils.testing import requires_data
 from gammapy.utils.scripts import make_path
 
 from astropy.table import Table
-from astropy.io.votable import from_table
+from astropy.io.votable import parse as parsevo
+from astropy.io.votable import from_table as from_tablevo
 from pyvo.dal.tap import TAPResults
-from pytest import raises
+from pyvo.dal.adhoc import DatalinkResults
+
+import pytest
+import re
+
+
+@pytest.fixture()
+def get_result_rows():
+    class result_row:
+        def __init__(self, datalink):
+            self.datalink = datalink
+            self.id = datalink.getcolumn("ID")[0]
+
+        def __getitem__(self, item):
+            return self.id
+
+        def getdatalink(self):
+            return self.datalink
+
+    root_path = make_path("$GAMMAPY_DATA/")
+
+    def _make_results(pattern):
+        data_link_resources = (root_path / "tests" / "ivoa").rglob(pattern)
+        result = []
+        for fil in data_link_resources:
+            vot = parsevo(fil)
+            dl = DatalinkResults(votable=vot)
+            result.append(result_row(dl))
+        return result
+
+    return _make_results
 
 
 def test_obscore_structure():
@@ -30,10 +62,44 @@ def test_obscore_structure():
 
 
 @requires_data()
+def test_make_fetch_list(get_result_rows):
+    reg = re.compile(r"TapResult-\d+-(.*).fits.gz")
+    result_rows = get_result_rows("datalink*.xml")
+    fl = make_fetch_list(result_rows)
+    assert len(fl) == len(result_rows)
+    for idx in range(len(result_rows)):
+        dl_tab = result_rows[idx].getdatalink().to_table()
+        res_row = dl_tab[dl_tab["semantics"] == "#package"]
+
+        out_tag = reg.match(fl[0][1]).group(1)
+        assert fl[idx][0] == res_row["access_url"]
+        assert fl[idx][2] == res_row["ID"]
+        assert out_tag == res_row["content_qualifier"]
+
+    result_rows = get_result_rows("split_datalink*.xml")
+    fl = make_fetch_list(result_rows)
+    assert len(fl) == 5 * len(result_rows)
+    fl_split = [fl[:5], fl[5:]]
+    for idx in range(len(result_rows)):
+        dl_tab = result_rows[idx].getdatalink().to_table()
+        res_row = dl_tab[dl_tab["semantics"] == "#this"]
+        out_tag = reg.match(fl[0][1]).group(1)
+        assert fl_split[idx][0][0] == res_row["access_url"]
+        assert fl_split[idx][0][2] == res_row["ID"]
+        assert out_tag == res_row["content_qualifier"]
+
+        res_row = dl_tab[dl_tab["semantics"] == "#calibration"][0]
+        out_tag = reg.match(fl[1][1]).group(1)
+        assert fl_split[idx][1][0] == res_row["access_url"]
+        assert fl_split[idx][1][2] == res_row["ID"]
+        assert out_tag == res_row["content_qualifier"]
+
+
+@requires_data()
 def test_make_obs_table():
     root_path = make_path("$GAMMAPY_DATA/")
     tap_res = TAPResults(
-        from_table(Table.read(root_path / "tests" / "obscore_table.fits.gz"))
+        from_tablevo(Table.read(root_path / "tests" / "ivoa" / "obscore_table.fits.gz"))
     )
     obs_table = make_obs_table(tap_res)
 
@@ -41,10 +107,10 @@ def test_make_obs_table():
     assert obs_table["OBS_ID"][0] == 23523
     assert obs_table["DATE-OBS"][3] == "2004-12-08"
 
-    ivoa_tab = from_table(
+    ivoa_tab = from_tablevo(
         Table.read(root_path / "tests" / "minimal_datastore" / "obs-index.fits.gz")
     )
-    with raises(KeyError):
+    with pytest.raises(KeyError):
         obs_table = make_obs_table(TAPResults(ivoa_tab))
 
 
@@ -61,7 +127,7 @@ def test_ObsTableRow():
         "tstop",
     ]
     root_path = make_path("$GAMMAPY_DATA/")
-    obscore_tab = Table.read(root_path / "tests" / "obscore_table.fits.gz")
+    obscore_tab = Table.read(root_path / "tests" / "ivoa" / "obscore_table.fits.gz")
 
     testrow = obscore_tab[0]
 
@@ -91,7 +157,7 @@ def test_ObsTableRow():
     otr = ObsTableRow.from_row(testrow)
     assert otr.obs_id == 23526
 
-    with raises(KeyError):
+    with pytest.raises(KeyError):
         otr = ObsTableRow.from_row(testrow[mandatory_cols[1:]])
 
 
