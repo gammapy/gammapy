@@ -4,8 +4,7 @@ PIG 29 - SkyModel Restructuring
 
 * Author: Atreyee Sinha, Maxime Regard
 * Created: ``2024-12-13``
-* Accepted: ``xx``
-* Status: xx
+* Status: Withdrawn
 * Discussion: `#4381`_
 
 Abstract
