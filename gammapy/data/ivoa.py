@@ -179,9 +179,9 @@ def make_hdu_table(fetched_files):
     return Table(hdu_tab_rows)
 
 
-def make_data_store_from_query_result(results, save_dir):
-    fetched_files = []
-    for row in results:
+def make_fetch_list(result):
+    fetch_files = []
+    for row in result:
         fetch_info = {}
         for dl in row.getdatalink():
             if dl["semantics"] == "#this":
@@ -198,9 +198,23 @@ def make_data_store_from_query_result(results, save_dir):
 
         for url, name in zip(dwn_urls, names):
             suffix = "".join(Path(urlsplit(url).path).suffixes)
-            out_path = save_dir / f"TapResult-{row['obs_id']}-{name}{suffix}"
-            fetched_files.append((out_path, row["obs_id"]))
-            progress_download(url, out_path)
+            save_name = f"TapResult-{row['obs_id']}-{name}{suffix}"
+            fetch_files.append((url, save_name, row["obs_id"]))
+    return fetch_files
+
+
+def fetch_files(fetch_list, save_dir):
+    fetched_list = []
+    for url, save_name, obs_id in fetch_list:
+        out_path = save_dir / save_name
+        progress_download(url, out_path)
+        fetched_list.append(url, save_name, obs_id)
+    return fetched_list
+
+
+def make_data_store_from_query_result(results, save_dir):
+    fetch_list = make_fetch_list(results)
+    fetched_files = fetch_files(fetch_list, save_dir)
 
     hdu_tab = make_hdu_table(fetched_files)
     obs_tab = make_obs_table(results)
