@@ -798,8 +798,9 @@ def make_effective_livetime_map(observations, geom, offset_max=None):
         offset = coords.skycoord.separation(obs.get_pointing_icrs(obs.tmid))
         mask = offset < offset_max
 
+        pointing_pos = obs.get_pointing_icrs(obs.tmid)
         exposure = make_map_exposure_true_energy(
-            pointing=geom.center_skydir,
+            pointing=pointing_pos,
             livetime=obs.observation_live_time_duration,
             aeff=obs.aeff,
             geom=geom_obs,
