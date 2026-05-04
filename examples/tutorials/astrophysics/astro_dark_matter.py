@@ -64,6 +64,8 @@ for profile in profiles.DMProfile.__subclasses__():
 
 plt.loglog()
 plt.axvline(8.5, linestyle="dashed", color="black", label="local density")
+plt.xlabel(f"Radius [{radii.unit}]")
+plt.ylabel(rf"Density [{p(radii).unit}]")
 plt.legend()
 plt.show()
 
@@ -250,16 +252,4 @@ plt.show()
 
 channel = "Z"
 massDM = 10 * u.TeV
-diff_flux = DarkMatterDecaySpectralModel(mass=massDM, channel=channel)
-int_flux = (
-    jfact_decay * diff_flux.integral(energy_min=0.1 * u.TeV, energy_max=10 * u.TeV)
-).to("cm-2 s-1")
-
-flux_map = WcsNDMap(geom=geom, data=int_flux.value, unit="cm-2 s-1")
-plt.figure()
-ax = flux_map.plot(cmap="viridis", norm=LogNorm(), add_cbar=True)
-plt.title(
-    f"Flux [{int_flux.unit}]\n m$_{{DM}}$={fluxes.mDM.to('TeV')}, channel={fluxes.channel}"
-)
-
-plt.show()
+diff_flux = DarkMatterDecayS
