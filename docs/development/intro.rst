@@ -23,17 +23,18 @@ Before attempting to make a contribution, you should *use* Gammapy a bit at leas
 
 * Install Gammapy.
 * Execute one or two of the tutorial notebooks for Gammapy and do the exercises there.
-* Ask questions or complain about issues on the Gammapy `slack channel <https://gammapy.slack.com/>`__,
+* Ask questions or complain about issues on the Gammapy
+  `slack channel <https://gammapy.slack.com/>`__,
   `GitHub discussions <https://github.com/gammapy/gammapy/discussions>`__ or
   `GitHub issues tracker <https://github.com/gammapy/gammapy/issues>`__.
 
 We'd like to note that there are many ways to contribute to the Gammapy project.
 For example if you mention it to a colleague or suggest it to a student, or if
 you use it and `acknowledge Gammapy <https://gammapy.org/acknowledging.html>`__
-in a presentation, poster or publication, or if you report an issue on the mailing list,
-those are contributions we value. The rest of this page though is concerned only with
-the process and technical steps how to contribute a code or documentation change via a
-**pull request** against the Gammapy repository.
+in a presentation, poster or publication, or if you report an issue on the mailing
+list, those are contributions we value. The rest of this page though is concerned
+only with the process and technical steps how to contribute a code or documentation
+change via a **pull request** against the Gammapy repository.
 
 So let's assume you've used Gammapy for a while, and now you'd like to fix or
 add something to the Gammapy code, tests or docs. Here are the steps and commands
@@ -44,8 +45,8 @@ to do it ...
 Acceptation of the Developer Certificate of Origin (DCO)
 ========================================================
 As described in the :ref:`PIG 24 <pig-024>` and
-the `README.rst <https://github.com/gammapy/gammapy/blob/master/README.rst>`_ file, each
-contributor shall accept the DCO based stored in the file
+the `README.rst <https://github.com/gammapy/gammapy/blob/master/README.rst>`_ file,
+each contributor shall accept the DCO based stored in the file
 `CONTRIBUTING.md <https://github.com/gammapy/gammapy/blob/main/CONTRIBUTING.md#gammapy-developer-certification-of-origin>`_:
 this is a binding statement that asserts that you are the creator of your contribution,
 and that you wish to allow Gammapy to use your work to cite you as contributor.
