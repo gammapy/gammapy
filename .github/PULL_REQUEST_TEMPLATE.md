@@ -20,3 +20,9 @@ This pull request ...
 <!-- Do you have any specific questions, e.g. about API or implementation? -->
 <!-- Do you include a test executing the new code you're adding (to make sure it runs)? -->
 <!-- Do you include some documentation? Is it needed? -->
+
+**AI usage disclosure**
+<!-- Please specify if and how AI tool were utilised: -->
+<!-- * Which AI tool or agent was used? -->
+<!-- * What is the type of assistance (i.e. code suggestion, explanation..)? -->
+<!-- * What was the level of human supervision? -->
