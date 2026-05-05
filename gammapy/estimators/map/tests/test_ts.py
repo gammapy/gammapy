@@ -672,7 +672,7 @@ def test_with_TemplateSpatialModel():
     # Test for bug reported in 4920
     dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
     dataset = dataset.downsample(10)
-    filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits"
+    filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits.gz"
     model = TemplateSpatialModel.read(filename, normalize=False)
     model.position = SkyCoord(0, 0, unit="deg", frame="galactic")
     sky_model = SkyModel(spatial_model=model, spectral_model=PowerLawSpectralModel())

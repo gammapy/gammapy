@@ -17,6 +17,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Programming Language :: Python :: Implementation :: CPython",
     "Topic :: Scientific/Engineering :: Astronomy",
 ]
@@ -56,7 +57,8 @@ all = [
     "sherpa; platform_system != 'Windows'",
     "healpy; platform_system != 'Windows'",
     "ipywidgets",
-    "ray[default]>=2.9",
+    "ray[default]>=2.9,<2.55; python_version < '3.14'",
+    "ray[default]>=2.55; python_version >= '3.14'",
     "ultranest",
     "numba",
     "arviz<1",
@@ -143,17 +145,52 @@ except Exception:
 """
 
 [tool.ruff]
-exclude = ["docs", "dev"]
 # Like black
 line-length = 88
 indent-width = 4
 
 [tool.ruff.lint]
-ignore = ["E741"]
-extend-ignore = ["E203","E712"]
+select = [
+  "E",   # pycodestyle errors
+  "F",   # pyflakes
+  "B",   # flake8-bugbear
+  "I",   # isort
+  "PLE", # pylint errors
+  "D",   # pydocstyle
+  # "UP",   # pyUpgrade
+  "FLY", # flynt
+  "DTZ", # flake8-datetimez
+  "S",   # flake8-bandit
+  "N",   # pep8-naming
+]
+ignore = [
+    # rules we want to always ignore
+    # for rules details see: https://docs.astral.sh/ruff/rules/
+    "B904", "B905", "B026",
+    "D100", "D102", "D104", "D105",
+    "D205", "D400", "D401", "D403",
+    "N802", "N803", "N806", "N813",
+    "S101", # use of assert
+    # TODO: the following rules should not be ignored
+    "B006","B007", "B008", "B009", "B017", "B018", "B024", "B028",
+    "D101", "D103", "D200", "D202", "D208", "D209", "D214", "D215", "D301", "D404", "D409", "D410", "D411", "D419",
+    "DTZ011",
+    "E741",
+    "F401",
+    "N801", "N805", "N815", "N816", "N818",
+    "S113", "S202", "S301", "S307", "S324",  "S603",
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
+[tool.ruff.lint.pycodestyle]
+max-doc-length = 100
 
 [tool.ruff.lint.per-file-ignores]
 "examples/*" = ["E402"]
+"test_*.py" = ["D", "E501"]
+"docs/conf.py" = ["I"]
 
 [tool.ruff.format]
 # Like Black, use double quotes for strings.

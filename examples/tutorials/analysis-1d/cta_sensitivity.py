@@ -119,8 +119,9 @@ dataset.exposure *= containment
 ######################################################################
 # Next, correct the background estimation.
 #
-# Warning: this neglects the energy dispersion by computing the containment
-# radius from the PSF in true energy but using the reco energy axis.
+# .. WARNING::
+#    This neglects the energy dispersion by computing the containment
+#    radius from the PSF in true energy but using the reco energy axis.
 #
 
 on_radii = obs.psf.containment_radius(
@@ -180,9 +181,9 @@ display(sensitivity_table)
 
 fig, ax = plt.subplots()
 
-ax.set_prop_cycle(cycler("marker", "s*v") + cycler("color", "rgb"))
+ax.set_prop_cycle(cycler("marker", "s*v") + cycler("color", "rkb"))
 
-for criterion in ("significance", "gamma", "bkg"):
+for criterion in ("bkg", "significance", "gamma"):
     mask = sensitivity_table["criterion"] == criterion
     t = sensitivity_table[mask]
 
