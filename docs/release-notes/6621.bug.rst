@@ -1,1 +1,1 @@
-Skips stacking if no valid mask_safe, fix gti preventing stacking of invalid dataset
+`~gammapy.datasets.MapDataset.stack(other)` now skips stacking if other mask_safe is invalid. This prevents stacking gti of invalid dataset.
