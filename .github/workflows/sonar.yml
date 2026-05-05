@@ -20,7 +20,7 @@ jobs:
     if: github.event.workflow_run.conclusion == 'success'
     steps:
       - name: 'Download code coverage'
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             let allArtifacts = await github.rest.actions.listWorkflowRunArtifacts({
@@ -86,7 +86,7 @@ jobs:
 
       - name: Sonarqube Scan Branch or Tag
         if: github.event.workflow_run.event != 'pull_request'
-        uses: SonarSource/sonarqube-scan-action@v7
+        uses: SonarSource/sonarqube-scan-action@v8
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -98,7 +98,7 @@ jobs:
 
       - name: Sonarqube Scan PR
         if: github.event.workflow_run.event == 'pull_request'
-        uses: SonarSource/sonarqube-scan-action@v7
+        uses: SonarSource/sonarqube-scan-action@v8
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

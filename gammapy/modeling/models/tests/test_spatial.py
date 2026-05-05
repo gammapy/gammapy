@@ -353,7 +353,7 @@ def test_sky_diffuse_constant():
 @requires_data()
 @requires_dependency("ipywidgets")
 def test_sky_diffuse_map(caplog):
-    filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits"  # noqa: E501
+    filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits.gz"  # noqa: E501
     model = TemplateSpatialModel.read(filename, normalize=False)
     lon = [258.5, 0] * u.deg
     lat = -39.8 * u.deg
@@ -811,7 +811,7 @@ def test_piecewise_spatial_model_3d():
 
 @requires_data()
 def test_template_ND(tmpdir, caplog):
-    filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits"  # noqa: E501
+    filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits.gz"  # noqa: E501
     map_ = Map.read(filename)
     map_.data[map_.data < 0] = 0
     geom2d = map_.geom
@@ -858,7 +858,7 @@ def test_template_ND(tmpdir, caplog):
 
 @requires_data()
 def test_templatespatial_write(tmpdir, caplog):
-    filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits"
+    filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits.gz"
     map_ = Map.read(filename)
     with caplog.at_level(logging.WARNING):
         template = TemplateSpatialModel(map_)
@@ -874,7 +874,7 @@ def test_templatespatial_write(tmpdir, caplog):
 
 @requires_data()
 def test_template_spatial_parameters_copy():
-    filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits"
+    filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits.gz"
     model = TemplateSpatialModel.read(filename, normalize=False)
     model.position = SkyCoord(0, 0, unit="deg", frame="galactic")
     model_copy = model.copy()
