@@ -1,18 +1,19 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-import numpy as np
 import astropy.units as u
 from astropy.coordinates import Angle
 from astropy.coordinates.erfa_astrom import erfa_astrom, ErfaAstromInterpolator
+import numpy as np
 from astropy.table import Table
 from astropy.time import Time
+
 from gammapy.data import FixedPointingInfo, PointingMode
 from gammapy.irf import EDispMap, FoVAlignment, PSFMap
-from gammapy.maps import Map, RegionNDMap, MapAxis
+from gammapy.maps import Map, MapAxis, RegionNDMap
 from gammapy.maps.utils import broadcast_axis_values_to_geom
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.stats import WStatCountsStatistic
-from gammapy.utils.coordinates import FoVICRSFrame, FoVAltAzFrame
+from gammapy.utils.coordinates import FoVAltAzFrame, FoVICRSFrame
 from gammapy.utils.regions import compound_region_to_regions
 
 __all__ = [
@@ -56,6 +57,7 @@ def _compute_rotation_time_steps(
         Pointing direction.
     location : `astropy.coordinates.EarthLocation`
         Observatory location
+
     Returns
     -------
     times : `~astropy.time.Time`
@@ -207,6 +209,7 @@ def make_map_background_irf(
         Default is True.
     location : `astropy.coordinates.EarthLocation`, optional
         Observatory location
+
     Returns
     -------
     background : `~gammapy.maps.WcsNDMap`
@@ -612,7 +615,7 @@ def make_effective_livetime_map(observations, geom, offset_max=None):
         mask = offset < offset_max
 
         exposure = make_map_exposure_true_energy(
-            pointing=geom.center_skydir,
+            pointing=obs.get_pointing_icrs(obs.tmid),
             livetime=obs.observation_live_time_duration,
             aeff=obs.aeff,
             geom=geom_obs,
