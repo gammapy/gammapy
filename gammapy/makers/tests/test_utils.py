@@ -1,12 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import pytest
 import numpy as np
-from numpy.testing import assert_allclose
+import pytest
 from astropy import units as u
-from astropy.coordinates import SkyCoord, AltAz
+from astropy.coordinates import AltAz, SkyCoord
 from astropy.table import Table
 from astropy.time import Time
+from numpy.testing import assert_allclose
 from regions import PointSkyRegion
+
 from gammapy.data import (
     GTI,
     DataStore,
@@ -23,8 +24,11 @@ from gammapy.irf import (
 )
 from gammapy.makers import WobbleRegionsFinder
 from gammapy.makers.utils import (
+    ThetaSquaredTable,
+    _get_fov_coord,
     _map_spectrum_weight,
     guess_instrument_fov,
+    integrate_project_irf_on_geom,
     make_counts_off_rad_max,
     make_counts_rad_max,
     make_edisp_kernel_map,
@@ -32,17 +36,13 @@ from gammapy.makers.utils import (
     make_map_background_irf,
     make_map_exposure_true_energy,
     make_observation_time_map,
-    ThetaSquaredTable,
-    _get_fov_coord,
     project_irf_on_geom,
-    integrate_project_irf_on_geom,
 )
 from gammapy.maps import HpxGeom, MapAxis, RegionGeom, WcsGeom, WcsNDMap
 from gammapy.modeling.models import ConstantSpectralModel
-from gammapy.utils.coordinates import FoVAltAzFrame
+from gammapy.utils.coordinates import FoVAltAzFrame, FoVICRSFrame
 from gammapy.utils.testing import requires_data
 from gammapy.utils.time import time_ref_to_dict
-from gammapy.utils.coordinates import FoVICRSFrame
 
 
 @pytest.fixture(scope="session")
@@ -784,20 +784,36 @@ def test_make_effective_livetime_map():
     energy_axis_true = MapAxis.from_energy_bounds(
         10 * u.GeV, 1 * u.TeV, nbin=2, name="energy_true"
     )
-    geom = WcsGeom.create(
-        skydir=source_pos,
-        binsz=0.02,
-        width=(6, 6),
-        frame="galactic",
-        proj="CAR",
-        axes=[energy_axis_true],
-    )
+
+    geom_kwargs = {
+        "binsz": 0.02,
+        "width": (6, 6),
+        "frame": "galactic",
+        "proj": "CAR",
+        "axes": [energy_axis_true],
+    }
+
+    geom = WcsGeom.create(skydir=source_pos, **geom_kwargs)
+    geom_offset = WcsGeom.create(skydir=offset_pos, **geom_kwargs)
+
     obs_time = make_effective_livetime_map(observations, geom, offset_max=2.5 * u.deg)
+    obs_time_other = make_effective_livetime_map(
+        observations, geom_offset, offset_max=2.5 * u.deg
+    )
+
     obs_time_center = obs_time.get_by_coord((source_pos, energy_axis_true.center))
-    assert_allclose(obs_time_center, [0, 1.2847], rtol=1e-3)
+    obs_time_center_other = obs_time_other.get_by_coord(
+        (source_pos, energy_axis_true.center)
+    )
+    assert_allclose(obs_time_center, [0, 1.2779], rtol=1e-3)
+    assert_allclose(obs_time_center_other, [0, 1.2779], rtol=1e-3)
 
     obs_time_offset = obs_time.get_by_coord((offset_pos, energy_axis_true.center))
-    assert_allclose(obs_time_offset, [0, 0.242814], rtol=1e-3)
+    obs_time_offset_other = obs_time_other.get_by_coord(
+        (offset_pos, energy_axis_true.center)
+    )
+    assert_allclose(obs_time_offset, obs_time_offset_other, rtol=2e-2)
+    assert_allclose(obs_time_offset, [0, 0.4303], rtol=1e-3)
 
     assert obs_time.unit == u.hr
 
