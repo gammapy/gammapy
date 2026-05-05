@@ -883,7 +883,7 @@ def test_template_spatial_parameters_copy():
 
 @requires_data()
 def test_template_spatial_plot():
-    filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits"
+    filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits.gz"
     model = TemplateSpatialModel.read(filename, normalize=False)
     assert isinstance(model.plot(), mpl.axes.Axes)
 
