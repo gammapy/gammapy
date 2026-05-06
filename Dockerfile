@@ -18,8 +18,11 @@ RUN python -m pip install --no-cache-dir build \
 FROM python:3.12-slim
 COPY --from=builder /repo/dist /tmp/dist
 
+# Install with all extra dependencies and cleanup leftovers
 RUN python -m pip install --no-cache-dir /tmp/dist/*[all] \
-    && rm -r /tmp/dist
+    && rm -rf /tmp/dist \
+    && find /usr/local -type d -name "__pycache__" -exec rm -r {} + \
+    && find /usr/local -type f -name "*.pyc" -delete
 
 RUN useradd --create-home --system --user-group gammapy
 USER gammapy
