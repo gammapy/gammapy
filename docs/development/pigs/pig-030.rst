@@ -1,6 +1,6 @@
 .. include:: ../../references.txt
 
-.. _pig-027:
+.. _pig-030:
 
 **************************************
 PIG 30 - Systematics Modifier API
@@ -8,8 +8,8 @@ PIG 30 - Systematics Modifier API
 
 * Author: Stefan Fröse, Axel Donath, Tim Unbehaun
 * Created: ``2025-06-14``
-* Status: Draft
-* Discussion: `#XXXX`_
+* Status: Withdrawn ``2026-04-28``
+* Discussion: `#5947`_
 
 Abstract
 ========
@@ -442,6 +442,8 @@ TODO/Thoughts
 Decision
 ========
 
-To be reviewed and approved by the Gammapy Coordination Committee (CC)
+The PIG proposes to cover an important science use case for Gammapy. The approach is interesting but the connection
+with existing systematic modifiers used in ``FoVBackgroundModel`` could be explored more. Discussion stalled and
+it was decided to withdraw the PIG for now.
 
-.. _#XXXX: https://github.com/gammapy/gammapy/issues/XXXX
+.. _#5947: https://github.com/gammapy/gammapy/pull/5947
