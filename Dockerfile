@@ -1,3 +1,5 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
+
 # Two-stage build, first build the python wheel
 FROM python:3.12 AS builder
 
@@ -16,7 +18,7 @@ RUN python -m pip install --no-cache-dir build \
 FROM python:3.12-slim
 COPY --from=builder /repo/dist /tmp/dist
 
-RUN python -m pip install --no-cache-dir /tmp/dist/* \
+RUN python -m pip install --no-cache-dir /tmp/dist/*[all] \
     && rm -r /tmp/dist
 
 RUN useradd --create-home --system --user-group gammapy
