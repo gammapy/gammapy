@@ -160,6 +160,7 @@ def integrate_spectrum(
         values *= energy
 
     # we can call trapz_loglog assuming the last axis is the one to perform integration on.
+    values = values.reshape(energy.shape)
     integral = trapz_loglog(values, energy, axis=-1)
     # integral.shape = (num, n_energy, n_samples) so we sum on axis 0
     return integral.sum(axis=0)
