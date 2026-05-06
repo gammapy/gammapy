@@ -1,5 +1,4 @@
 User-agent: *
-Allow: /*/dev/
 Allow: /*/stable/
 Disallow: /
 
