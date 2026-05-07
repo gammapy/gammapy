@@ -56,9 +56,9 @@ class DMProfile(abc.ABC):
         r"""Integrate dark matter profile numerically.
 
         .. math::
-            F(r_{min}, r_{max}) = \int_{r_{min}}^{r_{max}}\rho(r)^\gamma dr \\
-            \gamma = 2 \text{for annihilation} \\
-            \gamma = 1 \text{for decay}
+            F(r_{\min}, r_{\max}) = \int_{r_{\min}}^{r_{\max}}\rho(r)^\gamma dr \\
+            \gamma = 2 \text{ for annihilation} \\
+            \gamma = 1 \text{ for decay}
 
         Parameters
         ----------
@@ -127,7 +127,7 @@ class ZhaoProfile(DMProfile):
         Scale radius, :math:`r_s`.
     alpha : `~astropy.units.Quantity`
         :math:`\alpha`.
-    beta: `~astropy.units.Quantity`
+    beta : `~astropy.units.Quantity`
         :math:`\beta`.
     gamma : `~astropy.units.Quantity`
         :math:`\gamma`.
@@ -138,6 +138,7 @@ class ZhaoProfile(DMProfile):
     ----------
     .. [1] `Zhao (1996), "Analytical models for galactic nuclei"
       <https://ui.adsabs.harvard.edu/abs/1996MNRAS.278..488Z>`_
+
     * `Marco et al. (2011), "PPPC 4 DM ID: a poor particle physicist cookbook for dark matter indirect detection"
       <https://ui.adsabs.harvard.edu/abs/2011JCAP...03..051C>`_
     """

@@ -18,7 +18,7 @@ notebook shows how to use these models to correct for this interaction.
 #
 # As usual, we’ll start with the standard imports …
 #
-
+import numpy as np
 import astropy.units as u
 import matplotlib.pyplot as plt
 from gammapy.catalog import SourceCatalog4FGL
@@ -31,7 +31,9 @@ from gammapy.modeling.models import (
     GaussianPrior,
     PowerLawSpectralModel,
     SkyModel,
+    TemplateNDSpectralModel,
 )
+from gammapy.maps import MapAxis, RegionNDMap, RegionGeom
 
 ######################################################################
 # Load the data
@@ -56,6 +58,9 @@ print(dataset)
 
 
 ######################################################################
+#
+# .. _model-absorption:
+#
 # Model the observed spectrum
 # ---------------------------
 #
@@ -82,7 +87,6 @@ print(EBL_DATA_BUILTIN.keys())
 
 ######################################################################
 # Define the power law
-#
 index = 2.3
 amplitude = 1.81 * 1e-12 * u.Unit("cm-2 s-1 TeV-1")
 reference = 1 * u.TeV
@@ -184,11 +188,113 @@ plt.show()
 
 
 ######################################################################
+# Use a custom EBL model
+# ----------------------
+#
+# To use a custom EBL model, you have different options:
+#
+# * Use the XSPEC table model format and read in the EBL model
+# * Use the `~gammapy.modeling.models.TemplateNDSpectralModel` to define your EBL model
+#
+# If you save the optical depth as a function of energy and redshift
+# in the format proposed by the XSPEC table models (see `here <https://heasarc.gsfc.nasa.gov/docs/heasarc/ofwg/docs/summary/ogip_92_009_summary.html>`_,
+# or check the model fits files in `$GAMMAPY_DATA/ebl/ <https://github.com/gammapy/gammapy-data/tree/main/ebl>`_ for examples),
+# you can read in your custom EBL model using the `~gammapy.modeling.models.EBLAbsorptionNormSpectralModel.read()` method.
+
+filename = "$GAMMAPY_DATA/ebl/ebl_dominguez11.fits.gz"
+absorption_custom = EBLAbsorptionNormSpectralModel.read(filename, redshift=redshift)
+print(absorption_custom)
+
+######################################################################
+# In the second case, you can create `~gammapy.modeling.models.TemplateNDSpectralModel` from your data.
+#
+# To create your own models, you must have the optical depth tabulated as a function of gamma-ray energy and redshift.
+# In this example, we create a toy model with 5 bins in energy (``energies_toymodel``) and 3 bins in redshift (``redshifts_toymodel=[0.1,0.3,0.5]``).
+
+ebl_abs_dict_toymodel = {
+    0.1: [
+        0.98033076,
+        0.63278539,
+        0.22098954,
+        0.024528508,
+        1.175492e-38,
+    ],
+    0.3: [
+        0.91439042,
+        0.17481028,
+        0.0064894828,
+        1.0083145e-7,
+        1.1754907e-38,
+    ],
+    0.5: [
+        0.81180396,
+        0.032063942,
+        0.00010244388,
+        5.5373134e-19,
+        1.1754907e-38,
+    ],
+}
+redshifts_toymodel = [key for key in ebl_abs_dict_toymodel]
+energies_toymodel = np.logspace(-1, 2, 5) * u.TeV
+
+
+######################################################################
+# Use energy and redshift as axes to define a `~gammapy.maps.RegionGeom`:
+
+axes_energy_toymodel = MapAxis.from_nodes(
+    energies_toymodel, name="energy_true", interp="log"
+)
+axes_redshift_toymodel = MapAxis.from_nodes(
+    redshifts_toymodel, name="redshift", interp="linear"
+)
+geom_toymodel = RegionGeom(
+    region=None, axes=[axes_energy_toymodel, axes_redshift_toymodel]
+)
+
+
+######################################################################
+# Reshape your data and use it together with the above define geometry to create a
+# `~gammapy.modeling.models.TemplateNDSpectralModel` from a `~gammapy.maps.RegionNDMap`:
+data_reshaped_toymodel = np.array(
+    [ebl_abs_dict_toymodel[key] for key in ebl_abs_dict_toymodel]
+)
+print(np.shape(data_reshaped_toymodel))
+
+######################################################################
+ndmap_toymodel = RegionNDMap(geom=geom_toymodel, data=data_reshaped_toymodel, unit="")
+absorption_toymodel = TemplateNDSpectralModel(
+    map=ndmap_toymodel,
+    filename="ebl_toymodel.fits.gz",
+    interp_kwargs={"extrapolate": False},
+)
+
+
+######################################################################
+# Redshift is used as a free parameter in our model here. If you want to use the model
+# to account/correct for EBL absorption, make sure to set it correctly and freeze it
+# before applying the model to your data.
+absorption_toymodel.parameters["redshift"].value = redshift
+absorption_toymodel.parameters["redshift"].frozen = True
+print(absorption_toymodel)
+
+
+######################################################################
+# This ``absorption_toymodel`` can now be used in the same way as the ``absorption`` model defined :ref:`here <model-absorption>`
+#
+#
+# To write and read your toymodel, you can use the `~gammapy.modeling.models.TemplateNDSpectralModel.write()`
+# and read it again with `~gammapy.maps.RegionNDMap.read()` as a  `~gammapy.maps.RegionNDMap`, which can
+# then again be assigned to a `~gammapy.modeling.models.TemplateNDSpectralModel` as shown above.
+absorption_toymodel.write(overwrite=True)
+ndmap_toymodel_read = RegionNDMap.read("ebl_toymodel.fits.gz")
+
+
+######################################################################
 # Further extensions
 # ------------------
 #
 # In this notebook, we have kept the parameters of the EBL model, the
-# `alpha_norm` and the `redshift` frozen. Under reasonable assumptions
+# ``alpha_norm`` and the ``redshift`` frozen. Under reasonable assumptions
 # on the intrinsic spectrum, it can be possible to constrain these
 # parameters.
 #
@@ -211,7 +317,7 @@ print(intrinsic_model)
 
 
 ######################################################################
-# We add Gaussian priors on the `alpha` and `beta` parameters based on the 4FGL
+# We add Gaussian priors on the ``alpha`` and ``beta`` parameters based on the 4FGL
 # measurements and the associated errors. For more details on using priors, see
 # :doc:`/tutorials/details/priors`
 #

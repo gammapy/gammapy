@@ -12,7 +12,14 @@ import matplotlib.pyplot as plt
 from gammapy.maps import Map, RegionGeom
 from gammapy.modeling import Covariance, Parameter, Parameters
 from gammapy.modeling.covariance import CovarianceMixin
-from gammapy.utils.scripts import from_yaml, make_path, to_yaml, write_yaml
+from gammapy.stats.fit_statistics import FitStatisticPenalty
+from gammapy.utils.scripts import (
+    from_yaml,
+    make_path,
+    to_yaml,
+    write_yaml,
+    method_wrapper,
+)
 
 __all__ = ["Model", "Models", "DatasetModels", "ModelBase"]
 
@@ -33,9 +40,11 @@ def _recursive_dict_filename_update(dict_, path):
 
 def _recursive_model_filename_update(model, path):
     """Update model filename to relative path if child of path."""
-    if hasattr(model, "filename") and path == make_path(model.filename).parent:
-        _, filename = split(model.filename)
-        model.filename = filename
+    if hasattr(model, "filename"):
+        filename_path = make_path(model.filename)
+        if filename_path is not None and path == filename_path.parent:
+            _, filename = split(model.filename)
+            model.filename = filename
 
     if hasattr(model, "_models"):
         for m in model._models:
@@ -169,6 +178,8 @@ def _write_models(
 ):
     """Write models to YAML file with additional information using an `extra_dict`."""
 
+    if path is None:
+        raise ValueError("The path is not defined.")
     base_path, _ = split(path)
     path = make_path(path)
     base_path = make_path(base_path)
@@ -192,6 +203,17 @@ def _write_models(
     yaml_str += models.to_yaml(full_output, overwrite_templates)
 
     write_yaml(yaml_str, path, overwrite=overwrite, checksum=checksum)
+
+
+def _set_models_penalties(models, penalties):
+    """Set penalties on models"""
+    if penalties is not None:
+        if not isinstance(penalties, (list, tuple)):
+            penalties = [penalties]
+        if not all([isinstance(_, FitStatisticPenalty) for _ in penalties]):
+            raise ValueError("Penalties must be FitStatisticPenalty instances.")
+
+    models._penalties = penalties
 
 
 class ModelBase:
@@ -286,6 +308,10 @@ class ModelBase:
             pars = Parameters([par])
             variance = self._covariance.get_subcovariance(pars).data
             par.error = np.sqrt(variance[0][0])
+
+    sample_parameters_from_covariance = method_wrapper(
+        CovarianceMixin.sample_parameters_from_covariance
+    )
 
     @property
     def parameters(self):
@@ -457,17 +483,21 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
     ----------
     models : `SkyModel`, list of `SkyModel` or `Models`
         Sky models.
-    covariance_data : `~numpy.ndarray`
-        Covariance data.
+    covariance_data : `~numpy.ndarray`, optional
+        Covariance data. Default is None.
+    penalties : list of `~gammapy.stats.FitStatisticPenalty`, optional
+        Penalties to be applied to the Models parameters when computing a FitStatistic. Default is None.
     """
 
-    def __init__(self, models=None, covariance_data=None):
+    def __init__(self, models=None, covariance_data=None, penalties=None):
         if models is None:
             models = []
 
         if isinstance(models, (Models, DatasetModels)):
             if covariance_data is None and models.covariance is not None:
                 covariance_data = models.covariance.data
+            if penalties is None and models._penalties is not None:
+                penalties = models._penalties
             models = models._models
         elif isinstance(models, ModelBase):
             models = [models]
@@ -492,6 +522,8 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
         if covariance_data is not None:
             self.covariance = covariance_data
 
+        _set_models_penalties(self, penalties)
+
     @property
     def parameters(self):
         """Parameters as a `~gammapy.modeling.Parameters` object."""
@@ -515,7 +547,7 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
 
     @property
     def background_models(self):
-        """Dictionnary mapping of dataset names with their associated `~gammapy.modeling.models.FoVBackgroundModel` names."""
+        """Dictionary mapping of dataset names with their associated `~gammapy.modeling.models.FoVBackgroundModel` names."""
         return self._background_models
 
     @classmethod
@@ -743,7 +775,7 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
             return f"<pre>{html.escape(str(self))}</pre>"
 
     def __add__(self, other):
-        if isinstance(other, (Models, list)):
+        if isinstance(other, (DatasetModels, list)):
             return Models([*self, *other])
         elif isinstance(other, ModelBase):
             _check_name_unique(other, self.names)
@@ -1222,13 +1254,13 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
         kwargs_point : dict, optional
             Keyword arguments passed to `~matplotlib.lines.Line2D` for plotting
             of point sources. Default is None.
-        path_effect : `~matplotlib.patheffects.PathEffect`, optional
+        path_effect : `~matplotlib.patheffects`, optional
             Path effect applied to artists and lines. Default is None.
         size_factor : float, optional
             Factor applied to the size of the model
             If not specified, the defaults for the models will be used.
         **kwargs : dict
-            Keyword arguments passed to `~matplotlib.artists.Artist`.
+            Keyword arguments passed to `~regions.PixelRegion.as_artist`.
 
         Returns
         -------
@@ -1260,21 +1292,19 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
 
         Parameters
         ----------
-        ax : `~astropy.visualization.WCSAxes`, optional
+        ax : `~astropy.visualization.wcsaxes.WCSAxes`, optional
             Axes to plot on. If no axes are given, an all-sky WCS
             is chosen using a CAR projection. Default is None.
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.pyplot.scatter`.
 
-
         Returns
         -------
-        ax : `~astropy.visualization.WcsAxes`
+        ax : `~astropy.visualization.wcsaxes.WCSAxes`
             WCS axes.
 
         Examples
         --------
-
         >>> from gammapy.datasets import MapDataset
         >>> from gammapy.catalog import SourceCatalog3FHL
         >>> fermi_dataset = MapDataset.read(
@@ -1340,6 +1370,11 @@ class Models(DatasetModels, collections.abc.MutableSequence):
         for parameter, prior in zip(parameters, priors):
             parameter.prior = prior
 
+    def set_penalties(self, penalties):
+        """Set the list of FitStatisticPenalty to be applied on the Models."""
+        # TODO: check that penalties parameters apply to models parameters...
+        _set_models_penalties(self, penalties)
+
 
 class restore_models_status:
     def __init__(self, models, restore_values=True):
@@ -1352,7 +1387,7 @@ class restore_models_status:
     def __enter__(self):
         pass
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, exception_type, exception_value, exception_traceback):
         for value, par, frozen in zip(self.values, self.models.parameters, self.frozen):
             if self.restore_values:
                 par.value = value

@@ -124,7 +124,6 @@ values = [
 
 @pytest.mark.parametrize(("n_on", "n_off", "alpha", "mu_sig", "result"), values)
 def test_wstat_with_musig(n_on, n_off, alpha, mu_sig, result):
-
     stat = WStatCountsStatistic(n_on, n_off, alpha, mu_sig)
     excess = stat.n_sig
     sqrt_ts = stat.sqrt_ts
@@ -204,7 +203,7 @@ def test_cash_sum():
     stat_sum = stat.sum()
 
     assert stat_sum.n_on == 6
-    assert stat_sum.n_bkg == 2.5
+    assert_allclose(stat_sum.n_bkg, 2.5)
 
     new_size = (2, 10, 3)
     on = np.resize(on, new_size)
@@ -234,7 +233,7 @@ def test_wstat_sum():
 
     assert stat_sum.n_on == 6
     assert stat_sum.n_off == 27
-    assert stat_sum.n_bkg == 2.5
+    assert_allclose(stat_sum.n_bkg, 2.5)
     assert_allclose(stat_sum.alpha, 0.0925925925925925)
 
     new_size = (2, 10, 3)

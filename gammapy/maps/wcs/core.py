@@ -111,7 +111,7 @@ class WcsMap(Map):
             raise ValueError(f"Invalid map type: {map_type!r}")
 
     @classmethod
-    def from_hdulist(cls, hdu_list, hdu=None, hdu_bands=None, format="gadf"):
+    def from_hdulist(cls, hdu_list, hdu=None, hdu_bands=None, format=None):
         """Make a WcsMap object from a FITS HDUList.
 
         Parameters
@@ -125,7 +125,9 @@ class WcsMap(Map):
             Name or index of the HDU with the BANDS table.
             Default is None.
         format : {'gadf', 'fgst-ccube', 'fgst-template'}, optional
-            FITS format convention. Default is "gadf".
+            FITS format convention.
+            If None, the format is identified from the header and will default to 'gadf' if no header is found.
+            Default is None.
 
         Returns
         -------
@@ -143,7 +145,8 @@ class WcsMap(Map):
         if hdu_bands is not None:
             hdu_bands = hdu_list[hdu_bands]
 
-        format = identify_wcs_format(hdu_bands)
+        if format is None:
+            format = identify_wcs_format(hdu_bands)
 
         wcs_map = cls.from_hdu(hdu, hdu_bands, format=format)
 
@@ -270,7 +273,7 @@ class WcsMap(Map):
 
         if len(shape) == 2:
             data_flat = np.ravel(data)
-            non_zero = np.where(~(data_flat == 0))
+            non_zero = np.nonzero(data_flat)
             value = data_flat[non_zero].astype(float)
             cols = [
                 fits.Column("PIX", "J", array=non_zero[0]),
@@ -279,7 +282,7 @@ class WcsMap(Map):
         elif npix[0].size == 1:
             shape_flat = shape[:-2] + (shape[-1] * shape[-2],)
             data_flat = np.ravel(data).reshape(shape_flat)
-            nonzero = np.where(~(data_flat == 0))
+            nonzero = np.nonzero(data_flat)
             channel = np.ravel_multi_index(nonzero[:-1], shape[:-2])
             value = data_flat[nonzero].astype(float)
             cols = [
@@ -293,7 +296,7 @@ class WcsMap(Map):
             pix = []
             for i, _ in np.ndenumerate(npix[0]):
                 data_i = np.ravel(data[i[::-1]])
-                pix_i = np.where(~(data_i == 0))
+                pix_i = np.nonzero(data_i)
                 data_i = data_i[pix_i]
                 data_flat += [data_i]
                 pix += pix_i

@@ -126,8 +126,12 @@ def test_select_time(time_interval, expected_length, expected_times):
 
     if expected_length != 0:
         expected_times.format = "mjd"
-        assert_time_allclose(gti_selected.time_start[0], expected_times[0])
-        assert_time_allclose(gti_selected.time_stop[-1], expected_times[1])
+        assert_time_allclose(gti_selected.time_start[0], expected_times[0], atol=1e-6)
+        assert_time_allclose(gti_selected.time_stop[-1], expected_times[1], atol=1e-6)
+
+    gti_selected_inverted = gti.select_time(time_interval, inverted=True)
+
+    assert len(gti_selected_inverted.table) == 39042 - expected_length
 
 
 def test_gti_delete_intervals():

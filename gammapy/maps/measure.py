@@ -47,8 +47,8 @@ def containment_region(map_, fraction=0.393, apply_union=True):
 
         try:
             paths_all = cs.get_paths()[0]
-            starts = np.where(paths_all.codes == 1)[0]
-            stops = np.where(paths_all.codes == 79)[0] + 1
+            starts = np.nonzero(paths_all.codes == 1)[0]
+            stops = np.nonzero(paths_all.codes == 79)[0] + 1
             paths = []
             for start, stop in zip(starts, stops):
                 paths.append(

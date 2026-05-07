@@ -266,7 +266,7 @@ def create_empty_map_dataset_from_irfs(
         if hasattr(observation, "pointing"):
             if observation.pointing.mode is not PointingMode.POINTING:
                 raise NotImplementedError(
-                    "Only datas with fixed pointing in ICRS are supported"
+                    "Only data with fixed pointing in ICRS are supported"
                 )
             position = observation.pointing.fixed_icrs
 
@@ -506,7 +506,7 @@ class MapDataset(Dataset):
         "mask_safe",
         "background",
     ]
-    # TODO: shoule be part of the LazyFitsData no ?
+    # TODO: should be part of the LazyFitsData no ?
     gti = None
     meta_table = None
 
@@ -811,8 +811,6 @@ class MapDataset(Dataset):
             return self._background_cached
         else:
             return background
-
-        return background
 
     @property
     def _background_parameters_changed(self):
@@ -1147,6 +1145,10 @@ class MapDataset(Dataset):
             Non-finite values are replaced by zero if True. Default is True.
 
         """
+
+        if other.mask_safe and not np.any(other.mask_safe):
+            return
+
         if self.counts and other.counts:
             self.counts.stack(
                 other.counts, weights=other.mask_safe, nan_to_num=nan_to_num
@@ -1671,9 +1673,11 @@ class MapDataset(Dataset):
             When True adds both DATASUM and CHECKSUM cards to the headers written to the file.
             Default is False.
         """
-        self.to_hdulist().writeto(
-            str(make_path(filename)), overwrite=overwrite, checksum=checksum
-        )
+        if filename is None:
+            raise ValueError("The filename is not defined.")
+        filename = make_path(filename)
+        filename.parent.mkdir(exist_ok=True, parents=True)
+        self.to_hdulist().writeto(filename, overwrite=overwrite, checksum=checksum)
 
     @classmethod
     def _read_lazy(cls, name, filename, cache, format=format):
@@ -1912,7 +1916,7 @@ class MapDataset(Dataset):
         if containment_correction:
             if not isinstance(on_region, CircleSkyRegion):
                 raise TypeError(
-                    "Containment correction is only supported for" " `CircleSkyRegion`."
+                    "Containment correction is only supported for `CircleSkyRegion`."
                 )
             elif self.psf is None or isinstance(self.psf, PSFKernel):
                 raise ValueError("No PSFMap set. Containment correction impossible")
@@ -2219,7 +2223,7 @@ class MapDataset(Dataset):
         WcsGeom
         <BLANKLINE>
             axes       : ['lon', 'lat', 'energy']
-            shape      : (320, 240, 3)
+            shape      : (np.int64(320), np.int64(240), 3)
             ndim       : 3
             frame      : galactic
             projection : CAR
@@ -2275,7 +2279,7 @@ class MapDataset(Dataset):
         >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
         >>> sliced = dataset.slice_by_energy(energy_min="1 TeV", energy_max="5 TeV")
         >>> sliced.data_shape
-        (3, 240, 320)
+        (3, np.int64(240), np.int64(320))
         """
         name = make_name(name)
 
@@ -2482,9 +2486,9 @@ class MapDataset(Dataset):
         vmin = npredmapdata.data.min()
         vmax = npredmapdata.data.max()
         # Fallback if the map is entirely zero
-        if vmin == 0.0:
+        if np.isclose(vmin, 0.0):
             vmin = np.max([countsmapdata.data.max() * 0.02, countsmapdata.data.min()])
-        if vmax == 0.0:
+        if np.isclose(vmax, 0.0):
             vmax = countsmapdata.data.max()
 
         # Create custom colormaps
@@ -2999,9 +3003,9 @@ class MapDatasetOnOff(MapDataset):
         random_state = get_random_state(random_state)
         npred = self.npred_signal()
         data = np.nan_to_num(npred.data, copy=True, nan=0.0, posinf=0.0, neginf=0.0)
-        npred.data = random_state.poisson(data)
+        npred.data = random_state.poisson(data).astype("float")
 
-        npred_bkg = random_state.poisson(npred_background.data)
+        npred_bkg = random_state.poisson(npred_background.data).astype("float")
 
         self.counts = npred + npred_bkg
 
@@ -3225,7 +3229,7 @@ class MapDatasetOnOff(MapDataset):
             name=name,
         )
 
-        kwargs = {"name": name}
+        kwargs = {"name": name, "counts_off": None, "acceptance_off": None}
 
         if self.counts_off is not None:
             kwargs["counts_off"] = self.counts_off.get_spectrum(
@@ -3236,12 +3240,13 @@ class MapDatasetOnOff(MapDataset):
             kwargs["acceptance"] = self.acceptance.get_spectrum(
                 on_region, np.mean, weights=self.mask_safe
             )
-            norm = self.background.get_spectrum(
-                on_region, np.sum, weights=self.mask_safe
-            )
-            acceptance_off = kwargs["acceptance"] * kwargs["counts_off"] / norm
-            np.nan_to_num(acceptance_off.data, copy=False)
-            kwargs["acceptance_off"] = acceptance_off
+            if self.counts_off is not None:
+                norm = self.background.get_spectrum(
+                    on_region, np.sum, weights=self.mask_safe
+                )
+                acceptance_off = kwargs["acceptance"] * kwargs["counts_off"] / norm
+                np.nan_to_num(acceptance_off.data, copy=False)
+                kwargs["acceptance_off"] = acceptance_off
 
         return SpectrumDatasetOnOff.from_spectrum_dataset(dataset=dataset, **kwargs)
 

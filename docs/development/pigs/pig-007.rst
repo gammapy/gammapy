@@ -165,7 +165,7 @@ To combine parametric model components with their corresponding instrument respo
 functions, such as PSF, energy dispersion and exposure, we propose the introduction
 of "forward folded" models. These take a fixed data grid, typically defined by the
 exposure map, on which the model is evaluated. After application of instrument
-response functions, the number of prediced counts is returned by the ``.evaluate()``
+response functions, the number of predicted counts is returned by the ``.evaluate()``
 method. We propose to introduce the following classes:
 
 SpectralIRFModel
@@ -235,7 +235,7 @@ operator using the ``SourceModels`` class.
     total_model = component_1 + component_2
     assert isinstance(total_model, SourceModels)
 
-    # becomes quivalent to
+    # becomes equivalent to
 
     total_model = SourceModels([component_1, component_2])
 
@@ -336,7 +336,7 @@ introducing a ``SpatialModel.skycood`` attribute.
 Implement default parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-For spectral models Gammapy has defined default parameters, which simplifes the
+For spectral models Gammapy has defined default parameters, which simplifies the
 interactive usage of the models. From this experience we propose to introduce
 default parameters for ``SpatialModel`` as well as ``SourceModel``.
 

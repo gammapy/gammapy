@@ -39,7 +39,7 @@ very complex line.
 
 Similarly, classes should have 3-10 methods. 2 methods classes (e.g. only
 ``__init__`` and ``__call__``) should usually be functions. Above 10-20
-methodes, the class should  be split into several classes/functions.
+methods, the class should  be split into several classes/functions.
 
 It is important to keep the number of functions and classes needed by the user
 to a reasonable level. Modularity is therefore very important, since it allows

@@ -9,7 +9,6 @@ from gammapy.utils.testing import requires_dependency
 
 
 def test_containment():
-
     model = GaussianSpatialModel(sigma="0.15 deg")
     geom = model._get_plot_map(None).geom.upsample(factor=3)
     model_map = model.integrate_geom(geom)
@@ -35,7 +34,6 @@ def test_containment():
 
 @requires_dependency("healpy")
 def test_containment_fail_hpx():
-
     geom_hpx = HpxGeom.create(binsz=10, frame="galactic")
     m = HpxNDMap(geom_hpx)
 

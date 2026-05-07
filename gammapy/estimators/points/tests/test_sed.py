@@ -220,7 +220,7 @@ def fpe_ecpl():
 
 
 def test_str(fpe_pwl):
-    datasets, fpe = fpe_pwl
+    _, fpe = fpe_pwl
     assert "FluxPointsEstimator" in str(fpe)
 
 
@@ -691,7 +691,7 @@ def test_flux_points_parallel_ray(fpe_pwl):
 def test_flux_points_parallel_ray_actor_spectrum(fpe_pwl):
     from gammapy.datasets.actors import DatasetsActor
 
-    datasets, fpe = fpe_pwl
+    datasets, _ = fpe_pwl
     with pytest.raises(TypeError):
         DatasetsActor(datasets)
 
@@ -771,6 +771,27 @@ def test_fpe_non_uniform_datasets():
 
     with pytest.raises(ValueError, match="same value of the 'TELESCOP' meta keyword"):
         fpe.run(datasets=[dataset_1, dataset_2])
+
+
+def test_fpe_multiple_telescopes():
+    energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=10)
+    geom = RegionGeom.create("icrs;circle(0, 0, 0.1)", axes=[energy_axis])
+    dataset_1 = SpectrumDataset.create(
+        geom=geom, meta_table=Table({"TELESCOP": ["CTA"]})
+    )
+    dataset_2 = SpectrumDataset.create(
+        geom=geom, meta_table=Table({"TELESCOP": ["CTB"]})
+    )
+    assert dataset_1.meta_table["TELESCOP"] is not dataset_2.meta_table["TELESCOP"]
+    datasets = Datasets([dataset_1, dataset_2])
+    datasets.models = SkyModel(spectral_model=PowerLawSpectralModel(), name="test")
+    fpe = FluxPointsEstimator(
+        energy_edges=[1, 2, 4, 10] * u.TeV,
+        source="test",
+        allow_multiple_telescopes=True,
+    )
+    fp = fpe.run(datasets)
+    assert_allclose(fp.counts.data[0], ([[[0]], [[0]]]), rtol=1e-3)
 
 
 @requires_data()
@@ -856,7 +877,7 @@ def test_fpe_diff_lengths():
     dataset4.meta_table = Table(names=["NAME", "TELESCOP"], data=[["23523"], ["not"]])
     datasets = Datasets([dataset1, dataset2, dataset3, dataset4])
     with pytest.raises(ValueError):
-        fp = fpe.run(datasets)
+        fpe.run(datasets)
 
 
 def test_resample_axis():

@@ -735,6 +735,13 @@ class RegionGeom(Geom):
 
         The regions are combined with union to a compound region.
 
+        Note that this function is intended for combining close by
+        regions into one `~gammapy.maps.RegionGeom`. Since it uses an
+        underlying tangential projection, undefined behaviour may occur
+        if the list of input regions contains regions far from each other.
+        If required, one can explicitly pass an appropriate WCS, eg with a cartesian
+        projection, through ``kwargs``.
+
         Parameters
         ----------
         regions : list of `~regions.SkyRegion` or str
@@ -746,6 +753,27 @@ class RegionGeom(Geom):
         -------
         geom : `RegionGeom`
             Region map geometry.
+
+        Examples
+        --------
+        >>> from gammapy.maps import RegionGeom, WcsGeom
+        >>> from regions import CircleSkyRegion
+        >>> from astropy.coordinates import SkyCoord
+        >>> import astropy.units as u
+
+        >>> list_region = [CircleSkyRegion(SkyCoord(326*u.deg, -13*u.deg), radius=0.4*u.deg),
+        ... CircleSkyRegion(SkyCoord(325*u.deg, -14*u.deg), radius=0.3*u.deg)]
+        >>> wcs = WcsGeom.create().wcs
+        >>> region = RegionGeom.from_regions(list_region, wcs=wcs)
+        >>> print(region)
+        RegionGeom
+        region     : CompoundSkyRegion
+        axes       : ['lon', 'lat']
+        shape      : (1, 1)
+        ndim       : 2
+        frame      : icrs
+        center     : 325.5 deg, -13.5 deg
+
         """
         regions = _parse_regions(regions)
 
@@ -859,7 +887,11 @@ class RegionGeom(Geom):
                     ax = m.plot(add_cbar=False, vmin=-1, vmax=0)
 
             kwargs.setdefault("facecolor", "None")
-            kwargs.setdefault("edgecolor", "tab:blue")
+            user_color = kwargs.pop("color", kwargs.pop("c", None))
+            kwargs.setdefault("edgecolor", kwargs.pop("ec", "C0"))
+            if user_color is not None:
+                kwargs["edgecolor"] = user_color
+
             kwargs_point.setdefault("marker", "*")
 
             for key, value in kwargs.items():
@@ -867,8 +899,8 @@ class RegionGeom(Geom):
                 if key_point and key_point not in kwargs_point:
                     kwargs_point[key_point] = value
 
-            if "color" in kwargs:
-                kwargs_point.setdefault("color", kwargs["color"])
+            if user_color is not None:
+                kwargs_point.setdefault("color", user_color)
             if "color" in kwargs_point:
                 kwargs_point["markeredgecolor"] = kwargs_point["color"]
 

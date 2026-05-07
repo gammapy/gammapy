@@ -9,7 +9,7 @@ This model parametrises a gaussian spectrum.
 It is defined by the following equation:
 
 .. math::
-    \phi(E) = \frac{N_0}{\sigma \sqrt{2\pi}}  \exp{ \frac{- \left( E-\bar{E} \right)^2 }{2 \sigma^2} }
+    \phi(E) = \frac{N_0}{\sigma \sqrt{2\pi}}  \exp{ \left( \frac{- \left( E-\bar{E} \right)^2 }{2 \sigma^2} \right) }
 
 """
 

@@ -146,7 +146,7 @@ def get_centroid(vertices):
     """Compute centroid of a polygon. Implicitly assumes a flat
     cartesian projection, will probably break for very large polygons.
 
-    Code comes from:
+    Code adapted from:
     https://stackoverflow.com/questions/75699024/finding-the-centroid-of-a-polygon-in-python
 
     Parameters
@@ -161,7 +161,7 @@ def get_centroid(vertices):
     """
     polygon = []
     for vertex in vertices:
-        polygon.append((vertex.ra.degree, vertex.dec.degree))
+        polygon.append((vertex.ra.degree, vertex.dec.degree, 0))
     polygon = np.array(polygon)
 
     # Same polygon, but with vertices cycled around. Now the polygon
@@ -175,7 +175,7 @@ def get_centroid(vertices):
     centroids = (polygon + polygon2) / 3.0
 
     # Get average of those centroids, weighted by the signed areas.
-    centroid = np.average(centroids, axis=0, weights=signed_areas)
+    centroid = np.average(centroids, axis=0, weights=signed_areas[:, -1])
 
     return SkyCoord(centroid[0] * u.deg, centroid[1] * u.deg, frame=vertices.frame)
 

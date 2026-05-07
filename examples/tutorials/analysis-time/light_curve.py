@@ -95,7 +95,7 @@ conf_3d = AnalysisConfig()
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # Here we use the Crab runs from the
-# `H.E.S.S. DL3 data release 1 <https://www.mpi-hd.mpg.de/hfm/HESS/pages/dl3-dr1/>`__.
+# `H.E.S.S. DL3 data release 1 <https://hess-experiment.eu/releases/>`__.
 #
 
 conf_3d.observations.obs_ids = [23523, 23526, 23559, 23592]
@@ -237,7 +237,7 @@ conf_1d = AnalysisConfig()
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # Here we use the Crab runs from the
-# `H.E.S.S. DL3 data release 1 <https://www.mpi-hd.mpg.de/hfm/HESS/pages/dl3-dr1/>`__
+# `H.E.S.S. DL3 data release 1 <https://hess-experiment.eu/releases/>`__
 #
 
 conf_1d.observations.obs_ids = [23523, 23526, 23559, 23592]

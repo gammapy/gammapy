@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import matplotlib.pyplot as plt
+from gammapy.visualization.utils import get_last_user_line_or_patch
 
 __all__ = [
     "plot_spectrum_datasets_off_regions",
@@ -81,7 +82,7 @@ def plot_spectrum_datasets_off_regions(
 
         # create proxy artist for the custom legend
         if legend:
-            handle = Patch(**plot_kwargs)
+            handle = get_last_user_line_or_patch(ax)
             handles.append(handle)
             labels.append(dataset.name)
 

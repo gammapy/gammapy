@@ -29,7 +29,6 @@ from gammapy.utils.regions import region_circle_to_ellipse, region_to_frame
 from gammapy.utils.scripts import make_path
 from .core import ModelBase, _build_parameters_from_dict
 from gammapy.utils.units import wrap_at
-from gammapy.utils.deprecation import deprecated_renamed_argument
 
 __all__ = [
     "ConstantFluxSpatialModel",
@@ -63,6 +62,42 @@ def compute_sigma_eff(lon_0, lat_0, lon, lat, phi, major_axis, e):
     denominator = np.sqrt(a2 + b2)
     sigma_eff = major_axis * minor_axis / denominator
     return minor_axis, sigma_eff
+
+
+def _validate_template_map(map_):
+    """Validate template map data for NaN, negative, or zero values."""
+    if (map_.data < 0).any():
+        log.warning("Map has negative values. Check and fix this!")
+
+    if (map_.data == 0.0).all():  # NOSONAR
+        # (S1244): explicit check for exactly representable zeros
+        log.warning("Map values are all zeros. Check and fix this!")
+
+    if np.isnan(map_.data).any():
+        log.warning("Map has NaN values. Check and fix this!")
+
+    if not map_.geom.is_image:
+        # sum over spatial dimensions for each non-spatial slice
+        if map_.geom.is_hpx:
+            spatial_sum = map_.data.sum(axis=-1)
+        else:
+            spatial_sum = map_.data.sum(axis=(-2, -1))
+
+        if (spatial_sum == 0).any():
+            log.warning(
+                "Map values are all zeros in at least one energy bin. Check and fix this!"
+            )
+
+
+def _get_template_filename(filename):
+    """Handle and validate template filename."""
+    if filename is not None:
+        return str(make_path(filename))
+    log.warning(
+        "The filename is not defined. Therefore, the model will not be serialised correctly. "
+        'To set the filename, the "template_model.filename" attribute can be used.'
+    )
+    return None
 
 
 class SpatialModel(ModelBase):
@@ -142,7 +177,7 @@ class SpatialModel(ModelBase):
         sub_covar[0, 0] *= cos_lat**2.0
         sub_covar[0, 1] *= cos_lat
         sub_covar[1, 0] *= cos_lat
-        eig_vals, eig_vecs = np.linalg.eig(sub_covar)
+        eig_vals, eig_vecs = np.linalg.eigh(sub_covar)
         lon_err, lat_err = np.sqrt(eig_vals)
         y_vec = eig_vecs[:, 0]
         phi = (np.arctan2(y_vec[1], y_vec[0]) * u.rad).to("deg") + self.phi_0
@@ -397,13 +432,19 @@ class SpatialModel(ModelBase):
 
         return ax
 
-    def _to_region_error(self):
+    def _to_region_error(self, size_factor=1.0):
+        """The function of each spatial model will be called instead"""
         pass
 
     def plot_error(
-        self, ax=None, which="position", kwargs_position=None, kwargs_extension=None
+        self,
+        ax=None,
+        which="position",
+        size_factor=1.0,
+        kwargs_position=None,
+        kwargs_extension=None,
     ):
-        """Plot the errors of the spatial model.
+        r"""Plot the errors of the spatial model.
 
         Parameters
         ----------
@@ -417,11 +458,14 @@ class SpatialModel(ModelBase):
                 * "position": plot the position error of the spatial model
                 * "extension": plot the extension error of the spatial model
 
+        size_factor : float, optional
+            Extension around which the 1:math:`\sigma` error band is plotted.
+            Default is 1.0.
         kwargs_position : dict, optional
             Keyword arguments passed to `~SpatialModel.plot_position_error`.
             Default is None.
         kwargs_extension : dict, optional
-            Keyword arguments passed to `~SpatialModel.plot_extension_error`.
+            Keyword arguments passed to `~regions.PixelRegion.as_artist`.
             Default is None.
 
         Returns
@@ -441,8 +485,7 @@ class SpatialModel(ModelBase):
 
         if "all" in which:
             self.plot_position_error(ax, **kwargs_position)
-
-            region = self._to_region_error()
+            region = self._to_region_error(size_factor=size_factor)
             if region is not None:
                 artist = region.to_pixel(ax.wcs).as_artist(**kwargs_extension)
                 ax.add_artist(artist)
@@ -451,7 +494,7 @@ class SpatialModel(ModelBase):
             self.plot_position_error(ax, **kwargs_position)
 
         if "extension" in which:
-            region = self._to_region_error()
+            region = self._to_region_error(size_factor=size_factor)
             if region is not None:
                 artist = region.to_pixel(ax.wcs).as_artist(**kwargs_extension)
                 ax.add_artist(artist)
@@ -659,16 +702,17 @@ class GaussianSpatialModel(SpatialModel):
         exponent = -0.5 * ((1 - np.cos(sep)) / a)
         return u.Quantity(norm * np.exp(exponent).value, "sr-1", copy=COPY_IF_NEEDED)
 
-    @deprecated_renamed_argument("x_sigma", "size_factor", "2.0")
     def to_region(self, size_factor=1.0, **kwargs):
         r"""Model outline at a given number of :math:`\sigma`.
 
         Parameters
         ----------
-        size_factor : float
-            Number of :math:`\sigma
+        size_factor : float, optional
+            Number of :math:`\sigma`.
             Default is :math:`1.0\sigma` which corresponds to about 39%
             containment for a 2D symmetric Gaussian.
+        kwargs : dict
+            Keyword arguments passed to `~regions.EllipseSkyRegion`.
 
         Returns
         -------
@@ -689,15 +733,14 @@ class GaussianSpatialModel(SpatialModel):
         """Evaluation region consistent with evaluation radius."""
         return self.to_region(size_factor=5)
 
-    @deprecated_renamed_argument("x_sigma", "size_factor", "2.0")
-    def _to_region_error(self, size_factor=1.5):
+    def _to_region_error(self, size_factor=1.0):
         r"""Plot model error at a given number of :math:`\sigma`.
 
         Parameters
         ----------
-        size_factor : float
-            Number of :math:`\sigma`
-            Default is :math:`1.5\sigma` which corresponds to about 68%
+        size_factor : float, optional
+            Number of :math:`\sigma`.
+            Default is 1.0 which corresponds to about 39%
             containment for a 2D symmetric Gaussian.
 
         Returns
@@ -791,14 +834,15 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
         """
         return self.r_0.quantity * (1 + 8 * self.eta.value)
 
-    @deprecated_renamed_argument("x_r_0", "size_factor", "2.0")
-    def to_region(self, size_factor=1, **kwargs):
+    def to_region(self, size_factor=1.0, **kwargs):
         r"""Model outline at a given number of :math:`r_0`.
 
         Parameters
         ----------
         size_factor : float, optional
-            Number of :math:`r_0`. Default is 1.0
+            Number of :math:`r_0`. Default is 1.0.
+        kwargs : dict
+            Keyword arguments passed to `~regions.EllipseSkyRegion`.
 
         Returns
         -------
@@ -820,13 +864,13 @@ class GeneralizedGaussianSpatialModel(SpatialModel):
         scale = self.evaluation_radius / self.r_0.quantity
         return self.to_region(size_factor=scale)
 
-    def _to_region_error(self, size_factor=1):
+    def _to_region_error(self, size_factor=1.0):
         r"""Model error at a given number of :math:`r_0`.
 
         Parameters
         ----------
         size_factor : float, optional
-            Number of :math:`r_0`. Default is 1.
+            Number of :math:`r_0`. Default is 1.0.
 
         Returns
         -------
@@ -1000,7 +1044,7 @@ class DiskSpatialModel(SpatialModel):
 
         return cls.from_position(region.center, **kwargs)
 
-    def _to_region_error(self):
+    def _to_region_error(self, size_factor=1.0):
         """Model error.
 
         Returns
@@ -1020,10 +1064,10 @@ class DiskSpatialModel(SpatialModel):
 
         return EllipseAnnulusSkyRegion(
             center=self.position,
-            inner_height=2 * r_0_lo,
-            outer_height=2 * r_0_hi,
-            inner_width=2 * minor_axis_lo,
-            outer_width=2 * minor_axis_hi,
+            inner_height=2 * size_factor * r_0_lo,
+            outer_height=2 * size_factor * r_0_hi,
+            inner_width=2 * size_factor * minor_axis_lo,
+            outer_width=2 * size_factor * minor_axis_hi,
             angle=self.phi.quantity,
         )
 
@@ -1290,6 +1334,7 @@ class TemplateSpatialModel(SpatialModel):
     interp_kwargs : dict
         Interpolation keyword arguments passed to `gammapy.maps.Map.interp_by_coord`.
         Default arguments are {'method': 'linear', 'fill_value': 0, "values_scale": "log"}.
+        For a `~gammapy.maps.HpxNDMap`, default arguments are {'method': 'linear'}.
     filename : str
         Name of the map file.
     copy_data : bool
@@ -1313,59 +1358,20 @@ class TemplateSpatialModel(SpatialModel):
         copy_data=True,
         **kwargs,
     ):
-        if (map.data < 0).any():
-            log.warning("Map has negative values. Check and fix this!")
-        if (map.data == 0.0).all():
-            log.warning("Map values are all zeros. Check and fix this!")
-        if np.isnan(map.data).any():
-            log.warning("Map has NaN values. Check and fix this!")
-        if not map.geom.is_image and (map.data.sum(axis=(1, 2)) == 0).any():
-            log.warning(
-                "Map values are all zeros in at least one energy bin. Check and fix this!"
-            )
-
-        if filename is not None:
-            filename = str(make_path(filename))
-        if filename is None:
-            log.warning(
-                "The filename is not defined. Therefore, the model will not be serialised correctly. "
-                'To set the filename, the "template_model.filename" attribute can be used.'
-            )
-        self.filename = filename
+        _validate_template_map(map)
+        self.filename = _get_template_filename(filename)
 
         self.normalize = normalize
-        if normalize:
-            # Normalize the diffuse map model so that it integrates to unity
-            if map.geom.is_image:
-                data_sum = map.data.sum()
-            else:
-                # Normalize in each energy bin
-                data_sum = map.data.sum(axis=(1, 2)).reshape((-1, 1, 1))
-
-            data = np.divide(
-                map.data.astype(float),
-                data_sum,
-                out=np.zeros_like(map.data, dtype=float),
-                where=data_sum != 0,
-            )
-            data /= map.geom.solid_angle().to_value("sr")
-            map = map.copy(data=data, unit="sr-1")
-
-        if map.unit.is_equivalent(""):
-            map = map.copy(data=map.data, unit="sr-1")
-            log.warning("Missing spatial template unit, assuming sr^-1")
-
-        if copy_data:
-            self._map = map.copy()
-        else:
-            self._map = map.copy(data=map.data)
-
         self.meta = {} if meta is None else meta
+
+        self._map = self._process_template_map(map, normalize, copy_data)
 
         interp_kwargs = {} if interp_kwargs is None else interp_kwargs
         interp_kwargs.setdefault("method", "linear")
         interp_kwargs.setdefault("fill_value", 0)
-        interp_kwargs.setdefault("values_scale", "log")
+
+        if isinstance(self.map, WcsNDMap):
+            interp_kwargs.setdefault("values_scale", "log")
 
         self._interp_kwargs = interp_kwargs
         kwargs["frame"] = self.map.geom.frame
@@ -1378,6 +1384,38 @@ class TemplateSpatialModel(SpatialModel):
         ):
             kwargs["lat_0"] = self.map_center.data.lat
         super().__init__(**kwargs)
+
+    @staticmethod
+    def _process_template_map(map_, normalize, copy_data):
+        """Handle normalization, units, and data copying logic."""
+        if normalize:
+            # Normalize the diffuse map model so that it integrates to unity
+            # Do the sum over spatial axes for each non-spatial slice.
+            if map_.geom.is_hpx:
+                data_sum = map_.data.sum(axis=-1, keepdims=True)
+            else:
+                data_sum = map_.data.sum(axis=(-2, -1), keepdims=True)
+
+            data = np.divide(
+                map_.data.astype(float),
+                data_sum,
+                out=np.zeros_like(map_.data, dtype=float),
+                where=data_sum != 0,
+            )
+            data /= map_.geom.solid_angle().to_value("sr")
+
+            processed_map = map_.copy(data=data, unit="sr-1")
+        else:
+            if copy_data:
+                processed_map = map_.copy()
+            else:
+                processed_map = map_.copy(data=map_.data)
+
+        if processed_map.unit.is_equivalent(""):
+            log.warning("Missing spatial template unit, assuming sr^-1")
+            processed_map = processed_map.copy(data=processed_map.data, unit="sr-1")
+
+        return processed_map
 
     def __str__(self):
         width = self.map.geom.width
@@ -1397,7 +1435,7 @@ class TemplateSpatialModel(SpatialModel):
         if self.is_energy_dependent:
             energy_min = self.map.geom.axes["energy_true"].center[0]
             energy_max = self.map.geom.axes["energy_true"].center[-1]
-            prnt1 = f"Energy min: {energy_min} \n" f"Energy max: {energy_max} \n"
+            prnt1 = f"Energy min: {energy_min} \nEnergy max: {energy_max} \n"
             prnt = prnt + prnt1
 
         return prnt
@@ -1548,11 +1586,43 @@ class TemplateSpatialModel(SpatialModel):
         )
 
     def plot(self, ax=None, geom=None, **kwargs):
+        """Plot spatial model.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes`, optional
+            Matplotlib axes. Default is None.
+        geom : `~gammapy.maps.WcsGeom`, optional
+            Geometry to use for plotting. Default is None.
+        **kwargs : dict
+            Keyword arguments passed to `~gammapy.maps.WcsMap.plot()`.
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`, optional
+            Matplotlib axes.
+        """
         if geom is None:
             geom = self.map.geom
         super().plot(ax=ax, geom=geom, **kwargs)
 
     def plot_interactive(self, ax=None, geom=None, **kwargs):
+        """Plot spatial model.
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes`, optional
+            Matplotlib axes. Default is None.
+        geom : `~gammapy.maps.WcsGeom`, optional
+            Geom to use for plotting. Default is None.
+        **kwargs : dict
+            Keyword arguments passed to `~gammapy.maps.WcsMap.plot()`.
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`, optional
+            Matplotlib axes.
+        """
         if geom is None:
             geom = self.map.geom
         super().plot_interactive(ax=ax, geom=geom, **kwargs)
@@ -1588,19 +1658,16 @@ class TemplateNDSpatialModel(SpatialModel):
     ):
         if not isinstance(map, (HpxNDMap, WcsNDMap)):
             raise TypeError("Map should be a HpxNDMap or WcsNDMap")
+
+        _validate_template_map(map)
+        self.filename = _get_template_filename(filename)
+
         if copy_data:
             self._map = map.copy()
         else:
             self._map = map.copy(data=map.data)
+
         self.meta = dict() if meta is None else meta
-        if filename is not None:
-            filename = str(make_path(filename))
-        if filename is None:
-            log.warning(
-                "The filename is not defined. Therefore, the model will not be serialised correctly. "
-                'To set the filename, the "template_model.filename" attribute can be used.'
-            )
-        self.filename = filename
 
         parameters = []
         for axis in map.geom.axes:

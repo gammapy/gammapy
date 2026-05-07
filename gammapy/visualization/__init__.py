@@ -3,6 +3,7 @@ from .cmap import colormap_hess, colormap_milagro
 from .datasets import plot_npred_signal, plot_spectrum_datasets_off_regions
 from .heatmap import annotate_heatmap, plot_heatmap
 from .panel import MapPanelPlotter
+from .violin import plot_samples_violin_vs_energy
 from .utils import (
     add_colorbar,
     plot_contour_line,
@@ -24,4 +25,5 @@ __all__ = [
     "plot_theta_squared_table",
     "plot_npred_signal",
     "plot_distribution",
+    "plot_samples_violin_vs_energy",
 ]

@@ -160,7 +160,6 @@ def stat_profile_ul_scipy(
     ul : float
         Upper limit value.
     """
-
     stat_scan = np.array(stat_scan)
     value_scan = np.array(value_scan)
     if np.allclose(stat_scan, stat_scan[0]):
@@ -169,7 +168,7 @@ def stat_profile_ul_scipy(
         )
 
     mask_valid = np.isfinite(stat_scan) & np.isfinite(value_scan)
-    if mask_valid.sum() == 0.0:
+    if not np.any(mask_valid):
         raise ValueError(
             "Statistic profile has no finite value therefore no best-fit value can be determined."
         )
@@ -188,7 +187,8 @@ def stat_profile_ul_scipy(
     stat_best_fit = result.fun
 
     def f(x):
-        return interp((x,)) - stat_best_fit - delta_ts
+        y = interp(np.asarray([x]))
+        return float(y.item()) - stat_best_fit - delta_ts
 
     roots, res = find_roots(
         f, lower_bound=norm_best_fit, upper_bound=value_scan[-1], nbin=1, **kwargs

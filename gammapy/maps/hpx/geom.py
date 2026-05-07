@@ -314,6 +314,13 @@ class HpxGeom(Geom):
 
     def pix_to_idx(self, pix, clip=False):
         # FIXME: Look for better method to clip HPX indices
+
+        # If pix only contains non-spatial coordinates (e.g. Map.get_image_by_pix),
+        # do NOT interpret pix[0] as HEALPix ipix.
+        if len(pix) == len(self.axes):
+            pix = pix_tuple_to_idx(pix)
+            return self.axes.pix_to_idx(pix, clip=clip)
+
         idx = pix_tuple_to_idx(pix)
         idx_local = self.global_to_local(idx)
         for i, _ in enumerate(idx):
@@ -566,11 +573,11 @@ class HpxGeom(Geom):
             if axis != otheraxis:
                 return False
 
-        if not self.nside == other.nside:
+        if self.nside != other.nside:
             return False
-        elif not self.frame == other.frame:
+        elif self.frame != other.frame:
             return False
-        elif not self.nest == other.nest:
+        elif self.nest != other.nest:
             return False
         else:
             return True
@@ -870,7 +877,7 @@ class HpxGeom(Geom):
             raise ValueError(f"Invalid type for skydir: {type(skydir)!r}")
 
         if region is None and width is not None:
-            region = f"DISK({lon},{lat},{width/2})"
+            region = f"DISK({lon},{lat},{width / 2})"
 
         return cls(nside, nest=nest, frame=frame, region=region, axes=axes)
 

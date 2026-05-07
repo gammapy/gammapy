@@ -117,7 +117,7 @@ class FoVICRSFrame(BaseCoordinateFrame):
 
     Attributes
     ----------
-    origin: `~astropy.coordinates.ICRS`
+    origin : `~astropy.coordinates.ICRS`
         Origin of this frame as an ICRS coordinate
 
     Examples
@@ -125,13 +125,9 @@ class FoVICRSFrame(BaseCoordinateFrame):
     .. testcode::
 
         import astropy.units as u
-        from astropy.time import Time
         from astropy.coordinates import SkyCoord
-        from gammapy.utils.observers import observatory_locations
         from gammapy.utils.coordinates import FoVICRSFrame
 
-        location = observatory_locations.get("ctao_north")
-        obstime = Time("2025-01-01T00:00:00")
         origin = SkyCoord(85.63333333, 20.01444444, unit="deg", frame="icrs")
 
         fov_frame = FoVICRSFrame(origin=origin)

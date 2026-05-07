@@ -304,7 +304,7 @@ map_4d = Map.create(
 print(map_4d.geom)
 
 ######################################################################
-# It is possible to utilise the `~gammapy.maps.TimeMapAxis.slice` attrribute
+# It is possible to utilise the `~gammapy.maps.TimeMapAxis.slice` attribute
 # to create new a `~gammapy.maps.TimeMapAxis`. Here we are slicing
 # between the first and third axis to extract the subsection of the axis
 # between indice 0 and 2.
@@ -561,7 +561,7 @@ print(hdulist.info())
 
 
 ######################################################################
-# As we can see the ``HDUList`` object contains to HDUs. The first one
+# As we can see the ``HDUList`` object contains two HDUs. The first one
 # named ``PRIMARY`` contains the data array with shape corresponding to
 # our data and the WCS information stored in the header:
 #

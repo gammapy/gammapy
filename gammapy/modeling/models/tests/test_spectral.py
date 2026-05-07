@@ -21,6 +21,7 @@ from gammapy.modeling.models import (
     GaussianSpectralModel,
     LogParabolaNormSpectralModel,
     LogParabolaSpectralModel,
+    LogParabola2SpectralModel,
     Model,
     NaimaSpectralModel,
     PiecewiseNormSpectralModel,
@@ -42,7 +43,6 @@ from gammapy.utils.testing import (
     requires_data,
     requires_dependency,
 )
-from gammapy.utils.deprecation import GammapyDeprecationWarning
 
 
 def table_model():
@@ -321,6 +321,20 @@ TEST_MODELS = [
         integral_1_10TeV=u.Quantity(27.24066846, "TeV"),
         eflux_1_10TeV=u.Quantity(133.34487, "TeV2"),
     ),
+    dict(
+        name="logpar2",
+        model=LogParabola2SpectralModel.from_log10(
+            alpha=2.3 * u.Unit(""),
+            amplitude=4 / u.cm**2 / u.s / u.TeV,
+            reference=1 * u.TeV,
+            beta=1.151292546497023 * u.Unit(""),
+            escale=10 * u.TeV,
+        ),
+        val_at_2TeV=u.Quantity(1.418847, "cm-2 s-1 TeV-1"),
+        integral_1_10TeV=u.Quantity(4.397409, "cm-2 s-1"),
+        eflux_1_10TeV=u.Quantity(10.505849, "TeV cm-2 s-1"),
+        e_peak=7.408182 * u.TeV,
+    ),
 ]
 
 # Add compound models
@@ -423,6 +437,17 @@ def test_models(spectrum):
     val = model(e_array)
     assert val.shape == e_array.shape
     assert_quantity_allclose(val[0], spectrum["val_at_2TeV"])
+
+
+@requires_dependency("scipy")
+@pytest.mark.parametrize("spectrum", TEST_MODELS, ids=lambda _: _["name"])
+def test_plot_error(spectrum):
+    with mpl_plot_check():
+        if len(spectrum["model"].parameters) == 0:
+            with pytest.raises(NotImplementedError):
+                spectrum["model"].plot_error((1 * u.TeV, 10 * u.TeV))
+        else:
+            spectrum["model"].plot_error((1 * u.TeV, 10 * u.TeV))
 
 
 def test_evaluate():
@@ -592,7 +617,7 @@ def test_to_from_dict_compound():
 
 
 def test_to_from_dict_piecewise_lin():
-    spectrum = TEST_MODELS[-4]
+    spectrum = TEST_MODELS[-5]
     model = spectrum["model"]
     assert spectrum["name"] == "pbpllin"
     model_dict = model.to_dict()
@@ -612,7 +637,7 @@ def test_to_from_dict_piecewise_lin():
 
 
 def test_to_from_dict_piecewise():
-    spectrum = TEST_MODELS[-5]
+    spectrum = TEST_MODELS[-6]
     model = spectrum["model"]
     assert spectrum["name"] == "pbpl"
     model_dict = model.to_dict()
@@ -665,7 +690,7 @@ def test_absorption():
     model = pwl * absorption
     desired = u.Quantity(5.140765e-13, "TeV-1 s-1 cm-2")
     assert_quantity_allclose(model(1 * u.TeV), desired, rtol=1e-3)
-    assert model.model2.alpha_norm.value == 1.0
+    assert_allclose(model.model2.alpha_norm.value, 1.0)
 
     # EBL + PWL model: test if norm of EBL=0: it mean model =pwl
     model.parameters["alpha_norm"].value = 0
@@ -677,7 +702,7 @@ def test_absorption():
     )
     model = pwl * absorption
     desired = u.Quantity(2.739695e-13, "TeV-1 s-1 cm-2")
-    assert model.model2.alpha_norm.value == 1.5
+    assert_allclose(model.model2.alpha_norm.value, 1.5)
     assert_quantity_allclose(model(1 * u.TeV), desired, rtol=1e-3)
 
     # Test error propagation
@@ -764,13 +789,13 @@ def test_template_spectral_model_evaluate_tiny():
         energy=energy, values=values * u.Unit("MeV-1 s-1 sr-1")
     )
     result = model(energy)
-    tiny = np.finfo(np.float32).tiny
+    tiny = np.finfo(values.dtype).tiny
     mask = abs(values) - tiny > tiny
     np.testing.assert_allclose(
         values[mask] / values.max(), result[mask].value / values.max()
     )
     mask = abs(result.value) - tiny <= tiny
-    assert np.all(result[mask] == 0.0)
+    assert np.allclose(result[mask], 0.0, atol=1e-40)
 
 
 def test_template_spectral_model_single_value():
@@ -1108,26 +1133,17 @@ class TestSpectralModelErrorPropagation:
         assert out.unit == "cm-2 s-1 TeV-1"
         assert_allclose(out.data, [3.757824e-11, 3.142095e-12, 3.155082e-12], rtol=7e-2)
 
-        with pytest.warns(GammapyDeprecationWarning):
-            self.model.evaluate_error(1e6 * u.MeV, epsilon=10)
-
     def test_integral_error(self):
         out = self.model.integral_error(1 * u.TeV, 10 * u.TeV)
         assert out.unit == "cm-2 s-1"
         assert out.shape == (3,)
         assert_allclose(out.data, [2.205520e-11, 2.395797e-12, 2.905355e-12], rtol=7e-2)
 
-        with pytest.warns(GammapyDeprecationWarning):
-            self.model.integral_error(1 * u.TeV, 10 * u.TeV, epsilon=10)
-
     def test_energy_flux_error(self):
         out = self.model.energy_flux_error(1 * u.TeV, 10 * u.TeV)
         assert out.unit == "TeV cm-2 s-1"
         assert out.shape == (3,)
         assert_allclose(out.data, [4.133955e-11, 6.634629e-12, 9.896814e-12], rtol=7e-2)
-
-        with pytest.warns(GammapyDeprecationWarning):
-            self.model.energy_flux_error(1 * u.TeV, 10 * u.TeV, epsilon=10)
 
 
 def test_piecesenorm_model_error():
@@ -1175,9 +1191,6 @@ def test_dnde_error_ecpl_model():
 
     out = model.evaluate_error(0.1 * u.TeV)
     assert_allclose(out.data, [1.538462e-10, 2.071542e-11, 1.837818e-11], rtol=7e-1)
-
-    with pytest.warns(GammapyDeprecationWarning):
-        out = model.evaluate_error(0.1 * u.TeV, epsilon=10)
 
 
 def test_integral_error_power_law():
@@ -1245,6 +1258,22 @@ def test_energy_flux_error_exp_cutoff_power_law():
     assert_allclose(eflux_errp.value / 1e-12, 2.052225, rtol=7e-1)
 
 
+def test_integral_bpl():
+    bpl = BrokenPowerLawSpectralModel(
+        index1=2.3,
+        index2=1.7,
+        amplitude=2.0e-12 * u.Unit("cm-2 s-1 TeV-1"),
+        ebreak=10 * u.GeV,
+    )
+
+    e_min = np.array([0.1]) * u.GeV
+    e_max = np.array([11.0]) * u.GeV
+    result_array = bpl.integral(e_min, e_max)
+
+    assert result_array.shape == (1,)
+    assert_allclose(result_array.value, [6.1e-09], rtol=0.01)
+
+
 def test_integral_exp_cut_off_power_law_large_number_of_bins():
     energy = np.geomspace(1, 10, 100) * u.TeV
     energy_min = energy[:-1]
@@ -1285,10 +1314,13 @@ def test_template_ND(tmpdir, caplog):
     assert template.parameters["tilt"].value == 0
     assert_allclose(template([1, 100, 1000] * u.GeV), [1.0, 2.0, 2.0])
 
+    assert template.is_norm_spectral_model
+
     template.parameters["norm"].value = 1
     template.filename = str(tmpdir / "template_ND.fits")
     template.write()
     template.write(filename=str(tmpdir / "template_ND_2.fits"))
+    template.write(filename=str(tmpdir / "template_ND_2.fits"), overwrite=True)
 
     dict_ = template.to_dict()
     template_new = TemplateNDSpectralModel.from_dict(dict_)
@@ -1296,6 +1328,9 @@ def test_template_ND(tmpdir, caplog):
     assert len(template_new.parameters) == 2
     assert template_new.parameters["norm"].value == 1
     assert template_new.parameters["tilt"].value == 0
+
+    with mpl_plot_check():
+        template.plot_error([1, 1000] * u.GeV)
 
 
 def test_template_ND_no_energy(tmpdir):
@@ -1405,6 +1440,34 @@ def test_vectorized_integrate_spectrum():
     assert_allclose(integral.to_value("cm-2s-1"), [9e-12, 9e-13])
     assert vector_integral.shape == (2, 10)
     assert_allclose(vector_integral[:, 0].to_value("cm-2s-1"), [9e-12, 9e-13])
+    
+    energy = [100, 1000] * u.GeV
+
+    integral = integrate_spectrum(model, energy[:-1], energy[1:], ndecade=20)
+    vector_integral = integrate_spectrum(
+        model, energy[:-1], energy[1:], ndecade=20, parameter_samples=parameter_samples
+    )
+
+    assert integral.shape == (1,)
+    assert_allclose(integral.to_value("cm-2s-1"), [9e-12,])
+    assert vector_integral.shape == (1, 10)
+    assert_allclose(vector_integral[:, 0].to_value("cm-2s-1"), [9e-12,])
+
+
+    energy_min, energy_max = [100, 1000] * u.GeV
+    model = BrokenPowerLawSpectralModel()
+    parameter_samples = [np.ones(10) * par.quantity for par in model.parameters]
+
+    integral = integrate_spectrum(model, energy_min, energy_max, ndecade=20)
+    vector_integral = integrate_spectrum(
+        model, energy_min, energy_max, ndecade=20, parameter_samples=parameter_samples
+    )
+
+    assert integral.isscalar
+    assert_allclose(integral.to_value("cm-2s-1"), 9e-12)
+    assert vector_integral.shape == (10,)
+    assert_allclose(vector_integral[0].to_value("cm-2s-1"), 9e-12)
+
 
     # check fail if model is not passed
     with pytest.raises(TypeError):
@@ -1415,3 +1478,41 @@ def test_vectorized_integrate_spectrum():
             ndecade=20,
             parameter_samples=parameter_samples,
         )
+
+
+def test_plot_error_invalid():
+    ecpl = ExpCutoffPowerLawSpectralModel(
+        index=2.0,
+        reference=1 * u.TeV,
+        amplitude="2.2e-13 TeV-1 s-1 cm-2",
+        lambda_=0.09 / u.TeV,
+        alpha=5.1,
+    )
+    ecpl.index.error = 0.35
+    ecpl.amplitude.error = 0.7e-13
+    ecpl.alpha.error = 3
+    ecpl.lambda_.error = 0.045
+
+    with mpl_plot_check():
+        plt.figure()
+        ecpl.plot([1, 100] * u.TeV, energy_power=2)
+        ecpl.plot_error([1, 100] * u.TeV, energy_power=2)
+        plt.ylim(1e-15, 1e-11)
+        plt.show()
+
+
+def test_bpl_evalaute_array():
+    model = BrokenPowerLawSpectralModel(
+        index1=1.5 * u.Unit(""),
+        index2=2.5 * u.Unit(""),
+        amplitude=4 / u.cm**2 / u.s / u.TeV,
+        ebreak=0.5 * u.TeV,
+    )
+    values = model.evaluate(
+        [0.1, 1] * u.GeV,
+        np.ones(3) * 1.5 * u.Unit(""),
+        np.ones(3) * 2.5 * u.Unit(""),
+        np.ones(3) * 4 / u.cm**2 / u.s / u.TeV,
+        np.ones(3) * 0.5 * u.TeV,
+    )
+    assert values.shape == (2, 3)

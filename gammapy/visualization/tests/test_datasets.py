@@ -3,6 +3,7 @@ import pytest
 from numpy.testing import assert_allclose
 import matplotlib
 import matplotlib.pyplot as plt
+from matplotlib.colors import same_color
 from packaging import version
 from gammapy.datasets.tests.test_map import MapDataset
 from gammapy.modeling.models import (
@@ -61,7 +62,7 @@ def test_plot_spectrum_datasets_off_regions():
 
     actual = ax.patches[2].get_edgecolor()
     assert_allclose(actual, (1.0, 0.498039, 0.054902, 1.0), rtol=1e-2)
-    assert ax.lines[0].get_color() == "#2ca02c"
+    assert same_color(ax.lines[0].get_color(), "#2ca02c")
 
 
 @requires_data()
@@ -89,6 +90,27 @@ def test_plot_regions_color_point():
     for patch in ax.lines:
         assert patch.get_color() == "red"
     # red because color set for both lines and points
+
+    plt.figure()
+    ax = models.plot_regions(linewidth=1, c="red", edgecolor="green")
+    for patch in ax.patches:
+        assert_allclose(patch.get_edgecolor(), (1.0, 0.0, 0.0, 1.0), rtol=1e-2)
+    for patch in ax.lines:
+        assert patch.get_color() == "red"
+
+    plt.figure()
+    ax = models.plot_regions(linewidth=1, c="red", ec="green")
+    for patch in ax.patches:
+        assert_allclose(patch.get_edgecolor(), (1.0, 0.0, 0.0, 1.0), rtol=1e-2)
+    for patch in ax.lines:
+        assert patch.get_color() == "red"
+
+    plt.figure()
+    ax = models.plot_regions(linewidth=1, ec="green")
+    for patch in ax.patches:
+        assert_allclose(patch.get_edgecolor(), (0.0, 0.501961, 0.0, 1.0), rtol=1e-2)
+    for patch in ax.lines:
+        assert patch.get_markeredgecolor() == "green"
 
     plt.figure()
     ax = models.plot_regions(
@@ -124,6 +146,18 @@ def test_plot_regions_color_point():
     for patch in ax.lines:
         assert patch.get_color() == "red"
     # red because color has priority over edgecolor as for the lines
+
+    plt.figure()
+    ax = models.plot_regions(
+        linewidth=1,
+        kwargs_point={"marker": "d", "markersize": 5, "color": "red"},
+    )
+    for patch in ax.patches:
+        assert_allclose(
+            patch.get_edgecolor(), (0.121569, 0.466667, 0.705882, 1), rtol=1e-2
+        )
+    for patch in ax.lines:
+        assert patch.get_color() == "red"
 
 
 @requires_data()

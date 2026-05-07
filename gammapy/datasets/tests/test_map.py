@@ -59,7 +59,12 @@ from gammapy.modeling.models import (
     UniformPrior,
     ExpCutoffPowerLawSpectralModel,
 )
-from gammapy.utils.testing import mpl_plot_check, requires_data, requires_dependency
+from gammapy.utils.testing import (
+    mpl_plot_check,
+    requires_data,
+    requires_dependency,
+    assert_quantity_allclose,
+)
 from gammapy.utils.types import JsonQuantityEncoder
 
 
@@ -705,6 +710,9 @@ def test_map_dataset_fits_io(tmp_path, sky_model, geom, geom_etrue):
 
     dataset.write(tmp_path / "test.fits")
 
+    nested_path = tmp_path / "new_directory" / "new_directory" / "test.fits"
+    dataset.write(nested_path)
+
     dataset_new = MapDataset.read(tmp_path / "test.fits")
 
     assert dataset_new.name == "test"
@@ -1219,7 +1227,7 @@ def test_stack(sky_model):
     # stacking when no safe masks are defined
     dataset1 = MapDataset(counts=cnt1, background=bkg1)
     stacked = MapDataset.from_geoms(**dataset1.geoms)
-    for i in range(3):
+    for _ in range(3):
         stacked.stack(dataset1)
     assert_allclose(stacked.background.data.sum(), 2880.0, 1e-5)
     assert_allclose(stacked.counts.data.sum(), 14400.0, 1e-5)
@@ -1370,6 +1378,18 @@ def test_stack_npred():
     npred_stacked = stacked.npred()
 
     assert_allclose(npred_stacked.data, stacked_npred.data)
+    assert_allclose(stacked.gti.time_sum, 3600 * u.s)
+
+    dataset_3 = MapDataset.create(
+        geom,
+        energy_axis_true=axis_etrue,
+        name="dataset-2",
+        gti=GTI.create("60 min", "90 min"),
+    )
+    dataset_3.mask_safe = dataset_2.mask_safe.copy()
+    dataset_3.mask_safe.data = False
+    stacked.stack(dataset_3)
+    assert_allclose(stacked.gti.time_sum, 3600 * u.s)
 
 
 def to_cube(image):
@@ -1458,6 +1478,19 @@ def get_map_dataset_onoff(images, **kwargs):
 
 
 @requires_data()
+def test_mapdataset_on_off_to_spectrum_dataset_with_no_counts_off(images):
+    dataset = get_map_dataset_onoff(images)
+    dataset.counts_off = None
+    on_region = CircleSkyRegion(
+        center=dataset.counts.geom.center_skydir, radius=0.1 * u.deg
+    )
+    spectrum_dataset = dataset.to_spectrum_dataset(on_region)
+    assert spectrum_dataset.acceptance is not None
+    assert spectrum_dataset.counts_off is None
+    assert spectrum_dataset.acceptance_off is None
+
+
+@requires_data()
 def test_map_dataset_on_off_to_asimov(images):
     dataset = get_map_dataset_onoff(images)
 
@@ -1517,7 +1550,7 @@ def test_map_dataset_on_off_fits_io(images, lazy, tmp_path):
         dataset_new = MapDatasetOnOff.read(tmp_path / "test.fits", lazy=lazy)
         assert dataset_new.name == "MapDatasetOnOff-test"
         assert dataset_new.mask.data.dtype == bool
-        assert dataset_new.meta_table["livetime"] == 1.0 * u.h
+        assert_quantity_allclose(dataset_new.meta_table["livetime"], 1.0 * u.h)
         assert dataset_new.meta_table["obs_id"] == 111
 
         assert_allclose(dataset.counts.data, dataset_new.counts.data)

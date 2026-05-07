@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 from astropy.coordinates import Angle
+from astropy.nddata import NoOverlapError
 import gammapy.utils.parallel as parallel
 from gammapy.datasets import Datasets, MapDataset, MapDatasetOnOff, SpectrumDataset
 from .core import Maker
@@ -98,15 +99,24 @@ class DatasetsMaker(Maker, parallel.ParallelMixin):
         observation : `Observation`
             Observation.
         """
+        obs_point = observation.get_pointing_icrs(observation.tmid)
         if self._apply_cutout:
             cutouts_kwargs = {
-                "position": observation.get_pointing_icrs(observation.tmid).galactic,
+                "position": obs_point.galactic,
                 "width": self.cutout_width,
                 "mode": self.cutout_mode,
             }
-            dataset_obs = dataset.cutout(
-                **cutouts_kwargs,
-            )
+            try:
+                dataset_obs = dataset.cutout(
+                    **cutouts_kwargs,
+                )
+            except NoOverlapError:
+                log.warning(
+                    f"{observation.obs_id} discarded because"
+                    " it is outside the FOV of the reference geom."
+                )
+                return None
+
         else:
             dataset_obs = dataset.copy()
 
@@ -124,7 +134,7 @@ class DatasetsMaker(Maker, parallel.ParallelMixin):
         return dataset_obs
 
     def callback(self, dataset):
-        if self.stack_datasets:
+        if self.stack_datasets and dataset is not None:
             if type(self._dataset) is MapDataset and type(dataset) is MapDatasetOnOff:
                 dataset = dataset.to_map_dataset(name=dataset.name)
             self._dataset.stack(dataset)
@@ -188,7 +198,14 @@ class DatasetsMaker(Maker, parallel.ParallelMixin):
         if self.stack_datasets:
             return Datasets([self._dataset])
 
+        valid_datasets = [d for d in self._datasets if d is not None]
         lookup = {
-            d.meta_table["OBS_ID"][0]: idx for idx, d in enumerate(self._datasets)
+            d.meta_table["OBS_ID"][0]: idx for idx, d in enumerate(valid_datasets)
         }
-        return Datasets([self._datasets[lookup[obs.obs_id]] for obs in observations])
+        return Datasets(
+            [
+                valid_datasets[lookup[obs.obs_id]]
+                for obs in observations
+                if obs.obs_id in lookup
+            ]
+        )

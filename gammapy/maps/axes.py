@@ -188,8 +188,7 @@ class MapAxis:
         """
         if self.name != required_name:
             raise ValueError(
-                "Unexpected axis name,"
-                f' expected "{required_name}", got: "{self.name}"'
+                f'Unexpected axis name, expected "{required_name}", got: "{self.name}"'
             )
 
     def is_aligned(self, other, atol=2e-2):
@@ -422,7 +421,7 @@ class MapAxis:
         )
         ax.set_xlabel(xlabel)
         xmin, xmax = self.bounds
-        if not xmin == xmax:
+        if xmin != xmax:
             ax.set_xlim(self.bounds)
         return ax
 
@@ -1153,7 +1152,7 @@ class MapAxis:
             if centers[-1] != self.center[-1]:
                 if strict is True:
                     raise ValueError(
-                        f"Number of {self.name} bins - 1 ({self.nbin-1}) is not divisible by {factor}"
+                        f"Number of {self.name} bins - 1 ({self.nbin - 1}) is not divisible by {factor}"
                     )
                 else:
                     centers = np.append(centers, self.center[-1])
@@ -1432,7 +1431,7 @@ class MapAxis:
                 axis = MapAxis.from_nodes(e_ref, name="energy", interp="log")
             else:
                 raise ValueError(
-                    "Either 'e_ref', 'e_min' or 'e_max' column " "names are required"
+                    "Either 'e_ref', 'e_min' or 'e_max' column names are required"
                 )
         elif format == "gadf-sed-norm":
             # TODO: guess interp here
@@ -2205,7 +2204,7 @@ class MapAxes(Sequence):
             f"order: {required_names}, got: {self.names}."
         )
 
-        if not allow_extra and not len(self) == len(required_names):
+        if not allow_extra and len(self) != len(required_names):
             raise ValueError(message)
 
         try:
@@ -2325,7 +2324,7 @@ class TimeMapAxis:
                 f"Time edges max must have a valid time unit, got {edges_max.unit}"
             )
 
-        if not edges_min.shape == edges_max.shape:
+        if edges_min.shape != edges_max.shape:
             raise ValueError(
                 "Edges min and edges max must have the same shape,"
                 f" got {edges_min.shape} and {edges_max.shape}."
@@ -2422,7 +2421,9 @@ class TimeMapAxis:
     def edges(self):
         """Return the array of bin edges values."""
         if not self.is_contiguous:
-            raise ValueError("Time axis is not contiguous")
+            raise ValueError(
+                "Time axis is not contiguous, therefore cannot compute bin edges."
+            )
 
         return edges_from_lo_hi(self.edges_min, self.edges_max)
 
@@ -2493,7 +2494,7 @@ class TimeMapAxis:
         """Return labels for plotting."""
         labels = []
 
-        for t_min, t_max in self.iter_by_edges:
+        for t_min, t_max in self.iter_by_time_edges:
             label = f"{getattr(t_min, self.time_format)} - {getattr(t_max, self.time_format)}"
             labels.append(label)
 
@@ -2561,8 +2562,7 @@ class TimeMapAxis:
         """
         if self.name != required_name:
             raise ValueError(
-                "Unexpected axis name,"
-                f' expected "{required_name}", got: "{self.name}"'
+                f'Unexpected axis name, expected "{required_name}", got: "{self.name}"'
             )
 
     def is_allclose(self, other, **kwargs):
@@ -2621,9 +2621,15 @@ class TimeMapAxis:
 
     @property
     def iter_by_edges(self):
-        """Iterate by intervals defined by the edges."""
-        for time_min, time_max in zip(self.time_min, self.time_max):
-            yield (time_min, time_max)
+        """Iterate by time intervals defined by the edges as an `~astropy.units.Quantity`."""
+        for t_min, t_max in zip(self._edges_min, self._edges_max):
+            yield (t_min, t_max)
+
+    @property
+    def iter_by_time_edges(self):
+        """Iterate by time intervals defined by the edges as a `~astropy.time.Time` object."""
+        for t_min, t_max in zip(self.time_min, self.time_max):
+            yield (t_min, t_max)
 
     def coord_to_idx(self, coord, **kwargs):
         """Transform time axis coordinate to bin index.
@@ -2674,9 +2680,10 @@ class TimeMapAxis:
         coords = np.zeros_like(pix)
         frac, idx = np.modf(pix)
         idx1 = idx.astype(int)
-        valid = np.logical_and(idx >= 0, idx < self.nbin, np.isfinite(idx))
-        idx_valid = np.where(valid)
-        idx_invalid = np.where(~valid)
+
+        valid = (idx >= 0) & (idx < self.nbin)
+        idx_valid = np.nonzero(valid)
+        idx_invalid = np.nonzero(~valid)
 
         coords[idx_valid] = (
             frac[idx_valid] * self.time_delta[idx1[valid]] + self.edges_min[idx1[valid]]
@@ -3125,8 +3132,8 @@ class TimeMapAxis:
             mask2 = self.time_max <= time_interval[1]
             mask = mask1 & mask2
             if np.any(mask):
-                idx_min = np.where(mask)[0][0]
-                idx_max = np.where(mask)[0][-1]
+                idx_min = np.nonzero(mask)[0][0]
+                idx_max = np.nonzero(mask)[0][-1]
                 bin_type = "normal   "
             else:
                 idx_min = idx_max = -1
@@ -3162,7 +3169,7 @@ class LabelMapAxis:
     def __init__(self, labels, name=""):
         unique_labels = np.unique(labels)
 
-        if not len(unique_labels) == len(labels):
+        if len(unique_labels) != len(labels):
             raise ValueError("Node labels must be unique")
 
         self._labels = np.array(labels)
@@ -3189,8 +3196,7 @@ class LabelMapAxis:
         """
         if self.name != required_name:
             raise ValueError(
-                "Unexpected axis name,"
-                f' expected "{required_name}", got: "{self.name}"'
+                f'Unexpected axis name, expected "{required_name}", got: "{self.name}"'
             )
 
     @property

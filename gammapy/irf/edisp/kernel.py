@@ -283,7 +283,7 @@ class EDispKernel(IRF):
                     and hdu.verify_datasum() != 1
                 ):
                     warnings.warn(
-                        f"Checksum verification failed for HDU { hdulist[0]} of {filename}.",
+                        f"Checksum verification failed for HDU {hdulist[0]} of {filename}.",
                         UserWarning,
                     )
             table_drm = Table.read(filename, hdu="DRM")
@@ -396,7 +396,7 @@ class EDispKernel(IRF):
         # Make RMF type matrix
         for idx, row in enumerate(self.data):
             pos = np.nonzero(row)[0]
-            borders = np.where(np.diff(pos) != 1)[0]
+            borders = np.nonzero(np.diff(pos) != 1)[0]
             # add 1 to borders for correct behaviour of np.split
             groups = np.split(pos, borders + 1)
             n_grp_temp = len(groups) if len(groups) > 0 else 1
@@ -677,7 +677,7 @@ class EDispKernel(IRF):
             Size of the figure. Default is (15, 5).
 
         """
-        fig, axes = plt.subplots(nrows=1, ncols=2, figsize=figsize)
+        _, axes = plt.subplots(nrows=1, ncols=2, figsize=figsize)
         self.plot_bias(ax=axes[0])
         self.plot_matrix(ax=axes[1])
         plt.tight_layout()

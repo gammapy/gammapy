@@ -115,7 +115,7 @@ def find_roots(
     x = scale.inverse(np.linspace(a, b, nbin + 1))
     if len(x) > 2:
         signs = np.sign([f(xk, *args) for xk in x])
-        ind = np.where(signs[:-1] != signs[1:])[0]
+        ind = np.nonzero(signs[:-1] != signs[1:])[0]
     else:
         ind = [0]
     nroots = max(1, len(ind))
@@ -123,7 +123,7 @@ def find_roots(
     results = np.array(nroots * [BAD_RES])
 
     for k, idx in enumerate(ind):
-        bracket = [x[idx], x[idx + 1]]
+        bracket = [x[idx].item(), x[idx + 1].item()]
         if method in ["bisection", "brentq", "brenth", "ridder", "toms748"]:
             kwargs["bracket"] = bracket
         elif method in ["secant", "newton", "halley"]:

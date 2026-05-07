@@ -515,10 +515,12 @@ class SourceCatalogObject4FGL(SourceCatalogObjectFermiBase):
                     path_extended = (
                         "$GAMMAPY_DATA/catalogs/fermi/Extended_12years/Templates/"
                     )
-                else:
+                elif de["version"] < 39:
                     path_extended = (
                         "$GAMMAPY_DATA/catalogs/fermi/Extended_14years/Templates/"
                     )
+                else:
+                    path_extended = "$GAMMAPY_DATA/catalogs/fermi/LAT_extended_sources_16years/Templates/"
                 path = make_path(path_extended)
                 with warnings.catch_warnings():  # ignore FITS units warnings
                     warnings.simplefilter("ignore", FITSFixedWarning)
@@ -906,7 +908,7 @@ class SourceCatalogObject3FGL(SourceCatalogObjectFermiBase):
                     lon_0=ra, lat_0=dec, r_0=r_0, e=e, phi=phi, frame="icrs"
                 )
             elif morph_type in ["Map", "Ring", "2D Gaussian x2"]:
-                filename = de["Spatial_Filename"].strip()
+                filename = de["Spatial_Filename"].strip() + ".gz"
                 path = make_path(
                     "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v15/Templates/"
                 )
@@ -1075,7 +1077,7 @@ class SourceCatalogObject2FHL(SourceCatalogObjectFermiBase):
                     lon_0=ra, lat_0=dec, r_0=r_0, e=e, phi=phi, frame="icrs"
                 )
             elif morph_type in ["Map", "Ring", "2D Gaussian x2"]:
-                filename = de["Spatial_Filename"].strip()
+                filename = de["Spatial_Filename"].strip() + ".gz"
                 path = make_path(
                     "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v15/Templates/"
                 )
@@ -1340,7 +1342,7 @@ class SourceCatalogObject3FHL(SourceCatalogObjectFermiBase):
                     lon_0=ra, lat_0=dec, r_0=r_0, e=e, phi=phi, frame="icrs"
                 )
             elif morph_type in ["SpatialMap"]:
-                filename = de["Spatial_Filename"].strip()
+                filename = de["Spatial_Filename"].strip() + ".gz"
                 path = make_path(
                     "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/"
                 )
@@ -1905,9 +1907,13 @@ class SourceCatalog4FGL(SourceCatalog):
     - https://arxiv.org/abs/2005.11208 (DR2)
     - https://arxiv.org/abs/2201.11184 (DR3)
     - https://arxiv.org/abs/2307.12546 (DR4)
+    - https://arxiv.org/abs/2602.22148 (FL16Y)
 
-    By default we use the file of the DR4 initial release
+    By default we use the file of the DR4 final release (gll_psc_v35.fit.gz)
     from https://fermi.gsfc.nasa.gov/ssc/data/access/lat/14yr_catalog/
+
+    FL16Y break the 4FGL incremental catalog continuity but can be still open with this class
+    (this feature will be deprecated once 5FGL is available).
 
     One source is represented by `~gammapy.catalog.SourceCatalogObject4FGL`.
     """
@@ -1916,7 +1922,7 @@ class SourceCatalog4FGL(SourceCatalog):
     description = "LAT 14-year point source catalog"
     source_object_class = SourceCatalogObject4FGL
 
-    def __init__(self, filename="$GAMMAPY_DATA/catalogs/fermi/gll_psc_v32.fit.gz"):
+    def __init__(self, filename="$GAMMAPY_DATA/catalogs/fermi/gll_psc_v35.fit.gz"):
         filename = make_path(filename)
         table = Table.read(filename, hdu="LAT_Point_Source_Catalog")
         table_standardise_units_inplace(table)

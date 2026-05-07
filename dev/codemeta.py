@@ -3,6 +3,7 @@
 import json
 import logging
 from configparser import ConfigParser
+import tomllib
 import click
 from datetime import date
 
@@ -19,7 +20,13 @@ def update_codemeta(maintainer, filename, setup_file=None):
         if "familyName" in author.keys() and author["familyName"] == maintainer:
             log.info(f"Setting maintainer to {maintainer}")
             data["maintainer"] = author
-
+    data["author"].insert(0,
+        {
+            "@type": "Organization",
+            "name": "Gammapy team"
+        }
+    )
+    data["funding"] = ["10.13039/501100000780::101129751", "10.13039/501100000780::824064"] #, "10.3030/101131928::101131928"]
     data["readme"] = "https://gammapy.org"
     data["issueTracker"] = "https://github.com/gammapy/gammapy/issues"
     data["developmentStatus"] = ("active",)
@@ -30,13 +37,14 @@ def update_codemeta(maintainer, filename, setup_file=None):
 
 
     if setup_file:
-        # complete with software requirements from setup.cfg
-        cf = ConfigParser()
-        cf.read(setup_file)
-        requirements = cf["options"]["install_requires"].split("\n")
-        if "" in requirements:
-            requirements.remove("")
-        data["softwareRequirements"] = requirements
+        # complete with software requirements from pyproject.toml
+        with open(setup_file, "rb") as fp:
+            conf = tomllib.load(fp)
+            requirements = conf["project"]["dependencies"]
+
+            if "" in requirements:
+                requirements.remove("")
+            data["softwareRequirements"] = requirements
 
     with open(filename, "w") as f:
         json.dump(data, f, indent=4)
@@ -57,7 +65,7 @@ def update_codemeta(maintainer, filename, setup_file=None):
 @click.option(
     "--filename", default="../codemeta.json", type=str, help="codemeta filename"
 )
-@click.option("--setup_file", default="../setup.cfg", type=str, help="setup filename")
+@click.option("--setup_file", default="../pyproject.toml", type=str, help="setup filename")
 @click.option(
     "--log_level",
     default="INFO",

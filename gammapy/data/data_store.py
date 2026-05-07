@@ -648,7 +648,7 @@ class DataStoreChecker(Checker):
         # obs and HDU index should have the same OBS_ID
         obs_table_obs_id = set(self.data_store.obs_table["OBS_ID"])
         hdu_table_obs_id = set(self.data_store.hdu_table["OBS_ID"])
-        if not obs_table_obs_id == hdu_table_obs_id:
+        if obs_table_obs_id != hdu_table_obs_id:
             yield {
                 "level": "error",
                 "msg": "Inconsistent OBS_ID in obs and HDU index tables",

@@ -126,7 +126,7 @@ class Sampler:
 
         def _prior_inverse_cdf(values):
             """Returns a list of model parameters for a given list of values (that are bound in [0,1])."""
-            if None in parameters:
+            if None in parameters.prior:
                 raise ValueError(
                     "Some parameters have no prior set. You need priors on all parameters."
                 )

@@ -23,6 +23,9 @@ from gammapy.stats import (
 )
 from gammapy.stats.utils import ts_to_sigma
 from .map.core import FluxMaps
+import logging
+
+log = logging.getLogger(__name__)
 
 __all__ = [
     "combine_flux_maps",
@@ -283,7 +286,7 @@ def estimate_exposure_reco_energy(dataset, spectral_model=None, normalize=True):
 
         geom  : WcsGeom
         axes  : ['lon', 'lat', 'energy']
-        shape : (320, 240, 10)
+        shape : (np.int64(320), np.int64(240), 10)
         ndim  : 3
         unit  : cm2 s
         dtype : float64
@@ -780,7 +783,7 @@ def get_rebinned_axis(fluxpoint, axis_name="energy", method=None, **kwargs):
         The axis name to combine along. Default is 'energy'.
     method : str
         The method to resample the axis. Supported options are
-        'fixed_bins' and 'min-ts'.
+        'fixed-bins' and 'min-ts'.
     kwargs : dict
         Keywords passed to `get_edges_fixed_bins` or `get_edges_min_ts`.
         If method is 'fixed-bins', keyword should be `group_size`.
@@ -874,6 +877,9 @@ def combine_significance_maps(maps):
     get_combined_significance_maps : same method but computing the significance maps from estimators and datasets.
 
     """
+    if len(maps) < 2:
+        raise ValueError("List of flux maps has less than two elements")
+
     geom = maps[0].ts.geom.to_image()
     ts_sum = Map.from_geom(geom)
     ts_sum_sign = Map.from_geom(geom)
@@ -974,7 +980,7 @@ def combine_flux_maps(
         List of maps with the same geometry.
     method : str
         * gaussian_errors :
-            Under the gaussian error approximation the likelihood is given by the gaussian distibution.
+            Under the gaussian error approximation the likelihood is given by the gaussian distribution.
             The product of gaussians is also a gaussian so can derive dnde, dnde_err, and ts.
         * distrib :
             Likelihood profile approximation assuming that probabilities distributions for
@@ -1015,7 +1021,7 @@ def combine_flux_maps(
             gti.stack(gtis[k])
     else:
         gti = None
-    # TODO : change this once we have stackable metadata objets
+    # TODO : change this once we have stackable metadata objects
     metas = [map_.meta for map_ in maps if map_.meta is not None]
     meta = {}
     if np.any(metas):
@@ -1114,7 +1120,7 @@ def get_combined_flux_maps(
         Datasets containing only `~gammapy.datasets.MapDataset`.
     method : str
         * gaussian_errors :
-            Under the gaussian error approximation the likelihood is given by the gaussian distibution.
+            Under the gaussian error approximation the likelihood is given by the gaussian distribution.
             The product of gaussians is also a gaussian so can derive dnde, dnde_err, and ts.
         * distrib :
             Likelihood profile approximation assuming that probabilities distributions for
@@ -1219,7 +1225,7 @@ def interpolate_profile_map(flux_map, dnde_scan_axis=None):
     mask_valid = ~np.isnan(flux_map.dnde.data)
     dnde_scan_values = flux_map.dnde_scan_values.quantity.to_value(dnde_scan_axis.unit)
 
-    for ij, il, ik in zip(*np.where(mask_valid)):
+    for ij, il, ik in zip(*np.nonzero(mask_valid)):
         spline = InterpolatedUnivariateSpline(
             dnde_scan_values[ij, :, il, ik],
             flux_map.stat_scan.data[ij, :, il, ik],
@@ -1262,7 +1268,7 @@ def approximate_profile_map(
         sqrt_ts_threshold_ul = flux_map.sqrt_ts_threshold_ul
 
     mask_valid = ~np.isnan(flux_map.dnde.data)
-    ij, il, ik = np.where(mask_valid)
+    ij, il, ik = np.nonzero(mask_valid)
     loc = flux_map.dnde.data[mask_valid][:, None]
     value = dnde_coord[ij, :, il, ik]
     try:
@@ -1301,11 +1307,11 @@ def approximate_profile_map(
     except NameError:
         pass
 
-    if not sqrt_ts_threshold_ul == "ignore" and sqrt_ts_threshold_ul is not None:
+    if sqrt_ts_threshold_ul != "ignore" and sqrt_ts_threshold_ul is not None:
         mask_ul = (flux_map.sqrt_ts.data < sqrt_ts_threshold_ul) & ~np.isnan(
             flux_map.dnde_ul.data
         )
-        ij, il, ik = np.where(mask_ul)
+        ij, il, ik = np.nonzero(mask_ul)
         value = dnde_coord[ij, :, il, ik]
         loc_ul = flux_map.dnde_ul.data[mask_ul][:, None]
         scale_ul = flux_map.dnde_ul.data[mask_ul][:, None]
@@ -1322,7 +1328,7 @@ def approximate_profile_map(
 def get_flux_map_from_profile(
     flux_map, n_sigma=1, n_sigma_ul=2, reference_model=None, meta=None, gti=None
 ):
-    """Create a new flux map using the likehood profile (stat_scan)
+    """Create a new flux map using the likelihood profile (stat_scan)
     to get ts, dnde, dnde_err, dnde_errp, dnde_errn, and dnde_ul.
 
     Parameters
@@ -1453,6 +1459,11 @@ def _get_default_norm(
             norm = Parameter(**norm_kwargs)
         except TypeError as error:
             raise TypeError(f"Invalid dict key for norm init : {error}")
+    if norm is not None and norm.interp == "lin":
+        log.warning(
+            "Linear interpolation should be used with care on the 'norm' parameter. "
+            "We recommend using 'log' interpretation instead."
+        )
     if norm.name != "norm":
         raise ValueError("norm.name is not 'norm'")
     return norm

@@ -599,7 +599,7 @@ because it does not affect the proposed API for datasets.
 Lazy loading of Datasets
 ------------------------
 For the use-case of inspecting or stacking individual datasets (e.g. MapDataset per observation)
-it could be advantegeous to implement a lazy-loading or generator interface for
+it could be advantageous to implement a lazy-loading or generator interface for
 ``Datasets.read()``. Such that the individual datasets are only read from disk on
 requests and are not loaded in memory when calling ``.read()``. We leave this question
 un-addressed in this PR but mention it for completeness.

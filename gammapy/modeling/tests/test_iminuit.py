@@ -96,7 +96,7 @@ def test_iminuit_limits():
     # Check that minuit sees the limit factors correctly
     params = minuit.init_params
 
-    assert not params["x"].has_limits
+    assert not params["par_000_x"].has_limits
     assert params["par_001_y"].has_limits
     assert_allclose(params["par_001_y"].lower_limit, 3.01)
     assert params["par_001_y"].upper_limit is None
@@ -109,7 +109,7 @@ def test_opts():
         function=ds.fcn, parameters=pars, migrad_opts={"ncall": 20}, tol=1.0, strategy=2
     )
     assert info["nfev"] == 29
-    assert minuit.tol == 1.0
+    assert_allclose(minuit.tol, 1.0)
     assert minuit.strategy == 2
 
 

@@ -287,9 +287,9 @@ def plot_distribution(
     axes : `~numpy.ndarray` of `~matplotlib.pyplot.Axes`
         Array of Axes.
     result_list : list of dict
-        List of dictionnary that contains the results of `scipy.optimize.curve_fit`. The number of elements in the list
+        List of dictionary that contains the results of `scipy.optimize.curve_fit`. The number of elements in the list
         correspond to the dimension of the non-spatial axis of the map.
-        The dictionnary contains:
+        The dictionary contains:
 
             * `axis_edges` : the edges of the non-spatial axis bin used
             * `param` : the best-fit parameters of the input function `func`
@@ -336,7 +336,7 @@ def plot_distribution(
 
         cutout_mask.data = np.logical_and(cutout_mask.data, mask.data)
 
-    idx_x, idx_y = np.where(cutout_mask)
+    idx_x, idx_y = np.nonzero(cutout_mask)
 
     data = cutout.data[..., idx_x, idx_y]
 
@@ -423,3 +423,12 @@ def plot_distribution(
         axe.legend()
 
     return axes, result_list
+
+
+def get_last_user_line_or_patch(ax):
+    """Return the last-added user Line2D or Patch on a `~matplotlib.pyplot.Axes`."""
+
+    allowed_ids = {id(a) for a in ax.lines} | {id(a) for a in ax.patches}
+    for a in reversed(ax.get_children()):
+        if id(a) in allowed_ids:
+            return a

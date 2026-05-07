@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Instrument response functions (IRFs)."""
+
 from gammapy.utils.registry import Registry
 from .background import Background2D, Background3D, BackgroundIRF
 from .core import IRF, FoVAlignment, IRFMap

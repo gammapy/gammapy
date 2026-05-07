@@ -337,6 +337,9 @@ def test_flux_map_str(wcs_flux_map, reference_model):
 def test_flux_map_read_write(tmp_path, wcs_flux_map, logpar_reference_model, sed_type):
     fluxmap = FluxMaps(wcs_flux_map, logpar_reference_model)
 
+    with pytest.raises(ValueError, match="The filename is not defined."):
+        fluxmap.write(None)
+
     fluxmap.write(tmp_path / "tmp.fits", sed_type=sed_type, overwrite=True)
     new_fluxmap = FluxMaps.read(tmp_path / "tmp.fits")
 
@@ -349,9 +352,9 @@ def test_flux_map_read_write(tmp_path, wcs_flux_map, logpar_reference_model, sed
     assert (
         new_fluxmap.reference_model.spectral_model.tag[0] == "LogParabolaSpectralModel"
     )
-    assert new_fluxmap.reference_model.spectral_model.alpha.value == 1.5
-    assert new_fluxmap.reference_model.spectral_model.beta.value == 0.5
-    assert new_fluxmap.reference_model.spectral_model.amplitude.value == 2e-12
+    assert_allclose(new_fluxmap.reference_model.spectral_model.alpha.value, 1.5)
+    assert_allclose(new_fluxmap.reference_model.spectral_model.beta.value, 0.5)
+    assert_allclose(new_fluxmap.reference_model.spectral_model.amplitude.value, 2e-12)
 
     # check existence and content of additional map
     assert_allclose(new_fluxmap.sqrt_ts.data, 1.0)
@@ -583,7 +586,6 @@ def test_slice_by_coord():
 
 
 def test_copy(map_flux_estimate):
-
     model = SkyModel(PowerLawSpectralModel(amplitude="1e-10 cm-2s-1TeV-1", index=3))
 
     fe = FluxMaps(data=map_flux_estimate, reference_model=model)

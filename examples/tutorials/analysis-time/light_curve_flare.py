@@ -52,7 +52,7 @@ In summary, we have to:
 -  Extract the light curve from the reduced dataset
 
 Here, we will use the PKS 2155-304 observations from the
-`H.E.S.S. first public test data release <https://www.mpi-hd.mpg.de/hfm/HESS/pages/dl3-dr1/>`__.
+`H.E.S.S. first public test data release <https://hess-experiment.eu/releases/>`__.
 We will use time intervals of 5 minutes
 duration. The tutorial is implemented with the intermediate level API.
 

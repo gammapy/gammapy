@@ -96,7 +96,7 @@ Bug fixes and improvements
 *gammapy.stats*
 
 - For consistency with the convention of `errn` and `errp` in the `Estimator` classes, which are
-  always positve quantities, the sign of the value returned by `~gammapy.stats.CountsStatistic.compute_errn()`
+  always positive quantities, the sign of the value returned by `~gammapy.stats.CountsStatistic.compute_errn()`
   has been changed.
 
 Contributors

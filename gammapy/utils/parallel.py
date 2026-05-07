@@ -278,7 +278,7 @@ def run_multiprocessing(
             processes = cpu_count
 
         if multiprocessing.current_process().name != "MainProcess":
-            # with multiprocessing subprocesses cannot have childs (but possible with ray)
+            # with multiprocessing subprocesses cannot have children (but possible with ray)
             processes = 1
 
     if processes == 1:

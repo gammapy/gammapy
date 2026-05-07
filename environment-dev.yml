@@ -21,7 +21,7 @@ dependencies:
   - astropy
   - click>8.0
   - cython
-  - numpy>1.20
+  - numpy
   - pydantic>=2.5
   - pyyaml
   - regions>=0.5
@@ -29,6 +29,8 @@ dependencies:
   - scipy!=1.10
   - iminuit>=2.8.0
   - extension-helpers
+  - tqdm
+  - requests
   # test dependencies
   - codecov
   - pytest
@@ -36,8 +38,6 @@ dependencies:
   - pytest-cov
   - pytest-xdist
   - coverage
-  - requests
-  - tqdm
   # extra dependencies
   - healpy
   - ipython
@@ -48,17 +48,14 @@ dependencies:
   - reproject
   - ultranest
   - numba
+  - arviz
   # dev dependencies
-  - black=22.6.0
   - codespell
-  - flake8
-  - isort
   - jinja2
   - jupytext
   - nbsphinx
   - numdifftools
   - pandoc
-  - pydocstyle
   - pylint
   - setuptools_scm
   - sherpa>=4.17
@@ -75,6 +72,7 @@ dependencies:
   - nbformat
   - h5py
   - ruamel.yaml
+  - towncrier
   # incompatible with current jupyter, results in broken env when present
   # use e.g. pipx if you need cffconvert
   # - cffconvert
@@ -83,5 +81,6 @@ dependencies:
   - pip:
       - pytest-sphinx
       - ray[default]>=2.9
+      - arviz[preview]
       - PyGithub
       - pypandoc

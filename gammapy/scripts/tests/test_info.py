@@ -15,3 +15,6 @@ def test_cli_info_no_args():
     assert "Gammapy package" in result.output
     assert "Other packages" in result.output
     assert "Gammapy environment variables" in result.output
+    assert "pydantic" in result.output
+    assert "jupyter" in result.output
+    assert "PyYAML" in result.output

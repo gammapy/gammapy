@@ -55,20 +55,18 @@ Four solutions exist:
 
 1. You add this message by hand into each of your commit messages (not recommended)
 
-2. You can sign each of your commits with the command: "``git commit -s``".
+2. You can sign each of your commits with the command: ``git commit -s``.
 
-If you have authored a commit that is missing its ‘Signed-off-by’ line, you can amend your commits and push them to
-GitHub: "``git commit --amend --no-edit --signoff``"
-(see also this `How To <https://github.com/src-d/guide/blob/master/developer-community/fix-DCO.md#how-to-add-sign-offs-retroactively>`_).
+    * If you have authored a commit that is missing its ‘Signed-off-by’ line, you can amend your commits and push them to
+      GitHub: ``git commit --amend --no-edit --signoff``
+      (see also this `How To <https://github.com/src-d/guide/blob/master/developer-community/fix-DCO.md#how-to-add-sign-offs-retroactively>`_).
 
-3. You can make an alias of the command "``git commit -s``", e.g.
+3. You can make an alias of the command ``git commit -s``, e.g. ``alias gcs 'git commit -s'``.
 
-``alias gcs 'git commit -s'``
+4. You can create a so-called ``git hooks`` allowing to automatically sign all your commits (recommended option). This
+   method is described in detail `here <https://github.com/src-d/guide/blob/master/developer-community/fix-DCO.md#how-to-prevent-missing-sign-offs-in-the-future>`_.
 
-4. You can create a so-called `git hooks` allowing to automatically sign all your commits (recommended option). This
-method is described in detail `here <https://github.com/src-d/guide/blob/master/developer-community/fix-DCO.md#how-to-prevent-missing-sign-offs-in-the-future>`_.
-
-For each of these solutions, it is **mandatory** to correctly set your `user.name` and `user.email` as part of your git
+For each of these solutions, it is **mandatory** to correctly set your ``user.name`` and ``user.email`` as part of your git
 configuration (see `this page <https://docs.github.com/en/account-and-profile/setting-up-and-managing-your-personal-account-on-github/managing-email-preferences/setting-your-commit-email-address>`_ to configure it).
 You have to use **your real name** (i.e., pseudonyms or anonymous contributions cannot be made) when using git. This is
 because the DCO is a binding document, granting the Gammapy project to be an open source project.
@@ -264,38 +262,47 @@ We adhere to the PEP8 coding style. To enforce this, setup the
 
     pre-commit install
 
+``pre-commit`` will run before every commit and ensure code linting and formatting. But one can run it manually using:
+
+.. code-block:: bash
+
+    # on all files
+    pre-commit run --all-files
+    # or on specific files:
+    pre-commit run --files <file1> <file2> ...
+
 
 Running tests & building Documentation
 ======================================
 To run tests and build documentation we use tool `tox <https://tox.wiki/en/latest/>`__.
 It is a virtual environment management tool which allows you to test Gammapy locally
-in mutltiple test environments with different versions of Python and our dependencies.
-It is also used to build the documentation and check the codestyle in a specific environment.
-The same setup based on `tox` is used in our CI build.
+in multiple test environments with different versions of Python and our dependencies.
+It is also used to build the documentation.
+The same setup based on ``tox`` is used in our CI build.
 
-Once you have created and activated the `gammapy-dev` environment, made some modification
+Once you have created and activated the ``gammapy-dev`` environment, made some modification
 to the code, you should run the tests:
 
 .. code-block:: bash
 
     tox -e test
 
-This will execute the tests in the standard `test`` environment. If you would like
+This will execute the tests in the standard ``test`` environment. If you would like
 to test with a different environment you can use:
 
 .. code-block:: bash
 
-    tox -e py310-test-numpy121
+    tox -e py313-test-numpy21
 
-Which will test the code with Python 3.10 and numpy 1.21. All available pre-defined
+Which will test the code with Python 3.13 and numpy 2.1. All available pre-defined
 environments can be listed using:
 
 .. code-block:: bash
 
     tox --listenvs
 
-However for most contributions testing with the standard `tox -e test` command is sufficient.
-Additional arguments for `pytest` can be passed after `--`:
+However for most contributions testing with the standard ``tox -e test`` command is sufficient.
+Additional arguments for ``pytest`` can be passed after ``--``:
 
 .. code-block:: bash
 
@@ -314,54 +321,10 @@ To build the documentation locally you can use:
 
     tox -e build_docs
 
-And use `make docs-show` to open a browser and preview the result.
+And use ``make docs-show`` to open a browser and preview the result.
 
-The codestyle can be checked using the command:
+Finally to make a completely clean folder for build the documentation you can run:
 
 .. code-block:: bash
 
-    tox -e codestyle
-
-Which will run the tool `flake8` to check for code style issues.
-
-
-..
-    * run tests
-    * build docs
-    * explain make and setup.py
-
-    **Make a working example**
-
-    * Explain "documentation driven development" and "test driven development"
-
-    * make a branch
-    * test in ``examples``
-    * ``import IPython; IPython.embed`` trick
-
-    **Integrate the code in Gammapy**
-
-    * move functions / classes to Gammapy
-    * move tests to Gammapy
-    * check tests locally
-    * check docs locally
-
-    **Contribute with Jupyter notebooks**
-
-    * check tests with user tutorials environment: `gammapy jupyter --src mynotebook.ipynb test --tutor`
-    * strip the output cells: `gammapy jupyter --src mynotebook.ipynb strip`
-    * clean format code cells: `gammapy jupyter --src mynotebook.ipynb  black`
-    * diff stripped notebooks: `git diff mynotbeook.pynb`
-
-    **Make a pull request**
-
-    * make a pull request
-    * check diff on GitHub
-    * check tests on travis-ci
-
-    **Code review**
-
-    tbd
-
-    **Close the loop**
-
-    tbd
+    make clean-repo

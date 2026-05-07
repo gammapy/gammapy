@@ -18,7 +18,6 @@ from gammapy.utils.fits import earth_location_from_dict
 from gammapy.utils.testing import Checker
 from gammapy.utils.time import time_ref_from_dict
 from .metadata import EventListMetaData
-from gammapy.utils.deprecation import deprecated_renamed_argument
 
 __all__ = ["EventList"]
 
@@ -340,13 +339,16 @@ class EventList:
         mask &= energy < energy_range[1]
         return self.select_row_subset(mask)
 
-    def select_time(self, time_interval):
+    def select_time(self, time_interval, inverted=False):
         """Select events in time interval.
 
         Parameters
         ----------
         time_interval : `astropy.time.Time`
             Start time (inclusive) and stop time (exclusive) for the selection.
+        inverted : bool, optional
+            Whether to invert selection i.e. to keep all entries outside the time range.
+            Default is False.
 
         Returns
         -------
@@ -356,6 +358,8 @@ class EventList:
         time = self.time
         mask = time_interval[0] <= time
         mask &= time < time_interval[1]
+        if inverted:
+            mask = ~mask
         return self.select_row_subset(mask)
 
     def select_region(self, regions, wcs=None):
@@ -379,7 +383,6 @@ class EventList:
         mask = geom.contains(self.radec)
         return self.select_row_subset(mask)
 
-    @deprecated_renamed_argument("band", "values", "2.0")
     def select_parameter(self, parameter, values, is_range=True):
         """
         Event selection according to parameter values, either in a range or exact matches.

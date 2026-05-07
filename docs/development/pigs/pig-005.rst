@@ -50,8 +50,8 @@ create bugfix releases for v1.0 in a v1.0.x series.
 * Gammapy 0.9 in November 2018
 * Gammapy 0.10 in January 2019
 * Gammapy 0.11 in March 2019
-* Gammapy 0.12 in Mai 2019
-* Gammapy 0.13 in Juli 2019
+* Gammapy 0.12 in May 2019
+* Gammapy 0.13 in July 2019
 * Gammapy 0.14 in September 2019
 * Gammapy 0.15 in October 2019
 * Gammapy 1.0 in November 2019
@@ -105,7 +105,7 @@ Data and Observation handling
 -----------------------------
 
 Implement support for good time intervals (GTIs). Simplify DL3 data access and
-simpify creation of custom index files. Implement support for event types.
+simplify creation of custom index files. Implement support for event types.
 
 IRFs
 ----
@@ -129,7 +129,7 @@ Unify and improve integration of background and exposure maps along the energy
 axes. Improve performance of the model evaluation by using bounding boxes and
 caching (low priority). Add support for healpix maps (low priority). Implement
 3D background model creation. Better expose classical image based background
-methods such as ring- and adaptive ring-backround. Implement spectral points
+methods such as ring- and adaptive ring-background. Implement spectral points
 estimation with 3D analysis.
 
 Datasets

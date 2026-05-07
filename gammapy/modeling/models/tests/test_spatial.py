@@ -14,7 +14,7 @@ from regions import (
     PointSkyRegion,
     RectangleSkyRegion,
 )
-from gammapy.maps import Map, MapAxis, MapCoord, RegionGeom, WcsGeom, WcsNDMap
+from gammapy.maps import Map, MapAxis, MapCoord, RegionGeom, WcsGeom, WcsNDMap, HpxGeom
 from gammapy.modeling.models import (
     SPATIAL_MODEL_REGISTRY,
     ConstantSpatialModel,
@@ -350,7 +350,7 @@ def test_sky_diffuse_constant():
 @requires_data()
 @requires_dependency("ipywidgets")
 def test_sky_diffuse_map(caplog):
-    filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits"  # noqa: E501
+    filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits.gz"  # noqa: E501
     model = TemplateSpatialModel.read(filename, normalize=False)
     lon = [258.5, 0] * u.deg
     lat = -39.8 * u.deg
@@ -430,6 +430,17 @@ def test_sky_diffuse_map_3d():
 
     with mpl_plot_check():
         model.plot_interactive()
+
+
+@requires_dependency("healpy")
+def test_hpx_template():
+    geom = HpxGeom.create(nside=16)
+    template_map = Map.from_geom(geom=geom, data=1, unit="")
+
+    model = TemplateSpatialModel(template_map)
+    val = model.evaluate(lon=0, lat=0)
+
+    assert_allclose(val.to_value("sr-1"), 1.0 / (4 * np.pi))
 
 
 def test_sky_diffuse_map_normalize():
@@ -524,7 +535,7 @@ def test_model_from_dict(tmpdir, model_cls):
 
     data = model.to_dict()
     model_from_dict = model_cls.from_dict(data)
-    assert model_from_dict.tag == model_from_dict.tag
+    assert model_from_dict.tag == model.tag
 
     bkg_model = FoVBackgroundModel(spatial_model=model, dataset_name="test")
     bkg_model_dict = bkg_model.to_dict()
@@ -596,6 +607,20 @@ def test_spatial_model_plot_error(model_class, extension_param):
         ax = empty_map.plot()
         model.plot_error(ax=ax, which="all")
         model.plot_error(ax=ax, which="position")
+        model.plot_error(ax=ax, which="extension")
+
+
+def test_pointspatialmodel_plot_error():
+    model = PointSpatialModel(lon_0="0 deg", lat_0="0 deg", frame="galactic")
+    model.lat_0.error = 0.04
+    model.lon_0.error = 0.02
+
+    empty_map = Map.create(
+        skydir=model.position, frame=model.frame, width=1, binsz=0.02
+    )
+    with mpl_plot_check():
+        ax = empty_map.plot()
+        model.plot_error(ax=ax, which="all")
         model.plot_error(ax=ax, which="extension")
 
 
@@ -783,7 +808,7 @@ def test_piecewise_spatial_model_3d():
 
 @requires_data()
 def test_template_ND(tmpdir, caplog):
-    filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits"  # noqa: E501
+    filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits.gz"  # noqa: E501
     map_ = Map.read(filename)
     map_.data[map_.data < 0] = 0
     geom2d = map_.geom
@@ -830,7 +855,7 @@ def test_template_ND(tmpdir, caplog):
 
 @requires_data()
 def test_templatespatial_write(tmpdir, caplog):
-    filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits"
+    filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits.gz"
     map_ = Map.read(filename)
     with caplog.at_level(logging.WARNING):
         template = TemplateSpatialModel(map_)
@@ -846,8 +871,31 @@ def test_templatespatial_write(tmpdir, caplog):
 
 @requires_data()
 def test_template_spatial_parameters_copy():
-    filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits"
+    filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits.gz"
     model = TemplateSpatialModel.read(filename, normalize=False)
     model.position = SkyCoord(0, 0, unit="deg", frame="galactic")
     model_copy = model.copy()
     assert_allclose(model.parameters.value, model_copy.parameters.value)
+
+
+@requires_dependency("healpy")
+def test_hpx_template_normalize():
+    """
+    Test the normalization (scaling) of a multidimensional HPX map.
+    This ensures that the `axis=-1` and `keepdims=True` logic works correctly
+    for scaling each spatial slice independently.
+    """
+    energy_axis = MapAxis.from_energy_bounds("1 TeV", "10 TeV", nbin=2)
+    geom = HpxGeom.create(nside=4, axes=[energy_axis])
+
+    template_map = Map.from_geom(geom=geom, unit="")
+    template_map.data[0, :] = 2.0
+    template_map.data[1, :] = 5.0
+
+    model = TemplateSpatialModel(template_map, normalize=True)
+
+    solid_angle = geom.solid_angle().to_value("sr")
+
+    integral = np.sum(model.map.data * solid_angle, axis=-1)
+
+    assert_allclose(integral, [1.0, 1.0])

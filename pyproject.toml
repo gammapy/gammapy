@@ -1,11 +1,128 @@
+[project]
+name = "gammapy"
+description = "A Python package for gamma-ray astronomy"
+readme = "LONG_DESCRIPTION.rst"
+license = "BSD-3-Clause"
+license-files = ["LICENSE.rst"]
+authors = [
+    { name = "The Gammapy developers", email = "gammapy-coordination-l@in2p3.fr" }
+]
+requires-python = ">=3.11"
+classifiers = [
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: C",
+    "Programming Language :: Cython",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Topic :: Scientific/Engineering :: Astronomy",
+]
+dependencies = [
+    "numpy>=2.0",
+    "scipy>=1.13",
+    "astropy>=6.1.5",  # AnchoredEllipse fix
+    "regions>=0.9.0",
+    "pyyaml>=5.3",
+    "click>=8.0",
+    "pydantic>=2.8.0",
+    "iminuit>=2.26.0",
+    "matplotlib>=3.8",
+    "requests",
+    "tqdm",
+]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://gammapy.org"
+Documentation = "https://docs.gammapy.org/dev/"
+Source = "https://github.com/gammapy/gammapy"
+
 [build-system]
 requires = [
-    "setuptools >= 65",
+    "setuptools >= 77.0.3",
+    "wheel",
     "Cython",
     "numpy >= 2.0.0rc1",
     "setuptools_scm[toml] >= 8",
 ]
 build-backend = "setuptools.build_meta"
+
+[project.optional-dependencies]
+all = [
+    "naima",
+    "sherpa; platform_system != 'Windows'",
+    "healpy; platform_system != 'Windows'",
+    "ipywidgets",
+    "ray[default]>=2.9,<2.55; python_version < '3.14'",
+    "ray[default]>=2.55; python_version >= '3.14'",
+    "ultranest",
+    "numba",
+    "arviz<1",
+    "arviz[preview]",
+]
+all_no_ray = [
+    "naima",
+    "sherpa; platform_system != 'Windows'",
+    "healpy; platform_system != 'Windows'",
+    "ipywidgets",
+    "ultranest",
+    "numba",
+    "arviz<1",
+    "arviz[preview]",
+]
+cov = [
+    "naima",
+    "sherpa; platform_system != 'Windows'",
+    "healpy; platform_system != 'Windows'",
+    "ipywidgets",
+    "ultranest",
+    "numba",
+    "arviz<1",
+    "arviz[preview]",
+]
+test = [
+    "pytest-astropy",
+    "pytest-xdist",
+    "pytest",
+    "docutils",
+    "sphinx",
+]
+docs = [
+    "astropy",
+    "numpydoc",
+    "sphinx",
+    "sphinx_automodapi",
+    "sphinx-click",
+    "sphinx-copybutton",
+    "sphinx-design",
+    "sphinx-gallery",
+    "sphinx-changelog",
+    "pydata-sphinx-theme",
+    "nbformat",
+    "docutils",
+]
+test_notebooks = [
+    "jupyter",
+    "jupytext",
+    "jupyter_client",
+    "ipykernel"
+]
+
+[tool.setuptools.packages.find]
+include = ["gammapy*"]
+
+[tool.setuptools.package-data]
+"gammapy" = ["CITATION"]
+"gammapy.analysis" = ["config/*"]
+"gammapy.workflow" = ["config/*"]
+"gammapy.irf.psf.tests" = ["data/*"]
+"gammapy.modeling.models.tests" = ["data/*"]
+"gammapy.catalog.tests" = ["data/*"]
+
 
 [tool.pytest.ini_options]
 filterwarnings = [
@@ -28,17 +145,52 @@ except Exception:
 """
 
 [tool.ruff]
-exclude = ["docs", "dev"]
 # Like black
 line-length = 88
 indent-width = 4
 
 [tool.ruff.lint]
-ignore = ["E741"]
-extend-ignore = ["E203","E712"]
+select = [
+  "E",   # pycodestyle errors
+  "F",   # pyflakes
+  "B",   # flake8-bugbear
+  "I",   # isort
+  "PLE", # pylint errors
+  "D",   # pydocstyle
+  # "UP",   # pyUpgrade
+  "FLY", # flynt
+  "DTZ", # flake8-datetimez
+  "S",   # flake8-bandit
+  "N",   # pep8-naming
+]
+ignore = [
+    # rules we want to always ignore
+    # for rules details see: https://docs.astral.sh/ruff/rules/
+    "B904", "B905", "B026",
+    "D100", "D102", "D104", "D105",
+    "D205", "D400", "D401", "D403",
+    "N802", "N803", "N806", "N813",
+    "S101", # use of assert
+    # TODO: the following rules should not be ignored
+    "B006","B007", "B008", "B009", "B017", "B018", "B024", "B028",
+    "D101", "D103", "D200", "D202", "D208", "D209", "D214", "D215", "D301", "D404", "D409", "D410", "D411", "D419",
+    "DTZ011",
+    "E741",
+    "F401",
+    "N801", "N805", "N815", "N816", "N818",
+    "S113", "S202", "S301", "S307", "S324",  "S603",
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
+[tool.ruff.lint.pycodestyle]
+max-doc-length = 100
 
 [tool.ruff.lint.per-file-ignores]
 "examples/*" = ["E402"]
+"test_*.py" = ["D", "E501"]
+"docs/conf.py" = ["I"]
 
 [tool.ruff.format]
 # Like Black, use double quotes for strings.
@@ -52,3 +204,50 @@ skip-magic-trailing-comma = false
 
 # Like Black, automatically detect the appropriate line ending.
 line-ending = "auto"
+
+# Including towncrier to create the changelog
+[tool.towncrier]
+package = "gammapy"
+directory = "docs/release-notes"
+filename = "docs/release-notes/CHANGELOG.rst"
+template = "docs/release-notes/template.rst"
+
+issue_format = "`#{issue} <https://github.com/gammapy/gammapy/issues/{issue}>`_"
+
+[[tool.towncrier.type]]
+directory = "api"
+name = "API changes"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "infrastructure"
+name = "Infrastructure"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "docs"
+name = "Documentation improvements"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "feature"
+name = "New features"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "bug"
+name = "Bug Fixes"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "issues"
+name = "Known issues"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "contributors"
+name = "Contributors"
+showcontent = true
+
+[project.scripts]
+gammapy = "gammapy.scripts.main:cli"

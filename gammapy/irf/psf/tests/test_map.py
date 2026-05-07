@@ -27,13 +27,13 @@ def fake_psf3d(sigma=0.15 * u.deg, shape="gauss"):
     rad = np.linspace(0, 1.0, 101) * u.deg
     rad_axis = MapAxis.from_edges(rad, name="rad")
 
-    O, R, E = np.meshgrid(offset_axis.center, rad_axis.edges, energy_axis_true.center)
+    _, R, _ = np.meshgrid(offset_axis.center, rad_axis.edges, energy_axis_true.center)
 
-    Rmid = 0.5 * (R[:-1] + R[1:])
+    rmid = 0.5 * (R[:-1] + R[1:])
     if shape == "gauss":
-        val = np.exp(-0.5 * Rmid**2 / sigma**2)
+        val = np.exp(-0.5 * rmid**2 / sigma**2)
     else:
-        val = Rmid < sigma
+        val = rmid < sigma
 
     drad = 2 * np.pi * (np.cos(R[:-1]) - np.cos(R[1:])) * u.Unit("sr")
     psf_value = val / ((val * drad).sum(0)[0])
@@ -420,10 +420,10 @@ def test_psf_map_write_gtpsf(tmpdir):
 def test_to_image():
     psfmap = make_test_psfmap(0.15 * u.deg)
 
-    psf2D = psfmap.to_image()
-    assert_allclose(psf2D.psf_map.geom.data_shape, (1, 100, 25, 25))
-    assert_allclose(psf2D.exposure_map.geom.data_shape, (1, 1, 25, 25))
-    assert_allclose(psf2D.psf_map.data[0][0][12][12], 7.068315, rtol=1e-2)
+    psf2d = psfmap.to_image()
+    assert_allclose(psf2d.psf_map.geom.data_shape, (1, 100, 25, 25))
+    assert_allclose(psf2d.exposure_map.geom.data_shape, (1, 1, 25, 25))
+    assert_allclose(psf2d.psf_map.data[0][0][12][12], 7.068315, rtol=1e-2)
 
 
 def test_psf_map_from_gauss():

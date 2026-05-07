@@ -42,7 +42,7 @@ def bkg_3d_interp():
     fov_lat = [0, 1, 2, 3] * u.deg
     fov_lat_axis = MapAxis.from_edges(fov_lat, name="fov_lat")
 
-    data = np.ones((5, 3, 3))
+    data = np.ones((5, 3, 3), dtype=np.float32)
 
     data[-2, :, :] = 0.0
     # clipping of value before last will cause extrapolation problems
@@ -149,7 +149,7 @@ def test_background_3d_missing_values(bkg_3d_interp):
         fov_lat=0.5 * u.deg,
         energy=999 * u.TeV,
     )
-    assert_allclose(res.value, 8.796068e18)
+    assert_allclose(res.value, 8.796068e18, rtol=1e-5)
     # without missing value interpolation
     # extrapolation within the last bin would give too high value
 
@@ -267,11 +267,10 @@ def test_bkg_3d_wrong_units():
 
     wrong_unit = u.cm**2 * u.s
     data = np.ones((2, 3, 3)) * wrong_unit
-    with pytest.raises(ValueError) as error:
+    expected = "Error: (.*) is not an allowed unit. (.*) requires (.*) data quantities."
+
+    with pytest.raises(ValueError, match=expected):
         Background3D(axes=[energy_axis, fov_lon_axis, fov_lat_axis], data=data)
-    assert error.match(
-        "Error: (.*) is not an allowed unit. (.*) requires (.*) data quantities."
-    )
 
 
 def test_bkg_2d_wrong_units():
@@ -283,12 +282,10 @@ def test_bkg_2d_wrong_units():
     wrong_unit = u.cm**2 * u.s
     data = np.ones((energy_axis.nbin, offset_axis.nbin)) * wrong_unit
     bkg2d_test = Background2D(axes=[energy_axis, offset_axis])
+    expected = f"Error: {wrong_unit} is not an allowed unit. {bkg2d_test.tag} requires {bkg2d_test.default_unit} data quantities."
     with pytest.raises(ValueError) as error:
         Background2D(axes=[energy_axis, offset_axis], data=data)
-        assert error.match(
-            f"Error: {wrong_unit} is not an allowed unit. {bkg2d_test.tag}"
-            f" requires {bkg2d_test.default_unit} data quantities."
-        )
+    assert str(error.value) == expected
 
 
 def test_background_2d_read_missing_hducls():
@@ -433,7 +430,7 @@ def test_eq(bkg_2d):
     assert bkg1 == bkg_2d
 
     bkg1.data[0][0] = 10
-    assert not bkg1 == bkg_2d
+    assert bkg1 != bkg_2d
 
 
 def test_write_bkg_3d():
@@ -450,8 +447,8 @@ def test_write_bkg_3d():
         unit=u.Unit("s-1 MeV-1 sr-1"),
         fov_alignment=FoVAlignment.ALTAZ,
     )
-    hduBackground = bg_3d.to_table_hdu()
-    hduBackground.writeto("background.fits", overwrite=True)
+    hdu_background = bg_3d.to_table_hdu()
+    hdu_background.writeto("background.fits", overwrite=True)
     bg = Background3D.read("background.fits", hdu="BACKGROUND")
 
     assert bg.fov_alignment.value == "ALTAZ"

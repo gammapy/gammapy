@@ -21,23 +21,7 @@ help:
 	@echo '     docs-show          Open local HTML docs in browser'
 	@echo ''
 	@echo '     trailing-spaces    Remove trailing spaces at the end of lines in *.py files'
-	@echo '     black              Run black code formatter'
-	@echo '     isort              Run isort code formatter to sort imports'
-	@echo '     polish             Run trailing-spaces, black and isort'
-	@echo ''
-	@echo '     flake8             Run flake8 static code analysis'
 	@echo '     pylint             Run pylint static code analysis'
-	@echo '     pydocstyle         Run docstring checks'
-	@echo ''
-	@echo ' Note that most things are done via `python setup.py`, we only use'
-	@echo ' make for things that are not trivial to execute via `setup.py`.'
-	@echo ''
-	@echo ' setup.py commands:'
-	@echo ''
-	@echo '     python setup.py --help-commands'
-	@echo '     python setup.py install'
-	@echo '     python setup.py bdist_conda'
-	@echo '     python setup.py develop'
 	@echo ''
 	@echo ' To get info about your Gammapy installation and setup run this command'
 	@echo ''
@@ -93,18 +77,6 @@ docs-show:
 trailing-spaces:
 	find $(PROJECT) examples docs -name "*.py" -exec perl -pi -e 's/[ \t]*$$//' {} \;
 
-black:
-	black $(PROJECT)
-
-isort:
-	isort -rc gammapy examples docs -s docs/conf.py
-
-polish: black isort trailing-spaces;
-
-# Note: flake8 is very fast and almost never has false positives
-flake8:
-	flake8 $(PROJECT)
-
 # TODO: once the errors are fixed, remove the -E option and tackle the warnings
 # Note: pylint is very thorough, but slow, and has false positives or nitpicky stuff
 pylint:
@@ -120,15 +92,5 @@ pylint:
 # D400: First line should end with a period (not ')')
 # D401: First line should be in imperative mood; try rephrasing (found 'Function')
 # D403: First word of the first line should be properly capitalized ('Add', not 'add')
-pydocstyle:
-	pydocstyle $(PROJECT) \
-	--convention=numpy \
-	--match-dir='^(?!extern).*' \
-	--match='(?!test_).*\.py' \
-	--add-ignore=D100,D102,D103,D104,D105,D200,D202,D205,D400,D401,D403,D410
-
-# Note: codespell will pick its options from setup.cfg
-codespell:
-	codespell gammapy
 
 # TODO: add test and code quality checks for `examples`

@@ -133,7 +133,14 @@ obs = Observation.create(
 print(obs)
 
 ######################################################################
-# Simulate a spectra
+# Simulate a spectrum
+#
+#
+# Note that here we are using full containment IRFs and thus set
+# ``containment_correction=True`` in the `~gammapy.makers.SpectrumDatasetMaker` and use
+# a circular on region. If you have pointlike IRFs, please set
+# ``containment_correction=False`` and use a `~regions.PointSkyRegion`.
+# See :doc:`/tutorials/data/magic` tutorial for details.
 #
 
 # Make the SpectrumDataset
@@ -142,7 +149,9 @@ geom = RegionGeom.create(region=on_region, axes=[energy_axis])
 dataset_empty = SpectrumDataset.create(
     geom=geom, energy_axis_true=energy_axis_true, name="obs-0"
 )
-maker = SpectrumDatasetMaker(selection=["exposure", "edisp", "background"])
+maker = SpectrumDatasetMaker(
+    containment_correction=True, selection=["exposure", "edisp", "background"]
+)
 
 dataset = maker.run(dataset_empty, obs)
 

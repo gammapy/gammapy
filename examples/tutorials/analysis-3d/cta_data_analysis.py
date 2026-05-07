@@ -176,10 +176,10 @@ plt.show()
 
 spatial_model = GaussianSpatialModel(sigma="0.05 deg")
 spectral_model = PowerLawSpectralModel(index=2)
-model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
+kernel_model = SkyModel(spatial_model=spatial_model, spectral_model=spectral_model)
 
 ts_image_estimator = TSMapEstimator(
-    model,
+    kernel_model=kernel_model,
     kernel_width="0.5 deg",
     selection_optional=[],
     downsampling_factor=2,
