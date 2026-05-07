@@ -1,9 +1,9 @@
 .. include:: ../../references.txt
 
-.. _pig-029:
+.. _pig-031:
 
 *************************************************************
-PIG 29 - Separation of Plotting Methods using Plotter classes
+PIG 31 - Separation of Plotting Methods using Plotter classes
 *************************************************************
 
 * Author: Régis Terrier and Atreyee Sinha
@@ -35,6 +35,8 @@ Currently, plotting methods are tightly integrated with Gammapy objects. This pr
   possible.
 - **Performance Overhead**: We initially always used delayed imports for matplotlib but removed this at some point.
   Yet always importing `matplotlib` is inefficient for workflows that do not need plotting functionalities.
+- **Untested plotting code**: Most of out plotting code is not tested, except for `Models.plot_regions()` which has a complicated test for 
+   the colours. We only check that a plot is generated.
 
 A more modular approach, using dedicated `Plotter` classes, would resolve these issues while preserving all current plotting functionalities.
 We already have an example of such a class in `gammapy.visualization`, the `MapPanelPlotter`. It is a `WcsNDMap` plotter
@@ -117,89 +119,6 @@ The `WcsNDMapPlotter` could then be defined this way:
 
 Configuration of the `WCSAxes` could also be added on init.
 
-The `MapDatasetPlotter` could look like this:
-
-.. code:: python
-
-  import matplotlib.pyplot as plt
-
-  class MapDatasetPlotter:
-    """"""
-    def __init__(self, rc_params=None):
-        super().__init__(rc_params)
-
-    def peek(self, dataset, figsize=(12, 8)):
-        """Quick-look summary plots.
-
-        Parameters
-        ----------
-        dataset : `~gammapy.datasets.MapDataset`
-            The MapDataset to peek in.
-        figsize : tuple
-            Size of the figure. Default is (12, 10).
-
-        """
-
-        def plot_mask(ax, mask, **kwargs):
-            if mask is not None:
-                mask.plot_mask(ax=ax, **kwargs)
-
-        with plt.rc_context(self.rcParams):
-            fig, axes = plt.subplots(
-                ncols=2,
-                nrows=2,
-                subplot_kw={"projection": self._geom.wcs},
-                figsize=figsize,
-                gridspec_kw={"hspace": 0.25, "wspace": 0.1},
-            )
-
-            axes = axes.flat
-            axes[0].set_title("Counts")
-            dataset.counts.sum_over_axes().plot(ax=axes[0], add_cbar=True)
-            plot_mask(ax=axes[0], mask=dataset.mask_fit_image, alpha=0.2)
-            plot_mask(ax=axes[0], mask=dataset.mask_safe_image, hatches=["///"], colors="w")
-
-            axes[1].set_title("Excess counts")
-            dataset.excess.sum_over_axes().plot(ax=axes[1], add_cbar=True)
-            plot_mask(ax=axes[1], mask=dataset.mask_fit_image, alpha=0.2)
-            plot_mask(ax=axes[1], mask=dataset.mask_safe_image, hatches=["///"], colors="w")
-
-            axes[2].set_title("Exposure")
-            dataset.exposure.sum_over_axes().plot(ax=axes[2], add_cbar=True)
-            plot_mask(ax=axes[2], mask=dataset.mask_safe_image, hatches=["///"], colors="w")
-
-            axes[3].set_title("Background")
-            dataset.background.sum_over_axes().plot(ax=axes[3], add_cbar=True)
-            plot_mask(ax=axes[3], mask=dataset.mask_fit_image, alpha=0.2)
-            plot_mask(ax=axes[3], mask=dataset.mask_safe_image, hatches=["///"], colors="w")
-
-    def plot_mask(self,):
-        pass
-
-In the `MapDataset` code one would have:
-
-.. code:: python
-
-        def __init__(self, **lots_of_arguments):
-            self._plotter = None  # Lazy instantiation
-
-        @property
-        def plotter(self):
-            """Access the plotter for this MapDataset.
-
-            See `MapDatasetPlotter` for available plotting methods.
-            """
-            if self._plotter is None:
-                from .plotters import MapDatasetPlotter   # delayed import
-
-                self._plotter = MapDatasetPlotter(self)
-            return self._plotter
-
-        def peek(self, figsize=(12, 8)):
-            self.plotter.peek(figsize)
-
-An example for `gammapy.data` objects is proposed in the PR `#5725`_.
-
 The property getter/setter mechanism could use a `PlotMixin` approach to avoid repeating the boilerplate code.
 
 If a user wants to modify `MapDataset.peek()` to provide more suited visualization of e.g. Fermi data (`#5570`_), they could
@@ -210,7 +129,7 @@ Alternatives
 ============
 
 A general drawback of this approach is the large number of plotter classes necessary. Yet given the specialization of plot functions this seems
-unavoidable.
+unavoidable. Note that this can be reduced with stateless plotters.
 
 Other strategies can be envisioned:
 - Keep the current approach: This would maintain the status quo but does not address the issues outlined.
