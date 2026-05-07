@@ -1,1 +1,1 @@
-Fixes `integrate_spectrum` to allow integration of spectral models without a closed analytical form (e.g. BrokenPowerLaw) with energy bounds given as arrays of length 1.
+Fixes `~gammapy.modeling.models.integrate_spectrum` to allow integration of spectral models without a closed analytical form (e.g. `~gammapy.modeling.models.BrokenPowerLawSpectralModel`) with energy bounds given as arrays of length 1.
