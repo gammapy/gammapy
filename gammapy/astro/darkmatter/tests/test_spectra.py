@@ -175,3 +175,41 @@ def test_dm_spectral_model_custom_io(tmp_path):
 
     assert loaded_model.source == str(custom_file)
     assert loaded_model.mapping_dict == mapping
+
+
+def test_dm_annihilation_custom_errors(tmp_path):
+    file_path = tmp_path / "test_dm.ecsv"
+    t = Table()
+    t["mDM"] = [1000, 5000] * u.GeV
+    t["Log[10,x]"] = [-3, -2]
+    t["bbar"] = [1e-5, 1e-4]
+    t.write(file_path)
+
+    mass = 5 * u.TeV
+    with pytest.raises(TypeError, match="mapping_dict must be a dictionary"):
+        DarkMatterAnnihilationSpectralModel(
+            mass=mass,
+            channel="b",
+            source=str(file_path),
+            mapping_dict=["not", "a", "dict"],
+        )
+
+    incomplete_mapping = {"Log[10,x]": "Log[10,x]"}
+    with pytest.raises(KeyError, match="Mandatory column"):
+        DarkMatterAnnihilationSpectralModel(
+            mass=mass,
+            channel="b",
+            source=str(file_path),
+            mapping_dict=incomplete_mapping,
+        )
+
+    wrong_mapping = {"mDM": "mDM", "Log[10,x]": "Log[10,x]", "wrong_col": "tau"}
+    with pytest.raises(
+        ValueError,
+        match="The channel b is not available \
+                            in the provided mapping dictionary. Please choose another \
+                            channel or check the mapping_dict provided.\n",
+    ):
+        DarkMatterAnnihilationSpectralModel(
+            mass=mass, channel="b", source=str(file_path), mapping_dict=wrong_mapping
+        )
