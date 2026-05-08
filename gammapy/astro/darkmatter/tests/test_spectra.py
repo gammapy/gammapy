@@ -138,12 +138,12 @@ def test_custom_source_file_empty(tmp_path):
 
     with pytest.raises(KeyError, match="Source file is empty."):
         DarkMatterAnnihilationSpectralModel(
-            mass=5 * u.TeV, channel="b", source_file=empty_file
+            mass=5 * u.TeV, channel="b", source=str(empty_file)
         )
 
 
 def test_dm_spectral_model_custom_io(tmp_path):
-    """Test that source_file and mapping_dict survive YAML serialization."""
+    """Test that source file and mapping_dict survive YAML serialization."""
     custom_file = tmp_path / "custom_spectra.ecsv"
 
     t = Table(
@@ -161,7 +161,7 @@ def test_dm_spectral_model_custom_io(tmp_path):
         mass=500 * u.GeV,
         channel="b",
         jfactor=3.41e19 * u.Unit("GeV2 cm-5"),
-        source_file=str(custom_file),
+        source=str(custom_file),
         mapping_dict=mapping,
     )
 
@@ -173,5 +173,5 @@ def test_dm_spectral_model_custom_io(tmp_path):
     new_models = Models.read(filename)
     loaded_model = new_models[0].spectral_model
 
-    assert loaded_model.source_file == str(custom_file)
+    assert loaded_model.source == str(custom_file)
     assert loaded_model.mapping_dict == mapping
