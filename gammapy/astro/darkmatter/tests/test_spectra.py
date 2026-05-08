@@ -37,7 +37,12 @@ def test_primary_flux():
 def test_primary_flux_interpolation(mass, expected_flux, source, expected_exception):
     if expected_exception:
         with pytest.raises(expected_exception):
-            PrimaryFlux(channel="aZ", mDM=mass * u.TeV, source=source)
+            PrimaryFlux(
+                channel="aZ",
+                mDM=mass * u.TeV,
+                source=source,
+                mapping_dict={"mDM": "mDM"},
+            )
         return
     primflux = PrimaryFlux(channel="W", mDM=mass * u.TeV, source=source)
     actual = primflux(500 * u.GeV)
@@ -137,6 +142,17 @@ def test_custom_source_file_empty(tmp_path):
     empty_file.touch()
 
     with pytest.raises(KeyError, match="Source file is empty."):
+        DarkMatterAnnihilationSpectralModel(
+            mass=5 * u.TeV, channel="b", source=str(empty_file)
+        )
+
+
+def test_custom_source_file_bad_extension(tmp_path):
+    """Test that a custom file has a bad extension raises the correct error."""
+    empty_file = tmp_path / "empty_spectra.dl2"
+    empty_file.touch()
+
+    with pytest.raises(KeyError, match="Source file extension "):
         DarkMatterAnnihilationSpectralModel(
             mass=5 * u.TeV, channel="b", source=str(empty_file)
         )
