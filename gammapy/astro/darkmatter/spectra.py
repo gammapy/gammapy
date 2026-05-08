@@ -142,7 +142,8 @@ class PrimaryFlux(TemplateNDSpectralModel):
                 table_filename = f"{base_data_path}/cosmixs/AtProduction-Gamma.dat"
 
         self.table_path = make_path(table_filename)
-        if not self.table_path.exists():
+
+        if self.table_path is None or not self.table_path.exists():
             raise FileNotFoundError(
                 f"\n\nFile not found: {table_filename}\n"
                 "You may download the dataset needed with the following command:\n"
@@ -333,7 +334,7 @@ class PrimaryFlux(TemplateNDSpectralModel):
                 for key in self.mandatory_keys:
                     if key not in mapping_dict.values():
                         raise KeyError(
-                            f"Mandatory column '{key}' not found in file. \
+                            f"Mandatory column {key} not found in file. \
                             Please check the mapping_dict provided or the column \
                             names in the file.\n"
                         )
