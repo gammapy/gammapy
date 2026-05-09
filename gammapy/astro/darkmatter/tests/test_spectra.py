@@ -114,7 +114,9 @@ def test_primary_flux_cosmixs():
     with pytest.raises(ValueError):
         PrimaryFlux(channel="Spam", mDM=1 * u.TeV)
 
-    primflux = PrimaryFlux(channel="W", mDM=1 * u.TeV, source="cosmixs")
+    primflux = PrimaryFlux(
+        channel="W", mDM=1 * u.TeV, source="cosmixs", mapping_dict={"mDM": "mDM"}
+    )
     actual = primflux(500 * u.GeV)
     desired = 0.00013085 / u.GeV
     assert_quantity_allclose(actual, desired, rtol=1e-4)
@@ -228,4 +230,42 @@ def test_dm_annihilation_custom_errors(tmp_path):
     ):
         DarkMatterAnnihilationSpectralModel(
             mass=mass, channel="b", source=str(file_path), mapping_dict=wrong_mapping
+        )
+
+
+def test_missing_data_file(monkeypatch):
+    """Test that FileNotFoundError is raised if the data path does not exist."""
+    monkeypatch.setenv("GAMMAPY_DATA", "/fake/path/to/nowhere")
+    with pytest.raises(FileNotFoundError, match="File not found"):
+        PrimaryFlux(mDM=1 * u.TeV, channel="b")
+
+
+@requires_data()
+def test_mDM_out_of_bounds():
+    """Test that ValueError is raised if the mass is out of the interpolation table bounds."""
+    with pytest.raises(ValueError, match="is out of the bounds of the model"):
+        PrimaryFlux(mDM=1 * u.eV, channel="b")
+
+
+def test_custom_source_file_without_mapping_and_missing_channel(tmp_path):
+    """Test the use of custom files without mapping_dict and with missing channels."""
+    custom_file = tmp_path / "custom_spectra_nomap.ecsv"
+
+    t = Table(
+        {
+            "mDM": [500.0, 500.0, 1000.0, 1000.0] * u.GeV,
+            "Log[10,x]": [100.0, 200.0, 100.0, 200.0],
+            "b": [1e-15, 1e-16, 1e-15, 1e-16],
+        }
+    )
+    t.write(custom_file, format="ascii.ecsv")
+
+    model = DarkMatterAnnihilationSpectralModel(
+        mass=500 * u.GeV, channel="b", source=str(custom_file)
+    )
+    assert model.channel == "b"
+
+    with pytest.raises(ValueError, match="The channel eL is not available"):
+        DarkMatterAnnihilationSpectralModel(
+            mass=500 * u.GeV, channel="eL", source=str(custom_file)
         )
