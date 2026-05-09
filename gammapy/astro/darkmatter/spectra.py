@@ -324,20 +324,17 @@ class PrimaryFlux(TemplateNDSpectralModel):
 
     @mapping_dict.setter
     def mapping_dict(self, mapping_dict):
-        if self._source_type != "custom_file":
-            self._mapping_dict = None
-        else:
-            if mapping_dict is not None:
-                if not isinstance(mapping_dict, dict):
-                    raise TypeError("mapping_dict must be a dictionary.")
+        if mapping_dict is not None:
+            if not isinstance(mapping_dict, dict):
+                raise TypeError("mapping_dict must be a dictionary.")
 
-                for key in self.mandatory_keys:
-                    if key not in mapping_dict.values():
-                        raise KeyError(
-                            f"Mandatory column {key} not found in file. \
-                            Please check the mapping_dict provided or the column \
-                            names in the file.\n"
-                        )
+            for key in self.mandatory_keys:
+                if key not in mapping_dict.values():
+                    raise KeyError(
+                        f"Mandatory column {key} not found in file. \
+                        Please check the mapping_dict provided or the column \
+                        names in the file.\n"
+                    )
         self._mapping_dict = mapping_dict
 
     def evaluate(self, energy, *args):
