@@ -396,7 +396,7 @@ class SpatialModel(ModelBase):
         m = self._get_plot_map(geom)
         if m.geom.is_image:
             raise TypeError("Use .plot() for 2D Maps")
-        m.plot_interactive(ax=ax, **kwargs)
+        return m.plot_interactive(ax=ax, **kwargs)
 
     def plot_position_error(self, ax=None, **kwargs):
         """Plot position error.
@@ -1604,7 +1604,7 @@ class TemplateSpatialModel(SpatialModel):
         """
         if geom is None:
             geom = self.map.geom
-        super().plot(ax=ax, geom=geom, **kwargs)
+        return super().plot(ax=ax, geom=geom, **kwargs)
 
     def plot_interactive(self, ax=None, geom=None, **kwargs):
         """Plot spatial model.
@@ -1625,7 +1625,7 @@ class TemplateSpatialModel(SpatialModel):
         """
         if geom is None:
             geom = self.map.geom
-        super().plot_interactive(ax=ax, geom=geom, **kwargs)
+        return super().plot_interactive(ax=ax, geom=geom, **kwargs)
 
 
 class TemplateNDSpatialModel(SpatialModel):

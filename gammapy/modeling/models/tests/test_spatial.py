@@ -460,6 +460,17 @@ def test_sky_diffuse_map_normalize():
     assert_allclose(integral.value, 1, rtol=1e-4)
 
 
+def test_template_spatial_model_plot_returns_axes():
+    model_map = Map.create(map_type="wcs", width=(1, 1), binsz=0.5, unit="sr-1")
+    model_map.data += 1.0
+    model = TemplateSpatialModel(model_map, normalize=False)
+
+    with mpl_plot_check():
+        ax = model.plot()
+
+    assert ax is not None
+
+
 def test_sky_diffuse_map_copy():
     # define model map with a constant value of 1
     model_map = Map.create(map_type="wcs", width=(1, 1), binsz=0.5, unit="sr-1")
