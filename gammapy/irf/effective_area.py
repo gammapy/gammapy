@@ -1,11 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import numpy as np
 import astropy.units as u
-from astropy.visualization import quantity_support
 import matplotlib.pyplot as plt
+import numpy as np
+from astropy.visualization import quantity_support
+
 from gammapy.maps import MapAxes, MapAxis
 from gammapy.maps.axes import UNIT_STRING_FORMAT
 from gammapy.visualization.utils import add_colorbar
+
 from .core import IRF
 
 __all__ = ["EffectiveAreaTable2D"]
@@ -139,7 +141,6 @@ class EffectiveAreaTable2D(IRF):
             for ee in energy:
                 area = self.evaluate(offset=offset_axis.center, energy_true=ee)
                 max_area = np.nanmax(area)
-                area /= np.nanmax(area)
                 if max_area == 0:
                     continue
                 area /= max_area
