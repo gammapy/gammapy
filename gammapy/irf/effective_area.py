@@ -1,13 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import astropy.units as u
-import matplotlib.pyplot as plt
 import numpy as np
+import astropy.units as u
 from astropy.visualization import quantity_support
-
+import matplotlib.pyplot as plt
 from gammapy.maps import MapAxes, MapAxis
 from gammapy.maps.axes import UNIT_STRING_FORMAT
 from gammapy.visualization.utils import add_colorbar
-
 from .core import IRF
 
 __all__ = ["EffectiveAreaTable2D"]
