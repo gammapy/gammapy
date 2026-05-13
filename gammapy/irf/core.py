@@ -4,11 +4,13 @@ import html
 import logging
 from copy import deepcopy
 from enum import Enum
+
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
-from astropy.table import Table
+from astropy.table import Table, hstack
 from astropy.utils import lazyproperty
+
 from gammapy.maps import Map, MapAxes, MapAxis, RegionGeom
 from gammapy.utils.compat import COPY_IF_NEEDED
 from gammapy.utils.integrate import trapz_loglog
@@ -17,7 +19,13 @@ from gammapy.utils.interpolation import (
     interpolation_scale,
 )
 from gammapy.utils.scripts import make_path
-from .io import IRF_DL3_HDU_SPECIFICATION, IRF_MAP_HDU_SPECIFICATION, gadf_is_pointlike
+
+from .io import (
+    IRF_DL3_AXES_SPECIFICATION,
+    IRF_DL3_HDU_SPECIFICATION,
+    IRF_MAP_HDU_SPECIFICATION,
+    gadf_is_pointlike,
+)
 
 log = logging.getLogger(__name__)
 
@@ -506,9 +514,41 @@ class IRF(metaclass=abc.ABCMeta):
         table : `~astropy.table.Table`
             IRF data table.
         """
-        table = self.axes.to_table(format=format)
 
         if format == "gadf-dl3":
+            tables = []
+
+            for ax in self.axes:
+                table = Table()
+                edges = ax.edges
+
+                if ax.name == "energy":
+                    column_prefix = "ENERG"
+                else:
+                    for column_prefix, spec in IRF_DL3_AXES_SPECIFICATION.items():
+                        if spec["name"] == ax.name:
+                            break
+
+                if ax.node_type == "edges":
+                    edges_hi, edges_lo = edges[:-1], edges[1:]
+                else:
+                    edges_hi, edges_lo = ax.center, ax.center
+
+                table[f"{column_prefix}_LO"] = edges_hi[np.newaxis]
+                table[f"{column_prefix}_HI"] = edges_lo[np.newaxis]
+
+                # background models are stored in reconstructed energy
+                hduclass = table.meta.get("HDUCLAS2")
+                if hduclass in {"BKG", "RAD_MAX"} and column_prefix == "ENERG":
+                    name = "energy"
+
+                edges_lo = table[f"{column_prefix}_LO"].quantity[0]
+                edges_hi = table[f"{column_prefix}_HI"].quantity[0]
+
+                tables.append(ax.to_table(format=format))
+
+            table = hstack(tables)
+
             table.meta = self.meta.copy()
             spec = IRF_DL3_HDU_SPECIFICATION[self.tag]
 
