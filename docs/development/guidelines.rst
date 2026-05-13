@@ -7,14 +7,12 @@ Community Guidelines
 This section describes a list of requirements and guidelines that should be followed
 by any contributor to Gammapy. We warmly welcome new contributors to Gammapy.
 
-* If you are new to Gammapy, both as a user and contributor, we strongly encourage
-  you to get in `contact <https://gammapy.org/contact.html>`__ with us early via
-  GitHub,  Slack or email before beginning your journey. See :ref:`contact-early`
-  for further detail.
+* If you are new to Gammapy please read the :ref:<new-contributor> steps in addition
+  the ones outlined here.
 * Before beginning work on a pull request (PR), you should comment on an issue
   (ideally labeled ``package-novice``) to express your interest, and propose
-  your intended approach there. If you have a specific idea in mind you should
-  open an issue before a PR.
+  your intended approach there. If you have a specific idea (e.g. you notice a bug
+  or want to propose a new feature) you should open an issue before a PR.
 * Opening a PR without prior discussion is generally not accepted.
 * All authors must follow the the authorship policy outlined :ref:`here <authorship-policy>`
   and ensure their git account is correctly configured.
@@ -38,8 +36,6 @@ We recognise that artificial intelligence (AI), in particular Large language mod
 within software development. We list below a number of guidelines for utilising AI:
 
 * All PRs must include a clear disclosure of any AI usage
-* You should avoid using AI to communicate with us, so we can ensure you are not an
-  automated tool (i.e. a bot)
 * The responsibility of contributing non copyrighted code rests solely on the author
 * Contributions must comply with Gammapy's license and
   :ref:`Developer Certificate of Origin (DCO) <authorship-policy>`
