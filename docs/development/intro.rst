@@ -21,8 +21,9 @@ anytime if you ask.
 
 Before attempting to make a contribution, you should *use* Gammapy a bit at least:
 
-* Install Gammapy.
-* Execute one or two of the tutorial notebooks for Gammapy and do the exercises there.
+* :ref:`Install Gammapy <getting-started>`.
+* Execute one or two of the :ref:`tutorial notebooks <tutorials>` for Gammapy and
+  do the exercises there.
 * Ask questions or complain about issues on the Gammapy
   `slack channel <https://gammapy.slack.com/>`__,
   `GitHub discussions <https://github.com/gammapy/gammapy/discussions>`__ or
@@ -36,9 +37,22 @@ list, those are contributions we value. The rest of this page though is concerne
 only with the process and technical steps how to contribute a code or documentation
 change via a **pull request** against the Gammapy repository.
 
-So let's assume you've used Gammapy for a while, and now you'd like to fix or
-add something to the Gammapy code, tests or docs. Here are the steps and commands
-to do it ...
+.. _new-contributor:
+
+New contributors
+================
+This is a general overview for new contributors to Gammapy.
+It is important that you first read our :ref:`community guidelines <dev_guidelines>`.
+
+* If you are new to Gammapy, both as a user and contributor, we strongly encourage
+  you to get in `contact <https://gammapy.org/contact.html>`__ with us early via
+  GitHub,  Slack or email before beginning your journey. See :ref:`contact-early`
+  for further detail.
+* We have marked some issues
+  `good-first-issue <https://github.com/gammapy/gammapy/issues?q=state%3Aopen%20label%3Agood-first-issue>`__
+  as we think they are a good entry point into the process of contributing to Gammapy.
+* The following sections outline the important aspects of contributing to Gammapy.
+
 
 .. _authorship-policy:
 
@@ -339,12 +353,3 @@ Finally to make a completely clean folder for build the documentation you can ru
 
     make clean-repo
 
-
-New contributors
-================
-This is a general overview for new contributors to Gammapy.
-It is important that you first read our :ref:`community guidelines <dev_guidelines>`.
-
-* We have marked some issues
-  `good-first-issue <https://github.com/gammapy/gammapy/issues?q=state%3Aopen%20label%3Agood-first-issue>`__
-  as we think they are a good entry point into the process of contributing to Gammapy.
