@@ -1221,7 +1221,7 @@ class MapAxis:
 
         Parameters
         ----------
-        format : {"ogip", "ogip-sherpa", "gadf-dl3", "gtpsf"}
+        format : {"ogip", "ogip-sherpa", "gtpsf"}
             Format specification. Default is "ogip".
 
         Returns
@@ -1254,23 +1254,6 @@ class MapAxis:
                 table["e_ref"] = self.center
                 table["e_min"] = self.edges_min
                 table["e_max"] = self.edges_max
-        elif format == "gadf-dl3":
-            from gammapy.irf.io import IRF_DL3_AXES_SPECIFICATION
-
-            if self.name == "energy":
-                column_prefix = "ENERG"
-            else:
-                for column_prefix, spec in IRF_DL3_AXES_SPECIFICATION.items():
-                    if spec["name"] == self.name:
-                        break
-
-            if self.node_type == "edges":
-                edges_hi, edges_lo = edges[:-1], edges[1:]
-            else:
-                edges_hi, edges_lo = self.center, self.center
-
-            table[f"{column_prefix}_LO"] = edges_hi[np.newaxis]
-            table[f"{column_prefix}_HI"] = edges_lo[np.newaxis]
         elif format == "gtpsf":
             if self.name == "energy_true":
                 table["Energy"] = self.center.to("MeV")
