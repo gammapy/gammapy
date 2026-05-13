@@ -545,7 +545,7 @@ class IRF(metaclass=abc.ABCMeta):
                 edges_lo = table[f"{column_prefix}_LO"].quantity[0]
                 edges_hi = table[f"{column_prefix}_HI"].quantity[0]
 
-                tables.append(ax.to_table(format=format))
+                tables.append(table)
 
             table = hstack(tables)
 
