@@ -63,6 +63,14 @@ def test_obscore_structure():
 
 @requires_data()
 def test_make_fetch_list(get_result_rows):
+
+    out_tag_dict = {
+        "bkgrate": "bkg",
+        "event-list": "event-list",
+        "aeff": "aeff",
+        "edisp": "edisp",
+        "psf": "psf",
+    }
     reg = re.compile(r"TapResult-\d+-(.*).fits.gz")
     result_rows = get_result_rows("datalink*.xml")
     fl = make_fetch_list(result_rows)
@@ -87,12 +95,14 @@ def test_make_fetch_list(get_result_rows):
         assert fl_split[idx][0][0] == res_row["access_url"]
         assert fl_split[idx][0][2] == res_row["ID"]
         assert out_tag == res_row["content_qualifier"]
+        res_rows = dl_tab[dl_tab["semantics"] == "#calibration"]
+        irf_files = fl_split[idx][1:]
+        for row, (url, filn, obsid) in zip(res_rows, irf_files):
+            out_tag = reg.match(filn).group(1)
+            assert url == row["access_url"]
+            assert obsid == row["ID"]
+            assert out_tag == out_tag_dict[row["content_qualifier"]]
 
-        res_row = dl_tab[dl_tab["semantics"] == "#calibration"][0]
-        out_tag = reg.match(fl[1][1]).group(1)
-        assert fl_split[idx][1][0] == res_row["access_url"]
-        assert fl_split[idx][1][2] == res_row["ID"]
-        assert out_tag == res_row["content_qualifier"]
 
 
 @requires_data()

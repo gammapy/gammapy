@@ -187,7 +187,11 @@ def make_fetch_list(result):
             if dl["semantics"] == "#this":
                 fetch_info[dl["content_qualifier"]] = dl["access_url"]
             if dl["semantics"] == "#calibration":
-                fetch_info[dl["content_qualifier"]] = dl["access_url"]
+                if dl["content_qualifier"] == "bkgrate":
+                    key = "bkg"
+                else:
+                    key = dl["content_qualifier"]
+                fetch_info[key] = dl["access_url"]
 
         if len(set(fetch_info.values())) == 1:
             dwn_urls = [fetch_info["event-list"]]
