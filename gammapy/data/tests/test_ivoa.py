@@ -6,6 +6,7 @@ from gammapy.data.ivoa import (
     make_obs_table,
     ObsTableRow,
     make_fetch_list,
+    fetch_files,
 )
 from gammapy.utils.testing import requires_data
 from gammapy.utils.scripts import make_path
@@ -47,6 +48,13 @@ def get_result_rows():
     return _make_results
 
 
+@pytest.fixture(scope="function", params=["datalink*.xml", "split_datalink*.xml"])
+def fetch_list(get_result_rows, request):
+    glob = request.param
+    results = get_result_rows(glob)
+    return make_fetch_list(results)
+
+
 def test_obscore_structure():
     obscore_default_tab = empty_obscore_table()
     assert len(obscore_default_tab.columns) == 29
@@ -63,7 +71,6 @@ def test_obscore_structure():
 
 @requires_data()
 def test_make_fetch_list(get_result_rows):
-
     out_tag_dict = {
         "bkgrate": "bkg",
         "event-list": "event-list",
@@ -103,6 +110,19 @@ def test_make_fetch_list(get_result_rows):
             assert obsid == row["ID"]
             assert out_tag == out_tag_dict[row["content_qualifier"]]
 
+
+@requires_data()
+def test_fetch_files(monkeypatch, fetch_list):
+    def download_mock(url, out_path):
+        pass
+
+    save_dir = "tmp_test_dir"
+    monkeypatch.setattr("gammapy.data.ivoa.progress_download", download_mock)
+    fetched = fetch_files(fetch_list, make_path(save_dir))
+    assert len(fetch_list) == len(fetched)
+    out_path, file_name = fetched[0][1].parts
+    assert save_dir == out_path
+    assert file_name == fetch_list[0][1]
 
 
 @requires_data()

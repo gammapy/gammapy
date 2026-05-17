@@ -212,7 +212,7 @@ def fetch_files(fetch_list, save_dir):
     for url, save_name, obs_id in fetch_list:
         out_path = save_dir / save_name
         progress_download(url, out_path)
-        fetched_list.append(url, save_name, obs_id)
+        fetched_list.append((url, out_path, obs_id))
     return fetched_list
 
 
