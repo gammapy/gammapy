@@ -1,12 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-from typing import ClassVar
-from astropy.table import Column, Table, vstack
-from gammapy.data import DataStore
-from pydantic import BaseModel
-from urllib.parse import urlsplit
 from pathlib import Path
+from typing import ClassVar
+from urllib.parse import urlsplit
+
 from astropy.io import fits
+from astropy.table import Column, Table, vstack
+from pydantic import BaseModel
+
+from gammapy.data import DataStore
 
 __all__ = ["to_obscore_table"]
 
@@ -36,7 +38,7 @@ def progress_download(source, destination):
     from tqdm import tqdm
 
     destination.parent.mkdir(parents=True, exist_ok=True)
-    with requests.get(source, stream=True) as r:
+    with requests.get(source, stream=True, timeout=60) as r:
         total_size = (
             int(r.headers.get("content-length"))
             if r.headers.get("content-length")
@@ -96,7 +98,8 @@ class ObsTableRow(BaseModel):
     nsblevel: float | None = None
     relhum: float | None = None
 
-    # GADF defies four keywords in kebab-case, but python can only allow camel_case variable names
+    # GADF defies four keywords in kebab-case, but python can only allow
+    # camel_case variable names
     REPLACE_KEYS: ClassVar[tuple] = (
         ["DATE_OBS", "TIME_OBS", "DATE_END", "TIME_END"],
         ["DATE-OBS", "TIME-OBS", "DATE-END", "TIME-END"],
@@ -153,7 +156,7 @@ def make_hdu_table(fetched_files):
 
     hdu_tab_rows = []
 
-    for fil, obs_id, kind in fetched_files:
+    for _, fil, obs_id in fetched_files:
         with fits.open(fil) as hdus:
             for hdu in hdus:
                 if hdu.name == "PRIMARY":
@@ -200,7 +203,7 @@ def make_fetch_list(result):
             dwn_urls = list(fetch_info.values())
             names = list(fetch_info.keys())
 
-        for url, name in zip(dwn_urls, names):
+        for url, name in zip(dwn_urls, names, strict=True):
             suffix = "".join(Path(urlsplit(url).path).suffixes)
             save_name = f"TapResult-{row['obs_id']}-{name}{suffix}"
             fetch_files.append((url, save_name, row["obs_id"]))
@@ -227,15 +230,11 @@ def make_data_store_from_query_result(results, save_dir):
     hdu_tab.write(save_dir / "hdu-index.fits.gz", overwrite=True)
 
 
-def make_datastore_dir_from_tap(results, save_dir):
-    pass
-
-
 def empty_obscore_table():
     """Generate the Obscore default table.
 
-    In case the obscore standard changes, this function should be changed according
-    to https://www.ivoa.net/documents/ObsCore
+    In case the obscore standard changes, this function should be changed
+    according to https://www.ivoa.net/documents/ObsCore
 
     Returns
     -------
@@ -329,7 +328,8 @@ def empty_obscore_table():
     obscore_table[11] = Column(
         name="s_fov",
         unit="deg",
-        description="Estimated size of the covered region as the diameter of a containing circle",
+        description="Estimated size of the covered region as the diameter of"
+        " a containing circle",
         dtype="f8",
         meta={
             "Utype": "Char.SpatialAxis.Coverage.Bounds.Extent.diameter",
@@ -366,7 +366,8 @@ def empty_obscore_table():
     obscore_table[15] = Column(
         name="s_xel2",
         unit="",
-        description="Number of elements along the second coordinate of the spatial axis",
+        description="Number of elements along the second coordinate of "
+        "the spatial axis",
         dtype="i4",
         meta={"Utype": "Char.SpatialAxis.numBins2", "UCD": "meta.number"},
     )
@@ -471,7 +472,8 @@ def empty_obscore_table():
     obscore_table[27] = Column(
         name="facility_name",
         unit="",
-        description="The name of the facility, telescope space craft used for the observation",
+        description="The name of the facility, telescope space craft used for"
+        " the observation",
         dtype="U10",
         meta={
             "Utype": "Provenance.ObsConfig.Facility.name",
@@ -522,7 +524,8 @@ def to_obscore_table(
     access_url=None,
     obscore_template=None,
 ):
-    """Generate the complete obscore Table by adding one row per observation using _obscore_row().
+    """Generate the complete obscore Table by adding one row per observation
+    using _obscore_row().
 
     Parameters
     ----------
@@ -530,15 +533,18 @@ def to_obscore_table(
         Base directory of the data files.
     selected_obs : list or array of Observation ID(int)
         Default is None (default of ``None`` means ``no observation ``).
-        If not given, the full obscore (for all the obs_ids in DataStore) table is returned.
+        If not given, the full obscore (for all the obs_ids in DataStore) table
+        is returned.
     obs_publisher_did : str, optional
         ID for the Dataset given by the publisher (check IVOA recommendations).
-        Default is None. Giving the values of this argument is highly recommended.
-        If not the corresponding obscore field is filled by the Observation ID value.
+        Default is None. Giving the values of this argument is highly
+        recommended. If not the corresponding obscore field is filled by
+        the Observation ID value.
     access_url : str, optional
         URL used to to access (download) dataset(check IVOA recommendations).
-        Default is None. Giving the values of this argument is highly recommended.
-        If not the corresponding obscore field is filled by the Observation ID value.
+        Default is None. Giving the values of this argument is highly
+        recommended. If not the corresponding obscore field is filled by
+        the Observation ID value.
     obscore_template : dict, optional
         Template for fixed values in the obscore Table.
         Default is DEFAULT_OBSCORE_TEMPLATE
@@ -556,12 +562,14 @@ def to_obscore_table(
     """
     if obs_publisher_did is None:
         log.warning(
-            "Insufficient publisher information: 'obs_publisher_did'. Giving this value is highly recommended."
+            "Insufficient publisher information: 'obs_publisher_did'. Giving"
+            "this value is highly recommended."
         )
         obs_publisher_did = ""
     if access_url is None:
         log.warning(
-            "Insufficient publisher information: 'access_url'. Giving this value is highly recommended."
+            "Insufficient publisher information: 'access_url'. Giving "
+            "this value is highly recommended."
         )
         access_url = ""
 

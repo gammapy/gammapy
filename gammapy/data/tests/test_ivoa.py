@@ -1,24 +1,29 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from numpy.testing import assert_allclose
-from gammapy.data.ivoa import (
-    empty_obscore_table,
-    to_obscore_table,
-    make_obs_table,
-    ObsTableRow,
-    make_fetch_list,
-    fetch_files,
-)
-from gammapy.utils.testing import requires_data
-from gammapy.utils.scripts import make_path
-
-from astropy.table import Table
-from astropy.io.votable import parse as parsevo
-from astropy.io.votable import from_table as from_tablevo
-from pyvo.dal.tap import TAPResults
-from pyvo.dal.adhoc import DatalinkResults
+import re
 
 import pytest
-import re
+from astropy.io.votable import from_table as from_tablevo
+from astropy.io.votable import parse as parsevo
+from astropy.table import Table
+from numpy.testing import assert_allclose
+from pyvo.dal.adhoc import DatalinkResults
+from pyvo.dal.tap import TAPResults
+
+from gammapy.data.ivoa import (
+    ObsTableRow,
+    empty_obscore_table,
+    fetch_files,
+    make_fetch_list,
+    make_hdu_table,
+    make_obs_table,
+    to_obscore_table,
+)
+from gammapy.utils.scripts import make_path
+from gammapy.utils.testing import requires_data
+
+
+def download_mock(url, out_path):
+    pass
 
 
 @pytest.fixture()
@@ -53,6 +58,17 @@ def fetch_list(get_result_rows, request):
     glob = request.param
     results = get_result_rows(glob)
     return make_fetch_list(results)
+
+
+@pytest.fixture(scope="function", params=["datalink*.xml", "split_datalink*.xml"])
+def fetched_list(get_result_rows, monkeypatch, request):
+    glob = request.param
+    results = get_result_rows(glob)
+    ft_list = make_fetch_list(results)
+
+    save_dir = make_path("$GAMMAPY_DATA/") / "tests" / "ivoa"
+    monkeypatch.setattr("gammapy.data.ivoa.progress_download", download_mock)
+    return fetch_files(ft_list, save_dir)
 
 
 def test_obscore_structure():
@@ -113,9 +129,6 @@ def test_make_fetch_list(get_result_rows):
 
 @requires_data()
 def test_fetch_files(monkeypatch, fetch_list):
-    def download_mock(url, out_path):
-        pass
-
     save_dir = "tmp_test_dir"
     monkeypatch.setattr("gammapy.data.ivoa.progress_download", download_mock)
     fetched = fetch_files(fetch_list, make_path(save_dir))
@@ -123,6 +136,16 @@ def test_fetch_files(monkeypatch, fetch_list):
     out_path, file_name = fetched[0][1].parts
     assert save_dir == out_path
     assert file_name == fetch_list[0][1]
+
+
+@requires_data()
+def test_make_hdu_table(fetched_list):
+    hdu_tab = make_hdu_table(fetched_list)
+
+    if "aeff" in str(fetched_list[1][1]):
+        assert len(hdu_tab) == (len(fetched_list) + 2)
+    else:
+        assert len(hdu_tab) == 6 * len(fetched_list)
 
 
 @requires_data()
