@@ -48,7 +48,8 @@ dependencies:
   - reproject
   - ultranest
   - numba
-  - arviz
+  - arviz>=1
+  - xarray
   - nautilus-sampler
   # dev dependencies
   - codespell
@@ -82,6 +83,5 @@ dependencies:
   - pip:
       - pytest-sphinx
       - ray[default]>=2.9
-      - arviz[preview]
       - PyGithub
       - pypandoc

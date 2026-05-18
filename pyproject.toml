@@ -61,6 +61,7 @@ all = [
     "ultranest",
     "numba",
     "arviz>=1",
+    "xarray",
     "nautilus-sampler",
 ]
 all_no_ray = [
@@ -71,6 +72,7 @@ all_no_ray = [
     "ultranest",
     "numba",
     "arviz>=1",
+    "xarray",
     "nautilus-sampler",
 ]
 cov = [
@@ -81,6 +83,7 @@ cov = [
     "ultranest",
     "numba",
     "arviz>=1",
+    "xarray",
     "nautilus-sampler",
 ]
 test = [
