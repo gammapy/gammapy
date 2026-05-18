@@ -63,6 +63,7 @@ all = [
     "numba",
     "arviz<1",
     "arviz[preview]",
+    "nautilus-sampler",
 ]
 all_no_ray = [
     "naima",
@@ -73,6 +74,7 @@ all_no_ray = [
     "numba",
     "arviz<1",
     "arviz[preview]",
+    "nautilus-sampler",
 ]
 cov = [
     "naima",
@@ -83,6 +85,7 @@ cov = [
     "numba",
     "arviz<1",
     "arviz[preview]",
+    "nautilus-sampler",
 ]
 test = [
     "pytest-astropy",
