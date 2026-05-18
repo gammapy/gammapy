@@ -422,8 +422,6 @@ class FluxPointsDataset(Dataset):
 
     def plot_fit(
         self,
-        ax_spectrum=None,
-        ax_residuals=None,
         kwargs_spectrum=None,
         kwargs_residuals=None,
     ):
@@ -433,10 +431,6 @@ class FluxPointsDataset(Dataset):
 
         Parameters
         ----------
-        ax_spectrum : `~matplotlib.axes.Axes`, optional
-            Axes to plot flux points and best fit model on. Default is None.
-        ax_residuals : `~matplotlib.axes.Axes`, optional
-            Axes to plot residuals on. Default is None.
         kwargs_spectrum : dict, optional
             Keyword arguments passed to `~FluxPointsDataset.plot_spectrum`. Default is None.
         kwargs_residuals : dict, optional
@@ -468,13 +462,9 @@ class FluxPointsDataset(Dataset):
         fig = plt.figure(figsize=(9, 7))
 
         gs = GridSpec(7, 1)
-        if ax_spectrum is None:
-            ax_spectrum = fig.add_subplot(gs[:5, :])
-            if ax_residuals is None:
-                plt.setp(ax_spectrum.get_xticklabels(), visible=False)
-
-        if ax_residuals is None:
-            ax_residuals = fig.add_subplot(gs[5:, :], sharex=ax_spectrum)
+        ax_spectrum = fig.add_subplot(gs[:5, :])
+        plt.setp(ax_spectrum.get_xticklabels(), visible=False)
+        ax_residuals = fig.add_subplot(gs[5:, :], sharex=ax_spectrum)
 
         kwargs_spectrum = kwargs_spectrum or {}
         kwargs_residuals = kwargs_residuals or {}
