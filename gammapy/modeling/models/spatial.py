@@ -1620,15 +1620,10 @@ class TemplateSpatialModel(SpatialModel):
             Geom to use for plotting. Default is None.
         **kwargs : dict
             Keyword arguments passed to `~gammapy.maps.WcsMap.plot()`.
-
-        Returns
-        -------
-        ax : `~matplotlib.axes.Axes`, optional
-            Matplotlib axes.
         """
         if geom is None:
             geom = self.map.geom
-        return super().plot_interactive(ax=ax, geom=geom, **kwargs)
+        super().plot_interactive(ax=ax, geom=geom, **kwargs)
 
 
 class TemplateNDSpatialModel(SpatialModel):
