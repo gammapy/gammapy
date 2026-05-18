@@ -886,6 +886,9 @@ def test_template_spatial_plot():
     filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits.gz"
     model = TemplateSpatialModel.read(filename, normalize=False)
     assert isinstance(model.plot(), mpl.axes.Axes)
+    map_3d = model.map.to_cube([MapAxis.from_edges([1.0,2.0],unit="TeV",**{"name":"energy_true"})])
+    model_3d = TemplateSpatialModel(map_3d)
+    model_3d.plot_interactive()
 
 
 @requires_dependency("healpy")
