@@ -1,0 +1,1 @@
+Fixing the bug in the Aeff plot in the peek() function  where the area is divided twice.

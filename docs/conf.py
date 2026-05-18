@@ -340,3 +340,8 @@ sphinx_gallery_conf = {
 html_context = {
     "default_mode": "light",
 }
+
+# Add any extra paths that contain custom files (such as robots.txt or
+# .htaccess) here, relative to this directory. These files are copied
+# directly to the root of the documentation.
+html_extra_path = ["robots.txt"]
