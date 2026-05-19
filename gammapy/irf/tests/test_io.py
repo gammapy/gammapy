@@ -4,6 +4,7 @@ from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.io import fits
 from astropy.units import Quantity
+from astropy.table import Table
 from gammapy.irf import (
     Background3D,
     EffectiveAreaTable2D,
@@ -121,6 +122,7 @@ class TestIRFWrite:
             data=self.aeff_data.value,
             unit=self.aeff_data.unit,
         )
+
         self.edisp = EnergyDispersion2D(
             axes=[
                 self.energy_axis_true,
@@ -137,6 +139,24 @@ class TestIRFWrite:
         self.bkg = Background3D(
             axes=axes, data=self.bkg_data.value, unit=self.bkg_data.unit
         )
+
+    def test_to_hdulist(self):
+        hdulist = self.aeff.to_hdulist()
+        assert hdulist[0].name == "PRIMARY"
+        assert hdulist[1].name == "EFFECTIVE AREA"
+        assert hdulist[1].header["TUNIT1"] == "TeV"
+        assert hdulist[1].header["TUNIT3"] == "deg"
+        assert hdulist[1].header["TUNIT5"] == "cm2"
+
+        table = Table.read(hdulist[1], format="fits")
+        assert table.colnames == [
+            "ENERG_LO",
+            "ENERG_HI",
+            "THETA_LO",
+            "THETA_HI",
+            "EFFAREA",
+        ]
+        assert_allclose(table["EFFAREA"].quantity[0].T, self.aeff_data)
 
     def test_array_to_container(self):
         assert_allclose(self.aeff.quantity, self.aeff_data)
