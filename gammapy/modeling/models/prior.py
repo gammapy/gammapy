@@ -4,7 +4,9 @@
 import logging
 import numpy as np
 import astropy.units as u
-from scipy.stats import norm, uniform, loguniform, gennorm
+from scipy.stats import norm, uniform, loguniform, gennorm, gaussian_kde
+from scipy.interpolate import interp1d
+from scipy.special import ndtr
 from gammapy.modeling import PriorParameter, PriorParameters
 from .core import ModelBase
 
@@ -14,6 +16,7 @@ __all__ = [
     "UniformPrior",
     "LogUniformPrior",
     "Prior",
+    "SamplesKDEPrior",
 ]
 
 log = logging.getLogger(__name__)
@@ -284,3 +287,92 @@ class GeneralizedGaussianPrior(Prior):
             loc=self.mu.value,
             scale=self.sigma.value * np.sqrt(2),
         )
+
+
+class SamplesKDEPrior(Prior):
+    """Prior based on a Gaussian kernel density estimate (KDE)
+    constructed from (optionally weighted) samples.
+
+    Parameters
+    ----------
+    samples : `~numpy.ndarray`
+        One-dimensional samples used to build the KDE. Shape ``(n_samples,)``
+        or any array that can be flattened to this shape.
+    weights : `~numpy.ndarray`, optional
+        Weights associated with the samples. Must have the same length as
+        ``samples``. If not given, all samples are assigned equal weight.
+        Weights are normalised internally to sum to 1.
+    """
+
+    tag = ["SamplesKDEPrior"]
+    _type = "prior"
+
+    def __init__(self, samples, weights=None):
+        self.samples = np.asarray(samples, dtype=float).ravel()
+        n_samples = self.samples.size
+
+        if n_samples == 0:
+            raise ValueError("SamplesKDEPrior requires at least one sample.")
+
+        if weights is None:
+            weights = np.ones(n_samples, dtype=float)
+        else:
+            weights = np.asarray(weights, dtype=float)
+            if weights.size != n_samples:
+                raise ValueError("weights and samples must have the same length.")
+
+        self.weights = weights / weights.sum()
+
+        self._kde = gaussian_kde(self.samples, weights=self.weights)
+
+        # inverse cdf : https://stackoverflow.com/a/71993662
+        x_sorted = np.sort(self.samples)
+        cdf_values = []
+        for x_i in x_sorted:
+            z = (x_i - self.samples) / self._kde.factor
+            cdf_values.append(np.average(ndtr(z), weights=self.weights))
+
+        cdf_values = np.asarray(cdf_values, dtype=float)
+
+        self._inv_cdf = interp1d(
+            cdf_values,
+            x_sorted,
+            kind="cubic",
+            bounds_error=False,
+            fill_value=(x_sorted[0], x_sorted[-1]),
+        )
+
+        super().__init__()
+
+    def evaluate(self, value):
+        """Evaluate the prior contribution to the fit statistic.
+
+        This returns ``-2 log p(value)`` where ``p`` is given by the KDE.
+        """
+        value = np.asarray(value, dtype=float)
+        logp = np.squeeze(self._kde.logpdf(value))
+        return -2.0 * logp
+
+    def _inverse_cdf(self, value):
+        """Inverse cumulative distribution function."""
+        value = np.asarray(value, dtype=float)
+        return self._inv_cdf(value)
+
+    def to_dict(self):
+        """Convert prior to dictionary for YAML serialization."""
+        data = {
+            "type": self.tag[0],
+            "samples": self.samples.tolist(),
+        }
+        # always store weights explicitly so round-trip is exact
+        data["weights"] = self.weights.tolist()
+        return data
+
+    @classmethod
+    def from_dict(cls, data):
+        """Create prior from dictionary."""
+        samples = np.array(data["samples"], dtype=float)
+        weights = data.get("weights", None)
+        if weights is not None:
+            weights = np.array(weights, dtype=float)
+        return cls(samples=samples, weights=weights)
