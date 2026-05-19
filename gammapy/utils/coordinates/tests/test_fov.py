@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import pytest
 from numpy.testing import assert_allclose
 import astropy.units as u
 from astropy.coordinates import (
@@ -15,6 +16,25 @@ from gammapy.utils.coordinates import (
     fov_to_sky,
     sky_to_fov,
 )
+from gammapy.utils.observers import observatory_locations
+from gammapy.utils.testing import assert_time_allclose
+
+
+@pytest.fixture
+def ctao_location():
+    return observatory_locations["ctao_north"]
+
+
+@pytest.fixture
+def single_time():
+    return Time("2026-01-01T00:00:00")
+
+
+@pytest.fixture
+def altaz_origin(location, single_time):
+    return AltAz(
+        az=172 * u.deg, alt=80 * u.deg, location=ctao_location, obstime=single_time
+    )
 
 
 class TestFoVAltAzFrame:
@@ -85,6 +105,39 @@ class TestFoVAltAzFrame:
 
         assert_allclose(roundtrip.ra.deg, [10, 30, 45])
         assert_allclose(roundtrip.dec.deg, [-60, -30, 60])
+
+
+def test_inconsistent_obstime_location_origin_fovaltaz():
+    location = observatory_locations["ctao_north"]
+    single_time = Time("2026-01-01T00:00:00")
+    origin = AltAz(
+        az=172 * u.deg, alt=80 * u.deg, location=location, obstime=single_time
+    )
+
+    different_time = Time("2026-01-01T01:00:00")
+    with pytest.raises(ValueError, match="obstime mismatch"):
+        FoVAltAzFrame(origin=origin, location=location, obstime=different_time)
+
+    different_location = observatory_locations["hess"]
+    with pytest.raises(ValueError, match="location mismatch"):
+        FoVAltAzFrame(origin=origin, location=different_location, obstime=single_time)
+
+    time_array = single_time + [0.0, 1.0, 2.0] * u.h
+    with pytest.raises(ValueError):
+        FoVAltAzFrame(origin=origin, location=location, obstime=time_array)
+
+    origins = AltAz(
+        az=172 * u.deg, alt=80 * u.deg, location=location, obstime=time_array
+    )
+    # identical origin.obstime and obstime should be accepted
+    fov_frame = FoVAltAzFrame(origin=origins, location=location, obstime=time_array)
+    assert_time_allclose(fov_frame.origin.obstime, fov_frame.obstime)
+
+    with pytest.raises(ValueError, match="origin and obstime have inconsistent shapes"):
+        FoVAltAzFrame(origin=origins, location=location, obstime=time_array[:-1])
+
+    with pytest.raises(ValueError, match="origin and obstime have inconsistent shapes"):
+        FoVAltAzFrame(origin=origins, location=location, obstime=single_time)
 
 
 def test_checked_hess_values():
