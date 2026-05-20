@@ -38,8 +38,24 @@ class PrimaryFlux(TemplateNDSpectralModel):
         Dark matter particle mass as rest mass energy.
     channel : str
         Annihilation channel. List available channels with `~gammapy.astro.darkmatter.PrimaryFlux.allowed_channels`.
-    source : {"cosmixs", "pppc4"}, optional
-        Data source for the spectra. Default is 'pppc4'.
+    source : str, optional
+        Data source for the spectra. Options are:
+
+        * ``"pppc4"`` (default): Cirelli et al. 2011.
+        * ``"cosmixs"``: Cirelli et al. 2024.
+        * A path to a custom file: Any format readable by `astropy.table.Table.read`
+        (e.g., .ecsv, .fits, .csv, .dat).
+
+        If a custom file path is provided, it must contain 'mDM' (mass of dark
+        matter particle) and 'Log[10,x]' (energy) columns, plus columns named after
+        the requested annihilation/decay channels (see the documentation).
+    mapping_dict : dict, optional
+        Mapping dictionary to map the columns of the custom source file to the expected
+        column names. This is only needed if a file as a spectra source is provided
+        and the column names in the file do not match the expected names. The dictionary
+        should have the format {actual_column_name_in_file:expected_column_name}.
+        An example of the expected columns can be found in the documentation.
+
 
     References
     ----------
