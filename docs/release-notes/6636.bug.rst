@@ -1,0 +1,1 @@
+Return `ax` object with `TemplateSpatialModel.plot()`, adjust documentation for `TemplateSpatialModel.plot_interactive()`, add tests for both.
