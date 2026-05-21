@@ -1,1 +1,1 @@
-Fixing the bug in the Aeff plot in the peek() function  where the area is divided twice.
+Fixes `~gammapy.irf.EffectiveAreaTable2D.plot_offset_dependence()` to remove area being divided twice.
