@@ -78,12 +78,8 @@ def inference_data_from_sampler(
     random_seed=42,
     predictives=True,
 ):
-<<<<<<< HEAD
     """
     Convert Sampler results to an xarray DataTree object with optional resampling and prior inclusion.
-=======
-    """Convert Sampler results to an ArviZ InferenceData object with optional resampling and prior inclusion.
->>>>>>> 5192afef0 (Adapt for pydocstyle)
 
     Parameters
     ----------
@@ -145,12 +141,8 @@ def inference_data_from_sampler(
 
 
 def resample_posterior(inference_data, n_samples=None, random_seed=42):
-<<<<<<< HEAD
     """
     Resample posterior samples from a DataTree object using importance weights.
-=======
-    """Resample posterior samples from an InferenceData object using importance weights.
->>>>>>> 5192afef0 (Adapt for pydocstyle)
 
     Parameters
     ----------
