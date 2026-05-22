@@ -1449,19 +1449,10 @@ def test_vectorized_integrate_spectrum():
     )
 
     assert integral.shape == (1,)
-    assert_allclose(
-        integral.to_value("cm-2s-1"),
-        [
-            9e-12,
-        ],
-    )
+    assert_allclose(integral.to_value("cm-2s-1"), 9e-12)
+
     assert vector_integral.shape == (1, 10)
-    assert_allclose(
-        vector_integral[:, 0].to_value("cm-2s-1"),
-        [
-            9e-12,
-        ],
-    )
+    assert_allclose(vector_integral[:, 0].to_value("cm-2s-1"), 9e-12)
 
     energy_min, energy_max = [100, 1000] * u.GeV
     model = BrokenPowerLawSpectralModel()
