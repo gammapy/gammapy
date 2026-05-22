@@ -1,15 +1,18 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import copy
 import logging
+
 import numpy as np
 from astropy.convolution import Tophat2DKernel
 from astropy.coordinates import Angle
+
 from gammapy.datasets import MapDataset, MapDatasetOnOff
 from gammapy.maps import Map
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from gammapy.stats import CashCountsStatistic, WStatCountsStatistic
+
 from ..core import Estimator
-from ..utils import estimate_exposure_reco_energy, apply_threshold_sensitivity
+from ..utils import apply_threshold_sensitivity, estimate_exposure_reco_energy
 from .core import FluxMaps
 
 __all__ = ["ExcessMapEstimator"]
@@ -190,7 +193,7 @@ class ExcessMapEstimator(Estimator):
         Only used if ``energy_edges`` is None.
         If False, apply the estimator in each energy bin of the parent dataset.
         If True, apply the estimator in only one bin defined by the energy edges of the parent dataset.
-        Default is False.
+        Default is True.
 
     Examples
     --------
@@ -239,7 +242,7 @@ class ExcessMapEstimator(Estimator):
         gamma_min_sensitivity=10,
         bkg_syst_fraction_sensitivity=0.05,
         apply_threshold_sensitivity=False,
-        sum_over_energy_groups=False,
+        sum_over_energy_groups=True,
     ):
         self.correlation_radius = correlation_radius
         self.n_sigma = n_sigma
