@@ -386,9 +386,9 @@ class DarkMatterAnnihilationSpectralModel(SpectralModel):
         See `PrimaryFlux.channel_registry` for more.
     scale : float
         Scale parameter for model fitting.
-    jfactor : `~astropy.units.Quantity`
+    jfactor : `~astropy.units.Quantity`, optional
         Integrated J-Factor needed when `~gammapy.modeling.models.PointSpatialModel`
-        is used.
+        is used. Default is 1.
     z : float, optional
         Redshift value. Default is 0.
     k : int, optional
@@ -534,9 +534,9 @@ class DarkMatterDecaySpectralModel(SpectralModel):
         See `PrimaryFlux.channel_registry` for more.
     scale : float
         Scale parameter for model fitting
-    jfactor : `~astropy.units.Quantity`
+    jfactor : `~astropy.units.Quantity`, optional
         Integrated J-Factor needed when `~gammapy.modeling.models.PointSpatialModel`
-        is used.
+        is used. Default is 1.
     z : float, optional
         Redshift value. Default is 0.
     source : str, optional
