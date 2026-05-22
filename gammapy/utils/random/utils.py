@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Helper functions to work with distributions."""
+
 import numbers
 import numpy as np
 import scipy.integrate

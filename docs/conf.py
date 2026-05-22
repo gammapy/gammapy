@@ -27,9 +27,14 @@ from importlib.metadata import metadata
 from sphinx_gallery.sorting import ExplicitOrder
 
 # Load utils docs functions
-from gammapy.utils.docs import SubstitutionCodeBlock, DynamicPRLinkTransform, gammapy_sphinx_ext_activate
+from gammapy.utils.docs import (
+    SubstitutionCodeBlock,
+    DynamicPRLinkTransform,
+    gammapy_sphinx_ext_activate,
+)
 
 # flake8: noqa
+
 
 # Add our custom directives to Sphinx
 def setup(app):
@@ -41,7 +46,7 @@ def setup(app):
     app.add_post_transform(DynamicPRLinkTransform)
 
 
-distribution_name= "gammapy"
+distribution_name = "gammapy"
 gammapy_metadata = metadata(distribution_name)
 
 sys.path.insert(0, os.path.dirname(__file__))
@@ -79,18 +84,18 @@ plot_html_show_source_link = False
 numfig = False
 
 # The suffix of source filenames.
-source_suffix = '.rst'
+source_suffix = ".rst"
 
 # The master toctree document.
-master_doc = 'index'
+master_doc = "index"
 
 # Allow to add the canonical html flag on all the pages
 # This allows you to indicate to the web search engine that the pages for the stable version are privileged
-html_baseurl = 'https://docs.gammapy.org/stable/'
+html_baseurl = "https://docs.gammapy.org/stable/"
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents. Set to the "smart" one.
-default_role = 'obj'
+default_role = "obj"
 
 # Add any Sphinx extension module names here, as strings.
 extensions = [
@@ -98,13 +103,13 @@ extensions = [
     "sphinx_automodapi.automodapi",
     "sphinx_automodapi.smart_resolver",
     "sphinx_click.ext",
-    'sphinx_copybutton',
+    "sphinx_copybutton",
     "sphinx_design",
     "sphinx_gallery.gen_gallery",
     "sphinx_changelog",
     "sphinx.ext.doctest",
     "sphinx.ext.mathjax",
-    'sphinx.ext.viewcode',
+    "sphinx.ext.viewcode",
     # Allows for mapping to other documentation projects
     "sphinx.ext.intersphinx",
     # Allows for Numpy docstring format
@@ -128,22 +133,22 @@ intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
     "scipy": ("https://docs.scipy.org/doc/scipy/", None),
-	"matplotlib": ("https://matplotlib.org/", None),
-	"astropy": ("https://docs.astropy.org/en/stable/", None),
-	"regions": ("https://astropy-regions.readthedocs.io/en/latest/", None),
-	"reproject": ("https://reproject.readthedocs.io/en/latest/", None),
-	"naima": ("https://naima.readthedocs.io/en/latest/", None),
-	"gadf": ("https://gamma-astro-data-formats.readthedocs.io/en/latest/", None),
-	"iminuit": ("https://iminuit.readthedocs.io/en/latest/", None),
-	"pandas": ("https://pandas.pydata.org/pandas-docs/stable/", None),
-	}
+    "matplotlib": ("https://matplotlib.org/", None),
+    "astropy": ("https://docs.astropy.org/en/stable/", None),
+    "regions": ("https://astropy-regions.readthedocs.io/en/latest/", None),
+    "reproject": ("https://reproject.readthedocs.io/en/latest/", None),
+    "naima": ("https://naima.readthedocs.io/en/latest/", None),
+    "gadf": ("https://gamma-astro-data-formats.readthedocs.io/en/latest/", None),
+    "iminuit": ("https://iminuit.readthedocs.io/en/latest/", None),
+    "pandas": ("https://pandas.pydata.org/pandas-docs/stable/", None),
+}
 
 # -- Options for autodoc output ------------------------------------
 # Include class and __init__ docstrings
 autoclass_content = "both"
 
 # Directory for API docs
-automodapi_toctreedirnm = 'api'
+automodapi_toctreedirnm = "api"
 
 # Suppress member summaries
 numpydoc_show_class_members = False
@@ -173,8 +178,8 @@ changelog_links_docpattern = [".*changelog.*", "whatsnew/.*", "release-notes/.*"
 # -- Project information -------------------------------------------------------
 
 # This does not *have* to match the package name, but typically does
-project = gammapy_metadata.get('Name')
-author = gammapy_metadata.get('Author-email').split('<')[0].strip()
+project = gammapy_metadata.get("Name")
+author = gammapy_metadata.get("Author-email").split("<")[0].strip()
 copyright = "{}, {}".format(datetime.datetime.now().year, author)
 
 
@@ -246,9 +251,9 @@ html_theme_options = {
     "navbar_end": ["version-switcher", "theme-switcher", "navbar-icon-links"],
     "navigation_with_keys": True,
     # footers
-    "footer_start": ["copyright","custom-footer.html"],
+    "footer_start": ["copyright", "custom-footer.html"],
     "footer_center": ["last-updated"],
-    "footer_end": ["sphinx-version", "theme-version"]
+    "footer_end": ["sphinx-version", "theme-version"],
 }
 
 gammapy_sphinx_ext_activate()
