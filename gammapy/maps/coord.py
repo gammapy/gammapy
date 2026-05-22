@@ -217,7 +217,7 @@ class MapCoord:
         >>> from astropy.coordinates import SkyCoord
         >>> from gammapy.maps import MapCoord
         >>> lon, lat = [1, 2], [2, 3]
-        >>> skycoord = SkyCoord(lon, lat, unit='deg')
+        >>> skycoord = SkyCoord(lon, lat, unit="deg")
         >>> energy = [1000]
         >>> c = MapCoord.create((lon, lat))
         >>> c = MapCoord.create((skycoord,))
