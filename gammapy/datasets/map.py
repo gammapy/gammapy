@@ -67,16 +67,16 @@ def create_map_dataset_geoms(
     geom : `~gammapy.maps.WcsGeom`
         Reference target geometry with a reconstructed energy axis. It is used for counts and background maps.
         Additional external data axes can be added to support e.g. event types.
-    energy_axis_true : `~gammapy.maps.MapAxis`
+    energy_axis_true : `~gammapy.maps.MapAxis`, optional
         True energy axis used for IRF maps.
-    migra_axis : `~gammapy.maps.MapAxis`
+    migra_axis : `~gammapy.maps.MapAxis`, optional
         If set, this provides the migration axis for the energy dispersion map.
         If not set, an EDispKernelMap is produced instead. Default is None.
-    rad_axis : `~gammapy.maps.MapAxis`
+    rad_axis : `~gammapy.maps.MapAxis`, optional
         Rad axis for the PSF map.
-    binsz_irf : float
+    binsz_irf : float, optional
         IRF Map pixel size in degrees.
-    reco_psf : bool
+    reco_psf : bool, optional
         Use reconstructed energy for the PSF geometry. Default is False.
 
     Returns
