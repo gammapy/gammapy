@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /*/stable/
+Disallow: /
+
+Sitemap: https://docs.gammapy.org/stable/sitemap.xml

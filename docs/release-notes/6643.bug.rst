@@ -1,0 +1,1 @@
+Corrects `~gammapy.makers.utils.make_effective_livetime_map` to use observation pointing to compute livetime map.
