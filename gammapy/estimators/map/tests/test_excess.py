@@ -1,8 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import pytest
-import numpy as np
-from numpy.testing import assert_allclose
 import astropy.units as u
+import numpy as np
+import pytest
+from numpy.testing import assert_allclose
+
 from gammapy.datasets import MapDataset, MapDatasetOnOff
 from gammapy.estimators import ExcessMapEstimator
 from gammapy.estimators.utils import (
@@ -476,3 +477,15 @@ def test_maps_alpha(simple_dataset_on_off):
     assert_allclose(result["acceptance_on"].data[:, 10, 10], 2, atol=1e-3)
     assert_allclose(result["acceptance_off"].data[:, 10, 10], 2, atol=1e-3)
     assert_allclose(result["alpha"].data[:, 10, 10], 1, atol=1e-3)
+
+
+def test_sum_over_energy_groups(simple_dataset_on_off):
+    estimator = ExcessMapEstimator(sum_over_energy_groups=False)
+    result = estimator.run(simple_dataset_on_off)
+
+    assert result["npred"].data.shape == (2, 20, 20)
+
+    estimator = ExcessMapEstimator()
+    result = estimator.run(simple_dataset_on_off)
+
+    assert result["npred"].data.shape == (1, 20, 20)
