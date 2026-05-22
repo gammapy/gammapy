@@ -390,11 +390,6 @@ class SpatialModel(ModelBase):
             Geom to use for plotting. Default is None.
         **kwargs : dict
             Keyword arguments passed to `~gammapy.maps.WcsMap.plot()`.
-
-        Returns
-        -------
-        ax : `~matplotlib.axes.Axes`, optional
-            Matplotlib axes.
         """
         m = self._get_plot_map(geom)
         if m.geom.is_image:
