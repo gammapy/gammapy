@@ -825,19 +825,23 @@ class Map(abc.ABC):
 
             # Define map axes
             energy_axis = MapAxis.from_edges(
-                np.logspace(-1., 1., 4), unit='TeV', name='energy',
+                np.logspace(-1.0, 1.0, 4),
+                unit="TeV",
+                name="energy",
             )
 
             time_axis = MapAxis.from_edges(
-                np.linspace(0., 10, 20), unit='h', name='time',
+                np.linspace(0.0, 10, 20),
+                unit="h",
+                name="time",
             )
 
             # Define map center
-            skydir = SkyCoord(0, 0, frame='galactic', unit='deg')
+            skydir = SkyCoord(0, 0, frame="galactic", unit="deg")
 
             # Create map
             m_wcs = Map.create(
-                map_type='wcs',
+                map_type="wcs",
                 binsz=0.02,
                 skydir=skydir,
                 width=10.0,
@@ -845,13 +849,13 @@ class Map(abc.ABC):
             )
 
             # Get image by coord tuple
-            image = m_wcs.get_image_by_coord(('500 GeV', '1 h'))
+            image = m_wcs.get_image_by_coord(("500 GeV", "1 h"))
 
             # Get image by coord dict with strings
-            image = m_wcs.get_image_by_coord({'energy': '500 GeV', 'time': '1 h'})
+            image = m_wcs.get_image_by_coord({"energy": "500 GeV", "time": "1 h"})
 
             # Get image by coord dict with quantities
-            image = m_wcs.get_image_by_coord({'energy': 0.5 * u.TeV, 'time': 1 * u.h})
+            image = m_wcs.get_image_by_coord({"energy": 0.5 * u.TeV, "time": 1 * u.h})
         """
         if isinstance(coords, tuple):
             coords = dict(zip(self.geom.axes.names, coords))
@@ -1429,7 +1433,7 @@ class Map(abc.ABC):
 
         If you would like to adjust the figure size you can use the ``rc_params`` argument::
 
-            rc_params = {'figure.figsize': (12, 6), 'font.size': 12}
+            rc_params = {"figure.figsize": (12, 6), "font.size": 12}
             m.plot_interactive(rc_params=rc_params)
         """
         import matplotlib as mpl

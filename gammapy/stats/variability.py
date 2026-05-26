@@ -417,13 +417,14 @@ def TimmerKonig_lightcurve_simulator(
     >>> from gammapy.stats import TimmerKonig_lightcurve_simulator
     >>> import astropy.units as u
     >>> def powerlaw(x):
-    ...     return x**(-2)
+    ...     return x ** (-2)
     >>> def powerlaw_with_parameters(x, i):
-    ...     return x**(-i)
-    >>> ts, ta = TimmerKonig_lightcurve_simulator(lambda x: x**(-2), 20, 1*u.h)
-    >>> ts2, ta2 = TimmerKonig_lightcurve_simulator(powerlaw, 20, 1*u.h)
-    >>> ts3, ta3 = TimmerKonig_lightcurve_simulator(powerlaw_with_parameters,
-    ...                                            20, 1*u.h, power_spectrum_params={"i":2})
+    ...     return x ** (-i)
+    >>> ts, ta = TimmerKonig_lightcurve_simulator(lambda x: x ** (-2), 20, 1 * u.h)
+    >>> ts2, ta2 = TimmerKonig_lightcurve_simulator(powerlaw, 20, 1 * u.h)
+    >>> ts3, ta3 = TimmerKonig_lightcurve_simulator(
+    ...     powerlaw_with_parameters, 20, 1 * u.h, power_spectrum_params={"i": 2}
+    ... )
 
     References
     ----------

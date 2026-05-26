@@ -995,16 +995,19 @@ class MapDataset(Dataset):
 
         >>> energy_axis = MapAxis.from_energy_bounds(1.0, 10.0, 4, unit="TeV")
         >>> energy_axis_true = MapAxis.from_energy_bounds(
-        ...            0.5, 20, 10, unit="TeV", name="energy_true"
-        ...        )
+        ...     0.5, 20, 10, unit="TeV", name="energy_true"
+        ... )
         >>> geom = WcsGeom.create(
-        ...            skydir=(83.633, 22.014),
-        ...            binsz=0.02, width=(2, 2),
-        ...            frame="icrs",
-        ...            proj="CAR",
-        ...            axes=[energy_axis]
-        ...        )
-        >>> empty = MapDataset.create(geom=geom, energy_axis_true=energy_axis_true, name="empty")
+        ...     skydir=(83.633, 22.014),
+        ...     binsz=0.02,
+        ...     width=(2, 2),
+        ...     frame="icrs",
+        ...     proj="CAR",
+        ...     axes=[energy_axis],
+        ... )
+        >>> empty = MapDataset.create(
+        ...     geom=geom, energy_axis_true=energy_axis_true, name="empty"
+        ... )
         """
         geoms = create_map_dataset_geoms(
             geom=geom,
@@ -1287,8 +1290,10 @@ class MapDataset(Dataset):
         --------
         >>> from gammapy.datasets import MapDataset
         >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
-        >>> kwargs = {"cmap": "RdBu_r", "vmin":-5, "vmax":5, "add_cbar": True}
-        >>> dataset.plot_residuals_spatial(method="diff/sqrt(model)", **kwargs) # doctest: +SKIP
+        >>> kwargs = {"cmap": "RdBu_r", "vmin": -5, "vmax": 5, "add_cbar": True}
+        >>> dataset.plot_residuals_spatial(
+        ...     method="diff/sqrt(model)", **kwargs
+        ... )  # doctest: +SKIP
         """
         counts, npred = self.counts.copy(), self.npred()
 
@@ -1365,8 +1370,10 @@ class MapDataset(Dataset):
         --------
         >>> from gammapy.datasets import MapDataset
         >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
-        >>> kwargs = {"markerfacecolor": "blue", "markersize":8, "marker":'s'}
-        >>> dataset.plot_residuals_spectral(method="diff/sqrt(model)", **kwargs) # doctest: +SKIP
+        >>> kwargs = {"markerfacecolor": "blue", "markersize": 8, "marker": "s"}
+        >>> dataset.plot_residuals_spectral(
+        ...     method="diff/sqrt(model)", **kwargs
+        ... )  # doctest: +SKIP
 
         """
         counts, npred = self.counts.copy(), self.npred()
@@ -1469,10 +1476,19 @@ class MapDataset(Dataset):
         >>> import astropy.units as u
         >>> from gammapy.datasets import MapDataset
         >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
-        >>> reg = CircleSkyRegion(SkyCoord(0,0, unit="deg", frame="galactic"), radius=1.0 * u.deg)
-        >>> kwargs_spatial = {"cmap": "RdBu_r", "vmin":-5, "vmax":5, "add_cbar": True}
-        >>> kwargs_spectral = {"region":reg, "markerfacecolor": "blue", "markersize": 8, "marker": "s"}
-        >>> dataset.plot_residuals(kwargs_spatial=kwargs_spatial, kwargs_spectral=kwargs_spectral) # doctest: +SKIP
+        >>> reg = CircleSkyRegion(
+        ...     SkyCoord(0, 0, unit="deg", frame="galactic"), radius=1.0 * u.deg
+        ... )
+        >>> kwargs_spatial = {"cmap": "RdBu_r", "vmin": -5, "vmax": 5, "add_cbar": True}
+        >>> kwargs_spectral = {
+        ...     "region": reg,
+        ...     "markerfacecolor": "blue",
+        ...     "markersize": 8,
+        ...     "marker": "s",
+        ... }
+        >>> dataset.plot_residuals(
+        ...     kwargs_spatial=kwargs_spatial, kwargs_spectral=kwargs_spectral
+        ... )  # doctest: +SKIP
         """
         ax_spatial, ax_spectral = get_axes(
             ax_spatial,
@@ -2215,7 +2231,7 @@ class MapDataset(Dataset):
         --------
         >>> from gammapy.datasets import MapDataset
         >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
-        >>> slices = {"energy": slice(0, 3)} #to get the first 3 energy slices
+        >>> slices = {"energy": slice(0, 3)}  # to get the first 3 energy slices
         >>> sliced = dataset.slice_by_idx(slices)
         >>> print(sliced.geoms["geom"])
         WcsGeom

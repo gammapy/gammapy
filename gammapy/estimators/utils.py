@@ -184,11 +184,11 @@ def find_peaks_in_flux_map(maps, threshold, min_distance=1):
     >>>
     >>> dataset = MapDataset.read("$GAMMAPY_DATA/cta-1dc-gc/cta-1dc-gc.fits.gz")
     >>> estimator = ExcessMapEstimator(
-    ...     correlation_radius="0.1 deg", energy_edges=[0.1, 10]*u.TeV
+    ...     correlation_radius="0.1 deg", energy_edges=[0.1, 10] * u.TeV
     ... )
     >>> maps = estimator.run(dataset)
     >>> # Find the peaks which are above 5 sigma
-    >>> sources = find_peaks_in_flux_map(maps, threshold=5, min_distance=0.1*u.deg)
+    >>> sources = find_peaks_in_flux_map(maps, threshold=5, min_distance=0.1 * u.deg)
 
     """
     quantity_for_peaks = maps["sqrt_ts"]
@@ -357,8 +357,7 @@ def resample_energy_edges(dataset, conditions={}):
     >>> spectrum_dataset = Datasets(datasets).stack_reduce()
     >>> # Resample the energy edges so the minimum sqrt_ts is 2
     >>> resampled_energy_edges = resample_energy_edges(
-    ...     spectrum_dataset,
-    ...     conditions={"sqrt_ts_min": 2}
+    ...     spectrum_dataset, conditions={"sqrt_ts_min": 2}
     ... )
     """
     if not isinstance(dataset, (SpectrumDataset, SpectrumDatasetOnOff)):
@@ -801,21 +800,19 @@ def get_rebinned_axis(fluxpoint, axis_name="energy", method=None, **kwargs):
     >>>
     >>> # Rebin lightcurve axis
     >>> lc_1d = FluxPoints.read(
-    ...         "$GAMMAPY_DATA/estimators/pks2155_hess_lc/pks2155_hess_lc.fits",
-    ...         format="lightcurve",
-    ...     )
+    ...     "$GAMMAPY_DATA/estimators/pks2155_hess_lc/pks2155_hess_lc.fits",
+    ...     format="lightcurve",
+    ... )
     >>> # Rebin axis by combining adjacent bins as per the group_size
     >>> new_axis = get_rebinned_axis(
     ...     lc_1d, method="fixed-bins", group_size=2, axis_name="time"
     ... )
     >>>
     >>> # Rebin HESS flux points axis
-    >>> fp = FluxPoints.read(
-    ...         "$GAMMAPY_DATA/estimators/crab_hess_fp/crab_hess_fp.fits"
-    ... )
+    >>> fp = FluxPoints.read("$GAMMAPY_DATA/estimators/crab_hess_fp/crab_hess_fp.fits")
     >>> # Rebin according to a minimum significance
     >>> axis_new = get_rebinned_axis(
-    ...     fp, method='min-ts', ts_threshold=4, axis_name='energy'
+    ...     fp, method="min-ts", ts_threshold=4, axis_name="energy"
     ... )
     """
     # TODO: Make fixed_bins and fixed_edges work for multidimensions

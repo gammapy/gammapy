@@ -392,7 +392,7 @@ class PointingInfo:
     Examples
     --------
     >>> from gammapy.data import PointingInfo
-    >>> pointing_info = PointingInfo.read('$GAMMAPY_DATA/tests/pointing_table.fits.gz')
+    >>> pointing_info = PointingInfo.read("$GAMMAPY_DATA/tests/pointing_table.fits.gz")
     >>> print(pointing_info)
     Pointing info:
     <BLANKLINE>
