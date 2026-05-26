@@ -157,7 +157,6 @@ class Fit:
         fit_result : `FitResult`
             Fit result.
         """
-
         datasets, parameters = _parse_datasets(datasets=datasets)
 
         optimize_result = self.optimize(datasets=datasets)

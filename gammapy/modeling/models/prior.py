@@ -232,8 +232,8 @@ class LogUniformPrior(Prior):
 
     @staticmethod
     def evaluate(value, min, max):
-        """
-        Evaluate the likelihood penalization term (hence -2*).
+        """Evaluate the likelihood penalization term (hence -2*).
+
         Note that this is currently a different scaling that the Uniform or Gaussian priors.
         With current implementation the TS of a source with/without LogUniform prior would be different... TBD
         """
