@@ -41,15 +41,15 @@ class ImageProfileEstimator(Estimator):
         from astropy import units as u
 
         # load example data
-        filename = '$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-counts.fits.gz'
+        filename = "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc-counts.fits.gz"
         fermi_cts = Map.read(filename)
 
         # set up profile estimator and run
-        p = ImageProfileEstimator(axis='lon', method='sum')
+        p = ImageProfileEstimator(axis="lon", method="sum")
         profile = p.run(fermi_cts)
 
         # smooth profile and plot
-        smoothed = profile.smooth(kernel='gauss')
+        smoothed = profile.smooth(kernel="gauss")
         smoothed.peek()
         plt.show()
     """
