@@ -499,7 +499,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
     Read an example light curve object:
 
     >>> from gammapy.modeling.models import LightCurveTemplateTemporalModel
-    >>> path = '$GAMMAPY_DATA/tests/models/light_curve/lightcrv_PKSB1222+216.fits'
+    >>> path = "$GAMMAPY_DATA/tests/models/light_curve/lightcrv_PKSB1222+216.fits"
     >>> light_curve = LightCurveTemplateTemporalModel.read(path)
 
     Show basic information about the lightcurve:
@@ -524,7 +524,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
     Compute mean ``norm`` in a given time interval:
 
     >>> import astropy.units as u
-    >>> t_r = Time(59000.5, format='mjd')
+    >>> t_r = Time(59000.5, format="mjd")
     >>> t_min = t_r + [1, 4, 8] * u.d
     >>> t_max = t_r + [1.5, 6, 9] * u.d
     >>> light_curve.integral(t_min, t_max)

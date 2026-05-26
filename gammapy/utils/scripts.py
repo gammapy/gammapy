@@ -323,7 +323,7 @@ def logic_parser(table, expression):
     Given a table with columns 'OBS_ID' and 'EVENT_TYPE':
 
     >>> from astropy.table import Table
-    >>> data = {'OBS_ID': [1, 2, 3, 4], 'EVENT_TYPE': ['1', '3', '4', '2']}
+    >>> data = {"OBS_ID": [1, 2, 3, 4], "EVENT_TYPE": ["1", "3", "4", "2"]}
     >>> table = Table(data)
     >>> expression = '(OBS_ID < 3) and (OBS_ID > 1) and ((EVENT_TYPE in ["3", "4"]) or (EVENT_TYPE == "3"))'
     >>> filtered_table = logic_parser(table, expression)

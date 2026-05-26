@@ -431,8 +431,8 @@ class Model:
         --------
         >>> from gammapy.modeling.models import Model
         >>> spectral_model = Model.create(
-        ...            "pl-2", model_type="spectral", amplitude="1e-10 cm-2 s-1", index=3
-        ...        )
+        ...     "pl-2", model_type="spectral", amplitude="1e-10 cm-2 s-1", index=3
+        ... )
         >>> type(spectral_model)
         <class 'gammapy.modeling.models.spectral.PowerLaw2SpectralModel'>
         """
@@ -1240,13 +1240,22 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
         >>> from gammapy.datasets import MapDataset
         >>> from gammapy.catalog import SourceCatalog3FHL
         >>> fermi_dataset = MapDataset.read(
-        ...    "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc.fits.gz", name="fermi_dataset")
+        ...     "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc.fits.gz",
+        ...     name="fermi_dataset",
+        ... )
         >>> catalog = SourceCatalog3FHL()
         >>> models = catalog.to_models().select_from_geom(fermi_dataset.geoms["geom"])
-        >>> ax = fermi_dataset.excess.sum_over_axes().smooth("0.2 deg").plot(add_cbar=True, cmap="Blues")
-        >>> ax = models.plot_regions(ax=ax, linewidth=1,  color="red",
-        ...    kwargs_point={"marker":"o", "markersize":5, "color":"red"}
-        ...            )
+        >>> ax = (
+        ...     fermi_dataset.excess.sum_over_axes()
+        ...     .smooth("0.2 deg")
+        ...     .plot(add_cbar=True, cmap="Blues")
+        ... )
+        >>> ax = models.plot_regions(
+        ...     ax=ax,
+        ...     linewidth=1,
+        ...     color="red",
+        ...     kwargs_point={"marker": "o", "markersize": 5, "color": "red"},
+        ... )
         """
         regions = self.to_regions(size_factor=size_factor)
 
@@ -1276,11 +1285,16 @@ class DatasetModels(collections.abc.Sequence, CovarianceMixin):
         >>> from gammapy.datasets import MapDataset
         >>> from gammapy.catalog import SourceCatalog3FHL
         >>> fermi_dataset = MapDataset.read(
-        ...        "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc.fits.gz", name="fermi_dataset"
-        ...        )
+        ...     "$GAMMAPY_DATA/fermi-3fhl-gc/fermi-3fhl-gc.fits.gz",
+        ...     name="fermi_dataset",
+        ... )
         >>> catalog = SourceCatalog3FHL()
         >>> models = catalog.to_models().select_from_geom(fermi_dataset.geoms["geom"])
-        >>> ax = fermi_dataset.excess.sum_over_axes().smooth("0.2 deg").plot(add_cbar=True, cmap="Blues")
+        >>> ax = (
+        ...     fermi_dataset.excess.sum_over_axes()
+        ...     .smooth("0.2 deg")
+        ...     .plot(add_cbar=True, cmap="Blues")
+        ... )
         >>> ax = models.plot_positions(ax=ax, color="red", marker="+", linewidth=1)
         """
         from astropy.visualization.wcsaxes import WCSAxes

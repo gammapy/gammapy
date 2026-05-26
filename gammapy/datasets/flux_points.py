@@ -458,15 +458,24 @@ class FluxPointsDataset(Dataset):
         >>> from gammapy.estimators import FluxPoints
         >>> from gammapy.datasets import FluxPointsDataset
 
-        >>> #load precomputed flux points
+        >>> # load precomputed flux points
         >>> filename = "$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits"
         >>> flux_points = FluxPoints.read(filename)
         >>> model = SkyModel(spectral_model=PowerLawSpectralModel())
         >>> dataset = FluxPointsDataset(model, flux_points)
-        >>> #configuring optional parameters
-        >>> kwargs_spectrum = {"kwargs_model": {"color":"red", "ls":"--"}, "kwargs_fp":{"color":"green", "marker":"o"}}
-        >>> kwargs_residuals = {"color": "blue", "markersize":4, "marker":'s', }
-        >>> dataset.plot_fit(kwargs_residuals=kwargs_residuals, kwargs_spectrum=kwargs_spectrum) # doctest: +SKIP
+        >>> # configuring optional parameters
+        >>> kwargs_spectrum = {
+        ...     "kwargs_model": {"color": "red", "ls": "--"},
+        ...     "kwargs_fp": {"color": "green", "marker": "o"},
+        ... }
+        >>> kwargs_residuals = {
+        ...     "color": "blue",
+        ...     "markersize": 4,
+        ...     "marker": "s",
+        ... }
+        >>> dataset.plot_fit(
+        ...     kwargs_residuals=kwargs_residuals, kwargs_spectrum=kwargs_spectrum
+        ... )  # doctest: +SKIP
         """
         if self.data.geom.ndim > 3:
             raise ValueError("Plot fit works with only one energy axis")
@@ -593,15 +602,17 @@ class FluxPointsDataset(Dataset):
         >>> from gammapy.estimators import FluxPoints
         >>> from gammapy.datasets import FluxPointsDataset
 
-        >>> #load precomputed flux points
+        >>> # load precomputed flux points
         >>> filename = "$GAMMAPY_DATA/tests/spectrum/flux_points/diff_flux_points.fits"
         >>> flux_points = FluxPoints.read(filename)
         >>> model = SkyModel(spectral_model=PowerLawSpectralModel())
         >>> dataset = FluxPointsDataset(model, flux_points)
-        >>> #configuring optional parameters
-        >>> kwargs_model = {"color":"red", "ls":"--"}
-        >>> kwargs_fp = {"color":"green", "marker":"o"}
-        >>> dataset.plot_spectrum(kwargs_fp=kwargs_fp, kwargs_model=kwargs_model) # doctest: +SKIP
+        >>> # configuring optional parameters
+        >>> kwargs_model = {"color": "red", "ls": "--"}
+        >>> kwargs_fp = {"color": "green", "marker": "o"}
+        >>> dataset.plot_spectrum(
+        ...     kwargs_fp=kwargs_fp, kwargs_model=kwargs_model
+        ... )  # doctest: +SKIP
         """
         kwargs_fp = (kwargs_fp or {}).copy()
         kwargs_model = (kwargs_model or {}).copy()

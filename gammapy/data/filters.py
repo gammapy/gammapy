@@ -33,10 +33,15 @@ class ObservationFilter:
     >>> from astropy.time import Time
     >>> from astropy.coordinates import Angle
     >>>
-    >>> time_filter = Time(['2021-03-27T20:10:00', '2021-03-27T20:20:00'])
-    >>> phase_filter = {'type': 'custom', 'opts': dict(parameter='PHASE', band=(0.2, 0.8))}
+    >>> time_filter = Time(["2021-03-27T20:10:00", "2021-03-27T20:20:00"])
+    >>> phase_filter = {
+    ...     "type": "custom",
+    ...     "opts": dict(parameter="PHASE", band=(0.2, 0.8)),
+    ... }
     >>>
-    >>> my_obs_filter = ObservationFilter(time_filter=time_filter, event_filters=[phase_filter])
+    >>> my_obs_filter = ObservationFilter(
+    ...     time_filter=time_filter, event_filters=[phase_filter]
+    ... )
     >>>
     >>> ds = DataStore.from_dir("$GAMMAPY_DATA/cta-1dc/index/gps")
     >>> my_obs = ds.obs(obs_id=111630)

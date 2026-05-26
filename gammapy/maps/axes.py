@@ -1931,7 +1931,7 @@ class MapAxes(Sequence):
         >>> import astropy.units as u
         >>> from astropy.time import Time
         >>> from gammapy.maps import MapAxis, MapAxes, TimeMapAxis
-        >>> energy_axis = MapAxis.from_energy_bounds(1*u.TeV, 3*u.TeV, 6)
+        >>> energy_axis = MapAxis.from_energy_bounds(1 * u.TeV, 3 * u.TeV, 6)
         >>> time_ref = Time("1999-01-01T00:00:00.123456789")
         >>> time_axis = TimeMapAxis(
         ...     edges_min=[0, 1, 3] * u.d,
@@ -3496,7 +3496,8 @@ class LabelMapAxis:
         --------
         >>> from gammapy.maps import LabelMapAxis
         >>> label_axis = LabelMapAxis(
-        ...     labels=["dataset-1", "dataset-2", "dataset-3", "dataset-4"], name="dataset"
+        ...     labels=["dataset-1", "dataset-2", "dataset-3", "dataset-4"],
+        ...     name="dataset",
         ... )
         >>> slices = slice(2, 4)
         >>> sliced = label_axis.slice(slices)
