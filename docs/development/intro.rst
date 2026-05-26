@@ -352,4 +352,3 @@ Finally to make a completely clean folder for build the documentation you can ru
 .. code-block:: bash
 
     make clean-repo
-
