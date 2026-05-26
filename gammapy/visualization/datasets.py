@@ -45,20 +45,26 @@ def plot_spectrum_datasets_off_regions(
 
     Plot to visualise the overlap of off regions::
 
-        plot_spectrum_datasets_off_regions(datasets, ax, alpha=0.3, facecolor='black')
+        plot_spectrum_datasets_off_regions(datasets, ax, alpha=0.3, facecolor="black")
 
     Plot that cycles through colors (``edgecolor``) and line styles together::
 
-        plot_spectrum_datasets_off_regions(datasets, ax, prop_cycle=plt.cycler(color=list('rgb'), ls=['--', '-', ':']))  # noqa: E501
+        plot_spectrum_datasets_off_regions(
+            datasets, ax, prop_cycle=plt.cycler(color=list("rgb"), ls=["--", "-", ":"])
+        )  # noqa: E501
 
     Plot that uses a modified `~matplotlib.rcParams`, has two legend columns, static and
     dynamic colors, but only shows labels for ``datasets1`` and ``datasets2``. Note that
     ``legend_kwargs`` only applies if it's given in the last function call with ``legend=True``::
 
-        plt.rc('legend', columnspacing=1, fontsize=9)
-        plot_spectrum_datasets_off_regions(datasets1, ax, legend=True, edgecolor='cyan')
-        plot_spectrum_datasets_off_regions(datasets2, ax, legend=True, legend_kwargs=dict(ncol=2))
-        plot_spectrum_datasets_off_regions(datasets3, ax, legend=False, edgecolor='magenta')
+        plt.rc("legend", columnspacing=1, fontsize=9)
+        plot_spectrum_datasets_off_regions(datasets1, ax, legend=True, edgecolor="cyan")
+        plot_spectrum_datasets_off_regions(
+            datasets2, ax, legend=True, legend_kwargs=dict(ncol=2)
+        )
+        plot_spectrum_datasets_off_regions(
+            datasets3, ax, legend=False, edgecolor="magenta"
+        )
     """
     from matplotlib.legend_handler import HandlerPatch, HandlerTuple
     from matplotlib.patches import CirclePolygon, Patch

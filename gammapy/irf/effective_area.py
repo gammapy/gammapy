@@ -32,8 +32,10 @@ class EffectiveAreaTable2D(IRF):
     Here's an example you can use to learn about this class:
 
     >>> from gammapy.irf import EffectiveAreaTable2D
-    >>> filename = '$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits'
-    >>> aeff = EffectiveAreaTable2D.read(filename, hdu='EFFECTIVE AREA')
+    >>> filename = (
+    ...     "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
+    ... )
+    >>> aeff = EffectiveAreaTable2D.read(filename, hdu="EFFECTIVE AREA")
     >>> print(aeff)
     EffectiveAreaTable2D
     --------------------
@@ -50,10 +52,12 @@ class EffectiveAreaTable2D(IRF):
     >>> from gammapy.irf import EffectiveAreaTable2D
     >>> from gammapy.maps import MapAxis
     >>> energy_axis_true = MapAxis.from_energy_bounds(
-    ...        "0.1 TeV", "100 TeV", nbin=30, name="energy_true"
-    ...    )
+    ...     "0.1 TeV", "100 TeV", nbin=30, name="energy_true"
+    ... )
     >>> offset_axis = MapAxis.from_bounds(0, 5, nbin=4, name="offset")
-    >>> aeff = EffectiveAreaTable2D(axes=[energy_axis_true, offset_axis], data=1e10, unit="cm2")
+    >>> aeff = EffectiveAreaTable2D(
+    ...     axes=[energy_axis_true, offset_axis], data=1e10, unit="cm2"
+    ... )
     >>> print(aeff)
     EffectiveAreaTable2D
     --------------------
