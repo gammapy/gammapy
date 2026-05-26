@@ -46,16 +46,18 @@ class GitHubContributorsExtractor:
         log.info(f"Remaining {remaining} requests over {total} requests.")
 
     def extract_contributors_by_milestone(
-        self, milestone_name, state="closed",
+        self,
+        milestone_name,
+        state="closed",
     ):
         """Extract list of unique contributors from PRs as per the milestone.
 
-         Parameters
-         ----------
-         milestone_name :  str
-            Milestone name i.e. 'v1.0'
-         state : str ("closed", "open", "all")
-            State of PRs to extract.
+        Parameters
+        ----------
+        milestone_name :  str
+           Milestone name i.e. 'v1.0'
+        state : str ("closed", "open", "all")
+           State of PRs to extract.
         """
         milestones = self.repo.get_milestones(state="all")
         milestone_obj = None
@@ -64,7 +66,9 @@ class GitHubContributorsExtractor:
                 milestone_obj = m
                 break
         if milestone_obj is None:
-            log.error(f"Milestone '{milestone_name}' not found in repository '{self.repo.full_name}'.")
+            log.error(
+                f"Milestone '{milestone_name}' not found in repository '{self.repo.full_name}'."
+            )
             return []
 
         # Get PRs filtered by milestone using issues API (GitHub returns PRs as issues)
@@ -77,7 +81,7 @@ class GitHubContributorsExtractor:
         num_closed_issues = 0
         for issue in issues:
             if issue.pull_request is None:
-                if issue.state == 'closed':
+                if issue.state == "closed":
                     num_closed_issues += 1
                 continue  # skip issues, only process PRs
 
@@ -99,13 +103,20 @@ class GitHubContributorsExtractor:
             # It is possible that there will be 'authors' such as 'web-flow' which is just a merging action
             # The extra lines here ignore those users that are not real
             # Start to add authors
-            if pr.user and pr.user.login not in {"web-flow", "dependabot[bot]", "github-actions[bot]"}:
+            if pr.user and pr.user.login not in {
+                "web-flow",
+                "dependabot[bot]",
+                "github-actions[bot]",
+            }:
                 unique_users.add(pr.user.name or pr.user.login)
 
             # For committers
             for commit in pr.get_commits():
-                if commit.committer and commit.committer.login not in {"web-flow", "dependabot[bot]",
-                                                                       "github-actions[bot]"}:
+                if commit.committer and commit.committer.login not in {
+                    "web-flow",
+                    "dependabot[bot]",
+                    "github-actions[bot]",
+                }:
                     # This is required for if a user deletes their account
                     try:
                         name = commit.committer.name
@@ -116,7 +127,11 @@ class GitHubContributorsExtractor:
 
             # For reviewers
             for review in pr.get_reviews():
-                if review.user and review.user.login not in {"web-flow", "dependabot[bot]", "github-actions[bot]"}:
+                if review.user and review.user.login not in {
+                    "web-flow",
+                    "dependabot[bot]",
+                    "github-actions[bot]",
+                }:
                     unique_users.add(review.user.name or review.user.login)
 
         return {
@@ -136,14 +151,22 @@ def cli(log_level):
     logging.basicConfig(level=log_level)
     log.setLevel(level=log_level)
 
+
 @cli.command(
     "contributors_by_milestone",
-    help="Make a list of contributors for a specific milestone"
+    help="Make a list of contributors for a specific milestone",
 )
 @click.option("--token", default=None, type=str, help="Your GitHub token.")
 @click.option("--repo", default="gammapy/gammapy", type=str, help="The relative repo.")
-@click.option("--milestone", required=True, type=str, help="Comma-separated list of milestones, e.g., '2.0.1,2.1'")
-@click.option("--state", default="closed", type=str, help="Is the issues closed or not.")
+@click.option(
+    "--milestone",
+    required=True,
+    type=str,
+    help="Comma-separated list of milestones, e.g., '2.0.1,2.1'",
+)
+@click.option(
+    "--state", default="closed", type=str, help="Is the issues closed or not."
+)
 def contributors_by_milestone(repo, token, milestone, state):
     """List contributors attached to a specific milestone."""
     extractor = GitHubContributorsExtractor(repo=repo, token=token)
@@ -156,9 +179,9 @@ def contributors_by_milestone(repo, token, milestone, state):
             milestone_name=m,
             state=state,
         )
-        users = info['contributors']
-        num_prs = info['num_prs']
-        num_closed_issues = info['num_closed_issues']
+        users = info["contributors"]
+        num_prs = info["num_prs"]
+        num_closed_issues = info["num_closed_issues"]
         log.info(f"""
         For milestone '{m}':
           - {num_prs} pull requests

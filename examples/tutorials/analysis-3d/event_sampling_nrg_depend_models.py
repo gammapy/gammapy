@@ -87,7 +87,7 @@ for i in range(len(amplitudes)):
     spec = PowerLawSpectralModel(
         index=indices[i], amplitude=amplitudes[i], reference="1 TeV"
     )
-    spec.plot([0.2, 100] * u.TeV, label=f"Time bin {i+1}")
+    spec.plot([0.2, 100] * u.TeV, label=f"Time bin {i + 1}")
 plt.legend()
 plt.show()
 
