@@ -174,8 +174,7 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
                 telescopes.extend(list(d.meta_table["TELESCOP"].flatten()))
         if len(np.unique(telescopes)) > 1:
             raise ValueError(
-                "All datasets must use the same value of the"
-                " 'TELESCOP' meta keyword."
+                "All datasets must use the same value of the 'TELESCOP' meta keyword."
             )
 
         meta = {
@@ -246,7 +245,6 @@ class FluxPointsEstimator(FluxEstimator, parallel.ParallelMixin):
             return self._nan_result(datasets, model, energy_min, energy_max)
 
     def _nan_result(self, datasets, model, energy_min, energy_max):
-        """NaN result."""
         energy_axis = MapAxis.from_energy_edges([energy_min, energy_max])
 
         with np.errstate(invalid="ignore", divide="ignore"):
