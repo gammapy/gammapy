@@ -1948,7 +1948,7 @@ class LogParabolaSpectralModel(SpectralModel):
 
     @classmethod
     def from_log10(cls, amplitude, reference, alpha, beta):
-        """Construct from :math:`\log_{10}` parametrization."""
+        r"""Construct from :math:`\log_{10}` parametrization."""
         beta_ = beta / np.log(10)
         return cls(amplitude=amplitude, reference=reference, alpha=alpha, beta=beta_)
 
@@ -2002,7 +2002,7 @@ class LogParabolaNormSpectralModel(SpectralModel):
 
     @classmethod
     def from_log10(cls, norm, reference, alpha, beta):
-        """Construct from :math:`\log_{10}` parametrization."""
+        r"""Construct from :math:`\log_{10}` parametrization."""
         beta_ = beta / np.log(10)
         return cls(norm=norm, reference=reference, alpha=alpha, beta=beta_)
 
