@@ -66,6 +66,15 @@ class ExpTestModel(SpectralModel):
         return np.log(y * u.TeV) * u.TeV
 
 
+def test_read_write_no_filename():
+    with pytest.raises(ValueError):
+        FluxPoints.read(None)
+
+    fp = FluxPoints(None, None)
+    with pytest.raises(ValueError):
+        fp.write(None)
+
+
 def test_energy_ref_lafferty():
     """
     Tests Lafferty & Wyatt x-point method.

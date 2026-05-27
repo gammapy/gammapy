@@ -211,6 +211,29 @@ def test_workflow_1d():
 
 
 @requires_data()
+def test_workflow_1d_None_values_for_energy_axes():
+    config = get_example_config("1d")
+    workflow = Workflow(config)
+
+    workflow.config.flux_points = {}
+    workflow.get_observations()
+    workflow.get_datasets()
+    workflow.read_models(MODEL_FILE_1D)
+    workflow.run_fit()
+    with pytest.raises(
+        ValueError,
+        match="Missing or incomplete energy axis parameters in flux points configuration.",
+    ):
+        workflow.get_flux_points()
+
+    with pytest.raises(
+        ValueError,
+        match="Missing or incomplete energy axis parameters in light curve configuration.",
+    ):
+        workflow.get_light_curve()
+
+
+@requires_data()
 def test_geom_workflow_1d():
     cfg = """
     observations:
