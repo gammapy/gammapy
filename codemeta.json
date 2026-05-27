@@ -3,6 +3,10 @@
     "@type": "SoftwareSourceCode",
     "author": [
         {
+            "@type": "Organization",
+            "name": "Gammapy team"
+        },
+        {
             "@id": "https://orcid.org/0000-0002-6606-2816",
             "@type": "Person",
             "affiliation": {
@@ -91,6 +95,16 @@
             },
             "familyName": "Bylund",
             "givenName": "Tomas"
+        },
+        {
+            "@id": "https://orcid.org/0000-0001-6484-485X",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Universit\u00e9 Paris Cit\u00e9, CNRS, Astroparticule et Cosmologie, F-75013 Paris, France"
+            },
+            "familyName": "Carrasco",
+            "givenName": "Marie-Sophie"
         },
         {
             "@id": "https://orcid.org/0000-0002-6488-8219",
@@ -313,16 +327,6 @@
             "givenName": "Robert Daniel"
         },
         {
-            "@id": "https://orcid.org/0009-0001-0100-9846",
-            "@type": "Person",
-            "affiliation": {
-                "@type": "Organization",
-                "name": "Laboratoire Univers et Particules de Montpellier, CNRS, Universit\u00e9 de Montpellier, Montpellier, France"
-            },
-            "familyName": "Pigoux",
-            "givenName": "Natthan"
-        },
-        {
             "@id": "https://orcid.org/0000-0002-7537-7334",
             "@type": "Person",
             "affiliation": {
@@ -522,10 +526,6 @@
             },
             "familyName": "Yu",
             "givenName": "Pei"
-        },
-        {
-            "@type": "Organization",
-            "name": "The Gammapy team"
         }
     ],
     "codeRepository": "https://github.com/gammapy/gammapy",
@@ -561,7 +561,7 @@
         "active"
     ],
     "email": "GAMMAPY-COORDINATION-L@IN2P3.FR",
-    "dateModified": "2026-03-11",
+    "dateModified": "2026-05-27",
     "softwareRequirements": [
         "numpy>=2.0",
         "scipy>=1.13",
