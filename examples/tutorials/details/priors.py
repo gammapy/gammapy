@@ -59,9 +59,10 @@ The setup
 
 """
 
+import matplotlib.pyplot as plt
 import numpy as np
 from astropy import units as u
-import matplotlib.pyplot as plt
+
 from gammapy.datasets import SpectrumDatasetOnOff
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
@@ -422,7 +423,7 @@ model_weak_prior.parameters["amplitude"].prior = uniform_penalty
 ######################################################################
 # As we are only interested in the behaviour of the amplitude, we freeze the
 # spectral index here
-model_weak.parameters['index'].frozen = True
+model_weak.parameters["index"].frozen = True
 
 ######################################################################
 # We set the minimum value to zero and the maximum value
@@ -443,7 +444,7 @@ plt.plot(
     color="tab:orange",
     linestyle="dashed",
     label=f"Uniform Prior\n $min={uniform_penalty.min.value}$, "
-          f"penalty={uniform_penalty.penalty.value}",
+    f"penalty={uniform_penalty.penalty.value}",
 )
 plt.xlabel("Amplitude Value [1 / (TeV s cm2)]")
 plt.ylabel("Prior")
