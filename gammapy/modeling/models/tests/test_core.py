@@ -24,6 +24,7 @@ from gammapy.modeling.models import (
     FoVBackgroundModel,
     DiskSpatialModel,
 )
+from gammapy.modeling.models.core import _write_models, _recursive_model_filename_update
 from gammapy.utils.testing import mpl_plot_check, requires_data
 
 
@@ -429,3 +430,22 @@ def test_add_datasets_models():
     assert isinstance(Models() + DatasetModels(), Models)
     assert isinstance(DatasetModels() + DatasetModels(), Models)
     assert isinstance(Models() + Models(), Models)
+
+
+def test_write_models_no_path(tmp_path):
+    spectral_model = PowerLawSpectralModel()
+    model = SkyModel(spectral_model=spectral_model, name="test-model")
+    models = Models([model])
+
+    with pytest.raises(ValueError, match="The path is not defined."):
+        _write_models(models, path=None)
+
+    spectral_model.filename = None
+    _recursive_model_filename_update(spectral_model, path=None)
+    assert spectral_model.filename is None
+
+    spectral_model.filename = tmp_path / "model.fits"
+    _recursive_model_filename_update(spectral_model, path=None)
+    assert spectral_model.filename == tmp_path / "model.fits"
+    _recursive_model_filename_update(spectral_model, path=tmp_path)
+    assert spectral_model.filename == "model.fits"
