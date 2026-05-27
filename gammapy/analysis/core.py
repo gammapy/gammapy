@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Session class driving the high level interface API."""
+
 import html
 import logging
 from astropy.coordinates import SkyCoord
@@ -90,10 +91,13 @@ class Analysis:
     def _set_data_store(self):
         """Set the datastore on the Analysis object."""
         path = make_path(self.config.observations.datastore)
-        if path.is_file():
+
+        if path.is_file():  # NOSONAR
+            # (S2259): attribute cannot be None
             log.debug(f"Setting datastore from file: {path}")
             self.datastore = DataStore.from_file(path)
-        elif path.is_dir():
+        elif path.is_dir():  # NOSONAR
+            # (S2259): attribute cannot be None
             log.debug(f"Setting datastore from directory: {path}")
             self.datastore = DataStore.from_dir(path)
         else:
@@ -317,7 +321,14 @@ class Analysis:
 
         fp_settings = self.config.flux_points
         log.info("Calculating flux points.")
-        energy_edges = self._make_energy_axis(fp_settings.energy).edges
+
+        energy_edges = self._make_energy_axis(fp_settings.energy)
+        if energy_edges is not None:
+            energy_edges = energy_edges.edges
+        else:
+            raise ValueError(
+                "Missing or incomplete energy axis parameters in flux points configuration."
+            )
         flux_point_estimator = FluxPointsEstimator(
             energy_edges=energy_edges,
             source=fp_settings.source,
@@ -363,7 +374,14 @@ class Analysis:
         """Calculate light curve for a specific model component."""
         lc_settings = self.config.light_curve
         log.info("Computing light curve.")
-        energy_edges = self._make_energy_axis(lc_settings.energy_edges).edges
+
+        energy_edges = self._make_energy_axis(lc_settings.energy_edges)
+        if energy_edges is not None:
+            energy_edges = energy_edges.edges
+        else:
+            raise ValueError(
+                "Missing or incomplete energy axis parameters in light curve configuration."
+            )
 
         if (
             lc_settings.time_intervals.start is None

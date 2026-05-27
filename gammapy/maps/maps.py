@@ -28,13 +28,14 @@ class Maps(MutableMapping):
         return self._geom
 
     def __setitem__(self, key, value):
-        if value is not None and not isinstance(value, Map):
-            raise ValueError(
-                f"MapDict can only contain Map objects, got {type(value)} instead."
-            )
-        # TODO: which loosers criterion to apply? broadcastability?
-        else:
-            self._geom = value.geom
+        if value is not None:
+            if not isinstance(value, Map):
+                raise ValueError(
+                    f"MapDict can only contain Map objects, got {type(value)} instead."
+                )
+            # TODO: which loosers criterion to apply? broadcastability?
+            else:
+                self._geom = value.geom
 
         self._data[key] = value
 
