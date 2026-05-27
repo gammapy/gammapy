@@ -92,6 +92,7 @@ test = [
     "pytest",
     "docutils",
     "sphinx",
+    "pyvo"
 ]
 docs = [
     "astropy",
