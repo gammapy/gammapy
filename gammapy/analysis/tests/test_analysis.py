@@ -3,6 +3,7 @@ import logging
 from pathlib import Path
 import pytest
 from numpy.testing import assert_allclose
+from astropy.io import fits
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from regions import CircleSkyRegion
@@ -12,6 +13,7 @@ from gammapy.datasets import MapDataset, SpectrumDatasetOnOff
 from gammapy.maps import WcsGeom, WcsNDMap
 from gammapy.modeling.models import DatasetModels
 from gammapy.utils.testing import requires_data
+from gammapy.utils.scripts import make_path
 
 CONFIG_PATH = Path(__file__).resolve().parent / ".." / "config"
 MODEL_FILE = CONFIG_PATH / "model.yaml"
@@ -57,6 +59,28 @@ def test_get_observations_no_datastore():
     analysis.config.observations.datastore = "other"
     with pytest.raises(FileNotFoundError):
         analysis.get_observations()
+
+
+@requires_data()
+def test_set_datastore_from_file(tmpdir):
+    filename = "$GAMMAPY_DATA/hess-dl3-dr1/hdu-index.fits.gz"
+    index_hdu = fits.open(make_path(filename))["HDU_INDEX"]
+
+    filename = "$GAMMAPY_DATA/hess-dl3-dr1/obs-index.fits.gz"
+    obs_hdu = fits.open(make_path(filename))["OBS_INDEX"]
+
+    hdulist = fits.HDUList()
+    hdulist.append(index_hdu)
+    hdulist.append(obs_hdu)
+
+    filename = tmpdir / "test-index.fits"
+    hdulist.writeto(str(filename))
+
+    config = AnalysisConfig()
+    analysis = Analysis(config)
+    analysis.config.observations.datastore = filename
+    analysis.get_observations()
+    assert analysis.observations[0].obs_id == 20136
 
 
 @requires_data()
@@ -208,6 +232,21 @@ def test_analysis_1d():
 
     flux = analysis.light_curve.flux.data[:, :, 0, 0]
     assert_allclose(flux, [[1.688954e-11], [2.347870e-11], [1.604152e-11]], rtol=1e-4)
+
+    analysis.config.flux_points = {}
+    analysis.run_fit()
+    with pytest.raises(
+        ValueError,
+        match="Missing or incomplete energy axis parameters in flux points configuration.",
+    ):
+        analysis.get_flux_points()
+
+    analysis.config.light_curve = {}
+    with pytest.raises(
+        ValueError,
+        match="Missing or incomplete energy axis parameters in light curve configuration.",
+    ):
+        analysis.get_light_curve()
 
 
 @requires_data()

@@ -13,6 +13,7 @@ from gammapy.datasets import (
 from gammapy.modeling.models import DatasetModels
 from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import requires_data
+from gammapy.datasets.io import OGIPDatasetWriter, OGIPDatasetReader
 
 
 @requires_data()
@@ -122,7 +123,7 @@ def test_spectrum_datasets_to_io(tmp_path):
 
 
 @requires_data()
-def test_ogip_writer(tmp_path):
+def test_ogip_writer_and_reader(tmp_path):
     dataset = SpectrumDatasetOnOff.read(
         "$GAMMAPY_DATA/joint-crab/spectra/hess/pha_obs23523.fits"
     )
@@ -132,8 +133,13 @@ def test_ogip_writer(tmp_path):
     datasets.write(tmp_path / "written_datasets.yaml")
 
     new_datasets = datasets.read(tmp_path / "written_datasets.yaml")
+    with pytest.raises(ValueError, match="The filename is not defined."):
+        OGIPDatasetWriter(None)
 
     assert new_datasets[0].counts_off is None
+    ogip_reader = OGIPDatasetReader(None)
+    with pytest.raises(ValueError, match="The filename is not defined."):
+        ogip_reader.get_valid_path(None)
 
 
 @requires_data()
