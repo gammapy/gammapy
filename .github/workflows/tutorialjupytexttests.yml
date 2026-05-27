@@ -13,7 +13,6 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
-
         with:
           python-version: '3.11'
 
