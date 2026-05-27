@@ -729,10 +729,8 @@ def test_joint_ts_map_hawc():
     datasets = Datasets.read("$GAMMAPY_DATA/hawc/DL4/HAWC_pass4_public_Crab.yaml")
     datasets = Datasets(datasets[-2:])
 
-    energy_edges = datasets[0].counts.geom.axes[0].squash().edges
     estimator = TSMapEstimator(
         kernel_width=2 * u.deg,
-        energy_edges=energy_edges,
         sum_over_energy_groups=False,
         n_jobs=4,
     )
@@ -742,7 +740,6 @@ def test_joint_ts_map_hawc():
 
     estimator = TSMapEstimator(
         kernel_width=2 * u.deg,
-        energy_edges=energy_edges,
         sum_over_energy_groups=False,
         selection_optional=["stat_scan"],
         n_jobs=4,
@@ -883,10 +880,7 @@ def test_excess_map_compatibility():
 
     ts_est_sum = TSMapEstimator(kernel_model=model, sum_over_energy_groups=True)
 
-    energy_edges = dataset.counts.geom.axes[0].squash().edges
-    ts_est = TSMapEstimator(
-        kernel_model=model, energy_edges=energy_edges, sum_over_energy_groups=False
-    )
+    ts_est = TSMapEstimator(kernel_model=model, sum_over_energy_groups=False)
 
     result = est.run(dataset=dataset)
 

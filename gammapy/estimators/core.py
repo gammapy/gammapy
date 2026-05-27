@@ -51,13 +51,11 @@ class Estimator(abc.ABC):
     def _get_energy_axis(self, dataset):
         """Energy axis."""
         if self.energy_edges is None:
-            energy_axis = dataset.counts.geom.axes["energy"]
-            if getattr(self, "sum_over_energy_groups", True):
-                energy_axis = energy_axis.squash()
+            return dataset.counts.geom.axes["energy"].squash()
+        elif self.energy_edges == "all":
+            return dataset.counts.geom.axes["energy"]
         else:
-            energy_axis = MapAxis.from_energy_edges(self.energy_edges)
-
-        return energy_axis
+            return MapAxis.from_energy_edges(self.energy_edges)
 
     def copy(self):
         """Copy estimator."""
