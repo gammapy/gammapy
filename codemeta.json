@@ -313,6 +313,16 @@
             "givenName": "Robert Daniel"
         },
         {
+            "@id": "https://orcid.org/0009-0001-0100-9846",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Laboratoire Univers et Particules de Montpellier, CNRS, Universit\u00e9 de Montpellier, Montpellier, France"
+            },
+            "familyName": "Pigoux",
+            "givenName": "Natthan"
+        },
+        {
             "@id": "https://orcid.org/0000-0002-7537-7334",
             "@type": "Person",
             "affiliation": {
@@ -512,6 +522,10 @@
             },
             "familyName": "Yu",
             "givenName": "Pei"
+        },
+        {
+            "@type": "Organization",
+            "name": "The Gammapy team"
         }
     ],
     "codeRepository": "https://github.com/gammapy/gammapy",
@@ -537,22 +551,28 @@
         "familyName": "Donath",
         "givenName": "Axel"
     },
+    "funding": [
+        "10.13039/501100000780::101129751",
+        "10.13039/501100000780::824064"
+    ],
     "readme": "https://gammapy.org",
     "issueTracker": "https://github.com/gammapy/gammapy/issues",
     "developmentStatus": [
         "active"
     ],
     "email": "GAMMAPY-COORDINATION-L@IN2P3.FR",
-    "dateModified": "2025-12-16",
+    "dateModified": "2026-03-11",
     "softwareRequirements": [
         "numpy>=2.0",
         "scipy>=1.13",
-        "astropy>=6.1",
+        "astropy>=6.1.5",
         "regions>=0.9.0",
         "pyyaml>=5.3",
         "click>=8.0",
         "pydantic>=2.8.0",
         "iminuit>=2.26.0",
-        "matplotlib>=3.8,<3.10"
+        "matplotlib>=3.8",
+        "requests",
+        "tqdm"
     ]
 }
