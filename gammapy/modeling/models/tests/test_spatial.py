@@ -383,6 +383,8 @@ def test_sky_diffuse_map(caplog):
     with pytest.raises(TypeError):
         model.plot_grid()
 
+    assert isinstance(model.plot(), mpl.axes.Axes)
+
     # change central position
     model.lon_0.value = 12.0
     model.lat_0.value = 6
@@ -432,7 +434,8 @@ def test_sky_diffuse_map_3d():
         model.plot_grid()
 
     with mpl_plot_check():
-        model.plot_interactive()
+        out = model.plot_interactive()
+        assert out is None
 
 
 @requires_dependency("healpy")
@@ -879,18 +882,6 @@ def test_template_spatial_parameters_copy():
     model.position = SkyCoord(0, 0, unit="deg", frame="galactic")
     model_copy = model.copy()
     assert_allclose(model.parameters.value, model_copy.parameters.value)
-
-
-@requires_data()
-def test_template_spatial_plot():
-    filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits.gz"
-    model = TemplateSpatialModel.read(filename, normalize=False)
-    assert isinstance(model.plot(), mpl.axes.Axes)
-    map_3d = model.map.to_cube(
-        [MapAxis.from_edges([1.0, 2.0], unit="TeV", **{"name": "energy_true"})]
-    )
-    model_3d = TemplateSpatialModel(map_3d)
-    model_3d.plot_interactive()
 
 
 @requires_dependency("healpy")
