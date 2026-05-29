@@ -179,7 +179,7 @@ class EnergyDependentMorphologyEstimator(Estimator):
             parameters = [
                 param
                 for param in sliced.models[
-                    f"{sliced[0].models.names[0]}" # is this really the best way?
+                    f"{sliced[0].models.names[0]}"  # is this really the best way?
                 ].parameters.free_parameters
             ]
             null_values = [0] + [
