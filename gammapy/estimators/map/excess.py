@@ -10,7 +10,7 @@ from gammapy.datasets import MapDataset, MapDatasetOnOff
 from gammapy.maps import Map
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from gammapy.stats import CashCountsStatistic, WStatCountsStatistic
-from gammapy.utils.deprecation import deprecated_attribute
+from gammapy.utils.deprecation import deprecated_attribute, deprecated_renamed_argument
 
 from ..core import Estimator
 from ..utils import apply_threshold_sensitivity, estimate_exposure_reco_energy
@@ -233,6 +233,7 @@ class ExcessMapEstimator(Estimator):
 
     sum_over_energy_groups = deprecated_attribute("sum_over_energy_groups", "2.2")
 
+    @deprecated_renamed_argument("sum_over_energy_groups", None, "2.2")
     def __init__(
         self,
         correlation_radius="0.1 deg",
@@ -259,6 +260,7 @@ class ExcessMapEstimator(Estimator):
         self.energy_edges = energy_edges
         self.correlate_off = correlate_off
 
+        # TODO: remove in v2.3 as sum_over_energy_groups is deprecated
         if energy_edges is None and not sum_over_energy_groups:
             self.energy_edges = "all"
 

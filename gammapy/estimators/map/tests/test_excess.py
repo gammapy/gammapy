@@ -17,6 +17,7 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
 )
+from gammapy.utils.deprecation import GammapyDeprecationWarning
 from gammapy.utils.testing import requires_data
 
 
@@ -484,8 +485,9 @@ def test_energy_edges_all(simple_dataset_on_off):
 
     assert result["npred"].data.shape == (2, 20, 20)
 
-    estimator = ExcessMapEstimator(sum_over_energy_groups=False)
-    result = estimator.run(simple_dataset_on_off)
+    with pytest.warns(GammapyDeprecationWarning):
+        estimator = ExcessMapEstimator(sum_over_energy_groups=False)
+        result = estimator.run(simple_dataset_on_off)
 
     assert result["npred"].data.shape == (2, 20, 20)
 
