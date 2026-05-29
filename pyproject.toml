@@ -69,11 +69,11 @@ extra = [
     "numba",
 ]
 
-all = [{include-group = "extra"}, {include-group = "bayesian"}, {include-group = "distributed"}]
+all = ["gammapy[extra, bayesian, distributed]"]
 
-all_no_ray =  [{include-group = "extra"}, {include-group = "bayesian"}]
+all_no_ray = ["gammapy[extra, bayesian]"]
 
-cov = [{include-group = "extra"}, {include-group = "bayesian"}]
+cov =  ["gammapy[extra, bayesian]"] #[{include-group = "extra"}, {include-group = "bayesian"}]
 
 test = [
     "pytest-astropy",

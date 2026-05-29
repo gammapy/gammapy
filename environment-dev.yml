@@ -60,7 +60,6 @@ dependencies:
   - pandoc
   - pylint
   - setuptools_scm
-  - sherpa>=4.17
   - sphinx
   - sphinx-click
   - sphinx-gallery
@@ -81,6 +80,7 @@ dependencies:
   - pyinstrument
   - memray
   - pip:
+      - sherpa>=4.17
       - pytest-sphinx
       - ray[default]>=2.9
       - PyGithub
