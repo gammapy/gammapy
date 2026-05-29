@@ -68,9 +68,13 @@ extra = [
     "ipywidgets",
     "numba",
 ]
+
 all = [{include-group = "extra"}, {include-group = "bayesian"}, {include-group = "distributed"}]
+
 all_no_ray =  [{include-group = "extra"}, {include-group = "bayesian"}]
+
 cov = [{include-group = "extra"}, {include-group = "bayesian"}]
+
 test = [
     "pytest-astropy",
     "pytest-xdist",
