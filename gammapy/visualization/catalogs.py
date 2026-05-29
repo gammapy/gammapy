@@ -69,7 +69,7 @@ def plot_pulse_profile_3PC(
             f"`source` must be an instance of `~gammapy.catalog.SourceCatalogObject3PC`, got {type(source)}."
         )
     if n_period > 2:
-        raise ValueError(f"`n_preiod` must be either 1 or 2, got {n_period}.")
+        raise ValueError(f"`n_period` must be either 1 or 2, got {n_period}.")
 
     fig, axes = plt.subplots(
         ncols=1,
