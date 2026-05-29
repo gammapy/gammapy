@@ -39,7 +39,7 @@ __all__ = [
 ]
 
 
-# This is legacy code from astropy regions
+# TODO: This is legacy code from astropy regions. Remove when using regions.SkyPolygonRegion.
 def pixel_scale_angle_at_skycoord(skycoord, wcs, offset=1 * u.arcsec):
     """
     Calculate the pixel coordinate and scale and WCS rotation angle at
@@ -258,6 +258,7 @@ class SphericalCircleSkyRegion(CircleSkyRegion):
         return separation < self.radius
 
 
+# TODO: can we rely on regions.PolygonSkyRegion instead?
 class PolygonPointsSkyRegion(PolygonSkyRegion):
     """Polygon sky region defined by a list of points."""
 
