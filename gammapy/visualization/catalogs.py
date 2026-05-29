@@ -1,10 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
-
 import logging
 
 log = logging.getLogger(__name__)
-
 
 __all__ = ["plot_pulse_profile_3PC"]
 
@@ -24,7 +22,6 @@ def plot_pulse_profile_3PC(
     integrated profile above 100 MeV, optionally overlaid with radio and
     best-fit profiles. The remaining panels show pulse profiles in different
     gamma-ray energy bands.
-
 
     Parameters
     ----------
@@ -49,6 +46,15 @@ def plot_pulse_profile_3PC(
     axes : `~numpy.ndarray` of `~matplotlib.axes.Axes`
         Array of matplotlib axes objects corresponding to the panels.
 
+    Examples
+    --------
+    This example shows how to plot the pulse profile::
+        from gammapy.catalog import SourceCatalog3PC
+        from gammapy.visualization.catalogs import plot_pulse_profile_3PC
+
+        catalog = SourceCatalog3PC()
+        source = catalog["J0534+2200"]
+        axes = plot_pulse_profile_3PC(source, n_period=2)
     """
     from gammapy.catalog import SourceCatalogObject3PC
 
