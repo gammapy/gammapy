@@ -21,31 +21,49 @@ anytime if you ask.
 
 Before attempting to make a contribution, you should *use* Gammapy a bit at least:
 
-* Install Gammapy.
-* Execute one or two of the tutorial notebooks for Gammapy and do the exercises there.
-* Ask questions or complain about issues on the Gammapy `slack channel <https://gammapy.slack.com/>`__,
+* :ref:`Install Gammapy <getting-started>`.
+* Execute one or two of the :ref:`tutorial notebooks <tutorials>` for Gammapy and
+  do the exercises there.
+* Ask questions or complain about issues on the Gammapy
+  `slack channel <https://gammapy.slack.com/>`__,
   `GitHub discussions <https://github.com/gammapy/gammapy/discussions>`__ or
   `GitHub issues tracker <https://github.com/gammapy/gammapy/issues>`__.
 
 We'd like to note that there are many ways to contribute to the Gammapy project.
 For example if you mention it to a colleague or suggest it to a student, or if
 you use it and `acknowledge Gammapy <https://gammapy.org/acknowledging.html>`__
-in a presentation, poster or publication, or if you report an issue on the mailing list,
-those are contributions we value. The rest of this page though is concerned only with
-the process and technical steps how to contribute a code or documentation change via a
-**pull request** against the Gammapy repository.
+in a presentation, poster or publication, or if you report an issue on the mailing
+list, those are contributions we value. The rest of this page though is concerned
+only with the process and technical steps how to contribute a code or documentation
+change via a **pull request** against the Gammapy repository.
 
-So let's assume you've used Gammapy for a while, and now you'd like to fix or
-add something to the Gammapy code, tests or docs. Here are the steps and commands
-to do it ...
+.. _new-contributor:
+
+New contributors
+================
+This is a general overview for new contributors to Gammapy.
+It is important that you first read our :ref:`community guidelines <dev_guidelines>`.
+
+* If you are new to Gammapy, both as a user and contributor, we strongly encourage
+  you to get in `contact <https://gammapy.org/contact.html>`__ with us early via
+  GitHub,  Slack or email before beginning your journey. See :ref:`contact-early`
+  for further detail.
+* We have marked some issues
+  `good-first-issue <https://github.com/gammapy/gammapy/issues?q=state%3Aopen%20label%3Agood-first-issue>`__
+  as we think they are a good entry point into the process of contributing to Gammapy.
+* The following sections outline the important aspects of contributing to Gammapy.
+
+
+.. _authorship-policy:
 
 Acceptation of the Developer Certificate of Origin (DCO)
 ========================================================
-As described in the `PIG 24 <https://github.com/gammapy/gammapy/blob/master/docs/development/pigs/pig-024.rst>`_ and
-the `README.rst <https://github.com/gammapy/gammapy/blob/master/README.rst>`_ file, each contributor shall accept the
-DCO based stored in the file `CONTRIBUTING.md <https://github.com/gammapy/gammapy/blob/main/CONTRIBUTING.md#gammapy-developer-certification-of-origin>`_:
-this is a binding statement that asserts that you are the creator of your contribution, and that you wish to allow
-Gammapy to use your work to cite you as contributor.
+As described in the :ref:`PIG 24 <pig-024>` and
+the `README.rst <https://github.com/gammapy/gammapy/blob/master/README.rst>`_ file,
+each contributor shall accept the DCO based stored in the file
+`CONTRIBUTING.md <https://github.com/gammapy/gammapy/blob/main/CONTRIBUTING.md#gammapy-developer-certification-of-origin>`_:
+this is a binding statement that asserts that you are the creator of your contribution,
+and that you wish to allow Gammapy to use your work to cite you as contributor.
 
 **If you are willing to agree to these terms, the following agreement line should be added to every commit message:**
 
@@ -57,20 +75,26 @@ Four solutions exist:
 
 2. You can sign each of your commits with the command: ``git commit -s``.
 
-    * If you have authored a commit that is missing its ‘Signed-off-by’ line, you can amend your commits and push them to
-      GitHub: ``git commit --amend --no-edit --signoff``
+    * If you have authored a commit that is missing its ‘Signed-off-by’ line, you can
+      amend your commits and push them to GitHub:
+      ``git commit --amend --no-edit --signoff``
       (see also this `How To <https://github.com/src-d/guide/blob/master/developer-community/fix-DCO.md#how-to-add-sign-offs-retroactively>`_).
 
-3. You can make an alias of the command ``git commit -s``, e.g. ``alias gcs 'git commit -s'``.
+3. You can make an alias of the command ``git commit -s``, e.g.
+   ``alias gcs 'git commit -s'``.
 
-4. You can create a so-called ``git hooks`` allowing to automatically sign all your commits (recommended option). This
-   method is described in detail `here <https://github.com/src-d/guide/blob/master/developer-community/fix-DCO.md#how-to-prevent-missing-sign-offs-in-the-future>`_.
+4. You can create a so-called ``git hooks`` allowing to automatically sign
+   all your commits (recommended option). This method is described in detail
+   `here <https://github.com/src-d/guide/blob/master/developer-community/fix-DCO.md#how-to-prevent-missing-sign-offs-in-the-future>`_.
 
-For each of these solutions, it is **mandatory** to correctly set your ``user.name`` and ``user.email`` as part of your git
-configuration (see `this page <https://docs.github.com/en/account-and-profile/setting-up-and-managing-your-personal-account-on-github/managing-email-preferences/setting-your-commit-email-address>`_ to configure it).
-You have to use **your real name** (i.e., pseudonyms or anonymous contributions cannot be made) when using git. This is
-because the DCO is a binding document, granting the Gammapy project to be an open source project.
+For each of these solutions, it is **mandatory** to correctly set your
+``user.name`` and ``user.email`` as part of your git configuration (see
+`this page <https://docs.github.com/en/account-and-profile/setting-up-and-managing-your-personal-account-on-github/managing-email-preferences/setting-your-commit-email-address>`_ to configure it).
+You have to use **your real name** (i.e., pseudonyms or anonymous contributions
+cannot be made) when using git. This is because the DCO is a binding document,
+granting the Gammapy project to be an open source project.
 
+.. _contact-early:
 
 Get in touch early
 ==================
