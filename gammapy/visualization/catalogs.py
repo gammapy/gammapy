@@ -16,8 +16,7 @@ def plot_pulse_profile_3PC(
     add_best_fit_profile=True,
     add_error=True,
 ):
-    """
-    Plot pulse profiles from the Fermi-LAT 3PC catalog.
+    """Plot pulse profiles from the Fermi-LAT 3PC catalog.
 
     This function generates a multi-panel figure showing the phase-resolved
     pulse profiles of a pulsar as provided in the
@@ -51,8 +50,6 @@ def plot_pulse_profile_3PC(
         Array of matplotlib axes objects corresponding to the panels.
 
     """
-
-    # Import here to avoid circular imports
     from gammapy.catalog import SourceCatalogObject3PC
 
     key_names = [

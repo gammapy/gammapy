@@ -1,8 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
-
-
 import pytest
 from numpy.testing import assert_allclose
 from gammapy.catalog import SourceCatalog3PC
@@ -13,7 +10,6 @@ from gammapy.visualization.catalogs import plot_pulse_profile_3PC
 @requires_data()
 def test_plot_pulse_profile_3pc_invalid_nperiod():
     """Test that invalid n_period raises ValueError."""
-
     catalog = SourceCatalog3PC()
     source = catalog[0]
 
@@ -24,7 +20,6 @@ def test_plot_pulse_profile_3pc_invalid_nperiod():
 @requires_data()
 def test_plot_pulse_profile_3pc_basic():
     """Test basic execution with a real 3PC source."""
-
     catalog = SourceCatalog3PC()
 
     source = catalog["J0534+2200"]
@@ -43,7 +38,6 @@ def test_plot_pulse_profile_3pc_basic():
 @requires_data()
 def test_plot_pulse_profile_3pc_single_period():
     """Test plotting with n_period=1."""
-
     catalog = SourceCatalog3PC()
     source = catalog[0]
 
@@ -57,7 +51,6 @@ def test_plot_pulse_profile_3pc_single_period():
 @requires_data()
 def test_plot_pulse_profile_3pc_missing_info():
     """Test plotting with n_period=1."""
-
     catalog = SourceCatalog3PC()
 
     source = catalog[8]  # no  best-fit available
