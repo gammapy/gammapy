@@ -16,7 +16,42 @@ def plot_pulse_profile_3PC(
     add_best_fit_profile=True,
     add_error=True,
 ):
-    """"""
+    """
+    Plot pulse profiles from the Fermi-LAT 3PC catalog.
+
+    This function generates a multi-panel figure showing the phase-resolved
+    pulse profiles of a pulsar as provided in the
+    `~gammapy.catalog.SourceCatalog3PC`. The first panel displays the
+    integrated profile above 100 MeV, optionally overlaid with radio and
+    best-fit profiles. The remaining panels show pulse profiles in different
+    gamma-ray energy bands.
+
+
+    Parameters
+    ----------
+    source : `~gammapy.catalog.SourceCatalogObject3PC`
+        Source object containing pulse profile data from the 3PC catalog.
+    n_period : {1, 2}, optional
+        Number of pulsar periods to display on the phase axis. Default is 2.
+    add_radio_profile : bool, optional
+        Whether to overlay the radio pulse profile in the top panel.
+        If no radio profile is available, it is skipped automatically.
+        Default is True.
+    add_best_fit_profile : bool, optional
+        Whether to overlay the best-fit pulse profile in the top panel.
+        If no best-fit profile is available, it is skipped automatically.
+        Default is True.
+    add_error : bool, optional
+        Whether to display uncertainties as error bars for all profiles.
+        Default is True.
+
+    Returns
+    -------
+    axes : `~numpy.ndarray` of `~matplotlib.axes.Axes`
+        Array of matplotlib axes objects corresponding to the panels.
+
+    """
+
     # Import here to avoid circular imports
     from gammapy.catalog import SourceCatalogObject3PC
 
@@ -155,7 +190,9 @@ def plot_pulse_profile_3PC(
             kwargs["histtype"] = "stepfilled"
         axis = profiles[name].geom.axes["phase"]
         data = profiles[name].data.squeeze()
-        label = f"{int(name.split('_')[0])/1000} - {int(name.split('_')[1])/1000} GeV"
+        label = (
+            f"{int(name.split('_')[0]) / 1000} - {int(name.split('_')[1]) / 1000} GeV"
+        )
         ax.hist(
             axis.as_plot_center,
             bins=axis.as_plot_edges,
