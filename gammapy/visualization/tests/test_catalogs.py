@@ -52,3 +52,16 @@ def test_plot_pulse_profile_3pc_single_period():
     for ax in axes:
         xmin, xmax = ax.get_xlim()
         assert_allclose([xmin, xmax], [0, 1])
+
+
+@requires_data()
+def test_plot_pulse_profile_3pc_missing_info():
+    """Test plotting with n_period=1."""
+
+    catalog = SourceCatalog3PC()
+
+    source = catalog[8]  # no  best-fit available
+    plot_pulse_profile_3PC(source, add_best_fit_profile=True)
+
+    source = catalog[1]  # no Radio profile available
+    plot_pulse_profile_3PC(source, add_radio_profile=True)

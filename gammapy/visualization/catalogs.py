@@ -119,7 +119,7 @@ def plot_pulse_profile_3PC(
     try:
         best_fit_profile = source.pulse_profile_best_fit
     except KeyError:
-        best_fit_profile = False
+        add_best_fit_profile = False
         log.warning(f"No Best fit profile available for PSR {source.name}, skipping.")
 
     if add_best_fit_profile:
