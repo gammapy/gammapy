@@ -51,41 +51,26 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [project.optional-dependencies]
-all = [
-    "naima",
-    "sherpa; platform_system != 'Windows'",
-    "healpy; platform_system != 'Windows'",
-    "ipywidgets",
+bayesian = [
+   "ultranest",
+    "arviz>=1",
+    "xarray",
+    "nautilus-sampler",
+]
+distributed = [
     "ray[default]>=2.9,<2.55; python_version < '3.14'",
     "ray[default]>=2.55; python_version >= '3.14'",
-    "ultranest",
-    "numba",
-    "arviz>=1",
-    "xarray",
-    "nautilus-sampler",
 ]
-all_no_ray = [
+extra = [
     "naima",
     "sherpa; platform_system != 'Windows'",
     "healpy; platform_system != 'Windows'",
     "ipywidgets",
-    "ultranest",
     "numba",
-    "arviz>=1",
-    "xarray",
-    "nautilus-sampler",
 ]
-cov = [
-    "naima",
-    "sherpa; platform_system != 'Windows'",
-    "healpy; platform_system != 'Windows'",
-    "ipywidgets",
-    "ultranest",
-    "numba",
-    "arviz>=1",
-    "xarray",
-    "nautilus-sampler",
-]
+all = [{include-group = "extra"}, {include-group = "bayesian"}, {include-group = "distributed"}]
+all_no_ray =  [{include-group = "extra"}, {include-group = "bayesian"}]
+cov = [{include-group = "extra"}, {include-group = "bayesian"}]
 test = [
     "pytest-astropy",
     "pytest-xdist",
