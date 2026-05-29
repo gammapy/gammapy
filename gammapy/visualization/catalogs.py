@@ -49,6 +49,7 @@ def plot_pulse_profile_3PC(
     Examples
     --------
     This example shows how to plot the pulse profile::
+
         from gammapy.catalog import SourceCatalog3PC
         from gammapy.visualization.catalogs import plot_pulse_profile_3PC
 
