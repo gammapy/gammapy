@@ -41,8 +41,7 @@ __all__ = [
 
 # TODO: This is legacy code from astropy regions. Remove when using regions.SkyPolygonRegion.
 def pixel_scale_angle_at_skycoord(skycoord, wcs, offset=1 * u.arcsec):
-    """
-    Calculate the pixel coordinate and scale and WCS rotation angle at
+    """Calculate the pixel coordinate and scale and WCS rotation angle at
     the position of a SkyCoord coordinate.
 
     Parameters
