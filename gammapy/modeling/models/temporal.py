@@ -711,7 +711,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         else:
             raise ValueError("Not a valid format, choose from ['map', 'table']")
 
-    def evaluate(self, time, t_ref=None, energy=None):
+    def evaluate(self, time, t_ref=None, energy=None, fill_value=0):
         """Evaluate the model at given coordinates.
 
         Parameters
@@ -741,7 +741,10 @@ class LightCurveTemplateTemporalModel(TemporalModel):
             coords["energy"] = energy.reshape(-1, 1)
 
         val = self.map.interp_by_coord(
-            coords, method=self.method, values_scale=self.values_scale
+            coords,
+            method=self.method,
+            values_scale=self.values_scale,
+            fill_value=fill_value,
         )
         val = np.clip(val, 0, a_max=None)
         return u.Quantity(val, unit=self.map.unit, copy=COPY_IF_NEEDED)
