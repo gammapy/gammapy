@@ -176,9 +176,7 @@ def get_spectrum_datasets():
     gti1 = GTI.create("0h", "1h", Time("2010-01-01T00:00:00").tt)
     dataset_1.gti = gti1
 
-    # dataset_2 = simulate_spectrum_dataset(model=model, random_state=1)
-    dataset_2 = dataset_1.copy()
-    dataset_2._name = "dataset_2"
+    dataset_2 = dataset_1.copy(name="dataset_2")
     gti2 = GTI.create("1h", "2h", Time("2010-01-01T00:00:00").tt)
     dataset_2.gti = gti2
 
@@ -595,7 +593,6 @@ def get_map_datasets():
     gti1 = GTI.create("0 h", "1 h", "2010-01-01T00:00:00")
     dataset_1.gti = gti1
 
-    # dataset_2 = simulate_map_dataset(random_state=1, name="dataset_2")
     dataset_2 = dataset_1.copy()
     gti2 = GTI.create("1 h", "2 h", "2010-01-01T00:00:00")
     dataset_2.gti = gti2
