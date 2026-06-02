@@ -1,0 +1,1 @@
+Make LightCurveTemplateTemporalModel return zero instead of linearly extrapolate when evaluating outside the times in the template.
