@@ -42,10 +42,11 @@ def get_github_name(login):
 
 
 def get_reviewers(pr):
-    data = json.loads(gh(["pr", "view", pr, "--json", "reviews"]))
-    return {r["author"]["login"] for r in data.get("reviews", []) if r.get("author")}
     try:
-        pass
+        data = json.loads(gh(["pr", "view", pr, "--json", "reviews"]))
+        return {
+            r["author"]["login"] for r in data.get("reviews", []) if r.get("author")
+        }
     except Exception:
         return set()
 
@@ -168,9 +169,7 @@ def main():
     items = [(merged[k], merged_counts[k]) for k in merged]
 
     print("## Contributors\n")
-
     visible = 0
-
     for name, s in sorted(items, key=lambda x: x[0].split()[-1]):
         total = s["commits"] + s["co"] + s["reviews"]
 
