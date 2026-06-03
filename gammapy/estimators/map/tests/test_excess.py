@@ -488,8 +488,7 @@ def test_energy_edges_all(simple_dataset_on_off):
     with pytest.warns(GammapyDeprecationWarning):
         estimator = ExcessMapEstimator(sum_over_energy_groups=False)
         result = estimator.run(simple_dataset_on_off)
-
-    assert result["npred"].data.shape == (2, 20, 20)
+        assert result["npred"].data.shape == (2, 20, 20)
 
     estimator = ExcessMapEstimator()
     result = estimator.run(simple_dataset_on_off)
