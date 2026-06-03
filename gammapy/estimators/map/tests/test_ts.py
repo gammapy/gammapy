@@ -1,13 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from copy import deepcopy
-import pytest
-import numpy as np
-from numpy.testing import assert_allclose
+
 import astropy.units as u
+import numpy as np
+import pytest
 from astropy.coordinates import Angle, SkyCoord
+from numpy.testing import assert_allclose
 from scipy.stats import pearsonr
+
 from gammapy.datasets import Datasets, MapDataset, MapDatasetOnOff
-from gammapy.estimators import TSMapEstimator, ExcessMapEstimator
+from gammapy.estimators import ExcessMapEstimator, TSMapEstimator
 from gammapy.estimators.utils import (
     approximate_profile_map,
     combine_flux_maps,
@@ -703,7 +705,9 @@ def test_joint_ts_map_hawc():
     datasets = Datasets(datasets[-2:])
 
     estimator = TSMapEstimator(
-        kernel_width=2 * u.deg, sum_over_energy_groups=False, n_jobs=4
+        kernel_width=2 * u.deg,
+        sum_over_energy_groups=False,
+        n_jobs=4,
     )
     result = estimator.run(datasets)
     assert_allclose(result["flux"].data[0, 59, 59], 4.034048e-12, rtol=1e-3)
