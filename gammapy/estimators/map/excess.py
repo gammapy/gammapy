@@ -1,15 +1,19 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import copy
 import logging
+
 import numpy as np
 from astropy.convolution import Tophat2DKernel
 from astropy.coordinates import Angle
+
 from gammapy.datasets import MapDataset, MapDatasetOnOff
 from gammapy.maps import Map
 from gammapy.modeling.models import PowerLawSpectralModel, SkyModel
 from gammapy.stats import CashCountsStatistic, WStatCountsStatistic
+from gammapy.utils.deprecation import deprecated_attribute, deprecated_renamed_argument
+
 from ..core import Estimator
-from ..utils import estimate_exposure_reco_energy, apply_threshold_sensitivity
+from ..utils import apply_threshold_sensitivity, estimate_exposure_reco_energy
 from .core import FluxMaps
 
 __all__ = ["ExcessMapEstimator"]
@@ -169,7 +173,8 @@ class ExcessMapEstimator(Estimator):
     energy_edges : list of `~astropy.units.Quantity`, optional
         Edges of the target maps energy bins. The resulting bin edges won't be exactly equal to the input ones,
         but rather the closest values to the energy axis edges of the parent dataset.
-        Default is None: apply the estimator in each energy bin of the parent dataset.
+        Default is None: energy_edges are set as [edge_min, edge_max] of the parent dataset.
+        If "all" alias is used apply the estimator in each energy bin of the parent dataset.
         For further explanation see :ref:`estimators`.
     correlate_off : bool, optional
         Correlate OFF events. Default is True.
@@ -187,10 +192,10 @@ class ExcessMapEstimator(Estimator):
         If True, use `bkg_syst_fraction_sensitivity` and `gamma_min_sensitivity` in the sensitivity computation.
         Default is False which is the same setting as the HGPS catalog.
     sum_over_energy_groups : bool, optional
-        Only used if ``energy_edges`` is None.
-        If False, apply the estimator in each energy bin of the parent dataset.
-        If True, apply the estimator in only one bin defined by the energy edges of the parent dataset.
-        Default is False.
+        Only used if `energy_edges=None` and `sum_over_energy_groups=False`
+        then it's equivalent to `energy_edges="all"`. Deprecated since v2.2.
+        Default is True.
+
 
     Examples
     --------
@@ -226,6 +231,9 @@ class ExcessMapEstimator(Estimator):
         "acceptance_off",
     ]
 
+    sum_over_energy_groups = deprecated_attribute("sum_over_energy_groups", "2.2")
+
+    @deprecated_renamed_argument("sum_over_energy_groups", None, "2.2")
     def __init__(
         self,
         correlation_radius="0.1 deg",
@@ -239,7 +247,7 @@ class ExcessMapEstimator(Estimator):
         gamma_min_sensitivity=10,
         bkg_syst_fraction_sensitivity=0.05,
         apply_threshold_sensitivity=False,
-        sum_over_energy_groups=False,
+        sum_over_energy_groups=True,
     ):
         self.correlation_radius = correlation_radius
         self.n_sigma = n_sigma
@@ -250,8 +258,11 @@ class ExcessMapEstimator(Estimator):
         self.apply_threshold_sensitivity = apply_threshold_sensitivity
         self.selection_optional = selection_optional
         self.energy_edges = energy_edges
-        self.sum_over_energy_groups = sum_over_energy_groups
         self.correlate_off = correlate_off
+
+        # TODO: remove in v2.3 as sum_over_energy_groups is deprecated
+        if energy_edges is None and not sum_over_energy_groups:
+            self.energy_edges = "all"
 
         if spectral_model is None:
             spectral_model = PowerLawSpectralModel(index=2)

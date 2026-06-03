@@ -2,26 +2,28 @@
 """Functions to compute test statistic images."""
 
 import warnings
-import astropy.units as u
 from itertools import repeat
+
+import astropy.units as u
 import numpy as np
 import scipy.optimize
-from scipy.interpolate import InterpolatedUnivariateSpline
 from astropy.coordinates import Angle
 from astropy.utils import lazyproperty
+from scipy.interpolate import InterpolatedUnivariateSpline
+
 import gammapy.utils.parallel as parallel
 from gammapy.datasets import Datasets
 from gammapy.datasets.map import MapEvaluator
 from gammapy.datasets.utils import get_nearest_valid_exposure_position
 from gammapy.maps import Map, MapAxis, Maps
 from gammapy.modeling.models import PointSpatialModel, PowerLawSpectralModel, SkyModel
-from gammapy.stats.utils import ts_to_sigma
 from gammapy.stats import cash
+from gammapy.stats.utils import ts_to_sigma
 from gammapy.utils.array import shape_2N, symmetric_crop_pad_width
 from gammapy.utils.compilation import get_fit_statistics_compiled
+from gammapy.utils.deprecation import deprecated_renamed_argument
 from gammapy.utils.pbar import progress_bar
 from gammapy.utils.roots import find_roots
-from gammapy.utils.deprecation import deprecated_renamed_argument
 
 from ..core import Estimator
 from ..utils import (
@@ -120,10 +122,11 @@ class TSMapEstimator(Estimator, parallel.ParallelMixin):
 
         Default is None, so only "ts", "norm", "niter", "norm_err", "npred", "npred_excess", "stat", "stat_null" and
         "success" are computed.
-    energy_edges : list of `~astropy.units.Quantity`, optional
+    energy_edges : list of `~astropy.units.Quantity` or str, optional
         Edges of the target maps energy bins. The resulting bin edges won't be exactly equal to the input ones,
         but rather the closest values to the energy axis edges of the parent dataset.
-        Default is None: apply the estimator in each energy bin of the parent dataset.
+        Default is None: energy_edges are set as [edge_min, edge_max] of the parent dataset.
+        If "all" alias is used apply the estimator in each energy bin of the parent dataset.
         For further explanation see :ref:`estimators`.
     sum_over_energy_groups : bool, optional
         Whether to sum over the energy groups or fit the norm on the full energy
