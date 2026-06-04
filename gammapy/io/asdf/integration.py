@@ -1,3 +1,4 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 import importlib.resources as importlib_resources
 
 from asdf.resource import DirectoryResourceMapping

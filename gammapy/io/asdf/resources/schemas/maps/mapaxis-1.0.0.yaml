@@ -41,6 +41,6 @@ properties:
       Flag indicating boundary condition for the axis.
     enum: [monotonic, periodic]
 
-required: [name, nodes, unit, interp, node_type]
+required: [nodes]
 additionalProperties: false
 ...

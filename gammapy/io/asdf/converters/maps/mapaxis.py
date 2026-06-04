@@ -1,3 +1,4 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 from asdf.extension import Converter
 
 
@@ -19,10 +20,10 @@ class MapAxisConverter(Converter):
         from gammapy.maps import MapAxis
 
         return MapAxis(
-            name=node["name"],
+            name=node.get("name", ""),
             nodes=node["nodes"],
             unit=node.get("unit", ""),
-            interp=node["interp"],
-            node_type=node["node_type"],
+            interp=node.get("interp", "lin"),
+            node_type=node.get("node_type", "edges"),
             boundary_type=node.get("boundary_type", "monotonic"),
         )

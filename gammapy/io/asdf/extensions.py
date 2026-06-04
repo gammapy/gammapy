@@ -1,3 +1,4 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 """
 This module builds all of the ASDF extensions which will be registered by `gammapy.io.asdf.integration`,
 via an ``entry-point`` in the ``pyproject.toml`` file.
