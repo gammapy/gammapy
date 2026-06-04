@@ -5,6 +5,7 @@ import pytest
 from gammapy.maps import MapAxis
 
 asdf = pytest.importorskip("asdf")
+pytest.importorskip("asdf.testing")
 from asdf.testing.helpers import yaml_to_asdf  # noqa: E402
 
 
