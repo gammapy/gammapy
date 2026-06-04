@@ -44,24 +44,30 @@ class EDispMap(IRFMap):
         from gammapy.makers.utils import make_edisp_map, make_map_exposure_true_energy
 
         # Define energy dispersion map geometry
-        energy_axis_true = MapAxis.from_edges(np.logspace(-1, 1, 10), unit="TeV", name="energy_true")
+        energy_axis_true = MapAxis.from_edges(
+            np.logspace(-1, 1, 10), unit="TeV", name="energy_true"
+        )
         migra_axis = MapAxis.from_edges(np.linspace(0, 3, 100), name="migra")
         pointing = SkyCoord(0, 0, unit="deg")
         geom = WcsGeom.create(
-                binsz=0.25 * u.deg,
-                width=10 * u.deg,
-                skydir=pointing,
-                axes=[migra_axis, energy_axis_true],
+            binsz=0.25 * u.deg,
+            width=10 * u.deg,
+            skydir=pointing,
+            axes=[migra_axis, energy_axis_true],
         )
 
         # Extract EnergyDispersion2D from CTA 1DC IRF
-        filename = "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
+        filename = (
+            "$GAMMAPY_DATA/cta-1dc/caldb/data/cta/1dc/bcf/South_z20_50h/irf_file.fits"
+        )
         edisp2D = EnergyDispersion2D.read(filename, hdu="ENERGY DISPERSION")
         aeff2d = EffectiveAreaTable2D.read(filename, hdu="EFFECTIVE AREA")
 
         # Create the exposure map
         exposure_geom = geom.squash(axis_name="migra")
-        exposure_map = make_map_exposure_true_energy(pointing, "1 h", aeff2d, exposure_geom)
+        exposure_map = make_map_exposure_true_energy(
+            pointing, "1 h", aeff2d, exposure_geom
+        )
 
         # Create the EDispMap for the specified pointing
         edisp_map = make_edisp_map(edisp2D, pointing, geom, exposure_map)

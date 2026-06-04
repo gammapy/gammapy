@@ -51,42 +51,31 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [project.optional-dependencies]
-all = [
-    "naima",
-    "sherpa; platform_system != 'Windows'",
-    "healpy; platform_system != 'Windows'",
-    "ipywidgets",
-    "ray[default]>=2.9,<2.55; python_version < '3.14'",
-    "ray[default]>=2.55; python_version >= '3.14'",
-    "ultranest",
-    "numba",
+bayesian = [
+   "ultranest",
     "arviz>=1",
     "xarray",
     "nautilus-sampler",
     "asdf",
 ]
-all_no_ray = [
+distributed = [
+    "ray[default]>=2.9,<2.55; python_version < '3.14'",
+    "ray[default]>=2.55; python_version >= '3.14'",
+]
+extra = [
     "naima",
     "sherpa; platform_system != 'Windows'",
     "healpy; platform_system != 'Windows'",
     "ipywidgets",
-    "ultranest",
     "numba",
-    "arviz>=1",
-    "xarray",
-    "nautilus-sampler",
 ]
-cov = [
-    "naima",
-    "sherpa; platform_system != 'Windows'",
-    "healpy; platform_system != 'Windows'",
-    "ipywidgets",
-    "ultranest",
-    "numba",
-    "arviz>=1",
-    "xarray",
-    "nautilus-sampler",
-]
+
+all = ["gammapy[extra, bayesian, distributed]"]
+
+all_no_ray = ["gammapy[extra, bayesian]"]
+
+cov =  ["gammapy[extra, bayesian]"]
+
 test = [
     "pytest-astropy",
     "pytest-xdist",
@@ -159,7 +148,7 @@ select = [
   "E",   # pycodestyle errors
   "F",   # pyflakes
   "B",   # flake8-bugbear
-  "I",   # isort
+  #"I",   # isort # uncomment before v3.0
   "PLE", # pylint errors
   "D",   # pydocstyle
   # "UP",   # pyUpgrade

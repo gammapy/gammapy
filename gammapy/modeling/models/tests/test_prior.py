@@ -3,6 +3,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
+from scipy.stats import norm
 from gammapy.modeling import Parameter
 from gammapy.modeling.models import (
     PRIOR_REGISTRY,
@@ -13,6 +14,7 @@ from gammapy.modeling.models import (
     SkyModel,
     UniformPrior,
     LogUniformPrior,
+    SamplesKDEPrior,
 )
 from gammapy.utils.testing import assert_quantity_allclose
 
@@ -200,3 +202,88 @@ def test_factor_min_max_use_synced_bounds():
     p.prior = UniformPrior(min=0.0, max=1e-10)
     assert_allclose(p.factor_min, 0.0)
     assert_allclose(p.factor_max, 1e-10 / 1e-12)
+
+
+def test_samples_prior_empty_samples_raises():
+    with pytest.raises(ValueError, match="at least one sample"):
+        SamplesKDEPrior([])
+
+
+def test_samples_prior_weights_length_mismatch_raises():
+    samples = np.array([0.0, 1.0, 2.0])
+    weights = np.array([1.0, 2.0])  # wrong length
+    with pytest.raises(ValueError, match="same length"):
+        SamplesKDEPrior(samples, weights=weights)
+
+
+def test_samples_prior_inverse_cdf_monotonic_and_bounds():
+    rng = np.random.default_rng(2)
+    samples = rng.normal(loc=0.0, scale=1.0, size=500)
+    prior = SamplesKDEPrior(samples)
+
+    p = np.linspace(0.01, 0.99, 21)
+    x_from_p = prior._inverse_cdf(p)
+
+    # monotonic: higher p should give higher x
+    diff = np.diff(x_from_p)
+    assert np.all(diff >= -1e-6)
+
+    # values should lie within sample range (with small tolerance)
+    s_min, s_max = samples.min(), samples.max()
+    assert x_from_p.min() >= s_min - 1e-6
+    assert x_from_p.max() <= s_max + 1e-6
+
+    # behaviour at "edges" via fill_value
+    x_lo = prior._inverse_cdf(0.0)
+    x_hi = prior._inverse_cdf(1.0)
+    assert x_lo <= s_min + 1e-6
+    assert x_hi >= s_max - 1e-6
+
+
+def test_samples_prior_against_scipy_norm():
+    # KDE + approximation + interpolation will not be exact;
+    # keep tolerance loose but check basic consistency.
+
+    rng = np.random.default_rng(12)
+    mu, sigma = 1.5, 0.7
+    samples = rng.normal(mu, sigma, size=2000)
+    weights = rng.uniform(0.8, 1.2, size=samples.size)
+
+    prior = SamplesKDEPrior(samples, weights=weights)
+
+    assert "SamplesKDEPrior" in prior.tag
+    assert prior._type == "prior"
+
+    x = np.linspace(mu - 3 * sigma, mu + 3 * sigma, 40)
+    expected_val = -2 * norm(mu, sigma).logpdf(x)
+    val = prior.evaluate(x)
+    assert_allclose(val, expected_val, rtol=0.1)
+    assert np.all(np.isfinite(val))
+
+    p = np.linspace(0.1, 0.95, 11)
+    x_prior = prior._inverse_cdf(p)
+    x_ref = norm(mu, sigma).ppf(p)
+    assert_allclose(x_prior, x_ref, rtol=0.1)
+    assert np.all(np.isfinite(x_prior))
+
+
+def test_samples_prior_serialization_roundtrip():
+    rng = np.random.default_rng(42)
+    samples = rng.normal(loc=1.0, scale=0.5, size=500)
+    weights = rng.uniform(0.8, 1.2, size=samples.size)
+
+    prior = SamplesKDEPrior(samples, weights=weights)
+
+    data = prior.to_dict()
+    prior2 = SamplesKDEPrior.from_dict(data)
+
+    x = np.linspace(samples.min() - 1, samples.max() + 1, 30)
+    assert_allclose(prior.evaluate(x), prior2.evaluate(x), rtol=0, atol=1e-10)
+
+    p = np.linspace(0.05, 0.95, 9)
+    assert_allclose(
+        prior._inverse_cdf(p),
+        prior2._inverse_cdf(p),
+        rtol=0,
+        atol=1e-10,
+    )

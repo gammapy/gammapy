@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Source catalogs."""
+
 from gammapy.utils.registry import Registry
 from .core import SourceCatalog, SourceCatalogObject
 from .fermi import (

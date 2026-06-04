@@ -1,0 +1,1 @@
+Remove dependency to regions deprecated function pixel_scale_angle_at_skycoord in `~gammapy.utils.regions.SkyPolygonRegion`.

@@ -936,7 +936,7 @@ class Parameters(collections.abc.Sequence):
         >>> pwl = PowerLawSpectralModel(index=2)
         >>> with pwl.parameters.restore_status():
         ...     pwl.parameters["index"].value = 3
-        >>> print(pwl.parameters["index"].value) # doctest: +SKIP
+        >>> print(pwl.parameters["index"].value)  # doctest: +SKIP
         """
         return restore_parameters_status(self, restore_values)
 

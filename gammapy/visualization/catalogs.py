@@ -1,0 +1,230 @@
+import matplotlib.pyplot as plt
+import numpy as np
+import logging
+
+log = logging.getLogger(__name__)
+
+__all__ = ["plot_pulse_profile_3PC"]
+
+
+def plot_pulse_profile_3PC(
+    source,
+    n_period=2,
+    add_radio_profile=True,
+    add_best_fit_profile=True,
+    add_error=True,
+):
+    """Plot pulse profiles from the Fermi-LAT 3PC catalog.
+
+    This function generates a multi-panel figure showing the phase-resolved
+    pulse profiles of a pulsar as provided in the
+    `~gammapy.catalog.SourceCatalog3PC`. The first panel displays the
+    integrated profile above 100 MeV, optionally overlaid with radio and
+    best-fit profiles. The remaining panels show pulse profiles in different
+    gamma-ray energy bands.
+
+    Parameters
+    ----------
+    source : `~gammapy.catalog.SourceCatalogObject3PC`
+        Source object containing pulse profile data from the 3PC catalog.
+    n_period : {1, 2}, optional
+        Number of pulsar periods to display on the phase axis. Default is 2.
+    add_radio_profile : bool, optional
+        Whether to overlay the radio pulse profile in the top panel.
+        If no radio profile is available, it is skipped automatically.
+        Default is True.
+    add_best_fit_profile : bool, optional
+        Whether to overlay the best-fit pulse profile in the top panel.
+        If no best-fit profile is available, it is skipped automatically.
+        Default is True.
+    add_error : bool, optional
+        Whether to display uncertainties as error bars for all profiles.
+        Default is True.
+
+    Returns
+    -------
+    axes : `~numpy.ndarray` of `~matplotlib.axes.Axes`
+        Array of matplotlib axes objects corresponding to the panels.
+
+    Examples
+    --------
+    This example shows how to plot the pulse profile::
+
+        from gammapy.catalog import SourceCatalog3PC
+        from gammapy.visualization.catalogs import plot_pulse_profile_3PC
+
+        catalog = SourceCatalog3PC()
+        source = catalog["J0534+2200"]
+        axes = plot_pulse_profile_3PC(source, n_period=2)
+    """
+    from gammapy.catalog import SourceCatalogObject3PC
+
+    key_names = [
+        "50_100_WtCt",
+        "100_300_WtCt",
+        "300_1000_WtCt",
+        "1000_3000_WtCt",
+        "3000_100000_WtCt",
+        "10000_100000_WtCt",
+    ]
+
+    if not isinstance(source, SourceCatalogObject3PC):
+        raise TypeError(
+            f"`source` must be an instance of `~gammapy.catalog.SourceCatalogObject3PC`, got {type(source)}."
+        )
+    if n_period > 2:
+        raise ValueError(f"`n_period` must be either 1 or 2, got {n_period}.")
+
+    fig, axes = plt.subplots(
+        ncols=1,
+        nrows=6,
+        figsize=(7, 12),
+        gridspec_kw={"height_ratios": [1.6, 1, 1, 1, 1, 1]},
+    )
+
+    plt.subplots_adjust(wspace=0, hspace=0)
+    for ax in axes[:-1]:
+        ax.tick_params(
+            axis="x", direction="inout", labelbottom=False, top=True, bottom=True
+        )
+    axes[0].tick_params(
+        axis="x", direction="inout", labeltop=True, top=True, bottom=True
+    )
+    axes[-1].tick_params(
+        axis="x", direction="inout", labelbottom=True, top=True, bottom=True
+    )
+
+    ax_ylim = [np.inf, 0]
+
+    try:
+        radio_profile = source.pulse_profile_radio
+    except KeyError:
+        add_radio_profile = False
+        log.warning(f"No Radio profile available for PSR {source.name}, skipping.")
+
+    if add_radio_profile:
+        radio_axis = radio_profile.geom.axes["phase"]
+        axes[0].plot(
+            radio_axis.as_plot_center,
+            radio_profile.data.squeeze(),
+            color="#FB462A",
+            lw=0.5,
+            label="Radio",
+        )
+        ax_ylim[0] = (
+            radio_profile.data.squeeze().min()
+            - 0.1 * radio_profile.data.squeeze().min()
+        )
+        ax_ylim[1] = (
+            radio_profile.data.squeeze().max()
+            + 0.1 * radio_profile.data.squeeze().max()
+        )
+
+    try:
+        best_fit_profile = source.pulse_profile_best_fit
+    except KeyError:
+        add_best_fit_profile = False
+        log.warning(f"No Best fit profile available for PSR {source.name}, skipping.")
+
+    if add_best_fit_profile:
+        best_fit_profile = source.pulse_profile_best_fit
+        best_fit_axis = best_fit_profile.geom.axes["phase"]
+        axes[0].plot(
+            best_fit_axis.as_plot_center,
+            best_fit_profile.data.squeeze(),
+            color="teal",
+            lw=2,
+            ls="--",
+            label="Best-fit",
+        )
+        ax_ylim[0] = min(
+            best_fit_profile.data.squeeze().min()
+            - 0.1 * best_fit_profile.data.squeeze().min(),
+            ax_ylim[0],
+        )
+        ax_ylim[1] = max(
+            best_fit_profile.data.squeeze().max()
+            + 0.1 * best_fit_profile.data.squeeze().max(),
+            ax_ylim[1],
+        )
+
+    profiles = source.pulse_profiles
+    axis = profiles["GT100_WtCnt"].geom.axes["phase"]
+    data = profiles["GT100_WtCnt"].data.squeeze()
+    axes[0].hist(
+        axis.as_plot_center,
+        color="#202449",
+        bins=axis.as_plot_edges,
+        weights=data,
+        histtype="step",
+        lw=1,
+        label="> 100 MeV",
+    )
+    ax_ylim[0] = min(data.min() - 0.1 * data.min(), ax_ylim[0])
+    ax_ylim[1] = max(data.max() + 0.1 * data.max(), ax_ylim[1])
+    if add_error:
+        errors = profiles["Unc_GT100_WtCnt"].data.squeeze()
+        axes[0].errorbar(
+            axis.as_plot_center,
+            data,
+            yerr=errors,
+            fmt="none",
+            color="#202449",
+            elinewidth=0.5,
+        )
+        ax_ylim[0] = min(
+            (data - errors).min() - 0.1 * (data - errors).min(), ax_ylim[0]
+        )
+        ax_ylim[1] = max(
+            (data + errors).max() + 0.1 * (data + errors).max(), ax_ylim[1]
+        )
+
+    axes[0].set_ylim(ax_ylim)
+    axes[0].set_xlim(0, int(n_period))
+    axes[0].legend(loc=1)
+
+    for i, (ax, name) in enumerate(
+        zip(np.concatenate([axes[1:2], axes[1:]]), reversed(key_names))
+    ):
+        kwargs = {}
+        kwargs["color"] = "#202449"
+        kwargs["histtype"] = "step"
+        if i == 0:
+            kwargs["color"] = "grey"
+            kwargs["histtype"] = "stepfilled"
+        axis = profiles[name].geom.axes["phase"]
+        data = profiles[name].data.squeeze()
+        label = (
+            f"{int(name.split('_')[0]) / 1000} - {int(name.split('_')[1]) / 1000} GeV"
+        )
+        ax.hist(
+            axis.as_plot_center,
+            bins=axis.as_plot_edges,
+            weights=data,
+            label=label,
+            lw=1,
+            **kwargs,
+        )
+        ylim = [data.min() - 0.1 * data.min(), data.max() + 0.1 * data.max()]
+        if add_error:
+            errors = profiles[f"Unc_{name}"].data.squeeze()
+            ax.errorbar(
+                axis.as_plot_center,
+                data,
+                yerr=errors,
+                fmt="none",
+                color=kwargs["color"],
+                elinewidth=0.5,
+            )
+            ylim[0] = min((data - errors).min() - 0.1 * (data - errors).min(), ylim[0])
+            ylim[1] = max((data + errors).max() + 0.1 * (data + errors).max(), ylim[1])
+        if i != 0:
+            ax.set_ylim(ylim)
+        ax.set_xlim(0, int(n_period))
+        ax.legend(loc=1)
+
+    for ax in axes:
+        ax.set_ylabel("Weighted Counts")
+        ax.set_xlabel("Phase")
+
+    return axes

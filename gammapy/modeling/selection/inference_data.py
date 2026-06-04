@@ -6,22 +6,20 @@ from gammapy.modeling.parameter import Parameters
 
 def inference_data_from_ultranest(sampler_results, weighted=False):
     """
-     Convert UltraNest result dictionary to Xarray DataTree.
+    Convert UltraNest result dictionary to Xarray DataTree.
 
-     Parameters
-     ----------
-     sampler_results : dict
-         The result dictionary returned by `ReactiveNestedSampler.run()`.
-     weighted : bool
-         If True, uses the weighted samples (more accurate) otherwise use directly the unweighted samples.
+    Parameters
+    ----------
+    sampler_results : dict
+        The result dictionary returned by `ReactiveNestedSampler.run()`.
+    weighted : bool
+        If True, uses the weighted samples (more accurate) otherwise use directly the unweighted samples.
 
-     Returns
-     -------
+    Returns
+    -------
     inferencedata : `xarray.DataTree`
-        Returns an xarray.DataTree instance
+        Returns an xarray.DataTree instance.
     """
-
-    import numpy as np
     import arviz as az
     import xarray as xr
 
@@ -160,7 +158,6 @@ def resample_posterior(inference_data, n_samples=None, random_seed=42):
     inferencedata : `~xarray.DataTree`
         A new DataTree object with resampled posterior and sample_stats.
     """
-
     import arviz as az
     import xarray as xr
 
@@ -197,7 +194,9 @@ def resample_posterior(inference_data, n_samples=None, random_seed=42):
 
 
 def generate_prior_samples(parameters, n_prior_samples=1000, random_seed=42):
-    """Generate prior samples. This function draws samples from the prior distributions of the model
+    """Generate prior samples.
+
+    This function draws samples from the prior distributions of the model
     parameters using inverse transform sampling.
 
     Parameters
