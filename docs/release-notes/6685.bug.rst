@@ -1,0 +1,1 @@
+Fix default behavior of `sum_over_energy_groups=False` case in `gammapy.estimators.ExcessMapEstimator`.

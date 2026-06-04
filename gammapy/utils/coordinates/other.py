@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Other coordinate and distance-related functions."""
+
 import numpy as np
 from astropy.units import Quantity, Unit
 

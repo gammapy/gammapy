@@ -95,7 +95,7 @@ class MapAxis:
     nodes : `~numpy.ndarray` or `~astropy.units.Quantity`
         Array of node values.  These will be interpreted as either bin
         edges or centers according to ``node_type``.
-    interp : {'lin', 'log', 'sqrt'}
+    interp : {'lin', 'log', 'sqrt'}, optional
         Interpolation method used to transform between axis and pixel
         coordinates. Default is 'lin'.
     name : str, optional
@@ -1931,7 +1931,7 @@ class MapAxes(Sequence):
         >>> import astropy.units as u
         >>> from astropy.time import Time
         >>> from gammapy.maps import MapAxis, MapAxes, TimeMapAxis
-        >>> energy_axis = MapAxis.from_energy_bounds(1*u.TeV, 3*u.TeV, 6)
+        >>> energy_axis = MapAxis.from_energy_bounds(1 * u.TeV, 3 * u.TeV, 6)
         >>> time_ref = Time("1999-01-01T00:00:00.123456789")
         >>> time_axis = TimeMapAxis(
         ...     edges_min=[0, 1, 3] * u.d,
@@ -2300,7 +2300,7 @@ class TimeMapAxis:
         Reference time to use.
     name : str, optional
         Axis name. Default is "time".
-    interp : {'lin'}
+    interp : {'lin'}, optional
         Interpolation method used to transform between axis and pixel
         coordinates. For now only 'lin' is supported. Default is 'lin'.
     """
@@ -3497,7 +3497,8 @@ class LabelMapAxis:
         --------
         >>> from gammapy.maps import LabelMapAxis
         >>> label_axis = LabelMapAxis(
-        ...     labels=["dataset-1", "dataset-2", "dataset-3", "dataset-4"], name="dataset"
+        ...     labels=["dataset-1", "dataset-2", "dataset-3", "dataset-4"],
+        ...     name="dataset",
         ... )
         >>> slices = slice(2, 4)
         >>> sliced = label_axis.slice(slices)

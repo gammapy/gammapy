@@ -6,6 +6,7 @@ Convert jupyter notebook to sphinx gallery python script.
 
 Usage: python ipynb_to_gallery.py notebook.ipynb (Optional)script.py
 """
+
 import json
 import pypandoc as pdoc
 

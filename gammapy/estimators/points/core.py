@@ -160,9 +160,9 @@ class FluxPoints(FluxMaps):
     flux points given in one of the formats documented above::
 
     >>> from gammapy.estimators import FluxPoints
-    >>> filename = '$GAMMAPY_DATA/hawc/crab_flux/HAWC19_flux_points.fits'
+    >>> filename = "$GAMMAPY_DATA/hawc/crab_flux/HAWC19_flux_points.fits"
     >>> flux_points = FluxPoints.read(filename)
-    >>> flux_points.plot() #doctest: +SKIP
+    >>> flux_points.plot()  # doctest: +SKIP
 
     An instance of `FluxPoints` can also be created by passing an instance of
     `astropy.table.Table`, which contains the required columns, such as `'e_ref'`
@@ -182,7 +182,7 @@ class FluxPoints(FluxMaps):
     >>> table["dnde_err"] = pwl.evaluate_error(e_ref)[0]
     >>> table.meta["SED_TYPE"] = "dnde"
     >>> flux_points = FluxPoints.from_table(table)
-    >>> flux_points.plot(sed_type="flux") #doctest: +SKIP
+    >>> flux_points.plot(sed_type="flux")  # doctest: +SKIP
 
     If you have flux points in a different data format, the format can be changed
     by renaming the table columns and adding meta data::
@@ -193,22 +193,24 @@ class FluxPoints(FluxMaps):
     >>> from gammapy.estimators import FluxPoints
     >>> from gammapy.utils.scripts import make_path
 
-    >>> filename = make_path('$GAMMAPY_DATA/tests/spectrum/flux_points/flux_points_ctb_37b.txt')
-    >>> table = Table.read(filename ,format='ascii.csv', delimiter=' ', comment='#')
-    >>> table.rename_column('Differential_Flux', 'dnde')
-    >>> table['dnde'].unit = 'cm-2 s-1 TeV-1'
+    >>> filename = make_path(
+    ...     "$GAMMAPY_DATA/tests/spectrum/flux_points/flux_points_ctb_37b.txt"
+    ... )
+    >>> table = Table.read(filename, format="ascii.csv", delimiter=" ", comment="#")
+    >>> table.rename_column("Differential_Flux", "dnde")
+    >>> table["dnde"].unit = "cm-2 s-1 TeV-1"
 
-    >>> table.rename_column('lower_error', 'dnde_errn')
-    >>> table['dnde_errn'].unit = 'cm-2 s-1 TeV-1'
+    >>> table.rename_column("lower_error", "dnde_errn")
+    >>> table["dnde_errn"].unit = "cm-2 s-1 TeV-1"
 
-    >>> table.rename_column('upper_error', 'dnde_errp')
-    >>> table['dnde_errp'].unit = 'cm-2 s-1 TeV-1'
+    >>> table.rename_column("upper_error", "dnde_errp")
+    >>> table["dnde_errp"].unit = "cm-2 s-1 TeV-1"
 
-    >>> table.rename_column('E', 'e_ref')
-    >>> table['e_ref'].unit = 'TeV'
+    >>> table.rename_column("E", "e_ref")
+    >>> table["e_ref"].unit = "TeV"
 
     >>> flux_points = FluxPoints.from_table(table, sed_type="dnde")
-    >>> flux_points.plot(sed_type="e2dnde") #doctest: +SKIP
+    >>> flux_points.plot(sed_type="e2dnde")  # doctest: +SKIP
 
 
     Note: In order to reproduce the example you need the tests datasets folder.
@@ -868,9 +870,13 @@ class FluxPoints(FluxMaps):
         >>> filename = "$GAMMAPY_DATA/estimators/crab_hess_fp/crab_hess_fp.fits"
         >>> flux_points = FluxPoints.read(filename)
         >>> flux_points_recomputed = flux_points.recompute_ul(n_sigma_ul=4)
-        >>> print(f'{flux_points.meta["n_sigma_ul"]}, {float(flux_points.flux_ul.data[1][0]):.2e}')
+        >>> print(
+        ...     f"{flux_points.meta['n_sigma_ul']}, {float(flux_points.flux_ul.data[1][0]):.2e}"
+        ... )
         3.0, 3.99e-11
-        >>> print(f'{flux_points_recomputed.meta["n_sigma_ul"]}, {float(flux_points_recomputed.flux_ul.data[1][0]):.2e}')
+        >>> print(
+        ...     f"{flux_points_recomputed.meta['n_sigma_ul']}, {float(flux_points_recomputed.flux_ul.data[1][0]):.2e}"
+        ... )
         4, 4.25e-11
         """
         if not self.has_stat_profiles:
