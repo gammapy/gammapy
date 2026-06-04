@@ -349,3 +349,18 @@ def test_observationtable_init_with_table():
         TypeError, match="The input `table` is not an `astropy.table.Table`."
     ):
         ObservationTable(table=wrong_table)
+
+
+def test_observationtable_init_with_data_deprecated():
+    time1 = Time(58000.0, format="mjd", scale="utc")
+    table = Table({"OBS_ID": ["0001", "0002"], "TSTART": [time1, time1]})
+    table.meta["TELESCOP"] = "CTAO"
+
+    match_msg = "The `data` argument is deprecated and will be removed"
+    with pytest.warns(DeprecationWarning, match=match_msg):
+        obs_table = ObservationTable(data=table)
+
+    assert len(obs_table) == 2
+    assert "OBS_ID" in obs_table.colnames
+    assert obs_table.meta["TELESCOP"] == "CTAO"
+    assert isinstance(obs_table, ObservationTable)

@@ -9,6 +9,8 @@ from gammapy.utils.scripts import make_path
 from gammapy.utils.testing import Checker
 from gammapy.utils.time import time_ref_from_dict
 
+import warnings
+
 __all__ = ["ObservationTable"]
 
 
@@ -25,20 +27,27 @@ class ObservationTable(Table):
         ----------
         table : `astropy.table.Table'
             Astropy table to initialize observation table.
-        data : `astropy.io.fits`
-            Fits file to load for the observation table.
         meta : ~dict
-            Dictionary of metadata to update the `data` or
-            `table` ones.
+            Dictionary of metadata to update the `table` object.
         """
-        self._data = table if table is not None else data
+        if data is not None and isinstance(data, Table):
+            warnings.warn(
+                "The `data` argument is deprecated and will be removed in a future release. "
+                "Please use the `table` argument instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            if table is None:
+                table = data
+
+        input_data = table if table is not None else data
         if table is not None and not isinstance(table, Table):
             raise TypeError("The input `table` is not an `astropy.table.Table`.")
 
-        if meta is None and hasattr(self._data, "meta"):
-            meta = self._data.meta.copy()
+        if meta is None and hasattr(input_data, "meta"):
+            meta = input_data.meta.copy()
 
-        super().__init__(data=self._data, copy=copy, meta=meta, **kwargs)
+        super().__init__(data=input_data, copy=copy, meta=meta, **kwargs)
 
         if table is not None:
             self._validate_columns()
@@ -47,7 +56,7 @@ class ObservationTable(Table):
         """Check that the table contains the OBS_ID column."""
         required_columns = ["OBS_ID"]
         for column in required_columns:
-            if column not in self._data.colnames:
+            if column not in self.colnames:
                 raise ValueError(f"Missing mandatory column: {column}.")
 
     @classmethod
