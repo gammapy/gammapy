@@ -56,7 +56,7 @@ bayesian = [
     "arviz>=1",
     "xarray",
     "nautilus-sampler",
-    "asdf>=2.15.1",
+    "asdf",
 ]
 distributed = [
     "ray[default]>=2.9,<2.55; python_version < '3.14'",
@@ -82,7 +82,6 @@ test = [
     "pytest",
     "docutils",
     "sphinx",
-    "asdf>=2.15.1"
 ]
 docs = [
     "astropy",
