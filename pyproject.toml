@@ -63,7 +63,7 @@ all = [
     "arviz>=1",
     "xarray",
     "nautilus-sampler",
-    "asdf",
+    "asdf>=2.15.1",
 ]
 all_no_ray = [
     "naima",
@@ -93,7 +93,7 @@ test = [
     "pytest",
     "docutils",
     "sphinx",
-    "asdf"
+    "asdf>=2.15.1"
 ]
 docs = [
     "astropy",
