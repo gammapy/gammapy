@@ -42,10 +42,7 @@ def add(contributors, counts, name, email, kind):
 
 def main():
     if len(sys.argv) < 3:
-        sys.exit(
-            'Usage: contributors.py "since" "until" '
-            "[--min-contributions N] [--merge-threshold T]"
-        )
+        sys.exit('Usage: contributors.py "since" "until" [--min-contributions N]')
 
     since, until = sys.argv[1], sys.argv[2]
 
