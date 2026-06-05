@@ -1,1 +1,1 @@
-Make LightCurveTemplateTemporalModel return zero instead of linearly extrapolate when evaluating outside the times in the template.
+Adapt `~gammapy.modeling.models.LightCurveTemplateTemporalModel` to return zero when evaluating outside the times in the template.
