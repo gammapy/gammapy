@@ -114,7 +114,8 @@ include = ["gammapy*"]
 "gammapy.irf.psf.tests" = ["data/*"]
 "gammapy.modeling.models.tests" = ["data/*"]
 "gammapy.catalog.tests" = ["data/*"]
-"gammapy.io.asdf.resources" = ["**/*.yaml"]
+"gammapy.io.asdf.resources.schemas" = ["**/*.yaml"]
+"gammapy.io.asdf.resources.manifests" = ["*.yaml"]
 
 
 [tool.pytest.ini_options]
@@ -248,6 +249,9 @@ showcontent = true
 [project.scripts]
 gammapy = "gammapy.scripts.main:cli"
 
+# The following are ASDF entry points: register gammapy's converters,
+# schemas and manifests, allow asdf to automatically discover
+# and use gammapy's serialization support.
 [project.entry-points."asdf.extensions"]
 gammapy = "gammapy.io.asdf.integration:get_extensions"
 

@@ -9,27 +9,24 @@ pytest.importorskip("asdf.testing")
 from asdf.testing.helpers import yaml_to_asdf  # noqa: E402
 
 
-def create_map_axis():
-    return [
-        MapAxis(nodes=[0.25, 0.75, 1.0, 2.0], interp="lin", node_type="edges"),
-        MapAxis(
-            nodes=[1, 3, 7], unit="TeV", name="energy", interp="log", node_type="center"
-        ),
-        MapAxis(
-            nodes=[0.25, 0.75, 1.0, 2.0],
-            unit="TeV",
-            name="energy",
-            interp="sqrt",
-            node_type="edges",
-        ),
-        MapAxis(
-            nodes=np.array([0.25, 0.75, 1.0, 2.0]), interp="lin", node_type="center"
-        ),
-        MapAxis(nodes=[0, 1, 3, 7], unit="deg", interp="lin", boundary_type="periodic"),
-    ]
+tested_map_axes = [
+    MapAxis(nodes=[0.25, 0.75, 1.0, 2.0], interp="lin", node_type="edges"),
+    MapAxis(
+        nodes=[1, 3, 7], unit="TeV", name="energy", interp="log", node_type="center"
+    ),
+    MapAxis(
+        nodes=[0.25, 0.75, 1.0, 2.0],
+        unit="TeV",
+        name="energy",
+        interp="sqrt",
+        node_type="edges",
+    ),
+    MapAxis(nodes=np.array([0.25, 0.75, 1.0, 2.0]), interp="lin", node_type="center"),
+    MapAxis(nodes=[0, 1, 3, 7], unit="deg", interp="lin", boundary_type="periodic"),
+]
 
 
-@pytest.mark.parametrize("axis", create_map_axis())
+@pytest.mark.parametrize("axis", tested_map_axes)
 def test_map_axis_roundtrip(axis, tmp_path):
     file_path = tmp_path / "test.asdf"
     with asdf.AsdfFile() as af:
@@ -40,59 +37,58 @@ def test_map_axis_roundtrip(axis, tmp_path):
         assert af["axis"] == axis
 
 
-def create_examples():
-    return [
-        {
-            "example": """!<asdf://gammapy.org/gammapy/tags/maps/mapaxis-1.0.0>
+tested_read_examples = [
+    {
+        "example": """!<asdf://gammapy.org/gammapy/tags/maps/mapaxis-1.0.0>
           name: energy
           interp: log
           node_type: edges
           boundary_type: monotonic
           nodes: !core/ndarray-1.1.0 [0.25, 0.75, 1.0, 2.0]
           unit: TeV""",
-            "truth": MapAxis(
-                nodes=[0.25, 0.75, 1.0, 2.0],
-                name="energy",
-                unit="TeV",
-                interp="log",
-                node_type="edges",
-                boundary_type="monotonic",
-            ),
-        },
-        {
-            "example": """!<asdf://gammapy.org/gammapy/tags/maps/mapaxis-1.0.0>
+        "truth": MapAxis(
+            nodes=[0.25, 0.75, 1.0, 2.0],
+            name="energy",
+            unit="TeV",
+            interp="log",
+            node_type="edges",
+            boundary_type="monotonic",
+        ),
+    },
+    {
+        "example": """!<asdf://gammapy.org/gammapy/tags/maps/mapaxis-1.0.0>
           name: energy
           interp: log
           node_type: edges
           nodes: !core/ndarray-1.1.0 [0.25, 0.75, 1.0, 2.0]
           unit: TeV""",
-            "truth": MapAxis(
-                nodes=[0.25, 0.75, 1.0, 2.0],
-                name="energy",
-                unit="TeV",
-                interp="log",
-                node_type="edges",
-                boundary_type="monotonic",
-            ),
-        },
-        {
-            "example": """!<asdf://gammapy.org/gammapy/tags/maps/mapaxis-1.0.0>
+        "truth": MapAxis(
+            nodes=[0.25, 0.75, 1.0, 2.0],
+            name="energy",
+            unit="TeV",
+            interp="log",
+            node_type="edges",
+            boundary_type="monotonic",
+        ),
+    },
+    {
+        "example": """!<asdf://gammapy.org/gammapy/tags/maps/mapaxis-1.0.0>
           name: energy
           interp: bad
           node_type: edges
           nodes: !core/ndarray-1.1.0 [0.25, 0.75, 1.0, 2.0]
           unit: TeV""",
-        },
-        {
-            "example": """!<asdf://gammapy.org/gammapy/tags/maps/mapaxis-1.0.0>
+    },
+    {
+        "example": """!<asdf://gammapy.org/gammapy/tags/maps/mapaxis-1.0.0>
               name: energy
               interp: lin
               node_type: edges""",
-        },
-    ]
+    },
+]
 
 
-@pytest.mark.parametrize("example", create_examples())
+@pytest.mark.parametrize("example", tested_read_examples)
 def test_map_axis_read_examples(example):
     buff = yaml_to_asdf(f"example: {example['example'].strip()}")
 

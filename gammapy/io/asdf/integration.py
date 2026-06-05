@@ -38,7 +38,7 @@ def get_extensions():
 
     Returns
     -------
-    list of asdf.extension.Extension
+    list of `~asdf.extension.Extension`
     """
     from . import extensions
 
