@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import json
 import re
 import subprocess
 import sys
@@ -15,69 +14,40 @@ def git(args):
     return run(["git"] + args)
 
 
-def gh(args):
-    return run(["gh"] + args)
-
-
 def normalise(s):
     s = unicodedata.normalize("NFKD", s.lower())
     return "".join(c for c in s if c.isalnum())
 
 
-def similarity(email, name):
-    local = normalise(email.split("@")[0])
-    name = normalise(name)
-    if not local or not name:
-        return 0
-    common = sum(1 for c in local if c in name)
-    return common / max(len(local), len(name))
-
-
-def get_github_name(login):
-    try:
-        data = json.loads(gh(["api", f"users/{login}"]))
-        return data.get("name") or login.replace("-", " ").replace("_", " ").title()
-    except Exception:
-        return login
-
-
-def get_reviewers(pr):
-    try:
-        data = json.loads(gh(["pr", "view", pr, "--json", "reviews"]))
-        return {
-            r["author"]["login"] for r in data.get("reviews", []) if r.get("author")
-        }
-    except Exception:
-        return set()
-
-
-def match_email_login(email, login):
-    local = email.split("@")[0]
-    return local in login or login in local
+def pick_name(a, b):
+    long, short = (a, b) if len(a) >= len(b) else (b, a)
+    return long if any(c.isupper() for c in long) else short
 
 
 def add(contributors, counts, name, email, kind):
     name = name.strip()
     email = email.strip().lower()
+    key = email.split("@")[0]
 
     if "bot" in name.lower() or email.endswith("github.com"):
         return
 
-    contributors[email] = name
+    if key in contributors:
+        name = pick_name(name, contributors[key])
 
-    counts[email][kind] += 1
+    contributors[key] = name
+
+    counts[key][kind] += 1
 
 
 def main():
     if len(sys.argv) < 3:
         sys.exit(
             'Usage: contributors.py "since" "until" '
-            "[--include-reviewers] [--min-contributions N] "
-            "[--merge-threshold T]"
+            "[--min-contributions N] [--merge-threshold T]"
         )
 
     since, until = sys.argv[1], sys.argv[2]
-    include_reviewers = "--include-reviewers" in sys.argv
 
     min_contrib = 0
     if "--min-contributions" in sys.argv:
@@ -133,25 +103,6 @@ def main():
     for msg in msgs:
         for a, b in re.findall(r"(?:\(#(\d+)\)|Merge pull request #(\d+))", msg):
             prs.update(filter(None, (a, b)))
-
-    if include_reviewers:
-        for pr in prs:
-            for login in get_reviewers(pr):
-                hit = next(
-                    (
-                        e
-                        for e in contributors
-                        if not e.startswith("gh:") and match_email_login(e, login)
-                    ),
-                    None,
-                )
-
-                if hit:
-                    counts[hit]["reviews"] += 1
-                else:
-                    key = f"gh:{login}"
-                    contributors[key] = get_github_name(login)
-                    counts[key]["reviews"] += 1
 
     # merging
     merged = {}
