@@ -295,9 +295,15 @@ We adhere to the PEP8 coding style. To enforce this, setup the
     # or on specific files:
     pre-commit run --files <file1> <file2> ...
 
+Using ``pixi``:
+
+.. code-block:: bash
+
+    pixi run pre-commit
 
 Running tests & building Documentation
 ======================================
+
 To run tests and build documentation we use tool `tox <https://tox.wiki/en/latest/>`__.
 It is a virtual environment management tool which allows you to test Gammapy locally
 in multiple test environments with different versions of Python and our dependencies.
@@ -352,3 +358,31 @@ Finally to make a completely clean folder for build the documentation you can ru
 .. code-block:: bash
 
     make clean-repo
+
+
+**Using pixi**
+
+Once `pixi <https://pixi.prefix.dev/latest/>`__ is installed, information on environments and tasks can be displayed using:
+
+.. code-block:: bash
+
+    pixi info
+
+To run tests:
+.. code-block:: bash
+
+    pixi run pytest <pytest_options>
+
+You can choose on which environment to run the tests using the `-e` option:
+
+.. code-block:: bash
+
+    pixi run -e numpy21 pytest
+
+Which will test the code with Python 3.12 and numpy 2.1.
+
+To build the documentation locally you can use:
+
+.. code-block:: bash
+
+    pixi run build_docs
