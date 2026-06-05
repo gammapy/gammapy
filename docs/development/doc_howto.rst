@@ -18,6 +18,10 @@ Or one can equivalently use tox::
 
      tox -e build_docs
 
+Or equivalently using ``pixi``::
+
+     pixi run build-docs
+
 Generating the PDF docs is more complex.
 This should work::
 
@@ -320,6 +324,12 @@ To check for broken external links you can use ``tox``:
 .. code-block:: bash
 
    tox -e linkcheck
+
+Or using ``pixi``::
+
+.. code-block:: bash
+
+   pixi run linkcheck
 
 Include png files as images
 ----------------------------
