@@ -158,6 +158,7 @@ def integrate_spectrum(
         values *= energy
 
     # we can call trapz_loglog assuming the last axis is the one to perform integration on.
+    values = values.reshape(energy.shape)
     integral = trapz_loglog(values, energy, axis=-1)
     # integral.shape = (num, n_energy, n_samples) so we sum on axis 0
     return integral.sum(axis=0)
@@ -260,11 +261,9 @@ class SpectralModel(ModelBase):
 
         Returns
         -------
-        median, errn , errp: tuple of `~astropy.units.Quantity`
+        median, errn , errp : tuple of `~astropy.units.Quantity`
             Median, negative, and positive errors
-
         """
-
         samples[~np.isfinite(samples)] = np.nan
         cdf = stats.norm.cdf
         median = np.nanpercentile(samples, 50, axis=-1)
@@ -1897,7 +1896,7 @@ class LogParabolaSpectralModel(SpectralModel):
 
     @classmethod
     def from_log10(cls, amplitude, reference, alpha, beta):
-        """Construct from :math:`\log_{10}` parametrization."""
+        r"""Construct from :math:`\log_{10}` parametrization."""
         beta_ = beta / np.log(10)
         return cls(amplitude=amplitude, reference=reference, alpha=alpha, beta=beta_)
 
@@ -1961,7 +1960,7 @@ class LogParabola2SpectralModel(SpectralModel):
 
     @classmethod
     def from_log10(cls, amplitude, reference, alpha, beta, escale):
-        """Construct from :math:`\log_{10}` parametrization."""
+        r"""Construct from :math:`\log_{10}` parametrization."""
         beta_ = beta / np.log(10)
         return cls(
             amplitude=amplitude,
@@ -2021,7 +2020,7 @@ class LogParabolaNormSpectralModel(SpectralModel):
 
     @classmethod
     def from_log10(cls, norm, reference, alpha, beta):
-        """Construct from :math:`\log_{10}` parametrization."""
+        r"""Construct from :math:`\log_{10}` parametrization."""
         beta_ = beta / np.log(10)
         return cls(norm=norm, reference=reference, alpha=alpha, beta=beta_)
 
@@ -2098,8 +2097,10 @@ class TemplateSpectralModel(SpectralModel):
         Fill table from an EBL model (Franceschini, 2008)
 
         >>> from gammapy.modeling.models import TemplateSpectralModel
-        >>> filename = '$GAMMAPY_DATA/ebl/ebl_franceschini.fits.gz'
-        >>> table_model = TemplateSpectralModel.read_xspec_model(filename=filename, param=0.3)
+        >>> filename = "$GAMMAPY_DATA/ebl/ebl_franceschini.fits.gz"
+        >>> table_model = TemplateSpectralModel.read_xspec_model(
+        ...     filename=filename, param=0.3
+        ... )
         """
         # TODO: Format of the file should be described and discussed in
         # https://gamma-astro-data-formats.readthedocs.io/en/latest/index.html

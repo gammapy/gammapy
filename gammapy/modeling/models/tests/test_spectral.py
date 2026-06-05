@@ -1258,6 +1258,22 @@ def test_energy_flux_error_exp_cutoff_power_law():
     assert_allclose(eflux_errp.value / 1e-12, 2.052225, rtol=7e-1)
 
 
+def test_integral_bpl():
+    bpl = BrokenPowerLawSpectralModel(
+        index1=2.3,
+        index2=1.7,
+        amplitude=2.0e-12 * u.Unit("cm-2 s-1 TeV-1"),
+        ebreak=10 * u.GeV,
+    )
+
+    e_min = np.array([0.1]) * u.GeV
+    e_max = np.array([11.0]) * u.GeV
+    result_array = bpl.integral(e_min, e_max)
+
+    assert result_array.shape == (1,)
+    assert_allclose(result_array.value, [6.1e-09], rtol=0.01)
+
+
 def test_integral_exp_cut_off_power_law_large_number_of_bins():
     energy = np.geomspace(1, 10, 100) * u.TeV
     energy_min = energy[:-1]
@@ -1424,6 +1440,33 @@ def test_vectorized_integrate_spectrum():
     assert_allclose(integral.to_value("cm-2s-1"), [9e-12, 9e-13])
     assert vector_integral.shape == (2, 10)
     assert_allclose(vector_integral[:, 0].to_value("cm-2s-1"), [9e-12, 9e-13])
+
+    energy = [100, 1000] * u.GeV
+
+    integral = integrate_spectrum(model, energy[:-1], energy[1:], ndecade=20)
+    vector_integral = integrate_spectrum(
+        model, energy[:-1], energy[1:], ndecade=20, parameter_samples=parameter_samples
+    )
+
+    assert integral.shape == (1,)
+    assert_allclose(integral.to_value("cm-2s-1"), 9e-12)
+
+    assert vector_integral.shape == (1, 10)
+    assert_allclose(vector_integral[:, 0].to_value("cm-2s-1"), 9e-12)
+
+    energy_min, energy_max = [100, 1000] * u.GeV
+    model = BrokenPowerLawSpectralModel()
+    parameter_samples = [np.ones(10) * par.quantity for par in model.parameters]
+
+    integral = integrate_spectrum(model, energy_min, energy_max, ndecade=20)
+    vector_integral = integrate_spectrum(
+        model, energy_min, energy_max, ndecade=20, parameter_samples=parameter_samples
+    )
+
+    assert integral.isscalar
+    assert_allclose(integral.to_value("cm-2s-1"), 9e-12)
+    assert vector_integral.shape == (10,)
+    assert_allclose(vector_integral[0].to_value("cm-2s-1"), 9e-12)
 
     # check fail if model is not passed
     with pytest.raises(TypeError):

@@ -20,7 +20,7 @@ from gammapy.modeling.models import (
     TemplateSpatialModel,
 )
 
-filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits"
+filename = "$GAMMAPY_DATA/catalogs/fermi/Extended_archive_v18/Templates/RXJ1713_2016_250GeV.fits.gz"
 
 m = Map.read(filename)
 m = m.copy(unit="sr^-1")

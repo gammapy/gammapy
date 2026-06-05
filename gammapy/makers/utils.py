@@ -1,23 +1,24 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
-import numpy as np
+
 import astropy.units as u
+import numpy as np
 from astropy.coordinates import SkyCoord
-from astropy.coordinates.erfa_astrom import erfa_astrom, ErfaAstromInterpolator
+from astropy.coordinates.erfa_astrom import ErfaAstromInterpolator, erfa_astrom
 from astropy.table import Table
 from astropy.time import Time
+from regions import CircleSkyRegion
+
 from gammapy.data import FixedPointingInfo, PointingMode
-from gammapy.irf import EDispMap, FoVAlignment, PSFMap
+from gammapy.irf import BackgroundIRF, EDispMap, FoVAlignment, PSFMap
 from gammapy.makers import background
-from gammapy.irf import BackgroundIRF
-from gammapy.maps import Map, RegionNDMap, MapAxis
+from gammapy.maps import Map, MapAxis, RegionNDMap
 from gammapy.maps.utils import broadcast_axis_values_to_geom
 from gammapy.modeling.models import PowerLawSpectralModel
 from gammapy.stats import WStatCountsStatistic
-from gammapy.utils.coordinates import FoVICRSFrame, FoVAltAzFrame
-from gammapy.utils.regions import compound_region_to_regions
-from regions import CircleSkyRegion
+from gammapy.utils.coordinates import FoVAltAzFrame, FoVICRSFrame
 from gammapy.utils.deprecation import deprecated
+from gammapy.utils.regions import compound_region_to_regions
 
 __all__ = [
     "make_counts_off_rad_max",
@@ -41,11 +42,12 @@ EARTH_ANGULAR_VELOCITY = 360 * u.deg / u.day
 def _compute_rotation_time_steps(
     time_start, time_stop, fov_rotation, pointing_altaz, location
 ):
-    """
-    Compute the time intervals between start and stop times, such that the FoV associated to a fixed RaDec position rotates
-    by 'fov_rotation' in AltAz frame during each time step.
-    It assumes that the rotation rate at the provided pointing is a good estimate of the rotation rate over the full
-    output duration (first order approximation).
+    """Compute the time intervals between start and stop times.
+
+    This will be such that the FoV associated to a fixed RaDec position rotates
+    by 'fov_rotation' in AltAz frame during each time step. It assumes that the
+    rotation rate at the provided pointing is a good estimate of the rotation
+    rate over the full output duration (first order approximation).
 
 
     Parameters
@@ -60,6 +62,7 @@ def _compute_rotation_time_steps(
         Pointing direction.
     location : `astropy.coordinates.EarthLocation`
         Observatory location
+
     Returns
     -------
     times : `~astropy.time.Time`
@@ -211,6 +214,7 @@ def make_map_background_irf(
         Default is True.
     location : `astropy.coordinates.EarthLocation`, optional
         Observatory location
+
     Returns
     -------
     background : `~gammapy.maps.WcsNDMap`
@@ -799,7 +803,7 @@ def make_effective_livetime_map(observations, geom, offset_max=None):
         mask = offset < offset_max
 
         exposure = make_map_exposure_true_energy(
-            pointing=geom.center_skydir,
+            pointing=obs.get_pointing_icrs(obs.tmid),
             livetime=obs.observation_live_time_duration,
             aeff=obs.aeff,
             geom=geom_obs,
@@ -816,10 +820,9 @@ def make_effective_livetime_map(observations, geom, offset_max=None):
 
 
 def guess_instrument_fov(obs):
-    """
-    Guess the camera field of view for the given observation
-    from the IRFs. This simply takes the maximum offset of the
-    effective area IRF.
+    """Guess the camera field of view for the given observation from the IRFs.
+
+    This simply takes the maximum offset of the effective area IRF.
     TODO: This logic will break for more complex IRF models.
     A better option would be to compute the offset at which
     the effective area is above 10% of the maximum.
@@ -908,7 +911,6 @@ def project_irf_on_geom(geom, irf, fov_frame, use_region_center=True):
     map : `~gammapy.maps.Map`
         Map containing the projected IRF.
     """
-
     if not use_region_center:
         image_geom = geom.to_wcs_geom().to_image()
         region_coord, weights = geom.get_wcs_coord_and_weights()

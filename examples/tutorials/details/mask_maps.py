@@ -118,7 +118,7 @@ from gammapy.maps import Map, WcsGeom
 #
 
 filename = "$GAMMAPY_DATA/fermi-3fhl-crab/Fermi-LAT-3FHL_datasets.yaml"
-datasets = Datasets.read(filename=filename)
+datasets = Datasets.read(filename=filename, checksum=False)
 dataset = datasets["Fermi-LAT"]
 
 

@@ -38,9 +38,11 @@ def requires_dependency(name):
 
         from gammapy.utils.testing import requires_dependency
 
-        @requires_dependency('scipy')
+
+        @requires_dependency("scipy")
         def test_using_scipy():
             import scipy
+
             ...
     """
     import pytest
@@ -82,6 +84,7 @@ def requires_data(name="gammapy-data"):
     ::
 
         from gammapy.utils.testing import requires_data
+
 
         @requires_data()
         def test_using_data_files():
@@ -183,7 +186,7 @@ def _unquantify_allclose_arguments(actual, desired, rtol, atol):
         desired = desired.to(actual.unit)
     except u.UnitsError:
         raise u.UnitsError(
-            "Units for 'desired' ({}) and 'actual' ({}) " "are not convertible".format(
+            "Units for 'desired' ({}) and 'actual' ({}) are not convertible".format(
                 desired.unit, actual.unit
             )
         )
@@ -197,7 +200,7 @@ def _unquantify_allclose_arguments(actual, desired, rtol, atol):
             atol = atol.to(actual.unit)
         except u.UnitsError:
             raise u.UnitsError(
-                "Units for 'atol' ({}) and 'actual' ({}) " "are not convertible".format(
+                "Units for 'atol' ({}) and 'actual' ({}) are not convertible".format(
                     atol.unit, actual.unit
                 )
             )

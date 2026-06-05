@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Dark matter spatial and spectral models."""
+
 from gammapy.modeling.models import SPECTRAL_MODEL_REGISTRY
 from .profiles import (
     BurkertProfile,

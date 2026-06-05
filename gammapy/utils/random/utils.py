@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Helper functions to work with distributions."""
+
 import numbers
 import numpy as np
 import scipy.integrate
@@ -87,8 +88,7 @@ def get_random_state(init):
         return init
     else:
         raise ValueError(
-            "{} cannot be used to seed a numpy.random.RandomState"
-            " instance".format(init)
+            "{} cannot be used to seed a numpy.random.RandomState instance".format(init)
         )
 
 
@@ -270,7 +270,7 @@ def sample_times(
 
     >>> from astropy.units import Quantity
     >>> from gammapy.utils.random import sample_times
-    >>> rate = Quantity(10, 'Hz')
+    >>> rate = Quantity(10, "Hz")
     >>> times = sample_times(size=100, rate=rate, random_state=0)
     >>> times[-1]
     <TimeDelta object: scale='None' format='sec' value=9.186484131475074>
