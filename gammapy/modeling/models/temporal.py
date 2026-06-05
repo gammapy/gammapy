@@ -485,14 +485,29 @@ class LightCurveTemplateTemporalModel(TemporalModel):
     The ``norm`` is supposed to be a unit-less multiplicative factor in the model,
     to be multiplied with a spectral model.
 
-    The model does linear interpolation for times between the given ``(time, energy, norm)``
+    By default the model does linear interpolation for times between the given ``(time, energy, norm)``
     values.
 
     When the temporal model is energy-dependent, the default interpolation scheme is
     linear with a log scale for the values. The interpolation method and scale values
-    can be changed with the ``method`` and ``values_scale`` arguments.
+    can be changed with the ``interp_kwargs`` argument.
 
     For more information see :ref:`LightCurve-temporal-model`.
+
+    Parameters
+    ----------
+    map : `~gammapy.maps.RegionNDMap`
+        Map template with a "time" axes and optionally an "energy" axes.
+    tref : float, optional
+        Reference time for the time-axes in the map.
+    filename : string
+        Default name for the serialisation.
+    interp_kwargs : dict
+        Interpolation keyword arguments passed to `gammapy.maps.Map.interp_by_coord`.
+        For energy independent models the default arguments are
+            {'method': 'linear', 'values_scale':'lin', 'fill_value': 0}.
+        For energy-dependent models the default arguments are
+            {'method': 'linear', 'values_scale':'log', 'fill_value': 0}.
 
     Examples
     --------
@@ -536,7 +551,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
     _t_ref_default = Time("2000-01-01")
     t_ref = Parameter("t_ref", _t_ref_default.mjd, unit="day", frozen=True)
 
-    def __init__(self, map, t_ref=None, filename=None, method=None, values_scale=None):
+    def __init__(self, map, t_ref=None, filename=None, interp_kwargs=None):
         if (map.data < 0).any():
             log.warning("Map has negative values. Check and fix this!")
 
@@ -548,17 +563,16 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
         self.filename = filename
 
-        if method is None:
-            method = "linear"
+        if self.is_energy_dependent:
+            values_scale = "log"
+        else:
+            values_scale = "lin"
 
-        if values_scale is None:
-            if self.is_energy_dependent:
-                values_scale = "log"
-            else:
-                values_scale = "lin"
-
-        self.method = method
-        self.values_scale = values_scale
+        interp_kwargs = interp_kwargs or {}
+        interp_kwargs.setdefault("values_scale", values_scale)
+        interp_kwargs.setdefault("method", "linear")
+        interp_kwargs.setdefault("fill_value", 0)
+        self._interp_kwargs = interp_kwargs
 
     def __str__(self):
         start_time = self.t_ref.quantity + self.map.geom.axes["time"].edges[0]
@@ -710,7 +724,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         else:
             raise ValueError("Not a valid format, choose from ['map', 'table']")
 
-    def evaluate(self, time, t_ref=None, energy=None, fill_value=0):
+    def evaluate(self, time, t_ref=None, energy=None):
         """Evaluate the model at given coordinates.
 
         Parameters
@@ -739,12 +753,7 @@ class LightCurveTemplateTemporalModel(TemporalModel):
 
             coords["energy"] = energy.reshape(-1, 1)
 
-        val = self.map.interp_by_coord(
-            coords,
-            method=self.method,
-            values_scale=self.values_scale,
-            fill_value=fill_value,
-        )
+        val = self.map.interp_by_coord(coords, **self._interp_kwargs)
         val = np.clip(val, 0, a_max=None)
         return u.Quantity(val, unit=self.map.unit, copy=COPY_IF_NEEDED)
 
