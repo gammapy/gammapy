@@ -3,7 +3,7 @@ channels = ["conda-forge"]
 platforms = ["linux-64", "linux-aarch64", "osx-arm64", "win-64"]
 
 [dependencies]
-python = ">=3.11"
+python = ">=3.12"
 
 # Gammapy feature
 # ------------
@@ -29,8 +29,6 @@ description = "Run pre-commit hooks"
 # ------------
 # Dependencies
 # ------------
-[feature.py311.dependencies]
-python = "3.11.*"
 [feature.py312.dependencies]
 python = "3.12.*"
 [feature.py313.dependencies]
@@ -104,7 +102,6 @@ gammapy = { path = ".", editable = true, extras = ["all_no_ray"] }
 default = { features = ["gammapy"], solve-group = "gammapy" }
 
 # Python matrix environments
-py311 = { features = ["test", "py311"], solve-group = "py311" }
 py312 = { features = ["test", "py312"], solve-group = "py312" }
 py313 = { features = ["test", "py313"], solve-group = "py313" }
 
