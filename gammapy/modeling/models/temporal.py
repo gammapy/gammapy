@@ -734,7 +734,12 @@ class LightCurveTemplateTemporalModel(TemporalModel):
         t_ref: `~gammapy.modeling.Parameter`, optional
             Reference time for the model. Default is None.
         energy: `~astropy.units.Quantity`, optional
-            Energy. Default is None.
+       time : `~astropy.time.Time`
+           Time.
+       t_ref : `~gammapy.modeling.Parameter`, optional
+           Reference time for the model. Default is None.
+       energy : `~astropy.units.Quantity`, optional
+           Energy. Default is None.
 
         Returns
         -------
